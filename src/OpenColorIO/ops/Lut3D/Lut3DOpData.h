@@ -66,8 +66,8 @@ public:
 
     // Use functional composition to generate a single op that 
     // approximates the effect of the pair of ops.
-    static Lut3DOpDataRcPtr Compose(ConstLut3DOpDataRcPtr & A,
-                                    ConstLut3DOpDataRcPtr & B);
+    static void Compose(Lut3DOpDataRcPtr & A,
+                        ConstLut3DOpDataRcPtr & B);
 
 public:
     // The gridSize parameter is the length of the cube axis.
@@ -128,7 +128,7 @@ public:
 
     Lut3DOpDataRcPtr inverse() const;
 
-    bool operator==(const OpData& other) const;
+    bool operator==(const OpData& other) const override;
 
     void finalize() override;
 
