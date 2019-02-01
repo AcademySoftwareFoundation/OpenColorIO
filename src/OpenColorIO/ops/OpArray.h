@@ -198,11 +198,6 @@ public:
             && (m_data == a.m_data);
     }
 
-    // Specialized in the child classes to calculate the expected number of 
-    // array values based on the specified length, the interpretation of
-    // length and number of components.
-    virtual unsigned long getNumValues() const = 0;
-
 protected:
     unsigned long m_length;
     unsigned long m_numColorComponents;
