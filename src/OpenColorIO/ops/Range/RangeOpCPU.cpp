@@ -38,6 +38,80 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
+class RangeOpCPU : public OpCPU
+{
+public:
+
+    RangeOpCPU(ConstRangeOpDataRcPtr & range);
+
+protected:
+    float m_scale;
+    float m_offset;
+    float m_lowerBound;
+    float m_upperBound;
+    float m_alphaScale;
+
+private:
+    RangeOpCPU() = delete;
+};
+
+class RangeScaleMinMaxRenderer : public RangeOpCPU
+{
+public:
+    RangeScaleMinMaxRenderer(ConstRangeOpDataRcPtr & range);
+
+    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+};
+
+class RangeScaleMinRenderer : public RangeOpCPU
+{
+public:
+    RangeScaleMinRenderer(ConstRangeOpDataRcPtr & range);
+
+    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+};
+
+class RangeScaleMaxRenderer : public RangeOpCPU
+{
+public:
+    RangeScaleMaxRenderer(ConstRangeOpDataRcPtr & range);
+
+    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+};
+
+class RangeScaleRenderer : public RangeOpCPU
+{
+public:
+    RangeScaleRenderer(ConstRangeOpDataRcPtr & range);
+
+    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+};
+
+class RangeMinMaxRenderer : public RangeOpCPU
+{
+public:
+    RangeMinMaxRenderer(ConstRangeOpDataRcPtr & range);
+
+    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+};
+
+class RangeMinRenderer : public RangeOpCPU
+{
+public:
+    RangeMinRenderer(ConstRangeOpDataRcPtr & range);
+
+    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+};
+
+class RangeMaxRenderer : public RangeOpCPU
+{
+public:
+    RangeMaxRenderer(ConstRangeOpDataRcPtr & range);
+
+    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+};
+
+
 RangeOpCPU::RangeOpCPU(ConstRangeOpDataRcPtr & range)
     :   OpCPU()
     ,   m_scale(0.0f)
@@ -208,7 +282,7 @@ void RangeMaxRenderer::apply(float * rgbaBuffer, long numPixels) const
 }
 
 
-OpCPURcPtr RangeOpCPU::GetRenderer(ConstRangeOpDataRcPtr & range)
+OpCPURcPtr GetRangeRenderer(ConstRangeOpDataRcPtr & range)
 {
     OpCPURcPtr op(new NoOpCPU);
 
@@ -264,3 +338,372 @@ OpCPURcPtr RangeOpCPU::GetRenderer(ConstRangeOpDataRcPtr & range)
 
 }
 OCIO_NAMESPACE_EXIT
+
+
+
+
+
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+
+#include "ops/Range/RangeOpData.h"
+#include "pystring/pystring.h"
+#include "unittest.h"
+
+
+static const float g_error = 1e-7f;
+
+
+OIIO_ADD_TEST(RangeOpCPU, identity)
+{
+    OCIO::RangeOpDataRcPtr range = std::make_shared<OCIO::RangeOpData>();
+    OIIO_CHECK_NO_THROW(range->validate());
+    OIIO_CHECK_NO_THROW(range->finalize());
+
+    OCIO::ConstRangeOpDataRcPtr r = range;
+    OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
+
+    const std::string typeName(typeid(*op.get()).name());
+    OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "NoOpCPU"));
+
+    const long numPixels = 3;
+    float image[4*numPixels] = { -0.50f, -0.25f, 0.50f, 0.0f,
+                                  0.75f,  1.00f, 1.25f, 1.0f,
+                                  1.25f,  1.50f, 1.75f, 0.0f };
+
+    OIIO_CHECK_NO_THROW(op->apply(&image[0], numPixels));
+
+    OIIO_CHECK_CLOSE(image[0],  -0.50f, g_error);
+    OIIO_CHECK_CLOSE(image[1],  -0.25f, g_error);
+    OIIO_CHECK_CLOSE(image[2],   0.50f, g_error);
+    OIIO_CHECK_CLOSE(image[3],   0.00f, g_error);
+
+    OIIO_CHECK_CLOSE(image[4],   0.75f, g_error);
+    OIIO_CHECK_CLOSE(image[5],   1.00f, g_error);
+    OIIO_CHECK_CLOSE(image[6],   1.25f, g_error);
+    OIIO_CHECK_CLOSE(image[7],   1.00f, g_error);
+
+    OIIO_CHECK_CLOSE(image[8],   1.25f, g_error);
+    OIIO_CHECK_CLOSE(image[9],   1.50f, g_error);
+    OIIO_CHECK_CLOSE(image[10],  1.75f, g_error);
+    OIIO_CHECK_CLOSE(image[11],  0.00f, g_error);
+}
+
+OIIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings)
+{
+    OCIO::RangeOpDataRcPtr range 
+        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 
+                                              0., 1., 0.5, 1.5);
+
+    OIIO_CHECK_NO_THROW(range->validate());
+    OIIO_CHECK_NO_THROW(range->finalize());
+
+    OCIO::ConstRangeOpDataRcPtr r = range;
+    OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
+
+    const std::string typeName(typeid(*op.get()).name());
+    OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeScaleMinMaxRenderer"));
+
+    const long numPixels = 3;
+    float image[4*numPixels] = { -0.50f, -0.25f, 0.50f, 0.0f,
+                                  0.75f,  1.00f, 1.25f, 1.0f,
+                                  1.25f,  1.50f, 1.75f, 0.0f };
+
+    OIIO_CHECK_NO_THROW(op->apply(&image[0], numPixels));
+
+    OIIO_CHECK_CLOSE(image[0],  0.50f, g_error);
+    OIIO_CHECK_CLOSE(image[1],  0.50f, g_error);
+    OIIO_CHECK_CLOSE(image[2],  1.00f, g_error);
+    OIIO_CHECK_CLOSE(image[3],  0.00f, g_error);
+
+    OIIO_CHECK_CLOSE(image[4],  1.25f, g_error);
+    OIIO_CHECK_CLOSE(image[5],  1.50f, g_error);
+    OIIO_CHECK_CLOSE(image[6],  1.50f, g_error);
+    OIIO_CHECK_CLOSE(image[7],  1.00f, g_error);
+
+    OIIO_CHECK_CLOSE(image[8],  1.50f, g_error);
+    OIIO_CHECK_CLOSE(image[9],  1.50f, g_error);
+    OIIO_CHECK_CLOSE(image[10], 1.50f, g_error);
+    OIIO_CHECK_CLOSE(image[11], 0.00f, g_error);
+}
+
+OIIO_ADD_TEST(RangeOpCPU, scale_with_low_clipping)
+{
+    OCIO::RangeOpDataRcPtr range 
+        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 
+                                              0.,  OCIO::RangeOpData::EmptyValue(), 
+                                              0.5, OCIO::RangeOpData::EmptyValue());
+
+    OIIO_CHECK_NO_THROW(range->validate());
+    OIIO_CHECK_NO_THROW(range->finalize());
+
+    OCIO::ConstRangeOpDataRcPtr r = range;
+    OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
+
+    const std::string typeName(typeid(*op.get()).name());
+    OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeScaleMinRenderer"));
+
+    const long numPixels = 3;
+    float image[4*numPixels] = { -0.50f, -0.25f, 0.50f, 0.0f,
+                                  0.75f,  1.00f, 1.25f, 1.0f,
+                                  1.25f,  1.50f, 1.75f, 0.0f };
+
+    OIIO_CHECK_NO_THROW(op->apply(&image[0], numPixels));
+
+    OIIO_CHECK_CLOSE(image[0],  0.50f, g_error);
+    OIIO_CHECK_CLOSE(image[1],  0.50f, g_error);
+    OIIO_CHECK_CLOSE(image[2],  1.00f, g_error);
+    OIIO_CHECK_CLOSE(image[3],  0.00f, g_error);
+
+    OIIO_CHECK_CLOSE(image[4],  1.25f, g_error);
+    OIIO_CHECK_CLOSE(image[5],  1.50f, g_error);
+    OIIO_CHECK_CLOSE(image[6],  1.75f, g_error);
+    OIIO_CHECK_CLOSE(image[7],  1.00f, g_error);
+
+    OIIO_CHECK_CLOSE(image[8],  1.75f, g_error);
+    OIIO_CHECK_CLOSE(image[9],  2.00f, g_error);
+    OIIO_CHECK_CLOSE(image[10], 2.25f, g_error);
+    OIIO_CHECK_CLOSE(image[11], 0.00f, g_error);
+}
+
+OIIO_ADD_TEST(RangeOpCPU, scale_with_high_clipping)
+{
+    OCIO::RangeOpDataRcPtr range 
+        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 
+                                              OCIO::RangeOpData::EmptyValue(), 1., 
+                                              OCIO::RangeOpData::EmptyValue(), 1.5);
+
+    OIIO_CHECK_NO_THROW(range->validate());
+    OIIO_CHECK_NO_THROW(range->finalize());
+
+    OCIO::ConstRangeOpDataRcPtr r = range;
+    OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
+
+    const std::string typeName(typeid(*op.get()).name());
+    OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeScaleMaxRenderer"));
+
+    const long numPixels = 3;
+    float image[4*numPixels] = { -0.50f, -0.25f, 0.50f, 0.0f,
+                                  0.75f,  1.00f, 1.25f, 1.0f,
+                                  1.25f,  1.50f, 1.75f, 0.0f };
+
+    OIIO_CHECK_NO_THROW(op->apply(&image[0], numPixels));
+
+    OIIO_CHECK_CLOSE(image[0],  0.00f, g_error);
+    OIIO_CHECK_CLOSE(image[1],  0.25f, g_error);
+    OIIO_CHECK_CLOSE(image[2],  1.00f, g_error);
+    OIIO_CHECK_CLOSE(image[3],  0.00f, g_error);
+
+    OIIO_CHECK_CLOSE(image[4],  1.25f, g_error);
+    OIIO_CHECK_CLOSE(image[5],  1.50f, g_error);
+    OIIO_CHECK_CLOSE(image[6],  1.50f, g_error);
+    OIIO_CHECK_CLOSE(image[7],  1.00f, g_error);
+
+    OIIO_CHECK_CLOSE(image[8],  1.50f, g_error);
+    OIIO_CHECK_CLOSE(image[9],  1.50f, g_error);
+    OIIO_CHECK_CLOSE(image[10], 1.50f, g_error);
+    OIIO_CHECK_CLOSE(image[11], 0.00f, g_error);
+}
+
+OIIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings_2)
+{
+    OCIO::RangeOpDataRcPtr range 
+        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 
+                                              0., 1., 0., 1.5);
+
+    OIIO_CHECK_NO_THROW(range->validate());
+    OIIO_CHECK_NO_THROW(range->finalize());
+
+    OCIO::ConstRangeOpDataRcPtr r = range;
+    OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
+
+    const std::string typeName(typeid(*op.get()).name());
+    OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeScaleMinMaxRenderer"));
+
+    const long numPixels = 3;
+    float image[4*numPixels] = { -0.50f, -0.25f, 0.50f, 0.0f,
+                                  0.75f,  1.00f, 1.25f, 1.0f,
+                                  1.25f,  1.50f, 1.75f, 0.0f };
+
+    OIIO_CHECK_NO_THROW(op->apply(&image[0], numPixels));
+
+    OIIO_CHECK_CLOSE(image[0],  0.000f, g_error);
+    OIIO_CHECK_CLOSE(image[1],  0.000f, g_error);
+    OIIO_CHECK_CLOSE(image[2],  0.750f, g_error);
+    OIIO_CHECK_CLOSE(image[3],  0.000f, g_error);
+
+    OIIO_CHECK_CLOSE(image[4],  1.125f, g_error);
+    OIIO_CHECK_CLOSE(image[5],  1.500f, g_error);
+    OIIO_CHECK_CLOSE(image[6],  1.500f, g_error);
+    OIIO_CHECK_CLOSE(image[7],  1.000f, g_error);
+
+    OIIO_CHECK_CLOSE(image[8],  1.500f, g_error);
+    OIIO_CHECK_CLOSE(image[9],  1.500f, g_error);
+    OIIO_CHECK_CLOSE(image[10], 1.500f, g_error);
+    OIIO_CHECK_CLOSE(image[11], 0.000f, g_error);
+}
+
+OIIO_ADD_TEST(RangeOpCPU, offset_with_low_and_high_clippings)
+{
+    OCIO::RangeOpDataRcPtr range 
+        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 
+                                              0., 1., 1., 2.);
+
+    OIIO_CHECK_NO_THROW(range->validate());
+    OIIO_CHECK_NO_THROW(range->finalize());
+
+    OCIO::ConstRangeOpDataRcPtr r = range;
+    OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
+
+    const std::string typeName(typeid(*op.get()).name());
+    OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeScaleMinMaxRenderer"));
+
+    const long numPixels = 3;
+    float image[4*numPixels] = { -0.50f, -0.25f, 0.50f, 0.0f,
+                                  0.75f,  1.00f, 1.25f, 1.0f,
+                                  1.25f,  1.50f, 1.75f, 0.0f };
+
+    OIIO_CHECK_NO_THROW(op->apply(&image[0], numPixels));
+
+    OIIO_CHECK_CLOSE(image[0],  1.00f, g_error);
+    OIIO_CHECK_CLOSE(image[1],  1.00f, g_error);
+    OIIO_CHECK_CLOSE(image[2],  1.50f, g_error);
+    OIIO_CHECK_CLOSE(image[3],  0.00f, g_error);
+
+    OIIO_CHECK_CLOSE(image[4],  1.75f, g_error);
+    OIIO_CHECK_CLOSE(image[5],  2.00f, g_error);
+    OIIO_CHECK_CLOSE(image[6],  2.00f, g_error);
+    OIIO_CHECK_CLOSE(image[7],  1.00f, g_error);
+
+    OIIO_CHECK_CLOSE(image[8],  2.00f, g_error);
+    OIIO_CHECK_CLOSE(image[9],  2.00f, g_error);
+    OIIO_CHECK_CLOSE(image[10], 2.00f, g_error);
+    OIIO_CHECK_CLOSE(image[11], 0.00f, g_error);
+}
+
+OIIO_ADD_TEST(RangeOpCPU, low_and_high_clippings)
+{
+    OCIO::RangeOpDataRcPtr range 
+        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 
+                                              1., 2., 1., 2.);
+
+    OIIO_CHECK_NO_THROW(range->validate());
+    OIIO_CHECK_NO_THROW(range->finalize());
+
+    OCIO::ConstRangeOpDataRcPtr r = range;
+    OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
+
+    const std::string typeName(typeid(*op.get()).name());
+    OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeMinMaxRenderer"));
+
+    const long numPixels = 4;
+    float image[4*numPixels] = { -0.50f, -0.25f, 0.50f, 0.0f,
+                                  0.75f,  1.00f, 1.25f, 1.0f,
+                                  1.25f,  1.50f, 1.75f, 0.0f,
+                                  2.00f,  2.50f, 2.75f, 1.0f };
+
+    OIIO_CHECK_NO_THROW(op->apply(&image[0], numPixels));
+
+    OIIO_CHECK_CLOSE(image[0],  1.00f, g_error);
+    OIIO_CHECK_CLOSE(image[1],  1.00f, g_error);
+    OIIO_CHECK_CLOSE(image[2],  1.00f, g_error);
+    OIIO_CHECK_CLOSE(image[3],  0.00f, g_error);
+
+    OIIO_CHECK_CLOSE(image[4],  1.00f, g_error);
+    OIIO_CHECK_CLOSE(image[5],  1.00f, g_error);
+    OIIO_CHECK_CLOSE(image[6],  1.25f, g_error);
+    OIIO_CHECK_CLOSE(image[7],  1.00f, g_error);
+
+    OIIO_CHECK_CLOSE(image[8],  1.25f, g_error);
+    OIIO_CHECK_CLOSE(image[9],  1.50f, g_error);
+    OIIO_CHECK_CLOSE(image[10], 1.75f, g_error);
+    OIIO_CHECK_CLOSE(image[11], 0.00f, g_error);
+
+    OIIO_CHECK_CLOSE(image[12], 2.00f, g_error);
+    OIIO_CHECK_CLOSE(image[13], 2.00f, g_error);
+    OIIO_CHECK_CLOSE(image[14], 2.00f, g_error);
+    OIIO_CHECK_CLOSE(image[15], 1.00f, g_error);
+}
+
+OIIO_ADD_TEST(RangeOpCPU, low_clipping)
+{
+    OCIO::RangeOpDataRcPtr range 
+        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 
+                                              -0.1, OCIO::RangeOpData::EmptyValue(), 
+                                              -0.1, OCIO::RangeOpData::EmptyValue());
+
+    OIIO_CHECK_NO_THROW(range->validate());
+    OIIO_CHECK_NO_THROW(range->finalize());
+
+    OCIO::ConstRangeOpDataRcPtr r = range;
+    OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
+
+    const std::string typeName(typeid(*op.get()).name());
+    OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeMinRenderer"));
+
+    const long numPixels = 3;
+    float image[4*numPixels] = { -0.50f, -0.25f, 0.50f, 0.0f,
+                                  0.75f,  1.00f, 1.25f, 1.0f,
+                                  1.25f,  1.50f, 1.75f, 0.0f };
+
+    OIIO_CHECK_NO_THROW(op->apply(&image[0], numPixels));
+
+    OIIO_CHECK_CLOSE(image[0], -0.10f, g_error);
+    OIIO_CHECK_CLOSE(image[1], -0.10f, g_error);
+    OIIO_CHECK_CLOSE(image[2],  0.50f, g_error);
+    OIIO_CHECK_CLOSE(image[3],  0.00f, g_error);
+
+    OIIO_CHECK_CLOSE(image[4],  0.75f, g_error);
+    OIIO_CHECK_CLOSE(image[5],  1.00f, g_error);
+    OIIO_CHECK_CLOSE(image[6],  1.25f, g_error);
+    OIIO_CHECK_CLOSE(image[7],  1.00f, g_error);
+
+    OIIO_CHECK_CLOSE(image[8],  1.25f, g_error);
+    OIIO_CHECK_CLOSE(image[9],  1.50f, g_error);
+    OIIO_CHECK_CLOSE(image[10], 1.75f, g_error);
+    OIIO_CHECK_CLOSE(image[11], 0.00f, g_error);
+}
+
+OIIO_ADD_TEST(RangeOpCPU, high_clipping)
+{
+    OCIO::RangeOpDataRcPtr range 
+        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 
+                                              OCIO::RangeOpData::EmptyValue(), 1.1, 
+                                              OCIO::RangeOpData::EmptyValue(), 1.1);
+
+    OIIO_CHECK_NO_THROW(range->validate());
+    OIIO_CHECK_NO_THROW(range->finalize());
+
+    OCIO::ConstRangeOpDataRcPtr r = range;
+    OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
+
+    const std::string typeName(typeid(*op.get()).name());
+    OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeMaxRenderer"));
+
+    const long numPixels = 3;
+    float image[4*numPixels] = { -0.50f, -0.25f, 0.50f, 0.0f,
+                                  0.75f,  1.00f, 1.25f, 1.0f,
+                                  1.25f,  1.50f, 1.75f, 0.0f };
+
+    OIIO_CHECK_NO_THROW(op->apply(&image[0], numPixels));
+
+    OIIO_CHECK_CLOSE(image[0],  -0.50f, g_error);
+    OIIO_CHECK_CLOSE(image[1],  -0.25f, g_error);
+    OIIO_CHECK_CLOSE(image[2],   0.50f, g_error);
+    OIIO_CHECK_CLOSE(image[3],   0.00f, g_error);
+
+    OIIO_CHECK_CLOSE(image[4],   0.75f, g_error);
+    OIIO_CHECK_CLOSE(image[5],   1.00f, g_error);
+    OIIO_CHECK_CLOSE(image[6],   1.10f, g_error);
+    OIIO_CHECK_CLOSE(image[7],   1.00f, g_error);
+
+    OIIO_CHECK_CLOSE(image[8],   1.10f, g_error);
+    OIIO_CHECK_CLOSE(image[9],   1.10f, g_error);
+    OIIO_CHECK_CLOSE(image[10],  1.10f, g_error);
+    OIIO_CHECK_CLOSE(image[11],  0.00f, g_error);
+}
+
+
+
+#endif
