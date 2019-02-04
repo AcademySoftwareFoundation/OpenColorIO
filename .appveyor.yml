@@ -12,9 +12,15 @@ environment:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       CMAKE_PLATFORM: "Visual Studio 14 2015 Win64"
       OCIO_BUILD_LIB: ON
+      OCIO_USE_SSE: ON
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       CMAKE_PLATFORM: "Visual Studio 14 2015 Win64"
       OCIO_BUILD_LIB: OFF
+      OCIO_USE_SSE: ON
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      CMAKE_PLATFORM: "Visual Studio 14 2015 Win64"
+      OCIO_BUILD_LIB: ON
+      OCIO_USE_SSE: OFF
 
 install:
   - cinst: python2
@@ -29,6 +35,7 @@ build_script:
     -DBUILD_SHARED_LIBS=%OCIO_BUILD_LIB%
     -DOCIO_BUILD_TESTS=ON
     -DOCIO_BUILD_GPU_TESTS=OFF
+    -DOCIO_USE_SSE=%OCIO_USE_SSE%
     -DOCIO_WARNING_AS_ERROR=ON
     -DCMAKE_BUILD_TYPE=%CONFIGURATION%
     -DPYTHON_LIBRARY=C:\Python27-x64\libs\python27.lib

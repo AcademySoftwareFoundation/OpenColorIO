@@ -15,6 +15,9 @@ if(NOT BUILD_SHARED_LIBS)
     )
 endif()
 
+set_target_properties(openglbuilder PROPERTIES 
+    COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
+
 target_include_directories(openglbuilder
 	PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}

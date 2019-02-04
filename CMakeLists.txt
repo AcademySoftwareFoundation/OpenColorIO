@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.10)
 
 project(OpenColorIO 
 	VERSION 2.0.0
-	HOMEPAGE_URL http://opencolorio.org/
 	LANGUAGES CXX C)
 
 # "dev" for master or "" for any official release
@@ -38,6 +37,16 @@ option(OCIO_BUILD_JAVA "Specify whether to build java bindings" OFF)
 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
 option(OCIO_INLINES_HIDDEN "Specify whether to build with -fvisibility-inlines-hidden" ${UNIX})
+
+###############################################################################
+# Platform dependent compilation flags
+
+set(PLATFORM_COMPILE_FLAGS "")
+if(MSVC)
+	# Because our Exceptions derive from std::runtime_error we can safely disable this warning
+	set(PLATFORM_COMPILE_FLAGS "/wd4275")
+endif()
+
 
 ###############################################################################
 # External linking
