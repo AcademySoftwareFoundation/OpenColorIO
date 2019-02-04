@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018 Autodesk Inc., et al.
+Copyright (c) 2019 Autodesk Inc., et al.
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -27,22 +27,26 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_RANGEOP_CPU
-#define INCLUDED_OCIO_RANGEOP_CPU
+#ifndef INCLUDED_OCIO_RANGE_GPU
+#define INCLUDED_OCIO_RANGE_GPU
 
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "GpuShaderUtils.h"
 #include "ops/Range/RangeOpData.h"
 
 
 OCIO_NAMESPACE_ENTER
 {
 
-OpCPURcPtr GetRangeRenderer(ConstRangeOpDataRcPtr & range);
+void GetRangeGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
+                              ConstRangeOpDataRcPtr & range);
 
 }
 OCIO_NAMESPACE_EXIT
 
 
 #endif
+
+
