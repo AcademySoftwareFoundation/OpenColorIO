@@ -1387,6 +1387,15 @@ OCIO_NAMESPACE_ENTER
                     load(second, boolval);
                     cs->setIsData(boolval);
                 }
+                else if(key == "categories")
+                {
+                    std::vector<std::string> categories;
+                    load(second, categories);
+                    for(auto name : categories)
+                    {
+                        cs->addCategory(name.c_str());
+                    }
+                }
                 else if(key == "allocation")
                 {
                     Allocation val;
@@ -1435,7 +1444,18 @@ OCIO_NAMESPACE_ENTER
                 out << YAML::Value << YAML::Literal << cs->getDescription();
             }
             out << YAML::Key << "isdata" << YAML::Value << cs->isData();
-            
+
+            if(cs->getNumCategories() > 0)
+            {
+                std::vector<std::string> categories;
+                for(int idx=0; idx<cs->getNumCategories(); ++idx)
+                {
+                    categories.push_back(cs->getCategory(idx));
+                }
+                out << YAML::Key << "categories";
+                out << YAML::Flow << YAML::Value << categories;
+            }
+
             out << YAML::Key << "allocation" << YAML::Value;
             save(out, cs->getAllocation());
             if(cs->getAllocationNumVars() > 0)
