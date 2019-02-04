@@ -1,23 +1,35 @@
 Individual Contributor License Agreement ("Agreement")
 
 Thank you for your interest in the OpenColorIO Project a Series of LF
-Projects, LLC (hereinafter "Project") which has selected the BSD 3-clause
-license (hereinafter "BSD") license for its inbound contributions. The terms
-You, Contributor and Contribution are used here as defined in the BSD
-license.
+Projects, LLC (hereinafter "Project"). In order to clarify the
+intellectual property licenses granted with Contributions from any
+corporate entity to the Project, LF Projects, LLC ("LF Projects") is
+required to have an Individual Contributor License Agreement (ICLA) on
+file that has been signed by each contributing individual. (For legal
+entities, please use the Corporate Contributor License Agreement
+(CCLA).)
 
-The Project is required to have a Contributor License Agreement (CLA) on
-file that binds each Contributor.
+Each contributing individual ("You") must accept and agree that, for
+any Contribution (as defined below), You are bound by the licenses
+granted and representations made herein.
 
-You agree that all Contributions to the Project made by You shall be
-submitted pursuant to the Developer Certificate of Origin Version 1.1 (DCO,
-current version available at https://developercertificate.org) accompanying
-the contribution and licensed to the project under the BSD license, and that
-You agree to, and shall be bound by, the terms of the BSD license.
+"Contribution" means any code, documentation or other original work of
+authorship that is submitted to LF Projects for inclusion in the
+Project by You or by another person authorized to make the submission
+on Your behalf.
+
+You accept and agree that all of Your present and future Contributions
+to the Project shall be:
+
+Submitted under a Developer's Certificate of Origin v. 1.1 (DCO); and
+Licensed under the BSD-3-Clause License.
 
 
-Signature: _______________________________________________
+
+Signature: __________________________________________
+
 
 Name: _______________________________________________
 
-Date: ___________________________________________
+
+Date: _______________________________________________
