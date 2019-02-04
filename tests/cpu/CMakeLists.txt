@@ -115,6 +115,7 @@ set(SOURCES
 	ops/NoOp/NoOps.cpp
 	ops/Range/RangeOpCPU.cpp
 	ops/Range/RangeOpData.cpp
+	ops/Range/RangeOpGPU.cpp
 	ops/Range/RangeOps.cpp
 	ops/Truelight/TruelightOp.cpp
 	OpTools.cpp
