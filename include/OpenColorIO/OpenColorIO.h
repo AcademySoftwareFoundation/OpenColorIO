@@ -757,7 +757,7 @@ OCIO_NAMESPACE_ENTER
     // or built from scratch.
     // 
     // .. note::
-    //    The color spaces are decoupled from the config. ones i.e. any 
+    //    The color spaces are decoupled from the config ones, i.e., any 
     //    changes to the set itself or to its color spaces do not affect the 
     //    original color spaces from the configuration.  If needed, 
     //    use :cpp:func:`Config::addColorSpace` to update the configuration.
