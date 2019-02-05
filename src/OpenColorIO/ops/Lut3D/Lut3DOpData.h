@@ -71,7 +71,7 @@ public:
 
 public:
     // The gridSize parameter is the length of the cube axis.
-    explicit Lut3DOpData(long gridSize);
+    explicit Lut3DOpData(unsigned long gridSize);
 
     Lut3DOpData(
         BitDepth             inBitDepth,
@@ -79,7 +79,7 @@ public:
         const std::string &  id,
         const Descriptions & descriptions,
         Interpolation        interpolation,
-        long                 gridSize
+        unsigned long        gridSize
     );
 
     virtual ~Lut3DOpData();
@@ -143,7 +143,7 @@ public:
     class Lut3DArray : public Array
     {
     public:
-        Lut3DArray(long dimension, BitDepth outBitDepth);
+        Lut3DArray(unsigned long dimension, BitDepth outBitDepth);
 
         Lut3DArray(const Lut3DArray &) = default;
         Lut3DArray & operator= (const Lut3DArray &) = default;

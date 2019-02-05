@@ -200,7 +200,7 @@ void Lut3DOpData::Compose(Lut3DOpDataRcPtr & A,
     // TODO: Code to handle dynamic properties should go here.
 }
 
-Lut3DOpData::Lut3DArray::Lut3DArray(long length,
+Lut3DOpData::Lut3DArray::Lut3DArray(unsigned long length,
                                     BitDepth outBitDepth)
 {
     resize(length, getMaxColorComponents());
@@ -326,7 +326,7 @@ void Lut3DOpData::Lut3DArray::scale(float scaleFactor)
     }
 }
 
-Lut3DOpData::Lut3DOpData(long gridSize)
+Lut3DOpData::Lut3DOpData(unsigned long gridSize)
     : OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
     , m_interpolation(INTERP_DEFAULT)
     , m_array(gridSize, getOutputBitDepth())
@@ -340,7 +340,7 @@ Lut3DOpData::Lut3DOpData(BitDepth inBitDepth,
                          const std::string& id,
                          const Descriptions& descriptions,
                          Interpolation interpolation,
-                         long gridSize)
+                         unsigned long gridSize)
     : OpData(inBitDepth, outBitDepth, id, descriptions)
     , m_interpolation(interpolation)
     , m_array(gridSize, getOutputBitDepth())
@@ -791,7 +791,7 @@ OIIO_ADD_TEST(OpDataLut3D, OuputDepthScaling)
 
     float expectedValue = 0.0f;
 
-    for (long i = 0; i < newArrValues.size(); i++)
+    for(unsigned long i = 0; i < (unsigned long)newArrValues.size(); i++)
     {
         expectedValue = initialArrValues[i] * factor;
         OIIO_CHECK_ASSERT(OCIO::EqualWithAbsError(expectedValue,

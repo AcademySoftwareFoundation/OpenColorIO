@@ -258,9 +258,9 @@ OCIO_NAMESPACE_ENTER
             majorVersion_(FirstSupportedMajorVersion_),
             minorVersion_(0),
             context_(Context::Create()),
+            colorspaces_(ColorSpaceSet::Create()),
             strictParsing_(true),
-            sanity_(SANITY_UNKNOWN),
-            colorspaces_(ColorSpaceSet::Create())
+            sanity_(SANITY_UNKNOWN)
         {
             std::string activeDisplays;
             Platform::Getenv(OCIO_ACTIVE_DISPLAYS_ENVVAR, activeDisplays);

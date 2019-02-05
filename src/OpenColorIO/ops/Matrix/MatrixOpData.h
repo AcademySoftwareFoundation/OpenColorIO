@@ -199,16 +199,16 @@ public:
 
     bool hasAlpha() const;
 
-    virtual void setOutputBitDepth(BitDepth out);
+    virtual void setOutputBitDepth(BitDepth out) override;
 
-    virtual void setInputBitDepth(BitDepth in);
+    virtual void setInputBitDepth(BitDepth in) override;
 
     MatrixOpDataRcPtr compose(ConstMatrixOpDataRcPtr & B) const;
 
     // Used by composition to remove small errors.
     void cleanUp(double offsetScale);
 
-    bool operator==(const OpData & other) const;
+    bool operator==(const OpData & other) const override;
 
     MatrixOpDataRcPtr inverse() const;
 
