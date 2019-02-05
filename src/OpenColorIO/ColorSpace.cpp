@@ -32,6 +32,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "pystring/pystring.h"
+
+
 OCIO_NAMESPACE_ENTER
 {
     ColorSpaceRcPtr ColorSpace::Create()
@@ -64,6 +67,9 @@ OCIO_NAMESPACE_ENTER
         
         bool toRefSpecified_;
         bool fromRefSpecified_;
+
+        typedef std::vector<std::string> Categories;
+        Categories categories_;
         
         Impl() :
             bitDepth_(BIT_DEPTH_UNKNOWN),
@@ -99,8 +105,47 @@ OCIO_NAMESPACE_ENTER
 
                 toRefSpecified_ = rhs.toRefSpecified_;
                 fromRefSpecified_ = rhs.fromRefSpecified_;
+
+                categories_ = rhs.categories_;
             }
             return *this;
+        }
+
+        Categories::const_iterator findCategory(const char * category) const
+        {
+            if(!category || !*category) return categories_.end();
+
+            // NB: Categories are not case-sensitive and whitespace is stripped.
+            const std::string ref(pystring::strip(pystring::lower(category)));
+
+            for(auto itr = categories_.begin(); itr!=categories_.end(); ++itr)
+            {
+                if(pystring::strip(pystring::lower(*itr))==ref)
+                {
+                    return itr;
+                }
+            }
+
+            return categories_.end();
+        }
+
+        void removeCategory(const char * category)
+        {
+            if(!category || !*category) return;
+
+            // NB: Categories are not case-sensitive and whitespace is stripped.
+            const std::string ref(pystring::strip(pystring::lower(category)));
+
+            for(auto itr = categories_.begin(); itr!=categories_.end(); ++itr)
+            {
+                if(pystring::strip(pystring::lower(*itr))==ref)
+                {
+                    categories_.erase(itr);
+                    return;
+                }
+            }
+
+            return;
         }
     };
     
@@ -175,7 +220,44 @@ OCIO_NAMESPACE_ENTER
     {
         getImpl()->bitDepth_ = bitDepth;
     }
-    
+
+    bool ColorSpace::hasCategory(const char * category) const
+    {
+        return getImpl()->findCategory(category)
+            != getImpl()->categories_.end();
+    }
+
+    void ColorSpace::addCategory(const char * category)
+    {
+        if(getImpl()->findCategory(category) 
+            == getImpl()->categories_.end())
+        {
+            getImpl()->categories_.push_back(pystring::strip(category));
+        }
+    }
+
+    void ColorSpace::removeCategory(const char * category)
+    {
+        getImpl()->removeCategory(category);
+    }
+
+    int ColorSpace::getNumCategories() const
+    {
+        return static_cast<int>(getImpl()->categories_.size());
+    }
+
+    const char * ColorSpace::getCategory(int index) const
+    {
+        if(index<0 || index>=getImpl()->categories_.size()) return nullptr;
+
+        return getImpl()->categories_[index].c_str();
+    }
+
+    void ColorSpace::clearCategories()
+    {
+        getImpl()->categories_.clear();
+    }
+
     bool ColorSpace::isData() const
     {
         return getImpl()->isData_;
@@ -285,3 +367,52 @@ OCIO_NAMESPACE_ENTER
     }
 }
 OCIO_NAMESPACE_EXIT
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+#include "unittest.h"
+
+OIIO_ADD_TEST(ColorSpace, category)
+{
+    OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+    OIIO_CHECK_EQUAL(cs->getNumCategories(), 0);
+
+    OIIO_CHECK_ASSERT(!cs->hasCategory("linear"));
+    OIIO_CHECK_ASSERT(!cs->hasCategory("rendering"));
+    OIIO_CHECK_ASSERT(!cs->hasCategory("log"));
+
+    OIIO_CHECK_NO_THROW(cs->addCategory("linear"));
+    OIIO_CHECK_NO_THROW(cs->addCategory("rendering"));
+    OIIO_CHECK_EQUAL(cs->getNumCategories(), 2);
+
+    OIIO_CHECK_ASSERT(cs->hasCategory("linear"));
+    OIIO_CHECK_ASSERT(cs->hasCategory("rendering"));
+    OIIO_CHECK_ASSERT(!cs->hasCategory("log"));
+
+    OIIO_CHECK_EQUAL(std::string(cs->getCategory(0)), std::string("linear"));
+    OIIO_CHECK_EQUAL(std::string(cs->getCategory(1)), std::string("rendering"));
+    // Check with an invalid index.
+    OIIO_CHECK_NO_THROW(cs->getCategory(2));
+    OIIO_CHECK_ASSERT(cs->getCategory(2) == nullptr);
+
+    OIIO_CHECK_NO_THROW(cs->removeCategory("linear"));
+    OIIO_CHECK_EQUAL(cs->getNumCategories(), 1);
+    OIIO_CHECK_ASSERT(!cs->hasCategory("linear"));
+    OIIO_CHECK_ASSERT(cs->hasCategory("rendering"));
+    OIIO_CHECK_ASSERT(!cs->hasCategory("log"));
+
+    // Remove a category not in the color space.
+    OIIO_CHECK_NO_THROW(cs->removeCategory("log"));
+    OIIO_CHECK_EQUAL(cs->getNumCategories(), 1);
+    OIIO_CHECK_ASSERT(cs->hasCategory("rendering"));
+
+    OIIO_CHECK_NO_THROW(cs->clearCategories());
+    OIIO_CHECK_EQUAL(cs->getNumCategories(), 0);
+}
+
+#endif // OCIO_UNIT_TEST
