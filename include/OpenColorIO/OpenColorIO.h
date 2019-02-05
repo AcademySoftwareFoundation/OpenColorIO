@@ -304,30 +304,52 @@ OCIO_NAMESPACE_ENTER
         // 
         // ColorSpaces
         // ^^^^^^^^^^^
-        
+
+        //!cpp:function:: Get all color spaces having a specific category
+        //                in the order they appear in the config file.
+        //
+        // .. note::
+        //    If the category is null or empty, the method returns 
+        //    all the color spaces like :cpp:func:`Config::getNumColorSpaces` 
+        //    and :cpp:func:`Config::getColorSpaceNameByIndex` do.
+        //
+        // .. note::
+        //    It's worth noticing that the method returns a copy of the 
+        //    selected color spaces decoupling the result from the config. 
+        //    Hence, any changes on the config do not affect the existing 
+        //    color space sets, and vice-versa.
+        //
+        ColorSpaceSetRcPtr getColorSpaces(const char * category) const;
+
         //!cpp:function::
         int getNumColorSpaces() const;
-        //!cpp:function:: This will null if an invalid index is specified
+        //!cpp:function:: Will be null for invalid index.
         const char * getColorSpaceNameByIndex(int index) const;
         
         //!rst::
         // .. note::
         //    These fcns all accept either a color space OR role name.
-        //    (Colorspace names take precedence over roles.)
+        //    (Color space names take precedence over roles.)
         
-        //!cpp:function:: This will return null if the specified name is not
-        // found.
+        //!cpp:function:: Will return null if the name is not found.
         ConstColorSpaceRcPtr getColorSpace(const char * name) const;
-        //!cpp:function::
+        //!cpp:function:: Will return -1 if the name is not found.
         int getIndexForColorSpace(const char * name) const;
         
-        //!cpp:function::
+        //!cpp:function:: Add a color space to the configuration.
         // .. note::
         //    If another color space is already registered with the same name,
         //    this will overwrite it. This stores a copy of the specified
         //    color space.
+        // .. note::
+        //    Adding a color space to a Config does not affect any ColorSpaceSets 
+        //    that have already been created.
         void addColorSpace(const ConstColorSpaceRcPtr & cs);
-        //!cpp:function::
+
+        //!cpp:function:: Remove all the color spaces from the configuration.
+        // .. note::
+        //    Removing color spaces from a Config does not affect 
+        //    any ColorSpaceSets that have already been created.
         void clearColorSpaces();
         
         //!cpp:function:: Given the specified string, get the longest,
@@ -605,7 +627,39 @@ OCIO_NAMESPACE_ENTER
         BitDepth getBitDepth() const;
         //!cpp:function::
         void setBitDepth(BitDepth bitDepth);
-        
+
+        ///////////////////////////////////////////////////////////////////////////
+        //!rst::
+        // Categories
+        // ^^^^^^^^^^
+        // A category is used to allow applications to filter the list of color spaces 
+        // they display in menus based on what that color space is used for.
+        //
+        // Here is an example config entry that could appear under a ColorSpace:
+        // categories: [input, rendering]
+        //
+        // The example contains two categories: 'input' and 'rendering'. 
+        // Category strings are not case-sensitive and the order is not significant.
+        // There is no limit imposed on length or number. Although users may add 
+        // their own categories, the strings will typically come from a fixed set 
+        // listed in the documentation (similar to roles).
+
+        //!cpp:function:: Return true if the category is present.
+        bool hasCategory(const char * category) const;
+        //!cpp:function:: Add a single category.
+        // .. note:: Will do nothing if the category already exists.
+        void addCategory(const char * category);
+        //!cpp:function:: Remove a category.
+        // .. note:: Will do nothing if the category is missing.
+        void removeCategory(const char * category);
+        //!cpp:function:: Get the number of categories.
+        int getNumCategories() const;
+        //!cpp:function:: Return the category name using its index
+        // .. note:: Will be null if the index is invalid.
+        const char * getCategory(int index) const;
+        // Clear all the categories.
+        void clearCategories();
+
         ///////////////////////////////////////////////////////////////////////////
         //!rst::
         // Data
@@ -693,9 +747,105 @@ OCIO_NAMESPACE_ENTER
     
     
     
-    
-    
-    
+    ///////////////////////////////////////////////////////////////////////////
+    //!rst:: .. _colorspaceset_section:
+    // 
+    // ColorSpaceSet
+    // *************
+    // The *ColorSpaceSet* is a set of color spaces (i.e. no color space duplication) 
+    // which could be the result of :cpp:func:`Config::getColorSpaces`
+    // or built from scratch.
+    // 
+    // .. note::
+    //    The color spaces are decoupled from the config ones, i.e., any 
+    //    changes to the set itself or to its color spaces do not affect the 
+    //    original color spaces from the configuration.  If needed, 
+    //    use :cpp:func:`Config::addColorSpace` to update the configuration.
+
+    //!cpp:class::
+    class OCIOEXPORT ColorSpaceSet
+    {
+    public:
+        //!cpp:function:: Create an empty set of color spaces.
+        static ColorSpaceSetRcPtr Create();
+
+        //!cpp:function:: Create a set containing a copy of all the color spaces.
+        ColorSpaceSetRcPtr createEditableCopy() const;
+
+        //!cpp:function:: Return true if the two sets are equal.
+        // .. note:: The comparison is done on the color space names (not a deep comparison).
+        bool operator==(const ColorSpaceSet & css) const;
+        //!cpp:function:: Return true if the two sets are different.
+        bool operator!=(const ColorSpaceSet & css) const;
+
+        //!cpp:function:: Return the number of color spaces.
+        int getNumColorSpaces() const;
+        //!cpp:function:: Return the color space name using its index.
+        // This will be null if an invalid index is specified.
+        const char * getColorSpaceNameByIndex(int index) const;
+        //!cpp:function:: Return the color space using its index.
+        // This will be empty if an invalid index is specified.
+        ConstColorSpaceRcPtr getColorSpaceByIndex(int index) const;
+
+        //!rst::
+        // .. note::
+        //    These fcns only accept color space names (i.e. no role name).
+
+        //!cpp:function:: Will return null if the name is not found.
+        ConstColorSpaceRcPtr getColorSpace(const char * name) const;
+        //!cpp:function:: Will return -1 if the name is not found.
+        int getIndexForColorSpace(const char * name) const;
+
+        //!cpp:function:: Add color space(s).
+        // .. note::
+        //    If another color space is already registered with the same name,
+        //    this will overwrite it. This stores a copy of the specified
+        //    color space(s).
+        void addColorSpace(const ConstColorSpaceRcPtr & cs);
+        void addColorSpaces(const ConstColorSpaceSetRcPtr & cs);
+
+        //!cpp:function:: Remove color space(s) using color space names (i.e. no role name).
+        // .. note:: The removal of a missing color space does nothing.
+        void removeColorSpace(const char * name);
+        void removeColorSpaces(const ConstColorSpaceSetRcPtr & cs);
+
+        //!cpp:function:: Clear all color spaces.
+        void clearColorSpaces();
+
+    private:
+        ColorSpaceSet();
+        ~ColorSpaceSet();
+        
+        ColorSpaceSet(const ColorSpaceSet &);
+        ColorSpaceSet & operator= (const ColorSpaceSet &);
+        
+        static void deleter(ColorSpaceSet * c);
+        
+        class Impl;
+        friend class Impl;
+        Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
+    };
+
+
+    // .. note::
+    //    All these fcns provide some operations on two color space sets 
+    //    where the result contains copied color spaces and no duplicates.
+
+    //!cpp:function:: Perform the union of two sets.
+    ConstColorSpaceSetRcPtr operator||(const ConstColorSpaceSetRcPtr & lcss, 
+                                       const ConstColorSpaceSetRcPtr & rcss);
+    //!cpp:function:: Perform the intersection of two sets.
+    ConstColorSpaceSetRcPtr operator&&(const ConstColorSpaceSetRcPtr & lcss, 
+                                       const ConstColorSpaceSetRcPtr & rcss);
+    //!cpp:function:: Perform the difference of two sets.
+    ConstColorSpaceSetRcPtr operator-(const ConstColorSpaceSetRcPtr & lcss, 
+                                      const ConstColorSpaceSetRcPtr & rcss);
+
+
+
+
     ///////////////////////////////////////////////////////////////////////////
     //!rst:: .. _look_section:
     // 

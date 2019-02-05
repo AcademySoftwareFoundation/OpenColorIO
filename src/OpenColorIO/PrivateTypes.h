@@ -45,7 +45,6 @@ OCIO_NAMESPACE_ENTER
     typedef std::set<std::string> StringSet;
     
     typedef std::vector<ConstTransformRcPtr> ConstTransformVec;
-    typedef std::vector<ColorSpaceRcPtr> ColorSpaceVec;
     typedef std::vector<LookRcPtr> LookVec;
     
     typedef std::vector<TransformDirection> TransformDirectionVec;
