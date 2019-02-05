@@ -712,7 +712,8 @@ void validateInfoElementVersion(const char * versionAttr,
     //
     // Note: The minor version is not taken into account when validating the
     // version. The minor version is only for tracking purposes.
-    //
+    // Note: <Info> is not part of CLF.
+    // 
     if (versionAttr && *versionAttr &&
         0 == Platform::Strcasecmp(ATTR_VERSION, versionAttr))
     {
@@ -1104,7 +1105,7 @@ void CTFReaderCDLElt::start(const char ** atts)
 
     if (!isStyleFound)
     {
-        throwMessage("CTF CDL parsing. Required attribute 'style' is missing. ");
+        throwMessage("CTF/CLF CDL parsing. Required attribute 'style' is missing. ");
     }
 }
 

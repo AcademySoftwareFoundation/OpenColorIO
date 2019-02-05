@@ -187,7 +187,7 @@ public:
 
         if (!m_elms.empty())
         {
-            std::string error("CTF parsing error (no closing tag for '");
+            std::string error("CTF/CLF parsing error (no closing tag for '");
             error += m_elms.back()->getName().c_str();
             error += "). ";
             throwMessage(error);
@@ -197,14 +197,14 @@ public:
         if (pT.use_count() == 0)
         {
             static const std::string error(
-                "CTF parsing error: Invalid transform. ");
+                "CTF/CLF parsing error: Invalid transform. ");
             throwMessage(error);
         }
 
         if (pT->getOps().empty())
         {
             static const std::string error(
-                "CTF parsing error: No color operator in file. ");
+                "CTF/CLF parsing error: No color operator in file. ");
             throwMessage(error);
         }
     }
@@ -226,7 +226,7 @@ public:
                     {
                         // It could be an Op or an Attribute.
                         std::string error(
-                            "CTF parsing error (no closing tag for '");
+                            "CTF/CLF parsing error (no closing tag for '");
                         error += m_elms.back()->getName().c_str();
                         error += "'). ";
                         throwMessage(error);
@@ -236,13 +236,13 @@ public:
                         // Completely lost, something went wrong,
                         // but nothing detected with the stack.
                         static const std::string error(
-                            "CTF parsing error (unbalanced element tags). ");
+                            "CTF/CLF parsing error (unbalanced element tags). ");
                         throwMessage(error);
                     }
                 }
                 else
                 {
-                    std::string error("CTF parsing error: ");
+                    std::string error("CTF/CLF parsing error: ");
                     error += XML_ErrorString(XML_GetErrorCode(m_parser));
                     throwMessage(error);
                 }
@@ -736,14 +736,14 @@ private:
         auto pElt(pImpl->m_elms.back());
         if (!pElt.get())
         {
-            pImpl->throwMessage("CTF parsing error: Tag is missing. ");
+            pImpl->throwMessage("CTF/CLF parsing error: Tag is missing. ");
         }
 
         // Is it the expected element?
         if (pElt->getName() != name)
         {
             std::stringstream ss;
-            ss << "CTF parsing error: Tag '";
+            ss << "CTF/CLF parsing error: Tag '";
             ss << (name ? name : "");
             ss << "' is missing";
             pImpl->throwMessage(ss.str());
@@ -764,7 +764,7 @@ private:
             if (!pPlainElt)
             {
                 std::stringstream ss;
-                ss << "CTF parsing error: Attribute end '";
+                ss << "CTF/CLF parsing error: Attribute end '";
                 ss << (name ? name : "");
                 ss << "' is illegal. ";
                 pImpl->throwMessage(ss.str());
@@ -779,7 +779,7 @@ private:
                 pParent != pPlainElt->getParent())
             {
                 std::stringstream ss;
-                ss << "CTF parsing error: Tag '";
+                ss << "CTF/CLF parsing error: Tag '";
                 ss << (name ? name : "");
                 ss << "'.";
                 pImpl->throwMessage(ss.str());
@@ -804,14 +804,14 @@ private:
 
         if (len<0 || !s || !*s)
         {
-            pImpl->throwMessage("CTF parsing error: attribute illegal. ");
+            pImpl->throwMessage("CTF/CLF parsing error: attribute illegal. ");
         }
 
         auto pElt = pImpl->m_elms.back();
         if (!pElt)
         {
             std::ostringstream oss;
-            oss << "CTF parsing error: missing end tag '";
+            oss << "CTF/CLF parsing error: missing end tag '";
             oss << std::string(s, len).c_str();
             oss << "'.";
             pImpl->throwMessage(oss.str());
@@ -847,7 +847,7 @@ private:
                     if (pElt->isContainer())
                     {
                         std::ostringstream oss;
-                        oss << "CTF parsing error: attribute illegal '";
+                        oss << "CTF/CLF parsing error: attribute illegal '";
                         oss << std::string(s, len).c_str();
                         oss << "'.";
                         pImpl->throwMessage(oss.str());
@@ -858,7 +858,7 @@ private:
                     if (!pPlainElt)
                     {
                         std::ostringstream oss;
-                        oss << "CTF parsing error: attribute illegal '";
+                        oss << "CTF/CLF parsing error: attribute illegal '";
                         oss << std::string(s, len).c_str();
                         oss << "'.";
                         pImpl->throwMessage(oss.str());

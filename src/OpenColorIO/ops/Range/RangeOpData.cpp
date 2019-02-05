@@ -97,7 +97,7 @@ RangeOpData::RangeOpData(const IndexMapping & pIM, BitDepth inDepth, unsigned in
 {
     if (pIM.getDimension() != 2)
     {
-        throw Exception("CTF parsing error. Only two entry IndexMaps are supported.");
+        throw Exception("CTF/CLF parsing error. Only two entry IndexMaps are supported.");
     }
 
     float first, second;
