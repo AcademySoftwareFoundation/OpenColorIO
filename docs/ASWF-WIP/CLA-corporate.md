@@ -1,42 +1,49 @@
 Corporate Contributor License Agreement ("Agreement")
 
 Thank you for your interest in the OpenColorIO Project a Series of LF
-Projects, LLC (hereinafter "Project") which has selected the BSD 3-clause
-(hereinafter "BSD") license for its inbound contributions. The terms You,
-Contributor and Contribution are used here as defined in the BSD license.
+Projects, LLC (hereinafter "Project"). In order to clarify the
+intellectual property licenses granted with Contributions from any
+corporate entity to the Project, LF Projects, LLC ("LF Projects") is
+required to have a Corporate Contributor License Agreement (CCLA) on
+file that has been signed by each contributing corporation.
 
-The Project is required to have a Contributor License Agreement (CLA) on
-file that binds each Contributor.
+Each contributing corporation ("You") must accept and agree that, for
+any Contribution (as defined below), You and all other individuals and
+entities that control You, are controlled by You, or are under common
+control with You, are bound by the licenses granted and
+representations made as though all such individuals and entities are a
+single contributor. For the purposes of this definition, "control"
+means (i) the power, direct or indirect, to cause the direction or
+management of such entity, whether by contract or otherwise, or (ii)
+ownership of fifty percent (50%) or more of the outstanding shares, or
+(iii) beneficial ownership of such entity.
 
-You agree that all Contributions to the Project made by You or by Your
-designated employees shall be submitted pursuant to the Developer
-Certificate of Origin Version 1.1 (DCO, current version available at
-https://developercertificate.org) accompanying the contribution and licensed
-to the project under the BSD license. You agree that You shall be bound by
-the terms of the BSD license for all contributions made by You and Your
-employees. Your designated employees are those listed by Your CLA Manager(s)
-on the system of record for the Project. You agree to identify Your initial
-CLA Manager(s) below and thereafter maintain current CLA Manager records in
-the Project's system of record.
+"Contribution" means any code, documentation or other original work of
+authorship that is submitted to LF Projects for inclusion in the
+Project by Your employee or by any individual or entity that controls
+You, or is under common control with You or is controlled by You and
+authorized to make the submission on Your behalf.
 
-CLA Manager 1:
+You accept and agree that all of Your present and future Contributions
+to the Project shall be:
 
-Name ______________________________, Email _________________________________
-
-CLA Manager 2 (optional):
-
-Name ______________________________, Email _________________________________
+Submitted under a Developer's Certificate of Origin v. 1.1 (DCO); and
+Licensed under the BSD-3-Clause License.
 
 
 Corporate Signature:
 
-Company Name: ____________________________________________________________
+
+Company Name: ____________________________________________
+
 
 Signature: _______________________________________________
 
+
 Name: _______________________________________________
+
 
 Title _______________________________________________
 
-Date: _______________________________________________
 
+Date: _______________________________________________
