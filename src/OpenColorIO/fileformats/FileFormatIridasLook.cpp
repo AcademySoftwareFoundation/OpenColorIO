@@ -274,7 +274,7 @@ OCIO_NAMESPACE_ENTER
             // Start the parsing of one element
             static void StartElementHandler(void *userData,
                 const XML_Char *name,
-                const XML_Char **atts)
+                const XML_Char ** /*atts*/)
             {
                 XMLParserHelper * pImpl = (XMLParserHelper*)userData;
 

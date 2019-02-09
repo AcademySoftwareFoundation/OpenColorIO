@@ -266,13 +266,13 @@ class XmlReaderDummyElt : public XmlReaderPlainElt
         {
         }
 
-        void appendDescription(const std::string& desc)
+        void appendDescription(const std::string& /*desc*/)
         {
         }
 
         const std::string& getIdentifier() const;
 
-        void start(const char **atts)
+        void start(const char ** /*atts*/)
         {
         }
 
@@ -299,7 +299,7 @@ public:
 
     const std::string& getIdentifier() const;
 
-    void start(const char **atts)
+    void start(const char ** /*atts*/)
     {
     }
 
@@ -307,7 +307,7 @@ public:
     {
     }
 
-    void setRawData(const char* str, size_t len, unsigned xmlLine)
+    void setRawData(const char* str, size_t len, unsigned /*xmlLine*/)
     {
         m_rawData.push_back(std::string(str, len));
     }
@@ -340,7 +340,7 @@ public:
     {
     }
 
-    void start(const char **atts)
+    void start(const char ** /*atts*/)
     {
         m_description.resize(0);
         m_changed = false;
@@ -348,7 +348,7 @@ public:
 
     void end();
 
-    void setRawData(const char* str, size_t len, unsigned xmlLine)
+    void setRawData(const char* str, size_t len, unsigned /*xmlLine*/)
     {
         // keep adding to the string
         m_description += std::string(str, len);
@@ -394,7 +394,7 @@ public:
         return getName();
     }
 
-    void appendDescription(const std::string& desc)
+    void appendDescription(const std::string& /*desc*/)
     {
     }
 
@@ -417,7 +417,7 @@ public:
     {
     }
 
-    void start(const char **atts) {}
+    void start(const char ** /*atts*/) {}
 
     void end() {}
 
@@ -463,7 +463,7 @@ public:
     {
     }
 
-    virtual void start(const char **atts)
+    virtual void start(const char ** /*atts*/)
     {
     }
 
@@ -497,7 +497,7 @@ public:
     {
     }
 
-    void start(const char **atts)
+    void start(const char ** /*atts*/)
     {
     }
 
@@ -574,7 +574,7 @@ public:
     {
     }
 
-    void start(const char **atts)
+    void start(const char ** /*atts*/)
     {
         m_isSlopeInit = m_isOffsetInit = m_isPowerInit = false;
     }
@@ -653,7 +653,7 @@ public:
     {
     }
 
-    void start(const char **atts)
+    void start(const char ** /*atts*/)
     {
     }
 

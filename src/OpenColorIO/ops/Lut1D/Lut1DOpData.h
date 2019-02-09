@@ -229,7 +229,7 @@ public:
     // lookup rather than interpolation.
     bool mayLookup(BitDepth incomingDepth) const;
 
-    bool operator==(const OpData & other) const;
+    bool operator==(const OpData & other) const override;
 
     OpDataRcPtr getIdentityReplacement() const;
 

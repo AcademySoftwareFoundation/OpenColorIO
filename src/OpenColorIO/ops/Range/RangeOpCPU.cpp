@@ -364,7 +364,8 @@ OIIO_ADD_TEST(RangeOpCPU, identity)
     OCIO::ConstRangeOpDataRcPtr r = range;
     OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
 
-    const std::string typeName(typeid(*op.get()).name());
+    const OCIO::OpCPU & c = *op;
+    const std::string typeName(typeid(c).name());
     OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "NoOpCPU"));
 
     const long numPixels = 3;
@@ -402,7 +403,8 @@ OIIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings)
     OCIO::ConstRangeOpDataRcPtr r = range;
     OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
 
-    const std::string typeName(typeid(*op.get()).name());
+    const OCIO::OpCPU & c = *op;
+    const std::string typeName(typeid(c).name());
     OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeScaleMinMaxRenderer"));
 
     const long numPixels = 3;
@@ -441,7 +443,8 @@ OIIO_ADD_TEST(RangeOpCPU, scale_with_low_clipping)
     OCIO::ConstRangeOpDataRcPtr r = range;
     OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
 
-    const std::string typeName(typeid(*op.get()).name());
+    const OCIO::OpCPU & c = *op;
+    const std::string typeName(typeid(c).name());
     OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeScaleMinRenderer"));
 
     const long numPixels = 3;
@@ -480,7 +483,8 @@ OIIO_ADD_TEST(RangeOpCPU, scale_with_high_clipping)
     OCIO::ConstRangeOpDataRcPtr r = range;
     OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
 
-    const std::string typeName(typeid(*op.get()).name());
+    const OCIO::OpCPU & c = *op;
+    const std::string typeName(typeid(c).name());
     OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeScaleMaxRenderer"));
 
     const long numPixels = 3;
@@ -518,7 +522,8 @@ OIIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings_2)
     OCIO::ConstRangeOpDataRcPtr r = range;
     OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
 
-    const std::string typeName(typeid(*op.get()).name());
+    const OCIO::OpCPU & c = *op;
+    const std::string typeName(typeid(c).name());
     OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeScaleMinMaxRenderer"));
 
     const long numPixels = 3;
@@ -556,7 +561,8 @@ OIIO_ADD_TEST(RangeOpCPU, offset_with_low_and_high_clippings)
     OCIO::ConstRangeOpDataRcPtr r = range;
     OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
 
-    const std::string typeName(typeid(*op.get()).name());
+    const OCIO::OpCPU & c = *op;
+    const std::string typeName(typeid(c).name());
     OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeScaleMinMaxRenderer"));
 
     const long numPixels = 3;
@@ -594,7 +600,8 @@ OIIO_ADD_TEST(RangeOpCPU, low_and_high_clippings)
     OCIO::ConstRangeOpDataRcPtr r = range;
     OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
 
-    const std::string typeName(typeid(*op.get()).name());
+    const OCIO::OpCPU & c = *op;
+    const std::string typeName(typeid(c).name());
     OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeMinMaxRenderer"));
 
     const long numPixels = 4;
@@ -639,7 +646,8 @@ OIIO_ADD_TEST(RangeOpCPU, low_clipping)
     OCIO::ConstRangeOpDataRcPtr r = range;
     OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
 
-    const std::string typeName(typeid(*op.get()).name());
+    const OCIO::OpCPU & c = *op;
+    const std::string typeName(typeid(c).name());
     OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeMinRenderer"));
 
     const long numPixels = 3;
@@ -678,7 +686,8 @@ OIIO_ADD_TEST(RangeOpCPU, high_clipping)
     OCIO::ConstRangeOpDataRcPtr r = range;
     OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
 
-    const std::string typeName(typeid(*op.get()).name());
+    const OCIO::OpCPU & c = *op;
+    const std::string typeName(typeid(c).name());
     OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeMaxRenderer"));
 
     const long numPixels = 3;
