@@ -886,7 +886,8 @@ void CTFReaderOpElt::end()
 const char * CTFReaderOpElt::getTypeName() const
 {
     OpDataRcPtr op = getOp();
-    return typeid(*op).name();
+    auto & r = *op;
+    return typeid(r).name();
 }
 
 //------------------------------------------------------------------------------
