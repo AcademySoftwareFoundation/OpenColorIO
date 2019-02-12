@@ -56,14 +56,14 @@ public:
     //
     unsigned getNum3DTextures() const override;
     void add3DTexture(const char * name, const char * id, unsigned edgelen, 
-                      Interpolation interpolation, const float * values);
+                      Interpolation interpolation, const float * values) override;
     void get3DTexture(unsigned index, const char *& name, 
                       const char *& id, unsigned & edgelen, 
                       Interpolation & interpolation) const override;
     void get3DTextureValues(unsigned index, const float *& value) const override;
 
     // Get the complete shader text
-    const char * getShaderText() const;
+    const char * getShaderText() const override;
 
     // Get the corresponding cache identifier
     virtual const char * getCacheID() const override;
@@ -87,8 +87,8 @@ public:
 
 protected:
 
-    unsigned getTextureMaxWidth() const;
-    void setTextureMaxWidth(unsigned maxWidth);
+    unsigned getTextureMaxWidth() const override;
+    void setTextureMaxWidth(unsigned maxWidth) override;
 
     // Uniforms are not used by the legacy shader builder
     //
@@ -141,8 +141,8 @@ class GenericGpuShaderDesc : public GpuShaderDesc
 public:
     static GpuShaderDescRcPtr Create();
 
-    unsigned getTextureMaxWidth() const;
-    void setTextureMaxWidth(unsigned maxWidth);
+    unsigned getTextureMaxWidth() const override;
+    void setTextureMaxWidth(unsigned maxWidth) override;
 
     // Accessors to the uniforms
     //
@@ -152,7 +152,7 @@ public:
 
     // Accessors to the 1D & 2D textures built from 1D LUT
     //
-    unsigned getNumTextures() const;
+    unsigned getNumTextures() const override;
     void addTexture(const char * name, const char * id, unsigned width, unsigned height,
                     TextureType channel, Interpolation interpolation, const float * values) override;
     void getTexture(unsigned index, const char *& name, const char *& id, 
@@ -171,7 +171,7 @@ public:
     void get3DTextureValues(unsigned index, const float *& value) const override;
 
     // Get the complete shader text
-    const char * getShaderText() const;
+    const char * getShaderText() const override;
 
     // Get the corresponding cache identifier
     virtual const char * getCacheID() const override;

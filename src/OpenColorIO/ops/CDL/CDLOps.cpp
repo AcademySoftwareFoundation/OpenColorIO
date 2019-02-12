@@ -208,7 +208,7 @@ bool CDLOp::canCombineWith(ConstOpRcPtr & /*op*/) const
     return false;
 }
 
-void CDLOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
+void CDLOp::combineWith(OpRcPtrVec & /*ops*/, ConstOpRcPtr & secondOp) const
 {
     if(!canCombineWith(secondOp))
     {

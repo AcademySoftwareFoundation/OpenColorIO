@@ -49,7 +49,7 @@ public:
     {
     }
 
-    void start(const char ** atts) override {}
+    void start(const char ** /*atts*/) override {}
 
     void end() override {}
 
@@ -95,7 +95,7 @@ public:
     {
     }
 
-    void start(const char ** atts) override
+    void start(const char ** /*atts*/) override
     {
     }
 
@@ -129,7 +129,7 @@ public:
     {
     }
 
-    void start(const char ** atts) override
+    void start(const char ** /*atts*/) override
     {
     }
 

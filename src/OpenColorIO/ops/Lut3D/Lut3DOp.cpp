@@ -802,7 +802,7 @@ void CreateLut3DOp(OpRcPtrVec & ops,
                         "invalid lut specified.");
     }
 
-    const long lutSize = (long)lut->size[0];
+    const unsigned long lutSize = lut->size[0];
     if (lut->lut.size() != lutSize*lutSize*lutSize * 3)
     {
         throw Exception("Cannot apply Lut3DOp op, "
@@ -817,19 +817,19 @@ void CreateLut3DOp(OpRcPtrVec & ops,
 
     Array & lutArray = lutBF->getArray();
 
-    for (long b = 0; b < lutSize; ++b)
+    for (unsigned long b = 0; b < lutSize; ++b)
     {
-        for (long g = 0; g < lutSize; ++g)
+        for (unsigned long g = 0; g < lutSize; ++g)
         {
-            for (long r = 0; r < lutSize; ++r)
+            for (unsigned long r = 0; r < lutSize; ++r)
             {
                 // OpData::Lut3D Array index. b changes fastest.
-                const long arrayIdx = 3 * ((r*lutSize + g)*lutSize + b);
+                const unsigned long arrayIdx = 3 * ((r*lutSize + g)*lutSize + b);
 
                 // Lut3D struct index. r changes fastest.
-                const long ocioIdx = 3 * ((b*lutSize + g)*lutSize + r);
+                const unsigned long ocioIdx = 3 * ((b*lutSize + g)*lutSize + r);
 
-                lutArray[arrayIdx] = lut->lut[ocioIdx];
+                lutArray[arrayIdx    ] = lut->lut[ocioIdx    ];
                 lutArray[arrayIdx + 1] = lut->lut[ocioIdx + 1];
                 lutArray[arrayIdx + 2] = lut->lut[ocioIdx + 2];
             }
@@ -902,7 +902,7 @@ OIIO_ADD_TEST(Lut3DOpStruct, NanInfValueCheck)
     
     OIIO_CHECK_NO_THROW(GenerateIdentityLut3D(
         &lut->lut[0], lut->size[0], 3, OCIO::LUT3DORDER_FAST_RED));
-    for(long i=0; i<lut->lut.size(); ++i)
+    for(size_t i=0; i<lut->lut.size(); ++i)
     {
         lut->lut[i] = powf(lut->lut[i], 2.0f);
     }
@@ -940,7 +940,7 @@ OIIO_ADD_TEST(Lut3DOpStruct, ValueCheck)
     lut->lut.resize(lut->size[0] * lut->size[1] * lut->size[2] * 3);
     OIIO_CHECK_NO_THROW(GenerateIdentityLut3D(
         &lut->lut[0], lut->size[0], 3, OCIO::LUT3DORDER_FAST_RED));
-    for (long i = 0; i < lut->lut.size(); ++i)
+    for (size_t i = 0; i < lut->lut.size(); ++i)
     {
         lut->lut[i] = powf(lut->lut[i], 2.0f);
     }

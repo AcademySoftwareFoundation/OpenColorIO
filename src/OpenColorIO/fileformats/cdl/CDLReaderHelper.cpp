@@ -106,7 +106,7 @@ void CDLReaderColorCorrectionElt::setCDLTransformList(CDLTransformVecRcPtr pTran
     m_transformList = pTransformList;
 }
 
-void CDLReaderColorCorrectionElt::appendDescription(const std::string & desc)
+void CDLReaderColorCorrectionElt::appendDescription(const std::string & /*desc*/)
 {
     // TODO: OCIO only keeps the description on the SOP.
     //m_transform->setDescription(desc.c_str());

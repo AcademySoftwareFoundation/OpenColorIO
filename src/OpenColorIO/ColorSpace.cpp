@@ -248,7 +248,7 @@ OCIO_NAMESPACE_ENTER
 
     const char * ColorSpace::getCategory(int index) const
     {
-        if(index<0 || index>=getImpl()->categories_.size()) return nullptr;
+        if(index<0 || index>=(int)getImpl()->categories_.size()) return nullptr;
 
         return getImpl()->categories_[index].c_str();
     }
