@@ -705,7 +705,7 @@ void Lut1DOpData::finalize()
     cacheIDStream << InterpolationToString(m_interpolation) << " ";
     cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
     cacheIDStream << BitDepthToString(getOutputBitDepth()) << " ";
-    cacheIDStream << isInputHalfDomain()?"half domain ":"standard domain ";
+    cacheIDStream << (isInputHalfDomain()?"half domain ":"standard domain ");
     cacheIDStream << GetHueAdjustName(m_hueAdjust);
     // NB: The m_invQuality is not currently included.
 
