@@ -43,36 +43,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
-// Allow us to temporarily manipulate the style without cloning the object.
-class Lut3DStyleGuard
-{
-public:
-    Lut3DStyleGuard(ConstLut3DOpDataRcPtr & lut)
-        : m_wasFast(lut->getInvStyle() == Lut3DOpData::INV_FAST)
-    {
-        m_lut = std::const_pointer_cast<Lut3DOpData>(lut);
-        m_lut->setInvStyle(Lut3DOpData::INV_EXACT);
-    }
-
-    ~Lut3DStyleGuard()
-    {
-        if (m_wasFast)
-        {
-            m_lut->setInvStyle(Lut3DOpData::INV_FAST);
-        }
-    }
-
-private:
-    Lut3DOpDataRcPtr m_lut;
-    bool             m_wasFast;
-};
-
 Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut)
 {
     if (lut->getDirection() != TRANSFORM_DIR_INVERSE)
     {
         throw Exception("MakeFastLut3DFromInverse expects an inverse LUT");
     }
+
+    // The composition needs to use the EXACT renderer.
+    // (Also avoids infinite loop.)
+    // So temporarily set the style to EXACT.
+    LutStyleGuard<Lut3DOpData> guard(*lut);
 
     // Make a domain for the composed Lut3D.
     // TODO: Using a large number like 48 here is better for accuracy, 
@@ -84,11 +65,6 @@ Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut)
     // actual depth so that scaling is done correctly.
     newDomain->setInputBitDepth(lut->getInputBitDepth());
     newDomain->setOutputBitDepth(lut->getInputBitDepth());
-
-    // The composition needs to use the INV_EXACT renderer.
-    // (Also avoids infinite loop.)
-    // So temporarily set the style to INV_EXACT.
-    Lut3DStyleGuard guard(lut);
 
     // Compose the LUT newDomain with our inverse LUT (using INV_EXACT style).
     Lut3DOpData::Compose(newDomain, lut);
@@ -331,7 +307,7 @@ Lut3DOpData::Lut3DOpData(unsigned long gridSize)
     , m_interpolation(INTERP_DEFAULT)
     , m_array(gridSize, getOutputBitDepth())
     , m_direction(TRANSFORM_DIR_FORWARD)
-    , m_invStyle(INV_FAST)
+    , m_invQuality(LUT_INVERSION_FAST)
 {
 }
 
@@ -345,7 +321,7 @@ Lut3DOpData::Lut3DOpData(BitDepth inBitDepth,
     , m_interpolation(interpolation)
     , m_array(gridSize, getOutputBitDepth())
     , m_direction(TRANSFORM_DIR_FORWARD)
-    , m_invStyle(INV_FAST)
+    , m_invQuality(LUT_INVERSION_FAST)
 {
 }
 
@@ -378,9 +354,9 @@ Interpolation Lut3DOpData::getConcreteInterpolation() const
     }
 }
 
-void Lut3DOpData::setInvStyle(InvStyle style)
+void Lut3DOpData::setInversionQuality(LutInversionQuality style)
 {
-    m_invStyle = style;
+    m_invQuality = style;
 }
 
 namespace
@@ -516,9 +492,9 @@ bool Lut3DOpData::operator==(const OpData & other) const
 
     const Lut3DOpData* lop = static_cast<const Lut3DOpData*>(&other);
 
+    // NB: The m_invQuality is not currently included.
     if (m_direction != lop->m_direction
-        || m_interpolation != lop->m_interpolation
-        || m_invStyle != lop->m_invStyle)
+        || m_interpolation != lop->m_interpolation)
     {
         return false;
     }
@@ -592,28 +568,6 @@ Lut3DOpDataRcPtr Lut3DOpData::inverse() const
     return invLut;
 }
 
-namespace
-{
-const char* GetInvStyleName(Lut3DOpData::InvStyle invStyle)
-{
-    switch (invStyle)
-    {
-    case Lut3DOpData::INV_EXACT:
-    {
-        return "exact";
-        break;
-    }
-    case Lut3DOpData::INV_FAST:
-    {
-        return "fast";
-        break;
-    }
-    }
-
-    throw Exception("3D LUT has an invalid inverse style.");
-}
-}
-
 void Lut3DOpData::finalize()
 {
     AutoMutex lock(m_mutex);
@@ -632,8 +586,8 @@ void Lut3DOpData::finalize()
     cacheIDStream << InterpolationToString(m_interpolation) << " ";
     cacheIDStream << TransformDirectionToString(m_direction) << " ";
     cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
-    cacheIDStream << BitDepthToString(getOutputBitDepth()) << " ";
-    cacheIDStream << GetInvStyleName(m_invStyle);
+    cacheIDStream << BitDepthToString(getOutputBitDepth());
+    // NB: The m_invQuality is not currently included.
 
     m_cacheID = cacheIDStream.str();
 }
@@ -654,7 +608,7 @@ OIIO_ADD_TEST(OpDataLut3D, TestEmpty)
     OIIO_CHECK_ASSERT(l.isIdentity());
     OIIO_CHECK_ASSERT(!l.isNoOp());
     OIIO_CHECK_EQUAL(l.getType(), OCIO::OpData::Lut3DType);
-    OIIO_CHECK_EQUAL(l.getInvStyle(), OCIO::Lut3DOpData::INV_FAST);
+    OIIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_FAST);
     OIIO_CHECK_EQUAL(l.getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
 }
 
@@ -680,10 +634,10 @@ OIIO_ADD_TEST(OpDataLut3D, TestAccessors)
     l.setInterpolation(interpol);
     OIIO_CHECK_EQUAL(l.getInterpolation(), interpol);
 
-    OIIO_CHECK_EQUAL(l.getInvStyle(), OCIO::Lut3DOpData::INV_FAST);
-    l.setInvStyle(OCIO::Lut3DOpData::INV_EXACT);
-    OIIO_CHECK_EQUAL(l.getInvStyle(), OCIO::Lut3DOpData::INV_EXACT);
-    l.setInvStyle(OCIO::Lut3DOpData::INV_FAST);
+    OIIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_FAST);
+    l.setInversionQuality(OCIO::LUT_INVERSION_BEST);
+    OIIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_BEST);
+    l.setInversionQuality(OCIO::LUT_INVERSION_FAST);
 
     OIIO_CHECK_EQUAL(l.getArray().getLength(), (long)33);
     OIIO_CHECK_EQUAL(l.getArray().getNumValues(), (long)33 * 33 * 33 * 3);
@@ -823,8 +777,19 @@ OIIO_ADD_TEST(OpDataLut3D, Equality)
                          OCIO::INTERP_LINEAR, 33);  
 
     OIIO_CHECK_ASSERT(l1 == l4);
-}
 
+    // Inversion quality does not affect forward ops equality.
+    l1.setInversionQuality(OCIO::LUT_INVERSION_BEST);
+
+    OIIO_CHECK_ASSERT(l1 == l4);
+
+    // Inversion quality does not affect inverse ops equality.
+    // Even so applying the ops could lead to small differences.
+    auto l5 = l1.inverse();
+    auto l6 = l4.inverse();
+
+    OIIO_CHECK_ASSERT(*l5 == *l6);
+}
 
 OIIO_ADD_TEST(OpDataLut3D, Interpolation)
 {

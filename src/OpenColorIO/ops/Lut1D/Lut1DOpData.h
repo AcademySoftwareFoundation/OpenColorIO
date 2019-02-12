@@ -68,13 +68,6 @@ public:
         HUE_DW3       // Algorithm used in ACES Output Transforms through v0.7.
     };
 
-    // Enumeration of the inverse 1D LUT styles.
-    enum InvStyle
-    {
-        INV_EXACT = 0,  // Exact, but slow, inverse processing.
-        INV_FAST        // Fast, but approximate, inverse processing.
-    };
-
     // Contains properties needed for inversion of a single channel of a LUT.
     struct ComponentProperties
     {
@@ -146,9 +139,9 @@ public:
 
     TransformDirection getDirection() const { return m_direction; }
 
-    inline InvStyle getInvStyle() const { return m_invStyle; }
+    inline LutInversionQuality getInversionQuality() const { return m_invQuality; }
 
-    void setInvStyle(InvStyle style);
+    void setInversionQuality(LutInversionQuality style);
 
     Type getType() const override { return Lut1DType; }
 
@@ -229,7 +222,7 @@ public:
     // lookup rather than interpolation.
     bool mayLookup(BitDepth incomingDepth) const;
 
-    bool operator==(const OpData & other) const override;
+    bool operator==(const OpData & other) const;
 
     OpDataRcPtr getIdentityReplacement() const;
 
@@ -316,7 +309,7 @@ private:
     TransformDirection  m_direction;
 
     // Members for inverse LUT.
-    InvStyle            m_invStyle;
+    LutInversionQuality m_invQuality;
 
     ComponentProperties m_componentProperties[3];
 

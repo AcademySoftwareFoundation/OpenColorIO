@@ -213,7 +213,7 @@ Lut1DOpData::Lut1DOpData(unsigned long dimension)
     , m_halfFlags(LUT_STANDARD)
     , m_hueAdjust(HUE_NONE)
     , m_direction(TRANSFORM_DIR_FORWARD)
-    , m_invStyle(Lut1DOpData::INV_FAST)
+    , m_invQuality(LUT_INVERSION_FAST)
     , m_fileBitDepth(BIT_DEPTH_UNKNOWN)
 {
 }
@@ -227,7 +227,7 @@ Lut1DOpData::Lut1DOpData(BitDepth inBitDepth,
     , m_halfFlags(halfFlags)
     , m_hueAdjust(HUE_NONE)
     , m_direction(TRANSFORM_DIR_FORWARD)
-    , m_invStyle(Lut1DOpData::INV_FAST)
+    , m_invQuality(LUT_INVERSION_FAST)
     , m_fileBitDepth(BIT_DEPTH_UNKNOWN)
 {
 }
@@ -243,7 +243,7 @@ Lut1DOpData::Lut1DOpData(BitDepth inBitDepth, BitDepth outBitDepth,
     , m_halfFlags(halfFlags)
     , m_hueAdjust(HUE_NONE)
     , m_direction(TRANSFORM_DIR_FORWARD)
-    , m_invStyle(Lut1DOpData::INV_FAST)
+    , m_invQuality(LUT_INVERSION_FAST)
     , m_fileBitDepth(BIT_DEPTH_UNKNOWN)
 {
 }
@@ -260,7 +260,7 @@ Lut1DOpData::Lut1DOpData(BitDepth inBitDepth, BitDepth outBitDepth,
     , m_halfFlags(halfFlags)
     , m_hueAdjust(HUE_NONE)
     , m_direction(TRANSFORM_DIR_FORWARD)
-    , m_invStyle(Lut1DOpData::INV_FAST)
+    , m_invQuality(LUT_INVERSION_FAST)
     , m_fileBitDepth(BIT_DEPTH_UNKNOWN)
 {
 }
@@ -286,9 +286,9 @@ void Lut1DOpData::setInterpolation(Interpolation algo)
     m_interpolation = algo;
 }
 
-void Lut1DOpData::setInvStyle(InvStyle style)
+void Lut1DOpData::setInversionQuality(LutInversionQuality style)
 {
-    m_invStyle = style;
+    m_invQuality = style;
 }
 
 bool Lut1DOpData::isIdentity() const
@@ -560,9 +560,9 @@ bool Lut1DOpData::operator==(const OpData & other) const
 
     const Lut1DOpData* lop = static_cast<const Lut1DOpData*>(&other);
 
+    // NB: The m_invQuality is not currently included.
     if (m_direction != lop->m_direction
-        || m_interpolation != lop->m_interpolation
-        || m_invStyle != lop->m_invStyle)
+        || m_interpolation != lop->m_interpolation)
     {
         return false;
     }
@@ -679,24 +679,6 @@ const char* GetHueAdjustName(Lut1DOpData::HueAdjust algo)
     throw Exception("1D LUT has an invalid hue adjust style.");
 }
 
-const char* GetInvStyleName(Lut1DOpData::InvStyle invStyle)
-{
-    switch (invStyle)
-    {
-    case Lut1DOpData::INV_EXACT:
-    {
-        return "exact";
-        break;
-    }
-    case Lut1DOpData::INV_FAST:
-    {
-        return "fast";
-        break;
-    }
-    }
-
-    throw Exception("1D LUT has an invalid inverse style.");
-}
 }
 
 void Lut1DOpData::finalize()
@@ -723,9 +705,9 @@ void Lut1DOpData::finalize()
     cacheIDStream << InterpolationToString(m_interpolation) << " ";
     cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
     cacheIDStream << BitDepthToString(getOutputBitDepth()) << " ";
-    cacheIDStream << (isInputHalfDomain() ? "half domain " : "standard domain ");
-    cacheIDStream << GetHueAdjustName(m_hueAdjust) << " ";
-    cacheIDStream << GetInvStyleName(m_invStyle);
+    cacheIDStream << isInputHalfDomain()?"half domain ":"standard domain ";
+    cacheIDStream << GetHueAdjustName(m_hueAdjust);
+    // NB: The m_invQuality is not currently included.
 
     m_cacheID = cacheIDStream.str();
 }
@@ -935,32 +917,6 @@ void Lut1DOpData::Compose(Lut1DOpDataRcPtr & A,
     A->setHueAdjust(B->getHueAdjust());
 }
 
-
-// Allow us to temporarily manipulate the style without cloning the object.
-class Lut1DStyleGuard
-{
-public:
-    Lut1DStyleGuard(ConstLut1DOpDataRcPtr & lut)
-        : m_wasFast(lut->getInvStyle() == Lut1DOpData::INV_FAST)
-    {
-        m_lut = std::const_pointer_cast<Lut1DOpData>(lut);
-        m_lut->setInvStyle(Lut1DOpData::INV_EXACT);
-    }
-
-    ~Lut1DStyleGuard()
-    {
-        if (m_wasFast)
-        {
-            m_lut->setInvStyle(Lut1DOpData::INV_FAST);
-        }
-    }
-
-private:
-    Lut1DOpDataRcPtr m_lut;
-    bool             m_wasFast;
-};
-
-
 // The domain to use for the FastLut is a challenging problem since we don't
 // know the input and output color space of the LUT.  In particular, we don't
 // know if a half or normal domain would be better.  For now, we use a
@@ -1013,7 +969,7 @@ Lut1DOpDataRcPtr Lut1DOpData::MakeFastLut1DFromInverse(ConstLut1DOpDataRcPtr & l
     newDomainLut->setOutputBitDepth(lut->getInputBitDepth());
 
     // Change inv style to INV_EXACT to avoid recursion.
-    Lut1DStyleGuard guard(lut);
+    LutStyleGuard<Lut1DOpData> guard(*lut);
 
     Compose(newDomainLut, lut, COMPOSE_RESAMPLE_NO);
     return newDomainLut;
@@ -1549,6 +1505,19 @@ OIIO_ADD_TEST(Lut1DOpData, equality_test)
     l1.setHueAdjust(OCIO::Lut1DOpData::HUE_DW3);
 
     OIIO_CHECK_ASSERT(!(l1 == l4));
+
+    // Inversion quality does not affect forward ops equality.
+    l4.setHueAdjust(OCIO::Lut1DOpData::HUE_DW3);
+    l1.setInversionQuality(OCIO::LUT_INVERSION_BEST);
+
+    OIIO_CHECK_ASSERT(l1 == l4);
+
+    // Inversion quality does not affect inverse ops equality.
+    // Even so applying the ops could lead to small differences.
+    auto l5 = l1.inverse();
+    auto l6 = l4.inverse();
+
+    OIIO_CHECK_ASSERT(*l5 == *l6);
 }
 
 OIIO_ADD_TEST(Lut1DOpData, channel)
