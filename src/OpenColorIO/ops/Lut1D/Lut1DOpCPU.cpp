@@ -1618,15 +1618,14 @@ OpCPURcPtr GetLut1DRenderer(ConstLut1DOpDataRcPtr & lut)
     }
     else
     {
-        // LUT_INVERSION_FAST or LUT_INVERSION_DEFAULT
-        if (lut->getInversionQuality() != LUT_INVERSION_BEST)
+        if (lut->getConcreteInversionQuality() == LUT_INVERSION_FAST)
         {
             ConstLut1DOpDataRcPtr newLut = Lut1DOpData::MakeFastLut1DFromInverse(lut, false);
 
             // Render with a Lut1D renderer.
             return GetForwardLut1DRenderer(newLut);
         }
-        else  // LUT_INVERSION_BEST
+        else  // LUT_INVERSION_EXACT
         {
             if (lut->isInputHalfDomain())
             {

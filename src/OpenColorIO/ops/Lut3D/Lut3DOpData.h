@@ -89,6 +89,9 @@ public:
     // of the 3D LUT.
     inline LutInversionQuality getInversionQuality() const { return m_invQuality; }
 
+    // LUT_INVERSION_BEST and LUT_INVERSION_DEFAULT are translated to what should be used.
+    LutInversionQuality getConcreteInversionQuality() const;
+
     void setInversionQuality(LutInversionQuality style);
 
     inline const Array & getArray() const { return m_array; }
