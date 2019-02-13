@@ -9,6 +9,11 @@ matrix:
     - os: linux
       language: cpp
       compiler: gcc
+    - os: linux
+      language: cpp
+      compiler: gcc
+      env:
+        - OPTIONS_BUILD="-DOCIO_USE_SSE=OFF"
     - os: osx
       language: cpp
       compiler: clang
@@ -21,7 +26,8 @@ matrix:
       osx_image: xcode9.1
 
 env:
-  - OPTIONS="-DCMAKE_BUILD_TYPE=Release -DOCIO_BUILD_TESTS=ON -DOCIO_BUILD_GPU_TESTS=OFF -DOCIO_BUILD_DOCS=ON -DOCIO_WARNING_AS_ERROR=ON"
+  global:
+    - OPTIONS="-DCMAKE_BUILD_TYPE=Release -DOCIO_BUILD_TESTS=ON -DOCIO_BUILD_GPU_TESTS=OFF -DOCIO_BUILD_DOCS=ON -DOCIO_WARNING_AS_ERROR=ON"
 
 # Install missing packages
 before_install:
@@ -54,7 +60,7 @@ before_install:
 script:
   - mkdir _build
   - cd _build
-  - cmake .. -DCMAKE_INSTALL_PREFIX=../_install $OPTIONS
+  - cmake .. -DCMAKE_INSTALL_PREFIX=../_install $OPTIONS $OPTIONS_BUILD
   - cmake --build . --target install
   - ctest -V
 
