@@ -63,7 +63,13 @@ OCIO_NAMESPACE_ENTER
     typedef OCIO_SHARED_PTR<const ColorSpace> ConstColorSpaceRcPtr;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<ColorSpace> ColorSpaceRcPtr;
-    
+
+    class OCIOEXPORT ColorSpaceSet;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const ColorSpaceSet> ConstColorSpaceSetRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<ColorSpaceSet> ColorSpaceSetRcPtr;
+
     class OCIOEXPORT Look;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<const Look> ConstLookRcPtr;

@@ -12,6 +12,9 @@ if(NOT BUILD_SHARED_LIBS)
     )
 endif()
 
+set_target_properties(ociobakelut PROPERTIES 
+    COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
+
 target_link_libraries(ociobakelut PRIVATE OpenColorIO lcms2 apputils)
 
 install(TARGETS ociobakelut

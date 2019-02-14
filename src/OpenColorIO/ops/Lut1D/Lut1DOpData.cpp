@@ -495,7 +495,7 @@ unsigned long Lut1DOpData::GetLutIdealSize(BitDepth inputBitDepth,
     // However note that if the inputBitDepth is, e.g. 10i, this might not be
     // the number of entries required for a look-up.
 
-    unsigned long size = HALF_DOMAIN_REQUIRED_ENTRIES;
+    const unsigned long size = HALF_DOMAIN_REQUIRED_ENTRIES;
 
     if (Lut1DOpData::IsInputHalfDomain(halfFlags))
     {
@@ -723,7 +723,7 @@ void Lut1DOpData::finalize()
     cacheIDStream << InterpolationToString(m_interpolation) << " ";
     cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
     cacheIDStream << BitDepthToString(getOutputBitDepth()) << " ";
-    cacheIDStream << isInputHalfDomain()?"half domain ":"standard domain ";
+    cacheIDStream << (isInputHalfDomain() ? "half domain " : "standard domain ");
     cacheIDStream << GetHueAdjustName(m_hueAdjust) << " ";
     cacheIDStream << GetInvStyleName(m_invStyle);
 
@@ -1335,7 +1335,6 @@ OIIO_ADD_TEST(Lut1DOpData, accessors)
     // Note: Hue and Sat adjust do not affect identity status.
     OIIO_CHECK_ASSERT(l.isIdentity());
 
-    const float back1 = l.getArray()[1];
     l.getArray()[1] = 1.0f;
     OIIO_CHECK_ASSERT(!l.isNoOp());
     OIIO_CHECK_ASSERT(!l.isIdentity());

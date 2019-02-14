@@ -114,13 +114,13 @@ OCIO_NAMESPACE_ENTER
         // Apply the env override if it's not empty.
         if(!activeDisplaysEnvOverride.empty())
         {
-            displayCache = IntersectStringVecsCaseIgnore(displayMasterList, activeDisplaysEnvOverride);
+            displayCache = IntersectStringVecsCaseIgnore(activeDisplaysEnvOverride, displayMasterList);
             if(!displayCache.empty()) return;
         }
         // Otherwise, aApply the active displays if it's not empty.
         else if(!activeDisplays.empty())
         {
-            displayCache = IntersectStringVecsCaseIgnore(displayMasterList, activeDisplays);
+            displayCache = IntersectStringVecsCaseIgnore(activeDisplays, displayMasterList);
             if(!displayCache.empty()) return;
         }
         

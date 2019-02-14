@@ -1,7 +1,6 @@
 /*
-Copyright (c) 2018 Autodesk Inc., et al.
+Copyright (c) 2019 Autodesk Inc., et al.
 All Rights Reserved.
-
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
 met:
@@ -27,19 +26,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_RANGEOP_CPU
-#define INCLUDED_OCIO_RANGEOP_CPU
+#ifndef INCLUDED_OCIO_LUT3D_GPU
+#define INCLUDED_OCIO_LUT3D_GPU
 
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ops/Range/RangeOpData.h"
+#include "GpuShaderUtils.h"
+#include "ops/Lut3D/Lut3DOpData.h"
 
 
 OCIO_NAMESPACE_ENTER
 {
 
-OpCPURcPtr GetRangeRenderer(ConstRangeOpDataRcPtr & range);
+void GetLut3DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
+                              ConstLut3DOpDataRcPtr & lutData);
 
 }
 OCIO_NAMESPACE_EXIT

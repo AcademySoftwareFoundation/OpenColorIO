@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.10)
 
 project(OpenColorIO 
 	VERSION 2.0.0
-	HOMEPAGE_URL http://opencolorio.org/
 	LANGUAGES CXX C)
 
 # "dev" for master or "" for any official release
@@ -33,11 +32,34 @@ option(OCIO_BUILD_GPU_TESTS "Specify whether to build gpu unittests" ON)
 option(OCIO_BUILD_PYTHON "Specify whether to build python bindings" ON)
 option(OCIO_BUILD_JAVA "Specify whether to build java bindings" OFF)
 
+option(OCIO_WARNING_AS_ERROR "Set build error level for CI testing" OFF)
+
+
 ###############################################################################
 # Optimisation / internal linking preferences
 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
 option(OCIO_INLINES_HIDDEN "Specify whether to build with -fvisibility-inlines-hidden" ${UNIX})
+
+###############################################################################
+# Platform dependent compilation flags
+
+set(PLATFORM_COMPILE_FLAGS "")
+
+if(MSVC)
+	# Because our Exceptions derive from std::runtime_error we can safely disable this warning
+	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /wd4275")
+else()
+	#TODO: Fix warnings before enabling the flag.
+	#set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wall")
+endif()
+
+if(OCIO_WARNING_AS_ERROR)
+	# Windows compilation has many tricky warnings, difficult to fix.
+	if(NOT MSVC)
+		set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Werror")
+	endif()
+endif()
 
 ###############################################################################
 # External linking

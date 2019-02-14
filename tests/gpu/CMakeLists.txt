@@ -38,6 +38,9 @@ if(OCIO_USE_SSE)
 	)
 endif(OCIO_USE_SSE)
 
+set_target_properties(test_gpu_exec PROPERTIES 
+	COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
+
 target_link_libraries(test_gpu_exec
 	PRIVATE
 		OpenColorIO

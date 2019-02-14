@@ -42,19 +42,10 @@ OCIO_NAMESPACE_ENTER
     {
     private:
         ProcessorMetadataRcPtr m_metadata;
-        
-        OpRcPtrVec m_cpuOps;
-        OpRcPtrVec m_gpuOps;
-        
-        // These 3 op vecs represent the 3 stages in our gpu pipe.
-        // 1) preprocess shader text
-        // 2) 3D LUT process lookup
-        // 3) postprocess shader text
-        
-        OpRcPtrVec m_gpuOpsHwPreProcess;
-        OpRcPtrVec m_gpuOpsCpuLatticeProcess;
-        OpRcPtrVec m_gpuOpsHwPostProcess;
-        
+
+        // Vector of ops for the processor.
+        OpRcPtrVec m_ops;
+
         mutable std::string m_cpuCacheID;
         
         mutable Mutex m_resultsCacheMutex;
