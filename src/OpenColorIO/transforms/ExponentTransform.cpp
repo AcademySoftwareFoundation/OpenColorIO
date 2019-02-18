@@ -30,159 +30,207 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ops/Exponent/ExponentOps.h"
 #include "OpBuilders.h"
+#include "ops/Exponent/ExponentOps.h"
+#include "ops/Gamma/GammaOpData.h"
+#include "ops/Gamma/GammaOps.h"
 
 
 OCIO_NAMESPACE_ENTER
 {
-    ExponentTransformRcPtr ExponentTransform::Create()
-    {
-        return ExponentTransformRcPtr(new ExponentTransform(), &deleter);
-    }
-    
-    void ExponentTransform::deleter(ExponentTransform* t)
-    {
-        delete t;
-    }
-    
-    
-    class ExponentTransform::Impl : public ExponentOpData
-    {
-    public:
-        TransformDirection dir_;
-        
-        Impl() :
-            ExponentOpData(),
-            dir_(TRANSFORM_DIR_FORWARD)
-        { }
-        
-        ~Impl()
-        { }
-        
-        Impl& operator= (const Impl & rhs)
-        {
-            if (this != &rhs)
-            {
-                ExponentOpData::operator=(rhs);
-                dir_ = rhs.dir_;
-            }
-            return *this;
-        }
+ExponentTransformRcPtr ExponentTransform::Create()
+{
+    return ExponentTransformRcPtr(new ExponentTransform(), &deleter);
+}
 
-    private:        
-        Impl(const Impl & rhs);
-    };
+void ExponentTransform::deleter(ExponentTransform* t)
+{
+    delete t;
+}
+
+
+class ExponentTransform::Impl : public GammaOpData
+{
+public:
+    TransformDirection m_dir;
     
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    
-    ExponentTransform::ExponentTransform()
-        : m_impl(new ExponentTransform::Impl)
+    Impl()
+        :   GammaOpData()
+        ,   m_dir(TRANSFORM_DIR_FORWARD)
     {
+        setRedParams  ( {1.} );
+        setGreenParams( {1.} );
+        setBlueParams ( {1.} );
+        setAlphaParams( {1.} );
     }
     
-    TransformRcPtr ExponentTransform::createEditableCopy() const
-    {
-        ExponentTransformRcPtr transform = ExponentTransform::Create();
-        *(transform->m_impl) = *m_impl;
-        return transform;
-    }
+    ~Impl()
+    { }
     
-    ExponentTransform::~ExponentTransform()
-    {
-        delete m_impl;
-        m_impl = NULL;
-    }
-    
-    ExponentTransform& ExponentTransform::operator= (const ExponentTransform & rhs)
+    Impl& operator= (const Impl & rhs)
     {
         if (this != &rhs)
         {
-            *m_impl = *rhs.m_impl;
+            GammaOpData::operator=(rhs);
+            m_dir = rhs.m_dir;
         }
         return *this;
     }
-    
-    TransformDirection ExponentTransform::getDirection() const
-    {
-        return getImpl()->dir_;
-    }
-    
-    void ExponentTransform::setDirection(TransformDirection dir)
-    {
-        getImpl()->dir_ = dir;
-    }
-    
-    void ExponentTransform::validate() const
-    {
-        Transform::validate();
 
-        // TODO: Uncomment in upcoming PR that contains the OpData validate.
-        //       getImpl()->data_->validate()
-        //       
-        //       OpData classes are the enhancement of some existing 
-        //       structures (like Lut1D and Lut3D) by encapsulating
-        //       all the data and adding high-level behaviors.
-    }
 
-    void ExponentTransform::setValue(const float * vec4)
-    {
-        if(vec4)
-        {
-            for(unsigned i=0; i<4; ++i)
-            {
-                getImpl()->m_exp4[i] = vec4[i];
-            }
-        }
-    }
-    
-    void ExponentTransform::getValue(float * vec4) const
-    {
-        if(vec4)
-        {
-            for(unsigned i=0; i<4; ++i)
-            {
-                vec4[i] = float(getImpl()->m_exp4[i]);
-            }
-        }
-    }
-    
-    std::ostream& operator<< (std::ostream& os, const ExponentTransform& t)
-    {
-        float exp[4];
-        t.getValue(exp);
+private:        
+    Impl(const Impl & rhs);
+};
 
-        os << "<ExponentTransform ";
-        os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
-        os << "value=" << exp[0];
-        for (int i = 1; i < 4; ++i)
-        {
-          os << " " << exp[i];
-        }
+///////////////////////////////////////////////////////////////////////////
 
-        os << ">";
-        return os;
+
+
+ExponentTransform::ExponentTransform()
+    : m_impl(new ExponentTransform::Impl)
+{
+}
+
+TransformRcPtr ExponentTransform::createEditableCopy() const
+{
+    ExponentTransformRcPtr transform = ExponentTransform::Create();
+    *(transform->m_impl) = *m_impl;
+    return transform;
+}
+
+ExponentTransform::~ExponentTransform()
+{
+    delete m_impl;
+    m_impl = nullptr;
+}
+
+ExponentTransform& ExponentTransform::operator= (const ExponentTransform & rhs)
+{
+    if (this != &rhs)
+    {
+        *m_impl = *rhs.m_impl;
+    }
+    return *this;
+}
+
+TransformDirection ExponentTransform::getDirection() const
+{
+    return getImpl()->m_dir;
+}
+
+void ExponentTransform::setDirection(TransformDirection dir)
+{
+    getImpl()->m_dir = dir;
+}
+
+void ExponentTransform::validate() const
+{
+    Transform::validate();
+    getImpl()->validate();
+}
+
+void ExponentTransform::setValue(const float * vec4)
+{
+    if(vec4)
+    {
+        getImpl()->getRedParams()  [0] = vec4[0];
+        getImpl()->getGreenParams()[0] = vec4[1];
+        getImpl()->getBlueParams() [0] = vec4[2];
+        getImpl()->getAlphaParams()[0] = vec4[3];
+    }
+}
+
+void ExponentTransform::getValue(float * vec4) const
+{
+    if(vec4)
+    {
+        vec4[0] = (float)getImpl()->getRedParams()  [0];
+        vec4[1] = (float)getImpl()->getGreenParams()[0];
+        vec4[2] = (float)getImpl()->getBlueParams() [0];
+        vec4[3] = (float)getImpl()->getAlphaParams()[0];
+    }
+}
+
+std::ostream& operator<< (std::ostream& os, const ExponentTransform & t)
+{
+    float value[4];
+    t.getValue(value);
+
+    os << "<ExponentTransform ";
+    os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
+    
+    os << "value=" << value[0];
+    for (int i = 1; i < 4; ++i)
+    {
+      os << " " << value[i];
     }
     
+    os << ">";
+    return os;
+}
+
+
     
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void BuildExponentOps(OpRcPtrVec & ops,
+                      const Config & config,
+                      const ExponentTransform & transform,
+                      TransformDirection dir)
+{
+    TransformDirection combinedDir = CombineTransformDirections(dir,
+        transform.getDirection());
     
-    void BuildExponentOps(OpRcPtrVec & ops,
-                          const Config& /*config*/,
-                          const ExponentTransform & transform,
-                          TransformDirection dir)
+    float vec4[4] = { 1., 1., 1., 1. };
+    transform.getValue(vec4);
+
+    if(config.getMajorVersion()==1)
     {
-        TransformDirection combinedDir = CombineTransformDirections(dir,
-            transform.getDirection());
-        
-        float vec4[4];
-        transform.getValue(vec4);
-        
         CreateExponentOp(ops,
                          vec4,
                          combinedDir);
     }
+    else
+    {
+        double gamma4[4] = { vec4[0], vec4[1], vec4[2], vec4[3] };
+
+        CreateGammaOp(ops, "", OpData::Descriptions(),
+                      combinedDir==TRANSFORM_DIR_FORWARD ? GammaOpData::BASIC_FWD
+                                                         : GammaOpData::BASIC_REV,
+                      gamma4, nullptr);
+    }
+}
+
+    
 }
 OCIO_NAMESPACE_EXIT
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+#include "unittest.h"
+
+
+OIIO_ADD_TEST(ExponentTransform, basic)
+{
+    OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
+    OIIO_CHECK_EQUAL(exp->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+
+    exp->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    OIIO_CHECK_EQUAL(exp->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+
+    std::vector<float> val4(4, 1.), identity_val4(4, 1.);
+    OIIO_CHECK_NO_THROW(exp->getValue(&val4[0]));
+    OIIO_CHECK_ASSERT(val4 == identity_val4);
+
+    val4[1] = 2.;
+    OIIO_CHECK_NO_THROW(exp->setValue(&val4[0]));
+    OIIO_CHECK_NO_THROW(exp->getValue(&val4[0]));
+    OIIO_CHECK_ASSERT(val4 != identity_val4);
+}
+
+#endif

@@ -86,15 +86,15 @@ OCIO_NAMESPACE_ENTER
         {
             BuildExponentOps(ops, config, *exponentTransform, dir);
         }
+        else if(ConstExponentWithLinearTransformRcPtr expWithLinearTransform = \
+            DynamicPtrCast<const ExponentWithLinearTransform>(transform))
+        {
+            BuildExponentWithLinearOps(ops, config, *expWithLinearTransform, dir);
+        }
         else if(ConstFileTransformRcPtr fileTransform = \
             DynamicPtrCast<const FileTransform>(transform))
         {
             BuildFileOps(ops, config, context, *fileTransform, dir);
-        }
-        else if(ConstGammaTransformRcPtr gammaTransform = \
-            DynamicPtrCast<const GammaTransform>(transform))
-        {
-            BuildGammaOps(ops, config, *gammaTransform, dir);
         }
         else if(ConstGroupTransformRcPtr groupTransform = \
             DynamicPtrCast<const GroupTransform>(transform))

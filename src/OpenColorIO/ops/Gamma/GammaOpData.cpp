@@ -225,7 +225,7 @@ void validateParams(const GammaOpData::Params & p,
 {
     if (p.size() != reqdSize)
     {
-        throw Exception("GammaOp: Wrong number of parameters");
+        throw Exception("Wrong number of parameters");
     }
     for (unsigned int i=0; i<reqdSize; i++)
     {
@@ -850,7 +850,7 @@ OIIO_ADD_TEST(GammaOpData, validate)
                              paramsR, paramsG, params, paramsA);
         OIIO_CHECK_THROW_WHAT(g1.validate(),
                               OCIO::Exception,
-                              "GammaOp: Wrong number of parameters");
+                              "Wrong number of parameters");
     }
 
     {
@@ -859,7 +859,7 @@ OIIO_ADD_TEST(GammaOpData, validate)
                              paramsB, paramsB, paramsB, paramsB);
         OIIO_CHECK_THROW_WHAT(g1.validate(),
                               OCIO::Exception,
-                              "GammaOp: Wrong number of parameters");
+                              "Wrong number of parameters");
     }
 
     {

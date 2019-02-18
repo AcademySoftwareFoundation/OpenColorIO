@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018 Autodesk Inc., et al.
+Copyright (c) 2019 Autodesk Inc., et al.
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace OCIO = OCIO_NAMESPACE;
 #include "GPUUnitTest.h"
 
-OCIO_NAMESPACE_USING
 
 namespace
 {
@@ -44,23 +43,19 @@ const double offset[4] = {  .01,  .02,  .03,  .05 };
 
 
 // Helper method to build unit tests.
-void AddGammaTest(OCIOGPUTest & test, 
-                  OCIO::GpuShaderDescRcPtr & shaderDesc,
-                  TransformDirection direction,
-                  const double * gamma,
-                  const double * offset,
-                  float epsilon)
+void AddExponentTest(OCIOGPUTest & test, 
+                     OCIO::GpuShaderDescRcPtr & shaderDesc,
+                     OCIO::TransformDirection direction,
+                     const double * gamma,
+                     const double * offset,
+                     float epsilon)
 {
-    OCIO::GammaTransformRcPtr g = OCIO::GammaTransform::Create();
-    g->setDirection(direction);
-    g->setStyle(GAMMA_BASIC);
-    g->setGamma(gamma);
+    OCIO::ExponentWithLinearTransformRcPtr 
+        g = OCIO::ExponentWithLinearTransform::Create();
 
-    if(offset)
-    {
-        g->setStyle(GAMMA_MONCURVE);
-        g->setOffset(offset);
-    }
+    g->setDirection(direction);
+    g->setGamma(gamma);
+    g->setOffset(offset);
 
     test.setErrorThreshold(epsilon);
 
@@ -69,72 +64,12 @@ void AddGammaTest(OCIOGPUTest & test,
 
 };
 
-OCIO_ADD_GPU_TEST(GammaOp, basic_legacy_shader)
+OCIO_ADD_GPU_TEST(ExponentWithLinearOp, legacy_shader)
 {
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
-    AddGammaTest(test, shaderDesc, TRANSFORM_DIR_FORWARD, gamma, nullptr,
-#ifdef USE_SSE
-        5e-4f // Note: Related to the ssePower optimization !
-#else
-        5e-6f
-#endif
-        );
-}
-
-
-OCIO_ADD_GPU_TEST(GammaOp, basic)
-{
-    OCIO::GpuShaderDescRcPtr shaderDesc 
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
-
-    AddGammaTest(test, shaderDesc, TRANSFORM_DIR_FORWARD, gamma, nullptr,
-#ifdef USE_SSE
-        5e-4f // Note: Related to the ssePower optimization !
-#else
-        5e-6f
-#endif
-        );
-}
-
-
-OCIO_ADD_GPU_TEST(GammaOp, basic_inverse_legacy_shader)
-{
-    OCIO::GpuShaderDescRcPtr shaderDesc 
-        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
-
-    AddGammaTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, gamma, nullptr,
-#ifdef USE_SSE
-        5e-4f // Note: Related to the ssePower optimization !
-#else
-        1e-6f
-#endif
-        );
-}
-
-
-OCIO_ADD_GPU_TEST(GammaOp, basic_inverse)
-{
-    OCIO::GpuShaderDescRcPtr shaderDesc 
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
-
-    AddGammaTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, gamma, nullptr,
-#ifdef USE_SSE
-        1e-4f // Note: Related to the ssePower optimization !
-#else
-        1e-6f
-#endif
-        );
-}
-
-
-OCIO_ADD_GPU_TEST(GammaOp, moncurve_legacy_shader)
-{
-    OCIO::GpuShaderDescRcPtr shaderDesc 
-        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
-
-    AddGammaTest(test, shaderDesc, TRANSFORM_DIR_FORWARD, gamma, offset,
+    AddExponentTest(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, gamma, offset,
 #ifdef USE_SSE
         1e-4f // Note: Related to the ssePower optimization !
 #else
@@ -144,12 +79,12 @@ OCIO_ADD_GPU_TEST(GammaOp, moncurve_legacy_shader)
 }
 
 
-OCIO_ADD_GPU_TEST(GammaOp, moncurve_inverse_legacy_shader)
+OCIO_ADD_GPU_TEST(ExponentWithLinearOp, inverse_legacy_shader)
 {
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
-    AddGammaTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, gamma, offset,
+    AddExponentTest(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, gamma, offset,
 #ifdef USE_SSE
         5e-5f // Note: Related to the ssePower optimization !
 #else
@@ -159,12 +94,12 @@ OCIO_ADD_GPU_TEST(GammaOp, moncurve_inverse_legacy_shader)
 }
 
 
-OCIO_ADD_GPU_TEST(GammaOp, moncurve)
+OCIO_ADD_GPU_TEST(ExponentWithLinearOp, forward)
 {
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    AddGammaTest(test, shaderDesc, TRANSFORM_DIR_FORWARD, gamma, offset,
+    AddExponentTest(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, gamma, offset,
 #ifdef USE_SSE
         1e-4f // Note: Related to the ssePower optimization !
 #else
@@ -174,12 +109,12 @@ OCIO_ADD_GPU_TEST(GammaOp, moncurve)
 }
 
 
-OCIO_ADD_GPU_TEST(GammaOp, moncurve_inverse)
+OCIO_ADD_GPU_TEST(ExponentWithLinearOp, inverse)
 {
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    AddGammaTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, gamma, offset,
+    AddExponentTest(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, gamma, offset,
 #ifdef USE_SSE
         5e-5f // TODO: ssePower optimization !
 #else

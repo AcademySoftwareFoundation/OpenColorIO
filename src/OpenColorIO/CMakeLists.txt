@@ -81,8 +81,8 @@ set(SOURCES
 	transforms/ColorSpaceTransform.cpp
 	transforms/DisplayTransform.cpp
 	transforms/ExponentTransform.cpp
+	transforms/ExponentWithLinearTransform.cpp
 	transforms/FileTransform.cpp
-	transforms/GammaTransform.cpp
 	transforms/GroupTransform.cpp
 	transforms/LogTransform.cpp
 	transforms/LookTransform.cpp

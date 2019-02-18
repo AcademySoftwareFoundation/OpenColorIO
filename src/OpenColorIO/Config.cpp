@@ -2583,12 +2583,66 @@ OIIO_ADD_TEST(Config, range_serialization)
     }
 }
 
-OIIO_ADD_TEST(Config, gamma_serialization)
+OIIO_ADD_TEST(Config, exponent_serialization)   
+{   
+    {   
+        const std::string strEnd =  
+            "    from_reference: !<ExponentTransform> " 
+            "{value: [1.101, 1.202, 1.303, 1.404]}\n";  
+        const std::string str = SIMPLE_PROFILE + strEnd;    
+
+        std::istringstream is; 
+        is.str(str);    
+        OCIO::ConstConfigRcPtr config;  
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));   
+        OIIO_CHECK_NO_THROW(config->sanityCheck()); 
+
+        std::stringstream ss;  
+        ss << *config.get();    
+        OIIO_CHECK_EQUAL(ss.str(), str);    
+    }   
+
+     {  
+        const std::string strEnd =  
+            "    from_reference: !<ExponentTransform> " 
+            "{value: [1.101, 1.202, 1.303, 1.404], direction: inverse}\n";  
+        const std::string str = SIMPLE_PROFILE + strEnd;    
+
+        std::istringstream is; 
+        is.str(str);    
+        OCIO::ConstConfigRcPtr config;  
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));   
+        OIIO_CHECK_NO_THROW(config->sanityCheck()); 
+
+        std::stringstream ss;  
+        ss << *config.get();    
+        OIIO_CHECK_EQUAL(ss.str(), str);    
+    }   
+
+    // Errors
+
+    {
+        // Some gamma values are missing.
+        const std::string strEnd =
+            "    from_reference: !<ExponentTransform> "
+            "{value: [1.1, 1.2, 1.3]}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is),
+                              OCIO::Exception,
+                              "ExponentTransform parse error, value field must be 4 floats");
+    }
+}
+
+OIIO_ADD_TEST(Config, exponent_with_linear_serialization)
 {
     {
         const std::string strEnd =
-            "    from_reference: !<GammaTransform> "
-            "{style: basic, gamma: [1.1, 1.2, 1.3, 1.4]}\n";
+            "    from_reference: !<ExponentWithLinearTransform> "
+            "{gamma: [1.1, 1.2, 1.3, 1.4], offset: [0.101, 0.102, 0.103, 0.1]}\n";
         const std::string str = SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
@@ -2604,44 +2658,8 @@ OIIO_ADD_TEST(Config, gamma_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<GammaTransform> "
-            "{style: basic, gamma: [1.1, 1.2, 1.3, 1.4], direction: inverse}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
-
-        std::istringstream is;
-        is.str(str);
-        OCIO::ConstConfigRcPtr config;
-        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OIIO_CHECK_NO_THROW(config->sanityCheck());
-
-        std::stringstream ss;
-        ss << *config.get();
-        OIIO_CHECK_EQUAL(ss.str(), str);
-    }
-
-    {
-        const std::string strEnd =
-            "    from_reference: !<GammaTransform> "
-            "{style: moncurve, gamma: [1.1, 1.2, 1.3, 1.4],"
-            " offset: [0.101, 0.102, 0.103, 0.1]}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
-
-        std::istringstream is;
-        is.str(str);
-        OCIO::ConstConfigRcPtr config;
-        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OIIO_CHECK_NO_THROW(config->sanityCheck());
-
-        std::stringstream ss;
-        ss << *config.get();
-        OIIO_CHECK_EQUAL(ss.str(), str);
-    }
-
-    {
-        const std::string strEnd =
-            "    from_reference: !<GammaTransform> "
-            "{style: moncurve, gamma: [1.1, 1.2, 1.3, 1.4],"
-            " offset: [0.101, 0.102, 0.103, 0.1], direction: inverse}\n";
+            "    from_reference: !<ExponentWithLinearTransform> "
+            "{gamma: [1.1, 1.2, 1.3, 1.4], offset: [0.101, 0.102, 0.103, 0.1], direction: inverse}\n";
         const std::string str = SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
@@ -2658,10 +2676,26 @@ OIIO_ADD_TEST(Config, gamma_serialization)
     // Errors
 
     {
+        // Offset values are missing.
+        const std::string strEnd =
+            "    from_reference: !<ExponentWithLinearTransform> "
+            "{gamma: [1.1, 1.2, 1.3, 1.4]}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_THROW_WHAT(config->sanityCheck(),
+                              OCIO::Exception,
+                              "Wrong number of parameters");
+    }
+
+    {
         // Some gamma values are missing.
         const std::string strEnd =
-            "    from_reference: !<GammaTransform> "
-            "{style: basic, gamma: [1.1, 1.2]}\n";
+            "    from_reference: !<ExponentWithLinearTransform> "
+            "{gamma: [1.1, 1.2, 1.3]}\n";
         const std::string str = SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
@@ -2669,14 +2703,13 @@ OIIO_ADD_TEST(Config, gamma_serialization)
         OCIO::ConstConfigRcPtr config;
         OIIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is),
                               OCIO::Exception,
-                              "GammaTransform parse error, gamma field must be 4 floats");
+                              "ExponentWithLinear parse error, gamma field must be 4 floats");
     }
-
     {
         // Some offset values are missing.
         const std::string strEnd =
-            "    from_reference: !<GammaTransform> "
-            "{style: moncurve, gamma: [1.1, 1.2, 1.3, 1.4], offset: [0.101, 0.102]}\n";
+            "    from_reference: !<ExponentWithLinearTransform> "
+            "{gamma: [1.1, 1.2, 1.3, 1.4], offset: [0.101, 0.102]}\n";
         const std::string str = SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
@@ -2684,22 +2717,7 @@ OIIO_ADD_TEST(Config, gamma_serialization)
         OCIO::ConstConfigRcPtr config;
         OIIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is),
                               OCIO::Exception,
-                              "GammaTransform parse error, offset field must be 4 floats");
-    }
-
-    {
-        // The style name is wrong.
-        const std::string strEnd =
-            "    from_reference: !<GammaTransform> "
-            "{style: moncurv, gamma: [1.1, 1.2, 1.3, 1.4], offset: [0.11, 0.12, 0.13, 0.14]}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
-
-        std::istringstream is;
-        is.str(str);
-        OCIO::ConstConfigRcPtr config;
-        OIIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is),
-                              OCIO::Exception,
-                              "Error: Loading the OCIO profile failed. Wrong Gamma style: moncurv");
+                              "ExponentWithLinear parse error, offset field must be 4 floats");
     }
 }
 

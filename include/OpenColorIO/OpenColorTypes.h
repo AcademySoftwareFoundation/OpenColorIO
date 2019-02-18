@@ -149,17 +149,17 @@ OCIO_NAMESPACE_ENTER
     //!cpp:type::
     typedef OCIO_SHARED_PTR<ExponentTransform> ExponentTransformRcPtr;
     
+    class OCIOEXPORT ExponentWithLinearTransform;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const ExponentWithLinearTransform> ConstExponentWithLinearTransformRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<ExponentWithLinearTransform> ExponentWithLinearTransformRcPtr;
+    
     class OCIOEXPORT FileTransform;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<const FileTransform> ConstFileTransformRcPtr;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<FileTransform> FileTransformRcPtr;
-    
-    class OCIOEXPORT GammaTransform;
-    //!cpp:type::
-    typedef OCIO_SHARED_PTR<const GammaTransform> ConstGammaTransformRcPtr;
-    //!cpp:type::
-    typedef OCIO_SHARED_PTR<GammaTransform> GammaTransformRcPtr;
     
     class OCIOEXPORT GroupTransform;
     //!cpp:type::
@@ -315,14 +315,6 @@ OCIO_NAMESPACE_ENTER
         RANGE_CLAMP
     };
 
-    //!cpp:type:: Selects either a basic power function or a piecewise function 
-    //            that uses a linear segment in the shadows.
-    enum GammaStyle
-    {
-        GAMMA_BASIC = 0,
-        GAMMA_MONCURVE
-    };
-    
     //!rst::
     // Conversion
     // **********
@@ -387,11 +379,6 @@ OCIO_NAMESPACE_ENTER
     //!cpp:function::
     extern OCIOEXPORT RangeStyle RangeStyleFromString(const char * style);
     
-    //!cpp:function::
-    extern OCIOEXPORT const char * GammaStyleToString(GammaStyle style);
-    //!cpp:function::
-    extern OCIOEXPORT GammaStyle GammaStyleFromString(const char * style);
-
 
     /*!rst::
     Roles

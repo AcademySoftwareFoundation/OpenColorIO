@@ -438,6 +438,63 @@ OCIO_NAMESPACE_ENTER
     
     //!rst:: //////////////////////////////////////////////////////////////////
     
+    //!cpp:class:: The gamma transform is able to represent power functions 
+    //             and similar curves (e.g. sRGB and L*)
+    //
+    // That piecewise power function never clamp.
+    // 
+    class OCIOEXPORT ExponentWithLinearTransform : public Transform
+    {
+    public:
+        //!cpp:function::
+        static ExponentWithLinearTransformRcPtr Create();
+        
+        //!cpp:function::
+        virtual TransformRcPtr createEditableCopy() const;
+        
+        //!cpp:function::
+        virtual TransformDirection getDirection() const;
+        //!cpp:function::
+        virtual void setDirection(TransformDirection dir);
+
+        //!cpp:function:: Validate the transform and throw if invalid.
+        virtual void validate() const;
+
+        //!cpp:function:: Set the exponent value for the power function for R, G, B, A.
+        // .. note::
+        //    By convention, the gamma values should be >= 1. (Where possible, set 
+        //    the transform direction to inverse rather than using gamma values less than 1.)
+        void setGamma(const double * vec4);
+        //!cpp:function::
+        void getGamma(double * vec4) const;
+
+        //!cpp:function:: Set the offset used with two segment curves such as sRGB and L*.
+        void setOffset(const double * vec4);
+        //!cpp:function::
+        void getOffset(double * vec4) const;
+
+    private:
+        ExponentWithLinearTransform();
+        ExponentWithLinearTransform(const ExponentWithLinearTransform &);
+        virtual ~ExponentWithLinearTransform();
+        
+        ExponentWithLinearTransform& operator= (const ExponentWithLinearTransform &);
+        
+        static void deleter(ExponentWithLinearTransform* t);
+        
+        class Impl;
+        friend class Impl;
+        Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
+    };
+
+    //!cpp:function::
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ExponentWithLinearTransform&);
+    
+
+    //!rst:: //////////////////////////////////////////////////////////////////
+    
     //!cpp:class::
     class OCIOEXPORT FileTransform : public Transform
     {
@@ -500,71 +557,7 @@ OCIO_NAMESPACE_ENTER
     //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const FileTransform&);
     
-    
-    //!rst:: //////////////////////////////////////////////////////////////////
-    
-    //!cpp:class:: The gamma transform is able to represent power functions 
-    //             and similar curves (e.g. sRGB and L*)
-    //
-    // The basic power functions always clamp values below 0.
-    // The piecewise power functions never clamp.
-    // 
-    class OCIOEXPORT GammaTransform : public Transform
-    {
-    public:
-        //!cpp:function::
-        static GammaTransformRcPtr Create();
-        
-        //!cpp:function::
-        virtual TransformRcPtr createEditableCopy() const;
-        
-        //!cpp:function::
-        virtual TransformDirection getDirection() const;
-        //!cpp:function::
-        virtual void setDirection(TransformDirection dir);
 
-        //!cpp:function:: Validate the transform and throw if invalid.
-        virtual void validate() const;
-
-        //!cpp:function:: The style controls whether the gamma implements 
-        // a basic power function or a piecewise function (L*, sRGB).
-        virtual GammaStyle getStyle() const;
-        //!cpp:function::
-        virtual void setStyle(GammaStyle style);
-
-        //!cpp:function:: Set the exponent value for the power function for R, G, B, A.
-        // .. note::
-        //    By convention, the gamma values should be >= 1. (Where possible, set 
-        //    the transform direction to inverse rather than using gamma values less than 1.)
-        void setGamma(const double * vec4);
-        //!cpp:function::
-        void getGamma(double * vec4) const;
-
-        //!cpp:function:: Set the offset used with two segment curves such as sRGB and L*.
-        void setOffset(const double * vec4);
-        //!cpp:function::
-        void getOffset(double * vec4) const;
-
-    private:
-        GammaTransform();
-        GammaTransform(const GammaTransform &);
-        virtual ~GammaTransform();
-        
-        GammaTransform& operator= (const GammaTransform &);
-        
-        static void deleter(GammaTransform* t);
-        
-        class Impl;
-        friend class Impl;
-        Impl * m_impl;
-        Impl * getImpl() { return m_impl; }
-        const Impl * getImpl() const { return m_impl; }
-    };
-    
-    //!cpp:function::
-    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const GammaTransform&);
-    
-    
     //!rst:: //////////////////////////////////////////////////////////////////
     
     //!cpp:class::

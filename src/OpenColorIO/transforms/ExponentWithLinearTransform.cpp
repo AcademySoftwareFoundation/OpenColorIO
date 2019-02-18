@@ -38,18 +38,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
-GammaTransformRcPtr GammaTransform::Create()
+ExponentWithLinearTransformRcPtr ExponentWithLinearTransform::Create()
 {
-    return GammaTransformRcPtr(new GammaTransform(), &deleter);
+    return ExponentWithLinearTransformRcPtr(new ExponentWithLinearTransform(), &deleter);
 }
 
-void GammaTransform::deleter(GammaTransform* t)
+void ExponentWithLinearTransform::deleter(ExponentWithLinearTransform* t)
 {
     delete t;
 }
 
 
-class GammaTransform::Impl : public GammaOpData
+class ExponentWithLinearTransform::Impl : public GammaOpData
 {
 public:
     TransformDirection m_dir;
@@ -62,6 +62,8 @@ public:
         setGreenParams( {1.} );
         setBlueParams ( {1.} );
         setAlphaParams( {1.} );
+
+        setStyle(GammaOpData::MONCURVE_FWD);
     }
     
     ~Impl()
@@ -86,25 +88,25 @@ private:
 
 
 
-GammaTransform::GammaTransform()
-    : m_impl(new GammaTransform::Impl)
+ExponentWithLinearTransform::ExponentWithLinearTransform()
+    : m_impl(new ExponentWithLinearTransform::Impl)
 {
 }
 
-TransformRcPtr GammaTransform::createEditableCopy() const
+TransformRcPtr ExponentWithLinearTransform::createEditableCopy() const
 {
-    GammaTransformRcPtr transform = GammaTransform::Create();
+    ExponentWithLinearTransformRcPtr transform = ExponentWithLinearTransform::Create();
     *(transform->m_impl) = *m_impl;
     return transform;
 }
 
-GammaTransform::~GammaTransform()
+ExponentWithLinearTransform::~ExponentWithLinearTransform()
 {
     delete m_impl;
     m_impl = nullptr;
 }
 
-GammaTransform& GammaTransform::operator= (const GammaTransform & rhs)
+ExponentWithLinearTransform& ExponentWithLinearTransform::operator= (const ExponentWithLinearTransform & rhs)
 {
     if (this != &rhs)
     {
@@ -113,60 +115,23 @@ GammaTransform& GammaTransform::operator= (const GammaTransform & rhs)
     return *this;
 }
 
-TransformDirection GammaTransform::getDirection() const
+TransformDirection ExponentWithLinearTransform::getDirection() const
 {
     return getImpl()->m_dir;
 }
 
-void GammaTransform::setDirection(TransformDirection dir)
+void ExponentWithLinearTransform::setDirection(TransformDirection dir)
 {
     getImpl()->m_dir = dir;
 }
 
-//
-// At the config level, OCIO provides a direction attribute for transforms 
-// and we add a public two-element style attribute to control the type 
-// of function applied. 
-// 
-// However, at the Gamma Op & OpData level, it is more convenient to have 
-// the two direction+style attributes combined into a single four-element enum 
-// that unambiguously identifies which rendering math to apply. The translation 
-// to that GammaOpData::Style enum is done in this module and 
-// so there is no separate direction enum in the op/Gamma modules. 
-// This is also aligned with the four styles supported in CLF/CTF files.
-//
-
-GammaStyle GammaTransform::getStyle() const
-{
-    if(getImpl()->getStyle()==GammaOpData::MONCURVE_FWD)
-    {
-        return GAMMA_MONCURVE;
-    }
-    else
-    {
-        return GAMMA_BASIC;
-    }
-}
-
-void GammaTransform::setStyle(GammaStyle style)
-{
-    if(style==GAMMA_MONCURVE)
-    {
-        getImpl()->setStyle(GammaOpData::MONCURVE_FWD);
-    }
-    else
-    {
-        getImpl()->setStyle(GammaOpData::BASIC_FWD);
-    }
-}
-
-void GammaTransform::validate() const
+void ExponentWithLinearTransform::validate() const
 {
     Transform::validate();
     getImpl()->validate();
 }
 
-void GammaTransform::setGamma(const double * vec4)
+void ExponentWithLinearTransform::setGamma(const double * vec4)
 {
     if(vec4)
     {
@@ -177,7 +142,7 @@ void GammaTransform::setGamma(const double * vec4)
     }
 }
 
-void GammaTransform::getGamma(double * vec4) const
+void ExponentWithLinearTransform::getGamma(double * vec4) const
 {
     if(vec4)
     {
@@ -188,7 +153,7 @@ void GammaTransform::getGamma(double * vec4) const
     }
 }
 
-void GammaTransform::setOffset(const double * vec4)
+void ExponentWithLinearTransform::setOffset(const double * vec4)
 {
     if(vec4)
     {
@@ -204,7 +169,7 @@ void GammaTransform::setOffset(const double * vec4)
     }
 }
 
-void GammaTransform::getOffset(double * vec4) const
+void ExponentWithLinearTransform::getOffset(double * vec4) const
 {
     vec4[0] = getImpl()->getRedParams().size()==2   ? getImpl()->getRedParams()[1]   : 0.;
     vec4[1] = getImpl()->getGreenParams().size()==2 ? getImpl()->getGreenParams()[1] : 0.;
@@ -212,11 +177,10 @@ void GammaTransform::getOffset(double * vec4) const
     vec4[3] = getImpl()->getAlphaParams().size()==2 ? getImpl()->getAlphaParams()[1] : 0.;
 }
 
-std::ostream& operator<< (std::ostream& os, const GammaTransform & t)
+std::ostream& operator<< (std::ostream& os, const ExponentWithLinearTransform & t)
 {
-    os << "<GammaTransform ";
+    os << "<ExponentWithLinearTransform ";
     os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
-    os << "style=" << GammaStyleToString(t.getStyle()) << ", ";
     
     double gamma[4];
     t.getGamma(gamma);
@@ -227,17 +191,14 @@ std::ostream& operator<< (std::ostream& os, const GammaTransform & t)
       os << " " << gamma[i];
     }
     
-    if(t.getStyle()==GAMMA_MONCURVE)
-    {
-        double offset[4];
-        t.getOffset(offset);
+    double offset[4];
+    t.getOffset(offset);
 
-        os << ", offset=" << offset[0];
-        for (int i = 1; i < 4; ++i)
-        {
-          os << " " << offset[i];
-        }   
-    }
+    os << ", offset=" << offset[0];
+    for (int i = 1; i < 4; ++i)
+    {
+      os << " " << offset[i];
+    }   
 
     os << ">";
     return os;
@@ -246,10 +207,10 @@ std::ostream& operator<< (std::ostream& os, const GammaTransform & t)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void BuildGammaOps(OpRcPtrVec & ops,
-                   const Config & /*config*/,
-                   const GammaTransform & transform,
-                   TransformDirection dir)
+void BuildExponentWithLinearOps(OpRcPtrVec & ops,
+                                const Config & /*config*/,
+                                const ExponentWithLinearTransform & transform,
+                                TransformDirection dir)
 {
     TransformDirection combinedDir 
         = CombineTransformDirections(dir, transform.getDirection());
@@ -257,24 +218,13 @@ void BuildGammaOps(OpRcPtrVec & ops,
     double gamma4[4] = { 1., 1., 1., 1. };
     transform.getGamma(gamma4);
 
-    if(transform.getStyle()==GAMMA_MONCURVE)
-    {
-        double offset4[4] = { 0., 0., 0., 0. };
-        transform.getOffset(offset4);
+    double offset4[4] = { 0., 0., 0., 0. };
+    transform.getOffset(offset4);
 
-        CreateGammaOp(ops, "", OpData::Descriptions(),
-                      combinedDir==TRANSFORM_DIR_FORWARD ? GammaOpData::MONCURVE_FWD
-                                                         : GammaOpData::MONCURVE_REV,
-                      gamma4, offset4);
-    }
-    else
-    {
-
-        CreateGammaOp(ops, "", OpData::Descriptions(),
-                      combinedDir==TRANSFORM_DIR_FORWARD ? GammaOpData::BASIC_FWD
-                                                         : GammaOpData::BASIC_REV,
-                      gamma4, nullptr);
-    }
+    CreateGammaOp(ops, "", OpData::Descriptions(),
+                  combinedDir==TRANSFORM_DIR_FORWARD ? GammaOpData::MONCURVE_FWD
+                                                     : GammaOpData::MONCURVE_REV,
+                  gamma4, offset4);
 }
 
 }
@@ -290,38 +240,31 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "unittest.h"
 
 
-OCIO_NAMESPACE_USING
-
-
-OIIO_ADD_TEST(GammaTransform, basic)
+OIIO_ADD_TEST(ExponentWithLinearTransform, basic)
 {
-    OCIO::GammaTransformRcPtr gamma = OCIO::GammaTransform::Create();
-    OIIO_CHECK_EQUAL(gamma->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
-    OIIO_CHECK_EQUAL(gamma->getStyle(), OCIO::GAMMA_BASIC);
+    OCIO::ExponentWithLinearTransformRcPtr exp = OCIO::ExponentWithLinearTransform::Create();
+    OIIO_CHECK_EQUAL(exp->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
 
-    gamma->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-    OIIO_CHECK_EQUAL(gamma->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+    exp->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    OIIO_CHECK_EQUAL(exp->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
 
     std::vector<double> val4(4, 1.), identity_val4(4, 1.);
-    OIIO_CHECK_NO_THROW(gamma->getGamma(&val4[0]));
+    OIIO_CHECK_NO_THROW(exp->getGamma(&val4[0]));
     OIIO_CHECK_ASSERT(val4 == identity_val4);
 
     val4[1] = 2.;
-    OIIO_CHECK_NO_THROW(gamma->setGamma(&val4[0]));
-    OIIO_CHECK_NO_THROW(gamma->getGamma(&val4[0]));
+    OIIO_CHECK_NO_THROW(exp->setGamma(&val4[0]));
+    OIIO_CHECK_NO_THROW(exp->getGamma(&val4[0]));
     OIIO_CHECK_ASSERT(val4 != identity_val4);
-
-    OIIO_CHECK_NO_THROW(gamma->setStyle(OCIO::GAMMA_MONCURVE));
-    OIIO_CHECK_EQUAL(gamma->getStyle(), OCIO::GAMMA_MONCURVE);
 
     val4[1] = 1.;
     identity_val4 = { 0., 0., 0., 0. };
-    OIIO_CHECK_NO_THROW(gamma->getOffset(&val4[0]));
+    OIIO_CHECK_NO_THROW(exp->getOffset(&val4[0]));
     OIIO_CHECK_ASSERT(val4 == identity_val4);
 
     val4[1] = 2.;
-    OIIO_CHECK_NO_THROW(gamma->setOffset(&val4[0]));
-    OIIO_CHECK_NO_THROW(gamma->getGamma(&val4[0]));
+    OIIO_CHECK_NO_THROW(exp->setOffset(&val4[0]));
+    OIIO_CHECK_NO_THROW(exp->getGamma(&val4[0]));
     OIIO_CHECK_ASSERT(val4 != identity_val4);
 }
 
