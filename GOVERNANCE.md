@@ -100,8 +100,8 @@ project at all ASWF TAC meetings.
 
 ### TSC Leaders
 
-* Chair: TBD
-* Chief Architect: TBD
+* Chair: Michael Dolan
+* Chief Architect: Doug Walker
 
 ### TSC Members
 
