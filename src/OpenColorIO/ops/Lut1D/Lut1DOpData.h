@@ -110,6 +110,9 @@ public:
     static unsigned long GetLutIdealSize(BitDepth incomingBitDepth);
 
     explicit Lut1DOpData(unsigned long dimension);
+
+    Lut1DOpData(unsigned long dimension, TransformDirection dir);
+
     Lut1DOpData(BitDepth inBitDepth, BitDepth outBitDepth, HalfFlags halfFlags);
 
     Lut1DOpData(BitDepth inBitDepth,

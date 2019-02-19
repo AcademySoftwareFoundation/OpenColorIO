@@ -147,23 +147,24 @@ OCIO_NAMESPACE_ENTER
     
     // Registry Builders
     FileFormat * CreateFileFormat3DL();
+    FileFormat * CreateFileFormatCC();
     FileFormat * CreateFileFormatCCC();
     FileFormat * CreateFileFormatCDL();
-    FileFormat * CreateFileFormatCC();
+    FileFormat * CreateFileFormatCLF();
     FileFormat * CreateFileFormatCSP();
+    FileFormat * CreateFileFormatDiscreet1DL();
     FileFormat * CreateFileFormatHDL();
     FileFormat * CreateFileFormatICC();
-    FileFormat * CreateFileFormatDiscreet1DL();
-    FileFormat * CreateFileFormatIridasItx();
     FileFormat * CreateFileFormatIridasCube();
+    FileFormat * CreateFileFormatIridasItx();
     FileFormat * CreateFileFormatIridasLook();
     FileFormat * CreateFileFormatPandora();
+    FileFormat * CreateFileFormatResolveCube();
     FileFormat * CreateFileFormatSpi1D();
     FileFormat * CreateFileFormatSpi3D();
     FileFormat * CreateFileFormatSpiMtx();
     FileFormat * CreateFileFormatTruelight();
     FileFormat * CreateFileFormatVF();
-    FileFormat * CreateFileFormatResolveCube();
     
 }
 OCIO_NAMESPACE_EXIT

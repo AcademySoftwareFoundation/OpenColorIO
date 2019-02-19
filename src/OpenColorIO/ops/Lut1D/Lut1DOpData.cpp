@@ -218,6 +218,18 @@ Lut1DOpData::Lut1DOpData(unsigned long dimension)
 {
 }
 
+Lut1DOpData::Lut1DOpData(unsigned long dimension, TransformDirection dir)
+    : OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
+    , m_interpolation(INTERP_LINEAR)
+    , m_array(getOutputBitDepth(), LUT_STANDARD, dimension)
+    , m_halfFlags(LUT_STANDARD)
+    , m_hueAdjust(HUE_NONE)
+    , m_direction(dir)
+    , m_invStyle(Lut1DOpData::INV_FAST)
+    , m_fileBitDepth(BIT_DEPTH_UNKNOWN)
+{
+}
+
 Lut1DOpData::Lut1DOpData(BitDepth inBitDepth,
                          BitDepth outBitDepth,
                          HalfFlags halfFlags)
@@ -416,6 +428,7 @@ bool IsValid(const Interpolation & interpolation)
     case INTERP_LINEAR:
     case INTERP_NEAREST:
         return true;
+    case INTERP_CUBIC:
     case INTERP_TETRAHEDRAL:
     case INTERP_UNKNOWN:
     default:
@@ -830,7 +843,7 @@ void ComposeVec(Lut1DOpDataRcPtr & A, const OpRcPtrVec & B)
 //
 // Note1: If either LUT uses hue adjust, composition will not give the same
 // result as if they were applied sequentially.  However, we need to allow
-// composition because the Lut1D CPU renderer needs it to build the lookup
+// composition because the LUT 1D CPU renderer needs it to build the lookup
 // table for the hue adjust renderer.  We could potentially do a lock object in
 // that renderer to over-ride the hue adjust temporarily like in invLut1d.
 // But for now, put the burdon on the caller to use Lut1DOpData::mayCompose first.
@@ -902,7 +915,7 @@ void Lut1DOpData::Compose(Lut1DOpDataRcPtr & A,
         //       Perhaps add a utility function to be shared with the constructor.
         A = std::make_shared<Lut1DOpData>(resampleDepth,
                                           A->getInputBitDepth(),
-                                          A->getId(),
+                                          A->getID(),
                                           A->getDescriptions(),
                                           A->getInterpolation(),
                                           // half case handled above
@@ -921,7 +934,7 @@ void Lut1DOpData::Compose(Lut1DOpDataRcPtr & A,
     ComposeVec(A, ops);
 
     // Configure the metadata of the result LUT.
-    A->setId(A->getId() + B->getId());
+    A->setID(A->getID() + B->getID());
     newDesc += A->getDescriptions();
     newDesc += B->getDescriptions();
     A->getDescriptions() += newDesc;
@@ -1078,7 +1091,7 @@ void Lut1DOpData::prepareArray()
     const unsigned long activeChannels = getArray().getNumColorComponents();
     Array::Values& values = getArray().getValues();
 
-    for (unsigned c = 0; c < activeChannels; ++c)
+    for (unsigned long c = 0; c < activeChannels; ++c)
     {
         // Determine if the LUT is overall increasing or decreasing.
         // The heuristic used is to compare first and last entries.
@@ -1591,6 +1604,11 @@ OIIO_ADD_TEST(Lut1DOpData, interpolation)
     OIIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_BEST);
     OIIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
     OIIO_CHECK_NO_THROW(l.validate());
+
+    l.setInterpolation(OCIO::INTERP_CUBIC);
+    OIIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_CUBIC);
+    OIIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
+    OIIO_CHECK_THROW_WHAT(l.validate(), OCIO::Exception, "does not support interpolation algorithm");
 
     l.setInterpolation(OCIO::INTERP_DEFAULT);
     OIIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_DEFAULT);
@@ -2252,7 +2270,7 @@ void SetLutArrayHalf(const OCIO::Lut1DOpDataRcPtr & op, unsigned long channels)
             }
             else if (j == 1)
             {
-                if (i < 32768u)                  // decreasing function
+                if (i < 32768u)                 // decreasing function
                     f = -0.5f * f + 0.02f;
                 else                            // gap between pos & neg at zero
                     f = -0.4f * f + 0.05f;
