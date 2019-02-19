@@ -225,7 +225,7 @@ Lut1DOpData::Lut1DOpData(unsigned long dimension, TransformDirection dir)
     , m_halfFlags(LUT_STANDARD)
     , m_hueAdjust(HUE_NONE)
     , m_direction(dir)
-    , m_invStyle(Lut1DOpData::INV_FAST)
+    , m_invQuality(LUT_INVERSION_FAST)
     , m_fileBitDepth(BIT_DEPTH_UNKNOWN)
 {
 }

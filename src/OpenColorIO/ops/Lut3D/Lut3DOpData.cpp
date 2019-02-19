@@ -316,7 +316,7 @@ Lut3DOpData::Lut3DOpData(long gridSize, TransformDirection dir)
     , m_interpolation(INTERP_DEFAULT)
     , m_array(gridSize, getOutputBitDepth())
     , m_direction(dir)
-    , m_invStyle(INV_FAST)
+    , m_invQuality(LUT_INVERSION_FAST)
 {
 }
 
