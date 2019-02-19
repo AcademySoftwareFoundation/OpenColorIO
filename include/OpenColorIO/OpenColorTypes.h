@@ -258,6 +258,7 @@ OCIO_NAMESPACE_ENTER
         INTERP_NEAREST = 1,     //! nearest neighbor in all dimensions
         INTERP_LINEAR = 2,      //! linear interpolation in all dimensions
         INTERP_TETRAHEDRAL = 3, //! tetrahedral interpolation in all directions
+        INTERP_CUBIC = 4,       //! cubic interpolation in all dimensions
 
         INTERP_DEFAULT = 254,   //! the default interpolation type
         INTERP_BEST = 255       //! the 'best' suitable interpolation type

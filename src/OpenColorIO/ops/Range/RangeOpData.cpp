@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "BitDepthUtils.h"
 #include "MathUtils.h"
+#include "ops/IndexMapping.h"
 #include "ops/Range/RangeOpData.h"
 #include "Platform.h"
 
@@ -80,6 +81,48 @@ RangeOpData::RangeOpData(BitDepth inBitDepth,
     ,   m_alphaScale(0.)
 {
     validate();
+}
+
+RangeOpData::RangeOpData(const IndexMapping & pIM, BitDepth inDepth, unsigned int len)
+    : OpData(inDepth, BIT_DEPTH_F32)
+    ,   m_minInValue(RangeOpData::EmptyValue())
+    ,   m_maxInValue(RangeOpData::EmptyValue())
+    ,   m_minOutValue(RangeOpData::EmptyValue())
+    ,   m_maxOutValue(RangeOpData::EmptyValue())
+    ,   m_scale(0.)
+    ,   m_offset(0.)
+    ,   m_lowBound(0.)
+    ,   m_highBound(0.)
+    ,   m_alphaScale(0.)
+{
+    if (pIM.getDimension() != 2)
+    {
+        throw Exception("CTF/CLF parsing error. Only two entry IndexMaps are supported.");
+    }
+
+    float first, second;
+    pIM.getPair(0u, first, second);
+
+    // The first half of the pair is scaled to the LUT's input bit depth.
+    m_minInValue = first;
+    // The second half is scaled to the number of entries in the LUT.
+    m_minOutValue = second / (float)(len - 1u);
+
+    // Note: The CLF spec does not say how to handle out-of-range values.
+    // E.g., a user could specify an index longer than the LUT length.
+    // For now, we are not preventing this (no harm is done since those values
+    // are already clipped safely on input to the LUT renderers).
+
+    pIM.getPair(1u, first, second);
+    m_maxInValue = first;
+    m_maxOutValue = second / (float)(len - 1u);
+
+    validate();
+
+    // The maxOutValues are scaled for 32f, so call the Range version to
+    // set the depth and rescale values if necessary.  Note we are prepping
+    // things for the input depth of the LUT (which follows the range).
+    setOutputBitDepth(inDepth);
 }
 
 RangeOpData::~RangeOpData()
@@ -622,7 +665,6 @@ MatrixOpDataRcPtr RangeOpData::convertToMatrix() const
     mtx->setArrayValue(0, scale);
     mtx->setArrayValue(5, scale);
     mtx->setArrayValue(10, scale);
-    mtx->setArrayValue(15, 1.);
 
     const double offset = getOffset();
     mtx->setOffsetValue(0, offset);
@@ -695,7 +737,7 @@ void RangeOpData::finalize()
     AutoMutex lock(m_mutex);
 
     std::ostringstream cacheIDStream;
-    cacheIDStream << getId();
+    cacheIDStream << getID();
 
     cacheIDStream.precision(DefaultValues::FLOAT_DECIMALS);
 
