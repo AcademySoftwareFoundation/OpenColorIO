@@ -2676,6 +2676,19 @@ OIIO_ADD_TEST(Config, exponent_with_linear_serialization)
     // Errors
 
     {
+        const std::string strEnd =
+            "    from_reference: !<ExponentWithLinearTransform> {}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is),
+                              OCIO::Exception,
+                              "ExponentWithLinear parse error, gamma and offset fields are missing");
+    }
+
+    {
         // Offset values are missing.
         const std::string strEnd =
             "    from_reference: !<ExponentWithLinearTransform> "
@@ -2685,10 +2698,24 @@ OIIO_ADD_TEST(Config, exponent_with_linear_serialization)
         std::istringstream is;
         is.str(str);
         OCIO::ConstConfigRcPtr config;
-        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OIIO_CHECK_THROW_WHAT(config->sanityCheck(),
+        OIIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is),
                               OCIO::Exception,
-                              "Wrong number of parameters");
+                              "ExponentWithLinear parse error, offset field is missing");
+    }
+
+    {
+        // Gamma values are missing.
+        const std::string strEnd =
+            "    from_reference: !<ExponentWithLinearTransform> "
+            "{offset: [1.1, 1.2, 1.3, 1.4]}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is),
+                              OCIO::Exception,
+                              "ExponentWithLinear parse error, gamma field is missing");
     }
 
     {

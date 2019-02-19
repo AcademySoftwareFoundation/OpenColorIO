@@ -6,7 +6,6 @@ set(SOURCES
 	CDLOps_test.cpp
 	Config_test.cpp
 	ExpOps_Test.cpp
-	ExpWithLinearOps_test.cpp
 	GPUHelpers.cpp
 	GPUUnitTest.cpp
 	LogOps_Test.cpp

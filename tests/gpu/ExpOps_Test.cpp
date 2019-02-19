@@ -40,15 +40,34 @@ const float g_epsilon = 1e-6f;
 
 
 // Helper method to build unit tests
-void AddExpTest(OCIOGPUTest & test, 
-                OCIO::GpuShaderDescRcPtr & shaderDesc,
-                TransformDirection direction,
-                const float * value,
-                float epsilon)
+void AddExponent(OCIOGPUTest & test, 
+                 OCIO::GpuShaderDescRcPtr & shaderDesc,
+                 TransformDirection direction,
+                 const float * gamma,
+                 float epsilon)
 {
     OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
     exp->setDirection(direction);
-    exp->setValue(value);
+    exp->setValue(gamma);
+
+    test.setErrorThreshold(epsilon);
+
+    test.setContext(exp->createEditableCopy(), shaderDesc);
+}
+
+// Helper method to build unit tests
+void AddExponentWithLinear(OCIOGPUTest & test, 
+                           OCIO::GpuShaderDescRcPtr & shaderDesc,
+                           TransformDirection direction,
+                           const double * gamma,
+                           const double * offset,
+                           float epsilon)
+{
+    OCIO::ExponentWithLinearTransformRcPtr 
+        exp = OCIO::ExponentWithLinearTransform::Create();
+    exp->setDirection(direction);
+    exp->setGamma(gamma);
+    exp->setOffset(offset);
 
     test.setErrorThreshold(epsilon);
 
@@ -56,45 +75,121 @@ void AddExpTest(OCIOGPUTest & test,
 }
 
 
-OCIO_ADD_GPU_TEST(ExpTransform, ExpValue_legacy_shader)
+OCIO_ADD_GPU_TEST(ExponentOp, legacy_shader)
 {
     const float exp[4] = { 2.0f, 2.0f, 2.0f, 1.0f };
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
-    AddExpTest(test, shaderDesc, TRANSFORM_DIR_FORWARD, exp, g_epsilon);
+    AddExponent(test, shaderDesc, TRANSFORM_DIR_FORWARD, exp, g_epsilon);
 }
 
 
-OCIO_ADD_GPU_TEST(ExpTransform, ExpValue_generic_shader)
+OCIO_ADD_GPU_TEST(ExponentOp, forward)
 {
     const float exp[4] = { 2.0f, 2.0f, 2.0f, 1.0f };
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    AddExpTest(test, shaderDesc, TRANSFORM_DIR_FORWARD, exp, g_epsilon);
+    AddExponent(test, shaderDesc, TRANSFORM_DIR_FORWARD, exp, g_epsilon);
 }
 
 
-OCIO_ADD_GPU_TEST(ExpTransform, ExpValue_inverse_legacy_shader)
+OCIO_ADD_GPU_TEST(ExponentOp, inverse_legacy_shader)
 {
     const float exp[4] = { 1.0f/2.0f, 1.0f/2.0f, 1.0f/2.0f, 1.0f };
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
-    AddExpTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, exp, g_epsilon);
+    AddExponent(test, shaderDesc, TRANSFORM_DIR_INVERSE, exp, g_epsilon);
 }
 
 
-OCIO_ADD_GPU_TEST(ExpTransform, ExpValue_inverse_generic_shader)
+OCIO_ADD_GPU_TEST(ExponentOp, inverse)
 {
     const float exp[4] = { 1.0f/2.0f, 1.0f/2.0f, 1.0f/2.0f, 1.0f };
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    AddExpTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, exp, g_epsilon);
+    AddExponent(test, shaderDesc, TRANSFORM_DIR_INVERSE, exp, g_epsilon);
 }
+
+
+const double gamma[4]  = { 2.1,  2.2,  2.3,  1.5  };
+const double offset[4] = {  .01,  .02,  .03,  .05 };
+
+
+OCIO_ADD_GPU_TEST(ExponentWithLinearOp, legacy_shader)
+{
+    OCIO::GpuShaderDescRcPtr shaderDesc 
+        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
+
+    AddExponentWithLinear(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, gamma, offset,
+#ifdef USE_SSE
+        1e-4f // Note: Related to the ssePower optimization !
+#else
+        5e-6f
+#endif
+        );
+}
+
+
+OCIO_ADD_GPU_TEST(ExponentWithLinearOp, inverse_legacy_shader)
+{
+    OCIO::GpuShaderDescRcPtr shaderDesc 
+        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
+
+    AddExponentWithLinear(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, gamma, offset,
+#ifdef USE_SSE
+        5e-5f // Note: Related to the ssePower optimization !
+#else
+        5e-7f
+#endif
+        );
+}
+
+
+OCIO_ADD_GPU_TEST(ExponentWithLinearOp, forward)
+{
+    OCIO::GpuShaderDescRcPtr shaderDesc 
+        = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    AddExponentWithLinear(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, gamma, offset,
+#ifdef USE_SSE
+        1e-4f // Note: Related to the ssePower optimization !
+#else
+        5e-6f
+#endif
+        );
+}
+
+
+OCIO_ADD_GPU_TEST(ExponentWithLinearOp, inverse)
+{
+    OCIO::GpuShaderDescRcPtr shaderDesc 
+        = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    AddExponentWithLinear(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, gamma, offset,
+#ifdef USE_SSE
+        5e-5f // Note: Related to the ssePower optimization !
+#else
+        5e-7f
+#endif
+        );
+}
+
+
+// Still need bit-depth coverage from these tests:
+//      GPURendererGamma1_test
+//      GPURendererGamma2_test
+//      GPURendererGamma3_test
+//      GPURendererGamma4_test
+//      GPURendererGamma5_test
+//      GPURendererGamma6_test
+//      GPURendererGamma7_test
+//      GPURendererGamma8_test
+

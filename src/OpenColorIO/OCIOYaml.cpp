@@ -653,6 +653,17 @@ OCIO_NAMESPACE_ENTER
         inline void load(const YAML::Node& node, ExponentWithLinearTransformRcPtr& t)
         {
             t = ExponentWithLinearTransform::Create();
+
+            enum FieldFound
+            {
+                NOTHING_FOUND = 0x00,
+                GAMMA_FOUND   = 0x01,
+                OFFSET_FOUND  = 0x02,
+                FIELDS_FOUND  = (GAMMA_FOUND|OFFSET_FOUND)
+            };
+
+            FieldFound fields = NOTHING_FOUND;
+            static const std::string err("ExponentWithLinear parse error, ");
             
             std::string key;
             
@@ -674,11 +685,14 @@ OCIO_NAMESPACE_ENTER
                     if(val.size() != 4)
                     {
                         std::ostringstream os;
-                        os << "ExponentWithLinear parse error, gamma field must be 4 ";
-                        os << "floats. Found '" << val.size() << "'.";
+                        os << err 
+                           << "gamma field must be 4 floats. Found '" 
+                           << val.size() 
+                           << "'.";
                         throw Exception(os.str().c_str());
                     }
                     t->setGamma(&val[0]);
+                    fields = FieldFound(fields|GAMMA_FOUND);
                 }
                 else if(key == "offset")
                 {
@@ -687,11 +701,14 @@ OCIO_NAMESPACE_ENTER
                     if(val.size() != 4)
                     {
                         std::ostringstream os;
-                        os << "ExponentWithLinear parse error, offset field must be 4 ";
-                        os << "floats. Found '" << val.size() << "'.";
+                        os << err 
+                           << "offset field must be 4 floats. Found '" 
+                           << val.size() 
+                           << "'.";
                         throw Exception(os.str().c_str());
                     }
                     t->setOffset(&val[0]);
+                    fields = FieldFound(fields|OFFSET_FOUND);
                 }
                 else if(key == "direction")
                 {
@@ -703,6 +720,25 @@ OCIO_NAMESPACE_ENTER
                 {
                     LogUnknownKeyWarning(node.Tag(), first);
                 }
+            }
+
+            if(fields!=FIELDS_FOUND)
+            {
+                std::string e = err;
+                if(fields==NOTHING_FOUND)
+                {
+                    e += "gamma and offset fields are missing";
+                }
+                else if((fields&GAMMA_FOUND)!=GAMMA_FOUND)
+                {
+                    e += "gamma field is missing";
+                }
+                else
+                {
+                    e += "offset field is missing";
+                }
+
+                throw Exception(e.c_str());
             }
         }
 

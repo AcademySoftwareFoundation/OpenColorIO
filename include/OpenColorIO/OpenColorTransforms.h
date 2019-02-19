@@ -447,7 +447,6 @@ OCIO_NAMESPACE_ENTER
     //   with the breakpoint at offset/(gamma - 1).
     //
     // Negative values are never clamped.
-    // 
     class OCIOEXPORT ExponentWithLinearTransform : public Transform
     {
     public:
