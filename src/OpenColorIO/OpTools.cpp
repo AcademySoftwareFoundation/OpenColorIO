@@ -77,5 +77,33 @@ OCIO_NAMESPACE_ENTER
         }
     }
 
+    const char * GetInvQualityName(LutInversionQuality invStyle)
+    {
+        switch (invStyle)
+        {
+        case LUT_INVERSION_EXACT:
+        {
+            return "exact";
+            break;
+        }
+        case LUT_INVERSION_FAST:
+        {
+            return "fast";
+            break;
+        }
+        case LUT_INVERSION_DEFAULT:
+        {
+            return "default";
+            break;
+        }
+        case LUT_INVERSION_BEST:
+        {
+            return "best";
+            break;
+        }
+        }
+
+        throw Exception("The LUT has an unrecognized inversion quality setting.");
+    }
 }
 OCIO_NAMESPACE_EXIT

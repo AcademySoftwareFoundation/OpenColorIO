@@ -714,7 +714,7 @@ namespace
         Lut3DOpDataRcPtr ldata = lut3DData();
 
         if (ldata->getDirection() == TRANSFORM_DIR_INVERSE
-            && ldata->getInvStyle() == Lut3DOpData::INV_FAST)
+            && ldata->getConcreteInversionQuality() == LUT_INVERSION_FAST)
         {
             // NB: The result of MakeFastLut is set to TRANSFORM_DIR_FORWARD.
             ConstLut3DOpDataRcPtr p = constThis.lut3DData();
@@ -749,7 +749,7 @@ namespace
             // Note: The GPU Path only needs to create a forward 3D LUT for 
             // the 'exact inverse' case as finalize() handled the 'fast inverse'. 
 
-            if(ldata->getInvStyle() == Lut3DOpData::INV_FAST)
+            if(ldata->getConcreteInversionQuality() == LUT_INVERSION_FAST)
             {
                 throw Exception("3D LUT Op instance was not finalized.");
             }

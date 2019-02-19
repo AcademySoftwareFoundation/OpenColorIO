@@ -1955,14 +1955,14 @@ OpCPURcPtr GetLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
     }
     else
     {
-        if (lut->getInvStyle() == Lut3DOpData::INV_FAST)
+        if (lut->getConcreteInversionQuality() == LUT_INVERSION_FAST)
         {
             ConstLut3DOpDataRcPtr newLut = MakeFastLut3DFromInverse(lut);
 
             // Render with a Lut3D renderer.
             return GetForwardLut3DRenderer(newLut);
         }
-        else  // INV_EXACT
+        else  // LUT_INVERSION_EXACT
         {
             return std::make_shared<InvLut3DRenderer>(lut);
         }
