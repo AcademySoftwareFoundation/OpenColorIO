@@ -2721,6 +2721,85 @@ OIIO_ADD_TEST(Config, exponent_with_linear_serialization)
     }
 }
 
+OIIO_ADD_TEST(Config, exponent_vs_config_version)
+{
+    // OCIO config file version == 1  and exponent == 1
+
+    const std::string strEnd =
+        "    from_reference: !<ExponentTransform> {value: [1, 1, 1, 1]}\n";
+    const std::string str = SIMPLE_PROFILE + strEnd;
+
+    std::istringstream is;
+    is.str(str);
+    OCIO::ConstConfigRcPtr config;
+    OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+    OCIO::ConstProcessorRcPtr processor;
+    OIIO_CHECK_NO_THROW(processor = config->getProcessor("raw", "lnh"));
+
+    float img1[4] = { -0.5f, 0.0f, 1.0f, 1.0f };
+    OIIO_CHECK_NO_THROW(processor->applyRGBA(img1));
+
+    OIIO_CHECK_EQUAL(img1[0], -0.5f);
+    OIIO_CHECK_EQUAL(img1[1],  0.0f);
+    OIIO_CHECK_EQUAL(img1[2],  1.0f);
+    OIIO_CHECK_EQUAL(img1[3],  1.0f);
+
+    // OCIO config file version == 1  and exponent != 1
+
+    const std::string strEnd2 =
+        "    from_reference: !<ExponentTransform> {value: [2, 2, 2, 1]}\n";
+    const std::string str2 = SIMPLE_PROFILE + strEnd2;
+
+    is.str(str2);
+    OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OIIO_CHECK_NO_THROW(config->sanityCheck());
+    OIIO_CHECK_NO_THROW(processor = config->getProcessor("raw", "lnh"));
+
+    float img2[4] = { -0.5f, 0.0f, 1.0f, 1.0f };
+    OIIO_CHECK_NO_THROW(processor->applyRGBA(img2));
+
+    OIIO_CHECK_EQUAL(img2[0],  0.0f);
+    OIIO_CHECK_EQUAL(img2[1],  0.0f);
+    OIIO_CHECK_EQUAL(img2[2],  1.0f);
+    OIIO_CHECK_EQUAL(img2[3],  1.0f);
+
+    // OCIO config file version > 1  and exponent == 1
+
+    std::string str3 = str;
+    str3.replace(0, strlen("ocio_profile_version: 1"), "ocio_profile_version: 2");
+    is.str(str3);
+    OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OIIO_CHECK_NO_THROW(config->sanityCheck());
+    OIIO_CHECK_NO_THROW(processor = config->getProcessor("raw", "lnh"));
+
+    float img3[4] = { -0.5f, 0.0f, 1.0f, 1.0f };
+    OIIO_CHECK_NO_THROW(processor->applyRGBA(img3));
+
+    OIIO_CHECK_EQUAL(img3[0], 0.0f);
+    OIIO_CHECK_EQUAL(img3[1], 0.0f);
+    OIIO_CHECK_CLOSE(img3[2], 1.0f, 2e-5f); // Because of SSE optimizations.
+    OIIO_CHECK_CLOSE(img3[3], 1.0f, 2e-5f); // Because of SSE optimizations.
+
+    // OCIO config file version > 1  and exponent != 1
+
+    std::string str4 = str2;
+    str4.replace(0, strlen("ocio_profile_version: 1"), "ocio_profile_version: 2");
+    is.str(str4);
+    OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OIIO_CHECK_NO_THROW(config->sanityCheck());
+    OIIO_CHECK_NO_THROW(processor = config->getProcessor("raw", "lnh"));
+
+    float img4[4] = { -0.5f, 0.0f, 1.0f, 1.0f };
+    OIIO_CHECK_NO_THROW(processor->applyRGBA(img4));
+
+    OIIO_CHECK_EQUAL(img4[0], 0.0f);
+    OIIO_CHECK_EQUAL(img4[1], 0.0f);
+    OIIO_CHECK_CLOSE(img4[2], 1.0f, 3e-5f); // Because of SSE optimizations.
+    OIIO_CHECK_CLOSE(img4[3], 1.0f, 2e-5f); // Because of SSE optimizations.
+}
+
 OIIO_ADD_TEST(Config, categories)
 {
     static const std::string MY_OCIO_CONFIG =

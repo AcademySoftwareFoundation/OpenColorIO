@@ -116,7 +116,7 @@ OCIO_ADD_GPU_TEST(ExponentWithLinearOp, inverse)
 
     AddExponentTest(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, gamma, offset,
 #ifdef USE_SSE
-        5e-5f // TODO: ssePower optimization !
+        5e-5f // Note: Related to the ssePower optimization !
 #else
         5e-7f
 #endif

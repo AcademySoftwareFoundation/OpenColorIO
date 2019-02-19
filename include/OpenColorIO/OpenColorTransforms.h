@@ -392,8 +392,9 @@ OCIO_NAMESPACE_ENTER
     
     //!cpp:class:: Represents exponent transform: pow( clamp(color), value)
     // 
-    // If the exponent is 1.0, this will not clamp. Otherwise, the input color
-    // will be clamped between [0.0, inf]
+    // For configs with version == 1: If the exponent is 1.0, this will not clamp. 
+    // Otherwise, the input color will be clamped between [0.0, inf].
+    // For configs with version > 1: Negative values are always clamped.
     class OCIOEXPORT ExponentTransform : public Transform
     {
     public:
@@ -438,10 +439,14 @@ OCIO_NAMESPACE_ENTER
     
     //!rst:: //////////////////////////////////////////////////////////////////
     
-    //!cpp:class:: The gamma transform is able to represent power functions 
-    //             and similar curves (e.g. sRGB and L*)
+    //!cpp:class:: Represents power functions with a linear section in the shadows 
+    //             such as sRGB and L*.
     //
-    // That piecewise power function never clamp.
+    // The basic formula is:
+    //   pow( (x + offset)/(1 + offset), gamma )
+    //   with the breakpoint at offset/(gamma - 1).
+    //
+    // Negative values are never clamped.
     // 
     class OCIOEXPORT ExponentWithLinearTransform : public Transform
     {
@@ -462,13 +467,14 @@ OCIO_NAMESPACE_ENTER
 
         //!cpp:function:: Set the exponent value for the power function for R, G, B, A.
         // .. note::
-        //    By convention, the gamma values should be >= 1. (Where possible, set 
-        //    the transform direction to inverse rather than using gamma values less than 1.)
+        //     The gamma values must be in the range of [1, 10]. Set the transform direction 
+        //     to inverse to obtain the effect of values less than 1.
         void setGamma(const double * vec4);
         //!cpp:function::
         void getGamma(double * vec4) const;
 
-        //!cpp:function:: Set the offset used with two segment curves such as sRGB and L*.
+        //!cpp:function::
+        // .. note:: The offset values must be in the range [0, 0.9].
         void setOffset(const double * vec4);
         //!cpp:function::
         void getOffset(double * vec4) const;
