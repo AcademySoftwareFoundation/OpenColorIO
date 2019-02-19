@@ -87,7 +87,8 @@ void PadLutChannels(unsigned long width,
     // Pad the remaining of the texture with the last LUT entry.
     // Note: GPU Textures are expected a size of width*height.
 
-    unsigned long missingEntries = width*height - ((unsigned long)chn.size() / 3);
+    const unsigned long missingEntries = width*height -
+                                         ((unsigned long)chn.size() / 3);
     for (unsigned long idx = 0; idx < missingEntries; ++idx)
     {
         chn.push_back(channel[3 * (currWidth - 1) + 0]);

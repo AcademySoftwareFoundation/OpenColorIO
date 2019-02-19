@@ -87,7 +87,7 @@ OCIO_NAMESPACE_ENTER
     class OpData;
     typedef OCIO_SHARED_PTR<OpData> OpDataRcPtr;
     typedef OCIO_SHARED_PTR<const OpData> ConstOpDataRcPtr;
-
+    typedef std::vector<OpDataRcPtr> OpDataVec;
 
     // The OpData class is a helper class to hold the data part of an Op 
     // with some basic behaviors (i.e. isNoop(), isIdentity() …). The Op class 
@@ -122,7 +122,7 @@ OCIO_NAMESPACE_ENTER
     {
     public:
 
-        // Enumeration of all possible operator types
+        // Enumeration of all possible operator types.
         enum Type
         {
             Lut1DType,        // A 1D LUT
@@ -205,8 +205,11 @@ OCIO_NAMESPACE_ENTER
         OpData& operator=(const OpData& rhs);
         virtual ~OpData();
 
-        inline const std::string & getId() const { return m_id; }
-        void setId(const std::string & id) { m_id = id; }
+        inline const std::string & getID() const { return m_id; }
+        void setID(const std::string & id) { m_id = id; }
+
+        inline const std::string& getName() const { return m_name; }
+        void setName(const std::string& name) { m_name = name; }
 
         inline const Descriptions & getDescriptions() const { return m_descriptions; }
         inline Descriptions & getDescriptions() { return m_descriptions; }
@@ -254,10 +257,11 @@ OCIO_NAMESPACE_ENTER
         mutable std::string m_cacheID;
 
     private:
-        std::string m_id;
+        std::string  m_id;
+        std::string  m_name;
         Descriptions m_descriptions;
-        BitDepth m_inBitDepth;
-        BitDepth m_outBitDepth;
+        BitDepth     m_inBitDepth;
+        BitDepth     m_outBitDepth;
     };
     
     class Op;
@@ -272,6 +276,10 @@ OCIO_NAMESPACE_ENTER
     
     void OptimizeOpVec(OpRcPtrVec & result);
     
+    void CreateOpVecFromOpDataVec(OpRcPtrVec & ops,
+                                  const OpDataVec & opDataVec,
+                                  TransformDirection dir);
+
     class Op
     {
         public:

@@ -64,11 +64,15 @@ set(SOURCES
 	Exception.cpp
 	fileformats/cdl/CDLParser.cpp
 	fileformats/cdl/CDLReaderHelper.cpp
+	fileformats/ctf/CTFReaderHelper.cpp
+	fileformats/ctf/CTFReaderUtils.cpp
+	fileformats/ctf/CTFTransform.cpp
 	fileformats/FileFormat3DL.cpp
 	fileformats/FileFormatCCC.cpp
 	fileformats/FileFormatCC.cpp
 	fileformats/FileFormatCDL.cpp
 	fileformats/FileFormatCSP.cpp
+	fileformats/FileFormatCTF.cpp
 	fileformats/FileFormatDiscreet1DL.cpp
 	fileformats/FileFormatHDL.cpp
 	fileformats/FileFormatICC.cpp
@@ -82,6 +86,8 @@ set(SOURCES
 	fileformats/FileFormatSpiMtx.cpp
 	fileformats/FileFormatTruelight.cpp
 	fileformats/FileFormatVF.cpp
+	fileformats/xmlutils/XMLReaderHelper.cpp
+	fileformats/xmlutils/XMLReaderUtils.cpp
 	GpuShader.cpp
 	GpuShaderDesc.cpp
 	GpuShaderUtils.cpp
@@ -101,6 +107,7 @@ set(SOURCES
 	ops/CDL/CDLOpData.cpp
 	ops/CDL/CDLOps.cpp
 	ops/Exponent/ExponentOps.cpp
+	ops/IndexMapping.cpp
 	ops/Log/LogOps.cpp
 	ops/Lut1D/Lut1DOp.cpp
 	ops/Lut1D/Lut1DOpCPU.cpp
@@ -113,6 +120,7 @@ set(SOURCES
 	ops/Matrix/MatrixOpCPU.cpp
 	ops/Matrix/MatrixOpData.cpp
 	ops/Matrix/MatrixOps.cpp
+	ops/Metadata.cpp
 	ops/NoOp/NoOps.cpp
 	ops/Range/RangeOpCPU.cpp
 	ops/Range/RangeOpData.cpp

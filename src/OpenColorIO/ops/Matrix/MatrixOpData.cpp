@@ -711,7 +711,7 @@ double MatrixOpData::getOffsetValue(unsigned long index) const
         // TODO: should never happen. Consider assert.
         std::ostringstream oss;
         oss << "Matrix array content issue: '";
-        oss << getId().c_str();
+        oss << getID().c_str();
         oss << "' offset index out of range '";
         oss << index;
         oss << "'. ";
@@ -730,7 +730,7 @@ void MatrixOpData::setOffsetValue(unsigned long index, double value)
         // TODO: should never happen. Consider assert.
         std::ostringstream oss;
         oss << "Matrix array content issue: '";
-        oss << getId().c_str();
+        oss << getID().c_str();
         oss << "' offset index out of range '";
         oss << index;
         oss << "'. ";
@@ -767,9 +767,9 @@ MatrixOpDataRcPtr MatrixOpData::compose(ConstMatrixOpDataRcPtr & B) const
     {
         std::ostringstream oss;
         oss << "Matrix bit-depth missmatch between '";
-        oss << getId();
+        oss << getID();
         oss << "' and '";
-        oss << B->getId();
+        oss << B->getID();
         oss << "'. ";
 
         throw Exception(oss.str().c_str());
@@ -789,7 +789,7 @@ MatrixOpDataRcPtr MatrixOpData::compose(ConstMatrixOpDataRcPtr & B) const
     MatrixOpDataRcPtr out = std::make_shared<MatrixOpData>(
         getInputBitDepth(),
         B->getOutputBitDepth());
-    out->setId(getId() + B->getId());
+    out->setID(getID() + B->getID());
     out->getDescriptions() = newDesc;
 
     // TODO: May want to revisit how the metadata is set.
@@ -943,7 +943,7 @@ void MatrixOpData::finalize()
     AutoMutex lock(m_mutex);
 
     std::ostringstream cacheIDStream;
-    cacheIDStream << getId();
+    cacheIDStream << getID();
 
     md5_state_t state;
     md5_byte_t digest[16];
@@ -1150,7 +1150,7 @@ OIIO_ADD_TEST(MatrixOpData, test_construct)
 {
     OCIO::MatrixOpData matOp;
 
-    OIIO_CHECK_EQUAL(matOp.getId(), "");
+    OIIO_CHECK_EQUAL(matOp.getID(), "");
     OIIO_CHECK_EQUAL(matOp.getType(), OCIO::OpData::MatrixType);
     OIIO_CHECK_EQUAL(matOp.getInputBitDepth(), OCIO::BIT_DEPTH_F32);
     OIIO_CHECK_EQUAL(matOp.getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
@@ -1431,7 +1431,7 @@ OIIO_ADD_TEST(MatrixOpData, equality)
     m1.setArrayValue(0, 2);
 
     OCIO::MatrixOpData m2(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
-    m2.setId("invalid_u_id_test");
+    m2.setID("invalid_u_id_test");
     m2.setArrayValue(0, 2);
 
     OIIO_CHECK_ASSERT(!(m1 == m2));

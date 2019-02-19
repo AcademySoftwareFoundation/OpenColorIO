@@ -198,7 +198,7 @@ OIIO_ADD_TEST(FileFormatCC, TestCC1)
 
 OIIO_ADD_TEST(FileFormatCC, TestCC2)
 {
-    // CC file
+    // CC file using windows eol.
     const std::string fileName("cdl_test2.cc");
 
     OCIO::LocalCachedFileRcPtr ccFile;
