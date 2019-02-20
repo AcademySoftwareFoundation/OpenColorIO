@@ -127,8 +127,17 @@ void ExponentWithLinearTransform::setDirection(TransformDirection dir)
 
 void ExponentWithLinearTransform::validate() const
 {
-    Transform::validate();
-    getImpl()->validate();
+    try
+    {
+        Transform::validate();
+        getImpl()->validate();
+    }
+    catch(Exception & ex)
+    {
+        std::string errMsg("ExponentWithLinearTransform validation failed: ");
+        errMsg += ex.what();
+        throw Exception(errMsg.c_str());
+    }
 }
 
 void ExponentWithLinearTransform::setGamma(const double * vec4)

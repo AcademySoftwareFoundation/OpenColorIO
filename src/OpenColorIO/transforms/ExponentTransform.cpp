@@ -125,8 +125,17 @@ void ExponentTransform::setDirection(TransformDirection dir)
 
 void ExponentTransform::validate() const
 {
-    Transform::validate();
-    getImpl()->validate();
+    try
+    {
+        Transform::validate();
+        getImpl()->validate();
+    }
+    catch(Exception & ex)
+    {
+        std::string errMsg("ExponentTransform validation failed: ");
+        errMsg += ex.what();
+        throw Exception(errMsg.c_str());
+    }
 }
 
 void ExponentTransform::setValue(const float * vec4)
