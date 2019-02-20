@@ -32,33 +32,40 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace OCIO = OCIO_NAMESPACE;
 #include "GPUUnitTest.h"
 
-OCIO_NAMESPACE_USING
-
 
 const int LUT3D_EDGE_SIZE = 32;
 const float g_epsilon = 1e-6f;
 
 
+enum Version : unsigned
+{
+    OCIO_VERSION_1 = 1,
+    OCIO_VERSION_2 = 2  // version 2 or higher
+};
+
 // Helper method to build unit tests
 void AddExponent(OCIOGPUTest & test, 
                  OCIO::GpuShaderDescRcPtr & shaderDesc,
-                 TransformDirection direction,
+                 OCIO::TransformDirection direction,
                  const float * gamma,
-                 float epsilon)
+                 float epsilon,
+                 Version ver)
 {
     OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
     exp->setDirection(direction);
     exp->setValue(gamma);
 
-    test.setErrorThreshold(epsilon);
+    OCIO_NAMESPACE::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
+    config->setMajorVersion(ver);
 
-    test.setContext(exp->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(epsilon);
+    test.setContext(config, exp->createEditableCopy(), shaderDesc);
 }
 
 // Helper method to build unit tests
 void AddExponentWithLinear(OCIOGPUTest & test, 
                            OCIO::GpuShaderDescRcPtr & shaderDesc,
-                           TransformDirection direction,
+                           OCIO::TransformDirection direction,
                            const double * gamma,
                            const double * offset,
                            float epsilon)
@@ -75,16 +82,26 @@ void AddExponentWithLinear(OCIOGPUTest & test,
 }
 
 
-OCIO_ADD_GPU_TEST(ExponentOp, legacy_shader)
+OCIO_ADD_GPU_TEST(ExponentOp, legacy_shader_v1)
 {
     const float exp[4] = { 2.0f, 2.0f, 2.0f, 1.0f };
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
-    AddExponent(test, shaderDesc, TRANSFORM_DIR_FORWARD, exp, g_epsilon);
+    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, exp, g_epsilon, OCIO_VERSION_1);
 }
 
+
+OCIO_ADD_GPU_TEST(ExponentOp, forward_v1)
+{
+    const float exp[4] = { 2.0f, 2.0f, 2.0f, 1.0f };
+
+    OCIO::GpuShaderDescRcPtr shaderDesc 
+        = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, exp, g_epsilon, OCIO_VERSION_1);
+}
 
 OCIO_ADD_GPU_TEST(ExponentOp, forward)
 {
@@ -93,18 +110,35 @@ OCIO_ADD_GPU_TEST(ExponentOp, forward)
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    AddExponent(test, shaderDesc, TRANSFORM_DIR_FORWARD, exp, g_epsilon);
+    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, exp,
+#ifdef USE_SSE
+        1e-4f // Note: Related to the ssePower optimization !
+#else
+        g_epsilon
+#endif
+        , OCIO_VERSION_2);
 }
 
 
-OCIO_ADD_GPU_TEST(ExponentOp, inverse_legacy_shader)
+OCIO_ADD_GPU_TEST(ExponentOp, inverse_legacy_shader_v1)
 {
     const float exp[4] = { 1.0f/2.0f, 1.0f/2.0f, 1.0f/2.0f, 1.0f };
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
-    AddExponent(test, shaderDesc, TRANSFORM_DIR_INVERSE, exp, g_epsilon);
+    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, exp, g_epsilon, OCIO_VERSION_1);
+}
+
+
+OCIO_ADD_GPU_TEST(ExponentOp, inverse_v1)
+{
+    const float exp[4] = { 1.0f/2.0f, 1.0f/2.0f, 1.0f/2.0f, 1.0f };
+
+    OCIO::GpuShaderDescRcPtr shaderDesc 
+        = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, exp, g_epsilon, OCIO_VERSION_1);
 }
 
 
@@ -115,7 +149,13 @@ OCIO_ADD_GPU_TEST(ExponentOp, inverse)
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    AddExponent(test, shaderDesc, TRANSFORM_DIR_INVERSE, exp, g_epsilon);
+    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, exp,
+#ifdef USE_SSE
+        1e-4f // Note: Related to the ssePower optimization !
+#else
+        g_epsilon
+#endif
+        , OCIO_VERSION_2);
 }
 
 
