@@ -76,45 +76,47 @@ void AddExponentWithLinear(OCIOGPUTest & test,
     exp->setGamma(gamma);
     exp->setOffset(offset);
 
-    test.setErrorThreshold(epsilon);
+    OCIO_NAMESPACE::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
+    config->setMajorVersion(2);
 
-    test.setContext(exp->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(epsilon);
+    test.setContext(config, exp->createEditableCopy(), shaderDesc);
 }
 
 
 OCIO_ADD_GPU_TEST(ExponentOp, legacy_shader_v1)
 {
-    const float exp[4] = { 2.0f, 2.0f, 2.0f, 1.0f };
+    const float exp[4] = { 2.6f, 2.4f, 1.8f, 1.1f };
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
-    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, exp, g_epsilon, OCIO_VERSION_1);
+    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, exp, 1e-5f, OCIO_VERSION_1);
 }
 
 
 OCIO_ADD_GPU_TEST(ExponentOp, forward_v1)
 {
-    const float exp[4] = { 2.0f, 2.0f, 2.0f, 1.0f };
+    const float exp[4] = { 2.6f, 2.4f, 1.8f, 1.1f };
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, exp, g_epsilon, OCIO_VERSION_1);
+    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, exp, 1e-5f, OCIO_VERSION_1);
 }
 
 OCIO_ADD_GPU_TEST(ExponentOp, forward)
 {
-    const float exp[4] = { 2.0f, 2.0f, 2.0f, 1.0f };
+    const float exp[4] = { 2.6f, 2.4f, 1.8f, 1.1f };
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, exp,
 #ifdef USE_SSE
-        1e-4f // Note: Related to the ssePower optimization !
+        5e-4f // TODO: Only related to the ssePower optimization ?
 #else
-        g_epsilon
+        1e-5f
 #endif
         , OCIO_VERSION_2);
 }
@@ -151,7 +153,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, inverse)
 
     AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, exp,
 #ifdef USE_SSE
-        1e-4f // Note: Related to the ssePower optimization !
+        5e-4f // TODO: Only related to the ssePower optimization ?
 #else
         g_epsilon
 #endif
