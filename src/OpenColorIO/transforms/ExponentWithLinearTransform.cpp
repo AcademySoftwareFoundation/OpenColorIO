@@ -58,10 +58,10 @@ public:
         :   GammaOpData()
         ,   m_dir(TRANSFORM_DIR_FORWARD)
     {
-        setRedParams  ( {1.} );
-        setGreenParams( {1.} );
-        setBlueParams ( {1.} );
-        setAlphaParams( {1.} );
+        setRedParams  ( {1., 0.} );
+        setGreenParams( {1., 0.} );
+        setBlueParams ( {1., 0.} );
+        setAlphaParams( {1., 0.} );
 
         setStyle(GammaOpData::MONCURVE_FWD);
     }
@@ -271,10 +271,12 @@ OIIO_ADD_TEST(ExponentWithLinearTransform, basic)
     OIIO_CHECK_NO_THROW(exp->getOffset(&val4[0]));
     OIIO_CHECK_ASSERT(val4 == identity_val4);
 
-    val4[1] = 2.;
+    val4[1] = 0.5001;
     OIIO_CHECK_NO_THROW(exp->setOffset(&val4[0]));
-    OIIO_CHECK_NO_THROW(exp->getGamma(&val4[0]));
-    OIIO_CHECK_ASSERT(val4 != identity_val4);
+    std::vector<double> expected_offset = { 0., val4[1], 0., 0. };
+    val4[1] = -1.0;
+    OIIO_CHECK_NO_THROW(exp->getOffset(&val4[0]));
+    OIIO_CHECK_ASSERT(val4 == expected_offset);
 }
 
 #endif

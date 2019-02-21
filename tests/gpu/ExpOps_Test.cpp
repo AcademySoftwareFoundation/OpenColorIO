@@ -122,7 +122,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, forward)
 
 OCIO_ADD_GPU_TEST(ExponentOp, inverse_legacy_shader_v1)
 {
-    const float exp[4] = { 1.0f/2.0f, 1.0f/2.0f, 1.0f/2.0f, 1.0f };
+    const float exp[4] = { 2.6f, 2.4f, 1.8f, 1.1f };
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
@@ -133,7 +133,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, inverse_legacy_shader_v1)
 
 OCIO_ADD_GPU_TEST(ExponentOp, inverse_v1)
 {
-    const float exp[4] = { 1.0f/2.0f, 1.0f/2.0f, 1.0f/2.0f, 1.0f };
+    const float exp[4] = { 2.6f, 2.4f, 1.8f, 1.1f };
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
@@ -144,7 +144,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, inverse_v1)
 
 OCIO_ADD_GPU_TEST(ExponentOp, inverse)
 {
-    const float exp[4] = { 1.0f/2.0f, 1.0f/2.0f, 1.0f/2.0f, 1.0f };
+    const float exp[4] = { 2.6f, 2.4f, 1.8f, 1.1f };
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
