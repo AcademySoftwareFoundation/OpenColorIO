@@ -304,7 +304,7 @@ OCIO_NAMESPACE_ENTER
                << ", the parsing of the field '" << field << "' from '" 
                << node.Tag() << "' failed: " << msg;
 
-            LogWarning(os.str());
+            throw Exception(os.str().c_str());
         }
         
         // View

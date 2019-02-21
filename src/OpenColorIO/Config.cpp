@@ -3052,38 +3052,9 @@ OIIO_ADD_TEST(Config, error_line_number)
     std::istringstream is;
     is.str(SHORT_PROFILE);
 
-    // Redirect the std::cerr to catch the warning.
-    class Guard
-    {
-    public:
-        Guard()
-            :   m_oldBuf(std::cerr.rdbuf())
-        {
-            std::cerr.rdbuf(m_ss.rdbuf());
-        }
-
-        ~Guard()
-        {
-            std::cerr.rdbuf(m_oldBuf);
-            m_oldBuf = nullptr;
-        }
-
-        std::string output() { return m_ss.str(); }
-
-    private:
-        std::stringstream m_ss;
-        std::streambuf *  m_oldBuf;
-
-        Guard(const Guard&) = delete;
-        Guard operator=(const Guard&) = delete;
-    };
-
-    Guard g;
-    OIIO_CHECK_NO_THROW(OCIO::Config::CreateFromStream(is)->createEditableCopy());
-    OIIO_CHECK_EQUAL(g.output(), 
-        std::string("[OpenColorIO Warning]: At line 12, the parsing of the field "
-                    "'matrix' from 'MatrixTransform' failed: 'matrix' field "
-                    "must be 16 floats. Found '6'.\n"));
+    OIIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is),
+                          OCIO::Exception,
+                          "Error: Loading the OCIO profile failed. At line 12, the parsing");
 }
 
 #endif // OCIO_UNIT_TEST
