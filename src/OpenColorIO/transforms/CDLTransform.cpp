@@ -385,8 +385,17 @@ OCIO_NAMESPACE_ENTER
     
     void CDLTransform::validate() const
     {
-        Transform::validate();
-        getImpl()->validate();
+        try
+        {
+            Transform::validate();
+            getImpl()->validate();
+        }
+        catch(Exception & ex)
+        {
+            std::string errMsg("CDLTransform validation failed: ");
+            errMsg += ex.what();
+            throw Exception(errMsg.c_str());
+        }
     }
 
     const char * CDLTransform::getXML() const
