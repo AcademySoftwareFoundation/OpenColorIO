@@ -3028,4 +3028,62 @@ OIIO_ADD_TEST(Config, view)
     }
 }
 
+OIIO_ADD_TEST(Config, error_line_number)
+{
+    // Check the line number contained in the parser error messages.
+
+    const std::string SHORT_PROFILE =
+        "ocio_profile_version: 2\n"
+        "strictparsing: false\n"
+        "roles:\n"
+        "  default: raw\n"
+        "displays:\n"
+        "  sRGB:\n"
+        "  - !<View> {name: Raw, colorspace: raw}\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw\n"
+		// Some floats are missing for 'matrix'
+        "    to_reference: !<MatrixTransform> {matrix: [1, 0, 0, 0, 0, 1]}\n"
+        "    allocation: uniform\n"
+        "\n";
+    
+    std::istringstream is;
+    is.str(SHORT_PROFILE);
+
+    // Redirect the std::cerr to catch the warning.
+    class Guard
+    {
+    public:
+        Guard()
+            :   m_oldBuf(std::cerr.rdbuf())
+        {
+            std::cerr.rdbuf(m_ss.rdbuf());
+        }
+
+        ~Guard()
+        {
+            std::cerr.rdbuf(m_oldBuf);
+            m_oldBuf = nullptr;
+        }
+
+        std::string output() { return m_ss.str(); }
+
+    private:
+        std::stringstream m_ss;
+        std::streambuf *  m_oldBuf;
+
+        Guard(const Guard&) = delete;
+        Guard operator=(const Guard&) = delete;
+    };
+
+    Guard g;
+    OIIO_CHECK_NO_THROW(OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    OIIO_CHECK_EQUAL(g.output(), 
+        std::string("[OpenColorIO Warning]: At line 12, the parsing of the field "
+                    "'matrix' from 'MatrixTransform' failed: 'matrix' field "
+                    "must be 16 floats. Found '6'.\n"));
+}
+
 #endif // OCIO_UNIT_TEST

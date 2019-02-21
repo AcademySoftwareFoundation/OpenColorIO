@@ -301,7 +301,7 @@ OCIO_NAMESPACE_ENTER
         
             std::ostringstream os;
             os << "At line " << (node.GetMark().line + 1) 
-               << ", the field '" << field << "' parsing for the node '" 
+               << ", the parsing of the field '" << field << "' from '" 
                << node.Tag() << "' failed: " << msg;
 
             LogWarning(os.str());
