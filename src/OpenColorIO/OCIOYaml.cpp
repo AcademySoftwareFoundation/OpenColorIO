@@ -259,14 +259,14 @@ OCIO_NAMESPACE_ENTER
         //
         
         inline void LogUnknownKeyWarning(const YAML::Node & node,
-                                         const YAML::Node & tag)
+                                         const YAML::Node & key)
         {
-            std::string field;
-            load(tag, field);
+            std::string keyName;
+            load(key, keyName);
         
             std::ostringstream os;
-            os << "At line " << (node.GetMark().line + 1)
-               << ", unknown field in " << node.Tag() << ": '" << field << "'.";
+            os << "At line " << (key.GetMark().line + 1)
+               << ", unknown key '" << keyName << "' in '" << node.Tag() << "'.";
 
             LogWarning(os.str());
         }
@@ -274,11 +274,11 @@ OCIO_NAMESPACE_ENTER
         inline void LogUnknownKeyWarning(const std::string & name,
                                          const YAML::Node & tag)
         {
-            std::string field;
-            load(tag, field);
+            std::string key;
+            load(tag, key);
         
             std::ostringstream os;
-            os << "Unknown field in " << name << ": '" << field << "'.";
+            os << "Unknown key in " << name << ": '" << key << "'.";
             LogWarning(os.str());
         }
         
@@ -287,22 +287,23 @@ OCIO_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "At line " << (node.GetMark().line + 1) 
-               << ":  " << msg;
+               << ", '" << node.Tag() << "' parsing failed: " 
+               << msg;
 
             throw Exception(os.str().c_str());
         }
 
-        inline void throwError(const YAML::Node & node,
-                               const YAML::Node & tag,
-                               const std::string & msg)
+        inline void throwValueError(const std::string & nodeName,
+                                    const YAML::Node & key,
+                                    const std::string & msg)
         {
-            std::string field;
-            load(tag, field);
+            std::string keyName;
+            load(key, keyName);
         
             std::ostringstream os;
-            os << "At line " << (node.GetMark().line + 1) 
-               << ", the parsing of the field '" << field << "' from '" 
-               << node.Tag() << "' failed: " << msg;
+            os << "At line " << (key.GetMark().line + 1) 
+               << ", the value parsing of the key '" << keyName 
+               << "' from '" << nodeName << "' failed: " << msg;
 
             throw Exception(os.str().c_str());
         }
@@ -478,9 +479,9 @@ OCIO_NAMESPACE_ENTER
                     if(floatvecval.size() != 3)
                     {
                         std::ostringstream os;
-                        os << "'slope' field must be 3 ";
+                        os << "'slope' values must be 3 ";
                         os << "floats. Found '" << floatvecval.size() << "'.";
-                        throwError(node, first, os.str());
+                        throwValueError(node.Tag(), first, os.str());
                     }
                     t->setSlope(&floatvecval[0]);
                 }
@@ -490,9 +491,9 @@ OCIO_NAMESPACE_ENTER
                     if(floatvecval.size() != 3)
                     {
                         std::ostringstream os;
-                        os << "'offset' field must be 3 ";
+                        os << "'offset' values must be 3 ";
                         os << "floats. Found '" << floatvecval.size() << "'.";
-                        throwError(node, first, os.str());
+                        throwValueError(node.Tag(), first, os.str());
                     }
                     t->setOffset(&floatvecval[0]);
                 }
@@ -502,9 +503,9 @@ OCIO_NAMESPACE_ENTER
                     if(floatvecval.size() != 3)
                     {
                         std::ostringstream os;
-                        os << "'power' field must be 3 ";
+                        os << "'power' values must be 3 ";
                         os << "floats. Found '" << floatvecval.size() << "'.";
-                        throwError(node, first, os.str());
+                        throwValueError(node.Tag(), first, os.str());
                     }
                     t->setPower(&floatvecval[0]);
                 }
@@ -643,9 +644,9 @@ OCIO_NAMESPACE_ENTER
                     if(val.size() != 4)
                     {
                         std::ostringstream os;
-                        os << "'value' field must be 4 ";
+                        os << "'value' values must be 4 ";
                         os << "floats. Found '" << val.size() << "'.";
-                        throwError(node, first, os.str());
+                        throwValueError(node.Tag(), first, os.str());
                     }
                     t->setValue(&val[0]);
                 }
@@ -774,7 +775,8 @@ OCIO_NAMESPACE_ENTER
                         // throwing an exception.  Should this be a warning, instead?
                         if(!childTransform)
                         {
-                            throwError(node, first, "Child transform could not be parsed.");
+                            throwValueError(node.Tag(), first, 
+                                            "Child transform could not be parsed.");
                         }
                         
                         t->push_back(childTransform);
@@ -943,9 +945,9 @@ OCIO_NAMESPACE_ENTER
                     if(val.size() != 16)
                     {
                         std::ostringstream os;
-                        os << "'matrix' field must be 16 ";
+                        os << "'matrix' values must be 16 ";
                         os << "floats. Found '" << val.size() << "'.";
-                        throwError(node, first, os.str());
+                        throwValueError(node.Tag(), first, os.str());
                     }
                     t->setMatrix(&val[0]);
                 }
@@ -956,9 +958,9 @@ OCIO_NAMESPACE_ENTER
                     if(val.size() != 4)
                     {
                         std::ostringstream os;
-                        os << "'offset' field must be 4 ";
+                        os << "'offset' values must be 4 ";
                         os << "floats. Found '" << val.size() << "'.";
-                        throwError(node, first, os.str());
+                        throwValueError(node.Tag(), first, os.str());
                     }
                     t->setOffset(&val[0]);
                 }
@@ -1713,8 +1715,8 @@ OCIO_NAMESPACE_ENTER
                     if(second.Type() != YAML::NodeType::Map)
                     {
                         std::ostringstream os;
-                        os << "'environment' field needs to be a (name: key) map.";
-                        throwError(node, first, os.str());
+                        os << "The value type of 'environment' key needs to be a map.";
+                        throwValueError(node.Tag(), first, os.str());
                     }
                     for (Iterator it = second.begin();
                          it != second.end();
@@ -1748,9 +1750,9 @@ OCIO_NAMESPACE_ENTER
                     if(val.size() != 3)
                     {
                         std::ostringstream os;
-                        os << "'luma' field must be 3 ";
+                        os << "'luma' values must be 3 ";
                         os << "floats. Found '" << val.size() << "'.";
-                        throwError(node, first, os.str());
+                        throwValueError(node.Tag(), first, os.str());
                     }
                     c->setDefaultLumaCoefs(&val[0]);
                 }
@@ -1759,8 +1761,8 @@ OCIO_NAMESPACE_ENTER
                     if(second.Type() != YAML::NodeType::Map)
                     {
                         std::ostringstream os;
-                        os << "'roles' field needs to be a (name: key) map.";
-                        throwError(node, first, os.str());
+                        os << "The value type of the 'roles' key needs to be a map.";
+                        throwValueError(node.Tag(), first, os.str());
                     }
                     for (Iterator it = second.begin();
                          it != second.end();
@@ -1777,8 +1779,8 @@ OCIO_NAMESPACE_ENTER
                     if(second.Type() != YAML::NodeType::Map)
                     {
                         std::ostringstream os;
-                        os << "'displays' field needs to be a (name: key) map.";
-                        throwError(node, first, os.str());
+                        os << "The value type of 'displays' key needs to be a map.";
+                        throwValueError(node.Tag(), first, os.str());
                     }
                     for (Iterator it = second.begin();
                          it != second.end();

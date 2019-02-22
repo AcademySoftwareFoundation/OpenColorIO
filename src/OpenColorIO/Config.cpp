@@ -3028,7 +3028,7 @@ OIIO_ADD_TEST(Config, view)
     }
 }
 
-OIIO_ADD_TEST(Config, error_line_number)
+OIIO_ADD_TEST(Config, key_value_error)
 {
     // Check the line number contained in the parser error messages.
 
@@ -3044,8 +3044,10 @@ OIIO_ADD_TEST(Config, error_line_number)
         "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: raw\n"
-		// Some floats are missing for 'matrix'
-        "    to_reference: !<MatrixTransform> {matrix: [1, 0, 0, 0, 0, 1]}\n"
+        "    to_reference: !<MatrixTransform> \n"
+        "                      {\n"
+        "                           matrix: [1, 0, 0, 0, 0, 1]\n" // Missing values.
+        "                      }\n"
         "    allocation: uniform\n"
         "\n";
     
@@ -3054,7 +3056,68 @@ OIIO_ADD_TEST(Config, error_line_number)
 
     OIIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is),
                           OCIO::Exception,
-                          "Error: Loading the OCIO profile failed. At line 12, the parsing");
+                          "Error: Loading the OCIO profile failed. At line 14, the value "
+                          "parsing of the key 'matrix' from 'MatrixTransform' failed: "
+                          "'matrix' values must be 16 floats. Found '6'.");
+}
+
+namespace
+{
+
+// Redirect the std::cerr to catch the warning.
+class Guard
+{
+public:      
+    Guard()      
+        :   m_oldBuf(std::cerr.rdbuf())      
+    {        
+        std::cerr.rdbuf(m_ss.rdbuf());       
+    }        
+
+    ~Guard()         
+    {        
+        std::cerr.rdbuf(m_oldBuf);       
+        m_oldBuf = nullptr;      
+    }        
+
+    std::string output() { return m_ss.str(); }      
+
+private:         
+    std::stringstream m_ss;      
+    std::streambuf *  m_oldBuf;      
+
+    Guard(const Guard&) = delete;        
+    Guard operator=(const Guard&) = delete;      
+};
+
+};
+
+OIIO_ADD_TEST(Config, unknown_key_error)
+{
+    const std::string SHORT_PROFILE =
+        "ocio_profile_version: 2\n"
+        "strictparsing: false\n"
+        "roles:\n"
+        "  default: raw\n"
+        "displays:\n"
+        "  sRGB:\n"
+        "  - !<View> {name: Raw, colorspace: raw}\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw\n"
+        "    dummyKey: dummyValue\n"
+        "    to_reference: !<MatrixTransform> {offset: [1, 0, 0, 0]}\n"
+        "    allocation: uniform\n"
+        "\n";
+    
+    std::istringstream is;
+    is.str(SHORT_PROFILE);
+
+    Guard g;
+    OIIO_CHECK_NO_THROW(OCIO::Config::CreateFromStream(is));
+    OIIO_CHECK_EQUAL(g.output(), 
+                     "[OpenColorIO Warning]: At line 12, unknown key 'dummyKey' in 'ColorSpace'.\n");
 }
 
 #endif // OCIO_UNIT_TEST
