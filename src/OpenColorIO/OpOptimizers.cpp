@@ -245,7 +245,7 @@ OIIO_ADD_TEST(OpOptimizers, RemoveInverseOps)
 {
     OCIO::OpRcPtrVec ops;
     
-    float exp[4] = { 1.2f, 1.3f, 1.4f, 1.5f };
+    const double exp[4] = { 1.2, 1.3, 1.4, 1.5 };
     
     
     float k[3] = { 0.18f, 0.18f, 0.18f };
@@ -284,7 +284,7 @@ OIIO_ADD_TEST(OpOptimizers, CombineOps)
     float m3[4] = { 0.6f, 0.6f, 0.6f, 1.0f };
     float m4[4] = { 0.7f, 0.7f, 0.7f, 1.0f };
     
-    float exp[4] = { 1.2f, 1.3f, 1.4f, 1.5f };
+    const double exp[4] = { 1.2, 1.3, 1.4, 1.5 };
     
     {
     OCIO::OpRcPtrVec ops;

@@ -66,8 +66,8 @@ void AddExponent(OCIOGPUTest & test,
 void AddExponentWithLinear(OCIOGPUTest & test, 
                            OCIO::GpuShaderDescRcPtr & shaderDesc,
                            OCIO::TransformDirection direction,
-                           const double * gamma,
-                           const double * offset,
+                           const double(&gamma)[4],
+                           const double(&offset)[4],
                            float epsilon)
 {
     OCIO::ExponentWithLinearTransformRcPtr 

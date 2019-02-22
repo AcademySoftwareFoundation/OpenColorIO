@@ -140,50 +140,41 @@ void ExponentWithLinearTransform::validate() const
     }
 }
 
-void ExponentWithLinearTransform::setGamma(const double * vec4)
+void ExponentWithLinearTransform::setGamma(const double(&values)[4])
 {
-    if(vec4)
-    {
-        getImpl()->getRedParams()  [0] = vec4[0];
-        getImpl()->getGreenParams()[0] = vec4[1];
-        getImpl()->getBlueParams() [0] = vec4[2];
-        getImpl()->getAlphaParams()[0] = vec4[3];
-    }
+    getImpl()->getRedParams()  [0] = values[0];
+    getImpl()->getGreenParams()[0] = values[1];
+    getImpl()->getBlueParams() [0] = values[2];
+    getImpl()->getAlphaParams()[0] = values[3];
 }
 
-void ExponentWithLinearTransform::getGamma(double * vec4) const
+void ExponentWithLinearTransform::getGamma(double(&values)[4]) const
 {
-    if(vec4)
-    {
-        vec4[0] = getImpl()->getRedParams()  [0];
-        vec4[1] = getImpl()->getGreenParams()[0];
-        vec4[2] = getImpl()->getBlueParams() [0];
-        vec4[3] = getImpl()->getAlphaParams()[0];
-    }
+    values[0] = getImpl()->getRedParams()  [0];
+    values[1] = getImpl()->getGreenParams()[0];
+    values[2] = getImpl()->getBlueParams() [0];
+    values[3] = getImpl()->getAlphaParams()[0];
 }
 
-void ExponentWithLinearTransform::setOffset(const double * vec4)
+void ExponentWithLinearTransform::setOffset(const double(&values)[4])
 {
-    if(vec4)
-    {
-        const GammaOpData::Params red = { getImpl()->getRedParams()[0]  , vec4[0] };
-        const GammaOpData::Params grn = { getImpl()->getGreenParams()[0], vec4[1] };
-        const GammaOpData::Params blu = { getImpl()->getBlueParams()[0] , vec4[2] };
-        const GammaOpData::Params alp = { getImpl()->getAlphaParams()[0], vec4[3] };
+    const GammaOpData::Params red = { getImpl()->getRedParams()[0]  , values[0] };
+    const GammaOpData::Params grn = { getImpl()->getGreenParams()[0], values[1] };
+    const GammaOpData::Params blu = { getImpl()->getBlueParams()[0] , values[2] };
+    const GammaOpData::Params alp = { getImpl()->getAlphaParams()[0], values[3] };
 
-        getImpl()->setRedParams(red);
-        getImpl()->setGreenParams(grn);
-        getImpl()->setBlueParams(blu);
-        getImpl()->setAlphaParams(alp);
-    }
+    getImpl()->setRedParams(red);
+    getImpl()->setGreenParams(grn);
+    getImpl()->setBlueParams(blu);
+    getImpl()->setAlphaParams(alp);
 }
 
-void ExponentWithLinearTransform::getOffset(double * vec4) const
+void ExponentWithLinearTransform::getOffset(double(&values)[4]) const
 {
-    vec4[0] = getImpl()->getRedParams().size()==2   ? getImpl()->getRedParams()[1]   : 0.;
-    vec4[1] = getImpl()->getGreenParams().size()==2 ? getImpl()->getGreenParams()[1] : 0.;
-    vec4[2] = getImpl()->getBlueParams().size()==2  ? getImpl()->getBlueParams()[1]  : 0.;
-    vec4[3] = getImpl()->getAlphaParams().size()==2 ? getImpl()->getAlphaParams()[1] : 0.;
+    values[0] = getImpl()->getRedParams().size()==2   ? getImpl()->getRedParams()[1]   : 0.;
+    values[1] = getImpl()->getGreenParams().size()==2 ? getImpl()->getGreenParams()[1] : 0.;
+    values[2] = getImpl()->getBlueParams().size()==2  ? getImpl()->getBlueParams()[1]  : 0.;
+    values[3] = getImpl()->getAlphaParams().size()==2 ? getImpl()->getAlphaParams()[1] : 0.;
 }
 
 std::ostream& operator<< (std::ostream& os, const ExponentWithLinearTransform & t)
@@ -249,6 +240,19 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "unittest.h"
 
 
+namespace
+{
+
+void CheckValues(const double(&v1)[4], const double(&v2)[4])
+{
+    OIIO_CHECK_CLOSE(v1[0], v2[0], 1e-6f);
+    OIIO_CHECK_CLOSE(v1[1], v2[1], 1e-6f);
+    OIIO_CHECK_CLOSE(v1[2], v2[2], 1e-6f);
+    OIIO_CHECK_CLOSE(v1[3], v2[3], 1e-6f);
+}
+
+};
+
 OIIO_ADD_TEST(ExponentWithLinearTransform, basic)
 {
     OCIO::ExponentWithLinearTransformRcPtr exp = OCIO::ExponentWithLinearTransform::Create();
@@ -257,26 +261,25 @@ OIIO_ADD_TEST(ExponentWithLinearTransform, basic)
     exp->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
     OIIO_CHECK_EQUAL(exp->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
 
-    std::vector<double> val4(4, 1.), identity_val4(4, 1.);
-    OIIO_CHECK_NO_THROW(exp->getGamma(&val4[0]));
-    OIIO_CHECK_ASSERT(val4 == identity_val4);
+    double val4[4] = { -1., -1. -1. -1. };
 
-    val4[1] = 2.;
-    OIIO_CHECK_NO_THROW(exp->setGamma(&val4[0]));
-    OIIO_CHECK_NO_THROW(exp->getGamma(&val4[0]));
-    OIIO_CHECK_ASSERT(val4 != identity_val4);
+    OIIO_CHECK_NO_THROW(exp->getGamma(val4));
+    CheckValues(val4, { 1., 1., 1., 1. });
 
-    val4[1] = 1.;
-    identity_val4 = { 0., 0., 0., 0. };
-    OIIO_CHECK_NO_THROW(exp->getOffset(&val4[0]));
-    OIIO_CHECK_ASSERT(val4 == identity_val4);
+    val4[1] = 2.1234567;
+    OIIO_CHECK_NO_THROW(exp->setGamma(val4));
+    val4[1] = -1.;
+    OIIO_CHECK_NO_THROW(exp->getGamma(val4));
+    CheckValues(val4, {1., 2.1234567, 1., 1.});
 
-    val4[1] = 0.5001;
-    OIIO_CHECK_NO_THROW(exp->setOffset(&val4[0]));
-    std::vector<double> expected_offset = { 0., val4[1], 0., 0. };
-    val4[1] = -1.0;
-    OIIO_CHECK_NO_THROW(exp->getOffset(&val4[0]));
-    OIIO_CHECK_ASSERT(val4 == expected_offset);
+    OIIO_CHECK_NO_THROW(exp->getOffset(val4));
+    CheckValues(val4, { 0., 0., 0., 0. });
+
+    val4[1] = 0.1234567;
+    OIIO_CHECK_NO_THROW(exp->setOffset(val4));
+    val4[1] = -1.;
+    OIIO_CHECK_NO_THROW(exp->getOffset(val4));
+    CheckValues(val4, { 0., 0.1234567, 0., 0. });
 }
 
 #endif

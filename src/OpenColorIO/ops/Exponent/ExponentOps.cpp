@@ -292,14 +292,11 @@ OCIO_NAMESPACE_ENTER
     
     
     void CreateExponentOp(OpRcPtrVec & ops,
-                          const float * exp4,
+                          const double(&vec4)[4],
                           TransformDirection direction)
     {
-        bool expIsIdentity = IsVecEqualToOne(exp4, 4);
-        if(expIsIdentity) return;
-        double d_exp[4] = { double(exp4[0]), double(exp4[1]),
-                            double(exp4[2]), double(exp4[3]) };
-        ops.push_back( ExponentOpRcPtr(new ExponentOp(d_exp, direction)) );
+        if(IsVecEqualToOneFlt(vec4, 4)) return;
+        ops.push_back( ExponentOpRcPtr(new ExponentOp(vec4, direction)) );
     }
 }
 OCIO_NAMESPACE_EXIT
@@ -316,7 +313,7 @@ OCIO_NAMESPACE_USING
 
 OIIO_ADD_TEST(ExponentOps, Value)
 {
-    const float exp1[4] = { 1.2f, 1.3f, 1.4f, 1.5f };
+    const double exp1[4] = { 1.2, 1.3, 1.4, 1.5 };
     
     OpRcPtrVec ops;
     OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
@@ -365,7 +362,7 @@ void ValidateOp(const float * source, const OpRcPtr op, const float * result, co
 
 OIIO_ADD_TEST(ExponentOps, ValueLimits)
 {
-    const float exp1[4] = { 0.0f, 2.0f, -2.0f, 1.5f };
+    const double exp1[4] = { 0., 2., -2., 1.5 };
 
     OpRcPtrVec ops;
     OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
@@ -393,8 +390,8 @@ OIIO_ADD_TEST(ExponentOps, ValueLimits)
 
 OIIO_ADD_TEST(ExponentOps, Inverse)
 {
-    const float exp1[4] = { 2.0f, 1.02345f, 5.651321f, 0.12345678910f };
-    const float exp2[4] = { 2.0f, 2.0f, 2.0f, 2.0f };
+    const double exp1[4] = { 2.0, 1.02345, 5.651321, 0.12345678910 };
+    const double exp2[4] = { 2.0, 2.0,     2.0,      2.0 };
     
     OpRcPtrVec ops;
     
@@ -429,8 +426,8 @@ OIIO_ADD_TEST(ExponentOps, Combining)
 {
     const float error = 1e-6f;
     {
-    const float exp1[4] = { 2.0f, 2.0f, 2.0f, 1.0f };
-    const float exp2[4] = { 1.2f, 1.2f, 1.2f, 1.0f };
+    const double exp1[4] = { 2.0, 2.0, 2.0, 1.0 };
+    const double exp2[4] = { 1.2, 1.2, 1.2, 1.0 };
     
     OpRcPtrVec ops;
     OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
@@ -468,7 +465,7 @@ OIIO_ADD_TEST(ExponentOps, Combining)
     
     {
     
-    const float exp1[4] = {1.037289f, 1.019015f, 0.966082f, 1.0f};
+    const double exp1[4] = {1.037289, 1.019015, 0.966082, 1.0};
     
     OpRcPtrVec ops;
     OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
@@ -486,7 +483,7 @@ OIIO_ADD_TEST(ExponentOps, Combining)
     }
 
     {
-    const float exp1[4] = { 1.037289f, 1.019015f, 0.966082f, 1.0f };
+    const double exp1[4] = { 1.037289, 1.019015, 0.966082, 1.0 };
 
     OpRcPtrVec ops;
     OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
@@ -527,7 +524,7 @@ OIIO_ADD_TEST(ExponentOps, Combining)
 
 OIIO_ADD_TEST(ExponentOps, ThrowCreate)
 {
-    const float exp1[4] = { 0.0f, 1.3f, 1.4f, 1.5f };
+    const double exp1[4] = { 0.0, 1.3, 1.4, 1.5 };
 
     OpRcPtrVec ops;
     OIIO_CHECK_THROW_WHAT(
@@ -541,7 +538,7 @@ OIIO_ADD_TEST(ExponentOps, ThrowCreate)
 
 OIIO_ADD_TEST(ExponentOps, ThrowCombine)
 {
-    const float exp1[4] = { 0.0f, 1.3f, 1.4f, 1.5f };
+    const double exp1[4] = { 0.0, 1.3, 1.4, 1.5 };
 
     OpRcPtrVec ops;
     OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
@@ -557,7 +554,7 @@ OIIO_ADD_TEST(ExponentOps, ThrowCombine)
 
 OIIO_ADD_TEST(ExponentOps, NoOp)
 {
-    const float exp1[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    const double exp1[4] = { 1.0, 1.0, 1.0, 1.0 };
 
     // CreateExponentOp will not create a NoOp
     OpRcPtrVec ops;
@@ -569,8 +566,8 @@ OIIO_ADD_TEST(ExponentOps, NoOp)
 
 OIIO_ADD_TEST(ExponentOps, CacheID)
 {
-    const float exp1[4] = { 2.0f, 2.1f, 3.0f, 3.1f };
-    const float exp2[4] = { 4.0f, 4.1f, 5.0f, 5.1f };
+    const double exp1[4] = { 2.0, 2.1, 3.0, 3.1 };
+    const double exp2[4] = { 4.0, 4.1, 5.0, 5.1 };
 
     OpRcPtrVec ops;
     OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));

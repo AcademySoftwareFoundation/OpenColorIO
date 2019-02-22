@@ -414,8 +414,10 @@ OCIO_NAMESPACE_ENTER
 
         //!cpp:function::
         void setValue(const float * vec4);
+        void setValue(const double(&vec4)[4]);
         //!cpp:function::
         void getValue(float * vec4) const;
+        void getValue(double(&vec4)[4]) const;
     
     private:
         ExponentTransform();
@@ -468,15 +470,15 @@ OCIO_NAMESPACE_ENTER
         // .. note::
         //     The gamma values must be in the range of [1, 10]. Set the transform direction 
         //     to inverse to obtain the effect of values less than 1.
-        void setGamma(const double * vec4);
+        void setGamma(const double(&values)[4]);
         //!cpp:function::
-        void getGamma(double * vec4) const;
+        void getGamma(double(&values)[4]) const;
 
         //!cpp:function::
         // .. note:: The offset values must be in the range [0, 0.9].
-        void setOffset(const double * vec4);
+        void setOffset(const double(&values)[4]);
         //!cpp:function::
-        void getOffset(double * vec4) const;
+        void getOffset(double(&values)[4]) const;
 
     private:
         ExponentWithLinearTransform();

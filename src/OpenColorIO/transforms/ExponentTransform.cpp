@@ -149,6 +149,14 @@ void ExponentTransform::setValue(const float * vec4)
     }
 }
 
+void ExponentTransform::setValue(const double(&vec4)[4])
+{
+    getImpl()->getRedParams()  [0] = vec4[0];
+    getImpl()->getGreenParams()[0] = vec4[1];
+    getImpl()->getBlueParams() [0] = vec4[2];
+    getImpl()->getAlphaParams()[0] = vec4[3];
+}
+
 void ExponentTransform::getValue(float * vec4) const
 {
     if(vec4)
@@ -158,6 +166,14 @@ void ExponentTransform::getValue(float * vec4) const
         vec4[2] = (float)getImpl()->getBlueParams() [0];
         vec4[3] = (float)getImpl()->getAlphaParams()[0];
     }
+}
+
+void ExponentTransform::getValue(double(&vec4)[4]) const
+{
+    vec4[0] = getImpl()->getRedParams()  [0];
+    vec4[1] = getImpl()->getGreenParams()[0];
+    vec4[2] = getImpl()->getBlueParams() [0];
+    vec4[3] = getImpl()->getAlphaParams()[0];
 }
 
 std::ostream& operator<< (std::ostream& os, const ExponentTransform & t)
@@ -190,7 +206,7 @@ void BuildExponentOps(OpRcPtrVec & ops,
     TransformDirection combinedDir = CombineTransformDirections(dir,
         transform.getDirection());
     
-    float vec4[4] = { 1., 1., 1., 1. };
+    double vec4[4] = { 1., 1., 1., 1. };
     transform.getValue(vec4);
 
     if(config.getMajorVersion()==1)
@@ -201,12 +217,10 @@ void BuildExponentOps(OpRcPtrVec & ops,
     }
     else
     {
-        double gamma4[4] = { vec4[0], vec4[1], vec4[2], vec4[3] };
-
         CreateGammaOp(ops, "", OpData::Descriptions(),
                       combinedDir==TRANSFORM_DIR_FORWARD ? GammaOpData::BASIC_FWD
                                                          : GammaOpData::BASIC_REV,
-                      gamma4, nullptr);
+                      vec4, nullptr);
     }
 }
 
@@ -240,6 +254,35 @@ OIIO_ADD_TEST(ExponentTransform, basic)
     OIIO_CHECK_NO_THROW(exp->setValue(&val4[0]));
     OIIO_CHECK_NO_THROW(exp->getValue(&val4[0]));
     OIIO_CHECK_ASSERT(val4 != identity_val4);
+}
+
+namespace
+{
+
+void CheckValues(const double(&v1)[4], const double(&v2)[4])
+{
+    OIIO_CHECK_CLOSE(v1[0], v2[0], 1e-6f);
+    OIIO_CHECK_CLOSE(v1[1], v2[1], 1e-6f);
+    OIIO_CHECK_CLOSE(v1[2], v2[2], 1e-6f);
+    OIIO_CHECK_CLOSE(v1[3], v2[3], 1e-6f);
+}
+
+};
+
+OIIO_ADD_TEST(ExponentTransform, double)
+{
+    OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
+    OIIO_CHECK_EQUAL(exp->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+
+    double val4[4] = { -1., -2., -3., -4. };
+    OIIO_CHECK_NO_THROW(exp->getValue(val4));
+    CheckValues(val4, { 1., 1., 1., 1. });
+
+    val4[1] = 2.1234567;
+    OIIO_CHECK_NO_THROW(exp->setValue(val4));
+    val4[1] = -2.;
+    OIIO_CHECK_NO_THROW(exp->getValue(val4));
+    CheckValues(val4, {1., 2.1234567, 1., 1.});
 }
 
 #endif

@@ -611,7 +611,7 @@ OCIO_NAMESPACE_ENTER
                 
                 if(key == "value")
                 {
-                    std::vector<float> val;
+                    std::vector<double> val;
                     load(second, val);
                     if(val.size() != 4)
                     {
@@ -620,7 +620,8 @@ OCIO_NAMESPACE_ENTER
                         os << "floats. Found '" << val.size() << "'.";
                         throw Exception(os.str().c_str());
                     }
-                    t->setValue(&val[0]);
+                    const double v[4] = { val[0], val[1], val[2], val[3] };
+                    t->setValue(v);
                 }
                 else if(key == "direction")
                 {
@@ -640,10 +641,13 @@ OCIO_NAMESPACE_ENTER
             out << YAML::VerbatimTag("ExponentTransform");
             out << YAML::Flow << YAML::BeginMap;
             
-            std::vector<float> value(4, 0.0);
-            t->getValue(&value[0]);
+            double value[4];
+            t->getValue(value);
+            std::vector<double> v;
+            v.assign(value, value + 4);
+
             out << YAML::Key << "value";
-            out << YAML::Value << YAML::Flow << value;
+            out << YAML::Value << YAML::Flow << v;
             EmitBaseTransformKeyValues(out, t);
             out << YAML::EndMap;
         }
@@ -691,7 +695,8 @@ OCIO_NAMESPACE_ENTER
                            << "'.";
                         throw Exception(os.str().c_str());
                     }
-                    t->setGamma(&val[0]);
+                    const double v[4] = { val[0], val[1], val[2], val[3] };
+                    t->setGamma(v);
                     fields = FieldFound(fields|GAMMA_FOUND);
                 }
                 else if(key == "offset")
@@ -707,7 +712,8 @@ OCIO_NAMESPACE_ENTER
                            << "'.";
                         throw Exception(os.str().c_str());
                     }
-                    t->setOffset(&val[0]);
+                    const double v[4] = { val[0], val[1], val[2], val[3] };
+                    t->setOffset(v);
                     fields = FieldFound(fields|OFFSET_FOUND);
                 }
                 else if(key == "direction")
@@ -747,15 +753,21 @@ OCIO_NAMESPACE_ENTER
             out << YAML::VerbatimTag("ExponentWithLinearTransform");
             out << YAML::Flow << YAML::BeginMap;
             
-            std::vector<double> gamma(4, 1.);
-            t->getGamma(&gamma[0]);
-            out << YAML::Key << "gamma";
-            out << YAML::Value << YAML::Flow << gamma;
+            std::vector<double> v;
 
-            std::vector<double> offset(4, 0.);
-            t->getOffset(&offset[0]);
+            double gamma[4];
+            t->getGamma(gamma);
+            v.assign(gamma, gamma + 4);
+
+            out << YAML::Key << "gamma";
+            out << YAML::Value << YAML::Flow << v;
+
+            double offset[4];
+            t->getOffset(offset);
+            v.assign(offset, offset + 4);
+
             out << YAML::Key << "offset";
-            out << YAML::Value << YAML::Flow << offset;
+            out << YAML::Value << YAML::Flow << v;
 
             EmitBaseTransformKeyValues(out, t);
             out << YAML::EndMap;
