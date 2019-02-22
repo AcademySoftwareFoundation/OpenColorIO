@@ -166,7 +166,13 @@ OCIO_NAMESPACE_ENTER
     typedef OCIO_SHARED_PTR<const LogTransform> ConstLogTransformRcPtr;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<LogTransform> LogTransformRcPtr;
-    
+
+    class OCIOEXPORT LogAffineTransform;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const LogAffineTransform> ConstLogAffineTransformRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<LogAffineTransform> LogAffineTransformRcPtr;
+
     class OCIOEXPORT LookTransform;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<const LookTransform> ConstLookTransformRcPtr;
@@ -321,6 +327,15 @@ OCIO_NAMESPACE_ENTER
         ENV_ENVIRONMENT_UNKNOWN = 0,
         ENV_ENVIRONMENT_LOAD_PREDEFINED,
         ENV_ENVIRONMENT_LOAD_ALL
+    };
+
+    //!cpp:type::
+    enum LogAffineParameter
+    {
+        LOG_SIDE_SLOPE = 0,
+        LOG_SIDE_OFFSET,
+        LIN_SIDE_SLOPE,
+        LIN_SIDE_OFFSET
     };
 
     //!cpp:type::

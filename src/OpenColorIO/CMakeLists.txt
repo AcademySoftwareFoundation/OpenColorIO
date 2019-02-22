@@ -54,7 +54,11 @@ set(SOURCES
 	ops/CDL/CDLOps.cpp
 	ops/Exponent/ExponentOps.cpp
 	ops/IndexMapping.cpp
+	ops/Log/LogOpCPU.cpp
+	ops/Log/LogOpData.cpp
+	ops/Log/LogOpGPU.cpp
 	ops/Log/LogOps.cpp
+	ops/Log/LogUtils.cpp
 	ops/Lut1D/Lut1DOp.cpp
 	ops/Lut1D/Lut1DOpCPU.cpp
 	ops/Lut1D/Lut1DOpData.cpp
@@ -87,6 +91,7 @@ set(SOURCES
 	transforms/ExponentTransform.cpp
 	transforms/FileTransform.cpp
 	transforms/GroupTransform.cpp
+	transforms/LogAffineTransform.cpp
 	transforms/LogTransform.cpp
 	transforms/LookTransform.cpp
 	transforms/MatrixTransform.cpp

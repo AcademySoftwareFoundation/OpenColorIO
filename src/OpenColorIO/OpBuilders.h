@@ -97,6 +97,11 @@ OCIO_NAMESPACE_ENTER
                      const LogTransform& transform,
                      TransformDirection dir);
     
+    void BuildLogOps(OpRcPtrVec & ops,
+                     const Config& config,
+                     const LogAffineTransform& transform,
+                     TransformDirection dir);
+    
     void BuildLookOps(OpRcPtrVec & ops,
                       const Config& config,
                       const ConstContextRcPtr & context,

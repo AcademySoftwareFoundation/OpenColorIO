@@ -552,7 +552,63 @@ OCIO_NAMESPACE_ENTER
     //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const GroupTransform&);
     
-    
+
+    //!rst:: //////////////////////////////////////////////////////////////////
+
+    //!cpp:class::  Applies a logarithm with an affine transform before and after.
+    // Represents the Cineon lin-to-log type transforms.
+    //
+    // logSideSlope * log( linSideSlope * color + linSideOffset, base) + logSideOffset
+    //
+    // * Default values are: 1. * log( 1. * color + 0., 2.) + 0.
+    // * Only the rgb channels are affected.
+    class OCIOEXPORT LogAffineTransform : public Transform
+    {
+    public:
+        //!cpp:function::
+        static LogAffineTransformRcPtr Create();
+
+        //!cpp:function::
+        virtual TransformRcPtr createEditableCopy() const;
+
+        //!cpp:function::
+        virtual TransformDirection getDirection() const;
+        //!cpp:function::
+        virtual void setDirection(TransformDirection dir);
+
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
+        //!cpp:function::
+        void setBase(double base);
+        //!cpp:function::
+        double getBase() const;
+
+        //!cpp:function:: Set values for each R, G & B components.
+        void setValue(LogAffineParameter val, const double(&values)[3]);
+        //!cpp:function::
+        void getValue(LogAffineParameter val, double(&values)[3]) const;
+
+    private:
+        LogAffineTransform();
+        LogAffineTransform(const LogTransform &);
+        virtual ~LogAffineTransform();
+
+        LogAffineTransform& operator= (const LogAffineTransform &);
+
+        static void deleter(LogAffineTransform* t);
+
+        class Impl;
+        friend class Impl;
+        Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
+    };
+
+    //!cpp:function::
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const LogAffineTransform&);
+
+
     //!rst:: //////////////////////////////////////////////////////////////////
     
     //!cpp:class:: Represents log transform: log(color, base)
@@ -578,10 +634,10 @@ OCIO_NAMESPACE_ENTER
         virtual void validate() const;
 
         //!cpp:function::
-        void setBase(float val);
+        void setBase(double val);
         //!cpp:function::
-        float getBase() const;
-    
+        double getBase() const;
+
     private:
         LogTransform();
         LogTransform(const LogTransform &);
@@ -600,10 +656,8 @@ OCIO_NAMESPACE_ENTER
     
     //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const LogTransform&);
-    
-    
-    
-    
+
+
     //!rst:: //////////////////////////////////////////////////////////////////
     
     //!cpp:class::
@@ -660,8 +714,6 @@ OCIO_NAMESPACE_ENTER
     
     //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const LookTransform&);
-    
-    
     
     
     //!rst:: //////////////////////////////////////////////////////////////////

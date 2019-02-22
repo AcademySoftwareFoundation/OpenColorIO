@@ -96,6 +96,11 @@ OCIO_NAMESPACE_ENTER
         {
             BuildGroupOps(ops, config, context, *groupTransform, dir);
         }
+        else if(ConstLogAffineTransformRcPtr logAffineTransform = \
+            DynamicPtrCast<const LogAffineTransform>(transform))
+        {
+            BuildLogOps(ops, config, *logAffineTransform, dir);
+        }
         else if(ConstLogTransformRcPtr logTransform = \
             DynamicPtrCast<const LogTransform>(transform))
         {

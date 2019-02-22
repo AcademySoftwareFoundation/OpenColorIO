@@ -32,7 +32,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "ops/Log/LogOpData.h"
 #include "ops/Log/LogOps.h"
+#include "ops/Log/LogUtils.h"
 #include "OpBuilders.h"
 
 OCIO_NAMESPACE_ENTER
@@ -51,11 +53,9 @@ OCIO_NAMESPACE_ENTER
     class LogTransform::Impl : public LogOpData
     {
     public:
-        TransformDirection dir_;
         
-        Impl() :
-            LogOpData(2.0f),
-            dir_(TRANSFORM_DIR_FORWARD)
+        Impl()
+            : LogOpData(2.0f, TRANSFORM_DIR_FORWARD)
         { }
         
         ~Impl()
@@ -66,7 +66,6 @@ OCIO_NAMESPACE_ENTER
             if (this != &rhs)
             {
                 LogOpData::operator=(rhs);
-                dir_ = rhs.dir_;
             }
             return *this;
         }
@@ -107,38 +106,39 @@ OCIO_NAMESPACE_ENTER
     
     TransformDirection LogTransform::getDirection() const
     {
-        return getImpl()->dir_;
+        return getImpl()->getDirection();
     }
     
     void LogTransform::setDirection(TransformDirection dir)
     {
-        getImpl()->dir_ = dir;
+        getImpl()->setDirection(dir);
     }
     
     void LogTransform::validate() const
     {
-        Transform::validate();
-
-        // TODO: Uncomment in upcoming PR that contains the OpData validate.
-        //       getImpl()->data_->validate()
-        //       
-        //       OpData classes are the enhancement of some existing 
-        //       structures (like Lut1D and Lut3D) by encapsulating
-        //       all the data and adding high-level behaviors.
+        try
+        {
+            Transform::validate();
+            getImpl()->validate();
+        }
+        catch (Exception & ex)
+        {
+            std::string errMsg("LogTransform validation failed: ");
+            errMsg += ex.what();
+            throw Exception(errMsg.c_str());
+        }
     }
 
-    float LogTransform::getBase() const
+    double LogTransform::getBase() const
     {
-        return getImpl()->m_base[0];
+        return getImpl()->getBase();
     }
     
-    void LogTransform::setBase(float val)
+    void LogTransform::setBase(double val)
     {
-        getImpl()->m_base[0] = val;
-        getImpl()->m_base[1] = val;
-        getImpl()->m_base[2] = val;
+        getImpl()->setBase(val);
     }
-    
+
     std::ostream& operator<< (std::ostream& os, const LogTransform& t)
     {
         os << "<LogTransform ";
@@ -158,10 +158,31 @@ OCIO_NAMESPACE_ENTER
                      const LogTransform& transform,
                      TransformDirection dir)
     {
-        TransformDirection combinedDir = CombineTransformDirections(dir,
-                                                  transform.getDirection());
-        
+        TransformDirection combinedDir =
+            CombineTransformDirections(dir,
+                                       transform.getDirection());
         CreateLogOp(ops, transform.getBase(), combinedDir);
     }
 }
 OCIO_NAMESPACE_EXIT
+
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+#include "unittest.h"
+
+OIIO_ADD_TEST(LogTransform, basic)
+{
+    const OCIO::LogTransformRcPtr log = OCIO::LogTransform::Create();
+
+    OIIO_CHECK_EQUAL(log->getBase(), 2.0f);
+    OIIO_CHECK_EQUAL(log->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+
+    log->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    OIIO_CHECK_EQUAL(log->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+
+    log->setBase(10.0f);
+    OIIO_CHECK_EQUAL(log->getBase(), 10.0f);
+}
+
+#endif

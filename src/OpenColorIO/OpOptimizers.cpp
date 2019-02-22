@@ -247,16 +247,17 @@ OIIO_ADD_TEST(OpOptimizers, RemoveInverseOps)
     
     float exp[4] = { 1.2f, 1.3f, 1.4f, 1.5f };
     
-    
-    float k[3] = { 0.18f, 0.18f, 0.18f };
-    float m[3] = { 2.0f, 2.0f, 2.0f };
-    float b[3] = { 0.1f, 0.1f, 0.1f };
-    float base[3] = { 10.0f, 10.0f, 10.0f };
-    float kb[3] = { 1.0f, 1.0f, 1.0f };
+    double logSlope[3] = { 0.18, 0.18, 0.18 };
+    double linSlope[3] = { 2.0, 2.0, 2.0 };
+    double linOffset[3] = { 0.1, 0.1, 0.1 };
+    double base = 10.0;
+    double logOffset[3] = { 1.0, 1.0, 1.0 };
     
     OCIO::CreateExponentOp(ops, exp, OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO::CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO::CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO::CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
+                      OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
+                      OCIO::TRANSFORM_DIR_INVERSE);
     OCIO::CreateExponentOp(ops, exp, OCIO::TRANSFORM_DIR_INVERSE);
     
     OIIO_CHECK_EQUAL(ops.size(), 4);
@@ -267,8 +268,10 @@ OIIO_ADD_TEST(OpOptimizers, RemoveInverseOps)
     ops.clear();
     OCIO::CreateExponentOp(ops, exp, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateExponentOp(ops, exp, OCIO::TRANSFORM_DIR_INVERSE);
-    OCIO::CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE);
-    OCIO::CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
+                      OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO::CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
+                      OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateExponentOp(ops, exp, OCIO::TRANSFORM_DIR_FORWARD);
     
     OIIO_CHECK_EQUAL(ops.size(), 5);

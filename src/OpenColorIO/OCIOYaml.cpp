@@ -58,6 +58,7 @@ namespace YAML {
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::ExponentTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::FileTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::GroupTransform>;
+    template <> class TypedKeyNotFound<OCIO_NAMESPACE::LogAffineTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::LogTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::LookTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::MatrixTransform>;
@@ -79,13 +80,14 @@ namespace YAML {
 #pragma warning( pop )
 #endif
 
+#include "Display.h"
 #include "Logging.h"
 #include "MathUtils.h"
 #include "pystring/pystring.h"
 #include "PathUtils.h"
 #include "ParseUtils.h"
-#include "Display.h"
 #include "OCIOYaml.h"
+#include "ops/Log/LogUtils.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -185,6 +187,15 @@ OCIO_NAMESPACE_ENTER
 #endif
         }
         
+        inline void load(const YAML::Node& node, std::vector<double>& x)
+        {
+#ifdef OLDYAML
+            node >> x;
+#else
+            x = node.as<std::vector<double> >();
+#endif
+        }
+        
         inline void load(const YAML::Node& node, std::vector<float>& x)
         {
 #ifdef OLDYAML
@@ -193,7 +204,7 @@ OCIO_NAMESPACE_ENTER
             x = node.as<std::vector<float> >();
 #endif
         }
-        
+
         // Enums
         
         inline void load(const YAML::Node& node, BitDepth& depth)
@@ -775,14 +786,48 @@ OCIO_NAMESPACE_ENTER
             out << YAML::EndMap;
         }
         
-        // LogTransform
-        
-        inline void load(const YAML::Node& node, LogTransformRcPtr& t)
+        // LogAffineTransform
+
+        inline void loadLogParam(const YAML::Node& node,
+                                 double(&param)[3],
+                                 const std::string & paramName)
         {
-            t = LogTransform::Create();
+            if (node.size() == 0)
+            {
+                double val = 0.0;
+                load(node, val);
+                param[0] = val;
+                param[1] = val;
+                param[2] = val;
+            }
+            else
+            {
+                std::vector<double> val;
+                load(node, val);
+                if (val.size() != 3)
+                {
+                    std::ostringstream os;
+                    os << "LogAffineTransform parse error, " << paramName;
+                    os << " value field must have 3 components. Found '" << val.size() << "'.";
+                    throw Exception(os.str().c_str());
+                }
+                param[0] = val[0];
+                param[1] = val[1];
+                param[2] = val[2];
+            }
+        }
+        
+        inline void load(const YAML::Node& node, LogAffineTransformRcPtr& t)
+        {
+            t = LogAffineTransform::Create();
             
             std::string key;
-            
+            double base = 2.0;
+            double logSlope[3] = { 1.0, 1.0, 1.0 };
+            double linSlope[3] = { 1.0, 1.0, 1.0 };
+            double linOffset[3] = { 0.0, 0.0, 0.0 };
+            double logOffset[3] = { 0.0, 0.0, 0.0 };
+
             for (Iterator iter = node.begin();
                  iter != node.end();
                  ++iter)
@@ -794,11 +839,36 @@ OCIO_NAMESPACE_ENTER
                 
                 if (second.Type() == YAML::NodeType::Null) continue;
                 
-                if(key == "base")
+                if (key == "base")
                 {
-                    float val = 0.0f;
-                    load(second, val);
-                    t->setBase(val);
+                    size_t nb = second.size();
+                    if (nb == 0)
+                    {
+                        load(second, base);
+                    }
+                    else
+                    {
+                        std::ostringstream os;
+                        os << "LogAffineTransform parse error, base must be a ";
+                        os << "single double. Found " << nb << ".";
+                        throw Exception(os.str().c_str());
+                    }
+                }
+                else if (key == "linSideOffset")
+                {
+                    loadLogParam(second, linOffset, key);
+                }
+                else if (key == "linSideSlope")
+                {
+                    loadLogParam(second, linSlope, key);
+                }
+                else if (key == "logSideOffset")
+                {
+                    loadLogParam(second, logOffset, key);
+                }
+                else if (key == "logSideSlope")
+                {
+                    loadLogParam(second, logSlope, key);
                 }
                 else if(key == "direction")
                 {
@@ -811,17 +881,122 @@ OCIO_NAMESPACE_ENTER
                     LogUnknownKeyWarning(node.Tag(), first);
                 }
             }
+            t->setBase(base);
+            t->setValue(LOG_SIDE_SLOPE, logSlope);
+            t->setValue(LIN_SIDE_SLOPE, linSlope);
+            t->setValue(LIN_SIDE_OFFSET, linOffset);
+            t->setValue(LOG_SIDE_OFFSET, logOffset);
         }
         
-        inline void save(YAML::Emitter& out, ConstLogTransformRcPtr t)
+        inline void saveLogParam(YAML::Emitter& out, const double(&param)[3],
+                                 double defaultVal, const char * paramName)
         {
-            out << YAML::VerbatimTag("LogTransform");
+            // (See test in Config.cpp that verifies double precision is preserved.)
+            if (param[0] == param[1] && param[0] == param[2])
+            {
+                if (param[0] != defaultVal)
+                {
+                    out << YAML::Key << paramName << YAML::Value << param[0];
+                }
+            }
+            else
+            {
+                std::vector<double> vals;
+                vals.assign(param, param + 3);
+                out << YAML::Key << paramName << YAML::Value << vals;
+            }
+        }
+
+        inline void save(YAML::Emitter& out, ConstLogAffineTransformRcPtr t)
+        {
+            out << YAML::VerbatimTag("LogAffineTransform");
             out << YAML::Flow << YAML::BeginMap;
-            out << YAML::Key << "base" << YAML::Value << t->getBase();
+
+            double logSlope[3] = { 1.0, 1.0, 1.0 };
+            double linSlope[3] = { 1.0, 1.0, 1.0 };
+            double linOffset[3] = { 0.0, 0.0, 0.0 };
+            double logOffset[3] = { 0.0, 0.0, 0.0 };
+            t->getValue(LOG_SIDE_SLOPE, logSlope);
+            t->getValue(LOG_SIDE_OFFSET, logOffset);
+            t->getValue(LIN_SIDE_SLOPE, linSlope);
+            t->getValue(LIN_SIDE_OFFSET, linOffset);
+            
+            const double baseVal = t->getBase();
+            if (baseVal != 2.0)
+            {
+                out << YAML::Key << "base" << YAML::Value << baseVal;
+            }
+            saveLogParam(out, logSlope, 1.0, "logSideSlope");
+            saveLogParam(out, logOffset, 0.0, "logSideOffset");
+            saveLogParam(out, linSlope, 1.0, "linSideSlope");
+            saveLogParam(out, linOffset, 0.0, "linSideOffset");
+
             EmitBaseTransformKeyValues(out, t);
             out << YAML::EndMap;
         }
         
+        // LogTransform
+
+        inline void load(const YAML::Node& node, LogTransformRcPtr& t)
+        {
+            t = LogTransform::Create();
+
+            std::string key;
+
+            for (Iterator iter = node.begin();
+                iter != node.end();
+                ++iter)
+            {
+                const YAML::Node& first = get_first(iter);
+                const YAML::Node& second = get_second(iter);
+
+                load(first, key);
+
+                if (second.Type() == YAML::NodeType::Null) continue;
+
+                if (key == "base")
+                {
+                    double base = 2.0;
+                    size_t nb = second.size();
+                    if (nb == 0)
+                    {
+                        load(second, base);
+                    }
+                    else
+                    {
+                        std::ostringstream os;
+                        os << "LogTransform parse error, base must be a ";
+                        os << " single double. Found " << nb << ".";
+                        throw Exception(os.str().c_str());
+                    }
+                    t->setBase(base);
+                }
+                else if (key == "direction")
+                {
+                    TransformDirection val;
+                    load(second, val);
+                    t->setDirection(val);
+                }
+                else
+                {
+                    LogUnknownKeyWarning(node.Tag(), first);
+                }
+            }
+        }
+
+        inline void save(YAML::Emitter& out, ConstLogTransformRcPtr t)
+        {
+            out << YAML::VerbatimTag("LogTransform");
+            out << YAML::Flow << YAML::BeginMap;
+            const double baseVal = t->getBase();
+            if (baseVal != 2.0)
+            {
+                out << YAML::Key << "base" << YAML::Value << baseVal;
+            }
+            EmitBaseTransformKeyValues(out, t);
+            out << YAML::EndMap;
+        }
+
         // LookTransform
         
         inline void load(const YAML::Node& node, LookTransformRcPtr& t)
@@ -1253,6 +1428,11 @@ OCIO_NAMESPACE_ENTER
                 load(node, temp);
                 t = temp;
             }
+            else if(type == "LogAffineTransform") {
+                LogAffineTransformRcPtr temp;
+                load(node, temp);
+                t = temp;
+            }
             else if(type == "LogTransform") {
                 LogTransformRcPtr temp;
                 load(node, temp);
@@ -1316,6 +1496,9 @@ OCIO_NAMESPACE_ENTER
             else if(ConstGroupTransformRcPtr Group_tran = \
                 DynamicPtrCast<const GroupTransform>(t))
                 save(out, Group_tran);
+            else if(ConstLogAffineTransformRcPtr Log_tran = \
+                DynamicPtrCast<const LogAffineTransform>(t))
+                save(out, Log_tran);
             else if(ConstLogTransformRcPtr Log_tran = \
                 DynamicPtrCast<const LogTransform>(t))
                 save(out, Log_tran);

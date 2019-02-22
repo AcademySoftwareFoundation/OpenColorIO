@@ -367,7 +367,15 @@ OCIO_NAMESPACE_ENTER
     }
 
     void GpuShaderText::declareVec3f(const std::string & name, 
-                                  const float x, const float y, const float z)
+                                     float x, float y, float z)
+    {
+        declareVec3f(name, getFloatString(x, m_lang), 
+                           getFloatString(y, m_lang), 
+                           getFloatString(z, m_lang));
+    }
+
+    void GpuShaderText::declareVec3f(const std::string & name, 
+                                     double x, double y, double z)
     {
         declareVec3f(name, getFloatString(x, m_lang), 
                            getFloatString(y, m_lang), 

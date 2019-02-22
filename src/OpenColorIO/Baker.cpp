@@ -295,6 +295,113 @@ OIIO_ADD_TEST(Baker_Unit_Tests, test_listlutwriters)
 }
 */
 
+OIIO_ADD_TEST(Baker_Unit_Tests, bake)
+{
+    // SSE aware test, similar to python test.
+    OCIO::BakerRcPtr bake = OCIO::Baker::Create();
+
+    static const std::string myProfile =
+        "ocio_profile_version: 1\n"
+        "\n"
+        "strictparsing: false\n"
+        "\n"
+        "colorspaces :\n"
+        "  - !<ColorSpace>\n"
+        "    name : lnh\n"
+        "    bitdepth : 16f\n"
+        "    isdata : false\n"
+        "    allocation : lg2\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name : test\n"
+        "    bitdepth : 8ui\n"
+        "    isdata : false\n"
+        "    allocation : uniform\n"
+        "    to_reference : !<ExponentTransform> {value: [2.2, 2.2, 2.2, 1]}\n";
+
+    static const std::string expectedLut =
+        "CSPLUTV100\n"
+        "3D\n"
+        "\n"
+        "BEGIN METADATA\n"
+        "this is some metadata!\n"
+        "END METADATA\n"
+        "\n"
+#ifdef USE_SSE
+        "4\n"
+        "0.000977 0.039373 1.587398 64.000168\n"
+        "0.000000 0.333333 0.666667 1.000000\n"
+        "4\n"
+        "0.000977 0.039373 1.587398 64.000168\n"
+        "0.000000 0.333333 0.666667 1.000000\n"
+        "4\n"
+        "0.000977 0.039373 1.587398 64.000168\n"
+        "0.000000 0.333333 0.666667 1.000000\n"
+        "\n"
+        "2 2 2\n"
+        "0.042823 0.042823 0.042823\n"
+        "6.622034 0.042823 0.042823\n"
+        "0.042823 6.622034 0.042823\n"
+        "6.622034 6.622034 0.042823\n"
+        "0.042823 0.042823 6.622034\n"
+        "6.622034 0.042823 6.622034\n"
+        "0.042823 6.622034 6.622034\n"
+        "6.622034 6.622034 6.622034\n"
+#else
+        "4\n"
+        "0.000977 0.039373 1.587401 64.000000\n"
+        "0.000000 0.333333 0.666667 1.000000\n"
+        "4\n"
+        "0.000977 0.039373 1.587401 64.000000\n"
+        "0.000000 0.333333 0.666667 1.000000\n"
+        "4\n"
+        "0.000977 0.039373 1.587401 64.000000\n"
+        "0.000000 0.333333 0.666667 1.000000\n"
+        "\n"
+        "2 2 2\n"
+        "0.042823 0.042823 0.042823\n"
+        "6.622026 0.042823 0.042823\n"
+        "0.042823 6.622026 0.042823\n"
+        "6.622026 6.622026 0.042823\n"
+        "0.042823 0.042823 6.622026\n"
+        "6.622026 0.042823 6.622026\n"
+        "0.042823 6.622026 6.622026\n"
+        "6.622026 6.622026 6.622026\n"
+#endif // USE_SSE
+        "\n";
+    std::istringstream is(myProfile);
+    OCIO::ConstConfigRcPtr config;
+    OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OIIO_REQUIRE_EQUAL(config->getNumColorSpaces(), 2);
+    bake->setConfig(config);
+    auto cfg2 = bake->getConfig();
+    OIIO_REQUIRE_EQUAL(cfg2->getNumColorSpaces(), 2);
+
+    bake->setFormat("cinespace");
+    OIIO_CHECK_EQUAL("cinespace", std::string(bake->getFormat()));
+    bake->setType("3D");
+    OIIO_CHECK_EQUAL("3D", std::string(bake->getType()));
+    bake->setMetadata("this is some metadata!");
+    OIIO_CHECK_EQUAL("this is some metadata!", std::string(bake->getMetadata()));
+    bake->setInputSpace("lnh");
+    OIIO_CHECK_EQUAL("lnh", std::string(bake->getInputSpace()));
+    bake->setLooks("foo, +bar");
+    OIIO_CHECK_EQUAL("foo, +bar", std::string(bake->getLooks()));
+    bake->setLooks("");
+    bake->setTargetSpace("test");
+    OIIO_CHECK_EQUAL("test", std::string(bake->getTargetSpace()));
+    bake->setShaperSize(4);
+    OIIO_CHECK_EQUAL(4, bake->getShaperSize());
+    bake->setCubeSize(2);
+    OIIO_CHECK_EQUAL(2, bake->getCubeSize());
+    std::ostringstream os;
+    bake->bake(os);
+    OIIO_CHECK_EQUAL(expectedLut, os.str());
+    OIIO_CHECK_EQUAL(8, bake->getNumFormats());
+    OIIO_CHECK_EQUAL("cinespace", std::string(bake->getFormatNameByIndex(2)));
+    OIIO_CHECK_EQUAL("3dl", std::string(bake->getFormatExtensionByIndex(1)));
+}
+
 #endif // OCIO_BUILD_TESTS
 
     
