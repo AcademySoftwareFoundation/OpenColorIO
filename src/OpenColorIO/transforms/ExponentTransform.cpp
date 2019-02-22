@@ -261,10 +261,12 @@ namespace
 
 void CheckValues(const double(&v1)[4], const double(&v2)[4])
 {
-    OIIO_CHECK_CLOSE(v1[0], v2[0], 1e-6f);
-    OIIO_CHECK_CLOSE(v1[1], v2[1], 1e-6f);
-    OIIO_CHECK_CLOSE(v1[2], v2[2], 1e-6f);
-    OIIO_CHECK_CLOSE(v1[3], v2[3], 1e-6f);
+    static const float errThreshold = 1e-8f;
+
+    OIIO_CHECK_CLOSE(v1[0], v2[0], errThreshold);
+    OIIO_CHECK_CLOSE(v1[1], v2[1], errThreshold);
+    OIIO_CHECK_CLOSE(v1[2], v2[2], errThreshold);
+    OIIO_CHECK_CLOSE(v1[3], v2[3], errThreshold);
 }
 
 };

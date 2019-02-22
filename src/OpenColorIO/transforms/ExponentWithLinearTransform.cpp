@@ -158,9 +158,9 @@ void ExponentWithLinearTransform::getGamma(double(&values)[4]) const
 
 void ExponentWithLinearTransform::setOffset(const double(&values)[4])
 {
-    const GammaOpData::Params red = { getImpl()->getRedParams()[0]  , values[0] };
+    const GammaOpData::Params red = { getImpl()->getRedParams()  [0], values[0] };
     const GammaOpData::Params grn = { getImpl()->getGreenParams()[0], values[1] };
-    const GammaOpData::Params blu = { getImpl()->getBlueParams()[0] , values[2] };
+    const GammaOpData::Params blu = { getImpl()->getBlueParams() [0], values[2] };
     const GammaOpData::Params alp = { getImpl()->getAlphaParams()[0], values[3] };
 
     getImpl()->setRedParams(red);
@@ -171,10 +171,10 @@ void ExponentWithLinearTransform::setOffset(const double(&values)[4])
 
 void ExponentWithLinearTransform::getOffset(double(&values)[4]) const
 {
-    values[0] = getImpl()->getRedParams().size()==2   ? getImpl()->getRedParams()[1]   : 0.;
-    values[1] = getImpl()->getGreenParams().size()==2 ? getImpl()->getGreenParams()[1] : 0.;
-    values[2] = getImpl()->getBlueParams().size()==2  ? getImpl()->getBlueParams()[1]  : 0.;
-    values[3] = getImpl()->getAlphaParams().size()==2 ? getImpl()->getAlphaParams()[1] : 0.;
+    values[0] = getImpl()->getRedParams().size()  == 2 ? getImpl()->getRedParams()  [1] : 0.;
+    values[1] = getImpl()->getGreenParams().size()== 2 ? getImpl()->getGreenParams()[1] : 0.;
+    values[2] = getImpl()->getBlueParams().size() == 2 ? getImpl()->getBlueParams() [1] : 0.;
+    values[3] = getImpl()->getAlphaParams().size()== 2 ? getImpl()->getAlphaParams()[1] : 0.;
 }
 
 std::ostream& operator<< (std::ostream& os, const ExponentWithLinearTransform & t)
@@ -245,10 +245,12 @@ namespace
 
 void CheckValues(const double(&v1)[4], const double(&v2)[4])
 {
-    OIIO_CHECK_CLOSE(v1[0], v2[0], 1e-6f);
-    OIIO_CHECK_CLOSE(v1[1], v2[1], 1e-6f);
-    OIIO_CHECK_CLOSE(v1[2], v2[2], 1e-6f);
-    OIIO_CHECK_CLOSE(v1[3], v2[3], 1e-6f);
+    static const float errThreshold = 1e-8f;
+
+    OIIO_CHECK_CLOSE(v1[0], v2[0], errThreshold);
+    OIIO_CHECK_CLOSE(v1[1], v2[1], errThreshold);
+    OIIO_CHECK_CLOSE(v1[2], v2[2], errThreshold);
+    OIIO_CHECK_CLOSE(v1[3], v2[3], errThreshold);
 }
 
 };
