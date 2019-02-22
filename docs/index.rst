@@ -51,7 +51,7 @@ provide a menu option to select a different OCIO configuration after launch.
 Please be sure to select a profile that matches your color workflow (VFX work
 typically requires a different profile than animated features). If you need
 assistance picking a profile, email 
-`ocio-user <http://lists.aswf.io/g/ocio-user>`__\.
+`ocio-user <https://lists.aswf.io/g/ocio-user>`__\.
 
 Downloading and Building the Code
 *********************************
@@ -64,7 +64,7 @@ Download a `.zip <http://github.com/imageworks/OpenColorIO/zipball/master>`_ or
 current state of the repository.
 
 Please see the :ref:`developer-guide` for more info, and contact `ocio-dev
-<http://lists.aswf.io/g/ocio-dev>`__\  with any questions.
+<https://lists.aswf.io/g/ocio-dev>`__\  with any questions.
 
 .. toctree::
     :hidden:
