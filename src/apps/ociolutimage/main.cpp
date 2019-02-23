@@ -126,7 +126,7 @@ void Generate(int cubesize, int maxwidth,
     f->write_image(OIIO::TypeDesc::FLOAT, &img[0]);
     f->close();
 #if OIIO_VERSION < 10903
-    OIIO::ImageInput::destroy(f);
+    OIIO::ImageOutput::destroy(f);
 #endif
 }
 
