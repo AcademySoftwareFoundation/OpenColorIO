@@ -34,10 +34,16 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       brew update;
       brew install glew;
+      brew upgrade cmake;
+      brew upgrade pyenv;
       echo 'eval "$(pyenv init -)"' >> .bash_profile;
       source .bash_profile;
+      export PYTHON_CONFIGURE_OPTS="--enable-framework";
       pyenv install -v 2.7.15;
       pyenv global 2.7.15;
+      export OPTIONS="$OPTIONS -DPYTHON_LIBRARY=$(python-config --prefix)/lib/libpython2.7.dylib";
+      export OPTIONS="$OPTIONS -DPYTHON_INCLUDE_DIR=$(python-config --prefix)/include/python2.7";
+      export OPTIONS="$OPTIONS -DPYTHON_EXECUTABLE=$(which python2)";
     fi
 
 # Run the Build script
