@@ -37,12 +37,27 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
+class ArrayBase
+{
+public:
+    ArrayBase() {}
+    virtual ~ArrayBase() {}
+    virtual void setDoubleValue(unsigned long index, double value) = 0;
+    virtual unsigned long getLength() const = 0;
+    virtual unsigned long getNumColorComponents() const = 0;
+
+    // Specialized in the child classes to calculate the expected number of 
+    // array values based on the specified length, the interpretation of
+    // length and number of components.
+    virtual unsigned long getNumValues() const = 0;
+};
+
 // The CLF spec defines several ops that all contain an array (LUT1D, LUT3D,
 // and Matrix). The Array class is used as a building block to implement those
 // other classes. Since the dimensionality of the underlying array of those 
 // classes varies, the interpretation of "length" is defined by child classes.
 // The class represents the array for a 3by1D LUT and a 3D LUT or a matrix.
-template<typename T> class ArrayT
+template<typename T> class ArrayT : public ArrayBase
 {
 public:
     typedef std::vector<T> Values;
@@ -77,16 +92,12 @@ public:
         }
     }
 
-    void setLength(unsigned length)
+    void setDoubleValue(unsigned long index, double value) override
     {
-        if (m_length != length)
-        {
-            m_length = length;
-            m_data.resize(getNumValues());
-        }
+        m_data[index] = (T)value;
     }
 
-    unsigned long getLength() const
+    unsigned long getLength() const override
     {
         return m_length;
     }
@@ -100,7 +111,7 @@ public:
         }
     }
 
-    unsigned long getNumColorComponents() const
+    unsigned long getNumColorComponents() const override
     {
         return m_numColorComponents;
     }
@@ -186,11 +197,6 @@ public:
             && (m_numColorComponents == a.m_numColorComponents)
             && (m_data == a.m_data);
     }
-
-    // Specialized in the child classes to calculate the expected number of 
-    // array values based on the specified length, the interpretation of
-    // length and number of components.
-    virtual unsigned long getNumValues() const = 0;
 
 protected:
     unsigned long m_length;

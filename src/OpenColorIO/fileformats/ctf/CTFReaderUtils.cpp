@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
+Copyright (c) 2018 Autodesk Inc., et al.
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -26,60 +26,67 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef INCLUDED_OCIO_UNITTESTFILES_H
-#define INCLUDED_OCIO_UNITTESTFILES_H
+#include <cstring>
+#include <sstream>
 
-#ifdef OCIO_UNIT_TEST
-
-#include <fstream>
-
-#include <OpenColorIO/OpenColorIO.h>
-#include "Op.h"
-#include "pystring/pystring.h"
+#include "fileformats/ctf/CTFReaderUtils.h"
 
 OCIO_NAMESPACE_ENTER
 {
 
-const char * getTestFilesDir();
-
-void BuildOps(const std::string & fileName,
-              OpRcPtrVec & fileOps,
-              TransformDirection dir);
-    
-class CachedFile;
-
-template <class LocalFileFormat, class LocalCachedFile>
-OCIO_SHARED_PTR<LocalCachedFile> LoadTestFile(
-    const std::string & fileName, std::ios_base::openmode mode)
+Interpolation GetInterpolation1D(const char * str)
 {
-    const std::string filePath(std::string(getTestFilesDir()) + "/"
-                               + fileName);
-
-    // Open the filePath
-    std::ifstream filestream;
-    filestream.open(filePath.c_str(), mode);
-
-    if (!filestream.is_open())
+    if (str && *str)
     {
-        throw Exception("Error opening test file.");
+        if (0 == strcmp(str, "linear"))
+        {
+            return INTERP_LINEAR;
+        }
+        else if (0 == strcmp(str, "cubic"))
+        {
+            return INTERP_CUBIC;
+        }
+        else if (0 == strcmp(str, "default"))
+        {
+            return INTERP_DEFAULT;
+        }
+
+        std::ostringstream oss;
+        oss << "1D LUT interpolation not recongnized: '" << str << "'.";
+        throw Exception(oss.str().c_str());
     }
 
-    std::string root, extension, name;
-    pystring::os::path::splitext(root, extension, filePath);
+    throw Exception("1D LUT missing interpolation value.");
+}
 
-    // Read file
-    LocalFileFormat tester;
-    OCIO_SHARED_PTR<CachedFile> cachedFile = tester.Read(filestream, filePath);
+Interpolation GetInterpolation3D(const char * str)
+{
+    if (str && *str)
+    {
+        if (0 == strcmp(str, "trilinear"))
+        {
+            return INTERP_LINEAR;
+        }
+        else if (0 == strcmp(str, "tetrahedral"))
+        {
+            return INTERP_TETRAHEDRAL;
+        }
+        else if (0 == strcmp(str, "4pt tetrahedral"))
+        {
+            return INTERP_TETRAHEDRAL;
+        }
+        else if (0 == strcmp(str, "default"))
+        {
+            return INTERP_DEFAULT;
+        }
 
-    filestream.close();
+        std::ostringstream oss;
+        oss << "3D LUT interpolation not recongnized: '" << str << "'.";
+        throw Exception(oss.str().c_str());
+    }
 
-    return DynamicPtrCast<LocalCachedFile>(cachedFile);
+    throw Exception("3D LUT missing interpolation value.");
 }
 
 }
 OCIO_NAMESPACE_EXIT
-
-
-#endif // OCIO_UNIT_TEST
-
-#endif // INCLUDED_OCIO_UNITTEST_H

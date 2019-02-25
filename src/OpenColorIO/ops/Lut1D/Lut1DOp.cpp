@@ -1632,7 +1632,7 @@ OIIO_ADD_TEST(Lut1D, finite_value_hue_adjust)
 
     OCIO::Lut1DOpDataRcPtr invData = typedRcPtr->lut1DData()->inverse();
     OCIO::Lut1DOpDataRcPtr invDataExact = invData->clone();
-    invDataExact->setInvStyle(OCIO::Lut1DOpData::INV_EXACT);
+    invDataExact->setInversionQuality(OCIO::LUT_INVERSION_BEST);
     OIIO_CHECK_NO_THROW(
         CreateLut1DOp(ops, invData, OCIO::TRANSFORM_DIR_FORWARD));
     OIIO_CHECK_NO_THROW(
@@ -1825,8 +1825,8 @@ OIIO_ADD_TEST(InvLut1D, apply_half)
         OIIO_CHECK_ASSERT(!OCIO::FloatsDiffer(inImage2[i], inImage[i], 50, false));
     }
 
-    // Repeat with style = INV_FAST.
-    invLut.setInvStyle(OCIO::OpData::InvLut1D::INV_FAST);
+    // Repeat with style = LUT_INVERSION_FAST.
+    invLut.setInversionQuality(OCIO::LUT_INVERSION_FAST);
     ops1.replace(invLut.clone(OCIO::OpData::Lut1D::DO_SHALLOW_COPY), 0);
 
     for (unsigned i = 0; i<12; ++i) { inImage2[i] = inImage1[i]; }

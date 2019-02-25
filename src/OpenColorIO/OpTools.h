@@ -42,6 +42,35 @@ OCIO_NAMESPACE_ENTER
                        long numPixels,
                        OpRcPtrVec & ops);
 
+    const char * GetInvQualityName(LutInversionQuality invStyle);
+
+    // Allow us to temporarily manipulate the inversion quality without
+    // cloning the object.
+    template <class LutType>
+    class LutStyleGuard
+    {
+    public:
+        LutStyleGuard(const LutType & lut)
+            : m_prevQuality(lut.getInversionQuality())
+            , m_lut(const_cast<LutType &>(lut))
+        {
+            m_lut.setInversionQuality(LUT_INVERSION_BEST);
+        }
+
+        ~LutStyleGuard()
+        {
+            if (m_prevQuality != LUT_INVERSION_BEST)
+            {
+                m_lut.setInversionQuality(m_prevQuality);
+            }
+        }
+
+    private:
+        LutType &           m_lut;
+        LutInversionQuality m_prevQuality;
+    };
+
+
 }
 OCIO_NAMESPACE_EXIT
 

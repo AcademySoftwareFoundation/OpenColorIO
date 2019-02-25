@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
+Copyright (c) 2018 Autodesk Inc., et al.
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -26,60 +26,69 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef INCLUDED_OCIO_UNITTESTFILES_H
-#define INCLUDED_OCIO_UNITTESTFILES_H
+#ifndef INCLUDED_OCIO_OPS_INDEXMAPPING_H
+#define INCLUDED_OCIO_OPS_INDEXMAPPING_H
 
-#ifdef OCIO_UNIT_TEST
-
-#include <fstream>
+#include <utility>
+#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
-#include "Op.h"
-#include "pystring/pystring.h"
 
 OCIO_NAMESPACE_ENTER
 {
 
-const char * getTestFilesDir();
-
-void BuildOps(const std::string & fileName,
-              OpRcPtrVec & fileOps,
-              TransformDirection dir);
-    
-class CachedFile;
-
-template <class LocalFileFormat, class LocalCachedFile>
-OCIO_SHARED_PTR<LocalCachedFile> LoadTestFile(
-    const std::string & fileName, std::ios_base::openmode mode)
+// The class represents the index mapping for a LUT
+// This class defines a list that is the new mapping of input 
+// code values (inValues) to index positions (n) in a LUT.
+// 
+// TODO: This is an initial implementation to just do the minimal
+//       required for CLF support.  We may add more later.
+//
+// Note: The 1D & 3D LUT classes do not have an IndexMaping instance,
+//       our current implementation converts a map into a separate
+//       Range op when the file is read.
+//
+class IndexMapping
 {
-    const std::string filePath(std::string(getTestFilesDir()) + "/"
-                               + fileName);
+public:
+    typedef std::pair<float,float> Data;
+    typedef std::vector<Data> ComponentData;
 
-    // Open the filePath
-    std::ifstream filestream;
-    filestream.open(filePath.c_str(), mode);
+    // Type definition of the three component colors.
+    typedef ComponentData Indices[3];
 
-    if (!filestream.is_open())
-    {
-        throw Exception("Error opening test file.");
-    }
+public:
+    explicit IndexMapping(size_t dimension);
+    IndexMapping() = delete;
 
-    std::string root, extension, name;
-    pystring::os::path::splitext(root, extension, filePath);
+    virtual ~IndexMapping();
 
-    // Read file
-    LocalFileFormat tester;
-    OCIO_SHARED_PTR<CachedFile> cachedFile = tester.Read(filestream, filePath);
+    size_t getDimension() const;
 
-    filestream.close();
+    void resize(size_t newDimension);
 
-    return DynamicPtrCast<LocalCachedFile>(cachedFile);
-}
+    const Indices & getIndices() const;
+
+    unsigned int getNumComponents() const;
+
+    void getPair(size_t index, float & first, float & second) const;
+
+    void setPair(size_t index, float first, float second);
+
+    void validate() const;
+
+    bool operator==(const IndexMapping & other) const;
+
+private:
+
+    void validateIndex(size_t index) const;
+
+    size_t   m_dimension; // Dimension
+    Indices  m_indices;   // All values
+};
 
 }
 OCIO_NAMESPACE_EXIT
 
 
-#endif // OCIO_UNIT_TEST
-
-#endif // INCLUDED_OCIO_UNITTEST_H
+#endif

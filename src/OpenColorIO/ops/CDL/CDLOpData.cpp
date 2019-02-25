@@ -40,36 +40,26 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
-namespace
+namespace DefaultValues
 {
-const int FLOAT_DECIMALS = 7;
-
-std::string GetString(double value)
-{
-    std::ostringstream oss;
-    oss.precision(FLOAT_DECIMALS);
-    oss << value;
-    return oss.str();
+    const int FLOAT_DECIMALS = 7;
 }
 
-std::string GetString(CDLOpData::ChannelParams params)
-{
-    std::ostringstream oss;
-    oss.precision(FLOAT_DECIMALS);
-    oss << params[0] << ", " << params[1] << ", " << params[2];
-    return oss.str();
-}
 
 static const CDLOpData::ChannelParams kOneParams(1.0);
 static const CDLOpData::ChannelParams kZeroParams(0.0);
 
+// Original CTF styles:
 static const char V1_2_FWD_NAME[] = "v1.2_Fwd";
 static const char V1_2_REV_NAME[] = "v1.2_Rev";
 static const char NO_CLAMP_FWD_NAME[] = "noClampFwd";
 static const char NO_CLAMP_REV_NAME[] = "noClampRev";
 
-}; // anon
-
+// CLF styles (also allowed now in CTF):
+static const char V1_2_FWD_CLF_NAME[] = "Fwd";
+static const char V1_2_REV_CLF_NAME[] = "Rev";
+static const char NO_CLAMP_FWD_CLF_NAME[] = "FwdNoClamp";
+static const char NO_CLAMP_REV_CLF_NAME[] = "RevNoClamp";
 
 CDLOpData::Style CDLOpData::GetStyle(const char* name)
 {
@@ -85,9 +75,13 @@ return CDL_STYLE;                                          \
     if (name && *name)
     {
         RETURN_STYLE_FROM_NAME(V1_2_FWD_NAME, CDL_V1_2_FWD);
+        RETURN_STYLE_FROM_NAME(V1_2_FWD_CLF_NAME, CDL_V1_2_FWD);
         RETURN_STYLE_FROM_NAME(V1_2_REV_NAME, CDL_V1_2_REV);
+        RETURN_STYLE_FROM_NAME(V1_2_REV_CLF_NAME, CDL_V1_2_REV);
         RETURN_STYLE_FROM_NAME(NO_CLAMP_FWD_NAME, CDL_NO_CLAMP_FWD);
+        RETURN_STYLE_FROM_NAME(NO_CLAMP_FWD_CLF_NAME, CDL_NO_CLAMP_FWD);
         RETURN_STYLE_FROM_NAME(NO_CLAMP_REV_NAME, CDL_NO_CLAMP_REV);
+        RETURN_STYLE_FROM_NAME(NO_CLAMP_REV_CLF_NAME, CDL_NO_CLAMP_REV);
     }
 
 #undef RETURN_STYLE_FROM_NAME
@@ -98,13 +92,13 @@ return CDL_STYLE;                                          \
 const char * CDLOpData::GetStyleName(CDLOpData::Style style)
 {
     // Get the name of the CDL style from the enum stored
-    // in the "style" variable
+    // in the "style" variable.
     switch (style)
     {
-        case CDL_V1_2_FWD:     return V1_2_FWD_NAME;
-        case CDL_V1_2_REV:     return V1_2_REV_NAME;
-        case CDL_NO_CLAMP_FWD: return NO_CLAMP_FWD_NAME;
-        case CDL_NO_CLAMP_REV: return NO_CLAMP_REV_NAME;
+        case CDL_V1_2_FWD:     return V1_2_FWD_CLF_NAME;
+        case CDL_V1_2_REV:     return V1_2_REV_CLF_NAME;
+        case CDL_NO_CLAMP_FWD: return NO_CLAMP_FWD_CLF_NAME;
+        case CDL_NO_CLAMP_REV: return NO_CLAMP_REV_CLF_NAME;
     }
 
     throw Exception("Unknown style for CDL.");
@@ -324,6 +318,29 @@ void CDLOpData::validate() const
     validateParams(m_slopeParams, m_powerParams, m_saturation);
 }
 
+std::string CDLOpData::getSlopeString() const
+{
+    return GetChannelParametersString(m_slopeParams);
+}
+
+std::string CDLOpData::getOffsetString() const
+{
+    return GetChannelParametersString(m_offsetParams);
+}
+
+std::string CDLOpData::getPowerString() const
+{
+    return GetChannelParametersString(m_powerParams);
+}
+
+std::string CDLOpData::getSaturationString() const
+{
+    std::ostringstream oss;
+    oss.precision(DefaultValues::FLOAT_DECIMALS);
+    oss << m_saturation;
+    return oss.str();
+}
+
 bool CDLOpData::isReverse() const
 {
     const CDLOpData::Style style = getStyle();
@@ -348,6 +365,14 @@ bool CDLOpData::isClamping() const
         case CDLOpData::CDL_NO_CLAMP_REV: return false;
     }
     return false;
+}
+
+std::string CDLOpData::GetChannelParametersString(ChannelParams params)
+{
+    std::ostringstream oss;
+    oss.precision(DefaultValues::FLOAT_DECIMALS);
+    oss << params[0] << ", " << params[1] << ", " << params[2];
+    return oss.str();
 }
 
 bool CDLOpData::isInverse(ConstCDLOpDataRcPtr & r) const
@@ -380,13 +405,15 @@ void CDLOpData::finalize()
     AutoMutex lock(m_mutex);
 
     std::ostringstream cacheIDStream;
-    cacheIDStream << getId() << " ";
+    cacheIDStream << getID() << " ";
+
+    cacheIDStream.precision(DefaultValues::FLOAT_DECIMALS);
 
     cacheIDStream << GetStyleName(getStyle()) << " ";
-    cacheIDStream << GetString(m_slopeParams) << " ";
-    cacheIDStream << GetString(m_offsetParams) << " ";
-    cacheIDStream << GetString(m_powerParams) << " ";
-    cacheIDStream << GetString(m_saturation) << " ";
+    cacheIDStream << getSlopeString() << " ";
+    cacheIDStream << getOffsetString() << " ";
+    cacheIDStream << getPowerString() << " ";
+    cacheIDStream << getSaturationString() << " ";
 
     m_cacheID = cacheIDStream.str();
 }
@@ -456,7 +483,7 @@ OIIO_ADD_TEST(OpDataCDL, constructors)
     OIIO_CHECK_EQUAL(cdlOpDefault.getInputBitDepth(), OCIO::BIT_DEPTH_F32);
     OIIO_CHECK_EQUAL(cdlOpDefault.getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
-    OIIO_CHECK_EQUAL(cdlOpDefault.getId(), "");
+    OIIO_CHECK_EQUAL(cdlOpDefault.getID(), "");
     OIIO_CHECK_ASSERT(cdlOpDefault.getDescriptions().empty());
 
     OIIO_CHECK_EQUAL(cdlOpDefault.getStyle(),
@@ -489,7 +516,7 @@ OIIO_ADD_TEST(OpDataCDL, constructors)
     OIIO_CHECK_EQUAL(cdlOpComplete.getInputBitDepth(), OCIO::BIT_DEPTH_F16);
     OIIO_CHECK_EQUAL(cdlOpComplete.getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
 
-    OIIO_CHECK_EQUAL(cdlOpComplete.getId(), "test_id");
+    OIIO_CHECK_EQUAL(cdlOpComplete.getID(), "test_id");
     OIIO_CHECK_ASSERT(cdlOpComplete.getDescriptions() == descriptions);
 
     OIIO_CHECK_EQUAL(cdlOpComplete.getStyle(),
@@ -527,7 +554,7 @@ OIIO_ADD_TEST(OpDataCDL, inverse)
         OIIO_CHECK_EQUAL(invOp->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
         // Ensure id, name and descriptions are empty
-        OIIO_CHECK_EQUAL(invOp->getId(), "");
+        OIIO_CHECK_EQUAL(invOp->getID(), "");
         OIIO_CHECK_ASSERT(invOp->getDescriptions().empty());
 
         // Ensure style is inverted
@@ -558,7 +585,7 @@ OIIO_ADD_TEST(OpDataCDL, inverse)
         OIIO_CHECK_EQUAL(invOp->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
         // Ensure id, name and descriptions are empty
-        OIIO_CHECK_EQUAL(invOp->getId(), "");
+        OIIO_CHECK_EQUAL(invOp->getID(), "");
         OIIO_CHECK_ASSERT(invOp->getDescriptions().empty());
 
         // Ensure style is inverted
@@ -589,7 +616,7 @@ OIIO_ADD_TEST(OpDataCDL, inverse)
         OIIO_CHECK_EQUAL(invOp->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
         // Ensure id, name and descriptions are empty
-        OIIO_CHECK_EQUAL(invOp->getId(), "");
+        OIIO_CHECK_EQUAL(invOp->getID(), "");
         OIIO_CHECK_ASSERT(invOp->getDescriptions().empty());
 
         // Ensure style is inverted
@@ -619,7 +646,7 @@ OIIO_ADD_TEST(OpDataCDL, inverse)
         OIIO_CHECK_EQUAL(invOp->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
         // Ensure id, name and descriptions are empty
-        OIIO_CHECK_EQUAL(invOp->getId(), "");
+        OIIO_CHECK_EQUAL(invOp->getID(), "");
         OIIO_CHECK_ASSERT(invOp->getDescriptions().empty());
 
         // Ensure style is inverted
@@ -802,4 +829,3 @@ OIIO_ADD_TEST(OpDataCDL, channel)
 }
 
 #endif
-

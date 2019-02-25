@@ -44,6 +44,7 @@ class RangeOpData;
 typedef OCIO_SHARED_PTR<RangeOpData> RangeOpDataRcPtr;
 typedef OCIO_SHARED_PTR<const RangeOpData> ConstRangeOpDataRcPtr;
 
+class IndexMapping;
 
 // The class represents the Range op data.
 // 
@@ -79,6 +80,10 @@ public:
                 double minOutValue,   // Lower bound of the range
                 double maxOutValue    // Upper bound of the range
                 );
+
+    // Constructor from a 2-entry index map from a Lut1D or Lut3D.
+    // Note: Throws if the index map is not appropriate.
+    RangeOpData(const IndexMapping& pIM, BitDepth inDepth, unsigned int len);
 
     virtual ~RangeOpData();
 

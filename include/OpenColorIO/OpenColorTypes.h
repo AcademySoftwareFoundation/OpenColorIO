@@ -252,11 +252,9 @@ OCIO_NAMESPACE_ENTER
     // 1D LUT INTERP_BEST: LINEAR
     // 3D LUT INTERP_BEST: TETRAHEDRAL
     //
-    // Note: INTERP_BEST is subject to change in minor releases, so if you
-    // care about locking off on a specific interpolation type, we'd recommend
-    // directly specifying it.
-    //
-    // Note: The tetrahedral method is always used when inverting 3D LUTs.
+    // Note: INTERP_BEST and INTERP_DEFAULT are subject to change in minor
+    // releases, so if you care about locking off on a specific interpolation
+    // type, we'd recommend directly specifying it.
     //
     enum Interpolation
     {
@@ -264,11 +262,34 @@ OCIO_NAMESPACE_ENTER
         INTERP_NEAREST = 1,     //! nearest neighbor in all dimensions
         INTERP_LINEAR = 2,      //! linear interpolation in all dimensions
         INTERP_TETRAHEDRAL = 3, //! tetrahedral interpolation in all directions
+        INTERP_CUBIC = 4,       //! cubic interpolation in all dimensions
 
         INTERP_DEFAULT = 254,   //! the default interpolation type
         INTERP_BEST = 255       //! the 'best' suitable interpolation type
     };
     
+    //!cpp:type::
+    //
+    // Specify the method to use when inverting a Lut1D or Lut3D.  The EXACT
+    // method is slower, and only available on the CPU, but it calculates an
+    // exact inverse.  The exact inverse is based on the use of LINEAR forward
+    // interpolation for Lut1D and TETRAHEDRAL forward interpolation for Lut3D.
+    // The FAST method bakes the inverse into another forward LUT (using the
+    // exact method).  For Lut1D, a half-domain LUT is used and so this is
+    // quite accurate even for scene-linear values, but for Lut3D the baked
+    // version is more of an approximation.  The DEFAULT is the FAST method
+    // since it is the only one available on both CPU and GPU.  The BEST is
+    // the EXACT method.
+    //
+    enum LutInversionQuality
+    {
+        LUT_INVERSION_EXACT = 0,
+        LUT_INVERSION_FAST,
+
+        LUT_INVERSION_DEFAULT = 254,
+        LUT_INVERSION_BEST = 255
+    };
+
     //!cpp:type::
     enum BitDepth {
         BIT_DEPTH_UNKNOWN = 0,

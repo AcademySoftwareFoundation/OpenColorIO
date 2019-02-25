@@ -526,7 +526,7 @@ OCIO_NAMESPACE_ENTER
         ConstProcessorRcPtr getProcessor(const ConstColorSpaceRcPtr & srcColorSpace,
                                          const ConstColorSpaceRcPtr & dstColorSpace) const;
         
-            //!cpp:function::
+        //!cpp:function::
         // .. note::
         //    Names can be colorspace name, role name, or a combination of both.
         ConstProcessorRcPtr getProcessor(const char * srcName,
