@@ -53,6 +53,10 @@ set(SOURCES
 	ops/CDL/CDLOpData.cpp
 	ops/CDL/CDLOps.cpp
 	ops/Exponent/ExponentOps.cpp
+	ops/FixedFunction/FixedFunctionOpGPU.cpp
+	ops/FixedFunction/FixedFunctionOpCPU.cpp
+	ops/FixedFunction/FixedFunctionOpData.cpp
+	ops/FixedFunction/FixedFunctionOps.cpp
 	ops/IndexMapping.cpp
 	ops/Log/LogOps.cpp
 	ops/Lut1D/Lut1DOp.cpp
@@ -86,6 +90,7 @@ set(SOURCES
 	transforms/DisplayTransform.cpp
 	transforms/ExponentTransform.cpp
 	transforms/FileTransform.cpp
+	transforms/FixedFunctionTransform.cpp
 	transforms/GroupTransform.cpp
 	transforms/LogTransform.cpp
 	transforms/LookTransform.cpp

@@ -427,7 +427,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "unittest.h"
 
-OIIO_ADD_TEST(OpDataCDL, accessors)
+OIIO_ADD_TEST(CDLOpData, accessors)
 {
     OCIO::CDLOpData::ChannelParams slopeParams(1.35, 1.1, 0.71);
     OCIO::CDLOpData::ChannelParams offsetParams(0.05, -0.23, 0.11);
@@ -474,7 +474,7 @@ OIIO_ADD_TEST(OpDataCDL, accessors)
 
 }
 
-OIIO_ADD_TEST(OpDataCDL, constructors)
+OIIO_ADD_TEST(CDLOpData, constructors)
 {
     // Check default constructor
     OCIO::CDLOpData cdlOpDefault;
@@ -533,7 +533,7 @@ OIIO_ADD_TEST(OpDataCDL, constructors)
     OIIO_CHECK_EQUAL(cdlOpComplete.getSaturation(), 1.23);
 }
 
-OIIO_ADD_TEST(OpDataCDL, inverse)
+OIIO_ADD_TEST(CDLOpData, inverse)
 {
     OCIO::CDLOpData cdlOp(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_UINT12,
                           "test_id", 
@@ -668,7 +668,7 @@ OIIO_ADD_TEST(OpDataCDL, inverse)
 }
 
 
-OIIO_ADD_TEST(OpDataCDL, style)
+OIIO_ADD_TEST(CDLOpData, style)
 {
     // Check default constructor
     OCIO::CDLOpData cdlOp;
@@ -700,7 +700,7 @@ OIIO_ADD_TEST(OpDataCDL, style)
 }
 
 
-OIIO_ADD_TEST(OpDataCDL, validation_success)
+OIIO_ADD_TEST(CDLOpData, validation_success)
 {
     OCIO::CDLOpData cdlOp;
 
@@ -761,7 +761,7 @@ OIIO_ADD_TEST(OpDataCDL, validation_success)
     OIIO_CHECK_NO_THROW(cdlOp.validate());
 }
 
-OIIO_ADD_TEST(OpDataCDL, validation_failure)
+OIIO_ADD_TEST(CDLOpData, validation_failure)
 {
     OCIO::CDLOpData cdlOp;
 
@@ -800,7 +800,7 @@ OIIO_ADD_TEST(OpDataCDL, validation_failure)
 
 // TODO: CDLOp_inverse_bypass_test is missing
 
-OIIO_ADD_TEST(OpDataCDL, channel)
+OIIO_ADD_TEST(CDLOpData, channel)
 {
   {
     OCIO::CDLOpData cdlOp;

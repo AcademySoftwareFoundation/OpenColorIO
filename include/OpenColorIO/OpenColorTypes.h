@@ -155,6 +155,12 @@ OCIO_NAMESPACE_ENTER
     //!cpp:type::
     typedef OCIO_SHARED_PTR<FileTransform> FileTransformRcPtr;
     
+    class OCIOEXPORT FixedFunctionTransform;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const FixedFunctionTransform> ConstFixedFunctionTransformRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<FixedFunctionTransform> FixedFunctionTransformRcPtr;
+    
     class OCIOEXPORT GroupTransform;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<const GroupTransform> ConstGroupTransformRcPtr;
@@ -330,6 +336,17 @@ OCIO_NAMESPACE_ENTER
         RANGE_CLAMP
     };
     
+    //!cpp:type:: Enumeration of the :cpp:class:`FixedFunction` transform algorithms.
+    enum FixedFunctionStyle
+    {
+        FIXED_FUNCTION_ACES_RED_MOD_03 = 0,
+        FIXED_FUNCTION_ACES_RED_MOD_10,
+        FIXED_FUNCTION_ACES_GLOW_03,
+        FIXED_FUNCTION_ACES_GLOW_10,
+        FIXED_FUNCTION_ACES_DARK_TO_DIM_10,
+        FIXED_FUNCTION_REC2100_SURROUND
+    };
+    
     //!rst::
     // Conversion
     // **********
@@ -393,6 +410,11 @@ OCIO_NAMESPACE_ENTER
     extern OCIOEXPORT const char * RangeStyleToString(RangeStyle style);
     //!cpp:function::
     extern OCIOEXPORT RangeStyle RangeStyleFromString(const char * style);
+    
+    //!cpp:function::
+    extern OCIOEXPORT const char * FixedFunctionStyleToString(FixedFunctionStyle style);
+    //!cpp:function::
+    extern OCIOEXPORT FixedFunctionStyle FixedFunctionStyleFromString(const char * style);
     
     
     /*!rst::

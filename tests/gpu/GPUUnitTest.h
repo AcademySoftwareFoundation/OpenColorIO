@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
+Copyright (c) 2019 Autodesk Inc., et al.
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -38,9 +38,33 @@ class OCIOGPUTest;
 
 typedef void (*OCIOTestFunc)(OCIOGPUTest & test);
 
-// The class holds the information around a specific GPU unit test
+// Test harness for comparing GPU results to CPU results.
+//
+// By default, the framework compares the GPU results to the CPU results
+// using an automatically generated neutral ramp for the standard range [0, 1].
+// 
 class OCIOGPUTest
 {
+    public:
+        // The structure holds color values to check.
+        struct CustomValues
+        {
+            typedef std::vector<float> Values;
+            Values m_inputValues;
+
+            // Keeping the original input value size allows 
+            // to avoid manipulating padded values added to fit
+            // the predefined GPU texture size.
+            size_t m_originalInputValueSize;
+
+            bool m_useWideRangeValues;
+
+            CustomValues() 
+                : m_originalInputValueSize(0)
+                , m_useWideRangeValues(true) 
+            {}
+        };
+
     public:
         OCIOGPUTest(const std::string& testgroup, const std::string& testname, OCIOTestFunc test);
 
@@ -60,9 +84,13 @@ class OCIOGPUTest
         inline OCIO_NAMESPACE::ConstProcessorRcPtr & getProcessor() { return m_processor; }
         inline OCIO_NAMESPACE::GpuShaderDescRcPtr & getShaderDesc() { return m_shaderDesc; }
 
-        // Use or not a wide range image
-        inline bool getWideRange() const { return m_useWideRange; }
-        inline void setWideRange(bool use) { m_useWideRange = use; }
+        // WideRange tests a neutral ramp on [-1,2], standard range is [0,1].
+        inline bool getWideRange() const { return m_values.m_useWideRangeValues; }
+        inline void setWideRange(bool use) { m_values.m_useWideRangeValues = use; }
+
+        // Provide a set of RGBA values to test (otherwise a neutral ramp will be used).
+        inline void setCustomValues(CustomValues & values) { m_values = values; }
+        inline CustomValues & getCustomValues() { return m_values; }
 
         inline float getErrorThreshold() const { return m_errorThreshold; }
         inline void setErrorThreshold(float error) { m_errorThreshold = error; }
@@ -89,10 +117,10 @@ class OCIOGPUTest
         OCIO_NAMESPACE::ConstProcessorRcPtr m_processor;
         OCIO_NAMESPACE::GpuShaderDescRcPtr m_shaderDesc;
         float m_errorThreshold;
-        bool m_useWideRange;
         bool m_performRelativeComparison;
         float m_expectedMinimalValue;
         bool m_verbose;
+        CustomValues m_values;
 };
 
 typedef std::vector<OCIOGPUTest*> UnitTests;

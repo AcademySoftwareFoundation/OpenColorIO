@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
+Copyright (c) 2019 Autodesk Inc., et al.
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -55,6 +55,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <algorithm>
 
 
 #include "glsl.h"
@@ -147,7 +148,6 @@ OCIOGPUTest::OCIOGPUTest(const std::string& testgroup,
     ,   m_name(testname)
     ,   m_function(test)
     ,   m_errorThreshold(Shader::defaultErrorThreshold)
-    ,   m_useWideRange(true)
     ,   m_performRelativeComparison(false)
     ,   m_expectedMinimalValue(1e-6f)
     ,   m_verbose(false)
@@ -202,14 +202,12 @@ namespace
 
     OpenGLBuilderRcPtr g_oglBuilder;
 
-    std::vector<float> g_image;
     GLuint g_imageTexID;
 
     void AllocateImageTexture()
     {
         const unsigned numEntries = g_winWidth * g_winHeight * g_components;
-        g_image.resize(numEntries);
-        memset(&g_image[0], 0, numEntries * sizeof(float));
+        OCIOGPUTest::CustomValues::Values image(g_winWidth*g_winHeight*g_components, 0.0f);
 
         glGenTextures(1, &g_imageTexID);
 
@@ -224,7 +222,7 @@ namespace
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, g_winWidth, g_winHeight, 0,
-                     GL_RGBA, GL_FLOAT, &g_image[0]);
+                     GL_RGBA, GL_FLOAT, &image[0]);
     }
 
     void Reshape()
@@ -269,24 +267,86 @@ namespace
         glutDestroyWindow(g_win);
     }
 
-    void UpdateImageTexture(bool useWideRange)
+    void UpdateImageTexture(OCIOGPUTest * test)
     {
-        const float min = useWideRange ? -1.0f : 0.0f;
-        const float max = useWideRange ? +2.0f : 1.0f;
-        const float range = max - min;
+        // Note: User-specified custom values are padded out 
+        // to the preferred size (g_winWidth x g_winHeight).
 
-        const unsigned numEntries = g_winWidth * g_winHeight * g_components;
-        const float step = range / numEntries;
+        const unsigned predefinedNumEntries 
+            = g_winWidth * g_winHeight * g_components;
 
-        for(unsigned idx=0; idx<numEntries; ++idx)
+        if(test->getCustomValues().m_inputValues.empty())
         {
-            g_image[idx] = min + step * float(idx);
+            // It means to generate the input values.
+
+            const bool useWideRange = test->getWideRange();
+
+            const float min = useWideRange ? -1.0f : 0.0f;
+            const float max = useWideRange ? +2.0f : 1.0f;
+            const float range = max - min;
+
+            OCIOGPUTest::CustomValues tmp;
+            tmp.m_originalInputValueSize = predefinedNumEntries;
+            tmp.m_inputValues 
+                = OCIOGPUTest::CustomValues::Values(predefinedNumEntries, 
+                                                    test->getExpectedMinimalValue());
+
+            const float step 
+                = std::max(range / predefinedNumEntries, test->getExpectedMinimalValue());
+
+            for(unsigned idx=0; idx<predefinedNumEntries; ++idx)
+            {
+                tmp.m_inputValues[idx] = min + step * float(idx);
+            }
+
+            test->setCustomValues(tmp);
+        }
+        else
+        {
+            // It means to use the custom input values.
+
+            const OCIOGPUTest::CustomValues::Values & existingInputValues 
+                = test->getCustomValues().m_inputValues;
+
+            const size_t numInputValues = existingInputValues.size();
+            if(0!=(numInputValues%g_components))
+            {
+                throw OCIO::Exception("Only the RGBA input values are supported");
+            }
+
+            test->getCustomValues().m_originalInputValueSize = numInputValues;
+
+            if(numInputValues>predefinedNumEntries)
+            {
+                throw OCIO::Exception("Exceed the predefined texture maximum size");
+            }
+            else if(numInputValues<predefinedNumEntries)
+            {
+                OCIOGPUTest::CustomValues values;
+                values.m_originalInputValueSize = existingInputValues.size();
+                values.m_inputValues.resize(predefinedNumEntries, 
+                                            test->getExpectedMinimalValue());
+
+                for(size_t idx=0; idx<numInputValues; ++idx)
+                {
+                    values.m_inputValues[idx] = existingInputValues[idx];
+                }
+
+                test->setCustomValues(values);
+            }
+        }
+
+        const OCIOGPUTest::CustomValues & values = test->getCustomValues();
+
+        if(predefinedNumEntries!=values.m_inputValues.size())
+        {
+            throw OCIO::Exception("Missing some expected input values");
         }
 
         glBindTexture(GL_TEXTURE_2D, g_imageTexID);
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, g_winWidth, g_winHeight, 0,
-            GL_RGBA, GL_FLOAT, &g_image[0]);
+                     GL_RGBA, GL_FLOAT, &values.m_inputValues[0]);
     }
 
     void UpdateOCIOGLState(OCIOGPUTest * test)
@@ -294,17 +354,17 @@ namespace
         OCIO::ConstProcessorRcPtr & processor = test->getProcessor();
         OCIO::GpuShaderDescRcPtr & shaderDesc = test->getShaderDesc();
 
-        // Step 1: Create the legacy GPU shader description
+        // Step 1: Update the GPU shader description.
         shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
 
-        // Step 2: Collect the shader program information for a specific processor    
+        // Step 2: Collect the shader program information for a specific processor.   
         processor->extractGpuShaderInfo(shaderDesc);
 
-        // Step 3: Use the helper OpenGL builder
+        // Step 3: Create the OpenGL builder to prepare the GPU shader program.
         g_oglBuilder = OpenGLBuilder::Create(shaderDesc);
         g_oglBuilder->setVerbose(test->isVerbose());
 
-        // Step 4: Allocate & upload all the LUTs
+        // Step 4: Allocate & upload all the LUTs in a dedicated GPU texture.
         g_oglBuilder->allocateAllTextures(1);
 
         std::ostringstream main;
@@ -317,58 +377,83 @@ namespace
              << "    gl_FragColor = " << shaderDesc->getFunctionName() << "(col);" << std::endl
              << "}" << std::endl;
 
-        // Step 5: Build the fragment shader program
+        // Step 5: Build the fragment shader program.
         g_oglBuilder->buildProgram(main.str().c_str());
 
-        // Step 6: Enable the fragment shader program, and all needed textures
+        // Step 6: Enable the fragment shader program, and all needed resources.
         g_oglBuilder->useProgram();
         glUniform1i(glGetUniformLocation(g_oglBuilder->getProgramHandle(), "img"), 0);
         g_oglBuilder->useAllTextures();
     }
 
-    // Validate the GPU processing against the CPU one
+    // Validate the GPU processing against the CPU one.
     void ValidateImageTexture(OCIOGPUTest * test)
     {
         OCIO::ConstProcessorRcPtr & processor = test->getProcessor();
         const float epsilon = test->getErrorThreshold();
         const float expectMinValue = test->getExpectedMinimalValue();
 
-        // Step 1: Compute the output using the CPU engine
+        // Compute the width & height to avoid testing the padded values.
 
-        std::vector<float> cppImage = g_image;    
-        OCIO_NAMESPACE::PackedImageDesc desc(&cppImage[0], g_winWidth, g_winHeight, g_components);
+        const size_t numPixels 
+            = test->getCustomValues().m_originalInputValueSize / g_components;
+
+        size_t width, height = 0;
+        if(numPixels<=g_winWidth)
+        {
+            width  = numPixels;
+            height = 1;
+        }
+        else
+        {
+            width  = g_winWidth;
+            height = numPixels/g_winWidth;
+            if((numPixels%g_winWidth)>0) height += 1;
+        }
+
+        if(width==0 || width>g_winWidth || height==0 || height>g_winHeight)
+        {
+            throw OCIO::Exception("Mismatch with the expected image size");
+        }
+
+        // Step 1: Compute the output using the CPU engine.
+
+        OCIOGPUTest::CustomValues::Values cpuImage = test->getCustomValues().m_inputValues;
+        OCIO_NAMESPACE::PackedImageDesc desc(&cpuImage[0], (long)width, (long)height, g_components);
         processor->apply(desc);
 
-        // Step 2: Grab the GPU output from the rendering buffer
+        // Step 2: Grab the GPU output from the rendering buffer.
 
-        std::vector<float> gpuImage = g_image;
+        OCIOGPUTest::CustomValues::Values gpuImage(g_winWidth*g_winHeight*g_components, 0.0f);
         glReadBuffer( GL_COLOR_ATTACHMENT0 );
         glReadPixels(0, 0, g_winWidth, g_winHeight, GL_RGBA, GL_FLOAT, (GLvoid*)&gpuImage[0]);
 
-        // Step 3: Compare the two results
+        // Step 3: Compare the two results.
 
-        for(size_t idx=0; idx<(g_winWidth * g_winHeight); ++idx)
+        const OCIOGPUTest::CustomValues::Values & image = test->getCustomValues().m_inputValues;
+
+        for(size_t idx=0; idx<(width*height); ++idx)
         {
             const bool isFaulty 
                 = test->getRelativeComparison()
-                    ? (!Shader::RelativeCompare(cppImage[4*idx+0], gpuImage[4*idx+0], epsilon, expectMinValue) ||
-                       !Shader::RelativeCompare(cppImage[4*idx+1], gpuImage[4*idx+1], epsilon, expectMinValue) ||
-                       !Shader::RelativeCompare(cppImage[4*idx+2], gpuImage[4*idx+2], epsilon, expectMinValue) ||
-                       !Shader::RelativeCompare(cppImage[4*idx+3], gpuImage[4*idx+3], epsilon, expectMinValue))
-                    : (!Shader::AbsoluteCompare(cppImage[4*idx+0], gpuImage[4*idx+0], epsilon) ||
-                       !Shader::AbsoluteCompare(cppImage[4*idx+1], gpuImage[4*idx+1], epsilon) ||
-                       !Shader::AbsoluteCompare(cppImage[4*idx+2], gpuImage[4*idx+2], epsilon) ||
-                       !Shader::AbsoluteCompare(cppImage[4*idx+3], gpuImage[4*idx+3], epsilon));
+                    ? (!Shader::RelativeCompare(cpuImage[4*idx+0], gpuImage[4*idx+0], epsilon, expectMinValue) ||
+                       !Shader::RelativeCompare(cpuImage[4*idx+1], gpuImage[4*idx+1], epsilon, expectMinValue) ||
+                       !Shader::RelativeCompare(cpuImage[4*idx+2], gpuImage[4*idx+2], epsilon, expectMinValue) ||
+                       !Shader::RelativeCompare(cpuImage[4*idx+3], gpuImage[4*idx+3], epsilon, expectMinValue))
+                    : (!Shader::AbsoluteCompare(cpuImage[4*idx+0], gpuImage[4*idx+0], epsilon) ||
+                       !Shader::AbsoluteCompare(cpuImage[4*idx+1], gpuImage[4*idx+1], epsilon) ||
+                       !Shader::AbsoluteCompare(cpuImage[4*idx+2], gpuImage[4*idx+2], epsilon) ||
+                       !Shader::AbsoluteCompare(cpuImage[4*idx+3], gpuImage[4*idx+3], epsilon));
             if(isFaulty)
             {
                 std::stringstream err;
                 err << std::setprecision(10)
                     << "\n\tfrom orig[" << idx << "] = {" 
-                    << g_image[4*idx+0] << ", " << g_image[4*idx+1] << ", "
-                    << g_image[4*idx+2] << ", " << g_image[4*idx+3] << "}\n"
+                    << image[4*idx+0] << ", " <<image[4*idx+1] << ", "
+                    << image[4*idx+2] << ", " <<image[4*idx+3] << "}\n"
                     << "\tto  cpu = {"
-                    << cppImage[4*idx+0] << ", " << cppImage[4*idx+1] << ", "
-                    << cppImage[4*idx+2] << ", " << cppImage[4*idx+3] << "}\n"
+                    << cpuImage[4*idx+0] << ", " << cpuImage[4*idx+1] << ", "
+                    << cpuImage[4*idx+2] << ", " << cpuImage[4*idx+3] << "}\n"
                     << "\tand gpu = {" 
                     << gpuImage[4*idx+0] << ", " << gpuImage[4*idx+1] << ", "
                     << gpuImage[4*idx+2] << ", " << gpuImage[4*idx+3] << "}\n"
@@ -401,7 +486,7 @@ int main(int, char **)
     }
 #endif
 
-    // Step 1: Initilize the OpenGL engine
+    // Step 1: Initilize the OpenGL engine.
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);           // 4-byte pixel alignment
 
@@ -415,36 +500,36 @@ int main(int, char **)
     glClearColor(0, 0, 0, 0);                        // background color
     glClearStencil(0);                               // clear stencil buffer
 
-    // Step 2: Allocate the texture that holds the image
+    // Step 2: Allocate the texture that holds the image.
 
     AllocateImageTexture();
 
-    // Step 3: Create the frame buffer and render buffer
+    // Step 3: Create the frame buffer and render buffer.
 
     GLuint fboId;
 
-    // create a framebuffer object, you need to delete them when program exits.
+    // Create a framebuffer object, you need to delete them when program exits.
     glGenFramebuffers(1, &fboId);
     glBindFramebuffer(GL_FRAMEBUFFER, fboId);
 
 
     GLuint rboId;
 
-    // create a renderbuffer object to store depth info
+    // Create a renderbuffer object to store depth info.
     glGenRenderbuffers(1, &rboId);
     glBindRenderbuffer(GL_RENDERBUFFER, rboId);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA32F_ARB, g_winWidth, g_winHeight);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-    // attach a texture to FBO color attachement point
+    // Attach a texture to FBO color attachement point.
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, g_imageTexID, 0);
 
-    // attach a renderbuffer to depth attachment point
+    // Attach a renderbuffer to depth attachment point.
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rboId);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // Step 4: Execute all the unit tests
+    // Step 4: Execute all the unit tests.
 
     unsigned failures = 0;
 
@@ -473,24 +558,24 @@ int main(int, char **)
 
             if(test->isValid())
             {
-                // Set the rendering destination to FBO
+                // Set the rendering destination to FBO.
                 glBindFramebuffer(GL_FRAMEBUFFER, fboId);
                 
-                // Clear buffer
+                // Clear buffer.
                 glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-                // Update the image texture
-                UpdateImageTexture(test->getWideRange());
+                // Update the image texture.
+                UpdateImageTexture(test);
 
-                // Update the GPU shader program
+                // Update the GPU shader program.
                 UpdateOCIOGLState(test);
 
-                // Process the image texture into the rendering buffer
+                // Process the image texture into the rendering buffer.
                 Reshape();
                 Redisplay();
 
-                // Validate the processed image using the rendering buffer
+                // Validate the processed image using the rendering buffer.
                 ValidateImageTexture(test);
             }
         }

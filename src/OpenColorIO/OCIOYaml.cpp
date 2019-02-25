@@ -57,6 +57,7 @@ namespace YAML {
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::DisplayTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::ExponentTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::FileTransform>;
+    template <> class TypedKeyNotFound<OCIO_NAMESPACE::FixedFunctionTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::GroupTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::LogTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::LookTransform>;
@@ -191,6 +192,15 @@ OCIO_NAMESPACE_ENTER
             node >> x;
 #else
             x = node.as<std::vector<float> >();
+#endif
+        }
+        
+        inline void load(const YAML::Node& node, std::vector<double>& x)
+        {
+#ifdef OLDYAML
+            node >> x;
+#else
+            x = node.as<std::vector<double> >();
 #endif
         }
         
@@ -704,6 +714,71 @@ OCIO_NAMESPACE_ENTER
             out << YAML::EndMap;
         }
         
+        // FixedFunctionTransform
+        
+        inline void load(const YAML::Node& node, FixedFunctionTransformRcPtr& t)
+        {
+            t = FixedFunctionTransform::Create();
+            
+            std::string key;
+            
+            for (Iterator iter = node.begin();
+                 iter != node.end();
+                 ++iter)
+            {
+                const YAML::Node& first = get_first(iter);
+                const YAML::Node& second = get_second(iter);
+                
+                load(first, key);
+                
+                if (second.Type() == YAML::NodeType::Null) continue;
+                
+                if(key == "params")
+                {
+                    std::vector<double> params;
+                    load(second, params);
+                    t->setParams(&params[0], params.size());
+                }
+                else if(key == "style")
+                {
+                    std::string style;
+                    load(second, style);
+                    t->setStyle( FixedFunctionStyleFromString(style.c_str()) );
+                }
+                else if(key == "direction")
+                {
+                    TransformDirection val;
+                    load(second, val);
+                    t->setDirection(val);
+                }
+                else
+                {
+                    LogUnknownKeyWarning(node.Tag(), first);
+                }
+            }
+        }
+        
+        inline void save(YAML::Emitter& out, ConstFixedFunctionTransformRcPtr t)
+        {
+            out << YAML::VerbatimTag("FixedFunctionTransform");
+            out << YAML::Flow << YAML::BeginMap;
+            
+            out << YAML::Key << "style";
+            out << YAML::Value << YAML::Flow << FixedFunctionStyleToString(t->getStyle());
+            
+            const size_t numParams = t->getNumParams();
+            if(numParams>0)
+            {
+                std::vector<double> params(numParams, 0.);
+                t->getParams(&params[0]);
+                out << YAML::Key << "params";
+                out << YAML::Value << YAML::Flow << params;
+            }
+
+            EmitBaseTransformKeyValues(out, t);
+            out << YAML::EndMap;
+        }
+
         // GroupTransform
         
         void load(const YAML::Node& node, TransformRcPtr& t);
@@ -1248,6 +1323,11 @@ OCIO_NAMESPACE_ENTER
                 load(node, temp);
                 t = temp;
             }
+            else if(type == "FixedFunctionTransform")  {
+                FixedFunctionTransformRcPtr temp;
+                load(node, temp);
+                t = temp;
+            }
             else if(type == "GroupTransform") {
                 GroupTransformRcPtr temp;
                 load(node, temp);
@@ -1313,6 +1393,9 @@ OCIO_NAMESPACE_ENTER
             else if(ConstFileTransformRcPtr File_tran = \
                 DynamicPtrCast<const FileTransform>(t))
                 save(out, File_tran);
+            else if(ConstFixedFunctionTransformRcPtr Func_tran = \
+                DynamicPtrCast<const FixedFunctionTransform>(t))
+                save(out, Func_tran);
             else if(ConstGroupTransformRcPtr Group_tran = \
                 DynamicPtrCast<const GroupTransform>(t))
                 save(out, Group_tran);

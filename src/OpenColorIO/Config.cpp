@@ -3028,4 +3028,99 @@ OIIO_ADD_TEST(Config, view)
     }
 }
 
+OIIO_ADD_TEST(Config, fixed_function_serialization)
+{
+    static const std::string SIMPLE_PROFILE =
+        "ocio_profile_version: 1\n"
+        "\n"
+        "search_path: luts\n"
+        "strictparsing: true\n"
+        "luma: [0.2126, 0.7152, 0.0722]\n"
+        "\n"
+        "roles:\n"
+        "  default: raw\n"
+        "  scene_linear: raw\n"
+        "\n"
+        "displays:\n"
+        "  sRGB:\n"
+        "    - !<View> {name: Raw, colorspace: raw}\n"
+        "\n"
+        "active_displays: []\n"
+        "active_views: []\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw\n"
+        "    family: \"\"\n"
+        "    equalitygroup: \"\"\n"
+        "    bitdepth: unknown\n"
+        "    isdata: false\n"
+        "    allocation: uniform\n";
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<FixedFunctionTransform> {style: ACES_RedMod03}\n"
+            "        - !<FixedFunctionTransform> {style: ACES_RedMod03, direction: inverse}\n"
+            "        - !<FixedFunctionTransform> {style: ACES_RedMod10}\n"
+            "        - !<FixedFunctionTransform> {style: ACES_RedMod10, direction: inverse}\n"
+            "        - !<FixedFunctionTransform> {style: ACES_Glow03}\n"
+            "        - !<FixedFunctionTransform> {style: ACES_Glow03, direction: inverse}\n"
+            "        - !<FixedFunctionTransform> {style: ACES_Glow10}\n"
+            "        - !<FixedFunctionTransform> {style: ACES_Glow10, direction: inverse}\n"
+            "        - !<FixedFunctionTransform> {style: ACES_DarkToDim10}\n"
+            "        - !<FixedFunctionTransform> {style: ACES_DarkToDim10, direction: inverse}\n"
+            "        - !<FixedFunctionTransform> {style: REC2100_Surround, params: [0.75]}\n"
+            "        - !<FixedFunctionTransform> {style: REC2100_Surround, params: [0.75], direction: inverse}\n";
+
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<FixedFunctionTransform> {style: ACES_DarkToDim10, params: [0.75]}\n";
+
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception,
+            "The style 'ACES_DarkToDim10 (Forward)' must have zero parameter but 1 found.");
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<FixedFunctionTransform> {style: REC2100_Surround, direction: inverse}\n";
+
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception, 
+            "The style 'REC2100_Surround' must only have one parameter but 0 found.");
+    }
+}
+
 #endif // OCIO_UNIT_TEST
