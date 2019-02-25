@@ -66,7 +66,7 @@ public:
     virtual bool canCombineWith(ConstOpRcPtr & op) const override;
     virtual void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
 
-    virtual void finalize();
+    virtual void finalize() override;
     virtual void apply(float * rgbaBuffer, long numPixels) const override;
 
     virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
