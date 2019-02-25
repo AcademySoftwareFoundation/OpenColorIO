@@ -231,7 +231,7 @@ OpRcPtr GammaOp::clone() const
 {
     return OpRcPtr(new GammaOp(gammaData()->getInputBitDepth(),
                                gammaData()->getOutputBitDepth(),
-                               gammaData()->getId(),
+                               gammaData()->getID(),
                                gammaData()->getDescriptions(),
                                gammaData()->getStyle(),
                                gammaData()->getRedParams(), 

@@ -492,8 +492,8 @@ GammaOpDataRcPtr GammaOpData::compose(const GammaOpData & B) const
     Descriptions newDesc = getDescriptions();
     newDesc += B.getDescriptions();
 
-    std::string id(getId());
-    id += B.getId();
+    std::string id(getID());
+    id += B.getID();
 
     GammaOpDataRcPtr outOp 
     = std::make_shared<GammaOpData>(getInputBitDepth(),
@@ -527,7 +527,7 @@ void GammaOpData::finalize()
     AutoMutex lock(m_mutex);
 
     std::ostringstream cacheIDStream;
-    cacheIDStream << getId() << " ";
+    cacheIDStream << getID() << " ";
 
     cacheIDStream << GammaOpData::convertStyleToString(getStyle()) << " ";
 
