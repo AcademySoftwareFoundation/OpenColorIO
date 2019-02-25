@@ -98,7 +98,7 @@ public:
     void setParams(const Params & params) { m_params = params; }
     const Params & getParams() const { return m_params; }
 
-    bool operator==(const OpData & other) const;
+    bool operator==(const OpData & other) const override;
 
 protected:
     void invert();
