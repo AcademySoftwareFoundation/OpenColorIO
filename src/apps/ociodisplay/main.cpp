@@ -101,7 +101,11 @@ static void InitImageTexture(const char * filename)
         std::cout << "loading: " << filename << std::endl;
         try
         {
+#if OIIO_VERSION < 10903
+            OIIO::ImageInput* f = OIIO::ImageInput::create(filename);
+#else
             auto f = OIIO::ImageInput::create(filename);
+#endif
             if(!f)
             {
                 std::cerr << "Could not create image input." << std::endl;
