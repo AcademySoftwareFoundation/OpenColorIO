@@ -113,7 +113,11 @@ void Generate(int cubesize, int maxwidth,
         processor->apply(imgdesc);
     }
 
+#if OIIO_VERSION < 10903
+    OIIO::ImageOutput* f = OIIO::ImageOutput::create(outputfile);
+#else
     auto f = OIIO::ImageOutput::create(outputfile);
+#endif
     if(!f)
     {
         throw Exception( "Could not create output image.");
@@ -136,7 +140,11 @@ void Extract(int cubesize, int maxwidth,
              const std::string & outputfile)
 {
     // Read the image
+#if OIIO_VERSION < 10903
+    OIIO::ImageInput* f = OIIO::ImageInput::create(inputfile);
+#else
     auto f = OIIO::ImageInput::create(inputfile);
+#endif
     if(!f)
     {
         throw Exception("Could not create input image.");
