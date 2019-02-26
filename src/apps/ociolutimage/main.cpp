@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace OCIO = OCIO_NAMESPACE;
 OCIO_NAMESPACE_USING;
 
+// NB: OIIO_VERSION >= 10903 requires C++11 or later
 #include <OpenImageIO/imageio.h>
 #include <OpenImageIO/typedesc.h>
 

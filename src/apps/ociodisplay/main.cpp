@@ -39,6 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
+// NB: OIIO_VERSION >= 10903 requires C++11 or later
 #include <OpenImageIO/imageio.h>
 #include <OpenImageIO/typedesc.h>
 
