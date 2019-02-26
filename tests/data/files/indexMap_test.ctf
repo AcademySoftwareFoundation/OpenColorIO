@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="1" version="1.7">
+    <Description>Test LUT1D with IndexMap</Description>
+    <LUT1D inBitDepth="32f" outBitDepth="32f">
+    <IndexMap dim="6">
+    0.01@0  0.05@1  0.1@2  0.3@3  0.5@4  1.1@5
+    </IndexMap>
+        <Array dim="6 3">
+            0            0    0.0023303
+     0.013387     0.045415     0.092171
+     0.082962      0.16286      0.25283
+      0.23982       0.3777      0.51334
+      0.45502      0.64421      0.81588
+      0.76038            1            1
+        </Array>
+    </LUT1D>
+</ProcessList>
