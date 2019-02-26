@@ -24,9 +24,27 @@ env:
   - OPTIONS="-DCMAKE_BUILD_TYPE=Release -DOCIO_BUILD_TESTS=yes -DOCIO_BUILD_DOCS=yes"
 
 # Install missing packages
-install:
-  - if [[ $TRAVIS_OS_NAME = linux ]]; then sudo apt-get update -qq; fi
-  - if [[ $TRAVIS_OS_NAME = linux ]]; then sudo apt-get install -qq texlive-full; fi
+before_install:
+  # Linux ones
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+      sudo apt-get update -qq;
+      sudo apt-get install -y -qq texlive-full;
+    fi
+  # OSX ones
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      brew update;
+      brew install glew;
+      brew upgrade cmake;
+      brew upgrade pyenv;
+      echo 'eval "$(pyenv init -)"' >> .bash_profile;
+      source .bash_profile;
+      export PYTHON_CONFIGURE_OPTS="--enable-framework";
+      pyenv install -v 2.7.15;
+      pyenv global 2.7.15;
+      export OPTIONS="$OPTIONS -DPYTHON_LIBRARY=$(python-config --prefix)/lib/libpython2.7.dylib";
+      export OPTIONS="$OPTIONS -DPYTHON_INCLUDE_DIR=$(python-config --prefix)/include/python2.7";
+      export OPTIONS="$OPTIONS -DPYTHON_EXECUTABLE=$(which python2)";
+    fi
 
 # Run the Build script
 script:
@@ -35,7 +53,7 @@ script:
  - cmake .. -DCMAKE_INSTALL_PREFIX=../_install $OPTIONS
  - cmake --build . --target install
  - ctest --output-on-failure .
- - if [[ $TRAVIS_OS_NAME = linux ]]; then cmake --build . --target pdf; fi
+ - if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then cmake --build . --target pdf; fi
 
 deploy:
   provider: pages
