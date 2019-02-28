@@ -30,9 +30,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace OCIO = OCIO_NAMESPACE;
 OCIO_NAMESPACE_USING;
 
-// NB: OIIO_VERSION >= 10903 requires C++11 or later
 #include <OpenImageIO/imageio.h>
 #include <OpenImageIO/typedesc.h>
+
+#if OIIO_VERSION >= 10903 && __cplusplus < 201103
+#error While not officially supported, compile with C++11 (or higher) to use OIIO versions 1.9.3 or newer
+#endif
 
 #include "argparse.h"
 
