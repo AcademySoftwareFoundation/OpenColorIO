@@ -409,7 +409,11 @@ int main(int argc, const char **argv)
     std::cerr << "Loading " << inputimage << std::endl;
     try
     {
+#if OIIO_VERSION < 10903
+        OIIO::ImageInput* f = OIIO::ImageInput::create(inputimage);
+#else
         auto f = OIIO::ImageInput::create(inputimage);
+#endif
         if(!f)
         {
             std::cerr << "Could not create image input." << std::endl;
@@ -623,7 +627,11 @@ int main(int argc, const char **argv)
     // Write out the result
     try
     {
+#if OIIO_VERSION < 10903
+        OIIO::ImageOutput* f = OIIO::ImageOutput::create(outputimage);
+#else
         auto f = OIIO::ImageOutput::create(outputimage);
+#endif
         if(!f)
         {
             std::cerr << "Could not create output input." << std::endl;

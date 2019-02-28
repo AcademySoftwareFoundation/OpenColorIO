@@ -148,9 +148,6 @@ OCIOGPUTest::OCIOGPUTest(const std::string& testgroup,
     ,   m_name(testname)
     ,   m_function(test)
     ,   m_errorThreshold(Shader::defaultErrorThreshold)
-    ,   m_performRelativeComparison(false)
-    ,   m_expectedMinimalValue(1e-6f)
-    ,   m_verbose(false)
 {
 }
 
@@ -543,9 +540,11 @@ int main(int, char **)
      
         OCIOGPUTest* test = tests[idx];
 
+        bool enabledTest = true;
         try
         {
             test->setup();
+            enabledTest = test->isEnabled();
 
             std::string name(test->group());
             name += " / " + test->name();
@@ -556,7 +555,7 @@ int main(int, char **)
                       << std::left << std::setw(50)
                       << name << "] - ";
 
-            if(test->isValid())
+            if(test->isValid() && enabledTest)
             {
                 // Set the rendering destination to FBO.
                 glBindFramebuffer(GL_FRAMEBUFFER, fboId);
@@ -590,7 +589,11 @@ int main(int, char **)
             std::cerr << "FAILED - Unexpected error" << std::endl;
         }
 
-        if(curr_failures==failures && test->isValid())
+        if (!enabledTest)
+        {
+            std::cerr << "DISABLED" << std::endl;
+        }
+        else if(curr_failures==failures && test->isValid())
         {
             std::cerr << "PASSED" << std::endl;
         }
