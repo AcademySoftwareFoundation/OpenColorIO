@@ -83,16 +83,20 @@ class OCIOGPUTest
 
         inline bool isValid() { return m_processor && m_shaderDesc; }
 
+        inline void disable() { m_enabled = false; }
+        inline bool isEnabled() const { return m_enabled; }
+
     private:
         const std::string m_group, m_name;
         OCIOTestFunc m_function;          
         OCIO_NAMESPACE::ConstProcessorRcPtr m_processor;
         OCIO_NAMESPACE::GpuShaderDescRcPtr m_shaderDesc;
         float m_errorThreshold;
-        bool m_useWideRange;
-        bool m_performRelativeComparison;
-        float m_expectedMinimalValue;
-        bool m_verbose;
+        float m_expectedMinimalValue = 1e-6f;
+        bool m_useWideRange = true;
+        bool m_performRelativeComparison = false;
+        bool m_verbose = false;
+        bool m_enabled = true;
 };
 
 typedef std::vector<OCIOGPUTest*> UnitTests;
@@ -102,12 +106,17 @@ UnitTests& GetUnitTests();
 struct AddTest { AddTest(OCIOGPUTest* test); };
 
 
-
+// Use this macro to declare a test and provide a setup function for the test.
 #define OCIO_ADD_GPU_TEST(group, name)                                     \
     static void ocio_gputest_##group##_##name(OCIOGPUTest & test);         \
     AddTest ocio_##group##_##name(                                         \
         new OCIOGPUTest(#group, #name, ocio_gputest_##group##_##name));    \
     static void ocio_gputest_##group##_##name(OCIOGPUTest & test)
 
+// Use this macro inside OCIO_ADD_GPU_TEST function to disable the test.
+// The remaining of the function implementation will be skipped.
+#define OCIO_DISABLE_GPU_TEST() \
+    test.disable();             \
+    if (!test.isEnabled()) return; // Test to avoid unreacheable code warning.
 
 #endif /* OPENCOLORIO_GPU_UNITTEST_H */

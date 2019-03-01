@@ -410,7 +410,7 @@ int main(int argc, const char **argv)
     try
     {
 #if OIIO_VERSION < 10903
-        ImageInput* f = OIIO::ImageInput::create(inputimage);
+        OIIO::ImageInput* f = OIIO::ImageInput::create(inputimage);
 #else
         auto f = OIIO::ImageInput::create(inputimage);
 #endif
