@@ -33,8 +33,8 @@ rst_prolog = """
 .. |Sony Imageworks| replace:: `Sony Imageworks`_
 .. _Jeremy Selan: mailto:jeremy.selan@gmail.com
 .. |Jeremy Selan| replace:: `Jeremy Selan`_
-.. _ocio-users: http://groups.google.com/group/ocio-users
-.. _ocio-dev: http://groups.google.com/group/ocio-dev
+.. _ocio-user: https://lists.aswf.io/g/ocio-user
+.. _ocio-dev: https://lists.aswf.io/g/ocio-dev
 """
 
 # -- Options for HTML output ---------------------------------------------------

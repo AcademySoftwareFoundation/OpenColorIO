@@ -8,7 +8,7 @@ and how to create new ones.
 
 OCIO Configurations can be downloaded here: `.zip <http://github.com/imageworks/OpenColorIO-Configs/zipball/master>`__ `.tar.gz <http://github.com/imageworks/OpenColorIO-Configs/tarball/master>`__ (OCIO v1.0+)
 
-If you are interested in crafting custom color configurations, and need assistance, please contact: `ocio-dev <http://groups.google.com/group/ocio-dev>`__\.
+If you are interested in crafting custom color configurations, and need assistance, please contact: `ocio-user <https://lists.aswf.io/g/ocio-user>`__\.
 
 Public Configs
 **************
