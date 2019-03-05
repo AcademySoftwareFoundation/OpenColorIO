@@ -584,10 +584,24 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         double getBase() const;
 
-        //!cpp:function:: Set values for each R, G & B components.
-        void setValue(LogAffineParameter val, const double(&values)[3]);
+        //!rst:: Set/Get values for each R, G, and B components.
+
         //!cpp:function::
-        void getValue(LogAffineParameter val, double(&values)[3]) const;
+        void setLogSideSlopeValue(const double(&values)[3]);
+        //!cpp:function::
+        void setLogSideOffsetValue(const double(&values)[3]);
+        //!cpp:function::
+        void setLinSideSlopeValue(const double(&values)[3]);
+        //!cpp:function::
+        void setLinSideOffsetValue(const double(&values)[3]);
+        //!cpp:function::
+        void getLogSideSlopeValue(double(&values)[3]) const;
+        //!cpp:function::
+        void getLogSideOffsetValue(double(&values)[3]) const;
+        //!cpp:function::
+        void getLinSideSlopeValue(double(&values)[3]) const;
+        //!cpp:function::
+        void getLinSideOffsetValue(double(&values)[3]) const;
 
     private:
         LogAffineTransform();

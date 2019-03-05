@@ -190,7 +190,7 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, linSideSlope)
     log->setDirection(TRANSFORM_DIR_FORWARD);
 
     const double linSideSlope[3] = {2.0, 0.5, 3.0};
-    log->setValue(OCIO::LIN_SIDE_SLOPE, linSideSlope);
+    log->setLinSideSlopeValue(linSideSlope);
 
     test.setErrorThreshold(g_epsilon);
     test.setContext(log->createEditableCopy(), shaderDesc);
@@ -205,7 +205,7 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, linSideSlope_inverse)
     log->setDirection(TRANSFORM_DIR_INVERSE);
 
     const double linSideSlope[3] = { 2.0, 0.5, 3.0 };
-    log->setValue(OCIO::LIN_SIDE_SLOPE, linSideSlope);
+    log->setLinSideSlopeValue(linSideSlope);
 
     test.setErrorThreshold(g_epsilon);
     test.setContext(log->createEditableCopy(), shaderDesc);
@@ -220,7 +220,7 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, linSideOffset)
     log->setDirection(TRANSFORM_DIR_FORWARD);
 
     const double linSideOffset[3] = { 0.1, 0.2, 0.3 };
-    log->setValue(OCIO::LIN_SIDE_OFFSET, linSideOffset);
+    log->setLinSideOffsetValue(linSideOffset);
 
     test.setErrorThreshold(g_epsilon);
     test.setContext(log->createEditableCopy(), shaderDesc);
@@ -235,7 +235,7 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, linSideOffset_inverse)
     log->setDirection(TRANSFORM_DIR_INVERSE);
 
     const double linSideOffset[3] = { 0.1, 0.2, 0.3 };
-    log->setValue(OCIO::LIN_SIDE_OFFSET, linSideOffset);
+    log->setLinSideOffsetValue(linSideOffset);
 
     test.setErrorThreshold(g_epsilon);
     test.setContext(log->createEditableCopy(), shaderDesc);
@@ -250,7 +250,7 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, logSideSlope)
     log->setDirection(TRANSFORM_DIR_FORWARD);
 
     const double logSideSlope[3] = { 2.0, 0.5, 3.0 };
-    log->setValue(OCIO::LOG_SIDE_SLOPE, logSideSlope);
+    log->setLogSideSlopeValue(logSideSlope);
 
     test.setErrorThreshold(g_epsilon);
     test.setContext(log->createEditableCopy(), shaderDesc);
@@ -265,7 +265,7 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, logSideSlope_inverse)
     log->setDirection(TRANSFORM_DIR_INVERSE);
 
     const double logSideSlope[3] = { 2.0, 0.5, 3.0 };
-    log->setValue(OCIO::LOG_SIDE_SLOPE, logSideSlope);
+    log->setLogSideSlopeValue(logSideSlope);
 
     test.setErrorThreshold(g_epsilon);
     test.setContext(log->createEditableCopy(), shaderDesc);
@@ -280,7 +280,7 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, logSideOffset)
     log->setDirection(TRANSFORM_DIR_FORWARD);
 
     const double logSideOffset[3] = { 0.1, 0.2, 0.3 };
-    log->setValue(OCIO::LOG_SIDE_OFFSET, logSideOffset);
+    log->setLogSideOffsetValue(logSideOffset);
 
     test.setErrorThreshold(g_epsilon);
     test.setContext(log->createEditableCopy(), shaderDesc);
@@ -295,7 +295,7 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, logSideOffset_inverse)
     log->setDirection(TRANSFORM_DIR_INVERSE);
 
     const double logSideOffset[3] = { 0.1, 0.2, 0.3 };
-    log->setValue(OCIO::LOG_SIDE_OFFSET, logSideOffset);
+    log->setLogSideOffsetValue(logSideOffset);
 
     test.setErrorThreshold(g_epsilon);
     test.setContext(log->createEditableCopy(), shaderDesc);

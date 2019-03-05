@@ -36,7 +36,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-      
+
+// logSideSlope * log( linSideSlope * color + linSideOffset, base) + logSideOffset
+enum LogAffineParameter
+{
+    LOG_SIDE_SLOPE = 0,
+    LOG_SIDE_OFFSET,
+    LIN_SIDE_SLOPE,
+    LIN_SIDE_OFFSET
+};
+
 class LogOpData;
 typedef OCIO_SHARED_PTR<LogOpData> LogOpDataRcPtr;
 typedef OCIO_SHARED_PTR<const LogOpData> ConstLogOpDataRcPtr;
@@ -48,7 +57,9 @@ class LogOpData : public OpData
     // A log op applies one of a family of parametric logarithmic functions.
 public:
 
-    // Order of LogParams [ log slope, lin slope, lin offset, log base, log offset ].
+    // Order of LogParams follows LogAffineParameter:
+    // LOG_SIDE_SLOPE, LOG_SIDE_OFFSET,
+    // LIN_SIDE_SLOPE, LIN_SIDE_OFFSET.
     typedef std::vector<double> Params;
 
     LogOpData() = delete;

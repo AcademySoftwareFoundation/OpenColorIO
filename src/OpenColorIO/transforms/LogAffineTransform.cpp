@@ -139,14 +139,38 @@ OCIO_NAMESPACE_ENTER
         return getImpl()->getBase();
     }
 
-    void LogAffineTransform::setValue(LogAffineParameter val, const double(&values)[3])
+    void LogAffineTransform::setLogSideSlopeValue(const double(&values)[3])
     {
-        getImpl()->setValue(val, values);
+        getImpl()->setValue(LOG_SIDE_SLOPE, values);
+    }
+    void LogAffineTransform::setLogSideOffsetValue(const double(&values)[3])
+    {
+        getImpl()->setValue(LOG_SIDE_OFFSET, values);
+    }
+    void LogAffineTransform::setLinSideSlopeValue(const double(&values)[3])
+    {
+        getImpl()->setValue(LIN_SIDE_SLOPE, values);
+    }
+    void LogAffineTransform::setLinSideOffsetValue(const double(&values)[3])
+    {
+        getImpl()->setValue(LIN_SIDE_OFFSET, values);
     }
 
-    void LogAffineTransform::getValue(LogAffineParameter val, double(&values)[3]) const
+    void LogAffineTransform::getLogSideSlopeValue(double(&values)[3]) const
     {
-        getImpl()->getValue(val, values);
+        getImpl()->getValue(LOG_SIDE_SLOPE, values);
+    }
+    void LogAffineTransform::getLogSideOffsetValue(double(&values)[3]) const
+    {
+        getImpl()->getValue(LOG_SIDE_OFFSET, values);
+    }
+    void LogAffineTransform::getLinSideSlopeValue(double(&values)[3]) const
+    {
+        getImpl()->getValue(LIN_SIDE_SLOPE, values);
+    }
+    void LogAffineTransform::getLinSideOffsetValue(double(&values)[3]) const
+    {
+        getImpl()->getValue(LIN_SIDE_OFFSET, values);
     }
 
     std::ostream& operator<< (std::ostream& os, const LogAffineTransform& t)
@@ -154,13 +178,13 @@ OCIO_NAMESPACE_ENTER
         os << "<LogAffineTransform ";
         os << "base=" << t.getBase() << ", ";
         double values[3];
-        t.getValue(LOG_SIDE_SLOPE, values);
+        t.getLogSideSlopeValue(values);
         os << "logSideSlope=" << values[0] << " " << values[1] << " " << values[2] << ", ";
-        t.getValue(LOG_SIDE_OFFSET, values);
+        t.getLogSideOffsetValue(values);
         os << "logSideOffset=" << values[0] << " " << values[1] << " " << values[2] << ", ";
-        t.getValue(LIN_SIDE_SLOPE, values);
+        t.getLinSideSlopeValue(values);
         os << "linSideSlope=" << values[0] << " " << values[1] << " " << values[2] << ", ";
-        t.getValue(LIN_SIDE_OFFSET, values);
+        t.getLinSideOffsetValue(values);
         os << "linSideOffset=" << values[0] << " " << values[1] << " " << values[2] << ", ";
         os << "direction=" << TransformDirectionToString(t.getDirection());
         os << ">";
@@ -187,10 +211,10 @@ OCIO_NAMESPACE_ENTER
         double linOffset[3] = { 0.0, 0.0, 0.0 };
         double logOffset[3] = { 0.0, 0.0, 0.0 };
         
-        transform.getValue(LOG_SIDE_SLOPE, logSlope);
-        transform.getValue(LOG_SIDE_OFFSET, logOffset);
-        transform.getValue(LIN_SIDE_SLOPE, linSlope);
-        transform.getValue(LIN_SIDE_OFFSET, linOffset);
+        transform.getLogSideSlopeValue(logSlope);
+        transform.getLogSideOffsetValue(logOffset);
+        transform.getLinSideSlopeValue(linSlope);
+        transform.getLinSideOffsetValue(linOffset);
         
 
         CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset, combinedDir);
@@ -215,16 +239,16 @@ OIIO_ADD_TEST(LogAffineTransform, basic)
     const double base = log->getBase();
     OIIO_CHECK_EQUAL(base, 2.0);
     double values[3];
-    log->getValue(OCIO::LIN_SIDE_OFFSET, values);
+    log->getLinSideOffsetValue(values);
     OIIO_CHECK_ASSERT(AllEqual(values));
     OIIO_CHECK_EQUAL(values[0], 0.0);
-    log->getValue(OCIO::LIN_SIDE_SLOPE, values);
+    log->getLinSideSlopeValue(values);
     OIIO_CHECK_ASSERT(AllEqual(values));
     OIIO_CHECK_EQUAL(values[0], 1.0);
-    log->getValue(OCIO::LOG_SIDE_OFFSET, values);
+    log->getLogSideOffsetValue(values);
     OIIO_CHECK_ASSERT(AllEqual(values));
     OIIO_CHECK_EQUAL(values[0], 0.0);
-    log->getValue(OCIO::LOG_SIDE_SLOPE, values);
+    log->getLogSideSlopeValue(values);
     OIIO_CHECK_ASSERT(AllEqual(values));
     OIIO_CHECK_EQUAL(values[0], 1.0);
     OIIO_CHECK_EQUAL(log->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
@@ -236,26 +260,26 @@ OIIO_ADD_TEST(LogAffineTransform, basic)
     log->getBase();
     OIIO_CHECK_EQUAL(log->getBase(), 3.0);
 
-    log->setValue(OCIO::LIN_SIDE_OFFSET, { 0.1, 0.2, 0.3 });
-    log->getValue(OCIO::LIN_SIDE_OFFSET, values);
+    log->setLinSideOffsetValue({ 0.1, 0.2, 0.3 });
+    log->getLinSideOffsetValue(values);
     OIIO_CHECK_EQUAL(values[0], 0.1);
     OIIO_CHECK_EQUAL(values[1], 0.2);
     OIIO_CHECK_EQUAL(values[2], 0.3);
 
-    log->setValue(OCIO::LIN_SIDE_SLOPE, { 1.1, 1.2, 1.3 });
-    log->getValue(OCIO::LIN_SIDE_SLOPE, values);
+    log->setLinSideSlopeValue({ 1.1, 1.2, 1.3 });
+    log->getLinSideSlopeValue(values);
     OIIO_CHECK_EQUAL(values[0], 1.1);
     OIIO_CHECK_EQUAL(values[1], 1.2);
     OIIO_CHECK_EQUAL(values[2], 1.3);
 
-    log->setValue(OCIO::LOG_SIDE_OFFSET, { 0.1, 0.2, 0.3 });
-    log->getValue(OCIO::LOG_SIDE_OFFSET, values);
+    log->setLogSideOffsetValue({ 0.1, 0.2, 0.3 });
+    log->getLogSideOffsetValue(values);
     OIIO_CHECK_EQUAL(values[0], 0.1);
     OIIO_CHECK_EQUAL(values[1], 0.2);
     OIIO_CHECK_EQUAL(values[2], 0.3);
 
-    log->setValue(OCIO::LOG_SIDE_SLOPE, { 1.1, 1.2, 1.3 });
-    log->getValue(OCIO::LOG_SIDE_SLOPE, values);
+    log->setLogSideSlopeValue({ 1.1, 1.2, 1.3 });
+    log->getLogSideSlopeValue(values);
     OIIO_CHECK_EQUAL(values[0], 1.1);
     OIIO_CHECK_EQUAL(values[1], 1.2);
     OIIO_CHECK_EQUAL(values[2], 1.3);

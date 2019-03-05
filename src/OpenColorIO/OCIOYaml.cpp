@@ -882,10 +882,10 @@ OCIO_NAMESPACE_ENTER
                 }
             }
             t->setBase(base);
-            t->setValue(LOG_SIDE_SLOPE, logSlope);
-            t->setValue(LIN_SIDE_SLOPE, linSlope);
-            t->setValue(LIN_SIDE_OFFSET, linOffset);
-            t->setValue(LOG_SIDE_OFFSET, logOffset);
+            t->setLogSideSlopeValue(logSlope);
+            t->setLinSideSlopeValue(linSlope);
+            t->setLinSideOffsetValue(linOffset);
+            t->setLogSideOffsetValue(logOffset);
         }
         
         inline void saveLogParam(YAML::Emitter& out, const double(&param)[3],
@@ -916,10 +916,10 @@ OCIO_NAMESPACE_ENTER
             double linSlope[3] = { 1.0, 1.0, 1.0 };
             double linOffset[3] = { 0.0, 0.0, 0.0 };
             double logOffset[3] = { 0.0, 0.0, 0.0 };
-            t->getValue(LOG_SIDE_SLOPE, logSlope);
-            t->getValue(LOG_SIDE_OFFSET, logOffset);
-            t->getValue(LIN_SIDE_SLOPE, linSlope);
-            t->getValue(LIN_SIDE_OFFSET, linOffset);
+            t->getLogSideSlopeValue(logSlope);
+            t->getLogSideOffsetValue(logOffset);
+            t->getLinSideSlopeValue(linSlope);
+            t->getLinSideOffsetValue(linOffset);
             
             const double baseVal = t->getBase();
             if (baseVal != 2.0)

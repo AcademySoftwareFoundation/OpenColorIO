@@ -330,15 +330,6 @@ OCIO_NAMESPACE_ENTER
     };
 
     //!cpp:type::
-    enum LogAffineParameter
-    {
-        LOG_SIDE_SLOPE = 0,
-        LOG_SIDE_OFFSET,
-        LIN_SIDE_SLOPE,
-        LIN_SIDE_OFFSET
-    };
-
-    //!cpp:type::
     enum RangeStyle
     {
         RANGE_NO_CLAMP = 0,
