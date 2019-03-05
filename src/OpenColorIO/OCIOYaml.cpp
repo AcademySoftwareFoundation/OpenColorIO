@@ -1715,7 +1715,7 @@ OCIO_NAMESPACE_ENTER
                     if(second.Type() != YAML::NodeType::Map)
                     {
                         std::ostringstream os;
-                        os << "The value type of 'environment' key needs to be a map.";
+                        os << "The value type of key 'environment' needs to be a map.";
                         throwValueError(node.Tag(), first, os.str());
                     }
                     for (Iterator it = second.begin();
@@ -1761,7 +1761,7 @@ OCIO_NAMESPACE_ENTER
                     if(second.Type() != YAML::NodeType::Map)
                     {
                         std::ostringstream os;
-                        os << "The value type of the 'roles' key needs to be a map.";
+                        os << "The value type of the key 'roles' needs to be a map.";
                         throwValueError(node.Tag(), first, os.str());
                     }
                     for (Iterator it = second.begin();
@@ -1779,7 +1779,7 @@ OCIO_NAMESPACE_ENTER
                     if(second.Type() != YAML::NodeType::Map)
                     {
                         std::ostringstream os;
-                        os << "The value type of 'displays' key needs to be a map.";
+                        os << "The value type of the key 'displays' needs to be a map.";
                         throwValueError(node.Tag(), first, os.str());
                     }
                     for (Iterator it = second.begin();
