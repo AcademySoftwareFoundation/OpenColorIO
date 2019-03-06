@@ -213,7 +213,7 @@ public:
 
     bool hasChannelCrosstalk() const override;
 
-    void validate() const override;
+    virtual void validate() const override;
 
     std::string getSlopeString() const;
     std::string getOffsetString() const;
