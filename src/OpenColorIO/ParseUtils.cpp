@@ -289,9 +289,17 @@ OCIO_NAMESPACE_ENTER
     
     RangeStyle RangeStyleFromString(const char * style)
     {
-        std::string str = pystring::lower(style);
-        if(str == "noclamp") return RANGE_NO_CLAMP;
-        else if(str == "clamp") return RANGE_CLAMP;
+        if(style && *style)
+        {
+            const std::string str = pystring::lower(style);
+            if(str == "noclamp") return RANGE_NO_CLAMP;
+            else if(str == "clamp") return RANGE_CLAMP;
+        }
+
+        std::string msg("Wrong Range style: ");
+        msg += (style && *style) ? style : "<null>";
+
+        throw Exception(msg.c_str());
         return RANGE_CLAMP;
     }
 
@@ -347,7 +355,7 @@ OCIO_NAMESPACE_ENTER
         const int FLOAT_DECIMALS = 7;
         const int DOUBLE_DECIMALS = 16;
     }
-    
+
     std::string FloatToString(float value)
     {
         std::ostringstream pretty;

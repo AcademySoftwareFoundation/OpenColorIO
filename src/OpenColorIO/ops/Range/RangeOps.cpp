@@ -33,11 +33,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "GpuShaderUtils.h"
+#include "ilmbase/half.h"
 #include "HashUtils.h"
 #include "MathUtils.h"
 #include "ops/Range/RangeOpCPU.h"
 #include "ops/Range/RangeOpGPU.h"
 #include "ops/Range/RangeOps.h"
+
 
 OCIO_NAMESPACE_ENTER
 {
@@ -301,10 +303,9 @@ OCIO_NAMESPACE_USING
 
 const float g_error = 1e-7f;
 
-
 OIIO_ADD_TEST(RangeOps, apply_arbitrary)
 {
-    OCIO::RangeOp r(-0.101f, 0.950f, 0.194f, 1.001f, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::RangeOp r(-0.101, 0.95, 0.194, 1.001, OCIO::TRANSFORM_DIR_FORWARD);
     OIIO_CHECK_NO_THROW(r.finalize());
 
     float image[4*3] = { -0.50f,  0.25f, 0.50f, 0.0f,
@@ -331,10 +332,10 @@ OIIO_ADD_TEST(RangeOps, combining)
 {
     OCIO::OpRcPtrVec ops;
 
-    OCIO::CreateRangeOp(ops, 0.0f, 0.5f, 0.5f, 1.0f);
+    OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1.0);
     OIIO_REQUIRE_EQUAL(ops.size(), 1);
     OIIO_CHECK_NO_THROW(ops[0]->finalize());
-    OCIO::CreateRangeOp(ops, 0.0f, 1.0f, 0.5f, 1.5f);
+    OCIO::CreateRangeOp(ops, 0., 1., 0.5, 1.5);
     OIIO_REQUIRE_EQUAL(ops.size(), 2);
     OIIO_CHECK_NO_THROW(ops[1]->finalize());
 
@@ -371,7 +372,7 @@ OIIO_ADD_TEST(RangeOps, is_inverse)
 {
     OCIO::OpRcPtrVec ops;
 
-    OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1., OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1.);
     OIIO_CHECK_EQUAL(ops.size(), 1);
     // Skip finalize so that inverse direction is kept
     OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1., OCIO::TRANSFORM_DIR_INVERSE);
@@ -394,14 +395,14 @@ OIIO_ADD_TEST(RangeOps, is_inverse)
 
     OIIO_CHECK_ASSERT(ops[0]->isInverse(op1));
 
-    OCIO::CreateRangeOp(ops, 0.000002, 0.5, 0.5, 1.0, OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO::CreateRangeOp(ops, 0.000002, 0.5, 0.5, 1., OCIO::TRANSFORM_DIR_INVERSE);
     OIIO_REQUIRE_EQUAL(ops.size(), 4);
     OCIO::ConstOpRcPtr op3 = ops[3];
 
     OIIO_CHECK_ASSERT(!ops[0]->isInverse(op3));
     OIIO_CHECK_ASSERT(!ops[2]->isInverse(op3));
 
-    OCIO::CreateRangeOp(ops, 0.000002, 0.5, 0.5, 1.0, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateRangeOp(ops, 0.000002, 0.5, 0.5, 1.);
     OIIO_REQUIRE_EQUAL(ops.size(), 5);
     OCIO::ConstOpRcPtr op4 = ops[4];
 
@@ -423,9 +424,9 @@ OIIO_ADD_TEST(RangeOps, computed_identifier)
 {
     OCIO::OpRcPtrVec ops;
 
-    OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1.0, OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1.0, OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO::CreateRangeOp(ops, 0.1, 1., 0.3, 1.9, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1.0);
+    OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1.0);
+    OCIO::CreateRangeOp(ops, 0.1, 1., 0.3, 1.9);
     OCIO::CreateRangeOp(ops, 0.1, 1., 0.3, 1.9, OCIO::TRANSFORM_DIR_INVERSE);
     for(OCIO::OpRcPtrVec::reference op : ops) { op->finalize(); }
 
@@ -436,7 +437,7 @@ OIIO_ADD_TEST(RangeOps, computed_identifier)
     OIIO_CHECK_ASSERT(ops[1]->getCacheID() != ops[2]->getCacheID());
     OIIO_CHECK_ASSERT(ops[2]->getCacheID() != ops[3]->getCacheID());
 
-    OCIO::CreateRangeOp(ops, 0.1f, 1.0f, 0.3f, 1.90001f, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateRangeOp(ops, 0.1, 1., 0.3, 1.90001);
     for(OCIO::OpRcPtrVec::reference op : ops) { op->finalize(); }
 
     OIIO_REQUIRE_EQUAL(ops.size(), 5);

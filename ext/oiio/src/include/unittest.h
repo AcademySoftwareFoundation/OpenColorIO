@@ -157,8 +157,9 @@ struct AddTest { AddTest(OIIOTest* test); };
 /// to verify that the right one is thrown.
 #define OIIO_CHECK_THROW_WHAT(S, E, W)                                  \
     try { S; throw "throwanything"; } catch (E const& ex) {             \
-        std::string what(ex.what());                                    \
-        if (what.find(W) == std::string::npos) {                        \
+        const std::string what(ex.what());                              \
+        if (std::string(W).empty() || what.empty()                      \
+                || what.find(W) == std::string::npos) {                 \
             std::cout << __FILE__ << ":" << __LINE__ << ":\n"           \
             << "FAILED: " << #E << " was thrown with \"" << what <<     \
             "\". Expecting to contain \"" << W << "\"\n";               \

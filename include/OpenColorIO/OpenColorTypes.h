@@ -149,6 +149,12 @@ OCIO_NAMESPACE_ENTER
     //!cpp:type::
     typedef OCIO_SHARED_PTR<ExponentTransform> ExponentTransformRcPtr;
     
+    class OCIOEXPORT ExponentWithLinearTransform;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const ExponentWithLinearTransform> ConstExponentWithLinearTransformRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<ExponentWithLinearTransform> ExponentWithLinearTransformRcPtr;
+    
     class OCIOEXPORT FileTransform;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<const FileTransform> ConstFileTransformRcPtr;
@@ -329,7 +335,7 @@ OCIO_NAMESPACE_ENTER
         ENV_ENVIRONMENT_LOAD_ALL
     };
 
-    //!cpp:type::
+    //!cpp:type:: A RangeTransform may be set to clamp the values, or not.
     enum RangeStyle
     {
         RANGE_NO_CLAMP = 0,

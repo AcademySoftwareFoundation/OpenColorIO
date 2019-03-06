@@ -86,6 +86,11 @@ OCIO_NAMESPACE_ENTER
         {
             BuildExponentOps(ops, config, *exponentTransform, dir);
         }
+        else if(ConstExponentWithLinearTransformRcPtr expWithLinearTransform = \
+            DynamicPtrCast<const ExponentWithLinearTransform>(transform))
+        {
+            BuildExponentWithLinearOps(ops, config, *expWithLinearTransform, dir);
+        }
         else if(ConstFixedFunctionTransformRcPtr fixedFunctionTransform = \
             DynamicPtrCast<const FixedFunctionTransform>(transform))
         {

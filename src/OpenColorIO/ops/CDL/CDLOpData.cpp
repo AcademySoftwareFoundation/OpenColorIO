@@ -829,4 +829,3 @@ OIIO_ADD_TEST(CDLOpData, channel)
 }
 
 #endif
-

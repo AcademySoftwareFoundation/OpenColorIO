@@ -80,6 +80,11 @@ OCIO_NAMESPACE_ENTER
                           const ExponentTransform & transform,
                           TransformDirection dir);
     
+    void BuildExponentWithLinearOps(OpRcPtrVec & ops,
+                                    const Config& config,
+                                    const ExponentWithLinearTransform & transform,
+                                    TransformDirection dir);
+    
     void BuildFileOps(OpRcPtrVec & ops,
                       const Config& config,
                       const ConstContextRcPtr & context,

@@ -133,6 +133,7 @@ OCIO_NAMESPACE_ENTER
             RangeType,         // A range
             CDLType,           // A Color Decision List (aka CDL)
             FixedFunctionType, // A fixed function (i.e. where the style defines the behavior)
+            GammaType,         // A gamma (i.e. enhancement of the Exponent)
 
             NoOpType
         };

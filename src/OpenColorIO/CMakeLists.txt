@@ -57,6 +57,10 @@ set(SOURCES
 	ops/FixedFunction/FixedFunctionOpCPU.cpp
 	ops/FixedFunction/FixedFunctionOpData.cpp
 	ops/FixedFunction/FixedFunctionOps.cpp
+	ops/Gamma/GammaOpCPU.cpp
+	ops/Gamma/GammaOpData.cpp
+	ops/Gamma/GammaOpUtils.cpp
+	ops/Gamma/GammaOps.cpp
 	ops/IndexMapping.cpp
 	ops/Log/LogOps.cpp
 	ops/Lut1D/Lut1DOp.cpp
@@ -89,6 +93,7 @@ set(SOURCES
 	transforms/ColorSpaceTransform.cpp
 	transforms/DisplayTransform.cpp
 	transforms/ExponentTransform.cpp
+	transforms/ExponentWithLinearTransform.cpp
 	transforms/FileTransform.cpp
 	transforms/FixedFunctionTransform.cpp
 	transforms/GroupTransform.cpp

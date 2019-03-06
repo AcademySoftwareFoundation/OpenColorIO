@@ -31,6 +31,13 @@ if(NOT BUILD_SHARED_LIBS)
 	)
 endif()
 
+if(OCIO_USE_SSE)
+	target_compile_definitions(test_gpu_exec
+		PRIVATE
+			USE_SSE
+	)
+endif(OCIO_USE_SSE)
+
 set_target_properties(test_gpu_exec PROPERTIES 
 	COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
 
