@@ -2633,7 +2633,7 @@ OIIO_ADD_TEST(Config, exponent_serialization)
         OCIO::ConstConfigRcPtr config;
         OIIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is),
                               OCIO::Exception,
-                              "ExponentTransform parse error, value field must be 4 floats");
+                              "'value' values must be 4 floats. Found '3'");
     }
 }
 
