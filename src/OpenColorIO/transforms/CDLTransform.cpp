@@ -615,6 +615,8 @@ OCIO_NAMESPACE_ENTER
         
         if(config.getMajorVersion()==1)
         {
+            const double p[4] = { power4[0], power4[1], power4[2], power4[3] };
+
             if(combinedDir == TRANSFORM_DIR_FORWARD)
             {
                 // 1) Scale + Offset
@@ -622,7 +624,7 @@ OCIO_NAMESPACE_ENTER
                 
                 // 2) Power + Clamp at 0 (NB: This is not in accord with the 
                 //    ASC v1.2 spec since it also requires clamping at 1.)
-                CreateExponentOp(ops, power4, TRANSFORM_DIR_FORWARD);
+                CreateExponentOp(ops, p, TRANSFORM_DIR_FORWARD);
                 
                 // 3) Saturation (NB: Does not clamp at 0 and 1
                 //    as per ASC v1.2 spec)
@@ -636,7 +638,7 @@ OCIO_NAMESPACE_ENTER
                 
                 // 2) Power + Clamp at 0 (NB: This is not in accord with the 
                 //    ASC v1.2 spec since it also requires clamping at 1.)
-                CreateExponentOp(ops, power4, TRANSFORM_DIR_INVERSE);
+                CreateExponentOp(ops, p, TRANSFORM_DIR_INVERSE);
                 
                 // 1) Scale + Offset
                 CreateScaleOffsetOp(ops, scale4, offset4, TRANSFORM_DIR_INVERSE);

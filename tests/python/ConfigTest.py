@@ -219,7 +219,7 @@ return out_pixel;
         
         # TODO: these should work in-place
         rgbfoo = _proc.applyRGB([0.48, 0.18, 0.18])
-        self.assertAlmostEqual(1.9351075, rgbfoo[0], delta=1e-7);
+        self.assertAlmostEqual(1.9351077, rgbfoo[0], delta=1e-7);
         # TODO: these should work in-place
         rgbafoo = _proc.applyRGBA([0.48, 0.18, 0.18, 1.0])
         self.assertAlmostEqual(1.0, rgbafoo[3], delta=1e-8)
