@@ -14,11 +14,11 @@ save yourself a lot of time by asking first.
 
 How do you talk to us? There are several ways to get in touch:
 
-* [ocio-dev](https://groups.google.com/forum/#!forum/ocio-dev):
+* [ocio-dev](https://lists.aswf.io/g/ocio-dev):
 This is a development focused mail list with a deep history of technical
 conversations and decisions that have shaped the project.
 
-* [ocio-users](https://groups.google.com/forum/#!forum/ocio-users):
+* [ocio-user](https://lists.aswf.io/g/ocio-user):
 This is an end-user oriented mail list, focused on how to use OCIO’s features
 within a host application. Common topics include crafting configs, DCC behavior,
 and general color questions.
@@ -34,7 +34,7 @@ GitHub **issues** are a great place to start a conversation! Issues aren’t
 restricted to bugs; we happily welcome feature requests and other suggestions
 submitted as issues. The only conversations we would direct away from issues are
 questions in the form of “How do I do X”. Please direct these to the ocio-dev or
-ocio-users mail lists, and consider contributing what you've learned to our
+ocio-user mail lists, and consider contributing what you've learned to our
 docs if appropriate!
 
 ## Getting Started

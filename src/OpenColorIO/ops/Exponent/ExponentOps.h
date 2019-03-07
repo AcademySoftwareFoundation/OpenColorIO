@@ -67,7 +67,7 @@ OCIO_NAMESPACE_ENTER
     // Otherwise, will be clamped between [0.0, inf]
     
     void CreateExponentOp(OpRcPtrVec & ops,
-                          const float * exponent4,
+                          const double(&vec4)[4],
                           TransformDirection direction);
 }
 OCIO_NAMESPACE_EXIT

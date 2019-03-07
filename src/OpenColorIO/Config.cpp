@@ -2233,43 +2233,48 @@ OIIO_ADD_TEST(Config, Version_faulty_1)
     OIIO_CHECK_THROW(config = OCIO::Config::CreateFromStream(is), OCIO::Exception);
 }
 
+namespace
+{
+
+const std::string SIMPLE_PROFILE =
+    "ocio_profile_version: 1\n"
+    "\n"
+    "search_path: luts\n"
+    "strictparsing: true\n"
+    "luma: [0.2126, 0.7152, 0.0722]\n"
+    "\n"
+    "roles:\n"
+    "  default: raw\n"
+    "  scene_linear: lnh\n"
+    "\n"
+    "displays:\n"
+    "  sRGB:\n"
+    "    - !<View> {name: Raw, colorspace: raw}\n"
+    "\n"
+    "active_displays: []\n"
+    "active_views: []\n"
+    "\n"
+    "colorspaces:\n"
+    "  - !<ColorSpace>\n"
+    "    name: raw\n"
+    "    family: \"\"\n"
+    "    equalitygroup: \"\"\n"
+    "    bitdepth: unknown\n"
+    "    isdata: false\n"
+    "    allocation: uniform\n"
+    "\n"
+    "  - !<ColorSpace>\n"
+    "    name: lnh\n"
+    "    family: \"\"\n"
+    "    equalitygroup: \"\"\n"
+    "    bitdepth: unknown\n"
+    "    isdata: false\n"
+    "    allocation: uniform\n";
+
+};
+
 OIIO_ADD_TEST(Config, range_serialization)
 {
-    static const std::string SIMPLE_PROFILE =
-        "ocio_profile_version: 1\n"
-        "\n"
-        "search_path: luts\n"
-        "strictparsing: true\n"
-        "luma: [0.2126, 0.7152, 0.0722]\n"
-        "\n"
-        "roles:\n"
-        "  default: raw\n"
-        "  scene_linear: lnh\n"
-        "\n"
-        "displays:\n"
-        "  sRGB:\n"
-        "    - !<View> {name: Raw, colorspace: raw}\n"
-        "\n"
-        "active_displays: []\n"
-        "active_views: []\n"
-        "\n"
-        "colorspaces:\n"
-        "  - !<ColorSpace>\n"
-        "    name: raw\n"
-        "    family: \"\"\n"
-        "    equalitygroup: \"\"\n"
-        "    bitdepth: unknown\n"
-        "    isdata: false\n"
-        "    allocation: uniform\n"
-        "\n"
-        "  - !<ColorSpace>\n"
-        "    name: lnh\n"
-        "    family: \"\"\n"
-        "    equalitygroup: \"\"\n"
-        "    bitdepth: unknown\n"
-        "    isdata: false\n"
-        "    allocation: uniform\n";
-
     {
         const std::string strEnd =
             "    from_reference: !<RangeTransform> {}\n";
@@ -2576,6 +2581,250 @@ OIIO_ADD_TEST(Config, range_serialization)
                               OCIO::Exception,
                               "Loading the OCIO profile failed");
     }
+}
+
+OIIO_ADD_TEST(Config, exponent_serialization)   
+{   
+    {   
+        const std::string strEnd =  
+            "    from_reference: !<ExponentTransform> " 
+            "{value: [1.101, 1.202, 1.303, 1.404]}\n";  
+        const std::string str = SIMPLE_PROFILE + strEnd;    
+
+        std::istringstream is; 
+        is.str(str);    
+        OCIO::ConstConfigRcPtr config;  
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));   
+        OIIO_CHECK_NO_THROW(config->sanityCheck()); 
+
+        std::stringstream ss;  
+        ss << *config.get();    
+        OIIO_CHECK_EQUAL(ss.str(), str);    
+    }   
+
+     {  
+        const std::string strEnd =  
+            "    from_reference: !<ExponentTransform> " 
+            "{value: [1.101, 1.202, 1.303, 1.404], direction: inverse}\n";  
+        const std::string str = SIMPLE_PROFILE + strEnd;    
+
+        std::istringstream is; 
+        is.str(str);    
+        OCIO::ConstConfigRcPtr config;  
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));   
+        OIIO_CHECK_NO_THROW(config->sanityCheck()); 
+
+        std::stringstream ss;  
+        ss << *config.get();    
+        OIIO_CHECK_EQUAL(ss.str(), str);    
+    }   
+
+    // Errors
+
+    {
+        // Some gamma values are missing.
+        const std::string strEnd =
+            "    from_reference: !<ExponentTransform> "
+            "{value: [1.1, 1.2, 1.3]}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is),
+                              OCIO::Exception,
+                              "ExponentTransform parse error, value field must be 4 floats");
+    }
+}
+
+OIIO_ADD_TEST(Config, exponent_with_linear_serialization)
+{
+    {
+        const std::string strEnd =
+            "    from_reference: !<ExponentWithLinearTransform> "
+            "{gamma: [1.1, 1.2, 1.3, 1.4], offset: [0.101, 0.102, 0.103, 0.1]}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<ExponentWithLinearTransform> "
+            "{gamma: [1.1, 1.2, 1.3, 1.4], offset: [0.101, 0.102, 0.103, 0.1], direction: inverse}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    // Errors
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<ExponentWithLinearTransform> {}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is),
+                              OCIO::Exception,
+                              "ExponentWithLinear parse error, gamma and offset fields are missing");
+    }
+
+    {
+        // Offset values are missing.
+        const std::string strEnd =
+            "    from_reference: !<ExponentWithLinearTransform> "
+            "{gamma: [1.1, 1.2, 1.3, 1.4]}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is),
+                              OCIO::Exception,
+                              "ExponentWithLinear parse error, offset field is missing");
+    }
+
+    {
+        // Gamma values are missing.
+        const std::string strEnd =
+            "    from_reference: !<ExponentWithLinearTransform> "
+            "{offset: [1.1, 1.2, 1.3, 1.4]}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is),
+                              OCIO::Exception,
+                              "ExponentWithLinear parse error, gamma field is missing");
+    }
+
+    {
+        // Some gamma values are missing.
+        const std::string strEnd =
+            "    from_reference: !<ExponentWithLinearTransform> "
+            "{gamma: [1.1, 1.2, 1.3]}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is),
+                              OCIO::Exception,
+                              "ExponentWithLinear parse error, gamma field must be 4 floats");
+    }
+    {
+        // Some offset values are missing.
+        const std::string strEnd =
+            "    from_reference: !<ExponentWithLinearTransform> "
+            "{gamma: [1.1, 1.2, 1.3, 1.4], offset: [0.101, 0.102]}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is),
+                              OCIO::Exception,
+                              "ExponentWithLinear parse error, offset field must be 4 floats");
+    }
+}
+
+OIIO_ADD_TEST(Config, exponent_vs_config_version)
+{
+    // OCIO config file version == 1  and exponent == 1
+
+    const std::string strEnd =
+        "    from_reference: !<ExponentTransform> {value: [1, 1, 1, 1]}\n";
+    const std::string str = SIMPLE_PROFILE + strEnd;
+
+    std::istringstream is;
+    is.str(str);
+    OCIO::ConstConfigRcPtr config;
+    OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+    OCIO::ConstProcessorRcPtr processor;
+    OIIO_CHECK_NO_THROW(processor = config->getProcessor("raw", "lnh"));
+
+    float img1[4] = { -0.5f, 0.0f, 1.0f, 1.0f };
+    OIIO_CHECK_NO_THROW(processor->applyRGBA(img1));
+
+    OIIO_CHECK_EQUAL(img1[0], -0.5f);
+    OIIO_CHECK_EQUAL(img1[1],  0.0f);
+    OIIO_CHECK_EQUAL(img1[2],  1.0f);
+    OIIO_CHECK_EQUAL(img1[3],  1.0f);
+
+    // OCIO config file version == 1  and exponent != 1
+
+    const std::string strEnd2 =
+        "    from_reference: !<ExponentTransform> {value: [2, 2, 2, 1]}\n";
+    const std::string str2 = SIMPLE_PROFILE + strEnd2;
+
+    is.str(str2);
+    OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OIIO_CHECK_NO_THROW(config->sanityCheck());
+    OIIO_CHECK_NO_THROW(processor = config->getProcessor("raw", "lnh"));
+
+    float img2[4] = { -0.5f, 0.0f, 1.0f, 1.0f };
+    OIIO_CHECK_NO_THROW(processor->applyRGBA(img2));
+
+    OIIO_CHECK_EQUAL(img2[0],  0.0f);
+    OIIO_CHECK_EQUAL(img2[1],  0.0f);
+    OIIO_CHECK_EQUAL(img2[2],  1.0f);
+    OIIO_CHECK_EQUAL(img2[3],  1.0f);
+
+    // OCIO config file version > 1  and exponent == 1
+
+    std::string str3 = str;
+    str3.replace(0, strlen("ocio_profile_version: 1"), "ocio_profile_version: 2");
+    is.str(str3);
+    OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OIIO_CHECK_NO_THROW(config->sanityCheck());
+    OIIO_CHECK_NO_THROW(processor = config->getProcessor("raw", "lnh"));
+
+    float img3[4] = { -0.5f, 0.0f, 1.0f, 1.0f };
+    OIIO_CHECK_NO_THROW(processor->applyRGBA(img3));
+
+    OIIO_CHECK_EQUAL(img3[0], 0.0f);
+    OIIO_CHECK_EQUAL(img3[1], 0.0f);
+    OIIO_CHECK_CLOSE(img3[2], 1.0f, 2e-5f); // Because of SSE optimizations.
+    OIIO_CHECK_CLOSE(img3[3], 1.0f, 2e-5f); // Because of SSE optimizations.
+
+    // OCIO config file version > 1  and exponent != 1
+
+    std::string str4 = str2;
+    str4.replace(0, strlen("ocio_profile_version: 1"), "ocio_profile_version: 2");
+    is.str(str4);
+    OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OIIO_CHECK_NO_THROW(config->sanityCheck());
+    OIIO_CHECK_NO_THROW(processor = config->getProcessor("raw", "lnh"));
+
+    float img4[4] = { -0.5f, 0.0f, 1.0f, 1.0f };
+    OIIO_CHECK_NO_THROW(processor->applyRGBA(img4));
+
+    OIIO_CHECK_EQUAL(img4[0], 0.0f);
+    OIIO_CHECK_EQUAL(img4[1], 0.0f);
+    OIIO_CHECK_CLOSE(img4[2], 1.0f, 3e-5f); // Because of SSE optimizations.
+    OIIO_CHECK_CLOSE(img4[3], 1.0f, 2e-5f); // Because of SSE optimizations.
 }
 
 OIIO_ADD_TEST(Config, categories)

@@ -392,8 +392,9 @@ OCIO_NAMESPACE_ENTER
     
     //!cpp:class:: Represents exponent transform: pow( clamp(color), value)
     // 
-    // If the exponent is 1.0, this will not clamp. Otherwise, the input color
-    // will be clamped between [0.0, inf]
+    // For configs with version == 1: If the exponent is 1.0, this will not clamp. 
+    // Otherwise, the input color will be clamped between [0.0, inf].
+    // For configs with version > 1: Negative values are always clamped.
     class OCIOEXPORT ExponentTransform : public Transform
     {
     public:
@@ -413,8 +414,10 @@ OCIO_NAMESPACE_ENTER
 
         //!cpp:function::
         void setValue(const float * vec4);
+        void setValue(const double(&vec4)[4]);
         //!cpp:function::
         void getValue(float * vec4) const;
+        void getValue(double(&vec4)[4]) const;
     
     private:
         ExponentTransform();
@@ -436,6 +439,67 @@ OCIO_NAMESPACE_ENTER
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ExponentTransform&);
     
     
+    //!rst:: //////////////////////////////////////////////////////////////////
+    
+    //!cpp:class:: Represents power functions with a linear section in the shadows 
+    //             such as sRGB and L*.
+    //
+    // The basic formula is:
+    //   pow( (x + offset)/(1 + offset), gamma )
+    //   with the breakpoint at offset/(gamma - 1).
+    //
+    // Negative values are never clamped.
+    class OCIOEXPORT ExponentWithLinearTransform : public Transform
+    {
+    public:
+        //!cpp:function::
+        static ExponentWithLinearTransformRcPtr Create();
+        
+        //!cpp:function::
+        virtual TransformRcPtr createEditableCopy() const;
+        
+        //!cpp:function::
+        virtual TransformDirection getDirection() const;
+        //!cpp:function::
+        virtual void setDirection(TransformDirection dir);
+
+        //!cpp:function:: Validate the transform and throw if invalid.
+        virtual void validate() const;
+
+        //!cpp:function:: Set the exponent value for the power function for R, G, B, A.
+        // .. note::
+        //     The gamma values must be in the range of [1, 10]. Set the transform direction 
+        //     to inverse to obtain the effect of values less than 1.
+        void setGamma(const double(&values)[4]);
+        //!cpp:function::
+        void getGamma(double(&values)[4]) const;
+
+        //!cpp:function::
+        // .. note:: The offset values must be in the range [0, 0.9].
+        void setOffset(const double(&values)[4]);
+        //!cpp:function::
+        void getOffset(double(&values)[4]) const;
+
+    private:
+        ExponentWithLinearTransform();
+        ExponentWithLinearTransform(const ExponentWithLinearTransform &);
+        virtual ~ExponentWithLinearTransform();
+        
+        ExponentWithLinearTransform& operator= (const ExponentWithLinearTransform &);
+        
+        static void deleter(ExponentWithLinearTransform* t);
+        
+        class Impl;
+        friend class Impl;
+        Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
+    };
+
+    //!cpp:function::
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ExponentWithLinearTransform&);
+    
+
     //!rst:: //////////////////////////////////////////////////////////////////
     
     //!cpp:class::
@@ -500,7 +564,7 @@ OCIO_NAMESPACE_ENTER
     //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const FileTransform&);
     
-    
+
     //!rst:: //////////////////////////////////////////////////////////////////
     
     //!cpp:class::

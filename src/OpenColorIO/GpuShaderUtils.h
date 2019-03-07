@@ -151,7 +151,8 @@ OCIO_NAMESPACE_ENTER
         // Declare and initialize a vector with four elements
         void declareVec4f(const std::string& name,
                           float x, float y, float z, float w);
-        // Declare and initialize a vector with four elements
+        void declareVec4f(const std::string& name,
+                          double x, double y, double z, double w);
         void declareVec4f(const std::string& name,
                           const std::string& x, const std::string& y,
                           const std::string& z, const std::string& w);

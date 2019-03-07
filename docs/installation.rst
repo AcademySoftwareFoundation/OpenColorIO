@@ -128,30 +128,30 @@ for compiling on Windows as provided by `@hodoulp <https://github.com/hodoulp>`_
     @echo off
 
 
-    REM Grab the repo name, default is ocio_rw
-    set repo_name=ocio_rw
+    REM Grab the repo name, default is ocio
+    set repo_name=ocio
     if not %1.==. set repo_name=%1
 
 
+    REM Using cygwin to have Linux cool command line tools
     set CYGWIN=nodosfilewarning
 
-    set CMAKE_PATH=D:\OpenSource\cmake-3.9.3
+    set CMAKE_PATH=D:\OpenSource\3rdParty\cmake-3.12.2
+    set GLUT_PATH=D:\OpenSource\3rdParty\freeglut-3.0.0-2
+    set GLEW_PATH=D:\OpenSource\3rdParty\glew-1.9.0
     set PYTHON_PATH=C:\Python27
-    set BOOST_ROOT=D:\SolidAngle\boost_1_55_0
 
-    set PATH=D:\Tools\cygwin64\bin;%CMAKE_PATH%\bin;%PYTHON_PATH%;%PATH%
+    REM Add glut & glew dependencies to have GPU unit tests
+    set PATH=%GLEW_PATH%\bin;%GLUT_PATH%\bin;D:\Tools\cygwin64\bin;%CMAKE_PATH%\bin;%PATH%
 
-    call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
+    REM Add Ninja & jom to speed-up command line build i.e. one is enough
+    set PATH=D:\OpenSource\3rdParty\ninja;D:\OpenSource\3rdParty\jom;%PYTHONPATH%;%PATH%
 
+    call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x64
+    REM call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build\vcvarsall.bat" x64
 
     set OCIO_PATH=D:\OpenSource\%repo_name%
 
-
-    @doskey ne="D:\Tools\Notepad++\notepad++.exe" -nosession -multiInst $*
-    @doskey sub="D:\Tools\Sublime Text 3\subl.exe" --project %OCIO_PATH%_project.sublime-project
-
-
-    REM Decompose the directory change to avoid problems...
     D:
 
     IF NOT EXIST %OCIO_PATH% ( 
@@ -173,45 +173,74 @@ for compiling on Windows as provided by `@hodoulp <https://github.com/hodoulp>`_
     if not %are_you_sure%==Y set CMAKE_BUILD_TYPE=Debug
 
 
-    set BUILD_PATH=_build_rls
-    if not %CMAKE_BUILD_TYPE%==Release set BUILD_PATH=_build_dbg
+    set BUILD_PATH=%OCIO_PATH%\build_rls
+    set COMPILED_THIRD_PARTY_HOME=D:/OpenSource/3rdParty/compiled-dist_rls
+    set OCIO_BUILD_PYTHON=1
+
+    if not %CMAKE_BUILD_TYPE%==Release (
+    set BUILD_PATH=%OCIO_PATH%\build_dbg
+    set COMPILED_THIRD_PARTY_HOME=D:/OpenSource/3rdParty/compiled-dist_dbg
+    set OCIO_BUILD_PYTHON=0
+    )
+
+    set INSTALL_PATH=%COMPILED_THIRD_PARTY_HOME%/OpenColorIO-2.0.0
 
     IF NOT EXIST %BUILD_PATH% ( mkdir %BUILD_PATH% )
     cd %BUILD_PATH%
 
-
     echo **
     echo **
 
-    cmake -G "NMake Makefiles" ^
+    REM cmake -G "Visual Studio 14 2015 Win64"
+    REM cmake -G "Visual Studio 15 2017 Win64"
+    REM cmake -G "Ninja"
+    cmake -G "NMake Makefiles JOM" ^
         -DCMAKE_BUILD_TYPE=%CMAKE_BUILD_TYPE% ^
-        -DCMAKE_INSTALL_PREFIX=%OCIO_PATH%\_install ^
+        -DCMAKE_INSTALL_PREFIX=%INSTALL_PATH% ^
+        -DBUILD_SHARED_LIBS=ON ^
+        -DOCIO_BUILD_APPS=ON ^
         -DOCIO_BUILD_TESTS=ON ^
+        -DOCIO_BUILD_GPU_TESTS=ON ^
+        -DOCIO_BUILD_DOCS=OFF ^
+        -DOCIO_USE_SSE=ON ^
+        -DOCIO_WARNING_AS_ERROR=ON ^
+        -DOCIO_BUILD_PYTHON=%OCIO_BUILD_PYTHON% ^
+        -DPYTHON_LIBRARY=%PYTHONPATH%\libs\python27.lib ^
+        -DPYTHON_INCLUDE_DIR=%PYTHONPATH%\include ^
+        -DPYTHON_EXECUTABLE=%PYTHONPATH%\python.exe ^
+        -DOCIO_BUILD_JAVA=OFF ^
+        -DCMAKE_PREFIX_PATH=%COMPILED_THIRD_PARTY_HOME%\OpenImageIO-1.9.0;%COMPILED_THIRD_PARTY_HOME%/ilmbase-2.2.0 ^
         %OCIO_PATH%
 
-    set PATH=%OCIO_PATH%\%BUILD_PATH%\src\core;%PATH%
+    REM Add OCIO & OIIO
+    set PATH=%BUILD_PATH%\src\OpenColorIO;%INSTALL_PATH%\bin;%COMPILED_THIRD_PARTY_HOME%\OpenImageIO-1.9.0\bin;%PATH%
 
 
     REM Find the current branch
     set GITBRANCH=
     for /f %%I in ('git.exe rev-parse --abbrev-ref HEAD 2^> NUL') do set GITBRANCH=%%I
 
-    if not "%GITBRANCH%" == ""  prompt $C%GITBRANCH%$F $P$G 
+    if not "%GITBRANCH%" == ""  prompt $C%GITBRANCH%$F $P$G
 
+    TITLE %repo_name% (%GITBRANCH%)
 
     echo *******
     echo *********************************************
-    echo boost    = %BOOST_ROOT%
-    echo cmake    = %CMAKE_PATH%
-    echo *******
     if not "%GITBRANCH%" == "" echo branch  = %GITBRANCH%
-    echo *******
-    echo Mode    = %CMAKE_BUILD_TYPE%
-    echo path    = %OCIO_PATH%\%BUILD_PATH%
-    echo compile = nmake all
-    echo test    = nmake test
+    echo *
+    echo Mode         = %CMAKE_BUILD_TYPE%
+    echo Build path   = %BUILD_PATH%
+    echo Install path = %INSTALL_PATH%
+    echo *
+    echo compile = jom all
+    echo test    = ctest -V
+    echo doc     = jom doc
+    echo install = jom install
     echo *********************************************
     echo *******
+
+You could create a desktop shortcut with the following command:
+    ``%comspec% /k "C:\Users\hodoulp\ocio.bat" ocio``
 
 Also look to the Appveyor config script at the root of repository for an example
 build sequence.
