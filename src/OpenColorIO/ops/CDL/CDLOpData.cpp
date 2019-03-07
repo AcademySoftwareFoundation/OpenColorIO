@@ -829,4 +829,3 @@ OIIO_ADD_TEST(OpDataCDL, channel)
 }
 
 #endif
-
