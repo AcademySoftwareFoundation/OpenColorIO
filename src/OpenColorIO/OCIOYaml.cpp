@@ -188,15 +188,6 @@ OCIO_NAMESPACE_ENTER
 #endif
         }
         
-        inline void load(const YAML::Node& node, std::vector<double>& x)
-        {
-#ifdef OLDYAML
-            node >> x;
-#else
-            x = node.as<std::vector<double> >();
-#endif
-        }
-        
         inline void load(const YAML::Node& node, std::vector<float>& x)
         {
 #ifdef OLDYAML
