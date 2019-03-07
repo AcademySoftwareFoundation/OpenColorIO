@@ -34,8 +34,8 @@ Web Resources
 -------------
 * Web page: http://opencolorio.org
 * Mail lists:
-    * Developer: ocio-dev@googlegroups.com
-    * User: ocio-users@googlegroups.com
+    * Developer: ocio-dev@lists.aswf.io
+    * User: ocio-user@lists.aswf.io
 * Slack channel: https://opencolorio.slack.com
     * Please request access on the ocio-dev email with the email address you would like to be invited on
 
