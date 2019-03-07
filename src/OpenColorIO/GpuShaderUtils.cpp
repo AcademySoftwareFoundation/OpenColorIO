@@ -36,32 +36,26 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    // This method converts a float to a string adding a dot when
+    // This method converts a float/double to a string adding a dot when
     // the float does not have a fractional part. Hence, it ensures
     // that the shader understand that number as a float and not as an integer.
-    std::string getFloatString(float v, GpuLanguage lang)
+    // 
+    // Note: The template selects the appropriate number of digits for either single 
+    // or double arguments to losslessly represent the value as a string.
+    // 
+    template<typename T>
+    std::string getFloatString(T v, GpuLanguage lang)
     {
-        const float value = (lang==GPU_LANGUAGE_CG) ? float(ClampToNormHalf(v)) : v;
+        static_assert(!std::numeric_limits<T>::is_integer, "Only floating point values");
 
-        float integerpart = 0.0f;
-        const float fracpart = modff(value, &integerpart);
+        const T value = (lang == GPU_LANGUAGE_CG) ? (T)ClampToNormHalf(v) : v;
+
+        T integerpart = (T)0;
+        const T fracpart = std::modf(value, &integerpart);
 
         std::ostringstream oss;
-        oss.precision(16);
-        oss << value << ((fracpart==0.0f) ? "." : "");
-        return oss.str();
-    }
-
-    std::string getFloatString(double v, GpuLanguage lang)
-    {
-        const float value = (lang == GPU_LANGUAGE_CG) ? float(ClampToNormHalf(v)) : (float)v;
-
-        float integerpart = 0.0f;
-        const float fracpart = modff(value, &integerpart);
-
-        std::ostringstream oss;
-        oss.precision(16);
-        oss << value << ((fracpart == 0.0f) ? "." : "");
+        oss.precision(std::numeric_limits<T>::max_digits10);
+        oss << value << ((fracpart == (T)0) ? "." : "");
         return oss.str();
     }
 
@@ -367,7 +361,7 @@ OCIO_NAMESPACE_ENTER
     }
 
     void GpuShaderText::declareVec3f(const std::string & name, 
-                                  const float x, const float y, const float z)
+                                     const float x, const float y, const float z)
     {
         declareVec3f(name, getFloatString(x, m_lang), 
                            getFloatString(y, m_lang), 
@@ -375,9 +369,9 @@ OCIO_NAMESPACE_ENTER
     }
 
     void GpuShaderText::declareVec3f(const std::string & name, 
-                                  const std::string & x,
-                                  const std::string & y,
-                                  const std::string & z)
+                                     const std::string & x,
+                                     const std::string & y,
+                                     const std::string & z)
     {
         newLine() << vec3fDecl(name) << " = " << vec3fConst(x, y, z) << ";";
     }
@@ -438,11 +432,11 @@ OCIO_NAMESPACE_ENTER
         return vec4fKeyword() + " " + name;
     }
 
-    void GpuShaderText::declareVec4f(const std::string& name,
-                                  const float x,
-                                  const float y, 
-                                  const float z,
-                                  const float w)
+    void GpuShaderText::declareVec4f(const std::string & name,
+                                     const float x,
+                                     const float y, 
+                                     const float z,
+                                     const float w)
     {
         declareVec4f(name, getFloatString(x, m_lang), 
                            getFloatString(y, m_lang), 
@@ -450,11 +444,23 @@ OCIO_NAMESPACE_ENTER
                            getFloatString(w, m_lang));
     }
 
-    void GpuShaderText::declareVec4f(const std::string& name,
-                                  const std::string& x, 
-                                  const std::string& y,
-                                  const std::string& z,
-                                  const std::string& w)
+    void GpuShaderText::declareVec4f(const std::string & name,
+                                     const double x,
+                                     const double y, 
+                                     const double z,
+                                     const double w)
+    {
+        declareVec4f(name, getFloatString(x, m_lang), 
+                           getFloatString(y, m_lang), 
+                           getFloatString(z, m_lang),
+                           getFloatString(w, m_lang));
+    }
+
+    void GpuShaderText::declareVec4f(const std::string & name,
+                                     const std::string & x, 
+                                     const std::string & y,
+                                     const std::string & z,
+                                     const std::string & w)
     {
         newLine() << vec4fDecl(name) << " = " << vec4fConst(x, y, z, w) << ";";
     }
