@@ -35,161 +35,24 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "HashUtils.h"
 #include "GpuShaderUtils.h"
+#include "ops/Log/LogOpCPU.h"
+#include "ops/Log/LogOpData.h"
+#include "ops/Log/LogOpGPU.h"
 #include "ops/Log/LogOps.h"
 #include "MathUtils.h"
 
 
 OCIO_NAMESPACE_ENTER
 {
-    namespace DefaultValues
-    {
-        const int FLOAT_DECIMALS = 7;
-
-        float k[3] = { 1.0f, 1.0f, 1.0f };
-        float m[3] = { 1.0f, 1.0f, 1.0f };
-        float b[3] = { 0.0f, 0.0f, 0.0f };
-        float kb[3] = { 0.0f, 0.0f, 0.0f };
-    }
-
-    LogOpData::LogOpData(float base)
-        :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
-    {           
-        memcpy(m_k,    DefaultValues::k,    sizeof(float)*3);
-        memcpy(m_m,    DefaultValues::m,    sizeof(float)*3);
-        memcpy(m_b,    DefaultValues::b,    sizeof(float)*3);
-        memcpy(m_kb,   DefaultValues::kb,   sizeof(float)*3);
-
-        m_base[0] = base;
-        m_base[1] = base;
-        m_base[2] = base;
-    }
-
-    LogOpData::LogOpData(const float * k,
-                         const float * m,
-                         const float * b,
-                         const float * base,
-                         const float * kb)
-        :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
-    {           
-        memcpy(m_k,    k,    sizeof(float)*3);
-        memcpy(m_m,    m,    sizeof(float)*3);
-        memcpy(m_b,    b,    sizeof(float)*3);
-        memcpy(m_base, base, sizeof(float)*3);
-        memcpy(m_kb,   kb,   sizeof(float)*3);
-    }
-
-    LogOpData & LogOpData::operator = (const LogOpData & rhs)
-    {
-        if(this!=&rhs)
-        {
-            memcpy(m_k,    rhs.m_k,    sizeof(float)*3);
-            memcpy(m_m,    rhs.m_m,    sizeof(float)*3);
-            memcpy(m_b,    rhs.m_b,    sizeof(float)*3);
-            memcpy(m_base, rhs.m_base, sizeof(float)*3);
-            memcpy(m_kb,   rhs.m_kb,   sizeof(float)*3);
-        }
-
-        return *this;
-    }
-
-    void LogOpData::finalize()
-    {
-        AutoMutex lock(m_mutex);
-
-        std::ostringstream cacheIDStream;
-        cacheIDStream << getID();
-
-        cacheIDStream.precision(DefaultValues::FLOAT_DECIMALS);
-        for(int i=0; i<3; ++i)
-        {
-            cacheIDStream << m_k[i] << " ";
-            cacheIDStream << m_m[i] << " ";
-            cacheIDStream << m_b[i] << " ";
-            cacheIDStream << m_base[i] << " ";
-            cacheIDStream << m_kb[i] << " ";
-        }
-
-        m_cacheID = cacheIDStream.str();
-    }
-        
-
     namespace
     {
-        const float FLTMIN = std::numeric_limits<float>::min();
-        
-        // k * log(mx+b, base) + kb
-        // the caller is responsible for base != 1.0
-        // TODO: pull the precomputation into the caller?
-        
-        void ApplyLinToLog(float* rgbaBuffer, long numPixels, ConstLogOpDataRcPtr & log)
-        {
-            // We account for the change of base by rolling the multiplier
-            // in with 'k'
-            
-            const float knew[3] = { log->m_k[0] / logf(log->m_base[0]),
-                                    log->m_k[1] / logf(log->m_base[1]),
-                                    log->m_k[2] / logf(log->m_base[2]) };
-            
-            for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
-            {
-                rgbaBuffer[0] = knew[0] * logf(std::max(log->m_m[0]*rgbaBuffer[0] + log->m_b[0], FLTMIN)) + log->m_kb[0];
-                rgbaBuffer[1] = knew[1] * logf(std::max(log->m_m[1]*rgbaBuffer[1] + log->m_b[1], FLTMIN)) + log->m_kb[1];
-                rgbaBuffer[2] = knew[2] * logf(std::max(log->m_m[2]*rgbaBuffer[2] + log->m_b[2], FLTMIN)) + log->m_kb[2];
-                
-                rgbaBuffer += 4;
-            }
-        }
-        
-        // the caller is responsible for m != 0
-        // the caller is responsible for k != 0
-        // TODO: pull the precomputation into the caller?
-        
-        void ApplyLogToLin(float* rgbaBuffer, long numPixels, ConstLogOpDataRcPtr & log)
-        {
-            const float kinv[3] = { 1.0f / log->m_k[0],
-                                    1.0f / log->m_k[1],
-                                    1.0f / log->m_k[2] };
-            
-            const float minv[3] = { 1.0f / log->m_m[0],
-                                    1.0f / log->m_m[1],
-                                    1.0f / log->m_m[2] };
-            
-            for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
-            {
-                rgbaBuffer[0] 
-                    = minv[0] * (powf(log->m_base[0], kinv[0]*(rgbaBuffer[0]-log->m_kb[0])) 
-                        - log->m_b[0]);
-                rgbaBuffer[1] 
-                    = minv[1] * (powf(log->m_base[1], kinv[1]*(rgbaBuffer[1]-log->m_kb[1]))
-                        - log->m_b[1]);
-                rgbaBuffer[2] 
-                    = minv[2] * (powf(log->m_base[2], kinv[2]*(rgbaBuffer[2]-log->m_kb[2]))
-                        - log->m_b[2]);
-                
-                rgbaBuffer += 4;
-            }
-        }
-        
-    }
-    
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    namespace
-    {
-        class LogOp : public Op
+        class LogOp: public Op
         {
         public:
-            LogOp(float base, TransformDirection direction);
 
-            LogOp(const float * k,
-                  const float * m,
-                  const float * b,
-                  const float * base,
-                  const float * kb,
-                  TransformDirection direction);
+            LogOp(LogOpDataRcPtr & log);
+            LogOp() = delete;
+
             virtual ~LogOp();
             
             virtual OpRcPtr clone() const;
@@ -208,47 +71,23 @@ OCIO_NAMESPACE_ENTER
             LogOpDataRcPtr logData() { return DynamicPtrCast<LogOpData>(data()); }
 
         private:
-            TransformDirection m_direction;
+            OpCPURcPtr m_cpu;
         };
         
         typedef OCIO_SHARED_PTR<LogOp> LogOpRcPtr;
         typedef OCIO_SHARED_PTR<const LogOp> ConstLogOpRcPtr;
 
-        LogOp::LogOp(float base, TransformDirection direction):
-                                       Op(),
-                                       m_direction(direction)
+        LogOp::LogOp(LogOpDataRcPtr & log)
+            : Op()
+            , m_cpu(std::make_shared<NoOpCPU>())
         {
-            if(m_direction == TRANSFORM_DIR_UNKNOWN)
-            {
-                throw Exception("Cannot apply LogOp op, unspecified transform direction.");
-            }
-
-            data().reset(new LogOpData(base));
-        }
-        
-        LogOp::LogOp(const float * k,
-                     const float * m,
-                     const float * b,
-                     const float * base,
-                     const float * kb,
-                     TransformDirection direction):
-                                       Op(),
-                                       m_direction(direction)
-        {
-            if(m_direction == TRANSFORM_DIR_UNKNOWN)
-            {
-                throw Exception("Cannot apply LogOp op, unspecified transform direction.");
-            }
-
-            data().reset(new LogOpData(k, m, b, base, kb));
+            data() = log;
         }
         
         OpRcPtr LogOp::clone() const
         {
-            return std::make_shared<LogOp>(
-                logData()->m_k, logData()->m_m, logData()->m_b,
-                logData()->m_base, logData()->m_kb,
-                m_direction);
+            auto opData = logData()->clone();
+            return std::make_shared<LogOp>(opData);
         }
         
         LogOp::~LogOp()
@@ -270,46 +109,29 @@ OCIO_NAMESPACE_ENTER
         {
             ConstLogOpRcPtr typedRcPtr = DynamicPtrCast<const LogOp>(op);
             if(!typedRcPtr) return false;
-            
-            if(GetInverseTransformDirection(m_direction) != typedRcPtr->m_direction)
-                return false;
-            
-            float error = std::numeric_limits<float>::min();
-            if(!VecsEqualWithRelError(logData()->m_k, 3, typedRcPtr->logData()->m_k, 3, error))
-                return false;
-            if(!VecsEqualWithRelError(logData()->m_m, 3, typedRcPtr->logData()->m_m, 3, error))
-                return false;
-            if(!VecsEqualWithRelError(logData()->m_b, 3, typedRcPtr->logData()->m_b, 3, error))
-                return false;
-            if(!VecsEqualWithRelError(logData()->m_base, 3, typedRcPtr->logData()->m_base, 3, error))
-                return false;
-            if(!VecsEqualWithRelError(logData()->m_kb, 3, typedRcPtr->logData()->m_kb, 3, error))
-                return false;
-            
-            return true;
+
+            ConstLogOpDataRcPtr logOpData = typedRcPtr->logData();
+            return logData()->isInverse(logOpData);
         }
         
         void LogOp::finalize()
         {
-            if(m_direction == TRANSFORM_DIR_FORWARD)
-            {
-                if(VecContainsOne(logData()->m_base, 3))
-                    throw Exception("LogOp Exception, base cannot be 1.");
-            }
-            else if(m_direction == TRANSFORM_DIR_INVERSE)
-            {
-                if(VecContainsZero(logData()->m_m, 3))
-                    throw Exception("LogOp Exception, m (slope) cannot be 0.");
-                if(VecContainsZero(logData()->m_k, 3))
-                    throw Exception("LogOp Exception, k (multiplier) cannot be 0.");
-            }
+            const LogOp & constThis = *this;
 
+            // Only the 32f processing is natively supported
+            logData()->setInputBitDepth(BIT_DEPTH_F32);
+            logData()->setOutputBitDepth(BIT_DEPTH_F32);
+
+            logData()->validate();
             logData()->finalize();
-            
+
+            ConstLogOpDataRcPtr logOpData = constThis.logData();
+            m_cpu = GetLogRenderer(logOpData);
+
+            // Create the cacheID
             std::ostringstream cacheIDStream;
             cacheIDStream << "<LogOp ";
             cacheIDStream << logData()->getCacheID() << " ";
-            cacheIDStream << TransformDirectionToString(m_direction) << " ";
             cacheIDStream << ">";
             
             m_cacheID = cacheIDStream.str();
@@ -317,143 +139,45 @@ OCIO_NAMESPACE_ENTER
         
         void LogOp::apply(float* rgbaBuffer, long numPixels) const
         {
-            ConstLogOpDataRcPtr logOpData = logData();
-            if(m_direction == TRANSFORM_DIR_FORWARD)
-            {
-                ApplyLinToLog(rgbaBuffer, numPixels, logOpData);
-            }
-            else if(m_direction == TRANSFORM_DIR_INVERSE)
-            {
-                ApplyLogToLin(rgbaBuffer, numPixels, logOpData);
-            }
-        } // Op::process
+            m_cpu->apply(rgbaBuffer, numPixels);
+        }
         
         void LogOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
         {
-            if(getInputBitDepth()!=BIT_DEPTH_F32 
+            if (getInputBitDepth()!=BIT_DEPTH_F32 
                 || getOutputBitDepth()!=BIT_DEPTH_F32)
             {
                 throw Exception("Only 32F bit depth is supported for the GPU shader");
             }
 
-            if(m_direction == TRANSFORM_DIR_FORWARD)
-            {
-                // Lin To Log
-                // k * log(mx+b, base) + kb
-                
-                // We account for the change of base by rolling the multiplier
-                // in with 'k'
-                
-                const float knew[3] = { logData()->m_k[0] / logf(logData()->m_base[0]),
-                                        logData()->m_k[1] / logf(logData()->m_base[1]),
-                                        logData()->m_k[2] / logf(logData()->m_base[2]) };
-                
-                float clampMin = FLTMIN;
-                
-                // TODO: Switch to f32 for internal Cg processing?
-                if(shaderDesc->getLanguage() == GPU_LANGUAGE_CG)
-                {
-                    clampMin = static_cast<float>(GetHalfNormMin());
-                }
-                
-                // Decompose into 2 steps
-                // 1) clamp(mx+b)
-                // 2) knew * log(x) + kb
-                
-                GpuShaderText ss(shaderDesc->getLanguage());
-                ss.indent();
-
-                ss.newLine() << shaderDesc->getPixelName() << ".rgb = "
-                             << "max(" << ss.vec3fConst(clampMin) << ", "
-                             << ss.vec3fConst(logData()->m_m[0], 
-                                              logData()->m_m[1], 
-                                              logData()->m_m[2]) 
-                             << " * "
-                             << shaderDesc->getPixelName() << ".rgb + "
-                             << ss.vec3fConst(logData()->m_b[0], 
-                                              logData()->m_b[1], 
-                                              logData()->m_b[2]) 
-                             << ");";
-                
-                ss.newLine() << shaderDesc->getPixelName() << ".rgb = "
-                             << ss.vec3fConst(knew[0], knew[1], knew[2]) << " * "
-                             << "log(" << shaderDesc->getPixelName() << ".rgb) + "
-                             << ss.vec3fConst(logData()->m_kb[0], 
-                                              logData()->m_kb[1], 
-                                              logData()->m_kb[2]) 
-                             << ";";
-
-                shaderDesc->addToFunctionShaderCode(ss.string().c_str());
-            }
-            else if(m_direction == TRANSFORM_DIR_INVERSE)
-            {
-                const float kinv[3] = { 1.0f / logData()->m_k[0],
-                                        1.0f / logData()->m_k[1],
-                                        1.0f / logData()->m_k[2] };
-                
-                const float minv[3] = { 1.0f / logData()->m_m[0],
-                                        1.0f / logData()->m_m[1],
-                                        1.0f / logData()->m_m[2] };
-
-                // Decompose into 3 steps
-                // 1) kinv * ( x - kb)
-                // 2) pow(base, x)
-                // 3) minv * (x - b)
-
-                GpuShaderText ss(shaderDesc->getLanguage());
-                ss.indent();
-
-                ss.newLine() << shaderDesc->getPixelName() << ".rgb = "
-                             << ss.vec3fConst(kinv[0], kinv[1], kinv[2]) 
-                             << " * ("
-                             << shaderDesc->getPixelName() << ".rgb - "
-                             << ss.vec3fConst(logData()->m_kb[0], 
-                                              logData()->m_kb[1], 
-                                              logData()->m_kb[2]) 
-                             << ");";
-                
-                ss.newLine() << shaderDesc->getPixelName() << ".rgb = pow("
-                             << ss.vec3fConst(logData()->m_base[0], 
-                                              logData()->m_base[1], 
-                                              logData()->m_base[2]) 
-                             << ", "
-                             << shaderDesc->getPixelName() << ".rgb);";
-                
-                ss.newLine() << shaderDesc->getPixelName() << ".rgb = "
-                             << ss.vec3fConst(minv[0], minv[1], minv[2]) 
-                             << " * ("
-                             << shaderDesc->getPixelName() << ".rgb - "
-                             << ss.vec3fConst(logData()->m_b[0], 
-                                              logData()->m_b[1], 
-                                              logData()->m_b[2]) 
-                             << ");";
-
-                shaderDesc->addToFunctionShaderCode(ss.string().c_str());
-            }
+            ConstLogOpDataRcPtr data = logData();
+            GetLogGPUShaderProgram(shaderDesc, data);
         }
         
     }  // Anon namespace
     
     ///////////////////////////////////////////////////////////////////////////
-    
+
     void CreateLogOp(OpRcPtrVec & ops,
-                     const float * k,
-                     const float * m,
-                     const float * b,
-                     const float * base,
-                     const float * kb,
+                     double base,
+                     const double(&logSlope)[3],
+                     const double(&logOffset)[3],
+                     const double(&linSlope)[3],
+                     const double(&linOffset)[3],
                      TransformDirection direction)
     {
-        ops.push_back( LogOpRcPtr(new LogOp(k, m, b, base, kb, direction)) );
+        auto opData = std::make_shared<LogOpData>(base, logSlope, logOffset,
+                                                  linSlope, linOffset, direction);
+        ops.push_back( std::make_shared<LogOp>(opData));
     }
 
-    void CreateLogOp(OpRcPtrVec & ops, float base, TransformDirection direction)
+    void CreateLogOp(OpRcPtrVec & ops, double base, TransformDirection direction)
     {
-        ops.push_back( LogOpRcPtr(new LogOp(base, direction)) );
+        auto opData = std::make_shared<LogOpData>(base, direction);
+        ops.push_back(std::make_shared<LogOp>(opData));
     }
 }
 OCIO_NAMESPACE_EXIT
-
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -462,47 +186,48 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "unittest.h"
 
-OIIO_ADD_TEST(LogOps, LinToLog)
+OIIO_ADD_TEST(LogOps, lin_to_log)
 {
-    const float k[3] = { 0.18f, 0.18f, 0.18f };
-    const float m[3] = { 2.0f, 2.0f, 2.0f };
-    const float b[3] = { 0.1f, 0.1f, 0.1f };
-    const float base[3] = { 10.0f, 10.0f, 10.0f };
-    const float kb[3] = { 1.0f, 1.0f, 1.0f };
-    
+    const double base = 10.0;
+    const double logSlope[3] = { 0.18, 0.18, 0.18 };
+    const double linSlope[3] = { 2.0, 2.0, 2.0 };
+    const double linOffset[3] = { 0.1, 0.1, 0.1 };
+    const double logOffset[3] = { 1.0, 1.0, 1.0 };
     
     float data[8] = { 0.01f, 0.1f, 1.0f, 1.0f,
                       10.0f, 100.0f, 1000.0f, 1.0f, };
     
     const float result[8] = { 0.8342526242885725f,
-                        0.90588182584953925f,
-                        1.057999473052105462f,
-                        1.0f,
-                        1.23457529033568797f,
-                        1.41422447595451795f,
-                        1.59418930777214063f,
-                        1.0f };
+                              0.90588182584953925f,
+                              1.057999473052105462f,
+                              1.0f,
+                              1.23457529033568797f,
+                              1.41422447595451795f,
+                              1.59418930777214063f,
+                              1.0f };
     
     OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
+                                    linSlope, linOffset,
+                                    OCIO::TRANSFORM_DIR_FORWARD));
 
-    // one operator has been created
-    OIIO_CHECK_EQUAL(ops.size(), 1);
+    // One operator has been created.
+    OIIO_REQUIRE_EQUAL(ops.size(), 1);
     OIIO_REQUIRE_ASSERT((bool)ops[0]);
 
-    // no chache ID before operator has been finalized
+    // No chache ID before operator has been finalized.
     std::string opCache = ops[0]->getCacheID();
     OIIO_CHECK_EQUAL(opCache.size(), 0);
 
     OIIO_CHECK_NO_THROW(FinalizeOpVec(ops));
 
-    // validate properties
+    // Validate properties.
     opCache = ops[0]->getCacheID();
     OIIO_CHECK_NE(opCache.size(), 0);
     OIIO_CHECK_EQUAL(ops[0]->isNoOp(), false);
     OIIO_CHECK_EQUAL(ops[0]->hasChannelCrosstalk(), false);
     
-    // Apply the result
+    // Apply the result.
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
     {
         ops[i]->apply(data, 2);
@@ -514,13 +239,13 @@ OIIO_ADD_TEST(LogOps, LinToLog)
     }
 }
 
-OIIO_ADD_TEST(LogOps, LogToLin)
+OIIO_ADD_TEST(LogOps, log_to_lin)
 {
-    const float k[3] = { 0.18f, 0.18f, 0.18f };
-    const float m[3] = { 2.0f, 2.0f, 2.0f };
-    const float b[3] = { 0.1f, 0.1f, 0.1f };
-    const float base[3] = { 10.0f, 10.0f, 10.0f };
-    const float kb[3] = { 1.0f, 1.0f, 1.0f };
+    const double base = 10.0;
+    const double logSlope[3] = { 0.18, 0.18, 0.18 };
+    const double linSlope[3] = { 2.0, 2.0, 2.0 };
+    const double linOffset[3] = { 0.1, 0.1, 0.1 };
+    const double logOffset[3] = { 1.0, 1.0, 1.0 };
     
     float data[8] = { 0.8342526242885725f,
                       0.90588182584953925f,
@@ -532,14 +257,16 @@ OIIO_ADD_TEST(LogOps, LogToLin)
                       1.0f };
     
     const float result[8] = { 0.01f, 0.1f, 1.0f, 1.0f,
-                        10.0f, 100.0f, 1000.0f, 1.0f, };
+                              10.0f, 100.0f, 1000.0f, 1.0f, };
     
     OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
+                                    linSlope, linOffset,
+                                    OCIO::TRANSFORM_DIR_INVERSE));
     
     OIIO_CHECK_NO_THROW(FinalizeOpVec(ops));
     
-    // Apply the result
+    // Apply the result.
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
     {
         ops[i]->apply(data, 2);
@@ -547,32 +274,44 @@ OIIO_ADD_TEST(LogOps, LogToLin)
     
     for(int i=0; i<8; ++i)
     {
-        OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-3 );
+        OIIO_CHECK_CLOSE( data[i], result[i], 2.0e-3f );
     }
 }
 
-OIIO_ADD_TEST(LogOps, Inverse)
+OIIO_ADD_TEST(LogOps, inverse)
 {
-    const float k[3] = { 0.18f, 0.5f, 0.3f };
-    const float m[3] = { 2.0f, 4.0f, 8.0f };
-    const float b[3] = { 0.1f, 0.1f, 0.1f };
-    float base[3] = { 10.0f, 5.0f, 2.0f };
-    const float kb[3] = { 1.0f, 1.0f, 1.0f };
-    
+    double base = 10.0;
+    const double logSlope[3] = { 0.5, 0.5, 0.5 };
+    const double linSlope[3] = { 2.0, 2.0, 2.0 };
+    const double linOffset[3] = { 0.1, 0.1, 0.1 };
+    const double logOffset[3] = { 1.0, 1.0, 1.0 };
+    const double logSlope2[3] = { 0.5, 1.0, 1.5 };
+
     OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
+                                    OCIO::TRANSFORM_DIR_FORWARD));
     
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
+                                    OCIO::TRANSFORM_DIR_INVERSE));
     
-    base[0] += 1e-5f;
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE));
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD));
-    
-    OIIO_REQUIRE_EQUAL(ops.size(), 4);
+    base += 1.0;
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
+                                    OCIO::TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
+                                    OCIO::TRANSFORM_DIR_FORWARD));
+
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope2, logOffset, linSlope, linOffset,
+                                    OCIO::TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope2, logOffset, linSlope, linOffset,
+                                    OCIO::TRANSFORM_DIR_FORWARD));
+
+    OIIO_REQUIRE_EQUAL(ops.size(), 6);
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO::ConstOpRcPtr op1 = ops[1];
     OCIO::ConstOpRcPtr op2 = ops[2];
     OCIO::ConstOpRcPtr op3 = ops[3];
+    OCIO::ConstOpRcPtr op4 = ops[4];
+    OCIO::ConstOpRcPtr op5 = ops[5];
 
     OIIO_CHECK_ASSERT(ops[0]->isSameType(op1));
     OIIO_CHECK_ASSERT(ops[0]->isSameType(op2));
@@ -593,17 +332,21 @@ OIIO_ADD_TEST(LogOps, Inverse)
     
     OIIO_CHECK_EQUAL(ops[3]->isInverse(op3), false);
 
+    // When r, g & b are not equal, ops are not considered inverse 
+    // even though they are.
+    OIIO_CHECK_EQUAL(ops[4]->isInverse(op5), false);
+
     const float result[12] = { 0.01f, 0.1f, 1.0f, 1.0f,
-                        1.0f, 10.0f, 100.0f, 1.0f,
-                        1000.0f, 1.0f, 0.5f, 1.0f
-                      };
+                               1.0f, 10.0f, 100.0f, 1.0f,
+                               1000.0f, 1.0f, 0.5f, 1.0f };
     float data[12];
 
     for(int i=0; i<12; ++i)
     {
         data[i] = result[i];
     }
-     
+    
+    ops[0]->finalize();
     ops[0]->apply(data, 3);
     // Note: Skip testing alpha channels.
     OIIO_CHECK_NE( data[0], result[0] );
@@ -616,27 +359,41 @@ OIIO_ADD_TEST(LogOps, Inverse)
     OIIO_CHECK_NE( data[9], result[9] );
     OIIO_CHECK_NE( data[10], result[10] );
 
+    ops[1]->finalize();
     ops[1]->apply(data, 3);
+
+#ifndef USE_SSE
+    const float error = 1e-3f;
+#else
+    const float error = 1e-2f;
+#endif // !USE_SSE
+
     for(int i=0; i<12; ++i)
     {
-        OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-3 );
+        OIIO_CHECK_CLOSE( data[i], result[i], error);
     }
 }
 
-OIIO_ADD_TEST(LogOps, CacheID)
+OIIO_ADD_TEST(LogOps, cache_id)
 {
-    const float k[3] = { 0.18f, 0.18f, 0.18f };
-    const float m[3] = { 2.0f, 2.0f, 2.0f };
-    const float b[3] = { 0.1f, 0.1f, 0.1f };
-    const float base[3] = { 10.0f, 10.0f, 10.0f };
-    float kb[3] = { 1.0f, 1.0f, 1.0f };
+    const double base = 10.0;
+    const double logSlope[3] = { 0.18, 0.18, 0.18 };
+    const double linSlope[3] = { 2.0, 2.0, 2.0 };
+    const double linOffset[3] = { 0.1, 0.1, 0.1 };
+    double logOffset[3] = { 1.0, 1.0, 1.0 };
 
     OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD));
-    kb[0] += 1.0f;
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD));
-    kb[0] -= 1.0f;
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
+                                    linSlope, linOffset,
+                                    OCIO::TRANSFORM_DIR_FORWARD));
+    logOffset[0] += 1.0f;
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
+                                    linSlope, linOffset,
+                                    OCIO::TRANSFORM_DIR_FORWARD));
+    logOffset[0] -= 1.0f;
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
+                                    linSlope, linOffset,
+                                    OCIO::TRANSFORM_DIR_FORWARD));
 
     // 3 operators have been created
     OIIO_CHECK_EQUAL(ops.size(), 3);
@@ -653,123 +410,20 @@ OIIO_ADD_TEST(LogOps, CacheID)
     OIIO_CHECK_NE(opCacheID0, opCacheID1);
 }
 
-OIIO_ADD_TEST(LogOps, ThrowDirection)
+OIIO_ADD_TEST(LogOps, throw_direction)
 {
-    const float k[3] = { 0.18f, 0.18f, 0.18f };
-    const float m[3] = { 2.0f, 2.0f, 2.0f };
-    const float b[3] = { 0.1f, 0.1f, 0.1f };
-    const float base[3] = { 10.0f, 10.0f, 10.0f };
-    const float kb[3] = { 1.0f, 1.0f, 1.0f };
+    const double base = 10.0;
+    const double logSlope[3] = { 0.18, 0.18, 0.18 };
+    const double linSlope[3] = { 2.0, 2.0, 2.0 };
+    const double linOffset[3] = { 0.1, 0.1, 0.1 };
+    const double logOffset[3] = { 1.0, 1.0, 1.0 };
 
     OCIO::OpRcPtrVec ops;
     OIIO_CHECK_THROW_WHAT(
-        CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_UNKNOWN),
+        CreateLogOp(ops, base, logSlope, logOffset,
+                    linSlope, linOffset,
+                    OCIO::TRANSFORM_DIR_UNKNOWN),
         OCIO::Exception, "unspecified transform direction");
-}
-
-OIIO_ADD_TEST(LogOps, ThrowBase)
-{
-    const float k[3] = { 0.18f, 0.18f, 0.18f };
-    const float m[3] = { 2.0f, 2.0f, 2.0f };
-    const float b[3] = { 0.1f, 0.1f, 0.1f };
-    const float base0[3] = { 1.0f, 10.0f, 10.0f };
-    const float base1[3] = { 10.0f, 1.0f, 10.0f };
-    const float base2[3] = { 10.0f, 10.0f, 1.0f };
-    const float kb[3] = { 1.0f, 1.0f, 1.0f };
-
-    // Can't use base 1 for forward log transform
-    OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base0, kb, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_CHECK_THROW_WHAT(FinalizeOpVec(ops),
-        OCIO::Exception, "base cannot be 1");
-
-    ops.clear();
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base1, kb, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_CHECK_THROW_WHAT(FinalizeOpVec(ops),
-        OCIO::Exception, "base cannot be 1");
-
-    ops.clear();
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base2, kb, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_CHECK_THROW_WHAT(FinalizeOpVec(ops),
-        OCIO::Exception, "base cannot be 1");
-
-    // Base 1 is valid for inverse log transform
-    ops.clear();
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base0, kb, OCIO::TRANSFORM_DIR_INVERSE));
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops));
-
-    const std::string opCacheID = ops[0]->getCacheID();
-    OIIO_CHECK_NE(opCacheID.size(), 0);
-}
-
-OIIO_ADD_TEST(LogOps, ThrowSlope)
-{
-    const float k[3] = { 0.18f, 0.18f, 0.18f };
-    const float m0[3] = { 0.0f, 2.0f, 2.0f };
-    const float m1[3] = { 2.0f, 0.0f, 2.0f };
-    const float m2[3] = { 2.0f, 2.0f, 0.0f };
-    const float b[3] = { 0.1f, 0.1f, 0.1f };
-    const float base[3] = { 10.0f, 10.0f, 10.0f };
-    const float kb[3] = { 1.0f, 1.0f, 1.0f };
-
-    // Can't use slope 0 for inverse log transform
-    OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m0, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE));
-    OIIO_CHECK_THROW_WHAT(FinalizeOpVec(ops),
-        OCIO::Exception, "m (slope) cannot be 0");
-    ops.clear();
-
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m1, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE));
-    OIIO_CHECK_THROW_WHAT(FinalizeOpVec(ops),
-        OCIO::Exception, "m (slope) cannot be 0");
-    ops.clear();
-
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m2, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE));
-    OIIO_CHECK_THROW_WHAT(FinalizeOpVec(ops),
-        OCIO::Exception, "m (slope) cannot be 0");
-    ops.clear();
-
-    // Slope 0 is valid for forward log transform
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m0, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops));
-
-    const std::string opCacheID = ops[0]->getCacheID();
-    OIIO_CHECK_NE(opCacheID.size(), 0);
-}
-
-OIIO_ADD_TEST(LogOps, ThrowMultiplier)
-{
-    const float k0[3] = { 0.0f, 0.18f, 0.18f };
-    const float k1[3] = { 0.18f, 0.0f, 0.18f };
-    const float k2[3] = { 0.18f, 0.18f, 0.0f };
-    const float m[3] = { 2.0f, 2.0f, 2.0f };
-    const float b[3] = { 0.1f, 0.1f, 0.1f };
-    const float base[3] = { 10.0f, 10.0f, 10.0f };
-    const float kb[3] = { 1.0f, 1.0f, 1.0f };
-
-    // Can't use multiplier 0 for inverse log transform
-    OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k0, m, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE));
-    OIIO_CHECK_THROW_WHAT(FinalizeOpVec(ops),
-        OCIO::Exception, "k (multiplier) cannot be 0");
-    ops.clear();
-
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k1, m, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE));
-    OIIO_CHECK_THROW_WHAT(FinalizeOpVec(ops),
-        OCIO::Exception, "k (multiplier) cannot be 0");
-    ops.clear();
-
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k2, m, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE));
-    OIIO_CHECK_THROW_WHAT(FinalizeOpVec(ops),
-        OCIO::Exception, "k (multiplier) cannot be 0");
-    ops.clear();
-
-    // Multiplier 0 is valid for forward log transform
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k0, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops));
-
-    const std::string opCacheID = ops[0]->getCacheID();
-    OIIO_CHECK_NE(opCacheID.size(), 0);
 }
 
 #endif // OCIO_UNIT_TEST

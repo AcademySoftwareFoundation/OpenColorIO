@@ -6,5 +6,11 @@ if (MSVC_IDE)
     set(BUILD_TYPE ${CMAKE_BUILD_TYPE})
 endif()
 
-add_test(test_python ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/OpenColorIOTestSuite.py ${CMAKE_BINARY_DIR} ${BUILD_TYPE})
+
+set(SSE_ENABLED False)
+if(OCIO_USE_SSE)
+    set(SSE_ENABLED True)
+endif()
+
+add_test(test_python ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/OpenColorIOTestSuite.py ${CMAKE_BINARY_DIR} ${SSE_ENABLED} ${BUILD_TYPE})
 
