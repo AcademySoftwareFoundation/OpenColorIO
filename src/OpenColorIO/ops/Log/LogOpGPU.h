@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
+Copyright (c) 2019 Autodesk Inc., et al.
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -27,33 +27,26 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_LOGOPS_H
-#define INCLUDED_OCIO_LOGOPS_H
+#ifndef INCLUDED_OCIO_LOG_GPU
+#define INCLUDED_OCIO_LOG_GPU
 
-#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Op.h"
+#include "GpuShaderUtils.h"
+#include "ops/Log/LogOpData.h"
+
 
 OCIO_NAMESPACE_ENTER
 {
-    // output = logSlope * log( linSlope * input + linOffset, base ) + logOffset
-    // This does not affect alpha.
-    // In the forward direction this is lin->log.
-    // All input vectors are size 3 (including base).
-    
-    void CreateLogOp(OpRcPtrVec & ops,
-                     double base,
-                     const double(&logSlope)[3],
-                     const double(&logOffset)[3],
-                     const double(&linSlope)[3],
-                     const double(&linOffset)[3],
-                     TransformDirection direction);
 
-    void CreateLogOp(OpRcPtrVec & ops, double base, TransformDirection direction);
-    
+void GetLogGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
+                            ConstLogOpDataRcPtr & logData);
+
 }
 OCIO_NAMESPACE_EXIT
 
+
 #endif
+
+
