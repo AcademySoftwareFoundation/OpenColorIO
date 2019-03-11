@@ -307,11 +307,11 @@ OIIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         1.0f, 1.0f, 1.0f, 1.0f };
     const float error = 1e-4f;
 
-    const float k[3] = { 0.18f, 0.18f, 0.18f };
-    const float m[3] = { 2.0f, 2.0f, 2.0f };
-    const float b[3] = { 0.1f, 0.1f, 0.1f };
-    const float base[3] = { 10.0f, 10.0f, 10.0f };
-    const float kb[3] = { 1.0f, 1.0f, 1.0f };
+    const double base = 10.0;
+    const double logSlope[3] = { 0.18, 0.18, 0.18 };
+    const double linSlope[3] = { 2.0, 2.0, 2.0 };
+    const double linOffset[3] = { 0.1, 0.1, 0.1 };
+    const double logOffset[3] = { 1.0, 1.0, 1.0 };
 
     // Combining ops
     {
@@ -351,7 +351,9 @@ OIIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         // NoOp
         OIIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
         OIIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_FORWARD));
-        OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, TRANSFORM_DIR_FORWARD));
+        OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
+                                        linSlope, linOffset,
+                                        OCIO::TRANSFORM_DIR_FORWARD));
 
         OIIO_CHECK_EQUAL(ops.size(), 3);
 
@@ -388,7 +390,9 @@ OIIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         OIIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_FORWARD));
         // NoOp
         OIIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
-        OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, TRANSFORM_DIR_FORWARD));
+        OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
+                                        linSlope, linOffset,
+                                        OCIO::TRANSFORM_DIR_FORWARD));
 
         OIIO_CHECK_EQUAL(ops.size(), 3);
 
@@ -423,7 +427,9 @@ OIIO_ADD_TEST(FinalizeOpVec, optimize_combine)
     {
         OpRcPtrVec ops;
         OIIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_FORWARD));
-        OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, TRANSFORM_DIR_FORWARD));
+        OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
+                                        linSlope, linOffset,
+                                        OCIO::TRANSFORM_DIR_FORWARD));
         // NoOp
         OIIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
 
@@ -465,7 +471,9 @@ OIIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         OIIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_FORWARD));
         OIIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
         OIIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
-        OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, TRANSFORM_DIR_FORWARD));
+        OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
+                                        linSlope, linOffset,
+                                        OCIO::TRANSFORM_DIR_FORWARD));
         OIIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
         OIIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
 
