@@ -123,6 +123,8 @@ OCIO_NAMESPACE_ENTER
         // Declare and initialize a vector with three elements
         void declareVec3f(const std::string& name,
                           float x, float y, float z);
+        void declareVec3f(const std::string& name,
+                          double x, double y, double z);
         // Declare and initialize a vector with three elements
         void declareVec3f(const std::string& name,
                           const std::string& x, const std::string& y, const std::string& z);
