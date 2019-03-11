@@ -80,26 +80,26 @@ OCIO_NAMESPACE_ENTER
             }
             
             
-            // Log Settings
-            // output = k * log(mx+b, base) + kb
+            // Log Settings.
+            // output = logSlope * log( linSlope * input + linOffset, base ) + logOffset
             
-            float k[3] = { 1.0f, 1.0f, 1.0f };
-            float m[3] = { 1.0f, 1.0f, 1.0f };
-            float b[3] = { 0.0f, 0.0f, 0.0f };
-            float base[3] = { 2.0f, 2.0f, 2.0f };
-            float kb[3] = { 0.0f, 0.0f, 0.0f };
+            double base = 2.0;
+            double logSlope[3]  = { 1.0, 1.0, 1.0 };
+            double linSlope[3]  = { 1.0, 1.0, 1.0 };
+            double linOffset[3] = { 0.0, 0.0, 0.0 };
+            double logOffset[3] = { 0.0, 0.0, 0.0 };
             
             if(data.vars.size() >= 3)
             {
                 for(int i=0; i<3; ++i)
                 {
-                    b[i] = data.vars[2];
+                    linOffset[i] = data.vars[2];
                 }
             }
             
             if(dir == TRANSFORM_DIR_FORWARD)
             {
-                CreateLogOp(ops, k, m, b, base, kb, dir);
+                CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset, dir);
                 
                 CreateFitOp(ops,
                             oldmin, oldmax,
@@ -113,7 +113,7 @@ OCIO_NAMESPACE_ENTER
                             newmin, newmax,
                             dir);
                 
-                CreateLogOp(ops, k, m, b, base, kb, dir);
+                CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset, dir);
             }
             else
             {
@@ -145,15 +145,15 @@ OIIO_ADD_TEST(AllocationOps, Create)
     allocData.allocation = ALLOCATION_UNKNOWN;
     OIIO_CHECK_THROW_WHAT(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_FORWARD),
-        OCIO::Exception, "Unsupported Allocation Type");
+                            OCIO::Exception, "Unsupported Allocation Type");
     OIIO_CHECK_EQUAL(ops.size(), 0);
     OIIO_CHECK_THROW_WHAT(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_INVERSE),
-        OCIO::Exception, "Unsupported Allocation Type");
+                            OCIO::Exception, "Unsupported Allocation Type");
     OIIO_CHECK_EQUAL(ops.size(), 0);
     OIIO_CHECK_THROW_WHAT(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_UNKNOWN),
-        OCIO::Exception, "Unsupported Allocation Type");
+                            OCIO::Exception, "Unsupported Allocation Type");
     OIIO_CHECK_EQUAL(ops.size(), 0);
 
     allocData.allocation = ALLOCATION_UNIFORM;
@@ -173,7 +173,7 @@ OIIO_ADD_TEST(AllocationOps, Create)
     allocData.vars.push_back(10.0f);
     OIIO_CHECK_THROW_WHAT(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_UNKNOWN),
-        OCIO::Exception, "unspecified transform direction");
+                            OCIO::Exception, "unspecified transform direction");
     OIIO_CHECK_EQUAL(ops.size(), 0);
     OIIO_CHECK_NO_THROW(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_FORWARD));
@@ -202,7 +202,11 @@ OIIO_ADD_TEST(AllocationOps, Create)
     ConstOpRcPtr defaultLogOp = ops[0];
     ConstOpRcPtr defaultFitOp = ops[1];
 
+#ifndef USE_SSE
     const float error = 1e-6f;
+#else
+    const float error = 2e-5f;
+#endif
     const unsigned NB_PIXELS = 3;
     const float src[NB_PIXELS * 4] = {
          0.16f,  0.2f,  0.3f,   0.4f,
@@ -251,7 +255,7 @@ OIIO_ADD_TEST(AllocationOps, Create)
     ops.clear();
     OIIO_CHECK_THROW_WHAT(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_UNKNOWN),
-        OCIO::Exception, "unspecified transform direction");
+                            OCIO::Exception, "unspecified transform direction");
     OIIO_CHECK_EQUAL(ops.size(), 0);
 
     // adding data to target identity, only Log op is created (if valid)
@@ -272,7 +276,7 @@ OIIO_ADD_TEST(AllocationOps, Create)
     ops.clear();
     OIIO_CHECK_THROW_WHAT(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_UNKNOWN),
-        OCIO::Exception, "unspecified transform direction");
+                            OCIO::Exception, "unspecified transform direction");
     OIIO_CHECK_EQUAL(ops.size(), 0);
 
     // change log intercept

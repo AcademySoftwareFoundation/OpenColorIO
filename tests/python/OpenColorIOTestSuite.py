@@ -2,15 +2,17 @@ import unittest, os, sys
 
 build_location = sys.argv[1]
 
+opencolorio_sse = sys.argv[2].lower() == 'true'
+
 opencolorio_dir = os.path.join(build_location, "src", "OpenColorIO")
 pyopencolorio_dir = os.path.join(build_location, "src", "bindings", "python")
 
 if os.name == 'nt':
     # On Windows we must append the build type to the build dirs and add the main library to PATH
     # Note: Only when compiling within Microsoft Visual Studio editor i.e. not on command line.
-    if len(sys.argv)==3:
-        opencolorio_dir = os.path.join(opencolorio_dir, sys.argv[2])
-        pyopencolorio_dir = os.path.join(pyopencolorio_dir, sys.argv[2])
+    if len(sys.argv)==4:
+        opencolorio_dir = os.path.join(opencolorio_dir, sys.argv[3])
+        pyopencolorio_dir = os.path.join(pyopencolorio_dir, sys.argv[3])
 
     os.environ['PATH'] = "{0};{1}".format(opencolorio_dir, os.environ.get('PATH',""))
 elif sys.platform == 'darwin':
@@ -57,7 +59,7 @@ def suite():
     # Processor
     # ProcessorMetadata
     suite.addTest(GpuShaderDescTest("test_interface"))
-    suite.addTest(BakerTest("test_interface"))
+    suite.addTest(BakerTest("test_interface", opencolorio_sse))
     # PackedImageDesc
     # PlanarImageDesc
     return suite
