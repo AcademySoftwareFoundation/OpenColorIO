@@ -2633,7 +2633,7 @@ OIIO_ADD_TEST(Config, exponent_serialization)
         OCIO::ConstConfigRcPtr config;
         OIIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is),
                               OCIO::Exception,
-                              "ExponentTransform parse error, value field must be 4 floats");
+                              "'value' values must be 4 floats. Found '3'");
     }
 }
 
@@ -3276,5 +3276,415 @@ OIIO_ADD_TEST(Config, view)
         OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 1)), "View_1");
     }
 }
+
+OIIO_ADD_TEST(Config, log_serialization)
+{
+    static const std::string SIMPLE_PROFILE =
+        "ocio_profile_version: 1\n"
+        "\n"
+        "search_path: luts\n"
+        "strictparsing: true\n"
+        "luma: [0.2126, 0.7152, 0.0722]\n"
+        "\n"
+        "roles:\n"
+        "  default: raw\n"
+        "  scene_linear: lnh\n"
+        "\n"
+        "displays:\n"
+        "  sRGB:\n"
+        "    - !<View> {name: Raw, colorspace: raw}\n"
+        "\n"
+        "active_displays: []\n"
+        "active_views: []\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw\n"
+        "    family: \"\"\n"
+        "    equalitygroup: \"\"\n"
+        "    bitdepth: unknown\n"
+        "    isdata: false\n"
+        "    allocation: uniform\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: lnh\n"
+        "    family: \"\"\n"
+        "    equalitygroup: \"\"\n"
+        "    bitdepth: unknown\n"
+        "    isdata: false\n"
+        "    allocation: uniform\n";
+
+    {
+        // Log with default base value and default direction.
+        const std::string strEnd =
+            "    from_reference: !<LogTransform> {}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // Log with default base value.
+        const std::string strEnd =
+            "    from_reference: !<LogTransform> {direction: inverse}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // Log with specified base value.
+        const std::string strEnd =
+            "    from_reference: !<LogTransform> {base: 5}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // Log with specified base value and direction.
+        const std::string strEnd =
+            "    from_reference: !<LogTransform> {base: 7, direction: inverse}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // LogAffine with specified values 3 commponents.
+        const std::string strEnd =
+            "    from_reference: !<LogAffineTransform> {"
+            "base: 10, "
+            "logSideSlope: [1.3, 1.4, 1.5], "
+            "logSideOffset: [0, 0, 0.1], "
+            "linSideSlope: [1, 1, 1.1], "
+            "linSideOffset: [0.1234567890123, 0.5, 0.1]}\n";
+            const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // LogAffine with default value for base.
+        const std::string strEnd =
+            "    from_reference: !<LogAffineTransform> {"
+            "logSideSlope: [1, 1, 1.1], "
+            "logSideOffset: [0.1234567890123, 0.5, 0.1], "
+            "linSideSlope: [1.3, 1.4, 1.5], "
+            "linSideOffset: [0, 0, 0.1]}\n";
+    
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // LogAffine with single value for linSideOffset.
+        const std::string strEnd =
+            "    from_reference: !<LogAffineTransform> {"
+            "base: 10, "
+            "logSideSlope: [1, 1, 1.1], "
+            "logSideOffset: [0.1234567890123, 0.5, 0.1], "
+            "linSideSlope: [1.3, 1.4, 1.5], "
+            "linSideOffset: 0.5}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // LogAffine with single value for linSideSlope.
+        const std::string strEnd =
+            "    from_reference: !<LogAffineTransform> {"
+            "logSideSlope: [1, 1, 1.1], "
+            "linSideSlope: 1.3, "
+            "linSideOffset: [0, 0, 0.1]}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // LogAffine with single value for logSideOffset.
+        const std::string strEnd =
+            "    from_reference: !<LogAffineTransform> {"
+            "logSideSlope: [1, 1, 1.1], "
+            "logSideOffset: 0.5, "
+            "linSideSlope: [1.3, 1, 1], "
+            "linSideOffset: [0, 0, 0.1]}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // LogAffine with single value for logSideSlope.
+        const std::string strEnd =
+            "    from_reference: !<LogAffineTransform> {"
+            "logSideSlope: 1.1, "
+            "logSideOffset: [0.5, 0, 0], "
+            "linSideSlope: [1.3, 1, 1], "
+            "linSideOffset: [0, 0, 0.1]}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // LogAffine with default value for logSideSlope.
+        const std::string strEnd =
+            "    from_reference: !<LogAffineTransform> {"
+            "logSideOffset: [0.1234567890123, 0.5, 0.1], "
+            "linSideSlope: [1.3, 1.4, 1.5], "
+            "linSideOffset: [0.1, 0, 0]}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // LogAffine with default value for all but base.
+        const std::string strEnd =
+            "    from_reference: !<LogAffineTransform> {base: 10}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // LogAffine with wrong size for logSideSlope.
+        const std::string strEnd =
+            "    from_reference: !<LogAffineTransform> {"
+            "logSideSlope: [1, 1], "
+            "logSideOffset: [0.1234567890123, 0.5, 0.1]}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is),
+                              OCIO::Exception,
+                              "logSideSlope value field must have 3 components");
+    }
+
+    {
+        // LogAffine with 3 values for base.
+        const std::string strEnd =
+            "    from_reference: !<LogAffineTransform> {"
+            "base: [2, 2, 2], "
+            "logSideOffset: [0.1234567890123, 0.5, 0.1]}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is),
+            OCIO::Exception,
+            "base must be a single double");
+    }
+}
+
+OIIO_ADD_TEST(Config, key_value_error)
+{
+    // Check the line number contained in the parser error messages.
+
+    const std::string SHORT_PROFILE =
+        "ocio_profile_version: 2\n"
+        "strictparsing: false\n"
+        "roles:\n"
+        "  default: raw\n"
+        "displays:\n"
+        "  sRGB:\n"
+        "  - !<View> {name: Raw, colorspace: raw}\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw\n"
+        "    to_reference: !<MatrixTransform> \n"
+        "                      {\n"
+        "                           matrix: [1, 0, 0, 0, 0, 1]\n" // Missing values.
+        "                      }\n"
+        "    allocation: uniform\n"
+        "\n";
+    
+    std::istringstream is;
+    is.str(SHORT_PROFILE);
+
+    OIIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is),
+                          OCIO::Exception,
+                          "Error: Loading the OCIO profile failed. At line 14, the value "
+                          "parsing of the key 'matrix' from 'MatrixTransform' failed: "
+                          "'matrix' values must be 16 floats. Found '6'.");
+}
+
+namespace
+{
+
+// Redirect the std::cerr to catch the warning.
+class Guard
+{
+public:      
+    Guard()      
+        :   m_oldBuf(std::cerr.rdbuf())      
+    {        
+        std::cerr.rdbuf(m_ss.rdbuf());       
+    }        
+
+    ~Guard()         
+    {        
+        std::cerr.rdbuf(m_oldBuf);       
+        m_oldBuf = nullptr;      
+    }        
+
+    std::string output() { return m_ss.str(); }      
+
+private:         
+    std::stringstream m_ss;      
+    std::streambuf *  m_oldBuf;      
+
+    Guard(const Guard&) = delete;        
+    Guard operator=(const Guard&) = delete;      
+};
+
+};
+
+OIIO_ADD_TEST(Config, unknown_key_error)
+{
+    const std::string SHORT_PROFILE =
+        "ocio_profile_version: 2\n"
+        "strictparsing: false\n"
+        "roles:\n"
+        "  default: raw\n"
+        "displays:\n"
+        "  sRGB:\n"
+        "  - !<View> {name: Raw, colorspace: raw}\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw\n"
+        "    dummyKey: dummyValue\n"
+        "    to_reference: !<MatrixTransform> {offset: [1, 0, 0, 0]}\n"
+        "    allocation: uniform\n"
+        "\n";
+    
+    std::istringstream is;
+    is.str(SHORT_PROFILE);
+
+    Guard g;
+    OIIO_CHECK_NO_THROW(OCIO::Config::CreateFromStream(is));
+    OIIO_CHECK_EQUAL(g.output(), 
+                     "[OpenColorIO Warning]: At line 12, unknown key 'dummyKey' in 'ColorSpace'.\n");
+}
+
 
 #endif // OCIO_UNIT_TEST

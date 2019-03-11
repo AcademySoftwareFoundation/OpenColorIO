@@ -30,61 +30,28 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_LOGOPS_H
 #define INCLUDED_OCIO_LOGOPS_H
 
+#include <vector>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
 
-#include <vector>
-
 OCIO_NAMESPACE_ENTER
 {
-    class LogOpData;
-    typedef OCIO_SHARED_PTR<LogOpData> LogOpDataRcPtr;
-    typedef OCIO_SHARED_PTR<const LogOpData> ConstLogOpDataRcPtr;
-
-    class LogOpData : public OpData
-    {
-    public:
-        LogOpData(float base);
-        LogOpData(const float * k,
-                  const float * m,
-                  const float * b,
-                  const float * base,
-                  const float * kb);
-        virtual ~LogOpData() {}
-
-        LogOpData & operator = (const LogOpData & rhs);
-
-        virtual Type getType() const override { return LogType; }
-
-        virtual bool isNoOp() const override { return false; }
-        virtual bool isIdentity() const override { return false; }
-
-        virtual bool hasChannelCrosstalk() const override { return false; }
-
-        float m_k[3];
-        float m_m[3];
-        float m_b[3];
-        float m_base[3];
-        float m_kb[3];
-
-        virtual void finalize() override;
-    };
-
-    // output = k * log(mx+b, base) + kb
-    // This does not affect alpha
-    // In the forward direction this is lin->log
-    // All input vectors are size 3 (including base)
+    // output = logSlope * log( linSlope * input + linOffset, base ) + logOffset
+    // This does not affect alpha.
+    // In the forward direction this is lin->log.
+    // All input vectors are size 3 (including base).
     
     void CreateLogOp(OpRcPtrVec & ops,
-                     const float * k,
-                     const float * m,
-                     const float * b,
-                     const float * base,
-                     const float * kb,
+                     double base,
+                     const double(&logSlope)[3],
+                     const double(&logOffset)[3],
+                     const double(&linSlope)[3],
+                     const double(&linOffset)[3],
                      TransformDirection direction);
 
-    void CreateLogOp(OpRcPtrVec & ops, float base, TransformDirection direction);
+    void CreateLogOp(OpRcPtrVec & ops, double base, TransformDirection direction);
     
 }
 OCIO_NAMESPACE_EXIT
