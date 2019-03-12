@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="1d8dc8e1-59e6-4c43-9d37-afed3c436ebc" version="1.4">
+    <Description>Illegal hue adjust attribute.</Description>
+    <LUT1D inBitDepth="10i" outBitDepth="10i" hueAdjust="none">
+        <Array dim="5 1">
+   0.000635258
+   0.002711502
+   0.006484435
+   0.012209762
+   0.020143187
+        </Array>
+    </LUT1D>
+</ProcessList>

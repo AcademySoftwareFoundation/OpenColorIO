@@ -1209,11 +1209,11 @@ OIIO_ADD_TEST(MatrixOffsetOp, is_same_type)
     const float sat = 0.9f;
     const float lumaCoef3[3] = { 1.0f, 0.5f, 0.1f };
     const float scale[] = { 1.1f, 1.3f, 0.3f, 1.0f };
-    const float k[3] = { 0.18f, 0.5f, 0.3f };
-    const float m[3] = { 2.0f, 4.0f, 8.0f };
-    const float b[3] = { 0.1f, 0.1f, 0.1f };
-    const float base[3] = { 10.0f, 5.0f, 2.0f };
-    const float kb[3] = { 1.0f, 1.0f, 1.0f };
+    const double base = 10.0;
+    const double logSlope[3] = { 0.18, 0.5, 0.3 };
+    const double linSlope[3] = { 2.0, 4.0, 8.0 };
+    const double linOffset[3] = { 0.1, 0.1, 0.1 };
+    const double logOffset[3] = { 1.0, 1.0, 1.0 };
 
     // Create saturation, scale and log.
     OpRcPtrVec ops;
@@ -1223,7 +1223,7 @@ OIIO_ADD_TEST(MatrixOffsetOp, is_same_type)
     OIIO_CHECK_NO_THROW(CreateScaleOp(ops, scale, TRANSFORM_DIR_FORWARD));
     OIIO_CHECK_EQUAL(ops.size(), 2);
     OIIO_CHECK_NO_THROW(
-        CreateLogOp(ops, k, m, b, base, kb, TRANSFORM_DIR_FORWARD));
+        CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset, TRANSFORM_DIR_FORWARD));
     OIIO_REQUIRE_EQUAL(ops.size(), 3);
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO::ConstOpRcPtr op1 = ops[1];
@@ -1250,13 +1250,13 @@ OIIO_ADD_TEST(MatrixOffsetOp, is_inverse)
     OIIO_CHECK_NO_THROW(CreateOffsetOp(ops, offsetInv, TRANSFORM_DIR_FORWARD));
     OIIO_CHECK_EQUAL(ops.size(), 3);
 
-    const float k[3] = { 0.18f, 0.5f, 0.3f };
-    const float m[3] = { 2.0f, 4.0f, 8.0f };
-    const float b[3] = { 0.1f, 0.1f, 0.1f };
-    const float base[3] = { 10.0f, 5.0f, 2.0f };
-    const float kb[3] = { 1.0f, 1.0f, 1.0f };
+    const double base = 10.0;
+    const double logSlope[3] = { 0.18, 0.5, 0.3 };
+    const double linSlope[3] = { 2.0, 4.0, 8.0 };
+    const double linOffset[3] = { 0.1, 0.1, 0.1 };
+    const double logOffset[3] = { 1.0, 1.0, 1.0 };
     OIIO_CHECK_NO_THROW(
-        CreateLogOp(ops, k, m, b, base, kb, TRANSFORM_DIR_FORWARD));
+        CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset, TRANSFORM_DIR_FORWARD));
     OIIO_REQUIRE_EQUAL(ops.size(), 4);
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO::ConstOpRcPtr op1 = ops[1];
