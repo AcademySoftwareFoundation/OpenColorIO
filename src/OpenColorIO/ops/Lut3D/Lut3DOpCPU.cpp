@@ -630,6 +630,8 @@ void Lut3DTetrahedralRenderer::apply(float *rgbaBuffer, long nPixels) const
 #else
     float * rgba = rgbaBuffer;
 
+    const float dimMinusOne = float(m_dim) - 1.f;
+
     for (long i = 0; i < nPixels; ++i)
     {
         float newAlpha = (float)rgba[3] * m_alphaScale;
@@ -639,10 +641,10 @@ void Lut3DTetrahedralRenderer::apply(float *rgbaBuffer, long nPixels) const
         idx[1] = rgba[1] * m_step;
         idx[2] = rgba[2] * m_step;
 
-        // NaNs become 0
-        idx[0] = std::min(std::max(idx[0], 0.f), (float)m_dim - 1.f);
-        idx[1] = std::min(std::max(idx[1], 0.f), (float)m_dim - 1.f);
-        idx[2] = std::min(std::max(idx[2], 0.f), (float)m_dim - 1.f);
+        // NaNs become 0.
+        idx[0] = Clamp(idx[0], 0.f, dimMinusOne);
+        idx[1] = Clamp(idx[1], 0.f, dimMinusOne);
+        idx[2] = Clamp(idx[2], 0.f, dimMinusOne);
 
         int indexLow[3];
         indexLow[0] = static_cast<int>(std::floor(idx[0]));
@@ -939,6 +941,8 @@ void Lut3DRenderer::apply(float *rgbaBuffer, long nPixels) const
 #else
     float * rgba = rgbaBuffer;
 
+    const float dimMinusOne = float(m_dim) - 1.f;
+
     for (long i = 0; i < nPixels; ++i)
     {
         float newAlpha = (float)rgba[3] * m_alphaScale;
@@ -948,10 +952,10 @@ void Lut3DRenderer::apply(float *rgbaBuffer, long nPixels) const
         idx[1] = rgba[1] * m_step;
         idx[2] = rgba[2] * m_step;
 
-        // NaNs become 0
-        idx[0] = std::min(std::max(idx[0], 0.f), (float)m_dim - 1.f);
-        idx[1] = std::min(std::max(idx[1], 0.f), (float)m_dim - 1.f);
-        idx[2] = std::min(std::max(idx[2], 0.f), (float)m_dim - 1.f);
+        // NaNs become 0.
+        idx[0] = Clamp(idx[0], 0.f, dimMinusOne);
+        idx[1] = Clamp(idx[1], 0.f, dimMinusOne);
+        idx[2] = Clamp(idx[2], 0.f, dimMinusOne);
 
         int indexLow[3];
         indexLow[0] = static_cast<int>(std::floor(idx[0]));
@@ -1856,9 +1860,9 @@ void InvLut3DRenderer::apply(float * rgbaBuffer, long numPixels) const
     {
         // Although the inverse LUT has been extrapolated, it may not be enough
         // to cover an HDR float image, so need to clamp.
-        const float R = clamp(rgbaBuffer[0], 0.f, m_inMax);
-        const float G = clamp(rgbaBuffer[1], 0.f, m_inMax);
-        const float B = clamp(rgbaBuffer[2], 0.f, m_inMax);
+        const float R = Clamp(rgbaBuffer[0], 0.f, m_inMax);
+        const float G = Clamp(rgbaBuffer[1], 0.f, m_inMax);
+        const float B = Clamp(rgbaBuffer[2], 0.f, m_inMax);
 
         const long depthm1 = depth - 1;
         unsigned long baseIndx[3] = {0, 0, 0};
@@ -1922,9 +1926,9 @@ void InvLut3DRenderer::apply(float * rgbaBuffer, long numPixels) const
             level--;
 
             // Need to subtract 1 since the indices include the extrapolation.
-            rgbaBuffer[0] = clamp(result[0] - 1.f, 0.f, maxDim) * m_scale;
-            rgbaBuffer[1] = clamp(result[1] - 1.f, 0.f, maxDim) * m_scale;
-            rgbaBuffer[2] = clamp(result[2] - 1.f, 0.f, maxDim) * m_scale;
+            rgbaBuffer[0] = Clamp(result[0] - 1.f, 0.f, maxDim) * m_scale;
+            rgbaBuffer[1] = Clamp(result[1] - 1.f, 0.f, maxDim) * m_scale;
+            rgbaBuffer[2] = Clamp(result[2] - 1.f, 0.f, maxDim) * m_scale;
             rgbaBuffer[3] *= m_alphaScaling;
 
         }
@@ -1971,3 +1975,62 @@ OpCPURcPtr GetLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
 
 }
 OCIO_NAMESPACE_EXIT
+
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+
+#include <limits>
+#include "unittest.h"
+
+void Lut3DRendererNaNTest(OCIO::Interpolation interpol)
+{
+    OCIO::Lut3DOpDataRcPtr lut =
+        std::make_shared<OCIO::Lut3DOpData>(OCIO::BIT_DEPTH_F32,
+                                            OCIO::BIT_DEPTH_F32,
+                                            "uid",
+                                            OCIO::OpData::Descriptions(),
+                                            interpol,
+                                            4);
+
+    float * values = &lut->getArray().getValues()[0];
+    // Change LUT so that it is not identity.
+    values[65] += 0.001f;
+
+    OCIO::ConstLut3DOpDataRcPtr lutConst = lut;
+    OCIO::OpCPURcPtr renderer = OCIO::GetLut3DRenderer(lutConst);
+
+    const float qnan = std::numeric_limits<float>::quiet_NaN();
+    const float inf = std::numeric_limits<float>::infinity();
+    float pixels[16] = { qnan, qnan, qnan, 0.5f,
+                         0.5f, 0.3f, 0.2f, qnan,
+                          inf,  inf,  inf,  inf,
+                         -inf, -inf, -inf, -inf };
+
+    renderer->apply(pixels, 4);
+
+    OIIO_CHECK_CLOSE(pixels[0], values[0], 1e-7f);
+    OIIO_CHECK_CLOSE(pixels[1], values[1], 1e-7f);
+    OIIO_CHECK_CLOSE(pixels[2], values[2], 1e-7f);
+    OIIO_CHECK_ASSERT(std::isnan(pixels[7]));
+    OIIO_CHECK_CLOSE(pixels[8], 1.0f, 1e-7f);
+    OIIO_CHECK_CLOSE(pixels[9], 1.0f, 1e-7f);
+    OIIO_CHECK_CLOSE(pixels[10], 1.0f, 1e-7f);
+    OIIO_CHECK_EQUAL(pixels[11], inf);
+    OIIO_CHECK_CLOSE(pixels[12], 0.0f, 1e-7f);
+    OIIO_CHECK_CLOSE(pixels[13], 0.0f, 1e-7f);
+    OIIO_CHECK_CLOSE(pixels[14], 0.0f, 1e-7f);
+    OIIO_CHECK_EQUAL(pixels[15], -inf);
+}
+
+OIIO_ADD_TEST(Lut3DRenderer, nan_linear_test)
+{
+    Lut3DRendererNaNTest(OCIO::INTERP_LINEAR);
+}
+
+OIIO_ADD_TEST(Lut3DRenderer, nan_tetra_test)
+{
+    Lut3DRendererNaNTest(OCIO::INTERP_TETRAHEDRAL);
+}
+
+#endif

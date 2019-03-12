@@ -784,7 +784,7 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "unittest.h"
-#include "UnitTestFiles.h"
+#include "UnitTestUtils.h"
 
 #ifdef WINDOWS
 #define stringCopy(to, from, size) strcpy_s(to, size, from);

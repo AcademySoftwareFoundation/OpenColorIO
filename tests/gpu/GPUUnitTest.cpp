@@ -95,6 +95,9 @@ namespace Shader
                                       float eps,
                                       float minExpected)
     {
+        // If value and expected are infinity, return true.
+        if (value == expected) return true;
+        if (std::isnan(value) && std::isnan(expected)) return true;
         const float div = (expected > 0.0f) ?
             ((expected < minExpected) ? minExpected : expected) :
             ((-expected < minExpected) ? minExpected : -expected);
@@ -192,9 +195,9 @@ AddTest::AddTest(OCIOGPUTest* test)
 namespace
 {
     GLint g_win = 0;
-    const unsigned g_winWidth   = 256;
-    const unsigned g_winHeight  = 256;
-    const unsigned g_components = 4;
+    static constexpr unsigned g_winWidth   = 256;
+    static constexpr unsigned g_winHeight  = 256;
+    static constexpr unsigned g_components = 4;
 
     OpenGLBuilderRcPtr g_oglBuilder;
 
@@ -265,16 +268,52 @@ namespace
         glutDestroyWindow(g_win);
     }
 
-    void UpdateImageTexture(bool useWideRange)
+    void SetTestValue(float * image, float val, unsigned numComponents)
+    {
+        for (unsigned component = 0; component < numComponents; ++component)
+        {
+            for (unsigned idx = 0; idx < numComponents; ++idx)
+            {
+                const float valSet = (idx == component) ? val : 0.0f;
+                image[idx+component*numComponents] = valSet;
+            }
+        }
+    }
+
+    void UpdateImageTexture(bool useWideRange, bool testNan, bool testInfinity)
     {
         const float min = useWideRange ? -1.0f : 0.0f;
         const float max = useWideRange ? +2.0f : 1.0f;
         const float range = max - min;
 
-        const unsigned numEntries = g_winWidth * g_winHeight * g_components;
+        unsigned numEntries = g_winWidth * g_winHeight * g_components;
+
+        unsigned idx = 0;
+        const unsigned numTests = g_components*g_components;
+        if (testNan)
+        {
+            const float qnan = std::numeric_limits<float>::quiet_NaN();
+            SetTestValue(&g_image[0], qnan, g_components);
+            idx += numTests;
+            numEntries -= numTests;
+        }
+
+        if (testInfinity)
+        {
+            const float posinf = std::numeric_limits<float>::infinity();
+            SetTestValue(&g_image[idx], posinf, g_components);
+            idx += numTests;
+            numEntries -= numTests;
+
+            const float neginf = -std::numeric_limits<float>::infinity();
+            SetTestValue(&g_image[idx], neginf, g_components);
+            idx += numTests;
+            numEntries -= numTests;
+        }
+
         const float step = range / numEntries;
 
-        for(unsigned idx=0; idx<numEntries; ++idx)
+        for(; idx<numEntries; ++idx)
         {
             g_image[idx] = min + step * float(idx);
         }
@@ -479,7 +518,7 @@ int main(int, char **)
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
                 // Update the image texture
-                UpdateImageTexture(test->getWideRange());
+                UpdateImageTexture(test->getTestWideRange(), test->getTestNaN(), test->getTestInfinity());
 
                 // Update the GPU shader program
                 UpdateOCIOGLState(test);

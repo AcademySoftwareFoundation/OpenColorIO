@@ -331,6 +331,13 @@ OCIO_NAMESPACE_ENTER
                           getFloatString(z, m_lang));
     }
 
+    std::string GpuShaderText::vec3fConst(double x, double y, double z) const
+    {
+        return vec3fConst(getFloatString(x, m_lang), 
+                          getFloatString(y, m_lang), 
+                          getFloatString(z, m_lang));
+    }
+
     std::string GpuShaderText::vec3fConst(const std::string& x, 
                                           const std::string& y,
                                           const std::string& z) const
