@@ -118,8 +118,17 @@ OCIO_NAMESPACE_ENTER
     
     void MatrixTransform::validate() const
     {
-        Transform::validate();
-        getImpl()->validate();
+        try
+        {
+            Transform::validate();
+            getImpl()->validate();
+        }
+        catch(Exception & ex)
+        {
+            std::string errMsg("MatrixTransform validation failed: ");
+            errMsg += ex.what();
+            throw Exception(errMsg.c_str());
+        }
     }
 
     bool MatrixTransform::equals(const MatrixTransform & other) const
