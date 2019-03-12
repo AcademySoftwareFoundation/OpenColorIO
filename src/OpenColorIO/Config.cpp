@@ -3782,3 +3782,4 @@ OIIO_ADD_TEST(Config, fixed_function_serialization)
 }
 
 #endif // OCIO_UNIT_TEST
+
