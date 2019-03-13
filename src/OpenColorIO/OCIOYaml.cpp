@@ -270,8 +270,21 @@ OCIO_NAMESPACE_ENTER
         
         //
         
+        inline void LogUnknownKeyWarning(const YAML::Node & node,
+                                         const YAML::Node & key)
+        {
+            std::string keyName;
+            load(key, keyName);
+        
+            std::ostringstream os;
+            os << "At line " << (key.GetMark().line + 1)
+               << ", unknown key '" << keyName << "' in '" << node.Tag() << "'.";
+
+            LogWarning(os.str());
+        }
+        
         inline void LogUnknownKeyWarning(const std::string & name,
-                                         const YAML::Node& tag)
+                                         const YAML::Node & tag)
         {
             std::string key;
             load(tag, key);
@@ -279,6 +292,32 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream os;
             os << "Unknown key in " << name << ": '" << key << "'.";
             LogWarning(os.str());
+        }
+        
+        inline void throwError(const YAML::Node & node,
+                               const std::string & msg)
+        {
+            std::ostringstream os;
+            os << "At line " << (node.GetMark().line + 1) 
+               << ", '" << node.Tag() << "' parsing failed: " 
+               << msg;
+
+            throw Exception(os.str().c_str());
+        }
+
+        inline void throwValueError(const std::string & nodeName,
+                                    const YAML::Node & key,
+                                    const std::string & msg)
+        {
+            std::string keyName;
+            load(key, keyName);
+        
+            std::ostringstream os;
+            os << "At line " << (key.GetMark().line + 1) 
+               << ", the value parsing of the key '" << keyName 
+               << "' from '" << nodeName << "' failed: " << msg;
+
+            throw Exception(os.str().c_str());
         }
         
         // View
@@ -318,20 +357,19 @@ OCIO_NAMESPACE_ENTER
                 }
                 else
                 {
-                    LogUnknownKeyWarning(node.Tag(), first);
+                    LogUnknownKeyWarning(node, first);
                 }
             }
-            
             if(v.name.empty())
             {
-                throw Exception("View does not specify 'name'.");
+                throwError(node, "View does not specify 'name'.");
             }
             if(v.colorspace.empty())
             {
                 std::ostringstream os;
-                os << "View '" << v.name << "' ";
-                os << "does not specify colorspace.";
-                throw Exception(os.str().c_str());
+                os << "View '" << v.name << "' "
+                   << "does not specify colorspace.";
+                throwError(node, os.str().c_str());
             }
         }
         
@@ -401,7 +439,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 else
                 {
-                    LogUnknownKeyWarning(node.Tag(), first);
+                    LogUnknownKeyWarning(node, first);
                 }
             }
         }
@@ -453,9 +491,9 @@ OCIO_NAMESPACE_ENTER
                     if(floatvecval.size() != 3)
                     {
                         std::ostringstream os;
-                        os << "CDLTransform parse error, 'slope' field must be 3 ";
+                        os << "'slope' values must be 3 ";
                         os << "floats. Found '" << floatvecval.size() << "'.";
-                        throw Exception(os.str().c_str());
+                        throwValueError(node.Tag(), first, os.str());
                     }
                     t->setSlope(&floatvecval[0]);
                 }
@@ -465,9 +503,9 @@ OCIO_NAMESPACE_ENTER
                     if(floatvecval.size() != 3)
                     {
                         std::ostringstream os;
-                        os << "CDLTransform parse error, 'offset' field must be 3 ";
+                        os << "'offset' values must be 3 ";
                         os << "floats. Found '" << floatvecval.size() << "'.";
-                        throw Exception(os.str().c_str());
+                        throwValueError(node.Tag(), first, os.str());
                     }
                     t->setOffset(&floatvecval[0]);
                 }
@@ -477,9 +515,9 @@ OCIO_NAMESPACE_ENTER
                     if(floatvecval.size() != 3)
                     {
                         std::ostringstream os;
-                        os << "CDLTransform parse error, 'power' field must be 3 ";
+                        os << "'power' values must be 3 ";
                         os << "floats. Found '" << floatvecval.size() << "'.";
-                        throw Exception(os.str().c_str());
+                        throwValueError(node.Tag(), first, os.str());
                     }
                     t->setPower(&floatvecval[0]);
                 }
@@ -497,7 +535,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 else
                 {
-                    LogUnknownKeyWarning(node.Tag(), first);
+                    LogUnknownKeyWarning(node, first);
                 }
             }
         }
@@ -577,7 +615,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 else
                 {
-                    LogUnknownKeyWarning(node.Tag(), first);
+                    LogUnknownKeyWarning(node, first);
                 }
             }
         }
@@ -618,9 +656,9 @@ OCIO_NAMESPACE_ENTER
                     if(val.size() != 4)
                     {
                         std::ostringstream os;
-                        os << "ExponentTransform parse error, value field must be 4 ";
+                        os << "'value' values must be 4 ";
                         os << "floats. Found '" << val.size() << "'.";
-                        throw Exception(os.str().c_str());
+                        throwValueError(node.Tag(), first, os.str());
                     }
                     const double v[4] = { val[0], val[1], val[2], val[3] };
                     t->setValue(v);
@@ -633,7 +671,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 else
                 {
-                    LogUnknownKeyWarning(node.Tag(), first);
+                    LogUnknownKeyWarning(node, first);
                 }
             }
         }
@@ -818,7 +856,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 else
                 {
-                    LogUnknownKeyWarning(node.Tag(), first);
+                    LogUnknownKeyWarning(node, first);
                 }
             }
         }
@@ -874,7 +912,8 @@ OCIO_NAMESPACE_ENTER
                         // throwing an exception.  Should this be a warning, instead?
                         if(!childTransform)
                         {
-                            throw Exception("Child transform could not be parsed.");
+                            throwValueError(node.Tag(), first, 
+                                            "Child transform could not be parsed.");
                         }
                         
                         t->push_back(childTransform);
@@ -888,7 +927,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 else
                 {
-                    LogUnknownKeyWarning(node.Tag(), first);
+                    LogUnknownKeyWarning(node, first);
                 }
             }
         }
@@ -1004,7 +1043,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 else
                 {
-                    LogUnknownKeyWarning(node.Tag(), first);
+                    LogUnknownKeyWarning(node, first);
                 }
             }
             t->setBase(base);
@@ -1165,7 +1204,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 else
                 {
-                    LogUnknownKeyWarning(node.Tag(), first);
+                    LogUnknownKeyWarning(node, first);
                 }
             }
         }
@@ -1207,9 +1246,9 @@ OCIO_NAMESPACE_ENTER
                     if(val.size() != 16)
                     {
                         std::ostringstream os;
-                        os << "MatrixTransform parse error, matrix field must be 16 ";
+                        os << "'matrix' values must be 16 ";
                         os << "floats. Found '" << val.size() << "'.";
-                        throw Exception(os.str().c_str());
+                        throwValueError(node.Tag(), first, os.str());
                     }
                     t->setMatrix(&val[0]);
                 }
@@ -1220,9 +1259,9 @@ OCIO_NAMESPACE_ENTER
                     if(val.size() != 4)
                     {
                         std::ostringstream os;
-                        os << "MatrixTransform parse error, offset field must be 4 ";
+                        os << "'offset' values must be 4 ";
                         os << "floats. Found '" << val.size() << "'.";
-                        throw Exception(os.str().c_str());
+                        throwValueError(node.Tag(), first, os.str());
                     }
                     t->setOffset(&val[0]);
                 }
@@ -1234,7 +1273,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 else
                 {
-                    LogUnknownKeyWarning(node.Tag(), first);
+                    LogUnknownKeyWarning(node, first);
                 }
             }
         }
@@ -1322,7 +1361,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 else
                 {
-                    LogUnknownKeyWarning(node.Tag(), first);
+                    LogUnknownKeyWarning(node, first);
                 }
             }
         }
@@ -1443,7 +1482,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 else
                 {
-                    LogUnknownKeyWarning(node.Tag(), first);
+                    LogUnknownKeyWarning(node, first);
                 }
             }
         }
@@ -1516,9 +1555,10 @@ OCIO_NAMESPACE_ENTER
             if(node.Type() != YAML::NodeType::Map)
             {
                 std::ostringstream os;
-                os << "Unsupported Transform type encountered: (" << node.Type() << ") in OCIO profile. ";
-                os << "Only Mapping types supported.";
-                throw Exception(os.str().c_str());
+                os << "Unsupported Transform type encountered: (" 
+                   << node.Type() << ") in OCIO profile. "
+                   << "Only Mapping types supported.";
+                throwError(node, os.str());
             }
             
             std::string type = node.Tag();
@@ -1603,7 +1643,7 @@ OCIO_NAMESPACE_ENTER
                 //  t = EmptyTransformRcPtr(new EmptyTransform(), &deleter);
                 std::ostringstream os;
                 os << "Unsupported transform type !<" << type << "> in OCIO profile. ";
-                throw Exception(os.str().c_str());
+                throwError(node, os.str());
             }
         }
         
@@ -1740,7 +1780,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 else
                 {
-                    LogUnknownKeyWarning(node.Tag(), first);
+                    LogUnknownKeyWarning(node, first);
                 }
             }
         }
@@ -1852,7 +1892,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 else
                 {
-                    LogUnknownKeyWarning(node.Tag(), first);
+                    LogUnknownKeyWarning(node, first);
                 }
             }
         }
@@ -1940,7 +1980,7 @@ OCIO_NAMESPACE_ENTER
                    << (version.empty() ? "<null>" : version)
                    << ".";
 
-                throw Exception (os.str().c_str());
+                throwError(node, os.str());
             }
 
             try
@@ -1992,8 +2032,8 @@ OCIO_NAMESPACE_ENTER
                     if(second.Type() != YAML::NodeType::Map)
                     {
                         std::ostringstream os;
-                        os << "'environment' field needs to be a (name: key) map.";
-                        throw Exception(os.str().c_str());
+                        os << "The value type of key 'environment' needs to be a map.";
+                        throwValueError(node.Tag(), first, os.str());
                     }
                     for (Iterator it = second.begin();
                          it != second.end();
@@ -2027,9 +2067,9 @@ OCIO_NAMESPACE_ENTER
                     if(val.size() != 3)
                     {
                         std::ostringstream os;
-                        os << "'luma' field must be 3 ";
+                        os << "'luma' values must be 3 ";
                         os << "floats. Found '" << val.size() << "'.";
-                        throw Exception(os.str().c_str());
+                        throwValueError(node.Tag(), first, os.str());
                     }
                     c->setDefaultLumaCoefs(&val[0]);
                 }
@@ -2038,8 +2078,8 @@ OCIO_NAMESPACE_ENTER
                     if(second.Type() != YAML::NodeType::Map)
                     {
                         std::ostringstream os;
-                        os << "'roles' field needs to be a (name: key) map.";
-                        throw Exception(os.str().c_str());
+                        os << "The value type of the key 'roles' needs to be a map.";
+                        throwValueError(node.Tag(), first, os.str());
                     }
                     for (Iterator it = second.begin();
                          it != second.end();
@@ -2056,8 +2096,8 @@ OCIO_NAMESPACE_ENTER
                     if(second.Type() != YAML::NodeType::Map)
                     {
                         std::ostringstream os;
-                        os << "'displays' field needs to be a (name: key) map.";
-                        throw Exception(os.str().c_str());
+                        os << "The value type of the key 'displays' needs to be a map.";
+                        throwValueError(node.Tag(), first, os.str());
                     }
                     for (Iterator it = second.begin();
                          it != second.end();
@@ -2095,7 +2135,7 @@ OCIO_NAMESPACE_ENTER
                     {
                         std::ostringstream os;
                         os << "'colorspaces' field needs to be a (- !<ColorSpace>) list.";
-                        throw Exception(os.str().c_str());
+                        throwError(node, os.str());
                     }
                     for(unsigned i = 0; i < second.size(); ++i)
                     {
@@ -2109,7 +2149,7 @@ OCIO_NAMESPACE_ENTER
                                 {
                                     std::ostringstream os;
                                     os << "Colorspace with name '" << cs->getName() << "' already defined.";
-                                    throw Exception(os.str().c_str());
+                                    throwError(node, os.str());
                                 }
                             }
                             c->addColorSpace(cs);
@@ -2130,7 +2170,7 @@ OCIO_NAMESPACE_ENTER
                     {
                         std::ostringstream os;
                         os << "'looks' field needs to be a (- !<Look>) list.";
-                        throw Exception(os.str().c_str());
+                        throwError(node, os.str());
                     }
                     
                     for(unsigned i = 0; i < second.size(); ++i)

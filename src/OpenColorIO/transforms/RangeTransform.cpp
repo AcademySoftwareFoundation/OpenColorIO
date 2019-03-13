@@ -142,8 +142,17 @@ void RangeTransform::setStyle(RangeStyle style)
 
 void RangeTransform::validate() const
 {
-    Transform::validate();
-    getImpl()->validate();
+        try
+        {
+            Transform::validate();
+            getImpl()->validate();
+        }
+        catch(Exception & ex)
+        {
+            std::string errMsg("RangeTransform validation failed: ");
+            errMsg += ex.what();
+            throw Exception(errMsg.c_str());
+        }
 }
 
 bool RangeTransform::equals(const RangeTransform & other) const

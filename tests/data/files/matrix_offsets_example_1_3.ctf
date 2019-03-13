@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="1.3" id="b5" name="matrix offsets_example" xmlns="urn:NATAS:ASC:LUT:v0.95">
+    <Matrix id="c6" inBitDepth="32f" outBitDepth="32f">
+        <Array dim="4 4 3">
+ 3.24000 -1.53700 -0.49850  1
+-0.96930  1.87600  0.04156  2
+ 0.05560 -0.20400  1.05730  3
+ 0        0        0        1.0
+        </Array>
+    </Matrix>
+</ProcessList>
