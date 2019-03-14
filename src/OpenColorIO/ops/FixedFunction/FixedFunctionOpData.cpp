@@ -149,7 +149,7 @@ void FixedFunctionOpData::validate() const
         {
             std::stringstream ss;
             ss  << "The style '" << ConvertStyleToString(m_style, true) 
-                << "' must have zero parameter but " 
+                << "' must have zero parameters but " 
                 << m_params.size() << " found.";
             throw Exception(ss.str().c_str());
         }
@@ -305,7 +305,7 @@ OIIO_ADD_TEST(FixedFunctionOpData, aces_red_mod_style)
     OIIO_CHECK_NO_THROW(func.setParams(p));
     OIIO_CHECK_THROW_WHAT(func.validate(), 
                           OCIO::Exception, 
-                          "The style 'ACES_RedMod10 (Forward)' must have zero parameter but 1 found.");
+                          "The style 'ACES_RedMod10 (Forward)' must have zero parameters but 1 found.");
 }
 
 OIIO_ADD_TEST(FixedFunctionOpData, aces_dark_to_dim10_style)
@@ -332,10 +332,10 @@ OIIO_ADD_TEST(FixedFunctionOpData, aces_dark_to_dim10_style)
     OIIO_CHECK_NO_THROW(func.setParams(p));
     OIIO_CHECK_THROW_WHAT(func.validate(), 
                           OCIO::Exception, 
-                          "The style 'ACES_DarkToDim10 (Forward)' must have zero parameter but 1 found.");
+                          "The style 'ACES_DarkToDim10 (Forward)' must have zero parameters but 1 found.");
 }
 
-OIIO_ADD_TEST(FixedFunctionOpData, rec2110_surround_style)
+OIIO_ADD_TEST(FixedFunctionOpData, rec2100_surround_style)
 {
     OCIO::FixedFunctionOpData::Params params = { 2.0 };
         OCIO::FixedFunctionOpData func(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_F32, 

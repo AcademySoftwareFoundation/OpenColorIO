@@ -51,17 +51,17 @@ public:
 
     enum Style
     {
-        ACES_RED_MOD_03_FWD = 0,  // Red modifier (ACES v0.3/0.7)
-        ACES_RED_MOD_03_INV,      // Red modifier inverse (ACES v0.3/0.7)
+        ACES_RED_MOD_03_FWD = 0,  // Red modifier (ACES 0.3/0.7)
+        ACES_RED_MOD_03_INV,      // Red modifier inverse (ACES 0.3/0.7)
         ACES_RED_MOD_10_FWD,      // Red modifier (ACES 1.0)
-        ACES_RED_MOD_10_INV,      // Red modifier inverse (ACES 1.0)
-        ACES_GLOW_03_FWD,         // Glow function (ACES v0.3/0.7)
-        ACES_GLOW_03_INV,         // Glow function inverse (ACES v0.3/0.7)
+        ACES_RED_MOD_10_INV,      // Red modifier inverse (ACES v1.0)
+        ACES_GLOW_03_FWD,         // Glow function (ACES 0.3/0.7)
+        ACES_GLOW_03_INV,         // Glow function inverse (ACES 0.3/0.7)
         ACES_GLOW_10_FWD,         // Glow function (ACES 1.0)
         ACES_GLOW_10_INV,         // Glow function inverse (ACES 1.0)
         ACES_DARK_TO_DIM_10_FWD,  // Dark to dim surround correction (ACES 1.0)
         ACES_DARK_TO_DIM_10_INV,  // Dim to dark surround correction (ACES 1.0)
-        REC2100_SURROUND          // Rec.2100 surround correction (takes gamma param)
+        REC2100_SURROUND          // Rec.2100 surround correction (takes one double for the gamma param)
     };
 
     static const char * ConvertStyleToString(Style style, bool detailed);

@@ -3760,7 +3760,7 @@ OIIO_ADD_TEST(Config, fixed_function_serialization)
         OCIO::ConstConfigRcPtr config;
         OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OIIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception,
-            "The style 'ACES_DarkToDim10 (Forward)' must have zero parameter but 1 found.");
+            "The style 'ACES_DarkToDim10 (Forward)' must have zero parameters but 1 found.");
     }
 
     {

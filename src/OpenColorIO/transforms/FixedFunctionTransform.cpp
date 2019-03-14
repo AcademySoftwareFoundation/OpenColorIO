@@ -353,7 +353,7 @@ OIIO_ADD_TEST(FixedFunctionTransform, basic)
 
     OIIO_CHECK_NO_THROW(func->setStyle(OCIO::FIXED_FUNCTION_ACES_DARK_TO_DIM_10));
     OIIO_CHECK_THROW_WHAT(func->validate(), OCIO::Exception, 
-                          "The style 'ACES_DarkToDim10 (Forward)' must have zero parameter but 1 found.");
+                          "The style 'ACES_DarkToDim10 (Forward)' must have zero parameters but 1 found.");
 }
 
 #endif

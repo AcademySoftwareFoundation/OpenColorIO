@@ -348,15 +348,15 @@ OCIO_NAMESPACE_ENTER
         RANGE_CLAMP
     };
     
-    //!cpp:type:: Enumeration of the :cpp:class:`FixedFunction` transform algorithms.
+    //!cpp:type:: Enumeration of the :cpp:class:`FixedFunctionTransform` transform algorithms.
     enum FixedFunctionStyle
     {
-        FIXED_FUNCTION_ACES_RED_MOD_03 = 0,
-        FIXED_FUNCTION_ACES_RED_MOD_10,
-        FIXED_FUNCTION_ACES_GLOW_03,
-        FIXED_FUNCTION_ACES_GLOW_10,
-        FIXED_FUNCTION_ACES_DARK_TO_DIM_10,
-        FIXED_FUNCTION_REC2100_SURROUND
+        FIXED_FUNCTION_ACES_RED_MOD_03 = 0, //! Red modifier (ACES 0.3/0.7)
+        FIXED_FUNCTION_ACES_RED_MOD_10,     //! Red modifier (ACES 1.0)
+        FIXED_FUNCTION_ACES_GLOW_03,        //! Glow function (ACES 0.3/0.7)
+        FIXED_FUNCTION_ACES_GLOW_10,        //! Glow function (ACES 1.0)
+        FIXED_FUNCTION_ACES_DARK_TO_DIM_10, //! Dark to dim surround correction (ACES 1.0)
+        FIXED_FUNCTION_REC2100_SURROUND     //! Rec.2100 surround correction (takes one double for the gamma param)
     };
     
     //!rst::
