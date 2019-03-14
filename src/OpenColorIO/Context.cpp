@@ -410,8 +410,9 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
 #include <algorithm>
+#include "Platform.h"
+#include "unittest.h"
 
 #ifdef OCIO_SOURCE_DIR
 
@@ -438,39 +439,39 @@ namespace OCIO = OCIO_NAMESPACE;
         return std::string(path);
     }
 #endif
-    static const std::string contextpath(ociodir+std::string("/src/core/Context.cpp"));
+    static const std::string contextpath(ociodir+std::string("/src/OpenColorIO/Context.cpp"));
 
-OIIO_ADD_TEST(Context, ABSPath)
+OIIO_ADD_TEST(Context, abs_path)
 {
     OCIO::ContextRcPtr con = OCIO::Context::Create();
     con->setSearchPath(ociodir.c_str());
     
-    con->setStringVar("non_abs", "src/core/Context.cpp");
+    con->setStringVar("non_abs", "src/OpenColorIO/Context.cpp");
     con->setStringVar("is_abs", contextpath.c_str());
     
     OIIO_CHECK_NO_THROW(con->resolveFileLocation("${non_abs}"));
 
     OIIO_CHECK_ASSERT(strcmp(sanatizepath(con->resolveFileLocation("${non_abs}")).c_str(), 
-                                            contextpath.c_str()) == 0);
+                             contextpath.c_str()) == 0);
     
     OIIO_CHECK_NO_THROW(con->resolveFileLocation("${is_abs}"));
     OIIO_CHECK_ASSERT(strcmp(con->resolveFileLocation("${is_abs}"), contextpath.c_str()) == 0);
-   
 }
 
-OIIO_ADD_TEST(Context, VarSearchPath)
+OIIO_ADD_TEST(Context, var_search_path)
 {
     OCIO::ContextRcPtr context = OCIO::Context::Create();
 
     context->setStringVar("SOURCE_DIR", ociodir.c_str());
-    context->setSearchPath("${SOURCE_DIR}/src/core");
+    context->setSearchPath("${SOURCE_DIR}/src/OpenColorIO");
 
-    OIIO_CHECK_NO_THROW(context->resolveFileLocation("Context.cpp"));
-    OIIO_CHECK_ASSERT(strcmp(sanatizepath(context->resolveFileLocation("Context.cpp")).c_str(), 
-                                contextpath.c_str()) == 0);
-
+    std::string resolvedSource;
+    OIIO_CHECK_NO_THROW(resolvedSource = context->resolveFileLocation("Context.cpp"));
+    OIIO_CHECK_ASSERT(strcmp(sanatizepath(resolvedSource.c_str()).c_str(),
+                             contextpath.c_str()) == 0);
 }
-
+#else
+static_assert(0, "OCIO_SOURCE_DIR should be defined by tests/cpu/CMakeLists.txt");
 #endif // OCIO_SOURCE_DIR
 
 #endif // OCIO_UNIT_TEST
