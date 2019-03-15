@@ -110,7 +110,20 @@ set(SOURCES
 	UnitTest.cpp
 )
 
+if(WIN32 AND BUILD_SHARED_LIBS)
+
+    # To be appended to the binary file name.
+    set(LIBNAME_SUFFIX 
+        ${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}
+    )
+
+    # Create the version.rc file for the Windows DLL.
+    configure_file(res/version.rc.in ${CMAKE_CURRENT_BINARY_DIR}/version.rc @ONLY)
+    set(SOURCES ${SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
+endif()
+
 add_library(OpenColorIO ${SOURCES})
+
 target_include_directories(OpenColorIO
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
 )
@@ -143,13 +156,29 @@ if(OCIO_USE_SSE)
 			USE_SSE
 	)
 endif()
+
 if(WIN32)
-	# A windows application linking to eXpat static libraries must
+    # A windows application linking to eXpat static libraries must
     # have the global macro XML_STATIC defined
-	target_compile_definitions(OpenColorIO
-		PRIVATE
-			XML_STATIC
-	)
+    target_compile_definitions(OpenColorIO
+        PRIVATE
+            XML_STATIC
+    )
+
+    if(BUILD_SHARED_LIBS)
+
+        # Impose a versioned name on Windows to avoid binary name clashes 
+        # between different versions of the same library.
+
+        # Note: Do not append the PATCH to allow Apps use the
+        #       latest binary compatible library.
+
+        set_target_properties(OpenColorIO
+            PROPERTIES PREFIX ""
+                       SUFFIX "_${LIBNAME_SUFFIX}.dll"
+        )
+
+    endif()
 endif()
 
 set_target_properties(OpenColorIO PROPERTIES 
