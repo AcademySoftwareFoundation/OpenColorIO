@@ -139,15 +139,13 @@ static const __m128 LumaWeights = _mm_setr_ps(0.2126f, 0.7152f, 0.0722f, 0.0);
 inline __m128 LoadPixel(const float * rgbaBuffer, float & inAlpha)
 {
     inAlpha = rgbaBuffer[3];
-    return _mm_setr_ps(rgbaBuffer[0], rgbaBuffer[1], rgbaBuffer[2], 0.0f);
+    return _mm_loadu_ps(rgbaBuffer);
 }
 
 // Store the pixel's values into a given pixel list's position
 inline void StorePixel(float * rgbaBuffer, const __m128 pix, const float outAlpha)
 {
-    // TODO: use aligned version if rgbaBuffer alignement can be controlled (see OCIO_ALIGN)
     _mm_storeu_ps(rgbaBuffer, pix);
-
     rgbaBuffer[3] = outAlpha;
 }
 
@@ -354,13 +352,13 @@ CDLRendererV1_2Fwd::CDLRendererV1_2Fwd(ConstCDLOpDataRcPtr & cdl)
 {
 }
 
-void CDLRendererV1_2Fwd::apply(float * rgbaBuffer, long numPixels) const
+void CDLRendererV1_2Fwd::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    _apply<true>(rgbaBuffer, numPixels);
+    _apply<true>((const float *)inImg, (float *)outImg, numPixels);
 }
 
 template<bool CLAMP>
-void CDLRendererV1_2Fwd::_apply(float * rgbaBuffer, long numPixels) const
+void CDLRendererV1_2Fwd::_apply(const float * inImg, float * outImg, long numPixels) const
 {
 #ifdef USE_SSE
     __m128 inScale, outScale, slope, offset, power, saturation, pix;
@@ -379,13 +377,12 @@ void CDLRendererV1_2Fwd::_apply(float * rgbaBuffer, long numPixels) const
     // Combine scale and slope so that they can be applied at the same time
     __m128 inScaleSlope = _mm_mul_ps(slope, inScale);
 
-    // TODO: Add the ability to not overwrite the input buffer.
-    // At that time, memory align the output buffer (see OCIO_ALIGN).
-    float * rgba = rgbaBuffer;
+    const float * in = inImg;
+    float * out = outImg;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        pix = LoadPixel(rgba, inAlpha);
+        pix = LoadPixel(in, inAlpha);
 
         // inScale is combined with slope
         ApplySlope(pix, inScaleSlope);
@@ -398,14 +395,14 @@ void CDLRendererV1_2Fwd::_apply(float * rgbaBuffer, long numPixels) const
 
         ApplyOutScale(pix, outScale);
 
-        StorePixel(rgba, pix, inAlpha * m_alphaScale);
+        StorePixel(out, pix, inAlpha * m_alphaScale);
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 #else
-    // TODO: Add the ability to not overwrite the input buffer.
-    // At that time, memory align the output buffer (see OCIO_ALIGN).
-    float * rgba = rgbaBuffer;
+    const float * in = inImg;
+    float * out = outImg;
 
     // Combine inScale and slope
     const float * slope = m_renderParams.getSlope();
@@ -414,20 +411,25 @@ void CDLRendererV1_2Fwd::_apply(float * rgbaBuffer, long numPixels) const
 
     for (long idx = 0; idx<numPixels; ++idx)
     {
-        const float inAlpha = rgba[3];
+        const float inAlpha = in[3];
 
-        ApplySlope(rgba, inScaleSlope);
-        ApplyOffset(rgba, m_renderParams.getOffset());
+        // NB: 'in' and 'out' could be pointers to the same memory buffer.
+        memcpy(out, in, 4 * sizeof(float));
 
-        ApplyPower<CLAMP>(rgba, m_renderParams.getPower());
+        ApplySlope(out, inScaleSlope);
+        ApplyOffset(out, m_renderParams.getOffset());
 
-        ApplySaturation(rgba, m_renderParams.getSaturation());
-        ApplyClamp<CLAMP>(rgba);
+        ApplyPower<CLAMP>(out, m_renderParams.getPower());
 
-        ApplyScale(rgba, m_outScale);
-        rgba[3] = inAlpha * m_alphaScale;
+        ApplySaturation(out, m_renderParams.getSaturation());
+        ApplyClamp<CLAMP>(out);
 
-        rgba += 4;
+        ApplyScale(out, m_outScale);
+
+        out[3] = inAlpha * m_alphaScale;
+
+        in  += 4;
+        out += 4;
     }
 #endif
 }
@@ -437,9 +439,9 @@ CDLRendererNoClampFwd::CDLRendererNoClampFwd(ConstCDLOpDataRcPtr & cdl)
 {
 }
 
-void CDLRendererNoClampFwd::apply(float * rgbaBuffer, long numPixels) const
+void CDLRendererNoClampFwd::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    _apply<false>(rgbaBuffer, numPixels);
+    _apply<false>((const float *)inImg, (float *)outImg, numPixels);
 }
 
 CDLRendererV1_2Rev::CDLRendererV1_2Rev(ConstCDLOpDataRcPtr & cdl)
@@ -447,13 +449,13 @@ CDLRendererV1_2Rev::CDLRendererV1_2Rev(ConstCDLOpDataRcPtr & cdl)
 {
 }
 
-void CDLRendererV1_2Rev::apply(float * rgbaBuffer, long numPixels) const
+void CDLRendererV1_2Rev::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    _apply<true>(rgbaBuffer, numPixels);
+    _apply<true>((const float *)inImg, (float *)outImg, numPixels);
 }
 
 template<bool CLAMP>
-void CDLRendererV1_2Rev::_apply(float * rgbaBuffer, long numPixels) const
+void CDLRendererV1_2Rev::_apply(const float * inImg, float * outImg, long numPixels) const
 {
 #ifdef USE_SSE
     __m128 inScale, outScale, slopeRev, offsetRev, powerRev, saturationRev, pix;
@@ -469,11 +471,12 @@ void CDLRendererV1_2Rev::_apply(float * rgbaBuffer, long numPixels) const
 
     float inAlpha = 1.0f;
 
-    float * rgba = rgbaBuffer;
+    const float * in = inImg;
+    float * out = outImg;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        pix = LoadPixel(rgba, inAlpha);
+        pix = LoadPixel(in, inAlpha);
 
         ApplyInScale(pix, inScale);
 
@@ -487,32 +490,39 @@ void CDLRendererV1_2Rev::_apply(float * rgbaBuffer, long numPixels) const
         ApplyClamp<CLAMP>(pix);
 
         ApplyOutScale(pix, outScale);
-        StorePixel(rgba, pix, inAlpha * m_alphaScale);
+        StorePixel(out, pix, inAlpha * m_alphaScale);
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 #else
-    float * rgba = rgbaBuffer;
+    const float * in = inImg;
+    float * out = outImg;
 
     for (long idx = 0; idx<numPixels; ++idx)
     {
-        const float inAlpha = rgba[3];
+        const float inAlpha = in[3];
 
-        ApplyScale(rgba, m_inScale);
+        // NB: 'in' and 'out' could be pointers to the same memory buffer.
+        memcpy(out, in, 4 * sizeof(float));
 
-        ApplyClamp<CLAMP>(rgba);
-        ApplySaturation(rgba, m_renderParams.getSaturation());
+        ApplyScale(out, m_inScale);
 
-        ApplyPower<CLAMP>(rgba, m_renderParams.getPower());
+        ApplyClamp<CLAMP>(out);
+        ApplySaturation(out, m_renderParams.getSaturation());
 
-        ApplyOffset(rgba, m_renderParams.getOffset());
-        ApplySlope(rgba, m_renderParams.getSlope());
-        ApplyClamp<CLAMP>(rgba);
+        ApplyPower<CLAMP>(out, m_renderParams.getPower());
 
-        ApplyScale(rgba, m_outScale);
-        rgba[3] = inAlpha * m_alphaScale;
+        ApplyOffset(out, m_renderParams.getOffset());
+        ApplySlope(out, m_renderParams.getSlope());
+        ApplyClamp<CLAMP>(out);
 
-        rgba += 4;
+        ApplyScale(out, m_outScale);
+
+        out[3] = inAlpha * m_alphaScale;
+
+        in  += 4;
+        out += 4;
     }
 
 #endif
@@ -523,44 +533,28 @@ CDLRendererNoClampRev::CDLRendererNoClampRev(ConstCDLOpDataRcPtr & cdl)
 {
 }
 
-void CDLRendererNoClampRev::apply(float * rgbaBuffer, long numPixels) const
+void CDLRendererNoClampRev::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    _apply<false>(rgbaBuffer, numPixels);
+    _apply<false>((const float *)inImg, (float *)outImg, numPixels);
 }
 
 // TODO:  Add a faster renderer for the case where power and saturation are 1.
 OpCPURcPtr CDLOpCPU::GetRenderer(ConstCDLOpDataRcPtr & cdl)
 {
-    OpCPURcPtr op(new NoOpCPU);
-
     switch(cdl->getStyle())
     {
         case CDLOpData::CDL_V1_2_FWD:
-        {
-            op.reset(new CDLRendererV1_2Fwd(cdl));
-            break;
-        }
+            return std::make_shared<CDLRendererV1_2Fwd>(cdl);
         case CDLOpData::CDL_NO_CLAMP_FWD:
-        {
-            op.reset(new CDLRendererNoClampFwd(cdl));
-            break;
-        }
+            return std::make_shared<CDLRendererNoClampFwd>(cdl);
         case CDLOpData::CDL_V1_2_REV:
-        {
-            op.reset(new CDLRendererV1_2Rev(cdl));
-            break;
-        }
+            return std::make_shared<CDLRendererV1_2Rev>(cdl);
         case CDLOpData::CDL_NO_CLAMP_REV:
-        {
-            op.reset(new CDLRendererNoClampRev(cdl));
-            break;
-        }
-
-        default:
-            throw Exception("Unknown CDL style");
+            return std::make_shared<CDLRendererNoClampRev>(cdl);
     }
 
-    return op;
+    throw Exception("Unknown CDL style");
+    return OpCPURcPtr();
 }
 
 }

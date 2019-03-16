@@ -598,7 +598,6 @@ namespace
         bool isInverse(ConstOpRcPtr & op) const override;
         bool hasChannelCrosstalk() const override;
         void finalize() override;
-        void apply(float* rgbaBuffer, long numPixels) const override;
 
         bool supportedByLegacyShader() const override { return false; }
         void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
@@ -622,18 +621,12 @@ namespace
         }
 
     private:
-        // The computed cache identifier.
-        std::string m_cacheID;
-
-        // The CPU renderer, with a scaled, sanitized, and memory aligned copy of the LUT.
-        OpCPURcPtr m_cpu;
+        Lut3DOp() = delete;
 
         // When using the INV_FAST flag, a forward Lut3DOpData that is 
         // a fast approximation of the inverse of the original Lut3DOpData;
         // otherwise, it's a shared pointer to the original opData instance.
         ConstLut3DOpDataRcPtr m_computedLutData;
-
-        Lut3DOp() = delete;
     };
 
     typedef OCIO_SHARED_PTR<Lut3DOp> Lut3DOpRcPtr;
@@ -699,8 +692,6 @@ namespace
 
     void Lut3DOp::finalize()
     {
-        const Lut3DOp & constThis = *this;
-
         // TODO: Only the 32f processing is natively supported
         lut3DData()->setInputBitDepth(BIT_DEPTH_F32);
         lut3DData()->setOutputBitDepth(BIT_DEPTH_F32);
@@ -717,6 +708,7 @@ namespace
             && ldata->getConcreteInversionQuality() == LUT_INVERSION_FAST)
         {
             // NB: The result of MakeFastLut is set to TRANSFORM_DIR_FORWARD.
+            const Lut3DOp & constThis = *this;
             ConstLut3DOpDataRcPtr p = constThis.lut3DData();
             ldata = MakeFastLut3DFromInverse(p);
         }
@@ -733,44 +725,41 @@ namespace
         m_cacheID = cacheIDStream.str();
 
         // Compute the CPU engine using the newly computed opData.
-        m_cpu = GetLut3DRenderer(m_computedLutData);
-    }
-
-    void Lut3DOp::apply(float* rgbaBuffer, long numPixels) const
-    {
-        m_cpu->apply(rgbaBuffer, numPixels);
+        m_cpuOp = GetLut3DRenderer(m_computedLutData);
     }
 
     void Lut3DOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
     {
-        ConstLut3DOpDataRcPtr ldata = m_computedLutData;
-        if (ldata->getDirection() == TRANSFORM_DIR_INVERSE)
+        ConstLut3DOpDataRcPtr lutData = m_computedLutData;
+        if (lutData->getDirection() == TRANSFORM_DIR_INVERSE)
         {
             // Note: The GPU Path only needs to create a forward 3D LUT for 
             // the 'exact inverse' case as finalize() handled the 'fast inverse'. 
 
-            if(ldata->getConcreteInversionQuality() == LUT_INVERSION_FAST)
+            if(lutData->getConcreteInversionQuality() == LUT_INVERSION_FAST)
             {
                 throw Exception("3D LUT Op instance was not finalized.");
             }
 
-            Lut3DOpDataRcPtr tmp = MakeFastLut3DFromInverse(ldata);
+            // TODO: Add GPU renderer for EXACT mode.
+
+            Lut3DOpDataRcPtr tmp = MakeFastLut3DFromInverse(lutData);
 
             tmp->setInputBitDepth(BIT_DEPTH_F32);
             tmp->setOutputBitDepth(BIT_DEPTH_F32);
 
             tmp->finalize();
 
-            ldata = tmp;
+            lutData = tmp;
         }
 
-        if (ldata->getInputBitDepth() != BIT_DEPTH_F32 
-            || ldata->getOutputBitDepth() != BIT_DEPTH_F32)
+        if (lutData->getInputBitDepth() != BIT_DEPTH_F32 
+            || lutData->getOutputBitDepth() != BIT_DEPTH_F32)
         {
             throw Exception("Only 32F bit depth is supported for the GPU shader");
         }
 
-        GetLut3DGPUShaderProgram(shaderDesc, ldata);
+        GetLut3DGPUShaderProgram(shaderDesc, lutData);
     }
 }
 
@@ -981,7 +970,7 @@ OIIO_ADD_TEST(Lut3DOpStruct, ValueCheck)
     memcpy(color, reference, 12*sizeof(float));
     OCIO::Lut3D_Nearest(color, 3, *lut);
     memcpy(color2, reference, 12 * sizeof(float));
-    ops[0]->apply(color2, 3);
+    ops[0]->apply(color2, color2, 3);
     for(long i=0; i<12; ++i)
     {
         OIIO_CHECK_CLOSE(color[i], nearest[i], 1e-8);
@@ -993,7 +982,7 @@ OIIO_ADD_TEST(Lut3DOpStruct, ValueCheck)
     memcpy(color, reference, 12*sizeof(float));
     OCIO::Lut3D_Linear(color, 3, *lut);
     memcpy(color2, reference, 12 * sizeof(float));
-    ops[1]->apply(color2, 3);
+    ops[1]->apply(color2, color2, 3);
     for(long i=0; i<12; ++i)
     {
         OIIO_CHECK_CLOSE(color[i], linear[i], 1e-8);
@@ -1004,7 +993,7 @@ OIIO_ADD_TEST(Lut3DOpStruct, ValueCheck)
     memcpy(color, reference, 12*sizeof(float));
     OCIO::Lut3D_Tetrahedral(color, 3, *lut);
     memcpy(color2, reference, 12 * sizeof(float));
-    ops[2]->apply(color2, 3);
+    ops[2]->apply(color2, color2, 3);
     for(long i=0; i<12; ++i)
     {
         OIIO_CHECK_CLOSE(color[i], tetrahedral[i], 1e-8);
@@ -1074,7 +1063,7 @@ OIIO_ADD_TEST(Lut3DOp, Lut3DTetrahedral)
     memcpy(color, reference, 8 * sizeof(float));
     OCIO::Lut3D_Linear(color, 2, *lut);
     memcpy(color2, reference, 8 * sizeof(float));
-    ops[0]->apply(color2, 2);
+    ops[0]->apply(color2, color2, 2);
     for (long i = 0; i < 8; ++i)
     {
         OIIO_CHECK_CLOSE(color[i], linear[i], 1e-7);
@@ -1085,7 +1074,7 @@ OIIO_ADD_TEST(Lut3DOp, Lut3DTetrahedral)
     memcpy(color, reference, 8 * sizeof(float));
     OCIO::Lut3D_Tetrahedral(color, 2, *lut);
     memcpy(color2, reference, 8 * sizeof(float));
-    ops[1]->apply(color2, 2);
+    ops[1]->apply(color2, color2, 2);
     for (long i = 0; i < 8; ++i)
     {
         OIIO_CHECK_CLOSE(color[i], tetrahedral[i], 1e-7);
@@ -1453,7 +1442,7 @@ OIIO_ADD_TEST(Lut3DOp, CPURendererLut3D)
                          0.0f, 0.0f, step, 1.0f };
 
     {
-        OIIO_CHECK_NO_THROW(lut.apply(myImage, 2));
+        OIIO_CHECK_NO_THROW(lut.apply(myImage, myImage, 2));
 
         OIIO_CHECK_EQUAL(myImage[0], 0.0f);
         OIIO_CHECK_EQUAL(myImage[1], 0.0f);
@@ -1475,7 +1464,7 @@ OIIO_ADD_TEST(Lut3DOp, CPURendererLut3D)
     OIIO_CHECK_ASSERT(!lut.isNoOp());
 
     {
-        OIIO_CHECK_NO_THROW(lut.apply(myImage, 2));
+        OIIO_CHECK_NO_THROW(lut.apply(myImage, myImage, 2));
 
         OIIO_CHECK_EQUAL(myImage[0], 0.0f);
         OIIO_CHECK_EQUAL(myImage[1], 0.0f);
@@ -1495,7 +1484,7 @@ OIIO_ADD_TEST(Lut3DOp, CPURendererLut3D)
     OIIO_CHECK_ASSERT(!lut.isNoOp());
     myImage[6] = step;
     {
-        OIIO_CHECK_NO_THROW(lut.apply(myImage, 2));
+        OIIO_CHECK_NO_THROW(lut.apply(myImage, myImage, 2));
 
         OIIO_CHECK_EQUAL(myImage[0], 0.0f);
         OIIO_CHECK_EQUAL(myImage[1], 0.0f);

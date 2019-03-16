@@ -132,7 +132,7 @@ public:
 
     void updateData(ConstLut1DOpDataRcPtr & lut) override;
 
-    void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 protected:
     // Interpolation helper to gather data.
@@ -148,7 +148,7 @@ public:
 
     void updateData(ConstLut1DOpDataRcPtr & lut) override;
 
-    void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 protected:
     float m_step;
@@ -161,7 +161,7 @@ public:
     Lut1DRendererHueAdjust(ConstLut1DOpDataRcPtr & lut);
     virtual ~Lut1DRendererHueAdjust();
 
-    void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
 class Lut1DRendererHalfCodeHueAdjust : public Lut1DRendererHalfCode
@@ -170,7 +170,7 @@ public:
     Lut1DRendererHalfCodeHueAdjust(ConstLut1DOpDataRcPtr & lut);
     virtual ~Lut1DRendererHalfCodeHueAdjust();
 
-    void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
 class InvLut1DRenderer : public OpCPU
@@ -179,7 +179,7 @@ public:
     InvLut1DRenderer(ConstLut1DOpDataRcPtr & lut);
     virtual ~InvLut1DRenderer();
 
-    void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 
     void resetData();
 
@@ -238,7 +238,7 @@ public:
 
     void updateData(ConstLut1DOpDataRcPtr & lut) override;
 
-    void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
 class InvLut1DRendererHueAdjust : public InvLut1DRenderer
@@ -247,7 +247,7 @@ public:
     InvLut1DRendererHueAdjust(ConstLut1DOpDataRcPtr & lut);
     virtual ~InvLut1DRendererHueAdjust();
 
-    void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
 class InvLut1DRendererHalfCodeHueAdjust : public InvLut1DRendererHalfCode
@@ -256,7 +256,7 @@ public:
     InvLut1DRendererHalfCodeHueAdjust(ConstLut1DOpDataRcPtr & lut);
     virtual ~InvLut1DRendererHalfCodeHueAdjust();
 
-    void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
 BaseLut1DRenderer::BaseLut1DRenderer(ConstLut1DOpDataRcPtr & lut)
@@ -357,7 +357,7 @@ Lut1DRendererHalfCode::~Lut1DRendererHalfCode()
 {
 }
 
-void Lut1DRendererHalfCode::apply(float * rgbaBuffer, long numPixels) const
+void Lut1DRendererHalfCode::apply(const void * inImg, void * outImg, long numPixels) const
 {
     // TODO: Add ability for input or output to be an integer rather than
     // always float.
@@ -372,45 +372,49 @@ void Lut1DRendererHalfCode::apply(float * rgbaBuffer, long numPixels) const
 
     if (isLookup)
     {
-        float * rgba = rgbaBuffer;
+        const float * in = (const float *)inImg;
+        float * out = (float *)outImg;
 
         for(long idx=0; idx<numPixels; ++idx)
         {
-            rgba[0] = LookupLut<float, float>::compute(lutR, rgba[0]);
-            rgba[1] = LookupLut<float, float>::compute(lutG, rgba[1]);
-            rgba[2] = LookupLut<float, float>::compute(lutB, rgba[2]);
-            rgba[3] = rgba[3] * m_alphaScaling;
+            out[0] = LookupLut<float, float>::compute(lutR, in[0]);
+            out[1] = LookupLut<float, float>::compute(lutG, in[1]);
+            out[2] = LookupLut<float, float>::compute(lutB, in[2]);
+            out[3] = in[3] * m_alphaScaling;
 
-            rgba += 4;
+            in  += 4;
+            out += 4;
         }
     }
     else  // Need to interpolate rather than simply lookup.
     {
-        float * rgba = rgbaBuffer;
+        const float * in = (const float *)inImg;
+        float * out = (float *)outImg;
 
         for(long idx=0; idx<numPixels; ++idx)
         {
-            IndexPair redInterVals = getEdgeFloatValues(rgba[0]);
-            IndexPair greenInterVals = getEdgeFloatValues(rgba[1]);
-            IndexPair blueInterVals = getEdgeFloatValues(rgba[2]);
+            IndexPair redInterVals   = getEdgeFloatValues(in[0]);
+            IndexPair greenInterVals = getEdgeFloatValues(in[1]);
+            IndexPair blueInterVals  = getEdgeFloatValues(in[2]);
 
             // Since fraction is in the domain [0, 1), interpolate using
             // 1-fraction in order to avoid cases like -/+Inf * 0.
-            rgba[0] = lerpf(lutR[redInterVals.valB],
+            out[0] = lerpf(lutR[redInterVals.valB],
                             lutR[redInterVals.valA],
                             1.0f-redInterVals.fraction);
 
-            rgba[1] = lerpf(lutG[greenInterVals.valB],
+            out[1] = lerpf(lutG[greenInterVals.valB],
                             lutG[greenInterVals.valA],
                             1.0f-greenInterVals.fraction);
 
-            rgba[2] = lerpf(lutB[blueInterVals.valB],
+            out[2] = lerpf(lutB[blueInterVals.valB],
                             lutB[blueInterVals.valA],
                             1.0f-blueInterVals.fraction);
 
-            rgba[3] = rgba[3] * m_alphaScaling;
+            out[3] = in[3] * m_alphaScaling;
 
-            rgba += 4;
+            in  += 4;
+            out += 4;
         }
     }
 }
@@ -558,7 +562,7 @@ Lut1DRenderer::~Lut1DRenderer()
 {
 }
 
-void Lut1DRenderer::apply(float * rgbaBuffer, long numPixels) const
+void Lut1DRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * lutR = m_tmpLutR.data();
     const float * lutG = m_tmpLutG.data();
@@ -572,30 +576,33 @@ void Lut1DRenderer::apply(float * rgbaBuffer, long numPixels) const
     //     (Should be no runtime cost.)
     if (isLookup)
     {
-        float * rgba = rgbaBuffer;
+        const float * in = (const float *)inImg;
+        float * out = (float *)outImg;
 
         for(long idx=0; idx<numPixels; ++idx)
         {
-            rgba[0] = LookupLut<float, float>::compute(lutR, rgba[0]);
-            rgba[1] = LookupLut<float, float>::compute(lutG, rgba[1]);
-            rgba[2] = LookupLut<float, float>::compute(lutB, rgba[2]);
-            rgba[3] = rgba[3] * m_alphaScaling;
+            out[0] = LookupLut<float, float>::compute(lutR, in[0]);
+            out[1] = LookupLut<float, float>::compute(lutG, in[1]);
+            out[2] = LookupLut<float, float>::compute(lutB, in[2]);
+            out[3] = in[3] * m_alphaScaling;
 
-            rgba += 4;
+            in  += 4;
+            out += 4;
         }
     }
     else  // Need to interpolate rather than simply lookup.
     {
-        float * rgba = rgbaBuffer;
+        const float * in = (const float *)inImg;
+        float * out = (float *)outImg;
 
         for(long i=0; i<numPixels; ++i)
         {
 #ifdef USE_SSE
             __m128 idx
-                = _mm_mul_ps(_mm_set_ps(rgba[3],
-                                        rgba[2],
-                                        rgba[1],
-                                        rgba[0]),
+                = _mm_mul_ps(_mm_set_ps(in[3],
+                                        in[2],
+                                        in[1],
+                                        in[0]),
                              _mm_set_ps(1.0f,
                                         m_step,
                                         m_step,
@@ -626,9 +633,9 @@ void Lut1DRenderer::apply(float * rgbaBuffer, long numPixels) const
             float highIdx[4]; _mm_storeu_ps(highIdx, hIdx);
 #else
             float idx[3];
-            idx[0] = m_step * rgba[0];
-            idx[1] = m_step * rgba[1];
-            idx[2] = m_step * rgba[2];
+            idx[0] = m_step * in[0];
+            idx[1] = m_step * in[1];
+            idx[2] = m_step * in[2];
 
             // NaNs become 0
             idx[0] = std::min(std::max(0.f, idx[0]), m_dimMinusOne);
@@ -668,12 +675,13 @@ void Lut1DRenderer::apply(float * rgbaBuffer, long numPixels) const
             // in order to avoid cases like -/+Inf * 0. Therefore we never multiply by 0 and
             // thus handle the case where A or B is infinity and return infinity rather than
             // 0*Infinity (which is NaN).
-            rgba[0] = lerpf(lutR[(unsigned int)highIdx[0]], lutR[(unsigned int)lowIdx[0]], delta[0]);
-            rgba[1] = lerpf(lutG[(unsigned int)highIdx[1]], lutG[(unsigned int)lowIdx[1]], delta[1]);
-            rgba[2] = lerpf(lutB[(unsigned int)highIdx[2]], lutB[(unsigned int)lowIdx[2]], delta[2]);
-            rgba[3] = rgba[3] * m_alphaScaling;
+            out[0] = lerpf(lutR[(unsigned int)highIdx[0]], lutR[(unsigned int)lowIdx[0]], delta[0]);
+            out[1] = lerpf(lutG[(unsigned int)highIdx[1]], lutG[(unsigned int)lowIdx[1]], delta[1]);
+            out[2] = lerpf(lutB[(unsigned int)highIdx[2]], lutB[(unsigned int)lowIdx[2]], delta[2]);
+            out[3] = in[3] * m_alphaScaling;
 
-            rgba += 4;
+            in  += 4;
+            out += 4;
         }
     }
 }
@@ -721,7 +729,7 @@ Lut1DRendererHalfCodeHueAdjust::~Lut1DRendererHalfCodeHueAdjust()
 {
 }
 
-void Lut1DRendererHalfCodeHueAdjust::apply(float * rgbaBuffer, long numPixels) const
+void Lut1DRendererHalfCodeHueAdjust::apply(const void * inImg, void * outImg, long numPixels) const
 {
     // TODO: To uncomment when apply bit-depth will be in
     const bool isLookup = false; //GET_BIT_DEPTH( PF_IN ) != BIT_DEPTH_F32;
@@ -737,11 +745,12 @@ void Lut1DRendererHalfCodeHueAdjust::apply(float * rgbaBuffer, long numPixels) c
 
     if (isLookup)
     {
-        float * rgba = rgbaBuffer;
+        const float * in = (const float *)inImg;
+        float * out = (float *)outImg;
 
         for(long idx=0; idx<numPixels; ++idx)
         {
-            const float RGB[] = {rgba[0], rgba[1], rgba[2]};
+            const float RGB[] = {in[0], in[1], in[2]};
 
             // TODO: Refactor to use SSE2 intrinsic instructions.
 
@@ -754,29 +763,31 @@ void Lut1DRendererHalfCodeHueAdjust::apply(float * rgbaBuffer, long numPixels) c
                                       :  (RGB[mid] - RGB[min]) / orig_chroma;
 
             float RGB2[] = {
-                LookupLut<float, float>::compute(lutR, rgba[0]),
-                LookupLut<float, float>::compute(lutG, rgba[1]),
-                LookupLut<float, float>::compute(lutB, rgba[2])   };
+                LookupLut<float, float>::compute(lutR, in[0]),
+                LookupLut<float, float>::compute(lutG, in[1]),
+                LookupLut<float, float>::compute(lutB, in[2])   };
 
             const float new_chroma = RGB2[max] - RGB2[min];
 
             RGB2[mid] = hue_factor * new_chroma + RGB2[min];
 
-            rgba[0] = RGB2[0];
-            rgba[1] = RGB2[1];
-            rgba[2] = RGB2[2];
-            rgba[3] = rgba[3] * m_alphaScaling;
+            out[0] = RGB2[0];
+            out[1] = RGB2[1];
+            out[2] = RGB2[2];
+            out[3] = in[3] * m_alphaScaling;
 
-            rgba += 4;
+            in  += 4;
+            out += 4;
         }
     }
     else  // Need to interpolate rather than simply lookup.
     {
-        float * rgba = rgbaBuffer;
+        const float * in = (const float *)inImg;
+        float * out = (float *)outImg;
 
         for(long idx=0; idx<numPixels; ++idx)
         {
-            const float RGB[] = {rgba[0], rgba[1], rgba[2]};
+            const float RGB[] = {in[0], in[1], in[2]};
 
             int min, mid, max;
             GamutMapUtils::Order3(RGB, min, mid, max);
@@ -808,12 +819,13 @@ void Lut1DRendererHalfCodeHueAdjust::apply(float * rgbaBuffer, long numPixels) c
             const float new_chroma = RGB2[max] - RGB2[min];
             RGB2[mid] = hue_factor * new_chroma + RGB2[min];
 
-            rgba[0] = RGB2[0];
-            rgba[1] = RGB2[1];
-            rgba[2] = RGB2[2];
-            rgba[3] = rgba[3] * m_alphaScaling;
+            out[0] = RGB2[0];
+            out[1] = RGB2[1];
+            out[2] = RGB2[2];
+            out[3] = in[3] * m_alphaScaling;
 
-            rgba += 4;
+            in  += 4;
+            out += 4;
         }
     }
 }
@@ -833,7 +845,7 @@ Lut1DRendererHueAdjust::~Lut1DRendererHueAdjust()
 {
 }
 
-void Lut1DRendererHueAdjust::apply(float * rgbaBuffer, long numPixels) const
+void Lut1DRendererHueAdjust::apply(const void * inImg, void * outImg, long numPixels) const
 {
     // TODO: To uncomment when apply bit-depth will be in
     //const bool isLookup = GET_BIT_DEPTH( PF_IN ) != OCIO::BIT_DEPTH_F32;
@@ -850,11 +862,12 @@ void Lut1DRendererHueAdjust::apply(float * rgbaBuffer, long numPixels) const
 
     if (isLookup)
     {
-        float * rgba = rgbaBuffer;
+        const float * in = (const float *)inImg;
+        float * out = (float *)outImg;
 
         for(long idx=0; idx<numPixels; ++idx)
         {
-            const float RGB[] = {rgba[0], rgba[1], rgba[2]};
+            const float RGB[] = {in[0], in[1], in[2]};
 
             int min, mid, max;
             GamutMapUtils::Order3(RGB, min, mid, max);
@@ -865,30 +878,32 @@ void Lut1DRendererHueAdjust::apply(float * rgbaBuffer, long numPixels) const
                                      : (RGB[mid] - RGB[min]) / orig_chroma;
 
             float RGB2[] = {
-                LookupLut<float, float>::compute(lutR, rgba[0]),
-                LookupLut<float, float>::compute(lutG, rgba[1]),
-                LookupLut<float, float>::compute(lutB, rgba[2])
+                LookupLut<float, float>::compute(lutR, in[0]),
+                LookupLut<float, float>::compute(lutG, in[1]),
+                LookupLut<float, float>::compute(lutB, in[2])
             };
 
             const float new_chroma = RGB2[max] - RGB2[min];
 
             RGB2[mid] = hue_factor * new_chroma + RGB2[min];
 
-            rgba[0] = RGB2[0];
-            rgba[1] = RGB2[1];
-            rgba[2] = RGB2[2];
-            rgba[3] = rgba[3] * m_alphaScaling;
+            out[0] = RGB2[0];
+            out[1] = RGB2[1];
+            out[2] = RGB2[2];
+            out[3] = in[3] * m_alphaScaling;
 
-            rgba += 4;
+            in  += 4;
+            out += 4;
         }
     }
     else  // Need to interpolate rather than simply lookup.
     {
-        float * rgba = rgbaBuffer;
+        const float * in = (const float *)inImg;
+        float * out = (float *)outImg;
 
         for(long i=0; i<numPixels; ++i)
         {
-            const float RGB[] = {rgba[0], rgba[1], rgba[2]};
+            const float RGB[] = {in[0], in[1], in[2]};
 
             int min, mid, max;
             GamutMapUtils::Order3( RGB, min, mid, max);
@@ -900,7 +915,7 @@ void Lut1DRendererHueAdjust::apply(float * rgbaBuffer, long numPixels) const
 
 #ifdef USE_SSE
             __m128 idx
-                = _mm_mul_ps(_mm_set_ps(rgba[3],
+                = _mm_mul_ps(_mm_set_ps(in[3],
                                         RGB[2],
                                         RGB[1],
                                         RGB[0]),
@@ -984,12 +999,13 @@ void Lut1DRendererHueAdjust::apply(float * rgbaBuffer, long numPixels) const
 
             RGB2[mid] = hue_factor * new_chroma + RGB2[min];
 
-            rgba[0] = RGB2[0];
-            rgba[1] = RGB2[1];
-            rgba[2] = RGB2[2];
-            rgba[3] = rgba[3] * m_alphaScaling;
+            out[0] = RGB2[0];
+            out[1] = RGB2[1];
+            out[2] = RGB2[2];
+            out[3] = in[3] * m_alphaScaling;
 
-            rgba += 4;
+            in  += 4;
+            out += 4;
         }
     }
 }
@@ -1227,40 +1243,42 @@ void InvLut1DRenderer::updateData(ConstLut1DOpDataRcPtr & lut)
     m_scale = outMax / (float) (m_dim - 1);
 }
 
-void InvLut1DRenderer::apply(float * rgbaBuffer, long numPixels) const
+void InvLut1DRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    float * rgba = rgbaBuffer;
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
         // red
-        rgba[0] = FindLutInv(m_paramsR.lutStart,
-                             m_paramsR.startOffset,
-                             m_paramsR.lutEnd,
-                             m_paramsR.flipSign,
-                             m_scale,
-                             rgba[0]);
+        out[0] = FindLutInv(m_paramsR.lutStart,
+                            m_paramsR.startOffset,
+                            m_paramsR.lutEnd,
+                            m_paramsR.flipSign,
+                            m_scale,
+                            in[0]);
 
         // green
-        rgba[1] = FindLutInv(m_paramsG.lutStart,
-                             m_paramsG.startOffset,
-                             m_paramsG.lutEnd,
-                             m_paramsG.flipSign,
-                             m_scale,
-                             rgba[1]);
+        out[1] = FindLutInv(m_paramsG.lutStart,
+                            m_paramsG.startOffset,
+                            m_paramsG.lutEnd,
+                            m_paramsG.flipSign,
+                            m_scale,
+                            in[1]);
 
         // blue
-        rgba[2] = FindLutInv(m_paramsB.lutStart,
-                             m_paramsB.startOffset,
-                             m_paramsB.lutEnd,
-                             m_paramsB.flipSign,
-                             m_scale,
-                             rgba[2]);
+        out[2] = FindLutInv(m_paramsB.lutStart,
+                            m_paramsB.startOffset,
+                            m_paramsB.lutEnd,
+                            m_paramsB.flipSign,
+                            m_scale,
+                            in[2]);
 
         // alpha
-        rgba[3] = rgba[3] * m_alphaScaling;
+        out[3] = in[3] * m_alphaScaling;
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
@@ -1274,13 +1292,14 @@ InvLut1DRendererHueAdjust::~InvLut1DRendererHueAdjust()
 {
 }
 
-void InvLut1DRendererHueAdjust::apply(float * rgbaBuffer, long numPixels) const
+void InvLut1DRendererHueAdjust::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    float * rgba = rgbaBuffer;
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        const float RGB[] = {rgba[0], rgba[1], rgba[2]};
+        const float RGB[] = {in[0], in[1], in[2]};
 
         int min, mid, max;
         GamutMapUtils::Order3(RGB, min, mid, max);
@@ -1318,12 +1337,13 @@ void InvLut1DRendererHueAdjust::apply(float * rgbaBuffer, long numPixels) const
 
         RGB2[mid] = hue_factor * new_chroma + RGB2[min];
 
-        rgba[0] = RGB2[0];
-        rgba[1] = RGB2[1];
-        rgba[2] = RGB2[2];
-        rgba[3] = rgba[3] * m_alphaScaling;
+        out[0] = RGB2[0];
+        out[1] = RGB2[1];
+        out[2] = RGB2[2];
+        out[3] = in[3] * m_alphaScaling;
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
@@ -1415,13 +1435,14 @@ void InvLut1DRendererHalfCode::updateData(ConstLut1DOpDataRcPtr & lut)
     m_scale = outMax;
 }
 
-void InvLut1DRendererHalfCode::apply(float * rgbaBuffer, long numPixels) const
+void InvLut1DRendererHalfCode::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const bool redIsIncreasing = m_paramsR.flipSign > 0.f;
     const bool grnIsIncreasing = m_paramsG.flipSign > 0.f;
     const bool bluIsIncreasing = m_paramsB.flipSign > 0.f;
 
-    float * rgba = rgbaBuffer;
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
@@ -1434,7 +1455,7 @@ void InvLut1DRendererHalfCode::apply(float * rgbaBuffer, long numPixels) const
         // the neg effective domain starts.
         // If this proves to be a problem, could move the clamp here instead.
 
-        const float redIn = rgba[0];
+        const float redIn = in[0];
         const float redOut 
             = (redIsIncreasing == (redIn >= m_paramsR.bisectPoint)) 
                 ? FindLutInvHalf(m_paramsR.lutStart,
@@ -1450,7 +1471,7 @@ void InvLut1DRendererHalfCode::apply(float * rgbaBuffer, long numPixels) const
                                  m_scale,
                                  redIn);
 
-        const float grnIn = rgba[1];
+        const float grnIn = in[1];
         const float grnOut 
             = (grnIsIncreasing == (grnIn >= m_paramsG.bisectPoint)) 
                 ? FindLutInvHalf(m_paramsG.lutStart,
@@ -1466,7 +1487,7 @@ void InvLut1DRendererHalfCode::apply(float * rgbaBuffer, long numPixels) const
                                  m_scale,
                                  grnIn);
 
-        const float bluIn = rgba[2];
+        const float bluIn = in[2];
         const float bluOut 
             = (bluIsIncreasing == (bluIn >= m_paramsB.bisectPoint)) 
                 ? FindLutInvHalf(m_paramsB.lutStart,
@@ -1482,12 +1503,13 @@ void InvLut1DRendererHalfCode::apply(float * rgbaBuffer, long numPixels) const
                                  m_scale,
                                  bluIn);
 
-        rgba[0] = redOut;
-        rgba[1] = grnOut;
-        rgba[2] = bluOut;
-        rgba[3] = rgba[3] * m_alphaScaling;
+        out[0] = redOut;
+        out[1] = grnOut;
+        out[2] = bluOut;
+        out[3] = in[3] * m_alphaScaling;
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
@@ -1501,17 +1523,18 @@ InvLut1DRendererHalfCodeHueAdjust::~InvLut1DRendererHalfCodeHueAdjust()
 {
 }
 
-void InvLut1DRendererHalfCodeHueAdjust::apply(float * rgbaBuffer, long numPixels) const
+void InvLut1DRendererHalfCodeHueAdjust::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const bool redIsIncreasing = m_paramsR.flipSign > 0.f;
     const bool grnIsIncreasing = m_paramsG.flipSign > 0.f;
     const bool bluIsIncreasing = m_paramsB.flipSign > 0.f;
 
-    float * rgba = rgbaBuffer;
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        const float RGB[] = {rgba[0], rgba[1], rgba[2]};
+        const float RGB[] = {in[0], in[1], in[2]};
 
         int min, mid, max;
         GamutMapUtils::Order3( RGB, min, mid, max);
@@ -1572,12 +1595,13 @@ void InvLut1DRendererHalfCodeHueAdjust::apply(float * rgbaBuffer, long numPixels
 
         RGB2[mid] = hue_factor * new_chroma + RGB2[min];
 
-        rgba[0] = RGB2[0];
-        rgba[1] = RGB2[1];
-        rgba[2] = RGB2[2];
-        rgba[3] = rgba[3] * m_alphaScaling;
+        out[0] = RGB2[0];
+        out[1] = RGB2[1];
+        out[2] = RGB2[2];
+        out[3] = in[3] * m_alphaScaling;
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
@@ -1805,7 +1829,7 @@ OIIO_ADD_TEST(Lut1DRenderer, nan_test)
                          0.5f, 0.3f, qnan, 1.2f,
                          0.5f, 0.3f, 0.2f, qnan };
 
-    renderer->apply(pixels, 4);
+    renderer->apply(pixels, pixels, 4);
 
     OIIO_CHECK_CLOSE(pixels[0], values[0], 1e-7f);
     OIIO_CHECK_CLOSE(pixels[5], values[1], 1e-7f);
@@ -1839,7 +1863,7 @@ OIIO_ADD_TEST(Lut1DRenderer, nan_half_test)
                          0.5f, 0.3f, qnan, 1.2f,
                          0.5f, 0.3f, 0.2f, qnan };
 
-    renderer->apply(pixels, 4);
+    renderer->apply(pixels, pixels, 4);
 
     OIIO_CHECK_CLOSE(pixels[0], values[nanIdRed], 1e-7f);
     OIIO_CHECK_CLOSE(pixels[5], values[nanIdRed + 1], 1e-7f);

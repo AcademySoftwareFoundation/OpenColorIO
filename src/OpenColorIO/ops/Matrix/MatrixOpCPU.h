@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
-OpCPURcPtr GetMatrixRenderer(const MatrixOpDataRcPtr & mat);
+OpCPURcPtr GetMatrixRenderer(ConstMatrixOpDataRcPtr & mat);
 
 }
 OCIO_NAMESPACE_EXIT

@@ -60,7 +60,7 @@ class RangeScaleMinMaxRenderer : public RangeOpCPU
 public:
     RangeScaleMinMaxRenderer(ConstRangeOpDataRcPtr & range);
 
-    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+    virtual void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
 class RangeScaleMinRenderer : public RangeOpCPU
@@ -68,7 +68,7 @@ class RangeScaleMinRenderer : public RangeOpCPU
 public:
     RangeScaleMinRenderer(ConstRangeOpDataRcPtr & range);
 
-    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+    virtual void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
 class RangeScaleMaxRenderer : public RangeOpCPU
@@ -76,7 +76,7 @@ class RangeScaleMaxRenderer : public RangeOpCPU
 public:
     RangeScaleMaxRenderer(ConstRangeOpDataRcPtr & range);
 
-    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+    virtual void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
 class RangeScaleRenderer : public RangeOpCPU
@@ -84,7 +84,7 @@ class RangeScaleRenderer : public RangeOpCPU
 public:
     RangeScaleRenderer(ConstRangeOpDataRcPtr & range);
 
-    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+    virtual void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
 class RangeMinMaxRenderer : public RangeOpCPU
@@ -92,7 +92,7 @@ class RangeMinMaxRenderer : public RangeOpCPU
 public:
     RangeMinMaxRenderer(ConstRangeOpDataRcPtr & range);
 
-    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+    virtual void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
 class RangeMinRenderer : public RangeOpCPU
@@ -100,7 +100,7 @@ class RangeMinRenderer : public RangeOpCPU
 public:
     RangeMinRenderer(ConstRangeOpDataRcPtr & range);
 
-    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+    virtual void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
 class RangeMaxRenderer : public RangeOpCPU
@@ -108,7 +108,7 @@ class RangeMaxRenderer : public RangeOpCPU
 public:
     RangeMaxRenderer(ConstRangeOpDataRcPtr & range);
 
-    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+    virtual void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
 
@@ -132,22 +132,24 @@ RangeScaleMinMaxRenderer::RangeScaleMinMaxRenderer(ConstRangeOpDataRcPtr & range
 {
 }
 
-void RangeScaleMinMaxRenderer::apply(float * rgbaBuffer, long numPixels) const
+void RangeScaleMinMaxRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    float * rgba = rgbaBuffer;
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        const float t[3] = { rgba[0] * m_scale + m_offset,
-                             rgba[1] * m_scale + m_offset,
-                             rgba[2] * m_scale + m_offset };
+        const float t[3] = { in[0] * m_scale + m_offset,
+                             in[1] * m_scale + m_offset,
+                             in[2] * m_scale + m_offset };
 
-        rgba[0] = clamp(t[0], m_lowerBound, m_upperBound);
-        rgba[1] = clamp(t[1], m_lowerBound, m_upperBound);
-        rgba[2] = clamp(t[2], m_lowerBound, m_upperBound);
-        rgba[3] = rgba[3] * m_alphaScale;
+        out[0] = clamp(t[0], m_lowerBound, m_upperBound);
+        out[1] = clamp(t[1], m_lowerBound, m_upperBound);
+        out[2] = clamp(t[2], m_lowerBound, m_upperBound);
+        out[3] = in[3] * m_alphaScale;
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
@@ -156,18 +158,20 @@ RangeScaleMinRenderer::RangeScaleMinRenderer(ConstRangeOpDataRcPtr & range)
 {
 }
 
-void RangeScaleMinRenderer::apply(float * rgbaBuffer, long numPixels) const
+void RangeScaleMinRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    float * rgba = rgbaBuffer;
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        rgba[0] = std::max(m_lowerBound, rgba[0] * m_scale + m_offset);
-        rgba[1] = std::max(m_lowerBound, rgba[1] * m_scale + m_offset);
-        rgba[2] = std::max(m_lowerBound, rgba[2] * m_scale + m_offset);
-        rgba[3] = rgba[3] * m_alphaScale;
+        out[0] = std::max(m_lowerBound, in[0] * m_scale + m_offset);
+        out[1] = std::max(m_lowerBound, in[1] * m_scale + m_offset);
+        out[2] = std::max(m_lowerBound, in[2] * m_scale + m_offset);
+        out[3] = in[3] * m_alphaScale;
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
@@ -176,18 +180,20 @@ RangeScaleMaxRenderer::RangeScaleMaxRenderer(ConstRangeOpDataRcPtr & range)
 {
 }
 
-void RangeScaleMaxRenderer::apply(float * rgbaBuffer, long numPixels) const
+void RangeScaleMaxRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    float * rgba = rgbaBuffer;
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        rgba[0] = std::min(rgba[0] * m_scale + m_offset, m_upperBound),
-        rgba[1] = std::min(rgba[1] * m_scale + m_offset, m_upperBound),
-        rgba[2] = std::min(rgba[2] * m_scale + m_offset, m_upperBound),
-        rgba[3] = rgba[3] * m_alphaScale;
+        out[0] = std::min(in[0] * m_scale + m_offset, m_upperBound),
+        out[1] = std::min(in[1] * m_scale + m_offset, m_upperBound),
+        out[2] = std::min(in[2] * m_scale + m_offset, m_upperBound),
+        out[3] = in[3] * m_alphaScale;
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
@@ -204,18 +210,20 @@ RangeScaleRenderer::RangeScaleRenderer(ConstRangeOpDataRcPtr & range)
 {
 }
 
-void RangeScaleRenderer::apply(float * rgbaBuffer, long numPixels) const
+void RangeScaleRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    float * rgba = rgbaBuffer;
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        rgba[0] = rgba[0] * m_scale + m_offset;
-        rgba[1] = rgba[1] * m_scale + m_offset;
-        rgba[2] = rgba[2] * m_scale + m_offset;
-        rgba[3] = rgba[3] * m_alphaScale;
+        out[0] = in[0] * m_scale + m_offset;
+        out[1] = in[1] * m_scale + m_offset;
+        out[2] = in[2] * m_scale + m_offset;
+        out[3] = in[3] * m_alphaScale;
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
@@ -224,17 +232,20 @@ RangeMinMaxRenderer::RangeMinMaxRenderer(ConstRangeOpDataRcPtr & range)
 {
 }
 
-void RangeMinMaxRenderer::apply(float * rgbaBuffer, long numPixels) const
+void RangeMinMaxRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    float * rgba = rgbaBuffer;
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        rgba[0] = clamp(rgba[0], m_lowerBound, m_upperBound);
-        rgba[1] = clamp(rgba[1], m_lowerBound, m_upperBound);
-        rgba[2] = clamp(rgba[2], m_lowerBound, m_upperBound);
+        out[0] = clamp(in[0], m_lowerBound, m_upperBound);
+        out[1] = clamp(in[1], m_lowerBound, m_upperBound);
+        out[2] = clamp(in[2], m_lowerBound, m_upperBound);
+        out[3] = in[3];
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
@@ -243,9 +254,10 @@ RangeMinRenderer::RangeMinRenderer(ConstRangeOpDataRcPtr & range)
 {
 }
 
-void RangeMinRenderer::apply(float * rgbaBuffer, long numPixels) const
+void RangeMinRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    float * rgba = rgbaBuffer;
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
@@ -254,11 +266,13 @@ void RangeMinRenderer::apply(float * rgbaBuffer, long numPixels) const
         // renderer would not be called if there is a bit-depth conversion.
         // Likewise, m_alphaScale = 1, so no need to scale alpha.
 
-        rgba[0] = std::max(m_lowerBound, rgba[0]);
-        rgba[1] = std::max(m_lowerBound, rgba[1]);
-        rgba[2] = std::max(m_lowerBound, rgba[2]);
+        out[0] = std::max(m_lowerBound, in[0]);
+        out[1] = std::max(m_lowerBound, in[1]);
+        out[2] = std::max(m_lowerBound, in[2]);
+        out[3] = in[3];
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
@@ -267,73 +281,78 @@ RangeMaxRenderer::RangeMaxRenderer(ConstRangeOpDataRcPtr & range)
 {
 }
 
-void RangeMaxRenderer::apply(float * rgbaBuffer, long numPixels) const
+void RangeMaxRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    float * rgba = rgbaBuffer;
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        rgba[0] = std::min(rgba[0], m_upperBound);
-        rgba[1] = std::min(rgba[1], m_upperBound);
-        rgba[2] = std::min(rgba[2], m_upperBound);
+        out[0] = std::min(in[0], m_upperBound);
+        out[1] = std::min(in[1], m_upperBound);
+        out[2] = std::min(in[2], m_upperBound);
+        out[3] = in[3];
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
 
 OpCPURcPtr GetRangeRenderer(ConstRangeOpDataRcPtr & range)
 {
-    OpCPURcPtr op(new NoOpCPU);
-
     if (range->scales(false))
     {
         if (range->minClips())
         {
             if (range->maxClips())
             {
-                op.reset(new RangeScaleMinMaxRenderer(range));
+                return std::make_shared<RangeScaleMinMaxRenderer>(range);
             }
             else
             {
-                op.reset(new RangeScaleMinRenderer(range));
+                return std::make_shared<RangeScaleMinRenderer>(range);
             }
         }
         else
         {
             if (range->maxClips())
             {
-                op.reset(new RangeScaleMaxRenderer(range));
+                return std::make_shared<RangeScaleMaxRenderer>(range);
             }
             else
             {
                 // (Currently we will not get here, see comment above.)
-                op.reset(new RangeScaleRenderer(range));
+                return std::make_shared<RangeScaleRenderer>(range);
             }
         }
     }
-    else  // implies _scale = 1, _alphaScale = 1, _offset = 0
+    else  // implies m_scale = 1, m_alphaScale = 1, m_offset = 0
     {
         if (range->minClips())
         {
             if (range->maxClips())
             {
-                op.reset(new RangeMinMaxRenderer(range));
+                return std::make_shared<RangeMinMaxRenderer>(range);
             }
             else
             {
-                op.reset(new RangeMinRenderer(range));
+                return std::make_shared<RangeMinRenderer>(range);
             }
         }
         else if (range->maxClips())
         {
-            op.reset(new RangeMaxRenderer(range));
+            return std::make_shared<RangeMaxRenderer>(range);
         }
 
-        // Else, no rendering/scaling is needed and we return a null renderer.
+        // Else, no rendering/scaling is needed.
     }
 
-    return op;
+    // Note:
+    // In fact it should never happen as the optimization step removes the NoOps.
+
+    throw Exception("No processing as the Range is a NoOp");
+    return OpCPURcPtr();
 }
 
 }
@@ -360,35 +379,13 @@ OIIO_ADD_TEST(RangeOpCPU, identity)
     OCIO::RangeOpDataRcPtr range = std::make_shared<OCIO::RangeOpData>();
     OIIO_CHECK_NO_THROW(range->validate());
     OIIO_CHECK_NO_THROW(range->finalize());
+    OIIO_CHECK_NO_THROW(range->isIdentity());
+    OIIO_CHECK_NO_THROW(range->isNoOp());
 
     OCIO::ConstRangeOpDataRcPtr r = range;
-    OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
-
-    const OCIO::OpCPU & c = *op;
-    const std::string typeName(typeid(c).name());
-    OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "NoOpCPU"));
-
-    const long numPixels = 3;
-    float image[4*numPixels] = { -0.50f, -0.25f, 0.50f, 0.0f,
-                                  0.75f,  1.00f, 1.25f, 1.0f,
-                                  1.25f,  1.50f, 1.75f, 0.0f };
-
-    OIIO_CHECK_NO_THROW(op->apply(&image[0], numPixels));
-
-    OIIO_CHECK_CLOSE(image[0],  -0.50f, g_error);
-    OIIO_CHECK_CLOSE(image[1],  -0.25f, g_error);
-    OIIO_CHECK_CLOSE(image[2],   0.50f, g_error);
-    OIIO_CHECK_CLOSE(image[3],   0.00f, g_error);
-
-    OIIO_CHECK_CLOSE(image[4],   0.75f, g_error);
-    OIIO_CHECK_CLOSE(image[5],   1.00f, g_error);
-    OIIO_CHECK_CLOSE(image[6],   1.25f, g_error);
-    OIIO_CHECK_CLOSE(image[7],   1.00f, g_error);
-
-    OIIO_CHECK_CLOSE(image[8],   1.25f, g_error);
-    OIIO_CHECK_CLOSE(image[9],   1.50f, g_error);
-    OIIO_CHECK_CLOSE(image[10],  1.75f, g_error);
-    OIIO_CHECK_CLOSE(image[11],  0.00f, g_error);
+    OIIO_CHECK_THROW_WHAT(OCIO::GetRangeRenderer(r), 
+                          OCIO::Exception, 
+                          "No processing as the Range is a NoOp");
 }
 
 OIIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings)
@@ -412,7 +409,7 @@ OIIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings)
                                   0.75f,  1.00f, 1.25f, 1.0f,
                                   1.25f,  1.50f, 1.75f, 0.0f };
 
-    OIIO_CHECK_NO_THROW(op->apply(&image[0], numPixels));
+    OIIO_CHECK_NO_THROW(op->apply(&image[0], &image[0], numPixels));
 
     OIIO_CHECK_CLOSE(image[0],  0.50f, g_error);
     OIIO_CHECK_CLOSE(image[1],  0.50f, g_error);
@@ -452,7 +449,7 @@ OIIO_ADD_TEST(RangeOpCPU, scale_with_low_clipping)
                                   0.75f,  1.00f, 1.25f, 1.0f,
                                   1.25f,  1.50f, 1.75f, 0.0f };
 
-    OIIO_CHECK_NO_THROW(op->apply(&image[0], numPixels));
+    OIIO_CHECK_NO_THROW(op->apply(&image[0], &image[0], numPixels));
 
     OIIO_CHECK_CLOSE(image[0],  0.50f, g_error);
     OIIO_CHECK_CLOSE(image[1],  0.50f, g_error);
@@ -492,7 +489,7 @@ OIIO_ADD_TEST(RangeOpCPU, scale_with_high_clipping)
                                   0.75f,  1.00f, 1.25f, 1.0f,
                                   1.25f,  1.50f, 1.75f, 0.0f };
 
-    OIIO_CHECK_NO_THROW(op->apply(&image[0], numPixels));
+    OIIO_CHECK_NO_THROW(op->apply(&image[0], &image[0], numPixels));
 
     OIIO_CHECK_CLOSE(image[0],  0.00f, g_error);
     OIIO_CHECK_CLOSE(image[1],  0.25f, g_error);
@@ -531,7 +528,7 @@ OIIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings_2)
                                   0.75f,  1.00f, 1.25f, 1.0f,
                                   1.25f,  1.50f, 1.75f, 0.0f };
 
-    OIIO_CHECK_NO_THROW(op->apply(&image[0], numPixels));
+    OIIO_CHECK_NO_THROW(op->apply(&image[0], &image[0], numPixels));
 
     OIIO_CHECK_CLOSE(image[0],  0.000f, g_error);
     OIIO_CHECK_CLOSE(image[1],  0.000f, g_error);
@@ -570,7 +567,7 @@ OIIO_ADD_TEST(RangeOpCPU, offset_with_low_and_high_clippings)
                                   0.75f,  1.00f, 1.25f, 1.0f,
                                   1.25f,  1.50f, 1.75f, 0.0f };
 
-    OIIO_CHECK_NO_THROW(op->apply(&image[0], numPixels));
+    OIIO_CHECK_NO_THROW(op->apply(&image[0], &image[0], numPixels));
 
     OIIO_CHECK_CLOSE(image[0],  1.00f, g_error);
     OIIO_CHECK_CLOSE(image[1],  1.00f, g_error);
@@ -610,7 +607,7 @@ OIIO_ADD_TEST(RangeOpCPU, low_and_high_clippings)
                                   1.25f,  1.50f, 1.75f, 0.0f,
                                   2.00f,  2.50f, 2.75f, 1.0f };
 
-    OIIO_CHECK_NO_THROW(op->apply(&image[0], numPixels));
+    OIIO_CHECK_NO_THROW(op->apply(&image[0], &image[0], numPixels));
 
     OIIO_CHECK_CLOSE(image[0],  1.00f, g_error);
     OIIO_CHECK_CLOSE(image[1],  1.00f, g_error);
@@ -655,7 +652,7 @@ OIIO_ADD_TEST(RangeOpCPU, low_clipping)
                                   0.75f,  1.00f, 1.25f, 1.0f,
                                   1.25f,  1.50f, 1.75f, 0.0f };
 
-    OIIO_CHECK_NO_THROW(op->apply(&image[0], numPixels));
+    OIIO_CHECK_NO_THROW(op->apply(&image[0], &image[0], numPixels));
 
     OIIO_CHECK_CLOSE(image[0], -0.10f, g_error);
     OIIO_CHECK_CLOSE(image[1], -0.10f, g_error);
@@ -695,7 +692,7 @@ OIIO_ADD_TEST(RangeOpCPU, high_clipping)
                                   0.75f,  1.00f, 1.25f, 1.0f,
                                   1.25f,  1.50f, 1.75f, 0.0f };
 
-    OIIO_CHECK_NO_THROW(op->apply(&image[0], numPixels));
+    OIIO_CHECK_NO_THROW(op->apply(&image[0], &image[0], numPixels));
 
     OIIO_CHECK_CLOSE(image[0],  -0.50f, g_error);
     OIIO_CHECK_CLOSE(image[1],  -0.25f, g_error);

@@ -80,7 +80,7 @@ public:
     Lut3DTetrahedralRenderer(ConstLut3DOpDataRcPtr & lut);
     virtual ~Lut3DTetrahedralRenderer();
 
-    void apply(float *rgbaBuffer, long nPixels) const;
+    void apply(const void * inImg, void * outImg, long numPixels) const;
 };
 
 class Lut3DRenderer : public BaseLut3DRenderer
@@ -89,7 +89,7 @@ public:
     Lut3DRenderer(ConstLut3DOpDataRcPtr & lut);
     virtual ~Lut3DRenderer();
 
-    void apply(float *rgbaBuffer, long nPixels) const;
+    void apply(const void * inImg, void * outImg, long numPixels) const;
 
 };
 
@@ -189,7 +189,7 @@ public:
     InvLut3DRenderer(ConstLut3DOpDataRcPtr & lut);
     virtual ~InvLut3DRenderer();
 
-    virtual void apply(float * rgbaBuffer, long numPixels) const;
+    virtual void apply(const void * inImg, void * outImg, long numPixels) const;
 
     virtual void updateData(ConstLut3DOpDataRcPtr & lut);
 
@@ -414,8 +414,11 @@ Lut3DTetrahedralRenderer::~Lut3DTetrahedralRenderer()
 {
 }
 
-void Lut3DTetrahedralRenderer::apply(float *rgbaBuffer, long nPixels) const
+void Lut3DTetrahedralRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
 #ifdef USE_SSE
 
     __m128 step = _mm_set1_ps(m_step);
@@ -425,14 +428,11 @@ void Lut3DTetrahedralRenderer::apply(float *rgbaBuffer, long nPixels) const
     __m128 v[4];
     OCIO_ALIGN(float cmpDelta[4]);
 
-    float * inBuffer = rgbaBuffer;
-    float * outBuffer = rgbaBuffer;
-
-    for (long i = 0; i < nPixels; ++i)
+    for (long i = 0; i < numPixels; ++i)
     {
-        float newAlpha = (float)inBuffer[3] * m_alphaScale;
+        float newAlpha = (float)in[3] * m_alphaScale;
         
-        __m128 data = _mm_set_ps(inBuffer[3], inBuffer[2], inBuffer[1], inBuffer[0]);
+        __m128 data = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
         __m128 idx = _mm_mul_ps(data, step);
 
@@ -619,25 +619,22 @@ void Lut3DTetrahedralRenderer::apply(float *rgbaBuffer, long nPixels) const
         __m128 result = _mm_add_ps(_mm_add_ps(v[0], _mm_mul_ps(delta0, dv0)),
             _mm_add_ps(_mm_mul_ps(delta1, dv1), _mm_mul_ps(delta2, dv2)));
 
-        // TODO: use aligned version if outBuffer alignement can be controlled (see OCIO_ALIGN)
-        _mm_storeu_ps(outBuffer, result);
+        _mm_storeu_ps(out, result);
 
-        outBuffer[3] = newAlpha;
+        out[3] = newAlpha;
 
-        inBuffer += 4;
-        outBuffer += 4;
+        in  += 4;
+        out += 4;
     }
 #else
-    float * rgba = rgbaBuffer;
-
-    for (long i = 0; i < nPixels; ++i)
+    for (long i = 0; i < numPixels; ++i)
     {
-        float newAlpha = (float)rgba[3] * m_alphaScale;
+        float newAlpha = (float)in[3] * m_alphaScale;
 
         float idx[3];
-        idx[0] = rgba[0] * m_step;
-        idx[1] = rgba[1] * m_step;
-        idx[2] = rgba[2] * m_step;
+        idx[0] = in[0] * m_step;
+        idx[1] = in[1] * m_step;
+        idx[2] = in[2] * m_step;
 
         // NaNs become 0
         idx[0] = std::min(std::max(idx[0], 0.f), (float)m_dim - 1.f);
@@ -690,19 +687,19 @@ void Lut3DTetrahedralRenderer::apply(float *rgbaBuffer, long nPixels) const
 
         if (fx > fy) {
             if (fy > fz) {
-                rgba[0] =
+                out[0] =
                     (1 - fx)  * m_optLut[n000] +
                     (fx - fy) * m_optLut[n100] +
                     (fy - fz) * m_optLut[n110] +
                     (fz)      * m_optLut[n111];
 
-                rgba[1] =
+                out[1] =
                     (1 - fx)  * m_optLut[n000 + 1] +
                     (fx - fy) * m_optLut[n100 + 1] +
                     (fy - fz) * m_optLut[n110 + 1] +
                     (fz)      * m_optLut[n111 + 1];
 
-                rgba[2] =
+                out[2] =
                     (1 - fx)  * m_optLut[n000 + 2] +
                     (fx - fy) * m_optLut[n100 + 2] +
                     (fy - fz) * m_optLut[n110 + 2] +
@@ -710,19 +707,19 @@ void Lut3DTetrahedralRenderer::apply(float *rgbaBuffer, long nPixels) const
             }
             else if (fx > fz)
             {
-                rgba[0] =
+                out[0] =
                     (1 - fx)  * m_optLut[n000] +
                     (fx - fz) * m_optLut[n100] +
                     (fz - fy) * m_optLut[n101] +
                     (fy)      * m_optLut[n111];
 
-                rgba[1] =
+                out[1] =
                     (1 - fx)  * m_optLut[n000 + 1] +
                     (fx - fz) * m_optLut[n100 + 1] +
                     (fz - fy) * m_optLut[n101 + 1] +
                     (fy)      * m_optLut[n111 + 1];
 
-                rgba[2] =
+                out[2] =
                     (1 - fx)  * m_optLut[n000 + 2] +
                     (fx - fz) * m_optLut[n100 + 2] +
                     (fz - fy) * m_optLut[n101 + 2] +
@@ -730,19 +727,19 @@ void Lut3DTetrahedralRenderer::apply(float *rgbaBuffer, long nPixels) const
             }
             else
             {
-                rgba[0] =
+                out[0] =
                     (1 - fz)  * m_optLut[n000] +
                     (fz - fx) * m_optLut[n001] +
                     (fx - fy) * m_optLut[n101] +
                     (fy)      * m_optLut[n111];
 
-                rgba[1] =
+                out[1] =
                     (1 - fz)  * m_optLut[n000 + 1] +
                     (fz - fx) * m_optLut[n001 + 1] +
                     (fx - fy) * m_optLut[n101 + 1] +
                     (fy)      * m_optLut[n111 + 1];
 
-                rgba[2] =
+                out[2] =
                     (1 - fz)  * m_optLut[n000 + 2] +
                     (fz - fx) * m_optLut[n001 + 2] +
                     (fx - fy) * m_optLut[n101 + 2] +
@@ -753,19 +750,19 @@ void Lut3DTetrahedralRenderer::apply(float *rgbaBuffer, long nPixels) const
         {
             if (fz > fy)
             {
-                rgba[0] =
+                out[0] =
                     (1 - fz)  * m_optLut[n000] +
                     (fz - fy) * m_optLut[n001] +
                     (fy - fx) * m_optLut[n011] +
                     (fx)      * m_optLut[n111];
 
-                rgba[1] =
+                out[1] =
                     (1 - fz)  * m_optLut[n000 + 1] +
                     (fz - fy) * m_optLut[n001 + 1] +
                     (fy - fx) * m_optLut[n011 + 1] +
                     (fx)      * m_optLut[n111 + 1];
 
-                rgba[2] =
+                out[2] =
                     (1 - fz)  * m_optLut[n000 + 2] +
                     (fz - fy) * m_optLut[n001 + 2] +
                     (fy - fx) * m_optLut[n011 + 2] +
@@ -773,19 +770,19 @@ void Lut3DTetrahedralRenderer::apply(float *rgbaBuffer, long nPixels) const
             }
             else if (fz > fx)
             {
-                rgba[0] =
+                out[0] =
                     (1 - fy)  * m_optLut[n000] +
                     (fy - fz) * m_optLut[n010] +
                     (fz - fx) * m_optLut[n011] +
                     (fx)      * m_optLut[n111];
 
-                rgba[1] =
+                out[1] =
                     (1 - fy)  * m_optLut[n000 + 1] +
                     (fy - fz) * m_optLut[n010 + 1] +
                     (fz - fx) * m_optLut[n011 + 1] +
                     (fx)      * m_optLut[n111 + 1];
 
-                rgba[2] =
+                out[2] =
                     (1 - fy)  * m_optLut[n000 + 2] +
                     (fy - fz) * m_optLut[n010 + 2] +
                     (fz - fx) * m_optLut[n011 + 2] +
@@ -793,19 +790,19 @@ void Lut3DTetrahedralRenderer::apply(float *rgbaBuffer, long nPixels) const
             }
             else
             {
-                rgba[0] =
+                out[0] =
                     (1 - fy)  * m_optLut[n000] +
                     (fy - fx) * m_optLut[n010] +
                     (fx - fz) * m_optLut[n110] +
                     (fz)      * m_optLut[n111];
 
-                rgba[1] =
+                out[1] =
                     (1 - fy)  * m_optLut[n000 + 1] +
                     (fy - fx) * m_optLut[n010 + 1] +
                     (fx - fz) * m_optLut[n110 + 1] +
                     (fz)      * m_optLut[n111 + 1];
 
-                rgba[2] =
+                out[2] =
                     (1 - fy)  * m_optLut[n000 + 2] +
                     (fy - fx) * m_optLut[n010 + 2] +
                     (fx - fz) * m_optLut[n110 + 2] +
@@ -813,9 +810,10 @@ void Lut3DTetrahedralRenderer::apply(float *rgbaBuffer, long nPixels) const
             }
         }
 
-        rgba[3] = newAlpha;
-        rgba += 4;
+        out[3] = newAlpha;
 
+        in  += 4;
+        out += 4;
     }
 #endif
 }
@@ -829,8 +827,11 @@ Lut3DRenderer::~Lut3DRenderer()
 {
 }
 
-void Lut3DRenderer::apply(float *rgbaBuffer, long nPixels) const
+void Lut3DRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
 #ifdef USE_SSE
 
     __m128 step = _mm_set1_ps(m_step);
@@ -839,16 +840,11 @@ void Lut3DRenderer::apply(float *rgbaBuffer, long nPixels) const
 
     __m128 v[8];
 
-    float * imgBuffer = rgbaBuffer;
-
-    for (long i = 0; i < nPixels; ++i)
+    for (long i = 0; i < numPixels; ++i)
     {
-        float newAlpha = (float)imgBuffer[3] * m_alphaScale;
+        float newAlpha = (float)in[3] * m_alphaScale;
 
-        __m128 data = _mm_set_ps(imgBuffer[3],
-                                 imgBuffer[2],
-                                 imgBuffer[1],
-                                 imgBuffer[0]);
+        __m128 data = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
         __m128 idx = _mm_mul_ps(data, step);
 
@@ -929,24 +925,22 @@ void Lut3DRenderer::apply(float *rgbaBuffer, long nPixels) const
         __m128 result = _mm_add_ps(_mm_mul_ps(green1, oneMinusWr),
             _mm_mul_ps(green2, wr));
 
-        // TODO: use aligned version if imgBuffer alignement can be controlled (see OCIO_ALIGN)
-        _mm_storeu_ps(imgBuffer, result);
+        _mm_storeu_ps(out, result);
 
-        imgBuffer[3] = newAlpha;
+        out[3] = newAlpha;
 
-        imgBuffer += 4;
+        in  += 4;
+        out += 4;
     }
 #else
-    float * rgba = rgbaBuffer;
-
-    for (long i = 0; i < nPixels; ++i)
+    for (long i = 0; i < numPixels; ++i)
     {
-        float newAlpha = (float)rgba[3] * m_alphaScale;
+        float newAlpha = (float)in[3] * m_alphaScale;
 
         float idx[3];
-        idx[0] = rgba[0] * m_step;
-        idx[1] = rgba[1] * m_step;
-        idx[2] = rgba[2] * m_step;
+        idx[0] = in[0] * m_step;
+        idx[1] = in[1] * m_step;
+        idx[2] = in[2] * m_step;
 
         // NaNs become 0
         idx[0] = std::min(std::max(idx[0], 0.f), (float)m_dim - 1.f);
@@ -1003,15 +997,17 @@ void Lut3DRenderer::apply(float *rgbaBuffer, long nPixels) const
         y[0] = delta[1]; y[1] = delta[1]; y[2] = delta[1];
         z[0] = delta[2]; z[1] = delta[2]; z[2] = delta[2];
 
-        lerp_rgb(rgba,
+        lerp_rgb(out,
                  &m_optLut[n000], &m_optLut[n001],
                  &m_optLut[n010], &m_optLut[n011],
                  &m_optLut[n100], &m_optLut[n101],
                  &m_optLut[n110], &m_optLut[n111],
                  x, y, z);
 
-        rgba[3] = newAlpha;
-        rgba += 4;
+        out[3] = newAlpha;
+
+        in  += 4;
+        out += 4;
     }
 #endif
 }
@@ -1797,7 +1793,7 @@ void InvLut3DRenderer::extrapolate3DArray(ConstLut3DOpDataRcPtr & lut)
 
 // TODO apply() needs further optimization work.
 
-void InvLut3DRenderer::apply(float * rgbaBuffer, long numPixels) const
+void InvLut3DRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const unsigned long* gsz = m_tree.getGridSize();
     const float maxDim = float(gsz[0] - 3u);  // unextrapolated max
@@ -1852,13 +1848,16 @@ void InvLut3DRenderer::apply(float * rgbaBuffer, long numPixels) const
         currentChildInd[i] = 0;
     }
 
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
     for (long i = 0; i<numPixels; ++i)
     {
         // Although the inverse LUT has been extrapolated, it may not be enough
         // to cover an HDR float image, so need to clamp.
-        const float R = clamp(rgbaBuffer[0], 0.f, m_inMax);
-        const float G = clamp(rgbaBuffer[1], 0.f, m_inMax);
-        const float B = clamp(rgbaBuffer[2], 0.f, m_inMax);
+        const float R = clamp(in[0], 0.f, m_inMax);
+        const float G = clamp(in[1], 0.f, m_inMax);
+        const float B = clamp(in[2], 0.f, m_inMax);
 
         const long depthm1 = depth - 1;
         unsigned long baseIndx[3] = {0, 0, 0};
@@ -1922,13 +1921,15 @@ void InvLut3DRenderer::apply(float * rgbaBuffer, long numPixels) const
             level--;
 
             // Need to subtract 1 since the indices include the extrapolation.
-            rgbaBuffer[0] = clamp(result[0] - 1.f, 0.f, maxDim) * m_scale;
-            rgbaBuffer[1] = clamp(result[1] - 1.f, 0.f, maxDim) * m_scale;
-            rgbaBuffer[2] = clamp(result[2] - 1.f, 0.f, maxDim) * m_scale;
-            rgbaBuffer[3] *= m_alphaScaling;
+            out[0] = clamp(result[0] - 1.f, 0.f, maxDim) * m_scale;
+            out[1] = clamp(result[1] - 1.f, 0.f, maxDim) * m_scale;
+            out[2] = clamp(result[2] - 1.f, 0.f, maxDim) * m_scale;
+            out[3] = in[3] * m_alphaScaling;
 
         }
-        rgbaBuffer += 4;
+
+        in  += 4;
+        out += 4;
     }
 }
 

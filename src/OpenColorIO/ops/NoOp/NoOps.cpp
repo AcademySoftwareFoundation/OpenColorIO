@@ -69,8 +69,11 @@ OCIO_NAMESPACE_ENTER
             
             virtual bool isSameType(ConstOpRcPtr & op) const;
             virtual bool isInverse(ConstOpRcPtr & op) const;
+
             virtual void finalize() { }
-            virtual void apply(float* /*rgbaBuffer*/, long /*numPixels*/) const { }
+            // Note: Only used by some unit tests.
+            virtual void apply(const void * inImg, void * outImg, long numPixels) const
+            { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
             
             void extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const {}
         
@@ -340,7 +343,9 @@ OCIO_NAMESPACE_ENTER
             virtual void dumpMetadata(ProcessorMetadataRcPtr & metadata) const;
             
             virtual void finalize() {}
-            virtual void apply(float* /*rgbaBuffer*/, long /*numPixels*/) const {}
+            // Note: Only used by some unit tests.
+            virtual void apply(const void * inImg, void * outImg, long numPixels) const
+            { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
             
             void extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const {}
             
@@ -408,8 +413,10 @@ OCIO_NAMESPACE_ENTER
             virtual void dumpMetadata(ProcessorMetadataRcPtr & metadata) const;
             
             virtual void finalize() {}
-            virtual void apply(float* /*rgbaBuffer*/, long /*numPixels*/) const {}
-            
+            // Note: Only used by some unit tests.
+            virtual void apply(const void * inImg, void * outImg, long numPixels) const
+            { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
+
             void extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const {}
             
         private:

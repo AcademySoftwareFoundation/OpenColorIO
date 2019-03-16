@@ -62,7 +62,6 @@ OCIO_NAMESPACE_ENTER
             virtual bool isSameType(ConstOpRcPtr & op) const;
             virtual bool isInverse(ConstOpRcPtr & op) const;
             virtual void finalize();
-            virtual void apply(float* rgbaBuffer, long numPixels) const;
             
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
             
@@ -79,7 +78,6 @@ OCIO_NAMESPACE_ENTER
 
         LogOp::LogOp(LogOpDataRcPtr & log)
             : Op()
-            , m_cpu(std::make_shared<NoOpCPU>())
         {
             data() = log;
         }
@@ -126,7 +124,7 @@ OCIO_NAMESPACE_ENTER
             logData()->finalize();
 
             ConstLogOpDataRcPtr logOpData = constThis.logData();
-            m_cpu = GetLogRenderer(logOpData);
+            m_cpuOp = GetLogRenderer(logOpData);
 
             // Create the cacheID
             std::ostringstream cacheIDStream;
@@ -135,11 +133,6 @@ OCIO_NAMESPACE_ENTER
             cacheIDStream << ">";
             
             m_cacheID = cacheIDStream.str();
-        }
-        
-        void LogOp::apply(float* rgbaBuffer, long numPixels) const
-        {
-            m_cpu->apply(rgbaBuffer, numPixels);
         }
         
         void LogOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
@@ -230,7 +223,7 @@ OIIO_ADD_TEST(LogOps, lin_to_log)
     // Apply the result.
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
     {
-        ops[i]->apply(data, 2);
+        ops[i]->apply(data, data, 2);
     }
     
     for(int i=0; i<8; ++i)
@@ -269,7 +262,7 @@ OIIO_ADD_TEST(LogOps, log_to_lin)
     // Apply the result.
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
     {
-        ops[i]->apply(data, 2);
+        ops[i]->apply(data, data, 2);
     }
     
     for(int i=0; i<8; ++i)
@@ -347,7 +340,7 @@ OIIO_ADD_TEST(LogOps, inverse)
     }
     
     ops[0]->finalize();
-    ops[0]->apply(data, 3);
+    ops[0]->apply(data, data, 3);
     // Note: Skip testing alpha channels.
     OIIO_CHECK_NE( data[0], result[0] );
     OIIO_CHECK_NE( data[1], result[1] );
@@ -360,7 +353,7 @@ OIIO_ADD_TEST(LogOps, inverse)
     OIIO_CHECK_NE( data[10], result[10] );
 
     ops[1]->finalize();
-    ops[1]->apply(data, 3);
+    ops[1]->apply(data, data, 3);
 
 #ifndef USE_SSE
     const float error = 1e-3f;
