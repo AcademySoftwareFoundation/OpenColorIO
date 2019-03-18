@@ -57,7 +57,7 @@ ConstOpCPURcPtr CreateCPUOp(const OpRcPtr & op, BitDepth inBD, BitDepth outBD)
         return OpCPURcPtr();
     }
 
-    throw Exception("Only the 1D LUT Op supports other bit depths than F32");
+    throw Exception("Only the 1D LUT Op supports bit depths other than F32");
 }
 
 std::string PixelFormatToString(PixelFormat pxlFormat)
@@ -157,7 +157,7 @@ void CPUProcessor::Impl::finalize(const OpRcPtrVec & ops, PixelFormat in, PixelF
     // Whatever are the requested input and output pixel formats, the internal 
     // computations are only performed in RGBA F32 i.e. only the first and the last Ops
     // handle different pixel formats. To simplify the Op implementations 
-    // a custom internal Op handle any possible pixel formats. Only the 1D LUT Op 
+    // a custom internal Op handles any possible pixel formats. Only the 1D LUT Op 
     // natively supports bit depths i.e. to benefit from its lookup implementation 
     // for interger bit depths.
     // 

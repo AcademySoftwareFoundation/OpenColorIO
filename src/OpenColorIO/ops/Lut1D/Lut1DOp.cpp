@@ -870,7 +870,7 @@ OIIO_ADD_TEST(Lut1DOpStruct, FiniteValue)
     float inputBuffer_linearforward2[4] = { 0.5f, 0.6f, 0.7f, 0.5f };
     const float outputBuffer_linearforward[4] = { 0.25f, 0.36f, 0.49f, 0.5f };
     OCIO::Lut1D_Linear(inputBuffer_linearforward, 1, *lut);
-    ops[0]->apply(inputBuffer_linearforward2, inputBuffer_linearforward2, 1);
+    ops[0]->apply(inputBuffer_linearforward2, 1);
     for(int i=0; i <4; ++i)
     {
         OIIO_CHECK_CLOSE(inputBuffer_linearforward[i], outputBuffer_linearforward[i], 1e-5f);
@@ -889,7 +889,7 @@ OIIO_ADD_TEST(Lut1DOpStruct, FiniteValue)
     float outputBuffer_linearinverse[4] = { 0.25f, 0.36f, 0.49f, 0.5f };
     float outputBuffer_linearinverse2[4] = { 0.25f, 0.36f, 0.49f, 0.5f };
     OCIO::Lut1D_LinearInverse(outputBuffer_linearinverse, 1, *lut);
-    ops[1]->apply(outputBuffer_linearinverse2, outputBuffer_linearinverse2, 1);
+    ops[1]->apply(outputBuffer_linearinverse2, 1);
     for(int i=0; i <4; ++i)
     {
         OIIO_CHECK_CLOSE(inputBuffer_linearinverse[i], outputBuffer_linearinverse[i], 1e-5f);
@@ -1542,7 +1542,7 @@ OIIO_ADD_TEST(Lut1D, finite_value)
         float lut1d_inputBuffer_linearforward[4] = { 0.5f, 0.6f, 0.7f, 0.5f };
 
         OIIO_CHECK_NO_THROW(ops[0]->finalize());
-        OIIO_CHECK_NO_THROW(ops[0]->apply(lut1d_inputBuffer_linearforward, lut1d_inputBuffer_linearforward, 1));
+        OIIO_CHECK_NO_THROW(ops[0]->apply(lut1d_inputBuffer_linearforward, 1));
         for (int i = 0; i <4; ++i)
         {
             OIIO_CHECK_CLOSE(lut1d_inputBuffer_linearforward[i],
@@ -1571,7 +1571,7 @@ OIIO_ADD_TEST(Lut1D, finite_value)
         float lut1d_outputBuffer_linearinverse[4] = { 0.25f, 0.36f, 0.49f, 0.5f };
 
         OIIO_CHECK_NO_THROW(ops[0]->finalize());
-        OIIO_CHECK_NO_THROW(ops[0]->apply(lut1d_outputBuffer_linearinverse, lut1d_outputBuffer_linearinverse, 1));
+        OIIO_CHECK_NO_THROW(ops[0]->apply(lut1d_outputBuffer_linearinverse, 1));
         for (int i = 0; i <4; ++i)
         {
             OIIO_CHECK_CLOSE(lut1dlegacy_outputBuffer_linearinverse[i],
@@ -1612,7 +1612,7 @@ OIIO_ADD_TEST(Lut1D, finite_value_hue_adjust)
     float lut1d_inputBuffer_linearforward[4] = { 0.5f, 0.6f, 0.7f, 0.5f };
 
     OIIO_CHECK_NO_THROW(typedRcPtr->finalize());
-    OIIO_CHECK_NO_THROW(typedRcPtr->apply(lut1d_inputBuffer_linearforward, lut1d_inputBuffer_linearforward, 1));
+    OIIO_CHECK_NO_THROW(typedRcPtr->apply(lut1d_inputBuffer_linearforward, 1));
     for (int i = 0; i <4; ++i)
     {
         OIIO_CHECK_CLOSE(lut1d_inputBuffer_linearforward[i],
@@ -1635,8 +1635,8 @@ OIIO_ADD_TEST(Lut1D, finite_value_hue_adjust)
 
     OIIO_CHECK_NO_THROW(ops[1]->finalize());
     OIIO_CHECK_NO_THROW(ops[2]->finalize());
-    OIIO_CHECK_NO_THROW(ops[1]->apply(lut1d_outputBuffer_linearinverse, lut1d_outputBuffer_linearinverse, 1)); // fast
-    OIIO_CHECK_NO_THROW(ops[2]->apply(lut1d_outputBuffer_linearinverseEx, lut1d_outputBuffer_linearinverseEx, 1)); // exact
+    OIIO_CHECK_NO_THROW(ops[1]->apply(lut1d_outputBuffer_linearinverse, 1)); // fast
+    OIIO_CHECK_NO_THROW(ops[2]->apply(lut1d_outputBuffer_linearinverseEx, 1)); // exact
     for (int i = 0; i <4; ++i)
     {
         OIIO_CHECK_CLOSE(lut1d_outputBuffer_linearinverse[i],
@@ -1903,7 +1903,7 @@ OIIO_ADD_TEST(Lut1D, inverse_twice)
         float lut1d_inputBuffer_linearinverse[4] = { 0.25f, 0.36f, 0.49f, 0.5f };
 
         OIIO_CHECK_NO_THROW(ops[0]->finalize());
-        OIIO_CHECK_NO_THROW(ops[0]->apply(lut1d_inputBuffer_linearinverse, lut1d_inputBuffer_linearinverse, 1));
+        OIIO_CHECK_NO_THROW(ops[0]->apply(lut1d_inputBuffer_linearinverse, 1));
         for (int i = 0; i < 4; ++i)
         {
             OIIO_CHECK_CLOSE(lut1d_inputBuffer_linearinverse[i],
@@ -1920,7 +1920,7 @@ OIIO_ADD_TEST(Lut1D, inverse_twice)
 
         // Apply the inverse.
         OIIO_CHECK_NO_THROW(ops[1]->finalize());
-        OIIO_CHECK_NO_THROW(ops[1]->apply(lut1d_inputBuffer_linearinverse, lut1d_inputBuffer_linearinverse, 1));
+        OIIO_CHECK_NO_THROW(ops[1]->apply(lut1d_inputBuffer_linearinverse, 1));
 
         // Verify we are back on the input.
         for (int i = 0; i < 4; ++i)

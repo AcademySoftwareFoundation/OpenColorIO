@@ -223,7 +223,7 @@ OIIO_ADD_TEST(LogOps, lin_to_log)
     // Apply the result.
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
     {
-        ops[i]->apply(data, data, 2);
+        ops[i]->apply(data, 2);
     }
     
     for(int i=0; i<8; ++i)
@@ -262,7 +262,7 @@ OIIO_ADD_TEST(LogOps, log_to_lin)
     // Apply the result.
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
     {
-        ops[i]->apply(data, data, 2);
+        ops[i]->apply(data, 2);
     }
     
     for(int i=0; i<8; ++i)
@@ -340,7 +340,7 @@ OIIO_ADD_TEST(LogOps, inverse)
     }
     
     ops[0]->finalize();
-    ops[0]->apply(data, data, 3);
+    ops[0]->apply(data, 3);
     // Note: Skip testing alpha channels.
     OIIO_CHECK_NE( data[0], result[0] );
     OIIO_CHECK_NE( data[1], result[1] );
@@ -353,7 +353,7 @@ OIIO_ADD_TEST(LogOps, inverse)
     OIIO_CHECK_NE( data[10], result[10] );
 
     ops[1]->finalize();
-    ops[1]->apply(data, data, 3);
+    ops[1]->apply(data, 3);
 
 #ifndef USE_SSE
     const float error = 1e-3f;

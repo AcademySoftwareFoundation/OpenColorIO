@@ -50,7 +50,7 @@ inline BitDepth ExtractBitDepth(PixelFormat in) { return BitDepth(0x00FF&in); }
 inline ChannelOrdering ExtractChannelOrder(PixelFormat in) { return ChannelOrdering(0xFF00&in); }
 
 
-// Metaprogramming requires templated structures to access to
+// Metaprogramming requires templated structures to access
 // some bit depth information at compile time.
 
 // Incomplete structure to have a compile time build break for unsupported bit depths.
@@ -109,10 +109,10 @@ template<> struct BitDepthInfo<BIT_DEPTH_F32>
 // the float value before casting.
 
 // Incomplete structure to have a compile time build break for unsupported bit depths.
-template<BitDepth bd> struct Convertor { };
+template<BitDepth bd> struct Converter { };
 
 template<>
-struct Convertor<BIT_DEPTH_UINT8>
+struct Converter<BIT_DEPTH_UINT8>
 {
     typedef typename BitDepthInfo<BIT_DEPTH_UINT8>::Type Type;
 
@@ -125,7 +125,7 @@ struct Convertor<BIT_DEPTH_UINT8>
 };
 
 template<>
-struct Convertor<BIT_DEPTH_UINT16>
+struct Converter<BIT_DEPTH_UINT16>
 {
     typedef typename BitDepthInfo<BIT_DEPTH_UINT16>::Type Type;
 
@@ -138,7 +138,7 @@ struct Convertor<BIT_DEPTH_UINT16>
 };
 
 template<>
-struct Convertor<BIT_DEPTH_F16>
+struct Converter<BIT_DEPTH_F16>
 {
     typedef typename BitDepthInfo<BIT_DEPTH_F16>::Type Type;
 
@@ -149,7 +149,7 @@ struct Convertor<BIT_DEPTH_F16>
 };
 
 template<>
-struct Convertor<BIT_DEPTH_F32>
+struct Converter<BIT_DEPTH_F32>
 {
     typedef typename BitDepthInfo<BIT_DEPTH_F32>::Type Type;
 

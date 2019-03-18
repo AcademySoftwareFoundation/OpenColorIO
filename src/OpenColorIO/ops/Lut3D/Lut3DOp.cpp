@@ -970,7 +970,7 @@ OIIO_ADD_TEST(Lut3DOpStruct, ValueCheck)
     memcpy(color, reference, 12*sizeof(float));
     OCIO::Lut3D_Nearest(color, 3, *lut);
     memcpy(color2, reference, 12 * sizeof(float));
-    ops[0]->apply(color2, color2, 3);
+    ops[0]->apply(color2, 3);
     for(long i=0; i<12; ++i)
     {
         OIIO_CHECK_CLOSE(color[i], nearest[i], 1e-8);
@@ -982,7 +982,7 @@ OIIO_ADD_TEST(Lut3DOpStruct, ValueCheck)
     memcpy(color, reference, 12*sizeof(float));
     OCIO::Lut3D_Linear(color, 3, *lut);
     memcpy(color2, reference, 12 * sizeof(float));
-    ops[1]->apply(color2, color2, 3);
+    ops[1]->apply(color2, 3);
     for(long i=0; i<12; ++i)
     {
         OIIO_CHECK_CLOSE(color[i], linear[i], 1e-8);
@@ -993,7 +993,7 @@ OIIO_ADD_TEST(Lut3DOpStruct, ValueCheck)
     memcpy(color, reference, 12*sizeof(float));
     OCIO::Lut3D_Tetrahedral(color, 3, *lut);
     memcpy(color2, reference, 12 * sizeof(float));
-    ops[2]->apply(color2, color2, 3);
+    ops[2]->apply(color2, 3);
     for(long i=0; i<12; ++i)
     {
         OIIO_CHECK_CLOSE(color[i], tetrahedral[i], 1e-8);
@@ -1063,7 +1063,7 @@ OIIO_ADD_TEST(Lut3DOp, Lut3DTetrahedral)
     memcpy(color, reference, 8 * sizeof(float));
     OCIO::Lut3D_Linear(color, 2, *lut);
     memcpy(color2, reference, 8 * sizeof(float));
-    ops[0]->apply(color2, color2, 2);
+    ops[0]->apply(color2, 2);
     for (long i = 0; i < 8; ++i)
     {
         OIIO_CHECK_CLOSE(color[i], linear[i], 1e-7);
@@ -1074,7 +1074,7 @@ OIIO_ADD_TEST(Lut3DOp, Lut3DTetrahedral)
     memcpy(color, reference, 8 * sizeof(float));
     OCIO::Lut3D_Tetrahedral(color, 2, *lut);
     memcpy(color2, reference, 8 * sizeof(float));
-    ops[1]->apply(color2, color2, 2);
+    ops[1]->apply(color2, 2);
     for (long i = 0; i < 8; ++i)
     {
         OIIO_CHECK_CLOSE(color[i], tetrahedral[i], 1e-7);

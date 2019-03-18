@@ -73,6 +73,8 @@ OCIO_NAMESPACE_ENTER
 
             virtual void finalize() { }
             // Note: Only used by some unit tests.
+            virtual void apply(void * img, long numPixels) const
+            { apply(img, img, numPixels); }
             virtual void apply(const void * inImg, void * outImg, long numPixels) const
             { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
             
@@ -345,6 +347,8 @@ OCIO_NAMESPACE_ENTER
             
             virtual void finalize() {}
             // Note: Only used by some unit tests.
+            virtual void apply(void * img, long numPixels) const
+            { apply(img, img, numPixels); }
             virtual void apply(const void * inImg, void * outImg, long numPixels) const
             { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
             
@@ -415,6 +419,8 @@ OCIO_NAMESPACE_ENTER
             
             virtual void finalize() {}
             // Note: Only used by some unit tests.
+            virtual void apply(void * img, long numPixels) const
+            { apply(img, img, numPixels); }
             virtual void apply(const void * inImg, void * outImg, long numPixels) const
             { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
 

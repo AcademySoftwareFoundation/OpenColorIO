@@ -301,7 +301,7 @@ OIIO_ADD_TEST(RangeOps, apply_arbitrary)
                           0.75f,  1.00f, 1.25f, 1.0f,
                           1.25f,  1.50f, 1.75f, 0.0f };
 
-    OIIO_CHECK_NO_THROW(r.apply(&image[0], &image[0], 3));
+    OIIO_CHECK_NO_THROW(r.apply(&image[0], 3));
 
     OIIO_CHECK_CLOSE(image[0],  0.194f,        g_error);
     OIIO_CHECK_CLOSE(image[1],  0.4635119438f, g_error);

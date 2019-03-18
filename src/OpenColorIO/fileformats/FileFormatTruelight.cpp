@@ -528,7 +528,7 @@ OIIO_ADD_TEST(FileFormatTruelight, ShaperAndLut3D)
     // Apply the result
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
     {
-        ops[i]->apply(data, data, 3);
+        ops[i]->apply(data, 3);
     }
     
     for(int i=0; i<4*3; ++i)
@@ -598,7 +598,7 @@ OIIO_ADD_TEST(FileFormatTruelight, Shaper)
     // Apply the result
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
     {
-        ops[i]->apply(data, data, 3);
+        ops[i]->apply(data, 3);
     }
     
     for(int i=0; i<4*3; ++i)
@@ -685,7 +685,7 @@ OIIO_ADD_TEST(FileFormatTruelight, Lut3D)
     // Apply the result
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
     {
-        ops[i]->apply(data, data, 3);
+        ops[i]->apply(data, 3);
     }
     
     for(int i=0; i<4*3; ++i)

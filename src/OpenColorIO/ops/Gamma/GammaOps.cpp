@@ -411,7 +411,7 @@ void ApplyGamma(const OCIO::OpRcPtr & op,
                 long numPixels, 
                 float errorThreshold)
 {
-    OIIO_CHECK_NO_THROW(op->apply(image, image, numPixels));
+    OIIO_CHECK_NO_THROW(op->apply(image, numPixels));
 
     for(long idx=0; idx<(numPixels*4); ++idx)
     {

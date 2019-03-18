@@ -329,10 +329,13 @@ OCIO_NAMESPACE_ENTER
             // This must be safe to call in a multi-threaded context.
             // Ops that have mutable data internally, or rely on external
             // caching, must thus be appropriately mutexed.
-            
+
+            virtual void apply(void * img, long numPixels) const
+            { m_cpuOp->apply(img, img, numPixels); }
+
             virtual void apply(const void * inImg, void * outImg, long numPixels) const
             { m_cpuOp->apply(inImg, outImg, numPixels); }
-            
+
             
             // Is this op supported by the legacy shader text generator ?
             virtual bool supportedByLegacyShader() const { return true; }

@@ -226,7 +226,7 @@ OIIO_ADD_TEST(AllocationOps, Create)
     float tmp[NB_PIXELS * 4];
     memcpy(tmp, &src[0], 4 * NB_PIXELS * sizeof(float));
 
-    ops[0]->apply(tmp, tmp, NB_PIXELS);
+    ops[0]->apply(tmp, NB_PIXELS);
 
     for (unsigned idx = 0; idx<(NB_PIXELS * 4); ++idx)
     {
@@ -235,7 +235,7 @@ OIIO_ADD_TEST(AllocationOps, Create)
 
     memcpy(tmp, &src[0], 4 * NB_PIXELS * sizeof(float));
 
-    ops[1]->apply(tmp, tmp, NB_PIXELS);
+    ops[1]->apply(tmp, NB_PIXELS);
 
     for (unsigned idx = 0; idx<(NB_PIXELS * 4); ++idx)
     {
@@ -293,7 +293,7 @@ OIIO_ADD_TEST(AllocationOps, Create)
         3.29865813f, 3.29278183f, 5.39231730f, 123.4f,
         3.45943165f, 3.45943165f, 3.45943165f, 1.0f };
 
-    ops[0]->apply(tmp, tmp, NB_PIXELS);
+    ops[0]->apply(tmp, NB_PIXELS);
 
     for (unsigned idx = 0; idx<(NB_PIXELS * 4); ++idx)
     {

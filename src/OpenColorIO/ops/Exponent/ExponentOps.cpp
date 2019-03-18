@@ -139,6 +139,7 @@ OCIO_NAMESPACE_ENTER
             virtual void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const;
             
             virtual void finalize();
+            virtual void apply(void * img, long numPixels) const;
             virtual void apply(const void * inImg, void * outImg, long numPixels) const;
             
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
@@ -261,12 +262,18 @@ OCIO_NAMESPACE_ENTER
             m_cacheID = cacheIDStream.str();
         }
         
+        void ExponentOp::apply(void * img, long numPixels) const
+        {
+            ConstExponentOpDataRcPtr expOpData = expData();
+            ApplyClampExponent(img, img, numPixels, expOpData);
+        }
+
         void ExponentOp::apply(const void * inImg, void * outImg, long numPixels) const
         {
             ConstExponentOpDataRcPtr expOpData = expData();
             ApplyClampExponent(inImg, outImg, numPixels, expOpData);
         }
-        
+
         void ExponentOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const 
         {
             if(getInputBitDepth()!=BIT_DEPTH_F32 

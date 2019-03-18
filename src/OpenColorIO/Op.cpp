@@ -283,7 +283,7 @@ void Apply(const OpRcPtrVec ops, float * source, long numPixels)
     OpRcPtrVec::size_type numOps = ops.size();
     for (OpRcPtrVec::size_type i = 0; i < numOps; ++i)
     {
-        ops[i]->apply(source, source, numPixels);
+        ops[i]->apply(source, numPixels);
     }
 }
 

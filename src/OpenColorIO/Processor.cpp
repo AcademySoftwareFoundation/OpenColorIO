@@ -346,7 +346,7 @@ OCIO_NAMESPACE_ENTER
             
             for(auto & op : m_ops)
             {
-                op->apply(rgbaBuffer, rgbaBuffer, numPixels);
+                op->apply(rgbaBuffer, numPixels);
             }
             
             scanlineHelper.finishRGBAScanline();
@@ -360,19 +360,23 @@ OCIO_NAMESPACE_ENTER
         // We need to allocate a temp array as the pixel must be 4 floats in size
         // (otherwise, sse loads will potentially fail)
         
-        const float inImg[4] = { pixel[0], pixel[1], pixel[2], 0.0f };
+        float rgbaBuffer[4] = { pixel[0], pixel[1], pixel[2], 0.0f };
         
         for(auto & op : m_ops)
         {
-            op->apply(inImg, pixel, 1);
+            op->apply(rgbaBuffer, 1);
         }
+
+        pixel[0] = rgbaBuffer[0];
+        pixel[1] = rgbaBuffer[1];
+        pixel[2] = rgbaBuffer[2];
     }
     
     void Processor::Impl::applyRGBA(float * pixel) const
     {
         for(auto & op : m_ops)
         {
-            op->apply(pixel, pixel, 1);
+            op->apply(pixel, 1);
         }
     }
     

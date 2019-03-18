@@ -501,14 +501,14 @@ OIIO_ADD_TEST(MatrixOffsetOp, scale)
     float tmp[NB_PIXELS*4];
     memcpy(tmp, &src[0], 4*NB_PIXELS*sizeof(float));
 
-    ops[0]->apply(tmp, tmp, NB_PIXELS);
+    ops[0]->apply(tmp, NB_PIXELS);
 
     for(unsigned long idx=0; idx<(NB_PIXELS*4); ++idx)
     {
         OIIO_CHECK_CLOSE(dst[idx], tmp[idx], error);
     }
 
-    ops[1]->apply(tmp, tmp, NB_PIXELS);
+    ops[1]->apply(tmp, NB_PIXELS);
 
     for(unsigned long idx=0; idx<(NB_PIXELS*4); ++idx)
     {
@@ -543,14 +543,14 @@ OIIO_ADD_TEST(MatrixOffsetOp, offset)
     float tmp[NB_PIXELS*4];
     memcpy(tmp, &src[0], 4*NB_PIXELS*sizeof(float));
 
-    ops[0]->apply(tmp, tmp, NB_PIXELS);
+    ops[0]->apply(tmp, NB_PIXELS);
 
     for(unsigned long idx=0; idx<(NB_PIXELS*4); ++idx)
     {
         OIIO_CHECK_CLOSE(dst[idx], tmp[idx], error);
     }
 
-    ops[1]->apply(tmp, tmp, NB_PIXELS);
+    ops[1]->apply(tmp, NB_PIXELS);
 
     for(unsigned long idx=0; idx<(NB_PIXELS*4); ++idx)
     {
@@ -590,7 +590,7 @@ OIIO_ADD_TEST(MatrixOffsetOp, matrix)
     float tmp[NB_PIXELS*4];
     memcpy(tmp, &src[0], 4*NB_PIXELS*sizeof(float));
 
-    ops[0]->apply(tmp, tmp, NB_PIXELS);
+    ops[0]->apply(tmp, NB_PIXELS);
 
     for(unsigned long idx=0; idx<(NB_PIXELS*4); ++idx)
     {
@@ -599,7 +599,7 @@ OIIO_ADD_TEST(MatrixOffsetOp, matrix)
                                                       error, 1.0f));
     }
 
-    ops[1]->apply(tmp, tmp, NB_PIXELS);
+    ops[1]->apply(tmp, NB_PIXELS);
 
     for(unsigned long idx=0; idx<(NB_PIXELS*4); ++idx)
     {
@@ -646,7 +646,7 @@ OIIO_ADD_TEST(MatrixOffsetOp, arbitrary)
     float tmp[NB_PIXELS*4];
     memcpy(tmp, &src[0], 4*NB_PIXELS*sizeof(float));
 
-    ops[0]->apply(tmp, tmp, NB_PIXELS);
+    ops[0]->apply(tmp, NB_PIXELS);
 
     for(unsigned long idx=0; idx<(NB_PIXELS*4); ++idx)
     {
@@ -655,7 +655,7 @@ OIIO_ADD_TEST(MatrixOffsetOp, arbitrary)
                                                       error, 1.0f));
     }
 
-    ops[1]->apply(tmp, tmp, NB_PIXELS);
+    ops[1]->apply(tmp, NB_PIXELS);
 
     for(unsigned long idx=0; idx<(NB_PIXELS*4); ++idx)
     {
@@ -718,14 +718,14 @@ OIIO_ADD_TEST(MatrixOffsetOp, create_fit_op)
     float tmp[NB_PIXELS * 4];
     memcpy(tmp, &src[0], 4 * NB_PIXELS * sizeof(float));
 
-    ops[0]->apply(tmp, tmp, NB_PIXELS);
+    ops[0]->apply(tmp, NB_PIXELS);
 
     for (unsigned long idx = 0; idx<(NB_PIXELS * 4); ++idx)
     {
         OIIO_CHECK_CLOSE(dst[idx], tmp[idx], error);
     }
 
-    ops[1]->apply(tmp, tmp, NB_PIXELS);
+    ops[1]->apply(tmp, NB_PIXELS);
 
     for (unsigned long idx = 0; idx<(NB_PIXELS * 4); ++idx)
     {
@@ -766,14 +766,14 @@ OIIO_ADD_TEST(MatrixOffsetOp, create_saturation_op)
     float tmp[NB_PIXELS * 4];
     memcpy(tmp, &src[0], 4 * NB_PIXELS * sizeof(float));
 
-    ops[0]->apply(tmp, tmp, NB_PIXELS);
+    ops[0]->apply(tmp, NB_PIXELS);
 
     for (unsigned long idx = 0; idx<(NB_PIXELS * 4); ++idx)
     {
         OIIO_CHECK_CLOSE(dst[idx], tmp[idx], error);
     }
 
-    ops[1]->apply(tmp, tmp, NB_PIXELS);
+    ops[1]->apply(tmp, NB_PIXELS);
 
     for (unsigned long idx = 0; idx<(NB_PIXELS * 4); ++idx)
     {
@@ -810,7 +810,7 @@ OIIO_ADD_TEST(MatrixOffsetOp, create_min_max_op)
     float tmp[NB_PIXELS * 4];
     memcpy(tmp, &src[0], 4 * NB_PIXELS * sizeof(float));
 
-    ops[0]->apply(tmp, tmp, NB_PIXELS);
+    ops[0]->apply(tmp, NB_PIXELS);
 
     for (unsigned long idx = 0; idx<(NB_PIXELS * 4); ++idx)
     {
@@ -859,12 +859,12 @@ OIIO_ADD_TEST(MatrixOffsetOp, combining)
         {
             float tmp[4];
             memcpy(tmp, &source[4*test], 4*sizeof(float));
-            ops[0]->apply(tmp, tmp, 1);
-            ops[1]->apply(tmp, tmp, 1);
+            ops[0]->apply(tmp, 1);
+            ops[1]->apply(tmp, 1);
             
             float tmp2[4];
             memcpy(tmp2, &source[4*test], 4*sizeof(float));
-            combined[0]->apply(tmp2, tmp2, 1);
+            combined[0]->apply(tmp2, 1);
             
             for(unsigned int i=0; i<4; ++i)
             {
@@ -897,12 +897,12 @@ OIIO_ADD_TEST(MatrixOffsetOp, combining)
         {
             float tmp[4];
             memcpy(tmp, &source[4 * test], 4 * sizeof(float));
-            op0->apply(tmp, tmp, 1);
-            op1->apply(tmp, tmp, 1);
+            op0->apply(tmp, 1);
+            op1->apply(tmp, 1);
 
             float tmp2[4];
             memcpy(tmp2, &source[4 * test], 4 * sizeof(float));
-            ops[0]->apply(tmp2, tmp2, 1);
+            ops[0]->apply(tmp2, 1);
 
             for (unsigned int i = 0; i<4; ++i)
             {
@@ -933,12 +933,12 @@ OIIO_ADD_TEST(MatrixOffsetOp, combining)
         {
             float tmp[4];
             memcpy(tmp, &source[4*test], 4*sizeof(float));
-            ops[0]->apply(tmp, tmp, 1);
-            ops[1]->apply(tmp, tmp, 1);
+            ops[0]->apply(tmp, 1);
+            ops[1]->apply(tmp, 1);
             
             float tmp2[4];
             memcpy(tmp2, &source[4*test], 4*sizeof(float));
-            combined[0]->apply(tmp2, tmp2, 1);
+            combined[0]->apply(tmp2, 1);
             
             for(unsigned int i=0; i<4; ++i)
             {
@@ -967,12 +967,12 @@ OIIO_ADD_TEST(MatrixOffsetOp, combining)
         {
             float tmp[4];
             memcpy(tmp, &source[4*test], 4*sizeof(float));
-            ops[0]->apply(tmp, tmp, 1);
-            ops[1]->apply(tmp, tmp, 1);
+            ops[0]->apply(tmp, 1);
+            ops[1]->apply(tmp, 1);
             
             float tmp2[4];
             memcpy(tmp2, &source[4*test], 4*sizeof(float));
-            combined[0]->apply(tmp2, tmp2, 1);
+            combined[0]->apply(tmp2, 1);
             
             for(unsigned int i=0; i<4; ++i)
             {
@@ -1001,12 +1001,12 @@ OIIO_ADD_TEST(MatrixOffsetOp, combining)
         {
             float tmp[4];
             memcpy(tmp, &source[4*test], 4*sizeof(float));
-            ops[0]->apply(tmp, tmp, 1);
-            ops[1]->apply(tmp, tmp, 1);
+            ops[0]->apply(tmp, 1);
+            ops[1]->apply(tmp, 1);
             
             float tmp2[4];
             memcpy(tmp2, &source[4*test], 4*sizeof(float));
-            combined[0]->apply(tmp2, tmp2, 1);
+            combined[0]->apply(tmp2, 1);
             
             for(unsigned int i=0; i<4; ++i)
             {
@@ -1308,7 +1308,7 @@ OIIO_ADD_TEST(MatrixOffsetOp, removing_red_green)
     float tmp[NB_PIXELS * 4];
     memcpy(tmp, &src[0], 4 * NB_PIXELS * sizeof(float));
 
-    ops[0]->apply(tmp, tmp, NB_PIXELS);
+    ops[0]->apply(tmp, NB_PIXELS);
 
     for (unsigned long idx = 0; idx<NB_PIXELS; idx+=4)
     {
