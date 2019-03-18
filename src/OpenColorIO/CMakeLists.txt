@@ -170,7 +170,7 @@ if(WIN32)
         # Impose a versioned name on Windows to avoid binary name clashes 
         # between different versions of the same library.
 
-        # Note: Do not append the PATCH to allow Apps use the
+        # Note: Do not append the PATCH to allow Apps to use the
         #       latest binary compatible library.
 
         set_target_properties(OpenColorIO
