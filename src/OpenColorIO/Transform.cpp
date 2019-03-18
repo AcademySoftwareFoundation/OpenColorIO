@@ -91,6 +91,11 @@ OCIO_NAMESPACE_ENTER
         {
             BuildExponentWithLinearOps(ops, config, *expWithLinearTransform, dir);
         }
+        else if(ConstFixedFunctionTransformRcPtr fixedFunctionTransform = \
+            DynamicPtrCast<const FixedFunctionTransform>(transform))
+        {
+            BuildFixedFunctionOps(ops, config, context, *fixedFunctionTransform, dir);
+        }
         else if(ConstFileTransformRcPtr fileTransform = \
             DynamicPtrCast<const FileTransform>(transform))
         {
@@ -174,6 +179,11 @@ OCIO_NAMESPACE_ENTER
             dynamic_cast<const FileTransform*>(t))
         {
             os << *fileTransform;
+        }
+        else if(const FixedFunctionTransform * fixedFunctionTransform = \
+            dynamic_cast<const FixedFunctionTransform*>(t))
+        {
+            os << *fixedFunctionTransform;
         }
         else if(const GroupTransform * groupTransform = \
             dynamic_cast<const GroupTransform*>(t))
