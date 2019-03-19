@@ -129,6 +129,11 @@ RangeOpData::~RangeOpData()
 {
 }
 
+RangeOpDataRcPtr RangeOpData::clone() const
+{
+    return std::make_shared<RangeOpData>(*this);
+}
+
 void RangeOpData::setMinInValue(double value)
 {
     m_minInValue = value;

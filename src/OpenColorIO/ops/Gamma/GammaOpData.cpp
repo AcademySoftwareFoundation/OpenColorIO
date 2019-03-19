@@ -135,6 +135,11 @@ GammaOpData::~GammaOpData()
 {
 }
 
+GammaOpDataRcPtr GammaOpData::clone() const
+{
+    return std::make_shared<GammaOpData>(*this);
+}
+
 GammaOpDataRcPtr GammaOpData::inverse() const
 {
     Style invStyle = BASIC_FWD;
