@@ -128,13 +128,17 @@ target_link_libraries(OpenColorIO
 if(NOT BUILD_SHARED_LIBS)
 	target_compile_definitions(OpenColorIO
 		PRIVATE
-		OpenColorIO_SKIP_IMPORTS
+			OpenColorIO_SKIP_IMPORTS
 	)
 else()
+	# Only exports selected symbols.
 	target_compile_definitions(OpenColorIO
 		PRIVATE
-		OpenColorIO_EXPORTS
+			OpenColorIO_EXPORTS
 	)
+	# If supported for the target machine, emit position-independent code 
+	# suitable for dynamic linking.
+	set_property(TARGET OpenColorIO PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif()
 
 if(OCIO_USE_SSE)
@@ -143,6 +147,7 @@ if(OCIO_USE_SSE)
 			USE_SSE
 	)
 endif()
+
 if(WIN32)
 	# A windows application linking to eXpat static libraries must
     # have the global macro XML_STATIC defined
