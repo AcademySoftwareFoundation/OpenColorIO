@@ -95,7 +95,6 @@ OCIO_ADD_GPU_TEST(RangeOp, scale_with_high_clipping)
 OCIO_ADD_GPU_TEST(RangeOp, scale_with_low_and_high_clippings_2)
 {
     // The similar test above is only an offset, this test is a scale & offset.
-
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
     range->setMinInValue(0.1f);
     range->setMaxInValue(1.1f);

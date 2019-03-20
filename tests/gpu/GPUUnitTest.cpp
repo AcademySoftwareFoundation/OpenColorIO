@@ -96,6 +96,9 @@ namespace Shader
                                       float eps,
                                       float minExpected)
     {
+        // If value and expected are infinity, return true.
+        if (value == expected) return true;
+        if (std::isnan(value) && std::isnan(expected)) return true;
         const float div = (expected > 0.0f) ?
             ((expected < minExpected) ? minExpected : expected) :
             ((-expected < minExpected) ? minExpected : -expected);
@@ -193,9 +196,9 @@ AddTest::AddTest(OCIOGPUTest* test)
 namespace
 {
     GLint g_win = 0;
-    const unsigned g_winWidth   = 256;
-    const unsigned g_winHeight  = 256;
-    const unsigned g_components = 4;
+    static constexpr unsigned g_winWidth   = 256;
+    static constexpr unsigned g_winHeight  = 256;
+    static constexpr unsigned g_components = 4;
 
     OpenGLBuilderRcPtr g_oglBuilder;
 
@@ -264,6 +267,18 @@ namespace
         glutDestroyWindow(g_win);
     }
 
+    void SetTestValue(float * image, float val, unsigned numComponents)
+    {
+        for (unsigned component = 0; component < numComponents; ++component)
+        {
+            for (unsigned idx = 0; idx < numComponents; ++idx)
+            {
+                const float valSet = (idx == component) ? val : 0.0f;
+                image[idx+component*numComponents] = valSet;
+            }
+        }
+    }
+
     void UpdateImageTexture(OCIOGPUTest * test)
     {
         // Note: User-specified custom values are padded out 
@@ -276,10 +291,12 @@ namespace
         {
             // It means to generate the input values.
 
-            const bool useWideRange = test->getWideRange();
+            const bool testWideRange = test->getTestWideRange();
+            const bool testNaN = test->getTestNaN();
+            const bool testInfinity = test->getTestInfinity();
 
-            const float min = useWideRange ? -1.0f : 0.0f;
-            const float max = useWideRange ? +2.0f : 1.0f;
+            const float min = testWideRange ? -1.0f : 0.0f;
+            const float max = testWideRange ? +2.0f : 1.0f;
             const float range = max - min;
 
             OCIOGPUTest::CustomValues tmp;
@@ -288,10 +305,34 @@ namespace
                 = OCIOGPUTest::CustomValues::Values(predefinedNumEntries, 
                                                     test->getExpectedMinimalValue());
 
-            const float step 
-                = std::max(range / predefinedNumEntries, test->getExpectedMinimalValue());
+            unsigned idx = 0;
+            unsigned numEntries = predefinedNumEntries;
+            const unsigned numTests = g_components*g_components;
+            if (testNaN)
+            {
+                const float qnan = std::numeric_limits<float>::quiet_NaN();
+                SetTestValue(&tmp.m_inputValues[0], qnan, g_components);
+                idx += numTests;
+                numEntries -= numTests;
+            }
 
-            for(unsigned idx=0; idx<predefinedNumEntries; ++idx)
+            if (testInfinity)
+            {
+                const float posinf = std::numeric_limits<float>::infinity();
+                SetTestValue(&g_image[idx], posinf, g_components);
+                idx += numTests;
+                numEntries -= numTests;
+
+                const float neginf = -std::numeric_limits<float>::infinity();
+                SetTestValue(&g_image[idx], neginf, g_components);
+                idx += numTests;
+                numEntries -= numTests;
+            }
+
+            const float step 
+                = std::max(range / numEntries, test->getExpectedMinimalValue());
+
+            for(; idx<numEntries; ++idx)
             {
                 tmp.m_inputValues[idx] = min + step * float(idx);
             }

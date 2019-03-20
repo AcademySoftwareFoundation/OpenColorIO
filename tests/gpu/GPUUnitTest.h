@@ -57,11 +57,8 @@ class OCIOGPUTest
             // the predefined GPU texture size.
             size_t m_originalInputValueSize;
 
-            bool m_useWideRangeValues;
-
             CustomValues() 
                 : m_originalInputValueSize(0)
-                , m_useWideRangeValues(true) 
             {}
         };
 
@@ -84,11 +81,21 @@ class OCIOGPUTest
         inline OCIO_NAMESPACE::ConstProcessorRcPtr & getProcessor() { return m_processor; }
         inline OCIO_NAMESPACE::GpuShaderDescRcPtr & getShaderDesc() { return m_shaderDesc; }
 
-        // WideRange tests a neutral ramp on [-1,2], standard range is [0,1].
-        inline bool getWideRange() const { return m_values.m_useWideRangeValues; }
-        inline void setWideRange(bool use) { m_values.m_useWideRangeValues = use; }
+        // Set TestWideRange to true to use test values on [-1,2] rather than [0,1].
+        inline bool getTestWideRange() const { return m_testWideRange; }
+        inline void setTestWideRange(bool use) { m_testWideRange = use; }
+
+        // Set TestNaN to true to include NaNs in each channel of the test values.
+        inline bool getTestNaN() const { return m_testNaN; }
+        inline void setTestNaN(bool use) { m_testNaN = use; }
+
+        // Set TestInfinity to true to include positive and negative infinity
+        // in each channel of the test values.
+        inline bool getTestInfinity() const { return m_testInfinity; }
+        inline void setTestInfinity(bool use) { m_testInfinity = use; }
 
         // Provide a set of RGBA values to test (otherwise a neutral ramp will be used).
+        // TestWideRange, TestNaN & TestInfinity are used when m_inputValues is empty. 
         inline void setCustomValues(CustomValues & values) { m_values = values; }
         inline CustomValues & getCustomValues() { return m_values; }
 
@@ -121,7 +128,9 @@ class OCIOGPUTest
         OCIO_NAMESPACE::GpuShaderDescRcPtr m_shaderDesc;
         float m_errorThreshold;
         float m_expectedMinimalValue = 1e-6f;
-        bool m_useWideRange = true;
+        bool m_testWideRange = true;
+        bool m_testNaN = true;
+        bool m_testInfinity = true;
         bool m_performRelativeComparison = false;
         bool m_verbose = false;
         bool m_enabled = true;

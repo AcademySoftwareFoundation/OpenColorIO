@@ -60,11 +60,16 @@ void AddLogTest(OCIOGPUTest & test,
     test.setErrorThreshold(epsilon);
 
     test.setContext(log->createEditableCopy(), shaderDesc);
+    // TODO: Would like to be able to remove the setTestNaN(false) and
+    // setTestInfinity(false) from all of these tests.
+    test.setTestInfinity(false);
 }
 
 
 OCIO_ADD_GPU_TEST(LogTransform, LogBase_10)
 {
+    // TODO: Would like to be able to remove the setTestNaN(false) from all of these tests.
+    test.setTestNaN(false);
     const float base10 = 10.0f;
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
@@ -82,11 +87,13 @@ OCIO_ADD_GPU_TEST(LogTransform, LogBase_10_inverse)
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
     AddLogTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, base10, g_epsilon_inverse);
+    test.setTestNaN(false);
 }
 
 
 OCIO_ADD_GPU_TEST(LogTransform, LogBase_10_generic_shader)
 {
+    test.setTestNaN(false);
     const float base10 = 10.0f;
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
@@ -104,11 +111,13 @@ OCIO_ADD_GPU_TEST(LogTransform, LogBase_10_inverse_generic_shader)
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     AddLogTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, base10, g_epsilon_inverse);
+    test.setTestNaN(false);
 }
 
 
 OCIO_ADD_GPU_TEST(LogTransform, LogBase_euler)
 {
+    test.setTestNaN(false);
     const float eulerConstant = expf(1.0f);
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
@@ -126,11 +135,13 @@ OCIO_ADD_GPU_TEST(LogTransform, LogBase_euler_inverse)
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
     AddLogTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, eulerConstant, g_epsilon_inverse);
+    test.setTestNaN(false);
 }
 
 
 OCIO_ADD_GPU_TEST(LogTransform, LogBase_euler_generic_shader)
 {
+    test.setTestNaN(false);
     const float eulerConstant = expf(1.0f);
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
@@ -148,6 +159,7 @@ OCIO_ADD_GPU_TEST(LogTransform, LogBase_euler_inverse_generic_shader)
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     AddLogTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, eulerConstant, g_epsilon_inverse);
+    test.setTestNaN(false);
 }
 
 OCIO_ADD_GPU_TEST(LogAffineTransform, base)
@@ -163,6 +175,7 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, base)
 
     test.setErrorThreshold(g_epsilon);
     test.setContext(log->createEditableCopy(), shaderDesc);
+    test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(LogAffineTransform, base_inverse)
@@ -179,6 +192,8 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, base_inverse)
     test.setErrorThreshold(g_epsilon);
     test.setRelativeComparison(true);
     test.setContext(log->createEditableCopy(), shaderDesc);
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(LogAffineTransform, linSideSlope)
@@ -194,6 +209,7 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, linSideSlope)
 
     test.setErrorThreshold(g_epsilon);
     test.setContext(log->createEditableCopy(), shaderDesc);
+    test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(LogAffineTransform, linSideSlope_inverse)
@@ -209,6 +225,8 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, linSideSlope_inverse)
 
     test.setErrorThreshold(g_epsilon);
     test.setContext(log->createEditableCopy(), shaderDesc);
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(LogAffineTransform, linSideOffset)
@@ -224,6 +242,7 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, linSideOffset)
 
     test.setErrorThreshold(g_epsilon);
     test.setContext(log->createEditableCopy(), shaderDesc);
+    test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(LogAffineTransform, linSideOffset_inverse)
@@ -239,6 +258,8 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, linSideOffset_inverse)
 
     test.setErrorThreshold(g_epsilon);
     test.setContext(log->createEditableCopy(), shaderDesc);
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(LogAffineTransform, logSideSlope)
@@ -254,6 +275,7 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, logSideSlope)
 
     test.setErrorThreshold(g_epsilon);
     test.setContext(log->createEditableCopy(), shaderDesc);
+    test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(LogAffineTransform, logSideSlope_inverse)
@@ -269,6 +291,8 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, logSideSlope_inverse)
 
     test.setErrorThreshold(g_epsilon);
     test.setContext(log->createEditableCopy(), shaderDesc);
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(LogAffineTransform, logSideOffset)
@@ -284,6 +308,7 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, logSideOffset)
 
     test.setErrorThreshold(g_epsilon);
     test.setContext(log->createEditableCopy(), shaderDesc);
+    test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(LogAffineTransform, logSideOffset_inverse)
@@ -299,5 +324,7 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, logSideOffset_inverse)
 
     test.setErrorThreshold(g_epsilon);
     test.setContext(log->createEditableCopy(), shaderDesc);
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
 }
 
