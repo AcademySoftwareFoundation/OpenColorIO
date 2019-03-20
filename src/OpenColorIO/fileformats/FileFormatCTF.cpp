@@ -1021,7 +1021,7 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "unittest.h"
-#include "UnitTestFiles.h"
+#include "UnitTestUtils.h"
 
 OCIO::LocalCachedFileRcPtr LoadCLFFile(const std::string & fileName)
 {
