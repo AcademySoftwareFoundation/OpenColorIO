@@ -444,6 +444,8 @@ OIIO_ADD_TEST(RangeOps, computed_identifier)
 
 OIIO_ADD_TEST(RangeOps, bit_depth)
 {
+    // Test bit depths.
+
     OCIO::RangeOpDataRcPtr range
         = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
                                               0., 255., -1., 65540.);
@@ -458,13 +460,13 @@ OIIO_ADD_TEST(RangeOps, bit_depth)
     OIIO_CHECK_EQUAL(ops[0]->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
     OIIO_CHECK_EQUAL(ops[0]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT16);
 
-    ops.push_back(ops[0]->clone());
+    // Test bit depths after a clone.
 
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO::ConstOpRcPtr o = ops[0]->clone();
+    OIIO_CHECK_EQUAL(o->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(o->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT16);
 
-    OIIO_CHECK_EQUAL(ops[0]->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
-    OIIO_CHECK_EQUAL(ops[0]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT16);
-    OIIO_CHECK_EQUAL(ops[1]->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
-    OIIO_CHECK_EQUAL(ops[1]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT16);
+    OCIO::ConstRangeOpDataRcPtr r = DynamicPtrCast<const OCIO::RangeOpData>(o->data());
+    OIIO_CHECK_EQUAL(r->getMinOutValue(), -1.);
 }
 #endif
