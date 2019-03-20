@@ -108,6 +108,7 @@ set(SOURCES
 	transforms/RangeTransform.cpp
 	transforms/TruelightTransform.cpp
 	UnitTest.cpp
+	UnitTestUtils.cpp
 )
 
 if(WIN32 AND BUILD_SHARED_LIBS)

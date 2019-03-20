@@ -110,6 +110,7 @@ OCIO_NAMESPACE_ENTER
         std::string vec3fKeyword() const;
         // Get the string for creating constant vector with three elements
         std::string vec3fConst(float x, float y, float z) const;
+        std::string vec3fConst(double x, double y, double z) const;
         // Get the string for creating constant vector with three elements
         std::string vec3fConst(const std::string& x, const std::string& y,
                                const std::string& z) const;
