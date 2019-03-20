@@ -434,7 +434,10 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
+
+#include <limits>
 #include "unittest.h"
+#include "UnitTestUtils.h"
 
 OCIO_NAMESPACE_USING
 
@@ -665,9 +668,17 @@ OIIO_ADD_TEST(CDLOps, is_inverse)
 // Note that the error thresholds are higher for the SSE version because
 // of the use of a much faster, but somewhat less accurate, implementation
 // of the power function.
+// TODO: The NaN and Inf handling is probably not ideal, as shown by the 
+// tests below, and could be improved.
 OIIO_ADD_TEST(CDLOps, apply_clamp_fwd)
 {
+    const float qnan = std::numeric_limits<float>::quiet_NaN();
+    const float inf = std::numeric_limits<float>::infinity();
     float input_32f[] = {
+         qnan,    qnan,  qnan,  0.0f,
+         0.0f,    0.0f,  0.0f,  qnan,
+         inf,     inf,   inf,   inf,
+        -inf,    -inf,  -inf,  -inf,
          0.3278f, 0.01f, 1.0f,  0.0f,
          0.25f,   0.5f,  0.75f, 1.0f,
          1.25f,   1.5f,  1.75f, 0.75f,
@@ -676,6 +687,10 @@ OIIO_ADD_TEST(CDLOps, apply_clamp_fwd)
          0.0f,    0.8f,  0.99f, 0.5f };
 
     const float expected_32f[] = {
+        0.0f,      0.0f,      0.0f,      0.0f,
+        0.071827f, 0.0f,      0.070533f, qnan,
+        1.0f,      1.0f,      1.0f,      inf,
+        0.0f,      0.0f,      0.0f,     -inf,
         0.609399f, 0.000000f, 0.113130f, 0.0f,
         0.422056f, 0.401466f, 0.035820f, 1.0f,
         1.000000f, 1.000000f, 0.000000f, 0.75f,
@@ -683,20 +698,26 @@ OIIO_ADD_TEST(CDLOps, apply_clamp_fwd)
         0.000000f, 0.000000f, 0.031735f, 0.25f,
         0.000000f, 0.746748f, 0.018691f, 0.5f  };
 
-    ApplyCDL(input_32f, expected_32f, 6,
+    ApplyCDL(input_32f, expected_32f, 10,
              CDL_DATA_1::slope, CDL_DATA_1::offset, 
              CDL_DATA_1::power, CDL_DATA_1::saturation, 
              OCIO::CDLOpData::CDL_V1_2_FWD,
 #ifdef USE_SSE
              4e-6f);
 #else
-             1e-6f);
+             2e-6f);
 #endif
 }
 
 OIIO_ADD_TEST(CDLOps, apply_clamp_rev)
 {
+    const float qnan = std::numeric_limits<float>::quiet_NaN();
+    const float inf = std::numeric_limits<float>::infinity();
     float input_32f[] = {
+       qnan,       qnan,       qnan,      0.0f,
+       0.0f,       0.0f,       0.0f,      qnan,
+       inf,        inf,        inf,       inf,
+      -inf,       -inf,       -inf,      -inf,
        0.609399f,  0.100000f,  0.113130f, 0.0f,
        0.001000f,  0.746748f,  0.018691f, 0.5f,
        0.422056f,  0.401466f,  0.035820f, 1.0f,
@@ -705,6 +726,10 @@ OIIO_ADD_TEST(CDLOps, apply_clamp_rev)
       -0.2f,       0.5f,       1.4f,      0.0f };
 
     const float expected_32f[] = {
+      0.0f,      0.209091f, 0.0f,      0.0f,
+      0.0f,      0.209091f, 0.0f,      qnan,
+      0.703713f, 1.0f,      1.0f,       inf,
+      0.0f,      0.209091f, 0.0f,      -inf,
       0.340710f, 0.275726f, 1.000000f, 0.0f,
       0.025902f, 0.801895f, 1.000000f, 0.5f,
       0.250000f, 0.500000f, 0.750006f, 1.0f,
@@ -712,20 +737,26 @@ OIIO_ADD_TEST(CDLOps, apply_clamp_rev)
       0.703704f, 1.000000f, 1.000000f, 0.75f,
       0.012206f, 0.582944f, 1.000000f, 0.0f };
 
-    ApplyCDL(input_32f, expected_32f, 6,
+    ApplyCDL(input_32f, expected_32f, 10,
              CDL_DATA_1::slope, CDL_DATA_1::offset, 
              CDL_DATA_1::power, CDL_DATA_1::saturation, 
              OCIO::CDLOpData::CDL_V1_2_REV,
 #ifdef USE_SSE
              9e-6f);
 #else
-             1e-6f);
+             1e-5f);
 #endif
 }
 
 OIIO_ADD_TEST(CDLOps, apply_noclamp_fwd)
 {
+    const float qnan = std::numeric_limits<float>::quiet_NaN();
+    const float inf = std::numeric_limits<float>::infinity();
     float input_32f[] = {
+       qnan,    qnan,  qnan,  0.0f,
+       0.0f,    0.0f,  0.0f,  qnan,
+       inf,     inf,   inf,   inf,
+      -inf,    -inf,  -inf,  -inf,
        0.3278f, 0.01f, 1.0f,  0.0f,
        0.0f,    0.8f,  0.99f, 0.5f,
        0.25f,   0.5f,  0.75f, 1.0f,
@@ -734,6 +765,10 @@ OIIO_ADD_TEST(CDLOps, apply_noclamp_fwd)
       -0.2f,    0.5f,  1.4f,  0.0f };
 
     const float expected_32f[] = {
+       0.0f,       0.0f,       0.0f,      0.0f,
+       0.109661f, -0.249088f,  0.108368f, qnan,
+       qnan,      qnan,        qnan,       inf,
+       qnan,      qnan,        qnan,      -inf,
        0.645424f, -0.260548f,  0.149154f, 0.0f,
       -0.045094f,  0.746748f,  0.018691f, 0.5f,
        0.422056f,  0.401466f,  0.035820f, 1.0f,
@@ -741,20 +776,26 @@ OIIO_ADD_TEST(CDLOps, apply_noclamp_fwd)
        1.753162f,  1.331130f, -0.108181f, 0.75f,
       -0.327485f,  0.431854f,  0.111983f, 0.0f };
 
-    ApplyCDL(input_32f, expected_32f, 6,
+    ApplyCDL(input_32f, expected_32f, 10,
              CDL_DATA_1::slope, CDL_DATA_1::offset, 
              CDL_DATA_1::power, CDL_DATA_1::saturation, 
              OCIO::CDLOpData::CDL_NO_CLAMP_FWD,
 #ifdef USE_SSE
              2e-5f);
 #else
-             1e-6f);
+             2e-6f);
 #endif
 }
 
 OIIO_ADD_TEST(CDLOps, apply_noclamp_rev)
 {
+    const float qnan = std::numeric_limits<float>::quiet_NaN();
+    const float inf = std::numeric_limits<float>::infinity();
     float input_32f[] = {
+       qnan,       qnan,       qnan,      0.0f,
+       0.0f,       0.0f,       0.0f,      qnan,
+       inf,        inf,        inf,       inf,
+      -inf,       -inf,       -inf,      -inf,
        0.609399f,  0.100000f,  0.113130f, 0.0f,
        0.001000f,  0.746748f,  0.018691f, 0.5f,
        0.422056f,  0.401466f,  0.035820f, 1.0f,
@@ -763,6 +804,10 @@ OIIO_ADD_TEST(CDLOps, apply_noclamp_rev)
       -0.2f,       0.5f,       1.4f,      0.0f };
 
     const float expected_32f[] = {
+      -0.037037f,  0.209091f, -1.549296f,  0.0f,
+      -0.037037f,  0.209091f, -1.549296f,  qnan,
+      -0.037037f,  0.209091f, -1.549296f,  inf,
+      -0.037037f,  0.209091f, -1.549296f, -inf,
        0.340710f,  0.275726f,  1.294827f,  0.0f,
        0.025902f,  0.801895f,  1.022221f,  0.5f,
        0.250000f,  0.500000f,  0.750006f,  1.0f,
@@ -770,7 +815,7 @@ OIIO_ADD_TEST(CDLOps, apply_noclamp_rev)
        0.937160f,  1.700692f,  19.807237f, 0.75f,
       -0.099839f,  0.580528f,  14.880301f, 0.0f };
 
-    ApplyCDL(input_32f, expected_32f, 6,
+    ApplyCDL(input_32f, expected_32f, 10,
              CDL_DATA_1::slope, CDL_DATA_1::offset, 
              CDL_DATA_1::power, CDL_DATA_1::saturation, 
              OCIO::CDLOpData::CDL_NO_CLAMP_REV,
@@ -791,17 +836,27 @@ namespace CDL_DATA_2
 
 OIIO_ADD_TEST(CDLOps, apply_clamp_fwd_2)
 {
+    const float qnan = std::numeric_limits<float>::quiet_NaN();
+    const float inf = std::numeric_limits<float>::infinity();
     float input_32f[] = {
+      qnan,  qnan,  qnan,  0.0f,
+      0.0f,  0.0f,  0.0f,  qnan,
+      inf,   inf,   inf,   inf,
+     -inf,  -inf,  -inf,  -inf,
       0.65f, 0.55f, 0.20f, 0.0f,
       0.41f, 0.81f, 0.39f, 0.5f,
       0.25f, 0.50f, 0.75f, 1.0f };
 
     const float expected_32f[] = {
+      0.0f,      0.0f,      0.0f,      0.0f,
+      0.027379f, 0.024645f, 0.046585f, qnan,
+      1.0f,      1.0f,      1.0f,      inf,
+      0.0f,      0.0f,      0.0,      -inf,
       0.745644f, 0.639197f, 0.264149f, 0.0f,
       0.499594f, 0.897554f, 0.428591f, 0.5f,
       0.305035f, 0.578779f, 0.692558f, 1.0f };
 
-    ApplyCDL(input_32f, expected_32f, 3,
+    ApplyCDL(input_32f, expected_32f, 7,
              CDL_DATA_2::slope, CDL_DATA_2::offset, 
              CDL_DATA_2::power, CDL_DATA_2::saturation, 
              OCIO::CDLOpData::CDL_V1_2_FWD,
@@ -822,7 +877,14 @@ namespace CDL_DATA_3
 
 OIIO_ADD_TEST(CDLOps, apply_clamp_fwd_3)
 {
+    const float qnan = std::numeric_limits<float>::quiet_NaN();
+    const float inf = std::numeric_limits<float>::infinity();
     float input_32f[] = {
+      qnan,  qnan, qnan, 0.0f,
+      0.0f,  0.0f, 0.0f, qnan,
+      inf,   inf,  inf,  inf,
+     -inf,  -inf, -inf, -inf,
+
       0.02f, 0.0f, 0.0f, 0.0f,
       0.17f, 0.0f, 0.0f, 0.0f,
       0.65f, 0.0f, 0.0f, 0.0f,
@@ -844,6 +906,11 @@ OIIO_ADD_TEST(CDLOps, apply_clamp_fwd_3)
       0.97f, 0.13f, 0.23f, 0.0f };
 
     const float expected_32f[] = {
+      0.000000f, 0.000000f, 0.000000f, 0.0f,
+      0.000000f, 0.000000f, 0.000000f, qnan,
+      1.0f,      1.0f,      1.0f,      inf,
+      0.0f,      0.0f,      0.0f,     -inf,
+
       0.000000f, 0.000000f, 0.000000f, 0.0f,
       0.364613f, 0.000781f, 0.000781f, 0.0f,
       0.992126f, 0.002126f, 0.002126f, 0.0f,
@@ -864,7 +931,7 @@ OIIO_ADD_TEST(CDLOps, apply_clamp_fwd_3)
       0.992154f, 0.002154f, 0.0410283f, 0.0f,
       0.992154f, 0.002154f, 0.0410283f, 0.0f };
 
-    ApplyCDL(input_32f, expected_32f, 16,
+    ApplyCDL(input_32f, expected_32f, 20,
              CDL_DATA_3::slope, CDL_DATA_3::offset, 
              CDL_DATA_3::power, CDL_DATA_3::saturation, 
              OCIO::CDLOpData::CDL_V1_2_FWD,
@@ -877,7 +944,14 @@ OIIO_ADD_TEST(CDLOps, apply_clamp_fwd_3)
 
 OIIO_ADD_TEST(CDLOps, apply_noclamp_fwd_3)
 {
+    const float qnan = std::numeric_limits<float>::quiet_NaN();
+    const float inf = std::numeric_limits<float>::infinity();
     float input_32f[] = {
+      qnan,  qnan, qnan, 0.0f,
+      0.0f,  0.0f, 0.0f, qnan,
+      inf,   inf,  inf,  inf,
+     -inf,  -inf, -inf, -inf,
+
       0.02f, 0.0f, 0.0f, 0.0f,
       0.17f, 0.0f, 0.0f, 0.0f,
       0.65f, 0.0f, 0.0f, 0.0f,
@@ -899,6 +973,11 @@ OIIO_ADD_TEST(CDLOps, apply_noclamp_fwd_3)
       0.97f, 0.13f, 0.23f, 0.0f };
 
     const float expected_32f[] = {
+       0.0f,       0.0f,       0.0f,      0.0f,
+      -0.178000f, -0.178000f, -0.178000f, qnan,
+       qnan,       qnan,       qnan,      inf,
+       qnan,       qnan,       qnan,     -inf,
+
       -0.110436f, -0.177855f, -0.177855f, 0.0f,
        0.363211f, -0.176840f, -0.176840f, 0.0f,
        2.158845f, -0.172992f, -0.172992f, 0.0f,
@@ -919,7 +998,7 @@ OIIO_ADD_TEST(CDLOps, apply_noclamp_fwd_3)
        2.159931f, -0.043206f, 0.043188f, 0.0f,
        3.454341f, -0.040432f, 0.045962f, 0.0f };
 
-    ApplyCDL(input_32f, expected_32f, 16,
+    ApplyCDL(input_32f, expected_32f, 20,
              CDL_DATA_3::slope, CDL_DATA_3::offset, 
              CDL_DATA_3::power, CDL_DATA_3::saturation, 
              OCIO::CDLOpData::CDL_NO_CLAMP_FWD,

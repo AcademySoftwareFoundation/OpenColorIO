@@ -154,6 +154,9 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_inverse_legacy_shader)
 
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_generic_shader)
 {
+    // TODO: Would like to be able to remove the setTestNaN(false) and
+    // setTestInfinity(false) from all of these tests.
+    test.setTestNaN(false);
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_2.spi1d");
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
@@ -166,6 +169,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_generic_shader)
 
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_inverse_generic_shader)
 {
+    test.setTestNaN(false);
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_2.spi1d");
     file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
@@ -239,6 +243,8 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_nearest_generic_shader)
 
 OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_legacy_shader)
 {
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_4.spi1d");
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
@@ -247,13 +253,15 @@ OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_legacy_shader)
     test.setContext(file->createEditableCopy(), shaderDesc);
     // lut1d_4.spi1d has values outside [0, 1]. Legacy shader is baking ops
     // into a 3D LUT and would clamp outside of [0, 1].
-    test.setWideRange(false);
+    test.setTestWideRange(false);
     test.setErrorThreshold(2e-4f);
 }
 
 
 OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_inverse_legacy_shader)
 {
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_4.spi1d");
     file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
@@ -261,13 +269,14 @@ OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_inverse_legacy_shader)
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
 
     test.setContext(file->createEditableCopy(), shaderDesc);
-    test.setWideRange(false);
+    test.setTestWideRange(false);
     test.setErrorThreshold(5e-5f);
 }
 
 
 OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_generic_shader)
 {
+    test.setTestNaN(false);
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_4.spi1d");
 
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
@@ -279,6 +288,8 @@ OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_generic_shader)
 
 OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_inverse_generic_shader)
 {
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_4.spi1d");
     file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 

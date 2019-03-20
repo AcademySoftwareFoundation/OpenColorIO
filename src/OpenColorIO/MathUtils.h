@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cmath>
 #include <vector>
+#include <algorithm>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -72,7 +73,8 @@ OCIO_NAMESPACE_ENTER
     {
         return ((x1 > x2)? x1 - x2: x2 - x1) <= e * ((x1 > 0)? x1: -x1);
     }
-    
+
+#ifdef OCIO_UNIT_TEST
     // Relative comparison: check if the difference between value and expected
     // relative to (divided by) expected does not exceed the eps.  A minimum
     // expected value is used to limit the scaling of the difference and
@@ -83,6 +85,9 @@ OCIO_NAMESPACE_ENTER
                                       T eps,
                                       T minExpected)
     {
+        // If value and expected are infinity, return true.
+        if (value == expected) return true;
+        if (std::isnan(value) && std::isnan(expected)) return true;
         const float div = (expected > 0) ?
             ((expected < minExpected) ? minExpected : expected) :
             ((-expected < minExpected) ? minExpected : -expected);
@@ -91,7 +96,7 @@ OCIO_NAMESPACE_ENTER
             ((value > expected) ? value - expected : expected - value)
             / div) <= eps;
     }
-
+#endif
 
     inline float lerpf(float a, float b, float z)
     {
@@ -123,11 +128,13 @@ OCIO_NAMESPACE_ENTER
     
 // Clamp value a to[min, max]
 // First compare with max, then with min.
-// Does not validate max >= min
+// 
+// Note: Does not validate max >= min.
+// Note: NaN values become 0.
 template<typename T>
-inline T clamp(T a, T min, T max)
+inline T Clamp(T a, T min, T max)
 {
-    return ((a) > (max) ? (max) : ((min) > (a) ? (min) : (a)));
+    return std::min(std::max(min, a), max);
 }
 
 // Remove/map special float values to values inside the floating-point domain.
