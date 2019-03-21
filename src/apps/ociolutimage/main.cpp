@@ -32,8 +32,9 @@ OCIO_NAMESPACE_USING;
 
 #include <OpenImageIO/imageio.h>
 #include <OpenImageIO/typedesc.h>
-#if (OIIO_VERSION < 10100)
-namespace OIIO = OIIO_NAMESPACE;
+
+#if OIIO_VERSION >= 10903 && __cplusplus < 201103
+#error While not officially supported, compile with C++11 (or higher) to use OIIO versions 1.9.3 or newer
 #endif
 
 #include "argparse.h"
@@ -116,7 +117,11 @@ void Generate(int cubesize, int maxwidth,
         processor->apply(imgdesc);
     }
 
+#if OIIO_VERSION < 10903
     OIIO::ImageOutput* f = OIIO::ImageOutput::create(outputfile);
+#else
+    auto f = OIIO::ImageOutput::create(outputfile);
+#endif
     if(!f)
     {
         throw Exception( "Could not create output image.");
@@ -128,7 +133,9 @@ void Generate(int cubesize, int maxwidth,
     f->open(outputfile, spec);
     f->write_image(OIIO::TypeDesc::FLOAT, &img[0]);
     f->close();
-    delete f;
+#if OIIO_VERSION < 10903
+    OIIO::ImageOutput::destroy(f);
+#endif
 }
 
 
@@ -137,7 +144,11 @@ void Extract(int cubesize, int maxwidth,
              const std::string & outputfile)
 {
     // Read the image
+#if OIIO_VERSION < 10903
     OIIO::ImageInput* f = OIIO::ImageInput::create(inputfile);
+#else
+    auto f = OIIO::ImageInput::create(inputfile);
+#endif
     if(!f)
     {
         throw Exception("Could not create input image.");
@@ -183,7 +194,9 @@ void Extract(int cubesize, int maxwidth,
     std::vector<float> img;
     img.resize(spec.width*spec.height*spec.nchannels, 0);
     f->read_image(OIIO::TypeDesc::TypeFloat, &img[0]);
-    delete f;
+#if OIIO_VERSION < 10903
+    OIIO::ImageInput::destroy(f);
+#endif
     
     // Repack into rgb
     // Convert the RGB[...] image to an RGB image, in place.
