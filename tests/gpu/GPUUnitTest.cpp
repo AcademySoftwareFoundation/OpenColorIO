@@ -319,12 +319,12 @@ namespace
             if (testInfinity)
             {
                 const float posinf = std::numeric_limits<float>::infinity();
-                SetTestValue(&g_image[idx], posinf, g_components);
+                SetTestValue(&tmp.m_inputValues[idx], posinf, g_components);
                 idx += numTests;
                 numEntries -= numTests;
 
                 const float neginf = -std::numeric_limits<float>::infinity();
-                SetTestValue(&g_image[idx], neginf, g_components);
+                SetTestValue(&tmp.m_inputValues[idx], neginf, g_components);
                 idx += numTests;
                 numEntries -= numTests;
             }

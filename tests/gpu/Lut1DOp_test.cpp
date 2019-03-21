@@ -307,9 +307,9 @@ OCIO_ADD_GPU_TEST(Lut1DOp, not_linear_lut1d_5_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
-    // TODO: Should be smaller.
-    test.setErrorThreshold(1e-3f);
+    test.setErrorThreshold(1e-6f);
     test.setRelativeComparison(true); // LUT contains values up to 64
+    test.setExpectedMinimalValue(1.0f);
 }
 
 OCIO_ADD_GPU_TEST(Lut1DOp, not_linear_lut1d_5_inverse_generic_shader)
