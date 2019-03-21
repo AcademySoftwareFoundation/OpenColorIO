@@ -1,4 +1,4 @@
-# Control the end-of-line (i.e. eof) type for all the test files.
+# Control the end-of-line (i.e. eol) type for all the test files.
 
 # Most formats are text formats. Binary formats are excluded below.
 # Favor LF for all text files on all platforms.
