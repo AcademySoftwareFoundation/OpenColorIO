@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
+Copyright (c) 2019 Autodesk Inc., et al.
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -26,54 +26,52 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef INCLUDED_OCIO_UNITTESTFILES_H
-#define INCLUDED_OCIO_UNITTESTFILES_H
-
 #ifdef OCIO_UNIT_TEST
 
-#include <fstream>
-
 #include <OpenColorIO/OpenColorIO.h>
-#include "Op.h"
-#include "pystring/pystring.h"
+
+#include "OpBuilders.h"
+#include "UnitTestUtils.h"
 
 OCIO_NAMESPACE_ENTER
 {
+#ifndef OCIO_UNIT_TEST_FILES_DIR
+#error Expecting OCIO_UNIT_TEST_FILES_DIR to be defined for tests. Check relevant CMakeLists.txt
+#endif
 
-const char * getTestFilesDir();
+// For explanation, refer to https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html 
+#define _STR(x) #x
+#define STR(x) _STR(x)
+
+static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
+
+const char * getTestFilesDir()
+{
+    return ocioTestFilesDir.c_str();
+}
 
 void BuildOps(const std::string & fileName,
               OpRcPtrVec & fileOps,
-              TransformDirection dir);
-    
-class CachedFile;
-
-template <class LocalFileFormat, class LocalCachedFile>
-OCIO_SHARED_PTR<LocalCachedFile> LoadTestFile(
-    const std::string & fileName, std::ios_base::openmode mode)
+              TransformDirection dir)
 {
     const std::string filePath(std::string(getTestFilesDir()) + "/"
                                + fileName);
 
-    // Open the filePath
-    std::ifstream filestream;
-    filestream.open(filePath.c_str(), mode);
+    // Create a FileTransform
+    FileTransformRcPtr pFileTransform = FileTransform::Create();
+    // A transform file does not define any interpolation (contrary to config
+    // file), this is to avoid exception when creating the operation.
+    pFileTransform->setInterpolation(INTERP_LINEAR);
+    pFileTransform->setDirection(TRANSFORM_DIR_FORWARD);
+    pFileTransform->setSrc(filePath.c_str());
 
-    if (!filestream.is_open())
-    {
-        throw Exception("Error opening test file.");
-    }
+    // Create empty Config to use
+    ConfigRcPtr pConfig = Config::Create();
 
-    std::string root, extension, name;
-    pystring::os::path::splitext(root, extension, filePath);
+    ContextRcPtr pContext = Context::Create();
 
-    // Read file
-    LocalFileFormat tester;
-    OCIO_SHARED_PTR<CachedFile> cachedFile = tester.Read(filestream, filePath);
-
-    filestream.close();
-
-    return DynamicPtrCast<LocalCachedFile>(cachedFile);
+    BuildFileOps(fileOps, *(pConfig.get()), pContext,
+                 *(pFileTransform.get()), dir);
 }
 
 }
@@ -81,5 +79,3 @@ OCIO_NAMESPACE_EXIT
 
 
 #endif // OCIO_UNIT_TEST
-
-#endif // INCLUDED_OCIO_UNITTEST_H

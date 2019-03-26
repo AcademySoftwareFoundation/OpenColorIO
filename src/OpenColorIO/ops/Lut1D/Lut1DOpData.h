@@ -161,10 +161,7 @@ public:
     void setInputBitDepth(BitDepth in) override;
 
     // The file readers should call this to record the original scaling of the LUT values.
-    void setFileBitDepth(BitDepth depth)
-    {
-        m_fileBitDepth = depth;
-    }
+    inline void setFileBitDepth(BitDepth depth) { m_fileBitDepth = depth; }
 
     void finalize() override;
 
