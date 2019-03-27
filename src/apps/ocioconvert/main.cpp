@@ -446,9 +446,8 @@ int main(int argc, const char **argv)
 
         if(!ok)
         {
-            std::stringstream ss;
-            ss << "ERROR reading \"" << inputimage << "\" : " << f->geterror() << "\n";
-            throw OCIO::Exception(ss.str().c_str());
+            std::cerr << "Error reading \"" << inputimage << "\" : " << f->geterror() << "\n";
+            exit(1);
         }
 
 #if OIIO_VERSION < 10903
@@ -656,9 +655,8 @@ int main(int argc, const char **argv)
         const bool ok = f->write_image(OIIO::TypeDesc::FLOAT, &img[0]);
         if(!ok)
         {
-            std::stringstream ss;
-            ss << "ERROR writing \"" << outputimage << "\" : " << f->geterror() << "\n";
-            throw OCIO::Exception(ss.str().c_str());
+            std::cerr << "Error writing \"" << outputimage << "\" : " << f->geterror() << "\n";
+            exit(1);
         }
 
         f->close();

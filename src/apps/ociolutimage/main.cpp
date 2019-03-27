@@ -131,7 +131,7 @@ void Generate(int cubesize, int maxwidth,
     if(!ok)
     {
         std::stringstream ss;
-        ss << "ERROR writing \"" << outputfile << "\" : " << f->geterror() << "\n";
+        ss << "Error writing \"" << outputfile << "\" : " << f->geterror() << "\n";
         throw Exception(ss.str().c_str());
     }
 
@@ -207,7 +207,7 @@ void Extract(int cubesize, int maxwidth,
     if(!ok)
     {
         std::stringstream ss;
-        ss << "ERROR reading \"" << inputfile << "\" : " << f->geterror() << "\n";
+        ss << "Error reading \"" << inputfile << "\" : " << f->geterror() << "\n";
         throw OCIO::Exception(ss.str().c_str());
     }
 

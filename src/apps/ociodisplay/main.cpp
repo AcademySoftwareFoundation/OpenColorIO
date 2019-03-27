@@ -139,9 +139,8 @@ static void InitImageTexture(const char * filename)
 
                 if(!ok)
                 {
-                    std::stringstream ss;
-                    ss << "ERROR reading \"" << filename << "\" : " << f->geterror() << "\n";
-                    throw OCIO::Exception(ss.str().c_str());
+                    std::cerr << "Error reading \"" << filename << "\" : " << f->geterror() << "\n";
+                    exit(1);
                 }
 
 #if OIIO_VERSION < 10903
