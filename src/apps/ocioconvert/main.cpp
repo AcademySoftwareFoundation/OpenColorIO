@@ -436,7 +436,21 @@ int main(int argc, const char **argv)
         img.resize(imgwidth*imgheight*components);
         memset(&img[0], 0, imgwidth*imgheight*components*sizeof(float));
         
-        f->read_image(OIIO::TypeDesc::TypeFloat, &img[0]);
+        const bool ok = f->read_image(
+#if OIIO_VERSION >= 10800
+                OIIO::TypeFloat, 
+#else
+                OIIO::TypeDesc::TypeFloat, 
+#endif
+                &img[0]);
+
+        if(!ok)
+        {
+            std::stringstream ss;
+            ss << "ERROR reading \"" << inputimage << "\" : " << f->geterror() << "\n";
+            throw OCIO::Exception(ss.str().c_str());
+        }
+
 #if OIIO_VERSION < 10903
         OIIO::ImageInput::destroy(f);
 #endif
@@ -639,7 +653,14 @@ int main(int argc, const char **argv)
         }
         
         f->open(outputimage, spec);
-        f->write_image(OIIO::TypeDesc::FLOAT, &img[0]);
+        const bool ok = f->write_image(OIIO::TypeDesc::FLOAT, &img[0]);
+        if(!ok)
+        {
+            std::stringstream ss;
+            ss << "ERROR writing \"" << outputimage << "\" : " << f->geterror() << "\n";
+            throw OCIO::Exception(ss.str().c_str());
+        }
+
         f->close();
 #if OIIO_VERSION < 10903
         OIIO::ImageOutput::destroy(f);

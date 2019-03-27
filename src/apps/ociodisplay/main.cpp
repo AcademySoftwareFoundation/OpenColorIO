@@ -129,13 +129,21 @@ static void InitImageTexture(const char * filename)
             img.resize(texWidth*texHeight*components);
             memset(&img[0], 0, texWidth*texHeight*components*sizeof(float));
 
-            f->read_image(
-#if (OIIO_VERSION >= 10800)
+            const bool ok = f->read_image(
+#if OIIO_VERSION >= 10800
                 OIIO::TypeFloat, 
 #else
                 OIIO::TypeDesc::TypeFloat, 
 #endif
                 &img[0]);
+
+                if(!ok)
+                {
+                    std::stringstream ss;
+                    ss << "ERROR reading \"" << filename << "\" : " << f->geterror() << "\n";
+                    throw OCIO::Exception(ss.str().c_str());
+                }
+
 #if OIIO_VERSION < 10903
             OIIO::ImageInput::destroy(f);
 #endif
