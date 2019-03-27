@@ -785,7 +785,7 @@ OIIO_ADD_TEST(FileTransform, LoadFileOK)
     OIIO_CHECK_NO_THROW(LoadTransformFile(discreetLut));
 
     // Houdini 1D LUT.
-    const std::string houdiniLut("sRGB.lut");
+    const std::string houdiniLut("houdini.lut");
     OIIO_CHECK_NO_THROW(LoadTransformFile(houdiniLut));
 
     // Discreet 3D LUT file.
