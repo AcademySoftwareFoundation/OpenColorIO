@@ -9,8 +9,12 @@ set(OpenColorIO_VERSION_RELEASE_TYPE "dev")
 
 enable_testing()
 
+# Use C++11.
 set(CMAKE_CXX_STANDARD 11)
+# Disable fallback to other C++ version if C++11 is not supported.
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Disable any compiler specific C++ extensions.
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/share/cmake)
 set(CMAKE_WARN_DEPRECATED ON)
