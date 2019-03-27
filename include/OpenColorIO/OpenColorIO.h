@@ -291,12 +291,32 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function::
         const char * getSearchPath() const;
-        //!cpp:function::
+        //!cpp:function:: Set all search paths as a concatenated string, using
+        // ':' to separate the paths.  See addSearchPath for a more robust and
+        // platform-agnostic method of setting the search paths.
         void setSearchPath(const char * path);
         
         //!cpp:function::
-        const char * getWorkingDir() const;
+        int getNumSearchPaths() const;
+        //!cpp:function:: Get a search path from the list. The paths are in the
+        // order they will be searched (that is, highest to lowest priority).
+        const char * getSearchPath(int index) const;
         //!cpp:function::
+        void clearSearchPaths();
+        //!cpp:function:: Add a single search path to the end of the list.
+        // Paths may be either absolute or relative. Relative paths are
+        // relative to the working directory. Forward slashes will be
+        // normalized to reverse for Windows. Environment (context) variables
+        // may be used in paths.
+        void addSearchPath(const char * path);
+
+        //!cpp:function::
+        const char * getWorkingDir() const;
+        //!cpp:function:: The working directory defaults to the location of the
+        // config file. It is used to convert any relative paths to absolute.
+        // If no search paths have been set, the working directory will be used
+        // as the fallback search path. No environment (context) variables may
+        // be used in the working directory.
         void setWorkingDir(const char * dirname);
         
         ///////////////////////////////////////////////////////////////////////////
@@ -1628,6 +1648,15 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         const char * getSearchPath() const;
         
+        //!cpp:function::
+        int getNumSearchPaths() const;
+        //!cpp:function::
+        const char * getSearchPath(int index) const;
+        //!cpp:function::
+        void clearSearchPaths();
+        //!cpp:function::
+        void addSearchPath(const char * path);
+
         //!cpp:function::
         void setWorkingDir(const char * dirname);
         //!cpp:function::

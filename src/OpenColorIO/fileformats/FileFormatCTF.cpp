@@ -39,6 +39,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fileformats/ctf/CTFReaderUtils.h"
 #include "fileformats/xmlutils/XMLReaderHelper.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
+#include "OpBuilders.h"
+#include "ops/NoOp/NoOps.h"
 #include "Platform.h"
 #include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
@@ -119,6 +121,7 @@ public:
     ~LocalCachedFile() {};
             
     CTFReaderTransformPtr m_transform;
+    std::string m_filePath;
 
 };
         
@@ -495,6 +498,11 @@ private:
                                       TAG_PROCESS_LIST, recognizedName))
             {
                 pImpl->AddOpReader(CTFReaderOpElt::RangeType, name);
+            }
+            else if (SupportedElement(name, pElt, TAG_REFERENCE,
+                                      TAG_PROCESS_LIST, recognizedName))
+            {
+                pImpl->AddOpReader(CTFReaderOpElt::ReferenceType, name);
             }
             else if (SupportedElement(name, pElt, TAG_CDL,
                                       TAG_PROCESS_LIST, recognizedName))
@@ -925,16 +933,16 @@ bool isLoadableCTF(std::istream & istream)
 // Raise an exception if it can't be loaded.
 CachedFileRcPtr LocalFileFormat::Read(
     std::istream & istream,
-    const std::string & fileName) const
+    const std::string & filePath) const
 {
     if (!isLoadableCTF(istream))
     {
         std::ostringstream oss;
-        oss << "Parsing error: '" << fileName << "' is not a CTF/CLF file.";
+        oss << "Parsing error: '" << filePath << "' is not a CTF/CLF file.";
         throw Exception(oss.str().c_str());
     }
 
-    XMLParserHelper parser(fileName);
+    XMLParserHelper parser(filePath);
     parser.Parse(istream);
 
     LocalCachedFileRcPtr cachedFile =
@@ -942,14 +950,89 @@ CachedFileRcPtr LocalFileFormat::Read(
 
     // Keep transform.
     cachedFile->m_transform = parser.getTransform();
+    cachedFile->m_filePath = filePath;
 
     return cachedFile;
 }
 
+// Helper called by LocalFileFormat::BuildFileOps
+void BuildOp(OpRcPtrVec & ops,
+             const Config& config,
+             const ConstContextRcPtr & context,
+             const OpDataRcPtr & opData,
+             TransformDirection dir)
+{
+    if (opData->getType() == OpData::ReferenceType)
+    {
+        // Recursively resolve the op.
+        ReferenceOpDataRcPtr ref = DynamicPtrCast<ReferenceOpData>(opData);
+        if (ref->getReferenceStyle() == REF_PATH)
+        {
+            dir = CombineTransformDirections(dir, ref->getDirection());
+            FileTransformRcPtr fileTransform = FileTransform::Create();
+            fileTransform->setInterpolation(INTERP_LINEAR);
+            fileTransform->setDirection(TRANSFORM_DIR_FORWARD);
+            fileTransform->setSrc(ref->getPath().c_str());
+            FileTransform * pFileTranform = fileTransform.get();
+
+            size_t sizeBefore = ops.size();
+            // This might call LocalFileFormat::BuildFileOps if the file
+            // is a CTF. BuildFileTransformOps is making sure there is no
+            // cycling recursion.
+            BuildFileTransformOps(ops, config, context, *pFileTranform, dir);
+
+            // The original in/out bit-depths of the loaded opvec need
+            // to be set to match the depths of the Reference element
+            // that they replace.
+            size_t sizeAfter = ops.size();
+            if (sizeBefore != sizeAfter)
+            {
+                // Set the input depth of the first op in the loaded opvec
+                // to match the Reference.
+                while (sizeBefore < sizeAfter)
+                {
+                    ConstOpRcPtr op = ops[sizeBefore];
+                    ConstOpDataRcPtr data = op->data();
+                    auto fileData = DynamicPtrCast<const FileNoOpData>(data);
+                    // Ignore the FileNoOps that are inserted in order to
+                    // properly handle nested References.
+                    if (!fileData)
+                    {
+                        ops[sizeBefore]->setInputBitDepth(
+                            ref->getInputBitDepth());
+                        break;
+                    }
+                    ++sizeBefore;
+                }
+                // Set the output depth of the last op in the loaded opvec
+                // to match the Reference.
+                while (sizeAfter > sizeBefore)
+                {
+                    --sizeAfter;
+                    ConstOpRcPtr op = ops[sizeAfter];
+                    ConstOpDataRcPtr data = op->data();
+                    auto fileData = DynamicPtrCast<const FileNoOpData>(data);
+                    if (!fileData)
+                    {
+                        ops[sizeAfter]->setOutputBitDepth(
+                            ref->getOutputBitDepth());
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        CreateOpVecFromOpData(ops, opData, dir);
+    }
+
+}
+
 void
 LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
-                              const Config& /*config*/,
-                              const ConstContextRcPtr & /*context*/,
+                              const Config& config,
+                              const ConstContextRcPtr & context,
                               CachedFileRcPtr untypedCachedFile,
                               const FileTransform& fileTransform,
                               TransformDirection dir) const
@@ -974,41 +1057,29 @@ LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
         throw Exception(os.str().c_str());
     }
 
-    const OpDataVec & allOpData = cachedFile->m_transform->getOps();
-    CreateOpVecFromOpDataVec(ops, allOpData, newDir);
-}
+    // Resolve reference path using context and load referenced files.
+    const OpDataVec & opDataVec = cachedFile->m_transform->getOps();
+    if (newDir == TRANSFORM_DIR_FORWARD)
+    {
+        for (auto & opData : opDataVec)
+        {
+            BuildOp(ops, config, context, opData, newDir);
+        }
+    }
+    else
+    {
+        for (int idx = (int)opDataVec.size() - 1; idx >= 0; --idx)
+        {
+            BuildOp(ops, config, context, opDataVec[idx], newDir);
+        }
+    }
 }
     
+} // end of anonymous namespace.
+
 FileFormat * CreateFileFormatCLF()
 {
     return new LocalFileFormat();
-}
-
-LocalCachedFileRcPtr LoadFile(const std::string & filePathName)
-{
-    // Open the filePath.
-    std::ifstream filestream;
-    filestream.open(filePathName.c_str(), std::ios_base::in);
-
-    if (!filestream.is_open())
-    {
-        std::string err("Could not open file: ");
-        err += filePathName;
-
-        throw Exception(err.c_str());
-    }
-        
-    std::string root, extension, name;
-    pystring::os::path::splitext(root, extension, filePathName);
-
-    name = pystring::os::path::basename(root);
-    name += extension;
-
-    // Read file.
-    LocalFileFormat tester;
-    CachedFileRcPtr cachedFile = tester.Read(filestream, name);
-
-    return DynamicPtrCast<LocalCachedFile>(cachedFile);
 }
 
 
@@ -3046,13 +3117,115 @@ OIIO_ADD_TEST(FileFormatCTF, info_element_version_test)
     
 }
 
+//
+// NOTE: These tests are on the ReferenceOpData itself, before it gets replaced
+// with the ops from the file it is referencing.  Please see RefereceOpData.cpp
+// for tests involving the resolved ops.
+//
+OIIO_ADD_TEST(Reference, load_alias)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    std::string fileName("reference_alias.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(fileName));
+    const OCIO::OpDataVec & fileOps = cachedFile->m_transform->getOps();
+
+    OIIO_REQUIRE_EQUAL(fileOps.size(), 1);
+    OCIO::OpDataRcPtr op = fileOps[0];
+    OCIO::ReferenceOpDataRcPtr ref = std::dynamic_pointer_cast<OCIO::ReferenceOpData>(op);
+    OIIO_REQUIRE_ASSERT(ref);
+    OIIO_CHECK_EQUAL(ref->getName(), "name");
+    OIIO_CHECK_EQUAL(ref->getID(), "uuid");
+    OIIO_CHECK_EQUAL(ref->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ref->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ref->getReferenceStyle(), OCIO::REF_ALIAS);
+    OIIO_CHECK_EQUAL(ref->getPath(), "");
+    OIIO_CHECK_EQUAL(ref->getAlias(), "alias");
+    OIIO_CHECK_EQUAL(ref->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+}
+
+OIIO_ADD_TEST(Reference, load_path)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    std::string fileName("reference_path_missing_file.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(fileName));
+    const OCIO::OpDataVec & fileOps = cachedFile->m_transform->getOps();
+    
+    OIIO_REQUIRE_EQUAL(fileOps.size(), 1);
+    OCIO::OpDataRcPtr op = fileOps[0];
+    OCIO::ReferenceOpDataRcPtr ref = std::dynamic_pointer_cast<OCIO::ReferenceOpData>(op);
+    OIIO_REQUIRE_ASSERT(ref);
+    OIIO_CHECK_EQUAL(ref->getReferenceStyle(), OCIO::REF_PATH);
+    OIIO_CHECK_EQUAL(ref->getPath(), "toto/toto.ctf");
+    OIIO_CHECK_EQUAL(ref->getAlias(), "");
+    OIIO_CHECK_EQUAL(ref->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+}
+
+OIIO_ADD_TEST(Reference, load_multiple)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    // File contains 2 references, 1 range and 1 reference.
+    std::string fileName("references_some_inverted.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(fileName));
+    const OCIO::OpDataVec & fileOps = cachedFile->m_transform->getOps();
+    
+    OIIO_REQUIRE_EQUAL(fileOps.size(), 4);
+    OCIO::OpDataRcPtr op0 = fileOps[0];
+    OCIO::ReferenceOpDataRcPtr ref0 = std::dynamic_pointer_cast<OCIO::ReferenceOpData>(op0);
+    OIIO_REQUIRE_ASSERT(ref0);
+    OIIO_CHECK_EQUAL(ref0->getReferenceStyle(), OCIO::REF_PATH);
+    OIIO_CHECK_EQUAL(ref0->getPath(), "matrix_example.clf");
+    OIIO_CHECK_EQUAL(ref0->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(ref0->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+    OIIO_CHECK_EQUAL(ref0->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    
+    OCIO::OpDataRcPtr op1 = fileOps[1];
+    OCIO::ReferenceOpDataRcPtr ref1 = std::dynamic_pointer_cast<OCIO::ReferenceOpData>(op1);
+    OIIO_REQUIRE_ASSERT(ref1);
+    OIIO_CHECK_EQUAL(ref1->getReferenceStyle(), OCIO::REF_PATH);
+    OIIO_CHECK_EQUAL(ref1->getPath(), "xyz_to_rgb.clf");
+    OIIO_CHECK_EQUAL(ref1->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+    OIIO_CHECK_EQUAL(ref1->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ref1->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO::OpDataRcPtr op2 = fileOps[2];
+    OCIO::RangeOpDataRcPtr range2 = std::dynamic_pointer_cast<OCIO::RangeOpData>(op2);
+    OIIO_REQUIRE_ASSERT(range2);
+
+    OCIO::OpDataRcPtr op3 = fileOps[3];
+    OCIO::ReferenceOpDataRcPtr ref3 = std::dynamic_pointer_cast<OCIO::ReferenceOpData>(op3);
+    OIIO_REQUIRE_ASSERT(ref3);
+    OIIO_CHECK_EQUAL(ref3->getReferenceStyle(), OCIO::REF_PATH);
+    OIIO_CHECK_EQUAL(ref3->getPath(), "cdl_clamp_fwd.clf");
+    OIIO_CHECK_EQUAL(ref3->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(ref3->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(ref3->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+}
+
+OIIO_ADD_TEST(Reference, load_path_utf8)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    std::string fileName("reference_utf8.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(fileName));
+    const OCIO::OpDataVec & fileOps = cachedFile->m_transform->getOps();
+    OIIO_REQUIRE_EQUAL(fileOps.size(), 1);
+    OCIO::OpDataRcPtr op = fileOps[0];
+    OCIO::ReferenceOpDataRcPtr ref = std::dynamic_pointer_cast<OCIO::ReferenceOpData>(op);
+    OIIO_REQUIRE_ASSERT(ref);
+    OIIO_CHECK_EQUAL(ref->getReferenceStyle(), OCIO::REF_PATH);
+    OIIO_CHECK_EQUAL(ref->getPath(), "\xE6\xA8\x99\xE6\xBA\x96\xE8\x90\xAC\xE5\x9C\x8B\xE7\xA2\xBC");
+    OIIO_CHECK_EQUAL(ref->getAlias(), "");
+}
+
+OIIO_ADD_TEST(Reference, load_alias_path)
+{
+    std::string fileName("reference_alias_path.ctf");
+    // Can't have alias and path at the same time.
+    OIIO_CHECK_THROW_WHAT(LoadCLFFile(fileName), OCIO::Exception,
+                          "alias & path attributes for Reference should not be both defined");
+}
+
 // TODO: Bring over tests when adding CTF support.
 // synColor: xmlTransformReader_test.cpp
-// checkReferenceAlias
-// checkReferencePath
-// checkReferenceSequenceInverse
-// checkReferenceError
-// checkUTF8
 // checkGamma1
 // checkGamma2
 // checkGamma3

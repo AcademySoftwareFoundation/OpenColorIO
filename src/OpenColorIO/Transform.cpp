@@ -99,7 +99,7 @@ OCIO_NAMESPACE_ENTER
         else if(ConstFileTransformRcPtr fileTransform = \
             DynamicPtrCast<const FileTransform>(transform))
         {
-            BuildFileOps(ops, config, context, *fileTransform, dir);
+            BuildFileTransformOps(ops, config, context, *fileTransform, dir);
         }
         else if(ConstGroupTransformRcPtr groupTransform = \
             DynamicPtrCast<const GroupTransform>(transform))

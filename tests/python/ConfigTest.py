@@ -225,5 +225,14 @@ return out_pixel;
         self.assertAlmostEqual(1.0, rgbafoo[3], delta=1e-8)
         #self.assertEqual("$a92ef63abd9edf61ad5a7855da064648", _proc.getCpuCacheID())
         
+        _cfge.clearSearchPaths()
+        self.assertEqual(0, _cfge.getNumSearchPaths())
+        _cfge.addSearchPath("First/ Path")
+        self.assertEqual(1, _cfge.getNumSearchPaths())
+        _cfge.addSearchPath("D:\\Second\\Path\\")
+        self.assertEqual(2, _cfge.getNumSearchPaths())
+        self.assertEqual("First/ Path", _cfge.getSearchPathByIndex(0))
+        self.assertEqual("D:\\Second\\Path\\", _cfge.getSearchPathByIndex(1))
+
         del _cfge
         del _cfg

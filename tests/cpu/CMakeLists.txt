@@ -141,6 +141,7 @@ set(SOURCES
 	ops/Range/RangeOpData.cpp
 	ops/Range/RangeOpGPU.cpp
 	ops/Range/RangeOps.cpp
+	ops/reference/ReferenceOpData.cpp
 	ops/Truelight/TruelightOp.cpp
 	OpTools.cpp
 	ParseUtils.cpp

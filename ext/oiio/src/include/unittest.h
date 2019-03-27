@@ -78,7 +78,6 @@ struct AddTest { AddTest(OIIOTest* test); };
         std::stringstream ss;                                           \
         ss <<  __FILE__ << ":" << __LINE__ << ":\n"                     \
            << "FAILED: " << #x << "\n";                                 \
-        ++unit_test_failures;                                           \
         throw OCIO_NAMESPACE::Exception(ss.str().c_str()); }
 
 #define OIIO_CHECK_ASSERT_MESSAGE(x, M)                                 \
@@ -100,7 +99,6 @@ struct AddTest { AddTest(OIIOTest* test); };
         ss <<  __FILE__ << ":" << __LINE__ << ":\n"                     \
            << "FAILED: " << #x << " == " << #y << "\n"                  \
            << "\tvalues were '" << (x) << "' and '" << (y) << "'\n";    \
-        ++unit_test_failures;                                           \
         throw OCIO_NAMESPACE::Exception(ss.str().c_str()); }
 
 #define OIIO_CHECK_NE(x,y)                                              \
