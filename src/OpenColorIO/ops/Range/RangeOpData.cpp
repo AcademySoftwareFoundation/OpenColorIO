@@ -649,7 +649,7 @@ bool RangeOpData::wouldClip(double val) const
     // Additional clipping implied by integer out depths.
     if (!IsFloatBitDepth(getOutputBitDepth()))
     {
-        out_lim = clamp(out_lim, 0., (double)GetBitDepthMaxValue(getOutputBitDepth()));
+        out_lim = Clamp(out_lim, 0., (double)GetBitDepthMaxValue(getOutputBitDepth()));
     }
 
     // Check if clipping altered the output.

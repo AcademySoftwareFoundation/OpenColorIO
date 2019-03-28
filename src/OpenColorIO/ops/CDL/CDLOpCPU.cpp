@@ -279,9 +279,10 @@ inline void ApplySaturation(float * pix, const float saturation)
 template<bool>
 inline void ApplyClamp(float * pix)
 {
-    pix[0] = std::min(std::max(pix[0], 0.f), 1.f);
-    pix[1] = std::min(std::max(pix[1], 0.f), 1.f);
-    pix[2] = std::min(std::max(pix[2], 0.f), 1.f);
+    // NaNs become 0.
+    pix[0] = Clamp(pix[0], 0.f, 1.f);
+    pix[1] = Clamp(pix[1], 0.f, 1.f);
+    pix[2] = Clamp(pix[2], 0.f, 1.f);
 }
 
 template<>
@@ -308,9 +309,10 @@ inline void ApplyPower(float * pix, const float * power)
 template<>
 inline void ApplyPower<false>(float * pix, const float * power)
 {
-    pix[0] = pix[0]<0.f ? pix[0] : powf(pix[0], power[0]);
-    pix[1] = pix[1]<0.f ? pix[1] : powf(pix[1], power[1]);
-    pix[2] = pix[2]<0.f ? pix[2] : powf(pix[2], power[2]);
+    // Note: Set NaNs to 0 to match the SSE path.
+    pix[0] = std::isnan(pix[0]) ? 0.0f : (pix[0]<0.f ? pix[0] : powf(pix[0], power[0]));
+    pix[1] = std::isnan(pix[1]) ? 0.0f : (pix[1]<0.f ? pix[1] : powf(pix[1], power[1]));
+    pix[2] = std::isnan(pix[2]) ? 0.0f : (pix[2]<0.f ? pix[2] : powf(pix[2], power[2]));
 }
 
 #endif // USE_SSE

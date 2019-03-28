@@ -2,7 +2,7 @@ include(ExternalProject)
 
 find_package(PythonInterp 2.7 REQUIRED)
 if(NOT OCIO_BUILD_PYTHON)
-	message(FATAL_ERROR "Doc generation requires that the python bindings be built")
+    message(FATAL_ERROR "Doc generation requires that the python bindings be built")
 endif()
 
 set(PATCH_COMMAND patch)
@@ -12,9 +12,25 @@ set(PATCH_COMMAND patch)
 
 set(EXTDIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
 set(PYTHON_VARIANT "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
-set(PYTHONPATH "${EXTDIST_ROOT}/lib${LIB_SUFFIX}/python${PYTHON_VARIANT}/site-packages")
 
-set(PYTHON_CMD PYTHONPATH=${PYTHONPATH} ${PYTHON_EXECUTABLE})
+if(WIN32)
+    # Unfortunately some windows tools require to have
+    #  the paths with the '\' (i.e. not working with '//').
+    string(REGEX REPLACE "/" "\\\\" EXTDIST_ROOT ${EXTDIST_ROOT})
+
+    set(PYTHONPATH "${EXTDIST_ROOT}/lib${LIB_SUFFIX}/site-packages")
+
+    # Workaround to mimic *nix '> PYTHONPATH=XXX CMD' 
+    #  on windows, it becomes  '> set PYTHONPATH=XXX \n call CMD'
+    #   '\n' is here because '\\&' does not work.
+    set(PYT_PRE_CMD set PYTHONPATH=${PYTHONPATH} "\n" call )
+else()
+    set(PYTHONPATH "${EXTDIST_ROOT}/lib${LIB_SUFFIX}/python${PYTHON_VARIANT}/site-packages")
+
+    set(PYT_PRE_CMD PYTHONPATH=${PYTHONPATH})
+endif()
+
+set(PYTHON_CMD ${PYT_PRE_CMD} ${PYTHON_EXECUTABLE})
 
 add_custom_target(pythonpath_create
 	COMMAND ${CMAKE_COMMAND} -E make_directory ${PYTHONPATH}
@@ -155,14 +171,14 @@ set(PYTHONPATH "${PYTHONPATH}:${CMAKE_BINARY_DIR}/src/python")
 ### HTML doc target ###
 
 add_custom_target(docs ALL
-    COMMAND PYTHONPATH=${PYTHONPATH} ${EXTDIST_ROOT}/bin/sphinx-build -b html . ${CMAKE_CURRENT_BINARY_DIR}/build-html
+    COMMAND ${PYT_PRE_CMD} ${EXTDIST_ROOT}/bin/sphinx-build -b html . ${CMAKE_CURRENT_BINARY_DIR}/build-html
     DEPENDS
         OpenColorIO
         PyOpenColorIO
         ${CMAKE_BINARY_DIR}/docs/conf.py
         rst_extraction
-		doc_copy
-		Sphinx
+        doc_copy
+        Sphinx
     COMMENT "Building html docs"
 )
 
@@ -183,23 +199,23 @@ find_package(LATEX)
 if(PDFLATEX_COMPILER)
     
     add_custom_target(latex
-        COMMAND PYTHONPATH=${PYTHONPATH} ${EXTDIST_ROOT}/bin/sphinx-build -b latex . ${CMAKE_CURRENT_BINARY_DIR}/build-latex
+        COMMAND ${PYT_PRE_CMD} ${EXTDIST_ROOT}/bin/sphinx-build -b latex . ${CMAKE_CURRENT_BINARY_DIR}/build-latex
         DEPENDS
             OpenColorIO
-			PyOpenColorIO
+            PyOpenColorIO
             ${CMAKE_BINARY_DIR}/docs/conf.py
-			rst_extraction
-			doc_copy
-			Sphinx
+            rst_extraction
+            doc_copy
+            Sphinx
         COMMENT "Building latex doc"
-	)
+    )
 
     add_custom_target(pdf ALL
-		DEPENDS latex
+        DEPENDS latex
         COMMAND ${PDFLATEX_COMPILER} OpenColorIO.tex
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/build-latex
         COMMENT "Building pdf doc"
-	)
+    )
     
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/build-latex/OpenColorIO.pdf
             DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/OpenColorIO/)

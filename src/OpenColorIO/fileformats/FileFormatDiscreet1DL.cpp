@@ -121,6 +121,30 @@ OCIO_NAMESPACE_ENTER
                 IM_LUT_FLOATBITS_PERCHANNEL = -32
             } IM_LutBitsPerChannel;
 
+
+            static BitDepth GetBitDepth(IM_LutBitsPerChannel discreetBitDepth)
+            {
+                switch (discreetBitDepth)
+                {
+                case IM_LUT_UNKNOWN_BITS_PERCHANNEL:
+                    return BIT_DEPTH_UNKNOWN;
+                case IM_LUT_8BITS_PERCHANNEL:
+                    return BIT_DEPTH_UINT8;
+                case IM_LUT_10BITS_PERCHANNEL:
+                    return BIT_DEPTH_UINT10;
+                case IM_LUT_12BITS_PERCHANNEL:
+                    return BIT_DEPTH_UINT12;
+                case IM_LUT_16BITS_PERCHANNEL:
+                    return BIT_DEPTH_UINT16;
+                case IM_LUT_HALFBITS_PERCHANNEL:
+                    return BIT_DEPTH_F16;
+                case IM_LUT_FLOATBITS_PERCHANNEL:
+                    return BIT_DEPTH_F32;
+                }
+
+                return BIT_DEPTH_UNKNOWN;
+            }
+
             // A look-up table descriptor: 
             class IMLutStruct {
             public:
@@ -146,7 +170,7 @@ OCIO_NAMESPACE_ENTER
 
             // Convert between table size and bit depth
             static IM_LutBitsPerChannel IMLutTableSizeToBitDepth(int tableSize,
-                bool isFloat = false);
+                                                                 bool isFloat = false);
 
             // Supply appropriate message string given IMLUT_ERR code.
             static const char * IMLutErrorStr(int errnum);
@@ -627,14 +651,26 @@ OCIO_NAMESPACE_ENTER
         class LocalCachedFile : public CachedFile
         {
         public:
-            LocalCachedFile ()
+            LocalCachedFile() = delete;
+            LocalCachedFile(BitDepth inBitDepth, BitDepth outBitDepth, unsigned long dimension)
             {
-                lut1D = Lut1D::Create();
+                const Lut1DOpData::HalfFlags halfFlags =
+                    (inBitDepth == BIT_DEPTH_F16)
+                    ? Lut1DOpData::LUT_INPUT_HALF_CODE
+                    : Lut1DOpData::LUT_STANDARD;
+
+                OpData::Descriptions desc;
+                lut1D = std::make_shared<Lut1DOpData>(inBitDepth,
+                                                      outBitDepth,
+                                                      "",
+                                                      desc,
+                                                      INTERP_LINEAR,
+                                                      halfFlags,
+                                                      dimension);
             };
             ~LocalCachedFile() {};
             
-            // TODO: Switch to the OpData class.
-            Lut1DRcPtr lut1D;
+            Lut1DOpDataRcPtr lut1D;
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -685,12 +721,11 @@ OCIO_NAMESPACE_ENTER
             pystring::os::path::splitext(root, extension, filePath);
             fileName = pystring::os::path::basename(root);
 
-            const int status = Lut1dUtils::IMLutGet(
-                istream,
-                fileName,
-                &discreetLut1d,
-                errline,
-                errorLine);
+            const int status = Lut1dUtils::IMLutGet(istream,
+                                                    fileName,
+                                                    &discreetLut1d,
+                                                    errline,
+                                                    errorLine);
             if (status != Lut1dUtils::IMLUT_OK)
             {
                 std::ostringstream os;
@@ -706,35 +741,36 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
 
-            if (discreetLut1d->srcBitDepth
-                == Lut1dUtils::IM_LUT_HALFBITS_PERCHANNEL)
-            {
-                // TODO: implement half floats
-                std::ostringstream os;
-                os << "Half are not implemented yet for Discreet 1D LUT reader.";
-                throw Exception(os.str().c_str());
-            }
+            const BitDepth inputBD = Lut1dUtils::GetBitDepth(discreetLut1d->srcBitDepth);
+            const BitDepth outputBD = Lut1dUtils::GetBitDepth(discreetLut1d->targetBitDepth);
+            const int lutSize = discreetLut1d->length;
 
-            LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
+            LocalCachedFileRcPtr cachedFile
+                = LocalCachedFileRcPtr(new LocalCachedFile(inputBD,
+                                                           outputBD,
+                                                           (unsigned long)lutSize));
 
-            // TODO: use bitdepth
-            float maxVal[3];
-            maxVal[0] = maxVal[1] = maxVal[2] = Lut1dUtils::GetMax( discreetLut1d->targetBitDepth );
-            
+
+            Array & array = cachedFile->lut1D->getArray();
             const int srcTableLimit = discreetLut1d->numtables - 1;
-            for (int i = 0; i< discreetLut1d->length; ++i)
+            for (int i = 0, p = 0; i< lutSize; ++i)
             {
-                for (int j = 0; j<3; ++j)
+                for (int j = 0; j<3; ++j, ++p )
                 {
-                    int srcTable = std::min(j, srcTableLimit);
-                    cachedFile->lut1D->luts[j].push_back( (float)discreetLut1d->tables[srcTable][i] / maxVal[j] );
+                    const int srcTable = std::min(j, srcTableLimit);
+                    if (discreetLut1d->targetBitDepth == Lut1dUtils::IM_LUT_HALFBITS_PERCHANNEL)
+                    {
+                        // Convert raw half values to floats.
+                        half halfObj;
+                        halfObj.setBits((unsigned short)discreetLut1d->tables[srcTable][i]);
+                        array[p] = (float)halfObj;
+                    }
+                    else
+                    {
+                        array[p] = (float)discreetLut1d->tables[srcTable][i];
+                    }
                 }
             }
-
-            // Same as 3dl
-            const int FORMAT1DL_SHAPER_CODEVALUE_TOLERANCE = 2;
-            cachedFile->lut1D->maxerror = FORMAT1DL_SHAPER_CODEVALUE_TOLERANCE/maxVal[0];
-            cachedFile->lut1D->errortype = Lut1D::ERROR_ABSOLUTE;
 
             Lut1dUtils::IMLutFree(&discreetLut1d);
             return cachedFile;
@@ -768,8 +804,7 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
             
-            CreateLut1DOp(ops, cachedFile->lut1D,
-                          INTERP_LINEAR, newDir);
+            CreateLut1DOp(ops, cachedFile->lut1D, newDir);
         }
     }
     
@@ -784,7 +819,7 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "unittest.h"
-#include "UnitTestFiles.h"
+#include "UnitTestUtils.h"
 
 #ifdef WINDOWS
 #define stringCopy(to, from, size) strcpy_s(to, size, from);
@@ -814,7 +849,7 @@ void TestToolsStripEndNewLine(
     OIIO_CHECK_EQUAL(stringResult, strippedString);
 }
 
-OIIO_ADD_TEST(FileFormatD1DL, TestStringUtil)
+OIIO_ADD_TEST(FileFormatD1DL, test_string_util)
 {
     TestToolsStripBlank("this is a test", "this is a test");
     TestToolsStripBlank("   this is a test      ", "this is a test");
@@ -838,63 +873,162 @@ OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & fileName)
         fileName, std::ios_base::in);
 }
 
-OIIO_ADD_TEST(FileFormatD1DL, Test)
+OIIO_ADD_TEST(FileFormatD1DL, test_lut1d_8i_8i)
 {
     OCIO::LocalCachedFileRcPtr lutFile;
     const std::string discreetLut("logtolin_8to8.lut");
     OIIO_CHECK_NO_THROW(lutFile = LoadLutFile(discreetLut));
 
-    // Current implementation of Discreet 1D LUT is converting table to floats
-    OIIO_CHECK_EQUAL(OCIO::Lut1D::ERROR_ABSOLUTE, lutFile->lut1D->errortype);
-    OIIO_CHECK_EQUAL(0.00784313772f, lutFile->lut1D->maxerror);
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getID(), "");
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getName(), "");
+    const OCIO::OpData::Descriptions & desc = lutFile->lut1D->getDescriptions();
+    OIIO_CHECK_EQUAL(desc.size(), 0);
 
-    for (int c = 0; c < 3; ++c) {
-        OIIO_CHECK_EQUAL(0.0f, lutFile->lut1D->from_min[c]);
-        OIIO_CHECK_EQUAL(1.0f, lutFile->lut1D->from_max[c]);
-        OIIO_CHECK_EQUAL(256, lutFile->lut1D->luts[c].size());
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_LINEAR);
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
 
-        // tests some values - all channels are the same
-        OIIO_CHECK_EQUAL(0.0f, lutFile->lut1D->luts[c][0]);
-        OIIO_CHECK_EQUAL(0.0f, lutFile->lut1D->luts[c][22]);
-        OIIO_CHECK_EQUAL(0.0196078438f, lutFile->lut1D->luts[c][32]);
-        OIIO_CHECK_EQUAL(0.0431372561f, lutFile->lut1D->luts[c][42]);
-        OIIO_CHECK_EQUAL(0.0705882385f, lutFile->lut1D->luts[c][52]);
-        OIIO_CHECK_EQUAL(0.105882354f, lutFile->lut1D->luts[c][62]);
-        OIIO_CHECK_EQUAL(0.141176477f, lutFile->lut1D->luts[c][72]);
-        OIIO_CHECK_EQUAL(0.188235298f, lutFile->lut1D->luts[c][82]);
-        OIIO_CHECK_EQUAL(0.623529434f, lutFile->lut1D->luts[c][142]);
-        OIIO_CHECK_EQUAL(0.737254918f, lutFile->lut1D->luts[c][152]);
-        OIIO_CHECK_EQUAL(0.870588243f, lutFile->lut1D->luts[c][162]);
-        OIIO_CHECK_EQUAL(1.0f, lutFile->lut1D->luts[c][202]);
+    OIIO_CHECK_ASSERT(!lutFile->lut1D->isInputHalfDomain());
+    OIIO_CHECK_ASSERT(!lutFile->lut1D->isOutputRawHalfs());
+
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getArray().getLength(), 256ul);
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getArray().getNumValues(), (unsigned long)256 * 3);
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getArray().getNumColorComponents(), 3ul);
+
+    // Select some samples to verify the LUT was fully read.
+    const unsigned long sampleInterval = 13ul;
+    const float expectedSampleValues[] =
+    {
+          0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   1.0,   3.0,   6.0,   9.0,
+         12.0,  15.0,  18.0,  22.0,  25.0,  30.0,  33.0,  37.0,  43.0,  48.0,
+         52.0,  59.0,  64.0,  70.0,  78.0,  85.0,  92.0, 101.0, 109.0, 117.0,
+        129.0, 138.0, 148.0, 161.0, 173.0, 185.0, 201.0, 214.0, 229.0, 248.0,
+        255.0, 255.0, 255.0, 255.0, 255.0, 255.0, 255.0, 255.0, 255.0, 255.0,
+        255.0, 255.0, 255.0, 255.0, 255.0, 255.0, 255.0, 255.0, 255.0, 255.0
+    };
+
+    const OCIO::Array::Values & lut1DValues = lutFile->lut1D->getArray().getValues();
+    for (unsigned long li = 0, ei = 0; li<lut1DValues.size(); li += sampleInterval, ++ei)
+    {
+        OIIO_CHECK_EQUAL(lut1DValues[li], expectedSampleValues[ei]);
     }
+}
 
+OIIO_ADD_TEST(FileFormatD1DL, test_lut1d_12i_16f)
+{
+    OCIO::LocalCachedFileRcPtr lutFile;
     const std::string discreetLut1216fp("Test_12to16fp.lut");
     OIIO_CHECK_NO_THROW(lutFile = LoadLutFile(discreetLut1216fp));
 
-    // Current implementation of Discreet 1D LUT is converting table to floats
-    OIIO_CHECK_EQUAL(OCIO::Lut1D::ERROR_ABSOLUTE, lutFile->lut1D->errortype);
-    OIIO_CHECK_EQUAL(3.05180438e-05f, lutFile->lut1D->maxerror);
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getID(), "");
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getName(), "");
+    const OCIO::OpData::Descriptions & desc = lutFile->lut1D->getDescriptions();
+    OIIO_CHECK_EQUAL(desc.size(), 0);
 
-    for (int c = 0; c < 3; ++c) {
-        OIIO_CHECK_EQUAL(0.0f, lutFile->lut1D->from_min[c]);
-        OIIO_CHECK_EQUAL(1.0f, lutFile->lut1D->from_max[c]);
-        OIIO_CHECK_EQUAL(4096, lutFile->lut1D->luts[c].size());
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_LINEAR);
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
-        // tests some values - all channels are the same
-        OIIO_CHECK_EQUAL(0.0f, lutFile->lut1D->luts[c][0]);
-        OIIO_CHECK_EQUAL(0.201464862f, lutFile->lut1D->luts[c][142]);
-        OIIO_CHECK_EQUAL(0.207568482f, lutFile->lut1D->luts[c][242]);
+    OIIO_CHECK_ASSERT(!lutFile->lut1D->isInputHalfDomain());
+    OIIO_CHECK_ASSERT(!lutFile->lut1D->isOutputRawHalfs());
+
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getArray().getLength(), 4096ul);
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getArray().getNumValues(), (unsigned long)4096 * 3);
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getArray().getNumColorComponents(), 3ul);
+
+    // Select some samples to verify the LUT was fully read.
+    const unsigned long sampleInterval = 207ul;
+    const unsigned short expectedSampleValues[] =
+    {
+            0, 12546, 13171, 13491, 13705, 13898, 14074, 14238, 14365, 14438,
+        14507, 14574, 14638, 14700, 14760, 14818, 14875, 14930, 14983, 15037,
+        15094, 15156, 15222, 15294, 15366, 15408, 15453, 15501, 15553, 15609,
+        15669, 15733, 15802, 15876, 15954, 16038, 16128, 16224, 16327, 16410,
+        16468, 16530, 16596, 16667, 16741, 16821, 16905, 16995, 17090, 17191,
+        17298, 17410, 17470, 17534, 17602, 17673, 17749, 17829, 17914, 18003
+    };
+
+    const OCIO::Array::Values & lut1DValues = lutFile->lut1D->getArray().getValues();
+    for (unsigned long li = 0, ei = 0; li<lut1DValues.size(); li += sampleInterval, ++ei)
+    {
+        OIIO_CHECK_EQUAL(half(lut1DValues[li]).bits(), expectedSampleValues[ei]);
     }
+}
 
-
-    // Half float are not handled as source yet.
+OIIO_ADD_TEST(FileFormatD1DL, test_lut1d_16f_16f)
+{
+    OCIO::LocalCachedFileRcPtr lutFile;
     const std::string discreetLut16fp16fp("photo_default_16fpto16fp.lut");
-    OIIO_CHECK_THROW(LoadLutFile(discreetLut16fp16fp), OCIO::Exception);
+    OIIO_CHECK_NO_THROW(lutFile = LoadLutFile(discreetLut16fp16fp));
 
-    // Half float are not handled yet.
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_LINEAR);
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
+
+    OIIO_CHECK_ASSERT(lutFile->lut1D->isInputHalfDomain());
+    OIIO_CHECK_ASSERT(!lutFile->lut1D->isOutputRawHalfs());
+
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getArray().getLength(), 65536ul);
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getArray().getNumValues(), (unsigned long)65536 * 3);
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getArray().getNumColorComponents(), 3ul);
+
+    // Select some samples to verify the LUT was fully read.
+    const unsigned long sampleInterval = 3277ul;
+    const float expectedSampleValues[] =
+    {
+            0,   242,   554,  1265,  2463,  3679,  4918,  6234,  7815,  9945,
+        11918, 13222, 14063, 14616, 14958, 15176, 15266, 15349, 15398, 15442,
+        15488, 15536, 15586, 15637, 15690, 15745, 15802, 15862, 15923, 15987,
+        32770, 33862, 34954, 36047, 37139, 38231, 39324, 40416, 41508, 42601,
+        43693, 44785, 45878, 46970, 48062, 49155, 50247, 51339, 52432, 53524,
+        54616, 55709, 56801, 57893, 58986, 60078, 61170, 62263, 63355, 64447
+    };
+
+    const OCIO::Array::Values & lut1DValues = lutFile->lut1D->getArray().getValues();
+    for (unsigned li = 0, ei = 0; li<lut1DValues.size(); li += sampleInterval, ++ei)
+    {
+        OIIO_CHECK_EQUAL(half(lut1DValues[li]).bits(), expectedSampleValues[ei]);
+    }
+}
+
+OIIO_ADD_TEST(FileFormatD1DL, test_lut1d_16f_12i)
+{
+    OCIO::LocalCachedFileRcPtr lutFile;
     const std::string discreetLut16fp12("Test_16fpto12.lut");
-    OIIO_CHECK_THROW(LoadLutFile(discreetLut16fp12), OCIO::Exception);
+    OIIO_CHECK_NO_THROW(lutFile = LoadLutFile(discreetLut16fp12));
 
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_LINEAR);
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+
+    OIIO_CHECK_ASSERT(lutFile->lut1D->isInputHalfDomain());
+    OIIO_CHECK_ASSERT(!lutFile->lut1D->isOutputRawHalfs());
+
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getArray().getLength(), 65536ul);
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getArray().getNumValues(), (unsigned long)65536 * 3);
+    OIIO_CHECK_EQUAL(lutFile->lut1D->getArray().getNumColorComponents(), 3ul);
+
+    // Select some samples to verify the LUT was fully read.
+    const unsigned long sampleInterval = 3277ul;
+    const float expectedSampleValues[] =
+    {
+           0.0f,    0.0f,    0.0f,    0.0f,    0.0f,    0.0f,    0.0f,    0.0f,    1.0f,    3.0f,
+          10.0f,   36.0f,  130.0f,  466.0f, 1585.0f, 2660.0f, 3595.0f, 4095.0f, 4095.0f, 4095.0f,
+        4095.0f, 4095.0f, 4095.0f, 4095.0f, 4095.0f, 4095.0f, 4095.0f, 4095.0f, 4095.0f, 4095.0f,
+           0.0f,    0.0f,    0.0f,    0.0f,    0.0f,    0.0f,    0.0f,    0.0f,    0.0f,    0.0f,
+           0.0f,    0.0f,    0.0f,    0.0f,    0.0f,    0.0f,    0.0f,    0.0f,    0.0f,    0.0f,
+           0.0f,    0.0f,    0.0f,    0.0f,    0.0f,    0.0f,    0.0f,    0.0f,    0.0f,    0.0f
+    };
+
+    const OCIO::Array::Values & lut1DValues = lutFile->lut1D->getArray().getValues();
+    for (unsigned li = 0, ei = 0; li<lut1DValues.size(); li += sampleInterval, ++ei)
+    {
+        OIIO_CHECK_EQUAL(lut1DValues[li], expectedSampleValues[ei]);
+    }
+}
+
+OIIO_ADD_TEST(FileFormatD1DL, test_bad_file)
+{
     // Bad file.
     const std::string truncatedLut("error_truncated_file.lut");
     OIIO_CHECK_THROW(LoadLutFile(truncatedLut), OCIO::Exception);

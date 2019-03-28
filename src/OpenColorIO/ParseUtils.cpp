@@ -302,7 +302,44 @@ OCIO_NAMESPACE_ENTER
         throw Exception(msg.c_str());
         return RANGE_CLAMP;
     }
-    
+
+    const char * FixedFunctionStyleToString(FixedFunctionStyle style)
+    {
+        switch(style)
+        {
+            case FIXED_FUNCTION_ACES_RED_MOD_03:     return "ACES_RedMod03";      break;
+            case FIXED_FUNCTION_ACES_RED_MOD_10:     return "ACES_RedMod10";      break;
+            case FIXED_FUNCTION_ACES_GLOW_03:        return "ACES_Glow03";        break;
+            case FIXED_FUNCTION_ACES_GLOW_10:        return "ACES_Glow10";        break;
+            case FIXED_FUNCTION_ACES_DARK_TO_DIM_10: return "ACES_DarkToDim10";   break;
+            case FIXED_FUNCTION_REC2100_SURROUND:    return "REC2100_Surround";   break;
+        }
+
+        // Default style is meaningless.
+        throw Exception("Unknown Fixed FunctionOp style");
+        return nullptr;
+    }
+
+    FixedFunctionStyle FixedFunctionStyleFromString(const char * style)
+    {
+        std::string str = pystring::lower(style);
+
+        if(str == "aces_redmod03")           return FIXED_FUNCTION_ACES_RED_MOD_03;
+        else if(str == "aces_redmod10")      return FIXED_FUNCTION_ACES_RED_MOD_10;
+        else if(str == "aces_glow03")        return FIXED_FUNCTION_ACES_GLOW_03;
+        else if(str == "aces_glow10")        return FIXED_FUNCTION_ACES_GLOW_10;
+        else if(str == "aces_darktodim10")   return FIXED_FUNCTION_ACES_DARK_TO_DIM_10;
+        else if(str == "rec2100_surround")   return FIXED_FUNCTION_REC2100_SURROUND;
+
+        // Default style is meaningless.
+        std::stringstream ss;
+        ss << "Unknown Fixed FunctionOp style: " << style;
+
+        throw Exception(ss.str().c_str());
+        return FIXED_FUNCTION_ACES_RED_MOD_03;
+    }
+
+
     const char * ROLE_DEFAULT = "default";
     const char * ROLE_REFERENCE = "reference";
     const char * ROLE_DATA = "data";

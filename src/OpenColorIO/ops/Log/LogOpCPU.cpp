@@ -228,9 +228,9 @@ inline void ApplyAdd(float * pix, const float * add)
 
 inline void ApplyMax(float * pix, float minValue)
 {
-    pix[0] = std::max(pix[0], minValue);
-    pix[1] = std::max(pix[1], minValue);
-    pix[2] = std::max(pix[2], minValue);
+    pix[0] = std::max(minValue, pix[0]);
+    pix[1] = std::max(minValue, pix[1]);
+    pix[2] = std::max(minValue, pix[2]);
 }
 
 inline void ApplyLog2(float * pix)
@@ -556,16 +556,24 @@ namespace OCIO = OCIO_NAMESPACE;
 
 void TestLog(float logBase)
 {
-    const float rgbaImage[8] = { 0.0367126f, 0.5f, 1.f,     0.f,
-                                 0.2f,       0.f,   .99f, 128.f };
-    float rgba[8] = {0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f};
-    memcpy(rgba, &rgbaImage[0], 8 * sizeof(float));
+    const float qnan = std::numeric_limits<float>::quiet_NaN();
+    const float inf = std::numeric_limits<float>::infinity();
+    const float rgbaImage[32] = { 0.0367126f, 0.5f, 1.f,     0.f,
+                                  0.2f,       0.f,   .99f, 128.f,
+                                  qnan,       qnan, qnan,    0.f,
+                                  0.f,        0.f,  0.f,     qnan,
+                                  inf,        inf,  inf,     0.f,
+                                  0.f,        0.f,  0.f,     inf,
+                                 -inf,       -inf, -inf,     0.f,
+                                  0.f,        0.f,  0.f,    -inf };
+    float rgba[32] = {};
+    memcpy(rgba, &rgbaImage[0], 32 * sizeof(float));
 
     OCIO::ConstLogOpDataRcPtr logOp = std::make_shared<OCIO::LogOpData>(
         logBase, OCIO::TRANSFORM_DIR_FORWARD);
 
     OCIO::OpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
-    pRenderer->apply(rgba, 2);
+    pRenderer->apply(rgba, 8);
 
     const float minValue = std::numeric_limits<float>::min();
 
@@ -590,6 +598,22 @@ void TestLog(float logBase)
 
         OIIO_CHECK_CLOSE(result, expected, error);
     }
+
+    const float resMin = logf(minValue) / logf(logBase);
+    OIIO_CHECK_CLOSE(rgba[8], resMin, error);
+    OIIO_CHECK_EQUAL(rgba[11], 0.0f);
+    OIIO_CHECK_CLOSE(rgba[12], resMin, error);
+    OIIO_CHECK_ASSERT(std::isnan(rgba[15]));
+    // SSE implementation of sseLog2 & sseExp2 do not behave like CPU for
+    // infinity & NaN. Some tests had to be disabled.
+    //OIIO_CHECK_EQUAL(rgba[16], inf);
+    OIIO_CHECK_EQUAL(rgba[19], 0.0f);
+    OIIO_CHECK_CLOSE(rgba[20], resMin, error);
+    OIIO_CHECK_EQUAL(rgba[23], inf);
+    OIIO_CHECK_CLOSE(rgba[24], resMin, error);
+    OIIO_CHECK_EQUAL(rgba[27], 0.0f);
+    OIIO_CHECK_CLOSE(rgba[28], resMin, error);
+    OIIO_CHECK_EQUAL(rgba[31], -inf);
 }
 
 OIIO_ADD_TEST(LogOpCPU, log_test)
@@ -603,16 +627,25 @@ OIIO_ADD_TEST(LogOpCPU, log_test)
 
 void TestAntiLog(float logBase)
 {
-    const float rgbaImage[8] = { 0.0367126f, 0.5f, 1.f,     0.f,
-                                 0.2f,       0.f,   .99f, 128.f };
-    float rgba[8] = { 0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f };
-    memcpy(rgba, &rgbaImage[0], 8 * sizeof(float));
+    const float qnan = std::numeric_limits<float>::quiet_NaN();
+    const float inf = std::numeric_limits<float>::infinity();
+    const float rgbaImage[32] = { 0.0367126f, 0.5f, 1.f,     0.f,
+                                 0.2f,       0.f,   .99f, 128.f,
+                                 qnan,       qnan, qnan,    0.f,
+                                 0.f,        0.f,  0.f,     qnan,
+                                 inf,        inf,  inf,     0.f,
+                                 0.f,        0.f,  0.f,     inf,
+                                -inf,       -inf, -inf,     0.f,
+                                 0.f,        0.f,  0.f,    -inf };
+
+    float rgba[32] = {};
+    memcpy(rgba, &rgbaImage[0], 32 * sizeof(float));
 
     OCIO::ConstLogOpDataRcPtr logOp = std::make_shared<OCIO::LogOpData>(
         logBase, OCIO::TRANSFORM_DIR_INVERSE);
 
     OCIO::OpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
-    pRenderer->apply(rgba, 2);
+    pRenderer->apply(rgba, 8);
 
     // Relative error tolerance for the log2 approximation.
     const float rtol = powf(2.f, -14.f);
@@ -632,6 +665,18 @@ void TestAntiLog(float logBase)
         // cannot use strict comparison.
         OIIO_CHECK_ASSERT(OCIO::EqualWithSafeRelError(result, expected, rtol, 1.0f));
     }
+    //OIIO_CHECK_ASSERT(std::isnan(rgba[8]));
+    OIIO_CHECK_EQUAL(rgba[11], 0.0f);
+    OIIO_CHECK_CLOSE(rgba[12], 1.0f, rtol);
+    OIIO_CHECK_ASSERT(std::isnan(rgba[15]));
+    //OIIO_CHECK_EQUAL(rgba[16], inf);
+    OIIO_CHECK_EQUAL(rgba[19], 0.0f);
+    OIIO_CHECK_CLOSE(rgba[20], 1.0f, rtol);
+    OIIO_CHECK_EQUAL(rgba[23], inf);
+    //OIIO_CHECK_EQUAL(rgba[24], 0.0f);
+    OIIO_CHECK_EQUAL(rgba[27], 0.0f);
+    OIIO_CHECK_CLOSE(rgba[28], 1.0f, rtol);
+    OIIO_CHECK_EQUAL(rgba[31], -inf);
 }
 
 OIIO_ADD_TEST(LogOpCPU, anti_log_test)
@@ -668,11 +713,19 @@ float ComputeLog2LinEval(float in, const OCIO::LogUtil::CTFParams::Params & para
 
 OIIO_ADD_TEST(LogOpCPU, log2lin_test)
 {
-    const float rgbaImage[8] = { 0.0367126f, 0.5f, 1.f,     0.f,
-                                 0.2f,       0.f,   .99f, 128.f };
+    const float qnan = std::numeric_limits<float>::quiet_NaN();
+    const float inf = std::numeric_limits<float>::infinity();
+    const float rgbaImage[32] = { 0.0367126f, 0.5f, 1.f,     0.f,
+                                  0.2f,       0.f,   .99f, 128.f,
+                                  qnan,       qnan, qnan,    0.f,
+                                  0.f,        0.f,  0.f,     qnan,
+                                  inf,        inf,  inf,     0.f,
+                                  0.f,        0.f,  0.f,     inf,
+                                 -inf,       -inf, -inf,     0.f,
+                                  0.f,        0.f,  0.f,    -inf };
 
-    float rgba[8] = { 0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f };
-    memcpy(rgba, &rgbaImage[0], 8 * sizeof(float));
+    float rgba[32] = {};
+    memcpy(rgba, &rgbaImage[0], 32 * sizeof(float));
 
     OCIO::LogUtil::CTFParams params;
     auto & redP = params.get(OCIO::LogUtil::CTFParams::red);
@@ -708,7 +761,7 @@ OIIO_ADD_TEST(LogOpCPU, log2lin_test)
         dir, base, paramsR, paramsG, paramsB);
 
     OCIO::OpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
-    pRenderer->apply(rgba, 2);
+    pRenderer->apply(rgba, 8);
 
     const OCIO::LogUtil::CTFParams::Params noParam;
 
@@ -740,8 +793,27 @@ OIIO_ADD_TEST(LogOpCPU, log2lin_test)
         // cannot use strict comparison.
         OIIO_CHECK_ASSERT(OCIO::EqualWithSafeRelError(result, expected, rtol, 1.0f));
     }
-}
 
+    const float res0 = ComputeLog2LinEval(0.0f, redP);
+
+    //OIIO_CHECK_ASSERT(std::isnan(rgba[8]));
+    OIIO_CHECK_EQUAL(rgba[11], 0.0f);
+
+    OIIO_CHECK_CLOSE(rgba[12], res0, rtol);
+    OIIO_CHECK_ASSERT(std::isnan(rgba[15]));
+
+    //OIIO_CHECK_EQUAL(rgba[16], inf);
+    OIIO_CHECK_EQUAL(rgba[19], 0.0f);
+
+    OIIO_CHECK_CLOSE(rgba[20], res0, rtol);
+    OIIO_CHECK_EQUAL(rgba[23], inf);
+
+    //OIIO_CHECK_CLOSE(rgba[24], ComputeLog2LinEval(-inf, redP), rtol);
+    OIIO_CHECK_EQUAL(rgba[27], 0.0f);
+
+    OIIO_CHECK_CLOSE(rgba[28], res0, rtol);
+    OIIO_CHECK_EQUAL(rgba[31], -inf);
+}
 
 float ComputeLin2LogEval(float in, const OCIO::LogUtil::CTFParams::Params & params)
 {
@@ -770,11 +842,19 @@ float ComputeLin2LogEval(float in, const OCIO::LogUtil::CTFParams::Params & para
 
 OIIO_ADD_TEST(LogOpCPU, lin2log_test)
 {
-    const float rgbaImage[8] = { 0.0367126f, 0.5f, 1.f,     0.f,
-                                 0.2f,       0.f,   .99f, 128.f };
+    const float qnan = std::numeric_limits<float>::quiet_NaN();
+    const float inf = std::numeric_limits<float>::infinity();
+    const float rgbaImage[32] = { 0.0367126f, 0.5f, 1.f,     0.f,
+                                  0.2f,       0.f,   .99f, 128.f,
+                                  qnan,       qnan, qnan,    0.f,
+                                  0.f,        0.f,  0.f,     qnan,
+                                  inf,        inf,  inf,     0.f,
+                                  0.f,        0.f,  0.f,     inf,
+                                 -inf,       -inf, -inf,     0.f,
+                                  0.f,        0.f,  0.f,    -inf };
 
-    float rgba[8] = { 0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f };
-    memcpy(rgba, &rgbaImage[0], 8 * sizeof(float));
+    float rgba[32] = {};
+    memcpy(rgba, &rgbaImage[0], 32 * sizeof(float));
 
     OCIO::LogUtil::CTFParams params;
     auto & redP = params.get(OCIO::LogUtil::CTFParams::red);
@@ -810,10 +890,11 @@ OIIO_ADD_TEST(LogOpCPU, lin2log_test)
         dir, base, paramsR, paramsG, paramsB);
 
     OCIO::OpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
-    pRenderer->apply(rgba, 2);
+    pRenderer->apply(rgba, 8);
 
     const OCIO::LogUtil::CTFParams::Params noParam;
 
+    const float error = 1e-4f;
     for (unsigned i = 0; i < 8; ++i)
     {
         const bool isRed = (i % 4 == 0);
@@ -837,9 +918,29 @@ OIIO_ADD_TEST(LogOpCPU, lin2log_test)
 
         // LogOpCPU implementation uses optimized logarithm approximation
         // cannot use strict comparison
-        const float error = 1e-4f;
         OIIO_CHECK_CLOSE(result, expected, error);
     }
+
+    const float res0 = ComputeLin2LogEval(0.0f, redP);
+    const float resMin = ComputeLin2LogEval(-100.0f, redP);
+
+    OIIO_CHECK_CLOSE(rgba[8], resMin, error);
+    OIIO_CHECK_EQUAL(rgba[11], 0.0f);
+
+    OIIO_CHECK_CLOSE(rgba[12], res0, error);
+    OIIO_CHECK_ASSERT(std::isnan(rgba[15]));
+
+    //OIIO_CHECK_EQUAL(rgba[16], inf);
+    OIIO_CHECK_EQUAL(rgba[19], 0.0f);
+
+    OIIO_CHECK_CLOSE(rgba[20], res0, error);
+    OIIO_CHECK_EQUAL(rgba[23], inf);
+
+    OIIO_CHECK_CLOSE(rgba[24], resMin, error);
+    OIIO_CHECK_EQUAL(rgba[27], 0.0f);
+
+    OIIO_CHECK_CLOSE(rgba[28], res0, error);
+    OIIO_CHECK_EQUAL(rgba[31], -inf);
 }
 
 // TODO: Test bitdepth support scaling - (logOp_Log_withScaling_test)

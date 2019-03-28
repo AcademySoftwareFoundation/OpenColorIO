@@ -53,6 +53,10 @@ set(SOURCES
 	ops/CDL/CDLOpData.cpp
 	ops/CDL/CDLOps.cpp
 	ops/Exponent/ExponentOps.cpp
+	ops/FixedFunction/FixedFunctionOpGPU.cpp
+	ops/FixedFunction/FixedFunctionOpCPU.cpp
+	ops/FixedFunction/FixedFunctionOpData.cpp
+	ops/FixedFunction/FixedFunctionOps.cpp
 	ops/Gamma/GammaOpCPU.cpp
 	ops/Gamma/GammaOpData.cpp
 	ops/Gamma/GammaOpUtils.cpp
@@ -95,6 +99,7 @@ set(SOURCES
 	transforms/ExponentTransform.cpp
 	transforms/ExponentWithLinearTransform.cpp
 	transforms/FileTransform.cpp
+	transforms/FixedFunctionTransform.cpp
 	transforms/GroupTransform.cpp
 	transforms/LogAffineTransform.cpp
 	transforms/LogTransform.cpp
@@ -103,9 +108,23 @@ set(SOURCES
 	transforms/RangeTransform.cpp
 	transforms/TruelightTransform.cpp
 	UnitTest.cpp
+	UnitTestUtils.cpp
 )
 
+if(WIN32 AND BUILD_SHARED_LIBS)
+
+    # To be appended to the binary file name.
+    set(LIBNAME_SUFFIX 
+        ${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}
+    )
+
+    # Create the version.rc file for the Windows DLL.
+    configure_file(res/version.rc.in ${CMAKE_CURRENT_BINARY_DIR}/version.rc @ONLY)
+    set(SOURCES ${SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
+endif()
+
 add_library(OpenColorIO ${SOURCES})
+
 target_include_directories(OpenColorIO
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
 )
@@ -123,13 +142,17 @@ target_link_libraries(OpenColorIO
 if(NOT BUILD_SHARED_LIBS)
 	target_compile_definitions(OpenColorIO
 		PRIVATE
-		OpenColorIO_SKIP_IMPORTS
+			OpenColorIO_SKIP_IMPORTS
 	)
 else()
+	# Only exports selected symbols.
 	target_compile_definitions(OpenColorIO
 		PRIVATE
-		OpenColorIO_EXPORTS
+			OpenColorIO_EXPORTS
 	)
+	# If supported for the target machine, emit position-independent code 
+	# suitable for dynamic linking.
+	set_property(TARGET OpenColorIO PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif()
 
 if(OCIO_USE_SSE)
@@ -138,13 +161,29 @@ if(OCIO_USE_SSE)
 			USE_SSE
 	)
 endif()
+
 if(WIN32)
-	# A windows application linking to eXpat static libraries must
+    # A windows application linking to eXpat static libraries must
     # have the global macro XML_STATIC defined
-	target_compile_definitions(OpenColorIO
-		PRIVATE
-			XML_STATIC
-	)
+    target_compile_definitions(OpenColorIO
+        PRIVATE
+            XML_STATIC
+    )
+
+    if(BUILD_SHARED_LIBS)
+
+        # Impose a versioned name on Windows to avoid binary name clashes 
+        # between different versions of the same library.
+
+        # Note: Do not append the PATCH to allow Apps to use the
+        #       latest binary compatible library.
+
+        set_target_properties(OpenColorIO
+            PROPERTIES PREFIX ""
+                       SUFFIX "_${LIBNAME_SUFFIX}.dll"
+        )
+
+    endif()
 endif()
 
 set_target_properties(OpenColorIO PROPERTIES 

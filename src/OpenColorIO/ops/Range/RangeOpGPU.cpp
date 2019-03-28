@@ -26,6 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <limits>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -48,53 +49,62 @@ void GetRangeGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
 
     if(range->scales(true))
     {
-        const double scale[4] 
-            = { range->getScale(), 
-                range->getScale(), 
-                range->getScale(), 
-                range->getAlphaScale() };
+        const double scale[3]
+            = { range->getScale(),
+                range->getScale(),
+                range->getScale() };
 
-        const double offset[4] 
+        const double offset[3] 
             = { range->getOffset(), 
                 range->getOffset(), 
-                range->getOffset(), 
-                0. };
+                range->getOffset() };
 
-        ss.newLine() << shaderDesc->getPixelName() << " = "
-                     << shaderDesc->getPixelName()
-                     << " * "
-                     << ss.vec4fConst(scale[0], scale[1], scale[2], scale[3])
+        ss.newLine() << shaderDesc->getPixelName() << ".rgb = "
+                     << shaderDesc->getPixelName() << ".rgb * "
+                     << ss.vec3fConst(scale[0], scale[1], scale[2])
                      << " + "
-                     << ss.vec4fConst(offset[0], offset[1], offset[2], offset[3])
+                     << ss.vec3fConst(offset[0], offset[1], offset[2])
                      << ";";
+    
+        const double alphaScale = range->getAlphaScale();
+        if (alphaScale != 1.0)
+        {
+            ss.newLine() << shaderDesc->getPixelName() << ".w = "
+                         << shaderDesc->getPixelName() << ".w * " << (float)alphaScale
+                         << ";";
+        }
     }
+
+    const float qnan = std::numeric_limits<float>::quiet_NaN();
 
     if(range->minClips())
     {
-        const double lowerBound[4] 
+        const double lowerBound[3] 
             = { range->getLowBound(), 
                 range->getLowBound(), 
-                range->getLowBound(), 
-                -1. * HALF_MAX };
+                range->getLowBound() };
 
-        ss.newLine() << shaderDesc->getPixelName() << " = "
-                     << "max(" << shaderDesc->getPixelName() << ", "
-                     << ss.vec4fConst(lowerBound[0], lowerBound[1], lowerBound[2], lowerBound[3])
-                     << ");";
+        ss.newLine() << shaderDesc->getPixelName() << ".rgb = "
+                     << "max(" << ss.vec3fConst(lowerBound[0],
+                                                lowerBound[1],
+                                                lowerBound[2]) << ", "
+                     << shaderDesc->getPixelName()
+                     << ".rgb);";
     }
 
-    if(range->maxClips())
+    if (range->maxClips())
     {
-        const double upperBound[4] 
-            = { range->getHighBound(), 
-                range->getHighBound(), 
-                range->getHighBound(), 
-                HALF_MAX };
+        const double upperBound[3]
+            = { range->getHighBound(),
+                range->getHighBound(),
+                range->getHighBound() };
 
-        ss.newLine() << shaderDesc->getPixelName() << " = "
-                     << "min(" << shaderDesc->getPixelName() << ", "
-                     << ss.vec4fConst(upperBound[0], upperBound[1], upperBound[2], upperBound[3])
-                     << ");";
+        ss.newLine() << shaderDesc->getPixelName() << ".rgb = "
+            << "min(" << ss.vec3fConst(upperBound[0],
+                                       upperBound[1],
+                                       upperBound[2]) << ", "
+            << shaderDesc->getPixelName()
+            << ".rgb);";
     }
 
     shaderDesc->addToFunctionShaderCode(ss.string().c_str());

@@ -324,6 +324,10 @@ OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_spi3d_linear)
 
 OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_spi3d_tetra)
 {
+    // TODO: Would like to be able to remove the setTestNaN(false) and
+    // setTestInfinity(false) from all of these tests.
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
     OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_1.spi3d");
     file->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
 
@@ -383,6 +387,8 @@ OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_spi3d_bizarre_linear)
 
 OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_spi3d_bizarre_tetra)
 {
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
     OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_bizarre.spi3d");
     file->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
 
