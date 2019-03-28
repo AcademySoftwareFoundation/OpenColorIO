@@ -1,0 +1,56 @@
+/* Before changing anything, refer to:                                            */
+/*   https://docs.microsoft.com/en-us/windows/desktop/menurc/versioninfo-resource */
+
+#include "afxres.h"
+
+#define VER_FILEVERSION             @OpenColorIO_VERSION_MAJOR@,@OpenColorIO_VERSION_MINOR@,@OpenColorIO_VERSION_PATCH@
+#define VER_FILEVERSION_STR         "@OpenColorIO_VERSION_MAJOR@.@OpenColorIO_VERSION_MINOR@.@OpenColorIO_VERSION_PATCH@"
+
+#define VER_PRODUCTVERSION          @OpenColorIO_VERSION_MAJOR@,@OpenColorIO_VERSION_MINOR@,@OpenColorIO_VERSION_PATCH@
+#define VER_PRODUCTVERSION_STR      "@OpenColorIO_VERSION_MAJOR@.@OpenColorIO_VERSION_MINOR@.@OpenColorIO_VERSION_PATCH@"
+
+#ifndef DEBUG
+#define VER_DEBUG                   0
+#else
+#define VER_DEBUG                   VS_FF_DEBUG
+#endif
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     VER_FILEVERSION
+PRODUCTVERSION  VER_PRODUCTVERSION
+FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
+FILEFLAGS       VER_DEBUG
+FILEOS          VOS__WINDOWS32
+FILETYPE        VFT_DLL
+FILESUBTYPE     VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4"
+        BEGIN
+            VALUE "CompanyName",      ""
+            VALUE "FileDescription",  "OpenColorIO (OCIO) DLL"
+            VALUE "FileVersion",      VER_FILEVERSION_STR
+            VALUE "InternalName",     "OpenColorIO"
+            VALUE "LegalCopyright",   ""
+            VALUE "LegalTrademarks1", ""
+            VALUE "LegalTrademarks2", ""
+            VALUE "OriginalFilename", "OpenColorIO_@LIBNAME_SUFFIX@.dll"
+            VALUE "ProductName",      "OpenColorIO"
+            VALUE "ProductVersion",   VER_PRODUCTVERSION_STR
+        END
+    END
+
+    BLOCK "VarFileInfo"
+    BEGIN
+        /* The following line should only be modified for localized versions.     */
+        /* It consists of any number of WORD,WORD pairs, with each pair           */
+        /* describing a language,codepage combination supported by the file.      */
+        /*                                                                        */
+        /* For example, a file might have values "0x409,1252" indicating that it  */
+        /* supports English language (0x409) in the Windows ANSI codepage (1252). */
+
+        VALUE "Translation", 0x409, 1252
+
+    END
+END

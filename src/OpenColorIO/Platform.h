@@ -35,12 +35,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef WINDOWS
 #define WINDOWS
 #endif
+
 #define _CRT_NONSTDC_NO_DEPRECATE 1
 #define _CRT_SECURE_NO_DEPRECATE 1
 #define NOMINMAX 1
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
 // windows - defined for both Win32 and Win64
-#include <Windows.h>
+#include <windows.h>
+
 #include <malloc.h>
 #include <io.h>
 #include <tchar.h> 
