@@ -1,7 +1,7 @@
 project(OpenColorIO)
 set(OCIO_VERSION_MAJOR 1)
 set(OCIO_VERSION_MINOR 1)
-set(OCIO_VERSION_PATCH 0)
+set(OCIO_VERSION_PATCH 1)
 
 cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/share/cmake)
