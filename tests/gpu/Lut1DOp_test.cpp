@@ -307,9 +307,9 @@ OCIO_ADD_GPU_TEST(Lut1DOp, not_linear_lut1d_5_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
-    // TODO: Should be smaller.
-    test.setErrorThreshold(1e-3f);
-    test.setRelativeComparison(true); // LUT contains values up to 64
+    test.setErrorThreshold(5e-4f);    // Good value for a relative error threshold.
+    test.setRelativeComparison(true); // LUT contains values from 0.0f to 64.0f
+                                      // explaining why an absolute error could not be used.
 }
 
 OCIO_ADD_GPU_TEST(Lut1DOp, not_linear_lut1d_5_inverse_generic_shader)

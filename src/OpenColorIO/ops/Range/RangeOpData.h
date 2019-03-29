@@ -91,6 +91,8 @@ public:
     // (May be used to set arguments to the constructor.)
     static double EmptyValue();
 
+    RangeOpDataRcPtr clone() const;
+
     //
     // Note: The setters below do not call validate and are only for use 
     //       by the file format parser.
