@@ -196,14 +196,7 @@ void Extract(int cubesize, int maxwidth,
     // TODO: confirm no data window?
     std::vector<float> img;
     img.resize(spec.width*spec.height*spec.nchannels, 0);
-    const bool ok = f->read_image(
-#if OIIO_VERSION >= 10800
-                OIIO::TypeFloat, 
-#else
-                OIIO::TypeDesc::TypeFloat, 
-#endif
-                &img[0]);
-
+    const bool ok = f->read_image(OIIO::TypeDesc::FLOAT, &img[0]);
     if(!ok)
     {
         std::stringstream ss;

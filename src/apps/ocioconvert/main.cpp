@@ -436,14 +436,7 @@ int main(int argc, const char **argv)
         img.resize(imgwidth*imgheight*components);
         memset(&img[0], 0, imgwidth*imgheight*components*sizeof(float));
         
-        const bool ok = f->read_image(
-#if OIIO_VERSION >= 10800
-                OIIO::TypeFloat, 
-#else
-                OIIO::TypeDesc::TypeFloat, 
-#endif
-                &img[0]);
-
+        const bool ok = f->read_image(OIIO::TypeDesc::FLOAT, &img[0]);
         if(!ok)
         {
             std::cerr << "Error reading \"" << inputimage << "\" : " << f->geterror() << "\n";
