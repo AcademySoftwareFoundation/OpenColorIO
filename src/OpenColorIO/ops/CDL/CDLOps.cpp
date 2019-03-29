@@ -155,16 +155,8 @@ CDLOp::CDLOp(BitDepth inBitDepth,
 
 OpRcPtr CDLOp::clone() const
 {
-    return std::make_shared<CDLOp>(cdlData()->getInputBitDepth(),
-                                   cdlData()->getOutputBitDepth(),
-                                   cdlData()->getID(),
-                                   cdlData()->getDescriptions(),
-                                   cdlData()->getStyle(),
-                                   cdlData()->getSlopeParams().data(), 
-                                   cdlData()->getOffsetParams().data(),
-                                   cdlData()->getPowerParams().data(), 
-                                   cdlData()->getSaturation(),
-                                   m_direction);
+    CDLOpDataRcPtr f = cdlData()->clone();
+    return std::make_shared<CDLOp>(f, m_direction);
 }
 
 CDLOp::~CDLOp()

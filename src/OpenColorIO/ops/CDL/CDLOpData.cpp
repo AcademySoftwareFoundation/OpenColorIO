@@ -156,6 +156,11 @@ CDLOpData::~CDLOpData()
 {
 }
 
+CDLOpDataRcPtr CDLOpData::clone() const
+{
+    return std::make_shared<CDLOpData>(*this);
+}
+
 bool CDLOpData::operator==(const OpData& other) const
 {
     if (this == &other) return true;
