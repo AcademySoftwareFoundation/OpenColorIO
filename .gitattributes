@@ -1,0 +1,15 @@
+# Control the end-of-line (i.e. eol) type for all the test files.
+
+# Most formats are text formats. Binary formats are excluded below.
+# Favor LF for all text files on all platforms.
+tests/data/files/* text eol=lf
+
+# Use CRLF for this file to validate clf parser also handles it.
+tests/data/files/matrix_windows.clf text eol=crlf
+
+# A binary file with a clf extension that will fail to be parsed.
+tests/data/files/image_png.clf binary
+
+# Exclude binary formats.
+tests/data/files/*.icc binary
+tests/data/files/*.icm binary
