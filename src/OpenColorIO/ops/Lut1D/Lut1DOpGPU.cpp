@@ -60,7 +60,10 @@ void PadLutChannels(unsigned long width,
         const unsigned long step = width - 1;
         for (unsigned long i = 0; i < (currWidth - step); i += step)
         {
-            std::transform(&channel[3 * i], &channel[3 * (i + step)], std::back_inserter(chn), [](float val) {return SanitizeFloat(val); });
+            std::transform(&channel[3 * i],
+                           &channel[3 * (i + step)],
+                           std::back_inserter(chn),
+                           [](float val) {return SanitizeFloat(val); });
 
             chn.push_back(SanitizeFloat(channel[3 * (i + step) + 0]));
             chn.push_back(SanitizeFloat(channel[3 * (i + step) + 1]));
@@ -71,7 +74,10 @@ void PadLutChannels(unsigned long width,
         // If there are still texels to fill, add them to the texture data.
         if (leftover > 0)
         {
-            std::transform(&channel[3 * (currWidth - leftover)], &channel[3 * (currWidth - 1)], std::back_inserter(chn), [](float val) {return SanitizeFloat(val); });
+            std::transform(&channel[3 * (currWidth - leftover)],
+                           &channel[3 * (currWidth - 1)],
+                           std::back_inserter(chn),
+                           [](float val) {return SanitizeFloat(val); });
 
             chn.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 0]));
             chn.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 1]));
