@@ -282,7 +282,7 @@ OCIO_NAMESPACE_ENTER
                     currentColorSpace = processColorSpace;
                 }
                 
-                std::copy(tmpOps.begin(), tmpOps.end(), std::back_inserter(ops));
+                ops += tmpOps;
             }
         }
     }
@@ -414,7 +414,7 @@ OCIO_NAMESPACE_ENTER
             if(success)
             {
                 currentColorSpace = cs;
-                std::copy(tmpOps.begin(), tmpOps.end(), std::back_inserter(ops));
+                ops += tmpOps;
             }
             else
             {

@@ -237,21 +237,6 @@ OCIO_NAMESPACE_ENTER
         }
 
 
-        void deepCopy(OpRcPtrVec & dst, const OpRcPtrVec & src)
-        {
-            for(auto & op : src)
-            {
-                dst.push_back(op->clone());
-            }
-        }
-
-
-        void shallowCopy(OpRcPtrVec & dst, const OpRcPtrVec & src)
-        {
-            std::copy(src.begin(), src.end(), back_inserter(dst));   
-        }
-
-
         OpRcPtrVec create3DLut(const OpRcPtrVec & src, unsigned edgelen)
         {
             if(src.size()==0) return OpRcPtrVec();
@@ -271,10 +256,9 @@ OCIO_NAMESPACE_ENTER
             GenerateIdentityLut3D(&lut3D[0], lut3DEdgeLen, 4, LUT3DORDER_FAST_RED);
             
             // Apply the lattice ops to it
-            const OpRcPtrVec::size_type max = src.size();
-            for(OpRcPtrVec::size_type i=0; i<max; ++i)
+            for(auto & op : src)
             {
-                src[i]->apply(&lut3D[0], lut3DNumPixels);
+                op->apply(&lut3D[0], lut3DNumPixels);
             }
             
             // Convert the RGBA image to an RGB image, in place.           
@@ -446,16 +430,16 @@ OCIO_NAMESPACE_ENTER
             LogDebug("GPU Ops: Post-3DLUT");
             FinalizeOpVec(gpuOpsHwPostProcess);
 
-            shallowCopy(gpuOps, gpuOpsHwPreProcess);
-            shallowCopy(gpuOps, gpuLut);
-            shallowCopy(gpuOps, gpuOpsHwPostProcess);
+            gpuOps += gpuOpsHwPreProcess;
+            gpuOps += gpuLut;
+            gpuOps += gpuOpsHwPostProcess;
         }
         else
         {
             // Note: finalize() already finalized & optimized the Op list.
 
             LogDebug("GPU Ops");
-            shallowCopy(gpuOps, m_ops);
+            gpuOps = m_ops;
         }
 
         // Create the shader program information
