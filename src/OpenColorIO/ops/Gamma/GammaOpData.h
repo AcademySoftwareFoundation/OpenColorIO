@@ -105,6 +105,8 @@ public:
 
     virtual ~GammaOpData();
 
+    GammaOpDataRcPtr clone() const;
+
     inline Style getStyle() const { return m_style; }
 
     Type getType() const override { return GammaType; }
