@@ -457,7 +457,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "ops/Lut1D/Lut1DOp.h"
 #include "ops/Lut1D/Lut1DOpData.h"
 #include "unittest.h"
-#include "UnitTestFiles.h"
+#include "UnitTestUtils.h"
 
 
 // TODO: CPUProcessor being part of the OCIO public API limits the ability 

@@ -143,6 +143,7 @@ void RangeScaleMinMaxRenderer::apply(const void * inImg, void * outImg, long num
                              in[1] * m_scale + m_offset,
                              in[2] * m_scale + m_offset };
 
+        // NaNs become m_lowerBound.
         out[0] = Clamp(t[0], m_lowerBound, m_upperBound);
         out[1] = Clamp(t[1], m_lowerBound, m_upperBound);
         out[2] = Clamp(t[2], m_lowerBound, m_upperBound);
@@ -165,10 +166,14 @@ void RangeScaleMinRenderer::apply(const void * inImg, void * outImg, long numPix
 
     for(long idx=0; idx<numPixels; ++idx)
     {
+        out[0] = in[0] * m_scale + m_offset;
+        out[1] = in[1] * m_scale + m_offset;
+        out[2] = in[2] * m_scale + m_offset;
+
         // NaNs become m_lowerBound.
-        out[0] = std::max(m_lowerBound, in[0] * m_scale + m_offset);
-        out[1] = std::max(m_lowerBound, in[1] * m_scale + m_offset);
-        out[2] = std::max(m_lowerBound, in[2] * m_scale + m_offset);
+        out[0] = std::max(m_lowerBound, out[0]);
+        out[1] = std::max(m_lowerBound, out[1]);
+        out[2] = std::max(m_lowerBound, out[2]);
         out[3] = in[3] * m_alphaScale;
 
         in  += 4;
@@ -188,10 +193,14 @@ void RangeScaleMaxRenderer::apply(const void * inImg, void * outImg, long numPix
 
     for(long idx=0; idx<numPixels; ++idx)
     {
+        out[0] = in[0] * m_scale + m_offset;
+        out[1] = in[1] * m_scale + m_offset;
+        out[2] = in[2] * m_scale + m_offset;
+
         // NaNs become m_upperBound.
-        out[0] = std::min(in[0] * m_scale + m_offset, m_upperBound),
-        out[1] = std::min(in[1] * m_scale + m_offset, m_upperBound),
-        out[2] = std::min(in[2] * m_scale + m_offset, m_upperBound),
+        out[0] = std::min(m_upperBound, out[0]),
+        out[1] = std::min(m_upperBound, out[1]),
+        out[2] = std::min(m_upperBound, out[2]),
         out[3] = in[3] * m_alphaScale;
 
         in  += 4;

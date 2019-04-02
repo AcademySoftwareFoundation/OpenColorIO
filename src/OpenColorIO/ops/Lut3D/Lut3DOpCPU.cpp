@@ -2007,7 +2007,7 @@ void Lut3DRendererNaNTest(OCIO::Interpolation interpol)
                           inf,  inf,  inf,  inf,
                          -inf, -inf, -inf, -inf };
 
-    renderer->apply(pixels, 4);
+    renderer->apply(pixels, pixels, 4);
 
     OIIO_CHECK_CLOSE(pixels[0], values[0], 1e-7f);
     OIIO_CHECK_CLOSE(pixels[1], values[1], 1e-7f);
