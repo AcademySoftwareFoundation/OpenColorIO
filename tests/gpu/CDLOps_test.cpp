@@ -66,9 +66,12 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1_legacy_shader)
 
     test.setContext(cdl, shaderDesc);
 
-    test.setWideRange(true);
+    test.setTestWideRange(true);
     test.setRelativeComparison(false);
     test.setErrorThreshold(1e-6f);
+    // TODO: Would like to be able to remove the setTestNaN(false)
+    // from all of these tests.
+    test.setTestNaN(false);
 }
 
 // Use the generic shader description with the CDL from OCIO v1 implementation
@@ -84,9 +87,10 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1)
 
     test.setContext(cdl, shaderDesc);
 
-    test.setWideRange(true);
+    test.setTestWideRange(true);
     test.setRelativeComparison(false);
     test.setErrorThreshold(1e-6f);
+    test.setTestNaN(false);
 }
 
 // Use the generic shader description with the CDL from OCIO v2 implementation
@@ -106,7 +110,7 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v2)
 
     test.setContext(config, cdl, shaderDesc);
 
-    test.setWideRange(true);
+    test.setTestWideRange(true);
     test.setRelativeComparison(false);
     // TODO: How to explain the threshold difference compare to the previous test
     //       (i.e. CDL v1 versus v2)
@@ -130,7 +134,7 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_inv_v2)
 
     test.setContext(config, cdl, shaderDesc);
 
-    test.setWideRange(true);
+    test.setTestWideRange(true);
     test.setRelativeComparison(false);
     test.setErrorThreshold(1e-5f);
 }
@@ -160,7 +164,7 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v2_Data_2)
 
     test.setContext(config, cdl, shaderDesc);
 
-    test.setWideRange(true);
+    test.setTestWideRange(true);
     test.setRelativeComparison(false);
     test.setErrorThreshold(1e-5f);
 }
@@ -191,7 +195,7 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v2_Data_3)
 
     test.setContext(config, cdl, shaderDesc);
 
-    test.setWideRange(true);
+    test.setTestWideRange(true);
     test.setRelativeComparison(false);
     test.setErrorThreshold(1e-5f);
 }

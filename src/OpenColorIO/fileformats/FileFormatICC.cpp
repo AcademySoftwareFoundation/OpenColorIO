@@ -474,8 +474,7 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "unittest.h"
-#include "OpBuilders.h"
-#include "UnitTestFiles.h"
+#include "UnitTestUtils.h"
 
 OIIO_ADD_TEST(FileFormatICC, Types)
 {

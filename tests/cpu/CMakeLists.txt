@@ -167,6 +167,7 @@ set(SOURCES
 	transforms/RangeTransform.cpp
 	transforms/TruelightTransform.cpp
 	UnitTest.cpp
+	UnitTestUtils.cpp
 )
 
 function(prepend var prefix)

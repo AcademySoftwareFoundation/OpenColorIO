@@ -226,7 +226,7 @@ Export capabilities through ociobakelut::
 
 
 See this `ocio-dev thread 
-<http://groups.google.com/group/ocio-dev/browse_thread/thread/56fd58e60d98e0f6#>`__
+<https://lists.aswf.io/g/ocio-dev/topic/30498585>`__
 for additional usage discussions.
 
 When exporting an ICC Profile, you will be asked to specify your monitor’s

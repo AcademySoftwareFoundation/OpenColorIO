@@ -143,9 +143,9 @@ void RangeScaleMinMaxRenderer::apply(const void * inImg, void * outImg, long num
                              in[1] * m_scale + m_offset,
                              in[2] * m_scale + m_offset };
 
-        out[0] = clamp(t[0], m_lowerBound, m_upperBound);
-        out[1] = clamp(t[1], m_lowerBound, m_upperBound);
-        out[2] = clamp(t[2], m_lowerBound, m_upperBound);
+        out[0] = Clamp(t[0], m_lowerBound, m_upperBound);
+        out[1] = Clamp(t[1], m_lowerBound, m_upperBound);
+        out[2] = Clamp(t[2], m_lowerBound, m_upperBound);
         out[3] = in[3] * m_alphaScale;
 
         in  += 4;
@@ -165,6 +165,7 @@ void RangeScaleMinRenderer::apply(const void * inImg, void * outImg, long numPix
 
     for(long idx=0; idx<numPixels; ++idx)
     {
+        // NaNs become m_lowerBound.
         out[0] = std::max(m_lowerBound, in[0] * m_scale + m_offset);
         out[1] = std::max(m_lowerBound, in[1] * m_scale + m_offset);
         out[2] = std::max(m_lowerBound, in[2] * m_scale + m_offset);
@@ -187,6 +188,7 @@ void RangeScaleMaxRenderer::apply(const void * inImg, void * outImg, long numPix
 
     for(long idx=0; idx<numPixels; ++idx)
     {
+        // NaNs become m_upperBound.
         out[0] = std::min(in[0] * m_scale + m_offset, m_upperBound),
         out[1] = std::min(in[1] * m_scale + m_offset, m_upperBound),
         out[2] = std::min(in[2] * m_scale + m_offset, m_upperBound),
@@ -201,9 +203,6 @@ void RangeScaleMaxRenderer::apply(const void * inImg, void * outImg, long numPix
 // has a min or max defined (which is necessary to have an offset), then it clamps.  
 // If it doesn't, then it is just a bit depth conversion and is therefore an identity.
 // The optimizer currently replaces identities with a scale matrix.
-//
-// TODO: Now that CLF allows non-clamping Ranges, could avoid turning
-// these ranges into matrices in the XML reader?
 //
 RangeScaleRenderer::RangeScaleRenderer(ConstRangeOpDataRcPtr & range)
     :  RangeOpCPU(range)
@@ -239,9 +238,10 @@ void RangeMinMaxRenderer::apply(const void * inImg, void * outImg, long numPixel
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        out[0] = clamp(in[0], m_lowerBound, m_upperBound);
-        out[1] = clamp(in[1], m_lowerBound, m_upperBound);
-        out[2] = clamp(in[2], m_lowerBound, m_upperBound);
+        // NaNs become m_lowerBound.
+        out[0] = Clamp(in[0], m_lowerBound, m_upperBound);
+        out[1] = Clamp(in[1], m_lowerBound, m_upperBound);
+        out[2] = Clamp(in[2], m_lowerBound, m_upperBound);
         out[3] = in[3];
 
         in  += 4;
@@ -266,6 +266,7 @@ void RangeMinRenderer::apply(const void * inImg, void * outImg, long numPixels) 
         // renderer would not be called if there is a bit-depth conversion.
         // Likewise, m_alphaScale = 1, so no need to scale alpha.
 
+        // NaNs become m_lowerBound.
         out[0] = std::max(m_lowerBound, in[0]);
         out[1] = std::max(m_lowerBound, in[1]);
         out[2] = std::max(m_lowerBound, in[2]);
@@ -288,9 +289,10 @@ void RangeMaxRenderer::apply(const void * inImg, void * outImg, long numPixels) 
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        out[0] = std::min(in[0], m_upperBound);
-        out[1] = std::min(in[1], m_upperBound);
-        out[2] = std::min(in[2], m_upperBound);
+        // NaNs become m_upperBound.
+        out[0] = std::min(m_upperBound, in[0]);
+        out[1] = std::min(m_upperBound, in[1]);
+        out[2] = std::min(m_upperBound, in[2]);
         out[3] = in[3];
 
         in  += 4;
@@ -366,6 +368,7 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 
+#include <limits>
 #include "ops/Range/RangeOpData.h"
 #include "pystring/pystring.h"
 #include "unittest.h"
@@ -404,10 +407,18 @@ OIIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings)
     const std::string typeName(typeid(c).name());
     OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeScaleMinMaxRenderer"));
 
-    const long numPixels = 3;
+    const long numPixels = 9;
+    const float qnan = std::numeric_limits<float>::quiet_NaN();
+    const float inf = std::numeric_limits<float>::infinity();
     float image[4*numPixels] = { -0.50f, -0.25f, 0.50f, 0.0f,
                                   0.75f,  1.00f, 1.25f, 1.0f,
-                                  1.25f,  1.50f, 1.75f, 0.0f };
+                                  1.25f,  1.50f, 1.75f, 0.0f,
+                                   qnan,   qnan,  qnan, 0.0f,
+                                   0.0f,   0.0f,  0.0f, qnan,
+                                    inf,    inf,   inf, 0.0f,
+                                   0.0f,   0.0f,  0.0f,  inf,
+                                   -inf,   -inf,  -inf, 0.0f,
+                                   0.0f,   0.0f,  0.0f, -inf };
 
     OIIO_CHECK_NO_THROW(op->apply(&image[0], &image[0], numPixels));
 
@@ -425,6 +436,36 @@ OIIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings)
     OIIO_CHECK_CLOSE(image[9],  1.50f, g_error);
     OIIO_CHECK_CLOSE(image[10], 1.50f, g_error);
     OIIO_CHECK_CLOSE(image[11], 0.00f, g_error);
+
+    OIIO_CHECK_EQUAL(image[12], 0.50f);
+    OIIO_CHECK_EQUAL(image[13], 0.50f);
+    OIIO_CHECK_EQUAL(image[14], 0.50f);
+    OIIO_CHECK_EQUAL(image[15], 0.00f);
+
+    OIIO_CHECK_EQUAL(image[16], 0.50f);
+    OIIO_CHECK_EQUAL(image[17], 0.50f);
+    OIIO_CHECK_EQUAL(image[18], 0.50f);
+    OIIO_CHECK_ASSERT(std::isnan(image[19]));
+
+    OIIO_CHECK_EQUAL(image[20], 1.50f);
+    OIIO_CHECK_EQUAL(image[21], 1.50f);
+    OIIO_CHECK_EQUAL(image[22], 1.50f);
+    OIIO_CHECK_EQUAL(image[23], 0.0f);
+
+    OIIO_CHECK_EQUAL(image[24], 0.50f);
+    OIIO_CHECK_EQUAL(image[25], 0.50f);
+    OIIO_CHECK_EQUAL(image[26], 0.50f);
+    OIIO_CHECK_EQUAL(image[27], inf);
+
+    OIIO_CHECK_EQUAL(image[28], 0.50f);
+    OIIO_CHECK_EQUAL(image[29], 0.50f);
+    OIIO_CHECK_EQUAL(image[30], 0.50f);
+    OIIO_CHECK_EQUAL(image[31], 0.0f);
+
+    OIIO_CHECK_EQUAL(image[32], 0.50f);
+    OIIO_CHECK_EQUAL(image[33], 0.50f);
+    OIIO_CHECK_EQUAL(image[34], 0.50f);
+    OIIO_CHECK_EQUAL(image[35], -inf);
 }
 
 OIIO_ADD_TEST(RangeOpCPU, scale_with_low_clipping)
@@ -444,10 +485,18 @@ OIIO_ADD_TEST(RangeOpCPU, scale_with_low_clipping)
     const std::string typeName(typeid(c).name());
     OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeScaleMinRenderer"));
 
-    const long numPixels = 3;
+    const long numPixels = 9;
+    const float qnan = std::numeric_limits<float>::quiet_NaN();
+    const float inf = std::numeric_limits<float>::infinity();
     float image[4*numPixels] = { -0.50f, -0.25f, 0.50f, 0.0f,
                                   0.75f,  1.00f, 1.25f, 1.0f,
-                                  1.25f,  1.50f, 1.75f, 0.0f };
+                                  1.25f,  1.50f, 1.75f, 0.0f,
+                                  qnan,   qnan,  qnan, 0.0f,
+                                  0.0f,   0.0f,  0.0f, qnan,
+                                   inf,    inf,   inf, 0.0f,
+                                  0.0f,   0.0f,  0.0f,  inf,
+                                  -inf,   -inf,  -inf, 0.0f,
+                                  0.0f,   0.0f,  0.0f, -inf };
 
     OIIO_CHECK_NO_THROW(op->apply(&image[0], &image[0], numPixels));
 
@@ -465,6 +514,36 @@ OIIO_ADD_TEST(RangeOpCPU, scale_with_low_clipping)
     OIIO_CHECK_CLOSE(image[9],  2.00f, g_error);
     OIIO_CHECK_CLOSE(image[10], 2.25f, g_error);
     OIIO_CHECK_CLOSE(image[11], 0.00f, g_error);
+
+    OIIO_CHECK_EQUAL(image[12], 0.50f);
+    OIIO_CHECK_EQUAL(image[13], 0.50f);
+    OIIO_CHECK_EQUAL(image[14], 0.50f);
+    OIIO_CHECK_EQUAL(image[15], 0.00f);
+
+    OIIO_CHECK_EQUAL(image[16], 0.50f);
+    OIIO_CHECK_EQUAL(image[17], 0.50f);
+    OIIO_CHECK_EQUAL(image[18], 0.50f);
+    OIIO_CHECK_ASSERT(std::isnan(image[19]));
+
+    OIIO_CHECK_EQUAL(image[20], inf);
+    OIIO_CHECK_EQUAL(image[21], inf);
+    OIIO_CHECK_EQUAL(image[22], inf);
+    OIIO_CHECK_EQUAL(image[23], 0.0f);
+
+    OIIO_CHECK_EQUAL(image[24], 0.50f);
+    OIIO_CHECK_EQUAL(image[25], 0.50f);
+    OIIO_CHECK_EQUAL(image[26], 0.50f);
+    OIIO_CHECK_EQUAL(image[27], inf);
+
+    OIIO_CHECK_EQUAL(image[28], 0.50f);
+    OIIO_CHECK_EQUAL(image[29], 0.50f);
+    OIIO_CHECK_EQUAL(image[30], 0.50f);
+    OIIO_CHECK_EQUAL(image[31], 0.0f);
+
+    OIIO_CHECK_EQUAL(image[32], 0.50f);
+    OIIO_CHECK_EQUAL(image[33], 0.50f);
+    OIIO_CHECK_EQUAL(image[34], 0.50f);
+    OIIO_CHECK_EQUAL(image[35], -inf);
 }
 
 OIIO_ADD_TEST(RangeOpCPU, scale_with_high_clipping)
@@ -484,10 +563,18 @@ OIIO_ADD_TEST(RangeOpCPU, scale_with_high_clipping)
     const std::string typeName(typeid(c).name());
     OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeScaleMaxRenderer"));
 
-    const long numPixels = 3;
+    const long numPixels = 9;
+    const float qnan = std::numeric_limits<float>::quiet_NaN();
+    const float inf = std::numeric_limits<float>::infinity();
     float image[4*numPixels] = { -0.50f, -0.25f, 0.50f, 0.0f,
                                   0.75f,  1.00f, 1.25f, 1.0f,
-                                  1.25f,  1.50f, 1.75f, 0.0f };
+                                  1.25f,  1.50f, 1.75f, 0.0f,
+                                   qnan,   qnan,  qnan, 0.0f,
+                                   0.0f,   0.0f,  0.0f, qnan,
+                                    inf,    inf,   inf, 0.0f,
+                                   0.0f,   0.0f,  0.0f,  inf,
+                                   -inf,   -inf,  -inf, 0.0f,
+                                   0.0f,   0.0f,  0.0f, -inf };
 
     OIIO_CHECK_NO_THROW(op->apply(&image[0], &image[0], numPixels));
 
@@ -505,6 +592,36 @@ OIIO_ADD_TEST(RangeOpCPU, scale_with_high_clipping)
     OIIO_CHECK_CLOSE(image[9],  1.50f, g_error);
     OIIO_CHECK_CLOSE(image[10], 1.50f, g_error);
     OIIO_CHECK_CLOSE(image[11], 0.00f, g_error);
+
+    OIIO_CHECK_EQUAL(image[12], 1.50f);
+    OIIO_CHECK_EQUAL(image[13], 1.50f);
+    OIIO_CHECK_EQUAL(image[14], 1.50f);
+    OIIO_CHECK_EQUAL(image[15], 0.00f);
+
+    OIIO_CHECK_EQUAL(image[16], 0.50f);
+    OIIO_CHECK_EQUAL(image[17], 0.50f);
+    OIIO_CHECK_EQUAL(image[18], 0.50f);
+    OIIO_CHECK_ASSERT(std::isnan(image[19]));
+
+    OIIO_CHECK_EQUAL(image[20], 1.50f);
+    OIIO_CHECK_EQUAL(image[21], 1.50f);
+    OIIO_CHECK_EQUAL(image[22], 1.50f);
+    OIIO_CHECK_EQUAL(image[23], 0.0f);
+
+    OIIO_CHECK_EQUAL(image[24], 0.50f);
+    OIIO_CHECK_EQUAL(image[25], 0.50f);
+    OIIO_CHECK_EQUAL(image[26], 0.50f);
+    OIIO_CHECK_EQUAL(image[27], inf);
+
+    OIIO_CHECK_EQUAL(image[28], -inf);
+    OIIO_CHECK_EQUAL(image[29], -inf);
+    OIIO_CHECK_EQUAL(image[30], -inf);
+    OIIO_CHECK_EQUAL(image[31], 0.0f);
+
+    OIIO_CHECK_EQUAL(image[32], 0.50f);
+    OIIO_CHECK_EQUAL(image[33], 0.50f);
+    OIIO_CHECK_EQUAL(image[34], 0.50f);
+    OIIO_CHECK_EQUAL(image[35], -inf);
 }
 
 OIIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings_2)

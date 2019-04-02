@@ -711,12 +711,10 @@ OCIO_NAMESPACE_ENTER
         float * values = &data->getArray().getValues()[0];
         for (unsigned long i = 0; i < lut->luts[0].size(); ++i)
         {
-            values[3 * i] = lut->luts[0][i];
+            values[3 * i    ] = lut->luts[0][i];
             values[3 * i + 1] = lut->luts[1][i];
             values[3 * i + 2] = lut->luts[2][i];
         }
-        
-        data->setFileBitDepth(lut->outputBitDepth);
 
         if (direction == TRANSFORM_DIR_INVERSE)
         {

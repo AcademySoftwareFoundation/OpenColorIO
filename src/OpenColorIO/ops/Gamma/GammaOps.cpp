@@ -222,15 +222,8 @@ std::string GammaOp::getInfo() const
 
 OpRcPtr GammaOp::clone() const
 {
-    return OpRcPtr(new GammaOp(gammaData()->getInputBitDepth(),
-                               gammaData()->getOutputBitDepth(),
-                               gammaData()->getID(),
-                               gammaData()->getDescriptions(),
-                               gammaData()->getStyle(),
-                               gammaData()->getRedParams(), 
-                               gammaData()->getGreenParams(), 
-                               gammaData()->getBlueParams(), 
-                               gammaData()->getAlphaParams()));
+    GammaOpDataRcPtr f = gammaData()->clone();
+    return std::make_shared<GammaOp>(f);
 }
 
 bool GammaOp::isSameType(ConstOpRcPtr & op) const

@@ -41,7 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "SSE.h"
 
 #define L_ADJUST(val) \
-    ((isOutInteger) ? clamp((val)+0.5f, outMin,  outMax) : SanitizeFloat(val))
+    ((isOutInteger) ? Clamp((val)+0.5f, outMin,  outMax) : SanitizeFloat(val))
 
 OCIO_NAMESPACE_ENTER
 {
@@ -637,10 +637,10 @@ void Lut1DRenderer::apply(const void * inImg, void * outImg, long numPixels) con
             idx[1] = m_step * in[1];
             idx[2] = m_step * in[2];
 
-            // NaNs become 0
-            idx[0] = std::min(std::max(0.f, idx[0]), m_dimMinusOne);
-            idx[1] = std::min(std::max(0.f, idx[1]), m_dimMinusOne);
-            idx[2] = std::min(std::max(0.f, idx[2]), m_dimMinusOne);
+            // NaNs become 0.
+            idx[0] = Clamp(idx[0], 0.f, m_dimMinusOne);
+            idx[1] = Clamp(idx[1], 0.f, m_dimMinusOne);
+            idx[2] = Clamp(idx[2], 0.f, m_dimMinusOne);
 
             unsigned int lowIdx[3];
             lowIdx[0] = static_cast<unsigned int>(std::floor(idx[0]));
@@ -952,10 +952,10 @@ void Lut1DRendererHueAdjust::apply(const void * inImg, void * outImg, long numPi
             idx[1] = m_step * RGB[1];
             idx[2] = m_step * RGB[2];
 
-            // NaNs become 0
-            idx[0] = std::min(std::max(0.f, idx[0]), m_dimMinusOne);
-            idx[1] = std::min(std::max(0.f, idx[1]), m_dimMinusOne);
-            idx[2] = std::min(std::max(0.f, idx[2]), m_dimMinusOne);
+            // NaNs become 0.
+            idx[0] = Clamp(idx[0], 0.f, m_dimMinusOne);
+            idx[1] = Clamp(idx[1], 0.f, m_dimMinusOne);
+            idx[2] = Clamp(idx[2], 0.f, m_dimMinusOne);
 
             unsigned int lowIdx[3];
             lowIdx[0] = static_cast<unsigned int>(std::floor(idx[0]));
@@ -1036,7 +1036,7 @@ float FindLutInv(const float * start,
     // this function uses std::lower_bound().
 
     // Clamp the value to the range of the LUT.
-    const float cv = std::min( std::max( val * flipSign, *start ), *end );
+    const float cv = Clamp( val * flipSign, *start, *end );
 
     // std::lower_bound()
     // "Returns an iterator pointing to the first element in the range [first,last) 
@@ -1098,7 +1098,7 @@ float FindLutInvHalf(const float * start,
     // this function uses std::lower_bound().
 
     // Clamp the value to the range of the LUT.
-    const float cv = std::min( std::max( val * flipSign, *start ), *end );
+    const float cv = Clamp( val * flipSign, *start, *end );
 
     const float* lowbound = std::lower_bound(start, end, cv);
 
@@ -1684,6 +1684,8 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
+
+#include <limits>
 #include "unittest.h"
 
 OIIO_ADD_TEST(GamutMapUtil, order3_test)
@@ -1824,17 +1826,28 @@ OIIO_ADD_TEST(Lut1DRenderer, nan_test)
     OCIO::OpCPURcPtr renderer = OCIO::GetLut1DRenderer(lutConst);
 
     const float qnan = std::numeric_limits<float>::quiet_NaN();
-    float pixels[16] = { qnan, 0.5f, 0.3f, -0.2f, 
+    const float inf = std::numeric_limits<float>::infinity();
+    float pixels[24] = { qnan, 0.5f, 0.3f, -0.2f,
                          0.5f, qnan, 0.3f, 0.2f, 
                          0.5f, 0.3f, qnan, 1.2f,
-                         0.5f, 0.3f, 0.2f, qnan };
+                         0.5f, 0.3f, 0.2f, qnan,
+                         inf,  inf,  inf,  inf,
+                         -inf, -inf, -inf, -inf };
 
-    renderer->apply(pixels, pixels, 4);
+    renderer->apply(pixels, pixels, 6);
 
     OIIO_CHECK_CLOSE(pixels[0], values[0], 1e-7f);
     OIIO_CHECK_CLOSE(pixels[5], values[1], 1e-7f);
     OIIO_CHECK_CLOSE(pixels[10], values[2], 1e-7f);
     OIIO_CHECK_ASSERT(std::isnan(pixels[15]));
+    OIIO_CHECK_CLOSE(pixels[16], values[21], 1e-7f);
+    OIIO_CHECK_CLOSE(pixels[17], values[22], 1e-7f);
+    OIIO_CHECK_CLOSE(pixels[18], values[23], 1e-7f);
+    OIIO_CHECK_EQUAL(pixels[19], inf);
+    OIIO_CHECK_CLOSE(pixels[20], values[0], 1e-7f);
+    OIIO_CHECK_CLOSE(pixels[21], values[1], 1e-7f);
+    OIIO_CHECK_CLOSE(pixels[22], values[2], 1e-7f);
+    OIIO_CHECK_EQUAL(pixels[23], -inf);
 
 }
 
