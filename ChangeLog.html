@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.1.0',
+        VERSION:     '1.1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO 1.1.0 documentation" href="index.html" />
+    <link rel="top" title="OpenColorIO 1.1.1 documentation" href="index.html" />
     <link rel="next" title="License" href="License.html" />
     <link rel="prev" title="Downloads" href="downloads.html" /> 
   </head>
@@ -38,7 +38,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO 1.1.0 documentation
+      OpenColorIO 1.1.1 documentation
       </div>
       <div class="content">
         
@@ -78,6 +78,19 @@
 <div class="section" id="changelog">
 <span id="changelog-main"></span><h1>ChangeLog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
 <dl class="docutils">
+<dt><strong>Version 1.1.1 (March 25 2019):</strong></dt>
+<dd><ul class="first last simple">
+<li>Added optional compatibility for building apps with OpenImageIO 1.9+</li>
+<li>Added USE_SSE checks to fix Linux build failure</li>
+<li>getDisplays() result ordering now matches the active_displays config
+definition or OCIO_ACTIVE_DISPLAYS env var override.</li>
+<li>Fixed incorrect getDefaultDisplay()/getDefaultView() result when
+OCIO_ACTIVE_DISPLAYS or OCIO_ACTIVE_VIEWS env vars are unset.</li>
+<li>Fixed Windows-specific GetEnv() bug</li>
+<li>Fixed Windows and MacOS CI failure cases</li>
+<li>Updated mail list URLs to aswf.io domain</li>
+</ul>
+</dd>
 <dt><strong>Version 1.1.0 (Jan 5 2018):</strong></dt>
 <dd><ul class="first last simple">
 <li>libc++ build fixes</li>

@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '1.1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO 1.1.0 documentation" href="../index.html" />
+    <link rel="top" title="OpenColorIO 1.1.1 documentation" href="../index.html" />
     <link rel="up" title="User Guide" href="index.html" />
     <link rel="next" title="Developer Guide" href="../developers/index.html" />
     <link rel="prev" title="Looks" href="looks.html" /> 
@@ -39,7 +39,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO 1.1.0 documentation
+      OpenColorIO 1.1.1 documentation
       </div>
       <div class="content">
         
@@ -119,7 +119,7 @@ performs various OCIO-specific &#8220;sanity checks&#8221;.</p>
 is used.</p>
 <p>Currently there is only one OCIO profile version, so the value is
 always <tt class="docutils literal"><span class="pre">1</span></tt> (one)</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">ocio_profile_version</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">ocio_profile_version</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
 </pre></div>
 </div>
 </div>
@@ -137,7 +137,7 @@ luts/
   lg10_to_p3.3dl</pre>
 </div>
 <p>For this, we would set <tt class="docutils literal"><span class="pre">search_path</span></tt> as follows:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">search_path</span><span class="p-Indicator">:</span> <span class="s">&quot;luts&quot;</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">search_path</span><span class="p p-Indicator">:</span> <span class="s">&quot;luts&quot;</span>
 </pre></div>
 </div>
 <p>In a colorspace definition, we might have a FileTransform which refers
@@ -147,11 +147,11 @@ directory, relative to the <tt class="docutils literal"><span class="pre">config
 or absolute (e.g. <tt class="docutils literal"><span class="pre">/mnt/path/to/my/luts</span></tt>)</p>
 <p>Multiple paths can be specified, including a mix of relative and
 absolute paths. Each path is separated with a colon <tt class="docutils literal"><span class="pre">:</span></tt></p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">search_path</span><span class="p-Indicator">:</span> <span class="s">&quot;/mnt/path/to/my/luts:luts&quot;</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">search_path</span><span class="p p-Indicator">:</span> <span class="s">&quot;/mnt/path/to/my/luts:luts&quot;</span>
 </pre></div>
 </div>
 <p>Finally, paths can reference OCIO&#8217;s context variables:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">search_path</span><span class="p-Indicator">:</span> <span class="s">&quot;/shots/show/$SHOT/cc/data:luts&quot;</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">search_path</span><span class="p p-Indicator">:</span> <span class="s">&quot;/shots/show/$SHOT/cc/data:luts&quot;</span>
 </pre></div>
 </div>
 <p>This allows for some clever setups, for example per-shot LUT&#8217;s with
@@ -162,7 +162,7 @@ fallbacks to a default. For more information, see the examples in
 <h3><tt class="docutils literal"><span class="pre">strictparsing</span></tt><a class="headerlink" href="#strictparsing" title="Permalink to this headline">¶</a></h3>
 <p>Optional. Valid values are <tt class="docutils literal"><span class="pre">true</span></tt> and <tt class="docutils literal"><span class="pre">false</span></tt>. Default is <tt class="docutils literal"><span class="pre">true</span></tt>
 (assuming a config is present):</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">strictparsing</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">true</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">strictparsing</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
 </pre></div>
 </div>
 <p>OCIO provides a mechanism for applications to extract the colorspace
@@ -186,7 +186,7 @@ essentially falls back to &#8220;non-color managed&#8221;.</p>
 <div class="section" id="luma">
 <h3><tt class="docutils literal"><span class="pre">luma</span></tt><a class="headerlink" href="#luma" title="Permalink to this headline">¶</a></h3>
 <p>Deprecated. Optional. Default is the Rec.709 primaries specified by the ASC:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">luma</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">0.2126</span><span class="p-Indicator">,</span> <span class="nv">0.7152</span><span class="p-Indicator">,</span> <span class="nv">0.0722</span><span class="p-Indicator">]</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">luma</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">0.2126</span><span class="p p-Indicator">,</span> <span class="nv">0.7152</span><span class="p p-Indicator">,</span> <span class="nv">0.0722</span><span class="p p-Indicator">]</span>
 </pre></div>
 </div>
 <p>These are the luminance coefficients, which can be used by
@@ -217,16 +217,16 @@ the correct log colorspace for the current project - the
 OCIOLogConvert always does the correct thing.</p>
 <p>A typical role definition looks like this, taken from the
 <a class="reference internal" href="../configurations/spi_vfx.html#config-spivfx"><em>spi-vfx</em></a> example configuration:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">roles</span><span class="p-Indicator">:</span>
-  <span class="l-Scalar-Plain">color_picking</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">cpf</span>
-  <span class="l-Scalar-Plain">color_timing</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lg10</span>
-  <span class="l-Scalar-Plain">compositing_log</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lgf</span>
-  <span class="l-Scalar-Plain">data</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ncf</span>
-  <span class="l-Scalar-Plain">default</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ncf</span>
-  <span class="l-Scalar-Plain">matte_paint</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">vd8</span>
-  <span class="l-Scalar-Plain">reference</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lnf</span>
-  <span class="l-Scalar-Plain">scene_linear</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lnf</span>
-  <span class="l-Scalar-Plain">texture_paint</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">dt16</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">roles</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">color_picking</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">cpf</span>
+  <span class="l l-Scalar l-Scalar-Plain">color_timing</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lg10</span>
+  <span class="l l-Scalar l-Scalar-Plain">compositing_log</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lgf</span>
+  <span class="l l-Scalar l-Scalar-Plain">data</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">ncf</span>
+  <span class="l l-Scalar l-Scalar-Plain">default</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">ncf</span>
+  <span class="l l-Scalar l-Scalar-Plain">matte_paint</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">vd8</span>
+  <span class="l l-Scalar l-Scalar-Plain">reference</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lnf</span>
+  <span class="l l-Scalar l-Scalar-Plain">scene_linear</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lnf</span>
+  <span class="l l-Scalar l-Scalar-Plain">texture_paint</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">dt16</span>
 </pre></div>
 </div>
 <p>All values in this example (such as <tt class="docutils literal"><span class="pre">cpf</span></tt>, <tt class="docutils literal"><span class="pre">lg10</span></tt> and <tt class="docutils literal"><span class="pre">ncf</span></tt>)
@@ -280,16 +280,16 @@ resulting in a &#8220;lifted&#8221; image useful for checking black-levels.</li>
 unaltered image, useful for tech-checking images</li>
 </ul>
 <p>An example of the <tt class="docutils literal"><span class="pre">displays</span></tt> section from the <a class="reference internal" href="../configurations/spi_vfx.html#config-spivfx"><em>spi-vfx</em></a> config:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">displays</span><span class="p-Indicator">:</span>
-  <span class="l-Scalar-Plain">DCIP3</span><span class="p-Indicator">:</span>
-    <span class="p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p-Indicator">{</span><span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Film</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">p3dci8</span><span class="p-Indicator">}</span>
-    <span class="p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p-Indicator">{</span><span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Log</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">lg10</span><span class="p-Indicator">}</span>
-    <span class="p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p-Indicator">{</span><span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Raw</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">nc10</span><span class="p-Indicator">}</span>
-  <span class="l-Scalar-Plain">sRGB</span><span class="p-Indicator">:</span>
-    <span class="p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p-Indicator">{</span><span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Film</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">srgb8</span><span class="p-Indicator">}</span>
-    <span class="p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p-Indicator">{</span><span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Log</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">lg10</span><span class="p-Indicator">}</span>
-    <span class="p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p-Indicator">{</span><span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Raw</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">nc10</span><span class="p-Indicator">}</span>
-    <span class="p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p-Indicator">{</span><span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Film</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">srgb8</span><span class="p-Indicator">}</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">displays</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">DCIP3</span><span class="p p-Indicator">:</span>
+    <span class="p p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p p-Indicator">{</span><span class="nv">name</span><span class="p p-Indicator">:</span> <span class="nv">Film</span><span class="p p-Indicator">,</span> <span class="nv">colorspace</span><span class="p p-Indicator">:</span> <span class="nv">p3dci8</span><span class="p p-Indicator">}</span>
+    <span class="p p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p p-Indicator">{</span><span class="nv">name</span><span class="p p-Indicator">:</span> <span class="nv">Log</span><span class="p p-Indicator">,</span> <span class="nv">colorspace</span><span class="p p-Indicator">:</span> <span class="nv">lg10</span><span class="p p-Indicator">}</span>
+    <span class="p p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p p-Indicator">{</span><span class="nv">name</span><span class="p p-Indicator">:</span> <span class="nv">Raw</span><span class="p p-Indicator">,</span> <span class="nv">colorspace</span><span class="p p-Indicator">:</span> <span class="nv">nc10</span><span class="p p-Indicator">}</span>
+  <span class="l l-Scalar l-Scalar-Plain">sRGB</span><span class="p p-Indicator">:</span>
+    <span class="p p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p p-Indicator">{</span><span class="nv">name</span><span class="p p-Indicator">:</span> <span class="nv">Film</span><span class="p p-Indicator">,</span> <span class="nv">colorspace</span><span class="p p-Indicator">:</span> <span class="nv">srgb8</span><span class="p p-Indicator">}</span>
+    <span class="p p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p p-Indicator">{</span><span class="nv">name</span><span class="p p-Indicator">:</span> <span class="nv">Log</span><span class="p p-Indicator">,</span> <span class="nv">colorspace</span><span class="p p-Indicator">:</span> <span class="nv">lg10</span><span class="p p-Indicator">}</span>
+    <span class="p p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p p-Indicator">{</span><span class="nv">name</span><span class="p p-Indicator">:</span> <span class="nv">Raw</span><span class="p p-Indicator">,</span> <span class="nv">colorspace</span><span class="p p-Indicator">:</span> <span class="nv">nc10</span><span class="p p-Indicator">}</span>
+    <span class="p p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p p-Indicator">{</span><span class="nv">name</span><span class="p p-Indicator">:</span> <span class="nv">Film</span><span class="p p-Indicator">,</span> <span class="nv">colorspace</span><span class="p p-Indicator">:</span> <span class="nv">srgb8</span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 <p>All the colorspaces (<tt class="docutils literal"><span class="pre">p3dci8</span></tt>, <tt class="docutils literal"><span class="pre">srgb8</span></tt> etc) refer to colorspaces
@@ -305,17 +305,17 @@ order of items in <tt class="docutils literal"><span class="pre">displays</span>
 change the order in which they appear.</p>
 <p>Given the example <tt class="docutils literal"><span class="pre">displays</span></tt> block in the previous section - to make
 the sRGB device appear first:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">active_displays</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">sRGB</span><span class="p-Indicator">,</span> <span class="nv">DCIP3</span><span class="p-Indicator">]</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">active_displays</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">sRGB</span><span class="p p-Indicator">,</span> <span class="nv">DCIP3</span><span class="p p-Indicator">]</span>
 </pre></div>
 </div>
 <p>To display only the <tt class="docutils literal"><span class="pre">DCIP3</span></tt> device, simply remove <tt class="docutils literal"><span class="pre">sRGB</span></tt>:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">active_displays</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">DCIP3</span><span class="p-Indicator">]</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">active_displays</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">DCIP3</span><span class="p p-Indicator">]</span>
 </pre></div>
 </div>
 <p>The value can be overridden by the <cite>OCIO_ACTIVE_DISPLAYS</cite>
 env-var. This allows you to make the <tt class="docutils literal"><span class="pre">sRGB</span></tt> the only active display,
 like so:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">active_displays</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">sRGB</span><span class="p-Indicator">]</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">active_displays</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">sRGB</span><span class="p p-Indicator">]</span>
 </pre></div>
 </div>
 <p>Then on a review machine with a DCI P3 projector, set the following
@@ -355,17 +355,17 @@ in the correct colorspace (by converting from the input colorspace to
 the process space, applies the look&#8217;s transform, and converts the
 image to the output colorspace)</p>
 <p>Here is a simple <tt class="docutils literal"><span class="pre">looks:</span></tt> section, which defines two looks:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">looks</span><span class="p-Indicator">:</span>
-  <span class="p-Indicator">-</span> <span class="kt">!&lt;Look&gt;</span>
-    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">beauty</span>
-    <span class="l-Scalar-Plain">process_space</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lnf</span>
-    <span class="l-Scalar-Plain">transform</span><span class="p-Indicator">:</span> <span class="kt">!&lt;CDLTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">slope</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">1</span><span class="p-Indicator">,</span> <span class="nv">2</span><span class="p-Indicator">,</span> <span class="nv">1</span><span class="p-Indicator">]}</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">looks</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="kt">!&lt;Look&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">beauty</span>
+    <span class="l l-Scalar l-Scalar-Plain">process_space</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lnf</span>
+    <span class="l l-Scalar l-Scalar-Plain">transform</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;CDLTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">slope</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span> <span class="nv">2</span><span class="p p-Indicator">,</span> <span class="nv">1</span><span class="p p-Indicator">]}</span>
 
-  <span class="p-Indicator">-</span> <span class="kt">!&lt;Look&gt;</span>
-    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">neutral</span>
-    <span class="l-Scalar-Plain">process_space</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lg10</span>
-    <span class="l-Scalar-Plain">transform</span><span class="p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="s">&#39;neutral-${SHOT}-${SEQ}.csp&#39;</span><span class="p-Indicator">,</span> <span class="nv">interpolation</span><span class="p-Indicator">:</span> <span class="nv">linear</span> <span class="p-Indicator">}</span>
-    <span class="l-Scalar-Plain">inverse_transform</span><span class="p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="s">&#39;neutral-${SHOT}-${SEQ}-reverse.csp&#39;</span><span class="p-Indicator">,</span> <span class="nv">interpolation</span><span class="p-Indicator">:</span> <span class="nv">linear</span> <span class="p-Indicator">}</span>
+  <span class="p p-Indicator">-</span> <span class="kt">!&lt;Look&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">neutral</span>
+    <span class="l l-Scalar l-Scalar-Plain">process_space</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lg10</span>
+    <span class="l l-Scalar l-Scalar-Plain">transform</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="s">&#39;neutral-${SHOT}-${SEQ}.csp&#39;</span><span class="p p-Indicator">,</span> <span class="nv">interpolation</span><span class="p p-Indicator">:</span> <span class="nv">linear</span> <span class="p p-Indicator">}</span>
+    <span class="l l-Scalar l-Scalar-Plain">inverse_transform</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="s">&#39;neutral-${SHOT}-${SEQ}-reverse.csp&#39;</span><span class="p p-Indicator">,</span> <span class="nv">interpolation</span><span class="p p-Indicator">:</span> <span class="nv">linear</span> <span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 <p>Here, the &#8220;beauty&#8221; look applies a simple, static ASC CDL grade, making
@@ -395,14 +395,14 @@ specified, then OCIO would give a helpful error message. This is
 commonly done for non-invertable looks</p>
 <p>As in colorspace definitions, the transform can be specified as a
 series of transforms using the <tt class="docutils literal"><span class="pre">GroupTransform</span></tt>, for example:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">looks</span><span class="p-Indicator">:</span>
-  <span class="p-Indicator">-</span> <span class="kt">!&lt;Look&gt;</span>
-    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">beauty</span>
-    <span class="l-Scalar-Plain">process_space</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lnf</span>
-    <span class="l-Scalar-Plain">transform</span><span class="p-Indicator">:</span> <span class="kt">!&lt;GroupTransform&gt;</span>
-      <span class="l-Scalar-Plain">children</span><span class="p-Indicator">:</span>
-        <span class="p-Indicator">-</span> <span class="kt">!&lt;CDLTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">slope</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">1</span><span class="p-Indicator">,</span> <span class="nv">2</span><span class="p-Indicator">,</span> <span class="nv">1</span><span class="p-Indicator">]}</span>
-        <span class="p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">beauty.spi1d</span><span class="p-Indicator">,</span> <span class="nv">interpolation</span><span class="p-Indicator">:</span> <span class="nv">nearest</span><span class="p-Indicator">}</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">looks</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="kt">!&lt;Look&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">beauty</span>
+    <span class="l l-Scalar l-Scalar-Plain">process_space</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lnf</span>
+    <span class="l l-Scalar l-Scalar-Plain">transform</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;GroupTransform&gt;</span>
+      <span class="l l-Scalar l-Scalar-Plain">children</span><span class="p p-Indicator">:</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!&lt;CDLTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">slope</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span> <span class="nv">2</span><span class="p p-Indicator">,</span> <span class="nv">1</span><span class="p p-Indicator">]}</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">beauty.spi1d</span><span class="p p-Indicator">,</span> <span class="nv">interpolation</span><span class="p p-Indicator">:</span> <span class="nv">nearest</span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 </div>
@@ -417,19 +417,19 @@ applications.</p>
 <h4><tt class="docutils literal"><span class="pre">to_reference</span></tt> and <tt class="docutils literal"><span class="pre">from_reference</span></tt><a class="headerlink" href="#to-reference-and-from-reference" title="Permalink to this headline">¶</a></h4>
 <p>Here is a example of a very simple <tt class="docutils literal"><span class="pre">colorspaces</span></tt> section, modified
 from the <a class="reference internal" href="../configurations/spi_vfx.html#config-spivfx"><em>spi-vfx</em></a> example config:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">colorspaces</span><span class="p-Indicator">:</span>
-  <span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lnf</span>
-    <span class="l-Scalar-Plain">bitdepth</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">32f</span>
-    <span class="l-Scalar-Plain">description</span><span class="p-Indicator">:</span> <span class="p-Indicator">|</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">colorspaces</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lnf</span>
+    <span class="l l-Scalar l-Scalar-Plain">bitdepth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">32f</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
       <span class="no">lnf : linear show space</span>
 
-  <span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lg16</span>
-    <span class="l-Scalar-Plain">bitdepth</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">16ui</span>
-    <span class="l-Scalar-Plain">description</span><span class="p-Indicator">:</span> <span class="p-Indicator">|</span>
+  <span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lg16</span>
+    <span class="l l-Scalar l-Scalar-Plain">bitdepth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">16ui</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
       <span class="no">lg16 : conversion from film log</span>
-    <span class="l-Scalar-Plain">to_reference</span><span class="p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">lg16_to_lnf.spi1d</span><span class="p-Indicator">,</span> <span class="nv">interpolation</span><span class="p-Indicator">:</span> <span class="nv">nearest</span><span class="p-Indicator">}</span>
+    <span class="l l-Scalar l-Scalar-Plain">to_reference</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">lg16_to_lnf.spi1d</span><span class="p p-Indicator">,</span> <span class="nv">interpolation</span><span class="p p-Indicator">:</span> <span class="nv">nearest</span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 <p>First the <tt class="docutils literal"><span class="pre">lnf</span></tt> colorspace (short for linear float) is used as our
@@ -452,25 +452,25 @@ convert images from <tt class="docutils literal"><span class="pre">lg16</span></
 to any other colorspace.</p>
 <p>Here is another example colorspace, which is defined using
 <tt class="docutils literal"><span class="pre">from_reference</span></tt>.</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">srgb8</span>
-  <span class="l-Scalar-Plain">bitdepth</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">8ui</span>
-  <span class="l-Scalar-Plain">description</span><span class="p-Indicator">:</span> <span class="p-Indicator">|</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">srgb8</span>
+  <span class="l l-Scalar l-Scalar-Plain">bitdepth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">8ui</span>
+  <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
     <span class="no">srgb8 :rgb display space for the srgb standard.</span>
-  <span class="l-Scalar-Plain">from_reference</span><span class="p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">srgb8.spi3d</span><span class="p-Indicator">,</span> <span class="nv">interpolation</span><span class="p-Indicator">:</span> <span class="nv">linear</span><span class="p-Indicator">}</span>
+  <span class="l l-Scalar l-Scalar-Plain">from_reference</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">srgb8.spi3d</span><span class="p p-Indicator">,</span> <span class="nv">interpolation</span><span class="p p-Indicator">:</span> <span class="nv">linear</span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 <p>We use <tt class="docutils literal"><span class="pre">from_reference</span></tt> here because we have a LUT which transforms
 from the reference colorspace (<tt class="docutils literal"><span class="pre">lnf</span></tt> in this example) to sRGB.</p>
 <p>In this case <tt class="docutils literal"><span class="pre">srgb8.spi3d</span></tt> is a complex 3D LUT which cannot be
 inverted, so it is considered a &#8220;display only&#8221; colorspace. If we did have a second 3D LUT to apply the inverse transform, we can specify both <tt class="docutils literal"><span class="pre">to_reference</span></tt> and <tt class="docutils literal"><span class="pre">from_reference</span></tt></p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">srgb8</span>
-  <span class="l-Scalar-Plain">bitdepth</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">8ui</span>
-  <span class="l-Scalar-Plain">description</span><span class="p-Indicator">:</span> <span class="p-Indicator">|</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">srgb8</span>
+  <span class="l l-Scalar l-Scalar-Plain">bitdepth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">8ui</span>
+  <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
     <span class="no">srgb8 :rgb display space for the srgb standard.</span>
-  <span class="l-Scalar-Plain">from_reference</span><span class="p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">lnf_to_srgb8.spi3d</span><span class="p-Indicator">,</span> <span class="nv">interpolation</span><span class="p-Indicator">:</span> <span class="nv">linear</span><span class="p-Indicator">}</span>
-  <span class="l-Scalar-Plain">to_reference</span><span class="p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">srgb8_to_lnf.spi3d</span><span class="p-Indicator">,</span> <span class="nv">interpolation</span><span class="p-Indicator">:</span> <span class="nv">linear</span><span class="p-Indicator">}</span>
+  <span class="l l-Scalar l-Scalar-Plain">from_reference</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">lnf_to_srgb8.spi3d</span><span class="p p-Indicator">,</span> <span class="nv">interpolation</span><span class="p p-Indicator">:</span> <span class="nv">linear</span><span class="p p-Indicator">}</span>
+  <span class="l l-Scalar l-Scalar-Plain">to_reference</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">srgb8_to_lnf.spi3d</span><span class="p p-Indicator">,</span> <span class="nv">interpolation</span><span class="p p-Indicator">:</span> <span class="nv">linear</span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 </div>
@@ -479,15 +479,15 @@ inverted, so it is considered a &#8220;display only&#8221; colorspace. If we did
 <p>The previous example colorspaces all used a single transform each,
 however it is often useful to use multiple transforms to define a
 colorspace.</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">srgb8</span>
-  <span class="l-Scalar-Plain">bitdepth</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">8ui</span>
-  <span class="l-Scalar-Plain">description</span><span class="p-Indicator">:</span> <span class="p-Indicator">|</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">srgb8</span>
+  <span class="l l-Scalar l-Scalar-Plain">bitdepth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">8ui</span>
+  <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
     <span class="no">srgb8 :rgb display space for the srgb standard.</span>
-  <span class="l-Scalar-Plain">from_reference</span><span class="p-Indicator">:</span> <span class="kt">!&lt;GroupTransform&gt;</span>
-    <span class="l-Scalar-Plain">children</span><span class="p-Indicator">:</span>
-      <span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpaceTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">lnf</span><span class="p-Indicator">,</span> <span class="nv">dst</span><span class="p-Indicator">:</span> <span class="nv">lg16</span><span class="p-Indicator">}</span>
-      <span class="p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">lg16_to_srgb8.spi3d</span><span class="p-Indicator">,</span> <span class="nv">interpolation</span><span class="p-Indicator">:</span> <span class="nv">linear</span><span class="p-Indicator">}</span>
+  <span class="l l-Scalar l-Scalar-Plain">from_reference</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;GroupTransform&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">children</span><span class="p p-Indicator">:</span>
+      <span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpaceTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">lnf</span><span class="p p-Indicator">,</span> <span class="nv">dst</span><span class="p p-Indicator">:</span> <span class="nv">lg16</span><span class="p p-Indicator">}</span>
+      <span class="p p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">lg16_to_srgb8.spi3d</span><span class="p p-Indicator">,</span> <span class="nv">interpolation</span><span class="p p-Indicator">:</span> <span class="nv">linear</span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 <p>Here to get from the reference colorspace, we first use the
@@ -506,29 +506,29 @@ current config).</p>
 <p>This section explains how OCIO internally applies all the
 transforms. It can be skipped over if you understand how the reference
 colorspace works.</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">colorspaces</span><span class="p-Indicator">:</span>
-  <span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lnf</span>
-    <span class="l-Scalar-Plain">bitdepth</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">32f</span>
-    <span class="l-Scalar-Plain">description</span><span class="p-Indicator">:</span> <span class="p-Indicator">|</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">colorspaces</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lnf</span>
+    <span class="l l-Scalar l-Scalar-Plain">bitdepth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">32f</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
       <span class="no">lnf : linear show space</span>
 
-  <span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lg16</span>
-    <span class="l-Scalar-Plain">bitdepth</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">16ui</span>
-    <span class="l-Scalar-Plain">description</span><span class="p-Indicator">:</span> <span class="p-Indicator">|</span>
+  <span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lg16</span>
+    <span class="l l-Scalar l-Scalar-Plain">bitdepth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">16ui</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
       <span class="no">lg16 : conversion from film log</span>
-    <span class="l-Scalar-Plain">to_reference</span><span class="p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">lg16.spi1d</span><span class="p-Indicator">,</span> <span class="nv">interpolation</span><span class="p-Indicator">:</span> <span class="nv">nearest</span><span class="p-Indicator">}</span>
+    <span class="l l-Scalar l-Scalar-Plain">to_reference</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">lg16.spi1d</span><span class="p p-Indicator">,</span> <span class="nv">interpolation</span><span class="p p-Indicator">:</span> <span class="nv">nearest</span><span class="p p-Indicator">}</span>
 
-  <span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">srgb8</span>
-    <span class="l-Scalar-Plain">bitdepth</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">8ui</span>
-    <span class="l-Scalar-Plain">description</span><span class="p-Indicator">:</span> <span class="p-Indicator">|</span>
+  <span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">srgb8</span>
+    <span class="l l-Scalar l-Scalar-Plain">bitdepth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">8ui</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
       <span class="no">srgb8 :rgb display space for the srgb standard.</span>
-    <span class="l-Scalar-Plain">from_reference</span><span class="p-Indicator">:</span> <span class="kt">!&lt;GroupTransform&gt;</span>
-      <span class="l-Scalar-Plain">children</span><span class="p-Indicator">:</span>
-        <span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpaceTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">lnf</span><span class="p-Indicator">,</span> <span class="nv">dst</span><span class="p-Indicator">:</span> <span class="nv">lg16</span><span class="p-Indicator">}</span>
-        <span class="p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">lg16_to_srgb8.spi3d</span><span class="p-Indicator">,</span> <span class="nv">interpolation</span><span class="p-Indicator">:</span> <span class="nv">linear</span><span class="p-Indicator">}</span>
+    <span class="l l-Scalar l-Scalar-Plain">from_reference</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;GroupTransform&gt;</span>
+      <span class="l l-Scalar l-Scalar-Plain">children</span><span class="p p-Indicator">:</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpaceTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">lnf</span><span class="p p-Indicator">,</span> <span class="nv">dst</span><span class="p p-Indicator">:</span> <span class="nv">lg16</span><span class="p p-Indicator">}</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">lg16_to_srgb8.spi3d</span><span class="p p-Indicator">,</span> <span class="nv">interpolation</span><span class="p p-Indicator">:</span> <span class="nv">linear</span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 <p>To explain how this all ties together to display an image, say we have
@@ -580,11 +580,11 @@ can use this to automatically output images in the correct bit-depth.</p>
 <p>The number is in bits. <tt class="docutils literal"><span class="pre">ui</span></tt> stands for unsigned integer. <tt class="docutils literal"><span class="pre">f</span></tt>
 stands for floating point.</p>
 <p>Example:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">srgb8</span>
-  <span class="l-Scalar-Plain">bitdepth</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">8ui</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">srgb8</span>
+  <span class="l l-Scalar l-Scalar-Plain">bitdepth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">8ui</span>
 
-  <span class="l-Scalar-Plain">from_reference</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">...</span><span class="p-Indicator">]</span>
+  <span class="l l-Scalar l-Scalar-Plain">from_reference</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">...</span><span class="p p-Indicator">]</span>
 </pre></div>
 </div>
 </div>
@@ -596,15 +596,15 @@ is used for non-color data channels, such as the &#8220;normals&#8221; output of
 a multipass 3D render.</p>
 <p>Here is example &#8220;non-color&#8221; colorspace from the <a class="reference internal" href="../configurations/spi_vfx.html#config-spivfx"><em>spi-vfx</em></a>
 config:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ncf</span>
-  <span class="l-Scalar-Plain">family</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">nc</span>
-  <span class="l-Scalar-Plain">equalitygroup</span><span class="p-Indicator">:</span>
-  <span class="l-Scalar-Plain">bitdepth</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">32f</span>
-  <span class="l-Scalar-Plain">description</span><span class="p-Indicator">:</span> <span class="p-Indicator">|</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">ncf</span>
+  <span class="l l-Scalar l-Scalar-Plain">family</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">nc</span>
+  <span class="l l-Scalar l-Scalar-Plain">equalitygroup</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">bitdepth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">32f</span>
+  <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
     <span class="no">ncf :nc,Non-color used to store non-color data such as depth or surface normals</span>
-  <span class="l-Scalar-Plain">isdata</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">true</span>
-  <span class="l-Scalar-Plain">allocation</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">uniform</span>
+  <span class="l l-Scalar l-Scalar-Plain">isdata</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+  <span class="l l-Scalar l-Scalar-Plain">allocation</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">uniform</span>
 </pre></div>
 </div>
 </div>
@@ -620,17 +620,17 @@ at different bit-depths.</p>
 converting to <tt class="docutils literal"><span class="pre">lg16</span></tt>, no transform is required. This is of course
 faster, but may cause an unexpected increase in precision (e.g. it skip
 potential clamping caused by a LUT)</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lg16</span>
-  <span class="l-Scalar-Plain">equalitygroup</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lg</span>
-  <span class="l-Scalar-Plain">bitdepth</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">16ui</span>
-  <span class="l-Scalar-Plain">to_reference</span><span class="p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">lg16.spi1d</span><span class="p-Indicator">,</span> <span class="nv">interpolation</span><span class="p-Indicator">:</span> <span class="nv">nearest</span><span class="p-Indicator">}</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lg16</span>
+  <span class="l l-Scalar l-Scalar-Plain">equalitygroup</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lg</span>
+  <span class="l l-Scalar l-Scalar-Plain">bitdepth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">16ui</span>
+  <span class="l l-Scalar l-Scalar-Plain">to_reference</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">lg16.spi1d</span><span class="p p-Indicator">,</span> <span class="nv">interpolation</span><span class="p p-Indicator">:</span> <span class="nv">nearest</span><span class="p p-Indicator">}</span>
 
-<span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lg10</span>
-  <span class="l-Scalar-Plain">equalitygroup</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lg</span>
-  <span class="l-Scalar-Plain">bitdepth</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">10ui</span>
-  <span class="l-Scalar-Plain">to_reference</span><span class="p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">lg10.spi1d</span><span class="p-Indicator">,</span> <span class="nv">interpolation</span><span class="p-Indicator">:</span> <span class="nv">nearest</span><span class="p-Indicator">}</span>
+<span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lg10</span>
+  <span class="l l-Scalar l-Scalar-Plain">equalitygroup</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lg</span>
+  <span class="l l-Scalar l-Scalar-Plain">bitdepth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">10ui</span>
+  <span class="l l-Scalar l-Scalar-Plain">to_reference</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">lg10.spi1d</span><span class="p p-Indicator">,</span> <span class="nv">interpolation</span><span class="p p-Indicator">:</span> <span class="nv">nearest</span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 <dl class="docutils">
@@ -646,23 +646,23 @@ option.</dd>
 <p>For example, a series of &#8220;log&#8221; colorspaces could be put in one
 &#8220;family&#8221;. Within a UI like the Nuke <tt class="docutils literal"><span class="pre">OCIOColorSpace</span></tt> node, these
 will be grouped together.</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">kodaklog</span>
-  <span class="l-Scalar-Plain">family</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">log</span>
-  <span class="l-Scalar-Plain">equalitygroup</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">kodaklog</span>
-  <span class="p-Indicator">[</span><span class="nv">...</span><span class="p-Indicator">]</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">kodaklog</span>
+  <span class="l l-Scalar l-Scalar-Plain">family</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">log</span>
+  <span class="l l-Scalar l-Scalar-Plain">equalitygroup</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">kodaklog</span>
+  <span class="p p-Indicator">[</span><span class="nv">...</span><span class="p p-Indicator">]</span>
 
-<span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">si2klog</span>
-  <span class="l-Scalar-Plain">family</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">log</span>
-  <span class="l-Scalar-Plain">equalitygroup</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">si2klog</span>
-  <span class="p-Indicator">[</span><span class="nv">...</span><span class="p-Indicator">]</span>
+<span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">si2klog</span>
+  <span class="l l-Scalar l-Scalar-Plain">family</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">log</span>
+  <span class="l l-Scalar l-Scalar-Plain">equalitygroup</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">si2klog</span>
+  <span class="p p-Indicator">[</span><span class="nv">...</span><span class="p p-Indicator">]</span>
 
-<span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">rec709</span>
-  <span class="l-Scalar-Plain">family</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">display</span>
-  <span class="l-Scalar-Plain">equalitygroup</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">rec709</span>
-  <span class="p-Indicator">[</span><span class="nv">...</span><span class="p-Indicator">]</span>
+<span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">rec709</span>
+  <span class="l l-Scalar l-Scalar-Plain">family</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">display</span>
+  <span class="l l-Scalar l-Scalar-Plain">equalitygroup</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">rec709</span>
+  <span class="p p-Indicator">[</span><span class="nv">...</span><span class="p p-Indicator">]</span>
 </pre></div>
 </div>
 <p>Unlike <tt class="docutils literal"><span class="pre">equalitygroup</span></tt>, the <tt class="docutils literal"><span class="pre">family</span></tt> has no impact on image
@@ -678,12 +678,12 @@ GPU.</p>
 specified (not all output formats utilise this)</p>
 <p>For a detailed description, see <a class="reference internal" href="../configurations/allocation_vars.html#allocationvars"><em>How to Configure ColorSpace Allocation</em></a></p>
 <p>Example of a &#8220;0-1&#8221; colorspace</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">allocation</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">uniform</span>
-<span class="l-Scalar-Plain">allocationvars</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">0.0</span><span class="p-Indicator">,</span> <span class="nv">1.0</span><span class="p-Indicator">]</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">allocation</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">uniform</span>
+<span class="l l-Scalar l-Scalar-Plain">allocationvars</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">0.0</span><span class="p p-Indicator">,</span> <span class="nv">1.0</span><span class="p p-Indicator">]</span>
 </pre></div>
 </div>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">allocation</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lg2</span>
-<span class="l-Scalar-Plain">allocationvars</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">-15</span><span class="p-Indicator">,</span> <span class="nv">6</span><span class="p-Indicator">]</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">allocation</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lg2</span>
+<span class="l l-Scalar l-Scalar-Plain">allocationvars</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">-15</span><span class="p p-Indicator">,</span> <span class="nv">6</span><span class="p p-Indicator">]</span>
 </pre></div>
 </div>
 </div>
@@ -692,29 +692,29 @@ specified (not all output formats utilise this)</p>
 <p>Optional.</p>
 <p>A human-readable description of the colorspace.</p>
 <p>The YAML syntax allows for either single-line descriptions:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">kodaklog</span>
-  <span class="p-Indicator">[</span><span class="nv">...</span><span class="p-Indicator">]</span>
-  <span class="l-Scalar-Plain">description</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">A concise description of the kodaklog colorspace.</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">kodaklog</span>
+  <span class="p p-Indicator">[</span><span class="nv">...</span><span class="p p-Indicator">]</span>
+  <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">A concise description of the kodaklog colorspace.</span>
 </pre></div>
 </div>
 <p>Or multiple-lines:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">kodaklog</span>
-  <span class="p-Indicator">[</span><span class="nv">...</span><span class="p-Indicator">]</span>
-  <span class="l-Scalar-Plain">description</span><span class="p-Indicator">:</span>
-    <span class="l-Scalar-Plain">This is a multi-line description of the kodaklog colorspace,</span>
-    <span class="l-Scalar-Plain">to demonstrate the YAML syntax for doing so.</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">kodaklog</span>
+  <span class="p p-Indicator">[</span><span class="nv">...</span><span class="p p-Indicator">]</span>
+  <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">This is a multi-line description of the kodaklog colorspace,</span>
+    <span class="l l-Scalar l-Scalar-Plain">to demonstrate the YAML syntax for doing so.</span>
 
-    <span class="l-Scalar-Plain">Here is the second line. The first one will be unwrapped into</span>
-    <span class="l-Scalar-Plain">a single line, as will this one.</span>
+    <span class="l l-Scalar l-Scalar-Plain">Here is the second line. The first one will be unwrapped into</span>
+    <span class="l l-Scalar l-Scalar-Plain">a single line, as will this one.</span>
 </pre></div>
 </div>
 <p>It&#8217;s common to use literal <tt class="docutils literal"><span class="pre">|</span></tt> block syntax to preserve all newlines:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">kodaklog</span>
-  <span class="p-Indicator">[</span><span class="nv">...</span><span class="p-Indicator">]</span>
-  <span class="l-Scalar-Plain">description</span><span class="p-Indicator">:</span> <span class="p-Indicator">|</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">kodaklog</span>
+  <span class="p p-Indicator">[</span><span class="nv">...</span><span class="p p-Indicator">]</span>
+  <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
     <span class="no">This is one line.</span>
     <span class="no">This is the second.</span>
 </pre></div>
@@ -760,7 +760,7 @@ specified (not all output formats utilise this)</p>
 <div class="section" id="exponenttransform">
 <h3><tt class="docutils literal"><span class="pre">ExponentTransform</span></tt><a class="headerlink" href="#exponenttransform" title="Permalink to this headline">¶</a></h3>
 <p>Raises pixel values to a given power (often referred to as &#8220;gamma&#8221;)</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="kt">!&lt;ExponentTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">value</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">1.8</span><span class="p-Indicator">,</span> <span class="nv">1.8</span><span class="p-Indicator">,</span> <span class="nv">1.8</span><span class="p-Indicator">,</span> <span class="nv">1</span><span class="p-Indicator">]}</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="kt">!&lt;ExponentTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">value</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">1.8</span><span class="p p-Indicator">,</span> <span class="nv">1.8</span><span class="p p-Indicator">,</span> <span class="nv">1.8</span><span class="p p-Indicator">,</span> <span class="nv">1</span><span class="p p-Indicator">]}</span>
 </pre></div>
 </div>
 <p>Keys:</p>
@@ -783,17 +783,17 @@ specified (not all output formats utilise this)</p>
 <div class="section" id="grouptransform">
 <h3><tt class="docutils literal"><span class="pre">GroupTransform</span></tt><a class="headerlink" href="#grouptransform" title="Permalink to this headline">¶</a></h3>
 <p>Combines multiple transforms into one.</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">colorspaces</span><span class="p-Indicator">:</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">colorspaces</span><span class="p p-Indicator">:</span>
 
-  <span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">adx10</span>
+  <span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">adx10</span>
 
-    <span class="p-Indicator">[</span><span class="nv">...</span><span class="p-Indicator">]</span>
+    <span class="p p-Indicator">[</span><span class="nv">...</span><span class="p p-Indicator">]</span>
 
-    <span class="l-Scalar-Plain">to_reference</span><span class="p-Indicator">:</span> <span class="kt">!&lt;GroupTransform&gt;</span>
-      <span class="l-Scalar-Plain">children</span><span class="p-Indicator">:</span>
-        <span class="p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">adx_adx10_to_cdd.spimtx</span><span class="p-Indicator">}</span>
-        <span class="p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">adx_cdd_to_cid.spimtx</span><span class="p-Indicator">}</span>
+    <span class="l l-Scalar l-Scalar-Plain">to_reference</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;GroupTransform&gt;</span>
+      <span class="l l-Scalar l-Scalar-Plain">children</span><span class="p p-Indicator">:</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">adx_adx10_to_cdd.spimtx</span><span class="p p-Indicator">}</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">adx_cdd_to_cid.spimtx</span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 <p>A group transform is accepted anywhere a &#8220;regular&#8221; transform is.</p>

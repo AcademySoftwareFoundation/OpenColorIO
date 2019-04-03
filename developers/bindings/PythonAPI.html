@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.1.0',
+        VERSION:     '1.1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO 1.1.0 documentation" href="../../index.html" />
+    <link rel="top" title="OpenColorIO 1.1.1 documentation" href="../../index.html" />
     <link rel="up" title="Developer Guide" href="../index.html" />
     <link rel="next" title="Python Transforms" href="PythonTransforms.html" />
     <link rel="prev" title="C++ Types" href="../api/OpenColorTypes.html" /> 
@@ -39,7 +39,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO 1.1.0 documentation
+      OpenColorIO 1.1.1 documentation
       </div>
       <div class="content">
         
@@ -130,44 +130,44 @@ in a multi-app ecosystem, as it allows all applications to be consistently confi
 <p>See <a class="reference internal" href="../usage_examples.html#developers-usageexamples"><em>Usage Examples</em></a></p>
 <div class="section" id="examples-of-use">
 <h3>Examples of Use<a class="headerlink" href="#examples-of-use" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
 
-<span class="c"># Load an existing configuration from the environment.</span>
-<span class="c"># The resulting configuration is read-only. If $OCIO is set, it will use that.</span>
-<span class="c"># Otherwise it will use an internal default.</span>
+<span class="c1"># Load an existing configuration from the environment.</span>
+<span class="c1"># The resulting configuration is read-only. If $OCIO is set, it will use that.</span>
+<span class="c1"># Otherwise it will use an internal default.</span>
 <span class="n">config</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">GetCurrentConfig</span><span class="p">()</span>
 
-<span class="c"># What color spaces exist?</span>
+<span class="c1"># What color spaces exist?</span>
 <span class="n">colorSpaceNames</span> <span class="o">=</span> <span class="p">[</span> <span class="n">cs</span><span class="o">.</span><span class="n">getName</span><span class="p">()</span> <span class="k">for</span> <span class="n">cs</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">getColorSpaces</span><span class="p">()</span> <span class="p">]</span>
 
-<span class="c"># Given a string, can we parse a color space name from it?</span>
-<span class="n">inputString</span> <span class="o">=</span> <span class="s">&#39;myname_linear.exr&#39;</span>
+<span class="c1"># Given a string, can we parse a color space name from it?</span>
+<span class="n">inputString</span> <span class="o">=</span> <span class="s1">&#39;myname_linear.exr&#39;</span>
 <span class="n">colorSpaceName</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">parseColorSpaceFromString</span><span class="p">(</span><span class="n">inputString</span><span class="p">)</span>
 <span class="k">if</span> <span class="n">colorSpaceName</span><span class="p">:</span>
-    <span class="k">print</span> <span class="s">&#39;Found color space&#39;</span><span class="p">,</span> <span class="n">colorSpaceName</span>
+    <span class="k">print</span> <span class="s1">&#39;Found color space&#39;</span><span class="p">,</span> <span class="n">colorSpaceName</span>
 <span class="k">else</span><span class="p">:</span>
-    <span class="k">print</span> <span class="s">&#39;Could not get color space from string&#39;</span><span class="p">,</span> <span class="n">inputString</span>
+    <span class="k">print</span> <span class="s1">&#39;Could not get color space from string&#39;</span><span class="p">,</span> <span class="n">inputString</span>
 
-<span class="c"># What is the name of scene-linear in the configuration?</span>
+<span class="c1"># What is the name of scene-linear in the configuration?</span>
 <span class="n">colorSpace</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">getColorSpace</span><span class="p">(</span><span class="n">OCIO</span><span class="o">.</span><span class="n">Constants</span><span class="o">.</span><span class="n">ROLE_SCENE_LINEAR</span><span class="p">)</span>
 <span class="k">if</span> <span class="n">colorSpace</span><span class="p">:</span>
     <span class="k">print</span> <span class="n">colorSpace</span><span class="o">.</span><span class="n">getName</span><span class="p">()</span>
 <span class="k">else</span><span class="p">:</span>
-    <span class="k">print</span> <span class="s">&#39;The role of scene-linear is not defined in the configuration&#39;</span>
+    <span class="k">print</span> <span class="s1">&#39;The role of scene-linear is not defined in the configuration&#39;</span>
 
-<span class="c"># For examples of how to actually perform the color transform math,</span>
-<span class="c"># see &#39;Python: Processor&#39; docs.</span>
+<span class="c1"># For examples of how to actually perform the color transform math,</span>
+<span class="c1"># see &#39;Python: Processor&#39; docs.</span>
 
-<span class="c"># Create a new, empty, editable configuration</span>
+<span class="c1"># Create a new, empty, editable configuration</span>
 <span class="n">config</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">Config</span><span class="p">()</span>
 
-<span class="c"># Create a new color space, and add it</span>
+<span class="c1"># Create a new color space, and add it</span>
 <span class="n">cs</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">ColorSpace</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-<span class="c"># (See ColorSpace for details)</span>
+<span class="c1"># (See ColorSpace for details)</span>
 <span class="n">config</span><span class="o">.</span><span class="n">addColorSpace</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span>
 
-<span class="c"># For additional examples of config manipulation, see</span>
-<span class="c"># https://github.com/imageworks/OpenColorIO-Configs/blob/master/nuke-default/make.py</span>
+<span class="c1"># For additional examples of config manipulation, see</span>
+<span class="c1"># https://github.com/imageworks/OpenColorIO-Configs/blob/master/nuke-default/make.py</span>
 </pre></div>
 </div>
 </div>
@@ -1023,7 +1023,7 @@ image capture devices, such as cameras and scanners, and internal
 <p>Color spaces are specific to a particular image precision
 (float32, uint8, etc.). The set of color spaces that provide equivalent
 mappings (at different precisions) are referred to as a &#8216;family&#8217;.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
 <span class="n">config</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">Config</span><span class="p">()</span>
 </pre></div>
 </div>
