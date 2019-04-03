@@ -887,7 +887,7 @@ OIIO_ADD_TEST(FileTransform, AllFormats)
 {
     OCIO::FormatRegistry & formatRegistry = OCIO::FormatRegistry::GetInstance();
     OIIO_CHECK_EQUAL(19, formatRegistry.getNumRawFormats());
-    OIIO_CHECK_EQUAL(22, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_READ));
+    OIIO_CHECK_EQUAL(23, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_READ));
     OIIO_CHECK_EQUAL(8, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_WRITE));
 
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("3dl", "flame"));
@@ -914,6 +914,7 @@ OIIO_ADD_TEST(FileTransform, AllFormats)
     OIIO_CHECK_ASSERT(!FormatNameFoundByExtension("3dl", "lustre"));
     OIIO_CHECK_ASSERT(!FormatNameFoundByExtension("m3d", "pandora_m3d"));
     OIIO_CHECK_ASSERT(!FormatNameFoundByExtension("icm", "Image Color Matching"));
+    OIIO_CHECK_ASSERT(!FormatNameFoundByExtension("ctf", "Color Transform Format"));
 
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("3dl", "flame"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("3dl", "lustre"));
@@ -921,6 +922,7 @@ OIIO_ADD_TEST(FileTransform, AllFormats)
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("ccc", "ColorCorrectionCollection"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("cdl", "ColorDecisionList"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("clf", "Academy/ASC Common LUT Format"));
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("ctf", "Color Transform Format"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("csp", "cinespace"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("cub", "truelight"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("cube", "iridas_cube"));
