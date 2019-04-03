@@ -69,7 +69,8 @@ endif()
 # External linking
 
 option(USE_EXTERNAL_YAML "Use system installed yaml-cpp library." OFF)
-option(USE_EXTERNAL_LCMS "Use system install lcms2 library." OFF)
+option(USE_EXTERNAL_LCMS "Use system installed lcms2 library." OFF)
+option(USE_EXTERNAL_SETUPTOOLS "Use system installed python setuptools." OFF)
 
 ###############################################################################
 # Versioning

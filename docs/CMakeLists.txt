@@ -36,17 +36,21 @@ add_custom_target(pythonpath_create
 	COMMAND ${CMAKE_COMMAND} -E make_directory ${PYTHONPATH}
 )
 
-# setuptools
-# https://pypi.python.org/pypi/setuptools
-set(SETUPTOOLS_VERSION 1.1.6)
-ExternalProject_Add(setuptools
-	DEPENDS pythonpath_create
-    URL ${CMAKE_SOURCE_DIR}/ext/setuptools-${SETUPTOOLS_VERSION}.tar.gz
-    BUILD_IN_SOURCE 1
-	CONFIGURE_COMMAND ""
-    BUILD_COMMAND ${PYTHON_CMD} setup.py build
-    INSTALL_COMMAND ${PYTHON_CMD} setup.py install --prefix=${EXTDIST_ROOT}
-)
+if(USE_EXTERNAL_SETUPTOOLS)
+    add_custom_target(setuptools /usr/bin/true)
+else()
+    # setuptools
+    # https://pypi.python.org/pypi/setuptools
+    set(SETUPTOOLS_VERSION 1.1.6)
+    ExternalProject_Add(setuptools
+            DEPENDS pythonpath_create
+        URL ${CMAKE_SOURCE_DIR}/ext/setuptools-${SETUPTOOLS_VERSION}.tar.gz
+        BUILD_IN_SOURCE 1
+            CONFIGURE_COMMAND ""
+        BUILD_COMMAND ${PYTHON_CMD} setup.py build
+        INSTALL_COMMAND ${PYTHON_CMD} setup.py install --prefix=${EXTDIST_ROOT}
+    )
+endif()
 
 # docutils
 # https://pypi.python.org/pypi/docutils
@@ -57,7 +61,7 @@ ExternalProject_Add(docutils
 	CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND ${PYTHON_CMD} setup.py build
-    INSTALL_COMMAND ${PYTHON_CMD} setup.py install --prefix=${EXTDIST_ROOT}
+    INSTALL_COMMAND ${PYTHON_CMD} setup.py install --prefix=${EXTDIST_ROOT} --install-lib=${EXTDIST_PYTHONPATH}
 )
 
 # MarkupSafe
@@ -69,7 +73,7 @@ ExternalProject_Add(MarkupSafe
 	CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND ${PYTHON_CMD} setup.py build
-    INSTALL_COMMAND ${PYTHON_CMD} setup.py install --prefix=${EXTDIST_ROOT}
+    INSTALL_COMMAND ${PYTHON_CMD} setup.py install --prefix=${EXTDIST_ROOT} --install-lib=${EXTDIST_PYTHONPATH}
 )
 
 # jinja2
@@ -81,7 +85,7 @@ ExternalProject_Add(Jinja2
 	CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND ${PYTHON_CMD} setup.py build
-    INSTALL_COMMAND ${PYTHON_CMD} setup.py install --prefix=${EXTDIST_ROOT}
+    INSTALL_COMMAND ${PYTHON_CMD} setup.py install --prefix=${EXTDIST_ROOT} --install-lib=${EXTDIST_PYTHONPATH}
 )
 
 # Pygments
@@ -93,7 +97,7 @@ ExternalProject_Add(Pygments
 	CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND ${PYTHON_CMD} setup.py build
-    INSTALL_COMMAND ${PYTHON_CMD} setup.py install --prefix=${EXTDIST_ROOT}
+    INSTALL_COMMAND ${PYTHON_CMD} setup.py install --prefix=${EXTDIST_ROOT} --install-lib=${EXTDIST_PYTHONPATH}
 )
 
 # sphinx
@@ -106,7 +110,7 @@ ExternalProject_Add(Sphinx
 	CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND ${PYTHON_CMD} setup.py build
-    INSTALL_COMMAND ${PYTHON_CMD} setup.py install --prefix=${EXTDIST_ROOT} --install-scripts=${EXTDIST_ROOT}/bin
+    INSTALL_COMMAND ${PYTHON_CMD} setup.py install --prefix=${EXTDIST_ROOT} --install-scripts=${EXTDIST_ROOT}/bin --install-lib=${EXTDIST_PYTHONPATH}
 )
 
 ###############################################################################
