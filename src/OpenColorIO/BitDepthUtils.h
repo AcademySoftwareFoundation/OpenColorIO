@@ -120,7 +120,7 @@ struct Converter<BIT_DEPTH_UINT8>
     {
         // Compute once here instead of several times in the macro.
         const float v = value + 0.5f;
-        return (Type)CLAMP(v, 0, BitDepthInfo<BIT_DEPTH_UINT8>::maxValue);
+        return (Type)CLAMP(v, 0.0f, BitDepthInfo<BIT_DEPTH_UINT8>::maxValue);
     }
 };
 
@@ -133,7 +133,7 @@ struct Converter<BIT_DEPTH_UINT16>
     {
         // Compute once here instead of several times in the macro.
         const float v = value + 0.5f;
-        return (Type)CLAMP(v, 0, BitDepthInfo<BIT_DEPTH_UINT16>::maxValue);
+        return (Type)CLAMP(v, 0.0f, BitDepthInfo<BIT_DEPTH_UINT16>::maxValue);
     }
 };
 
