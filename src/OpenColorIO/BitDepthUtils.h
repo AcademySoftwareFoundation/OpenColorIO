@@ -125,6 +125,32 @@ struct Converter<BIT_DEPTH_UINT8>
 };
 
 template<>
+struct Converter<BIT_DEPTH_UINT10>
+{
+    typedef typename BitDepthInfo<BIT_DEPTH_UINT10>::Type Type;
+
+    static Type CastValue(float value)
+    {
+        // Compute once here instead of several times in the macro.
+        const float v = value + 0.5f;
+        return (Type)CLAMP(v, 0.0f, BitDepthInfo<BIT_DEPTH_UINT10>::maxValue);
+    }
+};
+
+template<>
+struct Converter<BIT_DEPTH_UINT12>
+{
+    typedef typename BitDepthInfo<BIT_DEPTH_UINT12>::Type Type;
+
+    static Type CastValue(float value)
+    {
+        // Compute once here instead of several times in the macro.
+        const float v = value + 0.5f;
+        return (Type)CLAMP(v, 0.0f, BitDepthInfo<BIT_DEPTH_UINT12>::maxValue);
+    }
+};
+
+template<>
 struct Converter<BIT_DEPTH_UINT16>
 {
     typedef typename BitDepthInfo<BIT_DEPTH_UINT16>::Type Type;

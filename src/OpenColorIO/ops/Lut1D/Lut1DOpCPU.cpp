@@ -644,14 +644,14 @@ void Lut1DRenderer<inBD, outBD>::apply(const void * inImg, void * outImg, long n
             OCIO_ALIGN(float highIdx[4]); _mm_store_ps(highIdx, hIdx);
 #else
             float idx[3];
-            idx[0] = m_step * in[0];
-            idx[1] = m_step * in[1];
-            idx[2] = m_step * in[2];
+            idx[0] = this->m_step * in[0];
+            idx[1] = this->m_step * in[1];
+            idx[2] = this->m_step * in[2];
 
             // NaNs become 0
-            idx[0] = std::min(std::max(0.f, idx[0]), m_dimMinusOne);
-            idx[1] = std::min(std::max(0.f, idx[1]), m_dimMinusOne);
-            idx[2] = std::min(std::max(0.f, idx[2]), m_dimMinusOne);
+            idx[0] = std::min(std::max(0.f, idx[0]), this->m_dimMinusOne);
+            idx[1] = std::min(std::max(0.f, idx[1]), this->m_dimMinusOne);
+            idx[2] = std::min(std::max(0.f, idx[2]), this->m_dimMinusOne);
 
             unsigned int lowIdx[3];
             lowIdx[0] = static_cast<unsigned int>(std::floor(idx[0]));
@@ -921,14 +921,14 @@ void Lut1DRendererHueAdjust<inBD, outBD>::apply(const void * inImg, void * outIm
             OCIO_ALIGN(float highIdx[4]); _mm_store_ps(highIdx, hIdx);
 #else
             float idx[3];
-            idx[0] = m_step * RGB[0];
-            idx[1] = m_step * RGB[1];
-            idx[2] = m_step * RGB[2];
+            idx[0] = this->m_step * RGB[0];
+            idx[1] = this->m_step * RGB[1];
+            idx[2] = this->m_step * RGB[2];
 
             // NaNs become 0
-            idx[0] = std::min(std::max(0.f, idx[0]), m_dimMinusOne);
-            idx[1] = std::min(std::max(0.f, idx[1]), m_dimMinusOne);
-            idx[2] = std::min(std::max(0.f, idx[2]), m_dimMinusOne);
+            idx[0] = std::min(std::max(0.f, idx[0]), this->m_dimMinusOne);
+            idx[1] = std::min(std::max(0.f, idx[1]), this->m_dimMinusOne);
+            idx[2] = std::min(std::max(0.f, idx[2]), this->m_dimMinusOne);
 
             unsigned int lowIdx[3];
             lowIdx[0] = static_cast<unsigned int>(std::floor(idx[0]));
@@ -1682,12 +1682,22 @@ OpCPURcPtr GetLut1DRenderer_InBitDepth(ConstLut1DOpDataRcPtr & lut, BitDepth out
     {
         case BIT_DEPTH_UINT8:
             return GetLut1DRenderer_OutBitDepth<inBD, BIT_DEPTH_UINT8>(lut); break;
+        case BIT_DEPTH_UINT10:
+            return GetLut1DRenderer_OutBitDepth<inBD, BIT_DEPTH_UINT10>(lut); break;
+        case BIT_DEPTH_UINT12:
+            return GetLut1DRenderer_OutBitDepth<inBD, BIT_DEPTH_UINT12>(lut); break;
         case BIT_DEPTH_UINT16:
             return GetLut1DRenderer_OutBitDepth<inBD, BIT_DEPTH_UINT16>(lut); break;
         case BIT_DEPTH_F16:
             return GetLut1DRenderer_OutBitDepth<inBD, BIT_DEPTH_F16>(lut); break;
         case BIT_DEPTH_F32:
             return GetLut1DRenderer_OutBitDepth<inBD, BIT_DEPTH_F32>(lut); break;
+
+        case BIT_DEPTH_UINT14:
+        case BIT_DEPTH_UINT32:
+        case BIT_DEPTH_UNKNOWN:
+        default:
+            break;
     }
 
     throw Exception("Unsupported output bit depth");
@@ -1705,12 +1715,22 @@ OpCPURcPtr GetLut1DRenderer(ConstLut1DOpDataRcPtr & lut, BitDepth inBD, BitDepth
     {
         case BIT_DEPTH_UINT8:
             return GetLut1DRenderer_InBitDepth<BIT_DEPTH_UINT8>(lut, outBD); break;
+        case BIT_DEPTH_UINT10:
+            return GetLut1DRenderer_InBitDepth<BIT_DEPTH_UINT10>(lut, outBD); break;
+        case BIT_DEPTH_UINT12:
+            return GetLut1DRenderer_InBitDepth<BIT_DEPTH_UINT12>(lut, outBD); break;
         case BIT_DEPTH_UINT16:
             return GetLut1DRenderer_InBitDepth<BIT_DEPTH_UINT16>(lut, outBD); break;
         case BIT_DEPTH_F16:
             return GetLut1DRenderer_InBitDepth<BIT_DEPTH_F16>(lut, outBD); break;
         case BIT_DEPTH_F32:
             return GetLut1DRenderer_InBitDepth<BIT_DEPTH_F32>(lut, outBD); break;
+
+        case BIT_DEPTH_UINT14:
+        case BIT_DEPTH_UINT32:
+        case BIT_DEPTH_UNKNOWN:
+        default:
+            break;
     }
 
     throw Exception("Unsupported input bit depth");
