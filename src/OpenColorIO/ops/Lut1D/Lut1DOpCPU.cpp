@@ -470,16 +470,16 @@ void Lut1DRendererHalfCode<inBD, outBD>::apply(const void * inImg, void * outImg
     //     (Should be no runtime cost.)
     if(inBD != BIT_DEPTH_F32)
     {
-        const OutType * lutR = (const OutType *)m_tmpLutR;
-        const OutType * lutG = (const OutType *)m_tmpLutG;
-        const OutType * lutB = (const OutType *)m_tmpLutB;
+        const OutType * lutR = (const OutType *)this->m_tmpLutR;
+        const OutType * lutG = (const OutType *)this->m_tmpLutG;
+        const OutType * lutB = (const OutType *)this->m_tmpLutB;
 
         for(long idx=0; idx<numPixels; ++idx)
         {
             out[0] = LookupLut<InType, OutType>::compute(lutR, in[0]);
             out[1] = LookupLut<InType, OutType>::compute(lutG, in[1]);
             out[2] = LookupLut<InType, OutType>::compute(lutB, in[2]);
-            out[3] = OutType(in[3] * m_alphaScaling);
+            out[3] = OutType(in[3] * this->m_alphaScaling);
 
             in  += 4;
             out += 4;
@@ -487,9 +487,9 @@ void Lut1DRendererHalfCode<inBD, outBD>::apply(const void * inImg, void * outImg
     }
     else  // Need to interpolate rather than simply lookup.
     {
-        const float * lutR = (const float *)m_tmpLutR;
-        const float * lutG = (const float *)m_tmpLutG;
-        const float * lutB = (const float *)m_tmpLutB;
+        const float * lutR = (const float *)this->m_tmpLutR;
+        const float * lutG = (const float *)this->m_tmpLutG;
+        const float * lutB = (const float *)this->m_tmpLutB;
 
         for(long idx=0; idx<numPixels; ++idx)
         {
@@ -514,7 +514,7 @@ void Lut1DRendererHalfCode<inBD, outBD>::apply(const void * inImg, void * outImg
                               lutB[blueInterVals.valA],
                               1.0f-blueInterVals.fraction));
 
-            out[3] = Converter<outBD>::CastValue(in[3] * m_alphaScaling);
+            out[3] = Converter<outBD>::CastValue(in[3] * this->m_alphaScaling);
 
             in  += 4;
             out += 4;
@@ -589,16 +589,16 @@ void Lut1DRenderer<inBD, outBD>::apply(const void * inImg, void * outImg, long n
     //     (Should be no runtime cost.)
     if (inBD != BIT_DEPTH_F32)
     {
-        const OutType * lutR = (const OutType *)m_tmpLutR;
-        const OutType * lutG = (const OutType *)m_tmpLutG;
-        const OutType * lutB = (const OutType *)m_tmpLutB;
+        const OutType * lutR = (const OutType *)this->m_tmpLutR;
+        const OutType * lutG = (const OutType *)this->m_tmpLutG;
+        const OutType * lutB = (const OutType *)this->m_tmpLutB;
 
         for(long idx=0; idx<numPixels; ++idx)
         {
             out[0] = LookupLut<InType, OutType>::compute(lutR, in[0]);
             out[1] = LookupLut<InType, OutType>::compute(lutG, in[1]);
             out[2] = LookupLut<InType, OutType>::compute(lutB, in[2]);
-            out[3] = OutType(in[3] * m_alphaScaling);
+            out[3] = OutType(in[3] * this->m_alphaScaling);
 
             in  += 4;
             out += 4;
@@ -606,13 +606,13 @@ void Lut1DRenderer<inBD, outBD>::apply(const void * inImg, void * outImg, long n
     }
     else  // Need to interpolate rather than simply lookup.
     {
-        const float * lutR = (const float *)m_tmpLutR;
-        const float * lutG = (const float *)m_tmpLutG;
-        const float * lutB = (const float *)m_tmpLutB;
+        const float * lutR = (const float *)this->m_tmpLutR;
+        const float * lutG = (const float *)this->m_tmpLutG;
+        const float * lutB = (const float *)this->m_tmpLutB;
 
 #ifdef USE_SSE
-        __m128 step = _mm_set_ps(1.0f, m_step, m_step, m_step);
-        __m128 dimMinusOne = _mm_set1_ps(m_dimMinusOne);
+        __m128 step = _mm_set_ps(1.0f, this->m_step, this->m_step, this->m_step);
+        __m128 dimMinusOne = _mm_set1_ps(this->m_dimMinusOne);
 #endif
 
         for(long i=0; i<numPixels; ++i)
@@ -692,7 +692,7 @@ void Lut1DRenderer<inBD, outBD>::apply(const void * inImg, void * outImg, long n
                         lerpf(lutB[(unsigned int)highIdx[2]], 
                               lutB[(unsigned int)lowIdx[2]],
                               delta[2]));
-            out[3] = Converter<outBD>::CastValue(in[3] * m_alphaScaling);
+            out[3] = Converter<outBD>::CastValue(in[3] * this->m_alphaScaling);
 
             in  += 4;
             out += 4;
@@ -735,9 +735,9 @@ void Lut1DRendererHalfCodeHueAdjust<inBD, outBD>::apply(const void * inImg, void
     typedef typename BitDepthInfo<inBD>::Type InType;
     typedef typename BitDepthInfo<outBD>::Type OutType;
 
-    const float * lutR = (const float *)m_tmpLutR;
-    const float * lutG = (const float *)m_tmpLutG;
-    const float * lutB = (const float *)m_tmpLutB;
+    const float * lutR = (const float *)this->m_tmpLutR;
+    const float * lutG = (const float *)this->m_tmpLutG;
+    const float * lutB = (const float *)this->m_tmpLutB;
 
     const InType * in = (InType *)inImg;
     OutType * out = (OutType *)outImg;
@@ -770,7 +770,7 @@ void Lut1DRendererHalfCodeHueAdjust<inBD, outBD>::apply(const void * inImg, void
             out[0] = OutType(RGB2[0]);
             out[1] = OutType(RGB2[1]);
             out[2] = OutType(RGB2[2]);
-            out[3] = OutType(in[3] * m_alphaScaling);
+            out[3] = OutType(in[3] * this->m_alphaScaling);
 
             in  += 4;
             out += 4;
@@ -816,7 +816,7 @@ void Lut1DRendererHalfCodeHueAdjust<inBD, outBD>::apply(const void * inImg, void
             out[0] = Converter<outBD>::CastValue(RGB2[0]);
             out[1] = Converter<outBD>::CastValue(RGB2[1]);
             out[2] = Converter<outBD>::CastValue(RGB2[2]);
-            out[3] = Converter<outBD>::CastValue(in[3] * m_alphaScaling);
+            out[3] = Converter<outBD>::CastValue(in[3] * this->m_alphaScaling);
 
             in  += 4;
             out += 4;
@@ -830,9 +830,9 @@ void Lut1DRendererHueAdjust<inBD, outBD>::apply(const void * inImg, void * outIm
     typedef typename BitDepthInfo<inBD>::Type InType;
     typedef typename BitDepthInfo<outBD>::Type OutType;
 
-    const float * lutR = (const float *)m_tmpLutR;
-    const float * lutG = (const float *)m_tmpLutG;
-    const float * lutB = (const float *)m_tmpLutB;
+    const float * lutR = (const float *)this->m_tmpLutR;
+    const float * lutG = (const float *)this->m_tmpLutG;
+    const float * lutB = (const float *)this->m_tmpLutB;
 
     const InType * in = (InType *)inImg;
     OutType * out = (OutType *)outImg;
@@ -866,7 +866,7 @@ void Lut1DRendererHueAdjust<inBD, outBD>::apply(const void * inImg, void * outIm
             out[0] = OutType(RGB2[0]);
             out[1] = OutType(RGB2[1]);
             out[2] = OutType(RGB2[2]);
-            out[3] = OutType(in[3] * m_alphaScaling);
+            out[3] = OutType(in[3] * this->m_alphaScaling);
 
             in  += 4;
             out += 4;
@@ -893,13 +893,13 @@ void Lut1DRendererHueAdjust<inBD, outBD>::apply(const void * inImg, void * outIm
                                         RGB[1],
                                         RGB[0]),
                              _mm_set_ps(1.0f,
-                                        m_step,
-                                        m_step,
-                                        m_step));
+                                        this->m_step,
+                                        this->m_step,
+                                        this->m_step));
 
             // _mm_max_ps => NaNs become 0
             idx = _mm_min_ps(_mm_max_ps(idx, EZERO),
-                             _mm_set1_ps(m_dimMinusOne));
+                             _mm_set1_ps(this->m_dimMinusOne));
 
             // zero < std::floor(idx) < maxIdx
             // SSE => zero < truncate(idx) < maxIdx
@@ -910,7 +910,7 @@ void Lut1DRendererHueAdjust<inBD, outBD>::apply(const void * inImg, void * outIm
             // zero < std::ceil(idx) < maxIdx
             // SSE => (lowIdx (already truncated) + 1) < maxIdx
             __m128 hIdx = _mm_min_ps(_mm_add_ps(lIdx, EONE),
-                                     _mm_set1_ps(m_dimMinusOne));
+                                     _mm_set1_ps(this->m_dimMinusOne));
 
             // Computing delta relative to high rather than lowIdx
             // to save computing (1-delta) below.
@@ -968,7 +968,7 @@ void Lut1DRendererHueAdjust<inBD, outBD>::apply(const void * inImg, void * outIm
             out[0] = Converter<outBD>::CastValue(RGB2[0]);
             out[1] = Converter<outBD>::CastValue(RGB2[1]);
             out[2] = Converter<outBD>::CastValue(RGB2[2]);
-            out[3] = Converter<outBD>::CastValue(in[3] * m_alphaScaling);
+            out[3] = Converter<outBD>::CastValue(in[3] * this->m_alphaScaling);
 
             in  += 4;
             out += 4;
