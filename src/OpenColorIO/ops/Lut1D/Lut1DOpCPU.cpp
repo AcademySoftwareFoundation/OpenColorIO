@@ -423,6 +423,12 @@ void BaseLut1DRenderer<inBD, outBD>::reset()
             case BIT_DEPTH_UINT8:
                 resetData<BitDepthInfo<BIT_DEPTH_UINT8>::Type>();
                 break;
+            case BIT_DEPTH_UINT10:
+                resetData<BitDepthInfo<BIT_DEPTH_UINT10>::Type>();
+                break;
+            case BIT_DEPTH_UINT12:
+                resetData<BitDepthInfo<BIT_DEPTH_UINT12>::Type>();
+                break;
             case BIT_DEPTH_UINT16:
                 resetData<BitDepthInfo<BIT_DEPTH_UINT16>::Type>();
                 break;
@@ -431,6 +437,12 @@ void BaseLut1DRenderer<inBD, outBD>::reset()
                 break;
             case BIT_DEPTH_F32:
                 resetData<BitDepthInfo<BIT_DEPTH_F32>::Type>();
+                break;
+
+            case BIT_DEPTH_UINT14:
+            case BIT_DEPTH_UINT32:
+            case BIT_DEPTH_UNKNOWN:
+            default:
                 break;
         }
     }
