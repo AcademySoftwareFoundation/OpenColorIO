@@ -6,6 +6,7 @@ set(SOURCES
 	ColorSpaceSet.cpp
 	Config.cpp
 	Context.cpp
+	CPUProcessor.cpp
 	Display.cpp
 	Exception.cpp
 	fileformats/cdl/CDLParser.cpp
