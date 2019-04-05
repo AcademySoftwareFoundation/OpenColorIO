@@ -325,6 +325,12 @@ void BaseLut1DRenderer<inBD, outBD>::update(ConstLut1DOpDataRcPtr & lut)
         case BIT_DEPTH_UINT8:
             updateData<BitDepthInfo<BIT_DEPTH_UINT8>::Type>(lut);
             break;
+        case BIT_DEPTH_UINT10:
+            updateData<BitDepthInfo<BIT_DEPTH_UINT10>::Type>(lut);
+            break;
+        case BIT_DEPTH_UINT12:
+            updateData<BitDepthInfo<BIT_DEPTH_UINT12>::Type>(lut);
+            break;
         case BIT_DEPTH_UINT16:
             updateData<BitDepthInfo<BIT_DEPTH_UINT16>::Type>(lut);
             break;
@@ -333,6 +339,12 @@ void BaseLut1DRenderer<inBD, outBD>::update(ConstLut1DOpDataRcPtr & lut)
             break;
         case BIT_DEPTH_F32:
             updateData<BitDepthInfo<BIT_DEPTH_F32>::Type>(lut);
+            break;
+
+        case BIT_DEPTH_UINT14:
+        case BIT_DEPTH_UINT32:
+        case BIT_DEPTH_UNKNOWN:
+        default:
             break;
     }
 }
