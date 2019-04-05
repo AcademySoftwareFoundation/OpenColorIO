@@ -107,11 +107,11 @@ class CDLRendererV1_2Fwd : public CDLOpCPU
 public:
     CDLRendererV1_2Fwd(ConstCDLOpDataRcPtr & cdl);
 
-    virtual void apply(float * rgbaBuffer, long numPixels) const;
+    virtual void apply(const void * inImg, void * outImg, long numPixels) const;
 
 protected:
     template<bool CLAMP>
-    void _apply(float * rgbaBuffer, long numPixels) const;
+    void _apply(const float * inImg, float * outImg, long numPixels) const;
 };
 
 class CDLRendererNoClampFwd : public CDLRendererV1_2Fwd
@@ -119,7 +119,7 @@ class CDLRendererNoClampFwd : public CDLRendererV1_2Fwd
 public:
     CDLRendererNoClampFwd(ConstCDLOpDataRcPtr & cdl);
 
-    virtual void apply(float * rgbaBuffer, long numPixels) const;
+    virtual void apply(const void * inImg, void * outImg, long numPixels) const;
 };
 
 class CDLRendererV1_2Rev : public CDLOpCPU
@@ -127,11 +127,11 @@ class CDLRendererV1_2Rev : public CDLOpCPU
 public:
     CDLRendererV1_2Rev(ConstCDLOpDataRcPtr & cdl);
 
-    virtual void apply(float * rgbaBuffer, long numPixels) const;
+    virtual void apply(const void * inImg, void * outImg, long numPixels) const;
 
 protected:
     template<bool CLAMP>
-    void _apply(float * rgbaBuffer, long numPixels) const;
+    void _apply(const float * inImg, float * outImg, long numPixels) const;
 };
 
 class CDLRendererNoClampRev : public CDLRendererV1_2Rev
@@ -139,7 +139,7 @@ class CDLRendererNoClampRev : public CDLRendererV1_2Rev
 public:
     CDLRendererNoClampRev(ConstCDLOpDataRcPtr & cdl);
 
-    virtual void apply(float * rgbaBuffer, long numPixels) const;
+    virtual void apply(const void * inImg, void * outImg, long numPixels) const;
 };
 
 }

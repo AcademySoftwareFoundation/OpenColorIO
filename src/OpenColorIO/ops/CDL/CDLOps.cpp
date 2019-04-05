@@ -82,7 +82,6 @@ public:
     virtual void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const;
     
     virtual void finalize();
-    virtual void apply(float * rgbaBuffer, long numPixels) const;
     
     virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
 
@@ -92,14 +91,12 @@ protected:
 
 private:
     TransformDirection m_direction;
-    OpCPURcPtr m_cpu;
 };
 
 
 CDLOp::CDLOp()
     :   Op()
     ,   m_direction(TRANSFORM_DIR_FORWARD)
-    ,   m_cpu(new NoOpCPU)
 {           
     data().reset(new CDLOpData());
 }
@@ -107,7 +104,6 @@ CDLOp::CDLOp()
 CDLOp::CDLOp(CDLOpDataRcPtr & cdl, TransformDirection direction)
     :   Op()
     ,   m_direction(direction)
-    ,   m_cpu(new NoOpCPU)
 {
     if(m_direction == TRANSFORM_DIR_UNKNOWN)
     {
@@ -130,7 +126,6 @@ CDLOp::CDLOp(BitDepth inBitDepth,
              TransformDirection direction)
     :   Op()
     ,   m_direction(direction)
-    ,   m_cpu(new NoOpCPU)
 {
     if(m_direction == TRANSFORM_DIR_UNKNOWN)
     {
@@ -155,16 +150,8 @@ CDLOp::CDLOp(BitDepth inBitDepth,
 
 OpRcPtr CDLOp::clone() const
 {
-    return std::make_shared<CDLOp>(cdlData()->getInputBitDepth(),
-                                   cdlData()->getOutputBitDepth(),
-                                   cdlData()->getID(),
-                                   cdlData()->getDescriptions(),
-                                   cdlData()->getStyle(),
-                                   cdlData()->getSlopeParams().data(), 
-                                   cdlData()->getOffsetParams().data(),
-                                   cdlData()->getPowerParams().data(), 
-                                   cdlData()->getSaturation(),
-                                   m_direction);
+    CDLOpDataRcPtr f = cdlData()->clone();
+    return std::make_shared<CDLOp>(f, m_direction);
 }
 
 CDLOp::~CDLOp()
@@ -239,7 +226,7 @@ void CDLOp::finalize()
     cdlData()->finalize();
 
     ConstCDLOpDataRcPtr cdlOpData = constThis.cdlData();
-    m_cpu = CDLOpCPU::GetRenderer(cdlOpData);
+    m_cpuOp = CDLOpCPU::GetRenderer(cdlOpData);
 
     // Create the cacheID
     std::ostringstream cacheIDStream;
@@ -249,11 +236,6 @@ void CDLOp::finalize()
     cacheIDStream << ">";
 
     m_cacheID = cacheIDStream.str();
-}
-
-void CDLOp::apply(float * rgbaBuffer, long numPixels) const
-{
-    m_cpu->apply(rgbaBuffer, numPixels);
 }
 
 void CDLOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
@@ -455,7 +437,7 @@ void ApplyCDL(float * in, const float * ref, unsigned numPixels,
 
     OIIO_CHECK_NO_THROW(cdlOp.finalize());
 
-    cdlOp.apply(in, numPixels);
+    cdlOp.apply(in, in, numPixels);
 
     for(unsigned idx=0; idx<(numPixels*4); ++idx)
     {

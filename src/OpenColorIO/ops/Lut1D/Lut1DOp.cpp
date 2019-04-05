@@ -529,7 +529,6 @@ OCIO_NAMESPACE_ENTER
             bool isInverse(ConstOpRcPtr & op) const override;
             bool hasChannelCrosstalk() const override;
             void finalize() override;
-            void apply(float* rgbaBuffer, long numPixels) const override;
 
             bool supportedByLegacyShader() const override { return false; }
             void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
@@ -541,11 +540,6 @@ OCIO_NAMESPACE_ENTER
 
             ConstLut1DOpDataRcPtr m_lut_gpu_apply;
             
-			// The computed cache identifier
-            std::string m_cacheID;
-            // The CPU processor
-            OpCPURcPtr m_cpu = std::make_shared<NoOpCPU>();
-
             Lut1DOp() = delete;
         };
 
@@ -621,7 +615,7 @@ OCIO_NAMESPACE_ENTER
             const Lut1DOp & constThis = *this;
             ConstLut1DOpDataRcPtr lutDataConst = constThis.lut1DData();
 
-            m_cpu = GetLut1DRenderer(lutDataConst);
+            m_cpuOp = GetLut1DRenderer(lutDataConst);
 
             // Rebuild the cache identifier
             std::ostringstream cacheIDStream;
@@ -630,11 +624,6 @@ OCIO_NAMESPACE_ENTER
             cacheIDStream << ">";
 
             m_cacheID = cacheIDStream.str();
-        }
-
-        void Lut1DOp::apply(float* rgbaBuffer, long numPixels) const
-        {
-            m_cpu->apply(rgbaBuffer, numPixels);
         }
 
         void Lut1DOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
@@ -1406,7 +1395,7 @@ OIIO_ADD_TEST(Lut1D, basic)
 
     const float error = 1e-6f;
     {
-        OIIO_CHECK_NO_THROW(lut.apply(myImage, 2));
+        OIIO_CHECK_NO_THROW(lut.apply(myImage, myImage, 2));
 
         OIIO_CHECK_CLOSE(myImage[0], 0.0f, error);
         OIIO_CHECK_CLOSE(myImage[1], 0.0f, error);
@@ -1429,7 +1418,7 @@ OIIO_ADD_TEST(Lut1D, basic)
     OIIO_CHECK_ASSERT(!lut.isNoOp());
 
     {
-        OIIO_CHECK_NO_THROW(lut.apply(myImage, 2));
+        OIIO_CHECK_NO_THROW(lut.apply(myImage, myImage, 2));
 
         OIIO_CHECK_CLOSE(myImage[0], 0.0f, error);
         OIIO_CHECK_CLOSE(myImage[1], 0.0f, error);
@@ -1472,7 +1461,7 @@ OIIO_ADD_TEST(Lut1D, half)
     // TODO: The SC test is intended to test half evaluation using myImage
     // as input.  Adjust after half support is added to apply.
     OIIO_CHECK_NO_THROW(lut.finalize());
-    OIIO_CHECK_NO_THROW(lut.apply(resImage, 2));
+    OIIO_CHECK_NO_THROW(lut.apply(resImage, resImage, 2));
 
     const float error = 1e-4f;
 
@@ -1513,7 +1502,7 @@ OIIO_ADD_TEST(Lut1D, nan)
                                            0.0f, 0.0f, step, 1.0f };
 
     const float error = 1e-6f;
-    OIIO_CHECK_NO_THROW(lut.apply(myImage, 2));
+    OIIO_CHECK_NO_THROW(lut.apply(myImage, myImage, 2));
 
     OIIO_CHECK_CLOSE(myImage[0], 0.0f, error);
     OIIO_CHECK_CLOSE(myImage[1], 0.0f, error);

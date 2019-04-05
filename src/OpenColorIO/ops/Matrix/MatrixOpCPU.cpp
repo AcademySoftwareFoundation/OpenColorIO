@@ -42,9 +42,9 @@ namespace
 class ScaleRenderer : public OpCPU
 {
 public:
-    ScaleRenderer(const MatrixOpDataRcPtr & mat);
+    ScaleRenderer(ConstMatrixOpDataRcPtr & mat);
 
-    void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 private:
     ScaleRenderer() = delete;
@@ -54,9 +54,9 @@ private:
 class ScaleWithOffsetRenderer : public OpCPU
 {
 public:
-    ScaleWithOffsetRenderer(const MatrixOpDataRcPtr & mat);
+    ScaleWithOffsetRenderer(ConstMatrixOpDataRcPtr & mat);
 
-    void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 private:
     ScaleWithOffsetRenderer() = delete;
@@ -67,9 +67,9 @@ private:
 class MatrixWithOffsetRenderer : public OpCPU
 {
 public:
-    MatrixWithOffsetRenderer(const MatrixOpDataRcPtr & mat);
+    MatrixWithOffsetRenderer(ConstMatrixOpDataRcPtr & mat);
 
-    void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 private:
     MatrixWithOffsetRenderer() = delete;
@@ -85,9 +85,9 @@ private:
 class MatrixRenderer : public OpCPU
 {
 public:
-    MatrixRenderer(const MatrixOpDataRcPtr & mat);
+    MatrixRenderer(ConstMatrixOpDataRcPtr & mat);
 
-    void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 private:
     MatrixRenderer() = delete;
@@ -98,7 +98,7 @@ private:
     float m_column4[4];
 };
 
-ScaleRenderer::ScaleRenderer(const MatrixOpDataRcPtr & mat)
+ScaleRenderer::ScaleRenderer(ConstMatrixOpDataRcPtr & mat)
     : OpCPU()
 {
     const ArrayDouble::Values & m = mat->getArray().getValues();
@@ -109,22 +109,24 @@ ScaleRenderer::ScaleRenderer(const MatrixOpDataRcPtr & mat)
     m_scale[3] = (float)m[15];
 }
 
-void ScaleRenderer::apply(float * rgbaBuffer, long numPixels) const
+void ScaleRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    float * rgba = rgbaBuffer;
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
 
     for (long idx = 0; idx < numPixels; ++idx)
     {
-        rgba[0] *= m_scale[0];
-        rgba[1] *= m_scale[1];
-        rgba[2] *= m_scale[2];
-        rgba[3] *= m_scale[3];
+        out[0] = in[0] * m_scale[0];
+        out[1] = in[1] * m_scale[1];
+        out[2] = in[2] * m_scale[2];
+        out[3] = in[3] * m_scale[3];
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
-ScaleWithOffsetRenderer::ScaleWithOffsetRenderer(const MatrixOpDataRcPtr & mat)
+ScaleWithOffsetRenderer::ScaleWithOffsetRenderer(ConstMatrixOpDataRcPtr & mat)
     : OpCPU()
 {
     const ArrayDouble::Values & m = mat->getArray().getValues();
@@ -142,23 +144,24 @@ ScaleWithOffsetRenderer::ScaleWithOffsetRenderer(const MatrixOpDataRcPtr & mat)
     m_offset[3] = (float)o[3];
 }
 
-void ScaleWithOffsetRenderer::apply(float * rgbaBuffer,
-                                    long numPixels) const
+void ScaleWithOffsetRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    float * rgba = rgbaBuffer;
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
 
     for (long idx = 0; idx < numPixels; ++idx)
     {
-        rgba[0] = rgba[0] * m_scale[0] + m_offset[0];
-        rgba[1] = rgba[1] * m_scale[1] + m_offset[1];
-        rgba[2] = rgba[2] * m_scale[2] + m_offset[2];
-        rgba[3] = rgba[3] * m_scale[3] + m_offset[3];
+        out[0] = in[0] * m_scale[0] + m_offset[0];
+        out[1] = in[1] * m_scale[1] + m_offset[1];
+        out[2] = in[2] * m_scale[2] + m_offset[2];
+        out[3] = in[3] * m_scale[3] + m_offset[3];
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
-MatrixWithOffsetRenderer::MatrixWithOffsetRenderer(const MatrixOpDataRcPtr & mat)
+MatrixWithOffsetRenderer::MatrixWithOffsetRenderer(ConstMatrixOpDataRcPtr & mat)
     : OpCPU()
 {
     const unsigned long dim = mat->getArray().getLength();
@@ -225,9 +228,11 @@ MatrixWithOffsetRenderer::MatrixWithOffsetRenderer(const MatrixOpDataRcPtr & mat
 //      res1 = rm0 + gm1
 //      res2 = bm2 + am3
 //      image = res1 + res2
-void MatrixWithOffsetRenderer::apply(float * rgbaBuffer,
-                                     long numPixels) const
+void MatrixWithOffsetRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
 #ifdef USE_SSE
     // Matrix decomposition per _column.
     __m128 m0 = _mm_set_ps(m_column1[3],
@@ -248,14 +253,12 @@ void MatrixWithOffsetRenderer::apply(float * rgbaBuffer,
                            m_column4[0]);
     __m128 o = _mm_set_ps(m_offset[3], m_offset[2], m_offset[1], m_offset[0]);
 
-    float * rgba = rgbaBuffer;
-
     for (long idx = 0; idx < numPixels; ++idx)
     {
-        __m128 r = _mm_set1_ps(rgba[0]);
-        __m128 g = _mm_set1_ps(rgba[1]);
-        __m128 b = _mm_set1_ps(rgba[2]);
-        __m128 a = _mm_set1_ps(rgba[3]);
+        __m128 r = _mm_set1_ps(in[0]);
+        __m128 g = _mm_set1_ps(in[1]);
+        __m128 b = _mm_set1_ps(in[2]);
+        __m128 a = _mm_set1_ps(in[3]);
 
         __m128 rm0 = _mm_mul_ps(m0, r);
         __m128 gm1 = _mm_mul_ps(m1, g);
@@ -265,48 +268,48 @@ void MatrixWithOffsetRenderer::apply(float * rgbaBuffer,
         __m128 img = _mm_add_ps(_mm_add_ps(rm0, gm1), _mm_add_ps(bm2, am3));
         img = _mm_add_ps(img, o);
 
-        _mm_storeu_ps(rgba, img);
+        _mm_storeu_ps(out, img);
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 #else
-    float * rgba = rgbaBuffer;
-
     for (long idx = 0; idx < numPixels; ++idx)
     {
-        const float r = rgba[0];
-        const float g = rgba[1];
-        const float b = rgba[2];
-        const float a = rgba[3];
+        const float r = in[0];
+        const float g = in[1];
+        const float b = in[2];
+        const float a = in[3];
 
-        rgba[0] = r*m_column1[0]
+        out[0] = r*m_column1[0]
                 + g*m_column2[0]
                 + b*m_column3[0]
                 + a*m_column4[0]
                 + m_offset[0];
-        rgba[1] = r*m_column1[1]
+        out[1] = r*m_column1[1]
                 + g*m_column2[1]
                 + b*m_column3[1]
                 + a*m_column4[1]
                 + m_offset[1];
-        rgba[2] = r*m_column1[2]
+        out[2] = r*m_column1[2]
                 + g*m_column2[2]
                 + b*m_column3[2]
                 + a*m_column4[2]
                 + m_offset[2];
-        rgba[3] = r*m_column1[3]
+        out[3] = r*m_column1[3]
                 + g*m_column2[3]
                 + b*m_column3[3]
                 + a*m_column4[3]
                 + m_offset[3];
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 #endif
 
 }
 
-MatrixRenderer::MatrixRenderer(const MatrixOpDataRcPtr & mat)
+MatrixRenderer::MatrixRenderer(ConstMatrixOpDataRcPtr & mat)
     : OpCPU()
 {
     const unsigned long dim = mat->getArray().getLength();
@@ -339,8 +342,11 @@ MatrixRenderer::MatrixRenderer(const MatrixOpDataRcPtr & mat)
     m_column4[3] = (float)m[threeDim + 3];
 }
 
-void MatrixRenderer::apply(float * rgbaBuffer, long numPixels) const
+void MatrixRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
 #ifdef USE_SSE
     // Matrix decomposition per _column.
     __m128 m0 = _mm_set_ps(m_column1[3],
@@ -360,14 +366,12 @@ void MatrixRenderer::apply(float * rgbaBuffer, long numPixels) const
                            m_column4[1],
                            m_column4[0]);
 
-    float * rgba = rgbaBuffer;
-
     for (long idx = 0; idx < numPixels; ++idx)
     {
-        __m128 r = _mm_set1_ps(rgba[0]);
-        __m128 g = _mm_set1_ps(rgba[1]);
-        __m128 b = _mm_set1_ps(rgba[2]);
-        __m128 a = _mm_set1_ps(rgba[3]);
+        __m128 r = _mm_set1_ps(in[0]);
+        __m128 g = _mm_set1_ps(in[1]);
+        __m128 b = _mm_set1_ps(in[2]);
+        __m128 a = _mm_set1_ps(in[3]);
 
         __m128 rm0 = _mm_mul_ps(m0, r);
         __m128 gm1 = _mm_mul_ps(m1, g);
@@ -376,38 +380,38 @@ void MatrixRenderer::apply(float * rgbaBuffer, long numPixels) const
 
         __m128 img = _mm_add_ps(_mm_add_ps(rm0, gm1), _mm_add_ps(bm2, am3));
 
-        _mm_storeu_ps(rgba, img);
+        _mm_storeu_ps(out, img);
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 #else
-    float * rgba = rgbaBuffer;
-
     for (long idx = 0; idx < numPixels; ++idx)
     {
-        const float r = rgba[0];
-        const float g = rgba[1];
-        const float b = rgba[2];
-        const float a = rgba[3];
+        const float r = in[0];
+        const float g = in[1];
+        const float b = in[2];
+        const float a = in[3];
 
-        rgba[0] = r*m_column1[0]
-                + g*m_column2[0]
-                + b*m_column3[0]
-                + a*m_column4[0];
-        rgba[1] = r*m_column1[1]
-                + g*m_column2[1]
-                + b*m_column3[1]
-                + a*m_column4[1];
-        rgba[2] = r*m_column1[2]
-                + g*m_column2[2]
-                + b*m_column3[2]
-                + a*m_column4[2];
-        rgba[3] = r*m_column1[3]
-                + g*m_column2[3]
-                + b*m_column3[3]
-                + a*m_column4[3];
+        out[0] = r*m_column1[0]
+               + g*m_column2[0]
+               + b*m_column3[0]
+               + a*m_column4[0];
+        out[1] = r*m_column1[1]
+               + g*m_column2[1]
+               + b*m_column3[1]
+               + a*m_column4[1];
+        out[2] = r*m_column1[2]
+               + g*m_column2[2]
+               + b*m_column3[2]
+               + a*m_column4[2];
+        out[3] = r*m_column1[3]
+               + g*m_column2[3]
+               + b*m_column3[3]
+               + a*m_column4[3];
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 
 #endif
@@ -415,7 +419,7 @@ void MatrixRenderer::apply(float * rgbaBuffer, long numPixels) const
 
 }
 
-OpCPURcPtr GetMatrixRenderer(const MatrixOpDataRcPtr & mat)
+OpCPURcPtr GetMatrixRenderer(ConstMatrixOpDataRcPtr & mat)
 {
     if (mat->isDiagonal())
     {
@@ -462,7 +466,7 @@ OCIO_NAMESPACE_USING
 
 OIIO_ADD_TEST(MatrixOpCPU, scale_renderer)
 {
-    MatrixOpDataRcPtr mat(MatrixOpData::CreateDiagonalMatrix(
+    ConstMatrixOpDataRcPtr mat(MatrixOpData::CreateDiagonalMatrix(
         OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 2.0));
 
     OpCPURcPtr op = GetMatrixRenderer(mat);
@@ -473,7 +477,7 @@ OIIO_ADD_TEST(MatrixOpCPU, scale_renderer)
 
     float rgba[4] = { 4.f, 3.f, 2.f, 1.f };
 
-    op->apply(rgba, 1);
+    op->apply(rgba, rgba, 1);
 
     OIIO_CHECK_EQUAL(rgba[0], 8.f);
     OIIO_CHECK_EQUAL(rgba[1], 6.f);
@@ -491,7 +495,8 @@ OIIO_ADD_TEST(MatrixOpCPU, scale_with_offset_renderer)
     mat->setOffsetValue(2, 3.f);
     mat->setOffsetValue(3, 4.f);
 
-    OpCPURcPtr op = GetMatrixRenderer(mat);
+    OCIO::ConstMatrixOpDataRcPtr m = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(mat);
+    OpCPURcPtr op = GetMatrixRenderer(m);
     OIIO_CHECK_ASSERT((bool)op);
 
     ScaleWithOffsetRenderer* scaleOffOp = dynamic_cast<ScaleWithOffsetRenderer*>(op.get());
@@ -499,7 +504,7 @@ OIIO_ADD_TEST(MatrixOpCPU, scale_with_offset_renderer)
 
     float rgba[4] = { 4.f, 3.f, 2.f, 1.f };
 
-    op->apply(rgba, 1);
+    op->apply(rgba, rgba, 1);
 
     OIIO_CHECK_EQUAL(rgba[0], 9.f);
     OIIO_CHECK_EQUAL(rgba[1], 8.f);
@@ -522,7 +527,8 @@ OIIO_ADD_TEST(MatrixOpCPU, matrix_with_offset_renderer)
     // make not diag
     mat->setArrayValue(3, 0.5f);
 
-    OpCPURcPtr op = GetMatrixRenderer(mat);
+    OCIO::ConstMatrixOpDataRcPtr m = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(mat);
+    OpCPURcPtr op = GetMatrixRenderer(m);
     OIIO_CHECK_ASSERT((bool)op);
 
     MatrixWithOffsetRenderer* matOffOp = dynamic_cast<MatrixWithOffsetRenderer*>(op.get());
@@ -530,7 +536,7 @@ OIIO_ADD_TEST(MatrixOpCPU, matrix_with_offset_renderer)
 
     float rgba[4] = { 4.f, 3.f, 2.f, 1.f };
 
-    op->apply(rgba, 1);
+    op->apply(rgba, rgba, 1);
 
     OIIO_CHECK_EQUAL(rgba[0], 9.5f);
     OIIO_CHECK_EQUAL(rgba[1], 8.f);
@@ -546,7 +552,8 @@ OIIO_ADD_TEST(MatrixOpCPU, matrix_renderer)
     // Make not diagonal.
     mat->setArrayValue(3, 0.5f);
 
-    OpCPURcPtr op = GetMatrixRenderer(mat);
+    OCIO::ConstMatrixOpDataRcPtr m = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(mat);
+    OpCPURcPtr op = GetMatrixRenderer(m);
     OIIO_CHECK_ASSERT((bool)op);
 
     MatrixRenderer* matOp = dynamic_cast<MatrixRenderer*>(op.get());
@@ -554,7 +561,7 @@ OIIO_ADD_TEST(MatrixOpCPU, matrix_renderer)
 
     float rgba[4] = { 4.f, 3.f, 2.f, 1.f };
 
-    op->apply(rgba, 1);
+    op->apply(rgba, rgba, 1);
 
     OIIO_CHECK_EQUAL(rgba[0], 8.5f);
     OIIO_CHECK_EQUAL(rgba[1], 6.f);

@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <algorithm>
+#include <cmath>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -51,7 +52,7 @@ public:
 
     GammaBasicOpCPU(const GammaOpDataRcPtr & gamma);
 
-    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 protected:
     void update(const GammaOpDataRcPtr & gamma);
@@ -82,7 +83,7 @@ class GammaMoncurveOpCPUFwd : public GammaMoncurveOpCPU
 public:
     GammaMoncurveOpCPUFwd(const GammaOpDataRcPtr & gamma);
 
-    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 protected:
     void update(const GammaOpDataRcPtr & gamma);
@@ -96,7 +97,7 @@ class GammaMoncurveOpCPURev : public GammaMoncurveOpCPU
 public:
     GammaMoncurveOpCPURev(const GammaOpDataRcPtr & gamma);
 
-    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 protected:
     void update(const GammaOpDataRcPtr & gamma);
@@ -130,7 +131,8 @@ OpCPURcPtr GetGammaRenderer(const GammaOpDataRcPtr & gamma)
         }
     }
 
-    return std::make_shared<NoOpCPU>();
+    throw Exception("Unsupported Gamma style");
+    return OpCPURcPtr();
 }
 
 
@@ -180,19 +182,20 @@ void GammaBasicOpCPU::update(const GammaOpDataRcPtr & gamma)
         : 1. / gamma->getAlphaParams()[0]);
 }
 
-void GammaBasicOpCPU::apply(float * rgbaBuffer, long numPixels) const
+void GammaBasicOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
 {
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
 #ifdef USE_SSE
     const __m128 gamma = _mm_set_ps(m_alpGamma, m_bluGamma, m_grnGamma, m_redGamma);
       
     const __m128 inScale  = _mm_set1_ps(m_inScale);
     const __m128 outScale = _mm_set1_ps(m_outScale);
 
-    float * rgba = rgbaBuffer;
-
     for(long idx=0; idx<numPixels; ++idx)
     {
-        __m128 pixel = _mm_set_ps(rgba[3], rgba[2], rgba[1], rgba[0]);
+        __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
         pixel = _mm_mul_ps(pixel, inScale);
 
@@ -200,26 +203,26 @@ void GammaBasicOpCPU::apply(float * rgbaBuffer, long numPixels) const
 
         pixel = _mm_mul_ps(pixel, outScale);
 
-        _mm_storeu_ps(rgba, pixel);
+        _mm_storeu_ps(out, pixel);
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 #else
-    float * rgba = rgbaBuffer;
-
     for(long idx=0; idx<numPixels; ++idx)
     {
-        const float pixel[4] = { std::max(0.0f, rgba[0]), 
-                                 std::max(0.0f, rgba[1]), 
-                                 std::max(0.0f, rgba[2]),
-                                 std::max(0.0f, rgba[3]) };
+        const float pixel[4] = { std::max(0.0f, in[0]), 
+                                 std::max(0.0f, in[1]), 
+                                 std::max(0.0f, in[2]),
+                                 std::max(0.0f, in[3]) };
 
-        rgba[0] = powf(pixel[0] * m_inScale, m_redGamma) * m_outScale;
-        rgba[1] = powf(pixel[1] * m_inScale, m_grnGamma) * m_outScale;
-        rgba[2] = powf(pixel[2] * m_inScale, m_bluGamma) * m_outScale;
-        rgba[3] = powf(pixel[3] * m_inScale, m_alpGamma) * m_outScale;
+        out[0] = powf(pixel[0] * m_inScale, m_redGamma) * m_outScale;
+        out[1] = powf(pixel[1] * m_inScale, m_grnGamma) * m_outScale;
+        out[2] = powf(pixel[2] * m_inScale, m_bluGamma) * m_outScale;
+        out[3] = powf(pixel[3] * m_inScale, m_alpGamma) * m_outScale;
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 #endif
 }
@@ -248,8 +251,11 @@ void GammaMoncurveOpCPUFwd::update(const GammaOpDataRcPtr & gamma)
     m_outScale = GetBitDepthMaxValue(outBitDepth);
 }
 
-void GammaMoncurveOpCPUFwd::apply(float * rgbaBuffer, long numPixels) const
+void GammaMoncurveOpCPUFwd::apply(const void * inImg, void * outImg, long numPixels) const
 {
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
 #ifdef USE_SSE
     const __m128 scale
       = _mm_set_ps(m_alpha.scale, m_blue.scale,
@@ -273,11 +279,9 @@ void GammaMoncurveOpCPUFwd::apply(float * rgbaBuffer, long numPixels) const
 
     const __m128 outScale = _mm_set1_ps(m_outScale);
 
-    float * rgba = rgbaBuffer;
-
     for(long idx=0; idx<numPixels; ++idx)
     {
-        __m128 pixel = _mm_set_ps(rgba[3], rgba[2], rgba[1], rgba[0]);
+        __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
         __m128 data = _mm_add_ps(_mm_mul_ps(pixel, scale), offset);
 
@@ -290,13 +294,12 @@ void GammaMoncurveOpCPUFwd::apply(float * rgbaBuffer, long numPixels) const
         data = _mm_or_ps(_mm_and_ps(flag, data),
                          _mm_andnot_ps(flag, _mm_mul_ps(pixel, slope )));
 
-        _mm_storeu_ps(rgba, data);
+        _mm_storeu_ps(out, data);
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 #else
-    float * rgba = rgbaBuffer;
-
     const float red[5] 
         = { m_red.scale,  m_red.offset,
             m_red.gamma,  m_red.breakPnt, m_red.slope };
@@ -312,19 +315,20 @@ void GammaMoncurveOpCPUFwd::apply(float * rgbaBuffer, long numPixels) const
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        const float pixel[4] = { rgba[0], rgba[1], rgba[2], rgba[3] };
+        const float pixel[4] = { in[0], in[1], in[2], in[3] };
 
         const float data[4] = { powf(pixel[0] * red[0] + red[1], red[2]) * m_outScale,
                                 powf(pixel[1] * grn[0] + grn[1], grn[2]) * m_outScale,
                                 powf(pixel[2] * blu[0] + blu[1], blu[2]) * m_outScale,
                                 powf(pixel[3] * alp[0] + alp[1], alp[2]) * m_outScale };
 
-        rgba[0] = pixel[0]<=red[3] ? pixel[0] * red[4] : data[0];
-        rgba[1] = pixel[1]<=grn[3] ? pixel[1] * grn[4] : data[1];
-        rgba[2] = pixel[2]<=blu[3] ? pixel[2] * blu[4] : data[2];
-        rgba[3] = pixel[3]<=alp[3] ? pixel[3] * alp[4] : data[3];
+        out[0] = pixel[0]<=red[3] ? pixel[0] * red[4] : data[0];
+        out[1] = pixel[1]<=grn[3] ? pixel[1] * grn[4] : data[1];
+        out[2] = pixel[2]<=blu[3] ? pixel[2] * blu[4] : data[2];
+        out[3] = pixel[3]<=alp[3] ? pixel[3] * alp[4] : data[3];
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 #endif
 }
@@ -353,8 +357,11 @@ void GammaMoncurveOpCPURev::update(const GammaOpDataRcPtr & gamma)
     m_inScale = (float)(1. / GetBitDepthMaxValue(inBitDepth));
 }
 
-void GammaMoncurveOpCPURev::apply(float * rgbaBuffer, long numPixels) const
+void GammaMoncurveOpCPURev::apply(const void * inImg, void * outImg, long numPixels) const
 {
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
 #ifdef USE_SSE
     const __m128 scale
       = _mm_set_ps(m_alpha.scale, m_blue.scale,
@@ -378,11 +385,9 @@ void GammaMoncurveOpCPURev::apply(float * rgbaBuffer, long numPixels) const
 
     const __m128 inScale = _mm_set1_ps(m_inScale);
 
-    float * rgba = rgbaBuffer;
-
     for(long idx=0; idx<numPixels; ++idx)
     {
-        __m128 pixel = _mm_set_ps(rgba[3], rgba[2], rgba[1], rgba[0]);
+        __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
         __m128 data  = _mm_mul_ps(pixel, inScale);
 
@@ -395,13 +400,12 @@ void GammaMoncurveOpCPURev::apply(float * rgbaBuffer, long numPixels) const
         data = _mm_or_ps(_mm_and_ps(flag, data),
                          _mm_andnot_ps(flag, _mm_mul_ps(pixel, slope)));
 
-        _mm_storeu_ps(rgba, data);
+        _mm_storeu_ps(out, data);
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 #else
-    float * rgba = rgbaBuffer;
-
     const float red[5] 
         = { m_red.gamma,  m_red.scale,
             m_red.offset, m_red.breakPnt, m_red.slope };
@@ -417,19 +421,20 @@ void GammaMoncurveOpCPURev::apply(float * rgbaBuffer, long numPixels) const
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        const float pixel[4] = { rgba[0], rgba[1], rgba[2], rgba[3] };
+        const float pixel[4] = { in[0], in[1], in[2], in[3] };
 
         const float data[4] = { powf(pixel[0] * m_inScale, red[0]) * red[1] - red[2],
                                 powf(pixel[1] * m_inScale, grn[0]) * grn[1] - grn[2],
                                 powf(pixel[2] * m_inScale, blu[0]) * blu[1] - blu[2],
                                 powf(pixel[3] * m_inScale, alp[0]) * alp[1] - alp[2] };
 
-        rgba[0] = pixel[0]<=red[3] ? pixel[0] * red[4] : data[0];
-        rgba[1] = pixel[1]<=grn[3] ? pixel[1] * grn[4] : data[1];
-        rgba[2] = pixel[2]<=blu[3] ? pixel[2] * blu[4] : data[2];
-        rgba[3] = pixel[3]<=alp[3] ? pixel[3] * alp[4] : data[3];
+        out[0] = pixel[0]<=red[3] ? pixel[0] * red[4] : data[0];
+        out[1] = pixel[1]<=grn[3] ? pixel[1] * grn[4] : data[1];
+        out[2] = pixel[2]<=blu[3] ? pixel[2] * blu[4] : data[2];
+        out[3] = pixel[3]<=alp[3] ? pixel[3] * alp[4] : data[3];
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 #endif
 

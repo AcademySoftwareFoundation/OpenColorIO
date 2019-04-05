@@ -75,7 +75,6 @@ public:
     virtual void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const;
     
     virtual void finalize();
-    virtual void apply(float * rgbaBuffer, long numPixels) const;
     
     virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
 
@@ -86,15 +85,12 @@ protected:
 private:            
     // The range direction
     TransformDirection m_direction;
-    // The CPU processor
-    OpCPURcPtr m_cpu;
 };
 
 
 RangeOp::RangeOp()
     :   Op()
     ,   m_direction(TRANSFORM_DIR_FORWARD)
-    ,   m_cpu(new NoOpCPU)
 {           
     data().reset(new RangeOpData());
 }
@@ -102,7 +98,6 @@ RangeOp::RangeOp()
 RangeOp::RangeOp(RangeOpDataRcPtr & range, TransformDirection direction)
     :   Op()
     ,   m_direction(direction)
-    ,   m_cpu(new NoOpCPU)
 {
     if(m_direction == TRANSFORM_DIR_UNKNOWN)
     {
@@ -118,7 +113,6 @@ RangeOp::RangeOp(double minInValue, double maxInValue,
                  TransformDirection direction)
     :   Op()
     ,   m_direction(direction)
-    ,   m_cpu(new NoOpCPU)
 {
     if(m_direction == TRANSFORM_DIR_UNKNOWN)
     {
@@ -133,11 +127,8 @@ RangeOp::RangeOp(double minInValue, double maxInValue,
 
 OpRcPtr RangeOp::clone() const
 {
-    return std::make_shared<RangeOp>(rangeData()->getMinInValue(), 
-                                     rangeData()->getMaxInValue(),
-                                     rangeData()->getMinOutValue(), 
-                                     rangeData()->getMaxOutValue(),
-                                     m_direction);
+    RangeOpDataRcPtr clonedData = rangeData()->clone();
+    return std::make_shared<RangeOp>(clonedData, m_direction);
 }
 
 RangeOp::~RangeOp()
@@ -208,7 +199,7 @@ void RangeOp::finalize()
     rangeData()->finalize();
 
     ConstRangeOpDataRcPtr rangeOpData = constThis.rangeData();
-    m_cpu = GetRangeRenderer(rangeOpData);
+    m_cpuOp = GetRangeRenderer(rangeOpData);
 
     // Create the cacheID
     std::ostringstream cacheIDStream;
@@ -218,11 +209,6 @@ void RangeOp::finalize()
     cacheIDStream << ">";
     
     m_cacheID = cacheIDStream.str();
-}
-
-void RangeOp::apply(float * rgbaBuffer, long numPixels) const
-{
-    m_cpu->apply(rgbaBuffer, numPixels);
 }
 
 void RangeOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
@@ -445,4 +431,31 @@ OIIO_ADD_TEST(RangeOps, computed_identifier)
     OIIO_CHECK_ASSERT(ops[3]->getCacheID() != ops[4]->getCacheID());
 }
 
+OIIO_ADD_TEST(RangeOps, bit_depth)
+{
+    // Test bit depths.
+
+    OCIO::RangeOpDataRcPtr range
+        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
+                                              0., 255., -1., 65540.);
+
+    OIIO_CHECK_EQUAL(range->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(range->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT16);
+
+    OCIO::OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(OCIO::CreateRangeOp(ops, range, OCIO::TRANSFORM_DIR_FORWARD));
+    OIIO_REQUIRE_EQUAL(ops.size(), 1);
+
+    OIIO_CHECK_EQUAL(ops[0]->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops[0]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT16);
+
+    // Test bit depths after a clone.
+
+    OCIO::ConstOpRcPtr o = ops[0]->clone();
+    OIIO_CHECK_EQUAL(o->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(o->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT16);
+
+    OCIO::ConstRangeOpDataRcPtr r = DynamicPtrCast<const OCIO::RangeOpData>(o->data());
+    OIIO_CHECK_EQUAL(r->getMinOutValue(), -1.);
+}
 #endif

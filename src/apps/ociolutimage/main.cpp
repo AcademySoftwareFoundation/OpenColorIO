@@ -127,7 +127,14 @@ void Generate(int cubesize, int maxwidth,
     
     // TODO: If DPX, force 16-bit output?
     f->open(outputfile, spec);
-    f->write_image(OIIO::TypeDesc::FLOAT, &img[0]);
+    const bool ok = f->write_image(OIIO::TypeDesc::FLOAT, &img[0]);
+    if(!ok)
+    {
+        std::stringstream ss;
+        ss << "Error writing \"" << outputfile << "\" : " << f->geterror() << "\n";
+        throw Exception(ss.str().c_str());
+    }
+
     f->close();
 #if OIIO_VERSION < 10903
     OIIO::ImageOutput::destroy(f);
@@ -189,7 +196,14 @@ void Extract(int cubesize, int maxwidth,
     // TODO: confirm no data window?
     std::vector<float> img;
     img.resize(spec.width*spec.height*spec.nchannels, 0);
-    f->read_image(OIIO::TypeDesc::TypeFloat, &img[0]);
+    const bool ok = f->read_image(OIIO::TypeDesc::FLOAT, &img[0]);
+    if(!ok)
+    {
+        std::stringstream ss;
+        ss << "Error reading \"" << inputfile << "\" : " << f->geterror() << "\n";
+        throw OCIO::Exception(ss.str().c_str());
+    }
+
 #if OIIO_VERSION < 10903
     OIIO::ImageInput::destroy(f);
 #endif
