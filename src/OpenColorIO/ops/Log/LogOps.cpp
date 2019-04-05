@@ -62,7 +62,6 @@ OCIO_NAMESPACE_ENTER
             virtual bool isSameType(ConstOpRcPtr & op) const;
             virtual bool isInverse(ConstOpRcPtr & op) const;
             virtual void finalize();
-            virtual void apply(float* rgbaBuffer, long numPixels) const;
             
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
             
@@ -79,7 +78,6 @@ OCIO_NAMESPACE_ENTER
 
         LogOp::LogOp(LogOpDataRcPtr & log)
             : Op()
-            , m_cpu(std::make_shared<NoOpCPU>())
         {
             data() = log;
         }
@@ -126,7 +124,7 @@ OCIO_NAMESPACE_ENTER
             logData()->finalize();
 
             ConstLogOpDataRcPtr logOpData = constThis.logData();
-            m_cpu = GetLogRenderer(logOpData);
+            m_cpuOp = GetLogRenderer(logOpData);
 
             // Create the cacheID
             std::ostringstream cacheIDStream;
@@ -135,11 +133,6 @@ OCIO_NAMESPACE_ENTER
             cacheIDStream << ">";
             
             m_cacheID = cacheIDStream.str();
-        }
-        
-        void LogOp::apply(float* rgbaBuffer, long numPixels) const
-        {
-            m_cpu->apply(rgbaBuffer, numPixels);
         }
         
         void LogOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const

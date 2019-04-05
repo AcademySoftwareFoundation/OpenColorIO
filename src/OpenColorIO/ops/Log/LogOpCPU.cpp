@@ -82,7 +82,7 @@ class Log2LinRenderer : public L2LBaseRenderer
 public:
     explicit Log2LinRenderer(ConstLogOpDataRcPtr & log);
 
-    void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
 // Renderer for Lin2Log operations.
@@ -91,7 +91,7 @@ class Lin2LogRenderer : public L2LBaseRenderer
 public:
     explicit Lin2LogRenderer(ConstLogOpDataRcPtr & log);
 
-    void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 };
 
@@ -101,7 +101,7 @@ class LogRenderer : public LogOpCPU
 public:
     explicit LogRenderer(ConstLogOpDataRcPtr & log, float logScale);
 
-    void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 private:
     float m_logScale;
@@ -113,7 +113,7 @@ class AntiLogRenderer : public LogOpCPU
 public:
     explicit AntiLogRenderer(ConstLogOpDataRcPtr & log, float log2base);
 
-    void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 private:
     float m_log2_base;
@@ -248,12 +248,15 @@ inline void ApplyExp2(float * pix)
 }
 #endif
 
-void LogRenderer::apply(float * rgbaBuffer, long numPixels) const
+void LogRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
     //
     // out = log2( max(in*inScale, minValue) ) * logScale * outScale;
     //
     const float minValue = std::numeric_limits<float>::min();
+
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
 
 #ifdef USE_SSE
     const __m128 mm_inScale = _mm_set1_ps(m_inScale);
@@ -262,42 +265,41 @@ void LogRenderer::apply(float * rgbaBuffer, long numPixels) const
 
     __m128 mm_pixel;
 
-    // TODO: Add the ability to not overwrite the input buffer.
-    // At that time, memory align the output buffer (see OCIO_ALIGN).
-    float * rgba = rgbaBuffer;
-    
     for (long idx = 0; idx<numPixels; ++idx)
     {
-        mm_pixel = _mm_set_ps(0.0f, rgba[2], rgba[1], rgba[0]);
+        mm_pixel = _mm_set_ps(0.0f, in[2], in[1], in[0]);
         mm_pixel = _mm_mul_ps(mm_pixel, mm_inScale);
         mm_pixel = _mm_max_ps(mm_pixel, mm_minValue);
         mm_pixel = sseLog2(mm_pixel);
         mm_pixel = _mm_mul_ps(mm_pixel, mm_outScale);
 
-        const float alphares = rgba[3] * m_alphaScale;
+        const float alphares = in[3] * m_alphaScale;
 
-        _mm_storeu_ps(rgba, mm_pixel);
-        rgba[3] = alphares;
+        _mm_storeu_ps(out, mm_pixel);
+        out[3] = alphares;
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 #else
     const float outScale = m_outScale * m_logScale;
 
-    // TODO: Add the ability to not overwrite the input buffer.
-    // At that time, memory align the output buffer (see OCIO_ALIGN).
-    float * rgba = rgbaBuffer;
-
     for (long idx = 0; idx<numPixels; ++idx)
     {
-        ApplyScale(rgba, m_inScale);
-        ApplyMax(rgba, minValue);
-        ApplyLog2(rgba);
-        ApplyScale(rgba, outScale);
+        const float alphares = in[3] * m_alphaScale;
 
-        rgba[3] = rgba[3] * m_alphaScale;
+        // NB: 'in' and 'out' could be pointers to the same memory buffer.
+        memcpy(out, in, 4 * sizeof(float));
 
-        rgba += 4;
+        ApplyScale(out, m_inScale);
+        ApplyMax(out, minValue);
+        ApplyLog2(out);
+        ApplyScale(out, outScale);
+
+        out[3] = alphares;
+
+        in  += 4;
+        out += 4;
     }
 
 #endif
@@ -311,7 +313,7 @@ AntiLogRenderer::AntiLogRenderer(ConstLogOpDataRcPtr & log, float log2base)
     LogOpCPU::updateData(log);
 }
 
-void AntiLogRenderer::apply(float * rgbaBuffer, long numPixels) const
+void AntiLogRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
     //
     // out = pow(base, in*inScale) * outScale;
@@ -320,6 +322,10 @@ void AntiLogRenderer::apply(float * rgbaBuffer, long numPixels) const
     //   out = exp2( log2(base) * (in*inScale) ) * outScale;
     //   so that the constant factor log2(base) can be moved outside the loop.
     //
+
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
 #ifdef USE_SSE
     const __m128 mm_inScale = _mm_set1_ps(m_inScale);
     const __m128 mm_outScale = _mm_set1_ps(m_outScale);
@@ -327,40 +333,39 @@ void AntiLogRenderer::apply(float * rgbaBuffer, long numPixels) const
 
     __m128 mm_pixel;
 
-    // TODO: Add the ability to not overwrite the input buffer.
-    // At that time, memory align the output buffer (see OCIO_ALIGN).
-    float * rgba = rgbaBuffer;
-
     for (long idx = 0; idx<numPixels; ++idx)
     {
-        mm_pixel = _mm_set_ps(0.0f, rgba[2], rgba[1], rgba[0]);
+        mm_pixel = _mm_set_ps(0.0f, in[2], in[1], in[0]);
         mm_pixel = _mm_mul_ps(mm_pixel, mm_inScale);
         mm_pixel = sseExp2(_mm_mul_ps(mm_pixel, mm_log2_base));
         mm_pixel = _mm_mul_ps(mm_pixel, mm_outScale);
 
-        const float alphares = rgba[3] * m_alphaScale;
+        const float alphares = in[3] * m_alphaScale;
 
-        _mm_storeu_ps(rgba, mm_pixel);
-        rgba[3] = alphares;
+        _mm_storeu_ps(out, mm_pixel);
+        out[3] = alphares;
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 #else
     const float inScale = m_inScale * m_log2_base;
 
-    // TODO: Add the ability to not overwrite the input buffer.
-    // At that time, memory align the output buffer (see OCIO_ALIGN).
-    float * rgba = rgbaBuffer;
-
     for (long idx = 0; idx<numPixels; ++idx)
     {
-        ApplyScale(rgba, inScale);
-        ApplyExp2(rgba);
-        ApplyScale(rgba, m_outScale);
+        const float alphares = in[3] * m_alphaScale;
 
-        rgba[3] = rgba[3] * m_alphaScale;
+        // NB: 'in' and 'out' could be pointers to the same memory buffer.
+        memcpy(out, in, 4 * sizeof(float));
 
-        rgba += 4;
+        ApplyScale(out, inScale);
+        ApplyExp2(out);
+        ApplyScale(out, m_outScale);
+
+        out[3] = alphares;
+
+        in  += 4;
+        out += 4;
     }
 #endif
 }
@@ -372,7 +377,7 @@ Log2LinRenderer::Log2LinRenderer(ConstLogOpDataRcPtr & log)
     updateData(log);
 }
 
-void Log2LinRenderer::apply(float * rgbaBuffer, long numPixels) const
+void Log2LinRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
     //
     // out = ( pow( base, (in*inScale - logOffset) / logSlope ) - linOffset )
@@ -402,6 +407,9 @@ void Log2LinRenderer::apply(float * rgbaBuffer, long numPixels) const
         m_outScale / (float)m_paramsG[LIN_SIDE_SLOPE],
         m_outScale / (float)m_paramsB[LIN_SIDE_SLOPE] };
 
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
 #ifdef USE_SSE
     const __m128 mm_inscalekinv = _mm_set_ps(
         0.0f, inscalekinv[2], inscalekinv[1], inscalekinv[0]);
@@ -414,42 +422,42 @@ void Log2LinRenderer::apply(float * rgbaBuffer, long numPixels) const
 
     __m128 mm_pixel;
 
-    // TODO: Add the ability to not overwrite the input buffer.
-    // At that time, memory align the output buffer (see OCIO_ALIGN).
-    float * rgba = rgbaBuffer;
-
     for (long idx = 0; idx < numPixels; ++idx)
     {
-        mm_pixel = _mm_set_ps(0.0f, rgba[2], rgba[1], rgba[0]);
+        mm_pixel = _mm_set_ps(0.0f, in[2], in[1], in[0]);
         mm_pixel = _mm_add_ps(mm_pixel, mm_minuskb);
         mm_pixel = _mm_mul_ps(mm_pixel, mm_inscalekinv);
         mm_pixel = sseExp2(mm_pixel);
         mm_pixel = _mm_add_ps(mm_pixel, mm_minusb);
         mm_pixel = _mm_mul_ps(mm_pixel, mm_outscaleminv);
 
-        const float alphares = rgba[3] * m_alphaScale;
+        const float alphares = in[3] * m_alphaScale;
 
-        _mm_storeu_ps(rgba, mm_pixel);
-        rgba[3] = alphares;
+        _mm_storeu_ps(out, mm_pixel);
+        out[3] = alphares;
 
-        rgba += 4;
+        out += 4;
+        in  += 4;
     }
 #else
-    // TODO: Add the ability to not overwrite the input buffer.
-    // At that time, memory align the output buffer (see OCIO_ALIGN).
-    float * rgba = rgbaBuffer;
 
     for (long idx = 0; idx<numPixels; ++idx)
     {
-        ApplyAdd(rgba, minuskb);
-        ApplyScale(rgba, inscalekinv);
-        ApplyExp2(rgba);
-        ApplyAdd(rgba, minusb);
-        ApplyScale(rgba, outscaleminv);
+        const float alphares = in[3] * m_alphaScale;
 
-        rgba[3] = rgba[3] * m_alphaScale;
+        // NB: 'in' and 'out' could be pointers to the same memory buffer.
+        memcpy(out, in, 4 * sizeof(float));
 
-        rgba += 4;
+        ApplyAdd(out, minuskb);
+        ApplyScale(out, inscalekinv);
+        ApplyExp2(out);
+        ApplyAdd(out, minusb);
+        ApplyScale(out, outscaleminv);
+
+        out[3] = alphares;
+
+        out += 4;
+        in  += 4;
     }
 #endif
 }
@@ -461,7 +469,7 @@ Lin2LogRenderer::Lin2LogRenderer(ConstLogOpDataRcPtr & log)
     updateData(log);
 }
 
-void Lin2LogRenderer::apply(float * rgbaBuffer, long numPixels) const
+void Lin2LogRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
     // out = ( logSlope * log( base, max( minValue, (in*linSlope*inScale + linOffset) ) ) + logOffset ) * outscale
     //
@@ -487,6 +495,9 @@ void Lin2LogRenderer::apply(float * rgbaBuffer, long numPixels) const
         (float)m_paramsG[LOG_SIDE_OFFSET] * m_outScale,
         (float)m_paramsB[LOG_SIDE_OFFSET] * m_outScale };
 
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
 #ifdef USE_SSE
     const __m128 mm_minValue = _mm_set1_ps(minValue);
 
@@ -501,13 +512,9 @@ void Lin2LogRenderer::apply(float * rgbaBuffer, long numPixels) const
 
     __m128 mm_pixel;
 
-    // TODO: Add the ability to not overwrite the input buffer.
-    // At that time, memory align the output buffer (see OCIO_ALIGN).
-    float * rgba = rgbaBuffer;
-
     for (long idx = 0; idx<numPixels; ++idx)
     {
-        mm_pixel = _mm_set_ps(0.0f, rgba[2], rgba[1], rgba[0]);
+        mm_pixel = _mm_set_ps(0.0f, in[2], in[1], in[0]);
         mm_pixel = _mm_mul_ps(mm_pixel, mm_inscalem);
         mm_pixel = _mm_add_ps(mm_pixel, mm_b);
         mm_pixel = _mm_max_ps(mm_pixel, mm_minValue);
@@ -515,30 +522,35 @@ void Lin2LogRenderer::apply(float * rgbaBuffer, long numPixels) const
         mm_pixel = _mm_mul_ps(mm_pixel, mm_klogoutscale);
         mm_pixel = _mm_add_ps(mm_pixel, mm_kboutscale);
 
-        const float alphares = rgba[3] * m_alphaScale;
+        const float alphares = in[3] * m_alphaScale;
 
-        _mm_storeu_ps(rgba, mm_pixel);
-        rgba[3] = alphares;
+        _mm_storeu_ps(out, mm_pixel);
+        out[3] = alphares;
 
-        rgba += 4;
+        out += 4;
+        in  += 4;
     }
 #else
-    // TODO: Add the ability to not overwrite the input buffer.
-    // At that time, memory align the output buffer (see OCIO_ALIGN).
-    float * rgba = rgbaBuffer;
+    if(in!=out)
+    {
+        memcpy(out, in, numPixels * 4 * sizeof(float));
+    }
 
     for (long idx = 0; idx<numPixels; ++idx)
     {
-        ApplyScale(rgba, inscalem);
-        ApplyAdd(rgba, b);
-        ApplyMax(rgba, minValue);
-        ApplyLog2(rgba);
-        ApplyScale(rgba, klogoutscale);
-        ApplyAdd(rgba, kboutscale);
+        const float alphares = in[3] * m_alphaScale;
 
-        rgba[3] = rgba[3] * m_alphaScale;
+        ApplyScale(out, inscalem);
+        ApplyAdd(out, b);
+        ApplyMax(out, minValue);
+        ApplyLog2(out);
+        ApplyScale(out, klogoutscale);
+        ApplyAdd(out, kboutscale);
 
-        rgba += 4;
+        out[3] = alphares;
+
+        out += 4;
+        in  += 4;
     }
 #endif
 }
@@ -573,7 +585,7 @@ void TestLog(float logBase)
         logBase, OCIO::TRANSFORM_DIR_FORWARD);
 
     OCIO::OpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
-    pRenderer->apply(rgba, 8);
+    pRenderer->apply(rgba, rgba, 8);
 
     const float minValue = std::numeric_limits<float>::min();
 
@@ -645,7 +657,7 @@ void TestAntiLog(float logBase)
         logBase, OCIO::TRANSFORM_DIR_INVERSE);
 
     OCIO::OpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
-    pRenderer->apply(rgba, 8);
+    pRenderer->apply(rgba, rgba, 8);
 
     // Relative error tolerance for the log2 approximation.
     const float rtol = powf(2.f, -14.f);
@@ -761,7 +773,7 @@ OIIO_ADD_TEST(LogOpCPU, log2lin_test)
         dir, base, paramsR, paramsG, paramsB);
 
     OCIO::OpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
-    pRenderer->apply(rgba, 8);
+    pRenderer->apply(rgba, rgba, 8);
 
     const OCIO::LogUtil::CTFParams::Params noParam;
 
@@ -890,7 +902,7 @@ OIIO_ADD_TEST(LogOpCPU, lin2log_test)
         dir, base, paramsR, paramsG, paramsB);
 
     OCIO::OpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
-    pRenderer->apply(rgba, 8);
+    pRenderer->apply(rgba, rgba, 8);
 
     const OCIO::LogUtil::CTFParams::Params noParam;
 

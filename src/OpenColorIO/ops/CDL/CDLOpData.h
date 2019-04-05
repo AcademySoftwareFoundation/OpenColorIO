@@ -180,6 +180,8 @@ public:
 
     virtual ~CDLOpData();
 
+    CDLOpDataRcPtr clone() const;
+
     bool operator==(const OpData& other) const override;
 
     inline Style getStyle() const { return m_style; }

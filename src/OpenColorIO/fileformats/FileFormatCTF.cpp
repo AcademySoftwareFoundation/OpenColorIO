@@ -153,6 +153,12 @@ void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
     info.extension = "clf";
     info.capabilities = FORMAT_CAPABILITY_READ;
     formatInfoVec.push_back(info);
+
+    FormatInfo info2;
+    info2.name = "Color Transform Format";
+    info2.extension = "ctf";
+    info2.capabilities = FORMAT_CAPABILITY_READ;
+    formatInfoVec.push_back(info2);
 }
 
 class XMLParserHelper

@@ -31,29 +31,31 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "BitDepthUtils.h"
 
+namespace
+{
+
+static const std::string errBDNotSupported("Bit depth is not supported: ");
+
+};
+
 OCIO_NAMESPACE_ENTER
 {
-    static const std::string errBDNotSupported("Bit depth is not supported: ");
-
     float GetBitDepthMaxValue(BitDepth in)
     {
         switch(in)
         {
             case BIT_DEPTH_UINT8:
-                return 255.0f;
-
+                return (float)BitDepthInfo<BIT_DEPTH_UINT8>::maxValue;
             case BIT_DEPTH_UINT10:
-                return 1023.0f;
-
+                return (float)BitDepthInfo<BIT_DEPTH_UINT10>::maxValue;
             case BIT_DEPTH_UINT12:
-                return 4095.0f;
-
+                return (float)BitDepthInfo<BIT_DEPTH_UINT12>::maxValue;
             case BIT_DEPTH_UINT16:
-                return 65535.0f;
-
+                return (float)BitDepthInfo<BIT_DEPTH_UINT16>::maxValue;
             case BIT_DEPTH_F16:
+                return (float)BitDepthInfo<BIT_DEPTH_F16>::maxValue;
             case BIT_DEPTH_F32:
-                return 1.0f;
+                return (float)BitDepthInfo<BIT_DEPTH_F32>::maxValue;
 
             case BIT_DEPTH_UNKNOWN:
             case BIT_DEPTH_UINT14:
@@ -74,18 +76,21 @@ OCIO_NAMESPACE_ENTER
         switch(in)
         {
             case BIT_DEPTH_UINT8:
+                return BitDepthInfo<BIT_DEPTH_UINT8>::isFloat;
             case BIT_DEPTH_UINT10:
+                return BitDepthInfo<BIT_DEPTH_UINT10>::isFloat;
             case BIT_DEPTH_UINT12:
-            case BIT_DEPTH_UINT14:
+                return BitDepthInfo<BIT_DEPTH_UINT12>::isFloat;
             case BIT_DEPTH_UINT16:
-            case BIT_DEPTH_UINT32:
-                return false;
-
+                return BitDepthInfo<BIT_DEPTH_UINT16>::isFloat;
             case BIT_DEPTH_F16:
+                return BitDepthInfo<BIT_DEPTH_F16>::isFloat;
             case BIT_DEPTH_F32:
-                return true;
+                return BitDepthInfo<BIT_DEPTH_F32>::isFloat;
 
             case BIT_DEPTH_UNKNOWN:
+            case BIT_DEPTH_UINT14:
+            case BIT_DEPTH_UINT32:
             default:
             {
                 std::string err(errBDNotSupported);
@@ -104,36 +109,40 @@ OCIO_NAMESPACE_EXIT
 
 #ifdef OCIO_UNIT_TEST
 
-OCIO_NAMESPACE_USING
+namespace OCIO = OCIO_NAMESPACE;
 
 #include "unittest.h"
 
 OIIO_ADD_TEST(BitDepthUtils, GetBitDepthMaxValue)
 {
-    OIIO_CHECK_EQUAL(GetBitDepthMaxValue(BIT_DEPTH_UINT8), 255.0f);
-    OIIO_CHECK_EQUAL(GetBitDepthMaxValue(BIT_DEPTH_UINT16), 65535.0f);
+    OIIO_CHECK_EQUAL(OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_UINT8), 255.0f);
+    OIIO_CHECK_EQUAL(OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_UINT16), 65535.0f);
 
-    OIIO_CHECK_EQUAL(GetBitDepthMaxValue(BIT_DEPTH_F16), 1.0f);
-    OIIO_CHECK_EQUAL(GetBitDepthMaxValue(BIT_DEPTH_F32), 1.0f);
+    OIIO_CHECK_EQUAL(OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_F16), 1.0f);
+    OIIO_CHECK_EQUAL(OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_F32), 1.0f);
 
     OIIO_CHECK_THROW_WHAT(
-        GetBitDepthMaxValue((BitDepth)42), Exception, "not supported");
+        OCIO::GetBitDepthMaxValue((OCIO::BitDepth)42), OCIO::Exception, "not supported");
 }
 
 OIIO_ADD_TEST(BitDepthUtils, IsFloatBitDepth)
 {
-    OIIO_CHECK_ASSERT(!IsFloatBitDepth(BIT_DEPTH_UINT8));
-    OIIO_CHECK_ASSERT(!IsFloatBitDepth(BIT_DEPTH_UINT10));
-    OIIO_CHECK_ASSERT(!IsFloatBitDepth(BIT_DEPTH_UINT12));
-    OIIO_CHECK_ASSERT(!IsFloatBitDepth(BIT_DEPTH_UINT14));
-    OIIO_CHECK_ASSERT(!IsFloatBitDepth(BIT_DEPTH_UINT16));
-    OIIO_CHECK_ASSERT(!IsFloatBitDepth(BIT_DEPTH_UINT32));
+    OIIO_CHECK_ASSERT(!OCIO::IsFloatBitDepth(OCIO::BIT_DEPTH_UINT8));
+    OIIO_CHECK_ASSERT(!OCIO::IsFloatBitDepth(OCIO::BIT_DEPTH_UINT10));
+    OIIO_CHECK_ASSERT(!OCIO::IsFloatBitDepth(OCIO::BIT_DEPTH_UINT12));
+    OIIO_CHECK_ASSERT(!OCIO::IsFloatBitDepth(OCIO::BIT_DEPTH_UINT16));
     
-    OIIO_CHECK_ASSERT(IsFloatBitDepth(BIT_DEPTH_F16));
-    OIIO_CHECK_ASSERT(IsFloatBitDepth(BIT_DEPTH_F32));
+    OIIO_CHECK_ASSERT(OCIO::IsFloatBitDepth(OCIO::BIT_DEPTH_F16));
+    OIIO_CHECK_ASSERT(OCIO::IsFloatBitDepth(OCIO::BIT_DEPTH_F32));
 
     OIIO_CHECK_THROW_WHAT(
-        IsFloatBitDepth((BitDepth)42), Exception, "not supported");
+        OCIO::IsFloatBitDepth(OCIO::BIT_DEPTH_UINT14), OCIO::Exception, "not supported");
+
+    OIIO_CHECK_THROW_WHAT(
+        OCIO::IsFloatBitDepth(OCIO::BIT_DEPTH_UINT32), OCIO::Exception, "not supported");
+
+    OIIO_CHECK_THROW_WHAT(
+        OCIO::IsFloatBitDepth((OCIO::BitDepth)42), OCIO::Exception, "not supported");
 }
 
 #endif

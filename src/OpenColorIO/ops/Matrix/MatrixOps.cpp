@@ -80,7 +80,6 @@ OCIO_NAMESPACE_ENTER
             void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
             
             void finalize() override;
-            void apply(float* rgbaBuffer, long numPixels) const override;
             
             void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
         
@@ -92,7 +91,6 @@ OCIO_NAMESPACE_ENTER
             MatrixOffsetOp() = delete;
 
             TransformDirection m_direction;
-            OpCPURcPtr m_cpu;
         };
         
         
@@ -120,7 +118,6 @@ OCIO_NAMESPACE_ENTER
         MatrixOffsetOp::MatrixOffsetOp(MatrixOpDataRcPtr & matrix,
                                        TransformDirection direction)
             : Op()
-            , m_cpu(std::make_shared<NoOpCPU>())
             , m_direction(direction)
         {
             if (m_direction == TRANSFORM_DIR_UNKNOWN)
@@ -223,7 +220,9 @@ OCIO_NAMESPACE_ENTER
             matrixData()->validate();
             matrixData()->finalize();
 
-            m_cpu = GetMatrixRenderer(matrixData());
+            const MatrixOffsetOp & constThis = *this;
+            ConstMatrixOpDataRcPtr m = constThis.matrixData();
+            m_cpuOp = GetMatrixRenderer(m);
 
             // Create the cacheID
             std::ostringstream cacheIDStream;
@@ -235,11 +234,6 @@ OCIO_NAMESPACE_ENTER
             m_cacheID = cacheIDStream.str();
         }
         
-        void MatrixOffsetOp::apply(float* rgbaBuffer, long numPixels) const
-        {
-            m_cpu->apply(rgbaBuffer, numPixels);
-        }
-
         void MatrixOffsetOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
         {
             if (m_direction == TRANSFORM_DIR_INVERSE)

@@ -302,12 +302,11 @@ namespace
             OCIOGPUTest::CustomValues tmp;
             tmp.m_originalInputValueSize = predefinedNumEntries;
             tmp.m_inputValues 
-                = OCIOGPUTest::CustomValues::Values(predefinedNumEntries, 
-                                                    test->getExpectedMinimalValue());
+                = OCIOGPUTest::CustomValues::Values(predefinedNumEntries, min);
 
             unsigned idx = 0;
             unsigned numEntries = predefinedNumEntries;
-            const unsigned numTests = g_components*g_components;
+            const unsigned numTests = g_components * g_components;
             if (testNaN)
             {
                 const float qnan = std::numeric_limits<float>::quiet_NaN();
@@ -319,20 +318,20 @@ namespace
             if (testInfinity)
             {
                 const float posinf = std::numeric_limits<float>::infinity();
-                SetTestValue(&g_image[idx], posinf, g_components);
+                SetTestValue(&tmp.m_inputValues[idx], posinf, g_components);
                 idx += numTests;
                 numEntries -= numTests;
 
                 const float neginf = -std::numeric_limits<float>::infinity();
-                SetTestValue(&g_image[idx], neginf, g_components);
+                SetTestValue(&tmp.m_inputValues[idx], neginf, g_components);
                 idx += numTests;
                 numEntries -= numTests;
             }
 
-            const float step 
-                = std::max(range / numEntries, test->getExpectedMinimalValue());
+            // Compute the value step based on the remaining number of values.
+            const float step = range / float(numEntries);
 
-            for(; idx<numEntries; ++idx)
+            for(; idx<predefinedNumEntries; ++idx)
             {
                 tmp.m_inputValues[idx] = min + step * float(idx);
             }
@@ -362,8 +361,9 @@ namespace
             {
                 OCIOGPUTest::CustomValues values;
                 values.m_originalInputValueSize = existingInputValues.size();
-                values.m_inputValues.resize(predefinedNumEntries, 
-                                            test->getExpectedMinimalValue());
+
+                // Resize the buffer to fit the expected input image size.
+                values.m_inputValues.resize(predefinedNumEntries, 0);
 
                 for(size_t idx=0; idx<numInputValues; ++idx)
                 {
@@ -495,7 +495,9 @@ namespace
                     << "\tand gpu = {" 
                     << gpuImage[4*idx+0] << ", " << gpuImage[4*idx+1] << ", "
                     << gpuImage[4*idx+2] << ", " << gpuImage[4*idx+3] << "}\n"
-                    << "\twith epsilon=" 
+                    << "\twith " 
+                    << (test->getRelativeComparison() ? "relative " : "absolute ")
+                    << "epsilon=" 
                     << epsilon;
                 throw OCIO::Exception(err.str().c_str());
             }

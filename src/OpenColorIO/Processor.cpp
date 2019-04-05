@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "CPUProcessor.h"
 #include "GpuShader.h"
 #include "GpuShaderUtils.h"
 #include "HashUtils.h"
@@ -196,6 +197,11 @@ OCIO_NAMESPACE_ENTER
         getImpl()->extractGpuShaderInfo(shaderDesc);
     }
     
+    ConstCPUProcessorRcPtr Processor::getCPUProcessor(PixelFormat in, PixelFormat out) const
+    {
+        return getImpl()->getCPUProcessor(in, out);
+    }
+
     //////////////////////////////////////////////////////////////////////////
     
     
@@ -274,7 +280,7 @@ OCIO_NAMESPACE_ENTER
             const OpRcPtrVec::size_type max = src.size();
             for(OpRcPtrVec::size_type i=0; i<max; ++i)
             {
-                src[i]->apply(&lut3D[0], lut3DNumPixels);
+                src[i]->apply(&lut3D[0], &lut3D[0], lut3DNumPixels);
             }
             
             // Convert the RGBA image to an RGB image, in place.           
@@ -360,7 +366,7 @@ OCIO_NAMESPACE_ENTER
         {
             op->apply(rgbaBuffer, 1);
         }
-        
+
         pixel[0] = rgbaBuffer[0];
         pixel[1] = rgbaBuffer[1];
         pixel[2] = rgbaBuffer[2];
@@ -479,8 +485,16 @@ OCIO_NAMESPACE_ENTER
 
     ///////////////////////////////////////////////////////////////////////////
     
-    
-    
+    ConstCPUProcessorRcPtr Processor::Impl::getCPUProcessor(PixelFormat in, PixelFormat out) const
+    {
+        CPUProcessorRcPtr cpu = CPUProcessorRcPtr(new CPUProcessor(), &CPUProcessor::deleter);
+        cpu->getImpl()->finalize(m_ops, in, out);
+        return cpu;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////
+
     void Processor::Impl::addColorSpaceConversion(const Config & config,
                                  const ConstContextRcPtr & context,
                                  const ConstColorSpaceRcPtr & srcColorSpace,
