@@ -61,20 +61,20 @@ OCIO_NAMESPACE_ENTER
                         TransformDirection direction);
             virtual ~TruelightOp();
             
-            virtual OpRcPtr clone() const;
+            OpRcPtr clone() const override;
             
-            virtual std::string getInfo() const;
-            virtual std::string getCacheID() const;
+            std::string getInfo() const override;
+            std::string getCacheID() const override;
             
-            virtual bool isNoOp() const;
-            virtual bool isSameType(ConstOpRcPtr & op) const;
-            virtual bool isInverse(ConstOpRcPtr & op) const;
-            virtual bool hasChannelCrosstalk() const;
+            bool isNoOp() const override;
+            bool isSameType(ConstOpRcPtr & op) const override;
+            bool isInverse(ConstOpRcPtr & op) const override;
+            bool hasChannelCrosstalk() const override;
             
-            virtual void finalize();
+            void finalize() override;
             void apply(void * rgbaBuffer, long numPixels) const override;
             
-            virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
+            void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
         
         private:
             TransformDirection m_direction;
