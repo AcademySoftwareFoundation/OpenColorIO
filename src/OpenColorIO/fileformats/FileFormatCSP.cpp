@@ -44,6 +44,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
+#include "Platform.h"
+
 
 OCIO_NAMESPACE_ENTER
 {

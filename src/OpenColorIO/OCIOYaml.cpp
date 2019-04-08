@@ -1307,26 +1307,26 @@ OCIO_NAMESPACE_ENTER
                 
                 if(key == "matrix")
                 {
-                    std::vector<float> val;
+                    std::vector<double> val;
                     load(second, val);
                     if(val.size() != 16)
                     {
                         std::ostringstream os;
                         os << "'matrix' values must be 16 ";
-                        os << "floats. Found '" << val.size() << "'.";
+                        os << "numbers. Found '" << val.size() << "'.";
                         throwValueError(node.Tag(), first, os.str());
                     }
                     t->setMatrix(&val[0]);
                 }
                 else if(key == "offset")
                 {
-                    std::vector<float> val;
+                    std::vector<double> val;
                     load(second, val);
                     if(val.size() != 4)
                     {
                         std::ostringstream os;
                         os << "'offset' values must be 4 ";
-                        os << "floats. Found '" << val.size() << "'.";
+                        os << "numbers. Found '" << val.size() << "'.";
                         throwValueError(node.Tag(), first, os.str());
                     }
                     t->setOffset(&val[0]);
@@ -1349,7 +1349,7 @@ OCIO_NAMESPACE_ENTER
             out << YAML::VerbatimTag("MatrixTransform");
             out << YAML::Flow << YAML::BeginMap;
             
-            std::vector<float> matrix(16, 0.0);
+            std::vector<double> matrix(16, 0.0);
             t->getMatrix(&matrix[0]);
             if(!IsM44Identity(&matrix[0]))
             {
@@ -1357,7 +1357,7 @@ OCIO_NAMESPACE_ENTER
                 out << YAML::Value << YAML::Flow << matrix;
             }
             
-            std::vector<float> offset(4, 0.0);
+            std::vector<double> offset(4, 0.0);
             t->getOffset(&offset[0]);
             if(!IsVecEqualToZero(&offset[0],4))
             {

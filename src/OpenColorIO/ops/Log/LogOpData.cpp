@@ -66,7 +66,7 @@ void ValidateParams(const LogOpData::Params & params, TransformDirection directi
     if (direction != TRANSFORM_DIR_UNKNOWN)
     {
 
-        if (IsScalarEqualToZeroFlt(params[LIN_SIDE_SLOPE]))
+        if (IsScalarEqualToZero(params[LIN_SIDE_SLOPE]))
         {
             std::ostringstream oss;
             oss << "Log: Invalid linear slope value '";
@@ -74,7 +74,7 @@ void ValidateParams(const LogOpData::Params & params, TransformDirection directi
             oss << "', linear slope cannot be 0.";
             throw Exception(oss.str().c_str());
         }
-        if (IsScalarEqualToZeroFlt(params[LOG_SIDE_SLOPE]))
+        if (IsScalarEqualToZero(params[LOG_SIDE_SLOPE]))
         {
             std::ostringstream oss;
             oss << "Log: Invalid log slope value '";

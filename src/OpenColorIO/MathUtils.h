@@ -30,15 +30,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_MATHUTILS_H
 #define INCLUDED_OCIO_MATHUTILS_H
 
-#include <cmath>
-#include <vector>
 #include <algorithm>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ilmbase/half.h"
-#include "Op.h"
-#include "Platform.h"
+
 
 OCIO_NAMESPACE_ENTER
 {
@@ -147,15 +144,16 @@ inline T Clamp(T a, T min, T max)
 float SanitizeFloat(float f);
 
 // Checks within fltmin tolerance
-bool IsScalarEqualToZero(float v);
-bool IsScalarEqualToOne(float v);
-bool IsScalarEqualToZeroFlt(double v);
-bool IsScalarEqualToOneFlt(double v);
+template<typename T>
+bool IsScalarEqualToZero(T v);
+template<typename T>
+bool IsScalarEqualToOne(T v);
 
 // Are all the vector components the specified value?
-bool IsVecEqualToZero(const float* v, int size);
-bool IsVecEqualToOne(const float* v, int size);
-bool IsVecEqualToOneFlt(const double* v, int size);
+template<typename T>
+bool IsVecEqualToZero(const T * v, unsigned int size);
+template<typename T>
+bool IsVecEqualToOne(const T * v, unsigned int size);
 
 // Is at least one of the specified components equal to 0?
 bool VecContainsZero(const float* v, int size);
@@ -163,18 +161,9 @@ bool VecContainsOne(const float* v, int size);
 
 // Are two vectors equal? (Same size, same values?)
 template<typename T>
-bool VecsEqualWithRelError(const T * v1, int size1,
-                           const T * v2, int size2,
-                           T e)
-{
-    if (size1 != size2) return false;
-    for (int i = 0; i<size1; ++i)
-    {
-        if (!EqualWithRelError(v1[i], v2[i], e)) return false;
-    }
-
-    return true;
-}
+bool VecsEqualWithRelError(const T * v1, unsigned int size1,
+                           const T * v2, unsigned int size2,
+                           T e);
 
 inline double GetHalfMax()
 {
@@ -211,7 +200,8 @@ float GetSafeScalarInverse(float v, float defaultValue = 1.0);
 bool GetM44Inverse(float* mout, const float* m);
 
 // Is an identity matrix? (with fltmin tolerance)
-bool IsM44Identity(const float* m);
+template<typename T>
+bool IsM44Identity(const T * m);
 
 // Is this a purely diagonal matrix?
 bool IsM44Diagonal(const float* m);
