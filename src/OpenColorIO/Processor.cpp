@@ -264,7 +264,7 @@ OCIO_NAMESPACE_ENTER
             // Apply the lattice ops to it
             for(auto & op : src)
             {
-                src[i]->apply(&lut3D[0], &lut3D[0], lut3DNumPixels);
+                op->apply(&lut3D[0], &lut3D[0], lut3DNumPixels);
             }
             
             // Convert the RGBA image to an RGB image, in place.           

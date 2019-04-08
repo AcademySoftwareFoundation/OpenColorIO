@@ -72,8 +72,9 @@ OCIO_NAMESPACE_ENTER
             bool hasChannelCrosstalk() const override;
             
             void finalize() override;
-            void apply(float* rgbaBuffer, long numPixels) const override;
-            
+            void apply(void * rgbaBuffer, long numPixels) const override;
+            void apply(const void * inImg, void * outImg, long numPixels) const override;
+
             void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
         
             BitDepth getInputBitDepth() const override { return BIT_DEPTH_F32; }
@@ -351,14 +352,35 @@ OCIO_NAMESPACE_ENTER
             m_cacheID = cacheIDStream.str();
         }
         
-        void TruelightOp::apply(float* rgbaBuffer, long numPixels) const
+        void TruelightOp::apply(void * rgbaBuffer, long numPixels) const
         {
+            float * img = reinterpret_cast<float *>(rgbaBuffer);
+
             for(long pixelIndex = 0; pixelIndex < numPixels; ++pixelIndex)
             {
 #ifdef OCIO_TRUELIGHT_SUPPORT
-                TruelightInstanceTransformF(m_truelight, rgbaBuffer);
+                TruelightInstanceTransformF(m_truelight, img);
 #endif // OCIO_TRUELIGHT_SUPPORT
-                rgbaBuffer += 4; // skip alpha
+
+                img += 4; // skip alpha
+            }
+        }
+        
+        void TruelightOp::apply(const void * inImg, void * outImg, long numPixels) const
+        {
+            const float * in = reinterpret_cast<const float *>(inImg);
+            float * out = reinterpret_cast<float *>(outImg);
+
+            for(long pixelIndex = 0; pixelIndex < numPixels; ++pixelIndex)
+            {
+                memcpy(out, in, 4 * sizeof(float));
+
+#ifdef OCIO_TRUELIGHT_SUPPORT
+                TruelightInstanceTransformF(m_truelight, out);
+#endif // OCIO_TRUELIGHT_SUPPORT
+
+                in  += 4; // skip alpha
+                out += 4;
             }
         }
         
