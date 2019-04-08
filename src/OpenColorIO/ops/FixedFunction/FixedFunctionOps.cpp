@@ -67,14 +67,8 @@ public:
     virtual void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
 
     virtual void finalize() override;
-    virtual void apply(float * rgbaBuffer, long numPixels) const override;
 
     virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
-
-// Note: Only needed by unit tests.
-#ifdef OCIO_UNIT_TEST
-    OpCPURcPtr getCPUOp() const { return m_cpu; }
-#endif
 
 protected:
     ConstFixedFunctionOpDataRcPtr fnData() const { return DynamicPtrCast<const FixedFunctionOpData>(data()); }
@@ -82,15 +76,11 @@ protected:
 
     FixedFunctionOp() = delete;
     FixedFunctionOp(const FixedFunctionOp &) = delete;
-
-private:            
-    OpCPURcPtr m_cpu;
 };
 
 
 FixedFunctionOp::FixedFunctionOp(FixedFunctionOpDataRcPtr & func)
     :   Op()
-    ,   m_cpu(std::make_shared<NoOpCPU>())
 {
     data() = func;
 }
@@ -154,7 +144,7 @@ void FixedFunctionOp::finalize()
 
     const FixedFunctionOp & constThis = *this;
     ConstFixedFunctionOpDataRcPtr fnOpData = constThis.fnData();
-    m_cpu = GetFixedFunctionCPURenderer(fnOpData);
+    m_cpuOp = GetFixedFunctionCPURenderer(fnOpData);
 
     // Create the cacheID
     std::ostringstream cacheIDStream;
@@ -163,11 +153,6 @@ void FixedFunctionOp::finalize()
     cacheIDStream << ">";
     
     m_cacheID = cacheIDStream.str();
-}
-
-void FixedFunctionOp::apply(float * rgbaBuffer, long numPixels) const
-{
-    m_cpu->apply(rgbaBuffer, numPixels);
 }
 
 void FixedFunctionOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
@@ -273,7 +258,7 @@ OIIO_ADD_TEST(FixedFunctionOps, glow03_cpu_engine)
     OCIO::FixedFunctionOp func(funcData);
     OIIO_CHECK_NO_THROW(func.finalize());
 
-    OCIO::OpCPURcPtr cpuOp = func.getCPUOp();
+    OCIO::ConstOpCPURcPtr cpuOp = func.getCPUOp();
     const OCIO::OpCPU & c = *cpuOp;
     const std::string typeName(typeid(c).name());
     OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "Renderer_ACES_Glow03_Fwd"));
@@ -293,7 +278,7 @@ OIIO_ADD_TEST(FixedFunctionOps, darktodim10_cpu_engine)
     OCIO::FixedFunctionOp func(funcData);
     OIIO_CHECK_NO_THROW(func.finalize());
 
-    OCIO::OpCPURcPtr cpuOp = func.getCPUOp();
+    OCIO::ConstOpCPURcPtr cpuOp = func.getCPUOp();
     const OCIO::OpCPU & c = *cpuOp;
     const std::string typeName(typeid(c).name());
     OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "Renderer_ACES_DarkToDim10_Fwd"));

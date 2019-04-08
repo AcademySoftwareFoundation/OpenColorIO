@@ -88,6 +88,12 @@ OCIO_NAMESPACE_ENTER
     //!cpp:type::
     typedef OCIO_SHARED_PTR<Processor> ProcessorRcPtr;
     
+    class OCIOEXPORT CPUProcessor;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const CPUProcessor> ConstCPUProcessorRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<CPUProcessor> CPUProcessorRcPtr;
+    
     class OCIOEXPORT ProcessorMetadata;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<const ProcessorMetadata> ConstProcessorMetadataRcPtr;
@@ -304,17 +310,31 @@ OCIO_NAMESPACE_ENTER
 
     //!cpp:type::
     enum BitDepth {
-        BIT_DEPTH_UNKNOWN = 0,
-        BIT_DEPTH_UINT8,
-        BIT_DEPTH_UINT10,
-        BIT_DEPTH_UINT12,
-        BIT_DEPTH_UINT14,
-        BIT_DEPTH_UINT16,
-        BIT_DEPTH_UINT32,
-        BIT_DEPTH_F16,
-        BIT_DEPTH_F32
+        BIT_DEPTH_UNKNOWN = 0x0000,
+        BIT_DEPTH_UINT8   = 0x0001,
+        BIT_DEPTH_UINT10  = 0x0002,
+        BIT_DEPTH_UINT12  = 0x0004,
+        BIT_DEPTH_UINT14  = 0x0008,
+        BIT_DEPTH_UINT16  = 0x0010,
+        BIT_DEPTH_UINT32  = 0x0020,
+        BIT_DEPTH_F16     = 0x0040,
+        BIT_DEPTH_F32     = 0x0080
     };
     
+    //!cpp:type::
+    enum ChannelOrdering {
+        CHANNEL_ORDERING_RGBA = 0x0100,
+        CHANNEL_ORDERING_BGRA = 0x0200
+    };
+
+    // TODO: This is the first step of the complete feature, 
+    //       later pull requests will add more pixel formats.
+
+    //!cpp:type:: Used when there is a choice of pixel format for the CPU processing.
+    enum PixelFormat {
+        PIXEL_FORMAT_RGBA_F32 = (CHANNEL_ORDERING_RGBA|BIT_DEPTH_F32),
+    };
+
     //!cpp:type::
     enum Allocation {
         ALLOCATION_UNKNOWN = 0,

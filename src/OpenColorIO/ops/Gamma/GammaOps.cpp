@@ -170,29 +170,23 @@ public:
     virtual void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const;
     
     virtual void finalize();
-    virtual void apply(float * rgbaBuffer, long numPixels) const;
     
     virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
 
 protected:
     ConstGammaOpDataRcPtr gammaData() const { return DynamicPtrCast<const GammaOpData>(data()); }
     GammaOpDataRcPtr gammaData() { return DynamicPtrCast<GammaOpData>(data()); }
-
-private:
-    OpCPURcPtr m_cpu;
 };
 
 
 GammaOp::GammaOp()
     :   Op()
-    ,   m_cpu(new NoOpCPU)
 {           
     data().reset(new GammaOpData());
 }
 
 GammaOp::GammaOp(GammaOpDataRcPtr & gamma)
     :   Op()
-    ,   m_cpu(new NoOpCPU)
 {
     data() = gamma;
 }
@@ -207,7 +201,6 @@ GammaOp::GammaOp(BitDepth inBitDepth,
                  GammaOpData::Params blue,
                  GammaOpData::Params alpha)
     :   Op()
-    ,   m_cpu(new NoOpCPU)
 {
     GammaOpDataRcPtr gamma
         = std::make_shared<GammaOpData>(inBitDepth, outBitDepth,
@@ -278,7 +271,7 @@ void GammaOp::finalize()
     gammaData()->validate();
     gammaData()->finalize();
 
-    m_cpu = GetGammaRenderer(gammaData());
+    m_cpuOp = GetGammaRenderer(gammaData());
 
     // Create the cacheID
     std::ostringstream cacheIDStream;
@@ -287,11 +280,6 @@ void GammaOp::finalize()
     cacheIDStream << ">";
 
     m_cacheID = cacheIDStream.str();
-}
-
-void GammaOp::apply(float * rgbaBuffer, long numPixels) const
-{
-    m_cpu->apply(rgbaBuffer, numPixels);
 }
 
 void GammaOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
