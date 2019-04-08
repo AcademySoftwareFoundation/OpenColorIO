@@ -72,13 +72,15 @@ OCIO_NAMESPACE_ENTER
             virtual bool hasChannelCrosstalk() const;
             
             virtual void finalize();
-            virtual void apply(float* rgbaBuffer, long numPixels) const;
+            void apply(void * rgbaBuffer, long numPixels) const override;
             
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
         
         private:
             TransformDirection m_direction;
-            void *m_truelight;
+#ifdef OCIO_TRUELIGHT_SUPPORT
+            void * m_truelight = nullptr;
+#endif
             std::string m_configroot;
             std::string m_profile;
             std::string m_camera;
@@ -345,14 +347,17 @@ OCIO_NAMESPACE_ENTER
             m_cacheID = cacheIDStream.str();
         }
         
-        void TruelightOp::apply(float* rgbaBuffer, long numPixels) const
+        void TruelightOp::apply(void * rgbaBuffer, long numPixels) const
         {
+            float * img = reinterpret_cast<float *>(rgbaBuffer);
+
             for(long pixelIndex = 0; pixelIndex < numPixels; ++pixelIndex)
             {
 #ifdef OCIO_TRUELIGHT_SUPPORT
-                TruelightInstanceTransformF(m_truelight, rgbaBuffer);
+                TruelightInstanceTransformF(m_truelight, img);
 #endif // OCIO_TRUELIGHT_SUPPORT
-                rgbaBuffer += 4; // skip alpha
+
+                img += 4; // skip alpha
             }
         }
         
