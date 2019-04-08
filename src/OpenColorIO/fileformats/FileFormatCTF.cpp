@@ -1702,8 +1702,6 @@ OIIO_ADD_TEST(FileFormatCTF, lut3d)
     OIIO_CHECK_EQUAL(pLut->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
     OIIO_CHECK_EQUAL(pLut->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
 
-    const OCIO::Array & a1 = pLut->getArray();
-
     const OCIO::Array & array = pLut->getArray();
     OIIO_CHECK_EQUAL(array.getLength(), 17);
     OIIO_CHECK_EQUAL(array.getNumColorComponents(), 3);

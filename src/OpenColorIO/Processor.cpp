@@ -243,15 +243,6 @@ OCIO_NAMESPACE_ENTER
         }
 
 
-        void deepCopy(OpRcPtrVec & dst, const OpRcPtrVec & src)
-        {
-            for(auto & op : src)
-            {
-                dst.push_back(op->clone());
-            }
-        }
-
-
         void shallowCopy(OpRcPtrVec & dst, const OpRcPtrVec & src)
         {
             std::copy(src.begin(), src.end(), back_inserter(dst));   

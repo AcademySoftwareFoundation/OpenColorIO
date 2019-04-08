@@ -54,8 +54,8 @@ if(MSVC)
 	# Because our Exceptions derive from std::runtime_error we can safely disable this warning
 	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /wd4275")
 else()
-	#TODO: Fix warnings before enabling the flag.
-	#set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wall")
+    # TODO: OCIO being under active development, unused functions are fine for now.
+	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wall -Wno-unused-function")
 endif()
 
 if(OCIO_WARNING_AS_ERROR)
