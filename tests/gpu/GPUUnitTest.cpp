@@ -98,7 +98,7 @@ namespace Shader
     {
         // If value and expected are infinity, return true.
         if (value == expected) return true;
-        if (isnan(value) && isnan(expected)) return true;
+        if (F_ISNAN(value) && F_ISNAN(expected)) return true;
         const float div = (expected > 0.0f) ?
             ((expected < minExpected) ? minExpected : expected) :
             ((-expected < minExpected) ? minExpected : -expected);

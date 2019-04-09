@@ -2012,7 +2012,7 @@ void Lut3DRendererNaNTest(OCIO::Interpolation interpol)
     OIIO_CHECK_CLOSE(pixels[0], values[0], 1e-7f);
     OIIO_CHECK_CLOSE(pixels[1], values[1], 1e-7f);
     OIIO_CHECK_CLOSE(pixels[2], values[2], 1e-7f);
-    OIIO_CHECK_ASSERT(OCIO::isnan(pixels[7]));
+    OIIO_CHECK_ASSERT(OCIO::IsNan(pixels[7]));
     OIIO_CHECK_CLOSE(pixels[8], 1.0f, 1e-7f);
     OIIO_CHECK_CLOSE(pixels[9], 1.0f, 1e-7f);
     OIIO_CHECK_CLOSE(pixels[10], 1.0f, 1e-7f);

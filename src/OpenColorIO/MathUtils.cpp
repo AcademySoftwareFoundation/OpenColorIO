@@ -176,7 +176,7 @@ float SanitizeFloat(float f)
     {
         return std::numeric_limits<float>::max();
     }
-    else if (isnan(f))
+    else if (IsNan(f))
     {
         return 0.0f;
     }

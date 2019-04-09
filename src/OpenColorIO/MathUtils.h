@@ -30,6 +30,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_MATHUTILS_H
 #define INCLUDED_OCIO_MATHUTILS_H
 
+#if defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
+#ifndef WINDOWS
+#define WINDOWS
+#endif
+#endif
+
+
 #include <algorithm>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -40,27 +47,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
-#ifdef WINDOWS
-    inline int isnan (float val)
-    {
-        // Windows uses a non-standard version of 'isnan'
-        return _isnan (val);
-    }
-    inline int isnan(double val)
-    {
-        // Windows uses a non-standard version of 'isnan'
-        return _isnan(val);
-    }
+#if defined(WINDOWS)
+
+template<typename T>
+int IsNan(T val) { return _isnan(val); }
+
+#elif defined(__APPLE__)
+
+template<typename T>
+int IsNan(T val) { return __inline_isnanf(val); }
+
 #else
 
-#ifdef ANDROID
-// support std::isnan - needs to be tested as it might not be part of the NDK
-#define _GLIBCXX_USE_C99_MATH 1
-#endif
-
-    // This lets all platforms just use isnan, within the OCIO namespace,
-    // across all platforms. (Windows defines the function above).
-    using ::isnan;
+template<typename T>
+int IsNan(T val) { return __isnanf(val); }
 
 #endif
 
@@ -110,7 +110,7 @@ inline bool EqualWithSafeRelError(T value,
 {
     // If value and expected are infinity, return true.
     if (value == expected) return true;
-    if (isnan(value) && isnan(expected)) return true;
+    if (IsNan(value) && IsNan(expected)) return true;
     const float div = (expected > 0) ?
         ((expected < minExpected) ? minExpected : expected) :
         ((-expected < minExpected) ? minExpected : -expected);
