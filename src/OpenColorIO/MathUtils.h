@@ -31,7 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define INCLUDED_OCIO_MATHUTILS_H
 
 #include <algorithm>
-#include <math.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
