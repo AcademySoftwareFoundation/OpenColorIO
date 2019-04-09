@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #include <algorithm>
+#include <cmath>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -47,17 +48,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
-#if defined(WINDOWS)
-
 template<typename T>
-int IsNan(T val) { return _isnan(val); }
-
-#else
-
-template<typename T>
-int IsNan(T val) { return isnan(val); }
-
-#endif
+bool IsNan(T val) { return std::isnan(val); }
 
 
 // From Imath
