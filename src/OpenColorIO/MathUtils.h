@@ -52,15 +52,10 @@ OCIO_NAMESPACE_ENTER
 template<typename T>
 int IsNan(T val) { return _isnan(val); }
 
-#elif defined(__APPLE__)
-
-template<typename T>
-int IsNan(T val) { return __inline_isnanf(val); }
-
 #else
 
 template<typename T>
-int IsNan(T val) { return __isnanf(val); }
+int IsNan(T val) { return isnan(val); }
 
 #endif
 
