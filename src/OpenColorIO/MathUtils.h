@@ -40,67 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    // From Imath
-    //--------------------------------------------------------------------------
-    // Compare two numbers and test if they are "approximately equal":
-    //
-    // EqualWithAbsError (x1, x2, e)
-    //
-    //  Returns true if x1 is the same as x2 with an absolute error of
-    //  no more than e,
-    //  
-    //  abs (x1 - x2) <= e
-    //
-    // EqualWithRelError (x1, x2, e)
-    //
-    //  Returns true if x1 is the same as x2 with an relative error of
-    //  no more than e,
-    //  
-    //  abs (x1 - x2) <= e * x1
-    //
-    //--------------------------------------------------------------------------
-    
-    template<typename T>
-    inline bool EqualWithAbsError (T x1, T x2, T e)
-    {
-        return ((x1 > x2)? x1 - x2: x2 - x1) <= e;
-    }
-    
-    template<typename T>
-    inline bool EqualWithRelError (T x1, T x2, T e)
-    {
-        return ((x1 > x2)? x1 - x2: x2 - x1) <= e * ((x1 > 0)? x1: -x1);
-    }
 
-#ifdef OCIO_UNIT_TEST
-    // Relative comparison: check if the difference between value and expected
-    // relative to (divided by) expected does not exceed the eps.  A minimum
-    // expected value is used to limit the scaling of the difference and
-    // avoid large relative differences for small numbers.
-    template<typename T>
-    inline bool EqualWithSafeRelError(T value,
-                                      T expected,
-                                      T eps,
-                                      T minExpected)
-    {
-        // If value and expected are infinity, return true.
-        if (value == expected) return true;
-        if (std::isnan(value) && std::isnan(expected)) return true;
-        const float div = (expected > 0) ?
-            ((expected < minExpected) ? minExpected : expected) :
-            ((-expected < minExpected) ? minExpected : -expected);
-
-        return (
-            ((value > expected) ? value - expected : expected - value)
-            / div) <= eps;
-    }
-#endif
-
-    inline float lerpf(float a, float b, float z)
-    {
-        return (b - a) * z + a;
-    }
-    
 #ifdef WINDOWS
     inline int isnan (float val)
     {
@@ -121,8 +61,72 @@ OCIO_NAMESPACE_ENTER
 
     // This lets all platforms just use isnan, within the OCIO namespace,
     // across all platforms. (Windows defines the function above).
-    using std::isnan;
+    using ::isnan;
+
 #endif
+
+
+// From Imath
+//--------------------------------------------------------------------------
+// Compare two numbers and test if they are "approximately equal":
+//
+// EqualWithAbsError (x1, x2, e)
+//
+//  Returns true if x1 is the same as x2 with an absolute error of
+//  no more than e,
+//  
+//  abs (x1 - x2) <= e
+//
+// EqualWithRelError (x1, x2, e)
+//
+//  Returns true if x1 is the same as x2 with an relative error of
+//  no more than e,
+//  
+//  abs (x1 - x2) <= e * x1
+//
+//--------------------------------------------------------------------------
+    
+template<typename T>
+inline bool EqualWithAbsError (T x1, T x2, T e)
+{
+    return ((x1 > x2)? x1 - x2: x2 - x1) <= e;
+}
+
+template<typename T>
+inline bool EqualWithRelError (T x1, T x2, T e)
+{
+    return ((x1 > x2)? x1 - x2: x2 - x1) <= e * ((x1 > 0)? x1: -x1);
+}
+
+#ifdef OCIO_UNIT_TEST
+// Relative comparison: check if the difference between value and expected
+// relative to (divided by) expected does not exceed the eps.  A minimum
+// expected value is used to limit the scaling of the difference and
+// avoid large relative differences for small numbers.
+template<typename T>
+inline bool EqualWithSafeRelError(T value,
+                                  T expected,
+                                  T eps,
+                                  T minExpected)
+{
+    // If value and expected are infinity, return true.
+    if (value == expected) return true;
+    if (isnan(value) && isnan(expected)) return true;
+    const float div = (expected > 0) ?
+        ((expected < minExpected) ? minExpected : expected) :
+        ((-expected < minExpected) ? minExpected : -expected);
+
+    return (
+        ((value > expected) ? value - expected : expected - value)
+        / div) <= eps;
+}
+#endif
+
+inline float lerpf(float a, float b, float z)
+{
+    return (b - a) * z + a;
+}
+    
     
 // Clamp value a to[min, max]
 // First compare with max, then with min.

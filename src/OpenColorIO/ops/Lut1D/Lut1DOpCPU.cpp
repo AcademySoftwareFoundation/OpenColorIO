@@ -1839,7 +1839,7 @@ OIIO_ADD_TEST(Lut1DRenderer, nan_test)
     OIIO_CHECK_CLOSE(pixels[0], values[0], 1e-7f);
     OIIO_CHECK_CLOSE(pixels[5], values[1], 1e-7f);
     OIIO_CHECK_CLOSE(pixels[10], values[2], 1e-7f);
-    OIIO_CHECK_ASSERT(std::isnan(pixels[15]));
+    OIIO_CHECK_ASSERT(OCIO::isnan(pixels[15]));
     OIIO_CHECK_CLOSE(pixels[16], values[21], 1e-7f);
     OIIO_CHECK_CLOSE(pixels[17], values[22], 1e-7f);
     OIIO_CHECK_CLOSE(pixels[18], values[23], 1e-7f);
@@ -1881,6 +1881,6 @@ OIIO_ADD_TEST(Lut1DRenderer, nan_half_test)
     OIIO_CHECK_CLOSE(pixels[0], values[nanIdRed], 1e-7f);
     OIIO_CHECK_CLOSE(pixels[5], values[nanIdRed + 1], 1e-7f);
     OIIO_CHECK_CLOSE(pixels[10], values[nanIdRed + 2], 1e-7f);
-    OIIO_CHECK_ASSERT(std::isnan(pixels[15]));
+    OIIO_CHECK_ASSERT(OCIO::isnan(pixels[15]));
 }
 #endif
