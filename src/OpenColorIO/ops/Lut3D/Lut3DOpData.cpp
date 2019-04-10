@@ -1046,15 +1046,16 @@ OIIO_ADD_TEST(Lut3DOpData, compose_2)
     const std::string clfFile("lut3d_bizarre.clf");
     OCIO::OpRcPtrVec ops;
 
-    OIIO_CHECK_NO_THROW(BuildOps(clfFile, ops,
-                                 OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
+    OIIO_CHECK_NO_THROW(BuildOpsTest(ops, clfFile, context,
+                                     OCIO::TRANSFORM_DIR_FORWARD));
 
     OIIO_REQUIRE_EQUAL(2, ops.size());
 
     const std::string clfFile1("lut3d_17x17x17_10i_12i.clf");
     OCIO::OpRcPtrVec ops1;
-    OIIO_CHECK_NO_THROW(BuildOps(clfFile1, ops1,
-                                 OCIO::TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_NO_THROW(BuildOpsTest(ops1, clfFile1, context,
+                                     OCIO::TRANSFORM_DIR_FORWARD));
 
     OIIO_REQUIRE_EQUAL(2, ops1.size());
 
@@ -1098,7 +1099,9 @@ OIIO_ADD_TEST(Lut3DOpData, inv_lut3d_lut_size)
 {
     const std::string fileName("lut3d_17x17x17_10i_12i.clf");
     OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(BuildOps(fileName, ops, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
+    OIIO_CHECK_NO_THROW(BuildOpsTest(ops, fileName, context,
+                                     OCIO::TRANSFORM_DIR_FORWARD));
 
     OIIO_REQUIRE_EQUAL(2, ops.size());
 

@@ -1663,7 +1663,9 @@ OIIO_ADD_TEST(Lut1D, apply_half_domain_hue_adjust)
     const std::string ctfFile("lut1d_hd_hueAdjust.ctf");
 
     OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(BuildOps(ctfFile, ops, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
+    OIIO_CHECK_NO_THROW(BuildOpsTest(ops, ctfFile, context,
+                                     OCIO::TRANSFORM_DIR_FORWARD));
 
     OIIO_REQUIRE_EQUAL(ops.size(), 2);
     auto op = std::const_pointer_cast<const OCIO::Op>(ops[1]);
@@ -1716,7 +1718,9 @@ OIIO_ADD_TEST(InvLut1D, apply_half)
     static const std::string ctfFile("lut1d_halfdom.ctf");
 
     OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(BuildOps(ctfFile, ops, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
+    OIIO_CHECK_NO_THROW(BuildOpsTest(ops, ctfFile, context,
+                                     OCIO::TRANSFORM_DIR_FORWARD));
 
     OIIO_REQUIRE_EQUAL(ops.size(), 2);
     auto op = std::const_pointer_cast<const OCIO::Op>(ops[1]);
@@ -1790,7 +1794,9 @@ OIIO_ADD_TEST(Lut1D, lut_1d_compose_with_bit_depth)
     const std::string ctfFile("lut1d_comp.clf");
 
     OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(BuildOps(ctfFile, ops, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
+    OIIO_CHECK_NO_THROW(BuildOpsTest(ops, ctfFile, context,
+                                     OCIO::TRANSFORM_DIR_FORWARD));
 
     OIIO_REQUIRE_EQUAL(ops.size(), 3);
     auto op = std::const_pointer_cast<const OCIO::Op>(ops[1]);
