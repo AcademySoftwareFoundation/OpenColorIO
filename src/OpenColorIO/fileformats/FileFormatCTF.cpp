@@ -3072,7 +3072,7 @@ OIIO_ADD_TEST(FileFormatCTF, matrix_windows_eol)
 
 OIIO_ADD_TEST(FileFormatCTF, lut_3d_file_with_xml_extension)
 {
-    const std::string ctfFile("ABNorm_CxxxLog10toRec709_Full.xml");
+    const std::string ctfFile("not_a_ctf.xml");
     OIIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception,
                           "is not a CTF/CLF file.");
 }
