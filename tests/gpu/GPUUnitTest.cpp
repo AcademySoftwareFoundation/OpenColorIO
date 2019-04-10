@@ -54,21 +54,11 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
+#include <cmath>
 #include <algorithm>
 
 
 #include "glsl.h"
-
-
-#if defined __APPLE__
-    #define F_ISNAN(a) __inline_isnanf(a)
-#elif defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
-    #define F_ISNAN(a) (_isnan(a)!=0)
-#else
-    #define F_ISNAN(a) __isnanf(a)
-#endif
-
 
 
 namespace Shader
@@ -98,7 +88,7 @@ namespace Shader
     {
         // If value and expected are infinity, return true.
         if (value == expected) return true;
-        if (F_ISNAN(value) && F_ISNAN(expected)) return true;
+        if (std::isnan(value) && std::isnan(expected)) return true;
         const float div = (expected > 0.0f) ?
             ((expected < minExpected) ? minExpected : expected) :
             ((-expected < minExpected) ? minExpected : -expected);
@@ -117,7 +107,7 @@ namespace Shader
     {
         if ( ( (a >=  largeThreshold) && (b >=  largeThreshold) ) ||
              ( (a <= -largeThreshold) && (b <= -largeThreshold) ) ||
-             ( F_ISNAN(a) && F_ISNAN(b) ) )
+             ( std::isnan(a) && std::isnan(b) ) )
         {
             return true;
         }
@@ -134,7 +124,7 @@ namespace Shader
     {
         if ( ( (a >=  largeThreshold) && (b >=  largeThreshold) ) ||
              ( (a <= -largeThreshold) && (b <= -largeThreshold) ) ||
-             ( F_ISNAN(a) && F_ISNAN(b) ) )
+             ( std::isnan(a) && std::isnan(b) ) )
         {
           return true;
         }
