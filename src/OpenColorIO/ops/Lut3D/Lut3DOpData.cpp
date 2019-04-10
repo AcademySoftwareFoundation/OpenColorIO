@@ -986,15 +986,16 @@ OIIO_ADD_TEST(OpDataLut3D, ComposeTest)
     const std::string spi3dFile("spi_ocio_srgb_test.spi3d");
     OCIO::OpRcPtrVec ops;
 
-    OIIO_CHECK_NO_THROW(BuildOps(spi3dFile, ops,
-                                 OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
+    OIIO_CHECK_NO_THROW(BuildOpsTest(ops, spi3dFile, context,
+                                     OCIO::TRANSFORM_DIR_FORWARD));
 
     OIIO_REQUIRE_EQUAL(2, ops.size());
 
     const std::string spi3dFile1("comp2.spi3d");
     OCIO::OpRcPtrVec ops1;
-    OIIO_CHECK_NO_THROW(BuildOps(spi3dFile1, ops1,
-                                 OCIO::TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_NO_THROW(BuildOpsTest(ops1, spi3dFile1, context,
+                                     OCIO::TRANSFORM_DIR_FORWARD));
 
     OIIO_REQUIRE_EQUAL(2, ops1.size());
 

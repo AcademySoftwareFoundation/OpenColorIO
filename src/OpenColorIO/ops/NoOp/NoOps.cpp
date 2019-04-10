@@ -328,10 +328,9 @@ OCIO_NAMESPACE_ENTER
         class FileNoOp : public Op
         {
         public:
-            FileNoOp(const std::string & fileReference):
-                m_fileReference(fileReference)
+            FileNoOp(const std::string & fileReference)
             { 
-                data().reset(new NoOp()); 
+                data().reset(new FileNoOpData(fileReference));
             }
 
             virtual ~FileNoOp() {}
@@ -353,9 +352,6 @@ OCIO_NAMESPACE_ENTER
             { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
             
             void extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const {}
-            
-        private:
-            std::string m_fileReference;
         };
         
         typedef OCIO_SHARED_PTR<FileNoOp> FileNoOpRcPtr;
@@ -363,7 +359,8 @@ OCIO_NAMESPACE_ENTER
 
         OpRcPtr FileNoOp::clone() const
         {
-            return std::make_shared<FileNoOp>(m_fileReference);
+            auto fileData = DynamicPtrCast<const FileNoOpData>(data());
+            return std::make_shared<FileNoOp>(fileData->getPath());
         }
         
         bool FileNoOp::isSameType(ConstOpRcPtr & op) const
@@ -380,7 +377,8 @@ OCIO_NAMESPACE_ENTER
         
         void FileNoOp::dumpMetadata(ProcessorMetadataRcPtr & metadata) const
         {
-            metadata->addFile(m_fileReference.c_str());
+            auto fileData = DynamicPtrCast<const FileNoOpData>(data());
+            metadata->addFile(fileData->getPath().c_str());
         }
     }
     
