@@ -84,6 +84,10 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Context_getCacheID(PyObject * self, PyObject *);
         PyObject * PyOCIO_Context_getSearchPath(PyObject * self, PyObject *);
         PyObject * PyOCIO_Context_setSearchPath(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Context_getNumSearchPaths(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Context_getSearchPathByIndex(PyObject * self, PyObject *args);
+        PyObject * PyOCIO_Context_clearSearchPaths(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Context_addSearchPath(PyObject * self, PyObject *args);
         PyObject * PyOCIO_Context_getWorkingDir(PyObject * self, PyObject *);
         PyObject * PyOCIO_Context_setWorkingDir(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Context_getStringVar(PyObject * self, PyObject * args);
@@ -111,6 +115,14 @@ OCIO_NAMESPACE_ENTER
             (PyCFunction) PyOCIO_Context_getSearchPath, METH_NOARGS, CONTEXT_GETSEARCHPATH__DOC__ },
             { "setSearchPath",
             PyOCIO_Context_setSearchPath, METH_VARARGS, CONTEXT_SETSEARCHPATH__DOC__ },
+            { "getNumSearchPaths",
+            (PyCFunction)PyOCIO_Context_getNumSearchPaths, METH_NOARGS, CONTEXT_GETNUMSEARCHPATHS__DOC__ },
+            { "getSearchPathByIndex",
+            (PyCFunction)PyOCIO_Context_getSearchPathByIndex, METH_VARARGS, CONTEXT_GETSEARCHPATHBYINDEX__DOC__ },
+            { "clearSearchPaths",
+            (PyCFunction)PyOCIO_Context_clearSearchPaths, METH_NOARGS, CONTEXT_CLEARSEARCHPATHS__DOC__ },
+            { "addSearchPath",
+            (PyCFunction)PyOCIO_Context_addSearchPath, METH_VARARGS, CONTEXT_ADDSEARCHPATH__DOC__ },
             { "getWorkingDir",
             (PyCFunction) PyOCIO_Context_getWorkingDir, METH_NOARGS, CONTEXT_GETWORKINGDIR__DOC__ },
             { "setWorkingDir",
@@ -256,6 +268,46 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
+        PyObject * PyOCIO_Context_getNumSearchPaths(PyObject * self, PyObject *)
+        {
+            OCIO_PYTRY_ENTER()
+            ConstContextRcPtr context = GetConstContext(self, true);
+            return PyInt_FromLong(context->getNumSearchPaths());
+            OCIO_PYTRY_EXIT(NULL)
+        }
+
+        PyObject * PyOCIO_Context_getSearchPathByIndex(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            int index = 0;
+            if (!PyArg_ParseTuple(args, "i:getSearchPathByIndex",
+                &index)) return NULL;
+            ConstContextRcPtr context = GetConstContext(self, true);
+            return PyString_FromString(context->getSearchPath(index));
+            OCIO_PYTRY_EXIT(NULL)
+        }
+
+        PyObject * PyOCIO_Context_clearSearchPaths(PyObject * self, PyObject *)
+        {
+            OCIO_PYTRY_ENTER()
+            ContextRcPtr context = GetEditableContext(self);
+            context->clearSearchPaths();
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
+        }
+
+        PyObject * PyOCIO_Context_addSearchPath(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            char* path = 0;
+            if (!PyArg_ParseTuple(args, "s:addSearchPath",
+                &path)) return NULL;
+            ContextRcPtr context = GetEditableContext(self);
+            context->addSearchPath(path);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
+        }
+
         PyObject * PyOCIO_Context_getWorkingDir(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()

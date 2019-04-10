@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ops/Lut3D/Lut3DOpData.h"
 #include "ops/Metadata.h"
 #include "ops/Range/RangeOpData.h"
+#include "ops/reference/ReferenceOpData.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -348,7 +349,8 @@ public:
         CDLType,
         // CTF types
         InvLut1DType,
-        InvLut3DType
+        InvLut3DType,
+        ReferenceType
     };
 
     CTFReaderOpElt();
@@ -663,6 +665,27 @@ public:
     void setRawData(const char * str, size_t len, unsigned int xmlLine) override;
 };
 
+class CTFReaderReferenceElt : public CTFReaderOpElt
+{
+public:
+    CTFReaderReferenceElt();
+
+    ~CTFReaderReferenceElt();
+
+    void start(const char ** atts) override;
+
+    void end() override;
+
+    const OpDataRcPtr getOp() const override;
+
+    const ReferenceOpDataRcPtr getReference() const
+    {
+        return m_reference;
+    }
+
+private:
+    ReferenceOpDataRcPtr m_reference;
+};
 
 }
 OCIO_NAMESPACE_EXIT

@@ -816,6 +816,32 @@ OCIO_NAMESPACE_ENTER
         getImpl()->resetCacheIDs();
     }
     
+    int Config::getNumSearchPaths() const
+    {
+        return getImpl()->context_->getNumSearchPaths();
+    }
+
+    const char * Config::getSearchPath(int index) const
+    {
+        return getImpl()->context_->getSearchPath(index);
+    }
+
+    void Config::clearSearchPaths()
+    {
+        return getImpl()->context_->clearSearchPaths();
+
+        AutoMutex lock(getImpl()->cacheidMutex_);
+        getImpl()->resetCacheIDs();
+    }
+
+    void Config::addSearchPath(const char * path)
+    {
+        return getImpl()->context_->addSearchPath(path);
+
+        AutoMutex lock(getImpl()->cacheidMutex_);
+        getImpl()->resetCacheIDs();
+    }
+
     const char * Config::getWorkingDir() const
     {
         return getImpl()->context_->getWorkingDir();
@@ -1684,14 +1710,14 @@ OIIO_ADD_TEST(Config, test_searchpath_filesystem)
 }
 #endif
 
-OIIO_ADD_TEST(Config, InternalRawProfile)
+OIIO_ADD_TEST(Config, internal_raw_profile)
 {
     std::istringstream is;
     is.str(OCIO::INTERNAL_RAW_PROFILE);
     OIIO_CHECK_NO_THROW(OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromStream(is));
 }
 
-OIIO_ADD_TEST(Config, SimpleConfig)
+OIIO_ADD_TEST(Config, simple_config)
 {
     
     std::string SIMPLE_PROFILE =
@@ -1765,7 +1791,7 @@ OIIO_ADD_TEST(Config, SimpleConfig)
     OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
 }
 
-OIIO_ADD_TEST(Config, Roles)
+OIIO_ADD_TEST(Config, roles)
 {
     
     std::string SIMPLE_PROFILE =
@@ -1803,9 +1829,8 @@ OIIO_ADD_TEST(Config, Roles)
     
 }
 
-OIIO_ADD_TEST(Config, Serialize)
+OIIO_ADD_TEST(Config, serialize)
 {
-    
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
@@ -1889,8 +1914,123 @@ OIIO_ADD_TEST(Config, Serialize)
         OIIO_CHECK_EQUAL(osvec[i], PROFILE_OUTvec[i]);
 }
 
+OIIO_ADD_TEST(Config, serialize_searchpath)
+{
+    {
+        OCIO::ConfigRcPtr config = OCIO::Config::Create();
 
-OIIO_ADD_TEST(Config, SanityCheck)
+        std::ostringstream os;
+        config->serialize(os);
+
+        std::string PROFILE_OUT =
+            "ocio_profile_version: 1\n"
+            "\n"
+            "search_path: \"\"\n"
+            "strictparsing: true\n"
+            "luma: [0.2126, 0.7152, 0.0722]\n"
+            "\n"
+            "roles:\n"
+            "  {}\n"
+            "\n"
+            "displays:\n"
+            "  {}\n"
+            "\n"
+            "active_displays: []\n"
+            "active_views: []\n"
+            "\n"
+            "colorspaces:\n"
+            "  []";
+
+        std::vector<std::string> osvec;
+        OCIO::pystring::splitlines(os.str(), osvec);
+        std::vector<std::string> PROFILE_OUTvec;
+        OCIO::pystring::splitlines(PROFILE_OUT, PROFILE_OUTvec);
+
+        OIIO_CHECK_EQUAL(osvec.size(), PROFILE_OUTvec.size());
+        for (unsigned int i = 0; i < PROFILE_OUTvec.size(); ++i)
+            OIIO_CHECK_EQUAL(osvec[i], PROFILE_OUTvec[i]);
+    }
+
+    {
+        OCIO::ConfigRcPtr config = OCIO::Config::Create();
+
+        std::string searchPath("a:b:c");
+        config->setSearchPath(searchPath.c_str());
+
+        std::ostringstream os;
+        config->serialize(os);
+
+        std::vector<std::string> osvec;
+        OCIO::pystring::splitlines(os.str(), osvec);
+
+        const std::string expected1{ "search_path: a:b:c" };
+        OIIO_CHECK_EQUAL(osvec[2], expected1);
+
+        config->setMajorVersion(2);
+        os.clear();
+        os.str("");
+        config->serialize(os);
+
+        osvec.clear();
+        OCIO::pystring::splitlines(os.str(), osvec);
+
+        const std::string expected2[] = { "search_path:", "  - a", "  - b", "  - c" };
+        OIIO_CHECK_EQUAL(osvec[2], expected2[0]);
+        OIIO_CHECK_EQUAL(osvec[3], expected2[1]);
+        OIIO_CHECK_EQUAL(osvec[4], expected2[2]);
+        OIIO_CHECK_EQUAL(osvec[5], expected2[3]);
+
+        std::istringstream is;
+        is.str(os.str());
+        OCIO::ConstConfigRcPtr configRead;
+        OIIO_CHECK_NO_THROW(configRead = OCIO::Config::CreateFromStream(is));
+
+        OIIO_CHECK_EQUAL(configRead->getNumSearchPaths(), 3);
+        OIIO_CHECK_EQUAL(std::string(configRead->getSearchPath()), searchPath);
+        OIIO_CHECK_EQUAL(std::string(configRead->getSearchPath(0)), std::string("a"));
+        OIIO_CHECK_EQUAL(std::string(configRead->getSearchPath(1)), std::string("b"));
+        OIIO_CHECK_EQUAL(std::string(configRead->getSearchPath(2)), std::string("c"));
+
+        os.clear();
+        os.str("");
+        config->clearSearchPaths();
+        const std::string sp0{ "a path with a - in it/" };
+        const std::string sp1{ "/absolute/linux/path" };
+        const std::string sp2{ "C:\\absolute\\windows\\path" };
+        const std::string sp3{ "!<path> usiing /yaml/symbols" };
+        config->addSearchPath(sp0.c_str());
+        config->addSearchPath(sp1.c_str());
+        config->addSearchPath(sp2.c_str());
+        config->addSearchPath(sp3.c_str());
+        config->serialize(os);
+
+        osvec.clear();
+        OCIO::pystring::splitlines(os.str(), osvec);
+
+        const std::string expected3[] = { "search_path:",
+                                          "  - a path with a - in it/",
+                                          "  - /absolute/linux/path",
+                                          "  - C:\\absolute\\windows\\path",
+                                          "  - \"!<path> usiing /yaml/symbols\"" };
+        OIIO_CHECK_EQUAL(osvec[2], expected3[0]);
+        OIIO_CHECK_EQUAL(osvec[3], expected3[1]);
+        OIIO_CHECK_EQUAL(osvec[4], expected3[2]);
+        OIIO_CHECK_EQUAL(osvec[5], expected3[3]);
+        OIIO_CHECK_EQUAL(osvec[6], expected3[4]);
+
+        is.clear();
+        is.str(os.str());
+        OIIO_CHECK_NO_THROW(configRead = OCIO::Config::CreateFromStream(is));
+
+        OIIO_CHECK_EQUAL(configRead->getNumSearchPaths(), 4);
+        OIIO_CHECK_EQUAL(std::string(configRead->getSearchPath(0)), sp0);
+        OIIO_CHECK_EQUAL(std::string(configRead->getSearchPath(1)), sp1);
+        OIIO_CHECK_EQUAL(std::string(configRead->getSearchPath(2)), sp2);
+        OIIO_CHECK_EQUAL(std::string(configRead->getSearchPath(3)), sp3);
+    }
+}
+
+OIIO_ADD_TEST(Config, sanity_check)
 {
     {
     std::string SIMPLE_PROFILE =
@@ -1938,7 +2078,7 @@ OIIO_ADD_TEST(Config, SanityCheck)
 }
 
 
-OIIO_ADD_TEST(Config, EnvCheck)
+OIIO_ADD_TEST(config, env_check)
 {
     {
     std::string SIMPLE_PROFILE =
@@ -2027,7 +2167,7 @@ OIIO_ADD_TEST(Config, EnvCheck)
     }
 }
 
-OIIO_ADD_TEST(Config, RoleWithoutColorSpace)
+OIIO_ADD_TEST(Config, role_without_colorspace)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create()->createEditableCopy();
     config->setRole("reference", "UnknownColorSpace");
@@ -2036,7 +2176,7 @@ OIIO_ADD_TEST(Config, RoleWithoutColorSpace)
     OIIO_CHECK_THROW(config->serialize(os), OCIO::Exception);
 }
 
-OIIO_ADD_TEST(Config, Env_colorspace_name)
+OIIO_ADD_TEST(Config, env_colorspace_name)
 {
     const std::string MY_OCIO_CONFIG =
         "ocio_profile_version: 1\n"
@@ -2158,7 +2298,7 @@ OIIO_ADD_TEST(Config, Env_colorspace_name)
     }
 }
 
-OIIO_ADD_TEST(Config, Version)
+OIIO_ADD_TEST(Config, version)
 {
     const std::string SIMPLE_PROFILE =
         "ocio_profile_version: 2\n"
@@ -2212,7 +2352,7 @@ OIIO_ADD_TEST(Config, Version)
     }
 }
 
-OIIO_ADD_TEST(Config, Version_faulty_1)
+OIIO_ADD_TEST(Config, version_faulty_1)
 {
     const std::string SIMPLE_PROFILE =
         "ocio_profile_version: 2.0.1\n"

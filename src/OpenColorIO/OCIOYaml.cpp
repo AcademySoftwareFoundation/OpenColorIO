@@ -2121,8 +2121,20 @@ OCIO_NAMESPACE_ENTER
                 }
                 else if(key == "search_path" || key == "resource_path")
                 {
-                    load(second, stringval);
-                    c->setSearchPath(stringval.c_str());
+                    if (second.size() == 0)
+                    {
+                        load(second, stringval);
+                        c->setSearchPath(stringval.c_str());
+                    }
+                    else
+                    {
+                        std::vector<std::string> paths;
+                        load(second, paths);
+                        for (auto & path : paths)
+                        {
+                            c->addSearchPath(path.c_str());
+                        }
+                    }
                 }
                 else if(key == "strictparsing")
                 {
@@ -2301,7 +2313,8 @@ OCIO_NAMESPACE_ENTER
         inline void save(YAML::Emitter& out, const Config* c)
         {
             std::stringstream ss;
-            ss << c->getMajorVersion();
+            const unsigned configMajorVersion = c->getMajorVersion();
+            ss << configMajorVersion;
             if(c->getMinorVersion()!=0)
             {
                 ss << "." << c->getMinorVersion();
@@ -2328,7 +2341,34 @@ OCIO_NAMESPACE_ENTER
                 out << YAML::EndMap;
                 out << YAML::Newline;
             }
-            out << YAML::Key << "search_path" << YAML::Value << c->getSearchPath();
+
+            if (configMajorVersion < 2)
+            {
+                // Save search paths as a single string.
+                out << YAML::Key << "search_path" << YAML::Value << c->getSearchPath();
+            }
+            else
+            {
+                std::vector<std::string> searchPaths;
+                const int numSP = c->getNumSearchPaths();
+                for (int i = 0; i < c->getNumSearchPaths(); ++i)
+                {
+                    searchPaths.emplace_back(c->getSearchPath(i));
+                }
+
+                if (numSP == 0)
+                {
+                    out << YAML::Key << "search_path" << YAML::Value << "";
+                }
+                else if (numSP == 1)
+                {
+                    out << YAML::Key << "search_path" << YAML::Value << searchPaths[0];
+                }
+                else
+                {
+                    out << YAML::Key << "search_path" << YAML::Value << searchPaths;
+                }
+            }
             out << YAML::Key << "strictparsing" << YAML::Value << c->isStrictParsingEnabled();
             
             std::vector<float> luma(3, 0.f);

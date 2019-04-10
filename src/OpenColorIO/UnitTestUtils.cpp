@@ -50,9 +50,10 @@ const char * getTestFilesDir()
     return ocioTestFilesDir.c_str();
 }
 
-void BuildOps(const std::string & fileName,
-              OpRcPtrVec & fileOps,
-              TransformDirection dir)
+void BuildOpsTest(OpRcPtrVec & fileOps,
+                  const std::string & fileName,
+                  ContextRcPtr & context,
+                  TransformDirection dir)
 {
     const std::string filePath(std::string(getTestFilesDir()) + "/"
                                + fileName);
@@ -68,10 +69,8 @@ void BuildOps(const std::string & fileName,
     // Create empty Config to use
     ConfigRcPtr pConfig = Config::Create();
 
-    ContextRcPtr pContext = Context::Create();
-
-    BuildFileOps(fileOps, *(pConfig.get()), pContext,
-                 *(pFileTransform.get()), dir);
+    BuildFileTransformOps(fileOps, *(pConfig.get()), context,
+                          *(pFileTransform.get()), dir);
 }
 
 }
