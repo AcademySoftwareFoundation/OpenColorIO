@@ -42,9 +42,14 @@ OCIO_NAMESPACE_ENTER
 
 const char * getTestFilesDir();
 
-void BuildOps(const std::string & fileName,
-              OpRcPtrVec & fileOps,
-              TransformDirection dir);
+// Special test function that copies the implementation of FileTransform
+// in order to be able to access ops from a file path. fileOps will not be
+// finalized and will thus contain NoOps including FileNoOps.
+// context can be used to control working directory, search path etc.
+void BuildOpsTest(OpRcPtrVec & fileOps,
+                  const std::string & fileName,
+                  ContextRcPtr & context,
+                  TransformDirection dir);
     
 class CachedFile;
 

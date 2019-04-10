@@ -627,7 +627,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "unittest.h"
 #include "UnitTestUtils.h"
 
-OIIO_ADD_TEST(OpDataLut3D, TestEmpty)
+OIIO_ADD_TEST(Lut3DOpData, empty)
 {
     OCIO::Lut3DOpData l(2);
     OIIO_CHECK_NO_THROW(l.validate());
@@ -638,7 +638,7 @@ OIIO_ADD_TEST(OpDataLut3D, TestEmpty)
     OIIO_CHECK_EQUAL(l.getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
 }
 
-OIIO_ADD_TEST(OpDataLut3D, TestAccessors)
+OIIO_ADD_TEST(Lut3DOpData, accessors)
 {
     OCIO::Interpolation interpol = OCIO::INTERP_LINEAR;
 
@@ -678,7 +678,7 @@ OIIO_ADD_TEST(OpDataLut3D, TestAccessors)
     OIIO_CHECK_NO_THROW(l.validate());
 }
 
-OIIO_ADD_TEST(OpDataLut3D, TestDiffBitdepth)
+OIIO_ADD_TEST(Lut3DOpData, diff_bitdepth)
 {
     OCIO::Interpolation interpol = OCIO::INTERP_LINEAR;
     OCIO::Lut3DOpData l1(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8,
@@ -714,7 +714,7 @@ OIIO_ADD_TEST(OpDataLut3D, TestDiffBitdepth)
     }
 }
 
-OIIO_ADD_TEST(OpDataLut3D, Clone)
+OIIO_ADD_TEST(Lut3DOpData, clone)
 {
     OCIO::Lut3DOpData ref(33);
     ref.getArray()[1] = 0.1f;
@@ -728,7 +728,7 @@ OIIO_ADD_TEST(OpDataLut3D, Clone)
     OIIO_CHECK_ASSERT(pClone->getArray()==ref.getArray());
 }
 
-OIIO_ADD_TEST(OpDataLut3D, NotSupportedLength)
+OIIO_ADD_TEST(Lut3DOpData, not_supported_length)
 {
     const OCIO::Lut3DOpData ref1(OCIO::Lut3DOpData::maxSupportedLength);
 
@@ -740,7 +740,7 @@ OIIO_ADD_TEST(OpDataLut3D, NotSupportedLength)
 
 }
 
-OIIO_ADD_TEST(OpDataLut3D, OuputDepthScaling)
+OIIO_ADD_TEST(Lut3DOpData, ouput_depth_scaling)
 {
     OCIO::Interpolation interpol = OCIO::INTERP_LINEAR;
     OCIO::Lut3DOpData ref(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT10,
@@ -781,7 +781,7 @@ OIIO_ADD_TEST(OpDataLut3D, OuputDepthScaling)
     }
 }
 
-OIIO_ADD_TEST(OpDataLut3D, Equality)
+OIIO_ADD_TEST(Lut3DOpData, equality)
 {
     OCIO::Lut3DOpData l1(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
                          "", OCIO::OpData::Descriptions(), 
@@ -818,7 +818,7 @@ OIIO_ADD_TEST(OpDataLut3D, Equality)
     OIIO_CHECK_ASSERT(*l5 == *l6);
 }
 
-OIIO_ADD_TEST(OpDataLut3D, Interpolation)
+OIIO_ADD_TEST(Lut3DOpData, interpolation)
 {
     OCIO::Lut3DOpData l(2);
     l.setInputBitDepth(OCIO::BIT_DEPTH_F32);
@@ -924,7 +924,7 @@ void checkInverse_bitDepths_domain(
                      expectedInvInterpolationAlgo);
 }
 
-OIIO_ADD_TEST(OpDataInvLut3D, inverse_bitDepth_domain)
+OIIO_ADD_TEST(Lut3DOpData, inverse_bitDepth_domain)
 {
     checkInverse_bitDepths_domain(
         // reference
@@ -943,7 +943,7 @@ OIIO_ADD_TEST(OpDataInvLut3D, inverse_bitDepth_domain)
         OCIO::INTERP_TETRAHEDRAL);
 }
 
-OIIO_ADD_TEST(OpDataInvLut3D, isInverse_test)
+OIIO_ADD_TEST(Lut3DOpData, is_inverse)
 {
     // Create forward LUT.
     OCIO::Lut3DOpDataRcPtr L1NC =
@@ -981,20 +981,22 @@ OIIO_ADD_TEST(OpDataInvLut3D, isInverse_test)
     OIIO_CHECK_ASSERT(!L2->isInverse(L1));
 }
 
-OIIO_ADD_TEST(OpDataLut3D, ComposeTest)
+OIIO_ADD_TEST(Lut3DOpData, compose)
 {
     const std::string spi3dFile("spi_ocio_srgb_test.spi3d");
     OCIO::OpRcPtrVec ops;
 
-    OIIO_CHECK_NO_THROW(BuildOps(spi3dFile, ops,
-                                 OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
+    OIIO_CHECK_NO_THROW(BuildOpsTest(ops, spi3dFile, context,
+                                     OCIO::TRANSFORM_DIR_FORWARD));
 
+    // First op is a FileNoOp.
     OIIO_REQUIRE_EQUAL(2, ops.size());
 
     const std::string spi3dFile1("comp2.spi3d");
     OCIO::OpRcPtrVec ops1;
-    OIIO_CHECK_NO_THROW(BuildOps(spi3dFile1, ops1,
-                                 OCIO::TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_NO_THROW(BuildOpsTest(ops1, spi3dFile1, context,
+                                     OCIO::TRANSFORM_DIR_FORWARD));
 
     OIIO_REQUIRE_EQUAL(2, ops1.size());
 
@@ -1039,7 +1041,85 @@ OIIO_ADD_TEST(OpDataLut3D, ComposeTest)
 
 }
 
-// TODO: Bring tests using CLF parsing once available
+OIIO_ADD_TEST(Lut3DOpData, compose_2)
+{
+    const std::string clfFile("lut3d_bizarre.clf");
+    OCIO::OpRcPtrVec ops;
+
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
+    OIIO_CHECK_NO_THROW(BuildOpsTest(ops, clfFile, context,
+                                     OCIO::TRANSFORM_DIR_FORWARD));
+
+    OIIO_REQUIRE_EQUAL(2, ops.size());
+
+    const std::string clfFile1("lut3d_17x17x17_10i_12i.clf");
+    OCIO::OpRcPtrVec ops1;
+    OIIO_CHECK_NO_THROW(BuildOpsTest(ops1, clfFile1, context,
+                                     OCIO::TRANSFORM_DIR_FORWARD));
+
+    OIIO_REQUIRE_EQUAL(2, ops1.size());
+
+    OCIO_SHARED_PTR<const OCIO::Op> op0 = ops[1];
+    OCIO_SHARED_PTR<const OCIO::Op> op1 = ops1[1];
+
+    OCIO::ConstOpDataRcPtr opData0 = op0->data();
+    OCIO::ConstOpDataRcPtr opData1 = op1->data();
+
+    OCIO::ConstLut3DOpDataRcPtr lutData0 =
+        OCIO::DynamicPtrCast<const OCIO::Lut3DOpData>(opData0);
+    OCIO::ConstLut3DOpDataRcPtr lutData1 =
+        OCIO::DynamicPtrCast<const OCIO::Lut3DOpData>(opData1);
+
+    OIIO_REQUIRE_ASSERT(lutData0);
+    OIIO_REQUIRE_ASSERT(lutData1);
+
+    OCIO::Lut3DOpDataRcPtr composed = lutData0->clone();
+    OIIO_CHECK_NO_THROW(OCIO::Lut3DOpData::Compose(composed, lutData1));
+
+    OIIO_CHECK_EQUAL(composed->getArray().getLength(), (unsigned long)17);
+    const std::vector<float> & a = composed->getArray().getValues();
+    OIIO_CHECK_CLOSE(a[6]     / 4095.0f,    2.5942142f  / 4095.0f, 1e-7f);
+    OIIO_CHECK_CLOSE(a[7]     / 4095.0f,   29.60961342f / 4095.0f, 1e-7f);
+    OIIO_CHECK_CLOSE(a[8]     / 4095.0f,  154.82646179f / 4095.0f, 1e-7f);
+    OIIO_CHECK_CLOSE(a[8289]  / 4095.0f, 1184.69213867f / 4095.0f, 1e-6f);
+    OIIO_CHECK_CLOSE(a[8290]  / 4095.0f, 1854.97229004f / 4095.0f, 1e-7f);
+    OIIO_CHECK_CLOSE(a[8291]  / 4095.0f, 1996.75830078f / 4095.0f, 1e-7f);
+    OIIO_CHECK_CLOSE(a[14736] / 4095.0f, 4094.07617188f / 4095.0f, 1e-7f);
+    OIIO_CHECK_CLOSE(a[14737] / 4095.0f, 4067.37231445f / 4095.0f, 1e-6f);
+    OIIO_CHECK_CLOSE(a[14738] / 4095.0f, 4088.30493164f / 4095.0f, 1e-6f);
+
+    // Check that if the connecting bit-depths don't match, it's an exception.
+    OCIO::Lut3DOpDataRcPtr composed1 = lutData1->clone();
+    OIIO_CHECK_THROW_WHAT(OCIO::Lut3DOpData::Compose(composed1, lutData0),
+                          OCIO::Exception, "bit depth mismatch");
+
+}
+
+OIIO_ADD_TEST(Lut3DOpData, inv_lut3d_lut_size)
+{
+    const std::string fileName("lut3d_17x17x17_10i_12i.clf");
+    OCIO::OpRcPtrVec ops;
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
+    OIIO_CHECK_NO_THROW(BuildOpsTest(ops, fileName, context,
+                                     OCIO::TRANSFORM_DIR_FORWARD));
+
+    OIIO_REQUIRE_EQUAL(2, ops.size());
+
+    auto op1 = std::dynamic_pointer_cast<const OCIO::Op>(ops[1]);
+    OIIO_REQUIRE_ASSERT(op1);
+    auto fwdLutData = std::dynamic_pointer_cast<const OCIO::Lut3DOpData>(op1->data());
+    OIIO_REQUIRE_ASSERT(fwdLutData);
+    OCIO::ConstLut3DOpDataRcPtr invLutData = fwdLutData->inverse();
+
+    OCIO::Lut3DOpDataRcPtr invFastLutData = MakeFastLut3DFromInverse(invLutData);
+
+    // NB: Avoid finalizing the transform since this will reset the bit-depths
+    // and prevent checking that the inversion swapped them correctly.
+    OIIO_CHECK_EQUAL(invFastLutData->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+    OIIO_CHECK_EQUAL(invFastLutData->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+
+    OIIO_CHECK_EQUAL(invFastLutData->getArray().getLength(), 48);
+}
 
 #endif
 

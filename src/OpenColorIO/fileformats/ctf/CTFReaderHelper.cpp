@@ -999,14 +999,12 @@ CTFReaderOpEltRcPtr CTFReaderOpElt::GetReader(CTFReaderOpElt::Type type, const C
         ADD_DEFAULT_READER(CTFReaderRangeElt_1_7);
         break;
     }
-    /* TODO: CTF
-    case Color::Op::Reference:
+    case CTFReaderOpElt::ReferenceType:
     {
-    ADD_READER_FOR_VERSIONS_UP_TO(ReferenceElt, 1_6);
-    // Adding inverted attribute
-    ADD_DEFAULT_READER(ReferenceElt_1_7);
-    break;
+        ADD_DEFAULT_READER(CTFReaderReferenceElt);
+        break;
     }
+    /* TODO: CTF
     case Color::Op::Gamma:
     {
     // If the version is 1.4 or less, then use GammaElt
@@ -2240,6 +2238,100 @@ void CTFReaderRangeValueElt::setRawData(const char * s, size_t len, unsigned int
     {
         pRange->getRange()->setMaxOutValue(data[0]);
     }
+}
+
+//////////////////////////////////////////////////////////
+
+CTFReaderReferenceElt::CTFReaderReferenceElt()
+    : CTFReaderOpElt()
+    , m_reference(std::make_shared<ReferenceOpData>())
+{
+}
+
+CTFReaderReferenceElt::~CTFReaderReferenceElt()
+{
+}
+
+void CTFReaderReferenceElt::start(const char **atts)
+{
+    CTFReaderOpElt::start(atts);
+
+    std::string alias;
+    std::string path;
+    bool basePathFound = false;
+
+    unsigned long i = 0;
+    while (atts[i])
+    {
+        if (0 == Platform::Strcasecmp(ATTR_PATH, atts[i]))
+        {
+            path = atts[i + 1];
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_BASE_PATH, atts[i]))
+        {
+            // Ignore BasePath for now: BasePath could be used to point to
+            // a specific folder, but for OCIO all folders have to be
+            // reacheable throught the Context.
+            // All paths might be absolute or relative.
+            basePathFound = true;
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_ALIAS, atts[i]))
+        {
+            // Most alias operators may be ignored, with the exception of
+            // currentMonitor.  Since we cannot apply that transform here,
+            // we need to throw.
+            alias = atts[i + 1];
+            if (0 == Platform::Strcasecmp(alias.c_str(), "currentMonitor"))
+            {
+                throwMessage("The 'currentMonitor' alias is not supported.");
+            }
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_IS_INVERTED, atts[i]))
+        {
+            bool isInverted = (0 == Platform::Strcasecmp("true", atts[i + 1]));
+            getReference()->setDirection(TRANSFORM_DIR_INVERSE);
+        }
+
+        i += 2;
+    }
+
+    if (!alias.empty())
+    {
+        if (!path.empty())
+        {
+            throwMessage("alias & path attributes for Reference should not be "
+                         "both defined.");
+        }
+
+        if (basePathFound)
+        {
+            throwMessage("alias & basepath attributes for Reference should not be "
+                         "both defined.");
+        }
+
+        m_reference->setAlias(alias);
+    }
+    else
+    {
+        if (path.empty())
+        {
+            throwMessage("path attribute for Reference is missing.");
+        }
+
+        m_reference->setPath(path);
+    }
+}
+
+void CTFReaderReferenceElt::end()
+{
+    CTFReaderOpElt::end();
+
+    m_reference->validate();
+}
+
+const OpDataRcPtr CTFReaderReferenceElt::getOp() const
+{
+    return m_reference;
 }
 
 }

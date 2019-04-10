@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="empty">
+   <Reference id="uuid" name="name" inBitDepth="8i" outBitDepth="8i" alias="alias"/>
+</ProcessList>

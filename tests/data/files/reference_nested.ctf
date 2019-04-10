@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="empty">
+   <Reference id="uuid" name="name" inBitDepth="32f" outBitDepth="32f" path="reference_nested_2.ctf" basePath="Autodesk">
+   </Reference>
+</ProcessList>

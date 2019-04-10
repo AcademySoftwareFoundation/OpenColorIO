@@ -61,6 +61,32 @@ OCIO_NAMESPACE_ENTER
     void CreateLookNoOp(OpRcPtrVec & ops,
                         const std::string & lookName);
     
+    // Need to declare this here in order to allow FileTransform to be able to
+    // detect if a ReferenceOpData references itself in a cycle (either
+    // directly or indirectly).
+    class FileNoOpData : public OpData
+    {
+        FileNoOpData() = delete;
+    public:
+        FileNoOpData(const std::string & path)
+            : OpData(BIT_DEPTH_UNKNOWN, BIT_DEPTH_UNKNOWN)
+            , m_path(path)
+        {
+        }
+        Type getType() const  override { return NoOpType; };
+        bool isNoOp() const override { return true; };
+        bool isIdentity() const override { return true; };
+        bool hasChannelCrosstalk() const override { return false;  };
+        void finalize() override {};
+
+        const std::string & getPath() const { return m_path;  }
+        void setComplete() const { m_complete = true; }
+        bool getComplete() const { return m_complete;  }
+    private:
+        std::string m_path;
+        // false while the file is still being loaded.
+        mutable bool m_complete = false;
+    };
 }
 OCIO_NAMESPACE_EXIT
 

@@ -501,8 +501,9 @@ OIIO_ADD_TEST(FileFormatICC, TestFile)
         // This example uses a profile with a 1024-entry LUT for the TRC.
         const std::string iccFileName("sRGB_Color_Space_Profile.icm");
         OCIO::OpRcPtrVec ops;
-        OIIO_CHECK_NO_THROW(BuildOps(iccFileName, ops,
-            OCIO::TRANSFORM_DIR_INVERSE));
+        OCIO::ContextRcPtr context = OCIO::Context::Create();
+        OIIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context,
+                                         OCIO::TRANSFORM_DIR_INVERSE));
         OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, false));
         OIIO_CHECK_EQUAL(4, ops.size());
         OIIO_CHECK_EQUAL("<FileNoOp>", ops[0]->getInfo());
@@ -681,11 +682,12 @@ OIIO_ADD_TEST(FileFormatICC, TestFile)
 
 OIIO_ADD_TEST(FileFormatICC, TestApply)
 {
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
     {
         const std::string iccFileName("sRGB_Color_Space_Profile.icm");
         OCIO::OpRcPtrVec ops;
-        OIIO_CHECK_NO_THROW(BuildOps(iccFileName, ops,
-            OCIO::TRANSFORM_DIR_FORWARD));
+        OIIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context,
+                                         OCIO::TRANSFORM_DIR_FORWARD));
         OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, true));
 
         // apply ops
@@ -714,8 +716,8 @@ OIIO_ADD_TEST(FileFormatICC, TestApply)
 
         // inverse
         OCIO::OpRcPtrVec opsInv;
-        OIIO_CHECK_NO_THROW(BuildOps(iccFileName, opsInv,
-            OCIO::TRANSFORM_DIR_INVERSE));
+        OIIO_CHECK_NO_THROW(BuildOpsTest(opsInv, iccFileName, context,
+                                         OCIO::TRANSFORM_DIR_INVERSE));
         OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(opsInv, true));
 
         numOps = opsInv.size();
@@ -741,8 +743,8 @@ OIIO_ADD_TEST(FileFormatICC, TestApply)
     {
         const std::string iccFileName("LM-1760W.icc");
         OCIO::OpRcPtrVec ops;
-        OIIO_CHECK_NO_THROW(BuildOps(iccFileName, ops,
-            OCIO::TRANSFORM_DIR_FORWARD));
+        OIIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context,
+                                         OCIO::TRANSFORM_DIR_FORWARD));
         OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, true));
 
         // apply ops
@@ -778,8 +780,8 @@ OIIO_ADD_TEST(FileFormatICC, TestApply)
 
         // inverse
         OCIO::OpRcPtrVec opsInv;
-        OIIO_CHECK_NO_THROW(BuildOps(iccFileName, opsInv,
-            OCIO::TRANSFORM_DIR_INVERSE));
+        OIIO_CHECK_NO_THROW(BuildOpsTest(opsInv, iccFileName, context,
+                                         OCIO::TRANSFORM_DIR_INVERSE));
         OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(opsInv, true));
 
         numOps = opsInv.size();
