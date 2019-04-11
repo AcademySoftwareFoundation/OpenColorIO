@@ -15,6 +15,14 @@ class Context:
         pass
     def setSearchPath(self, searchPath):
         pass
+    def getNumSearchPaths(self):
+        pass
+    def getSearchPathByIndex(self, index):
+        pass
+    def clearSearchPaths(self):
+        pass
+    def addSearchPath(self, path):
+        pass
     def getWorkingDir(self):
         pass
     def setWorkingDir(self, workingDir):

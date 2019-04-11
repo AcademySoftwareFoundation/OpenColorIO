@@ -126,6 +126,7 @@ OCIO_NAMESPACE_ENTER
             LogType,           // A log
             ExponentType,      // An exponent
             RangeType,         // A range
+            ReferenceType,     // A reference to an external file
             CDLType,           // A Color Decision List (aka CDL)
             FixedFunctionType, // A fixed function (i.e. where the style defines the behavior)
             GammaType,         // A gamma (i.e. enhancement of the Exponent)
@@ -273,6 +274,10 @@ OCIO_NAMESPACE_ENTER
     
     void OptimizeOpVec(OpRcPtrVec & result);
     
+    void CreateOpVecFromOpData(OpRcPtrVec & ops,
+                               const OpDataRcPtr & opData,
+                               TransformDirection dir);
+
     void CreateOpVecFromOpDataVec(OpRcPtrVec & ops,
                                   const OpDataVec & opDataVec,
                                   TransformDirection dir);

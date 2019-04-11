@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="empty">
+   <Description>Error: may not have both alias and path in one Reference</Description>
+   <Reference id="uuid" name="name" inBitDepth="8i" outBitDepth="8i" alias="alias" 
+   path="toto/toto.xml" basePath="Shared">
+   </Reference>
+</ProcessList>
