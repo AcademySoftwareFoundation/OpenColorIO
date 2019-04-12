@@ -187,6 +187,7 @@ OCIO_NAMESPACE_ENTER
             }
 
             iterator begin() noexcept { return m_descriptions.begin(); }
+            iterator end() noexcept { return m_descriptions.end(); }
             const_iterator begin() const noexcept { return m_descriptions.begin(); }
             const_iterator end() const noexcept { return m_descriptions.end(); }
 
