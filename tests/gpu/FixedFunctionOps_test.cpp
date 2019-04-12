@@ -224,8 +224,13 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_glow10_inv)
     test.setContext(func->createEditableCopy(), shaderDesc);
 }
 
+// The next four tests run into a problem on some graphics cards where 0.0 * Inf = 0.0,
+// rather than the correct value of NaN.  Therefore turning off TestInfinity for these tests.
+
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces_darktodim10_fwd)
 {
+    test.setTestInfinity(false);
+
     OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
     func->setStyle(OCIO::FIXED_FUNCTION_ACES_DARK_TO_DIM_10);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
@@ -239,6 +244,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_darktodim10_fwd)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces_darktodim10_inv)
 {
+    test.setTestInfinity(false);
+
     OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
     func->setStyle(OCIO::FIXED_FUNCTION_ACES_DARK_TO_DIM_10);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
@@ -252,6 +259,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_darktodim10_inv)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_rec2100_surround_fwd)
 {
+    test.setTestInfinity(false);
+
     OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
     func->setStyle(OCIO::FIXED_FUNCTION_REC2100_SURROUND);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
@@ -261,16 +270,19 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_rec2100_surround_fwd)
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    test.setErrorThreshold(1e-6f);
+    test.setErrorThreshold(2e-6f);
     test.setContext(func->createEditableCopy(), shaderDesc);
 }
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_rec2100_surround_inv)
 {
+    test.setTestInfinity(false);
+
     OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
     func->setStyle(OCIO::FIXED_FUNCTION_REC2100_SURROUND);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-    const double data[1] = { 0.7 };
+    // (Since we're not calling inverse() here, set the param to be the inverse of prev test.)
+    const double data[1] = { 1./0.7 };
     func->setParams(&data[0], 1);
 
     OCIO::GpuShaderDescRcPtr shaderDesc 

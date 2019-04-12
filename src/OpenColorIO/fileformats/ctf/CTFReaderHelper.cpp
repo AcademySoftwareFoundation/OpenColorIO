@@ -1936,6 +1936,7 @@ ArrayBase * CTFReaderLut3DElt::updateDimension(const Dimensions & dims)
 
 void CTFReaderLut3DElt::endArray(unsigned int position)
 {
+    // NB: A CLF/CTF Lut3D Array stores the elements in blue-fastest order.
     Array* pArray = &m_lut->getArray();
     if (pArray->getNumValues() != position)
     {

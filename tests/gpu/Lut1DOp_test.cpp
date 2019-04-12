@@ -420,6 +420,8 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_inverse_half_file1_test)
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setRelativeComparison(true);
+    test.setExpectedMinimalValue(1e-3);
     test.setErrorThreshold(1e-4f);
 }
 
