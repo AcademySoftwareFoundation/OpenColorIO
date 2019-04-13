@@ -36,7 +36,6 @@ target_link_libraries(openglbuilder
 install(TARGETS openglbuilder
     ARCHIVE DESTINATION "share/openglbuilder/lib/"
 )
-
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/glsl.h
     DESTINATION "share/openglbuilder/include/"
 )
