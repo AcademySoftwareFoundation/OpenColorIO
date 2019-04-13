@@ -249,7 +249,7 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
 
         if(!name || !*name || !uid || !*uid || edgelen==0)
         {
-            throw OCIO::Exception("The texture data are corrupted");
+            throw OCIO::Exception("The texture data is corrupted");
         }
 
         const float* values = 0x0;
@@ -288,7 +288,7 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
 
         if(!name || !*name || !uid || !*uid || width==0)
         {
-            throw OCIO::Exception("The texture data are corrupted");
+            throw OCIO::Exception("The texture data is corrupted");
         }
 
         const float * values = 0x0;
@@ -412,7 +412,7 @@ unsigned OpenGLBuilder::GetTextureMaxWidth()
 
 #ifndef __APPLE__
         //
-        // In case of Linux, if glTexImage2D() succeed
+        // In case of Linux, if glTexImage2D() succeeds
         //  glGetTexLevelParameteriv() could fail.
         //
         // In case of OSX, glTexImage2D() will provide the right result,

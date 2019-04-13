@@ -41,7 +41,7 @@ class OpenGLBuilder;
 typedef OCIO_SHARED_PTR<OpenGLBuilder> OpenGLBuilderRcPtr;
 
 
-// This a reference implementation showing how to do the texture updload & allocation, 
+// This is a reference implementation showing how to do the texture upload & allocation,
 // and the program compilation for the GLSL shader language.
 
 class OpenGLBuilder
@@ -86,7 +86,7 @@ public:
     void useProgram();
     unsigned getProgramHandle();
 
-    // Determine the maximun width value of a texture
+    // Determine the maximum width value of a texture
     // depending of the graphic card and its driver.
     static unsigned GetTextureMaxWidth();
 
