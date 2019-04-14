@@ -121,6 +121,10 @@ the work.
 in [Required Approvals](#required-approvals)), a Committer other than the PR
 contributor may squash and merge changes into the master branch.
 
+See also (from the OCIO Developer Guide):
+* [Getting started](http://opencolorio.org/developers/geting_started.html)
+* [Submitting Changes](http://opencolorio.org/developers/submitting_changes.html)
+
 ## Required Approvals
 
 Modifications of the contents of the OpenColorIO repository are made on a
@@ -172,3 +176,21 @@ through discussion.
 Committers may opt to elevate significant or controversial modifications to the
 TSC by assigning the `tsc-review` label to a pull request or issue. The TSC
 should serve as the final arbiter where required.
+
+## Coding Standards
+Please see the OpenColorIO
+[Coding guidelines](http://opencolorio.org/developers/coding_guidelines.html)
+for a reference on project code style and best practices.
+
+For standards on contributing to documentation, see the
+[Documentation guidelines](http://opencolorio.org/developers/documentation_guidelines.html).
+
+## Reporting Vulnerabilities
+Quickly resolving security related issues is very important to us. If you think
+you've found a potential vulnerability in OpenColorIO, please report it by
+emailing ocio-tsc-private@lists.aswf.io. Only TSC members and ASWF project
+management are on this private list.
+
+Include detailed steps to reproduce the issue, and any other information that
+could aid an investigation. Someone will assess the report and make every
+effort to respond within 14 days.
