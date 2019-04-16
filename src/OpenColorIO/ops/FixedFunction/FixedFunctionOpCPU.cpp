@@ -58,7 +58,7 @@ class Renderer_ACES_RedMod03_Fwd : public FixedFunctionOpCPU
 public:
     explicit Renderer_ACES_RedMod03_Fwd(ConstFixedFunctionOpDataRcPtr & func);
 
-    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 protected:
     float m_1minusScale;
@@ -71,7 +71,7 @@ class Renderer_ACES_RedMod03_Inv : public Renderer_ACES_RedMod03_Fwd
 public:
     explicit Renderer_ACES_RedMod03_Inv(ConstFixedFunctionOpDataRcPtr & func);
 
-    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
 class Renderer_ACES_RedMod10_Fwd : public FixedFunctionOpCPU
@@ -79,7 +79,7 @@ class Renderer_ACES_RedMod10_Fwd : public FixedFunctionOpCPU
 public:
     explicit Renderer_ACES_RedMod10_Fwd(ConstFixedFunctionOpDataRcPtr & func);
 
-    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 protected:
     float m_1minusScale;
@@ -92,7 +92,7 @@ class Renderer_ACES_RedMod10_Inv : public Renderer_ACES_RedMod10_Fwd
 public:
     explicit Renderer_ACES_RedMod10_Inv(ConstFixedFunctionOpDataRcPtr & func);
 
-    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
 class Renderer_ACES_Glow03_Fwd : public FixedFunctionOpCPU
@@ -101,7 +101,7 @@ public:
     Renderer_ACES_Glow03_Fwd(ConstFixedFunctionOpDataRcPtr & func,
                              float glowGain, float glowMid);
 
-    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 protected:
     float m_glowGain, m_glowMid;
@@ -113,7 +113,7 @@ public:
     Renderer_ACES_Glow03_Inv(ConstFixedFunctionOpDataRcPtr & func,
                             float glowGain, float glowMid);
 
-    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
 class Renderer_ACES_DarkToDim10_Fwd : public FixedFunctionOpCPU
@@ -121,7 +121,7 @@ class Renderer_ACES_DarkToDim10_Fwd : public FixedFunctionOpCPU
 public:
     Renderer_ACES_DarkToDim10_Fwd(ConstFixedFunctionOpDataRcPtr & func, float gamma);
 
-    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 protected:
     float m_gamma;
@@ -133,7 +133,7 @@ class Renderer_REC2100_Surround : public FixedFunctionOpCPU
 public:
     Renderer_REC2100_Surround(ConstFixedFunctionOpDataRcPtr & func);
 
-    virtual void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 protected:
     float m_gamma;
@@ -244,15 +244,16 @@ __inline float CalcHueWeight(const float red, const float grn, const float blu,
     return f_H;
 }
 
-void Renderer_ACES_RedMod03_Fwd::apply(float * rgbaBuffer, long numPixels) const
+void Renderer_ACES_RedMod03_Fwd::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    float * rgba = rgbaBuffer;
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        float red = rgba[0];
-        float grn = rgba[1];
-        float blu = rgba[2];
+        float red = in[0];
+        float grn = in[1];
+        float blu = in[2];
 
         const float f_H = CalcHueWeight(red, grn, blu, m_inv_width);
 
@@ -284,12 +285,13 @@ void Renderer_ACES_RedMod03_Fwd::apply(float * rgbaBuffer, long numPixels) const
             red = newRed;
         }
 
-        rgba[0] = red * m_alphaScale;
-        rgba[1] = grn * m_alphaScale;
-        rgba[2] = blu * m_alphaScale;
-        rgba[3] = rgba[3] * m_alphaScale;
+        out[0] = red * m_alphaScale;
+        out[1] = grn * m_alphaScale;
+        out[2] = blu * m_alphaScale;
+        out[3] = in[3] * m_alphaScale;
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
@@ -298,15 +300,16 @@ Renderer_ACES_RedMod03_Inv::Renderer_ACES_RedMod03_Inv(ConstFixedFunctionOpDataR
 {
 }
 
-void Renderer_ACES_RedMod03_Inv::apply(float * rgbaBuffer, long numPixels) const
+void Renderer_ACES_RedMod03_Inv::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    float * rgba = rgbaBuffer;
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        float red = rgba[0];
-        float grn = rgba[1];
-        float blu = rgba[2];
+        float red = in[0];
+        float grn = in[1];
+        float blu = in[2];
 
         const float f_H = CalcHueWeight(red, grn, blu, m_inv_width);
         if (f_H > 0.f)
@@ -334,12 +337,13 @@ void Renderer_ACES_RedMod03_Inv::apply(float * rgbaBuffer, long numPixels) const
             red = newRed;
         }
 
-        rgba[0] = red * m_alphaScale;
-        rgba[1] = grn * m_alphaScale;
-        rgba[2] = blu * m_alphaScale;
-        rgba[3] = rgba[3] * m_alphaScale;
+        out[0] = red * m_alphaScale;
+        out[1] = grn * m_alphaScale;
+        out[2] = blu * m_alphaScale;
+        out[3] = in[3] * m_alphaScale;
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
@@ -359,15 +363,16 @@ Renderer_ACES_RedMod10_Fwd::Renderer_ACES_RedMod10_Fwd(ConstFixedFunctionOpDataR
     m_inv_width = 1.6976527263135504f;
 }
 
-void Renderer_ACES_RedMod10_Fwd::apply(float * rgbaBuffer, long numPixels) const
+void Renderer_ACES_RedMod10_Fwd::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    float * rgba = rgbaBuffer;
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        float red = rgba[0];
-        const float grn = rgba[1];
-        const float blu = rgba[2];
+        float red = in[0];
+        const float grn = in[1];
+        const float blu = in[2];
 
         const float f_H = CalcHueWeight(red, grn, blu, m_inv_width);
 
@@ -385,12 +390,13 @@ void Renderer_ACES_RedMod10_Fwd::apply(float * rgbaBuffer, long numPixels) const
             red = red + f_H * f_S * (m_pivot - red) * m_1minusScale;
         }
 
-        rgba[0] = red * m_alphaScale;
-        rgba[1] = grn * m_alphaScale;
-        rgba[2] = blu * m_alphaScale;
-        rgba[3] = rgba[3] * m_alphaScale;
+        out[0] = red * m_alphaScale;
+        out[1] = grn * m_alphaScale;
+        out[2] = blu * m_alphaScale;
+        out[3] = in[3] * m_alphaScale;
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
@@ -399,15 +405,16 @@ Renderer_ACES_RedMod10_Inv::Renderer_ACES_RedMod10_Inv(ConstFixedFunctionOpDataR
 {
 }
 
-void Renderer_ACES_RedMod10_Inv::apply(float * rgbaBuffer, long numPixels) const
+void Renderer_ACES_RedMod10_Inv::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    float * rgba = rgbaBuffer;
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        float red = rgba[0];
-        const float grn = rgba[1];
-        const float blu = rgba[2];
+        float red = in[0];
+        const float grn = in[1];
+        const float blu = in[2];
 
         const float f_H = CalcHueWeight(red, grn, blu, m_inv_width);
         if (f_H > 0.f)
@@ -422,12 +429,13 @@ void Renderer_ACES_RedMod10_Inv::apply(float * rgbaBuffer, long numPixels) const
             red = ( -b - sqrt( b * b - 4.f * a * c)) / ( 2.f * a);
         }
 
-        rgba[0] = red * m_alphaScale;
-        rgba[1] = grn * m_alphaScale;
-        rgba[2] = blu * m_alphaScale;
-        rgba[3] = rgba[3] * m_alphaScale;
+        out[0] = red * m_alphaScale;
+        out[1] = grn * m_alphaScale;
+        out[2] = blu * m_alphaScale;
+        out[3] = in[3] * m_alphaScale;
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
@@ -460,15 +468,16 @@ __inline float SigmoidShaper(const float sat)
     return s;
 }
 
-void Renderer_ACES_Glow03_Fwd::apply(float * rgbaBuffer, long numPixels) const
+void Renderer_ACES_Glow03_Fwd::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    float * rgba = rgbaBuffer;
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        const float red = rgba[0];
-        const float grn = rgba[1];
-        const float blu = rgba[2];
+        const float red = in[0];
+        const float grn = in[1];
+        const float blu = in[2];
 
         // NB: YC is at inScale.
         const float YC = rgbToYC(red, grn, blu);
@@ -499,12 +508,13 @@ void Renderer_ACES_Glow03_Fwd::apply(float * rgbaBuffer, long numPixels) const
         const float addedGlow = 1.f + glowGainOut;
         const float scaleFac = m_alphaScale * addedGlow;
 
-        rgba[0] = red * scaleFac;
-        rgba[1] = grn * scaleFac;
-        rgba[2] = blu * scaleFac;
-        rgba[3] = rgba[3] * m_alphaScale;
+        out[0] = red * scaleFac;
+        out[1] = grn * scaleFac;
+        out[2] = blu * scaleFac;
+        out[3] = in[3] * m_alphaScale;
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
@@ -515,15 +525,16 @@ Renderer_ACES_Glow03_Inv::Renderer_ACES_Glow03_Inv(ConstFixedFunctionOpDataRcPtr
 {
 }
 
-void Renderer_ACES_Glow03_Inv::apply(float * rgbaBuffer, long numPixels) const
+void Renderer_ACES_Glow03_Inv::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    float * rgba = rgbaBuffer;
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        const float red = rgba[0];
-        const float grn = rgba[1];
-        const float blu = rgba[2];
+        const float red = in[0];
+        const float grn = in[1];
+        const float blu = in[2];
 
         // NB: YC is at inScale.
         const float YC = rgbToYC(red, grn, blu);
@@ -554,12 +565,13 @@ void Renderer_ACES_Glow03_Inv::apply(float * rgbaBuffer, long numPixels) const
         const float reducedGlow = 1.f + glowGainOut;
         const float scaleFac = m_alphaScale * reducedGlow;
 
-        rgba[0] = red * scaleFac;
-        rgba[1] = grn * scaleFac;
-        rgba[2] = blu * scaleFac;
-        rgba[3] = rgba[3] * m_alphaScale;
+        out[0] = red * scaleFac;
+        out[1] = grn * scaleFac;
+        out[2] = blu * scaleFac;
+        out[3] = in[3] * m_alphaScale;
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
@@ -572,15 +584,16 @@ Renderer_ACES_DarkToDim10_Fwd::Renderer_ACES_DarkToDim10_Fwd(ConstFixedFunctionO
     m_invInScale = 1.f / m_inScale;
 }
 
-void Renderer_ACES_DarkToDim10_Fwd::apply(float * rgbaBuffer, long numPixels) const
+void Renderer_ACES_DarkToDim10_Fwd::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    float * rgba = rgbaBuffer;
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        const float red = rgba[0];
-        const float grn = rgba[1];
-        const float blu = rgba[2];
+        const float red = in[0];
+        const float grn = in[1];
+        const float blu = in[2];
 
 
         // With the modest 2% ACES surround, this minLum allows the min/max gain
@@ -598,12 +611,13 @@ void Renderer_ACES_DarkToDim10_Fwd::apply(float * rgbaBuffer, long numPixels) co
 
         const float scaleFac = m_alphaScale * Ypow_over_Y;
 
-        rgba[0] = red * scaleFac;
-        rgba[1] = grn * scaleFac;
-        rgba[2] = blu * scaleFac;
-        rgba[3] = rgba[3] * m_alphaScale;
+        out[0] = red * scaleFac;
+        out[1] = grn * scaleFac;
+        out[2] = blu * scaleFac;
+        out[3] = in[3] * m_alphaScale;
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
@@ -618,15 +632,16 @@ Renderer_REC2100_Surround::Renderer_REC2100_Surround(ConstFixedFunctionOpDataRcP
     m_invInScale = 1.f / m_inScale;
 }
 
-void Renderer_REC2100_Surround::apply(float * rgbaBuffer, long numPixels) const
+void Renderer_REC2100_Surround::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    float * rgba = rgbaBuffer;
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        const float red = rgba[0];
-        const float grn = rgba[1];
-        const float blu = rgba[2];
+        const float red = in[0];
+        const float grn = in[1];
+        const float blu = in[2];
 
         // This threshold needs to be bigger than 1e-10 (used above) to prevent extreme
         // gain in dark colors, yet smaller than 1e-2 to prevent distorting the shape of
@@ -648,12 +663,13 @@ void Renderer_REC2100_Surround::apply(float * rgbaBuffer, long numPixels) const
 
         const float scaleFac = m_alphaScale * Ypow_over_Y;
 
-        rgba[0] = red * scaleFac;
-        rgba[1] = grn * scaleFac;
-        rgba[2] = blu * scaleFac;
-        rgba[3] = rgba[3] * m_alphaScale;
+        out[0] = red * scaleFac;
+        out[1] = grn * scaleFac;
+        out[2] = blu * scaleFac;
+        out[3] = in[3] * m_alphaScale;
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
@@ -714,7 +730,8 @@ OpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func)
         }
     }
 
-    return std::make_shared<NoOpCPU>();
+    throw Exception("Unsupported FixedFunction style");
+    return OpCPURcPtr();
 }
 
 }
@@ -743,7 +760,7 @@ void ApplyFixedFunction(float * input_32f,
 {
     OCIO::OpCPURcPtr op;
     OIIO_CHECK_NO_THROW(op = OCIO::GetFixedFunctionCPURenderer(fnData));
-    OIIO_CHECK_NO_THROW(op->apply(input_32f, numSamples));
+    OIIO_CHECK_NO_THROW(op->apply(input_32f, input_32f, numSamples));
 
     for(unsigned idx=0; idx<(numSamples*4); ++idx)
     {

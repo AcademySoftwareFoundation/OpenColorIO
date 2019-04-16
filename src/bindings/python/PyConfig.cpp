@@ -98,6 +98,10 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_clearEnvironmentVars(PyObject * self, PyObject *);
         PyObject * PyOCIO_Config_getSearchPath(PyObject * self, PyObject *);
         PyObject * PyOCIO_Config_setSearchPath(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Config_getNumSearchPaths(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Config_getSearchPathByIndex(PyObject * self, PyObject *args);
+        PyObject * PyOCIO_Config_clearSearchPaths(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Config_addSearchPath(PyObject * self, PyObject *args);
         PyObject * PyOCIO_Config_getWorkingDir(PyObject * self, PyObject *);
         PyObject * PyOCIO_Config_setWorkingDir(PyObject * self,  PyObject * args);
         PyObject * PyOCIO_Config_getNumColorSpaces(PyObject * self, PyObject *);
@@ -189,6 +193,14 @@ OCIO_NAMESPACE_ENTER
             (PyCFunction) PyOCIO_Config_getSearchPath, METH_NOARGS, CONFIG_GETSEARCHPATH__DOC__ },
             { "setSearchPath",
             PyOCIO_Config_setSearchPath, METH_VARARGS, CONFIG_SETSEARCHPATH__DOC__ },
+            { "getNumSearchPaths",
+            (PyCFunction)PyOCIO_Config_getNumSearchPaths, METH_NOARGS, CONFIG_GETNUMSEARCHPATHS__DOC__ },
+            { "getSearchPathByIndex",
+            (PyCFunction)PyOCIO_Config_getSearchPathByIndex, METH_VARARGS, CONFIG_GETSEARCHPATHBYINDEX__DOC__ },
+            { "clearSearchPaths",
+            (PyCFunction)PyOCIO_Config_clearSearchPaths, METH_NOARGS, CONFIG_CLEARSEARCHPATHS__DOC__ },
+            { "addSearchPath",
+            (PyCFunction)PyOCIO_Config_addSearchPath, METH_VARARGS, CONFIG_ADDSEARCHPATH__DOC__ },
             { "getWorkingDir",
             (PyCFunction) PyOCIO_Config_getWorkingDir, METH_NOARGS, CONFIG_GETWORKINGDIR__DOC__ },
             { "setWorkingDir",
@@ -541,6 +553,46 @@ OCIO_NAMESPACE_ENTER
                 &path)) return NULL;
             ConfigRcPtr config = GetEditableConfig(self);
             config->setSearchPath(path);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
+        }
+
+        PyObject * PyOCIO_Config_getNumSearchPaths(PyObject * self, PyObject *)
+        {
+            OCIO_PYTRY_ENTER()
+            ConstConfigRcPtr config = GetConstConfig(self, true);
+            return PyInt_FromLong(config->getNumSearchPaths());
+            OCIO_PYTRY_EXIT(NULL)
+        }
+
+        PyObject * PyOCIO_Config_getSearchPathByIndex(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            int index = 0;
+            if (!PyArg_ParseTuple(args, "i:getSearchPathByIndex",
+                &index)) return NULL;
+            ConstConfigRcPtr config = GetConstConfig(self, true);
+            return PyString_FromString(config->getSearchPath(index));
+            OCIO_PYTRY_EXIT(NULL)
+        }
+
+        PyObject * PyOCIO_Config_clearSearchPaths(PyObject * self, PyObject *)
+        {
+            OCIO_PYTRY_ENTER()
+            ConfigRcPtr config = GetEditableConfig(self);
+            config->clearSearchPaths();
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
+        }
+
+        PyObject * PyOCIO_Config_addSearchPath(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            char* path = 0;
+            if (!PyArg_ParseTuple(args, "s:addSearchPath",
+                &path)) return NULL;
+            ConfigRcPtr config = GetEditableConfig(self);
+            config->addSearchPath(path);
             Py_RETURN_NONE;
             OCIO_PYTRY_EXIT(NULL)
         }

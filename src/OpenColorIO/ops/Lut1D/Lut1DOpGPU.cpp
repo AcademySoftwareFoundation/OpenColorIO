@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <algorithm>
+#include <iterator>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -59,41 +60,47 @@ void PadLutChannels(unsigned long width,
         const unsigned long step = width - 1;
         for (unsigned long i = 0; i < (currWidth - step); i += step)
         {
-            chn.insert(chn.end(), &channel[3 * i], &channel[3 * (i + step)]);
+            std::transform(&channel[3 * i],
+                           &channel[3 * (i + step)],
+                           std::back_inserter(chn),
+                           [](float val) {return SanitizeFloat(val); });
 
-            chn.push_back(channel[3 * (i + step) + 0]);
-            chn.push_back(channel[3 * (i + step) + 1]);
-            chn.push_back(channel[3 * (i + step) + 2]);
+            chn.push_back(SanitizeFloat(channel[3 * (i + step) + 0]));
+            chn.push_back(SanitizeFloat(channel[3 * (i + step) + 1]));
+            chn.push_back(SanitizeFloat(channel[3 * (i + step) + 2]));
             leftover -= step;
         }
 
         // If there are still texels to fill, add them to the texture data.
         if (leftover > 0)
         {
-            chn.insert(chn.end(),
-                       &channel[3 * (currWidth - leftover)],
-                       &channel[3 * (currWidth - 1)]);
+            std::transform(&channel[3 * (currWidth - leftover)],
+                           &channel[3 * (currWidth - 1)],
+                           std::back_inserter(chn),
+                           [](float val) {return SanitizeFloat(val); });
 
-            chn.push_back(channel[3 * (currWidth - 1) + 0]);
-            chn.push_back(channel[3 * (currWidth - 1) + 1]);
-            chn.push_back(channel[3 * (currWidth - 1) + 2]);
+            chn.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 0]));
+            chn.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 1]));
+            chn.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 2]));
         }
     }
     else
     {
-        chn = channel;
+        for (auto & val : channel)
+        {
+            chn.push_back(SanitizeFloat(val));
+        }
     }
 
     // Pad the remaining of the texture with the last LUT entry.
     // Note: GPU Textures are expected a size of width*height.
 
-    const unsigned long missingEntries = width*height -
-                                         ((unsigned long)chn.size() / 3);
+    unsigned long missingEntries = width*height - ((unsigned long)chn.size() / 3);
     for (unsigned long idx = 0; idx < missingEntries; ++idx)
     {
-        chn.push_back(channel[3 * (currWidth - 1) + 0]);
-        chn.push_back(channel[3 * (currWidth - 1) + 1]);
-        chn.push_back(channel[3 * (currWidth - 1) + 2]);
+        chn.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 0]));
+        chn.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 1]));
+        chn.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 2]));
     }
 }
 }
@@ -110,9 +117,11 @@ void GetLut1DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
     // Adjust LUT texture to allow for correct 2d linear interpolation, if needed.
 
     std::vector<float> values;
+    values.reserve(width*height*3);
+
     PadLutChannels(width, height, lutData->getArray().getValues(), values);
 
-    // Register the RGB LUT
+    // Register the RGB LUT.
 
     std::ostringstream resName;
     resName << shaderDesc->getResourcePrefix()

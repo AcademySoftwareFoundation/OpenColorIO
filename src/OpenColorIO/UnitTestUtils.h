@@ -26,8 +26,8 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef INCLUDED_OCIO_UNITTESTFILES_H
-#define INCLUDED_OCIO_UNITTESTFILES_H
+#ifndef INCLUDED_OCIO_UNITTESTUTILS_H
+#define INCLUDED_OCIO_UNITTESTUTILS_H
 
 #ifdef OCIO_UNIT_TEST
 
@@ -42,9 +42,14 @@ OCIO_NAMESPACE_ENTER
 
 const char * getTestFilesDir();
 
-void BuildOps(const std::string & fileName,
-              OpRcPtrVec & fileOps,
-              TransformDirection dir);
+// Special test function that copies the implementation of FileTransform
+// in order to be able to access ops from a file path. fileOps will not be
+// finalized and will thus contain NoOps including FileNoOps.
+// context can be used to control working directory, search path etc.
+void BuildOpsTest(OpRcPtrVec & fileOps,
+                  const std::string & fileName,
+                  ContextRcPtr & context,
+                  TransformDirection dir);
     
 class CachedFile;
 
@@ -82,4 +87,4 @@ OCIO_NAMESPACE_EXIT
 
 #endif // OCIO_UNIT_TEST
 
-#endif // INCLUDED_OCIO_UNITTEST_H
+#endif // INCLUDED_OCIO_UNITTESTUTILS_H

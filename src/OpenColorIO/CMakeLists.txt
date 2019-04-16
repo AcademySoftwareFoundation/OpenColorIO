@@ -6,6 +6,7 @@ set(SOURCES
 	ColorSpaceSet.cpp
 	Config.cpp
 	Context.cpp
+	CPUProcessor.cpp
 	Display.cpp
 	Exception.cpp
 	fileformats/cdl/CDLParser.cpp
@@ -84,6 +85,7 @@ set(SOURCES
 	ops/Range/RangeOpData.cpp
 	ops/Range/RangeOpGPU.cpp
 	ops/Range/RangeOps.cpp
+	ops/reference/ReferenceOpData.cpp
 	ops/Truelight/TruelightOp.cpp
 	OpTools.cpp
 	ParseUtils.cpp

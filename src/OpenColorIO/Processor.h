@@ -68,6 +68,9 @@ OCIO_NAMESPACE_ENTER
         // Extract all the information to fully implement the processor shader program.
         void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
 
+        // Get a CPU processor instance for arbitrary input and output pixel formats.
+        ConstCPUProcessorRcPtr getCPUProcessor(PixelFormat in, PixelFormat out) const;
+
         ////////////////////////////////////////////
         //
         // Builder functions, Not exposed

@@ -56,6 +56,9 @@ OCIO_NAMESPACE_ENTER
 
     class OpCPU;
     typedef OCIO_SHARED_PTR<OpCPU> OpCPURcPtr;
+    typedef OCIO_SHARED_PTR<const OpCPU> ConstOpCPURcPtr;
+    typedef std::vector<OpCPURcPtr> OpCPURcPtrVec;
+    typedef std::vector<ConstOpCPURcPtr> ConstOpCPURcPtrVec;
 
 
     // OpCPU is a helper class to define the CPU pixel processing method signature.
@@ -71,19 +74,11 @@ OCIO_NAMESPACE_ENTER
         OpCPU() {}
         virtual ~OpCPU() {}
 
-        virtual void apply(float * rgbaBuffer, long numPixels) const = 0;
+        // All the Ops assume float pointers (i.e. always float bit depths) except 
+        // the 1D LUT CPU Op where the finalization depends on input and output bit depths.
+        virtual void apply(const void * inImg, void * outImg, long numPixels) const = 0;
     };
 
-    // This class is to be used when no processing is needed.
-    class NoOpCPU : public OpCPU
-    {
-    public:
-        NoOpCPU() : OpCPU() {}
-
-        virtual void apply(float *, long) const { };
-    };
-
-    
     class OpData;
     typedef OCIO_SHARED_PTR<OpData> OpDataRcPtr;
     typedef OCIO_SHARED_PTR<const OpData> ConstOpDataRcPtr;
@@ -131,6 +126,7 @@ OCIO_NAMESPACE_ENTER
             LogType,           // A log
             ExponentType,      // An exponent
             RangeType,         // A range
+            ReferenceType,     // A reference to an external file
             CDLType,           // A Color Decision List (aka CDL)
             FixedFunctionType, // A fixed function (i.e. where the style defines the behavior)
             GammaType,         // A gamma (i.e. enhancement of the Exponent)
@@ -191,6 +187,7 @@ OCIO_NAMESPACE_ENTER
             }
 
             iterator begin() noexcept { return m_descriptions.begin(); }
+            iterator end() noexcept { return m_descriptions.end(); }
             const_iterator begin() const noexcept { return m_descriptions.begin(); }
             const_iterator end() const noexcept { return m_descriptions.end(); }
 
@@ -278,6 +275,10 @@ OCIO_NAMESPACE_ENTER
     
     void OptimizeOpVec(OpRcPtrVec & result);
     
+    void CreateOpVecFromOpData(OpRcPtrVec & ops,
+                               const OpDataRcPtr & opData,
+                               TransformDirection dir);
+
     void CreateOpVecFromOpDataVec(OpRcPtrVec & ops,
                                   const OpDataVec & opDataVec,
                                   TransformDirection dir);
@@ -334,9 +335,13 @@ OCIO_NAMESPACE_ENTER
             // This must be safe to call in a multi-threaded context.
             // Ops that have mutable data internally, or rely on external
             // caching, must thus be appropriately mutexed.
-            
-            virtual void apply(float* rgbaBuffer, long numPixels) const = 0;
-            
+
+            virtual void apply(void * img, long numPixels) const
+            { m_cpuOp->apply(img, img, numPixels); }
+
+            virtual void apply(const void * inImg, void * outImg, long numPixels) const
+            { m_cpuOp->apply(inImg, outImg, numPixels); }
+
             
             // Is this op supported by the legacy shader text generator ?
             virtual bool supportedByLegacyShader() const { return true; }
@@ -352,15 +357,23 @@ OCIO_NAMESPACE_ENTER
 
             ConstOpDataRcPtr data() const { return std::const_pointer_cast<const OpData>(m_data); }
 
+            ConstOpCPURcPtr getCPUOp() const { return m_cpuOp; }
+
         protected:
             Op();
             OpDataRcPtr & data() { return m_data; }
 
             std::string m_cacheID;
 
+            // This holds a CPU renderer for the specific op that is specialized 
+            // to the actual parameters being used.
+            OpCPURcPtr  m_cpuOp;
+
         private:
-            Op(const Op &);
-            Op& operator= (const Op &);
+            Op(const Op &) = delete;
+            Op& operator= (const Op &) = delete;
+
+            // The OpData instance holds the parameters (LUT values, matrix coefs, etc.) being used.
             OpDataRcPtr m_data;
     };
     
