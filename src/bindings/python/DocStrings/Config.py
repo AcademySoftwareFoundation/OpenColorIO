@@ -177,7 +177,8 @@ class Config:
         """
         getSearchPath()
         
-        Returns the search path.
+        Returns the search path as a concatenated string (see 
+        getSearchPathByIndex for a more platform agnostic function).
         
         :return: search path
         :rtype: string
@@ -188,9 +189,53 @@ class Config:
         """
         setSearchPath(path)
         
-        Sets the search path.
+        Sets the search path as a concatenated string (see addSearchPath
+        for a more platform agnostic function).
         
         :param path: the search path
+        :type path: string
+        """
+        pass
+
+    def getNumSearchPaths(self):
+        """
+        getNumSearchPaths()
+
+        Return the number of search paths.
+
+        :return: the number of search paths
+        :rtype: int
+        """
+        pass
+
+    def getSearchPathByIndex(self, index):
+        """
+        getSearchPathByIndex(index)
+
+        Return one of the search paths.
+
+        :param index: the index of the search path
+        :type index: int
+        :return: the search path at index
+        :rtype: string
+        """
+        pass
+
+    def clearSearchPaths(self):
+        """
+        clearSearchPaths()
+
+        Clear the search path list.
+        """
+        pass
+
+    def addSearchPath(self, path):
+        """
+        addSearchPath(path)
+
+        Add a search path to the end of the list.
+
+        :param path: the search path to add
         :type path: string
         """
         pass

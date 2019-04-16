@@ -79,6 +79,8 @@ OCIO_NAMESPACE_ENTER
             {
                 config_ = rhs.config_;
                 formatName_ = rhs.formatName_;
+                type_ = rhs.type_;
+                metadata_ = rhs.metadata_;
                 inputSpace_ = rhs.inputSpace_;
                 shaperSpace_ = rhs.shaperSpace_;
                 looks_ = rhs.looks_;
