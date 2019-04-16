@@ -362,7 +362,7 @@ OCIO_NAMESPACE_ENTER
         }
         else if(capability == FORMAT_CAPABILITY_WRITE)
         {
-            if(index<0 || index>=static_cast<int>(m_readFormatNames.size()))
+            if(index<0 || index>=static_cast<int>(m_writeFormatNames.size()))
             {
                 return "";
             }
