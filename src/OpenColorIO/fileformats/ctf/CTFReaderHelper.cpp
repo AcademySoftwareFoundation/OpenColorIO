@@ -2288,8 +2288,10 @@ void CTFReaderReferenceElt::start(const char **atts)
         }
         else if (0 == Platform::Strcasecmp(ATTR_IS_INVERTED, atts[i]))
         {
-            bool isInverted = (0 == Platform::Strcasecmp("true", atts[i + 1]));
-            getReference()->setDirection(TRANSFORM_DIR_INVERSE);
+            if (0 == Platform::Strcasecmp("true", atts[i + 1]))
+            {
+                getReference()->setDirection(TRANSFORM_DIR_INVERSE);
+            }
         }
 
         i += 2;
