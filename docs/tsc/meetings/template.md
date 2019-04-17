@@ -16,7 +16,7 @@ Attendees:
   * [ ] Kevin Wheatley (_TSC_) - Framestore
   * ...others...
 
-Appologies:
+Apologies:
   NONE
 
 # **OCIO TSC Meeting Notes**
