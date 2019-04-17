@@ -200,7 +200,7 @@ namespace
     static constexpr unsigned g_winHeight  = 256;
     static constexpr unsigned g_components = 4;
 
-    OpenGLBuilderRcPtr g_oglBuilder;
+    OCIO::OpenGLBuilderRcPtr g_oglBuilder;
 
     GLuint g_imageTexID;
 
@@ -399,7 +399,7 @@ namespace
         processor->extractGpuShaderInfo(shaderDesc);
 
         // Step 3: Create the OpenGL builder to prepare the GPU shader program.
-        g_oglBuilder = OpenGLBuilder::Create(shaderDesc);
+        g_oglBuilder = OCIO::OpenGLBuilder::Create(shaderDesc);
         g_oglBuilder->setVerbose(test->isVerbose());
 
         // Step 4: Allocate & upload all the LUTs in a dedicated GPU texture.
