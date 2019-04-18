@@ -985,10 +985,34 @@ OIIO_ADD_TEST(FileTransform, AllFormats)
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("spi3d", "spi3d"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("spimtx", "spimtx"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("vf", "nukevf"));
-
 }
 
-OIIO_ADD_TEST(FileTransform, validate)
+OIIO_ADD_TEST(FileTransform, FormatByIndex)
+{
+    OCIO::FormatRegistry & formatRegistry = OCIO::FormatRegistry::GetInstance();
+
+    for (unsigned int i = 0; i < formatRegistry.getNumRawFormats(); ++i)  {
+        if (i < formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_WRITE)) {
+            OIIO_CHECK_ASSERT(formatRegistry.getFormatNameByIndex(OCIO::FORMAT_CAPABILITY_WRITE, i) != "");
+            OIIO_CHECK_ASSERT(formatRegistry.getFormatExtensionByIndex(OCIO::FORMAT_CAPABILITY_WRITE, i) != "");
+        }
+        else {
+            OIIO_CHECK_ASSERT(formatRegistry.getFormatNameByIndex(OCIO::FORMAT_CAPABILITY_WRITE, i) == "");
+            OIIO_CHECK_ASSERT(formatRegistry.getFormatExtensionByIndex(OCIO::FORMAT_CAPABILITY_WRITE, i) == "");
+        }
+
+        if (i < formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_READ)) {
+            OIIO_CHECK_ASSERT(formatRegistry.getFormatNameByIndex(OCIO::FORMAT_CAPABILITY_READ, i) != "");
+            OIIO_CHECK_ASSERT(formatRegistry.getFormatExtensionByIndex(OCIO::FORMAT_CAPABILITY_READ, i) != "");
+        }
+        else {
+            OIIO_CHECK_ASSERT(formatRegistry.getFormatNameByIndex(OCIO::FORMAT_CAPABILITY_READ, i) == "");
+            OIIO_CHECK_ASSERT(formatRegistry.getFormatExtensionByIndex(OCIO::FORMAT_CAPABILITY_READ, i) == "");
+        }
+    }
+}
+
+OIIO_ADD_TEST(FileTransform, Validate)
 {
     OCIO::FileTransformRcPtr tr = OCIO::FileTransform::Create();
 
