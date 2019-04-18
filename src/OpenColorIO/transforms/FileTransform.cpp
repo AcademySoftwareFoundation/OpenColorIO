@@ -996,7 +996,7 @@ OIIO_ADD_TEST(FileTransform, FormatByIndex)
             OIIO_CHECK_ASSERT(formatRegistry.getFormatNameByIndex(OCIO::FORMAT_CAPABILITY_WRITE, i) != "");
             OIIO_CHECK_ASSERT(formatRegistry.getFormatExtensionByIndex(OCIO::FORMAT_CAPABILITY_WRITE, i) != "");
         }
-        else {
+        else {
             OIIO_CHECK_ASSERT(formatRegistry.getFormatNameByIndex(OCIO::FORMAT_CAPABILITY_WRITE, i) == "");
             OIIO_CHECK_ASSERT(formatRegistry.getFormatExtensionByIndex(OCIO::FORMAT_CAPABILITY_WRITE, i) == "");
         }
@@ -1005,7 +1005,7 @@ OIIO_ADD_TEST(FileTransform, FormatByIndex)
             OIIO_CHECK_ASSERT(formatRegistry.getFormatNameByIndex(OCIO::FORMAT_CAPABILITY_READ, i) != "");
             OIIO_CHECK_ASSERT(formatRegistry.getFormatExtensionByIndex(OCIO::FORMAT_CAPABILITY_READ, i) != "");
         }
-        else {
+        else {
             OIIO_CHECK_ASSERT(formatRegistry.getFormatNameByIndex(OCIO::FORMAT_CAPABILITY_READ, i) == "");
             OIIO_CHECK_ASSERT(formatRegistry.getFormatExtensionByIndex(OCIO::FORMAT_CAPABILITY_READ, i) == "");
         }
