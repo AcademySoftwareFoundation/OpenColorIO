@@ -308,7 +308,6 @@ OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_legacy_shader)
     test.setErrorThreshold(5e-4f);
 }
 
-
 OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_spi3d_linear)
 {
     // Linear interpolation

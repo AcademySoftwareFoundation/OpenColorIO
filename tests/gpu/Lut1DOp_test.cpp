@@ -88,7 +88,6 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_legacy_shader)
     test.setErrorThreshold(1e-6f);
 }
 
-
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_inverse_legacy_shader)
 {
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_1.spi1d");
@@ -101,7 +100,6 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_inverse_legacy_shader)
     test.setErrorThreshold(1e-6f);
 }
 
-
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_generic_shader)
 {
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_1.spi1d");
@@ -111,7 +109,6 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_generic_shader)
 
     test.setErrorThreshold(1e-6f);
 }
-
 
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_inverse_generic_shader)
 {
@@ -124,7 +121,6 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_inverse_generic_shader)
     test.setErrorThreshold(1e-6f);
 }
 
-
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_legacy_shader)
 {
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_2.spi1d");
@@ -135,7 +131,6 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_legacy_shader)
 
     test.setErrorThreshold(2e-4f);
 }
-
 
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_inverse_legacy_shader)
 {
@@ -148,7 +143,6 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_inverse_legacy_shader)
 
     test.setErrorThreshold(2e-4f);
 }
-
 
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_generic_shader)
 {
@@ -164,7 +158,6 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_generic_shader)
     test.setTestNaN(false);
 }
 
-
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_inverse_generic_shader)
 {
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_2.spi1d");
@@ -178,7 +171,6 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_inverse_generic_shader)
     test.setTestNaN(false);
 }
 
-
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_legacy_shader)
 {
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_3.spi1d");
@@ -189,7 +181,6 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_legacy_shader)
 
     test.setErrorThreshold(1e-6f);
 }
-
 
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_inverse_legacy_shader)
 {
@@ -203,7 +194,6 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_inverse_legacy_shader)
     test.setErrorThreshold(1e-6f);
 }
 
-
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_generic_shader)
 {
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_3.spi1d");
@@ -213,7 +203,6 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_generic_shader)
 
     test.setErrorThreshold(1e-6f);
 }
-
 
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_inverse_generic_shader)
 {
@@ -226,7 +215,6 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_inverse_generic_shader)
     test.setErrorThreshold(1e-6f);
 }
 
-
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_nearest_generic_shader)
 {
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_3.spi1d");
@@ -237,7 +225,6 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_nearest_generic_shader)
 
     test.setErrorThreshold(1e-6f);
 }
-
 
 OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_legacy_shader)
 {
@@ -257,7 +244,6 @@ OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_legacy_shader)
     test.setTestInfinity(false);
 }
 
-
 OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_inverse_legacy_shader)
 {
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_4.spi1d");
@@ -274,7 +260,6 @@ OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_inverse_legacy_shader)
     test.setTestNaN(false);
     test.setTestInfinity(false);
 }
-
 
 OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_generic_shader)
 {
@@ -302,7 +287,6 @@ OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_inverse_generic_shader)
     test.setTestNaN(false);
     test.setTestInfinity(false);
 }
-
 
 OCIO_ADD_GPU_TEST(Lut1DOp, not_linear_lut1d_5_generic_shader)
 {

@@ -81,7 +81,6 @@ OCIO_ADD_GPU_TEST(LogTransform, LogBase_10_legacy)
     test.setTestNaN(false);
 }
 
-
 OCIO_ADD_GPU_TEST(LogTransform, LogBase_10_legacy_inverse)
 {
     OCIO::GpuShaderDescRcPtr shaderDesc 
@@ -91,7 +90,6 @@ OCIO_ADD_GPU_TEST(LogTransform, LogBase_10_legacy_inverse)
 
     test.setTestNaN(false);
 }
-
 
 OCIO_ADD_GPU_TEST(LogTransform, LogBase_10_generic_shader)
 {
@@ -103,7 +101,6 @@ OCIO_ADD_GPU_TEST(LogTransform, LogBase_10_generic_shader)
     test.setTestNaN(false);
 }
 
-
 OCIO_ADD_GPU_TEST(LogTransform, LogBase_10_inverse_generic_shader)
 {
     OCIO::GpuShaderDescRcPtr shaderDesc 
@@ -113,7 +110,6 @@ OCIO_ADD_GPU_TEST(LogTransform, LogBase_10_inverse_generic_shader)
 
     test.setTestNaN(false);
 }
-
 
 OCIO_ADD_GPU_TEST(LogTransform, LogBase_euler_legacy)
 {
@@ -125,7 +121,6 @@ OCIO_ADD_GPU_TEST(LogTransform, LogBase_euler_legacy)
     test.setTestNaN(false);
 }
 
-
 OCIO_ADD_GPU_TEST(LogTransform, LogBase_euler_legacy_inverse)
 {
     OCIO::GpuShaderDescRcPtr shaderDesc 
@@ -136,7 +131,6 @@ OCIO_ADD_GPU_TEST(LogTransform, LogBase_euler_legacy_inverse)
     test.setTestNaN(false);
 }
 
-
 OCIO_ADD_GPU_TEST(LogTransform, LogBase_euler_generic_shader)
 {
     OCIO::GpuShaderDescRcPtr shaderDesc 
@@ -146,7 +140,6 @@ OCIO_ADD_GPU_TEST(LogTransform, LogBase_euler_generic_shader)
 
     test.setTestNaN(false);
 }
-
 
 OCIO_ADD_GPU_TEST(LogTransform, LogBase_euler_inverse_generic_shader)
 {
