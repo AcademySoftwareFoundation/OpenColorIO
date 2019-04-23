@@ -615,7 +615,7 @@ OCIO_NAMESPACE_ENTER
             const Lut1DOp & constThis = *this;
             ConstLut1DOpDataRcPtr lutDataConst = constThis.lut1DData();
 
-            m_cpuOp = GetLut1DRenderer(lutDataConst);
+            m_cpuOp = GetLut1DRenderer(lutDataConst, BIT_DEPTH_F32, BIT_DEPTH_F32);
 
             // Rebuild the cache identifier
             std::ostringstream cacheIDStream;

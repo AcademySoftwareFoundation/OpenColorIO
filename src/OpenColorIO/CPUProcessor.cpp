@@ -30,11 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "BitDepthUtils.h"
 #include "CPUProcessor.h"
-#include "Logging.h"
 #include "ops/Lut1D/Lut1DOpCPU.h"
-#include "ops/Lut3D/Lut3DOpCPU.h"
-#include "ops/Matrix/MatrixOpCPU.h"
-#include "ops/Range/RangeOpCPU.h"
 
 
 OCIO_NAMESPACE_ENTER
@@ -53,11 +49,17 @@ ConstOpCPURcPtr CreateCPUOp(const OpRcPtr & op, BitDepth inBD, BitDepth outBD)
     }
     else if (o->data()->getType()==OpData::Lut1DType)
     {
-        // TODO: Implement a 1D LUT CPUOp with bit depth support.
-        return OpCPURcPtr();
+        // Note: Only case where a clone is mandatory.
+        Lut1DOpDataRcPtr lut = DynamicPtrCast<const Lut1DOpData>(o->data())->clone();
+        lut->setInputBitDepth(inBD);
+        lut->setOutputBitDepth(outBD);
+        lut->finalize();
+
+        ConstLut1DOpDataRcPtr l = lut;
+        return GetLut1DRenderer(l, inBD, outBD);
     }
 
-    throw Exception("Only the 1D LUT Op supports bit depths other than F32");
+    throw Exception("Only the 1D LUT Op supports other bit depths than F32");
 }
 
 std::string PixelFormatToString(PixelFormat pxlFormat)
@@ -72,18 +74,6 @@ std::string PixelFormatToString(PixelFormat pxlFormat)
         case CHANNEL_ORDERING_BGRA:
             val += "bgra";
             break;
-// TODO: Will uncomment after implementation is complete.
-/*
-        case CHANNEL_ORDERING_ABGR:
-            val += "abgr";
-            break;
-        case CHANNEL_ORDERING_RGB:
-            val += "rgb";
-            break;
-        case CHANNEL_ORDERING_BGR:
-            val += "bgr";
-            break;
-*/
         default:
             throw Exception("Unsupported channel ordering");
             break;
@@ -96,11 +86,6 @@ std::string PixelFormatToString(PixelFormat pxlFormat)
         case BIT_DEPTH_UINT8:
             val += "uint8";
             break;
-// TODO: Will uncomment after implementation is complete.
-/*
-        case BIT_DEPTH_UINT8:
-            val += "uint8";
-            break;
         case BIT_DEPTH_UINT10:
             val += "uint10";
             break;
@@ -110,7 +95,6 @@ std::string PixelFormatToString(PixelFormat pxlFormat)
         case BIT_DEPTH_UINT14:
             val += "uint14";
             break;
-*/            
         case BIT_DEPTH_F16:
             val += "half";
             break;
