@@ -282,7 +282,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
 #endif
-#ifdef USE_SSE
+#if USE_SSE && OCIO_UNIT_TEST
         void Lut1D_Nearest_SSE(float* rgbaBuffer, long numPixels, const Lut1D & lut)
         {
             // orig: 546 ms
