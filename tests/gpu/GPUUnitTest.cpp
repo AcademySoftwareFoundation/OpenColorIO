@@ -207,7 +207,7 @@ namespace
     void AllocateImageTexture()
     {
         const unsigned numEntries = g_winWidth * g_winHeight * g_components;
-        OCIOGPUTest::CustomValues::Values image(g_winWidth*g_winHeight*g_components, 0.0f);
+        OCIOGPUTest::CustomValues::Values image(numEntries, 0.0f);
 
         glGenTextures(1, &g_imageTexID);
 
@@ -259,12 +259,6 @@ namespace
         glDisable(GL_TEXTURE_2D);
         
         glutSwapBuffers();
-    }
-
-    void CleanUp(void)
-    {
-        g_oglBuilder.reset();
-        glutDestroyWindow(g_win);
     }
 
     void SetTestValue(float * image, float val, unsigned numComponents)

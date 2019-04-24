@@ -129,11 +129,11 @@ LogOpData::LogOpData(BitDepth inBitDepth,
                      const Params & greenParams,
                      const Params & blueParams)
     : OpData(inBitDepth, outBitDepth)
-    , m_direction(dir)
-    , m_base(base)
     , m_redParams(redParams)
     , m_greenParams(greenParams)
     , m_blueParams(blueParams)
+    , m_base(base)
+    , m_direction(dir)
 {
     if (m_direction == TRANSFORM_DIR_UNKNOWN)
     {
