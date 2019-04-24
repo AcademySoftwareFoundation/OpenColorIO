@@ -75,8 +75,6 @@ void GetRangeGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
         }
     }
 
-    const float qnan = std::numeric_limits<float>::quiet_NaN();
-
     if(range->minClips())
     {
         const double lowerBound[3] 

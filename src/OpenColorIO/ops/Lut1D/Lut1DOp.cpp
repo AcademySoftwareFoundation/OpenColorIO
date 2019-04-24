@@ -282,7 +282,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
 #endif
-#ifdef USE_SSE
+#if USE_SSE && OCIO_UNIT_TEST
         void Lut1D_Nearest_SSE(float* rgbaBuffer, long numPixels, const Lut1D & lut)
         {
             // orig: 546 ms
@@ -615,7 +615,7 @@ OCIO_NAMESPACE_ENTER
             const Lut1DOp & constThis = *this;
             ConstLut1DOpDataRcPtr lutDataConst = constThis.lut1DData();
 
-            m_cpuOp = GetLut1DRenderer(lutDataConst);
+            m_cpuOp = GetLut1DRenderer(lutDataConst, BIT_DEPTH_F32, BIT_DEPTH_F32);
 
             // Rebuild the cache identifier
             std::ostringstream cacheIDStream;

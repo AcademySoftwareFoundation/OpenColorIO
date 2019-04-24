@@ -40,6 +40,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Platform.h"
 #include "SSE.h"
 
+
+// Suppress bogus warning when compiling with gcc
+#if __GNUC__ && __GNUC__ <= 5
+    #pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
+
+
 OCIO_NAMESPACE_ENTER
 {
 namespace
@@ -1313,6 +1320,10 @@ void InvLut3DRenderer::RangeTree::initRanges(float *grvec)
         cornerOffsets[1] = 1;             // increment along X
         cornerOffsets[2] = m_gsz[1];      // increment along Y
         cornerOffsets[3] = m_gsz[1] + 1;  // increment along X + Y
+    }
+    else
+    {
+        throw Exception("Unsupported channel number.");
     }
 
     float minVal[MAX_N] = { 0.0f, 0.0f, 0.0f, 0.0f };

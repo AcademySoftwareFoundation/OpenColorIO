@@ -326,8 +326,9 @@ private:
         STATE_IMAGE_PROCESSED,
         STATE_IMAGE_READ
     };
-    State m_initState;
+
     GLint m_glwin;
+    State m_initState;
     OpenGLBuilderRcPtr m_oglBuilder;
     GLuint m_imageTexID;
     GLenum m_format;
