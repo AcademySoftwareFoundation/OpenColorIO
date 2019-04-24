@@ -191,8 +191,6 @@ OCIO_NAMESPACE_ENTER
             return environ;
 #endif
         }
-        
-        const int MAX_PATH_LENGTH = 4096;
     }
     
     void LoadEnvironment(EnvMap & map, bool update)
