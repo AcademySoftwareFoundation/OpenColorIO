@@ -188,8 +188,8 @@ For standards on contributing to documentation, see the
 ## Reporting Vulnerabilities
 Quickly resolving security related issues is very important to us. If you think
 you've found a potential vulnerability in OpenColorIO, please report it by
-emailing ocio-tsc-private@lists.aswf.io. Only TSC members and ASWF project
-management are on this private list.
+emailing security@opencolorio.org. Only TSC members and ASWF project
+management have access to these messages.
 
 Include detailed steps to reproduce the issue, and any other information that
 could aid an investigation. Someone will assess the report and make every
