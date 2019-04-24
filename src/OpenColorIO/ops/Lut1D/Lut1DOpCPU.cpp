@@ -1914,12 +1914,16 @@ OIIO_ADD_TEST(Lut1DRenderer, nan_test)
         = OCIO::GetLut1DRenderer(lutConst, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32);
 
     const float qnan = std::numeric_limits<float>::quiet_NaN();
-    float pixels[16] = { qnan, 0.5f, 0.3f, -0.2f, 
+    const float inf = std::numeric_limits<float>::infinity();
+
+    float pixels[24] = { qnan, 0.5f, 0.3f, -0.2f,
                          0.5f, qnan, 0.3f, 0.2f, 
                          0.5f, 0.3f, qnan, 1.2f,
-                         0.5f, 0.3f, 0.2f, qnan };
+                         0.5f, 0.3f, 0.2f, qnan,
+                         inf,  inf,  inf,  inf,
+                         -inf, -inf, -inf, -inf };
 
-    renderer->apply(pixels, pixels, 4);
+    renderer->apply(pixels, pixels, 6);
 
     OIIO_CHECK_CLOSE(pixels[0], values[0], 1e-7f);
     OIIO_CHECK_CLOSE(pixels[5], values[1], 1e-7f);
