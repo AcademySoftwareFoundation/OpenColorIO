@@ -987,7 +987,7 @@ OIIO_ADD_TEST(FileTransform, AllFormats)
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("vf", "nukevf"));
 }
 
-void GetFormatByIndex(OCIO::FormatRegistry &reg, int cap)
+void ValidateFormatByIndex(OCIO::FormatRegistry &reg, int cap)
 {
     int numFormat = reg.getNumFormats(cap);
 
@@ -1007,8 +1007,8 @@ void GetFormatByIndex(OCIO::FormatRegistry &reg, int cap)
 OIIO_ADD_TEST(FileTransform, FormatByIndex)
 {
     OCIO::FormatRegistry & formatRegistry = OCIO::FormatRegistry::GetInstance();
-    GetFormatByIndex(formatRegistry, OCIO::FORMAT_CAPABILITY_WRITE);
-    GetFormatByIndex(formatRegistry, OCIO::FORMAT_CAPABILITY_READ);
+    ValidateFormatByIndex(formatRegistry, OCIO::FORMAT_CAPABILITY_WRITE);
+    ValidateFormatByIndex(formatRegistry, OCIO::FORMAT_CAPABILITY_READ);
 }
 
 OIIO_ADD_TEST(FileTransform, Validate)
