@@ -987,29 +987,28 @@ OIIO_ADD_TEST(FileTransform, AllFormats)
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("vf", "nukevf"));
 }
 
+void GetFormatByIndex(OCIO::FormatRegistry &reg, int cap)
+{
+    int numFormat = reg.getNumFormats(cap);
+
+    // Check out of bounds access
+    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strcasecmp(reg.getFormatNameByIndex(cap, -1), ""));
+    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strcasecmp(reg.getFormatExtensionByIndex(cap, -1), ""));
+    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strcasecmp(reg.getFormatNameByIndex(cap, numFormat + 1), ""));
+    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strcasecmp(reg.getFormatExtensionByIndex(cap, numFormat + 1), ""));
+
+    // Check valid access
+    for (int i = 0; i < numFormat; ++i) {
+        OIIO_CHECK_NE(0, OCIO::Platform::Strcasecmp(reg.getFormatNameByIndex(cap, i), ""));
+        OIIO_CHECK_NE(0, OCIO::Platform::Strcasecmp(reg.getFormatExtensionByIndex(cap, i), ""));
+    }
+}
+
 OIIO_ADD_TEST(FileTransform, FormatByIndex)
 {
     OCIO::FormatRegistry & formatRegistry = OCIO::FormatRegistry::GetInstance();
-
-    for (unsigned int i = 0; i < formatRegistry.getNumRawFormats(); ++i)  {
-        if (i < formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_WRITE)) {
-            OIIO_CHECK_ASSERT(formatRegistry.getFormatNameByIndex(OCIO::FORMAT_CAPABILITY_WRITE, i) != "");
-            OIIO_CHECK_ASSERT(formatRegistry.getFormatExtensionByIndex(OCIO::FORMAT_CAPABILITY_WRITE, i) != "");
-        }
-        else {
-            OIIO_CHECK_ASSERT(formatRegistry.getFormatNameByIndex(OCIO::FORMAT_CAPABILITY_WRITE, i) == "");
-            OIIO_CHECK_ASSERT(formatRegistry.getFormatExtensionByIndex(OCIO::FORMAT_CAPABILITY_WRITE, i) == "");
-        }
-
-        if (i < formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_READ)) {
-            OIIO_CHECK_ASSERT(formatRegistry.getFormatNameByIndex(OCIO::FORMAT_CAPABILITY_READ, i) != "");
-            OIIO_CHECK_ASSERT(formatRegistry.getFormatExtensionByIndex(OCIO::FORMAT_CAPABILITY_READ, i) != "");
-        }
-        else {
-            OIIO_CHECK_ASSERT(formatRegistry.getFormatNameByIndex(OCIO::FORMAT_CAPABILITY_READ, i) == "");
-            OIIO_CHECK_ASSERT(formatRegistry.getFormatExtensionByIndex(OCIO::FORMAT_CAPABILITY_READ, i) == "");
-        }
-    }
+    GetFormatByIndex(formatRegistry, OCIO::FORMAT_CAPABILITY_WRITE);
+    GetFormatByIndex(formatRegistry, OCIO::FORMAT_CAPABILITY_READ);
 }
 
 OIIO_ADD_TEST(FileTransform, Validate)
