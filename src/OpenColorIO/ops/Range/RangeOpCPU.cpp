@@ -454,7 +454,7 @@ OIIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings)
     OIIO_CHECK_EQUAL(image[16], 0.50f);
     OIIO_CHECK_EQUAL(image[17], 0.50f);
     OIIO_CHECK_EQUAL(image[18], 0.50f);
-    OIIO_CHECK_ASSERT(std::isnan(image[19]));
+    OIIO_CHECK_ASSERT(OCIO::IsNan(image[19]));
 
     OIIO_CHECK_EQUAL(image[20], 1.50f);
     OIIO_CHECK_EQUAL(image[21], 1.50f);
@@ -532,7 +532,7 @@ OIIO_ADD_TEST(RangeOpCPU, scale_with_low_clipping)
     OIIO_CHECK_EQUAL(image[16], 0.50f);
     OIIO_CHECK_EQUAL(image[17], 0.50f);
     OIIO_CHECK_EQUAL(image[18], 0.50f);
-    OIIO_CHECK_ASSERT(std::isnan(image[19]));
+    OIIO_CHECK_ASSERT(OCIO::IsNan(image[19]));
 
     OIIO_CHECK_EQUAL(image[20], inf);
     OIIO_CHECK_EQUAL(image[21], inf);
@@ -610,7 +610,7 @@ OIIO_ADD_TEST(RangeOpCPU, scale_with_high_clipping)
     OIIO_CHECK_EQUAL(image[16], 0.50f);
     OIIO_CHECK_EQUAL(image[17], 0.50f);
     OIIO_CHECK_EQUAL(image[18], 0.50f);
-    OIIO_CHECK_ASSERT(std::isnan(image[19]));
+    OIIO_CHECK_ASSERT(OCIO::IsNan(image[19]));
 
     OIIO_CHECK_EQUAL(image[20], 1.50f);
     OIIO_CHECK_EQUAL(image[21], 1.50f);

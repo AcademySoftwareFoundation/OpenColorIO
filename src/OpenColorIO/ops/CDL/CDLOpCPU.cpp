@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <algorithm>
 #include <cmath>
+#include <string.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -308,9 +309,9 @@ template<>
 inline void ApplyPower<false>(float * pix, const float * power)
 {
     // Note: Set NaNs to 0 to match the SSE path.
-    pix[0] = std::isnan(pix[0]) ? 0.0f : (pix[0]<0.f ? pix[0] : powf(pix[0], power[0]));
-    pix[1] = std::isnan(pix[1]) ? 0.0f : (pix[1]<0.f ? pix[1] : powf(pix[1], power[1]));
-    pix[2] = std::isnan(pix[2]) ? 0.0f : (pix[2]<0.f ? pix[2] : powf(pix[2], power[2]));
+    pix[0] = IsNan(pix[0]) ? 0.0f : (pix[0]<0.f ? pix[0] : powf(pix[0], power[0]));
+    pix[1] = IsNan(pix[1]) ? 0.0f : (pix[1]<0.f ? pix[1] : powf(pix[1], power[1]));
+    pix[2] = IsNan(pix[2]) ? 0.0f : (pix[2]<0.f ? pix[2] : powf(pix[2], power[2]));
 }
 
 #endif // USE_SSE
