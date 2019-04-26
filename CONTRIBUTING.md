@@ -122,7 +122,7 @@ in [Required Approvals](#required-approvals)), a Committer other than the PR
 contributor may squash and merge changes into the master branch.
 
 See also (from the OCIO Developer Guide):
-* [Getting started](http://opencolorio.org/developers/geting_started.html)
+* [Getting started](http://opencolorio.org/developers/getting_started.html)
 * [Submitting Changes](http://opencolorio.org/developers/submitting_changes.html)
 
 ## Required Approvals
