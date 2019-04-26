@@ -684,15 +684,15 @@ void ValidateFormatByIndex(OCIO::FormatRegistry &reg, int cap)
     int numFormat = reg.getNumFormats(cap);
 
     // Check out of bounds access
-    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strcasecmp(reg.getFormatNameByIndex(cap, -1), ""));
-    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strcasecmp(reg.getFormatExtensionByIndex(cap, -1), ""));
-    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strcasecmp(reg.getFormatNameByIndex(cap, numFormat), ""));
-    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strcasecmp(reg.getFormatExtensionByIndex(cap, numFormat), ""));
+    OIIO_CHECK_EQUAL(0, strcmp(reg.getFormatNameByIndex(cap, -1), ""));
+    OIIO_CHECK_EQUAL(0, strcmp(reg.getFormatExtensionByIndex(cap, -1), ""));
+    OIIO_CHECK_EQUAL(0, strcmp(reg.getFormatNameByIndex(cap, numFormat), ""));
+    OIIO_CHECK_EQUAL(0, strcmp(reg.getFormatExtensionByIndex(cap, numFormat), ""));
 
     // Check valid access
     for (int i = 0; i < numFormat; ++i) {
-        OIIO_CHECK_NE(0, OCIO::Platform::Strcasecmp(reg.getFormatNameByIndex(cap, i), ""));
-        OIIO_CHECK_NE(0, OCIO::Platform::Strcasecmp(reg.getFormatExtensionByIndex(cap, i), ""));
+        OIIO_CHECK_NE(0, strcmp(reg.getFormatNameByIndex(cap, i), ""));
+        OIIO_CHECK_NE(0, strcmp(reg.getFormatExtensionByIndex(cap, i), ""));
     }
 }
 
