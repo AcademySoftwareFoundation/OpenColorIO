@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Mutex.h"
 #include "ops/NoOp/NoOps.h"
 #include "PathUtils.h"
+#include "Platform.h"
 #include "pystring/pystring.h"
 
 OCIO_NAMESPACE_ENTER
@@ -361,7 +362,7 @@ OCIO_NAMESPACE_ENTER
         }
         else if(capability == FORMAT_CAPABILITY_WRITE)
         {
-            if(index<0 || index>=static_cast<int>(m_readFormatNames.size()))
+            if(index<0 || index>=static_cast<int>(m_writeFormatNames.size()))
             {
                 return "";
             }
@@ -440,12 +441,10 @@ OCIO_NAMESPACE_ENTER
             
             // Try the initial format.
             std::string primaryErrorText;
-            std::string root, extension, name;
+            std::string root, extension;
             pystring::os::path::splitext(root, extension, filepath);
             // remove the leading '.'
             extension = pystring::replace(extension,".","",1);
-
-            name = pystring::os::path::basename(root);
 
             FormatRegistry & formatRegistry = FormatRegistry::GetInstance();
             
@@ -479,7 +478,7 @@ OCIO_NAMESPACE_ENTER
 
                     CachedFileRcPtr cachedFile = tryFormat->Read(
                         filestream,
-                        name);
+                        filepath);
                     
                     if(IsDebugLoggingEnabled())
                     {
@@ -550,7 +549,7 @@ OCIO_NAMESPACE_ENTER
                         throw Exception(os.str().c_str());
                     }
 
-                    cachedFile = altFormat->Read(filestream, name);
+                    cachedFile = altFormat->Read(filestream, filepath);
                     
                     if(IsDebugLoggingEnabled())
                     {
@@ -634,79 +633,98 @@ OCIO_NAMESPACE_ENTER
         FileCacheMap g_fileCache;
         Mutex g_fileCacheLock;
         
-        void GetCachedFileAndFormat(
-            FileFormat * & format, CachedFileRcPtr & cachedFile,
-            const std::string & filepath)
+    } // namespace
+
+    void GetCachedFileAndFormat(FileFormat * & format,
+                                CachedFileRcPtr & cachedFile,
+                                const std::string & filepath)
+    {
+        // Load the file cache ptr from the global map
+        FileCacheResultPtr result;
         {
-            // Load the file cache ptr from the global map
-            FileCacheResultPtr result;
+            AutoMutex lock(g_fileCacheLock);
+            FileCacheMap::iterator iter = g_fileCache.find(filepath);
+            if (iter != g_fileCache.end())
             {
-                AutoMutex lock(g_fileCacheLock);
-                FileCacheMap::iterator iter = g_fileCache.find(filepath);
-                if(iter != g_fileCache.end())
-                {
-                    result = iter->second;
-                }
-                else
-                {
-                    result = FileCacheResultPtr(new FileCacheResult);
-                    g_fileCache[filepath] = result;
-                }
-            }
-            
-            // If this file has already been loaded, return
-            // the result immediately
-            
-            AutoMutex lock(result->mutex);
-            if(!result->ready)
-            {
-                result->ready = true;
-                result->error = false;
-                
-                try
-                {
-                    LoadFileUncached(result->format,
-                                     result->cachedFile,
-                                     filepath);
-                }
-                catch(std::exception & e)
-                {
-                    result->error = true;
-                    result->exceptionText = e.what();
-                }
-                catch(...)
-                {
-                    result->error = true;
-                    std::ostringstream os;
-                    os << "An unknown error occurred in LoadFileUncached, ";
-                    os << filepath;
-                    result->exceptionText = os.str();
-                }
-            }
-            
-            if(result->error)
-            {
-                throw Exception(result->exceptionText.c_str());
+                result = iter->second;
             }
             else
             {
-                format = result->format;
-                cachedFile = result->cachedFile;
+                result = FileCacheResultPtr(new FileCacheResult);
+                g_fileCache[filepath] = result;
             }
         }
-    } // namespace
-    
+
+        // If this file has already been loaded, return
+        // the result immediately
+
+        AutoMutex lock(result->mutex);
+        if (!result->ready)
+        {
+            result->ready = true;
+            result->error = false;
+
+            try
+            {
+                LoadFileUncached(result->format,
+                    result->cachedFile,
+                    filepath);
+            }
+            catch (std::exception & e)
+            {
+                result->error = true;
+                result->exceptionText = e.what();
+            }
+            catch (...)
+            {
+                result->error = true;
+                std::ostringstream os;
+                os << "An unknown error occurred in LoadFileUncached, ";
+                os << filepath;
+                result->exceptionText = os.str();
+            }
+        }
+
+        if (result->error)
+        {
+            throw Exception(result->exceptionText.c_str());
+        }
+        else
+        {
+            format = result->format;
+            cachedFile = result->cachedFile;
+        }
+
+        if (!format)
+        {
+            std::ostringstream os;
+            os << "The specified file load ";
+            os << filepath << " appeared to succeed, but no format ";
+            os << "was returned.";
+            throw Exception(os.str().c_str());
+        }
+
+        if (!cachedFile.get())
+        {
+            std::ostringstream os;
+            os << "The specified file load ";
+            os << filepath << " appeared to succeed, but no cachedFile ";
+            os << "was returned.";
+            throw Exception(os.str().c_str());
+        }
+    }
+
     void ClearFileTransformCaches()
     {
         AutoMutex lock(g_fileCacheLock);
         g_fileCache.clear();
     }
     
-    void BuildFileOps(OpRcPtrVec & ops,
-                      const Config& config,
-                      const ConstContextRcPtr & context,
-                      const FileTransform& fileTransform,
-                      TransformDirection dir)
+    void BuildFileTransformOps(OpRcPtrVec & ops,
+                               const Config& config,
+                               const ConstContextRcPtr & context,
+                               const FileTransform& fileTransform,
+                               TransformDirection dir)
     {
         std::string src = fileTransform.getSrc();
         if(src.empty())
@@ -717,34 +735,62 @@ OCIO_NAMESPACE_ENTER
         }
         
         std::string filepath = context->resolveFileLocation(src.c_str());
-        CreateFileNoOp(ops, filepath);
-        
+
+        // Verify the recursion is valid, FileNoOp is added for each file.
+        for (ConstOpRcPtr&& op : ops)
+        {
+            ConstOpDataRcPtr data = op->data();
+            auto fileData = DynamicPtrCast<const FileNoOpData>(data);
+            if (fileData)
+            {
+                // Error if file is still being loaded and is the same as the
+                // one about to be loaded.
+                if (!fileData->getComplete() &&
+                    Platform::Strcasecmp(fileData->getPath().c_str(),
+                                         filepath.c_str()) == 0)
+                {
+                    std::ostringstream os;
+                    os << "Reference to: " << filepath;
+                    os << " is creating a recursion.";
+
+                    throw Exception(os.str().c_str());
+                }
+            }
+        }
+
         FileFormat* format = NULL;
         CachedFileRcPtr cachedFile;
-        
-        GetCachedFileAndFormat(format, cachedFile, filepath);
-        if(!format)
+
+        try
         {
-            std::ostringstream os;
-            os << "The specified file load ";
-            os << filepath << " appeared to succeed, but no format ";
-            os << "was returned.";
-            throw Exception(os.str().c_str());
+            GetCachedFileAndFormat(format, cachedFile, filepath);
+            // Add FileNoOp and keep track of it.
+            CreateFileNoOp(ops, filepath);
+            ConstOpRcPtr fileNoOp = ops.back();
+
+            // CTF implementation of FileFormat::BuildFileOps might call
+            // BuildFileTransformOps for References.
+            format->BuildFileOps(ops,
+                                 config, context,
+                                 cachedFile, fileTransform,
+                                 dir);
+
+            // File has been loaded completely. It may now be referenced again.
+            ConstOpDataRcPtr data = fileNoOp->data();
+            auto fileData = DynamicPtrCast<const FileNoOpData>(data);
+            if (fileData)
+            {
+                fileData->setComplete();
+            }
         }
-        
-        if(!cachedFile.get())
+        catch (Exception & e)
         {
-            std::ostringstream os;
-            os << "The specified file load ";
-            os << filepath << " appeared to succeed, but no cachedFile ";
-            os << "was returned.";
-            throw Exception(os.str().c_str());
+            std::ostringstream err;
+            err << "The transform file: " << filepath;
+            err << " failed while loading ops with this error: ";
+            err << e.what();
+            throw Exception(err.str().c_str());
         }
-        
-        format->BuildFileOps(ops,
-                             config, context,
-                             cachedFile, fileTransform,
-                             dir);
     }
 }
 OCIO_NAMESPACE_EXIT
@@ -754,7 +800,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include <algorithm>
 #include "unittest.h"
-#include "UnitTestFiles.h"
+#include "UnitTestUtils.h"
 
 void LoadTransformFile(const std::string & fileName)
 {
@@ -785,7 +831,7 @@ OIIO_ADD_TEST(FileTransform, LoadFileOK)
     OIIO_CHECK_NO_THROW(LoadTransformFile(discreetLut));
 
     // Houdini 1D LUT.
-    const std::string houdiniLut("sRGB.lut");
+    const std::string houdiniLut("houdini.lut");
     OIIO_CHECK_NO_THROW(LoadTransformFile(houdiniLut));
 
     // Discreet 3D LUT file.
@@ -887,7 +933,7 @@ OIIO_ADD_TEST(FileTransform, AllFormats)
 {
     OCIO::FormatRegistry & formatRegistry = OCIO::FormatRegistry::GetInstance();
     OIIO_CHECK_EQUAL(19, formatRegistry.getNumRawFormats());
-    OIIO_CHECK_EQUAL(22, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_READ));
+    OIIO_CHECK_EQUAL(23, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_READ));
     OIIO_CHECK_EQUAL(8, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_WRITE));
 
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("3dl", "flame"));
@@ -914,6 +960,7 @@ OIIO_ADD_TEST(FileTransform, AllFormats)
     OIIO_CHECK_ASSERT(!FormatNameFoundByExtension("3dl", "lustre"));
     OIIO_CHECK_ASSERT(!FormatNameFoundByExtension("m3d", "pandora_m3d"));
     OIIO_CHECK_ASSERT(!FormatNameFoundByExtension("icm", "Image Color Matching"));
+    OIIO_CHECK_ASSERT(!FormatNameFoundByExtension("ctf", "Color Transform Format"));
 
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("3dl", "flame"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("3dl", "lustre"));
@@ -921,6 +968,7 @@ OIIO_ADD_TEST(FileTransform, AllFormats)
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("ccc", "ColorCorrectionCollection"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("cdl", "ColorDecisionList"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("clf", "Academy/ASC Common LUT Format"));
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("ctf", "Color Transform Format"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("csp", "cinespace"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("cub", "truelight"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("cube", "iridas_cube"));
@@ -937,10 +985,33 @@ OIIO_ADD_TEST(FileTransform, AllFormats)
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("spi3d", "spi3d"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("spimtx", "spimtx"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("vf", "nukevf"));
-
 }
 
-OIIO_ADD_TEST(FileTransform, validate)
+void ValidateFormatByIndex(OCIO::FormatRegistry &reg, int cap)
+{
+    int numFormat = reg.getNumFormats(cap);
+
+    // Check out of bounds access
+    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strcasecmp(reg.getFormatNameByIndex(cap, -1), ""));
+    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strcasecmp(reg.getFormatExtensionByIndex(cap, -1), ""));
+    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strcasecmp(reg.getFormatNameByIndex(cap, numFormat), ""));
+    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strcasecmp(reg.getFormatExtensionByIndex(cap, numFormat), ""));
+
+    // Check valid access
+    for (int i = 0; i < numFormat; ++i) {
+        OIIO_CHECK_NE(0, OCIO::Platform::Strcasecmp(reg.getFormatNameByIndex(cap, i), ""));
+        OIIO_CHECK_NE(0, OCIO::Platform::Strcasecmp(reg.getFormatExtensionByIndex(cap, i), ""));
+    }
+}
+
+OIIO_ADD_TEST(FileTransform, FormatByIndex)
+{
+    OCIO::FormatRegistry & formatRegistry = OCIO::FormatRegistry::GetInstance();
+    ValidateFormatByIndex(formatRegistry, OCIO::FORMAT_CAPABILITY_WRITE);
+    ValidateFormatByIndex(formatRegistry, OCIO::FORMAT_CAPABILITY_READ);
+}
+
+OIIO_ADD_TEST(FileTransform, Validate)
 {
     OCIO::FileTransformRcPtr tr = OCIO::FileTransform::Create();
 

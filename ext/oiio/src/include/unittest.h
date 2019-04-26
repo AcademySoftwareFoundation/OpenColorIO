@@ -78,7 +78,6 @@ struct AddTest { AddTest(OIIOTest* test); };
         std::stringstream ss;                                           \
         ss <<  __FILE__ << ":" << __LINE__ << ":\n"                     \
            << "FAILED: " << #x << "\n";                                 \
-        ++unit_test_failures;                                           \
         throw OCIO_NAMESPACE::Exception(ss.str().c_str()); }
 
 #define OIIO_CHECK_ASSERT_MESSAGE(x, M)                                 \
@@ -87,9 +86,18 @@ struct AddTest { AddTest(OIIOTest* test); };
                        << "FAILED: " << M << "\n"),                     \
             (void)++unit_test_failures))
 
-#define OIIO_CHECK_EQUAL(x,y)                                           \
+#define OIIO_CHECK_EQUAL(x,y) OIIO_CHECK_EQUAL_FROM(x,y,__LINE__)
+
+// When using OIIO_CHECK_EQUAL in an helper method used by one or more
+// unit tests, the error message indicates the helper method line number
+// and not the unit test line number.
+// 
+// Use OIIO_CHECK_EQUAL_FROM to propagate the right line number
+// to the error message.
+// 
+#define OIIO_CHECK_EQUAL_FROM(x,y,line)                                 \
     (((x) == (y)) ? ((void)0)                                           \
-         : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"          \
+         : ((std::cout << __FILE__ << ":" << line << ":\n"          \
              << "FAILED: " << #x << " == " << #y << "\n"                \
              << "\tvalues were '" << (x) << "' and '" << (y) << "'\n"), \
             (void)++unit_test_failures))
@@ -100,7 +108,6 @@ struct AddTest { AddTest(OIIOTest* test); };
         ss <<  __FILE__ << ":" << __LINE__ << ":\n"                     \
            << "FAILED: " << #x << " == " << #y << "\n"                  \
            << "\tvalues were '" << (x) << "' and '" << (y) << "'\n";    \
-        ++unit_test_failures;                                           \
         throw OCIO_NAMESPACE::Exception(ss.str().c_str()); }
 
 #define OIIO_CHECK_NE(x,y)                                              \
@@ -138,13 +145,23 @@ struct AddTest { AddTest(OIIOTest* test); };
              << "\tvalues were '" << (x) << "' and '" << (y) << "'\n"), \
             (void)++unit_test_failures))
 
-#define OIIO_CHECK_CLOSE(x,y,tol)                                       \
+#define OIIO_CHECK_CLOSE(x,y,tol) OIIO_CHECK_CLOSE_FROM(x,y,tol,__LINE__)
+
+// When using OIIO_CHECK_CLOSE in an helper method used by one or more
+// unit tests, the error message indicates the helper method line number
+// and not the unit test line number.
+// 
+// Use OIIO_CHECK_CLOSE_FROM to propagate the right line number
+// to the error message.
+// 
+#define OIIO_CHECK_CLOSE_FROM(x,y,tol,line)                             \
     ((std::abs((x) - (y)) < (tol)) ? ((void)0)                          \
          : ((std::cout << std::setprecision(10)                         \
-             << __FILE__ << ":" << __LINE__ << ":\n"                    \
-             << "FAILED: abs(" << #x << " - " << #y << ") < " << #tol << "\n" \
-             << "\tvalues were '" << (x) << "', '" << (y) << "' and '" << (tol) << "'\n"), \
-            (void)++unit_test_failures))
+             << __FILE__ << ":" << line << ":\n"                        \
+             << "FAILED: abs(" << #x << " - " << #y << ") < " << #tol   \
+             << "\n"                                                    \
+             << "\tvalues were '" << (x) << "', '" << (y) << "' and '"  \
+             << (tol) << "'\n"), (void)++unit_test_failures))
 
 #define OIIO_CHECK_THROW(S, E)                                          \
     try { S; throw "throwanything"; } catch( E const& ) { } catch (...) { \

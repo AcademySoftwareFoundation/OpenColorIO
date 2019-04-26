@@ -563,8 +563,63 @@ OCIO_NAMESPACE_ENTER
     
     //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const FileTransform&);
-    
 
+
+    //!rst:: //////////////////////////////////////////////////////////////////
+
+    //!cpp:class:: Provides a set of hard-coded algorithmic building blocks 
+    // that are needed to accurately implement various common color transformations.
+    //
+    //
+    class OCIOEXPORT FixedFunctionTransform : public Transform
+    {
+    public:
+        //!cpp:function::
+        static FixedFunctionTransformRcPtr Create();
+        
+        //!cpp:function::
+        virtual TransformRcPtr createEditableCopy() const;
+        
+        //!cpp:function::
+        virtual TransformDirection getDirection() const;
+        //!cpp:function::
+        virtual void setDirection(TransformDirection dir);
+
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
+        //!cpp:function::
+        virtual FixedFunctionStyle getStyle() const;
+        //!cpp:function:: Select which algorithm to use.
+        virtual void setStyle(FixedFunctionStyle style);
+
+        //!cpp:function::
+        size_t getNumParams() const;
+        //!cpp:function:: Set the parameters (for functions that require them).
+        void setParams(const double * params, size_t num);
+        //!cpp:function::
+        void getParams(double * params) const;
+    
+    private:
+        FixedFunctionTransform();
+        FixedFunctionTransform(const FixedFunctionTransform &);
+        virtual ~FixedFunctionTransform();
+        
+        FixedFunctionTransform & operator= (const FixedFunctionTransform &);
+        
+        static void deleter(FixedFunctionTransform * t);
+        
+        class Impl;
+        friend class Impl;
+        Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
+    };
+    
+    //!cpp:function::
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const FixedFunctionTransform&);
+
+    
     //!rst:: //////////////////////////////////////////////////////////////////
     
     //!cpp:class::
@@ -824,13 +879,17 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function::
         void setMatrix(const float * m44);
+        void setMatrix(const double * m44);
         //!cpp:function::
         void getMatrix(float * m44) const;
+        void getMatrix(double * m44) const;
         
         //!cpp:function::
         void setOffset(const float * offset4);
+        void setOffset(const double * offset4);
         //!cpp:function::
         void getOffset(float * offset4) const;
+        void getOffset(double * offset4) const;
         
         //!rst:: **Convenience functions**
         //

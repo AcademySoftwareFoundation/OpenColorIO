@@ -58,6 +58,7 @@ namespace YAML {
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::ExponentTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::ExponentWithLinearTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::FileTransform>;
+    template <> class TypedKeyNotFound<OCIO_NAMESPACE::FixedFunctionTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::GroupTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::LogAffineTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::LogTransform>;
@@ -879,6 +880,71 @@ OCIO_NAMESPACE_ENTER
             out << YAML::EndMap;
         }
         
+        // FixedFunctionTransform
+        
+        inline void load(const YAML::Node& node, FixedFunctionTransformRcPtr& t)
+        {
+            t = FixedFunctionTransform::Create();
+            
+            std::string key;
+            
+            for (Iterator iter = node.begin();
+                 iter != node.end();
+                 ++iter)
+            {
+                const YAML::Node& first = get_first(iter);
+                const YAML::Node& second = get_second(iter);
+                
+                load(first, key);
+                
+                if (second.Type() == YAML::NodeType::Null) continue;
+                
+                if(key == "params")
+                {
+                    std::vector<double> params;
+                    load(second, params);
+                    t->setParams(&params[0], params.size());
+                }
+                else if(key == "style")
+                {
+                    std::string style;
+                    load(second, style);
+                    t->setStyle( FixedFunctionStyleFromString(style.c_str()) );
+                }
+                else if(key == "direction")
+                {
+                    TransformDirection val;
+                    load(second, val);
+                    t->setDirection(val);
+                }
+                else
+                {
+                    LogUnknownKeyWarning(node.Tag(), first);
+                }
+            }
+        }
+        
+        inline void save(YAML::Emitter& out, ConstFixedFunctionTransformRcPtr t)
+        {
+            out << YAML::VerbatimTag("FixedFunctionTransform");
+            out << YAML::Flow << YAML::BeginMap;
+            
+            out << YAML::Key << "style";
+            out << YAML::Value << YAML::Flow << FixedFunctionStyleToString(t->getStyle());
+            
+            const size_t numParams = t->getNumParams();
+            if(numParams>0)
+            {
+                std::vector<double> params(numParams, 0.);
+                t->getParams(&params[0]);
+                out << YAML::Key << "params";
+                out << YAML::Value << YAML::Flow << params;
+            }
+
+            EmitBaseTransformKeyValues(out, t);
+            out << YAML::EndMap;
+        }
+
         // GroupTransform
         
         void load(const YAML::Node& node, TransformRcPtr& t);
@@ -1241,26 +1307,26 @@ OCIO_NAMESPACE_ENTER
                 
                 if(key == "matrix")
                 {
-                    std::vector<float> val;
+                    std::vector<double> val;
                     load(second, val);
                     if(val.size() != 16)
                     {
                         std::ostringstream os;
                         os << "'matrix' values must be 16 ";
-                        os << "floats. Found '" << val.size() << "'.";
+                        os << "numbers. Found '" << val.size() << "'.";
                         throwValueError(node.Tag(), first, os.str());
                     }
                     t->setMatrix(&val[0]);
                 }
                 else if(key == "offset")
                 {
-                    std::vector<float> val;
+                    std::vector<double> val;
                     load(second, val);
                     if(val.size() != 4)
                     {
                         std::ostringstream os;
                         os << "'offset' values must be 4 ";
-                        os << "floats. Found '" << val.size() << "'.";
+                        os << "numbers. Found '" << val.size() << "'.";
                         throwValueError(node.Tag(), first, os.str());
                     }
                     t->setOffset(&val[0]);
@@ -1283,7 +1349,7 @@ OCIO_NAMESPACE_ENTER
             out << YAML::VerbatimTag("MatrixTransform");
             out << YAML::Flow << YAML::BeginMap;
             
-            std::vector<float> matrix(16, 0.0);
+            std::vector<double> matrix(16, 0.0);
             t->getMatrix(&matrix[0]);
             if(!IsM44Identity(&matrix[0]))
             {
@@ -1291,7 +1357,7 @@ OCIO_NAMESPACE_ENTER
                 out << YAML::Value << YAML::Flow << matrix;
             }
             
-            std::vector<float> offset(4, 0.0);
+            std::vector<double> offset(4, 0.0);
             t->getOffset(&offset[0]);
             if(!IsVecEqualToZero(&offset[0],4))
             {
@@ -1594,7 +1660,12 @@ OCIO_NAMESPACE_ENTER
                 load(node, temp);
                 t = temp;
             }
-			else if(type == "GroupTransform") {
+            else if(type == "FixedFunctionTransform")  {
+                FixedFunctionTransformRcPtr temp;
+                load(node, temp);
+                t = temp;
+            }
+            else if(type == "GroupTransform") {
                 GroupTransformRcPtr temp;
                 load(node, temp);
                 t = temp;
@@ -1667,7 +1738,10 @@ OCIO_NAMESPACE_ENTER
             else if(ConstFileTransformRcPtr File_tran = \
                 DynamicPtrCast<const FileTransform>(t))
                 save(out, File_tran);
-			else if(ConstGroupTransformRcPtr Group_tran = \
+            else if(ConstFixedFunctionTransformRcPtr Func_tran = \
+                DynamicPtrCast<const FixedFunctionTransform>(t))
+                save(out, Func_tran);
+            else if(ConstGroupTransformRcPtr Group_tran = \
                 DynamicPtrCast<const GroupTransform>(t))
                 save(out, Group_tran);
             else if(ConstLogAffineTransformRcPtr Log_tran = \
@@ -2047,8 +2121,20 @@ OCIO_NAMESPACE_ENTER
                 }
                 else if(key == "search_path" || key == "resource_path")
                 {
-                    load(second, stringval);
-                    c->setSearchPath(stringval.c_str());
+                    if (second.size() == 0)
+                    {
+                        load(second, stringval);
+                        c->setSearchPath(stringval.c_str());
+                    }
+                    else
+                    {
+                        std::vector<std::string> paths;
+                        load(second, paths);
+                        for (auto & path : paths)
+                        {
+                            c->addSearchPath(path.c_str());
+                        }
+                    }
                 }
                 else if(key == "strictparsing")
                 {
@@ -2227,7 +2313,8 @@ OCIO_NAMESPACE_ENTER
         inline void save(YAML::Emitter& out, const Config* c)
         {
             std::stringstream ss;
-            ss << c->getMajorVersion();
+            const unsigned configMajorVersion = c->getMajorVersion();
+            ss << configMajorVersion;
             if(c->getMinorVersion()!=0)
             {
                 ss << "." << c->getMinorVersion();
@@ -2254,7 +2341,34 @@ OCIO_NAMESPACE_ENTER
                 out << YAML::EndMap;
                 out << YAML::Newline;
             }
-            out << YAML::Key << "search_path" << YAML::Value << c->getSearchPath();
+
+            if (configMajorVersion < 2)
+            {
+                // Save search paths as a single string.
+                out << YAML::Key << "search_path" << YAML::Value << c->getSearchPath();
+            }
+            else
+            {
+                std::vector<std::string> searchPaths;
+                const int numSP = c->getNumSearchPaths();
+                for (int i = 0; i < c->getNumSearchPaths(); ++i)
+                {
+                    searchPaths.emplace_back(c->getSearchPath(i));
+                }
+
+                if (numSP == 0)
+                {
+                    out << YAML::Key << "search_path" << YAML::Value << "";
+                }
+                else if (numSP == 1)
+                {
+                    out << YAML::Key << "search_path" << YAML::Value << searchPaths[0];
+                }
+                else
+                {
+                    out << YAML::Key << "search_path" << YAML::Value << searchPaths;
+                }
+            }
             out << YAML::Key << "strictparsing" << YAML::Value << c->isStrictParsingEnabled();
             
             std::vector<float> luma(3, 0.f);

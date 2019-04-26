@@ -9,8 +9,12 @@ set(OpenColorIO_VERSION_RELEASE_TYPE "dev")
 
 enable_testing()
 
+# Use C++11.
 set(CMAKE_CXX_STANDARD 11)
+# Disable fallback to other C++ version if C++11 is not supported.
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Disable any compiler specific C++ extensions.
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/share/cmake)
 set(CMAKE_WARN_DEPRECATED ON)
@@ -50,8 +54,8 @@ if(MSVC)
 	# Because our Exceptions derive from std::runtime_error we can safely disable this warning
 	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /wd4275")
 else()
-	#TODO: Fix warnings before enabling the flag.
-	#set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wall")
+	# TODO: OCIO being under active development, unused functions are fine for now.
+	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wall -Wno-unused-function")
 endif()
 
 if(OCIO_WARNING_AS_ERROR)

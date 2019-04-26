@@ -77,7 +77,7 @@ OCIO_NAMESPACE_ENTER
 
     bool ExponentOpData::isIdentity() const
     {
-        return IsVecEqualToOneFlt(m_exp4, 4);
+        return IsVecEqualToOne(m_exp4, 4);
     }
 
     void ExponentOpData::finalize()
@@ -99,16 +99,21 @@ OCIO_NAMESPACE_ENTER
 
     namespace
     {
-        void ApplyClampExponent(float* rgbaBuffer, long numPixels,
+        void ApplyClampExponent(const void * inImg, void * outImg, long numPixels,
                                 ConstExponentOpDataRcPtr & exp)
         {
+            const float * in = (const float *)inImg;
+            float * out = (float *)outImg;
+
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
-                rgbaBuffer[0] = powf( std::max(0.0f, rgbaBuffer[0]), float(exp->m_exp4[0]));
-                rgbaBuffer[1] = powf( std::max(0.0f, rgbaBuffer[1]), float(exp->m_exp4[1]));
-                rgbaBuffer[2] = powf( std::max(0.0f, rgbaBuffer[2]), float(exp->m_exp4[2]));
-                rgbaBuffer[3] = powf( std::max(0.0f, rgbaBuffer[3]), float(exp->m_exp4[3]));
-                rgbaBuffer += 4;
+                out[0] = powf( std::max(0.0f, in[0]), float(exp->m_exp4[0]));
+                out[1] = powf( std::max(0.0f, in[1]), float(exp->m_exp4[1]));
+                out[2] = powf( std::max(0.0f, in[2]), float(exp->m_exp4[2]));
+                out[3] = powf( std::max(0.0f, in[3]), float(exp->m_exp4[3]));
+
+                in  += 4;
+                out += 4;
             }
         }
     }
@@ -134,7 +139,8 @@ OCIO_NAMESPACE_ENTER
             virtual void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const;
             
             virtual void finalize();
-            virtual void apply(float* rgbaBuffer, long numPixels) const;
+            virtual void apply(void * img, long numPixels) const;
+            virtual void apply(const void * inImg, void * outImg, long numPixels) const;
             
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
 
@@ -162,7 +168,7 @@ OCIO_NAMESPACE_ENTER
 
                 for(int i=0; i<4; ++i)
                 {
-                    if(!IsScalarEqualToZeroFlt(exp4[i]))
+                    if(!IsScalarEqualToZero(exp4[i]))
                     {
                         values[i] = 1.0 / exp4[i];
                     }
@@ -211,7 +217,7 @@ OCIO_NAMESPACE_ENTER
                     expData()->m_exp4[2]*typedRcPtr->expData()->m_exp4[2],
                     expData()->m_exp4[3]*typedRcPtr->expData()->m_exp4[3] };
             
-            return IsVecEqualToOneFlt(combined, 4);
+            return IsVecEqualToOne(combined, 4);
         }
 
         bool ExponentOp::canCombineWith(ConstOpRcPtr & op) const
@@ -236,7 +242,7 @@ OCIO_NAMESPACE_ENTER
                     expData()->m_exp4[2]*typedRcPtr->expData()->m_exp4[2],
                     expData()->m_exp4[3]*typedRcPtr->expData()->m_exp4[3] };
 
-            if(!IsVecEqualToOneFlt(combined, 4))
+            if(!IsVecEqualToOne(combined, 4))
             {
                 ops.push_back(
                     ExponentOpRcPtr(new ExponentOp(combined,
@@ -256,13 +262,18 @@ OCIO_NAMESPACE_ENTER
             m_cacheID = cacheIDStream.str();
         }
         
-        void ExponentOp::apply(float* rgbaBuffer, long numPixels) const
+        void ExponentOp::apply(void * img, long numPixels) const
         {
-            if(!rgbaBuffer) return;
             ConstExponentOpDataRcPtr expOpData = expData();
-            ApplyClampExponent(rgbaBuffer, numPixels, expOpData);
+            ApplyClampExponent(img, img, numPixels, expOpData);
         }
-        
+
+        void ExponentOp::apply(const void * inImg, void * outImg, long numPixels) const
+        {
+            ConstExponentOpDataRcPtr expOpData = expData();
+            ApplyClampExponent(inImg, outImg, numPixels, expOpData);
+        }
+
         void ExponentOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const 
         {
             if(getInputBitDepth()!=BIT_DEPTH_F32 
@@ -295,7 +306,7 @@ OCIO_NAMESPACE_ENTER
                           const double(&vec4)[4],
                           TransformDirection direction)
     {
-        if(IsVecEqualToOneFlt(vec4, 4)) return;
+        if(IsVecEqualToOne(vec4, 4)) return;
         ops.push_back( ExponentOpRcPtr(new ExponentOp(vec4, direction)) );
     }
 }
@@ -334,14 +345,14 @@ OIIO_ADD_TEST(ExponentOps, Value)
     
     float tmp[4];
     memcpy(tmp, source, 4*sizeof(float));
-    ops[0]->apply(tmp, 1);
+    ops[0]->apply(tmp, tmp, 1);
     
     for(unsigned int i=0; i<4; ++i)
     {
         OIIO_CHECK_CLOSE(tmp[i], result1[i], error);
     }
     
-    ops[1]->apply(tmp, 1);
+    ops[1]->apply(tmp, tmp, 1);
     for(unsigned int i=0; i<4; ++i)
     {
         OIIO_CHECK_CLOSE(tmp[i], source[i], error);
@@ -352,7 +363,7 @@ void ValidateOp(const float * source, const OpRcPtr op, const float * result, co
 {
     float tmp[4];
     memcpy(tmp, source, 4 * sizeof(float));
-    op->apply(tmp, 1);
+    op->apply(tmp, tmp, 1);
 
     for (unsigned int i = 0; i<4; ++i)
     {
@@ -441,8 +452,8 @@ OIIO_ADD_TEST(ExponentOps, Combining)
     
     float tmp[4];
     memcpy(tmp, source, 4*sizeof(float));
-    ops[0]->apply(tmp, 1);
-    ops[1]->apply(tmp, 1);
+    ops[0]->apply(tmp, tmp, 1);
+    ops[1]->apply(tmp, tmp, 1);
     
     for(unsigned int i=0; i<4; ++i)
     {
@@ -455,7 +466,7 @@ OIIO_ADD_TEST(ExponentOps, Combining)
     
     float tmp2[4];
     memcpy(tmp2, source, 4*sizeof(float));
-    combined[0]->apply(tmp2, 1);
+    combined[0]->apply(tmp2, tmp2, 1);
     
     for(unsigned int i=0; i<4; ++i)
     {
@@ -500,9 +511,9 @@ OIIO_ADD_TEST(ExponentOps, Combining)
 
     float tmp[4];
     memcpy(tmp, source, 4 * sizeof(float));
-    ops[0]->apply(tmp, 1);
-    ops[1]->apply(tmp, 1);
-    ops[2]->apply(tmp, 1);
+    ops[0]->apply(tmp, tmp, 1);
+    ops[1]->apply(tmp, tmp, 1);
+    ops[2]->apply(tmp, tmp, 1);
 
     for (unsigned int i = 0; i<4; ++i)
     {
@@ -513,7 +524,7 @@ OIIO_ADD_TEST(ExponentOps, Combining)
     OIIO_CHECK_EQUAL(ops.size(), 1);
 
     memcpy(tmp, source, 4 * sizeof(float));
-    ops[0]->apply(tmp, 1);
+    ops[0]->apply(tmp, tmp, 1);
 
     for (unsigned int i = 0; i<4; ++i)
     {

@@ -154,6 +154,9 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_inverse_legacy_shader)
 
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_generic_shader)
 {
+    // TODO: Would like to be able to remove the setTestNaN(false) and
+    // setTestInfinity(false) from all of these tests.
+    test.setTestNaN(false);
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_2.spi1d");
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
@@ -166,6 +169,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_generic_shader)
 
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_inverse_generic_shader)
 {
+    test.setTestNaN(false);
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_2.spi1d");
     file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
@@ -239,6 +243,8 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_nearest_generic_shader)
 
 OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_legacy_shader)
 {
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_4.spi1d");
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
@@ -247,13 +253,15 @@ OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_legacy_shader)
     test.setContext(file->createEditableCopy(), shaderDesc);
     // lut1d_4.spi1d has values outside [0, 1]. Legacy shader is baking ops
     // into a 3D LUT and would clamp outside of [0, 1].
-    test.setWideRange(false);
+    test.setTestWideRange(false);
     test.setErrorThreshold(2e-4f);
 }
 
 
 OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_inverse_legacy_shader)
 {
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_4.spi1d");
     file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
@@ -261,13 +269,14 @@ OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_inverse_legacy_shader)
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
 
     test.setContext(file->createEditableCopy(), shaderDesc);
-    test.setWideRange(false);
+    test.setTestWideRange(false);
     test.setErrorThreshold(5e-5f);
 }
 
 
 OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_generic_shader)
 {
+    test.setTestNaN(false);
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_4.spi1d");
 
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
@@ -279,6 +288,8 @@ OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_generic_shader)
 
 OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_inverse_generic_shader)
 {
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_4.spi1d");
     file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
@@ -296,9 +307,9 @@ OCIO_ADD_GPU_TEST(Lut1DOp, not_linear_lut1d_5_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
-    // TODO: Should be smaller.
-    test.setErrorThreshold(1e-3f);
-    test.setRelativeComparison(true); // LUT contains values up to 64
+    test.setErrorThreshold(5e-4f);    // Good value for a relative error threshold.
+    test.setRelativeComparison(true); // LUT contains values from 0.0f to 64.0f
+                                      // explaining why an absolute error could not be used.
 }
 
 OCIO_ADD_GPU_TEST(Lut1DOp, not_linear_lut1d_5_inverse_generic_shader)
@@ -312,7 +323,120 @@ OCIO_ADD_GPU_TEST(Lut1DOp, not_linear_lut1d_5_inverse_generic_shader)
     test.setErrorThreshold(1e-6f);
 }
 
+OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_half_domain_unequal_channels)
+{
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_halfdom.ctf");
+    file->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_file2_test)
+{
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_green.ctf");
+    file->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+    
+    // LUT has just 32 entries and thus requires a larger tolerance due to
+    // index quantization on GPUs.
+    test.setErrorThreshold(1e-4f);
+}
+
+OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_hue_adjust_test)
+{
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
+    // Note: This LUT has 1024 entries so it tests the "small LUT" path.
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_1024_hue_adjust_test.ctf");
+    file->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+    // NB: This test has required a tolerance of 0.1 on older graphics cards.
+    test.setErrorThreshold(1e-5f);
+}
+
+OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_half_domain_hue_adjust_test)
+{
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
+    // Note: This LUT is half domain and also a "big LUT" so it tests that path.
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_hd_hueAdjust.ctf");
+    file->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+
+    // LUT range is 0.0001 -> 10000.0.
+    test.setRelativeComparison(true);
+    // NB: This test has required a tolerance of 0.1 on older graphics cards.
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_inverse_file1_test)
+{
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_inv.ctf");
+    file->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+    // Inverse LUT leads bigger errors.
+    test.setErrorThreshold(1e-4f);
+}
+
+OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_inverse_file2_test)
+{
+    test.setTestNaN(false);
+    // This LUT has an extended domain (entries outside [0,1]) and hence the fast LUT
+    // that gets built from it must have a halfDomain for both CPU and GPU.
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_inverse_gpu_err.ctf");
+    file->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_inverse_half_file1_test)
+{
+    test.setTestNaN(false);
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_inverse_halfdom_slog_fclut.ctf");
+    file->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(1e-4f);
+}
+
+OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_inverse_half_hue_adjust_file1_test)
+{
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_inverse_hd_hueAdjust.ctf");
+    file->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(1e-6f);
+}
+
+// TODO: Add tests with LUTs with Inf and NaN values.
 // TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1D_8i_test
 // TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1D_16i_test
 // TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1D_16f_test
@@ -322,12 +446,3 @@ OCIO_ADD_GPU_TEST(Lut1DOp, not_linear_lut1d_5_inverse_generic_shader)
 // TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1D_File1_test
 // TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1D_too_small
 // TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1D_half_domain_test
-// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1D_File2_test
-// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1D_hue_adjust_test
-// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1D_half_domain_hue_adjust_test
-// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererInvLut1D_File1_test
-// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererInvLut1D_File2_test
-// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererInvLut1DHalf_File1_test
-// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererInvLut1DHalf_HueAdjust_File1_test
-// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - lut1d_half_domain_special_values_test
-// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - lut1d_normal_domain_special_values_test

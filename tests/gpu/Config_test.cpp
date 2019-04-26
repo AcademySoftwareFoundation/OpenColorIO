@@ -124,6 +124,9 @@ OCIO_ADD_GPU_TEST(Config, several_1D_luts_legacy_shader)
 
 OCIO_ADD_GPU_TEST(Config, several_1D_luts_generic_shader)
 {
+    // TODO: Would like to be able to remove the setTestNaN(false) and
+    // setTestInfinity(false) from all of these tests.
+    test.setTestNaN(false);
     std::string configStr = createConfig();
     configStr +=
         "        - !<FileTransform> {src: lut1d_1.spi1d, interpolation: linear}\n"
@@ -143,6 +146,8 @@ OCIO_ADD_GPU_TEST(Config, several_1D_luts_generic_shader)
 
 OCIO_ADD_GPU_TEST(Config, arbitrary_generic_shader)
 {
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
     std::string configStr = createConfig();
     configStr +=
         "        - !<FileTransform> {src: lut1d_1.spi1d, interpolation: linear}\n"
@@ -173,6 +178,7 @@ OCIO_ADD_GPU_TEST(Config, arbitrary_generic_shader)
 
 OCIO_ADD_GPU_TEST(Config, several_luts_generic_shader)
 {
+    test.setTestNaN(false);
     std::string configStr = createConfig();
     configStr +=
         "        - !<FileTransform> {src: lut1d_1.spi1d, interpolation: linear}\n"

@@ -63,7 +63,7 @@ OCIO_NAMESPACE_ENTER
 
         for (OpRcPtrVec::size_type i = 0, size = ops.size(); i<size; ++i)
         {
-            ops[i]->apply(&tmp[0], numPixels);
+            ops[i]->apply(&tmp[0], &tmp[0], numPixels);
         }
 
         float * result = out;

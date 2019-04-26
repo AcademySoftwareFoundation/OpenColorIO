@@ -66,8 +66,8 @@ OCIO_NAMESPACE_ENTER
         }
 
     private:
-        LutType &           m_lut;
         LutInversionQuality m_prevQuality;
+        LutType &           m_lut;
     };
 
 

@@ -291,12 +291,32 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function::
         const char * getSearchPath() const;
-        //!cpp:function::
+        //!cpp:function:: Set all search paths as a concatenated string, using
+        // ':' to separate the paths.  See addSearchPath for a more robust and
+        // platform-agnostic method of setting the search paths.
         void setSearchPath(const char * path);
         
         //!cpp:function::
-        const char * getWorkingDir() const;
+        int getNumSearchPaths() const;
+        //!cpp:function:: Get a search path from the list. The paths are in the
+        // order they will be searched (that is, highest to lowest priority).
+        const char * getSearchPath(int index) const;
         //!cpp:function::
+        void clearSearchPaths();
+        //!cpp:function:: Add a single search path to the end of the list.
+        // Paths may be either absolute or relative. Relative paths are
+        // relative to the working directory. Forward slashes will be
+        // normalized to reverse for Windows. Environment (context) variables
+        // may be used in paths.
+        void addSearchPath(const char * path);
+
+        //!cpp:function::
+        const char * getWorkingDir() const;
+        //!cpp:function:: The working directory defaults to the location of the
+        // config file. It is used to convert any relative paths to absolute.
+        // If no search paths have been set, the working directory will be used
+        // as the fallback search path. No environment (context) variables may
+        // be used in the working directory.
         void setWorkingDir(const char * dirname);
         
         ///////////////////////////////////////////////////////////////////////////
@@ -550,7 +570,7 @@ OCIO_NAMESPACE_ENTER
         ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
                                          const ConstTransformRcPtr& transform,
                                          TransformDirection direction) const;
-        
+
     private:
         Config();
         ~Config();
@@ -959,10 +979,19 @@ OCIO_NAMESPACE_ENTER
         //!rst::
         // GPU Renderer
         // ^^^^^^^^^^^^
-        // Get the GPU shader program and its description
+        // Get the GPU shader program and its description.
         
-        //!cpp:function:: Extract the shader information to implement the color processing
+        //!cpp:function:: Extract the shader information to implement the color processing.
         void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
+
+        ///////////////////////////////////////////////////////////////////////////
+        //!rst::
+        // CPU Renderer
+        // ^^^^^^^^^^^^
+        // Get a CPU processor instance for arbitrary input and output pixel formats.
+        
+        //!cpp:function::        
+        ConstCPUProcessorRcPtr getCPUProcessor(PixelFormat in, PixelFormat out) const;
 
     private:
         Processor();
@@ -983,6 +1012,56 @@ OCIO_NAMESPACE_ENTER
     };
     
     
+    ///////////////////////////////////////////////////////////////////////////
+    //!rst::
+    // CPUProcessor
+    // *********
+    
+    //!cpp:class::
+    class CPUProcessor
+    {
+    public:
+        //!cpp:function::
+        bool isNoOp() const;
+        
+        //!cpp:function::
+        const char * getCacheID() const;
+
+        //!cpp:function::
+        bool hasChannelCrosstalk() const;
+        
+        //!cpp:function:: The PixelFormat describes the bit-depth and channel ordering 
+        //                of the input and output pixel buffers.
+        PixelFormat getInputPixelFormat() const;
+        PixelFormat getOutputPixelFormat() const;
+
+        //!cpp:function:: Process a continuous buffer of channel interleaved pixels 
+        //                (e.g. an image row).
+        // .. note:: Input and output buffers could be the same.
+        // .. note:: Some ops use SSE, so it may be helpful if the pixel buffers 
+        //           are aligned to 16-byte boundaries.
+        void apply(const void * inImg, void * outImg, long numPixels) const;
+
+    private:
+        CPUProcessor();
+        ~CPUProcessor();
+        
+        CPUProcessor(const CPUProcessor &) = delete;
+        CPUProcessor& operator= (const CPUProcessor &) = delete;
+        
+        static void deleter(CPUProcessor* c);
+
+        friend class Processor;
+
+        class Impl;
+        friend class Impl;
+        Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
+    };
+    
+
+
     //!cpp:class::
     // This class contains meta information about the process that generated
     // this processor.  The results of these functions do not
@@ -1628,6 +1707,15 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         const char * getSearchPath() const;
         
+        //!cpp:function::
+        int getNumSearchPaths() const;
+        //!cpp:function::
+        const char * getSearchPath(int index) const;
+        //!cpp:function::
+        void clearSearchPaths();
+        //!cpp:function::
+        void addSearchPath(const char * path);
+
         //!cpp:function::
         void setWorkingDir(const char * dirname);
         //!cpp:function::

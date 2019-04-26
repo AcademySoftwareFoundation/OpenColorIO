@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <sstream>
+#include <string.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -240,7 +241,7 @@ Lut1DOpData::Lut1DOpData(BitDepth inBitDepth,
     , m_hueAdjust(HUE_NONE)
     , m_direction(TRANSFORM_DIR_FORWARD)
     , m_invQuality(LUT_INVERSION_FAST)
-    , m_fileBitDepth(BIT_DEPTH_UNKNOWN)
+    , m_fileBitDepth(outBitDepth)
 {
 }
 
@@ -256,7 +257,7 @@ Lut1DOpData::Lut1DOpData(BitDepth inBitDepth, BitDepth outBitDepth,
     , m_hueAdjust(HUE_NONE)
     , m_direction(TRANSFORM_DIR_FORWARD)
     , m_invQuality(LUT_INVERSION_FAST)
-    , m_fileBitDepth(BIT_DEPTH_UNKNOWN)
+    , m_fileBitDepth(outBitDepth)
 {
 }
 
@@ -273,7 +274,7 @@ Lut1DOpData::Lut1DOpData(BitDepth inBitDepth, BitDepth outBitDepth,
     , m_hueAdjust(HUE_NONE)
     , m_direction(TRANSFORM_DIR_FORWARD)
     , m_invQuality(LUT_INVERSION_FAST)
-    , m_fileBitDepth(BIT_DEPTH_UNKNOWN)
+    , m_fileBitDepth(outBitDepth)
 {
 }
 

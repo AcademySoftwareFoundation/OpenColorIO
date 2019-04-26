@@ -162,6 +162,11 @@ public:
         m_offsets.setRGBA(offsets);
     }
 
+    inline void setRGBAOffsets(const double * offsets)
+    {
+        m_offsets.setRGBA(offsets);
+    }
+
     inline void setOffsets(const Offsets & offsets)
     {
         m_offsets = offsets;

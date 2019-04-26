@@ -1,5 +1,8 @@
 include(ExternalProject)
 
+# Define used for tests in src/OpenColorIO/Context.cpp
+add_definitions("-DOCIO_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
+
 function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 	set(TEST_BINARY "test_${NAME}_exec")
 	set(TEST_NAME "test_${NAME}")
@@ -60,6 +63,7 @@ set(SOURCES
 	ColorSpaceSet.cpp
 	Config.cpp
 	Context.cpp
+	CPUProcessor.cpp
 	Display.cpp
 	Exception.cpp
 	fileformats/cdl/CDLParser.cpp
@@ -107,6 +111,10 @@ set(SOURCES
 	ops/CDL/CDLOpData.cpp
 	ops/CDL/CDLOps.cpp
 	ops/Exponent/ExponentOps.cpp
+	ops/FixedFunction/FixedFunctionOpGPU.cpp
+	ops/FixedFunction/FixedFunctionOpCPU.cpp
+	ops/FixedFunction/FixedFunctionOpData.cpp
+	ops/FixedFunction/FixedFunctionOps.cpp
 	ops/Gamma/GammaOpCPU.cpp
 	ops/Gamma/GammaOpData.cpp
 	ops/Gamma/GammaOpUtils.cpp
@@ -134,6 +142,7 @@ set(SOURCES
 	ops/Range/RangeOpData.cpp
 	ops/Range/RangeOpGPU.cpp
 	ops/Range/RangeOps.cpp
+	ops/reference/ReferenceOpData.cpp
 	ops/Truelight/TruelightOp.cpp
 	OpTools.cpp
 	ParseUtils.cpp
@@ -150,6 +159,7 @@ set(SOURCES
 	transforms/ExponentTransform.cpp
 	transforms/ExponentWithLinearTransform.cpp
 	transforms/FileTransform.cpp
+	transforms/FixedFunctionTransform.cpp
 	transforms/GroupTransform.cpp
 	transforms/LogAffineTransform.cpp
 	transforms/LogTransform.cpp
@@ -158,6 +168,7 @@ set(SOURCES
 	transforms/RangeTransform.cpp
 	transforms/TruelightTransform.cpp
 	UnitTest.cpp
+	UnitTestUtils.cpp
 )
 
 function(prepend var prefix)

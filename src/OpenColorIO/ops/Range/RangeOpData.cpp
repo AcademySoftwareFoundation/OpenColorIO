@@ -129,6 +129,11 @@ RangeOpData::~RangeOpData()
 {
 }
 
+RangeOpDataRcPtr RangeOpData::clone() const
+{
+    return std::make_shared<RangeOpData>(*this);
+}
+
 void RangeOpData::setMinInValue(double value)
 {
     m_minInValue = value;
@@ -136,7 +141,7 @@ void RangeOpData::setMinInValue(double value)
 
 bool RangeOpData::hasMinInValue() const 
 {
-    return !isnan((float)m_minInValue);
+    return !IsNan((float)m_minInValue);
 }
 
 void RangeOpData::unsetMinInValue()
@@ -152,7 +157,7 @@ void RangeOpData::setMaxInValue(double value)
 
 bool RangeOpData::hasMaxInValue() const 
 {
-    return !isnan((float)m_maxInValue);
+    return !IsNan((float)m_maxInValue);
 }
 
 void RangeOpData::unsetMaxInValue()
@@ -168,7 +173,7 @@ void RangeOpData::setMinOutValue(double value)
 
 bool RangeOpData::hasMinOutValue() const 
 {
-    return !isnan((float)m_minOutValue);
+    return !IsNan((float)m_minOutValue);
 }
 
 void RangeOpData::unsetMinOutValue()
@@ -184,7 +189,7 @@ void RangeOpData::setMaxOutValue(double value)
 
 bool RangeOpData::hasMaxOutValue() const 
 {
-    return !isnan((float)m_maxOutValue);
+    return !IsNan((float)m_maxOutValue);
 }
 
 void RangeOpData::unsetMaxOutValue()
@@ -210,9 +215,9 @@ void RangeOpData::validate() const
     // to allow lossless setting of bit-depth from float-->int-->float.
 
     // If in_min or out_min is not empty, so must the other half be.
-    if (isnan((float)m_minInValue))
+    if (IsNan((float)m_minInValue))
     {
-        if (!isnan((float)m_minOutValue))
+        if (!IsNan((float)m_minOutValue))
         {
             throw Exception(
                 "In and out minimum limits must be both set or both missing in Range.");
@@ -220,16 +225,16 @@ void RangeOpData::validate() const
     }
     else
     {
-        if (isnan((float)m_minOutValue))
+        if (IsNan((float)m_minOutValue))
         {
             throw Exception(
                 "In and out minimum limits must be both set or both missing in Range.");
         }
     }
 
-    if (isnan((float)m_maxInValue))
+    if (IsNan((float)m_maxInValue))
     {
-        if (!isnan((float)m_maxOutValue))
+        if (!IsNan((float)m_maxOutValue))
         {
             throw Exception(
                 "In and out maximum limits must be both set or both missing in Range.");
@@ -237,7 +242,7 @@ void RangeOpData::validate() const
     }
     else
     {
-        if (isnan((float)m_maxOutValue))
+        if (IsNan((float)m_maxOutValue))
         {
             throw Exception(
                 "In and out maximum limits must be both set or both missing in Range.");
@@ -245,7 +250,7 @@ void RangeOpData::validate() const
     }
 
     // Currently not allowing polarity inversion so enforce max > min.
-    if (!isnan((float)m_minInValue) && !isnan((float)m_maxInValue))
+    if (!IsNan((float)m_minInValue) && !IsNan((float)m_maxInValue))
     {
         if (m_minInValue > m_maxInValue)
         {
@@ -449,23 +454,23 @@ void RangeOpData::setOutputBitDepth(BitDepth d)
 bool RangeOpData::minIsEmpty() const
 {
     // NB: Validation ensures out is not empty if in is not.
-    return isnan((float)m_minInValue) != 0;
+    return IsNan((float)m_minInValue) != 0;
 }
 
 bool RangeOpData::maxIsEmpty() const
 {
     // NB: Validation ensures out is not empty if in is not.
-    return isnan((float)m_maxInValue) != 0;
+    return IsNan((float)m_maxInValue) != 0;
 }
 
 bool RangeOpData::minClips() const
 {
-    return !isnan((float)m_lowBound);
+    return !IsNan((float)m_lowBound);
 }
 
 bool RangeOpData::maxClips() const
 {
-    return !isnan((float)m_highBound);
+    return !IsNan((float)m_highBound);
 }
 
 void RangeOpData::fillScaleOffset() const
@@ -649,7 +654,7 @@ bool RangeOpData::wouldClip(double val) const
     // Additional clipping implied by integer out depths.
     if (!IsFloatBitDepth(getOutputBitDepth()))
     {
-        out_lim = clamp(out_lim, 0., (double)GetBitDepthMaxValue(getOutputBitDepth()));
+        out_lim = Clamp(out_lim, 0., (double)GetBitDepthMaxValue(getOutputBitDepth()));
     }
 
     // Check if clipping altered the output.
@@ -765,10 +770,10 @@ OIIO_ADD_TEST(RangeOpData, accessors)
     {
     OCIO::RangeOpData r;
     
-    OIIO_CHECK_ASSERT(OCIO::isnan((float)r.getMinInValue()));
-    OIIO_CHECK_ASSERT(OCIO::isnan((float)r.getMaxInValue()));
-    OIIO_CHECK_ASSERT(OCIO::isnan((float)r.getMinOutValue()));
-    OIIO_CHECK_ASSERT(OCIO::isnan((float)r.getMaxOutValue()));
+    OIIO_CHECK_ASSERT(OCIO::IsNan((float)r.getMinInValue()));
+    OIIO_CHECK_ASSERT(OCIO::IsNan((float)r.getMaxInValue()));
+    OIIO_CHECK_ASSERT(OCIO::IsNan((float)r.getMinOutValue()));
+    OIIO_CHECK_ASSERT(OCIO::IsNan((float)r.getMaxOutValue()));
 
     double minVal = 1.0;
     double maxVal = 10.0;
@@ -1113,20 +1118,20 @@ namespace
         OIIO_CHECK_EQUAL(invOp->getOutputBitDepth(), in);
 
         // The min/max values should be swapped.
-        if (OCIO::isnan(revMinIn))
-            OIIO_CHECK_ASSERT(OCIO::isnan(invOp->getMinInValue()));
+        if (OCIO::IsNan(revMinIn))
+            OIIO_CHECK_ASSERT(OCIO::IsNan(invOp->getMinInValue()));
         else
             OIIO_CHECK_EQUAL(invOp->getMinInValue(), revMinIn);
-        if (OCIO::isnan(revMaxIn))
-            OIIO_CHECK_ASSERT(OCIO::isnan(invOp->getMaxInValue()));
+        if (OCIO::IsNan(revMaxIn))
+            OIIO_CHECK_ASSERT(OCIO::IsNan(invOp->getMaxInValue()));
         else
             OIIO_CHECK_EQUAL(invOp->getMaxInValue(), revMaxIn);
-        if (OCIO::isnan(revMinOut))
-            OIIO_CHECK_ASSERT(OCIO::isnan(invOp->getMinOutValue()));
+        if (OCIO::IsNan(revMinOut))
+            OIIO_CHECK_ASSERT(OCIO::IsNan(invOp->getMinOutValue()));
         else
             OIIO_CHECK_EQUAL(invOp->getMinOutValue(), revMinOut);
-        if (OCIO::isnan(revMaxOut))
-            OIIO_CHECK_ASSERT(OCIO::isnan(invOp->getMaxOutValue()));
+        if (OCIO::IsNan(revMaxOut))
+            OIIO_CHECK_ASSERT(OCIO::IsNan(invOp->getMaxOutValue()));
         else
             OIIO_CHECK_EQUAL(invOp->getMaxOutValue(), revMaxOut);
 

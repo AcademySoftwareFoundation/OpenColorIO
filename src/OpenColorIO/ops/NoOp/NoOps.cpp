@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <sstream>
+#include <string.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -69,8 +70,13 @@ OCIO_NAMESPACE_ENTER
             
             virtual bool isSameType(ConstOpRcPtr & op) const;
             virtual bool isInverse(ConstOpRcPtr & op) const;
+
             virtual void finalize() { }
-            virtual void apply(float* /*rgbaBuffer*/, long /*numPixels*/) const { }
+            // Note: Only used by some unit tests.
+            virtual void apply(void * img, long numPixels) const
+            { apply(img, img, numPixels); }
+            virtual void apply(const void * inImg, void * outImg, long numPixels) const
+            { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
             
             void extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const {}
         
@@ -322,10 +328,9 @@ OCIO_NAMESPACE_ENTER
         class FileNoOp : public Op
         {
         public:
-            FileNoOp(const std::string & fileReference):
-                m_fileReference(fileReference)
+            FileNoOp(const std::string & fileReference)
             { 
-                data().reset(new NoOp()); 
+                data().reset(new FileNoOpData(fileReference));
             }
 
             virtual ~FileNoOp() {}
@@ -340,12 +345,13 @@ OCIO_NAMESPACE_ENTER
             virtual void dumpMetadata(ProcessorMetadataRcPtr & metadata) const;
             
             virtual void finalize() {}
-            virtual void apply(float* /*rgbaBuffer*/, long /*numPixels*/) const {}
+            // Note: Only used by some unit tests.
+            virtual void apply(void * img, long numPixels) const
+            { apply(img, img, numPixels); }
+            virtual void apply(const void * inImg, void * outImg, long numPixels) const
+            { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
             
             void extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const {}
-            
-        private:
-            std::string m_fileReference;
         };
         
         typedef OCIO_SHARED_PTR<FileNoOp> FileNoOpRcPtr;
@@ -353,7 +359,8 @@ OCIO_NAMESPACE_ENTER
 
         OpRcPtr FileNoOp::clone() const
         {
-            return std::make_shared<FileNoOp>(m_fileReference);
+            auto fileData = DynamicPtrCast<const FileNoOpData>(data());
+            return std::make_shared<FileNoOp>(fileData->getPath());
         }
         
         bool FileNoOp::isSameType(ConstOpRcPtr & op) const
@@ -370,7 +377,8 @@ OCIO_NAMESPACE_ENTER
         
         void FileNoOp::dumpMetadata(ProcessorMetadataRcPtr & metadata) const
         {
-            metadata->addFile(m_fileReference.c_str());
+            auto fileData = DynamicPtrCast<const FileNoOpData>(data());
+            metadata->addFile(fileData->getPath().c_str());
         }
     }
     
@@ -408,8 +416,12 @@ OCIO_NAMESPACE_ENTER
             virtual void dumpMetadata(ProcessorMetadataRcPtr & metadata) const;
             
             virtual void finalize() {}
-            virtual void apply(float* /*rgbaBuffer*/, long /*numPixels*/) const {}
-            
+            // Note: Only used by some unit tests.
+            virtual void apply(void * img, long numPixels) const
+            { apply(img, img, numPixels); }
+            virtual void apply(const void * inImg, void * outImg, long numPixels) const
+            { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
+
             void extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const {}
             
         private:
