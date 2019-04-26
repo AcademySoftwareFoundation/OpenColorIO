@@ -26,7 +26,9 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <cstring>
+#include <sstream>
+#include <string.h>
+#include <type_traits>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -36,62 +38,87 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
-namespace
+template<typename T>
+bool IsScalarEqualToZero(T v)
 {
-    const float FLTMIN = std::numeric_limits<float>::min();
+    static_assert(std::is_floating_point<T>::value, 
+                  "Only single and double precision floats are supported");
+
+    return !FloatsDiffer(0.0f, (float)v, 2, false);
 }
 
-bool IsScalarEqualToZero(float v)
+template bool IsScalarEqualToZero(float v);
+template bool IsScalarEqualToZero(double v);
+
+template<typename T>
+bool IsScalarEqualToOne(T v)
 {
-    return EqualWithAbsError(v, 0.0f, FLTMIN);
+    static_assert(std::is_floating_point<T>::value, 
+                  "Only single and double precision floats are supported");
+
+    return !FloatsDiffer(1.0f, (float)v, 2, false);
 }
 
-bool IsScalarEqualToZeroFlt(double v)
-{
-    return EqualWithAbsError(float(v), 0.0f, FLTMIN);
-}
+template bool IsScalarEqualToOne(float v);
+template bool IsScalarEqualToOne(double v);
 
-bool IsScalarEqualToOne(float v)
+template<typename T>
+bool IsVecEqualToZero(const T * v, unsigned int size)
 {
-    return EqualWithAbsError(v, 1.0f, FLTMIN);
-}
+    static_assert(std::is_floating_point<T>::value, 
+                  "Only single and double precision floats are supported");
 
-bool IsScalarEqualToOneFlt(double v)
-{
-    return EqualWithAbsError(float(v), 1.0f, FLTMIN);
-}
-
-float GetSafeScalarInverse(float v, float defaultValue)
-{
-    if(IsScalarEqualToZero(v)) return defaultValue;
-    return 1.0f / v;
-}
-
-bool IsVecEqualToZero(const float* v, int size)
-{
-    for(int i=0; i<size; ++i)
+    for(unsigned int i=0; i<size; ++i)
     {
         if(!IsScalarEqualToZero(v[i])) return false;
     }
     return true;
 }
 
-bool IsVecEqualToOne(const float* v, int size)
+template bool IsVecEqualToZero(const float * v, unsigned int size);
+template bool IsVecEqualToZero(const double * v, unsigned int size);
+
+template<typename T>
+bool IsVecEqualToOne(const T * v, unsigned int size)
 {
-    for(int i=0; i<size; ++i)
+    static_assert(std::is_floating_point<T>::value, 
+                  "Only single and double precision floats are supported");
+
+    for(unsigned int i=0; i<size; ++i)
     {
         if(!IsScalarEqualToOne(v[i])) return false;
     }
     return true;
 }
 
-bool IsVecEqualToOneFlt(const double* v, int size)
+template bool IsVecEqualToOne(const float * v, unsigned int size);
+template bool IsVecEqualToOne(const double * v, unsigned int size);
+
+template<typename T>
+bool VecsEqualWithRelError(const T * v1, unsigned int size1,
+                           const T * v2, unsigned int size2,
+                           T e)
 {
-    for(int i=0; i<size; ++i)
+    static_assert(std::is_floating_point<T>::value, 
+                  "Only single and double precision floats are supported");
+
+    if (size1 != size2) return false;
+
+    for (unsigned int i = 0; i<size1; ++i)
     {
-        if(!IsScalarEqualToOneFlt(v[i])) return false;
+        if (!EqualWithRelError(v1[i], v2[i], e)) return false;
     }
+
     return true;
+}
+
+template bool VecsEqualWithRelError(const float * v1, unsigned int size1, const float * v2, unsigned int size2, float e);
+template bool VecsEqualWithRelError(const double * v1, unsigned int size1, const double * v2, unsigned int size2, double e);
+
+float GetSafeScalarInverse(float v, float defaultValue)
+{
+    if(IsScalarEqualToZero(v)) return defaultValue;
+    return 1.0f / v;
 }
 
 bool VecContainsZero(const float* v, int size)
@@ -149,16 +176,20 @@ float SanitizeFloat(float f)
     {
         return std::numeric_limits<float>::max();
     }
-    else if (isnan(f))
+    else if (IsNan(f))
     {
         return 0.0f;
     }
     return f;
 }
 
-bool IsM44Identity(const float* m44)
+template<typename T>
+bool IsM44Identity(const T * m44)
 {
-    int index=0;
+    static_assert(std::is_floating_point<T>::value, 
+                  "Only single and double precision floats are supported");
+
+    unsigned int index=0;
 
     for(unsigned int j=0; j<4; ++j)
     {
@@ -179,6 +210,10 @@ bool IsM44Identity(const float* m44)
     
     return true;
 }
+
+template bool IsM44Identity(const float * m44);
+template bool IsM44Identity(const double * m44);
+
 
 bool IsM44Diagonal(const float* m44)
 {

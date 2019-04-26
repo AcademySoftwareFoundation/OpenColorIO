@@ -342,14 +342,14 @@ OIIO_ADD_TEST(XMLReaderHelper, parse_number)
         OIIO_CHECK_NO_THROW(OCIO::ParseNumber(buffer.c_str(),
                                               buffer.size(),
                                               data));
-        OIIO_CHECK_ASSERT(OCIO::isnan(data));
+        OIIO_CHECK_ASSERT(OCIO::IsNan(data));
     }
     {
         std::string buffer("-NAN");
         OIIO_CHECK_NO_THROW(OCIO::ParseNumber(buffer.c_str(),
                                               buffer.size(),
                                               data));
-        OIIO_CHECK_ASSERT(OCIO::isnan(data));
+        OIIO_CHECK_ASSERT(OCIO::IsNan(data));
     }
     {
         std::string buffer("0.001");

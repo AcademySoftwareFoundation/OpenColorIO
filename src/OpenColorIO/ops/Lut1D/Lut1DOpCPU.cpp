@@ -593,7 +593,7 @@ IndexPair IndexPair::GetEdgeFloatValues(float fIn)
 
     idxPair.fraction = (fIn - fA) / (fB - fA);
 
-    if (isnan(idxPair.fraction)) idxPair.fraction = 0.0f;
+    if (IsNan(idxPair.fraction)) idxPair.fraction = 0.0f;
 
     return idxPair;
 }
@@ -1914,18 +1914,29 @@ OIIO_ADD_TEST(Lut1DRenderer, nan_test)
         = OCIO::GetLut1DRenderer(lutConst, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32);
 
     const float qnan = std::numeric_limits<float>::quiet_NaN();
-    float pixels[16] = { qnan, 0.5f, 0.3f, -0.2f, 
+    const float inf = std::numeric_limits<float>::infinity();
+
+    float pixels[24] = { qnan, 0.5f, 0.3f, -0.2f,
                          0.5f, qnan, 0.3f, 0.2f, 
                          0.5f, 0.3f, qnan, 1.2f,
-                         0.5f, 0.3f, 0.2f, qnan };
+                         0.5f, 0.3f, 0.2f, qnan,
+                         inf,  inf,  inf,  inf,
+                         -inf, -inf, -inf, -inf };
 
-    renderer->apply(pixels, pixels, 4);
+    renderer->apply(pixels, pixels, 6);
 
     OIIO_CHECK_CLOSE(pixels[0], values[0], 1e-7f);
     OIIO_CHECK_CLOSE(pixels[5], values[1], 1e-7f);
     OIIO_CHECK_CLOSE(pixels[10], values[2], 1e-7f);
-    OIIO_CHECK_ASSERT(std::isnan(pixels[15]));
-
+    OIIO_CHECK_ASSERT(OCIO::IsNan(pixels[15]));
+    OIIO_CHECK_CLOSE(pixels[16], values[21], 1e-7f);
+    OIIO_CHECK_CLOSE(pixels[17], values[22], 1e-7f);
+    OIIO_CHECK_CLOSE(pixels[18], values[23], 1e-7f);
+    OIIO_CHECK_EQUAL(pixels[19], inf);
+    OIIO_CHECK_CLOSE(pixels[20], values[0], 1e-7f);
+    OIIO_CHECK_CLOSE(pixels[21], values[1], 1e-7f);
+    OIIO_CHECK_CLOSE(pixels[22], values[2], 1e-7f);
+    OIIO_CHECK_EQUAL(pixels[23], -inf);
 }
 
 OIIO_ADD_TEST(Lut1DRenderer, nan_half_test)
@@ -1963,7 +1974,7 @@ OIIO_ADD_TEST(Lut1DRenderer, nan_half_test)
     OIIO_CHECK_CLOSE(pixels[0], values[nanIdRed], 1e-7f);
     OIIO_CHECK_CLOSE(pixels[5], values[nanIdRed + 1], 1e-7f);
     OIIO_CHECK_CLOSE(pixels[10], values[nanIdRed + 2], 1e-7f);
-    OIIO_CHECK_ASSERT(std::isnan(pixels[15]));
+    OIIO_CHECK_ASSERT(OCIO::IsNan(pixels[15]));
 }
 
 OIIO_ADD_TEST(Lut1DRenderer, bit_depth_support)
