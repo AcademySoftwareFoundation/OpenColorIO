@@ -4,7 +4,7 @@ Thank you for your interest in the OpenColorIO Project a Series of LF
 Projects, LLC (hereinafter "Project"). In order to clarify the
 intellectual property licenses granted with Contributions from any
 corporate entity to the Project, LF Projects, LLC ("LF Projects") is
-required to have a Corporate Contributor License Agreement (CCLA) on
+required to have a Corporate Contributor License Agreement (CCLA) on 
 file that has been signed by each contributing corporation.
 
 Each contributing corporation ("You") must accept and agree that, for
@@ -29,6 +29,15 @@ to the Project shall be:
 
 Submitted under a Developer's Certificate of Origin v. 1.1 (DCO); and
 Licensed under the BSD-3-Clause License.
+
+You agree that You shall be bound by the terms of the BSD-3-Clause License
+for all contributions made by You and Your employees. Your designated
+employees are those listed by Your CLA Manager(s) on the system of record
+for the Project. You agree to identify Your initial CLA Manager below and
+thereafter maintain current CLA Manager records in the Project’s system of record.
+
+
+Initial CLA Manager (Name and Email): ______________________________________
 
 
 Corporate Signature:
