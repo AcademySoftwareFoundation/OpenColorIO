@@ -72,8 +72,11 @@ OCIO_NAMESPACE_ENTER
             bool hasChannelCrosstalk() const override;
             
             void finalize() override;
+
             void apply(void * rgbaBuffer, long numPixels) const override;
+            void apply(const void * inImg, void * outImg, long numPixels) const override;
             
+            bool supportedByLegacyShader() const override;
             void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
         
         private:
@@ -349,18 +352,32 @@ OCIO_NAMESPACE_ENTER
         
         void TruelightOp::apply(void * rgbaBuffer, long numPixels) const
         {
-            float * img = reinterpret_cast<float *>(rgbaBuffer);
+            apply(rgbaBuffer, rgbaBuffer, numPixels);
+        }
+        
+        void TruelightOp::apply(const void * inImg, void * outImg, long numPixels) const
+        {
+            const float * in = reinterpret_cast<const float *>(inImg);
+            float * out = reinterpret_cast<float *>(outImg);
 
             for(long pixelIndex = 0; pixelIndex < numPixels; ++pixelIndex)
             {
+                memcpy(out, in, 4 * sizeof(float));
+
 #ifdef OCIO_TRUELIGHT_SUPPORT
-                TruelightInstanceTransformF(m_truelight, img);
+                TruelightInstanceTransformF(m_truelight, out);
 #endif // OCIO_TRUELIGHT_SUPPORT
 
-                img += 4; // skip alpha
+                in  += 4; // skip alpha
+                out += 4;
             }
         }
-        
+
+        bool TruelightOp::supportedByLegacyShader() const
+        {
+            return false; 
+        }
+
         void TruelightOp::extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const
         {
             throw Exception("TruelightOp does not define an gpu shader.");
