@@ -4,7 +4,7 @@ Thank you for your interest in the OpenColorIO Project a Series of LF
 Projects, LLC (hereinafter "Project"). In order to clarify the
 intellectual property licenses granted with Contributions from any
 corporate entity to the Project, LF Projects, LLC ("LF Projects") is
-required to have a Corporate Contributor License Agreement (CCLA) on 
+required to have a Corporate Contributor License Agreement (CCLA) on
 file that has been signed by each contributing corporation.
 
 Each contributing corporation ("You") must accept and agree that, for
