@@ -91,14 +91,15 @@ script:
   - mkdir _build
   - cd _build
   - cmake .. -DCMAKE_INSTALL_PREFIX=../_install $OPTIONS $OPTIONS_BUILD
-  - if [[ "$TRAVIS_JOB_NAME" == linux_*_sonar ]]; then
-      build-wrapper-linux-x86-64 --out_dir bw-output cmake --build . --target install
+  - if [[ "$TRAVIS_JOB_NAME" == linux_*_sonar ]];
+    then
+      build-wrapper-linux-x86-64 --out_dir bw-output cmake --build . --target install;
     else
-      cmake --build . --target install
+      cmake --build . --target install;
     fi
   - ctest -V
   - if [[ "$TRAVIS_JOB_NAME" == *_sonar ]]; then
-      sonar-scanner
+      sonar-scanner;
     fi
 
 cache:
