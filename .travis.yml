@@ -8,15 +8,13 @@ matrix:
   include:
     # Linux jobs
     - name: linux_clang
-    # TODO: Enable once analysis is confirmed to be working
-    # if: type != cron OR branch != master
+      if: type != cron OR branch != master
       os: linux
       language: cpp
       compiler: clang
 
     - name: linux_clang_sonar
-    # TODO: Enable once analysis is confirmed to be working
-    # if: type = cron AND branch = master
+      if: type = cron AND branch = master
       os: linux
       dist: trusty
       language: cpp
@@ -44,6 +42,8 @@ matrix:
       language: cpp
       compiler: clang
       osx_image: xcode9.1
+      env:
+        - MATRIX_EVAL=""
 
     - name: osx_gcc
       os: osx
@@ -69,11 +69,11 @@ before_install:
       wget https://cmake.org/files/v3.12/cmake-3.12.2-Linux-x86_64.sh;
       sh cmake-3.12.2-Linux-x86_64.sh -- --skip-license --prefix=${TRAVIS_BUILD_DIR}/_cmake;
       export PATH="${TRAVIS_BUILD_DIR}/_cmake/bin:$PATH";
-      if [[ "$TRAVIS_JOB_NAME" == linux_*_sonar ]]; then
-        wget https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip;
-        unzip build-wrapper-linux-x86.zip;
-        export PATH="$PATH:$PWD/build-wrapper-linux-x86";
-      fi
+      #if [[ "$TRAVIS_JOB_NAME" == linux_*_sonar ]]; then
+      #  wget https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip;
+      #  unzip build-wrapper-linux-x86.zip;
+      #  export PATH="$PATH:$PWD/build-wrapper-linux-x86";
+      #fi
     fi
   # OSX ones
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
@@ -89,6 +89,7 @@ before_install:
       export OPTIONS="$OPTIONS -DPYTHON_LIBRARY=$(python-config --prefix)/lib/libpython2.7.dylib";
       export OPTIONS="$OPTIONS -DPYTHON_INCLUDE_DIR=$(python-config --prefix)/include/python2.7";
       export OPTIONS="$OPTIONS -DPYTHON_EXECUTABLE=$(which python2)";
+      eval "${MATRIX_EVAL}";
     fi
 
 # Run the Build script
