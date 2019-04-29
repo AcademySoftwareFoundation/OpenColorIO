@@ -37,23 +37,17 @@ matrix:
         - OPTIONS_BUILD="-DOCIO_USE_SSE=OFF"
 
     # OSX jobs
-    - name: osx_clang
+    - name: osx_10.12_clang
       os: osx
       language: cpp
       compiler: clang
       osx_image: xcode9.1
-      env:
-        - MATRIX_EVAL=""
 
-    - name: osx_gcc
+    - name: osx_10.14_clang
       os: osx
       language: cpp
-      # Note: On macOS, compiler "gcc" is an alias for "clang". This is how to
-      # actually build with GCC:
-      #   https://docs.travis-ci.com/user/languages/cpp#gcc-on-macos
-      osx_image: xcode8
-      env:
-        - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+      compiler: clang
+      osx_image: xcode10.2
 
 env:
   global:
@@ -84,7 +78,6 @@ before_install:
       export OPTIONS="$OPTIONS -DPYTHON_LIBRARY=$(python-config --prefix)/lib/libpython2.7.dylib";
       export OPTIONS="$OPTIONS -DPYTHON_INCLUDE_DIR=$(python-config --prefix)/include/python2.7";
       export OPTIONS="$OPTIONS -DPYTHON_EXECUTABLE=$(which python2)";
-      eval "${MATRIX_EVAL}";
     fi
 
 # Run the Build script
