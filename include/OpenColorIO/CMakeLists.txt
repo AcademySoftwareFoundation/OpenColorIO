@@ -13,4 +13,4 @@ file(GLOB_RECURSE core_export_headers "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
 list(APPEND core_export_headers ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO/OpenColorABI.h)
 
 install(FILES ${core_export_headers}
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/include/OpenColorIO)
+    DESTINATION include/OpenColorIO)

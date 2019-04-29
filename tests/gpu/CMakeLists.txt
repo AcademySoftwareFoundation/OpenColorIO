@@ -1,5 +1,7 @@
 find_package(OpenGL REQUIRED)
-find_package(GLEW REQUIRED)
+if(NOT APPLE)
+	find_package(GLEW REQUIRED)
+endif()
 find_package(GLUT REQUIRED)
 
 set(SOURCES
@@ -44,7 +46,7 @@ set_target_properties(test_gpu_exec PROPERTIES
 target_link_libraries(test_gpu_exec
 	PRIVATE
 		OpenColorIO
-		openglbuilder
+		oglbuilder
 		unittest_data
 		${GLEW_LIBRARIES}
 		${GLUT_LIBRARIES}
