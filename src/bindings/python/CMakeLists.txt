@@ -97,5 +97,5 @@ install(TARGETS PyOpenColorIO
        LIBRARY DESTINATION ${PYTHON_VARIANT_PATH}
 )
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/PyOpenColorIO/PyOpenColorIO.h
-       DESTINATION "include/PyOpenColorIO/"
+       DESTINATION include/OpenColorIO/PyOpenColorIO
 )
