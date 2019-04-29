@@ -160,28 +160,48 @@ OCIO_NAMESPACE_ENTER
         if (m44) getImpl()->setRGBA(m44);
     }
     
-    void MatrixTransform::getMatrix(float * m44) const
+    void MatrixTransform::setMatrix(const double * m44)
     {
+        if (m44) getImpl()->setRGBA(m44);
+    }
+
+    template<typename T>
+    void GetMatrix(const ArrayDouble::Values & vals, T * m44)
+    {
+        static_assert(std::is_floating_point<T>::value, 
+                      "Only single and double precision floats are supported");
+
         if (m44)
         {
-            const ArrayDouble::Values vals = getImpl()->getArray().getValues();
-            m44[0]  = (float)vals[0];
-            m44[1]  = (float)vals[1];
-            m44[2]  = (float)vals[2];
-            m44[3]  = (float)vals[3];
-            m44[4]  = (float)vals[4];
-            m44[5]  = (float)vals[5];
-            m44[6]  = (float)vals[6];
-            m44[7]  = (float)vals[7];
-            m44[8]  = (float)vals[8];
-            m44[9]  = (float)vals[9];
-            m44[10] = (float)vals[10];
-            m44[11] = (float)vals[11];
-            m44[12] = (float)vals[12];
-            m44[13] = (float)vals[13];
-            m44[14] = (float)vals[14];
-            m44[15] = (float)vals[15];
+            m44[0]  = (T)vals[0];
+            m44[1]  = (T)vals[1];
+            m44[2]  = (T)vals[2];
+            m44[3]  = (T)vals[3];
+            m44[4]  = (T)vals[4];
+            m44[5]  = (T)vals[5];
+            m44[6]  = (T)vals[6];
+            m44[7]  = (T)vals[7];
+            m44[8]  = (T)vals[8];
+            m44[9]  = (T)vals[9];
+            m44[10] = (T)vals[10];
+            m44[11] = (T)vals[11];
+            m44[12] = (T)vals[12];
+            m44[13] = (T)vals[13];
+            m44[14] = (T)vals[14];
+            m44[15] = (T)vals[15];
         }
+    }
+    
+    void MatrixTransform::getMatrix(float * m44) const
+    {
+        const ArrayDouble::Values & vals = getImpl()->getArray().getValues();
+        GetMatrix(vals, m44);
+    }
+    
+    void MatrixTransform::getMatrix(double * m44) const
+    {
+        const ArrayDouble::Values & vals = getImpl()->getArray().getValues();
+        GetMatrix(vals, m44);
     }
     
     void MatrixTransform::setOffset(const float * offset4)
@@ -189,16 +209,36 @@ OCIO_NAMESPACE_ENTER
         if (offset4) getImpl()->setRGBAOffsets(offset4);
     }
     
+    void MatrixTransform::setOffset(const double * offset4)
+    {
+        if (offset4) getImpl()->setRGBAOffsets(offset4);
+    }
+
+    template<typename T>
+    void GetOffset(const double * vals, T * offset4)
+    {
+        static_assert(std::is_floating_point<T>::value, 
+                      "Only single and double precision floats are supported");
+
+        if(offset4)
+        {
+            offset4[0] = (T)vals[0];
+            offset4[1] = (T)vals[1];
+            offset4[2] = (T)vals[2];
+            offset4[3] = (T)vals[3];
+        }
+    }
+    
     void MatrixTransform::getOffset(float * offset4) const
     {
-        if (offset4)
-        {
-            const double* vals = getImpl()->getOffsets().getValues();
-            offset4[0] = (float)vals[0];
-            offset4[1] = (float)vals[1];
-            offset4[2] = (float)vals[2];
-            offset4[3] = (float)vals[3];
-        }
+        const double * vals = getImpl()->getOffsets().getValues();
+        GetOffset(vals, offset4);
+    }
+    
+    void MatrixTransform::getOffset(double * offset4) const
+    {
+        const double * vals = getImpl()->getOffsets().getValues();
+        GetOffset(vals, offset4);
     }
     
     /*

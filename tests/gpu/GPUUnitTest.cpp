@@ -54,21 +54,11 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
+#include <cmath>
 #include <algorithm>
 
 
 #include "glsl.h"
-
-
-#if defined __APPLE__
-    #define F_ISNAN(a) __inline_isnanf(a)
-#elif defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
-    #define F_ISNAN(a) (_isnan(a)!=0)
-#else
-    #define F_ISNAN(a) __isnanf(a)
-#endif
-
 
 
 namespace Shader
@@ -117,7 +107,7 @@ namespace Shader
     {
         if ( ( (a >=  largeThreshold) && (b >=  largeThreshold) ) ||
              ( (a <= -largeThreshold) && (b <= -largeThreshold) ) ||
-             ( F_ISNAN(a) && F_ISNAN(b) ) )
+             ( std::isnan(a) && std::isnan(b) ) )
         {
             return true;
         }
@@ -134,7 +124,7 @@ namespace Shader
     {
         if ( ( (a >=  largeThreshold) && (b >=  largeThreshold) ) ||
              ( (a <= -largeThreshold) && (b <= -largeThreshold) ) ||
-             ( F_ISNAN(a) && F_ISNAN(b) ) )
+             ( std::isnan(a) && std::isnan(b) ) )
         {
           return true;
         }
@@ -207,7 +197,7 @@ namespace
     void AllocateImageTexture()
     {
         const unsigned numEntries = g_winWidth * g_winHeight * g_components;
-        OCIOGPUTest::CustomValues::Values image(g_winWidth*g_winHeight*g_components, 0.0f);
+        OCIOGPUTest::CustomValues::Values image(numEntries, 0.0f);
 
         glGenTextures(1, &g_imageTexID);
 
@@ -259,12 +249,6 @@ namespace
         glDisable(GL_TEXTURE_2D);
         
         glutSwapBuffers();
-    }
-
-    void CleanUp(void)
-    {
-        g_oglBuilder.reset();
-        glutDestroyWindow(g_win);
     }
 
     void SetTestValue(float * image, float val, unsigned numComponents)

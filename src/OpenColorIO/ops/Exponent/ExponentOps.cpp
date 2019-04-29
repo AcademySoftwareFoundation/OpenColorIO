@@ -77,7 +77,7 @@ OCIO_NAMESPACE_ENTER
 
     bool ExponentOpData::isIdentity() const
     {
-        return IsVecEqualToOneFlt(m_exp4, 4);
+        return IsVecEqualToOne(m_exp4, 4);
     }
 
     void ExponentOpData::finalize()
@@ -168,7 +168,7 @@ OCIO_NAMESPACE_ENTER
 
                 for(int i=0; i<4; ++i)
                 {
-                    if(!IsScalarEqualToZeroFlt(exp4[i]))
+                    if(!IsScalarEqualToZero(exp4[i]))
                     {
                         values[i] = 1.0 / exp4[i];
                     }
@@ -217,7 +217,7 @@ OCIO_NAMESPACE_ENTER
                     expData()->m_exp4[2]*typedRcPtr->expData()->m_exp4[2],
                     expData()->m_exp4[3]*typedRcPtr->expData()->m_exp4[3] };
             
-            return IsVecEqualToOneFlt(combined, 4);
+            return IsVecEqualToOne(combined, 4);
         }
 
         bool ExponentOp::canCombineWith(ConstOpRcPtr & op) const
@@ -242,7 +242,7 @@ OCIO_NAMESPACE_ENTER
                     expData()->m_exp4[2]*typedRcPtr->expData()->m_exp4[2],
                     expData()->m_exp4[3]*typedRcPtr->expData()->m_exp4[3] };
 
-            if(!IsVecEqualToOneFlt(combined, 4))
+            if(!IsVecEqualToOne(combined, 4))
             {
                 ops.push_back(
                     ExponentOpRcPtr(new ExponentOp(combined,
@@ -306,7 +306,7 @@ OCIO_NAMESPACE_ENTER
                           const double(&vec4)[4],
                           TransformDirection direction)
     {
-        if(IsVecEqualToOneFlt(vec4, 4)) return;
+        if(IsVecEqualToOne(vec4, 4)) return;
         ops.push_back( ExponentOpRcPtr(new ExponentOp(vec4, direction)) );
     }
 }

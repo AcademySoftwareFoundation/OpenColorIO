@@ -362,7 +362,7 @@ OCIO_NAMESPACE_ENTER
         }
         else if(capability == FORMAT_CAPABILITY_WRITE)
         {
-            if(index<0 || index>=static_cast<int>(m_readFormatNames.size()))
+            if(index<0 || index>=static_cast<int>(m_writeFormatNames.size()))
             {
                 return "";
             }
@@ -985,10 +985,33 @@ OIIO_ADD_TEST(FileTransform, AllFormats)
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("spi3d", "spi3d"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("spimtx", "spimtx"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("vf", "nukevf"));
-
 }
 
-OIIO_ADD_TEST(FileTransform, validate)
+void ValidateFormatByIndex(OCIO::FormatRegistry &reg, int cap)
+{
+    int numFormat = reg.getNumFormats(cap);
+
+    // Check out of bounds access
+    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strcasecmp(reg.getFormatNameByIndex(cap, -1), ""));
+    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strcasecmp(reg.getFormatExtensionByIndex(cap, -1), ""));
+    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strcasecmp(reg.getFormatNameByIndex(cap, numFormat), ""));
+    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strcasecmp(reg.getFormatExtensionByIndex(cap, numFormat), ""));
+
+    // Check valid access
+    for (int i = 0; i < numFormat; ++i) {
+        OIIO_CHECK_NE(0, OCIO::Platform::Strcasecmp(reg.getFormatNameByIndex(cap, i), ""));
+        OIIO_CHECK_NE(0, OCIO::Platform::Strcasecmp(reg.getFormatExtensionByIndex(cap, i), ""));
+    }
+}
+
+OIIO_ADD_TEST(FileTransform, FormatByIndex)
+{
+    OCIO::FormatRegistry & formatRegistry = OCIO::FormatRegistry::GetInstance();
+    ValidateFormatByIndex(formatRegistry, OCIO::FORMAT_CAPABILITY_WRITE);
+    ValidateFormatByIndex(formatRegistry, OCIO::FORMAT_CAPABILITY_READ);
+}
+
+OIIO_ADD_TEST(FileTransform, Validate)
 {
     OCIO::FileTransformRcPtr tr = OCIO::FileTransform::Create();
 

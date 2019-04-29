@@ -91,7 +91,7 @@ void CheckFloat(const std::string& operation,
 {
 
     if ((IsInfinity(expected) && IsInfinity(actual)) ||
-        (isnan(expected) && isnan(actual)))
+        (IsNan(expected) && IsNan(actual)))
     {
         return;
     }

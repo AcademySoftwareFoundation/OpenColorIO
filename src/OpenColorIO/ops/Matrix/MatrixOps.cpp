@@ -182,7 +182,6 @@ OCIO_NAMESPACE_ENTER
             }
             
             ConstMatrixOpDataRcPtr firstMat = matrixData();
-            unsigned long indexNew = 0;
             if (m_direction == TRANSFORM_DIR_INVERSE)
             {
                 // Could throw.
