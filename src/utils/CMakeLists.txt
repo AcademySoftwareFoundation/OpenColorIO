@@ -1,6 +1,8 @@
 if(TARGET test_gpu_exec OR 
-   TARGET ociodisplay
+   TARGET ociodisplay OR
+   TARGET ocioconvert
 )
-	add_subdirectory(openglbuilder)
+    add_subdirectory(oglbuilder)
 endif()
+
 add_subdirectory(pystring)
