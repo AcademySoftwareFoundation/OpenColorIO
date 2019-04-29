@@ -51,7 +51,7 @@ matrix:
       # Note: On macOS, compiler "gcc" is an alias for "clang". This is how to
       # actually build with GCC:
       #   https://docs.travis-ci.com/user/languages/cpp#gcc-on-macos
-      osx_image: xcode9.1
+      osx_image: xcode8
       env:
         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
 
