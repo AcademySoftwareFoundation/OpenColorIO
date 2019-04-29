@@ -271,18 +271,18 @@ OCIO_NAMESPACE_ENTER
             
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
-                if(!isnan(rgbaBuffer[0]))
+                if(!IsNan(rgbaBuffer[0]))
                     rgbaBuffer[0] = lookupNearest_1D(mInv_x_maxIndex[0] * (rgbaBuffer[0] - b[0]), maxIndex[0], startPos[0]);
-                if(!isnan(rgbaBuffer[1]))
+                if(!IsNan(rgbaBuffer[1]))
                     rgbaBuffer[1] = lookupNearest_1D(mInv_x_maxIndex[1] * (rgbaBuffer[1] - b[1]), maxIndex[1], startPos[1]);
-                if(!isnan(rgbaBuffer[2]))
+                if(!IsNan(rgbaBuffer[2]))
                     rgbaBuffer[2] = lookupNearest_1D(mInv_x_maxIndex[2] * (rgbaBuffer[2] - b[2]), maxIndex[2], startPos[2]);
                 
                 rgbaBuffer += 4;
             }
         }
 #endif
-#ifdef USE_SSE
+#if USE_SSE && OCIO_UNIT_TEST
         void Lut1D_Nearest_SSE(float* rgbaBuffer, long numPixels, const Lut1D & lut)
         {
             // orig: 546 ms
@@ -340,11 +340,11 @@ OCIO_NAMESPACE_ENTER
                 // _mm_cvttps_pi32 converts 2 floats to 2 32-bit packed ints,
                 // with truncation
                 
-                if(!isnan(result[0]))
+                if(!IsNan(result[0]))
                     rgbaBuffer[0] = startPos[0][(int)(result[0])];
-                if(!isnan(result[1]))
+                if(!IsNan(result[1]))
                     rgbaBuffer[1] = startPos[1][(int)(result[1])];
-                if(!isnan(result[2]))
+                if(!IsNan(result[2]))
                     rgbaBuffer[2] = startPos[2][(int)(result[2])];
                 
                 rgbaBuffer += 4;
@@ -383,11 +383,11 @@ OCIO_NAMESPACE_ENTER
             
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
-                if(!isnan(rgbaBuffer[0]))
+                if(!IsNan(rgbaBuffer[0]))
                     rgbaBuffer[0] = lookupLinear_1D(mInv_x_maxIndex[0] * (rgbaBuffer[0] - b[0]), maxIndex[0], startPos[0]);
-                if(!isnan(rgbaBuffer[1]))
+                if(!IsNan(rgbaBuffer[1]))
                     rgbaBuffer[1] = lookupLinear_1D(mInv_x_maxIndex[1] * (rgbaBuffer[1] - b[1]), maxIndex[1], startPos[1]);
-                if(!isnan(rgbaBuffer[2]))
+                if(!IsNan(rgbaBuffer[2]))
                     rgbaBuffer[2] = lookupLinear_1D(mInv_x_maxIndex[2] * (rgbaBuffer[2] - b[2]), maxIndex[2], startPos[2]);
                 
                 rgbaBuffer += 4;
@@ -439,11 +439,11 @@ OCIO_NAMESPACE_ENTER
             
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
-                if(!isnan(rgbaBuffer[0]))
+                if(!IsNan(rgbaBuffer[0]))
                     rgbaBuffer[0] = m[0] * reverseLookupNearest_1D(rgbaBuffer[0], startPos[0], endPos[0]) + b[0];
-                if(!isnan(rgbaBuffer[1]))
+                if(!IsNan(rgbaBuffer[1]))
                     rgbaBuffer[1] = m[1] * reverseLookupNearest_1D(rgbaBuffer[1], startPos[1], endPos[1]) + b[1];
-                if(!isnan(rgbaBuffer[2]))
+                if(!IsNan(rgbaBuffer[2]))
                     rgbaBuffer[2] = m[2] * reverseLookupNearest_1D(rgbaBuffer[2], startPos[2], endPos[2]) + b[2];
                 
                 rgbaBuffer += 4;
@@ -492,11 +492,11 @@ OCIO_NAMESPACE_ENTER
             
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
-                if(!isnan(rgbaBuffer[0]))
+                if(!IsNan(rgbaBuffer[0]))
                     rgbaBuffer[0] = m[0] * reverseLookupLinear_1D(rgbaBuffer[0], startPos[0], endPos[0], invMaxIndex[0]) + b[0];
-                if(!isnan(rgbaBuffer[1]))
+                if(!IsNan(rgbaBuffer[1]))
                     rgbaBuffer[1] = m[1] * reverseLookupLinear_1D(rgbaBuffer[1], startPos[1], endPos[1], invMaxIndex[0]) + b[1];
-                if(!isnan(rgbaBuffer[2]))
+                if(!IsNan(rgbaBuffer[2]))
                     rgbaBuffer[2] = m[2] * reverseLookupLinear_1D(rgbaBuffer[2], startPos[2], endPos[2], invMaxIndex[0]) + b[2];
                 
                 rgbaBuffer += 4;
@@ -615,7 +615,7 @@ OCIO_NAMESPACE_ENTER
             const Lut1DOp & constThis = *this;
             ConstLut1DOpDataRcPtr lutDataConst = constThis.lut1DData();
 
-            m_cpuOp = GetLut1DRenderer(lutDataConst);
+            m_cpuOp = GetLut1DRenderer(lutDataConst, BIT_DEPTH_F32, BIT_DEPTH_F32);
 
             // Rebuild the cache identifier
             std::ostringstream cacheIDStream;

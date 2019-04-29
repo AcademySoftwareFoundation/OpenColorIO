@@ -615,7 +615,7 @@ void TestLog(float logBase)
     OIIO_CHECK_CLOSE(rgba[8], resMin, error);
     OIIO_CHECK_EQUAL(rgba[11], 0.0f);
     OIIO_CHECK_CLOSE(rgba[12], resMin, error);
-    OIIO_CHECK_ASSERT(std::isnan(rgba[15]));
+    OIIO_CHECK_ASSERT(OCIO::IsNan(rgba[15]));
     // SSE implementation of sseLog2 & sseExp2 do not behave like CPU for
     // infinity & NaN. Some tests had to be disabled.
     //OIIO_CHECK_EQUAL(rgba[16], inf);
@@ -677,10 +677,10 @@ void TestAntiLog(float logBase)
         // cannot use strict comparison.
         OIIO_CHECK_ASSERT(OCIO::EqualWithSafeRelError(result, expected, rtol, 1.0f));
     }
-    //OIIO_CHECK_ASSERT(std::isnan(rgba[8]));
+    //OIIO_CHECK_ASSERT(OCIO::IsNan(rgba[8]));
     OIIO_CHECK_EQUAL(rgba[11], 0.0f);
     OIIO_CHECK_CLOSE(rgba[12], 1.0f, rtol);
-    OIIO_CHECK_ASSERT(std::isnan(rgba[15]));
+    OIIO_CHECK_ASSERT(OCIO::IsNan(rgba[15]));
     //OIIO_CHECK_EQUAL(rgba[16], inf);
     OIIO_CHECK_EQUAL(rgba[19], 0.0f);
     OIIO_CHECK_CLOSE(rgba[20], 1.0f, rtol);
@@ -808,11 +808,11 @@ OIIO_ADD_TEST(LogOpCPU, log2lin_test)
 
     const float res0 = ComputeLog2LinEval(0.0f, redP);
 
-    //OIIO_CHECK_ASSERT(std::isnan(rgba[8]));
+    //OIIO_CHECK_ASSERT(OCIO::IsNan(rgba[8]));
     OIIO_CHECK_EQUAL(rgba[11], 0.0f);
 
     OIIO_CHECK_CLOSE(rgba[12], res0, rtol);
-    OIIO_CHECK_ASSERT(std::isnan(rgba[15]));
+    OIIO_CHECK_ASSERT(OCIO::IsNan(rgba[15]));
 
     //OIIO_CHECK_EQUAL(rgba[16], inf);
     OIIO_CHECK_EQUAL(rgba[19], 0.0f);
@@ -940,7 +940,7 @@ OIIO_ADD_TEST(LogOpCPU, lin2log_test)
     OIIO_CHECK_EQUAL(rgba[11], 0.0f);
 
     OIIO_CHECK_CLOSE(rgba[12], res0, error);
-    OIIO_CHECK_ASSERT(std::isnan(rgba[15]));
+    OIIO_CHECK_ASSERT(OCIO::IsNan(rgba[15]));
 
     //OIIO_CHECK_EQUAL(rgba[16], inf);
     OIIO_CHECK_EQUAL(rgba[19], 0.0f);

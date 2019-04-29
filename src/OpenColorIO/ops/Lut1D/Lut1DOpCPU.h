@@ -35,7 +35,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-OpCPURcPtr GetLut1DRenderer(ConstLut1DOpDataRcPtr & lut);
+
+OpCPURcPtr GetLut1DRenderer(ConstLut1DOpDataRcPtr & lut, BitDepth in, BitDepth out);
+
 }
 OCIO_NAMESPACE_EXIT
 

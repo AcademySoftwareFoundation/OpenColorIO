@@ -40,6 +40,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Platform.h"
 #include "SSE.h"
 
+
+// Suppress bogus warning when compiling with gcc
+#if __GNUC__ && __GNUC__ <= 5
+    #pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
+
+
 OCIO_NAMESPACE_ENTER
 {
 namespace
@@ -1314,6 +1321,10 @@ void InvLut3DRenderer::RangeTree::initRanges(float *grvec)
         cornerOffsets[2] = m_gsz[1];      // increment along Y
         cornerOffsets[3] = m_gsz[1] + 1;  // increment along X + Y
     }
+    else
+    {
+        throw Exception("Unsupported channel number.");
+    }
 
     float minVal[MAX_N] = { 0.0f, 0.0f, 0.0f, 0.0f };
     float maxVal[MAX_N] = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -2012,7 +2023,7 @@ void Lut3DRendererNaNTest(OCIO::Interpolation interpol)
     OIIO_CHECK_CLOSE(pixels[0], values[0], 1e-7f);
     OIIO_CHECK_CLOSE(pixels[1], values[1], 1e-7f);
     OIIO_CHECK_CLOSE(pixels[2], values[2], 1e-7f);
-    OIIO_CHECK_ASSERT(std::isnan(pixels[7]));
+    OIIO_CHECK_ASSERT(OCIO::IsNan(pixels[7]));
     OIIO_CHECK_CLOSE(pixels[8], 1.0f, 1e-7f);
     OIIO_CHECK_CLOSE(pixels[9], 1.0f, 1e-7f);
     OIIO_CHECK_CLOSE(pixels[10], 1.0f, 1e-7f);

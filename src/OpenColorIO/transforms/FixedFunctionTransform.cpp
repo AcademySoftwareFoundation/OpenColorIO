@@ -273,7 +273,7 @@ std::ostream& operator<< (std::ostream & os, const FixedFunctionTransform & t)
         t.getParams(&params[0]);
 
         os << ", params=" << params[0];
-        for (int i = 1; i < numParams; ++i)
+        for (size_t i = 1; i < numParams; ++i)
         {
           os << " " << params[i];
         }

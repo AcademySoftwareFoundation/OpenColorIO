@@ -879,13 +879,17 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function::
         void setMatrix(const float * m44);
+        void setMatrix(const double * m44);
         //!cpp:function::
         void getMatrix(float * m44) const;
+        void getMatrix(double * m44) const;
         
         //!cpp:function::
         void setOffset(const float * offset4);
+        void setOffset(const double * offset4);
         //!cpp:function::
         void getOffset(float * offset4) const;
+        void getOffset(double * offset4) const;
         
         //!rst:: **Convenience functions**
         //
