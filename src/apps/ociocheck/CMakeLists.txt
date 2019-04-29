@@ -1,5 +1,5 @@
 set(SOURCES
-	main.cpp
+    main.cpp
 )
 
 add_executable(ociocheck ${SOURCES})
@@ -14,8 +14,12 @@ endif()
 set_target_properties(ociocheck PROPERTIES 
     COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
 
-target_link_libraries(ociocheck PRIVATE OpenColorIO apputils)
+target_link_libraries(ociocheck 
+    PRIVATE 
+        OpenColorIO
+        apputils
+)
 
 install(TARGETS ociocheck
-	RUNTIME DESTINATION bin
+    RUNTIME DESTINATION bin
 )
