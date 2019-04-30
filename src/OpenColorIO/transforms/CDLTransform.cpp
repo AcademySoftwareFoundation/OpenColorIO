@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <fstream>
 #include <sstream>
+#include <string.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -90,7 +91,7 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    void LoadCDL(CDLTransform * cdl, const char * xml)
+    void LoadCDL(CDLTransform & cdl, const char * xml)
     {
         if(!xml || (strlen(xml) == 0))
         {
@@ -111,21 +112,21 @@ OCIO_NAMESPACE_ENTER
             throw Exception("Error loading CDL xml. ColorCorrection expected.");
         }
 
-        CDLTransformRcPtr cdlRcPtr = CDLTransform::Create();
+        CDLTransformRcPtr cdlRcPtr;
         parser.getCDLTransform(cdlRcPtr);
 
-        cdl->setID(cdlRcPtr->getID());
-        cdl->setDescription(cdlRcPtr->getDescription());
+        cdl.setID(cdlRcPtr->getID());
+        cdl.setDescription(cdlRcPtr->getDescription());
         float slope[3] = { 0.f, 0.f, 0.f };
         cdlRcPtr->getSlope(slope);
-        cdl->setSlope(slope);
+        cdl.setSlope(slope);
         float offset[3] = { 0.f, 0.f, 0.f };
         cdlRcPtr->getOffset(offset);
-        cdl->setOffset(offset);
+        cdl.setOffset(offset);
         float power[3] = { 0.f, 0.f, 0.f };
-        cdlRcPtr->getPower(offset);
-        cdl->setPower(offset);
-        cdl->setSat(cdlRcPtr->getSat());
+        cdlRcPtr->getPower(power);
+        cdl.setPower(power);
+        cdl.setSat(cdlRcPtr->getSat());
     }
     
     CDLTransformRcPtr CDLTransform::Create()
@@ -406,7 +407,7 @@ OCIO_NAMESPACE_ENTER
     
     void CDLTransform::setXML(const char * xml)
     {
-        LoadCDL(this, xml);
+        LoadCDL(*this, xml);
     }
     
     // We use this approach, rather than comparing XML to get around the

@@ -193,7 +193,7 @@ namespace
 
         for (long pixelIndex = 0; pixelIndex<numPixels; ++pixelIndex)
         {
-            if (isnan(rgbaBuffer[0]) || isnan(rgbaBuffer[1]) || isnan(rgbaBuffer[2]))
+            if (IsNan(rgbaBuffer[0]) || IsNan(rgbaBuffer[1]) || IsNan(rgbaBuffer[2]))
             {
                 rgbaBuffer[0] = std::numeric_limits<float>::quiet_NaN();
                 rgbaBuffer[1] = std::numeric_limits<float>::quiet_NaN();
@@ -238,7 +238,7 @@ namespace
         for (long pixelIndex = 0; pixelIndex<numPixels; ++pixelIndex)
         {
 
-            if (isnan(rgbaBuffer[0]) || isnan(rgbaBuffer[1]) || isnan(rgbaBuffer[2]))
+            if (IsNan(rgbaBuffer[0]) || IsNan(rgbaBuffer[1]) || IsNan(rgbaBuffer[2]))
             {
                 rgbaBuffer[0] = std::numeric_limits<float>::quiet_NaN();
                 rgbaBuffer[1] = std::numeric_limits<float>::quiet_NaN();
@@ -334,7 +334,7 @@ void Lut3D_Tetrahedral(float* rgbaBuffer, long numPixels, const Lut3D & lut)
     for (long pixelIndex = 0; pixelIndex<numPixels; ++pixelIndex)
     {
 
-        if (isnan(rgbaBuffer[0]) || isnan(rgbaBuffer[1]) || isnan(rgbaBuffer[2]))
+        if (IsNan(rgbaBuffer[0]) || IsNan(rgbaBuffer[1]) || IsNan(rgbaBuffer[2]))
         {
             rgbaBuffer[0] = std::numeric_limits<float>::quiet_NaN();
             rgbaBuffer[1] = std::numeric_limits<float>::quiet_NaN();

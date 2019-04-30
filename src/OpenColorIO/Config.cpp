@@ -2377,7 +2377,7 @@ namespace
 {
 
 const std::string SIMPLE_PROFILE =
-    "ocio_profile_version: 1\n"
+    "ocio_profile_version: 2\n"
     "\n"
     "search_path: luts\n"
     "strictparsing: true\n"
@@ -2890,19 +2890,23 @@ OIIO_ADD_TEST(Config, exponent_with_linear_serialization)
 
 OIIO_ADD_TEST(Config, exponent_vs_config_version)
 {
+    // The config i.e. SIMPLE_PROFILE is a version 2.
+
+    std::istringstream is;
+    OCIO::ConstConfigRcPtr config;
+    OCIO::ConstProcessorRcPtr processor;
+
     // OCIO config file version == 1  and exponent == 1
 
     const std::string strEnd =
         "    from_reference: !<ExponentTransform> {value: [1, 1, 1, 1]}\n";
-    const std::string str = SIMPLE_PROFILE + strEnd;
+    std::string str = SIMPLE_PROFILE + strEnd;
+    str.replace(0, strlen("ocio_profile_version: 2"), "ocio_profile_version: 1");
 
-    std::istringstream is;
     is.str(str);
-    OCIO::ConstConfigRcPtr config;
     OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
     OIIO_CHECK_NO_THROW(config->sanityCheck());
 
-    OCIO::ConstProcessorRcPtr processor;
     OIIO_CHECK_NO_THROW(processor = config->getProcessor("raw", "lnh"));
 
     float img1[4] = { -0.5f, 0.0f, 1.0f, 1.0f };
@@ -2917,7 +2921,8 @@ OIIO_ADD_TEST(Config, exponent_vs_config_version)
 
     const std::string strEnd2 =
         "    from_reference: !<ExponentTransform> {value: [2, 2, 2, 1]}\n";
-    const std::string str2 = SIMPLE_PROFILE + strEnd2;
+    std::string str2 = SIMPLE_PROFILE + strEnd2;
+    str2.replace(0, strlen("ocio_profile_version: 2"), "ocio_profile_version: 1");
 
     is.str(str2);
     OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
@@ -3419,41 +3424,6 @@ OIIO_ADD_TEST(Config, view)
 
 OIIO_ADD_TEST(Config, log_serialization)
 {
-    static const std::string SIMPLE_PROFILE =
-        "ocio_profile_version: 1\n"
-        "\n"
-        "search_path: luts\n"
-        "strictparsing: true\n"
-        "luma: [0.2126, 0.7152, 0.0722]\n"
-        "\n"
-        "roles:\n"
-        "  default: raw\n"
-        "  scene_linear: lnh\n"
-        "\n"
-        "displays:\n"
-        "  sRGB:\n"
-        "    - !<View> {name: Raw, colorspace: raw}\n"
-        "\n"
-        "active_displays: []\n"
-        "active_views: []\n"
-        "\n"
-        "colorspaces:\n"
-        "  - !<ColorSpace>\n"
-        "    name: raw\n"
-        "    family: \"\"\n"
-        "    equalitygroup: \"\"\n"
-        "    bitdepth: unknown\n"
-        "    isdata: false\n"
-        "    allocation: uniform\n"
-        "\n"
-        "  - !<ColorSpace>\n"
-        "    name: lnh\n"
-        "    family: \"\"\n"
-        "    equalitygroup: \"\"\n"
-        "    bitdepth: unknown\n"
-        "    isdata: false\n"
-        "    allocation: uniform\n";
-
     {
         // Log with default base value and default direction.
         const std::string strEnd =
@@ -3764,7 +3734,7 @@ OIIO_ADD_TEST(Config, key_value_error)
                           OCIO::Exception,
                           "Error: Loading the OCIO profile failed. At line 14, the value "
                           "parsing of the key 'matrix' from 'MatrixTransform' failed: "
-                          "'matrix' values must be 16 floats. Found '6'.");
+                          "'matrix' values must be 16 numbers. Found '6'.");
 }
 
 namespace
@@ -3828,33 +3798,6 @@ OIIO_ADD_TEST(Config, unknown_key_error)
 
 OIIO_ADD_TEST(Config, fixed_function_serialization)
 {
-    static const std::string SIMPLE_PROFILE =
-        "ocio_profile_version: 1\n"
-        "\n"
-        "search_path: luts\n"
-        "strictparsing: true\n"
-        "luma: [0.2126, 0.7152, 0.0722]\n"
-        "\n"
-        "roles:\n"
-        "  default: raw\n"
-        "  scene_linear: raw\n"
-        "\n"
-        "displays:\n"
-        "  sRGB:\n"
-        "    - !<View> {name: Raw, colorspace: raw}\n"
-        "\n"
-        "active_displays: []\n"
-        "active_views: []\n"
-        "\n"
-        "colorspaces:\n"
-        "  - !<ColorSpace>\n"
-        "    name: raw\n"
-        "    family: \"\"\n"
-        "    equalitygroup: \"\"\n"
-        "    bitdepth: unknown\n"
-        "    isdata: false\n"
-        "    allocation: uniform\n";
-
     {
         const std::string strEnd =
             "    from_reference: !<GroupTransform>\n"
@@ -3919,6 +3862,34 @@ OIIO_ADD_TEST(Config, fixed_function_serialization)
         OIIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception, 
             "The style 'REC2100_Surround' must only have one parameter but 0 found.");
     }
+}
+
+OIIO_ADD_TEST(Config, matrix_serialization)
+{
+    const std::string strEnd =
+        "    from_reference: !<GroupTransform>\n"
+        "      children:\n"
+                 // Check the value serialization.
+        "        - !<MatrixTransform> {matrix: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],"\
+                                     " offset: [-1, -2, -3, -4]}\n"
+                 // Check the value precision.
+        "        - !<MatrixTransform> {offset: [0.123456789876, 1.23456789876, 12.3456789876, 123.456789876]}\n"
+        "        - !<MatrixTransform> {matrix: [0.123456789876, 1.23456789876, 12.3456789876, 123.456789876, "\
+                                                "1234.56789876, 12345.6789876, 123456.789876, 1234567.89876, "\
+                                                "0, 0, 1, 0, 0, 0, 0, 1]}\n";
+
+    const std::string str = SIMPLE_PROFILE + strEnd;
+
+    std::istringstream is;
+    is.str(str);
+
+    OCIO::ConstConfigRcPtr config;
+    OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+    std::stringstream ss;
+    ss << *config.get();
+    OIIO_CHECK_EQUAL(ss.str(), str);
 }
 
 #endif // OCIO_UNIT_TEST

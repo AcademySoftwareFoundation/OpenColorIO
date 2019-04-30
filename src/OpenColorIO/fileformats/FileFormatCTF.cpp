@@ -1773,8 +1773,6 @@ OIIO_ADD_TEST(FileFormatCTF, lut3d)
     OIIO_CHECK_EQUAL(pLut->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
     OIIO_CHECK_EQUAL(pLut->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
 
-    const OCIO::Array & a1 = pLut->getArray();
-
     const OCIO::Array & array = pLut->getArray();
     OIIO_CHECK_EQUAL(array.getLength(), 17);
     OIIO_CHECK_EQUAL(array.getNumColorComponents(), 3);
@@ -2306,11 +2304,11 @@ OIIO_ADD_TEST(FileFormatCTF, lut_3by1d_with_nan_infinity)
     const OCIO::Array & array = pLut1d->getArray();
 
     OIIO_REQUIRE_EQUAL(array.getValues().size(), array.getNumValues());
-    OIIO_CHECK_ASSERT(OCIO::isnan(array.getValues()[0]));
-    OIIO_CHECK_ASSERT(OCIO::isnan(array.getValues()[1]));
-    OIIO_CHECK_ASSERT(OCIO::isnan(array.getValues()[2]));
-    OIIO_CHECK_ASSERT(OCIO::isnan(array.getValues()[3]));
-    OIIO_CHECK_ASSERT(OCIO::isnan(array.getValues()[4]));
+    OIIO_CHECK_ASSERT(OCIO::IsNan(array.getValues()[0]));
+    OIIO_CHECK_ASSERT(OCIO::IsNan(array.getValues()[1]));
+    OIIO_CHECK_ASSERT(OCIO::IsNan(array.getValues()[2]));
+    OIIO_CHECK_ASSERT(OCIO::IsNan(array.getValues()[3]));
+    OIIO_CHECK_ASSERT(OCIO::IsNan(array.getValues()[4]));
     OIIO_CHECK_EQUAL(array.getValues()[5],
                      std::numeric_limits<float>::infinity());
     OIIO_CHECK_EQUAL(array.getValues()[6],

@@ -96,8 +96,8 @@ public:
 
     void setInversionQuality(LutInversionQuality style);
 
+    // Note: The Lut3DOpData Array stores the values in blue-fastest order.
     inline const Array & getArray() const { return m_array; }
-
     inline Array & getArray() { return m_array; }
 
     // Get the grid dimensions of the array (array is N x N x N x 3).
