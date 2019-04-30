@@ -68,7 +68,7 @@ GLint g_win = 0;
 int g_winWidth = 0;
 int g_winHeight = 0;
 
-OpenGLBuilderRcPtr g_oglBuilder;
+OCIO::OpenGLBuilderRcPtr g_oglBuilder;
 
 GLuint g_imageTexID;
 float g_imageAspect;
@@ -498,7 +498,7 @@ void UpdateOCIOGLState()
     processor->extractGpuShaderInfo(shaderDesc);
 
     // Step 3: Use the helper OpenGL builder
-    g_oglBuilder = OpenGLBuilder::Create(shaderDesc);
+    g_oglBuilder = OCIO::OpenGLBuilder::Create(shaderDesc);
     g_oglBuilder->setVerbose(g_gpuinfo);
 
     // Step 4: Allocate & upload all the LUTs

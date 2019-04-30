@@ -18,7 +18,6 @@ target_link_libraries(ociolutimage
 	PRIVATE
 		apputils
 		pystring
-	PUBLIC
 		OpenColorIO
 		OpenImageIO
 )
