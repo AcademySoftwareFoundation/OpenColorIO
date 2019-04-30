@@ -225,7 +225,7 @@ public:
         processor->extractGpuShaderInfo(shaderDesc);
 
         // Use the helper OpenGL builder
-        m_oglBuilder = OpenGLBuilder::Create(shaderDesc);
+        m_oglBuilder = OCIO::OpenGLBuilder::Create(shaderDesc);
         m_oglBuilder->setVerbose(gpuinfo);
 
         // Allocate & upload all the LUTs
@@ -329,7 +329,7 @@ private:
 
     GLint m_glwin;
     State m_initState;
-    OpenGLBuilderRcPtr m_oglBuilder;
+    OCIO::OpenGLBuilderRcPtr m_oglBuilder;
     GLuint m_imageTexID;
     GLenum m_format;
     long m_width;

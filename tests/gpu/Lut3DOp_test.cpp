@@ -82,8 +82,8 @@ OCIO_ADD_GPU_TEST(Lut3DOp, red_only_using_CSP_file_legacy_shader)
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
-
     test.setContext(file->createEditableCopy(), shaderDesc);
+
     test.setErrorThreshold(2e-4f);
 }
 
@@ -126,8 +126,8 @@ OCIO_ADD_GPU_TEST(Lut3DOp, green_only_using_CSP_file_legacy_shader)
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
-
     test.setContext(file->createEditableCopy(), shaderDesc);
+
     test.setErrorThreshold(2e-4f);
 }
 
@@ -170,8 +170,8 @@ OCIO_ADD_GPU_TEST(Lut3DOp, blue_only_using_CSP_file_legacy_shader)
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
-
     test.setContext(file->createEditableCopy(), shaderDesc);
+
     test.setErrorThreshold(2e-4f);
 }
 
@@ -256,9 +256,7 @@ OCIO_ADD_GPU_TEST(Lut3DOp, arbitrary_using_CSP_file)
     file->setSrc(filename.c_str());
     file->setInterpolation(OCIO::INTERP_LINEAR);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
-
+    OCIO::GpuShaderDescRcPtr shaderDesc  = OCIO::GpuShaderDesc::CreateShaderDesc();
     test.setContext(file->createEditableCopy(), shaderDesc);
 
     // TODO: Small LUTs not being resampled for now, such error threshold is expected
@@ -305,11 +303,10 @@ OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_legacy_shader)
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
-
     test.setContext(file->createEditableCopy(), shaderDesc);
+
     test.setErrorThreshold(5e-4f);
 }
-
 
 OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_spi3d_linear)
 {
@@ -317,24 +314,25 @@ OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_spi3d_linear)
     OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_1.spi3d");
 
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     test.setContext(file->createEditableCopy(), shaderDesc);
+
     test.setErrorThreshold(5e-4f);
 }
 
 OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_spi3d_tetra)
 {
-    // TODO: Would like to be able to remove the setTestNaN(false) and
-    // setTestInfinity(false) from all of these tests.
-    test.setTestNaN(false);
-    test.setTestInfinity(false);
     OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_1.spi3d");
     file->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
 
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     test.setContext(file->createEditableCopy(), shaderDesc);
+
     test.setErrorThreshold(1e-6f);
+
+    // TODO: Would like to be able to remove the setTestNaN(false) and
+    // setTestInfinity(false) from all of these tests.
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(Lut3DOp, inv3dlut_file_spi3d_linear)
@@ -350,8 +348,8 @@ OCIO_ADD_GPU_TEST(Lut3DOp, inv3dlut_file_spi3d_linear)
     file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     test.setContext(file->createEditableCopy(), shaderDesc);
+
     test.setErrorThreshold(1.2e-3f);
 }
 
@@ -367,8 +365,8 @@ OCIO_ADD_GPU_TEST(Lut3DOp, inv3dlut_file_spi3d_tetra)
     file->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
 
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     test.setContext(file->createEditableCopy(), shaderDesc);
+
     test.setErrorThreshold(1.2e-3f);
 }
 
@@ -378,8 +376,8 @@ OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_spi3d_bizarre_linear)
     OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_bizarre.spi3d");
 
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     test.setContext(file->createEditableCopy(), shaderDesc);
+
     // This is due to the fact that the LUT is small and to
     // the GPU 8-bit index quantization.
     test.setErrorThreshold(1e-2f);
@@ -387,15 +385,16 @@ OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_spi3d_bizarre_linear)
 
 OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_spi3d_bizarre_tetra)
 {
-    test.setTestNaN(false);
-    test.setTestInfinity(false);
     OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_bizarre.spi3d");
     file->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
 
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     test.setContext(file->createEditableCopy(), shaderDesc);
+
     test.setErrorThreshold(1e-6f);
+
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(Lut3DOp, inv3dlut_file_spi3d_bizarre_linear)
@@ -407,8 +406,8 @@ OCIO_ADD_GPU_TEST(Lut3DOp, inv3dlut_file_spi3d_bizarre_linear)
     file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     test.setContext(file->createEditableCopy(), shaderDesc);
+
     test.setErrorThreshold(3e-4f);
 }
 
@@ -422,8 +421,8 @@ OCIO_ADD_GPU_TEST(Lut3DOp, inv3dlut_file_spi3d_bizarre_tetra)
     file->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
 
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     test.setContext(file->createEditableCopy(), shaderDesc);
+
     test.setErrorThreshold(3e-4f);
 }
 

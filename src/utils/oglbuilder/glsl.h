@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
+Copyright (c) 2018 Autodesk Inc., et al.
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -30,18 +30,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_GLSL_H_
 #define INCLUDED_OCIO_GLSL_H_
 
-#include <OpenColorIO/OpenColorIO.h>
-namespace OCIO = OCIO_NAMESPACE;
-
-
 #include <vector>
 
+#include <OpenColorIO/OpenColorIO.h>
+
+
+OCIO_NAMESPACE_ENTER
+{
 
 class OpenGLBuilder;
 typedef OCIO_SHARED_PTR<OpenGLBuilder> OpenGLBuilderRcPtr;
 
 
-// This a reference implementation showing how to do the texture updload & allocation, 
+// This is a reference implementation showing how to do the texture upload & allocation, 
 // and the program compilation for the GLSL shader language.
 
 class OpenGLBuilder
@@ -68,7 +69,7 @@ class OpenGLBuilder
 
 public:
     // Create an OpenGL builder using the GPU shader information from a specific processor
-    static OpenGLBuilderRcPtr Create(const OCIO::GpuShaderDescRcPtr & gpuShader);
+    static OpenGLBuilderRcPtr Create(const GpuShaderDescRcPtr & gpuShader);
 
     ~OpenGLBuilder();
 
@@ -86,17 +87,21 @@ public:
     void useProgram();
     unsigned getProgramHandle();
 
-    // Determine the maximun width value of a texture
+    // Determine the maximum width value of a texture
     // depending of the graphic card and its driver.
     static unsigned GetTextureMaxWidth();
 
 protected:
-    OpenGLBuilder(const OCIO::GpuShaderDescRcPtr & gpuShader);
+    OpenGLBuilder(const GpuShaderDescRcPtr & gpuShader);
 
     void deleteAllTextures();
 
 private:
-    const OCIO::GpuShaderDescRcPtr m_shaderDesc; // Description of the fragment shader to create
+    OpenGLBuilder();
+    OpenGLBuilder(const OpenGLBuilder&);
+    OpenGLBuilder& operator=(const OpenGLBuilder&);
+
+    const GpuShaderDescRcPtr m_shaderDesc; // Description of the fragment shader to create
     unsigned m_startIndex;                 // Starting index for texture allocations
     TextureIds m_textureIds;               // Texture ids of all needed textures
     unsigned m_fragShader;                 // Fragment shader identifier
@@ -105,6 +110,8 @@ private:
     bool m_verbose;
 };
 
+}
+OCIO_NAMESPACE_EXIT
 
 #endif // INCLUDED_OCIO_GLSL_H_
 
