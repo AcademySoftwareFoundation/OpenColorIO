@@ -774,8 +774,8 @@ int main(int argc, char **argv)
         if(env && *env)
         {
             std::cout << std::endl;
-            std::cout << "OCIO Configuration = '" << env << "'" << std::endl;
-            std::cout << "OCIO search_path   = " << config->getSearchPath() << std::endl;
+            std::cout << "OCIO Configuration: '" << env << "'" << std::endl;
+            std::cout << "OCIO search_path:    " << config->getSearchPath() << std::endl;
         }
     }
     
