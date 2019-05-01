@@ -222,6 +222,12 @@ OCIO_NAMESPACE_ENTER
         return *this;
     }
 
+    GpuShaderText::GpuShaderLine& GpuShaderText::GpuShaderLine::operator<<(double value)
+    {
+        m_text->m_ossLine << getFloatString(value, m_text->m_lang);
+        return *this;
+    }
+
     GpuShaderText::GpuShaderLine& GpuShaderText::GpuShaderLine::operator<<(unsigned value)
     {
         m_text->m_ossLine << value;
@@ -348,6 +354,11 @@ OCIO_NAMESPACE_ENTER
     }
 
     std::string GpuShaderText::vec3fConst(const float v) const
+    {
+        return vec3fConst(getFloatString(v, m_lang));
+    }
+
+    std::string GpuShaderText::vec3fConst(const double v) const
     {
         return vec3fConst(getFloatString(v, m_lang));
     }
@@ -549,6 +560,12 @@ OCIO_NAMESPACE_ENTER
                                            const std::string& coords) const
     {
         return getTexSample<3>(m_lang, textureName, getSamplerName(textureName), coords);
+    }
+
+
+    void GpuShaderText::declareUniformFloat(const std::string & uniformName)
+    {
+        newLine() << "uniform float " << uniformName << ";";
     }
 
     // Keep the method private as only float & double types are expected

@@ -1671,7 +1671,7 @@ OIIO_ADD_TEST(Lut3DOp, cpu_renderer_lut3d_with_nan)
     OIIO_CHECK_EQUAL(myImage[5], 0.0f);
     OIIO_CHECK_EQUAL(myImage[10], 0.0f);
 
-    OIIO_CHECK_ASSERT(isnan(myImage[15]));
+    OIIO_CHECK_ASSERT(OCIO::IsNan(myImage[15]));
 
     OIIO_CHECK_EQUAL(myImage[16], 0.5f);
     OIIO_CHECK_EQUAL(myImage[17], 0.5f);

@@ -8,6 +8,7 @@ set(SOURCES
 	Context.cpp
 	CPUProcessor.cpp
 	Display.cpp
+	DynamicProperty.cpp
 	Exception.cpp
 	fileformats/cdl/CDLParser.cpp
 	fileformats/cdl/CDLReaderHelper.cpp
@@ -54,9 +55,13 @@ set(SOURCES
 	ops/CDL/CDLOpData.cpp
 	ops/CDL/CDLOps.cpp
 	ops/Exponent/ExponentOps.cpp
-	ops/FixedFunction/FixedFunctionOpGPU.cpp
+	ops/exposurecontrast/ExposureContrastOpCPU.cpp
+	ops/exposurecontrast/ExposureContrastOpData.cpp
+	ops/exposurecontrast/ExposureContrastOpGPU.cpp
+	ops/exposurecontrast/ExposureContrastOps.cpp
 	ops/FixedFunction/FixedFunctionOpCPU.cpp
 	ops/FixedFunction/FixedFunctionOpData.cpp
+	ops/FixedFunction/FixedFunctionOpGPU.cpp
 	ops/FixedFunction/FixedFunctionOps.cpp
 	ops/Gamma/GammaOpCPU.cpp
 	ops/Gamma/GammaOpData.cpp
@@ -100,6 +105,7 @@ set(SOURCES
 	transforms/DisplayTransform.cpp
 	transforms/ExponentTransform.cpp
 	transforms/ExponentWithLinearTransform.cpp
+	transforms/ExposureContrastTransform.cpp
 	transforms/FileTransform.cpp
 	transforms/FixedFunctionTransform.cpp
 	transforms/GroupTransform.cpp

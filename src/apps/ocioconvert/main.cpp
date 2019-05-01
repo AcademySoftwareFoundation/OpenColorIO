@@ -246,8 +246,12 @@ public:
 
         // Enable the fragment shader program, and all needed textures
         m_oglBuilder->useProgram();
+        // The image texture
         glUniform1i(glGetUniformLocation(m_oglBuilder->getProgramHandle(), "img"), 0);
+        // The LUT textures
         m_oglBuilder->useAllTextures();
+        // Enable uniforms for dynamic properties
+        m_oglBuilder->useAllUniforms();
 
         m_initState = STATE_SHADER_UPDATED;
     }

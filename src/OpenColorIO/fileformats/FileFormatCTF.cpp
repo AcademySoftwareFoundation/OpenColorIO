@@ -515,6 +515,11 @@ private:
             {
                 pImpl->AddOpReader(CTFReaderOpElt::CDLType, name);
             }
+            else if (SupportedElement(name, pElt, TAG_EXPOSURE_CONTRAST,
+                                      TAG_PROCESS_LIST, recognizedName))
+            {
+                pImpl->AddOpReader(CTFReaderOpElt::ExposureContrastType, name);
+            }
             // TODO: handle other ops from syncolor.
 
             // Handle other elements that are transform-level metadata or parts of ops.
@@ -699,6 +704,32 @@ private:
                 {
                     pImpl->m_elms.push_back(
                         std::make_shared<XmlReaderSaturationElt>(
+                            name,
+                            pContainer,
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename()));
+                }
+                else if (SupportedElement(name, pElt, TAG_EC_PARAMS,
+                                          TAG_EXPOSURE_CONTRAST, recognizedName))
+                {
+                    pImpl->m_elms.push_back(
+                        std::make_shared<CTFReaderECParamsElt>(
+                            name,
+                            pContainer,
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename()));
+                }
+
+                // Dynamic Property is valid under any operator parent. First
+                // test if the tag is supported to set the recognizedName 
+                // accordingly, without testing for parents. Test for the
+                // parent type prior to testing the name.
+                else if (SupportedElement(name, pElt, TAG_DYNAMIC_PARAMETER,
+                                          "", recognizedName) &&
+                         std::dynamic_pointer_cast<CTFReaderOpElt>(pContainer))
+                {
+                    pImpl->m_elms.push_back(
+                        std::make_shared<CTFReaderDynamicParamElt>(
                             name,
                             pContainer,
                             pImpl->getXmLineNumber(),
@@ -3230,6 +3261,178 @@ OIIO_ADD_TEST(Reference, load_alias_path)
                           "alias & path attributes for Reference should not be both defined");
 }
 
+OIIO_ADD_TEST(FileFormatCTF, exposure_contrast_video)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    const std::string ctfFile("exposure_contrast_video.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
+    OIIO_REQUIRE_ASSERT(cachedFile);
+    const OCIO::OpDataVec & opList = cachedFile->m_transform->getOps();
+
+    OIIO_REQUIRE_EQUAL(opList.size(), 2);
+
+    OIIO_REQUIRE_ASSERT(opList[0]);
+    OIIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::ExposureContrastType);
+
+    auto pEC = std::dynamic_pointer_cast<const OCIO::ExposureContrastOpData>(opList[0]);
+    OIIO_REQUIRE_ASSERT(pEC);
+
+    OIIO_CHECK_EQUAL(pEC->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(pEC->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
+
+    OIIO_CHECK_EQUAL(pEC->getStyle(), OCIO::ExposureContrastOpData::STYLE_VIDEO);
+
+    OIIO_CHECK_EQUAL(pEC->getExposure(), -1.0);
+    OIIO_CHECK_EQUAL(pEC->getContrast(), 1.5);
+    OIIO_CHECK_EQUAL(pEC->getPivot(), 0.5);
+
+    OIIO_CHECK_ASSERT(pEC->isDynamic());
+    OIIO_CHECK_ASSERT(pEC->getExposureProperty()->isDynamic());
+    OIIO_CHECK_ASSERT(pEC->getContrastProperty()->isDynamic());
+    OIIO_CHECK_ASSERT(!pEC->getGammaProperty()->isDynamic());
+
+    OIIO_REQUIRE_ASSERT(opList[1]);
+    OIIO_CHECK_EQUAL(opList[1]->getType(), OCIO::OpData::ExposureContrastType);
+
+    auto pECRev = std::dynamic_pointer_cast<const OCIO::ExposureContrastOpData>(opList[1]);
+    OIIO_REQUIRE_ASSERT(pECRev);
+    OIIO_CHECK_ASSERT(!pECRev->isDynamic());
+
+    OIIO_CHECK_EQUAL(pECRev->getStyle(), OCIO::ExposureContrastOpData::STYLE_VIDEO_REV);
+}
+
+OIIO_ADD_TEST(FileFormatCTF, exposure_contrast_log)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    const std::string ctfFile("exposure_contrast_log.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
+    OIIO_REQUIRE_ASSERT(cachedFile);
+    const OCIO::OpDataVec & opList = cachedFile->m_transform->getOps();
+
+    OIIO_REQUIRE_EQUAL(opList.size(), 2);
+
+    OIIO_REQUIRE_ASSERT(opList[0]);
+    OIIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::ExposureContrastType);
+
+    auto pEC = std::dynamic_pointer_cast<const OCIO::ExposureContrastOpData>(opList[0]);
+    OIIO_REQUIRE_ASSERT(pEC);
+
+    OIIO_CHECK_EQUAL(pEC->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(pEC->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
+    OIIO_CHECK_EQUAL(pEC->getStyle(), OCIO::ExposureContrastOpData::STYLE_LOGARITHMIC);
+
+    OIIO_CHECK_EQUAL(pEC->getExposure(), -1.5);
+    OIIO_CHECK_EQUAL(pEC->getContrast(), 0.5);
+    OIIO_CHECK_EQUAL(pEC->getGamma(), 1.2);
+    OIIO_CHECK_EQUAL(pEC->getPivot(), 0.18);
+
+    OIIO_CHECK_ASSERT(pEC->isDynamic());
+    OIIO_CHECK_ASSERT(pEC->getExposureProperty()->isDynamic());
+    OIIO_CHECK_ASSERT(pEC->getContrastProperty()->isDynamic());
+    OIIO_CHECK_ASSERT(pEC->getGammaProperty()->isDynamic());
+
+    OIIO_REQUIRE_ASSERT(opList[1]);
+    OIIO_CHECK_EQUAL(opList[1]->getType(), OCIO::OpData::ExposureContrastType);
+
+    auto pECRev = std::dynamic_pointer_cast<const OCIO::ExposureContrastOpData>(opList[1]);
+    OIIO_REQUIRE_ASSERT(pECRev);
+
+    OIIO_CHECK_EQUAL(pECRev->getStyle(), OCIO::ExposureContrastOpData::STYLE_LOGARITHMIC_REV);
+    OIIO_CHECK_ASSERT(pECRev->isDynamic());
+    OIIO_CHECK_ASSERT(pECRev->getExposureProperty()->isDynamic());
+    OIIO_CHECK_ASSERT(!pECRev->getContrastProperty()->isDynamic());
+    OIIO_CHECK_ASSERT(!pECRev->getGammaProperty()->isDynamic());
+}
+
+OIIO_ADD_TEST(FileFormatCTF, exposure_contrast_linear)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    const std::string ctfFile("exposure_contrast_linear.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
+    OIIO_REQUIRE_ASSERT(cachedFile);
+    const OCIO::OpDataVec & opList = cachedFile->m_transform->getOps();
+
+    OIIO_REQUIRE_EQUAL(opList.size(), 2);
+
+    OIIO_REQUIRE_ASSERT(opList[0]);
+    OIIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::ExposureContrastType);
+
+    auto pEC = std::dynamic_pointer_cast<const OCIO::ExposureContrastOpData>(opList[0]);
+    OIIO_REQUIRE_ASSERT(pEC);
+
+    OIIO_CHECK_EQUAL(pEC->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
+    OIIO_CHECK_EQUAL(pEC->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
+    OIIO_CHECK_EQUAL(pEC->getStyle(), OCIO::ExposureContrastOpData::STYLE_LINEAR);
+
+    OIIO_CHECK_EQUAL(pEC->getExposure(), 0.65);
+    OIIO_CHECK_EQUAL(pEC->getContrast(), 1.2);
+    OIIO_CHECK_EQUAL(pEC->getGamma(), 0.5);
+    OIIO_CHECK_EQUAL(pEC->getPivot(), 1.0);
+
+    OIIO_CHECK_ASSERT(pEC->isDynamic());
+    OIIO_CHECK_ASSERT(pEC->getExposureProperty()->isDynamic());
+    OIIO_CHECK_ASSERT(pEC->getContrastProperty()->isDynamic());
+    OIIO_CHECK_ASSERT(pEC->getGammaProperty()->isDynamic());
+
+    OIIO_REQUIRE_ASSERT(opList[1]);
+    OIIO_CHECK_EQUAL(opList[1]->getType(), OCIO::OpData::ExposureContrastType);
+
+    auto pECRev = std::dynamic_pointer_cast<const OCIO::ExposureContrastOpData>(opList[1]);
+    OIIO_REQUIRE_ASSERT(pECRev);
+
+    OIIO_CHECK_EQUAL(pECRev->getStyle(), OCIO::ExposureContrastOpData::STYLE_LINEAR_REV);
+    OIIO_CHECK_ASSERT(!pECRev->isDynamic());
+    OIIO_CHECK_ASSERT(!pECRev->getExposureProperty()->isDynamic());
+    OIIO_CHECK_ASSERT(!pECRev->getContrastProperty()->isDynamic());
+    OIIO_CHECK_ASSERT(!pECRev->getGammaProperty()->isDynamic());
+}
+
+OIIO_ADD_TEST(FileFormatCTF, exposure_contrast_no_gamma) 
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    const std::string ctfFile("exposure_contrast_no_gamma.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
+    OIIO_REQUIRE_ASSERT(cachedFile);
+    const OCIO::OpDataVec & opList = cachedFile->m_transform->getOps();
+
+    OIIO_REQUIRE_EQUAL(opList.size(), 1);
+
+    OIIO_REQUIRE_ASSERT(opList[0]);
+    OIIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::ExposureContrastType);
+
+    auto pEC = std::dynamic_pointer_cast<const OCIO::ExposureContrastOpData>(opList[0]);
+    OIIO_REQUIRE_ASSERT(pEC);
+
+    OIIO_CHECK_EQUAL(pEC->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
+    OIIO_CHECK_EQUAL(pEC->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
+
+    OIIO_CHECK_EQUAL(pEC->getStyle(), OCIO::ExposureContrastOpData::STYLE_VIDEO);
+
+    OIIO_CHECK_EQUAL(pEC->getExposure(), 0.2);
+    OIIO_CHECK_EQUAL(pEC->getContrast(), 0.65);
+    OIIO_CHECK_EQUAL(pEC->getPivot(), 0.23);
+
+    OIIO_CHECK_EQUAL(pEC->getGamma(), 1.0);
+
+    OIIO_CHECK_ASSERT(!pEC->isDynamic());
+    OIIO_CHECK_ASSERT(!pEC->getExposureProperty()->isDynamic());
+    OIIO_CHECK_ASSERT(!pEC->getContrastProperty()->isDynamic());
+    OIIO_CHECK_ASSERT(!pEC->getGammaProperty()->isDynamic());
+}
+
+OIIO_ADD_TEST(FileFormatCTF, exposure_contrast_failures)
+{
+    const std::string ecBadStyle("exposure_contrast_bad_style.ctf");
+    OIIO_CHECK_THROW_WHAT(LoadCLFFile(ecBadStyle), OCIO::Exception,
+                          "Unknown exposure contrast style");
+
+    const std::string ecMissingParam("exposure_contrast_missing_param.ctf");
+    OIIO_CHECK_THROW_WHAT(LoadCLFFile(ecMissingParam), OCIO::Exception,
+                          "exposure missing");
+}
+
 // TODO: Bring over tests when adding CTF support.
 // synColor: xmlTransformReader_test.cpp
 // checkGamma1
@@ -3244,15 +3447,6 @@ OIIO_ADD_TEST(Reference, load_alias_path)
 // checkGamma_alpha4
 // checkGamma_alpha5
 // checkGamma_alpha6
-// checkExposureContrastVideo
-// checkExposureContrastLog
-// checkExposureContrastLinear
-// checkExposureContrastBadStyle
-// checkExposureContrastMissingParam
-// checkExposureContrastNoGamma
-// checkExposureContrastNoGammaDynamic
-// ecNotDynamic
-// ecExposureOnlyDynamic
 // checkLog_Log10
 // checkLog_Log2
 // checkLog_AntiLog10
