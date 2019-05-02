@@ -76,10 +76,15 @@ OCIO_NAMESPACE_ENTER
 
             void apply(void * rgbaBuffer, long numPixels) const override;
             void apply(const void * inImg, void * outImg, long numPixels) const override;
-            
+
             bool supportedByLegacyShader() const override;
             void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
-        
+
+            BitDepth getInputBitDepth() const override { return BIT_DEPTH_F32; }
+            void setInputBitDepth(BitDepth /*bitDepth*/) override { }
+            BitDepth getOutputBitDepth() const override { return BIT_DEPTH_F32; }
+            void setOutputBitDepth(BitDepth /*bitDepth*/) override { }
+
         private:
             TransformDirection m_direction;
 #ifdef OCIO_TRUELIGHT_SUPPORT
