@@ -104,7 +104,7 @@ public:
         return inst;
     }
 
-    void init()
+    void init(bool verbose)
     {
         if (m_initState != STATE_CREATED) return;
             
@@ -122,10 +122,19 @@ public:
         glewInit();
         if (!glewIsSupported("GL_VERSION_2_0"))
         {
-            std::cout << "OpenGL 2.0 not supported" << std::endl;
+            std::cerr << "OpenGL 2.0 not supported" << std::endl;
             exit(1);
         }
 #endif
+
+        if(verbose)
+        {
+            std::cout << std::endl
+                      << "GL Vendor:    " << glGetString(GL_VENDOR) << std::endl
+                      << "GL Renderer:  " << glGetString(GL_RENDERER) << std::endl
+                      << "GL Version:   " << glGetString(GL_VERSION) << std::endl
+                      << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+        }
 
         // Initilize the OpenGL engine
         glPixelStorei(GL_UNPACK_ALIGNMENT, 4);           // 4-byte pixel alignment
@@ -361,6 +370,7 @@ int main(int argc, const char **argv)
     bool usegpu = false;
     bool usegpuLegacy = false;
     bool outputgpuInfo = false;
+    bool verbose = false;
 
     ap.options("ocioconvert -- apply colorspace transform to an image \n\n"
                "usage: ocioconvert [options]  inputimage inputcolorspace outputimage outputcolorspace\n\n",
@@ -375,6 +385,7 @@ int main(int argc, const char **argv)
                "--gpulegacy", &usegpuLegacy, "Use the legacy (i.e. baked) GPU color processing "
                                              "instead of the CPU one (--gpu is ignored)",
                "--gpuinfo", &outputgpuInfo, "Output the OCIO shader program",
+               "--v", &verbose, "Display general information",
                NULL
                );
     if (ap.parse (argc, argv) < 0) {
@@ -389,13 +400,39 @@ int main(int argc, const char **argv)
       exit(1);
     }
 
+    if(verbose)
+    {
+        std::cout << std::endl;
+        std::cout << "OIIO Version: " << OIIO_VERSION_STRING << std::endl;
+        std::cout << "OCIO Version: " << OCIO::GetVersion() << std::endl;
+        const char * env = getenv("OCIO");
+        if(env && *env)
+        {
+            try
+            {
+                std::cout << std::endl;
+                std::cout << "OCIO Configuration: '" << env << "'" << std::endl;
+                OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+                std::cout << "OCIO search_path:    " << config->getSearchPath() << std::endl;
+            }
+            catch(...)
+            {
+
+                std::cerr << "Error loading the config file: '" << env << "'";
+                exit(1);
+            }
+        }
+    }
+    
     if (usegpuLegacy)
     {
-        std::cerr << "Using legacy OCIO v1 GPU color processing." << std::endl;
+        std::cout << std::endl;
+        std::cout << "Using legacy OCIO v1 GPU color processing." << std::endl;
     }
     else if (usegpu)
     {
-        std::cerr << "Using GPU color processing." << std::endl;
+        std::cout << std::endl;
+        std::cout << "Using GPU color processing." << std::endl;
     }
 
     const char * inputimage = args[0].c_str();
@@ -411,7 +448,8 @@ int main(int argc, const char **argv)
     
 
     // Load the image
-    std::cerr << "Loading " << inputimage << std::endl;
+    std::cout << std::endl;
+    std::cout << "Loading " << inputimage << std::endl;
     try
     {
 #if OIIO_VERSION < 10903
@@ -532,7 +570,7 @@ int main(int argc, const char **argv)
     if (usegpu || usegpuLegacy)
     {
         GPUManagement & gpuMgmt = GPUManagement::Instance();
-        gpuMgmt.init();
+        gpuMgmt.init(verbose);
         gpuMgmt.prepareImage(&img[0], imgwidth, imgheight, components);
     }
 
@@ -668,7 +706,8 @@ int main(int argc, const char **argv)
         exit(1);
     }
     
-    std::cerr << "Wrote " << outputimage << std::endl;
+    std::cout << std::endl;
+    std::cout << "Wrote " << outputimage << std::endl;
     
     return 0;
 }
