@@ -3202,6 +3202,8 @@ OIIO_ADD_TEST(Reference, load_multiple)
     OIIO_CHECK_EQUAL(ref3->getPath(), "cdl_clamp_fwd.clf");
     OIIO_CHECK_EQUAL(ref3->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
     OIIO_CHECK_EQUAL(ref3->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+    // Note: This tests that the "inverted" attribute set to anything other than
+    // true does not result in an inverted transform.
     OIIO_CHECK_EQUAL(ref3->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
 }
 

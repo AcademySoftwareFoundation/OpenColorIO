@@ -709,28 +709,6 @@ void parseArguments(int argc, char **argv)
             g_filename = argv[i];
         }
     }
-
-    if(g_verbose)
-    {
-        std::cout << std::endl;
-        if(!g_filename.empty())
-        {
-            std::cout << "Image:" << std::endl
-                      << "\t" << g_filename << std::endl;
-        }
-        std::cout << std::endl;
-        std::cout << "OIIO: " << std::endl
-                  << "\tversion       = " << OIIO_VERSION_STRING << std::endl;
-        std::cout << std::endl;
-        std::cout << "OCIO: " << std::endl
-                  << "\tversion       = " << OCIO::GetVersion() << std::endl;
-        if(getenv("OCIO"))
-        {
-            std::cout << "\tconfiguration = " << getenv("OCIO") << std::endl;
-            OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-            std::cout << "\tsearch_path   = " << config->getSearchPath() << std::endl;
-        }
-    }
 }
 
 int main(int argc, char **argv)
@@ -749,7 +727,7 @@ int main(int argc, char **argv)
     glewInit();
     if (!glewIsSupported("GL_VERSION_2_0"))
     {
-        printf("OpenGL 2.0 not supported\n");
+        std::cerr << "OpenGL 2.0 not supported" << std::endl;
         exit(1);
     }
 #endif
@@ -758,13 +736,52 @@ int main(int argc, char **argv)
     glutKeyboardFunc(Key);
     glutSpecialFunc(SpecialKey);
     glutDisplayFunc(Redisplay);
+
+    if(g_verbose)
+    {
+        std::cout << std::endl
+                  << "GL Vendor:    " << glGetString(GL_VENDOR) << std::endl
+                  << "GL Renderer:  " << glGetString(GL_RENDERER) << std::endl
+                  << "GL Version:   " << glGetString(GL_VERSION) << std::endl
+                  << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+
+        if(!g_filename.empty())
+        {
+            std::cout << std::endl;
+            std::cout << "Image: " << g_filename << std::endl;
+        }
+        std::cout << std::endl;
+        std::cout << "OIIO Version: " << OIIO_VERSION_STRING << std::endl;
+        std::cout << "OCIO Version: " << OCIO::GetVersion() << std::endl;
+    }
+
+    OCIO::ConstConfigRcPtr config;
+    try
+    {
+        config = OCIO::GetCurrentConfig();
+    }
+    catch(...)
+    {
+        const char * env = getenv("OCIO");
+        std::cerr << "Error loading the config file: '" << (env ? env : "") << "'";
+        exit(1);
+    }
+
+    if(g_verbose)
+    {
+        const char * env = getenv("OCIO");
+
+        if(env && *env)
+        {
+            std::cout << std::endl;
+            std::cout << "OCIO Configuration: '" << env << "'" << std::endl;
+            std::cout << "OCIO search_path:    " << config->getSearchPath() << std::endl;
+        }
+    }
     
+    std::cout << std::endl;
     std::cout << USAGE_TEXT << std::endl;
     
-    // TODO: switch profiles based on shading language
-    std::cout << "GL_SHADING_LANGUAGE_VERSION: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
-    std::cout << std::endl;
-
     InitImageTexture(g_filename.c_str());
     try
     {
