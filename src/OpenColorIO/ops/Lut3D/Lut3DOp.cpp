@@ -519,7 +519,7 @@ void Lut3D_Tetrahedral(float* rgbaBuffer, long numPixels, const Lut3D & lut)
                         (fz)* startPos[n111 + 2];
                 }
             }
-        } // !isnan
+        } // !IsNan
 
         rgbaBuffer += 4;
     }
