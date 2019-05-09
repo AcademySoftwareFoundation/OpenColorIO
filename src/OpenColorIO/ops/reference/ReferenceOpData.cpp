@@ -64,16 +64,6 @@ bool ReferenceOpData::hasChannelCrosstalk() const
     return true;
 }
 
-void ReferenceOpData::setOutputBitDepth(BitDepth out)
-{
-    OpData::setOutputBitDepth(out);
-}
-
-void ReferenceOpData::setInputBitDepth(BitDepth in)
-{
-    OpData::setInputBitDepth(in);
-}
-
 bool ReferenceOpData::operator==(const OpData& other) const
 {
     if (this == &other) return true;
@@ -251,6 +241,27 @@ bool GetFilePath(std::string & path, OCIO::ConstOpRcPtr & op)
 // The following tests load files using the non-public API in order to validate
 // the referenced files are loaded correctly.
 //
+
+OIIO_ADD_TEST(Reference, load_one_reference)
+{
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
+    context->addSearchPath(OCIO::getTestFilesDir());
+    std::string fileName("reference_one_matrix.ctf");
+    OCIO::OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(BuildOpsTest(ops, fileName, context, OCIO::TRANSFORM_DIR_FORWARD));
+
+    // Ops contains [FileNoOp, FileNoOp, Matrix].
+    OIIO_REQUIRE_EQUAL(ops.size(), 3);
+
+    OIIO_CHECK_NO_THROW(ops.validate());
+
+    OCIO::ConstOpRcPtr op = ops[2];
+    auto matrixData = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(op->data());
+    OIIO_REQUIRE_ASSERT(matrixData);
+    OIIO_CHECK_EQUAL(op->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(op->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+}
+
 OIIO_ADD_TEST(Reference, load_multiple_resolve_internal)
 {
     OCIO::ContextRcPtr context = OCIO::Context::Create();
