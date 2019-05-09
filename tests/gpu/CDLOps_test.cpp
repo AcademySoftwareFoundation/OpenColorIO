@@ -166,7 +166,7 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v2_Data_2)
 
     test.setTestWideRange(true);
     test.setRelativeComparison(false);
-    test.setErrorThreshold(1e-5f);
+    test.setErrorThreshold(2e-5f);
 }
 
 

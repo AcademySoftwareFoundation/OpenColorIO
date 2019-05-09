@@ -45,6 +45,9 @@ const int LUT3D_EDGE_SIZE = 64;
 const float g_epsilon = 1e-4f;
 const float g_epsilon_inverse = 1e-3f;
 
+const float base10 = 10.0f;
+const float eulerConstant = expf(1.0f);
+
 
 // Helper method to build unit tests
 void AddLogTest(OCIOGPUTest & test, 
@@ -57,274 +60,256 @@ void AddLogTest(OCIOGPUTest & test,
     log->setDirection(direction);
     log->setBase(base);
 
+    test.setContext(log->createEditableCopy(), shaderDesc);
+
     test.setErrorThreshold(epsilon);
 
-    test.setContext(log->createEditableCopy(), shaderDesc);
     // TODO: Would like to be able to remove the setTestNaN(false) and
     // setTestInfinity(false) from all of these tests.
     test.setTestInfinity(false);
 }
 
 
-OCIO_ADD_GPU_TEST(LogTransform, LogBase_10)
+OCIO_ADD_GPU_TEST(LogTransform, LogBase_10_legacy)
 {
-    // TODO: Would like to be able to remove the setTestNaN(false) from all of these tests.
-    test.setTestNaN(false);
-    const float base10 = 10.0f;
-
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
     AddLogTest(test, shaderDesc, TRANSFORM_DIR_FORWARD, base10, g_epsilon);
+
+    // TODO: Would like to be able to remove the setTestNaN(false) from all of these tests.
+    test.setTestNaN(false);
 }
 
-
-OCIO_ADD_GPU_TEST(LogTransform, LogBase_10_inverse)
+OCIO_ADD_GPU_TEST(LogTransform, LogBase_10_legacy_inverse)
 {
-    const float base10 = 10.0f;
-
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
     AddLogTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, base10, g_epsilon_inverse);
+
     test.setTestNaN(false);
 }
-
 
 OCIO_ADD_GPU_TEST(LogTransform, LogBase_10_generic_shader)
 {
-    test.setTestNaN(false);
-    const float base10 = 10.0f;
-
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     AddLogTest(test, shaderDesc, TRANSFORM_DIR_FORWARD, base10, g_epsilon);
-}
 
+    test.setTestNaN(false);
+}
 
 OCIO_ADD_GPU_TEST(LogTransform, LogBase_10_inverse_generic_shader)
 {
-    const float base10 = 10.0f;
-
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     AddLogTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, base10, g_epsilon_inverse);
+
     test.setTestNaN(false);
 }
 
-
-OCIO_ADD_GPU_TEST(LogTransform, LogBase_euler)
+OCIO_ADD_GPU_TEST(LogTransform, LogBase_euler_legacy)
 {
-    test.setTestNaN(false);
-    const float eulerConstant = expf(1.0f);
-
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
     AddLogTest(test, shaderDesc, TRANSFORM_DIR_FORWARD, eulerConstant, g_epsilon);
+
+    test.setTestNaN(false);
 }
 
-
-OCIO_ADD_GPU_TEST(LogTransform, LogBase_euler_inverse)
+OCIO_ADD_GPU_TEST(LogTransform, LogBase_euler_legacy_inverse)
 {
-    const float eulerConstant = expf(1.0f);
-
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
     AddLogTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, eulerConstant, g_epsilon_inverse);
+
     test.setTestNaN(false);
 }
-
 
 OCIO_ADD_GPU_TEST(LogTransform, LogBase_euler_generic_shader)
 {
-    test.setTestNaN(false);
-    const float eulerConstant = expf(1.0f);
-
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     AddLogTest(test, shaderDesc, TRANSFORM_DIR_FORWARD, eulerConstant, g_epsilon);
-}
 
+    test.setTestNaN(false);
+}
 
 OCIO_ADD_GPU_TEST(LogTransform, LogBase_euler_inverse_generic_shader)
 {
-    const float eulerConstant = expf(1.0f);
-
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     AddLogTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, eulerConstant, g_epsilon_inverse);
+
     test.setTestNaN(false);
 }
 
 OCIO_ADD_GPU_TEST(LogAffineTransform, base)
 {
-    OCIO::GpuShaderDescRcPtr shaderDesc
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     OCIO::LogAffineTransformRcPtr log = OCIO::LogAffineTransform::Create();
     log->setDirection(TRANSFORM_DIR_FORWARD);
+    log->setBase(base10);
 
-    const double base = 10.0;
-    log->setBase(base);
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+    test.setContext(log->createEditableCopy(), shaderDesc);
 
     test.setErrorThreshold(g_epsilon);
-    test.setContext(log->createEditableCopy(), shaderDesc);
+
     test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(LogAffineTransform, base_inverse)
 {
-    OCIO::GpuShaderDescRcPtr shaderDesc
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     OCIO::LogAffineTransformRcPtr log = OCIO::LogAffineTransform::Create();
     log->setDirection(TRANSFORM_DIR_INVERSE);
+    log->setBase(base10);
 
-    const double base = 10.0;
-    log->setBase(base);
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+    test.setContext(log->createEditableCopy(), shaderDesc);
 
     test.setErrorThreshold(g_epsilon);
+
     test.setRelativeComparison(true);
-    test.setContext(log->createEditableCopy(), shaderDesc);
+
     test.setTestNaN(false);
     test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(LogAffineTransform, linSideSlope)
 {
-    OCIO::GpuShaderDescRcPtr shaderDesc
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     OCIO::LogAffineTransformRcPtr log = OCIO::LogAffineTransform::Create();
     log->setDirection(TRANSFORM_DIR_FORWARD);
 
     const double linSideSlope[3] = {2.0, 0.5, 3.0};
     log->setLinSideSlopeValue(linSideSlope);
 
-    test.setErrorThreshold(g_epsilon);
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
     test.setContext(log->createEditableCopy(), shaderDesc);
+
+    test.setErrorThreshold(g_epsilon);
+
     test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(LogAffineTransform, linSideSlope_inverse)
 {
-    OCIO::GpuShaderDescRcPtr shaderDesc
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     OCIO::LogAffineTransformRcPtr log = OCIO::LogAffineTransform::Create();
     log->setDirection(TRANSFORM_DIR_INVERSE);
 
     const double linSideSlope[3] = { 2.0, 0.5, 3.0 };
     log->setLinSideSlopeValue(linSideSlope);
 
-    test.setErrorThreshold(g_epsilon);
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
     test.setContext(log->createEditableCopy(), shaderDesc);
+
+    test.setErrorThreshold(g_epsilon);
+
     test.setTestNaN(false);
     test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(LogAffineTransform, linSideOffset)
 {
-    OCIO::GpuShaderDescRcPtr shaderDesc
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     OCIO::LogAffineTransformRcPtr log = OCIO::LogAffineTransform::Create();
     log->setDirection(TRANSFORM_DIR_FORWARD);
 
     const double linSideOffset[3] = { 0.1, 0.2, 0.3 };
     log->setLinSideOffsetValue(linSideOffset);
 
-    test.setErrorThreshold(g_epsilon);
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
     test.setContext(log->createEditableCopy(), shaderDesc);
+
+    test.setErrorThreshold(g_epsilon);
+
     test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(LogAffineTransform, linSideOffset_inverse)
 {
-    OCIO::GpuShaderDescRcPtr shaderDesc
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     OCIO::LogAffineTransformRcPtr log = OCIO::LogAffineTransform::Create();
     log->setDirection(TRANSFORM_DIR_INVERSE);
 
     const double linSideOffset[3] = { 0.1, 0.2, 0.3 };
     log->setLinSideOffsetValue(linSideOffset);
 
-    test.setErrorThreshold(g_epsilon);
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
     test.setContext(log->createEditableCopy(), shaderDesc);
+
+    test.setErrorThreshold(g_epsilon);
+
     test.setTestNaN(false);
     test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(LogAffineTransform, logSideSlope)
 {
-    OCIO::GpuShaderDescRcPtr shaderDesc
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     OCIO::LogAffineTransformRcPtr log = OCIO::LogAffineTransform::Create();
     log->setDirection(TRANSFORM_DIR_FORWARD);
 
     const double logSideSlope[3] = { 2.0, 0.5, 3.0 };
     log->setLogSideSlopeValue(logSideSlope);
 
-    test.setErrorThreshold(g_epsilon);
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
     test.setContext(log->createEditableCopy(), shaderDesc);
+
+    test.setErrorThreshold(g_epsilon);
+
     test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(LogAffineTransform, logSideSlope_inverse)
 {
-    OCIO::GpuShaderDescRcPtr shaderDesc
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     OCIO::LogAffineTransformRcPtr log = OCIO::LogAffineTransform::Create();
     log->setDirection(TRANSFORM_DIR_INVERSE);
 
     const double logSideSlope[3] = { 2.0, 0.5, 3.0 };
     log->setLogSideSlopeValue(logSideSlope);
 
-    test.setErrorThreshold(g_epsilon);
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
     test.setContext(log->createEditableCopy(), shaderDesc);
+
+    test.setErrorThreshold(g_epsilon);
+
     test.setTestNaN(false);
     test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(LogAffineTransform, logSideOffset)
 {
-    OCIO::GpuShaderDescRcPtr shaderDesc
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     OCIO::LogAffineTransformRcPtr log = OCIO::LogAffineTransform::Create();
     log->setDirection(TRANSFORM_DIR_FORWARD);
 
     const double logSideOffset[3] = { 0.1, 0.2, 0.3 };
     log->setLogSideOffsetValue(logSideOffset);
 
-    test.setErrorThreshold(g_epsilon);
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
     test.setContext(log->createEditableCopy(), shaderDesc);
+
+    test.setErrorThreshold(g_epsilon);
+
     test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(LogAffineTransform, logSideOffset_inverse)
 {
-    OCIO::GpuShaderDescRcPtr shaderDesc
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     OCIO::LogAffineTransformRcPtr log = OCIO::LogAffineTransform::Create();
     log->setDirection(TRANSFORM_DIR_INVERSE);
 
     const double logSideOffset[3] = { 0.1, 0.2, 0.3 };
     log->setLogSideOffsetValue(logSideOffset);
 
-    test.setErrorThreshold(g_epsilon);
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
     test.setContext(log->createEditableCopy(), shaderDesc);
+
+    test.setErrorThreshold(g_epsilon);
+
     test.setTestNaN(false);
     test.setTestInfinity(false);
 }
-
