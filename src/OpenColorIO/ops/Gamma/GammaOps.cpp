@@ -259,7 +259,7 @@ void GammaOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
     ConstGammaOpRcPtr typedRcPtr = DynamicPtrCast<const GammaOp>(secondOp);
 
     GammaOpDataRcPtr res = gammaData()->compose(*typedRcPtr->gammaData());
-    CreateGammaOp(ops, res);
+    CreateGammaOp(ops, res, TRANSFORM_DIR_FORWARD);
 }
 
 void GammaOp::finalize()
@@ -295,7 +295,7 @@ void GammaOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
 
     ss.newLine() << "";
     ss.newLine() << "// Add Gamma "
-                 << GammaOpData::convertStyleToString(gammaData()->getStyle())
+                 << GammaOpData::ConvertStyleToString(gammaData()->getStyle())
                  << " processing";
     ss.newLine() << "";
 
@@ -335,14 +335,6 @@ void GammaOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
 
 }  // Anon namespace
     
-void CreateGammaOp(OpRcPtrVec & ops, 
-                   GammaOpDataRcPtr & gammaData)
-{
-    if(gammaData->isNoOp()) return;
-
-    ops.push_back(std::make_shared<GammaOp>(gammaData));
-}
-
 void CreateGammaOp(OpRcPtrVec & ops,
                    const std::string & id,
                    const OpData::Descriptions & desc,
@@ -376,7 +368,22 @@ void CreateGammaOp(OpRcPtrVec & ops,
                                         style,
                                         paramR, paramG, paramB, paramA);
 
-    CreateGammaOp(ops, gammaData);
+    CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
+}
+
+void CreateGammaOp(OpRcPtrVec & ops, 
+                   GammaOpDataRcPtr & gammaData,
+                   TransformDirection direction)
+{
+    if(gammaData->isNoOp()) return;
+
+    auto gamma = gammaData;
+    if (direction == TRANSFORM_DIR_INVERSE)
+    {
+        gamma = gamma->inverse();
+    }
+
+    ops.push_back(std::make_shared<GammaOp>(gamma));
 }
 
 }

@@ -3860,7 +3860,8 @@ OIIO_ADD_TEST(Config, fixed_function_serialization)
         OCIO::ConstConfigRcPtr config;
         OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OIIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception, 
-            "The style 'REC2100_Surround' must only have one parameter but 0 found.");
+                              "The style 'REC2100_Surround' must "
+                              "have one parameter but 0 found.");
     }
 }
 

@@ -120,17 +120,18 @@ OCIO_NAMESPACE_ENTER
         // Enumeration of all possible operator types.
         enum Type
         {
+            CDLType,           // A Color Decision List (aka CDL)
+            ExponentType,      // An exponent
+            FixedFunctionType, // A fixed function (i.e. where the style defines the behavior)
+            GammaType,         // A gamma (i.e. enhancement of the Exponent)
+            LogType,           // A log
             Lut1DType,         // A 1D LUT
             Lut3DType,         // A 3D LUT
             MatrixType,        // A matrix
-            LogType,           // A log
-            ExponentType,      // An exponent
             RangeType,         // A range
             ReferenceType,     // A reference to an external file
-            CDLType,           // A Color Decision List (aka CDL)
-            FixedFunctionType, // A fixed function (i.e. where the style defines the behavior)
-            GammaType,         // A gamma (i.e. enhancement of the Exponent)
 
+            // Note: Keep at end of list.
             NoOpType
         };
 

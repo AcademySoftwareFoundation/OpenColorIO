@@ -73,6 +73,28 @@ void BuildOpsTest(OpRcPtrVec & fileOps,
                           *(pFileTransform.get()), dir);
 }
 
+
+ConstProcessorRcPtr GetFileTransformProcessor(const std::string & fileName)
+{
+    const std::string filePath(std::string(getTestFilesDir()) + "/"
+                                           + fileName);
+    // Create a FileTransform.
+    FileTransformRcPtr fileTransform = FileTransform::Create();
+    
+    // A tranform file does not define any interpolation (contrary to config
+    // file), this is to avoid exception when creating the operation.
+    fileTransform->setInterpolation(INTERP_LINEAR);
+    fileTransform->setDirection(TRANSFORM_DIR_FORWARD);
+    fileTransform->setSrc(filePath.c_str());
+
+    // Create empty Config to use.
+    ConfigRcPtr config = Config::Create();
+    config->setMajorVersion(2);
+
+    // Get the processor corresponding to the transform.
+    return config->getProcessor(fileTransform);
+}
+
 }
 OCIO_NAMESPACE_EXIT
 

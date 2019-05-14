@@ -33,6 +33,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Op.h"
 #include "ops/CDL/CDLOps.h"
+#include "ops/Exponent/ExponentOps.h"
+#include "ops/FixedFunction/FixedFunctionOps.h"
+#include "ops/Gamma/GammaOps.h"
+#include "ops/Log/LogOps.h"
 #include "ops/Lut1D/Lut1DOp.h"
 #include "ops/Lut3D/Lut3DOp.h"
 #include "ops/Range/RangeOps.h"
@@ -195,6 +199,13 @@ OCIO_NAMESPACE_ENTER
                                const OpDataRcPtr & opData,
                                TransformDirection dir)
     {
+        if (dir == TRANSFORM_DIR_UNKNOWN)
+        {
+            throw Exception("Cannot create Op with unspecified transform direction.");
+        }
+
+        static_assert(OpData::NoOpType == 10, "Need to handle new type here");
+        
         switch (opData->getType())
         {
         case OpData::CDLType:
@@ -205,7 +216,39 @@ OCIO_NAMESPACE_ENTER
             break;
         }
 
-        case OpData::OpData::Lut1DType:
+        case OpData::ExponentType:
+        {
+            auto expSrc = std::dynamic_pointer_cast<ExponentOpData>(opData);
+            auto exp = std::make_shared<ExponentOpData>(*expSrc);
+            CreateExponentOp(ops, exp, dir);
+            break;
+        }
+
+        case OpData::FixedFunctionType:
+        {
+            auto ffSrc = std::dynamic_pointer_cast<FixedFunctionOpData>(opData);
+            auto ff = std::make_shared<FixedFunctionOpData>(*ffSrc);
+            CreateFixedFunctionOp(ops, ff, dir);
+            break;
+        }
+
+        case OpData::GammaType:
+        {
+            auto gammaSrc = std::dynamic_pointer_cast<GammaOpData>(opData);
+            auto gamma = std::make_shared<GammaOpData>(*gammaSrc);
+            CreateGammaOp(ops, gamma, dir);
+            break;
+        }
+
+        case OpData::LogType:
+        {
+            auto logSrc = std::dynamic_pointer_cast<LogOpData>(opData);
+            auto log = std::make_shared<LogOpData>(*logSrc);
+            CreateLogOp(ops, log, dir);
+            break;
+        }
+
+        case OpData::Lut1DType:
         {
             auto lutSrc = std::dynamic_pointer_cast<Lut1DOpData>(opData);
             auto lut = std::make_shared<Lut1DOpData>(*lutSrc);
@@ -213,7 +256,7 @@ OCIO_NAMESPACE_ENTER
             break;
         }
 
-        case OpData::OpData::Lut3DType:
+        case OpData::Lut3DType:
         {
             auto lutSrc = std::dynamic_pointer_cast<Lut3DOpData>(opData);
             auto lut = std::make_shared<Lut3DOpData>(*lutSrc);
@@ -236,8 +279,13 @@ OCIO_NAMESPACE_ENTER
             CreateRangeOp(ops, range, dir);
             break;
         }
+        
+        case OpData::ReferenceType:
+        {
+            throw Exception("ReferenceOpData should have been replaced by referenced ops");
+            break;
+        }
 
-        // TODO: Add the other ops when ready
         default:
             throw Exception("OpData is not supported");
         }

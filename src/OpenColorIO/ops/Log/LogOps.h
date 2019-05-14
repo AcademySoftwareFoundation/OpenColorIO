@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
+#include "ops/Log/LogOpData.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -52,7 +53,11 @@ OCIO_NAMESPACE_ENTER
                      TransformDirection direction);
 
     void CreateLogOp(OpRcPtrVec & ops, double base, TransformDirection direction);
-    
+
+    void CreateLogOp(OpRcPtrVec & ops,
+                     LogOpDataRcPtr & logData,
+                     TransformDirection direction);
+
 }
 OCIO_NAMESPACE_EXIT
 

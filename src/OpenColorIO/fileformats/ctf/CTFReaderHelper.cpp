@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fileformats/ctf/CTFReaderHelper.h"
 #include "fileformats/ctf/CTFReaderUtils.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
+#include "MathUtils.h"
 #include "Platform.h"
 #include "pystring/pystring.h"
 
@@ -958,12 +959,45 @@ CTFReaderOpEltRcPtr CTFReaderOpElt::GetReader(CTFReaderOpElt::Type type, const C
 
     switch (type)
     {
-    case CTFReaderOpElt::MatrixType:
+    case CTFReaderOpElt::ACESType:
     {
-        // If the version is 1.2 or less, then use MatrixElt.
-        ADD_READER_FOR_VERSIONS_UP_TO(CTFReaderMatrixElt, 1_2);
-        // If the version is 1.3 or more, then use MatrixElt_1_3.
-        ADD_DEFAULT_READER(CTFReaderMatrixElt_1_3);
+        ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderACESElt, 1_5);
+        break;
+    }
+    case CTFReaderOpElt::CDLType:
+    {
+        // Note: CLF style name support was not added until version 1.7, but
+        // no point creating a separate version just for that.
+        ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderCDLElt, 1_3);
+        break;
+    }
+    case CTFReaderOpElt::FixedFunctionType:
+    {
+        ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderFixedFunctionElt, 2_0);
+        break;
+    }
+    case CTFReaderOpElt::GammaType:
+    {
+        // If the version is 1.4 or less, then use GammaElt.
+        // This reader forces the alpha transformation to be the identity.
+        ADD_READER_FOR_VERSIONS_UP_TO(CTFReaderGammaElt, 1_4);
+        // If the version is 1.5 or more, then use GammaElt_1_5.
+        ADD_DEFAULT_READER(CTFReaderGammaElt_1_5);
+        break;
+    }
+    case CTFReaderOpElt::InvLut1DType:
+    {
+        ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderInvLut1DElt, 1_3);
+        break;
+    }
+    case CTFReaderOpElt::InvLut3DType:
+    {
+        ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderInvLut3DElt, 1_6);
+        break;
+    }
+    case CTFReaderOpElt::LogType:
+    {
+        ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderLogElt, 1_3);
         break;
     }
     case CTFReaderOpElt::Lut1DType:
@@ -975,11 +1009,6 @@ CTFReaderOpEltRcPtr CTFReaderOpElt::GetReader(CTFReaderOpElt::Type type, const C
         ADD_DEFAULT_READER(CTFReaderLut1DElt_1_7);
         break;
     }
-    case CTFReaderOpElt::InvLut1DType:
-    {
-        ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderInvLut1DElt, 1_3);
-        break;
-    }
     case CTFReaderOpElt::Lut3DType:
     {
         ADD_READER_FOR_VERSIONS_UP_TO(CTFReaderLut3DElt, 1_6);
@@ -987,9 +1016,12 @@ CTFReaderOpEltRcPtr CTFReaderOpElt::GetReader(CTFReaderOpElt::Type type, const C
         ADD_DEFAULT_READER(CTFReaderLut3DElt_1_7);
         break;
     }
-    case CTFReaderOpElt::InvLut3DType:
+    case CTFReaderOpElt::MatrixType:
     {
-        ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderInvLut3DElt, 1_6);
+        // If the version is 1.2 or less, then use MatrixElt.
+        ADD_READER_FOR_VERSIONS_UP_TO(CTFReaderMatrixElt, 1_2);
+        // If the version is 1.3 or more, then use MatrixElt_1_3.
+        ADD_DEFAULT_READER(CTFReaderMatrixElt_1_3);
         break;
     }
     case CTFReaderOpElt::RangeType:
@@ -1004,59 +1036,11 @@ CTFReaderOpEltRcPtr CTFReaderOpElt::GetReader(CTFReaderOpElt::Type type, const C
         ADD_DEFAULT_READER(CTFReaderReferenceElt);
         break;
     }
-    /* TODO: CTF
-    case Color::Op::Gamma:
+    case CTFReaderOpElt::NoType:
     {
-    // If the version is 1.4 or less, then use GammaElt
-    // This reader forces the alpha transformation to be the identity.
-    ADD_READER_FOR_VERSIONS_UP_TO(GammaElt, 1_4);
-    // If the version is 1.5 or more, then use GammaElt_1_5
-    ADD_DEFAULT_READER(GammaElt_1_5);
-    break;
-    }
-    case Color::Op::ExposureContrast:
-    {
-    ADD_DEFAULT_READER(ExposureContrastElt);
-    break;
-    }
-    case Color::Op::Log:
-    {
-    ADD_READER_FOR_VERSIONS_STARTING_AT(LogElt, 1_3);
-    break;
-    }*/
-    case CTFReaderOpElt::CDLType:
-    {
-        // Note: CLF style name support was not added until version 1.7, but
-        // no point creating a separate version just for that.
-        ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderCDLElt, 1_3);
+        static_assert(CTFReaderOpElt::NoType == 12, "Need to handle new type here");
         break;
     }
-    /* TODO: CTF
-    case Color::Op::Dither:
-    {
-    ADD_READER_FOR_VERSIONS_STARTING_AT(DitherElt, 1_5);
-    break;
-    }
-    case Color::Op::GamutMap:
-    {
-    ADD_READER_FOR_VERSIONS_STARTING_AT(GamutMapElt, 1_4);
-    break;
-    }
-    case Color::Op::HueVector:
-    {
-    ADD_READER_FOR_VERSIONS_STARTING_AT(HueVectorElt, 1_4);
-    break;
-    }
-    case OpData::OpData::ACESType:
-    {
-    ADD_READER_FOR_VERSIONS_STARTING_AT(ACESElt, 1_5);
-    break;
-    }
-    case Color::Op::Function:
-    {
-    ADD_READER_FOR_VERSIONS_STARTING_AT(FunctionElt, 1_8);
-    break;
-    }*/
     }
 
     return pOp;
@@ -1072,6 +1056,132 @@ BitDepth CTFReaderOpElt::GetBitDepth(const std::string & strBD)
     else if (str == "16f") return BIT_DEPTH_F16;
     else if (str == "32f") return BIT_DEPTH_F32;
     return BIT_DEPTH_UNKNOWN;
+}
+
+//////////////////////////////////////////////////////////
+
+CTFReaderACESElt::CTFReaderACESElt()
+    : CTFReaderOpElt()
+    , m_fixedFunction(std::make_shared<FixedFunctionOpData>())
+{
+}
+
+CTFReaderACESElt::~CTFReaderACESElt()
+{
+}
+
+void CTFReaderACESElt::start(const char **atts)
+{
+    CTFReaderOpElt::start(atts);
+
+    bool isStyleFound = false;
+
+    unsigned i = 0;
+    while (atts[i])
+    {
+        if (0 == Platform::Strcasecmp(ATTR_STYLE, atts[i]))
+        {
+            // We need a valid style to parse the parameters.
+            // This will throw on unrecognized styles.
+            try
+            {
+                m_fixedFunction->setStyle(FixedFunctionOpData::GetStyle(atts[i + 1]));
+                isStyleFound = true;
+            }
+            catch (Exception& ce)
+            {
+                throwMessage(ce.what());
+            }
+        }
+
+        i += 2;
+    }
+    if (!isStyleFound)
+    {
+        throwMessage("style parameter for FixedFunction is missing.");
+    }
+}
+
+void CTFReaderACESElt::end()
+{
+    CTFReaderOpElt::end();
+
+    m_fixedFunction->validate();
+}
+
+const OpDataRcPtr CTFReaderACESElt::getOp() const
+{
+    return m_fixedFunction;
+}
+
+CTFReaderACESParamsElt::CTFReaderACESParamsElt(
+    const std::string & name,
+    ContainerEltRcPtr pParent,
+    unsigned int xmlLineNumber,
+    const std::string & xmlFile)
+    : XmlReaderPlainElt(name, pParent, xmlLineNumber, xmlFile)
+{
+}
+
+CTFReaderACESParamsElt::~CTFReaderACESParamsElt()
+{
+}
+
+void CTFReaderACESParamsElt::start(const char **atts)
+{
+    // Attributes we want to extract.
+    double gamma = std::numeric_limits<double>::quiet_NaN();
+    
+    CTFReaderACESElt * pFixedFunction
+        = dynamic_cast<CTFReaderACESElt*>(getParent().get());
+
+    // Try extracting the attributes.
+    unsigned i = 0;
+    while (atts[i])
+    {
+        if (0 == Platform::Strcasecmp(ATTR_GAMMA, atts[i]))
+        {
+            const size_t len = strlen(atts[i + 1]);
+            ParseNumber(atts[i + 1], len, gamma);
+        }
+
+        i += 2;
+    }
+
+    const auto style = pFixedFunction->getFixedFunction()->getStyle();
+    if (style == FixedFunctionOpData::REC2100_SURROUND)
+    {
+        if (pFixedFunction->getFixedFunction()->getParams().size())
+        {
+            ThrowM(*this, "ACES FixedFunction element with style ",
+                   FixedFunctionOpData::ConvertStyleToString(style, false),
+                   " expects only 1 gamma parameter.");
+        }
+        FixedFunctionOpData::Params params;
+        if (std::isnan(gamma))
+        {
+            ThrowM(*this, "Missing required parameter ", ATTR_GAMMA,
+                   "for ACES FixedFunction element with style ",
+                   FixedFunctionOpData::ConvertStyleToString(style, false));
+        }
+        params.push_back(gamma);
+        // Assign the parameters to the object.
+        pFixedFunction->getFixedFunction()->setParams(params);
+    }
+    else
+    {
+        ThrowM(*this, "ACES FixedFunction element with style ",
+               FixedFunctionOpData::ConvertStyleToString(style, false),
+               " does not take any parameter.");
+    }
+}
+
+void CTFReaderACESParamsElt::end()
+{
+}
+
+void CTFReaderACESParamsElt::setRawData(const char * str, size_t len, unsigned int xmlLine)
+{
 }
 
 //////////////////////////////////////////////////////////
@@ -1094,7 +1204,7 @@ void CTFReaderCDLElt::start(const char ** atts)
     bool isStyleFound = false;
     for (unsigned i = 0; atts[i]; i += 2)
     {
-        if (0 == Platform::Strcasecmp(ATTR_CDL_STYLE, atts[i]))
+        if (0 == Platform::Strcasecmp(ATTR_STYLE, atts[i]))
         {
             // Unrecognized CDL styles will throw an exception.
             m_cdl->setStyle(CDLOpData::GetStyle(atts[i + 1]));
@@ -1158,266 +1268,857 @@ const CDLOpDataRcPtr & CTFReaderSOPNodeElt::getCDL() const
 
 //////////////////////////////////////////////////////////
 
-CTFReaderMatrixElt::CTFReaderMatrixElt()
+CTFReaderFixedFunctionElt::CTFReaderFixedFunctionElt()
     : CTFReaderOpElt()
-    , CTFArrayMgt()
-    , m_matrix(std::make_shared<MatrixOpData>())
+    , m_fixedFunction(std::make_shared<FixedFunctionOpData>())
 {
 }
 
-CTFReaderMatrixElt::~CTFReaderMatrixElt()
+CTFReaderFixedFunctionElt::~CTFReaderFixedFunctionElt()
 {
 }
 
-void CTFReaderMatrixElt::end()
+void CTFReaderFixedFunctionElt::start(const char **atts)
+{
+    CTFReaderOpElt::start(atts);
+
+    bool isStyleFound = false;
+
+    unsigned i = 0;
+    while (atts[i])
+    {
+        if (0 == Platform::Strcasecmp(ATTR_STYLE, atts[i]))
+        {
+            // We need a valid style to parse the parameters.
+            // This will throw on unrecognized styles.
+            try
+            {
+                m_fixedFunction->setStyle(FixedFunctionOpData::GetStyle(atts[i + 1]));
+                isStyleFound = true;
+            }
+            catch (Exception& ce)
+            {
+                throwMessage(ce.what());
+            }
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_PARAMS, atts[i]))
+        {
+            std::vector<double> data;
+            const char* paramsStr = atts[i + 1];
+            const size_t len = strlen(paramsStr);
+            try
+            {
+                data = GetNumbers<double>(paramsStr, len);
+            }
+            catch (Exception& /*ce*/)
+            {
+                ThrowM(*this, "Illegal '", getTypeName(), "' params ",
+                       TruncateString(paramsStr, len));
+            }
+            m_fixedFunction->setParams(data);
+        }
+
+        i += 2;
+    }
+    if (!isStyleFound)
+    {
+        throwMessage("style parameter for FixedFunction is missing.");
+    }
+}
+
+void CTFReaderFixedFunctionElt::end()
+{
+    CTFReaderOpElt::end();
+
+    m_fixedFunction->validate();
+}
+
+const OpDataRcPtr CTFReaderFixedFunctionElt::getOp() const
+{
+    return m_fixedFunction;
+}
+
+//////////////////////////////////////////////////////////
+
+CTFReaderGammaElt::CTFReaderGammaElt()
+    : m_gamma(std::make_shared<GammaOpData>())
+{
+}
+
+CTFReaderGammaElt::~CTFReaderGammaElt()
+{
+}
+
+void CTFReaderGammaElt::start(const char ** atts)
+{
+    CTFReaderOpElt::start(atts);
+    bool isStyleFound = false;
+
+    unsigned i = 0;
+    while (atts[i])
+    {
+        if (0 == Platform::Strcasecmp(ATTR_STYLE, atts[i]))
+        {
+            // We need a valid style to parse the parameters.
+            // This will throw on unrecognized styles.
+            GammaOpData::Style style
+                = GammaOpData::ConvertStringToStyle(atts[i + 1]);
+            m_gamma->setStyle(style);
+            isStyleFound = true;
+        }
+
+        i += 2;
+    }
+    if (!isStyleFound)
+    {
+        throwMessage("Missing parameter 'style'. ");
+    }
+}
+
+void CTFReaderGammaElt::end()
+{
+    CTFReaderOpElt::end();
+
+    // Set default alpha parameters.
+    const GammaOpData::Params paramsA
+        = GammaOpData::getIdentityParameters(m_gamma->getStyle());
+    m_gamma->setAlphaParams(paramsA);
+
+    // Validate the end result.
+    try
+    {
+        getGamma()->validateParameters();
+    }
+    catch (Exception & ce)
+    {
+        ThrowM(*this, "Invalid parameters: ",
+               ce.what(), ". ");
+    }
+}
+
+const OpDataRcPtr CTFReaderGammaElt::getOp() const
+{
+    return m_gamma;
+}
+
+CTFReaderGammaParamsEltRcPtr CTFReaderGammaElt::createGammaParamsElt(
+    const std::string & name,
+    ContainerEltRcPtr pParent,
+    unsigned int xmlLineNumber,
+    const std::string & xmlFile) const
+{
+    return std::make_shared<CTFReaderGammaParamsElt>(name, pParent, xmlLineNumber, xmlFile);
+}
+
+
+void CTFReaderGammaElt_1_5::end()
 {
     CTFReaderOpElt::end();
 
     // Validate the end result.
-    m_matrix->validate();
+    try
+    {
+        getGamma()->validateParameters();
+    }
+    catch (Exception & ce)
+    {
+        ThrowM(*this, "Invalid parameters: ",
+               ce.what(), ". ");
+    }
 }
 
-const OpDataRcPtr CTFReaderMatrixElt::getOp() const
+CTFReaderGammaParamsEltRcPtr CTFReaderGammaElt_1_5::createGammaParamsElt(
+    const std::string & name,
+    ContainerEltRcPtr pParent,
+    unsigned int xmlLineNumber,
+    const std::string & xmlFile) const
 {
-    return m_matrix;
+    CTFReaderGammaParamsEltRcPtr res =
+        std::make_shared<CTFReaderGammaParamsElt_1_5>(name, pParent, xmlLineNumber, xmlFile);
+    return res;
 }
 
-ArrayBase * CTFReaderMatrixElt::updateDimension(const Dimensions & dims)
+//////////////////////////////////////////////////////////
+
+CTFReaderGammaParamsElt::CTFReaderGammaParamsElt(const std::string & name,
+                                                 ContainerEltRcPtr pParent,
+                                                 unsigned int xmlLineNumber,
+                                                 const std::string & xmlFile)
+    : XmlReaderPlainElt(name, pParent, xmlLineNumber, xmlFile)
 {
-    if (dims.size() != 3)
-    {
-        return nullptr;
-    }
-
-    const size_t max = (dims.empty() ? 0 : (dims.size() - 1));
-    const unsigned numColorComponents = dims[max];
-
-    if (dims[0] != dims[1] || dims[2] != 3)
-    {
-        return nullptr;
-    }
-
-    ArrayDouble * pArray = &m_matrix->getArray();
-    pArray->resize(dims[0], numColorComponents);
-
-    return pArray;
 }
 
-void CTFReaderMatrixElt::endArray(unsigned int position)
+CTFReaderGammaParamsElt::~CTFReaderGammaParamsElt()
 {
-    ArrayDouble & array = m_matrix->getArray();
-    if (array.getNumValues() != position)
-    {
-        std::ostringstream arg;
-        arg << "Expected " << array.getLength() << "x" << array.getLength();
-        arg << " Array values, found " << position;
-
-        throw Exception(arg.str().c_str());
-    }
-
-    // Extract offsets.
-
-    const ArrayDouble::Values & values = array.getValues();
-
-    if (array.getLength() == 4)
-    {
-        m_matrix->setOffsetValue(0, values[3]);
-        m_matrix->setOffsetValue(1, values[7]);
-        m_matrix->setOffsetValue(2, values[11]);
-
-        m_matrix->setArrayValue(3, 0.0f);
-        m_matrix->setArrayValue(7, 0.0f);
-        m_matrix->setArrayValue(11, 0.0f);
-        m_matrix->setArrayValue(15, 1.0f);
-    }
-
-    // Array parsing is done.
-
-    setCompleted(true);
-
-    convert_1_2_to_Latest();
-
-    array.validate();
 }
 
-void CTFReaderMatrixElt::convert_1_2_to_Latest()
+void CTFReaderGammaParamsElt::start(const char ** atts)
 {
-    if (CTF_PROCESS_LIST_VERSION_1_2 < CTF_PROCESS_LIST_VERSION)
-    {
-        ArrayDouble & array = m_matrix->getArray();
+    // Attributes we want to extract.
+    int chan = -1;
+    double gamma = std::numeric_limits<double>::quiet_NaN();
+    double offset = std::numeric_limits<double>::quiet_NaN();
 
-        if (array.getLength() == 3)
+    // Try extracting the attributes.
+    unsigned i = 0;
+    while (atts[i])
+    {
+        if (0 == Platform::Strcasecmp(ATTR_CHAN, atts[i]))
         {
-            const float offsets[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-            m_matrix->setRGBAOffsets(offsets);
-        }
-        else if (array.getLength() == 4)
-        {
-            m_matrix->setOffsetValue(3, 0.0f);
+            chan = getChannelNumber(atts[i + 1]);
 
-            array = m_matrix->getArray();
-            ArrayDouble::Values oldV = array.getValues();
-
-            array.resize(3, 3);
-
-            ArrayDouble::Values & v = array.getValues();
-            v[0] = oldV[0];
-            v[1] = oldV[1];
-            v[2] = oldV[2];
-
-            v[3] = oldV[4];
-            v[4] = oldV[5];
-            v[5] = oldV[6];
-
-            v[6] = oldV[8];
-            v[7] = oldV[9];
-            v[8] = oldV[10];
-        }
-        else if (array.getLength() != 4)
-        {
-            std::ostringstream arg;
-            arg << "MatrixElt: Expecting array dimension to be 3 or 4. Got: ";
-            arg << array.getLength() << ".";
-
-            throw Exception(arg.str().c_str());
-        }
-    }
-}
-
-ArrayBase * CTFReaderMatrixElt_1_3::updateDimension(const Dimensions & dims)
-{
-    if (dims.size() != 3)
-    {
-        return nullptr;
-    }
-
-    const size_t max = (dims.empty() ? 0 : (dims.size() - 1));
-    const unsigned numColorComponents = dims[max];
-
-    if (!((dims[0] == 3 && dims[1] == 3 && dims[2] == 3) ||
-          (dims[0] == 3 && dims[1] == 4 && dims[2] == 3) ||
-          (dims[0] == 4 && dims[1] == 4 && dims[2] == 4) ||
-          (dims[0] == 4 && dims[1] == 5 && dims[2] == 4)))
-    {
-        return nullptr;
-    }
-
-    ArrayDouble * pArray = &getMatrix()->getArray();
-    pArray->resize(dims[1], numColorComponents);
-
-    return pArray;
-}
-
-void CTFReaderMatrixElt_1_3::endArray(unsigned int position)
-{
-    ArrayDouble & array = getMatrix()->getArray();
-
-    const ArrayDouble::Values & values = array.getValues();
-
-    // Note: Version 1.3 of Matrix Op supports 4 xml formats:
-    //       1) 4x5x4, matrix with alpha and offsets
-    //       2) 4x4x4, matrix with alpha and no offsets
-    //       3) 3x4x3, matrix only with offsets and no alpha
-    //       4) 3x3x3, matrix with no alpha and no offsets
-
-    if (array.getLength() == 3 && array.getNumColorComponents() == 3)
-    {
-        if (position != 9)
-        {
-            ThrowM(*this, "Expected 3x3 Array values, found ", position, ".");
-        }
-    }
-    else if (array.getLength() == 4)
-    {
-        if (array.getNumColorComponents() == 3)
-        {
-            if (position != 12)
+            // Chan is optional but, if present, must be legal.
+            if (chan == -1)
             {
-                ThrowM(*this, "Expected 3x4 Array values, found ", position, ".");
+                ThrowM(*this, "Invalid channel: ", atts[i + 1], ". ");
             }
-
-            MatrixOpDataRcPtr & pMatrix = getMatrix();
-
-            pMatrix->setOffsetValue(0, values[3]);
-            pMatrix->setOffsetValue(1, values[7]);
-            pMatrix->setOffsetValue(2, values[11]);
-            pMatrix->setOffsetValue(3, 0.0);
-
-            ArrayDouble::Values oldV = array.getValues();
-
-            array.setLength(3);
-
-            ArrayDouble::Values & v = array.getValues();
-            v[0] = oldV[0];
-            v[1] = oldV[1];
-            v[2] = oldV[2];
-
-            v[3] = oldV[4];
-            v[4] = oldV[5];
-            v[5] = oldV[6];
-
-            v[6] = oldV[8];
-            v[7] = oldV[9];
-            v[8] = oldV[10];
         }
-        else
+        else if (0 == Platform::Strcasecmp(ATTR_GAMMA, atts[i]))
         {
-            if (position != 16)
-            {
-                ThrowM(*this, "Expected 4x4 Array values, found ", position, ".");
-            }
-
-            MatrixOpDataRcPtr & pMatrix = getMatrix();
-
-            const float offsets[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-            pMatrix->setRGBAOffsets(offsets);
+            const size_t len = strlen(atts[i + 1]);
+            ParseNumber(atts[i + 1], len, gamma);
         }
+        else if (0 == Platform::Strcasecmp(ATTR_OFFSET, atts[i]))
+        {
+            const size_t len = strlen(atts[i + 1]);
+            ParseNumber(atts[i + 1], len, offset);
+        }
+
+        i += 2;
+    }
+
+    // Validate the attributes are appropriate for the gamma style and set
+    // the parameters (numeric validation is done by GammaOp::validate).
+
+    CTFReaderGammaElt * pGamma
+        = dynamic_cast<CTFReaderGammaElt*>(getParent().get());
+
+    GammaOpData::Params params;
+
+    const GammaOpData::Style style = pGamma->getGamma()->getStyle();
+    switch (style)
+    {
+    case GammaOpData::BASIC_FWD:
+    case GammaOpData::BASIC_REV:
+    {
+        if (IsNan(gamma))
+        {
+            ThrowM(*this, "Missing required gamma parameter for style: ",
+                   GammaOpData::ConvertStyleToString(style),
+                   ". ");
+        }
+        params.push_back(gamma);
+
+        if (!IsNan(offset))
+        {
+            ThrowM(*this, "Illegal offset parameter for style: ",
+                   GammaOpData::ConvertStyleToString(style),
+                   ". ");
+        }
+        break;
+    }
+
+    case GammaOpData::MONCURVE_FWD:
+    case GammaOpData::MONCURVE_REV:
+    {
+        if (IsNan(gamma))
+        {
+            ThrowM(*this, "Missing required gamma parameter for style: ",
+                   GammaOpData::ConvertStyleToString(style),
+                   ". ");
+        }
+        params.push_back(gamma);
+
+        if (IsNan(offset))
+        {
+            ThrowM(*this, "Missing required offset parameter for style: ",
+                   GammaOpData::ConvertStyleToString(style),
+                   ". ");
+        }
+        params.push_back(offset);
+        break;
+    }
+    }
+
+    // Assign the parameters to the object.
+    switch (chan)
+    {
+    case -1:
+        pGamma->getGamma()->setParams(params);
+        break;
+    case 0:
+        pGamma->getGamma()->setRedParams(params);
+        break;
+    case 1:
+        pGamma->getGamma()->setGreenParams(params);
+        break;
+    case 2:
+        pGamma->getGamma()->setBlueParams(params);
+        break;
+    case 3:
+        pGamma->getGamma()->setAlphaParams(params);
+        break;
+    }
+}
+
+void CTFReaderGammaParamsElt::end()
+{
+}
+
+void CTFReaderGammaParamsElt::setRawData(const char * , size_t , unsigned int )
+{
+}
+
+int CTFReaderGammaParamsElt::getChannelNumber(const char * name) const
+{
+    // Version prior to 1.3 only supports R, G and B channels.
+
+    int chan = -1;
+    if (0 == Platform::Strcasecmp("R", name))
+    {
+        chan = 0;
+    }
+    else if (0 == Platform::Strcasecmp("G", name))
+    {
+        chan = 1;
+    }
+    else if (0 == Platform::Strcasecmp("B", name))
+    {
+        chan = 2;
+    }
+    return chan;
+}
+
+CTFReaderGammaParamsElt_1_5::CTFReaderGammaParamsElt_1_5(const std::string & name,
+                                                         ContainerEltRcPtr pParent,
+                                                         unsigned int xmlLineNumber,
+                                                         const std::string & xmlFile)
+    : CTFReaderGammaParamsElt(name, pParent, xmlLineNumber, xmlFile)
+{
+}
+
+CTFReaderGammaParamsElt_1_5::~CTFReaderGammaParamsElt_1_5()
+{
+}
+
+int CTFReaderGammaParamsElt_1_5::getChannelNumber(const char * name) const
+{
+    // Version equal or greater than 1.5 supports R, G, B and A channels.
+
+    int chan = -1;
+    if (0 == Platform::Strcasecmp("A", name))
+    {
+        chan = 3;
     }
     else
     {
-        if (position != 20)
+        chan = CTFReaderGammaParamsElt::getChannelNumber(name);
+    }
+    return chan;
+}
+
+//////////////////////////////////////////////////////////
+
+CTFReaderInvLut1DElt::CTFReaderInvLut1DElt()
+    : m_invLut(std::make_shared<Lut1DOpData>(2, TRANSFORM_DIR_INVERSE))
+{
+}
+
+CTFReaderInvLut1DElt::~CTFReaderInvLut1DElt()
+{
+}
+
+void CTFReaderInvLut1DElt::start(const char ** atts)
+{
+    CTFReaderOpElt::start(atts);
+
+    // As the 'interpolation' element is optional,
+    // set the value to default behavior.
+    m_invLut->setInterpolation(INTERP_DEFAULT);
+
+    unsigned i = 0;
+    while (atts[i])
+    {
+        if (0 == Platform::Strcasecmp(ATTR_INTERPOLATION, atts[i]))
         {
-            ThrowM(*this, "Expected 4x5 Array values, found ", position, ".");
+            try
+            {
+                Interpolation interp = GetInterpolation1D(atts[i + 1]);
+                m_invLut->setInterpolation(interp);
+            }
+            catch (const std::exception & e)
+            {
+                throwMessage(e.what());
+            }
         }
 
-        MatrixOpDataRcPtr & pMatrix = getMatrix();
+        if (0 == Platform::Strcasecmp(ATTR_HALF_DOMAIN, atts[i]))
+        {
+            if (0 != Platform::Strcasecmp("true", atts[i + 1]))
+            {
+                std::ostringstream oss;
+                oss << "Unknown halfDomain value: '" << atts[i + 1];
+                oss << "' while parsing InvLut1D. ";
+                throwMessage(oss.str());
+            }
 
-        pMatrix->setOffsetValue(0, values[4]);
-        pMatrix->setOffsetValue(1, values[9]);
-        pMatrix->setOffsetValue(2, values[14]);
-        pMatrix->setOffsetValue(3, values[19]);
+            m_invLut->setInputHalfDomain(true);
+        }
 
-        ArrayDouble::Values oldV = array.getValues();
+        if (0 == Platform::Strcasecmp(ATTR_RAW_HALFS, atts[i]))
+        {
+            if (0 != Platform::Strcasecmp("true", atts[i + 1]))
+            {
+                std::ostringstream oss;
+                oss << "Unknown rawHalfs value: '" << atts[i + 1];
+                oss << "' while parsing InvLut1D. ";
+                throwMessage(oss.str());
+            }
 
-        array.resize(4, 4);
+            m_invLut->setOutputRawHalfs(true);
+        }
 
-        ArrayDouble::Values & v = array.getValues();
-        v[0] = oldV[0];
-        v[1] = oldV[1];
-        v[2] = oldV[2];
-        v[3] = oldV[3];
+        if (0 == Platform::Strcasecmp(ATTR_HUE_ADJUST, atts[i]))
+        {
+            if (0 != Platform::Strcasecmp("dw3", atts[i + 1]))
+            {
+                std::ostringstream oss;
+                oss << "Unknown hueAdjust value: '" << atts[i + 1];
+                oss << "' while parsing InvLut1D. ";
+                throwMessage(oss.str());
+            }
 
-        v[4] = oldV[5];
-        v[5] = oldV[6];
-        v[6] = oldV[7];
-        v[7] = oldV[8];
+            m_invLut->setHueAdjust(Lut1DOpData::HUE_DW3);
+        }
 
-        v[8] = oldV[10];
-        v[9] = oldV[11];
-        v[10] = oldV[12];
-        v[11] = oldV[13];
+        i += 2;
+    }
+}
 
-        v[12] = oldV[15];
-        v[13] = oldV[16];
-        v[14] = oldV[17];
-        v[15] = oldV[18];
+void CTFReaderInvLut1DElt::end()
+{
+    CTFReaderOpElt::end();
+    m_invLut->validate();
+}
+
+const OpDataRcPtr CTFReaderInvLut1DElt::getOp() const
+{
+    return m_invLut;
+}
+
+ArrayBase * CTFReaderInvLut1DElt::updateDimension(const Dimensions & dims)
+{
+    if (dims.size() != 2)
+    {
+        return nullptr;
     }
 
-    // Array parsing is done.
+    const size_t max = (dims.empty() ? 0 : (dims.size() - 1));
+    const unsigned int numColorComponents = dims[max];
+
+    if (dims[1] != 3 && dims[1] != 1)
+    {
+        return nullptr;
+    }
+
+    Array * pArray = &m_invLut->getArray();
+    pArray->resize(dims[0], numColorComponents);
+    return pArray;
+}
+
+void CTFReaderInvLut1DElt::endArray(unsigned int position)
+{
+    Array * pArray = &m_invLut->getArray();
+
+    // Convert half bits to float values if needed.
+    if (m_invLut->isOutputRawHalfs())
+    {
+        const size_t maxValues = pArray->getNumValues();
+        for (size_t i = 0; i<maxValues; ++i)
+        {
+            pArray->getValues()[i]
+                = ConvertHalfBitsToFloat((unsigned short)pArray->getValues()[i]);
+        }
+    }
+
+    if (pArray->getNumValues() != position)
+    {
+        const unsigned long numColorComponents = pArray->getNumColorComponents();
+        const unsigned long maxColorComponents = pArray->getMaxColorComponents();
+
+        const unsigned long dimensions = pArray->getLength();
+
+        if (numColorComponents != 1 || position != dimensions)
+        {
+            std::ostringstream arg;
+            arg << "Expected " << dimensions << "x" << numColorComponents;
+            arg << " Array values, found " << position << ". ";
+            throwMessage(arg.str());
+        }
+
+        // Convert a 1D LUT to a 3by1D LUT
+        // (duplicate values from the Red to the Green and Blue).
+        const unsigned long numLuts = maxColorComponents;
+
+        // TODO: Should improve Lut1DOp so that the copy is unnecessary.
+        for (long i = (dimensions - 1); i >= 0; --i)
+        {
+            for (unsigned long j = 0; j<numLuts; ++j)
+            {
+                pArray->getValues()[(i*numLuts) + j]
+                    = pArray->getValues()[i];
+            }
+        }
+    }
+
+    pArray->validate();
+
+    // Record the original array scaling present in the file.  This is used by
+    // a heuristic involved with LUT inversion.  The bit-depth of ops is
+    // typically changed after the file is read, hence the need to store it now.
+    m_invLut->setFileBitDepth(m_invLut->getInputBitDepth());
+
+    // At this point, we have created the complete Lut1D base class.
+    // Finalize will finish initializing as an inverse Lut1D.
 
     setCompleted(true);
+}
 
-    array.validate();
+//////////////////////////////////////////////////////////
+
+CTFReaderInvLut3DElt::CTFReaderInvLut3DElt()
+    : m_invLut(std::make_shared<Lut3DOpData>(2, TRANSFORM_DIR_INVERSE))
+{
+}
+
+CTFReaderInvLut3DElt::~CTFReaderInvLut3DElt()
+{
+}
+
+void CTFReaderInvLut3DElt::start(const char ** atts)
+{
+    CTFReaderOpElt::start(atts);
+
+    // As the 'interpolation' element is optional,
+    // set the value to default behavior.
+    m_invLut->setInterpolation(INTERP_DEFAULT);
+
+    unsigned i = 0;
+    while (atts[i])
+    {
+        if (0 == Platform::Strcasecmp(ATTR_INTERPOLATION, atts[i]))
+        {
+            try
+            {
+                Interpolation interp = GetInterpolation3D(atts[i + 1]);
+                m_invLut->setInterpolation(interp);
+            }
+            catch (const std::exception& e)
+            {
+                throwMessage(e.what());
+            }
+        }
+
+        i += 2;
+    }
+}
+
+void CTFReaderInvLut3DElt::end()
+{
+    CTFReaderOpElt::end();
+    m_invLut->validate();
+}
+
+const OpDataRcPtr CTFReaderInvLut3DElt::getOp() const
+{
+    return m_invLut;
+}
+
+ArrayBase * CTFReaderInvLut3DElt::updateDimension(const Dimensions & dims)
+{
+    if (dims.size() != 4)
+    {
+        return nullptr;
+    }
+
+    const size_t max = (dims.empty() ? 0 : (dims.size() - 1));
+    const unsigned int numColorComponents = dims[max];
+
+    if (dims[3] != 3 || dims[1] != dims[0] || dims[2] != dims[0])
+    {
+        return nullptr;
+    }
+
+    Array * pArray = &m_invLut->getArray();
+    pArray->resize(dims[0], numColorComponents);
+    return pArray;
+}
+
+void CTFReaderInvLut3DElt::endArray(unsigned int position)
+{
+    Array * pArray = &m_invLut->getArray();
+
+    if (pArray->getNumValues() != position)
+    {
+        const unsigned long len = pArray->getLength();
+        std::ostringstream arg;
+        arg << "Expected " << len << "x" << len << "x" << len << "x";
+        arg << pArray->getNumColorComponents();
+        arg << " Array values, found " << position << ". ";
+        throwMessage(arg.str());
+    }
+
+    pArray->validate();
+
+    // At this point, we have created the complete Lut3D
+    // Finalize will finish initializing as an inverse Lut3D.
+
+    setCompleted(true);
+}
+
+//////////////////////////////////////////////////////////
+
+CTFReaderLogElt::CTFReaderLogElt()
+    : CTFReaderOpElt()
+    , m_log(std::make_shared<LogOpData>(2.0, TRANSFORM_DIR_FORWARD))
+{
+}
+
+CTFReaderLogElt::~CTFReaderLogElt()
+{
+}
+
+void CTFReaderLogElt::start(const char ** atts)
+{
+    CTFReaderOpElt::start(atts);
+    
+    bool isStyleFound = false;
+    for (unsigned i = 0; atts[i]; i += 2)
+    {
+        if (0 == Platform::Strcasecmp(ATTR_STYLE, atts[i]))
+        {
+            if (0 == Platform::Strcasecmp(atts[i + 1], "log10"))
+            {
+                m_ctfParams.m_style = LogUtil::LOG10;
+            }
+            else if (0 == Platform::Strcasecmp(atts[i + 1], "log2"))
+            {
+                m_ctfParams.m_style = LogUtil::LOG2;
+            }
+            else if (0 == Platform::Strcasecmp(atts[i + 1], "antiLog10"))
+            {
+                m_ctfParams.m_style = LogUtil::ANTI_LOG10;
+            }
+            else if (0 == Platform::Strcasecmp(atts[i + 1], "antiLog2"))
+            {
+                m_ctfParams.m_style = LogUtil::ANTI_LOG2;
+            }
+            else if (0 == Platform::Strcasecmp(atts[i + 1], "logToLin"))
+            {
+                m_ctfParams.m_style = LogUtil::LOG_TO_LIN;
+            }
+            else if (0 == Platform::Strcasecmp(atts[i + 1], "linToLog"))
+            {
+                m_ctfParams.m_style = LogUtil::LIN_TO_LOG;
+            }
+            else
+            {
+                ThrowM(*this, "Required attribute 'style' '", atts[i + 1], "' is invalid. ");
+            }
+
+            isStyleFound = true;
+        }
+    }
+
+    if (!isStyleFound)
+    {
+        throwMessage("CTF/CLF Log parsing. Required attribute 'style' is missing. ");
+    }
+}
+
+void CTFReaderLogElt::end()
+{
+    CTFReaderOpElt::end();
+
+    double base = 2.0;
+    LogOpData::Params rParams, gParams, bParams;
+    TransformDirection dir = TRANSFORM_DIR_UNKNOWN;
+
+    try
+    {
+        LogUtil::ConvertLogParameters(m_ctfParams, base,
+                                      rParams, gParams, bParams, dir);
+    }
+    catch (Exception& ce)
+    {
+        ThrowM(*this, "Parameters are not valid: '", ce.what(), "'. ");
+    }
+
+    m_log->setBase(base);
+    m_log->setDirection(dir);
+    m_log->setRedParams(rParams);
+    m_log->setGreenParams(gParams);
+    m_log->setBlueParams(bParams);
+
+    // Validate the end result.
+    try
+    {
+        m_log->validate();
+    }
+    catch (Exception& ce)
+    {
+        ThrowM(*this, "Log is not valid: '", ce.what(), "'. ");
+    }
+}
+
+const OpDataRcPtr CTFReaderLogElt::getOp() const
+{
+    return m_log;
+}
+
+CTFReaderLogParamsElt::CTFReaderLogParamsElt(const std::string & name,
+                                             ContainerEltRcPtr pParent,
+                                             unsigned int xmlLineNumber,
+                                             const std::string & xmlFile)
+    : XmlReaderPlainElt(name, pParent, xmlLineNumber, xmlFile)
+{
+}
+
+CTFReaderLogParamsElt::~CTFReaderLogParamsElt()
+{
+}
+
+void CTFReaderLogParamsElt::start(const char ** atts)
+{
+    // Attributes we want to extract
+    int chan = -1;
+    double gamma = std::numeric_limits<double>::quiet_NaN();
+    double refWhite = std::numeric_limits<double>::quiet_NaN();
+    double refBlack = std::numeric_limits<double>::quiet_NaN();
+    double highlight = std::numeric_limits<double>::quiet_NaN();
+    double shadow = std::numeric_limits<double>::quiet_NaN();
+
+    // Try extracting the attributes
+    unsigned i = 0;
+    while (atts[i])
+    {
+        const size_t len = strlen(atts[i + 1]);
+
+        if (0 == Platform::Strcasecmp(ATTR_CHAN, atts[i]))
+        {
+            if (0 == Platform::Strcasecmp("R", atts[i + 1]))
+            {
+                chan = 0;
+            }
+            else if (0 == Platform::Strcasecmp("G", atts[i + 1]))
+            {
+                chan = 1;
+            }
+            else if (0 == Platform::Strcasecmp("B", atts[i + 1]))
+            {
+                chan = 2;
+            }
+            // Chan is optional but, if present, must be legal
+            else
+            {
+                ThrowM(*this, "Illegal channel attribute value '",
+                       atts[i + 1], "'. ");
+            }
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_GAMMA, atts[i]))
+        {
+            ParseNumber(atts[i + 1], len, gamma);
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_REFWHITE, atts[i]))
+        {
+            ParseNumber(atts[i + 1], len, refWhite);
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_REFBLACK, atts[i]))
+        {
+            ParseNumber(atts[i + 1], len, refBlack);
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_HIGHLIGHT, atts[i]))
+        {
+            ParseNumber(atts[i + 1], len, highlight);
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_SHADOW, atts[i]))
+        {
+            ParseNumber(atts[i + 1], len, shadow);
+        }
+
+        i += 2;
+    }
+
+    // Validate the attributes are appropriate for the log style and set
+    // the parameters (numeric validation is done by LogOpData::validate).
+
+    CTFReaderLogElt * pLog
+        = dynamic_cast<CTFReaderLogElt*>(getParent().get());
+
+    LogUtil::CTFParams::Params params(5);
+
+    LogUtil::CTFParams & ctfParams = pLog->getCTFParams();
+    const LogUtil::LogStyle style = ctfParams.m_style;
+    if (style == LogUtil::LIN_TO_LOG ||
+        style == LogUtil::LOG_TO_LIN)
+    {
+        if (IsNan(gamma))
+        {
+            ThrowM(*this, "Required attribute '", ATTR_GAMMA, "' is missing. ");
+        }
+        params[LogUtil::CTFParams::gamma] = gamma;
+
+        if (IsNan(refWhite))
+        {
+            ThrowM(*this, "Required attribute '", ATTR_REFWHITE, "' is missing. ");
+        }
+        params[LogUtil::CTFParams::refWhite] = refWhite;
+
+        if (IsNan(refBlack))
+        {
+            ThrowM(*this, "Required attribute '", ATTR_REFBLACK, "' is missing. ");
+        }
+        params[LogUtil::CTFParams::refBlack] = refBlack;
+
+        if (IsNan(highlight))
+        {
+            ThrowM(*this, "Required attribute '", ATTR_HIGHLIGHT, "' is missing. ");
+        }
+        params[LogUtil::CTFParams::highlight] = highlight;
+
+        if (IsNan(shadow))
+        {
+            ThrowM(*this, "Required attribute '", ATTR_SHADOW, "' is missing. ");
+        }
+        params[LogUtil::CTFParams::shadow] = shadow;
+    }
+
+    // Assign the parameters to the object.
+    switch (chan)
+    {
+    case -1:
+        ctfParams.m_params[LogUtil::CTFParams::red] = params;
+        ctfParams.m_params[LogUtil::CTFParams::green] = params;
+        ctfParams.m_params[LogUtil::CTFParams::blue] = params;
+        break;
+    case 0:
+        ctfParams.m_params[LogUtil::CTFParams::red] = params;
+        break;
+    case 1:
+        ctfParams.m_params[LogUtil::CTFParams::green] = params;
+        break;
+    case 2:
+        ctfParams.m_params[LogUtil::CTFParams::blue] = params;
+        break;
+    }
+}
+
+void CTFReaderLogParamsElt::end()
+{
+}
+
+void CTFReaderLogParamsElt::setRawData(const char *, size_t, unsigned int)
+{
 }
 
 //////////////////////////////////////////////////////////
@@ -1694,173 +2395,6 @@ void CTFReaderLut1DElt_1_7::end()
 
 //////////////////////////////////////////////////////////
 
-CTFReaderInvLut1DElt::CTFReaderInvLut1DElt()
-    : m_invLut(std::make_shared<Lut1DOpData>(2, TRANSFORM_DIR_INVERSE))
-{
-}
-
-CTFReaderInvLut1DElt::~CTFReaderInvLut1DElt()
-{
-}
-
-void CTFReaderInvLut1DElt::start(const char ** atts)
-{
-    CTFReaderOpElt::start(atts);
-
-    // As the 'interpolation' element is optional,
-    // set the value to default behavior.
-    m_invLut->setInterpolation(INTERP_DEFAULT);
-
-    unsigned i = 0;
-    while (atts[i])
-    {
-        if (0 == Platform::Strcasecmp(ATTR_INTERPOLATION, atts[i]))
-        {
-            try
-            {
-                Interpolation interp = GetInterpolation1D(atts[i + 1]);
-                m_invLut->setInterpolation(interp);
-            }
-            catch (const std::exception & e)
-            {
-                throwMessage(e.what());
-            }
-        }
-
-        if (0 == Platform::Strcasecmp(ATTR_HALF_DOMAIN, atts[i]))
-        {
-            if (0 != Platform::Strcasecmp("true", atts[i + 1]))
-            {
-                std::ostringstream oss;
-                oss << "Unknown halfDomain value: '" << atts[i + 1];
-                oss << "' while parsing InvLut1D. ";
-                throwMessage(oss.str());
-            }
-
-            m_invLut->setInputHalfDomain(true);
-        }
-
-        if (0 == Platform::Strcasecmp(ATTR_RAW_HALFS, atts[i]))
-        {
-            if (0 != Platform::Strcasecmp("true", atts[i + 1]))
-            {
-                std::ostringstream oss;
-                oss << "Unknown rawHalfs value: '" << atts[i + 1];
-                oss << "' while parsing InvLut1D. ";
-                throwMessage(oss.str());
-            }
-
-            m_invLut->setOutputRawHalfs(true);
-        }
-
-        if (0 == Platform::Strcasecmp(ATTR_HUE_ADJUST, atts[i]))
-        {
-            if (0 != Platform::Strcasecmp("dw3", atts[i + 1]))
-            {
-                std::ostringstream oss;
-                oss << "Unknown hueAdjust value: '" << atts[i + 1];
-                oss << "' while parsing InvLut1D. ";
-                throwMessage(oss.str());
-            }
-
-            m_invLut->setHueAdjust(Lut1DOpData::HUE_DW3);
-        }
-
-        i += 2;
-    }
-}
-
-void CTFReaderInvLut1DElt::end()
-{
-    CTFReaderOpElt::end();
-    m_invLut->validate();
-}
-
-const OpDataRcPtr CTFReaderInvLut1DElt::getOp() const
-{
-    return m_invLut;
-}
-
-ArrayBase * CTFReaderInvLut1DElt::updateDimension(const Dimensions & dims)
-{
-    if (dims.size() != 2)
-    {
-        return nullptr;
-    }
-
-    const size_t max = (dims.empty() ? 0 : (dims.size() - 1));
-    const unsigned int numColorComponents = dims[max];
-
-    if (dims[1] != 3 && dims[1] != 1)
-    {
-        return nullptr;
-    }
-
-    Array * pArray = &m_invLut->getArray();
-    pArray->resize(dims[0], numColorComponents);
-    return pArray;
-}
-
-void CTFReaderInvLut1DElt::endArray(unsigned int position)
-{
-    Array * pArray = &m_invLut->getArray();
-
-    // Convert half bits to float values if needed.
-    if (m_invLut->isOutputRawHalfs())
-    {
-        const size_t maxValues = pArray->getNumValues();
-        for (size_t i = 0; i<maxValues; ++i)
-        {
-            pArray->getValues()[i]
-                = ConvertHalfBitsToFloat((unsigned short)pArray->getValues()[i]);
-        }
-    }
-
-    if (pArray->getNumValues() != position)
-    {
-        const unsigned long numColorComponents = pArray->getNumColorComponents();
-        const unsigned long maxColorComponents = pArray->getMaxColorComponents();
-
-        const unsigned long dimensions = pArray->getLength();
-
-        if (numColorComponents != 1 || position != dimensions)
-        {
-            std::ostringstream arg;
-            arg << "Expected " << dimensions << "x" << numColorComponents;
-            arg << " Array values, found " << position << ". ";
-            throwMessage(arg.str());
-        }
-
-        // Convert a 1D LUT to a 3by1D LUT
-        // (duplicate values from the Red to the Green and Blue).
-        const unsigned long numLuts = maxColorComponents;
-
-        // TODO: Should improve Lut1DOp so that the copy is unnecessary.
-        for (long i = (dimensions - 1); i >= 0; --i)
-        {
-            for (unsigned long j = 0; j<numLuts; ++j)
-            {
-                pArray->getValues()[(i*numLuts) + j]
-                    = pArray->getValues()[i];
-            }
-        }
-    }
-
-    pArray->validate();
-
-    // Record the original array scaling present in the file.  This is used by
-    // a heuristic involved with LUT inversion.  The bit-depth of ops is
-    // typically changed after the file is read, hence the need to store it now.
-    m_invLut->setFileBitDepth(m_invLut->getInputBitDepth());
-
-    // At this point, we have created the complete Lut1D base class.
-    // Finalize will finish initializing as an inverse Lut1D.
-
-    setCompleted(true);
-}
-
-//////////////////////////////////////////////////////////
-
 CTFReaderLut3DElt::CTFReaderLut3DElt()
     : CTFReaderOpElt()
     , CTFArrayMgt()
@@ -2011,94 +2545,266 @@ void CTFReaderLut3DElt_1_7::end()
 
 //////////////////////////////////////////////////////////
 
-CTFReaderInvLut3DElt::CTFReaderInvLut3DElt()
-    : m_invLut(std::make_shared<Lut3DOpData>(2, TRANSFORM_DIR_INVERSE))
+CTFReaderMatrixElt::CTFReaderMatrixElt()
+    : CTFReaderOpElt()
+    , CTFArrayMgt()
+    , m_matrix(std::make_shared<MatrixOpData>())
 {
 }
 
-CTFReaderInvLut3DElt::~CTFReaderInvLut3DElt()
+CTFReaderMatrixElt::~CTFReaderMatrixElt()
 {
 }
 
-void CTFReaderInvLut3DElt::start(const char ** atts)
-{
-    CTFReaderOpElt::start(atts);
-
-    // As the 'interpolation' element is optional,
-    // set the value to default behavior.
-    m_invLut->setInterpolation(INTERP_DEFAULT);
-
-    unsigned i = 0;
-    while (atts[i])
-    {
-        if (0 == Platform::Strcasecmp(ATTR_INTERPOLATION, atts[i]))
-        {
-            try
-            {
-                Interpolation interp = GetInterpolation3D(atts[i + 1]);
-                m_invLut->setInterpolation(interp);
-            }
-            catch (const std::exception& e)
-            {
-                throwMessage(e.what());
-            }
-        }
-
-        i += 2;
-    }
-}
-
-void CTFReaderInvLut3DElt::end()
+void CTFReaderMatrixElt::end()
 {
     CTFReaderOpElt::end();
-    m_invLut->validate();
+
+    // Validate the end result.
+    m_matrix->validate();
 }
 
-const OpDataRcPtr CTFReaderInvLut3DElt::getOp() const
+const OpDataRcPtr CTFReaderMatrixElt::getOp() const
 {
-    return m_invLut;
+    return m_matrix;
 }
 
-ArrayBase * CTFReaderInvLut3DElt::updateDimension(const Dimensions & dims)
+ArrayBase * CTFReaderMatrixElt::updateDimension(const Dimensions & dims)
 {
-    if (dims.size() != 4)
+    if (dims.size() != 3)
     {
         return nullptr;
     }
 
     const size_t max = (dims.empty() ? 0 : (dims.size() - 1));
-    const unsigned int numColorComponents = dims[max];
+    const unsigned numColorComponents = dims[max];
 
-    if (dims[3] != 3 || dims[1] != dims[0] || dims[2] != dims[0])
+    if (dims[0] != dims[1] || dims[2] != 3)
     {
         return nullptr;
     }
 
-    Array * pArray = &m_invLut->getArray();
+    ArrayDouble * pArray = &m_matrix->getArray();
     pArray->resize(dims[0], numColorComponents);
+
     return pArray;
 }
 
-void CTFReaderInvLut3DElt::endArray(unsigned int position)
+void CTFReaderMatrixElt::endArray(unsigned int position)
 {
-    Array * pArray = &m_invLut->getArray();
-
-    if (pArray->getNumValues() != position)
+    ArrayDouble & array = m_matrix->getArray();
+    if (array.getNumValues() != position)
     {
-        const unsigned long len = pArray->getLength();
         std::ostringstream arg;
-        arg << "Expected " << len << "x" << len << "x" << len << "x";
-        arg << pArray->getNumColorComponents();
-        arg << " Array values, found " << position << ". ";
-        throwMessage(arg.str());
+        arg << "Expected " << array.getLength() << "x" << array.getLength();
+        arg << " Array values, found " << position;
+
+        throw Exception(arg.str().c_str());
     }
 
-    pArray->validate();
+    // Extract offsets.
 
-    // At this point, we have created the complete Lut3D
-    // Finalize will finish initializing as an inverse Lut3D.
+    const ArrayDouble::Values & values = array.getValues();
+
+    if (array.getLength() == 4)
+    {
+        m_matrix->setOffsetValue(0, values[3]);
+        m_matrix->setOffsetValue(1, values[7]);
+        m_matrix->setOffsetValue(2, values[11]);
+
+        m_matrix->setArrayValue(3, 0.0f);
+        m_matrix->setArrayValue(7, 0.0f);
+        m_matrix->setArrayValue(11, 0.0f);
+        m_matrix->setArrayValue(15, 1.0f);
+    }
+
+    // Array parsing is done.
 
     setCompleted(true);
+
+    convert_1_2_to_Latest();
+
+    array.validate();
+}
+
+void CTFReaderMatrixElt::convert_1_2_to_Latest()
+{
+    if (CTF_PROCESS_LIST_VERSION_1_2 < CTF_PROCESS_LIST_VERSION)
+    {
+        ArrayDouble & array = m_matrix->getArray();
+
+        if (array.getLength() == 3)
+        {
+            const float offsets[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+            m_matrix->setRGBAOffsets(offsets);
+        }
+        else if (array.getLength() == 4)
+        {
+            m_matrix->setOffsetValue(3, 0.0f);
+
+            array = m_matrix->getArray();
+            ArrayDouble::Values oldV = array.getValues();
+
+            array.resize(3, 3);
+
+            ArrayDouble::Values & v = array.getValues();
+            v[0] = oldV[0];
+            v[1] = oldV[1];
+            v[2] = oldV[2];
+
+            v[3] = oldV[4];
+            v[4] = oldV[5];
+            v[5] = oldV[6];
+
+            v[6] = oldV[8];
+            v[7] = oldV[9];
+            v[8] = oldV[10];
+        }
+        else if (array.getLength() != 4)
+        {
+            std::ostringstream arg;
+            arg << "MatrixElt: Expecting array dimension to be 3 or 4. Got: ";
+            arg << array.getLength() << ".";
+
+            throw Exception(arg.str().c_str());
+        }
+    }
+}
+
+ArrayBase * CTFReaderMatrixElt_1_3::updateDimension(const Dimensions & dims)
+{
+    if (dims.size() != 3)
+    {
+        return nullptr;
+    }
+
+    const size_t max = (dims.empty() ? 0 : (dims.size() - 1));
+    const unsigned numColorComponents = dims[max];
+
+    if (!((dims[0] == 3 && dims[1] == 3 && dims[2] == 3) ||
+          (dims[0] == 3 && dims[1] == 4 && dims[2] == 3) ||
+          (dims[0] == 4 && dims[1] == 4 && dims[2] == 4) ||
+          (dims[0] == 4 && dims[1] == 5 && dims[2] == 4)))
+    {
+        return nullptr;
+    }
+
+    ArrayDouble * pArray = &getMatrix()->getArray();
+    pArray->resize(dims[1], numColorComponents);
+
+    return pArray;
+}
+
+void CTFReaderMatrixElt_1_3::endArray(unsigned int position)
+{
+    ArrayDouble & array = getMatrix()->getArray();
+
+    const ArrayDouble::Values & values = array.getValues();
+
+    // Note: Version 1.3 of Matrix Op supports 4 xml formats:
+    //       1) 4x5x4, matrix with alpha and offsets
+    //       2) 4x4x4, matrix with alpha and no offsets
+    //       3) 3x4x3, matrix only with offsets and no alpha
+    //       4) 3x3x3, matrix with no alpha and no offsets
+
+    if (array.getLength() == 3 && array.getNumColorComponents() == 3)
+    {
+        if (position != 9)
+        {
+            ThrowM(*this, "Expected 3x3 Array values, found ", position, ".");
+        }
+    }
+    else if (array.getLength() == 4)
+    {
+        if (array.getNumColorComponents() == 3)
+        {
+            if (position != 12)
+            {
+                ThrowM(*this, "Expected 3x4 Array values, found ", position, ".");
+            }
+
+            MatrixOpDataRcPtr & pMatrix = getMatrix();
+
+            pMatrix->setOffsetValue(0, values[3]);
+            pMatrix->setOffsetValue(1, values[7]);
+            pMatrix->setOffsetValue(2, values[11]);
+            pMatrix->setOffsetValue(3, 0.0);
+
+            ArrayDouble::Values oldV = array.getValues();
+
+            array.setLength(3);
+
+            ArrayDouble::Values & v = array.getValues();
+            v[0] = oldV[0];
+            v[1] = oldV[1];
+            v[2] = oldV[2];
+
+            v[3] = oldV[4];
+            v[4] = oldV[5];
+            v[5] = oldV[6];
+
+            v[6] = oldV[8];
+            v[7] = oldV[9];
+            v[8] = oldV[10];
+        }
+        else
+        {
+            if (position != 16)
+            {
+                ThrowM(*this, "Expected 4x4 Array values, found ", position, ".");
+            }
+
+            MatrixOpDataRcPtr & pMatrix = getMatrix();
+
+            const float offsets[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+            pMatrix->setRGBAOffsets(offsets);
+        }
+    }
+    else
+    {
+        if (position != 20)
+        {
+            ThrowM(*this, "Expected 4x5 Array values, found ", position, ".");
+        }
+
+        MatrixOpDataRcPtr & pMatrix = getMatrix();
+
+        pMatrix->setOffsetValue(0, values[4]);
+        pMatrix->setOffsetValue(1, values[9]);
+        pMatrix->setOffsetValue(2, values[14]);
+        pMatrix->setOffsetValue(3, values[19]);
+
+        ArrayDouble::Values oldV = array.getValues();
+
+        array.resize(4, 4);
+
+        ArrayDouble::Values & v = array.getValues();
+        v[0] = oldV[0];
+        v[1] = oldV[1];
+        v[2] = oldV[2];
+        v[3] = oldV[3];
+
+        v[4] = oldV[5];
+        v[5] = oldV[6];
+        v[6] = oldV[7];
+        v[7] = oldV[8];
+
+        v[8] = oldV[10];
+        v[9] = oldV[11];
+        v[10] = oldV[12];
+        v[11] = oldV[13];
+
+        v[12] = oldV[15];
+        v[13] = oldV[16];
+        v[14] = oldV[17];
+        v[15] = oldV[18];
+    }
+
+    // Array parsing is done.
+
+    setCompleted(true);
+
+    array.validate();
 }
 
 //////////////////////////////////////////////////////////
@@ -2148,7 +2854,7 @@ void CTFReaderRangeElt_1_7::start(const char ** atts)
     {
         // TODO: Refactor to use a base class attribute checking function
         //       instead of looping twice around the attribute list.
-        if (0 == Platform::Strcasecmp(ATTR_RANGE_STYLE, atts[i]))
+        if (0 == Platform::Strcasecmp(ATTR_STYLE, atts[i]))
         {
             m_isNoClamp = (0 == Platform::Strcasecmp("noClamp", atts[i + 1]));
         }

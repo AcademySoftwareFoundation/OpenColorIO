@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="1.5" id="id">
+    <Description>Rec 709 with alpha set to something else</Description>
+    <Gamma inBitDepth="16f" outBitDepth="8i" style="moncurveFwd">
+        <!-- This is the shortest 2.22... string that will yield -->
+        <!-- a double that compares exactly equal to 1/0.45. -->
+        <!-- Only sets the R, G and B channels. -->
+        <GammaParams gamma="2.2222222222222222" offset="0.099" />
+        <!-- Sets valid parameters for the A channel. -->
+        <GammaParams channel="A" gamma="1.7" offset="0.33" />
+    </Gamma>
+</ProcessList>

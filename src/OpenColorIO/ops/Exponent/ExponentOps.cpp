@@ -126,6 +126,8 @@ OCIO_NAMESPACE_ENTER
         public:
             ExponentOp(const double * exp4,
                        TransformDirection direction);
+            ExponentOp(ExponentOpDataRcPtr & exp);
+
             virtual ~ExponentOp();
             
             virtual OpRcPtr clone() const;
@@ -185,7 +187,13 @@ OCIO_NAMESPACE_ENTER
                 data().reset(new ExponentOpData(exp4));
             }
         }
-        
+
+        ExponentOp::ExponentOp(ExponentOpDataRcPtr & exp)
+            : Op()
+        {
+            data() = exp;
+        }
+
         OpRcPtr ExponentOp::clone() const
         {
             return std::make_shared<ExponentOp>(expData()->m_exp4, TRANSFORM_DIR_FORWARD);
@@ -309,6 +317,42 @@ OCIO_NAMESPACE_ENTER
         if(IsVecEqualToOne(vec4, 4)) return;
         ops.push_back( ExponentOpRcPtr(new ExponentOp(vec4, direction)) );
     }
+
+    void CreateExponentOp(OpRcPtrVec & ops,
+                          ExponentOpDataRcPtr & expData,
+                          TransformDirection direction)
+    {
+        if (IsVecEqualToOne(expData->m_exp4, 4)) return;
+
+        if (direction == TRANSFORM_DIR_UNKNOWN)
+        {
+            throw Exception("Cannot create ExponentOp with unspecified transform direction.");
+        }
+        else if (direction == TRANSFORM_DIR_INVERSE)
+        {
+            double values[4];
+
+            for (int i = 0; i<4; ++i)
+            {
+                if (!IsScalarEqualToZero(expData->m_exp4[i]))
+                {
+                    values[i] = 1.0 / expData->m_exp4[i];
+                }
+                else
+                {
+                    throw Exception("Cannot apply ExponentOp op, Cannot apply 0.0 exponent in the inverse.");
+                }
+            }
+
+            ExponentOpDataRcPtr invExp = std::make_shared<ExponentOpData>(values);
+            ops.push_back(ExponentOpRcPtr(new ExponentOp(invExp)));
+        }
+        else
+        {
+            ops.push_back(ExponentOpRcPtr(new ExponentOp(expData)));
+        }
+    }
+
 }
 OCIO_NAMESPACE_EXIT
 

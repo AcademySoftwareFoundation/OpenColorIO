@@ -69,6 +69,10 @@ OCIO_NAMESPACE_ENTER
     void CreateExponentOp(OpRcPtrVec & ops,
                           const double(&vec4)[4],
                           TransformDirection direction);
+
+    void CreateExponentOp(OpRcPtrVec & ops,
+                          ExponentOpDataRcPtr & expData,
+                          TransformDirection direction);
 }
 OCIO_NAMESPACE_EXIT
 
