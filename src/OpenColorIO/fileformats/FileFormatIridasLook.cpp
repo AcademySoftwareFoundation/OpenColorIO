@@ -184,33 +184,30 @@ OCIO_NAMESPACE_ENTER
                 while (istream.good())
                 {
                     std::getline(istream, line);
+                    line.push_back('\n');
                     ++m_lineNumber;
 
-                    Parse(line);
+                    Parse(line, !istream.good());
                 }
             }
-            void Parse(const std::string & buffer)
+            void Parse(const std::string & buffer, bool lastLine)
             {
-                int done = 0;
+                const int done = lastLine?1:0;
 
-                do
+                if (XML_STATUS_ERROR == XML_Parse(m_parser, buffer.c_str(), (int)buffer.size(), done))
                 {
-                    if (XML_STATUS_ERROR == XML_Parse(m_parser, buffer.c_str(), (int)buffer.size(), done))
+                    XML_Error eXpatErrorCode = XML_GetErrorCode(m_parser);
+                    if (eXpatErrorCode == XML_ERROR_TAG_MISMATCH)
                     {
-                        XML_Error eXpatErrorCode = XML_GetErrorCode(m_parser);
-                        if (eXpatErrorCode == XML_ERROR_TAG_MISMATCH)
-                        {
-                            Throw("XML parsing error (unbalanced element tags)");
-                        }
-                        else
-                        {
-                            std::string error("XML parsing error: ");
-                            error += XML_ErrorString(XML_GetErrorCode(m_parser));
-                            Throw(error);
-                        }
+                        Throw("XML parsing error (unbalanced element tags)");
                     }
-                } while (done);
-
+                    else
+                    {
+                        std::string error("XML parsing error: ");
+                        error += XML_ErrorString(XML_GetErrorCode(m_parser));
+                        Throw(error);
+                    }
+                }
             }
 
             void getLut(int & lutSize, std::vector<float> & lut) const
@@ -431,11 +428,12 @@ OCIO_NAMESPACE_ENTER
                 }
 
                 if (len == 0) return;
-
                 if (len<0 || !s || !*s)
                 {
                     pImpl->Throw("XML parsing error: attribute illegal");
                 }
+                // Parsing a single new line. This is valid.
+                if (len == 1 && s[0] == '\n') return;
 
                 if (pImpl->m_size)
                 {
