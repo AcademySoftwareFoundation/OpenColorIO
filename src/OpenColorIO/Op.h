@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "DynamicProperty.h"
 #include "Mutex.h"
 
 OCIO_NAMESPACE_ENTER
@@ -122,6 +123,7 @@ OCIO_NAMESPACE_ENTER
         {
             CDLType,           // A Color Decision List (aka CDL)
             ExponentType,      // An exponent
+            ExposureContrastType, // An op for making interactive viewport adjustments
             FixedFunctionType, // A fixed function (i.e. where the style defines the behavior)
             GammaType,         // A gamma (i.e. enhancement of the Exponent)
             LogType,           // A log
@@ -273,7 +275,7 @@ OCIO_NAMESPACE_ENTER
     bool IsOpVecNoOp(const OpRcPtrVec & ops);
     
     void FinalizeOpVec(OpRcPtrVec & opVec, bool optimize=true);
-    
+
     void OptimizeOpVec(OpRcPtrVec & result);
     
     void CreateOpVecFromOpData(OpRcPtrVec & ops,
@@ -356,9 +358,14 @@ OCIO_NAMESPACE_ENTER
             virtual void setInputBitDepth(BitDepth bitdepth) { m_data->setInputBitDepth(bitdepth); }
             virtual void setOutputBitDepth(BitDepth bitdepth) { m_data->setOutputBitDepth(bitdepth); }
 
-            ConstOpDataRcPtr data() const { return std::const_pointer_cast<const OpData>(m_data); }
+            virtual bool hasDynamicProperty(DynamicPropertyType type) const;
+            virtual DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
+            virtual void replaceDynamicProperty(DynamicPropertyType type,
+                                                DynamicPropertyImplRcPtr prop);
 
             ConstOpCPURcPtr getCPUOp() const { return m_cpuOp; }
+
+            ConstOpDataRcPtr data() const { return std::const_pointer_cast<const OpData>(m_data); }
 
         protected:
             Op();

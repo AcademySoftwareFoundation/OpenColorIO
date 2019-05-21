@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="empty">
+   <ExposureContrast inBitDepth="16f" outBitDepth="16f" style="video">
+      <ECParams contrast="1" pivot="1" />
+   </ExposureContrast>
+</ProcessList>
