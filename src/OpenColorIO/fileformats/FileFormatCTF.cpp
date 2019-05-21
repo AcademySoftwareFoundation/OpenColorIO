@@ -100,11 +100,7 @@ to contain values outside of [0,1023] and to use fractional values.
 
 */
 
-// TODO: In this PR the CTF format is not enabled yet since it relies on other
-// PRs that add or enhance the OCIO op model.  Once those are merged, a
-// follow-up PR will enable the CTF support and add additional unit tests.
-// CTF write support has also been put into a separate PR to limit the size of
-// the review.
+// TODO: CTF write support will be done with an upcoming PR.
 
 OCIO_NAMESPACE_ENTER
 {
@@ -468,7 +464,7 @@ private:
             }
 
             // Safety check to try and ensure that all new elements will get handled here.
-            static_assert(CTFReaderOpElt::NoType == 12, "Need to handle new type here");
+            static_assert(CTFReaderOpElt::NoType == 13, "Need to handle new type here");
 
             // Will allow to give better error feedback to the user if the
             // element name is not handled. If any case recognizes the name,

@@ -1043,7 +1043,7 @@ CTFReaderOpEltRcPtr CTFReaderOpElt::GetReader(CTFReaderOpElt::Type type, const C
     }
     case CTFReaderOpElt::NoType:
     {
-        static_assert(CTFReaderOpElt::NoType == 12, "Need to handle new type here");
+        static_assert(CTFReaderOpElt::NoType == 13, "Need to handle new type here");
         break;
     }
     }

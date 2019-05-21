@@ -354,7 +354,7 @@ public:
         RangeType,
         // CTF types.
         ACESType,
-        ExposureContrastType
+        ExposureContrastType,
         FixedFunctionType,
         GammaType,
         InvLut1DType,

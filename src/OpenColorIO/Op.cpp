@@ -219,7 +219,7 @@ OCIO_NAMESPACE_ENTER
             throw Exception("Cannot create Op with unspecified transform direction.");
         }
 
-        static_assert(OpData::NoOpType == 10, "Need to handle new type here");
+        static_assert(OpData::NoOpType == 11, "Need to handle new type here");
         
         switch (opData->getType())
         {
