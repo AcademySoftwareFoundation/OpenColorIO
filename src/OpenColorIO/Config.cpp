@@ -2376,8 +2376,11 @@ OIIO_ADD_TEST(Config, version_faulty_1)
 namespace
 {
 
+const std::string PROFILE_V1 = "ocio_profile_version: 1\n";
+
+const std::string PROFILE_V2 = "ocio_profile_version: 2\n";
+
 const std::string SIMPLE_PROFILE =
-    "ocio_profile_version: 2\n"
     "\n"
     "search_path: luts\n"
     "strictparsing: true\n"
@@ -2418,7 +2421,7 @@ OIIO_ADD_TEST(Config, range_serialization)
     {
         const std::string strEnd =
             "    from_reference: !<RangeTransform> {}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2435,7 +2438,7 @@ OIIO_ADD_TEST(Config, range_serialization)
     {
         const std::string strEnd =
             "    from_reference: !<RangeTransform> {direction: inverse}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2452,7 +2455,7 @@ OIIO_ADD_TEST(Config, range_serialization)
     {
         const std::string strEnd =
             "    from_reference: !<RangeTransform> {style: noClamp}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2469,7 +2472,7 @@ OIIO_ADD_TEST(Config, range_serialization)
     {
         const std::string strEnd =
             "    from_reference: !<RangeTransform> {style: noClamp, direction: inverse}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2489,7 +2492,7 @@ OIIO_ADD_TEST(Config, range_serialization)
             "    from_reference: !<RangeTransform> {minInValue: -0.0109, "
             "maxInValue: 1.0505, minOutValue: 0.0009, maxOutValue: 2.5001, "
             "direction: inverse}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2509,7 +2512,7 @@ OIIO_ADD_TEST(Config, range_serialization)
             "    from_reference: !<RangeTransform> {minInValue: -0.0109, "
             "maxInValue: 1.0505, minOutValue: 0.0009, maxOutValue: 2.5001, "
             "style: Clamp, direction: inverse}\n";
-        const std::string in_str = SIMPLE_PROFILE + in_strEnd;
+        const std::string in_str = PROFILE_V2 + SIMPLE_PROFILE + in_strEnd;
 
         std::istringstream is;
         is.str(in_str);
@@ -2523,7 +2526,7 @@ OIIO_ADD_TEST(Config, range_serialization)
             "    from_reference: !<RangeTransform> {minInValue: -0.0109, "
             "maxInValue: 1.0505, minOutValue: 0.0009, maxOutValue: 2.5001, "
             "direction: inverse}\n";
-        const std::string out_str = SIMPLE_PROFILE + out_strEnd;
+        const std::string out_str = PROFILE_V2 + SIMPLE_PROFILE + out_strEnd;
 
         std::stringstream ss;
         ss << *config.get();
@@ -2534,7 +2537,7 @@ OIIO_ADD_TEST(Config, range_serialization)
         const std::string strEnd =
             "    from_reference: !<RangeTransform> "
             "{minInValue: 0, maxOutValue: 1}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2551,18 +2554,23 @@ OIIO_ADD_TEST(Config, range_serialization)
 
     {
         // maxInValue has an illegal second number.
-        const std::string strEnd =
+        const std::string strEndFail =
             "    from_reference: !<RangeTransform> {minInValue: -0.01, "
             "maxInValue: 1.05  10, minOutValue: 0.0009, maxOutValue: 2.5}\n";
-        const std::string strEndSaved =
+        const std::string strEnd =
             "    from_reference: !<RangeTransform> {minInValue: -0.01, "
             "maxInValue: 1.05, minOutValue: 0.0009, maxOutValue: 2.5}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
-        const std::string strSaved = SIMPLE_PROFILE + strEndSaved;
+        
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEndFail;
+        const std::string strSaved = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
         OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is),
+                              OCIO::Exception, "parsing double failed");
+
+        is.str(strSaved);
         OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OIIO_CHECK_NO_THROW(config->sanityCheck());
 
@@ -2580,8 +2588,8 @@ OIIO_ADD_TEST(Config, range_serialization)
         const std::string strEndSaved =
             "    from_reference: !<RangeTransform> {minInValue: -0.01, "
             "minOutValue: 0.0009}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
-        const std::string strSaved = SIMPLE_PROFILE + strEndSaved;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
+        const std::string strSaved = PROFILE_V2 + SIMPLE_PROFILE + strEndSaved;
 
         std::istringstream is;
         is.str(str);
@@ -2599,7 +2607,7 @@ OIIO_ADD_TEST(Config, range_serialization)
         const std::string strEnd =
             "    from_reference: !<RangeTransform> "
             "{minInValue: 0.12345678901234, maxOutValue: 1.23456789012345}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2618,7 +2626,7 @@ OIIO_ADD_TEST(Config, range_serialization)
         const std::string strEnd =
             "    from_reference: !<RangeTransform> {minInValue: -0.01, "
             "maxInValue: 1.05, minOutValue: 0.0009, maxOutValue: 2.5}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2636,7 +2644,7 @@ OIIO_ADD_TEST(Config, range_serialization)
         const std::string strEnd =
             "    from_reference: !<RangeTransform> {minOutValue: 0.0009, "
             "maxOutValue: 2.5}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2659,7 +2667,7 @@ OIIO_ADD_TEST(Config, range_serialization)
             "minOutValue: 0.0009, maxOutValue: 2.5}\n"
             "        - !<RangeTransform> {minOutValue: 0.0009, maxOutValue: 2.1}\n"
             "        - !<RangeTransform> {minOutValue: 0.1, maxOutValue: 0.9}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2684,7 +2692,7 @@ OIIO_ADD_TEST(Config, range_serialization)
             // missing { (and mInValue is wrong -> that's a warning)
             "        - !<RangeTransform> mInValue: -0.01, maxInValue: 1.05, "
             "minOutValue: 0.0009, maxOutValue: 2.5}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2698,7 +2706,7 @@ OIIO_ADD_TEST(Config, range_serialization)
             // The comma is missing after the minInValue value.
             "    from_reference: !<RangeTransform> {minInValue: -0.01 "
             "maxInValue: 1.05, minOutValue: 0.0009, maxOutValue: 2.5}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2713,7 +2721,7 @@ OIIO_ADD_TEST(Config, range_serialization)
             // The comma is missing between the minOutValue value and
             // the maxOutValue tag.
             "maxInValue: 1.05, minOutValue: 0.0009maxOutValue: 2.5}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2729,7 +2737,7 @@ OIIO_ADD_TEST(Config, exponent_serialization)
         const std::string strEnd =  
             "    from_reference: !<ExponentTransform> " 
             "{value: [1.101, 1.202, 1.303, 1.404]}\n";  
-        const std::string str = SIMPLE_PROFILE + strEnd;    
+        const std::string str = PROFILE_V1 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is; 
         is.str(str);    
@@ -2746,7 +2754,7 @@ OIIO_ADD_TEST(Config, exponent_serialization)
         const std::string strEnd =  
             "    from_reference: !<ExponentTransform> " 
             "{value: [1.101, 1.202, 1.303, 1.404], direction: inverse}\n";  
-        const std::string str = SIMPLE_PROFILE + strEnd;    
+        const std::string str = PROFILE_V1 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is; 
         is.str(str);    
@@ -2766,7 +2774,7 @@ OIIO_ADD_TEST(Config, exponent_serialization)
         const std::string strEnd =
             "    from_reference: !<ExponentTransform> "
             "{value: [1.1, 1.2, 1.3]}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V1 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2783,7 +2791,7 @@ OIIO_ADD_TEST(Config, exponent_with_linear_serialization)
         const std::string strEnd =
             "    from_reference: !<ExponentWithLinearTransform> "
             "{gamma: [1.1, 1.2, 1.3, 1.4], offset: [0.101, 0.102, 0.103, 0.1]}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2800,7 +2808,7 @@ OIIO_ADD_TEST(Config, exponent_with_linear_serialization)
         const std::string strEnd =
             "    from_reference: !<ExponentWithLinearTransform> "
             "{gamma: [1.1, 1.2, 1.3, 1.4], offset: [0.101, 0.102, 0.103, 0.1], direction: inverse}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2818,7 +2826,7 @@ OIIO_ADD_TEST(Config, exponent_with_linear_serialization)
     {
         const std::string strEnd =
             "    from_reference: !<ExponentWithLinearTransform> {}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2833,7 +2841,7 @@ OIIO_ADD_TEST(Config, exponent_with_linear_serialization)
         const std::string strEnd =
             "    from_reference: !<ExponentWithLinearTransform> "
             "{gamma: [1.1, 1.2, 1.3, 1.4]}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2848,7 +2856,7 @@ OIIO_ADD_TEST(Config, exponent_with_linear_serialization)
         const std::string strEnd =
             "    from_reference: !<ExponentWithLinearTransform> "
             "{offset: [1.1, 1.2, 1.3, 1.4]}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2863,7 +2871,7 @@ OIIO_ADD_TEST(Config, exponent_with_linear_serialization)
         const std::string strEnd =
             "    from_reference: !<ExponentWithLinearTransform> "
             "{gamma: [1.1, 1.2, 1.3]}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2877,7 +2885,7 @@ OIIO_ADD_TEST(Config, exponent_with_linear_serialization)
         const std::string strEnd =
             "    from_reference: !<ExponentWithLinearTransform> "
             "{gamma: [1.1, 1.2, 1.3, 1.4], offset: [0.101, 0.102]}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2900,8 +2908,7 @@ OIIO_ADD_TEST(Config, exponent_vs_config_version)
 
     const std::string strEnd =
         "    from_reference: !<ExponentTransform> {value: [1, 1, 1, 1]}\n";
-    std::string str = SIMPLE_PROFILE + strEnd;
-    str.replace(0, strlen("ocio_profile_version: 2"), "ocio_profile_version: 1");
+    const std::string str = PROFILE_V1 + SIMPLE_PROFILE + strEnd;
 
     is.str(str);
     OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
@@ -2921,8 +2928,7 @@ OIIO_ADD_TEST(Config, exponent_vs_config_version)
 
     const std::string strEnd2 =
         "    from_reference: !<ExponentTransform> {value: [2, 2, 2, 1]}\n";
-    std::string str2 = SIMPLE_PROFILE + strEnd2;
-    str2.replace(0, strlen("ocio_profile_version: 2"), "ocio_profile_version: 1");
+    const std::string str2 = PROFILE_V1 + SIMPLE_PROFILE + strEnd2;
 
     is.str(str2);
     OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
@@ -2939,8 +2945,7 @@ OIIO_ADD_TEST(Config, exponent_vs_config_version)
 
     // OCIO config file version > 1  and exponent == 1
 
-    std::string str3 = str;
-    str3.replace(0, strlen("ocio_profile_version: 1"), "ocio_profile_version: 2");
+    std::string str3 = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
     is.str(str3);
     OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
     OIIO_CHECK_NO_THROW(config->sanityCheck());
@@ -2956,8 +2961,7 @@ OIIO_ADD_TEST(Config, exponent_vs_config_version)
 
     // OCIO config file version > 1  and exponent != 1
 
-    std::string str4 = str2;
-    str4.replace(0, strlen("ocio_profile_version: 1"), "ocio_profile_version: 2");
+    std::string str4 = PROFILE_V2 + SIMPLE_PROFILE + strEnd2;
     is.str(str4);
     OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
     OIIO_CHECK_NO_THROW(config->sanityCheck());
@@ -3424,11 +3428,47 @@ OIIO_ADD_TEST(Config, view)
 
 OIIO_ADD_TEST(Config, log_serialization)
 {
+    const std::string PROFILE_V1 = "ocio_profile_version: 1\n";
+    const std::string PROFILE_V2 = "ocio_profile_version: 2\n";
+    static const std::string SIMPLE_PROFILE =
+        "\n"
+        "search_path: luts\n"
+        "strictparsing: true\n"
+        "luma: [0.2126, 0.7152, 0.0722]\n"
+        "\n"
+        "roles:\n"
+        "  default: raw\n"
+        "  scene_linear: lnh\n"
+        "\n"
+        "displays:\n"
+        "  sRGB:\n"
+        "    - !<View> {name: Raw, colorspace: raw}\n"
+        "\n"
+        "active_displays: []\n"
+        "active_views: []\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw\n"
+        "    family: \"\"\n"
+        "    equalitygroup: \"\"\n"
+        "    bitdepth: unknown\n"
+        "    isdata: false\n"
+        "    allocation: uniform\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: lnh\n"
+        "    family: \"\"\n"
+        "    equalitygroup: \"\"\n"
+        "    bitdepth: unknown\n"
+        "    isdata: false\n"
+        "    allocation: uniform\n";
+
     {
         // Log with default base value and default direction.
         const std::string strEnd =
             "    from_reference: !<LogTransform> {}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V1 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -3446,7 +3486,7 @@ OIIO_ADD_TEST(Config, log_serialization)
         // Log with default base value.
         const std::string strEnd =
             "    from_reference: !<LogTransform> {direction: inverse}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V1 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -3464,7 +3504,7 @@ OIIO_ADD_TEST(Config, log_serialization)
         // Log with specified base value.
         const std::string strEnd =
             "    from_reference: !<LogTransform> {base: 5}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V1 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -3482,7 +3522,7 @@ OIIO_ADD_TEST(Config, log_serialization)
         // Log with specified base value and direction.
         const std::string strEnd =
             "    from_reference: !<LogTransform> {base: 7, direction: inverse}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V1 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -3505,7 +3545,7 @@ OIIO_ADD_TEST(Config, log_serialization)
             "logSideOffset: [0, 0, 0.1], "
             "linSideSlope: [1, 1, 1.1], "
             "linSideOffset: [0.1234567890123, 0.5, 0.1]}\n";
-            const std::string str = SIMPLE_PROFILE + strEnd;
+            const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -3528,7 +3568,7 @@ OIIO_ADD_TEST(Config, log_serialization)
             "linSideSlope: [1.3, 1.4, 1.5], "
             "linSideOffset: [0, 0, 0.1]}\n";
     
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -3551,7 +3591,7 @@ OIIO_ADD_TEST(Config, log_serialization)
             "logSideOffset: [0.1234567890123, 0.5, 0.1], "
             "linSideSlope: [1.3, 1.4, 1.5], "
             "linSideOffset: 0.5}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -3572,7 +3612,7 @@ OIIO_ADD_TEST(Config, log_serialization)
             "logSideSlope: [1, 1, 1.1], "
             "linSideSlope: 1.3, "
             "linSideOffset: [0, 0, 0.1]}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -3594,7 +3634,7 @@ OIIO_ADD_TEST(Config, log_serialization)
             "logSideOffset: 0.5, "
             "linSideSlope: [1.3, 1, 1], "
             "linSideOffset: [0, 0, 0.1]}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -3616,7 +3656,7 @@ OIIO_ADD_TEST(Config, log_serialization)
             "logSideOffset: [0.5, 0, 0], "
             "linSideSlope: [1.3, 1, 1], "
             "linSideOffset: [0, 0, 0.1]}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -3637,7 +3677,7 @@ OIIO_ADD_TEST(Config, log_serialization)
             "logSideOffset: [0.1234567890123, 0.5, 0.1], "
             "linSideSlope: [1.3, 1.4, 1.5], "
             "linSideOffset: [0.1, 0, 0]}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -3655,7 +3695,7 @@ OIIO_ADD_TEST(Config, log_serialization)
         // LogAffine with default value for all but base.
         const std::string strEnd =
             "    from_reference: !<LogAffineTransform> {base: 10}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -3675,7 +3715,7 @@ OIIO_ADD_TEST(Config, log_serialization)
             "    from_reference: !<LogAffineTransform> {"
             "logSideSlope: [1, 1], "
             "logSideOffset: [0.1234567890123, 0.5, 0.1]}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -3692,7 +3732,7 @@ OIIO_ADD_TEST(Config, log_serialization)
             "    from_reference: !<LogAffineTransform> {"
             "base: [2, 2, 2], "
             "logSideOffset: [0.1234567890123, 0.5, 0.1]}\n";
-        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -3798,6 +3838,33 @@ OIIO_ADD_TEST(Config, unknown_key_error)
 
 OIIO_ADD_TEST(Config, fixed_function_serialization)
 {
+    static const std::string SIMPLE_PROFILE =
+        "ocio_profile_version: 2\n"
+        "\n"
+        "search_path: luts\n"
+        "strictparsing: true\n"
+        "luma: [0.2126, 0.7152, 0.0722]\n"
+        "\n"
+        "roles:\n"
+        "  default: raw\n"
+        "  scene_linear: raw\n"
+        "\n"
+        "displays:\n"
+        "  sRGB:\n"
+        "    - !<View> {name: Raw, colorspace: raw}\n"
+        "\n"
+        "active_displays: []\n"
+        "active_views: []\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw\n"
+        "    family: \"\"\n"
+        "    equalitygroup: \"\"\n"
+        "    bitdepth: unknown\n"
+        "    isdata: false\n"
+        "    allocation: uniform\n";
+
     {
         const std::string strEnd =
             "    from_reference: !<GroupTransform>\n"
@@ -3864,6 +3931,127 @@ OIIO_ADD_TEST(Config, fixed_function_serialization)
     }
 }
 
+OIIO_ADD_TEST(Config, exposure_contrast_serialization)
+{
+    static const std::string SIMPLE_PROFILE =
+        "ocio_profile_version: 2\n"
+        "\n"
+        "search_path: luts\n"
+        "strictparsing: true\n"
+        "luma: [0.2126, 0.7152, 0.0722]\n"
+        "\n"
+        "roles:\n"
+        "  default: raw\n"
+        "  scene_linear: raw\n"
+        "\n"
+        "displays:\n"
+        "  sRGB:\n"
+        "    - !<View> {name: Raw, colorspace: raw}\n"
+        "\n"
+        "active_displays: []\n"
+        "active_views: []\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw\n"
+        "    family: \"\"\n"
+        "    equalitygroup: \"\"\n"
+        "    bitdepth: unknown\n"
+        "    isdata: false\n"
+        "    allocation: uniform\n";
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<ExposureContrastTransform> {style: video, exposure: 1.5,"
+                       " contrast: 0.5, gamma: 1.1, pivot: 0.18}\n"
+            "        - !<ExposureContrastTransform> {style: video,"
+                       " exposure: {value: 1.5, dynamic: true}, contrast: 0.5,"
+                       " gamma: 1.1, pivot: 0.18}\n"
+            "        - !<ExposureContrastTransform> {style: video, exposure: -1.4,"
+                       " contrast: 0.6, gamma: 1.2, pivot: 0.2,"
+                       " direction: inverse}\n"
+            "        - !<ExposureContrastTransform> {style: log, exposure: 1.5,"
+                       " contrast: 0.6, gamma: 1.2, pivot: 0.18}\n"
+            "        - !<ExposureContrastTransform> {style: log, exposure: 1.5,"
+                       " contrast: 0.5, gamma: 1.1, pivot: 0.18,"
+                       " direction: inverse}\n"
+            "        - !<ExposureContrastTransform> {style: log, exposure: 1.5,"
+                       " contrast: {value: 0.6, dynamic: true}, gamma: 1.2,"
+                       " pivot: 0.18}\n"
+            "        - !<ExposureContrastTransform> {style: linear, exposure: 1.5,"
+                       " contrast: 0.5, gamma: 1.1, pivot: 0.18}\n"
+            "        - !<ExposureContrastTransform> {style: linear, exposure: 1.5,"
+                       " contrast: 0.5, gamma: 1.1, pivot: 0.18,"
+                       " direction: inverse}\n"
+            "        - !<ExposureContrastTransform> {style: linear, exposure: 1.5,"
+                       " contrast: 0.5, gamma: {value: 1.1, dynamic: true},"
+                       " pivot: 0.18}\n";
+
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n";
+        
+        const std::string strEndEC =
+            "        - !<ExposureContrastTransform> {style: video,"
+                       " exposure: {value: 1.5},"
+                       " contrast: {value: 0.5, dynamic: false},"
+                       " gamma: {value: 1.1}, pivot: 0.18}\n";
+
+        const std::string strEndECExpected =
+            "        - !<ExposureContrastTransform> {style: video, exposure: 1.5,"
+                       " contrast: 0.5, gamma: 1.1, pivot: 0.18}\n";
+
+        const std::string str = SIMPLE_PROFILE + strEnd + strEndEC;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        const std::string strExpected = SIMPLE_PROFILE + strEnd + strEndECExpected;
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), strExpected);
+
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<ExposureContrastTransform> {style: wrong}\n";
+
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OIIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is),
+                              OCIO::Exception,
+                              "Unknown exposure contrast style");
+    }
+}
+
 OIIO_ADD_TEST(Config, matrix_serialization)
 {
     const std::string strEnd =
@@ -3878,7 +4066,7 @@ OIIO_ADD_TEST(Config, matrix_serialization)
                                                 "1234.56789876, 12345.6789876, 123456.789876, 1234567.89876, "\
                                                 "0, 0, 1, 0, 0, 0, 0, 1]}\n";
 
-    const std::string str = SIMPLE_PROFILE + strEnd;
+    const std::string str = PROFILE_V1 + SIMPLE_PROFILE + strEnd;
 
     std::istringstream is;
     is.str(str);

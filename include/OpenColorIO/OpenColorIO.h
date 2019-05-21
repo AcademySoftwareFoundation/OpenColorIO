@@ -944,13 +944,22 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         bool isNoOp() const;
         
-        //!cpp:function:: does the processor represent an image transformation that
-        //                introduces crosstalk between the image channels
+        //!cpp:function:: True if the image transformation is non-separable.
+        //                For example, if a change in red may also cause a
+        //                change in green or blue.
         bool hasChannelCrosstalk() const;
         
         //!cpp:function::
         ConstProcessorMetadataRcPtr getMetadata() const;
-        
+
+        //!cpp:function:: The returned pointer may be used to set the value of any
+        //                dynamic properties of the requested type.  Throws if the
+        //                requested property is not found.  Note that if the
+        //                processor contains several ops that support the
+        //                requested property, only ones for which dynamic has
+        //                been enabled will be controlled.
+        DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
+
         ///////////////////////////////////////////////////////////////////////////
         //!rst::
         // CPU Renderer
@@ -1564,18 +1573,12 @@ OCIO_NAMESPACE_ENTER
             TEXTURE_RGB_CHANNEL
         };
 
-        enum UniformType
-        {
-            UNIFORM_BOOL_TYPE,
-            UNIFORM_FLOAT_TYPE
-        };
-
-        // Note: Support for uniforms will be added in a follow-up
+        //!cpp:function:: Uniform related methods
         virtual unsigned getNumUniforms() const = 0;
         virtual void getUniform(unsigned index, const char *& name, 
-                                UniformType & type, void *& value) const = 0;
-        virtual void addUniform(unsigned index, const char * name, 
-                                UniformType type, void * value) = 0;
+                                DynamicPropertyRcPtr & value) const = 0;
+        virtual bool addUniform(const char * name, 
+                                DynamicPropertyRcPtr value) = 0;
 
         //!cpp:function:: 1D lut related methods
         virtual unsigned getTextureMaxWidth() const = 0;

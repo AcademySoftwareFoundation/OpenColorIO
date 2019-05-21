@@ -26,16 +26,19 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <algorithm>
 #include <sstream>
-#include <vector>
 #include <string>
-#include <string.h>
+#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "GpuShader.h"
 #include "HashUtils.h"
+#include "Platform.h"
 
+OCIO_NAMESPACE_ENTER
+{
 
 namespace
 {
@@ -46,19 +49,19 @@ const unsigned max3DLUTDimension = 129;
 
 static void  CreateArray(const float * buf, 
                          unsigned w, unsigned h, unsigned d, 
-                         OCIO_NAMESPACE::GpuShaderDesc::TextureType type, 
+                         GpuShaderDesc::TextureType type, 
                          std::vector<float> & res)
 {
     if(buf!=nullptr)
     {
         const unsigned size 
-            = w * h * d * (type==OCIO_NAMESPACE::GpuShaderDesc::TEXTURE_RGB_CHANNEL ? 3 : 1);
+            = w * h * d * (type==GpuShaderDesc::TEXTURE_RGB_CHANNEL ? 3 : 1);
         res.resize(size);
         memcpy(&res[0], buf, size * sizeof(float));
     }
     else
     {
-        throw OCIO_NAMESPACE::Exception("Missing texture values");
+        throw Exception("Missing texture values");
     }
 }
 
@@ -69,37 +72,52 @@ public:
     {
         Texture(const char * n, const char * identifier, 
                 unsigned w, unsigned h, unsigned d,
-                OCIO_NAMESPACE::GpuShaderDesc::TextureType channel, 
-                OCIO_NAMESPACE::Interpolation interpolation, 
+                GpuShaderDesc::TextureType channel, 
+                Interpolation interpolation, 
                 const float * v)
-            :   name(n)
-            ,   id(identifier)
-            ,   width(w)
-            ,   height(h)
-            ,   depth(d)
-            ,   type(channel)
-            ,   interp(interpolation)
+            :   m_name(n)
+            ,   m_id(identifier)
+            ,   m_width(w)
+            ,   m_height(h)
+            ,   m_depth(d)
+            ,   m_type(channel)
+            ,   m_interp(interpolation)
         {
             // An unfortunate copy is mandatory to allow the creation of a GPU shader cache. 
             // The cache needs a decoupling of the processor and shader instances forbidding
             // shared naked pointer usage.
-            CreateArray(v, width, height, depth, type, values);
+            CreateArray(v, m_width, m_height, m_depth, m_type, m_values);
         }
 
-        std::string name;
-        std::string id;
-        unsigned width;
-        unsigned height;
-        unsigned depth;
-        OCIO_NAMESPACE::GpuShaderDesc::TextureType type;
-        OCIO_NAMESPACE::Interpolation interp;
+        std::string m_name;
+        std::string m_id;
+        unsigned m_width;
+        unsigned m_height;
+        unsigned m_depth;
+        GpuShaderDesc::TextureType m_type;
+        Interpolation m_interp;
 
-        std::vector<float> values;
+        std::vector<float> m_values;
 
         Texture() = delete;
     };
 
     typedef std::vector<Texture> Textures;
+
+    struct Uniform
+    {
+        Uniform(const char * n, DynamicPropertyRcPtr v)
+            : m_name(n)
+            , m_value(v)
+        {
+        }
+        std::string m_name;
+        DynamicPropertyRcPtr m_value;
+
+        Uniform() = delete;
+    };
+
+    typedef std::vector<Uniform> Uniforms;
 
 public:       
     PrivateImpl()
@@ -115,106 +133,139 @@ public:
     inline void set1dLutMaxWidth(unsigned maxWidth) { m_max1DLUTWidth = maxWidth; }
 
     void addTexture(const char * name, const char * id, unsigned width, unsigned height, 
-                    OCIO_NAMESPACE::GpuShaderDesc::TextureType channel,
-                    OCIO_NAMESPACE::Interpolation interpolation, const float * values)
+                    GpuShaderDesc::TextureType channel,
+                    Interpolation interpolation, const float * values)
     {
         if(width > get1dLutMaxWidth())
         {
             std::stringstream ss;
             ss  << "1D LUT size exceeds the maximum: "
                 << width << " > " << get1dLutMaxWidth();
-            throw OCIO_NAMESPACE::Exception(ss.str().c_str());
+            throw Exception(ss.str().c_str());
         }
 
         Texture t(name, id, width, height, 1, channel, interpolation, values);
-        textures.push_back(t);
+        m_textures.push_back(t);
     }
 
     void getTexture(unsigned index, const char *& name, const char *& id, 
                     unsigned & width, unsigned & height, 
-                    OCIO_NAMESPACE::GpuShaderDesc::TextureType & channel, 
-                    OCIO_NAMESPACE::Interpolation & interpolation) const
+                    GpuShaderDesc::TextureType & channel, 
+                    Interpolation & interpolation) const
     {
-        if(index >= textures.size())
+        if(index >= m_textures.size())
         {
             std::ostringstream ss;
             ss << "1D LUT access error: index = " << index
-               << " where size = " << textures.size();
-            throw OCIO_NAMESPACE::Exception(ss.str().c_str());
+               << " where size = " << m_textures.size();
+            throw Exception(ss.str().c_str());
         }
 
-        const Texture & t = textures[index];
-        name          = t.name.c_str();
-        id            = t.id.c_str();
-        width         = t.width;
-        height        = t.height;
-        channel       = t.type;
-        interpolation = t.interp;
+        const Texture & t = m_textures[index];
+        name          = t.m_name.c_str();
+        id            = t.m_id.c_str();
+        width         = t.m_width;
+        height        = t.m_height;
+        channel       = t.m_type;
+        interpolation = t.m_interp;
     }
 
     void getTextureValues(unsigned index, const float *& values) const
     {
-        if(index >= textures.size())
+        if(index >= m_textures.size())
         {
             std::ostringstream ss;
             ss << "1D LUT access error: index = " << index
-               << " where size = " << textures.size();
-            throw OCIO_NAMESPACE::Exception(ss.str().c_str());
+               << " where size = " << m_textures.size();
+            throw Exception(ss.str().c_str());
         }
 
-        const Texture & t = textures[index];
-        values   = &t.values[0];
+        const Texture & t = m_textures[index];
+        values   = &t.m_values[0];
     }
 
     void add3DTexture(const char * name, const char * id, unsigned dimension, 
-                      OCIO_NAMESPACE::Interpolation interpolation, const float * values)
+                      Interpolation interpolation, const float * values)
     {
         if(dimension > get3dLutMaxDimension())
         {
             std::stringstream ss;
             ss  << "3D LUT dimension exceeds the maximum: "
                 << dimension << " > " << get3dLutMaxDimension();
-            throw OCIO_NAMESPACE::Exception(ss.str().c_str());
+            throw Exception(ss.str().c_str());
         }
 
         Texture t(
             name, id, dimension, dimension, dimension, 
-            OCIO_NAMESPACE::GpuShaderDesc::TEXTURE_RGB_CHANNEL, 
+            GpuShaderDesc::TEXTURE_RGB_CHANNEL, 
             interpolation, values);
-        textures3D.push_back(t);
+        m_textures3D.push_back(t);
     }
 
     void get3DTexture(unsigned index, const char *& name, const char *& id, 
                       unsigned & edgelen, 
-                      OCIO_NAMESPACE::Interpolation & interpolation) const
+                      Interpolation & interpolation) const
     {
-        if(index >= textures3D.size())
+        if(index >= m_textures3D.size())
         {
             std::ostringstream ss;
             ss << "3D LUT access error: index = " << index
-               << " where size = " << textures3D.size();
-            throw OCIO_NAMESPACE::Exception(ss.str().c_str());
+               << " where size = " << m_textures3D.size();
+            throw Exception(ss.str().c_str());
         }
 
-        const Texture & t = textures3D[index];
-        name          = t.name.c_str();
-        id            = t.id.c_str();
-        edgelen       = t.width;
-        interpolation = t.interp;
+        const Texture & t = m_textures3D[index];
+        name          = t.m_name.c_str();
+        id            = t.m_id.c_str();
+        edgelen       = t.m_width;
+        interpolation = t.m_interp;
     }
 
     void get3DTextureValues(unsigned index, const float *& values) const
     {
-        if(index >= textures3D.size())
+        if(index >= m_textures3D.size())
         {
             std::ostringstream ss;
             ss << "3D LUT access error: index = " << index
-               << " where size = " << textures3D.size();
-            throw OCIO_NAMESPACE::Exception(ss.str().c_str());
+               << " where size = " << m_textures3D.size();
+            throw Exception(ss.str().c_str());
         }
 
-        const Texture & t = textures3D[index];
-        values = &t.values[0];
+        const Texture & t = m_textures3D[index];
+        values = &t.m_values[0];
+    }
+
+    unsigned getNumUniforms() const
+    {
+        return (unsigned)m_uniforms.size();
+    }
+    
+    void getUniform(unsigned index, const char *& name, DynamicPropertyRcPtr & value) const
+    {
+        if (index >= (unsigned)m_uniforms.size())
+        {
+            std::ostringstream ss;
+            ss << "Uniforms access error: index = " << index
+                << " where size = " << m_uniforms.size();
+            throw Exception(ss.str().c_str());
+        }
+        const Uniform & u = m_uniforms[index];
+        name = u.m_name.c_str();
+        value = u.m_value;
+    }
+
+    bool addUniform(const char * name, DynamicPropertyRcPtr value)
+    {
+        for (auto u : m_uniforms)
+        {
+            if (u.m_value == value)
+            {
+                // Uniform is already there.
+                return false;
+            }
+        }
+        m_uniforms.emplace_back(name, value);
+        return true;
     }
 
     void createShaderText(const char * shaderDeclarations,
@@ -223,53 +274,62 @@ public:
                           const char * shaderFunctionBody,
                           const char * shaderFunctionFooter)
     {
-        shaderCode.resize(0);
-        shaderCode += (shaderDeclarations && *shaderDeclarations) ? shaderDeclarations : "";
-        shaderCode += (shaderHelperMethods && *shaderHelperMethods) ? shaderHelperMethods : "";
-        shaderCode += (shaderFunctionHeader && *shaderFunctionHeader) ? shaderFunctionHeader : "";
-        shaderCode += (shaderFunctionBody && shaderFunctionBody) ? shaderFunctionBody : "";
-        shaderCode += (shaderFunctionFooter && shaderFunctionFooter) ? shaderFunctionFooter : "";
+        m_shaderCode.resize(0);
+        m_shaderCode += (shaderDeclarations && *shaderDeclarations) ? shaderDeclarations : "";
+        m_shaderCode += (shaderHelperMethods && *shaderHelperMethods) ? shaderHelperMethods : "";
+        m_shaderCode += (shaderFunctionHeader && *shaderFunctionHeader) ? shaderFunctionHeader : "";
+        m_shaderCode += (shaderFunctionBody && *shaderFunctionBody) ? shaderFunctionBody : "";
+        m_shaderCode += (shaderFunctionFooter && *shaderFunctionFooter) ? shaderFunctionFooter : "";
 
-        shaderCodeID.resize(0);
+        m_shaderCodeID.resize(0);
     }
 
     void finalize(const std::string & cacheID)
     {
         // Finalize the shader program
-        createShaderText(declarations.c_str(),
-                         helperMethods.c_str(), 
-                         functionHeader.c_str(), 
-                         functionBody.c_str(), 
-                         functionFooter.c_str());
+        createShaderText(m_declarations.c_str(),
+                         m_helperMethods.c_str(), 
+                         m_functionHeader.c_str(), 
+                         m_functionBody.c_str(), 
+                         m_functionFooter.c_str());
 
         // Compute the identifier
-        std::ostringstream ss;
-        ss << shaderCode;
-        for(auto & t : textures3D)
+        std::ostringstream os;
+        os << m_shaderCode;
+        os << "T3D" << m_textures3D.size();
+        for(auto & t : m_textures3D)
         {
-            ss << t.id;
+            os << t.m_id;
         }
-        for(auto & t : textures)
+        os << "T" << m_textures.size();
+        for(auto & t : m_textures)
         {
-            ss << t.id;
+            os << t.m_id;
+        }
+        os << "U" << m_uniforms.size();
+        for (auto & u : m_uniforms)
+        {
+            os << u.m_name;
         }
 
-        const std::string id = ss.str();
-        shaderCodeID = cacheID 
-            + OCIO_NAMESPACE::CacheIDHash(id.c_str(), unsigned(id.length()));
+        const std::string id = os.str();
+        m_shaderCodeID = cacheID 
+            + CacheIDHash(id.c_str(), unsigned(id.length()));
     }
 
-    std::string declarations;
-    std::string helperMethods;
-    std::string functionHeader;
-    std::string functionBody;
-    std::string functionFooter;
+    std::string m_declarations;
+    std::string m_helperMethods;
+    std::string m_functionHeader;
+    std::string m_functionBody;
+    std::string m_functionFooter;
 
-    std::string shaderCode;
-    std::string shaderCodeID;
+    std::string m_shaderCode;
+    std::string m_shaderCodeID;
 
-    Textures textures;
-    Textures textures3D;
+    Textures m_textures;
+    Textures m_textures3D;
+
+    Uniforms m_uniforms;
 
 protected:
     unsigned m_max1DLUTWidth;
@@ -280,10 +340,6 @@ private:
 };
 
 };
-
-
-OCIO_NAMESPACE_ENTER
-{
 
 class LegacyGpuShaderDesc::Impl : public PrivateImpl
 {
@@ -329,12 +385,12 @@ unsigned LegacyGpuShaderDesc::getNumUniforms() const
     return 0;
 }
 
-void LegacyGpuShaderDesc::getUniform(unsigned, const char *&, UniformType &, void *&) const
+void LegacyGpuShaderDesc::getUniform(unsigned, const char *&, DynamicPropertyRcPtr &) const
 {
     throw Exception("Uniforms are not supported");
 }
 
-void LegacyGpuShaderDesc::addUniform(unsigned, const char *, UniformType, void *)
+bool LegacyGpuShaderDesc::addUniform(const char *, DynamicPropertyRcPtr)
 {
     throw Exception("Uniforms are not supported");
 }
@@ -376,7 +432,7 @@ void LegacyGpuShaderDesc::getTextureValues(unsigned, const float *&) const
 
 unsigned LegacyGpuShaderDesc::getNum3DTextures() const
 {
-    return unsigned(getImpl()->textures3D.size());
+    return unsigned(getImpl()->m_textures3D.size());
 }
 
 void LegacyGpuShaderDesc::add3DTexture(const char * name, const char * id, unsigned dimension, 
@@ -390,7 +446,7 @@ void LegacyGpuShaderDesc::add3DTexture(const char * name, const char * id, unsig
         throw Exception(ss.str().c_str());
     }
 
-    if(getImpl()->textures3D.size()!=0)
+    if(getImpl()->m_textures3D.size()!=0)
     {
         const std::string ss("3D Texture error: only one 3D texture allowed");
         throw Exception(ss.c_str());
@@ -413,41 +469,41 @@ void LegacyGpuShaderDesc::get3DTextureValues(unsigned index, const float *& valu
 
 const char * LegacyGpuShaderDesc::getShaderText() const
 {
-    return getImpl()->shaderCode.c_str();
+    return getImpl()->m_shaderCode.c_str();
 }
 
 const char * LegacyGpuShaderDesc::getCacheID() const
 {
-    return getImpl()->shaderCodeID.c_str();
+    return getImpl()->m_shaderCodeID.c_str();
 }
 
 void LegacyGpuShaderDesc::addToDeclareShaderCode(const char * shaderCode)
 {
-    if(getImpl()->declarations.empty())
+    if(getImpl()->m_declarations.empty())
     {
-        getImpl()->declarations += "\n// Declaration of all variables\n\n";
+        getImpl()->m_declarations += "\n// Declaration of all variables\n\n";
     }
-    getImpl()->declarations += (shaderCode && *shaderCode) ? shaderCode : "";
+    getImpl()->m_declarations += (shaderCode && *shaderCode) ? shaderCode : "";
 }
 
 void LegacyGpuShaderDesc::addToHelperShaderCode(const char * shaderCode)
 {
-    getImpl()->helperMethods += (shaderCode && *shaderCode) ? shaderCode : "";
+    getImpl()->m_helperMethods += (shaderCode && *shaderCode) ? shaderCode : "";
 }
 
 void LegacyGpuShaderDesc::addToFunctionShaderCode(const char * shaderCode)
 {
-    getImpl()->functionBody += (shaderCode && *shaderCode) ? shaderCode : "";
+    getImpl()->m_functionBody += (shaderCode && *shaderCode) ? shaderCode : "";
 }
 
 void LegacyGpuShaderDesc::addToFunctionHeaderShaderCode(const char * shaderCode)
 {
-    getImpl()->functionHeader += (shaderCode && *shaderCode) ? shaderCode : "";
+    getImpl()->m_functionHeader += (shaderCode && *shaderCode) ? shaderCode : "";
 }
 
 void LegacyGpuShaderDesc::addToFunctionFooterShaderCode(const char * shaderCode)
 {
-    getImpl()->functionFooter += (shaderCode && *shaderCode) ? shaderCode : "";
+    getImpl()->m_functionFooter += (shaderCode && *shaderCode) ? shaderCode : "";
 }
 
 void LegacyGpuShaderDesc::createShaderText(const char * shaderDeclarations, 
@@ -500,22 +556,18 @@ GenericGpuShaderDesc::~GenericGpuShaderDesc()
 
 unsigned GenericGpuShaderDesc::getNumUniforms() const
 {
-    // Outside the scope of this code review. Will add in future step.
-    return 0;
+    return getImpl()->getNumUniforms();
 }
 
-void GenericGpuShaderDesc::getUniform(
-    unsigned, const char *&, UniformType &, void *&) const
+void GenericGpuShaderDesc::getUniform(unsigned index, const char *& name,
+                                      DynamicPropertyRcPtr & value) const
 {
-    // Outside the scope of this code review. Will add in future step.
-    throw Exception("Not yet implemented");
+    return getImpl()->getUniform(index, name, value);
 }
 
-void GenericGpuShaderDesc::addUniform(
-    unsigned, const char *, UniformType, void *)
+bool GenericGpuShaderDesc::addUniform(const char * name, DynamicPropertyRcPtr value)
 {
-    // Outside the scope of this code review. Will add in future step.
-    throw Exception("Not yet implemented");
+    return getImpl()->addUniform(name, value);
 }
 
 unsigned GenericGpuShaderDesc::getTextureMaxWidth() const 
@@ -530,7 +582,7 @@ void GenericGpuShaderDesc::setTextureMaxWidth(unsigned maxWidth)
 
 unsigned GenericGpuShaderDesc::getNumTextures() const
 {
-    return unsigned(getImpl()->textures.size());
+    return unsigned(getImpl()->m_textures.size());
 }
 
 void GenericGpuShaderDesc::addTexture(const char * name, const char * id, 
@@ -557,7 +609,7 @@ void GenericGpuShaderDesc::getTextureValues(unsigned index, const float *& value
 
 unsigned GenericGpuShaderDesc::getNum3DTextures() const
 {
-    return unsigned(getImpl()->textures3D.size());
+    return unsigned(getImpl()->m_textures3D.size());
 }
 
 void GenericGpuShaderDesc::add3DTexture(
@@ -581,45 +633,45 @@ void GenericGpuShaderDesc::get3DTextureValues(unsigned index, const float *& val
 
 const char * GenericGpuShaderDesc::getShaderText() const
 {
-    return getImpl()->shaderCode.c_str();
+    return getImpl()->m_shaderCode.c_str();
 }
 
 const char * GenericGpuShaderDesc::getCacheID() const
 {
-    return getImpl()->shaderCodeID.c_str();
+    return getImpl()->m_shaderCodeID.c_str();
 }
 
 void GenericGpuShaderDesc::addToDeclareShaderCode(const char * shaderCode)
 {
-    if(getImpl()->declarations.empty())
+    if(getImpl()->m_declarations.empty())
     {
-        getImpl()->declarations += "\n// Declaration of all variables\n\n";
+        getImpl()->m_declarations += "\n// Declaration of all variables\n\n";
     }
-    getImpl()->declarations += (shaderCode && *shaderCode) ? shaderCode : "";
+    getImpl()->m_declarations += (shaderCode && *shaderCode) ? shaderCode : "";
 }
 
 void GenericGpuShaderDesc::addToHelperShaderCode(const char * shaderCode)
 {
-    if(getImpl()->helperMethods.empty())
+    if(getImpl()->m_helperMethods.empty())
     {
-        getImpl()->helperMethods += "\n// Declaration of all helper methods\n\n";
+        getImpl()->m_helperMethods += "\n// Declaration of all helper methods\n\n";
     }
-    getImpl()->helperMethods += (shaderCode && *shaderCode) ? shaderCode : "";
+    getImpl()->m_helperMethods += (shaderCode && *shaderCode) ? shaderCode : "";
 }
 
 void GenericGpuShaderDesc::addToFunctionShaderCode(const char * shaderCode)
 {
-    getImpl()->functionBody += (shaderCode && *shaderCode) ? shaderCode : "";
+    getImpl()->m_functionBody += (shaderCode && *shaderCode) ? shaderCode : "";
 }
 
 void GenericGpuShaderDesc::addToFunctionHeaderShaderCode(const char * shaderCode)
 {
-    getImpl()->functionHeader += (shaderCode && *shaderCode) ? shaderCode : "";
+    getImpl()->m_functionHeader += (shaderCode && *shaderCode) ? shaderCode : "";
 }
 
 void GenericGpuShaderDesc::addToFunctionFooterShaderCode(const char * shaderCode)
 {
-    getImpl()->functionFooter += (shaderCode && *shaderCode) ? shaderCode : "";
+    getImpl()->m_functionFooter += (shaderCode && *shaderCode) ? shaderCode : "";
 }
 
 void GenericGpuShaderDesc::createShaderText(
@@ -677,6 +729,8 @@ OIIO_ADD_TEST(GpuShader, generic_shader)
 
         OIIO_CHECK_NO_THROW(shaderDesc->finalize());
         const std::string id(shaderDesc->getCacheID());
+        OIIO_CHECK_EQUAL(id, std::string("glsl_1.3 1sd234_ res_1sd234_ pxl_1sd234_ "
+                                         "$664fefaf8040c8fae4a3b56f2239872d"));
         OIIO_CHECK_NO_THROW(shaderDesc->setResourcePrefix("res_1"));
         OIIO_CHECK_NO_THROW(shaderDesc->finalize());
         OIIO_CHECK_NE(std::string(shaderDesc->getCacheID()), id);

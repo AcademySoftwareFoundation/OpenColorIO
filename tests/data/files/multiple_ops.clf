@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ProcessList id="none" compCLFversion="2.0">
     <ASC_CDL id="cc01234" inBitDepth="16f" outBitDepth="10i" style="Rev">
-        <DynamicParameter param="LOOK_SWITCH" />
         <Description>scene 1 exterior look</Description>
         <SOPNode>
             <Slope>1.000000  1.000000  0.800000</Slope>
