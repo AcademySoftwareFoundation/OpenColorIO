@@ -389,6 +389,30 @@ OCIO_NAMESPACE_ENTER
     
     
     //!rst:: //////////////////////////////////////////////////////////////////
+
+    //!cpp:class:: Allows transform parameter values to be set on-the-fly
+    //             (after finalization).  For example, to modify the exposure
+    //             in a viewport.
+    class OCIOEXPORT DynamicProperty
+    {
+    public:
+
+        //!cpp:function:: 
+        virtual DynamicPropertyValueType getValueType() const = 0;
+        //!cpp:function:: 
+        virtual double getDoubleValue() const = 0;
+        //!cpp:function:: 
+        virtual void setValue(double value) = 0;
+
+    protected:
+
+        DynamicProperty() {}
+        virtual ~DynamicProperty() {}
+
+        DynamicProperty& operator= (const DynamicProperty &);
+    };
+
+    //!rst:: //////////////////////////////////////////////////////////////////
     
     //!cpp:class:: Represents exponent transform: pow( clamp(color), value)
     // 
@@ -498,7 +522,113 @@ OCIO_NAMESPACE_ENTER
 
     //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ExponentWithLinearTransform&);
-    
+
+    //!rst:: //////////////////////////////////////////////////////////////////
+
+    //!cpp:class:: Applies exposure, gamma, and pivoted contrast adjustments.
+    // Adjusts the math to be appropriate for linear, logarithmic, or video
+    // color spaces.
+    class OCIOEXPORT ExposureContrastTransform : public Transform
+    {
+    public:
+        //!cpp:function::
+        static ExposureContrastTransformRcPtr Create();
+
+        //!cpp:function::
+        virtual TransformRcPtr createEditableCopy() const;
+
+        //!cpp:function::
+        virtual void setDirection(TransformDirection dir);
+        //!cpp:function::
+        virtual TransformDirection getDirection() const;
+
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
+        //!cpp:function:: Select the algorithm for linear, video
+        // or log color spaces.
+        ExposureContrastStyle getStyle() const;
+        //!cpp:function::
+        void setStyle(ExposureContrastStyle style);
+
+        //!cpp:function:: Applies an exposure adjustment.  The value is in
+        //                units of stops (regardless of style), for example,
+        //                a value of -1 would be equivalent to reducing the
+        //                lighting by one half.
+        double getExposure() const;
+        //!cpp:function::
+        void setExposure(double exposure);
+        //!cpp:function::
+        bool isExposureDynamic() const;
+        //!cpp:function::
+        void makeExposureDynamic();
+
+        //!cpp:function:: Applies a contrast/gamma adjustment around a pivot
+        //                point.  The contrast and gamma are mathematically the
+        //                same, but two controls are provided to enable the use
+        //                of separate dynamic parameters.  Contrast is usually
+        //                a scene-referred adjustment that pivots around gray
+        //                whereas gamma is usually a display-referred adjustment
+        //                that pivots around white.
+        double getContrast() const;
+        //!cpp:function::
+        void setContrast(double contrast);
+        //!cpp:function::
+        bool isContrastDynamic() const;
+        //!cpp:function::
+        void makeContrastDynamic();
+        //!cpp:function::
+        double getGamma() const;
+        //!cpp:function::
+        void setGamma(double gamma);
+        //!cpp:function::
+        bool isGammaDynamic() const;
+        //!cpp:function::
+        void makeGammaDynamic();
+
+        //!cpp:function:: Get/set the pivot point around which the contrast
+        //                and gamma controls will work. Regardless of whether
+        //                linear/video/log-style is being used, the pivot is
+        //                always expressed in linear. In other words, a pivot
+        //                of 0.18 is always mid-gray.
+        double getPivot() const;
+        //!cpp:function::
+        void setPivot(double pivot);
+
+        //!cpp:function:: Get/set the increment needed to move one stop for
+        //                the log-style algorithm. For example, ACEScct is
+        //                0.057, LogC is roughly 0.074, and Cineon is roughly
+        //                90/1023 = 0.088. The default value is 0.088.
+        double getLogExposureStep() const;
+        //!cpp:function::
+        void setLogExposureStep(double logExposureStep);
+
+        //!cpp:function:: Get/set the position of 18% gray for use by the
+        //                log-style algorithm. For example, ACEScct is about
+        //                0.41, LogC is about 0.39, and ADX10 is 
+        //                445/1023 = 0.435.  The default value is 0.435.
+        double getLogMidGray() const;
+        //!cpp:function::
+        void setLogMidGray(double logMidGray);
+
+    private:
+        ExposureContrastTransform();
+        ExposureContrastTransform(const ExposureContrastTransform &);
+        virtual ~ExposureContrastTransform();
+
+        ExposureContrastTransform & operator= (const ExposureContrastTransform &);
+
+        static void deleter(ExposureContrastTransform * t);
+
+        class Impl;
+        Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
+    };
+
+    //!cpp:function::
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&,
+                                                const ExposureContrastTransform&);
 
     //!rst:: //////////////////////////////////////////////////////////////////
     
@@ -589,9 +719,9 @@ OCIO_NAMESPACE_ENTER
         virtual void validate() const;
 
         //!cpp:function::
-        virtual FixedFunctionStyle getStyle() const;
+        FixedFunctionStyle getStyle() const;
         //!cpp:function:: Select which algorithm to use.
-        virtual void setStyle(FixedFunctionStyle style);
+        void setStyle(FixedFunctionStyle style);
 
         //!cpp:function::
         size_t getNumParams() const;

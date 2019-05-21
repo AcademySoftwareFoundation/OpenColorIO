@@ -85,6 +85,11 @@ OCIO_NAMESPACE_ENTER
                                     const ExponentWithLinearTransform & transform,
                                     TransformDirection dir);
     
+    void BuildExposureContrastOps(OpRcPtrVec & ops,
+                                  const Config& config,
+                                  const ExposureContrastTransform & transform,
+                                  TransformDirection dir);
+    
     void BuildFileTransformOps(OpRcPtrVec & ops,
                                const Config& config,
                                const ConstContextRcPtr & context,

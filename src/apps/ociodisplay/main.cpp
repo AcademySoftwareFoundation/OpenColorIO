@@ -510,13 +510,15 @@ void UpdateOCIOGLState()
     
     // Step 5: Build the fragment shader program
     g_oglBuilder->buildProgram(g_fragShaderText);
-    
+
     // Step 6: Enable the fragment shader program, and all needed textures
     g_oglBuilder->useProgram();
     // The image texture
     glUniform1i(glGetUniformLocation(g_oglBuilder->getProgramHandle(), "tex1"), 0);
     // The LUT textures
     g_oglBuilder->useAllTextures();
+    // Enable uniforms for dynamic properties
+    g_oglBuilder->useAllUniforms();
 }
 
 void menuCallback(int /*id*/)

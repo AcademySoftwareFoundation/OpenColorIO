@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Op.h"
 #include "ops/CDL/CDLOps.h"
+#include "ops/exposurecontrast/ExposureContrastOps.h"
 #include "ops/Lut1D/Lut1DOp.h"
 #include "ops/Lut3D/Lut3DOp.h"
 #include "ops/Range/RangeOps.h"
@@ -99,7 +100,6 @@ OCIO_NAMESPACE_ENTER
                 m_outBitDepth == other.m_outBitDepth);
     }
 
-
     Op::Op()
     { }
 
@@ -118,6 +118,21 @@ OCIO_NAMESPACE_ENTER
         os << "Op: " << getInfo() << " cannot be combined. ";
         os << "A type-specific combining function is not defined.";
         throw Exception(os.str().c_str());
+    }
+
+    bool Op::hasDynamicProperty(DynamicPropertyType type) const
+    {
+        return false;
+    }
+
+    DynamicPropertyRcPtr Op::getDynamicProperty(DynamicPropertyType type) const
+    {
+        throw Exception("Op does not implement dynamic property.");
+    }
+
+    void Op::replaceDynamicProperty(DynamicPropertyType type, DynamicPropertyImplRcPtr prop)
+    {
+        throw Exception("Op does not implement dynamic property.");
     }
 
 
@@ -300,7 +315,7 @@ OCIO_NAMESPACE_ENTER
         
         return true;
     }
-    
+
     void FinalizeOpVec(OpRcPtrVec & ops, bool optimize)
     {
         // TODO: Add envvar to force disable optimizations
@@ -317,7 +332,7 @@ OCIO_NAMESPACE_ENTER
             op->finalize();
         }
     }
-
+    
     void CreateOpVecFromOpData(OpRcPtrVec & ops,
                                const OpDataRcPtr & opData,
                                TransformDirection dir)
@@ -329,6 +344,14 @@ OCIO_NAMESPACE_ENTER
             auto cdlSrc = std::dynamic_pointer_cast<CDLOpData>(opData);
             auto cdl = std::make_shared<CDLOpData>(*cdlSrc);
             CreateCDLOp(ops, cdl, dir);
+            break;
+        }
+
+        case OpData::ExposureContrastType:
+        {
+            auto ecSrc = std::dynamic_pointer_cast<ExposureContrastOpData>(opData);
+            auto ec = ecSrc->clone();
+            CreateExposureContrastOp(ops, ec, dir);
             break;
         }
 
@@ -416,21 +439,21 @@ void Apply(const OpRcPtrVec & ops, float * source, long numPixels)
 OIIO_ADD_TEST(FinalizeOpVec, optimize_combine)
 {
     const float m1[16] = { 1.1f, 0.2f, 0.3f, 0.4f,
-        0.5f, 1.6f, 0.7f, 0.8f,
-        0.2f, 0.1f, 1.1f, 0.2f,
-        0.3f, 0.4f, 0.5f, 1.6f };
+                           0.5f, 1.6f, 0.7f, 0.8f,
+                           0.2f, 0.1f, 1.1f, 0.2f,
+                           0.3f, 0.4f, 0.5f, 1.6f };
 
     const float v1[4] = { -0.5f, -0.25f, 0.25f, 0.0f };
 
     const float m2[16] = { 1.1f, -0.1f, -0.1f, 0.0f,
-        0.1f, 0.9f, -0.2f, 0.0f,
-        0.05f, 0.0f, 1.1f, 0.0f,
-        0.0f, 0.0f, 0.0f, 1.0f };
+                           0.1f,  0.9f, -0.2f, 0.0f,
+                           0.05f, 0.0f,  1.1f, 0.0f,
+                           0.0f,  0.0f,  0.0f, 1.0f };
     const float v2[4] = { -0.2f, -0.1f, -0.1f, -0.2f };
 
-    const float source[] = { 0.1f, 0.2f, 0.3f, 0.4f,
-        -0.1f, -0.2f, 50.0f, 123.4f,
-        1.0f, 1.0f, 1.0f, 1.0f };
+    const float source[] = { 0.1f,  0.2f,  0.3f,   0.4f,
+                            -0.1f, -0.2f, 50.0f, 123.4f,
+                             1.0f,  1.0f,  1.0f,   1.0f };
     const float error = 1e-4f;
 
     const double base = 10.0;
@@ -689,6 +712,26 @@ OIIO_ADD_TEST(CreateOpVecFromOpDataVec, basic)
     }
 }
 
+OIIO_ADD_TEST(Op, non_dynamic_ops)
+{
+    float scale[4] = { 2.0f, 2.0f, 2.0f, 1.0f };
+
+    OCIO::OpRcPtrVec ops;
+    OCIO::CreateScaleOp(ops, scale, OCIO::TRANSFORM_DIR_FORWARD);
+
+    OIIO_REQUIRE_EQUAL(ops.size(), 1);
+    OIIO_REQUIRE_ASSERT(ops[0]);
+    
+    // Test that non-dynamic ops such as matrix respond properly to dynamic
+    // property requests.
+    OIIO_CHECK_ASSERT(!ops[0]->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
+    OIIO_CHECK_ASSERT(!ops[0]->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST));
+    OIIO_CHECK_ASSERT(!ops[0]->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA));
+
+    OIIO_CHECK_THROW_WHAT(ops[0]->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA),
+                          OCIO::Exception, "does not implement dynamic property");
+}
+
 OIIO_ADD_TEST(OpRcPtrVec, bit_depth)
 {
     OCIO::OpRcPtrVec ops;
@@ -885,4 +928,5 @@ OIIO_ADD_TEST(OpRcPtrVec, bit_depth_with_filenoop)
     OIIO_CHECK_NO_THROW(ops.validate());
 
 }
+
 #endif
