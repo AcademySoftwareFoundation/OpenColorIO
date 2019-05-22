@@ -268,7 +268,7 @@ OCIO_NAMESPACE_ENTER
     class Op;
     typedef OCIO_SHARED_PTR<Op> OpRcPtr;
     typedef OCIO_SHARED_PTR<const Op> ConstOpRcPtr;
-    typedef std::vector<OpRcPtr> OpRcPtrVec;
+    class OpRcPtrVec;
     
     std::string SerializeOpVec(const OpRcPtrVec & ops, int indent=0);
     bool IsOpVecNoOp(const OpRcPtrVec & ops);
@@ -298,7 +298,10 @@ OCIO_NAMESPACE_ENTER
             
             // This should yield a string of not unreasonable length.
             // It can only be called after finalize()
-            virtual std::string getCacheID() const { return m_cacheID; }            
+            virtual std::string getCacheID() const { return m_cacheID; }
+
+            virtual bool isNoOpType() const { return m_data->getType() == OpData::NoOpType; }
+
             // Is the processing a noop? I.e, does apply do nothing.
             // (Even no-ops may define Allocation though.)
             // This must be implemented in a manner where its valid to
@@ -385,6 +388,68 @@ OCIO_NAMESPACE_ENTER
     };
     
     std::ostream& operator<< (std::ostream&, const Op&);
+
+    // The class handles a list of ops and enforces bit depth consistency between ops.
+    //
+    // Note: List only manages shared pointers i.e. it never clones ops.
+    class OpRcPtrVec
+    {
+        typedef std::vector<OpRcPtr> Type;
+        Type m_ops;
+
+    public:
+        typedef Type::value_type value_type;
+        typedef Type::size_type size_type;
+
+        typedef Type::iterator iterator;
+        typedef Type::const_iterator const_iterator;
+
+        typedef Type::reference reference;
+        typedef Type::const_reference const_reference;
+
+        OpRcPtrVec() {}
+        OpRcPtrVec(const OpRcPtrVec & v);
+        OpRcPtrVec & operator=(const OpRcPtrVec & v);
+        // Note: It copies elements i.e. no clone.
+        OpRcPtrVec & operator+=(const OpRcPtrVec & v);
+
+        size_type size() const { return m_ops.size(); }
+
+        iterator begin() noexcept { return m_ops.begin(); }
+        const_iterator begin() const noexcept { return m_ops.begin(); }
+        iterator end() noexcept { return m_ops.end(); }
+        const_iterator end() const noexcept { return m_ops.end(); }
+
+        const OpRcPtr & operator[](size_type idx) const { return m_ops[idx]; }
+
+        iterator erase(const_iterator position);       
+        iterator erase(const_iterator first, const_iterator last);
+
+        // Insert at the 'position' the elements from the range ['first', 'last'[ 
+        // respecting the element's order. Inserting elements at a given position 
+        // shifts elements starting at 'position' to the right.
+        // 
+        // Note: Inserting an empty range will do nothing and inserting 
+        // in an empty list appends elements from the range ['first', 'last'[.
+        //
+        // Note: It copies elements i.e. no clone.
+        void insert(const_iterator position, const_iterator first, const_iterator last);
+
+        void clear() noexcept { m_ops.clear(); }
+        bool empty() const noexcept { return m_ops.empty(); }
+
+        void push_back(const value_type & val);
+        const_reference back() const;
+
+        // Validate the bit depth consistency between Ops.
+        void validate() const;
+
+        OpRcPtrVec clone() const;
+
+    protected:
+        void adjustBitDepths();
+    };
+
 }
 OCIO_NAMESPACE_EXIT
 

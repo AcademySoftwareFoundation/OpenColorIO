@@ -140,8 +140,7 @@ OCIO_NAMESPACE_ENTER
                     
                     // Insert the new ops (which may be empty) at
                     // this location
-                    std::copy(tmpops.begin(), tmpops.end(),
-                        std::inserter(opVec, opVec.begin() + firstindex));
+                    opVec.insert(opVec.begin() + firstindex, tmpops.begin(), tmpops.end());
                     
                     // Decrement firstindex by 1,
                     // to backstep and reconsider the A, A' case.

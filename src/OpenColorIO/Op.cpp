@@ -119,7 +119,7 @@ OCIO_NAMESPACE_ENTER
         os << "A type-specific combining function is not defined.";
         throw Exception(os.str().c_str());
     }
-    
+
     bool Op::hasDynamicProperty(DynamicPropertyType type) const
     {
         return false;
@@ -134,6 +134,131 @@ OCIO_NAMESPACE_ENTER
     {
         throw Exception("Op does not implement dynamic property.");
     }
+
+
+    OpRcPtrVec::OpRcPtrVec(const OpRcPtrVec & v)
+    {
+        *this = v; 
+    }
+
+    OpRcPtrVec & OpRcPtrVec::operator=(const OpRcPtrVec & v)
+    {
+        if(this!=&v)
+        {
+            m_ops = v.m_ops;
+        }
+
+        return *this;
+    }
+
+    OpRcPtrVec & OpRcPtrVec::operator+=(const OpRcPtrVec & v)
+    {
+        m_ops.insert(end(), v.begin(), v.end());
+        adjustBitDepths();
+        return *this;
+    }
+
+// gcc 4.8 partially supports C++11.
+// Note: gcc 4.8 C++11 does not support C++11 changes for 
+//       std::vector::erase() & std::vector::insert() methods.
+#if __GNUC__ <= 4
+    // Convert a const iterator to a non const iterator.
+    #define ITER(pos) (m_ops.begin()+(pos-m_ops.begin())) 
+#else
+    #define ITER(pos) pos 
+#endif
+
+    OpRcPtrVec::iterator OpRcPtrVec::erase(OpRcPtrVec::const_iterator position) 
+    { 
+        OpRcPtrVec::iterator iter = m_ops.erase(ITER(position)); 
+        adjustBitDepths();
+        return iter;
+    }
+    
+    OpRcPtrVec::iterator OpRcPtrVec::erase(OpRcPtrVec::const_iterator first, 
+                                           OpRcPtrVec::const_iterator last)
+    { 
+        OpRcPtrVec::iterator iter = m_ops.erase(ITER(first), ITER(last)); 
+        adjustBitDepths();
+        return iter;
+    }
+
+    void OpRcPtrVec::insert(OpRcPtrVec::const_iterator position, 
+                            OpRcPtrVec::const_iterator first, 
+                            OpRcPtrVec::const_iterator last)
+    {
+        m_ops.insert(ITER(position), first, last);
+        adjustBitDepths();
+    }
+
+    void OpRcPtrVec::push_back(const OpRcPtrVec::value_type & val) 
+    {
+        m_ops.push_back(val);
+        adjustBitDepths();
+    }
+
+    OpRcPtrVec::const_reference OpRcPtrVec::back() const
+    {
+        return m_ops.back();
+    }
+
+    void OpRcPtrVec::validate() const
+    {
+        const size_type numOps = m_ops.size();
+        BitDepth prevOutBD = BIT_DEPTH_UNKNOWN;
+
+        for(size_type idx=0; idx<numOps; ++idx)
+        {
+            if(!m_ops[idx]->isNoOpType())
+            {
+                if(m_ops[idx]->getInputBitDepth() == BIT_DEPTH_UNKNOWN)
+                {
+                    throw Exception("Unsupported 'unknown' bit-depth.");
+                }
+                if(prevOutBD != BIT_DEPTH_UNKNOWN
+                    && m_ops[idx]->getInputBitDepth() != prevOutBD)
+                {
+                    throw Exception("Bit-depth mismatch between adjacent ops.");
+                }
+                prevOutBD = m_ops[idx]->getOutputBitDepth();
+            }
+        }
+    }
+
+    // As ops are added or removed from the OpVec, we need to adjust the inputBitDepth
+    // of an op to match the outputBitDepth of the one before it. This allows the op 
+    // to make any necessary adjustments to the scaling of its parameter values.
+    void OpRcPtrVec::adjustBitDepths()
+    {
+        const size_type numOps = m_ops.size();
+        BitDepth prevOutBD = BIT_DEPTH_UNKNOWN;
+
+        for(size_type idx=0; idx<numOps; ++idx)
+        {
+            if(!m_ops[idx]->isNoOpType())
+            {
+                if(prevOutBD != BIT_DEPTH_UNKNOWN 
+                    && m_ops[idx]->getInputBitDepth() != prevOutBD)
+                {
+                    m_ops[idx]->setInputBitDepth(prevOutBD);
+                }
+                prevOutBD = m_ops[idx]->getOutputBitDepth();
+            }
+        }
+    }
+
+    OpRcPtrVec OpRcPtrVec::clone() const
+    {
+        OpRcPtrVec v;
+
+        for(const auto & op : m_ops)
+        {
+            v.push_back(op->clone());
+        }
+
+        return v;
+    }
+
 
     std::ostream& operator<< (std::ostream & os, const Op & op)
     {
@@ -183,9 +308,9 @@ OCIO_NAMESPACE_ENTER
     
     bool IsOpVecNoOp(const OpRcPtrVec & ops)
     {
-        for(OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
+        for(const auto & op : ops)
         {
-            if(!ops[i]->isNoOp()) return false;
+            if(!op->isNoOp()) return false;
         }
         
         return true;
@@ -195,14 +320,16 @@ OCIO_NAMESPACE_ENTER
     {
         // TODO: Add envvar to force disable optimizations
 
-        if (optimize)
+        ops.validate();
+        
+        if(optimize)
         {
             OptimizeOpVec(ops);
         }
-
-        for (OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
+        
+        for(auto & op : ops)
         {
-            ops[i]->finalize();
+            op->finalize();
         }
     }
     
@@ -270,16 +397,16 @@ OCIO_NAMESPACE_ENTER
                                   const OpDataVec & opDataVec,
                                   TransformDirection dir)
     {
-        if (dir == TRANSFORM_DIR_FORWARD)
+        if(dir == TRANSFORM_DIR_FORWARD)
         {
-            for (auto & opData : opDataVec)
+            for(const auto & opData : opDataVec)
             {
                 CreateOpVecFromOpData(ops, opData, dir);
             }
         }
         else
         {
-            for (int idx = (int)opDataVec.size() - 1; idx >= 0; --idx)
+            for(int idx = (int)opDataVec.size() - 1; idx >= 0; --idx)
             {
                 CreateOpVecFromOpData(ops, opDataVec[idx], dir);
             }
@@ -301,12 +428,11 @@ namespace OCIO = OCIO_NAMESPACE;
 
 OCIO_NAMESPACE_USING
 
-void Apply(const OpRcPtrVec ops, float * source, long numPixels)
+void Apply(const OpRcPtrVec & ops, float * source, long numPixels)
 {
-    OpRcPtrVec::size_type numOps = ops.size();
-    for (OpRcPtrVec::size_type i = 0; i < numOps; ++i)
+    for(const auto & op : ops)
     {
-        ops[i]->apply(source, numPixels);
+        op->apply(source, numPixels);
     }
 }
 
@@ -606,5 +732,201 @@ OIIO_ADD_TEST(Op, non_dynamic_ops)
                           OCIO::Exception, "does not implement dynamic property");
 }
 
+OIIO_ADD_TEST(OpRcPtrVec, bit_depth)
+{
+    OCIO::OpRcPtrVec ops;
+    auto mat = OCIO::MatrixOpData::CreateDiagonalMatrix(OCIO::BIT_DEPTH_F32,
+                                                        OCIO::BIT_DEPTH_UINT8,
+                                                        1024.);
+    OCIO::CreateMatrixOp(ops, mat, OCIO::TRANSFORM_DIR_FORWARD);
+    OIIO_REQUIRE_EQUAL(ops.size(), 1);
+    OIIO_CHECK_EQUAL(ops[0]->getInputBitDepth(),  OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(ops[0]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+
+    auto range = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32,
+                                                     OCIO::BIT_DEPTH_F32,
+                                                     0.0f, 1.0f, 0.5f, 1.5f);
+
+    OCIO::CreateRangeOp(ops, range, OCIO::TRANSFORM_DIR_FORWARD);
+
+    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OIIO_CHECK_EQUAL(ops[0]->getInputBitDepth(),  OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(ops[0]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops[1]->getInputBitDepth(),  OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops[1]->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
+    // Test push_back.
+
+    mat = OCIO::MatrixOpData::CreateDiagonalMatrix(OCIO::BIT_DEPTH_UINT8,
+                                                   OCIO::BIT_DEPTH_UINT8,
+                                                   1.1);
+    OCIO::CreateMatrixOp(ops, mat, OCIO::TRANSFORM_DIR_FORWARD);
+
+    OIIO_REQUIRE_EQUAL(ops.size(), 3);
+    OIIO_CHECK_EQUAL(ops[0]->getInputBitDepth(),  OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(ops[0]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops[1]->getInputBitDepth(),  OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops[1]->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(ops[2]->getInputBitDepth(),  OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(ops[2]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+
+    // Test erase.
+
+    ops.erase(ops.begin()+1);
+
+    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OIIO_CHECK_EQUAL(ops[0]->getInputBitDepth(),  OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(ops[0]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops[1]->getInputBitDepth(),  OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops[1]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+
+    // Test erase.
+
+    mat = OCIO::MatrixOpData::CreateDiagonalMatrix(OCIO::BIT_DEPTH_UINT8,
+                                                   OCIO::BIT_DEPTH_UINT12,
+                                                   1.2);
+    OCIO::CreateMatrixOp(ops, mat, OCIO::TRANSFORM_DIR_FORWARD);
+
+    mat = OCIO::MatrixOpData::CreateDiagonalMatrix(OCIO::BIT_DEPTH_UINT8,
+                                                   OCIO::BIT_DEPTH_UINT16,
+                                                   0.9);
+    OCIO::CreateMatrixOp(ops, mat, OCIO::TRANSFORM_DIR_FORWARD);
+
+    mat = OCIO::MatrixOpData::CreateDiagonalMatrix(OCIO::BIT_DEPTH_F32,
+                                                   OCIO::BIT_DEPTH_UINT12,
+                                                   0.9);
+    OCIO::CreateMatrixOp(ops, mat, OCIO::TRANSFORM_DIR_FORWARD);
+
+    OIIO_CHECK_EQUAL(ops[0]->getInputBitDepth(),  OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(ops[0]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops[1]->getInputBitDepth(),  OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops[1]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops[2]->getInputBitDepth(),  OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops[2]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+    OIIO_CHECK_EQUAL(ops[3]->getInputBitDepth(),  OCIO::BIT_DEPTH_UINT12);
+    OIIO_CHECK_EQUAL(ops[3]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT16);   
+    OIIO_CHECK_EQUAL(ops[4]->getInputBitDepth(),  OCIO::BIT_DEPTH_UINT16);
+    OIIO_CHECK_EQUAL(ops[4]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+
+    OIIO_REQUIRE_EQUAL(ops.size(), 5);
+    ops.erase(ops.begin()+1, ops.begin()+4);
+
+    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OIIO_CHECK_EQUAL(ops[0]->getInputBitDepth(),  OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(ops[0]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops[1]->getInputBitDepth(),  OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops[1]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+
+    // Test insert.
+
+    OCIO::OpRcPtrVec ops1 = ops.clone();
+
+    OIIO_REQUIRE_EQUAL(ops1.size(), 2);
+    OIIO_CHECK_EQUAL(ops1[0]->getInputBitDepth(),  OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(ops1[0]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops1[1]->getInputBitDepth(),  OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops1[1]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+
+    ops1.insert(ops1.begin()+1, ops.begin(), ops.begin()+1);
+    OIIO_REQUIRE_EQUAL(ops1.size(), 3);
+    OIIO_CHECK_EQUAL(ops1[0]->getInputBitDepth(),  OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(ops1[0]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops1[1]->getInputBitDepth(),  OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops1[1]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops1[2]->getInputBitDepth(),  OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops1[2]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+
+    // Test operator +=.
+
+    OCIO::OpRcPtrVec ops2 = ops.clone();
+
+    OIIO_REQUIRE_EQUAL(ops2.size(), 2);
+    ops2[0]->setInputBitDepth(OCIO::BIT_DEPTH_F32);
+
+    OIIO_CHECK_EQUAL(ops2[0]->getInputBitDepth(),  OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(ops2[0]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops2[1]->getInputBitDepth(),  OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops2[1]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+
+    ops2 += ops2.clone();
+
+    OIIO_REQUIRE_EQUAL(ops2.size(), 4);
+    OIIO_CHECK_EQUAL(ops2[0]->getInputBitDepth(),  OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(ops2[0]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops2[1]->getInputBitDepth(),  OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops2[1]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+    OIIO_CHECK_EQUAL(ops2[2]->getInputBitDepth(),  OCIO::BIT_DEPTH_UINT12);
+    OIIO_CHECK_EQUAL(ops2[2]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops2[3]->getInputBitDepth(),  OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops2[3]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+}
+
+OIIO_ADD_TEST(OpRcPtrVec, bit_depth_with_filenoop)
+{
+    OCIO::OpRcPtrVec ops;
+    auto mat = OCIO::MatrixOpData::CreateDiagonalMatrix(OCIO::BIT_DEPTH_F32,
+                                                        OCIO::BIT_DEPTH_UINT8,
+                                                        255.);
+    OCIO::CreateMatrixOp(ops, mat, OCIO::TRANSFORM_DIR_FORWARD);
+    OIIO_REQUIRE_EQUAL(ops.size(), 1);
+    OIIO_CHECK_EQUAL(ops[0]->getInputBitDepth(),  OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(ops[0]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+
+    OIIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
+    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+
+    auto range = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32,
+                                                     OCIO::BIT_DEPTH_F32,
+                                                     0.0f, 1.0f, 0.5f, 1.5f);
+    OCIO::CreateRangeOp(ops, range, OCIO::TRANSFORM_DIR_FORWARD);
+
+    OIIO_REQUIRE_EQUAL(ops.size(), 3);
+    OIIO_CHECK_EQUAL(ops[0]->getInputBitDepth(),  OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(ops[0]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    // FileNoOp should not change bit-depths.
+    OIIO_CHECK_EQUAL(ops[2]->getInputBitDepth(),  OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops[2]->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
+    OIIO_CHECK_NO_THROW(ops.validate());
+
+    OIIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
+    OIIO_REQUIRE_EQUAL(ops.size(), 4);
+
+    OIIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
+    OIIO_REQUIRE_EQUAL(ops.size(), 5);
+
+    auto mat2 = OCIO::MatrixOpData::CreateDiagonalMatrix(OCIO::BIT_DEPTH_F16,
+                                                        OCIO::BIT_DEPTH_UINT12,
+                                                        4095.);
+    OCIO::CreateMatrixOp(ops, mat2, OCIO::TRANSFORM_DIR_FORWARD);
+
+    OIIO_REQUIRE_EQUAL(ops.size(), 6);
+    OIIO_CHECK_EQUAL(ops[0]->getInputBitDepth(),  OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(ops[0]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    // FileNoOp should not change bit-depths.
+    OIIO_CHECK_EQUAL(ops[2]->getInputBitDepth(),  OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops[2]->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+    // FileNoOp should not change bit-depths.
+    // FileNoOp should not change bit-depths.
+    OIIO_CHECK_EQUAL(ops[5]->getInputBitDepth(),  OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(ops[5]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+
+    OIIO_CHECK_NO_THROW(ops.validate());
+
+    // Remove FileNoOp and adjust the bit-depths.
+
+    OIIO_CHECK_NO_THROW(OptimizeOpVec(ops));
+
+    OIIO_REQUIRE_EQUAL(ops.size(), 3);
+    OIIO_CHECK_EQUAL(ops[0]->getInputBitDepth(),  OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(ops[0]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops[1]->getInputBitDepth(),  OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(ops[1]->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(ops[2]->getInputBitDepth(),  OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(ops[2]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+
+    OIIO_CHECK_NO_THROW(ops.validate());
+
+}
 
 #endif

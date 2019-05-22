@@ -40,25 +40,13 @@ OCIO_NAMESPACE_ENTER
 {
     namespace
     {
-        class NoOp : public OpData
-        {
-        public:
-            NoOp() : OpData(BIT_DEPTH_F32, BIT_DEPTH_F32) { }
-
-            virtual Type getType() const override { return NoOpType; }
-            virtual bool isNoOp() const override { return true; }
-            virtual bool isIdentity() const override { return true; }
-            virtual bool hasChannelCrosstalk() const override { return false; }
-            virtual void finalize() override { m_cacheID = ""; }
-        };
-
         class AllocationNoOp : public Op
         {
         public:
             AllocationNoOp(const AllocationData & allocationData):
                 m_allocationData(allocationData)
             { 
-                data().reset(new NoOp()); 
+                data().reset(new NoOpData()); 
             }
 
             virtual ~AllocationNoOp() {}
@@ -401,7 +389,7 @@ OCIO_NAMESPACE_ENTER
             LookNoOp(const std::string & look):
                 m_look(look)
             { 
-                data().reset(new NoOp()); 
+                data().reset(new NoOpData()); 
             }
 
             virtual ~LookNoOp() {}
