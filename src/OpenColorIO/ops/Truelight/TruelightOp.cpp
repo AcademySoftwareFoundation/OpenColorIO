@@ -61,11 +61,13 @@ OCIO_NAMESPACE_ENTER
                         const char * cubeinput,
                         TransformDirection direction);
             virtual ~TruelightOp();
-            
+
             OpRcPtr clone() const override;
             
             std::string getInfo() const override;
             std::string getCacheID() const override;
+
+            bool isNoOpType() const override { return false; }
             
             bool isNoOp() const override;
             bool isSameType(ConstOpRcPtr & op) const override;
