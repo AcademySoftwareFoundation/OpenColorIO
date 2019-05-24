@@ -47,7 +47,7 @@ void CreateFixedFunctionOp(OpRcPtrVec & ops,
                            FixedFunctionOpData::Style style);
 
 void CreateFixedFunctionOp(OpRcPtrVec & ops,
-                           FixedFunctionOpDataRcPtr funcData,
+                           FixedFunctionOpDataRcPtr & funcData,
                            TransformDirection direction);
 
 }

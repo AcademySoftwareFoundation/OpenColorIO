@@ -400,7 +400,7 @@ void CreateCDLOp(OpRcPtrVec & ops,
 {
     if(cdlData->isNoOp()) return;
 
-    ops.push_back(CDLOpRcPtr(new CDLOp(cdlData, direction)));
+    ops.push_back(std::make_shared<CDLOp>(cdlData, direction));
 }
 
 

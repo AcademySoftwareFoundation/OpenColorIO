@@ -124,8 +124,7 @@ OCIO_NAMESPACE_ENTER
         class ExponentOp : public Op
         {
         public:
-            ExponentOp(const double * exp4,
-                       TransformDirection direction);
+            ExponentOp(const double * exp4);
             ExponentOp(ExponentOpDataRcPtr & exp);
 
             virtual ~ExponentOp();
@@ -155,37 +154,10 @@ OCIO_NAMESPACE_ENTER
         typedef OCIO_SHARED_PTR<ExponentOp> ExponentOpRcPtr;
         typedef OCIO_SHARED_PTR<const ExponentOp> ConstExponentOpRcPtr;
         
-        ExponentOp::ExponentOp(const double * exp4,
-                               TransformDirection direction):
-                               Op()
+        ExponentOp::ExponentOp(const double * exp4)
+            : Op()
         {
-            if(direction == TRANSFORM_DIR_UNKNOWN)
-            {
-                throw Exception("Cannot create ExponentOp with unspecified transform direction.");
-            }
-            
-            if(direction == TRANSFORM_DIR_INVERSE)
-            {
-                double values[4];
-
-                for(int i=0; i<4; ++i)
-                {
-                    if(!IsScalarEqualToZero(exp4[i]))
-                    {
-                        values[i] = 1.0 / exp4[i];
-                    }
-                    else
-                    {
-                        throw Exception("Cannot apply ExponentOp op, Cannot apply 0.0 exponent in the inverse.");
-                    }
-                }
-
-                data().reset(new ExponentOpData(values));
-            }
-            else
-            {
-                data().reset(new ExponentOpData(exp4));
-            }
+            data().reset(new ExponentOpData(exp4));
         }
 
         ExponentOp::ExponentOp(ExponentOpDataRcPtr & exp)
@@ -196,7 +168,7 @@ OCIO_NAMESPACE_ENTER
 
         OpRcPtr ExponentOp::clone() const
         {
-            return std::make_shared<ExponentOp>(expData()->m_exp4, TRANSFORM_DIR_FORWARD);
+            return std::make_shared<ExponentOp>(expData()->m_exp4);
         }
         
         ExponentOp::~ExponentOp()
@@ -252,9 +224,7 @@ OCIO_NAMESPACE_ENTER
 
             if(!IsVecEqualToOne(combined, 4))
             {
-                ops.push_back(
-                    ExponentOpRcPtr(new ExponentOp(combined,
-                        TRANSFORM_DIR_FORWARD)) );
+                ops.push_back(std::make_shared<ExponentOp>(combined) );
             }
         }
 
@@ -314,42 +284,41 @@ OCIO_NAMESPACE_ENTER
                           const double(&vec4)[4],
                           TransformDirection direction)
     {
-        if(IsVecEqualToOne(vec4, 4)) return;
-        ops.push_back( ExponentOpRcPtr(new ExponentOp(vec4, direction)) );
+        ExponentOpDataRcPtr expData = std::make_shared<ExponentOpData>(vec4);
+        CreateExponentOp(ops, expData, direction);
     }
 
     void CreateExponentOp(OpRcPtrVec & ops,
                           ExponentOpDataRcPtr & expData,
                           TransformDirection direction)
     {
-        if (IsVecEqualToOne(expData->m_exp4, 4)) return;
-
-        if (direction == TRANSFORM_DIR_UNKNOWN)
+        if (!IsVecEqualToOne(expData->m_exp4, 4))
         {
-            throw Exception("Cannot create ExponentOp with unspecified transform direction.");
-        }
-        else if (direction == TRANSFORM_DIR_INVERSE)
-        {
-            double values[4];
-
-            for (int i = 0; i<4; ++i)
+            if (direction == TRANSFORM_DIR_UNKNOWN)
             {
-                if (!IsScalarEqualToZero(expData->m_exp4[i]))
-                {
-                    values[i] = 1.0 / expData->m_exp4[i];
-                }
-                else
-                {
-                    throw Exception("Cannot apply ExponentOp op, Cannot apply 0.0 exponent in the inverse.");
-                }
+                throw Exception("Cannot create ExponentOp with unspecified transform direction.");
             }
-
-            ExponentOpDataRcPtr invExp = std::make_shared<ExponentOpData>(values);
-            ops.push_back(ExponentOpRcPtr(new ExponentOp(invExp)));
-        }
-        else
-        {
-            ops.push_back(ExponentOpRcPtr(new ExponentOp(expData)));
+            else if (direction == TRANSFORM_DIR_INVERSE)
+            {
+                double values[4];
+                for (int i = 0; i<4; ++i)
+                {
+                    if (!IsScalarEqualToZero(expData->m_exp4[i]))
+                    {
+                        values[i] = 1.0 / expData->m_exp4[i];
+                    }
+                    else
+                    {
+                        throw Exception("Cannot apply ExponentOp op, Cannot apply 0.0 exponent in the inverse.");
+                    }
+                }
+                ExponentOpDataRcPtr expInv = std::make_shared<ExponentOpData>(values);
+                ops.push_back(std::make_shared<ExponentOp>(expInv));
+            }
+            else
+            {
+                ops.push_back(std::make_shared<ExponentOp>(expData));
+            }
         }
     }
 

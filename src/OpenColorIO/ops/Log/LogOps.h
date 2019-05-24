@@ -42,7 +42,7 @@ OCIO_NAMESPACE_ENTER
     // output = logSlope * log( linSlope * input + linOffset, base ) + logOffset
     // This does not affect alpha.
     // In the forward direction this is lin->log.
-    // All input vectors are size 3 (including base).
+    // All input vectors are size 3 (excluding base).
     
     void CreateLogOp(OpRcPtrVec & ops,
                      double base,

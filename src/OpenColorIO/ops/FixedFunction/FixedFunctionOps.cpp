@@ -193,7 +193,7 @@ void CreateFixedFunctionOp(OpRcPtrVec & ops,
 }
 
 void CreateFixedFunctionOp(OpRcPtrVec & ops, 
-                           FixedFunctionOpDataRcPtr funcData,
+                           FixedFunctionOpDataRcPtr & funcData,
                            TransformDirection direction)
 {
     if(funcData->isNoOp()) return;

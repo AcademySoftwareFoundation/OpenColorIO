@@ -254,9 +254,9 @@ void CreateRangeOp(OpRcPtrVec & ops,
                    double minOutValue, double maxOutValue,
                    TransformDirection direction)
 {
-    RangeOpDataRcPtr rangeData(
-        new RangeOpData(BIT_DEPTH_F32, BIT_DEPTH_F32,
-                        minInValue, maxInValue, minOutValue, maxOutValue));
+    RangeOpDataRcPtr rangeData =
+        std::make_shared<RangeOpData>(BIT_DEPTH_F32, BIT_DEPTH_F32,
+                                      minInValue, maxInValue, minOutValue, maxOutValue);
 
     CreateRangeOp(ops, rangeData, direction);
 }
@@ -265,7 +265,7 @@ void CreateRangeOp(OpRcPtrVec & ops, RangeOpDataRcPtr & rangeData, TransformDire
 {
     if (rangeData->isNoOp()) return;
 
-    ops.push_back(RangeOpRcPtr(new RangeOp(rangeData, direction)));
+    ops.push_back(std::make_shared<RangeOp>(rangeData, direction));
 }
 
 }

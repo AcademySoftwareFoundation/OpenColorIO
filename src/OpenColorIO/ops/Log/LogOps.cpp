@@ -174,6 +174,11 @@ OCIO_NAMESPACE_ENTER
                      LogOpDataRcPtr & logData,
                      TransformDirection direction)
     {
+        if (direction == TRANSFORM_DIR_UNKNOWN)
+        {
+            throw Exception("Cannot create Log op, unspecified transform direction.");
+        }
+
         auto log = logData;
         if (direction == TRANSFORM_DIR_INVERSE)
         {
