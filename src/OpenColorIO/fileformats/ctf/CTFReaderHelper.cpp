@@ -1547,7 +1547,7 @@ void CTFReaderECParamsElt::start(const char ** atts)
     {
         throwMessage("ExposureContrast element: contrast missing.");
     }
-    if (std::isnan(pivot))
+    if (IsNan(pivot))
     {
         throwMessage("ExposureContrast element: pivot missing.");
     }
