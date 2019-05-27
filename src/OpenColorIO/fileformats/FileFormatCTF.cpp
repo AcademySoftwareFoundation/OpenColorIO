@@ -525,7 +525,7 @@ private:
                 pImpl->AddOpReader(CTFReaderOpElt::Lut3DType, name);
             }
             else if (SupportedElement(name, pElt, TAG_MATRIX,
-                                 TAG_PROCESS_LIST, recognizedName))
+                                      TAG_PROCESS_LIST, recognizedName))
             {
                 pImpl->AddOpReader(CTFReaderOpElt::MatrixType, name);
             }
