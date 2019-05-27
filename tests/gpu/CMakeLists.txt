@@ -7,6 +7,7 @@ find_package(GLUT REQUIRED)
 set(SOURCES
 	CDLOps_test.cpp
 	Config_test.cpp
+	ECOps_test.cpp
 	ExpOps_Test.cpp
 	FixedFunctionOps_test.cpp
 	GPUHelpers.cpp

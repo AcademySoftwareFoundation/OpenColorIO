@@ -40,8 +40,8 @@ OCIO_NAMESPACE_ENTER
 {
     void CreateGpuAllocationNoOp(OpRcPtrVec & ops,
                                  const AllocationData & allocationData);
-    
-    
+
+
     // Partition an opvec into 3 segments for GPU Processing
     //
     // gpuLatticeOps need not support analytical gpu shader generation
@@ -49,37 +49,40 @@ OCIO_NAMESPACE_ENTER
     //
     // Additional ops will optinally be inserted to take into account
     // allocation transformations
-    
+
     void PartitionGPUOps(OpRcPtrVec & gpuPreOps,
                          OpRcPtrVec & gpuLatticeOps,
                          OpRcPtrVec & gpuPostOps,
                          const OpRcPtrVec & ops);
-    
+
     void CreateFileNoOp(OpRcPtrVec & ops,
                         const std::string & fname);
-    
+
     void CreateLookNoOp(OpRcPtrVec & ops,
                         const std::string & lookName);
-    
+
+    class NoOpData : public OpData
+    {
+    public:
+        NoOpData() : OpData(BIT_DEPTH_UNKNOWN, BIT_DEPTH_UNKNOWN) { }
+
+        Type getType() const override { return NoOpType; }
+        bool isNoOp() const override { return true; }
+        bool isIdentity() const override { return true; }
+        bool hasChannelCrosstalk() const override { return false; }
+        void finalize() override { m_cacheID = ""; }
+    };
+
     // Need to declare this here in order to allow FileTransform to be able to
     // detect if a ReferenceOpData references itself in a cycle (either
     // directly or indirectly).
-    class FileNoOpData : public OpData
+    class FileNoOpData : public NoOpData
     {
         FileNoOpData() = delete;
     public:
-        FileNoOpData(const std::string & path)
-            : OpData(BIT_DEPTH_UNKNOWN, BIT_DEPTH_UNKNOWN)
-            , m_path(path)
-        {
-        }
-        Type getType() const  override { return NoOpType; };
-        bool isNoOp() const override { return true; };
-        bool isIdentity() const override { return true; };
-        bool hasChannelCrosstalk() const override { return false;  };
-        void finalize() override {};
+        FileNoOpData(const std::string & path) : NoOpData(), m_path(path) { }
 
-        const std::string & getPath() const { return m_path;  }
+        const std::string & getPath() const { return m_path; }
         void setComplete() const { m_complete = true; }
         bool getComplete() const { return m_complete;  }
     private:

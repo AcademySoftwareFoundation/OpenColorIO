@@ -51,6 +51,7 @@ OCIO_NAMESPACE_ENTER
 
             GpuShaderLine& operator<<(const char * str);
             GpuShaderLine& operator<<(float value);
+            GpuShaderLine& operator<<(double value);
             GpuShaderLine& operator<<(unsigned value);
             GpuShaderLine& operator<<(const std::string & str);
             GpuShaderLine& operator=(const GpuShaderLine & rhs);
@@ -116,6 +117,7 @@ OCIO_NAMESPACE_ENTER
                                const std::string& z) const;
         // Get the string for creating constant vector with three elements
         std::string vec3fConst(float v) const;
+        std::string vec3fConst(double v) const;
         // Get the string for creating constant vector with three elements
         std::string vec3fConst(const std::string& v) const;
         // Get the declaration for a vector with three elements
@@ -176,6 +178,8 @@ OCIO_NAMESPACE_ENTER
         std::string sampleTex2D(const std::string& textureName, const std::string& coords) const;
         // Get the texture lookup call for a 3D texture.
         std::string sampleTex3D(const std::string& textureName, const std::string& coords) const;
+
+        void declareUniformFloat(const std::string & uniformName);
 
         //
         // Matrix multiplication helpers

@@ -803,10 +803,7 @@ void ComposeVec(Lut1DOpDataRcPtr & A, const OpRcPtrVec & B)
     CreateScaleOp(ops, iScale4, TRANSFORM_DIR_FORWARD);
 
     // Copy and append B.
-    for(OpRcPtrVec::size_type i=0, size = B.size(); i<size; ++i)
-    {
-        ops.push_back(B[i]);
-    }
+    ops += B;
 
     // Insert an op to compensate for the bitdepth scaling of B.
     //

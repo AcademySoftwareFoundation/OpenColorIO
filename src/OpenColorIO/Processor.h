@@ -58,7 +58,9 @@ OCIO_NAMESPACE_ENTER
         bool hasChannelCrosstalk() const;
         
         ConstProcessorMetadataRcPtr getMetadata() const;
-        
+
+        DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
+
         void apply(ImageDesc& img) const;
         
         void applyRGB(float * pixel) const;

@@ -339,6 +339,42 @@ OCIO_NAMESPACE_ENTER
         return FIXED_FUNCTION_ACES_RED_MOD_03;
     }
 
+    namespace
+    {
+        static constexpr const char * EC_STYLE_VIDEO = "video";
+        static constexpr const char * EC_STYLE_LOGARITHMIC = "log";
+        static constexpr const char * EC_STYLE_LINEAR = "linear";
+    }
+
+    const char * ExposureContrastStyleToString(ExposureContrastStyle style)
+    {
+        switch (style)
+        {
+        case EXPOSURE_CONTRAST_VIDEO:       return EC_STYLE_VIDEO;       break;
+        case EXPOSURE_CONTRAST_LOGARITHMIC: return EC_STYLE_LOGARITHMIC; break;
+        case EXPOSURE_CONTRAST_LINEAR:      return EC_STYLE_LINEAR;      break;
+        }
+
+        // Default style is meaningless.
+        throw Exception("Unknown exposure contrast style");
+        return nullptr;
+    }
+    
+    ExposureContrastStyle ExposureContrastStyleFromString(const char * style)
+    {
+        std::string str = pystring::lower(style);
+
+        if      (str == EC_STYLE_LINEAR)      return EXPOSURE_CONTRAST_LINEAR;
+        else if (str == EC_STYLE_VIDEO)       return EXPOSURE_CONTRAST_VIDEO;
+        else if (str == EC_STYLE_LOGARITHMIC) return EXPOSURE_CONTRAST_LOGARITHMIC;
+
+        // Default style is meaningless.
+        std::stringstream ss;
+        ss << "Unknown exposure contrast style: " << style;
+
+        throw Exception(ss.str().c_str());
+        return EXPOSURE_CONTRAST_LINEAR;
+    }
 
     const char * ROLE_DEFAULT = "default";
     const char * ROLE_REFERENCE = "reference";
