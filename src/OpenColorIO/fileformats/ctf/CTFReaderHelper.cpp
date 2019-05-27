@@ -1163,7 +1163,7 @@ void CTFReaderACESParamsElt::start(const char **atts)
                    " expects only 1 gamma parameter.");
         }
         FixedFunctionOpData::Params params;
-        if (std::isnan(gamma))
+        if (IsNan(gamma))
         {
             ThrowM(*this, "Missing required parameter ", ATTR_GAMMA,
                    "for ACES FixedFunction element with style ",
