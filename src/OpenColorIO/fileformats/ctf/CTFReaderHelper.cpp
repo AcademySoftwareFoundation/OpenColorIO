@@ -1558,7 +1558,7 @@ void CTFReaderECParamsElt::start(const char ** atts)
 
     // Gamma wasn't always part of the spec, therefore it's optional; use the
     // default value if not present.
-    if (!std::isnan(gamma))
+    if (!IsNan(gamma))
     {
         pEC->getExposureContrast()->setGamma(gamma);
     }
