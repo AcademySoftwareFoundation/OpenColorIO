@@ -1543,7 +1543,7 @@ void CTFReaderECParamsElt::start(const char ** atts)
     {
         throwMessage("ExposureContrast element: exposure missing.");
     }
-    if (std::isnan(contrast))
+    if (IsNan(contrast))
     {
         throwMessage("ExposureContrast element: contrast missing.");
     }
