@@ -1539,7 +1539,7 @@ void CTFReaderECParamsElt::start(const char ** atts)
     CTFReaderExposureContrastElt * pEC
         = dynamic_cast<CTFReaderExposureContrastElt*>(getParent().get());
 
-    if (std::isnan(exposure))
+    if (IsNan(exposure))
     {
         throwMessage("ExposureContrast element: exposure missing.");
     }
