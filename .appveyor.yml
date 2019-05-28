@@ -1,6 +1,7 @@
 branches:
-  except:
-    - ci_test
+  only:
+    - master
+    - /RB-.*/
 
 version: '{branch}-{build}'
 image: Visual Studio 2015
