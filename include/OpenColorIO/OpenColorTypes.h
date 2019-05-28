@@ -149,6 +149,12 @@ OCIO_NAMESPACE_ENTER
     //!cpp:type::
     typedef OCIO_SHARED_PTR<DisplayTransform> DisplayTransformRcPtr;
     
+    class OCIOEXPORT DynamicProperty;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const DynamicProperty> ConstDynamicPropertyRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<DynamicProperty> DynamicPropertyRcPtr;
+    
     class OCIOEXPORT ExponentTransform;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<const ExponentTransform> ConstExponentTransformRcPtr;
@@ -161,6 +167,12 @@ OCIO_NAMESPACE_ENTER
     //!cpp:type::
     typedef OCIO_SHARED_PTR<ExponentWithLinearTransform> ExponentWithLinearTransformRcPtr;
     
+    class OCIOEXPORT ExposureContrastTransform;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const ExposureContrastTransform> ConstExposureContrastTransformRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<ExposureContrastTransform> ExposureContrastTransformRcPtr;
+
     class OCIOEXPORT FileTransform;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<const FileTransform> ConstFileTransformRcPtr;
@@ -378,7 +390,28 @@ OCIO_NAMESPACE_ENTER
         FIXED_FUNCTION_ACES_DARK_TO_DIM_10, //! Dark to dim surround correction (ACES 1.0)
         FIXED_FUNCTION_REC2100_SURROUND     //! Rec.2100 surround correction (takes one double for the gamma param)
     };
-    
+
+    //!cpp:type:: Enumeration of the :cpp:class:`ExposureContrastTransform` transform algorithms.
+    enum ExposureContrastStyle
+    {
+        EXPOSURE_CONTRAST_LINEAR,          //! E/C to be applied to a linear space image
+        EXPOSURE_CONTRAST_VIDEO,           //! E/C to be applied to a video space image
+        EXPOSURE_CONTRAST_LOGARITHMIC      //! E/C to be applied to a log space image
+    };
+
+    enum DynamicPropertyType
+    {
+        DYNAMIC_PROPERTY_EXPOSURE, //! Image exposure value (double floating point value)
+        DYNAMIC_PROPERTY_CONTRAST, //! Image contrast value (double floating point value)
+        DYNAMIC_PROPERTY_GAMMA,    //! Image gamma value (double floating point value)
+    };
+
+    enum DynamicPropertyValueType
+    {
+        DYNAMIC_PROPERTY_DOUBLE, //! Value is a double
+        DYNAMIC_PROPERTY_BOOL    //! Value is a bool
+    };
+
     //!rst::
     // Conversion
     // **********
@@ -448,7 +481,12 @@ OCIO_NAMESPACE_ENTER
     //!cpp:function::
     extern OCIOEXPORT FixedFunctionStyle FixedFunctionStyleFromString(const char * style);
     
-    
+    //!cpp:function::
+    extern OCIOEXPORT const char * ExposureContrastStyleToString(ExposureContrastStyle style);
+    //!cpp:function::
+    extern OCIOEXPORT ExposureContrastStyle ExposureContrastStyleFromString(const char * style);
+
+
     /*!rst::
     Roles
     *****

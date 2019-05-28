@@ -854,7 +854,7 @@ void CTFReaderOpElt::start(const char ** atts)
         std::string s(atts[i + 1]);
         boost::algorithm::Trim(s);
         bool bypass = false;
-        if (0 == Foundation::Utils::Strcasecmp(s.c_str(), "true"))
+        if (0 == Platform::Strcasecmp(s.c_str(), "true"))
         {
         bypass = true;
         }
@@ -1013,13 +1013,13 @@ CTFReaderOpEltRcPtr CTFReaderOpElt::GetReader(CTFReaderOpElt::Type type, const C
     // If the version is 1.5 or more, then use GammaElt_1_5
     ADD_DEFAULT_READER(GammaElt_1_5);
     break;
-    }
-    case Color::Op::ExposureContrast:
+    }*/
+    case CTFReaderOpElt::ExposureContrastType:
     {
-    ADD_DEFAULT_READER(ExposureContrastElt);
-    break;
+        ADD_DEFAULT_READER(CTFReaderExposureContrastElt);
+        break;
     }
-    case Color::Op::Log:
+    /*case Color::Op::Log:
     {
     ADD_READER_FOR_VERSIONS_STARTING_AT(LogElt, 1_3);
     break;
@@ -2297,7 +2297,6 @@ void CTFReaderReferenceElt::start(const char **atts)
 
         i += 2;
     }
-
     if (!alias.empty())
     {
         if (!path.empty())
@@ -2335,6 +2334,235 @@ void CTFReaderReferenceElt::end()
 const OpDataRcPtr CTFReaderReferenceElt::getOp() const
 {
     return m_reference;
+}
+
+//////////////////////////////////////////////////////////
+
+CTFReaderExposureContrastElt::CTFReaderExposureContrastElt()
+    : CTFReaderOpElt()
+    , m_ec(std::make_shared<ExposureContrastOpData>())
+{
+}
+
+CTFReaderExposureContrastElt::~CTFReaderExposureContrastElt()
+{
+}
+
+void CTFReaderExposureContrastElt::start(const char ** atts)
+{
+    CTFReaderOpElt::start(atts);
+
+    bool isStyleFound = false;
+
+    unsigned i = 0;
+    while (atts[i])
+    {
+        if (0 == Platform::Strcasecmp(ATTR_EC_STYLE, atts[i]))
+        {
+            ExposureContrastOpData::Style style = ExposureContrastOpData::STYLE_LINEAR;
+            try
+            {
+                style = ExposureContrastOpData::ConvertStringToStyle(atts[i + 1]);
+
+            }
+            catch (Exception& ce)
+            {
+                ThrowM(*this, "ExposureContrast element: ", ce.what());
+            }
+
+            m_ec->setStyle(style);
+            isStyleFound = true;
+        }
+
+        i += 2;
+    }
+    if (!isStyleFound)
+    {
+        throwMessage("ExposureContrast element: style missing.");
+    }
+
+}
+
+void CTFReaderExposureContrastElt::end()
+{
+    CTFReaderOpElt::end();
+
+    // Validate the end result.
+    m_ec->validate();
+}
+
+const OpDataRcPtr CTFReaderExposureContrastElt::getOp() const
+{
+    return m_ec;
+}
+
+CTFReaderECParamsElt::CTFReaderECParamsElt(const std::string & name,
+                                           ContainerEltRcPtr pParent,
+                                           unsigned int xmlLineNumber,
+                                           const std::string & xmlFile)
+    : XmlReaderPlainElt(name, pParent, xmlLineNumber, xmlFile)
+{
+}
+
+CTFReaderECParamsElt::~CTFReaderECParamsElt()
+{
+}
+
+void CTFReaderECParamsElt::start(const char ** atts)
+{
+    // Attributes we want to extract
+    double exposure = std::numeric_limits<double>::quiet_NaN();
+    double contrast = std::numeric_limits<double>::quiet_NaN();
+    double gamma = std::numeric_limits<double>::quiet_NaN();
+    double pivot = std::numeric_limits<double>::quiet_NaN();
+
+    // Try extracting the attributes
+    unsigned i = 0;
+    while (atts[i])
+    {
+        const size_t len = strlen(atts[i + 1]);
+
+        if (0 == Platform::Strcasecmp(ATTR_EXPOSURE, atts[i]))
+        {
+            ParseNumber(atts[i + 1], len, exposure);
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_CONTRAST, atts[i]))
+        {
+            ParseNumber(atts[i + 1], len, contrast);
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_GAMMA, atts[i]))
+        {
+            ParseNumber(atts[i + 1], len, gamma);
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_PIVOT, atts[i]))
+        {
+            ParseNumber(atts[i + 1], len, pivot);
+        }
+
+        i += 2;
+    }
+
+    CTFReaderExposureContrastElt * pEC
+        = dynamic_cast<CTFReaderExposureContrastElt*>(getParent().get());
+
+    if (std::isnan(exposure))
+    {
+        throwMessage("ExposureContrast element: exposure missing.");
+    }
+    if (std::isnan(contrast))
+    {
+        throwMessage("ExposureContrast element: contrast missing.");
+    }
+    if (std::isnan(pivot))
+    {
+        throwMessage("ExposureContrast element: pivot missing.");
+    }
+
+    // Assign the parameters to the object
+    pEC->getExposureContrast()->setExposure(exposure);
+    pEC->getExposureContrast()->setContrast(contrast);
+
+    // Gamma wasn't always part of the spec, therefore it's optional; use the
+    // default value if not present.
+    if (!std::isnan(gamma))
+    {
+        pEC->getExposureContrast()->setGamma(gamma);
+    }
+
+    pEC->getExposureContrast()->setPivot(pivot);
+}
+
+void CTFReaderECParamsElt::end()
+{
+}
+
+void CTFReaderECParamsElt::setRawData(const char * str, size_t len, unsigned int xmlLine)
+{
+}
+
+CTFReaderDynamicParamElt::CTFReaderDynamicParamElt(const std::string & name,
+                                                   ContainerEltRcPtr pParent,
+                                                   unsigned int xmlLineNumber,
+                                                   const std::string & xmlFile)
+    : XmlReaderPlainElt(name, pParent, xmlLineNumber, xmlFile)
+{
+}
+
+CTFReaderDynamicParamElt::~CTFReaderDynamicParamElt()
+{
+}
+
+void CTFReaderDynamicParamElt::start(const char ** atts)
+{
+    ContainerEltRcPtr container = getParent();
+
+    // Try extracting the attributes
+    unsigned i = 0;
+    while (atts[i])
+    {
+        if (0 == Platform::Strcasecmp(ATTR_PARAM, atts[i]))
+        {
+            if (0 == Platform::Strcasecmp(TAG_DYN_PROP_EXPOSURE, atts[i + 1]))
+            {
+                CTFReaderExposureContrastElt* pEC =
+                    dynamic_cast<CTFReaderExposureContrastElt*>(container.get());
+                if (!pEC)
+                {
+                    ThrowM(*this, "Dynamic parameter '", atts[i + 1],
+                           "' is not supported in '",
+                           container->getName().c_str(), "'");
+                }
+
+                ExposureContrastOpDataRcPtr pECOp = pEC->getExposureContrast();
+                pECOp->getExposureProperty()->makeDynamic();
+            }
+            else if (0 == Platform::Strcasecmp(TAG_DYN_PROP_CONTRAST, atts[i + 1]))
+            {
+                CTFReaderExposureContrastElt* pEC =
+                    dynamic_cast<CTFReaderExposureContrastElt*>(container.get());
+                if (!pEC)
+                {
+                    ThrowM(*this, "Dynamic parameter '", atts[i + 1],
+                           "' is not supported in '",
+                           container->getName().c_str(), "'");
+                }
+
+                ExposureContrastOpDataRcPtr pECOp = pEC->getExposureContrast();
+                pECOp->getContrastProperty()->makeDynamic();
+            }
+            else if (0 == Platform::Strcasecmp(TAG_DYN_PROP_GAMMA, atts[i + 1]))
+            {
+                CTFReaderExposureContrastElt* pEC =
+                    dynamic_cast<CTFReaderExposureContrastElt*>(container.get());
+                if (!pEC)
+                {
+                    ThrowM(*this, "Dynamic parameter '", atts[i + 1],
+                           "' is not supported in '",
+                           container->getName().c_str(), "'");
+                }
+
+                ExposureContrastOpDataRcPtr pECOp = pEC->getExposureContrast();
+                pECOp->getGammaProperty()->makeDynamic();
+            }
+            else
+            {
+                ThrowM(*this, "Dynamic parameter '", atts[i + 1],
+                       "' is not valid in '",
+                       container->getName().c_str(), "'");
+            }
+        }
+
+        i += 2;
+    }
+
+}
+
+void CTFReaderDynamicParamElt::end()
+{
+}
+
+void CTFReaderDynamicParamElt::setRawData(const char * str, size_t len, unsigned int xmlLine)
+{
 }
 
 }

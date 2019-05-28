@@ -67,9 +67,6 @@ public:
 
     bool hasChannelCrosstalk() const override;
 
-    void setOutputBitDepth(BitDepth out) override;
-    void setInputBitDepth(BitDepth in) override;
-
     bool operator==(const OpData& other) const override;
 
     virtual void finalize() override;

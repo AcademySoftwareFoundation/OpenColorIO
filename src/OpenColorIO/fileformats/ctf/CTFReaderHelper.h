@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fileformats/ctf/CTFTransform.h"
 #include "ops/OpArray.h"
 #include "ops/CDL/CDLOpData.h"
+#include "ops/exposurecontrast/ExposureContrastOpData.h"
 #include "ops/IndexMapping.h"
 #include "ops/Lut1D/Lut1DOpData.h"
 #include "ops/Lut3D/Lut3DOpData.h"
@@ -350,7 +351,8 @@ public:
         // CTF types
         InvLut1DType,
         InvLut3DType,
-        ReferenceType
+        ReferenceType,
+        ExposureContrastType
     };
 
     CTFReaderOpElt();
@@ -673,7 +675,6 @@ public:
     ~CTFReaderReferenceElt();
 
     void start(const char ** atts) override;
-
     void end() override;
 
     const OpDataRcPtr getOp() const override;
@@ -685,6 +686,57 @@ public:
 
 private:
     ReferenceOpDataRcPtr m_reference;
+};
+
+class CTFReaderExposureContrastElt : public CTFReaderOpElt
+{
+public:
+    CTFReaderExposureContrastElt();
+    ~CTFReaderExposureContrastElt();
+
+    void start(const char ** atts) override;
+    void end() override;
+
+    const OpDataRcPtr getOp() const override;
+
+    const ExposureContrastOpDataRcPtr getExposureContrast() const
+    {
+        return m_ec;
+    }
+
+private:
+    ExposureContrastOpDataRcPtr m_ec;
+};
+
+class CTFReaderECParamsElt : public XmlReaderPlainElt
+{
+public:
+    CTFReaderECParamsElt(const std::string & name,
+                         ContainerEltRcPtr pParent,
+                         unsigned int xmlLineNumber,
+                         const std::string & xmlFile);
+
+    ~CTFReaderECParamsElt();
+
+    void start(const char ** atts) override;
+    void end() override;
+
+    void setRawData(const char * str, size_t len, unsigned int xmlLine) override;
+};
+
+class CTFReaderDynamicParamElt : public XmlReaderPlainElt
+{
+public:
+    CTFReaderDynamicParamElt(const std::string & name,
+                             ContainerEltRcPtr pParent,
+                             unsigned int xmlLineNumber,
+                             const std::string & xmlFile);
+    ~CTFReaderDynamicParamElt();
+
+    void start(const char ** atts) override;
+    void end() override;
+
+    void setRawData(const char * str, size_t len, unsigned int xmlLine) override;
 };
 
 }

@@ -173,6 +173,11 @@ OCIO_NAMESPACE_ENTER
         return getImpl()->getMetadata();
     }
     
+    DynamicPropertyRcPtr Processor::getDynamicProperty(DynamicPropertyType type) const
+    {
+        return getImpl()->getDynamicProperty(type);
+    }
+
     void Processor::apply(ImageDesc& img) const
     {
         getImpl()->apply(img);
@@ -243,12 +248,6 @@ OCIO_NAMESPACE_ENTER
         }
 
 
-        void shallowCopy(OpRcPtrVec & dst, const OpRcPtrVec & src)
-        {
-            std::copy(src.begin(), src.end(), back_inserter(dst));   
-        }
-
-
         OpRcPtrVec create3DLut(const OpRcPtrVec & src, unsigned edgelen)
         {
             if(src.size()==0) return OpRcPtrVec();
@@ -268,10 +267,9 @@ OCIO_NAMESPACE_ENTER
             GenerateIdentityLut3D(&lut3D[0], lut3DEdgeLen, 4, LUT3DORDER_FAST_RED);
             
             // Apply the lattice ops to it
-            const OpRcPtrVec::size_type max = src.size();
-            for(OpRcPtrVec::size_type i=0; i<max; ++i)
+            for(auto & op : src)
             {
-                src[i]->apply(&lut3D[0], &lut3D[0], lut3DNumPixels);
+                op->apply(&lut3D[0], &lut3D[0], lut3DNumPixels);
             }
             
             // Convert the RGBA image to an RGB image, in place.           
@@ -320,6 +318,18 @@ OCIO_NAMESPACE_ENTER
         return m_metadata;
     }
     
+    DynamicPropertyRcPtr Processor::Impl::getDynamicProperty(DynamicPropertyType type) const
+    {
+        for (auto op : m_ops)
+        {
+            if (op->hasDynamicProperty(type))
+            {
+                return op->getDynamicProperty(type);
+            }
+        }
+        throw Exception("Cannot find dynamic property; not used by processor.");
+    }
+
     void Processor::Impl::apply(ImageDesc& img) const
     {
         if(m_ops.empty()) return;
@@ -443,16 +453,16 @@ OCIO_NAMESPACE_ENTER
             LogDebug("GPU Ops: Post-3DLUT");
             FinalizeOpVec(gpuOpsHwPostProcess);
 
-            shallowCopy(gpuOps, gpuOpsHwPreProcess);
-            shallowCopy(gpuOps, gpuLut);
-            shallowCopy(gpuOps, gpuOpsHwPostProcess);
+            gpuOps += gpuOpsHwPreProcess;
+            gpuOps += gpuLut;
+            gpuOps += gpuOpsHwPostProcess;
         }
         else
         {
             // Note: finalize() already finalized & optimized the Op list.
 
             LogDebug("GPU Ops");
-            shallowCopy(gpuOps, m_ops);
+            gpuOps = m_ops;
         }
 
         // Create the shader program information
@@ -502,6 +512,46 @@ OCIO_NAMESPACE_ENTER
         BuildOps(m_ops, config, context, transform, direction);
     }
 
+    namespace
+    {
+        void UnifyDynamicProperty(OpRcPtr op,
+                                  DynamicPropertyImplRcPtr & prop,
+                                  DynamicPropertyType type)
+        {
+            if (op->hasDynamicProperty(type))
+            {
+                if (!prop)
+                {
+                    // Initialize property.
+                    DynamicPropertyRcPtr dp = op->getDynamicProperty(type);
+                    prop = OCIO_DYNAMIC_POINTER_CAST<DynamicPropertyImpl>(dp);
+                }
+                else
+                {
+                    // Share the property.
+                    op->replaceDynamicProperty(type, prop);
+                }
+            }
+        }
+    }
+
+    // This ensures that when a dynamic property on a processor is
+    // modified, all ops that respond to that property (and which
+    // are enabled) are synchronized.
+    void UnifyDynamicProperties(OpRcPtrVec & ops)
+    {
+        DynamicPropertyImplRcPtr dpExposure;
+        DynamicPropertyImplRcPtr dpContrast;
+        DynamicPropertyImplRcPtr dpGamma;
+        for (auto op : ops)
+        {
+            UnifyDynamicProperty(op, dpExposure, DYNAMIC_PROPERTY_EXPOSURE);
+            UnifyDynamicProperty(op, dpContrast, DYNAMIC_PROPERTY_CONTRAST);
+            UnifyDynamicProperty(op, dpGamma, DYNAMIC_PROPERTY_GAMMA);
+        }
+    }
+
+
     void Processor::Impl::finalize()
     {
         AutoMutex lock(m_resultsCacheMutex);
@@ -511,10 +561,70 @@ OCIO_NAMESPACE_ENTER
         {
             op->dumpMetadata(m_metadata);
         }
-        
+
+        // Unify dynamic pointers before rendering ops are created.
+        UnifyDynamicProperties(m_ops);
+
         LogDebug("CPU Ops");
         FinalizeOpVec(m_ops);
     }
 
 }
 OCIO_NAMESPACE_EXIT
+
+////////////////////////////////////////////////////////////////////////////////
+
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+#include "ops/exposurecontrast/ExposureContrastOps.h"
+#include "unittest.h"
+
+OIIO_ADD_TEST(Processor, shared_dynamic_properties)
+{
+    OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_FORWARD;
+    OCIO::ExposureContrastOpDataRcPtr data =
+        std::make_shared<OCIO::ExposureContrastOpData>();
+
+    data->setExposure(1.2);
+    data->setPivot(0.5);
+    data->getExposureProperty()->makeDynamic();
+
+    OCIO::OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
+    OIIO_REQUIRE_EQUAL(ops.size(), 1);
+    OIIO_REQUIRE_ASSERT(ops[0]);
+
+    data = data->clone();
+    data->setExposure(2.2);
+
+    OIIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
+    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OIIO_REQUIRE_ASSERT(ops[1]);
+
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OCIO::ConstOpRcPtr op1 = ops[1];
+
+    auto data0 = OCIO_DYNAMIC_POINTER_CAST<const OCIO::ExposureContrastOpData>(op0->data());
+    auto data1 = OCIO_DYNAMIC_POINTER_CAST<const OCIO::ExposureContrastOpData>(op1->data());
+
+    OCIO::DynamicPropertyImplRcPtr dp0 = data0->getExposureProperty();
+    OCIO::DynamicPropertyImplRcPtr dp1 = data1->getExposureProperty();
+
+    OIIO_CHECK_NE(dp0->getDoubleValue(), dp1->getDoubleValue());
+
+    OCIO::UnifyDynamicProperties(ops);
+
+    OCIO::DynamicPropertyImplRcPtr dp0_post = data0->getExposureProperty();
+    OCIO::DynamicPropertyImplRcPtr dp1_post = data1->getExposureProperty();
+
+    OIIO_CHECK_EQUAL(dp0_post->getDoubleValue(), dp1_post->getDoubleValue());
+
+    // Both share the same pointer.
+    OIIO_CHECK_EQUAL(dp0_post.get(), dp1_post.get());
+
+    // The first pointer is the one that gets shared.
+    OIIO_CHECK_EQUAL(dp0.get(), dp0_post.get());
+}
+
+#endif

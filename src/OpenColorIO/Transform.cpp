@@ -91,6 +91,11 @@ OCIO_NAMESPACE_ENTER
         {
             BuildExponentWithLinearOps(ops, config, *expWithLinearTransform, dir);
         }
+        else if (ConstExposureContrastTransformRcPtr ecTransform = \
+            DynamicPtrCast<const ExposureContrastTransform>(transform))
+        {
+            BuildExposureContrastOps(ops, config, *ecTransform, dir);
+        }
         else if(ConstFixedFunctionTransformRcPtr fixedFunctionTransform = \
             DynamicPtrCast<const FixedFunctionTransform>(transform))
         {
@@ -174,6 +179,11 @@ OCIO_NAMESPACE_ENTER
             dynamic_cast<const ExponentTransform*>(t))
         {
             os << *exponentTransform;
+        }
+        else if (const ExposureContrastTransform * ecTransform = \
+            dynamic_cast<const ExposureContrastTransform*>(t))
+        {
+            os << *ecTransform;
         }
         else if(const FileTransform * fileTransform = \
             dynamic_cast<const FileTransform*>(t))

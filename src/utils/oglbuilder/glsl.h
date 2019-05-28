@@ -49,23 +49,42 @@ class OpenGLBuilder
 {
     struct TextureId
     {
-        unsigned id;
-        std::string name;
-        unsigned type;
+        unsigned m_id = -1;
+        std::string m_name;
+        unsigned m_type = -1;
 
-        TextureId():
-            id(-1),
-            type(-1)
-        {}
-
-        TextureId(unsigned id, const std::string& name, unsigned type):
-            id(id),
-            name(name),
-            type(type)
+        TextureId(unsigned id, const std::string& name, unsigned type)
+            : m_id(id)
+            , m_name(name)
+            , m_type(type)
         {}
     };
 
     typedef std::vector<TextureId> TextureIds;
+
+    // Uniform are used for dynamic parameters.
+    class Uniform
+    {
+    public:
+        Uniform(const std::string & name,
+                DynamicPropertyRcPtr v)
+            : m_name(name)
+            , m_value(v)
+            , m_handle(0)
+        {
+        }
+
+        void setUp(unsigned program);
+
+        void use();
+
+    private:
+        Uniform() = delete;
+        std::string m_name;
+        DynamicPropertyRcPtr m_value;
+        GLuint m_handle;
+    };
+    typedef std::vector<Uniform> Uniforms;
 
 public:
     // Create an OpenGL builder using the GPU shader information from a specific processor
@@ -77,9 +96,12 @@ public:
     inline bool isVerbose() const { return m_verbose; }
 
     // Allocate & upload all the needed textures
-    //  (i.e. the index is the first available index for any kind of textures)
+    //  (i.e. the index is the first available index for any kind of textures).
     void allocateAllTextures(unsigned startIndex);
     void useAllTextures();
+
+    // Update all uniforms.
+    void useAllUniforms();
 
     // Build the complete shader program which includes the OCIO shader program 
     // and the client shader program.
@@ -94,7 +116,11 @@ public:
 protected:
     OpenGLBuilder(const GpuShaderDescRcPtr & gpuShader);
 
+    // Prepare all the needed uniforms.
+    void linkAllUniforms();
+
     void deleteAllTextures();
+    void deleteAllUniforms();
 
 private:
     OpenGLBuilder();
@@ -104,10 +130,11 @@ private:
     const GpuShaderDescRcPtr m_shaderDesc; // Description of the fragment shader to create
     unsigned m_startIndex;                 // Starting index for texture allocations
     TextureIds m_textureIds;               // Texture ids of all needed textures
+    Uniforms m_uniforms;                   // Vector of dynamic parameters
     unsigned m_fragShader;                 // Fragment shader identifier
     unsigned m_program;                    // Program identifier
     std::string m_shaderCacheID;           // Current shader program key
-    bool m_verbose;
+    bool m_verbose;                        // Print shader code to std::cout for debugging purposes
 };
 
 }
