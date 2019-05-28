@@ -2,8 +2,9 @@
 # https://docs.travis-ci.com/user/languages/cpp
 
 branches:
-  except:
-    - ci_test
+  only:
+    - master
+    - /^RB-.*$/
 
 matrix:
   include:
