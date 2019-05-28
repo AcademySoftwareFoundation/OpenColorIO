@@ -1,7 +1,7 @@
 branches:
   only:
     - master
-    - /RB-.*/
+    - /^RB-.*$/
 
 version: '{branch}-{build}'
 image: Visual Studio 2015
