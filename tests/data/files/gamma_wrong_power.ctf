@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="id" version="1.3">
+    <Description>The moncurve style requires a gamma >= 1</Description>
+    <Gamma inBitDepth="16f" outBitDepth="8i" style="moncurveFwd">
+        <GammaParams gamma="0.1" offset="0.0" />
+    </Gamma>
+</ProcessList>

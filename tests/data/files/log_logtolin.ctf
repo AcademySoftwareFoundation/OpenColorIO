@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="1.3" id="b5cc7aed-d405-4d8b-b64b-382b2341a378" name="log example" xmlns="urn:NATAS:ASC:LUT:v0.95">
+   <Description>Example of Log To Lin logarithm operation.</Description>
+   <InputDescriptor>inputDesc</InputDescriptor>
+   <OutputDescriptor>outputDesc</OutputDescriptor>
+   <Log inBitDepth="32f" outBitDepth="32f" style="logToLin">
+      <Description>Log To Lin logarithm operation</Description>
+      <LogParams gamma="0.6" refWhite="685" refBlack="95" highlight="1.0" shadow="0.0005" />
+   </Log>
+</ProcessList>

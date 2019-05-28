@@ -802,61 +802,82 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "unittest.h"
 #include "UnitTestUtils.h"
 
-void LoadTransformFile(const std::string & fileName)
-{
-    const std::string filePath(std::string(OCIO::getTestFilesDir()) + "/"
-                               + fileName);
-    // Create a FileTransform.
-    OCIO::FileTransformRcPtr pFileTransform
-        = OCIO::FileTransform::Create();
-    // A tranform file does not define any interpolation (contrary to config
-    // file), this is to avoid exception when creating the operation.
-    pFileTransform->setInterpolation(OCIO::INTERP_LINEAR);
-    pFileTransform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
-    pFileTransform->setSrc(filePath.c_str());
-
-    // Create empty Config to use.
-    OCIO::ConfigRcPtr pConfig = OCIO::Config::Create();
-
-    // Get the processor corresponding to the transform.
-    OCIO::ConstProcessorRcPtr pProcessor
-        = pConfig->getProcessor(pFileTransform);
-
-}
-
 OIIO_ADD_TEST(FileTransform, LoadFileOK)
 {
+    OCIO::ConstProcessorRcPtr proc;
+
     // Discreet 1D LUT.
     const std::string discreetLut("logtolin_8to8.lut");
-    OIIO_CHECK_NO_THROW(LoadTransformFile(discreetLut));
+    OIIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(discreetLut));
+    OIIO_CHECK_ASSERT(!proc->isNoOp());
 
     // Houdini 1D LUT.
     const std::string houdiniLut("houdini.lut");
-    OIIO_CHECK_NO_THROW(LoadTransformFile(houdiniLut));
+    OIIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(houdiniLut));
+    OIIO_CHECK_ASSERT(!proc->isNoOp());
 
     // Discreet 3D LUT file.
     const std::string discree3DtLut("discreet-3d-lut.3dl");
-    OIIO_CHECK_NO_THROW(LoadTransformFile(discree3DtLut));
+    OIIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(discree3DtLut));
+    OIIO_CHECK_ASSERT(!proc->isNoOp());
 
     // 3D LUT file.
     const std::string crosstalk3DtLut("crosstalk.3dl");
-    OIIO_CHECK_NO_THROW(LoadTransformFile(crosstalk3DtLut));
+    OIIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(crosstalk3DtLut));
+    OIIO_CHECK_ASSERT(!proc->isNoOp());
 
     // Lustre 3D LUT file.
     const std::string lustre3DtLut("lustre_33x33x33.3dl");
-    OIIO_CHECK_NO_THROW(LoadTransformFile(lustre3DtLut));
+    OIIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(lustre3DtLut));
+    OIIO_CHECK_ASSERT(!proc->isNoOp());
 
     // Autodesk color transform format.
     const std::string ctfTransform("matrix_example4x4.ctf");
-    OIIO_CHECK_NO_THROW(LoadTransformFile(ctfTransform));
+    OIIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(ctfTransform));
+    OIIO_CHECK_ASSERT(!proc->isNoOp());
 
     // Academy/ASC common LUT format.
     const std::string clfRangeTransform("range.clf");
-    OIIO_CHECK_NO_THROW(LoadTransformFile(clfRangeTransform));
-    
+    OIIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(clfRangeTransform));
+    OIIO_CHECK_ASSERT(!proc->isNoOp());
+
     // Academy/ASC common LUT format.
     const std::string clfMatTransform("matrix_example.clf");
-    OIIO_CHECK_NO_THROW(LoadTransformFile(clfMatTransform));
+    OIIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(clfMatTransform));
+    OIIO_CHECK_ASSERT(!proc->isNoOp());
+
+    // Test other types of CLF/CTF elements.
+    const std::string clfCdlTransform("cdl_clamp_fwd.clf");
+    OIIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(clfCdlTransform));
+    OIIO_CHECK_ASSERT(!proc->isNoOp());
+
+    const std::string clfLut1Transform("lut1d_example.clf");
+    OIIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(clfLut1Transform));
+    OIIO_CHECK_ASSERT(!proc->isNoOp());
+
+    const std::string clfLut3Transform("lut3d_2x2x2_32f_32f.clf");
+    OIIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(clfLut3Transform));
+    OIIO_CHECK_ASSERT(!proc->isNoOp());
+
+    const std::string ctFFfTransform("ff_aces_redmod.ctf");
+    OIIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(ctFFfTransform));
+    OIIO_CHECK_ASSERT(!proc->isNoOp());
+
+    const std::string ctfGammaTransform("gamma_test1.ctf");
+    OIIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(ctfGammaTransform));
+    OIIO_CHECK_ASSERT(!proc->isNoOp());
+
+    const std::string ctfLogTransform("log_logtolin.ctf");
+    OIIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(ctfLogTransform));
+    OIIO_CHECK_ASSERT(!proc->isNoOp());
+
+    const std::string ctfInvLut1Transform("lut1d_inv.ctf");
+    OIIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(ctfInvLut1Transform));
+    OIIO_CHECK_ASSERT(!proc->isNoOp());
+
+    const std::string ctfInvLut3Transform("lut3d_example_Inv.ctf");
+    OIIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(ctfInvLut3Transform));
+    OIIO_CHECK_ASSERT(!proc->isNoOp());
 }
 
 OIIO_ADD_TEST(FileTransform, LoadFileFail)
@@ -866,24 +887,24 @@ OIIO_ADD_TEST(FileTransform, LoadFileFail)
     // Test that they are correctly recognized as unreadable.
     {
         const std::string lustreOldLut("legacy_slog_to_log_v3_lustre.lut");
-        OIIO_CHECK_THROW_WHAT(LoadTransformFile(lustreOldLut),
+        OIIO_CHECK_THROW_WHAT(OCIO::GetFileTransformProcessor(lustreOldLut),
                               OCIO::Exception, "could not be loaded");
     }
 
     {
         const std::string lustreOldLut("legacy_flmlk_desat.lut");
-        OIIO_CHECK_THROW_WHAT(LoadTransformFile(lustreOldLut),
+        OIIO_CHECK_THROW_WHAT(OCIO::GetFileTransformProcessor(lustreOldLut),
                               OCIO::Exception, "could not be loaded");
     }
 
     // Invalid file.
     const std::string unKnown("error_unknown_format.txt");
-    OIIO_CHECK_THROW_WHAT(LoadTransformFile(unKnown),
+    OIIO_CHECK_THROW_WHAT(OCIO::GetFileTransformProcessor(unKnown),
                           OCIO::Exception, "could not be loaded");
 
     // Missing file.
     const std::string missing("missing.file");
-    OIIO_CHECK_THROW_WHAT(LoadTransformFile(missing),
+    OIIO_CHECK_THROW_WHAT(OCIO::GetFileTransformProcessor(missing),
                           OCIO::Exception, "could not be located");
 }
 
