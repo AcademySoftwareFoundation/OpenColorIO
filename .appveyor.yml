@@ -1,3 +1,7 @@
+branches:
+  except:
+    - ci_test
+
 version: '{branch}-{build}'
 image: Visual Studio 2015
 clone_folder: C:\source\ocio
