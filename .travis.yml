@@ -1,6 +1,10 @@
 # travis-ci.org build file
 # https://docs.travis-ci.com/user/languages/cpp
 
+branches:
+  except:
+    - ci_test
+
 matrix:
   include:
     - os: linux
