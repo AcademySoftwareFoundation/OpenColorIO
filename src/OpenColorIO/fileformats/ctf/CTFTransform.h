@@ -130,12 +130,12 @@ static const CTFVersion CTF_PROCESS_LIST_VERSION_1_7 = CTFVersion(1, 7);
 // Version 1.8 2017-10 adds Function op as a valid element in CTF files.
 static const CTFVersion CTF_PROCESS_LIST_VERSION_1_8 = CTFVersion(1, 8);
 
-// TODO: follow CTF format changes.
-// static const CTFVersion CTF_PROCESS_LIST_VERSION_1_9 = CTFVersion(1, 9);
+// TODO: Version 2.0 (TBD) sync with OCIO and incorporate CLF v3 changes.
+static const CTFVersion CTF_PROCESS_LIST_VERSION_2_0 = CTFVersion(2, 0);
 
 // Add new version before this line
 // and do not forget to update the following line.
-static const CTFVersion CTF_PROCESS_LIST_VERSION = CTF_PROCESS_LIST_VERSION_1_8;
+static const CTFVersion CTF_PROCESS_LIST_VERSION = CTF_PROCESS_LIST_VERSION_2_0;
 
 
 // Version 1.0 initial Autodesk version for InfoElt.

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="none" version="2">
+    <FixedFunction inBitDepth="32f" outBitDepth="32f" style="Rec2100Surround" params="0.8" />
+</ProcessList>

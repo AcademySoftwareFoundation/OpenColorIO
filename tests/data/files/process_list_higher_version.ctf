@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ProcessList version="2" id="b5cc7aed-d405-4d8b-b64b-382b2341a378" name="matrix example" xmlns="urn:NATAS:ASC:LUT:v0.95">
+<ProcessList version="42" id="b5cc7aed-d405-4d8b-b64b-382b2341a378" name="matrix example" xmlns="urn:NATAS:ASC:LUT:v0.95">
     <Description>Convert output-referred XYZ values to linear RGB.</Description>
     <InputDescriptor>XYZ</InputDescriptor>
     <OutputDescriptor>RGB</OutputDescriptor>

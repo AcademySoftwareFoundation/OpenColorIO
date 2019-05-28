@@ -42,15 +42,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
-    void CreateGammaOp(OpRcPtrVec & ops, 
-                       GammaOpDataRcPtr & gammaData);
-
     void CreateGammaOp(OpRcPtrVec & ops,
                        const std::string & id,
                        const OpData::Descriptions & descr,
                        GammaOpData::Style style,
                        const double * gamma4,
                        const double * offset4);
+
+    void CreateGammaOp(OpRcPtrVec & ops, 
+                       GammaOpDataRcPtr & gammaData,
+                       TransformDirection direction);
+
 }
 OCIO_NAMESPACE_EXIT
 
