@@ -1,0 +1,14 @@
+# azure-pipelines template file
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/process/templates?view=azure-devops
+
+# Note: This is currently Linux only
+
+steps:
+- bash: build-wrapper-linux-x86-64 --out-dir bw_output make clean all
+  workingDirectory: _build
+  displayName: Build OCIO with build-wrapper
+
+- bash: sonar-scanner -X -Dsonar.login=$SONAR_TOKEN
+  env:
+    SONAR_TOKEN: $(tokens.sonarCloud)
+  displayName: Run sonar-scanner

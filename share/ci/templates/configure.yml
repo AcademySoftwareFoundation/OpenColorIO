@@ -1,0 +1,43 @@
+# azure-pipelines template file
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/process/templates?view=azure-devops
+
+parameters:
+  buildType: Release
+  buildSharedLibs: ON
+  buildTests: ON
+  buildGpuTests: OFF
+  buildDocs: ON
+  verbose: OFF
+  compiler: ''
+  cxxFlags: ''
+  cmakeOpts: ''
+
+steps:
+- checkout: self
+  clean: true
+  fetchDepth: 50
+  displayName: Checkout OCIO source
+
+- bash: |
+    mkdir _build
+    mkdir _install
+
+    if [ "$COMPILER" ]; then
+        export CXX="$COMPILER"
+    fi
+  displayName: Setup environment
+
+- bash: |
+    cmake -DCMAKE_INSTALL_PREFIX=../_install \
+          -DCMAKE_BUILD_TYPE=${{ parameters.buildType }} \
+          -DCMAKE_CXX_FLAGS="${{ parameters.cxxFlags }}" \
+          -DCMAKE_VERBOSE_MAKEFILE:BOOL=${{ parameters.verbose }} \
+          -DBUILD_SHARED_LIBS=${{ parameters.buildSharedLibs }} \
+          -DOCIO_BUILD_TESTS=${{ parameters.buildTests }} \
+          -DOCIO_BUILD_GPU_TESTS=${{ parameters.buildGpuTests }} \
+          -DOCIO_BUILD_DOCS=${{ parameters.buildDocs }} \
+          -DOCIO_WARNING_AS_ERROR=ON \
+          ${{ parameters.cmakeOpts }} \
+          ../.
+  workingDirectory: _build
+  displayName: Configure OCIO

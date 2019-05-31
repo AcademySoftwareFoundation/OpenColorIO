@@ -1,0 +1,7 @@
+# azure-pipelines template file
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/process/templates?view=azure-devops
+
+steps:
+- bash: ctest -V
+  workingDirectory: _build
+  displayName: Test OCIO

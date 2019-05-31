@@ -1,0 +1,141 @@
+# azure-pipelines build file
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=azure-devops&tabs=schema
+
+# TODO: Add gh-pages deployment on tag trigger
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - master
+    - RB-*
+    - ci_test
+
+pr:
+  autoCancel: true
+  branches:
+    include:
+    - master
+    - RB-*
+
+# Common variables
+variables:
+  cxxStd: '11'
+  nixCxxFlags: -std=c++$(cxxStd) -fPIC
+
+jobs:
+
+# ------------------------------------------------------------------------------
+# Linux
+# ------------------------------------------------------------------------------
+# TODO: Move Docker images to ASWF DockerHub account
+
+- job: Linux
+  strategy:
+    matrix:
+      Ubuntu 18.04 (VFX CY2020):
+        agentImage: 'ubuntu-16.04'
+        containerImage: michdolan/ubuntu18.04_vfx2020:latest
+        compiler: g++
+        cxxFlags: ''
+      Ubuntu 18.04 (VFX CY2019):
+        agentImage: 'ubuntu-16.04'
+        containerImage: michdolan/ubuntu18.04_vfx2019:latest
+        compiler: g++
+        cxxFlags: ''
+      Ubuntu 18.04 (Clang):
+        agentImage: 'ubuntu-16.04'
+        containerImage: michdolan/ubuntu18.04_vfx2019:latest
+        compiler: clang++
+        cxxFlags: -Wno-deprecated-register
+  pool:
+    vmImage: $(agentImage)
+  container: $[ variables['containerImage'] ]
+
+  steps:
+  - template: share/ci/templates/configure.yml
+    parameters:
+      compiler: $(compiler)
+      cxxFlags: $(nixCxxFlags) $(cxxFlags)
+  - template: share/ci/templates/build.yml
+  - template: share/ci/templates/test.yml
+
+# --------------------------
+# SonarCloud static analysis
+# --------------------------
+- job: SonarCloud
+  displayName: SonarCloud Ubuntu 18.04 (VFX CY2019)
+  condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
+  pool:
+    vmImage: 'ubuntu-16.04'
+  container: michdolan/ubuntu18.04_vfx2019:latest
+
+  steps:
+  - template: share/ci/templates/configure.yml
+    parameters:
+      cxxFlags: $(nixCxxFlags)
+  - template: share/ci/templates/build_sonar.yml
+  - template: share/ci/templates/test.yml
+
+# ------------------------------------------------------------------------------
+# macOS
+# ------------------------------------------------------------------------------
+- job: macOS
+  strategy:
+    matrix:
+      10.14 AppleClang 10.0:
+        agentImage: 'macOS-10.14'
+  pool:
+    vmImage: $(agentImage)
+  
+  steps:
+  - bash: ci/scripts/install_macos.sh 2.7.16
+    displayName: Install dependencies
+
+  - template: share/ci/templates/configure.yml
+    parameters:
+      cxxFlags: $(nixCxxFlags) -Wno-deprecated-register
+      cmakeOpts: |
+        -DPYTHON_INCLUDE_DIR=$(python-config --prefix)/include/python2.7 \
+        -DPYTHON_LIBRARY=$(python-config --prefix)/lib/libpython2.7.dylib \
+        -DPYTHON_EXECUTABLE=$(which python2)
+
+  - template: share/ci/templates/build.yml
+  - template: share/ci/templates/test.yml
+
+# ------------------------------------------------------------------------------
+# Windows
+# ------------------------------------------------------------------------------
+- job: Windows
+  strategy:
+    matrix:
+      2016 MSVC 14.16:
+        agentImage: 'vs2017-win2016'
+        buildSharedLibs: ON
+        buildDocs: ON
+      2016 MSVC 14.16 (Static):
+        agentImage: 'vs2017-win2016'
+        buildSharedLibs: OFF
+        buildDocs: OFF
+  pool:
+    vmImage: $(agentImage)
+
+  steps:
+  - task: UsePythonVersion@0
+    # Note: This provides a static Python lib only
+    inputs:
+      versionSpec: '2.7'
+    displayName: Configure Python
+
+  - template: share/ci/templates/configure.yml
+    parameters:
+      buildSharedLibs: $(buildSharedLibs)
+      buildDocs: $(buildDocs)
+      cxxFlags: /std:c++$(cxxStd) /EHsc /D WIN32 /D NDEBUG
+      verbose: ON
+      cmakeOpts: |
+        -DCMAKE_GENERATOR_PLATFORM=x64 \
+        -DPYTHON_EXECUTABLE=$(which python)
+
+  - template: share/ci/templates/build.yml
+  - template: share/ci/templates/test.yml

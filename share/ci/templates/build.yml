@@ -1,0 +1,14 @@
+# azure-pipelines template file
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/process/templates?view=azure-devops
+
+parameters:
+  buildType: Release
+
+steps:
+- bash: |
+    cmake --build . \
+          --target install \
+          --config ${{ parameters.buildType }} \
+          -- -j2
+  workingDirectory: _build
+  displayName: Build OCIO
