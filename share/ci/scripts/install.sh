@@ -12,8 +12,8 @@ apt-get -y upgrade
 RUN apt-get -y git
 RUN apt-get -y wget
 RUN apt-get -y unzip
-RUN apt-get -y g++-$(GCC_VERSION)
-RUN apt-get -y clang-$(CLANG_VERSION)
+RUN apt-get -y g++-${GCC_VERSION}
+RUN apt-get -y clang-${CLANG_VERSION}
 RUN apt-get -y python${PYTHON_VERSION}
 RUN apt-get -y python${PYTHON_VERSION}-dev
 RUN apt-get -y python-pip
