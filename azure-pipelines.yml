@@ -89,7 +89,7 @@ jobs:
     vmImage: $(agentImage)
   
   steps:
-  - bash: ci/scripts/install_macos.sh 2.7.16
+  - bash: share/ci/scripts/install_macos.sh 2.7.16
     displayName: Install dependencies
 
   - template: share/ci/templates/configure.yml
