@@ -33,17 +33,17 @@ jobs:
 - job: Linux
   strategy:
     matrix:
-      Ubuntu 18.04 (VFX CY2020):
+      Ubuntu 18.04 VFX CY2020:
         agentImage: 'ubuntu-16.04'
         containerImage: michdolan/ubuntu18.04_vfx2020:latest
         compiler: g++
         cxxFlags: ''
-      Ubuntu 18.04 (VFX CY2019):
+      Ubuntu 18.04 VFX CY2019:
         agentImage: 'ubuntu-16.04'
         containerImage: michdolan/ubuntu18.04_vfx2019:latest
         compiler: g++
         cxxFlags: ''
-      Ubuntu 18.04 (Clang):
+      Ubuntu 18.04 Clang 6.0:
         agentImage: 'ubuntu-16.04'
         containerImage: michdolan/ubuntu18.04_vfx2019:latest
         compiler: clang++
@@ -64,7 +64,7 @@ jobs:
 # SonarCloud static analysis
 # --------------------------
 - job: SonarCloud
-  displayName: SonarCloud Ubuntu 18.04 (VFX CY2019)
+  displayName: SonarCloud Ubuntu 18.04 VFX CY2019
   condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
   pool:
     vmImage: 'ubuntu-16.04'
@@ -113,7 +113,7 @@ jobs:
         agentImage: 'vs2017-win2016'
         buildSharedLibs: ON
         buildDocs: ON
-      2016 MSVC 14.16 (Static):
+      2016 MSVC 14.16 Static:
         agentImage: 'vs2017-win2016'
         buildSharedLibs: OFF
         buildDocs: OFF
