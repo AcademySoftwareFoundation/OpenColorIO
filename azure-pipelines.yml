@@ -20,7 +20,7 @@ pr:
 
 # Common variables
 variables:
-  cxxStd: '11'
+  cxxStd: 11
   nixCxxFlags: -std=c++$(cxxStd) -fPIC
 
 jobs:
