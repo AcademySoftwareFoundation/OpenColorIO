@@ -12,3 +12,5 @@ steps:
           -- -j2
   workingDirectory: _build
   displayName: Build OCIO
+
+- template: share/ci/templates/test.yml

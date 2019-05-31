@@ -8,6 +8,11 @@ steps:
   workingDirectory: _build
   displayName: Build OCIO with build-wrapper
 
+- template: share/ci/templates/test.yml
+
+- bash: share/ci/scripts/run_gcov.sh
+  displayName: Generate code coverage report
+
 - bash: sonar-scanner -X -Dsonar.login=$SONAR_TOKEN
   env:
     SONAR_TOKEN: $(tokens.sonarCloud)

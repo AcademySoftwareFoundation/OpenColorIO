@@ -57,8 +57,8 @@ jobs:
     parameters:
       compiler: $(compiler)
       cxxFlags: $(nixCxxFlags) $(cxxFlags)
+
   - template: share/ci/templates/build.yml
-  - template: share/ci/templates/test.yml
 
 # --------------------------
 # SonarCloud static analysis
@@ -73,9 +73,12 @@ jobs:
   steps:
   - template: share/ci/templates/configure.yml
     parameters:
-      cxxFlags: $(nixCxxFlags)
+      cxxFlags: $(nixCxxFlags) -g -O0 -fprofile-arcs -ftest-coverage
+      cmakeOpts: |
+        -DCMAKE_EXE_LINKER_FLAGS="-lgcov" \
+        -DCMAKE_CXX_OUTPUT_EXTENSION_REPLACE=ON
+
   - template: share/ci/templates/build_sonar.yml
-  - template: share/ci/templates/test.yml
 
 # ------------------------------------------------------------------------------
 # macOS
@@ -101,7 +104,6 @@ jobs:
         -DPYTHON_EXECUTABLE=$(which python2)
 
   - template: share/ci/templates/build.yml
-  - template: share/ci/templates/test.yml
 
 # ------------------------------------------------------------------------------
 # Windows
@@ -138,5 +140,3 @@ jobs:
         -DPYTHON_EXECUTABLE=$(which python)
 
   - template: share/ci/templates/build.yml
-  - template: share/ci/templates/test.yml
-
