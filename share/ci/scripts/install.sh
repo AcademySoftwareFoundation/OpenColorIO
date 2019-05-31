@@ -9,34 +9,28 @@ PYTHON_VERSION="$3"
 apt-get update
 apt-get -y upgrade
 
-RUN apt-get -y git
-RUN apt-get -y wget
-RUN apt-get -y unzip
-RUN apt-get -y g++-${GCC_VERSION}
-RUN apt-get -y clang-${CLANG_VERSION}
-RUN apt-get -y python${PYTHON_VERSION}
-RUN apt-get -y python${PYTHON_VERSION}-dev
-RUN apt-get -y python-pip
-RUN apt-get -y libgl1-mesa-dev
-RUN apt-get -y freeglut3-dev
-RUN apt-get -y libglew-dev
-RUN apt-get -y libxmu-dev
-RUN apt-get -y libxi-dev
-RUN apt-get -y zlib1g-dev
-RUN apt-get -y bzip2
-RUN apt-get -y libbz2-dev
-RUN apt-get -y libjpeg-turbo8-dev
-RUN apt-get -y libpng-dev
-RUN apt-get -y libtiff-dev
-
-update-alternatives --remove-all gcc
-update-alternatives --remove-all g++
+apt-get install -y git
+apt-get install -y wget
+apt-get install -y unzip
+apt-get install -y g++-${GCC_VERSION}
+apt-get install -y clang-${CLANG_VERSION}
+apt-get install -y python${PYTHON_VERSION}
+apt-get install -y python${PYTHON_VERSION}-dev
+apt-get install -y python-pip
+apt-get install -y libgl1-mesa-dev
+apt-get install -y freeglut3-dev
+apt-get install -y libglew-dev
+apt-get install -y libxmu-dev
+apt-get install -y libxi-dev
+apt-get install -y zlib1g-dev
+apt-get install -y bzip2
+apt-get install -y libbz2-dev
+apt-get install -y libjpeg-turbo8-dev
+apt-get install -y libpng-dev
+apt-get install -y libtiff-dev
 
 update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_VERSION} 100 \
                     --slave /usr/bin/g++ g++ /usr/bin/g++-${GCC_VERSION}
-
-update-alternatives --remove-all clang
-update-alternatives --remove-all clang++
 
 update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${CLANG_VERSION} 100 \
                     --slave /usr/bin/clang++ clang++ /usr/bin/clang++-${CLANG_VERSION}

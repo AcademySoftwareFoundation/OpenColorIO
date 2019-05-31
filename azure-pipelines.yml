@@ -20,7 +20,7 @@ pr:
 
 # Common variables
 variables:
-  cxxStd: 11
+  cxxStd: 14
   nixCxxFlags: -std=c++$(cxxStd) -fPIC
 
 jobs:
@@ -35,17 +35,17 @@ jobs:
     matrix:
       Ubuntu 18.04 VFX CY2020:
         agentImage: 'ubuntu-16.04'
-        containerImage: michdolan/ubuntu18.04_vfx2020:latest
+        containerImage: michdolan/ubuntu18.04:vfx2020_py27
         compiler: g++
         cxxFlags: ''
       Ubuntu 18.04 VFX CY2019:
         agentImage: 'ubuntu-16.04'
-        containerImage: michdolan/ubuntu18.04_vfx2019:latest
+        containerImage: michdolan/ubuntu18.04:vfx2019
         compiler: g++
         cxxFlags: ''
       Ubuntu 18.04 Clang 6.0:
         agentImage: 'ubuntu-16.04'
-        containerImage: michdolan/ubuntu18.04_vfx2019:latest
+        containerImage: michdolan/ubuntu18.04:vfx2019
         compiler: clang++
         cxxFlags: -Wno-deprecated-register
   pool:
@@ -68,7 +68,7 @@ jobs:
   condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
   pool:
     vmImage: 'ubuntu-16.04'
-  container: michdolan/ubuntu18.04_vfx2019:latest
+    container: michdolan/ubuntu18.04:vfx2019
 
   steps:
   - template: share/ci/templates/configure.yml
@@ -139,3 +139,4 @@ jobs:
 
   - template: share/ci/templates/build.yml
   - template: share/ci/templates/test.yml
+
