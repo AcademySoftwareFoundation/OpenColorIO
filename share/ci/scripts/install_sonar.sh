@@ -17,8 +17,8 @@ wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scann
 unzip sonar-scanner-cli-${SONAR_VERSION}-linux.zip
 mv sonar-scanner-${SONAR_VERSION}-linux /var/opt/.
 
-export PATH="/var/opt/sonar-scanner-${SONAR_VER}-linux/bin:${PATH}"
-export SONAR_RUNNER_HOME="/var/opt/sonar-scanner-${SONAR_VER}-linux"
+export PATH="/var/opt/sonar-scanner-${SONAR_VERSION}-linux/bin:${PATH}"
+export SONAR_RUNNER_HOME="/var/opt/sonar-scanner-${SONAR_VERSION}-linux"
 
 cd ..
 rm -rf _sonar
