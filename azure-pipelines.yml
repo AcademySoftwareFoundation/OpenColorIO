@@ -36,29 +36,38 @@ jobs:
       Ubuntu 18.04 VFX CY2020:
         agentImage: 'ubuntu-16.04'
         containerImage: michdolan/ubuntu18.04:vfx2020_py27
-        compiler: g++
         cxxFlags: ''
+        cxxCompiler: g++
+        cCompiler: gcc
       Ubuntu 18.04 VFX CY2019:
         agentImage: 'ubuntu-16.04'
         containerImage: michdolan/ubuntu18.04:vfx2019
-        compiler: g++
         cxxFlags: ''
+        cxxCompiler: g++
+        cCompiler: gcc
       Ubuntu 18.04 Clang 6.0:
         agentImage: 'ubuntu-16.04'
         containerImage: michdolan/ubuntu18.04:vfx2019
-        compiler: clang++
         cxxFlags: -Wno-deprecated-register
+        cxxCompiler: clang++
+        cCompiler: clang
   pool:
     vmImage: $(agentImage)
   container: $[ variables['containerImage'] ]
 
   steps:
+  - template: share/ci/templates/checkout.yml
   - template: share/ci/templates/configure.yml
     parameters:
-      compiler: $(compiler)
       cxxFlags: $(nixCxxFlags) $(cxxFlags)
+      cxxCompiler: $(cxxCompiler)
+      cCompiler: $(cCompiler)
 
   - template: share/ci/templates/build.yml
+    parameters:
+      cxxCompiler: $(cxxCompiler)
+      cCompiler: $(cCompiler)
+      cmakeOpts: -- -j2
 
 # --------------------------
 # SonarCloud static analysis
@@ -71,6 +80,7 @@ jobs:
   container: michdolan/ubuntu18.04:vfx2019
 
   steps:
+  - template: share/ci/templates/checkout.yml
   - template: share/ci/templates/configure.yml
     parameters:
       cxxFlags: $(nixCxxFlags) -g -O0 -fprofile-arcs -ftest-coverage
@@ -92,6 +102,7 @@ jobs:
     vmImage: $(agentImage)
   
   steps:
+  - template: share/ci/templates/checkout.yml
   - bash: share/ci/scripts/install_macos.sh 2.7.16
     displayName: Install dependencies
 
@@ -104,6 +115,8 @@ jobs:
         -DPYTHON_EXECUTABLE=$(which python2)
 
   - template: share/ci/templates/build.yml
+    parameters:
+      cmakeOpts: -- -j2
 
 # ------------------------------------------------------------------------------
 # Windows
@@ -129,6 +142,7 @@ jobs:
       versionSpec: '2.7'
     displayName: Configure Python
 
+  - template: share/ci/templates/checkout.yml
   - template: share/ci/templates/configure.yml
     parameters:
       buildSharedLibs: $(buildSharedLibs)

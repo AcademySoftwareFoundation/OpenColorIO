@@ -10,7 +10,7 @@ MACOS_MINOR="$(sw_vers -productVersion | cut -f 2 -d .)"
 # This workaround is needed for building Python on macOS >= 10.14:
 #   https://developer.apple.com/documentation/xcode_release_notes/xcode_10_release_notes
 
-if [[ "$MACOS_MAJOR" -gt 9 ] && [ "$MACOS_MINOR" -gt 13 ]]; then
+if [[ "$MACOS_MAJOR" -gt 9 && "$MACOS_MINOR" -gt 13 ]]; then
     sudo installer \
         -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_${MACOS_MAJOR}.${MACOS_MINOR}.pkg \
         -target /
