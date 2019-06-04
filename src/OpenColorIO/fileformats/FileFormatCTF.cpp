@@ -160,6 +160,9 @@ void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
 class XMLParserHelper
 {
 public:
+    XMLParserHelper() = delete;
+    XMLParserHelper(const XMLParserHelper &) = delete;
+
     XMLParserHelper(const std::string & fileName)
         : m_parser(XML_ParserCreate(nullptr))
         , m_fileName(fileName)
@@ -310,8 +313,6 @@ private:
         os << ". At line (" << m_lineNumber << ")";
         throw Exception(os.str().c_str());
     }
-
-    XMLParserHelper() = delete;
 
     // Determines if the element name is supported in the current context.
     static bool SupportedElement(const char * name,

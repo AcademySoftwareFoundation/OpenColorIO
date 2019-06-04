@@ -59,12 +59,18 @@ OCIO_NAMESPACE_ENTER
 
     /** Automatically acquire and release lock within enclosing scope. */
     template <class T>
-    class AutoLock {
+    class AutoLock
+    {
     public:
-	AutoLock(T& m) : _m(m) { _m.lock(); }
-	~AutoLock()            { _m.unlock(); }
+        AutoLock() = delete;
+        AutoLock & operator=(const AutoLock &) = delete;
+        AutoLock & operator=(AutoLock &&) = delete;
+
+        AutoLock(T & m) : _m(m) { _m.lock();   }
+        ~AutoLock()             { _m.unlock(); }
+
     private:
-	T& _m;
+	   T & _m;
     };
 
 #ifndef NDEBUG

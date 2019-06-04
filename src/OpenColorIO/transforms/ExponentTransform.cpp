@@ -63,7 +63,9 @@ public:
         setBlueParams ( {1.} );
         setAlphaParams( {1.} );
     }
-    
+
+    Impl(const Impl &) = delete;
+
     ~Impl()
     { }
     
@@ -76,10 +78,6 @@ public:
         }
         return *this;
     }
-
-
-private:        
-    Impl(const Impl & rhs);
 };
 
 ///////////////////////////////////////////////////////////////////////////

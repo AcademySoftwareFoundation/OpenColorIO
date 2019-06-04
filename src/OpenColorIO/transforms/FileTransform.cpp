@@ -66,7 +66,9 @@ OCIO_NAMESPACE_ENTER
             dir_(TRANSFORM_DIR_FORWARD),
             interp_(INTERP_UNKNOWN)
         { }
-        
+
+        Impl(const Impl &) = delete;
+
         ~Impl()
         { }
         

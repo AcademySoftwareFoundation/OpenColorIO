@@ -59,7 +59,9 @@ OCIO_NAMESPACE_ENTER
             dir_(TRANSFORM_DIR_FORWARD),
             allocation_(ALLOCATION_UNIFORM)
         { }
-        
+
+        Impl(const Impl &) = delete;
+
         ~Impl()
         { }
         

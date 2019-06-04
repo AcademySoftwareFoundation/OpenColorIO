@@ -159,6 +159,8 @@ public:
 
     ~Impl() {}
 
+    Impl(const Impl &) = delete;
+
     Impl& operator=(const Impl & rhs)
     {
         if(this!=&rhs)
@@ -178,9 +180,6 @@ public:
     }
 
     TransformDirection m_direction;
-
-private:
-    Impl(const Impl &);
 };
 
 ///////////////////////////////////////////////////////////////////////////

@@ -49,7 +49,11 @@ const char CDL_TAG_VIEWING_DESCRIPTION[] = "ViewingDescription";
 class CDLParser::Impl
 {
 public:
+    Impl() = delete;
     Impl(const std::string & fileName);
+    Impl(const Impl &) = delete;
+    Impl & operator=(const Impl &) = delete;
+
     ~Impl();
 
     // Parse a CDL stream.

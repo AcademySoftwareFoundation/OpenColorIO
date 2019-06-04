@@ -57,7 +57,9 @@ OCIO_NAMESPACE_ENTER
         Impl()
             : LogOpData(2.0f, TRANSFORM_DIR_FORWARD)
         { }
-        
+
+        Impl(const Impl &) = delete;
+
         ~Impl()
         { }
 
@@ -69,9 +71,6 @@ OCIO_NAMESPACE_ENTER
             }
             return *this;
         }
-
-    private:        
-        Impl(const Impl & rhs);
     };
     
     ///////////////////////////////////////////////////////////////////////////
