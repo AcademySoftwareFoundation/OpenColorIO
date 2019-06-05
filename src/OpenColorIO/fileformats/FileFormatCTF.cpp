@@ -100,11 +100,7 @@ to contain values outside of [0,1023] and to use fractional values.
 
 */
 
-// TODO: In this PR the CTF format is not enabled yet since it relies on other
-// PRs that add or enhance the OCIO op model.  Once those are merged, a
-// follow-up PR will enable the CTF support and add additional unit tests.
-// CTF write support has also been put into a separate PR to limit the size of
-// the review.
+// TODO: CTF write support will be done with an upcoming PR.
 
 OCIO_NAMESPACE_ENTER
 {
@@ -470,6 +466,9 @@ private:
                 pElt = pImpl->m_elms.back();
             }
 
+            // Safety check to try and ensure that all new elements will get handled here.
+            static_assert(CTFReaderOpElt::NoType == 13, "Need to handle new type here");
+
             // Will allow to give better error feedback to the user if the
             // element name is not handled. If any case recognizes the name,
             // but the element is not in the correct context (under the correct
@@ -478,40 +477,10 @@ private:
 
             // For each possible element name, test against a tag name and a
             // current parent name to determine if the element should be handled.
-            if (SupportedElement(name, pElt, TAG_MATRIX,
-                                 TAG_PROCESS_LIST, recognizedName))
-            {
-                pImpl->AddOpReader(CTFReaderOpElt::MatrixType, name);
-            }
-            else if (SupportedElement(name, pElt, TAG_LUT1D,
+            if (SupportedElement(name, pElt, TAG_ACES,
                                       TAG_PROCESS_LIST, recognizedName))
             {
-                pImpl->AddOpReader(CTFReaderOpElt::Lut1DType, name);
-            }
-            else if (SupportedElement(name, pElt, TAG_INVLUT1D,
-                                      TAG_PROCESS_LIST, recognizedName))
-            {
-                pImpl->AddOpReader(CTFReaderOpElt::InvLut1DType, name);
-            }
-            else if (SupportedElement(name, pElt, TAG_LUT3D,
-                                      TAG_PROCESS_LIST, recognizedName))
-            {
-                pImpl->AddOpReader(CTFReaderOpElt::Lut3DType, name);
-            }
-            else if (SupportedElement(name, pElt, TAG_INVLUT3D,
-                                      TAG_PROCESS_LIST, recognizedName))
-            {
-                pImpl->AddOpReader(CTFReaderOpElt::InvLut3DType, name);
-            }
-            else if (SupportedElement(name, pElt, TAG_RANGE,
-                                      TAG_PROCESS_LIST, recognizedName))
-            {
-                pImpl->AddOpReader(CTFReaderOpElt::RangeType, name);
-            }
-            else if (SupportedElement(name, pElt, TAG_REFERENCE,
-                                      TAG_PROCESS_LIST, recognizedName))
-            {
-                pImpl->AddOpReader(CTFReaderOpElt::ReferenceType, name);
+                pImpl->AddOpReader(CTFReaderOpElt::ACESType, name);
             }
             else if (SupportedElement(name, pElt, TAG_CDL,
                                       TAG_PROCESS_LIST, recognizedName))
@@ -522,6 +491,56 @@ private:
                                       TAG_PROCESS_LIST, recognizedName))
             {
                 pImpl->AddOpReader(CTFReaderOpElt::ExposureContrastType, name);
+            }
+            else if (SupportedElement(name, pElt, TAG_FIXED_FUNCTION,
+                                      TAG_PROCESS_LIST, recognizedName))
+            {
+                pImpl->AddOpReader(CTFReaderOpElt::FixedFunctionType, name);
+            }
+            else if (SupportedElement(name, pElt, TAG_GAMMA,
+                                      TAG_PROCESS_LIST, recognizedName))
+            {
+                pImpl->AddOpReader(CTFReaderOpElt::GammaType, name);
+            }
+            else if (SupportedElement(name, pElt, TAG_INVLUT1D,
+                                      TAG_PROCESS_LIST, recognizedName))
+            {
+                pImpl->AddOpReader(CTFReaderOpElt::InvLut1DType, name);
+            }
+            else if (SupportedElement(name, pElt, TAG_INVLUT3D,
+                                      TAG_PROCESS_LIST, recognizedName))
+            {
+                pImpl->AddOpReader(CTFReaderOpElt::InvLut3DType, name);
+            }
+            else if (SupportedElement(name, pElt, TAG_LOG,
+                                      TAG_PROCESS_LIST, recognizedName))
+            {
+                pImpl->AddOpReader(CTFReaderOpElt::LogType, name);
+            }
+            else if (SupportedElement(name, pElt, TAG_LUT1D,
+                                      TAG_PROCESS_LIST, recognizedName))
+            {
+                pImpl->AddOpReader(CTFReaderOpElt::Lut1DType, name);
+            }
+            else if (SupportedElement(name, pElt, TAG_LUT3D,
+                                      TAG_PROCESS_LIST, recognizedName))
+            {
+                pImpl->AddOpReader(CTFReaderOpElt::Lut3DType, name);
+            }
+            else if (SupportedElement(name, pElt, TAG_MATRIX,
+                                      TAG_PROCESS_LIST, recognizedName))
+            {
+                pImpl->AddOpReader(CTFReaderOpElt::MatrixType, name);
+            }
+            else if (SupportedElement(name, pElt, TAG_RANGE,
+                                      TAG_PROCESS_LIST, recognizedName))
+            {
+                pImpl->AddOpReader(CTFReaderOpElt::RangeType, name);
+            }
+            else if (SupportedElement(name, pElt, TAG_REFERENCE,
+                                      TAG_PROCESS_LIST, recognizedName))
+            {
+                pImpl->AddOpReader(CTFReaderOpElt::ReferenceType, name);
             }
             // TODO: handle other ops from syncolor.
 
@@ -542,11 +561,11 @@ private:
                             pImpl->getXmlFilename(),
                             nullptr));
                 }
-                else if (SupportedElement(name, pElt, TAG_INFO, 
-                                          TAG_PROCESS_LIST, recognizedName))
+                else if (SupportedElement(name, pElt, TAG_ACES_PARAMS,
+                                          TAG_ACES, recognizedName))
                 {
                     pImpl->m_elms.push_back(
-                        std::make_shared<CTFReaderInfoElt>(
+                        std::make_shared<CTFReaderACESParamsElt>(
                             name,
                             pContainer,
                             pImpl->getXmLineNumber(),
@@ -590,7 +609,52 @@ private:
                                 pImpl->getXmLineNumber(),
                                 pImpl->getXmlFilename()));
                     }
-
+                }
+                else if (SupportedElement(name, pElt, TAG_DESCRIPTION,
+                                          "", recognizedName))
+                {
+                    pImpl->m_elms.push_back(
+                        std::make_shared<XmlReaderDescriptionElt>(
+                            name,
+                            pContainer,
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename()));
+                }
+                // Dynamic Property is valid under any operator parent. First
+                // test if the tag is supported to set the recognizedName 
+                // accordingly, without testing for parents. Test for the
+                // parent type prior to testing the name.
+                else if (SupportedElement(name, pElt, TAG_DYNAMIC_PARAMETER,
+                                          "", recognizedName) &&
+                         std::dynamic_pointer_cast<CTFReaderOpElt>(pContainer))
+                {
+                    pImpl->m_elms.push_back(
+                        std::make_shared<CTFReaderDynamicParamElt>(
+                            name,
+                            pContainer,
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename()));
+                }
+                else if (SupportedElement(name, pElt, TAG_EC_PARAMS,
+                                          TAG_EXPOSURE_CONTRAST, recognizedName))
+                {
+                    pImpl->m_elms.push_back(
+                        std::make_shared<CTFReaderECParamsElt>(
+                            name,
+                            pContainer,
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename()));
+                }
+                else if (SupportedElement(name, pElt, TAG_GAMMA_PARAMS,
+                                          TAG_GAMMA, recognizedName))
+                {
+                    CTFReaderGammaElt * pGamma = dynamic_cast<CTFReaderGammaElt*>(pContainer.get());
+                    pImpl->m_elms.push_back(
+                        pGamma->createGammaParamsElt(
+                            name,
+                            pContainer,
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename()));
                 }
                 else if (SupportedElement(name, pElt, TAG_INDEX_MAP, TAG_LUT1D, recognizedName) ||
                          SupportedElement(name, pElt, TAG_INDEX_MAP, TAG_LUT3D, recognizedName))
@@ -624,11 +688,11 @@ private:
                     }
 
                 }
-                else if (SupportedElement(name, pElt, TAG_DESCRIPTION,
-                                          "", recognizedName))
+                else if (SupportedElement(name, pElt, TAG_INFO, 
+                                          TAG_PROCESS_LIST, recognizedName))
                 {
                     pImpl->m_elms.push_back(
-                        std::make_shared<XmlReaderDescriptionElt>(
+                        std::make_shared<CTFReaderInfoElt>(
                             name,
                             pContainer,
                             pImpl->getXmLineNumber(),
@@ -643,6 +707,31 @@ private:
                             pContainer,
                             pImpl->getXmLineNumber(),
                             pImpl->getXmlFilename()));
+                }
+                else if (SupportedElement(name, pElt, TAG_LOG_PARAMS,
+                                          TAG_LOG, recognizedName))
+                {
+                    auto pLog = std::dynamic_pointer_cast<CTFReaderLogElt>(pContainer);
+                    const auto style = pLog->getCTFParams().m_style;
+                    if (!(style == LogUtil::LOG_TO_LIN ||
+                          style == LogUtil::LIN_TO_LOG))
+                    {
+                        pImpl->m_elms.push_back(
+                            std::make_shared<XmlReaderDummyElt>(
+                                name,
+                                (pImpl->m_elms.empty() ? 0 : pImpl->m_elms.back()),
+                                pImpl->getXmLineNumber(),
+                                pImpl->getXmlFilename(),
+                                ": Log Params not allowed in this element"));
+                    }
+                    else
+                    {
+                        pImpl->m_elms.push_back(
+                            std::make_shared<CTFReaderLogParamsElt>(name,
+                                pContainer,
+                                pImpl->getXmLineNumber(),
+                                pImpl->getXmlFilename()));
+                    }
                 }
                 else if (SupportedElement(name, pElt, TAG_OUTPUT_DESCRIPTOR,
                     TAG_PROCESS_LIST, recognizedName))
@@ -659,29 +748,6 @@ private:
                 {
                     pImpl->m_elms.push_back(
                         std::make_shared<CTFReaderRangeValueElt>(
-                            name,
-                            pContainer,
-                            pImpl->getXmLineNumber(),
-                            pImpl->getXmlFilename()));
-                }
-                else if (SupportedElement(name, pElt, TAG_SOPNODE,
-                                          TAG_CDL, recognizedName))
-                {
-                    auto pCDL =
-                        std::dynamic_pointer_cast<CTFReaderCDLElt>(pContainer);
-
-                    auto sopNodeElt = std::make_shared<CTFReaderSOPNodeElt>(
-                        name,
-                        pCDL,
-                        pImpl->getXmLineNumber(),
-                        pImpl->getXmlFilename());
-                    pImpl->m_elms.push_back(sopNodeElt);
-                }
-                else if (SupportedElement(name, pElt, sopSubElements,
-                                          TAG_SOPNODE, recognizedName))
-                {
-                    pImpl->m_elms.push_back(
-                        std::make_shared<XmlReaderSOPValueElt>(
                             name,
                             pContainer,
                             pImpl->getXmLineNumber(),
@@ -712,27 +778,24 @@ private:
                             pImpl->getXmLineNumber(),
                             pImpl->getXmlFilename()));
                 }
-                else if (SupportedElement(name, pElt, TAG_EC_PARAMS,
-                                          TAG_EXPOSURE_CONTRAST, recognizedName))
+                else if (SupportedElement(name, pElt, TAG_SOPNODE,
+                                          TAG_CDL, recognizedName))
                 {
-                    pImpl->m_elms.push_back(
-                        std::make_shared<CTFReaderECParamsElt>(
-                            name,
-                            pContainer,
-                            pImpl->getXmLineNumber(),
-                            pImpl->getXmlFilename()));
-                }
+                    auto pCDL =
+                        std::dynamic_pointer_cast<CTFReaderCDLElt>(pContainer);
 
-                // Dynamic Property is valid under any operator parent. First
-                // test if the tag is supported to set the recognizedName 
-                // accordingly, without testing for parents. Test for the
-                // parent type prior to testing the name.
-                else if (SupportedElement(name, pElt, TAG_DYNAMIC_PARAMETER,
-                                          "", recognizedName) &&
-                         std::dynamic_pointer_cast<CTFReaderOpElt>(pContainer))
+                    auto sopNodeElt = std::make_shared<CTFReaderSOPNodeElt>(
+                        name,
+                        pCDL,
+                        pImpl->getXmLineNumber(),
+                        pImpl->getXmlFilename());
+                    pImpl->m_elms.push_back(sopNodeElt);
+                }
+                else if (SupportedElement(name, pElt, sopSubElements,
+                                          TAG_SOPNODE, recognizedName))
                 {
                     pImpl->m_elms.push_back(
-                        std::make_shared<CTFReaderDynamicParamElt>(
+                        std::make_shared<XmlReaderSOPValueElt>(
                             name,
                             pContainer,
                             pImpl->getXmLineNumber(),
@@ -2493,6 +2556,392 @@ OIIO_ADD_TEST(FileFormatCTF, range3)
     OIIO_CHECK_ASSERT(pR->maxIsEmpty());
 }
 
+OIIO_ADD_TEST(FileFormatCTF, gamma1)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    const std::string ctfFile("gamma_test1.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
+    OIIO_REQUIRE_ASSERT((bool)cachedFile);
+
+    OIIO_CHECK_EQUAL(cachedFile->m_transform->getID(), "id");
+
+    OIIO_CHECK_EQUAL(cachedFile->m_transform->getDescriptions().size(), 1);
+    OIIO_CHECK_EQUAL(cachedFile->m_transform->getDescriptions()[0], "2.4 gamma");
+
+    const OCIO::OpDataVec & opList = cachedFile->m_transform->getOps();
+    OIIO_REQUIRE_EQUAL(opList.size(), 1);
+    OIIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::GammaType);
+    auto pG = std::dynamic_pointer_cast<const OCIO::GammaOpData>(opList[0]);
+    OIIO_REQUIRE_ASSERT(pG);
+
+    OIIO_CHECK_EQUAL(pG->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
+    OIIO_CHECK_EQUAL(pG->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+
+    OIIO_CHECK_EQUAL(pG->getStyle(), OCIO::GammaOpData::BASIC_FWD);
+
+    OCIO::GammaOpData::Params params;
+    params.push_back(2.4);
+
+    OIIO_CHECK_ASSERT(pG->getRedParams() == params);
+    OIIO_CHECK_ASSERT(pG->getGreenParams() == params);
+    OIIO_CHECK_ASSERT(pG->getBlueParams() == params);
+    // Version of the ctf is less than 1.5, so alpha must be identity.
+    OIIO_CHECK_ASSERT(OCIO::GammaOpData::isIdentityParameters(
+                          pG->getAlphaParams(),
+                          pG->getStyle()));
+
+    OIIO_CHECK_ASSERT(!pG->areAllComponentsEqual());
+    OIIO_CHECK_ASSERT(pG->isNonChannelDependent()); // RGB are equal, A is an identity
+}
+
+OIIO_ADD_TEST(FileFormatCTF, gamma2)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    const std::string ctfFile("gamma_test2.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
+    OIIO_REQUIRE_ASSERT((bool)cachedFile);
+
+    const OCIO::OpDataVec & opList = cachedFile->m_transform->getOps();
+    OIIO_REQUIRE_EQUAL(opList.size(), 1);
+    OIIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::GammaType);
+    auto pG = std::dynamic_pointer_cast<const OCIO::GammaOpData>(opList[0]);
+    OIIO_REQUIRE_ASSERT(pG);
+
+    OIIO_CHECK_EQUAL(pG->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(pG->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+
+    OIIO_CHECK_EQUAL(pG->getStyle(), OCIO::GammaOpData::BASIC_REV);
+    OCIO::GammaOpData::Params paramsR;
+    paramsR.push_back(2.4);
+    OCIO::GammaOpData::Params paramsG;
+    paramsG.push_back(2.35);
+    OCIO::GammaOpData::Params paramsB;
+    paramsB.push_back(2.2);
+
+    OIIO_CHECK_ASSERT(pG->getRedParams() == paramsR);
+    OIIO_CHECK_ASSERT(pG->getGreenParams() == paramsG);
+    OIIO_CHECK_ASSERT(pG->getBlueParams() == paramsB);
+    OIIO_CHECK_ASSERT(OCIO::GammaOpData::isIdentityParameters(
+                          pG->getAlphaParams(),
+                          pG->getStyle()));
+
+    OIIO_CHECK_ASSERT(!pG->areAllComponentsEqual());
+    OIIO_CHECK_ASSERT(!pG->isNonChannelDependent());
+}
+
+OIIO_ADD_TEST(FileFormatCTF, gamma3)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    const std::string ctfFile("gamma_test3.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
+    OIIO_REQUIRE_ASSERT((bool)cachedFile);
+
+    const OCIO::OpDataVec & opList = cachedFile->m_transform->getOps();
+    OIIO_REQUIRE_EQUAL(opList.size(), 1);
+    OIIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::GammaType);
+    auto pG = std::dynamic_pointer_cast<const OCIO::GammaOpData>(opList[0]);
+    OIIO_REQUIRE_ASSERT(pG);
+
+    OIIO_CHECK_EQUAL(pG->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
+    OIIO_CHECK_EQUAL(pG->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+
+    OIIO_CHECK_EQUAL(pG->getStyle(), OCIO::GammaOpData::MONCURVE_FWD);
+    OCIO::GammaOpData::Params params;
+    params.push_back(1. / 0.45);
+    params.push_back(0.099);
+
+    // This is a precision test to ensure we can recreate a double that is
+    // exactly equal to 1/0.45, which is required to implement rec 709 exactly.
+    OIIO_CHECK_ASSERT(pG->getRedParams() == params);
+    OIIO_CHECK_ASSERT(pG->getGreenParams() == params);
+    OIIO_CHECK_ASSERT(pG->getBlueParams() == params);
+    OIIO_CHECK_ASSERT(OCIO::GammaOpData::isIdentityParameters(
+                          pG->getAlphaParams(),
+                          pG->getStyle()));
+
+    OIIO_CHECK_ASSERT(!pG->areAllComponentsEqual());
+    OIIO_CHECK_ASSERT(pG->isNonChannelDependent());
+}
+
+OIIO_ADD_TEST(FileFormatCTF, gamma4)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    const std::string ctfFile("gamma_test4.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
+    OIIO_REQUIRE_ASSERT((bool)cachedFile);
+
+    const OCIO::OpDataVec & opList = cachedFile->m_transform->getOps();
+    OIIO_REQUIRE_EQUAL(opList.size(), 1);
+    OIIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::GammaType);
+    auto pG = std::dynamic_pointer_cast<const OCIO::GammaOpData>(opList[0]);
+    OIIO_REQUIRE_ASSERT(pG);
+
+    OIIO_CHECK_EQUAL(pG->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
+    OIIO_CHECK_EQUAL(pG->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
+    OIIO_CHECK_EQUAL(pG->getStyle(), OCIO::GammaOpData::MONCURVE_REV);
+    OCIO::GammaOpData::Params paramsR;
+    paramsR.push_back(2.2);
+    paramsR.push_back(0.001);
+    OCIO::GammaOpData::Params paramsG;
+    paramsG.push_back(2.4);
+    paramsG.push_back(0.01);
+    OCIO::GammaOpData::Params paramsB;
+    paramsB.push_back(2.6);
+    paramsB.push_back(0.1);
+
+    OIIO_CHECK_ASSERT(pG->getRedParams() == paramsR);
+    OIIO_CHECK_ASSERT(pG->getGreenParams() == paramsG);
+    OIIO_CHECK_ASSERT(pG->getBlueParams() == paramsB);
+    OIIO_CHECK_ASSERT(OCIO::GammaOpData::isIdentityParameters(
+                          pG->getAlphaParams(),
+                          pG->getStyle()));
+
+    OIIO_CHECK_ASSERT(!pG->areAllComponentsEqual());
+    OIIO_CHECK_ASSERT(!pG->isNonChannelDependent());
+}
+
+OIIO_ADD_TEST(FileFormatCTF, gamma5)
+{
+    // This test is for an old (< 1.5) transform file that contains
+    // an invalid GammaParams for the A channel.
+    const std::string ctfFile("gamma_test5.ctf");
+    OIIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception,
+                          "Invalid channel");
+}
+
+OIIO_ADD_TEST(FileFormatCTF, gamma6)
+{
+    // This test is for an old (< 1.5) transform file that contains
+    // a single GammaParams with identity values:
+    // - R, G and B set to identity parameters (identity test).
+    // - A set to identity.
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    const std::string ctfFile("gamma_test6.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
+    OIIO_REQUIRE_ASSERT((bool)cachedFile);
+
+    const OCIO::OpDataVec & opList = cachedFile->m_transform->getOps();
+    OIIO_REQUIRE_EQUAL(opList.size(), 1);
+    OIIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::GammaType);
+    auto pG = std::dynamic_pointer_cast<const OCIO::GammaOpData>(opList[0]);
+    OIIO_REQUIRE_ASSERT(pG);
+
+    OIIO_CHECK_EQUAL(pG->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
+    OIIO_CHECK_EQUAL(pG->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+
+    OIIO_CHECK_EQUAL(pG->getStyle(), OCIO::GammaOpData::MONCURVE_FWD);
+    OIIO_CHECK_ASSERT(pG->areAllComponentsEqual());
+    OIIO_CHECK_ASSERT(pG->isNonChannelDependent()); 
+    OIIO_CHECK_ASSERT(pG->isIdentity());
+}
+
+OIIO_ADD_TEST(FileFormatCTF, gamma_wrong_power)
+{
+    // The moncurve style requires a gamma value >= 1.
+    const std::string ctfFile("gamma_wrong_power.ctf");
+    OIIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception,
+                          "is less than lower bound");
+}
+
+OIIO_ADD_TEST(FileFormatCTF, gamma_alpha1)
+{
+    // This test is for a new (>= 1.5) transform file that contains
+    // a single GammaParams:
+    // - R, G and B set to same parameters.
+    // - A set to identity.
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    const std::string ctfFile("gamma_alpha_test1.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
+    OIIO_REQUIRE_ASSERT((bool)cachedFile);
+
+    const OCIO::OpDataVec & opList = cachedFile->m_transform->getOps();
+    OIIO_REQUIRE_EQUAL(opList.size(), 1);
+    OIIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::GammaType);
+    auto pG = std::dynamic_pointer_cast<const OCIO::GammaOpData>(opList[0]);
+    OIIO_REQUIRE_ASSERT(pG);
+
+    OIIO_CHECK_EQUAL(pG->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
+    OIIO_CHECK_EQUAL(pG->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(pG->getStyle(), OCIO::GammaOpData::BASIC_FWD);
+
+    OCIO::GammaOpData::Params params;
+    params.push_back(2.4);
+
+    OIIO_CHECK_ASSERT(pG->getRedParams() == params);
+    OIIO_CHECK_ASSERT(pG->getGreenParams() == params);
+    OIIO_CHECK_ASSERT(pG->getBlueParams() == params);
+    OIIO_CHECK_ASSERT(OCIO::GammaOpData::isIdentityParameters(
+                          pG->getAlphaParams(),
+                          pG->getStyle()));
+
+    OIIO_CHECK_ASSERT(!pG->areAllComponentsEqual());
+    OIIO_CHECK_ASSERT(pG->isNonChannelDependent());
+}
+
+OIIO_ADD_TEST(FileFormatCTF, gamma_alpha2)
+{
+    // This test is for a new (>= 1.5) transform file that contains
+    // a different GammaParams for every channel:
+    // - R, G, B and A set to different parameters.
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    const std::string ctfFile("gamma_alpha_test2.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
+    OIIO_REQUIRE_ASSERT((bool)cachedFile);
+
+    const OCIO::OpDataVec & opList = cachedFile->m_transform->getOps();
+    OIIO_REQUIRE_EQUAL(opList.size(), 1);
+    OIIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::GammaType);
+    auto pG = std::dynamic_pointer_cast<const OCIO::GammaOpData>(opList[0]);
+    OIIO_REQUIRE_ASSERT(pG);
+
+    OIIO_CHECK_EQUAL(pG->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(pG->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OIIO_CHECK_EQUAL(pG->getStyle(), OCIO::GammaOpData::BASIC_REV);
+
+    OCIO::GammaOpData::Params paramsR;
+    paramsR.push_back(2.4);
+    OCIO::GammaOpData::Params paramsG;
+    paramsG.push_back(2.35);
+    OCIO::GammaOpData::Params paramsB;
+    paramsB.push_back(2.2);
+    OCIO::GammaOpData::Params paramsA;
+    paramsA.push_back(2.5);
+
+    OIIO_CHECK_ASSERT(pG->getRedParams() == paramsR);
+    OIIO_CHECK_ASSERT(pG->getGreenParams() == paramsG);
+    OIIO_CHECK_ASSERT(pG->getBlueParams() == paramsB);
+    OIIO_CHECK_ASSERT(pG->getAlphaParams() == paramsA);
+
+    OIIO_CHECK_ASSERT(!pG->areAllComponentsEqual());
+    OIIO_CHECK_ASSERT(!pG->isNonChannelDependent());
+}
+
+OIIO_ADD_TEST(FileFormatCTF, gamma_alpha3)
+{
+    // This test is for a new (>= 1.5) transform file that contains
+    // a single GammaParams:
+    // - R, G and B set to same parameters (precision test).
+    // - A set to identity.
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    const std::string ctfFile("gamma_alpha_test3.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
+    OIIO_REQUIRE_ASSERT((bool)cachedFile);
+
+    const OCIO::OpDataVec & opList = cachedFile->m_transform->getOps();
+    OIIO_REQUIRE_EQUAL(opList.size(), 1);
+    OIIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::GammaType);
+    auto pG = std::dynamic_pointer_cast<const OCIO::GammaOpData>(opList[0]);
+    OIIO_REQUIRE_ASSERT(pG);
+
+    OIIO_CHECK_EQUAL(pG->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
+    OIIO_CHECK_EQUAL(pG->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(pG->getStyle(), OCIO::GammaOpData::MONCURVE_FWD);
+
+    OCIO::GammaOpData::Params params;
+    params.push_back(1. / 0.45);
+    params.push_back(0.099);
+
+    OIIO_CHECK_ASSERT(pG->getRedParams() == params);
+    OIIO_CHECK_ASSERT(pG->getGreenParams() == params);
+    OIIO_CHECK_ASSERT(pG->getBlueParams() == params);
+    OIIO_CHECK_ASSERT(OCIO::GammaOpData::isIdentityParameters(
+                          pG->getAlphaParams(),
+                          pG->getStyle()));
+
+    OIIO_CHECK_ASSERT(!pG->areAllComponentsEqual());
+    OIIO_CHECK_ASSERT(pG->isNonChannelDependent());
+}
+
+OIIO_ADD_TEST(FileFormatCTF, gamma_alpha4)
+{
+    // This test is for a new (>= 1.5) transform file that contains
+    // a different GammaParams for every channel:
+    // - R, G, B and A set to different parameters (attributes order test).
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    const std::string ctfFile("gamma_alpha_test4.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
+    OIIO_REQUIRE_ASSERT((bool)cachedFile);
+
+    const OCIO::OpDataVec & opList = cachedFile->m_transform->getOps();
+    OIIO_REQUIRE_EQUAL(opList.size(), 1);
+    OIIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::GammaType);
+    auto pG = std::dynamic_pointer_cast<const OCIO::GammaOpData>(opList[0]);
+    OIIO_REQUIRE_ASSERT(pG);
+
+    OIIO_CHECK_EQUAL(pG->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
+    OIIO_CHECK_EQUAL(pG->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(pG->getStyle(), OCIO::GammaOpData::MONCURVE_REV);
+
+    OCIO::GammaOpData::Params paramsR;
+    paramsR.push_back(2.2);
+    paramsR.push_back(0.001);
+    OCIO::GammaOpData::Params paramsG;
+    paramsG.push_back(2.4);
+    paramsG.push_back(0.01);
+    OCIO::GammaOpData::Params paramsB;
+    paramsB.push_back(2.6);
+    paramsB.push_back(0.1);
+    OCIO::GammaOpData::Params paramsA;
+    paramsA.push_back(2.0);
+    paramsA.push_back(0.0001);
+
+    OIIO_CHECK_ASSERT(pG->getRedParams() == paramsR);
+    OIIO_CHECK_ASSERT(pG->getGreenParams() == paramsG);
+    OIIO_CHECK_ASSERT(pG->getBlueParams() == paramsB);
+    OIIO_CHECK_ASSERT(pG->getAlphaParams() == paramsA);
+
+    OIIO_CHECK_ASSERT(!pG->areAllComponentsEqual());
+    OIIO_CHECK_ASSERT(!pG->isNonChannelDependent());
+}
+
+OIIO_ADD_TEST(FileFormatCTF, gamma_alpha5)
+{
+    // This test is for a new (>= 1.5) transform file that contains
+    // a GammaParams with no channel specified:
+    // - R, G and B set to same parameters.
+    // and a GammaParams for the A channel:
+    // - A set to different parameters.
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    const std::string ctfFile("gamma_alpha_test5.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
+    OIIO_REQUIRE_ASSERT((bool)cachedFile);
+
+    const OCIO::OpDataVec & opList = cachedFile->m_transform->getOps();
+    OIIO_REQUIRE_EQUAL(opList.size(), 1);
+    OIIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::GammaType);
+    auto pG = std::dynamic_pointer_cast<const OCIO::GammaOpData>(opList[0]);
+    OIIO_REQUIRE_ASSERT(pG);
+
+    OIIO_CHECK_EQUAL(pG->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
+    OIIO_CHECK_EQUAL(pG->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OIIO_CHECK_EQUAL(pG->getStyle(), OCIO::GammaOpData::MONCURVE_FWD);
+
+    OCIO::GammaOpData::Params params;
+    params.push_back(1. / 0.45);
+    params.push_back(0.099);
+    OCIO::GammaOpData::Params paramsA;
+    paramsA.push_back(1.7);
+    paramsA.push_back(0.33);
+
+    OIIO_CHECK_ASSERT(pG->getRedParams() == params);
+    OIIO_CHECK_ASSERT(pG->getGreenParams() == params);
+    OIIO_CHECK_ASSERT(pG->getBlueParams() == params);
+    OIIO_CHECK_ASSERT(pG->getAlphaParams() == paramsA);
+
+    OIIO_CHECK_ASSERT(!pG->areAllComponentsEqual());
+    OIIO_CHECK_ASSERT(!pG->isNonChannelDependent());
+}
+
+OIIO_ADD_TEST(FileFormatCTF, gamma_alpha6)
+{
+    // This test is for an new (>= 1.5) transform file that contains
+    // an invalid GammaParams for the A channel (missing offset attribute).
+    const std::string ctfFile("gamma_alpha_test6.ctf");
+    OIIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception,
+                          "Missing required offset parameter");
+}
+
 OIIO_ADD_TEST(FileFormatCTF, invalid_version)
 {
     const std::string ctfFile("process_list_invalid_version.ctf");
@@ -3156,6 +3605,172 @@ OIIO_ADD_TEST(FileFormatCTF, info_element_version_test)
     
 }
 
+OIIO_ADD_TEST(Log, load_log10)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    std::string fileName("log_log10.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(fileName));
+    const OCIO::OpDataVec & fileOps = cachedFile->m_transform->getOps();
+    
+    OIIO_CHECK_EQUAL(cachedFile->m_transform->getName(), "log example");
+    OIIO_CHECK_EQUAL(cachedFile->m_transform->getID(),
+                     "b5cc7aed-d405-4d8b-b64b-382b2341a378");
+    OIIO_CHECK_EQUAL(cachedFile->m_transform->getInputDescriptor(), "inputDesc");
+    OIIO_CHECK_EQUAL(cachedFile->m_transform->getOutputDescriptor(), "outputDesc");
+    OIIO_CHECK_EQUAL(cachedFile->m_transform->getDescriptions().size(), 1);
+    OIIO_CHECK_EQUAL(cachedFile->m_transform->getDescriptions()[0],
+                     "Example of Log10 logarithm operation.");
+
+    OIIO_REQUIRE_EQUAL(fileOps.size(), 1);
+    OCIO::OpDataRcPtr op = fileOps[0];
+    OCIO::LogOpDataRcPtr log = std::dynamic_pointer_cast<OCIO::LogOpData>(op);
+    OIIO_REQUIRE_ASSERT(log);
+    OIIO_REQUIRE_EQUAL(log->getDescriptions().size(), 1);
+    OIIO_CHECK_EQUAL(log->getDescriptions()[0],
+                     "Log10 logarithm operation");
+
+    OIIO_CHECK_EQUAL(log->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(log->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
+
+    OIIO_CHECK_ASSERT(log->isLog10());
+    OIIO_CHECK_EQUAL(log->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+}
+
+OIIO_ADD_TEST(Log, load_log2)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    std::string fileName("log_log2.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(fileName));
+    const OCIO::OpDataVec & fileOps = cachedFile->m_transform->getOps();
+    OIIO_REQUIRE_EQUAL(fileOps.size(), 1);
+    OCIO::OpDataRcPtr op = fileOps[0];
+    OCIO::LogOpDataRcPtr log = std::dynamic_pointer_cast<OCIO::LogOpData>(op);
+    OIIO_REQUIRE_ASSERT(log);
+
+    OIIO_CHECK_EQUAL(log->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(log->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
+    OIIO_CHECK_ASSERT(log->isLog2());
+    OIIO_CHECK_EQUAL(log->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+}
+
+OIIO_ADD_TEST(Log, load_antilog10)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    std::string fileName("log_antilog10.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(fileName));
+    const OCIO::OpDataVec & fileOps = cachedFile->m_transform->getOps();
+    OIIO_REQUIRE_EQUAL(fileOps.size(), 1);
+    OCIO::OpDataRcPtr op = fileOps[0];
+    OCIO::LogOpDataRcPtr log = std::dynamic_pointer_cast<OCIO::LogOpData>(op);
+    OIIO_REQUIRE_ASSERT(log);
+
+    OIIO_CHECK_EQUAL(log->getInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OIIO_CHECK_EQUAL(log->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
+
+    OIIO_CHECK_ASSERT(log->isLog10());
+    OIIO_CHECK_EQUAL(log->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+}
+
+OIIO_ADD_TEST(Log, load_antilog2)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    std::string fileName("log_antilog2.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(fileName));
+    const OCIO::OpDataVec & fileOps = cachedFile->m_transform->getOps();
+    OIIO_REQUIRE_EQUAL(fileOps.size(), 1);
+    OCIO::OpDataRcPtr op = fileOps[0];
+    OCIO::LogOpDataRcPtr log = std::dynamic_pointer_cast<OCIO::LogOpData>(op);
+    OIIO_REQUIRE_ASSERT(log);
+
+    OIIO_CHECK_EQUAL(log->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
+    OIIO_CHECK_EQUAL(log->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+
+    OIIO_CHECK_ASSERT(log->isLog2());
+    OIIO_CHECK_EQUAL(log->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+}
+
+OIIO_ADD_TEST(Log, load_log_to_lin)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    std::string fileName("log_logtolin.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(fileName));
+    const OCIO::OpDataVec & fileOps = cachedFile->m_transform->getOps();
+    OIIO_REQUIRE_EQUAL(fileOps.size(), 1);
+    OCIO::OpDataRcPtr op = fileOps[0];
+    OCIO::LogOpDataRcPtr log = std::dynamic_pointer_cast<OCIO::LogOpData>(op);
+    OIIO_REQUIRE_ASSERT(log);
+
+    OIIO_CHECK_EQUAL(log->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(log->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
+    OIIO_CHECK_EQUAL(log->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+    OIIO_CHECK_ASSERT(!log->isLog2());
+    OIIO_CHECK_ASSERT(!log->isLog10());
+    OIIO_CHECK_ASSERT(log->allComponentsEqual());
+    auto & param = log->getRedParams();
+    OIIO_REQUIRE_EQUAL(param.size(), 4);
+    double error = 1e-9;
+    OIIO_CHECK_CLOSE(param[OCIO::LOG_SIDE_SLOPE],  0.29325513196, error);
+    OIIO_CHECK_CLOSE(param[OCIO::LOG_SIDE_OFFSET], 0.66959921799, error);
+    OIIO_CHECK_CLOSE(param[OCIO::LIN_SIDE_SLOPE],  0.98969709693, error);
+    OIIO_CHECK_CLOSE(param[OCIO::LIN_SIDE_OFFSET], 0.01030290307, error);
+}
+
+OIIO_ADD_TEST(Log, load_lin_to_log)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    std::string fileName("log_lintolog_3chan.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(fileName));
+    const OCIO::OpDataVec & fileOps = cachedFile->m_transform->getOps();
+    OIIO_REQUIRE_EQUAL(fileOps.size(), 1);
+    OCIO::OpDataRcPtr op = fileOps[0];
+    OCIO::LogOpDataRcPtr log = std::dynamic_pointer_cast<OCIO::LogOpData>(op);
+    OIIO_REQUIRE_ASSERT(log);
+
+    OIIO_CHECK_EQUAL(log->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(log->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
+    OIIO_CHECK_EQUAL(log->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    OIIO_CHECK_ASSERT(!log->allComponentsEqual());
+
+    auto & rParam = log->getRedParams();
+    OIIO_REQUIRE_EQUAL(rParam.size(), 4);
+    double error = 1e-9;
+    OIIO_CHECK_CLOSE(rParam[OCIO::LOG_SIDE_SLOPE],   0.244379276637, error);
+    OIIO_CHECK_CLOSE(rParam[OCIO::LOG_SIDE_OFFSET],  0.665689149560, error);
+    OIIO_CHECK_CLOSE(rParam[OCIO::LIN_SIDE_SLOPE],   1.111637101285, error);
+    OIIO_CHECK_CLOSE(rParam[OCIO::LIN_SIDE_OFFSET], -0.000473391157, error);
+
+    auto & gParam = log->getGreenParams();
+    OIIO_REQUIRE_EQUAL(gParam.size(), 4);
+    OIIO_CHECK_CLOSE(gParam[OCIO::LOG_SIDE_SLOPE],  0.293255131964, error);
+    OIIO_CHECK_CLOSE(gParam[OCIO::LOG_SIDE_OFFSET], 0.666666666667, error);
+    OIIO_CHECK_CLOSE(gParam[OCIO::LIN_SIDE_SLOPE],  0.991514003046, error);
+    OIIO_CHECK_CLOSE(gParam[OCIO::LIN_SIDE_OFFSET], 0.008485996954, error);
+
+    auto & bParam = log->getBlueParams();
+    OIIO_REQUIRE_EQUAL(bParam.size(), 4);
+    OIIO_CHECK_CLOSE(bParam[OCIO::LOG_SIDE_SLOPE],  0.317693059628, error);
+    OIIO_CHECK_CLOSE(bParam[OCIO::LOG_SIDE_OFFSET], 0.667644183773, error);
+    OIIO_CHECK_CLOSE(bParam[OCIO::LIN_SIDE_SLOPE],  1.236287104632, error);
+    OIIO_CHECK_CLOSE(bParam[OCIO::LIN_SIDE_OFFSET], 0.010970316295, error);
+}
+
+OIIO_ADD_TEST(Log, load_invalid_style)
+{
+    std::string fileName("log_invalidstyle.ctf");
+    OIIO_CHECK_THROW_WHAT(LoadCLFFile(fileName), OCIO::Exception,
+                          "is invalid");
+}
+
+OIIO_ADD_TEST(Log, load_faulty_version)
+{
+    std::string fileName("log_log10_faulty_version.ctf");
+    OIIO_CHECK_THROW_WHAT(LoadCLFFile(fileName), OCIO::Exception,
+                          "Unsupported transform file version");
+}
+
 //
 // NOTE: These tests are on the ReferenceOpData itself, before it gets replaced
 // with the ops from the file it is referencing.  Please see RefereceOpData.cpp
@@ -3437,33 +4052,236 @@ OIIO_ADD_TEST(FileFormatCTF, exposure_contrast_failures)
                           "exposure missing");
 }
 
+OIIO_ADD_TEST(FixedFunction, load_ff_aces_redmod)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    std::string fileName("ff_aces_redmod.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(fileName));
+    const OCIO::OpDataVec & fileOps = cachedFile->m_transform->getOps();
+    OIIO_REQUIRE_EQUAL(fileOps.size(), 1);
+    OCIO::OpDataRcPtr op = fileOps[0];
+    OCIO::FixedFunctionOpDataRcPtr func = std::dynamic_pointer_cast<OCIO::FixedFunctionOpData>(op);
+    OIIO_REQUIRE_ASSERT(func);
+
+    OIIO_CHECK_EQUAL(func->getInputBitDepth(), OCIO::BIT_DEPTH_UINT16);
+    OIIO_CHECK_EQUAL(func->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
+    OIIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::ACES_RED_MOD_03_INV);
+}
+
+OIIO_ADD_TEST(FixedFunction, load_ff_aces_surround)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    std::string fileName("ff_aces_surround.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(fileName));
+    const OCIO::OpDataVec & fileOps = cachedFile->m_transform->getOps();
+
+    OIIO_REQUIRE_EQUAL(fileOps.size(), 1);
+    OCIO::OpDataRcPtr op = fileOps[0];
+    OCIO::FixedFunctionOpDataRcPtr func = std::dynamic_pointer_cast<OCIO::FixedFunctionOpData>(op);
+    OIIO_REQUIRE_ASSERT(func);
+
+    OIIO_CHECK_EQUAL(func->getInputBitDepth(), OCIO::BIT_DEPTH_UINT16);
+    OIIO_CHECK_EQUAL(func->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
+    OIIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::REC2100_SURROUND);
+
+    OCIO::FixedFunctionOpData::Params params;
+    params.push_back(1.2);
+    func->validate();
+    OIIO_CHECK_ASSERT(func->getParams() == params);
+}
+
+void ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::Style style)
+{
+    std::string styleName{ OCIO::FixedFunctionOpData::ConvertStyleToString(style, false) };
+    std::ostringstream strebuf;
+    strebuf << "<?xml version='1.0' encoding='UTF-8'?>\n";
+    strebuf << "<ProcessList id='none' version='2'>\n";
+    strebuf << "    <FixedFunction inBitDepth='8i' outBitDepth='32f' style='";
+    strebuf << styleName;
+    strebuf << "' />\n";
+    strebuf << "</ProcessList>\n";
+
+    std::istringstream ctf;
+    ctf.str(strebuf.str());
+
+    // Load file
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr file;
+    OIIO_CHECK_NO_THROW(file = tester.Read(ctf, styleName));
+    OCIO::LocalCachedFileRcPtr cachedFile = OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
+    const OCIO::OpDataVec & fileOps = cachedFile->m_transform->getOps();
+
+    OIIO_REQUIRE_EQUAL(fileOps.size(), 1);
+    OCIO::OpDataRcPtr op = fileOps[0];
+    OCIO::FixedFunctionOpDataRcPtr func = std::dynamic_pointer_cast<OCIO::FixedFunctionOpData>(op);
+    OIIO_REQUIRE_ASSERT(func);
+
+    OIIO_CHECK_EQUAL(func->getStyle(), style);
+}
+
+OIIO_ADD_TEST(FixedFunction, load_ff_style)
+{
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_03_FWD);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_03_INV);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_10_FWD);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_10_INV);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_03_FWD);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_03_INV);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_10_FWD);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_10_INV);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV);
+}
+
+OIIO_ADD_TEST(FixedFunction, load_ff_surround)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    std::string fileName("ff_surround.ctf");
+    OIIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(fileName));
+    const OCIO::OpDataVec & fileOps = cachedFile->m_transform->getOps();
+
+    OIIO_REQUIRE_EQUAL(fileOps.size(), 1);
+    OCIO::OpDataRcPtr op = fileOps[0];
+    OCIO::FixedFunctionOpDataRcPtr func = std::dynamic_pointer_cast<OCIO::FixedFunctionOpData>(op);
+    OIIO_REQUIRE_ASSERT(func);
+
+    OIIO_CHECK_EQUAL(func->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OIIO_CHECK_EQUAL(func->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
+    OIIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::REC2100_SURROUND);
+
+    OCIO::FixedFunctionOpData::Params params;
+    params.push_back(0.8);
+    func->validate();
+    OIIO_CHECK_ASSERT(func->getParams() == params);
+}
+
+OIIO_ADD_TEST(FixedFunction, load_ff_fail_version)
+{
+    std::ostringstream strebuf;
+    strebuf << "<?xml version='1.0' encoding='UTF-8'?>\n";
+    strebuf << "<ProcessList id='none' version='1.5'>\n";
+    strebuf << "    <FixedFunction inBitDepth='8i' outBitDepth='32f' ";
+    strebuf << "params = '0.8' ";
+    strebuf << "style = 'Rec2100Surround' />\n";
+    strebuf << "</ProcessList>\n";
+
+    std::istringstream ctf;
+    ctf.str(strebuf.str());
+
+    // Load file
+    std::string emptyString;
+    OCIO::LocalFileFormat tester;
+    OIIO_CHECK_THROW_WHAT(tester.Read(ctf, emptyString), OCIO::Exception,
+                          "Unsupported transform file version");
+}
+
+OIIO_ADD_TEST(FixedFunction, load_ff_fail_params)
+{
+    std::ostringstream strebuf;
+    strebuf << "<?xml version='1.0' encoding='UTF-8'?>\n";
+    strebuf << "<ProcessList id='none' version='2'>\n";
+    strebuf << "    <FixedFunction inBitDepth='8i' outBitDepth='32f' ";
+    strebuf << "params = '0.8 2.0' ";
+    strebuf << "style = 'Rec2100Surround' />\n";
+    strebuf << "</ProcessList>\n";
+
+    std::istringstream ctf;
+    ctf.str(strebuf.str());
+
+    // Load file
+    std::string emptyString;
+    OCIO::LocalFileFormat tester;
+    OIIO_CHECK_THROW_WHAT(tester.Read(ctf, emptyString), OCIO::Exception,
+                          "must have one parameter but 2 found");
+}
+
+OIIO_ADD_TEST(FixedFunction, load_ff_aces_fail_style)
+{
+    std::ostringstream strebuf;
+    strebuf << "<?xml version='1.0' encoding='UTF-8'?>\n";
+    strebuf << "<ProcessList id='none' version='1.5'>\n";
+    strebuf << "    <ACES inBitDepth='16i' outBitDepth='32f' style='UnknownStyle' />\n";
+    strebuf << "</ProcessList>\n";
+
+    std::istringstream ctf;
+    ctf.str(strebuf.str());
+
+    // Load file
+    std::string emptyString;
+    OCIO::LocalFileFormat tester;
+    OIIO_CHECK_THROW_WHAT(tester.Read(ctf, emptyString), OCIO::Exception,
+                          "Unknown FixedFunction style");
+}
+
+OIIO_ADD_TEST(FixedFunction, load_ff_aces_fail_gamma_param)
+{
+    std::ostringstream strebuf;
+    strebuf << "<?xml version='1.0' encoding='UTF-8'?>\n";
+    strebuf << "<ProcessList id='none' version='1.5'>\n";
+    strebuf << "    <ACES inBitDepth='16i' outBitDepth='32f' style='Surround'>\n";
+    strebuf << "        <ACESParams wrongParam='1.2' />\n";
+    strebuf << "    </ACES>\n";
+    strebuf << "</ProcessList>\n";
+
+    std::istringstream ctf;
+    ctf.str(strebuf.str());
+
+    // Load file
+    std::string emptyString;
+    OCIO::LocalFileFormat tester;
+    OIIO_CHECK_THROW_WHAT(tester.Read(ctf, emptyString), OCIO::Exception,
+                          "Missing required parameter");
+}
+
+OIIO_ADD_TEST(FixedFunction, load_ff_aces_fail_gamma_twice)
+{
+    std::ostringstream strebuf;
+    strebuf << "<?xml version='1.0' encoding='UTF-8'?>\n";
+    strebuf << "<ProcessList id='none' version='1.5'>\n";
+    strebuf << "    <ACES inBitDepth='16i' outBitDepth='32f' style='Surround'>\n";
+    strebuf << "        <ACESParams gamma='1.2' />\n";
+    strebuf << "        <ACESParams gamma='1.4' />\n";
+    strebuf << "    </ACES>\n";
+    strebuf << "</ProcessList>\n";
+
+    std::istringstream ctf;
+    ctf.str(strebuf.str());
+
+    // Load file
+    std::string emptyString;
+    OCIO::LocalFileFormat tester;
+    OIIO_CHECK_THROW_WHAT(tester.Read(ctf, emptyString), OCIO::Exception,
+                          "only 1 gamma parameter");
+}
+
+OIIO_ADD_TEST(FixedFunction, load_ff_aces_fail_missing_param)
+{
+    std::ostringstream strebuf;
+    strebuf << "<?xml version='1.0' encoding='UTF-8'?>\n";
+    strebuf << "<ProcessList id='none' version='1.5'>\n";
+    strebuf << "    <ACES inBitDepth='16i' outBitDepth='32f' style='Surround'>\n";
+    strebuf << "    </ACES>\n";
+    strebuf << "</ProcessList>\n";
+
+    std::istringstream ctf;
+    ctf.str(strebuf.str());
+
+    // Load file
+    std::string emptyString;
+    OCIO::LocalFileFormat tester;
+    OIIO_CHECK_THROW_WHAT(tester.Read(ctf, emptyString), OCIO::Exception,
+                          "must have one parameter");
+}
+
 // TODO: Bring over tests when adding CTF support.
 // synColor: xmlTransformReader_test.cpp
-// checkGamma1
-// checkGamma2
-// checkGamma3
-// checkGamma4
-// checkGamma5
-// checkGamma_wrong_power
-// checkGamma_alpha1
-// checkGamma_alpha2
-// checkGamma_alpha3
-// checkGamma_alpha4
-// checkGamma_alpha5
-// checkGamma_alpha6
-// checkLog_Log10
-// checkLog_Log2
-// checkLog_AntiLog10
-// checkLog_AntiLog2
-// checkLog_LogToLin
-// checkLog_LintToLog_3Chan
-// checkLog_invalidstyle
-// log_with_faulty_version_test
+
 // checkDither
 // look_test
 // look_test_true
-// checkACES
-// checkACES2
 // checkFunction
 // checkGamutMap
 // checkHueVector

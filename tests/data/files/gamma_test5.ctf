@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="id">
+    <Description>Alpha param not allowed for versions below 1.5</Description>
+    <Gamma inBitDepth="16f" outBitDepth="8i" style="basicFwd">
+        <!-- If there is only one Params, use it for R, G, and B. -->
+        <GammaParams gamma="2.4" />
+        <!-- Invalid GammaParams on alpha channel for unversioned ctf -->
+        <GammaParams channel="A" gamma="1.2" />
+    </Gamma>
+</ProcessList>

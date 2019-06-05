@@ -40,13 +40,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    
-    // Create a CDL op from an OpData CDL
-    void CreateCDLOp(OpRcPtrVec & ops, 
-                     CDLOpDataRcPtr & cdlData,
-                     TransformDirection direction);
 
-    // Create a CDL op from its parameters
+    // Create a CDL op from its parameters.
     void CreateCDLOp(OpRcPtrVec & ops,
                      const std::string & id,
                      const OpData::Descriptions & descr,
@@ -55,6 +50,11 @@ OCIO_NAMESPACE_ENTER
                      const double * offset3,
                      const double * power3,
                      double saturation,
+                     TransformDirection direction);
+    
+    // Create a CDL op from an OpData CDL.
+    void CreateCDLOp(OpRcPtrVec & ops, 
+                     CDLOpDataRcPtr & cdlData,
                      TransformDirection direction);
 
 }

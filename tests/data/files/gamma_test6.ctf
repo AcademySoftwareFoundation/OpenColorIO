@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="id" version="1.3">
+    <Description>Identity test</Description>
+    <Gamma inBitDepth="16f" outBitDepth="8i" style="moncurveFwd">
+        <!-- This sets the R, G and B channels to identity -->
+        <GammaParams gamma="1.0" offset="0.0" />
+    </Gamma>
+</ProcessList>
