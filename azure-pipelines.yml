@@ -132,17 +132,14 @@ jobs:
         agentImage: 'vs2017-win2016'
         buildSharedLibs: ON
         buildDocs: ON
-        cxxFlags: /D NDEBUG /EHsc
       2016 MSVC 14.16 (Static):
         agentImage: 'vs2017-win2016'
         buildSharedLibs: OFF
         buildDocs: OFF
-        cxxFlags: /D NDEBUG /EHsc
       2012 MSVC 14.0:
         agentImage: 'vs2015-win2012r2'
         buildSharedLibs: ON
         buildDocs: ON
-        cxxFlags: ''
   pool:
     vmImage: $(agentImage)
 
@@ -158,7 +155,7 @@ jobs:
     parameters:
       buildSharedLibs: $(buildSharedLibs)
       buildDocs: $(buildDocs)
-      cxxFlags: $(cxxFlags)
+      cxxFlags: /D NDEBUG /EHsc
       verbose: ON
       cmakeOpts: |
         -DCMAKE_GENERATOR_PLATFORM=x64 \
