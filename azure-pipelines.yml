@@ -18,11 +18,6 @@ pr:
     - master
     - RB-*
 
-# Common variables
-variables:
-  cxxStd: 14
-  nixCxxFlags: -std=c++$(cxxStd) -fPIC
-
 jobs:
 
 # ------------------------------------------------------------------------------
@@ -36,19 +31,25 @@ jobs:
       Ubuntu 18.04 VFX CY2020:
         agentImage: 'ubuntu-16.04'
         containerImage: michdolan/ubuntu18.04:vfx2020_py27
-        cxxFlags: ''
+        useSSE: ON
         cxxCompiler: g++
         cCompiler: gcc
       Ubuntu 18.04 VFX CY2019:
         agentImage: 'ubuntu-16.04'
         containerImage: michdolan/ubuntu18.04:vfx2019
-        cxxFlags: ''
+        useSSE: ON
+        cxxCompiler: g++
+        cCompiler: gcc
+      Ubuntu 18.04 VFX CY2019 (No SSE):
+        agentImage: 'ubuntu-16.04'
+        containerImage: michdolan/ubuntu18.04:vfx2019
+        useSSE: OFF
         cxxCompiler: g++
         cCompiler: gcc
       Ubuntu 18.04 Clang 6.0:
         agentImage: 'ubuntu-16.04'
         containerImage: michdolan/ubuntu18.04:vfx2019
-        cxxFlags: -Wno-deprecated-register
+        useSSE: ON
         cxxCompiler: clang++
         cCompiler: clang
   pool:
@@ -59,7 +60,7 @@ jobs:
   - template: share/ci/templates/checkout.yml
   - template: share/ci/templates/configure.yml
     parameters:
-      cxxFlags: $(nixCxxFlags) $(cxxFlags)
+      useSSE: $(useSSE)
       cxxCompiler: $(cxxCompiler)
       cCompiler: $(cCompiler)
 
@@ -83,7 +84,7 @@ jobs:
   - template: share/ci/templates/checkout.yml
   - template: share/ci/templates/configure.yml
     parameters:
-      cxxFlags: $(nixCxxFlags) -g -O0 -fprofile-arcs -ftest-coverage
+      cxxFlags: -g -O0 -fprofile-arcs -ftest-coverage
       cmakeOpts: |
         -DCMAKE_EXE_LINKER_FLAGS="-lgcov" \
         -DCMAKE_CXX_OUTPUT_EXTENSION_REPLACE=ON
@@ -98,6 +99,8 @@ jobs:
     matrix:
       10.14 AppleClang 10.0:
         agentImage: 'macOS-10.14'
+      10.13 AppleClang 9.4:
+        agentImage: 'macOS-10.13'
   pool:
     vmImage: $(agentImage)
   
@@ -108,7 +111,6 @@ jobs:
 
   - template: share/ci/templates/configure.yml
     parameters:
-      cxxFlags: $(nixCxxFlags) -Wno-deprecated-register
       cmakeOpts: |
         -DPYTHON_INCLUDE_DIR=$(python-config --prefix)/include/python2.7 \
         -DPYTHON_LIBRARY=$(python-config --prefix)/lib/libpython2.7.dylib \
@@ -121,6 +123,8 @@ jobs:
 # ------------------------------------------------------------------------------
 # Windows
 # ------------------------------------------------------------------------------
+# TODO: Move '/EHsc' or '/wd4530' to CMakeLists.txt after further investigation
+
 - job: Windows
   strategy:
     matrix:
@@ -128,10 +132,17 @@ jobs:
         agentImage: 'vs2017-win2016'
         buildSharedLibs: ON
         buildDocs: ON
-      2016 MSVC 14.16 Static:
+        cxxFlags: /EHsc
+      2016 MSVC 14.16 (Static):
         agentImage: 'vs2017-win2016'
         buildSharedLibs: OFF
         buildDocs: OFF
+        cxxFlags: /EHsc
+      2012 MSVC 14.0:
+        agentImage: 'vs2015-win2012r2'
+        buildSharedLibs: ON
+        buildDocs: ON
+        cxxFlags: ''
   pool:
     vmImage: $(agentImage)
 
@@ -147,7 +158,7 @@ jobs:
     parameters:
       buildSharedLibs: $(buildSharedLibs)
       buildDocs: $(buildDocs)
-      cxxFlags: /std:c++$(cxxStd) /EHsc /D WIN32 /D NDEBUG
+      cxxFlags: $(cxxFlags)
       verbose: ON
       cmakeOpts: |
         -DCMAKE_GENERATOR_PLATFORM=x64 \

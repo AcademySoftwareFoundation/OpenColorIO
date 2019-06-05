@@ -7,6 +7,7 @@ parameters:
   buildTests: ON
   buildGpuTests: OFF
   buildDocs: ON
+  useSSE: ON
   verbose: OFF
   cxxFlags: ''
   cxxCompiler: ''
@@ -37,6 +38,7 @@ steps:
           -DOCIO_BUILD_TESTS=${{ parameters.buildTests }} \
           -DOCIO_BUILD_GPU_TESTS=${{ parameters.buildGpuTests }} \
           -DOCIO_BUILD_DOCS=${{ parameters.buildDocs }} \
+          -DOCIO_USE_SSE=${{ parameters.useSSE }} \
           -DOCIO_WARNING_AS_ERROR=ON \
           ${{ parameters.cmakeOpts }}
   workingDirectory: _build
