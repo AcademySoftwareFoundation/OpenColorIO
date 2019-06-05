@@ -1158,7 +1158,7 @@ void CTFReaderACESParamsElt::start(const char **atts)
         if (0 == Platform::Strcasecmp(ATTR_GAMMA, atts[i]))
         {
             const size_t len = strlen(atts[i + 1]);
-            ParseNumber(atts[i + 1], len, gamma);
+            ParseNumber(atts[i + 1], 0, len, gamma);
         }
 
         i += 2;
@@ -1529,19 +1529,19 @@ void CTFReaderECParamsElt::start(const char ** atts)
 
         if (0 == Platform::Strcasecmp(ATTR_EXPOSURE, atts[i]))
         {
-            ParseNumber(atts[i + 1], len, exposure);
+            ParseNumber(atts[i + 1], 0, len, exposure);
         }
         else if (0 == Platform::Strcasecmp(ATTR_CONTRAST, atts[i]))
         {
-            ParseNumber(atts[i + 1], len, contrast);
+            ParseNumber(atts[i + 1], 0, len, contrast);
         }
         else if (0 == Platform::Strcasecmp(ATTR_GAMMA, atts[i]))
         {
-            ParseNumber(atts[i + 1], len, gamma);
+            ParseNumber(atts[i + 1], 0, len, gamma);
         }
         else if (0 == Platform::Strcasecmp(ATTR_PIVOT, atts[i]))
         {
-            ParseNumber(atts[i + 1], len, pivot);
+            ParseNumber(atts[i + 1], 0, len, pivot);
         }
 
         i += 2;
@@ -1723,12 +1723,12 @@ void CTFReaderGammaParamsElt::start(const char ** atts)
         else if (0 == Platform::Strcasecmp(ATTR_GAMMA, atts[i]))
         {
             const size_t len = strlen(atts[i + 1]);
-            ParseNumber(atts[i + 1], len, gamma);
+            ParseNumber(atts[i + 1], 0, len, gamma);
         }
         else if (0 == Platform::Strcasecmp(ATTR_OFFSET, atts[i]))
         {
             const size_t len = strlen(atts[i + 1]);
-            ParseNumber(atts[i + 1], len, offset);
+            ParseNumber(atts[i + 1], 0, len, offset);
         }
 
         i += 2;
@@ -2274,23 +2274,23 @@ void CTFReaderLogParamsElt::start(const char ** atts)
         }
         else if (0 == Platform::Strcasecmp(ATTR_GAMMA, atts[i]))
         {
-            ParseNumber(atts[i + 1], len, gamma);
+            ParseNumber(atts[i + 1], 0, len, gamma);
         }
         else if (0 == Platform::Strcasecmp(ATTR_REFWHITE, atts[i]))
         {
-            ParseNumber(atts[i + 1], len, refWhite);
+            ParseNumber(atts[i + 1], 0, len, refWhite);
         }
         else if (0 == Platform::Strcasecmp(ATTR_REFBLACK, atts[i]))
         {
-            ParseNumber(atts[i + 1], len, refBlack);
+            ParseNumber(atts[i + 1], 0, len, refBlack);
         }
         else if (0 == Platform::Strcasecmp(ATTR_HIGHLIGHT, atts[i]))
         {
-            ParseNumber(atts[i + 1], len, highlight);
+            ParseNumber(atts[i + 1], 0, len, highlight);
         }
         else if (0 == Platform::Strcasecmp(ATTR_SHADOW, atts[i]))
         {
-            ParseNumber(atts[i + 1], len, shadow);
+            ParseNumber(atts[i + 1], 0, len, shadow);
         }
 
         i += 2;
