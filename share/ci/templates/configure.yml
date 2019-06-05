@@ -34,7 +34,7 @@ steps:
           -DCMAKE_INSTALL_PREFIX=../_install \
           -DCMAKE_BUILD_TYPE=${{ parameters.buildType }} \
           -DCMAKE_CXX_STANDARD=${{ parameters.cxxStd }} \
-          -DCMAKE_CXX_FLAGS=${{ parameters.cxxFlags }} \
+          -DCMAKE_CXX_FLAGS="${{ parameters.cxxFlags }}" \
           -DCMAKE_VERBOSE_MAKEFILE:BOOL=${{ parameters.verbose }} \
           -DBUILD_SHARED_LIBS=${{ parameters.buildSharedLibs }} \
           -DOCIO_BUILD_TESTS=${{ parameters.buildTests }} \
