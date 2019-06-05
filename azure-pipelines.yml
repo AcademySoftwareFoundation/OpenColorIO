@@ -155,7 +155,7 @@ jobs:
     parameters:
       buildSharedLibs: $(buildSharedLibs)
       buildDocs: $(buildDocs)
-      cxxFlags: /D NDEBUG /EHsc
+      cxxFlags: /std:c++14 /EHsc /D WIN32 /D NDEBUG
       verbose: ON
       cmakeOpts: |
         -DCMAKE_GENERATOR_PLATFORM=x64 \
