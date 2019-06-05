@@ -84,7 +84,7 @@ jobs:
   - template: share/ci/templates/checkout.yml
   - template: share/ci/templates/configure.yml
     parameters:
-      cxxFlags: -g -O0 -fprofile-arcs -ftest-coverage
+      cxxFlags: "-g -O0 -fprofile-arcs -ftest-coverage"
       cmakeOpts: |
         -DCMAKE_EXE_LINKER_FLAGS="-lgcov" \
         -DCMAKE_CXX_OUTPUT_EXTENSION_REPLACE=ON
@@ -99,7 +99,7 @@ jobs:
     matrix:
       10.14 AppleClang 10.0:
         agentImage: 'macOS-10.14'
-      10.13 AppleClang 9.4:
+      10.13 AppleClang 10.0:
         agentImage: 'macOS-10.13'
   pool:
     vmImage: $(agentImage)
@@ -132,12 +132,12 @@ jobs:
         agentImage: 'vs2017-win2016'
         buildSharedLibs: ON
         buildDocs: ON
-        cxxFlags: /EHsc
+        cxxFlags: "/EHsc"
       2016 MSVC 14.16 (Static):
         agentImage: 'vs2017-win2016'
         buildSharedLibs: OFF
         buildDocs: OFF
-        cxxFlags: /EHsc
+        cxxFlags: "/EHsc"
       2012 MSVC 14.0:
         agentImage: 'vs2015-win2012r2'
         buildSharedLibs: ON
