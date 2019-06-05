@@ -307,11 +307,10 @@ void LogOpData::finalize()
 bool LogOpData::operator==(const OpData& other) const
 {
     if (this == &other) return true;
-    if (getType() != other.getType()) return false;
+
+    if (!OpData::operator==(other)) return false;
 
     const LogOpData* log = static_cast<const LogOpData*>(&other);
-
-    if (!(OpData::operator==(other))) return false;
 
     return (m_direction == log->m_direction
             && m_base == log->m_base
