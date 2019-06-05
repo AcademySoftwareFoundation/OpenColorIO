@@ -23,9 +23,13 @@ jobs:
 # ------------------------------------------------------------------------------
 # Linux
 # ------------------------------------------------------------------------------
+# Note: 'agentImage' is the Microsoft-hosted agent. 'containerImage' is the
+#       Docker container where the build occurs.
+# Note: 'containerImage' images are hosted on DockerHub.
+
 # TODO: Move Docker images to ASWF DockerHub account
 # TODO: Investigate 'No SSE' test failure:
-#   [335/555] [GammaOps / apply_moncurve_style_rev ] - FAILED
+#       [335/555] [GammaOps / apply_moncurve_style_rev ] - FAILED
 
 - job: Linux
   strategy:
@@ -125,8 +129,8 @@ jobs:
 # ------------------------------------------------------------------------------
 # Windows
 # ------------------------------------------------------------------------------
-# TODO: Setup Python environment on 'vs2015-win2012r2' agent. See:
-#   https://github.com/Microsoft/azure-pipelines-image-generation/issues/374
+# TODO: Configure Python for 'vs2015-win2012r2' agent. See:
+#       https://github.com/Microsoft/azure-pipelines-image-generation/issues/374
 
 - job: Windows
   strategy:

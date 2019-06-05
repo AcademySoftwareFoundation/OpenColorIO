@@ -60,6 +60,12 @@ option(OCIO_INLINES_HIDDEN "Specify whether to build with -fvisibility-inlines-h
 
 set(PLATFORM_COMPILE_FLAGS "")
 
+if(NOT MSVC)
+    message(STATUS " MSVC is undefined!")
+else()
+    message(STATUS " MSVC is defined!")
+endif()
+
 if(MSVC)
 	# Because our Exceptions derive from std::runtime_error we can safely disable warning 4275
 	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /EHsc /wd4275 /DWIN32")
