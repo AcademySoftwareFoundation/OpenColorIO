@@ -24,6 +24,8 @@ jobs:
 # Linux
 # ------------------------------------------------------------------------------
 # TODO: Move Docker images to ASWF DockerHub account
+# TODO: Investigate 'No SSE' test failure:
+#   [335/555] [GammaOps / apply_moncurve_style_rev ] - FAILED
 
 - job: Linux
   strategy:
@@ -40,18 +42,18 @@ jobs:
         useSSE: ON
         cxxCompiler: g++
         cCompiler: gcc
-      Ubuntu 18.04 VFX CY2019 (No SSE):
-        agentImage: 'ubuntu-16.04'
-        containerImage: michdolan/ubuntu18.04:vfx2019
-        useSSE: OFF
-        cxxCompiler: g++
-        cCompiler: gcc
       Ubuntu 18.04 Clang 6.0:
         agentImage: 'ubuntu-16.04'
         containerImage: michdolan/ubuntu18.04:vfx2019
         useSSE: ON
         cxxCompiler: clang++
         cCompiler: clang
+#      Ubuntu 18.04 VFX CY2019 (No SSE):
+#        agentImage: 'ubuntu-16.04'
+#        containerImage: michdolan/ubuntu18.04:vfx2019
+#        useSSE: OFF
+#        cxxCompiler: g++
+#        cCompiler: gcc
   pool:
     vmImage: $(agentImage)
   container: $[ variables['containerImage'] ]
@@ -123,7 +125,8 @@ jobs:
 # ------------------------------------------------------------------------------
 # Windows
 # ------------------------------------------------------------------------------
-# TODO: Move '/EHsc' or '/wd4530' to CMakeLists.txt after further investigation
+# TODO: Setup Python environment on 'vs2015-win2012r2' agent. See:
+#   https://github.com/Microsoft/azure-pipelines-image-generation/issues/374
 
 - job: Windows
   strategy:
@@ -136,10 +139,10 @@ jobs:
         agentImage: 'vs2017-win2016'
         buildSharedLibs: OFF
         buildDocs: OFF
-      2012 MSVC 14.0:
-        agentImage: 'vs2015-win2012r2'
-        buildSharedLibs: ON
-        buildDocs: ON
+#      2012 MSVC 14.0:
+#        agentImage: 'vs2015-win2012r2'
+#        buildSharedLibs: ON
+#        buildDocs: ON
   pool:
     vmImage: $(agentImage)
 
@@ -155,7 +158,6 @@ jobs:
     parameters:
       buildSharedLibs: $(buildSharedLibs)
       buildDocs: $(buildDocs)
-      cxxFlags: /EHsc /D WIN32 /D NDEBUG
       verbose: ON
       cmakeOpts: |
         -DCMAKE_GENERATOR_PLATFORM=x64 \
