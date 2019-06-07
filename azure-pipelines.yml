@@ -146,6 +146,8 @@ jobs:
     vmImage: $(agentImage)
 
   steps:
+  - template: share/ci/templates/checkout.yml
+
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '2.7'
@@ -156,7 +158,6 @@ jobs:
     displayName: Install dependencies
     condition: eq(variables['agentImage'], 'vs2015-win2012r2')
 
-  - template: share/ci/templates/checkout.yml
   - template: share/ci/templates/configure.yml
     parameters:
       buildSharedLibs: $(buildSharedLibs)
