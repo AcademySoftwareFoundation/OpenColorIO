@@ -28,8 +28,6 @@ jobs:
 # Note: 'containerImage' images are hosted on DockerHub.
 
 # TODO: Move Docker images to ASWF DockerHub account
-# TODO: Investigate 'No SSE' test failure:
-#       [335/555] [GammaOps / apply_moncurve_style_rev ] - FAILED
 
 - job: Linux
   strategy:
@@ -52,12 +50,12 @@ jobs:
         useSSE: ON
         cxxCompiler: clang++
         cCompiler: clang
-#      Ubuntu 18.04 VFX CY2019 (No SSE):
-#        agentImage: 'ubuntu-16.04'
-#        containerImage: michdolan/ubuntu18.04:vfx2019
-#        useSSE: OFF
-#        cxxCompiler: g++
-#        cCompiler: gcc
+      Ubuntu 18.04 VFX CY2019 (No SSE):
+        agentImage: 'ubuntu-16.04'
+        containerImage: michdolan/ubuntu18.04:vfx2019
+        useSSE: OFF
+        cxxCompiler: g++
+        cCompiler: gcc
   pool:
     vmImage: $(agentImage)
   container: $[ variables['containerImage'] ]
@@ -129,9 +127,6 @@ jobs:
 # ------------------------------------------------------------------------------
 # Windows
 # ------------------------------------------------------------------------------
-# TODO: Configure Python for 'vs2015-win2012r2' agent. See:
-#       https://github.com/Microsoft/azure-pipelines-image-generation/issues/374
-
 - job: Windows
   strategy:
     matrix:
@@ -143,19 +138,19 @@ jobs:
         agentImage: 'vs2017-win2016'
         buildSharedLibs: OFF
         buildDocs: OFF
-#      2012 MSVC 14.0:
-#        agentImage: 'vs2015-win2012r2'
-#        buildSharedLibs: ON
-#        buildDocs: ON
+      2012 MSVC 14.0:
+        agentImage: 'vs2015-win2012r2'
+        buildSharedLibs: ON
+        buildDocs: ON
   pool:
     vmImage: $(agentImage)
 
   steps:
   - task: UsePythonVersion@0
-    # Note: This provides a static Python lib only
     inputs:
       versionSpec: '2.7'
     displayName: Configure Python
+    condition: ne(variables['Agent.Name'], 'vs2015-win2012r2')
 
   - template: share/ci/templates/checkout.yml
   - template: share/ci/templates/configure.yml
