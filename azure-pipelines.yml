@@ -155,6 +155,7 @@ jobs:
       ls
       ls C:/
       python --version
+      cat C:/msi.log
 
   - template: share/ci/templates/configure.yml
     parameters:
