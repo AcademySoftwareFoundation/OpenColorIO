@@ -150,7 +150,7 @@ jobs:
     inputs:
       versionSpec: '2.7'
     displayName: Configure Python
-    condition: ne(variables['Agent.Name'], 'vs2015-win2012r2')
+    condition: ne(variables['agentImage'], 'vs2015-win2012r2')
 
   - template: share/ci/templates/checkout.yml
   - template: share/ci/templates/configure.yml
