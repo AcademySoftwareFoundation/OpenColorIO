@@ -147,22 +147,8 @@ jobs:
 
   steps:
   - template: share/ci/templates/checkout.yml
-
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '2.7'
-    displayName: Configure Python
-    condition: ne(variables['agentImage'], 'vs2015-win2012r2')
-
-  - powershell: share/ci/scripts/install_win2012r2.ps1
+  - powershell: share/ci/scripts/install_windows.ps1
     displayName: Install dependencies
-    condition: eq(variables['agentImage'], 'vs2015-win2012r2')
-
-  - bash: |
-      echo "${PATH}"
-      ls
-      ls C:/
-      python --version
 
   - template: share/ci/templates/configure.yml
     parameters:
