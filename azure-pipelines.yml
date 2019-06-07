@@ -158,6 +158,12 @@ jobs:
     displayName: Install dependencies
     condition: eq(variables['agentImage'], 'vs2015-win2012r2')
 
+  - bash: |
+      echo "${PATH}"
+      ls
+      ls C:/
+      python --version
+
   - template: share/ci/templates/configure.yml
     parameters:
       buildSharedLibs: $(buildSharedLibs)
