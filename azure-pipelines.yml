@@ -150,13 +150,6 @@ jobs:
   - powershell: share/ci/scripts/install_windows.ps1
     displayName: Install dependencies
 
-  - bash: |
-      echo "${PATH}"
-      ls
-      ls C:/
-      python --version
-      cat C:/msi.log
-
   - template: share/ci/templates/configure.yml
     parameters:
       buildSharedLibs: $(buildSharedLibs)
