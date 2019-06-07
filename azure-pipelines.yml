@@ -152,6 +152,10 @@ jobs:
     displayName: Configure Python
     condition: ne(variables['agentImage'], 'vs2015-win2012r2')
 
+  - powershell: share/ci/scripts/install_win2012r2.ps1
+    displayName: Install dependencies
+    condition: eq(variables['agentImage'], 'vs2015-win2012r2')
+
   - template: share/ci/templates/checkout.yml
   - template: share/ci/templates/configure.yml
     parameters:
