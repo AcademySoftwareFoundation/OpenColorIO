@@ -1,6 +1,6 @@
 # Upgrade Python
 Invoke-WebRequest https://www.python.org/ftp/python/2.7.16/python-2.7.16.amd64.msi -OutFile C:\python-2.7.16.amd64.msi
-msiexec /i C:\python-2.7.16.amd64.msi ALLUSERS=0 TARGETDIR=C:\_python27
+msiexec /i C:\python-2.7.16.amd64.msi ALLUSERS=1 ADDLOCAL=ALL TARGETDIR=C:\_python27 /log
 Write-Host "##vso[task.prependpath]C:\_python27"
 Write-Host "##vso[task.prependpath]C:\_python27\Scripts"
 
