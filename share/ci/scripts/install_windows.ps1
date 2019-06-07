@@ -1,6 +1,6 @@
 # Install Python
 Invoke-WebRequest https://www.python.org/ftp/python/2.7.16/python-2.7.16.amd64.msi -OutFile C:\python-2.7.16.amd64.msi
-msiexec /i C:\python-2.7.16.amd64.msi /quiet /l* ALLUSERS=1 ADDLOCAL=ALL TARGETDIR=C:\_python27
+msiexec /i C:\python-2.7.16.amd64.msi /quiet /l* C:\_python27.log TARGETDIR=C:\_python27
 Write-Host "##vso[task.prependpath]C:\_python27"
 Write-Host "##vso[task.prependpath]C:\_python27\Scripts"
 
