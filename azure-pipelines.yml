@@ -148,9 +148,8 @@ jobs:
   steps:
   - template: share/ci/templates/checkout.yml
   - powershell: |
-      share/ci/scripts/install_windows.ps1 `
-          -PythonVersion 2.17.16 `
-          -CMakeVersion 3.14.4
+      share/ci/scripts/install_python.ps1 2.7.16
+      share/ci/scripts/install_cmake.ps1 3.14.4
     displayName: Install dependencies
 
   - template: share/ci/templates/configure.yml
