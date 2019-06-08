@@ -2,11 +2,11 @@
 
 set -ex
 
-BOOST_MAJOR="$1"
-BOOST_MINOR="$2"
-BOOST_PATCH="$3"
-BOOST_MAJOR_MINOR="${BOOST_MAJOR}.${BOOST_MINOR}"
-BOOST_VERSION="${BOOST_MAJOR}.${BOOST_MINOR}.${BOOST_PATCH}"
+BOOST_VERSION="$1"
+BOOST_MAJOR_MINOR=$(echo "${BOOST_VERSION}" | cut -d. -f-2)
+BOOST_MAJOR=$(echo "${BOOST_VERSION}" | cut -d. -f-1)
+BOOST_MINOR=$(echo "${BOOST_MAJOR_MINOR}" | cut -d. -f2-)
+BOOST_PATCH=$(echo "${BOOST_VERSION}" | cut -d. -f3-)
 BOOST_VERSION_U="${BOOST_MAJOR}_${BOOST_MINOR}_${BOOST_PATCH}"
 
 echo "using python : : /usr/bin/python${PYTHON_VERSION} ;\n" \

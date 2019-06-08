@@ -2,11 +2,11 @@
 
 set -ex
 
-CMAKE_MAJOR="$1"
-CMAKE_MINOR="$2"
-CMAKE_PATCH="$3"
-CMAKE_MAJOR_MINOR="${CMAKE_MAJOR}.${CMAKE_MINOR}"
-CMAKE_VERSION="${CMAKE_MAJOR}.${CMAKE_MINOR}.${CMAKE_PATCH}"
+CMAKE_VERSION="$1"
+CMAKE_MAJOR_MINOR=$(echo "${CMAKE_VERSION}" | cut -d. -f-2)
+CMAKE_MAJOR=$(echo "${CMAKE_VERSION}" | cut -d. -f-1)
+CMAKE_MINOR=$(echo "${CMAKE_MAJOR_MINOR}" | cut -d. -f2-)
+CMAKE_PATCH=$(echo "${CMAKE_VERSION}" | cut -d. -f3-)
 
 apt remove -y cmake
 
