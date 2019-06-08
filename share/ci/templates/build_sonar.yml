@@ -23,7 +23,7 @@ steps:
 
 - template: test.yml
 
-- bash: share/ci/scripts/run_gcov.sh
+- bash: share/ci/scripts/linux/run_gcov.sh
   displayName: Generate code coverage report
 
 - bash: sonar-scanner -X -Dsonar.login=$SONAR_TOKEN
