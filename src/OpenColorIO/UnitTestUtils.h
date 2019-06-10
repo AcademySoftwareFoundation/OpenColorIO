@@ -50,7 +50,10 @@ void BuildOpsTest(OpRcPtrVec & fileOps,
                   const std::string & fileName,
                   ContextRcPtr & context,
                   TransformDirection dir);
-    
+
+// Create processor for a given file.
+ConstProcessorRcPtr GetFileTransformProcessor(const std::string & fileName);
+
 class CachedFile;
 
 template <class LocalFileFormat, class LocalCachedFile>

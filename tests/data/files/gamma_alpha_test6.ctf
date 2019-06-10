@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="1.5" id="id">
+    <Description>Cannot mix moncurve RGB with basic alpha</Description>
+    <Gamma inBitDepth="16f" outBitDepth="8i" style="moncurveFwd">
+        <GammaParams gamma="2.2222222222222222" offset="0.099" />
+        <!-- Sets invalid parameters for the A channel - missing offset -->
+        <GammaParams channel="A" gamma="1.7" />
+    </Gamma>
+</ProcessList>

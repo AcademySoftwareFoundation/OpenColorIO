@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="id">
+    <Gamma inBitDepth="16f" outBitDepth="32f" style="moncurveRev">
+        <GammaParams offset="0.1" channel="B" gamma="2.6" />
+        <GammaParams channel="G" gamma="2.4" offset="0.01" />
+        <GammaParams channel="R" gamma="2.2" offset="0.001" />
+   </Gamma>
+</ProcessList>

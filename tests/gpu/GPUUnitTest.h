@@ -30,9 +30,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OPENCOLORIO_GPU_UNITTEST_H
 #define OPENCOLORIO_GPU_UNITTEST_H
 
-#include <vector>
+#include <functional>
 #include <string>
-
+#include <vector>
 
 class OCIOGPUTest;
 
@@ -64,6 +64,8 @@ class OCIOGPUTest
 
     public:
         OCIOGPUTest(const std::string& testgroup, const std::string& testname, OCIOTestFunc test);
+
+        ~OCIOGPUTest();
 
         inline const std::string& group() const  { return m_group; }
         inline const std::string& name() const  { return m_name; }
@@ -121,6 +123,42 @@ class OCIOGPUTest
         inline void disable() { m_enabled = false; }
         inline bool isEnabled() const { return m_enabled; }
 
+        // Testing dynamic properties requires to run several times the same
+        // unit test with the same shader code with some dynamic property
+        // value changes. Registering n callbacks (i.e. each callback changing
+        // a value for example) would run 1+n times the unit test.
+        // Test runs, then for each callback, it is called and test runs again.
+        // See ECOps_test.cpp for an example.
+        typedef std::function<void()> RetestSetupCallback;
+        inline void addRetest(RetestSetupCallback & retest)
+        {
+            m_retests.push_back(retest);
+        }
+
+        inline size_t getNumRetests() const
+        {
+            return m_retests.size();
+        }
+
+        void retestSetup(size_t idx);
+
+        inline void updateMaxDiff(float maxDiff, size_t idxDiff)
+        {
+            if (maxDiff > m_maxDiff)
+            {
+                m_maxDiff = maxDiff;
+                m_idxDiff = idxDiff;
+            }
+        }
+        inline float getMaxDiff() const
+        {
+            return m_maxDiff;
+        }
+        inline size_t getMaxDiffIndex() const
+        {
+            return m_idxDiff;
+        }
+
     private:
         const std::string m_group, m_name;
         OCIOTestFunc m_function;          
@@ -128,6 +166,8 @@ class OCIOGPUTest
         OCIO_NAMESPACE::GpuShaderDescRcPtr m_shaderDesc;
         float m_errorThreshold;
         float m_expectedMinimalValue = 1e-6f;
+        float m_maxDiff = 0.f;
+        size_t m_idxDiff = 0;
         bool m_testWideRange = true;
         bool m_testNaN = true;
         bool m_testInfinity = true;
@@ -135,20 +175,26 @@ class OCIOGPUTest
         bool m_verbose = false;
         bool m_enabled = true;
         CustomValues m_values;
+
+        std::vector<RetestSetupCallback> m_retests;
+
 };
 
-typedef std::vector<OCIOGPUTest*> UnitTests;
+typedef std::shared_ptr<OCIOGPUTest> OCIOGPUTestRcPtr;
+typedef std::vector<OCIOGPUTestRcPtr> UnitTests;
 
 UnitTests& GetUnitTests();
 
-struct AddTest { AddTest(OCIOGPUTest* test); };
+struct AddTest { AddTest(OCIOGPUTestRcPtr test); };
 
 
 // Use this macro to declare a test and provide a setup function for the test.
-#define OCIO_ADD_GPU_TEST(group, name)                                     \
-    static void ocio_gputest_##group##_##name(OCIOGPUTest & test);         \
-    AddTest ocio_##group##_##name(                                         \
-        new OCIOGPUTest(#group, #name, ocio_gputest_##group##_##name));    \
+#define OCIO_ADD_GPU_TEST(group, name)                                    \
+    static void ocio_gputest_##group##_##name(OCIOGPUTest & test);        \
+    AddTest ocio_##group##_##name(                                        \
+        std::make_shared<OCIOGPUTest>(#group,                             \
+                                      #name,                              \
+                                      ocio_gputest_##group##_##name));    \
     static void ocio_gputest_##group##_##name(OCIOGPUTest & test)
 
 // Use this macro inside OCIO_ADD_GPU_TEST function to disable the test.

@@ -182,16 +182,6 @@ void FixedFunctionOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) cons
 ///////////////////////////////////////////////////////////////////////////
 
 
-
-void CreateFixedFunctionOp(OpRcPtrVec & ops, 
-                           FixedFunctionOpDataRcPtr funcData)
-{
-    if(funcData->isNoOp()) return;
-
-    ops.push_back(std::make_shared<FixedFunctionOp>(funcData));
-}
-
-
 void CreateFixedFunctionOp(OpRcPtrVec & ops, 
                            const FixedFunctionOpData::Params & params,
                            FixedFunctionOpData::Style style)
@@ -199,8 +189,24 @@ void CreateFixedFunctionOp(OpRcPtrVec & ops,
     FixedFunctionOpDataRcPtr funcData 
         = std::make_shared<FixedFunctionOpData>(BIT_DEPTH_F32, BIT_DEPTH_F32,
                                                 params, style);
-    CreateFixedFunctionOp(ops, funcData);
+    CreateFixedFunctionOp(ops, funcData, TRANSFORM_DIR_FORWARD);
 }
+
+void CreateFixedFunctionOp(OpRcPtrVec & ops, 
+                           FixedFunctionOpDataRcPtr & funcData,
+                           TransformDirection direction)
+{
+    if(funcData->isNoOp()) return;
+
+    auto func = funcData;
+    if (direction == TRANSFORM_DIR_INVERSE)
+    {
+        func = func->inverse();
+    }
+
+    ops.push_back(std::make_shared<FixedFunctionOp>(func));
+}
+
 
 
 }

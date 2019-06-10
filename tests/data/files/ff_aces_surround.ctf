@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="none" version="1.5">
+<!-- 
+The ACES element is now deprecated.  Please use FixedFunction going forward.
+ -->
+    <ACES inBitDepth="16i" outBitDepth="32f" style="Surround">
+        <ACESParams gamma="1.2" />
+    </ACES>
+</ProcessList>

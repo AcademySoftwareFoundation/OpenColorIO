@@ -161,7 +161,7 @@ OCIO_NAMESPACE_ENTER
     {
         auto opData = std::make_shared<LogOpData>(base, logSlope, logOffset,
                                                   linSlope, linOffset, direction);
-        ops.push_back( std::make_shared<LogOp>(opData));
+        ops.push_back(std::make_shared<LogOp>(opData));
     }
 
     void CreateLogOp(OpRcPtrVec & ops, double base, TransformDirection direction)
@@ -169,6 +169,25 @@ OCIO_NAMESPACE_ENTER
         auto opData = std::make_shared<LogOpData>(base, direction);
         ops.push_back(std::make_shared<LogOp>(opData));
     }
+
+    void CreateLogOp(OpRcPtrVec & ops,
+                     LogOpDataRcPtr & logData,
+                     TransformDirection direction)
+    {
+        if (direction == TRANSFORM_DIR_UNKNOWN)
+        {
+            throw Exception("Cannot create Log op, unspecified transform direction.");
+        }
+
+        auto log = logData;
+        if (direction == TRANSFORM_DIR_INVERSE)
+        {
+            log = log->inverse();
+        }
+
+        ops.push_back(std::make_shared<LogOp>(log));
+    }
+
 }
 OCIO_NAMESPACE_EXIT
 
