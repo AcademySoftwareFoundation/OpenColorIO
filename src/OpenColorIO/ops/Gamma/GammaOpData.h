@@ -87,7 +87,8 @@ public:
         MONCURVE_REV
     };
 
-    static const char * convertStyleToString(Style style);
+    static Style ConvertStringToStyle(const char * str);
+    static const char * ConvertStyleToString(Style style);
 
     typedef std::vector<double> Params;
 

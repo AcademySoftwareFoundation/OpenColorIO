@@ -65,6 +65,7 @@ public:
     };
 
     static const char * ConvertStyleToString(Style style, bool detailed);
+    static Style GetStyle(const char * name);
 
     typedef std::vector<double> Params;
 

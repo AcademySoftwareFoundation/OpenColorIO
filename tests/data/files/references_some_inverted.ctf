@@ -8,5 +8,5 @@
       <minOutValue>0.1</minOutValue>
       <maxOutValue>1.2</maxOutValue>
    </Range>
-   <Reference id="uuid" name="name" inBitDepth="32f" outBitDepth="32f" path="cdl_clamp_fwd.clf" basePath="Shared"/>
+   <Reference id="uuid" name="name" inBitDepth="32f" outBitDepth="32f" inverted="false" path="cdl_clamp_fwd.clf" basePath="Shared"/>
 </ProcessList>

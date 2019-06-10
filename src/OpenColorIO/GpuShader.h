@@ -93,18 +93,23 @@ protected:
     // Uniforms are not used by the legacy shader builder
     //
     unsigned getNumUniforms() const override;
-    void getUniform(unsigned index, const char *& name, UniformType & type, void *& value) const override;
-    void addUniform(unsigned index, const char * name, UniformType type, void * value) override;
+    void getUniform(unsigned index, const char *& name,
+                    DynamicPropertyRcPtr & value) const override;
+    bool addUniform(const char * name,
+                    DynamicPropertyRcPtr value) override;
 
     // 1D & 2D textures are not used by the legacy shader builder
     //
     unsigned getNumTextures() const override;
-    void addTexture(const char * name, const char * id, unsigned width, unsigned height,
-                    TextureType channel, Interpolation interpolation, const float * values) override;
+    void addTexture(const char * name, const char * id,
+                    unsigned width, unsigned height,
+                    TextureType channel, Interpolation interpolation,
+                    const float * values) override;
     // Get the texture 1D or 2D information
     void getTexture(unsigned index, const char *& name, const char *& id, 
                     unsigned & width, unsigned & height,
-                    TextureType & channel, Interpolation & interpolation) const override;
+                    TextureType & channel,
+                    Interpolation & interpolation) const override;
     // Get the texture 1D or 2D values only
     void getTextureValues(unsigned index, const float *& values) const override;
 
@@ -147,17 +152,21 @@ public:
     // Accessors to the uniforms
     //
     unsigned getNumUniforms() const override;
-    void getUniform(unsigned index, const char *& name, UniformType & type, void *& value) const override;
-    void addUniform(unsigned index, const char * name, UniformType type, void * value) override;
+    void getUniform(unsigned index, const char *& name,
+                    DynamicPropertyRcPtr & value) const override;
+    bool addUniform(const char * name,
+                    DynamicPropertyRcPtr value) override;
 
     // Accessors to the 1D & 2D textures built from 1D LUT
     //
     unsigned getNumTextures() const override;
-    void addTexture(const char * name, const char * id, unsigned width, unsigned height,
-                    TextureType channel, Interpolation interpolation, const float * values) override;
+    void addTexture(const char * name, const char * id,
+                    unsigned width, unsigned height, TextureType channel,
+                    Interpolation interpolation, const float * values) override;
     void getTexture(unsigned index, const char *& name, const char *& id, 
                     unsigned & width, unsigned & height,
-                    TextureType & channel, Interpolation & interpolation) const override;
+                    TextureType & channel,
+                    Interpolation & interpolation) const override;
     void getTextureValues(unsigned index, const float *& values) const override;
 
     // Accessors to the 3D textures built from 3D LUT

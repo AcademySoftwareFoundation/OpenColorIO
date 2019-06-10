@@ -46,6 +46,10 @@ void CreateFixedFunctionOp(OpRcPtrVec & ops,
                            const FixedFunctionOpData::Params & data,
                            FixedFunctionOpData::Style style);
 
+void CreateFixedFunctionOp(OpRcPtrVec & ops,
+                           FixedFunctionOpDataRcPtr & funcData,
+                           TransformDirection direction);
+
 }
 OCIO_NAMESPACE_EXIT
 

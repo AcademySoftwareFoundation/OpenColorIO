@@ -57,6 +57,7 @@ namespace YAML {
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::DisplayTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::ExponentTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::ExponentWithLinearTransform>;
+    template <> class TypedKeyNotFound<OCIO_NAMESPACE::ExposureContrastTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::FileTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::FixedFunctionTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::GroupTransform>;
@@ -138,45 +139,137 @@ OCIO_NAMESPACE_ENTER
         inline void load(const YAML::Node& node, bool& x)
         {
 #ifdef OLDYAML
-            node.Read<bool>(x);
+            if (!node.Read<bool>(x))
+            {
+                std::ostringstream os;
+                os << "At line " << (node.GetMark().line + 1)
+                   << ", '" << node.Tag() << "' parsing boolean failed.";
+
+                throw Exception(os.str().c_str());
+            }
 #else
-            x = node.as<bool>();
+            try
+            {
+                x = node.as<bool>();
+            }
+            catch (const std::exception & e)
+            {
+                std::ostringstream os;
+                os << "At line " << (node.GetMark().line + 1)
+                   << ", '" << node.Tag() << "' parsing boolean failed "
+                   << "with: " << e.what();
+                throw Exception(os.str().c_str());
+            }
 #endif
         }
         
         inline void load(const YAML::Node& node, int& x)
         {
 #ifdef OLDYAML
-            node.Read<int>(x);
+            if (!node.Read<int>(x))
+            {
+                std::ostringstream os;
+                os << "At line " << (node.GetMark().line + 1)
+                   << ", '" << node.Tag() << "' parsing integer failed.";
+
+                throw Exception(os.str().c_str());
+            }
 #else
-            x = node.as<int>();
+            try
+            {
+                x = node.as<int>();
+            }
+            catch (const std::exception & e)
+            {
+                std::ostringstream os;
+                os << "At line " << (node.GetMark().line + 1)
+                   << ", '" << node.Tag() << "' parsing integer failed "
+                   << "with: " << e.what();
+                throw Exception(os.str().c_str());
+            }
+
 #endif
         }
         
         inline void load(const YAML::Node& node, float& x)
         {
 #ifdef OLDYAML
-            node.Read<float>(x);
+            if (!node.Read<float>(x))
+            {
+                std::ostringstream os;
+                os << "At line " << (node.GetMark().line + 1)
+                   << ", '" << node.Tag() << "' parsing float failed.";
+
+                throw Exception(os.str().c_str());
+            }
 #else
-            x = node.as<float>();
+            try
+            {
+                x = node.as<float>();
+            }
+            catch (const std::exception & e)
+            {
+                std::ostringstream os;
+                os << "At line " << (node.GetMark().line + 1)
+                   << ", '" << node.Tag() << "' parsing float failed "
+                   << "with: " << e.what();
+                throw Exception(os.str().c_str());
+            }
+
 #endif
         }
         
         inline void load(const YAML::Node& node, double& x)
         {
 #ifdef OLDYAML
-            node.Read<double>(x);
+            if (!node.Read<double>(x))
+            {
+                std::ostringstream os;
+                os << "At line " << (node.GetMark().line + 1)
+                   << ", '" << node.Tag() << "' parsing double failed.";
+
+                throw Exception(os.str().c_str());
+            }
 #else
-            x = node.as<double>();
+            try
+            {
+                x = node.as<double>();
+            }
+            catch (const std::exception & e)
+            {
+                std::ostringstream os;
+                os << "At line " << (node.GetMark().line + 1)
+                   << ", '" << node.Tag() << "' parsing double failed "
+                   << "with: " << e.what();
+                throw Exception(os.str().c_str());
+            }
 #endif
         }
         
         inline void load(const YAML::Node& node, std::string& x)
         {
 #ifdef OLDYAML
-            node.Read<std::string>(x);
+            if (!node.Read<std::string>(x))
+            {
+                std::ostringstream os;
+                os << "At line " << (node.GetMark().line + 1)
+                   << ", '" << node.Tag() << "' parsing string failed.";
+
+                throw Exception(os.str().c_str());
+            }
 #else
-            x = node.as<std::string>();
+            try
+            {
+                x = node.as<std::string>();
+            }
+            catch (const std::exception & e)
+            {
+                std::ostringstream os;
+                os << "At line " << (node.GetMark().line + 1)
+                   << ", '" << node.Tag() << "' parsing string failed "
+                   << "with: " << e.what();
+                throw Exception(os.str().c_str());
+            }
 #endif
         }
         
@@ -809,6 +902,182 @@ OCIO_NAMESPACE_ENTER
 
             out << YAML::Key << "offset";
             out << YAML::Value << YAML::Flow << v;
+
+            EmitBaseTransformKeyValues(out, t);
+            out << YAML::EndMap;
+        }
+
+        // ExposureContrastTransform
+
+        struct DynamicPropetyLoader
+        {
+            bool m_dynamic = false;
+            bool m_dynamicRead = false;
+            double m_value = 0.;
+            bool m_valueRead = false;
+        };
+
+        inline void loadDynamicProperty(const YAML::Node& node, DynamicPropetyLoader & dp)
+        {
+            if (node.Type() == YAML::NodeType::Map)
+            {
+                for (Iterator it = node.begin();
+                    it != node.end();
+                    ++it)
+                {
+                    std::string k;
+                    const YAML::Node& first = get_first(it);
+                    load(first, k);
+                    if (k == "value")
+                    {
+                        load(get_second(it), dp.m_value);
+                        dp.m_valueRead = true;
+                    }
+                    else if (k == "dynamic")
+                    {
+                        load(get_second(it), dp.m_dynamic);
+                        dp.m_dynamicRead = true;
+                    }
+                    else
+                    {
+                        LogUnknownKeyWarning(node, first);
+                    }
+                }
+            }
+            else if (node.size() == 0)
+            {
+                load(node, dp.m_value);
+                dp.m_valueRead = true;
+            }
+            else
+            {
+                throwError(node, "The value needs to be a map or a single value.");
+            }
+        }
+
+        inline void load(const YAML::Node& node, ExposureContrastTransformRcPtr& t)
+        {
+            t = ExposureContrastTransform::Create();
+
+            std::string key;
+
+            for (Iterator iter = node.begin();
+                iter != node.end();
+                ++iter)
+            {
+                const YAML::Node& first = get_first(iter);
+                const YAML::Node& second = get_second(iter);
+
+                load(first, key);
+
+                if (second.Type() == YAML::NodeType::Null) continue;
+
+                if (key == "exposure")
+                {
+                    DynamicPropetyLoader dp;
+                    loadDynamicProperty(second, dp);
+                    if (dp.m_dynamicRead && dp.m_dynamic)
+                    {
+                        t->makeExposureDynamic();
+                    }
+                    if (dp.m_valueRead)
+                    {
+                        t->setExposure(dp.m_value);
+                    }
+                }
+                else if (key == "contrast")
+                {
+                    DynamicPropetyLoader dp;
+                    loadDynamicProperty(second, dp);
+                    if (dp.m_dynamicRead && dp.m_dynamic)
+                    {
+                        t->makeContrastDynamic();
+                    }
+                    if (dp.m_valueRead)
+                    {
+                        t->setContrast(dp.m_value);
+                    }
+                }
+                else if (key == "gamma")
+                {
+                    DynamicPropetyLoader dp;
+                    loadDynamicProperty(second, dp);
+                    if (dp.m_dynamicRead && dp.m_dynamic)
+                    {
+                        t->makeGammaDynamic();
+                    }
+                    if (dp.m_valueRead)
+                    {
+                        t->setGamma(dp.m_value);
+                    }
+                }
+                else if (key == "pivot")
+                {
+                    double param;
+                    load(second, param);
+                    t->setPivot(param);
+                }
+                else if (key == "style")
+                {
+                    std::string style;
+                    load(second, style);
+                    t->setStyle(ExposureContrastStyleFromString(style.c_str()));
+                }
+                else if (key == "direction")
+                {
+                    TransformDirection val;
+                    load(second, val);
+                    t->setDirection(val);
+                }
+                else
+                {
+                    LogUnknownKeyWarning(node, first);
+                }
+            }
+        }
+
+        inline void saveDynamicProperty(YAML::Emitter& out,
+                                        bool dynamic, double value)
+        {
+            if (dynamic)
+            {
+                out << YAML::Value << YAML::BeginMap;
+                out << YAML::Key << "value" << YAML::Value << value;
+                out << YAML::Key << "dynamic";
+                out << YAML::Value << YAML::Flow << true;
+                out << YAML::EndMap;
+            }
+            else
+            {
+                out << YAML::Value << YAML::Flow << value;
+            }
+        }
+
+        inline void save(YAML::Emitter& out, ConstExposureContrastTransformRcPtr t)
+        {
+            out << YAML::VerbatimTag("ExposureContrastTransform");
+            out << YAML::Flow << YAML::BeginMap;
+
+            out << YAML::Key << "style";
+            out << YAML::Value << YAML::Flow << ExposureContrastStyleToString(t->getStyle());
+
+            out << YAML::Key << "exposure";
+            saveDynamicProperty(out,
+                                t->isExposureDynamic(),
+                                t->getExposure());
+
+            out << YAML::Key << "contrast";
+            saveDynamicProperty(out,
+                                t->isContrastDynamic(),
+                                t->getContrast());
+
+            out << YAML::Key << "gamma";
+            saveDynamicProperty(out,
+                                t->isGammaDynamic(),
+                                t->getGamma());
+
+            out << YAML::Key << "pivot";
+            out << YAML::Value << YAML::Flow << t->getPivot();
 
             EmitBaseTransformKeyValues(out, t);
             out << YAML::EndMap;
@@ -1655,6 +1924,11 @@ OCIO_NAMESPACE_ENTER
                 load(node, temp);
                 t = temp;
             }
+            else if (type == "ExposureContrastTransform") {
+                ExposureContrastTransformRcPtr temp;
+                load(node, temp);
+                t = temp;
+            }
             else if(type == "FileTransform")  {
                 FileTransformRcPtr temp;
                 load(node, temp);
@@ -1737,6 +2011,9 @@ OCIO_NAMESPACE_ENTER
                 save(out, ExpLinear_tran);
             else if(ConstFileTransformRcPtr File_tran = \
                 DynamicPtrCast<const FileTransform>(t))
+                save(out, File_tran);
+            else if (ConstExposureContrastTransformRcPtr File_tran = \
+                DynamicPtrCast<const ExposureContrastTransform>(t))
                 save(out, File_tran);
             else if(ConstFixedFunctionTransformRcPtr Func_tran = \
                 DynamicPtrCast<const FixedFunctionTransform>(t))

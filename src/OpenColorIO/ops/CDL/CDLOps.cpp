@@ -372,17 +372,6 @@ void CDLOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
 
 
 
-
-void CreateCDLOp(OpRcPtrVec & ops,
-                 CDLOpDataRcPtr & cdlData, 
-                 TransformDirection direction)
-{
-    if(cdlData->isNoOp()) return;
-
-    ops.push_back(CDLOpRcPtr(new CDLOp(cdlData, direction)));
-}
-
-
 void CreateCDLOp(OpRcPtrVec & ops,
                  const std::string & id,
                  const OpData::Descriptions & desc,
@@ -404,6 +393,16 @@ void CreateCDLOp(OpRcPtrVec & ops,
 
     CreateCDLOp(ops, cdlData, direction);
 }
+
+void CreateCDLOp(OpRcPtrVec & ops,
+                 CDLOpDataRcPtr & cdlData, 
+                 TransformDirection direction)
+{
+    if(cdlData->isNoOp()) return;
+
+    ops.push_back(std::make_shared<CDLOp>(cdlData, direction));
+}
+
 
 }
 OCIO_NAMESPACE_EXIT

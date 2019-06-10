@@ -1650,12 +1650,17 @@ OIIO_ADD_TEST(Lut1D, finite_value_hue_adjust)
 // Unit tests using clf files.
 //
 
+namespace
+{
+
 void Apply(const OCIO::OpRcPtrVec & ops, float * img, long numPixels)
 {
     for (auto op : ops)
     {
         op->apply(img, numPixels);
     }
+}
+
 }
 
 OIIO_ADD_TEST(Lut1D, apply_half_domain_hue_adjust)

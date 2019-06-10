@@ -33,7 +33,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fileformats/ctf/CTFTransform.h"
 #include "ops/OpArray.h"
 #include "ops/CDL/CDLOpData.h"
+#include "ops/exposurecontrast/ExposureContrastOpData.h"
+#include "ops/FixedFunction/FixedFunctionOpData.h"
+#include "ops/Gamma/GammaOpData.h"
 #include "ops/IndexMapping.h"
+#include "ops/Log/LogOpData.h"
+#include "ops/Log/LogUtils.h"
 #include "ops/Lut1D/Lut1DOpData.h"
 #include "ops/Lut3D/Lut3DOpData.h"
 #include "ops/Metadata.h"
@@ -88,6 +93,51 @@ private:
 };
 
 typedef OCIO_SHARED_PTR<CTFReaderTransformElt> CTFReaderTransformEltRcPtr;
+
+class CTFReaderMetadataElt : public XmlReaderComplexElt
+{
+public:
+    CTFReaderMetadataElt(const std::string & name,
+                         ContainerEltRcPtr pParent,
+                         unsigned int xmlLineNumber,
+                         const std::string & xmlFile);
+
+    virtual ~CTFReaderMetadataElt();
+
+    const std::string& getIdentifier() const override;
+
+    void start(const char ** atts) override;
+
+    void end() override;
+
+    void setRawData(const char * str, size_t len, unsigned int xmlLine);
+
+    Metadata & getMetadata() { return m_metadata; }
+
+protected:
+    Metadata m_metadata;
+
+private:
+    CTFReaderMetadataElt() = delete;
+};
+
+class CTFReaderInfoElt : public CTFReaderMetadataElt
+{
+public:
+    CTFReaderInfoElt(const std::string & name,
+                     ContainerEltRcPtr pParent,
+                     unsigned int xmlLineNumber,
+                     const std::string & xmlFile);
+
+    virtual ~CTFReaderInfoElt();
+
+    void start(const char ** atts) override;
+
+    void end() override;
+
+private:
+    CTFReaderInfoElt() = delete;
+};
 
 class CTFReaderInputDescriptorElt : public XmlReaderPlainElt
 {
@@ -288,51 +338,6 @@ private:
     bool m_completed;
 };
 
-class CTFReaderMetadataElt : public XmlReaderComplexElt
-{
-public:
-    CTFReaderMetadataElt(const std::string & name,
-                         ContainerEltRcPtr pParent,
-                         unsigned int xmlLineNumber,
-                         const std::string & xmlFile);
-
-    virtual ~CTFReaderMetadataElt();
-
-    const std::string& getIdentifier() const override;
-
-    void start(const char ** atts) override;
-
-    void end() override;
-
-    void setRawData(const char * str, size_t len, unsigned int xmlLine);
-
-    Metadata & getMetadata() { return m_metadata; }
-
-protected:
-    Metadata m_metadata;
-
-private:
-    CTFReaderMetadataElt() = delete;
-};
-
-class CTFReaderInfoElt : public CTFReaderMetadataElt
-{
-public:
-    CTFReaderInfoElt(const std::string & name,
-                     ContainerEltRcPtr pParent,
-                     unsigned int xmlLineNumber,
-                     const std::string & xmlFile);
-
-    virtual ~CTFReaderInfoElt();
-
-    void start(const char ** atts) override;
-
-    void end() override;
-
-private:
-    CTFReaderInfoElt() = delete;
-};
-
 class CTFReaderOpElt;
 typedef OCIO_SHARED_PTR<CTFReaderOpElt> CTFReaderOpEltRcPtr;
 
@@ -342,15 +347,23 @@ public:
     // Enumeration of all possible reader types.
     enum Type
     {
+        CDLType,
         Lut1DType,
         Lut3DType,
         MatrixType,
         RangeType,
-        CDLType,
-        // CTF types
+        // CTF types.
+        ACESType,
+        ExposureContrastType,
+        FixedFunctionType,
+        GammaType,
         InvLut1DType,
         InvLut3DType,
-        ReferenceType
+        LogType,
+        ReferenceType,
+
+        // Note: Keep at end of list.
+        NoType
     };
 
     CTFReaderOpElt();
@@ -384,6 +397,43 @@ protected:
 
 protected:
     CTFReaderTransformPtr m_transform;  // The parent
+};
+
+class CTFReaderACESElt : public CTFReaderOpElt
+{
+public:
+    CTFReaderACESElt();
+    ~CTFReaderACESElt();
+
+    void start(const char **atts) override;
+    void end() override;
+
+    const OpDataRcPtr getOp() const override;
+
+    const FixedFunctionOpDataRcPtr getFixedFunction() const
+    {
+        return m_fixedFunction;
+    }
+
+private:
+    FixedFunctionOpDataRcPtr m_fixedFunction;
+};
+
+class CTFReaderACESParamsElt : public XmlReaderPlainElt
+{
+public:
+    CTFReaderACESParamsElt(const std::string & name,
+                           ContainerEltRcPtr pParent,
+                           unsigned int xmlLineNumber,
+                           const std::string & xmlFile);
+
+    ~CTFReaderACESParamsElt();
+
+    void start(const char **atts) override;
+
+    void end() override;
+
+    void setRawData(const char * str, size_t len, unsigned int xmlLine) override;
 };
 
 class CTFReaderCDLElt : public CTFReaderOpElt
@@ -432,50 +482,187 @@ public:
     const CDLOpDataRcPtr & getCDL() const override;
 };
 
-class CTFReaderMatrixElt : public CTFReaderOpElt, public CTFArrayMgt
+class CTFReaderFixedFunctionElt : public CTFReaderOpElt
 {
 public:
-    CTFReaderMatrixElt();
+    CTFReaderFixedFunctionElt();
+    ~CTFReaderFixedFunctionElt();
 
-    ~CTFReaderMatrixElt();
+    void start(const char **atts) override;
+    void end() override;
+
+    const OpDataRcPtr getOp() const override;
+
+    const FixedFunctionOpDataRcPtr getFixedFunction() const
+    {
+        return m_fixedFunction;
+    }
+
+private:
+    FixedFunctionOpDataRcPtr m_fixedFunction;
+};
+
+class CTFReaderGammaParamsElt;
+typedef OCIO_SHARED_PTR<CTFReaderGammaParamsElt> CTFReaderGammaParamsEltRcPtr;
+
+class CTFReaderGammaElt : public CTFReaderOpElt
+{
+public:
+    CTFReaderGammaElt();
+    ~CTFReaderGammaElt();
+
+    void start(const char ** atts) override;
 
     void end() override;
 
     const OpDataRcPtr getOp() const override;
 
-    // Get the associated Matrix
-    const MatrixOpDataRcPtr & getMatrix() const
-    {
-        return m_matrix;
-    }
+    const GammaOpDataRcPtr & getGamma() const { return m_gamma; }
 
-    ArrayBase * updateDimension(const Dimensions & dims) override;
-
-    void endArray(unsigned int position) override;
-
-protected:
-    // Helper method to convert Matrix data from 1.2 to latest.
-    void convert_1_2_to_Latest();
-
-    MatrixOpDataRcPtr & getMatrix()
-    {
-        return m_matrix;
-    }
+    virtual CTFReaderGammaParamsEltRcPtr createGammaParamsElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile) const;
 
 private:
-    MatrixOpDataRcPtr m_matrix;
+    GammaOpDataRcPtr m_gamma;
 };
 
-class CTFReaderMatrixElt_1_3 : public CTFReaderMatrixElt
+class CTFReaderGammaElt_1_5 : public CTFReaderGammaElt
 {
 public:
-    CTFReaderMatrixElt_1_3() : CTFReaderMatrixElt() {}
+    CTFReaderGammaElt_1_5() : CTFReaderGammaElt() {}
+    ~CTFReaderGammaElt_1_5() {}
 
-    ~CTFReaderMatrixElt_1_3() {}
+    void end() override;
+
+    CTFReaderGammaParamsEltRcPtr createGammaParamsElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile) const override;
+};
+
+class CTFReaderGammaParamsElt : public XmlReaderPlainElt
+{
+public:
+    CTFReaderGammaParamsElt(const std::string & name,
+                            ContainerEltRcPtr pParent,
+                            unsigned int xmlLineNumber,
+                            const std::string & xmlFile);
+
+    ~CTFReaderGammaParamsElt();
+
+    void start(const char ** atts);
+    void end();
+
+    void setRawData(const char * str, size_t len, unsigned int xmlLine);
+
+protected:
+    virtual int getChannelNumber(const char * name) const;
+};
+
+class CTFReaderGammaParamsElt_1_5 : public CTFReaderGammaParamsElt
+{
+public:
+    CTFReaderGammaParamsElt_1_5(const std::string & name,
+                                ContainerEltRcPtr pParent,
+                                unsigned int xmlLineNumber,
+                                const std::string & xmlFile);
+    ~CTFReaderGammaParamsElt_1_5();
+
+protected:
+    int getChannelNumber(const char * name) const override;
+};
+
+class CTFReaderInvLut1DElt : public CTFReaderOpElt, public CTFArrayMgt
+{
+public:
+    CTFReaderInvLut1DElt();
+    ~CTFReaderInvLut1DElt();
+
+    void start(const char ** atts) override;
+
+    void end() override;
+
+    const OpDataRcPtr getOp() const override;
+
+    const Lut1DOpDataRcPtr & getLut() const { return m_invLut; }
 
     ArrayBase * updateDimension(const Dimensions & dims) override;
 
     void endArray(unsigned int position) override;
+
+private:
+    Lut1DOpDataRcPtr m_invLut;
+};
+
+class CTFReaderInvLut3DElt : public CTFReaderOpElt, public CTFArrayMgt
+{
+public:
+    CTFReaderInvLut3DElt();
+    ~CTFReaderInvLut3DElt();
+
+    void start(const char ** atts) override;
+
+    void end() override;
+
+    const OpDataRcPtr getOp() const override;
+
+    const Lut3DOpDataRcPtr & getLut() const { return m_invLut; }
+
+    ArrayBase * updateDimension(const Dimensions & dims) override;
+
+    void endArray(unsigned int position) override;
+
+private:
+    Lut3DOpDataRcPtr m_invLut;
+};
+
+class CTFReaderLogElt : public CTFReaderOpElt
+{
+public:
+    CTFReaderLogElt();
+
+    ~CTFReaderLogElt();
+
+    void start(const char ** atts) override;
+
+    void end() override;
+
+    const OpDataRcPtr getOp() const override;
+
+    const LogOpDataRcPtr & getLog() const
+    {
+        return m_log;
+    }
+
+    LogUtil::CTFParams & getCTFParams()
+    {
+        return m_ctfParams;
+    }
+
+protected:
+    LogUtil::CTFParams m_ctfParams;
+    LogOpDataRcPtr m_log;
+};
+
+class CTFReaderLogParamsElt : public XmlReaderPlainElt
+{
+public:
+    CTFReaderLogParamsElt(const std::string & name,
+                          ContainerEltRcPtr pParent,
+                          unsigned int xmlLineNumber,
+                          const std::string & xmlFile);
+
+    ~CTFReaderLogParamsElt();
+
+    void start(const char ** atts) override;
+
+    void end() override;
+
+    void setRawData(const char * str, size_t len, unsigned int xmlLine) override;
 };
 
 class CTFReaderLut1DElt : public CTFReaderOpElt, public CTFArrayMgt, public CTFIndexMapMgt
@@ -528,28 +715,6 @@ public:
     void end() override;
 };
 
-class CTFReaderInvLut1DElt : public CTFReaderOpElt, public CTFArrayMgt
-{
-public:
-    CTFReaderInvLut1DElt();
-    ~CTFReaderInvLut1DElt();
-
-    void start(const char ** atts) override;
-
-    void end() override;
-
-    const OpDataRcPtr getOp() const override;
-
-    const Lut1DOpDataRcPtr & getLut() const { return m_invLut; }
-
-    ArrayBase * updateDimension(const Dimensions & dims) override;
-
-    void endArray(unsigned int position) override;
-
-private:
-    Lut1DOpDataRcPtr m_invLut;
-};
-
 class CTFReaderLut3DElt : public CTFReaderOpElt, public CTFArrayMgt, public CTFIndexMapMgt
 {
 public:
@@ -591,26 +756,50 @@ public:
     void end() override;
 };
 
-class CTFReaderInvLut3DElt : public CTFReaderOpElt, public CTFArrayMgt
+class CTFReaderMatrixElt : public CTFReaderOpElt, public CTFArrayMgt
 {
 public:
-    CTFReaderInvLut3DElt();
-    ~CTFReaderInvLut3DElt();
+    CTFReaderMatrixElt();
 
-    void start(const char ** atts) override;
+    ~CTFReaderMatrixElt();
 
     void end() override;
 
     const OpDataRcPtr getOp() const override;
 
-    const Lut3DOpDataRcPtr & getLut() const { return m_invLut; }
+    // Get the associated Matrix
+    const MatrixOpDataRcPtr & getMatrix() const
+    {
+        return m_matrix;
+    }
 
     ArrayBase * updateDimension(const Dimensions & dims) override;
 
     void endArray(unsigned int position) override;
 
+protected:
+    // Helper method to convert Matrix data from 1.2 to latest.
+    void convert_1_2_to_Latest();
+
+    MatrixOpDataRcPtr & getMatrix()
+    {
+        return m_matrix;
+    }
+
 private:
-    Lut3DOpDataRcPtr m_invLut;
+    MatrixOpDataRcPtr m_matrix;
+};
+
+class CTFReaderMatrixElt_1_3 : public CTFReaderMatrixElt
+{
+public:
+    CTFReaderMatrixElt_1_3() : CTFReaderMatrixElt() {}
+
+    ~CTFReaderMatrixElt_1_3() {}
+
+    ArrayBase * updateDimension(const Dimensions & dims) override;
+
+    void endArray(unsigned int position) override;
 };
 
 class CTFReaderRangeElt : public CTFReaderOpElt
@@ -673,7 +862,6 @@ public:
     ~CTFReaderReferenceElt();
 
     void start(const char ** atts) override;
-
     void end() override;
 
     const OpDataRcPtr getOp() const override;
@@ -685,6 +873,57 @@ public:
 
 private:
     ReferenceOpDataRcPtr m_reference;
+};
+
+class CTFReaderExposureContrastElt : public CTFReaderOpElt
+{
+public:
+    CTFReaderExposureContrastElt();
+    ~CTFReaderExposureContrastElt();
+
+    void start(const char ** atts) override;
+    void end() override;
+
+    const OpDataRcPtr getOp() const override;
+
+    const ExposureContrastOpDataRcPtr getExposureContrast() const
+    {
+        return m_ec;
+    }
+
+private:
+    ExposureContrastOpDataRcPtr m_ec;
+};
+
+class CTFReaderECParamsElt : public XmlReaderPlainElt
+{
+public:
+    CTFReaderECParamsElt(const std::string & name,
+                         ContainerEltRcPtr pParent,
+                         unsigned int xmlLineNumber,
+                         const std::string & xmlFile);
+
+    ~CTFReaderECParamsElt();
+
+    void start(const char ** atts) override;
+    void end() override;
+
+    void setRawData(const char * str, size_t len, unsigned int xmlLine) override;
+};
+
+class CTFReaderDynamicParamElt : public XmlReaderPlainElt
+{
+public:
+    CTFReaderDynamicParamElt(const std::string & name,
+                             ContainerEltRcPtr pParent,
+                             unsigned int xmlLineNumber,
+                             const std::string & xmlFile);
+    ~CTFReaderDynamicParamElt();
+
+    void start(const char ** atts) override;
+    void end() override;
+
+    void setRawData(const char * str, size_t len, unsigned int xmlLine) override;
 };
 
 }

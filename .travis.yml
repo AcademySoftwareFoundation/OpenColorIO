@@ -1,6 +1,11 @@
 # travis-ci.org build file
 # https://docs.travis-ci.com/user/languages/cpp
 
+branches:
+  only:
+    - master
+    - /^RB-.*$/
+
 matrix:
   include:
     - os: linux

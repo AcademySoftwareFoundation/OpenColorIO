@@ -71,66 +71,92 @@ namespace Shader
     // equal for testing purposes.
     const float largeThreshold = std::numeric_limits<float>::max();
 
-    // Code copied from core/MathUtils.h
-    inline bool EqualWithAbsError(float x1, float x2, float e)
+    enum LimitsDiff
     {
-        return ((x1 > x2) ? x1 - x2 : x2 - x1) <= e;
-    }
-
-    // Relative comparison: check if the difference between value and expected
-    // relative to (divided by) expected does not exceed the eps.  A minimum
-    // expected value is used to limit the scaling of the difference and
-    // avoid large relative differences for small numbers.
-    inline bool EqualWithSafeRelError(float value,
-                                      float expected,
-                                      float eps,
-                                      float minExpected)
+        NOT_APPLICABLE,
+        INCONSISTANT,
+        CONSISTANT
+    };
+    inline LimitsDiff ValidateInf(float x1, float x2)
     {
-        // If value and expected are infinity, return true.
-        if (value == expected) return true;
-        if (std::isnan(value) && std::isnan(expected)) return true;
-        const float div = (expected > 0.0f) ?
-            ((expected < minExpected) ? minExpected : expected) :
-            ((-expected < minExpected) ? minExpected : -expected);
-
-        return (
-            ((value > expected) ? value - expected : expected - value)
-            / div) <= eps;
-    }
-    // end of copy from core/MathUtils.h
-
-    // Compute the absolute equality of two floats
-    // a is the first float to compare
-    // b is the first float to compare
-    // epsilon is the maximum expected epsilon
-    bool AbsoluteCompare(float a, float b, float epsilon)
-    {
-        if ( ( (a >=  largeThreshold) && (b >=  largeThreshold) ) ||
-             ( (a <= -largeThreshold) && (b <= -largeThreshold) ) ||
-             ( std::isnan(a) && std::isnan(b) ) )
+        if (fabs(x1) < largeThreshold && fabs(x2) < largeThreshold)
         {
+            return NOT_APPLICABLE;
+        }
+        if (((x1 >= largeThreshold) && (x2 < largeThreshold)) ||
+            ((x1 < largeThreshold) && (x2 >= largeThreshold)) ||
+            ((x1 <= -largeThreshold) && (x2 > -largeThreshold)) ||
+            ((x1 > -largeThreshold) && (x2 <= -largeThreshold)))
+        {
+            return INCONSISTANT;
+        }
+        return CONSISTANT;
+    }
+
+    inline LimitsDiff ValidateNan(float x1, float x2)
+    {
+        if (!std::isnan(x1))
+        {
+            if (!std::isnan(x2))
+            {
+                return NOT_APPLICABLE;
+            }
+            else
+            {
+                return INCONSISTANT;
+            }
+        }
+        else
+        {
+            if (std::isnan(x2))
+            {
+                return CONSISTANT;
+            }
+            else
+            {
+                return INCONSISTANT;
+            }
+        }
+    }
+
+    inline bool AbsoluteDifference(float x1, float x2, float & diff)
+    {
+        const float thisDiff = fabs(x2 - x1);
+        if (thisDiff > diff)
+        {
+            diff = thisDiff;
             return true;
         }
-
-        return EqualWithAbsError(a, b, epsilon);
+        return false;
     }
 
-    // Compute the relative equality of two floats
-    // a is the first float to compare
-    // b is the first float to compare
-    // epsilon is the maximum expected epsilon
-    // expectedMinValue is the minimum expected value
-    bool RelativeCompare(float a, float b, float epsilon, float expectedMinValue)
+    inline bool RelativeDifference(float x1, float x2, float min_x1, float & diff)
     {
-        if ( ( (a >=  largeThreshold) && (b >=  largeThreshold) ) ||
-             ( (a <= -largeThreshold) && (b <= -largeThreshold) ) ||
-             ( std::isnan(a) && std::isnan(b) ) )
+        const float absx1 = fabs(x1);
+        float div = std::max(absx1, min_x1);
+        const float thisDiff = fabs(x1 - x2) / div;
+        if (thisDiff > diff)
         {
-          return true;
+            diff = thisDiff;
+            return true;
+        }
+        return false;
+    }
+
+    // Return ture if diff has been updated. 
+    inline bool ComputeDiff(float x1, float x2, bool rel, float min_x1, float & diff)
+    {
+        if (rel)
+        {
+            return RelativeDifference(x1, x2, min_x1, diff);
+        }
+        else
+        {
+            return AbsoluteDifference(x1, x2, diff);
         }
 
-        return EqualWithSafeRelError(a, b, epsilon, expectedMinValue);
     }
+
 }
 
 
@@ -141,6 +167,10 @@ OCIOGPUTest::OCIOGPUTest(const std::string& testgroup,
     ,   m_name(testname)
     ,   m_function(test)
     ,   m_errorThreshold(Shader::defaultErrorThreshold)
+{
+}
+
+OCIOGPUTest::~OCIOGPUTest()
 {
 }
 
@@ -170,6 +200,13 @@ void OCIOGPUTest::setContextProcessor(OCIO_NAMESPACE::ConstProcessorRcPtr proces
     m_processor      = processor;
 }
 
+void OCIOGPUTest::retestSetup(size_t idx)
+{
+    if (idx < m_retests.size())
+    {
+        m_retests[idx]();
+    }
+}
 
 UnitTests& GetUnitTests()
 {
@@ -177,7 +214,7 @@ UnitTests& GetUnitTests()
     return ocio_gpu_unit_tests;
 }
 
-AddTest::AddTest(OCIOGPUTest* test)
+AddTest::AddTest(OCIOGPUTestRcPtr test)
 {
     GetUnitTests().push_back(test);
 }
@@ -263,15 +300,15 @@ namespace
         }
     }
 
-    void UpdateImageTexture(OCIOGPUTest * test)
+    void UpdateImageTexture(OCIOGPUTestRcPtr test)
     {
         // Note: User-specified custom values are padded out 
         // to the preferred size (g_winWidth x g_winHeight).
 
-        const unsigned predefinedNumEntries 
+        const unsigned predefinedNumEntries
             = g_winWidth * g_winHeight * g_components;
 
-        if(test->getCustomValues().m_inputValues.empty())
+        if (test->getCustomValues().m_inputValues.empty())
         {
             // It means to generate the input values.
 
@@ -285,7 +322,7 @@ namespace
 
             OCIOGPUTest::CustomValues tmp;
             tmp.m_originalInputValueSize = predefinedNumEntries;
-            tmp.m_inputValues 
+            tmp.m_inputValues
                 = OCIOGPUTest::CustomValues::Values(predefinedNumEntries, min);
 
             unsigned idx = 0;
@@ -315,7 +352,7 @@ namespace
             // Compute the value step based on the remaining number of values.
             const float step = range / float(numEntries);
 
-            for(; idx<predefinedNumEntries; ++idx)
+            for (; idx < predefinedNumEntries; ++idx)
             {
                 tmp.m_inputValues[idx] = min + step * float(idx);
             }
@@ -326,22 +363,22 @@ namespace
         {
             // It means to use the custom input values.
 
-            const OCIOGPUTest::CustomValues::Values & existingInputValues 
+            const OCIOGPUTest::CustomValues::Values & existingInputValues
                 = test->getCustomValues().m_inputValues;
 
             const size_t numInputValues = existingInputValues.size();
-            if(0!=(numInputValues%g_components))
+            if (0 != (numInputValues%g_components))
             {
                 throw OCIO::Exception("Only the RGBA input values are supported");
             }
 
             test->getCustomValues().m_originalInputValueSize = numInputValues;
 
-            if(numInputValues>predefinedNumEntries)
+            if (numInputValues > predefinedNumEntries)
             {
                 throw OCIO::Exception("Exceed the predefined texture maximum size");
             }
-            else if(numInputValues<predefinedNumEntries)
+            else if (numInputValues < predefinedNumEntries)
             {
                 OCIOGPUTest::CustomValues values;
                 values.m_originalInputValueSize = existingInputValues.size();
@@ -349,7 +386,7 @@ namespace
                 // Resize the buffer to fit the expected input image size.
                 values.m_inputValues.resize(predefinedNumEntries, 0);
 
-                for(size_t idx=0; idx<numInputValues; ++idx)
+                for (size_t idx = 0; idx < numInputValues; ++idx)
                 {
                     values.m_inputValues[idx] = existingInputValues[idx];
                 }
@@ -360,7 +397,7 @@ namespace
 
         const OCIOGPUTest::CustomValues & values = test->getCustomValues();
 
-        if(predefinedNumEntries!=values.m_inputValues.size())
+        if (predefinedNumEntries != values.m_inputValues.size())
         {
             throw OCIO::Exception("Missing some expected input values");
         }
@@ -371,7 +408,7 @@ namespace
                      GL_RGBA, GL_FLOAT, &values.m_inputValues[0]);
     }
 
-    void UpdateOCIOGLState(OCIOGPUTest * test)
+    void UpdateOCIOGLState(OCIOGPUTestRcPtr test)
     {
         OCIO::ConstProcessorRcPtr & processor = test->getProcessor();
         OCIO::GpuShaderDescRcPtr & shaderDesc = test->getShaderDesc();
@@ -406,10 +443,43 @@ namespace
         g_oglBuilder->useProgram();
         glUniform1i(glGetUniformLocation(g_oglBuilder->getProgramHandle(), "img"), 0);
         g_oglBuilder->useAllTextures();
+        g_oglBuilder->useAllUniforms();
     }
 
+    void DiffComponent(const std::vector<float> & cpuImage,
+                       const std::vector<float> & gpuImage,
+                       size_t idx, bool relativeTest, float expectMin,
+                       float & diff, size_t & idxDiff,
+                       size_t & idxInf, size_t & idxNan)
+    {
+        float cpuVal = cpuImage[idx];
+        float gpuVal = gpuImage[idx];
+        Shader::LimitsDiff infDiff = Shader::ValidateInf(cpuVal, gpuVal);
+        if (infDiff == Shader::NOT_APPLICABLE)
+        {
+            Shader::LimitsDiff nanDiff = Shader::ValidateNan(cpuVal, gpuVal);
+            if (nanDiff == Shader::NOT_APPLICABLE)
+            {
+                if (Shader::ComputeDiff(cpuVal, gpuVal, relativeTest, expectMin, diff))
+                {
+                    idxDiff = idx;
+                }
+            }
+            else if (nanDiff == Shader::INCONSISTANT)
+            {
+                idxNan = idx;
+            }
+        }
+        else if (infDiff == Shader::INCONSISTANT)
+        {
+            idxInf = idx;
+        }
+    }
+
+    static constexpr size_t invalidIndex = std::numeric_limits<size_t>::max();
+
     // Validate the GPU processing against the CPU one.
-    void ValidateImageTexture(OCIOGPUTest * test)
+    void ValidateImageTexture(OCIOGPUTestRcPtr test)
     {
         OCIO::ConstProcessorRcPtr & processor = test->getProcessor();
         const float epsilon = test->getErrorThreshold();
@@ -450,41 +520,91 @@ namespace
         glReadBuffer( GL_COLOR_ATTACHMENT0 );
         glReadPixels(0, 0, g_winWidth, g_winHeight, GL_RGBA, GL_FLOAT, (GLvoid*)&gpuImage[0]);
 
+        glutSwapBuffers();
+
         // Step 3: Compare the two results.
 
         const OCIOGPUTest::CustomValues::Values & image = test->getCustomValues().m_inputValues;
-
+        float diff = 0.0f;
+        size_t idxDiff = invalidIndex;
+        size_t idxNan = invalidIndex;
+        size_t idxInf = invalidIndex;
+        const bool relativeTest = test->getRelativeComparison();
         for(size_t idx=0; idx<(width*height); ++idx)
         {
-            const bool isFaulty 
-                = test->getRelativeComparison()
-                    ? (!Shader::RelativeCompare(cpuImage[4*idx+0], gpuImage[4*idx+0], epsilon, expectMinValue) ||
-                       !Shader::RelativeCompare(cpuImage[4*idx+1], gpuImage[4*idx+1], epsilon, expectMinValue) ||
-                       !Shader::RelativeCompare(cpuImage[4*idx+2], gpuImage[4*idx+2], epsilon, expectMinValue) ||
-                       !Shader::RelativeCompare(cpuImage[4*idx+3], gpuImage[4*idx+3], epsilon, expectMinValue))
-                    : (!Shader::AbsoluteCompare(cpuImage[4*idx+0], gpuImage[4*idx+0], epsilon) ||
-                       !Shader::AbsoluteCompare(cpuImage[4*idx+1], gpuImage[4*idx+1], epsilon) ||
-                       !Shader::AbsoluteCompare(cpuImage[4*idx+2], gpuImage[4*idx+2], epsilon) ||
-                       !Shader::AbsoluteCompare(cpuImage[4*idx+3], gpuImage[4*idx+3], epsilon));
-            if(isFaulty)
+            DiffComponent(cpuImage, gpuImage, 4 * idx + 0, relativeTest, expectMinValue,
+                          diff, idxDiff, idxInf, idxNan);
+            DiffComponent(cpuImage, gpuImage, 4 * idx + 1, relativeTest, expectMinValue,
+                          diff, idxDiff, idxInf, idxNan);
+            DiffComponent(cpuImage, gpuImage, 4 * idx + 2, relativeTest, expectMinValue,
+                          diff, idxDiff, idxInf, idxNan);
+            DiffComponent(cpuImage, gpuImage, 4 * idx + 3, relativeTest, expectMinValue,
+                          diff, idxDiff, idxInf, idxNan);
+        }
+
+        size_t componentIdx = idxDiff % 4;
+        size_t pixelIdx = idxDiff / 4;
+        if (diff > epsilon || idxInf != invalidIndex || idxNan != invalidIndex)
+        {
+            std::stringstream err;
+            err << std::setprecision(10)
+                << "\nMaximum error: " << diff << " at pixel: " << pixelIdx
+                << " on component " << componentIdx;
+            if (diff > epsilon)
             {
-                std::stringstream err;
                 err << std::setprecision(10)
-                    << "\n\tfrom orig[" << idx << "] = {" 
-                    << image[4*idx+0] << ", " <<image[4*idx+1] << ", "
-                    << image[4*idx+2] << ", " <<image[4*idx+3] << "}\n"
-                    << "\tto  cpu = {"
-                    << cpuImage[4*idx+0] << ", " << cpuImage[4*idx+1] << ", "
-                    << cpuImage[4*idx+2] << ", " << cpuImage[4*idx+3] << "}\n"
-                    << "\tand gpu = {" 
-                    << gpuImage[4*idx+0] << ", " << gpuImage[4*idx+1] << ", "
-                    << gpuImage[4*idx+2] << ", " << gpuImage[4*idx+3] << "}\n"
-                    << "\twith " 
+                    << " larger than epsilon.\nscr = {"
+                    << image[4 * pixelIdx + 0] << ", " << image[4 * pixelIdx + 1] << ", "
+                    << image[4 * pixelIdx + 2] << ", " << image[4 * pixelIdx + 3] << "}"
+                    << "\ncpu = {"
+                    << cpuImage[4 * pixelIdx + 0] << ", " << cpuImage[4 * pixelIdx + 1] << ", "
+                    << cpuImage[4 * pixelIdx + 2] << ", " << cpuImage[4 * pixelIdx + 3] << "}"
+                    << "\ngpu = {"
+                    << gpuImage[4 * pixelIdx + 0] << ", " << gpuImage[4 * pixelIdx + 1] << ", "
+                    << gpuImage[4 * pixelIdx + 2] << ", " << gpuImage[4 * pixelIdx + 3] << "}\n"
                     << (test->getRelativeComparison() ? "relative " : "absolute ")
-                    << "epsilon=" 
+                    << "tolerance="
                     << epsilon;
-                throw OCIO::Exception(err.str().c_str());
             }
+            if (idxInf != invalidIndex)
+            {
+                size_t componentIdx = idxInf % 4;
+                size_t pixelIdx = idxInf / 4;
+                err << std::setprecision(10)
+                    << "\nLarge number error: " << diff << " at pixel: " << pixelIdx
+                    << " on component " << componentIdx
+                    << ".\nscr = {"
+                    << image[4 * pixelIdx + 0] << ", " << image[4 * pixelIdx + 1] << ", "
+                    << image[4 * pixelIdx + 2] << ", " << image[4 * pixelIdx + 3] << "}"
+                    << "\ncpu = {"
+                    << cpuImage[4 * pixelIdx + 0] << ", " << cpuImage[4 * pixelIdx + 1] << ", "
+                    << cpuImage[4 * pixelIdx + 2] << ", " << cpuImage[4 * pixelIdx + 3] << "}"
+                    << "\ngpu = {"
+                    << gpuImage[4 * pixelIdx + 0] << ", " << gpuImage[4 * pixelIdx + 1] << ", "
+                    << gpuImage[4 * pixelIdx + 2] << ", " << gpuImage[4 * pixelIdx + 3] << "}\n";
+            }
+            if (idxNan != invalidIndex)
+            {
+                size_t componentIdx = idxNan % 4;
+                size_t pixelIdx = idxNan / 4;
+                err << std::setprecision(10)
+                    << "\nNAN error: " << diff << " at pixel: " << pixelIdx
+                    << " on component " << componentIdx
+                    << ".\nscr = {"
+                    << image[4 * pixelIdx + 0] << ", " << image[4 * pixelIdx + 1] << ", "
+                    << image[4 * pixelIdx + 2] << ", " << image[4 * pixelIdx + 3] << "}"
+                    << "\ncpu = {"
+                    << cpuImage[4 * pixelIdx + 0] << ", " << cpuImage[4 * pixelIdx + 1] << ", "
+                    << cpuImage[4 * pixelIdx + 2] << ", " << cpuImage[4 * pixelIdx + 3] << "}"
+                    << "\ngpu = {"
+                    << gpuImage[4 * pixelIdx + 0] << ", " << gpuImage[4 * pixelIdx + 1] << ", "
+                    << gpuImage[4 * pixelIdx + 2] << ", " << gpuImage[4 * pixelIdx + 3] << "}\n";
+            }
+            throw OCIO::Exception(err.str().c_str());
+        }
+        else
+        {
+            test->updateMaxDiff(diff, idxDiff);
         }
     }
 };
@@ -559,13 +679,13 @@ int main(int, char **)
 
     std::cerr << "\n OpenColorIO_Core_GPU_Unit_Tests\n\n";
 
-    const UnitTests & tests = GetUnitTests();
+    UnitTests & tests = GetUnitTests();
     const size_t numTests = tests.size();
     for(size_t idx=0; idx<numTests; ++idx)
     {
         const unsigned curr_failures = failures;
      
-        OCIOGPUTest* test = tests[idx];
+        OCIOGPUTestRcPtr test = tests[idx];
 
         bool enabledTest = true;
         try
@@ -587,22 +707,36 @@ int main(int, char **)
                 // Set the rendering destination to FBO.
                 glBindFramebuffer(GL_FRAMEBUFFER, fboId);
                 
-                // Clear buffer.
-                glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-                // Update the image texture.
+                // Initialize the texture with the RGBA values to be processed.
                 UpdateImageTexture(test);
 
                 // Update the GPU shader program.
                 UpdateOCIOGLState(test);
 
-                // Process the image texture into the rendering buffer.
-                Reshape();
-                Redisplay();
+                const size_t numRetest = test->getNumRetests();
+                // Need to run once and for each retest.  
+                for (size_t idx = 0; idx <= numRetest; ++idx)
+                {
+                    if (idx != 0) // Skip first run.
+                    {
+                        // Call the retest callback.
+                        test->retestSetup(idx - 1);
+                        // Update uniforms with dynamic properties.
+                        g_oglBuilder->useAllUniforms();
+                    }
 
-                // Validate the processed image using the rendering buffer.
-                ValidateImageTexture(test);
+                    // Clear buffer.
+                    glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
+                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+                    // Process the image texture into the rendering buffer.
+                    Reshape();
+                    Redisplay();
+
+                    // Compute the expected values using the CPU and compare
+                    // against the GPU values.
+                    ValidateImageTexture(test);
+                }
             }
         }
         catch(OCIO::Exception & ex)
@@ -622,13 +756,22 @@ int main(int, char **)
         }
         else if(curr_failures==failures && test->isValid())
         {
-            std::cerr << "PASSED" << std::endl;
+            size_t idx = test->getMaxDiffIndex();
+            size_t componentIdx = idx % 4;
+            size_t pixelIdx = idx / 4;
+
+            std::cerr << "PASSED - (MaxDiff: " << test->getMaxDiff()
+                      << " at pix[" << pixelIdx
+                      << "][" << componentIdx << "])" << std::endl;
         }
         else if(!test->isValid())
         {
             ++failures;
             std::cerr << "FAILED - Invalid test" << std::endl;
         }
+
+        // Get rid of the test.
+        tests[idx] = nullptr;
 
         glUseProgram(0);
 

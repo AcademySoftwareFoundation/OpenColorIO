@@ -106,10 +106,13 @@ public:
     bool isInverse(ConstLogOpDataRcPtr & r) const;
 
     inline const Params & getRedParams() const { return m_redParams; }
+    inline void setRedParams(const Params & p) { m_redParams = p; }
 
     inline const Params & getGreenParams() const { return m_greenParams; }
+    inline void setGreenParams(const Params & p) { m_greenParams = p; }
 
     inline const Params & getBlueParams() const { return m_blueParams; }
+    inline void setBlueParams(const Params & p) { m_blueParams = p; }
 
     TransformDirection getDirection() const { return m_direction; }
 
