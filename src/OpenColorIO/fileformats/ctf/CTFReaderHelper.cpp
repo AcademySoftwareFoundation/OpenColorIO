@@ -362,6 +362,7 @@ void CTFReaderArrayElt::setRawData(const char * s,
     // needed here to process each value from the strings.  This function
     // is the most used when reading in large transforms.
     //
+
     pos = FindNextTokenStart(s, len, 0);
     while (pos != len)
     {
@@ -555,6 +556,7 @@ size_t FindNextTokenStart_IndexMap(const char* s, size_t len, size_t pos)
     return pos;
 }
 
+
 // Extract the next pair of IndexMap numbers contained in the string.
 // - str the string to search
 // - len length of the string
@@ -567,29 +569,38 @@ size_t FindNextTokenStart_IndexMap(const char* s, size_t len, size_t pos)
 // Example: <IndexMap dim="6">64.5@0 1e-1@0.1 0.1@-0.2 1 @2 2 @3 940 @ 2</IndexMap>
 void GetNextIndexPair(const char *s, size_t len, size_t& pos, float& num1, float& num2)
 {
+    // s might not be null terminated.
     // Set pos to how much leading white space there is.
     pos = FindNextTokenStart(s, len, pos);
 
     if (pos != len)
     {
-        // Extract a number at pos.
         // Note, the len may here include the @ at the end of the string for ParseNumber
         // (e.g. "10.5@") but it does not cause the sscanf to fail.
-        ParseNumber(s + pos, len - pos, num1);
-
         // Set pos to advance over the numbers we just parsed.
         // Note that we stop either at white space or an ampersand.
-        pos = FindIndexDelim(s, len, pos);
+        size_t endPos = FindIndexDelim(s, len, pos);
+        if (endPos == len)
+        {
+            std::ostringstream oss;
+            oss << "GetNextIndexPair: First number of a pair is the end of the string '"
+                << TruncateString(s, len) << "'.";
+            throw Exception(oss.str().c_str());
+        }
+
+        // Extract a number at pos.
+        ParseNumber(s, pos, endPos, num1);
 
         // Set pos to the start of the next number, advancing over white space or an @.
-        pos = FindNextTokenStart_IndexMap(s, len, pos);
+        pos = FindNextTokenStart_IndexMap(s, len, endPos);
+
+        endPos = FindDelim(s, len, pos);
 
         // Extract the other half of the index pair.
-        ParseNumber(s + pos, len - pos, num2);
-
         // Set pos to advance over the numbers we just parsed.
-        pos = FindDelim(s, len, pos);
+        ParseNumber(s, pos, endPos, num2);
 
+        pos = endPos;
         if (pos != len)
         {
             pos = FindNextTokenStart(s, len, pos);
@@ -1147,7 +1158,7 @@ void CTFReaderACESParamsElt::start(const char **atts)
         if (0 == Platform::Strcasecmp(ATTR_GAMMA, atts[i]))
         {
             const size_t len = strlen(atts[i + 1]);
-            ParseNumber(atts[i + 1], len, gamma);
+            ParseNumber(atts[i + 1], 0, len, gamma);
         }
 
         i += 2;
@@ -1518,19 +1529,19 @@ void CTFReaderECParamsElt::start(const char ** atts)
 
         if (0 == Platform::Strcasecmp(ATTR_EXPOSURE, atts[i]))
         {
-            ParseNumber(atts[i + 1], len, exposure);
+            ParseNumber(atts[i + 1], 0, len, exposure);
         }
         else if (0 == Platform::Strcasecmp(ATTR_CONTRAST, atts[i]))
         {
-            ParseNumber(atts[i + 1], len, contrast);
+            ParseNumber(atts[i + 1], 0, len, contrast);
         }
         else if (0 == Platform::Strcasecmp(ATTR_GAMMA, atts[i]))
         {
-            ParseNumber(atts[i + 1], len, gamma);
+            ParseNumber(atts[i + 1], 0, len, gamma);
         }
         else if (0 == Platform::Strcasecmp(ATTR_PIVOT, atts[i]))
         {
-            ParseNumber(atts[i + 1], len, pivot);
+            ParseNumber(atts[i + 1], 0, len, pivot);
         }
 
         i += 2;
@@ -1712,12 +1723,12 @@ void CTFReaderGammaParamsElt::start(const char ** atts)
         else if (0 == Platform::Strcasecmp(ATTR_GAMMA, atts[i]))
         {
             const size_t len = strlen(atts[i + 1]);
-            ParseNumber(atts[i + 1], len, gamma);
+            ParseNumber(atts[i + 1], 0, len, gamma);
         }
         else if (0 == Platform::Strcasecmp(ATTR_OFFSET, atts[i]))
         {
             const size_t len = strlen(atts[i + 1]);
-            ParseNumber(atts[i + 1], len, offset);
+            ParseNumber(atts[i + 1], 0, len, offset);
         }
 
         i += 2;
@@ -2263,23 +2274,23 @@ void CTFReaderLogParamsElt::start(const char ** atts)
         }
         else if (0 == Platform::Strcasecmp(ATTR_GAMMA, atts[i]))
         {
-            ParseNumber(atts[i + 1], len, gamma);
+            ParseNumber(atts[i + 1], 0, len, gamma);
         }
         else if (0 == Platform::Strcasecmp(ATTR_REFWHITE, atts[i]))
         {
-            ParseNumber(atts[i + 1], len, refWhite);
+            ParseNumber(atts[i + 1], 0, len, refWhite);
         }
         else if (0 == Platform::Strcasecmp(ATTR_REFBLACK, atts[i]))
         {
-            ParseNumber(atts[i + 1], len, refBlack);
+            ParseNumber(atts[i + 1], 0, len, refBlack);
         }
         else if (0 == Platform::Strcasecmp(ATTR_HIGHLIGHT, atts[i]))
         {
-            ParseNumber(atts[i + 1], len, highlight);
+            ParseNumber(atts[i + 1], 0, len, highlight);
         }
         else if (0 == Platform::Strcasecmp(ATTR_SHADOW, atts[i]))
         {
-            ParseNumber(atts[i + 1], len, shadow);
+            ParseNumber(atts[i + 1], 0, len, shadow);
         }
 
         i += 2;

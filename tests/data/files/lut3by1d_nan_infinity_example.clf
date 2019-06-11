@@ -2,9 +2,9 @@
 <ProcessList id="empty" xmlns="urn:NATAS:ASC:LUT:v0.95" compCLFversion="2.0">
    <LUT1D inBitDepth="32f" outBitDepth="32f">
       <Array dim="4 3">
- NAN -NAN -NAN123  
-NAN123 nan  INF  
-inf  infinity -inf 
+ NAN -NAN -NAN  
+NaN nan  INF  
+inf  inFInity -inf 
 -infinity  0  0
       </Array>
    </LUT1D>
