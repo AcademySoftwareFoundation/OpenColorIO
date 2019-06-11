@@ -30,6 +30,15 @@ to the Project shall be:
 Submitted under a Developer's Certificate of Origin v. 1.1 (DCO); and
 Licensed under the BSD-3-Clause License.
 
+You agree that You shall be bound by the terms of the BSD-3-Clause License
+for all contributions made by You and Your employees. Your designated
+employees are those listed by Your CLA Manager(s) on the system of record
+for the Project. You agree to identify Your initial CLA Manager below and
+thereafter maintain current CLA Manager records in the Project’s system of record.
+
+
+Initial CLA Manager (Name and Email): ______________________________________
+
 
 Corporate Signature:
 
