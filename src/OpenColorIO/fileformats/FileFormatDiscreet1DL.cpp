@@ -156,6 +156,9 @@ OCIO_NAMESPACE_ENTER
                                           // pointers to tables of length "length".
 
                 IMLutStruct() : numtables(0), tables(0) {}
+                IMLutStruct(const IMLutStruct &) = delete;
+                IMLutStruct& operator=(const IMLutStruct &) = delete;
+
                 ~IMLutStruct();
             };
 
