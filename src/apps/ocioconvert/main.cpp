@@ -88,6 +88,9 @@ private:
     {
     }
 
+    GPUManagement(const GPUManagement &) = delete;
+    GPUManagement & operator=(const GPUManagement &) = delete;
+
     ~GPUManagement()
     {
         if (m_initState != STATE_CREATED)

@@ -150,6 +150,8 @@ template<BitDepth inBD, BitDepth outBD>
 class Lut1DRendererHalfCode : public BaseLut1DRenderer<inBD, outBD>
 {
 public:
+    Lut1DRendererHalfCode() = delete;
+
     Lut1DRendererHalfCode(ConstLut1DOpDataRcPtr & lut)
         : BaseLut1DRenderer<inBD, outBD>(lut) {}
 
@@ -163,6 +165,8 @@ template<BitDepth inBD, BitDepth outBD>
 class Lut1DRenderer : public BaseLut1DRenderer<inBD, outBD>
 {
 public:
+    Lut1DRenderer() = delete;
+
     Lut1DRenderer(ConstLut1DOpDataRcPtr & lut) 
         : BaseLut1DRenderer<inBD, outBD>(lut) {}
 
@@ -176,6 +180,8 @@ template<BitDepth inBD, BitDepth outBD>
 class Lut1DRendererHueAdjust : public Lut1DRenderer<inBD, outBD>
 {
 public:
+    Lut1DRendererHueAdjust() = delete;
+
     Lut1DRendererHueAdjust(ConstLut1DOpDataRcPtr & lut)
         :  Lut1DRenderer<inBD, outBD>(lut, BIT_DEPTH_F32) {}
 
@@ -186,6 +192,8 @@ template<BitDepth inBD, BitDepth outBD>
 class Lut1DRendererHalfCodeHueAdjust : public Lut1DRendererHalfCode<inBD, outBD>
 {
 public:
+    Lut1DRendererHalfCodeHueAdjust() = delete;
+
     Lut1DRendererHalfCodeHueAdjust(ConstLut1DOpDataRcPtr & lut)
         : Lut1DRendererHalfCode<inBD, outBD>(lut, BIT_DEPTH_F32) {}
 

@@ -57,7 +57,9 @@ OCIO_NAMESPACE_ENTER
         Impl() :
             dir_(TRANSFORM_DIR_FORWARD)
         { }
-        
+
+        Impl(const Impl &) = delete;
+
         ~Impl()
         {
             vec_.clear();

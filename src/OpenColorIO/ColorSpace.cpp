@@ -78,6 +78,8 @@ OCIO_NAMESPACE_ENTER
             toRefSpecified_(false),
             fromRefSpecified_(false)
         { }
+
+        Impl(const Impl &) = delete;
         
         ~Impl()
         { }

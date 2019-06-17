@@ -185,7 +185,8 @@ class XmlReaderDummyElt : public XmlReaderPlainElt
     class DummyParent : public XmlReaderContainerElt
     {
     public:
-        DummyParent(ElementRcPtr pParent)
+        DummyParent() = delete;
+        DummyParent(ElementRcPtr & pParent)
             : XmlReaderContainerElt(pParent.get() ? pParent->getName() : "",
                                     pParent.get() ? pParent->getXmlLineNumber() : 0,
                                     pParent.get() ? pParent->getXmlFile() : "")
@@ -256,8 +257,9 @@ typedef OCIO_SHARED_PTR<XmlReaderDummyElt> DummyEltRcPtr;
 class XmlReaderDescriptionElt : public XmlReaderPlainElt
 {
 public:
+    XmlReaderDescriptionElt() = delete;
     XmlReaderDescriptionElt(const std::string & name,
-                            ContainerEltRcPtr pParent,
+                            ContainerEltRcPtr & pParent,
                             unsigned int xmlLocation,
                             const std::string & xmlFile)
         : XmlReaderPlainElt(name, pParent, xmlLocation, xmlFile)
@@ -473,6 +475,9 @@ class XmlReaderElementStack
 
 public:
     XmlReaderElementStack();
+
+    XmlReaderElementStack(const XmlReaderElementStack &) = delete;
+    XmlReaderElementStack & operator=(const XmlReaderElementStack &) = delete;
 
     virtual ~XmlReaderElementStack();
 

@@ -68,6 +68,8 @@ OCIO_NAMESPACE_ENTER
             cubesize_(-1)
         {
         }
+
+        Impl(const Impl &) = delete;
         
         ~Impl()
         {
