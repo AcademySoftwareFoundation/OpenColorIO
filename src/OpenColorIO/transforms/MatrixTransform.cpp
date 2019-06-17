@@ -57,7 +57,9 @@ OCIO_NAMESPACE_ENTER
             , dir_(TRANSFORM_DIR_FORWARD)
         {
         }
-        
+
+        Impl(const Impl &) = delete;
+
         ~Impl()
         { }
         
@@ -70,9 +72,6 @@ OCIO_NAMESPACE_ENTER
             }
             return *this;
         }
-
-    private:        
-        Impl(const Impl & rhs);
     };
     
     ///////////////////////////////////////////////////////////////////////////

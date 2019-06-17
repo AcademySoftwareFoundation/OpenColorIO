@@ -285,8 +285,15 @@ ArgOption::add_argument (const char *argv)
 
 
 
+ArgParse::ArgParse ()
+    : m_argc(0), m_argv(nullptr), m_global(nullptr)
+{
+}
+
+
+
 ArgParse::ArgParse (int argc, const char **argv)
-    : m_argc(argc), m_argv(argv), m_global(NULL)
+    : m_argc(argc), m_argv(argv), m_global(nullptr)
 {
 }
 

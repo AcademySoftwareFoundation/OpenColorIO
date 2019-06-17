@@ -55,6 +55,8 @@ OCIO_NAMESPACE_ENTER
         
         Impl()
         { }
+
+        Impl(const Impl &) = delete;
         
         ~Impl()
         { }

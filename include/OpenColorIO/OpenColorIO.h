@@ -89,9 +89,15 @@ OCIO_NAMESPACE_ENTER
     {
     public:
         //!cpp:function:: Constructor that takes a string as the exception message.
-        Exception(const char *) throw();
+        explicit Exception(const char *);
         //!cpp:function:: Constructor that takes an existing exception.
-        Exception(const Exception&) throw();
+        Exception(const Exception &);
+
+        ~Exception();
+
+    private:
+        Exception();
+        Exception & operator= (const Exception &);
     };
     
     //!cpp:class:: An exception class for errors detected at
@@ -105,9 +111,15 @@ OCIO_NAMESPACE_ENTER
     {
     public:
         //!cpp:function:: Constructor that takes a string as the exception message.
-        ExceptionMissingFile(const char *) throw();
+        explicit ExceptionMissingFile(const char *);
         //!cpp:function:: Constructor that takes an existing exception.
-        ExceptionMissingFile(const ExceptionMissingFile&) throw();
+        ExceptionMissingFile(const ExceptionMissingFile &);
+
+        ~ExceptionMissingFile();
+
+    private:
+        ExceptionMissingFile();
+        ExceptionMissingFile & operator= (const ExceptionMissingFile &);
     };
     
     ///////////////////////////////////////////////////////////////////////////
@@ -1055,8 +1067,8 @@ OCIO_NAMESPACE_ENTER
         CPUProcessor();
         ~CPUProcessor();
         
-        CPUProcessor(const CPUProcessor &) = delete;
-        CPUProcessor& operator= (const CPUProcessor &) = delete;
+        CPUProcessor(const CPUProcessor &);
+        CPUProcessor& operator= (const CPUProcessor &);
         
         static void deleter(CPUProcessor* c);
 

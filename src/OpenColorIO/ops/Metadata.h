@@ -46,9 +46,13 @@ public:
     typedef std::pair<std::string,std::string> Attribute;
     typedef std::vector<Attribute> Attributes;
 
+    Metadata() = delete;
+
     Metadata(const std::string & name);
 
     Metadata(const Metadata & other);
+
+    ~Metadata() {}
 
     const std::string & getName() const;
 
@@ -105,8 +109,6 @@ public:
     Metadata & operator=(const Metadata & rhs);
 
 private:
-    Metadata() = delete;
-
     std::string  m_name;       // The element name
     std::string  m_value;      // The element value
     Attributes   m_attributes; // The element's list of attributes

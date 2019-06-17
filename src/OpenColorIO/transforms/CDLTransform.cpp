@@ -320,7 +320,9 @@ OCIO_NAMESPACE_ENTER
             ,   m_direction(TRANSFORM_DIR_FORWARD)
         {
         }
-        
+
+        Impl(const Impl &) = delete;
+
         ~Impl() { }
         
         Impl& operator= (const Impl & rhs)
@@ -337,9 +339,6 @@ OCIO_NAMESPACE_ENTER
         TransformDirection m_direction;
 
         mutable std::string m_xml;
-
-    private:
-        Impl(const Impl&);
     };
     
     
