@@ -246,7 +246,8 @@ OCIO_NAMESPACE_ENTER
         // returns true if the op's output does not combine input channels
         virtual bool hasChannelCrosstalk() const = 0;
 
-        virtual bool operator==(const OpData& other) const;
+        virtual bool operator==(const OpData & other) const;
+        bool operator!=(const OpData & other) const = delete;
 
         virtual void finalize() = 0;
 

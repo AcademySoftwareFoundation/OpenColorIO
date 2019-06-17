@@ -160,6 +160,9 @@ void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
 class XMLParserHelper
 {
 public:
+    XMLParserHelper() = delete;
+    XMLParserHelper(const XMLParserHelper &) = delete;
+
     XMLParserHelper(const std::string & fileName)
         : m_parser(XML_ParserCreate(nullptr))
         , m_fileName(fileName)
@@ -185,9 +188,15 @@ public:
         while (istream.good())
         {
             std::getline(istream, line);
+            // Add back the newline character. Parsing will copy the line in a
+            // buffer up to the length of the line without the null termination.
+            // Our code will be called back to parse the buffer into a number.
+            // Code uses strtod. The buffer has to be delimited so that strtod
+            // does not access it after its length.
+            line.push_back('\n');
             ++m_lineNumber;
 
-            Parse(line);
+            Parse(line, !istream.good());
         }
 
         if (!m_elms.empty())
@@ -214,45 +223,42 @@ public:
         }
     }
 
-    void Parse(const std::string & buffer)
+    void Parse(const std::string & buffer, bool lastLine)
     {
-        int done = 0;
+        const int done = lastLine?1:0;
 
-        do
+        if (XML_STATUS_ERROR == XML_Parse(m_parser,
+                                          buffer.c_str(),
+                                          (int)buffer.size(), done))
         {
-            if (XML_STATUS_ERROR == XML_Parse(m_parser,
-                                              buffer.c_str(),
-                                              (int)buffer.size(), done))
+            XML_Error eXpatErrorCode = XML_GetErrorCode(m_parser);
+            if (eXpatErrorCode == XML_ERROR_TAG_MISMATCH)
             {
-                XML_Error eXpatErrorCode = XML_GetErrorCode(m_parser);
-                if (eXpatErrorCode == XML_ERROR_TAG_MISMATCH)
+                if (!m_elms.empty())
                 {
-                    if (!m_elms.empty())
-                    {
-                        // It could be an Op or an Attribute.
-                        std::string error(
-                            "CTF/CLF parsing error (no closing tag for '");
-                        error += m_elms.back()->getName().c_str();
-                        error += "'). ";
-                        throwMessage(error);
-                    }
-                    else
-                    {
-                        // Completely lost, something went wrong,
-                        // but nothing detected with the stack.
-                        static const std::string error(
-                            "CTF/CLF parsing error (unbalanced element tags). ");
-                        throwMessage(error);
-                    }
+                    // It could be an Op or an Attribute.
+                    std::string error(
+                        "CTF/CLF parsing error (no closing tag for '");
+                    error += m_elms.back()->getName().c_str();
+                    error += "'). ";
+                    throwMessage(error);
                 }
                 else
                 {
-                    std::string error("CTF/CLF parsing error: ");
-                    error += XML_ErrorString(XML_GetErrorCode(m_parser));
+                    // Completely lost, something went wrong,
+                    // but nothing detected with the stack.
+                    static const std::string error(
+                        "CTF/CLF parsing error (unbalanced element tags). ");
                     throwMessage(error);
                 }
             }
-        } while (done);
+            else
+            {
+                std::string error("CTF/CLF parsing error: ");
+                error += XML_ErrorString(XML_GetErrorCode(m_parser));
+                throwMessage(error);
+            }
+        }
 
     }
 
@@ -310,8 +316,6 @@ private:
         os << ". At line (" << m_lineNumber << ")";
         throw Exception(os.str().c_str());
     }
-
-    XMLParserHelper() = delete;
 
     // Determines if the element name is supported in the current context.
     static bool SupportedElement(const char * name,
@@ -909,11 +913,12 @@ private:
         }
 
         if (len == 0) return;
-
         if (len<0 || !s || !*s)
         {
             pImpl->throwMessage("CTF/CLF parsing error: attribute illegal. ");
         }
+        // Parsing a single new line. This is valid.
+        if (len == 1 && s[0] == '\n') return;
 
         auto pElt = pImpl->m_elms.back();
         if (!pElt)
@@ -2195,7 +2200,7 @@ OIIO_ADD_TEST(FileFormatCTF, invalid_transform)
 OIIO_ADD_TEST(FileFormatCTF, missing_element_end)
 {
     const std::string ctfFile("transform_element_end_missing.clf");
-    OIIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception, "no closing tag");
+    OIIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception, "no element found");
 }
 
 

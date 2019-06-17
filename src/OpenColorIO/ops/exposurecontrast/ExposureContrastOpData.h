@@ -162,6 +162,8 @@ public:
 
     ExposureContrastOpData();
 
+    ExposureContrastOpData(const ExposureContrastOpData &) = delete;
+
     ExposureContrastOpData(BitDepth inBitDepth,
                            BitDepth outBitDepth,
                            Style style);

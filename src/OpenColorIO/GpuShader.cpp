@@ -275,10 +275,10 @@ public:
                           const char * shaderFunctionFooter)
     {
         m_shaderCode.resize(0);
-        m_shaderCode += (shaderDeclarations && *shaderDeclarations) ? shaderDeclarations : "";
-        m_shaderCode += (shaderHelperMethods && *shaderHelperMethods) ? shaderHelperMethods : "";
+        m_shaderCode += (shaderDeclarations   && *shaderDeclarations)   ? shaderDeclarations   : "";
+        m_shaderCode += (shaderHelperMethods  && *shaderHelperMethods)  ? shaderHelperMethods  : "";
         m_shaderCode += (shaderFunctionHeader && *shaderFunctionHeader) ? shaderFunctionHeader : "";
-        m_shaderCode += (shaderFunctionBody && *shaderFunctionBody) ? shaderFunctionBody : "";
+        m_shaderCode += (shaderFunctionBody   && *shaderFunctionBody)   ? shaderFunctionBody   : "";
         m_shaderCode += (shaderFunctionFooter && *shaderFunctionFooter) ? shaderFunctionFooter : "";
 
         m_shaderCodeID.resize(0);

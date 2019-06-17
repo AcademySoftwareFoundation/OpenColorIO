@@ -49,7 +49,11 @@ const char CDL_TAG_VIEWING_DESCRIPTION[] = "ViewingDescription";
 class CDLParser::Impl
 {
 public:
+    Impl() = delete;
     Impl(const std::string & fileName);
+    Impl(const Impl &) = delete;
+    Impl & operator=(const Impl &) = delete;
+
     ~Impl();
 
     // Parse a CDL stream.
@@ -87,7 +91,7 @@ public:
 
 protected:
     // Parse a line.
-    void parse(const std::string & buffer);
+    void parse(const std::string & buffer, bool lastLine);
 
     std::string loadHeader(std::istream & istream);
 
@@ -236,9 +240,10 @@ void CDLParser::Impl::parse(std::istream & istream)
     while (istream.good())
     {
         std::getline(istream, line);
+        line.push_back('\n');
         ++m_lineNumber;
 
-        parse(line);
+        parse(line, !istream.good());
     }
 
     validateParsing();
@@ -267,46 +272,43 @@ void CDLParser::Impl::throwMessage(const std::string & error) const
     throw Exception(os.str().c_str());
 }
 
-void CDLParser::Impl::parse(const std::string & buffer)
+void CDLParser::Impl::parse(const std::string & buffer, bool lastLine)
 {
-    int done = 0;
-
-    do
+    const int done = lastLine?1:0;
+    
+    if (XML_STATUS_ERROR == XML_Parse(m_parser,
+                                      buffer.c_str(),
+                                      (int)buffer.size(),
+                                      done))
     {
-        if (XML_STATUS_ERROR == XML_Parse(m_parser,
-                                          buffer.c_str(),
-                                          (int)buffer.size(),
-                                          done))
+        XML_Error eXpatErrorCode = XML_GetErrorCode(m_parser);
+        if (eXpatErrorCode == XML_ERROR_TAG_MISMATCH)
         {
-            XML_Error eXpatErrorCode = XML_GetErrorCode(m_parser);
-            if (eXpatErrorCode == XML_ERROR_TAG_MISMATCH)
+            if (!m_elms.empty())
             {
-                if (!m_elms.empty())
-                {
-                    // It could be an Op or an Attribute.
-                    std::string error("XML parsing error "
-                                      "(no closing tag for '");
-                    error += m_elms.back()->getName().c_str();
-                    error += "'). ";
-                    throwMessage(error);
-                }
-                else
-                {
-                    // Completely lost, something went wrong,
-                    // but nothing detected with the stack.
-                    static const std::string error("XML parsing error "
-                                                   "(unbalanced element tags). ");
-                    throwMessage(error);
-                }
+                // It could be an Op or an Attribute.
+                std::string error("XML parsing error "
+                                  "(no closing tag for '");
+                error += m_elms.back()->getName().c_str();
+                error += "'). ";
+                throwMessage(error);
             }
             else
             {
-                std::string error("XML parsing error: ");
-                error += XML_ErrorString(XML_GetErrorCode(m_parser));
+                // Completely lost, something went wrong,
+                // but nothing detected with the stack.
+                static const std::string error("XML parsing error "
+                                               "(unbalanced element tags). ");
                 throwMessage(error);
             }
         }
-    } while (done);
+        else
+        {
+            std::string error("XML parsing error: ");
+            error += XML_ErrorString(XML_GetErrorCode(m_parser));
+            throwMessage(error);
+        }
+    }
 
 }
 
@@ -921,14 +923,13 @@ void CDLParser::Impl::CharacterDataHandler(void *userData,
         throw Exception("Internal CDL parsing error.");
     }
 
-    if (len == 0) {
-        return;
-    }
-
+    if (len == 0) return;
     if (len<0 || !s || !*s)
     {
         pImpl->throwMessage("Empty attribute data");
     }
+    // Parsing a single new line. This is valid.
+    if (len == 1 && s[0] == '\n') return;
 
     ElementRcPtr pElt = pImpl->m_elms.back();
     if (!pElt)

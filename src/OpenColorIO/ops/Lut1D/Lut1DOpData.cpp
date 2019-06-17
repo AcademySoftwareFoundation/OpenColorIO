@@ -585,18 +585,14 @@ bool Lut1DOpData::haveEqualBasics(const Lut1DOpData & B) const
 bool Lut1DOpData::operator==(const OpData & other) const
 {
     if (this == &other) return true;
-    if (getType() != other.getType()) return false;
+
+    if (!OpData::operator==(other)) return false;
 
     const Lut1DOpData* lop = static_cast<const Lut1DOpData*>(&other);
 
     // NB: The m_invQuality is not currently included.
     if (m_direction != lop->m_direction
         || m_interpolation != lop->m_interpolation)
-    {
-        return false;
-    }
-
-    if (!OpData::operator==(*lop))
     {
         return false;
     }

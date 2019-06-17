@@ -514,18 +514,13 @@ bool Lut3DOpData::operator==(const OpData & other) const
 {
     if (this == &other) return true;
 
-    if (getType() != other.getType()) return false;
+    if (!OpData::operator==(other)) return false;
 
     const Lut3DOpData* lop = static_cast<const Lut3DOpData*>(&other);
 
     // NB: The m_invQuality is not currently included.
     if (m_direction != lop->m_direction
         || m_interpolation != lop->m_interpolation)
-    {
-        return false;
-    }
-
-    if (!OpData::operator==(other))
     {
         return false;
     }
