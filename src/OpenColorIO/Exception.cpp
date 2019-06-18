@@ -31,24 +31,34 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
   
-    Exception::Exception(const char * msg) throw()
-    : std::runtime_error(msg)
-    {}
+Exception::Exception(const char * msg)
+    :   std::runtime_error(msg)
+{
+}
 
-    Exception::Exception(const Exception& e) throw()
-    : std::runtime_error(e)
-    {}
+Exception::Exception(const Exception & e)
+    :   std::runtime_error(e)
+{
+}
 
-  
-  
-  
-    ExceptionMissingFile::ExceptionMissingFile(const char * msg) throw()
-    : Exception(msg)
-    {}
+Exception::~Exception()
+{
+}
 
-    ExceptionMissingFile::ExceptionMissingFile(const ExceptionMissingFile& e) throw()
-    : Exception(e)
-    {}
+
+ExceptionMissingFile::ExceptionMissingFile(const char * msg)
+    :   Exception(msg)
+{
+}
+
+ExceptionMissingFile::ExceptionMissingFile(const ExceptionMissingFile & e)
+    :   Exception(e)
+{
+}
+
+ExceptionMissingFile::~ExceptionMissingFile()
+{
+}
 
 }
 OCIO_NAMESPACE_EXIT

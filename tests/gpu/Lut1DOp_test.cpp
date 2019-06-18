@@ -415,7 +415,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_inverse_half_file1_test)
     test.setErrorThreshold(1e-4f);
 
     test.setRelativeComparison(true);
-    test.setExpectedMinimalValue(1e-3);
+    test.setExpectedMinimalValue(1e-3f);
 
     test.setTestNaN(false);
 }

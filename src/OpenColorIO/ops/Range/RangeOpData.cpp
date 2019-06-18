@@ -686,11 +686,9 @@ bool RangeOpData::operator==(const OpData & other) const
 {
     if (this == &other) return true;
 
-    if (getType() != other.getType()) return false;
+    if (!OpData::operator==(other)) return false;
 
     const RangeOpData* rop = static_cast<const RangeOpData*>(&other);
-
-    if (!(OpData::operator==(other))) return false;
 
     if ( (minIsEmpty() != rop->minIsEmpty()) || 
             (maxIsEmpty() != rop->maxIsEmpty()) )
