@@ -549,16 +549,19 @@ GammaOpDataRcPtr GammaOpData::compose(const GammaOpData & B) const
     return outOp;
 }
 
-bool GammaOpData::operator==(const GammaOpData & other) const
+bool GammaOpData::operator==(const OpData & other) const
 {
     if(this==&other) return true;
 
-    return  OpData::operator==(other) &&
-            m_style == other.m_style &&
-            m_redParams == other.m_redParams &&
-            m_greenParams == other.m_greenParams &&
-            m_blueParams == other.m_blueParams &&
-            m_alphaParams == other.m_alphaParams;
+    if(!OpData::operator==(other)) return false;
+
+    const GammaOpData* gop = static_cast<const GammaOpData*>(&other);
+
+    return  m_style == gop->m_style &&
+            m_redParams == gop->m_redParams &&
+            m_greenParams == gop->m_greenParams &&
+            m_blueParams == gop->m_blueParams &&
+            m_alphaParams == gop->m_alphaParams;
 }
 
 void GammaOpData::finalize()

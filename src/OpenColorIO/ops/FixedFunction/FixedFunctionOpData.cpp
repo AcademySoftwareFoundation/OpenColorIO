@@ -309,9 +309,7 @@ bool FixedFunctionOpData::operator==(const OpData & other) const
 {
     if (this == &other) return true;
 
-    if (getType() != other.getType()) return false;
-
-    if(!(OpData::operator==(other))) return false;
+    if (!OpData::operator==(other)) return false;
 
     const FixedFunctionOpData* fop = static_cast<const FixedFunctionOpData*>(&other);
 
