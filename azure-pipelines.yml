@@ -68,7 +68,7 @@ jobs:
   - template: share/ci/templates/checkout.yml
   - bash: $(installSh)
     displayName: Install dependencies
-    condition: and(suceeded(), variables['installSh'])
+    condition: and(succeeded(), variables['installSh'])
 
   - template: share/ci/templates/configure.yml
     parameters:
