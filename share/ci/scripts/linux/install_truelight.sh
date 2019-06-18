@@ -6,7 +6,6 @@ TRUELIGHT_VERSION="$1"
 TRUELIGHT_MAJOR_MINOR=$(echo "${TRUELIGHT_VERSION}" | cut -d. -f-2)
 TRUELIGHT_MAJOR=$(echo "${TRUELIGHT_VERSION}" | cut -d. -f-1)
 TRUELIGHT_MINOR=$(echo "${TRUELIGHT_MAJOR_MINOR}" | cut -d. -f2-)
-TRUELIGHT_PATCH=$(echo "${TRUELIGHT_VERSION}" | cut -d. -f3-)
 
 mkdir _truelight
 cd _truelight

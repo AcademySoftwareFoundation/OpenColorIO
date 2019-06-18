@@ -27,41 +27,49 @@ jobs:
 #       Docker container where the build occurs.
 # Note: 'containerImage' images are hosted on DockerHub.
 
-# TODO: Move Docker images to ASWF DockerHub account
-
 - job: Linux
   strategy:
     matrix:
-      Ubuntu 18.04 VFX CY2020:
+      CentOS 7 VFX CY2019:
         agentImage: 'ubuntu-16.04'
-        containerImage: michdolan/ubuntu18.04:vfx2020_py27
+        containerImage: aswfstaging/ci-ocio:2019
         useSSE: ON
         cxxCompiler: g++
         cCompiler: gcc
-      Ubuntu 18.04 VFX CY2019:
+        installSh: ''
+      CentOS 7 VFX CY2019 (No SSE):
         agentImage: 'ubuntu-16.04'
-        containerImage: michdolan/ubuntu18.04:vfx2019
-        useSSE: ON
-        cxxCompiler: g++
-        cCompiler: gcc
-      Ubuntu 18.04 Clang 6.0:
-        agentImage: 'ubuntu-16.04'
-        containerImage: michdolan/ubuntu18.04:vfx2019
-        useSSE: ON
-        cxxCompiler: clang++
-        cCompiler: clang
-      Ubuntu 18.04 VFX CY2019 (No SSE):
-        agentImage: 'ubuntu-16.04'
-        containerImage: michdolan/ubuntu18.04:vfx2019
+        containerImage: aswfstaging/ci-ocio:2019
         useSSE: OFF
         cxxCompiler: g++
         cCompiler: gcc
+        installSh: ''
+      CentOS 7 Clang 7:
+        agentImage: 'ubuntu-16.04'
+        containerImage: aswfstaging/ci-ocio:2019
+        useSSE: ON
+        cxxCompiler: clang++
+        cCompiler: clang
+        installSh: ''
+      CentOS 7 Clang 7 (Latest):
+        agentImage: 'ubuntu-16.04'
+        containerImage: aswfstaging/ci-base:2019
+        useSSE: ON
+        cxxCompiler: clang++
+        cCompiler: clang
+        installSh: |
+          share/ci/scripts/linux/install_openexr.sh latest
+          share/ci/scripts/linux/install_oiio.sh latest
   pool:
     vmImage: $(agentImage)
   container: $[ variables['containerImage'] ]
 
   steps:
   - template: share/ci/templates/checkout.yml
+  - bash: $(installSh)
+    displayName: Install dependencies
+    condition: and(suceeded(), variables['installSh'])
+
   - template: share/ci/templates/configure.yml
     parameters:
       useSSE: $(useSSE)
@@ -78,11 +86,10 @@ jobs:
 # SonarCloud static analysis
 # --------------------------
 - job: SonarCloud
-  displayName: SonarCloud Ubuntu 18.04 VFX CY2019
-  condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
+  displayName: SonarCloud CentOS 7 VFX CY2019
   pool:
     vmImage: 'ubuntu-16.04'
-  container: michdolan/ubuntu18.04:vfx2019
+  container: aswfstaging/ci-ocio:2019
 
   steps:
   - template: share/ci/templates/checkout.yml
