@@ -89,7 +89,7 @@ jobs:
   displayName: Linux CentOS 7 VFX CY2019 (SonarCloud)
   pool:
     vmImage: 'ubuntu-16.04'
-  container: aswfstaging/ci-ocio:2019
+  container: michdolan/ubuntu18.04:vfx2019
 
   steps:
   - template: share/ci/templates/checkout.yml
