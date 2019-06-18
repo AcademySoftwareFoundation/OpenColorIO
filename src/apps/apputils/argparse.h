@@ -126,7 +126,8 @@ class ArgOption;   // Forward declaration
 
 class ArgParse {
 public:
-    ArgParse (int argc=0, const char **argv=NULL);
+    ArgParse ();
+    ArgParse (int argc, const char **argv);
     ~ArgParse ();
 
     /// Declare the command line options.  After the introductory

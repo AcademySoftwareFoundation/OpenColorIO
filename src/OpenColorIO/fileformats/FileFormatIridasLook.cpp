@@ -156,6 +156,10 @@ OCIO_NAMESPACE_ENTER
         class XMLParserHelper
         {
         public:
+            XMLParserHelper() = delete;
+            XMLParserHelper(const XMLParserHelper &) = delete;
+            XMLParserHelper & operator=(const XMLParserHelper &) = delete;
+
             XMLParserHelper(const std::string & fileName)
                 : m_parser(XML_ParserCreate(NULL))
                 , m_fileName(fileName)
@@ -265,8 +269,6 @@ OCIO_NAMESPACE_ENTER
                 os << ". At line (" << m_lineNumber << ")";
                 throw Exception(os.str().c_str());
             }
-
-            XMLParserHelper() {};
 
             // Start the parsing of one element
             static void StartElementHandler(void *userData,

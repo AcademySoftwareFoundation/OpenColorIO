@@ -854,7 +854,7 @@ OCIO_NAMESPACE_ENTER
 
     private:
         LogAffineTransform();
-        LogAffineTransform(const LogTransform &);
+        LogAffineTransform(const LogAffineTransform &);
         virtual ~LogAffineTransform();
 
         LogAffineTransform& operator= (const LogAffineTransform &);

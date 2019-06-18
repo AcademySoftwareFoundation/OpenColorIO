@@ -898,13 +898,13 @@ void MatrixOpData::cleanUp(double offsetScale)
 bool MatrixOpData::operator==(const OpData & other) const
 {
     if (this == &other) return true;
-    if (getType() != other.getType()) return false;
+
+    if (!OpData::operator==(other)) return false;
 
     const MatrixOpData* mop = static_cast<const MatrixOpData*>(&other);
 
-    return (OpData::operator==(other) &&
-           m_array == mop->m_array &&
-           m_offsets == mop->m_offsets);
+    return (m_array == mop->m_array &&
+            m_offsets == mop->m_offsets);
 }
 
 MatrixOpDataRcPtr MatrixOpData::inverse() const

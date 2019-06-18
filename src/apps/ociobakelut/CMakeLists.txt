@@ -12,6 +12,10 @@ if(NOT BUILD_SHARED_LIBS)
     )
 endif()
 
+if(MSVC)
+    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /wd4996")
+endif()
+
 set_target_properties(ociobakelut PROPERTIES 
     COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
 

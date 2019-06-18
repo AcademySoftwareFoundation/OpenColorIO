@@ -94,14 +94,15 @@ OCIO_NAMESPACE_ENTER
         }
     }
 
-    bool OpData::operator==(const OpData& other) const
+    bool OpData::operator==(const OpData & other) const
     {
         if (this == &other) return true;
 
-        return (m_id == other.m_id &&
-                m_descriptions == other.m_descriptions &&
-                m_inBitDepth == other.m_inBitDepth && 
-                m_outBitDepth == other.m_outBitDepth);
+        return (getType() == other.getType()
+                && m_id == other.m_id
+                && m_descriptions == other.m_descriptions
+                && m_inBitDepth == other.m_inBitDepth
+                && m_outBitDepth == other.m_outBitDepth);
     }
 
     Op::Op()
@@ -975,6 +976,51 @@ OIIO_ADD_TEST(OpRcPtrVec, bit_depth_with_filenoop)
 
     OIIO_CHECK_NO_THROW(ops.validate());
 
+}
+
+OIIO_ADD_TEST(OpData, equality)
+{
+    auto mat1 = OCIO::MatrixOpData::CreateDiagonalMatrix(OCIO::BIT_DEPTH_F32,
+                                                         OCIO::BIT_DEPTH_F32,
+                                                         1.1);
+    auto mat2 = mat1->clone();
+
+    // Use the MatrixOpData::operator==().
+    OIIO_CHECK_ASSERT(*mat2==*mat1);
+
+    auto range = std::make_shared<RangeOpData>(BIT_DEPTH_F32,
+                                               BIT_DEPTH_F32,
+                                               0.0f, 1.0f, 0.5f, 1.5f);
+
+    // Use the MatrixOpData::operator==().
+    OIIO_CHECK_ASSERT( !(*mat2==*range) );
+
+    // Use the RangeOpData::operator==().
+    OIIO_CHECK_ASSERT( !(*range==*mat1) );
+
+    // Use the OpData::operator==().
+    auto op1 = DynamicPtrCast<OpData>(range);
+    OIIO_CHECK_ASSERT( !(*op1==*mat1) );    
+
+    // Use the OpData::operator==().
+    auto op2 = DynamicPtrCast<OpData>(mat2);
+    OIIO_CHECK_ASSERT( !(*op2==*op1) );
+
+    // Change something.
+
+    // Use the MatrixOpData::operator==().
+    OIIO_CHECK_ASSERT( *mat2==*mat1 );
+
+    // Use the OpData::operator==().
+    OIIO_CHECK_ASSERT( *op2==*mat1 );
+
+    mat2->setOffsetValue(1, mat2->getOffsetValue(1) + 1.0);
+
+    // Use the MatrixOpData::operator==().
+    OIIO_CHECK_ASSERT( !(*mat2==*mat1) );
+
+    // Use the OpData::operator==().
+    OIIO_CHECK_ASSERT( !(*op2==*mat1) );
 }
 
 #endif
