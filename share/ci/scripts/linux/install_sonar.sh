@@ -21,4 +21,3 @@ echo $(sonar-scanner --help)
 
 cd ..
 rm -rf _sonar
-

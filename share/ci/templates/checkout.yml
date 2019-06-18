@@ -6,4 +6,3 @@ steps:
   clean: true
   fetchDepth: 50
   displayName: Checkout OCIO source
-
