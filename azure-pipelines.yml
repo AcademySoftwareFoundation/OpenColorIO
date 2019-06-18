@@ -86,7 +86,7 @@ jobs:
 # SonarCloud static analysis
 # --------------------------
 - job: SonarCloud
-  displayName: SonarCloud CentOS 7 VFX CY2019
+  displayName: Linux CentOS 7 VFX CY2019 (SonarCloud)
   pool:
     vmImage: 'ubuntu-16.04'
   container: aswfstaging/ci-ocio:2019

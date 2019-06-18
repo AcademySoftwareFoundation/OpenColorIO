@@ -20,7 +20,7 @@ cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
       -DBoost_NO_BOOST_CMAKE=ON \
       ../.
 make -j4
-make install
+sudo make install
 
 cd ../..
 rm -rf oiio

@@ -9,10 +9,6 @@ BOOST_MINOR=$(echo "${BOOST_MAJOR_MINOR}" | cut -d. -f2-)
 BOOST_PATCH=$(echo "${BOOST_VERSION}" | cut -d. -f3-)
 BOOST_VERSION_U="${BOOST_MAJOR}_${BOOST_MINOR}_${BOOST_PATCH}"
 
-echo "using python : : $(which python) ;\n" \
-     "using gcc : : ${CXX} ;\n" \
-     > ${HOME}/user-config.jam
-
 mkdir _boost
 cd _boost
 
