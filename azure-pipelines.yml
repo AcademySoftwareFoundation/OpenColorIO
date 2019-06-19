@@ -85,11 +85,14 @@ jobs:
 # --------------------------
 # SonarCloud static analysis
 # --------------------------
+# TODO: Remove 'condition' after initial merge to enable PR static analysis
+
 - job: SonarCloud
   displayName: Linux CentOS 7 VFX CY2019 (SonarCloud)
+  condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
   pool:
     vmImage: 'ubuntu-16.04'
-  container: michdolan/ubuntu18.04:vfx2019
+  container: aswfstaging/ci-ocio:2019
 
   steps:
   - template: share/ci/templates/checkout.yml
