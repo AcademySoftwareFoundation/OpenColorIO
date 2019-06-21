@@ -672,6 +672,8 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "unittest.h"
 #include "UnitTestUtils.h"
+#include "Platform.h"
+
 
 OIIO_ADD_TEST(CDLTransform, equality)
 {
@@ -919,16 +921,15 @@ namespace
 
 OIIO_ADD_TEST(CDLTransform, clear_caches)
 {
-    char filename[L_tmpnam_s];
-    const errno_t err = tmpnam_s(filename, L_tmpnam_s);
-    OIIO_CHECK_EQUAL(err, 0);
+    std::string filename;
+    OIIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(filename, ""));
 
     std::fstream stream(filename, std::ios_base::out|std::ios_base::trunc);
     stream << kContentsA;
     stream.close();
 
     OCIO::CDLTransformRcPtr transform; 
-    OIIO_CHECK_NO_THROW(transform = OCIO::CDLTransform::CreateFromFile(filename, "cc03343"));
+    OIIO_CHECK_NO_THROW(transform = OCIO::CDLTransform::CreateFromFile(filename.c_str(), "cc03343"));
 
     float slope[3];
 
@@ -943,7 +944,7 @@ OIIO_ADD_TEST(CDLTransform, clear_caches)
 
     OIIO_CHECK_NO_THROW(OCIO::ClearAllCaches());
 
-    OIIO_CHECK_NO_THROW(transform = OCIO::CDLTransform::CreateFromFile(filename, "cc03343"));
+    OIIO_CHECK_NO_THROW(transform = OCIO::CDLTransform::CreateFromFile(filename.c_str(), "cc03343"));
     OIIO_CHECK_NO_THROW(transform->getSlope(slope));
 
     OIIO_CHECK_EQUAL(slope[0], 1.1f);
@@ -953,16 +954,15 @@ OIIO_ADD_TEST(CDLTransform, clear_caches)
 
 OIIO_ADD_TEST(CDLTransform, faulty_file_content)
 {
-    char filename[L_tmpnam_s];
-    const errno_t err = tmpnam_s(filename, L_tmpnam_s);
-    OIIO_CHECK_EQUAL(err, 0);
+    std::string filename;
+    OIIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(filename, ""));
 
     {
         std::fstream stream(filename, std::ios_base::out|std::ios_base::trunc);
         stream << kContentsA << "Some Extra faulty information";
         stream.close();
 
-        OIIO_CHECK_THROW_WHAT(OCIO::CDLTransform::CreateFromFile(filename, "cc03343"),
+        OIIO_CHECK_THROW_WHAT(OCIO::CDLTransform::CreateFromFile(filename.c_str(), "cc03343"),
                               OCIO::Exception,
                               "Error parsing ColorCorrectionCollection (). Error is: XML parsing error");
     }
@@ -979,7 +979,7 @@ OIIO_ADD_TEST(CDLTransform, faulty_file_content)
         stream << faultyContent;
         stream.close();
 
-        OIIO_CHECK_THROW_WHAT(OCIO::CDLTransform::CreateFromFile(filename, "cc03343"),
+        OIIO_CHECK_THROW_WHAT(OCIO::CDLTransform::CreateFromFile(filename.c_str(), "cc03343"),
                               OCIO::Exception,
                               "Error loading ccc xml. Duplicate elements with 'cc03343'");
     }

@@ -50,8 +50,12 @@ namespace OCIO = OCIO_NAMESPACE;
 #endif
 
 
+// TODO: Make OCIO::Platform::CreateTempFilename() public so it could be used here.
+
 std::string createTempFile(const std::string& fileExt, const std::string& fileContent)
 {
+    // Note: because of security issue, tmpnam could not be used
+
     std::string filename;
 
 #ifdef WINDOWS
@@ -67,16 +71,12 @@ std::string createTempFile(const std::string& fileExt, const std::string& fileCo
     
 #else
 
-    // Note: because of security issue, tmpnam could not be used
-
     std::stringstream ss;
-    time_t t = time(NULL);
-    ss << rand_r((unsigned int*)&t);
-    std::string str = "/tmp/ocio";
-    str += ss.str();
-    str += fileExt;
+    ss << "/tmp/ocio";
+    ss << std::rand();
+    ss << fileExt;
 
-    filename = str;
+    filename = ss.str();
 
 #endif
 
