@@ -828,7 +828,7 @@ OCIO_NAMESPACE_ENTER
 
     void Config::clearSearchPaths()
     {
-        return getImpl()->context_->clearSearchPaths();
+        getImpl()->context_->clearSearchPaths();
 
         AutoMutex lock(getImpl()->cacheidMutex_);
         getImpl()->resetCacheIDs();
@@ -836,7 +836,7 @@ OCIO_NAMESPACE_ENTER
 
     void Config::addSearchPath(const char * path)
     {
-        return getImpl()->context_->addSearchPath(path);
+        getImpl()->context_->addSearchPath(path);
 
         AutoMutex lock(getImpl()->cacheidMutex_);
         getImpl()->resetCacheIDs();

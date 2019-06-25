@@ -160,7 +160,7 @@ public:
 
     virtual void validateParameters() const;
 
-    bool operator==(const GammaOpData& other) const;
+    bool operator==(const OpData& other) const override;
 
     virtual void finalize() override;
 

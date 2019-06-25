@@ -88,6 +88,8 @@ OCIO_NAMESPACE_ENTER
 
         Lut1D();
 
+        ~Lut1D() {}
+
         mutable std::string m_cacheID;
         mutable bool m_isNoOp;
         mutable Mutex m_mutex;

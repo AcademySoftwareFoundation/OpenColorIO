@@ -164,12 +164,12 @@ CDLOpDataRcPtr CDLOpData::clone() const
 bool CDLOpData::operator==(const OpData& other) const
 {
     if (this == &other) return true;
-    if (getType() != other.getType()) return false;
+
+    if (!OpData::operator==(other)) return false;
 
     const CDLOpData* cdl = static_cast<const CDLOpData*>(&other);
 
-    return OpData::operator==(other) 
-        && m_style        == cdl->m_style 
+    return m_style        == cdl->m_style 
         && m_slopeParams  == cdl->m_slopeParams
         && m_offsetParams == cdl->m_offsetParams
         && m_powerParams  == cdl->m_powerParams

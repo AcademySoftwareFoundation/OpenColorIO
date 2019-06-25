@@ -42,6 +42,8 @@ class ColorSpaceSet::Impl
 public:
     Impl() { }
     ~Impl() { }
+
+    Impl(const Impl &) = delete;
     
     Impl & operator= (const Impl & rhs)
     {

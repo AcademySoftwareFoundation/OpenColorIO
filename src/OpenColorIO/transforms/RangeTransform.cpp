@@ -60,6 +60,8 @@ public:
     {
     }
 
+    Impl(const Impl &) = delete;
+
     ~Impl() {}
 
     Impl& operator=(const Impl & rhs)
@@ -84,9 +86,6 @@ public:
 
     TransformDirection m_direction;
     RangeStyle         m_style;
-
-private:
-    Impl(const Impl&);
 };
 
 ///////////////////////////////////////////////////////////////////////////

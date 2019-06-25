@@ -65,7 +65,9 @@ public:
 
         setStyle(GammaOpData::MONCURVE_FWD);
     }
-    
+
+    Impl(const Impl &) = delete;
+
     ~Impl()
     { }
     
@@ -78,10 +80,6 @@ public:
         }
         return *this;
     }
-
-
-private:        
-    Impl(const Impl & rhs);
 };
 
 ///////////////////////////////////////////////////////////////////////////
