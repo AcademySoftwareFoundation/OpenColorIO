@@ -114,6 +114,9 @@ void* AlignedMalloc(size_t size, size_t alignment);
 // Frees a block of memory that was allocated with AlignedMalloc.
 void AlignedFree(void* memBlock);
 
+// Create a temporary filename where filenameExt could be empty.
+void CreateTempFilename(std::string & filename, const std::string & filenameExt);
+
 }
 
 }

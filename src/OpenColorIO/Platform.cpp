@@ -31,6 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include <sstream>
+
 #include "Platform.h"
 
 
@@ -96,6 +98,34 @@ void AlignedFree(void* memBlock)
     free(memBlock);
 #endif
 }
+
+void CreateTempFilename(std::string & filename, const std::string & filenameExt)
+{
+    // Note: Because of security issue, tmpnam could not be used.
+
+#ifdef WINDOWS
+
+    char tmpFilename[L_tmpnam];
+    if(tmpnam_s(tmpFilename))
+    {
+        throw Exception("Could not create a temporary file.");
+    }
+
+    filename = tmpFilename;
+
+#else
+
+    std::stringstream ss;
+    ss << "/tmp/ocio";
+    ss << std::rand();
+
+    filename = ss.str();
+
+#endif
+
+    filename += filenameExt;
+}
+
 
 }//namespace platform
 
@@ -200,4 +230,19 @@ OIIO_ADD_TEST(Platform, aligned_memory_test)
 
     OCIO::Platform::AlignedFree(memBlock);
 }
+
+
+OIIO_ADD_TEST(Platform, CreateTempFilename)
+{
+    std::string f1, f2;
+
+    OIIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(f1, ""));
+    OIIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(f2, ""));
+    OIIO_CHECK_ASSERT(f1!=f2);
+
+    OIIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(f1, ".ctf"));
+    OIIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(f2, ".ctf"));
+    OIIO_CHECK_ASSERT(f1!=f2);
+}
+
 #endif // OCIO_UNIT_TEST
