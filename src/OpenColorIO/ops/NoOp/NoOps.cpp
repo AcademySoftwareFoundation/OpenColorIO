@@ -65,13 +65,11 @@ OCIO_NAMESPACE_ENTER
 
             ConstOpCPURcPtr getCPUOp() const override { return nullptr; }
 
-#ifdef OCIO_UNIT_TEST
-            void apply(void * img, long numPixels) const
+            void apply(void * img, long numPixels) const override
             { apply(img, img, numPixels); }
 
-            void apply(const void * inImg, void * outImg, long numPixels) const
+            void apply(const void * inImg, void * outImg, long numPixels) const override
             { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
-#endif
 
             void extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const override {}
         
@@ -345,13 +343,11 @@ OCIO_NAMESPACE_ENTER
 
             ConstOpCPURcPtr getCPUOp() const override { return nullptr; }
 
-#ifdef OCIO_UNIT_TEST
-            void apply(void * img, long numPixels) const
+            void apply(void * img, long numPixels) const override
             { apply(img, img, numPixels); }
 
-            void apply(const void * inImg, void * outImg, long numPixels) const
+            void apply(const void * inImg, void * outImg, long numPixels) const override
             { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
-#endif
 
             void extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const override {}
             
@@ -426,13 +422,11 @@ OCIO_NAMESPACE_ENTER
 
             ConstOpCPURcPtr getCPUOp() const override { return nullptr; }
 
-#ifdef OCIO_UNIT_TEST
-            void apply(void * img, long numPixels) const
+            void apply(void * img, long numPixels) const override
             { apply(img, img, numPixels); }
 
-            void apply(const void * inImg, void * outImg, long numPixels) const
+            void apply(const void * inImg, void * outImg, long numPixels) const override
             { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
-#endif
 
             void extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const override {}
             

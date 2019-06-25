@@ -644,7 +644,7 @@ OIIO_ADD_TEST(OptimizeSeparablePrefix, gamma_prefix)
                                               OCIO::GammaOpData::BASIC_REV, 
                                               params1, params1, params1, paramsA);
 
-    OIIO_CHECK_NO_THROW(OCIO::CreateGammaOp(originalOps, gamma1));
+    OIIO_CHECK_NO_THROW(OCIO::CreateGammaOp(originalOps, gamma1, OCIO::TRANSFORM_DIR_FORWARD));
     OIIO_REQUIRE_EQUAL(originalOps.size(), 1);
 
     OCIO::OpRcPtrVec optimizedOps;
@@ -680,7 +680,7 @@ OIIO_ADD_TEST(OptimizeSeparablePrefix, gamma_prefix)
                                               OCIO::GammaOpData::BASIC_REV, 
                                               params1, params1, params1, paramsA);
 
-    OIIO_CHECK_NO_THROW(OCIO::CreateGammaOp(originalOps, gamma2));
+    OIIO_CHECK_NO_THROW(OCIO::CreateGammaOp(originalOps, gamma2, OCIO::TRANSFORM_DIR_FORWARD));
     OIIO_REQUIRE_EQUAL(originalOps.size(), 1);
 
     // Optimize it.
