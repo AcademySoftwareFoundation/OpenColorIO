@@ -300,7 +300,7 @@ namespace
         }
     }
 
-    void UpdateImageTexture(OCIOGPUTestRcPtr test)
+    void UpdateImageTexture(OCIOGPUTestRcPtr & test)
     {
         // Note: User-specified custom values are padded out 
         // to the preferred size (g_winWidth x g_winHeight).
@@ -408,16 +408,19 @@ namespace
                      GL_RGBA, GL_FLOAT, &values.m_inputValues[0]);
     }
 
-    void UpdateOCIOGLState(OCIOGPUTestRcPtr test)
+    void UpdateOCIOGLState(OCIOGPUTestRcPtr & test)
     {
         OCIO::ConstProcessorRcPtr & processor = test->getProcessor();
+
         OCIO::GpuShaderDescRcPtr & shaderDesc = test->getShaderDesc();
 
         // Step 1: Update the GPU shader description.
         shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
 
         // Step 2: Collect the shader program information for a specific processor.   
-        processor->extractGpuShaderInfo(shaderDesc);
+        OCIO::ConstGPUProcessorRcPtr gpuProcessor
+            = processor->getDefaultGPUProcessor();
+        gpuProcessor->extractGpuShaderInfo(shaderDesc);
 
         // Step 3: Create the OpenGL builder to prepare the GPU shader program.
         g_oglBuilder = OCIO::OpenGLBuilder::Create(shaderDesc);
@@ -479,9 +482,11 @@ namespace
     static constexpr size_t invalidIndex = std::numeric_limits<size_t>::max();
 
     // Validate the GPU processing against the CPU one.
-    void ValidateImageTexture(OCIOGPUTestRcPtr test)
+    void ValidateImageTexture(OCIOGPUTestRcPtr & test)
     {
-        OCIO::ConstProcessorRcPtr & processor = test->getProcessor();
+        OCIO::ConstCPUProcessorRcPtr processor
+            = test->getProcessor()->getDefaultCPUProcessor();
+
         const float epsilon = test->getErrorThreshold();
         const float expectMinValue = test->getExpectedMinimalValue();
 

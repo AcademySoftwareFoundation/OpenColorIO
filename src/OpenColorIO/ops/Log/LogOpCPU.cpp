@@ -122,7 +122,7 @@ private:
 static const float LOG2_10 = ((float) 3.3219280948873623478703194294894);
 static const float LOG10_2 = ((float) 0.3010299956639811952137388947245);
 
-OpCPURcPtr GetLogRenderer(ConstLogOpDataRcPtr & log)
+ConstOpCPURcPtr GetLogRenderer(ConstLogOpDataRcPtr & log)
 {
     const TransformDirection dir = log->getDirection();
     if (log->isLog2())
@@ -584,7 +584,7 @@ void TestLog(float logBase)
     OCIO::ConstLogOpDataRcPtr logOp = std::make_shared<OCIO::LogOpData>(
         logBase, OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO::OpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
+    OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
     pRenderer->apply(rgba, rgba, 8);
 
     const float minValue = std::numeric_limits<float>::min();
@@ -656,7 +656,7 @@ void TestAntiLog(float logBase)
     OCIO::ConstLogOpDataRcPtr logOp = std::make_shared<OCIO::LogOpData>(
         logBase, OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO::OpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
+    OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
     pRenderer->apply(rgba, rgba, 8);
 
     // Relative error tolerance for the log2 approximation.
@@ -772,7 +772,7 @@ OIIO_ADD_TEST(LogOpCPU, log2lin_test)
         OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
         dir, base, paramsR, paramsG, paramsB);
 
-    OCIO::OpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
+    OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
     pRenderer->apply(rgba, rgba, 8);
 
     const OCIO::LogUtil::CTFParams::Params noParam;
@@ -901,7 +901,7 @@ OIIO_ADD_TEST(LogOpCPU, lin2log_test)
         OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
         dir, base, paramsR, paramsG, paramsB);
 
-    OCIO::OpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
+    OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
     pRenderer->apply(rgba, rgba, 8);
 
     const OCIO::LogUtil::CTFParams::Params noParam;

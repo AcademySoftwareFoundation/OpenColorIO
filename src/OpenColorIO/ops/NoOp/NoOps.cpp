@@ -51,22 +51,29 @@ OCIO_NAMESPACE_ENTER
 
             virtual ~AllocationNoOp() {}
             
-            virtual OpRcPtr clone() const;
-            
-            virtual std::string getInfo() const { return "<AllocationNoOp>"; }
-            virtual std::string getCacheID() const { return ""; }
-            
-            virtual bool isSameType(ConstOpRcPtr & op) const;
-            virtual bool isInverse(ConstOpRcPtr & op) const;
+            TransformDirection getDirection() const noexcept override { return TRANSFORM_DIR_FORWARD; }
 
-            virtual void finalize() { }
-            // Note: Only used by some unit tests.
-            virtual void apply(void * img, long numPixels) const
-            { apply(img, img, numPixels); }
-            virtual void apply(const void * inImg, void * outImg, long numPixels) const
-            { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
+            OpRcPtr clone() const override;
             
-            void extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const {}
+            std::string getInfo() const override { return "<AllocationNoOp>"; }
+            std::string getCacheID() const override { return ""; }
+            
+            bool isSameType(ConstOpRcPtr & op) const override;
+            bool isInverse(ConstOpRcPtr & op) const override;
+
+            void finalize(FinalizationFlags /*fFlags*/) override { }
+
+            ConstOpCPURcPtr getCPUOp() const override { return nullptr; }
+
+#ifdef OCIO_UNIT_TEST
+            void apply(void * img, long numPixels) const
+            { apply(img, img, numPixels); }
+
+            void apply(const void * inImg, void * outImg, long numPixels) const
+            { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
+#endif
+
+            void extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const override {}
         
             void getGpuAllocation(AllocationData & allocation) const;
             
@@ -323,23 +330,33 @@ OCIO_NAMESPACE_ENTER
 
             virtual ~FileNoOp() {}
             
-            virtual OpRcPtr clone() const;
+            TransformDirection getDirection() const noexcept override { return TRANSFORM_DIR_FORWARD; }
+
+            OpRcPtr clone() const override;
             
-            virtual std::string getInfo() const { return "<FileNoOp>"; }
-            virtual std::string getCacheID() const { return ""; }
+            std::string getInfo() const override { return "<FileNoOp>"; }
+            std::string getCacheID() const override { return ""; }
             
-            virtual bool isSameType(ConstOpRcPtr & op) const;
-            virtual bool isInverse(ConstOpRcPtr & op) const;
-            virtual void dumpMetadata(ProcessorMetadataRcPtr & metadata) const;
+            bool isSameType(ConstOpRcPtr & op) const override;
+            bool isInverse(ConstOpRcPtr & op) const override;
+            void dumpMetadata(ProcessorMetadataRcPtr & metadata) const override;
             
-            virtual void finalize() {}
-            // Note: Only used by some unit tests.
-            virtual void apply(void * img, long numPixels) const
+            void finalize(FinalizationFlags /*fFlags*/) override {}
+
+            ConstOpCPURcPtr getCPUOp() const override { return nullptr; }
+
+#ifdef OCIO_UNIT_TEST
+            void apply(void * img, long numPixels) const
             { apply(img, img, numPixels); }
-            virtual void apply(const void * inImg, void * outImg, long numPixels) const
+
+            void apply(const void * inImg, void * outImg, long numPixels) const
             { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
+#endif
+
+            void extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const override {}
             
-            void extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const {}
+        private:
+            std::string m_fileReference;
         };
         
         typedef OCIO_SHARED_PTR<FileNoOp> FileNoOpRcPtr;
@@ -394,23 +411,30 @@ OCIO_NAMESPACE_ENTER
 
             virtual ~LookNoOp() {}
             
-            virtual OpRcPtr clone() const;
-            
-            virtual std::string getInfo() const { return "<LookNoOp>"; }
-            virtual std::string getCacheID() const { return ""; }
-            
-            virtual bool isSameType(ConstOpRcPtr & op) const;
-            virtual bool isInverse(ConstOpRcPtr & op) const;
-            virtual void dumpMetadata(ProcessorMetadataRcPtr & metadata) const;
-            
-            virtual void finalize() {}
-            // Note: Only used by some unit tests.
-            virtual void apply(void * img, long numPixels) const
-            { apply(img, img, numPixels); }
-            virtual void apply(const void * inImg, void * outImg, long numPixels) const
-            { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
+            TransformDirection getDirection() const noexcept override { return TRANSFORM_DIR_FORWARD; }
 
-            void extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const {}
+            OpRcPtr clone() const override;
+            
+            std::string getInfo() const override { return "<LookNoOp>"; }
+            std::string getCacheID() const override { return ""; }
+            
+            bool isSameType(ConstOpRcPtr & op) const override;
+            bool isInverse(ConstOpRcPtr & op) const override;
+            void dumpMetadata(ProcessorMetadataRcPtr & metadata) const override;
+            
+            void finalize(FinalizationFlags /*fFlags*/) override {}
+
+            ConstOpCPURcPtr getCPUOp() const override { return nullptr; }
+
+#ifdef OCIO_UNIT_TEST
+            void apply(void * img, long numPixels) const
+            { apply(img, img, numPixels); }
+
+            void apply(const void * inImg, void * outImg, long numPixels) const
+            { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
+#endif
+
+            void extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const override {}
             
         private:
             std::string m_look;

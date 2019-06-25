@@ -55,15 +55,19 @@ OCIO_NAMESPACE_ENTER
 
             virtual ~LogOp();
             
-            virtual OpRcPtr clone() const;
+            TransformDirection getDirection() const noexcept override { return logData()->getDirection(); }
+
+            OpRcPtr clone() const override;
             
-            virtual std::string getInfo() const;
+            std::string getInfo() const override;
             
-            virtual bool isSameType(ConstOpRcPtr & op) const;
-            virtual bool isInverse(ConstOpRcPtr & op) const;
-            virtual void finalize();
+            bool isSameType(ConstOpRcPtr & op) const override;
+            bool isInverse(ConstOpRcPtr & op) const override;
+            void finalize(FinalizationFlags fFlags) override;
+
+            ConstOpCPURcPtr getCPUOp() const override;
             
-            virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
+            void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
             
         protected:
             ConstLogOpDataRcPtr logData() const { return DynamicPtrCast<const LogOpData>(data()); }
@@ -112,19 +116,13 @@ OCIO_NAMESPACE_ENTER
             return logData()->isInverse(logOpData);
         }
         
-        void LogOp::finalize()
+        void LogOp::finalize(FinalizationFlags /*fFlags*/)
         {
-            const LogOp & constThis = *this;
-
-            // Only the 32f processing is natively supported
+            // Only 32f processing is natively supported.
             logData()->setInputBitDepth(BIT_DEPTH_F32);
             logData()->setOutputBitDepth(BIT_DEPTH_F32);
 
-            logData()->validate();
             logData()->finalize();
-
-            ConstLogOpDataRcPtr logOpData = constThis.logData();
-            m_cpuOp = GetLogRenderer(logOpData);
 
             // Create the cacheID
             std::ostringstream cacheIDStream;
@@ -135,6 +133,12 @@ OCIO_NAMESPACE_ENTER
             m_cacheID = cacheIDStream.str();
         }
         
+        ConstOpCPURcPtr LogOp::getCPUOp() const
+        {
+            ConstLogOpDataRcPtr data = logData();
+            return GetLogRenderer(data);
+        }
+
         void LogOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
         {
             if (getInputBitDepth()!=BIT_DEPTH_F32 
@@ -231,7 +235,8 @@ OIIO_ADD_TEST(LogOps, lin_to_log)
     std::string opCache = ops[0]->getCacheID();
     OIIO_CHECK_EQUAL(opCache.size(), 0);
 
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops));
+    OIIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
 
     // Validate properties.
     opCache = ops[0]->getCacheID();
@@ -276,7 +281,8 @@ OIIO_ADD_TEST(LogOps, log_to_lin)
                                     linSlope, linOffset,
                                     OCIO::TRANSFORM_DIR_INVERSE));
     
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops));
+    OIIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
     
     // Apply the result.
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
@@ -358,7 +364,7 @@ OIIO_ADD_TEST(LogOps, inverse)
         data[i] = result[i];
     }
     
-    ops[0]->finalize();
+    ops[0]->finalize(OCIO::FINALIZATION_EXACT);
     ops[0]->apply(data, 3);
     // Note: Skip testing alpha channels.
     OIIO_CHECK_NE( data[0], result[0] );
@@ -371,7 +377,7 @@ OIIO_ADD_TEST(LogOps, inverse)
     OIIO_CHECK_NE( data[9], result[9] );
     OIIO_CHECK_NE( data[10], result[10] );
 
-    ops[1]->finalize();
+    ops[1]->finalize(OCIO::FINALIZATION_EXACT);
     ops[1]->apply(data, 3);
 
 #ifndef USE_SSE
@@ -413,7 +419,8 @@ OIIO_ADD_TEST(LogOps, cache_id)
     OIIO_REQUIRE_ASSERT((bool)ops[1]);
     OIIO_REQUIRE_ASSERT((bool)ops[2]);
 
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops));
+    OIIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
 
     const std::string opCacheID0 = ops[0]->getCacheID();
     const std::string opCacheID1 = ops[1]->getCacheID();

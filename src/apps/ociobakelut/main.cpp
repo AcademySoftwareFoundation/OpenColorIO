@@ -316,7 +316,7 @@ int main (int argc, const char* argv[])
             
             if(cubesize<2) cubesize = 32; // default
 
-            OCIO::ConstProcessorRcPtr processor;
+            OCIO::ConstCPUProcessorRcPtr processor;
             if (!looks.empty())
             {
                 OCIO::LookTransformRcPtr transform =
@@ -325,12 +325,12 @@ int main (int argc, const char* argv[])
                 transform->setSrc(inputspace.c_str());
                 transform->setDst(outputspace.c_str());
                 processor = config->getProcessor(transform,
-                    OCIO::TRANSFORM_DIR_FORWARD);
+                    OCIO::TRANSFORM_DIR_FORWARD)->getDefaultCPUProcessor();
             }
             else
             {
                 processor = config->getProcessor(inputspace.c_str(),
-                    outputspace.c_str());
+                    outputspace.c_str())->getDefaultCPUProcessor();
             }
             
             SaveICCProfileToFile(outputfile,

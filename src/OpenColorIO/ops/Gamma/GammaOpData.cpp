@@ -149,6 +149,22 @@ GammaOpData::GammaOpData()
 
 GammaOpData::GammaOpData(BitDepth inBitDepth,
                          BitDepth outBitDepth,
+                         const Style & style,
+                         const Params & redParams,
+                         const Params & greenParams,
+                         const Params & blueParams,
+                         const Params & alphaParams)
+    :   OpData(inBitDepth, outBitDepth)
+    ,   m_style(style)
+    ,   m_redParams(redParams)
+    ,   m_greenParams(greenParams)
+    ,   m_blueParams(blueParams)
+    ,   m_alphaParams(alphaParams)
+{
+}
+
+GammaOpData::GammaOpData(BitDepth inBitDepth,
+                         BitDepth outBitDepth,
                          const std::string & id,
                          const OpData::Descriptions & desc,
                          const Style & style,
@@ -567,6 +583,8 @@ bool GammaOpData::operator==(const OpData & other) const
 void GammaOpData::finalize()
 {
     AutoMutex lock(m_mutex);
+
+    validate();
 
     std::ostringstream cacheIDStream;
     cacheIDStream << getID() << " ";

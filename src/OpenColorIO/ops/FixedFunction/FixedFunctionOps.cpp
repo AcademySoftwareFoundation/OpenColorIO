@@ -56,19 +56,23 @@ public:
 
     virtual ~FixedFunctionOp();
 
-    virtual OpRcPtr clone() const override;
+    TransformDirection getDirection() const noexcept override { return TRANSFORM_DIR_FORWARD; }
 
-    virtual std::string getInfo() const override;
+    OpRcPtr clone() const override;
 
-    virtual bool isIdentity() const override;
-    virtual bool isSameType(ConstOpRcPtr & op) const override;
-    virtual bool isInverse(ConstOpRcPtr & op) const override;
-    virtual bool canCombineWith(ConstOpRcPtr & op) const override;
-    virtual void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
+    std::string getInfo() const override;
 
-    virtual void finalize() override;
+    bool isIdentity() const override;
+    bool isSameType(ConstOpRcPtr & op) const override;
+    bool isInverse(ConstOpRcPtr & op) const override;
+    bool canCombineWith(ConstOpRcPtr & op) const override;
+    void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
 
-    virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
+    void finalize(FinalizationFlags fFlags) override;
+
+    ConstOpCPURcPtr getCPUOp() const override;
+
+    void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
 
 protected:
     ConstFixedFunctionOpDataRcPtr fnData() const { return DynamicPtrCast<const FixedFunctionOpData>(data()); }
@@ -133,18 +137,13 @@ void FixedFunctionOp::combineWith(OpRcPtrVec & /*ops*/, ConstOpRcPtr & secondOp)
     }
 }
 
-void FixedFunctionOp::finalize()
+void FixedFunctionOp::finalize(FinalizationFlags /*fFlags*/)
 {
-    // In this initial implementation, only 32f processing is natively supported.
+    // Only 32f processing is natively supported.
     fnData()->setInputBitDepth(BIT_DEPTH_F32);
     fnData()->setOutputBitDepth(BIT_DEPTH_F32);
 
-    fnData()->validate();
     fnData()->finalize();
-
-    const FixedFunctionOp & constThis = *this;
-    ConstFixedFunctionOpDataRcPtr fnOpData = constThis.fnData();
-    m_cpuOp = GetFixedFunctionCPURenderer(fnOpData);
 
     // Create the cacheID
     std::ostringstream cacheIDStream;
@@ -153,6 +152,12 @@ void FixedFunctionOp::finalize()
     cacheIDStream << ">";
     
     m_cacheID = cacheIDStream.str();
+}
+
+ConstOpCPURcPtr FixedFunctionOp::getCPUOp() const
+{
+    ConstFixedFunctionOpDataRcPtr data = fnData();
+    return GetFixedFunctionCPURenderer(data);
 }
 
 void FixedFunctionOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
@@ -262,7 +267,7 @@ OIIO_ADD_TEST(FixedFunctionOps, glow03_cpu_engine)
                                                 data, style);
 
     OCIO::FixedFunctionOp func(funcData);
-    OIIO_CHECK_NO_THROW(func.finalize());
+    OIIO_CHECK_NO_THROW(func.finalize(OCIO::FINALIZATION_EXACT));
 
     OCIO::ConstOpCPURcPtr cpuOp = func.getCPUOp();
     const OCIO::OpCPU & c = *cpuOp;
@@ -282,7 +287,7 @@ OIIO_ADD_TEST(FixedFunctionOps, darktodim10_cpu_engine)
                                                       data, style);
 
     OCIO::FixedFunctionOp func(funcData);
-    OIIO_CHECK_NO_THROW(func.finalize());
+    OIIO_CHECK_NO_THROW(func.finalize(OCIO::FINALIZATION_EXACT));
 
     OCIO::ConstOpCPURcPtr cpuOp = func.getCPUOp();
     const OCIO::OpCPU & c = *cpuOp;
@@ -300,7 +305,7 @@ OIIO_ADD_TEST(FixedFunctionOps, aces_red_mod_inv)
     OIIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, 
                                                     OCIO::FixedFunctionOpData::ACES_RED_MOD_03_FWD));
 
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, false));
+    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
     OIIO_REQUIRE_EQUAL(ops.size(), 2);
 
     OCIO::ConstOpRcPtr op0 = ops[0];
@@ -324,7 +329,7 @@ OIIO_ADD_TEST(FixedFunctionOps, aces_glow_inv)
     OIIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, 
                                                     OCIO::FixedFunctionOpData::ACES_GLOW_03_FWD));
 
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, false));
+    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
     OIIO_REQUIRE_EQUAL(ops.size(), 2);
 
     OCIO::ConstOpRcPtr op0 = ops[0];
@@ -348,7 +353,7 @@ OIIO_ADD_TEST(FixedFunctionOps, aces_darktodim10_inv)
     OIIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, 
                                                     OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD));
 
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, false));
+    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
     OIIO_REQUIRE_EQUAL(ops.size(), 2);
 
     OCIO::ConstOpRcPtr op0 = ops[0];
@@ -372,7 +377,7 @@ OIIO_ADD_TEST(FixedFunctionOps, rec2100_surround_inv)
     OIIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, { 1. / 2. }, 
                                                     OCIO::FixedFunctionOpData::REC2100_SURROUND));
 
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, false));
+    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
     OIIO_REQUIRE_EQUAL(ops.size(), 2);
     {
         OCIO::ConstOpRcPtr op0 = ops[0];
@@ -388,7 +393,7 @@ OIIO_ADD_TEST(FixedFunctionOps, rec2100_surround_inv)
     OIIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, { 2.01 }, 
                                                     OCIO::FixedFunctionOpData::REC2100_SURROUND));
 
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, false));
+    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
     OIIO_REQUIRE_EQUAL(ops.size(), 3);
     {
         OCIO::ConstOpRcPtr op0 = ops[0];

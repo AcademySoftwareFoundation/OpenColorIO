@@ -320,8 +320,10 @@ OCIO_NAMESPACE_ENTER
             PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
             
             // Apply processor to LUT data
-            ConstProcessorRcPtr inputToTarget;
-            inputToTarget = config->getProcessor(baker.getInputSpace(), baker.getTargetSpace());
+            ConstCPUProcessorRcPtr inputToTarget;
+            inputToTarget
+                = config->getProcessor(baker.getInputSpace(), 
+                                       baker.getTargetSpace())->getDefaultCPUProcessor();
             inputToTarget->apply(cubeImg);
             
             int shaperSize = baker.getShaperSize();
@@ -522,7 +524,8 @@ OIIO_ADD_TEST(FileFormatTruelight, ShaperAndLut3D)
         CreateLut3DOp(ops, lut->lut3D,
                       OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD);
     }
-    FinalizeOpVec(ops);
+    OIIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
     
     
     // Apply the result
@@ -592,7 +595,8 @@ OIIO_ADD_TEST(FileFormatTruelight, Shaper)
         CreateLut3DOp(ops, lut->lut3D,
                       OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD);
     }
-    FinalizeOpVec(ops);
+    OIIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
     
     
     // Apply the result
@@ -679,7 +683,8 @@ OIIO_ADD_TEST(FileFormatTruelight, Lut3D)
         CreateLut3DOp(ops, lut->lut3D,
                       OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD);
     }
-    FinalizeOpVec(ops);
+    OIIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
     
     
     // Apply the result

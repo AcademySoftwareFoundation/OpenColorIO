@@ -310,7 +310,7 @@ void RangeMaxRenderer::apply(const void * inImg, void * outImg, long numPixels) 
 }
 
 
-OpCPURcPtr GetRangeRenderer(ConstRangeOpDataRcPtr & range)
+ConstOpCPURcPtr GetRangeRenderer(ConstRangeOpDataRcPtr & range)
 {
     if (range->scales(false))
     {
@@ -363,7 +363,7 @@ OpCPURcPtr GetRangeRenderer(ConstRangeOpDataRcPtr & range)
     // In fact it should never happen as the optimization step removes the NoOps.
 
     throw Exception("No processing as the Range is a NoOp");
-    return OpCPURcPtr();
+    return ConstOpCPURcPtr();
 }
 
 }
@@ -410,7 +410,7 @@ OIIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings)
     OIIO_CHECK_NO_THROW(range->finalize());
 
     OCIO::ConstRangeOpDataRcPtr r = range;
-    OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
+    OCIO::ConstOpCPURcPtr op = OCIO::GetRangeRenderer(r);
 
     const OCIO::OpCPU & c = *op;
     const std::string typeName(typeid(c).name());
@@ -488,7 +488,7 @@ OIIO_ADD_TEST(RangeOpCPU, scale_with_low_clipping)
     OIIO_CHECK_NO_THROW(range->finalize());
 
     OCIO::ConstRangeOpDataRcPtr r = range;
-    OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
+    OCIO::ConstOpCPURcPtr op = OCIO::GetRangeRenderer(r);
 
     const OCIO::OpCPU & c = *op;
     const std::string typeName(typeid(c).name());
@@ -566,7 +566,7 @@ OIIO_ADD_TEST(RangeOpCPU, scale_with_high_clipping)
     OIIO_CHECK_NO_THROW(range->finalize());
 
     OCIO::ConstRangeOpDataRcPtr r = range;
-    OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
+    OCIO::ConstOpCPURcPtr op = OCIO::GetRangeRenderer(r);
 
     const OCIO::OpCPU & c = *op;
     const std::string typeName(typeid(c).name());
@@ -643,7 +643,7 @@ OIIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings_2)
     OIIO_CHECK_NO_THROW(range->finalize());
 
     OCIO::ConstRangeOpDataRcPtr r = range;
-    OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
+    OCIO::ConstOpCPURcPtr op = OCIO::GetRangeRenderer(r);
 
     const OCIO::OpCPU & c = *op;
     const std::string typeName(typeid(c).name());
@@ -682,7 +682,7 @@ OIIO_ADD_TEST(RangeOpCPU, offset_with_low_and_high_clippings)
     OIIO_CHECK_NO_THROW(range->finalize());
 
     OCIO::ConstRangeOpDataRcPtr r = range;
-    OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
+    OCIO::ConstOpCPURcPtr op = OCIO::GetRangeRenderer(r);
 
     const OCIO::OpCPU & c = *op;
     const std::string typeName(typeid(c).name());
@@ -721,7 +721,7 @@ OIIO_ADD_TEST(RangeOpCPU, low_and_high_clippings)
     OIIO_CHECK_NO_THROW(range->finalize());
 
     OCIO::ConstRangeOpDataRcPtr r = range;
-    OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
+    OCIO::ConstOpCPURcPtr op = OCIO::GetRangeRenderer(r);
 
     const OCIO::OpCPU & c = *op;
     const std::string typeName(typeid(c).name());
@@ -767,7 +767,7 @@ OIIO_ADD_TEST(RangeOpCPU, low_clipping)
     OIIO_CHECK_NO_THROW(range->finalize());
 
     OCIO::ConstRangeOpDataRcPtr r = range;
-    OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
+    OCIO::ConstOpCPURcPtr op = OCIO::GetRangeRenderer(r);
 
     const OCIO::OpCPU & c = *op;
     const std::string typeName(typeid(c).name());
@@ -807,7 +807,7 @@ OIIO_ADD_TEST(RangeOpCPU, high_clipping)
     OIIO_CHECK_NO_THROW(range->finalize());
 
     OCIO::ConstRangeOpDataRcPtr r = range;
-    OCIO::OpCPURcPtr op = OCIO::GetRangeRenderer(r);
+    OCIO::ConstOpCPURcPtr op = OCIO::GetRangeRenderer(r);
 
     const OCIO::OpCPU & c = *op;
     const std::string typeName(typeid(c).name());

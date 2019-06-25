@@ -495,7 +495,9 @@ void UpdateOCIOGLState()
     shaderDesc->setResourcePrefix("ocio_");
 
     // Step 2: Collect the shader program information for a specific processor    
-    processor->extractGpuShaderInfo(shaderDesc);
+    OCIO::ConstGPUProcessorRcPtr gpuProcessor
+        = processor->getDefaultGPUProcessor();
+    gpuProcessor->extractGpuShaderInfo(shaderDesc);
 
     // Step 3: Use the helper OpenGL builder
     g_oglBuilder = OCIO::OpenGLBuilder::Create(shaderDesc);

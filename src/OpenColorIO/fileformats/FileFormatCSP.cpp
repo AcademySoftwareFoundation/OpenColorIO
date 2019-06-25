@@ -694,7 +694,9 @@ OCIO_NAMESPACE_ENTER
                 GenerateIdentityLut1D(&shaperOutData[0], shaperSize, 3);
                 GenerateIdentityLut1D(&shaperInData[0], shaperSize, 3);
                 
-                ConstProcessorRcPtr shaperToInput = config->getProcessor(baker.getShaperSpace(), baker.getInputSpace());
+                ConstCPUProcessorRcPtr shaperToInput 
+                    = config->getProcessor(baker.getShaperSpace(), 
+                                           baker.getInputSpace())->getDefaultCPUProcessor();
                 if(shaperToInput->hasChannelCrosstalk())
                 {
                     // TODO: Automatically turn shaper into non-crosstalked version?
@@ -707,20 +709,22 @@ OCIO_NAMESPACE_ENTER
                 PackedImageDesc shaperInImg(&shaperInData[0], shaperSize, 1, 3);
                 shaperToInput->apply(shaperInImg);
 
-                ConstProcessorRcPtr shaperToTarget;
+                ConstCPUProcessorRcPtr shaperToTarget;
                 if (!looks.empty())
                 {
                     LookTransformRcPtr transform = LookTransform::Create();
                     transform->setLooks(looks.c_str());
                     transform->setSrc(baker.getShaperSpace());
                     transform->setDst(baker.getTargetSpace());
-                    shaperToTarget = config->getProcessor(transform,
-                        TRANSFORM_DIR_FORWARD);
+                    shaperToTarget
+                        = config->getProcessor(transform, 
+                                               TRANSFORM_DIR_FORWARD)->getDefaultCPUProcessor();
                 }
                 else
                 {
-                  shaperToTarget = config->getProcessor(baker.getShaperSpace(),
-                      baker.getTargetSpace());
+                    shaperToTarget
+                        = config->getProcessor(baker.getShaperSpace(), 
+                                               baker.getTargetSpace())->getDefaultCPUProcessor();
                 }
                 shaperToTarget->apply(cubeImg);
             }
@@ -771,7 +775,8 @@ OCIO_NAMESPACE_ENTER
                 GenerateIdentityLut1D(&shaperInData[0], shaperSize, 3);
                 
                 // Apply the forward to the allocation to the output shaper y axis, and the cube
-                ConstProcessorRcPtr shaperToInput = config->getProcessor(allocationTransform, TRANSFORM_DIR_INVERSE);
+                ConstCPUProcessorRcPtr shaperToInput
+                    = config->getProcessor(allocationTransform, TRANSFORM_DIR_INVERSE)->getDefaultCPUProcessor();
                 PackedImageDesc shaperInImg(&shaperInData[0], shaperSize, 1, 3);
                 shaperToInput->apply(shaperInImg);
                 shaperToInput->apply(cubeImg);
@@ -784,14 +789,15 @@ OCIO_NAMESPACE_ENTER
                     transform->setLooks(looks.c_str());
                     transform->setSrc(baker.getInputSpace());
                     transform->setDst(baker.getTargetSpace());
-                    inputToTarget = config->getProcessor(transform,
+                    inputToTarget = config->getProcessor(transform, 
                         TRANSFORM_DIR_FORWARD);
                 }
                 else
                 {
                     inputToTarget = config->getProcessor(baker.getInputSpace(), baker.getTargetSpace());
                 }
-                inputToTarget->apply(cubeImg);
+                ConstCPUProcessorRcPtr cpu = inputToTarget->getDefaultCPUProcessor();
+                cpu->apply(cubeImg);
             }
             
             // Write out the file

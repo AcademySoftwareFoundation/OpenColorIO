@@ -395,9 +395,10 @@ OIIO_ADD_TEST(ExposureContrastTransform, processor)
     ec->setGamma(1.5);
 
     OCIO::ConstProcessorRcPtr processor = config->getProcessor(ec);
+    OCIO::ConstCPUProcessorRcPtr cpuProcessor = processor->getDefaultCPUProcessor();
 
     float pixel[3] = { 0.2f, 0.3f, 0.4f };
-    processor->applyRGB(pixel);
+    cpuProcessor->applyRGB(pixel);
 
     const float error = 1e-5f;
     OIIO_CHECK_CLOSE(pixel[0], 0.32340f, error);
@@ -410,23 +411,23 @@ OIIO_ADD_TEST(ExposureContrastTransform, processor)
     pixel[0] = 0.2f;
     pixel[1] = 0.3f;
     pixel[2] = 0.4f;
-    processor->applyRGB(pixel);
+    cpuProcessor->applyRGB(pixel);
     OIIO_CHECK_CLOSE(pixel[0], 0.32340f, error);
     OIIO_CHECK_CLOSE(pixel[1], 0.43834f, error);
     OIIO_CHECK_CLOSE(pixel[2], 0.54389f, error);
 
     OCIO::DynamicPropertyRcPtr dpExposure;
-    OIIO_CHECK_NO_THROW(dpExposure = processor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
+    OIIO_CHECK_NO_THROW(dpExposure = cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
     dpExposure->setValue(2.1);
 
     // Gamma is a property of ExposureContrast but here it is not defined as dynamic.
-    OIIO_CHECK_THROW(processor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA), OCIO::Exception);
+    OIIO_CHECK_THROW(cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA), OCIO::Exception);
 
     // Processor has been changed by dpExposure.
     pixel[0] = 0.2f;
     pixel[1] = 0.3f;
     pixel[2] = 0.4f;
-    processor->applyRGB(pixel);
+    cpuProcessor->applyRGB(pixel);
     OIIO_CHECK_CLOSE(pixel[0], 0.42965f, error);
     OIIO_CHECK_CLOSE(pixel[1], 0.58235f, error);
     OIIO_CHECK_CLOSE(pixel[2], 0.72258f, error);
@@ -436,7 +437,7 @@ OIIO_ADD_TEST(ExposureContrastTransform, processor)
     pixel[0] = 0.2f;
     pixel[1] = 0.3f;
     pixel[2] = 0.4f;
-    processor->applyRGB(pixel);
+    cpuProcessor->applyRGB(pixel);
     OIIO_CHECK_CLOSE(pixel[0], 0.29698f, error);
     // Adjust error for SSE approximation.
     OIIO_CHECK_CLOSE(pixel[1], 0.40252f, error*2.0f);
@@ -475,12 +476,13 @@ OIIO_ADD_TEST(ExposureContrastTransform, processor_several_ec)
     float pixel_aa[3];
     {
         OCIO::ConstProcessorRcPtr processor = config->getProcessor(ec1);
-        processor->applyRGB(pixel_a);
+        OCIO::ConstCPUProcessorRcPtr cpuProcessor = processor->getDefaultCPUProcessor();
+        cpuProcessor->applyRGB(pixel_a);
 
         pixel_aa[0] = pixel_a[0];
         pixel_aa[1] = pixel_a[1];
         pixel_aa[2] = pixel_a[2];
-        processor->applyRGB(pixel_aa);
+        cpuProcessor->applyRGB(pixel_aa);
     }
 
     OCIO::ExposureContrastTransformRcPtr ec2 = OCIO::ExposureContrastTransform::Create();
@@ -498,14 +500,15 @@ OIIO_ADD_TEST(ExposureContrastTransform, processor_several_ec)
     float pixel_ab[3] = { pixel_a[0], pixel_a[1], pixel_a[2] };
     {
         OCIO::ConstProcessorRcPtr processor = config->getProcessor(ec2);
-        processor->applyRGB(pixel_b);
+        OCIO::ConstCPUProcessorRcPtr cpuProcessor = processor->getDefaultCPUProcessor();
+        cpuProcessor->applyRGB(pixel_b);
 
         pixel_bb[0] = pixel_b[0];
         pixel_bb[1] = pixel_b[1];
         pixel_bb[2] = pixel_b[2];
 
-        processor->applyRGB(pixel_bb);
-        processor->applyRGB(pixel_ab);
+        cpuProcessor->applyRGB(pixel_bb);
+        cpuProcessor->applyRGB(pixel_ab);
     }
 
     // Make exposure of second E/C dynamic.
@@ -522,15 +525,16 @@ OIIO_ADD_TEST(ExposureContrastTransform, processor_several_ec)
 
     {
         OCIO::ConstProcessorRcPtr processor = config->getProcessor(grp1);
+        OCIO::ConstCPUProcessorRcPtr cpuProcessor = processor->getDefaultCPUProcessor();
 
         // Make second exposure dynamic. Value is still a.
         OCIO::DynamicPropertyRcPtr dpExposure;
-        OIIO_CHECK_NO_THROW(dpExposure = processor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
+        OIIO_CHECK_NO_THROW(dpExposure = cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
 
         float pixel[3] = { srcPixel[0], srcPixel[1], srcPixel[2] };
 
         // Apply a then a.
-        processor->applyRGB(pixel);
+        cpuProcessor->applyRGB(pixel);
 
         OIIO_CHECK_CLOSE(pixel[0], pixel_aa[0], error);
         OIIO_CHECK_CLOSE(pixel[1], pixel_aa[1], error);
@@ -543,7 +547,7 @@ OIIO_ADD_TEST(ExposureContrastTransform, processor_several_ec)
         pixel[2] = srcPixel[2];
 
         // Apply a then b.
-        processor->applyRGB(pixel);
+        cpuProcessor->applyRGB(pixel);
 
         OIIO_CHECK_CLOSE(pixel[0], pixel_ab[0], error);
         OIIO_CHECK_CLOSE(pixel[1], pixel_ab[1], error);
@@ -565,10 +569,11 @@ OIIO_ADD_TEST(ExposureContrastTransform, processor_several_ec)
     ec2->setExposure(0.456);
     {
         OCIO::ConstProcessorRcPtr processor = config->getProcessor(grp2);
+        OCIO::ConstCPUProcessorRcPtr cpuProcessor = processor->getDefaultCPUProcessor();
 
         // The dynamic property is common to both ops.
         OCIO::DynamicPropertyRcPtr dpExposure;
-        OIIO_CHECK_NO_THROW(dpExposure = processor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
+        OIIO_CHECK_NO_THROW(dpExposure = cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
 
         float pixel[3] = { srcPixel[0], srcPixel[1], srcPixel[2] };
 
@@ -576,7 +581,7 @@ OIIO_ADD_TEST(ExposureContrastTransform, processor_several_ec)
         dpExposure->setValue(a);
 
         // Apply a twice.
-        processor->applyRGB(pixel);
+        cpuProcessor->applyRGB(pixel);
 
         OIIO_CHECK_CLOSE(pixel[0], pixel_aa[0], error);
         OIIO_CHECK_CLOSE(pixel[1], pixel_aa[1], error);
@@ -589,7 +594,7 @@ OIIO_ADD_TEST(ExposureContrastTransform, processor_several_ec)
         pixel[2] = srcPixel[2];
 
         // Apply b twice.
-        processor->applyRGB(pixel);
+        cpuProcessor->applyRGB(pixel);
 
         OIIO_CHECK_CLOSE(pixel[0], pixel_bb[0], error);
         OIIO_CHECK_CLOSE(pixel[1], pixel_bb[1], error);

@@ -429,7 +429,8 @@ OCIO_NAMESPACE_ENTER
             {
                 inputToTarget = config->getProcessor(baker.getInputSpace(), baker.getTargetSpace());
             }
-            inputToTarget->apply(cubeImg);
+            ConstCPUProcessorRcPtr cpu = inputToTarget->getDefaultCPUProcessor();
+            cpu->apply(cubeImg);
             
             if(baker.getMetadata() != NULL)
             {

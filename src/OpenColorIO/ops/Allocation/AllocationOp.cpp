@@ -197,7 +197,8 @@ OIIO_ADD_TEST(AllocationOps, Create)
     OCIO::ConstOpRcPtr op1 = ops[1];
     // second op is a fit transform
     OIIO_CHECK_EQUAL(forwardFitOp->isSameType(op1), true);
-    OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops));
+    OIIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
     OIIO_REQUIRE_EQUAL(ops.size(), 2);
     ConstOpRcPtr defaultLogOp = ops[0];
     ConstOpRcPtr defaultFitOp = ops[1];
@@ -284,7 +285,7 @@ OIIO_ADD_TEST(AllocationOps, Create)
     OIIO_CHECK_NO_THROW(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_FORWARD));
     OIIO_CHECK_EQUAL(ops.size(), 1);
-    ops[0]->finalize();
+    ops[0]->finalize(OCIO::FINALIZATION_EXACT);
 
     memcpy(tmp, &src[0], 4 * NB_PIXELS * sizeof(float));
 

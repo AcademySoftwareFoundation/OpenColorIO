@@ -670,9 +670,9 @@ OCIO_NAMESPACE_ENTER
                     // is the higest value that is transformed by the
                     // cube (e.g for a generic lin-to-log transform,
                     // what the log value 1.0 is in linear).
-                    ConstProcessorRcPtr shaperToInputProc = config->getProcessor(
+                    ConstCPUProcessorRcPtr shaperToInputProc = config->getProcessor(
                         shaperSpace.c_str(),
-                        inputSpace.c_str());
+                        inputSpace.c_str())->getDefaultCPUProcessor();
 
                     float minval[3] = {0.0f, 0.0f, 0.0f};
                     float maxval[3] = {1.0f, 1.0f, 1.0f};
@@ -700,7 +700,8 @@ OCIO_NAMESPACE_ENTER
                 }
                 
                 PackedImageDesc shaperImg(&shaperData[0], shaperSize, 1, 3);
-                inputToShaperProc->apply(shaperImg);
+                ConstCPUProcessorRcPtr cpu = inputToShaperProc->getDefaultCPUProcessor();
+                cpu->apply(shaperImg);
             }
             
             //
@@ -739,8 +740,8 @@ OCIO_NAMESPACE_ENTER
                     cubeProc = inputToTargetProc;
                 }
 
-                
-                cubeProc->apply(cubeImg);
+                ConstCPUProcessorRcPtr cpu = cubeProc->getDefaultCPUProcessor();
+                cpu->apply(cubeImg);
             }
             
             //
@@ -754,7 +755,8 @@ OCIO_NAMESPACE_ENTER
                 GenerateIdentityLut1D(&onedData[0], onedSize, 3);
                 PackedImageDesc onedImg(&onedData[0], onedSize, 1, 3);
                 
-                inputToTargetProc->apply(onedImg);
+                ConstCPUProcessorRcPtr cpu = inputToTargetProc->getDefaultCPUProcessor();
+                cpu->apply(onedImg);
             }
             
             //
