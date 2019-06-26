@@ -26,6 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <chrono>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
@@ -667,8 +668,24 @@ int main(int argc, const char **argv)
                                                       OCIO::OPTIMIZATION_DEFAULT,
                                                       OCIO::FINALIZATION_DEFAULT);
 
+            const std::chrono::high_resolution_clock::time_point start
+                = std::chrono::high_resolution_clock::now();
+
             OCIO::ImageDescRcPtr imgDesc = OCIO::CreateImageDesc(spec, img);
             cpuProcessor->apply(*imgDesc);
+
+            if(verbose)
+            {
+                const std::chrono::high_resolution_clock::time_point end
+                    = std::chrono::high_resolution_clock::now();
+
+                std::chrono::duration<float, std::milli> duration = end - start;
+
+                std::cout << std::endl;
+                std::cout << "CPU processing took: " 
+                          << duration.count()
+                          <<  " ms" << std::endl;
+            }
         }
     }
     catch(OCIO::Exception & exception)
