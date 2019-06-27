@@ -27,42 +27,32 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
+#include <vector>
+
 #include <OpenColorIO/OpenColorIO.h>
 
+#include <sstream>
+
 #include "Platform.h"
+
 
 OCIO_NAMESPACE_ENTER
 {
 
 namespace Platform
 {
-// Unlike the ::getenv(), the method does not use any static buffer 
-// for the Windows platform only. *nix platforms are still using
-// the ::getenv method, but reducing the static vairable usage.
-// 
-void Getenv (const char* name, std::string& value)
+void Getenv (const char * name, std::string & value)
 {
 #ifdef WINDOWS
-    // To remove the security compilation warning, the _dupenv_s method
-    // must be used (instead of the getenv). The improvement is that
-    // the buffer length is now under control to mitigate buffer overflow attacks.
-    //
-    char * val;
-    size_t len = 0;
-    // At least _dupenv_s validates the memory size by returning ENOMEM
-    //  in case of allocation size issue.
-    const errno_t err = ::_dupenv_s(&val, &len, name);
-    if(err!=0 || len==0 || !val || !*val)
+    if(uint32_t size = GetEnvironmentVariable(name, nullptr, 0))
     {
-        if(val) free(val);
-        value.resize(0);
+        std::vector<char> buffer(size);
+        GetEnvironmentVariable(name, buffer.data(), size);
+        value = std::string(buffer.data());
     }
     else
     {
-        // NB: len is the sizeof() of a string ( i.e. not its strlen() )
-        value = val;
-        value.resize(len-1);
-        if(val) free(val);
+        value.clear();
     }
 #else
     const char* val = ::getenv(name);
@@ -108,6 +98,34 @@ void AlignedFree(void* memBlock)
     free(memBlock);
 #endif
 }
+
+void CreateTempFilename(std::string & filename, const std::string & filenameExt)
+{
+    // Note: Because of security issue, tmpnam could not be used.
+
+#ifdef WINDOWS
+
+    char tmpFilename[L_tmpnam];
+    if(tmpnam_s(tmpFilename))
+    {
+        throw Exception("Could not create a temporary file.");
+    }
+
+    filename = tmpFilename;
+
+#else
+
+    std::stringstream ss;
+    ss << "/tmp/ocio";
+    ss << std::rand();
+
+    filename = ss.str();
+
+#endif
+
+    filename += filenameExt;
+}
+
 
 }//namespace platform
 
@@ -166,6 +184,26 @@ OIIO_ADD_TEST(Platform, putenv)
         OCIO::Platform::Getenv("MY_DUMMY_ENV", env);
         OIIO_CHECK_ASSERT(env.empty());
     }
+#ifdef WINDOWS
+    {
+        SetEnvironmentVariable("MY_WINDOWS_DUMMY_ENV", "1");
+        std::string env;
+        OCIO::Platform::Getenv("MY_WINDOWS_DUMMY_ENV", env);
+        OIIO_CHECK_EQUAL(env, std::string("1"));
+    }
+    {
+        SetEnvironmentVariable("MY_WINDOWS_DUMMY_ENV", " ");
+        std::string env;
+        OCIO::Platform::Getenv("MY_WINDOWS_DUMMY_ENV", env);
+        OIIO_CHECK_EQUAL(env, std::string(" "));
+    }
+    {
+        SetEnvironmentVariable("MY_WINDOWS_DUMMY_ENV", "");
+        std::string env;
+        OCIO::Platform::Getenv("MY_WINDOWS_DUMMY_ENV", env);
+        OIIO_CHECK_ASSERT(env.empty());
+    }
+#endif
 }
 
 OIIO_ADD_TEST(Platform, string_compare)
@@ -192,4 +230,19 @@ OIIO_ADD_TEST(Platform, aligned_memory_test)
 
     OCIO::Platform::AlignedFree(memBlock);
 }
+
+
+OIIO_ADD_TEST(Platform, CreateTempFilename)
+{
+    std::string f1, f2;
+
+    OIIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(f1, ""));
+    OIIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(f2, ""));
+    OIIO_CHECK_ASSERT(f1!=f2);
+
+    OIIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(f1, ".ctf"));
+    OIIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(f2, ".ctf"));
+    OIIO_CHECK_ASSERT(f1!=f2);
+}
+
 #endif // OCIO_UNIT_TEST
