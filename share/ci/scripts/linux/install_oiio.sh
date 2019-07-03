@@ -7,7 +7,10 @@ OIIO_VERSION="$1"
 git clone https://github.com/OpenImageIO/oiio.git
 cd oiio
 
-if [ "$OIIO_VERSION" != "latest" ]; then
+if [ "$OIIO_VERSION" == "latest" ]; then
+    LATEST_TAG=$(git describe --abbrev=0 --tags)
+    git checkout tags/${LATEST_TAG} -b ${LATEST_TAG}
+else
     git checkout tags/Release-${OIIO_VERSION} -b Release-${OIIO_VERSION}
 fi
 
