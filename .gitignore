@@ -6,3 +6,4 @@ _install*
 dist*
 mastercopy
 *.pyc
+!*.yml

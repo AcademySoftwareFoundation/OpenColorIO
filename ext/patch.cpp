@@ -11,7 +11,7 @@
 
 
 extern "C" {
-#ifdef WIN32
+#if defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
 #include <direct.h>
 #define GETCWD _getcwd
 #else
@@ -66,7 +66,7 @@ std::string unixify_filepath(const std::string& filepath) {
 	return fixed;
 }
 
-#ifdef WIN32
+#if defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
 #define fix_filepath windowsify_filepath
 #define path_seperator "\\"
 #define path_regex "\\\\"
