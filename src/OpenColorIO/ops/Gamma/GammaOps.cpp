@@ -589,7 +589,7 @@ OIIO_ADD_TEST(GammaOps, apply_moncurve_style_fwd)
 
 OIIO_ADD_TEST(GammaOps, apply_moncurve_style_rev)
 {
-    const float errorThreshold = 1e-7f;
+    const float errorThreshold = 1e-6f;
     const long numPixels = 6;
 
     float input_32f[numPixels*4] = {

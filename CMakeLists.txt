@@ -9,19 +9,29 @@ set(OpenColorIO_VERSION_RELEASE_TYPE "dev")
 
 enable_testing()
 
-# Use C++11.
-set(CMAKE_CXX_STANDARD 11)
-# Disable fallback to other C++ version if C++11 is not supported.
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-# Disable any compiler specific C++ extensions.
-set(CMAKE_CXX_EXTENSIONS OFF)
-
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/share/cmake)
 set(CMAKE_WARN_DEPRECATED ON)
 
 if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release)
 endif()
+
+###############################################################################
+# C++ configuration
+
+set(SUPPORTED_CXX_STANDARDS 11 14)
+string(REPLACE ";" ", " SUPPORTED_CXX_STANDARDS_STR "${SUPPORTED_CXX_STANDARDS}")
+
+if(CMAKE_CXX_STANDARD AND NOT CMAKE_CXX_STANDARD IN_LIST SUPPORTED_CXX_STANDARDS)
+    message(FATAL_ERROR " CMAKE_CXX_STANDARD ${CMAKE_CXX_STANDARD} is unsupported. Supported standards are: ${SUPPORTED_CXX_STANDARDS_STR}")
+elseif(NOT CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 11)
+endif()
+
+# Disable fallback to other C++ version if standard is not supported.
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Disable any compiler specific C++ extensions.
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 ###############################################################################
 # Components to build
@@ -51,8 +61,8 @@ option(OCIO_INLINES_HIDDEN "Specify whether to build with -fvisibility-inlines-h
 set(PLATFORM_COMPILE_FLAGS "")
 
 if(MSVC)
-	# Because our Exceptions derive from std::runtime_error we can safely disable this warning
-	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /wd4275")
+	# Because our Exceptions derive from std::runtime_error we can safely disable warning 4275
+	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /EHsc /wd4275 /DWIN32")
 else()
 	# TODO: OCIO being under active development, unused functions are fine for now.
 	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wall -Wno-unused-function")
@@ -63,6 +73,9 @@ else()
 		set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wno-deprecated-register")
 	endif()
 
+	if(BUILD_SHARED_LIBS OR OCIO_BUILD_SHARED)
+	    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -fPIC")
+	endif()
 endif()
 
 if(OCIO_WARNING_AS_ERROR)
