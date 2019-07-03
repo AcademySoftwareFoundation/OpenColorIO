@@ -14,6 +14,7 @@ fi
 mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
+      -DOPENEXR_ENABLE_TESTS=OFF \
       ../.
 make -j4
 sudo make install
