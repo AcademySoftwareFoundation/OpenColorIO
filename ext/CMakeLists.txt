@@ -1,7 +1,31 @@
 include(ExternalProject)
 
-######################################################################
+###############################################################################
+# ext paths
+
+set(EXT_SCRIPTS_DIR "${CMAKE_SOURCE_DIR}/share/ext/scripts")
+set(EXT_INSTALL_DIR "${PROJECT_BINARY_DIR}/ext/dist")
+set(EXT_INCLUDE_DIR "${EXT_INSTALL_DIR}/include")
+set(EXT_LIBRARY_DIR "${EXT_INSTALL_DIR}/lib")
+set(EXT_PC_DIR "${EXT_LIBRARY_DIR}/pkgconfig")
+
+if(NOT ENV{PKG_CONFIG_PATH} MATCHES "^${EXT_PC_DIR}:")
+	set(ENV{PKG_CONFIG_PATH} "${EXT_PC_DIR}:$ENV{PKG_CONFIG_PATH}")
+endif()
+
+function(install_ext PKG VER)
+	if(MSVC)
+		execute_process(COMMAND "powershell -noexit & '${EXT_SCRIPTS_DIR}/windows/install_${PKG}.ps1' ${VER}"
+						WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
+	else()
+		execute_process(COMMAND "${EXT_SCRIPTS_DIR}/nix/install_${PKG}.sh" "${VER}"
+						WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
+	endif()
+endfunction()
+
+###############################################################################
 # Patch
+
 add_custom_target(patch)
 if(WIN32)
 	add_executable(patch_exec patch.cpp)
@@ -12,9 +36,9 @@ else()
 endif()
 
 ###############################################################################
-### libexpat ###
+### expat ###
 
-add_library(libexpat UNKNOWN IMPORTED GLOBAL)
+add_library(expat UNKNOWN IMPORTED GLOBAL)
 
 set(LIBEXPAT_VERSION 2_2_5)
 set(LIBEXPAT_INSTALL_DIR "${CMAKE_BINARY_DIR}/ext/dist")
@@ -58,10 +82,13 @@ else()
 	set_property(TARGET libexpat PROPERTY IMPORTED_LOCATION ${LIBEXPAT_LIBRARY})
 endif()
 
-set_property(TARGET libexpat PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${LIBEXPAT_INCLUDE_DIRS})
+set_property(TARGET expat 
+	PROPERTY IMPORTED_LOCATION ${EXPAT_LIBRARY})
+set_property(TARGET expat 
+	PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${EXPAT_INCLUDE_DIRS})
 
-######################################################################
-# YamlCpp
+###############################################################################
+# yaml-cpp
 
 add_library(yamlcpp UNKNOWN IMPORTED GLOBAL)
 if(USE_EXTERNAL_YAML)
@@ -114,13 +141,18 @@ else()
 	add_dependencies(yamlcpp Yaml-cpp)
 endif()
 
-if(YAMLCPP_VERSION VERSION_LESS "0.5.0")
-	set_property(TARGET yamlcpp PROPERTY INTERFACE_COMPILE_DEFINITIONS "OLDYAML")
-endif()
-set_property(TARGET yamlcpp PROPERTY IMPORTED_LOCATION ${YAMLCPP_LIBRARY})
-set_property(TARGET yamlcpp PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${YAMLCPP_INCLUDE_DIRS})
+find_package(YamlCpp 0.3.0 REQUIRED)
 
-######################################################################
+if(YAMLCPP_VERSION VERSION_LESS "0.5.0")
+	set_property(TARGET yamlcpp
+		PROPERTY INTERFACE_COMPILE_DEFINITIONS "OLDYAML")
+endif()
+set_property(TARGET yamlcpp 
+	PROPERTY IMPORTED_LOCATION ${YAMLCPP_LIBRARY})
+set_property(TARGET yamlcpp 
+	PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${YAMLCPP_INCLUDE_DIRS})
+
+###############################################################################
 # LCMS2
 
 add_library(lcms2 UNKNOWN IMPORTED GLOBAL)
@@ -159,7 +191,7 @@ set_property(TARGET lcms2 PROPERTY IMPORTED_LOCATION ${LCMS2_LIBRARY})
 set_property(TARGET lcms2 PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${LCMS2_INCLUDE_DIRS})
 
 
-######################################################################
+###############################################################################
 # ILMBASE (HALF PART ONLY)
 
 add_library(ilmbase UNKNOWN IMPORTED GLOBAL)
@@ -195,7 +227,7 @@ set_property(TARGET ilmbase PROPERTY IMPORTED_LOCATION ${ILMBASE_LIBRARY})
 set_property(TARGET ilmbase PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${ILMBASE_INCLUDE_DIRS})
 
 
-######################################################################
+###############################################################################
 # sampleicc
 add_library(sampleicc INTERFACE IMPORTED GLOBAL)
 set_property(TARGET sampleicc PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/sampleicc/src/include")

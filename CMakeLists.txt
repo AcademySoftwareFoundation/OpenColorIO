@@ -48,6 +48,8 @@ option(OCIO_BUILD_JAVA "Specify whether to build java bindings" OFF)
 
 option(OCIO_WARNING_AS_ERROR "Set build error level for CI testing" OFF)
 
+option(OCIO_INSTALL_EXT "Set to ON to install external dependencies during configuration" OFF)
+
 
 ###############################################################################
 # Optimisation / internal linking preferences
