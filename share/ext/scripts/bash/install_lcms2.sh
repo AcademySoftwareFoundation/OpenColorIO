@@ -11,7 +11,10 @@ cd ext/tmp
 git clone https://github.com/mm2/Little-CMS.git
 cd Little-CMS
 
-if [ "$LCMS2_VERSION" != "latest" ]; then
+if [ "$LCMS2_VERSION" == "latest" ]; then
+    LATEST_TAG=$(git describe --abbrev=0 --tags)
+    git checkout tags/${LATEST_TAG} -b ${LATEST_TAG}
+else
     git checkout tags/lcms${LCMS2_VERSION} -b lcms${LCMS2_VERSION}
 fi
 

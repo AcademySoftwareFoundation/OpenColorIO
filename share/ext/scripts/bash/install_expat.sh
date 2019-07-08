@@ -16,7 +16,10 @@ cd ext/tmp
 git clone https://github.com/libexpat/libexpat.git
 cd libexpat
 
-if [ "$EXPAT_VERSION" != "latest" ]; then
+if [ "$EXPAT_VERSION" == "latest" ]; then
+    LATEST_TAG=$(git describe --abbrev=0 --tags)
+    git checkout tags/${LATEST_TAG} -b ${LATEST_TAG}
+else
     git checkout tags/R_${EXPAT_VERSION_U} -b R_${EXPAT_VERSION_U}
 fi
 

@@ -14,7 +14,10 @@ cd ext/tmp
 git clone https://github.com/jbeder/yaml-cpp.git
 cd yaml-cpp
 
-if [ "$YAMLCPP_VERSION" != "latest" ]; then
+if [ "$YAMLCPP_VERSION" == "latest" ]; then
+    LATEST_TAG=$(git describe --abbrev=0 --tags)
+    git checkout tags/${LATEST_TAG} -b ${LATEST_TAG}
+else
     if [[ "$YAMLCPP_MINOR" -lt 6 && "$YAMLCPP_PATCH" -lt 3 ]]; then
         git checkout tags/release-${YAMLCPP_VERSION} -b release-${YAMLCPP_VERSION}
     else
@@ -29,7 +32,7 @@ cmake -DCMAKE_INSTALL_PREFIX=../../../dist \
       -DYAML_CPP_BUILD_TESTS=OFF \
       -DYAML_CPP_BUILD_TOOLS=OFF \
       -DYAML_CPP_BUILD_CONTRIB=OFF \
-      -DCMAKE_CXX_FLAGS="-fPIC" \
+      -DCMAKE_CXX_FLAGS="-fPIC -fvisibility=hidden -fvisibility-inlines-hidden" \
       ../.
 make -j4
 make install

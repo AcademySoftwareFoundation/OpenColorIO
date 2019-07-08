@@ -21,7 +21,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 			pystring
 			sampleicc
 			unittest_data
-			expat
+			libexpat
 			ilmbase
 	)
 	if(PRIVATE_INCLUDES)

@@ -23,7 +23,7 @@ pkg_check_modules(PC_YAMLCPP QUIET yaml-cpp)
 set(YAMLCPP_VERSION ${PC_YAMLCPP_VERSION})
 
 if(NOT YAMLCPP_INCLUDE_DIR)
-    find_path(YAMLCPP_INCLUDE_DIR yaml-cpp/yaml.h
+    find_path(YAMLCPP_INCLUDE_DIR "yaml-cpp/yaml.h"
               HINTS ${EXT_INCLUDE_DIR}
                    ~/Library/Frameworks/yaml-cpp/include/
                     /Library/Frameworks/yaml-cpp/include/
@@ -40,7 +40,7 @@ if(NOT YAMLCPP_INCLUDE_DIR)
 endif()
 
 if (NOT YAMLCPP_LIBRARY)
-    if(EXISTS "${EXT_INCLUDE_DIR}/yaml-cpp" OR YAMLCPP_STATIC_LIBRARY)
+    if(EXISTS "${EXT_INCLUDE_DIR}/yaml-cpp/yaml.h" OR YAMLCPP_STATIC_LIBRARY)
         set(YAMLCPP_STATIC libyaml-cpp.a libyaml-cppmd.lib)
     endif()
 

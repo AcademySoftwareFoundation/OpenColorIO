@@ -4,7 +4,7 @@ include(ExternalProject)
 # ext paths
 
 set(EXT_SCRIPTS_DIR "${CMAKE_SOURCE_DIR}/share/ext/scripts")
-set(EXT_INSTALL_DIR "${PROJECT_BINARY_DIR}/ext/dist")
+set(EXT_INSTALL_DIR "${CMAKE_SOURCE_DIR}/ext/dist")
 set(EXT_INCLUDE_DIR "${EXT_INSTALL_DIR}/include")
 set(EXT_LIBRARY_DIR "${EXT_INSTALL_DIR}/lib")
 set(EXT_PC_DIR "${EXT_LIBRARY_DIR}/pkgconfig")
@@ -140,8 +140,6 @@ else()
 	add_dependencies(Yaml-cpp patch)
 	add_dependencies(yamlcpp Yaml-cpp)
 endif()
-
-find_package(YamlCpp 0.3.0 REQUIRED)
 
 if(YAMLCPP_VERSION VERSION_LESS "0.5.0")
 	set_property(TARGET yamlcpp

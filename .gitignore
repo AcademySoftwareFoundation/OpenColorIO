@@ -7,3 +7,4 @@ dist*
 mastercopy
 *.pyc
 !*.yml
+.vscode
