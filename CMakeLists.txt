@@ -48,9 +48,6 @@ option(OCIO_BUILD_JAVA "Specify whether to build java bindings" OFF)
 
 option(OCIO_WARNING_AS_ERROR "Set build error level for CI testing" OFF)
 
-option(OCIO_INSTALL_EXT "Set to ON to install external dependencies during configuration" OFF)
-
-
 ###############################################################################
 # Optimisation / internal linking preferences
 
@@ -90,8 +87,9 @@ endif()
 ###############################################################################
 # External linking
 
-option(USE_EXTERNAL_YAML "Use system installed yaml-cpp library." OFF)
-option(USE_EXTERNAL_LCMS "Use system install lcms2 library." OFF)
+set(OCIO_INSTALL_EXT "NONE" CACHE STRING "Set the condition for Installing external dependencies")
+set_property(CACHE OCIO_INSTALL_EXT PROPERTY STRINGS "NONE" "MISSING" "ALL")
+set(OCIO_INSTALL_EXT_OPTIONS "MISSING" "ALL")
 
 ###############################################################################
 # Versioning
@@ -106,7 +104,6 @@ endif()
 if(NOT OCIO_NAMESPACE)
 	set(OCIO_NAMESPACE OpenColorIO CACHE STRING "Specify the master OCIO C++ namespace: Options include OpenColorIO OpenColorIO_<YOURFACILITY> etc.")
 endif()
-
 
 ###############################################################################
 # Error checking

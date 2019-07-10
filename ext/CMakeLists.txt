@@ -1,27 +1,64 @@
 include(ExternalProject)
 
 ###############################################################################
-# ext paths
+# External dependency paths
 
-set(EXT_SCRIPTS_DIR "${CMAKE_SOURCE_DIR}/share/ext/scripts")
-set(EXT_INSTALL_DIR "${CMAKE_SOURCE_DIR}/ext/dist")
-set(EXT_INCLUDE_DIR "${EXT_INSTALL_DIR}/include")
-set(EXT_LIBRARY_DIR "${EXT_INSTALL_DIR}/lib")
+set(EXT_BUILD_DIR "${CMAKE_BINARY_DIR}/ext/build")
+set(EXT_DIST_DIR "${CMAKE_BINARY_DIR}/ext/dist")
+set(EXT_INCLUDE_DIR "${EXT_DIST_DIR}/include")
+set(EXT_LIBRARY_DIR "${EXT_DIST_DIR}/lib")
 set(EXT_PC_DIR "${EXT_LIBRARY_DIR}/pkgconfig")
+set(EXT_SITE_PACKAGES_DIR 
+    "${EXT_LIBRARY_DIR}/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages")
 
 if(NOT ENV{PKG_CONFIG_PATH} MATCHES "^${EXT_PC_DIR}:")
 	set(ENV{PKG_CONFIG_PATH} "${EXT_PC_DIR}:$ENV{PKG_CONFIG_PATH}")
 endif()
 
-function(install_ext PKG VER)
-	if(MSVC)
-		execute_process(COMMAND "powershell -noexit & '${EXT_SCRIPTS_DIR}/windows/install_${PKG}.ps1' ${VER}"
-						WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
-	else()
-		execute_process(COMMAND "${EXT_SCRIPTS_DIR}/nix/install_${PKG}.sh" "${VER}"
-						WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
-	endif()
-endfunction()
+if(NOT ENV{PYTHONPATH} MATCHES "^${EXT_SITE_PACKAGES_DIR}:")
+    set(ENV{PYTHONPATH} "${EXT_SITE_PACKAGES_DIR}:$ENV{PYTHONPATH}")
+endif()
+
+###############################################################################
+# Python packages
+
+if(OCIO_BUILD_DOCS AND OCIO_INSTALL_EXT IN_LIST OCIO_INSTALL_EXT_OPTIONS)
+	# OCIO_INSTALL_EXT option MISSING is treated as ALL for Python packages
+    include(FindPythonInterp)
+
+    if(NOT PYTHONINTERP_FOUND)
+        message(FATAL_ERROR 
+            "No Python interpreter was found! "
+            "Use -DOCIO_BUILD_DOCS=OFF to skip Python dependencies.")
+    endif()
+
+    function(pip_install pkg ver)
+        message(STATUS "${pkg} ${ver} will be installed to: ${EXT_SITE_PACKAGES_DIR}")
+        add_custom_target(${pkg} ALL)
+        add_custom_command(TARGET ${pkg} PRE_BUILD
+            COMMAND pip install --quiet 
+                                --disable-pip-version-check
+                                --install-option="--prefix=${EXT_DIST_DIR}" 
+                                -I ${pkg}==${ver}
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+    endfunction()
+
+    if(PYTHON_VERSION_MAJOR EQUAL 2)
+        pip_install(setuptools 1.1.6)
+        pip_install(docutils 0.14)
+        pip_install(MarkupSafe 1.1.1)
+        pip_install(Jinja2 2.10.1)
+        pip_install(Pygments 2.4.2)
+        pip_install(Sphinx 1.8.5)
+    elseif(PYTHON_VERSION_MAJOR EQUAL 3)
+        pip_install(setuptools 1.1.6)
+        pip_install(docutils-python3 0.13)
+        pip_install(MarkupSafe 1.1.1)
+        pip_install(Jinja2 2.10.1)
+        pip_install(Pygments 2.4.2)
+        pip_install(Sphinx 2.1.2)
+    endif()
+endif()
 
 ###############################################################################
 # Patch
@@ -36,194 +73,275 @@ else()
 endif()
 
 ###############################################################################
-### expat ###
+# C/C++ common options
 
-add_library(expat UNKNOWN IMPORTED GLOBAL)
+macro(find_lib_package lib ver)
+	if(NOT OCIO_INSTALL_EXT STREQUAL "ALL")
+		set(_LIB_FIND_ARGS ${lib} ${ver})
+		if(OCIO_INSTALL_EXT STREQUAL "NONE")
+			list(APPEND _LIB_FIND_ARGS REQUIRED)
+		endif()
+		find_package(${_LIB_FIND_ARGS})
+	endif()
+endmacro()
 
-set(LIBEXPAT_VERSION 2_2_5)
-set(LIBEXPAT_INSTALL_DIR "${CMAKE_BINARY_DIR}/ext/dist")
-set(LIBEXPAT_CMAKE_ARGS
-	-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-	-DBUILD_SHARED_LIBS:BOOL=OFF
-	-DCMAKE_INSTALL_PREFIX=${LIBEXPAT_INSTALL_DIR}
-	-DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
-)
+function(print_lib_info lib ver)
+	message(STATUS "${lib} ${ver} will be installed to: ${EXT_DIST_DIR}")
+	if(NOT BUILD_SHARED_LIBS)
+		#TODO: Find a way to merge in the static libs when built with ext installed libs
+		message(WARNING "Building STATIC libOpenColorIO. "
+						"${lib}'s symbols are NOT included in the output binary!")
+	endif()
+endfunction()
 
-if(CMAKE_TOOLCHAIN_FILE)
-    set(LIBEXPAT_CMAKE_ARGS ${LIBEXPAT_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+if(UNIX)
+    set(EXT_C_FLAGS "${EXT_C_FLAGS} -fPIC -fvisibility=hidden")
+    set(EXT_CXX_FLAGS "${EXT_CXX_FLAGS} -fPIC -fvisibility=hidden")
+    if(OCIO_INLINES_HIDDEN)
+        set(EXT_CXX_FLAGS "${EXT_CXX_FLAGS} -fvisibility-inlines-hidden")
+    endif()
 endif()
-
-set(LIBEXPAT_INCLUDE_DIRS "${LIBEXPAT_INSTALL_DIR}/include")
-set(LIBEXPAT_LIBRARY "${LIBEXPAT_INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}expat${CMAKE_STATIC_LIBRARY_SUFFIX}")
-
-set(LIBEXPAT_ZIPFILE     "${CMAKE_SOURCE_DIR}/ext/expat_${LIBEXPAT_VERSION}.tar.gz")
-set(LIBEXPAT_PATCHFILE   "${CMAKE_SOURCE_DIR}/ext/expat_${LIBEXPAT_VERSION}.patch")
-
-ExternalProject_Add(libexpat-src
-	URL ${LIBEXPAT_ZIPFILE}
-	PATCH_COMMAND ${PATCH_COMMAND} -f -p 1 < ${LIBEXPAT_PATCHFILE}
-	BINARY_DIR "${CMAKE_BINARY_DIR}/ext/build/libexpat"
-	BUILD_BYPRODUCTS "${LIBEXPAT_LIBRARY}"
-	INSTALL_DIR "${LIBEXPAT_INSTALL_DIR}"
-	CMAKE_ARGS ${LIBEXPAT_CMAKE_ARGS}
-	EXCLUDE_FROM_ALL TRUE
-)
-
-file(MAKE_DIRECTORY ${LIBEXPAT_INCLUDE_DIRS}) # Hack to let imported target be built from ExternalProject_Add
-add_dependencies(libexpat-src patch)
-add_dependencies(libexpat libexpat-src)
-
-if(WIN32)
-	set(LIBEXPAT_STATIC_DEBUG_LIBRARIES     ${PROJECT_BINARY_DIR}/ext/dist/lib/expatd.lib)
-	set(LIBEXPAT_STATIC_OPTIMIZED_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/expat.lib)
-	set_property(TARGET libexpat PROPERTY IMPORTED_LOCATION_DEBUG   ${LIBEXPAT_STATIC_DEBUG_LIBRARIES})
-	set_property(TARGET libexpat PROPERTY IMPORTED_LOCATION_RELEASE ${LIBEXPAT_STATIC_OPTIMIZED_LIBRARIES})
-else()
-	set_property(TARGET libexpat PROPERTY IMPORTED_LOCATION ${LIBEXPAT_LIBRARY})
-endif()
-
-set_property(TARGET expat 
-	PROPERTY IMPORTED_LOCATION ${EXPAT_LIBRARY})
-set_property(TARGET expat 
-	PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${EXPAT_INCLUDE_DIRS})
 
 ###############################################################################
-# yaml-cpp
+# Expat
+
+add_library(libexpat UNKNOWN IMPORTED GLOBAL)
+
+set(LIBEXPAT_MIN_VERSION 2.2.5)
+
+find_lib_package(Expat ${LIBEXPAT_MIN_VERSION})
+
+if((NOT LIBEXPAT_FOUND AND OCIO_INSTALL_EXT STREQUAL "MISSING") 
+        OR (OCIO_INSTALL_EXT STREQUAL "ALL"))
+
+	if(GET_LIBEXPAT_VERSION AND GET_LIBEXPAT_VERSION VERSION_GREATER_EQUAL LIBEXPAT_MIN_VERSION)
+		set(LIBEXPAT_VERSION ${GET_LIBEXPAT_VERSION})
+	else()
+		set(LIBEXPAT_VERSION ${LIBEXPAT_MIN_VERSION})
+	endif()
+    string(REPLACE "." "_" LIBEXPAT_VERSION_U ${LIBEXPAT_VERSION})
+	print_lib_info(Expat ${LIBEXPAT_VERSION})
+
+    string(STRIP "${CMAKE_C_FLAGS} ${EXT_C_FLAGS} ${LIBEXPAT_C_FLAGS}" LIBEXPAT_C_FLAGS)
+    string(STRIP "${CMAKE_CXX_FLAGS} ${EXT_CXX_FLAGS} ${LIBEXPAT_CXX_FLAGS}" LIBEXPAT_CXX_FLAGS)
+
+    set(LIBEXPAT_CMAKE_ARGS
+	    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+	    -DCMAKE_INSTALL_PREFIX=${EXT_DIST_DIR}
+        -DBUILD_examples:BOOL=OFF
+        -DBUILD_tests:BOOL=OFF
+        -DBUILD_shared:BOOL=OFF
+        -DCMAKE_C_FLAGS=${LIBEXPAT_C_FLAGS}
+        -DCMAKE_CXX_FLAGS=${LIBEXPAT_CXX_FLAGS}
+		-DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
+    )
+    if(CMAKE_TOOLCHAIN_FILE)
+        set(LIBEXPAT_CMAKE_ARGS 
+            ${LIBEXPAT_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+    endif()
+
+    set(LIBEXPAT_INCLUDE_DIRS "${EXT_INCLUDE_DIR}")
+    set(LIBEXPAT_LIBRARY 
+        "${EXT_LIBRARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}expat${CMAKE_STATIC_LIBRARY_SUFFIX}")
+
+    ExternalProject_Add(ext_libexpat
+        GIT_REPOSITORY "https://github.com/libexpat/libexpat.git"
+        GIT_TAG "R_${LIBEXPAT_VERSION_U}"
+        GIT_SHALLOW TRUE
+        PREFIX "${EXT_BUILD_DIR}/libexpat"
+        BUILD_BYPRODUCTS "${LIBEXPAT_LIBRARY}"
+        SOURCE_SUBDIR expat
+        CMAKE_ARGS ${LIBEXPAT_CMAKE_ARGS}
+		EXCLUDE_FROM_ALL TRUE
+    )
+    add_dependencies(libexpat ext_libexpat)
+endif()
+
+set_property(TARGET libexpat PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${LIBEXPAT_INCLUDE_DIRS})
+set_property(TARGET libexpat PROPERTY IMPORTED_LOCATION ${LIBEXPAT_LIBRARY})
+
+###############################################################################
+# Yaml-cpp
 
 add_library(yamlcpp UNKNOWN IMPORTED GLOBAL)
-if(USE_EXTERNAL_YAML)
-	find_package(YamlCpp 0.3.0 REQUIRED)
-else()
+
+set(YAMLCPP_MIN_VERSION 0.3.0)
+
+find_lib_package(YamlCpp ${YAMLCPP_MIN_VERSION})
+
+if((NOT YAMLCPP_FOUND AND OCIO_INSTALL_EXT STREQUAL "MISSING") 
+        OR (OCIO_INSTALL_EXT STREQUAL "ALL"))
+
+	if(GET_YAMLCPP_VERSION AND GET_YAMLCPP_VERSION VERSION_GREATER_EQUAL YAMLCPP_MIN_VERSION)
+		set(YAMLCPP_VERSION ${GET_YAMLCPP_VERSION})
+	else()
+		set(YAMLCPP_VERSION ${YAMLCPP_MIN_VERSION})
+	endif()
+	string(REPLACE "." ";" YAMLCPP_VERSION_LIST ${YAMLCPP_VERSION})
+    list(GET YAMLCPP_VERSION_LIST 0 YAMLCPP_VERSION_MAJOR)
+    list(GET YAMLCPP_VERSION_LIST 1 YAMLCPP_VERSION_MINOR)
+    list(GET YAMLCPP_VERSION_LIST 2 YAMLCPP_VERSION_PATCH)
+	print_lib_info(Yaml-cpp ${YAMLCPP_VERSION})
+
 	if("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 		# C++11 deprecates std::auto_ptr
-		set(YAML_CMAKE_CXX_FLAGS "-Wno-deprecated-declarations ${CMAKE_CXX_FLAGS}")
-	else()
-		set(YAML_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+		set(YAMLCPP_CXX_FLAGS "${YAMLCPP_CXX_FLAGS} -Wno-deprecated-declarations")
 	endif()
 
-	set(YAMLCPP_VERSION "0.3.0")
-	set(YAML_CPP_INSTALL_DIR "${CMAKE_BINARY_DIR}/ext/dist")
-	set(YAML_CPP_CMAKE_ARGS
+    string(STRIP "${CMAKE_CXX_FLAGS} ${EXT_CXX_FLAGS} ${YAMLCPP_CXX_FLAGS}" YAMLCPP_CXX_FLAGS)
+
+	set(YAMLCPP_CMAKE_ARGS
 		-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+		-DCMAKE_INSTALL_PREFIX=${EXT_DIST_DIR}
 		-DBUILD_SHARED_LIBS:BOOL=OFF
-		-DCMAKE_INSTALL_PREFIX=${YAML_CPP_INSTALL_DIR}
-		-DYAML_CPP_BUILD_TOOLS:BOOL=FALSE
-		-DOCIO_INLINES_HIDDEN:BOOL=${OCIO_INLINES_HIDDEN}
-		-DCMAKE_CXX_FLAGS=${YAML_CMAKE_CXX_FLAGS}
+		-DYAML_CPP_BUILD_TESTS:BOOL=OFF
+		-DYAML_CPP_BUILD_TOOLS:BOOL=OFF
+		-DYAML_CPP_BUILD_CONTRIB:BOOL=OFF
+		-DCMAKE_CXX_FLAGS=${YAMLCPP_CXX_FLAGS}
 		-DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
 	)
 	if(CMAKE_TOOLCHAIN_FILE)
-		set(YAML_CPP_CMAKE_ARGS
-			${YAML_CPP_CMAKE_ARGS}
-			-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
-		)
+		set(YAMLCPP_CMAKE_ARGS 
+		    ${YAMLCPP_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
 	endif()
 
-	if(NOT BUILD_SHARED_LIBS)
-		#TODO: Find a way to merge in the static libs when built with internal yamlcpp
-		message(WARNING " Building STATIC libOpenColorIO using the in-built Yaml-cpp. Yaml-cpp's symbols are NOT included in the output binary!")
-	endif()
+    set(YAMLCPP_INCLUDE_DIRS "${EXT_INCLUDE_DIR}")
+    set(YAMLCPP_LIBRARY 
+        "${EXT_LIBRARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}yaml-cpp${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
-	set(YAMLCPP_INCLUDE_DIRS "${YAML_CPP_INSTALL_DIR}/include")
-	set(YAMLCPP_LIBRARY "${YAML_CPP_INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}yaml-cpp${CMAKE_STATIC_LIBRARY_SUFFIX}")
+	if(YAMLCPP_VERSION_MINOR LESS 6 AND YAMLCPP_VERSION_PATCH LESS 3)
+        set(YAMLCPP_GIT_TAG "release-${YAMLCPP_VERSION}")
+    else()
+        set(YAMLCPP_GIT_TAG "yaml-cpp-${YAMLCPP_VERSION}")
+    endif()
 
-	ExternalProject_Add(Yaml-cpp
-		URL "${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAMLCPP_VERSION}.tar.gz"
-		PATCH_COMMAND ${PATCH_COMMAND} -f -p 1 < "${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAMLCPP_VERSION}.patch"
-		BINARY_DIR "${CMAKE_BINARY_DIR}/ext/build/yaml-cpp"
-		BUILD_BYPRODUCTS "${YAMLCPP_LIBRARY}"
-		INSTALL_DIR "${YAML_CPP_INSTALL_DIR}"
-		CMAKE_ARGS "${YAML_CPP_CMAKE_ARGS}"
+	ExternalProject_Add(ext_yamlcpp
+        GIT_REPOSITORY "https://github.com/jbeder/yaml-cpp.git"
+        GIT_TAG ${YAMLCPP_GIT_TAG}
+        GIT_SHALLOW TRUE
+        PREFIX "${EXT_BUILD_DIR}/yaml-cpp"
+        BUILD_BYPRODUCTS "${YAMLCPP_LIBRARY}"
+		CMAKE_ARGS ${YAMLCPP_CMAKE_ARGS}
 		EXCLUDE_FROM_ALL TRUE
-	)
-	file(MAKE_DIRECTORY ${YAMLCPP_INCLUDE_DIRS}) # Hack to let imported target be built from ExternalProject_Add
-	add_dependencies(Yaml-cpp patch)
-	add_dependencies(yamlcpp Yaml-cpp)
+    )
+	add_dependencies(yamlcpp ext_yamlcpp)
 endif()
 
 if(YAMLCPP_VERSION VERSION_LESS "0.5.0")
-	set_property(TARGET yamlcpp
-		PROPERTY INTERFACE_COMPILE_DEFINITIONS "OLDYAML")
+	set_property(TARGET yamlcpp PROPERTY INTERFACE_COMPILE_DEFINITIONS "OLDYAML")
 endif()
-set_property(TARGET yamlcpp 
-	PROPERTY IMPORTED_LOCATION ${YAMLCPP_LIBRARY})
-set_property(TARGET yamlcpp 
-	PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${YAMLCPP_INCLUDE_DIRS})
+set_property(TARGET yamlcpp PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${YAMLCPP_INCLUDE_DIRS})
+set_property(TARGET yamlcpp PROPERTY IMPORTED_LOCATION ${YAMLCPP_LIBRARY})
 
 ###############################################################################
 # LCMS2
 
 add_library(lcms2 UNKNOWN IMPORTED GLOBAL)
-if(USE_EXTERNAL_LCMS)
-	find_package(LCMS2 2.1 REQUIRED)
-else()
-	set(LCMS2_INSTALL_DIR "${CMAKE_BINARY_DIR}/ext/dist")
+
+set(LCMS2_MIN_VERSION 2.2)
+
+find_lib_package(LCMS2 ${LCMS2_MIN_VERSION})
+
+if((NOT LCMS2_FOUND AND OCIO_INSTALL_EXT STREQUAL "MISSING") 
+        OR (OCIO_INSTALL_EXT STREQUAL "ALL"))
+
+	if(GET_LCMS2_VERSION AND GET_LCMS2_VERSION VERSION_GREATER_EQUAL LCMS2_MIN_VERSION)
+		set(LCMS2_VERSION ${GET_LCMS2_VERSION})
+	else()
+		set(LCMS2_VERSION ${LCMS2_MIN_VERSION})
+	endif()
+	print_lib_info(LCMS2 ${LCMS2_VERSION})
+
+	string(STRIP "${CMAKE_C_FLAGS} ${EXT_C_FLAGS} ${LCMS2_C_FLAGS}" LCMS2_C_FLAGS)
+
 	set(LCMS2_CMAKE_ARGS
 		-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-		-DBUILD_SHARED_LIBS:BOOL=OFF
-		-DCMAKE_INSTALL_PREFIX=${LCMS2_INSTALL_DIR}
-		-DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
+		-DCMAKE_INSTALL_PREFIX=${EXT_DIST_DIR}
+        -DBUILD_SHARED_LIBS:BOOL=OFF
+        -DCMAKE_C_FLAGS=${LCMS2_C_FLAGS}
 	)
-
-	if(NOT BUILD_SHARED_LIBS)
-		#TODO: Find a way to merge in the static libs when built with internal lcms2
-		message(WARNING " Building STATIC libOpenColorIO using the in-built LCMS2. LCMS2's symbols are NOT included in the output binary!")
+	if(CMAKE_TOOLCHAIN_FILE)
+		set(LCMS2_CMAKE_ARGS 
+		    ${LCMS2_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
 	endif()
 
-	set(LCMS2_INCLUDE_DIRS "${LCMS2_INSTALL_DIR}/include/lcms2")
-	set(LCMS2_LIBRARY ${LCMS2_INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lcms2${CMAKE_STATIC_LIBRARY_SUFFIX})
+	set(LCMS2_INCLUDE_DIRS "${EXT_INCLUDE_DIR}")
+	set(LCMS2_LIBRARY 
+	    "${EXT_LIBRARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}lcms2${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
-	ExternalProject_Add(LCMS2
-		URL "${CMAKE_SOURCE_DIR}/ext/lcms2-2.1.tar.gz"
-		PATCH_COMMAND ${PATCH_COMMAND} -f -p 1 < "${CMAKE_SOURCE_DIR}/ext/lcms2-2.1.patch"
-		BINARY_DIR "${CMAKE_BINARY_DIR}/ext/build/lcms2"
-		BUILD_BYPRODUCTS "${LCMS2_LIBRARY}"
-		INSTALL_DIR "${LCMS2_INSTALL_DIR}"
-		CMAKE_ARGS ${LCMS2_CMAKE_ARGS}
-	)
-	file(MAKE_DIRECTORY ${LCMS2_INCLUDE_DIRS}) # Hack to let imported target be built from ExternalProject_Add
-	add_dependencies(lcms2 patch)
-	add_dependencies(lcms2 LCMS2)
+	ExternalProject_Add(ext_lcms2
+        GIT_REPOSITORY "https://github.com/mm2/Little-CMS.git"
+        GIT_TAG "lcms${LCMS2_VERSION}"
+        GIT_SHALLOW TRUE
+        PREFIX "${EXT_BUILD_DIR}/Little-CMS"
+        BUILD_BYPRODUCTS "${LCMS2_LIBRARY}"
+        PATCH_COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_MODULE_PATH}/BuildLCMS2.cmake" "CMakeLists.txt"
+        CMAKE_ARGS ${LCMS2_CMAKE_ARGS}
+		EXCLUDE_FROM_ALL TRUE
+    )
+	add_dependencies(lcms2 ext_lcms2)
 endif()
-set_property(TARGET lcms2 PROPERTY IMPORTED_LOCATION ${LCMS2_LIBRARY})
-set_property(TARGET lcms2 PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${LCMS2_INCLUDE_DIRS})
 
+set_property(TARGET lcms2 PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${LCMS2_INCLUDE_DIRS})
+set_property(TARGET lcms2 PROPERTY IMPORTED_LOCATION ${LCMS2_LIBRARY})
 
 ###############################################################################
-# ILMBASE (HALF PART ONLY)
+# IlmBase (Half part only)
 
 add_library(ilmbase UNKNOWN IMPORTED GLOBAL)
-set(ILMBASE_INSTALL_DIR "${CMAKE_BINARY_DIR}/ext/dist")
-set(ILMBASE_CMAKE_ARGS
-	-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-	-DBUILD_SHARED_LIBS:BOOL=OFF
-	-DCMAKE_INSTALL_PREFIX=${ILMBASE_INSTALL_DIR}
-	-DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
-)
 
-if(NOT BUILD_SHARED_LIBS)
-	#TODO: Find a way to merge in the static libs when built with internal ilmbase
-	message(WARNING " Building STATIC libOpenColorIO using the in-built ILMBASE. ILMBASE's symbols are NOT included in the output binary!")
+set(ILMBASE_MIN_VERSION 2.3.0)
+
+find_lib_package(IlmBase ${ILMBASE_MIN_VERSION})
+
+if((NOT ILMBASE_FOUND AND OCIO_INSTALL_EXT STREQUAL "MISSING") 
+        OR (OCIO_INSTALL_EXT STREQUAL "ALL"))
+
+	if(GET_ILMBASE_VERSION AND GET_ILMBASE_VERSION VERSION_GREATER_EQUAL ILMBASE_MIN_VERSION)
+		set(ILMBASE_VERSION ${GET_ILMBASE_VERSION})
+	else()
+		set(ILMBASE_VERSION ${ILMBASE_MIN_VERSION})
+	endif()
+	print_lib_info(IlmBase ${ILMBASE_VERSION})
+
+	string(STRIP "${CMAKE_CXX_FLAGS} ${EXT_CXX_FLAGS} ${ILMBASE_CXX_FLAGS}" ILMBASE_CXX_FLAGS)
+
+	set(ILMBASE_CMAKE_ARGS
+		-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+		-DCMAKE_INSTALL_PREFIX=${EXT_DIST_DIR}
+		-DOPENEXR_BUILD_OPENEXR:BOOL=OFF
+		-DOPENEXR_BUILD_PYTHON_LIBS:BOOL=OFF
+		-DOPENEXR_BUILD_SHARED:BOOL=OFF
+		-DOPENEXR_BUILD_STATIC:BOOL=ON
+		-DOPENEXR_ENABLE_TESTS:BOOL=OFF
+		-DCMAKE_CXX_FLAGS=${ILMBASE_CXX_FLAGS}
+		-DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
+	)
+	if(CMAKE_TOOLCHAIN_FILE)
+		set(ILMBASE_CMAKE_ARGS 
+		    ${ILMBASE_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+	endif()
+
+	set(ILMBASE_INCLUDE_DIRS "${EXT_INCLUDE_DIR}")
+	set(ILMBASE_LIBRARY 
+	    "${EXT_LIBRARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}ilmbase${CMAKE_STATIC_LIBRARY_SUFFIX}")
+
+	ExternalProject_Add(ext_ilmbase
+        GIT_REPOSITORY "https://github.com/openexr/openexr.git"
+        GIT_TAG "v${ILMBASE_VERSION}"
+        GIT_SHALLOW TRUE
+        PREFIX "${EXT_BUILD_DIR}/openexr"
+        BUILD_BYPRODUCTS "${ILMBASE_LIBRARY}"
+        CMAKE_ARGS ${ILMBASE_CMAKE_ARGS}
+        BUILD_COMMAND ${CMAKE_COMMAND} --build . --target Half_static
+        INSTALL_COMMAND ${CMAKE_COMMAND} -P "IlmBase/Half/cmake_install.cmake"
+		EXCLUDE_FROM_ALL TRUE
+    )
+	add_dependencies(ilmbase ext_ilmbase)
 endif()
 
-set(ILMBASE_INCLUDE_DIRS "${ILMBASE_INSTALL_DIR}/include")
-set(ILMBASE_LIBRARY ${ILMBASE_INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}ilmbase${CMAKE_STATIC_LIBRARY_SUFFIX})
-
-ExternalProject_Add(ILMBASE
-	URL "${CMAKE_SOURCE_DIR}/ext/ilmbasehalf-2.2.1.tar.gz"
-	PATCH_COMMAND ${PATCH_COMMAND} -f -p 1 < "${CMAKE_SOURCE_DIR}/ext/ilmbasehalf-2.2.1.patch"
-	BINARY_DIR "${CMAKE_BINARY_DIR}/ext/build/ilmbase"
-	BUILD_BYPRODUCTS "${ILMBASE_LIBRARY}"
-	INSTALL_DIR "${ILMBASE_INSTALL_DIR}"
-	CMAKE_ARGS ${ILMBASE_CMAKE_ARGS}
-)
-file(MAKE_DIRECTORY ${ILMBASE_INCLUDE_DIRS}) # Hack to let imported target be built from ExternalProject_Add
-add_dependencies(ilmbase patch)
-add_dependencies(ilmbase ILMBASE)
-
-set_property(TARGET ilmbase PROPERTY IMPORTED_LOCATION ${ILMBASE_LIBRARY})
 set_property(TARGET ilmbase PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${ILMBASE_INCLUDE_DIRS})
-
+set_property(TARGET ilmbase PROPERTY IMPORTED_LOCATION ${ILMBASE_LIBRARY})
 
 ###############################################################################
 # sampleicc
