@@ -7,10 +7,6 @@ YAMLCPP_MAJOR_MINOR=$(echo "${YAMLCPP_VERSION}" | cut -d. -f-2)
 YAMLCPP_MINOR=$(echo "${YAMLCPP_MAJOR_MINOR}" | cut -d. -f2-)
 YAMLCPP_PATCH=$(echo "${YAMLCPP_VERSION}" | cut -d. -f3-)
 
-mkdir -p ext/dist
-mkdir -p ext/tmp
-cd ext/tmp
-
 git clone https://github.com/jbeder/yaml-cpp.git
 cd yaml-cpp
 
@@ -27,7 +23,7 @@ fi
 
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=../../../dist \
+cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
       -DBUILD_SHARED_LIBS=OFF \
       -DYAML_CPP_BUILD_TESTS=OFF \
       -DYAML_CPP_BUILD_TOOLS=OFF \
@@ -37,5 +33,5 @@ cmake -DCMAKE_INSTALL_PREFIX=../../../dist \
 make -j4
 make install
 
-cd ../../..
-rm -rf tmp
+cd ../..
+rm -rf yaml-cpp

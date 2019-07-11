@@ -10,6 +10,4 @@ else
     SPHINX_VERSION="$2"
 fi
 
-mkdir -p ext/dist
-
-pip install --install-option="--prefix=${PWD}/ext/dist" -I Sphinx==${SPHINX_VERSION}
+pip install Sphinx==${SPHINX_VERSION}

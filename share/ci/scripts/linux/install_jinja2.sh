@@ -10,6 +10,4 @@ else
     JINJA2_VERSION="$2"
 fi
 
-mkdir -p ext/dist
-
-pip install --install-option="--prefix=${PWD}/ext/dist" -I Jinja2==${JINJA2_VERSION}
+pip install Jinja2==${JINJA2_VERSION}

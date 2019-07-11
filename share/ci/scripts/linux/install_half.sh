@@ -4,10 +4,6 @@ set -ex
 
 OPENEXR_VERSION="$1"
 
-mkdir -p ext/dist
-mkdir -p ext/tmp
-cd ext/tmp
-
 git clone https://github.com/openexr/openexr.git
 cd openexr
 
@@ -20,7 +16,7 @@ fi
 
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=../../../dist \
+cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
       -DOPENEXR_BUILD_OPENEXR=OFF \
       -DOPENEXR_BUILD_PYTHON_LIBS=OFF \
       -DOPENEXR_BUILD_SHARED=OFF \
@@ -32,5 +28,5 @@ cmake -DCMAKE_INSTALL_PREFIX=../../../dist \
 make -j4 Half_static
 cmake -P IlmBase/Half/cmake_install.cmake
 
-cd ../../..
-rm -rf tmp
+cd ../..
+rm -rf openexr

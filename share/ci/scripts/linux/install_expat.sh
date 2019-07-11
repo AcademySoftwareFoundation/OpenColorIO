@@ -9,10 +9,6 @@ EXPAT_MINOR=$(echo "${EXPAT_MAJOR_MINOR}" | cut -d. -f2-)
 EXPAT_PATCH=$(echo "${EXPAT_VERSION}" | cut -d. -f3-)
 EXPAT_VERSION_U="${EXPAT_MAJOR}_${EXPAT_MINOR}_${EXPAT_PATCH}"
 
-mkdir -p ext/dist
-mkdir -p ext/tmp
-cd ext/tmp
-
 git clone https://github.com/libexpat/libexpat.git
 cd libexpat
 
@@ -25,7 +21,7 @@ fi
 
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=../../../dist \
+cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
       -DBUILD_examples=OFF \
       -DBUILD_tests=OFF \
       -DBUILD_shared=OFF \
@@ -35,8 +31,5 @@ cmake -DCMAKE_INSTALL_PREFIX=../../../dist \
 make -j4
 make install
 
-cd ../../..
-rm -rf tmp
-
-mkdir -p dist/include/expat
-mv dist/include/expat*.h dist/include/expat/.
+cd ../..
+rm -rf libexpat

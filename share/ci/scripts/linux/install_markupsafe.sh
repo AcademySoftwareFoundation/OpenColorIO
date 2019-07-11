@@ -10,6 +10,4 @@ else
     MARKUPSAFE_VERSION="$2"
 fi
 
-mkdir -p ext/dist
-
-pip install --install-option="--prefix=${PWD}/ext/dist" -I MarkupSafe==${MARKUPSAFE_VERSION}
+pip install MarkupSafe==${MARKUPSAFE_VERSION}
