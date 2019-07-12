@@ -19,6 +19,7 @@ cp ../share/cmake/BuildLCMS2.cmake CMakeLists.txt
 mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
+      -DBUILD_SHARED_LIBS:BOOL=OFF \
       -DCMAKE_C_FLAGS="-fPIC" \
       ../.
 make -j4

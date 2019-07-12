@@ -1,4 +1,5 @@
 include(ExternalProject)
+include(PipInstall)
 
 find_package(PythonInterp 2.7 REQUIRED)
 if(NOT OCIO_BUILD_PYTHON)
@@ -10,27 +11,25 @@ set(PATCH_COMMAND patch)
 ###############################################################################
 ### External Doc Apps ###
 
-set(EXTDIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
+set(EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
 set(PYTHON_VARIANT "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
 
 if(WIN32)
     # Unfortunately some windows tools require to have
     #  the paths with the '\' (i.e. not working with '//').
-    string(REGEX REPLACE "/" "\\\\" EXTDIST_ROOT ${EXTDIST_ROOT})
+    string(REGEX REPLACE "/" "\\\\" EXT_DIST_ROOT ${EXT_DIST_ROOT})
 
-    set(PYTHONPATH "${EXTDIST_ROOT}/lib${LIB_SUFFIX}/site-packages")
+    set(PYTHONPATH "${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/site-packages")
 
     # Workaround to mimic *nix '> PYTHONPATH=XXX CMD' 
     #  on windows, it becomes  '> set PYTHONPATH=XXX \n call CMD'
     #   '\n' is here because '\\&' does not work.
     set(PYT_PRE_CMD set PYTHONPATH=${PYTHONPATH} "\n" call )
 else()
-    set(PYTHONPATH "${EXTDIST_ROOT}/lib${LIB_SUFFIX}/python${PYTHON_VARIANT}/site-packages")
+    set(PYTHONPATH "${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/python${PYTHON_VARIANT}/site-packages")
 
     set(PYT_PRE_CMD PYTHONPATH=${PYTHONPATH})
 endif()
-
-set(PYTHON_CMD ${PYT_PRE_CMD} ${PYTHON_EXECUTABLE})
 
 add_custom_target(pythonpath_create
 	COMMAND ${CMAKE_COMMAND} -E make_directory ${PYTHONPATH}
@@ -38,76 +37,40 @@ add_custom_target(pythonpath_create
 
 # setuptools
 # https://pypi.python.org/pypi/setuptools
-set(SETUPTOOLS_VERSION 1.1.6)
-ExternalProject_Add(setuptools
-	DEPENDS pythonpath_create
-    URL ${CMAKE_SOURCE_DIR}/ext/setuptools-${SETUPTOOLS_VERSION}.tar.gz
-    BUILD_IN_SOURCE 1
-	CONFIGURE_COMMAND ""
-    BUILD_COMMAND ${PYTHON_CMD} setup.py build
-    INSTALL_COMMAND ${PYTHON_CMD} setup.py install --prefix=${EXTDIST_ROOT}
-)
+set(SETUPTOOLS_MIN_VERSION 1.1.6)
+pip_install(setuptools %{SETUPTOOLS_MIN_VERSION} ${EXT_DIST_ROOT})
+add_dependencies(setuptools pythonpath_create)
 
 # docutils
 # https://pypi.python.org/pypi/docutils
-set(DOCUTILS_VERSION 0.11)
-ExternalProject_Add(docutils
-    DEPENDS setuptools
-    URL ${CMAKE_SOURCE_DIR}/ext/docutils-${DOCUTILS_VERSION}.tar.gz
-	CONFIGURE_COMMAND ""
-    BUILD_IN_SOURCE 1
-    BUILD_COMMAND ${PYTHON_CMD} setup.py build
-    INSTALL_COMMAND ${PYTHON_CMD} setup.py install --prefix=${EXTDIST_ROOT}
-)
+set(DOCUTILS_MIN_VERSION 0.14)
+pip_install(docutils %{DOCUTILS_MIN_VERSION} ${EXT_DIST_ROOT})
+add_dependencies(docutils setuptools)
 
 # MarkupSafe
 # https://pypi.python.org/pypi/MarkupSafe
-set(MARKUPSAFE_VERSION 1.0)
-ExternalProject_Add(MarkupSafe
-    DEPENDS setuptools
-	URL ${CMAKE_SOURCE_DIR}/ext/MarkupSafe-${MARKUPSAFE_VERSION}.tar.gz
-	CONFIGURE_COMMAND ""
-    BUILD_IN_SOURCE 1
-    BUILD_COMMAND ${PYTHON_CMD} setup.py build
-    INSTALL_COMMAND ${PYTHON_CMD} setup.py install --prefix=${EXTDIST_ROOT}
-)
+set(MARKUPSAFE_MIN_VERSION 1.1.1)
+pip_install(MarkupSafe ${MARKUPSAFE_MIN_VERSION} ${EXT_DIST_ROOT})
+add_dependencies(MarkupSafe setuptools)
 
-# jinja2
+# Jinja2
 # https://pypi.python.org/pypi/Jinja2
-set(JINJA2_VERSION 2.7.1)
-ExternalProject_Add(Jinja2
-	DEPENDS setuptools MarkupSafe
-    URL ${CMAKE_SOURCE_DIR}/ext/Jinja2-${JINJA2_VERSION}.tar.gz
-	CONFIGURE_COMMAND ""
-    BUILD_IN_SOURCE 1
-    BUILD_COMMAND ${PYTHON_CMD} setup.py build
-    INSTALL_COMMAND ${PYTHON_CMD} setup.py install --prefix=${EXTDIST_ROOT}
-)
+set(JINJA2_MIN_VERSION 2.10.1)
+pip_install(Jinja2 ${JINJA2_MIN_VERSION} ${EXT_DIST_ROOT})
+add_dependencies(Jinja2 setuptools MarkupSafe)
 
 # Pygments
 # https://pypi.python.org/pypi/Pygments
-set(PYGMENTS_VERSION 1.6)
-ExternalProject_Add(Pygments
-    DEPENDS setuptools
-    URL ${CMAKE_SOURCE_DIR}/ext/Pygments-${PYGMENTS_VERSION}.tar.gz
-	CONFIGURE_COMMAND ""
-    BUILD_IN_SOURCE 1
-    BUILD_COMMAND ${PYTHON_CMD} setup.py build
-    INSTALL_COMMAND ${PYTHON_CMD} setup.py install --prefix=${EXTDIST_ROOT}
-)
+set(PYGMENTS_MIN_VERSION 2.4.2)
+pip_install(Pygments ${PYGMENTS_MIN_VERSION} ${EXT_DIST_ROOT})
+add_dependencies(Pygments setuptools)
 
-# sphinx
+# Sphinx
 # https://pypi.python.org/pypi/Sphinx
-set(SPHINX_VERSION 1.2b3)
-ExternalProject_Add(Sphinx
-    DEPENDS setuptools docutils Jinja2 Pygments
-    URL ${CMAKE_SOURCE_DIR}/ext/Sphinx-${SPHINX_VERSION}.tar.gz
-    PATCH_COMMAND ${PATCH_COMMAND} -p1 < ${CMAKE_SOURCE_DIR}/ext/Sphinx-${SPHINX_VERSION}.patch
-	CONFIGURE_COMMAND ""
-    BUILD_IN_SOURCE 1
-    BUILD_COMMAND ${PYTHON_CMD} setup.py build
-    INSTALL_COMMAND ${PYTHON_CMD} setup.py install --prefix=${EXTDIST_ROOT} --install-scripts=${EXTDIST_ROOT}/bin
-)
+set(SPHINX_MIN_VERSION 1.8.5)
+pip_install(Sphinx ${PYGMENTS_MIN_VERSION} ${EXT_DIST_ROOT})
+add_dependencies(Sphinx setuptools docutils Jinja2 Pygments)
+
 
 ###############################################################################
 ### Copy templates to build area ###
@@ -171,7 +134,7 @@ set(PYTHONPATH "${PYTHONPATH}:${CMAKE_BINARY_DIR}/src/python")
 ### HTML doc target ###
 
 add_custom_target(docs ALL
-    COMMAND ${PYT_PRE_CMD} ${EXTDIST_ROOT}/bin/sphinx-build -b html . ${CMAKE_CURRENT_BINARY_DIR}/build-html
+    COMMAND ${PYT_PRE_CMD} ${EXT_DIST_ROOT}/bin/sphinx-build -b html . ${CMAKE_CURRENT_BINARY_DIR}/build-html
     DEPENDS
         OpenColorIO
         PyOpenColorIO
@@ -199,7 +162,7 @@ find_package(LATEX)
 if(PDFLATEX_COMPILER)
     
     add_custom_target(latex
-        COMMAND ${PYT_PRE_CMD} ${EXTDIST_ROOT}/bin/sphinx-build -b latex . ${CMAKE_CURRENT_BINARY_DIR}/build-latex
+        COMMAND ${PYT_PRE_CMD} ${EXT_DIST_ROOT}/bin/sphinx-build -b latex . ${CMAKE_CURRENT_BINARY_DIR}/build-latex
         DEPENDS
             OpenColorIO
             PyOpenColorIO

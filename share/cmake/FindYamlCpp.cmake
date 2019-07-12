@@ -1,73 +1,61 @@
-# Find YAMLCPP
+# Locate yaml-cpp
 #
-# Variables defined by this module:
-#   YAMLCPP_FOUND
-#   YAMLCPP_INCLUDE_DIRS
-#   YAMLCPP_LIBRARY
-#   YAMLCPP_VERSION
+# This module defines
+#  YAMLCPP_FOUND, if false, do not try to link to yaml-cpp
+#  YAMLCPP_LIBRARY, where to find yaml-cpp
+#  YAMLCPP_INCLUDE_DIR, where to find yaml.h
+#  YAMLCPP_VERSION, the version of the library
 #
-# Usage:
-#   find_package(YAMLCPP [version] [REQUIRED])
+# By default, the dynamic libraries of yaml-cpp will be found. To find the static ones instead,
+# you must set the YAMLCPP_STATIC_LIBRARY variable to TRUE before calling find_package(YamlCpp ...).
 #
-# Note:
-# You can tell the module where YAMLCPP is installed by setting any of 
-# these variable before calling find_package:
-#   YAMLCPP_INCLUDE_DIR - Directory containing yaml-cpp/yaml.h
-#   YAMLCPP_LIBRARY_DIR - Directory containing yaml-cpp library
-#   YAMLCPP_STATIC_LIBRARY - Prefer static library
-#
-
+# If yaml-cpp is not installed in a standard path, you can use the YAMLCPP_DIR CMake variable
+# to tell CMake where yaml-cpp is.
 include(FindPkgConfig)
-pkg_check_modules(PC_YAMLCPP QUIET yaml-cpp)
 
-set(YAMLCPP_VERSION ${PC_YAMLCPP_VERSION})
-
-if(NOT YAMLCPP_INCLUDE_DIR)
-    find_path(YAMLCPP_INCLUDE_DIR "yaml-cpp/yaml.h"
-              HINTS ${EXT_INCLUDE_DIR}
-                   ~/Library/Frameworks/yaml-cpp/include/
-                    /Library/Frameworks/yaml-cpp/include/
-                    /usr/local/include/
-                    /usr/include/
-                    /sw/yaml-cpp/         # Fink
-                    /opt/local/yaml-cpp/  # DarwinPorts
-                    /opt/csw/yaml-cpp/    # Blastwave
-                    /opt/yaml-cpp/
-                    ${PC_YAMLCPP_INCLUDEDIR}
-                    ${PC_YAMLCPP_INCLUDE_DIRS}
-              PATH_SUFFIXES include
-    )
+# attempt to find static library first if this is set
+if(YAMLCPP_STATIC_LIBRARY)
+    set(YAMLCPP_STATIC libyaml-cpp.a libyaml-cppmd.lib)
 endif()
 
-if (NOT YAMLCPP_LIBRARY)
-    if(EXISTS "${EXT_INCLUDE_DIR}/yaml-cpp/yaml.h" OR YAMLCPP_STATIC_LIBRARY)
-        set(YAMLCPP_STATIC libyaml-cpp.a libyaml-cppmd.lib)
-    endif()
+# Try to use pkgconfig to get the verison
+pkg_check_modules(PC_YAML_CPP REQUIRED QUIET yaml-cpp)
 
-    find_library(YAMLCPP_LIBRARY
-                 NAMES ${YAMLCPP_STATIC} yaml-cpp
-                 HINTS ${YAMLCPP_LIBRARY_DIR}
-                       ${EXT_LIBRARY_DIR}
-                      ~/Library/Frameworks
-                       /Library/Frameworks
-                       /usr/local
-                       /usr
-                       /sw
-                       /opt/local
-                       /opt/csw
-                       /opt
-                       ${PC_YAMLCPP_LIBDIRS}
-                       ${PC_YAMLCPP_LIBRARY_DIRS}
-                 PATH_SUFFIXES lib64 lib
-    )
-endif()
-
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(YAMLCPP
-    REQUIRED_VARS YAMLCPP_INCLUDE_DIR 
-                  YAMLCPP_LIBRARY 
-    VERSION_VAR YAMLCPP_VERSION
+# find the yaml-cpp include directory
+find_path(YAMLCPP_INCLUDE_DIR yaml-cpp/yaml.h
+          HINTS
+          ~/Library/Frameworks/yaml-cpp/include/
+          /Library/Frameworks/yaml-cpp/include/
+          /usr/local/include/
+          /usr/include/
+          /sw/yaml-cpp/         # Fink
+          /opt/local/yaml-cpp/  # DarwinPorts
+          /opt/csw/yaml-cpp/    # Blastwave
+          /opt/yaml-cpp/
+          ${PC_YAML_CPP_INCLUDEDIR}
+          ${PC_YAML_CPP_INCLUDE_DIRS}
+          PATH_SUFFIXES include
 )
+
+# find the yaml-cpp library
+find_library(YAMLCPP_LIBRARY
+             NAMES ${YAMLCPP_STATIC} yaml-cpp
+             HINTS ~/Library/Frameworks
+                    /Library/Frameworks
+                    /usr/local
+                    /usr
+                    /sw
+                    /opt/local
+                    /opt/csw
+                    /opt
+                    ${PC_YAML_CPP_LIBRARY_DIRS}
+             PATH_SUFFIXES lib64 lib
+)
+
+set(YAMLCPP_VERSION ${PC_YAML_CPP_VERSION})
+
+# handle the QUIETLY and REQUIRED arguments and set YAMLCPP_FOUND to TRUE if all listed variables are TRUE
+include(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(YAMLCPP REQUIRED_VARS YAMLCPP_INCLUDE_DIR YAMLCPP_LIBRARY VERSION_VAR YAMLCPP_VERSION)
 mark_as_advanced(YAMLCPP_LIBRARY YAMLCPP_INCLUDE_DIR YAMLCPP_VERSION)
 
-set(YAMLCPP_INCLUDE_DIRS ${YAMLCPP_INCLUDE_DIR})

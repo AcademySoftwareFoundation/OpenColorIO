@@ -144,7 +144,7 @@ target_link_libraries(OpenColorIO
 		yamlcpp
 		pystring
 		sampleicc
-		libexpat
+		expat
 		ilmbase
 )
 if(NOT BUILD_SHARED_LIBS)

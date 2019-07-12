@@ -18,6 +18,14 @@ pr:
     - master
     - RB-*
 
+schedules:
+  - cron: "0 0 * * 0"
+    displayName: Weekly Sunday build
+    branches:
+      include:
+        - master
+    always: true
+
 jobs:
 
 # ------------------------------------------------------------------------------
@@ -36,40 +44,24 @@ jobs:
         useSSE: ON
         cxxCompiler: g++
         cCompiler: gcc
-        installSh: ''
       CentOS 7 VFX CY2019 (No SSE):
         agentImage: 'ubuntu-16.04'
         containerImage: aswfstaging/ci-ocio:2019
         useSSE: OFF
         cxxCompiler: g++
         cCompiler: gcc
-        installSh: ''
       CentOS 7 Clang 7:
         agentImage: 'ubuntu-16.04'
         containerImage: aswfstaging/ci-ocio:2019
         useSSE: ON
         cxxCompiler: clang++
         cCompiler: clang
-        installSh: ''
-      CentOS 7 Clang 7 (Latest):
-        agentImage: 'ubuntu-16.04'
-        containerImage: aswfstaging/ci-base:2019
-        useSSE: ON
-        cxxCompiler: clang++
-        cCompiler: clang
-        installSh: |
-          share/ci/scripts/linux/install_openexr.sh latest
-          share/ci/scripts/linux/install_oiio.sh latest
   pool:
     vmImage: $(agentImage)
   container: $[ variables['containerImage'] ]
 
   steps:
   - template: share/ci/templates/checkout.yml
-  - bash: $(installSh)
-    displayName: Install dependencies
-    condition: and(succeeded(), variables['installSh'])
-
   - template: share/ci/templates/configure.yml
     parameters:
       useSSE: $(useSSE)
@@ -82,11 +74,50 @@ jobs:
       cCompiler: $(cCompiler)
       cmakeOpts: -- -j2
 
-# --------------------------
-# SonarCloud static analysis
-# --------------------------
-# TODO: Remove 'condition' after initial merge to enable PR static analysis
+# ----------------------------------
+# Latest dependency tags (cron only)
+# ----------------------------------
+- job: Latest
+    strategy:
+    matrix:
+      CentOS 7 VFX CY2019:
+        agentImage: 'ubuntu-16.04'
+        cxxCompiler: g++
+        cCompiler: gcc
+      CentOS 7 Clang 7:
+        agentImage: 'ubuntu-16.04'
+        cxxCompiler: clang++
+        cCompiler: clang
+  condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
+  pool:
+    vmImage: 'ubuntu-16.04'
+  container: aswfstaging/ci-ocio:2019
 
+  steps:
+  - template: share/ci/templates/checkout.yml
+  - bash: |
+      share/ci/scripts/linux/install_expat.sh latest
+      share/ci/scripts/linux/install_lcms2.sh latest
+      share/ci/scripts/linux/install_yaml-cpp.sh latest
+      share/ci/scripts/linux/install_openexr.sh latest
+      share/ci/scripts/linux/install_oiio.sh latest
+    displayName: Install dependencies
+    condition: and(succeeded(), variables['installSh'])
+
+  - template: share/ci/templates/configure.yml
+    parameters:
+      cxxCompiler: $(cxxCompiler)
+      cCompiler: $(cCompiler)
+
+  - template: share/ci/templates/build.yml
+    parameters:
+      cxxCompiler: $(cxxCompiler)
+      cCompiler: $(cCompiler)
+      cmakeOpts: -- -j2
+
+# --------------------------------------
+# SonarCloud static analysis (cron only)
+# --------------------------------------
 - job: SonarCloud
   displayName: Linux CentOS 7 VFX CY2019 (SonarCloud)
   condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
