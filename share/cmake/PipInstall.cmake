@@ -9,7 +9,7 @@
 #   <package> - Install target
 #
 # Usage:
-#   pip_install(Sphinx min_version prefix)
+#   pip_install(Sphinx 2.1.2 "ext/dist")
 #
 # Pre-defined variables that affect macro behavior:
 #   GET_<PACKAGE>_MIN_VERSION - Request a specific version
