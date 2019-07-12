@@ -106,6 +106,7 @@ jobs:
 
   - template: share/ci/templates/configure.yml
     parameters:
+      installExt: NONE
       cxxCompiler: $(cxxCompiler)
       cCompiler: $(cCompiler)
 

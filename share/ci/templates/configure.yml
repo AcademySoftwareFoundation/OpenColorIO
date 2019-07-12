@@ -8,6 +8,7 @@ parameters:
   buildGpuTests: OFF
   buildDocs: ON
   useSSE: ON
+  installExt: ALL
   verbose: OFF
   cxxStd: 14
   cxxFlags: ''
@@ -41,6 +42,7 @@ steps:
           -DOCIO_BUILD_GPU_TESTS=${{ parameters.buildGpuTests }} \
           -DOCIO_BUILD_DOCS=${{ parameters.buildDocs }} \
           -DOCIO_USE_SSE=${{ parameters.useSSE }} \
+          -DOCIO_INSTALL_EXT=${{ parameters.installExt }} \
           -DOCIO_WARNING_AS_ERROR=ON \
           ${{ parameters.cmakeOpts }}
   workingDirectory: _build
