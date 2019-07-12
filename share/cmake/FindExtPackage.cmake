@@ -20,7 +20,7 @@
 #   <PACKAGE>_LIBRARY
 #
 # Usage:
-#   find_ext_package(IlmBase min_version)
+#   find_ext_package(IlmBase 2.3.0)
 #
 # Pre-defined variables that affect macro behavior:
 #   OCIO_INSTALL_EXT - Determines install requirements
