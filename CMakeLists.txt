@@ -85,11 +85,10 @@ if(OCIO_WARNING_AS_ERROR)
 endif()
 
 ###############################################################################
-# External linking
+# External linking options
 
-set(OCIO_INSTALL_EXT "NONE" CACHE STRING "Set the condition for Installing external dependencies")
+set(OCIO_INSTALL_EXT "MISSING" CACHE STRING "Set the condition for Installing external dependencies")
 set_property(CACHE OCIO_INSTALL_EXT PROPERTY STRINGS "NONE" "MISSING" "ALL")
-set(OCIO_INSTALL_EXT_OPTIONS "MISSING" "ALL")
 
 ###############################################################################
 # Versioning

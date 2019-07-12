@@ -31,6 +31,7 @@ macro(pip_install package min_version prefix)
 
     # Setup install target command (to run at build time)
     message(STATUS "${package} ${${_PACKAGE_UPPER}_VERSION} will be installed to: ${prefix}")
+    add_custom_target(${package})
     add_custom_command(TARGET ${package} PRE_BUILD
         COMMAND pip install --quiet
                             --disable-pip-version-check
@@ -38,5 +39,4 @@ macro(pip_install package min_version prefix)
                             -I ${package}==${${_PACKAGE_UPPER}_VERSION}
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
-    add_custom_target(${package})
-macro()
+endmacro()

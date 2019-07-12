@@ -19,7 +19,7 @@ if(YAMLCPP_STATIC_LIBRARY)
 endif()
 
 # Try to use pkgconfig to get the verison
-pkg_check_modules(PC_YAML_CPP REQUIRED QUIET yaml-cpp)
+pkg_check_modules(PC_YAML_CPP QUIET yaml-cpp)
 
 # find the yaml-cpp include directory
 find_path(YAMLCPP_INCLUDE_DIR yaml-cpp/yaml.h

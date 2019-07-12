@@ -1,5 +1,5 @@
-# Find an external package on the current system, or set the variables
-# needed to install it when an internal build is required or requested.
+# Find an external package installed on this system, or set the variables
+# needed to install it.
 #
 # Parameters:
 #   package - Package name matching Find<Package>.cmake module
@@ -34,29 +34,27 @@ macro(find_ext_package package min_version)
 	if(NOT OCIO_INSTALL_EXT STREQUAL ALL)
 		find_package(${package} ${min_version})
 
+        # Force variable consistency between find modules
 		if(${_PACKAGE_UPPER}_FOUND OR ${package}_FOUND)
-		    # Unify find module variables
 		    if(${package}_FOUND)
 		        set(${_PACKAGE_UPPER}_FOUND ${${package}_FOUND})
-		    endif()
+            endif()
 		    if(${_PACKAGE_UPPER}_LIBRARIES)
 		        set(${_PACKAGE_UPPER}_LIBRARY ${${_PACKAGE_UPPER}_LIBRARIES})
-		    endif()
+            endif()
             if(${_PACKAGE_UPPER}_INCLUDE_DIR)
 		        set(${_PACKAGE_UPPER}_INCLUDE_DIRS ${${_PACKAGE_UPPER}_INCLUDE_DIR})
 		    endif()
-		endif()
+        endif()
 	else()
 	    set(${_PACKAGE_UPPER}_FOUND FALSE)
 	endif()
 
-    # Custom failure message
+    # Provide a helpful failure message
 	if(NOT ${_PACKAGE_UPPER}_FOUND AND OCIO_INSTALL_EXT STREQUAL NONE)
 	    message(FATAL_ERROR
             "Dependent package ${package} not found! "
-            "Use -DOCIO_INSTALL_EXT=MISSING to install it at build time, or "
-            "-D${_PACKAGE_UPPER}_INCLUDE_DIR=<path> "
-            "-D${_PACKAGE_UPPER}_LIBRARY_DIR=<path> to hint at its location."
+            "Use -DOCIO_INSTALL_EXT=<MISSING|ALL> to install it at build time."
         )
 	endif()
 
@@ -79,9 +77,11 @@ macro(find_ext_package package min_version)
     else()
         set(${_PACKAGE_UPPER}_VERSION ${min_version})
     endif()
+
+    # <major>.<minor>.<patch> --> <major>_<minor>_<patch>
     string(REPLACE "." "_" ${_PACKAGE_UPPER}_VERSION_U ${${_PACKAGE_UPPER}_VERSION})
 
-    # Split version into major/minor/patch components
+    # Split version into major, minor, and patch
     string(REPLACE "." ";" _PACKAGE_VERSION_LIST ${${_PACKAGE_UPPER}_VERSION})
     list(LENGTH _PACKAGE_VERSION_LIST _PACKAGE_VERSION_COMPS)
     list(GET _PACKAGE_VERSION_LIST 0 ${_PACKAGE_UPPER}_VERSION_MAJOR)

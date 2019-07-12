@@ -6,71 +6,90 @@ if(NOT OCIO_BUILD_PYTHON)
     message(FATAL_ERROR "Doc generation requires that the python bindings be built")
 endif()
 
-set(PATCH_COMMAND patch)
-
 ###############################################################################
 ### External Doc Apps ###
 
-set(EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
-set(PYTHON_VARIANT "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
-
-if(WIN32)
-    # Unfortunately some windows tools require to have
-    #  the paths with the '\' (i.e. not working with '//').
-    string(REGEX REPLACE "/" "\\\\" EXT_DIST_ROOT ${EXT_DIST_ROOT})
-
-    set(PYTHONPATH "${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/site-packages")
-
-    # Workaround to mimic *nix '> PYTHONPATH=XXX CMD' 
-    #  on windows, it becomes  '> set PYTHONPATH=XXX \n call CMD'
-    #   '\n' is here because '\\&' does not work.
-    set(PYT_PRE_CMD set PYTHONPATH=${PYTHONPATH} "\n" call )
+if(NOT OCIO_INSTALL_EXT STREQUAL ALL)
+    find_package(Sphinx)
+    if(NOT SPHINX_FOUND)
+        if(OCIO_INSTALL_EXT STREQUAL MISSING)
+            set(SPHINX_INSTALL_EXT TRUE)
+        else()
+            message(FATAL_ERROR
+                "Dependent package Sphinx not found! "
+                "Use -DOCIO_INSTALL_EXT=<MISSING|ALL> to install it at build time."
+            )
+        endif()
+    endif()
 else()
-    set(PYTHONPATH "${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/python${PYTHON_VARIANT}/site-packages")
-
-    set(PYT_PRE_CMD PYTHONPATH=${PYTHONPATH})
+    set(SPHINX_INSTALL_EXT TRUE)
 endif()
 
-add_custom_target(pythonpath_create
-	COMMAND ${CMAKE_COMMAND} -E make_directory ${PYTHONPATH}
-)
+if(SPHINX_INSTALL_EXT)
 
-# setuptools
-# https://pypi.python.org/pypi/setuptools
-set(SETUPTOOLS_MIN_VERSION 1.1.6)
-pip_install(setuptools %{SETUPTOOLS_MIN_VERSION} ${EXT_DIST_ROOT})
-add_dependencies(setuptools pythonpath_create)
+    set(EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
+    set(PYTHON_VARIANT "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
 
-# docutils
-# https://pypi.python.org/pypi/docutils
-set(DOCUTILS_MIN_VERSION 0.14)
-pip_install(docutils %{DOCUTILS_MIN_VERSION} ${EXT_DIST_ROOT})
-add_dependencies(docutils setuptools)
+    if(WIN32)
+        # Unfortunately some windows tools require to have
+        #  the paths with the '\' (i.e. not working with '//').
+        string(REGEX REPLACE "/" "\\\\" EXT_DIST_ROOT ${EXT_DIST_ROOT})
 
-# MarkupSafe
-# https://pypi.python.org/pypi/MarkupSafe
-set(MARKUPSAFE_MIN_VERSION 1.1.1)
-pip_install(MarkupSafe ${MARKUPSAFE_MIN_VERSION} ${EXT_DIST_ROOT})
-add_dependencies(MarkupSafe setuptools)
+        set(PYTHONPATH "${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/site-packages")
 
-# Jinja2
-# https://pypi.python.org/pypi/Jinja2
-set(JINJA2_MIN_VERSION 2.10.1)
-pip_install(Jinja2 ${JINJA2_MIN_VERSION} ${EXT_DIST_ROOT})
-add_dependencies(Jinja2 setuptools MarkupSafe)
+        # Workaround to mimic *nix '> PYTHONPATH=XXX CMD' 
+        #  on windows, it becomes  '> set PYTHONPATH=XXX \n call CMD'
+        #   '\n' is here because '\\&' does not work.
+        set(PYT_PRE_CMD set PYTHONPATH=${PYTHONPATH} "\n" call )
+    else()
+        set(PYTHONPATH "${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/python${PYTHON_VARIANT}/site-packages")
 
-# Pygments
-# https://pypi.python.org/pypi/Pygments
-set(PYGMENTS_MIN_VERSION 2.4.2)
-pip_install(Pygments ${PYGMENTS_MIN_VERSION} ${EXT_DIST_ROOT})
-add_dependencies(Pygments setuptools)
+        set(PYT_PRE_CMD PYTHONPATH=${PYTHONPATH})
+    endif()
 
-# Sphinx
-# https://pypi.python.org/pypi/Sphinx
-set(SPHINX_MIN_VERSION 1.8.5)
-pip_install(Sphinx ${PYGMENTS_MIN_VERSION} ${EXT_DIST_ROOT})
-add_dependencies(Sphinx setuptools docutils Jinja2 Pygments)
+    set(SPHINX_EXECUTABLE ${PYT_PRE_CMD} "${EXT_DIST_ROOT}/bin/sphinx-build")
 
+    add_custom_target(pythonpath_create
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${PYTHONPATH}
+    )
+
+    # setuptools
+    # https://pypi.python.org/pypi/setuptools
+    set(SETUPTOOLS_MIN_VERSION 1.1.6)
+    pip_install(setuptools ${SETUPTOOLS_MIN_VERSION} ${EXT_DIST_ROOT})
+    add_dependencies(setuptools pythonpath_create)
+
+    # docutils
+    # https://pypi.python.org/pypi/docutils
+    set(DOCUTILS_MIN_VERSION 0.14)
+    pip_install(docutils ${DOCUTILS_MIN_VERSION} ${EXT_DIST_ROOT})
+    add_dependencies(docutils setuptools)
+
+    # MarkupSafe
+    # https://pypi.python.org/pypi/MarkupSafe
+    set(MARKUPSAFE_MIN_VERSION 1.1.1)
+    pip_install(MarkupSafe ${MARKUPSAFE_MIN_VERSION} ${EXT_DIST_ROOT})
+    add_dependencies(MarkupSafe setuptools)
+
+    # Jinja2
+    # https://pypi.python.org/pypi/Jinja2
+    set(JINJA2_MIN_VERSION 2.10.1)
+    pip_install(Jinja2 ${JINJA2_MIN_VERSION} ${EXT_DIST_ROOT})
+    add_dependencies(Jinja2 setuptools MarkupSafe)
+
+    # Pygments
+    # https://pypi.python.org/pypi/Pygments
+    set(PYGMENTS_MIN_VERSION 2.4.2)
+    pip_install(Pygments ${PYGMENTS_MIN_VERSION} ${EXT_DIST_ROOT})
+    add_dependencies(Pygments setuptools)
+
+    # Sphinx
+    # https://pypi.python.org/pypi/Sphinx
+    set(SPHINX_MIN_VERSION 1.8.5)
+    pip_install(Sphinx ${SPHINX_MIN_VERSION} ${EXT_DIST_ROOT})
+    add_dependencies(Sphinx setuptools docutils Jinja2 Pygments)
+
+endif()
 
 ###############################################################################
 ### Copy templates to build area ###
@@ -134,7 +153,7 @@ set(PYTHONPATH "${PYTHONPATH}:${CMAKE_BINARY_DIR}/src/python")
 ### HTML doc target ###
 
 add_custom_target(docs ALL
-    COMMAND ${PYT_PRE_CMD} ${EXT_DIST_ROOT}/bin/sphinx-build -b html . ${CMAKE_CURRENT_BINARY_DIR}/build-html
+    COMMAND ${SPHINX_EXECUTABLE} -b html . ${CMAKE_CURRENT_BINARY_DIR}/build-html
     DEPENDS
         OpenColorIO
         PyOpenColorIO
@@ -162,7 +181,7 @@ find_package(LATEX)
 if(PDFLATEX_COMPILER)
     
     add_custom_target(latex
-        COMMAND ${PYT_PRE_CMD} ${EXT_DIST_ROOT}/bin/sphinx-build -b latex . ${CMAKE_CURRENT_BINARY_DIR}/build-latex
+        COMMAND ${SPHINX_EXECUTABLE} -b latex . ${CMAKE_CURRENT_BINARY_DIR}/build-latex
         DEPENDS
             OpenColorIO
             PyOpenColorIO
