@@ -1,5 +1,5 @@
 include(ExternalProject)
-include(PipInstall)
+include(FindExtPackage)
 
 find_package(PythonInterp 2.7 REQUIRED)
 if(NOT OCIO_BUILD_PYTHON)
@@ -9,40 +9,30 @@ endif()
 ###############################################################################
 ### External Doc Apps ###
 
-if(NOT OCIO_INSTALL_EXT STREQUAL ALL)
-    find_package(Sphinx)
-    if(NOT SPHINX_FOUND)
-        if(OCIO_INSTALL_EXT STREQUAL MISSING)
-            set(SPHINX_INSTALL_EXT TRUE)
-        else()
-            message(FATAL_ERROR
-                "Dependent package Sphinx not found! "
-                "Use -DOCIO_INSTALL_EXT=<MISSING|ALL> to install it at build time."
-            )
-        endif()
-    endif()
-else()
-    set(SPHINX_INSTALL_EXT TRUE)
-endif()
+# Defines SPHINX_EXECUTABLE if Sphinx is found
+find_ext_package(Sphinx)
 
 if(SPHINX_INSTALL_EXT)
+    include(PipInstall)
 
     set(EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
     set(PYTHON_VARIANT "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
+    set(PYOCIO_DIR "${CMAKE_BINARY_DIR}/src/bindings/python")
 
     if(WIN32)
         # Unfortunately some windows tools require to have
         #  the paths with the '\' (i.e. not working with '//').
         string(REGEX REPLACE "/" "\\\\" EXT_DIST_ROOT ${EXT_DIST_ROOT})
 
-        set(PYTHONPATH "${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/site-packages")
+        set(PYTHONPATH "${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/site-packages:${PYOCIO_DIR}")
 
         # Workaround to mimic *nix '> PYTHONPATH=XXX CMD' 
         #  on windows, it becomes  '> set PYTHONPATH=XXX \n call CMD'
         #   '\n' is here because '\\&' does not work.
         set(PYT_PRE_CMD set PYTHONPATH=${PYTHONPATH} "\n" call )
     else()
-        set(PYTHONPATH "${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/python${PYTHON_VARIANT}/site-packages")
+        set(PYTHONPATH 
+            "${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/python${PYTHON_VARIANT}/site-packages:${PYOCIO_DIR}")
 
         set(PYT_PRE_CMD PYTHONPATH=${PYTHONPATH})
     endif()
@@ -99,35 +89,35 @@ configure_file(conf.py.in ${CMAKE_BINARY_DIR}/docs/conf.py @ONLY)
 
 file(GLOB_RECURSE DOC_SOURCES "${CMAKE_SOURCE_DIR}/docs/*")
 list(APPEND DOC_SOURCES 
-	${CMAKE_SOURCE_DIR}/README.md
-	${CMAKE_SOURCE_DIR}/INSTALL.md
-	${CMAKE_SOURCE_DIR}/CHANGELOG.md
-	${CMAKE_SOURCE_DIR}/LICENSE.md
-	${CMAKE_SOURCE_DIR}/share/nuke/ocionuke/viewer.py
+    ${CMAKE_SOURCE_DIR}/README.md
+    ${CMAKE_SOURCE_DIR}/INSTALL.md
+    ${CMAKE_SOURCE_DIR}/CHANGELOG.md
+    ${CMAKE_SOURCE_DIR}/LICENSE.md
+    ${CMAKE_SOURCE_DIR}/share/nuke/ocionuke/viewer.py
 )
 
 add_custom_target(doc_copy
-	COMMENT "Copying doc files to staging area"
+    COMMENT "Copying doc files to staging area"
 )
 
 foreach(f ${DOC_SOURCES})
-	string(REGEX REPLACE "^${CMAKE_SOURCE_DIR}/" "" relpath ${f})
-	string(REGEX REPLACE "[/. ]" "_" tgtname ${relpath})
-	string(REGEX MATCH "^docs" IN_DOCS ${relpath})
+    string(REGEX REPLACE "^${CMAKE_SOURCE_DIR}/" "" relpath ${f})
+    string(REGEX REPLACE "[/. ]" "_" tgtname ${relpath})
+    string(REGEX MATCH "^docs" IN_DOCS ${relpath})
 
-	set(SRC_PATH ${CMAKE_SOURCE_DIR}/${relpath})
-	set(DST_PATH ${CMAKE_BINARY_DIR}/${relpath})
-	if(NOT IN_DOCS)
-		get_filename_component(F_NAME ${relpath} NAME)
-		set(DST_PATH "${CMAKE_BINARY_DIR}/docs/${F_NAME}")
-	endif()
+    set(SRC_PATH ${CMAKE_SOURCE_DIR}/${relpath})
+    set(DST_PATH ${CMAKE_BINARY_DIR}/${relpath})
+    if(NOT IN_DOCS)
+        get_filename_component(F_NAME ${relpath} NAME)
+        set(DST_PATH "${CMAKE_BINARY_DIR}/docs/${F_NAME}")
+    endif()
 
-	add_custom_command(OUTPUT ${DST_PATH}
-		COMMAND ${CMAKE_COMMAND} -E copy ${SRC_PATH} ${DST_PATH}
-		DEPENDS ${SRC_PATH}
-	)
-	add_custom_target("copy_${tgtname}" DEPENDS ${DST_PATH})
-	add_dependencies(doc_copy "copy_${tgtname}")
+    add_custom_command(OUTPUT ${DST_PATH}
+        COMMAND ${CMAKE_COMMAND} -E copy ${SRC_PATH} ${DST_PATH}
+        DEPENDS ${SRC_PATH}
+    )
+    add_custom_target("copy_${tgtname}" DEPENDS ${DST_PATH})
+    add_dependencies(doc_copy "copy_${tgtname}")
 endforeach()
 
 
@@ -138,11 +128,11 @@ set(EXTRACT_COMMAND "${CMAKE_SOURCE_DIR}/share/sphinx/ExtractRstFromSourceCPP.py
 set(OCIO_HEADER_DIR "${CMAKE_SOURCE_DIR}/include/OpenColorIO")
 set(RST_DESTINATION "${CMAKE_BINARY_DIR}/docs/developers/api/")
 add_custom_target(rst_extraction
-	COMMAND ${CMAKE_COMMAND} -E make_directory ${RST_DESTINATION}
-	COMMAND ${PYTHON_EXECUTABLE} ${EXTRACT_COMMAND} ${OCIO_HEADER_DIR}/OpenColorIO.h ${RST_DESTINATION}/OpenColorIO.rst
-	COMMAND ${PYTHON_EXECUTABLE} ${EXTRACT_COMMAND} ${OCIO_HEADER_DIR}/OpenColorTransforms.h ${RST_DESTINATION}/OpenColorTransforms.rst
-	COMMAND ${PYTHON_EXECUTABLE} ${EXTRACT_COMMAND} ${OCIO_HEADER_DIR}/OpenColorTypes.h ${RST_DESTINATION}/OpenColorTypes.rst
-	COMMENT "Extracting .rst files from C++ headers"
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${RST_DESTINATION}
+    COMMAND ${PYTHON_EXECUTABLE} ${EXTRACT_COMMAND} ${OCIO_HEADER_DIR}/OpenColorIO.h ${RST_DESTINATION}/OpenColorIO.rst
+    COMMAND ${PYTHON_EXECUTABLE} ${EXTRACT_COMMAND} ${OCIO_HEADER_DIR}/OpenColorTransforms.h ${RST_DESTINATION}/OpenColorTransforms.rst
+    COMMAND ${PYTHON_EXECUTABLE} ${EXTRACT_COMMAND} ${OCIO_HEADER_DIR}/OpenColorTypes.h ${RST_DESTINATION}/OpenColorTypes.rst
+    COMMENT "Extracting .rst files from C++ headers"
 )
 
 # Add built PyOpenColorIO to PYTHONPATH and ensure that doc target depends on PyOpenColorIO

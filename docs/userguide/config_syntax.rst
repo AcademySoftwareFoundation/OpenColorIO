@@ -39,7 +39,7 @@ Config sections
 ***************
 
 ``ocio_profile_version``
-++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Required.
 
@@ -55,7 +55,7 @@ The currently supported version strings are ``1`` and ``2``.
 
 
 ``search_path``
-+++++++++++++++
+^^^^^^^^^^^^^^^
 
 Optional. Default is an empty search path.
 
@@ -104,7 +104,7 @@ fallbacks to a default. For more information, see the examples in
 
 
 ``strictparsing``
-+++++++++++++++++
+^^^^^^^^^^^^^^^^^
 
 Optional. Valid values are ``true`` and ``false``. Default is ``true``
 (assuming a config is present):
@@ -138,7 +138,7 @@ essentially falls back to "non-color managed".
 
 
 ``luma``
-++++++++
+^^^^^^^^
 
 Deprecated. Optional. Default is the Rec.709 primaries specified by the ASC:
 
@@ -162,7 +162,7 @@ image-viewer when displaying a single channel)
 
 
 ``roles``
-+++++++++
+^^^^^^^^^
 
 Required.
 
@@ -241,7 +241,7 @@ use these differently.
 
 
 ``displays``
-++++++++++++
+^^^^^^^^^^^^
 
 Required.
 
@@ -281,9 +281,10 @@ defined later in the config.
 Unless the ``active_displays`` and ``active_views`` sections are
 defined, the first display and first view will be the default.
 
+.. _active-displays:
 
 ``active_displays``
-+++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^
 
 Optional. Default is for all displays to be visible, and to respect
 order of items in ``displays`` section.
@@ -323,9 +324,10 @@ Or specify multiple active displays, by separating each with a colon::
 
     export OCIO_ACTIVE_DISPLAYS="DCIP3:sRGB"
 
+.. _active-views:
 
 ``active_views``
-++++++++++++++++
+^^^^^^^^^^^^^^^^
 
 Optional. Default is for all views to be visible, and to respect order
 of the views under the display.
@@ -339,7 +341,7 @@ Overridden by the ``OCIO_ACTIVE_VIEWS`` env-var::
 
 
 ``looks``
-+++++++++
+^^^^^^^^^
 
 Optional.
 
@@ -425,7 +427,7 @@ series of transforms using the ``GroupTransform``, for example:
 
 
 ``colorspaces``
-+++++++++++++++
+^^^^^^^^^^^^^^^
 
 Required.
 
@@ -816,7 +818,7 @@ Available transforms
 ********************
 
 ``AllocationTransform``
-+++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^
 
 Transforms from reference space to the range specified by the
 ``vars:``
@@ -829,7 +831,7 @@ Keys:
 
 
 ``CDLTransform``
-++++++++++++++++
+^^^^^^^^^^^^^^^^
 
 Applies an ASC CDL compliant grade
 
@@ -843,7 +845,7 @@ Keys:
 
 
 ``ColorSpaceTransform``
-+++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^
 
 Transforms from ``src`` colorspace to ``dst`` colorspace.
 
@@ -855,7 +857,7 @@ Keys:
 
 
 ``ExponentTransform``
-+++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^
 
 Raises pixel values to a given power (often referred to as "gamma")
 
@@ -870,7 +872,7 @@ Keys:
 
 
 ``FileTransform``
-+++++++++++++++++
+^^^^^^^^^^^^^^^^^
 
 Applies a lookup table (LUT)
 
@@ -883,7 +885,7 @@ Keys:
 
 
 ``GroupTransform``
-++++++++++++++++++
+^^^^^^^^^^^^^^^^^^
 
 Combines multiple transforms into one.
 
@@ -905,7 +907,7 @@ A group transform is accepted anywhere a "regular" transform is.
 
 
 ``LogTransform``
-++++++++++++++++
+^^^^^^^^^^^^^^^^
 
 Applies a mathematical logarithm with a given base to the pixel values.
 
@@ -915,13 +917,13 @@ Keys:
 
 
 ``LookTransform``
-+++++++++++++++++
+^^^^^^^^^^^^^^^^^
 
 Applies a named look
 
 
 ``MatrixTransform``
-+++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^
 
 Applies a matrix transform to the pixel values
 
@@ -933,7 +935,7 @@ Keys:
 
 
 ``RangeTransform``
-+++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^
 
 Applies an affine transform (scale & offset) and clamps values to min/max bounds.
 
@@ -953,7 +955,7 @@ Keys:
 
 
 ``TruelightTransform``
-++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^
 
 Applies a transform from a Truelight profile.
 

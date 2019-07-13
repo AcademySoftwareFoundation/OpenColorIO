@@ -86,6 +86,7 @@ Colorspaces and transforms that implement the ACES Input Transforms. These color
 **Technical information**
 
 References and descriptions are provided for each group of Input Transforms below.
+
 - The colorspaces whose names include a transfer function and a gamut name are full implementations of ACES Input Transforms.
 	- Ex. The ARRI 'V3 LogC (EI160) - Wide Gamut' colorspace
 	- Ex. The RED 'REDlogFilm - DRAGONcolor2' colorspace

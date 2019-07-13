@@ -57,31 +57,34 @@ should work on OS X and most Linux distros.
 The basic requirements are:
 
 - cmake >= 3.10
-- *Expat >= 2.2.5 (XML parser for CDL/CLF/CTF)
-- *yaml-cpp >= 0.3.0 (YAML parser for Configs)
-- *IlmBase Half >= 2.3.0 (for half domain LUTs)
-- *Little CMS >= 2.2 (for ociobakelut ICC profile baking)
+- \*Expat >= 2.2.5 (XML parser for CDL/CLF/CTF)
+- \*yaml-cpp >= 0.3.0 (YAML parser for Configs)
+- \*IlmBase Half >= 2.3.0 (for half domain LUTs)
+- \*Little CMS >= 2.2 (for ociobakelut ICC profile baking)
 - (optional) Python 2.x (for the Python bindings and docs)
-    - *setuptools >= 1.1.6
-    - *docutils >= 0.14
-    - *MarkupSafe >= 1.1.1
-    - *Jinja2 >= 2.10.1
-    - *Pygments >= 2.4.2
-    - *Sphinx >= 1.8.5
+    - \*setuptools >= 1.1.6
+    - \*docutils >= 0.14
+    - \*MarkupSafe >= 1.1.1
+    - \*Jinja2 >= 2.10.1
+    - \*Pygments >= 2.4.2
+    - \*Sphinx >= 1.8.5
 - (optional) Nuke 6.x or newer (for the Nuke nodes)
 - (optional) OpenImageIO (for apps including ocioconvert)
 - (optional) Truelight SDK (for TruelightTransform)
 
 Requirements above with a preceeding * can be automatically installed at 
-build time by setting the ``OCIO_INSTALL_EXT`` option in your cmake command. 
-Libraries are pulled from upstream repositories (requiring an internet 
-connection) and statically-linked into libOpenColorIO. Python packages are 
-installed with ``pip``. Three options are available:
+build time by setting the ``OCIO_INSTALL_EXT`` option in your cmake command 
+(requires an internet connection). C/C++ libraries are pulled from upstream 
+repositories, built, and statically-linked into libOpenColorIO. Python packages 
+are installed with ``pip``. All installs are fully contained within your build 
+directory. Three options are available:
 
-- ``NONE``: Use system installed libraries. Fail if any are missing.
-- ``MISSING`` (default): Prefer system found libraries. Install any that are 
-  not found.
-- ``ALL``: Install all requirements, regardless of system installation.
+- ``NONE`` (default): Use system installed packages. Fail if any are missing or 
+  don't meet minimum version requireements.
+- ``MISSING``: Prefer system installed packages. Install any that are not 
+  found or don't meet minimum version requireements.
+- ``ALL``: Install all required packages, regardless of availability on the 
+  current system.
 
 To keep things simple, this guide will use the following example
 paths - these will almost definitely be different for you:
@@ -101,13 +104,12 @@ Nuke, OpenImageIO etc
 
 As we want to install OCIO to a custom location (instead of the
 default ``/usr/local``), we will run cmake with
-``CMAKE_INSTALL_PREFIX``
+``CMAKE_INSTALL_PREFIX``. We will also set ``OCIO_INSTALL_EXT`` to ``MISSING``
+to automatically download any needed dependencies.
 
 Still in ``/tmp/ociobuild``, run::
 
-    $ cmake -D CMAKE_INSTALL_PREFIX=/software/ocio 
-            -D OCIO_INSTALL_EXT=MISSING 
-            /source/ocio
+    $ cmake -D CMAKE_INSTALL_PREFIX=/software/ocio -D OCIO_INSTALL_EXT=MISSING /source/ocio
 
 The last argument is the location of the OCIO source code (containing
 the main CMakeLists.txt file). You should see something along the
@@ -140,7 +142,7 @@ this::
     $ ls lib/
     libOpenColorIO.a      libOpenColorIO.dylib
 
-.. _windows-build
+.. _windows-build:
 
 Windows Build
 +++++++++++++
@@ -399,12 +401,12 @@ Environment variables
 
 .. envvar:: OCIO_ACTIVE_DISPLAYS
 
-   Overrides the :ref:`active_displays` configuration value.
+   Overrides the :ref:`active-displays` configuration value.
    Colon-separated list of displays, e.g ``sRGB:P3``
 
 .. envvar:: OCIO_ACTIVE_VIEWS
 
-   Overrides the :ref:`active_views` configuration
+   Overrides the :ref:`active-views` configuration
    item. Colon-separated list of view names, e.g
    ``internal:client:DI``
 
