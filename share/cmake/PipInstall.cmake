@@ -20,23 +20,21 @@ find_package(PythonInterp 2.7 QUIET)
 
 macro(pip_install package min_version prefix)
     string(TOUPPER ${package} _PKG_UPPER)
-
-    # Make sure any request for a specific version is high enough
+    set(${_PKG_UPPER}_VERSION ${min_version})
+    
+    # Was a specific version requested?
     if(GET_${_PKG_UPPER}_VERSION)
         if(NOT GET_${_PKG_UPPER}_VERSION VERSION_GREATER_EQUAL ${min_version})
             message(WARNING 
-                "The requested ${package} version ${GET_${_PKG_UPPER}_VERSION} is older "
-                "than the minimum required version!\n"
-                "Version ${min_version} will be installed instead."
+                "The minimum supported ${package} version is ${min_version} "
+                "(version ${GET_${_PKG_UPPER}_VERSION} was requested)."
             )
         else()
             set(${_PKG_UPPER}_VERSION ${GET_${_PKG_UPPER}_VERSION})
         endif()
-    else()
-        set(${_PKG_UPPER}_VERSION ${min_version})
     endif()
 
-    # Indicate a more exact install location
+    # Package install location
     if(WIN32)
         set(_SITE_PKGS_DIR "${prefix}/lib${LIB_SUFFIX}/site-packages")
     else()
@@ -44,7 +42,7 @@ macro(pip_install package min_version prefix)
         set(_SITE_PKGS_DIR "${prefix}/lib${LIB_SUFFIX}/python${_PY_VERSION}/site-packages")
     endif()
 
-    # Setup install target command (to run at build time)
+    # pip install target
     message(STATUS "Installing ${package} (version ${${_PKG_UPPER}_VERSION}): ${_SITE_PKGS_DIR}")
     add_custom_target(${package})
     add_custom_command(TARGET ${package} PRE_BUILD
