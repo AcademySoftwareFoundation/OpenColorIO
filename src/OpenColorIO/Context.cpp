@@ -485,7 +485,7 @@ static const std::string ociodir(STR(OCIO_SOURCE_DIR));
 // Method to compare paths.
 std::string SanitizePath(const char* path)
 {
-    std::string s{ OCIO::pystring::os::path::normpath(path) };
+    std::string s{ pystring::os::path::normpath(path) };
     return s;
 }
 

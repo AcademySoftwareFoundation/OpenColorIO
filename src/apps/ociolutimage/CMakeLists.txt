@@ -17,7 +17,7 @@ set_target_properties(ociolutimage PROPERTIES
 target_link_libraries(ociolutimage
 	PRIVATE
 		apputils
-		pystring
+		pystring::pystring
 		OpenColorIO
 		OpenImageIO
 )

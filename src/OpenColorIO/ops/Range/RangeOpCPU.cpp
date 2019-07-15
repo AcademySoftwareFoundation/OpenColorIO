@@ -414,7 +414,7 @@ OCIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings)
 
     const OCIO::OpCPU & c = *op;
     const std::string typeName(typeid(c).name());
-    OCIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeScaleMinMaxRenderer"));
+    OCIO_CHECK_NE(-1, pystring::find(typeName, "RangeScaleMinMaxRenderer"));
 
     const long numPixels = 9;
     const float qnan = std::numeric_limits<float>::quiet_NaN();
@@ -492,7 +492,7 @@ OCIO_ADD_TEST(RangeOpCPU, scale_with_low_clipping)
 
     const OCIO::OpCPU & c = *op;
     const std::string typeName(typeid(c).name());
-    OCIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeScaleMinRenderer"));
+    OCIO_CHECK_NE(-1, pystring::find(typeName, "RangeScaleMinRenderer"));
 
     const long numPixels = 9;
     const float qnan = std::numeric_limits<float>::quiet_NaN();
@@ -570,7 +570,7 @@ OCIO_ADD_TEST(RangeOpCPU, scale_with_high_clipping)
 
     const OCIO::OpCPU & c = *op;
     const std::string typeName(typeid(c).name());
-    OCIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeScaleMaxRenderer"));
+    OCIO_CHECK_NE(-1, pystring::find(typeName, "RangeScaleMaxRenderer"));
 
     const long numPixels = 9;
     const float qnan = std::numeric_limits<float>::quiet_NaN();
@@ -647,7 +647,7 @@ OCIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings_2)
 
     const OCIO::OpCPU & c = *op;
     const std::string typeName(typeid(c).name());
-    OCIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeScaleMinMaxRenderer"));
+    OCIO_CHECK_NE(-1, pystring::find(typeName, "RangeScaleMinMaxRenderer"));
 
     const long numPixels = 3;
     float image[4*numPixels] = { -0.50f, -0.25f, 0.50f, 0.0f,
@@ -686,7 +686,7 @@ OCIO_ADD_TEST(RangeOpCPU, offset_with_low_and_high_clippings)
 
     const OCIO::OpCPU & c = *op;
     const std::string typeName(typeid(c).name());
-    OCIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeScaleMinMaxRenderer"));
+    OCIO_CHECK_NE(-1, pystring::find(typeName, "RangeScaleMinMaxRenderer"));
 
     const long numPixels = 3;
     float image[4*numPixels] = { -0.50f, -0.25f, 0.50f, 0.0f,
@@ -725,7 +725,7 @@ OCIO_ADD_TEST(RangeOpCPU, low_and_high_clippings)
 
     const OCIO::OpCPU & c = *op;
     const std::string typeName(typeid(c).name());
-    OCIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeMinMaxRenderer"));
+    OCIO_CHECK_NE(-1, pystring::find(typeName, "RangeMinMaxRenderer"));
 
     const long numPixels = 4;
     float image[4*numPixels] = { -0.50f, -0.25f, 0.50f, 0.0f,
@@ -771,7 +771,7 @@ OCIO_ADD_TEST(RangeOpCPU, low_clipping)
 
     const OCIO::OpCPU & c = *op;
     const std::string typeName(typeid(c).name());
-    OCIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeMinRenderer"));
+    OCIO_CHECK_NE(-1, pystring::find(typeName, "RangeMinRenderer"));
 
     const long numPixels = 3;
     float image[4*numPixels] = { -0.50f, -0.25f, 0.50f, 0.0f,
@@ -811,7 +811,7 @@ OCIO_ADD_TEST(RangeOpCPU, high_clipping)
 
     const OCIO::OpCPU & c = *op;
     const std::string typeName(typeid(c).name());
-    OCIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "RangeMaxRenderer"));
+    OCIO_CHECK_NE(-1, pystring::find(typeName, "RangeMaxRenderer"));
 
     const long numPixels = 3;
     float image[4*numPixels] = { -0.50f, -0.25f, 0.50f, 0.0f,

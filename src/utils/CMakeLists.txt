@@ -4,5 +4,3 @@ if(TARGET test_gpu_exec OR
 )
     add_subdirectory(oglbuilder)
 endif()
-
-add_subdirectory(pystring)
