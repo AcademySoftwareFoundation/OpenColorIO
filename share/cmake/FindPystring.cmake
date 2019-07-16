@@ -20,7 +20,6 @@
 #
 
 add_library(pystring::pystring UNKNOWN IMPORTED GLOBAL)
-set(INSTALL_EXT_PYSTRING TRUE)
 
 ###############################################################################
 ### Try to find package ###
@@ -65,42 +64,26 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
             lib64 lib 
     )
 
-    # Version is not available?
-    if(NOT PYSTRING_VERSION)
-        message(WARNING 
-            "Could not determine Pystring library version, assuming ${Pystring_FIND_VERSION}.")
+    # Override REQUIRED if package can be installed
+    if(OCIO_INSTALL_EXT_PACKAGES STREQUAL MISSING)
+        set(Pystring_FIND_REQUIRED FALSE)
     endif()
 
-    # Override REQUIRED, since it's determined by OCIO_INSTALL_EXT_PACKAGES 
-    # instead.
-    set(Pystring_FIND_REQUIRED FALSE)
-
     include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args(PYSTRING 
+    find_package_handle_standard_args(Pystring
         REQUIRED_VARS 
             PYSTRING_INCLUDE_DIR 
             PYSTRING_LIBRARY 
         VERSION_VAR
             PYSTRING_VERSION
     )
-
-    if(PYSTRING_FOUND)
-        set(INSTALL_EXT_PYSTRING FALSE)
-    else()
-        if(OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
-            message(FATAL_ERROR
-                "Required package Pystring not found!\n"
-                "Use -DOCIO_INSTALL_EXT_PACKAGES=<MISSING|ALL> to install it, "
-                "or -DPYSTRING_DIRS=<path> to hint at its location."
-            )
-        endif()
-    endif()
+    set(PYSTRING_FOUND ${Pystring_FOUND})
 endif()
 
 ###############################################################################
 ### Install package from source ###
 
-if(INSTALL_EXT_PYSTRING)
+if(NOT PYSTRING_FOUND)
     include(ExternalProject)
 
     set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")

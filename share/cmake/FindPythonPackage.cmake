@@ -17,13 +17,22 @@
 
 find_package(PythonInterp 2.7 QUIET)
 
-macro(find_python_package package version)
-    string(TOUPPER ${package} _PKG_UPPER)
-    string(TOLOWER ${package} _PKG_LOWER)
+macro(find_python_package)
+    cmake_parse_arguments(_FIND "REQUIRED" "" "" ${ARGN})
+    list(LENGTH ${ARGN} ARGN_COUNT)
+    if(ARGN_COUNT GREATER 0)
+        list(GET ${ARGN} 0 package)
+    endif()
+    if(ARGN_COUNT GREATER 1)
+        list(GET ${ARGN} 1 version)
+    endif()
 
-    add_custom_target(${package})
-    set(${_PKG_UPPER}_FOUND FALSE)
-    set(INSTALL_EXT_${_PKG_UPPER} TRUE)
+    message(STATUS "${_FIND_PKG}")
+    string(TOUPPER ${_FIND_PKG} _FIND_PKG_UPPER)
+    string(TOLOWER ${_FIND_PKG} _FIND_PKG_LOWER)
+
+    add_custom_target(${_FIND_PKG})
+    set(_${_FIND_PKG_UPPER}_INSTALL TRUE)
 
     ###########################################################################
     ### Try to find package ###
@@ -31,31 +40,33 @@ macro(find_python_package package version)
     if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         execute_process(
             COMMAND
-                "${PYTHON_EXECUTABLE}" -c "import ${_PKG_LOWER}"
+                "${PYTHON_EXECUTABLE}" -c "import ${_FIND_PKG_LOWER}"
             RESULT_VARIABLE
                 _PKG_IMPORT_RESULT
         )
 
         if(_PKG_IMPORT_RESULT EQUAL 0)
-            set(${_PKG_UPPER}_FOUND TRUE)
-            set(INSTALL_EXT_${_PKG_UPPER} FALSE)
+            set(${_FIND_PKG_UPPER}_FOUND TRUE)
+            set(_${_FIND_PKG_UPPER}_INSTALL FALSE)
         else()
+            set(${_FIND_PKG_UPPER}_FOUND FALSE)
+            set(_FIND_ERR "Could NOT find ${_FIND_PKG}: import ${_FIND_PKG_LOWER} failed")
             if(OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
-                message(FATAL_ERROR
-                    "Required package ${package} not found!\n"
-                    "Use -DOCIO_INSTALL_EXT_PACKAGES=<MISSING|ALL> to install it, "
-                    "or add its location to PYTHONPATH so it can be found."
-                )
+                set(_${_FIND_PKG_UPPER}_INSTALL FALSE)
+                if(_FIND_REQUIRED)
+                    message(FATAL_ERROR "${_FIND_ERR}")
+                endif()
             endif()
+            message(WARNING "${_FIND_ERR}")
         endif()
     endif()
 
     ###########################################################################
     ### Install package from PyPi ###
 
-    if(INSTALL_EXT_${_PKG_UPPER})
+    if(${_FIND_PKG_UPPER}_FOUND)
         set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
-        set(${_PKG_UPPER}_FOUND TRUE)
+        set(${_FIND_PKG_UPPER}_FOUND TRUE)
 
         # Package install location
         if(WIN32)
@@ -69,17 +80,17 @@ macro(find_python_package package version)
         # Configure install target
         add_custom_command(
             TARGET
-                ${package}
+                ${_FIND_PKG}
             COMMAND
                 pip install --quiet 
                             --disable-pip-version-check
                             --install-option="--prefix=${_EXT_DIST_ROOT}"
-                            -I ${package}==${version}
+                            -I ${_FIND_PKG}==${_FIND_VERSION}
             WORKING_DIRECTORY
                 "${CMAKE_BINARY_DIR}"
         )
 
-        message(STATUS "Installing ${package}: ${_SITE_PKGS_DIR} (version ${version})")
+        message(STATUS "Installing ${_FIND_PKG}: ${_SITE_PKGS_DIR} (version ${_FIND_VERSION})")
     endif()
 
 endmacro()

@@ -20,7 +20,6 @@
 #
 
 add_library(expat::expat UNKNOWN IMPORTED GLOBAL)
-set(INSTALL_EXT_EXPAT TRUE)
 
 ###############################################################################
 ### Try to find package ###
@@ -90,41 +89,26 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         endif()
     endif()
 
-    if(NOT EXPAT_VERSION)
-        message(WARNING 
-            "Could not determine Expat library version, assuming ${Expat_FIND_VERSION}.")
+    # Override REQUIRED if package can be installed
+    if(OCIO_INSTALL_EXT_PACKAGES STREQUAL MISSING)
+        set(Expat_FIND_REQUIRED FALSE)
     endif()
 
-    # Override REQUIRED, since it's determined by OCIO_INSTALL_EXT_PACKAGES 
-    # instead.
-    set(Expat_FIND_REQUIRED FALSE)
-
     include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args(EXPAT 
+    find_package_handle_standard_args(Expat
         REQUIRED_VARS 
             EXPAT_INCLUDE_DIR 
             EXPAT_LIBRARY 
         VERSION_VAR
             EXPAT_VERSION
     )
-
-    if(EXPAT_FOUND)
-        set(INSTALL_EXT_EXPAT FALSE)
-    else()
-        if(OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
-            message(FATAL_ERROR
-                "Required package Expat not found!\n"
-                "Use -DOCIO_INSTALL_EXT_PACKAGES=<MISSING|ALL> to install it, "
-                "or -DEXPAT_DIRS=<path> to hint at its location."
-            )
-        endif()
-    endif()
+    set(EXPAT_FOUND ${Expat_FOUND})
 endif()
 
 ###############################################################################
 ### Install package from source ###
 
-if(INSTALL_EXT_EXPAT)
+if(NOT EXPAT_FOUND)
     include(ExternalProject)
 
     set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")

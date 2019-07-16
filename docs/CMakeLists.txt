@@ -38,37 +38,37 @@ add_custom_target(pythonpath_create
 # setuptools
 # https://pypi.python.org/pypi/setuptools
 set(SETUPTOOLS_MIN_VERSION 1.1.6)
-find_python_package(setuptools ${SETUPTOOLS_MIN_VERSION})
+find_python_package(setuptools ${SETUPTOOLS_MIN_VERSION} REQUIRED)
 add_dependencies(setuptools pythonpath_create)
 
 # docutils
 # https://pypi.python.org/pypi/docutils
 set(DOCUTILS_MIN_VERSION 0.14)
-find_python_package(docutils ${DOCUTILS_MIN_VERSION})
+find_python_package(docutils ${DOCUTILS_MIN_VERSION} REQUIRED)
 add_dependencies(docutils setuptools)
 
 # MarkupSafe
 # https://pypi.python.org/pypi/MarkupSafe
 set(MARKUPSAFE_MIN_VERSION 1.1.1)
-find_python_package(MarkupSafe ${MARKUPSAFE_MIN_VERSION})
+find_python_package(MarkupSafe ${MARKUPSAFE_MIN_VERSION} REQUIRED)
 add_dependencies(MarkupSafe setuptools)
 
 # Jinja2
 # https://pypi.python.org/pypi/Jinja2
 set(JINJA2_MIN_VERSION 2.10.1)
-find_python_package(Jinja2 ${JINJA2_MIN_VERSION})
+find_python_package(Jinja2 ${JINJA2_MIN_VERSION} REQUIRED)
 add_dependencies(Jinja2 setuptools MarkupSafe)
 
 # Pygments
 # https://pypi.python.org/pypi/Pygments
 set(PYGMENTS_MIN_VERSION 2.4.2)
-find_python_package(Pygments ${PYGMENTS_MIN_VERSION})
+find_python_package(Pygments ${PYGMENTS_MIN_VERSION} REQUIRED)
 add_dependencies(Pygments setuptools)
 
 # Sphinx
 # https://pypi.python.org/pypi/Sphinx
 set(SPHINX_MIN_VERSION 1.8.5)
-find_package(Sphinx ${SPHINX_MIN_VERSION})
+find_package(Sphinx ${SPHINX_MIN_VERSION} REQUIRED)
 add_dependencies(Sphinx setuptools docutils Jinja2 Pygments)
 
 

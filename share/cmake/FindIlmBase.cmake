@@ -20,7 +20,6 @@
 #
 
 add_library(ilmbase::ilmbase UNKNOWN IMPORTED GLOBAL)
-set(INSTALL_EXT_ILMBASE TRUE)
 
 # IlmBase components may have the version in their name
 set(_ILMBASE_LIB_VER "${IlmBase_FIND_VERSION_MAJOR}_${IlmBase_FIND_VERSION_MINOR}")
@@ -69,14 +68,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
             lib64 lib 
     )
 
-    # Find config if possible, to get the version
-    find_path(_ILMBASE_CONFIG
-        NAMES
-            IlmBaseConfig.h OpenEXRConfig.h
-        PATHS
-            "${ILMBASE_INCLUDE_DIR}/OpenEXR"  
-    )
-
+    # Get version from config header file
     if(ILMBASE_INCLUDE_DIR)
         if(EXISTS "${ILMBASE_INCLUDE_DIR}/OpenEXR/IlmBaseConfig.h")
             set(_ILMBASE_CONFIG "${ILMBASE_INCLUDE_DIR}/OpenEXR/IlmBaseConfig.h")
@@ -84,8 +76,6 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
             set(_ILMBASE_CONFIG "${ILMBASE_INCLUDE_DIR}/OpenEXR/OpenEXRConfig.h")
         endif()
     endif()
-
-    message(STATUS ${_ILMBASE_CONFIG})
 
     if(_ILMBASE_CONFIG)
         file(STRINGS "${_ILMBASE_CONFIG}" _ILMBASE_VER_SEARCH 
@@ -96,41 +86,26 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         endif()
     endif()
 
-    if(NOT ILMBASE_VERSION)
-        message(WARNING 
-            "Could not determine IlmBase library version, assuming ${IlmBase_FIND_VERSION}.")
+    # Override REQUIRED if package can be installed
+    if(OCIO_INSTALL_EXT_PACKAGES STREQUAL MISSING)
+        set(IlmBase_FIND_REQUIRED FALSE)
     endif()
 
-    # Override REQUIRED, since it's determined by OCIO_INSTALL_EXT_PACKAGES 
-    # instead.
-    set(IlmBase_FIND_REQUIRED FALSE)
-
     include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args(ILMBASE 
+    find_package_handle_standard_args(IlmBase
         REQUIRED_VARS 
             ILMBASE_INCLUDE_DIR 
             ILMBASE_LIBRARY 
         VERSION_VAR
             ILMBASE_VERSION
     )
-
-    if(ILMBASE_FOUND)
-        set(INSTALL_EXT_ILMBASE FALSE)
-    else()
-        if(OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
-            message(FATAL_ERROR
-                "Required package IlmBase not found!\n"
-                "Use -DOCIO_INSTALL_EXT_PACKAGES=<MISSING|ALL> to install it, "
-                "or -DILMBASE_DIRS=<path> to hint at its location."
-            )
-        endif()
-    endif()
+    set(ILMBASE_FOUND ${IlmBase_FOUND})
 endif()
 
 ###############################################################################
 ### Install package from source ###
 
-if(INSTALL_EXT_ILMBASE)
+if(NOT ILMBASE_FOUND)
     include(ExternalProject)
 
     set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")

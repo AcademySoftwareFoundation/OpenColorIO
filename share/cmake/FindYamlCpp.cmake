@@ -20,7 +20,6 @@
 #
 
 add_library(yamlcpp::yamlcpp UNKNOWN IMPORTED GLOBAL)
-set(INSTALL_EXT_YAMLCPP TRUE)
 
 ###############################################################################
 ### Try to find package ###
@@ -73,42 +72,30 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     )
 
     # Get version from config
-    set(YAMLCPP_VERSION "${PC_YAMLCPP_VERSION}")
-
-    if(NOT YAMLCPP_VERSION)
-        message(WARNING 
-            "Could not determine YamlCpp library version, assuming ${YamlCpp_FIND_VERSION}.")
+    if(PC_YAMLCPP_VERSION)
+        set(YAMLCPP_VERSION "${PC_YAMLCPP_VERSION}")
     endif()
 
-    # Override REQUIRED, since it's determined by OCIO_INSTALL_EXT_PACKAGES instead
-    set(YamlCpp_FIND_REQUIRED FALSE)
+    # Override REQUIRED if package can be installed
+    if(OCIO_INSTALL_EXT_PACKAGES STREQUAL MISSING)
+        set(YamlCpp_FIND_REQUIRED FALSE)
+    endif()
 
     include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args(YAMLCPP
+    find_package_handle_standard_args(YamlCpp
         REQUIRED_VARS 
             YAMLCPP_INCLUDE_DIR 
             YAMLCPP_LIBRARY 
         VERSION_VAR
             YAMLCPP_VERSION
     )
-
-    if(YAMLCPP_FOUND)
-        set(INSTALL_EXT_YAMLCPP FALSE)
-    else()
-        if(OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
-            message(FATAL_ERROR
-                "Required package YampCpp not found!\n"
-                "Use -DOCIO_INSTALL_EXT_PACKAGES=<MISSING|ALL> to install it, "
-                "or -DYAMLCPP_DIRS=<path> to hint at its location."
-            )
-        endif()
-    endif()
+    set(YAMLCPP_FOUND ${YamlCpp_FOUND})
 endif()
 
 ###############################################################################
 ### Install package from source ###
 
-if(INSTALL_EXT_YAMLCPP)
+if(NOT YAMLCPP_FOUND)
     include(ExternalProject)
 
     set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")

@@ -20,7 +20,6 @@
 #
 
 add_library(lcms2::lcms2 UNKNOWN IMPORTED GLOBAL)
-set(INSTALL_EXT_LCMS2 TRUE)
 
 ###############################################################################
 ### Try to find package ###
@@ -82,14 +81,10 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         endif()
     endif()
 
-    if(NOT LCMS2_VERSION)
-        message(WARNING 
-            "Could not determine LCMS2 library version, assuming ${LCMS2_FIND_VERSION}.")
+    # Override REQUIRED if package can be installed
+    if(OCIO_INSTALL_EXT_PACKAGES STREQUAL MISSING)
+        set(LCMS2_FIND_REQUIRED FALSE)
     endif()
-
-    # Override REQUIRED, since it's determined by OCIO_INSTALL_EXT_PACKAGES 
-    # instead.
-    set(LCMS2_FIND_REQUIRED FALSE)
 
     include(FindPackageHandleStandardArgs)
     find_package_handle_standard_args(LCMS2
@@ -99,24 +94,12 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         VERSION_VAR
             LCMS2_VERSION
     )
-
-    if(LCMS2_FOUND)
-        set(INSTALL_EXT_LCMS2 FALSE)
-    else()
-        if(OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
-            message(FATAL_ERROR
-                "Required package LCMS2 not found!\n"
-                "Use -DOCIO_INSTALL_EXT_PACKAGES=<MISSING|ALL> to install it, "
-                "or -DLCMS2_DIRS=<path> to hint at its location."
-            )
-        endif()
-    endif()
 endif()
 
 ###############################################################################
 ### Install package from source ###
 
-if(INSTALL_EXT_LCMS2)
+if(NOT LCMS2_FOUND)
     include(ExternalProject)
 
     set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")

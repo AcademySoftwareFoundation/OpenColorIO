@@ -20,7 +20,6 @@ find_package(PythonInterp 2.7 QUIET)
 
 add_custom_target(Sphinx)
 set(SPHINX_FOUND FALSE)
-set(INSTALL_EXT_SPHINX TRUE)
 
 ###############################################################################
 ### Try to find package ###
@@ -34,33 +33,23 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
             ${SPHINX_DIRS}
     )
 
-    # Override REQUIRED, since it's determined by OCIO_INSTALL_EXT_PACKAGES 
-    # instead.
-    set(Sphinx_FIND_REQUIRED FALSE)
+    # Override REQUIRED if package can be installed
+    if(OCIO_INSTALL_EXT_PACKAGES STREQUAL MISSING)
+        set(Sphinx_FIND_REQUIRED FALSE)
+    endif()
 
     include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args(SPHINX 
+    find_package_handle_standard_args(Sphinx
         REQUIRED_VARS 
             SPHINX_EXECUTABLE
     )
-
-    if(SPHINX_FOUND)
-        set(INSTALL_EXT_SPHINX FALSE)
-    else()
-        if(OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
-            message(FATAL_ERROR
-                "Required executable sphinx-build not found!\n"
-                "Use -DOCIO_INSTALL_EXT_PACKAGES=<MISSING|ALL> to install it, "
-                "or -DSPHINX_DIRS=<path> to hint at its location."
-            )
-        endif()
-    endif()
+    set(SPHINX_FOUND ${Sphinx_FOUND})
 endif()
 
 ###############################################################################
 ### Install package from PyPi ###
 
-if(INSTALL_EXT_${_PKG_UPPER})
+if(NOT ${_PKG_UPPER}_FOUND)
     set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
 
     # Set find_package standard args
