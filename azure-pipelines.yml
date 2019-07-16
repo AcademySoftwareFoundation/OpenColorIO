@@ -79,15 +79,15 @@ jobs:
 # ----------------------------------
 - job: Latest
     strategy:
-    matrix:
-      CentOS 7 VFX CY2019:
-        agentImage: 'ubuntu-16.04'
-        cxxCompiler: g++
-        cCompiler: gcc
-      CentOS 7 Clang 7:
-        agentImage: 'ubuntu-16.04'
-        cxxCompiler: clang++
-        cCompiler: clang
+      matrix:
+        CentOS 7 VFX CY2019:
+          agentImage: 'ubuntu-16.04'
+          cxxCompiler: g++
+          cCompiler: gcc
+        CentOS 7 Clang 7:
+          agentImage: 'ubuntu-16.04'
+          cxxCompiler: clang++
+          cCompiler: clang
   condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
   pool:
     vmImage: 'ubuntu-16.04'
