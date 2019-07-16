@@ -19,7 +19,6 @@
 find_package(PythonInterp 2.7 QUIET)
 
 add_custom_target(Sphinx)
-set(SPHINX_FOUND FALSE)
 
 ###############################################################################
 ### Try to find package ###
@@ -49,7 +48,7 @@ endif()
 ###############################################################################
 ### Install package from PyPi ###
 
-if(NOT ${_PKG_UPPER}_FOUND)
+if(NOT SPHINX_FOUND)
     set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
 
     # Set find_package standard args
