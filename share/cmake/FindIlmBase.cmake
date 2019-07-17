@@ -155,7 +155,7 @@ if(NOT ILMBASE_FOUND)
             PREFIX "${_EXT_BUILD_ROOT}/openexr"
             BUILD_BYPRODUCTS ${ILMBASE_LIBRARY}
             CMAKE_ARGS ${ILMBASE_CMAKE_ARGS}
-            BUILD_COMMAND ${CMAKE_COMMAND} --build . --target Half_static
+            BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${CMAKE_BUILD_TYPE} --target Half_static
             INSTALL_COMMAND ${CMAKE_COMMAND} -P "IlmBase/Half/cmake_install.cmake"
             EXCLUDE_FROM_ALL TRUE
         )

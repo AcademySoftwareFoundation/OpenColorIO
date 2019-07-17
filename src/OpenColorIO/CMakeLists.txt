@@ -143,7 +143,7 @@ target_link_libraries(OpenColorIO
 	PRIVATE
 		yamlcpp::yamlcpp
 		pystring::pystring
-		sampleicc
+		sampleicc::sampleicc
 		expat::expat
 		ilmbase::ilmbase
 )

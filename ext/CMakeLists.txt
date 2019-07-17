@@ -16,19 +16,24 @@ find_package(YamlCpp ${YAMLCPP_MIN_VERSION} REQUIRED)
 set(ILMBASE_MIN_VERSION 2.3.0)
 find_package(IlmBase ${ILMBASE_MIN_VERSION} REQUIRED)
 
-# pystring
+# Pystring
 # https://github.com/imageworks/pystring
 set(PYSTRING_MIN_VERSION 1.1.3)
 find_package(Pystring ${PYSTRING_MIN_VERSION} REQUIRED)
 
 if(OCIO_BUILD_APPS)
-
 	# LCMS2
 	# http://www.littlecms.com
 	set(LCMS2_MIN_VERSION 2.2)
 	find_package(LCMS2 ${LCMS2_MIN_VERSION} REQUIRED)
-
 endif()
+
+# Sample ICC (modified)
+# http://www.color.org/sampleicc.xalter
+add_library(sampleicc::sampleicc INTERFACE IMPORTED GLOBAL)
+set_target_properties(sampleicc::sampleicc PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/sampleicc/src/include"
+)
 
 ###############################################################################
 ### External Python dependencies ###
@@ -73,7 +78,6 @@ if(OCIO_BUILD_DOCS)
 
 	# Make sphinx-build path available in other modules
 	set(SPHINX_EXECUTABLE "${SPHINX_EXECUTABLE}" CACHE STRING "Path to sphinx-build")
-
 endif()
 
 ###############################################################################
