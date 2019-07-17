@@ -20,7 +20,7 @@
 #
 
 if (NOT TARGET ilmbase::ilmbase)
-    add_library(ilmbase::ilmbase UNKNOWN IMPORTED GLOBAL)]
+    add_library(ilmbase::ilmbase UNKNOWN IMPORTED GLOBAL)
     set(_ILMBASE_TARGET_CREATE TRUE)
 endif()
 
