@@ -41,7 +41,7 @@ OCIO_NAMESPACE_USING;
 #include <string>
 #include <sstream>
 
-#include "pystring.h"
+#include "pystring/pystring.h"
 
 enum Lut3DOrder
 {
