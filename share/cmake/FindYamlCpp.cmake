@@ -108,8 +108,11 @@ if(NOT YAMLCPP_FOUND)
     set(YAMLCPP_FOUND TRUE)
     set(YAMLCPP_VERSION ${YamlCpp_FIND_VERSION})
     set(YAMLCPP_INCLUDE_DIR "${_EXT_DIST_ROOT}/include")
-    set(YAMLCPP_LIBRARY 
-        "${_EXT_DIST_ROOT}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}yaml-cpp${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    if(WIN32)
+        set(YAMLCPP_LIBRARY "${_EXT_DIST_ROOT}/lib/libyaml-cppmd.lib")
+    else()
+        set(YAMLCPP_LIBRARY "${_EXT_DIST_ROOT}/lib/libyaml-cpp.a")
+    endif()
 
     if(_YAMLCPP_TARGET_CREATE)
         if("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU"
