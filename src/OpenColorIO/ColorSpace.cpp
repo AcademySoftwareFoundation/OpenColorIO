@@ -377,44 +377,44 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(ColorSpace, category)
+OCIO_ADD_TEST(ColorSpace, category)
 {
     OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
-    OIIO_CHECK_EQUAL(cs->getNumCategories(), 0);
+    OCIO_CHECK_EQUAL(cs->getNumCategories(), 0);
 
-    OIIO_CHECK_ASSERT(!cs->hasCategory("linear"));
-    OIIO_CHECK_ASSERT(!cs->hasCategory("rendering"));
-    OIIO_CHECK_ASSERT(!cs->hasCategory("log"));
+    OCIO_CHECK_ASSERT(!cs->hasCategory("linear"));
+    OCIO_CHECK_ASSERT(!cs->hasCategory("rendering"));
+    OCIO_CHECK_ASSERT(!cs->hasCategory("log"));
 
-    OIIO_CHECK_NO_THROW(cs->addCategory("linear"));
-    OIIO_CHECK_NO_THROW(cs->addCategory("rendering"));
-    OIIO_CHECK_EQUAL(cs->getNumCategories(), 2);
+    OCIO_CHECK_NO_THROW(cs->addCategory("linear"));
+    OCIO_CHECK_NO_THROW(cs->addCategory("rendering"));
+    OCIO_CHECK_EQUAL(cs->getNumCategories(), 2);
 
-    OIIO_CHECK_ASSERT(cs->hasCategory("linear"));
-    OIIO_CHECK_ASSERT(cs->hasCategory("rendering"));
-    OIIO_CHECK_ASSERT(!cs->hasCategory("log"));
+    OCIO_CHECK_ASSERT(cs->hasCategory("linear"));
+    OCIO_CHECK_ASSERT(cs->hasCategory("rendering"));
+    OCIO_CHECK_ASSERT(!cs->hasCategory("log"));
 
-    OIIO_CHECK_EQUAL(std::string(cs->getCategory(0)), std::string("linear"));
-    OIIO_CHECK_EQUAL(std::string(cs->getCategory(1)), std::string("rendering"));
+    OCIO_CHECK_EQUAL(std::string(cs->getCategory(0)), std::string("linear"));
+    OCIO_CHECK_EQUAL(std::string(cs->getCategory(1)), std::string("rendering"));
     // Check with an invalid index.
-    OIIO_CHECK_NO_THROW(cs->getCategory(2));
-    OIIO_CHECK_ASSERT(cs->getCategory(2) == nullptr);
+    OCIO_CHECK_NO_THROW(cs->getCategory(2));
+    OCIO_CHECK_ASSERT(cs->getCategory(2) == nullptr);
 
-    OIIO_CHECK_NO_THROW(cs->removeCategory("linear"));
-    OIIO_CHECK_EQUAL(cs->getNumCategories(), 1);
-    OIIO_CHECK_ASSERT(!cs->hasCategory("linear"));
-    OIIO_CHECK_ASSERT(cs->hasCategory("rendering"));
-    OIIO_CHECK_ASSERT(!cs->hasCategory("log"));
+    OCIO_CHECK_NO_THROW(cs->removeCategory("linear"));
+    OCIO_CHECK_EQUAL(cs->getNumCategories(), 1);
+    OCIO_CHECK_ASSERT(!cs->hasCategory("linear"));
+    OCIO_CHECK_ASSERT(cs->hasCategory("rendering"));
+    OCIO_CHECK_ASSERT(!cs->hasCategory("log"));
 
     // Remove a category not in the color space.
-    OIIO_CHECK_NO_THROW(cs->removeCategory("log"));
-    OIIO_CHECK_EQUAL(cs->getNumCategories(), 1);
-    OIIO_CHECK_ASSERT(cs->hasCategory("rendering"));
+    OCIO_CHECK_NO_THROW(cs->removeCategory("log"));
+    OCIO_CHECK_EQUAL(cs->getNumCategories(), 1);
+    OCIO_CHECK_ASSERT(cs->hasCategory("rendering"));
 
-    OIIO_CHECK_NO_THROW(cs->clearCategories());
-    OIIO_CHECK_EQUAL(cs->getNumCategories(), 0);
+    OCIO_CHECK_NO_THROW(cs->clearCategories());
+    OCIO_CHECK_EQUAL(cs->getNumCategories(), 0);
 }
 
 #endif // OCIO_UNIT_TEST

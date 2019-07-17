@@ -440,7 +440,7 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #include "ops/Lut1D/Lut1DOp.h"
 #include "ops/Lut1D/Lut1DOpData.h"
-#include "unittest.h"
+#include "UnitTest.h"
 #include "UnitTestUtils.h"
 
 
@@ -468,12 +468,12 @@ OCIO::ConstCPUProcessorRcPtr ComputeValues(OCIO::ConstProcessorRcPtr processor,
     typedef typename OCIO::BitDepthInfo< ExtractBitDepthInfo<outPF>::bd >::Type outType;
 
     OCIO::ConstCPUProcessorRcPtr cpuProcessor;
-    OIIO_CHECK_NO_THROW(cpuProcessor = processor->getCPUProcessor(inPF, outPF));
+    OCIO_CHECK_NO_THROW(cpuProcessor = processor->getCPUProcessor(inPF, outPF));
 
     const size_t numValues = size_t(numPixels * 4);
 
     std::vector<outType> out(numValues);
-    OIIO_CHECK_NO_THROW(cpuProcessor->apply(inImg, &out[0], numPixels));
+    OCIO_CHECK_NO_THROW(cpuProcessor->apply(inImg, &out[0], numPixels));
 
     const outType * res = (const outType *)resImg;
 
@@ -481,18 +481,18 @@ OCIO::ConstCPUProcessorRcPtr ComputeValues(OCIO::ConstProcessorRcPtr processor,
     {
         if(OCIO::BitDepthInfo< ExtractBitDepthInfo<outPF>::bd >::isFloat)
         {
-            OIIO_CHECK_CLOSE_FROM(out[idx], res[idx], absErrorThreshold, line);
+            OCIO_CHECK_CLOSE_FROM(out[idx], res[idx], absErrorThreshold, line);
         }
         else
         {
-            OIIO_CHECK_EQUAL_FROM(out[idx], res[idx], line);
+            OCIO_CHECK_EQUAL_FROM(out[idx], res[idx], line);
         }
     }
 
     return cpuProcessor;
 }
 
-OIIO_ADD_TEST(CPUProcessor, with_one_matrix)
+OCIO_ADD_TEST(CPUProcessor, with_one_matrix)
 {
     // The unit test validates that pixel formats are correctly 
     // processed when the op list contains only one arbitrary Op
@@ -505,7 +505,7 @@ OIIO_ADD_TEST(CPUProcessor, with_one_matrix)
     transform->setOffset( offset4 );
 
     OCIO::ConstProcessorRcPtr processor; 
-    OIIO_CHECK_NO_THROW(processor = config->getProcessor(transform));
+    OCIO_CHECK_NO_THROW(processor = config->getProcessor(transform));
 
     const unsigned NB_PIXELS = 3;
 
@@ -527,8 +527,8 @@ OIIO_ADD_TEST(CPUProcessor, with_one_matrix)
                             OCIO::PIXEL_FORMAT_RGBA_F32,
                             __LINE__>(processor, &f_inImg[0], &resImg[0], NB_PIXELS, 1e-7f);
 
-        OIIO_CHECK_EQUAL(cpuProcessor->getInputPixelFormat(), OCIO::PIXEL_FORMAT_RGBA_F32);
-        OIIO_CHECK_EQUAL(cpuProcessor->getOutputPixelFormat(), OCIO::PIXEL_FORMAT_RGBA_F32);
+        OCIO_CHECK_EQUAL(cpuProcessor->getInputPixelFormat(), OCIO::PIXEL_FORMAT_RGBA_F32);
+        OCIO_CHECK_EQUAL(cpuProcessor->getOutputPixelFormat(), OCIO::PIXEL_FORMAT_RGBA_F32);
 
         // Validate that the two apply paths produce identical results.
 
@@ -536,11 +536,11 @@ OIIO_ADD_TEST(CPUProcessor, with_one_matrix)
         f_outImg2 = f_inImg;
 
         OCIO::PackedImageDesc desc(&f_outImg2[0], NB_PIXELS, 1, 4);
-        OIIO_CHECK_NO_THROW(processor->apply(desc));
+        OCIO_CHECK_NO_THROW(processor->apply(desc));
 
         for(unsigned idx=0; idx<(NB_PIXELS*4); ++idx)
         {
-            OIIO_CHECK_CLOSE(f_outImg2[idx], resImg[idx],  1e-7f);
+            OCIO_CHECK_CLOSE(f_outImg2[idx], resImg[idx],  1e-7f);
         }
     }
 
@@ -619,7 +619,7 @@ OIIO_ADD_TEST(CPUProcessor, with_one_matrix)
 */
 }
 
-OIIO_ADD_TEST(CPUProcessor, with_one_1d_lut)
+OCIO_ADD_TEST(CPUProcessor, with_one_1d_lut)
 {
     // The unit test validates that pixel formats are correctly 
     // processed when the op list contains only one 1D LUT.
@@ -635,7 +635,7 @@ OIIO_ADD_TEST(CPUProcessor, with_one_1d_lut)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
 
     OCIO::ConstProcessorRcPtr processor; 
-    OIIO_CHECK_NO_THROW(processor = config->getProcessor(transform));
+    OCIO_CHECK_NO_THROW(processor = config->getProcessor(transform));
 
     const unsigned NB_PIXELS = 4;
 
@@ -659,8 +659,8 @@ OIIO_ADD_TEST(CPUProcessor, with_one_1d_lut)
                             OCIO::PIXEL_FORMAT_RGBA_F32,
                             __LINE__>(processor, &f_inImg[0], &resImg[0], NB_PIXELS, 1e-7f);
 
-        OIIO_CHECK_EQUAL(cpuProcessor->getInputPixelFormat(), OCIO::PIXEL_FORMAT_RGBA_F32);
-        OIIO_CHECK_EQUAL(cpuProcessor->getOutputPixelFormat(), OCIO::PIXEL_FORMAT_RGBA_F32);
+        OCIO_CHECK_EQUAL(cpuProcessor->getInputPixelFormat(), OCIO::PIXEL_FORMAT_RGBA_F32);
+        OCIO_CHECK_EQUAL(cpuProcessor->getOutputPixelFormat(), OCIO::PIXEL_FORMAT_RGBA_F32);
 
         // Validate that the two apply paths produce identical results.
 
@@ -668,11 +668,11 @@ OIIO_ADD_TEST(CPUProcessor, with_one_1d_lut)
         f_outImg2 = f_inImg;
 
         OCIO::PackedImageDesc desc(&f_outImg2[0], NB_PIXELS, 1, 4);
-        OIIO_CHECK_NO_THROW(processor->apply(desc));
+        OCIO_CHECK_NO_THROW(processor->apply(desc));
 
         for(unsigned idx=0; idx<(NB_PIXELS*4); ++idx)
         {
-            OIIO_CHECK_CLOSE(f_outImg2[idx], resImg[idx],  1e-7f);
+            OCIO_CHECK_CLOSE(f_outImg2[idx], resImg[idx],  1e-7f);
         }
     }
 
@@ -758,7 +758,7 @@ OIIO_ADD_TEST(CPUProcessor, with_one_1d_lut)
 */
 }
 
-OIIO_ADD_TEST(CPUProcessor, with_several_ops)
+OCIO_ADD_TEST(CPUProcessor, with_several_ops)
 {
     // The unit test validates that pixel formats are correctly 
     // processed when the op list starts or ends with a 1D LUT.
@@ -802,11 +802,11 @@ OIIO_ADD_TEST(CPUProcessor, with_several_ops)
         is.str(str);
 
         OCIO::ConstConfigRcPtr config;
-        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OIIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         OCIO::ConstProcessorRcPtr processor; 
-        OIIO_CHECK_NO_THROW(processor = config->getProcessor("cs1", "cs2"));
+        OCIO_CHECK_NO_THROW(processor = config->getProcessor("cs1", "cs2"));
 
         const unsigned NB_PIXELS = 4;
 
@@ -830,8 +830,8 @@ OIIO_ADD_TEST(CPUProcessor, with_several_ops)
                                 OCIO::PIXEL_FORMAT_RGBA_F32,
                                 __LINE__>(processor, &f_inImg[0], &resImg[0], NB_PIXELS, 1e-7f);    
 
-            OIIO_CHECK_EQUAL(cpuProcessor->getInputPixelFormat(), OCIO::PIXEL_FORMAT_RGBA_F32);
-            OIIO_CHECK_EQUAL(cpuProcessor->getOutputPixelFormat(), OCIO::PIXEL_FORMAT_RGBA_F32);
+            OCIO_CHECK_EQUAL(cpuProcessor->getInputPixelFormat(), OCIO::PIXEL_FORMAT_RGBA_F32);
+            OCIO_CHECK_EQUAL(cpuProcessor->getOutputPixelFormat(), OCIO::PIXEL_FORMAT_RGBA_F32);
 
             // Validate that the two apply paths produce identical results.
 
@@ -839,11 +839,11 @@ OIIO_ADD_TEST(CPUProcessor, with_several_ops)
             f_outImg2 = f_inImg;
 
             OCIO::PackedImageDesc desc(&f_outImg2[0], NB_PIXELS, 1, 4);
-            OIIO_CHECK_NO_THROW(processor->apply(desc));
+            OCIO_CHECK_NO_THROW(processor->apply(desc));
 
             for(unsigned idx=0; idx<(NB_PIXELS*4); ++idx)
             {
-                OIIO_CHECK_CLOSE(f_outImg2[idx], resImg[idx],  1e-7f);
+                OCIO_CHECK_CLOSE(f_outImg2[idx], resImg[idx],  1e-7f);
             }
         }
 
@@ -945,11 +945,11 @@ OIIO_ADD_TEST(CPUProcessor, with_several_ops)
         is.str(str);
 
         OCIO::ConstConfigRcPtr config;
-        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OIIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         OCIO::ConstProcessorRcPtr processor; 
-        OIIO_CHECK_NO_THROW(processor = config->getProcessor("cs1", "cs2"));
+        OCIO_CHECK_NO_THROW(processor = config->getProcessor("cs1", "cs2"));
 
         const unsigned NB_PIXELS = 4;
 
@@ -973,8 +973,8 @@ OIIO_ADD_TEST(CPUProcessor, with_several_ops)
                                 OCIO::PIXEL_FORMAT_RGBA_F32,
                                 __LINE__>(processor, &f_inImg[0], &resImg[0], NB_PIXELS, 1e-7f);    
 
-            OIIO_CHECK_EQUAL(cpuProcessor->getInputPixelFormat(), OCIO::PIXEL_FORMAT_RGBA_F32);
-            OIIO_CHECK_EQUAL(cpuProcessor->getOutputPixelFormat(), OCIO::PIXEL_FORMAT_RGBA_F32);
+            OCIO_CHECK_EQUAL(cpuProcessor->getInputPixelFormat(), OCIO::PIXEL_FORMAT_RGBA_F32);
+            OCIO_CHECK_EQUAL(cpuProcessor->getOutputPixelFormat(), OCIO::PIXEL_FORMAT_RGBA_F32);
 
             // Validate that the two apply paths produce identical results.
 
@@ -982,11 +982,11 @@ OIIO_ADD_TEST(CPUProcessor, with_several_ops)
             f_outImg2 = f_inImg;
 
             OCIO::PackedImageDesc desc(&f_outImg2[0], NB_PIXELS, 1, 4);
-            OIIO_CHECK_NO_THROW(processor->apply(desc));
+            OCIO_CHECK_NO_THROW(processor->apply(desc));
 
             for(unsigned idx=0; idx<(NB_PIXELS*4); ++idx)
             {
-                OIIO_CHECK_CLOSE(f_outImg2[idx], resImg[idx],  1e-7f);
+                OCIO_CHECK_CLOSE(f_outImg2[idx], resImg[idx],  1e-7f);
             }
         }
 /*
@@ -1050,11 +1050,11 @@ OIIO_ADD_TEST(CPUProcessor, with_several_ops)
         is.str(str);
 
         OCIO::ConstConfigRcPtr config;
-        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OIIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         OCIO::ConstProcessorRcPtr processor; 
-        OIIO_CHECK_NO_THROW(processor = config->getProcessor("cs1", "cs2"));
+        OCIO_CHECK_NO_THROW(processor = config->getProcessor("cs1", "cs2"));
 
         const unsigned NB_PIXELS = 4;
 
@@ -1078,8 +1078,8 @@ OIIO_ADD_TEST(CPUProcessor, with_several_ops)
                                 OCIO::PIXEL_FORMAT_RGBA_F32,
                                 __LINE__>(processor, &f_inImg[0], &resImg[0], NB_PIXELS, 1e-7f);    
 
-            OIIO_CHECK_EQUAL(cpuProcessor->getInputPixelFormat(), OCIO::PIXEL_FORMAT_RGBA_F32);
-            OIIO_CHECK_EQUAL(cpuProcessor->getOutputPixelFormat(), OCIO::PIXEL_FORMAT_RGBA_F32);
+            OCIO_CHECK_EQUAL(cpuProcessor->getInputPixelFormat(), OCIO::PIXEL_FORMAT_RGBA_F32);
+            OCIO_CHECK_EQUAL(cpuProcessor->getOutputPixelFormat(), OCIO::PIXEL_FORMAT_RGBA_F32);
 
             // Validate that the two apply paths produce identical results.
 
@@ -1087,11 +1087,11 @@ OIIO_ADD_TEST(CPUProcessor, with_several_ops)
             f_outImg2 = f_inImg;
 
             OCIO::PackedImageDesc desc(&f_outImg2[0], NB_PIXELS, 1, 4);
-            OIIO_CHECK_NO_THROW(processor->apply(desc));
+            OCIO_CHECK_NO_THROW(processor->apply(desc));
 
             for(unsigned idx=0; idx<(NB_PIXELS*4); ++idx)
             {
-                OIIO_CHECK_CLOSE(f_outImg2[idx], resImg[idx],  1e-7f);
+                OCIO_CHECK_CLOSE(f_outImg2[idx], resImg[idx],  1e-7f);
             }
         }
 /*

@@ -296,37 +296,37 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
 
 OCIO_NAMESPACE_USING
 
 
-OIIO_ADD_TEST(RangeTransform, basic)
+OCIO_ADD_TEST(RangeTransform, basic)
 {
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
-    OIIO_CHECK_EQUAL(range->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
-    OIIO_CHECK_EQUAL(range->getStyle(), OCIO::RANGE_CLAMP);
-    OIIO_CHECK_ASSERT(!range->hasMinInValue());
-    OIIO_CHECK_ASSERT(!range->hasMaxInValue());
-    OIIO_CHECK_ASSERT(!range->hasMinOutValue());
-    OIIO_CHECK_ASSERT(!range->hasMaxOutValue());
+    OCIO_CHECK_EQUAL(range->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(range->getStyle(), OCIO::RANGE_CLAMP);
+    OCIO_CHECK_ASSERT(!range->hasMinInValue());
+    OCIO_CHECK_ASSERT(!range->hasMaxInValue());
+    OCIO_CHECK_ASSERT(!range->hasMinOutValue());
+    OCIO_CHECK_ASSERT(!range->hasMaxOutValue());
 
     range->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-    OIIO_CHECK_EQUAL(range->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_EQUAL(range->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
 
     range->setStyle(OCIO::RANGE_NO_CLAMP);
-    OIIO_CHECK_EQUAL(range->getStyle(), OCIO::RANGE_NO_CLAMP);
+    OCIO_CHECK_EQUAL(range->getStyle(), OCIO::RANGE_NO_CLAMP);
 
     range->setMinInValue(-0.5f);
-    OIIO_CHECK_EQUAL(range->getMinInValue(), -0.5f);
-    OIIO_CHECK_ASSERT(range->hasMinInValue());
+    OCIO_CHECK_EQUAL(range->getMinInValue(), -0.5f);
+    OCIO_CHECK_ASSERT(range->hasMinInValue());
 
     OCIO::RangeTransformRcPtr range2 = OCIO::RangeTransform::Create();
     range2->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
     range2->setMinInValue(-0.5f);
     range2->setStyle(OCIO::RANGE_NO_CLAMP);
-    OIIO_CHECK_ASSERT(range2->equals(*range));
+    OCIO_CHECK_ASSERT(range2->equals(*range));
 
     range2->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
     range2->unsetMinInValue();
@@ -336,60 +336,60 @@ OIIO_ADD_TEST(RangeTransform, basic)
 
     // (Note that the transform would not validate at this point.)
 
-    OIIO_CHECK_ASSERT(!range2->hasMinInValue());
-    OIIO_CHECK_EQUAL(range2->getMaxInValue(), -0.5f);
-    OIIO_CHECK_EQUAL(range2->getMinOutValue(), 1.5f);
-    OIIO_CHECK_EQUAL(range2->getMaxOutValue(), 4.5f);
+    OCIO_CHECK_ASSERT(!range2->hasMinInValue());
+    OCIO_CHECK_EQUAL(range2->getMaxInValue(), -0.5f);
+    OCIO_CHECK_EQUAL(range2->getMinOutValue(), 1.5f);
+    OCIO_CHECK_EQUAL(range2->getMaxOutValue(), 4.5f);
 
     range2->setMinInValue(-1.5f);
-    OIIO_CHECK_EQUAL(range2->getMinInValue(), -1.5f);
-    OIIO_CHECK_EQUAL(range2->getMaxInValue(), -0.5f);
-    OIIO_CHECK_EQUAL(range2->getMinOutValue(), 1.5f);
-    OIIO_CHECK_EQUAL(range2->getMaxOutValue(), 4.5f);
+    OCIO_CHECK_EQUAL(range2->getMinInValue(), -1.5f);
+    OCIO_CHECK_EQUAL(range2->getMaxInValue(), -0.5f);
+    OCIO_CHECK_EQUAL(range2->getMinOutValue(), 1.5f);
+    OCIO_CHECK_EQUAL(range2->getMaxOutValue(), 4.5f);
 
-    OIIO_CHECK_ASSERT(range2->hasMinInValue());
-    OIIO_CHECK_ASSERT(range2->hasMaxInValue());
-    OIIO_CHECK_ASSERT(range2->hasMinOutValue());
-    OIIO_CHECK_ASSERT(range2->hasMaxOutValue());
+    OCIO_CHECK_ASSERT(range2->hasMinInValue());
+    OCIO_CHECK_ASSERT(range2->hasMaxInValue());
+    OCIO_CHECK_ASSERT(range2->hasMinOutValue());
+    OCIO_CHECK_ASSERT(range2->hasMaxOutValue());
 
     range2->unsetMinInValue();
-    OIIO_CHECK_ASSERT(!range2->hasMinInValue());
-    OIIO_CHECK_ASSERT(range2->hasMaxInValue());
-    OIIO_CHECK_ASSERT(range2->hasMinOutValue());
-    OIIO_CHECK_ASSERT(range2->hasMaxOutValue());
+    OCIO_CHECK_ASSERT(!range2->hasMinInValue());
+    OCIO_CHECK_ASSERT(range2->hasMaxInValue());
+    OCIO_CHECK_ASSERT(range2->hasMinOutValue());
+    OCIO_CHECK_ASSERT(range2->hasMaxOutValue());
 
     range2->unsetMaxInValue();
-    OIIO_CHECK_ASSERT(!range2->hasMinInValue());
-    OIIO_CHECK_ASSERT(!range2->hasMaxInValue());
-    OIIO_CHECK_ASSERT(range2->hasMinOutValue());
-    OIIO_CHECK_ASSERT(range2->hasMaxOutValue());
+    OCIO_CHECK_ASSERT(!range2->hasMinInValue());
+    OCIO_CHECK_ASSERT(!range2->hasMaxInValue());
+    OCIO_CHECK_ASSERT(range2->hasMinOutValue());
+    OCIO_CHECK_ASSERT(range2->hasMaxOutValue());
 
     range2->unsetMinOutValue();
-    OIIO_CHECK_ASSERT(!range2->hasMinInValue());
-    OIIO_CHECK_ASSERT(!range2->hasMaxInValue());
-    OIIO_CHECK_ASSERT(!range2->hasMinOutValue());
-    OIIO_CHECK_ASSERT(range2->hasMaxOutValue());
+    OCIO_CHECK_ASSERT(!range2->hasMinInValue());
+    OCIO_CHECK_ASSERT(!range2->hasMaxInValue());
+    OCIO_CHECK_ASSERT(!range2->hasMinOutValue());
+    OCIO_CHECK_ASSERT(range2->hasMaxOutValue());
 
     range2->unsetMaxOutValue();
-    OIIO_CHECK_ASSERT(!range2->hasMinInValue());
-    OIIO_CHECK_ASSERT(!range2->hasMaxInValue());
-    OIIO_CHECK_ASSERT(!range2->hasMinOutValue());
-    OIIO_CHECK_ASSERT(!range2->hasMaxOutValue());
+    OCIO_CHECK_ASSERT(!range2->hasMinInValue());
+    OCIO_CHECK_ASSERT(!range2->hasMaxInValue());
+    OCIO_CHECK_ASSERT(!range2->hasMinOutValue());
+    OCIO_CHECK_ASSERT(!range2->hasMaxOutValue());
 }
 
 
-OIIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
+OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
 {
     ConfigRcPtr config = Config::Create();
     OCIO::OpRcPtrVec ops;
 
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
-    OIIO_CHECK_EQUAL(range->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
-    OIIO_CHECK_EQUAL(range->getStyle(), OCIO::RANGE_CLAMP);
-    OIIO_CHECK_ASSERT(!range->hasMinInValue());
-    OIIO_CHECK_ASSERT(!range->hasMaxInValue());
-    OIIO_CHECK_ASSERT(!range->hasMinOutValue());
-    OIIO_CHECK_ASSERT(!range->hasMaxOutValue());
+    OCIO_CHECK_EQUAL(range->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(range->getStyle(), OCIO::RANGE_CLAMP);
+    OCIO_CHECK_ASSERT(!range->hasMinInValue());
+    OCIO_CHECK_ASSERT(!range->hasMaxInValue());
+    OCIO_CHECK_ASSERT(!range->hasMinOutValue());
+    OCIO_CHECK_ASSERT(!range->hasMaxOutValue());
 
     range->setMinInValue(0.0f);
     range->setMaxInValue(0.5f);
@@ -398,50 +398,50 @@ OIIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
 
     // Test the resulting Range Op
 
-    OIIO_CHECK_NO_THROW(
+    OCIO_CHECK_NO_THROW(
         BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD) );
 
-    OIIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO::ConstOpRcPtr op0 = ops[0];
-    OIIO_REQUIRE_EQUAL(op0->data()->getType(), OCIO::OpData::RangeType);
+    OCIO_REQUIRE_EQUAL(op0->data()->getType(), OCIO::OpData::RangeType);
 
     OCIO::ConstRangeOpDataRcPtr rangeData
         = DynamicPtrCast<const OCIO::RangeOpData>(op0->data());
 
-    OIIO_CHECK_EQUAL(rangeData->getMinInValue(), range->getMinInValue());
-    OIIO_CHECK_EQUAL(rangeData->getMaxInValue(), range->getMaxInValue());
-    OIIO_CHECK_EQUAL(rangeData->getMinOutValue(), range->getMinOutValue());
-    OIIO_CHECK_EQUAL(rangeData->getMaxOutValue(), range->getMaxOutValue());
+    OCIO_CHECK_EQUAL(rangeData->getMinInValue(), range->getMinInValue());
+    OCIO_CHECK_EQUAL(rangeData->getMaxInValue(), range->getMaxInValue());
+    OCIO_CHECK_EQUAL(rangeData->getMinOutValue(), range->getMinOutValue());
+    OCIO_CHECK_EQUAL(rangeData->getMaxOutValue(), range->getMaxOutValue());
 
     // Test the resulting Matrix Op
 
     range->setStyle(OCIO::RANGE_NO_CLAMP);
 
-    OIIO_CHECK_NO_THROW(
+    OCIO_CHECK_NO_THROW(
         BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD) );
 
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
     OCIO::ConstOpRcPtr op1 = ops[1];
-    OIIO_REQUIRE_EQUAL(op1->data()->getType(), OCIO::OpData::MatrixType);
+    OCIO_REQUIRE_EQUAL(op1->data()->getType(), OCIO::OpData::MatrixType);
 
     OCIO::ConstMatrixOpDataRcPtr matrixData
         = DynamicPtrCast<const OCIO::MatrixOpData>(op1->data());
 
-    OIIO_CHECK_EQUAL(matrixData->getOffsetValue(0), rangeData->getOffset());
+    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(0), rangeData->getOffset());
 
-    OIIO_CHECK_EQUAL(matrixData->getOffsetValue(0), 0.5);
-    OIIO_CHECK_EQUAL(matrixData->getOffsetValue(1), 0.5);
-    OIIO_CHECK_EQUAL(matrixData->getOffsetValue(2), 0.5);
-    OIIO_CHECK_EQUAL(matrixData->getOffsetValue(3), 0.0);
+    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(0), 0.5);
+    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(1), 0.5);
+    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(2), 0.5);
+    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(3), 0.0);
 
-    OIIO_CHECK_ASSERT(matrixData->isDiagonal());
+    OCIO_CHECK_ASSERT(matrixData->isDiagonal());
 
-    OIIO_CHECK_EQUAL(matrixData->getArray()[0], rangeData->getScale());
+    OCIO_CHECK_EQUAL(matrixData->getArray()[0], rangeData->getScale());
 
-    OIIO_CHECK_EQUAL(matrixData->getArray()[ 0], 2.0);
-    OIIO_CHECK_EQUAL(matrixData->getArray()[ 5], 2.0);
-    OIIO_CHECK_EQUAL(matrixData->getArray()[10], 2.0);
-    OIIO_CHECK_EQUAL(matrixData->getArray()[15], 1.0);
+    OCIO_CHECK_EQUAL(matrixData->getArray()[ 0], 2.0);
+    OCIO_CHECK_EQUAL(matrixData->getArray()[ 5], 2.0);
+    OCIO_CHECK_EQUAL(matrixData->getArray()[10], 2.0);
+    OCIO_CHECK_EQUAL(matrixData->getArray()[15], 1.0);
 }
 
 #endif

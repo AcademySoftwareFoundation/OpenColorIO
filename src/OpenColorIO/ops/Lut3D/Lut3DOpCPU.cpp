@@ -1992,7 +1992,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 
 #include <limits>
-#include "unittest.h"
+#include "UnitTest.h"
 
 void Lut3DRendererNaNTest(OCIO::Interpolation interpol)
 {
@@ -2020,26 +2020,26 @@ void Lut3DRendererNaNTest(OCIO::Interpolation interpol)
 
     renderer->apply(pixels, pixels, 4);
 
-    OIIO_CHECK_CLOSE(pixels[0], values[0], 1e-7f);
-    OIIO_CHECK_CLOSE(pixels[1], values[1], 1e-7f);
-    OIIO_CHECK_CLOSE(pixels[2], values[2], 1e-7f);
-    OIIO_CHECK_ASSERT(OCIO::IsNan(pixels[7]));
-    OIIO_CHECK_CLOSE(pixels[8], 1.0f, 1e-7f);
-    OIIO_CHECK_CLOSE(pixels[9], 1.0f, 1e-7f);
-    OIIO_CHECK_CLOSE(pixels[10], 1.0f, 1e-7f);
-    OIIO_CHECK_EQUAL(pixels[11], inf);
-    OIIO_CHECK_CLOSE(pixels[12], 0.0f, 1e-7f);
-    OIIO_CHECK_CLOSE(pixels[13], 0.0f, 1e-7f);
-    OIIO_CHECK_CLOSE(pixels[14], 0.0f, 1e-7f);
-    OIIO_CHECK_EQUAL(pixels[15], -inf);
+    OCIO_CHECK_CLOSE(pixels[0], values[0], 1e-7f);
+    OCIO_CHECK_CLOSE(pixels[1], values[1], 1e-7f);
+    OCIO_CHECK_CLOSE(pixels[2], values[2], 1e-7f);
+    OCIO_CHECK_ASSERT(OCIO::IsNan(pixels[7]));
+    OCIO_CHECK_CLOSE(pixels[8], 1.0f, 1e-7f);
+    OCIO_CHECK_CLOSE(pixels[9], 1.0f, 1e-7f);
+    OCIO_CHECK_CLOSE(pixels[10], 1.0f, 1e-7f);
+    OCIO_CHECK_EQUAL(pixels[11], inf);
+    OCIO_CHECK_CLOSE(pixels[12], 0.0f, 1e-7f);
+    OCIO_CHECK_CLOSE(pixels[13], 0.0f, 1e-7f);
+    OCIO_CHECK_CLOSE(pixels[14], 0.0f, 1e-7f);
+    OCIO_CHECK_EQUAL(pixels[15], -inf);
 }
 
-OIIO_ADD_TEST(Lut3DRenderer, nan_linear_test)
+OCIO_ADD_TEST(Lut3DRenderer, nan_linear_test)
 {
     Lut3DRendererNaNTest(OCIO::INTERP_LINEAR);
 }
 
-OIIO_ADD_TEST(Lut3DRenderer, nan_tetra_test)
+OCIO_ADD_TEST(Lut3DRenderer, nan_tetra_test)
 {
     Lut3DRendererNaNTest(OCIO::INTERP_TETRAHEDRAL);
 }

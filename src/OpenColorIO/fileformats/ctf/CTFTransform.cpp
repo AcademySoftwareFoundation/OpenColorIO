@@ -216,140 +216,140 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "ops/Matrix/MatrixOpData.h"
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(CTFVersion, read_version)
+OCIO_ADD_TEST(CTFVersion, read_version)
 {
     {
         const OCIO::CTFVersion version1(1, 2, 3);
         const OCIO::CTFVersion version2(1, 2, 3);
-        OIIO_CHECK_EQUAL(version1, version2);
+        OCIO_CHECK_EQUAL(version1, version2);
         {
             const OCIO::CTFVersion version3(0, 0, 1);
-            OIIO_CHECK_ASSERT(false == (version1 == version3));
-            OIIO_CHECK_ASSERT(version3 < version1);
+            OCIO_CHECK_ASSERT(false == (version1 == version3));
+            OCIO_CHECK_ASSERT(version3 < version1);
         }
         {
             const OCIO::CTFVersion version3(0, 1, 0);
-            OIIO_CHECK_ASSERT(false == (version1 == version3));
-            OIIO_CHECK_ASSERT(version3 < version1);
+            OCIO_CHECK_ASSERT(false == (version1 == version3));
+            OCIO_CHECK_ASSERT(version3 < version1);
         }
         {
             const OCIO::CTFVersion version3(1, 0, 0);
-            OIIO_CHECK_ASSERT(false == (version1 == version3));
-            OIIO_CHECK_ASSERT(version3 < version1);
+            OCIO_CHECK_ASSERT(false == (version1 == version3));
+            OCIO_CHECK_ASSERT(version3 < version1);
         }
         {
             const OCIO::CTFVersion version3(1, 2, 0);
-            OIIO_CHECK_ASSERT(false == (version1 == version3));
-            OIIO_CHECK_ASSERT(version3 < version1);
+            OCIO_CHECK_ASSERT(false == (version1 == version3));
+            OCIO_CHECK_ASSERT(version3 < version1);
         }
         {
             const OCIO::CTFVersion version3(1, 2, 2);
-            OIIO_CHECK_ASSERT(false == (version1 == version3));
-            OIIO_CHECK_ASSERT(version3 < version1);
+            OCIO_CHECK_ASSERT(false == (version1 == version3));
+            OCIO_CHECK_ASSERT(version3 < version1);
         }
     }
 
     OCIO::CTFVersion versionRead;
     {
-        OIIO_CHECK_NO_THROW(OCIO::CTFVersion::ReadVersion("1.2.3", versionRead));
+        OCIO_CHECK_NO_THROW(OCIO::CTFVersion::ReadVersion("1.2.3", versionRead));
         const OCIO::CTFVersion version(1, 2, 3);
-        OIIO_CHECK_EQUAL(version, versionRead);
+        OCIO_CHECK_EQUAL(version, versionRead);
     }
     {
-        OIIO_CHECK_NO_THROW(OCIO::CTFVersion::ReadVersion("1.2", versionRead));
+        OCIO_CHECK_NO_THROW(OCIO::CTFVersion::ReadVersion("1.2", versionRead));
         const OCIO::CTFVersion version(1, 2, 0);
-        OIIO_CHECK_EQUAL(version, versionRead);
+        OCIO_CHECK_EQUAL(version, versionRead);
     }
     {
-        OIIO_CHECK_NO_THROW(OCIO::CTFVersion::ReadVersion("1", versionRead));
+        OCIO_CHECK_NO_THROW(OCIO::CTFVersion::ReadVersion("1", versionRead));
         const OCIO::CTFVersion version(1, 0, 0);
-        OIIO_CHECK_EQUAL(version, versionRead);
+        OCIO_CHECK_EQUAL(version, versionRead);
     }
     {
-        OIIO_CHECK_NO_THROW(OCIO::CTFVersion::ReadVersion("1.10", versionRead));
+        OCIO_CHECK_NO_THROW(OCIO::CTFVersion::ReadVersion("1.10", versionRead));
         const OCIO::CTFVersion version(1, 10, 0);
-        OIIO_CHECK_EQUAL(version, versionRead);
+        OCIO_CHECK_EQUAL(version, versionRead);
     }
     {
-        OIIO_CHECK_NO_THROW(OCIO::CTFVersion::ReadVersion("1.1.0", versionRead));
+        OCIO_CHECK_NO_THROW(OCIO::CTFVersion::ReadVersion("1.1.0", versionRead));
         const OCIO::CTFVersion version(1, 1, 0);
-        OIIO_CHECK_EQUAL(version, versionRead);
+        OCIO_CHECK_EQUAL(version, versionRead);
     }
     {
-        OIIO_CHECK_NO_THROW(OCIO::CTFVersion::ReadVersion("1.01", versionRead));
+        OCIO_CHECK_NO_THROW(OCIO::CTFVersion::ReadVersion("1.01", versionRead));
         const OCIO::CTFVersion version(1, 1, 0);
-        OIIO_CHECK_EQUAL(version, versionRead);
+        OCIO_CHECK_EQUAL(version, versionRead);
     }
 
-    OIIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion("", versionRead),
+    OCIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion("", versionRead),
                           OCIO::Exception, 
                           "is not a valid version");
-    OIIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion("1 2", versionRead),
+    OCIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion("1 2", versionRead),
                           OCIO::Exception, 
                           "is not a valid version");
-    OIIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion("1-2", versionRead),
+    OCIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion("1-2", versionRead),
                           OCIO::Exception, 
                           "is not a valid version");
-    OIIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion("a", versionRead),
+    OCIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion("a", versionRead),
                           OCIO::Exception, 
                           "is not a valid version");
-    OIIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion("1.", versionRead),
+    OCIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion("1.", versionRead),
                           OCIO::Exception, 
                           "is not a valid version");
-    OIIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion(".2", versionRead),
+    OCIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion(".2", versionRead),
                           OCIO::Exception, 
                           "is not a valid version");
-    OIIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion("1.0 2", versionRead),
+    OCIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion("1.0 2", versionRead),
                           OCIO::Exception,
                           "is not a valid version");
-    OIIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion("-1", versionRead),
+    OCIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion("-1", versionRead),
                           OCIO::Exception,
                           "is not a valid version");
 }
 
-OIIO_ADD_TEST(CTFVersion, version_write)
+OCIO_ADD_TEST(CTFVersion, version_write)
 {
     {
         const OCIO::CTFVersion version(1, 2, 3);
         std::ostringstream ostream;
         ostream << version;
-        OIIO_CHECK_EQUAL(ostream.str(), "1.2.3");
+        OCIO_CHECK_EQUAL(ostream.str(), "1.2.3");
     }
     {
         const OCIO::CTFVersion version(1, 0, 3);
         std::ostringstream ostream;
         ostream << version;
-        OIIO_CHECK_EQUAL(ostream.str(), "1.0.3");
+        OCIO_CHECK_EQUAL(ostream.str(), "1.0.3");
     }
     {
         const OCIO::CTFVersion version(1, 2, 0);
         std::ostringstream ostream;
         ostream << version;
-        OIIO_CHECK_EQUAL(ostream.str(), "1.2");
+        OCIO_CHECK_EQUAL(ostream.str(), "1.2");
     }
     {
         const OCIO::CTFVersion version(1, 20, 0);
         std::ostringstream ostream;
         ostream << version;
-        OIIO_CHECK_EQUAL(ostream.str(), "1.20");
+        OCIO_CHECK_EQUAL(ostream.str(), "1.20");
     }
     {
         const OCIO::CTFVersion version(1, 0, 0);
         std::ostringstream ostream;
         ostream << version;
-        OIIO_CHECK_EQUAL(ostream.str(), "1");
+        OCIO_CHECK_EQUAL(ostream.str(), "1");
     }
     {
         const OCIO::CTFVersion version(0, 0, 0);
         std::ostringstream ostream;
         ostream << version;
-        OIIO_CHECK_EQUAL(ostream.str(), "0");
+        OCIO_CHECK_EQUAL(ostream.str(), "0");
     }
 }
 
-OIIO_ADD_TEST(CTFReaderTransform, accessors)
+OCIO_ADD_TEST(CTFReaderTransform, accessors)
 {
     OCIO::CTFReaderTransform t;
     {
@@ -358,25 +358,25 @@ OIIO_ADD_TEST(CTFReaderTransform, accessors)
         OCIO::Metadata & info = t.getInfo();
         const OCIO::Metadata & cinfo = t.getInfo();
 
-        OIIO_CHECK_EQUAL(info.getName(), "Info");
-        OIIO_CHECK_EQUAL(cinfo.getName(), "Info");
+        OCIO_CHECK_EQUAL(info.getName(), "Info");
+        OCIO_CHECK_EQUAL(cinfo.getName(), "Info");
 
-        OIIO_CHECK_EQUAL(t.getID(), "");
-        OIIO_CHECK_EQUAL(ct.getID(), "");
-        OIIO_CHECK_EQUAL(t.getName(), "");
-        OIIO_CHECK_EQUAL(ct.getName(), "");
-        OIIO_CHECK_EQUAL(t.getInverseOfId(), "");
-        OIIO_CHECK_EQUAL(ct.getInverseOfId(), "");
-        OIIO_CHECK_EQUAL(t.getInputDescriptor(), "");
-        OIIO_CHECK_EQUAL(ct.getInputDescriptor(), "");
-        OIIO_CHECK_EQUAL(t.getOutputDescriptor(), "");
-        OIIO_CHECK_EQUAL(ct.getOutputDescriptor(), "");
+        OCIO_CHECK_EQUAL(t.getID(), "");
+        OCIO_CHECK_EQUAL(ct.getID(), "");
+        OCIO_CHECK_EQUAL(t.getName(), "");
+        OCIO_CHECK_EQUAL(ct.getName(), "");
+        OCIO_CHECK_EQUAL(t.getInverseOfId(), "");
+        OCIO_CHECK_EQUAL(ct.getInverseOfId(), "");
+        OCIO_CHECK_EQUAL(t.getInputDescriptor(), "");
+        OCIO_CHECK_EQUAL(ct.getInputDescriptor(), "");
+        OCIO_CHECK_EQUAL(t.getOutputDescriptor(), "");
+        OCIO_CHECK_EQUAL(ct.getOutputDescriptor(), "");
 
-        OIIO_CHECK_ASSERT(t.getOps().empty());
-        OIIO_CHECK_ASSERT(ct.getOps().empty());
+        OCIO_CHECK_ASSERT(t.getOps().empty());
+        OCIO_CHECK_ASSERT(ct.getOps().empty());
 
-        OIIO_CHECK_ASSERT(t.getDescriptions().empty());
-        OIIO_CHECK_ASSERT(ct.getDescriptions().empty());
+        OCIO_CHECK_ASSERT(t.getDescriptions().empty());
+        OCIO_CHECK_ASSERT(ct.getDescriptions().empty());
     }
     t.setName("Name");
     t.setID("123");
@@ -393,30 +393,30 @@ OIIO_ADD_TEST(CTFReaderTransform, accessors)
     {
         const OCIO::CTFReaderTransform & ct = t;
 
-        OIIO_CHECK_EQUAL(t.getID(), "123");
-        OIIO_CHECK_EQUAL(ct.getID(), "123");
-        OIIO_CHECK_EQUAL(t.getName(), "Name");
-        OIIO_CHECK_EQUAL(ct.getName(), "Name");
-        OIIO_CHECK_EQUAL(t.getInverseOfId(), "654");
-        OIIO_CHECK_EQUAL(ct.getInverseOfId(), "654");
-        OIIO_CHECK_EQUAL(t.getInputDescriptor(), "input");
-        OIIO_CHECK_EQUAL(ct.getInputDescriptor(), "input");
-        OIIO_CHECK_EQUAL(t.getOutputDescriptor(), "output");
-        OIIO_CHECK_EQUAL(ct.getOutputDescriptor(), "output");
+        OCIO_CHECK_EQUAL(t.getID(), "123");
+        OCIO_CHECK_EQUAL(ct.getID(), "123");
+        OCIO_CHECK_EQUAL(t.getName(), "Name");
+        OCIO_CHECK_EQUAL(ct.getName(), "Name");
+        OCIO_CHECK_EQUAL(t.getInverseOfId(), "654");
+        OCIO_CHECK_EQUAL(ct.getInverseOfId(), "654");
+        OCIO_CHECK_EQUAL(t.getInputDescriptor(), "input");
+        OCIO_CHECK_EQUAL(ct.getInputDescriptor(), "input");
+        OCIO_CHECK_EQUAL(t.getOutputDescriptor(), "output");
+        OCIO_CHECK_EQUAL(ct.getOutputDescriptor(), "output");
 
-        OIIO_CHECK_EQUAL(t.getOps().size(), 1);
-        OIIO_CHECK_EQUAL(ct.getOps().size(), 1);
+        OCIO_CHECK_EQUAL(t.getOps().size(), 1);
+        OCIO_CHECK_EQUAL(ct.getOps().size(), 1);
 
-        OIIO_CHECK_EQUAL(t.getDescriptions().size(), 2);
-        OIIO_CHECK_EQUAL(ct.getDescriptions().size(), 2);
-        OIIO_CHECK_EQUAL(t.getDescriptions()[0], "One");
-        OIIO_CHECK_EQUAL(ct.getDescriptions()[0], "One");
-        OIIO_CHECK_EQUAL(t.getDescriptions()[1], "Two");
-        OIIO_CHECK_EQUAL(ct.getDescriptions()[1], "Two");
+        OCIO_CHECK_EQUAL(t.getDescriptions().size(), 2);
+        OCIO_CHECK_EQUAL(ct.getDescriptions().size(), 2);
+        OCIO_CHECK_EQUAL(t.getDescriptions()[0], "One");
+        OCIO_CHECK_EQUAL(ct.getDescriptions()[0], "One");
+        OCIO_CHECK_EQUAL(t.getDescriptions()[1], "Two");
+        OCIO_CHECK_EQUAL(ct.getDescriptions()[1], "Two");
     }
 }
 
-OIIO_ADD_TEST(CTFReaderTransform, validate)
+OCIO_ADD_TEST(CTFReaderTransform, validate)
 {
     OCIO::CTFReaderTransform t;
     auto matrix = std::make_shared<OCIO::MatrixOpData>(OCIO::BIT_DEPTH_UINT10,
@@ -428,17 +428,17 @@ OIIO_ADD_TEST(CTFReaderTransform, validate)
 
     t.getOps().push_back(matrix);
 
-    OIIO_CHECK_NO_THROW(t.validate());
+    OCIO_CHECK_NO_THROW(t.validate());
 
     matrix = std::make_shared<OCIO::MatrixOpData>(OCIO::BIT_DEPTH_F16,
                                                   OCIO::BIT_DEPTH_F32);
     t.getOps().push_back(matrix);
 
-    OIIO_CHECK_THROW_WHAT(t.validate(), OCIO::Exception,
+    OCIO_CHECK_THROW_WHAT(t.validate(), OCIO::Exception,
                           "Bitdepth missmatch between ops");
 
     matrix->setInputBitDepth(OCIO::BIT_DEPTH_F32);
-    OIIO_CHECK_NO_THROW(t.validate());
+    OCIO_CHECK_NO_THROW(t.validate());
 }
 
 

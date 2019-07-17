@@ -537,19 +537,19 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 #include <fstream>
 
-OIIO_ADD_TEST(FileFormatIridasCube, FormatInfo)
+OCIO_ADD_TEST(FileFormatIridasCube, FormatInfo)
 {
     OCIO::FormatInfoVec formatInfoVec;
     OCIO::LocalFileFormat tester;
     tester.GetFormatInfo(formatInfoVec);
 
-    OIIO_CHECK_EQUAL(1, formatInfoVec.size());
-    OIIO_CHECK_EQUAL("iridas_cube", formatInfoVec[0].name);
-    OIIO_CHECK_EQUAL("cube", formatInfoVec[0].extension);
-    OIIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ | OCIO::FORMAT_CAPABILITY_WRITE,
+    OCIO_CHECK_EQUAL(1, formatInfoVec.size());
+    OCIO_CHECK_EQUAL("iridas_cube", formatInfoVec[0].name);
+    OCIO_CHECK_EQUAL("cube", formatInfoVec[0].extension);
+    OCIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ | OCIO::FORMAT_CAPABILITY_WRITE,
         formatInfoVec[0].capabilities);
 }
 
@@ -566,7 +566,7 @@ OCIO::LocalCachedFileRcPtr ReadIridasCube(const std::string & fileContent)
     return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
 }
 
-OIIO_ADD_TEST(FileFormatIridasCube, ReadFailure)
+OCIO_ADD_TEST(FileFormatIridasCube, ReadFailure)
 {
     {
         // Validate stream can be read with no error.
@@ -585,7 +585,7 @@ OIIO_ADD_TEST(FileFormatIridasCube, ReadFailure)
             "0.0 1.0 1.0\n"
             "1.0 1.0 1.0\n";
 
-        OIIO_CHECK_NO_THROW(ReadIridasCube(SAMPLE_NO_ERROR));
+        OCIO_CHECK_NO_THROW(ReadIridasCube(SAMPLE_NO_ERROR));
     }
     {
         // Wrong LUT_3D_SIZE tag
@@ -603,7 +603,7 @@ OIIO_ADD_TEST(FileFormatIridasCube, ReadFailure)
             "0.0 1.0 1.0\n"
             "1.0 1.0 1.0\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadIridasCube(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadIridasCube(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Malformed LUT_3D_SIZE tag");
     }
@@ -623,7 +623,7 @@ OIIO_ADD_TEST(FileFormatIridasCube, ReadFailure)
             "0.0 1.0 1.0\n"
             "1.0 1.0 1.0\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadIridasCube(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadIridasCube(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Malformed DOMAIN_MIN tag");
     }
@@ -643,7 +643,7 @@ OIIO_ADD_TEST(FileFormatIridasCube, ReadFailure)
             "0.0 1.0 1.0\n"
             "1.0 1.0 1.0\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadIridasCube(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadIridasCube(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Malformed DOMAIN_MAX tag");
     }
@@ -663,7 +663,7 @@ OIIO_ADD_TEST(FileFormatIridasCube, ReadFailure)
             "0.0 1.0 1.0\n"
             "1.0 1.0 1.0\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadIridasCube(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadIridasCube(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Malformed color triples specified");
     }
@@ -685,13 +685,13 @@ OIIO_ADD_TEST(FileFormatIridasCube, ReadFailure)
             "0.0 1.0 1.0\n"
             "1.0 1.0 1.0\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadIridasCube(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadIridasCube(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Incorrect number of 3D LUT entries");
     }
 }
 
-OIIO_ADD_TEST(FileFormatIridasCube, no_shaper)
+OCIO_ADD_TEST(FileFormatIridasCube, no_shaper)
 {
     // check baker output
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
@@ -738,13 +738,13 @@ OIIO_ADD_TEST(FileFormatIridasCube, no_shaper)
     
     //
     std::vector<std::string> osvec;
-    OCIO::pystring::splitlines(output.str(), osvec);
+    pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
-    OCIO::pystring::splitlines(bout.str(), resvec);
-    OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    pystring::splitlines(bout.str(), resvec);
+    OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
     {
-        OIIO_CHECK_EQUAL(osvec[i], resvec[i]);
+        OCIO_CHECK_EQUAL(osvec[i], resvec[i]);
     }
 }
 
