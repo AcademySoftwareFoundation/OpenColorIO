@@ -58,9 +58,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
 
     # Attempt to find static library first if this is set
     if(YAMLCPP_STATIC_LIBRARY)
-        set(_YAMLCPP_STATIC 
-            "${CMAKE_STATIC_LIBRARY_PREFIX}yaml-cpp${CMAKE_STATIC_LIBRARY_SUFFIX}"
-            "${CMAKE_STATIC_LIBRARY_PREFIX}yaml-cppmd${CMAKE_STATIC_LIBRARY_SUFFIX}")
+        set(_YAMLCPP_STATIC libyaml-cpp.a libyaml-cppmd.lib)
     endif()
 
     # Find library
