@@ -19,7 +19,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 		PRIVATE
 			yamlcpp::yamlcpp
 			pystring::pystring
-			sampleicc
+			sampleicc::sampleicc
 			unittest_data
 			expat::expat
 			ilmbase::ilmbase

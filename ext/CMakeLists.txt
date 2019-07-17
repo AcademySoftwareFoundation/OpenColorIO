@@ -2,7 +2,7 @@
 ### External C/C++ dependencies ###
 
 # Expat
-# https://libexpat.github.io
+# https://github.com/libexpat/libexpat
 set(EXPAT_MIN_VERSION 2.2.5)
 find_package(Expat ${EXPAT_MIN_VERSION} REQUIRED)
 
@@ -12,7 +12,7 @@ set(YAMLCPP_MIN_VERSION 0.3.0)
 find_package(YamlCpp ${YAMLCPP_MIN_VERSION} REQUIRED)
 
 # IlmBase (Half part only)
-# https://www.openexr.com
+# https://github.com/openexr/openexr
 set(ILMBASE_MIN_VERSION 2.3.0)
 find_package(IlmBase ${ILMBASE_MIN_VERSION} REQUIRED)
 
@@ -23,13 +23,13 @@ find_package(Pystring ${PYSTRING_MIN_VERSION} REQUIRED)
 
 if(OCIO_BUILD_APPS)
 	# LCMS2
-	# http://www.littlecms.com
+	# https://github.com/mm2/Little-CMS
 	set(LCMS2_MIN_VERSION 2.2)
 	find_package(LCMS2 ${LCMS2_MIN_VERSION} REQUIRED)
 endif()
 
 # Sample ICC (modified)
-# http://www.color.org/sampleicc.xalter
+# http://sampleicc.sourceforge.net
 add_library(sampleicc::sampleicc INTERFACE IMPORTED GLOBAL)
 set_target_properties(sampleicc::sampleicc PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/sampleicc/src/include"
