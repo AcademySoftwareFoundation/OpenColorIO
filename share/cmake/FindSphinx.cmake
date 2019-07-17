@@ -2,7 +2,7 @@
 #
 # Variables defined by this module:
 #   SPHINX_FOUND
-#   SPHINX_EXECUTABLE
+#   SPHINX_EXECUTABLE (CACHE)
 #
 # Targets defined by this module:
 #   Sphinx - custom pip target, if package can be installed

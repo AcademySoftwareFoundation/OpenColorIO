@@ -7,70 +7,31 @@ if(NOT OCIO_BUILD_PYTHON)
 endif()
 
 ###############################################################################
-### External Python dependencies ###
+### Setup PYTHONPATH ###
 
 set(EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
 set(PYTHON_VARIANT "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
-set(PYOCIO_DIR "${CMAKE_BINARY_DIR}/src/bindings/python")
+
+# Add built PyOpenColorIO to PYTHONPATH and ensure that doc target depends on PyOpenColorIO
+set(PY_OCIO_DIR "${CMAKE_BINARY_DIR}/src/bindings/python")
 
 if(WIN32)
+    set(PYTHONPATH "${PY_OCIO_DIR};${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/site-packages;$ENV{PYTHONPATH}")
+
     # Unfortunately some windows tools require to have
     #  the paths with the '\' (i.e. not working with '//').
-    string(REGEX REPLACE "/" "\\\\" EXT_DIST_ROOT ${EXT_DIST_ROOT})
-
-    set(PYTHONPATH "${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/site-packages:${PYOCIO_DIR}")
+    string(REGEX REPLACE "/" "\\\\" PYTHONPATH ${PYTHONPATH})
 
     # Workaround to mimic *nix '> PYTHONPATH=XXX CMD' 
     #  on windows, it becomes  '> set PYTHONPATH=XXX \n call CMD'
     #   '\n' is here because '\\&' does not work.
-    set(PYT_PRE_CMD set PYTHONPATH=${PYTHONPATH} "\n" call )
+    set(PYT_PRE_CMD set PYTHONPATH=${PYTHONPATH} "\n" call)
 else()
     set(PYTHONPATH 
-        "${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/python${PYTHON_VARIANT}/site-packages:${PYOCIO_DIR}")
+        "${PY_OCIO_DIR}:${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/python${PYTHON_VARIANT}/site-packages:$ENV{PYTHONPATH}")
 
     set(PYT_PRE_CMD PYTHONPATH=${PYTHONPATH})
 endif()
-
-add_custom_target(pythonpath_create
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${PYTHONPATH}
-)
-
-# setuptools
-# https://pypi.python.org/pypi/setuptools
-set(SETUPTOOLS_MIN_VERSION 1.1.6)
-find_python_package(setuptools ${SETUPTOOLS_MIN_VERSION} REQUIRED)
-add_dependencies(setuptools pythonpath_create)
-
-# docutils
-# https://pypi.python.org/pypi/docutils
-set(DOCUTILS_MIN_VERSION 0.14)
-find_python_package(docutils ${DOCUTILS_MIN_VERSION} REQUIRED)
-add_dependencies(docutils setuptools)
-
-# MarkupSafe
-# https://pypi.python.org/pypi/MarkupSafe
-set(MARKUPSAFE_MIN_VERSION 1.1.1)
-find_python_package(MarkupSafe ${MARKUPSAFE_MIN_VERSION} REQUIRED)
-add_dependencies(MarkupSafe setuptools)
-
-# Jinja2
-# https://pypi.python.org/pypi/Jinja2
-set(JINJA2_MIN_VERSION 2.10.1)
-find_python_package(Jinja2 ${JINJA2_MIN_VERSION} REQUIRED)
-add_dependencies(Jinja2 setuptools MarkupSafe)
-
-# Pygments
-# https://pypi.python.org/pypi/Pygments
-set(PYGMENTS_MIN_VERSION 2.4.2)
-find_python_package(Pygments ${PYGMENTS_MIN_VERSION} REQUIRED)
-add_dependencies(Pygments setuptools)
-
-# Sphinx
-# https://pypi.python.org/pypi/Sphinx
-set(SPHINX_MIN_VERSION 1.8.5)
-find_package(Sphinx ${SPHINX_MIN_VERSION} REQUIRED)
-add_dependencies(Sphinx setuptools docutils Jinja2 Pygments)
-
 
 ###############################################################################
 ### Copy templates to build area ###
@@ -111,7 +72,6 @@ foreach(f ${DOC_SOURCES})
     add_dependencies(doc_copy "copy_${tgtname}")
 endforeach()
 
-
 ###############################################################################
 ### Extract rst from c++ headers ###
 
@@ -125,10 +85,6 @@ add_custom_target(rst_extraction
     COMMAND ${PYTHON_EXECUTABLE} ${EXTRACT_COMMAND} ${OCIO_HEADER_DIR}/OpenColorTypes.h ${RST_DESTINATION}/OpenColorTypes.rst
     COMMENT "Extracting .rst files from C++ headers"
 )
-
-# Add built PyOpenColorIO to PYTHONPATH and ensure that doc target depends on PyOpenColorIO
-set(PYTHONPATH "${PYTHONPATH}:${CMAKE_BINARY_DIR}/src/python")
-
 
 ###############################################################################
 ### HTML doc target ###
@@ -146,7 +102,6 @@ add_custom_target(docs ALL
     COMMENT "Building html docs"
 )
 
-
 ###############################################################################
 ### Installation ###
 
@@ -154,7 +109,6 @@ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/build-html/
         DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/OpenColorIO/html
         PATTERN .* EXCLUDE
 )
-
 
 ###############################################################################
 ### PDF target ###

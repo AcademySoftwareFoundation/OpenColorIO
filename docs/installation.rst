@@ -76,7 +76,7 @@ Automated Installation
 
 Listed dependencies with a preceeding * can be automatically installed at 
 build time by setting the ``OCIO_INSTALL_EXT_PACKAGES`` option in your cmake 
-command (requires an internet connection). C/C^^ libraries are pulled from 
+command (requires an internet connection). C/C++ libraries are pulled from 
 external repositories, built, and statically-linked into libOpenColorIO. Python 
 packages are installed with ``pip``. All installs are fully contained within 
 your build directory.
