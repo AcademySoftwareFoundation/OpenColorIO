@@ -926,12 +926,12 @@ void compareFloats(const std::string& floats1, const std::string& floats2)
 {
     // number comparison
     std::vector<std::string> strings1;
-    pystring::split(pystring::strip(floats1), strings1);
+    OCIO::pystring::split(OCIO::pystring::strip(floats1), strings1);
     std::vector<float> numbers1;
     OCIO::StringVecToFloatVec(numbers1, strings1);
 
     std::vector<std::string> strings2;
-    pystring::split(pystring::strip(floats2), strings2);
+    OCIO::pystring::split(OCIO::pystring::strip(floats2), strings2);
     std::vector<float> numbers2;
     OCIO::StringVecToFloatVec(numbers2, strings2);
 
@@ -1153,9 +1153,9 @@ OCIO_ADD_TEST(FileFormatCSP, complete3D)
     
     //
     std::vector<std::string> osvec;
-    pystring::splitlines(output.str(), osvec);
+    OCIO::pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
-    pystring::splitlines(bout.str(), resvec);
+    OCIO::pystring::splitlines(bout.str(), resvec);
     OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
     {
@@ -1247,9 +1247,9 @@ OCIO_ADD_TEST(FileFormatCSP, shaper_hdr)
     
     //
     std::vector<std::string> osvec;
-    pystring::splitlines(output.str(), osvec);
+    OCIO::pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
-    pystring::splitlines(bout.str(), resvec);
+    OCIO::pystring::splitlines(bout.str(), resvec);
     OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
     {
@@ -1330,9 +1330,9 @@ OCIO_ADD_TEST(FileFormatCSP, no_shaper)
 
     //
     std::vector<std::string> osvec;
-    pystring::splitlines(output.str(), osvec);
+    OCIO::pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
-    pystring::splitlines(bout.str(), resvec);
+    OCIO::pystring::splitlines(bout.str(), resvec);
     OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
     {

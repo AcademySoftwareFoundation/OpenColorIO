@@ -738,9 +738,9 @@ OCIO_ADD_TEST(FileFormatIridasCube, no_shaper)
     
     //
     std::vector<std::string> osvec;
-    pystring::splitlines(output.str(), osvec);
+    OCIO::pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
-    pystring::splitlines(bout.str(), resvec);
+    OCIO::pystring::splitlines(bout.str(), resvec);
     OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
     {
