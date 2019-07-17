@@ -18,7 +18,10 @@
 
 find_package(PythonInterp 2.7 QUIET)
 
-add_custom_target(Sphinx)
+if(NOT TARGET Sphinx)
+    add_custom_target(Sphinx)
+    set(_SPHINX_TARGET_CREATE TRUE)
+endif()
 
 ###############################################################################
 ### Try to find package ###
@@ -56,19 +59,21 @@ if(NOT SPHINX_FOUND)
     set(SPHINX_EXECUTABLE "${_EXT_DIST_ROOT}/bin/sphinx-build")
 
     # Configure install target
-    add_custom_command(
-        TARGET
-            Sphinx
-        COMMAND
-            pip install --quiet 
-                        --disable-pip-version-check
-                        --install-option="--prefix=${_EXT_DIST_ROOT}"
-                        -I Sphinx==${Sphinx_FIND_VERSION}
-        WORKING_DIRECTORY
-            "${CMAKE_BINARY_DIR}"
-    )
+    if(_SPHINX_TARGET_CREATE)
+        add_custom_command(
+            TARGET
+                Sphinx
+            COMMAND
+                pip install --quiet
+                            --disable-pip-version-check
+                            --install-option="--prefix=${_EXT_DIST_ROOT}"
+                            -I Sphinx==${Sphinx_FIND_VERSION}
+            WORKING_DIRECTORY
+                "${CMAKE_BINARY_DIR}"
+        )
 
-    message(STATUS "Installing Sphinx: ${SPHINX_EXECUTABLE} (version ${Sphinx_FIND_VERSION})")
+        message(STATUS "Installing Sphinx: ${SPHINX_EXECUTABLE} (version ${Sphinx_FIND_VERSION})")
+    endif()
 endif()
 
 mark_as_advanced(SPHINX_EXECUTABLE)

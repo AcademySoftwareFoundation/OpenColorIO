@@ -10,7 +10,7 @@ While prebuilt binaries are not yet available for all platforms, OCIO
 is available via several platform's package managers.
 
 Fedora and RHEL
-+++++++++++++++
+^^^^^^^^^^^^^^^
 
 In Fedora Core 15 and above, the following command will install OpenColorIO::
 
@@ -23,7 +23,7 @@ command will work for RedHat Enterprise Linux 6 and higher (including
 RHEL derivatives such as CentOS 6 and Scientific Linux 6)
 
 OS X using Homebrew
-+++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^
 
 You can use the Homebrew package manager to install OpenColorIO on OS X.
 
@@ -76,7 +76,7 @@ Automated Installation
 
 Listed dependencies with a preceeding * can be automatically installed at 
 build time by setting the ``OCIO_INSTALL_EXT_PACKAGES`` option in your cmake 
-command (requires an internet connection). C/C++ libraries are pulled from 
+command (requires an internet connection). C/C^^ libraries are pulled from 
 external repositories, built, and statically-linked into libOpenColorIO. Python 
 packages are installed with ``pip``. All installs are fully contained within 
 your build directory.
@@ -114,10 +114,10 @@ or static linking:
 To hint at Python package locations, add paths to the ``PYTHONPATH`` 
 environment variable prior to configuring the build.
 
-.. _osx-and-linux
+.. _osx-and-linux:
 
 OS X and Linux
-++++++++++++++
+^^^^^^^^^^^^^^
 
 While there is a huge range of possible setups, the following steps
 should work on OS X and most Linux distros. To keep things simple, this guide 
@@ -179,7 +179,7 @@ this::
 .. _windows-build:
 
 Windows Build
-+++++++++++++
+^^^^^^^^^^^^^
 
 While build environments may vary between user, here is an example batch file
 for compiling on Windows as provided by `@hodoulp <https://github.com/hodoulp>`__::
@@ -307,7 +307,7 @@ build sequence.
 .. _enabling-optional-components:
 
 Enabling optional components
-++++++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The OpenColorIO library is probably not all you want - the Python
 libraries bindings, the Nuke nodes and several applications are only

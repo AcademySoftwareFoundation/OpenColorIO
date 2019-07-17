@@ -19,7 +19,10 @@
 # downloaded, built, and statically-linked into libOpenColorIO at build time.
 #
 
-add_library(yamlcpp::yamlcpp UNKNOWN IMPORTED GLOBAL)
+if(NOT TARGET yamlcpp::yamlcpp)
+    add_library(yamlcpp::yamlcpp UNKNOWN IMPORTED GLOBAL)
+    set(_YAMLCPP_TARGET_CREATE TRUE)
+endif()
 
 ###############################################################################
 ### Try to find package ###
@@ -108,81 +111,85 @@ if(NOT YAMLCPP_FOUND)
     set(YAMLCPP_LIBRARY 
         "${_EXT_DIST_ROOT}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}yaml-cpp${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
-    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" 
-            OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-        # C++11 deprecates std::auto_ptr
-        set(YAMLCPP_CXX_FLAGS "${YAMLCPP_CXX_FLAGS} -Wno-deprecated-declarations")
-    endif()
-
-    if(UNIX)
-        set(YAMLCPP_CXX_FLAGS "${YAMLCPP_CXX_FLAGS} -fvisibility=hidden -fPIC")
-        if(OCIO_INLINES_HIDDEN)
-            set(YAMLCPP_CXX_FLAGS "${YAMLCPP_CXX_FLAGS} -fvisibility-inlines-hidden")
+    if(_YAMLCPP_TARGET_CREATE)
+        if("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU"
+                OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+            # C++11 deprecates std::auto_ptr
+            set(YAMLCPP_CXX_FLAGS "${YAMLCPP_CXX_FLAGS} -Wno-deprecated-declarations")
         endif()
-    endif()
 
-    string(STRIP "${YAMLCPP_CXX_FLAGS}" YAMLCPP_CXX_FLAGS)
+        if(UNIX)
+            set(YAMLCPP_CXX_FLAGS "${YAMLCPP_CXX_FLAGS} -fvisibility=hidden -fPIC")
+            if(OCIO_INLINES_HIDDEN)
+                set(YAMLCPP_CXX_FLAGS "${YAMLCPP_CXX_FLAGS} -fvisibility-inlines-hidden")
+            endif()
+        endif()
 
-    set(YAMLCPP_CMAKE_ARGS
-        ${YAMLCPP_CMAKE_ARGS}
-        -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
-        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -DBUILD_SHARED_LIBS:BOOL=OFF
-        -DYAML_CPP_BUILD_TESTS:BOOL=OFF
-        -DYAML_CPP_BUILD_TOOLS:BOOL=OFF
-        -DYAML_CPP_BUILD_CONTRIB:BOOL=OFF
-        -DCMAKE_CXX_FLAGS=${YAMLCPP_CXX_FLAGS}
-        -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
-    )
-    if(CMAKE_TOOLCHAIN_FILE)
-        set(YAMLCPP_CMAKE_ARGS 
-            ${YAMLCPP_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
-    endif()
+        string(STRIP "${YAMLCPP_CXX_FLAGS}" YAMLCPP_CXX_FLAGS)
 
-    if(NOT BUILD_SHARED_LIBS)
-        #TODO: Find a way to merge in the static libs when built with internal yamlcpp
-        message(WARNING
-            "Building STATIC libOpenColorIO using the in-built YamlCpp. "
-            "YampCpp symbols are NOT included in the output binary!"
+        set(YAMLCPP_CMAKE_ARGS
+            ${YAMLCPP_CMAKE_ARGS}
+            -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            -DBUILD_SHARED_LIBS:BOOL=OFF
+            -DYAML_CPP_BUILD_TESTS:BOOL=OFF
+            -DYAML_CPP_BUILD_TOOLS:BOOL=OFF
+            -DYAML_CPP_BUILD_CONTRIB:BOOL=OFF
+            -DCMAKE_CXX_FLAGS=${YAMLCPP_CXX_FLAGS}
+            -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
+        )
+        if(CMAKE_TOOLCHAIN_FILE)
+            set(YAMLCPP_CMAKE_ARGS
+                ${YAMLCPP_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+        endif()
+
+        if(NOT BUILD_SHARED_LIBS)
+            #TODO: Find a way to merge in the static libs when built with internal yamlcpp
+            message(WARNING
+                "Building STATIC libOpenColorIO using the in-built YamlCpp. "
+                "YampCpp symbols are NOT included in the output binary!"
+            )
+        endif()
+
+        if(YamlCpp_FIND_VERSION_MINOR LESS 6 AND YamlCpp_FIND_VERSION_PATCH LESS 3)
+            set(YAMLCPP_GIT_TAG "release-${YAMLCPP_VERSION}")
+        else()
+            set(YAMLCPP_GIT_TAG "yaml-cpp-${YAMLCPP_VERSION}")
+        endif()
+
+        # Hack to let imported target be built from ExternalProject_Add
+        file(MAKE_DIRECTORY ${YAMLCPP_INCLUDE_DIR})
+
+        ExternalProject_Add(yamlcpp_install
+            GIT_REPOSITORY "https://github.com/jbeder/yaml-cpp.git"
+            GIT_TAG ${YAMLCPP_GIT_TAG}
+            GIT_SHALLOW TRUE
+            PREFIX "${_EXT_BUILD_ROOT}/yaml-cpp"
+            BUILD_BYPRODUCTS ${YAMLCPP_LIBRARY}
+            CMAKE_ARGS ${YAMLCPP_CMAKE_ARGS}
+            EXCLUDE_FROM_ALL TRUE
+        )
+
+        add_dependencies(yamlcpp::yamlcpp yamlcpp_install)
+        message(STATUS
+            "Installing YamlCpp: ${YAMLCPP_LIBRARY} (version ${YAMLCPP_VERSION})"
         )
     endif()
-
-    # Hack to let imported target be built from ExternalProject_Add
-    file(MAKE_DIRECTORY ${YAMLCPP_INCLUDE_DIR})
-
-    if(YamlCpp_FIND_VERSION_MINOR LESS 6 AND YamlCpp_FIND_VERSION_PATCH LESS 3)
-        set(YAMLCPP_GIT_TAG "release-${YAMLCPP_VERSION}")
-    else()
-        set(YAMLCPP_GIT_TAG "yaml-cpp-${YAMLCPP_VERSION}")
-    endif()
-
-    ExternalProject_Add(yamlcpp_install
-        GIT_REPOSITORY "https://github.com/jbeder/yaml-cpp.git"
-        GIT_TAG ${YAMLCPP_GIT_TAG}
-        GIT_SHALLOW TRUE
-        PREFIX "${_EXT_BUILD_ROOT}/yaml-cpp"
-        BUILD_BYPRODUCTS ${YAMLCPP_LIBRARY}
-        CMAKE_ARGS ${YAMLCPP_CMAKE_ARGS}
-        EXCLUDE_FROM_ALL TRUE
-    )
-
-    add_dependencies(yamlcpp::yamlcpp yamlcpp_install)
-    message(STATUS 
-        "Installing YamlCpp: ${YAMLCPP_LIBRARY} (version ${YAMLCPP_VERSION})"
-    )
 endif()
 
 ###############################################################################
 ### Configure target ###
 
-if(YAMLCPP_VERSION VERSION_LESS "0.5.0")
-    set_target_properties(yamlcpp::yamlcpp PROPERTIES 
-        INTERFACE_COMPILE_DEFINITIONS "OLDYAML")
+if(_YAMLCPP_TARGET_CREATE)
+    if(YAMLCPP_VERSION VERSION_LESS "0.5.0")
+        set_target_properties(yamlcpp::yamlcpp PROPERTIES
+            INTERFACE_COMPILE_DEFINITIONS "OLDYAML")
+    endif()
+
+    set_target_properties(yamlcpp::yamlcpp PROPERTIES
+        IMPORTED_LOCATION ${YAMLCPP_LIBRARY}
+        INTERFACE_INCLUDE_DIRECTORIES ${YAMLCPP_INCLUDE_DIR}
+    )
+
+    mark_as_advanced(YAMLCPP_INCLUDE_DIR YAMLCPP_LIBRARY YAMLCPP_VERSION)
 endif()
-
-set_target_properties(yamlcpp::yamlcpp PROPERTIES
-    IMPORTED_LOCATION ${YAMLCPP_LIBRARY}
-    INTERFACE_INCLUDE_DIRECTORIES ${YAMLCPP_INCLUDE_DIR}
-)
-
-mark_as_advanced(YAMLCPP_INCLUDE_DIR YAMLCPP_LIBRARY YAMLCPP_VERSION)

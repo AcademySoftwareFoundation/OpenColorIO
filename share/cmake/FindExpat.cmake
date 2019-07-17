@@ -19,7 +19,10 @@
 # built, and statically-linked into libOpenColorIO at build time.
 #
 
-add_library(expat::expat UNKNOWN IMPORTED GLOBAL)
+if(NOT TARGET expat::expat)
+    add_library(expat::expat UNKNOWN IMPORTED GLOBAL)
+    set(_EXPAT_TARGET_CREATE TRUE)
+endif()
 
 ###############################################################################
 ### Try to find package ###
@@ -121,54 +124,58 @@ if(NOT EXPAT_FOUND)
     set(EXPAT_LIBRARY 
         "${_EXT_DIST_ROOT}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}expat${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
-    if(UNIX)
-        set(EXPAT_C_FLAGS "${EXPAT_C_FLAGS} -fPIC")
-        set(EXPAT_CXX_FLAGS "${EXPAT_CXX_FLAGS} -fPIC")
+    if(_EXPAT_TARGET_CREATE)
+        if(UNIX)
+            set(EXPAT_C_FLAGS "${EXPAT_C_FLAGS} -fPIC")
+            set(EXPAT_CXX_FLAGS "${EXPAT_CXX_FLAGS} -fPIC")
+        endif()
+
+        string(STRIP "${EXPAT_C_FLAGS}" EXPAT_C_FLAGS)
+        string(STRIP "${EXPAT_CXX_FLAGS}" EXPAT_CXX_FLAGS)
+
+        set(EXPAT_CMAKE_ARGS
+            ${EXPAT_CMAKE_ARGS}
+            -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            -DBUILD_examples:BOOL=OFF
+            -DBUILD_tests:BOOL=OFF
+            -DBUILD_shared:BOOL=OFF
+            -DCMAKE_C_FLAGS=${EXPAT_C_FLAGS}
+            -DCMAKE_CXX_FLAGS=${EXPAT_CXX_FLAGS}
+            -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
+        )
+        if(CMAKE_TOOLCHAIN_FILE)
+            set(EXPAT_CMAKE_ARGS
+                ${EXPAT_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+        endif()
+
+        # Hack to let imported target be built from ExternalProject_Add
+        file(MAKE_DIRECTORY ${EXPAT_INCLUDE_DIR})
+
+        ExternalProject_Add(expat_install
+            GIT_REPOSITORY "https://github.com/libexpat/libexpat.git"
+            GIT_TAG "R_${Expat_FIND_VERSION_MAJOR}_${Expat_FIND_VERSION_MINOR}_${Expat_FIND_VERSION_PATCH}"
+            GIT_SHALLOW TRUE
+            PREFIX "${_EXT_BUILD_ROOT}/libexpat"
+            BUILD_BYPRODUCTS ${EXPAT_LIBRARY}
+            SOURCE_SUBDIR expat
+            CMAKE_ARGS ${EXPAT_CMAKE_ARGS}
+            EXCLUDE_FROM_ALL TRUE
+        )
+
+        add_dependencies(expat::expat expat_install)
+        message(STATUS "Installing Expat: ${EXPAT_LIBRARY} (version ${EXPAT_VERSION})")
     endif()
-
-    string(STRIP "${EXPAT_C_FLAGS}" EXPAT_C_FLAGS)
-    string(STRIP "${EXPAT_CXX_FLAGS}" EXPAT_CXX_FLAGS)
-
-    set(EXPAT_CMAKE_ARGS
-        ${EXPAT_CMAKE_ARGS}
-        -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
-        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -DBUILD_examples:BOOL=OFF
-        -DBUILD_tests:BOOL=OFF
-        -DBUILD_shared:BOOL=OFF
-        -DCMAKE_C_FLAGS=${EXPAT_C_FLAGS}
-        -DCMAKE_CXX_FLAGS=${EXPAT_CXX_FLAGS}
-        -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
-    )
-    if(CMAKE_TOOLCHAIN_FILE)
-        set(EXPAT_CMAKE_ARGS 
-            ${EXPAT_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
-    endif()
-
-    # Hack to let imported target be built from ExternalProject_Add
-    file(MAKE_DIRECTORY ${EXPAT_INCLUDE_DIR})
-    
-    ExternalProject_Add(expat_install
-        GIT_REPOSITORY "https://github.com/libexpat/libexpat.git"
-        GIT_TAG "R_${Expat_FIND_VERSION_MAJOR}_${Expat_FIND_VERSION_MINOR}_${Expat_FIND_VERSION_PATCH}"
-        GIT_SHALLOW TRUE
-        PREFIX "${_EXT_BUILD_ROOT}/libexpat"
-        BUILD_BYPRODUCTS ${EXPAT_LIBRARY}
-        SOURCE_SUBDIR expat
-        CMAKE_ARGS ${EXPAT_CMAKE_ARGS}
-        EXCLUDE_FROM_ALL TRUE
-    )
-
-    add_dependencies(expat::expat expat_install)
-    message(STATUS "Installing Expat: ${EXPAT_LIBRARY} (version ${EXPAT_VERSION})")
 endif()
 
 ###############################################################################
 ### Configure target ###
 
-set_target_properties(expat::expat PROPERTIES
-    IMPORTED_LOCATION ${EXPAT_LIBRARY}
-    INTERFACE_INCLUDE_DIRECTORIES ${EXPAT_INCLUDE_DIR}
-)
+if(_EXPAT_TARGET_CREATE)
+    set_target_properties(expat::expat PROPERTIES
+        IMPORTED_LOCATION ${EXPAT_LIBRARY}
+        INTERFACE_INCLUDE_DIRECTORIES ${EXPAT_INCLUDE_DIR}
+    )
 
-mark_as_advanced(EXPAT_INCLUDE_DIR EXPAT_LIBRARY EXPAT_VERSION)
+    mark_as_advanced(EXPAT_INCLUDE_DIR EXPAT_LIBRARY EXPAT_VERSION)
+endif()

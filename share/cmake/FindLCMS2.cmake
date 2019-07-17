@@ -19,7 +19,10 @@
 # downloaded, built, and statically-linked into libOpenColorIO at build time.
 #
 
-add_library(lcms2::lcms2 UNKNOWN IMPORTED GLOBAL)
+if(NOT TARGET lcms2::lcms2)
+    add_library(lcms2::lcms2 UNKNOWN IMPORTED GLOBAL)
+    set(_LCMS2_TARGET_CREATE TRUE)
+endif()
 
 ###############################################################################
 ### Try to find package ###
@@ -112,48 +115,54 @@ if(NOT LCMS2_FOUND)
     set(LCMS2_LIBRARY 
         "${_EXT_DIST_ROOT}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lcms2${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
-    if(UNIX)
-        set(LCMS2_C_FLAGS "${LCMS2_C_FLAGS} -fPIC")
+    if(_LCMS2_TARGET_CREATE)
+        if(UNIX)
+            set(LCMS2_C_FLAGS "${LCMS2_C_FLAGS} -fPIC")
+        endif()
+
+        string(STRIP "${LCMS2_C_FLAGS}" LCMS2_C_FLAGS)
+
+        set(LCMS2_CMAKE_ARGS
+            ${LCMS2_CMAKE_ARGS}
+            -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            -DBUILD_SHARED_LIBS:BOOL=OFF
+            -DCMAKE_C_FLAGS=${LCMS2_C_FLAGS}
+        )
+        if(CMAKE_TOOLCHAIN_FILE)
+            set(LCMS2_CMAKE_ARGS
+                ${LCMS2_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+        endif()
+
+        # Hack to let imported target be built from ExternalProject_Add
+        file(MAKE_DIRECTORY ${LCMS2_INCLUDE_DIR})
+
+        ExternalProject_Add(lcms2_install
+            GIT_REPOSITORY "https://github.com/mm2/Little-CMS.git"
+            GIT_TAG "lcms${LCMS2_VERSION}"
+            GIT_SHALLOW TRUE
+            PREFIX "${_EXT_BUILD_ROOT}/Little-CMS"
+            BUILD_BYPRODUCTS ${LCMS2_LIBRARY}
+            PATCH_COMMAND
+                ${CMAKE_COMMAND} -E copy
+                "${CMAKE_SOURCE_DIR}/share/cmake/BuildLCMS2.cmake" "CMakeLists.txt"
+            CMAKE_ARGS ${LCMS2_CMAKE_ARGS}
+            EXCLUDE_FROM_ALL TRUE
+        )
+
+        add_dependencies(lcms2::lcms2 lcms2_install)
+        message(STATUS "Installing LCMS2: ${LCMS2_LIBRARY} (version ${LCMS2_VERSION})")
     endif()
-
-    string(STRIP "${LCMS2_C_FLAGS}" LCMS2_C_FLAGS)
-
-    set(LCMS2_CMAKE_ARGS
-        ${LCMS2_CMAKE_ARGS}
-        -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
-        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -DBUILD_SHARED_LIBS:BOOL=OFF
-        -DCMAKE_C_FLAGS=${LCMS2_C_FLAGS}
-    )
-    if(CMAKE_TOOLCHAIN_FILE)
-        set(LCMS2_CMAKE_ARGS 
-            ${LCMS2_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
-    endif()
-
-    # Hack to let imported target be built from ExternalProject_Add
-    file(MAKE_DIRECTORY ${LCMS2_INCLUDE_DIR})
-
-    ExternalProject_Add(lcms2_install
-        GIT_REPOSITORY "https://github.com/mm2/Little-CMS.git"
-        GIT_TAG "lcms${LCMS2_VERSION}"
-        GIT_SHALLOW TRUE
-        PREFIX "${_EXT_BUILD_ROOT}/Little-CMS"
-        BUILD_BYPRODUCTS ${LCMS2_LIBRARY}
-        PATCH_COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/share/cmake/BuildLCMS2.cmake" "CMakeLists.txt"
-        CMAKE_ARGS ${LCMS2_CMAKE_ARGS}
-        EXCLUDE_FROM_ALL TRUE
-    )
-
-    add_dependencies(lcms2::lcms2 lcms2_install)
-    message(STATUS "Installing LCMS2: ${LCMS2_LIBRARY} (version ${LCMS2_VERSION})")
 endif()
 
 ###############################################################################
 ### Configure target ###
 
-set_target_properties(lcms2::lcms2 PROPERTIES
-    IMPORTED_LOCATION ${LCMS2_LIBRARY}
-    INTERFACE_INCLUDE_DIRECTORIES ${LCMS2_INCLUDE_DIR}
-)
+if(_LCMS2_TARGET_CREATE)
+    set_target_properties(lcms2::lcms2 PROPERTIES
+        IMPORTED_LOCATION ${LCMS2_LIBRARY}
+        INTERFACE_INCLUDE_DIRECTORIES ${LCMS2_INCLUDE_DIR}
+    )
 
-mark_as_advanced(LCMS2_INCLUDE_DIR LCMS2_LIBRARY LCMS2_VERSION)
+    mark_as_advanced(LCMS2_INCLUDE_DIR LCMS2_LIBRARY LCMS2_VERSION)
+endif()

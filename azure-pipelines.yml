@@ -39,25 +39,22 @@ jobs:
   strategy:
     matrix:
       CentOS 7 VFX CY2019:
-        agentImage: 'ubuntu-16.04'
         containerImage: aswfstaging/ci-ocio:2019
         useSSE: ON
         cxxCompiler: g++
         cCompiler: gcc
       CentOS 7 VFX CY2019 (No SSE):
-        agentImage: 'ubuntu-16.04'
         containerImage: aswfstaging/ci-ocio:2019
         useSSE: OFF
         cxxCompiler: g++
         cCompiler: gcc
       CentOS 7 Clang 7:
-        agentImage: 'ubuntu-16.04'
         containerImage: aswfstaging/ci-ocio:2019
         useSSE: ON
         cxxCompiler: clang++
         cCompiler: clang
   pool:
-    vmImage: $(agentImage)
+    vmImage: 'ubuntu-16.04'
   container: $[ variables['containerImage'] ]
 
   steps:
@@ -80,18 +77,18 @@ jobs:
 - job: Latest
   strategy:
     matrix:
-      CentOS 7 VFX CY2019:
-        agentImage: 'ubuntu-16.04'
+      Linux CentOS 7 VFX CY2019:
+        containerImage: aswfstaging/ci-ocio:2019
         cxxCompiler: g++
         cCompiler: gcc
-      CentOS 7 Clang 7:
-        agentImage: 'ubuntu-16.04'
+      Linux CentOS 7 Clang 7:
+        containerImage: aswfstaging/ci-ocio:2019
         cxxCompiler: clang++
         cCompiler: clang
   condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
   pool:
     vmImage: 'ubuntu-16.04'
-  container: aswfstaging/ci-ocio:2019
+  container: $[ variables['containerImage'] ]
 
   steps:
   - template: share/ci/templates/checkout.yml
@@ -120,11 +117,14 @@ jobs:
 # SonarCloud static analysis (cron only)
 # --------------------------------------
 - job: SonarCloud
-  displayName: Linux CentOS 7 VFX CY2019 (SonarCloud)
+  strategy:
+    matrix:
+      Linux CentOS 7 VFX CY2019:
+        containerImage: aswfstaging/ci-ocio:2019
   condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
   pool:
     vmImage: 'ubuntu-16.04'
-  container: aswfstaging/ci-ocio:2019
+  container: $[ variables['containerImage'] ]
 
   steps:
   - template: share/ci/templates/checkout.yml

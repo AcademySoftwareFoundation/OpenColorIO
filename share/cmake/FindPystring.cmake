@@ -19,7 +19,10 @@
 # downloaded, built, and statically-linked into libOpenColorIO at build time.
 #
 
-add_library(pystring::pystring UNKNOWN IMPORTED GLOBAL)
+if(NOT TARGET pystring::pystring)
+    add_library(pystring::pystring UNKNOWN IMPORTED GLOBAL)
+    set(_PYSTRING_TARGET_CREATE TRUE)
+endif()
 
 ###############################################################################
 ### Try to find package ###
@@ -96,59 +99,65 @@ if(NOT PYSTRING_FOUND)
     set(PYSTRING_LIBRARY 
         "${_EXT_DIST_ROOT}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}pystring${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
-    if(UNIX)
-        set(PYSTRING_CXX_FLAGS "${PYSTRING_CXX_FLAGS} -fvisibility=hidden -fPIC")
-        if(OCIO_INLINES_HIDDEN)
-            set(PYSTRING_CXX_FLAGS "${PYSTRING_CXX_FLAGS} -fvisibility-inlines-hidden")
+    if(_PYSTRING_TARGET_CREATE)
+        if(UNIX)
+            set(PYSTRING_CXX_FLAGS "${PYSTRING_CXX_FLAGS} -fvisibility=hidden -fPIC")
+            if(OCIO_INLINES_HIDDEN)
+                set(PYSTRING_CXX_FLAGS "${PYSTRING_CXX_FLAGS} -fvisibility-inlines-hidden")
+            endif()
         endif()
-    endif()
 
-    string(STRIP "${PYSTRING_CXX_FLAGS}" PYSTRING_CXX_FLAGS)
+        string(STRIP "${PYSTRING_CXX_FLAGS}" PYSTRING_CXX_FLAGS)
 
-    set(PYSTRING_CMAKE_ARGS
-        ${PYSTRING_CMAKE_ARGS}
-        -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
-        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -DCMAKE_CXX_FLAGS=${PYSTRING_CXX_FLAGS}
-        -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
-    )
-    if(CMAKE_TOOLCHAIN_FILE)
-        set(PYSTRING_CMAKE_ARGS 
-            ${PYSTRING_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
-    endif()
-
-    if(NOT BUILD_SHARED_LIBS)
-        #TODO: Find a way to merge in the static libs when built with internal pystring
-        message(WARNING
-            "Building STATIC libOpenColorIO using the in-built Pystring. "
-            "Pystring symbols are NOT included in the output binary!"
+        set(PYSTRING_CMAKE_ARGS
+            ${PYSTRING_CMAKE_ARGS}
+            -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            -DCMAKE_CXX_FLAGS=${PYSTRING_CXX_FLAGS}
+            -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
         )
+        if(CMAKE_TOOLCHAIN_FILE)
+            set(PYSTRING_CMAKE_ARGS
+                ${PYSTRING_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+        endif()
+
+        if(NOT BUILD_SHARED_LIBS)
+            #TODO: Find a way to merge in the static libs when built with internal pystring
+            message(WARNING
+                "Building STATIC libOpenColorIO using the in-built Pystring. "
+                "Pystring symbols are NOT included in the output binary!"
+            )
+        endif()
+
+        # Hack to let imported target be built from ExternalProject_Add
+        file(MAKE_DIRECTORY ${PYSTRING_INCLUDE_DIR})
+
+        ExternalProject_Add(pystring_install
+            GIT_REPOSITORY "https://github.com/imageworks/pystring.git"
+            GIT_TAG "v${PYSTRING_VERSION}"
+            GIT_SHALLOW TRUE
+            PREFIX "${_EXT_BUILD_ROOT}/pystring"
+            BUILD_BYPRODUCTS ${PYSTRING_LIBRARY}
+            PATCH_COMMAND
+                ${CMAKE_COMMAND} -E copy
+                "${CMAKE_SOURCE_DIR}/share/cmake/BuildPystring.cmake" "CMakeLists.txt"
+            CMAKE_ARGS ${PYSTRING_CMAKE_ARGS}
+            EXCLUDE_FROM_ALL TRUE
+        )
+
+        add_dependencies(pystring::pystring pystring_install)
+        message(STATUS "Installing Pystring: ${PYSTRING_LIBRARY} (version ${PYSTRING_VERSION})")
     endif()
-
-    # Hack to let imported target be built from ExternalProject_Add
-    file(MAKE_DIRECTORY ${PYSTRING_INCLUDE_DIR})
-
-    ExternalProject_Add(pystring_install
-        GIT_REPOSITORY "https://github.com/imageworks/pystring.git"
-        GIT_TAG "v${PYSTRING_VERSION}"
-        GIT_SHALLOW TRUE
-        PREFIX "${_EXT_BUILD_ROOT}/pystring"
-        BUILD_BYPRODUCTS ${PYSTRING_LIBRARY}
-        PATCH_COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/share/cmake/BuildPystring.cmake" "CMakeLists.txt"
-        CMAKE_ARGS ${PYSTRING_CMAKE_ARGS}
-        EXCLUDE_FROM_ALL TRUE
-    )
-
-    add_dependencies(pystring::pystring pystring_install)
-    message(STATUS "Installing Pystring: ${PYSTRING_LIBRARY} (version ${PYSTRING_VERSION})")
 endif()
 
 ###############################################################################
 ### Configure target ###
 
-set_target_properties(pystring::pystring PROPERTIES
-    IMPORTED_LOCATION ${PYSTRING_LIBRARY}
-    INTERFACE_INCLUDE_DIRECTORIES ${PYSTRING_INCLUDE_DIR}
-)
+if(_PYSTRING_TARGET_CREATE)
+    set_target_properties(pystring::pystring PROPERTIES
+        IMPORTED_LOCATION ${PYSTRING_LIBRARY}
+        INTERFACE_INCLUDE_DIRECTORIES ${PYSTRING_INCLUDE_DIR}
+    )
 
-mark_as_advanced(PYSTRING_INCLUDE_DIR PYSTRING_LIBRARY PYSTRING_VERSION)
+    mark_as_advanced(PYSTRING_INCLUDE_DIR PYSTRING_LIBRARY PYSTRING_VERSION)
+endif()

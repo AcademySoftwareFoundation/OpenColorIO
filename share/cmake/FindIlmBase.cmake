@@ -19,7 +19,10 @@
 # downloaded, built, and statically-linked into libOpenColorIO at build time.
 #
 
-add_library(ilmbase::ilmbase UNKNOWN IMPORTED GLOBAL)
+if (NOT TARGET ilmbase::ilmbase)
+    add_library(ilmbase::ilmbase UNKNOWN IMPORTED GLOBAL)]
+    set(_ILMBASE_TARGET_CREATE TRUE)
+endif()
 
 # IlmBase components may have the version in their name
 set(_ILMBASE_LIB_VER "${IlmBase_FIND_VERSION_MAJOR}_${IlmBase_FIND_VERSION_MINOR}")
@@ -118,54 +121,58 @@ if(NOT ILMBASE_FOUND)
     set(ILMBASE_LIBRARY 
         "${_EXT_DIST_ROOT}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}Half-${_ILMBASE_LIB_VER}_s${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
-    if(UNIX)
-        set(ILMBASE_CXX_FLAGS "${ILMBASE_CXX_FLAGS} -fPIC")
+    if(_ILMBASE_TARGET_CREATE)
+        if(UNIX)
+            set(ILMBASE_CXX_FLAGS "${ILMBASE_CXX_FLAGS} -fPIC")
+        endif()
+
+        string(STRIP "${ILMBASE_CXX_FLAGS}" ILMBASE_CXX_FLAGS)
+
+        set(ILMBASE_CMAKE_ARGS
+            ${ILMBASE_CMAKE_ARGS}
+            -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            -DOPENEXR_BUILD_OPENEXR:BOOL=OFF
+            -DOPENEXR_BUILD_PYTHON_LIBS:BOOL=OFF
+            -DOPENEXR_BUILD_SHARED:BOOL=OFF
+            -DOPENEXR_BUILD_STATIC:BOOL=ON
+            -DOPENEXR_ENABLE_TESTS:BOOL=OFF
+            -DCMAKE_CXX_FLAGS=${ILMBASE_CXX_FLAGS}
+            -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
+        )
+        if(CMAKE_TOOLCHAIN_FILE)
+            set(ILMBASE_CMAKE_ARGS
+                ${ILMBASE_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+        endif()
+
+        # Hack to let imported target be built from ExternalProject_Add
+        file(MAKE_DIRECTORY ${ILMBASE_INCLUDE_DIR})
+
+        ExternalProject_Add(ilmbase_install
+            GIT_REPOSITORY "https://github.com/openexr/openexr.git"
+            GIT_TAG "v${ILMBASE_VERSION}"
+            GIT_SHALLOW TRUE
+            PREFIX "${_EXT_BUILD_ROOT}/openexr"
+            BUILD_BYPRODUCTS ${ILMBASE_LIBRARY}
+            CMAKE_ARGS ${ILMBASE_CMAKE_ARGS}
+            BUILD_COMMAND ${CMAKE_COMMAND} --build . --target Half_static
+            INSTALL_COMMAND ${CMAKE_COMMAND} -P "IlmBase/Half/cmake_install.cmake"
+            EXCLUDE_FROM_ALL TRUE
+        )
+
+        add_dependencies(ilmbase::ilmbase ilmbase_install)
+        message(STATUS "Installing IlmBase: ${ILMBASE_LIBRARY} (version ${ILMBASE_VERSION})")
     endif()
-
-    string(STRIP "${ILMBASE_CXX_FLAGS}" ILMBASE_CXX_FLAGS)
-
-    set(ILMBASE_CMAKE_ARGS
-        ${ILMBASE_CMAKE_ARGS}
-        -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
-        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -DOPENEXR_BUILD_OPENEXR:BOOL=OFF
-        -DOPENEXR_BUILD_PYTHON_LIBS:BOOL=OFF
-        -DOPENEXR_BUILD_SHARED:BOOL=OFF
-        -DOPENEXR_BUILD_STATIC:BOOL=ON
-        -DOPENEXR_ENABLE_TESTS:BOOL=OFF
-        -DCMAKE_CXX_FLAGS=${ILMBASE_CXX_FLAGS}
-        -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
-    )
-    if(CMAKE_TOOLCHAIN_FILE)
-        set(ILMBASE_CMAKE_ARGS 
-            ${ILMBASE_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
-    endif()
-
-    # Hack to let imported target be built from ExternalProject_Add
-    file(MAKE_DIRECTORY ${ILMBASE_INCLUDE_DIR})
-
-    ExternalProject_Add(ilmbase_install
-        GIT_REPOSITORY "https://github.com/openexr/openexr.git"
-        GIT_TAG "v${ILMBASE_VERSION}"
-        GIT_SHALLOW TRUE
-        PREFIX "${_EXT_BUILD_ROOT}/openexr"
-        BUILD_BYPRODUCTS ${ILMBASE_LIBRARY}
-        CMAKE_ARGS ${ILMBASE_CMAKE_ARGS}
-        BUILD_COMMAND ${CMAKE_COMMAND} --build . --target Half_static
-        INSTALL_COMMAND ${CMAKE_COMMAND} -P "IlmBase/Half/cmake_install.cmake"
-        EXCLUDE_FROM_ALL TRUE
-    )
-
-    add_dependencies(ilmbase::ilmbase ilmbase_install)
-    message(STATUS "Installing IlmBase: ${ILMBASE_LIBRARY} (version ${ILMBASE_VERSION})")
 endif()
 
 ###############################################################################
 ### Configure target ###
 
-set_target_properties(ilmbase::ilmbase PROPERTIES
-    IMPORTED_LOCATION ${ILMBASE_LIBRARY}
-    INTERFACE_INCLUDE_DIRECTORIES ${ILMBASE_INCLUDE_DIR}
-)
+if(_ILMBASE_TARGET_CREATE)
+    set_target_properties(ilmbase::ilmbase PROPERTIES
+        IMPORTED_LOCATION ${ILMBASE_LIBRARY}
+        INTERFACE_INCLUDE_DIRECTORIES ${ILMBASE_INCLUDE_DIR}
+    )
 
-mark_as_advanced(ILMBASE_INCLUDE_DIR ILMBASE_LIBRARY ILMBASE_VERSION)
+    mark_as_advanced(ILMBASE_INCLUDE_DIR ILMBASE_LIBRARY ILMBASE_VERSION)
+endif()
