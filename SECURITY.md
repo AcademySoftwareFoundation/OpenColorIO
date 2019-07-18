@@ -1,21 +1,16 @@
 # Security and OpenColorIO
 
 The OpenColorIO Technical Steering Committee (TSC) takes security very
-seriously.
+seriously. We strive to design secure software and regularly utilise analysis
+tools to help identify potential vulnerabilities.
 
-OpenVDB was not originally built as an outward-facing library.
-Users should exercise caution when working with untrusted data.
-Code injection bugs have been found in much simpler data structures,
-so it would be foolish to assume OpenVDB is immune.
-
-OpenVDB is also focused on high performance.   It will rely on
-incoming parameters being valid.  For example, array bounds checking is
-intentionally avoided.  Likewise, integer overflow concerns are
-intentionally not addressed.
+Users should exercise caution when working with untrusted data (config.ocio
+files, LUTs, etc.). Code injection bugs have been found in much simpler data
+structures, so it would be foolish to assume OpenColorIO is immune.
 
 ## Reporting Vulnerabilities
 
-Quickly resolving security related issues is very important to us. If you think
+Quickly resolving security related issues is a priority. If you think
 you've found a potential vulnerability in OpenColorIO, please report it by
 emailing security@opencolorio.org. Only TSC members and ASWF project
 management have access to these messages.
