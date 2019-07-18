@@ -13,12 +13,14 @@ endif()
 # build available, prioritizes ext/ installed Python dependencies, and
 # propagates the system PYTHONPATH.
 if(WIN32)
+    # Unfortunately some Windows tools need platform-specific path separators
+    # when setting PYTHONPATH in a command.
     file(TO_NATIVE_PATH ${CMAKE_BINARY_DIR} WIN_BINARY_DIR)
     string(CONCAT PYTHONPATH_SET
         "PYTHONPATH="
-        "${WIN_BINARY_DIR}\\src\\bindings\\python"
+        "${WIN_BINARY_DIR}\\src\\bindings\\python\\${CMAKE_BUILD_TYPE}"
         "\\\\;"
-        "${WIN_BINARY_DIR}\\ext\\dist\\lib${LIB_SUFFIX}\\site-packages"
+        "${WIN_BINARY_DIR}\\ext\\dist\\lib\\site-packages"
         "\\\\;"
         "$ENV{PYTHONPATH}"
     )
@@ -41,6 +43,7 @@ else()
 endif()
 
 message(STATUS ${PYT_PRE_CMD})
+message(STATUS $ENV{PATH})
 
 ###############################################################################
 ### Copy templates to build area ###
