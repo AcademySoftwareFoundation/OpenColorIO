@@ -27,12 +27,18 @@ endif()
 ### Try to find package ###
 
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
+    if(PYTHONINTERP_FOUND AND WIN32)
+        get_filename_component(PYTHON_ROOT "${PYTHON_EXECUTABLE}" DIRECTORY)
+        set(PYTHON_SCRIPTS_DIR "${PYTHON_ROOT}/Scripts")
+    endif()
+
     # Find sphinx-build
     find_program(SPHINX_EXECUTABLE 
         NAMES 
             sphinx-build
         HINTS
             ${SPHINX_DIRS}
+            ${PYTHON_SCRIPTS_DIR}
     )
 
     # Override REQUIRED if package can be installed
@@ -56,7 +62,11 @@ if(NOT SPHINX_FOUND)
 
     # Set find_package standard args
     set(SPHINX_FOUND TRUE)
-    set(SPHINX_EXECUTABLE "${_EXT_DIST_ROOT}/bin/sphinx-build")
+    if(WIN32)
+        set(SPHINX_EXECUTABLE "${_EXT_DIST_ROOT}/Scripts/sphinx-build")
+    else()
+        set(SPHINX_EXECUTABLE "${_EXT_DIST_ROOT}/bin/sphinx-build")
+    endif()
 
     # Configure install target
     if(_SPHINX_TARGET_CREATE)
@@ -64,7 +74,7 @@ if(NOT SPHINX_FOUND)
             TARGET
                 Sphinx
             COMMAND
-                pip install --quiet
+                pip install --verbose --verbose --verbose
                             --disable-pip-version-check
                             --install-option="--prefix=${_EXT_DIST_ROOT}"
                             -I Sphinx==${Sphinx_FIND_VERSION}
