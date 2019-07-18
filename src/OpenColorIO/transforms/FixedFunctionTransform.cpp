@@ -58,36 +58,30 @@ FixedFunctionOpData::Style ConvertStyle(FixedFunctionStyle style, TransformDirec
         {
             if(isForward) return FixedFunctionOpData::ACES_RED_MOD_03_FWD;
             else          return FixedFunctionOpData::ACES_RED_MOD_03_INV;
-            break;
         }
         case FIXED_FUNCTION_ACES_RED_MOD_10:
         {
             if(isForward) return FixedFunctionOpData::ACES_RED_MOD_10_FWD;
             else          return FixedFunctionOpData::ACES_RED_MOD_10_INV;
-            break;
         }
         case FIXED_FUNCTION_ACES_GLOW_03:
         {
             if(isForward) return FixedFunctionOpData::ACES_GLOW_03_FWD;
             else          return FixedFunctionOpData::ACES_GLOW_03_INV;
-            break;
         }
         case FIXED_FUNCTION_ACES_GLOW_10:
         {
             if(isForward) return FixedFunctionOpData::ACES_GLOW_10_FWD;
             else          return FixedFunctionOpData::ACES_GLOW_10_INV;
-            break;
         }
         case FIXED_FUNCTION_ACES_DARK_TO_DIM_10:
         {
             if(isForward) return FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD;
             else          return FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV;
-            break;
         }
         case FIXED_FUNCTION_REC2100_SURROUND:
         {
             return FixedFunctionOpData::REC2100_SURROUND;
-            break;
         }
     }
 
@@ -95,8 +89,6 @@ FixedFunctionOpData::Style ConvertStyle(FixedFunctionStyle style, TransformDirec
     ss << style;
 
     throw Exception(ss.str().c_str());
-
-    return FixedFunctionOpData::ACES_RED_MOD_03_FWD;
 }
 
 FixedFunctionStyle ConvertStyle(FixedFunctionOpData::Style style)
@@ -131,8 +123,6 @@ FixedFunctionStyle ConvertStyle(FixedFunctionOpData::Style style)
     ss << style;
 
     throw Exception(ss.str().c_str());
-
-    return FIXED_FUNCTION_ACES_RED_MOD_03;
 }
 
 }; // anon

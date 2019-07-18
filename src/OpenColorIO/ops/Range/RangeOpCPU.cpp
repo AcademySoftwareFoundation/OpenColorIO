@@ -363,7 +363,6 @@ OpCPURcPtr GetRangeRenderer(ConstRangeOpDataRcPtr & range)
     // In fact it should never happen as the optimization step removes the NoOps.
 
     throw Exception("No processing as the Range is a NoOp");
-    return OpCPURcPtr();
 }
 
 }
