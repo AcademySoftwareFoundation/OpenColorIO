@@ -85,10 +85,10 @@ jobs:
         containerImage: aswfstaging/ci-ocio:2019
         cxxCompiler: clang++
         cCompiler: clang
-  condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
   pool:
     vmImage: 'ubuntu-16.04'
   container: $[ variables['containerImage'] ]
+  #condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
 
   steps:
   - template: share/ci/templates/checkout.yml
@@ -121,10 +121,10 @@ jobs:
     matrix:
       Linux CentOS 7 VFX CY2019:
         containerImage: aswfstaging/ci-ocio:2019
-  condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
   pool:
     vmImage: 'ubuntu-16.04'
   container: $[ variables['containerImage'] ]
+  #condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
 
   steps:
   - template: share/ci/templates/checkout.yml
