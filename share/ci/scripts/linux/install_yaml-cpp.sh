@@ -24,7 +24,7 @@ fi
 mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
-      -DBUILD_SHARED_LIBS=OFF \
+      -DBUILD_SHARED_LIBS=ON \
       -DYAML_CPP_BUILD_TESTS=OFF \
       -DYAML_CPP_BUILD_TOOLS=OFF \
       -DYAML_CPP_BUILD_CONTRIB=OFF \

@@ -23,16 +23,16 @@ set(PYTHONPATH "${CMAKE_BINARY_DIR}/src/bindings/python")
 
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
     if(WIN32)
-        set(PYTHONPATH
-            "${PYTHONPATH}${PATH_SEP}${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/site-packages")
+        string(APPEND PYTHONPATH
+            "${PATH_SEP}${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/site-packages")
     else()
-        set(PYTHONPATH
-            "${PYTHONPATH}${PATH_SEP}${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/python${PYTHON_VARIANT}/site-packages")
+        string(APPEND PYTHONPATH
+            "${PATH_SEP}${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/python${PYTHON_VARIANT}/site-packages")
     endif()
 endif()
 
 if(DEFINED ENV{PYTHONPATH})
-    set(PYTHONPATH "${PYTHONPATH}${PATH_SEP}$ENV{PYTHONPATH}")
+    string(APPEND PYTHONPATH "${PATH_SEP}$ENV{PYTHONPATH}")
 endif()
 
 if(WIN32)

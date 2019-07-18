@@ -24,7 +24,7 @@ cd build
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
       -DBUILD_examples=OFF \
       -DBUILD_tests=OFF \
-      -DBUILD_shared=OFF \
+      -DBUILD_shared=ON \
       -DCMAKE_C_FLAGS="-fPIC" \
       -DCMAKE_CXX_FLAGS="-fPIC" \
       ../expat/.
