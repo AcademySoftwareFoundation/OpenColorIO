@@ -74,9 +74,13 @@ if(NOT SPHINX_FOUND)
             TARGET
                 Sphinx
             COMMAND
+                "${PYTHON_EXECUTABLE}" -c "import os; print(os.getenv('PATH'))"
+            COMMAND
                 pip install --disable-pip-version-check
                             --install-option="--prefix=${_EXT_DIST_ROOT}"
                             -I Sphinx==${Sphinx_FIND_VERSION}
+            COMMAND
+                "${PYTHON_EXECUTABLE}" -c "import os; print(os.getenv('PATH'))"
             WORKING_DIRECTORY
                 "${CMAKE_BINARY_DIR}"
         )

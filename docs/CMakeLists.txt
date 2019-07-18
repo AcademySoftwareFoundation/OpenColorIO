@@ -13,9 +13,14 @@ endif()
 # build available, prioritizes ext/ installed Python dependencies, and
 # propagates the system PYTHONPATH.
 if(WIN32)
-    # Unfortunately some Windows tools need platform-specific path separators
-    # when setting PYTHONPATH in a command.
+    # Use Windows path separators since this is being passed through to cmd
     file(TO_NATIVE_PATH ${CMAKE_BINARY_DIR} WIN_BINARY_DIR)
+    string(CONCAT PATH_SET
+        "PATH="
+        "${WIN_BINARY_DIR}\\src\\OpenColorIO\\${CMAKE_BUILD_TYPE}"
+        "\\\\;"
+        "$ENV{PATH}"
+    )
     string(CONCAT PYTHONPATH_SET
         "PYTHONPATH="
         "${WIN_BINARY_DIR}\\src\\bindings\\python\\${CMAKE_BUILD_TYPE}"
@@ -29,7 +34,7 @@ if(WIN32)
     # on Windows with:
     #   '> set PYTHONPATH=XXX \n call CMD'
     # '\n' is here because '\\&' does not work.
-    set(PYT_PRE_CMD set ${PYTHONPATH_SET} "\n" call)
+    set(PYT_PRE_CMD set ${PATH_SET} "\n" set ${PYTHONPATH_SET} "\n" call)
 else()
     set(PYTHON_VARIANT "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
     string(CONCAT PYT_PRE_CMD
@@ -41,9 +46,6 @@ else()
         "$ENV{PYTHONPATH}"
     )
 endif()
-
-message(STATUS ${PYT_PRE_CMD})
-message(STATUS $ENV{PATH})
 
 ###############################################################################
 ### Copy templates to build area ###

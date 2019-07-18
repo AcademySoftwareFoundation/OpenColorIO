@@ -73,7 +73,9 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     )
 
     # Get version from header or config file
-    if(EXPAT_INCLUDE_DIR AND EXISTS "${EXPAT_INCLUDE_DIR}/expat.h")
+    if(PC_EXPAT_FOUND)
+        set(EXPAT_VERSION "${PC_EXPAT_VERSION}")
+    elseif(EXPAT_INCLUDE_DIR AND EXISTS "${EXPAT_INCLUDE_DIR}/expat.h")
         file(STRINGS "${EXPAT_INCLUDE_DIR}/expat.h" _EXPAT_VER_SEARCH 
             REGEX "^[ \t]*#define[ \t]+XML_(MAJOR|MINOR|MICRO)_VERSION[ \t]+[0-9]+.*$")
         if(_EXPAT_VER_SEARCH)
@@ -87,8 +89,6 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
             set(EXPAT_VERSION 
                 "${EXPAT_VERSION_MAJOR}.${EXPAT_VERSION_MINOR}.${EXPAT_VERSION_MICRO}")
         endif()
-    elseif(PC_EXPAT_FOUND)
-        set(EXPAT_VERSION "${PC_EXPAT_VERSION}")
     endif()
 
     # Override REQUIRED if package can be installed
