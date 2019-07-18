@@ -196,8 +196,7 @@ jobs:
     displayName: Install dependencies
 
   - powershell: ls C:\
-  - powershell: ls C:\_python
-  - bash: python --version
+  - powershell: Get-Content -Path C:\_python.log
 
   - template: share/ci/templates/configure.yml
     parameters:
