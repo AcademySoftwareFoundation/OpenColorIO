@@ -22,8 +22,11 @@ fi
 mkdir build
 cd build
 
-sudo find /usr/local -type f -name '*expat.h' -delete
-sudo find /usr/local -type f -name '*expat*.so' -delete
+# Remove existing install
+for EXT in h so a pc
+do
+    sudo find /usr/local -type f -name "*expat*.${EXT}" -delete
+done
 
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
       -DBUILD_examples=OFF \

@@ -13,7 +13,8 @@ set(EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
 set(PYTHON_VARIANT "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
 
 if(WIN32)
-    set(PATH_SEP "\\\\;")
+    # Need to escape the ";" path separator at each level of expansion
+    set(PATH_SEP "\\\\\\;")
 else()
     set(PATH_SEP ":")
 endif()
@@ -47,6 +48,8 @@ if(WIN32)
 else()
     set(PYT_PRE_CMD PYTHONPATH=${PYTHONPATH})
 endif()
+
+message(STATUS ${PYT_PRE_CMD})
 
 ###############################################################################
 ### Copy templates to build area ###
