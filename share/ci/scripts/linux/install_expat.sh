@@ -25,7 +25,7 @@ cd build
 # Remove existing install
 for EXT in h so a pc
 do
-    sudo find /usr/local -type f -name "*expat*.${EXT}" -delete
+    sudo find /usr -type f -name "*expat*.${EXT}" -delete
 done
 
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local \

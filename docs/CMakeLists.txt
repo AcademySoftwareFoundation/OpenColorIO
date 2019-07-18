@@ -9,44 +9,35 @@ endif()
 ###############################################################################
 ### Setup PYTHONPATH ###
 
-set(EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
-set(PYTHON_VARIANT "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
-
+# Override PYTHONPATH prior to running Sphinx. This makes the PyOpenColorIO
+# build available, prioritizes ext/ installed Python dependencies, and
+# propagates the system PYTHONPATH.
 if(WIN32)
-    # Need to escape the ";" path separator at each level of expansion
-    set(PATH_SEP "\\\\\\;")
+    file(TO_NATIVE_PATH ${CMAKE_BINARY_DIR} WIN_BINARY_DIR)
+    string(CONCAT PYTHONPATH_SET
+        "PYTHONPATH="
+        "${WIN_BINARY_DIR}\\src\\bindings\\python"
+        "\\\\;"
+        "${WIN_BINARY_DIR}\\ext\\dist\\lib${LIB_SUFFIX}\\site-packages"
+        "\\\\;"
+        "$ENV{PYTHONPATH}"
+    )
+    # Mimic *nix:
+    #   '> PYTHONPATH=XXX CMD'
+    # on Windows with:
+    #   '> set PYTHONPATH=XXX \n call CMD'
+    # '\n' is here because '\\&' does not work.
+    set(PYT_PRE_CMD set ${PYTHONPATH_SET} "\n" call)
 else()
-    set(PATH_SEP ":")
-endif()
-
-# Add built PyOpenColorIO to PYTHONPATH
-set(PYTHONPATH "${CMAKE_BINARY_DIR}/src/bindings/python")
-
-if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
-    if(WIN32)
-        string(APPEND PYTHONPATH
-            "${PATH_SEP}${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/site-packages")
-    else()
-        string(APPEND PYTHONPATH
-            "${PATH_SEP}${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/python${PYTHON_VARIANT}/site-packages")
-    endif()
-endif()
-
-if(DEFINED ENV{PYTHONPATH})
-    string(APPEND PYTHONPATH "${PATH_SEP}$ENV{PYTHONPATH}")
-endif()
-
-if(WIN32)
-    # Unfortunately some windows tools require to have
-    #  the paths with the '\' (i.e. not working with '//').
-    string(REGEX REPLACE "/" "\\\\" PYTHONPATH ${PYTHONPATH})
-
-    # Workaround to mimic *nix '> PYTHONPATH=XXX CMD' 
-    #  on windows, it becomes  '> set PYTHONPATH=XXX \n call CMD'
-    #   '\n' is here because '\\&' does not work.
-    set(PYT_PRE_CMD set PYTHONPATH=${PYTHONPATH} "\n" call )
-else()
-    set(PYT_PRE_CMD PYTHONPATH=${PYTHONPATH})
+    set(PYTHON_VARIANT "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
+    string(CONCAT PYT_PRE_CMD
+        "PYTHONPATH="
+        "${CMAKE_BINARY_DIR}/src/bindings/python"
+        ":"
+        "${CMAKE_BINARY_DIR}/ext/dist/lib${LIB_SUFFIX}/python${PYTHON_VARIANT}/site-packages"
+        ":"
+        "$ENV{PYTHONPATH}"
+    )
 endif()
 
 message(STATUS ${PYT_PRE_CMD})
