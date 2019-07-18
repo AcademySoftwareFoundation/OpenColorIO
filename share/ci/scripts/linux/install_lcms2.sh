@@ -23,7 +23,7 @@ cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
       -DCMAKE_C_FLAGS="-fPIC" \
       ../.
 make -j4
-make install
+sudo make install
 
 cd ../..
 rm -rf Little-CMS

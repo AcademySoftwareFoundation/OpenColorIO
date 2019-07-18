@@ -10,4 +10,4 @@ else
     NUMPY_VERSION="$2"
 fi
 
-pip install numpy==${NUMPY_VERSION}
+sudo pip install numpy==${NUMPY_VERSION}

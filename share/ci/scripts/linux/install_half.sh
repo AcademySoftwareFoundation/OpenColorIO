@@ -26,7 +26,7 @@ cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
       -DCMAKE_CXX_FLAGS="-fPIC" \
       ../.
 make -j4 Half_static
-cmake -P IlmBase/Half/cmake_install.cmake
+sudo cmake -P IlmBase/Half/cmake_install.cmake
 
 cd ../..
 rm -rf openexr

@@ -10,4 +10,4 @@ else
     SPHINX_VERSION="$2"
 fi
 
-pip install Sphinx==${SPHINX_VERSION}
+sudo pip install Sphinx==${SPHINX_VERSION}

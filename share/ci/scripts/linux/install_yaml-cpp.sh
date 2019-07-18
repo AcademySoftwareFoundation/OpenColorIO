@@ -34,7 +34,7 @@ cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
                          -Wno-deprecated-declarations" \
       ../.
 make -j4
-make install
+sudo make install
 
 cd ../..
 rm -rf yaml-cpp

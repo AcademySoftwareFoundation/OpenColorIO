@@ -9,31 +9,35 @@ endif()
 ###############################################################################
 ### Setup PYTHONPATH ###
 
+if(WIN32)
+    set(PATH_SEP "\\;")
+else()
+    set(PATH_SEP ":")
+endif()
+
 set(EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
 set(PYTHON_VARIANT "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
 
 # Add built PyOpenColorIO to PYTHONPATH
-set(PYTHONPATH_LIST "${CMAKE_BINARY_DIR}/src/bindings/python")
+set(PYTHONPATH "${CMAKE_BINARY_DIR}/src/bindings/python")
 
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
     if(WIN32)
-        list(APPEND ${PYTHONPATH_LIST}
-            "${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/site-packages"
+        string(APPEND ${PYTHONPATH}
+            "${PATH_SEP}${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/site-packages"
         )
     else()
-        list(APPEND ${PYTHONPATH_LIST}
-            "${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/python${PYTHON_VARIANT}/site-packages"
+        string(APPEND ${PYTHONPATH}
+            "${PATH_SEP}${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/python${PYTHON_VARIANT}/site-packages"
         )
     endif()
 endif()
 
 if(DEFINED ENV{PYTHONPATH})
-    list(APPEND ${PYTHONPATH_LIST} "$ENV{PYTHONPATH}")
+    string(APPEND ${PYTHONPATH} "${PATH_SEP}$ENV{PYTHONPATH}")
 endif()
 
 if(WIN32)
-    string(REPLACE ";" "\\;" PYTHONPATH "${PYTHONPATH_LIST}")
-
     # Unfortunately some windows tools require to have
     #  the paths with the '\' (i.e. not working with '//').
     string(REGEX REPLACE "/" "\\\\" PYTHONPATH ${PYTHONPATH})
@@ -43,7 +47,6 @@ if(WIN32)
     #   '\n' is here because '\\&' does not work.
     set(PYT_PRE_CMD set PYTHONPATH=${PYTHONPATH} "\n" call )
 else()
-    string(REPLACE ";" ":" PYTHONPATH "${PYTHONPATH_LIST}")
     set(PYT_PRE_CMD PYTHONPATH=${PYTHONPATH})
 endif()
 

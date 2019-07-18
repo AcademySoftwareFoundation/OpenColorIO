@@ -29,7 +29,7 @@ cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
       -DCMAKE_CXX_FLAGS="-fPIC" \
       ../expat/.
 make -j4
-make install
+sudo make install
 
 cd ../..
 rm -rf libexpat

@@ -99,7 +99,6 @@ jobs:
       share/ci/scripts/linux/install_openexr.sh latest
       share/ci/scripts/linux/install_oiio.sh latest
     displayName: Install dependencies
-    condition: and(succeeded(), variables['installSh'])
 
   - template: share/ci/templates/configure.yml
     parameters:
