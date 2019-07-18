@@ -74,8 +74,7 @@ if(NOT SPHINX_FOUND)
             TARGET
                 Sphinx
             COMMAND
-                pip install --verbose
-                            --disable-pip-version-check
+                pip install --disable-pip-version-check
                             --install-option="--prefix=${_EXT_DIST_ROOT}"
                             -I Sphinx==${Sphinx_FIND_VERSION}
             WORKING_DIRECTORY

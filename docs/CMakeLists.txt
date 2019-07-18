@@ -32,7 +32,7 @@ if(DEFINED ENV{PYTHONPATH})
 endif()
 
 if(WIN32)
-    list(JOIN ${PYTHONPATH_LIST} "\;" PYTHONPATH)
+    string(REPLACE ";" "\\;" PYTHONPATH "${PYTHONPATH_LIST}")
 
     # Unfortunately some windows tools require to have
     #  the paths with the '\' (i.e. not working with '//').
@@ -43,7 +43,7 @@ if(WIN32)
     #   '\n' is here because '\\&' does not work.
     set(PYT_PRE_CMD set PYTHONPATH=${PYTHONPATH} "\n" call )
 else()
-    list(JOIN ${PYTHONPATH_LIST} ":" PYTHONPATH)
+    string(REPLACE ";" ":" PYTHONPATH "${PYTHONPATH_LIST}")
     set(PYT_PRE_CMD PYTHONPATH=${PYTHONPATH})
 endif()
 

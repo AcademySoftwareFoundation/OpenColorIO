@@ -61,11 +61,6 @@ Some optional components also depend on:
 
 - \*Little CMS >= 2.2 (for ociobakelut ICC profile baking)
 - Python 2.x (for the Python bindings and docs)
-    - \*setuptools >= 1.1.6
-    - \*docutils >= 0.14
-    - \*MarkupSafe >= 1.1.1
-    - \*Jinja2 >= 2.10.1
-    - \*Pygments >= 2.4.2
     - \*Sphinx >= 1.8.5
 - Nuke 6.x or newer (for the Nuke nodes)
 - OpenImageIO (for apps including ocioconvert)

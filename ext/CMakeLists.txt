@@ -41,35 +41,6 @@ set_target_properties(sampleicc::sampleicc PROPERTIES
 if(OCIO_BUILD_DOCS)
 	include(FindPythonPackage)
 
-	# setuptools
-	# https://pypi.python.org/pypi/setuptools
-	#set(SETUPTOOLS_MIN_VERSION 1.1.6)
-	#find_python_package(setuptools ${SETUPTOOLS_MIN_VERSION} REQUIRED)
-
-	# docutils
-	# https://pypi.python.org/pypi/docutils
-	#set(DOCUTILS_MIN_VERSION 0.14)
-	#find_python_package(docutils ${DOCUTILS_MIN_VERSION} REQUIRED)
-	#add_dependencies(docutils setuptools)
-
-	# MarkupSafe
-	# https://pypi.python.org/pypi/MarkupSafe
-	#set(MARKUPSAFE_MIN_VERSION 1.1.1)
-	#find_python_package(MarkupSafe ${MARKUPSAFE_MIN_VERSION} REQUIRED)
-	#add_dependencies(MarkupSafe setuptools)
-
-	# Jinja2
-	# https://pypi.python.org/pypi/Jinja2
-	#set(JINJA2_MIN_VERSION 2.10.1)
-	#find_python_package(Jinja2 ${JINJA2_MIN_VERSION} REQUIRED)
-	#add_dependencies(Jinja2 setuptools MarkupSafe)
-
-	# Pygments
-	# https://pypi.python.org/pypi/Pygments
-	#set(PYGMENTS_MIN_VERSION 2.4.2)
-	#find_python_package(Pygments ${PYGMENTS_MIN_VERSION} REQUIRED)
-	#add_dependencies(Pygments setuptools)
-
 	# Sphinx
 	# https://pypi.python.org/pypi/Sphinx
 	set(SPHINX_MIN_VERSION 1.8.5)
