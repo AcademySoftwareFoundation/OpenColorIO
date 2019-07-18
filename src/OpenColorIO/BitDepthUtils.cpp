@@ -65,7 +65,6 @@ OCIO_NAMESPACE_ENTER
                 std::string err(errBDNotSupported);
                 err += BitDepthToString(in);
                 throw Exception(err.c_str());
-                break;
             }
         }
     }
@@ -96,7 +95,6 @@ OCIO_NAMESPACE_ENTER
                 std::string err(errBDNotSupported);
                 err += BitDepthToString(in);
                 throw Exception(err.c_str());
-                break;
             }
         }
     }

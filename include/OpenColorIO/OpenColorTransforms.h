@@ -407,6 +407,7 @@ OCIO_NAMESPACE_ENTER
     protected:
 
         DynamicProperty() {}
+        DynamicProperty(const DynamicProperty &);
         virtual ~DynamicProperty() {}
 
         DynamicProperty& operator= (const DynamicProperty &);

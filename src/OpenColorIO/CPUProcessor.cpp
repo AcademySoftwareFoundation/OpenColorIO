@@ -76,7 +76,6 @@ std::string PixelFormatToString(PixelFormat pxlFormat)
             break;
         default:
             throw Exception("Unsupported channel ordering");
-            break;
     }
 
     val += "_";
@@ -103,7 +102,6 @@ std::string PixelFormatToString(PixelFormat pxlFormat)
             break;
         default:
             throw Exception("Unsupported bit depth");
-            break;
     }
 
     return val;    

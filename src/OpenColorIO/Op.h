@@ -410,6 +410,7 @@ OCIO_NAMESPACE_ENTER
         typedef Type::const_reference const_reference;
 
         OpRcPtrVec() {}
+        ~OpRcPtrVec() {}
         OpRcPtrVec(const OpRcPtrVec & v);
         OpRcPtrVec & operator=(const OpRcPtrVec & v);
         // Note: It copies elements i.e. no clone.
