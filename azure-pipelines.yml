@@ -206,7 +206,7 @@ jobs:
         -DCMAKE_GENERATOR_PLATFORM=x64 \
         -DPYTHON_INCLUDE_DIR=C:/_python/include \
         -DPYTHON_LIBRARY=C:/_python/libs/python27.lib \
-        -DPYTHON_EXECUTABLE=C:/_python/python
+        -DPYTHON_EXECUTABLE=C:/_python/python.exe
 
   - bash: echo $PATH
 
