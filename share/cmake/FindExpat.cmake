@@ -49,8 +49,8 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         NAMES
             expat.h
         HINTS
-            ${_EXPAT_SEARCH_DIRS}
             ${PC_EXPAT_INCLUDE_DIRS}
+            ${_EXPAT_SEARCH_DIRS}
         PATH_SUFFIXES
             include
             expat/include
@@ -66,8 +66,8 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         NAMES
             ${_EXPAT_STATIC} expat libexpat
         HINTS
-            ${_EXPAT_SEARCH_DIRS}
             ${PC_EXPAT_LIBRARY_DIRS}
+            ${_EXPAT_SEARCH_DIRS}
         PATH_SUFFIXES
             lib64 lib 
     )

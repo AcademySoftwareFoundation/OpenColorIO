@@ -13,7 +13,7 @@ set(EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
 set(PYTHON_VARIANT "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
 
 if(WIN32)
-    set(PATH_SEP "\\;")
+    set(PATH_SEP "\\\\;")
 else()
     set(PATH_SEP ":")
 endif()
