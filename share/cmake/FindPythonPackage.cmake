@@ -99,7 +99,7 @@ macro(find_python_package package version)
                 TARGET
                     ${package}
                 COMMAND
-                    pip install --quiet
+                    pip install --verbose
                                 --disable-pip-version-check
                                 --install-option="--prefix=${_EXT_DIST_ROOT}"
                                 -I ${package}==${version}

@@ -12,11 +12,27 @@ endif()
 set(EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
 set(PYTHON_VARIANT "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
 
-# Add built PyOpenColorIO to PYTHONPATH and ensure that doc target depends on PyOpenColorIO
-set(PY_OCIO_DIR "${CMAKE_BINARY_DIR}/src/bindings/python")
+# Add built PyOpenColorIO to PYTHONPATH
+set(PYTHONPATH_LIST "${CMAKE_BINARY_DIR}/src/bindings/python")
+
+if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
+    if(WIN32)
+        list(APPEND ${PYTHONPATH_LIST}
+            "${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/site-packages"
+        )
+    else()
+        list(APPEND ${PYTHONPATH_LIST}
+            "${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/python${PYTHON_VARIANT}/site-packages"
+        )
+    endif()
+endif()
+
+if(DEFINED ENV{PYTHONPATH})
+    list(APPEND ${PYTHONPATH_LIST} "$ENV{PYTHONPATH}")
+endif()
 
 if(WIN32)
-    set(PYTHONPATH "${PY_OCIO_DIR};${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/site-packages;$ENV{PYTHONPATH}")
+    list(JOIN ${PYTHONPATH_LIST} "\;" PYTHONPATH)
 
     # Unfortunately some windows tools require to have
     #  the paths with the '\' (i.e. not working with '//').
@@ -25,11 +41,9 @@ if(WIN32)
     # Workaround to mimic *nix '> PYTHONPATH=XXX CMD' 
     #  on windows, it becomes  '> set PYTHONPATH=XXX \n call CMD'
     #   '\n' is here because '\\&' does not work.
-    set(PYT_PRE_CMD set PYTHONPATH=${PYTHONPATH} "\n" call)
+    set(PYT_PRE_CMD set PYTHONPATH=${PYTHONPATH} "\n" call )
 else()
-    set(PYTHONPATH 
-        "${PY_OCIO_DIR}:${EXT_DIST_ROOT}/lib${LIB_SUFFIX}/python${PYTHON_VARIANT}/site-packages:$ENV{PYTHONPATH}")
-
+    list(JOIN ${PYTHONPATH_LIST} ":" PYTHONPATH)
     set(PYT_PRE_CMD PYTHONPATH=${PYTHONPATH})
 endif()
 
