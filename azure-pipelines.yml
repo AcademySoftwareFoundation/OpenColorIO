@@ -199,9 +199,8 @@ jobs:
 
   - powershell: |
       share/ci/scripts/windows/install_python.ps1 2.7.16
-      Get-Content -Path C:\_python.log
     displayName: Install Python
-    condition: and(succeeded(), variables['installPython'])
+    condition: and(succeeded(), eq(variables['installPython'], 'true'))
 
   - task: UsePythonVersion@0
     inputs:
@@ -209,7 +208,7 @@ jobs:
       addToPath: true
       architecture: 'x64'
     displayName: Configure Python
-    condition: and(succeeded(), not(variables['installPython']))
+    condition: and(succeeded(), eq(variables['installPython'], 'false'))
 
   - template: share/ci/templates/configure.yml
     parameters:
