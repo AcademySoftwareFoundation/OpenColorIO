@@ -73,22 +73,24 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     )
 
     # Get version from header or config file
-    if(PC_EXPAT_FOUND)
-        set(EXPAT_VERSION "${PC_EXPAT_VERSION}")
-    elseif(EXPAT_INCLUDE_DIR AND EXISTS "${EXPAT_INCLUDE_DIR}/expat.h")
+    # if(PC_EXPAT_FOUND)
+    #     set(EXPAT_VERSION "${PC_EXPAT_VERSION}")
+    if(EXPAT_INCLUDE_DIR AND EXISTS "${EXPAT_INCLUDE_DIR}/expat.h")
         file(STRINGS "${EXPAT_INCLUDE_DIR}/expat.h" _EXPAT_VER_SEARCH 
             REGEX "^[ \t]*#define[ \t]+XML_(MAJOR|MINOR|MICRO)_VERSION[ \t]+[0-9]+.*$")
         if(_EXPAT_VER_SEARCH)
-            foreach(_EXPAT_VER_PART MAJOR MINOR MICRO)
+            foreach(_VER_PART MAJOR MINOR MICRO)
                 string(REGEX REPLACE ".*#define[ \t]+XML_${_VER_PART}_VERSION[ \t]+([0-9]+).*" 
-                    "\\1" EXPAT_${_EXPAT_VER_PART}_VERSION "${_LCMS2_VER_SEARCH}")
-                if(NOT EXPAT_${_EXPAT_VER_PART}_VERSION)
-                    set(EXPAT_${_EXPAT_VER_PART}_VERSION 0)
+                    "\\1" EXPAT_VERSION_${_VER_PART} "${_EXPAT_VER_SEARCH}")
+                if(NOT EXPAT_VERSION_${_VER_PART})
+                    set(EXPAT_VERSION_${_VER_PART} 0)
                 endif()
             endforeach()
             set(EXPAT_VERSION 
                 "${EXPAT_VERSION_MAJOR}.${EXPAT_VERSION_MINOR}.${EXPAT_VERSION_MICRO}")
         endif()
+    elseif(PC_EXPAT_FOUND)
+        set(EXPAT_VERSION "${PC_EXPAT_VERSION}")
     endif()
 
     # Override REQUIRED if package can be installed
