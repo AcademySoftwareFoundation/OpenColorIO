@@ -12,7 +12,7 @@ endif()
 # Override PYTHONPATH prior to running Sphinx. This makes the PyOpenColorIO
 # build available, prioritizes ext/ installed Python dependencies, and
 # propagates the system PYTHONPATH.
-if(UNIX)
+if(WIN32)
     # Use Windows path separators since this is being passed through to cmd
     file(TO_NATIVE_PATH ${CMAKE_BINARY_DIR} WIN_BINARY_DIR)
     string(CONCAT PATH_SET
