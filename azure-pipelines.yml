@@ -219,8 +219,4 @@ jobs:
         -DCMAKE_GENERATOR_PLATFORM=x64 \
         -DPYTHON_EXECUTABLE=$(which python)
 
-  - bash: echo $PATH
-
   - template: share/ci/templates/build.yml
-
-  - bash: echo $PATH
