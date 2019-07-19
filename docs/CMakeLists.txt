@@ -15,11 +15,12 @@ endif()
 if(WIN32)
     # Use Windows path separators since this is being passed through to cmd
     file(TO_NATIVE_PATH ${CMAKE_BINARY_DIR} WIN_BINARY_DIR)
+    string(REPLACE ";" "\\\\;" ESC_PATH "$ENV{PATH}")
     string(CONCAT PATH_SET
         "PATH="
         "${WIN_BINARY_DIR}\\src\\OpenColorIO\\${CMAKE_BUILD_TYPE}"
         "\\\\;"
-        "$ENV{PATH}"
+        "${ESC_PATH}"
     )
     string(CONCAT PYTHONPATH_SET
         "PYTHONPATH="
