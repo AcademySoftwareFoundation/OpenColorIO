@@ -47,10 +47,6 @@ else()
     )
 endif()
 
-foreach(TOKEN ${PYT_PRE_CMD})
-    message(STATUS "${TOKEN}")
-endforeach()
-
 ###############################################################################
 ### Copy templates to build area ###
 
