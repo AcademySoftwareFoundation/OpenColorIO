@@ -75,44 +75,44 @@ jobs:
 # Latest dependency tags (cron only)
 # ----------------------------------
 - job: Latest
- strategy:
-   matrix:
-     Linux CentOS 7 VFX CY2019:
-       containerImage: aswfstaging/ci-ocio:2019
-       cxxCompiler: g++
-       cCompiler: gcc
-     Linux CentOS 7 Clang 7:
-       containerImage: aswfstaging/ci-ocio:2019
-       cxxCompiler: clang++
-       cCompiler: clang
- pool:
-   vmImage: 'ubuntu-16.04'
- container: $[ variables['containerImage'] ]
- condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
+  strategy:
+    matrix:
+      Linux CentOS 7 VFX CY2019:
+        containerImage: aswfstaging/ci-ocio:2019
+        cxxCompiler: g++
+        cCompiler: gcc
+      Linux CentOS 7 Clang 7:
+        containerImage: aswfstaging/ci-ocio:2019
+        cxxCompiler: clang++
+        cCompiler: clang
+  pool:
+    vmImage: 'ubuntu-16.04'
+  container: $[ variables['containerImage'] ]
+  condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
 
- steps:
- - template: share/ci/templates/checkout.yml
- - bash: |
-     find /usr -iname "*expat*"
-     share/ci/scripts/linux/install_expat.sh latest
-     find /usr -iname "*expat*"
-     share/ci/scripts/linux/install_lcms2.sh latest
-     share/ci/scripts/linux/install_yaml-cpp.sh latest
-     share/ci/scripts/linux/install_openexr.sh latest
-     share/ci/scripts/linux/install_oiio.sh latest
-   displayName: Install dependencies
+  steps:
+  - template: share/ci/templates/checkout.yml
+  - bash: |
+      find /usr -iname "*expat*"
+      share/ci/scripts/linux/install_expat.sh latest
+      find /usr -iname "*expat*"
+      share/ci/scripts/linux/install_lcms2.sh latest
+      share/ci/scripts/linux/install_yaml-cpp.sh latest
+      share/ci/scripts/linux/install_openexr.sh latest
+      share/ci/scripts/linux/install_oiio.sh latest
+    displayName: Install dependencies
 
- - template: share/ci/templates/configure.yml
-   parameters:
-     installExt: NONE
-     cxxCompiler: $(cxxCompiler)
-     cCompiler: $(cCompiler)
+  - template: share/ci/templates/configure.yml
+    parameters:
+      installExt: NONE
+      cxxCompiler: $(cxxCompiler)
+      cCompiler: $(cCompiler)
 
- - template: share/ci/templates/build.yml
-   parameters:
-     cxxCompiler: $(cxxCompiler)
-     cCompiler: $(cCompiler)
-     cmakeOpts: -- -j2
+  - template: share/ci/templates/build.yml
+    parameters:
+      cxxCompiler: $(cxxCompiler)
+      cCompiler: $(cCompiler)
+      cmakeOpts: -- -j2
 
 # # --------------------------------------
 # # SonarCloud static analysis (cron only)
