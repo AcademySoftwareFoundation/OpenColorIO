@@ -107,6 +107,8 @@ jobs:
       installExt: NONE
       cxxCompiler: $(cxxCompiler)
       cCompiler: $(cCompiler)
+      cmakeOpts: |
+        -DEXPAT_DIRS="/usr/local"
 
   - template: share/ci/templates/build.yml
     parameters:
