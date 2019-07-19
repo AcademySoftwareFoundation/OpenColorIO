@@ -72,16 +72,15 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     )
 
     # Get version from config or header file
-    if (PC_LCMS2_FOUND)
-        set(LCMS2_VERSION "${PC_LCMS2_VERSION}")
-
-    else(LCMS2_INCLUDE_DIR AND EXISTS "${LCMS2_INCLUDE_DIR}/lcms2.h")
+    if(LCMS2_INCLUDE_DIR AND EXISTS "${LCMS2_INCLUDE_DIR}/lcms2.h")
         file(STRINGS "${LCMS2_INCLUDE_DIR}/lcms2.h" _LCMS2_VER_SEARCH 
             REGEX "^[ \t]*//[ \t]+Version[ \t]+[.0-9]+.*$")
         if(_LCMS2_VER_SEARCH)
             string(REGEX REPLACE ".*//[ \t]+Version[ \t]+([.0-9]+).*" 
                 "\\1" LCMS2_VERSION "${_LCMS2_VER_SEARCH}")
         endif()
+    elseif(PC_LCMS2_FOUND)
+        set(LCMS2_VERSION "${PC_LCMS2_VERSION}")
     endif()
 
     # Override REQUIRED if package can be installed
@@ -145,7 +144,8 @@ if(NOT LCMS2_FOUND)
             BUILD_BYPRODUCTS ${LCMS2_LIBRARY}
             PATCH_COMMAND
                 ${CMAKE_COMMAND} -E copy
-                "${CMAKE_SOURCE_DIR}/share/cmake/BuildLCMS2.cmake" "CMakeLists.txt"
+                "${CMAKE_SOURCE_DIR}/share/cmake/projects/BuildLCMS2.cmake"
+                "CMakeLists.txt"
             CMAKE_ARGS ${LCMS2_CMAKE_ARGS}
             EXCLUDE_FROM_ALL TRUE
         )

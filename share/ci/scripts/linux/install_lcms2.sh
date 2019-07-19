@@ -14,7 +14,7 @@ else
     git checkout tags/lcms${LCMS2_VERSION} -b lcms${LCMS2_VERSION}
 fi
 
-cp ../share/cmake/BuildLCMS2.cmake CMakeLists.txt
+cp ../share/cmake/projects/BuildLCMS2.cmake CMakeLists.txt
 
 mkdir build
 cd build

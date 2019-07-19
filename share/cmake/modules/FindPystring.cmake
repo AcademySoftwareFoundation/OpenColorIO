@@ -140,7 +140,8 @@ if(NOT PYSTRING_FOUND)
             BUILD_BYPRODUCTS ${PYSTRING_LIBRARY}
             PATCH_COMMAND
                 ${CMAKE_COMMAND} -E copy
-                "${CMAKE_SOURCE_DIR}/share/cmake/BuildPystring.cmake" "CMakeLists.txt"
+                "${CMAKE_SOURCE_DIR}/share/cmake/projects/BuildPystring.cmake"
+                "CMakeLists.txt"
             CMAKE_ARGS ${PYSTRING_CMAKE_ARGS}
             EXCLUDE_FROM_ALL TRUE
         )

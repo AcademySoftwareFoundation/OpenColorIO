@@ -9,7 +9,11 @@ set(OpenColorIO_VERSION_RELEASE_TYPE "dev")
 
 enable_testing()
 
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/share/cmake)
+set(CMAKE_MODULE_PATH
+    ${CMAKE_MODULE_PATH}
+    ${CMAKE_SOURCE_DIR}/share/cmake/macros
+    ${CMAKE_SOURCE_DIR}/share/cmake/modules
+)
 set(CMAKE_WARN_DEPRECATED ON)
 
 if(NOT CMAKE_BUILD_TYPE)
