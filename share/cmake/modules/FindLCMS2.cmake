@@ -47,12 +47,13 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     # Find include directory
     find_path(LCMS2_INCLUDE_DIR
         NAMES
-            lcms2.h
+            lcms2/lcms2.h
         HINTS
             ${_LCMS2_SEARCH_DIRS}
             ${PC_LCMS2_INCLUDE_DIRS}
         PATH_SUFFIXES
             include
+            lcms2/include
     )
 
     # Attempt to find static library first if this is set
@@ -63,7 +64,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     # Find library
     find_library(LCMS2_LIBRARY
         NAMES
-            ${_LCMS2_STATIC} lcms2
+            ${_LCMS2_STATIC} lcms2 liblcms2
         HINTS
             ${_LCMS2_SEARCH_DIRS}
             ${PC_LCMS2_LIBRARY_DIRS}
