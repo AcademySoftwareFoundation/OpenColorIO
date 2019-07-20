@@ -90,7 +90,7 @@ jobs:
   pool:
     vmImage: 'ubuntu-16.04'
   container: $[ variables['containerImage'] ]
-  #condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
+  condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
 
   steps:
   - template: share/ci/templates/checkout.yml
@@ -106,7 +106,7 @@ jobs:
 
   - template: share/ci/templates/configure.yml
     parameters:
-      installExt: NONE
+      installExtPkgs: NONE
       cxxCompiler: $(cxxCompiler)
       cCompiler: $(cCompiler)
       cmakeOpts: |
