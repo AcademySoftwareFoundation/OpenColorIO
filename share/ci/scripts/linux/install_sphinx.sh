@@ -10,4 +10,8 @@ else
     SPHINX_VERSION="$2"
 fi
 
-sudo pip install Sphinx==${SPHINX_VERSION}
+if [ "$SPHINX_VERSION" == "latest" ]; then
+    sudo pip install Sphinx
+else
+    sudo pip install Sphinx==${SPHINX_VERSION}
+fi
