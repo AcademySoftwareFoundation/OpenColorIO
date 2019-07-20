@@ -50,8 +50,3 @@ if(OCIO_BUILD_DOCS)
     # Make sphinx-build path available in other modules
     set(SPHINX_EXECUTABLE "${SPHINX_EXECUTABLE}" CACHE STRING "Path to sphinx-build")
 endif()
-
-###############################################################################
-### sampleicc ###
-add_library(sampleicc INTERFACE IMPORTED GLOBAL)
-set_property(TARGET sampleicc PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/sampleicc/src/include")
