@@ -130,7 +130,7 @@ if(NOT PYSTRING_FOUND)
 
         ExternalProject_Add(pystring_install
             GIT_REPOSITORY "https://github.com/imageworks/pystring.git"
-            GIT_TAG "v${PYSTRING_VERSION}"
+            GIT_TAG "v${Pystring_FIND_VERSION}"
             GIT_SHALLOW TRUE
             PREFIX "${_EXT_BUILD_ROOT}/pystring"
             BUILD_BYPRODUCTS ${PYSTRING_LIBRARY}
