@@ -578,9 +578,9 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "ops/exposurecontrast/ExposureContrastOps.h"
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(Processor, shared_dynamic_properties)
+OCIO_ADD_TEST(Processor, shared_dynamic_properties)
 {
     OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_FORWARD;
     OCIO::ExposureContrastOpDataRcPtr data =
@@ -591,16 +591,16 @@ OIIO_ADD_TEST(Processor, shared_dynamic_properties)
     data->getExposureProperty()->makeDynamic();
 
     OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
-    OIIO_REQUIRE_EQUAL(ops.size(), 1);
-    OIIO_REQUIRE_ASSERT(ops[0]);
+    OCIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_REQUIRE_ASSERT(ops[0]);
 
     data = data->clone();
     data->setExposure(2.2);
 
-    OIIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
-    OIIO_REQUIRE_ASSERT(ops[1]);
+    OCIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_REQUIRE_ASSERT(ops[1]);
 
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO::ConstOpRcPtr op1 = ops[1];
@@ -611,20 +611,20 @@ OIIO_ADD_TEST(Processor, shared_dynamic_properties)
     OCIO::DynamicPropertyImplRcPtr dp0 = data0->getExposureProperty();
     OCIO::DynamicPropertyImplRcPtr dp1 = data1->getExposureProperty();
 
-    OIIO_CHECK_NE(dp0->getDoubleValue(), dp1->getDoubleValue());
+    OCIO_CHECK_NE(dp0->getDoubleValue(), dp1->getDoubleValue());
 
     OCIO::UnifyDynamicProperties(ops);
 
     OCIO::DynamicPropertyImplRcPtr dp0_post = data0->getExposureProperty();
     OCIO::DynamicPropertyImplRcPtr dp1_post = data1->getExposureProperty();
 
-    OIIO_CHECK_EQUAL(dp0_post->getDoubleValue(), dp1_post->getDoubleValue());
+    OCIO_CHECK_EQUAL(dp0_post->getDoubleValue(), dp1_post->getDoubleValue());
 
     // Both share the same pointer.
-    OIIO_CHECK_EQUAL(dp0_post.get(), dp1_post.get());
+    OCIO_CHECK_EQUAL(dp0_post.get(), dp1_post.get());
 
     // The first pointer is the one that gets shared.
-    OIIO_CHECK_EQUAL(dp0.get(), dp0_post.get());
+    OCIO_CHECK_EQUAL(dp0.get(), dp0_post.get());
 }
 
 #endif

@@ -670,29 +670,29 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 #include "UnitTestUtils.h"
 #include "Platform.h"
 
 
-OIIO_ADD_TEST(CDLTransform, equality)
+OCIO_ADD_TEST(CDLTransform, equality)
 {
     const OCIO::CDLTransformRcPtr cdl1 = OCIO::CDLTransform::Create();
     const OCIO::CDLTransformRcPtr cdl2 = OCIO::CDLTransform::Create();
 
-    OIIO_CHECK_ASSERT(cdl1->equals(cdl1));
-    OIIO_CHECK_ASSERT(cdl1->equals(cdl2));
-    OIIO_CHECK_ASSERT(cdl2->equals(cdl1));
+    OCIO_CHECK_ASSERT(cdl1->equals(cdl1));
+    OCIO_CHECK_ASSERT(cdl1->equals(cdl2));
+    OCIO_CHECK_ASSERT(cdl2->equals(cdl1));
 
     const OCIO::CDLTransformRcPtr cdl3 = OCIO::CDLTransform::Create();
     cdl3->setSat(cdl3->getSat()+0.002f);
 
-    OIIO_CHECK_ASSERT(!cdl1->equals(cdl3));
-    OIIO_CHECK_ASSERT(!cdl2->equals(cdl3));
-    OIIO_CHECK_ASSERT(cdl3->equals(cdl3));
+    OCIO_CHECK_ASSERT(!cdl1->equals(cdl3));
+    OCIO_CHECK_ASSERT(!cdl2->equals(cdl3));
+    OCIO_CHECK_ASSERT(cdl3->equals(cdl3));
 }
 
-OIIO_ADD_TEST(CDLTransform, CreateFromCCFile)
+OCIO_ADD_TEST(CDLTransform, CreateFromCCFile)
 {
     const std::string filePath(std::string(OCIO::getTestFilesDir())
                                + "/cdl_test1.cc");
@@ -701,25 +701,25 @@ OIIO_ADD_TEST(CDLTransform, CreateFromCCFile)
 
     {
         std::string idStr(transform->getID());
-        OIIO_CHECK_EQUAL("foo", idStr);
+        OCIO_CHECK_EQUAL("foo", idStr);
         std::string descStr(transform->getDescription());
-        OIIO_CHECK_EQUAL("this is a description", descStr);
+        OCIO_CHECK_EQUAL("this is a description", descStr);
         float slope[3] = {0.f, 0.f, 0.f};
-        OIIO_CHECK_NO_THROW(transform->getSlope(slope));
-        OIIO_CHECK_EQUAL(1.1f, slope[0]);
-        OIIO_CHECK_EQUAL(1.2f, slope[1]);
-        OIIO_CHECK_EQUAL(1.3f, slope[2]);
+        OCIO_CHECK_NO_THROW(transform->getSlope(slope));
+        OCIO_CHECK_EQUAL(1.1f, slope[0]);
+        OCIO_CHECK_EQUAL(1.2f, slope[1]);
+        OCIO_CHECK_EQUAL(1.3f, slope[2]);
         float offset[3] = { 0.f, 0.f, 0.f };
-        OIIO_CHECK_NO_THROW(transform->getOffset(offset));
-        OIIO_CHECK_EQUAL(2.1f, offset[0]);
-        OIIO_CHECK_EQUAL(2.2f, offset[1]);
-        OIIO_CHECK_EQUAL(2.3f, offset[2]);
+        OCIO_CHECK_NO_THROW(transform->getOffset(offset));
+        OCIO_CHECK_EQUAL(2.1f, offset[0]);
+        OCIO_CHECK_EQUAL(2.2f, offset[1]);
+        OCIO_CHECK_EQUAL(2.3f, offset[2]);
         float power[3] = { 0.f, 0.f, 0.f };
-        OIIO_CHECK_NO_THROW(transform->getPower(power));
-        OIIO_CHECK_EQUAL(3.1f, power[0]);
-        OIIO_CHECK_EQUAL(3.2f, power[1]);
-        OIIO_CHECK_EQUAL(3.3f, power[2]);
-        OIIO_CHECK_EQUAL(0.7f, transform->getSat());
+        OCIO_CHECK_NO_THROW(transform->getPower(power));
+        OCIO_CHECK_EQUAL(3.1f, power[0]);
+        OCIO_CHECK_EQUAL(3.2f, power[1]);
+        OCIO_CHECK_EQUAL(3.3f, power[2]);
+        OCIO_CHECK_EQUAL(0.7f, transform->getSat());
     }
 
     const std::string expectedOutXML(
@@ -735,36 +735,36 @@ OIIO_ADD_TEST(CDLTransform, CreateFromCCFile)
         "    </SatNode>\n"
         "</ColorCorrection>");
     std::string outXML(transform->getXML());
-    OIIO_CHECK_EQUAL(expectedOutXML, outXML);
+    OCIO_CHECK_EQUAL(expectedOutXML, outXML);
 
     // parse again using setXML
     OCIO::CDLTransformRcPtr transformCDL = OCIO::CDLTransform::Create();
     transformCDL->setXML(expectedOutXML.c_str());
     {
         std::string idStr(transformCDL->getID());
-        OIIO_CHECK_EQUAL("foo", idStr);
+        OCIO_CHECK_EQUAL("foo", idStr);
         std::string descStr(transformCDL->getDescription());
-        OIIO_CHECK_EQUAL("this is a description", descStr);
+        OCIO_CHECK_EQUAL("this is a description", descStr);
         float slope[3] = { 0.f, 0.f, 0.f };
-        OIIO_CHECK_NO_THROW(transformCDL->getSlope(slope));
-        OIIO_CHECK_EQUAL(1.1f, slope[0]);
-        OIIO_CHECK_EQUAL(1.2f, slope[1]);
-        OIIO_CHECK_EQUAL(1.3f, slope[2]);
+        OCIO_CHECK_NO_THROW(transformCDL->getSlope(slope));
+        OCIO_CHECK_EQUAL(1.1f, slope[0]);
+        OCIO_CHECK_EQUAL(1.2f, slope[1]);
+        OCIO_CHECK_EQUAL(1.3f, slope[2]);
         float offset[3] = { 0.f, 0.f, 0.f };
-        OIIO_CHECK_NO_THROW(transformCDL->getOffset(offset));
-        OIIO_CHECK_EQUAL(2.1f, offset[0]);
-        OIIO_CHECK_EQUAL(2.2f, offset[1]);
-        OIIO_CHECK_EQUAL(2.3f, offset[2]);
+        OCIO_CHECK_NO_THROW(transformCDL->getOffset(offset));
+        OCIO_CHECK_EQUAL(2.1f, offset[0]);
+        OCIO_CHECK_EQUAL(2.2f, offset[1]);
+        OCIO_CHECK_EQUAL(2.3f, offset[2]);
         float power[3] = { 0.f, 0.f, 0.f };
-        OIIO_CHECK_NO_THROW(transformCDL->getPower(power));
-        OIIO_CHECK_EQUAL(3.1f, power[0]);
-        OIIO_CHECK_EQUAL(3.2f, power[1]);
-        OIIO_CHECK_EQUAL(3.3f, power[2]);
-        OIIO_CHECK_EQUAL(0.7f, transformCDL->getSat());
+        OCIO_CHECK_NO_THROW(transformCDL->getPower(power));
+        OCIO_CHECK_EQUAL(3.1f, power[0]);
+        OCIO_CHECK_EQUAL(3.2f, power[1]);
+        OCIO_CHECK_EQUAL(3.3f, power[2]);
+        OCIO_CHECK_EQUAL(0.7f, transformCDL->getSat());
     }
 }
 
-OIIO_ADD_TEST(CDLTransform, CreateFromCCCFile)
+OCIO_ADD_TEST(CDLTransform, CreateFromCCCFile)
 {
     const std::string filePath(std::string(OCIO::getTestFilesDir())
                                + "/cdl_test1.ccc");
@@ -773,72 +773,72 @@ OIIO_ADD_TEST(CDLTransform, CreateFromCCCFile)
         OCIO::CDLTransformRcPtr transform =
             OCIO::CDLTransform::CreateFromFile(filePath.c_str(), "cc0003");
         std::string idStr(transform->getID());
-        OIIO_CHECK_EQUAL("cc0003", idStr);
+        OCIO_CHECK_EQUAL("cc0003", idStr);
         std::string descStr(transform->getDescription());
-        OIIO_CHECK_EQUAL("golden", descStr);
+        OCIO_CHECK_EQUAL("golden", descStr);
         float slope[3] = { 0.f, 0.f, 0.f };
-        OIIO_CHECK_NO_THROW(transform->getSlope(slope));
-        OIIO_CHECK_EQUAL(1.2f, slope[0]);
-        OIIO_CHECK_EQUAL(1.1f, slope[1]);
-        OIIO_CHECK_EQUAL(1.0f, slope[2]);
+        OCIO_CHECK_NO_THROW(transform->getSlope(slope));
+        OCIO_CHECK_EQUAL(1.2f, slope[0]);
+        OCIO_CHECK_EQUAL(1.1f, slope[1]);
+        OCIO_CHECK_EQUAL(1.0f, slope[2]);
         float offset[3] = { 0.f, 0.f, 0.f };
-        OIIO_CHECK_NO_THROW(transform->getOffset(offset));
-        OIIO_CHECK_EQUAL(0.0f, offset[0]);
-        OIIO_CHECK_EQUAL(0.0f, offset[1]);
-        OIIO_CHECK_EQUAL(0.0f, offset[2]);
+        OCIO_CHECK_NO_THROW(transform->getOffset(offset));
+        OCIO_CHECK_EQUAL(0.0f, offset[0]);
+        OCIO_CHECK_EQUAL(0.0f, offset[1]);
+        OCIO_CHECK_EQUAL(0.0f, offset[2]);
         float power[3] = { 0.f, 0.f, 0.f };
-        OIIO_CHECK_NO_THROW(transform->getPower(power));
-        OIIO_CHECK_EQUAL(0.9f, power[0]);
-        OIIO_CHECK_EQUAL(1.0f, power[1]);
-        OIIO_CHECK_EQUAL(1.2f, power[2]);
-        OIIO_CHECK_EQUAL(1.0f, transform->getSat());
+        OCIO_CHECK_NO_THROW(transform->getPower(power));
+        OCIO_CHECK_EQUAL(0.9f, power[0]);
+        OCIO_CHECK_EQUAL(1.0f, power[1]);
+        OCIO_CHECK_EQUAL(1.2f, power[2]);
+        OCIO_CHECK_EQUAL(1.0f, transform->getSat());
     }
     {
         // Using 0 based index
         OCIO::CDLTransformRcPtr transform =
             OCIO::CDLTransform::CreateFromFile(filePath.c_str(), "3");
         std::string idStr(transform->getID());
-        OIIO_CHECK_EQUAL("", idStr);
+        OCIO_CHECK_EQUAL("", idStr);
         std::string descStr(transform->getDescription());
-        OIIO_CHECK_EQUAL("", descStr);
+        OCIO_CHECK_EQUAL("", descStr);
         float slope[3] = { 0.f, 0.f, 0.f };
-        OIIO_CHECK_NO_THROW(transform->getSlope(slope));
-        OIIO_CHECK_EQUAL(4.0f, slope[0]);
-        OIIO_CHECK_EQUAL(5.0f, slope[1]);
-        OIIO_CHECK_EQUAL(6.0f, slope[2]);
+        OCIO_CHECK_NO_THROW(transform->getSlope(slope));
+        OCIO_CHECK_EQUAL(4.0f, slope[0]);
+        OCIO_CHECK_EQUAL(5.0f, slope[1]);
+        OCIO_CHECK_EQUAL(6.0f, slope[2]);
         float offset[3] = { 0.f, 0.f, 0.f };
-        OIIO_CHECK_NO_THROW(transform->getOffset(offset));
-        OIIO_CHECK_EQUAL(0.0f, offset[0]);
-        OIIO_CHECK_EQUAL(0.0f, offset[1]);
-        OIIO_CHECK_EQUAL(0.0f, offset[2]);
+        OCIO_CHECK_NO_THROW(transform->getOffset(offset));
+        OCIO_CHECK_EQUAL(0.0f, offset[0]);
+        OCIO_CHECK_EQUAL(0.0f, offset[1]);
+        OCIO_CHECK_EQUAL(0.0f, offset[2]);
         float power[3] = { 0.f, 0.f, 0.f };
-        OIIO_CHECK_NO_THROW(transform->getPower(power));
-        OIIO_CHECK_EQUAL(0.9f, power[0]);
-        OIIO_CHECK_EQUAL(1.0f, power[1]);
-        OIIO_CHECK_EQUAL(1.2f, power[2]);
-        OIIO_CHECK_EQUAL(1.0f, transform->getSat());
+        OCIO_CHECK_NO_THROW(transform->getPower(power));
+        OCIO_CHECK_EQUAL(0.9f, power[0]);
+        OCIO_CHECK_EQUAL(1.0f, power[1]);
+        OCIO_CHECK_EQUAL(1.2f, power[2]);
+        OCIO_CHECK_EQUAL(1.0f, transform->getSat());
     }
 }
 
-OIIO_ADD_TEST(CDLTransform, CreateFromCCCFileFailure)
+OCIO_ADD_TEST(CDLTransform, CreateFromCCCFileFailure)
 {
     const std::string filePath(std::string(OCIO::getTestFilesDir())
         + "/cdl_test1.ccc");
     {
         // Using ID
-        OIIO_CHECK_THROW_WHAT(
+        OCIO_CHECK_THROW_WHAT(
             OCIO::CDLTransform::CreateFromFile(filePath.c_str(), "NotFound"),
             OCIO::Exception, "could not be loaded from the src file");
     }
     {
         // Using index
-        OIIO_CHECK_THROW_WHAT(
+        OCIO_CHECK_THROW_WHAT(
             OCIO::CDLTransform::CreateFromFile(filePath.c_str(), "42"),
             OCIO::Exception, "could not be loaded from the src file");
     }
 }
 
-OIIO_ADD_TEST(CDLTransform, EscapeXML)
+OCIO_ADD_TEST(CDLTransform, EscapeXML)
 {
     const std::string inputXML(
         "<ColorCorrection id=\"Esc &lt; &amp; &quot; &apos; &gt;\">\n"
@@ -858,9 +858,9 @@ OIIO_ADD_TEST(CDLTransform, EscapeXML)
     transformCDL->setXML(inputXML.c_str());
     {
         std::string idStr(transformCDL->getID());
-        OIIO_CHECK_EQUAL("Esc < & \" ' >", idStr);
+        OCIO_CHECK_EQUAL("Esc < & \" ' >", idStr);
         std::string descStr(transformCDL->getDescription());
-        OIIO_CHECK_EQUAL("These: < & \" ' > are escape chars", descStr);
+        OCIO_CHECK_EQUAL("These: < & \" ' > are escape chars", descStr);
     }
 }
 
@@ -919,50 +919,50 @@ namespace
 
 }
 
-OIIO_ADD_TEST(CDLTransform, clear_caches)
+OCIO_ADD_TEST(CDLTransform, clear_caches)
 {
     std::string filename;
-    OIIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(filename, ""));
+    OCIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(filename, ""));
 
     std::fstream stream(filename, std::ios_base::out|std::ios_base::trunc);
     stream << kContentsA;
     stream.close();
 
     OCIO::CDLTransformRcPtr transform; 
-    OIIO_CHECK_NO_THROW(transform = OCIO::CDLTransform::CreateFromFile(filename.c_str(), "cc03343"));
+    OCIO_CHECK_NO_THROW(transform = OCIO::CDLTransform::CreateFromFile(filename.c_str(), "cc03343"));
 
     float slope[3];
 
-    OIIO_CHECK_NO_THROW(transform->getSlope(slope));
-    OIIO_CHECK_EQUAL(slope[0], 0.1f);
-    OIIO_CHECK_EQUAL(slope[1], 0.2f);
-    OIIO_CHECK_EQUAL(slope[2], 0.3f);
+    OCIO_CHECK_NO_THROW(transform->getSlope(slope));
+    OCIO_CHECK_EQUAL(slope[0], 0.1f);
+    OCIO_CHECK_EQUAL(slope[1], 0.2f);
+    OCIO_CHECK_EQUAL(slope[2], 0.3f);
 
     stream.open(filename, std::ios_base::out|std::ios_base::trunc);
     stream << kContentsB;
     stream.close();
 
-    OIIO_CHECK_NO_THROW(OCIO::ClearAllCaches());
+    OCIO_CHECK_NO_THROW(OCIO::ClearAllCaches());
 
-    OIIO_CHECK_NO_THROW(transform = OCIO::CDLTransform::CreateFromFile(filename.c_str(), "cc03343"));
-    OIIO_CHECK_NO_THROW(transform->getSlope(slope));
+    OCIO_CHECK_NO_THROW(transform = OCIO::CDLTransform::CreateFromFile(filename.c_str(), "cc03343"));
+    OCIO_CHECK_NO_THROW(transform->getSlope(slope));
 
-    OIIO_CHECK_EQUAL(slope[0], 1.1f);
-    OIIO_CHECK_EQUAL(slope[1], 2.2f);
-    OIIO_CHECK_EQUAL(slope[2], 3.3f);
+    OCIO_CHECK_EQUAL(slope[0], 1.1f);
+    OCIO_CHECK_EQUAL(slope[1], 2.2f);
+    OCIO_CHECK_EQUAL(slope[2], 3.3f);
 }
 
-OIIO_ADD_TEST(CDLTransform, faulty_file_content)
+OCIO_ADD_TEST(CDLTransform, faulty_file_content)
 {
     std::string filename;
-    OIIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(filename, ""));
+    OCIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(filename, ""));
 
     {
         std::fstream stream(filename, std::ios_base::out|std::ios_base::trunc);
         stream << kContentsA << "Some Extra faulty information";
         stream.close();
 
-        OIIO_CHECK_THROW_WHAT(OCIO::CDLTransform::CreateFromFile(filename.c_str(), "cc03343"),
+        OCIO_CHECK_THROW_WHAT(OCIO::CDLTransform::CreateFromFile(filename.c_str(), "cc03343"),
                               OCIO::Exception,
                               "Error parsing ColorCorrectionCollection (). Error is: XML parsing error");
     }
@@ -971,7 +971,7 @@ OIIO_ADD_TEST(CDLTransform, faulty_file_content)
 
         std::string faultyContent = kContentsA;
         const std::size_t found = faultyContent.find("cc03344");
-        OIIO_CHECK_ASSERT(found!=std::string::npos);
+        OCIO_CHECK_ASSERT(found!=std::string::npos);
         faultyContent.replace(found, strlen("cc03344"), "cc03343");
 
 
@@ -979,7 +979,7 @@ OIIO_ADD_TEST(CDLTransform, faulty_file_content)
         stream << faultyContent;
         stream.close();
 
-        OIIO_CHECK_THROW_WHAT(OCIO::CDLTransform::CreateFromFile(filename.c_str(), "cc03343"),
+        OCIO_CHECK_THROW_WHAT(OCIO::CDLTransform::CreateFromFile(filename.c_str(), "cc03343"),
                               OCIO::Exception,
                               "Error loading ccc xml. Duplicate elements with 'cc03343'");
     }

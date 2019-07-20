@@ -316,9 +316,9 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(Lut1DOp, pad_lut_one_dimension)
+OCIO_ADD_TEST(Lut1DOp, pad_lut_one_dimension)
 {
     const unsigned width = 6;
 
@@ -339,21 +339,21 @@ OIIO_ADD_TEST(Lut1DOp, pad_lut_one_dimension)
     // Pad the texture values.
 
     std::vector<float> chn;
-    OIIO_CHECK_NO_THROW(OCIO::PadLutChannels(width, 1, channel, chn));
+    OCIO_CHECK_NO_THROW(OCIO::PadLutChannels(width, 1, channel, chn));
 
     // Check the values.
 
     const float res[18] = { 0.0f, 0.1f, 0.2f, 1.0f, 1.1f, 1.2f,
                             2.0f, 2.1f, 2.2f, 3.0f, 3.1f, 3.2f,
                             3.0f, 3.1f, 3.2f, 3.0f, 3.1f, 3.2f };
-    OIIO_CHECK_EQUAL(chn.size(), 18);
+    OCIO_CHECK_EQUAL(chn.size(), 18);
     for (unsigned idx = 0; idx<chn.size(); ++idx)
     {
-        OIIO_CHECK_EQUAL(chn[idx], res[idx]);
+        OCIO_CHECK_EQUAL(chn[idx], res[idx]);
     }
 }
 
-OIIO_ADD_TEST(Lut1DOp, pad_lut_two_dimension_1)
+OCIO_ADD_TEST(Lut1DOp, pad_lut_two_dimension_1)
 {
     const unsigned width = 4;
     const unsigned height = 3;
@@ -369,20 +369,20 @@ OIIO_ADD_TEST(Lut1DOp, pad_lut_two_dimension_1)
     }
 
     std::vector<float> chn;
-    OIIO_CHECK_NO_THROW(OCIO::PadLutChannels(width, height, channel, chn));
+    OCIO_CHECK_NO_THROW(OCIO::PadLutChannels(width, height, channel, chn));
 
     const float res[] = {
         0.0f, 0.1f, 0.2f, 1.0f, 1.1f, 1.2f, 2.0f, 2.1f, 2.2f, 3.0f, 3.1f, 3.2f,
         3.0f, 3.1f, 3.2f, 4.0f, 4.1f, 4.2f, 5.0f, 5.1f, 5.2f, 6.0f, 6.1f, 6.2f, 
         6.0f, 6.1f, 6.2f, 7.0f, 7.1f, 7.2f, 7.0f, 7.1f, 7.2f, 7.0f, 7.1f, 7.2f };
-    OIIO_CHECK_EQUAL(chn.size(), 36);
+    OCIO_CHECK_EQUAL(chn.size(), 36);
     for (unsigned idx = 0; idx<chn.size(); ++idx)
     {
-        OIIO_CHECK_EQUAL(chn[idx], res[idx]);
+        OCIO_CHECK_EQUAL(chn[idx], res[idx]);
     }
 }
 
-OIIO_ADD_TEST(Lut1DOp, pad_lut_two_dimension_2)
+OCIO_ADD_TEST(Lut1DOp, pad_lut_two_dimension_2)
 {
     const unsigned width = 4;
     const unsigned height = 3;
@@ -399,7 +399,7 @@ OIIO_ADD_TEST(Lut1DOp, pad_lut_two_dimension_2)
 
     // Special case where size%(width-1) = 0
     std::vector<float> chn;
-    OIIO_CHECK_NO_THROW(OCIO::PadLutChannels(width, height, channel, chn));
+    OCIO_CHECK_NO_THROW(OCIO::PadLutChannels(width, height, channel, chn));
 
     // Check the values
 
@@ -408,11 +408,11 @@ OIIO_ADD_TEST(Lut1DOp, pad_lut_two_dimension_2)
         3.0f, 3.1f, 3.2f, 4.0f, 4.1f, 4.2f, 5.0f, 5.1f, 5.2f, 6.0f, 6.1f, 6.2f,
         6.0f, 6.1f, 6.2f, 7.0f, 7.1f, 7.2f, 8.0f, 8.1f, 8.2f, 8.0f, 8.1f, 8.2f };
     
-    OIIO_CHECK_EQUAL(chn.size(), 36);
+    OCIO_CHECK_EQUAL(chn.size(), 36);
 
     for (unsigned idx = 0; idx<chn.size(); ++idx)
     {
-        OIIO_CHECK_EQUAL(chn[idx], res[idx]);
+        OCIO_CHECK_EQUAL(chn[idx], res[idx]);
     }
 }
 

@@ -157,7 +157,7 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 
-#include "unittest.h"
+#include "UnitTest.h"
 #include "UnitTestUtils.h"
 
 OCIO::LocalCachedFileRcPtr LoadCCFile(const std::string & fileName)
@@ -166,111 +166,111 @@ OCIO::LocalCachedFileRcPtr LoadCCFile(const std::string & fileName)
         fileName, std::ios_base::in);
 }
 
-OIIO_ADD_TEST(FileFormatCC, TestCC1)
+OCIO_ADD_TEST(FileFormatCC, TestCC1)
 {
     // CC file
     const std::string fileName("cdl_test1.cc");
 
     OCIO::LocalCachedFileRcPtr ccFile;
-    OIIO_CHECK_NO_THROW(ccFile = LoadCCFile(fileName));
+    OCIO_CHECK_NO_THROW(ccFile = LoadCCFile(fileName));
 
     std::string idStr(ccFile->transform->getID());
-    OIIO_CHECK_EQUAL("foo", idStr);
+    OCIO_CHECK_EQUAL("foo", idStr);
     std::string descStr(ccFile->transform->getDescription());
-    OIIO_CHECK_EQUAL("this is a description", descStr);
+    OCIO_CHECK_EQUAL("this is a description", descStr);
     float slope[3] = { 0.f, 0.f, 0.f };
-    OIIO_CHECK_NO_THROW(ccFile->transform->getSlope(slope));
-    OIIO_CHECK_EQUAL(1.1f, slope[0]);
-    OIIO_CHECK_EQUAL(1.2f, slope[1]);
-    OIIO_CHECK_EQUAL(1.3f, slope[2]);
+    OCIO_CHECK_NO_THROW(ccFile->transform->getSlope(slope));
+    OCIO_CHECK_EQUAL(1.1f, slope[0]);
+    OCIO_CHECK_EQUAL(1.2f, slope[1]);
+    OCIO_CHECK_EQUAL(1.3f, slope[2]);
     float offset[3] = { 0.f, 0.f, 0.f };
-    OIIO_CHECK_NO_THROW(ccFile->transform->getOffset(offset));
-    OIIO_CHECK_EQUAL(2.1f, offset[0]);
-    OIIO_CHECK_EQUAL(2.2f, offset[1]);
-    OIIO_CHECK_EQUAL(2.3f, offset[2]);
+    OCIO_CHECK_NO_THROW(ccFile->transform->getOffset(offset));
+    OCIO_CHECK_EQUAL(2.1f, offset[0]);
+    OCIO_CHECK_EQUAL(2.2f, offset[1]);
+    OCIO_CHECK_EQUAL(2.3f, offset[2]);
     float power[3] = { 0.f, 0.f, 0.f };
-    OIIO_CHECK_NO_THROW(ccFile->transform->getPower(power));
-    OIIO_CHECK_EQUAL(3.1f, power[0]);
-    OIIO_CHECK_EQUAL(3.2f, power[1]);
-    OIIO_CHECK_EQUAL(3.3f, power[2]);
-    OIIO_CHECK_EQUAL(0.7f, ccFile->transform->getSat());
+    OCIO_CHECK_NO_THROW(ccFile->transform->getPower(power));
+    OCIO_CHECK_EQUAL(3.1f, power[0]);
+    OCIO_CHECK_EQUAL(3.2f, power[1]);
+    OCIO_CHECK_EQUAL(3.3f, power[2]);
+    OCIO_CHECK_EQUAL(0.7f, ccFile->transform->getSat());
 }
 
-OIIO_ADD_TEST(FileFormatCC, TestCC2)
+OCIO_ADD_TEST(FileFormatCC, TestCC2)
 {
     // CC file using windows eol.
     const std::string fileName("cdl_test2.cc");
 
     OCIO::LocalCachedFileRcPtr ccFile;
-    OIIO_CHECK_NO_THROW(ccFile = LoadCCFile(fileName));
+    OCIO_CHECK_NO_THROW(ccFile = LoadCCFile(fileName));
 
     std::string idStr(ccFile->transform->getID());
-    OIIO_CHECK_EQUAL("cc0001", idStr);
+    OCIO_CHECK_EQUAL("cc0001", idStr);
     // OCIO keeps only the first SOPNode description
     std::string descStr(ccFile->transform->getDescription());
-    OIIO_CHECK_EQUAL("Example look", descStr);
+    OCIO_CHECK_EQUAL("Example look", descStr);
     float slope[3] = { 0.f, 0.f, 0.f };
-    OIIO_CHECK_NO_THROW(ccFile->transform->getSlope(slope));
-    OIIO_CHECK_EQUAL(1.0f, slope[0]);
-    OIIO_CHECK_EQUAL(1.0f, slope[1]);
-    OIIO_CHECK_EQUAL(0.9f, slope[2]);
+    OCIO_CHECK_NO_THROW(ccFile->transform->getSlope(slope));
+    OCIO_CHECK_EQUAL(1.0f, slope[0]);
+    OCIO_CHECK_EQUAL(1.0f, slope[1]);
+    OCIO_CHECK_EQUAL(0.9f, slope[2]);
     float offset[3] = { 0.f, 0.f, 0.f };
-    OIIO_CHECK_NO_THROW(ccFile->transform->getOffset(offset));
-    OIIO_CHECK_EQUAL(-0.03f, offset[0]);
-    OIIO_CHECK_EQUAL(-0.02f, offset[1]);
-    OIIO_CHECK_EQUAL(0.0f, offset[2]);
+    OCIO_CHECK_NO_THROW(ccFile->transform->getOffset(offset));
+    OCIO_CHECK_EQUAL(-0.03f, offset[0]);
+    OCIO_CHECK_EQUAL(-0.02f, offset[1]);
+    OCIO_CHECK_EQUAL(0.0f, offset[2]);
     float power[3] = { 0.f, 0.f, 0.f };
-    OIIO_CHECK_NO_THROW(ccFile->transform->getPower(power));
-    OIIO_CHECK_EQUAL(1.25f, power[0]);
-    OIIO_CHECK_EQUAL(1.0f, power[1]);
-    OIIO_CHECK_EQUAL(1.0f, power[2]);
-    OIIO_CHECK_EQUAL(1.7f, ccFile->transform->getSat());
+    OCIO_CHECK_NO_THROW(ccFile->transform->getPower(power));
+    OCIO_CHECK_EQUAL(1.25f, power[0]);
+    OCIO_CHECK_EQUAL(1.0f, power[1]);
+    OCIO_CHECK_EQUAL(1.0f, power[2]);
+    OCIO_CHECK_EQUAL(1.7f, ccFile->transform->getSat());
 }
 
-OIIO_ADD_TEST(FileFormatCC, TestCC_SATNode)
+OCIO_ADD_TEST(FileFormatCC, TestCC_SATNode)
 {
     // CC file
     const std::string fileName("cdl_test_SATNode.cc");
 
     OCIO::LocalCachedFileRcPtr ccFile;
-    OIIO_CHECK_NO_THROW(ccFile = LoadCCFile(fileName));
+    OCIO_CHECK_NO_THROW(ccFile = LoadCCFile(fileName));
 
     // "SATNode" is recognized.
-    OIIO_CHECK_EQUAL(0.42f, ccFile->transform->getSat());
+    OCIO_CHECK_EQUAL(0.42f, ccFile->transform->getSat());
 }
 
-OIIO_ADD_TEST(FileFormatCC, TestCC_ASC_SAT)
+OCIO_ADD_TEST(FileFormatCC, TestCC_ASC_SAT)
 {
     // CC file
     const std::string fileName("cdl_test_ASC_SAT.cc");
 
     OCIO::LocalCachedFileRcPtr ccFile;
-    OIIO_CHECK_NO_THROW(ccFile = LoadCCFile(fileName));
+    OCIO_CHECK_NO_THROW(ccFile = LoadCCFile(fileName));
 
     // "ASC_SAT" is not recognized. Default value is returned.
-    OIIO_CHECK_EQUAL(1.0f, ccFile->transform->getSat());
+    OCIO_CHECK_EQUAL(1.0f, ccFile->transform->getSat());
 }
 
-OIIO_ADD_TEST(FileFormatCC, TestCC_ASC_SOP)
+OCIO_ADD_TEST(FileFormatCC, TestCC_ASC_SOP)
 {
     // CC file
     const std::string fileName("cdl_test_ASC_SOP.cc");
 
     OCIO::LocalCachedFileRcPtr ccFile;
-    OIIO_CHECK_NO_THROW(ccFile = LoadCCFile(fileName));
+    OCIO_CHECK_NO_THROW(ccFile = LoadCCFile(fileName));
 
     // "ASC_SOP" is not recognized. Default values are used.
     std::string descStr(ccFile->transform->getDescription());
-    OIIO_CHECK_EQUAL("", descStr);
+    OCIO_CHECK_EQUAL("", descStr);
     float slope[3] = { 0.f, 0.f, 0.f };
-    OIIO_CHECK_NO_THROW(ccFile->transform->getSlope(slope));
-    OIIO_CHECK_EQUAL(1.0f, slope[0]);
+    OCIO_CHECK_NO_THROW(ccFile->transform->getSlope(slope));
+    OCIO_CHECK_EQUAL(1.0f, slope[0]);
     float offset[3] = { 1.f, 1.f, 1.f };
-    OIIO_CHECK_NO_THROW(ccFile->transform->getOffset(offset));
-    OIIO_CHECK_EQUAL(0.0f, offset[0]);
+    OCIO_CHECK_NO_THROW(ccFile->transform->getOffset(offset));
+    OCIO_CHECK_EQUAL(0.0f, offset[0]);
     float power[3] = { 0.f, 0.f, 0.f };
-    OIIO_CHECK_NO_THROW(ccFile->transform->getPower(power));
-    OIIO_CHECK_EQUAL(1.0f, power[0]);
+    OCIO_CHECK_NO_THROW(ccFile->transform->getPower(power));
+    OCIO_CHECK_EQUAL(1.0f, power[0]);
 }
 
 #endif

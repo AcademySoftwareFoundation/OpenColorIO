@@ -969,109 +969,109 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(MatrixOpData, empty)
+OCIO_ADD_TEST(MatrixOpData, empty)
 {
     OCIO::MatrixOpData m;
-    OIIO_CHECK_ASSERT(m.isNoOp());
-    OIIO_CHECK_ASSERT(m.isUnityDiagonal());
-    OIIO_CHECK_ASSERT(m.isDiagonal());
-    OIIO_CHECK_NO_THROW(m.validate());
-    OIIO_CHECK_EQUAL(m.getType(), OCIO::OpData::MatrixType);
+    OCIO_CHECK_ASSERT(m.isNoOp());
+    OCIO_CHECK_ASSERT(m.isUnityDiagonal());
+    OCIO_CHECK_ASSERT(m.isDiagonal());
+    OCIO_CHECK_NO_THROW(m.validate());
+    OCIO_CHECK_EQUAL(m.getType(), OCIO::OpData::MatrixType);
 
-    OIIO_CHECK_EQUAL(m.getArray().getLength(), 4);
-    OIIO_CHECK_EQUAL(m.getArray().getNumValues(), 16);
-    OIIO_CHECK_EQUAL(m.getArray().getNumColorComponents(), 4);
+    OCIO_CHECK_EQUAL(m.getArray().getLength(), 4);
+    OCIO_CHECK_EQUAL(m.getArray().getNumValues(), 16);
+    OCIO_CHECK_EQUAL(m.getArray().getNumColorComponents(), 4);
 
     m.getArray().resize(3, 3);
 
-    OIIO_CHECK_EQUAL(m.getArray().getNumValues(), 9);
-    OIIO_CHECK_EQUAL(m.getArray().getLength(), 3);
-    OIIO_CHECK_EQUAL(m.getArray().getNumColorComponents(), 3);
-    OIIO_CHECK_NO_THROW(m.validate());
+    OCIO_CHECK_EQUAL(m.getArray().getNumValues(), 9);
+    OCIO_CHECK_EQUAL(m.getArray().getLength(), 3);
+    OCIO_CHECK_EQUAL(m.getArray().getNumColorComponents(), 3);
+    OCIO_CHECK_NO_THROW(m.validate());
 }
 
-OIIO_ADD_TEST(MatrixOpData, accessors)
+OCIO_ADD_TEST(MatrixOpData, accessors)
 {
     OCIO::MatrixOpData m(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
-    OIIO_CHECK_ASSERT(m.isNoOp());
-    OIIO_CHECK_ASSERT(m.isUnityDiagonal());
-    OIIO_CHECK_ASSERT(m.isDiagonal());
-    OIIO_CHECK_ASSERT(m.isIdentity());
-    OIIO_CHECK_NO_THROW(m.validate());
+    OCIO_CHECK_ASSERT(m.isNoOp());
+    OCIO_CHECK_ASSERT(m.isUnityDiagonal());
+    OCIO_CHECK_ASSERT(m.isDiagonal());
+    OCIO_CHECK_ASSERT(m.isIdentity());
+    OCIO_CHECK_NO_THROW(m.validate());
 
     m.setArrayValue(15, 1 + 1e-5f);
 
-    OIIO_CHECK_ASSERT(!m.isNoOp());
-    OIIO_CHECK_ASSERT(!m.isUnityDiagonal());
-    OIIO_CHECK_ASSERT(m.isDiagonal());
-    OIIO_CHECK_ASSERT(!m.isIdentity());
-    OIIO_CHECK_NO_THROW(m.validate());
+    OCIO_CHECK_ASSERT(!m.isNoOp());
+    OCIO_CHECK_ASSERT(!m.isUnityDiagonal());
+    OCIO_CHECK_ASSERT(m.isDiagonal());
+    OCIO_CHECK_ASSERT(!m.isIdentity());
+    OCIO_CHECK_NO_THROW(m.validate());
 
     m.setArrayValue(1, 1e-5f);
     m.setArrayValue(15, 1.0f);
 
-    OIIO_CHECK_ASSERT(!m.isNoOp());
-    OIIO_CHECK_ASSERT(!m.isUnityDiagonal());
-    OIIO_CHECK_ASSERT(!m.isDiagonal());
-    OIIO_CHECK_ASSERT(!m.isIdentity());
-    OIIO_CHECK_NO_THROW(m.validate());
+    OCIO_CHECK_ASSERT(!m.isNoOp());
+    OCIO_CHECK_ASSERT(!m.isUnityDiagonal());
+    OCIO_CHECK_ASSERT(!m.isDiagonal());
+    OCIO_CHECK_ASSERT(!m.isIdentity());
+    OCIO_CHECK_NO_THROW(m.validate());
 }
 
-OIIO_ADD_TEST(MatrixOpData, offsets)
+OCIO_ADD_TEST(MatrixOpData, offsets)
 {
     OCIO::MatrixOpData m(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
-    OIIO_CHECK_ASSERT(m.isNoOp());
-    OIIO_CHECK_ASSERT(m.isUnityDiagonal());
-    OIIO_CHECK_ASSERT(m.isDiagonal());
-    OIIO_CHECK_ASSERT(!m.hasOffsets());
-    OIIO_CHECK_NO_THROW(m.validate());
+    OCIO_CHECK_ASSERT(m.isNoOp());
+    OCIO_CHECK_ASSERT(m.isUnityDiagonal());
+    OCIO_CHECK_ASSERT(m.isDiagonal());
+    OCIO_CHECK_ASSERT(!m.hasOffsets());
+    OCIO_CHECK_NO_THROW(m.validate());
 
     m.setOffsetValue(2, 1.0f);
-    OIIO_CHECK_ASSERT(!m.isNoOp());
-    OIIO_CHECK_ASSERT(m.isUnityDiagonal());
-    OIIO_CHECK_ASSERT(m.isDiagonal());
-    OIIO_CHECK_ASSERT(m.hasOffsets());
-    OIIO_CHECK_NO_THROW(m.validate());
-    OIIO_CHECK_EQUAL(m.getOffsets()[2], 1.0f);
+    OCIO_CHECK_ASSERT(!m.isNoOp());
+    OCIO_CHECK_ASSERT(m.isUnityDiagonal());
+    OCIO_CHECK_ASSERT(m.isDiagonal());
+    OCIO_CHECK_ASSERT(m.hasOffsets());
+    OCIO_CHECK_NO_THROW(m.validate());
+    OCIO_CHECK_EQUAL(m.getOffsets()[2], 1.0f);
 }
 
-OIIO_ADD_TEST(MatrixOpData, offsets4)
+OCIO_ADD_TEST(MatrixOpData, offsets4)
 {
     OCIO::MatrixOpData m(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
-    OIIO_CHECK_ASSERT(m.isNoOp());
-    OIIO_CHECK_ASSERT(m.isUnityDiagonal());
-    OIIO_CHECK_ASSERT(m.isDiagonal());
-    OIIO_CHECK_ASSERT(!m.hasOffsets());
-    OIIO_CHECK_NO_THROW(m.validate());
+    OCIO_CHECK_ASSERT(m.isNoOp());
+    OCIO_CHECK_ASSERT(m.isUnityDiagonal());
+    OCIO_CHECK_ASSERT(m.isDiagonal());
+    OCIO_CHECK_ASSERT(!m.hasOffsets());
+    OCIO_CHECK_NO_THROW(m.validate());
 
     m.setOffsetValue(3, -1e-6f);
-    OIIO_CHECK_ASSERT(!m.isNoOp());
-    OIIO_CHECK_ASSERT(m.isUnityDiagonal());
-    OIIO_CHECK_ASSERT(m.isDiagonal());
-    OIIO_CHECK_ASSERT(m.hasOffsets());
-    OIIO_CHECK_NO_THROW(m.validate());
-    OIIO_CHECK_EQUAL(m.getOffsets()[3], -1e-6f);
+    OCIO_CHECK_ASSERT(!m.isNoOp());
+    OCIO_CHECK_ASSERT(m.isUnityDiagonal());
+    OCIO_CHECK_ASSERT(m.isDiagonal());
+    OCIO_CHECK_ASSERT(m.hasOffsets());
+    OCIO_CHECK_NO_THROW(m.validate());
+    OCIO_CHECK_EQUAL(m.getOffsets()[3], -1e-6f);
 }
 
-OIIO_ADD_TEST(MatrixOpData, diagonal)
+OCIO_ADD_TEST(MatrixOpData, diagonal)
 {
     OCIO::MatrixOpDataRcPtr pM = OCIO::MatrixOpData::CreateDiagonalMatrix(
         OCIO::BIT_DEPTH_UINT8,
         OCIO::BIT_DEPTH_UINT8, 
         0.5);
 
-    OIIO_CHECK_ASSERT(pM->isDiagonal());
-    OIIO_CHECK_ASSERT(!pM->hasOffsets());
-    OIIO_CHECK_NO_THROW(pM->validate());
-    OIIO_CHECK_EQUAL(pM->getArray().getValues()[0], 0.5);
-    OIIO_CHECK_EQUAL(pM->getArray().getValues()[5], 0.5);
-    OIIO_CHECK_EQUAL(pM->getArray().getValues()[10], 0.5);
-    OIIO_CHECK_EQUAL(pM->getArray().getValues()[15], 0.5);
+    OCIO_CHECK_ASSERT(pM->isDiagonal());
+    OCIO_CHECK_ASSERT(!pM->hasOffsets());
+    OCIO_CHECK_NO_THROW(pM->validate());
+    OCIO_CHECK_EQUAL(pM->getArray().getValues()[0], 0.5);
+    OCIO_CHECK_EQUAL(pM->getArray().getValues()[5], 0.5);
+    OCIO_CHECK_EQUAL(pM->getArray().getValues()[10], 0.5);
+    OCIO_CHECK_EQUAL(pM->getArray().getValues()[15], 0.5);
 }
 
-OIIO_ADD_TEST(MatrixOpData, clone)
+OCIO_ADD_TEST(MatrixOpData, clone)
 {
     OCIO::MatrixOpData ref;
     ref.setOffsetValue(2, 1.0f);
@@ -1079,20 +1079,20 @@ OIIO_ADD_TEST(MatrixOpData, clone)
 
     OCIO::MatrixOpDataRcPtr pClone = ref.clone();
 
-    OIIO_CHECK_ASSERT(pClone.get());
-    OIIO_CHECK_ASSERT(!pClone->isNoOp());
-    OIIO_CHECK_ASSERT(!pClone->isUnityDiagonal());
-    OIIO_CHECK_ASSERT(pClone->isDiagonal());
-    OIIO_CHECK_NO_THROW(pClone->validate());
-    OIIO_CHECK_EQUAL(pClone->getType(), OCIO::OpData::MatrixType);
-    OIIO_CHECK_EQUAL(pClone->getOffsets()[0], 0.0f);
-    OIIO_CHECK_EQUAL(pClone->getOffsets()[1], 0.0f);
-    OIIO_CHECK_EQUAL(pClone->getOffsets()[2], 1.0f);
-    OIIO_CHECK_EQUAL(pClone->getOffsets()[3], 0.0f);
-    OIIO_CHECK_ASSERT(pClone->getArray() == ref.getArray());
+    OCIO_CHECK_ASSERT(pClone.get());
+    OCIO_CHECK_ASSERT(!pClone->isNoOp());
+    OCIO_CHECK_ASSERT(!pClone->isUnityDiagonal());
+    OCIO_CHECK_ASSERT(pClone->isDiagonal());
+    OCIO_CHECK_NO_THROW(pClone->validate());
+    OCIO_CHECK_EQUAL(pClone->getType(), OCIO::OpData::MatrixType);
+    OCIO_CHECK_EQUAL(pClone->getOffsets()[0], 0.0f);
+    OCIO_CHECK_EQUAL(pClone->getOffsets()[1], 0.0f);
+    OCIO_CHECK_EQUAL(pClone->getOffsets()[2], 1.0f);
+    OCIO_CHECK_EQUAL(pClone->getOffsets()[3], 0.0f);
+    OCIO_CHECK_ASSERT(pClone->getArray() == ref.getArray());
 }
 
-OIIO_ADD_TEST(MatrixOpData, clone_offsets4)
+OCIO_ADD_TEST(MatrixOpData, clone_offsets4)
 {
     OCIO::MatrixOpData ref;
     ref.setOffsetValue(0, 1.0f);
@@ -1103,34 +1103,34 @@ OIIO_ADD_TEST(MatrixOpData, clone_offsets4)
 
     OCIO::MatrixOpDataRcPtr pClone = ref.clone();
 
-    OIIO_CHECK_ASSERT(pClone.get());
-    OIIO_CHECK_ASSERT(!pClone->isNoOp());
-    OIIO_CHECK_ASSERT(!pClone->isUnityDiagonal());
-    OIIO_CHECK_ASSERT(pClone->isDiagonal());
-    OIIO_CHECK_NO_THROW(pClone->validate());
-    OIIO_CHECK_EQUAL(pClone->getType(), OCIO::OpData::MatrixType);
-    OIIO_CHECK_EQUAL(pClone->getOffsets()[0], 1.0f);
-    OIIO_CHECK_EQUAL(pClone->getOffsets()[1], 2.0f);
-    OIIO_CHECK_EQUAL(pClone->getOffsets()[2], 3.0f);
-    OIIO_CHECK_EQUAL(pClone->getOffsets()[3], 4.0f);
-    OIIO_CHECK_ASSERT(pClone->getArray() == ref.getArray());
+    OCIO_CHECK_ASSERT(pClone.get());
+    OCIO_CHECK_ASSERT(!pClone->isNoOp());
+    OCIO_CHECK_ASSERT(!pClone->isUnityDiagonal());
+    OCIO_CHECK_ASSERT(pClone->isDiagonal());
+    OCIO_CHECK_NO_THROW(pClone->validate());
+    OCIO_CHECK_EQUAL(pClone->getType(), OCIO::OpData::MatrixType);
+    OCIO_CHECK_EQUAL(pClone->getOffsets()[0], 1.0f);
+    OCIO_CHECK_EQUAL(pClone->getOffsets()[1], 2.0f);
+    OCIO_CHECK_EQUAL(pClone->getOffsets()[2], 3.0f);
+    OCIO_CHECK_EQUAL(pClone->getOffsets()[3], 4.0f);
+    OCIO_CHECK_ASSERT(pClone->getArray() == ref.getArray());
 }
 
-OIIO_ADD_TEST(MatrixOpData, diff_bitdepth)
+OCIO_ADD_TEST(MatrixOpData, diff_bitdepth)
 {
     OCIO::MatrixOpData m1(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
-    OIIO_CHECK_ASSERT(m1.isNoOp());
-    OIIO_CHECK_ASSERT(m1.isUnityDiagonal());
-    OIIO_CHECK_ASSERT(m1.isDiagonal());
-    OIIO_CHECK_ASSERT(!m1.hasOffsets());
-    OIIO_CHECK_NO_THROW(m1.validate());
+    OCIO_CHECK_ASSERT(m1.isNoOp());
+    OCIO_CHECK_ASSERT(m1.isUnityDiagonal());
+    OCIO_CHECK_ASSERT(m1.isDiagonal());
+    OCIO_CHECK_ASSERT(!m1.hasOffsets());
+    OCIO_CHECK_NO_THROW(m1.validate());
 
     OCIO::MatrixOpData m2(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT10);
-    OIIO_CHECK_ASSERT(!m2.isNoOp());
-    OIIO_CHECK_ASSERT(!m2.isUnityDiagonal());
-    OIIO_CHECK_ASSERT(m2.isDiagonal());
-    OIIO_CHECK_ASSERT(!m2.hasOffsets());
-    OIIO_CHECK_NO_THROW(m2.validate());
+    OCIO_CHECK_ASSERT(!m2.isNoOp());
+    OCIO_CHECK_ASSERT(!m2.isUnityDiagonal());
+    OCIO_CHECK_ASSERT(m2.isDiagonal());
+    OCIO_CHECK_ASSERT(!m2.hasOffsets());
+    OCIO_CHECK_NO_THROW(m2.validate());
 
     const double coeff
         = (double)OCIO::GetBitDepthMaxValue(m2.getOutputBitDepth())
@@ -1141,74 +1141,74 @@ OIIO_ADD_TEST(MatrixOpData, diff_bitdepth)
     // not using the MatrixOpData algorithm.
     for (unsigned long idx = 0; idx<3; ++idx)
     {
-        OIIO_CHECK_CLOSE(m1.getArray().getValues()[idx * 5] * coeff,
+        OCIO_CHECK_CLOSE(m1.getArray().getValues()[idx * 5] * coeff,
                          m2.getArray().getValues()[idx * 5], error);
     }
 }
 
-OIIO_ADD_TEST(MatrixOpData, test_construct)
+OCIO_ADD_TEST(MatrixOpData, test_construct)
 {
     OCIO::MatrixOpData matOp;
 
-    OIIO_CHECK_EQUAL(matOp.getID(), "");
-    OIIO_CHECK_EQUAL(matOp.getType(), OCIO::OpData::MatrixType);
-    OIIO_CHECK_EQUAL(matOp.getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OIIO_CHECK_EQUAL(matOp.getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OIIO_CHECK_ASSERT(matOp.getDescriptions().empty());
-    OIIO_CHECK_EQUAL(matOp.getOffsets()[0], 0.0f);
-    OIIO_CHECK_EQUAL(matOp.getOffsets()[1], 0.0f);
-    OIIO_CHECK_EQUAL(matOp.getOffsets()[2], 0.0f);
-    OIIO_CHECK_EQUAL(matOp.getOffsets()[3], 0.0f);
-    OIIO_CHECK_EQUAL(matOp.getArray().getLength(), 4);
-    OIIO_CHECK_EQUAL(matOp.getArray().getNumColorComponents(), 4);
-    OIIO_CHECK_EQUAL(matOp.getArray().getNumValues(), 16);
+    OCIO_CHECK_EQUAL(matOp.getID(), "");
+    OCIO_CHECK_EQUAL(matOp.getType(), OCIO::OpData::MatrixType);
+    OCIO_CHECK_EQUAL(matOp.getInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(matOp.getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_ASSERT(matOp.getDescriptions().empty());
+    OCIO_CHECK_EQUAL(matOp.getOffsets()[0], 0.0f);
+    OCIO_CHECK_EQUAL(matOp.getOffsets()[1], 0.0f);
+    OCIO_CHECK_EQUAL(matOp.getOffsets()[2], 0.0f);
+    OCIO_CHECK_EQUAL(matOp.getOffsets()[3], 0.0f);
+    OCIO_CHECK_EQUAL(matOp.getArray().getLength(), 4);
+    OCIO_CHECK_EQUAL(matOp.getArray().getNumColorComponents(), 4);
+    OCIO_CHECK_EQUAL(matOp.getArray().getNumValues(), 16);
     const OCIO::ArrayDouble::Values & val = matOp.getArray().getValues();
-    OIIO_CHECK_EQUAL(val.size(), 16);
-    OIIO_CHECK_EQUAL(val[0], 1.0f);
-    OIIO_CHECK_EQUAL(val[1], 0.0f);
-    OIIO_CHECK_EQUAL(val[2], 0.0f);
-    OIIO_CHECK_EQUAL(val[3], 0.0f);
+    OCIO_CHECK_EQUAL(val.size(), 16);
+    OCIO_CHECK_EQUAL(val[0], 1.0f);
+    OCIO_CHECK_EQUAL(val[1], 0.0f);
+    OCIO_CHECK_EQUAL(val[2], 0.0f);
+    OCIO_CHECK_EQUAL(val[3], 0.0f);
 
-    OIIO_CHECK_EQUAL(val[4], 0.0f);
-    OIIO_CHECK_EQUAL(val[5], 1.0f);
-    OIIO_CHECK_EQUAL(val[6], 0.0f);
-    OIIO_CHECK_EQUAL(val[7], 0.0f);
+    OCIO_CHECK_EQUAL(val[4], 0.0f);
+    OCIO_CHECK_EQUAL(val[5], 1.0f);
+    OCIO_CHECK_EQUAL(val[6], 0.0f);
+    OCIO_CHECK_EQUAL(val[7], 0.0f);
 
-    OIIO_CHECK_EQUAL(val[8], 0.0f);
-    OIIO_CHECK_EQUAL(val[9], 0.0f);
-    OIIO_CHECK_EQUAL(val[10], 1.0f);
-    OIIO_CHECK_EQUAL(val[11], 0.0f);
+    OCIO_CHECK_EQUAL(val[8], 0.0f);
+    OCIO_CHECK_EQUAL(val[9], 0.0f);
+    OCIO_CHECK_EQUAL(val[10], 1.0f);
+    OCIO_CHECK_EQUAL(val[11], 0.0f);
 
-    OIIO_CHECK_EQUAL(val[12], 0.0f);
-    OIIO_CHECK_EQUAL(val[13], 0.0f);
-    OIIO_CHECK_EQUAL(val[14], 0.0f);
-    OIIO_CHECK_EQUAL(val[15], 1.0f);
+    OCIO_CHECK_EQUAL(val[12], 0.0f);
+    OCIO_CHECK_EQUAL(val[13], 0.0f);
+    OCIO_CHECK_EQUAL(val[14], 0.0f);
+    OCIO_CHECK_EQUAL(val[15], 1.0f);
 
-    OIIO_CHECK_NO_THROW(matOp.validate());
+    OCIO_CHECK_NO_THROW(matOp.validate());
 
     matOp.getArray().resize(3, 3); // validate() will resize to 4x4
 
-    OIIO_CHECK_EQUAL(matOp.getArray().getNumValues(), 9);
-    OIIO_CHECK_EQUAL(matOp.getArray().getLength(), 3);
-    OIIO_CHECK_EQUAL(matOp.getArray().getNumColorComponents(), 3);
+    OCIO_CHECK_EQUAL(matOp.getArray().getNumValues(), 9);
+    OCIO_CHECK_EQUAL(matOp.getArray().getLength(), 3);
+    OCIO_CHECK_EQUAL(matOp.getArray().getNumColorComponents(), 3);
 
-    OIIO_CHECK_NO_THROW(matOp.validate());
+    OCIO_CHECK_NO_THROW(matOp.validate());
 
-    OIIO_CHECK_EQUAL(matOp.getArray().getNumValues(), 16);
-    OIIO_CHECK_EQUAL(matOp.getArray().getLength(), 4);
-    OIIO_CHECK_EQUAL(matOp.getArray().getNumColorComponents(), 4);
+    OCIO_CHECK_EQUAL(matOp.getArray().getNumValues(), 16);
+    OCIO_CHECK_EQUAL(matOp.getArray().getLength(), 4);
+    OCIO_CHECK_EQUAL(matOp.getArray().getNumColorComponents(), 4);
 
 
     const OCIO::BitDepth bitDepth = OCIO::BIT_DEPTH_UINT8;
 
     OCIO::MatrixOpData m(bitDepth, bitDepth);
-    OIIO_CHECK_NO_THROW(m.validate());
+    OCIO_CHECK_NO_THROW(m.validate());
 
-    OIIO_CHECK_EQUAL(m.getInputBitDepth(), bitDepth);
-    OIIO_CHECK_EQUAL(m.getOutputBitDepth(), bitDepth);
+    OCIO_CHECK_EQUAL(m.getInputBitDepth(), bitDepth);
+    OCIO_CHECK_EQUAL(m.getOutputBitDepth(), bitDepth);
 }
 
-OIIO_ADD_TEST(MatrixOpData, output_depth_scaling)
+OCIO_ADD_TEST(MatrixOpData, output_depth_scaling)
 {
     OCIO::MatrixOpData ref(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
 
@@ -1255,14 +1255,14 @@ OIIO_ADD_TEST(MatrixOpData, output_depth_scaling)
     ref.setOutputBitDepth(newBitdepth);
     // Make sure that the bit-depth was changed from
     // the overriden method.
-    OIIO_CHECK_EQUAL(ref.getOutputBitDepth(), newBitdepth);
+    OCIO_CHECK_EQUAL(ref.getOutputBitDepth(), newBitdepth);
 
     // Check that the scaling between the new coefficients and
     // initial coefficients matches the factor computed above.
     const OCIO::ArrayDouble::Values & newCoeff = ref.getArray().getValues();
 
     // Sanity check first.
-    OIIO_CHECK_EQUAL(initialCoeff.size(), newCoeff.size());
+    OCIO_CHECK_EQUAL(initialCoeff.size(), newCoeff.size());
 
     double expectedValue;
 
@@ -1270,7 +1270,7 @@ OIIO_ADD_TEST(MatrixOpData, output_depth_scaling)
     for (unsigned long i = 0; i < newCoeff.size(); i++)
     {
         expectedValue = initialCoeff[i] * factor;
-        OIIO_CHECK_EQUAL(expectedValue, newCoeff[i]);
+        OCIO_CHECK_EQUAL(expectedValue, newCoeff[i]);
     }
 
     // Offset check.
@@ -1278,11 +1278,11 @@ OIIO_ADD_TEST(MatrixOpData, output_depth_scaling)
     for (unsigned long i = 0; i<dim; i++)
     {
         expectedValue = initialOffset[i] * factor;
-        OIIO_CHECK_EQUAL(expectedValue, ref.getOffsets()[i]);
+        OCIO_CHECK_EQUAL(expectedValue, ref.getOffsets()[i]);
     }
 }
 
-OIIO_ADD_TEST(MatrixOpData, input_depth_scaling)
+OCIO_ADD_TEST(MatrixOpData, input_depth_scaling)
 {
     OCIO::MatrixOpData ref(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
 
@@ -1329,45 +1329,45 @@ OIIO_ADD_TEST(MatrixOpData, input_depth_scaling)
     ref.setInputBitDepth(newBitdepth);
     // Make sure that the bit-depth was changed from the
     // overriden method.
-    OIIO_CHECK_EQUAL(ref.getInputBitDepth(), newBitdepth);
+    OCIO_CHECK_EQUAL(ref.getInputBitDepth(), newBitdepth);
 
     // Check that the scaling between the new coefficients and
     // initial coefficients matches the factor computed above.
     const OCIO::ArrayDouble::Values & newCoeff = ref.getArray().getValues();
 
     // Sanity check first.
-    OIIO_CHECK_EQUAL(initialCoeff.size(), newCoeff.size());
+    OCIO_CHECK_EQUAL(initialCoeff.size(), newCoeff.size());
 
     const double error = 1e-10;
     // Coefficient check.
     for (unsigned long i = 0; i < newCoeff.size(); i++)
     {
-        OIIO_CHECK_CLOSE((initialCoeff[i] * factor), newCoeff[i], error);
+        OCIO_CHECK_CLOSE((initialCoeff[i] * factor), newCoeff[i], error);
     }
 
     // Offset need to be unchanged.
     const unsigned long dim = ref.getArray().getLength();
     for (unsigned long i = 0; i<dim; i++) 
     {
-        OIIO_CHECK_EQUAL(initialOffset[i], ref.getOffsets()[i]);
+        OCIO_CHECK_EQUAL(initialOffset[i], ref.getOffsets()[i]);
     }
 }
 
 // Test that setting bit-depth does not affect Identity status.
-OIIO_ADD_TEST(MatrixOpData, identity)
+OCIO_ADD_TEST(MatrixOpData, identity)
 {
     OCIO::MatrixOpData m1(OCIO::BIT_DEPTH_UINT16, OCIO::BIT_DEPTH_F16);
-    OIIO_CHECK_ASSERT( m1.isIdentity() );  // 16i --> 16f
+    OCIO_CHECK_ASSERT( m1.isIdentity() );  // 16i --> 16f
 
     m1.setInputBitDepth(OCIO::BIT_DEPTH_F32);
-    OIIO_CHECK_ASSERT( m1.isIdentity() );  // 32f --> 16f
+    OCIO_CHECK_ASSERT( m1.isIdentity() );  // 32f --> 16f
 
     m1.setOutputBitDepth(OCIO::BIT_DEPTH_UINT16);
-    OIIO_CHECK_ASSERT( m1.isIdentity() );  // 32f --> 16i
+    OCIO_CHECK_ASSERT( m1.isIdentity() );  // 32f --> 16i
 }
 
 // Validate matrix composition.
-OIIO_ADD_TEST(MatrixOpData, composition)
+OCIO_ADD_TEST(MatrixOpData, composition)
 {
     // Create two test ops.
     const float mtxA[] = {  1, 2, 3, 4,
@@ -1403,29 +1403,29 @@ OIIO_ADD_TEST(MatrixOpData, composition)
     OCIO::MatrixOpDataRcPtr result(mA.compose(mBConst));
 
     // Check bit-depths copied correctly.
-    OIIO_CHECK_EQUAL(result->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
-    OIIO_CHECK_EQUAL(result->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OCIO_CHECK_EQUAL(result->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OCIO_CHECK_EQUAL(result->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
 
     const OCIO::ArrayDouble::Values& newCoeff = result->getArray().getValues();
 
     // Sanity check on size.
-    OIIO_CHECK_ASSERT(newCoeff.size() == 16);
+    OCIO_CHECK_ASSERT(newCoeff.size() == 16);
 
     // Coefficient check.
     for (unsigned long i = 0; i < newCoeff.size(); i++)
     {
-        OIIO_CHECK_EQUAL(aim[i], newCoeff[i]);
+        OCIO_CHECK_EQUAL(aim[i], newCoeff[i]);
     }
 
     // Offset check.
     const unsigned long dim = result->getArray().getLength();
     for (unsigned long i = 0; i < dim; i++)
     {
-        OIIO_CHECK_EQUAL(aim_offs[i], result->getOffsets()[i]);
+        OCIO_CHECK_EQUAL(aim_offs[i], result->getOffsets()[i]);
     }
 }
 
-OIIO_ADD_TEST(MatrixOpData, equality)
+OCIO_ADD_TEST(MatrixOpData, equality)
 {
     OCIO::MatrixOpData m1(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
     m1.setArrayValue(0, 2);
@@ -1434,24 +1434,24 @@ OIIO_ADD_TEST(MatrixOpData, equality)
     m2.setID("invalid_u_id_test");
     m2.setArrayValue(0, 2);
 
-    OIIO_CHECK_ASSERT(!(m1 == m2));
+    OCIO_CHECK_ASSERT(!(m1 == m2));
 
     OCIO::MatrixOpData m3(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
     m3.setArrayValue(0, 6);
 
-    OIIO_CHECK_ASSERT(!(m1 == m3));
+    OCIO_CHECK_ASSERT(!(m1 == m3));
 
     OCIO::MatrixOpData m4(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
     m4.setArrayValue(0, 2);
 
-    OIIO_CHECK_ASSERT(m1 == m4);
+    OCIO_CHECK_ASSERT(m1 == m4);
 
     m4.setOffsetValue(3, 1e-5f);
 
-    OIIO_CHECK_ASSERT(!(m1 == m4));
+    OCIO_CHECK_ASSERT(!(m1 == m4));
 }
 
-OIIO_ADD_TEST(MatrixOpData, rgb)
+OCIO_ADD_TEST(MatrixOpData, rgb)
 {
     OCIO::MatrixOpData m(OCIO::BIT_DEPTH_UINT16, OCIO::BIT_DEPTH_UINT16);
 
@@ -1459,28 +1459,28 @@ OIIO_ADD_TEST(MatrixOpData, rgb)
     m.setRGB(rgb);
 
     const OCIO::ArrayDouble::Values & v = m.getArray().getValues();
-    OIIO_CHECK_EQUAL(v[0], rgb[0]);
-    OIIO_CHECK_EQUAL(v[1], rgb[1]);
-    OIIO_CHECK_EQUAL(v[2], rgb[2]);
-    OIIO_CHECK_EQUAL(v[3], 0.0f);
+    OCIO_CHECK_EQUAL(v[0], rgb[0]);
+    OCIO_CHECK_EQUAL(v[1], rgb[1]);
+    OCIO_CHECK_EQUAL(v[2], rgb[2]);
+    OCIO_CHECK_EQUAL(v[3], 0.0f);
 
-    OIIO_CHECK_EQUAL(v[4], rgb[3]);
-    OIIO_CHECK_EQUAL(v[5], rgb[4]);
-    OIIO_CHECK_EQUAL(v[6], rgb[5]);
-    OIIO_CHECK_EQUAL(v[7], 0.0f);
+    OCIO_CHECK_EQUAL(v[4], rgb[3]);
+    OCIO_CHECK_EQUAL(v[5], rgb[4]);
+    OCIO_CHECK_EQUAL(v[6], rgb[5]);
+    OCIO_CHECK_EQUAL(v[7], 0.0f);
 
-    OIIO_CHECK_EQUAL(v[8], rgb[6]);
-    OIIO_CHECK_EQUAL(v[9], rgb[7]);
-    OIIO_CHECK_EQUAL(v[10], rgb[8]);
-    OIIO_CHECK_EQUAL(v[11], 0.0f);
+    OCIO_CHECK_EQUAL(v[8], rgb[6]);
+    OCIO_CHECK_EQUAL(v[9], rgb[7]);
+    OCIO_CHECK_EQUAL(v[10], rgb[8]);
+    OCIO_CHECK_EQUAL(v[11], 0.0f);
 
-    OIIO_CHECK_EQUAL(v[12], 0.0f);
-    OIIO_CHECK_EQUAL(v[13], 0.0f);
-    OIIO_CHECK_EQUAL(v[14], 0.0f);
-    OIIO_CHECK_EQUAL(v[15], 1.0f);
+    OCIO_CHECK_EQUAL(v[12], 0.0f);
+    OCIO_CHECK_EQUAL(v[13], 0.0f);
+    OCIO_CHECK_EQUAL(v[14], 0.0f);
+    OCIO_CHECK_EQUAL(v[15], 1.0f);
 }
 
-OIIO_ADD_TEST(MatrixOpData, rgba)
+OCIO_ADD_TEST(MatrixOpData, rgba)
 {
     OCIO::MatrixOpData m(OCIO::BIT_DEPTH_UINT16, OCIO::BIT_DEPTH_UINT16);
 
@@ -1490,15 +1490,15 @@ OIIO_ADD_TEST(MatrixOpData, rgba)
     const OCIO::ArrayDouble::Values & v = m.getArray().getValues();
     for (unsigned long i = 0; i<16; ++i)
     {
-        OIIO_CHECK_EQUAL(v[i], rgba[i]);
+        OCIO_CHECK_EQUAL(v[i], rgba[i]);
     }
 }
 
-OIIO_ADD_TEST(MatrixOpData, bitdepth_successive_changes)
+OCIO_ADD_TEST(MatrixOpData, bitdepth_successive_changes)
 {
     OCIO::MatrixOpData m1(OCIO::BIT_DEPTH_UINT10, OCIO::BIT_DEPTH_F32);
 
-    OIIO_CHECK_ASSERT(m1.isDiagonal());
+    OCIO_CHECK_ASSERT(m1.isDiagonal());
 
     const float scaleFactor = 
         OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_F32)
@@ -1515,7 +1515,7 @@ OIIO_ADD_TEST(MatrixOpData, bitdepth_successive_changes)
         {
             if (i == j)
             {
-                OIIO_CHECK_CLOSE(m1Coeff[i*dim + j], scaleFactor, error);
+                OCIO_CHECK_CLOSE(m1Coeff[i*dim + j], scaleFactor, error);
             }
         }
     }
@@ -1537,48 +1537,48 @@ OIIO_ADD_TEST(MatrixOpData, bitdepth_successive_changes)
     m2.setInputBitDepth(OCIO::BIT_DEPTH_UINT10);
     m2.setOutputBitDepth(OCIO::BIT_DEPTH_F32);
 
-    OIIO_CHECK_ASSERT(m2.isDiagonal());
+    OCIO_CHECK_ASSERT(m2.isDiagonal());
 
     const OCIO::ArrayDouble::Values & m2Coeff = m2.getArray().getValues();
 
     const size_t m1Size = m1Coeff.size();
     const size_t m2Size = m2Coeff.size();
-    OIIO_CHECK_EQUAL(m1Size, m2Size);
+    OCIO_CHECK_EQUAL(m1Size, m2Size);
 
     for (size_t i = 0; i < m1Size; ++i)
     {
-        OIIO_CHECK_CLOSE(m1Coeff[i], m2Coeff[i], error);
+        OCIO_CHECK_CLOSE(m1Coeff[i], m2Coeff[i], error);
     }
 }
 
-OIIO_ADD_TEST(MatrixOpData, matrixInverse_identity)
+OCIO_ADD_TEST(MatrixOpData, matrixInverse_identity)
 {
     OCIO::MatrixOpData
         refMatrixOp(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_UINT12);
 
-    OIIO_CHECK_ASSERT(refMatrixOp.isDiagonal());
-    OIIO_CHECK_ASSERT(refMatrixOp.isIdentity());
-    OIIO_CHECK_ASSERT(!refMatrixOp.hasOffsets());
+    OCIO_CHECK_ASSERT(refMatrixOp.isDiagonal());
+    OCIO_CHECK_ASSERT(refMatrixOp.isIdentity());
+    OCIO_CHECK_ASSERT(!refMatrixOp.hasOffsets());
 
     // Get inverse of reference matrix operation.
     OCIO::MatrixOpDataRcPtr invMatrixOp;
-    OIIO_CHECK_ASSERT(!invMatrixOp);
-    OIIO_CHECK_NO_THROW(invMatrixOp = refMatrixOp.inverse());
-    OIIO_REQUIRE_ASSERT(invMatrixOp);
+    OCIO_CHECK_ASSERT(!invMatrixOp);
+    OCIO_CHECK_NO_THROW(invMatrixOp = refMatrixOp.inverse());
+    OCIO_REQUIRE_ASSERT(invMatrixOp);
 
     // Inverse op should have its input/output bit-depth inverted.
-    OIIO_CHECK_EQUAL(invMatrixOp->getInputBitDepth(),
+    OCIO_CHECK_EQUAL(invMatrixOp->getInputBitDepth(),
                      refMatrixOp.getOutputBitDepth());
-    OIIO_CHECK_EQUAL(invMatrixOp->getOutputBitDepth(),
+    OCIO_CHECK_EQUAL(invMatrixOp->getOutputBitDepth(),
                      refMatrixOp.getInputBitDepth());
 
     // But still be an identity matrix.
-    OIIO_CHECK_ASSERT(invMatrixOp->isDiagonal());
-    OIIO_CHECK_ASSERT(invMatrixOp->isIdentity());
-    OIIO_CHECK_ASSERT(!invMatrixOp->hasOffsets());
+    OCIO_CHECK_ASSERT(invMatrixOp->isDiagonal());
+    OCIO_CHECK_ASSERT(invMatrixOp->isIdentity());
+    OCIO_CHECK_ASSERT(!invMatrixOp->hasOffsets());
 }
 
-OIIO_ADD_TEST(MatrixOpData, matrixInverse_singular)
+OCIO_ADD_TEST(MatrixOpData, matrixInverse_singular)
 {
     OCIO::MatrixOpData singularMatrixOp(OCIO::BIT_DEPTH_F32,
         OCIO::BIT_DEPTH_UINT12);
@@ -1592,19 +1592,19 @@ OIIO_ADD_TEST(MatrixOpData, matrixInverse_singular)
 
     singularMatrixOp.setRGBA(mat);
 
-    OIIO_CHECK_ASSERT(!singularMatrixOp.isNoOp());
-    OIIO_CHECK_ASSERT(!singularMatrixOp.isUnityDiagonal());
-    OIIO_CHECK_ASSERT(!singularMatrixOp.isDiagonal());
-    OIIO_CHECK_ASSERT(!singularMatrixOp.isIdentity());
-    OIIO_CHECK_ASSERT(!singularMatrixOp.hasOffsets());
+    OCIO_CHECK_ASSERT(!singularMatrixOp.isNoOp());
+    OCIO_CHECK_ASSERT(!singularMatrixOp.isUnityDiagonal());
+    OCIO_CHECK_ASSERT(!singularMatrixOp.isDiagonal());
+    OCIO_CHECK_ASSERT(!singularMatrixOp.isIdentity());
+    OCIO_CHECK_ASSERT(!singularMatrixOp.hasOffsets());
 
     // Get inverse of singular matrix operation.
-    OIIO_CHECK_THROW_WHAT(singularMatrixOp.inverse(),
+    OCIO_CHECK_THROW_WHAT(singularMatrixOp.inverse(),
                           OCIO::Exception,
                           "Singular Matrix can't be inverted");
 }
 
-OIIO_ADD_TEST(MatrixOpData, inverse)
+OCIO_ADD_TEST(MatrixOpData, inverse)
 {
     OCIO::MatrixOpData
         refMatrixOp(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32);
@@ -1621,13 +1621,13 @@ OIIO_ADD_TEST(MatrixOpData, inverse)
 
     // Get inverse of reference matrix operation.
     OCIO::MatrixOpDataRcPtr invMatrixOp;
-    OIIO_CHECK_NO_THROW(invMatrixOp = refMatrixOp.inverse());
-    OIIO_REQUIRE_ASSERT(invMatrixOp);
+    OCIO_CHECK_NO_THROW(invMatrixOp = refMatrixOp.inverse());
+    OCIO_REQUIRE_ASSERT(invMatrixOp);
 
     // Input/output bit-depths swapped.
-    OIIO_CHECK_EQUAL(invMatrixOp->getInputBitDepth(),
+    OCIO_CHECK_EQUAL(invMatrixOp->getInputBitDepth(),
                      refMatrixOp.getOutputBitDepth());
-    OIIO_CHECK_EQUAL(invMatrixOp->getOutputBitDepth(),
+    OCIO_CHECK_EQUAL(invMatrixOp->getOutputBitDepth(),
                      refMatrixOp.getInputBitDepth());
 
     const float expectedMatrix[16] = {
@@ -1646,27 +1646,27 @@ OIIO_ADD_TEST(MatrixOpData, inverse)
     // Check matrix coeffs.
     for (unsigned long i = 0; i < 16; ++i)
     {
-        OIIO_CHECK_CLOSE(invValues[i], expectedMatrix[i], 1e-6f);
+        OCIO_CHECK_CLOSE(invValues[i], expectedMatrix[i], 1e-6f);
     }
 
     // Check matrix offsets.
     for (unsigned long i = 0; i < 4; ++i)
     {
-        OIIO_CHECK_CLOSE(invOffsets[i],expectedOffsets[i], 1e-6f);
+        OCIO_CHECK_CLOSE(invOffsets[i],expectedOffsets[i], 1e-6f);
     }
 }
 
-OIIO_ADD_TEST(MatrixOpData, channel)
+OCIO_ADD_TEST(MatrixOpData, channel)
 {
     OCIO::MatrixOpData refMatrixOp(OCIO::BIT_DEPTH_F32,
                                    OCIO::BIT_DEPTH_UINT12);
 
-    OIIO_CHECK_ASSERT(!refMatrixOp.hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(!refMatrixOp.hasChannelCrosstalk());
 
     const float offsets[4] = { -0.1f, 0.2f, -0.3f, 0.4f };
     refMatrixOp.setRGBAOffsets(offsets);
     // False: with offsets.
-    OIIO_CHECK_ASSERT(!refMatrixOp.hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(!refMatrixOp.hasChannelCrosstalk());
 
     const float matrix[16] = { 0.9f, 0.0f,  0.0f, 0.0f,
                                0.0f, 0.5f,  0.0f, 0.0f,
@@ -1674,7 +1674,7 @@ OIIO_ADD_TEST(MatrixOpData, channel)
                                0.0f, 0.0f,  0.0f, 0.8f };
     refMatrixOp.setRGBA(matrix);
     // False: with diagonal.
-    OIIO_CHECK_ASSERT(!refMatrixOp.hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(!refMatrixOp.hasChannelCrosstalk());
 
     const float matrix2[16] = { 1.0f, 0.0f, 0.0f, 0.0f,
                                 0.0f, 1.0f, 0.0f, 0.0f,
@@ -1682,7 +1682,7 @@ OIIO_ADD_TEST(MatrixOpData, channel)
                                 0.0f, 0.0f, 0.0f, 1.0f };
     refMatrixOp.setRGBA(matrix2);
     // True: with off-diagonal.
-    OIIO_CHECK_ASSERT(refMatrixOp.hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(refMatrixOp.hasChannelCrosstalk());
 }
 
 #endif

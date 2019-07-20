@@ -473,7 +473,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <algorithm>
 #include "PathUtils.h"
 #include "Platform.h"
-#include "unittest.h"
+#include "UnitTest.h"
 
 #ifdef OCIO_SOURCE_DIR
 
@@ -489,50 +489,50 @@ std::string SanitizePath(const char* path)
     return s;
 }
 
-OIIO_ADD_TEST(Context, search_paths)
+OCIO_ADD_TEST(Context, search_paths)
 {
     OCIO::ContextRcPtr con = OCIO::Context::Create();
-    OIIO_CHECK_EQUAL(con->getNumSearchPaths(), 0);
+    OCIO_CHECK_EQUAL(con->getNumSearchPaths(), 0);
     const std::string empty{ "" };
-    OIIO_CHECK_EQUAL(std::string(con->getSearchPath()), empty);
-    OIIO_CHECK_EQUAL(std::string(con->getSearchPath(42)), empty);
+    OCIO_CHECK_EQUAL(std::string(con->getSearchPath()), empty);
+    OCIO_CHECK_EQUAL(std::string(con->getSearchPath(42)), empty);
 
     con->addSearchPath(empty.c_str());
-    OIIO_CHECK_EQUAL(con->getNumSearchPaths(), 0);
+    OCIO_CHECK_EQUAL(con->getNumSearchPaths(), 0);
 
     const std::string first{ "First" };
     con->addSearchPath(first.c_str());
-    OIIO_CHECK_EQUAL(con->getNumSearchPaths(), 1);
-    OIIO_CHECK_EQUAL(std::string(con->getSearchPath()), first);
-    OIIO_CHECK_EQUAL(std::string(con->getSearchPath(0)), first);
+    OCIO_CHECK_EQUAL(con->getNumSearchPaths(), 1);
+    OCIO_CHECK_EQUAL(std::string(con->getSearchPath()), first);
+    OCIO_CHECK_EQUAL(std::string(con->getSearchPath(0)), first);
     con->clearSearchPaths();
-    OIIO_CHECK_EQUAL(con->getNumSearchPaths(), 0);
-    OIIO_CHECK_EQUAL(std::string(con->getSearchPath()), empty);
+    OCIO_CHECK_EQUAL(con->getNumSearchPaths(), 0);
+    OCIO_CHECK_EQUAL(std::string(con->getSearchPath()), empty);
 
     const std::string second{ "Second" };
     const std::string firstSecond{ first + ":" + second };
     con->addSearchPath(first.c_str());
     con->addSearchPath(second.c_str());
-    OIIO_CHECK_EQUAL(con->getNumSearchPaths(), 2);
-    OIIO_CHECK_EQUAL(std::string(con->getSearchPath()), firstSecond);
-    OIIO_CHECK_EQUAL(std::string(con->getSearchPath(0)), first);
-    OIIO_CHECK_EQUAL(std::string(con->getSearchPath(1)), second);
+    OCIO_CHECK_EQUAL(con->getNumSearchPaths(), 2);
+    OCIO_CHECK_EQUAL(std::string(con->getSearchPath()), firstSecond);
+    OCIO_CHECK_EQUAL(std::string(con->getSearchPath(0)), first);
+    OCIO_CHECK_EQUAL(std::string(con->getSearchPath(1)), second);
     con->addSearchPath(empty.c_str());
-    OIIO_CHECK_EQUAL(con->getNumSearchPaths(), 2);
+    OCIO_CHECK_EQUAL(con->getNumSearchPaths(), 2);
 
     con->setSearchPath(first.c_str());
-    OIIO_CHECK_EQUAL(con->getNumSearchPaths(), 1);
-    OIIO_CHECK_EQUAL(std::string(con->getSearchPath()), first);
-    OIIO_CHECK_EQUAL(std::string(con->getSearchPath(0)), first);
+    OCIO_CHECK_EQUAL(con->getNumSearchPaths(), 1);
+    OCIO_CHECK_EQUAL(std::string(con->getSearchPath()), first);
+    OCIO_CHECK_EQUAL(std::string(con->getSearchPath(0)), first);
 
     con->setSearchPath(firstSecond.c_str());
-    OIIO_CHECK_EQUAL(con->getNumSearchPaths(), 2);
-    OIIO_CHECK_EQUAL(std::string(con->getSearchPath()), firstSecond);
-    OIIO_CHECK_EQUAL(std::string(con->getSearchPath(0)), first);
-    OIIO_CHECK_EQUAL(std::string(con->getSearchPath(1)), second);
+    OCIO_CHECK_EQUAL(con->getNumSearchPaths(), 2);
+    OCIO_CHECK_EQUAL(std::string(con->getSearchPath()), firstSecond);
+    OCIO_CHECK_EQUAL(std::string(con->getSearchPath(0)), first);
+    OCIO_CHECK_EQUAL(std::string(con->getSearchPath(1)), second);
 }
 
-OIIO_ADD_TEST(Context, abs_path)
+OCIO_ADD_TEST(Context, abs_path)
 {
     const std::string contextpath(ociodir + std::string("/src/OpenColorIO/Context.cpp"));
 
@@ -541,17 +541,17 @@ OIIO_ADD_TEST(Context, abs_path)
     con->setStringVar("non_abs", "src/OpenColorIO/Context.cpp");
     con->setStringVar("is_abs", contextpath.c_str());
     
-    OIIO_CHECK_NO_THROW(con->resolveFileLocation("${non_abs}"));
+    OCIO_CHECK_NO_THROW(con->resolveFileLocation("${non_abs}"));
 
-    OIIO_CHECK_ASSERT(strcmp(SanitizePath(con->resolveFileLocation("${non_abs}")).c_str(),
+    OCIO_CHECK_ASSERT(strcmp(SanitizePath(con->resolveFileLocation("${non_abs}")).c_str(),
                              SanitizePath(contextpath.c_str()).c_str()) == 0);
     
-    OIIO_CHECK_NO_THROW(con->resolveFileLocation("${is_abs}"));
-    OIIO_CHECK_ASSERT(strcmp(con->resolveFileLocation("${is_abs}"),
+    OCIO_CHECK_NO_THROW(con->resolveFileLocation("${is_abs}"));
+    OCIO_CHECK_ASSERT(strcmp(con->resolveFileLocation("${is_abs}"),
                              SanitizePath(contextpath.c_str()).c_str()) == 0);
 }
 
-OIIO_ADD_TEST(Context, var_search_path)
+OCIO_ADD_TEST(Context, var_search_path)
 {
     OCIO::ContextRcPtr context = OCIO::Context::Create();
     const std::string contextpath(ociodir + std::string("/src/OpenColorIO/Context.cpp"));
@@ -560,12 +560,12 @@ OIIO_ADD_TEST(Context, var_search_path)
     context->addSearchPath("${SOURCE_DIR}/src/OpenColorIO");
 
     std::string resolvedSource;
-    OIIO_CHECK_NO_THROW(resolvedSource = context->resolveFileLocation("Context.cpp"));
-    OIIO_CHECK_ASSERT(strcmp(SanitizePath(resolvedSource.c_str()).c_str(),
+    OCIO_CHECK_NO_THROW(resolvedSource = context->resolveFileLocation("Context.cpp"));
+    OCIO_CHECK_ASSERT(strcmp(SanitizePath(resolvedSource.c_str()).c_str(),
                              SanitizePath(contextpath.c_str()).c_str()) == 0);
 }
 
-OIIO_ADD_TEST(Context, use_searchpaths)
+OCIO_ADD_TEST(Context, use_searchpaths)
 {
     OCIO::ContextRcPtr context = OCIO::Context::Create();
 
@@ -576,17 +576,17 @@ OIIO_ADD_TEST(Context, use_searchpaths)
     context->addSearchPath(searchPath2.c_str());
 
     std::string resolvedSource;
-    OIIO_CHECK_NO_THROW(resolvedSource = context->resolveFileLocation("Context.cpp"));
+    OCIO_CHECK_NO_THROW(resolvedSource = context->resolveFileLocation("Context.cpp"));
     const std::string res1 = searchPath1 + "/Context.cpp";
-    OIIO_CHECK_ASSERT(strcmp(SanitizePath(resolvedSource.c_str()).c_str(),
+    OCIO_CHECK_ASSERT(strcmp(SanitizePath(resolvedSource.c_str()).c_str(),
                              SanitizePath(res1.c_str()).c_str()) == 0);
-    OIIO_CHECK_NO_THROW(resolvedSource = context->resolveFileLocation("GPUHelpers.h"));
+    OCIO_CHECK_NO_THROW(resolvedSource = context->resolveFileLocation("GPUHelpers.h"));
     const std::string res2 = searchPath2 + "/GPUHelpers.h";
-    OIIO_CHECK_ASSERT(strcmp(SanitizePath(resolvedSource.c_str()).c_str(),
+    OCIO_CHECK_ASSERT(strcmp(SanitizePath(resolvedSource.c_str()).c_str(),
                              SanitizePath(res2.c_str()).c_str()) == 0);
 }
 
-OIIO_ADD_TEST(Context, use_searchpaths_workingdir)
+OCIO_ADD_TEST(Context, use_searchpaths_workingdir)
 {
     OCIO::ContextRcPtr context = OCIO::Context::Create();
 
@@ -598,13 +598,13 @@ OIIO_ADD_TEST(Context, use_searchpaths_workingdir)
     context->addSearchPath(searchPath2.c_str());
 
     std::string resolvedSource;
-    OIIO_CHECK_NO_THROW(resolvedSource = context->resolveFileLocation("Context.cpp"));
+    OCIO_CHECK_NO_THROW(resolvedSource = context->resolveFileLocation("Context.cpp"));
     const std::string res1 = ociodir + "/" + searchPath1 + "/Context.cpp";
-    OIIO_CHECK_ASSERT(strcmp(SanitizePath(resolvedSource.c_str()).c_str(),
+    OCIO_CHECK_ASSERT(strcmp(SanitizePath(resolvedSource.c_str()).c_str(),
                              SanitizePath(res1.c_str()).c_str()) == 0);
-    OIIO_CHECK_NO_THROW(resolvedSource = context->resolveFileLocation("GPUHelpers.h"));
+    OCIO_CHECK_NO_THROW(resolvedSource = context->resolveFileLocation("GPUHelpers.h"));
     const std::string res2 = ociodir + "/" + searchPath2 + "/GPUHelpers.h";
-    OIIO_CHECK_ASSERT(strcmp(SanitizePath(resolvedSource.c_str()).c_str(),
+    OCIO_CHECK_ASSERT(strcmp(SanitizePath(resolvedSource.c_str()).c_str(),
                              SanitizePath(res2.c_str()).c_str()) == 0);
 }
 
