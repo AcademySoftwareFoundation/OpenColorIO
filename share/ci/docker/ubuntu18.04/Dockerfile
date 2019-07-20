@@ -6,8 +6,8 @@ RUN /tmp/linux/apt/install.sh && \
     /tmp/linux/apt/install_gcc.sh 6 && \
     /tmp/linux/apt/install_clang.sh 7 && \
     /tmp/linux/apt/install_python.sh 2.7 && \
-    /tmp/linux/install_numpy.sh 1.14 1.14 && \
-    /tmp/linux/install_sphinx.sh 1.8.5 1.8.5 && \
+    /tmp/linux/install_numpy.sh 1.14 && \
+    /tmp/linux/install_sphinx.sh 1.8.5 && \
     /tmp/linux/install_cmake.sh 3.11.4 && \
     /tmp/linux/install_expat.sh 2.2.5 && \
     /tmp/linux/install_lcms2.sh 2.2 && \

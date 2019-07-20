@@ -4,7 +4,6 @@
 #   PYSTRING_FOUND - If FALSE, do not try to link to pystring
 #   PYSTRING_LIBRARY - Where to find pystring
 #   PYSTRING_INCLUDE_DIR - Where to find pystring.h
-#   PYSTRING_VERSION - The version of the library
 #
 # Targets defined by this module:
 #   pystring::pystring - IMPORTED target, if found
@@ -76,9 +75,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     find_package_handle_standard_args(Pystring
         REQUIRED_VARS 
             PYSTRING_INCLUDE_DIR 
-            PYSTRING_LIBRARY 
-        VERSION_VAR
-            PYSTRING_VERSION
+            PYSTRING_LIBRARY
     )
     set(PYSTRING_FOUND ${Pystring_FOUND})
 endif()
@@ -94,7 +91,6 @@ if(NOT PYSTRING_FOUND)
 
     # Set find_package standard args
     set(PYSTRING_FOUND TRUE)
-    set(PYSTRING_VERSION ${Pystring_FIND_VERSION})
     set(PYSTRING_INCLUDE_DIR "${_EXT_DIST_ROOT}/include")
     set(PYSTRING_LIBRARY 
         "${_EXT_DIST_ROOT}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}pystring${CMAKE_STATIC_LIBRARY_SUFFIX}")

@@ -28,9 +28,9 @@ endif()
 ### Try to find package ###
 
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
-    # Try to use pkgconfig to get the verison
+    # Try to use pkg-config to get the verison
     find_package(PkgConfig QUIET)
-    pkg_check_modules(PC_EXPAT QUIET yaml-cpp)
+    pkg_check_modules(PC_YAMLCPP QUIET yaml-cpp)
 
     set(_YAMLCPP_SEARCH_DIRS
         ${YAMLCPP_DIRS}
@@ -72,9 +72,16 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
             lib64 lib
     )
 
-    # Get version from config
+    # Get version from config if it was found.
+    # Important: The yaml-cpp interface changed between 0.3.0 and 0.5.0. 
+    # OCIO supports both, but relies on YAMLCPP_VERSION to set the OLDYAML
+    # property below, which tells the compiler which to use.
     if(PC_YAMLCPP_VERSION)
         set(YAMLCPP_VERSION "${PC_YAMLCPP_VERSION}")
+    elseif(EXISTS "${YAMLCPP_INCLUDE_DIR}/yaml-cpp/iterator.h")
+        set(YAMLCPP_VERSION "0.3.0")
+    else()
+        set(YAMLCPP_VERSION "0.5.0")
     endif()
 
     # Override REQUIRED if package can be installed

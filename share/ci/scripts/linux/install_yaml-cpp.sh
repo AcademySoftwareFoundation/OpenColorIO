@@ -29,8 +29,6 @@ cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
       -DYAML_CPP_BUILD_TOOLS=OFF \
       -DYAML_CPP_BUILD_CONTRIB=OFF \
       -DCMAKE_CXX_FLAGS="-fPIC \
-                         -fvisibility=hidden \
-                         -fvisibility-inlines-hidden \
                          -Wno-deprecated-declarations" \
       ../.
 make -j4

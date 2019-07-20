@@ -28,7 +28,7 @@ endif()
 ### Try to find package ###
 
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
-    # Try to use pkgconfig to get the verison
+    # Try to use pkg-config to get the verison
     find_package(PkgConfig QUIET)
     pkg_check_modules(PC_LCMS2 QUIET lcms2)
 

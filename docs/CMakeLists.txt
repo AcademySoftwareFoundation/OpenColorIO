@@ -43,7 +43,7 @@ else()
         ":"
         "${CMAKE_BINARY_DIR}/ext/dist/lib${LIB_SUFFIX}/python${PYTHON_VARIANT}/site-packages"
         ":"
-        "$PYTHONPATH"
+        "$ENV{PYTHONPATH}"
     )
 endif()
 
