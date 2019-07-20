@@ -38,8 +38,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "ocioicc.h"
 
-#include "lcms2.h"
-#include "lcms2_plugin.h"
+#include "lcms2/lcms2.h"
+#include "lcms2/lcms2_plugin.h"
 
 OCIO_NAMESPACE_ENTER
 {

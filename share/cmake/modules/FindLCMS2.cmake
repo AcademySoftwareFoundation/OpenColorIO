@@ -73,7 +73,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     )
 
     # Get version from config or header file
-    if(LCMS2_INCLUDE_DIR AND EXISTS "${LCMS2_INCLUDE_DIR}/lcms2.h")
+    if(LCMS2_INCLUDE_DIR AND EXISTS "${LCMS2_INCLUDE_DIR}/lcms2/lcms2.h")
         file(STRINGS "${LCMS2_INCLUDE_DIR}/lcms2.h" _LCMS2_VER_SEARCH 
             REGEX "^[ \t]*//[ \t]+Version[ \t]+[.0-9]+.*$")
         if(_LCMS2_VER_SEARCH)
@@ -111,7 +111,7 @@ if(NOT LCMS2_FOUND)
     # Set find_package standard args
     set(LCMS2_FOUND TRUE)
     set(LCMS2_VERSION ${LCMS2_FIND_VERSION})
-    set(LCMS2_INCLUDE_DIR "${_EXT_DIST_ROOT}/include/lcms2")
+    set(LCMS2_INCLUDE_DIR "${_EXT_DIST_ROOT}/include")
     set(LCMS2_LIBRARY 
         "${_EXT_DIST_ROOT}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lcms2${CMAKE_STATIC_LIBRARY_SUFFIX}")
 

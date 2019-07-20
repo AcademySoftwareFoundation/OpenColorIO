@@ -22,10 +22,10 @@ set(PYSTRING_MIN_VERSION 1.1.3)
 find_package(Pystring ${PYSTRING_MIN_VERSION} REQUIRED)
 
 if(OCIO_BUILD_APPS)
-	# LCMS2
-	# https://github.com/mm2/Little-CMS
-	set(LCMS2_MIN_VERSION 2.2)
-	find_package(LCMS2 ${LCMS2_MIN_VERSION} REQUIRED)
+    # LCMS2
+    # https://github.com/mm2/Little-CMS
+    set(LCMS2_MIN_VERSION 2.2)
+    find_package(LCMS2 ${LCMS2_MIN_VERSION} REQUIRED)
 endif()
 
 # Sample ICC (modified)
@@ -39,16 +39,16 @@ set_target_properties(sampleicc::sampleicc PROPERTIES
 ### External Python dependencies ###
 
 if(OCIO_BUILD_DOCS)
-	include(FindPythonPackage)
+    include(FindPythonPackage)
 
-	# Sphinx
-	# https://pypi.python.org/pypi/Sphinx
-	set(SPHINX_MIN_VERSION 1.8.5)
-	find_package(Sphinx ${SPHINX_MIN_VERSION} REQUIRED)
-	#add_dependencies(Sphinx setuptools docutils Jinja2 Pygments)
+    # Sphinx
+    # https://pypi.python.org/pypi/Sphinx
+    set(SPHINX_MIN_VERSION 1.8.5)
+    find_package(Sphinx ${SPHINX_MIN_VERSION} REQUIRED)
+    #add_dependencies(Sphinx setuptools docutils Jinja2 Pygments)
 
-	# Make sphinx-build path available in other modules
-	set(SPHINX_EXECUTABLE "${SPHINX_EXECUTABLE}" CACHE STRING "Path to sphinx-build")
+    # Make sphinx-build path available in other modules
+    set(SPHINX_EXECUTABLE "${SPHINX_EXECUTABLE}" CACHE STRING "Path to sphinx-build")
 endif()
 
 ###############################################################################
