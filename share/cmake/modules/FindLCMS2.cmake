@@ -74,7 +74,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
 
     # Get version from config or header file
     if(LCMS2_INCLUDE_DIR AND EXISTS "${LCMS2_INCLUDE_DIR}/lcms2/lcms2.h")
-        file(STRINGS "${LCMS2_INCLUDE_DIR}/lcms2.h" _LCMS2_VER_SEARCH 
+        file(STRINGS "${LCMS2_INCLUDE_DIR}/lcms2/lcms2.h" _LCMS2_VER_SEARCH 
             REGEX "^[ \t]*//[ \t]+Version[ \t]+[.0-9]+.*$")
         if(_LCMS2_VER_SEARCH)
             string(REGEX REPLACE ".*//[ \t]+Version[ \t]+([.0-9]+).*" 
