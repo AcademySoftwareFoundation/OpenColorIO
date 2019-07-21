@@ -27,28 +27,27 @@ None
 
 None
 
+## File Format Expectations
 
-
-
-
-
-
-
-***File Format Expectations***
-
-Attempting to read a .vdb file will:
-* Return success and produce a valid VDB data structure in memory
+Attempting to read a .ocio file will:
+* Return success and produce a valid Config data structure in memory
 * Fail with an error
-* Execute forever
-* Run out of memory
 
-The last two options may be surprising.  VDBs, however, are designed
-as open-ended containers of production data that may be terabytes in size.
+The bulk of data read comes from transform files referenced by a Config. 
+These files may be arbitrarily large, and may live on any accessible volume. 
+Referenced file paths support environment variable expansion, making OCIO's 
+Processor invokation susceptible to environmental redirection. Files are only 
+read when needed for finalizing a Processor, so no transform files should be 
+accessed as a result of loading a Config.
 
 It is a bug if some file causes the library to crash.  It is a serious
 security issue if some file causes arbitrary code execution.
 
-***Runtime Library Expectations***
+OpenColorIO will attempt to associate a file's data and layout with a 
+registered file format, regardless of a file's extension. Invalid input data
+results in an error.
+
+## Runtime Library Expectations
 
 We consider the library to run with the same privilege as the linked
 code.  As such, we do not guarantee any safety against malformed
@@ -64,7 +63,7 @@ We do not consider this as severe as file format issues because
 in most deployments the parameter space is not exposed to potential
 attackers.
 
-***Proper Data Redaction***
+## Proper Data Redaction
 
 A common concern when working with sensitive data is to ensure
 that distributed files are clean and do not possess any hidden
@@ -75,23 +74,7 @@ The best practice for building a clean VDB is populate an
 empty grid voxel-by-voxel with the desired data and only
 copy known and trusted metadata fields.
 
-****Inactive Voxels****
-
-When voxels are marked inactive in the grid, they are not cleared
-to the background value.  If you rely on the data being deleted, you
-should overwrite the voxel's values as well as deactivating them.
-In addition, calling pruneInactive will free deactivated tiles.  This
-is particularly important when passing a VDB to another process.
-
-****Topology****
-
-It is important to note the general topology of the grid provides
-a 1-bit image of the data in question.  By taking the expected bandwidth
-into account, a close approximation of an SDF can be recreated by just
-the topology data.  Building a new tree with a new topology of only
-the desired data can avoid this.
-
-****Metadata****
+## Metadata
 
 VDBs will try to preserve metadata through most operations.  This can
 provide an unexpected sidechannel for communication.
