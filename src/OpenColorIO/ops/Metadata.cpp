@@ -223,9 +223,9 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(Metadata, test_accessors)
+OCIO_ADD_TEST(Metadata, test_accessors)
 {
     OCIO::Metadata info("Info");
 
@@ -234,16 +234,16 @@ OIIO_ADD_TEST(Metadata, test_accessors)
     info.addAttribute(OCIO::Metadata::Attribute("version", "1.0"));
 
     const OCIO::Metadata::Attributes& atts1 = info.getAttributes();
-    OIIO_CHECK_EQUAL(atts1.size(), 1);
-    OIIO_CHECK_EQUAL(atts1[0].first, "version");
-    OIIO_CHECK_EQUAL(atts1[0].second, "1.0");
+    OCIO_CHECK_EQUAL(atts1.size(), 1);
+    OCIO_CHECK_EQUAL(atts1[0].first, "version");
+    OCIO_CHECK_EQUAL(atts1[0].second, "1.0");
 
     info.addAttribute(OCIO::Metadata::Attribute("version", "2.0"));
 
     const OCIO::Metadata::Attributes& atts2 = info.getAttributes();
-    OIIO_CHECK_EQUAL(atts2.size(), 1);
-    OIIO_CHECK_EQUAL(atts2[0].first, "version");
-    OIIO_CHECK_EQUAL(atts2[0].second, "2.0");
+    OCIO_CHECK_EQUAL(atts2.size(), 1);
+    OCIO_CHECK_EQUAL(atts2[0].first, "version");
+    OCIO_CHECK_EQUAL(atts2[0].second, "2.0");
 
     info["Copyright"] = "Copyright 2013 Autodesk";
     info["Release"] = "2015";
@@ -268,19 +268,19 @@ OIIO_ADD_TEST(Metadata, test_accessors)
 
     {
         const OCIO::Metadata cinfo = info;
-        OIIO_CHECK_EQUAL(cinfo["Copyright"].getValue(), "Copyright 2013 Autodesk");
-        OIIO_CHECK_EQUAL(cinfo["Release"].getValue(), "2015");
-        OIIO_CHECK_EQUAL(cinfo["InputColorSpace"]["Description"].getValue(), 
+        OCIO_CHECK_EQUAL(cinfo["Copyright"].getValue(), "Copyright 2013 Autodesk");
+        OCIO_CHECK_EQUAL(cinfo["Release"].getValue(), "2015");
+        OCIO_CHECK_EQUAL(cinfo["InputColorSpace"]["Description"].getValue(), 
                          "Input color space description");
-        OIIO_CHECK_EQUAL(cinfo["InputColorSpace"]["Profile"].getValue(), 
+        OCIO_CHECK_EQUAL(cinfo["InputColorSpace"]["Profile"].getValue(), 
                          "Input color space profile");
-        OIIO_CHECK_EQUAL(cinfo["OutputColorSpace"]["Description"].getValue(), 
+        OCIO_CHECK_EQUAL(cinfo["OutputColorSpace"]["Description"].getValue(), 
                          "Output color space description");
-        OIIO_CHECK_EQUAL(cinfo["OutputColorSpace"]["Profile"].getValue(), 
+        OCIO_CHECK_EQUAL(cinfo["OutputColorSpace"]["Profile"].getValue(), 
                          "Output color space profile");
-        OIIO_CHECK_EQUAL(cinfo["Category"]["Name"].getValue(),
+        OCIO_CHECK_EQUAL(cinfo["Category"]["Name"].getValue(),
                          "Color space category name");
-        OIIO_CHECK_EQUAL(cinfo["Category"]["Importance"].getValue(), "High");
+        OCIO_CHECK_EQUAL(cinfo["Category"]["Importance"].getValue(), "High");
     }
 
     info["Extra"]["Item1"]["Item1a"] = "Extra:Item1:Item1a";
@@ -291,8 +291,8 @@ OIIO_ADD_TEST(Metadata, test_accessors)
 
     {
         const OCIO::Metadata cinfo = info;
-        OIIO_CHECK_ASSERT(!cinfo["Extra"].isLeaf());
-        OIIO_CHECK_ASSERT(cinfo["Extra"].getItems().size() == 2);
+        OCIO_CHECK_ASSERT(!cinfo["Extra"].isLeaf());
+        OCIO_CHECK_ASSERT(cinfo["Extra"].getItems().size() == 2);
     }
 
     // This should clear subelements of 'Extra' and make it a leaf metadata.
@@ -300,8 +300,8 @@ OIIO_ADD_TEST(Metadata, test_accessors)
 
     {
         const OCIO::Metadata& cinfo = info;
-        OIIO_CHECK_ASSERT(cinfo["Extra"].isLeaf());
-        OIIO_CHECK_EQUAL(cinfo["Extra"].getValue(), "Blah");
+        OCIO_CHECK_ASSERT(cinfo["Extra"].isLeaf());
+        OCIO_CHECK_EQUAL(cinfo["Extra"].getValue(), "Blah");
     }
 
     // This should clear the (leaf) value of 'Extra'
@@ -311,9 +311,9 @@ OIIO_ADD_TEST(Metadata, test_accessors)
 
     {
         const OCIO::Metadata& cinfo = info;
-        OIIO_CHECK_ASSERT(!cinfo["Extra"].isLeaf());
-        OIIO_CHECK_EQUAL(cinfo["Extra"].getItems().size(), 1);
-        OIIO_CHECK_EQUAL(cinfo["Extra"]["Item3"].getItems().size(), 3);
+        OCIO_CHECK_ASSERT(!cinfo["Extra"].isLeaf());
+        OCIO_CHECK_EQUAL(cinfo["Extra"].getItems().size(), 1);
+        OCIO_CHECK_EQUAL(cinfo["Extra"]["Item3"].getItems().size(), 3);
     }
 
     // Remove a subelement.
@@ -321,10 +321,10 @@ OIIO_ADD_TEST(Metadata, test_accessors)
 
     {
         const OCIO::Metadata& cinfo = info;
-        OIIO_CHECK_EQUAL(cinfo["Extra"]["Item3"].getItems().size(), 2);
-        OIIO_CHECK_EQUAL(cinfo["Extra"]["Item3"]["Item3a"].getValue(), 
+        OCIO_CHECK_EQUAL(cinfo["Extra"]["Item3"].getItems().size(), 2);
+        OCIO_CHECK_EQUAL(cinfo["Extra"]["Item3"]["Item3a"].getValue(), 
                          "Extra:Item3:Item3a");
-        OIIO_CHECK_EQUAL(cinfo["Extra"]["Item3"]["Item3c"].getValue(),
+        OCIO_CHECK_EQUAL(cinfo["Extra"]["Item3"]["Item3c"].getValue(),
                          "Extra:Item3:Item3c");
     }
 
@@ -334,8 +334,8 @@ OIIO_ADD_TEST(Metadata, test_accessors)
 
     {
         const OCIO::Metadata& cinfo = info;
-        OIIO_CHECK_ASSERT(cinfo["Extra"]["Item3"]["Item3a"].isLeaf());
-        OIIO_CHECK_EQUAL(cinfo["Extra"]["Item3"]["Item3a"].getValue(), "");
+        OCIO_CHECK_ASSERT(cinfo["Extra"]["Item3"]["Item3a"].isLeaf());
+        OCIO_CHECK_EQUAL(cinfo["Extra"]["Item3"]["Item3a"].getValue(), "");
     }
 
     // Clearing a non-leaf metadata.
@@ -344,8 +344,8 @@ OIIO_ADD_TEST(Metadata, test_accessors)
 
     {
         const OCIO::Metadata& cinfo = info;
-        OIIO_CHECK_ASSERT(cinfo["Extra"]["Item3"].isLeaf());
-        OIIO_CHECK_EQUAL(cinfo["Extra"]["Item3"].getValue(), "");
+        OCIO_CHECK_ASSERT(cinfo["Extra"]["Item3"].isLeaf());
+        OCIO_CHECK_EQUAL(cinfo["Extra"]["Item3"].getValue(), "");
     }
 
     // Create a separate metadata structure and use it to replace an element.
@@ -359,28 +359,28 @@ OIIO_ADD_TEST(Metadata, test_accessors)
     info["InputColorSpace"] = newInCS;
     {
         const OCIO::Metadata& cinfo = info;
-        OIIO_CHECK_EQUAL(cinfo["NewInputColorSpace"]["Profile"].getValue(),
+        OCIO_CHECK_EQUAL(cinfo["NewInputColorSpace"]["Profile"].getValue(),
                          "New input color space profile");
-        OIIO_CHECK_EQUAL(cinfo["NewInputColorSpace"]["Description"].getValue(),
+        OCIO_CHECK_EQUAL(cinfo["NewInputColorSpace"]["Description"].getValue(),
                          "New input color space description");
     }
 
     // Check exceptions.
     const OCIO::Metadata& cinfo = info;
 
-    OIIO_CHECK_THROW_WHAT(cinfo["OutputColorSpace"].getValue(), 
+    OCIO_CHECK_THROW_WHAT(cinfo["OutputColorSpace"].getValue(), 
                           OCIO::Exception, 
                           "Metadata should be a leaf 'OutputColorSpace'");
 
-    OIIO_CHECK_THROW_WHAT(cinfo["OutputColorSpace"]["Profile"].getItems(),
+    OCIO_CHECK_THROW_WHAT(cinfo["OutputColorSpace"]["Profile"].getItems(),
                           OCIO::Exception,
                           "Metadata should be a container 'Profile'");
 
-    OIIO_CHECK_THROW_WHAT(cinfo["OutputColorSpace"]["WrongName"],
+    OCIO_CHECK_THROW_WHAT(cinfo["OutputColorSpace"]["WrongName"],
                           OCIO::Exception,
                           "Metadata element not found 'WrongName'");
 
-    OIIO_CHECK_THROW_WHAT(info["OutputColorSpace"].remove("WrongName"),
+    OCIO_CHECK_THROW_WHAT(info["OutputColorSpace"].remove("WrongName"),
                           OCIO::Exception,
                           "Metadata element not found 'WrongName'");
     

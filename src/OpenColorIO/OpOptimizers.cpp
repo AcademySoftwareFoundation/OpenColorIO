@@ -232,7 +232,7 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
 #include "ops/Exponent/ExponentOps.h"
 #include "ops/Log/LogOps.h"
@@ -240,7 +240,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "ops/Lut3D/Lut3DOp.h"
 #include "ops/Matrix/MatrixOps.h"
 
-OIIO_ADD_TEST(OpOptimizers, RemoveInverseOps)
+OCIO_ADD_TEST(OpOptimizers, RemoveInverseOps)
 {
     OCIO::OpRcPtrVec ops;
     
@@ -259,9 +259,9 @@ OIIO_ADD_TEST(OpOptimizers, RemoveInverseOps)
                       OCIO::TRANSFORM_DIR_INVERSE);
     OCIO::CreateExponentOp(ops, exp, OCIO::TRANSFORM_DIR_INVERSE);
     
-    OIIO_CHECK_EQUAL(ops.size(), 4);
+    OCIO_CHECK_EQUAL(ops.size(), 4);
     OCIO::RemoveInverseOps(ops);
-    OIIO_CHECK_EQUAL(ops.size(), 0);
+    OCIO_CHECK_EQUAL(ops.size(), 0);
     
     
     ops.clear();
@@ -273,13 +273,13 @@ OIIO_ADD_TEST(OpOptimizers, RemoveInverseOps)
                       OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateExponentOp(ops, exp, OCIO::TRANSFORM_DIR_FORWARD);
     
-    OIIO_CHECK_EQUAL(ops.size(), 5);
+    OCIO_CHECK_EQUAL(ops.size(), 5);
     OCIO::RemoveInverseOps(ops);
-    OIIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_CHECK_EQUAL(ops.size(), 1);
 }
 
 
-OIIO_ADD_TEST(OpOptimizers, CombineOps)
+OCIO_ADD_TEST(OpOptimizers, CombineOps)
 {
     float m1[4] = { 2.0f, 2.0f, 2.0f, 1.0f };
     float m2[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
@@ -292,9 +292,9 @@ OIIO_ADD_TEST(OpOptimizers, CombineOps)
     OCIO::OpRcPtrVec ops;
     OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
     
-    OIIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_CHECK_EQUAL(ops.size(), 1);
     OCIO::CombineOps(ops);
-    OIIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_CHECK_EQUAL(ops.size(), 1);
     }
     
     {
@@ -302,9 +302,9 @@ OIIO_ADD_TEST(OpOptimizers, CombineOps)
     OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateScaleOp(ops, m3, OCIO::TRANSFORM_DIR_FORWARD);
     
-    OIIO_CHECK_EQUAL(ops.size(), 2);
+    OCIO_CHECK_EQUAL(ops.size(), 2);
     OCIO::CombineOps(ops);
-    OIIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_CHECK_EQUAL(ops.size(), 1);
     }
     
     {
@@ -313,9 +313,9 @@ OIIO_ADD_TEST(OpOptimizers, CombineOps)
     OCIO::CreateScaleOp(ops, m3, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateScaleOp(ops, m4, OCIO::TRANSFORM_DIR_FORWARD);
     
-    OIIO_CHECK_EQUAL(ops.size(), 3);
+    OCIO_CHECK_EQUAL(ops.size(), 3);
     OCIO::CombineOps(ops);
-    OIIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_CHECK_EQUAL(ops.size(), 1);
     }
     
     {
@@ -323,9 +323,9 @@ OIIO_ADD_TEST(OpOptimizers, CombineOps)
     OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateScaleOp(ops, m2, OCIO::TRANSFORM_DIR_FORWARD);
     
-    OIIO_CHECK_EQUAL(ops.size(), 2);
+    OCIO_CHECK_EQUAL(ops.size(), 2);
     OCIO::CombineOps(ops);
-    OIIO_CHECK_EQUAL(ops.size(), 0);
+    OCIO_CHECK_EQUAL(ops.size(), 0);
     }
     
     {
@@ -333,9 +333,9 @@ OIIO_ADD_TEST(OpOptimizers, CombineOps)
     OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_INVERSE);
     
-    OIIO_CHECK_EQUAL(ops.size(), 2);
+    OCIO_CHECK_EQUAL(ops.size(), 2);
     OCIO::CombineOps(ops);
-    OIIO_CHECK_EQUAL(ops.size(), 0);
+    OCIO_CHECK_EQUAL(ops.size(), 0);
     }
     
     {
@@ -346,9 +346,9 @@ OIIO_ADD_TEST(OpOptimizers, CombineOps)
     OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
     
-    OIIO_CHECK_EQUAL(ops.size(), 5);
+    OCIO_CHECK_EQUAL(ops.size(), 5);
     OCIO::CombineOps(ops);
-    OIIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_CHECK_EQUAL(ops.size(), 1);
     }
     
     {
@@ -358,9 +358,9 @@ OIIO_ADD_TEST(OpOptimizers, CombineOps)
     OCIO::CreateScaleOp(ops, m2, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateExponentOp(ops, exp, OCIO::TRANSFORM_DIR_INVERSE);
     
-    OIIO_CHECK_EQUAL(ops.size(), 4);
+    OCIO_CHECK_EQUAL(ops.size(), 4);
     OCIO::CombineOps(ops);
-    OIIO_CHECK_EQUAL(ops.size(), 0);
+    OCIO_CHECK_EQUAL(ops.size(), 0);
     }
 }
 

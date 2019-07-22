@@ -275,10 +275,10 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
 /*
-OIIO_ADD_TEST(Baker_Unit_Tests, test_listlutwriters)
+OCIO_ADD_TEST(Baker_Unit_Tests, test_listlutwriters)
 {
     
     std::vector<std::string> current_writers;
@@ -287,19 +287,19 @@ OIIO_ADD_TEST(Baker_Unit_Tests, test_listlutwriters)
     
     OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     
-    OIIO_CHECK_EQUAL(baker->getNumFormats(), (int)current_writers.size());
+    OCIO_CHECK_EQUAL(baker->getNumFormats(), (int)current_writers.size());
     
     std::vector<std::string> test;
     for(int i = 0; i < baker->getNumFormats(); ++i)
         test.push_back(baker->getFormatNameByIndex(i));
     
     for(unsigned int i = 0; i < current_writers.size(); ++i)
-        OIIO_CHECK_EQUAL(current_writers[i], test[i]);
+        OCIO_CHECK_EQUAL(current_writers[i], test[i]);
     
 }
 */
 
-OIIO_ADD_TEST(Baker_Unit_Tests, bake)
+OCIO_ADD_TEST(Baker_Unit_Tests, bake)
 {
     // SSE aware test, similar to python test.
     OCIO::BakerRcPtr bake = OCIO::Baker::Create();
@@ -375,35 +375,35 @@ OIIO_ADD_TEST(Baker_Unit_Tests, bake)
         "\n";
     std::istringstream is(myProfile);
     OCIO::ConstConfigRcPtr config;
-    OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OIIO_REQUIRE_EQUAL(config->getNumColorSpaces(), 2);
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(), 2);
     bake->setConfig(config);
     auto cfg2 = bake->getConfig();
-    OIIO_REQUIRE_EQUAL(cfg2->getNumColorSpaces(), 2);
+    OCIO_REQUIRE_EQUAL(cfg2->getNumColorSpaces(), 2);
 
     bake->setFormat("cinespace");
-    OIIO_CHECK_EQUAL("cinespace", std::string(bake->getFormat()));
+    OCIO_CHECK_EQUAL("cinespace", std::string(bake->getFormat()));
     bake->setType("3D");
-    OIIO_CHECK_EQUAL("3D", std::string(bake->getType()));
+    OCIO_CHECK_EQUAL("3D", std::string(bake->getType()));
     bake->setMetadata("this is some metadata!");
-    OIIO_CHECK_EQUAL("this is some metadata!", std::string(bake->getMetadata()));
+    OCIO_CHECK_EQUAL("this is some metadata!", std::string(bake->getMetadata()));
     bake->setInputSpace("lnh");
-    OIIO_CHECK_EQUAL("lnh", std::string(bake->getInputSpace()));
+    OCIO_CHECK_EQUAL("lnh", std::string(bake->getInputSpace()));
     bake->setLooks("foo, +bar");
-    OIIO_CHECK_EQUAL("foo, +bar", std::string(bake->getLooks()));
+    OCIO_CHECK_EQUAL("foo, +bar", std::string(bake->getLooks()));
     bake->setLooks("");
     bake->setTargetSpace("test");
-    OIIO_CHECK_EQUAL("test", std::string(bake->getTargetSpace()));
+    OCIO_CHECK_EQUAL("test", std::string(bake->getTargetSpace()));
     bake->setShaperSize(4);
-    OIIO_CHECK_EQUAL(4, bake->getShaperSize());
+    OCIO_CHECK_EQUAL(4, bake->getShaperSize());
     bake->setCubeSize(2);
-    OIIO_CHECK_EQUAL(2, bake->getCubeSize());
+    OCIO_CHECK_EQUAL(2, bake->getCubeSize());
     std::ostringstream os;
     bake->bake(os);
-    OIIO_CHECK_EQUAL(expectedLut, os.str());
-    OIIO_CHECK_EQUAL(8, bake->getNumFormats());
-    OIIO_CHECK_EQUAL("cinespace", std::string(bake->getFormatNameByIndex(2)));
-    OIIO_CHECK_EQUAL("3dl", std::string(bake->getFormatExtensionByIndex(1)));
+    OCIO_CHECK_EQUAL(expectedLut, os.str());
+    OCIO_CHECK_EQUAL(8, bake->getNumFormats());
+    OCIO_CHECK_EQUAL("cinespace", std::string(bake->getFormatNameByIndex(2)));
+    OCIO_CHECK_EQUAL("3dl", std::string(bake->getFormatExtensionByIndex(1)));
 }
 
 #endif // OCIO_BUILD_TESTS

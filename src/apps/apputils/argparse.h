@@ -47,11 +47,6 @@
         __attribute__ ((format (printf, fmtarg_pos, vararg_pos) ))
 #endif
 
-/*
-OIIO_NAMESPACE_ENTER
-{
-*/
-
 class ArgOption;   // Forward declaration
 
 
@@ -173,10 +168,5 @@ private:
     void error (const char *format, ...) OPENCOLORIO_PRINTF_ARGS(2,3);
     int found (const char *option);      // number of times option was parsed
 };
-
-/*
-}
-OIIO_NAMESPACE_EXIT
-*/
 
 #endif // OPENCOLORIO_ARGPARSE_H

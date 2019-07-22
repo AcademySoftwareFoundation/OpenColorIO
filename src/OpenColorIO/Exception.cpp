@@ -69,12 +69,12 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
 #include <string.h>
 
 
-OIIO_ADD_TEST(Exception, Basic)
+OCIO_ADD_TEST(Exception, Basic)
 {
     static const char* dummyErrorStr = "Dummy error";
 
@@ -86,11 +86,11 @@ OIIO_ADD_TEST(Exception, Basic)
     }
     catch(const OCIO::Exception& ex)
     {
-        OIIO_CHECK_EQUAL(strcmp(ex.what(), dummyErrorStr), 0);
+        OCIO_CHECK_EQUAL(strcmp(ex.what(), dummyErrorStr), 0);
     }
     catch(...)
     {
-        OIIO_CHECK_ASSERT(!"Wrong exception type");
+        OCIO_CHECK_ASSERT(!"Wrong exception type");
     }
 
     // Test 1
@@ -101,11 +101,11 @@ OIIO_ADD_TEST(Exception, Basic)
     }
     catch(const std::exception& ex)
     {
-        OIIO_CHECK_EQUAL(strcmp(ex.what(), dummyErrorStr), 0);
+        OCIO_CHECK_EQUAL(strcmp(ex.what(), dummyErrorStr), 0);
     }
     catch(...)
     {
-        OIIO_CHECK_ASSERT(!"Wrong exception type");
+        OCIO_CHECK_ASSERT(!"Wrong exception type");
     }
 
     // Test 2
@@ -117,16 +117,16 @@ OIIO_ADD_TEST(Exception, Basic)
     }
     catch(const std::exception& ex)
     {
-        OIIO_CHECK_EQUAL(strcmp(ex.what(), dummyErrorStr), 0);
+        OCIO_CHECK_EQUAL(strcmp(ex.what(), dummyErrorStr), 0);
     }
     catch(...)
     {
-        OIIO_CHECK_ASSERT(!"Wrong exception type");
+        OCIO_CHECK_ASSERT(!"Wrong exception type");
     }
 }
 
 
-OIIO_ADD_TEST(Exception, MissingFile)
+OCIO_ADD_TEST(Exception, MissingFile)
 {
     static const char* dummyErrorStr = "Dummy error";
 
@@ -136,11 +136,11 @@ OIIO_ADD_TEST(Exception, MissingFile)
     }
     catch(const std::exception& ex)
     {
-        OIIO_CHECK_EQUAL(strcmp(ex.what(), dummyErrorStr), 0);
+        OCIO_CHECK_EQUAL(strcmp(ex.what(), dummyErrorStr), 0);
     }
     catch(...)
     {
-        OIIO_CHECK_ASSERT(!"Wrong exception type");
+        OCIO_CHECK_ASSERT(!"Wrong exception type");
     }
 }
 

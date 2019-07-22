@@ -32,8 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma GCC visibility push(default)
 #endif
 
-#include <unittest.h> // OIIO unit tests header
-OIIO_TEST_APP(OpenColorIO_Core_Unit_Tests)
+#include "UnitTest.h" // OIIO unit tests header
+OCIO_TEST_APP(OpenColorIO_Core_Unit_Tests)
 
 #ifndef WIN32
 #pragma GCC visibility pop

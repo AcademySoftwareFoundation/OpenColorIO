@@ -212,7 +212,7 @@ OCIO_ADD_GPU_TEST(ExposureContrast, style_linear_dynamic_parameter)
 
 void Prepare2ECDynamic(OCIOGPUTest & test, bool firstDyn, bool secondDyn)
 {
-    // See also OIIO_ADD_TEST(ExposureContrastTransform, processor_several_ec).
+    // See also OCIO_ADD_TEST(ExposureContrastTransform, processor_several_ec).
     OCIO::ExposureContrastTransformRcPtr ec1 = OCIO::ExposureContrastTransform::Create();
     ec1->setStyle(OCIO::EXPOSURE_CONTRAST_LOGARITHMIC);
 

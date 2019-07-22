@@ -749,7 +749,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <cstring>
 
 #include "MathUtils.h"
-#include "unittest.h"
+#include "UnitTest.h"
 
 
 void ApplyFixedFunction(float * input_32f, 
@@ -759,8 +759,8 @@ void ApplyFixedFunction(float * input_32f,
                         float errorThreshold)
 {
     OCIO::OpCPURcPtr op;
-    OIIO_CHECK_NO_THROW(op = OCIO::GetFixedFunctionCPURenderer(fnData));
-    OIIO_CHECK_NO_THROW(op->apply(input_32f, input_32f, numSamples));
+    OCIO_CHECK_NO_THROW(op = OCIO::GetFixedFunctionCPURenderer(fnData));
+    OCIO_CHECK_NO_THROW(op->apply(input_32f, input_32f, numSamples));
 
     for(unsigned idx=0; idx<(numSamples*4); ++idx)
     {
@@ -778,12 +778,12 @@ void ApplyFixedFunction(float * input_32f,
             errorMsg << "Index: " << idx;
             errorMsg << " - Values: " << input_32f[idx] << " and: " << expected_32f[idx];
             errorMsg << " - Threshold: " << errorThreshold;
-            OIIO_CHECK_ASSERT_MESSAGE(0, errorMsg.str());
+            OCIO_CHECK_ASSERT_MESSAGE(0, errorMsg.str());
         }
     }
 }
 
-OIIO_ADD_TEST(FixedFunctionOpCPU, aces_red_mod_03)
+OCIO_ADD_TEST(FixedFunctionOpCPU, aces_red_mod_03)
 {
     const unsigned num_samples = 4;
 
@@ -829,7 +829,7 @@ OIIO_ADD_TEST(FixedFunctionOpCPU, aces_red_mod_03)
     }
 }
 
-OIIO_ADD_TEST(FixedFunctionOpCPU, aces_red_mod_10)
+OCIO_ADD_TEST(FixedFunctionOpCPU, aces_red_mod_10)
 {
     const unsigned num_samples = 4;
 
@@ -885,7 +885,7 @@ OIIO_ADD_TEST(FixedFunctionOpCPU, aces_red_mod_10)
     }
 }
 
-OIIO_ADD_TEST(FixedFunctionOpCPU, aces_glow_03)
+OCIO_ADD_TEST(FixedFunctionOpCPU, aces_glow_03)
 {
     const unsigned num_samples = 4;
 
@@ -931,7 +931,7 @@ OIIO_ADD_TEST(FixedFunctionOpCPU, aces_glow_03)
     }
 }
 
-OIIO_ADD_TEST(FixedFunctionOpCPU, aces_glow_10)
+OCIO_ADD_TEST(FixedFunctionOpCPU, aces_glow_10)
 {
     const unsigned num_samples = 4;
 
@@ -977,7 +977,7 @@ OIIO_ADD_TEST(FixedFunctionOpCPU, aces_glow_10)
     }
 }
 
-OIIO_ADD_TEST(FixedFunctionOpCPU, aces_dark_to_dim_10)
+OCIO_ADD_TEST(FixedFunctionOpCPU, aces_dark_to_dim_10)
 {
     const unsigned num_samples = 4;
 
@@ -1023,7 +1023,7 @@ OIIO_ADD_TEST(FixedFunctionOpCPU, aces_dark_to_dim_10)
     }
 }   
 
-OIIO_ADD_TEST(FixedFunctionOpCPU, rec2100_surround)
+OCIO_ADD_TEST(FixedFunctionOpCPU, rec2100_surround)
 {
     const unsigned num_samples = 4;
 

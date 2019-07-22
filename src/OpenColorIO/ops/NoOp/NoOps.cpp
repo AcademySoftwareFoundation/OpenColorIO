@@ -460,7 +460,7 @@ OCIO_NAMESPACE_EXIT
 OCIO_NAMESPACE_USING
 namespace OCIO = OCIO_NAMESPACE;
 
-#include "unittest.h"
+#include "UnitTest.h"
 #include "ops/Lut1D/Lut1DOp.h"
 #include "ops/Matrix/MatrixOps.h"
 
@@ -506,20 +506,20 @@ void CreateGenericLutOp(OpRcPtrVec & ops)
     CreateLut1DOp(ops, lut, INTERP_LINEAR, TRANSFORM_DIR_FORWARD);
 }
 
-OIIO_ADD_TEST(NoOps, PartitionGPUOps)
+OCIO_ADD_TEST(NoOps, PartitionGPUOps)
 {
     {
     OpRcPtrVec ops;
     
     OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
-    OIIO_CHECK_NO_THROW(
+    OCIO_CHECK_NO_THROW(
         PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops));
     
-    OIIO_CHECK_EQUAL(gpuPreOps.size(), 0);
-    OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 0);
-    OIIO_CHECK_EQUAL(gpuPostOps.size(), 0);
+    OCIO_CHECK_EQUAL(gpuPreOps.size(), 0);
+    OCIO_CHECK_EQUAL(gpuLatticeOps.size(), 0);
+    OCIO_CHECK_EQUAL(gpuPostOps.size(), 0);
     
-    OIIO_CHECK_NO_THROW( AssertPartitionIntegrity(gpuPreOps,
+    OCIO_CHECK_NO_THROW( AssertPartitionIntegrity(gpuPreOps,
                                                   gpuLatticeOps,
                                                   gpuPostOps) );
     }
@@ -527,21 +527,21 @@ OIIO_ADD_TEST(NoOps, PartitionGPUOps)
     {
     OpRcPtrVec ops;
     CreateGenericAllocationOp(ops);
-    OIIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_CHECK_EQUAL(ops.size(), 1);
 
     OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
-    OIIO_CHECK_NO_THROW(
+    OCIO_CHECK_NO_THROW(
         PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops));
     
-    OIIO_REQUIRE_EQUAL(gpuPreOps.size(), 1);
-    OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 0);
-    OIIO_CHECK_EQUAL(gpuPostOps.size(), 0);
+    OCIO_REQUIRE_EQUAL(gpuPreOps.size(), 1);
+    OCIO_CHECK_EQUAL(gpuLatticeOps.size(), 0);
+    OCIO_CHECK_EQUAL(gpuPostOps.size(), 0);
 
     OCIO::ConstOpRcPtr op0 = gpuPreOps[0];
 
-    OIIO_CHECK_EQUAL(ops[0]->isSameType(op0), true);
+    OCIO_CHECK_EQUAL(ops[0]->isSameType(op0), true);
 
-    OIIO_CHECK_NO_THROW( AssertPartitionIntegrity(gpuPreOps,
+    OCIO_CHECK_NO_THROW( AssertPartitionIntegrity(gpuPreOps,
                                                   gpuLatticeOps,
                                                   gpuPostOps) );
     }
@@ -551,17 +551,17 @@ OIIO_ADD_TEST(NoOps, PartitionGPUOps)
     
     CreateGenericAllocationOp(ops);
     CreateGenericScaleOp(ops);
-    OIIO_CHECK_EQUAL(ops.size(), 2);
+    OCIO_CHECK_EQUAL(ops.size(), 2);
 
     OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
-    OIIO_CHECK_NO_THROW(
+    OCIO_CHECK_NO_THROW(
         PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops));
     
-    OIIO_CHECK_EQUAL(gpuPreOps.size(), 2);
-    OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 0);
-    OIIO_CHECK_EQUAL(gpuPostOps.size(), 0);
+    OCIO_CHECK_EQUAL(gpuPreOps.size(), 2);
+    OCIO_CHECK_EQUAL(gpuLatticeOps.size(), 0);
+    OCIO_CHECK_EQUAL(gpuPostOps.size(), 0);
     
-    OIIO_CHECK_NO_THROW( AssertPartitionIntegrity(gpuPreOps,
+    OCIO_CHECK_NO_THROW( AssertPartitionIntegrity(gpuPreOps,
                                                   gpuLatticeOps,
                                                   gpuPostOps) );
     }
@@ -572,17 +572,17 @@ OIIO_ADD_TEST(NoOps, PartitionGPUOps)
     CreateGenericAllocationOp(ops);
     CreateGenericLutOp(ops);
     CreateGenericScaleOp(ops);
-    OIIO_CHECK_EQUAL(ops.size(), 3);
+    OCIO_CHECK_EQUAL(ops.size(), 3);
 
     OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
-    OIIO_CHECK_NO_THROW(
+    OCIO_CHECK_NO_THROW(
         PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops));
     
-    OIIO_CHECK_EQUAL(gpuPreOps.size(), 2);
-    OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 4);
-    OIIO_CHECK_EQUAL(gpuPostOps.size(), 1);
+    OCIO_CHECK_EQUAL(gpuPreOps.size(), 2);
+    OCIO_CHECK_EQUAL(gpuLatticeOps.size(), 4);
+    OCIO_CHECK_EQUAL(gpuPostOps.size(), 1);
     
-    OIIO_CHECK_NO_THROW( AssertPartitionIntegrity(gpuPreOps,
+    OCIO_CHECK_NO_THROW( AssertPartitionIntegrity(gpuPreOps,
                                                   gpuLatticeOps,
                                                   gpuPostOps) );
     }
@@ -591,17 +591,17 @@ OIIO_ADD_TEST(NoOps, PartitionGPUOps)
     OpRcPtrVec ops;
     
     CreateGenericLutOp(ops);
-    OIIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_CHECK_EQUAL(ops.size(), 1);
 
     OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
-    OIIO_CHECK_NO_THROW(
+    OCIO_CHECK_NO_THROW(
         PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops));
     
-    OIIO_CHECK_EQUAL(gpuPreOps.size(), 0);
-    OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 1);
-    OIIO_CHECK_EQUAL(gpuPostOps.size(), 0);
+    OCIO_CHECK_EQUAL(gpuPreOps.size(), 0);
+    OCIO_CHECK_EQUAL(gpuLatticeOps.size(), 1);
+    OCIO_CHECK_EQUAL(gpuPostOps.size(), 0);
     
-    OIIO_CHECK_NO_THROW( AssertPartitionIntegrity(gpuPreOps,
+    OCIO_CHECK_NO_THROW( AssertPartitionIntegrity(gpuPreOps,
                                                   gpuLatticeOps,
                                                   gpuPostOps) );
     }
@@ -615,17 +615,17 @@ OIIO_ADD_TEST(NoOps, PartitionGPUOps)
     CreateGenericLutOp(ops);
     CreateGenericScaleOp(ops);
     CreateGenericAllocationOp(ops);
-    OIIO_CHECK_EQUAL(ops.size(), 6);
+    OCIO_CHECK_EQUAL(ops.size(), 6);
 
     OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
-    OIIO_CHECK_NO_THROW(
+    OCIO_CHECK_NO_THROW(
         PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops));
     
-    OIIO_CHECK_EQUAL(gpuPreOps.size(), 0);
-    OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 4);
-    OIIO_CHECK_EQUAL(gpuPostOps.size(), 2);
+    OCIO_CHECK_EQUAL(gpuPreOps.size(), 0);
+    OCIO_CHECK_EQUAL(gpuLatticeOps.size(), 4);
+    OCIO_CHECK_EQUAL(gpuPostOps.size(), 2);
     
-    OIIO_CHECK_NO_THROW( AssertPartitionIntegrity(gpuPreOps,
+    OCIO_CHECK_NO_THROW( AssertPartitionIntegrity(gpuPreOps,
                                                   gpuLatticeOps,
                                                   gpuPostOps) );
     }
@@ -641,17 +641,17 @@ OIIO_ADD_TEST(NoOps, PartitionGPUOps)
     CreateGenericLutOp(ops);
     CreateGenericScaleOp(ops);
     CreateGenericAllocationOp(ops);
-    OIIO_CHECK_EQUAL(ops.size(), 8);
+    OCIO_CHECK_EQUAL(ops.size(), 8);
 
     OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
-    OIIO_CHECK_NO_THROW(
+    OCIO_CHECK_NO_THROW(
         PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops));
     
-    OIIO_CHECK_EQUAL(gpuPreOps.size(), 2);
-    OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 8);
-    OIIO_CHECK_EQUAL(gpuPostOps.size(), 2);
+    OCIO_CHECK_EQUAL(gpuPreOps.size(), 2);
+    OCIO_CHECK_EQUAL(gpuLatticeOps.size(), 8);
+    OCIO_CHECK_EQUAL(gpuPostOps.size(), 2);
     
-    OIIO_CHECK_NO_THROW( AssertPartitionIntegrity(gpuPreOps,
+    OCIO_CHECK_NO_THROW( AssertPartitionIntegrity(gpuPreOps,
                                                   gpuLatticeOps,
                                                   gpuPostOps) );
     /*
@@ -665,7 +665,7 @@ OIIO_ADD_TEST(NoOps, PartitionGPUOps)
     }
 } // PartitionGPUOps
 
-OIIO_ADD_TEST(NoOps, Throw)
+OCIO_ADD_TEST(NoOps, Throw)
 {
     // PartitionGPUOps might throw, but could not find how
 
@@ -676,84 +676,84 @@ OIIO_ADD_TEST(NoOps, Throw)
     CreateGenericScaleOp(ops);
 
     OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
-    OIIO_CHECK_NO_THROW(
+    OCIO_CHECK_NO_THROW(
         PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops));
 
-    OIIO_CHECK_THROW_WHAT(AssertPartitionIntegrity(
+    OCIO_CHECK_THROW_WHAT(AssertPartitionIntegrity(
         gpuLatticeOps, gpuLatticeOps, gpuPostOps),
         OCIO::Exception, "One gpuPreOps op does not support GPU");
 
-    OIIO_CHECK_THROW_WHAT(AssertPartitionIntegrity(
+    OCIO_CHECK_THROW_WHAT(AssertPartitionIntegrity(
         gpuPreOps, gpuPreOps, gpuPostOps),
         OCIO::Exception, "All gpuLatticeOps ops do support GPU");
 
-    OIIO_CHECK_THROW_WHAT(AssertPartitionIntegrity(
+    OCIO_CHECK_THROW_WHAT(AssertPartitionIntegrity(
         gpuPreOps, gpuLatticeOps, gpuLatticeOps),
         OCIO::Exception, "One gpuPostOps op does not support GPU");
 
 }
 
-OIIO_ADD_TEST(NoOps, AllocationOp)
+OCIO_ADD_TEST(NoOps, AllocationOp)
 {
     OpRcPtrVec ops;
     CreateGenericAllocationOp(ops);
     CreateGenericScaleOp(ops);
 
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO::ConstOpRcPtr op1 = ops[1];
     OpRcPtr clonedOp = ops[0]->clone();
 
-    OIIO_CHECK_EQUAL(clonedOp->isSameType(op0), true);
-    OIIO_CHECK_EQUAL(clonedOp->isSameType(op1), false);
-    OIIO_CHECK_EQUAL(clonedOp->isInverse(op0), true);
-    OIIO_CHECK_EQUAL(clonedOp->isInverse(op1), false);
+    OCIO_CHECK_EQUAL(clonedOp->isSameType(op0), true);
+    OCIO_CHECK_EQUAL(clonedOp->isSameType(op1), false);
+    OCIO_CHECK_EQUAL(clonedOp->isInverse(op0), true);
+    OCIO_CHECK_EQUAL(clonedOp->isInverse(op1), false);
 
-    OIIO_CHECK_EQUAL(clonedOp->isNoOp(), true);
-    OIIO_CHECK_EQUAL(clonedOp->hasChannelCrosstalk(), false);
-    OIIO_CHECK_EQUAL(clonedOp->supportedByLegacyShader(), true);
+    OCIO_CHECK_EQUAL(clonedOp->isNoOp(), true);
+    OCIO_CHECK_EQUAL(clonedOp->hasChannelCrosstalk(), false);
+    OCIO_CHECK_EQUAL(clonedOp->supportedByLegacyShader(), true);
 }
 
-OIIO_ADD_TEST(NoOps, FileOp)
+OCIO_ADD_TEST(NoOps, FileOp)
 {
     OpRcPtrVec ops;
     CreateFileNoOp(ops,"");
     CreateGenericAllocationOp(ops);
 
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO::ConstOpRcPtr op1 = ops[1];
     OpRcPtr clonedOp = ops[0]->clone();
 
-    OIIO_CHECK_EQUAL(clonedOp->isSameType(op0), true);
-    OIIO_CHECK_EQUAL(clonedOp->isSameType(op1), false);
-    OIIO_CHECK_EQUAL(clonedOp->isInverse(op0), true);
-    OIIO_CHECK_EQUAL(clonedOp->isInverse(op1), false);
+    OCIO_CHECK_EQUAL(clonedOp->isSameType(op0), true);
+    OCIO_CHECK_EQUAL(clonedOp->isSameType(op1), false);
+    OCIO_CHECK_EQUAL(clonedOp->isInverse(op0), true);
+    OCIO_CHECK_EQUAL(clonedOp->isInverse(op1), false);
 
-    OIIO_CHECK_EQUAL(clonedOp->isNoOp(), true);
-    OIIO_CHECK_EQUAL(clonedOp->hasChannelCrosstalk(), false);
-    OIIO_CHECK_EQUAL(clonedOp->supportedByLegacyShader(), true);
+    OCIO_CHECK_EQUAL(clonedOp->isNoOp(), true);
+    OCIO_CHECK_EQUAL(clonedOp->hasChannelCrosstalk(), false);
+    OCIO_CHECK_EQUAL(clonedOp->supportedByLegacyShader(), true);
 }
 
-OIIO_ADD_TEST(NoOps, LookOp)
+OCIO_ADD_TEST(NoOps, LookOp)
 {
     OpRcPtrVec ops;
     CreateLookNoOp(ops, "");
     CreateGenericAllocationOp(ops);
 
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO::ConstOpRcPtr op1 = ops[1];
     OpRcPtr clonedOp = ops[0]->clone();
 
-    OIIO_CHECK_EQUAL(clonedOp->isSameType(op0), true);
-    OIIO_CHECK_EQUAL(clonedOp->isSameType(op1), false);
-    OIIO_CHECK_EQUAL(clonedOp->isInverse(op0), true);
-    OIIO_CHECK_EQUAL(clonedOp->isInverse(op1), false);
+    OCIO_CHECK_EQUAL(clonedOp->isSameType(op0), true);
+    OCIO_CHECK_EQUAL(clonedOp->isSameType(op1), false);
+    OCIO_CHECK_EQUAL(clonedOp->isInverse(op0), true);
+    OCIO_CHECK_EQUAL(clonedOp->isInverse(op1), false);
 
-    OIIO_CHECK_EQUAL(clonedOp->isNoOp(), true);
-    OIIO_CHECK_EQUAL(clonedOp->hasChannelCrosstalk(), false);
-    OIIO_CHECK_EQUAL(clonedOp->supportedByLegacyShader(), true);
+    OCIO_CHECK_EQUAL(clonedOp->isNoOp(), true);
+    OCIO_CHECK_EQUAL(clonedOp->hasChannelCrosstalk(), false);
+    OCIO_CHECK_EQUAL(clonedOp->supportedByLegacyShader(), true);
 }
 
 #endif // OCIO_UNIT_TEST
