@@ -1,7 +1,7 @@
 # Security and OpenColorIO
 
 The OpenColorIO Technical Steering Committee (TSC) takes security very
-seriously. We strive to design secure software, and utilise continuous 
+seriously. We strive to design secure software, and utilize continuous 
 integration and code analysis tools to help identify potential 
 vulnerabilities.
 
@@ -46,9 +46,10 @@ It is a bug if some file causes the library to crash. It is a serious
 security issue if some file causes arbitrary code execution.
 
 OpenColorIO will attempt to associate a file's data and layout with a 
-registered file format, regardless of a file's extension. Only expected data 
-structures will be read. It is a bug if reading invalid or malformed data from 
-a file does not result in an immediate error.
+registered file format, regardless of its extension. Only expected data 
+structures will be read for each format. It is a bug if reading seriously 
+invalid or malformed data from a file does not result in an error from the 
+file format reader ultimately used with a file.
 
 ## Runtime Library Expectations
 
@@ -63,14 +64,3 @@ well-formed arguments causes arbitrary code execution.
 
 We do not consider this as severe as file format issues because in most 
 deployments the parameter space is not exposed to potential attackers.
-
-## Proper Data Redaction
-
-A concern when reading sensitive data in a computer program is to ensure 
-that data is only used and accessable in intended ways. OpenColorIO's public
-interface is not granted access to internal data structures read from 
-transform files. Proprietary LUTs and related data are only exposed inasmuch 
-as their source is accessable on the filesystem.
-
-However, approximate representations of transforms can be generated via OCIO's 
-public Baker interface, or by requesting textures for OCIO's GPU renderer.
