@@ -22,10 +22,10 @@ Providing you are using the `Fedora EPEL repository
 command will work for RedHat Enterprise Linux 6 and higher (including
 RHEL derivatives such as CentOS 6 and Scientific Linux 6)
 
-OS X using Homebrew
-+++++++++++++++++++
+macOS using Homebrew
+++++++++++++++++++++
 
-You can use the Homebrew package manager to install OpenColorIO on OS X.
+You can use the Homebrew package manager to install OpenColorIO on macOS.
 
 First install Homebrew as per the instructions on the `Homebrew
 homepage <http://mxcl.github.com/homebrew/>`__ (or see the `Homebrew wiki
@@ -46,17 +46,17 @@ To build with the Python library use this command::
 Building from source
 ********************
 
-.. _osx-and-linux
+.. _macos-and-linux
 
-OS X and Linux
-++++++++++++++
+macOS and Linux
++++++++++++++++
 
 While there is a huge range of possible setups, the following steps
-should work on OS X and most Linux distros.
+should work on macOS and most Linux distros.
 
 The basic requirements are:
 
-- cmake >= 2.8
+- cmake >= 3.10
 - (optional) Python 2.x (for the Python bindings)
 - (optional) Nuke 6.x or newer (for the Nuke nodes)
 - (optional) OpenImageIO (for apps including ocioconvert)
