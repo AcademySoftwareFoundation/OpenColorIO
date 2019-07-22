@@ -1,12 +1,13 @@
 # Security and OpenColorIO
 
 The OpenColorIO Technical Steering Committee (TSC) takes security very
-seriously. We strive to design secure software and regularly utilise analysis
-tools to help identify potential vulnerabilities.
+seriously. We strive to design secure software, and utilise continuous 
+integration and code analysis tools to help identify potential 
+vulnerabilities.
 
-Users should exercise caution when working with untrusted data (config.ocio
-files, LUTs, etc.). Code injection bugs have been found in much simpler data
-structures, so it would be foolish to assume OpenColorIO is immune.
+Users should exercise caution when working with untrusted data (config files, 
+LUTs, etc.). OCIO takes every precaution to read only valid data, but it 
+would be naive to say our code is immune to every exploit.
 
 ## Reporting Vulnerabilities
 
@@ -29,52 +30,47 @@ None
 
 ## File Format Expectations
 
-Attempting to read a .ocio file will:
+Attempting to read an OCIO config (YAML) file will:
 * Return success and produce a valid Config data structure in memory
 * Fail with an error
 
-The bulk of data read comes from transform files referenced by a Config. 
-These files may be arbitrarily large, and may live on any accessible volume. 
-Referenced file paths support environment variable expansion, making OCIO's 
-Processor invokation susceptible to environmental redirection. Files are only 
-read when needed for finalizing a Processor, so no transform files should be 
-accessed as a result of loading a Config.
+The vast majority of data used by OCIO comes from user-supplied transform 
+files referenced in a config. These files are arbitrarily large, may live 
+on any accessible volume, and are loaded lazily when requested by a Processor. 
+Referenced file paths may contain environment variables for expansion at load 
+time. Config authors should consider the implications of this when defining 
+file and search paths, to avoid the possibility of a maliciously modified 
+environment redirecting file reads to an insecure location.
 
-It is a bug if some file causes the library to crash.  It is a serious
+It is a bug if some file causes the library to crash. It is a serious
 security issue if some file causes arbitrary code execution.
 
 OpenColorIO will attempt to associate a file's data and layout with a 
-registered file format, regardless of a file's extension. Invalid input data
-results in an error.
+registered file format, regardless of a file's extension. Only expected data 
+structures will be read. It is a bug if reading invalid or malformed data from 
+a file does not result in an immediate error.
 
 ## Runtime Library Expectations
 
 We consider the library to run with the same privilege as the linked
-code.  As such, we do not guarantee any safety against malformed
-arguments.   Provided functions are called with well-formed
-parameters, we expect the same set of behaviors as with file
-loading.
+code. As such, we do not guarantee any safety against malformed arguments. 
+Provided functions are called with well-formed parameters, we expect the same 
+set of behaviors as with file loading.
 
-It is a bug if calling a function with well-formed arguments causes
-the library to crash.  It is a security issue if calling a function
-with well-formed arguments causes arbitrary code execution.
+It is a bug if calling a function with well-formed arguments causes the 
+library to crash. It is a security issue if calling a function with 
+well-formed arguments causes arbitrary code execution.
 
-We do not consider this as severe as file format issues because
-in most deployments the parameter space is not exposed to potential
-attackers.
+We do not consider this as severe as file format issues because in most 
+deployments the parameter space is not exposed to potential attackers.
 
 ## Proper Data Redaction
 
-A common concern when working with sensitive data is to ensure
-that distributed files are clean and do not possess any hidden
-data.   There are a few surprising ways in which OpenVDB can
-maintain data that appears erased.
+A concern when reading sensitive data in a computer program is to ensure 
+that data is only used and accessable in intended ways. OpenColorIO's public
+interface is not granted access to internal data structures read from 
+transform files. Proprietary LUTs and related data are only exposed inasmuch 
+as their source is accessable on the filesystem.
 
-The best practice for building a clean VDB is populate an
-empty grid voxel-by-voxel with the desired data and only
-copy known and trusted metadata fields.
-
-## Metadata
-
-VDBs will try to preserve metadata through most operations.  This can
-provide an unexpected sidechannel for communication.
+However, approximate representations of transforms can be generated via OCIO's 
+public Baker interface, or by requesting textures for OCIO's GPU renderer.
