@@ -341,19 +341,19 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 #include <fstream>
 
-OIIO_ADD_TEST(FileFormatVF, FormatInfo)
+OCIO_ADD_TEST(FileFormatVF, FormatInfo)
 {
     OCIO::FormatInfoVec formatInfoVec;
     OCIO::LocalFileFormat tester;
     tester.GetFormatInfo(formatInfoVec);
 
-    OIIO_CHECK_EQUAL(1, formatInfoVec.size());
-    OIIO_CHECK_EQUAL("nukevf", formatInfoVec[0].name);
-    OIIO_CHECK_EQUAL("vf", formatInfoVec[0].extension);
-    OIIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ,
+    OCIO_CHECK_EQUAL(1, formatInfoVec.size());
+    OCIO_CHECK_EQUAL("nukevf", formatInfoVec[0].name);
+    OCIO_CHECK_EQUAL("vf", formatInfoVec[0].extension);
+    OCIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ,
         formatInfoVec[0].capabilities);
 }
 
@@ -368,7 +368,7 @@ void ReadVF(const std::string & fileContent)
     OCIO::CachedFileRcPtr cachedFile = tester.Read(is, SAMPLE_NAME);
 }
 
-OIIO_ADD_TEST(FileFormatVF, ReadFailure)
+OCIO_ADD_TEST(FileFormatVF, ReadFailure)
 {
     {
         // Validate stream can be read with no error.
@@ -387,7 +387,7 @@ OIIO_ADD_TEST(FileFormatVF, ReadFailure)
             "1 1 0\n"
             "1 1 1\n";
 
-        OIIO_CHECK_NO_THROW(ReadVF(SAMPLE_NO_ERROR));
+        OCIO_CHECK_NO_THROW(ReadVF(SAMPLE_NO_ERROR));
     }
     {
         // Too much data
@@ -406,7 +406,7 @@ OIIO_ADD_TEST(FileFormatVF, ReadFailure)
             "1 1 0\n"
             "1 1 1\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadVF(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadVF(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Incorrect number of 3D LUT entries");
     }

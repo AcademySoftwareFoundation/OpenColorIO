@@ -354,23 +354,23 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 #include <fstream>
 
-OIIO_ADD_TEST(FileFormatPandora, FormatInfo)
+OCIO_ADD_TEST(FileFormatPandora, FormatInfo)
 {
     OCIO::FormatInfoVec formatInfoVec;
     OCIO::LocalFileFormat tester;
     tester.GetFormatInfo(formatInfoVec);
 
-    OIIO_CHECK_EQUAL(2, formatInfoVec.size());
-    OIIO_CHECK_EQUAL("pandora_mga", formatInfoVec[0].name);
-    OIIO_CHECK_EQUAL("mga", formatInfoVec[0].extension);
-    OIIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ,
+    OCIO_CHECK_EQUAL(2, formatInfoVec.size());
+    OCIO_CHECK_EQUAL("pandora_mga", formatInfoVec[0].name);
+    OCIO_CHECK_EQUAL("mga", formatInfoVec[0].extension);
+    OCIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ,
         formatInfoVec[0].capabilities);
-    OIIO_CHECK_EQUAL("pandora_m3d", formatInfoVec[1].name);
-    OIIO_CHECK_EQUAL("m3d", formatInfoVec[1].extension);
-    OIIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ,
+    OCIO_CHECK_EQUAL("pandora_m3d", formatInfoVec[1].name);
+    OCIO_CHECK_EQUAL("m3d", formatInfoVec[1].extension);
+    OCIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ,
         formatInfoVec[1].capabilities);
 }
 
@@ -385,7 +385,7 @@ void ReadPandora(const std::string & fileContent)
     OCIO::CachedFileRcPtr cachedFile = tester.Read(is, SAMPLE_NAME);
 }
 
-OIIO_ADD_TEST(FileFormatPandora, ReadFailure)
+OCIO_ADD_TEST(FileFormatPandora, ReadFailure)
 {
     {
         // Validate stream can be read with no error.
@@ -405,7 +405,7 @@ OIIO_ADD_TEST(FileFormatPandora, ReadFailure)
             "6 255 255   0\n"
             "7 255 255 255\n";
 
-        OIIO_CHECK_NO_THROW(ReadPandora(SAMPLE_NO_ERROR));
+        OCIO_CHECK_NO_THROW(ReadPandora(SAMPLE_NO_ERROR));
     }
     {
         // Wrong channel tag
@@ -424,7 +424,7 @@ OIIO_ADD_TEST(FileFormatPandora, ReadFailure)
             "6 255 255   0\n"
             "7 255 255 255\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadPandora(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadPandora(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Only 3D LUTs are currently supported");
     }
@@ -444,7 +444,7 @@ OIIO_ADD_TEST(FileFormatPandora, ReadFailure)
             "6 255 255   0\n"
             "7 255 255 255\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadPandora(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadPandora(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Incorrect number of 3D LUT entries");
     }
@@ -465,7 +465,7 @@ OIIO_ADD_TEST(FileFormatPandora, ReadFailure)
             "6 255 255   0\n"
             "7 255 255 255\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadPandora(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadPandora(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Expected to find 4 integers");
     }
@@ -487,7 +487,7 @@ OIIO_ADD_TEST(FileFormatPandora, ReadFailure)
             "7 255 255   0\n"
             "8 255 255 255\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadPandora(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadPandora(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Incorrect number of 3D LUT entries");
     }

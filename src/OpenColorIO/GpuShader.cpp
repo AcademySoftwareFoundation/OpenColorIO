@@ -741,37 +741,37 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
 
-OIIO_ADD_TEST(GpuShader, generic_shader)
+OCIO_ADD_TEST(GpuShader, generic_shader)
 {
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GenericGpuShaderDesc::Create();
 
     {
-        OIIO_CHECK_NE(shaderDesc->getLanguage(), OCIO::GPU_LANGUAGE_GLSL_1_3);
-        OIIO_CHECK_NO_THROW(shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3));
-        OIIO_CHECK_EQUAL(shaderDesc->getLanguage(), OCIO::GPU_LANGUAGE_GLSL_1_3);
+        OCIO_CHECK_NE(shaderDesc->getLanguage(), OCIO::GPU_LANGUAGE_GLSL_1_3);
+        OCIO_CHECK_NO_THROW(shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3));
+        OCIO_CHECK_EQUAL(shaderDesc->getLanguage(), OCIO::GPU_LANGUAGE_GLSL_1_3);
 
-        OIIO_CHECK_NE(std::string(shaderDesc->getFunctionName()), "1sd234_");
-        OIIO_CHECK_NO_THROW(shaderDesc->setFunctionName("1sd234_"));
-        OIIO_CHECK_EQUAL(std::string(shaderDesc->getFunctionName()), "1sd234_");
+        OCIO_CHECK_NE(std::string(shaderDesc->getFunctionName()), "1sd234_");
+        OCIO_CHECK_NO_THROW(shaderDesc->setFunctionName("1sd234_"));
+        OCIO_CHECK_EQUAL(std::string(shaderDesc->getFunctionName()), "1sd234_");
 
-        OIIO_CHECK_NE(std::string(shaderDesc->getPixelName()), "pxl_1sd234_");
-        OIIO_CHECK_NO_THROW(shaderDesc->setPixelName("pxl_1sd234_"));
-        OIIO_CHECK_EQUAL(std::string(shaderDesc->getPixelName()), "pxl_1sd234_");
+        OCIO_CHECK_NE(std::string(shaderDesc->getPixelName()), "pxl_1sd234_");
+        OCIO_CHECK_NO_THROW(shaderDesc->setPixelName("pxl_1sd234_"));
+        OCIO_CHECK_EQUAL(std::string(shaderDesc->getPixelName()), "pxl_1sd234_");
 
-        OIIO_CHECK_NE(std::string(shaderDesc->getResourcePrefix()), "res_1sd234_");
-        OIIO_CHECK_NO_THROW(shaderDesc->setResourcePrefix("res_1sd234_"));
-        OIIO_CHECK_EQUAL(std::string(shaderDesc->getResourcePrefix()), "res_1sd234_");
+        OCIO_CHECK_NE(std::string(shaderDesc->getResourcePrefix()), "res_1sd234_");
+        OCIO_CHECK_NO_THROW(shaderDesc->setResourcePrefix("res_1sd234_"));
+        OCIO_CHECK_EQUAL(std::string(shaderDesc->getResourcePrefix()), "res_1sd234_");
 
-        OIIO_CHECK_NO_THROW(shaderDesc->finalize());
+        OCIO_CHECK_NO_THROW(shaderDesc->finalize());
         const std::string id(shaderDesc->getCacheID());
-        OIIO_CHECK_EQUAL(id, std::string("glsl_1.3 1sd234_ res_1sd234_ pxl_1sd234_ "
+        OCIO_CHECK_EQUAL(id, std::string("glsl_1.3 1sd234_ res_1sd234_ pxl_1sd234_ "
                                          "$159b6ac2bdbbe3b57824faea46bd829b"));
-        OIIO_CHECK_NO_THROW(shaderDesc->setResourcePrefix("res_1"));
-        OIIO_CHECK_NO_THROW(shaderDesc->finalize());
-        OIIO_CHECK_NE(std::string(shaderDesc->getCacheID()), id);
+        OCIO_CHECK_NO_THROW(shaderDesc->setResourcePrefix("res_1"));
+        OCIO_CHECK_NO_THROW(shaderDesc->finalize());
+        OCIO_CHECK_NE(std::string(shaderDesc->getCacheID()), id);
     }
 
     {
@@ -783,13 +783,13 @@ OIIO_ADD_TEST(GpuShader, generic_shader)
             = { 0.1f, 0.2f, 0.3f,  0.4f, 0.5f, 0.6f,  0.7f, 0.8f, 0.9f,
                 0.1f, 0.2f, 0.3f,  0.4f, 0.5f, 0.6f,  0.7f, 0.8f, 0.9f };
 
-        OIIO_CHECK_EQUAL(shaderDesc->getNumTextures(), 0U);
-        OIIO_CHECK_NO_THROW(shaderDesc->addTexture("lut1", "1234", width, height, 
+        OCIO_CHECK_EQUAL(shaderDesc->getNumTextures(), 0U);
+        OCIO_CHECK_NO_THROW(shaderDesc->addTexture("lut1", "1234", width, height, 
                                                    OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL, 
                                                    OCIO::INTERP_TETRAHEDRAL,
                                                    &values[0]));
 
-        OIIO_CHECK_EQUAL(shaderDesc->getNumTextures(), 1U);
+        OCIO_CHECK_EQUAL(shaderDesc->getNumTextures(), 1U);
 
         const char * name = 0x0;
         const char * id = 0x0;
@@ -798,43 +798,43 @@ OIIO_ADD_TEST(GpuShader, generic_shader)
         OCIO::GpuShaderDesc::TextureType t = OCIO::GpuShaderDesc::TEXTURE_RED_CHANNEL;
         OCIO::Interpolation i = OCIO::INTERP_UNKNOWN;
 
-        OIIO_CHECK_NO_THROW(shaderDesc->getTexture(0, name, id, w, h, t, i));
+        OCIO_CHECK_NO_THROW(shaderDesc->getTexture(0, name, id, w, h, t, i));
 
-        OIIO_CHECK_EQUAL(std::string(name), "lut1");
-        OIIO_CHECK_EQUAL(std::string(id), "1234");
-        OIIO_CHECK_EQUAL(width, w);
-        OIIO_CHECK_EQUAL(height, h);
-        OIIO_CHECK_EQUAL(OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL, t);
-        OIIO_CHECK_EQUAL(OCIO::INTERP_TETRAHEDRAL, i);
+        OCIO_CHECK_EQUAL(std::string(name), "lut1");
+        OCIO_CHECK_EQUAL(std::string(id), "1234");
+        OCIO_CHECK_EQUAL(width, w);
+        OCIO_CHECK_EQUAL(height, h);
+        OCIO_CHECK_EQUAL(OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL, t);
+        OCIO_CHECK_EQUAL(OCIO::INTERP_TETRAHEDRAL, i);
 
-        OIIO_CHECK_THROW_WHAT(shaderDesc->getTexture(1, name, id, w, h, t, i),
+        OCIO_CHECK_THROW_WHAT(shaderDesc->getTexture(1, name, id, w, h, t, i),
                               OCIO::Exception,
                               "1D LUT access error");
 
         const float * vals = 0x0;
-        OIIO_CHECK_NO_THROW(shaderDesc->getTextureValues(0, vals));
-        OIIO_CHECK_NE(vals, 0x0);
+        OCIO_CHECK_NO_THROW(shaderDesc->getTextureValues(0, vals));
+        OCIO_CHECK_NE(vals, 0x0);
         for(unsigned idx=0; idx<size; ++idx)
         {
-            OIIO_CHECK_EQUAL(values[idx], vals[idx]);
+            OCIO_CHECK_EQUAL(values[idx], vals[idx]);
         }
 
-        OIIO_CHECK_THROW_WHAT(shaderDesc->getTextureValues(1, vals),
+        OCIO_CHECK_THROW_WHAT(shaderDesc->getTextureValues(1, vals),
                               OCIO::Exception,
                               "1D LUT access error");
 
         // Support several 1D LUTs
 
-        OIIO_CHECK_NO_THROW(shaderDesc->addTexture("lut2", "1234", width, height, 
+        OCIO_CHECK_NO_THROW(shaderDesc->addTexture("lut2", "1234", width, height, 
                                                    OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL, 
                                                    OCIO::INTERP_TETRAHEDRAL,
                                                    &values[0]));
 
-        OIIO_CHECK_EQUAL(shaderDesc->getNumTextures(), 2U);
+        OCIO_CHECK_EQUAL(shaderDesc->getNumTextures(), 2U);
 
-        OIIO_CHECK_NO_THROW(shaderDesc->getTextureValues(0, vals));
-        OIIO_CHECK_NO_THROW(shaderDesc->getTextureValues(1, vals));
-        OIIO_CHECK_THROW_WHAT(shaderDesc->getTextureValues(2, vals),
+        OCIO_CHECK_NO_THROW(shaderDesc->getTextureValues(0, vals));
+        OCIO_CHECK_NO_THROW(shaderDesc->getTextureValues(1, vals));
+        OCIO_CHECK_THROW_WHAT(shaderDesc->getTextureValues(2, vals),
                               OCIO::Exception,
                               "1D LUT access error");
     }
@@ -846,65 +846,65 @@ OIIO_ADD_TEST(GpuShader, generic_shader)
             = { 0.1f, 0.2f, 0.3f,  0.4f, 0.5f, 0.6f,  0.7f, 0.8f, 0.9f,  0.7f, 0.8f, 0.9f,
                 0.1f, 0.2f, 0.3f,  0.4f, 0.5f, 0.6f,  0.7f, 0.8f, 0.9f,  0.7f, 0.8f, 0.9f, };
 
-        OIIO_CHECK_EQUAL(shaderDesc->getNum3DTextures(), 0U);
-        OIIO_CHECK_NO_THROW(shaderDesc->add3DTexture("lut1", "1234", edgelen, 
+        OCIO_CHECK_EQUAL(shaderDesc->getNum3DTextures(), 0U);
+        OCIO_CHECK_NO_THROW(shaderDesc->add3DTexture("lut1", "1234", edgelen, 
                                                      OCIO::INTERP_TETRAHEDRAL,
                                                      &values[0]));
 
-        OIIO_CHECK_EQUAL(shaderDesc->getNum3DTextures(), 1U);
+        OCIO_CHECK_EQUAL(shaderDesc->getNum3DTextures(), 1U);
 
         const char * name = 0x0;
         const char * id = 0x0;
         unsigned e = 0;
         OCIO::Interpolation i = OCIO::INTERP_UNKNOWN;
 
-        OIIO_CHECK_NO_THROW(shaderDesc->get3DTexture(0, name, id, e, i));
+        OCIO_CHECK_NO_THROW(shaderDesc->get3DTexture(0, name, id, e, i));
 
-        OIIO_CHECK_EQUAL(std::string(name), "lut1");
-        OIIO_CHECK_EQUAL(std::string(id), "1234");
-        OIIO_CHECK_EQUAL(edgelen, e);
-        OIIO_CHECK_EQUAL(OCIO::INTERP_TETRAHEDRAL, i);
+        OCIO_CHECK_EQUAL(std::string(name), "lut1");
+        OCIO_CHECK_EQUAL(std::string(id), "1234");
+        OCIO_CHECK_EQUAL(edgelen, e);
+        OCIO_CHECK_EQUAL(OCIO::INTERP_TETRAHEDRAL, i);
 
-        OIIO_CHECK_THROW_WHAT(shaderDesc->get3DTexture(1, name, id, e, i),
+        OCIO_CHECK_THROW_WHAT(shaderDesc->get3DTexture(1, name, id, e, i),
                               OCIO::Exception,
                               "3D LUT access error");
 
         const float * vals = 0x0;
-        OIIO_CHECK_NO_THROW(shaderDesc->get3DTextureValues(0, vals));
-        OIIO_CHECK_NE(vals, 0x0);
+        OCIO_CHECK_NO_THROW(shaderDesc->get3DTextureValues(0, vals));
+        OCIO_CHECK_NE(vals, 0x0);
         for(unsigned idx=0; idx<size; ++idx)
         {
-            OIIO_CHECK_EQUAL(values[idx], vals[idx]);
+            OCIO_CHECK_EQUAL(values[idx], vals[idx]);
         }
 
-        OIIO_CHECK_THROW_WHAT(shaderDesc->get3DTextureValues(1, vals),
+        OCIO_CHECK_THROW_WHAT(shaderDesc->get3DTextureValues(1, vals),
                               OCIO::Exception,
                               "3D LUT access error");
 
         // Supports several 3D LUTs
 
-        OIIO_CHECK_NO_THROW(shaderDesc->add3DTexture("lut1", "1234", edgelen, 
+        OCIO_CHECK_NO_THROW(shaderDesc->add3DTexture("lut1", "1234", edgelen, 
                                                      OCIO::INTERP_TETRAHEDRAL,
                                                      &values[0]));
 
-        OIIO_CHECK_EQUAL(shaderDesc->getNum3DTextures(), 2U);
+        OCIO_CHECK_EQUAL(shaderDesc->getNum3DTextures(), 2U);
 
         // Check the 3D LUT limit
 
-        OIIO_CHECK_THROW(shaderDesc->add3DTexture("lut1", "1234", 130,
+        OCIO_CHECK_THROW(shaderDesc->add3DTexture("lut1", "1234", 130,
                                                   OCIO::INTERP_TETRAHEDRAL,
                                                   &values[0]),
                          OCIO::Exception);
     }
 
     {
-        OIIO_CHECK_NO_THROW(shaderDesc->addToDeclareShaderCode("vec2 coords;\n"));
-        OIIO_CHECK_NO_THROW(shaderDesc->addToHelperShaderCode("vec2 helpers() {}\n\n"));
-        OIIO_CHECK_NO_THROW(shaderDesc->addToFunctionHeaderShaderCode("void func() {\n"));
-        OIIO_CHECK_NO_THROW(shaderDesc->addToFunctionShaderCode("  int i;\n"));
-        OIIO_CHECK_NO_THROW(shaderDesc->addToFunctionFooterShaderCode("}\n"));
+        OCIO_CHECK_NO_THROW(shaderDesc->addToDeclareShaderCode("vec2 coords;\n"));
+        OCIO_CHECK_NO_THROW(shaderDesc->addToHelperShaderCode("vec2 helpers() {}\n\n"));
+        OCIO_CHECK_NO_THROW(shaderDesc->addToFunctionHeaderShaderCode("void func() {\n"));
+        OCIO_CHECK_NO_THROW(shaderDesc->addToFunctionShaderCode("  int i;\n"));
+        OCIO_CHECK_NO_THROW(shaderDesc->addToFunctionFooterShaderCode("}\n"));
 
-        OIIO_CHECK_NO_THROW(shaderDesc->finalize());
+        OCIO_CHECK_NO_THROW(shaderDesc->finalize());
 
         std::string fragText;
         fragText += "\n";
@@ -919,11 +919,11 @@ OIIO_ADD_TEST(GpuShader, generic_shader)
         fragText += "  int i;\n";
         fragText += "}\n";
 
-        OIIO_CHECK_EQUAL(fragText, shaderDesc->getShaderText());
+        OCIO_CHECK_EQUAL(fragText, shaderDesc->getShaderText());
     }
 }
 
-OIIO_ADD_TEST(GpuShader, legacy_shader)
+OCIO_ADD_TEST(GpuShader, legacy_shader)
 {
     const unsigned edgelen = 2;
 
@@ -935,8 +935,8 @@ OIIO_ADD_TEST(GpuShader, legacy_shader)
         const unsigned size = width*height*3;
         float values[size];
 
-        OIIO_CHECK_EQUAL(shaderDesc->getNumTextures(), 0U);
-        OIIO_CHECK_THROW_WHAT(shaderDesc->addTexture("lut1", "1234", width, height, 
+        OCIO_CHECK_EQUAL(shaderDesc->getNumTextures(), 0U);
+        OCIO_CHECK_THROW_WHAT(shaderDesc->addTexture("lut1", "1234", width, height, 
                                                      OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL, 
                                                      OCIO::INTERP_TETRAHEDRAL,
                                                      &values[0]), 
@@ -950,7 +950,7 @@ OIIO_ADD_TEST(GpuShader, legacy_shader)
         OCIO::GpuShaderDesc::TextureType t = OCIO::GpuShaderDesc::TEXTURE_RED_CHANNEL;
         OCIO::Interpolation i = OCIO::INTERP_UNKNOWN;
 
-        OIIO_CHECK_THROW_WHAT(shaderDesc->getTexture(0, name, id, w, h, t, i),
+        OCIO_CHECK_THROW_WHAT(shaderDesc->getTexture(0, name, id, w, h, t, i),
                               OCIO::Exception,
                               "1D LUTs are not supported");
     }
@@ -961,44 +961,44 @@ OIIO_ADD_TEST(GpuShader, legacy_shader)
             = { 0.1f, 0.2f, 0.3f,  0.4f, 0.5f, 0.6f,  0.7f, 0.8f, 0.9f,  0.7f, 0.8f, 0.9f,
                 0.1f, 0.2f, 0.3f,  0.4f, 0.5f, 0.6f,  0.7f, 0.8f, 0.9f,  0.7f, 0.8f, 0.9f, };
 
-        OIIO_CHECK_EQUAL(shaderDesc->getNum3DTextures(), 0U);
-        OIIO_CHECK_NO_THROW(shaderDesc->add3DTexture("lut1", "1234", edgelen, 
+        OCIO_CHECK_EQUAL(shaderDesc->getNum3DTextures(), 0U);
+        OCIO_CHECK_NO_THROW(shaderDesc->add3DTexture("lut1", "1234", edgelen, 
                                                      OCIO::INTERP_TETRAHEDRAL,
                                                      &values[0]));
 
-        OIIO_CHECK_EQUAL(shaderDesc->getNum3DTextures(), 1U);
+        OCIO_CHECK_EQUAL(shaderDesc->getNum3DTextures(), 1U);
 
         const char * name = 0x0;
         const char * id = 0x0;
         unsigned e = 0;
         OCIO::Interpolation i = OCIO::INTERP_UNKNOWN;
 
-        OIIO_CHECK_NO_THROW(shaderDesc->get3DTexture(0, name, id, e, i));
+        OCIO_CHECK_NO_THROW(shaderDesc->get3DTexture(0, name, id, e, i));
 
-        OIIO_CHECK_EQUAL(std::string(name), "lut1");
-        OIIO_CHECK_EQUAL(std::string(id), "1234");
-        OIIO_CHECK_EQUAL(edgelen, e);
-        OIIO_CHECK_EQUAL(OCIO::INTERP_TETRAHEDRAL, i);
+        OCIO_CHECK_EQUAL(std::string(name), "lut1");
+        OCIO_CHECK_EQUAL(std::string(id), "1234");
+        OCIO_CHECK_EQUAL(edgelen, e);
+        OCIO_CHECK_EQUAL(OCIO::INTERP_TETRAHEDRAL, i);
 
-        OIIO_CHECK_THROW_WHAT(shaderDesc->get3DTexture(1, name, id, e, i),
+        OCIO_CHECK_THROW_WHAT(shaderDesc->get3DTexture(1, name, id, e, i),
                               OCIO::Exception,
                               "3D LUT access error");
 
         const float * vals = 0x0;
-        OIIO_CHECK_NO_THROW(shaderDesc->get3DTextureValues(0, vals));
-        OIIO_CHECK_NE(vals, 0x0);
+        OCIO_CHECK_NO_THROW(shaderDesc->get3DTextureValues(0, vals));
+        OCIO_CHECK_NE(vals, 0x0);
         for(unsigned idx=0; idx<size; ++idx)
         {
-            OIIO_CHECK_EQUAL(values[idx], vals[idx]);
+            OCIO_CHECK_EQUAL(values[idx], vals[idx]);
         }
 
-        OIIO_CHECK_THROW_WHAT(shaderDesc->get3DTextureValues(1, vals),
+        OCIO_CHECK_THROW_WHAT(shaderDesc->get3DTextureValues(1, vals),
                               OCIO::Exception,
                               "3D LUT access error");
 
         // Only one 3D LUT
 
-        OIIO_CHECK_THROW_WHAT(shaderDesc->add3DTexture("lut1", "1234", edgelen, 
+        OCIO_CHECK_THROW_WHAT(shaderDesc->add3DTexture("lut1", "1234", edgelen, 
                                                        OCIO::INTERP_TETRAHEDRAL,
                                                        &values[0]),
                               OCIO::Exception,

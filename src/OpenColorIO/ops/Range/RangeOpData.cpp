@@ -762,18 +762,18 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 
-#include "unittest.h"
+#include "UnitTest.h"
 
 
-OIIO_ADD_TEST(RangeOpData, accessors)
+OCIO_ADD_TEST(RangeOpData, accessors)
 {
     {
     OCIO::RangeOpData r;
     
-    OIIO_CHECK_ASSERT(OCIO::IsNan((float)r.getMinInValue()));
-    OIIO_CHECK_ASSERT(OCIO::IsNan((float)r.getMaxInValue()));
-    OIIO_CHECK_ASSERT(OCIO::IsNan((float)r.getMinOutValue()));
-    OIIO_CHECK_ASSERT(OCIO::IsNan((float)r.getMaxOutValue()));
+    OCIO_CHECK_ASSERT(OCIO::IsNan((float)r.getMinInValue()));
+    OCIO_CHECK_ASSERT(OCIO::IsNan((float)r.getMaxInValue()));
+    OCIO_CHECK_ASSERT(OCIO::IsNan((float)r.getMinOutValue()));
+    OCIO_CHECK_ASSERT(OCIO::IsNan((float)r.getMaxOutValue()));
 
     double minVal = 1.0;
     double maxVal = 10.0;
@@ -782,12 +782,12 @@ OIIO_ADD_TEST(RangeOpData, accessors)
     r.setMinOutValue(2.0*minVal);
     r.setMaxOutValue(2.0*maxVal);
 
-    OIIO_CHECK_EQUAL(r.getMinInValue(), minVal);
-    OIIO_CHECK_EQUAL(r.getMaxInValue(), maxVal);
-    OIIO_CHECK_EQUAL(r.getMinOutValue(), 2.0*minVal);
-    OIIO_CHECK_EQUAL(r.getMaxOutValue(), 2.0*maxVal);
+    OCIO_CHECK_EQUAL(r.getMinInValue(), minVal);
+    OCIO_CHECK_EQUAL(r.getMaxInValue(), maxVal);
+    OCIO_CHECK_EQUAL(r.getMinOutValue(), 2.0*minVal);
+    OCIO_CHECK_EQUAL(r.getMaxOutValue(), 2.0*maxVal);
 
-    OIIO_CHECK_EQUAL(r.getType(), OCIO::OpData::RangeType);
+    OCIO_CHECK_EQUAL(r.getType(), OCIO::OpData::RangeType);
     }
 
     {
@@ -796,33 +796,33 @@ OIIO_ADD_TEST(RangeOpData, accessors)
     OCIO::RangeOpData range(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
                             0.0f, 1.0f, 0.5f, 1.5f);
 
-    OIIO_CHECK_EQUAL(range.getMinInValue(), 0.);
-    OIIO_CHECK_EQUAL(range.getMaxInValue(), 1.);
-    OIIO_CHECK_EQUAL(range.getMinOutValue(), 0.5);
-    OIIO_CHECK_EQUAL(range.getMaxOutValue(), 1.5);
+    OCIO_CHECK_EQUAL(range.getMinInValue(), 0.);
+    OCIO_CHECK_EQUAL(range.getMaxInValue(), 1.);
+    OCIO_CHECK_EQUAL(range.getMinOutValue(), 0.5);
+    OCIO_CHECK_EQUAL(range.getMaxOutValue(), 1.5);
 
-    OIIO_CHECK_NO_THROW(range.setMinInValue(-0.05432));
-    OIIO_CHECK_NO_THROW(range.validate());
-    OIIO_CHECK_EQUAL(range.getMinInValue(), -0.05432);
+    OCIO_CHECK_NO_THROW(range.setMinInValue(-0.05432));
+    OCIO_CHECK_NO_THROW(range.validate());
+    OCIO_CHECK_EQUAL(range.getMinInValue(), -0.05432);
 
-    OIIO_CHECK_NO_THROW(range.setMaxInValue(1.05432));
-    OIIO_CHECK_NO_THROW(range.validate());
-    OIIO_CHECK_EQUAL(range.getMaxInValue(), 1.05432);
+    OCIO_CHECK_NO_THROW(range.setMaxInValue(1.05432));
+    OCIO_CHECK_NO_THROW(range.validate());
+    OCIO_CHECK_EQUAL(range.getMaxInValue(), 1.05432);
 
-    OIIO_CHECK_NO_THROW(range.setMinOutValue(0.05432));
-    OIIO_CHECK_NO_THROW(range.validate());
-    OIIO_CHECK_EQUAL(range.getMinOutValue(), 0.05432);
+    OCIO_CHECK_NO_THROW(range.setMinOutValue(0.05432));
+    OCIO_CHECK_NO_THROW(range.validate());
+    OCIO_CHECK_EQUAL(range.getMinOutValue(), 0.05432);
 
-    OIIO_CHECK_NO_THROW(range.setMaxOutValue(2.05432));
-    OIIO_CHECK_NO_THROW(range.validate());
-    OIIO_CHECK_EQUAL(range.getMaxOutValue(), 2.05432);
+    OCIO_CHECK_NO_THROW(range.setMaxOutValue(2.05432));
+    OCIO_CHECK_NO_THROW(range.validate());
+    OCIO_CHECK_EQUAL(range.getMaxOutValue(), 2.05432);
 
-    OIIO_CHECK_CLOSE(range.getScale(), 1.804012123, g_error);
-    OIIO_CHECK_CLOSE(range.getOffset(), 0.1523139385, g_error);
+    OCIO_CHECK_CLOSE(range.getScale(), 1.804012123, g_error);
+    OCIO_CHECK_CLOSE(range.getOffset(), 0.1523139385, g_error);
     }
 }
 
-OIIO_ADD_TEST(RangeOpData, validation)
+OCIO_ADD_TEST(RangeOpData, validation)
 {
     OCIO::RangeOpData r;
 
@@ -831,46 +831,46 @@ OIIO_ADD_TEST(RangeOpData, validation)
     // leave min output empty
     r.setMaxOutValue(2.);
 
-    OIIO_CHECK_THROW_WHAT(r.validate(), 
+    OCIO_CHECK_THROW_WHAT(r.validate(), 
                           OCIO::Exception, 
                           "must be both set or both missing");
 }
 
-OIIO_ADD_TEST(RangeOpData, set_bit_depth)
+OCIO_ADD_TEST(RangeOpData, set_bit_depth)
 {
     OCIO::RangeOpData r1(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_F16,
                          16., 235., -0.5, 2. );
 
     OCIO::BitDepth newBitdepth = OCIO::BIT_DEPTH_UINT10;
     r1.setOutputBitDepth(newBitdepth);
-    OIIO_CHECK_EQUAL(r1.getOutputBitDepth(), newBitdepth);
-    OIIO_CHECK_EQUAL((float)r1.getMinInValue(), 16.f);
-    OIIO_CHECK_EQUAL((float)r1.getMaxInValue(), 235.f);
-    OIIO_CHECK_EQUAL((float)r1.getMinOutValue(), -0.5f * 1023.f);
-    OIIO_CHECK_EQUAL((float)r1.getMaxOutValue(), 2.f * 1023.f);
+    OCIO_CHECK_EQUAL(r1.getOutputBitDepth(), newBitdepth);
+    OCIO_CHECK_EQUAL((float)r1.getMinInValue(), 16.f);
+    OCIO_CHECK_EQUAL((float)r1.getMaxInValue(), 235.f);
+    OCIO_CHECK_EQUAL((float)r1.getMinOutValue(), -0.5f * 1023.f);
+    OCIO_CHECK_EQUAL((float)r1.getMaxOutValue(), 2.f * 1023.f);
 
     newBitdepth = OCIO::BIT_DEPTH_F32;
     r1.setOutputBitDepth(newBitdepth);
-    OIIO_CHECK_EQUAL(r1.getOutputBitDepth(), newBitdepth);
-    OIIO_CHECK_EQUAL((float)r1.getMinOutValue(), -0.5f);
-    OIIO_CHECK_EQUAL((float)r1.getMaxOutValue(), 2.f);
+    OCIO_CHECK_EQUAL(r1.getOutputBitDepth(), newBitdepth);
+    OCIO_CHECK_EQUAL((float)r1.getMinOutValue(), -0.5f);
+    OCIO_CHECK_EQUAL((float)r1.getMaxOutValue(), 2.f);
 
     OCIO::RangeOpData r2(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_UINT10, 
                          -0.5, 2.0, 0., 1023. );
 
     newBitdepth = OCIO::BIT_DEPTH_UINT10;
     r2.setInputBitDepth(newBitdepth);
-    OIIO_CHECK_EQUAL(r2.getInputBitDepth(), newBitdepth);
-    OIIO_CHECK_EQUAL((float)r2.getMinInValue(), -0.5f * 1023.f);
-    OIIO_CHECK_EQUAL((float)r2.getMaxInValue(), 2.f * 1023.f);
-    OIIO_CHECK_EQUAL((float)r2.getMinOutValue(), 0.f);
-    OIIO_CHECK_EQUAL((float)r2.getMaxOutValue(), 1023.f);
+    OCIO_CHECK_EQUAL(r2.getInputBitDepth(), newBitdepth);
+    OCIO_CHECK_EQUAL((float)r2.getMinInValue(), -0.5f * 1023.f);
+    OCIO_CHECK_EQUAL((float)r2.getMaxInValue(), 2.f * 1023.f);
+    OCIO_CHECK_EQUAL((float)r2.getMinOutValue(), 0.f);
+    OCIO_CHECK_EQUAL((float)r2.getMaxOutValue(), 1023.f);
 
     newBitdepth = OCIO::BIT_DEPTH_F16;
     r2.setInputBitDepth(newBitdepth);
-    OIIO_CHECK_EQUAL(r2.getInputBitDepth(), newBitdepth);
-    OIIO_CHECK_EQUAL((float)r2.getMinInValue(), -0.5f);
-    OIIO_CHECK_EQUAL((float)r2.getMaxInValue(), 2.f);
+    OCIO_CHECK_EQUAL(r2.getInputBitDepth(), newBitdepth);
+    OCIO_CHECK_EQUAL((float)r2.getMinInValue(), -0.5f);
+    OCIO_CHECK_EQUAL((float)r2.getMaxInValue(), 2.f);
 
     OCIO::RangeOpData r3;
     r3.setInputBitDepth(OCIO::BIT_DEPTH_F16);
@@ -883,117 +883,117 @@ OIIO_ADD_TEST(RangeOpData, set_bit_depth)
 
     r3.validate();
 
-    OIIO_CHECK_ASSERT(r3.minClips());  // since it's float --> int
-    OIIO_CHECK_ASSERT(r3.maxClips());
-    OIIO_CHECK_EQUAL(r3.getScale(), 1023.f);
-    OIIO_CHECK_EQUAL(r3.getOffset(), -1023.f);
+    OCIO_CHECK_ASSERT(r3.minClips());  // since it's float --> int
+    OCIO_CHECK_ASSERT(r3.maxClips());
+    OCIO_CHECK_EQUAL(r3.getScale(), 1023.f);
+    OCIO_CHECK_EQUAL(r3.getOffset(), -1023.f);
     newBitdepth = OCIO::BIT_DEPTH_UINT10;
     r3.setInputBitDepth(newBitdepth);
-    OIIO_CHECK_EQUAL(r3.getInputBitDepth(), newBitdepth);
-    OIIO_CHECK_ASSERT(r3.minIsEmpty());
-    OIIO_CHECK_EQUAL(r3.getScale(), 1.f);
-    OIIO_CHECK_EQUAL(r3.getOffset(), -1023.f);
-    OIIO_CHECK_EQUAL((float)r3.getMaxInValue(), 2.f * 1023.f);
-    OIIO_CHECK_ASSERT(r3.minClips());  // due to negative offset
-    OIIO_CHECK_ASSERT(!r3.maxClips()); // not needed since domain max is in range
+    OCIO_CHECK_EQUAL(r3.getInputBitDepth(), newBitdepth);
+    OCIO_CHECK_ASSERT(r3.minIsEmpty());
+    OCIO_CHECK_EQUAL(r3.getScale(), 1.f);
+    OCIO_CHECK_EQUAL(r3.getOffset(), -1023.f);
+    OCIO_CHECK_EQUAL((float)r3.getMaxInValue(), 2.f * 1023.f);
+    OCIO_CHECK_ASSERT(r3.minClips());  // due to negative offset
+    OCIO_CHECK_ASSERT(!r3.maxClips()); // not needed since domain max is in range
 }
 
-OIIO_ADD_TEST(RangeOpData, clamp_identity )
+OCIO_ADD_TEST(RangeOpData, clamp_identity )
 {
     OCIO::RangeOpData r1(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_F16, 
                          0., 255., 0., 1. );
-    OIIO_CHECK_ASSERT( r1.clampsToLutDomain() );
-    OIIO_CHECK_ASSERT( r1.isClampIdentity() );
-    OIIO_CHECK_ASSERT( ! r1.isClampNegs() );
+    OCIO_CHECK_ASSERT( r1.clampsToLutDomain() );
+    OCIO_CHECK_ASSERT( r1.isClampIdentity() );
+    OCIO_CHECK_ASSERT( ! r1.isClampNegs() );
 
     OCIO::RangeOpData r2(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_F16,
                          16., 300., -0.5, 2. );
-    OIIO_CHECK_ASSERT( ! r2.clampsToLutDomain() );
-    OIIO_CHECK_ASSERT( ! r2.isClampIdentity() );
-    OIIO_CHECK_ASSERT( ! r2.isClampNegs() );
+    OCIO_CHECK_ASSERT( ! r2.clampsToLutDomain() );
+    OCIO_CHECK_ASSERT( ! r2.isClampIdentity() );
+    OCIO_CHECK_ASSERT( ! r2.isClampNegs() );
 
     OCIO::RangeOpData r3(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_F16,
                          -16., 300., -0.5, 2. );
-    OIIO_CHECK_ASSERT( ! r3.clampsToLutDomain() );
-    OIIO_CHECK_ASSERT( ! r3.isClampIdentity() );
-    OIIO_CHECK_ASSERT( ! r3.isClampNegs() );
+    OCIO_CHECK_ASSERT( ! r3.clampsToLutDomain() );
+    OCIO_CHECK_ASSERT( ! r3.isClampIdentity() );
+    OCIO_CHECK_ASSERT( ! r3.isClampNegs() );
 
     OCIO::RangeOpData r4(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_UINT8,
                          0., 1., 8., 255. );
-    OIIO_CHECK_ASSERT( r4.clampsToLutDomain() );
-    OIIO_CHECK_ASSERT( ! r4.isClampIdentity() );
-    OIIO_CHECK_ASSERT( ! r4.isClampNegs() );
+    OCIO_CHECK_ASSERT( r4.clampsToLutDomain() );
+    OCIO_CHECK_ASSERT( ! r4.isClampIdentity() );
+    OCIO_CHECK_ASSERT( ! r4.isClampNegs() );
 
     OCIO::RangeOpData r5(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_UINT8, 
                          0.1, 1., -8., 255. );
-    OIIO_CHECK_ASSERT( r5.clampsToLutDomain() );
-    OIIO_CHECK_ASSERT( ! r5.isClampIdentity() );
-    OIIO_CHECK_ASSERT( ! r5.isClampNegs() );
+    OCIO_CHECK_ASSERT( r5.clampsToLutDomain() );
+    OCIO_CHECK_ASSERT( ! r5.isClampIdentity() );
+    OCIO_CHECK_ASSERT( ! r5.isClampNegs() );
 
     OCIO::RangeOpData r6(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_UINT8, 
                          -0.1, 1.1, -255. * 0.1, 255. * 1.1 );
-    OIIO_CHECK_ASSERT( ! r6.clampsToLutDomain() );
-    OIIO_CHECK_ASSERT( r6.isClampIdentity() );
-    OIIO_CHECK_ASSERT( ! r6.isClampNegs() );
+    OCIO_CHECK_ASSERT( ! r6.clampsToLutDomain() );
+    OCIO_CHECK_ASSERT( r6.isClampIdentity() );
+    OCIO_CHECK_ASSERT( ! r6.isClampNegs() );
 
     OCIO::RangeOpData r7(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_UINT8, 
                          0., OCIO::RangeOpData::EmptyValue(), 
                          0., OCIO::RangeOpData::EmptyValue());
-    OIIO_CHECK_ASSERT( ! r7.clampsToLutDomain() );
-    OIIO_CHECK_ASSERT( r7.isClampIdentity() );
-    OIIO_CHECK_ASSERT( r7.isClampNegs() );
+    OCIO_CHECK_ASSERT( ! r7.clampsToLutDomain() );
+    OCIO_CHECK_ASSERT( r7.isClampIdentity() );
+    OCIO_CHECK_ASSERT( r7.isClampNegs() );
 
     OCIO::RangeOpData r8(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_F32, 
                          OCIO::RangeOpData::EmptyValue(), 1., 
                          OCIO::RangeOpData::EmptyValue(), 1. );
-    OIIO_CHECK_ASSERT( ! r8.clampsToLutDomain() );
-    OIIO_CHECK_ASSERT( r8.isClampIdentity() );
-    OIIO_CHECK_ASSERT( ! r8.isClampNegs() );
+    OCIO_CHECK_ASSERT( ! r8.clampsToLutDomain() );
+    OCIO_CHECK_ASSERT( r8.isClampIdentity() );
+    OCIO_CHECK_ASSERT( ! r8.isClampNegs() );
 }
 
-OIIO_ADD_TEST(RangeOpData, identity)
+OCIO_ADD_TEST(RangeOpData, identity)
 {
     OCIO::RangeOpData r4(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_F16,
                          OCIO::RangeOpData::EmptyValue(), 
                          OCIO::RangeOpData::EmptyValue(), 
                          OCIO::RangeOpData::EmptyValue(), 
                          OCIO::RangeOpData::EmptyValue() );
-    OIIO_CHECK_ASSERT(r4.isIdentity());
-    OIIO_CHECK_ASSERT(r4.isNoOp());
-    OIIO_CHECK_ASSERT(!r4.hasChannelCrosstalk());
-    OIIO_CHECK_ASSERT(!r4.minClips());
-    OIIO_CHECK_ASSERT(!r4.maxClips());
-    OIIO_CHECK_ASSERT(!r4.scales(false));
-    OIIO_CHECK_ASSERT(r4.minIsEmpty());
-    OIIO_CHECK_ASSERT(r4.maxIsEmpty());
+    OCIO_CHECK_ASSERT(r4.isIdentity());
+    OCIO_CHECK_ASSERT(r4.isNoOp());
+    OCIO_CHECK_ASSERT(!r4.hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(!r4.minClips());
+    OCIO_CHECK_ASSERT(!r4.maxClips());
+    OCIO_CHECK_ASSERT(!r4.scales(false));
+    OCIO_CHECK_ASSERT(r4.minIsEmpty());
+    OCIO_CHECK_ASSERT(r4.maxIsEmpty());
 
     OCIO::RangeOpData r5(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT10,
                          0., 255., 0., 1023. );
-    OIIO_CHECK_ASSERT(!r5.wouldClip(0.));
-    OIIO_CHECK_ASSERT(!r5.wouldClip(255.));
-    OIIO_CHECK_ASSERT(!r5.scales(true));
-    OIIO_CHECK_ASSERT(!r5.isIdentity());
-    OIIO_CHECK_ASSERT(!r5.hasChannelCrosstalk());
-    OIIO_CHECK_ASSERT(!r5.isNoOp());
-    OIIO_CHECK_ASSERT(!r5.minClips());
-    OIIO_CHECK_ASSERT(!r5.maxClips());
-    OIIO_CHECK_ASSERT(r5.scales(false));
-    OIIO_CHECK_ASSERT(!r5.minIsEmpty());
-    OIIO_CHECK_ASSERT(!r5.maxIsEmpty());
+    OCIO_CHECK_ASSERT(!r5.wouldClip(0.));
+    OCIO_CHECK_ASSERT(!r5.wouldClip(255.));
+    OCIO_CHECK_ASSERT(!r5.scales(true));
+    OCIO_CHECK_ASSERT(!r5.isIdentity());
+    OCIO_CHECK_ASSERT(!r5.hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(!r5.isNoOp());
+    OCIO_CHECK_ASSERT(!r5.minClips());
+    OCIO_CHECK_ASSERT(!r5.maxClips());
+    OCIO_CHECK_ASSERT(r5.scales(false));
+    OCIO_CHECK_ASSERT(!r5.minIsEmpty());
+    OCIO_CHECK_ASSERT(!r5.maxIsEmpty());
 
     OCIO::RangeOpData r6(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
                          0., 255., -1., 65540. );
-    OIIO_CHECK_ASSERT(!r6.isIdentity());
-    OIIO_CHECK_ASSERT(!r6.isNoOp());
-    OIIO_CHECK_ASSERT(!r6.hasChannelCrosstalk());
-    OIIO_CHECK_ASSERT(r6.minClips());
-    OIIO_CHECK_ASSERT(r6.maxClips());
-    OIIO_CHECK_EQUAL(r6.getLowBound(), 0.f);  // check tightening of bound
-    OIIO_CHECK_EQUAL(r6.getHighBound(), 65535.f);
-    OIIO_CHECK_ASSERT(r6.scales(true));
+    OCIO_CHECK_ASSERT(!r6.isIdentity());
+    OCIO_CHECK_ASSERT(!r6.isNoOp());
+    OCIO_CHECK_ASSERT(!r6.hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(r6.minClips());
+    OCIO_CHECK_ASSERT(r6.maxClips());
+    OCIO_CHECK_EQUAL(r6.getLowBound(), 0.f);  // check tightening of bound
+    OCIO_CHECK_EQUAL(r6.getHighBound(), 65535.f);
+    OCIO_CHECK_ASSERT(r6.scales(true));
 }
 
-OIIO_ADD_TEST(RangeOpData, equality)
+OCIO_ADD_TEST(RangeOpData, equality)
 {
     OCIO::RangeOpData r1(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
                          0., 255., -1., 65540. );
@@ -1001,22 +1001,22 @@ OIIO_ADD_TEST(RangeOpData, equality)
     OCIO::RangeOpData r2(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
                          0.123, 255., -1., 65540. );
 
-    OIIO_CHECK_ASSERT(!(r1 == r2));
+    OCIO_CHECK_ASSERT(!(r1 == r2));
 
     OCIO::RangeOpData r3(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
                          0., 252., -1., 65540. );
 
-    OIIO_CHECK_ASSERT(!(r1 == r3));
+    OCIO_CHECK_ASSERT(!(r1 == r3));
 
     OCIO::RangeOpData r4(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
                          0., 255., -12., 65540. );
 
-    OIIO_CHECK_ASSERT(!(r1 == r4));
+    OCIO_CHECK_ASSERT(!(r1 == r4));
 
     OCIO::RangeOpData r5(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
                          0., 255., -1., 65540. );
 
-    OIIO_CHECK_ASSERT(r5 == r1);
+    OCIO_CHECK_ASSERT(r5 == r1);
 
     OCIO::RangeOpData r6(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_F16,
                          OCIO::RangeOpData::EmptyValue(),
@@ -1030,18 +1030,18 @@ OIIO_ADD_TEST(RangeOpData, equality)
                          OCIO::RangeOpData::EmptyValue(),
                          OCIO::RangeOpData::EmptyValue() );
 
-    OIIO_CHECK_ASSERT(r6 == r7);
+    OCIO_CHECK_ASSERT(r6 == r7);
 }
 
-OIIO_ADD_TEST(RangeOpData, faulty)
+OCIO_ADD_TEST(RangeOpData, faulty)
 {
     {
         OCIO::RangeOpData range(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
                                 0.0f, 1.0f, 0.5f, 1.5f);
-        OIIO_CHECK_NO_THROW(range.validate());
+        OCIO_CHECK_NO_THROW(range.validate());
 
-        OIIO_CHECK_NO_THROW(range.unsetMinInValue()); 
-        OIIO_CHECK_THROW_WHAT(range.validate(), 
+        OCIO_CHECK_NO_THROW(range.unsetMinInValue()); 
+        OCIO_CHECK_THROW_WHAT(range.validate(), 
                               OCIO::Exception,
                               "In and out minimum limits must be both set or both missing");
     }
@@ -1049,20 +1049,20 @@ OIIO_ADD_TEST(RangeOpData, faulty)
     {
         OCIO::RangeOpData range(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
                                 0.0f, 1.0f, 0.5f, 1.5f);
-        OIIO_CHECK_NO_THROW(range.validate());
+        OCIO_CHECK_NO_THROW(range.validate());
 
-        OIIO_CHECK_NO_THROW(range.unsetMinInValue()); 
-        OIIO_CHECK_NO_THROW(range.unsetMinOutValue()); 
-        OIIO_CHECK_NO_THROW(range.validate());
+        OCIO_CHECK_NO_THROW(range.unsetMinInValue()); 
+        OCIO_CHECK_NO_THROW(range.unsetMinOutValue()); 
+        OCIO_CHECK_NO_THROW(range.validate());
     }
 
     {
         OCIO::RangeOpData range(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
                                 0.0f, 1.0f, 0.5f, 1.5f);
-        OIIO_CHECK_NO_THROW(range.validate());
+        OCIO_CHECK_NO_THROW(range.validate());
 
-        OIIO_CHECK_NO_THROW(range.unsetMaxInValue()); 
-        OIIO_CHECK_THROW_WHAT(range.validate(), 
+        OCIO_CHECK_NO_THROW(range.unsetMaxInValue()); 
+        OCIO_CHECK_THROW_WHAT(range.validate(), 
                               OCIO::Exception,
                               "In and out maximum limits must be both set or both missing");
     }
@@ -1070,20 +1070,20 @@ OIIO_ADD_TEST(RangeOpData, faulty)
     {
         OCIO::RangeOpData range(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
                                 0.0f, 1.0f, 0.5f, 1.5f);
-        OIIO_CHECK_NO_THROW(range.validate());
+        OCIO_CHECK_NO_THROW(range.validate());
 
-        OIIO_CHECK_NO_THROW(range.unsetMaxInValue()); 
-        OIIO_CHECK_NO_THROW(range.unsetMaxOutValue()); 
-        OIIO_CHECK_NO_THROW(range.validate());
+        OCIO_CHECK_NO_THROW(range.unsetMaxInValue()); 
+        OCIO_CHECK_NO_THROW(range.unsetMaxOutValue()); 
+        OCIO_CHECK_NO_THROW(range.validate());
     }
 
     {
         OCIO::RangeOpData range(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
                                 0.0f, 1.0f, 0.5f, 1.5f);
-        OIIO_CHECK_NO_THROW(range.validate());
+        OCIO_CHECK_NO_THROW(range.validate());
 
-        OIIO_CHECK_NO_THROW(range.setMaxInValue(-125.)); 
-        OIIO_CHECK_THROW_WHAT(range.validate(), 
+        OCIO_CHECK_NO_THROW(range.setMaxInValue(-125.)); 
+        OCIO_CHECK_THROW_WHAT(range.validate(), 
                               OCIO::Exception,
                               "Range maximum input value is less than minimum input value");
     }
@@ -1091,10 +1091,10 @@ OIIO_ADD_TEST(RangeOpData, faulty)
     {
         OCIO::RangeOpData range(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
                                 0.0f, 1.0f, 0.5f, 1.5f);
-        OIIO_CHECK_NO_THROW(range.validate());
+        OCIO_CHECK_NO_THROW(range.validate());
 
-        OIIO_CHECK_NO_THROW(range.setMaxOutValue(-125.)); 
-        OIIO_CHECK_THROW_WHAT(range.validate(), 
+        OCIO_CHECK_NO_THROW(range.setMaxOutValue(-125.)); 
+        OCIO_CHECK_THROW_WHAT(range.validate(), 
                               OCIO::Exception,
                               "Range maximum output value is less than minimum output value");
     }
@@ -1114,26 +1114,26 @@ namespace
         OCIO::RangeOpDataRcPtr invOp = refOp.inverse();
 
         // Inverse op should have its input/output bitdepth swapped.
-        OIIO_CHECK_EQUAL(invOp->getInputBitDepth(), out);
-        OIIO_CHECK_EQUAL(invOp->getOutputBitDepth(), in);
+        OCIO_CHECK_EQUAL(invOp->getInputBitDepth(), out);
+        OCIO_CHECK_EQUAL(invOp->getOutputBitDepth(), in);
 
         // The min/max values should be swapped.
         if (OCIO::IsNan(revMinIn))
-            OIIO_CHECK_ASSERT(OCIO::IsNan(invOp->getMinInValue()));
+            OCIO_CHECK_ASSERT(OCIO::IsNan(invOp->getMinInValue()));
         else
-            OIIO_CHECK_EQUAL(invOp->getMinInValue(), revMinIn);
+            OCIO_CHECK_EQUAL(invOp->getMinInValue(), revMinIn);
         if (OCIO::IsNan(revMaxIn))
-            OIIO_CHECK_ASSERT(OCIO::IsNan(invOp->getMaxInValue()));
+            OCIO_CHECK_ASSERT(OCIO::IsNan(invOp->getMaxInValue()));
         else
-            OIIO_CHECK_EQUAL(invOp->getMaxInValue(), revMaxIn);
+            OCIO_CHECK_EQUAL(invOp->getMaxInValue(), revMaxIn);
         if (OCIO::IsNan(revMinOut))
-            OIIO_CHECK_ASSERT(OCIO::IsNan(invOp->getMinOutValue()));
+            OCIO_CHECK_ASSERT(OCIO::IsNan(invOp->getMinOutValue()));
         else
-            OIIO_CHECK_EQUAL(invOp->getMinOutValue(), revMinOut);
+            OCIO_CHECK_EQUAL(invOp->getMinOutValue(), revMinOut);
         if (OCIO::IsNan(revMaxOut))
-            OIIO_CHECK_ASSERT(OCIO::IsNan(invOp->getMaxOutValue()));
+            OCIO_CHECK_ASSERT(OCIO::IsNan(invOp->getMaxOutValue()));
         else
-            OIIO_CHECK_EQUAL(invOp->getMaxOutValue(), revMaxOut);
+            OCIO_CHECK_EQUAL(invOp->getMaxOutValue(), revMaxOut);
 
         // Check that the computation would be correct.
         // (Doing this in lieu of renderer testing.)
@@ -1146,17 +1146,17 @@ namespace
         // Want in == (in * fwdScale + fwdOffset) * revScale + revOffset
         // in == in * fwdScale * revScale + fwdOffset * revScale + revOffset
         // in == in * 1. + 0.
-        OIIO_CHECK_ASSERT(!OCIO::FloatsDiffer( 1.0f, fwdScale * revScale, 10, false));
+        OCIO_CHECK_ASSERT(!OCIO::FloatsDiffer( 1.0f, fwdScale * revScale, 10, false));
 
-        //OIIO_CHECK_ASSERT(!OCIO::floatsDiffer(
+        //OCIO_CHECK_ASSERT(!OCIO::floatsDiffer(
         //     0.0f, fwdOffset * revScale + revOffset, 100000, false));
         // The above is correct but we lose too much precision in the subtraction
         // so rearrange the compare as follows to allow a tighter tolerance.
-        OIIO_CHECK_ASSERT(!OCIO::FloatsDiffer(fwdOffset * revScale, -revOffset, 500, false));
+        OCIO_CHECK_ASSERT(!OCIO::FloatsDiffer(fwdOffset * revScale, -revOffset, 500, false));
     }
 }
 
-OIIO_ADD_TEST(RangeOpData, inverse)
+OCIO_ADD_TEST(RangeOpData, inverse)
 {
     checkInverse(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_UINT12,
                  OCIO::RangeOpData::EmptyValue(), OCIO::RangeOpData::EmptyValue(), 
@@ -1179,31 +1179,31 @@ OIIO_ADD_TEST(RangeOpData, inverse)
                  32., 235., 64., 940.);
 }
 
-OIIO_ADD_TEST(RangeOpData, computed_identifier)
+OCIO_ADD_TEST(RangeOpData, computed_identifier)
 {
     std::string id1, id2;
 
     OCIO::RangeOpData range(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
                             0.0f, 1.0f, 0.5f, 1.5f);
-    OIIO_CHECK_NO_THROW( range.finalize() );
-    OIIO_CHECK_NO_THROW( id1 = range.getCacheID() );
+    OCIO_CHECK_NO_THROW( range.finalize() );
+    OCIO_CHECK_NO_THROW( id1 = range.getCacheID() );
 
-    OIIO_CHECK_NO_THROW( range.unsetMaxInValue() ); 
-    OIIO_CHECK_NO_THROW( range.unsetMaxOutValue() ); 
-    OIIO_CHECK_NO_THROW( range.finalize() );
-    OIIO_CHECK_NO_THROW( id2 = range.getCacheID() );
+    OCIO_CHECK_NO_THROW( range.unsetMaxInValue() ); 
+    OCIO_CHECK_NO_THROW( range.unsetMaxOutValue() ); 
+    OCIO_CHECK_NO_THROW( range.finalize() );
+    OCIO_CHECK_NO_THROW( id2 = range.getCacheID() );
 
-    OIIO_CHECK_ASSERT( id1 != id2 );
+    OCIO_CHECK_ASSERT( id1 != id2 );
 
-    OIIO_CHECK_NO_THROW( range.unsetMinInValue() ); 
-    OIIO_CHECK_NO_THROW( range.unsetMinOutValue() ); 
-    OIIO_CHECK_NO_THROW( range.finalize() );
-    OIIO_CHECK_NO_THROW( id1 = range.getCacheID() );
+    OCIO_CHECK_NO_THROW( range.unsetMinInValue() ); 
+    OCIO_CHECK_NO_THROW( range.unsetMinOutValue() ); 
+    OCIO_CHECK_NO_THROW( range.finalize() );
+    OCIO_CHECK_NO_THROW( id1 = range.getCacheID() );
 
-    OIIO_CHECK_ASSERT( id1 != id2 );
+    OCIO_CHECK_ASSERT( id1 != id2 );
 
-    OIIO_CHECK_NO_THROW( id2 = range.getCacheID() );
-    OIIO_CHECK_ASSERT( id1 == id2 );
+    OCIO_CHECK_NO_THROW( id2 = range.getCacheID() );
+    OCIO_CHECK_ASSERT( id1 == id2 );
 }
 
 #endif

@@ -20,7 +20,6 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 			yamlcpp
 			pystring
 			sampleicc
-			oiio_unittest
 			unittest_data
 			libexpat
 			ilmbase

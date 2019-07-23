@@ -273,131 +273,131 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 
 #include "ops/Matrix/MatrixOps.h"
-#include "unittest.h"
+#include "UnitTest.h"
 
 
 OCIO_NAMESPACE_USING
 
 const float g_error = 1e-7f;
 
-OIIO_ADD_TEST(RangeOps, apply_arbitrary)
+OCIO_ADD_TEST(RangeOps, apply_arbitrary)
 {
     OCIO::RangeOp r(-0.101, 0.95, 0.194, 1.001, OCIO::TRANSFORM_DIR_FORWARD);
-    OIIO_CHECK_NO_THROW(r.finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(r.finalize(OCIO::FINALIZATION_EXACT));
 
     float image[4*3] = { -0.50f,  0.25f, 0.50f, 0.0f,
                           0.75f,  1.00f, 1.25f, 1.0f,
                           1.25f,  1.50f, 1.75f, 0.0f };
 
-    OIIO_CHECK_NO_THROW(r.apply(&image[0], 3));
+    OCIO_CHECK_NO_THROW(r.apply(&image[0], 3));
 
-    OIIO_CHECK_CLOSE(image[0],  0.194f,        g_error);
-    OIIO_CHECK_CLOSE(image[1],  0.4635119438f, g_error);
-    OIIO_CHECK_CLOSE(image[2],  0.6554719806f, g_error);
-    OIIO_CHECK_CLOSE(image[3],  0.0f,          g_error);
-    OIIO_CHECK_CLOSE(image[4],  0.8474320173f, g_error);
-    OIIO_CHECK_CLOSE(image[5],  1.001f,        g_error);
-    OIIO_CHECK_CLOSE(image[6],  1.001f,        g_error);
-    OIIO_CHECK_CLOSE(image[7],  1.0f,          g_error);
-    OIIO_CHECK_CLOSE(image[8],  1.001f,        g_error);
-    OIIO_CHECK_CLOSE(image[9],  1.001f,        g_error);
-    OIIO_CHECK_CLOSE(image[10], 1.001f,        g_error);
-    OIIO_CHECK_CLOSE(image[11], 0.0f,          g_error);
+    OCIO_CHECK_CLOSE(image[0],  0.194f,        g_error);
+    OCIO_CHECK_CLOSE(image[1],  0.4635119438f, g_error);
+    OCIO_CHECK_CLOSE(image[2],  0.6554719806f, g_error);
+    OCIO_CHECK_CLOSE(image[3],  0.0f,          g_error);
+    OCIO_CHECK_CLOSE(image[4],  0.8474320173f, g_error);
+    OCIO_CHECK_CLOSE(image[5],  1.001f,        g_error);
+    OCIO_CHECK_CLOSE(image[6],  1.001f,        g_error);
+    OCIO_CHECK_CLOSE(image[7],  1.0f,          g_error);
+    OCIO_CHECK_CLOSE(image[8],  1.001f,        g_error);
+    OCIO_CHECK_CLOSE(image[9],  1.001f,        g_error);
+    OCIO_CHECK_CLOSE(image[10], 1.001f,        g_error);
+    OCIO_CHECK_CLOSE(image[11], 0.0f,          g_error);
 }
 
-OIIO_ADD_TEST(RangeOps, combining)
+OCIO_ADD_TEST(RangeOps, combining)
 {
     OCIO::OpRcPtrVec ops;
 
     OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1.0);
-    OIIO_REQUIRE_EQUAL(ops.size(), 1);
-    OIIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
     OCIO::CreateRangeOp(ops, 0., 1., 0.5, 1.5);
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
-    OIIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
 
     OCIO::ConstOpRcPtr op1 = ops[1];
 
     // TODO: implement Range combine
-    OIIO_CHECK_THROW_WHAT(ops[0]->combineWith(ops, op1), 
+    OCIO_CHECK_THROW_WHAT(ops[0]->combineWith(ops, op1), 
                           OCIO::Exception, "TODO: Range can't be combined");
-    OIIO_CHECK_EQUAL(ops.size(), 2);
+    OCIO_CHECK_EQUAL(ops.size(), 2);
 
 }
 
-OIIO_ADD_TEST(RangeOps, combining_with_inverse)
+OCIO_ADD_TEST(RangeOps, combining_with_inverse)
 {
     OCIO::OpRcPtrVec ops;
 
     OCIO::CreateRangeOp(ops, 0., 1., 0.5, 1.5);
-    OIIO_REQUIRE_EQUAL(ops.size(), 1);
-    OIIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
     OCIO::CreateRangeOp(ops, 0., 1., 0.5, 1.5, OCIO::TRANSFORM_DIR_INVERSE);
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
-    OIIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
 
     OCIO::ConstOpRcPtr op1 = ops[1];
 
     // TODO: implement Range combine
-    OIIO_CHECK_THROW_WHAT(ops[0]->combineWith(ops, op1), 
+    OCIO_CHECK_THROW_WHAT(ops[0]->combineWith(ops, op1), 
                           OCIO::Exception, "TODO: Range can't be combined");
-    OIIO_CHECK_EQUAL(ops.size(), 2);
+    OCIO_CHECK_EQUAL(ops.size(), 2);
 
 }
 
-OIIO_ADD_TEST(RangeOps, is_inverse)
+OCIO_ADD_TEST(RangeOps, is_inverse)
 {
     OCIO::OpRcPtrVec ops;
 
     OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1.);
-    OIIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_CHECK_EQUAL(ops.size(), 1);
     // Skip finalize so that inverse direction is kept
     OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1., OCIO::TRANSFORM_DIR_INVERSE);
-    OIIO_CHECK_EQUAL(ops.size(), 2);
+    OCIO_CHECK_EQUAL(ops.size(), 2);
 
     const float offset[] = { 1.1f, -1.3f, 0.3f, 0.0f };
-    OIIO_CHECK_NO_THROW(CreateOffsetOp(ops, offset, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_REQUIRE_EQUAL(ops.size(), 3);
+    OCIO_CHECK_NO_THROW(CreateOffsetOp(ops, offset, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_EQUAL(ops.size(), 3);
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO::ConstOpRcPtr op1 = ops[1];
     OCIO::ConstOpRcPtr op2 = ops[2];
 
-    OIIO_CHECK_ASSERT(ops[0]->isSameType(op1));
-    OIIO_CHECK_ASSERT(!ops[0]->isSameType(op2));
+    OCIO_CHECK_ASSERT(ops[0]->isSameType(op1));
+    OCIO_CHECK_ASSERT(!ops[0]->isSameType(op2));
 
-    OIIO_CHECK_ASSERT(!ops[0]->isInverse(op2));
-    OIIO_CHECK_ASSERT(!ops[0]->isInverse(op0));
+    OCIO_CHECK_ASSERT(!ops[0]->isInverse(op2));
+    OCIO_CHECK_ASSERT(!ops[0]->isInverse(op0));
 
     // Inverse based on Op direction
 
-    OIIO_CHECK_ASSERT(ops[0]->isInverse(op1));
+    OCIO_CHECK_ASSERT(ops[0]->isInverse(op1));
 
     OCIO::CreateRangeOp(ops, 0.000002, 0.5, 0.5, 1., OCIO::TRANSFORM_DIR_INVERSE);
-    OIIO_REQUIRE_EQUAL(ops.size(), 4);
+    OCIO_REQUIRE_EQUAL(ops.size(), 4);
     OCIO::ConstOpRcPtr op3 = ops[3];
 
-    OIIO_CHECK_ASSERT(!ops[0]->isInverse(op3));
-    OIIO_CHECK_ASSERT(!ops[2]->isInverse(op3));
+    OCIO_CHECK_ASSERT(!ops[0]->isInverse(op3));
+    OCIO_CHECK_ASSERT(!ops[2]->isInverse(op3));
 
     OCIO::CreateRangeOp(ops, 0.000002, 0.5, 0.5, 1.);
-    OIIO_REQUIRE_EQUAL(ops.size(), 5);
+    OCIO_REQUIRE_EQUAL(ops.size(), 5);
     OCIO::ConstOpRcPtr op4 = ops[4];
 
-    OIIO_CHECK_ASSERT(!ops[0]->isInverse(op4));
-    OIIO_CHECK_ASSERT(!ops[2]->isInverse(op4));
-    OIIO_CHECK_ASSERT(ops[3]->isInverse(op4));
+    OCIO_CHECK_ASSERT(!ops[0]->isInverse(op4));
+    OCIO_CHECK_ASSERT(!ops[2]->isInverse(op4));
+    OCIO_CHECK_ASSERT(ops[3]->isInverse(op4));
 
     OCIO::CreateRangeOp(ops, 0.5, 1., 0.000002, 0.5, OCIO::TRANSFORM_DIR_INVERSE);
-    OIIO_REQUIRE_EQUAL(ops.size(), 6);
+    OCIO_REQUIRE_EQUAL(ops.size(), 6);
     OCIO::ConstOpRcPtr op5 = ops[5];
 
-    OIIO_CHECK_ASSERT(!ops[0]->isInverse(op5));
-    OIIO_CHECK_ASSERT(!ops[2]->isInverse(op5));
-    OIIO_CHECK_ASSERT(ops[3]->isInverse(op5));
-    OIIO_CHECK_ASSERT(!ops[4]->isInverse(op5));
+    OCIO_CHECK_ASSERT(!ops[0]->isInverse(op5));
+    OCIO_CHECK_ASSERT(!ops[2]->isInverse(op5));
+    OCIO_CHECK_ASSERT(ops[3]->isInverse(op5));
+    OCIO_CHECK_ASSERT(!ops[4]->isInverse(op5));
 }
 
-OIIO_ADD_TEST(RangeOps, computed_identifier)
+OCIO_ADD_TEST(RangeOps, computed_identifier)
 {
     OCIO::OpRcPtrVec ops;
 
@@ -407,22 +407,22 @@ OIIO_ADD_TEST(RangeOps, computed_identifier)
     OCIO::CreateRangeOp(ops, 0.1, 1., 0.3, 1.9, OCIO::TRANSFORM_DIR_INVERSE);
     for(OCIO::OpRcPtrVec::reference op : ops) { op->finalize(OCIO::FINALIZATION_EXACT); }
 
-    OIIO_REQUIRE_EQUAL(ops.size(), 4);
+    OCIO_REQUIRE_EQUAL(ops.size(), 4);
 
-    OIIO_CHECK_ASSERT(ops[0]->getCacheID() == ops[1]->getCacheID());
-    OIIO_CHECK_ASSERT(ops[0]->getCacheID() != ops[2]->getCacheID());
-    OIIO_CHECK_ASSERT(ops[1]->getCacheID() != ops[2]->getCacheID());
-    OIIO_CHECK_ASSERT(ops[2]->getCacheID() != ops[3]->getCacheID());
+    OCIO_CHECK_ASSERT(ops[0]->getCacheID() == ops[1]->getCacheID());
+    OCIO_CHECK_ASSERT(ops[0]->getCacheID() != ops[2]->getCacheID());
+    OCIO_CHECK_ASSERT(ops[1]->getCacheID() != ops[2]->getCacheID());
+    OCIO_CHECK_ASSERT(ops[2]->getCacheID() != ops[3]->getCacheID());
 
     OCIO::CreateRangeOp(ops, 0.1, 1., 0.3, 1.90001);
     for(OCIO::OpRcPtrVec::reference op : ops) { op->finalize(OCIO::FINALIZATION_EXACT); }
 
-    OIIO_REQUIRE_EQUAL(ops.size(), 5);
-    OIIO_CHECK_ASSERT(ops[2]->getCacheID() != ops[4]->getCacheID());
-    OIIO_CHECK_ASSERT(ops[3]->getCacheID() != ops[4]->getCacheID());
+    OCIO_REQUIRE_EQUAL(ops.size(), 5);
+    OCIO_CHECK_ASSERT(ops[2]->getCacheID() != ops[4]->getCacheID());
+    OCIO_CHECK_ASSERT(ops[3]->getCacheID() != ops[4]->getCacheID());
 }
 
-OIIO_ADD_TEST(RangeOps, bit_depth)
+OCIO_ADD_TEST(RangeOps, bit_depth)
 {
     // Test bit depths.
 
@@ -430,23 +430,23 @@ OIIO_ADD_TEST(RangeOps, bit_depth)
         = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
                                               0., 255., -1., 65540.);
 
-    OIIO_CHECK_EQUAL(range->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
-    OIIO_CHECK_EQUAL(range->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT16);
+    OCIO_CHECK_EQUAL(range->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OCIO_CHECK_EQUAL(range->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT16);
 
     OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(OCIO::CreateRangeOp(ops, range, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_CHECK_NO_THROW(OCIO::CreateRangeOp(ops, range, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
 
-    OIIO_CHECK_EQUAL(ops[0]->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
-    OIIO_CHECK_EQUAL(ops[0]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT16);
+    OCIO_CHECK_EQUAL(ops[0]->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OCIO_CHECK_EQUAL(ops[0]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT16);
 
     // Test bit depths after a clone.
 
     OCIO::ConstOpRcPtr o = ops[0]->clone();
-    OIIO_CHECK_EQUAL(o->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
-    OIIO_CHECK_EQUAL(o->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT16);
+    OCIO_CHECK_EQUAL(o->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OCIO_CHECK_EQUAL(o->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT16);
 
     OCIO::ConstRangeOpDataRcPtr r = DynamicPtrCast<const OCIO::RangeOpData>(o->data());
-    OIIO_CHECK_EQUAL(r->getMinOutValue(), -1.);
+    OCIO_CHECK_EQUAL(r->getMinOutValue(), -1.);
 }
 #endif

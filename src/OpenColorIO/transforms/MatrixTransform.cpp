@@ -478,44 +478,44 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(MatrixTransform, basic)
+OCIO_ADD_TEST(MatrixTransform, basic)
 {
     OCIO::MatrixTransformRcPtr matrix = OCIO::MatrixTransform::Create();
-    OIIO_CHECK_EQUAL(matrix->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(matrix->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
     
     float m44[16];
     float offset4[4];
     matrix->getValue(m44, offset4);
 
-    OIIO_CHECK_EQUAL(m44[0], 1.0f);
-    OIIO_CHECK_EQUAL(m44[1], 0.0f);
-    OIIO_CHECK_EQUAL(m44[2], 0.0f);
-    OIIO_CHECK_EQUAL(m44[3], 0.0f);
+    OCIO_CHECK_EQUAL(m44[0], 1.0f);
+    OCIO_CHECK_EQUAL(m44[1], 0.0f);
+    OCIO_CHECK_EQUAL(m44[2], 0.0f);
+    OCIO_CHECK_EQUAL(m44[3], 0.0f);
     
-    OIIO_CHECK_EQUAL(m44[4], 0.0f);
-    OIIO_CHECK_EQUAL(m44[5], 1.0f);
-    OIIO_CHECK_EQUAL(m44[6], 0.0f);
-    OIIO_CHECK_EQUAL(m44[7], 0.0f);
+    OCIO_CHECK_EQUAL(m44[4], 0.0f);
+    OCIO_CHECK_EQUAL(m44[5], 1.0f);
+    OCIO_CHECK_EQUAL(m44[6], 0.0f);
+    OCIO_CHECK_EQUAL(m44[7], 0.0f);
     
-    OIIO_CHECK_EQUAL(m44[8], 0.0f);
-    OIIO_CHECK_EQUAL(m44[9], 0.0f);
-    OIIO_CHECK_EQUAL(m44[10], 1.0f);
-    OIIO_CHECK_EQUAL(m44[11], 0.0f);
+    OCIO_CHECK_EQUAL(m44[8], 0.0f);
+    OCIO_CHECK_EQUAL(m44[9], 0.0f);
+    OCIO_CHECK_EQUAL(m44[10], 1.0f);
+    OCIO_CHECK_EQUAL(m44[11], 0.0f);
     
-    OIIO_CHECK_EQUAL(m44[12], 0.0f);
-    OIIO_CHECK_EQUAL(m44[13], 0.0f);
-    OIIO_CHECK_EQUAL(m44[14], 0.0f);
-    OIIO_CHECK_EQUAL(m44[15], 1.0f);
+    OCIO_CHECK_EQUAL(m44[12], 0.0f);
+    OCIO_CHECK_EQUAL(m44[13], 0.0f);
+    OCIO_CHECK_EQUAL(m44[14], 0.0f);
+    OCIO_CHECK_EQUAL(m44[15], 1.0f);
 
-    OIIO_CHECK_EQUAL(offset4[0], 0.0f);
-    OIIO_CHECK_EQUAL(offset4[1], 0.0f);
-    OIIO_CHECK_EQUAL(offset4[2], 0.0f);
-    OIIO_CHECK_EQUAL(offset4[3], 0.0f);
+    OCIO_CHECK_EQUAL(offset4[0], 0.0f);
+    OCIO_CHECK_EQUAL(offset4[1], 0.0f);
+    OCIO_CHECK_EQUAL(offset4[2], 0.0f);
+    OCIO_CHECK_EQUAL(offset4[3], 0.0f);
 
     matrix->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-    OIIO_CHECK_EQUAL(matrix->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_EQUAL(matrix->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
 
     m44[0]  = 1.0f;
     m44[1]  = 1.01f;
@@ -551,24 +551,24 @@ OIIO_ADD_TEST(MatrixTransform, basic)
 
     for (int i = 0; i < 16; ++i)
     {
-        OIIO_CHECK_EQUAL(m44r[i], m44[i]);
+        OCIO_CHECK_EQUAL(m44r[i], m44[i]);
     }
 
-    OIIO_CHECK_EQUAL(offset4r[0], 1.0f);
-    OIIO_CHECK_EQUAL(offset4r[1], 1.1f);
-    OIIO_CHECK_EQUAL(offset4r[2], 1.2f);
-    OIIO_CHECK_EQUAL(offset4r[3], 1.3f);
+    OCIO_CHECK_EQUAL(offset4r[0], 1.0f);
+    OCIO_CHECK_EQUAL(offset4r[1], 1.1f);
+    OCIO_CHECK_EQUAL(offset4r[2], 1.2f);
+    OCIO_CHECK_EQUAL(offset4r[3], 1.3f);
 }
 
-OIIO_ADD_TEST(MatrixTransform, equals)
+OCIO_ADD_TEST(MatrixTransform, equals)
 {
     OCIO::MatrixTransformRcPtr matrix1 = OCIO::MatrixTransform::Create();
     OCIO::MatrixTransformRcPtr matrix2 = OCIO::MatrixTransform::Create();
 
-    OIIO_CHECK_ASSERT(matrix1->equals(*matrix2));
+    OCIO_CHECK_ASSERT(matrix1->equals(*matrix2));
 
     matrix1->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-    OIIO_CHECK_ASSERT(!matrix1->equals(*matrix2));
+    OCIO_CHECK_ASSERT(!matrix1->equals(*matrix2));
     matrix1->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
     float m44[16];
@@ -576,13 +576,13 @@ OIIO_ADD_TEST(MatrixTransform, equals)
     matrix1->getValue(m44, offset4);
     m44[0] = 1.0f + 1e-6f;
     matrix1->setValue(m44, offset4);
-    OIIO_CHECK_ASSERT(!matrix1->equals(*matrix2));
+    OCIO_CHECK_ASSERT(!matrix1->equals(*matrix2));
     m44[0] = 1.0f;
     matrix1->setValue(m44, offset4);
 
     offset4[0] = 1e-6f;
     matrix1->setValue(m44, offset4);
-    OIIO_CHECK_ASSERT(!matrix1->equals(*matrix2));
+    OCIO_CHECK_ASSERT(!matrix1->equals(*matrix2));
 }
 
 #endif

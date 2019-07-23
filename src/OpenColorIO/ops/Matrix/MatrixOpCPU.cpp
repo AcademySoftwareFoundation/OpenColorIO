@@ -452,7 +452,7 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
 // TODO: syncolor also tests various bit-depths and pixel formats.
 // CPURenderer_cases.cpp_inc - CPURendererMatrix
@@ -464,28 +464,28 @@ namespace OCIO = OCIO_NAMESPACE;
 
 OCIO_NAMESPACE_USING
 
-OIIO_ADD_TEST(MatrixOpCPU, scale_renderer)
+OCIO_ADD_TEST(MatrixOpCPU, scale_renderer)
 {
     ConstMatrixOpDataRcPtr mat(MatrixOpData::CreateDiagonalMatrix(
         OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 2.0));
 
     ConstOpCPURcPtr op = GetMatrixRenderer(mat);
-    OIIO_CHECK_ASSERT((bool)op);
+    OCIO_CHECK_ASSERT((bool)op);
 
     const ScaleRenderer* scaleOp = dynamic_cast<const ScaleRenderer*>(op.get());
-    OIIO_CHECK_ASSERT(scaleOp);
+    OCIO_CHECK_ASSERT(scaleOp);
 
     float rgba[4] = { 4.f, 3.f, 2.f, 1.f };
 
     op->apply(rgba, rgba, 1);
 
-    OIIO_CHECK_EQUAL(rgba[0], 8.f);
-    OIIO_CHECK_EQUAL(rgba[1], 6.f);
-    OIIO_CHECK_EQUAL(rgba[2], 4.f);
-    OIIO_CHECK_EQUAL(rgba[3], 2.f);
+    OCIO_CHECK_EQUAL(rgba[0], 8.f);
+    OCIO_CHECK_EQUAL(rgba[1], 6.f);
+    OCIO_CHECK_EQUAL(rgba[2], 4.f);
+    OCIO_CHECK_EQUAL(rgba[3], 2.f);
 }
 
-OIIO_ADD_TEST(MatrixOpCPU, scale_with_offset_renderer)
+OCIO_ADD_TEST(MatrixOpCPU, scale_with_offset_renderer)
 {
     MatrixOpDataRcPtr mat(MatrixOpData::CreateDiagonalMatrix(
         OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 2.0));
@@ -497,23 +497,23 @@ OIIO_ADD_TEST(MatrixOpCPU, scale_with_offset_renderer)
 
     OCIO::ConstMatrixOpDataRcPtr m = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(mat);
     ConstOpCPURcPtr op = GetMatrixRenderer(m);
-    OIIO_CHECK_ASSERT((bool)op);
+    OCIO_CHECK_ASSERT((bool)op);
 
     const ScaleWithOffsetRenderer* scaleOffOp = dynamic_cast<const ScaleWithOffsetRenderer*>(op.get());
-    OIIO_CHECK_ASSERT(scaleOffOp);
+    OCIO_CHECK_ASSERT(scaleOffOp);
 
     float rgba[4] = { 4.f, 3.f, 2.f, 1.f };
 
     op->apply(rgba, rgba, 1);
 
-    OIIO_CHECK_EQUAL(rgba[0], 9.f);
-    OIIO_CHECK_EQUAL(rgba[1], 8.f);
-    OIIO_CHECK_EQUAL(rgba[2], 7.f);
-    OIIO_CHECK_EQUAL(rgba[3], 6.f);
+    OCIO_CHECK_EQUAL(rgba[0], 9.f);
+    OCIO_CHECK_EQUAL(rgba[1], 8.f);
+    OCIO_CHECK_EQUAL(rgba[2], 7.f);
+    OCIO_CHECK_EQUAL(rgba[3], 6.f);
 }
 
 
-OIIO_ADD_TEST(MatrixOpCPU, matrix_with_offset_renderer)
+OCIO_ADD_TEST(MatrixOpCPU, matrix_with_offset_renderer)
 {
     MatrixOpDataRcPtr mat(MatrixOpData::CreateDiagonalMatrix(
         OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 2.0));
@@ -529,22 +529,22 @@ OIIO_ADD_TEST(MatrixOpCPU, matrix_with_offset_renderer)
 
     OCIO::ConstMatrixOpDataRcPtr m = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(mat);
     ConstOpCPURcPtr op = GetMatrixRenderer(m);
-    OIIO_CHECK_ASSERT((bool)op);
+    OCIO_CHECK_ASSERT((bool)op);
 
     const MatrixWithOffsetRenderer* matOffOp = dynamic_cast<const MatrixWithOffsetRenderer*>(op.get());
-    OIIO_CHECK_ASSERT(matOffOp);
+    OCIO_CHECK_ASSERT(matOffOp);
 
     float rgba[4] = { 4.f, 3.f, 2.f, 1.f };
 
     op->apply(rgba, rgba, 1);
 
-    OIIO_CHECK_EQUAL(rgba[0], 9.5f);
-    OIIO_CHECK_EQUAL(rgba[1], 8.f);
-    OIIO_CHECK_EQUAL(rgba[2], 7.f);
-    OIIO_CHECK_EQUAL(rgba[3], 6.f);
+    OCIO_CHECK_EQUAL(rgba[0], 9.5f);
+    OCIO_CHECK_EQUAL(rgba[1], 8.f);
+    OCIO_CHECK_EQUAL(rgba[2], 7.f);
+    OCIO_CHECK_EQUAL(rgba[3], 6.f);
 }
 
-OIIO_ADD_TEST(MatrixOpCPU, matrix_renderer)
+OCIO_ADD_TEST(MatrixOpCPU, matrix_renderer)
 {
     MatrixOpDataRcPtr mat(MatrixOpData::CreateDiagonalMatrix(
         OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 2.0));
@@ -554,19 +554,19 @@ OIIO_ADD_TEST(MatrixOpCPU, matrix_renderer)
 
     OCIO::ConstMatrixOpDataRcPtr m = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(mat);
     ConstOpCPURcPtr op = GetMatrixRenderer(m);
-    OIIO_CHECK_ASSERT((bool)op);
+    OCIO_CHECK_ASSERT((bool)op);
 
     const MatrixRenderer* matOp = dynamic_cast<const MatrixRenderer*>(op.get());
-    OIIO_CHECK_ASSERT(matOp);
+    OCIO_CHECK_ASSERT(matOp);
 
     float rgba[4] = { 4.f, 3.f, 2.f, 1.f };
 
     op->apply(rgba, rgba, 1);
 
-    OIIO_CHECK_EQUAL(rgba[0], 8.5f);
-    OIIO_CHECK_EQUAL(rgba[1], 6.f);
-    OIIO_CHECK_EQUAL(rgba[2], 4.f);
-    OIIO_CHECK_EQUAL(rgba[3], 2.f);
+    OCIO_CHECK_EQUAL(rgba[0], 8.5f);
+    OCIO_CHECK_EQUAL(rgba[1], 6.f);
+    OCIO_CHECK_EQUAL(rgba[2], 4.f);
+    OCIO_CHECK_EQUAL(rgba[3], 2.f);
 }
 
 

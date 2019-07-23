@@ -203,19 +203,19 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 #include "UnitTestUtils.h"
 
-OIIO_ADD_TEST(FileFormatSpiMtx, FormatInfo)
+OCIO_ADD_TEST(FileFormatSpiMtx, FormatInfo)
 {
     OCIO::FormatInfoVec formatInfoVec;
     OCIO::LocalFileFormat tester;
     tester.GetFormatInfo(formatInfoVec);
 
-    OIIO_CHECK_EQUAL(1, formatInfoVec.size());
-    OIIO_CHECK_EQUAL("spimtx", formatInfoVec[0].name);
-    OIIO_CHECK_EQUAL("spimtx", formatInfoVec[0].extension);
-    OIIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ,
+    OCIO_CHECK_EQUAL(1, formatInfoVec.size());
+    OCIO_CHECK_EQUAL("spimtx", formatInfoVec[0].name);
+    OCIO_CHECK_EQUAL("spimtx", formatInfoVec[0].extension);
+    OCIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ,
         formatInfoVec[0].capabilities);
 }
 
@@ -225,37 +225,37 @@ OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & fileName)
         fileName, std::ios_base::in);
 }
 
-OIIO_ADD_TEST(FileFormatSpiMtx, Test)
+OCIO_ADD_TEST(FileFormatSpiMtx, Test)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string spiMtxFile("camera_to_aces.spimtx");
-    OIIO_CHECK_NO_THROW(cachedFile = LoadLutFile(spiMtxFile));
+    OCIO_CHECK_NO_THROW(cachedFile = LoadLutFile(spiMtxFile));
 
-    OIIO_REQUIRE_ASSERT((bool)cachedFile);
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->offset4[0]);
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->offset4[1]);
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->offset4[2]);
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->offset4[3]);
+    OCIO_REQUIRE_ASSERT((bool)cachedFile);
+    OCIO_CHECK_EQUAL(0.0f, cachedFile->offset4[0]);
+    OCIO_CHECK_EQUAL(0.0f, cachedFile->offset4[1]);
+    OCIO_CHECK_EQUAL(0.0f, cachedFile->offset4[2]);
+    OCIO_CHECK_EQUAL(0.0f, cachedFile->offset4[3]);
 
-    OIIO_CHECK_EQUAL(0.754338638f, cachedFile->m44[0]);
-    OIIO_CHECK_EQUAL(0.133697046f, cachedFile->m44[1]);
-    OIIO_CHECK_EQUAL(0.111968437f, cachedFile->m44[2]);
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->m44[3]);
+    OCIO_CHECK_EQUAL(0.754338638f, cachedFile->m44[0]);
+    OCIO_CHECK_EQUAL(0.133697046f, cachedFile->m44[1]);
+    OCIO_CHECK_EQUAL(0.111968437f, cachedFile->m44[2]);
+    OCIO_CHECK_EQUAL(0.0f, cachedFile->m44[3]);
 
-    OIIO_CHECK_EQUAL(0.021198141f, cachedFile->m44[4]);
-    OIIO_CHECK_EQUAL(1.005410934f, cachedFile->m44[5]);
-    OIIO_CHECK_EQUAL(-0.026610548f, cachedFile->m44[6]);
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->m44[7]);
+    OCIO_CHECK_EQUAL(0.021198141f, cachedFile->m44[4]);
+    OCIO_CHECK_EQUAL(1.005410934f, cachedFile->m44[5]);
+    OCIO_CHECK_EQUAL(-0.026610548f, cachedFile->m44[6]);
+    OCIO_CHECK_EQUAL(0.0f, cachedFile->m44[7]);
 
-    OIIO_CHECK_CLOSE(-0.00975699, cachedFile->m44[8], 1e-6f);
-    OIIO_CHECK_EQUAL(0.004508563f, cachedFile->m44[9]);
-    OIIO_CHECK_EQUAL(1.005253201f, cachedFile->m44[10]);
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->m44[11]);
+    OCIO_CHECK_CLOSE(-0.00975699, cachedFile->m44[8], 1e-6f);
+    OCIO_CHECK_EQUAL(0.004508563f, cachedFile->m44[9]);
+    OCIO_CHECK_EQUAL(1.005253201f, cachedFile->m44[10]);
+    OCIO_CHECK_EQUAL(0.0f, cachedFile->m44[11]);
 
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->m44[12]);
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->m44[13]);
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->m44[14]);
-    OIIO_CHECK_EQUAL(1.0f, cachedFile->m44[15]);
+    OCIO_CHECK_EQUAL(0.0f, cachedFile->m44[12]);
+    OCIO_CHECK_EQUAL(0.0f, cachedFile->m44[13]);
+    OCIO_CHECK_EQUAL(0.0f, cachedFile->m44[14]);
+    OCIO_CHECK_EQUAL(1.0f, cachedFile->m44[15]);
 }
 
 OCIO::LocalCachedFileRcPtr ReadSpiMtx(const std::string & fileContent)
@@ -271,7 +271,7 @@ OCIO::LocalCachedFileRcPtr ReadSpiMtx(const std::string & fileContent)
     return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
 }
 
-OIIO_ADD_TEST(FileFormatSpiMtx, ReadOffset)
+OCIO_ADD_TEST(FileFormatSpiMtx, ReadOffset)
 {
     {
         // Validate stream can be read with no error.
@@ -282,16 +282,16 @@ OIIO_ADD_TEST(FileFormatSpiMtx, ReadOffset)
             "0 0 1 65535.0\n";
 
         OCIO::LocalCachedFileRcPtr cachedFile;
-        OIIO_CHECK_NO_THROW(cachedFile = ReadSpiMtx(SAMPLE_FILE));
-        OIIO_REQUIRE_ASSERT((bool)cachedFile);
-        OIIO_CHECK_EQUAL(0.1f, cachedFile->offset4[0]);
-        OIIO_CHECK_EQUAL(0.5f, cachedFile->offset4[1]);
-        OIIO_CHECK_EQUAL(1.0f, cachedFile->offset4[2]);
-        OIIO_CHECK_EQUAL(0.0f, cachedFile->offset4[3]);
+        OCIO_CHECK_NO_THROW(cachedFile = ReadSpiMtx(SAMPLE_FILE));
+        OCIO_REQUIRE_ASSERT((bool)cachedFile);
+        OCIO_CHECK_EQUAL(0.1f, cachedFile->offset4[0]);
+        OCIO_CHECK_EQUAL(0.5f, cachedFile->offset4[1]);
+        OCIO_CHECK_EQUAL(1.0f, cachedFile->offset4[2]);
+        OCIO_CHECK_EQUAL(0.0f, cachedFile->offset4[3]);
     }
 }
 
-OIIO_ADD_TEST(FileFormatSpiMtx, ReadFailure)
+OCIO_ADD_TEST(FileFormatSpiMtx, ReadFailure)
 {
     {
         // Validate stream can be read with no error.
@@ -301,7 +301,7 @@ OIIO_ADD_TEST(FileFormatSpiMtx, ReadFailure)
             "0.0 1.0 0.0 0.0\n"
             "0.0 0.0 1.0 0.0\n";
 
-        OIIO_CHECK_NO_THROW(ReadSpiMtx(SAMPLE_NO_ERROR));
+        OCIO_CHECK_NO_THROW(ReadSpiMtx(SAMPLE_NO_ERROR));
     }
     {
         // Wrong number of elements
@@ -310,7 +310,7 @@ OIIO_ADD_TEST(FileFormatSpiMtx, ReadFailure)
             "0.0 1.0 0.0\n"
             "0.0 0.0 1.0\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadSpiMtx(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadSpiMtx(SAMPLE_ERROR),
                               OCIO::Exception,
                               "File must contain 12 float entries");
     }
@@ -321,7 +321,7 @@ OIIO_ADD_TEST(FileFormatSpiMtx, ReadFailure)
             "0.0 error 0.0 0.0\n"
             "0.0 0.0 1.0 0.0\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadSpiMtx(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadSpiMtx(SAMPLE_ERROR),
                               OCIO::Exception,
                               "File must contain all float entries");
     }

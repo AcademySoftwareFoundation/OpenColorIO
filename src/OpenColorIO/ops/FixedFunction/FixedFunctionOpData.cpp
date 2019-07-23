@@ -342,113 +342,113 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 
-#include "unittest.h"
+#include "UnitTest.h"
 
 
-OIIO_ADD_TEST(FixedFunctionOpData, aces_red_mod_style)
+OCIO_ADD_TEST(FixedFunctionOpData, aces_red_mod_style)
 {
     OCIO::FixedFunctionOpData func;
-    OIIO_CHECK_NO_THROW(func.setInputBitDepth(OCIO::BIT_DEPTH_UINT8));
-    OIIO_CHECK_EQUAL(func.getStyle(), OCIO::FixedFunctionOpData::ACES_RED_MOD_03_FWD);
-    OIIO_CHECK_EQUAL(func.getParams().size(), 0);
-    OIIO_CHECK_NO_THROW(func.validate());
-    OIIO_CHECK_NO_THROW(func.finalize());
+    OCIO_CHECK_NO_THROW(func.setInputBitDepth(OCIO::BIT_DEPTH_UINT8));
+    OCIO_CHECK_EQUAL(func.getStyle(), OCIO::FixedFunctionOpData::ACES_RED_MOD_03_FWD);
+    OCIO_CHECK_EQUAL(func.getParams().size(), 0);
+    OCIO_CHECK_NO_THROW(func.validate());
+    OCIO_CHECK_NO_THROW(func.finalize());
     const std::string cacheID(func.getCacheID());
 
-    OIIO_CHECK_NO_THROW(func.setStyle(OCIO::FixedFunctionOpData::ACES_RED_MOD_10_FWD));
-    OIIO_CHECK_EQUAL(func.getStyle(), OCIO::FixedFunctionOpData::ACES_RED_MOD_10_FWD);
-    OIIO_CHECK_NO_THROW(func.validate());
-    OIIO_CHECK_NO_THROW(func.finalize());
+    OCIO_CHECK_NO_THROW(func.setStyle(OCIO::FixedFunctionOpData::ACES_RED_MOD_10_FWD));
+    OCIO_CHECK_EQUAL(func.getStyle(), OCIO::FixedFunctionOpData::ACES_RED_MOD_10_FWD);
+    OCIO_CHECK_NO_THROW(func.validate());
+    OCIO_CHECK_NO_THROW(func.finalize());
 
-    OIIO_CHECK_ASSERT(cacheID!=std::string(func.getCacheID()));
+    OCIO_CHECK_ASSERT(cacheID!=std::string(func.getCacheID()));
 
     OCIO::FixedFunctionOpDataRcPtr inv = func.inverse();
-    OIIO_CHECK_EQUAL(inv->getStyle(), OCIO::FixedFunctionOpData::ACES_RED_MOD_10_INV);
-    OIIO_CHECK_EQUAL(inv->getParams().size(), 0);
-    OIIO_CHECK_ASSERT(cacheID!=std::string(inv->getCacheID()));
-    OIIO_CHECK_EQUAL(inv->getInputBitDepth(), func.getOutputBitDepth());
-    OIIO_CHECK_EQUAL(inv->getOutputBitDepth(), func.getInputBitDepth());
+    OCIO_CHECK_EQUAL(inv->getStyle(), OCIO::FixedFunctionOpData::ACES_RED_MOD_10_INV);
+    OCIO_CHECK_EQUAL(inv->getParams().size(), 0);
+    OCIO_CHECK_ASSERT(cacheID!=std::string(inv->getCacheID()));
+    OCIO_CHECK_EQUAL(inv->getInputBitDepth(), func.getOutputBitDepth());
+    OCIO_CHECK_EQUAL(inv->getOutputBitDepth(), func.getInputBitDepth());
 
     OCIO::FixedFunctionOpData::Params p = func.getParams();
     p.push_back(1.);
-    OIIO_CHECK_NO_THROW(func.setParams(p));
-    OIIO_CHECK_THROW_WHAT(func.validate(), 
+    OCIO_CHECK_NO_THROW(func.setParams(p));
+    OCIO_CHECK_THROW_WHAT(func.validate(), 
                           OCIO::Exception, 
                           "The style 'ACES_RedMod10 (Forward)' must have zero parameters but 1 found.");
 }
 
-OIIO_ADD_TEST(FixedFunctionOpData, aces_dark_to_dim10_style)
+OCIO_ADD_TEST(FixedFunctionOpData, aces_dark_to_dim10_style)
 {
     OCIO::FixedFunctionOpData func(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_F32, 
                                    OCIO::FixedFunctionOpData::Params(), 
                                    OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD);
 
-    OIIO_CHECK_EQUAL(func.getStyle(), OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD);
-    OIIO_CHECK_EQUAL(func.getParams().size(), 0);
-    OIIO_CHECK_NO_THROW(func.validate());
-    OIIO_CHECK_NO_THROW(func.finalize());
+    OCIO_CHECK_EQUAL(func.getStyle(), OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD);
+    OCIO_CHECK_EQUAL(func.getParams().size(), 0);
+    OCIO_CHECK_NO_THROW(func.validate());
+    OCIO_CHECK_NO_THROW(func.finalize());
     const std::string cacheID(func.getCacheID());
 
     OCIO::FixedFunctionOpDataRcPtr inv = func.inverse();
-    OIIO_CHECK_EQUAL(inv->getStyle(), OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV);
-    OIIO_CHECK_EQUAL(inv->getParams().size(), 0);
-    OIIO_CHECK_ASSERT(cacheID!=std::string(inv->getCacheID()));
-    OIIO_CHECK_EQUAL(inv->getInputBitDepth(), func.getOutputBitDepth());
-    OIIO_CHECK_EQUAL(inv->getOutputBitDepth(), func.getInputBitDepth());
+    OCIO_CHECK_EQUAL(inv->getStyle(), OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV);
+    OCIO_CHECK_EQUAL(inv->getParams().size(), 0);
+    OCIO_CHECK_ASSERT(cacheID!=std::string(inv->getCacheID()));
+    OCIO_CHECK_EQUAL(inv->getInputBitDepth(), func.getOutputBitDepth());
+    OCIO_CHECK_EQUAL(inv->getOutputBitDepth(), func.getInputBitDepth());
 
     OCIO::FixedFunctionOpData::Params p = func.getParams();
     p.push_back(1.);
-    OIIO_CHECK_NO_THROW(func.setParams(p));
-    OIIO_CHECK_THROW_WHAT(func.validate(), 
+    OCIO_CHECK_NO_THROW(func.setParams(p));
+    OCIO_CHECK_THROW_WHAT(func.validate(), 
                           OCIO::Exception, 
                           "The style 'ACES_DarkToDim10 (Forward)' must have zero parameters but 1 found.");
 }
 
-OIIO_ADD_TEST(FixedFunctionOpData, rec2100_surround_style)
+OCIO_ADD_TEST(FixedFunctionOpData, rec2100_surround_style)
 {
     OCIO::FixedFunctionOpData::Params params = { 2.0 };
         OCIO::FixedFunctionOpData func(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_F32, 
                                    params, OCIO::FixedFunctionOpData::REC2100_SURROUND);
-    OIIO_CHECK_NO_THROW(func.validate());
-    OIIO_CHECK_NO_THROW(func.finalize());
+    OCIO_CHECK_NO_THROW(func.validate());
+    OCIO_CHECK_NO_THROW(func.finalize());
     const std::string cacheID(func.getCacheID());
-    OIIO_CHECK_ASSERT(func.getParams() == params);
+    OCIO_CHECK_ASSERT(func.getParams() == params);
 
     OCIO::FixedFunctionOpDataRcPtr inv = func.inverse();
-    OIIO_CHECK_EQUAL(inv->getParams()[0], 1. / func.getParams()[0]);
-    OIIO_CHECK_EQUAL(inv->getInputBitDepth(), func.getOutputBitDepth());
-    OIIO_CHECK_EQUAL(inv->getOutputBitDepth(), func.getInputBitDepth());
-    OIIO_CHECK_ASSERT(cacheID!=std::string(inv->getCacheID()));
+    OCIO_CHECK_EQUAL(inv->getParams()[0], 1. / func.getParams()[0]);
+    OCIO_CHECK_EQUAL(inv->getInputBitDepth(), func.getOutputBitDepth());
+    OCIO_CHECK_EQUAL(inv->getOutputBitDepth(), func.getInputBitDepth());
+    OCIO_CHECK_ASSERT(cacheID!=std::string(inv->getCacheID()));
 
-    OIIO_CHECK_ASSERT(func == func);
-    OIIO_CHECK_ASSERT(!(func == *inv));
+    OCIO_CHECK_ASSERT(func == func);
+    OCIO_CHECK_ASSERT(!(func == *inv));
 
     params = func.getParams();
     params[0] = 120.;
-    OIIO_CHECK_NO_THROW(func.setParams(params));
-    OIIO_CHECK_THROW_WHAT(func.validate(), 
+    OCIO_CHECK_NO_THROW(func.setParams(params));
+    OCIO_CHECK_THROW_WHAT(func.validate(), 
                           OCIO::Exception,
                           "Parameter 120 is greater than upper bound 100");
 
     params = func.getParams();
     params[0] = 0.00001;
-    OIIO_CHECK_NO_THROW(func.setParams(params));
-    OIIO_CHECK_THROW_WHAT(func.validate(),
+    OCIO_CHECK_NO_THROW(func.setParams(params));
+    OCIO_CHECK_THROW_WHAT(func.validate(),
                           OCIO::Exception,
                           "Parameter 1e-05 is less than lower bound 0.001");
 
     params = func.getParams();
     params.push_back(12);
-    OIIO_CHECK_NO_THROW(func.setParams(params));
-    OIIO_CHECK_THROW_WHAT(func.validate(),
+    OCIO_CHECK_NO_THROW(func.setParams(params));
+    OCIO_CHECK_THROW_WHAT(func.validate(),
                           OCIO::Exception,
                           "The style 'REC2100_Surround' must have "
                           "one parameter but 2 found.");
 
     params = func.getParams();
     params.clear();
-    OIIO_CHECK_NO_THROW(func.setParams(params));
-    OIIO_CHECK_THROW_WHAT(func.validate(),
+    OCIO_CHECK_NO_THROW(func.setParams(params));
+    OCIO_CHECK_THROW_WHAT(func.validate(),
                           OCIO::Exception,
                           "The style 'REC2100_Surround' must have "
                           "one parameter but 0 found.");

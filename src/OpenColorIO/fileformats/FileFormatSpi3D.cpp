@@ -255,19 +255,19 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 #include "UnitTestUtils.h"
 
-OIIO_ADD_TEST(FileFormatSpi3D, FormatInfo)
+OCIO_ADD_TEST(FileFormatSpi3D, FormatInfo)
 {
     OCIO::FormatInfoVec formatInfoVec;
     OCIO::LocalFileFormat tester;
     tester.GetFormatInfo(formatInfoVec);
 
-    OIIO_CHECK_EQUAL(1, formatInfoVec.size());
-    OIIO_CHECK_EQUAL("spi3d", formatInfoVec[0].name);
-    OIIO_CHECK_EQUAL("spi3d", formatInfoVec[0].extension);
-    OIIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ,
+    OCIO_CHECK_EQUAL(1, formatInfoVec.size());
+    OCIO_CHECK_EQUAL("spi3d", formatInfoVec[0].name);
+    OCIO_CHECK_EQUAL("spi3d", formatInfoVec[0].extension);
+    OCIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ,
         formatInfoVec[0].capabilities);
 }
 
@@ -277,27 +277,27 @@ OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & fileName)
         fileName, std::ios_base::in);
 }
 
-OIIO_ADD_TEST(FileFormatSpi3D, Test)
+OCIO_ADD_TEST(FileFormatSpi3D, Test)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string spi3dFile("spi_ocio_srgb_test.spi3d");
-    OIIO_CHECK_NO_THROW(cachedFile = LoadLutFile(spi3dFile));
+    OCIO_CHECK_NO_THROW(cachedFile = LoadLutFile(spi3dFile));
 
-    OIIO_CHECK_ASSERT((bool)cachedFile);
-    OIIO_CHECK_ASSERT((bool)(cachedFile->lut));
+    OCIO_CHECK_ASSERT((bool)cachedFile);
+    OCIO_CHECK_ASSERT((bool)(cachedFile->lut));
 
-    OIIO_CHECK_EQUAL(32, cachedFile->lut->size[0]);
-    OIIO_CHECK_EQUAL(32, cachedFile->lut->size[1]);
-    OIIO_CHECK_EQUAL(32, cachedFile->lut->size[2]);
-    OIIO_CHECK_EQUAL(32*32*32*3, cachedFile->lut->lut.size());
+    OCIO_CHECK_EQUAL(32, cachedFile->lut->size[0]);
+    OCIO_CHECK_EQUAL(32, cachedFile->lut->size[1]);
+    OCIO_CHECK_EQUAL(32, cachedFile->lut->size[2]);
+    OCIO_CHECK_EQUAL(32*32*32*3, cachedFile->lut->lut.size());
 
-    OIIO_CHECK_EQUAL(0.040157f, cachedFile->lut->lut[0]);
-    OIIO_CHECK_EQUAL(0.038904f, cachedFile->lut->lut[1]);
-    OIIO_CHECK_EQUAL(0.028316f, cachedFile->lut->lut[2]);
+    OCIO_CHECK_EQUAL(0.040157f, cachedFile->lut->lut[0]);
+    OCIO_CHECK_EQUAL(0.038904f, cachedFile->lut->lut[1]);
+    OCIO_CHECK_EQUAL(0.028316f, cachedFile->lut->lut[2]);
     // 10 2 12
-    OIIO_CHECK_EQUAL(0.102161f, cachedFile->lut->lut[37086]);
-    OIIO_CHECK_EQUAL(0.032187f, cachedFile->lut->lut[37087]);
-    OIIO_CHECK_EQUAL(0.175453f, cachedFile->lut->lut[37088]);
+    OCIO_CHECK_EQUAL(0.102161f, cachedFile->lut->lut[37086]);
+    OCIO_CHECK_EQUAL(0.032187f, cachedFile->lut->lut[37087]);
+    OCIO_CHECK_EQUAL(0.175453f, cachedFile->lut->lut[37088]);
 }
 
 void ReadSpi3d(const std::string & fileContent)
@@ -311,7 +311,7 @@ void ReadSpi3d(const std::string & fileContent)
     OCIO::CachedFileRcPtr cachedFile = tester.Read(is, SAMPLE_NAME);
 }
 
-OIIO_ADD_TEST(FileFormatSpi3D, ReadFailure)
+OCIO_ADD_TEST(FileFormatSpi3D, ReadFailure)
 {
     {
         // Validate stream can be read with no error.
@@ -329,7 +329,7 @@ OIIO_ADD_TEST(FileFormatSpi3D, ReadFailure)
             "1 1 0 0.6 0.7 0.1\n"
             "1 1 1 0.6 0.7 0.7\n";
 
-        OIIO_CHECK_NO_THROW(ReadSpi3d(SAMPLE_NO_ERROR));
+        OCIO_CHECK_NO_THROW(ReadSpi3d(SAMPLE_NO_ERROR));
     }
     {
         // Wrong first line
@@ -346,7 +346,7 @@ OIIO_ADD_TEST(FileFormatSpi3D, ReadFailure)
             "1 1 0 0.6 0.7 0.1\n"
             "1 1 1 0.6 0.7 0.7\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadSpi3d(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadSpi3d(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Expected 'SPILUT'");
     }
@@ -365,7 +365,7 @@ OIIO_ADD_TEST(FileFormatSpi3D, ReadFailure)
             "1 1 0 0.6 0.7 0.1\n"
             "1 1 1 0.6 0.7 0.7\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadSpi3d(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadSpi3d(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Error while reading LUT size");
     }
@@ -384,7 +384,7 @@ OIIO_ADD_TEST(FileFormatSpi3D, ReadFailure)
             "1 1 0 0.6 0.7 0.1\n"
             "1 1 1 0.6 0.7 0.7\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadSpi3d(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadSpi3d(SAMPLE_ERROR),
                               OCIO::Exception,
                               "that falls outside of the cube");
     }
@@ -402,7 +402,7 @@ OIIO_ADD_TEST(FileFormatSpi3D, ReadFailure)
             "1 1 0 0.6 0.7 0.1\n"
             "1 1 1 0.6 0.7 0.7\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadSpi3d(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadSpi3d(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Not enough entries found");
     }

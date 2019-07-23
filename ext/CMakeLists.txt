@@ -199,9 +199,3 @@ set_property(TARGET ilmbase PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${ILMBASE_INC
 # sampleicc
 add_library(sampleicc INTERFACE IMPORTED GLOBAL)
 set_property(TARGET sampleicc PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/sampleicc/src/include")
-
-
-######################################################################
-# oiio unit tests
-add_library(oiio_unittest INTERFACE IMPORTED GLOBAL)
-set_property(TARGET oiio_unittest PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/oiio/src/include")

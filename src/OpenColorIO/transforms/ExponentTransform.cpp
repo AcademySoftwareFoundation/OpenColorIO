@@ -233,25 +233,25 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
 
-OIIO_ADD_TEST(ExponentTransform, basic)
+OCIO_ADD_TEST(ExponentTransform, basic)
 {
     OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
-    OIIO_CHECK_EQUAL(exp->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(exp->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
 
     exp->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-    OIIO_CHECK_EQUAL(exp->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_EQUAL(exp->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
 
     std::vector<float> val4(4, 1.), identity_val4(4, 1.);
-    OIIO_CHECK_NO_THROW(exp->getValue(&val4[0]));
-    OIIO_CHECK_ASSERT(val4 == identity_val4);
+    OCIO_CHECK_NO_THROW(exp->getValue(&val4[0]));
+    OCIO_CHECK_ASSERT(val4 == identity_val4);
 
     val4[1] = 2.;
-    OIIO_CHECK_NO_THROW(exp->setValue(&val4[0]));
-    OIIO_CHECK_NO_THROW(exp->getValue(&val4[0]));
-    OIIO_CHECK_ASSERT(val4 != identity_val4);
+    OCIO_CHECK_NO_THROW(exp->setValue(&val4[0]));
+    OCIO_CHECK_NO_THROW(exp->getValue(&val4[0]));
+    OCIO_CHECK_ASSERT(val4 != identity_val4);
 }
 
 namespace
@@ -261,27 +261,27 @@ void CheckValues(const double(&v1)[4], const double(&v2)[4])
 {
     static const float errThreshold = 1e-8f;
 
-    OIIO_CHECK_CLOSE(v1[0], v2[0], errThreshold);
-    OIIO_CHECK_CLOSE(v1[1], v2[1], errThreshold);
-    OIIO_CHECK_CLOSE(v1[2], v2[2], errThreshold);
-    OIIO_CHECK_CLOSE(v1[3], v2[3], errThreshold);
+    OCIO_CHECK_CLOSE(v1[0], v2[0], errThreshold);
+    OCIO_CHECK_CLOSE(v1[1], v2[1], errThreshold);
+    OCIO_CHECK_CLOSE(v1[2], v2[2], errThreshold);
+    OCIO_CHECK_CLOSE(v1[3], v2[3], errThreshold);
 }
 
 };
 
-OIIO_ADD_TEST(ExponentTransform, double)
+OCIO_ADD_TEST(ExponentTransform, double)
 {
     OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
-    OIIO_CHECK_EQUAL(exp->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(exp->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
 
     double val4[4] = { -1., -2., -3., -4. };
-    OIIO_CHECK_NO_THROW(exp->getValue(val4));
+    OCIO_CHECK_NO_THROW(exp->getValue(val4));
     CheckValues(val4, { 1., 1., 1., 1. });
 
     val4[1] = 2.1234567;
-    OIIO_CHECK_NO_THROW(exp->setValue(val4));
+    OCIO_CHECK_NO_THROW(exp->setValue(val4));
     val4[1] = -2.;
-    OIIO_CHECK_NO_THROW(exp->getValue(val4));
+    OCIO_CHECK_NO_THROW(exp->getValue(val4));
     CheckValues(val4, {1., 2.1234567, 1., 1.});
 }
 

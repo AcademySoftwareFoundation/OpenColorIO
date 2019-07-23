@@ -654,7 +654,7 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 #include "UnitTestUtils.h"
 
 OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & fileName)
@@ -663,24 +663,24 @@ OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & fileName)
         fileName, std::ios_base::in);
 }
 
-OIIO_ADD_TEST(FileFormat3DL, FormatInfo)
+OCIO_ADD_TEST(FileFormat3DL, FormatInfo)
 {
     OCIO::FormatInfoVec formatInfoVec;
     OCIO::LocalFileFormat tester;
     tester.GetFormatInfo(formatInfoVec);
 
-    OIIO_CHECK_EQUAL(2, formatInfoVec.size());
-    OIIO_CHECK_EQUAL("flame", formatInfoVec[0].name);
-    OIIO_CHECK_EQUAL("lustre", formatInfoVec[1].name);
-    OIIO_CHECK_EQUAL("3dl", formatInfoVec[0].extension);
-    OIIO_CHECK_EQUAL("3dl", formatInfoVec[1].extension);
-    OIIO_CHECK_EQUAL((OCIO::FORMAT_CAPABILITY_READ
+    OCIO_CHECK_EQUAL(2, formatInfoVec.size());
+    OCIO_CHECK_EQUAL("flame", formatInfoVec[0].name);
+    OCIO_CHECK_EQUAL("lustre", formatInfoVec[1].name);
+    OCIO_CHECK_EQUAL("3dl", formatInfoVec[0].extension);
+    OCIO_CHECK_EQUAL("3dl", formatInfoVec[1].extension);
+    OCIO_CHECK_EQUAL((OCIO::FORMAT_CAPABILITY_READ
         | OCIO::FORMAT_CAPABILITY_WRITE), formatInfoVec[0].capabilities);
-    OIIO_CHECK_EQUAL((OCIO::FORMAT_CAPABILITY_READ
+    OCIO_CHECK_EQUAL((OCIO::FORMAT_CAPABILITY_READ
         | OCIO::FORMAT_CAPABILITY_WRITE), formatInfoVec[1].capabilities);
 }
 
-OIIO_ADD_TEST(FileFormat3DL, Bake)
+OCIO_ADD_TEST(FileFormat3DL, Bake)
 {
 
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
@@ -740,19 +740,19 @@ OIIO_ADD_TEST(FileFormat3DL, Bake)
 
     std::vector<std::string> resvec;
     OCIO::pystring::splitlines(bout.str(), resvec);
-    OIIO_CHECK_EQUAL(resvec.size(), osvecLustre.size());
-    OIIO_CHECK_EQUAL(resvec.size() - 4, osvecFlame.size());
+    OCIO_CHECK_EQUAL(resvec.size(), osvecLustre.size());
+    OCIO_CHECK_EQUAL(resvec.size() - 4, osvecFlame.size());
 
-    OIIO_CHECK_EQUAL(resvec[0], osvecLustre[0]);
-    OIIO_CHECK_EQUAL(resvec[1], osvecLustre[1]);
+    OCIO_CHECK_EQUAL(resvec[0], osvecLustre[0]);
+    OCIO_CHECK_EQUAL(resvec[1], osvecLustre[1]);
     for (unsigned int i = 0; i < osvecFlame.size(); ++i)
     {
-        OIIO_CHECK_EQUAL(resvec[i+2], osvecFlame[i]);
-        OIIO_CHECK_EQUAL(resvec[i+2], osvecLustre[i+2]);
+        OCIO_CHECK_EQUAL(resvec[i+2], osvecFlame[i]);
+        OCIO_CHECK_EQUAL(resvec[i+2], osvecLustre[i+2]);
     }
     size_t last = resvec.size() - 2;
-    OIIO_CHECK_EQUAL(resvec[last], osvecLustre[last]);
-    OIIO_CHECK_EQUAL(resvec[last+1], osvecLustre[last+1]);
+    OCIO_CHECK_EQUAL(resvec[last], osvecLustre[last]);
+    OCIO_CHECK_EQUAL(resvec[last+1], osvecLustre[last+1]);
 
 
 }
@@ -764,69 +764,69 @@ OIIO_ADD_TEST(FileFormat3DL, Bake)
 // 14-bit    16383           [8192, 32767]
 // 16-bit    65535           [32768, 131071]
 
-OIIO_ADD_TEST(FileFormat3DL, GetLikelyLutBitDepth)
+OCIO_ADD_TEST(FileFormat3DL, GetLikelyLutBitDepth)
 {
-    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(-1), -1);
+    OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(-1), -1);
     
-    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(0), 8);
-    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(1), 8);
-    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(255), 8);
-    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(256), 8);
-    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(511), 8);
+    OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(0), 8);
+    OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(1), 8);
+    OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(255), 8);
+    OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(256), 8);
+    OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(511), 8);
     
-    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(512), 10);
-    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(1023), 10);
-    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(1024), 10);
-    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(2047), 10);
+    OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(512), 10);
+    OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(1023), 10);
+    OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(1024), 10);
+    OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(2047), 10);
     
-    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(2048), 12);
-    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(4095), 12);
-    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(4096), 12);
-    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(8191), 12);
+    OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(2048), 12);
+    OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(4095), 12);
+    OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(4096), 12);
+    OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(8191), 12);
     
-    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(16383), 14);
+    OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(16383), 14);
     
-    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(65535), 16);
-    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(65536), 16);
-    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(131071), 16);
+    OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(65535), 16);
+    OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(65536), 16);
+    OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(131071), 16);
     
-    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(131072), 16);
+    OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(131072), 16);
 }
 
 
-OIIO_ADD_TEST(FileFormat3DL, TestLoad)
+OCIO_ADD_TEST(FileFormat3DL, TestLoad)
 {
     // Discreet 3D LUT file
     const std::string discree3DtLut("discreet-3d-lut.3dl");
 
     OCIO::LocalCachedFileRcPtr lutFile;
-    OIIO_CHECK_NO_THROW(lutFile = LoadLutFile(discree3DtLut));
+    OCIO_CHECK_NO_THROW(lutFile = LoadLutFile(discree3DtLut));
 
-    OIIO_CHECK_ASSERT(lutFile->has1D);
-    OIIO_CHECK_ASSERT(lutFile->has3D);
-    OIIO_CHECK_EQUAL(OCIO::Lut1D::ERROR_ABSOLUTE, lutFile->lut1D->errortype);
-    OIIO_CHECK_EQUAL(0.00195503421f, lutFile->lut1D->maxerror);
-    OIIO_CHECK_EQUAL(0.0f, lutFile->lut1D->from_min[1]);
-    OIIO_CHECK_EQUAL(1.0f, lutFile->lut1D->from_max[1]);
-    OIIO_CHECK_EQUAL(17, lutFile->lut1D->luts[0].size());
-    OIIO_CHECK_EQUAL(0.0f, lutFile->lut1D->luts[0][0]);
-    OIIO_CHECK_EQUAL(0.563049853f, lutFile->lut1D->luts[0][9]);
-    OIIO_CHECK_EQUAL(1.0f, lutFile->lut1D->luts[0][16]);
-    OIIO_CHECK_EQUAL(17, lutFile->lut3D->size[0]);
-    OIIO_CHECK_EQUAL(17, lutFile->lut3D->size[1]);
-    OIIO_CHECK_EQUAL(17, lutFile->lut3D->size[2]);
-    OIIO_CHECK_EQUAL(17*17*17*3, lutFile->lut3D->lut.size());
+    OCIO_CHECK_ASSERT(lutFile->has1D);
+    OCIO_CHECK_ASSERT(lutFile->has3D);
+    OCIO_CHECK_EQUAL(OCIO::Lut1D::ERROR_ABSOLUTE, lutFile->lut1D->errortype);
+    OCIO_CHECK_EQUAL(0.00195503421f, lutFile->lut1D->maxerror);
+    OCIO_CHECK_EQUAL(0.0f, lutFile->lut1D->from_min[1]);
+    OCIO_CHECK_EQUAL(1.0f, lutFile->lut1D->from_max[1]);
+    OCIO_CHECK_EQUAL(17, lutFile->lut1D->luts[0].size());
+    OCIO_CHECK_EQUAL(0.0f, lutFile->lut1D->luts[0][0]);
+    OCIO_CHECK_EQUAL(0.563049853f, lutFile->lut1D->luts[0][9]);
+    OCIO_CHECK_EQUAL(1.0f, lutFile->lut1D->luts[0][16]);
+    OCIO_CHECK_EQUAL(17, lutFile->lut3D->size[0]);
+    OCIO_CHECK_EQUAL(17, lutFile->lut3D->size[1]);
+    OCIO_CHECK_EQUAL(17, lutFile->lut3D->size[2]);
+    OCIO_CHECK_EQUAL(17*17*17*3, lutFile->lut3D->lut.size());
     // LUT is R fast, file is B fast ([3..5] is [867..869] in file)
-    OIIO_CHECK_EQUAL(0.00854700897f, lutFile->lut3D->lut[3]);
-    OIIO_CHECK_EQUAL(0.00244200253f, lutFile->lut3D->lut[4]);
-    OIIO_CHECK_EQUAL(0.00708180759f, lutFile->lut3D->lut[5]);
-    OIIO_CHECK_EQUAL(0.0f, lutFile->lut3D->lut[4335]);
-    OIIO_CHECK_EQUAL(0.0368742384f, lutFile->lut3D->lut[4336]);
-    OIIO_CHECK_EQUAL(0.0705738738f, lutFile->lut3D->lut[4337]);
+    OCIO_CHECK_EQUAL(0.00854700897f, lutFile->lut3D->lut[3]);
+    OCIO_CHECK_EQUAL(0.00244200253f, lutFile->lut3D->lut[4]);
+    OCIO_CHECK_EQUAL(0.00708180759f, lutFile->lut3D->lut[5]);
+    OCIO_CHECK_EQUAL(0.0f, lutFile->lut3D->lut[4335]);
+    OCIO_CHECK_EQUAL(0.0368742384f, lutFile->lut3D->lut[4336]);
+    OCIO_CHECK_EQUAL(0.0705738738f, lutFile->lut3D->lut[4337]);
 
     const std::string discree3DtLutFail("error_truncated_file.3dl");
 
-    OIIO_CHECK_THROW_WHAT(LoadLutFile(discree3DtLutFail),
+    OCIO_CHECK_THROW_WHAT(LoadLutFile(discree3DtLutFail),
                           OCIO::Exception,
                           "Cannot infer 3D LUT size");
 

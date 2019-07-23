@@ -602,7 +602,7 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #include "ops/Lut1D/Lut1DOp.h"
 #include "ops/Lut1D/Lut1DOpData.h"
-#include "unittest.h"
+#include "UnitTest.h"
 #include "UnitTestUtils.h"
 
 
@@ -645,7 +645,8 @@ OCIO::ConstCPUProcessorRcPtr ComputeValues(OCIO::ConstProcessorRcPtr processor,
     typedef typename OCIO::BitDepthInfo<outBD>::Type outType;
 
     OCIO::ConstCPUProcessorRcPtr cpuProcessor;
-    OIIO_CHECK_NO_THROW(cpuProcessor 
+
+    OCIO_CHECK_NO_THROW(cpuProcessor 
         = processor->getOptimizedCPUProcessor(inBD, outBD, 
                                               OCIO::OPTIMIZATION_DEFAULT,
                                               OCIO::FINALIZATION_DEFAULT));
@@ -678,18 +679,18 @@ OCIO::ConstCPUProcessorRcPtr ComputeValues(OCIO::ConstProcessorRcPtr processor,
     {
         if(OCIO::BitDepthInfo<outBD>::isFloat)
         {
-            OIIO_CHECK_CLOSE_FROM(out[idx], res[idx], absErrorThreshold, line);
+            OCIO_CHECK_CLOSE_FROM(out[idx], res[idx], absErrorThreshold, line);
         }
         else
         {
-            OIIO_CHECK_EQUAL_FROM(out[idx], res[idx], line);
+            OCIO_CHECK_EQUAL_FROM(out[idx], res[idx], line);
         }
     }
 
     return cpuProcessor;
 }
 
-OIIO_ADD_TEST(CPUProcessor, with_one_matrix)
+OCIO_ADD_TEST(CPUProcessor, with_one_matrix)
 {
     // The unit test validates that pixel formats are correctly 
     // processed when the op list contains only one arbitrary Op
@@ -702,7 +703,7 @@ OIIO_ADD_TEST(CPUProcessor, with_one_matrix)
     transform->setOffset( offset4 );
 
     OCIO::ConstProcessorRcPtr processor; 
-    OIIO_CHECK_NO_THROW(processor = config->getProcessor(transform));
+    OCIO_CHECK_NO_THROW(processor = config->getProcessor(transform));
 
     const unsigned NB_PIXELS = 3;
 
@@ -974,7 +975,7 @@ OIIO_ADD_TEST(CPUProcessor, with_one_matrix)
     }
 }
 
-OIIO_ADD_TEST(CPUProcessor, with_one_1d_lut)
+OCIO_ADD_TEST(CPUProcessor, with_one_1d_lut)
 {
     // The unit test validates that pixel formats are correctly 
     // processed when the op list only contains one 1D LUT because it 
@@ -991,7 +992,7 @@ OIIO_ADD_TEST(CPUProcessor, with_one_1d_lut)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
 
     OCIO::ConstProcessorRcPtr processor; 
-    OIIO_CHECK_NO_THROW(processor = config->getProcessor(transform));
+    OCIO_CHECK_NO_THROW(processor = config->getProcessor(transform));
 
     const unsigned NB_PIXELS = 4;
 
@@ -1141,7 +1142,7 @@ OIIO_ADD_TEST(CPUProcessor, with_one_1d_lut)
     }
 }
 
-OIIO_ADD_TEST(CPUProcessor, with_several_ops)
+OCIO_ADD_TEST(CPUProcessor, with_several_ops)
 {
     // The unit test validates that pixel formats are correctly 
     // processed when the op list starts or ends with a 1D LUT because it 
@@ -1186,11 +1187,11 @@ OIIO_ADD_TEST(CPUProcessor, with_several_ops)
         is.str(str);
 
         OCIO::ConstConfigRcPtr config;
-        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OIIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         OCIO::ConstProcessorRcPtr processor; 
-        OIIO_CHECK_NO_THROW(processor = config->getProcessor("cs1", "cs2"));
+        OCIO_CHECK_NO_THROW(processor = config->getProcessor("cs1", "cs2"));
 
         const unsigned NB_PIXELS = 4;
 
@@ -1320,11 +1321,11 @@ OIIO_ADD_TEST(CPUProcessor, with_several_ops)
         is.str(str);
 
         OCIO::ConstConfigRcPtr config;
-        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OIIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         OCIO::ConstProcessorRcPtr processor; 
-        OIIO_CHECK_NO_THROW(processor = config->getProcessor("cs1", "cs2"));
+        OCIO_CHECK_NO_THROW(processor = config->getProcessor("cs1", "cs2"));
 
         const unsigned NB_PIXELS = 4;
 
@@ -1413,11 +1414,11 @@ OIIO_ADD_TEST(CPUProcessor, with_several_ops)
         is.str(str);
 
         OCIO::ConstConfigRcPtr config;
-        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OIIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         OCIO::ConstProcessorRcPtr processor; 
-        OIIO_CHECK_NO_THROW(processor = config->getProcessor("cs1", "cs2"));
+        OCIO_CHECK_NO_THROW(processor = config->getProcessor("cs1", "cs2"));
 
         const unsigned NB_PIXELS = 4;
 

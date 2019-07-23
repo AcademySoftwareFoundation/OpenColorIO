@@ -228,34 +228,34 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #include "MathUtils.h"
 #include "pystring/pystring.h"
-#include "unittest.h"
+#include "UnitTest.h"
 
 
-OIIO_ADD_TEST(FixedFunctionOps, basic)
+OCIO_ADD_TEST(FixedFunctionOps, basic)
 {
     OCIO::OpRcPtrVec ops;
     OCIO::FixedFunctionOpData::Params params;
 
-    OIIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, params, 
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, params, 
                                                     OCIO::FixedFunctionOpData::ACES_RED_MOD_10_FWD));
 
-    OIIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO::ConstFixedFunctionOpRcPtr func
         = OCIO::DynamicPtrCast<OCIO::FixedFunctionOp>(ops[0]);
 
-    OIIO_REQUIRE_EQUAL(func->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OIIO_REQUIRE_EQUAL(func->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_REQUIRE_EQUAL(func->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_REQUIRE_EQUAL(func->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
-    OIIO_CHECK_ASSERT(!func->isNoOp());
-    OIIO_CHECK_ASSERT(!func->isIdentity());
+    OCIO_CHECK_ASSERT(!func->isNoOp());
+    OCIO_CHECK_ASSERT(!func->isIdentity());
 
     OCIO::ConstFixedFunctionOpDataRcPtr funcData 
         = OCIO::DynamicPtrCast<const OCIO::FixedFunctionOpData>(func->data());
-    OIIO_REQUIRE_EQUAL(funcData->getStyle(), OCIO::FixedFunctionOpData::ACES_RED_MOD_10_FWD);
-    OIIO_REQUIRE_ASSERT(funcData->getParams() == params);
+    OCIO_REQUIRE_EQUAL(funcData->getStyle(), OCIO::FixedFunctionOpData::ACES_RED_MOD_10_FWD);
+    OCIO_REQUIRE_ASSERT(funcData->getParams() == params);
 }
 
-OIIO_ADD_TEST(FixedFunctionOps, glow03_cpu_engine)
+OCIO_ADD_TEST(FixedFunctionOps, glow03_cpu_engine)
 {
     // Validate that the right CPU OP is created.
 
@@ -267,15 +267,15 @@ OIIO_ADD_TEST(FixedFunctionOps, glow03_cpu_engine)
                                                 data, style);
 
     OCIO::FixedFunctionOp func(funcData);
-    OIIO_CHECK_NO_THROW(func.finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(func.finalize(OCIO::FINALIZATION_EXACT));
 
     OCIO::ConstOpCPURcPtr cpuOp = func.getCPUOp();
     const OCIO::OpCPU & c = *cpuOp;
     const std::string typeName(typeid(c).name());
-    OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "Renderer_ACES_Glow03_Fwd"));
+    OCIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "Renderer_ACES_Glow03_Fwd"));
 }
 
-OIIO_ADD_TEST(FixedFunctionOps, darktodim10_cpu_engine)
+OCIO_ADD_TEST(FixedFunctionOps, darktodim10_cpu_engine)
 {
     // Validate that the right CPU OP is created.
 
@@ -287,121 +287,121 @@ OIIO_ADD_TEST(FixedFunctionOps, darktodim10_cpu_engine)
                                                       data, style);
 
     OCIO::FixedFunctionOp func(funcData);
-    OIIO_CHECK_NO_THROW(func.finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(func.finalize(OCIO::FINALIZATION_EXACT));
 
     OCIO::ConstOpCPURcPtr cpuOp = func.getCPUOp();
     const OCIO::OpCPU & c = *cpuOp;
     const std::string typeName(typeid(c).name());
-    OIIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "Renderer_ACES_DarkToDim10_Fwd"));
+    OCIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "Renderer_ACES_DarkToDim10_Fwd"));
 }
 
-OIIO_ADD_TEST(FixedFunctionOps, aces_red_mod_inv)
+OCIO_ADD_TEST(FixedFunctionOps, aces_red_mod_inv)
 {
     OCIO::OpRcPtrVec ops;
 
-    OIIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, 
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, 
                                                     OCIO::FixedFunctionOpData::ACES_RED_MOD_03_INV));
 
-    OIIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, 
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, 
                                                     OCIO::FixedFunctionOpData::ACES_RED_MOD_03_FWD));
 
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO::ConstOpRcPtr op1 = ops[1];
 
-    OIIO_CHECK_ASSERT(!op0->isIdentity());
-    OIIO_CHECK_ASSERT(!op1->isIdentity());
+    OCIO_CHECK_ASSERT(!op0->isIdentity());
+    OCIO_CHECK_ASSERT(!op1->isIdentity());
 
-    OIIO_CHECK_ASSERT(op0->isSameType(op1));
-    OIIO_CHECK_ASSERT(op0->isInverse(op1));
-    OIIO_CHECK_ASSERT(op1->isInverse(op0));
+    OCIO_CHECK_ASSERT(op0->isSameType(op1));
+    OCIO_CHECK_ASSERT(op0->isInverse(op1));
+    OCIO_CHECK_ASSERT(op1->isInverse(op0));
 }
 
-OIIO_ADD_TEST(FixedFunctionOps, aces_glow_inv)
+OCIO_ADD_TEST(FixedFunctionOps, aces_glow_inv)
 {
     OCIO::OpRcPtrVec ops;
 
-    OIIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, 
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, 
                                                     OCIO::FixedFunctionOpData::ACES_GLOW_03_INV));
 
-    OIIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, 
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, 
                                                     OCIO::FixedFunctionOpData::ACES_GLOW_03_FWD));
 
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO::ConstOpRcPtr op1 = ops[1];
 
-    OIIO_CHECK_ASSERT(!op0->isIdentity());
-    OIIO_CHECK_ASSERT(!op1->isIdentity());
+    OCIO_CHECK_ASSERT(!op0->isIdentity());
+    OCIO_CHECK_ASSERT(!op1->isIdentity());
 
-    OIIO_CHECK_ASSERT(op0->isSameType(op1));
-    OIIO_CHECK_ASSERT(op0->isInverse(op1));
-    OIIO_CHECK_ASSERT(op1->isInverse(op0));
+    OCIO_CHECK_ASSERT(op0->isSameType(op1));
+    OCIO_CHECK_ASSERT(op0->isInverse(op1));
+    OCIO_CHECK_ASSERT(op1->isInverse(op0));
 }
 
-OIIO_ADD_TEST(FixedFunctionOps, aces_darktodim10_inv)
+OCIO_ADD_TEST(FixedFunctionOps, aces_darktodim10_inv)
 {
     OCIO::OpRcPtrVec ops;
 
-    OIIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, 
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, 
                                                     OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV));
 
-    OIIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, 
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, 
                                                     OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD));
 
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO::ConstOpRcPtr op1 = ops[1];
 
-    OIIO_CHECK_ASSERT(!op0->isIdentity());
-    OIIO_CHECK_ASSERT(!op1->isIdentity());
+    OCIO_CHECK_ASSERT(!op0->isIdentity());
+    OCIO_CHECK_ASSERT(!op1->isIdentity());
 
-    OIIO_CHECK_ASSERT(op0->isSameType(op1));
-    OIIO_CHECK_ASSERT(op0->isInverse(op1));
-    OIIO_CHECK_ASSERT(op1->isInverse(op0));
+    OCIO_CHECK_ASSERT(op0->isSameType(op1));
+    OCIO_CHECK_ASSERT(op0->isInverse(op1));
+    OCIO_CHECK_ASSERT(op1->isInverse(op0));
 }
 
-OIIO_ADD_TEST(FixedFunctionOps, rec2100_surround_inv)
+OCIO_ADD_TEST(FixedFunctionOps, rec2100_surround_inv)
 {
     OCIO::OpRcPtrVec ops;
 
-    OIIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, { 2. }, 
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, { 2. }, 
                                                     OCIO::FixedFunctionOpData::REC2100_SURROUND));
 
-    OIIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, { 1. / 2. }, 
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, { 1. / 2. }, 
                                                     OCIO::FixedFunctionOpData::REC2100_SURROUND));
 
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
     {
         OCIO::ConstOpRcPtr op0 = ops[0];
         OCIO::ConstOpRcPtr op1 = ops[1];
 
-        OIIO_CHECK_ASSERT(!op0->isIdentity());
-        OIIO_CHECK_ASSERT(!op1->isIdentity());
+        OCIO_CHECK_ASSERT(!op0->isIdentity());
+        OCIO_CHECK_ASSERT(!op1->isIdentity());
 
-        OIIO_CHECK_ASSERT(op0->isSameType(op1));
-        OIIO_CHECK_ASSERT(op0->isInverse(op1));
-        OIIO_CHECK_ASSERT(op1->isInverse(op0));
+        OCIO_CHECK_ASSERT(op0->isSameType(op1));
+        OCIO_CHECK_ASSERT(op0->isInverse(op1));
+        OCIO_CHECK_ASSERT(op1->isInverse(op0));
     }
-    OIIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, { 2.01 }, 
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, { 2.01 }, 
                                                     OCIO::FixedFunctionOpData::REC2100_SURROUND));
 
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
-    OIIO_REQUIRE_EQUAL(ops.size(), 3);
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_REQUIRE_EQUAL(ops.size(), 3);
     {
         OCIO::ConstOpRcPtr op0 = ops[0];
         OCIO::ConstOpRcPtr op1 = ops[1];
         OCIO::ConstOpRcPtr op2 = ops[2];
 
-        OIIO_CHECK_ASSERT(!op0->isInverse(op2));
-        OIIO_CHECK_ASSERT(!op1->isInverse(op2));
+        OCIO_CHECK_ASSERT(!op0->isInverse(op2));
+        OCIO_CHECK_ASSERT(!op1->isInverse(op2));
     }
 }
 

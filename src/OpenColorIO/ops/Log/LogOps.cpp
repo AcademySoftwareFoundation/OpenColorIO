@@ -200,9 +200,9 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(LogOps, lin_to_log)
+OCIO_ADD_TEST(LogOps, lin_to_log)
 {
     const double base = 10.0;
     const double logSlope[3] = { 0.18, 0.18, 0.18 };
@@ -223,26 +223,26 @@ OIIO_ADD_TEST(LogOps, lin_to_log)
                               1.0f };
     
     OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
+    OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
                                     linSlope, linOffset,
                                     OCIO::TRANSFORM_DIR_FORWARD));
 
     // One operator has been created.
-    OIIO_REQUIRE_EQUAL(ops.size(), 1);
-    OIIO_REQUIRE_ASSERT((bool)ops[0]);
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_REQUIRE_ASSERT((bool)ops[0]);
 
     // No chache ID before operator has been finalized.
     std::string opCache = ops[0]->getCacheID();
-    OIIO_CHECK_EQUAL(opCache.size(), 0);
+    OCIO_CHECK_EQUAL(opCache.size(), 0);
 
-    OIIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
 
     // Validate properties.
     opCache = ops[0]->getCacheID();
-    OIIO_CHECK_NE(opCache.size(), 0);
-    OIIO_CHECK_EQUAL(ops[0]->isNoOp(), false);
-    OIIO_CHECK_EQUAL(ops[0]->hasChannelCrosstalk(), false);
+    OCIO_CHECK_NE(opCache.size(), 0);
+    OCIO_CHECK_EQUAL(ops[0]->isNoOp(), false);
+    OCIO_CHECK_EQUAL(ops[0]->hasChannelCrosstalk(), false);
     
     // Apply the result.
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
@@ -252,11 +252,11 @@ OIIO_ADD_TEST(LogOps, lin_to_log)
     
     for(int i=0; i<8; ++i)
     {
-        OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-3 );
+        OCIO_CHECK_CLOSE( data[i], result[i], 1.0e-3 );
     }
 }
 
-OIIO_ADD_TEST(LogOps, log_to_lin)
+OCIO_ADD_TEST(LogOps, log_to_lin)
 {
     const double base = 10.0;
     const double logSlope[3] = { 0.18, 0.18, 0.18 };
@@ -277,12 +277,12 @@ OIIO_ADD_TEST(LogOps, log_to_lin)
                               10.0f, 100.0f, 1000.0f, 1.0f, };
     
     OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
+    OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
                                     linSlope, linOffset,
                                     OCIO::TRANSFORM_DIR_INVERSE));
     
-    OIIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
     
     // Apply the result.
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
@@ -292,11 +292,11 @@ OIIO_ADD_TEST(LogOps, log_to_lin)
     
     for(int i=0; i<8; ++i)
     {
-        OIIO_CHECK_CLOSE( data[i], result[i], 2.0e-3f );
+        OCIO_CHECK_CLOSE( data[i], result[i], 2.0e-3f );
     }
 }
 
-OIIO_ADD_TEST(LogOps, inverse)
+OCIO_ADD_TEST(LogOps, inverse)
 {
     double base = 10.0;
     const double logSlope[3] = { 0.5, 0.5, 0.5 };
@@ -306,24 +306,24 @@ OIIO_ADD_TEST(LogOps, inverse)
     const double logSlope2[3] = { 0.5, 1.0, 1.5 };
 
     OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
+    OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
                                     OCIO::TRANSFORM_DIR_FORWARD));
     
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
+    OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
                                     OCIO::TRANSFORM_DIR_INVERSE));
     
     base += 1.0;
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
+    OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
                                     OCIO::TRANSFORM_DIR_INVERSE));
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
+    OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
                                     OCIO::TRANSFORM_DIR_FORWARD));
 
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope2, logOffset, linSlope, linOffset,
+    OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope2, logOffset, linSlope, linOffset,
                                     OCIO::TRANSFORM_DIR_INVERSE));
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope2, logOffset, linSlope, linOffset,
+    OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope2, logOffset, linSlope, linOffset,
                                     OCIO::TRANSFORM_DIR_FORWARD));
 
-    OIIO_REQUIRE_EQUAL(ops.size(), 6);
+    OCIO_REQUIRE_EQUAL(ops.size(), 6);
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO::ConstOpRcPtr op1 = ops[1];
     OCIO::ConstOpRcPtr op2 = ops[2];
@@ -331,28 +331,28 @@ OIIO_ADD_TEST(LogOps, inverse)
     OCIO::ConstOpRcPtr op4 = ops[4];
     OCIO::ConstOpRcPtr op5 = ops[5];
 
-    OIIO_CHECK_ASSERT(ops[0]->isSameType(op1));
-    OIIO_CHECK_ASSERT(ops[0]->isSameType(op2));
+    OCIO_CHECK_ASSERT(ops[0]->isSameType(op1));
+    OCIO_CHECK_ASSERT(ops[0]->isSameType(op2));
     OCIO::ConstOpRcPtr op3Cloned = ops[3]->clone();
-    OIIO_CHECK_ASSERT(ops[0]->isSameType(op3Cloned));
+    OCIO_CHECK_ASSERT(ops[0]->isSameType(op3Cloned));
     
-    OIIO_CHECK_EQUAL(ops[0]->isInverse(op0), false);
-    OIIO_CHECK_EQUAL(ops[0]->isInverse(op1), true);
-    OIIO_CHECK_EQUAL(ops[0]->isInverse(op2), false);
-    OIIO_CHECK_EQUAL(ops[0]->isInverse(op3), false);
+    OCIO_CHECK_EQUAL(ops[0]->isInverse(op0), false);
+    OCIO_CHECK_EQUAL(ops[0]->isInverse(op1), true);
+    OCIO_CHECK_EQUAL(ops[0]->isInverse(op2), false);
+    OCIO_CHECK_EQUAL(ops[0]->isInverse(op3), false);
     
-    OIIO_CHECK_EQUAL(ops[1]->isInverse(op0), true);
-    OIIO_CHECK_EQUAL(ops[1]->isInverse(op2), false);
-    OIIO_CHECK_EQUAL(ops[1]->isInverse(op3), false);
+    OCIO_CHECK_EQUAL(ops[1]->isInverse(op0), true);
+    OCIO_CHECK_EQUAL(ops[1]->isInverse(op2), false);
+    OCIO_CHECK_EQUAL(ops[1]->isInverse(op3), false);
     
-    OIIO_CHECK_EQUAL(ops[2]->isInverse(op2), false);
-    OIIO_CHECK_EQUAL(ops[2]->isInverse(op3), true);
+    OCIO_CHECK_EQUAL(ops[2]->isInverse(op2), false);
+    OCIO_CHECK_EQUAL(ops[2]->isInverse(op3), true);
     
-    OIIO_CHECK_EQUAL(ops[3]->isInverse(op3), false);
+    OCIO_CHECK_EQUAL(ops[3]->isInverse(op3), false);
 
     // When r, g & b are not equal, ops are not considered inverse 
     // even though they are.
-    OIIO_CHECK_EQUAL(ops[4]->isInverse(op5), false);
+    OCIO_CHECK_EQUAL(ops[4]->isInverse(op5), false);
 
     const float result[12] = { 0.01f, 0.1f, 1.0f, 1.0f,
                                1.0f, 10.0f, 100.0f, 1.0f,
@@ -367,15 +367,15 @@ OIIO_ADD_TEST(LogOps, inverse)
     ops[0]->finalize(OCIO::FINALIZATION_EXACT);
     ops[0]->apply(data, 3);
     // Note: Skip testing alpha channels.
-    OIIO_CHECK_NE( data[0], result[0] );
-    OIIO_CHECK_NE( data[1], result[1] );
-    OIIO_CHECK_NE( data[2], result[2] );
-    OIIO_CHECK_NE( data[4], result[4] );
-    OIIO_CHECK_NE( data[5], result[5] );
-    OIIO_CHECK_NE( data[6], result[6] );
-    OIIO_CHECK_NE( data[8], result[8] );
-    OIIO_CHECK_NE( data[9], result[9] );
-    OIIO_CHECK_NE( data[10], result[10] );
+    OCIO_CHECK_NE( data[0], result[0] );
+    OCIO_CHECK_NE( data[1], result[1] );
+    OCIO_CHECK_NE( data[2], result[2] );
+    OCIO_CHECK_NE( data[4], result[4] );
+    OCIO_CHECK_NE( data[5], result[5] );
+    OCIO_CHECK_NE( data[6], result[6] );
+    OCIO_CHECK_NE( data[8], result[8] );
+    OCIO_CHECK_NE( data[9], result[9] );
+    OCIO_CHECK_NE( data[10], result[10] );
 
     ops[1]->finalize(OCIO::FINALIZATION_EXACT);
     ops[1]->apply(data, 3);
@@ -388,11 +388,11 @@ OIIO_ADD_TEST(LogOps, inverse)
 
     for(int i=0; i<12; ++i)
     {
-        OIIO_CHECK_CLOSE( data[i], result[i], error);
+        OCIO_CHECK_CLOSE( data[i], result[i], error);
     }
 }
 
-OIIO_ADD_TEST(LogOps, cache_id)
+OCIO_ADD_TEST(LogOps, cache_id)
 {
     const double base = 10.0;
     const double logSlope[3] = { 0.18, 0.18, 0.18 };
@@ -401,35 +401,35 @@ OIIO_ADD_TEST(LogOps, cache_id)
     double logOffset[3] = { 1.0, 1.0, 1.0 };
 
     OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
+    OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
                                     linSlope, linOffset,
                                     OCIO::TRANSFORM_DIR_FORWARD));
     logOffset[0] += 1.0f;
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
+    OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
                                     linSlope, linOffset,
                                     OCIO::TRANSFORM_DIR_FORWARD));
     logOffset[0] -= 1.0f;
-    OIIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
+    OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
                                     linSlope, linOffset,
                                     OCIO::TRANSFORM_DIR_FORWARD));
 
     // 3 operators have been created
-    OIIO_CHECK_EQUAL(ops.size(), 3);
-    OIIO_REQUIRE_ASSERT((bool)ops[0]);
-    OIIO_REQUIRE_ASSERT((bool)ops[1]);
-    OIIO_REQUIRE_ASSERT((bool)ops[2]);
+    OCIO_CHECK_EQUAL(ops.size(), 3);
+    OCIO_REQUIRE_ASSERT((bool)ops[0]);
+    OCIO_REQUIRE_ASSERT((bool)ops[1]);
+    OCIO_REQUIRE_ASSERT((bool)ops[2]);
 
-    OIIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
 
     const std::string opCacheID0 = ops[0]->getCacheID();
     const std::string opCacheID1 = ops[1]->getCacheID();
     const std::string opCacheID2 = ops[2]->getCacheID();
-    OIIO_CHECK_EQUAL(opCacheID0, opCacheID2);
-    OIIO_CHECK_NE(opCacheID0, opCacheID1);
+    OCIO_CHECK_EQUAL(opCacheID0, opCacheID2);
+    OCIO_CHECK_NE(opCacheID0, opCacheID1);
 }
 
-OIIO_ADD_TEST(LogOps, throw_direction)
+OCIO_ADD_TEST(LogOps, throw_direction)
 {
     const double base = 10.0;
     const double logSlope[3] = { 0.18, 0.18, 0.18 };
@@ -438,7 +438,7 @@ OIIO_ADD_TEST(LogOps, throw_direction)
     const double logOffset[3] = { 1.0, 1.0, 1.0 };
 
     OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_THROW_WHAT(
+    OCIO_CHECK_THROW_WHAT(
         CreateLogOp(ops, base, logSlope, logOffset,
                     linSlope, linOffset,
                     OCIO::TRANSFORM_DIR_UNKNOWN),

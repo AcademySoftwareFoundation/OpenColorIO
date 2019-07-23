@@ -236,9 +236,9 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(ExposureContrastOp, create)
+OCIO_ADD_TEST(ExposureContrastOp, create)
 {
     OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_FORWARD;
     OCIO::ExposureContrastOpDataRcPtr data =
@@ -247,21 +247,21 @@ OIIO_ADD_TEST(ExposureContrastOp, create)
 
     // Make it dynamic so that it is not a no op.
     data->getExposureProperty()->makeDynamic();
-    OIIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
-    OIIO_REQUIRE_EQUAL(ops.size(), 1);
-    OIIO_REQUIRE_ASSERT(ops[0]);
-    OIIO_CHECK_EQUAL(ops[0]->getInfo(), "<ExposureContrastOp>");
+    OCIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_REQUIRE_ASSERT(ops[0]);
+    OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<ExposureContrastOp>");
 
     data = data->clone();
     data->getContrastProperty()->makeDynamic();
-    OIIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
-    OIIO_REQUIRE_ASSERT(ops[1]);
+    OCIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_REQUIRE_ASSERT(ops[1]);
     OCIO::ConstOpRcPtr op1 = ops[1];
-    OIIO_CHECK_ASSERT(ops[0]->isSameType(op1));
+    OCIO_CHECK_ASSERT(ops[0]->isSameType(op1));
 }
 
-OIIO_ADD_TEST(ExposureContrastOp, inverse)
+OCIO_ADD_TEST(ExposureContrastOp, inverse)
 {
     OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_FORWARD;
     OCIO::ExposureContrastOpDataRcPtr data =
@@ -271,60 +271,60 @@ OIIO_ADD_TEST(ExposureContrastOp, inverse)
     data->setPivot(0.5);
 
     OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
-    OIIO_REQUIRE_EQUAL(ops.size(), 1);
-    OIIO_REQUIRE_ASSERT(ops[0]);
+    OCIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_REQUIRE_ASSERT(ops[0]);
 
     data = data->clone();
     direction = OCIO::TRANSFORM_DIR_INVERSE;
-    OIIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
-    OIIO_REQUIRE_ASSERT(ops[1]);
+    OCIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_REQUIRE_ASSERT(ops[1]);
 
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO::ConstOpRcPtr op1 = ops[1];
-    OIIO_CHECK_ASSERT(op0->isInverse(op1));
-    OIIO_CHECK_ASSERT(op1->isInverse(op0));
+    OCIO_CHECK_ASSERT(op0->isInverse(op1));
+    OCIO_CHECK_ASSERT(op1->isInverse(op0));
 
     // Create op2 similar to op1 with different exposure.
     data = data->clone();
     data->setExposure(1.3);
-    OIIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
-    OIIO_REQUIRE_EQUAL(ops.size(), 3);
-    OIIO_REQUIRE_ASSERT(ops[2]);
+    OCIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
+    OCIO_REQUIRE_EQUAL(ops.size(), 3);
+    OCIO_REQUIRE_ASSERT(ops[2]);
 
     OCIO::ConstOpRcPtr op2 = ops[2];
     // As exposure from E/C is not dynamic and exposure is different,
     // op1 and op2 are different.
-    OIIO_CHECK_ASSERT(op1 != op2);
-    OIIO_CHECK_ASSERT(!op0->isInverse(op2));
+    OCIO_CHECK_ASSERT(op1 != op2);
+    OCIO_CHECK_ASSERT(!op0->isInverse(op2));
 
     // With dynamic property.
     data = data->clone();
     data->getExposureProperty()->makeDynamic();
     OCIO::DynamicPropertyRcPtr dp3 = data->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE);
-    OIIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
-    OIIO_REQUIRE_EQUAL(ops.size(), 4);
-    OIIO_REQUIRE_ASSERT(ops[3]);
+    OCIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
+    OCIO_REQUIRE_EQUAL(ops.size(), 4);
+    OCIO_REQUIRE_ASSERT(ops[3]);
     OCIO::ConstOpRcPtr op3 = ops[3];
 
     data = data->clone();
     OCIO::DynamicPropertyRcPtr dp4 = data->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE);
 
     direction = OCIO::TRANSFORM_DIR_FORWARD;
-    OIIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
-    OIIO_REQUIRE_EQUAL(ops.size(), 5);
-    OIIO_REQUIRE_ASSERT(ops[4]);
+    OCIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
+    OCIO_REQUIRE_EQUAL(ops.size(), 5);
+    OCIO_REQUIRE_ASSERT(ops[4]);
 
     // Exposure dynamic, same value, opposite direction.
-    OIIO_CHECK_ASSERT(ops[4]->isInverse(op3));
-    OIIO_CHECK_ASSERT(!ops[4]->isInverse(op1));
-    OIIO_CHECK_ASSERT(!ops[4]->isInverse(op0));
+    OCIO_CHECK_ASSERT(ops[4]->isInverse(op3));
+    OCIO_CHECK_ASSERT(!ops[4]->isInverse(op1));
+    OCIO_CHECK_ASSERT(!ops[4]->isInverse(op0));
 
     // Value is not taken into account when dynamic property is enabled.
     dp4->setValue(-1.);
-    OIIO_CHECK_ASSERT(dp3->getDoubleValue() != dp4->getDoubleValue());
-    OIIO_CHECK_ASSERT(ops[4]->isInverse(op3));
+    OCIO_CHECK_ASSERT(dp3->getDoubleValue() != dp4->getDoubleValue());
+    OCIO_CHECK_ASSERT(ops[4]->isInverse(op3));
 }
 
 #endif

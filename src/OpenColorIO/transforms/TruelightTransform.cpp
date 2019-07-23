@@ -284,9 +284,9 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(TruelightTransform, simpletest)
+OCIO_ADD_TEST(TruelightTransform, simpletest)
 {
     
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
@@ -316,26 +316,26 @@ OIIO_ADD_TEST(TruelightTransform, simpletest)
     OCIO::ConstCPUProcessorRcPtr tolog;
     
 #ifdef OCIO_TRUELIGHT_SUPPORT
-    OIIO_CHECK_NO_THROW(tosrgb = config->getProcessor("log", "sRGB")->getDefaultCPUProcessor());
-    OIIO_CHECK_NO_THROW(tolog = config->getProcessor("sRGB", "log")->getDefaultCPUProcessor());
+    OCIO_CHECK_NO_THROW(tosrgb = config->getProcessor("log", "sRGB")->getDefaultCPUProcessor());
+    OCIO_CHECK_NO_THROW(tolog = config->getProcessor("sRGB", "log")->getDefaultCPUProcessor());
 #else
-    OIIO_CHECK_THROW(tosrgb = config->getProcessor("log", "sRGB")->getDefaultCPUProcessor(), OCIO::Exception);
-    OIIO_CHECK_THROW(tolog = config->getProcessor("sRGB", "log")->getDefaultCPUProcessor(), OCIO::Exception);
+    OCIO_CHECK_THROW(tosrgb = config->getProcessor("log", "sRGB")->getDefaultCPUProcessor(), OCIO::Exception);
+    OCIO_CHECK_THROW(tolog = config->getProcessor("sRGB", "log")->getDefaultCPUProcessor(), OCIO::Exception);
 #endif
     
 #ifdef OCIO_TRUELIGHT_SUPPORT
     float input[4] = {0.5f, 0.5f, 0.5f, 0.0f};
     float output[4] = {0.500098f, 0.500317f, 0.501134f, 0.0f};
-    OIIO_CHECK_NO_THROW(tosrgb->apply(input, output, 1));
-    OIIO_CHECK_NO_THROW(tolog->apply(input, output, 1 ));
-    OIIO_CHECK_CLOSE(input[0], output[0], 1e-4);
-    OIIO_CHECK_CLOSE(input[1], output[1], 1e-4);
-    OIIO_CHECK_CLOSE(input[2], output[2], 1e-4);
-    OIIO_CHECK_CLOSE(input[3], output[3], 1e-4);
+    OCIO_CHECK_NO_THROW(tosrgb->apply(input, output, 1));
+    OCIO_CHECK_NO_THROW(tolog->apply(input, output, 1 ));
+    OCIO_CHECK_CLOSE(input[0], output[0], 1e-4);
+    OCIO_CHECK_CLOSE(input[1], output[1], 1e-4);
+    OCIO_CHECK_CLOSE(input[2], output[2], 1e-4);
+    OCIO_CHECK_CLOSE(input[3], output[3], 1e-4);
 #endif
     
     std::ostringstream os;
-    OIIO_CHECK_NO_THROW(config->serialize(os));
+    OCIO_CHECK_NO_THROW(config->serialize(os));
     
     std::string referenceconfig =
     "ocio_profile_version: 1\n"
@@ -377,14 +377,14 @@ OIIO_ADD_TEST(TruelightTransform, simpletest)
     std::vector<std::string> referenceconfigvec;
     OCIO::pystring::splitlines(referenceconfig, referenceconfigvec);
     
-    OIIO_CHECK_EQUAL(osvec.size(), referenceconfigvec.size());
+    OCIO_CHECK_EQUAL(osvec.size(), referenceconfigvec.size());
     for(unsigned int i = 0; i < referenceconfigvec.size(); ++i)
-        OIIO_CHECK_EQUAL(osvec[i], referenceconfigvec[i]);
+        OCIO_CHECK_EQUAL(osvec[i], referenceconfigvec[i]);
     
     std::istringstream is;
     is.str(referenceconfig);
     OCIO::ConstConfigRcPtr rtconfig;
-    OIIO_CHECK_NO_THROW(rtconfig = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(rtconfig = OCIO::Config::CreateFromStream(is));
     
 }
 

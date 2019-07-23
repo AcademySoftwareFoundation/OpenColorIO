@@ -164,122 +164,122 @@ OCIO_NAMESPACE_EXIT
 
 OCIO_NAMESPACE_USING
 
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(LookParse, Parse)
+OCIO_ADD_TEST(LookParse, Parse)
 {
     LookParseResult r;
     
     {
     const LookParseResult::Options & options = r.parse("");
-    OIIO_CHECK_EQUAL(options.size(), 0);
-    OIIO_CHECK_EQUAL(options.empty(), true);
+    OCIO_CHECK_EQUAL(options.size(), 0);
+    OCIO_CHECK_EQUAL(options.empty(), true);
     }
     
     {
     const LookParseResult::Options & options = r.parse("  ");
-    OIIO_CHECK_EQUAL(options.size(), 0);
-    OIIO_CHECK_EQUAL(options.empty(), true);
+    OCIO_CHECK_EQUAL(options.size(), 0);
+    OCIO_CHECK_EQUAL(options.empty(), true);
     }
     
     {
     const LookParseResult::Options & options = r.parse("cc");
-    OIIO_CHECK_EQUAL(options.size(), 1);
-    OIIO_CHECK_EQUAL(options[0][0].name, "cc");
-    OIIO_CHECK_EQUAL(options[0][0].dir, TRANSFORM_DIR_FORWARD);
-    OIIO_CHECK_EQUAL(options.empty(), false);
+    OCIO_CHECK_EQUAL(options.size(), 1);
+    OCIO_CHECK_EQUAL(options[0][0].name, "cc");
+    OCIO_CHECK_EQUAL(options[0][0].dir, TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(options.empty(), false);
     }
     
     {
     const LookParseResult::Options & options = r.parse("+cc");
-    OIIO_CHECK_EQUAL(options.size(), 1);
-    OIIO_CHECK_EQUAL(options[0][0].name, "cc");
-    OIIO_CHECK_EQUAL(options[0][0].dir, TRANSFORM_DIR_FORWARD);
-    OIIO_CHECK_EQUAL(options.empty(), false);
+    OCIO_CHECK_EQUAL(options.size(), 1);
+    OCIO_CHECK_EQUAL(options[0][0].name, "cc");
+    OCIO_CHECK_EQUAL(options[0][0].dir, TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(options.empty(), false);
     }
     
     {
     const LookParseResult::Options & options = r.parse("  +cc");
-    OIIO_CHECK_EQUAL(options.size(), 1);
-    OIIO_CHECK_EQUAL(options[0][0].name, "cc");
-    OIIO_CHECK_EQUAL(options[0][0].dir, TRANSFORM_DIR_FORWARD);
-    OIIO_CHECK_EQUAL(options.empty(), false);
+    OCIO_CHECK_EQUAL(options.size(), 1);
+    OCIO_CHECK_EQUAL(options[0][0].name, "cc");
+    OCIO_CHECK_EQUAL(options[0][0].dir, TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(options.empty(), false);
     }
     
     {
     const LookParseResult::Options & options = r.parse("  +cc   ");
-    OIIO_CHECK_EQUAL(options.size(), 1);
-    OIIO_CHECK_EQUAL(options[0][0].name, "cc");
-    OIIO_CHECK_EQUAL(options[0][0].dir, TRANSFORM_DIR_FORWARD);
-    OIIO_CHECK_EQUAL(options.empty(), false);
+    OCIO_CHECK_EQUAL(options.size(), 1);
+    OCIO_CHECK_EQUAL(options[0][0].name, "cc");
+    OCIO_CHECK_EQUAL(options[0][0].dir, TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(options.empty(), false);
     }
     
     {
     const LookParseResult::Options & options = r.parse("+cc,-di");
-    OIIO_CHECK_EQUAL(options.size(), 1);
-    OIIO_CHECK_EQUAL(options[0].size(), 2);
-    OIIO_CHECK_EQUAL(options[0][0].name, "cc");
-    OIIO_CHECK_EQUAL(options[0][0].dir, TRANSFORM_DIR_FORWARD);
-    OIIO_CHECK_EQUAL(options[0][1].name, "di");
-    OIIO_CHECK_EQUAL(options[0][1].dir, TRANSFORM_DIR_INVERSE);
-    OIIO_CHECK_EQUAL(options.empty(), false);
+    OCIO_CHECK_EQUAL(options.size(), 1);
+    OCIO_CHECK_EQUAL(options[0].size(), 2);
+    OCIO_CHECK_EQUAL(options[0][0].name, "cc");
+    OCIO_CHECK_EQUAL(options[0][0].dir, TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(options[0][1].name, "di");
+    OCIO_CHECK_EQUAL(options[0][1].dir, TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_EQUAL(options.empty(), false);
     }
     
     {
     const LookParseResult::Options & options = r.parse("  +cc ,  -di");
-    OIIO_CHECK_EQUAL(options.size(), 1);
-    OIIO_CHECK_EQUAL(options[0].size(), 2);
-    OIIO_CHECK_EQUAL(options[0][0].name, "cc");
-    OIIO_CHECK_EQUAL(options[0][0].dir, TRANSFORM_DIR_FORWARD);
-    OIIO_CHECK_EQUAL(options[0][1].name, "di");
-    OIIO_CHECK_EQUAL(options[0][1].dir, TRANSFORM_DIR_INVERSE);
-    OIIO_CHECK_EQUAL(options.empty(), false);
+    OCIO_CHECK_EQUAL(options.size(), 1);
+    OCIO_CHECK_EQUAL(options[0].size(), 2);
+    OCIO_CHECK_EQUAL(options[0][0].name, "cc");
+    OCIO_CHECK_EQUAL(options[0][0].dir, TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(options[0][1].name, "di");
+    OCIO_CHECK_EQUAL(options[0][1].dir, TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_EQUAL(options.empty(), false);
     }
     
     {
     const LookParseResult::Options & options = r.parse("  +cc :  -di");
-    OIIO_CHECK_EQUAL(options.size(), 1);
-    OIIO_CHECK_EQUAL(options[0].size(), 2);
-    OIIO_CHECK_EQUAL(options[0][0].name, "cc");
-    OIIO_CHECK_EQUAL(options[0][0].dir, TRANSFORM_DIR_FORWARD);
-    OIIO_CHECK_EQUAL(options[0][1].name, "di");
-    OIIO_CHECK_EQUAL(options[0][1].dir, TRANSFORM_DIR_INVERSE);
-    OIIO_CHECK_EQUAL(options.empty(), false);
+    OCIO_CHECK_EQUAL(options.size(), 1);
+    OCIO_CHECK_EQUAL(options[0].size(), 2);
+    OCIO_CHECK_EQUAL(options[0][0].name, "cc");
+    OCIO_CHECK_EQUAL(options[0][0].dir, TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(options[0][1].name, "di");
+    OCIO_CHECK_EQUAL(options[0][1].dir, TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_EQUAL(options.empty(), false);
     }
     
     {
     const LookParseResult::Options & options = r.parse("+cc, -di |-cc");
-    OIIO_CHECK_EQUAL(options.size(), 2);
-    OIIO_CHECK_EQUAL(options[0].size(), 2);
-    OIIO_CHECK_EQUAL(options[0][0].name, "cc");
-    OIIO_CHECK_EQUAL(options[0][0].dir, TRANSFORM_DIR_FORWARD);
-    OIIO_CHECK_EQUAL(options[0][1].name, "di");
-    OIIO_CHECK_EQUAL(options[0][1].dir, TRANSFORM_DIR_INVERSE);
-    OIIO_CHECK_EQUAL(options[1].size(), 1);
-    OIIO_CHECK_EQUAL(options.empty(), false);
-    OIIO_CHECK_EQUAL(options[1][0].name, "cc");
-    OIIO_CHECK_EQUAL(options[1][0].dir, TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_EQUAL(options.size(), 2);
+    OCIO_CHECK_EQUAL(options[0].size(), 2);
+    OCIO_CHECK_EQUAL(options[0][0].name, "cc");
+    OCIO_CHECK_EQUAL(options[0][0].dir, TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(options[0][1].name, "di");
+    OCIO_CHECK_EQUAL(options[0][1].dir, TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_EQUAL(options[1].size(), 1);
+    OCIO_CHECK_EQUAL(options.empty(), false);
+    OCIO_CHECK_EQUAL(options[1][0].name, "cc");
+    OCIO_CHECK_EQUAL(options[1][0].dir, TRANSFORM_DIR_INVERSE);
     }
     
     {
     const LookParseResult::Options & options = r.parse("+cc, -di |-cc|   ");
-    OIIO_CHECK_EQUAL(options.size(), 3);
-    OIIO_CHECK_EQUAL(options[0].size(), 2);
-    OIIO_CHECK_EQUAL(options[0][0].name, "cc");
-    OIIO_CHECK_EQUAL(options[0][0].dir, TRANSFORM_DIR_FORWARD);
-    OIIO_CHECK_EQUAL(options[0][1].name, "di");
-    OIIO_CHECK_EQUAL(options[0][1].dir, TRANSFORM_DIR_INVERSE);
-    OIIO_CHECK_EQUAL(options[1].size(), 1);
-    OIIO_CHECK_EQUAL(options.empty(), false);
-    OIIO_CHECK_EQUAL(options[1][0].name, "cc");
-    OIIO_CHECK_EQUAL(options[1][0].dir, TRANSFORM_DIR_INVERSE);
-    OIIO_CHECK_EQUAL(options[2].size(), 1);
-    OIIO_CHECK_EQUAL(options[2][0].name, "");
-    OIIO_CHECK_EQUAL(options[2][0].dir, TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(options.size(), 3);
+    OCIO_CHECK_EQUAL(options[0].size(), 2);
+    OCIO_CHECK_EQUAL(options[0][0].name, "cc");
+    OCIO_CHECK_EQUAL(options[0][0].dir, TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(options[0][1].name, "di");
+    OCIO_CHECK_EQUAL(options[0][1].dir, TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_EQUAL(options[1].size(), 1);
+    OCIO_CHECK_EQUAL(options.empty(), false);
+    OCIO_CHECK_EQUAL(options[1][0].name, "cc");
+    OCIO_CHECK_EQUAL(options[1][0].dir, TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_EQUAL(options[2].size(), 1);
+    OCIO_CHECK_EQUAL(options[2][0].name, "");
+    OCIO_CHECK_EQUAL(options[2][0].dir, TRANSFORM_DIR_FORWARD);
     }
 }
 
-OIIO_ADD_TEST(LookParse, Reverse)
+OCIO_ADD_TEST(LookParse, Reverse)
 {
     LookParseResult r;
     
@@ -288,19 +288,19 @@ OIIO_ADD_TEST(LookParse, Reverse)
     r.reverse();
     const LookParseResult::Options & options = r.getOptions();
     
-    OIIO_CHECK_EQUAL(options.size(), 3);
-    OIIO_CHECK_EQUAL(options[0].size(), 2);
-    OIIO_CHECK_EQUAL(options[0][1].name, "cc");
-    OIIO_CHECK_EQUAL(options[0][1].dir, TRANSFORM_DIR_INVERSE);
-    OIIO_CHECK_EQUAL(options[0][0].name, "di");
-    OIIO_CHECK_EQUAL(options[0][0].dir, TRANSFORM_DIR_FORWARD);
-    OIIO_CHECK_EQUAL(options[1].size(), 1);
-    OIIO_CHECK_EQUAL(options.empty(), false);
-    OIIO_CHECK_EQUAL(options[1][0].name, "cc");
-    OIIO_CHECK_EQUAL(options[1][0].dir, TRANSFORM_DIR_FORWARD);
-    OIIO_CHECK_EQUAL(options[2].size(), 1);
-    OIIO_CHECK_EQUAL(options[2][0].name, "");
-    OIIO_CHECK_EQUAL(options[2][0].dir, TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_EQUAL(options.size(), 3);
+    OCIO_CHECK_EQUAL(options[0].size(), 2);
+    OCIO_CHECK_EQUAL(options[0][1].name, "cc");
+    OCIO_CHECK_EQUAL(options[0][1].dir, TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_EQUAL(options[0][0].name, "di");
+    OCIO_CHECK_EQUAL(options[0][0].dir, TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(options[1].size(), 1);
+    OCIO_CHECK_EQUAL(options.empty(), false);
+    OCIO_CHECK_EQUAL(options[1][0].name, "cc");
+    OCIO_CHECK_EQUAL(options[1][0].dir, TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(options[2].size(), 1);
+    OCIO_CHECK_EQUAL(options[2][0].name, "");
+    OCIO_CHECK_EQUAL(options[2][0].dir, TRANSFORM_DIR_INVERSE);
     }
 
     
