@@ -606,19 +606,19 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTestUtils.h"
 
 
-OIIO_ADD_TEST(CPUProcessor, flag_composition)
+OCIO_ADD_TEST(CPUProcessor, flag_composition)
 {
     // The test validates the build of a custom optimization flag.
 
     OCIO::OptimizationFlags customFlags = OCIO::OPTIMIZATION_LOSSLESS;
 
-    OIIO_CHECK_EQUAL((customFlags & OCIO::OPTIMIZATION_COMP_LUT1D), 
+    OCIO_CHECK_EQUAL((customFlags & OCIO::OPTIMIZATION_COMP_LUT1D), 
                      OCIO::OPTIMIZATION_NONE);
 
     customFlags
         = OCIO::OptimizationFlags(customFlags | OCIO::OPTIMIZATION_COMP_LUT1D);
 
-    OIIO_CHECK_EQUAL((customFlags & OCIO::OPTIMIZATION_COMP_LUT1D), 
+    OCIO_CHECK_EQUAL((customFlags & OCIO::OPTIMIZATION_COMP_LUT1D), 
                      OCIO::OPTIMIZATION_COMP_LUT1D);
 }
 
@@ -671,7 +671,7 @@ OCIO::ConstCPUProcessorRcPtr ComputeValues(OCIO::ConstProcessorRcPtr processor,
                                      OCIO::AutoStride,
                                      OCIO::AutoStride);
 
-    OIIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
+    OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
 
     const outType * res = reinterpret_cast<const outType*>(resImg);
 
@@ -1464,7 +1464,7 @@ OCIO_ADD_TEST(CPUProcessor, with_several_ops)
     }
 }
 
-OIIO_ADD_TEST(CPUProcessor, image_desc)
+OCIO_ADD_TEST(CPUProcessor, image_desc)
 {
     // The tests validate the image description types when using the same buffer image.
 
@@ -1504,11 +1504,11 @@ OIIO_ADD_TEST(CPUProcessor, image_desc)
     is.str(str);
 
     OCIO::ConstConfigRcPtr config;
-    OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OIIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(config->sanityCheck());
 
     OCIO::ConstProcessorRcPtr processor; 
-    OIIO_CHECK_NO_THROW(processor = config->getProcessor("cs1", "cs2"));
+    OCIO_CHECK_NO_THROW(processor = config->getProcessor("cs1", "cs2"));
 
     const std::vector<float> f_rInImg =
         {  -1.0000f,
@@ -1574,14 +1574,14 @@ OIIO_ADD_TEST(CPUProcessor, image_desc)
                f_rOutImg[3], f_gOutImg[3], f_bOutImg[3], f_aOutImg[3] };
 
         OCIO::ConstCPUProcessorRcPtr cpu; 
-        OIIO_CHECK_NO_THROW(cpu = processor->getDefaultCPUProcessor());
+        OCIO_CHECK_NO_THROW(cpu = processor->getDefaultCPUProcessor());
 
         OCIO::PackedImageDesc desc(&img[0], 2, 2, 4);
-        OIIO_CHECK_NO_THROW(cpu->apply(desc));
+        OCIO_CHECK_NO_THROW(cpu->apply(desc));
 
         for(size_t idx=0; idx<img.size(); ++idx)
         {
-            OIIO_CHECK_CLOSE(img[idx], res[idx], 1e-7f);
+            OCIO_CHECK_CLOSE(img[idx], res[idx], 1e-7f);
         }
     }
 
@@ -1601,14 +1601,14 @@ OIIO_ADD_TEST(CPUProcessor, image_desc)
                f_rOutImg[3], f_gOutImg[3], f_bOutImg[3] };
 
         OCIO::ConstCPUProcessorRcPtr cpu; 
-        OIIO_CHECK_NO_THROW(cpu = processor->getDefaultCPUProcessor());
+        OCIO_CHECK_NO_THROW(cpu = processor->getDefaultCPUProcessor());
 
         OCIO::PackedImageDesc desc(&img[0], 4, 1, 3);
-        OIIO_CHECK_NO_THROW(cpu->apply(desc));
+        OCIO_CHECK_NO_THROW(cpu->apply(desc));
 
         for(size_t idx=0; idx<img.size(); ++idx)
         {
-            OIIO_CHECK_CLOSE(img[idx], res[idx], 1e-7f);
+            OCIO_CHECK_CLOSE(img[idx], res[idx], 1e-7f);
         }
     }
 
@@ -1621,17 +1621,17 @@ OIIO_ADD_TEST(CPUProcessor, image_desc)
         std::vector<float> imgAlpha = f_aInImg;
 
         OCIO::ConstCPUProcessorRcPtr cpu; 
-        OIIO_CHECK_NO_THROW(cpu = processor->getDefaultCPUProcessor());
+        OCIO_CHECK_NO_THROW(cpu = processor->getDefaultCPUProcessor());
 
         OCIO::PlanarImageDesc desc(&imgRed[0], &imgGreen[0], &imgBlue[0], &imgAlpha[0], 2, 2);
-        OIIO_CHECK_NO_THROW(cpu->apply(desc));
+        OCIO_CHECK_NO_THROW(cpu->apply(desc));
 
         for(size_t idx=0; idx<imgRed.size(); ++idx)
         {
-            OIIO_CHECK_CLOSE(imgRed[idx],   f_rOutImg[idx], 1e-7f);
-            OIIO_CHECK_CLOSE(imgGreen[idx], f_gOutImg[idx], 1e-7f);
-            OIIO_CHECK_CLOSE(imgBlue[idx],  f_bOutImg[idx], 1e-7f);
-            OIIO_CHECK_CLOSE(imgAlpha[idx], f_aOutImg[idx], 1e-7f);
+            OCIO_CHECK_CLOSE(imgRed[idx],   f_rOutImg[idx], 1e-7f);
+            OCIO_CHECK_CLOSE(imgGreen[idx], f_gOutImg[idx], 1e-7f);
+            OCIO_CHECK_CLOSE(imgBlue[idx],  f_bOutImg[idx], 1e-7f);
+            OCIO_CHECK_CLOSE(imgAlpha[idx], f_aOutImg[idx], 1e-7f);
         }
     }
 
@@ -1643,16 +1643,16 @@ OIIO_ADD_TEST(CPUProcessor, image_desc)
         std::vector<float> imgBlue  = f_bInImg;
 
         OCIO::ConstCPUProcessorRcPtr cpu; 
-        OIIO_CHECK_NO_THROW(cpu = processor->getDefaultCPUProcessor());
+        OCIO_CHECK_NO_THROW(cpu = processor->getDefaultCPUProcessor());
 
         OCIO::PlanarImageDesc desc(&imgRed[0], &imgGreen[0], &imgBlue[0], nullptr, 1, 4);
-        OIIO_CHECK_NO_THROW(cpu->apply(desc));
+        OCIO_CHECK_NO_THROW(cpu->apply(desc));
 
         for(size_t idx=0; idx<imgRed.size(); ++idx)
         {
-            OIIO_CHECK_CLOSE(imgRed[idx],   f_rOutImg[idx], 1e-7f);
-            OIIO_CHECK_CLOSE(imgGreen[idx], f_gOutImg[idx], 1e-7f);
-            OIIO_CHECK_CLOSE(imgBlue[idx],  f_bOutImg[idx], 1e-7f);
+            OCIO_CHECK_CLOSE(imgRed[idx],   f_rOutImg[idx], 1e-7f);
+            OCIO_CHECK_CLOSE(imgGreen[idx], f_gOutImg[idx], 1e-7f);
+            OCIO_CHECK_CLOSE(imgBlue[idx],  f_bOutImg[idx], 1e-7f);
         }
     }
 }
@@ -1761,15 +1761,15 @@ void Process(const OCIO::ConstCPUProcessorRcPtr & cpuProcessor,
              OCIO::PackedImageDesc & dstImgDesc,
              unsigned lineNo)
 {
-    OIIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
+    OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
 
     const float * outImg = reinterpret_cast<float*>(dstImgDesc.getData());
     for(size_t pxl=0; pxl<NB_PIXELS; ++pxl)
     {
-        OIIO_CHECK_CLOSE_FROM(outImg[4*pxl+0], resImg[4*pxl+0], 1e-7f, lineNo);
-        OIIO_CHECK_CLOSE_FROM(outImg[4*pxl+1], resImg[4*pxl+1], 1e-7f, lineNo);
-        OIIO_CHECK_CLOSE_FROM(outImg[4*pxl+2], resImg[4*pxl+2], 1e-7f, lineNo);
-        OIIO_CHECK_CLOSE_FROM(outImg[4*pxl+3], resImg[4*pxl+3], 1e-7f, lineNo);
+        OCIO_CHECK_CLOSE_FROM(outImg[4*pxl+0], resImg[4*pxl+0], 1e-7f, lineNo);
+        OCIO_CHECK_CLOSE_FROM(outImg[4*pxl+1], resImg[4*pxl+1], 1e-7f, lineNo);
+        OCIO_CHECK_CLOSE_FROM(outImg[4*pxl+2], resImg[4*pxl+2], 1e-7f, lineNo);
+        OCIO_CHECK_CLOSE_FROM(outImg[4*pxl+3], resImg[4*pxl+3], 1e-7f, lineNo);
     }
 }
 
@@ -1778,7 +1778,7 @@ void Process(const OCIO::ConstCPUProcessorRcPtr & cpuProcessor,
              OCIO::PlanarImageDesc & dstImgDesc,
              unsigned lineNo)
 {
-    OIIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
+    OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
 
     const float * outImgR = reinterpret_cast<float*>(dstImgDesc.getRData());
     const float * outImgG = reinterpret_cast<float*>(dstImgDesc.getGData());
@@ -1787,12 +1787,12 @@ void Process(const OCIO::ConstCPUProcessorRcPtr & cpuProcessor,
 
     for(size_t pxl=0; pxl<NB_PIXELS; ++pxl)
     {
-        OIIO_CHECK_CLOSE_FROM(outImgR[pxl], resImg[4*pxl+0], 1e-7f, lineNo);
-        OIIO_CHECK_CLOSE_FROM(outImgG[pxl], resImg[4*pxl+1], 1e-7f, lineNo);
-        OIIO_CHECK_CLOSE_FROM(outImgB[pxl], resImg[4*pxl+2], 1e-7f, lineNo);
+        OCIO_CHECK_CLOSE_FROM(outImgR[pxl], resImg[4*pxl+0], 1e-7f, lineNo);
+        OCIO_CHECK_CLOSE_FROM(outImgG[pxl], resImg[4*pxl+1], 1e-7f, lineNo);
+        OCIO_CHECK_CLOSE_FROM(outImgB[pxl], resImg[4*pxl+2], 1e-7f, lineNo);
         if(outImgA)
         {
-            OIIO_CHECK_CLOSE_FROM(outImgA[pxl], resImg[4*pxl+3], 1e-7f, lineNo);
+            OCIO_CHECK_CLOSE_FROM(outImgA[pxl], resImg[4*pxl+3], 1e-7f, lineNo);
         }
     }
 }
@@ -1800,12 +1800,12 @@ void Process(const OCIO::ConstCPUProcessorRcPtr & cpuProcessor,
 } // anon
 
 
-OIIO_ADD_TEST(CPUProcessor, planar_vs_packed)
+OCIO_ADD_TEST(CPUProcessor, planar_vs_packed)
 {
     // The unit test validates different types for input and output imageDesc.
 
     OCIO::ConstCPUProcessorRcPtr cpuProcessor;
-    OIIO_CHECK_NO_THROW(cpuProcessor = BuildCPUProcessor(OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(cpuProcessor = BuildCPUProcessor(OCIO::TRANSFORM_DIR_FORWARD));
 
     // 1. Process from Packed to Planar Image Desc using the forward transform.
 
@@ -1816,38 +1816,38 @@ OIIO_ADD_TEST(CPUProcessor, planar_vs_packed)
                                      (void*)&outB[0], (void*)&outA[0], 
                                      NB_PIXELS, 1);
 
-    OIIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
+    OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
 
     for(size_t idx=0; idx<NB_PIXELS; ++idx)
     {
-        OIIO_CHECK_CLOSE(outR[idx], resImg[4*idx+0], 1e-7f);
-        OIIO_CHECK_CLOSE(outG[idx], resImg[4*idx+1], 1e-7f);
-        OIIO_CHECK_CLOSE(outB[idx], resImg[4*idx+2], 1e-7f);
-        OIIO_CHECK_CLOSE(outA[idx], resImg[4*idx+3], 1e-7f);
+        OCIO_CHECK_CLOSE(outR[idx], resImg[4*idx+0], 1e-7f);
+        OCIO_CHECK_CLOSE(outG[idx], resImg[4*idx+1], 1e-7f);
+        OCIO_CHECK_CLOSE(outB[idx], resImg[4*idx+2], 1e-7f);
+        OCIO_CHECK_CLOSE(outA[idx], resImg[4*idx+3], 1e-7f);
     }
 
 
     // 2. Process from Planar to Packed Image Desc using the inverse transform.
 
-    OIIO_CHECK_NO_THROW(cpuProcessor = BuildCPUProcessor(OCIO::TRANSFORM_DIR_INVERSE));
+    OCIO_CHECK_NO_THROW(cpuProcessor = BuildCPUProcessor(OCIO::TRANSFORM_DIR_INVERSE));
 
     std::vector<float> outImg(NB_PIXELS*4, -1.0f);
     OCIO::PackedImageDesc dstImgDesc2((void*)&outImg[0], NB_PIXELS, 1, 4);
 
-    OIIO_CHECK_NO_THROW(cpuProcessor->apply(dstImgDesc, dstImgDesc2));
+    OCIO_CHECK_NO_THROW(cpuProcessor->apply(dstImgDesc, dstImgDesc2));
 
     for(size_t idx=0; idx<(NB_PIXELS*4); ++idx)
     {
-        OIIO_CHECK_CLOSE(outImg[idx], inImg[idx], 1e-6f);
+        OCIO_CHECK_CLOSE(outImg[idx], inImg[idx], 1e-6f);
     }
 }
 
-OIIO_ADD_TEST(CPUProcessor, scanline_helper_packed)
+OCIO_ADD_TEST(CPUProcessor, scanline_helper_packed)
 {
     // Test the packed image description.
 
     OCIO::ConstCPUProcessorRcPtr cpuProcessor;
-    OIIO_CHECK_NO_THROW(cpuProcessor = BuildCPUProcessor(OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(cpuProcessor = BuildCPUProcessor(OCIO::TRANSFORM_DIR_FORWARD));
 
     std::vector<float> outImg(NB_PIXELS*4);
 
@@ -1983,12 +1983,12 @@ OIIO_ADD_TEST(CPUProcessor, scanline_helper_packed)
     }
 }
 
-OIIO_ADD_TEST(CPUProcessor, scanline_helper_planar)
+OCIO_ADD_TEST(CPUProcessor, scanline_helper_planar)
 {
     // Test the planar image description.
 
     OCIO::ConstCPUProcessorRcPtr cpuProcessor;
-    OIIO_CHECK_NO_THROW(cpuProcessor = BuildCPUProcessor(OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(cpuProcessor = BuildCPUProcessor(OCIO::TRANSFORM_DIR_FORWARD));
 
     std::vector<float> outImgR(NB_PIXELS);
     std::vector<float> outImgG(NB_PIXELS);
@@ -2110,12 +2110,12 @@ OIIO_ADD_TEST(CPUProcessor, scanline_helper_planar)
     }
 }
 
-OIIO_ADD_TEST(CPUProcessor, scanline_helper_tile)
+OCIO_ADD_TEST(CPUProcessor, scanline_helper_tile)
 {
     // Process tiles.
 
     OCIO::ConstCPUProcessorRcPtr cpuProcessor;
-    OIIO_CHECK_NO_THROW(cpuProcessor = BuildCPUProcessor(OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(cpuProcessor = BuildCPUProcessor(OCIO::TRANSFORM_DIR_FORWARD));
 
     std::vector<float> outImg(NB_PIXELS*4);
 
@@ -2149,14 +2149,14 @@ OIIO_ADD_TEST(CPUProcessor, scanline_helper_tile)
                                          4*sizeof(float),
                                          3*4*sizeof(float));
 
-        OIIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
+        OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
 
         for(size_t pxl=0; pxl<NB_PIXELS; ++pxl)
         {
-            OIIO_CHECK_CLOSE(outImg[4*pxl+0], resImg[4*pxl+0], 1e-7f);
-            OIIO_CHECK_CLOSE(outImg[4*pxl+1], resImg[4*pxl+1], 1e-7f);
-            OIIO_CHECK_CLOSE(outImg[4*pxl+2], resImg[4*pxl+2], 1e-7f);
-            OIIO_CHECK_CLOSE(outImg[4*pxl+3], resImg[4*pxl+3], 1e-7f);
+            OCIO_CHECK_CLOSE(outImg[4*pxl+0], resImg[4*pxl+0], 1e-7f);
+            OCIO_CHECK_CLOSE(outImg[4*pxl+1], resImg[4*pxl+1], 1e-7f);
+            OCIO_CHECK_CLOSE(outImg[4*pxl+2], resImg[4*pxl+2], 1e-7f);
+            OCIO_CHECK_CLOSE(outImg[4*pxl+3], resImg[4*pxl+3], 1e-7f);
         }
     }
 
@@ -2225,14 +2225,14 @@ OIIO_ADD_TEST(CPUProcessor, scanline_helper_tile)
 }
 
 
-OIIO_ADD_TEST(CPUProcessor, custom_scanlines)
+OCIO_ADD_TEST(CPUProcessor, custom_scanlines)
 {
     // Cases testing custom xStrideBytes and yStrideBytes values.
 
     const float magicNumber = 12345.6789f;
 
     OCIO::ConstCPUProcessorRcPtr cpuProcessor;
-    OIIO_CHECK_NO_THROW(cpuProcessor = BuildCPUProcessor(OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(cpuProcessor = BuildCPUProcessor(OCIO::TRANSFORM_DIR_FORWARD));
 
     {
         // Pixels are { RGBA, RGBA, RGBA, x,
@@ -2259,14 +2259,14 @@ OIIO_ADD_TEST(CPUProcessor, custom_scanlines)
         OCIO::PackedImageDesc dstImgDesc(&outImg[0], 
                                          NB_PIXELS, 1, 4);
 
-        OIIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
+        OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
 
         for(size_t pxl=0; pxl<NB_PIXELS; ++pxl)
         {
-            OIIO_CHECK_CLOSE(outImg[4*pxl+0], resImg[4*pxl+0], 1e-7f);
-            OIIO_CHECK_CLOSE(outImg[4*pxl+1], resImg[4*pxl+1], 1e-7f);
-            OIIO_CHECK_CLOSE(outImg[4*pxl+2], resImg[4*pxl+2], 1e-7f);
-            OIIO_CHECK_CLOSE(outImg[4*pxl+3], resImg[4*pxl+3], 1e-7f);
+            OCIO_CHECK_CLOSE(outImg[4*pxl+0], resImg[4*pxl+0], 1e-7f);
+            OCIO_CHECK_CLOSE(outImg[4*pxl+1], resImg[4*pxl+1], 1e-7f);
+            OCIO_CHECK_CLOSE(outImg[4*pxl+2], resImg[4*pxl+2], 1e-7f);
+            OCIO_CHECK_CLOSE(outImg[4*pxl+3], resImg[4*pxl+3], 1e-7f);
         }
     }
 
@@ -2293,13 +2293,13 @@ OIIO_ADD_TEST(CPUProcessor, custom_scanlines)
         OCIO::PackedImageDesc dstImgDesc(&outImg[0], 
                                          1, NB_PIXELS, 3);
 
-        OIIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
+        OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
 
         for(size_t pxl=0; pxl<NB_PIXELS; ++pxl)
         {
-            OIIO_CHECK_CLOSE(outImg[3*pxl+0], resImg[4*pxl+0], 1e-7f);
-            OIIO_CHECK_CLOSE(outImg[3*pxl+1], resImg[4*pxl+1], 1e-7f);
-            OIIO_CHECK_CLOSE(outImg[3*pxl+2], resImg[4*pxl+2], 1e-7f);
+            OCIO_CHECK_CLOSE(outImg[3*pxl+0], resImg[4*pxl+0], 1e-7f);
+            OCIO_CHECK_CLOSE(outImg[3*pxl+1], resImg[4*pxl+1], 1e-7f);
+            OCIO_CHECK_CLOSE(outImg[3*pxl+2], resImg[4*pxl+2], 1e-7f);
         }
     }
 
@@ -2326,13 +2326,13 @@ OIIO_ADD_TEST(CPUProcessor, custom_scanlines)
         OCIO::PackedImageDesc dstImgDesc(&outImg[0], 
                                          1, NB_PIXELS, 3);
 
-        OIIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
+        OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
 
         for(size_t pxl=0; pxl<NB_PIXELS; ++pxl)
         {
-            OIIO_CHECK_CLOSE(outImg[3*pxl+0], resImg[4*pxl+0], 1e-7f);
-            OIIO_CHECK_CLOSE(outImg[3*pxl+1], resImg[4*pxl+1], 1e-7f);
-            OIIO_CHECK_CLOSE(outImg[3*pxl+2], resImg[4*pxl+2], 1e-7f);
+            OCIO_CHECK_CLOSE(outImg[3*pxl+0], resImg[4*pxl+0], 1e-7f);
+            OCIO_CHECK_CLOSE(outImg[3*pxl+1], resImg[4*pxl+1], 1e-7f);
+            OCIO_CHECK_CLOSE(outImg[3*pxl+2], resImg[4*pxl+2], 1e-7f);
         }
     }
 
@@ -2362,22 +2362,22 @@ OIIO_ADD_TEST(CPUProcessor, custom_scanlines)
         OCIO::PackedImageDesc dstImgDesc(&outImg[0], 
                                          1, NB_PIXELS, 3);
 
-        OIIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
+        OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
 
         for(size_t pxl=0; pxl<NB_PIXELS; ++pxl)
         {
-            OIIO_CHECK_CLOSE(outImg[3*pxl+0], resImg[4*pxl+0], 1e-7f);
-            OIIO_CHECK_CLOSE(outImg[3*pxl+1], resImg[4*pxl+1], 1e-7f);
-            OIIO_CHECK_CLOSE(outImg[3*pxl+2], resImg[4*pxl+2], 1e-7f);
+            OCIO_CHECK_CLOSE(outImg[3*pxl+0], resImg[4*pxl+0], 1e-7f);
+            OCIO_CHECK_CLOSE(outImg[3*pxl+1], resImg[4*pxl+1], 1e-7f);
+            OCIO_CHECK_CLOSE(outImg[3*pxl+2], resImg[4*pxl+2], 1e-7f);
         }
     }
 
 }
 
-OIIO_ADD_TEST(CPUProcessor, one_pixel)
+OCIO_ADD_TEST(CPUProcessor, one_pixel)
 {
     OCIO::ConstCPUProcessorRcPtr cpuProcessor;
-    OIIO_CHECK_NO_THROW(cpuProcessor = BuildCPUProcessor(OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(cpuProcessor = BuildCPUProcessor(OCIO::TRANSFORM_DIR_FORWARD));
 
     // The CPU Processor only includes a Matrix with offset:
     //   const float offset4[4] = { 1.4002f, 0.4005f, 0.8007f, 0.5007f };
@@ -2385,22 +2385,22 @@ OIIO_ADD_TEST(CPUProcessor, one_pixel)
     {
         float pixel[4]{ 0.1f, 0.3f, 0.9f, 1.0f };
 
-        OIIO_CHECK_NO_THROW(cpuProcessor->applyRGBA(pixel));
+        OCIO_CHECK_NO_THROW(cpuProcessor->applyRGBA(pixel));
 
-        OIIO_CHECK_EQUAL(pixel[0], 0.1f + 1.4002f);
-        OIIO_CHECK_EQUAL(pixel[1], 0.3f + 0.4005f);
-        OIIO_CHECK_EQUAL(pixel[2], 0.9f + 0.8007f);
-        OIIO_CHECK_EQUAL(pixel[3], 1.0f + 0.5007f);
+        OCIO_CHECK_EQUAL(pixel[0], 0.1f + 1.4002f);
+        OCIO_CHECK_EQUAL(pixel[1], 0.3f + 0.4005f);
+        OCIO_CHECK_EQUAL(pixel[2], 0.9f + 0.8007f);
+        OCIO_CHECK_EQUAL(pixel[3], 1.0f + 0.5007f);
     }
 
     {
         float pixel[3]{ 0.1f, 0.3f, 0.9f };
 
-        OIIO_CHECK_NO_THROW(cpuProcessor->applyRGB(pixel));
+        OCIO_CHECK_NO_THROW(cpuProcessor->applyRGB(pixel));
 
-        OIIO_CHECK_EQUAL(pixel[0], 0.1f + 1.4002f);
-        OIIO_CHECK_EQUAL(pixel[1], 0.3f + 0.4005f);
-        OIIO_CHECK_EQUAL(pixel[2], 0.9f + 0.8007f);
+        OCIO_CHECK_EQUAL(pixel[0], 0.1f + 1.4002f);
+        OCIO_CHECK_EQUAL(pixel[1], 0.3f + 0.4005f);
+        OCIO_CHECK_EQUAL(pixel[2], 0.9f + 0.8007f);
     }
 }
 

@@ -558,7 +558,7 @@ OCIO_ADD_TEST(OpOptimizers, CombineOps)
     }
 }
 
-OIIO_ADD_TEST(OptimizeSeparablePrefix, inexpensive_prefix)
+OCIO_ADD_TEST(OptimizeSeparablePrefix, inexpensive_prefix)
 {
     // Test that only inexpensive ops are not replaced.
 
@@ -568,15 +568,15 @@ OIIO_ADD_TEST(OptimizeSeparablePrefix, inexpensive_prefix)
         = std::make_shared<OCIO::MatrixOpData>(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
     matrix->setArrayValue(0, 2.);
 
-    OIIO_CHECK_NO_THROW(OCIO::CreateMatrixOp(originalOps, matrix, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_REQUIRE_EQUAL(originalOps.size(), 1);
+    OCIO_CHECK_NO_THROW(OCIO::CreateMatrixOp(originalOps, matrix, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_EQUAL(originalOps.size(), 1);
     
     OCIO::RangeOpDataRcPtr range
         = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
                                               0., 255., -1., 65540.);
 
-    OIIO_CHECK_NO_THROW(OCIO::CreateRangeOp(originalOps, range, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_REQUIRE_EQUAL(originalOps.size(), 2);
+    OCIO_CHECK_NO_THROW(OCIO::CreateRangeOp(originalOps, range, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_EQUAL(originalOps.size(), 2);
 
     OCIO::OpRcPtrVec optimizedOps;
     for(auto op : originalOps)
@@ -585,19 +585,19 @@ OIIO_ADD_TEST(OptimizeSeparablePrefix, inexpensive_prefix)
     }
 
     // Optimize it.
-    OIIO_CHECK_NO_THROW(OCIO::OptimizeSeparablePrefix(optimizedOps, OCIO::OPTIMIZATION_VERY_GOOD));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeSeparablePrefix(optimizedOps, OCIO::OPTIMIZATION_VERY_GOOD));
 
     // Validate the result.
 
-    OIIO_REQUIRE_EQUAL(optimizedOps.size(), 2U);
+    OCIO_REQUIRE_EQUAL(optimizedOps.size(), 2U);
 
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(originalOps, OCIO::FINALIZATION_DEFAULT));
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(optimizedOps, OCIO::FINALIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(originalOps, OCIO::FINALIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(optimizedOps, OCIO::FINALIZATION_DEFAULT));
 
-    OIIO_CHECK_EQUAL(std::string(originalOps[0]->getCacheID()), 
+    OCIO_CHECK_EQUAL(std::string(originalOps[0]->getCacheID()), 
                      std::string(optimizedOps[0]->getCacheID()));
 
-    OIIO_CHECK_EQUAL(std::string(originalOps[1]->getCacheID()), 
+    OCIO_CHECK_EQUAL(std::string(originalOps[1]->getCacheID()), 
                      std::string(optimizedOps[1]->getCacheID()));
 }
 
@@ -626,13 +626,13 @@ void compareRender(OCIO::OpRcPtrVec ops1, OCIO::OpRcPtrVec ops2, unsigned line)
 
     for(size_t idx=0; idx<img1.size(); ++idx)
     {
-        OIIO_CHECK_CLOSE_FROM(img1[idx], img2[idx], 2e-5f, line);
+        OCIO_CHECK_CLOSE_FROM(img1[idx], img2[idx], 2e-5f, line);
     }
 }
 
 }
 
-OIIO_ADD_TEST(OptimizeSeparablePrefix, gamma_prefix)
+OCIO_ADD_TEST(OptimizeSeparablePrefix, gamma_prefix)
 {
     OCIO::OpRcPtrVec originalOps;
 
@@ -644,8 +644,8 @@ OIIO_ADD_TEST(OptimizeSeparablePrefix, gamma_prefix)
                                               OCIO::GammaOpData::BASIC_REV, 
                                               params1, params1, params1, paramsA);
 
-    OIIO_CHECK_NO_THROW(OCIO::CreateGammaOp(originalOps, gamma1, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_REQUIRE_EQUAL(originalOps.size(), 1);
+    OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(originalOps, gamma1, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_EQUAL(originalOps.size(), 1);
 
     OCIO::OpRcPtrVec optimizedOps;
     for(auto op : originalOps)
@@ -654,19 +654,19 @@ OIIO_ADD_TEST(OptimizeSeparablePrefix, gamma_prefix)
     }
 
     // Optimize it.
-    OIIO_CHECK_NO_THROW(OCIO::OptimizeSeparablePrefix(optimizedOps, OCIO::OPTIMIZATION_VERY_GOOD));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeSeparablePrefix(optimizedOps, OCIO::OPTIMIZATION_VERY_GOOD));
 
     // Validate the result.
 
-    OIIO_REQUIRE_EQUAL(optimizedOps.size(), 1);
+    OCIO_REQUIRE_EQUAL(optimizedOps.size(), 1);
 
     OCIO::ConstOpRcPtr o1 = optimizedOps[0];
     OCIO::ConstLut1DOpDataRcPtr oData1 = OCIO::DynamicPtrCast<const OCIO::Lut1DOpData>(o1->data());
-    OIIO_CHECK_EQUAL(oData1->getType(), OCIO::OpData::Lut1DType);
-    OIIO_CHECK_EQUAL(oData1->getArray().getLength(), 65536);
+    OCIO_CHECK_EQUAL(oData1->getType(), OCIO::OpData::Lut1DType);
+    OCIO_CHECK_EQUAL(oData1->getArray().getLength(), 65536);
 
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(originalOps, OCIO::FINALIZATION_DEFAULT));
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(optimizedOps, OCIO::FINALIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(originalOps, OCIO::FINALIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(optimizedOps, OCIO::FINALIZATION_DEFAULT));
 
     compareRender(originalOps, optimizedOps, __LINE__);
 
@@ -680,18 +680,18 @@ OIIO_ADD_TEST(OptimizeSeparablePrefix, gamma_prefix)
                                               OCIO::GammaOpData::BASIC_REV, 
                                               params1, params1, params1, paramsA);
 
-    OIIO_CHECK_NO_THROW(OCIO::CreateGammaOp(originalOps, gamma2, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_REQUIRE_EQUAL(originalOps.size(), 1);
+    OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(originalOps, gamma2, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_EQUAL(originalOps.size(), 1);
 
     // Optimize it.
-    OIIO_CHECK_NO_THROW(OCIO::OptimizeSeparablePrefix(originalOps, OCIO::OPTIMIZATION_VERY_GOOD));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeSeparablePrefix(originalOps, OCIO::OPTIMIZATION_VERY_GOOD));
 
-    OIIO_REQUIRE_EQUAL(originalOps.size(), 1);
+    OCIO_REQUIRE_EQUAL(originalOps.size(), 1);
     OCIO::ConstOpRcPtr o2 = originalOps[0];
-    OIIO_CHECK_EQUAL(o2->data()->getType(), OCIO::OpData::GammaType);
+    OCIO_CHECK_EQUAL(o2->data()->getType(), OCIO::OpData::GammaType);
 }
 
-OIIO_ADD_TEST(OptimizeSeparablePrefix, multi_op_prefix)
+OCIO_ADD_TEST(OptimizeSeparablePrefix, multi_op_prefix)
 {
     // Test prefix optimization of a complex transform.
 
@@ -701,15 +701,15 @@ OIIO_ADD_TEST(OptimizeSeparablePrefix, multi_op_prefix)
         = std::make_shared<OCIO::MatrixOpData>(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
     matrix->setArrayValue(0, 2.);
 
-    OIIO_CHECK_NO_THROW(OCIO::CreateMatrixOp(originalOps, matrix, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_REQUIRE_EQUAL(originalOps.size(), 1);
+    OCIO_CHECK_NO_THROW(OCIO::CreateMatrixOp(originalOps, matrix, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_EQUAL(originalOps.size(), 1);
     
     OCIO::RangeOpDataRcPtr range
         = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
                                               0., 255., -1000., 66000.);
 
-    OIIO_CHECK_NO_THROW(OCIO::CreateRangeOp(originalOps, range, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_REQUIRE_EQUAL(originalOps.size(), 2);
+    OCIO_CHECK_NO_THROW(OCIO::CreateRangeOp(originalOps, range, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_EQUAL(originalOps.size(), 2);
 
     const OCIO::CDLOpData::ChannelParams slope (1.35,  1.1,  0.071);
     const OCIO::CDLOpData::ChannelParams offset(0.05, -0.23, 0.11 );
@@ -721,30 +721,30 @@ OIIO_ADD_TEST(OptimizeSeparablePrefix, multi_op_prefix)
                                             OCIO::CDLOpData::CDL_V1_2_FWD, 
                                             slope, offset, power, saturation);
 
-    OIIO_CHECK_NO_THROW(OCIO::CreateCDLOp(originalOps, cdl, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_REQUIRE_EQUAL(originalOps.size(), 3);
+    OCIO_CHECK_NO_THROW(OCIO::CreateCDLOp(originalOps, cdl, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_EQUAL(originalOps.size(), 3);
 
     OCIO::OpRcPtrVec optimizedOps = originalOps.clone();
 
     // Optimize it.
-    OIIO_CHECK_NO_THROW(OCIO::OptimizeSeparablePrefix(optimizedOps, OCIO::OPTIMIZATION_VERY_GOOD));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeSeparablePrefix(optimizedOps, OCIO::OPTIMIZATION_VERY_GOOD));
 
     // Validate the result.
 
-    OIIO_REQUIRE_EQUAL(optimizedOps.size(), 1U);
+    OCIO_REQUIRE_EQUAL(optimizedOps.size(), 1U);
 
     OCIO::ConstOpRcPtr o = optimizedOps[0];
     OCIO::ConstLut1DOpDataRcPtr oData = OCIO::DynamicPtrCast<const OCIO::Lut1DOpData>(o->data());
-    OIIO_CHECK_EQUAL(oData->getType(), OCIO::OpData::Lut1DType);
-    OIIO_CHECK_EQUAL(oData->getArray().getLength(), 256);
+    OCIO_CHECK_EQUAL(oData->getType(), OCIO::OpData::Lut1DType);
+    OCIO_CHECK_EQUAL(oData->getArray().getLength(), 256);
 
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(originalOps, OCIO::FINALIZATION_DEFAULT));
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(optimizedOps, OCIO::FINALIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(originalOps, OCIO::FINALIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(optimizedOps, OCIO::FINALIZATION_DEFAULT));
 
     compareRender(originalOps, optimizedOps, __LINE__);
 }
 
-OIIO_ADD_TEST(OptimizeSeparablePrefix, op_with_dyn_properties)
+OCIO_ADD_TEST(OptimizeSeparablePrefix, op_with_dyn_properties)
 {
     // Test prefix optimization of a complex transform.
 
@@ -754,8 +754,8 @@ OIIO_ADD_TEST(OptimizeSeparablePrefix, op_with_dyn_properties)
         = std::make_shared<OCIO::MatrixOpData>(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
     matrix->setArrayValue(0, 2.);
 
-    OIIO_CHECK_NO_THROW(OCIO::CreateMatrixOp(originalOps, matrix, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_REQUIRE_EQUAL(originalOps.size(), 1);
+    OCIO_CHECK_NO_THROW(OCIO::CreateMatrixOp(originalOps, matrix, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_EQUAL(originalOps.size(), 1);
 
     OCIO::ExposureContrastOpDataRcPtr exposure =
         std::make_shared<OCIO::ExposureContrastOpData>();
@@ -763,38 +763,38 @@ OIIO_ADD_TEST(OptimizeSeparablePrefix, op_with_dyn_properties)
     exposure->setExposure(1.2);
     exposure->setPivot(0.5);
 
-    OIIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(originalOps, exposure, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_REQUIRE_EQUAL(originalOps.size(), 2);
+    OCIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(originalOps, exposure, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_EQUAL(originalOps.size(), 2);
 
     exposure = exposure->clone();
     exposure->getExposureProperty()->makeDynamic();
 
-    OIIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(originalOps, exposure, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_REQUIRE_EQUAL(originalOps.size(), 3);
+    OCIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(originalOps, exposure, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_EQUAL(originalOps.size(), 3);
 
     // Optimize it.
 
-    OIIO_CHECK_NO_THROW(OCIO::OptimizeSeparablePrefix(originalOps, OCIO::OPTIMIZATION_VERY_GOOD));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeSeparablePrefix(originalOps, OCIO::OPTIMIZATION_VERY_GOOD));
 
     // Validate the result.
 
-    OIIO_REQUIRE_EQUAL(originalOps.size(), 2U);
+    OCIO_REQUIRE_EQUAL(originalOps.size(), 2U);
 
     OCIO::ConstOpRcPtr o = originalOps[0];
     OCIO::ConstLut1DOpDataRcPtr oData = OCIO::DynamicPtrCast<const OCIO::Lut1DOpData>(o->data());
-    OIIO_CHECK_ASSERT(oData);
-    OIIO_CHECK_EQUAL(oData->getType(), OCIO::OpData::Lut1DType);
+    OCIO_CHECK_ASSERT(oData);
+    OCIO_CHECK_EQUAL(oData->getType(), OCIO::OpData::Lut1DType);
 
     o = originalOps[1];
     OCIO::ConstExposureContrastOpDataRcPtr exp 
         = OCIO::DynamicPtrCast<const OCIO::ExposureContrastOpData>(o->data());
 
-    OIIO_CHECK_ASSERT(exp);
-    OIIO_CHECK_EQUAL(exp->getType(), OCIO::OpData::ExposureContrastType);
-    OIIO_CHECK_ASSERT(exp->isDynamic());
+    OCIO_CHECK_ASSERT(exp);
+    OCIO_CHECK_EQUAL(exp->getType(), OCIO::OpData::ExposureContrastType);
+    OCIO_CHECK_ASSERT(exp->isDynamic());
 }
 
-OIIO_ADD_TEST(OpOptimizers, optimizations_with_bit_depths)
+OCIO_ADD_TEST(OpOptimizers, optimizations_with_bit_depths)
 {
     // Test that optimization of a transform preserves 
     // the input and output bit-depths.
@@ -803,21 +803,21 @@ OIIO_ADD_TEST(OpOptimizers, optimizations_with_bit_depths)
 
     OCIO::MatrixOpDataRcPtr matrix
         = std::make_shared<OCIO::MatrixOpData>(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT12);
-    OIIO_CHECK_NO_THROW(OCIO::CreateMatrixOp(ops, matrix, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_CHECK_NO_THROW(OCIO::CreateMatrixOp(ops, matrix, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
 
     matrix = std::make_shared<OCIO::MatrixOpData>(OCIO::BIT_DEPTH_UINT12, OCIO::BIT_DEPTH_UINT16);
     matrix->setArrayValue(0, 2.);
-    OIIO_CHECK_NO_THROW(OCIO::CreateMatrixOp(ops, matrix, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_CHECK_NO_THROW(OCIO::CreateMatrixOp(ops, matrix, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
     
     // Optimize it.
-    OIIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
 
     // Validate the bit-depths.
-    OIIO_REQUIRE_EQUAL(ops.size(), 1U);
-    OIIO_CHECK_EQUAL(ops.front()->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
-    OIIO_CHECK_EQUAL(ops.back()->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT16);
+    OCIO_REQUIRE_EQUAL(ops.size(), 1U);
+    OCIO_CHECK_EQUAL(ops.front()->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OCIO_CHECK_EQUAL(ops.back()->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT16);
 }
 
 

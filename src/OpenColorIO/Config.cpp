@@ -2917,7 +2917,7 @@ OCIO_ADD_TEST(Config, exponent_vs_config_version)
     OCIO_CHECK_NO_THROW(processor = config->getProcessor("raw", "lnh"));
 
     OCIO::ConstCPUProcessorRcPtr cpuProcessor;
-    OIIO_CHECK_NO_THROW(cpuProcessor = processor->getDefaultCPUProcessor());
+    OCIO_CHECK_NO_THROW(cpuProcessor = processor->getDefaultCPUProcessor());
 
     float img1[4] = { -0.5f, 0.0f, 1.0f, 1.0f };
     OCIO_CHECK_NO_THROW(cpuProcessor->applyRGBA(img1));

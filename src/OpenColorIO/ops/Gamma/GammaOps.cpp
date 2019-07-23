@@ -714,7 +714,7 @@ OCIO_ADD_TEST(GammaOps, computed_identifier)
                             &gamma4[0], nullptr));
     OCIO_CHECK_EQUAL(ops.size(), 2);
 
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
 
     OCIO_CHECK_ASSERT(ops[0]->getCacheID() != ops[1]->getCacheID());
 
@@ -724,7 +724,7 @@ OCIO_ADD_TEST(GammaOps, computed_identifier)
                             &gamma4[0], nullptr));
     OCIO_CHECK_EQUAL(ops.size(), 3);
 
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
 
     OCIO_CHECK_ASSERT(ops[0]->getCacheID() != ops[2]->getCacheID());
     OCIO_CHECK_ASSERT(ops[1]->getCacheID() == ops[2]->getCacheID());
@@ -735,7 +735,7 @@ OCIO_ADD_TEST(GammaOps, computed_identifier)
                             &gamma4[0], nullptr));
     OCIO_CHECK_EQUAL(ops.size(), 4);
 
-    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
 
     OCIO_CHECK_ASSERT(ops[0]->getCacheID() != ops[3]->getCacheID());
     OCIO_CHECK_ASSERT(ops[1]->getCacheID() != ops[3]->getCacheID());

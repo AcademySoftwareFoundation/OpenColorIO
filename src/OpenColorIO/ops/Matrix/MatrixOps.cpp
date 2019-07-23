@@ -701,8 +701,8 @@ OCIO_ADD_TEST(MatrixOffsetOp, create_fit_op)
     OCIO_CHECK_NO_THROW(CreateFitOp(ops,
                                     oldmin4, oldmax4,
                                     newmin4, newmax4, TRANSFORM_DIR_INVERSE));
-    OCO_REQUIRE_EQUAL(ops.size(), 2);
-    OCO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
 
     const unsigned long NB_PIXELS = 3;
     const float src[NB_PIXELS * 4] = {  0.1004f, 0.201f, 0.303f, 0.408f,

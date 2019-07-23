@@ -524,8 +524,8 @@ OCIO_ADD_TEST(FileFormatTruelight, ShaperAndLut3D)
         CreateLut3DOp(ops, lut->lut3D,
                       OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD);
     }
-    OIIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
-    OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
     
     
     // Apply the result
@@ -595,8 +595,8 @@ OCIO_ADD_TEST(FileFormatTruelight, Shaper)
         CreateLut3DOp(ops, lut->lut3D,
                       OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD);
     }
-    OIIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
-    OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
     
     
     // Apply the result
@@ -683,8 +683,8 @@ OCIO_ADD_TEST(FileFormatTruelight, Lut3D)
         CreateLut3DOp(ops, lut->lut3D,
                       OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD);
     }
-    OIIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
-    OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
     
     
     // Apply the result

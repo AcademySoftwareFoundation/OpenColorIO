@@ -222,7 +222,7 @@ OCIO_ADD_TEST(DynamicProperty, get_dynamic_via_processor)
     OCIO_CHECK_NO_THROW(processor = LoadTransformFile(ctfFile));
 
     OCIO::ConstCPUProcessorRcPtr cpuProcessor;
-    OIIO_CHECK_NO_THROW(cpuProcessor = processor->getDefaultCPUProcessor());
+    OCIO_CHECK_NO_THROW(cpuProcessor = processor->getDefaultCPUProcessor());
 
     float pixel[3] = { 0.5f, 0.4f, 0.2f };
     cpuProcessor->applyRGB(pixel);

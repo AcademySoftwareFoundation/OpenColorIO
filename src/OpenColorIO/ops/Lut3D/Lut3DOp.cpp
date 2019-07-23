@@ -1504,40 +1504,40 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_cloned)
     memcpy(bufferImageClone2, inImage, 12 * sizeof(float));
 
     // Apply the forward LUT.
-    OIIO_CHECK_NO_THROW(fwdLut->finalize(OCIO::FINALIZATION_EXACT));
-    OIIO_CHECK_NO_THROW(fwdLut->apply(bufferImage, 3));
+    OCIO_CHECK_NO_THROW(fwdLut->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(fwdLut->apply(bufferImage, 3));
 
     // Apply the cloned forward LUT.
-    OIIO_CHECK_NO_THROW(fwdLutCloned.finalize(OCIO::FINALIZATION_EXACT));
-    OIIO_CHECK_NO_THROW(fwdLutCloned.apply(bufferImageClone, 3));
+    OCIO_CHECK_NO_THROW(fwdLutCloned.finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(fwdLutCloned.apply(bufferImageClone, 3));
 
     // Apply the cloned cloned forward LUT.
-    OIIO_CHECK_NO_THROW(fwdLutClonedCloned->finalize(OCIO::FINALIZATION_EXACT));
-    OIIO_CHECK_NO_THROW(fwdLutClonedCloned->apply(bufferImageClone2, 3));
+    OCIO_CHECK_NO_THROW(fwdLutClonedCloned->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(fwdLutClonedCloned->apply(bufferImageClone2, 3));
 
     // Validate that the cloned op produces the exact same results.
     for (unsigned i = 0; i < 12; ++i)
     {
-        OIIO_CHECK_EQUAL(bufferImageClone[i], bufferImage[i]);
-        OIIO_CHECK_EQUAL(bufferImageClone2[i], bufferImage[i]);
+        OCIO_CHECK_EQUAL(bufferImageClone[i], bufferImage[i]);
+        OCIO_CHECK_EQUAL(bufferImageClone2[i], bufferImage[i]);
     }
 }
 
-OIIO_ADD_TEST(Lut3DOp, cpu_renderer_inverse)
+OCIO_ADD_TEST(Lut3DOp, cpu_renderer_inverse)
 {
     // The unit test validates the processing of inversed ops.
 
     const std::string fileName("lut3d_17x17x17_10i_12i.clf");
     OCIO::OpRcPtrVec ops;
     OCIO::ContextRcPtr context = OCIO::Context::Create();
-    OIIO_CHECK_NO_THROW(BuildOpsTest(ops, fileName, context,
+    OCIO_CHECK_NO_THROW(BuildOpsTest(ops, fileName, context,
                                      OCIO::TRANSFORM_DIR_FORWARD));
 
-    OIIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
-    OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_FAST));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_FAST));
 
     auto op0 = OCIO::DynamicPtrCast<const OCIO::Lut3DOp>(ops[0]);
-    OIIO_REQUIRE_ASSERT(op0);
+    OCIO_REQUIRE_ASSERT(op0);
     auto fwdLutData = OCIO::DynamicPtrCast<const OCIO::Lut3DOpData>(op0->data());
     auto fwdLutDataCloned = fwdLutData->clone();
     // Inversion is based on tetrahedral interpolation, so need to make sure 
