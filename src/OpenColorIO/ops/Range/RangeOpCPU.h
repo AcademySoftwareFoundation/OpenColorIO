@@ -39,7 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
-OpCPURcPtr GetRangeRenderer(ConstRangeOpDataRcPtr & range);
+ConstOpCPURcPtr GetRangeRenderer(ConstRangeOpDataRcPtr & range);
 
 }
 OCIO_NAMESPACE_EXIT

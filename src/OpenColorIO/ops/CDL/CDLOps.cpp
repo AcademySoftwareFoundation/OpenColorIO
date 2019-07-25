@@ -54,7 +54,7 @@ typedef OCIO_SHARED_PTR<const CDLOp> ConstCDLOpRcPtr;
 class CDLOp : public Op
 {
 public:
-    CDLOp();
+    CDLOp() = delete;
 
     CDLOp(CDLOpDataRcPtr & cdl, TransformDirection direction);
 
@@ -71,19 +71,23 @@ public:
 
     virtual ~CDLOp();
     
-    virtual OpRcPtr clone() const;
+    TransformDirection getDirection() const noexcept override { return m_direction; }
+
+    OpRcPtr clone() const override;
     
-    virtual std::string getInfo() const;
+    std::string getInfo() const override;
     
-    virtual bool isIdentity() const;
-    virtual bool isSameType(ConstOpRcPtr & op) const;
-    virtual bool isInverse(ConstOpRcPtr & op) const;
-    virtual bool canCombineWith(ConstOpRcPtr & op) const;
-    virtual void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const;
+    bool isIdentity() const override;
+    bool isSameType(ConstOpRcPtr & op) const override;
+    bool isInverse(ConstOpRcPtr & op) const override;
+    bool canCombineWith(ConstOpRcPtr & op) const override;
+    void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
     
-    virtual void finalize();
+    void finalize(FinalizationFlags fFlags) override;
+
+    ConstOpCPURcPtr getCPUOp() const override;
     
-    virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
+    void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
 
 protected:
     ConstCDLOpDataRcPtr cdlData() const { return DynamicPtrCast<const CDLOpData>(data()); }
@@ -93,13 +97,6 @@ private:
     TransformDirection m_direction;
 };
 
-
-CDLOp::CDLOp()
-    :   Op()
-    ,   m_direction(TRANSFORM_DIR_FORWARD)
-{           
-    data().reset(new CDLOpData());
-}
 
 CDLOp::CDLOp(CDLOpDataRcPtr & cdl, TransformDirection direction)
     :   Op()
@@ -208,25 +205,19 @@ void CDLOp::combineWith(OpRcPtrVec & /*ops*/, ConstOpRcPtr & secondOp) const
     // TODO: Implement CDLOp::combineWith()
 }
 
-void CDLOp::finalize()
+void CDLOp::finalize(FinalizationFlags /*fFlags*/)
 {
-    const CDLOp & constThis = *this;
-
     if(m_direction == TRANSFORM_DIR_INVERSE)
     {
         data() = cdlData()->inverse();
         m_direction = TRANSFORM_DIR_FORWARD;
     }
 
-    // Only the 32f processing is natively supported
+    // Only 32f processing is natively supported.
     cdlData()->setInputBitDepth(BIT_DEPTH_F32);
     cdlData()->setOutputBitDepth(BIT_DEPTH_F32);
 
-    cdlData()->validate();
     cdlData()->finalize();
-
-    ConstCDLOpDataRcPtr cdlOpData = constThis.cdlData();
-    m_cpuOp = CDLOpCPU::GetRenderer(cdlOpData);
 
     // Create the cacheID
     std::ostringstream cacheIDStream;
@@ -236,6 +227,12 @@ void CDLOp::finalize()
     cacheIDStream << ">";
 
     m_cacheID = cacheIDStream.str();
+}
+
+ConstOpCPURcPtr CDLOp::getCPUOp() const
+{
+    ConstCDLOpDataRcPtr data = cdlData();
+    return CDLOpCPU::GetRenderer(data);
 }
 
 void CDLOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
@@ -434,7 +431,7 @@ void ApplyCDL(float * in, const float * ref, unsigned numPixels,
                       style, slope, offset, power, saturation, 
                       OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO_CHECK_NO_THROW(cdlOp.finalize());
+    OCIO_CHECK_NO_THROW(cdlOp.finalize(OCIO::FINALIZATION_EXACT));
 
     cdlOp.apply(in, in, numPixels);
 
@@ -491,8 +488,8 @@ OCIO_ADD_TEST(CDLOps, computed_identifier)
                 OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
-    OCIO_CHECK_NO_THROW( ops[0]->finalize() );
-    OCIO_CHECK_NO_THROW( ops[1]->finalize() );
+    OCIO_CHECK_NO_THROW( ops[0]->finalize(OCIO::FINALIZATION_EXACT) );
+    OCIO_CHECK_NO_THROW( ops[1]->finalize(OCIO::FINALIZATION_EXACT) );
 
     OCIO_CHECK_EQUAL( ops[0]->getCacheID(), ops[1]->getCacheID() );
 
@@ -505,7 +502,7 @@ OCIO_ADD_TEST(CDLOps, computed_identifier)
                 OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
 
-    OCIO_CHECK_NO_THROW( ops[2]->finalize() );
+    OCIO_CHECK_NO_THROW( ops[2]->finalize(OCIO::FINALIZATION_EXACT) );
 
     OCIO_CHECK_ASSERT( ops[0]->getCacheID() != ops[2]->getCacheID() );
     OCIO_CHECK_ASSERT( ops[1]->getCacheID() != ops[2]->getCacheID() );
@@ -518,7 +515,7 @@ OCIO_ADD_TEST(CDLOps, computed_identifier)
                 OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 4);
 
-    OCIO_CHECK_NO_THROW( ops[3]->finalize() );
+    OCIO_CHECK_NO_THROW( ops[3]->finalize(OCIO::FINALIZATION_EXACT) );
 
     OCIO_CHECK_ASSERT( ops[0]->getCacheID() != ops[3]->getCacheID() );
     OCIO_CHECK_ASSERT( ops[1]->getCacheID() != ops[3]->getCacheID() );
@@ -532,7 +529,7 @@ OCIO_ADD_TEST(CDLOps, computed_identifier)
                 OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 5);
 
-    OCIO_CHECK_NO_THROW( ops[4]->finalize() );
+    OCIO_CHECK_NO_THROW( ops[4]->finalize(OCIO::FINALIZATION_EXACT) );
 
     OCIO_CHECK_ASSERT( ops[0]->getCacheID() != ops[4]->getCacheID() );
     OCIO_CHECK_ASSERT( ops[1]->getCacheID() != ops[4]->getCacheID() );
@@ -547,7 +544,7 @@ OCIO_ADD_TEST(CDLOps, computed_identifier)
                 OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 6);
 
-    OCIO_CHECK_NO_THROW( ops[5]->finalize() );
+    OCIO_CHECK_NO_THROW( ops[5]->finalize(OCIO::FINALIZATION_EXACT) );
 
     OCIO_CHECK_ASSERT( ops[3]->getCacheID() != ops[5]->getCacheID() );
     OCIO_CHECK_ASSERT( ops[4]->getCacheID() != ops[5]->getCacheID() );

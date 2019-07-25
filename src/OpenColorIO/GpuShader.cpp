@@ -33,9 +33,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "DynamicProperty.h"
 #include "GpuShader.h"
 #include "HashUtils.h"
 #include "Platform.h"
+
 
 OCIO_NAMESPACE_ENTER
 {
@@ -52,17 +54,15 @@ static void  CreateArray(const float * buf,
                          GpuShaderDesc::TextureType type, 
                          std::vector<float> & res)
 {
-    if(buf!=nullptr)
+    if(buf==nullptr)
     {
-        const unsigned size 
-            = w * h * d * (type==GpuShaderDesc::TEXTURE_RGB_CHANNEL ? 3 : 1);
-        res.resize(size);
-        memcpy(&res[0], buf, size * sizeof(float));
+        throw Exception("The buffer is invalid");
     }
-    else
-    {
-        throw Exception("Missing texture values");
-    }
+
+    const size_t size 
+        = w * h * d * (type==GpuShaderDesc::TEXTURE_RGB_CHANNEL ? 3 : 1);
+    res.resize(size);
+    memcpy(&res[0], buf, size * sizeof(float));
 }
 
 class PrivateImpl
@@ -70,12 +70,12 @@ class PrivateImpl
 public:
     struct Texture
     {
-        Texture(const char * n, const char * identifier, 
+        Texture(const char * name, const char * identifier, 
                 unsigned w, unsigned h, unsigned d,
                 GpuShaderDesc::TextureType channel, 
                 Interpolation interpolation, 
                 const float * v)
-            :   m_name(n)
+            :   m_name(name)
             ,   m_id(identifier)
             ,   m_width(w)
             ,   m_height(h)
@@ -83,6 +83,20 @@ public:
             ,   m_type(channel)
             ,   m_interp(interpolation)
         {
+            if(!name || !*name)
+            {
+                throw Exception("The texture name is invalid.");
+            }
+
+            if(w==0 || h==0 || d==0)
+            {
+                std::stringstream ss;
+                ss << "The texture buffer size is invalid: ["
+                   << w << " x " << h << " x " << d << "].";
+
+                throw Exception(ss.str().c_str());
+            }
+
             // An unfortunate copy is mandatory to allow the creation of a GPU shader cache. 
             // The cache needs a decoupling of the processor and shader instances forbidding
             // shared naked pointer usage.
@@ -106,11 +120,28 @@ public:
 
     struct Uniform
     {
-        Uniform(const char * n, DynamicPropertyRcPtr v)
-            : m_name(n)
-            , m_value(v)
+        Uniform(const char * name, const DynamicPropertyRcPtr & value)
+            :   m_name(name)
         {
+            if(!name || !*name)
+            {
+                throw Exception("The dynamic property name is invalid.");
+            }
+
+            if(!value->isDynamic())
+            {
+                // When a dynamic property is not dynamic, the GLSL fragment
+                // shader program should use a constant variable 
+                // (i.e. not a uniform variable).
+                throw Exception("The dynamic property is not dynamic.");
+            }
+
+            m_value 
+                = std::make_shared<DynamicPropertyImpl>(
+                    *dynamic_cast<DynamicPropertyImpl*>(value.get()) );
+
         }
+
         std::string m_name;
         DynamicPropertyRcPtr m_value;
 
@@ -119,7 +150,7 @@ public:
 
     typedef std::vector<Uniform> Uniforms;
 
-public:       
+public:
     PrivateImpl()
         :   m_max1DLUTWidth(4 * 1024)
     {
@@ -246,7 +277,7 @@ public:
         {
             std::ostringstream ss;
             ss << "Uniforms access error: index = " << index
-                << " where size = " << m_uniforms.size();
+               << " where size = " << m_uniforms.size();
             throw Exception(ss.str().c_str());
         }
         const Uniform & u = m_uniforms[index];
@@ -254,12 +285,19 @@ public:
         value = u.m_value;
     }
 
-    bool addUniform(const char * name, DynamicPropertyRcPtr value)
+    bool addUniform(const char * name, const DynamicPropertyRcPtr & value)
     {
         for (auto u : m_uniforms)
         {
-            if (u.m_value == value)
+            if (*u.m_value == *value)
             {
+                if(std::string(name)!=u.m_name)
+                {
+                    std::string err("Same dynamic properties must have the same name: ");
+                    err += u.m_name + " vs. " + name;
+                    throw Exception(err.c_str());
+                }
+
                 // Uniform is already there.
                 return false;
             }
@@ -296,20 +334,20 @@ public:
         // Compute the identifier
         std::ostringstream os;
         os << m_shaderCode;
-        os << "T3D" << m_textures3D.size();
+        os << "T3D: " << m_textures3D.size();
         for(auto & t : m_textures3D)
         {
-            os << t.m_id;
+            os << t.m_id << " ";
         }
-        os << "T" << m_textures.size();
+        os << "T1D: " << m_textures.size();
         for(auto & t : m_textures)
         {
-            os << t.m_id;
+            os << t.m_id << " ";
         }
-        os << "U" << m_uniforms.size();
+        os << "U: " << m_uniforms.size();
         for (auto & u : m_uniforms)
         {
-            os << u.m_name;
+            os << u.m_name << " ";
         }
 
         const std::string id = os.str();
@@ -390,7 +428,7 @@ void LegacyGpuShaderDesc::getUniform(unsigned, const char *&, DynamicPropertyRcP
     throw Exception("Uniforms are not supported");
 }
 
-bool LegacyGpuShaderDesc::addUniform(const char *, DynamicPropertyRcPtr)
+bool LegacyGpuShaderDesc::addUniform(const char *, const DynamicPropertyRcPtr &)
 {
     throw Exception("Uniforms are not supported");
 }
@@ -565,7 +603,7 @@ void GenericGpuShaderDesc::getUniform(unsigned index, const char *& name,
     return getImpl()->getUniform(index, name, value);
 }
 
-bool GenericGpuShaderDesc::addUniform(const char * name, DynamicPropertyRcPtr value)
+bool GenericGpuShaderDesc::addUniform(const char * name, const DynamicPropertyRcPtr & value)
 {
     return getImpl()->addUniform(name, value);
 }
@@ -730,7 +768,7 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
         OCIO_CHECK_NO_THROW(shaderDesc->finalize());
         const std::string id(shaderDesc->getCacheID());
         OCIO_CHECK_EQUAL(id, std::string("glsl_1.3 1sd234_ res_1sd234_ pxl_1sd234_ "
-                                         "$664fefaf8040c8fae4a3b56f2239872d"));
+                                         "$159b6ac2bdbbe3b57824faea46bd829b"));
         OCIO_CHECK_NO_THROW(shaderDesc->setResourcePrefix("res_1"));
         OCIO_CHECK_NO_THROW(shaderDesc->finalize());
         OCIO_CHECK_NE(std::string(shaderDesc->getCacheID()), id);

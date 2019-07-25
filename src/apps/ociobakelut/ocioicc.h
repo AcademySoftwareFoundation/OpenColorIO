@@ -56,7 +56,7 @@ OCIO_NAMESPACE_ENTER
 //                          illumination source is not D50.
 
 void SaveICCProfileToFile(const std::string & outputfile,
-                          ConstProcessorRcPtr & processor,
+                          ConstCPUProcessorRcPtr & processor,
                           int cubesize,
                           int whitepointtemp,
                           const std::string & displayicc,

@@ -39,33 +39,52 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
+class ScanlineHelper;
+
 class CPUProcessor::Impl
 {
 public:
     Impl() = default;
+    Impl(const Impl &) = delete;
+    Impl& operator=(const Impl &) = delete;
+
     ~Impl() = default;
 
-    bool isNoOp() const { return m_ops.empty(); }
+    bool hasChannelCrosstalk() const noexcept { return m_hasChannelCrosstalk; }
 
-    bool hasChannelCrosstalk() const { return m_hasChannelCrosstalk; }
+    const char * getCacheID() const noexcept { return m_cacheID.c_str(); }
 
-    const char * getCacheID() const;
+    BitDepth getInputBitDepth() const noexcept { return m_inBitDepth; }
+    BitDepth getOutputBitDepth() const noexcept { return m_outBitDepth; }
 
-    void finalize(const OpRcPtrVec & ops, PixelFormat in, PixelFormat out);
+    DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
 
-    PixelFormat getInputPixelFormat() const { return m_inPixelFormat; }
-    PixelFormat getOutputPixelFormat() const { return m_outPixelFormat; }
+    void apply(ImageDesc & imgDesc) const;
+    void apply(const ImageDesc & srcImgDesc, ImageDesc & dstImgDesc) const;
+    void applyRGB(void * pixel) const;
+    void applyRGBA(void * pixel) const;
 
-    void apply(const void * inImg, void * outImg, long numPixels) const;
+    ////////////////////////////////////////////
+    //
+    // Functions not exposed to the OCIO public API.
+        
+    void finalize(const OpRcPtrVec & rawOps,
+                  BitDepth in, BitDepth out,
+                  OptimizationFlags oFlags, FinalizationFlags fFlags);
 
 private:
-    ConstOpCPURcPtrVec m_ops;
-    PixelFormat        m_inPixelFormat = PIXEL_FORMAT_RGBA_F32;
-    PixelFormat        m_outPixelFormat = PIXEL_FORMAT_RGBA_F32;
+    ConstOpCPURcPtr    m_inBitDepthOp; // Converts from in to F32. It could be done by the first op.
+    ConstOpCPURcPtrVec m_cpuOps;       // It could be empty if the OpVec only contains a 1D LUT op
+                                       // (e.g. the 1D LUT CPUOp instance would be in the m_inBitDepthOp).
+    ConstOpCPURcPtr    m_outBitDepthOp;// Converts from F32 to out. It could be done by the last op.
+
+    BitDepth           m_inBitDepth = BIT_DEPTH_F32;
+    BitDepth           m_outBitDepth = BIT_DEPTH_F32;
     bool               m_hasChannelCrosstalk = true;
     std::string        m_cacheID;
-    size_t             m_numOps = 0;
-    bool               m_reuseOutBuffer = false;
+    Mutex              m_mutex;
+
+    std::unique_ptr<ScanlineHelper> m_scanlineBuilder;
 };
 
 

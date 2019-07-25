@@ -85,7 +85,7 @@ class CDLOpCPU : public OpCPU
 public:
 
     // Get the dedicated renderer
-    static OpCPURcPtr GetRenderer(ConstCDLOpDataRcPtr & cdl);
+    static ConstOpCPURcPtr GetRenderer(ConstCDLOpDataRcPtr & cdl);
 
     CDLOpCPU(ConstCDLOpDataRcPtr & cdl);
 

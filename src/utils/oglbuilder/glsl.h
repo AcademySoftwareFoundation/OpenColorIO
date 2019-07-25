@@ -78,6 +78,8 @@ class OpenGLBuilder
 
         void use();
 
+        DynamicPropertyRcPtr & getValue();
+
     private:
         Uniform() = delete;
         std::string m_name;

@@ -54,7 +54,7 @@ typedef OCIO_SHARED_PTR<const RangeOp> ConstRangeOpRcPtr;
 class RangeOp : public Op
 {
 public:
-    RangeOp();
+    RangeOp() = delete;
 
     RangeOp(RangeOpDataRcPtr & range, TransformDirection direction);
 
@@ -63,20 +63,23 @@ public:
             TransformDirection direction);
 
     virtual ~RangeOp();
-    
-    virtual OpRcPtr clone() const;
-    
-    virtual std::string getInfo() const;
-    
-    virtual bool isIdentity() const;
-    virtual bool isSameType(ConstOpRcPtr & op) const;
-    virtual bool isInverse(ConstOpRcPtr & op) const;
-    virtual bool canCombineWith(ConstOpRcPtr & op) const;
-    virtual void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const;
-    
-    virtual void finalize();
-    
-    virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
+
+    TransformDirection getDirection() const noexcept override { return m_direction; }
+
+    OpRcPtr clone() const override;
+
+    std::string getInfo() const override;
+
+    bool isSameType(ConstOpRcPtr & op) const override;
+    bool isInverse(ConstOpRcPtr & op) const override;
+    bool canCombineWith(ConstOpRcPtr & op) const override;
+    void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
+
+    void finalize(FinalizationFlags fFlags) override;
+
+    ConstOpCPURcPtr getCPUOp() const override;
+
+    void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
 
 protected:
     ConstRangeOpDataRcPtr rangeData() const { return DynamicPtrCast<const RangeOpData>(data()); }
@@ -87,13 +90,6 @@ private:
     TransformDirection m_direction;
 };
 
-
-RangeOp::RangeOp()
-    :   Op()
-    ,   m_direction(TRANSFORM_DIR_FORWARD)
-{           
-    data().reset(new RangeOpData());
-}
 
 RangeOp::RangeOp(RangeOpDataRcPtr & range, TransformDirection direction)
     :   Op()
@@ -140,11 +136,6 @@ std::string RangeOp::getInfo() const
     return "<RangeOp>";
 }
 
-bool RangeOp::isIdentity() const
-{
-    return rangeData()->isIdentity();
-}
-
 bool RangeOp::isSameType(ConstOpRcPtr & op) const
 {
     ConstRangeOpRcPtr typedRcPtr = DynamicPtrCast<const RangeOp>(op);
@@ -181,7 +172,7 @@ void RangeOp::combineWith(OpRcPtrVec & /*ops*/, ConstOpRcPtr & secondOp) const
     // TODO: Implement RangeOp::combineWith()
 }
 
-void RangeOp::finalize()
+void RangeOp::finalize(FinalizationFlags /*fFlags*/)
 {
     const RangeOp & constThis = *this;
     if(m_direction == TRANSFORM_DIR_INVERSE)
@@ -190,16 +181,11 @@ void RangeOp::finalize()
         m_direction = TRANSFORM_DIR_FORWARD;
     }
 
-    // In this initial implementation, only 32f processing is
-    // natively supported.
+    // Only 32f processing is natively supported.
     rangeData()->setInputBitDepth(BIT_DEPTH_F32);
     rangeData()->setOutputBitDepth(BIT_DEPTH_F32);
 
-    rangeData()->validate();
     rangeData()->finalize();
-
-    ConstRangeOpDataRcPtr rangeOpData = constThis.rangeData();
-    m_cpuOp = GetRangeRenderer(rangeOpData);
 
     // Create the cacheID
     std::ostringstream cacheIDStream;
@@ -209,6 +195,12 @@ void RangeOp::finalize()
     cacheIDStream << ">";
     
     m_cacheID = cacheIDStream.str();
+}
+
+ConstOpCPURcPtr RangeOp::getCPUOp() const
+{
+    ConstRangeOpDataRcPtr data = rangeData();
+    return GetRangeRenderer(data);
 }
 
 void RangeOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
@@ -291,7 +283,7 @@ const float g_error = 1e-7f;
 OCIO_ADD_TEST(RangeOps, apply_arbitrary)
 {
     OCIO::RangeOp r(-0.101, 0.95, 0.194, 1.001, OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO_CHECK_NO_THROW(r.finalize());
+    OCIO_CHECK_NO_THROW(r.finalize(OCIO::FINALIZATION_EXACT));
 
     float image[4*3] = { -0.50f,  0.25f, 0.50f, 0.0f,
                           0.75f,  1.00f, 1.25f, 1.0f,
@@ -319,10 +311,10 @@ OCIO_ADD_TEST(RangeOps, combining)
 
     OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1.0);
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
-    OCIO_CHECK_NO_THROW(ops[0]->finalize());
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
     OCIO::CreateRangeOp(ops, 0., 1., 0.5, 1.5);
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    OCIO_CHECK_NO_THROW(ops[1]->finalize());
+    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
 
     OCIO::ConstOpRcPtr op1 = ops[1];
 
@@ -339,10 +331,10 @@ OCIO_ADD_TEST(RangeOps, combining_with_inverse)
 
     OCIO::CreateRangeOp(ops, 0., 1., 0.5, 1.5);
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
-    OCIO_CHECK_NO_THROW(ops[0]->finalize());
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
     OCIO::CreateRangeOp(ops, 0., 1., 0.5, 1.5, OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    OCIO_CHECK_NO_THROW(ops[1]->finalize());
+    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
 
     OCIO::ConstOpRcPtr op1 = ops[1];
 
@@ -413,7 +405,7 @@ OCIO_ADD_TEST(RangeOps, computed_identifier)
     OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1.0);
     OCIO::CreateRangeOp(ops, 0.1, 1., 0.3, 1.9);
     OCIO::CreateRangeOp(ops, 0.1, 1., 0.3, 1.9, OCIO::TRANSFORM_DIR_INVERSE);
-    for(OCIO::OpRcPtrVec::reference op : ops) { op->finalize(); }
+    for(OCIO::OpRcPtrVec::reference op : ops) { op->finalize(OCIO::FINALIZATION_EXACT); }
 
     OCIO_REQUIRE_EQUAL(ops.size(), 4);
 
@@ -423,7 +415,7 @@ OCIO_ADD_TEST(RangeOps, computed_identifier)
     OCIO_CHECK_ASSERT(ops[2]->getCacheID() != ops[3]->getCacheID());
 
     OCIO::CreateRangeOp(ops, 0.1, 1., 0.3, 1.90001);
-    for(OCIO::OpRcPtrVec::reference op : ops) { op->finalize(); }
+    for(OCIO::OpRcPtrVec::reference op : ops) { op->finalize(OCIO::FINALIZATION_EXACT); }
 
     OCIO_REQUIRE_EQUAL(ops.size(), 5);
     OCIO_CHECK_ASSERT(ops[2]->getCacheID() != ops[4]->getCacheID());

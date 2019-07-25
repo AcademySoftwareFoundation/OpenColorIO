@@ -61,6 +61,8 @@ OCIO_NAMESPACE_ENTER
                         const char * cubeinput,
                         TransformDirection direction);
             virtual ~TruelightOp();
+            
+            TransformDirection getDirection() const noexcept override { return m_direction; }
 
             OpRcPtr clone() const override;
             
@@ -74,12 +76,15 @@ OCIO_NAMESPACE_ENTER
             bool isInverse(ConstOpRcPtr & op) const override;
             bool hasChannelCrosstalk() const override;
             
-            void finalize() override;
+            bool supportedByLegacyShader() const override;
+
+            void finalize(FinalizationFlags fFlags) override;
+
+            ConstOpCPURcPtr getCPUOp() const override { return nullptr; }
 
             void apply(void * rgbaBuffer, long numPixels) const override;
             void apply(const void * inImg, void * outImg, long numPixels) const override;
-
-            bool supportedByLegacyShader() const override;
+            
             void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
 
             BitDepth getInputBitDepth() const override { return BIT_DEPTH_F32; }
@@ -239,7 +244,7 @@ OCIO_NAMESPACE_ENTER
             return true;
         }
         
-        void TruelightOp::finalize()
+        void TruelightOp::finalize(FinalizationFlags /*fFlags*/)
         {
 #ifndef OCIO_TRUELIGHT_SUPPORT
             std::ostringstream err;

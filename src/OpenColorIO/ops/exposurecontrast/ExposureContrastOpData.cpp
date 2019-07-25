@@ -129,9 +129,9 @@ const char * ExposureContrastOpData::ConvertStyleToString(ExposureContrastOpData
 
 ExposureContrastOpData::ExposureContrastOpData()
     : OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
-    , m_exposure(std::make_shared<DynamicPropertyImpl>(0., false))
-    , m_contrast(std::make_shared<DynamicPropertyImpl>(1., false))
-    , m_gamma(std::make_shared<DynamicPropertyImpl>(1., false))
+    , m_exposure(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_EXPOSURE, 0., false))
+    , m_contrast(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_CONTRAST, 1., false))
+    , m_gamma(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_GAMMA, 1., false))
 {
 }
 
@@ -140,9 +140,9 @@ ExposureContrastOpData::ExposureContrastOpData(BitDepth inBitDepth,
                                                Style style)
     : OpData(inBitDepth, outBitDepth)
     , m_style(style)
-    , m_exposure(std::make_shared<DynamicPropertyImpl>(0., false))
-    , m_contrast(std::make_shared<DynamicPropertyImpl>(1., false))
-    , m_gamma(std::make_shared<DynamicPropertyImpl>(1., false))
+    , m_exposure(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_EXPOSURE, 0., false))
+    , m_contrast(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_CONTRAST, 1., false))
+    , m_gamma(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_GAMMA, 1., false))
 {
 }
 

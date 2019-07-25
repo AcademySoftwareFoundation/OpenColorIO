@@ -536,20 +536,10 @@ OCIO_NAMESPACE_ENTER
         // Processors
         // ^^^^^^^^^^
         //
-        // Convert from inputColorSpace to outputColorSpace
-        // 
-        // .. note::
-        //    This may provide higher fidelity than anticipated due to internal
-        //    optimizations. For example, if the inputcolorspace and the
-        //    outputColorSpace are members of the same family, no conversion
-        //    will be applied, even though strictly speaking quantization
-        //    should be added.
-        // 
-        // If you wish to test these calls for quantization characteristics,
-        // apply in two steps; the image must contain RGB triples (though
-        // arbitrary numbers of additional channels can be supported (ignored)
-        // using the pixelStrideBytes arg).
-        
+        // Create a :cpp:class:`Processor` to assemble a transformation between two 
+        // color spaces.  It may then be used to create a :cpp:class:`CPUProcessor` 
+        // or :cpp:class:`GPUProcessor` to process/convert pixels.
+
         //!cpp:function::
         ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
                                          const ConstColorSpaceRcPtr & srcColorSpace,
@@ -945,14 +935,13 @@ OCIO_NAMESPACE_ENTER
     //!rst::
     // Processor
     // *********
-    
+    // The *Processor* represents a specific color transformation which is 
+    // the result of :cpp:func:`Config::getProcessor`.
+
     //!cpp:class::
     class OCIOEXPORT Processor
     {
     public:
-        //!cpp:function::
-        static ProcessorRcPtr Create();
-        
         //!cpp:function::
         bool isNoOp() const;
         
@@ -960,59 +949,71 @@ OCIO_NAMESPACE_ENTER
         //                For example, if a change in red may also cause a
         //                change in green or blue.
         bool hasChannelCrosstalk() const;
-        
+
         //!cpp:function::
         ConstProcessorMetadataRcPtr getMetadata() const;
 
-        //!cpp:function:: The returned pointer may be used to set the value of any
-        //                dynamic properties of the requested type.  Throws if the
-        //                requested property is not found.  Note that if the
-        //                processor contains several ops that support the
-        //                requested property, only ones for which dynamic has
-        //                been enabled will be controlled.
+        // TODO: Revisit the dynamic property access.
+        //!cpp:function::
         DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
+        bool hasDynamicProperty(DynamicPropertyType type) const;
 
-        ///////////////////////////////////////////////////////////////////////////
-        //!rst::
-        // CPU Renderer
-        // ^^^^^^^^^^^^
-        
-        //!cpp:function:: Apply to an image.
-        void apply(ImageDesc& img) const;
-        
-        //!rst::
-        // Apply to a single pixel.
-        // 
-        // .. note::
-        //    This is not as efficient as applying to an entire image at once.
-        //    If you are processing multiple pixels, and have the flexibility,
-        //    use the above function instead.
-        
         //!cpp:function:: 
-        void applyRGB(float * pixel) const;
-        //!cpp:function:: 
-        void applyRGBA(float * pixel) const;
-        
-        //!cpp:function:: 
-        const char * getCpuCacheID() const;
-        
+        const char * getCacheID() const;
+
         ///////////////////////////////////////////////////////////////////////////
         //!rst::
         // GPU Renderer
         // ^^^^^^^^^^^^
-        // Get the GPU shader program and its description.
-        
-        //!cpp:function:: Extract the shader information to implement the color processing.
-        void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
+        // Get an optimized :cpp:class:`GPUProcessor` instance.
 
+        //!cpp:function::        
+        ConstGPUProcessorRcPtr getDefaultGPUProcessor() const;
+        //!cpp:function::        
+        ConstGPUProcessorRcPtr getOptimizedGPUProcessor(OptimizationFlags oFlags, 
+                                                        FinalizationFlags fFlags) const;
+        
         ///////////////////////////////////////////////////////////////////////////
         //!rst::
         // CPU Renderer
         // ^^^^^^^^^^^^
-        // Get a CPU processor instance for arbitrary input and output pixel formats.
-        
+        // Get an optimized :cpp:class:`CPUProcessor` instance.
+        //        
+        // .. note::
+        //    This may provide higher fidelity than anticipated due to internal
+        //    optimizations. For example, if the inputColorSpace and the
+        //    outputColorSpace are members of the same family, no conversion
+        //    will be applied, even though strictly speaking quantization
+        //    should be added.
+
+
+        // .. note:
+        //    The typical use case to apply color processing to an image is:
+        // 
+        // .. code-block:: cpp
+        //
+        //     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+        // 
+        //     OCIO::ConstProcessorRcPtr processor 
+        //         = config->getProcessor(colorSpace1, colorSpace2);
+        //
+        //     OCIO::ConstCPUProcessorRcPtr cpuProcessor
+        //         = processor->getDefaultCPUProcessor();
+        //
+        //     OCIO::PackedImageDesc img(imgDataPtr, imgWidth, imgHeight, imgChannels);
+        //     cpuProcessor->apply(img);
+        //     
+
         //!cpp:function::        
-        ConstCPUProcessorRcPtr getCPUProcessor(PixelFormat in, PixelFormat out) const;
+        ConstCPUProcessorRcPtr getDefaultCPUProcessor() const;
+        //!cpp:function::        
+        ConstCPUProcessorRcPtr getOptimizedCPUProcessor(OptimizationFlags oFlags, 
+                                                        FinalizationFlags fFlags) const;
+        //!cpp:function::        
+        ConstCPUProcessorRcPtr getOptimizedCPUProcessor(BitDepth inBitDepth,
+                                                        BitDepth outBitDepth,
+                                                        OptimizationFlags oFlags, 
+                                                        FinalizationFlags fFlags) const;
 
     private:
         Processor();
@@ -1021,12 +1022,13 @@ OCIO_NAMESPACE_ENTER
         Processor(const Processor &);
         Processor& operator= (const Processor &);
         
+        static ProcessorRcPtr Create();
+        
         static void deleter(Processor* c);
         
         friend class Config;
         
         class Impl;
-        friend class Impl;
         Impl * m_impl;
         Impl * getImpl() { return m_impl; }
         const Impl * getImpl() const { return m_impl; }
@@ -1043,25 +1045,41 @@ OCIO_NAMESPACE_ENTER
     {
     public:
         //!cpp:function::
-        bool isNoOp() const;
-        
-        //!cpp:function::
         const char * getCacheID() const;
 
         //!cpp:function::
         bool hasChannelCrosstalk() const;
-        
-        //!cpp:function:: The PixelFormat describes the bit-depth and channel ordering 
-        //                of the input and output pixel buffers.
-        PixelFormat getInputPixelFormat() const;
-        PixelFormat getOutputPixelFormat() const;
 
-        //!cpp:function:: Process a continuous buffer of channel interleaved pixels 
-        //                (e.g. an image row).
-        // .. note:: Input and output buffers could be the same.
-        // .. note:: Some ops use SSE, so it may be helpful if the pixel buffers 
-        //           are aligned to 16-byte boundaries.
-        void apply(const void * inImg, void * outImg, long numPixels) const;
+        //!cpp:function:: Bit-depths of the input and output pixel buffers.
+        BitDepth getInputBitDepth() const;
+        BitDepth getOutputBitDepth() const;
+
+        //!cpp:function:: Refer to :cpp:func:`GPUProcessor::getDynamicProperty`.
+        DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
+
+        ///////////////////////////////////////////////////////////////////////////
+        //!rst::
+        // Apply to an image with any kind of channel ordering while respecting 
+        // the input and output bit-depths.
+
+        //!cpp:function:: 
+        void apply(ImageDesc & imgDesc) const;
+        //!cpp:function:: 
+        void apply(const ImageDesc & srcImgDesc, ImageDesc & dstImgDesc) const;
+
+        //!rst::
+        // Apply to a single pixel respecting that the input and output bit-depths
+        // be identical.
+        // 
+        // .. note::
+        //    This is not as efficient as applying to an entire image at once.
+        //    If you are processing multiple pixels, and have the flexibility,
+        //    use the above function instead.
+
+        //!cpp:function:: 
+        void applyRGB(void * pixel) const;
+        //!cpp:function:: 
+        void applyRGBA(void * pixel) const;
 
     private:
         CPUProcessor();
@@ -1070,18 +1088,68 @@ OCIO_NAMESPACE_ENTER
         CPUProcessor(const CPUProcessor &);
         CPUProcessor& operator= (const CPUProcessor &);
         
-        static void deleter(CPUProcessor* c);
+        static void deleter(CPUProcessor * c);
 
         friend class Processor;
 
         class Impl;
-        friend class Impl;
         Impl * m_impl;
         Impl * getImpl() { return m_impl; }
         const Impl * getImpl() const { return m_impl; }
     };
     
 
+    ///////////////////////////////////////////////////////////////////////////
+    //!rst::
+    // GPUProcessor
+    // *********
+    
+    //!cpp:class::
+    class GPUProcessor
+    {
+    public:
+        //!cpp:function::
+        bool isNoOp() const;
+        
+        //!cpp:function::
+        const char * getCacheID() const;
+
+        //!cpp:function::
+        bool hasChannelCrosstalk() const;
+
+        //!cpp:function:: The returned pointer may be used to set the value of any
+        //                dynamic properties of the requested type.  Throws if the
+        //                requested property is not found.  Note that if the
+        //                processor contains several ops that support the
+        //                requested property, only ones for which dynamic has
+        //                been enabled will be controlled.
+        //
+        // .. note:: 
+        //    The dynamic properties in this object are decoupled from the ones 
+        //    in the :cpp:class:`Processor` it was generated from.
+        //
+        DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
+
+        //!cpp:function:: Extract the shader information to implement the color processing.
+        void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
+
+    private:
+        GPUProcessor();
+        ~GPUProcessor();
+        
+        GPUProcessor(const GPUProcessor &);
+        GPUProcessor& operator= (const GPUProcessor &);
+        
+        static void deleter(GPUProcessor * c);
+
+        friend class Processor;
+
+        class Impl;
+        Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
+    };
+    
 
     //!cpp:class::
     // This class contains meta information about the process that generated
@@ -1270,6 +1338,7 @@ OCIO_NAMESPACE_ENTER
     public:
         //!cpp:function::
         virtual ~ImageDesc();
+
     private:
         ImageDesc& operator= (const ImageDesc &);
     };
@@ -1281,50 +1350,74 @@ OCIO_NAMESPACE_ENTER
     //!rst::
     // PackedImageDesc
     // ^^^^^^^^^^^^^^^
-    
+
     //!cpp:class::
     class OCIOEXPORT PackedImageDesc : public ImageDesc
     {
     public:
         //!cpp:function::
-        // Pass the pointer to packed image data: rgbrgbrgb, etc.
-        // The number of channels must be greater than or equal to 3
+        // All the constructors expect a pointer to packed image data (such as 
+        // rgbrgbrgb or rgbargbargba) starting at the first color channel of 
+        // the first pixel to process (which does not need to be the first pixel 
+        // of the image). The number of channels must be greater than or equal to 3.
         // If a 4th channel is specified, it is assumed to be alpha
         // information.  Channels > 4 will be ignored.
-        
-        PackedImageDesc(float * data,
+
+        // The method assumes the CPUProcessor bit-depth type for the data pointer.
+
+        PackedImageDesc(void * data,
                         long width, long height,
-                        long numChannels,
-                        ptrdiff_t chanStrideBytes = AutoStride,
-                        ptrdiff_t xStrideBytes = AutoStride,
-                        ptrdiff_t yStrideBytes = AutoStride);
+                        long numChannels); // must be 3 (RGB) or 4 (RGBA)
+
+        PackedImageDesc(void * data,
+                        long width, long height,
+                        long numChannels,  // must be 3 (RGB) or 4 (RGBA)
+                        ptrdiff_t chanStrideBytes,
+                        ptrdiff_t xStrideBytes,
+                        ptrdiff_t yStrideBytes);
+
+        PackedImageDesc(void * data,
+                        long width, long height,
+                        ChannelOrdering chanOrder);
+
+        PackedImageDesc(void * data,
+                        long width, long height,
+                        ChannelOrdering chanOrder,
+                        ptrdiff_t chanStrideBytes,
+                        ptrdiff_t xStrideBytes,
+                        ptrdiff_t yStrideBytes);
+
         //!cpp:function::
         virtual ~PackedImageDesc();
-        
-        //!cpp:function::
-        float * getData() const;
-        
-        //!cpp:function::
+
+        //!cpp:function:: Get the channel ordering of all the pixels.
+        ChannelOrdering getChannelOrder() const;
+
+        //!cpp:function:: Get a pointer to the first color channel of the first pixel.
+        void * getData() const;
+
+        //!cpp:function:: Get the width to process (where x position starts at 0 and ends at width-1).
         long getWidth() const;
-        //!cpp:function::
+        //!cpp:function:: Get the height to process (where y position starts at 0 and ends at height-1).
         long getHeight() const;
-        //!cpp:function::
+        //!cpp:function:: Get the number of color channels.
         long getNumChannels() const;
-        
-        //!cpp:function::
+
+        //!cpp:function:: Get the step in bytes to find the next color channel in the same pixel.
         ptrdiff_t getChanStrideBytes() const;
-        //!cpp:function::
+        //!cpp:function:: Get the step in bytes to find the same color channel in the next pixel.
         ptrdiff_t getXStrideBytes() const;
-        //!cpp:function::
+        //!cpp:function:: Get the step in bytes to find the same color channel 
+        //                of the pixel at the same position in the next line.
         ptrdiff_t getYStrideBytes() const;
-        
+
     private:
-        class Impl;
-        friend class Impl;
+        struct Impl;
         Impl * m_impl;
         Impl * getImpl() { return m_impl; }
         const Impl * getImpl() const { return m_impl; }
         
+        PackedImageDesc();
         PackedImageDesc(const PackedImageDesc &);
         PackedImageDesc& operator= (const PackedImageDesc &);
     };
@@ -1340,40 +1433,52 @@ OCIO_NAMESPACE_ENTER
     {
     public:
         //!cpp:function::
-        // Pass the pointer to the specified image planes: rrrr gggg bbbb, etc.
-        // aData is optional, pass NULL if no alpha exists.
-        // {r,g,b} Data must be specified
-        
-        PlanarImageDesc(float * rData, float * gData, float * bData, float * aData,
+        // All the constructors expect pointers to the specified image planes 
+        // (i.e. rrrr gggg bbbb) starting at the first color channel of the 
+        // first pixel to process (which need not be the first pixel of the image).
+        // Pass NULL for aData if no alpha exists (r/g/bData must not be NULL).
+
+        // The method assumes the CPUProcessor bit-depth type for the R/G/B/A data pointers.
+
+        PlanarImageDesc(void * rData, void * gData, void * bData, void * aData,
+                        long width, long height);
+
+        PlanarImageDesc(void * rData, void * gData, void * bData, void * aData,
                         long width, long height,
-                        ptrdiff_t yStrideBytes = AutoStride);
+                        ptrdiff_t xStrideBytes,
+                        ptrdiff_t yStrideBytes);
+
         //!cpp:function::
         virtual ~PlanarImageDesc();
+
+        //!cpp:function:: Get a pointer to the red channel of the first pixel.
+        void * getRData() const;
+        //!cpp:function:: Get a pointer to the green channel of the first pixel.
+        void * getGData() const;
+        //!cpp:function:: Get a pointer to the blue channel of the first pixel.
+        void * getBData() const;
+        //!cpp:function:: Get a pointer to the alpha channel of the first pixel
+        //                or null as alpha channel is optional.
+        void * getAData() const;
         
-        //!cpp:function::
-        float* getRData() const;
-        //!cpp:function::
-        float* getGData() const;
-        //!cpp:function::
-        float* getBData() const;
-        //!cpp:function::
-        float* getAData() const;
-        
-        //!cpp:function::
+        //!cpp:function:: Get the width to process (where x position starts at 0 and ends at width-1).
         long getWidth() const;
-        //!cpp:function::
+        //!cpp:function:: Get the height to process (where y position starts at 0 and ends at height-1).
         long getHeight() const;
         
-        //!cpp:function::
+        //!cpp:function:: Get the step in bytes to find the same color channel of the next pixel.
+        ptrdiff_t getXStrideBytes() const;
+        //!cpp:function:: Get the step in bytes to find the same color channel 
+        //                of the pixel at the same position in the next line.
         ptrdiff_t getYStrideBytes() const;
         
     private:
-        class Impl;
-        friend class Impl;
+        struct Impl;
         Impl * m_impl;
         Impl * getImpl() { return m_impl; }
         const Impl * getImpl() const { return m_impl; }
         
+        PlanarImageDesc();
         PlanarImageDesc(const PlanarImageDesc &);
         PlanarImageDesc& operator= (const PlanarImageDesc &);
     };
@@ -1585,21 +1690,21 @@ OCIO_NAMESPACE_ENTER
             TEXTURE_RGB_CHANNEL
         };
 
-        //!cpp:function:: Uniform related methods
+        //!cpp:function:: Dynamic Property related methods.
         virtual unsigned getNumUniforms() const = 0;
         virtual void getUniform(unsigned index, const char *& name, 
                                 DynamicPropertyRcPtr & value) const = 0;
         virtual bool addUniform(const char * name, 
-                                DynamicPropertyRcPtr value) = 0;
+                                const DynamicPropertyRcPtr & value) = 0;
 
         //!cpp:function:: 1D lut related methods
         virtual unsigned getTextureMaxWidth() const = 0;
         virtual void setTextureMaxWidth(unsigned maxWidth) = 0;
         virtual unsigned getNumTextures() const = 0;
-        virtual void addTexture(
-            const char * name, const char * id, unsigned width, unsigned height,
-            TextureType channel, Interpolation interpolation,
-            const float * values) = 0;
+        virtual void addTexture(const char * name, const char * id, 
+                                unsigned width, unsigned height,
+                                TextureType channel, Interpolation interpolation,
+                                const float * values) = 0;
         virtual void getTexture(unsigned index, const char *& name, const char *& id, 
                                 unsigned & width, unsigned & height,
                                 TextureType & channel, Interpolation & interpolation) const = 0;
