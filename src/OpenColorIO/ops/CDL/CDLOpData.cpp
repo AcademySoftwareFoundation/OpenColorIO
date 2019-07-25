@@ -102,8 +102,6 @@ const char * CDLOpData::GetStyleName(CDLOpData::Style style)
     }
 
     throw Exception("Unknown style for CDL.");
-
-    return 0x0;
 }
 
 CDLOpData::CDLOpData()
@@ -408,6 +406,8 @@ CDLOpDataRcPtr CDLOpData::inverse() const
 void CDLOpData::finalize()
 {
     AutoMutex lock(m_mutex);
+
+    validate();
 
     std::ostringstream cacheIDStream;
     cacheIDStream << getID() << " ";

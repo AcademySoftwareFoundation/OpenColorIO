@@ -36,6 +36,7 @@ set(SOURCES
 	fileformats/FileFormatVF.cpp
 	fileformats/xmlutils/XMLReaderHelper.cpp
 	fileformats/xmlutils/XMLReaderUtils.cpp
+	GPUProcessor.cpp
 	GpuShader.cpp
 	GpuShaderDesc.cpp
 	GpuShaderUtils.cpp

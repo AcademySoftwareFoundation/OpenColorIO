@@ -54,6 +54,15 @@ OCIO_NAMESPACE_ENTER
         }
     }
 
+    ExponentOpData::ExponentOpData(const ExponentOpData & rhs)
+        :   OpData(rhs.getInputBitDepth(), rhs.getOutputBitDepth())
+    {
+        if(this!=&rhs)
+        {
+            *this = rhs;
+        }
+    }
+
     ExponentOpData::ExponentOpData(const double * exp4)
         :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
     {
@@ -64,6 +73,7 @@ OCIO_NAMESPACE_ENTER
     {
         if(this!=&rhs)
         {
+            OpData::operator=(rhs);
             memcpy(m_exp4, rhs.m_exp4, sizeof(double)*4);
         }
 
@@ -96,31 +106,42 @@ OCIO_NAMESPACE_ENTER
         m_cacheID = cacheIDStream.str();
     }
 
-
     namespace
     {
-        void ApplyClampExponent(const void * inImg, void * outImg, long numPixels,
-                                ConstExponentOpDataRcPtr & exp)
+        class ExponentOpCPU : public OpCPU
+        {
+        public:
+            ExponentOpCPU(ConstExponentOpDataRcPtr exp) : OpCPU(), m_data(exp) {}
+            virtual ~ExponentOpCPU() {}
+
+            void apply(const void * inImg, void * outImg, long numPixels) const override;
+
+        private:
+            ConstExponentOpDataRcPtr m_data;
+        };
+    
+        void ExponentOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
         {
             const float * in = (const float *)inImg;
             float * out = (float *)outImg;
 
+            const float exp[4] = { float(m_data->m_exp4[0]), 
+                                   float(m_data->m_exp4[1]),
+                                   float(m_data->m_exp4[2]),
+                                   float(m_data->m_exp4[3]) };
+
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
-                out[0] = powf( std::max(0.0f, in[0]), float(exp->m_exp4[0]));
-                out[1] = powf( std::max(0.0f, in[1]), float(exp->m_exp4[1]));
-                out[2] = powf( std::max(0.0f, in[2]), float(exp->m_exp4[2]));
-                out[3] = powf( std::max(0.0f, in[3]), float(exp->m_exp4[3]));
+                out[0] = powf( std::max(0.0f, in[0]), exp[0]);
+                out[1] = powf( std::max(0.0f, in[1]), exp[1]);
+                out[2] = powf( std::max(0.0f, in[2]), exp[2]);
+                out[3] = powf( std::max(0.0f, in[3]), exp[3]);
 
                 in  += 4;
                 out += 4;
             }
         }
-    }
-    
-   
-    namespace
-    {
+  
         class ExponentOp : public Op
         {
         public:
@@ -129,21 +150,23 @@ OCIO_NAMESPACE_ENTER
 
             virtual ~ExponentOp();
             
-            virtual OpRcPtr clone() const;
+            TransformDirection getDirection() const noexcept override { return TRANSFORM_DIR_FORWARD; }
+
+            OpRcPtr clone() const override;
             
-            virtual std::string getInfo() const;
+            std::string getInfo() const override;
             
-            virtual bool isSameType(ConstOpRcPtr & op) const;
-            virtual bool isInverse(ConstOpRcPtr & op) const;
+            bool isSameType(ConstOpRcPtr & op) const override;
+            bool isInverse(ConstOpRcPtr & op) const override;
             
-            virtual bool canCombineWith(ConstOpRcPtr & op) const;
-            virtual void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const;
+            bool canCombineWith(ConstOpRcPtr & op) const override;
+            void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
             
-            virtual void finalize();
-            virtual void apply(void * img, long numPixels) const;
-            virtual void apply(const void * inImg, void * outImg, long numPixels) const;
-            
-            virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
+            void finalize(FinalizationFlags fFlags) override;
+
+            ConstOpCPURcPtr getCPUOp() const override;
+
+            void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
 
         protected:
             ConstExponentOpDataRcPtr expData() const { return DynamicPtrCast<const ExponentOpData>(data()); }
@@ -228,8 +251,12 @@ OCIO_NAMESPACE_ENTER
             }
         }
 
-        void ExponentOp::finalize()
+        void ExponentOp::finalize(FinalizationFlags /*fFlags*/)
         {
+            // Only 32f processing is natively supported.
+            expData()->setInputBitDepth(BIT_DEPTH_F32);
+            expData()->setOutputBitDepth(BIT_DEPTH_F32);
+
             expData()->finalize();
 
             // Create the cacheID
@@ -240,16 +267,9 @@ OCIO_NAMESPACE_ENTER
             m_cacheID = cacheIDStream.str();
         }
         
-        void ExponentOp::apply(void * img, long numPixels) const
+        ConstOpCPURcPtr ExponentOp::getCPUOp() const
         {
-            ConstExponentOpDataRcPtr expOpData = expData();
-            ApplyClampExponent(img, img, numPixels, expOpData);
-        }
-
-        void ExponentOp::apply(const void * inImg, void * outImg, long numPixels) const
-        {
-            ConstExponentOpDataRcPtr expOpData = expData();
-            ApplyClampExponent(inImg, outImg, numPixels, expOpData);
+            return std::make_shared<ExponentOpCPU>(expData());
         }
 
         void ExponentOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const 
@@ -344,10 +364,7 @@ OCIO_ADD_TEST(ExponentOps, Value)
     OCIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_INVERSE));
     OCIO_CHECK_EQUAL(ops.size(), 2);
     
-    for(unsigned int i=0; i<ops.size(); ++i)
-    {
-        OCIO_CHECK_NO_THROW(ops[i]->finalize());
-    }
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, FINALIZATION_EXACT));
     
     float error = 1e-6f;
     
@@ -391,7 +408,7 @@ OCIO_ADD_TEST(ExponentOps, ValueLimits)
     OpRcPtrVec ops;
     OCIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
 
-    OCIO_CHECK_NO_THROW(ops[0]->finalize());
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(FINALIZATION_EXACT));
 
     float error = 1e-6f;
 
@@ -457,6 +474,9 @@ OCIO_ADD_TEST(ExponentOps, Combining)
     OCIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
     OCIO_CHECK_NO_THROW(CreateExponentOp(ops, exp2, TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
+
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, FINALIZATION_EXACT));
+    
     ConstOpRcPtr op1 = ops[1];
 
     const float source[] = {  0.9f, 0.4f, 0.1f, 0.5f, };
@@ -476,7 +496,9 @@ OCIO_ADD_TEST(ExponentOps, Combining)
     OpRcPtrVec combined;
     OCIO_CHECK_NO_THROW(ops[0]->combineWith(combined, op1));
     OCIO_CHECK_EQUAL(combined.size(), 1);
-    
+
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(combined, FINALIZATION_EXACT));
+
     float tmp2[4];
     memcpy(tmp2, source, 4*sizeof(float));
     combined[0]->apply(tmp2, tmp2, 1);
@@ -495,6 +517,10 @@ OCIO_ADD_TEST(ExponentOps, Combining)
     OCIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
     OCIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_INVERSE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
+
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, FINALIZATION_EXACT));
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+
     ConstOpRcPtr op1 = ops[1];
 
     const bool isInverse = ops[0]->isInverse(op1);
@@ -515,7 +541,7 @@ OCIO_ADD_TEST(ExponentOps, Combining)
     OCIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
     OCIO_CHECK_EQUAL(ops.size(), 3);
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, false));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, FINALIZATION_EXACT));
     OCIO_CHECK_EQUAL(ops.size(), 3);
 
     const float source[] = { 0.1f, 0.5f, 0.9f, 0.5f, };
@@ -533,7 +559,8 @@ OCIO_ADD_TEST(ExponentOps, Combining)
         OCIO_CHECK_CLOSE(tmp[i], result[i], error);
     }
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops));
+    OCIO_CHECK_NO_THROW(OptimizeOpVec(ops, OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, FINALIZATION_EXACT));
     OCIO_CHECK_EQUAL(ops.size(), 1);
 
     memcpy(tmp, source, 4 * sizeof(float));
@@ -600,8 +627,7 @@ OCIO_ADD_TEST(ExponentOps, CacheID)
 
     OCIO_CHECK_EQUAL(ops.size(), 3);
 
-
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, false));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, FINALIZATION_EXACT));
 
     const std::string opCacheID0 = ops[0]->getCacheID();
     const std::string opCacheID1 = ops[1]->getCacheID();

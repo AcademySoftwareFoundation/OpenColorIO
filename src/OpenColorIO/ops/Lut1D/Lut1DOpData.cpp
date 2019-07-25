@@ -506,7 +506,6 @@ unsigned long Lut1DOpData::GetLutIdealSize(BitDepth incomingBitDepth)
         std::string err("Bit-depth is not supported: ");
         err += BitDepthToString(incomingBitDepth);
         throw Exception(err.c_str());
-        break;
     }
 
     }
@@ -607,9 +606,11 @@ void Lut1DOpData::setHueAdjust(Lut1DOpData::HueAdjust algo)
 
 Lut1DOpDataRcPtr Lut1DOpData::clone() const
 {
+    // TODO: As 1D LUT could be cloned by the CPUProcessor,
+    //       think about the 'bypass' behavior.
+
     return std::make_shared<Lut1DOpData>(*this);
 }
-
 
 bool Lut1DOpData::IsInverse(const Lut1DOpData * lutfwd,
                             const Lut1DOpData * lutinv)
@@ -693,12 +694,10 @@ const char* GetHueAdjustName(Lut1DOpData::HueAdjust algo)
     case Lut1DOpData::HUE_DW3:
     {
         return "dw3";
-        break;
     }
     case Lut1DOpData::HUE_NONE:
     {
         return "none";
-        break;
     }
     }
     throw Exception("1D LUT has an invalid hue adjust style.");
@@ -714,6 +713,8 @@ void Lut1DOpData::finalize()
     }
 
     AutoMutex lock(m_mutex);
+
+    validate();
 
     md5_state_t state;
     md5_byte_t digest[16];
@@ -737,8 +738,6 @@ void Lut1DOpData::finalize()
     m_cacheID = cacheIDStream.str();
 }
 
-namespace
-{
 //-----------------------------------------------------------------------------
 //
 // Functional composition is a concept from mathematics where two functions
@@ -768,7 +767,7 @@ namespace
 // 
 // A is used as in/out parameter. As input is it the first LUT in the composition,
 // as output it is the result of the composition.
-void ComposeVec(Lut1DOpDataRcPtr & A, const OpRcPtrVec & B)
+void Lut1DOpData::ComposeVec(Lut1DOpDataRcPtr & A, const OpRcPtrVec & B)
 {
     if (B.size() == 0)
     {
@@ -830,7 +829,6 @@ void ComposeVec(Lut1DOpDataRcPtr & A, const OpRcPtrVec & B)
 
     A->OpData::setOutputBitDepth(outputBD);
 
-}
 }
 
 // Compose two Lut1DOpData.
@@ -990,10 +988,13 @@ Lut1DOpDataRcPtr Lut1DOpData::MakeFastLut1DFromInverse(ConstLut1DOpDataRcPtr & l
     newDomainLut->setInputBitDepth(lut->getInputBitDepth());
     newDomainLut->setOutputBitDepth(lut->getInputBitDepth());
 
+    newDomainLut->setHueAdjust(lut->getHueAdjust());
+
     // Change inv style to INV_EXACT to avoid recursion.
     LutStyleGuard<Lut1DOpData> guard(*lut);
 
     Compose(newDomainLut, lut, COMPOSE_RESAMPLE_NO);
+
     return newDomainLut;
 }
 

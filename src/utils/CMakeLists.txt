@@ -4,3 +4,9 @@ if(TARGET test_gpu_exec OR
 )
     add_subdirectory(oglbuilder)
 endif()
+
+if(TARGET ocioconvert OR 
+   TARGET ocioperf
+)
+    add_subdirectory(oiiohelpers)
+endif()

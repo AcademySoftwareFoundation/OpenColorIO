@@ -43,47 +43,58 @@ static constexpr const char * EC_EXPOSURE = "exposureVal";
 static constexpr const char * EC_CONTRAST = "contrastVal";
 static constexpr const char * EC_GAMMA = "gammaVal";
 
-void AddProperty(GpuShaderDescRcPtr shaderDesc,
-                 GpuShaderText & st,
-                 DynamicPropertyImplRcPtr prop,
-                 const std::string & name)
+void AddUniform(GpuShaderDescRcPtr & shaderDesc,
+                GpuShaderText & st,
+                DynamicPropertyImplRcPtr prop,
+                const std::string & name)
 {
-    if (prop->isDynamic())
+    // Add the uniform if it does not already exist.
+    if (shaderDesc->addUniform(name.c_str(), prop))
     {
-        // Add uniform to shader.
-        if (shaderDesc->addUniform(name.c_str(), prop))
-        {
-            // Declare uniform.
-            GpuShaderText stDecl(shaderDesc->getLanguage());
-            stDecl.declareUniformFloat(name);
-            shaderDesc->addToDeclareShaderCode(stDecl.string().c_str());
-        }
+        // Declare uniform.
+        GpuShaderText stDecl(shaderDesc->getLanguage());
+        stDecl.declareUniformFloat(name);
+        shaderDesc->addToDeclareShaderCode(stDecl.string().c_str());
+    }
+}
+
+std::string AddDynamicProperty(GpuShaderDescRcPtr & shaderDesc,
+                               GpuShaderText & st,
+                               DynamicPropertyImplRcPtr prop,
+                               const std::string & name)
+{
+    std::string finalName;
+
+    if(prop->isDynamic())
+    {
+        finalName = shaderDesc->getResourcePrefix();
+        finalName += name;
+
+        // NB: No need to add an index to the name to avoid collisions
+        //     as the dynamic properties are shared i.e. only one instance.
+
+        AddUniform(shaderDesc, st, prop, finalName);
     }
     else
     {
-        // If the property is not dynamic, declare a local variable rather than
-        // a uniform.
-        st.declareVar(name, (float)prop->getDoubleValue());
+        finalName = name;
+
+        st.declareVar(finalName, (float)prop->getDoubleValue());
     }
 
+    return finalName;
 }
 
-void AddProperties(GpuShaderDescRcPtr shaderDesc,
+void AddProperties(GpuShaderDescRcPtr & shaderDesc,
                    GpuShaderText & st,
                    ConstExposureContrastOpDataRcPtr & ec,
                    std::string & exposureName,
                    std::string & contrastName,
                    std::string & gammaName)
 {
-    exposureName = shaderDesc->getResourcePrefix();
-    exposureName += EC_EXPOSURE;
-    contrastName = shaderDesc->getResourcePrefix();
-    contrastName += EC_CONTRAST;
-    gammaName = shaderDesc->getResourcePrefix();
-    gammaName += EC_GAMMA;
-    AddProperty(shaderDesc, st, ec->getExposureProperty(), exposureName);
-    AddProperty(shaderDesc, st, ec->getContrastProperty(), contrastName);
-    AddProperty(shaderDesc, st, ec->getGammaProperty(), gammaName);
+    exposureName = AddDynamicProperty(shaderDesc, st, ec->getExposureProperty(), EC_EXPOSURE);
+    contrastName = AddDynamicProperty(shaderDesc, st, ec->getContrastProperty(), EC_CONTRAST);
+    gammaName    = AddDynamicProperty(shaderDesc, st, ec->getGammaProperty(),    EC_GAMMA);
 }
 
 void AddECLinearShader(GpuShaderText & st,
@@ -258,7 +269,7 @@ void AddECLogarithmicRevShader(GpuShaderText & st,
 
 }
 
-void GetExposureContrastGPUShaderProgram(GpuShaderDescRcPtr shaderDesc,
+void GetExposureContrastGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
                                          ConstExposureContrastOpDataRcPtr & ec)
 {
     std::string exposureName;

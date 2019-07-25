@@ -46,6 +46,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
+    bool OpCPU::hasDynamicProperty(DynamicPropertyType type) const
+    {
+        return false;
+    }
+
+    DynamicPropertyRcPtr OpCPU::getDynamicProperty(DynamicPropertyType type) const
+    {
+        throw Exception("Op does not implement dynamic property.");
+    }
+
+
     OpData::OpData(BitDepth inBitDepth, BitDepth outBitDepth)
         :   m_inBitDepth(inBitDepth)
         ,   m_outBitDepth(outBitDepth)
@@ -123,6 +134,11 @@ OCIO_NAMESPACE_ENTER
         os << "Op: " << getInfo() << " cannot be combined. ";
         os << "A type-specific combining function is not defined.";
         throw Exception(os.str().c_str());
+    }
+
+    bool Op::isDynamic() const
+    {
+        return false;
     }
 
     bool Op::hasDynamicProperty(DynamicPropertyType type) const
@@ -205,6 +221,11 @@ OCIO_NAMESPACE_ENTER
     OpRcPtrVec::const_reference OpRcPtrVec::back() const
     {
         return m_ops.back();
+    }
+
+    OpRcPtrVec::const_reference OpRcPtrVec::front() const
+    {
+        return m_ops.front();
     }
 
     void OpRcPtrVec::validate() const
@@ -320,24 +341,56 @@ OCIO_NAMESPACE_ENTER
         
         return true;
     }
-
-    void FinalizeOpVec(OpRcPtrVec & ops, bool optimize)
+    
+    void FinalizeOpVec(OpRcPtrVec & ops, FinalizationFlags fFlags)
     {
-        // TODO: Add envvar to force disable optimizations
-
-        ops.validate();
-        
-        if(optimize)
+        for(OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
         {
-            OptimizeOpVec(ops);
-        }
-        
-        for(auto & op : ops)
-        {
-            op->finalize();
+            ops[i]->finalize(fFlags);
         }
     }
-    
+
+    namespace
+    {
+
+    void UnifyDynamicProperty(OpRcPtr op,
+                              DynamicPropertyImplRcPtr & prop,
+                              DynamicPropertyType type)
+    {
+        if (op->hasDynamicProperty(type))
+        {
+            if (!prop)
+            {
+                // Initialize property.
+                DynamicPropertyRcPtr dp = op->getDynamicProperty(type);
+                prop = OCIO_DYNAMIC_POINTER_CAST<DynamicPropertyImpl>(dp);
+            }
+            else
+            {
+                // Share the property.
+                op->replaceDynamicProperty(type, prop);
+            }
+        }
+    }
+
+    }
+
+    // This ensures that when a dynamic property on a processor is
+    // modified, all ops that respond to that property (and which
+    // are enabled) are synchronized.
+    void UnifyDynamicProperties(OpRcPtrVec & ops)
+    {
+        DynamicPropertyImplRcPtr dpExposure;
+        DynamicPropertyImplRcPtr dpContrast;
+        DynamicPropertyImplRcPtr dpGamma;
+        for (auto op : ops)
+        {
+            UnifyDynamicProperty(op, dpExposure, DYNAMIC_PROPERTY_EXPOSURE);
+            UnifyDynamicProperty(op, dpContrast, DYNAMIC_PROPERTY_CONTRAST);
+            UnifyDynamicProperty(op, dpGamma, DYNAMIC_PROPERTY_GAMMA);
+        }
+    }
+
     void CreateOpVecFromOpData(OpRcPtrVec & ops,
                                const OpDataRcPtr & opData,
                                TransformDirection dir)
@@ -434,11 +487,13 @@ OCIO_NAMESPACE_ENTER
         case OpData::ReferenceType:
         {
             throw Exception("ReferenceOpData should have been replaced by referenced ops");
-            break;
         }
 
         default:
+        {
             throw Exception("OpData is not supported");
+        }
+
         }
     }
 
@@ -519,7 +574,7 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         OCIO_CHECK_EQUAL(ops.size(), 2);
      
         // No optimize: keep both matrix ops
-        OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, false));
+        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
         OCIO_CHECK_EQUAL(ops.size(), 2);
 
         // apply ops
@@ -528,7 +583,8 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         Apply(ops, tmp, 3);
 
         // Optimize: Combine 2 matrix ops
-        OCIO_CHECK_NO_THROW(FinalizeOpVec(ops));
+        OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_VERY_GOOD));
+        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
         OCIO_CHECK_EQUAL(ops.size(), 1);
 
         // apply op
@@ -556,7 +612,7 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
         // No optimize: keep both all ops
-        OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, false));
+        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
         // apply ops
@@ -565,7 +621,8 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         Apply(ops, tmp, 3);
 
         // Optimize: remove the no op
-        OCIO_CHECK_NO_THROW(FinalizeOpVec(ops));
+        OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_VERY_GOOD));
+        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
         OCIO_CHECK_EQUAL(ops.size(), 2);
         OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
         OCIO_CHECK_EQUAL(ops[1]->getInfo(), "<LogOp>");
@@ -595,7 +652,7 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
         // No optimize: keep both all ops
-        OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, false));
+        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
         // apply ops
@@ -604,7 +661,8 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         Apply(ops, tmp, 3);
 
         // Optimize: remove the no op
-        OCIO_CHECK_NO_THROW(FinalizeOpVec(ops));
+        OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_VERY_GOOD));
+        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
         OCIO_CHECK_EQUAL(ops.size(), 2);
         OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
         OCIO_CHECK_EQUAL(ops[1]->getInfo(), "<LogOp>");
@@ -634,7 +692,7 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
         // No optimize: keep both all ops
-        OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, false));
+        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
         // apply ops
@@ -643,7 +701,8 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         Apply(ops, tmp, 3);
 
         // Optimize: remove the no op
-        OCIO_CHECK_NO_THROW(FinalizeOpVec(ops));
+        OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_VERY_GOOD));
+        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
         OCIO_CHECK_EQUAL(ops.size(), 2);
         OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
         OCIO_CHECK_EQUAL(ops[1]->getInfo(), "<LogOp>");
@@ -678,7 +737,7 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         OCIO_CHECK_EQUAL(ops.size(), 9);
 
         // No optimize: keep both all ops
-        OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, false));
+        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
         OCIO_CHECK_EQUAL(ops.size(), 9);
 
         // apply ops
@@ -687,7 +746,8 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         Apply(ops, tmp, 3);
 
         // Optimize: remove the no op
-        OCIO_CHECK_NO_THROW(FinalizeOpVec(ops));
+        OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_VERY_GOOD));
+        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
         OCIO_CHECK_EQUAL(ops.size(), 2);
         OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
         OCIO_CHECK_EQUAL(ops[1]->getInfo(), "<LogOp>");
@@ -964,7 +1024,7 @@ OCIO_ADD_TEST(OpRcPtrVec, bit_depth_with_filenoop)
 
     // Remove FileNoOp and adjust the bit-depths.
 
-    OCIO_CHECK_NO_THROW(OptimizeOpVec(ops));
+    OCIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
 
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
     OCIO_CHECK_EQUAL(ops[0]->getInputBitDepth(),  OCIO::BIT_DEPTH_F32);

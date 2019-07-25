@@ -26,12 +26,14 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorIO/OpenColorIO.h>
-
 #include <cstdlib>
 #include <sstream>
 
+#include <OpenColorIO/OpenColorIO.h>
+
+#include "BitDepthUtils.h"
 #include "ImagePacking.h"
+
 
 OCIO_NAMESPACE_ENTER
 {
@@ -42,6 +44,7 @@ OCIO_NAMESPACE_ENTER
         {
             os << "<PackedImageDesc ";
             os << "data=" << packedImg->getData() << ", ";
+            os << "chanOrder=" << packedImg->getChannelOrder() << ", ";
             os << "width=" << packedImg->getWidth() << ", ";
             os << "height=" << packedImg->getHeight() << ", ";
             os << "numChannels=" << packedImg->getNumChannels() << ", ";
@@ -59,6 +62,7 @@ OCIO_NAMESPACE_ENTER
             os << "aData=" << planarImg->getAData() << ", ";
             os << "width=" << packedImg->getWidth() << ", ";
             os << "height=" << packedImg->getHeight() << ", ";
+            os << "xStrideBytes=" << planarImg->getXStrideBytes() << ", ";
             os << "yStrideBytes=" << planarImg->getYStrideBytes() << "";
             os << ">";
         }
@@ -74,69 +78,118 @@ OCIO_NAMESPACE_ENTER
     {
     
     }
-    
-    
-    
-    GenericImageDesc::GenericImageDesc():
-        width(0),
-        height(0),
-        xStrideBytes(0),
-        yStrideBytes(0),
-        rData(NULL),
-        gData(NULL),
-        bData(NULL),
-        aData(NULL)
-    { };
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    GenericImageDesc::~GenericImageDesc()
-    { };
-    
-    void GenericImageDesc::init(const ImageDesc& img)
+
+    void GenericImageDesc::init(const ImageDesc & img, BitDepth bitDepth, const ConstOpCPURcPtr & bitDepthOp)
     {
+        m_packedFloatRGBA = false;
+        m_bitDepth = bitDepth;
+        m_bitDepthOp = bitDepthOp;
+
         if(const PackedImageDesc * packedImg = dynamic_cast<const PackedImageDesc*>(&img))
         {
-            width = packedImg->getWidth();
-            height = packedImg->getHeight();
-            long numChannels = packedImg->getNumChannels();
+            m_width = packedImg->getWidth();
+            m_height = packedImg->getHeight();
+            const long numChannels = packedImg->getNumChannels();
+
+            m_packedFloatRGBA = packedImg->getChannelOrder()==CHANNEL_ORDERING_RGBA
+                && bitDepth==BIT_DEPTH_F32;
             
-            ptrdiff_t chanStrideBytes = packedImg->getChanStrideBytes();
-            xStrideBytes = packedImg->getXStrideBytes();
-            yStrideBytes = packedImg->getYStrideBytes();
+            m_chanStrideBytes = packedImg->getChanStrideBytes();
+            m_xStrideBytes    = packedImg->getXStrideBytes();
+            m_yStrideBytes    = packedImg->getYStrideBytes();
             
             // AutoStrides will already be resolved by here, in the constructor of the ImageDesc
-            if(chanStrideBytes == AutoStride ||
-                xStrideBytes == AutoStride ||
-                yStrideBytes == AutoStride)
+            if(m_chanStrideBytes == AutoStride ||
+                m_xStrideBytes == AutoStride ||
+                m_yStrideBytes == AutoStride)
             {
                 throw Exception("Malformed PackedImageDesc: Unresolved AutoStride.");
             }
-            
-            rData = packedImg->getData();
-            gData = reinterpret_cast<float*>( reinterpret_cast<char*>(rData)
-                + chanStrideBytes );
-            bData = reinterpret_cast<float*>( reinterpret_cast<char*>(rData)
-                + 2*chanStrideBytes );
-            if(numChannels >= 4)
+
+            if(packedImg->getChannelOrder()==CHANNEL_ORDERING_RGBA
+                || packedImg->getChannelOrder()==CHANNEL_ORDERING_RGB)
             {
-                aData = reinterpret_cast<float*>( reinterpret_cast<char*>(rData)
-                  + 3*chanStrideBytes );
+                if(packedImg->getChannelOrder()==CHANNEL_ORDERING_RGBA && numChannels!=4)
+                {
+                    throw Exception("Malformed PackedImageDesc: Wrong number of color channels.");
+                }
+                else if(packedImg->getChannelOrder()==CHANNEL_ORDERING_RGB && numChannels!=3)
+                {
+                    throw Exception("Malformed PackedImageDesc: Wrong number of color channels.");
+                }
+
+                m_rData = reinterpret_cast<void *>( packedImg->getData() );
+                m_gData = reinterpret_cast<void *>( reinterpret_cast<char *>(m_rData)
+                    + m_chanStrideBytes );
+                m_bData = reinterpret_cast<void *>( reinterpret_cast<char *>(m_rData)
+                    + 2 * m_chanStrideBytes );
+                if(packedImg->getChannelOrder()==CHANNEL_ORDERING_RGBA)
+                {
+                    m_aData = reinterpret_cast<void *>( reinterpret_cast<char *>(m_rData)
+                        + 3 * m_chanStrideBytes );
+                }
+                else
+                {
+                    m_aData = nullptr;
+                }
+            }
+            else if(packedImg->getChannelOrder()==CHANNEL_ORDERING_BGRA
+                || packedImg->getChannelOrder()==CHANNEL_ORDERING_BGR)
+            {
+                if(packedImg->getChannelOrder()==CHANNEL_ORDERING_BGRA && numChannels!=4)
+                {
+                    throw Exception("Malformed PackedImageDesc: Wrong number of color channels.");
+                }
+                else if(packedImg->getChannelOrder()==CHANNEL_ORDERING_BGR && numChannels!=3)
+                {
+                    throw Exception("Malformed PackedImageDesc: Wrong number of color channels.");
+                }
+
+                m_bData = reinterpret_cast<void *>( packedImg->getData() );
+                m_gData = reinterpret_cast<void *>( reinterpret_cast<char *>(m_bData)
+                    + m_chanStrideBytes );
+                m_rData = reinterpret_cast<void *>( reinterpret_cast<char *>(m_bData)
+                    + 2 * m_chanStrideBytes );
+                if(packedImg->getChannelOrder()==CHANNEL_ORDERING_BGRA)
+                {
+                    m_aData = reinterpret_cast<void *>( reinterpret_cast<char *>(m_bData)
+                        + 3 * m_chanStrideBytes );
+                }
+                else
+                {
+                    m_aData = nullptr;
+                }
+            }
+            else if(packedImg->getChannelOrder()==CHANNEL_ORDERING_ABGR)
+            {
+                if(numChannels!=4)
+                {
+                    throw Exception("Malformed PackedImageDesc: Missing color channels.");
+                }
+
+                m_aData = reinterpret_cast<void *>( packedImg->getData() );
+                m_bData = reinterpret_cast<void *>( reinterpret_cast<char *>(m_aData)
+                    + m_chanStrideBytes );
+                m_gData = reinterpret_cast<void *>( reinterpret_cast<char *>(m_aData)
+                    + 2 * m_chanStrideBytes );
+                m_rData = reinterpret_cast<void *>( reinterpret_cast<char *>(m_aData)
+                    + 3 * m_chanStrideBytes );
+            }
+            else
+            {
+                throw Exception("PackedImageDesc Error: Unknown channel ordering.");
+            }
+
+            if(m_rData == nullptr || m_gData == nullptr || m_bData == nullptr)
+            {
+                throw Exception("PackedImageDesc Error: A null image ptr was specified.");
             }
             
-            if(rData == NULL)
-            {
-                std::ostringstream os;
-                os << "PackedImageDesc Error: A null image ptr was specified.";
-                throw Exception(os.str().c_str());
-            }
-            
-            if(width <= 0 || height <= 0)
+            if(m_width <= 0 || m_height <= 0)
             {
                 std::ostringstream os;
                 os << "PackedImageDesc Error: Image dimensions must be positive for both x,y. '";
-                os << width << "x" << height << "' is not allowed.";
+                os << m_width << "x" << m_height << "' is not allowed.";
                 throw Exception(os.str().c_str());
             }
             
@@ -150,31 +203,33 @@ OCIO_NAMESPACE_ENTER
         }
         else if(const PlanarImageDesc * planarImg = dynamic_cast<const PlanarImageDesc*>(&img))
         {
-            width = planarImg->getWidth();
-            height = planarImg->getHeight();
-            xStrideBytes = sizeof(float);
-            yStrideBytes = planarImg->getYStrideBytes();
+            m_width = planarImg->getWidth();
+            m_height = planarImg->getHeight();
+
+            m_chanStrideBytes = planarImg->getXStrideBytes();
+            m_xStrideBytes    = planarImg->getXStrideBytes();
+            m_yStrideBytes    = planarImg->getYStrideBytes();
             
             // AutoStrides will already be resolved by here, in the constructor of the ImageDesc
-            if(yStrideBytes == AutoStride)
+            if(m_yStrideBytes == AutoStride)
             {
                 throw Exception("Malformed PlanarImageDesc: Unresolved AutoStride.");
             }
             
-            rData = planarImg->getRData();
-            gData = planarImg->getGData();
-            bData = planarImg->getBData();
-            aData = planarImg->getAData();
+            m_rData = reinterpret_cast<void *>(planarImg->getRData());
+            m_gData = reinterpret_cast<void *>(planarImg->getGData());
+            m_bData = reinterpret_cast<void *>(planarImg->getBData());
+            m_aData = reinterpret_cast<void *>(planarImg->getAData());
             
-            if(width <= 0 || height <= 0)
+            if(m_width <= 0 || m_height <= 0)
             {
                 std::ostringstream os;
                 os << "PlanarImageDesc Error: Image dimensions must be positive for both x,y. '";
-                os << width << "x" << height << "' is not allowed.";
+                os << m_width << "x" << m_height << "' is not allowed.";
                 throw Exception(os.str().c_str());
             }
             
-            if(rData == NULL || gData == NULL || bData == NULL)
+            if(m_rData == nullptr || m_gData == nullptr || m_bData == nullptr)
             {
                 std::ostringstream os;
                 os << "PlanarImageDesc Error: Valid ptrs must be passed for all 3 image rgb color channels.";
@@ -187,86 +242,224 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    bool GenericImageDesc::isPackedRGBA() const
+    bool GenericImageDesc::isPackedFloatRGBA() const
     {
-        char* rPtr = reinterpret_cast<char*>(rData);
-        char* gPtr = reinterpret_cast<char*>(gData);
-        char* bPtr = reinterpret_cast<char*>(bData);
-        char* aPtr = reinterpret_cast<char*>(aData);
-        
+        if(m_chanStrideBytes!=sizeof(float)) return false;
+
+        char* rPtr = reinterpret_cast<char*>(m_rData);
+        char* gPtr = reinterpret_cast<char*>(m_gData);
+        char* bPtr = reinterpret_cast<char*>(m_bData);
+        char* aPtr = reinterpret_cast<char*>(m_aData);
+
         if(gPtr-rPtr != sizeof(float)) return false;
         if(bPtr-gPtr != sizeof(float)) return false;
         if(aPtr && (aPtr-bPtr != sizeof(float))) return false;
-        
+
         // Confirm xStrideBytes is a pure float-sized packing
         // (I.e., it will divide evenly)
-        if(xStrideBytes <= 0) return false;
-        div_t result = div((int) xStrideBytes, (int)sizeof(float));
+        if(m_xStrideBytes <= 0) return false;
+        div_t result = div((int) m_xStrideBytes, (int)sizeof(float));
         if(result.rem != 0) return false;
-        
+
         int implicitChannels = result.quot;
         if(implicitChannels != 4) return false;
-        
-        return true;
+
+        return m_packedFloatRGBA;
     }
     
     
     ///////////////////////////////////////////////////////////////////////////
     
     
-    class PackedImageDesc::Impl
+    struct PackedImageDesc::Impl
     {
-    public:
-        float * data_;
-        long width_;
-        long height_;
-        long numChannels_;
-        ptrdiff_t chanStrideBytes_;
-        ptrdiff_t xStrideBytes_;
-        ptrdiff_t yStrideBytes_;
-        
-        Impl() :
-            data_(NULL),
-            width_(0),
-            height_(0),
-            numChannels_(0),
-            chanStrideBytes_(0),
-            xStrideBytes_(0),
-            yStrideBytes_(0)
-        {
-        }
-        
-        ~Impl()
-        { }
+        void * data_ = nullptr;
+
+        ChannelOrdering chanOrder_ = CHANNEL_ORDERING_RGBA;
+
+        long width_ = 0;
+        long height_ = 0;
+        long numChannels_ = 0;
+
+        // Byte numbers computed from the bit depth.
+        ptrdiff_t chanStrideBytes_ = 0;
+        ptrdiff_t xStrideBytes_ = 0;
+        ptrdiff_t yStrideBytes_ = 0;
     };
     
-    PackedImageDesc::PackedImageDesc(float * data,
+    PackedImageDesc::PackedImageDesc(void * data,
+                                     long width, long height,
+                                     long numChannels)
+        :   ImageDesc()
+        ,   m_impl(new PackedImageDesc::Impl)
+    {
+		getImpl()->data_        = data;
+		getImpl()->width_       = width;
+        getImpl()->height_      = height;
+        getImpl()->numChannels_ = numChannels;
+
+        if(numChannels==4)
+        {
+            getImpl()->chanOrder_ = CHANNEL_ORDERING_RGBA;
+        }
+        else if(numChannels==3)
+        {
+            getImpl()->chanOrder_ = CHANNEL_ORDERING_RGB;
+        }
+        else
+        {
+            throw Exception("Invalid number of channels.");
+        }
+
+        const unsigned oneChannelInBytes = sizeof(BitDepthInfo<BIT_DEPTH_F32>::Type);
+
+        getImpl()->chanStrideBytes_ = oneChannelInBytes;
+        getImpl()->xStrideBytes_    = getImpl()->chanStrideBytes_ * getImpl()->numChannels_;
+        getImpl()->yStrideBytes_    = getImpl()->xStrideBytes_* width;
+    }
+
+    PackedImageDesc::PackedImageDesc(void * data,
+                                     long width, long height,
+                                     ChannelOrdering chanOrder)
+        :   ImageDesc()
+        ,   m_impl(new PackedImageDesc::Impl)
+    {
+        getImpl()->data_      = data;
+        getImpl()->chanOrder_ = chanOrder;
+        getImpl()->width_     = width;
+        getImpl()->height_    = height;
+
+        if(chanOrder==CHANNEL_ORDERING_RGBA 
+            || chanOrder==CHANNEL_ORDERING_BGRA
+            || chanOrder==CHANNEL_ORDERING_ABGR)
+        {
+            getImpl()->numChannels_ = 4;
+        }
+        else if(chanOrder==CHANNEL_ORDERING_RGB 
+            || chanOrder==CHANNEL_ORDERING_BGR)
+        {
+            getImpl()->numChannels_ = 3;
+        }
+        else
+        {
+            throw Exception("Unknown channel ordering.");
+        }
+
+        const unsigned oneChannelInBytes = sizeof(BitDepthInfo<BIT_DEPTH_F32>::Type);
+
+        getImpl()->chanStrideBytes_ = oneChannelInBytes;
+        getImpl()->xStrideBytes_    = getImpl()->chanStrideBytes_ * getImpl()->numChannels_;
+        getImpl()->yStrideBytes_    = getImpl()->xStrideBytes_ * width;
+    }
+
+    PackedImageDesc::PackedImageDesc(void * data,
+                                     long width, long height,
+                                     ChannelOrdering chanOrder,
+                                     ptrdiff_t chanStrideBytes,
+                                     ptrdiff_t xStrideBytes,
+                                     ptrdiff_t yStrideBytes)
+        :   ImageDesc()
+        ,   m_impl(new PackedImageDesc::Impl)
+    {
+        getImpl()->data_      = data;
+        getImpl()->chanOrder_ = chanOrder;
+        getImpl()->width_     = width;
+        getImpl()->height_    = height;
+
+        if(chanOrder==CHANNEL_ORDERING_RGBA 
+            || chanOrder==CHANNEL_ORDERING_BGRA
+            || chanOrder==CHANNEL_ORDERING_ABGR)
+        {
+            getImpl()->numChannels_ = 4;
+        }
+        else if(chanOrder==CHANNEL_ORDERING_RGB 
+            || chanOrder==CHANNEL_ORDERING_BGR)
+        {
+            getImpl()->numChannels_ = 3;
+        }
+        else
+        {
+            throw Exception("Unknown channel ordering.");
+        }
+
+        const unsigned oneChannelInBytes = sizeof(BitDepthInfo<BIT_DEPTH_F32>::Type);
+
+        getImpl()->chanStrideBytes_ = (chanStrideBytes == AutoStride)
+            ? oneChannelInBytes : chanStrideBytes;
+        getImpl()->xStrideBytes_ = (xStrideBytes == AutoStride)
+            ? getImpl()->chanStrideBytes_ * getImpl()->numChannels_ : xStrideBytes;
+        getImpl()->yStrideBytes_ = (yStrideBytes == AutoStride)
+            ? getImpl()->xStrideBytes_ * width : yStrideBytes;
+
+        if((getImpl()->chanStrideBytes_ * getImpl()->numChannels_) > getImpl()->xStrideBytes_)
+        {
+            throw Exception("The channel and x strides are inconsistent.");
+        }
+        if((getImpl()->xStrideBytes_ * width) > getImpl()->yStrideBytes_)
+        {
+            throw Exception("The x and y strides are inconsistent.");
+        }
+    }
+
+    PackedImageDesc::PackedImageDesc(void * data,
                                      long width, long height,
                                      long numChannels,
                                      ptrdiff_t chanStrideBytes,
                                      ptrdiff_t xStrideBytes,
                                      ptrdiff_t yStrideBytes)
-        : m_impl(new PackedImageDesc::Impl)
+        :   ImageDesc()
+        ,   m_impl(new PackedImageDesc::Impl)
     {
-        getImpl()->data_ = data;
-        getImpl()->width_ = width;
-        getImpl()->height_ = height;
+        getImpl()->data_        = data;
+        getImpl()->width_       = width;
+        getImpl()->height_      = height;
         getImpl()->numChannels_ = numChannels;
+
+
+        if(numChannels==4)
+        {
+            getImpl()->chanOrder_ = CHANNEL_ORDERING_RGBA;
+        }
+        else if(numChannels==3)
+        {
+            getImpl()->chanOrder_ = CHANNEL_ORDERING_RGB;
+        }
+        else
+        {
+            throw Exception("Invalid number of channels.");
+        }
+
+        const unsigned oneChannelInBytes = sizeof(BitDepthInfo<BIT_DEPTH_F32>::Type);
+
         getImpl()->chanStrideBytes_ = (chanStrideBytes == AutoStride)
-            ? sizeof(float) : chanStrideBytes;
+            ? oneChannelInBytes : chanStrideBytes;
         getImpl()->xStrideBytes_ = (xStrideBytes == AutoStride)
-            ? sizeof(float)*numChannels : xStrideBytes;
+            ? getImpl()->chanStrideBytes_ * getImpl()->numChannels_ : xStrideBytes;
         getImpl()->yStrideBytes_ = (yStrideBytes == AutoStride)
-            ? sizeof(float)*width*numChannels : yStrideBytes;
+            ? getImpl()->xStrideBytes_ * width : yStrideBytes;
+
+        if((getImpl()->chanStrideBytes_ * getImpl()->numChannels_) > getImpl()->xStrideBytes_)
+        {
+            throw Exception("The channel and x strides are inconsistent.");
+        }
+        if((getImpl()->xStrideBytes_ * width) > getImpl()->yStrideBytes_)
+        {
+            throw Exception("The x and y strides are inconsistent.");
+        }
     }
-    
+
     PackedImageDesc::~PackedImageDesc()
     {
         delete m_impl;
-        m_impl = NULL;
+        m_impl = nullptr;
     }
-    
-    float * PackedImageDesc::getData() const
+
+    ChannelOrdering PackedImageDesc::getChannelOrder() const
+    {
+        return getImpl()->chanOrder_;
+    }
+
+    void * PackedImageDesc::getData() const
     {
         return getImpl()->data_;
     }
@@ -306,36 +499,25 @@ OCIO_NAMESPACE_ENTER
     
     
     
-    class PlanarImageDesc::Impl
+    struct PlanarImageDesc::Impl
     {
-    public:
-        float * rData_;
-        float * gData_;
-        float * bData_;
-        float * aData_;
-        long width_;
-        long height_;
-        ptrdiff_t yStrideBytes_;
-        
-        Impl() :
-            rData_(NULL),
-            gData_(NULL),
-            bData_(NULL),
-            aData_(NULL),
-            width_(0),
-            height_(0),
-            yStrideBytes_(0)
-        { }
-        
-        ~Impl()
-        { }
+        void * rData_ = nullptr;
+        void * gData_ = nullptr;
+        void * bData_ = nullptr;
+        void * aData_ = nullptr;
+
+        long width_ = 0;
+        long height_ = 0;
+
+        ptrdiff_t xStrideBytes_ = 0;
+        ptrdiff_t yStrideBytes_ = 0;
     };
     
     
-    PlanarImageDesc::PlanarImageDesc(float * rData, float * gData, float * bData, float * aData,
-                                     long width, long height,
-                                     ptrdiff_t yStrideBytes)
-        : m_impl(new PlanarImageDesc::Impl())
+    PlanarImageDesc::PlanarImageDesc(void * rData, void * gData, void * bData, void * aData,
+                                     long width, long height)
+        :   ImageDesc()
+        ,   m_impl(new PlanarImageDesc::Impl())
     {
         getImpl()->rData_ = rData;
         getImpl()->gData_ = gData;
@@ -343,32 +525,59 @@ OCIO_NAMESPACE_ENTER
         getImpl()->aData_ = aData;
         getImpl()->width_ = width;
         getImpl()->height_ = height;
+
+        getImpl()->xStrideBytes_ = sizeof(BitDepthInfo<BIT_DEPTH_F32>::Type);
+        getImpl()->yStrideBytes_ = getImpl()->xStrideBytes_ * width;
+    }
+    
+    PlanarImageDesc::PlanarImageDesc(void * rData, void * gData, void * bData, void * aData,
+                                     long width, long height,
+                                     ptrdiff_t xStrideBytes,
+                                     ptrdiff_t yStrideBytes)
+        :   ImageDesc()
+        ,   m_impl(new PlanarImageDesc::Impl())
+    {
+        getImpl()->rData_ = rData;
+        getImpl()->gData_ = gData;
+        getImpl()->bData_ = bData;
+        getImpl()->aData_ = aData;
+        getImpl()->width_ = width;
+        getImpl()->height_ = height;
+
+        getImpl()->xStrideBytes_ = (xStrideBytes == AutoStride)
+            ? sizeof(BitDepthInfo<BIT_DEPTH_F32>::Type) : xStrideBytes;
+
         getImpl()->yStrideBytes_ = (yStrideBytes == AutoStride)
-            ? sizeof(float)*width : yStrideBytes;
+            ? getImpl()->xStrideBytes_ * width : yStrideBytes;
+
+        if((getImpl()->xStrideBytes_ * width) > getImpl()->yStrideBytes_)
+        {
+            throw Exception("The x and y strides are inconsistent.");
+        }
     }
     
     PlanarImageDesc::~PlanarImageDesc()
     {
         delete m_impl;
-        m_impl = NULL;
+        m_impl = nullptr;
     }
-    
-    float* PlanarImageDesc::getRData() const
+
+    void * PlanarImageDesc::getRData() const
     {
         return getImpl()->rData_;
     }
     
-    float* PlanarImageDesc::getGData() const
+    void * PlanarImageDesc::getGData() const
     {
         return getImpl()->gData_;
     }
     
-    float* PlanarImageDesc::getBData() const
+    void * PlanarImageDesc::getBData() const
     {
         return getImpl()->bData_;
     }
     
-    float* PlanarImageDesc::getAData() const
+    void * PlanarImageDesc::getAData() const
     {
         return getImpl()->aData_;
     }
@@ -381,6 +590,11 @@ OCIO_NAMESPACE_ENTER
     long PlanarImageDesc::getHeight() const
     {
         return getImpl()->height_;
+    }
+    
+    ptrdiff_t PlanarImageDesc::getXStrideBytes() const
+    {
+        return getImpl()->xStrideBytes_;
     }
     
     ptrdiff_t PlanarImageDesc::getYStrideBytes() const

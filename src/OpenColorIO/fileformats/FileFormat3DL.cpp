@@ -531,7 +531,8 @@ OCIO_NAMESPACE_ENTER
               inputToTarget = config->getProcessor(baker.getInputSpace(),
                   baker.getTargetSpace());
             }
-            inputToTarget->apply(cubeImg);
+            ConstCPUProcessorRcPtr cpu = inputToTarget->getDefaultCPUProcessor();
+            cpu->apply(cubeImg);
             
             // Write out the file.
             // For for maximum compatibility with other apps, we will

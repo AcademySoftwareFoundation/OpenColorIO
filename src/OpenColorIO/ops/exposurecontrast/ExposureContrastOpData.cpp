@@ -95,32 +95,26 @@ const char * ExposureContrastOpData::ConvertStyleToString(ExposureContrastOpData
     case STYLE_LINEAR:
     {
         return EC_STYLE_LINEAR;
-        break;
     }
     case STYLE_LINEAR_REV:
     {
         return EC_STYLE_LINEAR_REV;
-        break;
     }
     case STYLE_VIDEO:
     {
         return EC_STYLE_VIDEO;
-        break;
     }
     case STYLE_VIDEO_REV:
     {
         return EC_STYLE_VIDEO_REV;
-        break;
     }
     case STYLE_LOGARITHMIC:
     {
         return EC_STYLE_LOGARITHMIC;
-        break;
     }
     case STYLE_LOGARITHMIC_REV:
     {
         return EC_STYLE_LOGARITHMIC_REV;
-        break;
     }
     }
 
@@ -129,9 +123,9 @@ const char * ExposureContrastOpData::ConvertStyleToString(ExposureContrastOpData
 
 ExposureContrastOpData::ExposureContrastOpData()
     : OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
-    , m_exposure(std::make_shared<DynamicPropertyImpl>(0., false))
-    , m_contrast(std::make_shared<DynamicPropertyImpl>(1., false))
-    , m_gamma(std::make_shared<DynamicPropertyImpl>(1., false))
+    , m_exposure(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_EXPOSURE, 0., false))
+    , m_contrast(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_CONTRAST, 1., false))
+    , m_gamma(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_GAMMA, 1., false))
 {
 }
 
@@ -140,9 +134,9 @@ ExposureContrastOpData::ExposureContrastOpData(BitDepth inBitDepth,
                                                Style style)
     : OpData(inBitDepth, outBitDepth)
     , m_style(style)
-    , m_exposure(std::make_shared<DynamicPropertyImpl>(0., false))
-    , m_contrast(std::make_shared<DynamicPropertyImpl>(1., false))
-    , m_gamma(std::make_shared<DynamicPropertyImpl>(1., false))
+    , m_exposure(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_EXPOSURE, 0., false))
+    , m_contrast(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_CONTRAST, 1., false))
+    , m_gamma(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_GAMMA, 1., false))
 {
 }
 
@@ -312,7 +306,6 @@ ExposureContrastOpData::getDynamicProperty(DynamicPropertyType type) const
         break;
     default:
         throw Exception("Dynamic property type not supported by ExposureContrast.");
-        break;
     }
     throw Exception("ExposureContrast property is not dynamic.");
 }
@@ -345,7 +338,6 @@ void ExposureContrastOpData::replaceDynamicProperty(DynamicPropertyType type,
         break;
     default:
         throw Exception("Dynamic property type not supported by ExposureContrast.");
-        break;
     }
     throw Exception("ExposureContrast property is not dynamic.");
 }

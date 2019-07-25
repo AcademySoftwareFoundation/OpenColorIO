@@ -1947,7 +1947,7 @@ void InvLut3DRenderer::apply(const void * inImg, void * outImg, long numPixels) 
     }
 }
 
-OpCPURcPtr GetForwardLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
+ConstOpCPURcPtr GetForwardLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
 {
     const Interpolation interp = lut->getConcreteInterpolation();
     if (interp == INTERP_TETRAHEDRAL)
@@ -1962,7 +1962,7 @@ OpCPURcPtr GetForwardLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
 
 } // anonymous namspace
 
-OpCPURcPtr GetLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
+ConstOpCPURcPtr GetLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
 {
     if (lut->getDirection() == TRANSFORM_DIR_FORWARD)
     {
@@ -2009,7 +2009,7 @@ void Lut3DRendererNaNTest(OCIO::Interpolation interpol)
     values[65] += 0.001f;
 
     OCIO::ConstLut3DOpDataRcPtr lutConst = lut;
-    OCIO::OpCPURcPtr renderer = OCIO::GetLut3DRenderer(lutConst);
+    OCIO::ConstOpCPURcPtr renderer = OCIO::GetLut3DRenderer(lutConst);
 
     const float qnan = std::numeric_limits<float>::quiet_NaN();
     const float inf = std::numeric_limits<float>::infinity();

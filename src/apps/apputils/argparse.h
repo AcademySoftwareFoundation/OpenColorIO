@@ -122,6 +122,7 @@ class ArgOption;   // Forward declaration
 class ArgParse {
 public:
     ArgParse ();
+    ArgParse (const ArgParse & ) = delete;
     ArgParse (int argc, const char **argv);
     ~ArgParse ();
 

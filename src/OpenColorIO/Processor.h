@@ -49,7 +49,7 @@ OCIO_NAMESPACE_ENTER
         mutable std::string m_cpuCacheID;
         
         mutable Mutex m_resultsCacheMutex;
-        
+
     public:
         Impl();
         ~Impl();
@@ -59,19 +59,30 @@ OCIO_NAMESPACE_ENTER
         
         ConstProcessorMetadataRcPtr getMetadata() const;
 
+        bool hasDynamicProperty(DynamicPropertyType type) const;
         DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
 
-        void apply(ImageDesc& img) const;
+        const char * getCacheID() const;
         
-        void applyRGB(float * pixel) const;
-        void applyRGBA(float * pixel) const;
-        const char * getCpuCacheID() const;
-        
-        // Extract all the information to fully implement the processor shader program.
-        void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
+        // Get an optimized GPU processor instance for F32 images with default optimizations.
+        ConstGPUProcessorRcPtr getDefaultGPUProcessor() const;
 
-        // Get a CPU processor instance for arbitrary input and output pixel formats.
-        ConstCPUProcessorRcPtr getCPUProcessor(PixelFormat in, PixelFormat out) const;
+        // Get an optimized GPU processor instance for F32 images.
+        ConstGPUProcessorRcPtr getOptimizedGPUProcessor(OptimizationFlags oFlags, 
+                                                        FinalizationFlags fFlags) const;
+
+        // Get an optimized CPU processor instance for F32 images with default optimizations.
+        ConstCPUProcessorRcPtr getDefaultCPUProcessor() const;
+
+        // Get an optimized CPU processor instance for F32 images.
+        ConstCPUProcessorRcPtr getOptimizedCPUProcessor(OptimizationFlags oFlags,
+                                                        FinalizationFlags fFlags) const;
+
+        // Get a optimized CPU processor instance for arbitrary input and output bit-depths.
+        ConstCPUProcessorRcPtr getOptimizedCPUProcessor(BitDepth inBitDepth,
+                                                        BitDepth outBitDepth,
+                                                        OptimizationFlags oFlags,
+                                                        FinalizationFlags fFlags) const;
 
         ////////////////////////////////////////////
         //
@@ -86,8 +97,10 @@ OCIO_NAMESPACE_ENTER
                           const ConstContextRcPtr & context,
                           const ConstTransformRcPtr& transform,
                           TransformDirection direction);
+
+        void addOps(const OpRcPtrVec & ops);
         
-        void finalize();
+        void computeMetadata();
     };
     
 }

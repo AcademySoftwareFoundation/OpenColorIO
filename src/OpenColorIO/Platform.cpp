@@ -35,6 +35,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Platform.h"
 
+#ifndef WINDOWS
+#include <chrono>
+#include <random>
+#endif
+
 
 OCIO_NAMESPACE_ENTER
 {
@@ -117,7 +122,13 @@ void CreateTempFilename(std::string & filename, const std::string & filenameExt)
 
     std::stringstream ss;
     ss << "/tmp/ocio";
-    ss << std::rand();
+
+    // Obtain a seed from the system clock.
+    const unsigned seed 
+        = (unsigned)std::chrono::system_clock::now().time_since_epoch().count();
+    // Use the standard mersenne_twister_engine.
+    std::mt19937 generator(seed);
+    ss << generator();
 
     filename = ss.str();
 

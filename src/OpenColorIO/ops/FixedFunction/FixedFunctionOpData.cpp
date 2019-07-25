@@ -91,8 +91,6 @@ const char * FixedFunctionOpData::ConvertStyleToString(Style style, bool detaile
     ss << style;
 
     throw Exception(ss.str().c_str());
-
-    return RED_MOD_03_FWD;
 }
 
 FixedFunctionOpData::Style FixedFunctionOpData::GetStyle(const char * name)
@@ -148,7 +146,6 @@ FixedFunctionOpData::Style FixedFunctionOpData::GetStyle(const char * name)
     std::string st("Unknown FixedFunction style: ");
     st += name;
     throw Exception(st.c_str());
-    return ACES_RED_MOD_03_FWD;
 }
 
 FixedFunctionOpData::FixedFunctionOpData()
@@ -319,6 +316,8 @@ bool FixedFunctionOpData::operator==(const OpData & other) const
 void FixedFunctionOpData::finalize()
 {
     AutoMutex lock(m_mutex);
+
+    validate();
 
     std::ostringstream cacheIDStream;
     cacheIDStream << getID();

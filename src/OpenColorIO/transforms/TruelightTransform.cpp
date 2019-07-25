@@ -312,25 +312,26 @@ OCIO_ADD_TEST(TruelightTransform, simpletest)
     }
     
     // check the transform round trip
-    OCIO::ConstProcessorRcPtr tosrgb;
-    OCIO::ConstProcessorRcPtr tolog;
+    OCIO::ConstCPUProcessorRcPtr tosrgb;
+    OCIO::ConstCPUProcessorRcPtr tolog;
     
 #ifdef OCIO_TRUELIGHT_SUPPORT
-    OCIO_CHECK_NO_THROW(tosrgb = config->getProcessor("log", "sRGB"));
-    OCIO_CHECK_NO_THROW(tolog = config->getProcessor("sRGB", "log"));
+    OCIO_CHECK_NO_THROW(tosrgb = config->getProcessor("log", "sRGB")->getDefaultCPUProcessor());
+    OCIO_CHECK_NO_THROW(tolog = config->getProcessor("sRGB", "log")->getDefaultCPUProcessor());
 #else
-    OCIO_CHECK_THROW(tosrgb = config->getProcessor("log", "sRGB"), OCIO::Exception);
-    OCIO_CHECK_THROW(tolog = config->getProcessor("sRGB", "log"), OCIO::Exception);
+    OCIO_CHECK_THROW(tosrgb = config->getProcessor("log", "sRGB")->getDefaultCPUProcessor(), OCIO::Exception);
+    OCIO_CHECK_THROW(tolog = config->getProcessor("sRGB", "log")->getDefaultCPUProcessor(), OCIO::Exception);
 #endif
     
 #ifdef OCIO_TRUELIGHT_SUPPORT
-    float input[3] = {0.5f, 0.5f, 0.5f};
-    float output[3] = {0.500098f, 0.500317f, 0.501134f};
-    OCIO_CHECK_NO_THROW(tosrgb->applyRGB(input));
-    OCIO_CHECK_NO_THROW(tolog->applyRGB(input));
+    float input[4] = {0.5f, 0.5f, 0.5f, 0.0f};
+    float output[4] = {0.500098f, 0.500317f, 0.501134f, 0.0f};
+    OCIO_CHECK_NO_THROW(tosrgb->apply(input, output, 1));
+    OCIO_CHECK_NO_THROW(tolog->apply(input, output, 1 ));
     OCIO_CHECK_CLOSE(input[0], output[0], 1e-4);
     OCIO_CHECK_CLOSE(input[1], output[1], 1e-4);
     OCIO_CHECK_CLOSE(input[2], output[2], 1e-4);
+    OCIO_CHECK_CLOSE(input[3], output[3], 1e-4);
 #endif
     
     std::ostringstream os;
