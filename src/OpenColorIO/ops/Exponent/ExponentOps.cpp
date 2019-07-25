@@ -54,6 +54,15 @@ OCIO_NAMESPACE_ENTER
         }
     }
 
+    ExponentOpData::ExponentOpData(const ExponentOpData & rhs)
+        :   OpData(rhs.getInputBitDepth(), rhs.getOutputBitDepth())
+    {
+        if(this!=&rhs)
+        {
+            *this = rhs;
+        }
+    }
+
     ExponentOpData::ExponentOpData(const double * exp4)
         :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
     {
@@ -64,6 +73,7 @@ OCIO_NAMESPACE_ENTER
     {
         if(this!=&rhs)
         {
+            OpData::operator=(rhs);
             memcpy(m_exp4, rhs.m_exp4, sizeof(double)*4);
         }
 

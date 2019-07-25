@@ -234,7 +234,10 @@ template<BitDepth inBD, BitDepth outBD>
 class InvLut1DRenderer : public OpCPU
 {
 public:
+    InvLut1DRenderer() = delete;
     InvLut1DRenderer(ConstLut1DOpDataRcPtr & lut);
+    InvLut1DRenderer(const InvLut1DRenderer&) = delete;
+    InvLut1DRenderer& operator=(const InvLut1DRenderer&) = delete;
     virtual ~InvLut1DRenderer();
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
@@ -255,18 +258,15 @@ protected:
     std::vector<float> m_tmpLutG;
     std::vector<float> m_tmpLutB;
     float              m_alphaScaling;  // Bit-depth scale factor for alpha channel.
-
-private:
-    InvLut1DRenderer() = delete;
-    InvLut1DRenderer(const InvLut1DRenderer&) = delete;
-    InvLut1DRenderer& operator=(const InvLut1DRenderer&) = delete;
 };
 
 template<BitDepth inBD, BitDepth outBD>
 class InvLut1DRendererHalfCode : public InvLut1DRenderer<inBD, outBD>
 {
 public:
+    InvLut1DRendererHalfCode() = delete;
     InvLut1DRendererHalfCode(ConstLut1DOpDataRcPtr & lut);
+    InvLut1DRendererHalfCode(const InvLut1DRendererHalfCode &) = delete;
     virtual ~InvLut1DRendererHalfCode();
 
     void updateData(ConstLut1DOpDataRcPtr & lut) override;

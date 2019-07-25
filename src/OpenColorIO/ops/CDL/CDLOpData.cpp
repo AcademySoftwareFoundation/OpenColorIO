@@ -102,8 +102,6 @@ const char * CDLOpData::GetStyleName(CDLOpData::Style style)
     }
 
     throw Exception("Unknown style for CDL.");
-
-    return 0x0;
 }
 
 CDLOpData::CDLOpData()

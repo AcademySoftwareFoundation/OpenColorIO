@@ -264,7 +264,6 @@ case in:                                              \
         case BIT_DEPTH_UNKNOWN:                       \
         default:                                      \
             throw Exception("Unsupported bit-depth"); \
-            break;                                    \
                                                       \
     }                                                 \
     break;                                            \
@@ -283,7 +282,6 @@ case in:                                              \
         case BIT_DEPTH_UNKNOWN:
         default:
             throw Exception("Unsupported bit-depth");
-            break;
     }
 
 #undef ADD_OUT_BIT_DEPTH

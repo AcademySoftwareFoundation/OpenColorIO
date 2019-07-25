@@ -436,7 +436,6 @@ bool LegacyGpuShaderDesc::addUniform(const char *, const DynamicPropertyRcPtr &)
 unsigned LegacyGpuShaderDesc::getTextureMaxWidth() const 
 {
     throw Exception("1D LUTs are not supported");
-    return 0;
 }
 
 void LegacyGpuShaderDesc::setTextureMaxWidth(unsigned)

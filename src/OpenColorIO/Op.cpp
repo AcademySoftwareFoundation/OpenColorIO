@@ -487,11 +487,13 @@ OCIO_NAMESPACE_ENTER
         case OpData::ReferenceType:
         {
             throw Exception("ReferenceOpData should have been replaced by referenced ops");
-            break;
         }
 
         default:
+        {
             throw Exception("OpData is not supported");
+        }
+
         }
     }
 

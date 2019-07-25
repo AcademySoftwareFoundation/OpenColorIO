@@ -51,19 +51,16 @@ ExposureContrastOpData::Style ConvertStyle(ExposureContrastStyle style, Transfor
     {
         return (isForward) ? ExposureContrastOpData::STYLE_VIDEO:
                              ExposureContrastOpData::STYLE_VIDEO_REV;
-        break;
     }
     case EXPOSURE_CONTRAST_LOGARITHMIC:
     {
         return (isForward) ? ExposureContrastOpData::STYLE_LOGARITHMIC:
                              ExposureContrastOpData::STYLE_LOGARITHMIC_REV;
-        break;
     }
     case EXPOSURE_CONTRAST_LINEAR:
     {
         return (isForward) ? ExposureContrastOpData::STYLE_LINEAR:
                              ExposureContrastOpData::STYLE_LINEAR_REV;
-        break;
     }
     }
 

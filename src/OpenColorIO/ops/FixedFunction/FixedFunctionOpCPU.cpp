@@ -731,7 +731,6 @@ ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func
     }
 
     throw Exception("Unsupported FixedFunction style");
-    return ConstOpCPURcPtr();
 }
 
 }

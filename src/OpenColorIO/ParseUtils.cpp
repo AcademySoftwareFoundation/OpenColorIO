@@ -300,24 +300,22 @@ OCIO_NAMESPACE_ENTER
         msg += (style && *style) ? style : "<null>";
 
         throw Exception(msg.c_str());
-        return RANGE_CLAMP;
     }
 
     const char * FixedFunctionStyleToString(FixedFunctionStyle style)
     {
         switch(style)
         {
-            case FIXED_FUNCTION_ACES_RED_MOD_03:     return "ACES_RedMod03";      break;
-            case FIXED_FUNCTION_ACES_RED_MOD_10:     return "ACES_RedMod10";      break;
-            case FIXED_FUNCTION_ACES_GLOW_03:        return "ACES_Glow03";        break;
-            case FIXED_FUNCTION_ACES_GLOW_10:        return "ACES_Glow10";        break;
-            case FIXED_FUNCTION_ACES_DARK_TO_DIM_10: return "ACES_DarkToDim10";   break;
-            case FIXED_FUNCTION_REC2100_SURROUND:    return "REC2100_Surround";   break;
+            case FIXED_FUNCTION_ACES_RED_MOD_03:     return "ACES_RedMod03";
+            case FIXED_FUNCTION_ACES_RED_MOD_10:     return "ACES_RedMod10";
+            case FIXED_FUNCTION_ACES_GLOW_03:        return "ACES_Glow03";
+            case FIXED_FUNCTION_ACES_GLOW_10:        return "ACES_Glow10";
+            case FIXED_FUNCTION_ACES_DARK_TO_DIM_10: return "ACES_DarkToDim10";
+            case FIXED_FUNCTION_REC2100_SURROUND:    return "REC2100_Surround";
         }
 
         // Default style is meaningless.
         throw Exception("Unknown Fixed FunctionOp style");
-        return nullptr;
     }
 
     FixedFunctionStyle FixedFunctionStyleFromString(const char * style)
@@ -336,7 +334,6 @@ OCIO_NAMESPACE_ENTER
         ss << "Unknown Fixed FunctionOp style: " << style;
 
         throw Exception(ss.str().c_str());
-        return FIXED_FUNCTION_ACES_RED_MOD_03;
     }
 
     namespace
@@ -350,14 +347,13 @@ OCIO_NAMESPACE_ENTER
     {
         switch (style)
         {
-        case EXPOSURE_CONTRAST_VIDEO:       return EC_STYLE_VIDEO;       break;
-        case EXPOSURE_CONTRAST_LOGARITHMIC: return EC_STYLE_LOGARITHMIC; break;
-        case EXPOSURE_CONTRAST_LINEAR:      return EC_STYLE_LINEAR;      break;
+        case EXPOSURE_CONTRAST_VIDEO:       return EC_STYLE_VIDEO;
+        case EXPOSURE_CONTRAST_LOGARITHMIC: return EC_STYLE_LOGARITHMIC;
+        case EXPOSURE_CONTRAST_LINEAR:      return EC_STYLE_LINEAR;
         }
 
         // Default style is meaningless.
         throw Exception("Unknown exposure contrast style");
-        return nullptr;
     }
     
     ExposureContrastStyle ExposureContrastStyleFromString(const char * style)
@@ -373,7 +369,6 @@ OCIO_NAMESPACE_ENTER
         ss << "Unknown exposure contrast style: " << style;
 
         throw Exception(ss.str().c_str());
-        return EXPOSURE_CONTRAST_LINEAR;
     }
 
     const char * ROLE_DEFAULT = "default";

@@ -79,22 +79,18 @@ OCIO_NAMESPACE_ENTER
         case LUT_INVERSION_EXACT:
         {
             return "exact";
-            break;
         }
         case LUT_INVERSION_FAST:
         {
             return "fast";
-            break;
         }
         case LUT_INVERSION_DEFAULT:
         {
             return "default";
-            break;
         }
         case LUT_INVERSION_BEST:
         {
             return "best";
-            break;
         }
         }
 

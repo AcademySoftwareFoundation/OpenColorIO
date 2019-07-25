@@ -46,6 +46,7 @@ OCIO_NAMESPACE_ENTER
     {
     public:
         ExponentOpData();
+        ExponentOpData(const ExponentOpData & rhs);
         ExponentOpData(const double * exp4);
         virtual ~ExponentOpData() {}
 

@@ -506,7 +506,6 @@ unsigned long Lut1DOpData::GetLutIdealSize(BitDepth incomingBitDepth)
         std::string err("Bit-depth is not supported: ");
         err += BitDepthToString(incomingBitDepth);
         throw Exception(err.c_str());
-        break;
     }
 
     }
@@ -695,12 +694,10 @@ const char* GetHueAdjustName(Lut1DOpData::HueAdjust algo)
     case Lut1DOpData::HUE_DW3:
     {
         return "dw3";
-        break;
     }
     case Lut1DOpData::HUE_NONE:
     {
         return "none";
-        break;
     }
     }
     throw Exception("1D LUT has an invalid hue adjust style.");
