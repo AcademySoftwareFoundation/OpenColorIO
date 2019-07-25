@@ -48,12 +48,16 @@ public:
     explicit ECRendererBase(ConstExposureContrastOpDataRcPtr & ec);
     virtual ~ECRendererBase();
 
+    bool hasDynamicProperty(DynamicPropertyType type) const override;
+    DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const override;
+
 protected:
     virtual void updateData(ConstExposureContrastOpDataRcPtr & ec) = 0;
 
     DynamicPropertyImplRcPtr m_exposure;
     DynamicPropertyImplRcPtr m_contrast;
     DynamicPropertyImplRcPtr m_gamma;
+
     float m_inScale = 1.0f;
     float m_outScale = 1.0f;
     float m_alphaScale = 1.0f;
@@ -81,6 +85,58 @@ ECRendererBase::ECRendererBase(ConstExposureContrastOpDataRcPtr & ec)
 ECRendererBase::~ECRendererBase()
 {
 }
+
+bool ECRendererBase::hasDynamicProperty(DynamicPropertyType type) const
+{
+    bool res = false;
+    switch (type)
+    {
+        case DYNAMIC_PROPERTY_EXPOSURE:
+            res = m_exposure->isDynamic();
+            break;
+        case DYNAMIC_PROPERTY_CONTRAST:
+            res = m_contrast->isDynamic();
+            break;
+        case DYNAMIC_PROPERTY_GAMMA:
+            res = m_gamma->isDynamic();
+            break;
+        default:
+            break;
+    }
+    
+    return res;
+}
+
+DynamicPropertyRcPtr ECRendererBase::getDynamicProperty(DynamicPropertyType type) const
+{
+    switch (type)
+    {
+        case DYNAMIC_PROPERTY_EXPOSURE:
+            if (m_exposure->isDynamic())
+            {
+                return m_exposure;
+            }
+            break;
+        case DYNAMIC_PROPERTY_CONTRAST:
+            if (m_contrast->isDynamic())
+            {
+                return m_contrast;
+            }
+            break;
+        case DYNAMIC_PROPERTY_GAMMA:
+            if (m_gamma->isDynamic())
+            {
+                return m_gamma;
+            }
+            break;
+        default:
+            throw Exception("Dynamic property type not supported by ExposureContrast.");
+            break;
+    }
+
+    throw Exception("ExposureContrast property is not dynamic.");
+}
+
 
 class ECLinearRenderer : public ECRendererBase
 {
@@ -408,10 +464,10 @@ void ECVideoRenderer::apply(const void * inImg, void * outImg, long numPixels) c
         for (long idx = 0; idx<numPixels; ++idx)
         {
             const float outAlpha = in[3] * m_alphaScale;
-            __m128 data = _mm_set_ps(out[3],
-                                     out[2],
-                                     out[1],
-                                     out[0]);
+            __m128 data = _mm_set_ps(in[3],
+                                     in[2],
+                                     in[1],
+                                     in[0]);
 
             //
             // out = powf( i * exposure / iPivot, contrast ) * oPivot

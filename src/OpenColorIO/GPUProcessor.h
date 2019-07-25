@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018 Autodesk Inc., et al.
+Copyright (c) 2019 Autodesk Inc., et al.
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -27,24 +27,51 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_FIXEDFUNCTION_CPU
-#define INCLUDED_OCIO_FIXEDFUNCTION_CPU
+#ifndef INCLUDED_OCIO_GPUPROCESSOR_H
+#define INCLUDED_OCIO_GPUPROCESSOR_H
 
-
-#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
-#include "ops/FixedFunction/FixedFunctionOpData.h"
 
 
 OCIO_NAMESPACE_ENTER
 {
 
-ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func);
+class GPUProcessor::Impl
+{
+public:
+    Impl() = default;
+    ~Impl() = default;
+
+    bool isNoOp() const noexcept { return m_ops.empty(); }
+
+    bool hasChannelCrosstalk() const noexcept { return m_hasChannelCrosstalk; }
+
+    const char * getCacheID() const noexcept { return m_cacheID.c_str(); }
+
+    DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
+
+    void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
+
+    ////////////////////////////////////////////
+    //
+    // Builder functions, Not exposed
+        
+    void finalize(const OpRcPtrVec & rawOps,
+                  OptimizationFlags oFlags, FinalizationFlags fFlags);
+
+private:
+    OpRcPtrVec    m_ops;
+    bool          m_hasChannelCrosstalk = true;
+    std::string   m_cacheID;
+    mutable Mutex m_mutex;
+};
+
 
 }
 OCIO_NAMESPACE_EXIT
+
 
 #endif

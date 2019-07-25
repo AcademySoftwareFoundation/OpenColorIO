@@ -150,6 +150,68 @@ OCIO_ADD_GPU_TEST(ExposureContrast, style_log_rev)
     test.setTestWideRange(true);
 }
 
+namespace
+{
+
+class ECRetest
+{
+public:
+    ECRetest() = delete;
+
+    ECRetest(OCIOGPUTest & test)
+    {
+        OCIO::ConstProcessorRcPtr & processor = test.getProcessor();
+
+        if(processor->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE))
+        {
+            m_exposure = processor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE);
+        }
+
+        if(processor->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST))
+        {
+            m_contrast = processor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST);
+        }
+
+        if(processor->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA))
+        {
+            m_gamma = processor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA);
+        }
+
+        m_shaderDesc = test.getShaderDesc();
+    }
+
+protected:
+
+    template<typename T>
+    void updateUniform(OCIO::DynamicPropertyType type, T value)
+    {
+        // Update all the GPU dynamic properties.
+
+        for(unsigned idx=0; idx<m_shaderDesc->getNumUniforms(); ++idx)
+        {
+            const char * name = nullptr;
+            OCIO::DynamicPropertyRcPtr prop;
+
+            m_shaderDesc->getUniform(idx, name, prop);
+            if(prop->getType()==type && prop->isDynamic())
+            {
+                prop->setValue(value);
+                return;
+            }
+        }
+    }
+
+    // Holder of all GPU information including dynamic properties.
+    OCIO::GpuShaderDescRcPtr m_shaderDesc;
+
+    // Keep dynamic property values for tests modifying their current value.
+    OCIO::DynamicPropertyRcPtr m_exposure;
+    OCIO::DynamicPropertyRcPtr m_contrast;
+    OCIO::DynamicPropertyRcPtr m_gamma;
+};
+
+}
+
 OCIO_ADD_GPU_TEST(ExposureContrast, style_linear_dynamic_parameter)
 {
     OCIO::ExposureContrastTransformRcPtr ec = OCIO::ExposureContrastTransform::Create();
@@ -166,37 +228,35 @@ OCIO_ADD_GPU_TEST(ExposureContrast, style_linear_dynamic_parameter)
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
     test.setContext(ec->createEditableCopy(), shaderDesc);
 
-    struct ECRetest
+    class MyECRetest : public ECRetest
     {
+    public:
+        MyECRetest(OCIOGPUTest & test) : ECRetest(test) {}
+
         void retest1()
         {
-            dpe->setValue(dpe->getDoubleValue() + 0.1);
+            m_exposure->setValue(m_exposure->getDoubleValue() + 0.1);
+            updateUniform(m_exposure->getType(), m_exposure->getDoubleValue());
         }
         void retest2()
         {
-            dpc->setValue(dpc->getDoubleValue() + 0.1);
+            m_contrast->setValue(m_contrast->getDoubleValue() + 0.1);
+            updateUniform(m_contrast->getType(), m_contrast->getDoubleValue());
         }
         void retest3()
         {
-            dpg->setValue(dpg->getDoubleValue() + 0.1);
+            m_gamma->setValue(m_gamma->getDoubleValue() + 0.1);
+            updateUniform(m_gamma->getType(), m_gamma->getDoubleValue());
         }
-
-        OCIO::DynamicPropertyRcPtr dpe;
-        OCIO::DynamicPropertyRcPtr dpc;
-        OCIO::DynamicPropertyRcPtr dpg;
     };
 
     // Use shared_ptr so that object would stay until test is deleted.
-    std::shared_ptr<ECRetest> ecRetest = std::make_shared<ECRetest>();
-
-    ecRetest->dpe = test.getProcessor()->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE);
-    ecRetest->dpc = test.getProcessor()->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST);
-    ecRetest->dpg = test.getProcessor()->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA);
+    std::shared_ptr<MyECRetest> ecRetest = std::make_shared<MyECRetest>(test);
 
     // This adds a reference count to the shared_ptr.
-    OCIOGPUTest::RetestSetupCallback f1 = std::bind(&ECRetest::retest1, ecRetest);
-    OCIOGPUTest::RetestSetupCallback f2 = std::bind(&ECRetest::retest2, ecRetest);
-    OCIOGPUTest::RetestSetupCallback f3 = std::bind(&ECRetest::retest3, ecRetest);
+    OCIOGPUTest::RetestSetupCallback f1 = std::bind(&MyECRetest::retest1, ecRetest);
+    OCIOGPUTest::RetestSetupCallback f2 = std::bind(&MyECRetest::retest2, ecRetest);
+    OCIOGPUTest::RetestSetupCallback f3 = std::bind(&MyECRetest::retest3, ecRetest);
 
     test.addRetest(f1);
     test.addRetest(f2);
@@ -237,28 +297,29 @@ void Prepare2ECDynamic(OCIOGPUTest & test, bool firstDyn, bool secondDyn)
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
     test.setContext(grp->createEditableCopy(), shaderDesc);
 
-    struct ECRetest
+    class MyECRetest : public ECRetest
     {
+    public:
+        MyECRetest(OCIOGPUTest & test) : ECRetest(test) {}
+
         void retest1()
         {
-            dpe->setValue(1.1);
+            m_exposure->setValue(1.1);
+            updateUniform(m_exposure->getType(), m_exposure->getDoubleValue());
         }
         void retest2()
         {
-            dpe->setValue(2.1);
+            m_exposure->setValue(2.1);
+            updateUniform(m_exposure->getType(), m_exposure->getDoubleValue());
         }
-
-        OCIO::DynamicPropertyRcPtr dpe;
     };
 
     // Use shared_ptr so that object would stay until test is deleted.
-    std::shared_ptr<ECRetest> ecRetest = std::make_shared<ECRetest>();
-
-    ecRetest->dpe = test.getProcessor()->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE);
+    std::shared_ptr<MyECRetest> ecRetest = std::make_shared<MyECRetest>(test);
 
     // This adds a reference count to the shared_ptr.
-    OCIOGPUTest::RetestSetupCallback f1 = std::bind(&ECRetest::retest1, ecRetest);
-    OCIOGPUTest::RetestSetupCallback f2 = std::bind(&ECRetest::retest2, ecRetest);
+    OCIOGPUTest::RetestSetupCallback f1 = std::bind(&MyECRetest::retest1, ecRetest);
+    OCIOGPUTest::RetestSetupCallback f2 = std::bind(&MyECRetest::retest2, ecRetest);
 
     test.addRetest(f1);
     test.addRetest(f2);

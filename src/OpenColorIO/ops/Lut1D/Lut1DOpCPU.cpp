@@ -1659,7 +1659,7 @@ OpCPURcPtr GetForwardLut1DRenderer(ConstLut1DOpDataRcPtr & lut)
 }
 
 template<BitDepth inBD, BitDepth outBD>
-OpCPURcPtr GetLut1DRenderer_OutBitDepth(ConstLut1DOpDataRcPtr & lut)
+ConstOpCPURcPtr GetLut1DRenderer_OutBitDepth(ConstLut1DOpDataRcPtr & lut)
 {
     if (lut->getDirection() == TRANSFORM_DIR_FORWARD)
     {
@@ -1703,7 +1703,7 @@ OpCPURcPtr GetLut1DRenderer_OutBitDepth(ConstLut1DOpDataRcPtr & lut)
 }
 
 template<BitDepth inBD>
-OpCPURcPtr GetLut1DRenderer_InBitDepth(ConstLut1DOpDataRcPtr & lut, BitDepth outBD)
+ConstOpCPURcPtr GetLut1DRenderer_InBitDepth(ConstLut1DOpDataRcPtr & lut, BitDepth outBD)
 {
     if(lut->getOutputBitDepth()!=outBD)
     {
@@ -1733,10 +1733,10 @@ OpCPURcPtr GetLut1DRenderer_InBitDepth(ConstLut1DOpDataRcPtr & lut, BitDepth out
     }
 
     throw Exception("Unsupported output bit depth");
-    return OpCPURcPtr();
+    return ConstOpCPURcPtr();
 }
 
-OpCPURcPtr GetLut1DRenderer(ConstLut1DOpDataRcPtr & lut, BitDepth inBD, BitDepth outBD)
+ConstOpCPURcPtr GetLut1DRenderer(ConstLut1DOpDataRcPtr & lut, BitDepth inBD, BitDepth outBD)
 {
     if(lut->getInputBitDepth()!=inBD)
     {
@@ -1766,7 +1766,7 @@ OpCPURcPtr GetLut1DRenderer(ConstLut1DOpDataRcPtr & lut, BitDepth inBD, BitDepth
     }
 
     throw Exception("Unsupported input bit depth");
-    return OpCPURcPtr();
+    return ConstOpCPURcPtr();
 }
 
 
@@ -1918,7 +1918,7 @@ OCIO_ADD_TEST(Lut1DRenderer, nan_test)
     values[21] = 1.0f;      values[22] = 1.0f;      values[23] = 1.0f;
 
     OCIO::ConstLut1DOpDataRcPtr lutConst = lut;
-    OCIO::OpCPURcPtr renderer 
+    OCIO::ConstOpCPURcPtr renderer 
         = OCIO::GetLut1DRenderer(lutConst, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32);
 
     const float qnan = std::numeric_limits<float>::quiet_NaN();
@@ -1965,7 +1965,7 @@ OCIO_ADD_TEST(Lut1DRenderer, nan_half_test)
 
     lut->setInputBitDepth(OCIO::BIT_DEPTH_F32);
     OCIO::ConstLut1DOpDataRcPtr lutConst = lut;
-    OCIO::OpCPURcPtr renderer 
+    OCIO::ConstOpCPURcPtr renderer 
         = OCIO::GetLut1DRenderer(lutConst, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32);
 
     const float qnan = std::numeric_limits<float>::quiet_NaN();
@@ -2275,12 +2275,12 @@ OCIO_ADD_TEST(Lut1DRenderer, bit_depth_support)
     // Processing from UINT8 to UINT8.
     {
         OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
-        OCIO::OpCPURcPtr cpuOp
+        OCIO::ConstOpCPURcPtr cpuOp
             = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
 
         const bool isLookup
-            = OCIO::DynamicPtrCast<OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8, 
-                                                           OCIO::BIT_DEPTH_UINT8>>(cpuOp)->isLookup();
+            = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8, 
+                                                                 OCIO::BIT_DEPTH_UINT8>>(cpuOp)->isLookup();
         OCIO_CHECK_ASSERT(isLookup);
 
         std::vector<uint8_t> outImg(NB_PIXELS * 4, 0);
@@ -2313,12 +2313,12 @@ OCIO_ADD_TEST(Lut1DRenderer, bit_depth_support)
         OCIO::Lut1DOpDataRcPtr lutDataCloned = lutData->inverse();
         OCIO::ConstLut1DOpDataRcPtr constLut = lutDataCloned;
 
-        OCIO::OpCPURcPtr cpuOp
+        OCIO::ConstOpCPURcPtr cpuOp
             = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
 
         const bool isLookup
-            = OCIO::DynamicPtrCast<OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8, 
-                                                           OCIO::BIT_DEPTH_UINT8>>(cpuOp)->isLookup();
+            = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8, 
+                                                                 OCIO::BIT_DEPTH_UINT8>>(cpuOp)->isLookup();
         OCIO_CHECK_ASSERT(isLookup);
 
         std::vector<uint8_t> outImg(NB_PIXELS * 4, 0);
@@ -2353,12 +2353,12 @@ OCIO_ADD_TEST(Lut1DRenderer, bit_depth_support)
 
         OCIO::ConstLut1DOpDataRcPtr constLut = lutDataCloned;
 
-        OCIO::OpCPURcPtr cpuOp
+        OCIO::ConstOpCPURcPtr cpuOp
             = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16);
 
         const bool isLookup
-            = OCIO::DynamicPtrCast<OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8, 
-                                                           OCIO::BIT_DEPTH_UINT16>>(cpuOp)->isLookup();
+            = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8, 
+                                                                 OCIO::BIT_DEPTH_UINT16>>(cpuOp)->isLookup();
         OCIO_CHECK_ASSERT(isLookup);
 
         std::vector<uint16_t> outImg(NB_PIXELS * 4, 0);
@@ -2393,12 +2393,12 @@ OCIO_ADD_TEST(Lut1DRenderer, bit_depth_support)
 
         OCIO::ConstLut1DOpDataRcPtr constLut = lutDataCloned;
 
-        OCIO::OpCPURcPtr cpuOp
+        OCIO::ConstOpCPURcPtr cpuOp
             = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_F16);
 
         const bool isLookup
-            = OCIO::DynamicPtrCast<OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8, 
-                                                           OCIO::BIT_DEPTH_F16>>(cpuOp)->isLookup();
+            = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8, 
+                                                                 OCIO::BIT_DEPTH_F16>>(cpuOp)->isLookup();
         OCIO_CHECK_ASSERT(isLookup);
 
         std::vector<half> outImg(NB_PIXELS * 4, 0);
@@ -2433,12 +2433,12 @@ OCIO_ADD_TEST(Lut1DRenderer, bit_depth_support)
 
         OCIO::ConstLut1DOpDataRcPtr constLut = lutDataCloned;
 
-        OCIO::OpCPURcPtr cpuOp
+        OCIO::ConstOpCPURcPtr cpuOp
             = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_F32);
 
         const bool isLookup
-            = OCIO::DynamicPtrCast<OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8, 
-                                                           OCIO::BIT_DEPTH_F32>>(cpuOp)->isLookup();
+            = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8, 
+                                                                 OCIO::BIT_DEPTH_F32>>(cpuOp)->isLookup();
         OCIO_CHECK_ASSERT(isLookup);
 
         std::vector<float> outImg(NB_PIXELS * 4, 0);
@@ -2483,12 +2483,12 @@ OCIO_ADD_TEST(Lut1DRenderer, bit_depth_support)
 
         OCIO::ConstLut1DOpDataRcPtr constLut = lutDataCloned;
 
-        OCIO::OpCPURcPtr cpuOp
+        OCIO::ConstOpCPURcPtr cpuOp
             = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_UINT8);
 
         const bool isLookup
-            = OCIO::DynamicPtrCast<OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_F32, 
-                                                           OCIO::BIT_DEPTH_UINT8>>(cpuOp)->isLookup();
+            = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_F32, 
+                                                                 OCIO::BIT_DEPTH_UINT8>>(cpuOp)->isLookup();
         OCIO_CHECK_ASSERT(!isLookup);
 
         std::vector<uint8_t> outImg(NB_PIXELS * 4, 0);
@@ -2524,12 +2524,12 @@ OCIO_ADD_TEST(Lut1DRenderer, bit_depth_support)
 
         OCIO::ConstLut1DOpDataRcPtr constLut = lutDataCloned;
 
-        OCIO::OpCPURcPtr cpuOp
+        OCIO::ConstOpCPURcPtr cpuOp
             = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_UINT16);
 
         const bool isLookup
-            = OCIO::DynamicPtrCast<OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_F32, 
-                                                           OCIO::BIT_DEPTH_UINT16>>(cpuOp)->isLookup();
+            = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_F32, 
+                                                                 OCIO::BIT_DEPTH_UINT16>>(cpuOp)->isLookup();
         OCIO_CHECK_ASSERT(!isLookup);
 
         std::vector<uint16_t> outImg(NB_PIXELS * 4, 0);

@@ -39,7 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
-void GetExposureContrastGPUShaderProgram(GpuShaderDescRcPtr shaderDesc,
+void GetExposureContrastGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
                                          ConstExposureContrastOpDataRcPtr & ec);
 
 }

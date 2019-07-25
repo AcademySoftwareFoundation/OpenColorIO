@@ -31,8 +31,10 @@ target_link_libraries(ocioconvert
 	PRIVATE 
 		apputils
 		oglbuilder
+		oiiohelpers
 		OpenColorIO
 		OpenImageIO
+        ilmbase
 		${OPENGL_LIBRARIES}
 		${GLEW_LIBRARIES}
 		${GLUT_LIBRARIES}

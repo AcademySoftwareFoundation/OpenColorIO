@@ -33,6 +33,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Op.h"
 #include "ops/OpArray.h"
+#include "PrivateTypes.h"
+
 
 OCIO_NAMESPACE_ENTER
 {
@@ -96,6 +98,12 @@ public:
         COMPOSE_RESAMPLE_INDEPTH = 1, // InDepth controls min size.
         COMPOSE_RESAMPLE_BIG = 2      // Min size is 65536.
     };
+
+    // Calculate a new LUT by evaluating a new domain (A) through a set of ops (B).
+    // A is used as in/out parameter. As input it is the first LUT in the composition,
+    // as output it is the result of the composition.
+    // B is the second LUT to compose and will not be modified.
+    static void ComposeVec(Lut1DOpDataRcPtr & A, const OpRcPtrVec & B);
 
     // Use functional composition to generate a single op that 
     // approximates the effect of the pair of ops.

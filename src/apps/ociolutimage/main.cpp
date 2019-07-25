@@ -106,8 +106,9 @@ void Generate(int cubesize, int maxwidth,
             throw Exception(os.str().c_str());
         }
         
-        OCIO::ConstProcessorRcPtr processor = 
-            config->getProcessor(incolorspace.c_str(), outcolorspace.c_str());
+        OCIO::ConstCPUProcessorRcPtr processor = 
+            config->getProcessor(incolorspace.c_str(), 
+                                 outcolorspace.c_str())->getDefaultCPUProcessor();
        
         OCIO::PackedImageDesc imgdesc(&img[0], width, height, 3);
         processor->apply(imgdesc);
