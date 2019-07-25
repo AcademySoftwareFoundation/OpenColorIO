@@ -146,7 +146,7 @@ typedef OCIO_SHARED_PTR<const GammaOp> ConstGammaOpRcPtr;
 class GammaOp : public Op
 {
 public:
-    GammaOp();
+    GammaOp() = delete;
     GammaOp(GammaOpDataRcPtr & gamma);
     GammaOp(BitDepth inBitDepth, 
             BitDepth outBitDepth,
@@ -160,30 +160,28 @@ public:
 
     virtual ~GammaOp();
     
-    virtual std::string getInfo() const;
+    TransformDirection getDirection() const noexcept override { return TRANSFORM_DIR_FORWARD; }
+
+    std::string getInfo() const override;
     
-    virtual OpRcPtr clone() const;
+    OpRcPtr clone() const override;
     
-    virtual bool isSameType(ConstOpRcPtr & op) const;
-    virtual bool isInverse(ConstOpRcPtr & op) const;
-    virtual bool canCombineWith(ConstOpRcPtr & op) const;
-    virtual void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const;
+    bool isSameType(ConstOpRcPtr & op) const override;
+    bool isInverse(ConstOpRcPtr & op) const override;
+    bool canCombineWith(ConstOpRcPtr & op) const override;
+    void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
     
-    virtual void finalize();
+    void finalize(FinalizationFlags fFlags) override;
+
+    ConstOpCPURcPtr getCPUOp() const override;
     
-    virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
+    void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
 
 protected:
     ConstGammaOpDataRcPtr gammaData() const { return DynamicPtrCast<const GammaOpData>(data()); }
     GammaOpDataRcPtr gammaData() { return DynamicPtrCast<GammaOpData>(data()); }
 };
 
-
-GammaOp::GammaOp()
-    :   Op()
-{           
-    data().reset(new GammaOpData());
-}
 
 GammaOp::GammaOp(GammaOpDataRcPtr & gamma)
     :   Op()
@@ -262,16 +260,13 @@ void GammaOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
     CreateGammaOp(ops, res, TRANSFORM_DIR_FORWARD);
 }
 
-void GammaOp::finalize()
+void GammaOp::finalize(FinalizationFlags /*fFlags*/)
 {
-    // Only the 32f processing is natively supported
+    // Only 32f processing is natively supported.
     gammaData()->setInputBitDepth(BIT_DEPTH_F32);
     gammaData()->setOutputBitDepth(BIT_DEPTH_F32);
 
-    gammaData()->validate();
     gammaData()->finalize();
-
-    m_cpuOp = GetGammaRenderer(gammaData());
 
     // Create the cacheID
     std::ostringstream cacheIDStream;
@@ -280,6 +275,12 @@ void GammaOp::finalize()
     cacheIDStream << ">";
 
     m_cacheID = cacheIDStream.str();
+}
+
+ConstOpCPURcPtr GammaOp::getCPUOp() const
+{
+    ConstGammaOpDataRcPtr data = gammaData();
+    return GetGammaRenderer(data);
 }
 
 void GammaOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
@@ -484,7 +485,8 @@ OCIO_ADD_TEST(GammaOps, apply_basic_style_fwd)
         OCIO::CreateGammaOp(ops, id, desc, OCIO::GammaOpData::BASIC_FWD,
                             &gamma4[0], nullptr));
 
-    OCIO::FinalizeOpVec(ops, true);
+    OCIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
 
     ApplyGamma(ops[0], input_32f, expected_32f, numPixels, errorThreshold);
@@ -535,7 +537,8 @@ OCIO_ADD_TEST(GammaOps, apply_basic_style_rev)
         OCIO::CreateGammaOp(ops, id, desc, OCIO::GammaOpData::BASIC_REV,
                             &gamma4[0], nullptr));
 
-    OCIO::FinalizeOpVec(ops, true);
+    OCIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
 
     ApplyGamma(ops[0], input_32f, expected_32f, numPixels, errorThreshold);
@@ -581,7 +584,8 @@ OCIO_ADD_TEST(GammaOps, apply_moncurve_style_fwd)
         OCIO::CreateGammaOp(ops, id, desc, OCIO::GammaOpData::MONCURVE_FWD,
                             &gamma4[0], &offset4[0]));
 
-    OCIO::FinalizeOpVec(ops, true);
+    OCIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
 
     ApplyGamma(ops[0], input_32f, expected_32f, numPixels, errorThreshold);
@@ -633,7 +637,8 @@ OCIO_ADD_TEST(GammaOps, apply_moncurve_style_rev)
         OCIO::CreateGammaOp(ops, id, desc, OCIO::GammaOpData::MONCURVE_REV,
                             &gamma4[0], &offset4[0]));
 
-    OCIO::FinalizeOpVec(ops, true);
+    OCIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
 
     ApplyGamma(ops[0], input_32f, expected_32f, numPixels, errorThreshold);
@@ -709,7 +714,7 @@ OCIO_ADD_TEST(GammaOps, computed_identifier)
                             &gamma4[0], nullptr));
     OCIO_CHECK_EQUAL(ops.size(), 2);
 
-    OCIO::FinalizeOpVec(ops, false); // no optimizations
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
 
     OCIO_CHECK_ASSERT(ops[0]->getCacheID() != ops[1]->getCacheID());
 
@@ -719,7 +724,7 @@ OCIO_ADD_TEST(GammaOps, computed_identifier)
                             &gamma4[0], nullptr));
     OCIO_CHECK_EQUAL(ops.size(), 3);
 
-    OCIO::FinalizeOpVec(ops, false); // no optimizations
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
 
     OCIO_CHECK_ASSERT(ops[0]->getCacheID() != ops[2]->getCacheID());
     OCIO_CHECK_ASSERT(ops[1]->getCacheID() == ops[2]->getCacheID());
@@ -730,7 +735,7 @@ OCIO_ADD_TEST(GammaOps, computed_identifier)
                             &gamma4[0], nullptr));
     OCIO_CHECK_EQUAL(ops.size(), 4);
 
-    OCIO::FinalizeOpVec(ops, false); // no optimizations
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
 
     OCIO_CHECK_ASSERT(ops[0]->getCacheID() != ops[3]->getCacheID());
     OCIO_CHECK_ASSERT(ops[1]->getCacheID() != ops[3]->getCacheID());

@@ -6,3 +6,9 @@ if(TARGET test_gpu_exec OR
 endif()
 
 add_subdirectory(pystring)
+
+if(TARGET ocioconvert OR 
+   TARGET ocioperf
+)
+    add_subdirectory(oiiohelpers)
+endif()

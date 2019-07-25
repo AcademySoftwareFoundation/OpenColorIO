@@ -504,7 +504,7 @@ OCIO_ADD_TEST(FileFormatICC, TestFile)
         OCIO::ContextRcPtr context = OCIO::Context::Create();
         OCIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context,
                                          OCIO::TRANSFORM_DIR_INVERSE));
-        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, false));
+        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
         OCIO_CHECK_EQUAL(4, ops.size());
         OCIO_CHECK_EQUAL("<FileNoOp>", ops[0]->getInfo());
         OCIO_CHECK_EQUAL("<MatrixOffsetOp>", ops[1]->getInfo());
@@ -688,7 +688,9 @@ OCIO_ADD_TEST(FileFormatICC, TestApply)
         OCIO::OpRcPtrVec ops;
         OCIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context,
                                          OCIO::TRANSFORM_DIR_FORWARD));
-        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, true));
+
+        OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
 
         // apply ops
         float srcImage[] = {
@@ -718,7 +720,8 @@ OCIO_ADD_TEST(FileFormatICC, TestApply)
         OCIO::OpRcPtrVec opsInv;
         OCIO_CHECK_NO_THROW(BuildOpsTest(opsInv, iccFileName, context,
                                          OCIO::TRANSFORM_DIR_INVERSE));
-        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(opsInv, true));
+        OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(opsInv, OCIO::OPTIMIZATION_DEFAULT));
+        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(opsInv, OCIO::FINALIZATION_EXACT));
 
         numOps = opsInv.size();
         for (OCIO::OpRcPtrVec::size_type i = 0; i < numOps; ++i)
@@ -745,7 +748,8 @@ OCIO_ADD_TEST(FileFormatICC, TestApply)
         OCIO::OpRcPtrVec ops;
         OCIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context,
                                          OCIO::TRANSFORM_DIR_FORWARD));
-        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, true));
+        OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
 
         // apply ops
         float srcImage[] = {
@@ -782,7 +786,8 @@ OCIO_ADD_TEST(FileFormatICC, TestApply)
         OCIO::OpRcPtrVec opsInv;
         OCIO_CHECK_NO_THROW(BuildOpsTest(opsInv, iccFileName, context,
                                          OCIO::TRANSFORM_DIR_INVERSE));
-        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(opsInv, true));
+        OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(opsInv, OCIO::OPTIMIZATION_DEFAULT));
+        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(opsInv, OCIO::FINALIZATION_EXACT));
 
         numOps = opsInv.size();
         for (OCIO::OpRcPtrVec::size_type i = 0; i < numOps; ++i)

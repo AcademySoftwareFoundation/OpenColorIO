@@ -50,12 +50,12 @@ class GammaBasicOpCPU : public OpCPU
 {
 public:
 
-    GammaBasicOpCPU(const GammaOpDataRcPtr & gamma);
+    GammaBasicOpCPU(ConstGammaOpDataRcPtr & gamma);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 protected:
-    void update(const GammaOpDataRcPtr & gamma);
+    void update(ConstGammaOpDataRcPtr & gamma);
 
 private:
     float m_inScale;
@@ -69,7 +69,7 @@ private:
 class GammaMoncurveOpCPU : public OpCPU
 {
 protected:
-    GammaMoncurveOpCPU(const GammaOpDataRcPtr &) : OpCPU() {}
+    GammaMoncurveOpCPU(ConstGammaOpDataRcPtr &) : OpCPU() {}
 
 protected:
     RendererParams m_red;
@@ -81,12 +81,12 @@ protected:
 class GammaMoncurveOpCPUFwd : public GammaMoncurveOpCPU
 {
 public:
-    GammaMoncurveOpCPUFwd(const GammaOpDataRcPtr & gamma);
+    GammaMoncurveOpCPUFwd(ConstGammaOpDataRcPtr & gamma);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 protected:
-    void update(const GammaOpDataRcPtr & gamma);
+    void update(ConstGammaOpDataRcPtr & gamma);
 
 private:
     float m_outScale;
@@ -95,19 +95,19 @@ private:
 class GammaMoncurveOpCPURev : public GammaMoncurveOpCPU
 {
 public:
-    GammaMoncurveOpCPURev(const GammaOpDataRcPtr & gamma);
+    GammaMoncurveOpCPURev(ConstGammaOpDataRcPtr & gamma);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 protected:
-    void update(const GammaOpDataRcPtr & gamma);
+    void update(ConstGammaOpDataRcPtr & gamma);
 
 private:
     float m_inScale;
 };
 
 
-OpCPURcPtr GetGammaRenderer(const GammaOpDataRcPtr & gamma)
+ConstOpCPURcPtr GetGammaRenderer(ConstGammaOpDataRcPtr & gamma)
 {
     switch(gamma->getStyle())
     {
@@ -132,13 +132,13 @@ OpCPURcPtr GetGammaRenderer(const GammaOpDataRcPtr & gamma)
     }
 
     throw Exception("Unsupported Gamma style");
-    return OpCPURcPtr();
+    return ConstOpCPURcPtr();
 }
 
 
 
 
-GammaBasicOpCPU::GammaBasicOpCPU(const GammaOpDataRcPtr & gamma)
+GammaBasicOpCPU::GammaBasicOpCPU(ConstGammaOpDataRcPtr & gamma)
     :   OpCPU()
     ,   m_inScale(0.0f)
     ,   m_outScale(0.0f)
@@ -150,7 +150,7 @@ GammaBasicOpCPU::GammaBasicOpCPU(const GammaOpDataRcPtr & gamma)
     update(gamma);
 }
 
-void GammaBasicOpCPU::update(const GammaOpDataRcPtr & gamma)
+void GammaBasicOpCPU::update(ConstGammaOpDataRcPtr & gamma)
 {
     // The gamma calculations are done in normalized space.
     // Compute the scale factors for integer in/out depths.
@@ -227,14 +227,14 @@ void GammaBasicOpCPU::apply(const void * inImg, void * outImg, long numPixels) c
 #endif
 }
 
-GammaMoncurveOpCPUFwd::GammaMoncurveOpCPUFwd(const GammaOpDataRcPtr & gamma)
+GammaMoncurveOpCPUFwd::GammaMoncurveOpCPUFwd(ConstGammaOpDataRcPtr & gamma)
     :   GammaMoncurveOpCPU(gamma)
     ,   m_outScale(0.0f)
 {
     update(gamma);
 }
 
-void GammaMoncurveOpCPUFwd::update(const GammaOpDataRcPtr & gamma)
+void GammaMoncurveOpCPUFwd::update(ConstGammaOpDataRcPtr & gamma)
 {
     // NB: The power function is applied in normalized space
     // but we fold the in/out depth conversion into the other scaling
@@ -333,14 +333,14 @@ void GammaMoncurveOpCPUFwd::apply(const void * inImg, void * outImg, long numPix
 #endif
 }
 
-GammaMoncurveOpCPURev::GammaMoncurveOpCPURev(const GammaOpDataRcPtr & gamma)
+GammaMoncurveOpCPURev::GammaMoncurveOpCPURev(ConstGammaOpDataRcPtr & gamma)
     :   GammaMoncurveOpCPU(gamma)
     ,   m_inScale(0.0f)
 {
     update(gamma);
 }
 
-void GammaMoncurveOpCPURev::update(const GammaOpDataRcPtr & gamma)
+void GammaMoncurveOpCPURev::update(ConstGammaOpDataRcPtr & gamma)
 {
     // NB: The power function is applied in normalized space
     // but we fold the in/out depth conversion into the other scaling

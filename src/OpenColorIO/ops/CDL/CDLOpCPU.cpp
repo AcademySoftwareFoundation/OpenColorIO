@@ -542,7 +542,7 @@ void CDLRendererNoClampRev::apply(const void * inImg, void * outImg, long numPix
 }
 
 // TODO:  Add a faster renderer for the case where power and saturation are 1.
-OpCPURcPtr CDLOpCPU::GetRenderer(ConstCDLOpDataRcPtr & cdl)
+ConstOpCPURcPtr CDLOpCPU::GetRenderer(ConstCDLOpDataRcPtr & cdl)
 {
     switch(cdl->getStyle())
     {
@@ -557,7 +557,7 @@ OpCPURcPtr CDLOpCPU::GetRenderer(ConstCDLOpDataRcPtr & cdl)
     }
 
     throw Exception("Unknown CDL style");
-    return OpCPURcPtr();
+    return ConstOpCPURcPtr();
 }
 
 }

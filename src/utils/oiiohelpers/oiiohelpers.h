@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018 Autodesk Inc., et al.
+Copyright (c) 2019 Autodesk Inc., et al.
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -27,24 +27,56 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_FIXEDFUNCTION_CPU
-#define INCLUDED_OCIO_FIXEDFUNCTION_CPU
+#ifndef INCLUDED_OCIO_OIIO_HELPERS_H_
+#define INCLUDED_OCIO_OIIO_HELPERS_H_
 
-
-#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Op.h"
-#include "ops/FixedFunction/FixedFunctionOpData.h"
+#include <OpenImageIO/imageio.h>
+#include <OpenImageIO/typedesc.h>
+#if (OIIO_VERSION < 10100)
+namespace OIIO = OIIO_NAMESPACE;
+#endif
 
 
 OCIO_NAMESPACE_ENTER
 {
 
-ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func);
+BitDepth GetBitDepth(const OIIO::ImageSpec & spec);
+
+// Print information of the image.
+void PrintImageSpec(const OIIO::ImageSpec & spec, bool verbose);
+
+// Manage the image buffer.
+class ImgBuffer
+{
+public:
+    ImgBuffer() = default;
+    ImgBuffer(const OIIO::ImageSpec & spec);
+
+    ImgBuffer(const ImgBuffer &) = delete;
+    ImgBuffer(ImgBuffer &&) = delete;
+
+    ImgBuffer & operator = (const ImgBuffer &) = delete;
+    ImgBuffer & operator = (ImgBuffer &&);
+
+    ~ImgBuffer();
+
+    void allocate(const OIIO::ImageSpec & spec);
+
+    inline void * getBuffer() const noexcept { return m_buffer; }
+
+private:
+    OIIO::ImageSpec m_spec;
+    void * m_buffer = nullptr;
+};
+
+
+ImageDescRcPtr CreateImageDesc(const OIIO::ImageSpec & spec, const ImgBuffer & img);
 
 }
 OCIO_NAMESPACE_EXIT
 
-#endif
+#endif // INCLUDED_OCIO_OIIO_HELPERS_H_
+

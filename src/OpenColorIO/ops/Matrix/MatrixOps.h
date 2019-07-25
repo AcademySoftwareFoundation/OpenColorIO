@@ -54,24 +54,24 @@ OCIO_NAMESPACE_ENTER
                         const float * offset4,
                         TransformDirection direction);
     
-    void CreateMatrixOffsetOp(OpRcPtrVec & ops,
-                              const float * m44, const float * offset4,
-                              TransformDirection direction);
-    
     void CreateScaleOffsetOp(OpRcPtrVec & ops,
                              const float * scale4, const float * offset4,
                              TransformDirection direction);
-    
-    void CreateFitOp(OpRcPtrVec & ops,
-                     const float * oldmin4, const float * oldmax4,
-                     const float * newmin4, const float * newmax4,
-                     TransformDirection direction);
     
     void CreateSaturationOp(OpRcPtrVec & ops,
                             float sat,
                             const float * lumaCoef3,
                             TransformDirection direction);
 
+    void CreateMatrixOffsetOp(OpRcPtrVec & ops,
+                              const float * m44, const float * offset4,
+                              TransformDirection direction);
+    
+    void CreateFitOp(OpRcPtrVec & ops,
+                     const float * oldmin4, const float * oldmax4,
+                     const float * newmin4, const float * newmax4,
+                     TransformDirection direction);
+    
     void CreateMinMaxOp(OpRcPtrVec & ops,
                         const float * from_min3,
                         const float * from_max3,
@@ -81,6 +81,7 @@ OCIO_NAMESPACE_ENTER
                         MatrixOpDataRcPtr & matrix,
                         TransformDirection direction);
 
+    void CreateIdentityMatrixOp(OpRcPtrVec & ops);
 }
 OCIO_NAMESPACE_EXIT
 

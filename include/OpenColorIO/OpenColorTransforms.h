@@ -398,17 +398,24 @@ OCIO_NAMESPACE_ENTER
     public:
 
         //!cpp:function:: 
+        virtual DynamicPropertyType getType() const = 0;
+
+        //!cpp:function:: 
         virtual DynamicPropertyValueType getValueType() const = 0;
+
         //!cpp:function:: 
         virtual double getDoubleValue() const = 0;
         //!cpp:function:: 
         virtual void setValue(double value) = 0;
 
+        //!cpp:function:: 
+        virtual bool isDynamic() const = 0;
+
     protected:
 
-        DynamicProperty() {}
+        DynamicProperty();
         DynamicProperty(const DynamicProperty &);
-        virtual ~DynamicProperty() {}
+        virtual ~DynamicProperty();
 
         DynamicProperty& operator= (const DynamicProperty &);
     };

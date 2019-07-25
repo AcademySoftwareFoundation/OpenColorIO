@@ -407,6 +407,8 @@ void CDLOpData::finalize()
 {
     AutoMutex lock(m_mutex);
 
+    validate();
+
     std::ostringstream cacheIDStream;
     cacheIDStream << getID() << " ";
 

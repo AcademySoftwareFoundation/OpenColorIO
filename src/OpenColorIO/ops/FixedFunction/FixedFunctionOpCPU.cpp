@@ -680,7 +680,7 @@ void Renderer_REC2100_Surround::apply(const void * inImg, void * outImg, long nu
 
 
 
-OpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func)
+ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func)
 {
     switch(func->getStyle())
     {
@@ -757,7 +757,7 @@ void ApplyFixedFunction(float * input_32f,
                         OCIO::ConstFixedFunctionOpDataRcPtr & fnData, 
                         float errorThreshold)
 {
-    OCIO::OpCPURcPtr op;
+    OCIO::ConstOpCPURcPtr op;
     OCIO_CHECK_NO_THROW(op = OCIO::GetFixedFunctionCPURenderer(fnData));
     OCIO_CHECK_NO_THROW(op->apply(input_32f, input_32f, numSamples));
 

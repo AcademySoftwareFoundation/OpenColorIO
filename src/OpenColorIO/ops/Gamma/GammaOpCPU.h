@@ -40,7 +40,7 @@ OCIO_NAMESPACE_ENTER
 {
       
 // Get the Gamma dedicated renderer.
-OpCPURcPtr GetGammaRenderer(const GammaOpDataRcPtr & gamma);
+ConstOpCPURcPtr GetGammaRenderer(ConstGammaOpDataRcPtr & gamma);
 
 }
 OCIO_NAMESPACE_EXIT

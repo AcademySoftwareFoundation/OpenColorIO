@@ -593,6 +593,8 @@ void Lut3DOpData::finalize()
 {
     AutoMutex lock(m_mutex);
 
+    validate();
+
     md5_state_t state;
     md5_byte_t digest[16];
 
@@ -631,6 +633,7 @@ OCIO_ADD_TEST(Lut3DOpData, empty)
     OCIO_CHECK_EQUAL(l.getType(), OCIO::OpData::Lut3DType);
     OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_FAST);
     OCIO_CHECK_EQUAL(l.getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_ASSERT(l.hasChannelCrosstalk());
 }
 
 OCIO_ADD_TEST(Lut3DOpData, accessors)

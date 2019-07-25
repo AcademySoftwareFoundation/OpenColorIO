@@ -51,6 +51,8 @@ public:
 
     virtual ~ExposureContrastOp();
 
+    TransformDirection getDirection() const noexcept override { return TRANSFORM_DIR_FORWARD; }
+
     OpRcPtr clone() const override;
 
     std::string getInfo() const override;
@@ -61,19 +63,17 @@ public:
     bool canCombineWith(ConstOpRcPtr & op) const override;
     void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
 
-    void finalize() override;
+    void finalize(FinalizationFlags fFlags) override;
 
-    void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
-
+    bool isDynamic() const override;
     bool hasDynamicProperty(DynamicPropertyType type) const override;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const override;
     void replaceDynamicProperty(DynamicPropertyType type,
                                 DynamicPropertyImplRcPtr prop) override;
 
-    // Note: Only needed by unit tests.
-#ifdef OCIO_UNIT_TEST
-    OpCPURcPtr getCPUOp() const { return m_cpuOp; }
-#endif
+    ConstOpCPURcPtr getCPUOp() const override;
+
+    void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
 
 protected:
     ConstExposureContrastOpDataRcPtr ecData() const
@@ -145,18 +145,13 @@ void ExposureContrastOp::combineWith(OpRcPtrVec & /*ops*/, ConstOpRcPtr & second
     }
 }
 
-void ExposureContrastOp::finalize()
+void ExposureContrastOp::finalize(FinalizationFlags /*fFlags*/)
 {
-    // In this initial implementation, only 32f processing is natively supported.
+    // Only 32f processing is natively supported.
     ecData()->setInputBitDepth(BIT_DEPTH_F32);
     ecData()->setOutputBitDepth(BIT_DEPTH_F32);
 
-    ecData()->validate();
     ecData()->finalize();
-
-    const ExposureContrastOp & constThis = *this;
-    ConstExposureContrastOpDataRcPtr ecOpData = constThis.ecData();
-    m_cpuOp = GetExposureContrastCPURenderer(ecOpData);
 
     // Create the cacheID
     std::ostringstream cacheIDStream;
@@ -165,6 +160,12 @@ void ExposureContrastOp::finalize()
     cacheIDStream << ">";
 
     m_cacheID = cacheIDStream.str();
+}
+
+ConstOpCPURcPtr ExposureContrastOp::getCPUOp() const
+{
+    ConstExposureContrastOpDataRcPtr ecOpData = ecData();
+    return GetExposureContrastCPURenderer(ecOpData);
 }
 
 void ExposureContrastOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
@@ -176,6 +177,11 @@ void ExposureContrastOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) c
 
     ConstExposureContrastOpDataRcPtr ecOpData = ecData();
     GetExposureContrastGPUShaderProgram(shaderDesc, ecOpData);
+}
+
+bool ExposureContrastOp::isDynamic() const
+{
+    return ecData()->isDynamic();
 }
 
 bool ExposureContrastOp::hasDynamicProperty(DynamicPropertyType type) const

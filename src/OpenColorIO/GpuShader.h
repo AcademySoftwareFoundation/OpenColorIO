@@ -96,7 +96,7 @@ protected:
     void getUniform(unsigned index, const char *& name,
                     DynamicPropertyRcPtr & value) const override;
     bool addUniform(const char * name,
-                    DynamicPropertyRcPtr value) override;
+                    const DynamicPropertyRcPtr & value) override;
 
     // 1D & 2D textures are not used by the legacy shader builder
     //
@@ -155,7 +155,7 @@ public:
     void getUniform(unsigned index, const char *& name,
                     DynamicPropertyRcPtr & value) const override;
     bool addUniform(const char * name,
-                    DynamicPropertyRcPtr value) override;
+                    const DynamicPropertyRcPtr & value) override;
 
     // Accessors to the 1D & 2D textures built from 1D LUT
     //

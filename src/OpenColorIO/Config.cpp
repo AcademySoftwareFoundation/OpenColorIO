@@ -1439,7 +1439,7 @@ OCIO_NAMESPACE_ENTER
         
         ProcessorRcPtr processor = Processor::Create();
         processor->getImpl()->addColorSpaceConversion(*this, context, src, dst);
-        processor->getImpl()->finalize();
+        processor->getImpl()->computeMetadata();
         return processor;
     }
     
@@ -1494,7 +1494,7 @@ OCIO_NAMESPACE_ENTER
     {
         ProcessorRcPtr processor = Processor::Create();
         processor->getImpl()->addTransform(*this, context, transform, direction);
-        processor->getImpl()->finalize();
+        processor->getImpl()->computeMetadata();
         return processor;
     }
     
@@ -2916,8 +2916,11 @@ OCIO_ADD_TEST(Config, exponent_vs_config_version)
 
     OCIO_CHECK_NO_THROW(processor = config->getProcessor("raw", "lnh"));
 
+    OCIO::ConstCPUProcessorRcPtr cpuProcessor;
+    OCIO_CHECK_NO_THROW(cpuProcessor = processor->getDefaultCPUProcessor());
+
     float img1[4] = { -0.5f, 0.0f, 1.0f, 1.0f };
-    OCIO_CHECK_NO_THROW(processor->applyRGBA(img1));
+    OCIO_CHECK_NO_THROW(cpuProcessor->applyRGBA(img1));
 
     OCIO_CHECK_EQUAL(img1[0], -0.5f);
     OCIO_CHECK_EQUAL(img1[1],  0.0f);
@@ -2933,10 +2936,12 @@ OCIO_ADD_TEST(Config, exponent_vs_config_version)
     is.str(str2);
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
     OCIO_CHECK_NO_THROW(config->sanityCheck());
+
     OCIO_CHECK_NO_THROW(processor = config->getProcessor("raw", "lnh"));
+    OCIO_CHECK_NO_THROW(cpuProcessor = processor->getDefaultCPUProcessor());
 
     float img2[4] = { -0.5f, 0.0f, 1.0f, 1.0f };
-    OCIO_CHECK_NO_THROW(processor->applyRGBA(img2));
+    OCIO_CHECK_NO_THROW(cpuProcessor->applyRGBA(img2));
 
     OCIO_CHECK_EQUAL(img2[0],  0.0f);
     OCIO_CHECK_EQUAL(img2[1],  0.0f);
@@ -2949,10 +2954,12 @@ OCIO_ADD_TEST(Config, exponent_vs_config_version)
     is.str(str3);
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
     OCIO_CHECK_NO_THROW(config->sanityCheck());
+
     OCIO_CHECK_NO_THROW(processor = config->getProcessor("raw", "lnh"));
+    OCIO_CHECK_NO_THROW(cpuProcessor = processor->getDefaultCPUProcessor());
 
     float img3[4] = { -0.5f, 0.0f, 1.0f, 1.0f };
-    OCIO_CHECK_NO_THROW(processor->applyRGBA(img3));
+    OCIO_CHECK_NO_THROW(cpuProcessor->applyRGBA(img3));
 
     OCIO_CHECK_EQUAL(img3[0], 0.0f);
     OCIO_CHECK_EQUAL(img3[1], 0.0f);
@@ -2965,10 +2972,12 @@ OCIO_ADD_TEST(Config, exponent_vs_config_version)
     is.str(str4);
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
     OCIO_CHECK_NO_THROW(config->sanityCheck());
+
     OCIO_CHECK_NO_THROW(processor = config->getProcessor("raw", "lnh"));
+    OCIO_CHECK_NO_THROW(cpuProcessor = processor->getDefaultCPUProcessor());
 
     float img4[4] = { -0.5f, 0.0f, 1.0f, 1.0f };
-    OCIO_CHECK_NO_THROW(processor->applyRGBA(img4));
+    OCIO_CHECK_NO_THROW(cpuProcessor->applyRGBA(img4));
 
     OCIO_CHECK_EQUAL(img4[0], 0.0f);
     OCIO_CHECK_EQUAL(img4[1], 0.0f);
