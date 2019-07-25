@@ -21,7 +21,7 @@ target_link_libraries(ocioperf
         oiiohelpers
         OpenColorIO
         OpenImageIO
-        ilmbase
+        ilmbase::ilmbase
 )
 
 install(TARGETS ocioperf

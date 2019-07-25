@@ -34,7 +34,7 @@ target_link_libraries(ocioconvert
 		oiiohelpers
 		OpenColorIO
 		OpenImageIO
-        ilmbase
+        ilmbase::ilmbase
 		${OPENGL_LIBRARIES}
 		${GLEW_LIBRARIES}
 		${GLUT_LIBRARIES}
