@@ -56,8 +56,10 @@ list(APPEND DOC_SOURCES
     ${CMAKE_SOURCE_DIR}/INSTALL.md
     ${CMAKE_SOURCE_DIR}/CHANGELOG.md
     ${CMAKE_SOURCE_DIR}/LICENSE.md
-    ${CMAKE_SOURCE_DIR}/share/nuke/ocionuke/viewer.py
 )
+if(OCIO_BUILD_NUKE)
+    list(APPEND DOC_SOURCES ${CMAKE_SOURCE_DIR}/share/nuke/ocionuke/viewer.py)
+endif()
 
 add_custom_target(doc_copy
     COMMENT "Copying doc files to staging area"
