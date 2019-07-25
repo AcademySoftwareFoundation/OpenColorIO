@@ -72,18 +72,18 @@ OCIO_NAMESPACE_ENTER
             os << "    <SOPNode>\n";
             std::string desc(ConvertSpecialCharToXmlToken(cdl.getDescription()));
             os << "        <Description>" << desc << "</Description>\n";
-            float slopeval[3];
+            double slopeval[3];
             cdl.getSlope(slopeval);
-            os << "        <Slope>" << FloatVecToString(slopeval, 3) << "</Slope>\n";
-            float offsetval[3];
+            os << "        <Slope>" << DoubleVecToString(slopeval, 3) << "</Slope>\n";
+            double offsetval[3];
             cdl.getOffset(offsetval);
-            os << "        <Offset>" << FloatVecToString(offsetval, 3)  << "</Offset>\n";
-            float powerval[3];
+            os << "        <Offset>" << DoubleVecToString(offsetval, 3)  << "</Offset>\n";
+            double powerval[3];
             cdl.getPower(powerval);
-            os << "        <Power>" << FloatVecToString(powerval, 3)  << "</Power>\n";
+            os << "        <Power>" << DoubleVecToString(powerval, 3)  << "</Power>\n";
             os << "    </SOPNode>\n";
             os << "    <SatNode>\n";
-            os << "        <Saturation>" << FloatToString(cdl.getSat()) << "</Saturation>\n";
+            os << "        <Saturation>" << DoubleToString(cdl.getSat()) << "</Saturation>\n";
             os << "    </SatNode>\n";
             os << "</ColorCorrection>";
 
@@ -117,13 +117,13 @@ OCIO_NAMESPACE_ENTER
 
         cdl.setID(cdlRcPtr->getID());
         cdl.setDescription(cdlRcPtr->getDescription());
-        float slope[3] = { 0.f, 0.f, 0.f };
+        double slope[3] = { 0., 0., 0. };
         cdlRcPtr->getSlope(slope);
         cdl.setSlope(slope);
-        float offset[3] = { 0.f, 0.f, 0.f };
+        double offset[3] = { 0., 0., 0. };
         cdlRcPtr->getOffset(offset);
         cdl.setOffset(offset);
-        float power[3] = { 0.f, 0.f, 0.f };
+        double power[3] = { 0., 0., 0. };
         cdlRcPtr->getPower(power);
         cdl.setPower(power);
         cdl.setSat(cdlRcPtr->getSat());
@@ -318,7 +318,6 @@ OCIO_NAMESPACE_ENTER
     public:       
         Impl() 
             :   CDLOpData()
-            ,   m_direction(TRANSFORM_DIR_FORWARD)
         {
         }
 
@@ -337,7 +336,7 @@ OCIO_NAMESPACE_ENTER
             return *this;
         }
 
-        TransformDirection m_direction;
+        TransformDirection m_direction = TRANSFORM_DIR_FORWARD;
 
         mutable std::string m_xml;
     };
@@ -431,6 +430,16 @@ OCIO_NAMESPACE_ENTER
 
         getImpl()->setSlopeParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
     }
+    void CDLTransform::setSlope(const double * rgb)
+    {
+        if (!rgb)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        getImpl()->setSlopeParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
+    }
+
     
     void CDLTransform::getSlope(float * rgb) const
     {
@@ -444,6 +453,18 @@ OCIO_NAMESPACE_ENTER
         rgb[1] = (float)params[1];
         rgb[2] = (float)params[2];
     }
+    void CDLTransform::getSlope(double * rgb) const
+    {
+        if (!rgb)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        const CDLOpData::ChannelParams & params = getImpl()->getSlopeParams();
+        rgb[0] = params[0];
+        rgb[1] = params[1];
+        rgb[2] = params[2];
+    }
 
     void CDLTransform::setOffset(const float * rgb)
     {
@@ -454,7 +475,16 @@ OCIO_NAMESPACE_ENTER
 
         getImpl()->setOffsetParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
     }
-    
+    void CDLTransform::setOffset(const double * rgb)
+    {
+        if (!rgb)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        getImpl()->setOffsetParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
+    }
+
     void CDLTransform::getOffset(float * rgb) const
     {
         if(!rgb)
@@ -467,6 +497,18 @@ OCIO_NAMESPACE_ENTER
         rgb[1] = (float)params[1];
         rgb[2] = (float)params[2];
     }
+    void CDLTransform::getOffset(double * rgb) const
+    {
+        if (!rgb)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        const CDLOpData::ChannelParams & params = getImpl()->getOffsetParams();
+        rgb[0] = params[0];
+        rgb[1] = params[1];
+        rgb[2] = params[2];
+    }
 
     void CDLTransform::setPower(const float * rgb)
     {
@@ -477,7 +519,16 @@ OCIO_NAMESPACE_ENTER
 
         getImpl()->setPowerParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
     }
-    
+    void CDLTransform::setPower(const double * rgb)
+    {
+        if (!rgb)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        getImpl()->setPowerParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
+    }
+
     void CDLTransform::getPower(float * rgb) const
     {
         if(!rgb)
@@ -489,6 +540,18 @@ OCIO_NAMESPACE_ENTER
         rgb[0] = (float)params[0];
         rgb[1] = (float)params[1];
         rgb[2] = (float)params[2];
+    }
+    void CDLTransform::getPower(double * rgb) const
+    {
+        if (!rgb)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        const CDLOpData::ChannelParams & params = getImpl()->getPowerParams();
+        rgb[0] = params[0];
+        rgb[1] = params[1];
+        rgb[2] = params[2];
     }
 
     void CDLTransform::setSOP(const float * vec9)
@@ -502,7 +565,18 @@ OCIO_NAMESPACE_ENTER
         getImpl()->setOffsetParams(CDLOpData::ChannelParams(vec9[3], vec9[4], vec9[5]));
         getImpl()->setPowerParams(CDLOpData::ChannelParams(vec9[6], vec9[7], vec9[8]));
     }
-    
+    void CDLTransform::setSOP(const double * vec9)
+    {
+        if (!vec9)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        getImpl()->setSlopeParams(CDLOpData::ChannelParams(vec9[0], vec9[1], vec9[2]));
+        getImpl()->setOffsetParams(CDLOpData::ChannelParams(vec9[3], vec9[4], vec9[5]));
+        getImpl()->setPowerParams(CDLOpData::ChannelParams(vec9[6], vec9[7], vec9[8]));
+    }
+
     void CDLTransform::getSOP(float * vec9) const
     {
         if(!vec9)
@@ -525,15 +599,37 @@ OCIO_NAMESPACE_ENTER
         vec9[7] = (float)powers[1];
         vec9[8] = (float)powers[2];
     }
-
-    void CDLTransform::setSat(float sat)
+    void CDLTransform::getSOP(double * vec9) const
     {
-        getImpl()->setSaturation((double)sat);
+        if (!vec9)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        const CDLOpData::ChannelParams & slopes = getImpl()->getSlopeParams();
+        vec9[0] = slopes[0];
+        vec9[1] = slopes[1];
+        vec9[2] = slopes[2];
+
+        const CDLOpData::ChannelParams & offsets = getImpl()->getOffsetParams();
+        vec9[3] = offsets[0];
+        vec9[4] = offsets[1];
+        vec9[5] = offsets[2];
+
+        const CDLOpData::ChannelParams & powers = getImpl()->getPowerParams();
+        vec9[6] = powers[0];
+        vec9[7] = powers[1];
+        vec9[8] = powers[2];
+    }
+
+    void CDLTransform::setSat(double sat)
+    {
+        getImpl()->setSaturation(sat);
     }
     
-    float CDLTransform::getSat() const
+    double CDLTransform::getSat() const
     {
-        return (float)getImpl()->getSaturation();
+        return getImpl()->getSaturation();
     }
 
     void CDLTransform::getSatLumaCoefs(float * rgb) const
@@ -547,7 +643,18 @@ OCIO_NAMESPACE_ENTER
         rgb[1] = 0.7152f;
         rgb[2] = 0.0722f;
     }
-    
+    void CDLTransform::getSatLumaCoefs(double * rgb) const
+    {
+        if (!rgb)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        rgb[0] = 0.2126;
+        rgb[1] = 0.7152;
+        rgb[2] = 0.0722;
+    }
+
     void CDLTransform::setID(const char * id)
     {
         getImpl()->setID(id ? id : "");
@@ -560,20 +667,61 @@ OCIO_NAMESPACE_ENTER
     
     void CDLTransform::setDescription(const char * desc)
     {
-        getImpl()->setDescriptions(OpData::Descriptions(desc ? desc : ""));
+        auto & info = getImpl()->getFormatMetadata();
+        int descIndex = info.getFirstChildIndex(METADATA_DESCRIPTION);
+        if (descIndex == -1)
+        {
+            info.getChildrenElements().emplace_back(METADATA_DESCRIPTION, desc ? desc : "");
+        }
+        else
+        {
+            info.getChildrenElements()[descIndex].setValue(desc ? desc : "");
+        }
     }
     
     const char * CDLTransform::getDescription() const
     {
-        if(getImpl()->getDescriptions().empty())
+        const auto & info = getImpl()->getFormatMetadata();
+        int descIndex = info.getFirstChildIndex(METADATA_DESCRIPTION);
+        if (descIndex == -1)
+        {
             return "";
+        }
+        else
+        {
+            return info.getChildrenElements()[descIndex].getValue();
+        }
+    }
 
-        return getImpl()->getDescriptions()[0].c_str();
+    BitDepth CDLTransform::getInputBitDepth() const
+    {
+        return getImpl()->getInputBitDepth();
+    }
+    BitDepth CDLTransform::getOutputBitDepth() const
+    {
+        return getImpl()->getOutputBitDepth();
+    }
+    void CDLTransform::setInputBitDepth(BitDepth bitDepth)
+    {
+        getImpl()->setInputBitDepth(bitDepth);
+    }
+    void CDLTransform::setOutputBitDepth(BitDepth bitDepth)
+    {
+        getImpl()->setOutputBitDepth(bitDepth);
     }
     
+    FormatMetadata & CDLTransform::getFormatMetadata()
+    {
+        return m_impl->getFormatMetadata();
+    }
+    const FormatMetadata & CDLTransform::getFormatMetadata() const
+    {
+        return m_impl->getFormatMetadata();
+    }
+
     std::ostream& operator<< (std::ostream& os, const CDLTransform& t)
     {
-        float sop[9];
+        double sop[9];
         t.getSOP(sop);
         
         os << "<CDLTransform";
@@ -597,19 +745,19 @@ OCIO_NAMESPACE_ENTER
                      const CDLTransform & cdlTransform,
                      TransformDirection dir)
     {
-        float scale4[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        double scale4[] = { 1.0, 1.0, 1.0, 1.0 };
         cdlTransform.getSlope(scale4);
         
-        float offset4[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+        double offset4[] = { 0.0, 0.0, 0.0, 0.0 };
         cdlTransform.getOffset(offset4);
         
-        float power4[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        double power4[] = { 1.0, 1.0, 1.0, 1.0 };
         cdlTransform.getPower(power4);
         
-        float lumaCoef3[] = { 1.0f, 1.0f, 1.0f };
+        double lumaCoef3[] = { 1.0, 1.0, 1.0 };
         cdlTransform.getSatLumaCoefs(lumaCoef3);
         
-        float sat = cdlTransform.getSat();
+        double sat = cdlTransform.getSat();
         
         TransformDirection combinedDir = CombineTransformDirections(dir,
                                                   cdlTransform.getDirection());
@@ -655,12 +803,11 @@ OCIO_NAMESPACE_ENTER
             const double p[3] = { power4[0],  power4[1],  power4[2]  };
 
             CreateCDLOp(ops, 
-                        cdlTransform.getID(),
-                        OpData::Descriptions(cdlTransform.getDescription()),
+                        FormatMetadataImpl(cdlTransform.getFormatMetadata()),
                         combinedDir==TRANSFORM_DIR_FORWARD 
                             ? CDLOpData::CDL_V1_2_FWD
                             : CDLOpData::CDL_V1_2_REV,
-                        s, o, p, double(sat), 
+                        s, o, p, sat, 
                         combinedDir);
         }
     }
@@ -719,7 +866,7 @@ OCIO_ADD_TEST(CDLTransform, CreateFromCCFile)
         OCIO_CHECK_EQUAL(3.1f, power[0]);
         OCIO_CHECK_EQUAL(3.2f, power[1]);
         OCIO_CHECK_EQUAL(3.3f, power[2]);
-        OCIO_CHECK_EQUAL(0.7f, transform->getSat());
+        OCIO_CHECK_EQUAL(0.7, transform->getSat());
     }
 
     const std::string expectedOutXML(
@@ -760,7 +907,7 @@ OCIO_ADD_TEST(CDLTransform, CreateFromCCFile)
         OCIO_CHECK_EQUAL(3.1f, power[0]);
         OCIO_CHECK_EQUAL(3.2f, power[1]);
         OCIO_CHECK_EQUAL(3.3f, power[2]);
-        OCIO_CHECK_EQUAL(0.7f, transformCDL->getSat());
+        OCIO_CHECK_EQUAL(0.7, transformCDL->getSat());
     }
 }
 

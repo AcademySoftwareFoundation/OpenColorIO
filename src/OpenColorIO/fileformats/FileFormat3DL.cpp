@@ -136,22 +136,22 @@ OCIO_NAMESPACE_ENTER
             
             ~LocalFileFormat() {};
             
-            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
+            void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
             
-            virtual CachedFileRcPtr Read(
+            CachedFileRcPtr read(
                 std::istream & istream,
-                const std::string & fileName) const;
+                const std::string & fileName) const override;
             
-            virtual void Write(const Baker & baker,
-                               const std::string & formatName,
-                               std::ostream & ostream) const;
+            void bake(const Baker & baker,
+                      const std::string & formatName,
+                      std::ostream & ostream) const override;
             
-            virtual void BuildFileOps(OpRcPtrVec & ops,
-                                      const Config& config,
-                                      const ConstContextRcPtr & context,
-                                      CachedFileRcPtr untypedCachedFile,
-                                      const FileTransform& fileTransform,
-                                      TransformDirection dir) const;
+            void buildFileOps(OpRcPtrVec & ops,
+                              const Config& config,
+                              const ConstContextRcPtr & context,
+                              CachedFileRcPtr untypedCachedFile,
+                              const FileTransform& fileTransform,
+                              TransformDirection dir) const override;
         };
         
         
@@ -205,12 +205,12 @@ OCIO_NAMESPACE_ENTER
             return static_cast<int>(roundf(val));
         }
         
-        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
+        void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
             info.name = "flame";
             info.extension = "3dl";
-            info.capabilities = (FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_WRITE);
+            info.capabilities = (FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
             formatInfoVec.push_back(info);
             
             FormatInfo info2 = info;
@@ -221,7 +221,7 @@ OCIO_NAMESPACE_ENTER
         // Try and load the format
         // Raise an exception if it can't be loaded.
         
-        CachedFileRcPtr LocalFileFormat::Read(
+        CachedFileRcPtr LocalFileFormat::read(
             std::istream & istream,
             const std::string & /* fileName unused */) const
         {
@@ -235,7 +235,7 @@ OCIO_NAMESPACE_ENTER
                 const int MAX_LINE_SIZE = 4096;
                 char lineBuffer[MAX_LINE_SIZE];
                 
-                std::vector<std::string> lineParts;
+                StringVec lineParts;
                 std::vector<int> tmpData;
                 
                 int lineNumber = 0;
@@ -476,14 +476,17 @@ OCIO_NAMESPACE_ENTER
             return static_cast<int>(logval);
         }
         
-        void LocalFileFormat::Write(const Baker & baker,
-                                    const std::string & formatName,
-                                    std::ostream & ostream) const
+        void LocalFileFormat::bake(const Baker & baker,
+                                   const std::string & formatName,
+                                   std::ostream & ostream) const
         {
             int DEFAULT_CUBE_SIZE = 0;
             int SHAPER_BIT_DEPTH = 10;
             int CUBE_BIT_DEPTH = 12;
             
+            // NOTE: This code is very old, Lustre and Flame have long been able
+            //       to support much larger cube sizes.  Furthermore there is no
+            //       need to use the legacy 3dl format since CLF/CTF is supported.
             if(formatName == "lustre")
             {
                 DEFAULT_CUBE_SIZE = 33;
@@ -583,7 +586,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         void
-        LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
+        LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                                       const Config& /*config*/,
                                       const ConstContextRcPtr & /*context*/,
                                       CachedFileRcPtr untypedCachedFile,
@@ -667,17 +670,17 @@ OCIO_ADD_TEST(FileFormat3DL, FormatInfo)
 {
     OCIO::FormatInfoVec formatInfoVec;
     OCIO::LocalFileFormat tester;
-    tester.GetFormatInfo(formatInfoVec);
+    tester.getFormatInfo(formatInfoVec);
 
     OCIO_CHECK_EQUAL(2, formatInfoVec.size());
     OCIO_CHECK_EQUAL("flame", formatInfoVec[0].name);
     OCIO_CHECK_EQUAL("lustre", formatInfoVec[1].name);
     OCIO_CHECK_EQUAL("3dl", formatInfoVec[0].extension);
     OCIO_CHECK_EQUAL("3dl", formatInfoVec[1].extension);
-    OCIO_CHECK_EQUAL((OCIO::FORMAT_CAPABILITY_READ
-        | OCIO::FORMAT_CAPABILITY_WRITE), formatInfoVec[0].capabilities);
-    OCIO_CHECK_EQUAL((OCIO::FORMAT_CAPABILITY_READ
-        | OCIO::FORMAT_CAPABILITY_WRITE), formatInfoVec[1].capabilities);
+    OCIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ | OCIO::FORMAT_CAPABILITY_BAKE,
+                     formatInfoVec[0].capabilities);
+    OCIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ | OCIO::FORMAT_CAPABILITY_BAKE,
+                     formatInfoVec[1].capabilities);
 }
 
 OCIO_ADD_TEST(FileFormat3DL, Bake)
@@ -713,13 +716,13 @@ OCIO_ADD_TEST(FileFormat3DL, Bake)
     std::ostringstream outputFlame;
     baker->bake(outputFlame);
 
-    std::vector<std::string> osvecFlame;
+    OCIO::StringVec osvecFlame;
     OCIO::pystring::splitlines(outputFlame.str(), osvecFlame);
 
     std::ostringstream outputLustre;
     baker->setFormat("lustre");
     baker->bake(outputLustre);
-    std::vector<std::string> osvecLustre;
+    OCIO::StringVec osvecLustre;
     OCIO::pystring::splitlines(outputLustre.str(), osvecLustre);
 
     std::ostringstream bout;
@@ -738,7 +741,7 @@ OCIO_ADD_TEST(FileFormat3DL, Bake)
     bout << "LUT8" << "\n";
     bout << "gamma 1.0" << "\n";
 
-    std::vector<std::string> resvec;
+    OCIO::StringVec resvec;
     OCIO::pystring::splitlines(bout.str(), resvec);
     OCIO_CHECK_EQUAL(resvec.size(), osvecLustre.size());
     OCIO_CHECK_EQUAL(resvec.size() - 4, osvecFlame.size());

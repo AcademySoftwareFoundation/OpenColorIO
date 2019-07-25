@@ -121,8 +121,7 @@ public:
 
     MatrixOpData(BitDepth inBitDepth,
                  BitDepth outBitDepth,
-                 const std::string & id,
-                 const Descriptions & descriptions);
+                 const FormatMetadataImpl & info);
 
     virtual ~MatrixOpData();
 

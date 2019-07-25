@@ -208,6 +208,8 @@ ExposureContrastOpDataRcPtr ExposureContrastOpData::inverse() const
     ec->setInputBitDepth(getOutputBitDepth());
     ec->setOutputBitDepth(getInputBitDepth());
 
+    ec->invertMetadata();
+
     return ec;
 }
 
@@ -453,8 +455,10 @@ OCIO_ADD_TEST(ExposureContrastOpData, accessors)
     OCIO_CHECK_EQUAL(ec0.getContrast(), 1.0);
     OCIO_CHECK_EQUAL(ec0.getGamma(), 1.0);
     OCIO_CHECK_EQUAL(ec0.getPivot(), 0.18);
-    OCIO_CHECK_EQUAL(ec0.getLogExposureStep(), 0.088);
-    OCIO_CHECK_EQUAL(ec0.getLogMidGray(), 0.435);
+    OCIO_CHECK_EQUAL(ec0.getLogExposureStep(),
+                     OCIO::ExposureContrastOpData::LOGEXPOSURESTEP_DEFAULT);
+    OCIO_CHECK_EQUAL(ec0.getLogMidGray(),
+                     OCIO::ExposureContrastOpData::LOGMIDGRAY_DEFAULT);
 
     OCIO_CHECK_ASSERT(ec0.isIdentity());
     OCIO_CHECK_ASSERT(ec0.isNoOp());
@@ -486,8 +490,10 @@ OCIO_ADD_TEST(ExposureContrastOpData, accessors)
     OCIO_CHECK_EQUAL(ec.getContrast(), 1.0);
     OCIO_CHECK_EQUAL(ec.getGamma(), 1.0);
     OCIO_CHECK_EQUAL(ec.getPivot(), 0.18);
-    OCIO_CHECK_EQUAL(ec.getLogExposureStep(), 0.088);
-    OCIO_CHECK_EQUAL(ec.getLogMidGray(), 0.435);
+    OCIO_CHECK_EQUAL(ec.getLogExposureStep(),
+                     OCIO::ExposureContrastOpData::LOGEXPOSURESTEP_DEFAULT);
+    OCIO_CHECK_EQUAL(ec.getLogMidGray(),
+                     OCIO::ExposureContrastOpData::LOGMIDGRAY_DEFAULT);
 
     OCIO_CHECK_ASSERT(ec.isNoOp());
 

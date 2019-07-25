@@ -124,17 +124,17 @@ OCIO_NAMESPACE_ENTER
     
     int Baker::getNumFormats()
     {
-        return FormatRegistry::GetInstance().getNumFormats(FORMAT_CAPABILITY_WRITE);
+        return FormatRegistry::GetInstance().getNumFormats(FORMAT_CAPABILITY_BAKE);
     }
     
     const char * Baker::getFormatNameByIndex(int index)
     {
-        return FormatRegistry::GetInstance().getFormatNameByIndex(FORMAT_CAPABILITY_WRITE, index);
+        return FormatRegistry::GetInstance().getFormatNameByIndex(FORMAT_CAPABILITY_BAKE, index);
     }
     
     const char * Baker::getFormatExtensionByIndex(int index)
     {
-        return FormatRegistry::GetInstance().getFormatExtensionByIndex(FORMAT_CAPABILITY_WRITE, index);
+        return FormatRegistry::GetInstance().getFormatExtensionByIndex(FORMAT_CAPABILITY_BAKE, index);
     }
     
     void Baker::setFormat(const char * formatName)
@@ -241,7 +241,7 @@ OCIO_NAMESPACE_ENTER
         
         try
         {
-            fmt->Write(*this, getImpl()->formatName_, os);
+            fmt->bake(*this, getImpl()->formatName_, os);
         }
         catch(std::exception & e)
         {

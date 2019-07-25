@@ -37,9 +37,9 @@ class Processor:
         """
         pass
     
-    def getMetadata(self):
+    def getProcessorMetadata(self):
         """
-        getMetadata()
+        getProcessorMetadata()
         
         Returns information about the process that generated this processor. 
         

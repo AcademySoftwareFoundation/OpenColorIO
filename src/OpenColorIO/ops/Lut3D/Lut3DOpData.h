@@ -63,12 +63,11 @@ public:
     Lut3DOpData(long gridSize, TransformDirection dir);
 
     Lut3DOpData(
-        BitDepth             inBitDepth,
-        BitDepth             outBitDepth,
-        const std::string &  id,
-        const Descriptions & descriptions,
-        Interpolation        interpolation,
-        unsigned long        gridSize
+        BitDepth                   inBitDepth,
+        BitDepth                   outBitDepth,
+        const FormatMetadataImpl & metadata,
+        Interpolation              interpolation,
+        unsigned long              gridSize
     );
 
     virtual ~Lut3DOpData();

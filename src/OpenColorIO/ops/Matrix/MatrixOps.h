@@ -43,24 +43,33 @@ OCIO_NAMESPACE_ENTER
     // Use whichever is most convenient; they are equally efficient.
     
     void CreateScaleOp(OpRcPtrVec & ops,
-                       const float * scale4,
+                       const double * scale4,
                        TransformDirection direction);
     
     void CreateMatrixOp(OpRcPtrVec & ops,
-                        const float * m44,
+                        const double * m44,
                         TransformDirection direction);
     
     void CreateOffsetOp(OpRcPtrVec & ops,
-                        const float * offset4,
+                        const double * offset4,
                         TransformDirection direction);
     
+    void CreateMatrixOffsetOp(OpRcPtrVec & ops,
+                              const double * m44, const double * offset4,
+                              TransformDirection direction);
+    
     void CreateScaleOffsetOp(OpRcPtrVec & ops,
-                             const float * scale4, const float * offset4,
+                             const double * scale4, const double * offset4,
                              TransformDirection direction);
     
+    void CreateFitOp(OpRcPtrVec & ops,
+                     const double * oldmin4, const double * oldmax4,
+                     const double * newmin4, const double * newmax4,
+                     TransformDirection direction);
+    
     void CreateSaturationOp(OpRcPtrVec & ops,
-                            float sat,
-                            const float * lumaCoef3,
+                            double sat,
+                            const double * lumaCoef3,
                             TransformDirection direction);
 
     void CreateMatrixOffsetOp(OpRcPtrVec & ops,
@@ -73,8 +82,8 @@ OCIO_NAMESPACE_ENTER
                      TransformDirection direction);
     
     void CreateMinMaxOp(OpRcPtrVec & ops,
-                        const float * from_min3,
-                        const float * from_max3,
+                        const double * from_min3,
+                        const double * from_max3,
                         TransformDirection direction);
 
     void CreateMatrixOp(OpRcPtrVec & ops,
@@ -82,6 +91,10 @@ OCIO_NAMESPACE_ENTER
                         TransformDirection direction);
 
     void CreateIdentityMatrixOp(OpRcPtrVec & ops);
+
+    // Create a copy of the matrix transform in the op and append it to the GroupTransform.
+    void CreateMatrixTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op);
+
 }
 OCIO_NAMESPACE_EXIT
 

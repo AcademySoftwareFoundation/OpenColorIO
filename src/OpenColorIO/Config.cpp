@@ -46,8 +46,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "OpBuilders.h"
 #include "PathUtils.h"
 #include "ParseUtils.h"
-#include "Processor.h"
 #include "PrivateTypes.h"
+#include "Processor.h"
 #include "pystring/pystring.h"
 #include "OCIOYaml.h"
 #include "Platform.h"
@@ -1904,9 +1904,9 @@ OCIO_ADD_TEST(Config, serialize)
     "      children:\n"
     "        - !<ExponentTransform> {value: [1, 1, 1, 1]}\n";
     
-    std::vector<std::string> osvec;
+    OCIO::StringVec osvec;
     OCIO::pystring::splitlines(os.str(), osvec);
-    std::vector<std::string> PROFILE_OUTvec;
+    OCIO::StringVec PROFILE_OUTvec;
     OCIO::pystring::splitlines(PROFILE_OUT, PROFILE_OUTvec);
     
     OCIO_CHECK_EQUAL(osvec.size(), PROFILE_OUTvec.size());
@@ -1941,9 +1941,9 @@ OCIO_ADD_TEST(Config, serialize_searchpath)
             "colorspaces:\n"
             "  []";
 
-        std::vector<std::string> osvec;
+        OCIO::StringVec osvec;
         OCIO::pystring::splitlines(os.str(), osvec);
-        std::vector<std::string> PROFILE_OUTvec;
+        OCIO::StringVec PROFILE_OUTvec;
         OCIO::pystring::splitlines(PROFILE_OUT, PROFILE_OUTvec);
 
         OCIO_CHECK_EQUAL(osvec.size(), PROFILE_OUTvec.size());
@@ -1960,7 +1960,7 @@ OCIO_ADD_TEST(Config, serialize_searchpath)
         std::ostringstream os;
         config->serialize(os);
 
-        std::vector<std::string> osvec;
+        OCIO::StringVec osvec;
         OCIO::pystring::splitlines(os.str(), osvec);
 
         const std::string expected1{ "search_path: a:b:c" };

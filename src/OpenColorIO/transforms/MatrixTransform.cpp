@@ -34,7 +34,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "OpBuilders.h"
 #include "ops/Matrix/MatrixOps.h"
 
-
 OCIO_NAMESPACE_ENTER
 {
     MatrixTransformRcPtr MatrixTransform::Create()
@@ -50,11 +49,10 @@ OCIO_NAMESPACE_ENTER
     class MatrixTransform::Impl : public MatrixOpData
     {
     public:
-        TransformDirection dir_;
-        
+        TransformDirection m_dir = TRANSFORM_DIR_FORWARD;
+
         Impl()
             : MatrixOpData()
-            , dir_(TRANSFORM_DIR_FORWARD)
         {
         }
 
@@ -68,7 +66,7 @@ OCIO_NAMESPACE_ENTER
             if (this != &rhs)
             {
                 MatrixOpData::operator=(rhs);
-                dir_ = rhs.dir_;
+                m_dir = rhs.m_dir;
             }
             return *this;
         }
@@ -107,12 +105,12 @@ OCIO_NAMESPACE_ENTER
     
     TransformDirection MatrixTransform::getDirection() const
     {
-        return getImpl()->dir_;
+        return getImpl()->m_dir;
     }
     
     void MatrixTransform::setDirection(TransformDirection dir)
     {
-        getImpl()->dir_ = dir;
+        getImpl()->m_dir = dir;
     }
     
     void MatrixTransform::validate() const
@@ -130,11 +128,38 @@ OCIO_NAMESPACE_ENTER
         }
     }
 
+    BitDepth MatrixTransform::getInputBitDepth() const
+    {
+        return getImpl()->getInputBitDepth();
+    }
+    BitDepth MatrixTransform::getOutputBitDepth() const
+    {
+        return getImpl()->getOutputBitDepth();
+    }
+    void MatrixTransform::setInputBitDepth(BitDepth bitDepth)
+    {
+        getImpl()->setInputBitDepth(bitDepth);
+    }
+    void MatrixTransform::setOutputBitDepth(BitDepth bitDepth)
+    {
+        getImpl()->setOutputBitDepth(bitDepth);
+    }
+
+    FormatMetadata & MatrixTransform::getFormatMetadata()
+    {
+        return m_impl->getFormatMetadata();
+    }
+
+    const FormatMetadata & MatrixTransform::getFormatMetadata() const
+    {
+        return m_impl->getFormatMetadata();
+    }
+
     bool MatrixTransform::equals(const MatrixTransform & other) const
     {
         if (this == &other) return true;
 
-        if (getImpl()->dir_ != other.getImpl()->dir_)
+        if (getImpl()->m_dir != other.getImpl()->m_dir)
         {
             return false;
         }
@@ -255,15 +280,43 @@ OCIO_NAMESPACE_ENTER
                               const float * oldmin4, const float * oldmax4,
                               const float * newmin4, const float * newmax4)
     {
+        if (!oldmin4 || !oldmax4) return;
+        if (!newmin4 || !newmax4) return;
+
+        if (m44) memset(m44, 0, 16 * sizeof(float));
+        if (offset4) memset(offset4, 0, 4 * sizeof(float));
+
+        for (int i = 0; i<4; ++i)
+        {
+            float denom = oldmax4[i] - oldmin4[i];
+            if (IsScalarEqualToZero(denom))
+            {
+                std::ostringstream os;
+                os << "Cannot create Fit operator. ";
+                os << "Max value equals min value '";
+                os << oldmax4[i] << "' in channel index ";
+                os << i << ".";
+                throw Exception(os.str().c_str());
+            }
+
+            if (m44) m44[5 * i] = (newmax4[i] - newmin4[i]) / denom;
+            if (offset4) offset4[i] = (newmin4[i] * oldmax4[i] - newmax4[i] * oldmin4[i]) / denom;
+        }
+    }
+
+    void MatrixTransform::Fit(double * m44, double * offset4,
+                              const double * oldmin4, const double * oldmax4,
+                              const double * newmin4, const double * newmax4)
+    {
         if(!oldmin4 || !oldmax4) return;
         if(!newmin4 || !newmax4) return;
         
-        if(m44) memset(m44, 0, 16*sizeof(float));
-        if(offset4) memset(offset4, 0, 4*sizeof(float));
+        if(m44) memset(m44, 0, 16*sizeof(double));
+        if(offset4) memset(offset4, 0, 4*sizeof(double));
         
         for(int i=0; i<4; ++i)
         {
-            float denom = oldmax4[i] - oldmin4[i];
+            double denom = oldmax4[i] - oldmin4[i];
             if(IsScalarEqualToZero(denom))
             {
                 std::ostringstream os;
@@ -296,6 +349,25 @@ OCIO_NAMESPACE_ENTER
             offset4[1] = 0.0f;
             offset4[2] = 0.0f;
             offset4[3] = 0.0f;
+        }
+    }
+    void MatrixTransform::Identity(double * m44, double * offset4)
+    {
+        if (m44)
+        {
+            memset(m44, 0, 16 * sizeof(double));
+            m44[0] = 1.0;
+            m44[5] = 1.0;
+            m44[10] = 1.0;
+            m44[15] = 1.0;
+        }
+
+        if (offset4)
+        {
+            offset4[0] = 0.0;
+            offset4[1] = 0.0;
+            offset4[2] = 0.0;
+            offset4[3] = 0.0;
         }
     }
 
@@ -336,6 +408,43 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
+    void MatrixTransform::Sat(double * m44, double * offset4,
+                              double sat, const double * lumaCoef3)
+    {
+        if(!lumaCoef3) return;
+        
+        if(m44)
+        {
+            m44[0] = (1 - sat) * lumaCoef3[0] + sat;
+            m44[1] = (1 - sat) * lumaCoef3[1];
+            m44[2] = (1 - sat) * lumaCoef3[2];
+            m44[3] = 0.0;
+            
+            m44[4] = (1 - sat) * lumaCoef3[0];
+            m44[5] = (1 - sat) * lumaCoef3[1] + sat;
+            m44[6] = (1 - sat) * lumaCoef3[2];
+            m44[7] = 0.0;
+            
+            m44[8] = (1 - sat) * lumaCoef3[0];
+            m44[9] = (1 - sat) * lumaCoef3[1];
+            m44[10] = (1 - sat) * lumaCoef3[2] + sat;
+            m44[11] = 0.0;
+            
+            m44[12] = 0.0;
+            m44[13] = 0.0;
+            m44[14] = 0.0;
+            m44[15] = 1.0;
+        }
+        
+        if(offset4)
+        {
+            offset4[0] = 0.0;
+            offset4[1] = 0.0;
+            offset4[2] = 0.0;
+            offset4[3] = 0.0;
+        }
+    }
+    
     void MatrixTransform::Scale(float * m44, float * offset4,
                                 const float * scale4)
     {
@@ -356,6 +465,28 @@ OCIO_NAMESPACE_ENTER
             offset4[1] = 0.0f;
             offset4[2] = 0.0f;
             offset4[3] = 0.0f;
+        }
+    }
+    void MatrixTransform::Scale(double * m44, double * offset4,
+                                const double * scale4)
+    {
+        if(!scale4) return;
+        
+        if(m44)
+        {
+            memset(m44, 0, 16*sizeof(double));
+            m44[0] = scale4[0];
+            m44[5] = scale4[1];
+            m44[10] = scale4[2];
+            m44[15] = scale4[3];
+        }
+        
+        if(offset4)
+        {
+            offset4[0] = 0.0;
+            offset4[1] = 0.0;
+            offset4[2] = 0.0;
+            offset4[3] = 0.0;
         }
     }
     
@@ -425,13 +556,86 @@ OCIO_NAMESPACE_ENTER
             }
         }
     }
+    void MatrixTransform::View(double * m44, double * offset4,
+                               int * channelHot4,
+                               const double * lumaCoef3)
+    {
+        if(!channelHot4 || !lumaCoef3) return;
+        
+        if(offset4)
+        {
+            offset4[0] = 0.0;
+            offset4[1] = 0.0;
+            offset4[2] = 0.0;
+            offset4[3] = 0.0;
+        }
+        
+        if(m44)
+        {
+            memset(m44, 0, 16*sizeof(double));
+            
+            // All channels are hot, return identity
+            if(channelHot4[0] && channelHot4[1] &&
+               channelHot4[2] && channelHot4[3])
+            {
+                Identity(m44, 0x0);
+            }
+            // If not all the channels are hot, but alpha is,
+            // just show it.
+            else if(channelHot4[3])
+            {
+                for(int i=0; i<4; ++i)
+                {
+                     m44[4*i+3] = 1.0;
+                }
+            }
+            // Blend rgb as specified, place it in all 3 output
+            // channels (to make a grayscale final image)
+            else
+            {
+                double values[3] = { 0.0, 0.0, 0.0 };
+                
+                for(int i = 0; i < 3; ++i)
+                {
+                    values[i] += lumaCoef3[i] * (channelHot4[i] ? 1.0 : 0.0);
+                }
+                
+                double sum = values[0] + values[1] + values[2];
+                if(!IsScalarEqualToZero(sum))
+                {
+                    values[0] /= sum;
+                    values[1] /= sum;
+                    values[2] /= sum;
+                }
+                
+                // Copy rgb into rgb rows
+                for(int row=0; row<3; ++row)
+                {
+                    for(int i=0; i<3; i++)
+                    {
+                        m44[4*row+i] = values[i];
+                    }
+                }
+                
+                // Preserve alpha
+                m44[15] = 1.0;
+            }
+        }
+    }
     
+    namespace
+    {
+        const int DOUBLE_DECIMALS = 16;
+    }
+
     std::ostream& operator<< (std::ostream& os, const MatrixTransform& t)
     {
-        float matrix[16], offset[4];
+        double matrix[16], offset[4];
 
         t.getMatrix(matrix);
         t.getOffset(offset);
+
+        os.precision(DOUBLE_DECIMALS);
 
         os << "<MatrixTransform ";
         os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
@@ -458,16 +662,23 @@ OCIO_NAMESPACE_ENTER
                         const MatrixTransform & transform,
                         TransformDirection dir)
     {
-        TransformDirection combinedDir = CombineTransformDirections(dir,
-            transform.getDirection());
+        TransformDirection combinedDir =
+            CombineTransformDirections(dir,
+                                       transform.getDirection());
         
-        float matrix[16];
-        float offset[4];
-        transform.getValue(matrix, offset);
-        
-        CreateMatrixOffsetOp(ops,
-                             matrix, offset,
-                             combinedDir);
+        double matrix[16];
+        double offset[4];
+        transform.getMatrix(matrix);
+        transform.getOffset(offset);
+
+        const FormatMetadataImpl metadata(transform.getFormatMetadata());
+        MatrixOpDataRcPtr mat = std::make_shared<MatrixOpData>(transform.getInputBitDepth(),
+                                                               transform.getOutputBitDepth(),
+                                                               metadata);
+        mat->setRGBA(matrix);
+        mat->setRGBAOffsets(offset);
+
+        CreateMatrixOp(ops, mat, combinedDir);
     }
     
 }

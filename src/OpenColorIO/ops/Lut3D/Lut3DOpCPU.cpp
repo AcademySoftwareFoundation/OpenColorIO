@@ -1996,11 +1996,13 @@ namespace OCIO = OCIO_NAMESPACE;
 
 void Lut3DRendererNaNTest(OCIO::Interpolation interpol)
 {
+    OCIO::FormatMetadataImpl metadata(OCIO::METADATA_ROOT);
+    metadata.addAttribute(OCIO::METADATA_ID, "uid");
+
     OCIO::Lut3DOpDataRcPtr lut =
         std::make_shared<OCIO::Lut3DOpData>(OCIO::BIT_DEPTH_F32,
                                             OCIO::BIT_DEPTH_F32,
-                                            "uid",
-                                            OCIO::OpData::Descriptions(),
+                                            metadata,
                                             interpol,
                                             4);
 

@@ -704,14 +704,16 @@ OCIO_NAMESPACE_ENTER
             values[3 * i + 2] = lut->luts[2][i];
         }
 
+        const double min[] = { lut->from_min[0], lut->from_min[1], lut->from_min[2] };
+        const double max[] = { lut->from_max[0], lut->from_max[1], lut->from_max[2] };
         if (direction == TRANSFORM_DIR_INVERSE)
         {
             CreateLut1DOp(ops, data, TRANSFORM_DIR_INVERSE);
-            CreateMinMaxOp(ops, lut->from_min, lut->from_max, TRANSFORM_DIR_INVERSE);
+            CreateMinMaxOp(ops, min, max, TRANSFORM_DIR_INVERSE);
         }
         else
         {
-            CreateMinMaxOp(ops, lut->from_min, lut->from_max, TRANSFORM_DIR_FORWARD);
+            CreateMinMaxOp(ops, min, max, TRANSFORM_DIR_FORWARD);
             CreateLut1DOp(ops, data, TRANSFORM_DIR_FORWARD);
         }
     }
@@ -1368,7 +1370,7 @@ OCIO_ADD_TEST(Lut1D, basic)
     // By default, this constructor creates an 'identity LUT'.
     OCIO::Lut1DOpDataRcPtr lutData =
         std::make_shared<OCIO::Lut1DOpData>(bitDepth, bitDepth,
-                                            "", OCIO::OpData::Descriptions(),
+                                            OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                                             OCIO::INTERP_LINEAR,
                                             OCIO::Lut1DOpData::LUT_STANDARD);
 
@@ -1429,7 +1431,7 @@ OCIO_ADD_TEST(Lut1D, half)
     OCIO::Lut1DOpDataRcPtr
         lutData(
             new OCIO::Lut1DOpData(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_F32,
-                                  "", OCIO::OpData::Descriptions(),
+                                  OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                                   OCIO::INTERP_LINEAR,
                                   OCIO::Lut1DOpData::LUT_STANDARD));
 
@@ -1475,7 +1477,7 @@ OCIO_ADD_TEST(Lut1D, nan)
     OCIO::Lut1DOpDataRcPtr
         lutData(
             new OCIO::Lut1DOpData(bitDepth, bitDepth,
-                                  "", OCIO::OpData::Descriptions(),
+                                  OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                                   OCIO::INTERP_LINEAR,
                                   OCIO::Lut1DOpData::LUT_STANDARD));
 

@@ -227,6 +227,64 @@ void CreateExposureContrastOp(OpRcPtrVec & ops,
     }
 }
 
+void CreateExposureContrastTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
+{
+    auto ec = DynamicPtrCast<const ExposureContrastOp>(op);
+    if (!ec)
+    {
+        throw Exception("CreateExposureContrastTransform: op has to be a ExposureContrastOp");
+    }
+    auto ecData = DynamicPtrCast<const ExposureContrastOpData>(op->data());
+    auto ecTransform = ExposureContrastTransform::Create();
+
+    const auto style = ecData->getStyle();
+
+    if (style == ExposureContrastOpData::STYLE_LINEAR_REV ||
+        style == ExposureContrastOpData::STYLE_VIDEO_REV ||
+        style == ExposureContrastOpData::STYLE_LOGARITHMIC_REV)
+    {
+        ecTransform->setDirection(TRANSFORM_DIR_INVERSE);
+    }
+    const auto transformStyle = ConvertStyle(style);
+    ecTransform->setStyle(transformStyle);
+
+    ecTransform->setInputBitDepth(ec->getInputBitDepth());
+    ecTransform->setOutputBitDepth(ec->getOutputBitDepth());
+
+    auto & formatMetadata = ecTransform->getFormatMetadata();
+    auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
+    metadata = ecData->getFormatMetadata();
+
+    const double exposure = ecData->getExposure();
+    const double contrast = ecData->getContrast();
+    const double gamma = ecData->getGamma();
+    const double logExposureStep = ecData->getLogExposureStep();
+    const double logMidGray = ecData->getLogMidGray();
+    const double pivot = ecData->getPivot();
+
+    ecTransform->setExposure(exposure);
+    ecTransform->setContrast(contrast);
+    ecTransform->setGamma(gamma);
+    ecTransform->setLogExposureStep(logExposureStep);
+    ecTransform->setLogMidGray(logMidGray);
+    ecTransform->setPivot(pivot);
+
+    if (ecData->hasDynamicProperty(DYNAMIC_PROPERTY_EXPOSURE))
+    {
+        ecTransform->makeExposureDynamic();
+    }
+    if (ecData->hasDynamicProperty(DYNAMIC_PROPERTY_CONTRAST))
+    {
+        ecTransform->makeContrastDynamic();
+    }
+    if (ecData->hasDynamicProperty(DYNAMIC_PROPERTY_GAMMA))
+    {
+        ecTransform->makeGammaDynamic();
+    }
+
+    group->push_back(ecTransform);
+}
+
 }
 OCIO_NAMESPACE_EXIT
 
@@ -325,6 +383,55 @@ OCIO_ADD_TEST(ExposureContrastOp, inverse)
     dp4->setValue(-1.);
     OCIO_CHECK_ASSERT(dp3->getDoubleValue() != dp4->getDoubleValue());
     OCIO_CHECK_ASSERT(ops[4]->isInverse(op3));
+}
+
+OCIO_ADD_TEST(ExposureContrastOp, create_transform)
+{
+    OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_FORWARD;
+    OCIO::ExposureContrastOpDataRcPtr data =
+        std::make_shared<OCIO::ExposureContrastOpData>();
+
+    data->getContrastProperty()->makeDynamic();
+    data->setExposure(1.2);
+    data->setPivot(0.5);
+    data->setLogExposureStep(0.09);
+    data->setLogMidGray(0.7);
+    data->getFormatMetadata().addAttribute("name", "test");
+
+    OCIO::OpRcPtrVec ops;
+    OCIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_REQUIRE_ASSERT(ops[0]);
+
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+
+    OCIO::ConstOpRcPtr op(ops[0]);
+
+    OCIO::CreateExposureContrastTransform(group, op);
+    OCIO_REQUIRE_EQUAL(group->size(), 1);
+    auto transform = group->getTransform(0);
+    OCIO_REQUIRE_ASSERT(transform);
+    auto ecTransform = OCIO_DYNAMIC_POINTER_CAST<OCIO::ExposureContrastTransform>(transform);
+    OCIO_REQUIRE_ASSERT(ecTransform);
+
+    const auto & metadata = ecTransform->getFormatMetadata();
+    OCIO_REQUIRE_EQUAL(metadata.getNumAttributes(), 1);
+    OCIO_CHECK_EQUAL(std::string(metadata.getAttributeName(0)), "name");
+    OCIO_CHECK_EQUAL(std::string(metadata.getAttributeValue(0)), "test");
+
+    OCIO_CHECK_EQUAL(ecTransform->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(ecTransform->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(ecTransform->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
+    OCIO_CHECK_EQUAL(ecTransform->getExposure(), data->getExposure());
+    OCIO_CHECK_EQUAL(ecTransform->isExposureDynamic(), false);
+    OCIO_CHECK_EQUAL(ecTransform->getContrast(), data->getContrast());
+    OCIO_CHECK_EQUAL(ecTransform->isContrastDynamic(), true);
+    OCIO_CHECK_EQUAL(ecTransform->getGamma(), data->getGamma());
+    OCIO_CHECK_EQUAL(ecTransform->isGammaDynamic(), false);
+    OCIO_CHECK_EQUAL(ecTransform->getPivot(), data->getPivot());
+    OCIO_CHECK_EQUAL(ecTransform->getLogExposureStep(), data->getLogExposureStep());
+    OCIO_CHECK_EQUAL(ecTransform->getLogMidGray(), data->getLogMidGray());
 }
 
 #endif

@@ -50,6 +50,12 @@ void CreateFixedFunctionOp(OpRcPtrVec & ops,
                            FixedFunctionOpDataRcPtr & funcData,
                            TransformDirection direction);
 
+FixedFunctionStyle ConvertStyle(FixedFunctionOpData::Style style);
+
+// Create a copy of the fixed function transform in the op and append it to
+// the GroupTransform.
+void CreateFixedFunctionTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op);
+
 }
 OCIO_NAMESPACE_EXIT
 

@@ -136,6 +136,33 @@ void ExponentTransform::validate() const
     }
 }
 
+BitDepth ExponentTransform::getInputBitDepth() const
+{
+    return getImpl()->getInputBitDepth();
+}
+BitDepth ExponentTransform::getOutputBitDepth() const
+{
+    return getImpl()->getOutputBitDepth();
+}
+void ExponentTransform::setInputBitDepth(BitDepth bitDepth)
+{
+    getImpl()->setInputBitDepth(bitDepth);
+}
+void ExponentTransform::setOutputBitDepth(BitDepth bitDepth)
+{
+    getImpl()->setOutputBitDepth(bitDepth);
+}
+
+FormatMetadata & ExponentTransform::getFormatMetadata()
+{
+    return m_impl->getFormatMetadata();
+}
+
+const FormatMetadata & ExponentTransform::getFormatMetadata() const
+{
+    return m_impl->getFormatMetadata();
+}
+
 void ExponentTransform::setValue(const float * vec4)
 {
     if(vec4)
@@ -215,7 +242,7 @@ void BuildExponentOps(OpRcPtrVec & ops,
     }
     else
     {
-        CreateGammaOp(ops, "", OpData::Descriptions(),
+        CreateGammaOp(ops, FormatMetadataImpl(transform.getFormatMetadata()),
                       combinedDir==TRANSFORM_DIR_FORWARD ? GammaOpData::BASIC_FWD
                                                          : GammaOpData::BASIC_REV,
                       vec4, nullptr);

@@ -70,6 +70,9 @@ ExposureContrastOpData::Style ConvertStyle(ExposureContrastStyle style, Transfor
     throw Exception(ss.str().c_str());
 }
 
+}; // anon
+
+
 ExposureContrastStyle ConvertStyle(ExposureContrastOpData::Style style)
 {
     switch (style)
@@ -92,10 +95,6 @@ ExposureContrastStyle ConvertStyle(ExposureContrastOpData::Style style)
 
     throw Exception(ss.str().c_str());
 }
-
-}; // anon
-
-
 
 ExposureContrastTransformRcPtr ExposureContrastTransform::Create()
 {
@@ -187,6 +186,33 @@ void ExposureContrastTransform::validate() const
 {
     Transform::validate();
     getImpl()->validate();
+}
+
+BitDepth ExposureContrastTransform::getInputBitDepth() const
+{
+    return getImpl()->getInputBitDepth();
+}
+BitDepth ExposureContrastTransform::getOutputBitDepth() const
+{
+    return getImpl()->getOutputBitDepth();
+}
+void ExposureContrastTransform::setInputBitDepth(BitDepth bitDepth)
+{
+    getImpl()->setInputBitDepth(bitDepth);
+}
+void ExposureContrastTransform::setOutputBitDepth(BitDepth bitDepth)
+{
+    getImpl()->setOutputBitDepth(bitDepth);
+}
+
+FormatMetadata & ExposureContrastTransform::getFormatMetadata()
+{
+    return m_impl->getFormatMetadata();
+}
+
+const FormatMetadata & ExposureContrastTransform::getFormatMetadata() const
+{
+    return m_impl->getFormatMetadata();
 }
 
 ExposureContrastStyle ExposureContrastTransform::getStyle() const
@@ -300,6 +326,8 @@ std::ostream& operator<< (std::ostream & os, const ExposureContrastTransform & t
     os << ", contrast=" << t.getContrast();
     os << ", gamma=" << t.getGamma();
     os << ", pivot=" << t.getPivot();
+    os << ", logExposureStep=" << t.getLogExposureStep();
+    os << ", logMidGray=" << t.getLogMidGray();
     if (t.isExposureDynamic())
     {
         os << ", exposureDynamic";
@@ -339,6 +367,8 @@ void BuildExposureContrastOps(OpRcPtrVec & ops,
     dyn = transform.isGammaDynamic();
     if (dyn) data->getGammaProperty()->makeDynamic();
     data->setPivot(transform.getPivot());
+    data->setLogExposureStep(transform.getLogExposureStep());
+    data->setLogMidGray(transform.getLogMidGray());
     // NB: Always use Forward here since direction is handled with the style above.
     CreateExposureContrastOp(ops, data, TRANSFORM_DIR_FORWARD);
 }
@@ -363,8 +393,10 @@ OCIO_ADD_TEST(ExposureContrastTransform, basic)
     OCIO_CHECK_EQUAL(ec->getContrast(), 1.0);
     OCIO_CHECK_EQUAL(ec->getGamma(), 1.0);
     OCIO_CHECK_EQUAL(ec->getPivot(), 0.18);
-    OCIO_CHECK_EQUAL(ec->getLogExposureStep(), 0.088);
-    OCIO_CHECK_EQUAL(ec->getLogMidGray(), 0.435);
+    OCIO_CHECK_EQUAL(ec->getLogExposureStep(),
+                     OCIO::ExposureContrastOpData::LOGEXPOSURESTEP_DEFAULT);
+    OCIO_CHECK_EQUAL(ec->getLogMidGray(),
+                     OCIO::ExposureContrastOpData::LOGMIDGRAY_DEFAULT);
     OCIO_CHECK_NO_THROW(ec->validate());
 
     OCIO_CHECK_NO_THROW(ec->setDirection(OCIO::TRANSFORM_DIR_INVERSE));

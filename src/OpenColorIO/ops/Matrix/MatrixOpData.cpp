@@ -518,9 +518,8 @@ MatrixOpData::MatrixOpData(BitDepth inBitDepth,
 
 MatrixOpData::MatrixOpData(BitDepth inBitDepth,
                            BitDepth outBitDepth,
-                           const std::string& id,
-                           const Descriptions& descriptions)
-    : OpData(inBitDepth, outBitDepth, id, descriptions)
+                           const FormatMetadataImpl & info)
+    : OpData(inBitDepth, outBitDepth, info)
     , m_array(getInputBitDepth(), getOutputBitDepth(), 4, 4)
 {
 }
@@ -682,7 +681,11 @@ bool MatrixOpData::hasAlpha() const
         // Bottom row.
         (m[12] != 0.0) || // Strict comparison intended
         (m[13] != 0.0) ||
-        (m[14] != 0.0);
+        (m[14] != 0.0) ||
+
+        // Alpha offset
+        (m_offsets[3] != 0.0);
+
 }
 
 MatrixOpDataRcPtr MatrixOpData::CreateDiagonalMatrix(
@@ -784,15 +787,15 @@ MatrixOpDataRcPtr MatrixOpData::compose(ConstMatrixOpDataRcPtr & B) const
         throw Exception("MatrixOpData: array content issue.");
     }
 
-    Descriptions newDesc = getDescriptions();
-    newDesc += B->getDescriptions();
+    // TODO: May want to revisit how the metadata is set.
+    FormatMetadataImpl newDesc = getFormatMetadata();
+    newDesc.combine(B->getFormatMetadata());
+
     MatrixOpDataRcPtr out = std::make_shared<MatrixOpData>(
         getInputBitDepth(),
         B->getOutputBitDepth());
-    out->setID(getID() + B->getID());
-    out->getDescriptions() = newDesc;
 
-    // TODO: May want to revisit how the metadata is set.
+    out->getFormatMetadata() = newDesc;
 
     // By definition, A.compose(B) implies that op A precedes op B
     // in the opList. The LUT format coefficients follow matrix math:
@@ -925,6 +928,9 @@ MatrixOpDataRcPtr MatrixOpData::inverse() const
     MatrixOpDataRcPtr invOp = std::make_shared<MatrixOpData>(getOutputBitDepth(), getInputBitDepth());
     invOp->setRGBA(&(invMatrixArray->getValues()[0]));
     invOp->setOffsets(invOffsets);
+    invOp->getFormatMetadata() = getFormatMetadata();
+
+    invOp->invertMetadata();
 
     // No need to call validate(), the invOp will have proper dimension,
     // bit-depths, matrix and offets values.
@@ -1073,6 +1079,35 @@ OCIO_ADD_TEST(MatrixOpData, diagonal)
     OCIO_CHECK_EQUAL(pM->getArray().getValues()[15], 0.5);
 }
 
+#define MATRIX_TEST_HAS_ALPHA(id, val)  \
+{                                       \
+    mat.getArray()[id] = val + 0.001;   \
+    OCIO_CHECK_ASSERT(mat.hasAlpha());  \
+    mat.getArray()[id] = val;           \
+    OCIO_CHECK_ASSERT(!mat.hasAlpha()); \
+}
+
+OCIO_ADD_TEST(MatrixOpData, has_alpha)
+{
+    OCIO::MatrixOpData mat;
+    OCIO_CHECK_ASSERT(!mat.hasAlpha());
+
+    MATRIX_TEST_HAS_ALPHA(3, 0.0);
+    MATRIX_TEST_HAS_ALPHA(7, 0.0);
+    MATRIX_TEST_HAS_ALPHA(11, 0.0);
+    MATRIX_TEST_HAS_ALPHA(12, 0.0);
+    MATRIX_TEST_HAS_ALPHA(13, 0.0);
+    MATRIX_TEST_HAS_ALPHA(14, 0.0);
+    MATRIX_TEST_HAS_ALPHA(15, 1.0);
+
+    mat.getOffsets()[3] = 0.001;
+    OCIO_CHECK_ASSERT(mat.hasAlpha());
+    mat.getOffsets()[3] = 0.0;
+    OCIO_CHECK_ASSERT(!mat.hasAlpha());
+}
+
+#undef MATRIX_TEST_HAS_ALPHA
+
 OCIO_ADD_TEST(MatrixOpData, clone)
 {
     OCIO::MatrixOpData ref;
@@ -1156,7 +1191,7 @@ OCIO_ADD_TEST(MatrixOpData, test_construct)
     OCIO_CHECK_EQUAL(matOp.getType(), OCIO::OpData::MatrixType);
     OCIO_CHECK_EQUAL(matOp.getInputBitDepth(), OCIO::BIT_DEPTH_F32);
     OCIO_CHECK_EQUAL(matOp.getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_ASSERT(matOp.getDescriptions().empty());
+    OCIO_CHECK_ASSERT(matOp.getFormatMetadata().getChildrenElements().empty());
     OCIO_CHECK_EQUAL(matOp.getOffsets()[0], 0.0f);
     OCIO_CHECK_EQUAL(matOp.getOffsets()[1], 0.0f);
     OCIO_CHECK_EQUAL(matOp.getOffsets()[2], 0.0f);
@@ -1436,7 +1471,8 @@ OCIO_ADD_TEST(MatrixOpData, equality)
     m2.setID("invalid_u_id_test");
     m2.setArrayValue(0, 2);
 
-    OCIO_CHECK_ASSERT(!(m1 == m2));
+    // id is part of metadata. FormatMetadataImpl is ignored for ==.
+    OCIO_CHECK_ASSERT(m1 == m2);
 
     OCIO::MatrixOpData m3(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
     m3.setArrayValue(0, 6);

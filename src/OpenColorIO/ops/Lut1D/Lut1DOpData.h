@@ -67,7 +67,8 @@ public:
     enum HueAdjust
     {
         HUE_NONE = 0, // No adjustment.
-        HUE_DW3       // Algorithm used in ACES Output Transforms through v0.7.
+        HUE_DW3,      // Algorithm used in ACES Output Transforms through v0.7.
+        HUE_NB_STYLES
     };
 
     // Contains properties needed for inversion of a single channel of a LUT.
@@ -125,15 +126,13 @@ public:
 
     Lut1DOpData(BitDepth inBitDepth,
                 BitDepth outBitDepth,
-                const std::string & id,
-                const Descriptions & descriptions,
+                const FormatMetadataImpl & info,
                 Interpolation interpolation,
                 HalfFlags halfFlags);
 
     Lut1DOpData(BitDepth inBitDepth,
                 BitDepth outBitDepth,
-                const std::string & id,
-                const Descriptions & descriptions,
+                const FormatMetadataImpl & info,
                 Interpolation interpolation,
                 HalfFlags halfFlags,
                 unsigned long dimension);

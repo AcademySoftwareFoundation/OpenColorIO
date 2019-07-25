@@ -38,7 +38,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "HashUtils.h"
 #include "OpBuilders.h"
 #include "Processor.h"
-
+#include "TransformBuilder.h"
+#include "transforms/FileTransform.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -163,11 +164,51 @@ OCIO_NAMESPACE_ENTER
         return getImpl()->hasChannelCrosstalk();
     }
     
-    ConstProcessorMetadataRcPtr Processor::getMetadata() const
+    ConstProcessorMetadataRcPtr Processor::getProcessorMetadata() const
     {
-        return getImpl()->getMetadata();
+        return getImpl()->getProcessorMetadata();
+    }
+    
+    const FormatMetadata & Processor::getFormatMetadata() const
+    {
+        return getImpl()->getFormatMetadata();
     }
 
+    int Processor::getNumTransforms() const
+    {
+        return getImpl()->getNumTransforms();
+    }
+
+    const FormatMetadata & Processor::getTransformFormatMetadata(int index) const
+    {
+        return getImpl()->getTransformFormatMetadata(index);
+    }
+
+    GroupTransformRcPtr Processor::createGroupTransform() const
+    {
+        return getImpl()->createGroupTransform();
+    }
+
+    void Processor::write(const char * formatName, std::ostream & os) const
+    {
+        getImpl()->write(formatName, os);
+    }
+
+    int Processor::getNumWriteFormats()
+    {
+        return FormatRegistry::GetInstance().getNumFormats(FORMAT_CAPABILITY_WRITE);
+    }
+
+    const char * Processor::getFormatNameByIndex(int index)
+    {
+        return FormatRegistry::GetInstance().getFormatNameByIndex(FORMAT_CAPABILITY_WRITE, index);
+    }
+
+    const char * Processor::getFormatExtensionByIndex(int index)
+    {
+        return FormatRegistry::GetInstance().getFormatExtensionByIndex(FORMAT_CAPABILITY_WRITE, index);
+	}
+	
     bool Processor::hasDynamicProperty(DynamicPropertyType type) const
     {
         return getImpl()->hasDynamicProperty(type);
@@ -238,21 +279,79 @@ OCIO_NAMESPACE_ENTER
         return false;
     }
     
-    ConstProcessorMetadataRcPtr Processor::Impl::getMetadata() const
+    ConstProcessorMetadataRcPtr Processor::Impl::getProcessorMetadata() const
     {
         return m_metadata;
     }
 
+    
+    const FormatMetadata & Processor::Impl::getFormatMetadata() const
+    {
+        return m_ops.getFormatMetadata();
+    }
+
+    int Processor::Impl::getNumTransforms() const
+    {
+        return (int)m_ops.size();
+    }
+
+    const FormatMetadata & Processor::Impl::getTransformFormatMetadata(int index) const
+    {
+        auto op = OCIO_DYNAMIC_POINTER_CAST<const Op>(m_ops[index]);
+        return op->data()->getFormatMetadata();
+    }
+
+    GroupTransformRcPtr Processor::Impl::createGroupTransform() const
+    {
+        GroupTransformRcPtr group = GroupTransform::Create();
+        
+        // Copy format metadata.
+        group->getFormatMetadata() = getFormatMetadata();
+
+        // Build transforms from ops.
+        for (ConstOpRcPtr op : m_ops)
+        {
+            CreateTransform(group, op);
+        }
+
+        return group;
+    }
+
+    void Processor::Impl::write(const char * formatName, std::ostream & os) const
+    {
+        FileFormat* fmt = FormatRegistry::GetInstance().getFileFormatByName(formatName);
+
+        if (!fmt)
+        {
+            std::ostringstream err;
+            err << "The format named '" << formatName;
+            err << "' could not be found. ";
+            throw Exception(err.str().c_str());
+        }
+
+        try
+        {
+            std::string fName{ formatName };
+            fmt->write(m_ops, getFormatMetadata(), fName, os);
+        }
+        catch (std::exception & e)
+        {
+            std::ostringstream err;
+            err << "Error writing " << formatName << ":";
+            err << e.what();
+            throw Exception(err.str().c_str());
+        }
+    }
+
     bool Processor::Impl::hasDynamicProperty(DynamicPropertyType type) const
     {
-        for(const auto & op : m_ops)
+        for (const auto & op : m_ops)
         {
-            if(op->hasDynamicProperty(type))
+            if (op->hasDynamicProperty(type))
             {
                 return true;
             }
         }
-
         return false;
     }
 

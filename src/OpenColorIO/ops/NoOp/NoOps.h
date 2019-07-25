@@ -90,6 +90,11 @@ OCIO_NAMESPACE_ENTER
         // false while the file is still being loaded.
         mutable bool m_complete = false;
     };
+
+    typedef OCIO_SHARED_PTR<FileNoOpData> FileNoOpDataRcPtr;
+    typedef OCIO_SHARED_PTR<const FileNoOpData> ConstFileNoOpDataRcPtr;
+
+     
 }
 OCIO_NAMESPACE_EXIT
 

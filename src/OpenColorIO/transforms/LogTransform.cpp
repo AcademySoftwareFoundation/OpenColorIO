@@ -128,6 +128,33 @@ OCIO_NAMESPACE_ENTER
         }
     }
 
+    BitDepth LogTransform::getInputBitDepth() const
+    {
+        return getImpl()->getInputBitDepth();
+    }
+    BitDepth LogTransform::getOutputBitDepth() const
+    {
+        return getImpl()->getOutputBitDepth();
+    }
+    void LogTransform::setInputBitDepth(BitDepth bitDepth)
+    {
+        getImpl()->setInputBitDepth(bitDepth);
+    }
+    void LogTransform::setOutputBitDepth(BitDepth bitDepth)
+    {
+        getImpl()->setOutputBitDepth(bitDepth);
+    }
+
+    FormatMetadata & LogTransform::getFormatMetadata()
+    {
+        return m_impl->getFormatMetadata();
+    }
+
+    const FormatMetadata & LogTransform::getFormatMetadata() const
+    {
+        return m_impl->getFormatMetadata();
+    }
+
     double LogTransform::getBase() const
     {
         return getImpl()->getBase();

@@ -1951,7 +1951,7 @@ OCIO_ADD_TEST(Lut1DRenderer, nan_half_test)
 {
     OCIO::Lut1DOpDataRcPtr lut = std::make_shared<OCIO::Lut1DOpData>(
         OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_F32,
-        "", OCIO::OpData::Descriptions(),
+        OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
         OCIO::INTERP_LINEAR,
         OCIO::Lut1DOpData::LUT_INPUT_HALF_CODE);
 

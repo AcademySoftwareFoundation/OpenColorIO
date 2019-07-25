@@ -89,35 +89,35 @@ OCIO_NAMESPACE_ENTER
             
             ~LocalFileFormat() {};
             
-            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
+            void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
             
-            virtual CachedFileRcPtr Read(
+            CachedFileRcPtr read(
                 std::istream & istream,
-                const std::string & fileName) const;
+                const std::string & fileName) const override;
             
-            virtual void Write(const Baker & baker,
-                               const std::string & formatName,
-                               std::ostream & ostream) const;
+            void bake(const Baker & baker,
+                      const std::string & formatName,
+                      std::ostream & ostream) const override;
             
-            virtual void BuildFileOps(OpRcPtrVec & ops,
-                         const Config& config,
-                         const ConstContextRcPtr & context,
-                         CachedFileRcPtr untypedCachedFile,
-                         const FileTransform& fileTransform,
-                         TransformDirection dir) const;
+            void buildFileOps(OpRcPtrVec & ops,
+                              const Config& config,
+                              const ConstContextRcPtr & context,
+                              CachedFileRcPtr untypedCachedFile,
+                              const FileTransform& fileTransform,
+                              TransformDirection dir) const override;
         };
         
-        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
+        void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
             info.name = "truelight";
             info.extension = "cub";
-            info.capabilities = (FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_WRITE);
+            info.capabilities = (FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
             formatInfoVec.push_back(info);
         }
         
         CachedFileRcPtr
-        LocalFileFormat::Read(
+        LocalFileFormat::read(
             std::istream & istream,
             const std::string & /* fileName unused */) const
         {
@@ -141,7 +141,7 @@ OCIO_NAMESPACE_ENTER
             int size3d[] = { 0, 0, 0 };
             int size1d = 0;
             {
-                std::vector<std::string> parts;
+                StringVec parts;
                 std::vector<float> tmpfloats;
                 
                 bool in1d = false;
@@ -301,9 +301,9 @@ OCIO_NAMESPACE_ENTER
 
 
         void
-        LocalFileFormat::Write(const Baker & baker,
-                               const std::string & /*formatName*/,
-                               std::ostream & ostream) const
+        LocalFileFormat::bake(const Baker & baker,
+                              const std::string & /*formatName*/,
+                              std::ostream & ostream) const
         {
             const int DEFAULT_CUBE_SIZE = 32;
             const int DEFAULT_SHAPER_SIZE = 1024;
@@ -365,7 +365,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         void
-        LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
+        LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                                       const Config& /*config*/,
                                       const ConstContextRcPtr & /*context*/,
                                       CachedFileRcPtr untypedCachedFile,
@@ -499,7 +499,7 @@ OCIO_ADD_TEST(FileFormatTruelight, ShaperAndLut3D)
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile;
-    OCIO_CHECK_NO_THROW(cachedFile = tester.Read(lutIStream, emptyString));
+    OCIO_CHECK_NO_THROW(cachedFile = tester.read(lutIStream, emptyString));
     OCIO::LocalCachedFileRcPtr lut = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
     
     OCIO_CHECK_ASSERT(lut->has1D);
@@ -569,7 +569,7 @@ OCIO_ADD_TEST(FileFormatTruelight, Shaper)
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile;
-    OCIO_CHECK_NO_THROW(cachedFile = tester.Read(lutIStream, emptyString));
+    OCIO_CHECK_NO_THROW(cachedFile = tester.read(lutIStream, emptyString));
     
     OCIO::LocalCachedFileRcPtr lut = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
     
@@ -658,7 +658,7 @@ OCIO_ADD_TEST(FileFormatTruelight, Lut3D)
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile;
-    OCIO_CHECK_NO_THROW(cachedFile = tester.Read(lutIStream, emptyString));
+    OCIO_CHECK_NO_THROW(cachedFile = tester.read(lutIStream, emptyString));
     OCIO::LocalCachedFileRcPtr lut = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
     
     OCIO_CHECK_ASSERT(!lut->has1D);

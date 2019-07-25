@@ -154,6 +154,33 @@ void RangeTransform::validate() const
         }
 }
 
+BitDepth RangeTransform::getInputBitDepth() const
+{
+    return getImpl()->getInputBitDepth();
+}
+BitDepth RangeTransform::getOutputBitDepth() const
+{
+    return getImpl()->getOutputBitDepth();
+}
+void RangeTransform::setInputBitDepth(BitDepth bitDepth)
+{
+    getImpl()->setInputBitDepth(bitDepth);
+}
+void RangeTransform::setOutputBitDepth(BitDepth bitDepth)
+{
+    getImpl()->setOutputBitDepth(bitDepth);
+}
+
+FormatMetadata & RangeTransform::getFormatMetadata()
+{
+    return m_impl->getFormatMetadata();
+}
+
+const FormatMetadata & RangeTransform::getFormatMetadata() const
+{
+    return m_impl->getFormatMetadata();
+}
+
 bool RangeTransform::equals(const RangeTransform & other) const
 {
     return getImpl()->equals(*other.getImpl());
@@ -270,7 +297,7 @@ void BuildRangeOps(OpRcPtrVec & ops,
 
     if(transform.getStyle()==RANGE_CLAMP)
     {
-        CreateRangeOp(ops, 
+        CreateRangeOp(ops, FormatMetadataImpl(transform.getFormatMetadata()),
                       transform.getMinInValue(), transform.getMaxInValue(), 
                       transform.getMinOutValue(), transform.getMaxOutValue(),
                       combinedDir);
@@ -278,10 +305,12 @@ void BuildRangeOps(OpRcPtrVec & ops,
     else
     {
         const RangeOpData r(BIT_DEPTH_F32, BIT_DEPTH_F32, 
+                            FormatMetadataImpl(transform.getFormatMetadata()),
                             transform.getMinInValue(), transform.getMaxInValue(), 
                             transform.getMinOutValue(), transform.getMaxOutValue());
-        MatrixOpDataRcPtr m = r.convertToMatrix();
 
+        MatrixOpDataRcPtr m = r.convertToMatrix();
+        
         CreateMatrixOp(ops, m, combinedDir);
     }
 }
@@ -318,34 +347,34 @@ OCIO_ADD_TEST(RangeTransform, basic)
     range->setStyle(OCIO::RANGE_NO_CLAMP);
     OCIO_CHECK_EQUAL(range->getStyle(), OCIO::RANGE_NO_CLAMP);
 
-    range->setMinInValue(-0.5f);
-    OCIO_CHECK_EQUAL(range->getMinInValue(), -0.5f);
+    range->setMinInValue(-0.5);
+    OCIO_CHECK_EQUAL(range->getMinInValue(), -0.5);
     OCIO_CHECK_ASSERT(range->hasMinInValue());
 
     OCIO::RangeTransformRcPtr range2 = OCIO::RangeTransform::Create();
     range2->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-    range2->setMinInValue(-0.5f);
+    range2->setMinInValue(-0.5);
     range2->setStyle(OCIO::RANGE_NO_CLAMP);
     OCIO_CHECK_ASSERT(range2->equals(*range));
 
     range2->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
     range2->unsetMinInValue();
-    range2->setMaxInValue(-0.5f);
-    range2->setMinOutValue(1.5f);
-    range2->setMaxOutValue(4.5f);
+    range2->setMaxInValue(-0.5);
+    range2->setMinOutValue(1.5);
+    range2->setMaxOutValue(4.5);
 
     // (Note that the transform would not validate at this point.)
 
     OCIO_CHECK_ASSERT(!range2->hasMinInValue());
-    OCIO_CHECK_EQUAL(range2->getMaxInValue(), -0.5f);
-    OCIO_CHECK_EQUAL(range2->getMinOutValue(), 1.5f);
-    OCIO_CHECK_EQUAL(range2->getMaxOutValue(), 4.5f);
+    OCIO_CHECK_EQUAL(range2->getMaxInValue(), -0.5);
+    OCIO_CHECK_EQUAL(range2->getMinOutValue(), 1.5);
+    OCIO_CHECK_EQUAL(range2->getMaxOutValue(), 4.5);
 
     range2->setMinInValue(-1.5f);
-    OCIO_CHECK_EQUAL(range2->getMinInValue(), -1.5f);
-    OCIO_CHECK_EQUAL(range2->getMaxInValue(), -0.5f);
-    OCIO_CHECK_EQUAL(range2->getMinOutValue(), 1.5f);
-    OCIO_CHECK_EQUAL(range2->getMaxOutValue(), 4.5f);
+    OCIO_CHECK_EQUAL(range2->getMinInValue(), -1.5);
+    OCIO_CHECK_EQUAL(range2->getMaxInValue(), -0.5);
+    OCIO_CHECK_EQUAL(range2->getMinOutValue(), 1.5);
+    OCIO_CHECK_EQUAL(range2->getMaxOutValue(), 4.5);
 
     OCIO_CHECK_ASSERT(range2->hasMinInValue());
     OCIO_CHECK_ASSERT(range2->hasMaxInValue());
@@ -391,10 +420,10 @@ OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
     OCIO_CHECK_ASSERT(!range->hasMinOutValue());
     OCIO_CHECK_ASSERT(!range->hasMaxOutValue());
 
-    range->setMinInValue(0.0f);
-    range->setMaxInValue(0.5f);
-    range->setMinOutValue(0.5f);
-    range->setMaxOutValue(1.5f);
+    range->setMinInValue(0.0);
+    range->setMaxInValue(0.5);
+    range->setMinOutValue(0.5);
+    range->setMaxOutValue(1.5);
 
     // Test the resulting Range Op
 

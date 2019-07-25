@@ -783,17 +783,19 @@ void CreateLut3DOp(OpRcPtrVec & ops,
         }
     }
 
+    const double min[] = { lut->from_min[0], lut->from_min[1], lut->from_min[2] };
+    const double max[] = { lut->from_max[0], lut->from_max[1], lut->from_max[2] };
     if (direction == TRANSFORM_DIR_FORWARD)
     {
         // NB: CreateMinMaxOp will not add the matrix if from_min & from_max
         //     are at their defaults.
-        CreateMinMaxOp(ops, lut->from_min, lut->from_max, TRANSFORM_DIR_FORWARD);
+        CreateMinMaxOp(ops, min, max, TRANSFORM_DIR_FORWARD);
         CreateLut3DOp(ops, lutBF, TRANSFORM_DIR_FORWARD);
     }
     else
     {
         CreateLut3DOp(ops, lutBF, TRANSFORM_DIR_INVERSE);
-        CreateMinMaxOp(ops, lut->from_min, lut->from_max, TRANSFORM_DIR_INVERSE);
+        CreateMinMaxOp(ops, min, max, TRANSFORM_DIR_INVERSE);
     }
 }
 
@@ -1382,7 +1384,7 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_lut3d)
     OCIO::Lut3DOpDataRcPtr
         lutData = std::make_shared<OCIO::Lut3DOpData>(
             bitDepth, bitDepth,
-            "", OCIO::OpData::Descriptions(),
+            OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
             OCIO::INTERP_LINEAR, 33);
 
     OCIO::Lut3DOp lut(lutData);

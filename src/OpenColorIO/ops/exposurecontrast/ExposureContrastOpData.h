@@ -230,14 +230,17 @@ public:
         return m_gamma;
     }
 
+    static constexpr const double LOGEXPOSURESTEP_DEFAULT = 0.088;
+    static constexpr const double LOGMIDGRAY_DEFAULT = 0.435;
+
 private:
     Style  m_style = STYLE_LINEAR;
     DynamicPropertyImplRcPtr m_exposure;
     DynamicPropertyImplRcPtr m_contrast;
     DynamicPropertyImplRcPtr m_gamma;
     double m_pivot = 0.18;
-    double m_logExposureStep = 0.088;
-    double m_logMidGray = 0.435;
+    double m_logExposureStep = LOGEXPOSURESTEP_DEFAULT;
+    double m_logMidGray = LOGMIDGRAY_DEFAULT;
 };
 
 }

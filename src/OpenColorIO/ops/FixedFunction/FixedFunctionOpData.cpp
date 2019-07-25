@@ -293,6 +293,8 @@ void FixedFunctionOpData::invert()
     const BitDepth inBD = getInputBitDepth();
     setInputBitDepth(getOutputBitDepth());
     setOutputBitDepth(inBD);
+
+    invertMetadata();
 }
 
 FixedFunctionOpDataRcPtr FixedFunctionOpData::inverse() const

@@ -46,6 +46,57 @@ Typically only needed when creating and/or manipulating configurations
 OCIO_NAMESPACE_ENTER
 {
 
+
+    //!rst:: //////////////////////////////////////////////////////////////////
+    
+    //!cpp:class:: The FormatMetadata class is intended to be a generic
+    //             container to hold metadata from various file formats.
+    //
+    //             This class provides a hierarchical metadata container.
+    //             A metadata object is similar to an element in XML.
+    //             It contains:
+    //             -- a name string (e.g. "Description")
+    //             -- a value string (e.g. "updated viewing LUT")
+    //             -- a list of attributes (name, value) string pairs
+    //                (e.g. "version", "1.5")
+    //             -- and a list of child sub-elements, which are also
+    //                objects implementing FormatMetadata.
+    class FormatMetadata
+    {
+    protected:
+        FormatMetadata();
+        virtual ~FormatMetadata();
+    public:
+        virtual const char * getName() const = 0;
+        virtual void setName(const char *) = 0;
+        virtual const char * getValue() const = 0;
+        virtual void setValue(const char *) = 0;
+
+        virtual int getNumAttributes() const = 0;
+        virtual const char * getAttributeName(int i) const = 0;
+        virtual const char * getAttributeValue(int i) const = 0;
+        //!cpp:function:: Add an attribute with a given name and value. If an
+        //                attribute with the same name already exists, the
+        //                value is replaced.
+        virtual void addAttribute(const char * name, const char * value) = 0;
+
+        virtual int getNumChildrenElements() const = 0;
+        virtual FormatMetadata & getChildElement(int i) = 0;
+        virtual const FormatMetadata & getChildElement(int i) const = 0;
+
+        //!cpp:function:: Add a child element with a given name. Name has to be
+        //                non-empty. Return a reference to the added element.
+        virtual FormatMetadata & addChildElement(const char * name) = 0;
+
+        //!cpp:function:: Add a child element with a given name and value. Name
+        //                has to be non-empty. Return a reference to the added element.
+        virtual FormatMetadata & addChildElement(const char * name, const char * value) = 0;
+
+        virtual void clear() = 0;
+        virtual FormatMetadata & operator=(const FormatMetadata & rhs) = 0;
+
+    };
+
     //!rst:: //////////////////////////////////////////////////////////////////
     
     //!cpp:class:: Base class for all the transform classes
@@ -62,11 +113,11 @@ OCIO_NAMESPACE_ENTER
         virtual void validate() const;
 
     private:
-        Transform& operator= (const Transform &);
+        Transform & operator=(const Transform &);
     };
     
     //!cpp:function::
-    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Transform&);
+    extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const Transform &);
     
     
     //!rst:: //////////////////////////////////////////////////////////////////
@@ -107,9 +158,9 @@ OCIO_NAMESPACE_ENTER
         AllocationTransform(const AllocationTransform &);
         virtual ~AllocationTransform();
         
-        AllocationTransform& operator= (const AllocationTransform &);
+        AllocationTransform & operator=(const AllocationTransform &);
         
-        static void deleter(AllocationTransform* t);
+        static void deleter(AllocationTransform * t);
         
         class Impl;
         friend class Impl;
@@ -119,7 +170,7 @@ OCIO_NAMESPACE_ENTER
     };
     
     //!cpp:function::
-    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const AllocationTransform&);
+    extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const AllocationTransform &);
     
     
     //!rst:: //////////////////////////////////////////////////////////////////
@@ -154,6 +205,14 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: Will throw if data is not valid.
         virtual void validate() const;
        
+        BitDepth getInputBitDepth() const;
+        BitDepth getOutputBitDepth() const;
+        void setInputBitDepth(BitDepth bitDepth);
+        void setOutputBitDepth(BitDepth bitDepth);
+
+        FormatMetadata & getFormatMetadata();
+        const FormatMetadata & getFormatMetadata() const;
+
         //!cpp:function::
         bool equals(const ConstCDLTransformRcPtr & other) const;
         
@@ -170,47 +229,57 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function::
         void setSlope(const float * rgb);
+        void setSlope(const double * rgb);
         //!cpp:function::
         void getSlope(float * rgb) const;
-        
+        void getSlope(double * rgb) const;
+
         //!cpp:function::
         void setOffset(const float * rgb);
+        void setOffset(const double * rgb);
         //!cpp:function::
         void getOffset(float * rgb) const;
-        
+        void getOffset(double * rgb) const;
+
         //!cpp:function::
         void setPower(const float * rgb);
+        void setPower(const double * rgb);
         //!cpp:function::
         void getPower(float * rgb) const;
-        
+        void getPower(double * rgb) const;
+
         //!cpp:function::
         void setSOP(const float * vec9);
+        void setSOP(const double * vec9);
         //!cpp:function::
         void getSOP(float * vec9) const;
-        
+        void getSOP(double * vec9) const;
+
         //!rst:: **ASC_SAT**
         
         //!cpp:function::
-        void setSat(float sat);
+        void setSat(double sat);
         //!cpp:function::
-        float getSat() const;
+        double getSat() const;
         
-        //!cpp:function:: These are hard-coded, by spec, to r709
+        //!cpp:function:: These are hard-coded, by spec, to r709.
         void getSatLumaCoefs(float * rgb) const;
-        
+        void getSatLumaCoefs(double * rgb) const;
+
         //!rst:: **Metadata**
         // 
         // These do not affect the image processing, but
         // are often useful for pipeline purposes and are
         // included in the serialization.
         
-        //!cpp:function:: Unique Identifier for this correction
+        //!cpp:function:: Unique Identifier for this correction.
         void setID(const char * id);
         //!cpp:function::
         const char * getID() const;
         
-        //!cpp:function:: Textual description of color correction
-        // (stored on the SOP)
+        //!cpp:function:: Textual description of color correction (stored on
+        //                the SOP). If there is already a description, the
+        //                setter will replace it with the supplied text.
         void setDescription(const char * desc);
         //!cpp:function::
         const char * getDescription() const;
@@ -220,9 +289,9 @@ OCIO_NAMESPACE_ENTER
         CDLTransform(const CDLTransform &);
         virtual ~CDLTransform();
         
-        CDLTransform& operator= (const CDLTransform &);
+        CDLTransform & operator=(const CDLTransform &);
         
-        static void deleter(CDLTransform* t);
+        static void deleter(CDLTransform * t);
         
         class Impl;
         friend class Impl;
@@ -232,7 +301,7 @@ OCIO_NAMESPACE_ENTER
     };
     
     //!cpp:function::
-    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const CDLTransform&);
+    extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const CDLTransform &);
     
     
     //!rst:: //////////////////////////////////////////////////////////////////
@@ -270,9 +339,9 @@ OCIO_NAMESPACE_ENTER
         ColorSpaceTransform(const ColorSpaceTransform &);
         virtual ~ColorSpaceTransform();
         
-        ColorSpaceTransform& operator= (const ColorSpaceTransform &);
+        ColorSpaceTransform & operator=(const ColorSpaceTransform &);
         
-        static void deleter(ColorSpaceTransform* t);
+        static void deleter(ColorSpaceTransform * t);
         
         class Impl;
         friend class Impl;
@@ -282,7 +351,7 @@ OCIO_NAMESPACE_ENTER
     };
     
     //!cpp:function::
-    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ColorSpaceTransform&);
+    extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const ColorSpaceTransform &);
     
     
     //!rst:: //////////////////////////////////////////////////////////////////
@@ -373,9 +442,9 @@ OCIO_NAMESPACE_ENTER
         DisplayTransform(const DisplayTransform &);
         virtual ~DisplayTransform();
         
-        DisplayTransform& operator= (const DisplayTransform &);
+        DisplayTransform & operator=(const DisplayTransform &);
         
-        static void deleter(DisplayTransform* t);
+        static void deleter(DisplayTransform * t);
         
         class Impl;
         friend class Impl;
@@ -385,7 +454,7 @@ OCIO_NAMESPACE_ENTER
     };
     
     //!cpp:function::
-    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const DisplayTransform&);
+    extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const DisplayTransform &);
     
     
     //!rst:: //////////////////////////////////////////////////////////////////
@@ -417,7 +486,7 @@ OCIO_NAMESPACE_ENTER
         DynamicProperty(const DynamicProperty &);
         virtual ~DynamicProperty();
 
-        DynamicProperty& operator= (const DynamicProperty &);
+        DynamicProperty & operator=(const DynamicProperty &);
     };
 
     //!rst:: //////////////////////////////////////////////////////////////////
@@ -444,6 +513,14 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: Will throw if data is not valid.
         virtual void validate() const;
 
+        BitDepth getInputBitDepth() const;
+        BitDepth getOutputBitDepth() const;
+        void setInputBitDepth(BitDepth bitDepth);
+        void setOutputBitDepth(BitDepth bitDepth);
+
+        FormatMetadata & getFormatMetadata();
+        const FormatMetadata & getFormatMetadata() const;
+
         //!cpp:function::
         void setValue(const float * vec4);
         void setValue(const double(&vec4)[4]);
@@ -456,9 +533,9 @@ OCIO_NAMESPACE_ENTER
         ExponentTransform(const ExponentTransform &);
         virtual ~ExponentTransform();
         
-        ExponentTransform& operator= (const ExponentTransform &);
+        ExponentTransform & operator=(const ExponentTransform &);
         
-        static void deleter(ExponentTransform* t);
+        static void deleter(ExponentTransform * t);
         
         class Impl;
         friend class Impl;
@@ -468,7 +545,7 @@ OCIO_NAMESPACE_ENTER
     };
     
     //!cpp:function::
-    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ExponentTransform&);
+    extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const ExponentTransform &);
     
     
     //!rst:: //////////////////////////////////////////////////////////////////
@@ -498,6 +575,14 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: Validate the transform and throw if invalid.
         virtual void validate() const;
 
+        BitDepth getInputBitDepth() const;
+        BitDepth getOutputBitDepth() const;
+        void setInputBitDepth(BitDepth bitDepth);
+        void setOutputBitDepth(BitDepth bitDepth);
+
+        FormatMetadata & getFormatMetadata();
+        const FormatMetadata & getFormatMetadata() const;
+
         //!cpp:function:: Set the exponent value for the power function for R, G, B, A.
         // .. note::
         //     The gamma values must be in the range of [1, 10]. Set the transform direction 
@@ -517,9 +602,9 @@ OCIO_NAMESPACE_ENTER
         ExponentWithLinearTransform(const ExponentWithLinearTransform &);
         virtual ~ExponentWithLinearTransform();
         
-        ExponentWithLinearTransform& operator= (const ExponentWithLinearTransform &);
+        ExponentWithLinearTransform & operator=(const ExponentWithLinearTransform &);
         
-        static void deleter(ExponentWithLinearTransform* t);
+        static void deleter(ExponentWithLinearTransform * t);
         
         class Impl;
         friend class Impl;
@@ -529,7 +614,7 @@ OCIO_NAMESPACE_ENTER
     };
 
     //!cpp:function::
-    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ExponentWithLinearTransform&);
+    extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const ExponentWithLinearTransform &);
 
     //!rst:: //////////////////////////////////////////////////////////////////
 
@@ -552,6 +637,14 @@ OCIO_NAMESPACE_ENTER
 
         //!cpp:function:: Will throw if data is not valid.
         virtual void validate() const;
+
+        BitDepth getInputBitDepth() const;
+        BitDepth getOutputBitDepth() const;
+        void setInputBitDepth(BitDepth bitDepth);
+        void setOutputBitDepth(BitDepth bitDepth);
+
+        FormatMetadata & getFormatMetadata();
+        const FormatMetadata & getFormatMetadata() const;
 
         //!cpp:function:: Select the algorithm for linear, video
         // or log color spaces.
@@ -624,7 +717,7 @@ OCIO_NAMESPACE_ENTER
         ExposureContrastTransform(const ExposureContrastTransform &);
         virtual ~ExposureContrastTransform();
 
-        ExposureContrastTransform & operator= (const ExposureContrastTransform &);
+        ExposureContrastTransform & operator=(const ExposureContrastTransform &);
 
         static void deleter(ExposureContrastTransform * t);
 
@@ -635,8 +728,8 @@ OCIO_NAMESPACE_ENTER
     };
 
     //!cpp:function::
-    extern OCIOEXPORT std::ostream& operator<< (std::ostream&,
-                                                const ExposureContrastTransform&);
+    extern OCIOEXPORT std::ostream & operator<<(std::ostream &,
+                                                const ExposureContrastTransform &);
 
     //!rst:: //////////////////////////////////////////////////////////////////
     
@@ -688,9 +781,9 @@ OCIO_NAMESPACE_ENTER
         FileTransform(const FileTransform &);
         virtual ~FileTransform();
         
-        FileTransform& operator= (const FileTransform &);
+        FileTransform & operator=(const FileTransform &);
         
-        static void deleter(FileTransform* t);
+        static void deleter(FileTransform * t);
         
         class Impl;
         friend class Impl;
@@ -700,7 +793,7 @@ OCIO_NAMESPACE_ENTER
     };
     
     //!cpp:function::
-    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const FileTransform&);
+    extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const FileTransform &);
 
 
     //!rst:: //////////////////////////////////////////////////////////////////
@@ -726,6 +819,14 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: Will throw if data is not valid.
         virtual void validate() const;
 
+        BitDepth getInputBitDepth() const;
+        BitDepth getOutputBitDepth() const;
+        void setInputBitDepth(BitDepth bitDepth);
+        void setOutputBitDepth(BitDepth bitDepth);
+
+        FormatMetadata & getFormatMetadata();
+        const FormatMetadata & getFormatMetadata() const;
+
         //!cpp:function::
         FixedFunctionStyle getStyle() const;
         //!cpp:function:: Select which algorithm to use.
@@ -743,7 +844,7 @@ OCIO_NAMESPACE_ENTER
         FixedFunctionTransform(const FixedFunctionTransform &);
         virtual ~FixedFunctionTransform();
         
-        FixedFunctionTransform & operator= (const FixedFunctionTransform &);
+        FixedFunctionTransform & operator=(const FixedFunctionTransform &);
         
         static void deleter(FixedFunctionTransform * t);
         
@@ -755,7 +856,7 @@ OCIO_NAMESPACE_ENTER
     };
     
     //!cpp:function::
-    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const FixedFunctionTransform&);
+    extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const FixedFunctionTransform &);
 
     
     //!rst:: //////////////////////////////////////////////////////////////////
@@ -778,14 +879,22 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: Will throw if data is not valid.
         virtual void validate() const;
 
+        virtual FormatMetadata & getFormatMetadata();
+        virtual const FormatMetadata & getFormatMetadata() const;
+
         //!cpp:function::
         ConstTransformRcPtr getTransform(int index) const;
-        
+
+        //!cpp:function::
+        TransformRcPtr & getTransform(int index);
+
         //!cpp:function::
         int size() const;
-        //!cpp:function::
-        void push_back(const ConstTransformRcPtr& transform);
-        //!cpp:function::
+        //!cpp:function:: Adds a copy of transform to the group.
+        void push_back(const ConstTransformRcPtr & transform);
+        //!cpp:function:: Adds transform to the group.
+        void push_back(TransformRcPtr & transform);
+        //!cpp:function:: Clears transforms (not the FormatMetadata).
         void clear();
         //!cpp:function::
         bool empty() const;
@@ -795,9 +904,9 @@ OCIO_NAMESPACE_ENTER
         GroupTransform(const GroupTransform &);
         virtual ~GroupTransform();
         
-        GroupTransform& operator= (const GroupTransform &);
+        GroupTransform & operator=(const GroupTransform &);
         
-        static void deleter(GroupTransform* t);
+        static void deleter(GroupTransform * t);
         
         class Impl;
         friend class Impl;
@@ -807,7 +916,7 @@ OCIO_NAMESPACE_ENTER
     };
     
     //!cpp:function::
-    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const GroupTransform&);
+    extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GroupTransform &);
     
 
     //!rst:: //////////////////////////////////////////////////////////////////
@@ -835,6 +944,14 @@ OCIO_NAMESPACE_ENTER
 
         //!cpp:function:: Will throw if data is not valid.
         virtual void validate() const;
+
+        BitDepth getInputBitDepth() const;
+        BitDepth getOutputBitDepth() const;
+        void setInputBitDepth(BitDepth bitDepth);
+        void setOutputBitDepth(BitDepth bitDepth);
+
+        FormatMetadata & getFormatMetadata();
+        const FormatMetadata & getFormatMetadata() const;
 
         //!cpp:function::
         void setBase(double base);
@@ -865,9 +982,9 @@ OCIO_NAMESPACE_ENTER
         LogAffineTransform(const LogAffineTransform &);
         virtual ~LogAffineTransform();
 
-        LogAffineTransform& operator= (const LogAffineTransform &);
+        LogAffineTransform & operator=(const LogAffineTransform &);
 
-        static void deleter(LogAffineTransform* t);
+        static void deleter(LogAffineTransform * t);
 
         class Impl;
         friend class Impl;
@@ -877,7 +994,7 @@ OCIO_NAMESPACE_ENTER
     };
 
     //!cpp:function::
-    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const LogAffineTransform&);
+    extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const LogAffineTransform &);
 
 
     //!rst:: //////////////////////////////////////////////////////////////////
@@ -904,6 +1021,14 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: Will throw if data is not valid.
         virtual void validate() const;
 
+        BitDepth getInputBitDepth() const;
+        BitDepth getOutputBitDepth() const;
+        void setInputBitDepth(BitDepth bitDepth);
+        void setOutputBitDepth(BitDepth bitDepth);
+
+        FormatMetadata & getFormatMetadata();
+        const FormatMetadata & getFormatMetadata() const;
+
         //!cpp:function::
         void setBase(double val);
         //!cpp:function::
@@ -914,9 +1039,9 @@ OCIO_NAMESPACE_ENTER
         LogTransform(const LogTransform &);
         virtual ~LogTransform();
         
-        LogTransform& operator= (const LogTransform &);
+        LogTransform & operator=(const LogTransform &);
         
-        static void deleter(LogTransform* t);
+        static void deleter(LogTransform * t);
         
         class Impl;
         friend class Impl;
@@ -926,7 +1051,7 @@ OCIO_NAMESPACE_ENTER
     };
     
     //!cpp:function::
-    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const LogTransform&);
+    extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const LogTransform &);
 
 
     //!rst:: //////////////////////////////////////////////////////////////////
@@ -972,9 +1097,9 @@ OCIO_NAMESPACE_ENTER
         LookTransform(const LookTransform &);
         virtual ~LookTransform();
         
-        LookTransform& operator= (const LookTransform &);
+        LookTransform & operator=(const LookTransform &);
         
-        static void deleter(LookTransform* t);
+        static void deleter(LookTransform * t);
         
         class Impl;
         friend class Impl;
@@ -984,7 +1109,7 @@ OCIO_NAMESPACE_ENTER
     };
     
     //!cpp:function::
-    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const LookTransform&);
+    extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const LookTransform &);
     
     
     //!rst:: //////////////////////////////////////////////////////////////////
@@ -1006,6 +1131,14 @@ OCIO_NAMESPACE_ENTER
 
         //!cpp:function:: Will throw if data is not valid.
         virtual void validate() const;
+
+        BitDepth getInputBitDepth() const;
+        BitDepth getOutputBitDepth() const;
+        void setInputBitDepth(BitDepth bitDepth);
+        void setOutputBitDepth(BitDepth bitDepth);
+
+        FormatMetadata & getFormatMetadata();
+        const FormatMetadata & getFormatMetadata() const;
 
         //!cpp:function:: Checks if this exactly equals other.
         bool equals(const MatrixTransform & other) const;
@@ -1041,31 +1174,42 @@ OCIO_NAMESPACE_ENTER
         static void Fit(float * m44, float * offset4,
                         const float * oldmin4, const float * oldmax4,
                         const float * newmin4, const float * newmax4);
+        static void Fit(double * m44, double* offset4,
+                        const double * oldmin4, const double * oldmax4,
+                        const double * newmin4, const double * newmax4);
         
         //!cpp:function::
         static void Identity(float * m44, float * offset4);
-        
+        static void Identity(double * m44, double * offset4);
+
         //!cpp:function::
         static void Sat(float * m44, float * offset4,
                         float sat, const float * lumaCoef3);
+        static void Sat(double * m44, double * offset4,
+                        double sat, const double * lumaCoef3);
         
         //!cpp:function::
         static void Scale(float * m44, float * offset4,
                           const float * scale4);
+        static void Scale(double * m44, double * offset4,
+                          const double * scale4);
         
         //!cpp:function::
         static void View(float * m44, float * offset4,
                          int * channelHot4,
                          const float * lumaCoef3);
+        static void View(double * m44, double * offset4,
+                         int * channelHot4,
+                         const double * lumaCoef3);
     
     private:
         MatrixTransform();
         MatrixTransform(const MatrixTransform &);
         virtual ~MatrixTransform();
         
-        MatrixTransform& operator= (const MatrixTransform &);
+        MatrixTransform & operator=(const MatrixTransform &);
         
-        static void deleter(MatrixTransform* t);
+        static void deleter(MatrixTransform * t);
         
         class Impl;
         friend class Impl;
@@ -1075,7 +1219,7 @@ OCIO_NAMESPACE_ENTER
     };
     
     //!cpp:function::
-    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const MatrixTransform&);
+    extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const MatrixTransform &);
 
     //!rst:: //////////////////////////////////////////////////////////////////
 
@@ -1116,6 +1260,14 @@ OCIO_NAMESPACE_ENTER
 
         //!cpp:function:: Will throw if data is not valid.
         virtual void validate() const;
+
+        BitDepth getInputBitDepth() const;
+        BitDepth getOutputBitDepth() const;
+        void setInputBitDepth(BitDepth bitDepth);
+        void setOutputBitDepth(BitDepth bitDepth);
+
+        FormatMetadata & getFormatMetadata();
+        const FormatMetadata & getFormatMetadata() const;
 
         //!cpp:function:: Checks if this equals other.
         bool equals(const RangeTransform & other) const;
@@ -1161,9 +1313,9 @@ OCIO_NAMESPACE_ENTER
         RangeTransform(const RangeTransform &);
         virtual ~RangeTransform();
         
-        RangeTransform& operator= (const RangeTransform &);
+        RangeTransform & operator=(const RangeTransform &);
         
-        static void deleter(RangeTransform* t);
+        static void deleter(RangeTransform * t);
         
         class Impl;
         friend class Impl;
@@ -1173,7 +1325,7 @@ OCIO_NAMESPACE_ENTER
     };
     
     //!cpp:function::
-    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const RangeTransform&);
+    extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const RangeTransform &);
 
     //!rst:: //////////////////////////////////////////////////////////////////
     
@@ -1250,9 +1402,9 @@ OCIO_NAMESPACE_ENTER
         TruelightTransform(const TruelightTransform &);
         virtual ~TruelightTransform();
         
-        TruelightTransform& operator= (const TruelightTransform &);
+        TruelightTransform & operator=(const TruelightTransform &);
         
-        static void deleter(TruelightTransform* t);
+        static void deleter(TruelightTransform * t);
         
         class Impl;
         friend class Impl;
@@ -1262,7 +1414,7 @@ OCIO_NAMESPACE_ENTER
     };
     
     //!cpp:function::
-    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const TruelightTransform &);
+    extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const TruelightTransform &);
     
 }
 OCIO_NAMESPACE_EXIT

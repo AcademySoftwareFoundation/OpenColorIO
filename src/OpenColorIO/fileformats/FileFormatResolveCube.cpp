@@ -226,22 +226,22 @@ OCIO_NAMESPACE_ENTER
             
             ~LocalFileFormat() {};
             
-            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
+            void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
             
-            virtual CachedFileRcPtr Read(
+            CachedFileRcPtr read(
                 std::istream & istream,
-                const std::string & fileName) const;
+                const std::string & fileName) const override;
             
-            virtual void Write(const Baker & baker,
-                               const std::string & formatName,
-                               std::ostream & ostream) const;
+            void bake(const Baker & baker,
+                      const std::string & formatName,
+                      std::ostream & ostream) const override;
             
-            virtual void BuildFileOps(OpRcPtrVec & ops,
-                         const Config& config,
-                         const ConstContextRcPtr & context,
-                         CachedFileRcPtr untypedCachedFile,
-                         const FileTransform& fileTransform,
-                         TransformDirection dir) const;
+            void buildFileOps(OpRcPtrVec & ops,
+                              const Config& config,
+                              const ConstContextRcPtr & context,
+                              CachedFileRcPtr untypedCachedFile,
+                              const FileTransform& fileTransform,
+                              TransformDirection dir) const override;
         private:
             static void ThrowErrorMessage(const std::string & error,
                 const std::string & fileName,
@@ -268,17 +268,16 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
 
-        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
+        void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
             info.name = "resolve_cube";
             info.extension = "cube";
-            info.capabilities = FORMAT_CAPABILITY_ALL;
+            info.capabilities = FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE;
             formatInfoVec.push_back(info);
         }
         
-        CachedFileRcPtr
-        LocalFileFormat::Read(
+        CachedFileRcPtr LocalFileFormat::read(
             std::istream & istream,
             const std::string & fileName) const
         {
@@ -307,7 +306,7 @@ OCIO_NAMESPACE_ENTER
             
             {
                 std::string line;
-                std::vector<std::string> parts;
+                StringVec parts;
                 std::vector<float> tmpfloats;
                 int lineNumber = 0;
                 bool headerComplete = false;
@@ -529,9 +528,9 @@ OCIO_NAMESPACE_ENTER
             return cachedFile;
         }
         
-        void LocalFileFormat::Write(const Baker & baker,
-                                    const std::string & formatName,
-                                    std::ostream & ostream) const
+        void LocalFileFormat::bake(const Baker & baker,
+                                   const std::string & formatName,
+                                   std::ostream & ostream) const
         {
             
             const int DEFAULT_1D_SIZE = 4096;
@@ -771,7 +770,7 @@ OCIO_NAMESPACE_ENTER
             if(baker.getMetadata() != NULL)
             {
                 std::string metadata = baker.getMetadata();
-                std::vector<std::string> metadatavec;
+                StringVec metadatavec;
                 pystring::split(pystring::strip(metadata), metadatavec, "\n");
                 if(metadatavec.size() > 0)
                 {
@@ -837,7 +836,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         void
-        LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
+        LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                                       const Config& /*config*/,
                                       const ConstContextRcPtr & /*context*/,
                                       CachedFileRcPtr untypedCachedFile,
@@ -922,7 +921,7 @@ OCIO::LocalCachedFileRcPtr ReadResolveCube(const std::string & fileContent)
     // Read file
     OCIO::LocalFileFormat tester;
     const std::string SAMPLE_NAME("Memory File");
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(is, SAMPLE_NAME);
+    OCIO::CachedFileRcPtr cachedFile = tester.read(is, SAMPLE_NAME);
 
     return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
 }
@@ -931,13 +930,13 @@ OCIO_ADD_TEST(FileFormatResolveCube, FormatInfo)
 {
     OCIO::FormatInfoVec formatInfoVec;
     OCIO::LocalFileFormat tester;
-    tester.GetFormatInfo(formatInfoVec);
+    tester.getFormatInfo(formatInfoVec);
 
     OCIO_CHECK_EQUAL(1, formatInfoVec.size());
     OCIO_CHECK_EQUAL("resolve_cube", formatInfoVec[0].name);
     OCIO_CHECK_EQUAL("cube", formatInfoVec[0].extension);
-    OCIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ | OCIO::FORMAT_CAPABILITY_WRITE,
-        formatInfoVec[0].capabilities);
+    OCIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ | OCIO::FORMAT_CAPABILITY_BAKE,
+                     formatInfoVec[0].capabilities);
 }
 
 OCIO_ADD_TEST(FileFormatResolveCube, Read1D)
@@ -1183,9 +1182,9 @@ OCIO_ADD_TEST(FileFormatResolveCube, Bake1D)
     baker->bake(output);
     
     //
-    std::vector<std::string> osvec;
+    OCIO::StringVec osvec;
     OCIO::pystring::splitlines(output.str(), osvec);
-    std::vector<std::string> resvec;
+    OCIO::StringVec resvec;
     OCIO::pystring::splitlines(bout.str(), resvec);
     OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
@@ -1245,9 +1244,9 @@ OCIO_ADD_TEST(FileFormatResolveCube, Bake3D)
     baker->bake(output);
     
     //
-    std::vector<std::string> osvec;
+    OCIO::StringVec osvec;
     OCIO::pystring::splitlines(output.str(), osvec);
-    std::vector<std::string> resvec;
+    OCIO::StringVec resvec;
     OCIO::pystring::splitlines(bout.str(), resvec);
     OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
@@ -1326,9 +1325,9 @@ OCIO_ADD_TEST(FileFormatResolveCube, Bake1D3D)
     baker->bake(output);
     
     //
-    std::vector<std::string> osvec;
+    OCIO::StringVec osvec;
     OCIO::pystring::splitlines(output.str(), osvec);
-    std::vector<std::string> resvec;
+    OCIO::StringVec resvec;
     OCIO::pystring::splitlines(bout.str(), resvec);
     OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)

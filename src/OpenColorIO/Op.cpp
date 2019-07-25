@@ -58,30 +58,30 @@ OCIO_NAMESPACE_ENTER
 
 
     OpData::OpData(BitDepth inBitDepth, BitDepth outBitDepth)
-        :   m_inBitDepth(inBitDepth)
-        ,   m_outBitDepth(outBitDepth)
-    { }
-
-    OpData::OpData(BitDepth inBitDepth, BitDepth outBitDepth,
-                   const std::string & id, 
-                   const Descriptions & desc)
-        :   m_id(id)
-        ,   m_descriptions(desc)
+        :   m_metadata(METADATA_ROOT)
         ,   m_inBitDepth(inBitDepth)
         ,   m_outBitDepth(outBitDepth)
     { }
 
+    OpData::OpData(BitDepth inBitDepth, BitDepth outBitDepth,
+                   const FormatMetadataImpl & info)
+        :   m_metadata(info)
+        ,   m_inBitDepth(inBitDepth)
+        ,   m_outBitDepth(outBitDepth)
+    {
+    }
+
     OpData::OpData(const OpData & rhs)
+        : m_metadata(METADATA_ROOT)
     {
         *this = rhs;
     }
 
-    OpData& OpData::operator=(const OpData & rhs)
+    OpData & OpData::operator=(const OpData & rhs)
     {
         if (this != &rhs)
         {
-            m_id           = rhs.m_id;
-            m_descriptions = rhs.m_descriptions;
+            m_metadata     = rhs.m_metadata;
             m_inBitDepth   = rhs.m_inBitDepth;
             m_outBitDepth  = rhs.m_outBitDepth;
         }
@@ -109,11 +109,35 @@ OCIO_NAMESPACE_ENTER
     {
         if (this == &other) return true;
 
+        // Ignore metadata.
         return (getType() == other.getType()
-                && m_id == other.m_id
-                && m_descriptions == other.m_descriptions
                 && m_inBitDepth == other.m_inBitDepth
                 && m_outBitDepth == other.m_outBitDepth);
+    }
+
+    const std::string & OpData::getID() const
+    {
+        return m_metadata.getAttributeValue(METADATA_ID);
+    }
+
+    void OpData::setID(const std::string & id)
+    {
+        return m_metadata.addAttribute(METADATA_ID, id.c_str());
+    }
+
+    const std::string & OpData::getName() const
+    {
+        return m_metadata.getAttributeValue(METADATA_NAME);
+    }
+
+    void OpData::setName(const std::string & name)
+    {
+        return m_metadata.addAttribute(METADATA_NAME, name.c_str());
+    }
+
+    void OpData::invertMetadata()
+    {
+        m_metadata.addChildElement(METADATA_DESCRIPTION, "Inverted");
     }
 
     Op::Op()
@@ -157,7 +181,13 @@ OCIO_NAMESPACE_ENTER
     }
 
 
+    OpRcPtrVec::OpRcPtrVec()
+        : m_metadata(METADATA_ROOT)
+    {
+    }
+
     OpRcPtrVec::OpRcPtrVec(const OpRcPtrVec & v)
+        : OpRcPtrVec()
     {
         *this = v; 
     }
@@ -167,6 +197,7 @@ OCIO_NAMESPACE_ENTER
         if(this!=&v)
         {
             m_ops = v.m_ops;
+            m_metadata = v.m_metadata;
         }
 
         return *this;
@@ -175,6 +206,7 @@ OCIO_NAMESPACE_ENTER
     OpRcPtrVec & OpRcPtrVec::operator+=(const OpRcPtrVec & v)
     {
         m_ops.insert(end(), v.begin(), v.end());
+        m_metadata.combine(v.m_metadata);
         adjustBitDepths();
         return *this;
     }
@@ -281,7 +313,7 @@ OCIO_NAMESPACE_ENTER
         {
             v.push_back(op->clone());
         }
-
+        v.m_metadata = m_metadata;
         return v;
     }
 
@@ -392,7 +424,7 @@ OCIO_NAMESPACE_ENTER
     }
 
     void CreateOpVecFromOpData(OpRcPtrVec & ops,
-                               const OpDataRcPtr & opData,
+                               const ConstOpDataRcPtr & opData,
                                TransformDirection dir)
     {
         if (dir == TRANSFORM_DIR_UNKNOWN)
@@ -406,7 +438,7 @@ OCIO_NAMESPACE_ENTER
         {
         case OpData::CDLType:
         {
-            auto cdlSrc = std::dynamic_pointer_cast<CDLOpData>(opData);
+            auto cdlSrc = std::dynamic_pointer_cast<const CDLOpData>(opData);
             auto cdl = std::make_shared<CDLOpData>(*cdlSrc);
             CreateCDLOp(ops, cdl, dir);
             break;
@@ -414,7 +446,7 @@ OCIO_NAMESPACE_ENTER
 
         case OpData::ExponentType:
         {
-            auto expSrc = std::dynamic_pointer_cast<ExponentOpData>(opData);
+            auto expSrc = std::dynamic_pointer_cast<const ExponentOpData>(opData);
             auto exp = std::make_shared<ExponentOpData>(*expSrc);
             CreateExponentOp(ops, exp, dir);
             break;
@@ -422,7 +454,7 @@ OCIO_NAMESPACE_ENTER
 
         case OpData::ExposureContrastType:
         {
-            auto ecSrc = std::dynamic_pointer_cast<ExposureContrastOpData>(opData);
+            auto ecSrc = std::dynamic_pointer_cast<const ExposureContrastOpData>(opData);
             auto ec = ecSrc->clone();
             CreateExposureContrastOp(ops, ec, dir);
             break;
@@ -430,7 +462,7 @@ OCIO_NAMESPACE_ENTER
         
         case OpData::FixedFunctionType:
         {
-            auto ffSrc = std::dynamic_pointer_cast<FixedFunctionOpData>(opData);
+            auto ffSrc = std::dynamic_pointer_cast<const FixedFunctionOpData>(opData);
             auto ff = std::make_shared<FixedFunctionOpData>(*ffSrc);
             CreateFixedFunctionOp(ops, ff, dir);
             break;
@@ -438,7 +470,7 @@ OCIO_NAMESPACE_ENTER
 
         case OpData::GammaType:
         {
-            auto gammaSrc = std::dynamic_pointer_cast<GammaOpData>(opData);
+            auto gammaSrc = std::dynamic_pointer_cast<const GammaOpData>(opData);
             auto gamma = std::make_shared<GammaOpData>(*gammaSrc);
             CreateGammaOp(ops, gamma, dir);
             break;
@@ -446,7 +478,7 @@ OCIO_NAMESPACE_ENTER
 
         case OpData::LogType:
         {
-            auto logSrc = std::dynamic_pointer_cast<LogOpData>(opData);
+            auto logSrc = std::dynamic_pointer_cast<const LogOpData>(opData);
             auto log = std::make_shared<LogOpData>(*logSrc);
             CreateLogOp(ops, log, dir);
             break;
@@ -454,7 +486,7 @@ OCIO_NAMESPACE_ENTER
 
         case OpData::Lut1DType:
         {
-            auto lutSrc = std::dynamic_pointer_cast<Lut1DOpData>(opData);
+            auto lutSrc = std::dynamic_pointer_cast<const Lut1DOpData>(opData);
             auto lut = std::make_shared<Lut1DOpData>(*lutSrc);
             CreateLut1DOp(ops, lut, dir);
             break;
@@ -462,7 +494,7 @@ OCIO_NAMESPACE_ENTER
 
         case OpData::Lut3DType:
         {
-            auto lutSrc = std::dynamic_pointer_cast<Lut3DOpData>(opData);
+            auto lutSrc = std::dynamic_pointer_cast<const Lut3DOpData>(opData);
             auto lut = std::make_shared<Lut3DOpData>(*lutSrc);
             CreateLut3DOp(ops, lut, dir);
             break;
@@ -470,7 +502,7 @@ OCIO_NAMESPACE_ENTER
 
         case OpData::MatrixType:
         {
-            auto matrixSrc = std::dynamic_pointer_cast<MatrixOpData>(opData);
+            auto matrixSrc = std::dynamic_pointer_cast<const MatrixOpData>(opData);
             auto matrix = std::make_shared<MatrixOpData>(*matrixSrc);
             CreateMatrixOp(ops, matrix, dir);
             break;
@@ -478,7 +510,7 @@ OCIO_NAMESPACE_ENTER
 
         case OpData::RangeType:
         {
-            auto rangeSrc = std::dynamic_pointer_cast<RangeOpData>(opData);
+            auto rangeSrc = std::dynamic_pointer_cast<const RangeOpData>(opData);
             auto range = std::make_shared<RangeOpData>(*rangeSrc);
             CreateRangeOp(ops, range, dir);
             break;
@@ -498,7 +530,7 @@ OCIO_NAMESPACE_ENTER
     }
 
     void CreateOpVecFromOpDataVec(OpRcPtrVec & ops,
-                                  const OpDataVec & opDataVec,
+                                  const ConstOpDataVec & opDataVec,
                                   TransformDirection dir)
     {
         if(dir == TRANSFORM_DIR_FORWARD)
@@ -542,18 +574,18 @@ void Apply(const OpRcPtrVec & ops, float * source, long numPixels)
 
 OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
 {
-    const float m1[16] = { 1.1f, 0.2f, 0.3f, 0.4f,
-                           0.5f, 1.6f, 0.7f, 0.8f,
-                           0.2f, 0.1f, 1.1f, 0.2f,
-                           0.3f, 0.4f, 0.5f, 1.6f };
+    const double m1[16] = { 1.1, 0.2, 0.3, 0.4,
+                            0.5, 1.6, 0.7, 0.8,
+                            0.2, 0.1, 1.1, 0.2,
+                            0.3, 0.4, 0.5, 1.6 };
 
-    const float v1[4] = { -0.5f, -0.25f, 0.25f, 0.0f };
+    const double v1[4] = { -0.5, -0.25, 0.25, 0.0 };
 
-    const float m2[16] = { 1.1f, -0.1f, -0.1f, 0.0f,
-                           0.1f,  0.9f, -0.2f, 0.0f,
-                           0.05f, 0.0f,  1.1f, 0.0f,
-                           0.0f,  0.0f,  0.0f, 1.0f };
-    const float v2[4] = { -0.2f, -0.1f, -0.1f, -0.2f };
+    const double m2[16] = { 1.1, -0.1, -0.1, 0.0,
+                            0.1,  0.9, -0.2, 0.0,
+                            0.05, 0.0,  1.1, 0.0,
+                            0.0,  0.0,  0.0, 1.0 };
+    const double v2[4] = { -0.2, -0.1, -0.1, -0.2 };
 
     const float source[] = { 0.1f,  0.2f,  0.3f,   0.4f,
                             -0.1f, -0.2f, 50.0f, 123.4f,
@@ -758,37 +790,22 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         Apply(ops, tmp2, 3);
 
         // compare results
-        for (unsigned int i = 0; i<12; ++i)
+        for (unsigned int i = 0; i < 12; ++i)
         {
             OCIO_CHECK_CLOSE(tmp2[i], tmp[i], error);
         }
     }
 }
 
-OCIO_ADD_TEST(Descriptions, basic)
+namespace
 {
-    OpData::Descriptions desc1;
-    OCIO_CHECK_ASSERT( desc1 == desc1 );
-
-    OpData::Descriptions desc2("My dummy comment");
-    OCIO_CHECK_ASSERT( desc1 != desc2 );
-    OCIO_CHECK_ASSERT( desc2 != desc1 );
-    OCIO_REQUIRE_EQUAL( desc2.size(), 1);
-    OCIO_CHECK_EQUAL(desc2[0], std::string("My dummy comment"));
-
-    OCIO_CHECK_NO_THROW( desc1 = desc2 );
-    OCIO_CHECK_ASSERT( desc1 == desc2 );
-    OCIO_CHECK_ASSERT( desc2 == desc1 );
-
-    OCIO_CHECK_NO_THROW( desc2 += "My second dummy comment" );
-    OCIO_REQUIRE_EQUAL( desc2.size(), 2);
-    OCIO_CHECK_ASSERT( desc1 != desc2 );
-    OCIO_CHECK_ASSERT( desc2 != desc1 );
+// Create some empty metadata as a test argument.
+static OCIO::FormatMetadataImpl metadata(METADATA_ROOT);
 }
 
 OCIO_ADD_TEST(CreateOpVecFromOpDataVec, basic)
 {
-    OpDataVec opDataVec;
+    ConstOpDataVec opDataVec;
     auto mat = MatrixOpData::CreateDiagonalMatrix(BIT_DEPTH_F32,
                                                   BIT_DEPTH_F32,
                                                   2.0);
@@ -796,7 +813,8 @@ OCIO_ADD_TEST(CreateOpVecFromOpDataVec, basic)
 
     auto range = std::make_shared<RangeOpData>(BIT_DEPTH_F32,
                                                BIT_DEPTH_F32,
-                                               0.0f, 1.0f, 0.5f, 1.5f);
+                                               metadata,
+                                               0.0, 1.0, 0.5, 1.5);
 
     opDataVec.push_back(range);
 
@@ -823,7 +841,7 @@ OCIO_ADD_TEST(CreateOpVecFromOpDataVec, basic)
 
 OCIO_ADD_TEST(Op, non_dynamic_ops)
 {
-    float scale[4] = { 2.0f, 2.0f, 2.0f, 1.0f };
+    double scale[4] = { 2.0, 2.0, 2.0, 1.0 };
 
     OCIO::OpRcPtrVec ops;
     OCIO::CreateScaleOp(ops, scale, OCIO::TRANSFORM_DIR_FORWARD);
@@ -854,7 +872,8 @@ OCIO_ADD_TEST(OpRcPtrVec, bit_depth)
 
     auto range = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32,
                                                      OCIO::BIT_DEPTH_F32,
-                                                     0.0f, 1.0f, 0.5f, 1.5f);
+                                                     metadata,
+                                                     0.0, 1.0, 0.5, 1.5);
 
     OCIO::CreateRangeOp(ops, range, OCIO::TRANSFORM_DIR_FORWARD);
 
@@ -986,7 +1005,8 @@ OCIO_ADD_TEST(OpRcPtrVec, bit_depth_with_filenoop)
 
     auto range = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32,
                                                      OCIO::BIT_DEPTH_F32,
-                                                     0.0f, 1.0f, 0.5f, 1.5f);
+                                                     metadata,
+                                                     0.0, 1.0, 0.5, 1.5);
     OCIO::CreateRangeOp(ops, range, OCIO::TRANSFORM_DIR_FORWARD);
 
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
@@ -1050,7 +1070,8 @@ OCIO_ADD_TEST(OpData, equality)
 
     auto range = std::make_shared<RangeOpData>(BIT_DEPTH_F32,
                                                BIT_DEPTH_F32,
-                                               0.0f, 1.0f, 0.5f, 1.5f);
+                                               metadata,
+                                               0.0, 1.0, 0.5, 1.5);
 
     // Use the MatrixOpData::operator==().
     OCIO_CHECK_ASSERT( !(*mat2==*range) );

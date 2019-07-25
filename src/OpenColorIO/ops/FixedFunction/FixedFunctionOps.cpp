@@ -41,6 +41,41 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
+FixedFunctionStyle ConvertStyle(FixedFunctionOpData::Style style)
+{
+    switch (style)
+    {
+    case FixedFunctionOpData::ACES_RED_MOD_03_FWD:
+    case FixedFunctionOpData::ACES_RED_MOD_03_INV:
+        return FIXED_FUNCTION_ACES_RED_MOD_03;
+
+    case FixedFunctionOpData::ACES_RED_MOD_10_FWD:
+    case FixedFunctionOpData::ACES_RED_MOD_10_INV:
+        return FIXED_FUNCTION_ACES_RED_MOD_10;
+
+    case FixedFunctionOpData::ACES_GLOW_03_FWD:
+    case FixedFunctionOpData::ACES_GLOW_03_INV:
+        return FIXED_FUNCTION_ACES_GLOW_03;
+
+    case FixedFunctionOpData::ACES_GLOW_10_FWD:
+    case FixedFunctionOpData::ACES_GLOW_10_INV:
+        return FIXED_FUNCTION_ACES_GLOW_10;
+
+    case FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD:
+    case FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV:
+        return FIXED_FUNCTION_ACES_DARK_TO_DIM_10;
+
+    case FixedFunctionOpData::REC2100_SURROUND:
+        return FIXED_FUNCTION_REC2100_SURROUND;
+    }
+
+    std::stringstream ss("Unknown FixedFunction style: ");
+    ss << style;
+
+    throw Exception(ss.str().c_str());
+
+    return FIXED_FUNCTION_ACES_RED_MOD_03;
+}
 
 namespace
 {
@@ -212,7 +247,41 @@ void CreateFixedFunctionOp(OpRcPtrVec & ops,
     ops.push_back(std::make_shared<FixedFunctionOp>(func));
 }
 
+void CreateFixedFunctionTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
+{
+    auto ff = DynamicPtrCast<const FixedFunctionOp>(op);
+    if (!ff)
+    {
+        throw Exception("CreateFixedFunctionTransform: op has to be a FixedFunctionOp");
+    }
+    auto ffData = DynamicPtrCast<const FixedFunctionOpData>(op->data());
+    auto ffTransform = FixedFunctionTransform::Create();
 
+    const auto style = ffData->getStyle();
+
+    if (style == FixedFunctionOpData::ACES_RED_MOD_03_INV ||
+        style == FixedFunctionOpData::ACES_RED_MOD_10_INV ||
+        style == FixedFunctionOpData::ACES_GLOW_03_INV ||
+        style == FixedFunctionOpData::ACES_GLOW_10_INV ||
+        style == FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV)
+    {
+        ffTransform->setDirection(TRANSFORM_DIR_INVERSE);
+    }
+    const auto transformStyle = ConvertStyle(style);
+    ffTransform->setStyle(transformStyle);
+
+    ffTransform->setInputBitDepth(ff->getInputBitDepth());
+    ffTransform->setOutputBitDepth(ff->getOutputBitDepth());
+
+    auto & formatMetadata = ffTransform->getFormatMetadata();
+    auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
+    metadata = ffData->getFormatMetadata();
+
+    auto & params = ffData->getParams();
+    ffTransform->setParams(params.data(), params.size());
+
+    group->push_back(ffTransform);
+}
 
 }
 OCIO_NAMESPACE_EXIT
@@ -403,6 +472,49 @@ OCIO_ADD_TEST(FixedFunctionOps, rec2100_surround_inv)
         OCIO_CHECK_ASSERT(!op0->isInverse(op2));
         OCIO_CHECK_ASSERT(!op1->isInverse(op2));
     }
+}
+
+OCIO_ADD_TEST(FixedFunctionOps, create_transform)
+{
+    OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_FORWARD;
+    const OCIO::FixedFunctionOpData::Params data{ 2.01 };
+    const OCIO::FixedFunctionOpData::Style style = OCIO::FixedFunctionOpData::REC2100_SURROUND;
+
+    OCIO::FixedFunctionOpDataRcPtr funcData
+        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::BIT_DEPTH_UINT10,
+                                                      OCIO::BIT_DEPTH_F32,
+                                                      data, style);
+    funcData->getFormatMetadata().addAttribute("name", "test");
+
+    OCIO::OpRcPtrVec ops;
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, funcData, direction));
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_REQUIRE_ASSERT(ops[0]);
+
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+
+    OCIO::ConstOpRcPtr op(ops[0]);
+
+    OCIO::CreateFixedFunctionTransform(group, op);
+    OCIO_REQUIRE_EQUAL(group->size(), 1);
+    auto transform = group->getTransform(0);
+    OCIO_REQUIRE_ASSERT(transform);
+    auto ffTransform = OCIO_DYNAMIC_POINTER_CAST<OCIO::FixedFunctionTransform>(transform);
+    OCIO_REQUIRE_ASSERT(ffTransform);
+
+    const auto & metadata = ffTransform->getFormatMetadata();
+    OCIO_REQUIRE_EQUAL(metadata.getNumAttributes(), 1);
+    OCIO_CHECK_EQUAL(std::string(metadata.getAttributeName(0)), "name");
+    OCIO_CHECK_EQUAL(std::string(metadata.getAttributeValue(0)), "test");
+
+    OCIO_CHECK_EQUAL(ffTransform->getDirection(), direction);
+    OCIO_CHECK_EQUAL(ffTransform->getInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OCIO_CHECK_EQUAL(ffTransform->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(ffTransform->getStyle(), OCIO::FIXED_FUNCTION_REC2100_SURROUND);
+    OCIO_CHECK_EQUAL(ffTransform->getNumParams(), 1);
+    double param[1];
+    ffTransform->getParams(param);
+    OCIO_CHECK_EQUAL(param[0], 2.01);
 }
 
 #endif

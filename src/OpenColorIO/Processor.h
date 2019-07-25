@@ -57,12 +57,23 @@ OCIO_NAMESPACE_ENTER
         bool isNoOp() const;
         bool hasChannelCrosstalk() const;
         
-        ConstProcessorMetadataRcPtr getMetadata() const;
+        ConstProcessorMetadataRcPtr getProcessorMetadata() const;
+
+        const FormatMetadata & getFormatMetadata() const;
+
+        int getNumTransforms() const;
+        const FormatMetadata & getTransformFormatMetadata(int index) const;
 
         bool hasDynamicProperty(DynamicPropertyType type) const;
         DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
 
         const char * getCacheID() const;
+
+        GroupTransformRcPtr createGroupTransform() const;
+
+        void write(const char * formatName, std::ostream & os) const;
+
+        void apply(ImageDesc& img) const;
         
         // Get an optimized GPU processor instance for F32 images with default optimizations.
         ConstGPUProcessorRcPtr getDefaultGPUProcessor() const;

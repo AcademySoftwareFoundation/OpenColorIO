@@ -179,20 +179,20 @@ OCIO_NAMESPACE_ENTER
             PyObject* pyslope = NULL;
             PyObject* pyoffset = NULL;
             PyObject* pypower = NULL;
-            float sat = -1.0; // -1.0 is an illegal value for saturation
+            double sat = -1.0; // -1.0 is an illegal value for saturation
             char* direction = NULL;
             char* id = NULL;
             char* description = NULL;
             static const char *kwlist[] = { "slope", "offset",
                 "power", "sat", "direction", "id", "description", NULL };
-            if(!PyArg_ParseTupleAndKeywords(args, kwds, "|OOOfsss",
+            if(!PyArg_ParseTupleAndKeywords(args, kwds, "|OOOdsss",
                 const_cast<char **>(kwlist),
                 &pyslope, &pyoffset, &pypower, &sat, &direction, &id,
                 &description)) return -1;
             if (pyslope)
             {
-                std::vector<float> slope;
-                if(!FillFloatVectorFromPySequence(pyslope, slope) ||
+                std::vector<double> slope;
+                if(!FillDoubleVectorFromPySequence(pyslope, slope) ||
                     (slope.size() != 3))
                 {
                     PyErr_SetString(PyExc_TypeError,
@@ -203,8 +203,8 @@ OCIO_NAMESPACE_ENTER
             }
             if (pyoffset)
             {
-                std::vector<float> offset;
-                if(!FillFloatVectorFromPySequence(pyoffset, offset) ||
+                std::vector<double> offset;
+                if(!FillDoubleVectorFromPySequence(pyoffset, offset) ||
                     (offset.size() != 3))
                 {
                     PyErr_SetString(PyExc_TypeError,
@@ -215,8 +215,8 @@ OCIO_NAMESPACE_ENTER
             }
             if (pypower)
             {
-                std::vector<float> power;
-                if(!FillFloatVectorFromPySequence(pypower, power) ||
+                std::vector<double> power;
+                if(!FillDoubleVectorFromPySequence(pypower, power) ||
                     (power.size() != 3))
                 {
                     PyErr_SetString(PyExc_TypeError,
@@ -225,7 +225,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 ptr->setPower(&power[0]);
             }
-            if(sat >= 0.0f) ptr->setSat(sat);
+            if(sat >= 0.0) ptr->setSat(sat);
             if(direction) ptr->setDirection(TransformDirectionFromString(direction));
             if(id) ptr->setID(id);
             if(description) ptr->setDescription(description);
@@ -288,9 +288,9 @@ OCIO_NAMESPACE_ENTER
         {
             OCIO_PYTRY_ENTER()
             ConstCDLTransformRcPtr transform = GetConstCDLTransform(self);
-            std::vector<float> data(3);
+            std::vector<double> data(3);
             transform->getSlope(&data[0]);
-            return CreatePyListFromFloatVector(data);
+            return CreatePyListFromDoubleVector(data);
             OCIO_PYTRY_EXIT(NULL)
         }
         
@@ -298,9 +298,9 @@ OCIO_NAMESPACE_ENTER
         {
             OCIO_PYTRY_ENTER()
             ConstCDLTransformRcPtr transform = GetConstCDLTransform(self);
-            std::vector<float> data(3);
+            std::vector<double> data(3);
             transform->getOffset(&data[0]);
-            return CreatePyListFromFloatVector(data);
+            return CreatePyListFromDoubleVector(data);
             OCIO_PYTRY_EXIT(NULL)
         }
         
@@ -308,9 +308,9 @@ OCIO_NAMESPACE_ENTER
         {
             OCIO_PYTRY_ENTER()
             ConstCDLTransformRcPtr transform = GetConstCDLTransform(self);
-            std::vector<float> data(3);
+            std::vector<double> data(3);
             transform->getPower(&data[0]);
-            return CreatePyListFromFloatVector(data);
+            return CreatePyListFromDoubleVector(data);
             OCIO_PYTRY_EXIT(NULL)
         }
         
@@ -318,9 +318,9 @@ OCIO_NAMESPACE_ENTER
         {
             OCIO_PYTRY_ENTER()
             ConstCDLTransformRcPtr transform = GetConstCDLTransform(self);
-            std::vector<float> data(9);
+            std::vector<double> data(9);
             transform->getSOP(&data[0]);
-            return CreatePyListFromFloatVector(data);
+            return CreatePyListFromDoubleVector(data);
             OCIO_PYTRY_EXIT(NULL)
         }
         
@@ -338,8 +338,8 @@ OCIO_NAMESPACE_ENTER
             PyObject* pyData = 0;
             if (!PyArg_ParseTuple(args, "O:setSlope", &pyData)) return NULL;
             CDLTransformRcPtr transform = GetEditableCDLTransform(self);
-            std::vector<float> data;
-            if(!FillFloatVectorFromPySequence(pyData, data) || (data.size() != 3))
+            std::vector<double> data;
+            if(!FillDoubleVectorFromPySequence(pyData, data) || (data.size() != 3))
             {
                 PyErr_SetString(PyExc_TypeError, "First argument must be a float array, size 3");
                 return 0;
@@ -355,8 +355,8 @@ OCIO_NAMESPACE_ENTER
             PyObject* pyData = 0;
             if (!PyArg_ParseTuple(args, "O:setOffset", &pyData)) return NULL;
             CDLTransformRcPtr transform = GetEditableCDLTransform(self);
-            std::vector<float> data;
-            if(!FillFloatVectorFromPySequence(pyData, data) || (data.size() != 3))
+            std::vector<double> data;
+            if(!FillDoubleVectorFromPySequence(pyData, data) || (data.size() != 3))
             {
                 PyErr_SetString(PyExc_TypeError, "First argument must be a float array, size 3");
                 return 0;
@@ -372,8 +372,8 @@ OCIO_NAMESPACE_ENTER
             PyObject* pyData = 0;
             if (!PyArg_ParseTuple(args, "O:setPower", &pyData)) return NULL;
             CDLTransformRcPtr transform = GetEditableCDLTransform(self);    
-            std::vector<float> data;
-            if(!FillFloatVectorFromPySequence(pyData, data) || (data.size() != 3))
+            std::vector<double> data;
+            if(!FillDoubleVectorFromPySequence(pyData, data) || (data.size() != 3))
             {
                 PyErr_SetString(PyExc_TypeError, "First argument must be a float array, size 3");
                 return 0;
@@ -389,8 +389,8 @@ OCIO_NAMESPACE_ENTER
             PyObject* pyData = 0;
             if (!PyArg_ParseTuple(args, "O:setSOP", &pyData)) return NULL;
             CDLTransformRcPtr transform = GetEditableCDLTransform(self); 
-            std::vector<float> data;
-            if(!FillFloatVectorFromPySequence(pyData, data) || (data.size() != 9))
+            std::vector<double> data;
+            if(!FillDoubleVectorFromPySequence(pyData, data) || (data.size() != 9))
             {
             	PyErr_SetString(PyExc_TypeError, "First argument must be a float array, size 9");
                 return 0;
@@ -403,8 +403,8 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_CDLTransform_setSat(PyObject * self, PyObject * args)
         {
             OCIO_PYTRY_ENTER()
-            float sat;
-            if (!PyArg_ParseTuple(args, "f:setSat", &sat)) return NULL;
+            double sat;
+            if (!PyArg_ParseTuple(args, "d:setSat", &sat)) return NULL;
             CDLTransformRcPtr transform = GetEditableCDLTransform(self);    
             transform->setSat(sat);    
             Py_RETURN_NONE;
@@ -415,9 +415,9 @@ OCIO_NAMESPACE_ENTER
         {
             OCIO_PYTRY_ENTER()
             ConstCDLTransformRcPtr transform = GetConstCDLTransform(self);
-            std::vector<float> data(3);
+            std::vector<double> data(3);
             transform->getSatLumaCoefs(&data[0]);
-            return CreatePyListFromFloatVector(data);
+            return CreatePyListFromDoubleVector(data);
             OCIO_PYTRY_EXIT(NULL)
         }
         

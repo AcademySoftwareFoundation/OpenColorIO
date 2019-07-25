@@ -128,6 +128,33 @@ OCIO_NAMESPACE_ENTER
         }
     }
 
+    BitDepth LogAffineTransform::getInputBitDepth() const
+    {
+        return getImpl()->getInputBitDepth();
+    }
+    BitDepth LogAffineTransform::getOutputBitDepth() const
+    {
+        return getImpl()->getOutputBitDepth();
+    }
+    void LogAffineTransform::setInputBitDepth(BitDepth bitDepth)
+    {
+        getImpl()->setInputBitDepth(bitDepth);
+    }
+    void LogAffineTransform::setOutputBitDepth(BitDepth bitDepth)
+    {
+        getImpl()->setOutputBitDepth(bitDepth);
+    }
+
+    FormatMetadata & LogAffineTransform::getFormatMetadata()
+    {
+        return m_impl->getFormatMetadata();
+    }
+
+    const FormatMetadata & LogAffineTransform::getFormatMetadata() const
+    {
+        return m_impl->getFormatMetadata();
+    }
+
     void LogAffineTransform::setBase(double base)
     {
         getImpl()->setBase(base);

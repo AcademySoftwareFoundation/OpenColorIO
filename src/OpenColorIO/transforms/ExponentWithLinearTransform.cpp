@@ -138,6 +138,33 @@ void ExponentWithLinearTransform::validate() const
     }
 }
 
+BitDepth ExponentWithLinearTransform::getInputBitDepth() const
+{
+    return getImpl()->getInputBitDepth();
+}
+BitDepth ExponentWithLinearTransform::getOutputBitDepth() const
+{
+    return getImpl()->getOutputBitDepth();
+}
+void ExponentWithLinearTransform::setInputBitDepth(BitDepth bitDepth)
+{
+    getImpl()->setInputBitDepth(bitDepth);
+}
+void ExponentWithLinearTransform::setOutputBitDepth(BitDepth bitDepth)
+{
+    getImpl()->setOutputBitDepth(bitDepth);
+}
+
+FormatMetadata & ExponentWithLinearTransform::getFormatMetadata()
+{
+    return m_impl->getFormatMetadata();
+}
+
+const FormatMetadata & ExponentWithLinearTransform::getFormatMetadata() const
+{
+    return m_impl->getFormatMetadata();
+}
+
 void ExponentWithLinearTransform::setGamma(const double(&values)[4])
 {
     getImpl()->getRedParams()  [0] = values[0];
@@ -219,7 +246,7 @@ void BuildExponentWithLinearOps(OpRcPtrVec & ops,
     double offset4[4] = { 0., 0., 0., 0. };
     transform.getOffset(offset4);
 
-    CreateGammaOp(ops, "", OpData::Descriptions(),
+    CreateGammaOp(ops, FormatMetadataImpl(transform.getFormatMetadata()),
                   combinedDir==TRANSFORM_DIR_FORWARD ? GammaOpData::MONCURVE_FWD
                                                      : GammaOpData::MONCURVE_REV,
                   gamma4, offset4);

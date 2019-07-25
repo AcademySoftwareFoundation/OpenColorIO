@@ -26,27 +26,17 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
-#ifndef INCLUDED_OCIO_EXPOSURECONTRAST_H
-#define INCLUDED_OCIO_EXPOSURECONTRAST_H
+#ifndef INCLUDED_OCIO_TRANSFORMBUILDER_H
+#define INCLUDED_OCIO_TRANSFORMBUILDER_H
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Op.h"
-#include "ops/exposurecontrast/ExposureContrastOpData.h"
+#include "op.h"
 
 OCIO_NAMESPACE_ENTER
 {
 
-void CreateExposureContrastOp(OpRcPtrVec & ops,
-                              ExposureContrastOpDataRcPtr & data,
-                              TransformDirection direction);
-
-ExposureContrastStyle ConvertStyle(ExposureContrastOpData::Style style);
-
-// Create a copy of the exposure contrast transform in the op and append it to
-// the GroupTransform.
-void CreateExposureContrastTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op);
+void CreateTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op);
 
 }
 OCIO_NAMESPACE_EXIT

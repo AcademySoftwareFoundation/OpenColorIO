@@ -44,10 +44,10 @@ OCIO_NAMESPACE_ENTER
     {
         if(data.allocation == ALLOCATION_UNIFORM)
         {
-            float oldmin[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-            float oldmax[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-            float newmin[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-            float newmax[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+            double oldmin[4] = { 0.0, 0.0, 0.0, 0.0 };
+            double oldmax[4] = { 1.0, 1.0, 1.0, 1.0 };
+            double newmin[4] = { 0.0, 0.0, 0.0, 0.0 };
+            double newmax[4] = { 1.0, 1.0, 1.0, 1.0 };
             
             if(data.vars.size() >= 2)
             {
@@ -65,10 +65,10 @@ OCIO_NAMESPACE_ENTER
         }
         else if(data.allocation == ALLOCATION_LG2)
         {
-            float oldmin[4] = { -10.0f, -10.0f, -10.0f, 0.0f };
-            float oldmax[4] = { 6.0f, 6.0f, 6.0f, 1.0f };
-            float newmin[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-            float newmax[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+            double oldmin[4] = { -10.0, -10.0, -10.0, 0.0 };
+            double oldmax[4] = {   6.0,   6.0,   6.0, 1.0 };
+            double newmin[4] = {   0.0,   0.0,   0.0, 0.0 };
+            double newmax[4] = {   1.0,   1.0,   1.0, 1.0 };
             
             if(data.vars.size() >= 2)
             {
@@ -78,7 +78,6 @@ OCIO_NAMESPACE_ENTER
                     oldmax[i] = data.vars[1];
                 }
             }
-            
             
             // Log Settings.
             // output = logSlope * log( linSlope * input + linOffset, base ) + logOffset

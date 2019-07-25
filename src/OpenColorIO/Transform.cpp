@@ -26,13 +26,25 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorIO/OpenColorIO.h>
-
-#include "OpBuilders.h"
-#include "Processor.h"
-
 #include <sstream>
 #include <typeinfo>
+
+#include <OpenColorIO/OpenColorIO.h>
+
+#include "fileformats/FormatMetadata.h"
+#include "OpBuilders.h"
+#include "ops/CDL/CDLOps.h"
+#include "ops/Exponent/ExponentOps.h"
+#include "ops/exposurecontrast/ExposureContrastOps.h"
+#include "ops/FixedFunction/FixedFunctionOps.h"
+#include "ops/Gamma/GammaOps.h"
+#include "ops/Log/LogOps.h"
+#include "ops/Lut1D/Lut1DOpData.h"
+#include "ops/Lut3D/Lut3DOpData.h"
+#include "ops/Matrix/MatrixOps.h"
+#include "ops/Range/RangeOps.h"
+#include "Processor.h"
+#include "TransformBuilder.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -237,5 +249,68 @@ OCIO_NAMESPACE_ENTER
         
         return os;
     }
+
+
+    void CreateTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
+    {
+        // AllocationNoOp, FileNoOp, LookNoOp won't create a Transform.
+        if (!op || op->isNoOp())
+            return;
+
+        auto data = op->data();
+
+        if (DynamicPtrCast<const CDLOpData>(data))
+        {
+            CreateCDLTransform(group, op);
+        }
+        else if (DynamicPtrCast<const ExponentOpData>(data))
+        {
+            CreateExponentTransform(group, op);
+        }
+        else if (DynamicPtrCast<const ExposureContrastOpData>(data))
+        {
+            CreateExposureContrastTransform(group, op);
+        }
+        else if (DynamicPtrCast<const FixedFunctionOpData>(data))
+        {
+            CreateFixedFunctionTransform(group, op);
+        }
+        else if (DynamicPtrCast<const GammaOpData>(data))
+        {
+            CreateGammaTransform(group, op);
+        }
+        else if (DynamicPtrCast<const LogOpData>(data))
+        {
+            CreateLogTransform(group, op);
+        }
+        else if (DynamicPtrCast<const Lut1DOpData>(data))
+        {
+            // TODO: implement Lut1DTransform.
+            // BuildLut1DTransform(group, op);
+        }
+        else if (DynamicPtrCast<const Lut3DOpData>(data))
+        {
+            // TODO: implement Lut3DTransform.
+            // BuildLut3DTransform(group, op);
+        }
+        else if (DynamicPtrCast<const MatrixOpData>(data))
+        {
+            CreateMatrixTransform(group, op);
+        }
+        else if (DynamicPtrCast<const RangeOpData>(data))
+        {
+            CreateRangeTransform(group, op);
+        }
+        else
+        {
+            std::ostringstream error;
+            error << "CreateTransform from op. Missing implementation for: "
+                  <<  typeid(op).name();
+
+            throw Exception(error.str().c_str());
+        }
+    }
+
+
 }
 OCIO_NAMESPACE_EXIT

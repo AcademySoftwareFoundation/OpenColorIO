@@ -58,10 +58,6 @@ public:
 
     RangeOp(RangeOpDataRcPtr & range, TransformDirection direction);
 
-    RangeOp(double minInValue, double maxInValue,
-            double minOutValue, double maxOutValue,
-            TransformDirection direction);
-
     virtual ~RangeOp();
 
     TransformDirection getDirection() const noexcept override { return m_direction; }
@@ -104,22 +100,6 @@ RangeOp::RangeOp(RangeOpDataRcPtr & range, TransformDirection direction)
     data() = range;
 }
 
-RangeOp::RangeOp(double minInValue, double maxInValue,
-                 double minOutValue, double maxOutValue,
-                 TransformDirection direction)
-    :   Op()
-    ,   m_direction(direction)
-{
-    if(m_direction == TRANSFORM_DIR_UNKNOWN)
-    {
-        throw Exception(
-            "Cannot create RangeOp with unspecified transform direction.");
-    }
-
-    data().reset(new RangeOpData(BIT_DEPTH_F32, BIT_DEPTH_F32,
-                                 minInValue, maxInValue,
-                                 minOutValue, maxOutValue));
-}
 
 OpRcPtr RangeOp::clone() const
 {
@@ -230,24 +210,13 @@ void RangeOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
 
 
 
-
-void CreateRangeOp(OpRcPtrVec & ops, 
-                   double minInValue, double maxInValue,
-                   double minOutValue, double maxOutValue)
-{
-    CreateRangeOp(ops, 
-                  minInValue, maxInValue,
-                  minOutValue, maxOutValue,
-                  TRANSFORM_DIR_FORWARD);
-}
-
-void CreateRangeOp(OpRcPtrVec & ops, 
+void CreateRangeOp(OpRcPtrVec & ops, const FormatMetadataImpl & info,
                    double minInValue, double maxInValue,
                    double minOutValue, double maxOutValue,
                    TransformDirection direction)
 {
     RangeOpDataRcPtr rangeData =
-        std::make_shared<RangeOpData>(BIT_DEPTH_F32, BIT_DEPTH_F32,
+        std::make_shared<RangeOpData>(BIT_DEPTH_F32, BIT_DEPTH_F32, info,
                                       minInValue, maxInValue, minOutValue, maxOutValue);
 
     CreateRangeOp(ops, rangeData, direction);
@@ -258,6 +227,33 @@ void CreateRangeOp(OpRcPtrVec & ops, RangeOpDataRcPtr & rangeData, TransformDire
     if (rangeData->isNoOp()) return;
 
     ops.push_back(std::make_shared<RangeOp>(rangeData, direction));
+}
+
+void CreateRangeTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
+{
+    auto range = DynamicPtrCast<const RangeOp>(op);
+    if (!range)
+    {
+        throw Exception("CreateRangeTransform: op has to be a RangeOp");
+    }
+    auto rangeTransform = RangeTransform::Create();
+    rangeTransform->setDirection(range->getDirection());
+    rangeTransform->setInputBitDepth(range->getInputBitDepth());
+    rangeTransform->setOutputBitDepth(range->getOutputBitDepth());
+
+    auto rangeData = DynamicPtrCast<const RangeOpData>(op->data());
+    auto & formatMetadata = rangeTransform->getFormatMetadata();
+    auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
+    metadata = rangeData->getFormatMetadata();
+
+    // Can't save non clamping range, they are converted to Matrix.
+    rangeTransform->setStyle(RANGE_CLAMP);
+    rangeTransform->setMinInValue(rangeData->getMinInValue());
+    rangeTransform->setMaxInValue(rangeData->getMaxInValue());
+    rangeTransform->setMinOutValue(rangeData->getMinOutValue());
+    rangeTransform->setMaxOutValue(rangeData->getMaxOutValue());
+
+    group->push_back(rangeTransform);
 }
 
 }
@@ -282,7 +278,11 @@ const float g_error = 1e-7f;
 
 OCIO_ADD_TEST(RangeOps, apply_arbitrary)
 {
-    OCIO::RangeOp r(-0.101, 0.95, 0.194, 1.001, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::RangeOpDataRcPtr range
+        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
+                                              OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), -0.101, 0.95, 0.194, 1.001);
+
+    OCIO::RangeOp r(range, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_CHECK_NO_THROW(r.finalize(OCIO::FINALIZATION_EXACT));
 
     float image[4*3] = { -0.50f,  0.25f, 0.50f, 0.0f,
@@ -309,10 +309,12 @@ OCIO_ADD_TEST(RangeOps, combining)
 {
     OCIO::OpRcPtrVec ops;
 
-    OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1.0);
+    OCIO::CreateRangeOp(ops, OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 0.5, 0.5, 1.0,
+                        OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
-    OCIO::CreateRangeOp(ops, 0., 1., 0.5, 1.5);
+    OCIO::CreateRangeOp(ops, OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 1., 0.5, 1.5,
+                        OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
     OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
 
@@ -329,10 +331,12 @@ OCIO_ADD_TEST(RangeOps, combining_with_inverse)
 {
     OCIO::OpRcPtrVec ops;
 
-    OCIO::CreateRangeOp(ops, 0., 1., 0.5, 1.5);
+    OCIO::CreateRangeOp(ops, OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 1., 0.5, 1.5,
+                        OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
-    OCIO::CreateRangeOp(ops, 0., 1., 0.5, 1.5, OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO::CreateRangeOp(ops, OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 1., 0.5, 1.5,
+                        OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
     OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
 
@@ -349,13 +353,15 @@ OCIO_ADD_TEST(RangeOps, is_inverse)
 {
     OCIO::OpRcPtrVec ops;
 
-    OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1.);
+    OCIO::CreateRangeOp(ops, OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 0.5, 0.5, 1.,
+                        OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_CHECK_EQUAL(ops.size(), 1);
     // Skip finalize so that inverse direction is kept
-    OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1., OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO::CreateRangeOp(ops, OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 0.5, 0.5, 1.,
+                        OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_CHECK_EQUAL(ops.size(), 2);
 
-    const float offset[] = { 1.1f, -1.3f, 0.3f, 0.0f };
+    const double offset[] = { 1.1, -1.3, 0.3, 0.0 };
     OCIO_CHECK_NO_THROW(CreateOffsetOp(ops, offset, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
     OCIO::ConstOpRcPtr op0 = ops[0];
@@ -372,14 +378,16 @@ OCIO_ADD_TEST(RangeOps, is_inverse)
 
     OCIO_CHECK_ASSERT(ops[0]->isInverse(op1));
 
-    OCIO::CreateRangeOp(ops, 0.000002, 0.5, 0.5, 1., OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO::CreateRangeOp(ops, OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0.000002, 0.5, 0.5, 1.,
+                        OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_REQUIRE_EQUAL(ops.size(), 4);
     OCIO::ConstOpRcPtr op3 = ops[3];
 
     OCIO_CHECK_ASSERT(!ops[0]->isInverse(op3));
     OCIO_CHECK_ASSERT(!ops[2]->isInverse(op3));
 
-    OCIO::CreateRangeOp(ops, 0.000002, 0.5, 0.5, 1.);
+    OCIO::CreateRangeOp(ops, OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0.000002, 0.5, 0.5, 1.,
+                        OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 5);
     OCIO::ConstOpRcPtr op4 = ops[4];
 
@@ -387,7 +395,8 @@ OCIO_ADD_TEST(RangeOps, is_inverse)
     OCIO_CHECK_ASSERT(!ops[2]->isInverse(op4));
     OCIO_CHECK_ASSERT(ops[3]->isInverse(op4));
 
-    OCIO::CreateRangeOp(ops, 0.5, 1., 0.000002, 0.5, OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO::CreateRangeOp(ops, OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0.5, 1., 0.000002, 0.5,
+                        OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_REQUIRE_EQUAL(ops.size(), 6);
     OCIO::ConstOpRcPtr op5 = ops[5];
 
@@ -401,10 +410,14 @@ OCIO_ADD_TEST(RangeOps, computed_identifier)
 {
     OCIO::OpRcPtrVec ops;
 
-    OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1.0);
-    OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1.0);
-    OCIO::CreateRangeOp(ops, 0.1, 1., 0.3, 1.9);
-    OCIO::CreateRangeOp(ops, 0.1, 1., 0.3, 1.9, OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO::CreateRangeOp(ops, OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 0.5, 0.5, 1.0,
+                        OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateRangeOp(ops, OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 0.5, 0.5, 1.0,
+                        OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateRangeOp(ops, OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0.1, 1., 0.3, 1.9,
+                        OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateRangeOp(ops, OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0.1, 1., 0.3, 1.9,
+                        OCIO::TRANSFORM_DIR_INVERSE);
     for(OCIO::OpRcPtrVec::reference op : ops) { op->finalize(OCIO::FINALIZATION_EXACT); }
 
     OCIO_REQUIRE_EQUAL(ops.size(), 4);
@@ -414,7 +427,8 @@ OCIO_ADD_TEST(RangeOps, computed_identifier)
     OCIO_CHECK_ASSERT(ops[1]->getCacheID() != ops[2]->getCacheID());
     OCIO_CHECK_ASSERT(ops[2]->getCacheID() != ops[3]->getCacheID());
 
-    OCIO::CreateRangeOp(ops, 0.1, 1., 0.3, 1.90001);
+    OCIO::CreateRangeOp(ops, OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0.1, 1., 0.3, 1.90001,
+                        OCIO::TRANSFORM_DIR_FORWARD);
     for(OCIO::OpRcPtrVec::reference op : ops) { op->finalize(OCIO::FINALIZATION_EXACT); }
 
     OCIO_REQUIRE_EQUAL(ops.size(), 5);
@@ -428,7 +442,7 @@ OCIO_ADD_TEST(RangeOps, bit_depth)
 
     OCIO::RangeOpDataRcPtr range
         = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
-                                              0., 255., -1., 65540.);
+                                              OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 255., -1., 65540.);
 
     OCIO_CHECK_EQUAL(range->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
     OCIO_CHECK_EQUAL(range->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT16);
@@ -449,4 +463,49 @@ OCIO_ADD_TEST(RangeOps, bit_depth)
     OCIO::ConstRangeOpDataRcPtr r = DynamicPtrCast<const OCIO::RangeOpData>(o->data());
     OCIO_CHECK_EQUAL(r->getMinOutValue(), -1.);
 }
+
+OCIO_ADD_TEST(RangeOps, create_transform)
+{
+    OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_INVERSE;
+
+    OCIO::FormatMetadataImpl metadataSource(OCIO::METADATA_ROOT);
+    metadataSource.addAttribute("name", "test");
+
+    OCIO::RangeOpDataRcPtr range
+        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_UINT10,
+                                              OCIO::BIT_DEPTH_UINT8,
+                                              metadataSource,
+                                              0.1, 0.9,
+                                              0.2, 0.7);
+
+    OCIO::OpRcPtrVec ops;
+    OCIO_CHECK_NO_THROW(OCIO::CreateRangeOp(ops, range, direction));
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_REQUIRE_ASSERT(ops[0]);
+
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+
+    OCIO::ConstOpRcPtr op(ops[0]);
+
+    OCIO::CreateRangeTransform(group, op);
+    OCIO_REQUIRE_EQUAL(group->size(), 1);
+    auto transform = group->getTransform(0);
+    OCIO_REQUIRE_ASSERT(transform);
+    auto rTransform = OCIO_DYNAMIC_POINTER_CAST<OCIO::RangeTransform>(transform);
+    OCIO_REQUIRE_ASSERT(rTransform);
+    OCIO_CHECK_EQUAL(rTransform->getInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OCIO_CHECK_EQUAL(rTransform->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+
+    const auto & metadata = rTransform->getFormatMetadata();
+    OCIO_REQUIRE_EQUAL(metadata.getNumAttributes(), 1);
+    OCIO_CHECK_EQUAL(std::string(metadata.getAttributeName(0)), "name");
+    OCIO_CHECK_EQUAL(std::string(metadata.getAttributeValue(0)), "test");
+
+    OCIO_CHECK_EQUAL(rTransform->getDirection(), direction);
+    OCIO_CHECK_EQUAL(rTransform->getMinInValue(), 0.1);
+    OCIO_CHECK_EQUAL(rTransform->getMaxInValue(), 0.9);
+    OCIO_CHECK_EQUAL(rTransform->getMinOutValue(), 0.2);
+    OCIO_CHECK_EQUAL(rTransform->getMaxOutValue(), 0.7);
+}
+
 #endif

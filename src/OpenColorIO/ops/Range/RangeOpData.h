@@ -75,6 +75,7 @@ public:
 
     RangeOpData(BitDepth inBitDepth,  // Requested bit depth for the input
                 BitDepth outBitDepth, // Requested bit depth for the output
+                const FormatMetadataImpl & info,
                 double minInValue,    // Lower bound of the domain
                 double maxInValue,    // Upper bound of the domain
                 double minOutValue,   // Lower bound of the range
