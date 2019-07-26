@@ -36,7 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "DynamicProperty.h"
-#include "fileformats/FormatMetaData.h"
+#include "fileformats/FormatMetadata.h"
 #include "Mutex.h"
 
 OCIO_NAMESPACE_ENTER

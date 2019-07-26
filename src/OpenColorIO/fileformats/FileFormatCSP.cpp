@@ -1335,10 +1335,6 @@ OCIO_ADD_TEST(FileFormatCSP, no_shaper)
 
     //
     std::vector<std::string> osvec;
-    OCIO::pystring::splitlines(output.str(), osvec);
-    std::vector<std::string> resvec;
-    OCIO::pystring::splitlines(bout.str(), resvec);
-    std::vector<std::string> osvec;
     pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
     pystring::splitlines(bout.str(), resvec);

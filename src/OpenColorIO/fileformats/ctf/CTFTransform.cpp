@@ -2141,30 +2141,30 @@ OCIO_ADD_TEST(CTFTransform, load_save_matrix)
                            " id=\"b5cc7aed-d405-4d8b-b64b-382b2341a378\""
                            " name=\"matrix example\">");
     OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(OCIO::pystring::strip(line),
+    OCIO_CHECK_EQUAL(pystring::strip(line),
                      "<Description>Convert output-referred XYZ values to "
                      "linear RGB.</Description>");
     OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(OCIO::pystring::strip(line),
+    OCIO_CHECK_EQUAL(pystring::strip(line),
                      "<InputDescriptor>XYZ</InputDescriptor>");
     OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(OCIO::pystring::strip(line),
+    OCIO_CHECK_EQUAL(pystring::strip(line),
                      "<OutputDescriptor>RGB</OutputDescriptor>");
     OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(OCIO::pystring::strip(line),
+    OCIO_CHECK_EQUAL(pystring::strip(line),
                      "<Matrix id=\"c61daf06-539f-4254-81fc-9800e6d02a37\""
                      " inBitDepth=\"32f\" outBitDepth=\"32f\">");
     OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(OCIO::pystring::strip(line),
+    OCIO_CHECK_EQUAL(pystring::strip(line),
                     "<Description>XYZ to sRGB matrix</Description>");
     OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(OCIO::pystring::strip(line), "<Array dim=\"3 3 3\">");
+    OCIO_CHECK_EQUAL(pystring::strip(line), "<Array dim=\"3 3 3\">");
     OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(OCIO::pystring::strip(line), "3.24              -1.537             -0.4985");
+    OCIO_CHECK_EQUAL(pystring::strip(line), "3.24              -1.537             -0.4985");
     OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(OCIO::pystring::strip(line), "-0.9693               1.876             0.04156");
+    OCIO_CHECK_EQUAL(pystring::strip(line), "-0.9693               1.876             0.04156");
     OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(OCIO::pystring::strip(line), "0.0556              -0.204              1.0573");
+    OCIO_CHECK_EQUAL(pystring::strip(line), "0.0556              -0.204              1.0573");
 }
 
 OCIO_ADD_TEST(CTFTransform, save_matrix_444)
@@ -2319,13 +2319,13 @@ OCIO_ADD_TEST(CTFTransform, legacy_cdl)
                            3.1, 3.2, 3.3 };
     cdl->setSOP(sop);
     cdl->setSat(2.1);
-    OCIO::ConstProcessorRcPtr processor = config->getProcessor(cdl);
     
-    OCIO::GroupTransformRcPtr group = processor->createGroupTransform();
-    OCIO_CHECK_EQUAL(group->size(), 3);
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
 
     // Need to specify an id so that it does not get generated.
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "cdl0");
+
+    group->push_back(cdl);
 
     // Get the processor corresponding to the transform.
     OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
@@ -2380,13 +2380,13 @@ OCIO_ADD_TEST(CTFTransform, cdl_clf)
     cdl->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, "Adding another description");
     cdl->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "TestCDL");
     cdl->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "CDL42");
-    OCIO::ConstProcessorRcPtr processor = config->getProcessor(cdl);
 
-    OCIO::GroupTransformRcPtr group = processor->createGroupTransform();
-    OCIO_CHECK_EQUAL(group->size(), 1);
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
 
     // Need to specify an id so that it does not get generated.
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "cdl1");
+
+    group->push_back(cdl);
 
     auto & info = group->getFormatMetadata().addChildElement(OCIO::METADATA_INFO);
     info.addChildElement("Release", "2019");
@@ -2451,13 +2451,13 @@ OCIO_ADD_TEST(CTFTransform, cdl_ctf)
                            3.1, 3.2, 3.3 };
     cdl->setSOP(sop);
     cdl->setSat(2.1);
-    OCIO::ConstProcessorRcPtr processor = config->getProcessor(cdl);
 
-    OCIO::GroupTransformRcPtr group = processor->createGroupTransform();
-    OCIO_CHECK_EQUAL(group->size(), 1);
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
 
     // Need to specify an id so that it does not get generated.
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "cdl2");
+
+    group->push_back(cdl);
 
     // Get the processor corresponding to the transform.
     OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
@@ -2500,16 +2500,15 @@ OCIO_ADD_TEST(CTFTransform, range_ctf)
     range->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "TestRange");
     range->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "Range42");
 
-    OCIO::ConstProcessorRcPtr processor = config->getProcessor(range);
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
 
-    OCIO::GroupTransformRcPtr group = processor->createGroupTransform();
-    OCIO_CHECK_EQUAL(group->size(), 1);
-    
     // Need to specify an id so that it does not get generated.
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "mat0");
     
     group->getFormatMetadata().addChildElement(OCIO::TAG_INPUT_DESCRIPTOR, "Input descpriptor");
     group->getFormatMetadata().addChildElement(OCIO::TAG_OUTPUT_DESCRIPTOR, "Output descpriptor");
+
+    group->push_back(range);
 
     OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
@@ -2549,13 +2548,11 @@ OCIO_ADD_TEST(CTFTransform, range_clf)
     range->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "TestRange");
     range->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "Range42");
 
-    OCIO::ConstProcessorRcPtr processor = config->getProcessor(range);
-
-    OCIO::GroupTransformRcPtr group = processor->createGroupTransform();
-    OCIO_CHECK_EQUAL(group->size(), 1);
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
     group->getFormatMetadata().addChildElement(OCIO::TAG_INPUT_DESCRIPTOR, "Input descpriptor");
     group->getFormatMetadata().addChildElement(OCIO::TAG_OUTPUT_DESCRIPTOR, "Output descpriptor");
+    group->push_back(range);
 
     OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
@@ -2590,11 +2587,9 @@ OCIO_ADD_TEST(CTFTransform, exponent_ctf)
     const double offset[] = { 0.1, 0.2, 0.1, 0.0 };
     exp->setOffset(offset);
 
-    OCIO::ConstProcessorRcPtr processor = config->getProcessor(exp);
-
-    OCIO::GroupTransformRcPtr group = processor->createGroupTransform();
-    OCIO_CHECK_EQUAL(group->size(), 1);
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
+    group->push_back(exp);
 
     OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
@@ -2625,11 +2620,9 @@ OCIO_ADD_TEST(CTFTransform, fixed_function_ctf)
     const double val = 0.5;
     ff->setParams(&val, 1);
 
-    OCIO::ConstProcessorRcPtr processor = config->getProcessor(ff);
-
-    OCIO::GroupTransformRcPtr group = processor->createGroupTransform();
-    OCIO_CHECK_EQUAL(group->size(), 1);
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDFF42");
+    group->push_back(ff);
 
     OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
@@ -2664,11 +2657,9 @@ OCIO_ADD_TEST(CTFTransform, exposure_contrast_ctf)
 
     ec->makeExposureDynamic();
 
-    OCIO::ConstProcessorRcPtr processor = config->getProcessor(ec);
-
-    OCIO::GroupTransformRcPtr group = processor->createGroupTransform();
-    OCIO_CHECK_EQUAL(group->size(), 1);
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDEC42");
+    group->push_back(ec);
 
     OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
