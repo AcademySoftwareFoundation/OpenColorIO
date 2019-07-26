@@ -1,10 +1,10 @@
 All code by Sony Pictures Imageworks except:
 
 Pystring
-http://code.google.com/p/pystring/
+https://github.com/imageworks/pystring
 
 yaml-cpp
-http://code.google.com/p/yaml-cpp/
+https://github.com/jbeder/yaml-cpp
 
 PTex (Mutex), courtesy of Brent Burley and Disney
 http://ptex.us/

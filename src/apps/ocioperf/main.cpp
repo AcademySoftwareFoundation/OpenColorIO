@@ -37,7 +37,7 @@ namespace OCIO = OCIO_NAMESPACE;
 namespace OIIO = OIIO_NAMESPACE;
 #endif
 
-#include "ilmbase/half.h"
+#include "OpenEXR/half.h"
 #include "oiiohelpers.h"
 
 

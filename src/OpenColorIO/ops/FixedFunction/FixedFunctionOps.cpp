@@ -272,7 +272,7 @@ OCIO_ADD_TEST(FixedFunctionOps, glow03_cpu_engine)
     OCIO::ConstOpCPURcPtr cpuOp = func.getCPUOp();
     const OCIO::OpCPU & c = *cpuOp;
     const std::string typeName(typeid(c).name());
-    OCIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "Renderer_ACES_Glow03_Fwd"));
+    OCIO_CHECK_NE(-1, pystring::find(typeName, "Renderer_ACES_Glow03_Fwd"));
 }
 
 OCIO_ADD_TEST(FixedFunctionOps, darktodim10_cpu_engine)
@@ -292,7 +292,7 @@ OCIO_ADD_TEST(FixedFunctionOps, darktodim10_cpu_engine)
     OCIO::ConstOpCPURcPtr cpuOp = func.getCPUOp();
     const OCIO::OpCPU & c = *cpuOp;
     const std::string typeName(typeid(c).name());
-    OCIO_CHECK_NE(-1, OCIO::pystring::find(typeName, "Renderer_ACES_DarkToDim10_Fwd"));
+    OCIO_CHECK_NE(-1, pystring::find(typeName, "Renderer_ACES_DarkToDim10_Fwd"));
 }
 
 OCIO_ADD_TEST(FixedFunctionOps, aces_red_mod_inv)

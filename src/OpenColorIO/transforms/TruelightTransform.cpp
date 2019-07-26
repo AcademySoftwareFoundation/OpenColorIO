@@ -373,9 +373,9 @@ OCIO_ADD_TEST(TruelightTransform, simpletest)
     
     
     std::vector<std::string> osvec;
-    OCIO::pystring::splitlines(os.str(), osvec);
+    pystring::splitlines(os.str(), osvec);
     std::vector<std::string> referenceconfigvec;
-    OCIO::pystring::splitlines(referenceconfig, referenceconfigvec);
+    pystring::splitlines(referenceconfig, referenceconfigvec);
     
     OCIO_CHECK_EQUAL(osvec.size(), referenceconfigvec.size());
     for(unsigned int i = 0; i < referenceconfigvec.size(); ++i)

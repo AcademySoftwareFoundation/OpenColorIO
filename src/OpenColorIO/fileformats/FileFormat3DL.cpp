@@ -714,13 +714,13 @@ OCIO_ADD_TEST(FileFormat3DL, Bake)
     baker->bake(outputFlame);
 
     std::vector<std::string> osvecFlame;
-    OCIO::pystring::splitlines(outputFlame.str(), osvecFlame);
+    pystring::splitlines(outputFlame.str(), osvecFlame);
 
     std::ostringstream outputLustre;
     baker->setFormat("lustre");
     baker->bake(outputLustre);
     std::vector<std::string> osvecLustre;
-    OCIO::pystring::splitlines(outputLustre.str(), osvecLustre);
+    pystring::splitlines(outputLustre.str(), osvecLustre);
 
     std::ostringstream bout;
     bout << "3DMESH" << "\n";
@@ -739,7 +739,7 @@ OCIO_ADD_TEST(FileFormat3DL, Bake)
     bout << "gamma 1.0" << "\n";
 
     std::vector<std::string> resvec;
-    OCIO::pystring::splitlines(bout.str(), resvec);
+    pystring::splitlines(bout.str(), resvec);
     OCIO_CHECK_EQUAL(resvec.size(), osvecLustre.size());
     OCIO_CHECK_EQUAL(resvec.size() - 4, osvecFlame.size());
 

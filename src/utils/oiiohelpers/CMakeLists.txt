@@ -33,8 +33,8 @@ target_link_libraries(oiiohelpers
         OpenImageIO
 
     PRIVATE
-        ilmbase
-        pystring
+        ilmbase::ilmbase
+        pystring::pystring
 )
 
 install(TARGETS oiiohelpers 

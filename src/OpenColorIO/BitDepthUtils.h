@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ilmbase/half.h"
+#include "OpenEXR/half.h"
 
 
 OCIO_NAMESPACE_ENTER

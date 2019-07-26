@@ -1184,9 +1184,9 @@ OCIO_ADD_TEST(FileFormatResolveCube, Bake1D)
     
     //
     std::vector<std::string> osvec;
-    OCIO::pystring::splitlines(output.str(), osvec);
+    pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
-    OCIO::pystring::splitlines(bout.str(), resvec);
+    pystring::splitlines(bout.str(), resvec);
     OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
     {
@@ -1246,9 +1246,9 @@ OCIO_ADD_TEST(FileFormatResolveCube, Bake3D)
     
     //
     std::vector<std::string> osvec;
-    OCIO::pystring::splitlines(output.str(), osvec);
+    pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
-    OCIO::pystring::splitlines(bout.str(), resvec);
+    pystring::splitlines(bout.str(), resvec);
     OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
     {
@@ -1327,9 +1327,9 @@ OCIO_ADD_TEST(FileFormatResolveCube, Bake1D3D)
     
     //
     std::vector<std::string> osvec;
-    OCIO::pystring::splitlines(output.str(), osvec);
+    pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
-    OCIO::pystring::splitlines(bout.str(), resvec);
+    pystring::splitlines(bout.str(), resvec);
     OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
     {

@@ -17,7 +17,7 @@ tar -xzf boost_${BOOST_VERSION_U}.tar.gz
 
 cd boost_${BOOST_VERSION_U}
 sh bootstrap.sh
-./b2 install -j4 variant=release toolset=gcc \
+sudo ./b2 install -j4 variant=release toolset=gcc \
     --with-system \
     --with-regex \
     --with-filesystem \

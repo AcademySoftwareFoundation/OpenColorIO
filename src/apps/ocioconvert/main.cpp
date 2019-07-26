@@ -57,7 +57,7 @@ namespace OIIO = OIIO_NAMESPACE;
 #endif
 
 #include "glsl.h"
-#include "ilmbase/half.h"
+#include "OpenEXR/half.h"
 #include "oiiohelpers.h"
 
 

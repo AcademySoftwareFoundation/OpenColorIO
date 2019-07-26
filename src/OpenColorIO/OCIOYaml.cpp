@@ -2562,7 +2562,7 @@ OCIO_NAMESPACE_ENTER
             
             if(filename)
             {
-                std::string realfilename = pystring::os::path::abspath(filename);
+                std::string realfilename = AbsPath(filename);
                 std::string configrootdir = pystring::os::path::dirname(realfilename);
                 c->setWorkingDir(configrootdir.c_str());
             }
