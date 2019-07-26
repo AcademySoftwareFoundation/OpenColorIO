@@ -372,10 +372,10 @@ OCIO_ADD_TEST(TruelightTransform, simpletest)
     "    from_reference: !<TruelightTransform> {config_root: /usr/fl/truelight, print: internal-LowContrast, display: sRGB, cube_input: log}\n";
     
     
-    OCIO::StringVec osvec;
-    OCIO::pystring::splitlines(os.str(), osvec);
-    OCIO::StringVec referenceconfigvec;
-    OCIO::pystring::splitlines(referenceconfig, referenceconfigvec);
+    std::vector<std::string> osvec;
+    pystring::splitlines(os.str(), osvec);
+    std::vector<std::string> referenceconfigvec;
+    pystring::splitlines(referenceconfig, referenceconfigvec);
     
     OCIO_CHECK_EQUAL(osvec.size(), referenceconfigvec.size());
     for(unsigned int i = 0; i < referenceconfigvec.size(); ++i)

@@ -36,19 +36,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    namespace pystring
-    {
-    namespace os
-    {
-    namespace path
-    {
-        // This is not currently included in pystring, but we need it
-        // So let's define it locally for now
-        
-        std::string abspath(const std::string & path);
-    }
-    }
-    }
+    // This is not currently included in pystring, but we need it
+    // So let's define it locally for now
+    
+    std::string AbsPath(const std::string & path);
     
     // The EnvMap is ordered by the length of the keys (long -> short). This
     // is so that recursive string expansion will deal with similar prefixed

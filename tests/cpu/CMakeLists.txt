@@ -17,12 +17,12 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 		PUBLIC
 			public_api
 		PRIVATE
-			yamlcpp
-			pystring
-			sampleicc
+			yamlcpp::yamlcpp
+			pystring::pystring
+			sampleicc::sampleicc
 			unittest_data
-			libexpat
-			ilmbase
+			expat::expat
+			ilmbase::ilmbase
 	)
 	if(PRIVATE_INCLUDES)
 		target_include_directories(${TEST_BINARY}

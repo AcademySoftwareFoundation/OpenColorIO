@@ -28,7 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <sstream>
 
-#include "expat/expat.h"
+#include "expat.h"
 #include "fileformats/cdl/CDLParser.h"
 #include "fileformats/cdl/CDLReaderHelper.h"
 #include "fileformats/xmlutils/XMLReaderHelper.h"

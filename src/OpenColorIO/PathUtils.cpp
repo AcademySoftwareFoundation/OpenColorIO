@@ -141,11 +141,9 @@ OCIO_NAMESPACE_ENTER
         g_fastFileHashCache.clear();
     }
     
-    namespace pystring
+    namespace
     {
-    namespace os
-    {
-        std::string getcwd()
+        std::string GetCwd()
         {
 #ifdef WINDOWS
             char path[MAXPATHLEN];
@@ -165,17 +163,13 @@ OCIO_NAMESPACE_ENTER
             return std::string(&current_dir[0]);
 #endif
         }
-        
-    namespace path
+    }
+
+    std::string AbsPath(const std::string & path)
     {
-        std::string abspath(const std::string & path)
-        {
-            std::string p = path;
-            if(!isabs(p)) p = join(getcwd(), p);
-            return normpath(p);
-        }
-    } // namespace path
-    } // namespace os
+        std::string p = path;
+        if(!pystring::os::path::isabs(p)) p = pystring::os::path::join(GetCwd(), p);
+        return pystring::os::path::normpath(p);
     }
     
     namespace

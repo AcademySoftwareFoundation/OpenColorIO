@@ -1904,10 +1904,10 @@ OCIO_ADD_TEST(Config, serialize)
     "      children:\n"
     "        - !<ExponentTransform> {value: [1, 1, 1, 1]}\n";
     
-    OCIO::StringVec osvec;
-    OCIO::pystring::splitlines(os.str(), osvec);
-    OCIO::StringVec PROFILE_OUTvec;
-    OCIO::pystring::splitlines(PROFILE_OUT, PROFILE_OUTvec);
+    std::vector<std::string> osvec;
+    pystring::splitlines(os.str(), osvec);
+    std::vector<std::string> PROFILE_OUTvec;
+    pystring::splitlines(PROFILE_OUT, PROFILE_OUTvec);
     
     OCIO_CHECK_EQUAL(osvec.size(), PROFILE_OUTvec.size());
     for(unsigned int i = 0; i < PROFILE_OUTvec.size(); ++i)
@@ -1941,10 +1941,10 @@ OCIO_ADD_TEST(Config, serialize_searchpath)
             "colorspaces:\n"
             "  []";
 
-        OCIO::StringVec osvec;
-        OCIO::pystring::splitlines(os.str(), osvec);
-        OCIO::StringVec PROFILE_OUTvec;
-        OCIO::pystring::splitlines(PROFILE_OUT, PROFILE_OUTvec);
+        std::vector<std::string> osvec;
+        pystring::splitlines(os.str(), osvec);
+        std::vector<std::string> PROFILE_OUTvec;
+        pystring::splitlines(PROFILE_OUT, PROFILE_OUTvec);
 
         OCIO_CHECK_EQUAL(osvec.size(), PROFILE_OUTvec.size());
         for (unsigned int i = 0; i < PROFILE_OUTvec.size(); ++i)
@@ -1960,8 +1960,8 @@ OCIO_ADD_TEST(Config, serialize_searchpath)
         std::ostringstream os;
         config->serialize(os);
 
-        OCIO::StringVec osvec;
-        OCIO::pystring::splitlines(os.str(), osvec);
+        std::vector<std::string> osvec;
+        pystring::splitlines(os.str(), osvec);
 
         const std::string expected1{ "search_path: a:b:c" };
         OCIO_CHECK_EQUAL(osvec[2], expected1);
@@ -1972,7 +1972,7 @@ OCIO_ADD_TEST(Config, serialize_searchpath)
         config->serialize(os);
 
         osvec.clear();
-        OCIO::pystring::splitlines(os.str(), osvec);
+        pystring::splitlines(os.str(), osvec);
 
         const std::string expected2[] = { "search_path:", "  - a", "  - b", "  - c" };
         OCIO_CHECK_EQUAL(osvec[2], expected2[0]);
@@ -2005,7 +2005,7 @@ OCIO_ADD_TEST(Config, serialize_searchpath)
         config->serialize(os);
 
         osvec.clear();
-        OCIO::pystring::splitlines(os.str(), osvec);
+        pystring::splitlines(os.str(), osvec);
 
         const std::string expected3[] = { "search_path:",
                                           "  - a path with a - in it/",
@@ -2329,8 +2329,8 @@ OCIO_ADD_TEST(Config, version)
 
         std::stringstream ss;
         ss << *config.get();   
-        OCIO::pystring::startswith(
-            OCIO::pystring::lower(ss.str()), "ocio_profile_version: 2.20");
+        pystring::startswith(
+            pystring::lower(ss.str()), "ocio_profile_version: 2.20");
     }
 
     {
@@ -2338,8 +2338,8 @@ OCIO_ADD_TEST(Config, version)
 
         std::stringstream ss;
         ss << *config.get();   
-        OCIO::pystring::startswith(
-            OCIO::pystring::lower(ss.str()), "ocio_profile_version: 2");
+        pystring::startswith(
+            pystring::lower(ss.str()), "ocio_profile_version: 2");
     }
 
     {
@@ -2347,8 +2347,8 @@ OCIO_ADD_TEST(Config, version)
 
         std::stringstream ss;
         ss << *config.get();   
-        OCIO::pystring::startswith(
-            OCIO::pystring::lower(ss.str()), "ocio_profile_version: 1");
+        pystring::startswith(
+            pystring::lower(ss.str()), "ocio_profile_version: 1");
     }
 }
 

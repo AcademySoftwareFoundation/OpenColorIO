@@ -3,4 +3,4 @@
 ChangeLog
 =========
 
-.. include:: ChangeLog
+.. include:: CHANGELOG.md
