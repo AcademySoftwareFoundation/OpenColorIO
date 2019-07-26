@@ -56,15 +56,25 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
 
     # Attempt to find static library first if this is set
     if(ILMBASE_STATIC_LIBRARY)
-        set(_ILMBASE_STATIC 
-            "${CMAKE_STATIC_LIBRARY_PREFIX}Half-${_ILMBASE_LIB_VER}_s${CMAKE_STATIC_LIBRARY_SUFFIX}" 
+        set(_ILMBASE_STATIC
             "${CMAKE_STATIC_LIBRARY_PREFIX}Half${CMAKE_STATIC_LIBRARY_SUFFIX}")
+        if(CMAKE_BUILD_TYPE STREQUAL Debug)
+            list(INSERT _ILMBASE_STATIC 0
+                "${CMAKE_STATIC_LIBRARY_PREFIX}Half-${_ILMBASE_LIB_VER}_s_d${CMAKE_STATIC_LIBRARY_SUFFIX}")
+        else()
+            list(INSERT _ILMBASE_STATIC 0
+                "${CMAKE_STATIC_LIBRARY_PREFIX}Half-${_ILMBASE_LIB_VER}_s${CMAKE_STATIC_LIBRARY_SUFFIX}")
+        endif()
     endif()
 
     # Find library
+    if(CMAKE_BUILD_TYPE STREQUAL Debug)
+        set(_ILMBASE_DEBUG "Half-${_ILMBASE_LIB_VER}_d")
+    endif()
+
     find_library(ILMBASE_LIBRARY
         NAMES
-            ${_ILMBASE_STATIC} "Half-${_ILMBASE_LIB_VER}" Half
+            ${_ILMBASE_STATIC} ${_ILMBASE_DEBUG} "Half-${_ILMBASE_LIB_VER}" Half
         HINTS
             ${_ILMBASE_SEARCH_DIRS}
         PATH_SUFFIXES
@@ -118,8 +128,13 @@ if(NOT ILMBASE_FOUND)
     set(ILMBASE_FOUND TRUE)
     set(ILMBASE_VERSION ${IlmBase_FIND_VERSION})
     set(ILMBASE_INCLUDE_DIR "${_EXT_DIST_ROOT}/include")
-    set(ILMBASE_LIBRARY 
-        "${_EXT_DIST_ROOT}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}Half-${_ILMBASE_LIB_VER}_s${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    if(CMAKE_BUILD_TYPE STREQUAL Debug)
+        set(ILMBASE_LIBRARY
+            "${_EXT_DIST_ROOT}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}Half-${_ILMBASE_LIB_VER}_s_d${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    else()
+        set(ILMBASE_LIBRARY
+            "${_EXT_DIST_ROOT}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}Half-${_ILMBASE_LIB_VER}_s${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    endif()
 
     if(_ILMBASE_TARGET_CREATE)
         if(UNIX)
