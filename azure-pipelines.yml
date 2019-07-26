@@ -68,6 +68,7 @@ jobs:
 
   - template: share/ci/templates/build.yml
     parameters:
+      buildType: Debug
       cxxCompiler: $(cxxCompiler)
       cCompiler: $(cCompiler)
       cmakeOpts: -- -j2
@@ -120,6 +121,7 @@ jobs:
 
   - template: share/ci/templates/build.yml
     parameters:
+      buildType: Debug
       cxxCompiler: $(cxxCompiler)
       cCompiler: $(cCompiler)
       cmakeOpts: -- -j2
@@ -178,6 +180,7 @@ jobs:
 
   - template: share/ci/templates/build.yml
     parameters:
+      buildType: Debug
       cmakeOpts: -- -j2
 
 # ------------------------------------------------------------------------------
@@ -234,3 +237,5 @@ jobs:
         -DPYTHON_EXECUTABLE=$(which python)
 
   - template: share/ci/templates/build.yml
+    parameters:
+      buildType: Debug

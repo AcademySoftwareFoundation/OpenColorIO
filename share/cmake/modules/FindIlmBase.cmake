@@ -61,7 +61,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
             "${CMAKE_STATIC_LIBRARY_PREFIX}Half${CMAKE_STATIC_LIBRARY_SUFFIX}"
         )
         if(CMAKE_BUILD_TYPE STREQUAL Debug)
-            # OpenEXR > 2.3.0
+            # WIN32 <= 2.3.0, All platforms > 2.3.0
             list(INSERT _ILMBASE_STATIC 0
                 "${CMAKE_STATIC_LIBRARY_PREFIX}Half-${_ILMBASE_LIB_VER}_s_d${CMAKE_STATIC_LIBRARY_SUFFIX}")
         endif()
@@ -69,7 +69,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
 
     # Find library
     if(CMAKE_BUILD_TYPE STREQUAL Debug)
-        # OpenEXR > 2.3.0
+        # WIN32 <= 2.3.0, All platforms > 2.3.0
         set(_ILMBASE_DEBUG "Half-${_ILMBASE_LIB_VER}_d")
     endif()
 
@@ -130,7 +130,8 @@ if(NOT ILMBASE_FOUND)
     set(ILMBASE_VERSION ${IlmBase_FIND_VERSION})
     set(ILMBASE_INCLUDE_DIR "${_EXT_DIST_ROOT}/include")
 
-    if(CMAKE_BUILD_TYPE STREQUAL Debug AND ILMBASE_VERSION VERSION_GREATER "2.3.0")
+    if(CMAKE_BUILD_TYPE STREQUAL Debug
+            AND (WIN32 OR ILMBASE_VERSION VERSION_GREATER "2.3.0"))
         set(_ILMBASE_LIB_SUFFIX "_d")
     endif()
     set(ILMBASE_LIBRARY
