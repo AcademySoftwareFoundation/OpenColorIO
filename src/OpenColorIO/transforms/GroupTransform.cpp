@@ -268,7 +268,7 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
 OCIO_ADD_TEST(GroupTransform, basic)
 {
