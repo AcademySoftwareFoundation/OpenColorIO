@@ -59,12 +59,20 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     # Attempt to find static library first if this is set
     if(EXPAT_STATIC_LIBRARY)
         set(_EXPAT_STATIC "${CMAKE_STATIC_LIBRARY_PREFIX}expat${CMAKE_STATIC_LIBRARY_SUFFIX}")
+        if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL Debug)
+            list(INSERT _EXPAT_STATIC 0
+                "${CMAKE_STATIC_LIBRARY_PREFIX}expatd${CMAKE_STATIC_LIBRARY_SUFFIX}")
+        endif()
     endif()
 
     # Find library
+    if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL Debug)
+        set(_EXPAT_DEBUG expatd)
+    endif()
+
     find_library(EXPAT_LIBRARY
         NAMES
-            ${_EXPAT_STATIC} expat libexpat
+            ${_EXPAT_STATIC} ${_EXPAT_DEBUG} expat libexpat
         HINTS
             ${_EXPAT_SEARCH_DIRS}
             ${PC_EXPAT_LIBRARY_DIRS}
@@ -122,8 +130,12 @@ if(NOT EXPAT_FOUND)
     set(EXPAT_FOUND TRUE)
     set(EXPAT_VERSION ${Expat_FIND_VERSION})
     set(EXPAT_INCLUDE_DIR "${_EXT_DIST_ROOT}/include")
-    set(EXPAT_LIBRARY 
-        "${_EXT_DIST_ROOT}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}expat${CMAKE_STATIC_LIBRARY_SUFFIX}")
+
+    if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL Debug)
+        set(_EXPAT_LIB_SUFFIX "d")
+    endif()
+    set(EXPAT_LIBRARY
+        "${_EXT_DIST_ROOT}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}expat${_EXPAT_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
     if(_EXPAT_TARGET_CREATE)
         if(UNIX)
