@@ -1,3 +1,4 @@
+
 find_package(PythonInterp 2.7 REQUIRED)
 find_package(PythonLibs 2.7 REQUIRED)
 
@@ -82,7 +83,6 @@ target_link_libraries(PyOpenColorIO
 		${PYTHON_LIBRARIES}
 		OpenColorIO
 )
-message(STATUS ${PYTHON_LIBRARIES})
 target_compile_definitions(PyOpenColorIO
 	PRIVATE
 		PYOCIO_NAME=PyOpenColorIO

@@ -61,14 +61,12 @@ jobs:
   - template: share/ci/templates/checkout.yml
   - template: share/ci/templates/configure.yml
     parameters:
-      buildType: Debug
       useSSE: $(useSSE)
       cxxCompiler: $(cxxCompiler)
       cCompiler: $(cCompiler)
 
   - template: share/ci/templates/build.yml
     parameters:
-      buildType: Debug
       cxxCompiler: $(cxxCompiler)
       cCompiler: $(cCompiler)
       cmakeOpts: -- -j2
@@ -92,7 +90,7 @@ jobs:
   pool:
     vmImage: 'ubuntu-16.04'
   container: $[ variables['containerImage'] ]
-  #condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
+  condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
 
   steps:
   - template: share/ci/templates/checkout.yml
@@ -108,7 +106,6 @@ jobs:
 
   - template: share/ci/templates/configure.yml
     parameters:
-      buildType: Debug
       installExtPkgs: NONE
       cxxCompiler: $(cxxCompiler)
       cCompiler: $(cCompiler)
@@ -121,7 +118,6 @@ jobs:
 
   - template: share/ci/templates/build.yml
     parameters:
-      buildType: Debug
       cxxCompiler: $(cxxCompiler)
       cCompiler: $(cCompiler)
       cmakeOpts: -- -j2
@@ -172,7 +168,6 @@ jobs:
 
   - template: share/ci/templates/configure.yml
     parameters:
-      buildType: Debug
       cmakeOpts: |
         -DPYTHON_INCLUDE_DIR=$(python-config --prefix)/include/python2.7 \
         -DPYTHON_LIBRARY=$(python-config --prefix)/lib/libpython2.7.dylib \
@@ -180,7 +175,6 @@ jobs:
 
   - template: share/ci/templates/build.yml
     parameters:
-      buildType: Debug
       cmakeOpts: -- -j2
 
 # ------------------------------------------------------------------------------
@@ -226,15 +220,8 @@ jobs:
     displayName: Configure Python
     condition: and(succeeded(), eq(variables['installPython'], 'false'))
 
-  - powershell: Get-ChildItem -Recurse -Path C:\_python
-    condition: and(succeeded(), eq(variables['installPython'], 'true'))
-
-  - powershell: Get-ChildItem -Recurse -Path C:\hostedtoolcache\windows\Python
-    condition: and(succeeded(), eq(variables['installPython'], 'false'))
-
   - template: share/ci/templates/configure.yml
     parameters:
-      buildType: Debug
       buildSharedLibs: $(buildSharedLibs)
       buildDocs: $(buildDocs)
       verbose: ON
@@ -243,5 +230,3 @@ jobs:
         -DPYTHON_EXECUTABLE=$(which python)
 
   - template: share/ci/templates/build.yml
-    parameters:
-      buildType: Debug
