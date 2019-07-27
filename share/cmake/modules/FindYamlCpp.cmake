@@ -58,13 +58,24 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
 
     # Attempt to find static library first if this is set
     if(YAMLCPP_STATIC_LIBRARY)
-        set(_YAMLCPP_STATIC libyaml-cpp.a libyaml-cppmd.lib)
+        if(WIN32)
+            set(_YAMLCPP_STATIC libyaml-cppmd.lib)
+            if(CMAKE_BUILD_TYPE STREQUAL Debug)
+                list(INSERT _YAMLCPP_STATIC 0 libyaml-cppmdd.lib)
+            endif()
+        else()
+            set(_YAMLCPP_STATIC libyaml-cpp.a)
+        endif()
     endif()
 
     # Find library
+    if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL Debug)
+        set(_YAMLCPP_DEBUG yaml-cppd)
+    endif()
+
     find_library(YAMLCPP_LIBRARY
         NAMES 
-            ${_YAMLCPP_STATIC} yaml-cpp
+            ${_YAMLCPP_STATIC} ${_YAMLCPP_DEBUG} yaml-cpp
         HINTS 
             ${_YAMLCPP_SEARCH_DIRS}
             ${PC_YAMLCPP_LIBRARY_DIRS}
@@ -114,7 +125,11 @@ if(NOT YAMLCPP_FOUND)
     set(YAMLCPP_VERSION ${YamlCpp_FIND_VERSION})
     set(YAMLCPP_INCLUDE_DIR "${_EXT_DIST_ROOT}/include")
     if(WIN32)
-        set(YAMLCPP_LIBRARY "${_EXT_DIST_ROOT}/lib/libyaml-cppmd.lib")
+        if(CMAKE_BUILD_TYPE STREQUAL Debug)
+            set(YAMLCPP_LIBRARY "${_EXT_DIST_ROOT}/lib/libyaml-cppmdd.lib")
+        else()
+            set(YAMLCPP_LIBRARY "${_EXT_DIST_ROOT}/lib/libyaml-cppmd.lib")
+        endif()
     else()
         set(YAMLCPP_LIBRARY "${_EXT_DIST_ROOT}/lib/libyaml-cpp.a")
     endif()
