@@ -226,6 +226,12 @@ jobs:
     displayName: Configure Python
     condition: and(succeeded(), eq(variables['installPython'], 'false'))
 
+  - powershell: Get-ChildItem -Recurse -Path C:\_python
+    condition: and(succeeded(), eq(variables['installPython'], 'true'))
+
+  - powershell: Get-ChildItem -Recurse -Path C:\hostedtoolcache\windows\Python
+    condition: and(succeeded(), eq(variables['installPython'], 'false'))
+
   - template: share/ci/templates/configure.yml
     parameters:
       buildType: Debug
