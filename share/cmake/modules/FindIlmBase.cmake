@@ -54,28 +54,31 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
             OpenEXR/include
     )
 
-    # Attempt to find static library first if this is set
+    # Lib names to search for
+    set(_ILMBASE_LIB_NAMES "Half-${_ILMBASE_LIB_VER}" Half)
+    if(CMAKE_BUILD_TYPE STREQUAL Debug)
+        # Prefer Debug lib names
+        list(INSERT _ILMBASE_LIB_NAMES 0 "Half-${_ILMBASE_LIB_VER}_d")
+    endif()
+
     if(ILMBASE_STATIC_LIBRARY)
-        set(_ILMBASE_STATIC
+        # Prefer static lib names
+        set(_ILMBASE_STATIC_LIB_NAMES 
             "${CMAKE_STATIC_LIBRARY_PREFIX}Half-${_ILMBASE_LIB_VER}_s${CMAKE_STATIC_LIBRARY_SUFFIX}"
             "${CMAKE_STATIC_LIBRARY_PREFIX}Half${CMAKE_STATIC_LIBRARY_SUFFIX}"
         )
         if(CMAKE_BUILD_TYPE STREQUAL Debug)
-            # WIN32 <= 2.3.0, All platforms > 2.3.0
-            list(INSERT _ILMBASE_STATIC 0
+            # Prefer static Debug lib names
+            list(INSERT _ILMBASE_STATIC_LIB_NAMES 0
                 "${CMAKE_STATIC_LIBRARY_PREFIX}Half-${_ILMBASE_LIB_VER}_s_d${CMAKE_STATIC_LIBRARY_SUFFIX}")
         endif()
     endif()
 
     # Find library
-    if(CMAKE_BUILD_TYPE STREQUAL Debug)
-        # WIN32 <= 2.3.0, All platforms > 2.3.0
-        set(_ILMBASE_DEBUG "Half-${_ILMBASE_LIB_VER}_d")
-    endif()
-
     find_library(ILMBASE_LIBRARY
         NAMES
-            ${_ILMBASE_STATIC} ${_ILMBASE_DEBUG} "Half-${_ILMBASE_LIB_VER}" Half
+            ${_ILMBASE_STATIC_LIB_NAMES} 
+            ${_ILMBASE_LIB_NAMES}
         HINTS
             ${_ILMBASE_SEARCH_DIRS}
         PATH_SUFFIXES
@@ -130,6 +133,9 @@ if(NOT ILMBASE_FOUND)
     set(ILMBASE_VERSION ${IlmBase_FIND_VERSION})
     set(ILMBASE_INCLUDE_DIR "${_EXT_DIST_ROOT}/include")
 
+    # Set the expected library name. "_d" is appended to Debug Windows builds 
+    # <= OpenEXR 2.3.0. In newer versions, it is appended to Debug libs on
+    # all platforms.
     if(CMAKE_BUILD_TYPE STREQUAL Debug
             AND (WIN32 OR ILMBASE_VERSION VERSION_GREATER "2.3.0"))
         set(_ILMBASE_LIB_SUFFIX "_d")
