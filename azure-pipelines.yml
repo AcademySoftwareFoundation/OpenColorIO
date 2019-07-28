@@ -256,9 +256,10 @@ jobs:
 
   - template: share/ci/templates/configure.yml
     parameters:
-      buildSharedLibs: $(buildSharedLibs)
-      buildDocs: $(buildDocs)
       buildType: $(buildType)
+      buildSharedLibs: $(buildSharedLibs)
+      buildPython: $(buildPython)
+      buildDocs: $(buildDocs)
       verbose: ON
       cmakeOpts: |
         -DCMAKE_GENERATOR_PLATFORM=x64 \
