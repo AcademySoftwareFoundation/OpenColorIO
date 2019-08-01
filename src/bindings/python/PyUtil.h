@@ -54,7 +54,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #ifdef WIN32
-    #define EXPORT_SYMBOL _declspec(dllexport)
+    #define EXPORT_SYMBOL __declspec(dllexport)
 #else
     #define EXPORT_SYMBOL
 #endif
