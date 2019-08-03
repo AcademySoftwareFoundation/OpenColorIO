@@ -30,12 +30,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_PLATFORM_H
 #define INCLUDED_OCIO_PLATFORM_H
 
-// platform-specific includes
-#if defined(_WIN32)
-#ifndef WINDOWS
-#define WINDOWS
-#endif
-
 #define _CRT_NONSTDC_NO_DEPRECATE 1
 #define _CRT_SECURE_NO_DEPRECATE 1
 #define NOMINMAX 1
@@ -69,7 +63,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assert.h>
 
 // missing functions on Windows
-#ifdef WINDOWS
+#ifdef _WIN32
 #define snprintf sprintf_s
 #define strtok_r strtok_s
 #define sscanf sscanf_s
@@ -85,7 +79,7 @@ inline double log2(double x)
 
 #else
 typedef off_t FilePos;
-#endif // WINDOWS
+#endif // _WIN32
     
 
 OCIO_NAMESPACE_ENTER
