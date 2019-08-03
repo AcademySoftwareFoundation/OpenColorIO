@@ -61,7 +61,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 #include <pthread.h>
 
-#endif // defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
+#endif // defined(_WIN32)
 
 // general includes
 #include <stdio.h>
