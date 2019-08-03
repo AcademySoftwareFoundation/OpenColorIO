@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#ifndef WIN32
+#ifndef _WIN32
 
 // fwd declare yaml-cpp visibility
 #pragma GCC visibility push(hidden)
@@ -72,14 +72,14 @@ namespace YAML {
 
 #endif
 
-#ifdef WIN32
+#ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable: 4146 )
 #endif
 
 #include <yaml-cpp/yaml.h>
 
-#ifdef WIN32
+#ifdef _MSC_VER
 #pragma warning( pop )
 #endif
 

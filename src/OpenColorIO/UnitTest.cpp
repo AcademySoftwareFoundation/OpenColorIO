@@ -28,14 +28,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef OCIO_UNIT_TEST
 
-#ifndef WIN32
+#ifndef _WIN32
 #pragma GCC visibility push(default)
 #endif
 
 #include "UnitTest.h" // OIIO unit tests header
 OCIO_TEST_APP(OpenColorIO_Core_Unit_Tests)
 
-#ifndef WIN32
+#ifndef _WIN32
 #pragma GCC visibility pop
 #endif
 
