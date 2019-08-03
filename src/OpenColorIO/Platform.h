@@ -30,6 +30,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_PLATFORM_H
 #define INCLUDED_OCIO_PLATFORM_H
 
+// platform-specific includes
+#if defined(_WIN32)
+
 #define _CRT_NONSTDC_NO_DEPRECATE 1
 #define _CRT_SECURE_NO_DEPRECATE 1
 #define NOMINMAX 1
@@ -38,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define WIN32_LEAN_AND_MEAN
 #endif
 // windows - defined for both Win32 and Win64
+
 #include <windows.h>
 
 #include <malloc.h>
