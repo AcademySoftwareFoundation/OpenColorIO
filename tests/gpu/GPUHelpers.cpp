@@ -33,7 +33,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "GPUHelpers.h"
 
 
-#if defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
+#if defined(_WIN32)
 #undef WINDOWS
 #define WINDOWS
 #endif

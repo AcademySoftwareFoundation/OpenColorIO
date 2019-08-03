@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define INCLUDED_OCIO_PLATFORM_H
 
 // platform-specific includes
-#if defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
+#if defined(_WIN32)
 #ifndef WINDOWS
 #define WINDOWS
 #endif
