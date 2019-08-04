@@ -1,3 +1,8 @@
+<!--
+SPDX-License-Identifier: CC-BY-4.0
+Copyright Contributors to the OpenColorIO Project.
+-->
+
 Corporate Contributor License Agreement ("Agreement")
 
 Thank you for your interest in the OpenColorIO Project a Series of LF

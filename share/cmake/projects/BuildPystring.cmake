@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+
 project(pystring)
 
 cmake_minimum_required(VERSION 3.10)

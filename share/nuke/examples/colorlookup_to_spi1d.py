@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
 
 def WriteSPI1D(filename, fromMin, fromMax, data):
     f = file(filename,'w')

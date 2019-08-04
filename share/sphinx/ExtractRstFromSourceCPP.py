@@ -1,4 +1,6 @@
 #!/usr/bin/python
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
 
 """
 Small Script to extract reStructuredText from OCIO headers

@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
 
 """
 This script contains mock OpenColorIO classes which define the __doc__
