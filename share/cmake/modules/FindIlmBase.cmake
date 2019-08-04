@@ -27,6 +27,8 @@ endif()
 # IlmBase components may have the version in their name
 set(_ILMBASE_LIB_VER "${IlmBase_FIND_VERSION_MAJOR}_${IlmBase_FIND_VERSION_MINOR}")
 
+string(TOLOWER ${CMAKE_BUILD_TYPE} _BUILD_TYPE_LOWER)
+
 ###############################################################################
 ### Try to find package ###
 
@@ -56,7 +58,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
 
     # Lib names to search for
     set(_ILMBASE_LIB_NAMES "Half-${_ILMBASE_LIB_VER}" Half)
-    if(CMAKE_BUILD_TYPE STREQUAL Debug)
+    if(_BUILD_TYPE_LOWER STREQUAL debug)
         # Prefer Debug lib names
         list(INSERT _ILMBASE_LIB_NAMES 0 "Half-${_ILMBASE_LIB_VER}_d")
     endif()
@@ -67,7 +69,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
             "${CMAKE_STATIC_LIBRARY_PREFIX}Half-${_ILMBASE_LIB_VER}_s${CMAKE_STATIC_LIBRARY_SUFFIX}"
             "${CMAKE_STATIC_LIBRARY_PREFIX}Half${CMAKE_STATIC_LIBRARY_SUFFIX}"
         )
-        if(CMAKE_BUILD_TYPE STREQUAL Debug)
+        if(_BUILD_TYPE_LOWER STREQUAL debug)
             # Prefer static Debug lib names
             list(INSERT _ILMBASE_STATIC_LIB_NAMES 0
                 "${CMAKE_STATIC_LIBRARY_PREFIX}Half-${_ILMBASE_LIB_VER}_s_d${CMAKE_STATIC_LIBRARY_SUFFIX}")
@@ -136,7 +138,7 @@ if(NOT ILMBASE_FOUND)
     # Set the expected library name. "_d" is appended to Debug Windows builds 
     # <= OpenEXR 2.3.0. In newer versions, it is appended to Debug libs on
     # all platforms.
-    if(CMAKE_BUILD_TYPE STREQUAL Debug
+    if(_BUILD_TYPE_LOWER STREQUAL debug
             AND (WIN32 OR ILMBASE_VERSION VERSION_GREATER "2.3.0"))
         set(_ILMBASE_LIB_SUFFIX "_d")
     endif()
