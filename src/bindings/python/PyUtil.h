@@ -53,8 +53,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PyNumber_Int        PyNumber_Long
 #endif
 
-#ifdef WIN32
-    #define EXPORT_SYMBOL _declspec(dllexport)
+#ifdef _WIN32
+    #define EXPORT_SYMBOL __declspec(dllexport)
 #else
     #define EXPORT_SYMBOL
 #endif

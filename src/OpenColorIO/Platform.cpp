@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Platform.h"
 
-#ifndef WINDOWS
+#ifndef _WIN32
 #include <chrono>
 #include <random>
 #endif
@@ -48,7 +48,7 @@ namespace Platform
 {
 void Getenv (const char * name, std::string & value)
 {
-#ifdef WINDOWS
+#ifdef _WIN32
     if(uint32_t size = GetEnvironmentVariable(name, nullptr, 0))
     {
         std::vector<char> buffer(size);
@@ -67,7 +67,7 @@ void Getenv (const char * name, std::string & value)
 
 int Strcasecmp(const char * str1, const char * str2)
 {
-#ifdef WINDOWS
+#ifdef _WIN32
     return ::_stricmp(str1, str2);
 #else
     return ::strcasecmp(str1, str2);
@@ -76,7 +76,7 @@ int Strcasecmp(const char * str1, const char * str2)
 
 int Strncasecmp(const char * str1, const char * str2, size_t n)
 {
-#ifdef WINDOWS
+#ifdef _WIN32
     return ::_strnicmp(str1, str2, n);
 #else
     return ::strncasecmp(str1, str2, n);
@@ -85,7 +85,7 @@ int Strncasecmp(const char * str1, const char * str2, size_t n)
 
 void* AlignedMalloc(size_t size, size_t alignment)
 {
-#ifdef WINDOWS
+#ifdef _WIN32
     void* memBlock = _aligned_malloc(size, alignment);
     return memBlock;
 #else
@@ -97,7 +97,7 @@ void* AlignedMalloc(size_t size, size_t alignment)
 
 void AlignedFree(void* memBlock)
 {
-#ifdef WINDOWS
+#ifdef _WIN32
     _aligned_free(memBlock);
 #else
     free(memBlock);
@@ -108,7 +108,7 @@ void CreateTempFilename(std::string & filename, const std::string & filenameExt)
 {
     // Note: Because of security issue, tmpnam could not be used.
 
-#ifdef WINDOWS
+#ifdef _WIN32
 
     char tmpFilename[L_tmpnam];
     if(tmpnam_s(tmpFilename))
@@ -195,7 +195,7 @@ OCIO_ADD_TEST(Platform, putenv)
         OCIO::Platform::Getenv("MY_DUMMY_ENV", env);
         OCIO_CHECK_ASSERT(env.empty());
     }
-#ifdef WINDOWS
+#ifdef _WIN32
     {
         SetEnvironmentVariable("MY_WINDOWS_DUMMY_ENV", "1");
         std::string env;
