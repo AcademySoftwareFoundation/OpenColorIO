@@ -24,8 +24,6 @@ if(NOT TARGET yamlcpp::yamlcpp)
     set(_YAMLCPP_TARGET_CREATE TRUE)
 endif()
 
-string(TOLOWER ${CMAKE_BUILD_TYPE} _BUILD_TYPE_LOWER)
-
 ###############################################################################
 ### Try to find package ###
 
@@ -60,7 +58,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
 
     # Lib names to search for
     set(_YAMLCPP_LIB_NAMES yaml-cpp)
-    if(WIN32 AND _BUILD_TYPE_LOWER STREQUAL debug)
+    if(WIN32 AND BUILD_TYPE_DEBUG)
         # Prefer Debug lib names (Windows only)
         list(INSERT _YAMLCPP_LIB_NAMES 0 yaml-cppd)
     endif()
@@ -72,7 +70,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         endif()
         set(_YAMLCPP_STATIC_LIB_NAMES 
             "libyaml-cpp${_YAMLCPP_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
-        if(WIN32 AND _BUILD_TYPE_LOWER STREQUAL debug)
+        if(WIN32 AND BUILD_TYPE_DEBUG)
             # Prefer static Debug lib names (Windows only)
             list(INSERT _YAMLCPP_STATIC_LIB_NAMES 0
                 "libyaml-cpp${_YAMLCPP_LIB_SUFFIX}d${CMAKE_STATIC_LIBRARY_SUFFIX}")
@@ -136,7 +134,7 @@ if(NOT YAMLCPP_FOUND)
     # Set the expected library name
     if(WIN32)
         set(_YAMLCPP_LIB_SUFFIX "md")
-        if(_BUILD_TYPE_LOWER STREQUAL debug)
+        if(BUILD_TYPE_DEBUG)
             string(APPEND _YAMLCPP_LIB_SUFFIX "d")
         endif()
     endif()

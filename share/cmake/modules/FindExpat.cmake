@@ -24,8 +24,6 @@ if(NOT TARGET expat::expat)
     set(_EXPAT_TARGET_CREATE TRUE)
 endif()
 
-string(TOLOWER ${CMAKE_BUILD_TYPE} _BUILD_TYPE_LOWER)
-
 ###############################################################################
 ### Try to find package ###
 
@@ -60,7 +58,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
 
     # Lib names to search for
     set(_EXPAT_LIB_NAMES expat libexpat)
-    if(WIN32 AND _BUILD_TYPE_LOWER STREQUAL debug)
+    if(WIN32 AND BUILD_TYPE_DEBUG)
         # Prefer Debug lib names (Windows only)
         list(INSERT _EXPAT_LIB_NAMES 0 expatd)
     endif()
@@ -69,7 +67,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         # Prefer static lib names
         set(_EXPAT_STATIC_LIB_NAMES 
             "${CMAKE_STATIC_LIBRARY_PREFIX}expat${CMAKE_STATIC_LIBRARY_SUFFIX}")
-        if(WIN32 AND _BUILD_TYPE_LOWER STREQUAL debug)
+        if(WIN32 AND BUILD_TYPE_DEBUG)
             # Prefer static Debug lib names (Windows only)
             list(INSERT _EXPAT_STATIC_LIB_NAMES 0
                 "${CMAKE_STATIC_LIBRARY_PREFIX}expatd${CMAKE_STATIC_LIBRARY_SUFFIX}")
@@ -140,7 +138,7 @@ if(NOT EXPAT_FOUND)
     set(EXPAT_INCLUDE_DIR "${_EXT_DIST_ROOT}/include")
 
     # Set the expected library name
-    if(WIN32 AND _BUILD_TYPE_LOWER STREQUAL debug)
+    if(WIN32 AND BUILD_TYPE_DEBUG)
         set(_EXPAT_LIB_SUFFIX "d")
     endif()
     set(EXPAT_LIBRARY
