@@ -40,7 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Platform.h"
 #include "pystring/pystring.h"
 
-#if !defined(WINDOWS)
+#if !defined(_WIN32)
 #include <sys/param.h>
 #else
 #include <direct.h>
@@ -50,7 +50,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #if defined(__APPLE__) && !defined(__IPHONE__)
 #include <crt_externs.h> // _NSGetEnviron()
 #include <unistd.h>
-#elif !defined(WINDOWS)
+#elif !defined(_WIN32)
 #include <unistd.h>
 extern char **environ;
 #endif
@@ -145,7 +145,7 @@ OCIO_NAMESPACE_ENTER
     {
         std::string GetCwd()
         {
-#ifdef WINDOWS
+#ifdef _WIN32
             char path[MAXPATHLEN];
             _getcwd(path, MAXPATHLEN);
             return path;
