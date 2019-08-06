@@ -828,7 +828,7 @@ OCIO_NAMESPACE_EXIT
 
 #include <cstring>
 #include <cstdlib>
-#ifndef WIN32
+#ifndef _WIN32
 #include <sys/time.h>
 #endif
 

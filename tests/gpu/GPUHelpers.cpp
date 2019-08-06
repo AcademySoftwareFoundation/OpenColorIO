@@ -32,18 +32,10 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #include "GPUHelpers.h"
 
-
-#if defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
-#undef WINDOWS
-#define WINDOWS
-#endif
-
-
-
 #include <stdio.h>
 #include <fstream>
 
-#if !defined(WINDOWS)
+#if !defined(_WIN32)
 #include <sstream>
 #include <stdlib.h>
 #include <time.h>
@@ -58,7 +50,7 @@ std::string createTempFile(const std::string& fileExt, const std::string& fileCo
 
     std::string filename;
 
-#ifdef WINDOWS
+#ifdef _WIN32
 
     char tmpFilename[L_tmpnam];
     if(tmpnam_s(tmpFilename))

@@ -74,7 +74,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			#define OCIOEXPORT
 			#define OCIOHIDDEN
 		#endif
-	#elif defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
+	#elif defined(_WIN32)
 		// Windows requires you to export from the main library and then import in any others
 		#if defined OpenColorIO_EXPORTS
 			#define OCIOEXPORT __declspec(dllexport)
@@ -92,7 +92,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 // Windows defines these troublesome macros that collide with std::limits
-#if defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
+#if defined(_WIN32)
 #undef min
 #undef max
 #endif

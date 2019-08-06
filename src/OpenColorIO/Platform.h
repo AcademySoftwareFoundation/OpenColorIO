@@ -31,10 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define INCLUDED_OCIO_PLATFORM_H
 
 // platform-specific includes
-#if defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
-#ifndef WINDOWS
-#define WINDOWS
-#endif
+#if defined(_WIN32)
 
 #define _CRT_NONSTDC_NO_DEPRECATE 1
 #define _CRT_SECURE_NO_DEPRECATE 1
@@ -44,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define WIN32_LEAN_AND_MEAN
 #endif
 // windows - defined for both Win32 and Win64
+
 #include <windows.h>
 
 #include <malloc.h>
@@ -61,7 +59,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 #include <pthread.h>
 
-#endif // defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
+#endif // defined(_WIN32)
 
 // general includes
 #include <stdio.h>
@@ -69,7 +67,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assert.h>
 
 // missing functions on Windows
-#ifdef WINDOWS
+#ifdef _WIN32
 #define snprintf sprintf_s
 #define strtok_r strtok_s
 #define sscanf sscanf_s
@@ -85,7 +83,7 @@ inline double log2(double x)
 
 #else
 typedef off_t FilePos;
-#endif // WINDOWS
+#endif // _WIN32
     
 
 OCIO_NAMESPACE_ENTER
