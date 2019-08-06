@@ -1,9 +1,7 @@
-<!--
-SPDX-License-Identifier: BSD-3-Clause
-Copyright Contributors to the OpenColorIO Project.
--->
+<!-- SPDX-License-Identifier: CC-BY-4.0 -->
+<!-- Copyright Contributors to the OpenColorIO Project. -->
 
-unittestsfiles.tar.gz
----------------------
+files
+-----
 
 Contains files used by unit tests.

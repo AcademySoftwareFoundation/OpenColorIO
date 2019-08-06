@@ -1,7 +1,5 @@
-<!--
-SPDX-License-Identifier: CC-BY-4.0
-Copyright Contributors to the OpenColorIO Project.
--->
+<!-- SPDX-License-Identifier: CC-BY-4.0 -->
+<!-- Copyright Contributors to the OpenColorIO Project. -->
 
 **Version 1.1.1 (April 2 2019):**
     * Added optional compatibility for building apps with OpenImageIO 1.9+
