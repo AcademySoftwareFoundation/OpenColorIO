@@ -56,15 +56,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // If supported, define OCIOEXPORT, OCIOHIDDEN
 // (used to choose which symbols to export from OpenColorIO)
-#if defined __GNUC__
-    #if __GNUC__ >= 4
-        #define OCIOEXPORT __attribute__ ((visibility("default")))
-        #define OCIOHIDDEN __attribute__ ((visibility("hidden")))
-    #else
-        #define OCIOEXPORT
-        #define OCIOHIDDEN
-    #endif
-#elif defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
+#if defined(_WIN32)
     // Windows requires you to export from the main library and then import in any others
     // only when compiling a dynamic library (i.e. DLL)
 	#ifndef OpenColorIO_SKIP_IMPORTS
@@ -77,6 +69,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		#define OCIOEXPORT
 	#endif
     #define OCIOHIDDEN
+#elif defined __GNUC__
+    #if __GNUC__ >= 4
+        #define OCIOEXPORT __attribute__ ((visibility("default")))
+        #define OCIOHIDDEN __attribute__ ((visibility("hidden")))
+    #else
+        #define OCIOEXPORT
+        #define OCIOHIDDEN
+    #endif
 #else // Others platforms not supported atm
     #define OCIOEXPORT
     #define OCIOHIDDEN
