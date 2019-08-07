@@ -9,6 +9,7 @@ parameters:
   buildSharedLibs: ON
   buildTests: ON
   buildGpuTests: OFF
+  buildPython: ON
   buildDocs: ON
   useSSE: ON
   installExtPkgs: ALL
@@ -43,6 +44,7 @@ steps:
           -DBUILD_SHARED_LIBS=${{ parameters.buildSharedLibs }} \
           -DOCIO_BUILD_TESTS=${{ parameters.buildTests }} \
           -DOCIO_BUILD_GPU_TESTS=${{ parameters.buildGpuTests }} \
+          -DOCIO_BUILD_PYTHON=${{ parameters.buildPython }} \
           -DOCIO_BUILD_DOCS=${{ parameters.buildDocs }} \
           -DOCIO_USE_SSE=${{ parameters.useSSE }} \
           -DOCIO_INSTALL_EXT_PACKAGES=${{ parameters.installExtPkgs }} \

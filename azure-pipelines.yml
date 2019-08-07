@@ -44,16 +44,25 @@ jobs:
       CentOS 7 VFX CY2019:
         containerImage: aswfstaging/ci-ocio:2019
         useSSE: ON
+        buildType: Release
         cxxCompiler: g++
         cCompiler: gcc
       CentOS 7 VFX CY2019 (No SSE):
         containerImage: aswfstaging/ci-ocio:2019
         useSSE: OFF
+        buildType: Release
         cxxCompiler: g++
         cCompiler: gcc
       CentOS 7 Clang 7:
         containerImage: aswfstaging/ci-ocio:2019
         useSSE: ON
+        buildType: Release
+        cxxCompiler: clang++
+        cCompiler: clang
+      CentOS 7 Clang 7 (Debug):
+        containerImage: aswfstaging/ci-ocio:2019
+        useSSE: ON
+        buildType: Debug
         cxxCompiler: clang++
         cCompiler: clang
   pool:
@@ -65,11 +74,13 @@ jobs:
   - template: share/ci/templates/configure.yml
     parameters:
       useSSE: $(useSSE)
+      buildType: $(buildType)
       cxxCompiler: $(cxxCompiler)
       cCompiler: $(cCompiler)
 
   - template: share/ci/templates/build.yml
     parameters:
+      buildType: $(buildType)
       cxxCompiler: $(cxxCompiler)
       cCompiler: $(cCompiler)
       cmakeOpts: -- -j2
@@ -157,8 +168,13 @@ jobs:
     matrix:
       10.14 AppleClang 10.0:
         agentImage: 'macOS-10.14'
+        buildType: Release
+      10.14 AppleClang 10.0 (Debug):
+        agentImage: 'macOS-10.14'
+        buildType: Debug
       10.13 AppleClang 10.0:
         agentImage: 'macOS-10.13'
+        buildType: Release
   pool:
     vmImage: $(agentImage)
 
@@ -171,6 +187,7 @@ jobs:
 
   - template: share/ci/templates/configure.yml
     parameters:
+      buildType: $(buildType)
       cmakeOpts: |
         -DPYTHON_INCLUDE_DIR=$(python-config --prefix)/include/python2.7 \
         -DPYTHON_LIBRARY=$(python-config --prefix)/lib/libpython2.7.dylib \
@@ -178,27 +195,44 @@ jobs:
 
   - template: share/ci/templates/build.yml
     parameters:
+      buildType: $(buildType)
       cmakeOpts: -- -j2
 
 # ------------------------------------------------------------------------------
 # Windows
 # ------------------------------------------------------------------------------
+# TODO: Install pythonXX_d.lib (or work around it being needed) to support Debug
+# build testing with Python bindings and docs enabled.
+
 - job: Windows
   strategy:
     matrix:
       2016 MSVC 14.16:
         agentImage: 'vs2017-win2016'
+        buildType: Release
         buildSharedLibs: ON
+        buildPython: ON
         buildDocs: ON
         installPython: false
       2016 MSVC 14.16 (Static):
         agentImage: 'vs2017-win2016'
+        buildType: Release
         buildSharedLibs: OFF
+        buildPython: ON
+        buildDocs: OFF
+        installPython: false
+      2016 MSVC 14.16 (Debug):
+        agentImage: 'vs2017-win2016'
+        buildType: Debug
+        buildSharedLibs: ON
+        buildPython: OFF
         buildDocs: OFF
         installPython: false
       2012 MSVC 14.0:
         agentImage: 'vs2015-win2012r2'
+        buildType: Release
         buildSharedLibs: ON
+        buildPython: ON
         buildDocs: ON
         installPython: true
   pool:
@@ -225,7 +259,9 @@ jobs:
 
   - template: share/ci/templates/configure.yml
     parameters:
+      buildType: $(buildType)
       buildSharedLibs: $(buildSharedLibs)
+      buildPython: $(buildPython)
       buildDocs: $(buildDocs)
       verbose: ON
       cmakeOpts: |
@@ -233,3 +269,5 @@ jobs:
         -DPYTHON_EXECUTABLE=$(which python)
 
   - template: share/ci/templates/build.yml
+    parameters:
+      buildType: $(buildType)

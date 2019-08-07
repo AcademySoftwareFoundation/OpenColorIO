@@ -59,15 +59,32 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
             yaml-cpp/include
     )
 
-    # Attempt to find static library first if this is set
+    # Lib names to search for
+    set(_YAMLCPP_LIB_NAMES yaml-cpp)
+    if(WIN32 AND BUILD_TYPE_DEBUG)
+        # Prefer Debug lib names (Windows only)
+        list(INSERT _YAMLCPP_LIB_NAMES 0 yaml-cppd)
+    endif()
+
     if(YAMLCPP_STATIC_LIBRARY)
-        set(_YAMLCPP_STATIC libyaml-cpp.a libyaml-cppmd.lib)
+        # Prefer static lib names
+        if(WIN32)
+            set(_YAMLCPP_LIB_SUFFIX "md")
+        endif()
+        set(_YAMLCPP_STATIC_LIB_NAMES 
+            "libyaml-cpp${_YAMLCPP_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+        if(WIN32 AND BUILD_TYPE_DEBUG)
+            # Prefer static Debug lib names (Windows only)
+            list(INSERT _YAMLCPP_STATIC_LIB_NAMES 0
+                "libyaml-cpp${_YAMLCPP_LIB_SUFFIX}d${CMAKE_STATIC_LIBRARY_SUFFIX}")
+        endif()
     endif()
 
     # Find library
     find_library(YAMLCPP_LIBRARY
         NAMES 
-            ${_YAMLCPP_STATIC} yaml-cpp
+            ${_YAMLCPP_STATIC_LIB_NAMES}
+            ${_YAMLCPP_LIB_NAMES}
         HINTS 
             ${_YAMLCPP_SEARCH_DIRS}
             ${PC_YAMLCPP_LIBRARY_DIRS}
@@ -116,11 +133,16 @@ if(NOT YAMLCPP_FOUND)
     set(YAMLCPP_FOUND TRUE)
     set(YAMLCPP_VERSION ${YamlCpp_FIND_VERSION})
     set(YAMLCPP_INCLUDE_DIR "${_EXT_DIST_ROOT}/include")
+
+    # Set the expected library name
     if(WIN32)
-        set(YAMLCPP_LIBRARY "${_EXT_DIST_ROOT}/lib/libyaml-cppmd.lib")
-    else()
-        set(YAMLCPP_LIBRARY "${_EXT_DIST_ROOT}/lib/libyaml-cpp.a")
+        set(_YAMLCPP_LIB_SUFFIX "md")
+        if(BUILD_TYPE_DEBUG)
+            string(APPEND _YAMLCPP_LIB_SUFFIX "d")
+        endif()
     endif()
+    set(YAMLCPP_LIBRARY 
+        "${_EXT_DIST_ROOT}/lib/libyaml-cpp${_YAMLCPP_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
     if(_YAMLCPP_TARGET_CREATE)
         if("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU"
