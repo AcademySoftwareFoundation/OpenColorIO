@@ -37,6 +37,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Disable any compiler specific C++ extensions.
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+set(_BUILD_TYPE_DEBUG OFF)
+if(CMAKE_BUILD_TYPE MATCHES "[Dd][Ee][Bb][Uu][Gg]")
+    set(_BUILD_TYPE_DEBUG ON)
+endif()
+set(BUILD_TYPE_DEBUG ${_BUILD_TYPE_DEBUG} CACHE BOOL "Case-insensitive CMAKE_BUILD_TYPE Debug equality flag.")
+
 ###############################################################################
 # Components to build
 
