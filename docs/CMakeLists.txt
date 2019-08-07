@@ -3,6 +3,8 @@ if(NOT OCIO_BUILD_PYTHON)
     message(FATAL_ERROR "Doc generation requires that the python bindings be built")
 endif()
 
+find_package(Sphinx)
+
 ###############################################################################
 ### Setup PYTHONPATH ###
 

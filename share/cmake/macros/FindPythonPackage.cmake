@@ -88,10 +88,13 @@ macro(find_python_package package version)
             # Package install location
             if(WIN32)
                 set(_SITE_PKGS_DIR "${_EXT_DIST_ROOT}/lib${LIB_SUFFIX}/site-packages")
+                # On Windows platform, pip is in the Scripts sub-directory.
+                set(_PYTHON_PIP "$ENV{PYTHONPATH}/Scripts/pip.exe")
             else()
                 set(_PYTHON_VARIANT "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
                 set(_SITE_PKGS_DIR
                     "${_EXT_DIST_ROOT}/lib${LIB_SUFFIX}/python${_PYTHON_VARIANT}/site-packages")
+                set(_PYTHON_PIP "pip")
             endif()
 
             # Configure install target
@@ -99,9 +102,9 @@ macro(find_python_package package version)
                 TARGET
                     ${package}
                 COMMAND
-                    pip install --disable-pip-version-check
-                                --install-option="--prefix=${_EXT_DIST_ROOT}"
-                                -I ${package}==${version}
+                    ${_PYTHON_PIP} install --disable-pip-version-check
+                                           --install-option="--prefix=${_EXT_DIST_ROOT}"
+                                           -I ${package}==${version}
                 WORKING_DIRECTORY
                     "${CMAKE_BINARY_DIR}"
             )
