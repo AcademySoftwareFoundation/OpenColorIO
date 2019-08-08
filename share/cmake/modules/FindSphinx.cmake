@@ -23,14 +23,15 @@ if(NOT TARGET Sphinx)
     set(_SPHINX_TARGET_CREATE TRUE)
 endif()
 
+if(PYTHONINTERP_FOUND AND WIN32)
+    get_filename_component(PYTHON_ROOT "${PYTHON_EXECUTABLE}" DIRECTORY)
+    set(PYTHON_SCRIPTS_DIR "${PYTHON_ROOT}/Scripts")
+endif()
+
 ###############################################################################
 ### Try to find package ###
 
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
-    if(PYTHONINTERP_FOUND AND WIN32)
-        get_filename_component(PYTHON_ROOT "${PYTHON_EXECUTABLE}" DIRECTORY)
-        set(PYTHON_SCRIPTS_DIR "${PYTHON_ROOT}/Scripts")
-    endif()
 
     # Find sphinx-build
     find_program(SPHINX_EXECUTABLE 
