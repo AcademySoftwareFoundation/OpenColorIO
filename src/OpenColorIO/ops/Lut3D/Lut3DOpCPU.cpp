@@ -84,7 +84,7 @@ private:
 class Lut3DTetrahedralRenderer : public BaseLut3DRenderer
 {
 public:
-    Lut3DTetrahedralRenderer(ConstLut3DOpDataRcPtr & lut);
+    explicit Lut3DTetrahedralRenderer(ConstLut3DOpDataRcPtr & lut);
     virtual ~Lut3DTetrahedralRenderer();
 
     void apply(const void * inImg, void * outImg, long numPixels) const;
@@ -93,7 +93,7 @@ public:
 class Lut3DRenderer : public BaseLut3DRenderer
 {
 public:
-    Lut3DRenderer(ConstLut3DOpDataRcPtr & lut);
+    explicit Lut3DRenderer(ConstLut3DOpDataRcPtr & lut);
     virtual ~Lut3DRenderer();
 
     void apply(const void * inImg, void * outImg, long numPixels) const;
@@ -143,6 +143,7 @@ class InvLut3DRenderer : public OpCPU
     {
     public:
         RangeTree();
+        RangeTree(const RangeTree &) = delete;
 
         // Populate the tree using the LUT values.
         // - gridVector Pointer to the vectorized 3d-LUT values.
@@ -193,7 +194,7 @@ class InvLut3DRenderer : public OpCPU
 
 public:
 
-    InvLut3DRenderer(ConstLut3DOpDataRcPtr & lut);
+    explicit InvLut3DRenderer(ConstLut3DOpDataRcPtr & lut);
     virtual ~InvLut3DRenderer();
 
     virtual void apply(const void * inImg, void * outImg, long numPixels) const;

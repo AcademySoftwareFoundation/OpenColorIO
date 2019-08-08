@@ -95,9 +95,9 @@ inline bool IsNumberDelimiter(char c)
 
 // Find the position of the next character to start scanning at.
 // Delimiters checked are spaces, commas, tabs and newlines.
-inline size_t FindNextTokenStart(const char * s, size_t len, size_t pos)
+inline size_t FindNextTokenStart(const char * str, size_t len, size_t pos)
 {
-    const char * ptr = s + pos;
+    const char * ptr = str + pos;
 
     if (pos == len)
     {
@@ -123,13 +123,19 @@ inline size_t FindDelim(const char * str, size_t len, size_t pos)
 {
     const char * ptr = str + pos;
 
+    if (pos == len)
+    {
+        return pos;
+    }
+
     while (!IsNumberDelimiter(*ptr))
     {
-        if ((pos + 1) >= len)
+        ptr++; pos++;
+
+        if (pos >= len)
         {
             return len;
         }
-        ptr++; pos++;
     }
 
     return pos;

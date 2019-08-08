@@ -584,7 +584,9 @@ namespace
     class Lut3DOp : public Op
     {
     public:
-        Lut3DOp(Lut3DOpDataRcPtr & data);
+        Lut3DOp() = delete;
+        Lut3DOp(const Lut3DOp &) = delete;
+        explicit Lut3DOp(Lut3DOpDataRcPtr & data);
         virtual ~Lut3DOp();
 
         TransformDirection getDirection() const noexcept override { return lut3DData()->getDirection(); }
@@ -620,9 +622,6 @@ namespace
         { 
             return DynamicPtrCast<Lut3DOpData>(data());
         }
-
-    private:
-        Lut3DOp() = delete;
     };
 
     typedef OCIO_SHARED_PTR<Lut3DOp> Lut3DOpRcPtr;

@@ -43,8 +43,12 @@ OCIO_NAMESPACE_ENTER
         class AllocationNoOp : public Op
         {
         public:
-            AllocationNoOp(const AllocationData & allocationData):
-                m_allocationData(allocationData)
+            AllocationNoOp() = delete;
+            AllocationNoOp(const AllocationNoOp &) = delete;
+
+            explicit AllocationNoOp(const AllocationData & allocationData)
+                :   Op()
+                ,   m_allocationData(allocationData)
             { 
                 data().reset(new NoOpData()); 
             }
@@ -321,7 +325,11 @@ OCIO_NAMESPACE_ENTER
         class FileNoOp : public Op
         {
         public:
-            FileNoOp(const std::string & fileReference)
+            FileNoOp() = delete;
+            FileNoOp(const FileNoOp &) = delete;
+
+            explicit FileNoOp(const std::string & fileReference)
+                : Op()
             { 
                 data().reset(new FileNoOpData(fileReference));
             }
@@ -399,8 +407,12 @@ OCIO_NAMESPACE_ENTER
         class LookNoOp : public Op
         {
         public:
-            LookNoOp(const std::string & look):
-                m_look(look)
+            LookNoOp() = delete;
+            LookNoOp(const LookNoOp &) = delete;
+
+            LookNoOp(const std::string & look)
+                :   Op()
+                ,   m_look(look)
             { 
                 data().reset(new NoOpData()); 
             }

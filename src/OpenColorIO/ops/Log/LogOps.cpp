@@ -49,9 +49,9 @@ OCIO_NAMESPACE_ENTER
         class LogOp: public Op
         {
         public:
-
-            LogOp(LogOpDataRcPtr & log);
             LogOp() = delete;
+            LogOp(const LogOp &) = delete;
+            explicit LogOp(LogOpDataRcPtr & log);
 
             virtual ~LogOp();
             

@@ -515,7 +515,9 @@ OCIO_NAMESPACE_ENTER
         class Lut1DOp : public Op
         {
         public:
-            Lut1DOp(Lut1DOpDataRcPtr & lutData);
+            Lut1DOp() = delete;
+            Lut1DOp(const Lut1DOp &) = delete;
+            explicit Lut1DOp(Lut1DOpDataRcPtr & lutData);
             virtual ~Lut1DOp();
 
             TransformDirection getDirection() const noexcept override { return lut1DData()->getDirection(); }
@@ -536,9 +538,6 @@ OCIO_NAMESPACE_ENTER
 
             ConstLut1DOpDataRcPtr lut1DData() const { return DynamicPtrCast<const Lut1DOpData>(data()); }
             Lut1DOpDataRcPtr lut1DData() { return DynamicPtrCast<Lut1DOpData>(data()); }
-
-        private:
-            Lut1DOp() = delete;
         };
 
         Lut1DOp::Lut1DOp(Lut1DOpDataRcPtr & lut1D)
