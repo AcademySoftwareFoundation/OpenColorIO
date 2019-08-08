@@ -89,7 +89,8 @@ macro(find_python_package package version)
             if(WIN32)
                 set(_SITE_PKGS_DIR "${_EXT_DIST_ROOT}/lib${LIB_SUFFIX}/site-packages")
                 # On Windows platform, pip is in the Scripts sub-directory.
-                set(_PYTHON_PIP "$ENV{PYTHONPATH}/Scripts/pip.exe")
+                get_filename_component(PYTHON_ROOT "${PYTHON_EXECUTABLE}" DIRECTORY)
+                set(_PYTHON_PIP "${PYTHON_ROOT}/Scripts/pip.exe")
             else()
                 set(_PYTHON_VARIANT "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
                 set(_SITE_PKGS_DIR
