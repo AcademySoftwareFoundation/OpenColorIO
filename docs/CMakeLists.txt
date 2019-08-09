@@ -1,9 +1,23 @@
+###############################################################################
+### Python ###
+
 find_package(PythonInterp 2.7 REQUIRED)
 if(NOT OCIO_BUILD_PYTHON)
     message(FATAL_ERROR "Doc generation requires that the python bindings be built")
 endif()
 
-find_package(Sphinx)
+###############################################################################
+### External Python dependencies ###
+
+include(FindPythonPackage)
+
+# Sphinx
+# https://pypi.python.org/pypi/Sphinx
+set(SPHINX_MIN_VERSION 1.8.5)
+find_package(Sphinx ${SPHINX_MIN_VERSION} REQUIRED)
+if(NOT SPHINX_FOUND)
+    message(FATAL_ERROR "Doc generation requires Sphinx")
+endif()
 
 ###############################################################################
 ### Setup PYTHONPATH ###
