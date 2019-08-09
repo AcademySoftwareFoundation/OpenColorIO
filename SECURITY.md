@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: CC-BY-4.0 -->
+<!-- Copyright Contributors to the OpenColorIO Project. -->
+
 # Security and OpenColorIO
 
 The OpenColorIO Technical Steering Committee (TSC) takes security very

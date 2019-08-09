@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: CC-BY-4.0 -->
+<!-- Copyright Contributors to the OpenColorIO Project. -->
+
 # Contributing to OpenColorIO
 
 Thank you for your interest in contributing to OpenColorIO. This document

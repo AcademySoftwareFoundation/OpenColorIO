@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
 
 set(NDK /Applications/android-ndk-r5b)
 set(NDK_LEVEL 9)
