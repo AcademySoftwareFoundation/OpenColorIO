@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: CC-BY-4.0 -->
+<!-- Copyright Contributors to the OpenColorIO Project. -->
+
 OpenColorIO
 ===========
 
@@ -8,9 +11,9 @@ OpenColorIO
 
 Introduction
 ------------
-[linear]: /docs/ociotheme/static/clo_res19_lnf.0101.jpg
-[log]: /docs/ociotheme/static/clo_res19_lm10.0101.jpg
-[vd]: /docs/ociotheme/static/clo_res19_vd16.0101.jpg
+[linear]: https://origin-flash.sonypictures.com/ist/imageworks/cloudy1.jpg
+[log]: https://origin-flash.sonypictures.com/ist/imageworks/cloudy3.jpg
+[vd]: https://origin-flash.sonypictures.com/ist/imageworks/cloudy2.jpg
 
 ![lnh][linear] ![lm10][log] ![vd8][vd]
 

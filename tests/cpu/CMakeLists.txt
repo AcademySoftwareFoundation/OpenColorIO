@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+
 include(ExternalProject)
 
 # Define used for tests in src/OpenColorIO/Context.cpp

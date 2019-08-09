@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+
 configure_file("OpenColorABI.h.in" "${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO/OpenColorABI.h" @ONLY)
 add_library(public_api INTERFACE)
 

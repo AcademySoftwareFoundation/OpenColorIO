@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+#
 # Locate or install expat
 #
 # Variables defined by this module:
@@ -56,15 +59,29 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
             expat/include
     )
 
-    # Attempt to find static library first if this is set
+    # Lib names to search for
+    set(_EXPAT_LIB_NAMES expat libexpat)
+    if(WIN32 AND BUILD_TYPE_DEBUG)
+        # Prefer Debug lib names (Windows only)
+        list(INSERT _EXPAT_LIB_NAMES 0 expatd)
+    endif()
+
     if(EXPAT_STATIC_LIBRARY)
-        set(_EXPAT_STATIC "${CMAKE_STATIC_LIBRARY_PREFIX}expat${CMAKE_STATIC_LIBRARY_SUFFIX}")
+        # Prefer static lib names
+        set(_EXPAT_STATIC_LIB_NAMES 
+            "${CMAKE_STATIC_LIBRARY_PREFIX}expat${CMAKE_STATIC_LIBRARY_SUFFIX}")
+        if(WIN32 AND BUILD_TYPE_DEBUG)
+            # Prefer static Debug lib names (Windows only)
+            list(INSERT _EXPAT_STATIC_LIB_NAMES 0
+                "${CMAKE_STATIC_LIBRARY_PREFIX}expatd${CMAKE_STATIC_LIBRARY_SUFFIX}")
+        endif()
     endif()
 
     # Find library
     find_library(EXPAT_LIBRARY
         NAMES
-            ${_EXPAT_STATIC} expat libexpat
+            ${_EXPAT_STATIC_LIB_NAMES}
+            ${_EXPAT_LIB_NAMES}
         HINTS
             ${_EXPAT_SEARCH_DIRS}
             ${PC_EXPAT_LIBRARY_DIRS}
@@ -122,8 +139,13 @@ if(NOT EXPAT_FOUND)
     set(EXPAT_FOUND TRUE)
     set(EXPAT_VERSION ${Expat_FIND_VERSION})
     set(EXPAT_INCLUDE_DIR "${_EXT_DIST_ROOT}/include")
-    set(EXPAT_LIBRARY 
-        "${_EXT_DIST_ROOT}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}expat${CMAKE_STATIC_LIBRARY_SUFFIX}")
+
+    # Set the expected library name
+    if(WIN32 AND BUILD_TYPE_DEBUG)
+        set(_EXPAT_LIB_SUFFIX "d")
+    endif()
+    set(EXPAT_LIBRARY
+        "${_EXT_DIST_ROOT}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}expat${_EXPAT_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
     if(_EXPAT_TARGET_CREATE)
         if(UNIX)
