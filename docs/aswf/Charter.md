@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: CC-BY-4.0 -->
+<!-- Copyright Contributors to the OpenColorIO Project. -->
+
 # Technical Charter (the &quot;Charter&quot;) for OpenColorIO a Series of LF Projects, LLC
 
 **Adopted \_\_\_\_\_\_\_\_\_\_\_**

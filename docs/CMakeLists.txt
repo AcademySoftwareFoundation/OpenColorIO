@@ -1,6 +1,8 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+
 ###############################################################################
 ### Python ###
-
 find_package(PythonInterp 2.7 REQUIRED)
 if(NOT OCIO_BUILD_PYTHON)
     message(FATAL_ERROR "Doc generation requires that the python bindings be built")

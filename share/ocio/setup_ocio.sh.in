@@ -1,4 +1,7 @@
 #!/bin/sh
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+
 OCIO_ROOT="@CMAKE_INSTALL_PREFIX@"
 OCIO_EXECROOT="@CMAKE_INSTALL_EXEC_PREFIX@"
 

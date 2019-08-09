@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
 
 find_package(PythonInterp 2.7 REQUIRED)
 find_package(PythonLibs 2.7 REQUIRED)
