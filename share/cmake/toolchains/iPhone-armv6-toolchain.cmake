@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
 
 set(IPHONE_SDK "4.3")
 set(IPHONE_ROOT "/Developer/Platforms/iPhoneOS.platform/Developer")

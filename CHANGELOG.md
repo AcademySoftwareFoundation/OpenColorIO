@@ -1,3 +1,16 @@
+<!-- SPDX-License-Identifier: CC-BY-4.0 -->
+<!-- Copyright Contributors to the OpenColorIO Project. -->
+
+**Version 1.1.1 (April 2 2019):**
+    * Added optional compatibility for building apps with OpenImageIO 1.9+
+    * Added USE_SSE checks to fix Linux build failure
+    * getDisplays() result ordering now matches the active_displays config
+      definition or OCIO_ACTIVE_DISPLAYS env var override.
+    * Fixed incorrect getDefaultDisplay()/getDefaultView() result when
+      OCIO_ACTIVE_DISPLAYS or OCIO_ACTIVE_VIEWS env vars are unset.
+    * Fixed Windows-specific GetEnv() bug
+    * Fixed Windows and MacOS CI failure cases
+
 **Version 1.1.0 (Jan 5 2018):**
     * libc++ build fixes
     * Added support for YAML > 5.0.1
