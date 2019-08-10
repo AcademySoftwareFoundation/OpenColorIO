@@ -3219,7 +3219,8 @@ OCIO_ADD_TEST(FileFormatCTF, metadata)
 
     // Check element values.
     //
-    OCIO_CHECK_EQUAL(info["Copyright"].getValue(), "Copyright 2013 Autodesk");
+    OCIO_CHECK_EQUAL(info["Copyright"].getValue(), 
+                     "Copyright Contributors to the OpenColorIO Project.");
     OCIO_CHECK_EQUAL(info["Release"].getValue(), "2015");
     OCIO_CHECK_EQUAL(info["InputColorSpace"]["Description"].getValue(),
                      "Input color space description");
