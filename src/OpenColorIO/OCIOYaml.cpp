@@ -66,7 +66,6 @@ namespace YAML {
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::LookTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::MatrixTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::RangeTransform>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::TruelightTransform>;
 }
 #pragma GCC visibility pop
 
@@ -1739,150 +1738,7 @@ OCIO_NAMESPACE_ENTER
             EmitBaseTransformKeyValues(out, t);
             out << YAML::EndMap;
         }
-        
-        // TruelightTransform
-        
-        inline void load(const YAML::Node& node, TruelightTransformRcPtr& t)
-        {
-            t = TruelightTransform::Create();
-            
-            std::string key, stringval;
-            
-            for (Iterator iter = node.begin();
-                 iter != node.end();
-                 ++iter)
-            {
-                const YAML::Node& first = get_first(iter);
-                const YAML::Node& second = get_second(iter);
                 
-                load(first, key);
-                
-                if (second.Type() == YAML::NodeType::Null) continue;
-                
-                if(key == "config_root")
-                {
-                    load(second, stringval);
-                    t->setConfigRoot(stringval.c_str());
-                }
-                else if(key == "profile")
-                {
-                    load(second, stringval);
-                    t->setProfile(stringval.c_str());
-                }
-                else if(key == "camera")
-                {
-                    load(second, stringval);
-                    t->setCamera(stringval.c_str());
-                }
-                else if(key == "input_display")
-                {
-                    load(second, stringval);
-                    t->setInputDisplay(stringval.c_str());
-                }
-                else if(key == "recorder")
-                {
-                    load(second, stringval);
-                    t->setRecorder(stringval.c_str());
-                }
-                else if(key == "print")
-                {
-                    load(second, stringval);
-                    t->setPrint(stringval.c_str());
-                }
-                else if(key == "lamp")
-                {
-                    load(second, stringval);
-                    t->setLamp(stringval.c_str());
-                }
-                else if(key == "output_camera")
-                {
-                    load(second, stringval);
-                    t->setOutputCamera(stringval.c_str());
-                }
-                else if(key == "display")
-                {
-                    load(second, stringval);
-                    t->setDisplay(stringval.c_str());
-                }
-                else if(key == "cube_input")
-                {
-                    load(second, stringval);
-                     t->setCubeInput(stringval.c_str());
-                }
-                else if(key == "direction")
-                {
-                    TransformDirection val;
-                    load(second, val);
-                    t->setDirection(val);
-                }
-                else
-                {
-                    LogUnknownKeyWarning(node, first);
-                }
-            }
-        }
-        
-        inline void save(YAML::Emitter& out, ConstTruelightTransformRcPtr t)
-        {
-            
-            out << YAML::VerbatimTag("TruelightTransform");
-            out << YAML::Flow << YAML::BeginMap;
-            if(strcmp(t->getConfigRoot(), "") != 0)
-            {
-                out << YAML::Key << "config_root";
-                out << YAML::Value << YAML::Flow << t->getConfigRoot();
-            }
-            if(strcmp(t->getProfile(), "") != 0)
-            {
-                out << YAML::Key << "profile";
-                out << YAML::Value << YAML::Flow << t->getProfile();
-            }
-            if(strcmp(t->getCamera(), "") != 0)
-            {
-                out << YAML::Key << "camera";
-                out << YAML::Value << YAML::Flow << t->getCamera();
-            }
-            if(strcmp(t->getInputDisplay(), "") != 0)
-            {
-                out << YAML::Key << "input_display";
-                out << YAML::Value << YAML::Flow << t->getInputDisplay();
-            }
-            if(strcmp(t->getRecorder(), "") != 0)
-            {
-                out << YAML::Key << "recorder";
-                out << YAML::Value << YAML::Flow << t->getRecorder();
-            }
-            if(strcmp(t->getPrint(), "") != 0)
-            {
-                out << YAML::Key << "print";
-                out << YAML::Value << YAML::Flow << t->getPrint();
-            }
-            if(strcmp(t->getLamp(), "") != 0)
-            {
-                out << YAML::Key << "lamp";
-                out << YAML::Value << YAML::Flow << t->getLamp();
-            }
-            if(strcmp(t->getOutputCamera(), "") != 0)
-            {
-                out << YAML::Key << "output_camera";
-                out << YAML::Value << YAML::Flow << t->getOutputCamera();
-            }
-            if(strcmp(t->getDisplay(), "") != 0)
-            {
-                out << YAML::Key << "display";
-                out << YAML::Value << YAML::Flow << t->getDisplay();
-            }
-            if(strcmp(t->getCubeInput(), "") != 0)
-            {
-                out << YAML::Key << "cube_input";
-                out << YAML::Value << YAML::Flow << t->getCubeInput();
-            }
-            
-            EmitBaseTransformKeyValues(out, t);
-            
-            out << YAML::EndMap;
-        }
-        
         // Transform
         
         void load(const YAML::Node& node, TransformRcPtr& t)
@@ -1969,11 +1825,6 @@ OCIO_NAMESPACE_ENTER
                 load(node, temp);
                 t = temp;
             }
-            else if(type == "TruelightTransform")  {
-                TruelightTransformRcPtr temp;
-                load(node, temp);
-                t = temp;
-            }
             else
             {
                 // TODO: add a new empty (better name?) aka passthru Transform()
@@ -2036,9 +1887,6 @@ OCIO_NAMESPACE_ENTER
             else if(ConstRangeTransformRcPtr Range_tran = \
                 DynamicPtrCast<const RangeTransform>(t))
                 save(out, Range_tran);
-            else if(ConstTruelightTransformRcPtr Truelight_tran = \
-                DynamicPtrCast<const TruelightTransform>(t))
-                save(out, Truelight_tran);
             else
                 throw Exception("Unsupported Transform() type for serialization.");
         }

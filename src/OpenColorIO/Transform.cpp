@@ -136,11 +136,6 @@ OCIO_NAMESPACE_ENTER
         {
             BuildRangeOps(ops, config, *rangeTransform, dir);
         }
-        else if(ConstTruelightTransformRcPtr truelightTransform = \
-            DynamicPtrCast<const TruelightTransform>(transform))
-        {
-            BuildTruelightOps(ops, config, *truelightTransform, dir);
-        }
         else
         {
             std::ostringstream error;
@@ -219,11 +214,6 @@ OCIO_NAMESPACE_ENTER
             dynamic_cast<const RangeTransform*>(t))
         {
             os << *rangeTransform;
-        }
-        else if(const TruelightTransform * truelightTransform = \
-            dynamic_cast<const TruelightTransform*>(t))
-        {
-            os << *truelightTransform;
         }
         else
         {

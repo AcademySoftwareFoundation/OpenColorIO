@@ -51,7 +51,6 @@ set(JNIOCIO_JAVAS
 	org/OpenColorIO/Processor.java
 	org/OpenColorIO/TransformDirection.java
 	org/OpenColorIO/Transform.java
-	org/OpenColorIO/TruelightTransform.java
 )
 
 set(JNIOCIO_CLASSES
@@ -89,8 +88,7 @@ set(JNIOCIO_CLASSES
   org.OpenColorIO.GroupTransform
   org.OpenColorIO.LogTransform
   org.OpenColorIO.LookTransform
-  org.OpenColorIO.MatrixTransform
-  org.OpenColorIO.TruelightTransform	
+  org.OpenColorIO.MatrixTransform	
 )
 
 configure_file(Manifest.txt.in ${CMAKE_CURRENT_BINARY_DIR}/Manifest.txt @ONLY)
