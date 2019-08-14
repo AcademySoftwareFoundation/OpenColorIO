@@ -45,19 +45,47 @@ bool operator==(const DynamicProperty &lhs, const DynamicProperty &rhs)
     return false;
 }
 
-DynamicPropertyImpl::DynamicPropertyImpl(double value, bool dynamic)
-    : m_valueType(DYNAMIC_PROPERTY_DOUBLE)
-    , m_value(value)
-    , m_isDynamic(dynamic)
+DynamicPropertyImpl::DynamicPropertyImpl(DynamicPropertyType type, double value, bool dynamic)
+    :   m_type(type)
+    ,   m_valueType(DYNAMIC_PROPERTY_DOUBLE)
+    ,   m_value(value)
+    ,   m_isDynamic(dynamic)
 {
 }
 
+DynamicPropertyImpl::DynamicPropertyImpl(DynamicPropertyImpl & rhs)
+    :   m_type(rhs.m_type)
+    ,   m_valueType(rhs.m_valueType)
+    ,   m_value(rhs.m_value)
+    ,   m_isDynamic(rhs.m_isDynamic)
+{   
+}
+
+double DynamicPropertyImpl::getDoubleValue() const
+{
+    if(m_valueType!=DYNAMIC_PROPERTY_DOUBLE)
+    {
+        throw Exception("The dynamic property does not hold a double precision value.");
+    }
+
+    return m_value;
+}
+
+void DynamicPropertyImpl::setValue(double value)
+{
+    if(m_valueType!=DYNAMIC_PROPERTY_DOUBLE)
+    {
+        throw Exception("The dynamic property does not hold a double precision value.");
+    }
+
+    m_value = value;
+}
 
 bool DynamicPropertyImpl::equals(const DynamicPropertyImpl & rhs) const
 {
     if (this == &rhs) return true;
 
-    if (m_isDynamic == rhs.m_isDynamic && m_valueType == rhs.m_valueType)
+    if (m_isDynamic == rhs.m_isDynamic && m_type == rhs.m_type)
     {
         if (!m_isDynamic)
         {
@@ -83,6 +111,16 @@ bool DynamicPropertyImpl::equals(const DynamicPropertyImpl & rhs) const
     return false;
 }
 
+DynamicProperty::DynamicProperty()
+{
+
+}
+
+DynamicProperty::~DynamicProperty()
+{
+
+}
+
 }
 OCIO_NAMESPACE_EXIT
 
@@ -93,62 +131,62 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 
 #include <sstream>
-#include "unittest.h"
+#include "UnitTest.h"
 #include "UnitTestUtils.h"
 
-OIIO_ADD_TEST(DynamicPropertyImpl, basic)
+OCIO_ADD_TEST(DynamicPropertyImpl, basic)
 {
     OCIO::DynamicPropertyRcPtr dp =
-        std::make_shared<OCIO::DynamicPropertyImpl>(1.0, false);
-    OIIO_REQUIRE_ASSERT(dp);
-    OIIO_CHECK_EQUAL(dp->getDoubleValue(), 1.0);
+        std::make_shared<OCIO::DynamicPropertyImpl>(OCIO::DYNAMIC_PROPERTY_EXPOSURE, 1.0, false);
+    OCIO_REQUIRE_ASSERT(dp);
+    OCIO_REQUIRE_EQUAL(dp->getDoubleValue(), 1.0);
     dp->setValue(2.0);
-    OIIO_CHECK_EQUAL(dp->getDoubleValue(), 2.0);
+    OCIO_CHECK_EQUAL(dp->getDoubleValue(), 2.0);
 
     OCIO::DynamicPropertyImplRcPtr dpImpl =
-        std::make_shared<OCIO::DynamicPropertyImpl>(1.0, false);
-    OIIO_REQUIRE_ASSERT(dpImpl);
-    OIIO_CHECK_ASSERT(!dpImpl->isDynamic());
-    OIIO_CHECK_EQUAL(dpImpl->getDoubleValue(), 1.0);
+        std::make_shared<OCIO::DynamicPropertyImpl>(OCIO::DYNAMIC_PROPERTY_EXPOSURE, 1.0, false);
+    OCIO_REQUIRE_ASSERT(dpImpl);
+    OCIO_CHECK_ASSERT(!dpImpl->isDynamic());
+    OCIO_CHECK_EQUAL(dpImpl->getDoubleValue(), 1.0);
 
     dpImpl->makeDynamic();
-    OIIO_CHECK_ASSERT(dpImpl->isDynamic());
+    OCIO_CHECK_ASSERT(dpImpl->isDynamic());
     dpImpl->setValue(2.0);
-    OIIO_CHECK_EQUAL(dpImpl->getDoubleValue(), 2.0);
+    OCIO_CHECK_EQUAL(dpImpl->getDoubleValue(), 2.0);
 }
 
-OIIO_ADD_TEST(DynamicPropertyImpl, equal)
+OCIO_ADD_TEST(DynamicPropertyImpl, equal)
 {
     OCIO::DynamicPropertyImplRcPtr dpImpl0 =
-        std::make_shared<OCIO::DynamicPropertyImpl>(1.0, false);
+        std::make_shared<OCIO::DynamicPropertyImpl>(OCIO::DYNAMIC_PROPERTY_EXPOSURE, 1.0, false);
     OCIO::DynamicPropertyRcPtr dp0 = dpImpl0;
     
     OCIO::DynamicPropertyImplRcPtr dpImpl1 =
-        std::make_shared<OCIO::DynamicPropertyImpl>(1.0, false);
+        std::make_shared<OCIO::DynamicPropertyImpl>(OCIO::DYNAMIC_PROPERTY_EXPOSURE, 1.0, false);
     OCIO::DynamicPropertyRcPtr dp1 = dpImpl1;
 
     // Both not dynamic, same value.
-    OIIO_CHECK_ASSERT(*dp0 == *dp1);
+    OCIO_CHECK_ASSERT(*dp0 == *dp1);
     
     // Both not dynamic, diff values.
     dp0->setValue(2.0);
-    OIIO_CHECK_ASSERT(!(*dp0 == *dp1));
+    OCIO_CHECK_ASSERT(!(*dp0 == *dp1));
     
     // Same value.
     dp1->setValue(2.0);
-    OIIO_CHECK_ASSERT(*dp0 == *dp1);
+    OCIO_CHECK_ASSERT(*dp0 == *dp1);
 
     // One dynamic, not the other, same value.
     dpImpl0->makeDynamic();
-    OIIO_CHECK_ASSERT(!(*dp0 == *dp1));
+    OCIO_CHECK_ASSERT(!(*dp0 == *dp1));
     
     // Both dynamic, same value.
     dpImpl1->makeDynamic();
-    OIIO_CHECK_ASSERT(*dp0 == *dp1);
+    OCIO_CHECK_ASSERT(*dp0 == *dp1);
     
     // Both dynamic, diffent values.
     dp1->setValue(3.0);
-    OIIO_CHECK_ASSERT(*dp0 == *dp1);
+    OCIO_CHECK_ASSERT(*dp0 == *dp1);
 }
 
 namespace
@@ -176,35 +214,39 @@ OCIO::ConstProcessorRcPtr LoadTransformFile(const std::string & fileName)
 
 // Test several aspects of dynamic properties, especially the ability to set
 // values via the processor.
-OIIO_ADD_TEST(DynamicProperty, get_dynamic_via_processor)
+OCIO_ADD_TEST(DynamicProperty, get_dynamic_via_processor)
 {
     const std::string ctfFile("exposure_contrast_video_dp.ctf");
+
     OCIO::ConstProcessorRcPtr processor;
-    OIIO_CHECK_NO_THROW(processor = LoadTransformFile(ctfFile));
+    OCIO_CHECK_NO_THROW(processor = LoadTransformFile(ctfFile));
+
+    OCIO::ConstCPUProcessorRcPtr cpuProcessor;
+    OCIO_CHECK_NO_THROW(cpuProcessor = processor->getDefaultCPUProcessor());
 
     float pixel[3] = { 0.5f, 0.4f, 0.2f };
-    processor->applyRGB(pixel);
+    cpuProcessor->applyRGB(pixel);
 
     float error = 1e-5f;
-    OIIO_CHECK_CLOSE(pixel[0], 0.57495f, error);
-    OIIO_CHECK_CLOSE(pixel[1], 0.43988f, error);
-    OIIO_CHECK_CLOSE(pixel[2], 0.19147f, error);
+    OCIO_CHECK_CLOSE(pixel[0], 0.57495f, error);
+    OCIO_CHECK_CLOSE(pixel[1], 0.43988f, error);
+    OCIO_CHECK_CLOSE(pixel[2], 0.19147f, error);
 
     OCIO::DynamicPropertyType dpt = OCIO::DYNAMIC_PROPERTY_EXPOSURE;
     OCIO::DynamicPropertyRcPtr dp;
-    OIIO_CHECK_NO_THROW(dp = processor->getDynamicProperty(dpt));
+    OCIO_CHECK_NO_THROW(dp = cpuProcessor->getDynamicProperty(dpt));
     const double fileValue = dp->getDoubleValue();
     dp->setValue(0.4);
 
     pixel[0] = 0.5f;
     pixel[1] = 0.4f;
     pixel[2] = 0.2f;
-    processor->applyRGB(pixel);
+    cpuProcessor->applyRGB(pixel);
 
     // Adjust error for SSE approximation.
-    OIIO_CHECK_CLOSE(pixel[0], 0.62966f, error*2.0f);
-    OIIO_CHECK_CLOSE(pixel[1], 0.48175f, error);
-    OIIO_CHECK_CLOSE(pixel[2], 0.20969f, error);
+    OCIO_CHECK_CLOSE(pixel[0], 0.62966f, error*2.0f);
+    OCIO_CHECK_CLOSE(pixel[1], 0.48175f, error);
+    OCIO_CHECK_CLOSE(pixel[2], 0.20969f, error);
 
     // Restore file value.
     dp->setValue(fileValue);
@@ -212,14 +254,14 @@ OIIO_ADD_TEST(DynamicProperty, get_dynamic_via_processor)
     pixel[0] = 0.5f;
     pixel[1] = 0.4f;
     pixel[2] = 0.2f;
-    processor->applyRGB(pixel);
+    cpuProcessor->applyRGB(pixel);
 
-    OIIO_CHECK_CLOSE(pixel[0], 0.57495f, error);
-    OIIO_CHECK_CLOSE(pixel[1], 0.43988f, error);
-    OIIO_CHECK_CLOSE(pixel[2], 0.19147f, error);
+    OCIO_CHECK_CLOSE(pixel[0], 0.57495f, error);
+    OCIO_CHECK_CLOSE(pixel[1], 0.43988f, error);
+    OCIO_CHECK_CLOSE(pixel[2], 0.19147f, error);
 
     // Note: The CTF does not define gamma as being dynamic.
-    OIIO_CHECK_THROW_WHAT(processor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA),
+    OCIO_CHECK_THROW_WHAT(cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA),
                           OCIO::Exception,
                           "Cannot find dynamic property");
 }

@@ -41,15 +41,15 @@ typedef OCIO_SHARED_PTR<DynamicPropertyImpl> DynamicPropertyImplRcPtr;
 class DynamicPropertyImpl : public DynamicProperty
 {
 public:
-    DynamicPropertyImpl(double value, bool dynamic);
+    DynamicPropertyImpl(DynamicPropertyType type, double value, bool dynamic);
+    DynamicPropertyImpl(DynamicPropertyImpl & rhs);
 
-    double getDoubleValue() const override
+    double getDoubleValue() const override;
+    void setValue(double value) override;
+
+    DynamicPropertyType getType() const override
     {
-        return m_value;
-    }
-    void setValue(double value) override
-    {
-        m_value = value;
+        return m_type;
     }
 
     DynamicPropertyValueType getValueType() const override
@@ -57,10 +57,11 @@ public:
         return m_valueType;
     }
 
-    bool isDynamic() const
+    bool isDynamic() const override
     {
         return m_isDynamic;
     }
+
     void makeDynamic()
     {
         m_isDynamic = true;
@@ -77,9 +78,10 @@ public:
     bool equals(const DynamicPropertyImpl & rhs) const;
 
 private:
-
     DynamicPropertyImpl() = delete;
     
+    DynamicPropertyType m_type = DYNAMIC_PROPERTY_EXPOSURE;
+
     DynamicPropertyValueType m_valueType = DYNAMIC_PROPERTY_DOUBLE;
     double m_value = 0;
     bool m_isDynamic = false;

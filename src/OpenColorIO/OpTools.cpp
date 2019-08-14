@@ -52,14 +52,9 @@ OCIO_NAMESPACE_ENTER
             values += 3;
         }
 
-        // NB: We assume finalize will set the bit-depth at each op interface
+        // NB: FinalizeOpVec() sets the bit-depths at each op interface
         // to 32f so there is never any quantization to integer.
-        // Furthermore, to avoid improper recursion we must never call
-        // the renderer with an integer input depth.
-        // TODO: Currently the OCIO finalize is hard-coded to 32f.
-        //       When that changes we need to update this to request 32f input
-        //       and output bit depths.
-        FinalizeOpVec(ops);
+        FinalizeOpVec(ops, FINALIZATION_EXACT);
 
         for (OpRcPtrVec::size_type i = 0, size = ops.size(); i<size; ++i)
         {
@@ -84,22 +79,18 @@ OCIO_NAMESPACE_ENTER
         case LUT_INVERSION_EXACT:
         {
             return "exact";
-            break;
         }
         case LUT_INVERSION_FAST:
         {
             return "fast";
-            break;
         }
         case LUT_INVERSION_DEFAULT:
         {
             return "default";
-            break;
         }
         case LUT_INVERSION_BEST:
         {
             return "best";
-            break;
         }
         }
 

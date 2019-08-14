@@ -732,9 +732,9 @@ OCIO_NAMESPACE_ENTER
                     // is the higest value that is transformed by the
                     // cube (e.g for a generic lin-to-log transform,
                     // what the log value 1.0 is in linear).
-                    ConstProcessorRcPtr shaperToInputProc = config->getProcessor(
+                    ConstCPUProcessorRcPtr shaperToInputProc = config->getProcessor(
                         shaperSpace.c_str(),
-                        inputSpace.c_str());
+                        inputSpace.c_str())->getDefaultCPUProcessor();
 
                     float minval[3] = {0.0f, 0.0f, 0.0f};
                     float maxval[3] = {1.0f, 1.0f, 1.0f};
@@ -762,7 +762,9 @@ OCIO_NAMESPACE_ENTER
                 }
                 
                 PackedImageDesc prelutImg(&prelutData[0], shaperSize, 1, 3);
-                inputToShaperProc->apply(prelutImg);
+
+                ConstCPUProcessorRcPtr cpu = inputToShaperProc->getDefaultCPUProcessor();
+                cpu->apply(prelutImg);
             }
             
             // TODO: Do same "auto prelut" input-space allocation as FileFormatCSP?
@@ -801,8 +803,8 @@ OCIO_NAMESPACE_ENTER
                     cubeProc = inputToTargetProc;
                 }
 
-                
-                cubeProc->apply(cubeImg);
+                ConstCPUProcessorRcPtr cpu = cubeProc->getDefaultCPUProcessor();
+                cpu->apply(cubeImg);
             }
             
             
@@ -814,8 +816,8 @@ OCIO_NAMESPACE_ENTER
                 
                 GenerateIdentityLut1D(&onedData[0], onedSize, 3);
                 PackedImageDesc onedImg(&onedData[0], onedSize, 1, 3);
-                
-                inputToTargetProc->apply(onedImg);
+                ConstCPUProcessorRcPtr cpu = inputToTargetProc->getDefaultCPUProcessor();
+                cpu->apply(onedImg);
             }
             
             
@@ -990,9 +992,9 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(FileFormatHDL, Read1D)
+OCIO_ADD_TEST(FileFormatHDL, Read1D)
 {
     std::ostringstream strebuf;
     strebuf << "Version\t\t1" << "\n";
@@ -1035,25 +1037,25 @@ OIIO_ADD_TEST(FileFormatHDL, Read1D)
     OCIO::CachedFileHDLRcPtr lut = OCIO::DynamicPtrCast<OCIO::CachedFileHDL>(cachedFile);
     
     //
-    OIIO_CHECK_EQUAL(to_min, lut->to_min);
-    OIIO_CHECK_EQUAL(to_max, lut->to_max);
-    OIIO_CHECK_EQUAL(black, lut->hdlblack);
-    OIIO_CHECK_EQUAL(white, lut->hdlwhite);
+    OCIO_CHECK_EQUAL(to_min, lut->to_min);
+    OCIO_CHECK_EQUAL(to_max, lut->to_max);
+    OCIO_CHECK_EQUAL(black, lut->hdlblack);
+    OCIO_CHECK_EQUAL(white, lut->hdlwhite);
     
     // check 1D data (each channel has the same data)
     for(int c = 0; c < 3; ++c) {
-        OIIO_CHECK_EQUAL(from_min, lut->lut1D->from_min[c]);
-        OIIO_CHECK_EQUAL(from_max, lut->lut1D->from_max[c]);
+        OCIO_CHECK_EQUAL(from_min, lut->lut1D->from_min[c]);
+        OCIO_CHECK_EQUAL(from_max, lut->lut1D->from_max[c]);
 
-        OIIO_CHECK_EQUAL(9, lut->lut1D->luts[c].size());
+        OCIO_CHECK_EQUAL(9, lut->lut1D->luts[c].size());
 
         for(unsigned int i = 0; i < lut->lut1D->luts[c].size(); ++i) {
-            OIIO_CHECK_EQUAL(lut1d[i], lut->lut1D->luts[c][i]);
+            OCIO_CHECK_EQUAL(lut1d[i], lut->lut1D->luts[c][i]);
         }
     }
 }
 
-OIIO_ADD_TEST(FileFormatHDL, Bake1D)
+OCIO_ADD_TEST(FileFormatHDL, Bake1D)
 {
     
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
@@ -1143,16 +1145,16 @@ OIIO_ADD_TEST(FileFormatHDL, Bake1D)
     
     //
     std::vector<std::string> osvec;
-    OCIO::pystring::splitlines(output.str(), osvec);
+    pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
-    OCIO::pystring::splitlines(bout, resvec);
-    OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    pystring::splitlines(bout, resvec);
+    OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
-        OIIO_CHECK_EQUAL(OCIO::pystring::strip(osvec[i]), OCIO::pystring::strip(resvec[i]));
+        OCIO_CHECK_EQUAL(pystring::strip(osvec[i]), pystring::strip(resvec[i]));
     
 }
 
-OIIO_ADD_TEST(FileFormatHDL, Read3D)
+OCIO_ADD_TEST(FileFormatHDL, Read3D)
 {
     std::ostringstream strebuf;
     strebuf << "Version         2" << "\n";
@@ -1201,20 +1203,20 @@ OIIO_ADD_TEST(FileFormatHDL, Read3D)
         0.f, 0.601016f, 0.917034f };
     
     //
-    OIIO_CHECK_EQUAL(to_min, lut->to_min);
-    OIIO_CHECK_EQUAL(to_max, lut->to_max);
-    OIIO_CHECK_EQUAL(black, lut->hdlblack);
-    OIIO_CHECK_EQUAL(white, lut->hdlwhite);
+    OCIO_CHECK_EQUAL(to_min, lut->to_min);
+    OCIO_CHECK_EQUAL(to_max, lut->to_max);
+    OCIO_CHECK_EQUAL(black, lut->hdlblack);
+    OCIO_CHECK_EQUAL(white, lut->hdlwhite);
     
     // check cube data
-    OIIO_CHECK_EQUAL(2*2*2*3, lut->lut3D->lut.size());
+    OCIO_CHECK_EQUAL(2*2*2*3, lut->lut3D->lut.size());
 
     for(unsigned int i = 0; i < lut->lut3D->lut.size(); ++i) {
-        OIIO_CHECK_EQUAL(cube[i], lut->lut3D->lut[i]);
+        OCIO_CHECK_EQUAL(cube[i], lut->lut3D->lut[i]);
     }
 }
 
-OIIO_ADD_TEST(FileFormatHDL, Bake3D)
+OCIO_ADD_TEST(FileFormatHDL, Bake3D)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     
@@ -1283,15 +1285,15 @@ OIIO_ADD_TEST(FileFormatHDL, Bake3D)
     
     //
     std::vector<std::string> osvec;
-    OCIO::pystring::splitlines(output.str(), osvec);
+    pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
-    OCIO::pystring::splitlines(bout, resvec);
-    OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    pystring::splitlines(bout, resvec);
+    OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
-        OIIO_CHECK_EQUAL(OCIO::pystring::strip(osvec[i]), OCIO::pystring::strip(resvec[i]));
+        OCIO_CHECK_EQUAL(pystring::strip(osvec[i]), pystring::strip(resvec[i]));
 }
 
-OIIO_ADD_TEST(FileFormatHDL, Read3D1D)
+OCIO_ADD_TEST(FileFormatHDL, Read3D1D)
 {
     std::ostringstream strebuf;
     strebuf << "Version         3" << "\n";
@@ -1355,31 +1357,31 @@ OIIO_ADD_TEST(FileFormatHDL, Read3D1D)
     OCIO::CachedFileHDLRcPtr lut = OCIO::DynamicPtrCast<OCIO::CachedFileHDL>(cachedFile);
     
     //
-    OIIO_CHECK_EQUAL(to_min, lut->to_min);
-    OIIO_CHECK_EQUAL(to_max, lut->to_max);
-    OIIO_CHECK_EQUAL(black, lut->hdlblack);
-    OIIO_CHECK_EQUAL(white, lut->hdlwhite);
+    OCIO_CHECK_EQUAL(to_min, lut->to_min);
+    OCIO_CHECK_EQUAL(to_max, lut->to_max);
+    OCIO_CHECK_EQUAL(black, lut->hdlblack);
+    OCIO_CHECK_EQUAL(white, lut->hdlwhite);
     
     // check prelut data (each channel has the same data)
     for(int c = 0; c < 3; ++c) {
-        OIIO_CHECK_EQUAL(from_min, lut->lut1D->from_min[c]);
-        OIIO_CHECK_EQUAL(from_max, lut->lut1D->from_max[c]);
-        OIIO_CHECK_EQUAL(10, lut->lut1D->luts[c].size());
+        OCIO_CHECK_EQUAL(from_min, lut->lut1D->from_min[c]);
+        OCIO_CHECK_EQUAL(from_max, lut->lut1D->from_max[c]);
+        OCIO_CHECK_EQUAL(10, lut->lut1D->luts[c].size());
 
         for(unsigned int i = 0; i < lut->lut1D->luts[c].size(); ++i) {
-            OIIO_CHECK_EQUAL(prelut[i], lut->lut1D->luts[c][i]);
+            OCIO_CHECK_EQUAL(prelut[i], lut->lut1D->luts[c][i]);
         }
     }
 
-    OIIO_CHECK_EQUAL(2*2*2*3, lut->lut3D->lut.size());
+    OCIO_CHECK_EQUAL(2*2*2*3, lut->lut3D->lut.size());
     
     // check cube data
     for(unsigned int i = 0; i < lut->lut3D->lut.size(); ++i) {
-        OIIO_CHECK_EQUAL(cube[i], lut->lut3D->lut[i]);
+        OCIO_CHECK_EQUAL(cube[i], lut->lut3D->lut[i]);
     }
 }
 
-OIIO_ADD_TEST(FileFormatHDL, Bake3D1D)
+OCIO_ADD_TEST(FileFormatHDL, Bake3D1D)
 {
     // check baker output
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
@@ -1475,20 +1477,20 @@ OIIO_ADD_TEST(FileFormatHDL, Bake3D1D)
 
     //
     std::vector<std::string> osvec;
-    OCIO::pystring::splitlines(output.str(), osvec);
+    pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
-    OCIO::pystring::splitlines(bout, resvec);
-    OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    pystring::splitlines(bout, resvec);
+    OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     
     // TODO: Get this working on osx
     /*
     for(unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
-        OIIO_CHECK_EQUAL(OCIO::pystring::strip(osvec[i]), OCIO::pystring::strip(resvec[i]));
+        OCIO_CHECK_EQUAL(pystring::strip(osvec[i]), pystring::strip(resvec[i]));
     */
 }
 
 
-OIIO_ADD_TEST(FileFormatHDL, LookTest)
+OCIO_ADD_TEST(FileFormatHDL, LookTest)
 {
     // Note this sets up a Look with the same parameters as the Bake3D1D test
     // however it uses a different shaper space, to ensure we catch that case.
@@ -1616,13 +1618,13 @@ OIIO_ADD_TEST(FileFormatHDL, LookTest)
 
     //
     std::vector<std::string> osvec;
-    OCIO::pystring::splitlines(output.str(), osvec);
+    pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
-    OCIO::pystring::splitlines(bout, resvec);
-    OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    pystring::splitlines(bout, resvec);
+    OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     
     for(unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
-        OIIO_CHECK_EQUAL(OCIO::pystring::strip(osvec[i]), OCIO::pystring::strip(resvec[i]));
+        OCIO_CHECK_EQUAL(pystring::strip(osvec[i]), pystring::strip(resvec[i]));
 }
 
 #endif // OCIO_BUILD_TESTS

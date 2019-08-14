@@ -45,8 +45,13 @@ namespace
 class ECRendererBase : public OpCPU
 {
 public:
+    ECRendererBase() = delete;
+    ECRendererBase(const ECRendererBase &) = delete;   
     explicit ECRendererBase(ConstExposureContrastOpDataRcPtr & ec);
     virtual ~ECRendererBase();
+
+    bool hasDynamicProperty(DynamicPropertyType type) const override;
+    DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const override;
 
 protected:
     virtual void updateData(ConstExposureContrastOpDataRcPtr & ec) = 0;
@@ -54,6 +59,7 @@ protected:
     DynamicPropertyImplRcPtr m_exposure;
     DynamicPropertyImplRcPtr m_contrast;
     DynamicPropertyImplRcPtr m_gamma;
+
     float m_inScale = 1.0f;
     float m_outScale = 1.0f;
     float m_alphaScale = 1.0f;
@@ -81,6 +87,58 @@ ECRendererBase::ECRendererBase(ConstExposureContrastOpDataRcPtr & ec)
 ECRendererBase::~ECRendererBase()
 {
 }
+
+bool ECRendererBase::hasDynamicProperty(DynamicPropertyType type) const
+{
+    bool res = false;
+    switch (type)
+    {
+        case DYNAMIC_PROPERTY_EXPOSURE:
+            res = m_exposure->isDynamic();
+            break;
+        case DYNAMIC_PROPERTY_CONTRAST:
+            res = m_contrast->isDynamic();
+            break;
+        case DYNAMIC_PROPERTY_GAMMA:
+            res = m_gamma->isDynamic();
+            break;
+        default:
+            break;
+    }
+    
+    return res;
+}
+
+DynamicPropertyRcPtr ECRendererBase::getDynamicProperty(DynamicPropertyType type) const
+{
+    switch (type)
+    {
+        case DYNAMIC_PROPERTY_EXPOSURE:
+            if (m_exposure->isDynamic())
+            {
+                return m_exposure;
+            }
+            break;
+        case DYNAMIC_PROPERTY_CONTRAST:
+            if (m_contrast->isDynamic())
+            {
+                return m_contrast;
+            }
+            break;
+        case DYNAMIC_PROPERTY_GAMMA:
+            if (m_gamma->isDynamic())
+            {
+                return m_gamma;
+            }
+            break;
+        default:
+            throw Exception("Dynamic property type not supported by ExposureContrast.");
+            break;
+    }
+
+    throw Exception("ExposureContrast property is not dynamic.");
+}
+
 
 class ECLinearRenderer : public ECRendererBase
 {
@@ -408,10 +466,10 @@ void ECVideoRenderer::apply(const void * inImg, void * outImg, long numPixels) c
         for (long idx = 0; idx<numPixels; ++idx)
         {
             const float outAlpha = in[3] * m_alphaScale;
-            __m128 data = _mm_set_ps(out[3],
-                                     out[2],
-                                     out[1],
-                                     out[0]);
+            __m128 data = _mm_set_ps(in[3],
+                                     in[2],
+                                     in[1],
+                                     in[0]);
 
             //
             // out = powf( i * exposure / iPivot, contrast ) * oPivot
@@ -806,7 +864,7 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
 namespace
 {
@@ -875,7 +933,7 @@ static constexpr float inf = std::numeric_limits<float>::infinity();
 
 }
 
-OIIO_ADD_TEST(ExposureContrastRenderer, video)
+OCIO_ADD_TEST(ExposureContrastRenderer, video)
 {
     //
     // Video case, no scaling
@@ -897,26 +955,26 @@ OIIO_ADD_TEST(ExposureContrastRenderer, video)
 
     OCIO::ConstExposureContrastOpDataRcPtr const_ec = ec;
     OCIO::OpCPURcPtr renderer = OCIO::GetExposureContrastCPURenderer(const_ec);
-    OIIO_CHECK_ASSERT(OCIO::DynamicPtrCast<OCIO::ECVideoRenderer>(renderer));
+    OCIO_CHECK_ASSERT(OCIO::DynamicPtrCast<OCIO::ECVideoRenderer>(renderer));
     std::vector<float> rgba = rgbaImage;
 
     renderer->apply(rgba.data(), rgba.data(), 4);
 
-    OIIO_CHECK_EQUAL(rgba[0], videoECVal(rgbaImage[0], const_ec));
-    OIIO_CHECK_EQUAL(rgba[1], videoECVal(rgbaImage[1], const_ec));
-    OIIO_CHECK_EQUAL(rgba[2], videoECVal(rgbaImage[2], const_ec));
-    OIIO_CHECK_EQUAL(rgba[3], rgbaImage[3]);
-    OIIO_CHECK_EQUAL(rgba[4], videoECVal(rgbaImage[4], const_ec));
-    OIIO_CHECK_EQUAL(rgba[5], videoECVal(rgbaImage[5], const_ec));
-    OIIO_CHECK_EQUAL(rgba[6], videoECVal(rgbaImage[6], const_ec));
-    OIIO_CHECK_EQUAL(rgba[7], rgbaImage[7]);
+    OCIO_CHECK_EQUAL(rgba[0], videoECVal(rgbaImage[0], const_ec));
+    OCIO_CHECK_EQUAL(rgba[1], videoECVal(rgbaImage[1], const_ec));
+    OCIO_CHECK_EQUAL(rgba[2], videoECVal(rgbaImage[2], const_ec));
+    OCIO_CHECK_EQUAL(rgba[3], rgbaImage[3]);
+    OCIO_CHECK_EQUAL(rgba[4], videoECVal(rgbaImage[4], const_ec));
+    OCIO_CHECK_EQUAL(rgba[5], videoECVal(rgbaImage[5], const_ec));
+    OCIO_CHECK_EQUAL(rgba[6], videoECVal(rgbaImage[6], const_ec));
+    OCIO_CHECK_EQUAL(rgba[7], rgbaImage[7]);
 
-    OIIO_CHECK_ASSERT(std::isnan(rgba[8]));
-    OIIO_CHECK_ASSERT(std::isnan(rgba[9]));
-    OIIO_CHECK_ASSERT(std::isnan(rgba[10]));
-    OIIO_CHECK_EQUAL(rgba[12], videoECVal(rgbaImage[12], const_ec));
-    OIIO_CHECK_EQUAL(rgba[13], videoECVal(rgbaImage[13], const_ec));
-    OIIO_CHECK_EQUAL(rgba[14], videoECVal(rgbaImage[14], const_ec));
+    OCIO_CHECK_ASSERT(std::isnan(rgba[8]));
+    OCIO_CHECK_ASSERT(std::isnan(rgba[9]));
+    OCIO_CHECK_ASSERT(std::isnan(rgba[10]));
+    OCIO_CHECK_EQUAL(rgba[12], videoECVal(rgbaImage[12], const_ec));
+    OCIO_CHECK_EQUAL(rgba[13], videoECVal(rgbaImage[13], const_ec));
+    OCIO_CHECK_EQUAL(rgba[14], videoECVal(rgbaImage[14], const_ec));
 
     // Re-test with different E/C values.
     //
@@ -932,24 +990,24 @@ OIIO_ADD_TEST(ExposureContrastRenderer, video)
 
     // As the ssePower is an approximation, strict equality is not possible.
     const float error = 1e-5f;
-    OIIO_CHECK_CLOSE(rgba[0], videoECVal(rgbaImage[0], const_ec), error);
-    OIIO_CHECK_CLOSE(rgba[1], videoECVal(rgbaImage[1], const_ec), error);
-    OIIO_CHECK_CLOSE(rgba[2], videoECVal(rgbaImage[2], const_ec), error);
-    OIIO_CHECK_EQUAL(rgba[3], rgbaImage[3]);
-    OIIO_CHECK_CLOSE(rgba[4], videoECVal(rgbaImage[4], const_ec), error);
-    OIIO_CHECK_CLOSE(rgba[5], videoECVal(rgbaImage[5], const_ec), error);
-    OIIO_CHECK_CLOSE(rgba[6], videoECVal(rgbaImage[6], const_ec), error);
-    OIIO_CHECK_EQUAL(rgba[7], rgbaImage[7]);
+    OCIO_CHECK_CLOSE(rgba[0], videoECVal(rgbaImage[0], const_ec), error);
+    OCIO_CHECK_CLOSE(rgba[1], videoECVal(rgbaImage[1], const_ec), error);
+    OCIO_CHECK_CLOSE(rgba[2], videoECVal(rgbaImage[2], const_ec), error);
+    OCIO_CHECK_EQUAL(rgba[3], rgbaImage[3]);
+    OCIO_CHECK_CLOSE(rgba[4], videoECVal(rgbaImage[4], const_ec), error);
+    OCIO_CHECK_CLOSE(rgba[5], videoECVal(rgbaImage[5], const_ec), error);
+    OCIO_CHECK_CLOSE(rgba[6], videoECVal(rgbaImage[6], const_ec), error);
+    OCIO_CHECK_EQUAL(rgba[7], rgbaImage[7]);
 
-    OIIO_CHECK_CLOSE(rgba[8], videoECVal(rgbaImage[8], const_ec), error);
-    OIIO_CHECK_CLOSE(rgba[9], videoECVal(rgbaImage[9], const_ec), error);
-    OIIO_CHECK_CLOSE(rgba[10], videoECVal(rgbaImage[10], const_ec), error);
-    OIIO_CHECK_EQUAL(rgba[12], videoECVal(rgbaImage[12], const_ec));
-    OIIO_CHECK_EQUAL(rgba[13], videoECVal(rgbaImage[13], const_ec));
-    OIIO_CHECK_EQUAL(rgba[14], videoECVal(rgbaImage[14], const_ec));
+    OCIO_CHECK_CLOSE(rgba[8], videoECVal(rgbaImage[8], const_ec), error);
+    OCIO_CHECK_CLOSE(rgba[9], videoECVal(rgbaImage[9], const_ec), error);
+    OCIO_CHECK_CLOSE(rgba[10], videoECVal(rgbaImage[10], const_ec), error);
+    OCIO_CHECK_EQUAL(rgba[12], videoECVal(rgbaImage[12], const_ec));
+    OCIO_CHECK_EQUAL(rgba[13], videoECVal(rgbaImage[13], const_ec));
+    OCIO_CHECK_EQUAL(rgba[14], videoECVal(rgbaImage[14], const_ec));
 }
 
-OIIO_ADD_TEST(ExposureContrastRenderer, log)
+OCIO_ADD_TEST(ExposureContrastRenderer, log)
 {
     //
     // Log case, no scaling
@@ -972,7 +1030,7 @@ OIIO_ADD_TEST(ExposureContrastRenderer, log)
 
     OCIO::ConstExposureContrastOpDataRcPtr const_ec = ec;
     OCIO::OpCPURcPtr renderer = OCIO::GetExposureContrastCPURenderer(const_ec);
-    OIIO_CHECK_ASSERT(OCIO::DynamicPtrCast<OCIO::ECLogarithmicRenderer>(renderer));
+    OCIO_CHECK_ASSERT(OCIO::DynamicPtrCast<OCIO::ECLogarithmicRenderer>(renderer));
 
     std::vector<float> rgba = rgbaImage;
 
@@ -981,21 +1039,21 @@ OIIO_ADD_TEST(ExposureContrastRenderer, log)
     const float inMax = OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_F32);
     const float outMax = OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_F32);
 
-    OIIO_CHECK_EQUAL(rgba[0], logECVal(rgbaImage[0], const_ec, inMax, outMax));
-    OIIO_CHECK_EQUAL(rgba[1], logECVal(rgbaImage[1], const_ec, inMax, outMax));
-    OIIO_CHECK_EQUAL(rgba[2], logECVal(rgbaImage[2], const_ec, inMax, outMax));
-    OIIO_CHECK_EQUAL(rgba[3], rgbaImage[3] * outMax / inMax);
-    OIIO_CHECK_EQUAL(rgba[4], logECVal(rgbaImage[4], const_ec, inMax, outMax));
-    OIIO_CHECK_EQUAL(rgba[5], logECVal(rgbaImage[5], const_ec, inMax, outMax));
-    OIIO_CHECK_EQUAL(rgba[6], logECVal(rgbaImage[6], const_ec, inMax, outMax));
-    OIIO_CHECK_EQUAL(rgba[7], rgbaImage[7] * outMax / inMax);
+    OCIO_CHECK_EQUAL(rgba[0], logECVal(rgbaImage[0], const_ec, inMax, outMax));
+    OCIO_CHECK_EQUAL(rgba[1], logECVal(rgbaImage[1], const_ec, inMax, outMax));
+    OCIO_CHECK_EQUAL(rgba[2], logECVal(rgbaImage[2], const_ec, inMax, outMax));
+    OCIO_CHECK_EQUAL(rgba[3], rgbaImage[3] * outMax / inMax);
+    OCIO_CHECK_EQUAL(rgba[4], logECVal(rgbaImage[4], const_ec, inMax, outMax));
+    OCIO_CHECK_EQUAL(rgba[5], logECVal(rgbaImage[5], const_ec, inMax, outMax));
+    OCIO_CHECK_EQUAL(rgba[6], logECVal(rgbaImage[6], const_ec, inMax, outMax));
+    OCIO_CHECK_EQUAL(rgba[7], rgbaImage[7] * outMax / inMax);
 
-    OIIO_CHECK_ASSERT(std::isnan(rgba[8]));
-    OIIO_CHECK_ASSERT(std::isnan(rgba[9]));
-    OIIO_CHECK_ASSERT(std::isnan(rgba[10]));
-    OIIO_CHECK_EQUAL(rgba[12], logECVal(rgbaImage[12], const_ec));
-    OIIO_CHECK_EQUAL(rgba[13], logECVal(rgbaImage[13], const_ec));
-    OIIO_CHECK_EQUAL(rgba[14], logECVal(rgbaImage[14], const_ec));
+    OCIO_CHECK_ASSERT(std::isnan(rgba[8]));
+    OCIO_CHECK_ASSERT(std::isnan(rgba[9]));
+    OCIO_CHECK_ASSERT(std::isnan(rgba[10]));
+    OCIO_CHECK_EQUAL(rgba[12], logECVal(rgbaImage[12], const_ec));
+    OCIO_CHECK_EQUAL(rgba[13], logECVal(rgbaImage[13], const_ec));
+    OCIO_CHECK_EQUAL(rgba[14], logECVal(rgbaImage[14], const_ec));
 
     // Re-test with differenc E/C values.
     //
@@ -1006,24 +1064,24 @@ OIIO_ADD_TEST(ExposureContrastRenderer, log)
     rgba = rgbaImage;
     renderer->apply(rgba.data(), rgba.data(), 4);
 
-    OIIO_CHECK_EQUAL(rgba[0], logECVal(rgbaImage[0], const_ec, inMax, outMax));
-    OIIO_CHECK_EQUAL(rgba[1], logECVal(rgbaImage[1], const_ec, inMax, outMax));
-    OIIO_CHECK_EQUAL(rgba[2], logECVal(rgbaImage[2], const_ec, inMax, outMax));
-    OIIO_CHECK_EQUAL(rgba[3], rgbaImage[3] * outMax / inMax);
-    OIIO_CHECK_EQUAL(rgba[4], logECVal(rgbaImage[4], const_ec, inMax, outMax));
-    OIIO_CHECK_EQUAL(rgba[5], logECVal(rgbaImage[5], const_ec, inMax, outMax));
-    OIIO_CHECK_EQUAL(rgba[6], logECVal(rgbaImage[6], const_ec, inMax, outMax));
-    OIIO_CHECK_EQUAL(rgba[7], rgbaImage[7] * outMax / inMax);
+    OCIO_CHECK_EQUAL(rgba[0], logECVal(rgbaImage[0], const_ec, inMax, outMax));
+    OCIO_CHECK_EQUAL(rgba[1], logECVal(rgbaImage[1], const_ec, inMax, outMax));
+    OCIO_CHECK_EQUAL(rgba[2], logECVal(rgbaImage[2], const_ec, inMax, outMax));
+    OCIO_CHECK_EQUAL(rgba[3], rgbaImage[3] * outMax / inMax);
+    OCIO_CHECK_EQUAL(rgba[4], logECVal(rgbaImage[4], const_ec, inMax, outMax));
+    OCIO_CHECK_EQUAL(rgba[5], logECVal(rgbaImage[5], const_ec, inMax, outMax));
+    OCIO_CHECK_EQUAL(rgba[6], logECVal(rgbaImage[6], const_ec, inMax, outMax));
+    OCIO_CHECK_EQUAL(rgba[7], rgbaImage[7] * outMax / inMax);
 
-    OIIO_CHECK_ASSERT(std::isnan(rgba[8]));
-    OIIO_CHECK_ASSERT(std::isnan(rgba[9]));
-    OIIO_CHECK_ASSERT(std::isnan(rgba[10]));
-    OIIO_CHECK_EQUAL(rgba[12], logECVal(rgbaImage[12], const_ec));
-    OIIO_CHECK_EQUAL(rgba[13], logECVal(rgbaImage[13], const_ec));
-    OIIO_CHECK_EQUAL(rgba[14], logECVal(rgbaImage[14], const_ec));
+    OCIO_CHECK_ASSERT(std::isnan(rgba[8]));
+    OCIO_CHECK_ASSERT(std::isnan(rgba[9]));
+    OCIO_CHECK_ASSERT(std::isnan(rgba[10]));
+    OCIO_CHECK_EQUAL(rgba[12], logECVal(rgbaImage[12], const_ec));
+    OCIO_CHECK_EQUAL(rgba[13], logECVal(rgbaImage[13], const_ec));
+    OCIO_CHECK_EQUAL(rgba[14], logECVal(rgbaImage[14], const_ec));
 }
 
-OIIO_ADD_TEST(ExposureContrastRenderer, linear)
+OCIO_ADD_TEST(ExposureContrastRenderer, linear)
 {
     //
     // Linear case, no scaling
@@ -1044,27 +1102,27 @@ OIIO_ADD_TEST(ExposureContrastRenderer, linear)
 
     OCIO::ConstExposureContrastOpDataRcPtr const_ec = ec;
     OCIO::OpCPURcPtr renderer = OCIO::GetExposureContrastCPURenderer(const_ec);
-    OIIO_CHECK_ASSERT(OCIO::DynamicPtrCast<OCIO::ECLinearRenderer>(renderer));
+    OCIO_CHECK_ASSERT(OCIO::DynamicPtrCast<OCIO::ECLinearRenderer>(renderer));
 
     std::vector<float> rgba = rgbaImage;
 
     renderer->apply(rgba.data(), rgba.data(), 4);
 
-    OIIO_CHECK_EQUAL(rgba[0], linECVal(rgbaImage[0], const_ec));
-    OIIO_CHECK_EQUAL(rgba[1], linECVal(rgbaImage[1], const_ec));
-    OIIO_CHECK_EQUAL(rgba[2], linECVal(rgbaImage[2], const_ec));
-    OIIO_CHECK_EQUAL(rgba[3], rgbaImage[3]);
-    OIIO_CHECK_EQUAL(rgba[4], linECVal(rgbaImage[4], const_ec));
-    OIIO_CHECK_EQUAL(rgba[5], linECVal(rgbaImage[5], const_ec));
-    OIIO_CHECK_EQUAL(rgba[6], linECVal(rgbaImage[6], const_ec));
-    OIIO_CHECK_EQUAL(rgba[7], rgbaImage[7]);
+    OCIO_CHECK_EQUAL(rgba[0], linECVal(rgbaImage[0], const_ec));
+    OCIO_CHECK_EQUAL(rgba[1], linECVal(rgbaImage[1], const_ec));
+    OCIO_CHECK_EQUAL(rgba[2], linECVal(rgbaImage[2], const_ec));
+    OCIO_CHECK_EQUAL(rgba[3], rgbaImage[3]);
+    OCIO_CHECK_EQUAL(rgba[4], linECVal(rgbaImage[4], const_ec));
+    OCIO_CHECK_EQUAL(rgba[5], linECVal(rgbaImage[5], const_ec));
+    OCIO_CHECK_EQUAL(rgba[6], linECVal(rgbaImage[6], const_ec));
+    OCIO_CHECK_EQUAL(rgba[7], rgbaImage[7]);
 
-    OIIO_CHECK_ASSERT(std::isnan(rgba[8]));
-    OIIO_CHECK_ASSERT(std::isnan(rgba[9]));
-    OIIO_CHECK_ASSERT(std::isnan(rgba[10]));
-    OIIO_CHECK_EQUAL(rgba[12], linECVal(rgbaImage[12], const_ec));
-    OIIO_CHECK_EQUAL(rgba[13], linECVal(rgbaImage[13], const_ec));
-    OIIO_CHECK_EQUAL(rgba[14], linECVal(rgbaImage[14], const_ec));
+    OCIO_CHECK_ASSERT(std::isnan(rgba[8]));
+    OCIO_CHECK_ASSERT(std::isnan(rgba[9]));
+    OCIO_CHECK_ASSERT(std::isnan(rgba[10]));
+    OCIO_CHECK_EQUAL(rgba[12], linECVal(rgbaImage[12], const_ec));
+    OCIO_CHECK_EQUAL(rgba[13], linECVal(rgbaImage[13], const_ec));
+    OCIO_CHECK_EQUAL(rgba[14], linECVal(rgbaImage[14], const_ec));
 
     // Re-test with different E/C values.
     //
@@ -1078,21 +1136,21 @@ OIIO_ADD_TEST(ExposureContrastRenderer, linear)
     // As the ssePower is an approximation, strict equality is not possible.
     const float error = 5e-5f;
 
-    OIIO_CHECK_CLOSE(rgba[0], linECVal(rgbaImage[0], const_ec), error);
-    OIIO_CHECK_CLOSE(rgba[1], linECVal(rgbaImage[1], const_ec), error);
-    OIIO_CHECK_CLOSE(rgba[2], linECVal(rgbaImage[2], const_ec), error);
-    OIIO_CHECK_EQUAL(rgba[3], rgbaImage[3]);
-    OIIO_CHECK_CLOSE(rgba[4], linECVal(rgbaImage[4], const_ec), error);
-    OIIO_CHECK_CLOSE(rgba[5], linECVal(rgbaImage[5], const_ec), error);
-    OIIO_CHECK_CLOSE(rgba[6], linECVal(rgbaImage[6], const_ec), error);
-    OIIO_CHECK_EQUAL(rgba[7], rgbaImage[7]);
+    OCIO_CHECK_CLOSE(rgba[0], linECVal(rgbaImage[0], const_ec), error);
+    OCIO_CHECK_CLOSE(rgba[1], linECVal(rgbaImage[1], const_ec), error);
+    OCIO_CHECK_CLOSE(rgba[2], linECVal(rgbaImage[2], const_ec), error);
+    OCIO_CHECK_EQUAL(rgba[3], rgbaImage[3]);
+    OCIO_CHECK_CLOSE(rgba[4], linECVal(rgbaImage[4], const_ec), error);
+    OCIO_CHECK_CLOSE(rgba[5], linECVal(rgbaImage[5], const_ec), error);
+    OCIO_CHECK_CLOSE(rgba[6], linECVal(rgbaImage[6], const_ec), error);
+    OCIO_CHECK_EQUAL(rgba[7], rgbaImage[7]);
 
-    OIIO_CHECK_CLOSE(rgba[8], linECVal(rgbaImage[8], const_ec), error);
-    OIIO_CHECK_CLOSE(rgba[9], linECVal(rgbaImage[9], const_ec), error);
-    OIIO_CHECK_CLOSE(rgba[10], linECVal(rgbaImage[10], const_ec), error);
-    OIIO_CHECK_EQUAL(rgba[12], linECVal(rgbaImage[12], const_ec));
-    OIIO_CHECK_EQUAL(rgba[13], linECVal(rgbaImage[13], const_ec));
-    OIIO_CHECK_EQUAL(rgba[14], linECVal(rgbaImage[14], const_ec));
+    OCIO_CHECK_CLOSE(rgba[8], linECVal(rgbaImage[8], const_ec), error);
+    OCIO_CHECK_CLOSE(rgba[9], linECVal(rgbaImage[9], const_ec), error);
+    OCIO_CHECK_CLOSE(rgba[10], linECVal(rgbaImage[10], const_ec), error);
+    OCIO_CHECK_EQUAL(rgba[12], linECVal(rgbaImage[12], const_ec));
+    OCIO_CHECK_EQUAL(rgba[13], linECVal(rgbaImage[13], const_ec));
+    OCIO_CHECK_EQUAL(rgba[14], linECVal(rgbaImage[14], const_ec));
 }
 
 namespace
@@ -1126,18 +1184,18 @@ void TestECInverse(OCIO::ExposureContrastOpData::Style style)
     // As the ssePower is an approximation, strict equality is not possible.
     const float error = 1e-5f;
 
-    OIIO_CHECK_CLOSE(rgba[0], rgbaImage[0], error);
-    OIIO_CHECK_CLOSE(rgba[1], rgbaImage[1], error);
-    OIIO_CHECK_CLOSE(rgba[2], rgbaImage[2], error);
-    OIIO_CHECK_EQUAL(rgba[3], rgbaImage[3]);
-    OIIO_CHECK_CLOSE(rgba[4], rgbaImage[4], error);
-    OIIO_CHECK_CLOSE(rgba[5], rgbaImage[5], error);
-    OIIO_CHECK_CLOSE(rgba[6], rgbaImage[6], error);
-    OIIO_CHECK_EQUAL(rgba[7], rgbaImage[7]);
+    OCIO_CHECK_CLOSE(rgba[0], rgbaImage[0], error);
+    OCIO_CHECK_CLOSE(rgba[1], rgbaImage[1], error);
+    OCIO_CHECK_CLOSE(rgba[2], rgbaImage[2], error);
+    OCIO_CHECK_EQUAL(rgba[3], rgbaImage[3]);
+    OCIO_CHECK_CLOSE(rgba[4], rgbaImage[4], error);
+    OCIO_CHECK_CLOSE(rgba[5], rgbaImage[5], error);
+    OCIO_CHECK_CLOSE(rgba[6], rgbaImage[6], error);
+    OCIO_CHECK_EQUAL(rgba[7], rgbaImage[7]);
 }
 }
 
-OIIO_ADD_TEST(ExposureContrastRenderer, inverse)
+OCIO_ADD_TEST(ExposureContrastRenderer, inverse)
 {
     TestECInverse(OCIO::ExposureContrastOpData::STYLE_LOGARITHMIC);
     TestECInverse(OCIO::ExposureContrastOpData::STYLE_LINEAR);
@@ -1181,17 +1239,17 @@ void TestLogParamForStyle(OCIO::ExposureContrastOpData::Style style, bool hasEff
         {
             if (!hasEffect || i%4 == 3) // EC does not affect alpha
             {
-                OIIO_CHECK_EQUAL(rgba[i], rgbaRef[i]);
+                OCIO_CHECK_EQUAL(rgba[i], rgbaRef[i]);
             }
             else
             {
-                OIIO_CHECK_NE(rgba[i], rgbaRef[i]);
+                OCIO_CHECK_NE(rgba[i], rgbaRef[i]);
             }
         }
     }
 }
 
-OIIO_ADD_TEST(ExposureContrastRenderer, log_params)
+OCIO_ADD_TEST(ExposureContrastRenderer, log_params)
 {
     TestLogParamForStyle(OCIO::ExposureContrastOpData::STYLE_VIDEO, false);
     TestLogParamForStyle(OCIO::ExposureContrastOpData::STYLE_VIDEO_REV, false);

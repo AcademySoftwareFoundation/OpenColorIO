@@ -93,6 +93,15 @@ public:
     typedef std::vector<double> Params;
 
     GammaOpData();
+    GammaOpData( const GammaOpData &) = default;
+
+    GammaOpData(BitDepth inBitDepth,
+                BitDepth outBitDepth,
+                const Style & style,
+                const Params & redParams,
+                const Params & greenParams,
+                const Params & blueParams,
+                const Params & alphaParams);
 
     GammaOpData(BitDepth inBitDepth,
                 BitDepth outBitDepth,

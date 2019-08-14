@@ -203,7 +203,7 @@ OCIO_NAMESPACE_ENTER
                 return 0;
             }
             PackedImageDesc img(&data[0], long(data.size()/3), 1, 3);
-            processor->apply(img);
+            processor->getDefaultCPUProcessor()->apply(img);
             return CreatePyListFromFloatVector(data);
             OCIO_PYTRY_EXIT(NULL)
         }
@@ -231,7 +231,7 @@ OCIO_NAMESPACE_ENTER
                 return 0;
             }
             PackedImageDesc img(&data[0], long(data.size()/4), 1, 4);
-            processor->apply(img);
+            processor->getDefaultCPUProcessor()->apply(img);
             return CreatePyListFromFloatVector(data);
             OCIO_PYTRY_EXIT(NULL)
         }

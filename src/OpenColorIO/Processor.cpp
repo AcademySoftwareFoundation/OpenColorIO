@@ -28,22 +28,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <algorithm>
 #include <cstring>
-#include <sstream>
 #include <iterator>
+#include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "CPUProcessor.h"
-#include "GpuShader.h"
-#include "GpuShaderUtils.h"
+#include "GPUProcessor.h"
 #include "HashUtils.h"
-#include "Logging.h"
 #include "OpBuilders.h"
-#include "ops/Allocation/AllocationOp.h"
-#include "ops/Lut3D/Lut3DOp.h"
-#include "ops/NoOp/NoOps.h"
 #include "Processor.h"
-#include "ScanlineHelper.h"
+
 
 OCIO_NAMESPACE_ENTER
 {
@@ -77,7 +72,7 @@ OCIO_NAMESPACE_ENTER
     ProcessorMetadata::~ProcessorMetadata()
     {
         delete m_impl;
-        m_impl = NULL;
+        m_impl = nullptr;
     }
     
     void ProcessorMetadata::deleter(ProcessorMetadata* c)
@@ -148,14 +143,14 @@ OCIO_NAMESPACE_ENTER
     }
     
     Processor::Processor()
-    : m_impl(new Processor::Impl)
+        : m_impl(new Processor::Impl)
     {
     }
     
     Processor::~Processor()
     {
         delete m_impl;
-        m_impl = NULL;
+        m_impl = nullptr;
     }
     
     bool Processor::isNoOp() const
@@ -172,124 +167,54 @@ OCIO_NAMESPACE_ENTER
     {
         return getImpl()->getMetadata();
     }
-    
+
+    bool Processor::hasDynamicProperty(DynamicPropertyType type) const
+    {
+        return getImpl()->hasDynamicProperty(type);
+    }
+
     DynamicPropertyRcPtr Processor::getDynamicProperty(DynamicPropertyType type) const
     {
         return getImpl()->getDynamicProperty(type);
     }
 
-    void Processor::apply(ImageDesc& img) const
+    const char * Processor::getCacheID() const
     {
-        getImpl()->apply(img);
-    }
-    void Processor::applyRGB(float * pixel) const
-    {
-        getImpl()->applyRGB(pixel);
+        return getImpl()->getCacheID();
     }
     
-    void Processor::applyRGBA(float * pixel) const
+    ConstGPUProcessorRcPtr Processor::getDefaultGPUProcessor() const
     {
-        getImpl()->applyRGBA(pixel);
-    }
-    
-    const char * Processor::getCpuCacheID() const
-    {
-        return getImpl()->getCpuCacheID();
-    }
-    
-    void Processor::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
-    {
-        getImpl()->extractGpuShaderInfo(shaderDesc);
-    }
-    
-    ConstCPUProcessorRcPtr Processor::getCPUProcessor(PixelFormat in, PixelFormat out) const
-    {
-        return getImpl()->getCPUProcessor(in, out);
+        return getImpl()->getDefaultGPUProcessor();
     }
 
-    //////////////////////////////////////////////////////////////////////////
-    
-    
-    
-    namespace
+    ConstGPUProcessorRcPtr Processor::getOptimizedGPUProcessor(OptimizationFlags oFlags, 
+                                                               FinalizationFlags fFlags) const
     {
-        void WriteShaderHeader(GpuShaderDescRcPtr & shaderDesc)
-        {
-            const std::string fcnName(shaderDesc->getFunctionName());
-
-            GpuShaderText ss(shaderDesc->getLanguage());
-
-            ss.newLine();
-            ss.newLine() << "// Declaration of the OCIO shader function";
-            ss.newLine();
-
-            ss.newLine() << ss.vec4fKeyword() << " " << fcnName 
-                         << "(in "  << ss.vec4fKeyword() << " inPixel)";
-            ss.newLine() << "{";
-            ss.indent();
-            ss.newLine() << ss.vec4fKeyword() << " " 
-                         << shaderDesc->getPixelName() << " = inPixel;";
-
-            shaderDesc->addToFunctionHeaderShaderCode(ss.string().c_str());
-        }
-        
-        
-        void WriteShaderFooter(GpuShaderDescRcPtr & shaderDesc)
-        {
-            GpuShaderText ss(shaderDesc->getLanguage());
-
-            ss.newLine();
-            ss.indent();
-            ss.newLine() << "return " << shaderDesc->getPixelName() << ";";
-            ss.dedent();
-            ss.newLine() << "}";
-
-            shaderDesc->addToFunctionFooterShaderCode(ss.string().c_str());
-        }
-
-
-        OpRcPtrVec create3DLut(const OpRcPtrVec & src, unsigned edgelen)
-        {
-            if(src.size()==0) return OpRcPtrVec();
-
-            const unsigned lut3DEdgeLen   = edgelen;
-            const unsigned lut3DNumPixels = lut3DEdgeLen*lut3DEdgeLen*lut3DEdgeLen;
-
-            Lut3DRcPtr lut = Lut3D::Create();
-            lut->size[0] = lut3DEdgeLen;
-            lut->size[1] = lut3DEdgeLen;
-            lut->size[2] = lut3DEdgeLen;
-
-            lut->lut.resize(lut3DNumPixels*3);
-            
-            // Allocate 3D LUT image, RGBA
-            std::vector<float> lut3D(lut3DNumPixels*4);
-            GenerateIdentityLut3D(&lut3D[0], lut3DEdgeLen, 4, LUT3DORDER_FAST_RED);
-            
-            // Apply the lattice ops to it
-            for(auto & op : src)
-            {
-                op->apply(&lut3D[0], &lut3D[0], lut3DNumPixels);
-            }
-            
-            // Convert the RGBA image to an RGB image, in place.           
-            for(unsigned i=0; i<lut3DNumPixels; ++i)
-            {
-                lut->lut[3*i+0] = lut3D[4*i+0];
-                lut->lut[3*i+1] = lut3D[4*i+1];
-                lut->lut[3*i+2] = lut3D[4*i+2];
-            }
-
-            OpRcPtrVec ops;
-            CreateLut3DOp(ops, lut, INTERP_LINEAR, TRANSFORM_DIR_FORWARD);
-            return ops;
-        }
+        return getImpl()->getOptimizedGPUProcessor(oFlags, fFlags);
     }
+
+    ConstCPUProcessorRcPtr Processor::getDefaultCPUProcessor() const
+    {
+        return getImpl()->getDefaultCPUProcessor();
+    }
+
+    ConstCPUProcessorRcPtr Processor::getOptimizedCPUProcessor(OptimizationFlags oFlags,
+                                                               FinalizationFlags fFlags) const
+    {
+        return getImpl()->getOptimizedCPUProcessor(oFlags, fFlags);
+    }
+
+    ConstCPUProcessorRcPtr Processor::getOptimizedCPUProcessor(BitDepth inBitDepth, 
+                                                               BitDepth outBitDepth,
+                                                               OptimizationFlags oFlags,
+                                                               FinalizationFlags fFlags) const
+    {
+        return getImpl()->getOptimizedCPUProcessor(inBitDepth, outBitDepth, oFlags, fFlags);
+    }
+
     
-    
-    //////////////////////////////////////////////////////////////////////////
-    
-    
+
     Processor::Impl::Impl():
         m_metadata(ProcessorMetadata::Create())
     {
@@ -305,7 +230,7 @@ OCIO_NAMESPACE_ENTER
     
     bool Processor::Impl::hasChannelCrosstalk() const
     {
-        for(auto & op : m_ops)
+        for(const auto & op : m_ops)
         {
             if(op->hasChannelCrosstalk()) return true;
         }
@@ -317,71 +242,34 @@ OCIO_NAMESPACE_ENTER
     {
         return m_metadata;
     }
-    
+
+    bool Processor::Impl::hasDynamicProperty(DynamicPropertyType type) const
+    {
+        for(const auto & op : m_ops)
+        {
+            if(op->hasDynamicProperty(type))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     DynamicPropertyRcPtr Processor::Impl::getDynamicProperty(DynamicPropertyType type) const
     {
-        for (auto op : m_ops)
+        for(const auto & op : m_ops)
         {
-            if (op->hasDynamicProperty(type))
+            if(op->hasDynamicProperty(type))
             {
                 return op->getDynamicProperty(type);
             }
         }
+
         throw Exception("Cannot find dynamic property; not used by processor.");
     }
 
-    void Processor::Impl::apply(ImageDesc& img) const
-    {
-        if(m_ops.empty()) return;
-        
-        ScanlineHelper scanlineHelper(img);
-        float * rgbaBuffer = 0;
-        long numPixels = 0;
-        
-        while(true)
-        {
-            scanlineHelper.prepRGBAScanline(&rgbaBuffer, &numPixels);
-            if(numPixels == 0) break;
-            if(!rgbaBuffer)
-                throw Exception("Cannot apply transform; null image.");
-            
-            for(auto & op : m_ops)
-            {
-                op->apply(rgbaBuffer, numPixels);
-            }
-            
-            scanlineHelper.finishRGBAScanline();
-        }
-    }
-    
-    void Processor::Impl::applyRGB(float * pixel) const
-    {
-        if(m_ops.empty()) return;
-        
-        // We need to allocate a temp array as the pixel must be 4 floats in size
-        // (otherwise, sse loads will potentially fail)
-        
-        float rgbaBuffer[4] = { pixel[0], pixel[1], pixel[2], 0.0f };
-        
-        for(auto & op : m_ops)
-        {
-            op->apply(rgbaBuffer, 1);
-        }
-
-        pixel[0] = rgbaBuffer[0];
-        pixel[1] = rgbaBuffer[1];
-        pixel[2] = rgbaBuffer[2];
-    }
-    
-    void Processor::Impl::applyRGBA(float * pixel) const
-    {
-        for(auto & op : m_ops)
-        {
-            op->apply(pixel, 1);
-        }
-    }
-    
-    const char * Processor::Impl::getCpuCacheID() const
+    const char * Processor::Impl::getCacheID() const
     {
         AutoMutex lock(m_resultsCacheMutex);
         
@@ -394,7 +282,7 @@ OCIO_NAMESPACE_ENTER
         else
         {
             std::ostringstream cacheid;
-            for(auto & op : m_ops)
+            for(const auto & op : m_ops)
             {
                 cacheid << op->getCacheID() << " ";
             }
@@ -406,153 +294,94 @@ OCIO_NAMESPACE_ENTER
         return m_cpuCacheID.c_str();
     }
     
-    
     ///////////////////////////////////////////////////////////////////////////
-    
-    
-    void Processor::Impl::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
+
+    ConstGPUProcessorRcPtr Processor::Impl::getDefaultGPUProcessor() const
     {
-        AutoMutex lock(m_resultsCacheMutex);
+        GPUProcessorRcPtr gpu = GPUProcessorRcPtr(new GPUProcessor(), &GPUProcessor::deleter);
 
-        LegacyGpuShaderDesc * legacy = dynamic_cast<LegacyGpuShaderDesc*>(shaderDesc.get());
+        gpu->getImpl()->finalize(m_ops, 
+                                 OPTIMIZATION_DEFAULT, FINALIZATION_DEFAULT);
 
-        OpRcPtrVec gpuOps;
-
-        if(legacy)
-        {
-            // GPU Process setup
-            //
-            // Partition the original, raw opvec into 3 segments for GPU Processing
-            //
-            // Interior index range does not support the gpu shader.
-            // This is used to bound our analytical shader text generation
-            // start index and end index are inclusive.
-            
-            // These 3 op vecs represent the 3 stages in our gpu pipe.
-            // 1) preprocess shader text
-            // 2) 3D LUT process lookup
-            // 3) postprocess shader text
-            
-            OpRcPtrVec gpuOpsHwPreProcess;
-            OpRcPtrVec gpuOpsCpuLatticeProcess;
-            OpRcPtrVec gpuOpsHwPostProcess;
-
-            PartitionGPUOps(gpuOpsHwPreProcess,
-                            gpuOpsCpuLatticeProcess,
-                            gpuOpsHwPostProcess,
-                            m_ops);
-
-            LogDebug("GPU Ops: Pre-3DLUT");
-            FinalizeOpVec(gpuOpsHwPreProcess);
-
-            LogDebug("GPU Ops: 3DLUT");
-            FinalizeOpVec(gpuOpsCpuLatticeProcess);
-            OpRcPtrVec gpuLut = create3DLut(gpuOpsCpuLatticeProcess, legacy->getEdgelen());
-            FinalizeOpVec(gpuLut);
-
-            LogDebug("GPU Ops: Post-3DLUT");
-            FinalizeOpVec(gpuOpsHwPostProcess);
-
-            gpuOps += gpuOpsHwPreProcess;
-            gpuOps += gpuLut;
-            gpuOps += gpuOpsHwPostProcess;
-        }
-        else
-        {
-            // Note: finalize() already finalized & optimized the Op list.
-
-            LogDebug("GPU Ops");
-            gpuOps = m_ops;
-        }
-
-        // Create the shader program information
-        for(auto & op : gpuOps)
-        {
-            op->extractGpuShaderInfo(shaderDesc);
-        }
-
-        WriteShaderHeader(shaderDesc);
-        WriteShaderFooter(shaderDesc);
-
-        shaderDesc->finalize();
-            
-        if(IsDebugLoggingEnabled())
-        {
-            LogDebug("GPU Shader");
-            LogDebug(shaderDesc->getShaderText());
-        }
+        return gpu;
     }
 
+    ConstGPUProcessorRcPtr Processor::Impl::getOptimizedGPUProcessor(OptimizationFlags oFlags,
+                                                                     FinalizationFlags fFlags) const
+    {
+        GPUProcessorRcPtr gpu = GPUProcessorRcPtr(new GPUProcessor(), &GPUProcessor::deleter);
+
+        gpu->getImpl()->finalize(m_ops, oFlags, fFlags);
+
+        return gpu;
+    }
 
     ///////////////////////////////////////////////////////////////////////////
-    
-    ConstCPUProcessorRcPtr Processor::Impl::getCPUProcessor(PixelFormat in, PixelFormat out) const
+
+    ConstCPUProcessorRcPtr Processor::Impl::getDefaultCPUProcessor() const
     {
         CPUProcessorRcPtr cpu = CPUProcessorRcPtr(new CPUProcessor(), &CPUProcessor::deleter);
-        cpu->getImpl()->finalize(m_ops, in, out);
+
+        cpu->getImpl()->finalize(m_ops, 
+                                 BIT_DEPTH_F32, BIT_DEPTH_F32, 
+                                 OPTIMIZATION_DEFAULT, FINALIZATION_DEFAULT);
+
+        return cpu;
+    }
+
+    ConstCPUProcessorRcPtr Processor::Impl::getOptimizedCPUProcessor(OptimizationFlags oFlags,
+                                                                     FinalizationFlags fFlags) const
+    {
+        CPUProcessorRcPtr cpu = CPUProcessorRcPtr(new CPUProcessor(), &CPUProcessor::deleter);
+
+        cpu->getImpl()->finalize(m_ops,
+                                 BIT_DEPTH_F32, BIT_DEPTH_F32,
+                                 oFlags, fFlags);
+
+        return cpu;
+    }
+
+    ConstCPUProcessorRcPtr Processor::Impl::getOptimizedCPUProcessor(BitDepth inBitDepth, 
+                                                                     BitDepth outBitDepth,
+                                                                     OptimizationFlags oFlags,
+                                                                     FinalizationFlags fFlags) const
+    {
+        CPUProcessorRcPtr cpu = CPUProcessorRcPtr(new CPUProcessor(), &CPUProcessor::deleter);
+
+        cpu->getImpl()->finalize(m_ops, inBitDepth, outBitDepth, oFlags, fFlags);
+
         return cpu;
     }
 
 
     ///////////////////////////////////////////////////////////////////////////
 
+
     void Processor::Impl::addColorSpaceConversion(const Config & config,
-                                 const ConstContextRcPtr & context,
-                                 const ConstColorSpaceRcPtr & srcColorSpace,
-                                 const ConstColorSpaceRcPtr & dstColorSpace)
+                                                  const ConstContextRcPtr & context,
+                                                  const ConstColorSpaceRcPtr & srcColorSpace,
+                                                  const ConstColorSpaceRcPtr & dstColorSpace)
     {
         BuildColorSpaceOps(m_ops, config, context, srcColorSpace, dstColorSpace);
+        UnifyDynamicProperties(m_ops);
     }
     
     void Processor::Impl::addTransform(const Config & config,
-                      const ConstContextRcPtr & context,
-                      const ConstTransformRcPtr& transform,
-                      TransformDirection direction)
+                                       const ConstContextRcPtr & context,
+                                       const ConstTransformRcPtr& transform,
+                                       TransformDirection direction)
     {
         BuildOps(m_ops, config, context, transform, direction);
+        UnifyDynamicProperties(m_ops);
     }
 
-    namespace
+    void Processor::Impl::addOps(const OpRcPtrVec & ops)
     {
-        void UnifyDynamicProperty(OpRcPtr op,
-                                  DynamicPropertyImplRcPtr & prop,
-                                  DynamicPropertyType type)
-        {
-            if (op->hasDynamicProperty(type))
-            {
-                if (!prop)
-                {
-                    // Initialize property.
-                    DynamicPropertyRcPtr dp = op->getDynamicProperty(type);
-                    prop = OCIO_DYNAMIC_POINTER_CAST<DynamicPropertyImpl>(dp);
-                }
-                else
-                {
-                    // Share the property.
-                    op->replaceDynamicProperty(type, prop);
-                }
-            }
-        }
+        m_ops = ops.clone();
+        UnifyDynamicProperties(m_ops);
     }
 
-    // This ensures that when a dynamic property on a processor is
-    // modified, all ops that respond to that property (and which
-    // are enabled) are synchronized.
-    void UnifyDynamicProperties(OpRcPtrVec & ops)
-    {
-        DynamicPropertyImplRcPtr dpExposure;
-        DynamicPropertyImplRcPtr dpContrast;
-        DynamicPropertyImplRcPtr dpGamma;
-        for (auto op : ops)
-        {
-            UnifyDynamicProperty(op, dpExposure, DYNAMIC_PROPERTY_EXPOSURE);
-            UnifyDynamicProperty(op, dpContrast, DYNAMIC_PROPERTY_CONTRAST);
-            UnifyDynamicProperty(op, dpGamma, DYNAMIC_PROPERTY_GAMMA);
-        }
-    }
-
-
-    void Processor::Impl::finalize()
+    void Processor::Impl::computeMetadata()
     {
         AutoMutex lock(m_resultsCacheMutex);
 
@@ -561,12 +390,6 @@ OCIO_NAMESPACE_ENTER
         {
             op->dumpMetadata(m_metadata);
         }
-
-        // Unify dynamic pointers before rendering ops are created.
-        UnifyDynamicProperties(m_ops);
-
-        LogDebug("CPU Ops");
-        FinalizeOpVec(m_ops);
     }
 
 }
@@ -578,9 +401,9 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "ops/exposurecontrast/ExposureContrastOps.h"
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(Processor, shared_dynamic_properties)
+OCIO_ADD_TEST(Processor, shared_dynamic_properties)
 {
     OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_FORWARD;
     OCIO::ExposureContrastOpDataRcPtr data =
@@ -591,16 +414,16 @@ OIIO_ADD_TEST(Processor, shared_dynamic_properties)
     data->getExposureProperty()->makeDynamic();
 
     OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
-    OIIO_REQUIRE_EQUAL(ops.size(), 1);
-    OIIO_REQUIRE_ASSERT(ops[0]);
+    OCIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_REQUIRE_ASSERT(ops[0]);
 
     data = data->clone();
     data->setExposure(2.2);
 
-    OIIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
-    OIIO_REQUIRE_ASSERT(ops[1]);
+    OCIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_REQUIRE_ASSERT(ops[1]);
 
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO::ConstOpRcPtr op1 = ops[1];
@@ -611,20 +434,20 @@ OIIO_ADD_TEST(Processor, shared_dynamic_properties)
     OCIO::DynamicPropertyImplRcPtr dp0 = data0->getExposureProperty();
     OCIO::DynamicPropertyImplRcPtr dp1 = data1->getExposureProperty();
 
-    OIIO_CHECK_NE(dp0->getDoubleValue(), dp1->getDoubleValue());
+    OCIO_CHECK_NE(dp0->getDoubleValue(), dp1->getDoubleValue());
 
     OCIO::UnifyDynamicProperties(ops);
 
     OCIO::DynamicPropertyImplRcPtr dp0_post = data0->getExposureProperty();
     OCIO::DynamicPropertyImplRcPtr dp1_post = data1->getExposureProperty();
 
-    OIIO_CHECK_EQUAL(dp0_post->getDoubleValue(), dp1_post->getDoubleValue());
+    OCIO_CHECK_EQUAL(dp0_post->getDoubleValue(), dp1_post->getDoubleValue());
 
     // Both share the same pointer.
-    OIIO_CHECK_EQUAL(dp0_post.get(), dp1_post.get());
+    OCIO_CHECK_EQUAL(dp0_post.get(), dp1_post.get());
 
     // The first pointer is the one that gets shared.
-    OIIO_CHECK_EQUAL(dp0.get(), dp0_post.get());
+    OCIO_CHECK_EQUAL(dp0.get(), dp0_post.get());
 }
 
 #endif

@@ -515,32 +515,29 @@ OCIO_NAMESPACE_ENTER
         class Lut1DOp : public Op
         {
         public:
-            Lut1DOp(Lut1DOpDataRcPtr & lutData);
+            Lut1DOp() = delete;
+            Lut1DOp(const Lut1DOp &) = delete;
+            explicit Lut1DOp(Lut1DOpDataRcPtr & lutData);
             virtual ~Lut1DOp();
+
+            TransformDirection getDirection() const noexcept override { return lut1DData()->getDirection(); }
 
             OpRcPtr clone() const override;
 
             std::string getInfo() const override;
-            std::string getCacheID() const override;
 
-            bool isNoOp() const override;
-            bool isIdentity() const override;
             bool isSameType(ConstOpRcPtr & op) const override;
             bool isInverse(ConstOpRcPtr & op) const override;
             bool hasChannelCrosstalk() const override;
-            void finalize() override;
+            void finalize(FinalizationFlags fFlags) override;
+
+            ConstOpCPURcPtr getCPUOp() const override;
 
             bool supportedByLegacyShader() const override { return false; }
             void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
 
             ConstLut1DOpDataRcPtr lut1DData() const { return DynamicPtrCast<const Lut1DOpData>(data()); }
             Lut1DOpDataRcPtr lut1DData() { return DynamicPtrCast<Lut1DOpData>(data()); }
-
-        private:
-
-            ConstLut1DOpDataRcPtr m_lut_gpu_apply;
-            
-            Lut1DOp() = delete;
         };
 
         Lut1DOp::Lut1DOp(Lut1DOpDataRcPtr & lut1D)
@@ -561,21 +558,6 @@ OCIO_NAMESPACE_ENTER
         std::string Lut1DOp::getInfo() const
         {
             return "<Lut1DOp>";
-        }
-
-        std::string Lut1DOp::getCacheID() const
-        {
-            return m_cacheID;
-        }
-
-        bool Lut1DOp::isNoOp() const
-        {
-            return lut1DData()->isNoOp();
-        }
-
-        bool Lut1DOp::isIdentity() const
-        {
-            return lut1DData()->isIdentity();
         }
 
         bool Lut1DOp::isSameType(ConstOpRcPtr & op) const
@@ -601,29 +583,32 @@ OCIO_NAMESPACE_ENTER
             return lut1DData()->hasChannelCrosstalk();
         }
 
-        void Lut1DOp::finalize()
+        void Lut1DOp::finalize(FinalizationFlags fFlags)
         {
             Lut1DOpDataRcPtr lutData = lut1DData();
 
-            // TODO: Only the 32f processing is natively supported
+            lutData->setInversionQuality(
+                fFlags==FINALIZATION_FAST ? LUT_INVERSION_FAST: LUT_INVERSION_EXACT);
+
+            // Only 32f processing is natively supported.
             lutData->setInputBitDepth(BIT_DEPTH_F32);
             lutData->setOutputBitDepth(BIT_DEPTH_F32);
 
-            lutData->validate();
             lutData->finalize();
-
-            const Lut1DOp & constThis = *this;
-            ConstLut1DOpDataRcPtr lutDataConst = constThis.lut1DData();
-
-            m_cpuOp = GetLut1DRenderer(lutDataConst, BIT_DEPTH_F32, BIT_DEPTH_F32);
 
             // Rebuild the cache identifier
             std::ostringstream cacheIDStream;
             cacheIDStream << "<Lut1D ";
-            cacheIDStream << lutDataConst->getCacheID() << " ";
+            cacheIDStream << lutData->getCacheID() << " ";
             cacheIDStream << ">";
 
             m_cacheID = cacheIDStream.str();
+        }
+
+        ConstOpCPURcPtr Lut1DOp::getCPUOp() const
+        {
+            ConstLut1DOpDataRcPtr data = lut1DData();
+            return GetLut1DRenderer(data, BIT_DEPTH_F32, BIT_DEPTH_F32);
         }
 
         void Lut1DOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
@@ -636,6 +621,8 @@ OCIO_NAMESPACE_ENTER
             ConstLut1DOpDataRcPtr lutData = lut1DData();
             if (lutData->getDirection() == TRANSFORM_DIR_INVERSE)
             {
+                // TODO: Add GPU renderer for EXACT mode.
+
                 Lut1DOpDataRcPtr newLut = Lut1DOpData::MakeFastLut1DFromInverse(lutData, true);
                 if (!newLut)
                 {
@@ -643,7 +630,7 @@ OCIO_NAMESPACE_ENTER
                 }
 
                 Lut1DOp invLut(newLut);
-                invLut.finalize();
+                invLut.finalize(FINALIZATION_EXACT);
                 invLut.extractGpuShaderInfo(shaderDesc);
             }
             else
@@ -780,10 +767,10 @@ OCIO_NAMESPACE_EXIT
 #include <cstring>
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 #include "UnitTestUtils.h"
 
-OIIO_ADD_TEST(Lut1DOpStruct, no_op)
+OCIO_ADD_TEST(Lut1DOpStruct, no_op)
 {
     // Make an identity LUT.
     OCIO::Lut1DRcPtr lut = OCIO::Lut1D::Create();
@@ -800,12 +787,12 @@ OIIO_ADD_TEST(Lut1DOpStruct, no_op)
     
     lut->maxerror = 1e-5f;
     lut->errortype = OCIO::Lut1D::ERROR_RELATIVE;
-    OIIO_CHECK_ASSERT(lut->isNoOp());
+    OCIO_CHECK_ASSERT(lut->isNoOp());
     
     lut->unfinalize();
     lut->maxerror = 1e-5f;
     lut->errortype = OCIO::Lut1D::ERROR_ABSOLUTE;
-    OIIO_CHECK_ASSERT(lut->isNoOp());
+    OCIO_CHECK_ASSERT(lut->isNoOp());
 
     // Edit the LUT.
     // These should NOT be identity.
@@ -813,12 +800,12 @@ OIIO_ADD_TEST(Lut1DOpStruct, no_op)
     lut->luts[0][125] += 1e-3f;
     lut->maxerror = 1e-5f;
     lut->errortype = OCIO::Lut1D::ERROR_RELATIVE;
-    OIIO_CHECK_ASSERT(!lut->isNoOp());
+    OCIO_CHECK_ASSERT(!lut->isNoOp());
 
     lut->unfinalize();
     lut->maxerror = 1e-5f;
     lut->errortype = OCIO::Lut1D::ERROR_ABSOLUTE;
-    OIIO_CHECK_ASSERT(!lut->isNoOp());
+    OCIO_CHECK_ASSERT(!lut->isNoOp());
 }
 
 namespace
@@ -846,24 +833,24 @@ OCIO::Lut1DRcPtr CreateSquareLut()
 }
 }
 
-OIIO_ADD_TEST(Lut1DOpStruct, FiniteValue)
+OCIO_ADD_TEST(Lut1DOpStruct, FiniteValue)
 {
     OCIO::Lut1DRcPtr lut = CreateSquareLut();
     
     lut->maxerror = 1e-5f;
     lut->errortype = OCIO::Lut1D::ERROR_RELATIVE;
     bool isNoOp = true;
-    OIIO_CHECK_NO_THROW(isNoOp = lut->isNoOp());
-    OIIO_CHECK_ASSERT(!isNoOp);
+    OCIO_CHECK_NO_THROW(isNoOp = lut->isNoOp());
+    OCIO_CHECK_ASSERT(!isNoOp);
     
     OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut, OCIO::INTERP_LINEAR,
+    OCIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut, OCIO::INTERP_LINEAR,
                                       OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut, OCIO::INTERP_LINEAR,
+    OCIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut, OCIO::INTERP_LINEAR,
                                       OCIO::TRANSFORM_DIR_INVERSE));
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
-    OIIO_CHECK_NO_THROW(ops[0]->finalize());
-    OIIO_CHECK_NO_THROW(ops[1]->finalize());
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
 
     float inputBuffer_linearforward[4] = { 0.5f, 0.6f, 0.7f, 0.5f };
     float inputBuffer_linearforward2[4] = { 0.5f, 0.6f, 0.7f, 0.5f };
@@ -872,8 +859,8 @@ OIIO_ADD_TEST(Lut1DOpStruct, FiniteValue)
     ops[0]->apply(inputBuffer_linearforward2, 1);
     for(int i=0; i <4; ++i)
     {
-        OIIO_CHECK_CLOSE(inputBuffer_linearforward[i], outputBuffer_linearforward[i], 1e-5f);
-        OIIO_CHECK_CLOSE(inputBuffer_linearforward2[i], outputBuffer_linearforward[i], 1e-5f);
+        OCIO_CHECK_CLOSE(inputBuffer_linearforward[i], outputBuffer_linearforward[i], 1e-5f);
+        OCIO_CHECK_CLOSE(inputBuffer_linearforward2[i], outputBuffer_linearforward[i], 1e-5f);
     }
     
     float inputBuffer_nearestforward[4] = { 0.5f, 0.6f, 0.7f, 0.5f };
@@ -881,7 +868,7 @@ OIIO_ADD_TEST(Lut1DOpStruct, FiniteValue)
     OCIO::Lut1D_Nearest(inputBuffer_nearestforward, 1, *lut);
     for(int i=0; i <4; ++i)
     {
-        OIIO_CHECK_CLOSE(inputBuffer_nearestforward[i], outputBuffer_nearestforward[i], 1e-5f);
+        OCIO_CHECK_CLOSE(inputBuffer_nearestforward[i], outputBuffer_nearestforward[i], 1e-5f);
     }
     
     const float inputBuffer_linearinverse[4] = { 0.5f, 0.6f, 0.7f, 0.5f };
@@ -891,8 +878,8 @@ OIIO_ADD_TEST(Lut1DOpStruct, FiniteValue)
     ops[1]->apply(outputBuffer_linearinverse2, 1);
     for(int i=0; i <4; ++i)
     {
-        OIIO_CHECK_CLOSE(inputBuffer_linearinverse[i], outputBuffer_linearinverse[i], 1e-5f);
-        OIIO_CHECK_CLOSE(inputBuffer_linearinverse[i], outputBuffer_linearinverse2[i], 1e-5f);
+        OCIO_CHECK_CLOSE(inputBuffer_linearinverse[i], outputBuffer_linearinverse[i], 1e-5f);
+        OCIO_CHECK_CLOSE(inputBuffer_linearinverse[i], outputBuffer_linearinverse2[i], 1e-5f);
     }
     
     const float inputBuffer_nearestinverse[4] = { 0.498039f, 0.6f, 0.698039f, 0.5f };
@@ -900,11 +887,11 @@ OIIO_ADD_TEST(Lut1DOpStruct, FiniteValue)
     OCIO::Lut1D_NearestInverse(outputBuffer_nearestinverse, 1, *lut);
     for(int i=0; i <4; ++i)
     {
-        OIIO_CHECK_CLOSE(inputBuffer_nearestinverse[i], outputBuffer_nearestinverse[i], 1e-5f);
+        OCIO_CHECK_CLOSE(inputBuffer_nearestinverse[i], outputBuffer_nearestinverse[i], 1e-5f);
     }
 }
 
-OIIO_ADD_TEST(Lut1DOp, arbitrary_value)
+OCIO_ADD_TEST(Lut1DOp, arbitrary_value)
 {
     OCIO::Lut1DRcPtr lut = CreateSquareLut();
     lut->from_min[0] = -0.25f;
@@ -935,12 +922,12 @@ OIIO_ADD_TEST(Lut1DOp, arbitrary_value)
 
     for(int i=0; i<16; ++i)
     {
-        OIIO_CHECK_CLOSE(outputBuffer_linearforward[i], outputBuffer_inv_linearforward[i], 1e-5f);
+        OCIO_CHECK_CLOSE(outputBuffer_linearforward[i], outputBuffer_inv_linearforward[i], 1e-5f);
     }
 }
 
 
-OIIO_ADD_TEST(Lut1DOp, extrapolation_errors)
+OCIO_ADD_TEST(Lut1DOp, extrapolation_errors)
 {
     OCIO::Lut1DRcPtr lut = OCIO::Lut1D::Create();
 
@@ -955,8 +942,8 @@ OIIO_ADD_TEST(Lut1DOp, extrapolation_errors)
     lut->maxerror = 1e-5f;
     lut->errortype = OCIO::Lut1D::ERROR_RELATIVE;
     bool isNoOp = true;
-    OIIO_CHECK_NO_THROW(isNoOp = lut->isNoOp());
-    OIIO_CHECK_ASSERT(!isNoOp);
+    OCIO_CHECK_NO_THROW(isNoOp = lut->isNoOp());
+    OCIO_CHECK_ASSERT(!isNoOp);
 
     const int PIXELS = 5;
     float inputBuffer_linearforward[PIXELS*4] = {
@@ -974,12 +961,12 @@ OIIO_ADD_TEST(Lut1DOp, extrapolation_errors)
     OCIO::Lut1D_Linear(inputBuffer_linearforward, PIXELS, *lut);
     for(size_t i=0; i <sizeof(inputBuffer_linearforward)/sizeof(inputBuffer_linearforward[0]); ++i)
     {
-        OIIO_CHECK_CLOSE(inputBuffer_linearforward[i], outputBuffer_linearforward[i], 1e-5f);
+        OCIO_CHECK_CLOSE(inputBuffer_linearforward[i], outputBuffer_linearforward[i], 1e-5f);
     }
 }
 
 
-OIIO_ADD_TEST(Lut1DOp, inverse)
+OCIO_ADD_TEST(Lut1DOp, inverse)
 {
     // Make a LUT that squares the input.
     OCIO::Lut1DRcPtr lut_a = CreateSquareLut();
@@ -1016,81 +1003,83 @@ OIIO_ADD_TEST(Lut1DOp, inverse)
 
     OCIO::OpRcPtrVec ops;
     // Adding Lut1DOp.
-    OIIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut_a,
+    OCIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut_a,
                                       OCIO::INTERP_LINEAR,
                                       OCIO::TRANSFORM_DIR_FORWARD));
     // Adding inverse Lut1DOp.
-    OIIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut_a,
+    OCIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut_a,
                                       OCIO::INTERP_LINEAR,
                                       OCIO::TRANSFORM_DIR_INVERSE));
     // Adding MatrixOffsetOp (i.e. min & max) and Lut1DOp.
-    OIIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut_b,
+    OCIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut_b,
                                       OCIO::INTERP_LINEAR,
                                       OCIO::TRANSFORM_DIR_FORWARD));
     // Adding inverse Lut1DOp and MatrixOffsetOp (i.e. min & max).
-    OIIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut_b,
+    OCIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut_b,
                                       OCIO::INTERP_LINEAR,
                                       OCIO::TRANSFORM_DIR_INVERSE));
 
-    OIIO_REQUIRE_EQUAL(ops.size(), 6);
+    OCIO_REQUIRE_EQUAL(ops.size(), 6);
 
-    OIIO_CHECK_EQUAL(ops[0]->getInfo(), "<Lut1DOp>");
-    OIIO_CHECK_EQUAL(ops[1]->getInfo(), "<Lut1DOp>");
-    OIIO_CHECK_EQUAL(ops[2]->getInfo(), "<MatrixOffsetOp>");
-    OIIO_CHECK_EQUAL(ops[3]->getInfo(), "<Lut1DOp>");
-    OIIO_CHECK_EQUAL(ops[4]->getInfo(), "<Lut1DOp>");
-    OIIO_CHECK_EQUAL(ops[5]->getInfo(), "<MatrixOffsetOp>");
+    OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<Lut1DOp>");
+    OCIO_CHECK_EQUAL(ops[1]->getInfo(), "<Lut1DOp>");
+    OCIO_CHECK_EQUAL(ops[2]->getInfo(), "<MatrixOffsetOp>");
+    OCIO_CHECK_EQUAL(ops[3]->getInfo(), "<Lut1DOp>");
+    OCIO_CHECK_EQUAL(ops[4]->getInfo(), "<Lut1DOp>");
+    OCIO_CHECK_EQUAL(ops[5]->getInfo(), "<MatrixOffsetOp>");
 
     OCIO::ConstOpRcPtr op1 = ops[1];
     OCIO::ConstOpRcPtr op3 = ops[3];
     OCIO::ConstOpRcPtr op4 = ops[4];
 
-    OIIO_CHECK_ASSERT(ops[0]->isInverse(op1));
-    OIIO_CHECK_ASSERT(ops[3]->isInverse(op4));
+    OCIO_CHECK_ASSERT(ops[0]->isInverse(op1));
+    OCIO_CHECK_ASSERT(ops[3]->isInverse(op4));
 
     OCIO::ConstOpRcPtr clonedOp = ops[3]->clone();
-    OIIO_CHECK_ASSERT(ops[3]->isSameType(clonedOp));
+    OCIO_CHECK_ASSERT(ops[3]->isSameType(clonedOp));
 
-    OIIO_CHECK_EQUAL(ops[0]->isInverse(op1), true);
-    OIIO_CHECK_EQUAL(ops[3]->isInverse(op4), true);
+    OCIO_CHECK_EQUAL(ops[0]->isInverse(op1), true);
+    OCIO_CHECK_EQUAL(ops[3]->isInverse(op4), true);
 
-    OIIO_CHECK_EQUAL(ops[0]->isInverse(op3), false);
-    OIIO_CHECK_EQUAL(ops[1]->isInverse(op4), false);
+    OCIO_CHECK_EQUAL(ops[0]->isInverse(op3), false);
+    OCIO_CHECK_EQUAL(ops[1]->isInverse(op4), false);
 
     // Add same as first.
-    OIIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut_c,
+    OCIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut_c,
         OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_REQUIRE_EQUAL(ops.size(), 7);
+    OCIO_REQUIRE_EQUAL(ops.size(), 7);
 
-    OIIO_CHECK_EQUAL(ops[0]->getInfo(), "<Lut1DOp>");
-    OIIO_CHECK_EQUAL(ops[1]->getInfo(), "<Lut1DOp>");
-    OIIO_CHECK_EQUAL(ops[2]->getInfo(), "<MatrixOffsetOp>");
-    OIIO_CHECK_EQUAL(ops[3]->getInfo(), "<Lut1DOp>");
-    OIIO_CHECK_EQUAL(ops[4]->getInfo(), "<Lut1DOp>");
-    OIIO_CHECK_EQUAL(ops[5]->getInfo(), "<MatrixOffsetOp>");
-    OIIO_CHECK_EQUAL(ops[6]->getInfo(), "<Lut1DOp>");
+    OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<Lut1DOp>");
+    OCIO_CHECK_EQUAL(ops[1]->getInfo(), "<Lut1DOp>");
+    OCIO_CHECK_EQUAL(ops[2]->getInfo(), "<MatrixOffsetOp>");
+    OCIO_CHECK_EQUAL(ops[3]->getInfo(), "<Lut1DOp>");
+    OCIO_CHECK_EQUAL(ops[4]->getInfo(), "<Lut1DOp>");
+    OCIO_CHECK_EQUAL(ops[5]->getInfo(), "<MatrixOffsetOp>");
+    OCIO_CHECK_EQUAL(ops[6]->getInfo(), "<Lut1DOp>");
 
-    OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, false));
-    OIIO_REQUIRE_EQUAL(ops.size(), 7);
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_REQUIRE_EQUAL(ops.size(), 7);
 
-    OIIO_CHECK_EQUAL(ops[0]->getCacheID(), ops[3]->getCacheID());
-    OIIO_CHECK_EQUAL(ops[1]->getCacheID(), ops[4]->getCacheID());
+    OCIO_CHECK_EQUAL(ops[0]->getCacheID(), ops[3]->getCacheID());
+    OCIO_CHECK_EQUAL(ops[1]->getCacheID(), ops[4]->getCacheID());
 
-    OIIO_CHECK_NE(ops[0]->getCacheID(), ops[1]->getCacheID());
-    OIIO_CHECK_NE(ops[0]->getCacheID(), ops[6]->getCacheID());
-    OIIO_CHECK_NE(ops[1]->getCacheID(), ops[3]->getCacheID());
-    OIIO_CHECK_NE(ops[1]->getCacheID(), ops[6]->getCacheID());
+    OCIO_CHECK_NE(ops[0]->getCacheID(), ops[1]->getCacheID());
+    OCIO_CHECK_NE(ops[0]->getCacheID(), ops[6]->getCacheID());
+    OCIO_CHECK_NE(ops[1]->getCacheID(), ops[3]->getCacheID());
+    OCIO_CHECK_NE(ops[1]->getCacheID(), ops[6]->getCacheID());
 
     // Optimize will remove LUT forward and inverse (0+1 and 3+4),
     // and remove matrix forward and inverse 2+5.
-    OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, true));
-    OIIO_REQUIRE_EQUAL(ops.size(), 1);
-    OIIO_CHECK_EQUAL(ops[0]->getInfo(), "<Lut1DOp>");
+    OCIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<Lut1DOp>");
 }
 
 
 #ifdef USE_SSE
-OIIO_ADD_TEST(Lut1DOp, sse)
+OCIO_ADD_TEST(Lut1DOp, sse)
 {
     // Make a LUT that squares the input.
     OCIO::Lut1DRcPtr lut = CreateSquareLut();
@@ -1098,8 +1087,8 @@ OIIO_ADD_TEST(Lut1DOp, sse)
     lut->maxerror = 1e-5f;
     lut->errortype = OCIO::Lut1D::ERROR_RELATIVE;
     bool isNoOp = true;
-    OIIO_CHECK_NO_THROW(isNoOp = lut->isNoOp());
-    OIIO_CHECK_ASSERT(!isNoOp);
+    OCIO_CHECK_NO_THROW(isNoOp = lut->isNoOp());
+    OCIO_CHECK_ASSERT(!isNoOp);
 
     const int NUM_TEST_PIXELS = 1024;
     std::vector<float> testValues(NUM_TEST_PIXELS*4);
@@ -1123,8 +1112,8 @@ OIIO_ADD_TEST(Lut1DOp, sse)
     
     for(int i=0; i<NUM_TEST_PIXELS*4; ++i)
     {
-        OIIO_CHECK_CLOSE(outputBuffer_cpu[i], outputBuffer_sse[i], 1e-7f);
-        //OIIO_CHECK_EQUAL(outputBuffer_cpu[i], outputBuffer_sse[i]);
+        OCIO_CHECK_CLOSE(outputBuffer_cpu[i], outputBuffer_sse[i], 1e-7f);
+        //OCIO_CHECK_EQUAL(outputBuffer_cpu[i], outputBuffer_sse[i]);
     }
     
     
@@ -1153,8 +1142,8 @@ OIIO_ADD_TEST(Lut1DOp, sse)
     
     for(int i=0; i<NUM_TEST_PIXELS*4; ++i)
     {
-        //OIIO_CHECK_CLOSE(outputBuffer_cpu[i], outputBuffer_sse[i], 1e-7f);
-        OIIO_CHECK_EQUAL(outputBuffer_cpu[i], outputBuffer_sse[i]);
+        //OCIO_CHECK_CLOSE(outputBuffer_cpu[i], outputBuffer_sse[i], 1e-7f);
+        OCIO_CHECK_EQUAL(outputBuffer_cpu[i], outputBuffer_sse[i]);
     }
     
     */
@@ -1162,14 +1151,14 @@ OIIO_ADD_TEST(Lut1DOp, sse)
 #endif
 
 
-OIIO_ADD_TEST(Lut1DOp, nan_inf)
+OCIO_ADD_TEST(Lut1DOp, nan_inf)
 {
     // Make a LUT that squares the input.
     OCIO::Lut1DRcPtr lut = CreateSquareLut();
     
     lut->maxerror = 1e-5f;
     lut->errortype = OCIO::Lut1D::ERROR_RELATIVE;
-    OIIO_CHECK_ASSERT(!lut->isNoOp());
+    OCIO_CHECK_ASSERT(!lut->isNoOp());
     
     const float reference[4] = {  std::numeric_limits<float>::signaling_NaN(),
                                   std::numeric_limits<float>::quiet_NaN(),
@@ -1191,11 +1180,11 @@ OIIO_ADD_TEST(Lut1DOp, nan_inf)
         if(isnan(color[i]))
         {
             std::cerr << color[i] << " " << output[i] << std::endl;
-            OIIO_CHECK_EQUAL(isnan(color[i]), isnan(output[i]));
+            OCIO_CHECK_EQUAL(isnan(color[i]), isnan(output[i]));
         }
         else
         {
-            OIIO_CHECK_EQUAL(color[i], output[i]);
+            OCIO_CHECK_EQUAL(color[i], output[i]);
         }
     }
     */
@@ -1206,11 +1195,11 @@ OIIO_ADD_TEST(Lut1DOp, nan_inf)
     {
         if(isnan(color[i]))
         {
-            OIIO_CHECK_EQUAL(isnan(color[i]), isnan(output[i]));
+            OCIO_CHECK_EQUAL(isnan(color[i]), isnan(output[i]));
         }
         else
         {
-            OIIO_CHECK_EQUAL(color[i], output[i]);
+            OCIO_CHECK_EQUAL(color[i], output[i]);
         }
     }
     */
@@ -1221,11 +1210,11 @@ OIIO_ADD_TEST(Lut1DOp, nan_inf)
     {
         if(isnan(color[i]))
         {
-            OIIO_CHECK_EQUAL(isnan(color[i]), isnan(output[i]));
+            OCIO_CHECK_EQUAL(isnan(color[i]), isnan(output[i]));
         }
         else
         {
-            OIIO_CHECK_EQUAL(color[i], output[i]);
+            OCIO_CHECK_EQUAL(color[i], output[i]);
         }
     }
     */
@@ -1236,17 +1225,17 @@ OIIO_ADD_TEST(Lut1DOp, nan_inf)
     {
         if(isnan(color[i]))
         {
-            OIIO_CHECK_EQUAL(isnan(color[i]), isnan(output[i]));
+            OCIO_CHECK_EQUAL(isnan(color[i]), isnan(output[i]));
         }
         else
         {
-            OIIO_CHECK_EQUAL(color[i], output[i]);
+            OCIO_CHECK_EQUAL(color[i], output[i]);
         }
     }
     */
 }
 
-OIIO_ADD_TEST(Lut1DOp, throw_no_op)
+OCIO_ADD_TEST(Lut1DOp, throw_no_op)
 {
     // Make an identity LUT.
     OCIO::Lut1DRcPtr lut = OCIO::Lut1D::Create();
@@ -1263,32 +1252,32 @@ OIIO_ADD_TEST(Lut1DOp, throw_no_op)
 
     lut->maxerror = 1e-5f;
     lut->errortype = (OCIO::Lut1D::ErrorType)0;
-    OIIO_CHECK_THROW_WHAT(lut->isNoOp(),
+    OCIO_CHECK_THROW_WHAT(lut->isNoOp(),
                           OCIO::Exception, "Unknown error type");
 
     lut->errortype = OCIO::Lut1D::ERROR_RELATIVE;
-    OIIO_CHECK_NO_THROW(lut->isNoOp());
+    OCIO_CHECK_NO_THROW(lut->isNoOp());
     lut->unfinalize();
 
     lut->luts[0].clear();
-    OIIO_CHECK_THROW_WHAT(lut->isNoOp(),
+    OCIO_CHECK_THROW_WHAT(lut->isNoOp(),
                           OCIO::Exception, "invalid Lut1D");
 
     lut->luts[0] = lut->luts[1];
     lut->luts[1].clear();
-    OIIO_CHECK_THROW_WHAT(lut->isNoOp(),
+    OCIO_CHECK_THROW_WHAT(lut->isNoOp(),
                           OCIO::Exception, "invalid Lut1D");
 
     lut->luts[1] = lut->luts[2];
     lut->luts[2].clear();
-    OIIO_CHECK_THROW_WHAT(lut->isNoOp(),
+    OCIO_CHECK_THROW_WHAT(lut->isNoOp(),
                           OCIO::Exception, "invalid Lut1D");
 
     lut->luts[2] = lut->luts[0];
-    OIIO_CHECK_NO_THROW(lut->isNoOp());
+    OCIO_CHECK_NO_THROW(lut->isNoOp());
 }
 
-OIIO_ADD_TEST(Lut1DOp, throw_op)
+OCIO_ADD_TEST(Lut1DOp, throw_op)
 {
     OCIO::Lut1DRcPtr lut = OCIO::Lut1D::Create();
     for (int c = 0; c<3; ++c)
@@ -1299,18 +1288,18 @@ OIIO_ADD_TEST(Lut1DOp, throw_op)
     lut->maxerror = 1e-5f;
     lut->errortype = OCIO::Lut1D::ERROR_RELATIVE;
     OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_THROW_WHAT(CreateLut1DOp(ops, lut,
+    OCIO_CHECK_THROW_WHAT(CreateLut1DOp(ops, lut,
                                         OCIO::INTERP_NEAREST,
                                         OCIO::TRANSFORM_DIR_UNKNOWN),
                           OCIO::Exception, "unspecified transform direction");
     
-    OIIO_CHECK_THROW_WHAT(CreateLut1DOp(ops, lut,
+    OCIO_CHECK_THROW_WHAT(CreateLut1DOp(ops, lut,
                                         OCIO::INTERP_UNKNOWN,
                                         OCIO::TRANSFORM_DIR_FORWARD),
                           OCIO::Exception, "unspecified interpolation");
 
     // INTERP_TETRAHEDRAL not allowed for 1D LUT.
-    OIIO_CHECK_THROW_WHAT(CreateLut1DOp(ops, lut,
+    OCIO_CHECK_THROW_WHAT(CreateLut1DOp(ops, lut,
                                         OCIO::INTERP_TETRAHEDRAL,
                                         OCIO::TRANSFORM_DIR_FORWARD),
                           OCIO::Exception,
@@ -1318,13 +1307,13 @@ OIIO_ADD_TEST(Lut1DOp, throw_op)
     ops.clear();
 
     lut->luts[0].clear();
-    OIIO_CHECK_THROW_WHAT(CreateLut1DOp(ops, lut,
+    OCIO_CHECK_THROW_WHAT(CreateLut1DOp(ops, lut,
                                         OCIO::INTERP_BEST,
                                         OCIO::TRANSFORM_DIR_FORWARD),
                           OCIO::Exception, "no LUT data provided");
 }
 
-OIIO_ADD_TEST(Lut1DOp, gpu)
+OCIO_ADD_TEST(Lut1DOp, gpu)
 {
     OCIO::Lut1DRcPtr lut = OCIO::Lut1D::Create();
     for (int c = 0; c < 3; ++c)
@@ -1335,27 +1324,28 @@ OIIO_ADD_TEST(Lut1DOp, gpu)
     lut->maxerror = 1e-5f;
     lut->errortype = OCIO::Lut1D::ERROR_RELATIVE;
     OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut,
+    OCIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut,
                                       OCIO::INTERP_NEAREST,
                                       OCIO::TRANSFORM_DIR_FORWARD));
     
-    OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops));
-    OIIO_REQUIRE_EQUAL(ops.size(), 1);
-    OIIO_CHECK_EQUAL(ops[0]->supportedByLegacyShader(), false);
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_CHECK_EQUAL(ops[0]->supportedByLegacyShader(), false);
 }
 
-OIIO_ADD_TEST(Lut1DOp, identity_lut_1d)
+OCIO_ADD_TEST(Lut1DOp, identity_lut_1d)
 {
     int size = 3;
     int channels = 2;
     std::vector<float> data(size*channels);
     OCIO::GenerateIdentityLut1D(&data[0], size, channels);
-    OIIO_CHECK_EQUAL(data[0], 0.0f);
-    OIIO_CHECK_EQUAL(data[1], 0.0f);
-    OIIO_CHECK_EQUAL(data[2], 0.5f);
-    OIIO_CHECK_EQUAL(data[3], 0.5f);
-    OIIO_CHECK_EQUAL(data[4], 1.0f);
-    OIIO_CHECK_EQUAL(data[5], 1.0f);
+    OCIO_CHECK_EQUAL(data[0], 0.0f);
+    OCIO_CHECK_EQUAL(data[1], 0.0f);
+    OCIO_CHECK_EQUAL(data[2], 0.5f);
+    OCIO_CHECK_EQUAL(data[3], 0.5f);
+    OCIO_CHECK_EQUAL(data[4], 1.0f);
+    OCIO_CHECK_EQUAL(data[5], 1.0f);
 
     size = 4;
     channels = 3;
@@ -1363,14 +1353,14 @@ OIIO_ADD_TEST(Lut1DOp, identity_lut_1d)
     OCIO::GenerateIdentityLut1D(&data[0], size, channels);
     for (int c = 0; c < channels; ++c)
     {
-        OIIO_CHECK_EQUAL(data[0+c], 0.0f);
-        OIIO_CHECK_EQUAL(data[channels+c], 0.33333333f);
-        OIIO_CHECK_EQUAL(data[2*channels+c], 0.66666667f);
-        OIIO_CHECK_EQUAL(data[3*channels+c], 1.0f);
+        OCIO_CHECK_EQUAL(data[0+c], 0.0f);
+        OCIO_CHECK_EQUAL(data[channels+c], 0.33333333f);
+        OCIO_CHECK_EQUAL(data[2*channels+c], 0.66666667f);
+        OCIO_CHECK_EQUAL(data[3*channels+c], 1.0f);
     }
 }
 
-OIIO_ADD_TEST(Lut1D, basic)
+OCIO_ADD_TEST(Lut1D, basic)
 {
     const OCIO::BitDepth bitDepth = OCIO::BIT_DEPTH_F32;
 
@@ -1383,9 +1373,9 @@ OIIO_ADD_TEST(Lut1D, basic)
 
     OCIO::Lut1DOp lut(lutData);
 
-    OIIO_CHECK_NO_THROW(lut.finalize());
-    OIIO_CHECK_ASSERT(lutData->isIdentity());
-    OIIO_CHECK_ASSERT(!lut.isNoOp());
+    OCIO_CHECK_NO_THROW(lut.finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_ASSERT(lutData->isIdentity());
+    OCIO_CHECK_ASSERT(!lut.isNoOp());
 
     const float step = OCIO::GetBitDepthMaxValue(lutData->getInputBitDepth())
                        / ((float)lutData->getArray().getLength() - 1.0f);
@@ -1395,17 +1385,17 @@ OIIO_ADD_TEST(Lut1D, basic)
 
     const float error = 1e-6f;
     {
-        OIIO_CHECK_NO_THROW(lut.apply(myImage, myImage, 2));
+        OCIO_CHECK_NO_THROW(lut.apply(myImage, myImage, 2));
 
-        OIIO_CHECK_CLOSE(myImage[0], 0.0f, error);
-        OIIO_CHECK_CLOSE(myImage[1], 0.0f, error);
-        OIIO_CHECK_CLOSE(myImage[2], 0.0f, error);
-        OIIO_CHECK_CLOSE(myImage[3], 1.0f, error);
+        OCIO_CHECK_CLOSE(myImage[0], 0.0f, error);
+        OCIO_CHECK_CLOSE(myImage[1], 0.0f, error);
+        OCIO_CHECK_CLOSE(myImage[2], 0.0f, error);
+        OCIO_CHECK_CLOSE(myImage[3], 1.0f, error);
 
-        OIIO_CHECK_CLOSE(myImage[4], 0.0f, error);
-        OIIO_CHECK_CLOSE(myImage[5], 0.0f, error);
-        OIIO_CHECK_CLOSE(myImage[6], step, error);
-        OIIO_CHECK_CLOSE(myImage[7], 1.0f, error);
+        OCIO_CHECK_CLOSE(myImage[4], 0.0f, error);
+        OCIO_CHECK_CLOSE(myImage[5], 0.0f, error);
+        OCIO_CHECK_CLOSE(myImage[6], step, error);
+        OCIO_CHECK_CLOSE(myImage[7], 1.0f, error);
     }
 
     // No more an 'identity LUT 1D'.
@@ -1413,27 +1403,27 @@ OIIO_ADD_TEST(Lut1D, basic)
 
     lutData->getArray()[5] = arbitraryVal;
 
-    OIIO_CHECK_NO_THROW(lut.finalize());
-    OIIO_CHECK_ASSERT(!lutData->isIdentity());
-    OIIO_CHECK_ASSERT(!lut.isNoOp());
+    OCIO_CHECK_NO_THROW(lut.finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_ASSERT(!lutData->isIdentity());
+    OCIO_CHECK_ASSERT(!lut.isNoOp());
 
     {
-        OIIO_CHECK_NO_THROW(lut.apply(myImage, myImage, 2));
+        OCIO_CHECK_NO_THROW(lut.apply(myImage, myImage, 2));
 
-        OIIO_CHECK_CLOSE(myImage[0], 0.0f, error);
-        OIIO_CHECK_CLOSE(myImage[1], 0.0f, error);
-        OIIO_CHECK_CLOSE(myImage[2], 0.0f, error);
-        OIIO_CHECK_CLOSE(myImage[3], 1.0f, error);
+        OCIO_CHECK_CLOSE(myImage[0], 0.0f, error);
+        OCIO_CHECK_CLOSE(myImage[1], 0.0f, error);
+        OCIO_CHECK_CLOSE(myImage[2], 0.0f, error);
+        OCIO_CHECK_CLOSE(myImage[3], 1.0f, error);
 
-        OIIO_CHECK_CLOSE(myImage[4], 0.0f, error);
-        OIIO_CHECK_CLOSE(myImage[5], 0.0f, error);
-        OIIO_CHECK_CLOSE(myImage[6], arbitraryVal, error);
-        OIIO_CHECK_CLOSE(myImage[7], 1.0f, error);
+        OCIO_CHECK_CLOSE(myImage[4], 0.0f, error);
+        OCIO_CHECK_CLOSE(myImage[5], 0.0f, error);
+        OCIO_CHECK_CLOSE(myImage[6], arbitraryVal, error);
+        OCIO_CHECK_CLOSE(myImage[7], 1.0f, error);
     }
 
 }
 
-OIIO_ADD_TEST(Lut1D, half)
+OCIO_ADD_TEST(Lut1D, half)
 {
     OCIO::Lut1DOpDataRcPtr
         lutData(
@@ -1450,7 +1440,7 @@ OIIO_ADD_TEST(Lut1D, half)
     // No more an 'identity LUT 1D'
     const float arbitraryVal = 0.123456f;
     lutData->getArray()[5] = arbitraryVal;
-    OIIO_CHECK_ASSERT(!lutData->isIdentity());
+    OCIO_CHECK_ASSERT(!lutData->isIdentity());
 
     const half myImage[8] = { 0.1f, 0.3f, 0.4f, 1.0f,
                               0.0f, 0.9f, step, 0.0f };
@@ -1460,23 +1450,23 @@ OIIO_ADD_TEST(Lut1D, half)
 
     // TODO: The SC test is intended to test half evaluation using myImage
     // as input.  Adjust after half support is added to apply.
-    OIIO_CHECK_NO_THROW(lut.finalize());
-    OIIO_CHECK_NO_THROW(lut.apply(resImage, resImage, 2));
+    OCIO_CHECK_NO_THROW(lut.finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(lut.apply(resImage, resImage, 2));
 
     const float error = 1e-4f;
 
-    OIIO_CHECK_CLOSE(resImage[0], (float)myImage[0], error);
-    OIIO_CHECK_CLOSE(resImage[1], (float)myImage[1], error);
-    OIIO_CHECK_CLOSE(resImage[2], (float)myImage[2], error);
-    OIIO_CHECK_CLOSE(resImage[3], (float)myImage[3], error);
+    OCIO_CHECK_CLOSE(resImage[0], (float)myImage[0], error);
+    OCIO_CHECK_CLOSE(resImage[1], (float)myImage[1], error);
+    OCIO_CHECK_CLOSE(resImage[2], (float)myImage[2], error);
+    OCIO_CHECK_CLOSE(resImage[3], (float)myImage[3], error);
 
-    OIIO_CHECK_CLOSE(resImage[4], (float)myImage[4], error);
-    OIIO_CHECK_CLOSE(resImage[5], (float)myImage[5], error);
-    OIIO_CHECK_CLOSE(resImage[6], arbitraryVal, error);
-    OIIO_CHECK_CLOSE(resImage[7], (float)myImage[7], error);
+    OCIO_CHECK_CLOSE(resImage[4], (float)myImage[4], error);
+    OCIO_CHECK_CLOSE(resImage[5], (float)myImage[5], error);
+    OCIO_CHECK_CLOSE(resImage[6], arbitraryVal, error);
+    OCIO_CHECK_CLOSE(resImage[7], (float)myImage[7], error);
 }
 
-OIIO_ADD_TEST(Lut1D, nan)
+OCIO_ADD_TEST(Lut1D, nan)
 {
     const OCIO::BitDepth bitDepth = OCIO::BIT_DEPTH_F32;
 
@@ -1490,9 +1480,9 @@ OIIO_ADD_TEST(Lut1D, nan)
 
     OCIO::Lut1DOp lut(lutData);
 
-    OIIO_CHECK_NO_THROW(lut.finalize());
-    OIIO_CHECK_ASSERT(lut.isIdentity());
-    OIIO_CHECK_ASSERT(!lut.isNoOp());
+    OCIO_CHECK_NO_THROW(lut.finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_ASSERT(lut.isIdentity());
+    OCIO_CHECK_ASSERT(!lut.isNoOp());
 
     const float step = OCIO::GetBitDepthMaxValue(lutData->getInputBitDepth())
                        / ((float)lutData->getArray().getLength() - 1.0f);
@@ -1502,20 +1492,20 @@ OIIO_ADD_TEST(Lut1D, nan)
                                            0.0f, 0.0f, step, 1.0f };
 
     const float error = 1e-6f;
-    OIIO_CHECK_NO_THROW(lut.apply(myImage, myImage, 2));
+    OCIO_CHECK_NO_THROW(lut.apply(myImage, myImage, 2));
 
-    OIIO_CHECK_CLOSE(myImage[0], 0.0f, error);
-    OIIO_CHECK_CLOSE(myImage[1], 0.0f, error);
-    OIIO_CHECK_CLOSE(myImage[2], 0.0f, error);
-    OIIO_CHECK_CLOSE(myImage[3], 1.0f, error);
+    OCIO_CHECK_CLOSE(myImage[0], 0.0f, error);
+    OCIO_CHECK_CLOSE(myImage[1], 0.0f, error);
+    OCIO_CHECK_CLOSE(myImage[2], 0.0f, error);
+    OCIO_CHECK_CLOSE(myImage[3], 1.0f, error);
 
-    OIIO_CHECK_CLOSE(myImage[4], 0.0f, error);
-    OIIO_CHECK_CLOSE(myImage[5], 0.0f, error);
-    OIIO_CHECK_CLOSE(myImage[6], step, error);
-    OIIO_CHECK_CLOSE(myImage[7], 1.0f, error);
+    OCIO_CHECK_CLOSE(myImage[4], 0.0f, error);
+    OCIO_CHECK_CLOSE(myImage[5], 0.0f, error);
+    OCIO_CHECK_CLOSE(myImage[6], step, error);
+    OCIO_CHECK_CLOSE(myImage[7], 1.0f, error);
 }
 
-OIIO_ADD_TEST(Lut1D, finite_value)
+OCIO_ADD_TEST(Lut1D, finite_value)
 {
     // Make a LUT that squares the input.
     OCIO::Lut1DRcPtr lut = CreateSquareLut();
@@ -1523,8 +1513,8 @@ OIIO_ADD_TEST(Lut1D, finite_value)
     lut->maxerror = 1e-5f;
     lut->errortype = OCIO::Lut1D::ERROR_RELATIVE;
     bool isNoOp = true;
-    OIIO_CHECK_NO_THROW(isNoOp = lut->isNoOp());
-    OIIO_CHECK_ASSERT(!isNoOp);
+    OCIO_CHECK_NO_THROW(isNoOp = lut->isNoOp());
+    OCIO_CHECK_ASSERT(!isNoOp);
 
     // Check lut1D with OCIO::Lut1D_Linear.
     {
@@ -1534,23 +1524,23 @@ OIIO_ADD_TEST(Lut1D, finite_value)
         OCIO::Lut1D_Linear(lut1dlegacy_inputBuffer_linearforward, 1, *lut);
 
         OCIO::OpRcPtrVec ops;
-        OIIO_CHECK_NO_THROW(
+        OCIO_CHECK_NO_THROW(
             CreateLut1DOp(ops, lut, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD));
-        OIIO_REQUIRE_EQUAL(ops.size(), 1);
+        OCIO_REQUIRE_EQUAL(ops.size(), 1);
 
         float lut1d_inputBuffer_linearforward[4] = { 0.5f, 0.6f, 0.7f, 0.5f };
 
-        OIIO_CHECK_NO_THROW(ops[0]->finalize());
-        OIIO_CHECK_NO_THROW(ops[0]->apply(lut1d_inputBuffer_linearforward, 1));
+        OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
+        OCIO_CHECK_NO_THROW(ops[0]->apply(lut1d_inputBuffer_linearforward, 1));
         for (int i = 0; i <4; ++i)
         {
-            OIIO_CHECK_CLOSE(lut1d_inputBuffer_linearforward[i],
+            OCIO_CHECK_CLOSE(lut1d_inputBuffer_linearforward[i],
                              outputBuffer_linearforward[i], 1e-5f);
 
-            OIIO_CHECK_CLOSE(lut1dlegacy_inputBuffer_linearforward[i],
+            OCIO_CHECK_CLOSE(lut1dlegacy_inputBuffer_linearforward[i],
                              outputBuffer_linearforward[i], 1e-5f);
 
-            OIIO_CHECK_CLOSE(lut1dlegacy_inputBuffer_linearforward[i],
+            OCIO_CHECK_CLOSE(lut1dlegacy_inputBuffer_linearforward[i],
                              lut1d_inputBuffer_linearforward[i], 1e-5f);
         }
     }
@@ -1563,29 +1553,29 @@ OIIO_ADD_TEST(Lut1D, finite_value)
         OCIO::Lut1D_LinearInverse(lut1dlegacy_outputBuffer_linearinverse, 1, *lut);
 
         OCIO::OpRcPtrVec ops;
-        OIIO_CHECK_NO_THROW(
+        OCIO_CHECK_NO_THROW(
             CreateLut1DOp(ops, lut, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_INVERSE));
-        OIIO_REQUIRE_EQUAL(ops.size(), 1);
+        OCIO_REQUIRE_EQUAL(ops.size(), 1);
 
         float lut1d_outputBuffer_linearinverse[4] = { 0.25f, 0.36f, 0.49f, 0.5f };
 
-        OIIO_CHECK_NO_THROW(ops[0]->finalize());
-        OIIO_CHECK_NO_THROW(ops[0]->apply(lut1d_outputBuffer_linearinverse, 1));
+        OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
+        OCIO_CHECK_NO_THROW(ops[0]->apply(lut1d_outputBuffer_linearinverse, 1));
         for (int i = 0; i <4; ++i)
         {
-            OIIO_CHECK_CLOSE(lut1dlegacy_outputBuffer_linearinverse[i],
+            OCIO_CHECK_CLOSE(lut1dlegacy_outputBuffer_linearinverse[i],
                              inputBuffer_linearinverse[i], 1e-5f);
 
-            OIIO_CHECK_CLOSE(lut1d_outputBuffer_linearinverse[i],
+            OCIO_CHECK_CLOSE(lut1d_outputBuffer_linearinverse[i],
                              inputBuffer_linearinverse[i], 1e-5f);
 
-            OIIO_CHECK_CLOSE(lut1dlegacy_outputBuffer_linearinverse[i],
+            OCIO_CHECK_CLOSE(lut1dlegacy_outputBuffer_linearinverse[i],
                 lut1d_outputBuffer_linearinverse[i], 1e-5f);
         }
     }
 }
 
-OIIO_ADD_TEST(Lut1D, finite_value_hue_adjust)
+OCIO_ADD_TEST(Lut1D, finite_value_hue_adjust)
 {
     // Make a LUT that squares the input.
     OCIO::Lut1DRcPtr lut = CreateSquareLut();
@@ -1593,13 +1583,13 @@ OIIO_ADD_TEST(Lut1D, finite_value_hue_adjust)
     lut->maxerror = 1e-5f;
     lut->errortype = OCIO::Lut1D::ERROR_RELATIVE;
     bool isNoOp = true;
-    OIIO_CHECK_NO_THROW(isNoOp = lut->isNoOp());
-    OIIO_CHECK_ASSERT(!isNoOp);
+    OCIO_CHECK_NO_THROW(isNoOp = lut->isNoOp());
+    OCIO_CHECK_ASSERT(!isNoOp);
 
     OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(
+    OCIO_CHECK_NO_THROW(
         CreateLut1DOp(ops, lut, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO::OpRcPtr cloned = ops[0]->clone();
     OCIO::Lut1DOpRcPtr typedRcPtr = OCIO::DynamicPtrCast<OCIO::Lut1DOp>(cloned);
     typedRcPtr->lut1DData()->setHueAdjust(OCIO::Lut1DOpData::HUE_DW3);
@@ -1610,37 +1600,37 @@ OIIO_ADD_TEST(Lut1D, finite_value_hue_adjust)
                                                   0.5f };
     float lut1d_inputBuffer_linearforward[4] = { 0.5f, 0.6f, 0.7f, 0.5f };
 
-    OIIO_CHECK_NO_THROW(typedRcPtr->finalize());
-    OIIO_CHECK_NO_THROW(typedRcPtr->apply(lut1d_inputBuffer_linearforward, 1));
+    OCIO_CHECK_NO_THROW(typedRcPtr->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(typedRcPtr->apply(lut1d_inputBuffer_linearforward, 1));
     for (int i = 0; i <4; ++i)
     {
-        OIIO_CHECK_CLOSE(lut1d_inputBuffer_linearforward[i],
+        OCIO_CHECK_CLOSE(lut1d_inputBuffer_linearforward[i],
                          outputBuffer_linearforward[i], 1e-5f);
     }
 
     OCIO::Lut1DOpDataRcPtr invData = typedRcPtr->lut1DData()->inverse();
     OCIO::Lut1DOpDataRcPtr invDataExact = invData->clone();
     invDataExact->setInversionQuality(OCIO::LUT_INVERSION_BEST);
-    OIIO_CHECK_NO_THROW(
+    OCIO_CHECK_NO_THROW(
         CreateLut1DOp(ops, invData, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_CHECK_NO_THROW(
+    OCIO_CHECK_NO_THROW(
         CreateLut1DOp(ops, invDataExact, OCIO::TRANSFORM_DIR_FORWARD));
 
-    OIIO_REQUIRE_EQUAL(ops.size(), 3);
+    OCIO_REQUIRE_EQUAL(ops.size(), 3);
 
     const float inputBuffer_linearinverse[4] = { 0.5f, 0.6f, 0.7f, 0.5f };
     float lut1d_outputBuffer_linearinverse[4] = { 0.25f, 0.37f, 0.49f, 0.5f };
     float lut1d_outputBuffer_linearinverseEx[4] = { 0.25f, 0.37f, 0.49f, 0.5f };
 
-    OIIO_CHECK_NO_THROW(ops[1]->finalize());
-    OIIO_CHECK_NO_THROW(ops[2]->finalize());
-    OIIO_CHECK_NO_THROW(ops[1]->apply(lut1d_outputBuffer_linearinverse, 1)); // fast
-    OIIO_CHECK_NO_THROW(ops[2]->apply(lut1d_outputBuffer_linearinverseEx, 1)); // exact
+    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[2]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[1]->apply(lut1d_outputBuffer_linearinverse, 1)); // fast
+    OCIO_CHECK_NO_THROW(ops[2]->apply(lut1d_outputBuffer_linearinverseEx, 1)); // exact
     for (int i = 0; i <4; ++i)
     {
-        OIIO_CHECK_CLOSE(lut1d_outputBuffer_linearinverse[i],
+        OCIO_CHECK_CLOSE(lut1d_outputBuffer_linearinverse[i],
                          inputBuffer_linearinverse[i], 1e-5f);
-        OIIO_CHECK_CLOSE(lut1d_outputBuffer_linearinverseEx[i],
+        OCIO_CHECK_CLOSE(lut1d_outputBuffer_linearinverseEx[i],
                          inputBuffer_linearinverse[i], 1e-5f);
     }
 }
@@ -1663,59 +1653,59 @@ void Apply(const OCIO::OpRcPtrVec & ops, float * img, long numPixels)
 
 }
 
-OIIO_ADD_TEST(Lut1D, apply_half_domain_hue_adjust)
+OCIO_ADD_TEST(Lut1D, apply_half_domain_hue_adjust)
 {
     const std::string ctfFile("lut1d_hd_hueAdjust.ctf");
 
     OCIO::OpRcPtrVec ops;
     OCIO::ContextRcPtr context = OCIO::Context::Create();
-    OIIO_CHECK_NO_THROW(BuildOpsTest(ops, ctfFile, context,
+    OCIO_CHECK_NO_THROW(BuildOpsTest(ops, ctfFile, context,
                                      OCIO::TRANSFORM_DIR_FORWARD));
 
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
     auto op = std::const_pointer_cast<const OCIO::Op>(ops[1]);
     auto opData = op->data();
-    OIIO_CHECK_EQUAL(opData->getType(), OCIO::OpData::Lut1DType);
+    OCIO_CHECK_EQUAL(opData->getType(), OCIO::OpData::Lut1DType);
 
     auto lut = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opData);
-    OIIO_REQUIRE_ASSERT(lut);
+    OCIO_REQUIRE_ASSERT(lut);
 
     float inputFrame[] = {
         0.05f, 0.18f, 1.1f, 0.5f,
         2.3f, 0.01f, 0.3f, 1.0f };
 
-    OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops));
-    OIIO_CHECK_NO_THROW(Apply(ops, inputFrame, 2));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(Apply(ops, inputFrame, 2));
 
     const float rtol = 1e-6f;
     const float minExpected = 1e-3f;
 
-    OIIO_CHECK_ASSERT(
+    OCIO_CHECK_ASSERT(
         OCIO::EqualWithSafeRelError(inputFrame[0], 0.54780269f, rtol, minExpected));
 
-    OIIO_CHECK_ASSERT(
+    OCIO_CHECK_ASSERT(
         OCIO::EqualWithSafeRelError(inputFrame[1],
                                     9.57448578f,
                                     rtol, minExpected));  // would be 5.0 w/out hue adjust
 
-    OIIO_CHECK_ASSERT(
+    OCIO_CHECK_ASSERT(
         OCIO::EqualWithSafeRelError(inputFrame[2], 73.45562744f, rtol, minExpected));
 
-    OIIO_CHECK_EQUAL(inputFrame[3], 0.5f);
+    OCIO_CHECK_EQUAL(inputFrame[3], 0.5f);
 
-    OIIO_CHECK_ASSERT(
+    OCIO_CHECK_ASSERT(
         OCIO::EqualWithSafeRelError(inputFrame[4], 188.087067f, rtol, minExpected));
-    OIIO_CHECK_ASSERT(
+    OCIO_CHECK_ASSERT(
         OCIO::EqualWithSafeRelError(inputFrame[5], 0.0324990489f, rtol, minExpected));
-    OIIO_CHECK_ASSERT(
+    OCIO_CHECK_ASSERT(
         OCIO::EqualWithSafeRelError(inputFrame[6],
                                     23.8472710f,
                                     rtol, minExpected));  // would be 11.3372078 w/out hue adjust
 
-    OIIO_CHECK_EQUAL(inputFrame[7], 1.0f);
+    OCIO_CHECK_EQUAL(inputFrame[7], 1.0f);
 }
 
-OIIO_ADD_TEST(InvLut1D, apply_half)
+OCIO_ADD_TEST(InvLut1D, apply_half)
 {
     const OCIO::BitDepth inBD = OCIO::BIT_DEPTH_F32;
     const OCIO::BitDepth outBD = OCIO::BIT_DEPTH_F32;
@@ -1724,16 +1714,16 @@ OIIO_ADD_TEST(InvLut1D, apply_half)
 
     OCIO::OpRcPtrVec ops;
     OCIO::ContextRcPtr context = OCIO::Context::Create();
-    OIIO_CHECK_NO_THROW(BuildOpsTest(ops, ctfFile, context,
+    OCIO_CHECK_NO_THROW(BuildOpsTest(ops, ctfFile, context,
                                      OCIO::TRANSFORM_DIR_FORWARD));
 
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
     auto op = std::const_pointer_cast<const OCIO::Op>(ops[1]);
     auto opData = op->data();
-    OIIO_CHECK_EQUAL(opData->getType(), OCIO::OpData::Lut1DType);
+    OCIO_CHECK_EQUAL(opData->getType(), OCIO::OpData::Lut1DType);
 
     auto lut = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opData);
-    OIIO_REQUIRE_ASSERT(lut);
+    OCIO_REQUIRE_ASSERT(lut);
 
     auto fwdLut = lut->clone();
     fwdLut->setInputBitDepth(outBD);
@@ -1752,8 +1742,8 @@ OIIO_ADD_TEST(InvLut1D, apply_half)
     memcpy(inImage1, inImage, 12 * sizeof(float));
 
     // Apply forward LUT.
-    OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops1));
-    OIIO_CHECK_NO_THROW(Apply(ops1, inImage1, 3));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops1, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(Apply(ops1, inImage1, 3));
 
     // Apply inverse LUT.
     OCIO::OpRcPtrVec ops2;
@@ -1765,13 +1755,13 @@ OIIO_ADD_TEST(InvLut1D, apply_half)
     float inImage2[12];
     memcpy(inImage2, inImage1, 12 * sizeof(float));
 
-    OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops2));
-    OIIO_CHECK_NO_THROW(Apply(ops2, inImage2, 3));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops2, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(Apply(ops2, inImage2, 3));
 
     // Compare the two applys
     for (unsigned i = 0; i < 12; ++i)
     {
-        OIIO_CHECK_ASSERT(!OCIO::FloatsDiffer(inImage2[i], inImage[i], 50, false));
+        OCIO_CHECK_ASSERT(!OCIO::FloatsDiffer(inImage2[i], inImage[i], 50, false));
     }
 
     // Repeat with style = LUT_INVERSION_FAST.
@@ -1784,34 +1774,34 @@ OIIO_ADD_TEST(InvLut1D, apply_half)
 
     memcpy(inImage2, inImage1, 12 * sizeof(float));
 
-    OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops3));
-    OIIO_CHECK_NO_THROW(Apply(ops3, inImage2, 3));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops3, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(Apply(ops3, inImage2, 3));
 
     // Compare the two applys
     for (unsigned i = 0; i < 12; ++i)
     {
-        OIIO_CHECK_ASSERT(!OCIO::FloatsDiffer(inImage2[i], inImage[i], 50, false));
+        OCIO_CHECK_ASSERT(!OCIO::FloatsDiffer(inImage2[i], inImage[i], 50, false));
     }
 }
 
-OIIO_ADD_TEST(Lut1D, lut_1d_compose_with_bit_depth)
+OCIO_ADD_TEST(Lut1D, lut_1d_compose_with_bit_depth)
 {
     const std::string ctfFile("lut1d_comp.clf");
 
     OCIO::OpRcPtrVec ops;
     OCIO::ContextRcPtr context = OCIO::Context::Create();
-    OIIO_CHECK_NO_THROW(BuildOpsTest(ops, ctfFile, context,
+    OCIO_CHECK_NO_THROW(BuildOpsTest(ops, ctfFile, context,
                                      OCIO::TRANSFORM_DIR_FORWARD));
 
-    OIIO_REQUIRE_EQUAL(ops.size(), 3);
+    OCIO_REQUIRE_EQUAL(ops.size(), 3);
     auto op = std::const_pointer_cast<const OCIO::Op>(ops[1]);
     auto opData = op->data();
-    OIIO_CHECK_EQUAL(opData->getType(), OCIO::OpData::Lut1DType);
+    OCIO_CHECK_EQUAL(opData->getType(), OCIO::OpData::Lut1DType);
     auto lut1 = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opData);
-    OIIO_REQUIRE_ASSERT(lut1);
+    OCIO_REQUIRE_ASSERT(lut1);
     op = std::const_pointer_cast<const OCIO::Op>(ops[2]);
     opData = op->data();
-    OIIO_CHECK_EQUAL(opData->getType(), OCIO::OpData::Lut1DType);
+    OCIO_CHECK_EQUAL(opData->getType(), OCIO::OpData::Lut1DType);
     auto lut2 = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opData);
 
     {
@@ -1819,33 +1809,33 @@ OIIO_ADD_TEST(Lut1D, lut_1d_compose_with_bit_depth)
         OCIO::Lut1DOpData::Compose(lutComposed, lut2, OCIO::Lut1DOpData::COMPOSE_RESAMPLE_NO);
 
         const float error = 1e-5f;
-        OIIO_CHECK_EQUAL(lutComposed->getArray().getLength(), 2);
-        OIIO_CHECK_CLOSE(lutComposed->getArray().getValues()[0], 0.00744791f, error);
-        OIIO_CHECK_CLOSE(lutComposed->getArray().getValues()[1], 0.03172233f, error);
-        OIIO_CHECK_CLOSE(lutComposed->getArray().getValues()[2], 0.07058375f, error);
-        OIIO_CHECK_CLOSE(lutComposed->getArray().getValues()[3], 0.3513808f, error);
-        OIIO_CHECK_CLOSE(lutComposed->getArray().getValues()[4], 0.51819527f, error);
-        OIIO_CHECK_CLOSE(lutComposed->getArray().getValues()[5], 0.67463773f, error);
+        OCIO_CHECK_EQUAL(lutComposed->getArray().getLength(), 2);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[0], 0.00744791f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[1], 0.03172233f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[2], 0.07058375f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[3], 0.3513808f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[4], 0.51819527f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[5], 0.67463773f, error);
     }
     {
         auto lutComposed = lut1->clone();
         OCIO::Lut1DOpData::Compose(lutComposed, lut2, OCIO::Lut1DOpData::COMPOSE_RESAMPLE_INDEPTH);
 
         const float error = 1e-5f;
-        OIIO_CHECK_EQUAL(lutComposed->getArray().getLength(), 256);
-        OIIO_CHECK_CLOSE(lutComposed->getArray().getValues()[0], 0.00744791f, error);
-        OIIO_CHECK_CLOSE(lutComposed->getArray().getValues()[1], 0.03172233f, error);
-        OIIO_CHECK_CLOSE(lutComposed->getArray().getValues()[2], 0.07058375f, error);
-        OIIO_CHECK_CLOSE(lutComposed->getArray().getValues()[383], 0.28073114f, error);
-        OIIO_CHECK_CLOSE(lutComposed->getArray().getValues()[384], 0.09914176f, error);
-        OIIO_CHECK_CLOSE(lutComposed->getArray().getValues()[385], 0.1866852f, error);
-        OIIO_CHECK_CLOSE(lutComposed->getArray().getValues()[765], 0.3513808f, error);
-        OIIO_CHECK_CLOSE(lutComposed->getArray().getValues()[766], 0.51819527f, error);
-        OIIO_CHECK_CLOSE(lutComposed->getArray().getValues()[767], 0.67463773f, error);
+        OCIO_CHECK_EQUAL(lutComposed->getArray().getLength(), 256);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[0], 0.00744791f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[1], 0.03172233f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[2], 0.07058375f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[383], 0.28073114f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[384], 0.09914176f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[385], 0.1866852f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[765], 0.3513808f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[766], 0.51819527f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[767], 0.67463773f, error);
     }
 }
 
-OIIO_ADD_TEST(Lut1D, inverse_twice)
+OCIO_ADD_TEST(Lut1D, inverse_twice)
 {
     // Make a LUT that squares the input.
     OCIO::Lut1DRcPtr lut = CreateSquareLut();
@@ -1853,44 +1843,44 @@ OIIO_ADD_TEST(Lut1D, inverse_twice)
     lut->maxerror = 1e-5f;
     lut->errortype = OCIO::Lut1D::ERROR_RELATIVE;
     bool isNoOp = true;
-    OIIO_CHECK_NO_THROW(isNoOp = lut->isNoOp());
-    OIIO_CHECK_ASSERT(!isNoOp);
+    OCIO_CHECK_NO_THROW(isNoOp = lut->isNoOp());
+    OCIO_CHECK_ASSERT(!isNoOp);
 
     const float outputBuffer_linearinverse[4] = { 0.5f, 0.6f, 0.7f, 0.5f };
 
     // Create inverse lut.
     OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut, OCIO::INTERP_LINEAR,
+    OCIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut, OCIO::INTERP_LINEAR,
                                       OCIO::TRANSFORM_DIR_INVERSE));
-    OIIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
 
     const float lut1d_inputBuffer_reference[4] = { 0.25f, 0.36f, 0.49f, 0.5f };
     float lut1d_inputBuffer_linearinverse[4] = { 0.25f, 0.36f, 0.49f, 0.5f };
 
-    OIIO_CHECK_NO_THROW(ops[0]->finalize());
-    OIIO_CHECK_NO_THROW(ops[0]->apply(lut1d_inputBuffer_linearinverse, 1));
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[0]->apply(lut1d_inputBuffer_linearinverse, 1));
     for (int i = 0; i < 4; ++i)
     {
-        OIIO_CHECK_CLOSE(lut1d_inputBuffer_linearinverse[i],
-                         outputBuffer_linearinverse[i], 1e-5f);
+        OCIO_CHECK_CLOSE(lut1d_inputBuffer_linearinverse[i],
+            outputBuffer_linearinverse[i], 1e-5f);
     }
 
     // Inverse the inverse.
     OCIO::Lut1DOp * pLut = dynamic_cast<OCIO::Lut1DOp*>(ops[0].get());
-    OIIO_CHECK_ASSERT(pLut);
+    OCIO_CHECK_ASSERT(pLut);
     OCIO::Lut1DOpDataRcPtr lutData = pLut->lut1DData()->inverse();
-    OIIO_CHECK_NO_THROW(OCIO::CreateLut1DOp(ops, lutData,
+    OCIO_CHECK_NO_THROW(OCIO::CreateLut1DOp(ops, lutData,
                                             OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
     // Apply the inverse.
-    OIIO_CHECK_NO_THROW(ops[1]->finalize());
-    OIIO_CHECK_NO_THROW(ops[1]->apply(lut1d_inputBuffer_linearinverse, 1));
+    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[1]->apply(lut1d_inputBuffer_linearinverse, 1));
 
     // Verify we are back on the input.
     for (int i = 0; i < 4; ++i)
     {
-        OIIO_CHECK_CLOSE(lut1d_inputBuffer_linearinverse[i],
+        OCIO_CHECK_CLOSE(lut1d_inputBuffer_linearinverse[i],
                          lut1d_inputBuffer_reference[i], 1e-5f);
     }
 }

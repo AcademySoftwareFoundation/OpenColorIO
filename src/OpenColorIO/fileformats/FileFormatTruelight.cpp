@@ -320,8 +320,10 @@ OCIO_NAMESPACE_ENTER
             PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
             
             // Apply processor to LUT data
-            ConstProcessorRcPtr inputToTarget;
-            inputToTarget = config->getProcessor(baker.getInputSpace(), baker.getTargetSpace());
+            ConstCPUProcessorRcPtr inputToTarget;
+            inputToTarget
+                = config->getProcessor(baker.getInputSpace(), 
+                                       baker.getTargetSpace())->getDefaultCPUProcessor();
             inputToTarget->apply(cubeImg);
             
             int shaperSize = baker.getShaperSize();
@@ -433,9 +435,9 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(FileFormatTruelight, ShaperAndLut3D)
+OCIO_ADD_TEST(FileFormatTruelight, ShaperAndLut3D)
 {
     // This lowers the red channel by 0.5, other channels are unaffected.
     const char * luttext = "# Truelight Cube v2.0\n"
@@ -497,11 +499,11 @@ OIIO_ADD_TEST(FileFormatTruelight, ShaperAndLut3D)
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile;
-    OIIO_CHECK_NO_THROW(cachedFile = tester.Read(lutIStream, emptyString));
+    OCIO_CHECK_NO_THROW(cachedFile = tester.Read(lutIStream, emptyString));
     OCIO::LocalCachedFileRcPtr lut = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
     
-    OIIO_CHECK_ASSERT(lut->has1D);
-    OIIO_CHECK_ASSERT(lut->has3D);
+    OCIO_CHECK_ASSERT(lut->has1D);
+    OCIO_CHECK_ASSERT(lut->has3D);
     
     float data[4*3] = { 0.1f, 0.2f, 0.3f, 0.0f,
                         1.0f, 0.5f, 0.123456f, 0.0f,
@@ -522,7 +524,8 @@ OIIO_ADD_TEST(FileFormatTruelight, ShaperAndLut3D)
         CreateLut3DOp(ops, lut->lut3D,
                       OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD);
     }
-    FinalizeOpVec(ops);
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
     
     
     // Apply the result
@@ -533,11 +536,11 @@ OIIO_ADD_TEST(FileFormatTruelight, ShaperAndLut3D)
     
     for(int i=0; i<4*3; ++i)
     {
-        OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-6 );
+        OCIO_CHECK_CLOSE( data[i], result[i], 1.0e-6 );
     }
 }
 
-OIIO_ADD_TEST(FileFormatTruelight, Shaper)
+OCIO_ADD_TEST(FileFormatTruelight, Shaper)
 {
     const char * luttext = "# Truelight Cube v2.0\n"
        "# lutLength 11\n"
@@ -566,12 +569,12 @@ OIIO_ADD_TEST(FileFormatTruelight, Shaper)
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile;
-    OIIO_CHECK_NO_THROW(cachedFile = tester.Read(lutIStream, emptyString));
+    OCIO_CHECK_NO_THROW(cachedFile = tester.Read(lutIStream, emptyString));
     
     OCIO::LocalCachedFileRcPtr lut = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
     
-    OIIO_CHECK_ASSERT(lut->has1D);
-    OIIO_CHECK_ASSERT(!lut->has3D);
+    OCIO_CHECK_ASSERT(lut->has1D);
+    OCIO_CHECK_ASSERT(!lut->has3D);
     
     float data[4*3] = { 0.1f, 0.2f, 0.3f, 0.0f,
                         1.0f, 0.5f, 0.123456f, 0.0f,
@@ -592,7 +595,8 @@ OIIO_ADD_TEST(FileFormatTruelight, Shaper)
         CreateLut3DOp(ops, lut->lut3D,
                       OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD);
     }
-    FinalizeOpVec(ops);
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
     
     
     // Apply the result
@@ -603,12 +607,12 @@ OIIO_ADD_TEST(FileFormatTruelight, Shaper)
     
     for(int i=0; i<4*3; ++i)
     {
-        OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-6 );
+        OCIO_CHECK_CLOSE( data[i], result[i], 1.0e-6 );
     }
 }
 
 
-OIIO_ADD_TEST(FileFormatTruelight, Lut3D)
+OCIO_ADD_TEST(FileFormatTruelight, Lut3D)
 {
     // This lowers the red channel by 0.5, other channels are unaffected.
     const char * luttext = "# Truelight Cube v2.0\n"
@@ -654,11 +658,11 @@ OIIO_ADD_TEST(FileFormatTruelight, Lut3D)
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile;
-    OIIO_CHECK_NO_THROW(cachedFile = tester.Read(lutIStream, emptyString));
+    OCIO_CHECK_NO_THROW(cachedFile = tester.Read(lutIStream, emptyString));
     OCIO::LocalCachedFileRcPtr lut = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
     
-    OIIO_CHECK_ASSERT(!lut->has1D);
-    OIIO_CHECK_ASSERT(lut->has3D);
+    OCIO_CHECK_ASSERT(!lut->has1D);
+    OCIO_CHECK_ASSERT(lut->has3D);
     
     float data[4*3] = { 0.1f, 0.2f, 0.3f, 0.0f,
                         1.0f, 0.5f, 0.123456f, 0.0f,
@@ -679,7 +683,8 @@ OIIO_ADD_TEST(FileFormatTruelight, Lut3D)
         CreateLut3DOp(ops, lut->lut3D,
                       OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD);
     }
-    FinalizeOpVec(ops);
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
     
     
     // Apply the result
@@ -690,7 +695,7 @@ OIIO_ADD_TEST(FileFormatTruelight, Lut3D)
     
     for(int i=0; i<4*3; ++i)
     {
-        OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-6 );
+        OCIO_CHECK_CLOSE( data[i], result[i], 1.0e-6 );
     }
 }
 

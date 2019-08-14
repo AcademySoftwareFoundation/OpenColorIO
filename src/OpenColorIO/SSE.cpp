@@ -40,12 +40,12 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #include "MathUtils.h"
 #include "SSE.h"
-#include "unittest.h"
+#include "UnitTest.h"
 
 
 OCIO_NAMESPACE_USING
 
-OIIO_ADD_TEST(SSE, sse2_log2_test)
+OCIO_ADD_TEST(SSE, sse2_log2_test)
 {
     const float values[8] = { 1e-010f, .1f, .5f, 1.f,
                               11.f, 112.f, 2425.f, 2e015f };
@@ -64,7 +64,7 @@ OIIO_ADD_TEST(SSE, sse2_log2_test)
         mm_sseResult = OCIO::sseLog2(_mm_set1_ps(values[i]));
         _mm_storeu_ps(sseResult, mm_sseResult);
 
-        OIIO_CHECK_CLOSE(cpuResult, sseResult[0], rtol);
+        OCIO_CHECK_CLOSE(cpuResult, sseResult[0], rtol);
     }
 }
 
@@ -97,7 +97,7 @@ void CheckFloat(const std::string& operation,
     }
 
     const float rtol = powf(2.f, -((float)precision));
-    OIIO_CHECK_ASSERT_MESSAGE(OCIO::EqualWithAbsError(expected, actual, rtol),
+    OCIO_CHECK_ASSERT_MESSAGE(OCIO::EqualWithAbsError(expected, actual, rtol),
                               GetErrorMessage(operation, expected, actual));
 }
 
@@ -128,7 +128,7 @@ void CheckPower(const float base, const float exponent)
     CheckSSE(operation, cpuResult, sseResult, 12);
 }
 
-OIIO_ADD_TEST(SSE, sse2_power_test)
+OCIO_ADD_TEST(SSE, sse2_power_test)
 {
     const float values[] = {
         1e-010f, .1f, .5f, 1.f,
@@ -213,7 +213,7 @@ std::string GetErrorMessage(const std::string& operation, const float expected, 
     return oss.str();
 }
 
-OIIO_ADD_TEST(SSE, sse2_exp2_test)
+OCIO_ADD_TEST(SSE, sse2_exp2_test)
 {
     const unsigned ulp_tolerance = 50;
 
@@ -235,7 +235,7 @@ OIIO_ADD_TEST(SSE, sse2_exp2_test)
         const float expected = powf(2.0f, values[i]);
 
         EvaluateExp2(values[i], sseResult);
-        OIIO_CHECK_ASSERT_MESSAGE(AreAllClose(sseResult, expected, ulp_tolerance),
+        OCIO_CHECK_ASSERT_MESSAGE(AreAllClose(sseResult, expected, ulp_tolerance),
                                   GetErrorMessage(GetOperation("exp2", values[i]), expected, sseResult));
     }
 
@@ -245,7 +245,7 @@ OIIO_ADD_TEST(SSE, sse2_exp2_test)
         const float expected = powf(2.0f, -values[i]);
 
         EvaluateExp2(-values[i], sseResult);
-        OIIO_CHECK_ASSERT_MESSAGE(AreAllClose(sseResult, expected, ulp_tolerance),
+        OCIO_CHECK_ASSERT_MESSAGE(AreAllClose(sseResult, expected, ulp_tolerance),
                                   GetErrorMessage(GetOperation("exp2", -values[i]), expected, sseResult));
     }
 
@@ -262,10 +262,10 @@ OIIO_ADD_TEST(SSE, sse2_exp2_test)
     // Check the log2_max_float and log2_min_float limits
     {
         EvaluateExp2(log2_max_float, sseResult);
-        OIIO_CHECK_ASSERT(AreAllInfinity(sseResult));
+        OCIO_CHECK_ASSERT(AreAllInfinity(sseResult));
 
         EvaluateExp2(log2_min_float, sseResult);
-        OIIO_CHECK_ASSERT(AreAllZero(sseResult));
+        OCIO_CHECK_ASSERT(AreAllZero(sseResult));
     }
 
     // The valid domain of exp2 is actually reduced by one ULP
@@ -282,7 +282,7 @@ OIIO_ADD_TEST(SSE, sse2_exp2_test)
         const float large_threshold = (float)pow(2.0, (double)AddULP(log2_max_float, -2));
 
         EvaluateExp2(log2_max_float_inside_one_ulp, sseResult);
-        OIIO_CHECK_ASSERT(AreAllInRange(sseResult, large_threshold, 
+        OCIO_CHECK_ASSERT(AreAllInRange(sseResult, large_threshold, 
                                         std::numeric_limits<float>::infinity()));
 
         // The result should be a small number, but not zero
@@ -290,7 +290,7 @@ OIIO_ADD_TEST(SSE, sse2_exp2_test)
         const float small_threshold = (float)pow(2.0, (double)AddULP(log2_min_float, -2));
 
         EvaluateExp2(log2_min_float_inside_one_ulp, sseResult);
-        OIIO_CHECK_ASSERT(AreAllInRange(sseResult, 0.0f, small_threshold));
+        OCIO_CHECK_ASSERT(AreAllInRange(sseResult, 0.0f, small_threshold));
     }
 
     // Verify that the log2_max_float and log2_min_float limits, expanded by one ULP,
@@ -303,10 +303,10 @@ OIIO_ADD_TEST(SSE, sse2_exp2_test)
     const float log2_min_float_outside_one_ulp = AddULP(log2_min_float, 1);
     {
         EvaluateExp2(log2_max_float_outside_one_ulp, sseResult);
-        OIIO_CHECK_ASSERT(AreAllInfinity(sseResult));
+        OCIO_CHECK_ASSERT(AreAllInfinity(sseResult));
 
         EvaluateExp2(log2_min_float_outside_one_ulp, sseResult);
-        OIIO_CHECK_ASSERT(AreAllZero(sseResult));
+        OCIO_CHECK_ASSERT(AreAllZero(sseResult));
     }
 }
 
@@ -316,7 +316,7 @@ void EvaluateAtan(const float x, float* result)
     _mm_storeu_ps(result, mm_sseResult);
 }
 
-OIIO_ADD_TEST(SSE, sse2_atan_test)
+OCIO_ADD_TEST(SSE, sse2_atan_test)
 {
     const float sign_values[] = { -1.0f, 1.0f };
 
@@ -353,7 +353,7 @@ OIIO_ADD_TEST(SSE, sse2_atan_test)
     }
 }
 
-OIIO_ADD_TEST(SSE, scalar_atan_test)
+OCIO_ADD_TEST(SSE, scalar_atan_test)
 {
     const float sign_values[] = { -1.0f, 1.0f };
 
@@ -394,7 +394,7 @@ void EvaluateAtan2(const float y, const float x, float* result)
     _mm_storeu_ps(result, mm_sseResult);
 }
 
-OIIO_ADD_TEST(SSE, sse2_atan2_test)
+OCIO_ADD_TEST(SSE, sse2_atan2_test)
 {
     const float sign_values[] = { -1.0f, 1.0f };
 
@@ -449,7 +449,7 @@ OIIO_ADD_TEST(SSE, sse2_atan2_test)
     }
 }
 
-OIIO_ADD_TEST(SSE, scalar_atan2_test)
+OCIO_ADD_TEST(SSE, scalar_atan2_test)
 {
     const float sign_values[] = { -1.0f, 1.0f };
 
@@ -508,7 +508,7 @@ void EvaluateCos(const float x, float* result)
     _mm_storeu_ps(result, mm_sseResult);
 }
 
-OIIO_ADD_TEST(SSE, sse2_cos_test)
+OCIO_ADD_TEST(SSE, sse2_cos_test)
 {
     const float sign_values[] = { -1.0f, 1.0f };
 
@@ -556,7 +556,7 @@ void EvaluateSin(const float x, float* result)
     _mm_storeu_ps(result, mm_sseResult);
 }
 
-OIIO_ADD_TEST(SSE, sse2_sin_test)
+OCIO_ADD_TEST(SSE, sse2_sin_test)
 {
     const float sign_values[] = { -1.0f, 1.0f };
 
@@ -606,7 +606,7 @@ void EvaluateSinCos(const float x, float* resultSin, float* resultCos)
     _mm_storeu_ps(resultCos, sseResultCos);
 }
 
-OIIO_ADD_TEST(SSE, sse2_sin_cos_test)
+OCIO_ADD_TEST(SSE, sse2_sin_cos_test)
 {
     const float sign_values[] = { -1.0f, 1.0f };
 
@@ -651,7 +651,7 @@ OIIO_ADD_TEST(SSE, sse2_sin_cos_test)
     }
 }
 
-OIIO_ADD_TEST(SSE, scalar_sin_cos_test)
+OCIO_ADD_TEST(SSE, scalar_sin_cos_test)
 {
     const float sign_values[] = { -1.0f, 1.0f };
 

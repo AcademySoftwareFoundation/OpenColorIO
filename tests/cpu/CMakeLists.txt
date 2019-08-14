@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+
 include(ExternalProject)
 
 # Define used for tests in src/OpenColorIO/Context.cpp
@@ -17,13 +20,12 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 		PUBLIC
 			public_api
 		PRIVATE
-			yamlcpp
-			pystring
-			sampleicc
-			oiio_unittest
+			yamlcpp::yamlcpp
+			pystring::pystring
+			sampleicc::sampleicc
 			unittest_data
-			libexpat
-			ilmbase
+			expat::expat
+			ilmbase::ilmbase
 	)
 	if(PRIVATE_INCLUDES)
 		target_include_directories(${TEST_BINARY}
@@ -93,6 +95,7 @@ set(SOURCES
 	fileformats/FileFormatVF.cpp
 	fileformats/xmlutils/XMLReaderHelper.cpp
 	fileformats/xmlutils/XMLReaderUtils.cpp
+	GPUProcessor.cpp
 	GpuShader.cpp
 	GpuShaderDesc.cpp
 	GpuShaderUtils.cpp

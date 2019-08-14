@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+
 set(SOURCES
     main.cpp
     ocioicc.cpp
@@ -22,7 +25,7 @@ set_target_properties(ociobakelut PROPERTIES
 target_link_libraries(ociobakelut 
     PRIVATE 
         OpenColorIO
-        lcms2
+        lcms2::lcms2
         apputils
 )
 

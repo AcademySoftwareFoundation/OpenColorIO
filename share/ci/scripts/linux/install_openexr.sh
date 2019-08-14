@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
 
 set -ex
 
@@ -19,6 +21,8 @@ cd build
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
       -DOPENEXR_BUILD_TESTS=OFF \
       -DOPENEXR_BUILD_UTILS=OFF \
+      -DCMAKE_C_FLAGS="-fPIC" \
+      -DCMAKE_CXX_FLAGS="-fPIC" \
       ../.
 make -j4
 sudo make install

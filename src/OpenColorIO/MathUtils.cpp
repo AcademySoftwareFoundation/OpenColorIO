@@ -616,7 +616,7 @@ OCIO_NAMESPACE_EXIT
 OCIO_NAMESPACE_USING
 
 #include <limits>
-#include "unittest.h"
+#include "UnitTest.h"
 
 namespace
 {
@@ -630,7 +630,7 @@ namespace
 }
 
    
-OIIO_ADD_TEST(MathUtils, M44_is_diagonal)
+OCIO_ADD_TEST(MathUtils, M44_is_diagonal)
 {
     {
         float m44[] = { 1.0f, 0.0f, 0.0f, 0.0f,
@@ -638,31 +638,31 @@ OIIO_ADD_TEST(MathUtils, M44_is_diagonal)
                         0.0f, 0.0f, 1.0f, 0.0f,
                         0.0f, 0.0f, 0.0f, 1.0f };
         bool isdiag = IsM44Diagonal(m44);
-        OIIO_CHECK_EQUAL(isdiag, true);
+        OCIO_CHECK_EQUAL(isdiag, true);
 
         m44[1] += 1e-8f;
         isdiag = IsM44Diagonal(m44);
-        OIIO_CHECK_EQUAL(isdiag, false);
+        OCIO_CHECK_EQUAL(isdiag, false);
     }
 }
 
 
-OIIO_ADD_TEST(MathUtils, IsScalarEqualToZero)
+OCIO_ADD_TEST(MathUtils, IsScalarEqualToZero)
 {
-        OIIO_CHECK_EQUAL(IsScalarEqualToZero(0.0f), true);
-        OIIO_CHECK_EQUAL(IsScalarEqualToZero(-0.0f), true);
+        OCIO_CHECK_EQUAL(IsScalarEqualToZero(0.0f), true);
+        OCIO_CHECK_EQUAL(IsScalarEqualToZero(-0.0f), true);
         
-        OIIO_CHECK_EQUAL(IsScalarEqualToZero(-1.072883670794056e-09f), false);
-        OIIO_CHECK_EQUAL(IsScalarEqualToZero(1.072883670794056e-09f), false);
+        OCIO_CHECK_EQUAL(IsScalarEqualToZero(-1.072883670794056e-09f), false);
+        OCIO_CHECK_EQUAL(IsScalarEqualToZero(1.072883670794056e-09f), false);
         
-        OIIO_CHECK_EQUAL(IsScalarEqualToZero(-1.072883670794056e-03f), false);
-        OIIO_CHECK_EQUAL(IsScalarEqualToZero(1.072883670794056e-03f), false);
+        OCIO_CHECK_EQUAL(IsScalarEqualToZero(-1.072883670794056e-03f), false);
+        OCIO_CHECK_EQUAL(IsScalarEqualToZero(1.072883670794056e-03f), false);
         
-        OIIO_CHECK_EQUAL(IsScalarEqualToZero(-1.072883670794056e-01f), false);
-        OIIO_CHECK_EQUAL(IsScalarEqualToZero(1.072883670794056e-01f), false);
+        OCIO_CHECK_EQUAL(IsScalarEqualToZero(-1.072883670794056e-01f), false);
+        OCIO_CHECK_EQUAL(IsScalarEqualToZero(1.072883670794056e-01f), false);
 }
 
-OIIO_ADD_TEST(MathUtils, GetM44Inverse)
+OCIO_ADD_TEST(MathUtils, GetM44Inverse)
 {
         // This is a degenerate matrix, and shouldnt be invertible.
         float m[] = { 0.3f, 0.3f, 0.3f, 0.0f,
@@ -672,11 +672,11 @@ OIIO_ADD_TEST(MathUtils, GetM44Inverse)
         
         float mout[16];
         bool invertsuccess = GetM44Inverse(mout, m);
-        OIIO_CHECK_EQUAL(invertsuccess, false);
+        OCIO_CHECK_EQUAL(invertsuccess, false);
 }
 
 
-OIIO_ADD_TEST(MathUtils, M44_M44_product)
+OCIO_ADD_TEST(MathUtils, M44_M44_product)
 {
     {
         float mout[16];
@@ -697,12 +697,12 @@ OIIO_ADD_TEST(MathUtils, M44_M44_product)
         
         for(int i=0; i<16; ++i)
         {
-            OIIO_CHECK_EQUAL(mout[i], mcorrect[i]);
+            OCIO_CHECK_EQUAL(mout[i], mcorrect[i]);
         }
     }
 }
 
-OIIO_ADD_TEST(MathUtils, M44_V4_product)
+OCIO_ADD_TEST(MathUtils, M44_V4_product)
 {
     {
         float vout[4];
@@ -717,12 +717,12 @@ OIIO_ADD_TEST(MathUtils, M44_V4_product)
         
         for(int i=0; i<4; ++i)
         {
-            OIIO_CHECK_EQUAL(vout[i], vcorrect[i]);
+            OCIO_CHECK_EQUAL(vout[i], vcorrect[i]);
         }
     }
 }
 
-OIIO_ADD_TEST(MathUtils, V4_add)
+OCIO_ADD_TEST(MathUtils, V4_add)
 {
     {
         float vout[4];
@@ -734,12 +734,12 @@ OIIO_ADD_TEST(MathUtils, V4_add)
         
         for(int i=0; i<4; ++i)
         {
-            OIIO_CHECK_EQUAL(vout[i], vcorrect[i]);
+            OCIO_CHECK_EQUAL(vout[i], vcorrect[i]);
         }
     }
 }
 
-OIIO_ADD_TEST(MathUtils, mxb_eval)
+OCIO_ADD_TEST(MathUtils, mxb_eval)
 {
     {
         float vout[4];
@@ -755,12 +755,12 @@ OIIO_ADD_TEST(MathUtils, mxb_eval)
         
         for(int i=0; i<4; ++i)
         {
-            OIIO_CHECK_EQUAL(vout[i], vcorrect[i]);
+            OCIO_CHECK_EQUAL(vout[i], vcorrect[i]);
         }
     }
 }
 
-OIIO_ADD_TEST(MathUtils, Combine_two_mxb)
+OCIO_ADD_TEST(MathUtils, Combine_two_mxb)
 {
     float m1[] = { 1.0f, 0.0f, 2.0f, 0.0f,
                    2.0f, 1.0f, 0.0f, 1.0f,
@@ -791,7 +791,7 @@ OIIO_ADD_TEST(MathUtils, Combine_two_mxb)
         // Compare outputs
         for(int i=0; i<4; ++i)
         {
-            OIIO_CHECK_CLOSE(vcombined[i], vout[i], tolerance);
+            OCIO_CHECK_CLOSE(vcombined[i], vout[i], tolerance);
         }
     }
     
@@ -809,7 +809,7 @@ OIIO_ADD_TEST(MathUtils, Combine_two_mxb)
         
         for(int i=0; i<4; ++i)
         {
-            OIIO_CHECK_CLOSE(vcombined[i], vout[i], tolerance);
+            OCIO_CHECK_CLOSE(vcombined[i], vout[i], tolerance);
         }
     }
     
@@ -829,12 +829,12 @@ OIIO_ADD_TEST(MathUtils, Combine_two_mxb)
         // large numbers, and the error for CHECK_CLOSE is absolute.
         for(int i=0; i<4; ++i)
         {
-            OIIO_CHECK_CLOSE(vcombined[i], vout[i], 1e-3);
+            OCIO_CHECK_CLOSE(vcombined[i], vout[i], 1e-3);
         }
     }
 }
 
-OIIO_ADD_TEST(MathUtils, mxb_invert)
+OCIO_ADD_TEST(MathUtils, mxb_invert)
 {
     {
         float m[] = { 1.0f, 2.0f, 0.0f, 0.0f,
@@ -850,14 +850,14 @@ OIIO_ADD_TEST(MathUtils, mxb_invert)
         
         GetMxbResult(vresult, m, x, v);
         bool invertsuccess = GetMxbInverse(mout, vout, m, v);
-        OIIO_CHECK_EQUAL(invertsuccess, true);
+        OCIO_CHECK_EQUAL(invertsuccess, true);
         
         GetMxbResult(vresult, mout, vresult, vout);
         
         float tolerance = 1e-9f;
         for(int i=0; i<4; ++i)
         {
-            OIIO_CHECK_CLOSE(vresult[i], x[i], tolerance);
+            OCIO_CHECK_CLOSE(vresult[i], x[i], tolerance);
         }
     }
     
@@ -872,7 +872,7 @@ OIIO_ADD_TEST(MathUtils, mxb_invert)
         float vout[4];
         
         bool invertsuccess = GetMxbInverse(mout, vout, m, v);
-        OIIO_CHECK_EQUAL(invertsuccess, false);
+        OCIO_CHECK_EQUAL(invertsuccess, false);
     }
 }
 
@@ -1239,7 +1239,7 @@ void checkFloatsDenormInvariant(const bool compressDenorms)
 
 } // anon
 
-OIIO_ADD_TEST(MathUtils, float_diff_keep_denorms_test)
+OCIO_ADD_TEST(MathUtils, float_diff_keep_denorms_test)
 {
     checkFloatsDenormInvariant(KEEP_DENORMS);
 
@@ -1339,7 +1339,7 @@ OIIO_ADD_TEST(MathUtils, float_diff_keep_denorms_test)
                             posminfloat_m8, posminfloat_m9, posminfloat_m16);
 }
 
-OIIO_ADD_TEST(MathUtils, float_diff_compress_denorms_test )
+OCIO_ADD_TEST(MathUtils, float_diff_compress_denorms_test )
 {
     checkFloatsDenormInvariant(COMPRESS_DENORMS);
 
@@ -1456,19 +1456,19 @@ OIIO_ADD_TEST(MathUtils, float_diff_compress_denorms_test )
                         posminfloat_m8, posminfloat_m9, posminfloat_m16);
 }
 
-OIIO_ADD_TEST(MathUtils, half_bits_test)
+OCIO_ADD_TEST(MathUtils, half_bits_test)
 {
     // Sanity check.
-    OIIO_CHECK_EQUAL(0.5f, ConvertHalfBitsToFloat(0x3800));
+    OCIO_CHECK_EQUAL(0.5f, ConvertHalfBitsToFloat(0x3800));
 
     // Preserve negatives.
-    OIIO_CHECK_EQUAL(-1.f, ConvertHalfBitsToFloat(0xbc00));
+    OCIO_CHECK_EQUAL(-1.f, ConvertHalfBitsToFloat(0xbc00));
 
     // Preserve values > 1.
-    OIIO_CHECK_EQUAL(1024.f, ConvertHalfBitsToFloat(0x6400));
+    OCIO_CHECK_EQUAL(1024.f, ConvertHalfBitsToFloat(0x6400));
 }
 
-OIIO_ADD_TEST(MathUtils, halfs_differ_test)
+OCIO_ADD_TEST(MathUtils, halfs_differ_test)
 {
     half pos_inf;   pos_inf.setBits(31744);   // +inf
     half neg_inf;   neg_inf.setBits(64512);   // -inf
@@ -1487,31 +1487,31 @@ OIIO_ADD_TEST(MathUtils, halfs_differ_test)
 
     int tol = 10;
 
-    OIIO_CHECK_ASSERT(HalfsDiffer(pos_inf, neg_inf, tol));
-    OIIO_CHECK_ASSERT(HalfsDiffer(pos_inf, pos_nan, tol));
-    OIIO_CHECK_ASSERT(HalfsDiffer(neg_inf, neg_nan, tol));
-    OIIO_CHECK_ASSERT(HalfsDiffer(pos_max, pos_inf, tol));
-    OIIO_CHECK_ASSERT(HalfsDiffer(neg_max, neg_inf, tol));
-    OIIO_CHECK_ASSERT(HalfsDiffer(pos_1, neg_1, tol));
-    OIIO_CHECK_ASSERT(HalfsDiffer(pos_2, pos_1, 0));
-    OIIO_CHECK_ASSERT(HalfsDiffer(neg_2, neg_1, 0));
+    OCIO_CHECK_ASSERT(HalfsDiffer(pos_inf, neg_inf, tol));
+    OCIO_CHECK_ASSERT(HalfsDiffer(pos_inf, pos_nan, tol));
+    OCIO_CHECK_ASSERT(HalfsDiffer(neg_inf, neg_nan, tol));
+    OCIO_CHECK_ASSERT(HalfsDiffer(pos_max, pos_inf, tol));
+    OCIO_CHECK_ASSERT(HalfsDiffer(neg_max, neg_inf, tol));
+    OCIO_CHECK_ASSERT(HalfsDiffer(pos_1, neg_1, tol));
+    OCIO_CHECK_ASSERT(HalfsDiffer(pos_2, pos_1, 0));
+    OCIO_CHECK_ASSERT(HalfsDiffer(neg_2, neg_1, 0));
 
-    OIIO_CHECK_ASSERT(!HalfsDiffer(pos_zero, neg_zero, 0));
-    OIIO_CHECK_ASSERT(!HalfsDiffer(pos_small, neg_small, tol));
-    OIIO_CHECK_ASSERT(!HalfsDiffer(pos_2, pos_1, tol));
-    OIIO_CHECK_ASSERT(!HalfsDiffer(neg_2, neg_1, tol));
+    OCIO_CHECK_ASSERT(!HalfsDiffer(pos_zero, neg_zero, 0));
+    OCIO_CHECK_ASSERT(!HalfsDiffer(pos_small, neg_small, tol));
+    OCIO_CHECK_ASSERT(!HalfsDiffer(pos_2, pos_1, tol));
+    OCIO_CHECK_ASSERT(!HalfsDiffer(neg_2, neg_1, tol));
 }
 
-OIIO_ADD_TEST(MathUtils, clamp)
+OCIO_ADD_TEST(MathUtils, clamp)
 {
-    OIIO_CHECK_EQUAL(-1.0f, Clamp(std::numeric_limits<float>::quiet_NaN(), -1.0f, 1.0f));
+    OCIO_CHECK_EQUAL(-1.0f, Clamp(std::numeric_limits<float>::quiet_NaN(), -1.0f, 1.0f));
 
-    OIIO_CHECK_EQUAL(10.0f, Clamp( std::numeric_limits<float>::infinity(),  5.0f, 10.0f));
-    OIIO_CHECK_EQUAL(5.0f, Clamp(-std::numeric_limits<float>::infinity(),  5.0f, 10.0f));
+    OCIO_CHECK_EQUAL(10.0f, Clamp( std::numeric_limits<float>::infinity(),  5.0f, 10.0f));
+    OCIO_CHECK_EQUAL(5.0f, Clamp(-std::numeric_limits<float>::infinity(),  5.0f, 10.0f));
 
-    OIIO_CHECK_EQUAL(0.0000005f, Clamp( 0.0000005f, 0.0f, 1.0f));
-    OIIO_CHECK_EQUAL(0.0f,       Clamp(-0.0000005f, 0.0f, 1.0f));
-    OIIO_CHECK_EQUAL(1.0f,       Clamp( 1.0000005f, 0.0f, 1.0f));
+    OCIO_CHECK_EQUAL(0.0000005f, Clamp( 0.0000005f, 0.0f, 1.0f));
+    OCIO_CHECK_EQUAL(0.0f,       Clamp(-0.0000005f, 0.0f, 1.0f));
+    OCIO_CHECK_EQUAL(1.0f,       Clamp( 1.0000005f, 0.0f, 1.0f));
 }
 
 #endif

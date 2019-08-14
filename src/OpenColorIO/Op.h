@@ -78,6 +78,10 @@ OCIO_NAMESPACE_ENTER
         // All the Ops assume float pointers (i.e. always float bit depths) except 
         // the 1D LUT CPU Op where the finalization depends on input and output bit depths.
         virtual void apply(const void * inImg, void * outImg, long numPixels) const = 0;
+
+        virtual bool hasDynamicProperty(DynamicPropertyType type) const;
+        virtual DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
+
     };
 
     class OpData;
@@ -275,10 +279,12 @@ OCIO_NAMESPACE_ENTER
     std::string SerializeOpVec(const OpRcPtrVec & ops, int indent=0);
     bool IsOpVecNoOp(const OpRcPtrVec & ops);
     
-    void FinalizeOpVec(OpRcPtrVec & opVec, bool optimize=true);
-
-    void OptimizeOpVec(OpRcPtrVec & result);
+    void FinalizeOpVec(OpRcPtrVec & opVec, FinalizationFlags fFlags);
     
+    void OptimizeOpVec(OpRcPtrVec & result, OptimizationFlags oFlags);
+
+    void UnifyDynamicProperties(OpRcPtrVec & ops);
+   
     void CreateOpVecFromOpData(OpRcPtrVec & ops,
                                const OpDataRcPtr & opData,
                                TransformDirection dir);
@@ -292,6 +298,8 @@ OCIO_NAMESPACE_ENTER
         public:
             virtual ~Op();
             
+            virtual TransformDirection getDirection() const noexcept = 0;
+
             virtual OpRcPtr clone() const = 0;
             
             // Something short, and printable.
@@ -334,9 +342,9 @@ OCIO_NAMESPACE_ENTER
             // This is called a single time after construction.
             // Final pre-processing and safety checks should happen here,
             // rather than in the constructor.
-            
-            virtual void finalize() = 0;
-            
+
+            virtual void finalize(FinalizationFlags fFlags) = 0;
+
             // Render the specified pixels.
             //
             // This must be safe to call in a multi-threaded context.
@@ -344,12 +352,12 @@ OCIO_NAMESPACE_ENTER
             // caching, must thus be appropriately mutexed.
 
             virtual void apply(void * img, long numPixels) const
-            { m_cpuOp->apply(img, img, numPixels); }
+            { getCPUOp()->apply(img, img, numPixels); }
 
             virtual void apply(const void * inImg, void * outImg, long numPixels) const
-            { m_cpuOp->apply(inImg, outImg, numPixels); }
+            { getCPUOp()->apply(inImg, outImg, numPixels); }
 
-            
+
             // Is this op supported by the legacy shader text generator ?
             virtual bool supportedByLegacyShader() const { return true; }
 
@@ -362,12 +370,14 @@ OCIO_NAMESPACE_ENTER
             virtual void setInputBitDepth(BitDepth bitdepth) { m_data->setInputBitDepth(bitdepth); }
             virtual void setOutputBitDepth(BitDepth bitdepth) { m_data->setOutputBitDepth(bitdepth); }
 
+            virtual bool isDynamic() const;
             virtual bool hasDynamicProperty(DynamicPropertyType type) const;
             virtual DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
             virtual void replaceDynamicProperty(DynamicPropertyType type,
                                                 DynamicPropertyImplRcPtr prop);
 
-            ConstOpCPURcPtr getCPUOp() const { return m_cpuOp; }
+            // On-demand creation of the OpCPU instance.
+            virtual ConstOpCPURcPtr getCPUOp() const = 0;
 
             ConstOpDataRcPtr data() const { return std::const_pointer_cast<const OpData>(m_data); }
 
@@ -376,10 +386,6 @@ OCIO_NAMESPACE_ENTER
             OpDataRcPtr & data() { return m_data; }
 
             std::string m_cacheID;
-
-            // This holds a CPU renderer for the specific op that is specialized 
-            // to the actual parameters being used.
-            OpCPURcPtr  m_cpuOp;
 
         private:
             Op(const Op &) = delete;
@@ -410,6 +416,7 @@ OCIO_NAMESPACE_ENTER
         typedef Type::const_reference const_reference;
 
         OpRcPtrVec() {}
+        ~OpRcPtrVec() {}
         OpRcPtrVec(const OpRcPtrVec & v);
         OpRcPtrVec & operator=(const OpRcPtrVec & v);
         // Note: It copies elements i.e. no clone.
@@ -441,7 +448,9 @@ OCIO_NAMESPACE_ENTER
         bool empty() const noexcept { return m_ops.empty(); }
 
         void push_back(const value_type & val);
+
         const_reference back() const;
+        const_reference front() const;
 
         // Validate the bit depth consistency between Ops.
         void validate() const;

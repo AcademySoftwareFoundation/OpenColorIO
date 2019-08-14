@@ -42,11 +42,6 @@
 #include "strutil.h"
 #include "argparse.h"
 
-/*
-OIIO_NAMESPACE_ENTER
-{
-*/
-
 class ArgOption {
 public:
     typedef int (*callback_t) (int, const char**);
@@ -527,10 +522,3 @@ ArgParse::command_line () const
     }
     return s;
 }
-
-
-/*
-}
-OIIO_NAMESPACE_EXIT
-*/
-

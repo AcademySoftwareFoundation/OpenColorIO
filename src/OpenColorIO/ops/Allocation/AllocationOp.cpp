@@ -136,69 +136,70 @@ OCIO_NAMESPACE_EXIT
 OCIO_NAMESPACE_USING
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(AllocationOps, Create)
+OCIO_ADD_TEST(AllocationOps, Create)
 {
     OpRcPtrVec ops;
     AllocationData allocData;
     allocData.allocation = ALLOCATION_UNKNOWN;
-    OIIO_CHECK_THROW_WHAT(
+    OCIO_CHECK_THROW_WHAT(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_FORWARD),
                             OCIO::Exception, "Unsupported Allocation Type");
-    OIIO_CHECK_EQUAL(ops.size(), 0);
-    OIIO_CHECK_THROW_WHAT(
+    OCIO_CHECK_EQUAL(ops.size(), 0);
+    OCIO_CHECK_THROW_WHAT(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_INVERSE),
                             OCIO::Exception, "Unsupported Allocation Type");
-    OIIO_CHECK_EQUAL(ops.size(), 0);
-    OIIO_CHECK_THROW_WHAT(
+    OCIO_CHECK_EQUAL(ops.size(), 0);
+    OCIO_CHECK_THROW_WHAT(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_UNKNOWN),
                             OCIO::Exception, "Unsupported Allocation Type");
-    OIIO_CHECK_EQUAL(ops.size(), 0);
+    OCIO_CHECK_EQUAL(ops.size(), 0);
 
     allocData.allocation = ALLOCATION_UNIFORM;
     // No allocation data leads to identity, not transform will be created
-    OIIO_CHECK_NO_THROW(
+    OCIO_CHECK_NO_THROW(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_UNKNOWN));
-    OIIO_CHECK_EQUAL(ops.size(), 0);
-    OIIO_CHECK_NO_THROW(
+    OCIO_CHECK_EQUAL(ops.size(), 0);
+    OCIO_CHECK_NO_THROW(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_FORWARD));
-    OIIO_CHECK_EQUAL(ops.size(), 0);
-    OIIO_CHECK_NO_THROW(
+    OCIO_CHECK_EQUAL(ops.size(), 0);
+    OCIO_CHECK_NO_THROW(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_INVERSE));
-    OIIO_CHECK_EQUAL(ops.size(), 0);
+    OCIO_CHECK_EQUAL(ops.size(), 0);
 
     // adding data to avoid identity. Fit transform will be created (if valid).
     allocData.vars.push_back(0.0f);
     allocData.vars.push_back(10.0f);
-    OIIO_CHECK_THROW_WHAT(
+    OCIO_CHECK_THROW_WHAT(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_UNKNOWN),
                             OCIO::Exception, "unspecified transform direction");
-    OIIO_CHECK_EQUAL(ops.size(), 0);
-    OIIO_CHECK_NO_THROW(
+    OCIO_CHECK_EQUAL(ops.size(), 0);
+    OCIO_CHECK_NO_THROW(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_FORWARD));
-    OIIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_CHECK_EQUAL(ops.size(), 1);
     const OpRcPtr forwardFitOp = ops[0];
     ops.clear();
-    OIIO_CHECK_NO_THROW(
+    OCIO_CHECK_NO_THROW(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_INVERSE));
-    OIIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO::ConstOpRcPtr op0 = ops[0];
-    OIIO_CHECK_EQUAL(forwardFitOp->isInverse(op0), true);
+    OCIO_CHECK_EQUAL(forwardFitOp->isInverse(op0), true);
     ops.clear();
 
     allocData.allocation = ALLOCATION_LG2;
 
     // default is not identity
     allocData.vars.clear();
-    OIIO_CHECK_NO_THROW(
+    OCIO_CHECK_NO_THROW(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_FORWARD));
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
     OCIO::ConstOpRcPtr op1 = ops[1];
     // second op is a fit transform
-    OIIO_CHECK_EQUAL(forwardFitOp->isSameType(op1), true);
-    OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops));
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_CHECK_EQUAL(forwardFitOp->isSameType(op1), true);
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
     ConstOpRcPtr defaultLogOp = ops[0];
     ConstOpRcPtr defaultFitOp = ops[1];
 
@@ -230,7 +231,7 @@ OIIO_ADD_TEST(AllocationOps, Create)
 
     for (unsigned idx = 0; idx<(NB_PIXELS * 4); ++idx)
     {
-        OIIO_CHECK_CLOSE(dstLog[idx], tmp[idx], error);
+        OCIO_CHECK_CLOSE(dstLog[idx], tmp[idx], error);
     }
 
     memcpy(tmp, &src[0], 4 * NB_PIXELS * sizeof(float));
@@ -239,52 +240,52 @@ OIIO_ADD_TEST(AllocationOps, Create)
 
     for (unsigned idx = 0; idx<(NB_PIXELS * 4); ++idx)
     {
-        OIIO_CHECK_CLOSE(dstFit[idx], tmp[idx], error);
+        OCIO_CHECK_CLOSE(dstFit[idx], tmp[idx], error);
     }
 
     ops.clear();
 
-    OIIO_CHECK_NO_THROW(
+    OCIO_CHECK_NO_THROW(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_INVERSE));
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
     op0 = ops[0];
     op1 = ops[1];
-    OIIO_CHECK_EQUAL(defaultFitOp->isInverse(op0), true);
-    OIIO_CHECK_EQUAL(defaultLogOp->isInverse(op1), true);
+    OCIO_CHECK_EQUAL(defaultFitOp->isInverse(op0), true);
+    OCIO_CHECK_EQUAL(defaultLogOp->isInverse(op1), true);
 
     ops.clear();
-    OIIO_CHECK_THROW_WHAT(
+    OCIO_CHECK_THROW_WHAT(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_UNKNOWN),
                             OCIO::Exception, "unspecified transform direction");
-    OIIO_CHECK_EQUAL(ops.size(), 0);
+    OCIO_CHECK_EQUAL(ops.size(), 0);
 
     // adding data to target identity, only Log op is created (if valid)
     allocData.vars.push_back(0.0f);
     allocData.vars.push_back(1.0f);
 
-    OIIO_CHECK_NO_THROW(
+    OCIO_CHECK_NO_THROW(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_FORWARD));
-    OIIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
     op0 = ops[0];
-    OIIO_CHECK_EQUAL(defaultLogOp->isSameType(op0), true);
+    OCIO_CHECK_EQUAL(defaultLogOp->isSameType(op0), true);
     ops.clear();
-    OIIO_CHECK_NO_THROW(
+    OCIO_CHECK_NO_THROW(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_INVERSE));
-    OIIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
     op0 = ops[0];
-    OIIO_CHECK_EQUAL(defaultLogOp->isSameType(op0), true);
+    OCIO_CHECK_EQUAL(defaultLogOp->isSameType(op0), true);
     ops.clear();
-    OIIO_CHECK_THROW_WHAT(
+    OCIO_CHECK_THROW_WHAT(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_UNKNOWN),
                             OCIO::Exception, "unspecified transform direction");
-    OIIO_CHECK_EQUAL(ops.size(), 0);
+    OCIO_CHECK_EQUAL(ops.size(), 0);
 
     // change log intercept
     allocData.vars.push_back(10.0f);
-    OIIO_CHECK_NO_THROW(
+    OCIO_CHECK_NO_THROW(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_FORWARD));
-    OIIO_CHECK_EQUAL(ops.size(), 1);
-    ops[0]->finalize();
+    OCIO_CHECK_EQUAL(ops.size(), 1);
+    ops[0]->finalize(OCIO::FINALIZATION_EXACT);
 
     memcpy(tmp, &src[0], 4 * NB_PIXELS * sizeof(float));
 
@@ -297,7 +298,7 @@ OIIO_ADD_TEST(AllocationOps, Create)
 
     for (unsigned idx = 0; idx<(NB_PIXELS * 4); ++idx)
     {
-        OIIO_CHECK_CLOSE(dstLogShift[idx], tmp[idx], error);
+        OCIO_CHECK_CLOSE(dstLogShift[idx], tmp[idx], error);
     }
 
 }

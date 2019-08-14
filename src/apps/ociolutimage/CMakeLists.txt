@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+
 set(SOURCES
 	main.cpp
 )
@@ -17,7 +20,7 @@ set_target_properties(ociolutimage PROPERTIES
 target_link_libraries(ociolutimage
 	PRIVATE
 		apputils
-		pystring
+		pystring::pystring
 		OpenColorIO
 		OpenImageIO
 )

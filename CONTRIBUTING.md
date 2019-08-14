@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: CC-BY-4.0 -->
+<!-- Copyright Contributors to the OpenColorIO Project. -->
+
 # Contributing to OpenColorIO
 
 Thank you for your interest in contributing to OpenColorIO. This document
@@ -178,19 +181,10 @@ TSC by assigning the `tsc-review` label to a pull request or issue. The TSC
 should serve as the final arbiter where required.
 
 ## Coding Standards
+
 Please see the OpenColorIO
 [Coding guidelines](http://opencolorio.org/developers/coding_guidelines.html)
 for a reference on project code style and best practices.
 
 For standards on contributing to documentation, see the
 [Documentation guidelines](http://opencolorio.org/developers/documentation_guidelines.html).
-
-## Reporting Vulnerabilities
-Quickly resolving security related issues is very important to us. If you think
-you've found a potential vulnerability in OpenColorIO, please report it by
-emailing security@opencolorio.org. Only TSC members and ASWF project
-management have access to these messages.
-
-Include detailed steps to reproduce the issue, and any other information that
-could aid an investigation. Someone will assess the report and make every
-effort to respond within 14 days.

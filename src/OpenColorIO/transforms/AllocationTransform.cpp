@@ -230,32 +230,32 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(AllocationTransform, allocation)
+OCIO_ADD_TEST(AllocationTransform, allocation)
 {
     OCIO::AllocationTransformRcPtr al = OCIO::AllocationTransform::Create();
 
     al->setAllocation(OCIO::ALLOCATION_UNIFORM);
-    OIIO_CHECK_NO_THROW(al->validate());
+    OCIO_CHECK_NO_THROW(al->validate());
 
     std::vector<float> envs(2, 0.0f);
     al->setVars(static_cast<int>(envs.size()), &envs[0]);
-    OIIO_CHECK_NO_THROW(al->validate());
+    OCIO_CHECK_NO_THROW(al->validate());
 
     envs.push_back(0.01f);
     al->setVars(static_cast<int>(envs.size()), &envs[0]);
-    OIIO_CHECK_THROW(al->validate(), OCIO::Exception);
+    OCIO_CHECK_THROW(al->validate(), OCIO::Exception);
 
     al->setAllocation(OCIO::ALLOCATION_LG2);
-    OIIO_CHECK_NO_THROW(al->validate());
+    OCIO_CHECK_NO_THROW(al->validate());
 
     envs.push_back(0.1f);
     al->setVars(static_cast<int>(envs.size()), &envs[0]);
-    OIIO_CHECK_THROW(al->validate(), OCIO::Exception);
+    OCIO_CHECK_THROW(al->validate(), OCIO::Exception);
 
     al->setVars(0, 0x0);
-    OIIO_CHECK_NO_THROW(al->validate());
+    OCIO_CHECK_NO_THROW(al->validate());
 }
 
 #endif

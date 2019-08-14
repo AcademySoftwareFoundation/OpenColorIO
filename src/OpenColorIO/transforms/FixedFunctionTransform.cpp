@@ -58,36 +58,30 @@ FixedFunctionOpData::Style ConvertStyle(FixedFunctionStyle style, TransformDirec
         {
             if(isForward) return FixedFunctionOpData::ACES_RED_MOD_03_FWD;
             else          return FixedFunctionOpData::ACES_RED_MOD_03_INV;
-            break;
         }
         case FIXED_FUNCTION_ACES_RED_MOD_10:
         {
             if(isForward) return FixedFunctionOpData::ACES_RED_MOD_10_FWD;
             else          return FixedFunctionOpData::ACES_RED_MOD_10_INV;
-            break;
         }
         case FIXED_FUNCTION_ACES_GLOW_03:
         {
             if(isForward) return FixedFunctionOpData::ACES_GLOW_03_FWD;
             else          return FixedFunctionOpData::ACES_GLOW_03_INV;
-            break;
         }
         case FIXED_FUNCTION_ACES_GLOW_10:
         {
             if(isForward) return FixedFunctionOpData::ACES_GLOW_10_FWD;
             else          return FixedFunctionOpData::ACES_GLOW_10_INV;
-            break;
         }
         case FIXED_FUNCTION_ACES_DARK_TO_DIM_10:
         {
             if(isForward) return FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD;
             else          return FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV;
-            break;
         }
         case FIXED_FUNCTION_REC2100_SURROUND:
         {
             return FixedFunctionOpData::REC2100_SURROUND;
-            break;
         }
     }
 
@@ -95,8 +89,6 @@ FixedFunctionOpData::Style ConvertStyle(FixedFunctionStyle style, TransformDirec
     ss << style;
 
     throw Exception(ss.str().c_str());
-
-    return FixedFunctionOpData::ACES_RED_MOD_03_FWD;
 }
 
 FixedFunctionStyle ConvertStyle(FixedFunctionOpData::Style style)
@@ -131,8 +123,6 @@ FixedFunctionStyle ConvertStyle(FixedFunctionOpData::Style style)
     ss << style;
 
     throw Exception(ss.str().c_str());
-
-    return FIXED_FUNCTION_ACES_RED_MOD_03;
 }
 
 }; // anon
@@ -312,47 +302,47 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
 
 OCIO_NAMESPACE_USING
 
 
-OIIO_ADD_TEST(FixedFunctionTransform, basic)
+OCIO_ADD_TEST(FixedFunctionTransform, basic)
 {
     OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
-    OIIO_CHECK_EQUAL(func->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
-    OIIO_CHECK_EQUAL(func->getStyle(), OCIO::FIXED_FUNCTION_ACES_RED_MOD_03);
-    OIIO_CHECK_EQUAL(func->getNumParams(), 0);
-    OIIO_CHECK_NO_THROW(func->validate());
+    OCIO_CHECK_EQUAL(func->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FIXED_FUNCTION_ACES_RED_MOD_03);
+    OCIO_CHECK_EQUAL(func->getNumParams(), 0);
+    OCIO_CHECK_NO_THROW(func->validate());
 
-    OIIO_CHECK_NO_THROW(func->setDirection(OCIO::TRANSFORM_DIR_INVERSE));
-    OIIO_CHECK_EQUAL(func->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
-    OIIO_CHECK_EQUAL(func->getNumParams(), 0);
-    OIIO_CHECK_NO_THROW(func->validate());
+    OCIO_CHECK_NO_THROW(func->setDirection(OCIO::TRANSFORM_DIR_INVERSE));
+    OCIO_CHECK_EQUAL(func->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_EQUAL(func->getNumParams(), 0);
+    OCIO_CHECK_NO_THROW(func->validate());
 
-    OIIO_CHECK_NO_THROW(func->setStyle(OCIO::FIXED_FUNCTION_ACES_RED_MOD_10));
-    OIIO_CHECK_EQUAL(func->getStyle(), OCIO::FIXED_FUNCTION_ACES_RED_MOD_10);
-    OIIO_CHECK_EQUAL(func->getNumParams(), 0);
-    OIIO_CHECK_NO_THROW(func->validate());
+    OCIO_CHECK_NO_THROW(func->setStyle(OCIO::FIXED_FUNCTION_ACES_RED_MOD_10));
+    OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FIXED_FUNCTION_ACES_RED_MOD_10);
+    OCIO_CHECK_EQUAL(func->getNumParams(), 0);
+    OCIO_CHECK_NO_THROW(func->validate());
 
-    OIIO_CHECK_NO_THROW(func->setStyle(OCIO::FIXED_FUNCTION_REC2100_SURROUND));
-    OIIO_CHECK_THROW_WHAT(func->validate(), OCIO::Exception, 
+    OCIO_CHECK_NO_THROW(func->setStyle(OCIO::FIXED_FUNCTION_REC2100_SURROUND));
+    OCIO_CHECK_THROW_WHAT(func->validate(), OCIO::Exception, 
                           "The style 'REC2100_Surround' must have "
                           "one parameter but 0 found.");
 
-    OIIO_CHECK_EQUAL(func->getNumParams(), 0);
+    OCIO_CHECK_EQUAL(func->getNumParams(), 0);
     const double values[1] = { 1. };
-    OIIO_CHECK_NO_THROW(func->setParams(&values[0], 1));
-    OIIO_CHECK_EQUAL(func->getNumParams(), 1);
+    OCIO_CHECK_NO_THROW(func->setParams(&values[0], 1));
+    OCIO_CHECK_EQUAL(func->getNumParams(), 1);
     double results[1] = { 0. };
-    OIIO_CHECK_NO_THROW(func->getParams(&results[0]));
-    OIIO_CHECK_EQUAL(results[0], values[0]);
+    OCIO_CHECK_NO_THROW(func->getParams(&results[0]));
+    OCIO_CHECK_EQUAL(results[0], values[0]);
 
-    OIIO_CHECK_NO_THROW(func->validate());
+    OCIO_CHECK_NO_THROW(func->validate());
 
-    OIIO_CHECK_NO_THROW(func->setStyle(OCIO::FIXED_FUNCTION_ACES_DARK_TO_DIM_10));
-    OIIO_CHECK_THROW_WHAT(func->validate(), OCIO::Exception, 
+    OCIO_CHECK_NO_THROW(func->setStyle(OCIO::FIXED_FUNCTION_ACES_DARK_TO_DIM_10));
+    OCIO_CHECK_THROW_WHAT(func->validate(), OCIO::Exception, 
                           "The style 'ACES_DarkToDim10 (Forward)' must have "
                           "zero parameters but 1 found.");
 }

@@ -226,6 +226,11 @@ void OpenGLBuilder::Uniform::setUp(unsigned program)
     }
 }
 
+DynamicPropertyRcPtr & OpenGLBuilder::Uniform::getValue()
+{
+    return m_value;
+}
+
 void OpenGLBuilder::Uniform::use()
 {
     // Update value.

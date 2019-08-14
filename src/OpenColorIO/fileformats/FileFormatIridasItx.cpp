@@ -295,7 +295,8 @@ OCIO_NAMESPACE_ENTER
                 inputToTarget = config->getProcessor(baker.getInputSpace(),
                     baker.getTargetSpace());
             }
-            inputToTarget->apply(cubeImg);
+            ConstCPUProcessorRcPtr cpu = inputToTarget->getDefaultCPUProcessor();
+            cpu->apply(cubeImg);
             
             // Write out the file.
             // For for maximum compatibility with other apps, we will
@@ -378,7 +379,7 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
 void ReadIridasItx(const std::string & fileContent)
 {
@@ -391,7 +392,7 @@ void ReadIridasItx(const std::string & fileContent)
     OCIO::CachedFileRcPtr cachedFile = tester.Read(is, SAMPLE_NAME);
 }
 
-OIIO_ADD_TEST(FileFormatIridasItx, ReadFailure)
+OCIO_ADD_TEST(FileFormatIridasItx, ReadFailure)
 {
     {
         // Validate stream can be read with no error.
@@ -408,7 +409,7 @@ OIIO_ADD_TEST(FileFormatIridasItx, ReadFailure)
             "0.0 1.0 1.0\n"
             "1.0 1.0 1.0\n";
 
-        OIIO_CHECK_NO_THROW(ReadIridasItx(SAMPLE_NO_ERROR));
+        OCIO_CHECK_NO_THROW(ReadIridasItx(SAMPLE_NO_ERROR));
     }
     {
         // Wrong LUT_3D_SIZE tag
@@ -424,7 +425,7 @@ OIIO_ADD_TEST(FileFormatIridasItx, ReadFailure)
             "0.0 1.0 1.0\n"
             "1.0 1.0 1.0\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadIridasItx(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadIridasItx(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Malformed LUT_3D_SIZE tag");
     }
@@ -443,7 +444,7 @@ OIIO_ADD_TEST(FileFormatIridasItx, ReadFailure)
             "0.0 1.0 1.0\n"
             "1.0 1.0 1.0\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadIridasItx(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadIridasItx(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Malformed color triples specified");
     }
@@ -463,7 +464,7 @@ OIIO_ADD_TEST(FileFormatIridasItx, ReadFailure)
             "0.0 1.0 1.0\n"
             "1.0 1.0 1.0\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadIridasItx(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadIridasItx(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Incorrect number of 3D LUT entries");
     }

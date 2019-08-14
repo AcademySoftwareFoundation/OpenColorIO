@@ -102,8 +102,6 @@ const char * CDLOpData::GetStyleName(CDLOpData::Style style)
     }
 
     throw Exception("Unknown style for CDL.");
-
-    return 0x0;
 }
 
 CDLOpData::CDLOpData()
@@ -409,6 +407,8 @@ void CDLOpData::finalize()
 {
     AutoMutex lock(m_mutex);
 
+    validate();
+
     std::ostringstream cacheIDStream;
     cacheIDStream << getID() << " ";
 
@@ -430,9 +430,9 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(CDLOpData, accessors)
+OCIO_ADD_TEST(CDLOpData, accessors)
 {
     OCIO::CDLOpData::ChannelParams slopeParams(1.35, 1.1, 0.71);
     OCIO::CDLOpData::ChannelParams offsetParams(0.05, -0.23, 0.11);
@@ -446,63 +446,63 @@ OIIO_ADD_TEST(CDLOpData, accessors)
     OCIO::CDLOpData::ChannelParams newSlopeParams(0.66);
     cdlOp.setSlopeParams(newSlopeParams);
 
-    OIIO_CHECK_ASSERT(cdlOp.getSlopeParams() == newSlopeParams);
-    OIIO_CHECK_ASSERT(cdlOp.getOffsetParams() == offsetParams);
-    OIIO_CHECK_ASSERT(cdlOp.getPowerParams() == powerParams);
-    OIIO_CHECK_EQUAL(cdlOp.getSaturation(), 1.23);
+    OCIO_CHECK_ASSERT(cdlOp.getSlopeParams() == newSlopeParams);
+    OCIO_CHECK_ASSERT(cdlOp.getOffsetParams() == offsetParams);
+    OCIO_CHECK_ASSERT(cdlOp.getPowerParams() == powerParams);
+    OCIO_CHECK_EQUAL(cdlOp.getSaturation(), 1.23);
 
     // Update offset parameters with the same value
     OCIO::CDLOpData::ChannelParams newOffsetParams(0.09);
     cdlOp.setOffsetParams(newOffsetParams);
 
-    OIIO_CHECK_ASSERT(cdlOp.getSlopeParams() == newSlopeParams);
-    OIIO_CHECK_ASSERT(cdlOp.getOffsetParams() == newOffsetParams);
-    OIIO_CHECK_ASSERT(cdlOp.getPowerParams() == powerParams);
-    OIIO_CHECK_EQUAL(cdlOp.getSaturation(), 1.23);
+    OCIO_CHECK_ASSERT(cdlOp.getSlopeParams() == newSlopeParams);
+    OCIO_CHECK_ASSERT(cdlOp.getOffsetParams() == newOffsetParams);
+    OCIO_CHECK_ASSERT(cdlOp.getPowerParams() == powerParams);
+    OCIO_CHECK_EQUAL(cdlOp.getSaturation(), 1.23);
 
     // Update power parameters with the same value
     OCIO::CDLOpData::ChannelParams newPowerParams(1.1);
     cdlOp.setPowerParams(newPowerParams);
 
-    OIIO_CHECK_ASSERT(cdlOp.getSlopeParams() == newSlopeParams);
-    OIIO_CHECK_ASSERT(cdlOp.getOffsetParams() == newOffsetParams);
-    OIIO_CHECK_ASSERT(cdlOp.getPowerParams() == newPowerParams);
-    OIIO_CHECK_EQUAL(cdlOp.getSaturation(), 1.23);
+    OCIO_CHECK_ASSERT(cdlOp.getSlopeParams() == newSlopeParams);
+    OCIO_CHECK_ASSERT(cdlOp.getOffsetParams() == newOffsetParams);
+    OCIO_CHECK_ASSERT(cdlOp.getPowerParams() == newPowerParams);
+    OCIO_CHECK_EQUAL(cdlOp.getSaturation(), 1.23);
 
     // Update the saturation parameter
     cdlOp.setSaturation(0.99);
 
-    OIIO_CHECK_ASSERT(cdlOp.getSlopeParams() == newSlopeParams);
-    OIIO_CHECK_ASSERT(cdlOp.getOffsetParams() == newOffsetParams);
-    OIIO_CHECK_ASSERT(cdlOp.getPowerParams() == newPowerParams);
-    OIIO_CHECK_EQUAL(cdlOp.getSaturation(), 0.99);
+    OCIO_CHECK_ASSERT(cdlOp.getSlopeParams() == newSlopeParams);
+    OCIO_CHECK_ASSERT(cdlOp.getOffsetParams() == newOffsetParams);
+    OCIO_CHECK_ASSERT(cdlOp.getPowerParams() == newPowerParams);
+    OCIO_CHECK_EQUAL(cdlOp.getSaturation(), 0.99);
 
 }
 
-OIIO_ADD_TEST(CDLOpData, constructors)
+OCIO_ADD_TEST(CDLOpData, constructors)
 {
     // Check default constructor
     OCIO::CDLOpData cdlOpDefault;
 
-    OIIO_CHECK_EQUAL(cdlOpDefault.getType(), OCIO::CDLOpData::CDLType);
-    OIIO_CHECK_EQUAL(cdlOpDefault.getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OIIO_CHECK_EQUAL(cdlOpDefault.getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(cdlOpDefault.getType(), OCIO::CDLOpData::CDLType);
+    OCIO_CHECK_EQUAL(cdlOpDefault.getInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(cdlOpDefault.getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
-    OIIO_CHECK_EQUAL(cdlOpDefault.getID(), "");
-    OIIO_CHECK_ASSERT(cdlOpDefault.getDescriptions().empty());
+    OCIO_CHECK_EQUAL(cdlOpDefault.getID(), "");
+    OCIO_CHECK_ASSERT(cdlOpDefault.getDescriptions().empty());
 
-    OIIO_CHECK_EQUAL(cdlOpDefault.getStyle(),
+    OCIO_CHECK_EQUAL(cdlOpDefault.getStyle(),
                      OCIO::CDLOpData::CDL_V1_2_FWD);
 
-    OIIO_CHECK_ASSERT(!cdlOpDefault.isReverse());
+    OCIO_CHECK_ASSERT(!cdlOpDefault.isReverse());
 
-    OIIO_CHECK_ASSERT(cdlOpDefault.getSlopeParams()
+    OCIO_CHECK_ASSERT(cdlOpDefault.getSlopeParams()
         == OCIO::CDLOpData::ChannelParams(1.0));
-    OIIO_CHECK_ASSERT(cdlOpDefault.getOffsetParams() 
+    OCIO_CHECK_ASSERT(cdlOpDefault.getOffsetParams() 
         == OCIO::CDLOpData::ChannelParams(0.0));
-    OIIO_CHECK_ASSERT(cdlOpDefault.getPowerParams()
+    OCIO_CHECK_ASSERT(cdlOpDefault.getPowerParams()
         == OCIO::CDLOpData::ChannelParams(1.0));
-    OIIO_CHECK_EQUAL(cdlOpDefault.getSaturation(), 1.0);
+    OCIO_CHECK_EQUAL(cdlOpDefault.getSaturation(), 1.0);
 
     // Check complete constructor
     OCIO::OpData::Descriptions descriptions;
@@ -517,28 +517,28 @@ OIIO_ADD_TEST(CDLOpData, constructors)
                                   OCIO::CDLOpData::ChannelParams(0.93, 0.81, 1.27),
                                   1.23);
 
-    OIIO_CHECK_EQUAL(cdlOpComplete.getType(), OCIO::OpData::CDLType);
-    OIIO_CHECK_EQUAL(cdlOpComplete.getInputBitDepth(), OCIO::BIT_DEPTH_F16);
-    OIIO_CHECK_EQUAL(cdlOpComplete.getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+    OCIO_CHECK_EQUAL(cdlOpComplete.getType(), OCIO::OpData::CDLType);
+    OCIO_CHECK_EQUAL(cdlOpComplete.getInputBitDepth(), OCIO::BIT_DEPTH_F16);
+    OCIO_CHECK_EQUAL(cdlOpComplete.getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
 
-    OIIO_CHECK_EQUAL(cdlOpComplete.getID(), "test_id");
-    OIIO_CHECK_ASSERT(cdlOpComplete.getDescriptions() == descriptions);
+    OCIO_CHECK_EQUAL(cdlOpComplete.getID(), "test_id");
+    OCIO_CHECK_ASSERT(cdlOpComplete.getDescriptions() == descriptions);
 
-    OIIO_CHECK_EQUAL(cdlOpComplete.getStyle(),
+    OCIO_CHECK_EQUAL(cdlOpComplete.getStyle(),
                      OCIO::CDLOpData::CDL_NO_CLAMP_REV);
 
-    OIIO_CHECK_ASSERT(cdlOpComplete.isReverse());
+    OCIO_CHECK_ASSERT(cdlOpComplete.isReverse());
 
-    OIIO_CHECK_ASSERT(cdlOpComplete.getSlopeParams()
+    OCIO_CHECK_ASSERT(cdlOpComplete.getSlopeParams()
         == OCIO::CDLOpData::ChannelParams(1.35, 1.1, 0.71));
-    OIIO_CHECK_ASSERT(cdlOpComplete.getOffsetParams()
+    OCIO_CHECK_ASSERT(cdlOpComplete.getOffsetParams()
         == OCIO::CDLOpData::ChannelParams(0.05, -0.23, 0.11));
-    OIIO_CHECK_ASSERT(cdlOpComplete.getPowerParams()
+    OCIO_CHECK_ASSERT(cdlOpComplete.getPowerParams()
         == OCIO::CDLOpData::ChannelParams(0.93, 0.81, 1.27));
-    OIIO_CHECK_EQUAL(cdlOpComplete.getSaturation(), 1.23);
+    OCIO_CHECK_EQUAL(cdlOpComplete.getSaturation(), 1.23);
 }
 
-OIIO_ADD_TEST(CDLOpData, inverse)
+OCIO_ADD_TEST(CDLOpData, inverse)
 {
     OCIO::CDLOpData cdlOp(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_UINT12,
                           "test_id", 
@@ -555,29 +555,29 @@ OIIO_ADD_TEST(CDLOpData, inverse)
         const OCIO::CDLOpDataRcPtr invOp = cdlOp.inverse();
 
         // Ensure bit depths are swapped
-        OIIO_CHECK_EQUAL(invOp->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
-        OIIO_CHECK_EQUAL(invOp->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
+        OCIO_CHECK_EQUAL(invOp->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+        OCIO_CHECK_EQUAL(invOp->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
         // Ensure id, name and descriptions are empty
-        OIIO_CHECK_EQUAL(invOp->getID(), "");
-        OIIO_CHECK_ASSERT(invOp->getDescriptions().empty());
+        OCIO_CHECK_EQUAL(invOp->getID(), "");
+        OCIO_CHECK_ASSERT(invOp->getDescriptions().empty());
 
         // Ensure style is inverted
-        OIIO_CHECK_EQUAL(invOp->getStyle(), OCIO::CDLOpData::CDL_V1_2_REV);
+        OCIO_CHECK_EQUAL(invOp->getStyle(), OCIO::CDLOpData::CDL_V1_2_REV);
 
-        OIIO_CHECK_ASSERT(invOp->isReverse());
+        OCIO_CHECK_ASSERT(invOp->isReverse());
 
         // Ensure CDL parameters are unchanged
-        OIIO_CHECK_ASSERT(invOp->getSlopeParams()
+        OCIO_CHECK_ASSERT(invOp->getSlopeParams()
                           == OCIO::CDLOpData::ChannelParams(1.35, 1.1, 0.71));
 
-        OIIO_CHECK_ASSERT(invOp->getOffsetParams()
+        OCIO_CHECK_ASSERT(invOp->getOffsetParams()
                          == OCIO::CDLOpData::ChannelParams(0.05, -0.23, 0.11));
 
-        OIIO_CHECK_ASSERT(invOp->getPowerParams()
+        OCIO_CHECK_ASSERT(invOp->getPowerParams()
                           == OCIO::CDLOpData::ChannelParams(0.93, 0.81, 1.27));
 
-        OIIO_CHECK_EQUAL(invOp->getSaturation(), 1.23);
+        OCIO_CHECK_EQUAL(invOp->getSaturation(), 1.23);
     }
 
     // Test CDL_V1_2_REV inverse
@@ -586,29 +586,29 @@ OIIO_ADD_TEST(CDLOpData, inverse)
         const OCIO::CDLOpDataRcPtr invOp = cdlOp.inverse();
 
         // Ensure bit depths are swapped
-        OIIO_CHECK_EQUAL(invOp->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
-        OIIO_CHECK_EQUAL(invOp->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
+        OCIO_CHECK_EQUAL(invOp->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+        OCIO_CHECK_EQUAL(invOp->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
         // Ensure id, name and descriptions are empty
-        OIIO_CHECK_EQUAL(invOp->getID(), "");
-        OIIO_CHECK_ASSERT(invOp->getDescriptions().empty());
+        OCIO_CHECK_EQUAL(invOp->getID(), "");
+        OCIO_CHECK_ASSERT(invOp->getDescriptions().empty());
 
         // Ensure style is inverted
-        OIIO_CHECK_EQUAL(invOp->getStyle(), OCIO::CDLOpData::CDL_V1_2_FWD);
+        OCIO_CHECK_EQUAL(invOp->getStyle(), OCIO::CDLOpData::CDL_V1_2_FWD);
 
-        OIIO_CHECK_EQUAL(invOp->isReverse(), false);
+        OCIO_CHECK_EQUAL(invOp->isReverse(), false);
 
         // Ensure CDL parameters are unchanged
-        OIIO_CHECK_ASSERT(invOp->getSlopeParams()
+        OCIO_CHECK_ASSERT(invOp->getSlopeParams()
                           == OCIO::CDLOpData::ChannelParams(1.35, 1.1, 0.71));
 
-        OIIO_CHECK_ASSERT(invOp->getOffsetParams()
+        OCIO_CHECK_ASSERT(invOp->getOffsetParams()
                           == OCIO::CDLOpData::ChannelParams(0.05, -0.23, 0.11));
 
-        OIIO_CHECK_ASSERT(invOp->getPowerParams()
+        OCIO_CHECK_ASSERT(invOp->getPowerParams()
                           == OCIO::CDLOpData::ChannelParams(0.93, 0.81, 1.27));
 
-        OIIO_CHECK_EQUAL(invOp->getSaturation(), 1.23);
+        OCIO_CHECK_EQUAL(invOp->getSaturation(), 1.23);
     }
 
     // Test CDL_NO_CLAMP_FWD inverse
@@ -617,28 +617,28 @@ OIIO_ADD_TEST(CDLOpData, inverse)
         const OCIO::CDLOpDataRcPtr invOp = cdlOp.inverse();
 
         // Ensure bit depths are swapped
-        OIIO_CHECK_EQUAL(invOp->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
-        OIIO_CHECK_EQUAL(invOp->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
+        OCIO_CHECK_EQUAL(invOp->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+        OCIO_CHECK_EQUAL(invOp->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
         // Ensure id, name and descriptions are empty
-        OIIO_CHECK_EQUAL(invOp->getID(), "");
-        OIIO_CHECK_ASSERT(invOp->getDescriptions().empty());
+        OCIO_CHECK_EQUAL(invOp->getID(), "");
+        OCIO_CHECK_ASSERT(invOp->getDescriptions().empty());
 
         // Ensure style is inverted
-        OIIO_CHECK_EQUAL(invOp->getStyle(), OCIO::CDLOpData::CDL_NO_CLAMP_REV);
-        OIIO_CHECK_ASSERT(invOp->isReverse());
+        OCIO_CHECK_EQUAL(invOp->getStyle(), OCIO::CDLOpData::CDL_NO_CLAMP_REV);
+        OCIO_CHECK_ASSERT(invOp->isReverse());
 
         // Ensure CDL parameters are unchanged
-        OIIO_CHECK_ASSERT(invOp->getSlopeParams()
+        OCIO_CHECK_ASSERT(invOp->getSlopeParams()
                            == OCIO::CDLOpData::ChannelParams(1.35, 1.1, 0.71));
 
-        OIIO_CHECK_ASSERT(invOp->getOffsetParams()
+        OCIO_CHECK_ASSERT(invOp->getOffsetParams()
                            == OCIO::CDLOpData::ChannelParams(0.05, -0.23, 0.11));
 
-        OIIO_CHECK_ASSERT(invOp->getPowerParams()
+        OCIO_CHECK_ASSERT(invOp->getPowerParams()
                            == OCIO::CDLOpData::ChannelParams(0.93, 0.81, 1.27));
 
-        OIIO_CHECK_EQUAL(invOp->getSaturation(), 1.23);
+        OCIO_CHECK_EQUAL(invOp->getSaturation(), 1.23);
     }
 
     // Test CDL_NO_CLAMP_REV inverse
@@ -647,65 +647,65 @@ OIIO_ADD_TEST(CDLOpData, inverse)
         const OCIO::CDLOpDataRcPtr invOp = cdlOp.inverse();
 
         // Ensure bit depths are swapped
-        OIIO_CHECK_EQUAL(invOp->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
-        OIIO_CHECK_EQUAL(invOp->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
+        OCIO_CHECK_EQUAL(invOp->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+        OCIO_CHECK_EQUAL(invOp->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
         // Ensure id, name and descriptions are empty
-        OIIO_CHECK_EQUAL(invOp->getID(), "");
-        OIIO_CHECK_ASSERT(invOp->getDescriptions().empty());
+        OCIO_CHECK_EQUAL(invOp->getID(), "");
+        OCIO_CHECK_ASSERT(invOp->getDescriptions().empty());
 
         // Ensure style is inverted
-        OIIO_CHECK_EQUAL(invOp->getStyle(), OCIO::CDLOpData::CDL_NO_CLAMP_FWD);
-        OIIO_CHECK_ASSERT(!invOp->isReverse());
+        OCIO_CHECK_EQUAL(invOp->getStyle(), OCIO::CDLOpData::CDL_NO_CLAMP_FWD);
+        OCIO_CHECK_ASSERT(!invOp->isReverse());
 
         // Ensure CDL parameters are unchanged
-        OIIO_CHECK_ASSERT(invOp->getSlopeParams()
+        OCIO_CHECK_ASSERT(invOp->getSlopeParams()
                           == OCIO::CDLOpData::ChannelParams(1.35, 1.1, 0.71));
 
-        OIIO_CHECK_ASSERT(invOp->getOffsetParams()
+        OCIO_CHECK_ASSERT(invOp->getOffsetParams()
                           == OCIO::CDLOpData::ChannelParams(0.05, -0.23, 0.11));
 
-        OIIO_CHECK_ASSERT(invOp->getPowerParams()
+        OCIO_CHECK_ASSERT(invOp->getPowerParams()
                           == OCIO::CDLOpData::ChannelParams(0.93, 0.81, 1.27));
 
-        OIIO_CHECK_EQUAL(invOp->getSaturation(), 1.23);
+        OCIO_CHECK_EQUAL(invOp->getSaturation(), 1.23);
     }
 }
 
 
-OIIO_ADD_TEST(CDLOpData, style)
+OCIO_ADD_TEST(CDLOpData, style)
 {
     // Check default constructor
     OCIO::CDLOpData cdlOp;
 
     // Check CDL_V1_2_FWD
     cdlOp.setStyle(OCIO::CDLOpData::CDL_V1_2_FWD);
-    OIIO_CHECK_EQUAL(cdlOp.getStyle(), OCIO::CDLOpData::CDL_V1_2_FWD);
-    OIIO_CHECK_ASSERT(!cdlOp.isReverse());
+    OCIO_CHECK_EQUAL(cdlOp.getStyle(), OCIO::CDLOpData::CDL_V1_2_FWD);
+    OCIO_CHECK_ASSERT(!cdlOp.isReverse());
 
     // Check CDL_V1_2_REV
     cdlOp.setStyle(OCIO::CDLOpData::CDL_V1_2_REV);
-    OIIO_CHECK_EQUAL(cdlOp.getStyle(), OCIO::CDLOpData::CDL_V1_2_REV);
-    OIIO_CHECK_ASSERT(cdlOp.isReverse());
+    OCIO_CHECK_EQUAL(cdlOp.getStyle(), OCIO::CDLOpData::CDL_V1_2_REV);
+    OCIO_CHECK_ASSERT(cdlOp.isReverse());
 
     // Check CDL_NO_CLAMP_FWD
     cdlOp.setStyle(OCIO::CDLOpData::CDL_NO_CLAMP_FWD);
-    OIIO_CHECK_EQUAL(cdlOp.getStyle(), OCIO::CDLOpData::CDL_NO_CLAMP_FWD);
-    OIIO_CHECK_ASSERT(!cdlOp.isReverse());
+    OCIO_CHECK_EQUAL(cdlOp.getStyle(), OCIO::CDLOpData::CDL_NO_CLAMP_FWD);
+    OCIO_CHECK_ASSERT(!cdlOp.isReverse());
 
     // Check CDL_NO_CLAMP_REV
     cdlOp.setStyle(OCIO::CDLOpData::CDL_NO_CLAMP_REV);
-    OIIO_CHECK_EQUAL(cdlOp.getStyle(), OCIO::CDLOpData::CDL_NO_CLAMP_REV);
-    OIIO_CHECK_ASSERT(cdlOp.isReverse());
+    OCIO_CHECK_EQUAL(cdlOp.getStyle(), OCIO::CDLOpData::CDL_NO_CLAMP_REV);
+    OCIO_CHECK_ASSERT(cdlOp.isReverse());
 
     // Check unknown style
-    OIIO_CHECK_THROW_WHAT(OCIO::CDLOpData::GetStyle("unknown_style"),
+    OCIO_CHECK_THROW_WHAT(OCIO::CDLOpData::GetStyle("unknown_style"),
                           OCIO::Exception, 
                           "Unknown style for CDL");
 }
 
 
-OIIO_ADD_TEST(CDLOpData, validation_success)
+OCIO_ADD_TEST(CDLOpData, validation_success)
 {
     OCIO::CDLOpData cdlOp;
 
@@ -721,10 +721,10 @@ OIIO_ADD_TEST(CDLOpData, validation_success)
     cdlOp.setPowerParams(powerParams);
     cdlOp.setSaturation(1.22);
 
-    OIIO_CHECK_ASSERT(!cdlOp.isIdentity());
-    OIIO_CHECK_ASSERT(!cdlOp.isNoOp());
+    OCIO_CHECK_ASSERT(!cdlOp.isIdentity());
+    OCIO_CHECK_ASSERT(!cdlOp.isNoOp());
 
-    OIIO_CHECK_NO_THROW(cdlOp.validate());
+    OCIO_CHECK_NO_THROW(cdlOp.validate());
 
     // Set an identity operation
     cdlOp.setSlopeParams(OCIO::kOneParams);
@@ -732,14 +732,14 @@ OIIO_ADD_TEST(CDLOpData, validation_success)
     cdlOp.setPowerParams(OCIO::kOneParams);
     cdlOp.setSaturation(1.0);
 
-    OIIO_CHECK_ASSERT(cdlOp.isIdentity());
-    OIIO_CHECK_ASSERT(!cdlOp.isNoOp());
+    OCIO_CHECK_ASSERT(cdlOp.isIdentity());
+    OCIO_CHECK_ASSERT(!cdlOp.isNoOp());
     // Set to non clamping
     cdlOp.setStyle(OCIO::CDLOpData::CDL_NO_CLAMP_FWD);
-    OIIO_CHECK_ASSERT(cdlOp.isIdentity());
-    OIIO_CHECK_ASSERT(cdlOp.isNoOp());
+    OCIO_CHECK_ASSERT(cdlOp.isIdentity());
+    OCIO_CHECK_ASSERT(cdlOp.isNoOp());
 
-    OIIO_CHECK_NO_THROW(cdlOp.validate());
+    OCIO_CHECK_NO_THROW(cdlOp.validate());
 
     // Check for slope = 0
     cdlOp.setSlopeParams(OCIO::CDLOpData::ChannelParams(0.0));
@@ -749,10 +749,10 @@ OIIO_ADD_TEST(CDLOpData, validation_success)
 
     cdlOp.setStyle(OCIO::CDLOpData::CDL_V1_2_FWD);
 
-    OIIO_CHECK_ASSERT(!cdlOp.isIdentity());
-    OIIO_CHECK_ASSERT(!cdlOp.isNoOp());
+    OCIO_CHECK_ASSERT(!cdlOp.isIdentity());
+    OCIO_CHECK_ASSERT(!cdlOp.isNoOp());
 
-    OIIO_CHECK_NO_THROW(cdlOp.validate());
+    OCIO_CHECK_NO_THROW(cdlOp.validate());
 
     // Check for saturation = 0
     cdlOp.setSlopeParams(slopeParams);
@@ -760,13 +760,13 @@ OIIO_ADD_TEST(CDLOpData, validation_success)
     cdlOp.setPowerParams(powerParams);
     cdlOp.setSaturation(0.0);
 
-    OIIO_CHECK_ASSERT(!cdlOp.isIdentity());
-    OIIO_CHECK_ASSERT(!cdlOp.isNoOp());
+    OCIO_CHECK_ASSERT(!cdlOp.isIdentity());
+    OCIO_CHECK_ASSERT(!cdlOp.isNoOp());
 
-    OIIO_CHECK_NO_THROW(cdlOp.validate());
+    OCIO_CHECK_NO_THROW(cdlOp.validate());
 }
 
-OIIO_ADD_TEST(CDLOpData, validation_failure)
+OCIO_ADD_TEST(CDLOpData, validation_failure)
 {
     OCIO::CDLOpData cdlOp;
 
@@ -776,7 +776,7 @@ OIIO_ADD_TEST(CDLOpData, validation_failure)
     cdlOp.setPowerParams(OCIO::CDLOpData::ChannelParams(1.2));
     cdlOp.setSaturation(1.17);
 
-    OIIO_CHECK_THROW_WHAT(cdlOp.validate(), OCIO::Exception, "should be greater than 0");
+    OCIO_CHECK_THROW_WHAT(cdlOp.validate(), OCIO::Exception, "should be greater than 0");
 
     // Fail: invalid power
     cdlOp.setSlopeParams(OCIO::CDLOpData::ChannelParams(0.9));
@@ -784,7 +784,7 @@ OIIO_ADD_TEST(CDLOpData, validation_failure)
     cdlOp.setPowerParams(OCIO::CDLOpData::ChannelParams(-1.2));
     cdlOp.setSaturation(1.17);
 
-    OIIO_CHECK_THROW_WHAT(cdlOp.validate(), OCIO::Exception, "should be greater than 0");
+    OCIO_CHECK_THROW_WHAT(cdlOp.validate(), OCIO::Exception, "should be greater than 0");
 
     // Fail: invalid saturation
     cdlOp.setSlopeParams(OCIO::CDLOpData::ChannelParams(0.9));
@@ -792,7 +792,7 @@ OIIO_ADD_TEST(CDLOpData, validation_failure)
     cdlOp.setPowerParams(OCIO::CDLOpData::ChannelParams(1.2));
     cdlOp.setSaturation(-1.17);
 
-    OIIO_CHECK_THROW_WHAT(cdlOp.validate(), OCIO::Exception, "should be greater than 0");
+    OCIO_CHECK_THROW_WHAT(cdlOp.validate(), OCIO::Exception, "should be greater than 0");
 
     // Check for power = 0
     cdlOp.setSlopeParams(OCIO::CDLOpData::ChannelParams(0.7));
@@ -800,18 +800,18 @@ OIIO_ADD_TEST(CDLOpData, validation_failure)
     cdlOp.setPowerParams(OCIO::CDLOpData::ChannelParams(0.0));
     cdlOp.setSaturation(1.4);
 
-    OIIO_CHECK_THROW_WHAT(cdlOp.validate(), OCIO::Exception, "should be greater than 0");
+    OCIO_CHECK_THROW_WHAT(cdlOp.validate(), OCIO::Exception, "should be greater than 0");
 }
 
 // TODO: CDLOp_inverse_bypass_test is missing
 
-OIIO_ADD_TEST(CDLOpData, channel)
+OCIO_ADD_TEST(CDLOpData, channel)
 {
   {
     OCIO::CDLOpData cdlOp;
 
     // False: identity
-    OIIO_CHECK_ASSERT(!cdlOp.hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(!cdlOp.hasChannelCrosstalk());
   }
 
   {
@@ -821,7 +821,7 @@ OIIO_ADD_TEST(CDLOpData, channel)
     cdlOp.setPowerParams(OCIO::CDLOpData::ChannelParams(1.2));
 
     // False: slope, offset, and power 
-    OIIO_CHECK_ASSERT(!cdlOp.hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(!cdlOp.hasChannelCrosstalk());
   }
 
   {
@@ -829,7 +829,7 @@ OIIO_ADD_TEST(CDLOpData, channel)
     cdlOp.setSaturation(1.17);
 
     // True: saturation
-    OIIO_CHECK_ASSERT(cdlOp.hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(cdlOp.hasChannelCrosstalk());
   }
 }
 

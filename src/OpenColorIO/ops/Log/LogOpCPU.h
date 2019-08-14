@@ -36,7 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-OpCPURcPtr GetLogRenderer(ConstLogOpDataRcPtr & log);
+ConstOpCPURcPtr GetLogRenderer(ConstLogOpDataRcPtr & log);
 }
 OCIO_NAMESPACE_EXIT
 

@@ -327,19 +327,19 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 #include "UnitTestUtils.h"
 
-OIIO_ADD_TEST(FileFormatSpi1D, FormatInfo)
+OCIO_ADD_TEST(FileFormatSpi1D, FormatInfo)
 {
     OCIO::FormatInfoVec formatInfoVec;
     OCIO::LocalFileFormat tester;
     tester.GetFormatInfo(formatInfoVec);
 
-    OIIO_CHECK_EQUAL(1, formatInfoVec.size());
-    OIIO_CHECK_EQUAL("spi1d", formatInfoVec[0].name);
-    OIIO_CHECK_EQUAL("spi1d", formatInfoVec[0].extension);
-    OIIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ,
+    OCIO_CHECK_EQUAL(1, formatInfoVec.size());
+    OCIO_CHECK_EQUAL("spi1d", formatInfoVec[0].name);
+    OCIO_CHECK_EQUAL("spi1d", formatInfoVec[0].extension);
+    OCIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ,
         formatInfoVec[0].capabilities);
 }
 
@@ -349,32 +349,32 @@ OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & fileName)
         fileName, std::ios_base::in);
 }
 
-OIIO_ADD_TEST(FileFormatSpi1D, Test)
+OCIO_ADD_TEST(FileFormatSpi1D, Test)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string spi1dFile("cpf.spi1d");
-    OIIO_CHECK_NO_THROW(cachedFile = LoadLutFile(spi1dFile));
+    OCIO_CHECK_NO_THROW(cachedFile = LoadLutFile(spi1dFile));
 
-    OIIO_CHECK_ASSERT((bool)cachedFile);
-    OIIO_CHECK_ASSERT((bool)(cachedFile->lut));
+    OCIO_CHECK_ASSERT((bool)cachedFile);
+    OCIO_CHECK_ASSERT((bool)(cachedFile->lut));
 
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->lut->from_min[0]);
-    OIIO_CHECK_EQUAL(1.0f, cachedFile->lut->from_max[0]);
+    OCIO_CHECK_EQUAL(0.0f, cachedFile->lut->from_min[0]);
+    OCIO_CHECK_EQUAL(1.0f, cachedFile->lut->from_max[0]);
 
-    OIIO_CHECK_EQUAL(2048, cachedFile->lut->luts[0].size());
-    OIIO_CHECK_EQUAL(2048, cachedFile->lut->luts[1].size());
-    OIIO_CHECK_EQUAL(2048, cachedFile->lut->luts[2].size());
+    OCIO_CHECK_EQUAL(2048, cachedFile->lut->luts[0].size());
+    OCIO_CHECK_EQUAL(2048, cachedFile->lut->luts[1].size());
+    OCIO_CHECK_EQUAL(2048, cachedFile->lut->luts[2].size());
 
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->lut->luts[0][0]);
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->lut->luts[1][0]);
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->lut->luts[2][0]);
+    OCIO_CHECK_EQUAL(0.0f, cachedFile->lut->luts[0][0]);
+    OCIO_CHECK_EQUAL(0.0f, cachedFile->lut->luts[1][0]);
+    OCIO_CHECK_EQUAL(0.0f, cachedFile->lut->luts[2][0]);
 
-    OIIO_CHECK_EQUAL(4.511920005404118f, cachedFile->lut->luts[0][1970]);
-    OIIO_CHECK_EQUAL(4.511920005404118f, cachedFile->lut->luts[1][1970]);
-    OIIO_CHECK_EQUAL(4.511920005404118f, cachedFile->lut->luts[2][1970]);
+    OCIO_CHECK_EQUAL(4.511920005404118f, cachedFile->lut->luts[0][1970]);
+    OCIO_CHECK_EQUAL(4.511920005404118f, cachedFile->lut->luts[1][1970]);
+    OCIO_CHECK_EQUAL(4.511920005404118f, cachedFile->lut->luts[2][1970]);
 
-    OIIO_CHECK_EQUAL(1e-5f, cachedFile->lut->maxerror);
-    OIIO_CHECK_EQUAL(OCIO::Lut1D::ERROR_RELATIVE, cachedFile->lut->errortype);
+    OCIO_CHECK_EQUAL(1e-5f, cachedFile->lut->maxerror);
+    OCIO_CHECK_EQUAL(OCIO::Lut1D::ERROR_RELATIVE, cachedFile->lut->errortype);
 }
 
 void ReadSpi1d(const std::string & fileContent)
@@ -388,7 +388,7 @@ void ReadSpi1d(const std::string & fileContent)
     OCIO::CachedFileRcPtr cachedFile = tester.Read(is, SAMPLE_NAME);
 }
 
-OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
+OCIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
 {
     {
         // Validate stream can be read with no error.
@@ -403,7 +403,7 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "1.0\n"
             "}\n";
 
-        OIIO_CHECK_NO_THROW(ReadSpi1d(SAMPLE_NO_ERROR));
+        OCIO_CHECK_NO_THROW(ReadSpi1d(SAMPLE_NO_ERROR));
     }
     {
         // Version missing
@@ -416,7 +416,7 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "1.0\n"
             "}\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Could not find 'Version' Tag");
     }
@@ -432,7 +432,7 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "1.0\n"
             "}\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Only format version 1 supported");
     }
@@ -448,7 +448,7 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "1.0\n"
             "}\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Invalid 'Version' Tag");
     }
@@ -464,7 +464,7 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "1.0\n"
             "}\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Could not find 'Version' Tag");
     }
@@ -480,7 +480,7 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "1.0\n"
             "}\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Invalid 'From' Tag");
     }
@@ -495,7 +495,7 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "1.0\n"
             "}\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Could not find 'Length' Tag");
     }
@@ -511,7 +511,7 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "1.0\n"
             "}\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Invalid 'Length' Tag");
     }
@@ -526,7 +526,7 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "1.0\n"
             "}\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Could not find 'Components' Tag");
     }
@@ -542,7 +542,7 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "1.0\n"
             "}\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Invalid 'Components' Tag");
     }
@@ -558,7 +558,7 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "1.0\n"
             "}\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Components must be [1,2,3]");
     }
@@ -573,7 +573,7 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "0.0\n"
             "}\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
                               OCIO::Exception,
                               "Not enough entries found");
     }

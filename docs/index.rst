@@ -1,3 +1,7 @@
+..
+  SPDX-License-Identifier: CC-BY-4.0
+  Copyright Contributors to the OpenColorIO Project.
+
 Home
 ====
 
@@ -84,8 +88,8 @@ Please see the :ref:`developer-guide` for more info, and contact `ocio-dev
     FAQ
     downloads
     
-    CHANGELOG
-    LICENSE
+    ChangeLog
+    License
 
 --------------------------------------------------------------------------------
 

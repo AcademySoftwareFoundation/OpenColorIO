@@ -35,6 +35,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Op.h"
 #include "ops/OpArray.h"
+#include "PrivateTypes.h"
+
 
 OCIO_NAMESPACE_ENTER
 {
@@ -112,7 +114,7 @@ public:
 
     bool isIdentity() const override;
 
-    bool hasChannelCrosstalk() const override { return false; }
+    bool hasChannelCrosstalk() const override { return true; }
 
     OpDataRcPtr getIdentityReplacement() const;
 

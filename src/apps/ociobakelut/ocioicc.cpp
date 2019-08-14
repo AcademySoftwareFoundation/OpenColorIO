@@ -58,7 +58,7 @@ typedef struct
     cmsHTRANSFORM to_PCS16;
     cmsHTRANSFORM from_PCS16;
     //OCIO::ConstProcessorRcPtr shaper_processor;
-    OCIO::ConstProcessorRcPtr processor;
+    OCIO::ConstCPUProcessorRcPtr processor;
 } SamplerData;
 
 static void Add3GammaCurves(cmsPipeline* lut, cmsFloat64Number Curve)
@@ -109,7 +109,7 @@ static cmsInt32Number PCS2Display_Sampler16(const cmsUInt16Number in[], cmsUInt1
 
 
 void SaveICCProfileToFile(const std::string & outputfile,
-                          ConstProcessorRcPtr & processor,
+                          ConstCPUProcessorRcPtr & processor,
                           int cubesize,
                           int whitepointtemp,
                           const std::string & displayicc,

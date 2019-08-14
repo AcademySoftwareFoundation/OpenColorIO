@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ilmbase/half.h"
+#include "OpenEXR/half.h"
 
 
 OCIO_NAMESPACE_ENTER
@@ -43,11 +43,6 @@ float GetBitDepthMaxValue(BitDepth in);
 
 // True if the bit depth is a float
 bool IsFloatBitDepth(BitDepth in);
-
-
-// Helper methods to manipulate Pixel Formats.
-inline BitDepth ExtractBitDepth(PixelFormat in) { return BitDepth(0x00FF&in); }
-inline ChannelOrdering ExtractChannelOrder(PixelFormat in) { return ChannelOrdering(0xFF00&in); }
 
 
 // Metaprogramming requires templated structures to access

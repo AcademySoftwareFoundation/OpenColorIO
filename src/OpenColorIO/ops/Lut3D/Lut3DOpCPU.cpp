@@ -84,7 +84,7 @@ private:
 class Lut3DTetrahedralRenderer : public BaseLut3DRenderer
 {
 public:
-    Lut3DTetrahedralRenderer(ConstLut3DOpDataRcPtr & lut);
+    explicit Lut3DTetrahedralRenderer(ConstLut3DOpDataRcPtr & lut);
     virtual ~Lut3DTetrahedralRenderer();
 
     void apply(const void * inImg, void * outImg, long numPixels) const;
@@ -93,7 +93,7 @@ public:
 class Lut3DRenderer : public BaseLut3DRenderer
 {
 public:
-    Lut3DRenderer(ConstLut3DOpDataRcPtr & lut);
+    explicit Lut3DRenderer(ConstLut3DOpDataRcPtr & lut);
     virtual ~Lut3DRenderer();
 
     void apply(const void * inImg, void * outImg, long numPixels) const;
@@ -143,6 +143,7 @@ class InvLut3DRenderer : public OpCPU
     {
     public:
         RangeTree();
+        RangeTree(const RangeTree &) = delete;
 
         // Populate the tree using the LUT values.
         // - gridVector Pointer to the vectorized 3d-LUT values.
@@ -193,7 +194,7 @@ class InvLut3DRenderer : public OpCPU
 
 public:
 
-    InvLut3DRenderer(ConstLut3DOpDataRcPtr & lut);
+    explicit InvLut3DRenderer(ConstLut3DOpDataRcPtr & lut);
     virtual ~InvLut3DRenderer();
 
     virtual void apply(const void * inImg, void * outImg, long numPixels) const;
@@ -1947,7 +1948,7 @@ void InvLut3DRenderer::apply(const void * inImg, void * outImg, long numPixels) 
     }
 }
 
-OpCPURcPtr GetForwardLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
+ConstOpCPURcPtr GetForwardLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
 {
     const Interpolation interp = lut->getConcreteInterpolation();
     if (interp == INTERP_TETRAHEDRAL)
@@ -1962,7 +1963,7 @@ OpCPURcPtr GetForwardLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
 
 } // anonymous namspace
 
-OpCPURcPtr GetLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
+ConstOpCPURcPtr GetLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
 {
     if (lut->getDirection() == TRANSFORM_DIR_FORWARD)
     {
@@ -1992,7 +1993,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 
 #include <limits>
-#include "unittest.h"
+#include "UnitTest.h"
 
 void Lut3DRendererNaNTest(OCIO::Interpolation interpol)
 {
@@ -2009,7 +2010,7 @@ void Lut3DRendererNaNTest(OCIO::Interpolation interpol)
     values[65] += 0.001f;
 
     OCIO::ConstLut3DOpDataRcPtr lutConst = lut;
-    OCIO::OpCPURcPtr renderer = OCIO::GetLut3DRenderer(lutConst);
+    OCIO::ConstOpCPURcPtr renderer = OCIO::GetLut3DRenderer(lutConst);
 
     const float qnan = std::numeric_limits<float>::quiet_NaN();
     const float inf = std::numeric_limits<float>::infinity();
@@ -2020,26 +2021,26 @@ void Lut3DRendererNaNTest(OCIO::Interpolation interpol)
 
     renderer->apply(pixels, pixels, 4);
 
-    OIIO_CHECK_CLOSE(pixels[0], values[0], 1e-7f);
-    OIIO_CHECK_CLOSE(pixels[1], values[1], 1e-7f);
-    OIIO_CHECK_CLOSE(pixels[2], values[2], 1e-7f);
-    OIIO_CHECK_ASSERT(OCIO::IsNan(pixels[7]));
-    OIIO_CHECK_CLOSE(pixels[8], 1.0f, 1e-7f);
-    OIIO_CHECK_CLOSE(pixels[9], 1.0f, 1e-7f);
-    OIIO_CHECK_CLOSE(pixels[10], 1.0f, 1e-7f);
-    OIIO_CHECK_EQUAL(pixels[11], inf);
-    OIIO_CHECK_CLOSE(pixels[12], 0.0f, 1e-7f);
-    OIIO_CHECK_CLOSE(pixels[13], 0.0f, 1e-7f);
-    OIIO_CHECK_CLOSE(pixels[14], 0.0f, 1e-7f);
-    OIIO_CHECK_EQUAL(pixels[15], -inf);
+    OCIO_CHECK_CLOSE(pixels[0], values[0], 1e-7f);
+    OCIO_CHECK_CLOSE(pixels[1], values[1], 1e-7f);
+    OCIO_CHECK_CLOSE(pixels[2], values[2], 1e-7f);
+    OCIO_CHECK_ASSERT(OCIO::IsNan(pixels[7]));
+    OCIO_CHECK_CLOSE(pixels[8], 1.0f, 1e-7f);
+    OCIO_CHECK_CLOSE(pixels[9], 1.0f, 1e-7f);
+    OCIO_CHECK_CLOSE(pixels[10], 1.0f, 1e-7f);
+    OCIO_CHECK_EQUAL(pixels[11], inf);
+    OCIO_CHECK_CLOSE(pixels[12], 0.0f, 1e-7f);
+    OCIO_CHECK_CLOSE(pixels[13], 0.0f, 1e-7f);
+    OCIO_CHECK_CLOSE(pixels[14], 0.0f, 1e-7f);
+    OCIO_CHECK_EQUAL(pixels[15], -inf);
 }
 
-OIIO_ADD_TEST(Lut3DRenderer, nan_linear_test)
+OCIO_ADD_TEST(Lut3DRenderer, nan_linear_test)
 {
     Lut3DRendererNaNTest(OCIO::INTERP_LINEAR);
 }
 
-OIIO_ADD_TEST(Lut3DRenderer, nan_tetra_test)
+OCIO_ADD_TEST(Lut3DRenderer, nan_tetra_test)
 {
     Lut3DRendererNaNTest(OCIO::INTERP_TETRAHEDRAL);
 }

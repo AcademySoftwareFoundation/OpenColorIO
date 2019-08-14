@@ -506,7 +506,6 @@ unsigned long Lut1DOpData::GetLutIdealSize(BitDepth incomingBitDepth)
         std::string err("Bit-depth is not supported: ");
         err += BitDepthToString(incomingBitDepth);
         throw Exception(err.c_str());
-        break;
     }
 
     }
@@ -607,9 +606,11 @@ void Lut1DOpData::setHueAdjust(Lut1DOpData::HueAdjust algo)
 
 Lut1DOpDataRcPtr Lut1DOpData::clone() const
 {
+    // TODO: As 1D LUT could be cloned by the CPUProcessor,
+    //       think about the 'bypass' behavior.
+
     return std::make_shared<Lut1DOpData>(*this);
 }
-
 
 bool Lut1DOpData::IsInverse(const Lut1DOpData * lutfwd,
                             const Lut1DOpData * lutinv)
@@ -693,12 +694,10 @@ const char* GetHueAdjustName(Lut1DOpData::HueAdjust algo)
     case Lut1DOpData::HUE_DW3:
     {
         return "dw3";
-        break;
     }
     case Lut1DOpData::HUE_NONE:
     {
         return "none";
-        break;
     }
     }
     throw Exception("1D LUT has an invalid hue adjust style.");
@@ -714,6 +713,8 @@ void Lut1DOpData::finalize()
     }
 
     AutoMutex lock(m_mutex);
+
+    validate();
 
     md5_state_t state;
     md5_byte_t digest[16];
@@ -737,8 +738,6 @@ void Lut1DOpData::finalize()
     m_cacheID = cacheIDStream.str();
 }
 
-namespace
-{
 //-----------------------------------------------------------------------------
 //
 // Functional composition is a concept from mathematics where two functions
@@ -768,7 +767,7 @@ namespace
 // 
 // A is used as in/out parameter. As input is it the first LUT in the composition,
 // as output it is the result of the composition.
-void ComposeVec(Lut1DOpDataRcPtr & A, const OpRcPtrVec & B)
+void Lut1DOpData::ComposeVec(Lut1DOpDataRcPtr & A, const OpRcPtrVec & B)
 {
     if (B.size() == 0)
     {
@@ -830,7 +829,6 @@ void ComposeVec(Lut1DOpDataRcPtr & A, const OpRcPtrVec & B)
 
     A->OpData::setOutputBitDepth(outputBD);
 
-}
 }
 
 // Compose two Lut1DOpData.
@@ -990,10 +988,13 @@ Lut1DOpDataRcPtr Lut1DOpData::MakeFastLut1DFromInverse(ConstLut1DOpDataRcPtr & l
     newDomainLut->setInputBitDepth(lut->getInputBitDepth());
     newDomainLut->setOutputBitDepth(lut->getInputBitDepth());
 
+    newDomainLut->setHueAdjust(lut->getHueAdjust());
+
     // Change inv style to INV_EXACT to avoid recursion.
     LutStyleGuard<Lut1DOpData> guard(*lut);
 
     Compose(newDomainLut, lut, COMPOSE_RESAMPLE_NO);
+
     return newDomainLut;
 }
 
@@ -1270,70 +1271,70 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
 
-OIIO_ADD_TEST(Lut1DOpData, get_lut_ideal_size)
+OCIO_ADD_TEST(Lut1DOpData, get_lut_ideal_size)
 {
-    OIIO_CHECK_EQUAL(OCIO::Lut1DOpData::GetLutIdealSize(OCIO::BIT_DEPTH_UINT8), 256);
-    OIIO_CHECK_EQUAL(OCIO::Lut1DOpData::GetLutIdealSize(OCIO::BIT_DEPTH_UINT16), 65536);
+    OCIO_CHECK_EQUAL(OCIO::Lut1DOpData::GetLutIdealSize(OCIO::BIT_DEPTH_UINT8), 256);
+    OCIO_CHECK_EQUAL(OCIO::Lut1DOpData::GetLutIdealSize(OCIO::BIT_DEPTH_UINT16), 65536);
 
-    OIIO_CHECK_EQUAL(OCIO::Lut1DOpData::GetLutIdealSize(OCIO::BIT_DEPTH_F16), 65536);
-    OIIO_CHECK_EQUAL(OCIO::Lut1DOpData::GetLutIdealSize(OCIO::BIT_DEPTH_F32), 65536);
+    OCIO_CHECK_EQUAL(OCIO::Lut1DOpData::GetLutIdealSize(OCIO::BIT_DEPTH_F16), 65536);
+    OCIO_CHECK_EQUAL(OCIO::Lut1DOpData::GetLutIdealSize(OCIO::BIT_DEPTH_F32), 65536);
 }
 
-OIIO_ADD_TEST(Lut1DOpData, constructor)
+OCIO_ADD_TEST(Lut1DOpData, constructor)
 {
     OCIO::Lut1DOpData lut(2);
 
-    OIIO_CHECK_ASSERT(lut.getType() == OCIO::OpData::Lut1DType);
-    OIIO_CHECK_ASSERT(!lut.isNoOp());
-    OIIO_CHECK_ASSERT(lut.isIdentity());
-    OIIO_CHECK_EQUAL(lut.getArray().getLength(), 2);
-    OIIO_CHECK_EQUAL(lut.getInterpolation(), OCIO::INTERP_LINEAR);
-    OIIO_CHECK_NO_THROW(lut.validate());
+    OCIO_CHECK_ASSERT(lut.getType() == OCIO::OpData::Lut1DType);
+    OCIO_CHECK_ASSERT(!lut.isNoOp());
+    OCIO_CHECK_ASSERT(lut.isIdentity());
+    OCIO_CHECK_EQUAL(lut.getArray().getLength(), 2);
+    OCIO_CHECK_EQUAL(lut.getInterpolation(), OCIO::INTERP_LINEAR);
+    OCIO_CHECK_NO_THROW(lut.validate());
 }
 
-OIIO_ADD_TEST(Lut1DOpData, accessors)
+OCIO_ADD_TEST(Lut1DOpData, accessors)
 {
     OCIO::Lut1DOpData l(17);
     l.setInputBitDepth(OCIO::BIT_DEPTH_UINT10);
     l.setOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
     l.setInterpolation(OCIO::INTERP_LINEAR);
 
-    OIIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_LINEAR);
-    OIIO_CHECK_ASSERT(!l.isNoOp());
-    OIIO_CHECK_ASSERT(l.isIdentity());
-    OIIO_CHECK_NO_THROW(l.validate());
+    OCIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_LINEAR);
+    OCIO_CHECK_ASSERT(!l.isNoOp());
+    OCIO_CHECK_ASSERT(l.isIdentity());
+    OCIO_CHECK_NO_THROW(l.validate());
 
-    OIIO_CHECK_EQUAL(l.getHueAdjust(), OCIO::Lut1DOpData::HUE_NONE);
+    OCIO_CHECK_EQUAL(l.getHueAdjust(), OCIO::Lut1DOpData::HUE_NONE);
     l.setHueAdjust(OCIO::Lut1DOpData::HUE_DW3);
-    OIIO_CHECK_EQUAL(l.getHueAdjust(), OCIO::Lut1DOpData::HUE_DW3);
+    OCIO_CHECK_EQUAL(l.getHueAdjust(), OCIO::Lut1DOpData::HUE_DW3);
 
     // Note: Hue and Sat adjust do not affect identity status.
-    OIIO_CHECK_ASSERT(l.isIdentity());
+    OCIO_CHECK_ASSERT(l.isIdentity());
 
     l.getArray()[1] = 1.0f;
-    OIIO_CHECK_ASSERT(!l.isNoOp());
-    OIIO_CHECK_ASSERT(!l.isIdentity());
-    OIIO_CHECK_NO_THROW(l.validate());
+    OCIO_CHECK_ASSERT(!l.isNoOp());
+    OCIO_CHECK_ASSERT(!l.isIdentity());
+    OCIO_CHECK_NO_THROW(l.validate());
 
     l.setInterpolation(OCIO::INTERP_BEST);
-    OIIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_BEST);
+    OCIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_BEST);
 
-    OIIO_CHECK_EQUAL(l.getArray().getLength(), 17);
-    OIIO_CHECK_EQUAL(l.getArray().getNumValues(), 17 * 3);
-    OIIO_CHECK_EQUAL(l.getArray().getNumColorComponents(), 3);
+    OCIO_CHECK_EQUAL(l.getArray().getLength(), 17);
+    OCIO_CHECK_EQUAL(l.getArray().getNumValues(), 17 * 3);
+    OCIO_CHECK_EQUAL(l.getArray().getNumColorComponents(), 3);
 
     l.getArray().resize(65, 3);
 
-    OIIO_CHECK_EQUAL(l.getArray().getLength(), 65);
-    OIIO_CHECK_EQUAL(l.getArray().getNumValues(), 65 * 3);
-    OIIO_CHECK_EQUAL(l.getArray().getNumColorComponents(), 3);
-    OIIO_CHECK_NO_THROW(l.validate());
+    OCIO_CHECK_EQUAL(l.getArray().getLength(), 65);
+    OCIO_CHECK_EQUAL(l.getArray().getNumValues(), 65 * 3);
+    OCIO_CHECK_EQUAL(l.getArray().getNumColorComponents(), 3);
+    OCIO_CHECK_NO_THROW(l.validate());
 }
 
-OIIO_ADD_TEST(Lut1DOpData, identity_bitdepth)
+OCIO_ADD_TEST(Lut1DOpData, identity_bitdepth)
 {
     OCIO::Lut1DOpData l1(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8,
                          "", OCIO::OpData::Descriptions(),
@@ -1344,13 +1345,13 @@ OIIO_ADD_TEST(Lut1DOpData, identity_bitdepth)
                          OCIO::INTERP_LINEAR,
                          OCIO::Lut1DOpData::LUT_STANDARD);
 
-    OIIO_CHECK_ASSERT(!l1.isNoOp());
-    OIIO_CHECK_ASSERT(l1.isIdentity());
-    OIIO_CHECK_NO_THROW(l1.validate());
+    OCIO_CHECK_ASSERT(!l1.isNoOp());
+    OCIO_CHECK_ASSERT(l1.isIdentity());
+    OCIO_CHECK_NO_THROW(l1.validate());
 
-    OIIO_CHECK_ASSERT(!l2.isNoOp());
-    OIIO_CHECK_ASSERT(l2.isIdentity());
-    OIIO_CHECK_NO_THROW(l2.validate());
+    OCIO_CHECK_ASSERT(!l2.isNoOp());
+    OCIO_CHECK_ASSERT(l2.isIdentity());
+    OCIO_CHECK_NO_THROW(l2.validate());
 
     const float coeff
         = OCIO::GetBitDepthMaxValue(l2.getOutputBitDepth())
@@ -1361,15 +1362,15 @@ OIIO_ADD_TEST(Lut1DOpData, identity_bitdepth)
     const float error = 1e-6f;
     for (unsigned long idx = 0; idx<l2.getArray().getLength(); ++idx)
     {
-        OIIO_CHECK_CLOSE(l1.getArray().getValues()[idx * 3 + 0] * coeff,
+        OCIO_CHECK_CLOSE(l1.getArray().getValues()[idx * 3 + 0] * coeff,
                          l2.getArray().getValues()[idx * 3 + 0],
                          error);
 
-        OIIO_CHECK_CLOSE(l1.getArray().getValues()[idx * 3 + 1] * coeff,
+        OCIO_CHECK_CLOSE(l1.getArray().getValues()[idx * 3 + 1] * coeff,
                          l2.getArray().getValues()[idx * 3 + 1],
                          error);
 
-        OIIO_CHECK_CLOSE(l1.getArray().getValues()[idx * 3 + 2] * coeff,
+        OCIO_CHECK_CLOSE(l1.getArray().getValues()[idx * 3 + 2] * coeff,
                          l2.getArray().getValues()[idx * 3 + 2],
                          error);
     }
@@ -1379,17 +1380,17 @@ OIIO_ADD_TEST(Lut1DOpData, identity_bitdepth)
                          OCIO::INTERP_LINEAR,
                          OCIO::Lut1DOpData::LUT_INPUT_HALF_CODE);
 
-    OIIO_CHECK_ASSERT(l3.isIdentity());
+    OCIO_CHECK_ASSERT(l3.isIdentity());
 }
 
-OIIO_ADD_TEST(Lut1DOpData, is_identity)
+OCIO_ADD_TEST(Lut1DOpData, is_identity)
 {
     OCIO::Lut1DOpData l1(OCIO::BIT_DEPTH_UINT10, OCIO::BIT_DEPTH_UINT10,
                          "", OCIO::OpData::Descriptions(),
                          OCIO::INTERP_LINEAR,
                          OCIO::Lut1DOpData::LUT_STANDARD);
 
-    OIIO_CHECK_ASSERT(l1.isIdentity());
+    OCIO_CHECK_ASSERT(l1.isIdentity());
 
     // The tolerance will be 1023*1e-5 = 0.01023.
     const unsigned long lastId = (unsigned long)l1.getArray().getValues().size() - 1;
@@ -1398,15 +1399,15 @@ OIIO_ADD_TEST(Lut1DOpData, is_identity)
 
     l1.getArray()[0] = first + 0.01f;
     l1.getArray()[lastId] = last + 0.01f;
-    OIIO_CHECK_ASSERT(l1.isIdentity());
+    OCIO_CHECK_ASSERT(l1.isIdentity());
 
     l1.getArray()[0] = first + 0.02f;
     l1.getArray()[lastId] = last;
-    OIIO_CHECK_ASSERT(!l1.isIdentity());
+    OCIO_CHECK_ASSERT(!l1.isIdentity());
 
     l1.getArray()[0] = first;
     l1.getArray()[lastId] = last + 0.02f;
-    OIIO_CHECK_ASSERT(!l1.isIdentity());
+    OCIO_CHECK_ASSERT(!l1.isIdentity());
 
 
     OCIO::Lut1DOpData l2(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_UINT10,
@@ -1426,25 +1427,25 @@ OIIO_ADD_TEST(Lut1DOpData, is_identity)
     // scaled -> 32736.0f
     const float ERROR_31700 = 32736.0f;
 
-    OIIO_CHECK_ASSERT(l2.isIdentity());
+    OCIO_CHECK_ASSERT(l2.isIdentity());
 
     l2.getArray()[0] = first2 + ERROR_0;
     l2.getArray()[id2] = last2 + ERROR_31700;
 
-    OIIO_CHECK_ASSERT(l2.isIdentity());
+    OCIO_CHECK_ASSERT(l2.isIdentity());
 
     l2.getArray()[0] = first2 + 2 * ERROR_0;
     l2.getArray()[id2] = last2;
 
-    OIIO_CHECK_ASSERT(!l2.isIdentity());
+    OCIO_CHECK_ASSERT(!l2.isIdentity());
 
     l2.getArray()[0] = first2;
     l2.getArray()[id2] = last2 + 2 * ERROR_31700;
 
-    OIIO_CHECK_ASSERT(!l2.isIdentity());
+    OCIO_CHECK_ASSERT(!l2.isIdentity());
 }
 
-OIIO_ADD_TEST(Lut1DOpData, clone)
+OCIO_ADD_TEST(Lut1DOpData, clone)
 {
     OCIO::Lut1DOpData ref(20);
     ref.getArray()[1] = 0.5f;
@@ -1452,14 +1453,14 @@ OIIO_ADD_TEST(Lut1DOpData, clone)
 
     OCIO::Lut1DOpDataRcPtr pClone = ref.clone();
 
-    OIIO_CHECK_ASSERT(!pClone->isNoOp());
-    OIIO_CHECK_ASSERT(!pClone->isIdentity());
-    OIIO_CHECK_NO_THROW(pClone->validate());
-    OIIO_CHECK_ASSERT(pClone->getArray() == ref.getArray());
-    OIIO_CHECK_EQUAL(pClone->getHueAdjust(), OCIO::Lut1DOpData::HUE_DW3);
+    OCIO_CHECK_ASSERT(!pClone->isNoOp());
+    OCIO_CHECK_ASSERT(!pClone->isIdentity());
+    OCIO_CHECK_NO_THROW(pClone->validate());
+    OCIO_CHECK_ASSERT(pClone->getArray() == ref.getArray());
+    OCIO_CHECK_EQUAL(pClone->getHueAdjust(), OCIO::Lut1DOpData::HUE_DW3);
 }
 
-OIIO_ADD_TEST(Lut1DOpData, output_depth_scaling)
+OCIO_ADD_TEST(Lut1DOpData, output_depth_scaling)
 {
     OCIO::Lut1DOpData ref(OCIO::BIT_DEPTH_UINT8,
                           OCIO::BIT_DEPTH_UINT10,
@@ -1477,26 +1478,26 @@ OIIO_ADD_TEST(Lut1DOpData, output_depth_scaling)
     ref.setOutputBitDepth(newBitdepth);
     // Now we need to make sure that the bitdepth was changed from the overriden
     // method.
-    OIIO_CHECK_EQUAL(ref.getOutputBitDepth(), newBitdepth);
+    OCIO_CHECK_EQUAL(ref.getOutputBitDepth(), newBitdepth);
 
     // Now we need to check the scaling between the new array and initial array
     // matches the factor computed above.
     const OCIO::Array::Values& newArrValues = ref.getArray().getValues();
 
     // Sanity check first.
-    OIIO_CHECK_EQUAL(initialArrValues.size(), newArrValues.size());
+    OCIO_CHECK_EQUAL(initialArrValues.size(), newArrValues.size());
 
     float expectedValue = 0.0f;
     const float error = 1e-6f;
     for (unsigned long i = 0; i < newArrValues.size(); i++)
     {
         expectedValue = initialArrValues[i] * factor;
-        OIIO_CHECK_CLOSE(expectedValue, newArrValues[i], error);
+        OCIO_CHECK_CLOSE(expectedValue, newArrValues[i], error);
     }
 
 }
 
-OIIO_ADD_TEST(Lut1DOpData, equality_test)
+OCIO_ADD_TEST(Lut1DOpData, equality_test)
 {
     OCIO::Lut1DOpData l1(OCIO::BIT_DEPTH_UINT10, OCIO::BIT_DEPTH_UINT10,
                          "", OCIO::OpData::Descriptions(),
@@ -1508,41 +1509,41 @@ OIIO_ADD_TEST(Lut1DOpData, equality_test)
                          OCIO::INTERP_NEAREST,
                          OCIO::Lut1DOpData::LUT_STANDARD);
 
-    OIIO_CHECK_ASSERT(!(l1 == l2));
+    OCIO_CHECK_ASSERT(!(l1 == l2));
 
     OCIO::Lut1DOpData l3(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_UINT10,
                          "", OCIO::OpData::Descriptions(),
                          OCIO::INTERP_LINEAR,
                          OCIO::Lut1DOpData::LUT_STANDARD);
 
-    OIIO_CHECK_ASSERT(!(l1 == l3) && !(l3 == l2));
+    OCIO_CHECK_ASSERT(!(l1 == l3) && !(l3 == l2));
 
     OCIO::Lut1DOpData l4(OCIO::BIT_DEPTH_UINT10, OCIO::BIT_DEPTH_UINT10,
                          "", OCIO::OpData::Descriptions(),
                          OCIO::INTERP_LINEAR,
                          OCIO::Lut1DOpData::LUT_STANDARD);
 
-    OIIO_CHECK_ASSERT(l1 == l4);
+    OCIO_CHECK_ASSERT(l1 == l4);
 
     l1.setHueAdjust(OCIO::Lut1DOpData::HUE_DW3);
 
-    OIIO_CHECK_ASSERT(!(l1 == l4));
+    OCIO_CHECK_ASSERT(!(l1 == l4));
 
     // Inversion quality does not affect forward ops equality.
     l4.setHueAdjust(OCIO::Lut1DOpData::HUE_DW3);
     l1.setInversionQuality(OCIO::LUT_INVERSION_BEST);
 
-    OIIO_CHECK_ASSERT(l1 == l4);
+    OCIO_CHECK_ASSERT(l1 == l4);
 
     // Inversion quality does not affect inverse ops equality.
     // Even so applying the ops could lead to small differences.
     auto l5 = l1.inverse();
     auto l6 = l4.inverse();
 
-    OIIO_CHECK_ASSERT(*l5 == *l6);
+    OCIO_CHECK_ASSERT(*l5 == *l6);
 }
 
-OIIO_ADD_TEST(Lut1DOpData, channel)
+OCIO_ADD_TEST(Lut1DOpData, channel)
 {
     OCIO::Lut1DOpDataRcPtr L1 = std::make_shared<OCIO::Lut1DOpData>(
         OCIO::BIT_DEPTH_UINT10, OCIO::BIT_DEPTH_UINT10,
@@ -1559,103 +1560,103 @@ OIIO_ADD_TEST(Lut1DOpData, channel)
         20);
 
     // False: identity.
-    OIIO_CHECK_ASSERT(!L1->hasChannelCrosstalk());
-    OIIO_CHECK_ASSERT(L1->mayCompose(L2));
+    OCIO_CHECK_ASSERT(!L1->hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(L1->mayCompose(L2));
 
     L1->setHueAdjust(OCIO::Lut1DOpData::HUE_DW3);
     
     // True: hue restore is on, it's an identity LUT, but this is not
     // tested for efficency.
-    OIIO_CHECK_ASSERT(L1->hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(L1->hasChannelCrosstalk());
     
-    OIIO_CHECK_ASSERT(!L1->mayCompose(L2));
+    OCIO_CHECK_ASSERT(!L1->mayCompose(L2));
 
     OCIO::ConstLut1DOpDataRcPtr L1C = L1;
-    OIIO_CHECK_ASSERT(!L2->mayCompose(L1C));
+    OCIO_CHECK_ASSERT(!L2->mayCompose(L1C));
 
     L1->setHueAdjust(OCIO::Lut1DOpData::HUE_NONE);
     L1->getArray()[1] = 3.0f;
     // False: non-identity.
-    OIIO_CHECK_ASSERT(!L1->hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(!L1->hasChannelCrosstalk());
 
     L1->setHueAdjust(OCIO::Lut1DOpData::HUE_DW3);
     // True: non-identity w/hue restore.
-    OIIO_CHECK_ASSERT(L1->hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(L1->hasChannelCrosstalk());
 }
 
-OIIO_ADD_TEST(Lut1DOpData, interpolation)
+OCIO_ADD_TEST(Lut1DOpData, interpolation)
 {
     OCIO::Lut1DOpData l(17);
     l.setInputBitDepth(OCIO::BIT_DEPTH_F32);
     l.setOutputBitDepth(OCIO::BIT_DEPTH_F32);
 
     l.setInterpolation(OCIO::INTERP_LINEAR);
-    OIIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_LINEAR);
-    OIIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
-    OIIO_CHECK_NO_THROW(l.validate());
+    OCIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_LINEAR);
+    OCIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
+    OCIO_CHECK_NO_THROW(l.validate());
 
     l.setInterpolation(OCIO::INTERP_BEST);
-    OIIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_BEST);
-    OIIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
-    OIIO_CHECK_NO_THROW(l.validate());
+    OCIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_BEST);
+    OCIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
+    OCIO_CHECK_NO_THROW(l.validate());
 
     l.setInterpolation(OCIO::INTERP_CUBIC);
-    OIIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_CUBIC);
-    OIIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
-    OIIO_CHECK_THROW_WHAT(l.validate(), OCIO::Exception, "does not support interpolation algorithm");
+    OCIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_CUBIC);
+    OCIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
+    OCIO_CHECK_THROW_WHAT(l.validate(), OCIO::Exception, "does not support interpolation algorithm");
 
     l.setInterpolation(OCIO::INTERP_DEFAULT);
-    OIIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_DEFAULT);
-    OIIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
-    OIIO_CHECK_NO_THROW(l.validate());
+    OCIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_DEFAULT);
+    OCIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
+    OCIO_CHECK_NO_THROW(l.validate());
 
     // TODO: INTERP_NEAREST is currently implemented as INTERP_LINEAR.
     l.setInterpolation(OCIO::INTERP_NEAREST);
-    OIIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_NEAREST);
-    OIIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
-    OIIO_CHECK_NO_THROW(l.validate());
+    OCIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_NEAREST);
+    OCIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
+    OCIO_CHECK_NO_THROW(l.validate());
 
     // Invalid interpolation type do not get translated
     // by getConcreteInterpolation.
     l.setInterpolation(OCIO::INTERP_UNKNOWN);
-    OIIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_UNKNOWN);
-    OIIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
-    OIIO_CHECK_THROW_WHAT(l.validate(), OCIO::Exception, "does not support interpolation algorithm");
+    OCIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_UNKNOWN);
+    OCIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
+    OCIO_CHECK_THROW_WHAT(l.validate(), OCIO::Exception, "does not support interpolation algorithm");
 
     l.setInterpolation(OCIO::INTERP_TETRAHEDRAL);
-    OIIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_TETRAHEDRAL);
-    OIIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
-    OIIO_CHECK_THROW_WHAT(l.validate(), OCIO::Exception, " does not support interpolation algorithm");
+    OCIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_TETRAHEDRAL);
+    OCIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
+    OCIO_CHECK_THROW_WHAT(l.validate(), OCIO::Exception, " does not support interpolation algorithm");
 }
 
-OIIO_ADD_TEST(Lut1DOpData, inversion_quality)
+OCIO_ADD_TEST(Lut1DOpData, inversion_quality)
 {
     OCIO::Lut1DOpData l(17);
     l.setInputBitDepth(OCIO::BIT_DEPTH_F32);
     l.setOutputBitDepth(OCIO::BIT_DEPTH_F32);
 
     l.setInversionQuality(OCIO::LUT_INVERSION_EXACT);
-    OIIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_EXACT);
-    OIIO_CHECK_EQUAL(l.getConcreteInversionQuality(), OCIO::LUT_INVERSION_EXACT);
-    OIIO_CHECK_NO_THROW(l.validate());
+    OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_EXACT);
+    OCIO_CHECK_EQUAL(l.getConcreteInversionQuality(), OCIO::LUT_INVERSION_EXACT);
+    OCIO_CHECK_NO_THROW(l.validate());
 
     l.setInversionQuality(OCIO::LUT_INVERSION_FAST);
-    OIIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_FAST);
-    OIIO_CHECK_EQUAL(l.getConcreteInversionQuality(), OCIO::LUT_INVERSION_FAST);
-    OIIO_CHECK_NO_THROW(l.validate());
+    OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_FAST);
+    OCIO_CHECK_EQUAL(l.getConcreteInversionQuality(), OCIO::LUT_INVERSION_FAST);
+    OCIO_CHECK_NO_THROW(l.validate());
 
     l.setInversionQuality(OCIO::LUT_INVERSION_DEFAULT);
-    OIIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_DEFAULT);
-    OIIO_CHECK_EQUAL(l.getConcreteInversionQuality(), OCIO::LUT_INVERSION_FAST);
-    OIIO_CHECK_NO_THROW(l.validate());
+    OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_DEFAULT);
+    OCIO_CHECK_EQUAL(l.getConcreteInversionQuality(), OCIO::LUT_INVERSION_FAST);
+    OCIO_CHECK_NO_THROW(l.validate());
 
     l.setInversionQuality(OCIO::LUT_INVERSION_BEST);
-    OIIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_BEST);
-    OIIO_CHECK_EQUAL(l.getConcreteInversionQuality(), OCIO::LUT_INVERSION_EXACT);
-    OIIO_CHECK_NO_THROW(l.validate());
+    OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_BEST);
+    OCIO_CHECK_EQUAL(l.getConcreteInversionQuality(), OCIO::LUT_INVERSION_EXACT);
+    OCIO_CHECK_NO_THROW(l.validate());
 }
 
-OIIO_ADD_TEST(Lut1DOpData, lut_1d_compose)
+OCIO_ADD_TEST(Lut1DOpData, lut_1d_compose)
 {
     OCIO::Lut1DOpDataRcPtr lut1 =
         std::make_shared<OCIO::Lut1DOpData>(OCIO::BIT_DEPTH_F32,
@@ -1702,35 +1703,35 @@ OIIO_ADD_TEST(Lut1DOpData, lut_1d_compose)
 
         values = &lut1->getArray().getValues()[0];
 
-        OIIO_CHECK_EQUAL(lut1->getArray().getLength(), 8);
+        OCIO_CHECK_EQUAL(lut1->getArray().getLength(), 8);
 
-        OIIO_CHECK_CLOSE(values[0], 0.0f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[1], 0.0f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[2], 0.00254739914f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[0], 0.0f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[1], 0.0f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[2], 0.00254739914f, 1e-6f);
 
-        OIIO_CHECK_CLOSE(values[3], 0.0f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[4], 0.00669934973f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[5], 0.00378420483f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[3], 0.0f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[4], 0.00669934973f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[5], 0.00378420483f, 1e-6f);
 
-        OIIO_CHECK_CLOSE(values[6], 0.0f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[7], 0.0121908365f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[8], 0.0619750582f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[6], 0.0f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[7], 0.0121908365f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[8], 0.0619750582f, 1e-6f);
 
-        OIIO_CHECK_CLOSE(values[9], 0.00682150759f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[10], 0.0272925831f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[11], 0.096942015f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[9], 0.00682150759f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[10], 0.0272925831f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[11], 0.096942015f, 1e-6f);
 
-        OIIO_CHECK_CLOSE(values[12], 0.0206955168f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[13], 0.0308703855f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[14], 0.12295182f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[12], 0.0206955168f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[13], 0.0308703855f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[14], 0.12295182f, 1e-6f);
 
-        OIIO_CHECK_CLOSE(values[15], 0.716288447f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[16], 0.0731772855f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[17], 1.0f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[15], 0.716288447f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[16], 0.0731772855f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[17], 1.0f, 1e-6f);
 
-        OIIO_CHECK_CLOSE(values[18], 0.725044191f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[19], 0.857842028f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[20], 1.0f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[18], 0.725044191f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[19], 0.857842028f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[20], 1.0f, 1e-6f);
     }
 
     {
@@ -1740,47 +1741,47 @@ OIIO_ADD_TEST(Lut1DOpData, lut_1d_compose)
 
         values = &lut1Cloned->getArray().getValues()[0];
 
-        OIIO_CHECK_EQUAL(lut1Cloned->getArray().getLength(), 65536);
+        OCIO_CHECK_EQUAL(lut1Cloned->getArray().getLength(), 65536);
 
-        OIIO_CHECK_CLOSE(values[0], 0.0f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[1], 0.0f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[2], 0.00254739914f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[0], 0.0f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[1], 0.0f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[2], 0.00254739914f, 1e-6f);
 
-        OIIO_CHECK_CLOSE(values[3], 0.0f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[4], 6.34463504e-07f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[5], 0.00254753046f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[3], 0.0f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[4], 6.34463504e-07f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[5], 0.00254753046f, 1e-6f);
 
-        OIIO_CHECK_CLOSE(values[6], 0.0f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[7], 1.26915984e-06f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[8], 0.00254766271f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[6], 0.0f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[7], 1.26915984e-06f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[8], 0.00254766271f, 1e-6f);
 
-        OIIO_CHECK_CLOSE(values[9], 0.0f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[10], 1.90362334e-06f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[11], 0.00254779495f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[9], 0.0f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[10], 1.90362334e-06f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[11], 0.00254779495f, 1e-6f);
 
-        OIIO_CHECK_CLOSE(values[12], 0.0f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[13], 2.53855251e-06f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[14], 0.0025479272f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[12], 0.0f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[13], 2.53855251e-06f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[14], 0.0025479272f, 1e-6f);
 
-        OIIO_CHECK_CLOSE(values[15], 0.0f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[16], 3.17324884e-06f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[17], 0.00254805945f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[15], 0.0f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[16], 3.17324884e-06f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[17], 0.00254805945f, 1e-6f);
 
-        OIIO_CHECK_CLOSE(values[300], 0.0f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[301], 6.3463347e-05f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[302], 0.00256060902f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[300], 0.0f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[301], 6.3463347e-05f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[302], 0.00256060902f, 1e-6f);
 
-        OIIO_CHECK_CLOSE(values[900], 0.0f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[901], 0.000190390972f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[902], 0.00258703064f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[900], 0.0f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[901], 0.000190390972f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[902], 0.00258703064f, 1e-6f);
 
-        OIIO_CHECK_CLOSE(values[2700], 0.0f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[2701], 0.000571172219f, 1e-6f);
-        OIIO_CHECK_CLOSE(values[2702], 0.00266629551f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[2700], 0.0f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[2701], 0.000571172219f, 1e-6f);
+        OCIO_CHECK_CLOSE(values[2702], 0.00266629551f, 1e-6f);
     }
 }
 
-OIIO_ADD_TEST(Lut1DOpData, lut_1d_compose_sc)
+OCIO_ADD_TEST(Lut1DOpData, lut_1d_compose_sc)
 {
     OCIO::Lut1DOpDataRcPtr lut1 =
         std::make_shared<OCIO::Lut1DOpData>(OCIO::BIT_DEPTH_UINT8,
@@ -1837,39 +1838,39 @@ OIIO_ADD_TEST(Lut1DOpData, lut_1d_compose_sc)
 
     {
         OCIO::Lut1DOpDataRcPtr lComp = lut1->clone();
-        OIIO_CHECK_NO_THROW(
+        OCIO_CHECK_NO_THROW(
             OCIO::Lut1DOpData::Compose(lComp, lut2C, OCIO::Lut1DOpData::COMPOSE_RESAMPLE_NO));
 
-        OIIO_CHECK_EQUAL(lComp->getArray().getLength(), 2);
-        OIIO_CHECK_CLOSE(lComp->getArray().getValues()[0], 0.00744791f, 1e-6f);
-        OIIO_CHECK_CLOSE(lComp->getArray().getValues()[1], 0.03172233f, 1e-6f);
-        OIIO_CHECK_CLOSE(lComp->getArray().getValues()[2], 0.07058375f, 1e-6f);
-        OIIO_CHECK_CLOSE(lComp->getArray().getValues()[3], 0.3513808f, 1e-6f);
-        OIIO_CHECK_CLOSE(lComp->getArray().getValues()[4], 0.51819527f, 1e-6f);
-        OIIO_CHECK_CLOSE(lComp->getArray().getValues()[5], 0.67463773f, 1e-6f);
+        OCIO_CHECK_EQUAL(lComp->getArray().getLength(), 2);
+        OCIO_CHECK_CLOSE(lComp->getArray().getValues()[0], 0.00744791f, 1e-6f);
+        OCIO_CHECK_CLOSE(lComp->getArray().getValues()[1], 0.03172233f, 1e-6f);
+        OCIO_CHECK_CLOSE(lComp->getArray().getValues()[2], 0.07058375f, 1e-6f);
+        OCIO_CHECK_CLOSE(lComp->getArray().getValues()[3], 0.3513808f, 1e-6f);
+        OCIO_CHECK_CLOSE(lComp->getArray().getValues()[4], 0.51819527f, 1e-6f);
+        OCIO_CHECK_CLOSE(lComp->getArray().getValues()[5], 0.67463773f, 1e-6f);
     }
 
     {
         OCIO::Lut1DOpDataRcPtr lComp = lut1->clone();
-        OIIO_CHECK_NO_THROW(
+        OCIO_CHECK_NO_THROW(
             OCIO::Lut1DOpData::Compose(lComp, lut2C, OCIO::Lut1DOpData::COMPOSE_RESAMPLE_INDEPTH));
 
-        OIIO_CHECK_EQUAL(lComp->getArray().getLength(), 256);
-        OIIO_CHECK_CLOSE(lComp->getArray().getValues()[0], 0.00744791f, 1e-6f);
-        OIIO_CHECK_CLOSE(lComp->getArray().getValues()[1], 0.03172233f, 1e-6f);
-        OIIO_CHECK_CLOSE(lComp->getArray().getValues()[2], 0.07058375f, 1e-6f);
-        OIIO_CHECK_CLOSE(lComp->getArray().getValues()[383], 0.28073114f, 1e-6f);
-        OIIO_CHECK_CLOSE(lComp->getArray().getValues()[384], 0.09914176f, 1e-6f);
-        OIIO_CHECK_CLOSE(lComp->getArray().getValues()[385], 0.1866852f, 1e-6f);
-        OIIO_CHECK_CLOSE(lComp->getArray().getValues()[765], 0.3513808f, 1e-6f);
-        OIIO_CHECK_CLOSE(lComp->getArray().getValues()[766], 0.51819527f, 1e-6f);
-        OIIO_CHECK_CLOSE(lComp->getArray().getValues()[767], 0.67463773f, 1e-6f);
+        OCIO_CHECK_EQUAL(lComp->getArray().getLength(), 256);
+        OCIO_CHECK_CLOSE(lComp->getArray().getValues()[0], 0.00744791f, 1e-6f);
+        OCIO_CHECK_CLOSE(lComp->getArray().getValues()[1], 0.03172233f, 1e-6f);
+        OCIO_CHECK_CLOSE(lComp->getArray().getValues()[2], 0.07058375f, 1e-6f);
+        OCIO_CHECK_CLOSE(lComp->getArray().getValues()[383], 0.28073114f, 1e-6f);
+        OCIO_CHECK_CLOSE(lComp->getArray().getValues()[384], 0.09914176f, 1e-6f);
+        OCIO_CHECK_CLOSE(lComp->getArray().getValues()[385], 0.1866852f, 1e-6f);
+        OCIO_CHECK_CLOSE(lComp->getArray().getValues()[765], 0.3513808f, 1e-6f);
+        OCIO_CHECK_CLOSE(lComp->getArray().getValues()[766], 0.51819527f, 1e-6f);
+        OCIO_CHECK_CLOSE(lComp->getArray().getValues()[767], 0.67463773f, 1e-6f);
     }
 
     {
         OCIO::ConstLut1DOpDataRcPtr lut1C = lut1;
         OCIO::Lut1DOpDataRcPtr lComp = lut2->clone();
-        OIIO_CHECK_THROW_WHAT(
+        OCIO_CHECK_THROW_WHAT(
             OCIO::Lut1DOpData::Compose(lComp, lut1C, OCIO::Lut1DOpData::COMPOSE_RESAMPLE_NO),
             OCIO::Exception, "bit-depth mismatch forbids the composition");
 
@@ -1901,27 +1902,27 @@ void checkInverse_bitDepths_domain(
 
     // Get inverse of reference 1D LUT operation.
     OCIO::Lut1DOpDataRcPtr invLut1d;
-    OIIO_CHECK_NO_THROW(invLut1d = refLut1d.inverse());
-    OIIO_REQUIRE_ASSERT(invLut1d);
+    OCIO_CHECK_NO_THROW(invLut1d = refLut1d.inverse());
+    OCIO_REQUIRE_ASSERT(invLut1d);
 
-    OIIO_CHECK_EQUAL(invLut1d->getInputBitDepth(),
+    OCIO_CHECK_EQUAL(invLut1d->getInputBitDepth(),
                      expectedInvInputBitDepth);
 
-    OIIO_CHECK_EQUAL(invLut1d->getOutputBitDepth(),
+    OCIO_CHECK_EQUAL(invLut1d->getOutputBitDepth(),
                      expectedInvOutputBitDepth);
 
-    OIIO_CHECK_EQUAL(invLut1d->getInterpolation(),
+    OCIO_CHECK_EQUAL(invLut1d->getInterpolation(),
                      expectedInvInterpolationAlgo);
 
-    OIIO_CHECK_EQUAL(invLut1d->getHalfFlags(),
+    OCIO_CHECK_EQUAL(invLut1d->getHalfFlags(),
                      expectedInvHalfFlags);
 
-    OIIO_CHECK_EQUAL(invLut1d->getHueAdjust(),
+    OCIO_CHECK_EQUAL(invLut1d->getHueAdjust(),
                      OCIO::Lut1DOpData::HUE_NONE);
 }
 
 
-OIIO_ADD_TEST(Lut1DOpData, inverse_bitDepth_domain)
+OCIO_ADD_TEST(Lut1DOpData, inverse_bitDepth_domain)
 {
     checkInverse_bitDepths_domain(
         // Reference
@@ -1964,7 +1965,7 @@ OIIO_ADD_TEST(Lut1DOpData, inverse_bitDepth_domain)
         OCIO::Lut1DOpData::LUT_INPUT_HALF_CODE);
 }
 
-OIIO_ADD_TEST(Lut1DOpData, inverse_hueadjust)
+OCIO_ADD_TEST(Lut1DOpData, inverse_hueadjust)
 {
     OCIO::Lut1DOpData refLut1d(OCIO::BIT_DEPTH_F32,
                                OCIO::BIT_DEPTH_F32,
@@ -1976,14 +1977,14 @@ OIIO_ADD_TEST(Lut1DOpData, inverse_hueadjust)
 
     // Get inverse of reference lut1d operation.
     OCIO::Lut1DOpDataRcPtr invLut1d;
-    OIIO_CHECK_NO_THROW(invLut1d = refLut1d.inverse());
-    OIIO_REQUIRE_ASSERT(invLut1d);
+    OCIO_CHECK_NO_THROW(invLut1d = refLut1d.inverse());
+    OCIO_REQUIRE_ASSERT(invLut1d);
 
-    OIIO_CHECK_EQUAL(invLut1d->getHueAdjust(),
+    OCIO_CHECK_EQUAL(invLut1d->getHueAdjust(),
                      OCIO::Lut1DOpData::HUE_DW3);
 }
 
-OIIO_ADD_TEST(Lut1DOpData, is_inverse)
+OCIO_ADD_TEST(Lut1DOpData, is_inverse)
 {
     // Create forward LUT.
     OCIO::Lut1DOpDataRcPtr L1 = std::make_shared<OCIO::Lut1DOpData>(
@@ -1998,33 +1999,33 @@ OIIO_ADD_TEST(Lut1DOpData, is_inverse)
     OCIO::Array & array = L1->getArray();
     OCIO::Array::Values & values = array.getValues();
     values[0] = 20.f;
-    OIIO_CHECK_ASSERT(!L1->isIdentity());
+    OCIO_CHECK_ASSERT(!L1->isIdentity());
 
     // Create an inverse LUT with same basics.
     OCIO::Lut1DOpDataRcPtr L2 = L1->inverse();
-    OIIO_REQUIRE_ASSERT(L2);
+    OCIO_REQUIRE_ASSERT(L2);
 
-    OIIO_CHECK_ASSERT(!(*L1 == *L2));
+    OCIO_CHECK_ASSERT(!(*L1 == *L2));
 
     OCIO::ConstLut1DOpDataRcPtr L1C = L1;
     OCIO::ConstLut1DOpDataRcPtr L2C = L2;
 
     // Check isInverse.
-    OIIO_CHECK_ASSERT(L1->isInverse(L2C));
-    OIIO_CHECK_ASSERT(L2->isInverse(L1C));
+    OCIO_CHECK_ASSERT(L1->isInverse(L2C));
+    OCIO_CHECK_ASSERT(L2->isInverse(L1C));
 
     // Arrays are the same if you normalize for the scaling difference.
     L1->setOutputBitDepth(OCIO::BIT_DEPTH_UINT12);
-    OIIO_CHECK_ASSERT(L1->isInverse(L2C));
-    OIIO_CHECK_ASSERT(L2->isInverse(L1C));
+    OCIO_CHECK_ASSERT(L1->isInverse(L2C));
+    OCIO_CHECK_ASSERT(L2->isInverse(L1C));
 
     // Catch the situation where the arrays are the same even though the
     // bit-depths don't match and hence the arrays effectively aren't the same.
     L1->setOutputBitDepth(OCIO::BIT_DEPTH_UINT10);  // restore original
-    OIIO_CHECK_ASSERT(L1->isInverse(L2C));
+    OCIO_CHECK_ASSERT(L1->isInverse(L2C));
     L1->OpData::setOutputBitDepth(OCIO::BIT_DEPTH_UINT12);
-    OIIO_CHECK_ASSERT(!L1->isInverse(L2C));
-    OIIO_CHECK_ASSERT(!L2->isInverse(L1C));
+    OCIO_CHECK_ASSERT(!L1->isInverse(L2C));
+    OCIO_CHECK_ASSERT(!L2->isInverse(L1C));
 }
 
 void SetLutArray(OCIO::Lut1DOpData & op,
@@ -2070,8 +2071,8 @@ void CheckInverse_IncreasingEffectiveDomain(
     SetLutArray(refLut1dOp, dimension, channels, fwdArrayData);
 
     OCIO::Lut1DOpDataRcPtr invLut1dOp = refLut1dOp.inverse();
-    OIIO_REQUIRE_ASSERT(invLut1dOp);
-    OIIO_CHECK_NO_THROW(invLut1dOp->finalize());
+    OCIO_REQUIRE_ASSERT(invLut1dOp);
+    OCIO_CHECK_NO_THROW(invLut1dOp->finalize());
 
     const OCIO::Lut1DOpData::ComponentProperties &
         redProperties = invLut1dOp->getRedProperties();
@@ -2082,20 +2083,20 @@ void CheckInverse_IncreasingEffectiveDomain(
     const OCIO::Lut1DOpData::ComponentProperties &
         blueProperties = invLut1dOp->getBlueProperties();
 
-    OIIO_CHECK_EQUAL(redProperties.isIncreasing, expIncreasingR);
-    OIIO_CHECK_EQUAL(redProperties.startDomain, expStartDomainR);
-    OIIO_CHECK_EQUAL(redProperties.endDomain, expEndDomainR);
+    OCIO_CHECK_EQUAL(redProperties.isIncreasing, expIncreasingR);
+    OCIO_CHECK_EQUAL(redProperties.startDomain, expStartDomainR);
+    OCIO_CHECK_EQUAL(redProperties.endDomain, expEndDomainR);
 
-    OIIO_CHECK_EQUAL(greenProperties.isIncreasing, expIncreasingG);
-    OIIO_CHECK_EQUAL(greenProperties.startDomain, expStartDomainG);
-    OIIO_CHECK_EQUAL(greenProperties.endDomain, expEndDomainG);
+    OCIO_CHECK_EQUAL(greenProperties.isIncreasing, expIncreasingG);
+    OCIO_CHECK_EQUAL(greenProperties.startDomain, expStartDomainG);
+    OCIO_CHECK_EQUAL(greenProperties.endDomain, expEndDomainG);
 
-    OIIO_CHECK_EQUAL(blueProperties.isIncreasing, expIncreasingB);
-    OIIO_CHECK_EQUAL(blueProperties.startDomain, expStartDomainB);
-    OIIO_CHECK_EQUAL(blueProperties.endDomain, expEndDomainB);
+    OCIO_CHECK_EQUAL(blueProperties.isIncreasing, expIncreasingB);
+    OCIO_CHECK_EQUAL(blueProperties.startDomain, expStartDomainB);
+    OCIO_CHECK_EQUAL(blueProperties.endDomain, expEndDomainB);
 }
 
-OIIO_ADD_TEST(Lut1DOpData, inverse_increasing_effective_domain)
+OCIO_ADD_TEST(Lut1DOpData, inverse_increasing_effective_domain)
 {
     {
         const float fwdData[] = { 0.1f, 0.8f, 0.1f,    // 0
@@ -2188,7 +2189,7 @@ void CheckInverse_Flatten(unsigned long dimension,
     SetLutArray(refLut1dOp, dimension, channels, fwdArrayData);
 
     OCIO::Lut1DOpDataRcPtr invLut1dOp = refLut1dOp.inverse();
-    OIIO_REQUIRE_ASSERT(invLut1dOp);
+    OCIO_REQUIRE_ASSERT(invLut1dOp);
     invLut1dOp->finalize();
 
     const OCIO::Array::Values &
@@ -2196,11 +2197,11 @@ void CheckInverse_Flatten(unsigned long dimension,
 
     for (unsigned long i = 0; i < dimension * channels; ++i)
     {
-        OIIO_CHECK_EQUAL(invValues[i], expInvArrayData[i]);
+        OCIO_CHECK_EQUAL(invValues[i], expInvArrayData[i]);
     }
 }
 
-OIIO_ADD_TEST(Lut1DOpData, inverse_flatten_test)
+OCIO_ADD_TEST(Lut1DOpData, inverse_flatten_test)
 {
     {
         const float fwdData[] = { 0.10f, 0.90f, 0.25f,    // 0
@@ -2291,7 +2292,7 @@ void SetLutArrayHalf(const OCIO::Lut1DOpDataRcPtr & op, unsigned long channels)
     }
 }
 
-OIIO_ADD_TEST(Lut1DOpData, inverse_half_domain)
+OCIO_ADD_TEST(Lut1DOpData, inverse_half_domain)
 {
     OCIO::Lut1DOpDataRcPtr refLut1dOp = std::make_shared<OCIO::Lut1DOpData>(
         OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
@@ -2302,7 +2303,7 @@ OIIO_ADD_TEST(Lut1DOpData, inverse_half_domain)
     SetLutArrayHalf(refLut1dOp, 3u);
 
     OCIO::Lut1DOpDataRcPtr invLut1dOp = refLut1dOp->inverse();
-    OIIO_REQUIRE_ASSERT(invLut1dOp);
+    OCIO_REQUIRE_ASSERT(invLut1dOp);
     invLut1dOp->finalize();
 
     const OCIO::Lut1DOpData::ComponentProperties &
@@ -2318,34 +2319,34 @@ OIIO_ADD_TEST(Lut1DOpData, inverse_half_domain)
         invValues = invLut1dOp->getArray().getValues();
 
     // Check increasing/decreasing and start/end domain.
-    OIIO_CHECK_EQUAL(redProperties.isIncreasing, true);
-    OIIO_CHECK_EQUAL(redProperties.startDomain, 0u);
-    OIIO_CHECK_EQUAL(redProperties.endDomain, 25000u);
-    OIIO_CHECK_EQUAL(redProperties.negStartDomain, 44100u);  // -0.2/3 (flattened to remove overlap)
-    OIIO_CHECK_EQUAL(redProperties.negEndDomain, 60000u);
+    OCIO_CHECK_EQUAL(redProperties.isIncreasing, true);
+    OCIO_CHECK_EQUAL(redProperties.startDomain, 0u);
+    OCIO_CHECK_EQUAL(redProperties.endDomain, 25000u);
+    OCIO_CHECK_EQUAL(redProperties.negStartDomain, 44100u);  // -0.2/3 (flattened to remove overlap)
+    OCIO_CHECK_EQUAL(redProperties.negEndDomain, 60000u);
 
-    OIIO_CHECK_EQUAL(greenProperties.isIncreasing, false);
-    OIIO_CHECK_EQUAL(greenProperties.startDomain, 0u);
-    OIIO_CHECK_EQUAL(greenProperties.endDomain, 25000u);
-    OIIO_CHECK_EQUAL(greenProperties.negStartDomain, 32768u);
-    OIIO_CHECK_EQUAL(greenProperties.negEndDomain, 60000u);
+    OCIO_CHECK_EQUAL(greenProperties.isIncreasing, false);
+    OCIO_CHECK_EQUAL(greenProperties.startDomain, 0u);
+    OCIO_CHECK_EQUAL(greenProperties.endDomain, 25000u);
+    OCIO_CHECK_EQUAL(greenProperties.negStartDomain, 32768u);
+    OCIO_CHECK_EQUAL(greenProperties.negEndDomain, 60000u);
 
-    OIIO_CHECK_EQUAL(blueProperties.isIncreasing, true);
-    OIIO_CHECK_EQUAL(blueProperties.startDomain, 11878u);
-    OIIO_CHECK_EQUAL(blueProperties.endDomain, 31743u);      // see note in invLut1DOp.cpp
-    OIIO_CHECK_EQUAL(blueProperties.negStartDomain, 44646u);
-    OIIO_CHECK_EQUAL(blueProperties.negEndDomain, 64511u);
+    OCIO_CHECK_EQUAL(blueProperties.isIncreasing, true);
+    OCIO_CHECK_EQUAL(blueProperties.startDomain, 11878u);
+    OCIO_CHECK_EQUAL(blueProperties.endDomain, 31743u);      // see note in invLut1DOp.cpp
+    OCIO_CHECK_EQUAL(blueProperties.negStartDomain, 44646u);
+    OCIO_CHECK_EQUAL(blueProperties.negEndDomain, 64511u);
 
     // Check reversals are removed.
     half act, aim;
     act = invValues[16000 * 3];
-    OIIO_CHECK_EQUAL(act.bits(), 15922);  // halfToFloat(15000) * 2 - 0.1
+    OCIO_CHECK_EQUAL(act.bits(), 15922);  // halfToFloat(15000) * 2 - 0.1
     act = invValues[52000 * 3];
-    OIIO_CHECK_EQUAL(act.bits(), 51567);  // halfToFloat(50000) * 3 + 0.1
+    OCIO_CHECK_EQUAL(act.bits(), 51567);  // halfToFloat(50000) * 3 + 0.1
     act = invValues[16000 * 3 + 1];
-    OIIO_CHECK_EQUAL(act.bits(), 46662);  // halfToFloat(15000) * -0.5 + 0.02
+    OCIO_CHECK_EQUAL(act.bits(), 46662);  // halfToFloat(15000) * -0.5 + 0.02
     act = invValues[52000 * 3 + 1];
-    OIIO_CHECK_EQUAL(act.bits(), 15885);  // halfToFloat(50000) * -0.4 + 0.05
+    OCIO_CHECK_EQUAL(act.bits(), 15885);  // halfToFloat(50000) * -0.4 + 0.05
 
     bool reversal = false;
     for (unsigned long i = 1; i < 31745; i++)
@@ -2353,25 +2354,25 @@ OIIO_ADD_TEST(Lut1DOpData, inverse_half_domain)
         if (invValues[i * 3] < invValues[(i - 1) * 3])           // increasing red
             reversal = true;
     }
-    OIIO_CHECK_ASSERT(!reversal);
+    OCIO_CHECK_ASSERT(!reversal);
     // Check no overlap at +0 and -0.
-    OIIO_CHECK_ASSERT(invValues[0] >= invValues[32768 * 3]);
+    OCIO_CHECK_ASSERT(invValues[0] >= invValues[32768 * 3]);
     reversal = false;
     for (unsigned long i = 1; i < 31745; i++)
     {
         if (invValues[i * 3 + 1] > invValues[(i - 1) * 3 + 1])   // decreasing grn
             reversal = true;
     }
-    OIIO_CHECK_ASSERT(!reversal);
-    OIIO_CHECK_ASSERT(invValues[0 + 1] <= invValues[32768 * 3 + 1]);
+    OCIO_CHECK_ASSERT(!reversal);
+    OCIO_CHECK_ASSERT(invValues[0 + 1] <= invValues[32768 * 3 + 1]);
     reversal = false;
     for (unsigned long i = 1; i < 31745; i++)
     {
         if (invValues[i * 3 + 2] < invValues[(i - 1) * 3 + 2])   // increasing blu
             reversal = true;
     }
-    OIIO_CHECK_ASSERT(!reversal);
-    OIIO_CHECK_ASSERT(invValues[0 + 2] >= invValues[32768 * 3 + 2]);
+    OCIO_CHECK_ASSERT(!reversal);
+    OCIO_CHECK_ASSERT(invValues[0 + 2] >= invValues[32768 * 3 + 2]);
 }
 
 

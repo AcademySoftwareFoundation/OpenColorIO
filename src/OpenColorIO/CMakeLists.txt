@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+
 set(SOURCES
 	Baker.cpp
 	BitDepthUtils.cpp
@@ -36,6 +39,7 @@ set(SOURCES
 	fileformats/FileFormatVF.cpp
 	fileformats/xmlutils/XMLReaderHelper.cpp
 	fileformats/xmlutils/XMLReaderUtils.cpp
+	GPUProcessor.cpp
 	GpuShader.cpp
 	GpuShaderDesc.cpp
 	GpuShaderUtils.cpp
@@ -141,11 +145,11 @@ target_link_libraries(OpenColorIO
 	PUBLIC 
 		public_api
 	PRIVATE
-		yamlcpp
-		pystring
-		sampleicc
-		libexpat
-		ilmbase
+		yamlcpp::yamlcpp
+		pystring::pystring
+		sampleicc::sampleicc
+		expat::expat
+		ilmbase::ilmbase
 )
 if(NOT BUILD_SHARED_LIBS)
 	target_compile_definitions(OpenColorIO

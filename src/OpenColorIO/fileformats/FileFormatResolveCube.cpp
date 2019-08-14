@@ -670,9 +670,9 @@ OCIO_NAMESPACE_ENTER
                     // is the higest value that is transformed by the
                     // cube (e.g for a generic lin-to-log transform,
                     // what the log value 1.0 is in linear).
-                    ConstProcessorRcPtr shaperToInputProc = config->getProcessor(
+                    ConstCPUProcessorRcPtr shaperToInputProc = config->getProcessor(
                         shaperSpace.c_str(),
-                        inputSpace.c_str());
+                        inputSpace.c_str())->getDefaultCPUProcessor();
 
                     float minval[3] = {0.0f, 0.0f, 0.0f};
                     float maxval[3] = {1.0f, 1.0f, 1.0f};
@@ -700,7 +700,8 @@ OCIO_NAMESPACE_ENTER
                 }
                 
                 PackedImageDesc shaperImg(&shaperData[0], shaperSize, 1, 3);
-                inputToShaperProc->apply(shaperImg);
+                ConstCPUProcessorRcPtr cpu = inputToShaperProc->getDefaultCPUProcessor();
+                cpu->apply(shaperImg);
             }
             
             //
@@ -739,8 +740,8 @@ OCIO_NAMESPACE_ENTER
                     cubeProc = inputToTargetProc;
                 }
 
-                
-                cubeProc->apply(cubeImg);
+                ConstCPUProcessorRcPtr cpu = cubeProc->getDefaultCPUProcessor();
+                cpu->apply(cubeImg);
             }
             
             //
@@ -754,7 +755,8 @@ OCIO_NAMESPACE_ENTER
                 GenerateIdentityLut1D(&onedData[0], onedSize, 3);
                 PackedImageDesc onedImg(&onedData[0], onedSize, 1, 3);
                 
-                inputToTargetProc->apply(onedImg);
+                ConstCPUProcessorRcPtr cpu = inputToTargetProc->getDefaultCPUProcessor();
+                cpu->apply(onedImg);
             }
             
             //
@@ -909,7 +911,7 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 #include <fstream>
 
 OCIO::LocalCachedFileRcPtr ReadResolveCube(const std::string & fileContent)
@@ -925,20 +927,20 @@ OCIO::LocalCachedFileRcPtr ReadResolveCube(const std::string & fileContent)
     return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
 }
 
-OIIO_ADD_TEST(FileFormatResolveCube, FormatInfo)
+OCIO_ADD_TEST(FileFormatResolveCube, FormatInfo)
 {
     OCIO::FormatInfoVec formatInfoVec;
     OCIO::LocalFileFormat tester;
     tester.GetFormatInfo(formatInfoVec);
 
-    OIIO_CHECK_EQUAL(1, formatInfoVec.size());
-    OIIO_CHECK_EQUAL("resolve_cube", formatInfoVec[0].name);
-    OIIO_CHECK_EQUAL("cube", formatInfoVec[0].extension);
-    OIIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ | OCIO::FORMAT_CAPABILITY_WRITE,
+    OCIO_CHECK_EQUAL(1, formatInfoVec.size());
+    OCIO_CHECK_EQUAL("resolve_cube", formatInfoVec[0].name);
+    OCIO_CHECK_EQUAL("cube", formatInfoVec[0].extension);
+    OCIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ | OCIO::FORMAT_CAPABILITY_WRITE,
         formatInfoVec[0].capabilities);
 }
 
-OIIO_ADD_TEST(FileFormatResolveCube, Read1D)
+OCIO_ADD_TEST(FileFormatResolveCube, Read1D)
 {
     const std::string SAMPLE =
         "LUT_1D_SIZE 2\n"
@@ -947,10 +949,10 @@ OIIO_ADD_TEST(FileFormatResolveCube, Read1D)
         "0.0 0.0 0.0\n"
         "1.0 0.0 0.0\n";
 
-    OIIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE));
+    OCIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE));
 }
 
-OIIO_ADD_TEST(FileFormatResolveCube, Read3D)
+OCIO_ADD_TEST(FileFormatResolveCube, Read3D)
 {
     const std::string SAMPLE =
         "LUT_3D_SIZE 2\n"
@@ -965,10 +967,10 @@ OIIO_ADD_TEST(FileFormatResolveCube, Read3D)
         "0.0 1.0 1.0\n"
         "1.0 1.0 1.0\n";
 
-    OIIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE));
+    OCIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE));
 }
 
-OIIO_ADD_TEST(FileFormatResolveCube, Read1D3D)
+OCIO_ADD_TEST(FileFormatResolveCube, Read1D3D)
 {
     const std::string SAMPLE =
         "LUT_1D_SIZE 6\n"
@@ -1010,10 +1012,10 @@ OIIO_ADD_TEST(FileFormatResolveCube, Read1D3D)
         "0.5 0.0 0.0\n"
         "0.0 0.0 0.0\n";
 
-    OIIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE));
+    OCIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE));
 }
 
-OIIO_ADD_TEST(FileFormatResolveCube, ReadDefaultRange)
+OCIO_ADD_TEST(FileFormatResolveCube, ReadDefaultRange)
 {
     const std::string SAMPLE_1D =
         "LUT_1D_SIZE 2\n"
@@ -1021,7 +1023,7 @@ OIIO_ADD_TEST(FileFormatResolveCube, ReadDefaultRange)
         "0.0 0.0 0.0\n"
         "1.0 0.0 0.0\n";
 
-    OIIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE_1D));
+    OCIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE_1D));
     
     const std::string SAMPLE_3D =
         "LUT_3D_SIZE 2\n"
@@ -1035,7 +1037,7 @@ OIIO_ADD_TEST(FileFormatResolveCube, ReadDefaultRange)
         "0.0 1.0 1.0\n"
         "1.0 1.0 1.0\n";
 
-    OIIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE_3D));
+    OCIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE_3D));
     
     const std::string SAMPLE_1D3D =
         "LUT_1D_SIZE 2\n"
@@ -1052,11 +1054,11 @@ OIIO_ADD_TEST(FileFormatResolveCube, ReadDefaultRange)
         "0.0 1.0 1.0\n"
         "1.0 1.0 1.0\n";
 
-    OIIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE_1D3D));
+    OCIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE_1D3D));
 }
 
 
-OIIO_ADD_TEST(FileFormatResolveCube, ReadFailure)
+OCIO_ADD_TEST(FileFormatResolveCube, ReadFailure)
 {
     {
         // Wrong LUT_3D_SIZE tag
@@ -1073,7 +1075,7 @@ OIIO_ADD_TEST(FileFormatResolveCube, ReadFailure)
             "0.0 1.0 1.0\n"
             "1.0 1.0 1.0\n";
 
-        OIIO_CHECK_THROW(ReadResolveCube(SAMPLE_ERROR), OCIO::Exception);
+        OCIO_CHECK_THROW(ReadResolveCube(SAMPLE_ERROR), OCIO::Exception);
     }
     {
         // Wrong LUT_3D_INPUT_RANGE tag
@@ -1090,7 +1092,7 @@ OIIO_ADD_TEST(FileFormatResolveCube, ReadFailure)
             "0.0 1.0 1.0\n"
             "1.0 1.0 1.0\n";
 
-        OIIO_CHECK_THROW(ReadResolveCube(SAMPLE_ERROR), OCIO::Exception);
+        OCIO_CHECK_THROW(ReadResolveCube(SAMPLE_ERROR), OCIO::Exception);
     }
     {
         // Comment after header
@@ -1107,7 +1109,7 @@ OIIO_ADD_TEST(FileFormatResolveCube, ReadFailure)
             "0.0 1.0 1.0\n"
             "1.0 1.0 1.0\n";
 
-        OIIO_CHECK_THROW(ReadResolveCube(SAMPLE_ERROR), OCIO::Exception);
+        OCIO_CHECK_THROW(ReadResolveCube(SAMPLE_ERROR), OCIO::Exception);
     }
     {
         // Unexpected tag
@@ -1124,7 +1126,7 @@ OIIO_ADD_TEST(FileFormatResolveCube, ReadFailure)
             "0.0 1.0 1.0\n"
             "1.0 1.0 1.0\n";
 
-        OIIO_CHECK_THROW(ReadResolveCube(SAMPLE_ERROR), OCIO::Exception);
+        OCIO_CHECK_THROW(ReadResolveCube(SAMPLE_ERROR), OCIO::Exception);
     }
     {
         // Wrong number of entries
@@ -1143,11 +1145,11 @@ OIIO_ADD_TEST(FileFormatResolveCube, ReadFailure)
             "0.0 1.0 1.0\n"
             "1.0 1.0 1.0\n";
 
-        OIIO_CHECK_THROW(ReadResolveCube(SAMPLE_ERROR), OCIO::Exception);
+        OCIO_CHECK_THROW(ReadResolveCube(SAMPLE_ERROR), OCIO::Exception);
     }
 }
 
-OIIO_ADD_TEST(FileFormatResolveCube, Bake1D)
+OCIO_ADD_TEST(FileFormatResolveCube, Bake1D)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     {
@@ -1182,17 +1184,17 @@ OIIO_ADD_TEST(FileFormatResolveCube, Bake1D)
     
     //
     std::vector<std::string> osvec;
-    OCIO::pystring::splitlines(output.str(), osvec);
+    pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
-    OCIO::pystring::splitlines(bout.str(), resvec);
-    OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    pystring::splitlines(bout.str(), resvec);
+    OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
     {
-        OIIO_CHECK_EQUAL(osvec[i], resvec[i]);
+        OCIO_CHECK_EQUAL(osvec[i], resvec[i]);
     }
 }
 
-OIIO_ADD_TEST(FileFormatResolveCube, Bake3D)
+OCIO_ADD_TEST(FileFormatResolveCube, Bake3D)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     {
@@ -1244,17 +1246,17 @@ OIIO_ADD_TEST(FileFormatResolveCube, Bake3D)
     
     //
     std::vector<std::string> osvec;
-    OCIO::pystring::splitlines(output.str(), osvec);
+    pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
-    OCIO::pystring::splitlines(bout.str(), resvec);
-    OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    pystring::splitlines(bout.str(), resvec);
+    OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
     {
-        OIIO_CHECK_EQUAL(osvec[i], resvec[i]);
+        OCIO_CHECK_EQUAL(osvec[i], resvec[i]);
     }
 }
 
-OIIO_ADD_TEST(FileFormatResolveCube, Bake1D3D)
+OCIO_ADD_TEST(FileFormatResolveCube, Bake1D3D)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     {
@@ -1325,13 +1327,13 @@ OIIO_ADD_TEST(FileFormatResolveCube, Bake1D3D)
     
     //
     std::vector<std::string> osvec;
-    OCIO::pystring::splitlines(output.str(), osvec);
+    pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
-    OCIO::pystring::splitlines(bout.str(), resvec);
-    OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    pystring::splitlines(bout.str(), resvec);
+    OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
     {
-        OIIO_CHECK_EQUAL(osvec[i], resvec[i]);
+        OCIO_CHECK_EQUAL(osvec[i], resvec[i]);
     }
 }
 

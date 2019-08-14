@@ -694,7 +694,9 @@ OCIO_NAMESPACE_ENTER
                 GenerateIdentityLut1D(&shaperOutData[0], shaperSize, 3);
                 GenerateIdentityLut1D(&shaperInData[0], shaperSize, 3);
                 
-                ConstProcessorRcPtr shaperToInput = config->getProcessor(baker.getShaperSpace(), baker.getInputSpace());
+                ConstCPUProcessorRcPtr shaperToInput 
+                    = config->getProcessor(baker.getShaperSpace(), 
+                                           baker.getInputSpace())->getDefaultCPUProcessor();
                 if(shaperToInput->hasChannelCrosstalk())
                 {
                     // TODO: Automatically turn shaper into non-crosstalked version?
@@ -707,20 +709,22 @@ OCIO_NAMESPACE_ENTER
                 PackedImageDesc shaperInImg(&shaperInData[0], shaperSize, 1, 3);
                 shaperToInput->apply(shaperInImg);
 
-                ConstProcessorRcPtr shaperToTarget;
+                ConstCPUProcessorRcPtr shaperToTarget;
                 if (!looks.empty())
                 {
                     LookTransformRcPtr transform = LookTransform::Create();
                     transform->setLooks(looks.c_str());
                     transform->setSrc(baker.getShaperSpace());
                     transform->setDst(baker.getTargetSpace());
-                    shaperToTarget = config->getProcessor(transform,
-                        TRANSFORM_DIR_FORWARD);
+                    shaperToTarget
+                        = config->getProcessor(transform, 
+                                               TRANSFORM_DIR_FORWARD)->getDefaultCPUProcessor();
                 }
                 else
                 {
-                  shaperToTarget = config->getProcessor(baker.getShaperSpace(),
-                      baker.getTargetSpace());
+                    shaperToTarget
+                        = config->getProcessor(baker.getShaperSpace(), 
+                                               baker.getTargetSpace())->getDefaultCPUProcessor();
                 }
                 shaperToTarget->apply(cubeImg);
             }
@@ -771,7 +775,8 @@ OCIO_NAMESPACE_ENTER
                 GenerateIdentityLut1D(&shaperInData[0], shaperSize, 3);
                 
                 // Apply the forward to the allocation to the output shaper y axis, and the cube
-                ConstProcessorRcPtr shaperToInput = config->getProcessor(allocationTransform, TRANSFORM_DIR_INVERSE);
+                ConstCPUProcessorRcPtr shaperToInput
+                    = config->getProcessor(allocationTransform, TRANSFORM_DIR_INVERSE)->getDefaultCPUProcessor();
                 PackedImageDesc shaperInImg(&shaperInData[0], shaperSize, 1, 3);
                 shaperToInput->apply(shaperInImg);
                 shaperToInput->apply(cubeImg);
@@ -784,14 +789,15 @@ OCIO_NAMESPACE_ENTER
                     transform->setLooks(looks.c_str());
                     transform->setSrc(baker.getInputSpace());
                     transform->setDst(baker.getTargetSpace());
-                    inputToTarget = config->getProcessor(transform,
+                    inputToTarget = config->getProcessor(transform, 
                         TRANSFORM_DIR_FORWARD);
                 }
                 else
                 {
                     inputToTarget = config->getProcessor(baker.getInputSpace(), baker.getTargetSpace());
                 }
-                inputToTarget->apply(cubeImg);
+                ConstCPUProcessorRcPtr cpu = inputToTarget->getDefaultCPUProcessor();
+                cpu->apply(cubeImg);
             }
             
             // Write out the file
@@ -920,29 +926,29 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
 void compareFloats(const std::string& floats1, const std::string& floats2)
 {
     // number comparison
     std::vector<std::string> strings1;
-    OCIO::pystring::split(OCIO::pystring::strip(floats1), strings1);
+    pystring::split(pystring::strip(floats1), strings1);
     std::vector<float> numbers1;
     OCIO::StringVecToFloatVec(numbers1, strings1);
 
     std::vector<std::string> strings2;
-    OCIO::pystring::split(OCIO::pystring::strip(floats2), strings2);
+    pystring::split(pystring::strip(floats2), strings2);
     std::vector<float> numbers2;
     OCIO::StringVecToFloatVec(numbers2, strings2);
 
-    OIIO_CHECK_EQUAL(numbers1.size(), numbers2.size());
+    OCIO_CHECK_EQUAL(numbers1.size(), numbers2.size());
     for(unsigned int j=0; j<numbers1.size(); ++j)
     {
-        OIIO_CHECK_CLOSE(numbers1[j], numbers2[j], 1e-5f);
+        OCIO_CHECK_CLOSE(numbers1[j], numbers2[j], 1e-5f);
     }
 }
 
-OIIO_ADD_TEST(FileFormatCSP, simple1D)
+OCIO_ADD_TEST(FileFormatCSP, simple1D)
 {
     std::ostringstream strebuf;
     strebuf << "CSPLUTV100"              << "\n";
@@ -984,10 +990,10 @@ OIIO_ADD_TEST(FileFormatCSP, simple1D)
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);
 
     // check metadata
-    OIIO_CHECK_EQUAL(csplut->metadata, std::string("foobar\n"));
+    OCIO_CHECK_EQUAL(csplut->metadata, std::string("foobar\n"));
 
     // check prelut data
-    OIIO_CHECK_ASSERT(csplut->hasprelut);
+    OCIO_CHECK_ASSERT(csplut->hasprelut);
 
     // check prelut data (note: the spline is resampled into a 1D LUT)
     for(int c=0; c<3; ++c)
@@ -996,7 +1002,7 @@ OIIO_ADD_TEST(FileFormatCSP, simple1D)
         {
             float input = float(i) / float(csplut->prelut->luts[c].size()-1);
             float output = csplut->prelut->luts[c][i];
-            OIIO_CHECK_CLOSE(input*2.0f, output, 1e-4);
+            OCIO_CHECK_CLOSE(input*2.0f, output, 1e-4);
         }
     }
 
@@ -1004,19 +1010,19 @@ OIIO_ADD_TEST(FileFormatCSP, simple1D)
     // red
     unsigned int i;
     for(i = 0; i < csplut->lut1D->luts[0].size(); ++i)
-        OIIO_CHECK_EQUAL(red[i], csplut->lut1D->luts[0][i]);
+        OCIO_CHECK_EQUAL(red[i], csplut->lut1D->luts[0][i]);
     // green
     for(i = 0; i < csplut->lut1D->luts[1].size(); ++i)
-        OIIO_CHECK_EQUAL(green[i], csplut->lut1D->luts[1][i]);
+        OCIO_CHECK_EQUAL(green[i], csplut->lut1D->luts[1][i]);
     // blue
     for(i = 0; i < csplut->lut1D->luts[2].size(); ++i)
-        OIIO_CHECK_EQUAL(blue[i], csplut->lut1D->luts[2][i]);
+        OCIO_CHECK_EQUAL(blue[i], csplut->lut1D->luts[2][i]);
     
     // check 3D data
-    OIIO_CHECK_EQUAL(csplut->lut3D->lut.size(), 0);
+    OCIO_CHECK_EQUAL(csplut->lut3D->lut.size(), 0);
 }
 
-OIIO_ADD_TEST(FileFormatCSP, simple3D)
+OCIO_ADD_TEST(FileFormatCSP, simple3D)
 {
     std::ostringstream strebuf;
     strebuf << "CSPLUTV100"                                  << "\n";
@@ -1061,24 +1067,24 @@ OIIO_ADD_TEST(FileFormatCSP, simple3D)
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);
     
     // check metadata
-    OIIO_CHECK_EQUAL(csplut->metadata, std::string("foobar\n"));
+    OCIO_CHECK_EQUAL(csplut->metadata, std::string("foobar\n"));
 
     // check prelut data
-    OIIO_CHECK_ASSERT(!csplut->hasprelut); // as in & out preLut values are the same
+    OCIO_CHECK_ASSERT(!csplut->hasprelut); // as in & out preLut values are the same
                                            // there is nothing to do.
     
     // check cube data
     for(unsigned int i = 0; i < csplut->lut3D->lut.size(); ++i) {
-        OIIO_CHECK_EQUAL(cube[i], csplut->lut3D->lut[i]);
+        OCIO_CHECK_EQUAL(cube[i], csplut->lut3D->lut[i]);
     }
 
     // check 1D data
-    OIIO_CHECK_EQUAL(csplut->lut1D->luts[0].size(), 0);
-    OIIO_CHECK_EQUAL(csplut->lut1D->luts[1].size(), 0);
-    OIIO_CHECK_EQUAL(csplut->lut1D->luts[2].size(), 0);
+    OCIO_CHECK_EQUAL(csplut->lut1D->luts[0].size(), 0);
+    OCIO_CHECK_EQUAL(csplut->lut1D->luts[1].size(), 0);
+    OCIO_CHECK_EQUAL(csplut->lut1D->luts[2].size(), 0);
 }
 
-OIIO_ADD_TEST(FileFormatCSP, complete3D)
+OCIO_ADD_TEST(FileFormatCSP, complete3D)
 {
     // check baker output
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
@@ -1153,10 +1159,10 @@ OIIO_ADD_TEST(FileFormatCSP, complete3D)
     
     //
     std::vector<std::string> osvec;
-    OCIO::pystring::splitlines(output.str(), osvec);
+    pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
-    OCIO::pystring::splitlines(bout.str(), resvec);
-    OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    pystring::splitlines(bout.str(), resvec);
+    OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
     {
         if(i>6)
@@ -1167,12 +1173,12 @@ OIIO_ADD_TEST(FileFormatCSP, complete3D)
         else
         {
             // text comparison
-            OIIO_CHECK_EQUAL(osvec[i], resvec[i]);
+            OCIO_CHECK_EQUAL(osvec[i], resvec[i]);
         }
     }
 }
 
-OIIO_ADD_TEST(FileFormatCSP, shaper_hdr)
+OCIO_ADD_TEST(FileFormatCSP, shaper_hdr)
 {
     // check baker output
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
@@ -1247,10 +1253,10 @@ OIIO_ADD_TEST(FileFormatCSP, shaper_hdr)
     
     //
     std::vector<std::string> osvec;
-    OCIO::pystring::splitlines(output.str(), osvec);
+    pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
-    OCIO::pystring::splitlines(bout.str(), resvec);
-    OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    pystring::splitlines(bout.str(), resvec);
+    OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
     {
         if(i>6)
@@ -1261,12 +1267,12 @@ OIIO_ADD_TEST(FileFormatCSP, shaper_hdr)
         else
         {
             // text comparison
-            OIIO_CHECK_EQUAL(osvec[i], resvec[i]);
+            OCIO_CHECK_EQUAL(osvec[i], resvec[i]);
         }
     }
 }
 
-OIIO_ADD_TEST(FileFormatCSP, no_shaper)
+OCIO_ADD_TEST(FileFormatCSP, no_shaper)
 {
     // check baker output
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
@@ -1330,17 +1336,17 @@ OIIO_ADD_TEST(FileFormatCSP, no_shaper)
 
     //
     std::vector<std::string> osvec;
-    OCIO::pystring::splitlines(output.str(), osvec);
+    pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
-    OCIO::pystring::splitlines(bout.str(), resvec);
-    OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    pystring::splitlines(bout.str(), resvec);
+    OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
     {
-        OIIO_CHECK_EQUAL(osvec[i], resvec[i]);
+        OCIO_CHECK_EQUAL(osvec[i], resvec[i]);
     }
 }
 
-OIIO_ADD_TEST(FileFormatCSP, lessStrictParse)
+OCIO_ADD_TEST(FileFormatCSP, lessStrictParse)
 {
     std::ostringstream strebuf;
     strebuf << " CspluTV100 malformed"                       << "\n";
@@ -1375,14 +1381,14 @@ OIIO_ADD_TEST(FileFormatCSP, lessStrictParse)
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile;
-    OIIO_CHECK_NO_THROW(cachedFile = tester.Read(simple3D, emptyString));
+    OCIO_CHECK_NO_THROW(cachedFile = tester.Read(simple3D, emptyString));
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);   
     
     // check metadata
-    OIIO_CHECK_EQUAL(csplut->metadata, std::string("foobar\n"));
+    OCIO_CHECK_EQUAL(csplut->metadata, std::string("foobar\n"));
 
     // check prelut data
-    OIIO_CHECK_ASSERT(!csplut->hasprelut); // as in & out from the preLut are the same,
+    OCIO_CHECK_ASSERT(!csplut->hasprelut); // as in & out from the preLut are the same,
                                            //  there is nothing to do.
 }
 

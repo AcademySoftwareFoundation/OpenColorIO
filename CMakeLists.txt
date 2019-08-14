@@ -1,4 +1,7 @@
-cmake_minimum_required(VERSION 3.10)
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+
+cmake_minimum_required(VERSION 3.11)
 
 project(OpenColorIO 
 	VERSION 2.0.0
@@ -9,7 +12,11 @@ set(OpenColorIO_VERSION_RELEASE_TYPE "dev")
 
 enable_testing()
 
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/share/cmake)
+set(CMAKE_MODULE_PATH
+    ${CMAKE_MODULE_PATH}
+    ${CMAKE_SOURCE_DIR}/share/cmake/macros
+    ${CMAKE_SOURCE_DIR}/share/cmake/modules
+)
 set(CMAKE_WARN_DEPRECATED ON)
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -33,6 +40,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Disable any compiler specific C++ extensions.
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+set(_BUILD_TYPE_DEBUG OFF)
+if(CMAKE_BUILD_TYPE MATCHES "[Dd][Ee][Bb][Uu][Gg]")
+    set(_BUILD_TYPE_DEBUG ON)
+endif()
+set(BUILD_TYPE_DEBUG ${_BUILD_TYPE_DEBUG} CACHE BOOL "Case-insensitive CMAKE_BUILD_TYPE Debug equality flag.")
+
 ###############################################################################
 # Components to build
 
@@ -47,7 +60,6 @@ option(OCIO_BUILD_PYTHON "Specify whether to build python bindings" ON)
 option(OCIO_BUILD_JAVA "Specify whether to build java bindings" OFF)
 
 option(OCIO_WARNING_AS_ERROR "Set build error level for CI testing" OFF)
-
 
 ###############################################################################
 # Optimisation / internal linking preferences
@@ -86,10 +98,10 @@ if(OCIO_WARNING_AS_ERROR)
 endif()
 
 ###############################################################################
-# External linking
+# External linking options
 
-option(USE_EXTERNAL_YAML "Use system installed yaml-cpp library." OFF)
-option(USE_EXTERNAL_LCMS "Use system install lcms2 library." OFF)
+set(OCIO_INSTALL_EXT_PACKAGES "MISSING" CACHE STRING "Set the condition for Installing external dependencies")
+set_property(CACHE OCIO_INSTALL_EXT_PACKAGES PROPERTY STRINGS "NONE" "MISSING" "ALL")
 
 ###############################################################################
 # Versioning
@@ -104,7 +116,6 @@ endif()
 if(NOT OCIO_NAMESPACE)
 	set(OCIO_NAMESPACE OpenColorIO CACHE STRING "Specify the master OCIO C++ namespace: Options include OpenColorIO OpenColorIO_<YOURFACILITY> etc.")
 endif()
-
 
 ###############################################################################
 # Error checking

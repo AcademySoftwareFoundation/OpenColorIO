@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
 
 set -ex
 
 apt-get update
 apt-get -y upgrade
 
+apt-get install -y sudo
 apt-get install -y git
 apt-get install -y wget
+apt-get install -y curl
 apt-get install -y unzip
 apt-get install -y python-pip
 apt-get install -y libgl1-mesa-dev

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
 
 import unittest, os, sys
 import PyOpenColorIO as OCIO
@@ -11,6 +13,6 @@ class GpuShaderDescTest(unittest.TestCase):
         desc.setFunctionName("foo123")
         self.assertEqual("foo123", desc.getFunctionName())
         desc.finalize()
-        self.assertEqual("glsl_1.3 foo123 ocio outColor $664fefaf8040c8fae4a3b56f2239872d", 
+        self.assertEqual("glsl_1.3 foo123 ocio outColor $159b6ac2bdbbe3b57824faea46bd829b", 
                          desc.getCacheID())
 

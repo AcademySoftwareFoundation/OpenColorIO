@@ -42,24 +42,26 @@ namespace
 class ScaleRenderer : public OpCPU
 {
 public:
-    ScaleRenderer(ConstMatrixOpDataRcPtr & mat);
+    ScaleRenderer() = delete;
+    ScaleRenderer(const ScaleRenderer &) = delete;
+    explicit ScaleRenderer(ConstMatrixOpDataRcPtr & mat);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 private:
-    ScaleRenderer() = delete;
     float m_scale[4];
 };
 
 class ScaleWithOffsetRenderer : public OpCPU
 {
 public:
-    ScaleWithOffsetRenderer(ConstMatrixOpDataRcPtr & mat);
+    ScaleWithOffsetRenderer() = delete;
+    ScaleWithOffsetRenderer(const ScaleRenderer &) = delete;
+    explicit ScaleWithOffsetRenderer(ConstMatrixOpDataRcPtr & mat);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 private:
-    ScaleWithOffsetRenderer() = delete;
     float m_scale[4];
     float m_offset[4];
 };
@@ -67,12 +69,13 @@ private:
 class MatrixWithOffsetRenderer : public OpCPU
 {
 public:
-    MatrixWithOffsetRenderer(ConstMatrixOpDataRcPtr & mat);
+    MatrixWithOffsetRenderer() = delete;
+    MatrixWithOffsetRenderer(const MatrixWithOffsetRenderer &) = delete;
+    explicit MatrixWithOffsetRenderer(ConstMatrixOpDataRcPtr & mat);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 private:
-    MatrixWithOffsetRenderer() = delete;
                                 
     float m_column1[4];
     float m_column2[4];
@@ -85,13 +88,13 @@ private:
 class MatrixRenderer : public OpCPU
 {
 public:
+    MatrixRenderer() = delete;
+    MatrixRenderer(const MatrixRenderer &) = delete;
     MatrixRenderer(ConstMatrixOpDataRcPtr & mat);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 private:
-    MatrixRenderer() = delete;
-
     float m_column1[4];
     float m_column2[4];
     float m_column3[4];
@@ -419,7 +422,7 @@ void MatrixRenderer::apply(const void * inImg, void * outImg, long numPixels) co
 
 }
 
-OpCPURcPtr GetMatrixRenderer(ConstMatrixOpDataRcPtr & mat)
+ConstOpCPURcPtr GetMatrixRenderer(ConstMatrixOpDataRcPtr & mat)
 {
     if (mat->isDiagonal())
     {
@@ -452,7 +455,7 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
 // TODO: syncolor also tests various bit-depths and pixel formats.
 // CPURenderer_cases.cpp_inc - CPURendererMatrix
@@ -464,28 +467,28 @@ namespace OCIO = OCIO_NAMESPACE;
 
 OCIO_NAMESPACE_USING
 
-OIIO_ADD_TEST(MatrixOpCPU, scale_renderer)
+OCIO_ADD_TEST(MatrixOpCPU, scale_renderer)
 {
     ConstMatrixOpDataRcPtr mat(MatrixOpData::CreateDiagonalMatrix(
         OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 2.0));
 
-    OpCPURcPtr op = GetMatrixRenderer(mat);
-    OIIO_CHECK_ASSERT((bool)op);
+    ConstOpCPURcPtr op = GetMatrixRenderer(mat);
+    OCIO_CHECK_ASSERT((bool)op);
 
-    ScaleRenderer* scaleOp = dynamic_cast<ScaleRenderer*>(op.get());
-    OIIO_CHECK_ASSERT(scaleOp);
+    const ScaleRenderer* scaleOp = dynamic_cast<const ScaleRenderer*>(op.get());
+    OCIO_CHECK_ASSERT(scaleOp);
 
     float rgba[4] = { 4.f, 3.f, 2.f, 1.f };
 
     op->apply(rgba, rgba, 1);
 
-    OIIO_CHECK_EQUAL(rgba[0], 8.f);
-    OIIO_CHECK_EQUAL(rgba[1], 6.f);
-    OIIO_CHECK_EQUAL(rgba[2], 4.f);
-    OIIO_CHECK_EQUAL(rgba[3], 2.f);
+    OCIO_CHECK_EQUAL(rgba[0], 8.f);
+    OCIO_CHECK_EQUAL(rgba[1], 6.f);
+    OCIO_CHECK_EQUAL(rgba[2], 4.f);
+    OCIO_CHECK_EQUAL(rgba[3], 2.f);
 }
 
-OIIO_ADD_TEST(MatrixOpCPU, scale_with_offset_renderer)
+OCIO_ADD_TEST(MatrixOpCPU, scale_with_offset_renderer)
 {
     MatrixOpDataRcPtr mat(MatrixOpData::CreateDiagonalMatrix(
         OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 2.0));
@@ -496,24 +499,24 @@ OIIO_ADD_TEST(MatrixOpCPU, scale_with_offset_renderer)
     mat->setOffsetValue(3, 4.f);
 
     OCIO::ConstMatrixOpDataRcPtr m = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(mat);
-    OpCPURcPtr op = GetMatrixRenderer(m);
-    OIIO_CHECK_ASSERT((bool)op);
+    ConstOpCPURcPtr op = GetMatrixRenderer(m);
+    OCIO_CHECK_ASSERT((bool)op);
 
-    ScaleWithOffsetRenderer* scaleOffOp = dynamic_cast<ScaleWithOffsetRenderer*>(op.get());
-    OIIO_CHECK_ASSERT(scaleOffOp);
+    const ScaleWithOffsetRenderer* scaleOffOp = dynamic_cast<const ScaleWithOffsetRenderer*>(op.get());
+    OCIO_CHECK_ASSERT(scaleOffOp);
 
     float rgba[4] = { 4.f, 3.f, 2.f, 1.f };
 
     op->apply(rgba, rgba, 1);
 
-    OIIO_CHECK_EQUAL(rgba[0], 9.f);
-    OIIO_CHECK_EQUAL(rgba[1], 8.f);
-    OIIO_CHECK_EQUAL(rgba[2], 7.f);
-    OIIO_CHECK_EQUAL(rgba[3], 6.f);
+    OCIO_CHECK_EQUAL(rgba[0], 9.f);
+    OCIO_CHECK_EQUAL(rgba[1], 8.f);
+    OCIO_CHECK_EQUAL(rgba[2], 7.f);
+    OCIO_CHECK_EQUAL(rgba[3], 6.f);
 }
 
 
-OIIO_ADD_TEST(MatrixOpCPU, matrix_with_offset_renderer)
+OCIO_ADD_TEST(MatrixOpCPU, matrix_with_offset_renderer)
 {
     MatrixOpDataRcPtr mat(MatrixOpData::CreateDiagonalMatrix(
         OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 2.0));
@@ -528,23 +531,23 @@ OIIO_ADD_TEST(MatrixOpCPU, matrix_with_offset_renderer)
     mat->setArrayValue(3, 0.5f);
 
     OCIO::ConstMatrixOpDataRcPtr m = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(mat);
-    OpCPURcPtr op = GetMatrixRenderer(m);
-    OIIO_CHECK_ASSERT((bool)op);
+    ConstOpCPURcPtr op = GetMatrixRenderer(m);
+    OCIO_CHECK_ASSERT((bool)op);
 
-    MatrixWithOffsetRenderer* matOffOp = dynamic_cast<MatrixWithOffsetRenderer*>(op.get());
-    OIIO_CHECK_ASSERT(matOffOp);
+    const MatrixWithOffsetRenderer* matOffOp = dynamic_cast<const MatrixWithOffsetRenderer*>(op.get());
+    OCIO_CHECK_ASSERT(matOffOp);
 
     float rgba[4] = { 4.f, 3.f, 2.f, 1.f };
 
     op->apply(rgba, rgba, 1);
 
-    OIIO_CHECK_EQUAL(rgba[0], 9.5f);
-    OIIO_CHECK_EQUAL(rgba[1], 8.f);
-    OIIO_CHECK_EQUAL(rgba[2], 7.f);
-    OIIO_CHECK_EQUAL(rgba[3], 6.f);
+    OCIO_CHECK_EQUAL(rgba[0], 9.5f);
+    OCIO_CHECK_EQUAL(rgba[1], 8.f);
+    OCIO_CHECK_EQUAL(rgba[2], 7.f);
+    OCIO_CHECK_EQUAL(rgba[3], 6.f);
 }
 
-OIIO_ADD_TEST(MatrixOpCPU, matrix_renderer)
+OCIO_ADD_TEST(MatrixOpCPU, matrix_renderer)
 {
     MatrixOpDataRcPtr mat(MatrixOpData::CreateDiagonalMatrix(
         OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 2.0));
@@ -553,20 +556,20 @@ OIIO_ADD_TEST(MatrixOpCPU, matrix_renderer)
     mat->setArrayValue(3, 0.5f);
 
     OCIO::ConstMatrixOpDataRcPtr m = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(mat);
-    OpCPURcPtr op = GetMatrixRenderer(m);
-    OIIO_CHECK_ASSERT((bool)op);
+    ConstOpCPURcPtr op = GetMatrixRenderer(m);
+    OCIO_CHECK_ASSERT((bool)op);
 
-    MatrixRenderer* matOp = dynamic_cast<MatrixRenderer*>(op.get());
-    OIIO_CHECK_ASSERT(matOp);
+    const MatrixRenderer* matOp = dynamic_cast<const MatrixRenderer*>(op.get());
+    OCIO_CHECK_ASSERT(matOp);
 
     float rgba[4] = { 4.f, 3.f, 2.f, 1.f };
 
     op->apply(rgba, rgba, 1);
 
-    OIIO_CHECK_EQUAL(rgba[0], 8.5f);
-    OIIO_CHECK_EQUAL(rgba[1], 6.f);
-    OIIO_CHECK_EQUAL(rgba[2], 4.f);
-    OIIO_CHECK_EQUAL(rgba[3], 2.f);
+    OCIO_CHECK_EQUAL(rgba[0], 8.5f);
+    OCIO_CHECK_EQUAL(rgba[1], 6.f);
+    OCIO_CHECK_EQUAL(rgba[2], 4.f);
+    OCIO_CHECK_EQUAL(rgba[3], 2.f);
 }
 
 

@@ -176,9 +176,9 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 
 #include "MathUtils.h"
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(GammaOpUtils, compute_params_forward)
+OCIO_ADD_TEST(GammaOpUtils, compute_params_forward)
 {
     const OCIO::GammaOpData::Params gParams = { 2.0f, 0.1f };
     OCIO::RendererParams rParams;
@@ -188,12 +188,12 @@ OIIO_ADD_TEST(GammaOpUtils, compute_params_forward)
     {
         ComputeParamsFwd(gParams, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, rParams);
 
-        OIIO_CHECK_EQUAL(rParams.gamma,    2.0f);
-        OIIO_CHECK_EQUAL(rParams.offset,   float(0.1 / (1. + 0.1)));
-        OIIO_CHECK_EQUAL(rParams.breakPnt, float(0.1 / (2. - 1. )));
-        OIIO_CHECK_EQUAL(rParams.scale,    float(1.  / (1. + 0.1)));
+        OCIO_CHECK_EQUAL(rParams.gamma,    2.0f);
+        OCIO_CHECK_EQUAL(rParams.offset,   float(0.1 / (1. + 0.1)));
+        OCIO_CHECK_EQUAL(rParams.breakPnt, float(0.1 / (2. - 1. )));
+        OCIO_CHECK_EQUAL(rParams.scale,    float(1.  / (1. + 0.1)));
 
-        OIIO_CHECK_ASSERT(OCIO::EqualWithAbsError(rParams.slope, 0.33057851f, 1e-7f));
+        OCIO_CHECK_ASSERT(OCIO::EqualWithAbsError(rParams.slope, 0.33057851f, 1e-7f));
     }
 
     // UINT10 to F16
@@ -201,17 +201,17 @@ OIIO_ADD_TEST(GammaOpUtils, compute_params_forward)
     {
         ComputeParamsFwd(gParams, OCIO::BIT_DEPTH_UINT10, OCIO::BIT_DEPTH_F16, rParams);
 
-        OIIO_CHECK_EQUAL(rParams.gamma,    2.0f);
-        OIIO_CHECK_EQUAL(rParams.offset,   float( 0.1 / (1. + 0.1)));
-        OIIO_CHECK_EQUAL(rParams.breakPnt, float((0.1 / (2. - 1. )) * 1023.));
-        OIIO_CHECK_EQUAL(rParams.scale,    float((1.  / (1. + 0.1)) / 1023.));
+        OCIO_CHECK_EQUAL(rParams.gamma,    2.0f);
+        OCIO_CHECK_EQUAL(rParams.offset,   float( 0.1 / (1. + 0.1)));
+        OCIO_CHECK_EQUAL(rParams.breakPnt, float((0.1 / (2. - 1. )) * 1023.));
+        OCIO_CHECK_EQUAL(rParams.scale,    float((1.  / (1. + 0.1)) / 1023.));
 
-        OIIO_CHECK_ASSERT(OCIO::EqualWithAbsError(rParams.slope, 0.00032314f, 1e-7f));
+        OCIO_CHECK_ASSERT(OCIO::EqualWithAbsError(rParams.slope, 0.00032314f, 1e-7f));
     }
 }
 
 
-OIIO_ADD_TEST(GammaOpUtils, compute_params_reverse)
+OCIO_ADD_TEST(GammaOpUtils, compute_params_reverse)
 {
     const OCIO::GammaOpData::Params gParams = { 2.0f, 0.1f };
     OCIO::RendererParams rParams;
@@ -221,12 +221,12 @@ OIIO_ADD_TEST(GammaOpUtils, compute_params_reverse)
     {
         ComputeParamsRev(gParams, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, rParams);
 
-        OIIO_CHECK_EQUAL(rParams.gamma,    0.5f );
-        OIIO_CHECK_EQUAL(rParams.offset,   0.1f);
-        OIIO_CHECK_EQUAL(rParams.scale,    1.0f + 0.1f);
+        OCIO_CHECK_EQUAL(rParams.gamma,    0.5f );
+        OCIO_CHECK_EQUAL(rParams.offset,   0.1f);
+        OCIO_CHECK_EQUAL(rParams.scale,    1.0f + 0.1f);
 
-        OIIO_CHECK_ASSERT(OCIO::EqualWithAbsError(rParams.breakPnt, 0.03305785f, 1e-7f));
-        OIIO_CHECK_ASSERT(OCIO::EqualWithAbsError(rParams.slope,    3.02499986f, 1e-7f));
+        OCIO_CHECK_ASSERT(OCIO::EqualWithAbsError(rParams.breakPnt, 0.03305785f, 1e-7f));
+        OCIO_CHECK_ASSERT(OCIO::EqualWithAbsError(rParams.slope,    3.02499986f, 1e-7f));
     }
 
     // UINT10 to F16
@@ -234,12 +234,12 @@ OIIO_ADD_TEST(GammaOpUtils, compute_params_reverse)
     {
         ComputeParamsRev(gParams, OCIO::BIT_DEPTH_UINT10, OCIO::BIT_DEPTH_F16, rParams);
 
-        OIIO_CHECK_EQUAL(rParams.gamma,    0.5f);
-        OIIO_CHECK_EQUAL(rParams.offset,   0.1f);
-        OIIO_CHECK_EQUAL(rParams.scale,    1.0f + 0.1f);
+        OCIO_CHECK_EQUAL(rParams.gamma,    0.5f);
+        OCIO_CHECK_EQUAL(rParams.offset,   0.1f);
+        OCIO_CHECK_EQUAL(rParams.scale,    1.0f + 0.1f);
 
-        OIIO_CHECK_ASSERT(OCIO::EqualWithAbsError(rParams.breakPnt, 33.81818390f, 1e-7f));
-        OIIO_CHECK_ASSERT(OCIO::EqualWithAbsError(rParams.slope,     0.00295698f, 1e-7f));
+        OCIO_CHECK_ASSERT(OCIO::EqualWithAbsError(rParams.breakPnt, 33.81818390f, 1e-7f));
+        OCIO_CHECK_ASSERT(OCIO::EqualWithAbsError(rParams.slope,     0.00295698f, 1e-7f));
     }
 
 }

@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
 
 set -ex
 
@@ -14,7 +16,7 @@ wget -q -O truelight-${TRUELIGHT_VERSION}_64.run \
      --post-data "access=public&download=truelight/${TRUELIGHT_MAJOR}_${TRUELIGHT_MINOR}/truelight-${TRUELIGHT_VERSION}_64.run&last_page=/support/customer-login/truelight_sp/truelight_${TRUELIGHT_MAJOR}${TRUELIGHT_MINOR}.php" \
      https://www.filmlight.ltd.uk/resources/download.php
 
-sh truelight-${TRUELIGHT_VERSION}_64.run
+sudo sh truelight-${TRUELIGHT_VERSION}_64.run
 
 cd ..
 rm -rf _truelight

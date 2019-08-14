@@ -40,7 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Platform.h"
 #include "pystring/pystring.h"
 
-#if !defined(WINDOWS)
+#if !defined(_WIN32)
 #include <sys/param.h>
 #else
 #include <direct.h>
@@ -50,7 +50,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #if defined(__APPLE__) && !defined(__IPHONE__)
 #include <crt_externs.h> // _NSGetEnviron()
 #include <unistd.h>
-#elif !defined(WINDOWS)
+#elif !defined(_WIN32)
 #include <unistd.h>
 extern char **environ;
 #endif
@@ -141,13 +141,11 @@ OCIO_NAMESPACE_ENTER
         g_fastFileHashCache.clear();
     }
     
-    namespace pystring
+    namespace
     {
-    namespace os
-    {
-        std::string getcwd()
+        std::string GetCwd()
         {
-#ifdef WINDOWS
+#ifdef _WIN32
             char path[MAXPATHLEN];
             _getcwd(path, MAXPATHLEN);
             return path;
@@ -165,17 +163,13 @@ OCIO_NAMESPACE_ENTER
             return std::string(&current_dir[0]);
 #endif
         }
-        
-    namespace path
+    }
+
+    std::string AbsPath(const std::string & path)
     {
-        std::string abspath(const std::string & path)
-        {
-            std::string p = path;
-            if(!isabs(p)) p = join(getcwd(), p);
-            return normpath(p);
-        }
-    } // namespace path
-    } // namespace os
+        std::string p = path;
+        if(!pystring::os::path::isabs(p)) p = pystring::os::path::join(GetCwd(), p);
+        return pystring::os::path::normpath(p);
     }
     
     namespace
@@ -258,9 +252,9 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(PathUtils, EnvExpand)
+OCIO_ADD_TEST(PathUtils, EnvExpand)
 {
     // build env by hand for unit test
     OCIO::EnvMap env_map; // = OCIO::GetEnvMap();
@@ -274,7 +268,7 @@ OIIO_ADD_TEST(PathUtils, EnvExpand)
     std::string foo = "/a/b/${TEST1}/${TEST1NG}/$TEST1/$TEST1NG/${FOO_${TEST1}}/";
     std::string foo_result = "/a/b/foo.bar/bar.foo/foo.bar/bar.foo/cheese/";
     std::string testresult = OCIO::EnvExpand(foo, env_map);
-    OIIO_CHECK_ASSERT( testresult == foo_result );
+    OCIO_CHECK_ASSERT( testresult == foo_result );
 }
 
 #endif // OCIO_BUILD_TESTS
