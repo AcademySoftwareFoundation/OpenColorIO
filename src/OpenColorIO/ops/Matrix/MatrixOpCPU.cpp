@@ -42,24 +42,26 @@ namespace
 class ScaleRenderer : public OpCPU
 {
 public:
-    ScaleRenderer(ConstMatrixOpDataRcPtr & mat);
+    ScaleRenderer() = delete;
+    ScaleRenderer(const ScaleRenderer &) = delete;
+    explicit ScaleRenderer(ConstMatrixOpDataRcPtr & mat);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 private:
-    ScaleRenderer() = delete;
     float m_scale[4];
 };
 
 class ScaleWithOffsetRenderer : public OpCPU
 {
 public:
-    ScaleWithOffsetRenderer(ConstMatrixOpDataRcPtr & mat);
+    ScaleWithOffsetRenderer() = delete;
+    ScaleWithOffsetRenderer(const ScaleRenderer &) = delete;
+    explicit ScaleWithOffsetRenderer(ConstMatrixOpDataRcPtr & mat);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 private:
-    ScaleWithOffsetRenderer() = delete;
     float m_scale[4];
     float m_offset[4];
 };
@@ -67,12 +69,13 @@ private:
 class MatrixWithOffsetRenderer : public OpCPU
 {
 public:
-    MatrixWithOffsetRenderer(ConstMatrixOpDataRcPtr & mat);
+    MatrixWithOffsetRenderer() = delete;
+    MatrixWithOffsetRenderer(const MatrixWithOffsetRenderer &) = delete;
+    explicit MatrixWithOffsetRenderer(ConstMatrixOpDataRcPtr & mat);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 private:
-    MatrixWithOffsetRenderer() = delete;
                                 
     float m_column1[4];
     float m_column2[4];
@@ -85,13 +88,13 @@ private:
 class MatrixRenderer : public OpCPU
 {
 public:
+    MatrixRenderer() = delete;
+    MatrixRenderer(const MatrixRenderer &) = delete;
     MatrixRenderer(ConstMatrixOpDataRcPtr & mat);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 private:
-    MatrixRenderer() = delete;
-
     float m_column1[4];
     float m_column2[4];
     float m_column3[4];

@@ -36,7 +36,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class OCIOGPUTest;
 
-typedef void (*OCIOTestFunc)(OCIOGPUTest & test);
+using OCIOTestFuncCallback = std::function<void(OCIOGPUTest & test)>;
+
 
 // Test harness for comparing GPU results to CPU results.
 //
@@ -63,7 +64,7 @@ class OCIOGPUTest
         };
 
     public:
-        OCIOGPUTest(const std::string& testgroup, const std::string& testname, OCIOTestFunc test);
+        OCIOGPUTest(const std::string& testgroup, const std::string& testname, OCIOTestFuncCallback test);
 
         ~OCIOGPUTest();
 
@@ -161,7 +162,7 @@ class OCIOGPUTest
 
     private:
         const std::string m_group, m_name;
-        OCIOTestFunc m_function;          
+        OCIOTestFuncCallback m_function;          
         OCIO_NAMESPACE::ConstProcessorRcPtr m_processor;
         OCIO_NAMESPACE::GpuShaderDescRcPtr m_shaderDesc;
         float m_errorThreshold;
@@ -185,16 +186,18 @@ typedef std::vector<OCIOGPUTestRcPtr> UnitTests;
 
 UnitTests& GetUnitTests();
 
-struct AddTest { AddTest(OCIOGPUTestRcPtr test); };
+struct AddTest { explicit AddTest(OCIOGPUTestRcPtr test); };
 
 
 // Use this macro to declare a test and provide a setup function for the test.
+// Note: Add a SonarCloud tag to suppress all warnings for the following method.
 #define OCIO_ADD_GPU_TEST(group, name)                                    \
     static void ocio_gputest_##group##_##name(OCIOGPUTest & test);        \
     AddTest ocio_##group##_##name(                                        \
         std::make_shared<OCIOGPUTest>(#group,                             \
                                       #name,                              \
                                       ocio_gputest_##group##_##name));    \
+    /* @SuppressWarnings('all') */                                        \
     static void ocio_gputest_##group##_##name(OCIOGPUTest & test)
 
 // Use this macro inside OCIO_ADD_GPU_TEST function to disable the test.

@@ -33,6 +33,7 @@
 
 #include <iostream>
 #include <cmath>
+#include <functional>
 #include <vector>
 #include <string>
 #include <iomanip>
@@ -41,21 +42,45 @@ extern int unit_test_failures;
 
 void unittest_fail();
 
-typedef void (*OCIOTestFunc)();
+using OCIOTestFuncCallback = std::function<void(void)>;
 
 struct OCIOTest
 {
-    OCIOTest(std::string testgroup, std::string testname, OCIOTestFunc test) :
+    OCIOTest(std::string testgroup, std::string testname, OCIOTestFuncCallback test) :
         group(testgroup), name(testname), function(test) { };
     std::string group, name;
-    OCIOTestFunc function;
+    OCIOTestFuncCallback function;
 };
 
-typedef std::vector<OCIOTest*> UnitTests;
+typedef std::shared_ptr<OCIOTest> OCIOTestRcPtr;
+typedef std::vector<OCIOTestRcPtr> UnitTests;
 
-UnitTests& GetUnitTests();
+UnitTests & GetUnitTests();
 
-struct AddTest { AddTest(OCIOTest* test); };
+struct AddTest
+{ 
+    explicit AddTest(OCIOTestRcPtr test)
+    {
+        GetUnitTests().push_back(test);
+    }
+};
+
+
+// Helper macro.
+
+#ifdef FIELD_STR
+    #error Unexpected defined macro 'FIELD_STR'
+#endif
+
+// Refer to https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html
+// for the macro 'stringizing' and MISRA C++ 2008, 16-3-1 for the potential issue
+// of having several # (and/or ##) in the same macro.
+#define FIELD_STR(field) #field
+
+
+#ifdef OCIO_CHECK_ASSERT
+    #error Unexpected defined macro 'OCIO_CHECK_ASSERT'
+#endif
 
 /// OCIO_CHECK_* macros checks if the conditions is met, and if not,
 /// prints an error message indicating the module and line where the
@@ -70,14 +95,14 @@ struct AddTest { AddTest(OCIOTest* test); };
 #define OCIO_CHECK_ASSERT(x)                                            \
     ((x) ? ((void)0)                                                    \
          : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"          \
-                       << "FAILED: " << #x << "\n"),                    \
+                       << "FAILED: " << FIELD_STR(x) << "\n"),          \
             (void)++unit_test_failures))
 
 #define OCIO_REQUIRE_ASSERT(x)                                          \
     if(!(x)) {                                                          \
         std::stringstream ss;                                           \
         ss <<  __FILE__ << ":" << __LINE__ << ":\n"                     \
-           << "FAILED: " << #x << "\n";                                 \
+           << "FAILED: " << FIELD_STR(x) << "\n";                       \
         throw OCIO_NAMESPACE::Exception(ss.str().c_str()); }
 
 #define OCIO_CHECK_ASSERT_MESSAGE(x, M)                                 \
@@ -97,8 +122,8 @@ struct AddTest { AddTest(OCIOTest* test); };
 // 
 #define OCIO_CHECK_EQUAL_FROM(x,y,line)                                 \
     (((x) == (y)) ? ((void)0)                                           \
-         : ((std::cout << __FILE__ << ":" << line << ":\n"          \
-             << "FAILED: " << #x << " == " << #y << "\n"                \
+         : ((std::cout << __FILE__ << ":" << line << ":\n"              \
+             << "FAILED: " << FIELD_STR(x) << " == " << FIELD_STR(y) << "\n" \
              << "\tvalues were '" << (x) << "' and '" << (y) << "'\n"), \
             (void)++unit_test_failures))
 
@@ -106,42 +131,42 @@ struct AddTest { AddTest(OCIOTest* test); };
     if((x)!=(y)) {                                                      \
         std::stringstream ss;                                           \
         ss <<  __FILE__ << ":" << __LINE__ << ":\n"                     \
-           << "FAILED: " << #x << " == " << #y << "\n"                  \
+           << "FAILED: " << FIELD_STR(x) << " == " << FIELD_STR(y) << "\n" \
            << "\tvalues were '" << (x) << "' and '" << (y) << "'\n";    \
         throw OCIO_NAMESPACE::Exception(ss.str().c_str()); }
 
 #define OCIO_CHECK_NE(x,y)                                              \
     (((x) != (y)) ? ((void)0)                                           \
          : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"          \
-             << "FAILED: " << #x << " != " << #y << "\n"                \
+             << "FAILED: " << FIELD_STR(x) << " != " << FIELD_STR(y) << "\n" \
              << "\tvalues were '" << (x) << "' and '" << (y) << "'\n"), \
             (void)++unit_test_failures))
 
 #define OCIO_CHECK_LT(x,y)                                              \
     (((x) < (y)) ? ((void)0)                                            \
          : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"          \
-             << "FAILED: " << #x << " < " << #y << "\n"                 \
+             << "FAILED: " << FIELD_STR(x) << " < " << FIELD_STR(y) << "\n" \
              << "\tvalues were '" << (x) << "' and '" << (y) << "'\n"), \
             (void)++unit_test_failures))
 
 #define OCIO_CHECK_GT(x,y)                                              \
     (((x) > (y)) ? ((void)0)                                            \
          : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"          \
-             << "FAILED: " << #x << " > " << #y << "\n"                 \
+             << "FAILED: " << FIELD_STR(x) << " > " << FIELD_STR(y) << "\n" \
              << "\tvalues were '" << (x) << "' and '" << (y) << "'\n"), \
             (void)++unit_test_failures))
 
 #define OCIO_CHECK_LE(x,y)                                              \
     (((x) <= (y)) ? ((void)0)                                           \
          : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"          \
-             << "FAILED: " << #x << " <= " << #y << "\n"                \
+             << "FAILED: " << FIELD_STR(x) << " <= " << FIELD_STR(y) << "\n" \
              << "\tvalues were '" << (x) << "' and '" << (y) << "'\n"), \
             (void)++unit_test_failures))
 
 #define OCIO_CHECK_GE(x,y)                                              \
     (((x) >= (y)) ? ((void)0)                                           \
          : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"          \
-             << "FAILED: " << #x << " >= " << #y << "\n"                \
+             << "FAILED: " << FIELD_STR(x) << " >= " << FIELD_STR(y) << "\n" \
              << "\tvalues were '" << (x) << "' and '" << (y) << "'\n"), \
             (void)++unit_test_failures))
 
@@ -158,16 +183,21 @@ struct AddTest { AddTest(OCIOTest* test); };
     ((std::abs((x) - (y)) < (tol)) ? ((void)0)                          \
          : ((std::cout << std::setprecision(10)                         \
              << __FILE__ << ":" << line << ":\n"                        \
-             << "FAILED: abs(" << #x << " - " << #y << ") < " << #tol   \
+             << "FAILED: abs(" << FIELD_STR(x)<< " - "                  \
+                               << FIELD_STR(y) << ") < "                \
+                               << FIELD_STR(tol)                        \
              << "\n"                                                    \
              << "\tvalues were '" << (x) << "', '" << (y) << "' and '"  \
              << (tol) << "'\n"), (void)++unit_test_failures))
 
 #define OCIO_CHECK_THROW(S, E)                                          \
-    try { S; throw "throwanything"; } catch( E const& ) { } catch (...) { \
+    try { S; throw "throwanything"; } catch( E const& ) { }             \
+    catch (...) {                                                       \
         std::cout << __FILE__ << ":" << __LINE__ << ":\n"               \
-        << "FAILED: " << #E << " is expected to be thrown\n";           \
-        ++unit_test_failures; }
+                  << "FAILED: " << FIELD_STR(E)                         \
+                  << " is expected to be thrown\n";                     \
+        ++unit_test_failures;                                           \
+    }
 
 /// Check that an exception E is thrown and that what() contains W
 /// When a function can throw different exceptions this can be used
@@ -178,13 +208,13 @@ struct AddTest { AddTest(OCIOTest* test); };
         if (std::string(W).empty() || what.empty()                      \
                 || what.find(W) == std::string::npos) {                 \
             std::cout << __FILE__ << ":" << __LINE__ << ":\n"           \
-            << "FAILED: " << #E << " was thrown with \"" << what <<     \
-            "\". Expecting to contain \"" << W << "\"\n";               \
+            << "FAILED: " << FIELD_STR(E) << " was thrown with \""      \
+            << what <<  "\". Expecting to contain \"" << W << "\"\n";   \
             ++unit_test_failures;                                       \
         }                                                               \
     } catch (...) {                                                     \
         std::cout << __FILE__ << ":" << __LINE__ << ":\n"               \
-        << "FAILED: " << #E << " is expected to be thrown\n";           \
+        << "FAILED: " << FIELD_STR(E) << " is expected to be thrown\n"; \
         ++unit_test_failures; }
 
 #define OCIO_CHECK_NO_THROW(S)                                          \
@@ -192,29 +222,33 @@ struct AddTest { AddTest(OCIOTest* test); };
         S;                                                              \
     } catch (std::exception & ex ) {                                    \
         std::cout << __FILE__ << ":" << __LINE__ << ":\n"               \
-            << "FAILED: exception thrown from " << #S << ": \""         \
-            << ex.what() << "\"\n";                                     \
+            << "FAILED: exception thrown from " << FIELD_STR(S)         \
+            << ": \"" << ex.what() << "\"\n";                           \
         ++unit_test_failures;                                           \
     } catch (...) {                                                     \
         std::cout << __FILE__ << ":" << __LINE__ << ":\n"               \
-        << "FAILED: exception thrown from " << #S <<"\n";               \
+        << "FAILED: exception thrown from " << FIELD_STR(S) <<"\n";     \
         ++unit_test_failures; }
 
+// Note: Add a SonarCloud tag to suppress all warnings for the following method.
 #define OCIO_ADD_TEST(group, name)                                      \
     static void ociotest_##group##_##name();                            \
-    AddTest oiioaddtest_##group##_##name(new OCIOTest(#group, #name, ociotest_##group##_##name)); \
+    AddTest oiioaddtest_##group##_##name(                               \
+        std::make_shared<OCIOTest>(FIELD_STR(group), FIELD_STR(name),   \
+                                   ociotest_##group##_##name));         \
+    /* @SuppressWarnings('all') */                                      \
     static void ociotest_##group##_##name()
 
 #define OCIO_TEST_SETUP() \
     int unit_test_failures = 0
 
 #define OCIO_TEST_APP(app)                                              \
-    std::vector<OCIOTest*>& GetUnitTests() {                            \
-        static std::vector<OCIOTest*> oiio_unit_tests;                  \
+    UnitTests & GetUnitTests() {                                        \
+        static UnitTests oiio_unit_tests;                               \
         return oiio_unit_tests; }                                       \
-    AddTest::AddTest(OCIOTest* test){GetUnitTests().push_back(test);};  \
     OCIO_TEST_SETUP();                                                  \
-    int main(int, char **) { std::cerr << "\n" << #app <<"\n\n";        \
+    int main(int, char **) {                                            \
+        std::cerr << "\n" << FIELD_STR(app) <<"\n\n";                   \
         const size_t numTests = GetUnitTests().size();                  \
         for(size_t i = 0; i < numTests; ++i) {                          \
             int _tmp = unit_test_failures;                              \
@@ -233,6 +267,7 @@ struct AddTest { AddTest(OCIOTest* test); };
                       << (_tmp == unit_test_failures ? "PASSED" : "FAILED") \
                       << std::endl; }                                   \
         std::cerr << "\n" << unit_test_failures << " tests failed\n\n"; \
+        GetUnitTests().clear();                                         \
         return unit_test_failures; }
 
 #endif /* INCLUDED_OCIO_UNITTEST_H */

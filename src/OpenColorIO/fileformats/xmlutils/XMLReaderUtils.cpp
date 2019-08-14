@@ -231,17 +231,25 @@ OCIO_ADD_TEST(XMLReaderHelper, get_numbers)
 
     OCIO_CHECK_NO_THROW(values = OCIO::GetNumbers<float>(str1, len1));
     OCIO_REQUIRE_EQUAL(values.size(), 8);
+    OCIO_CHECK_ASSERT(std::isinf(values[0]));
+    OCIO_CHECK_ASSERT(std::isinf(values[1]));
     OCIO_CHECK_EQUAL(values[2], 1.0f);
-    OCIO_CHECK_EQUAL(values[4], 66.0f); // 0x42
+    OCIO_CHECK_EQUAL(values[3], -2.0f);
+    OCIO_CHECK_EQUAL(values[4], 66.0f);         // i.e. 0x42
+    OCIO_CHECK_ASSERT(OCIO::IsNan(values[5]));
+    OCIO_CHECK_ASSERT(OCIO::IsNan(values[6]));
+    OCIO_CHECK_EQUAL(values[7], 5.0f);
 
     // It is valid to start with delimiters.
-    const char str2[] = ",  ,, , 0 2.0 3.0";
+    const char str2[] = ",  ,, , 0 2.0 \n \t 3.0 0.1e+1";
     const size_t len2 = strlen(str2);
 
     OCIO_CHECK_NO_THROW(values = OCIO::GetNumbers<float>(str2, len2));
-    OCIO_REQUIRE_EQUAL(values.size(), 3);
+    OCIO_REQUIRE_EQUAL(values.size(), 4);
     OCIO_CHECK_EQUAL(values[0], 0.0f);
+    OCIO_CHECK_EQUAL(values[1], 2.0f);
     OCIO_CHECK_EQUAL(values[2], 3.0f);
+    OCIO_CHECK_EQUAL(values[3], 1.0f);
 
     // Error: text is not a number.
     const char str3[] = "0   error 2.0 3.0";
@@ -351,7 +359,7 @@ OCIO_ADD_TEST(XMLReaderHelper, parse_number)
     }
     {
         std::string buffer("-1.0000 0");
-        size_t end = OCIO::FindDelim(buffer.c_str(), buffer.size(), 0);
+        const size_t end = OCIO::FindDelim(buffer.c_str(), buffer.size(), 0);
         OCIO_CHECK_NO_THROW(OCIO::ParseNumber(buffer.c_str(),
                                               0, end, data));
         OCIO_CHECK_EQUAL(data, -1.0f);

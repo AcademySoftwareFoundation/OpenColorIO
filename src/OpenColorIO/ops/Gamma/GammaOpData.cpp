@@ -107,8 +107,8 @@ GammaOpData::Style GammaOpData::ConvertStringToStyle(const char * str)
 
         throw Exception(os.str().c_str());
     }
+
     throw Exception("Missing gamma style.");
-    return BASIC_FWD;
 }
 
 const char * GammaOpData::ConvertStyleToString(Style style)
@@ -133,8 +133,6 @@ const char * GammaOpData::ConvertStyleToString(Style style)
     ss << style;
 
     throw Exception(ss.str().c_str());
-
-    return GAMMA_STYLE_BASIC_FWD;
 }
 
 GammaOpData::GammaOpData()
