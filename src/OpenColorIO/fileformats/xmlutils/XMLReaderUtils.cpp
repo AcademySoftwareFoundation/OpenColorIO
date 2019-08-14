@@ -311,9 +311,9 @@ OCIO_ADD_TEST(XMLReaderHelper, parse_number)
     }
     {
         std::string buffer(" 1 0");
-        OIIO_CHECK_NO_THROW(OCIO::ParseNumber(buffer.c_str(),
+        OCIO_CHECK_NO_THROW(OCIO::ParseNumber(buffer.c_str(),
                                               0, 2, data));
-        OIIO_CHECK_EQUAL(data, 1.0f);
+        OCIO_CHECK_EQUAL(data, 1.0f);
     }
     {
         std::string buffer("1.0 0");
@@ -526,7 +526,7 @@ OCIO_ADD_TEST(XMLReaderHelper, parse_number)
 
     {
         std::string buffer(" 123 ");
-        OIIO_CHECK_THROW_WHAT(OCIO::ParseNumber(buffer.c_str(),
+        OCIO_CHECK_THROW_WHAT(OCIO::ParseNumber(buffer.c_str(),
                                                 0, 3, data),
                               OCIO::Exception,
                               "followed by unexpected characters");
