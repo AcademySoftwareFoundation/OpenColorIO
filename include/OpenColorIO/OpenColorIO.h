@@ -337,8 +337,8 @@ OCIO_NAMESPACE_ENTER
         // ColorSpaces
         // ^^^^^^^^^^^
 
-        //!cpp:function:: Get all color spaces having a specific category
-        //                in the order they appear in the config file.
+        //!cpp:function:: Get all color spaces having a specific category 
+        // in the order they appear in the config file.
         //
         // .. note::
         //    If the category is null or empty, the method returns 
@@ -369,6 +369,7 @@ OCIO_NAMESPACE_ENTER
         int getIndexForColorSpace(const char * name) const;
         
         //!cpp:function:: Add a color space to the configuration.
+        //
         // .. note::
         //    If another color space is already registered with the same name,
         //    this will overwrite it. This stores a copy of the specified
@@ -379,6 +380,7 @@ OCIO_NAMESPACE_ENTER
         void addColorSpace(const ConstColorSpaceRcPtr & cs);
 
         //!cpp:function:: Remove all the color spaces from the configuration.
+        //
         // .. note::
         //    Removing color spaces from a Config does not affect 
         //    any ColorSpaceSets that have already been created.
@@ -819,6 +821,7 @@ OCIO_NAMESPACE_ENTER
         int getIndexForColorSpace(const char * name) const;
 
         //!cpp:function:: Add color space(s).
+        //
         // .. note::
         //    If another color space is already registered with the same name,
         //    this will overwrite it. This stores a copy of the specified
@@ -827,7 +830,9 @@ OCIO_NAMESPACE_ENTER
         void addColorSpaces(const ConstColorSpaceSetRcPtr & cs);
 
         //!cpp:function:: Remove color space(s) using color space names (i.e. no role name).
-        // .. note:: The removal of a missing color space does nothing.
+        //
+        // .. note::
+        //    The removal of a missing color space does nothing.
         void removeColorSpace(const char * name);
         void removeColorSpaces(const ConstColorSpaceSetRcPtr & cs);
 
@@ -946,8 +951,7 @@ OCIO_NAMESPACE_ENTER
         bool isNoOp() const;
         
         //!cpp:function:: True if the image transformation is non-separable.
-        //                For example, if a change in red may also cause a
-        //                change in green or blue.
+        // For example, if a change in red may also cause a change in green or blue.
         bool hasChannelCrosstalk() const;
 
         //!cpp:function::
@@ -987,7 +991,7 @@ OCIO_NAMESPACE_ENTER
         //    should be added.
 
 
-        // .. note:
+        // .. note::
         //    The typical use case to apply color processing to an image is:
         // 
         // .. code-block:: cpp
@@ -1102,7 +1106,7 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
     // GPUProcessor
-    // *********
+    // ************
     
     //!cpp:class::
     class GPUProcessor
@@ -1355,31 +1359,43 @@ OCIO_NAMESPACE_ENTER
     class OCIOEXPORT PackedImageDesc : public ImageDesc
     {
     public:
-        //!cpp:function::
+
+        //!rst::
         // All the constructors expect a pointer to packed image data (such as 
         // rgbrgbrgb or rgbargbargba) starting at the first color channel of 
         // the first pixel to process (which does not need to be the first pixel 
         // of the image). The number of channels must be greater than or equal to 3.
         // If a 4th channel is specified, it is assumed to be alpha
         // information.  Channels > 4 will be ignored.
+        //
+        // .. note:: 
+        // The methods assume the CPUProcessor bit-depth type for the data pointer.
 
-        // The method assumes the CPUProcessor bit-depth type for the data pointer.
-
+        //!cpp:function::
+        //
+        // .. note:: 
+        //    numChannels must be 3 (RGB) or 4 (RGBA).
         PackedImageDesc(void * data,
                         long width, long height,
-                        long numChannels); // must be 3 (RGB) or 4 (RGBA)
+                        long numChannels);
 
+        //!cpp:function::
+        //
+        // .. note:: 
+        //    numChannels smust be 3 (RGB) or 4 (RGBA).
         PackedImageDesc(void * data,
                         long width, long height,
-                        long numChannels,  // must be 3 (RGB) or 4 (RGBA)
+                        long numChannels,
                         ptrdiff_t chanStrideBytes,
                         ptrdiff_t xStrideBytes,
                         ptrdiff_t yStrideBytes);
 
+        //!cpp:function::
         PackedImageDesc(void * data,
                         long width, long height,
                         ChannelOrdering chanOrder);
 
+        //!cpp:function::
         PackedImageDesc(void * data,
                         long width, long height,
                         ChannelOrdering chanOrder,
@@ -1408,7 +1424,7 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: Get the step in bytes to find the same color channel in the next pixel.
         ptrdiff_t getXStrideBytes() const;
         //!cpp:function:: Get the step in bytes to find the same color channel 
-        //                of the pixel at the same position in the next line.
+        // of the pixel at the same position in the next line.
         ptrdiff_t getYStrideBytes() const;
 
     private:
@@ -1432,17 +1448,21 @@ OCIO_NAMESPACE_ENTER
     class OCIOEXPORT PlanarImageDesc : public ImageDesc
     {
     public:
-        //!cpp:function::
+
+        //!rst::
         // All the constructors expect pointers to the specified image planes 
         // (i.e. rrrr gggg bbbb) starting at the first color channel of the 
         // first pixel to process (which need not be the first pixel of the image).
         // Pass NULL for aData if no alpha exists (r/g/bData must not be NULL).
+        //
+        // .. note:: 
+        // The methods assume the CPUProcessor bit-depth type for the R/G/B/A data pointers.
 
-        // The method assumes the CPUProcessor bit-depth type for the R/G/B/A data pointers.
-
+        //!cpp:function::
         PlanarImageDesc(void * rData, void * gData, void * bData, void * aData,
                         long width, long height);
 
+        //!cpp:function::
         PlanarImageDesc(void * rData, void * gData, void * bData, void * aData,
                         long width, long height,
                         ptrdiff_t xStrideBytes,
@@ -1458,7 +1478,7 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: Get a pointer to the blue channel of the first pixel.
         void * getBData() const;
         //!cpp:function:: Get a pointer to the alpha channel of the first pixel
-        //                or null as alpha channel is optional.
+        // or null as alpha channel is optional.
         void * getAData() const;
         
         //!cpp:function:: Get the width to process (where x position starts at 0 and ends at width-1).
@@ -1469,7 +1489,7 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: Get the step in bytes to find the same color channel of the next pixel.
         ptrdiff_t getXStrideBytes() const;
         //!cpp:function:: Get the step in bytes to find the same color channel 
-        //                of the pixel at the same position in the next line.
+        // of the pixel at the same position in the next line.
         ptrdiff_t getYStrideBytes() const;
         
     private:
@@ -1670,7 +1690,6 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::  Set a prefix to the resource name
         //
         // .. note::
-        //
         //   Some applications require that textures, uniforms, 
         //   and helper methods be uniquely named because several 
         //   processor instances could coexist.
