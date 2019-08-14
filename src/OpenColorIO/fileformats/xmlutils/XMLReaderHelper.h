@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "ops/CDL/CDLOpData.h"
 
 OCIO_NAMESPACE_ENTER
