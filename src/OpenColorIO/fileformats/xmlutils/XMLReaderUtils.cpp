@@ -169,7 +169,7 @@ OIIO_ADD_TEST(XMLReaderHelper, string_to_float_failure)
 
     OIIO_CHECK_THROW_WHAT(OCIO::ParseNumber(str, 0, len, value),
                           OCIO::Exception,
-                          "are illegal");
+                          "can not be parsed");
 
 
     const char str1[] = "10 ";
@@ -177,7 +177,7 @@ OIIO_ADD_TEST(XMLReaderHelper, string_to_float_failure)
 
     OIIO_CHECK_THROW_WHAT(OCIO::ParseNumber(str1, 0, len1, value),
                           OCIO::Exception,
-                          "followed by characters");
+                          "followed by unexpected characters");
 
     // 2 characters are parsed and this is the length required.
     OIIO_CHECK_NO_THROW(OCIO::ParseNumber(str1, 0, 2, value));
@@ -189,7 +189,7 @@ OIIO_ADD_TEST(XMLReaderHelper, string_to_float_failure)
     // but we detect that strtod did read too many characters.
     OIIO_CHECK_THROW_WHAT(OCIO::ParseNumber(str2, 0, len2 - 2, value),
                           OCIO::Exception,
-                          "followed by characters");
+                          "followed by unexpected characters");
 
 
     const char str3[] = "123XX";
@@ -201,7 +201,7 @@ OIIO_ADD_TEST(XMLReaderHelper, string_to_float_failure)
 
 OIIO_ADD_TEST(XMLReaderHelper, get_numbers)
 {
-    const char str[] = "1.0 , 2.0     3.0,4";
+    const char str[] = "  1.0 , 2.0     3.0,4";
     const size_t len = strlen(str);
 
     std::vector<float> values;
@@ -244,12 +244,12 @@ OIIO_ADD_TEST(XMLReaderHelper, get_numbers)
     OIIO_CHECK_EQUAL(values[2], 3.0f);
 
     // Error: text is not a number.
-    const char str3[] = "0   error 2.0 3.0";
+    const char str3[] = "  0   error 2.0 3.0";
     const size_t len3 = strlen(str3);
 
     OIIO_CHECK_THROW_WHAT(values = OCIO::GetNumbers<float>(str3, len3),
                           OCIO::Exception,
-                          "are illegal");
+                          "can not be parsed");
 
     // Error: number is not separated from text.
     const char str4[] = "0   1.0error 2.0 3.0";
@@ -257,7 +257,7 @@ OIIO_ADD_TEST(XMLReaderHelper, get_numbers)
 
     OIIO_CHECK_THROW_WHAT(values = OCIO::GetNumbers<float>(str4, len4),
                           OCIO::Exception,
-                          "followed by characters");
+                          "followed by unexpected characters");
 }
 
 OIIO_ADD_TEST(XMLReaderHelper, trim)
@@ -299,6 +299,12 @@ OIIO_ADD_TEST(XMLReaderHelper, parse_number)
         std::string buffer("1 0");
         OIIO_CHECK_NO_THROW(OCIO::ParseNumber(buffer.c_str(),
                                               0, 1, data));
+        OIIO_CHECK_EQUAL(data, 1.0f);
+    }
+    {
+        std::string buffer(" 1 0");
+        OIIO_CHECK_NO_THROW(OCIO::ParseNumber(buffer.c_str(),
+                                              0, 2, data));
         OIIO_CHECK_EQUAL(data, 1.0f);
     }
     {
@@ -511,11 +517,18 @@ OIIO_ADD_TEST(XMLReaderHelper, parse_number)
     }
 
     {
+        std::string buffer(" 123 ");
+        OIIO_CHECK_THROW_WHAT(OCIO::ParseNumber(buffer.c_str(),
+                                                0, 3, data),
+                              OCIO::Exception,
+                              "followed by unexpected characters");
+    }
+    {
         std::string buffer("XY");
         OIIO_CHECK_THROW_WHAT(OCIO::ParseNumber(buffer.c_str(),
                                                 0, 2, data),
                               OCIO::Exception,
-                              "are illegal");
+                              "can not be parsed");
     }
 }
 

@@ -86,6 +86,38 @@ public:
 
     void throwMessage(const std::string & error) const;
 
+protected:
+    template<typename T>
+    void parseScalarAttribute(const char * name, const char * attrib, T & value)
+    {
+        const size_t len = strlen(attrib);
+        std::vector<T> data;
+
+        try
+        {
+            data = GetNumbers<T>(attrib, len);
+        }
+        catch (Exception & ce)
+        {
+            std::ostringstream oss;
+            oss << "For parameter: '";
+            oss << name << "'. ";
+            oss << ce.what();
+            throwMessage(oss.str());
+        }
+
+        if (data.size() != 1)
+        {
+            std::ostringstream oss;
+            oss << "For parameter: '";
+            oss << name << "'. ";
+            oss << "Expecting 1 value, found " << data.size() << " values.";
+            throwMessage(oss.str());
+        }
+
+        value = data[0];
+    }
+
 private:
     std::string  m_name;
     unsigned int m_xmlLineNumber;
