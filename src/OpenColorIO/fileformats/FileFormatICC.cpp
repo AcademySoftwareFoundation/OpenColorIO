@@ -105,9 +105,12 @@ OCIO_NAMESPACE_ENTER
         info.capabilities = FORMAT_CAPABILITY_READ;
         formatInfoVec.push_back(info);
 
-        // .icm is also fine
+        // .icm and .pf are also fine
         info.name = "Image Color Matching profile";
         info.extension = "icm";
+        formatInfoVec.push_back(info);
+        info.name = "ICC profile";
+        info.extension = "pf";
         formatInfoVec.push_back(info);
     }
 
