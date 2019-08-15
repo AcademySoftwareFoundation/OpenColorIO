@@ -61,3 +61,5 @@ The following reference implementations are provided:
 ---
 Images from "Cloudy With A Chance of Meatballs" Copyright 2011 Sony Pictures Inc. All Rights Reserved.
 
+See [LICENSE-THIRD-PARTY.md](LICENSE-THIRD-PARTY.md) for license information
+about portions of OpenColorIO that have been imported from other projects.
