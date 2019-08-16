@@ -151,7 +151,6 @@ set(SOURCES
 	ops/Range/RangeOpGPU.cpp
 	ops/Range/RangeOps.cpp
 	ops/reference/ReferenceOpData.cpp
-	ops/Truelight/TruelightOp.cpp
 	OpTools.cpp
 	ParseUtils.cpp
 	PathUtils.cpp
@@ -175,7 +174,6 @@ set(SOURCES
 	transforms/LookTransform.cpp
 	transforms/MatrixTransform.cpp
 	transforms/RangeTransform.cpp
-	transforms/TruelightTransform.cpp
 	UnitTest.cpp
 	UnitTestUtils.cpp
 )

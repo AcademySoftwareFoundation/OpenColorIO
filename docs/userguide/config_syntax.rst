@@ -956,28 +956,3 @@ Keys:
     If a minInValue is present, then minOutValue must also be present and the result 
     is clamped at the low end. Similarly, if maxInValue is present, then maxOutValue 
     must also be present and the result is clamped at the high end.
-
-
-``TruelightTransform``
-^^^^^^^^^^^^^^^^^^^^^^
-
-Applies a transform from a Truelight profile.
-
-Keys:
-
-* ``config_root``
-* ``profile``
-* ``camera``
-* ``input_display``
-* ``recorder``
-* ``print``
-* ``lamp``
-* ``output_camera``
-* ``display``
-* ``cube_input``
-* ``direction``
-
-.. note::
-
-    This transform requires OCIO to be compiled with the Truelight
-    SDK present.

@@ -81,8 +81,6 @@ const char* GetOCIOTClass(ConstTransformRcPtr tran) {
         return "org/OpenColorIO/LookTransform";
     else if(ConstMatrixTransformRcPtr mt = DynamicPtrCast<const MatrixTransform>(tran))
         return "org/OpenColorIO/MatrixTransform";
-    else if(ConstTruelightTransformRcPtr tt = DynamicPtrCast<const TruelightTransform>(tran))
-        return "org/OpenColorIO/TruelightTransform";
     else return "org/OpenColorIO/Transform";
 }
 
