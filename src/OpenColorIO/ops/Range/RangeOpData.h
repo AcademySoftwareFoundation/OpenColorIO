@@ -73,6 +73,8 @@ class RangeOpData : public OpData
 public:
     RangeOpData();
 
+    RangeOpData( const RangeOpData &) = default;
+
     RangeOpData(BitDepth inBitDepth,  // Requested bit depth for the input
                 BitDepth outBitDepth, // Requested bit depth for the output
                 double minInValue,    // Lower bound of the domain

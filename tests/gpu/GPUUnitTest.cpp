@@ -162,7 +162,7 @@ namespace Shader
 
 OCIOGPUTest::OCIOGPUTest(const std::string& testgroup, 
                          const std::string& testname, 
-                         OCIOTestFunc test) 
+                         OCIOTestFuncCallback test) 
     :   m_group(testgroup)
     ,   m_name(testname)
     ,   m_function(test)
