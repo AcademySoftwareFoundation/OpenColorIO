@@ -1,32 +1,44 @@
-# SPDX-License-Identifier: BSD-3-Clause
-# Copyright Contributors to the OpenColorIO Project.
-
-find_package(PythonInterp 2.7 REQUIRED)
 find_package(PythonLibs 2.7 REQUIRED)
+find_package(PythonInterp 2.7 REQUIRED)
+
 
 set(SOURCES
-	PyOpenColorIO.cpp
-	PyStatic.cpp
+	PyAllocationTransform.cpp
+	PyBaker.cpp
+	PyCDLTransform.cpp
+	PyColorSpace.cpp
+	PyColorSpaceTransform.cpp
+	PyConfig.cpp
+	PyConstants.cpp
+	PyContext.cpp
+	PyDisplayTransform.cpp
+	PyExponentTransform.cpp
+	PyFileTransform.cpp
+	PyGpuShaderDesc.cpp
+	PyGroupTransform.cpp
+	PyLogTransform.cpp
+	PyLook.cpp
+	PyLookTransform.cpp
+	PyMain.cpp
+	PyMatrixTransform.cpp
+	PyProcessor.cpp
+	PyProcessorMetadata.cpp
+	PyRangeTransform.cpp
 	PyTransform.cpp
+	PyUtil.cpp
 )
 
 ###############################################################################
 # PyDoc generation
-# file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include")
-# set(PYDOC_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/include/PyDoc.h")
-# add_custom_command(OUTPUT ${PYDOC_OUTPUT}
-# 	COMMAND ${PYTHON_EXECUTABLE} createPyDocH.py ${PYDOC_OUTPUT}
-# 	WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-# )
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include")
+set(PYDOC_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/include/PyDoc.h")
+add_custom_command(OUTPUT ${PYDOC_OUTPUT}
+	COMMAND ${PYTHON_EXECUTABLE} createPyDocH.py ${PYDOC_OUTPUT}
+	WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+)
 
 ###############################################################################
 # Python libs
-
-include_directories(
-	${PYTHON_INCLUDE_PATH}
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/bindings/python/pybind11/include"
-	#${PYBIND11_INCLUDE_DIR}
-)
 
 add_library(PyOpenColorIO MODULE ${SOURCES} ${PYDOC_OUTPUT})
 set_target_properties(PyOpenColorIO PROPERTIES
@@ -75,16 +87,15 @@ target_compile_definitions(PyOpenColorIO
 	PRIVATE
 		PYOCIO_NAME=PyOpenColorIO
 )
-
 if(WIN32)
-    set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/site-packages")
+       set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/site-packages")
 else()
-    set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages")
+       set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages")
 endif()
 
 install(TARGETS PyOpenColorIO
-    LIBRARY DESTINATION ${PYTHON_VARIANT_PATH}
+       LIBRARY DESTINATION ${PYTHON_VARIANT_PATH}
 )
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/PyOpenColorIO/PyOpenColorIO.h
-    DESTINATION include/OpenColorIO/PyOpenColorIO
+       DESTINATION include/OpenColorIO/PyOpenColorIO
 )
