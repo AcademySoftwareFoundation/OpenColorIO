@@ -77,9 +77,10 @@ public:
     //!cpp:function::
     virtual FormatMetadata & operator=(const FormatMetadata & rhs) = 0;
 
+    virtual ~FormatMetadata();
+
 protected:
     FormatMetadata();
-    virtual ~FormatMetadata();
 
 private:
     FormatMetadata(const FormatMetadata & rhs) = delete;
@@ -103,9 +104,10 @@ public:
     //!cpp:function:: Will throw if data is not valid.
     virtual void validate() const;
 
+    virtual ~Transform() = default;
+
 protected:
     Transform() = default;
-    virtual ~Transform() = default;
 
 private:
     Transform(const Transform &) = delete;
@@ -149,10 +151,11 @@ public:
     //!cpp:function::
     void setVars(int numvars, const float * vars);
 
+    virtual ~AllocationTransform();
+
 private:
     AllocationTransform();
     AllocationTransform(const AllocationTransform &);
-    virtual ~AllocationTransform();
 
     AllocationTransform & operator= (const AllocationTransform &);
 
@@ -265,9 +268,10 @@ public:
     //!cpp:function:: Deprecated. Use `getFormatMetadata`.
     virtual void setDescription(const char * desc) = 0;
 
+    virtual ~CDLTransform() = default;
+
 protected:
     CDLTransform() = default;
-    virtual ~CDLTransform() = default;
 
 private:
     CDLTransform(const CDLTransform &) = delete;
@@ -308,10 +312,11 @@ public:
     //!cpp:function::
     void setDst(const char * dst);
 
+    virtual ~ColorSpaceTransform();
+
 private:
     ColorSpaceTransform();
     ColorSpaceTransform(const ColorSpaceTransform &);
-    virtual ~ColorSpaceTransform();
 
     ColorSpaceTransform & operator=(const ColorSpaceTransform &);
 
@@ -409,10 +414,11 @@ public:
     // "looks" to an empty string.
     void setLooksOverrideEnabled(bool enabled);
 
+    virtual ~DisplayTransform();
+
 private:
     DisplayTransform();
     DisplayTransform(const DisplayTransform &);
-    virtual ~DisplayTransform();
 
     DisplayTransform & operator=(const DisplayTransform &);
 
@@ -435,7 +441,6 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const DisplayTransfo
 class OCIOEXPORT DynamicProperty
 {
 public:
-
     //!cpp:function::
     virtual DynamicPropertyType getType() const = 0;
 
@@ -450,11 +455,12 @@ public:
     //!cpp:function::
     virtual bool isDynamic() const = 0;
 
+    virtual ~DynamicProperty();
+
 protected:
 
     DynamicProperty();
     DynamicProperty(const DynamicProperty &);
-    virtual ~DynamicProperty();
 
     DynamicProperty & operator=(const DynamicProperty &);
 };
@@ -495,10 +501,11 @@ public:
     virtual NegativeStyle getNegativeStyle() const = 0;
     //!cpp:function::
     virtual void setNegativeStyle(NegativeStyle style) = 0;
+    
+    virtual ~ExponentTransform() = default;
 
 protected:
     ExponentTransform() = default;
-    virtual ~ExponentTransform() = default;
 
 private:
     ExponentTransform(const ExponentTransform &) = delete;
@@ -559,10 +566,11 @@ public:
     virtual NegativeStyle getNegativeStyle() const = 0;
     //!cpp:function::
     virtual void setNegativeStyle(NegativeStyle style) = 0;
+    
+    virtual ~ExponentWithLinearTransform() = default;
 
 protected:
     ExponentWithLinearTransform() = default;
-    virtual ~ExponentWithLinearTransform() = default;
 
 private:
     ExponentWithLinearTransform(const ExponentWithLinearTransform &) = delete;
@@ -654,9 +662,10 @@ public:
     // The default value is 0.435.
     virtual void setLogMidGray(double logMidGray) = 0;
 
+    virtual ~ExposureContrastTransform() = default;
+
 protected:
     ExposureContrastTransform() = default;
-    virtual ~ExposureContrastTransform() = default;
 
 private:
     ExposureContrastTransform(const ExposureContrastTransform &) = delete;
@@ -718,10 +727,11 @@ public:
     // an invalid index is specified.
     static const char * getFormatExtensionByIndex(int index);
 
+    virtual ~FileTransform();
+
 private:
     FileTransform();
     FileTransform(const FileTransform &);
-    virtual ~FileTransform();
 
     FileTransform & operator=(const FileTransform &);
 
@@ -767,9 +777,10 @@ public:
     //!cpp:function:: Set the parameters (for functions that require them).
     virtual void setParams(const double * params, size_t num) = 0;
 
+    virtual ~FixedFunctionTransform() = default;
+
 protected:
     FixedFunctionTransform() = default;
-    virtual ~FixedFunctionTransform() = default;
 
 private:
     FixedFunctionTransform(const FixedFunctionTransform &) = delete;
@@ -818,10 +829,11 @@ public:
     //!cpp:function:: Add a transform at the beginning of the group.
     void prependTransform(TransformRcPtr transform);
 
+    virtual ~GroupTransform();
+
 private:
     GroupTransform();
     GroupTransform(const GroupTransform &);
-    virtual ~GroupTransform();
 
     GroupTransform & operator=(const GroupTransform &);
 
@@ -886,9 +898,10 @@ public:
     //!cpp:function::
     virtual void setLinSideOffsetValue(const double(&values)[3]) noexcept = 0;
 
+    virtual ~LogAffineTransform() = default;
+
 protected:
     LogAffineTransform() = default;
-    virtual ~LogAffineTransform() = default;
 
 private:
     LogAffineTransform(const LogAffineTransform &) = delete;
@@ -1000,9 +1013,10 @@ public:
     //!cpp:function::
     virtual void setBase(double val) noexcept = 0;
 
+    virtual ~LogTransform() = default;
+
 protected:
     LogTransform() = default;
-    virtual ~LogTransform() = default;
 
 private:
     LogTransform(const LogTransform &) = delete;
@@ -1051,10 +1065,11 @@ public:
     // look specification. (And forward is assumed in the absence of either)
     void setLooks(const char * looks);
 
+    virtual ~LookTransform();
+
 private:
     LookTransform();
     LookTransform(const LookTransform &);
-    virtual ~LookTransform();
 
     LookTransform & operator=(const LookTransform &);
 
@@ -1158,9 +1173,10 @@ public:
     //!cpp:function::
     virtual void setInterpolation(Interpolation algo) = 0;
 
+    virtual ~Lut1DTransform() = default;
+
 protected:
     Lut1DTransform() = default;
-    virtual ~Lut1DTransform() = default;
 
 private:
     Lut1DTransform(const Lut1DTransform &) = delete;
@@ -1231,9 +1247,10 @@ public:
     //!cpp:function::
     virtual void setInterpolation(Interpolation algo) = 0;
 
+    virtual ~Lut3DTransform() = default;
+
 protected:
     Lut3DTransform() = default;
-    virtual ~Lut3DTransform() = default;
 
 private:
     Lut3DTransform(const Lut3DTransform &) = delete;
@@ -1341,9 +1358,10 @@ public:
                      int * channelHot4,
                      const double * lumaCoef3);
 
+    virtual ~MatrixTransform() = default;
+
 protected:
     MatrixTransform() = default;
-    virtual ~MatrixTransform() = default;
 
 private:
     MatrixTransform(const MatrixTransform &) = delete;
@@ -1455,9 +1473,10 @@ public:
     //!cpp:function:: Unset the maximum value for the output.
     virtual void unsetMaxOutValue() noexcept = 0;
 
+    virtual ~RangeTransform() = default;
+
 protected:
     RangeTransform() = default;
-    virtual ~RangeTransform() = default;
 
 private:
     RangeTransform(const RangeTransform &) = delete;

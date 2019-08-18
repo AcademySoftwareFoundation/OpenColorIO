@@ -755,9 +755,10 @@ public:
                                             const char * dstName,
                                             const char * dstInterchangeName);
 
+    ~Config();
+
 private:
     Config();
-    ~Config();
 
     Config(const Config &);
     Config& operator= (const Config &);
@@ -913,9 +914,10 @@ public:
     //!cpp:function:: Move a rule closer to the end of the list by one position.
     void decreaseRulePriority(size_t ruleIndex);
 
+    virtual ~FileRules();
+
 private:
     FileRules();
-    virtual ~FileRules();
 
     FileRules(const FileRules &) = delete;
     FileRules & operator= (const FileRules &) = delete;
@@ -1095,10 +1097,11 @@ public:
     void setTransform(const ConstTransformRcPtr & transform,
                         ColorSpaceDirection dir);
 
+    ~ColorSpace();
+
 private:
     ColorSpace(ReferenceSpaceType referenceSpace);
     ColorSpace();
-    ~ColorSpace();
 
     ColorSpace(const ColorSpace &);
     ColorSpace& operator= (const ColorSpace &);
@@ -1184,9 +1187,10 @@ public:
     //!cpp:function:: Clear all color spaces.
     void clearColorSpaces();
 
+    ~ColorSpaceSet();
+
 private:
     ColorSpaceSet();
-    ~ColorSpaceSet();
 
     ColorSpaceSet(const ColorSpaceSet &);
     ColorSpaceSet & operator= (const ColorSpaceSet &);
@@ -1261,9 +1265,11 @@ public:
     const char * getDescription() const;
     //!cpp:function::
     void setDescription(const char * description);
+
+    ~Look();
+
 private:
     Look();
-    ~Look();
 
     Look(const Look &);
     Look& operator= (const Look &);
@@ -1345,10 +1351,11 @@ public:
     // to null will clear it.
     void setTransform(const ConstTransformRcPtr & transform, ViewTransformDirection dir);
 
+    ~ViewTransform();
+    
 private:
     ViewTransform();
     ViewTransform(ReferenceSpaceType referenceSpace);
-    ~ViewTransform();
 
     ViewTransform(const ViewTransform &) = delete;
     ViewTransform & operator= (const ViewTransform &) = delete;
@@ -1486,9 +1493,10 @@ public:
                                                     BitDepth outBitDepth,
                                                     OptimizationFlags oFlags) const;
 
+    ~Processor();
+
 private:
     Processor();
-    ~Processor();
 
     Processor(const Processor &);
     Processor& operator= (const Processor &);
@@ -1560,9 +1568,10 @@ public:
     //!cpp:function::
     void applyRGBA(float * pixel) const;
 
+    ~CPUProcessor();
+
 private:
     CPUProcessor();
-    ~CPUProcessor();
 
     CPUProcessor(const CPUProcessor &);
     CPUProcessor& operator= (const CPUProcessor &);
@@ -1612,10 +1621,11 @@ public:
 
     //!cpp:function:: Extract the shader information using a custom :cpp:class:`GpuShaderCreator` class.
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const;
+    
+    ~GPUProcessor();
 
 private:
     GPUProcessor();
-    ~GPUProcessor();
 
     GPUProcessor(const GPUProcessor &);
     GPUProcessor& operator= (const GPUProcessor &);
@@ -1656,9 +1666,11 @@ public:
     void addFile(const char * fname);
     //!cpp:function::
     void addLook(const char * look);
+
+    ~ProcessorMetadata();
+
 private:
     ProcessorMetadata();
-    ~ProcessorMetadata();
     ProcessorMetadata(const ProcessorMetadata &);
     ProcessorMetadata& operator= (const ProcessorMetadata &);
 
@@ -1781,9 +1793,10 @@ public:
     // invalid index is specified.
     static const char * getFormatExtensionByIndex(int index);
 
+    ~Baker();
+
 private:
     Baker();
-    ~Baker();
 
     Baker(const Baker &);
     Baker& operator= (const Baker &);
@@ -2204,12 +2217,13 @@ public:
 
     //!cpp:function::
     virtual void finalize();
+    
+    //!cpp:function::
+    virtual ~GpuShaderCreator();
 
 protected:
     //!cpp:function::
     GpuShaderCreator();
-    //!cpp:function::
-    virtual ~GpuShaderCreator();
     //!cpp:function::
     GpuShaderCreator(const GpuShaderCreator &) = delete;
     //!cpp:function::
@@ -2422,11 +2436,12 @@ public:
     //!cpp:function:: Get the complete OCIO shader program.
     const char * getShaderText() const noexcept;
 
+    //!cpp:function::
+    virtual ~GpuShaderDesc();
+
 protected:
     //!cpp:function::
     GpuShaderDesc();
-    //!cpp:function::
-    virtual ~GpuShaderDesc();
     //!cpp:function::
     GpuShaderDesc(const GpuShaderDesc &) = delete;
     //!cpp:function::
@@ -2507,9 +2522,10 @@ public:
     // If the filename cannot be found, an exception will be thrown.
     const char * resolveFileLocation(const char * filename) const;
 
+    ~Context();
+    
 private:
     Context();
-    ~Context();
 
     Context(const Context &);
     Context& operator= (const Context &);
