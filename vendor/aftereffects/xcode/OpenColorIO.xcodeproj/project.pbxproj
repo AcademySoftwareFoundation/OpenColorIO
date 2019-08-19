@@ -95,9 +95,6 @@
 		2ACF571814776A1E00991ED5 /* ScanlineHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 2ACF56C414776A1E00991ED5 /* ScanlineHelper.h */; };
 		2ACF571914776A1E00991ED5 /* SSE.h in Headers */ = {isa = PBXBuildFile; fileRef = 2ACF56C514776A1E00991ED5 /* SSE.h */; };
 		2ACF571A14776A1E00991ED5 /* Transform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF56C614776A1E00991ED5 /* Transform.cpp */; };
-		2ACF571B14776A1E00991ED5 /* TruelightOp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF56C714776A1E00991ED5 /* TruelightOp.cpp */; };
-		2ACF571C14776A1E00991ED5 /* TruelightOp.h in Headers */ = {isa = PBXBuildFile; fileRef = 2ACF56C814776A1E00991ED5 /* TruelightOp.h */; };
-		2ACF571D14776A1E00991ED5 /* TruelightTransform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF56C914776A1E00991ED5 /* TruelightTransform.cpp */; };
 		2ACF571E14776A1E00991ED5 /* UnitTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF56CA14776A1E00991ED5 /* UnitTest.cpp */; };
 		2ACF571F14776A1E00991ED5 /* UnitTest.h in Headers */ = {isa = PBXBuildFile; fileRef = 2ACF56CB14776A1E00991ED5 /* UnitTest.h */; };
 		2ACF573F14776B7000991ED5 /* OpenColorABI.h in Headers */ = {isa = PBXBuildFile; fileRef = 2ACF573E14776B7000991ED5 /* OpenColorABI.h */; };
@@ -193,9 +190,6 @@
 		2ACF56C414776A1E00991ED5 /* ScanlineHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScanlineHelper.h; sourceTree = "<group>"; };
 		2ACF56C514776A1E00991ED5 /* SSE.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSE.h; sourceTree = "<group>"; };
 		2ACF56C614776A1E00991ED5 /* Transform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Transform.cpp; sourceTree = "<group>"; };
-		2ACF56C714776A1E00991ED5 /* TruelightOp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TruelightOp.cpp; sourceTree = "<group>"; };
-		2ACF56C814776A1E00991ED5 /* TruelightOp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TruelightOp.h; sourceTree = "<group>"; };
-		2ACF56C914776A1E00991ED5 /* TruelightTransform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TruelightTransform.cpp; sourceTree = "<group>"; };
 		2ACF56CA14776A1E00991ED5 /* UnitTest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = UnitTest.cpp; sourceTree = "<group>"; };
 		2ACF56CB14776A1E00991ED5 /* UnitTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UnitTest.h; sourceTree = "<group>"; };
 		2ACF573E14776B7000991ED5 /* OpenColorABI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenColorABI.h; sourceTree = "<group>"; };
@@ -319,9 +313,6 @@
 				2ACF56C414776A1E00991ED5 /* ScanlineHelper.h */,
 				2ACF56C514776A1E00991ED5 /* SSE.h */,
 				2ACF56C614776A1E00991ED5 /* Transform.cpp */,
-				2ACF56C714776A1E00991ED5 /* TruelightOp.cpp */,
-				2ACF56C814776A1E00991ED5 /* TruelightOp.h */,
-				2ACF56C914776A1E00991ED5 /* TruelightTransform.cpp */,
 				2ACF56CA14776A1E00991ED5 /* UnitTest.cpp */,
 				2ACF56CB14776A1E00991ED5 /* UnitTest.h */,
 			);
@@ -380,7 +371,6 @@
 				2ACF571614776A1E00991ED5 /* pystring.h in Headers */,
 				2ACF571814776A1E00991ED5 /* ScanlineHelper.h in Headers */,
 				2ACF571914776A1E00991ED5 /* SSE.h in Headers */,
-				2ACF571C14776A1E00991ED5 /* TruelightOp.h in Headers */,
 				2ACF571F14776A1E00991ED5 /* UnitTest.h in Headers */,
 				2ACF573F14776B7000991ED5 /* OpenColorABI.h in Headers */,
 				2A7CACBD15536CD700F52C98 /* LookParse.h in Headers */,
@@ -491,8 +481,6 @@
 				2ACF571514776A1E00991ED5 /* pystring.cpp in Sources */,
 				2ACF571714776A1E00991ED5 /* ScanlineHelper.cpp in Sources */,
 				2ACF571A14776A1E00991ED5 /* Transform.cpp in Sources */,
-				2ACF571B14776A1E00991ED5 /* TruelightOp.cpp in Sources */,
-				2ACF571D14776A1E00991ED5 /* TruelightTransform.cpp in Sources */,
 				2ACF571E14776A1E00991ED5 /* UnitTest.cpp in Sources */,
 				2A7CACBB15536CD700F52C98 /* FileFormatIridasLook.cpp in Sources */,
 				2A7CACBC15536CD700F52C98 /* LookParse.cpp in Sources */,
