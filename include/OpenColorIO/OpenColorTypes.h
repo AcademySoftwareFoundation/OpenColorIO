@@ -232,12 +232,6 @@ OCIO_NAMESPACE_ENTER
     //!cpp:type::
     typedef OCIO_SHARED_PTR<RangeTransform> RangeTransformRcPtr;
     
-    class OCIOEXPORT TruelightTransform;
-    //!cpp:type::
-    typedef OCIO_SHARED_PTR<const TruelightTransform> ConstTruelightTransformRcPtr;
-    //!cpp:type::
-    typedef OCIO_SHARED_PTR<TruelightTransform> TruelightTransformRcPtr;
-    
     template <class T, class U>
     inline OCIO_SHARED_PTR<T> DynamicPtrCast(OCIO_SHARED_PTR<U> const & ptr)
     {

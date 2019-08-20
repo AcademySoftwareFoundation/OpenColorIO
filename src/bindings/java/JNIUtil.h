@@ -73,7 +73,6 @@ typedef JObject <ConstGroupTransformRcPtr, GroupTransformRcPtr> GroupTransformJN
 typedef JObject <ConstLogTransformRcPtr, LogTransformRcPtr> LogTransformJNI;
 typedef JObject <ConstLookTransformRcPtr, LookTransformRcPtr> LookTransformJNI;
 typedef JObject <ConstMatrixTransformRcPtr, MatrixTransformRcPtr> MatrixTransformJNI;
-typedef JObject <ConstTruelightTransformRcPtr, TruelightTransformRcPtr> TruelightTransformJNI;
 
 template<typename T, typename S>
 inline jobject BuildJConstObject(JNIEnv * env, jobject self, jclass cls, T ptr)

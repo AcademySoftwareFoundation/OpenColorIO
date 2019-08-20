@@ -68,7 +68,6 @@ Some optional components also depend on:
     - \*Sphinx >= 1.8.5
 - Nuke 6.x or newer (for the Nuke nodes)
 - OpenImageIO (for apps including ocioconvert)
-- Truelight SDK (for TruelightTransform)
 
 Automated Installation
 ^^^^^^^^^^^^^^^^^^^^^^

@@ -769,14 +769,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\core\TruelightOp.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\src\core\TruelightTransform.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\src\core\UnitTest.cpp"
 				>
 			</File>
@@ -912,10 +904,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\src\core\SSE.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\src\core\TruelightOp.h"
 				>
 			</File>
 			<File
