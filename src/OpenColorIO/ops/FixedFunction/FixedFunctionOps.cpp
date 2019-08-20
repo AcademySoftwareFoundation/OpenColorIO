@@ -52,7 +52,9 @@ typedef OCIO_SHARED_PTR<const FixedFunctionOp> ConstFixedFunctionOpRcPtr;
 class FixedFunctionOp : public Op
 {
 public:
-    FixedFunctionOp(FixedFunctionOpDataRcPtr & func);
+    FixedFunctionOp() = delete;
+    FixedFunctionOp(const FixedFunctionOp &) = delete;
+    explicit FixedFunctionOp(FixedFunctionOpDataRcPtr & func);
 
     virtual ~FixedFunctionOp();
 
@@ -77,9 +79,6 @@ public:
 protected:
     ConstFixedFunctionOpDataRcPtr fnData() const { return DynamicPtrCast<const FixedFunctionOpData>(data()); }
     FixedFunctionOpDataRcPtr fnData() { return DynamicPtrCast<FixedFunctionOpData>(data()); }
-
-    FixedFunctionOp() = delete;
-    FixedFunctionOp(const FixedFunctionOp &) = delete;
 };
 
 

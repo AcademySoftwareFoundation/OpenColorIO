@@ -147,7 +147,9 @@ class GammaOp : public Op
 {
 public:
     GammaOp() = delete;
-    GammaOp(GammaOpDataRcPtr & gamma);
+    explicit GammaOp(GammaOpDataRcPtr & gamma);
+    GammaOp(const GammaOp &) = delete;
+
     GammaOp(BitDepth inBitDepth, 
             BitDepth outBitDepth,
             const std::string & id,
