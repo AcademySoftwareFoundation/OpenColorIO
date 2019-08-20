@@ -4053,6 +4053,55 @@ OCIO_ADD_TEST(FileFormatCTF, exposure_contrast_failures)
                           "exposure missing");
 }
 
+OCIO_ADD_TEST(FileFormatCTF, attribute_float_parse_extra_values)
+{
+    // Test attribute float parsing will throw if extra values are present
+    // (using E/C for this test).
+    std::istringstream ctf;
+    ctf.str(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="empty" version="1.7">
+   <ExposureContrast inBitDepth="32f" outBitDepth="32f" style="log">
+      <ECParams exposure="-1.5 1.2" contrast="0.5" gamma="1.2" pivot="0.18" />
+   </ExposureContrast>
+</ProcessList>
+)");
+
+    // Load file
+    std::string emptyString;
+    OCIO::LocalFileFormat tester;
+    OCIO_CHECK_THROW_WHAT(tester.Read(ctf, emptyString), OCIO::Exception,
+        "Expecting 1 value, found 2 values");
+}
+
+OCIO_ADD_TEST(FileFormatCTF, attribute_float_parse_leading_spaces)
+{
+    // Test attribute float parsing will not fail if extra leading white space
+    // is present (using E/C for this test).
+    std::istringstream ctf;
+    ctf.str(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="empty" version="1.7">
+   <ExposureContrast inBitDepth="32f" outBitDepth="32f" style="log">
+      <ECParams exposure="    -1.5 " contrast="0.5" gamma="1.2" pivot="0.18" />
+   </ExposureContrast>
+</ProcessList>
+)");
+
+    // Load file
+    std::string emptyString;
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr file;
+    OCIO_CHECK_NO_THROW(file = tester.Read(ctf, emptyString));
+    OCIO::LocalCachedFileRcPtr cachedFile = OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
+    const OCIO::OpDataVec & fileOps = cachedFile->m_transform->getOps();
+
+    OCIO_REQUIRE_EQUAL(fileOps.size(), 1);
+    OCIO::OpDataRcPtr op = fileOps[0];
+    auto ec = std::dynamic_pointer_cast<OCIO::ExposureContrastOpData>(op);
+    OCIO_REQUIRE_ASSERT(ec);
+
+    OCIO_CHECK_EQUAL(ec->getExposure(), -1.5);
+}
+
 OCIO_ADD_TEST(FixedFunction, load_ff_aces_redmod)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
