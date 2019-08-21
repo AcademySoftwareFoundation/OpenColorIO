@@ -105,9 +105,12 @@ OCIO_NAMESPACE_ENTER
         info.capabilities = FORMAT_CAPABILITY_READ;
         formatInfoVec.push_back(info);
 
-        // .icm is also fine
+        // .icm and .pf are also fine
         info.name = "Image Color Matching profile";
         info.extension = "icm";
+        formatInfoVec.push_back(info);
+        info.name = "ICC profile";
+        info.extension = "pf";
         formatInfoVec.push_back(info);
     }
 
@@ -499,7 +502,7 @@ OCIO_ADD_TEST(FileFormatICC, TestFile)
     OCIO::LocalCachedFileRcPtr iccFile;
     {
         // This example uses a profile with a 1024-entry LUT for the TRC.
-        const std::string iccFileName("sRGB_Color_Space_Profile.icm");
+        const std::string iccFileName("icc-test-3.icm");
         OCIO::OpRcPtrVec ops;
         OCIO::ContextRcPtr context = OCIO::Context::Create();
         OCIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context,
@@ -612,7 +615,7 @@ OCIO_ADD_TEST(FileFormatICC, TestFile)
     {
         // This test uses a profile where the TRC is a 1-entry curve,
         // to be interpreted as a gamma value.
-        const std::string iccFileName("AdobeRGB1998.icc");
+        const std::string iccFileName("icc-test-1.icc");
         OCIO_CHECK_NO_THROW(iccFile = LoadICCFile(iccFileName));
 
         OCIO_CHECK_ASSERT((bool)iccFile);
@@ -647,7 +650,7 @@ OCIO_ADD_TEST(FileFormatICC, TestFile)
     {
         // This test uses a profile where the TRC is 
         // a parametric curve of type 0 (a single gamma value).
-        const std::string iccFileName("LM-1760W.icc");
+        const std::string iccFileName("icc-test-2.pf");
         OCIO_CHECK_NO_THROW(iccFile = LoadICCFile(iccFileName));
 
         OCIO_CHECK_ASSERT((bool)iccFile);
@@ -684,7 +687,7 @@ OCIO_ADD_TEST(FileFormatICC, TestApply)
 {
     OCIO::ContextRcPtr context = OCIO::Context::Create();
     {
-        const std::string iccFileName("sRGB_Color_Space_Profile.icm");
+        const std::string iccFileName("icc-test-3.icm");
         OCIO::OpRcPtrVec ops;
         OCIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context,
                                          OCIO::TRANSFORM_DIR_FORWARD));
@@ -744,7 +747,7 @@ OCIO_ADD_TEST(FileFormatICC, TestApply)
     }
 
     {
-        const std::string iccFileName("LM-1760W.icc");
+        const std::string iccFileName("icc-test-2.pf");
         OCIO::OpRcPtrVec ops;
         OCIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context,
                                          OCIO::TRANSFORM_DIR_FORWARD));
