@@ -158,7 +158,8 @@ bool IsValid(double, double) { return true; }
 // Will throw if str[endPos-1] is not part of the number.
 // The character after the last one that is part of the number has to be
 // accessible (most likely str[endPos]).
-// Note: For performance reasons, this function does not copy the string.
+// Note: For performance reasons, this function does not copy the string
+//       unless an exception needs to be thrown.
 template<typename T>
 void ParseNumber(const char * str, size_t startPos, size_t endPos, T & value)
 {
@@ -167,7 +168,7 @@ void ParseNumber(const char * str, size_t startPos, size_t endPos, T & value)
         throw Exception("ParseNumber: nothing to parse.");
     }
 
-    const char * strParse = str + startPos;
+    const char * startParse = str + startPos;
 
     double val = 0.0f;
     char * endParse;
@@ -176,15 +177,26 @@ void ParseNumber(const char * str, size_t startPos, size_t endPos, T & value)
     // that it cannot convert to a number, in practice it does not need to
     // be null terminated.
     // C++11 version of strtod processes NAN & INF ASCII values.
-    val = strtod(strParse, &endParse);
+    val = strtod(startParse, &endParse);
     value = (T)val;
-    if (endParse == strParse || !IsValid(value, val))
+    if (endParse == startParse)
     {
         std::string fullStr(str, endPos);
-        std::string parseStr(strParse, endPos - startPos);
+        std::string parsedStr(startParse, endPos - startPos);
         std::ostringstream oss;
         oss << "ParserNumber: Characters '"
-            << parseStr
+            << parsedStr
+            << "' can not be parsed to numbers in '"
+            << TruncateString(fullStr.c_str(), 100) << "'.";
+        throw Exception(oss.str().c_str());
+    }
+    else if (!IsValid(value, val))
+    {
+        std::string fullStr(str, endPos);
+        std::string parsedStr(startParse, endPos - startPos);
+        std::ostringstream oss;
+        oss << "ParserNumber: Characters '"
+            << parsedStr
             << "' are illegal in '"
             << TruncateString(fullStr.c_str(), 100) << "'.";
         throw Exception(oss.str().c_str());
@@ -192,12 +204,12 @@ void ParseNumber(const char * str, size_t startPos, size_t endPos, T & value)
     else if (endParse != str + endPos)
     {
         // Number is followed by something.
-        std::string fullStr(str, endPos);
-        std::string parseStr(strParse, endPos - startPos);
+        std::string fullStr(str, startPos + (endParse - startParse));
+        std::string parsedStr(startParse, endPos - startPos);
         std::ostringstream oss;
         oss << "ParserNumber: '"
-            << parseStr
-            << "' followed by characters in '"
+            << parsedStr
+            << "' number is followed by unexpected characters in '"
             << TruncateString(fullStr.c_str(), 100) << "'.";
         throw Exception(oss.str().c_str());
     }
