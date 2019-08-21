@@ -20,7 +20,7 @@
             <ShortName>ACEScg</ShortName>
             <ID>387b23d1-f1ce-3f69-8544-e5601f45f78b</ID>
         </InputSpace>
-        <Copyright>Copyright 2016 Autodesk, Inc.  All rights reserved.</Copyright>
+        <Copyright>Copyright Contributors to the OpenColorIO Project.</Copyright>
     </Info>
     <Description>ACEScg to ACES2065-1</Description>
     <InputDescriptor>ACEScg</InputDescriptor>
