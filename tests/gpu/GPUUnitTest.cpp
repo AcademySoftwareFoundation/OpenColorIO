@@ -629,7 +629,7 @@ int main(int, char **)
     const char* argv[] = { "main", "-glDebug" };
     glutInit(&argc, const_cast<char**>(&argv[0]));
     
-    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
     glutInitWindowSize(g_winWidth, g_winHeight);
     glutInitWindowPosition(0, 0);
 
@@ -650,7 +650,7 @@ int main(int, char **)
               << "GL Version:   " << glGetString(GL_VERSION) << std::endl
               << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
-    // Step 1: Initilize the OpenGL engine.
+    // Step 1: Initialize the OpenGL engine.
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);           // 4-byte pixel alignment
 
