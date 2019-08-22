@@ -34,16 +34,25 @@ namespace OCIO = OCIO_NAMESPACE;
 
 
 #ifdef __APPLE__
+
+/* Defined before OpenGL and GLUT includes to avoid deprecation messages */
+#define GL_SILENCE_DEPRECATION
+
 #include <OpenGL/gl.h>
 #include <OpenGL/glext.h>
 #include <GLUT/glut.h>
+
 #elif _WIN32
+
 #include <GL/glew.h>
 #include <GL/glut.h>
+
 #else
+
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glut.h>
+
 #endif
 
 
