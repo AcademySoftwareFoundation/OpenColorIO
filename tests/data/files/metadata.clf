@@ -5,7 +5,7 @@
     <OutputDescriptor>outputDesc</OutputDescriptor>
 
     <Info>
-        <Copyright>Copyright 2013 Autodesk</Copyright>
+        <Copyright>Copyright Contributors to the OpenColorIO Project.</Copyright>
         <Release>2015</Release>
         <InputColorSpace>
             <Description>Input color space description</Description>
