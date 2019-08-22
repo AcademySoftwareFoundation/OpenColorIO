@@ -192,6 +192,7 @@ jobs:
         -DPYTHON_INCLUDE_DIR=$(python-config --prefix)/include/python2.7 \
         -DPYTHON_LIBRARY=$(python-config --prefix)/lib/libpython2.7.dylib \
         -DPYTHON_EXECUTABLE=$(which python2)
+        -DOCIO_BUILD_GPU_TESTS=ON
 
   - template: share/ci/templates/build.yml
     parameters:
