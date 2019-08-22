@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <vector>
-
-#include <OpenColorIO/OpenColorIO.h>
-
 #include "PyOpenColorIO.h"
 
 OCIO_NAMESPACE_ENTER
@@ -18,16 +14,23 @@ namespace
 void bindPyTransform(py::module & m)
 {
     py::class_<PyTransform>(m, "Transform")
-        .def("__str__", [](PyTransform & self) 
+        .def(py::init([](py::object transform) 
+        {
+            if(!py::is<PyTransform>(transform))
             {
-                std::ostringstream os;
-                // os << (*self.getRcPtr());
-                return os.str();
-            })
-        .def("validate", [](PyTransform & self) 
+                return py::cast<py::none>(Py_None);
+            }
+
+            PyTransform pyptr;
+
+            if(py::isinstance<PyAllocationTransform>(transform))
             {
-                // self.getRcPtr()->validate();
-            });
+                pyptr = py::cast<PyAllocationTransform>(transform);
+            }
+
+            return pyptr;
+        }),
+        "transform"_a);
 
     py::class_<PyAllocationTransform, PyTransform>(m, "AllocationTransform")
         .def(py::init<>())
@@ -36,56 +39,53 @@ void bindPyTransform(py::module & m)
                          TransformDirection direction) 
             {
                 PyAllocationTransform pyptr;
-                AllocationTransformRcPtr rcptr = pyptr.getRcPtr();
-                rcptr->setAllocation(allocation);
-                rcptr->setVars(vars.size(), vars.data());
-                rcptr->setDirection(direction);
+                AllocationTransformRcPtr eptr = pyptr.getRcPtr();
+                eptr->setAllocation(allocation);
+                eptr->setVars(vars.size(), vars.data());
+                eptr->setDirection(direction);
                 return pyptr;
             }), 
             "allocation"_a = ALLOCATION_UNIFORM, 
             "vars"_a = DEFAULT_ARGS,
             "direction"_a = TRANSFORM_DIR_FORWARD)
-        .def("__str__", [](PyAllocationTransform & self) 
-            {
-                std::ostringstream os;
-                os << (*self.getRcPtr());
-                return os.str();
-            })
-        .def("createEditableCopy", [](PyAllocationTransform & self) 
-            {
-                return self.getRcPtr()->createEditableCopy();
-            })
+
+        .def("__repr__", &PyAllocationTransform::repr)
+        .def("createEditableCopy", &PyAllocationTransform::createEditableCopy)
+
         .def("validate", [](PyAllocationTransform & self) 
             {
-                self.getRcPtr()->validate();
+                self.getConstRcPtr()->validate();
             })
+
         .def("getDirection", [](PyAllocationTransform & self) 
             {
-                return self.getRcPtr()->getDirection();
+                return self.getConstRcPtr()->getDirection();
             })
         .def("setDirection", [](PyAllocationTransform & self, TransformDirection direction) 
             {
                 self.getRcPtr()->setDirection(direction);
             }, 
             "direction"_a)
+
         .def("getAllocation", [](PyAllocationTransform & self) 
             {
-                return self.getRcPtr()->getAllocation();
+                return self.getConstRcPtr()->getAllocation();
             })
         .def("setAllocation", [](PyAllocationTransform & self, Allocation allocation) 
             {
                 self.getRcPtr()->setAllocation(allocation);
             }, 
             "allocation"_a)
+
         .def("getNumVars", [](PyAllocationTransform & self) 
             {
-                return self.getRcPtr()->getNumVars();
+                return self.getConstRcPtr()->getNumVars();
             })
         .def("getVars", [](PyAllocationTransform & self)
             {
                 std::vector<float> vars;
-                vars.resize(self.getRcPtr()->getNumVars());
-                self.getRcPtr()->getVars(vars.data());
+                vars.resize(self.getConstRcPtr()->getNumVars());
+                self.getConstRcPtr()->getVars(vars.data());
                 return vars;
             })
         .def("setVars", [](PyAllocationTransform & self, std::vector<float> vars) 

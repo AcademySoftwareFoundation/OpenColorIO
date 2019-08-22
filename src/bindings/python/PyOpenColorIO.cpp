@@ -3,9 +3,6 @@
 
 #include "PyOpenColorIO.h"
 
-namespace py = pybind11;
-using namespace pybind11::literals;
-
 OCIO_NAMESPACE_ENTER
 {
 
