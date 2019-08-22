@@ -644,6 +644,12 @@ int main(int, char **)
     }
 #endif
 
+    std::cout << std::endl
+              << "GL Vendor:    " << glGetString(GL_VENDOR) << std::endl
+              << "GL Renderer:  " << glGetString(GL_RENDERER) << std::endl
+              << "GL Version:   " << glGetString(GL_VERSION) << std::endl
+              << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+
     // Step 1: Initilize the OpenGL engine.
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);           // 4-byte pixel alignment
