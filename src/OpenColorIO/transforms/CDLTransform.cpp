@@ -37,9 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "MathUtils.h"
 #include "Mutex.h"
 #include "OpBuilders.h"
-#include "ops/CDL/CDLOps.h"
-#include "ops/Exponent/ExponentOps.h"
-#include "ops/Matrix/MatrixOps.h"
+#include "ops/CDL/CDLOpData.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
 
@@ -693,23 +691,6 @@ OCIO_NAMESPACE_ENTER
         }
     }
 
-    BitDepth CDLTransform::getInputBitDepth() const
-    {
-        return getImpl()->getInputBitDepth();
-    }
-    BitDepth CDLTransform::getOutputBitDepth() const
-    {
-        return getImpl()->getOutputBitDepth();
-    }
-    void CDLTransform::setInputBitDepth(BitDepth bitDepth)
-    {
-        getImpl()->setInputBitDepth(bitDepth);
-    }
-    void CDLTransform::setOutputBitDepth(BitDepth bitDepth)
-    {
-        getImpl()->setOutputBitDepth(bitDepth);
-    }
-    
     FormatMetadata & CDLTransform::getFormatMetadata()
     {
         return m_impl->getFormatMetadata();
@@ -737,80 +718,6 @@ OCIO_NAMESPACE_ENTER
         return os;
     }
     
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    void BuildCDLOps(OpRcPtrVec & ops,
-                     const Config & config,
-                     const CDLTransform & cdlTransform,
-                     TransformDirection dir)
-    {
-        double scale4[] = { 1.0, 1.0, 1.0, 1.0 };
-        cdlTransform.getSlope(scale4);
-        
-        double offset4[] = { 0.0, 0.0, 0.0, 0.0 };
-        cdlTransform.getOffset(offset4);
-        
-        double power4[] = { 1.0, 1.0, 1.0, 1.0 };
-        cdlTransform.getPower(power4);
-        
-        double lumaCoef3[] = { 1.0, 1.0, 1.0 };
-        cdlTransform.getSatLumaCoefs(lumaCoef3);
-        
-        double sat = cdlTransform.getSat();
-        
-        TransformDirection combinedDir = CombineTransformDirections(dir,
-                                                  cdlTransform.getDirection());
-        
-        if(config.getMajorVersion()==1)
-        {
-            const double p[4] = { power4[0], power4[1], power4[2], power4[3] };
-
-            if(combinedDir == TRANSFORM_DIR_FORWARD)
-            {
-                // 1) Scale + Offset
-                CreateScaleOffsetOp(ops, scale4, offset4, TRANSFORM_DIR_FORWARD);
-                
-                // 2) Power + Clamp at 0 (NB: This is not in accord with the 
-                //    ASC v1.2 spec since it also requires clamping at 1.)
-                CreateExponentOp(ops, p, TRANSFORM_DIR_FORWARD);
-                
-                // 3) Saturation (NB: Does not clamp at 0 and 1
-                //    as per ASC v1.2 spec)
-                CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_FORWARD);
-            }
-            else if(combinedDir == TRANSFORM_DIR_INVERSE)
-            {
-                // 3) Saturation (NB: Does not clamp at 0 and 1
-                //    as per ASC v1.2 spec)
-                CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_INVERSE);
-                
-                // 2) Power + Clamp at 0 (NB: This is not in accord with the 
-                //    ASC v1.2 spec since it also requires clamping at 1.)
-                CreateExponentOp(ops, p, TRANSFORM_DIR_INVERSE);
-                
-                // 1) Scale + Offset
-                CreateScaleOffsetOp(ops, scale4, offset4, TRANSFORM_DIR_INVERSE);
-            }
-        }
-        else
-        {
-            // Starting with the version 2, OCIO is now using a CDL Op
-            //   complying with the Common LUT Format (i.e. CLF) specification.
-
-            const double s[3] = { scale4[0],  scale4[1],  scale4[2]  };
-            const double o[3] = { offset4[0], offset4[1], offset4[2] };
-            const double p[3] = { power4[0],  power4[1],  power4[2]  };
-
-            CreateCDLOp(ops, 
-                        FormatMetadataImpl(cdlTransform.getFormatMetadata()),
-                        combinedDir==TRANSFORM_DIR_FORWARD 
-                            ? CDLOpData::CDL_V1_2_FWD
-                            : CDLOpData::CDL_V1_2_REV,
-                        s, o, p, sat, 
-                        combinedDir);
-        }
-    }
 }
 OCIO_NAMESPACE_EXIT
 
@@ -1131,5 +1038,65 @@ OCIO_ADD_TEST(CDLTransform, faulty_file_content)
                               "Error loading ccc xml. Duplicate elements with 'cc03343'");
     }
 }
-    
+
+OCIO_ADD_TEST(CDLTransform, buildops)
+{
+    auto cdl = OCIO::CDLTransform::Create();
+
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    // Testing v1 backwards compatibility.
+    config->setMajorVersion(1);
+
+    OCIO::OpRcPtrVec ops;
+    OCIO::BuildCDLOps(ops, *config, *cdl,
+                      OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(ops.size(), 3);
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_EQUAL(ops.size(), 0);
+
+    ops.clear();
+    const double power[]{1.1, 1.0, 1.0};
+    cdl->setPower(power);
+    OCIO::BuildCDLOps(ops, *config, *cdl,
+                      OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_REQUIRE_EQUAL(ops.size(), 3);
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_CHECK_EQUAL(ops[0]->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(ops[ops.size() - 1]->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
+    ops.clear();
+    cdl->setSat(1.5);
+    OCIO::BuildCDLOps(ops, *config, *cdl,
+                      OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_REQUIRE_EQUAL(ops.size(), 3);
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_CHECK_EQUAL(ops[0]->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(ops[ops.size() - 1]->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
+    ops.clear();
+    const double offset[]{ 0.0, 0.1, 0.0 };
+    cdl->setOffset(offset);
+    OCIO::BuildCDLOps(ops, *config, *cdl,
+                      OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_REQUIRE_EQUAL(ops.size(), 3);
+    OCIO_CHECK_EQUAL(ops[0]->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(ops[ops.size() - 1]->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_REQUIRE_EQUAL(ops.size(), 3);
+
+    // Testing v2 onward behavior.
+    config->setMajorVersion(2);
+    ops.clear();
+    OCIO::BuildCDLOps(ops, *config, *cdl,
+                      OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO::ConstOpRcPtr op = OCIO::DynamicPtrCast<const OCIO::Op>(ops[0]);
+    OCIO_CHECK_EQUAL(op->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(op->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+    auto cdldata = OCIO::DynamicPtrCast<const OCIO::CDLOpData>(op->data());
+    OCIO_REQUIRE_ASSERT(cdldata);
+}
+
 #endif

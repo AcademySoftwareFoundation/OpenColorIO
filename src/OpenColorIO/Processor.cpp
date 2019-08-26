@@ -456,27 +456,32 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
 
 
-    void Processor::Impl::addColorSpaceConversion(const Config & config,
+    void Processor::Impl::setColorSpaceConversion(const Config & config,
                                                   const ConstContextRcPtr & context,
                                                   const ConstColorSpaceRcPtr & srcColorSpace,
                                                   const ConstColorSpaceRcPtr & dstColorSpace)
     {
+        if (!m_ops.empty())
+        {
+            throw Exception("Internal error: Processor should be empty");
+        }
         BuildColorSpaceOps(m_ops, config, context, srcColorSpace, dstColorSpace);
+        FinalizeOpVec(m_ops, FINALIZATION_EXACT);
         UnifyDynamicProperties(m_ops);
     }
     
-    void Processor::Impl::addTransform(const Config & config,
+    void Processor::Impl::setTransform(const Config & config,
                                        const ConstContextRcPtr & context,
                                        const ConstTransformRcPtr& transform,
                                        TransformDirection direction)
     {
+        if (!m_ops.empty())
+        {
+            throw Exception("Internal error: Processor should be empty");
+        }
+        transform->validate();
         BuildOps(m_ops, config, context, transform, direction);
-        UnifyDynamicProperties(m_ops);
-    }
-
-    void Processor::Impl::addOps(const OpRcPtrVec & ops)
-    {
-        m_ops = ops.clone();
+        FinalizeOpVec(m_ops, FINALIZATION_EXACT);
         UnifyDynamicProperties(m_ops);
     }
 
@@ -501,6 +506,26 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "ops/exposurecontrast/ExposureContrastOps.h"
 #include "UnitTest.h"
+
+OCIO_ADD_TEST(Processor, basic)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+
+    auto processorEmptyGroup = config->getProcessor(group);
+    OCIO_CHECK_EQUAL(processorEmptyGroup->getNumTransforms(), 0);
+    OCIO_CHECK_EQUAL(std::string(processorEmptyGroup->getCacheID()), "<NOOP>");
+
+    auto mat = OCIO::MatrixTransform::Create();
+    double offset[4]{ 0.1, 0.2, 0.3, 0.4 };
+    mat->setOffset(offset);
+
+    auto processorMat = config->getProcessor(mat);
+    OCIO_CHECK_EQUAL(processorMat->getNumTransforms(), 1);
+
+    OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "$c15dfc9b251ee075f33c4ccb3eb1e4b8");
+}
 
 OCIO_ADD_TEST(Processor, shared_dynamic_properties)
 {

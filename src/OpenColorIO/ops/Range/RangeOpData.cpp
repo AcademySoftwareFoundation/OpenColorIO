@@ -732,10 +732,14 @@ RangeOpDataRcPtr RangeOpData::inverse() const
                                                            getMaxOutValue(),
                                                            getMinInValue(),
                                                            getMaxInValue());
+    invOp->setFileInputBitDepth(getFileOutputBitDepth());
+    invOp->setFileOutputBitDepth(getFileInputBitDepth());
+
     invOp->validate();
 
-    invOp->invertMetadata();
-
+    // Note that any existing metadata could become stale at this point but
+    // trying to update it is also challenging since inverse() is sometimes
+    // called even during the creation of new ops.
     return invOp;
 }
 

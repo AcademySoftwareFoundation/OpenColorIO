@@ -75,7 +75,7 @@ void Lut1DOpData::Lut3by1DArray::fill(HalfFlags halfFlags,
     Array::Values& values = getValues();
     if (Lut1DOpData::IsInputHalfDomain(halfFlags))
     {
-        const float scaleFactor = GetBitDepthMaxValue(outBitDepth);
+        const float scaleFactor = (float)GetBitDepthMaxValue(outBitDepth);
 
         for (unsigned long idx = 0; idx<dim; ++idx)
         {
@@ -93,7 +93,7 @@ void Lut1DOpData::Lut3by1DArray::fill(HalfFlags halfFlags,
     else
     {
         const float stepValue
-            = GetBitDepthMaxValue(outBitDepth) / ((float)dim - 1.0f);
+            = (float)(GetBitDepthMaxValue(outBitDepth)) / ((float)dim - 1.0f);
 
         for (unsigned long idx = 0; idx<dim; ++idx)
         {
@@ -106,6 +106,23 @@ void Lut1DOpData::Lut3by1DArray::fill(HalfFlags halfFlags,
             }
         }
     }
+}
+
+void Lut1DOpData::Lut3by1DArray::resize(unsigned long length, unsigned long numColorComponents)
+{
+    if (length > 1024 * 1024)
+    {
+        std::ostringstream oss;
+        oss << "LUT 1D: Length '" << length
+            << "' must not be greater than 1024x1024 (1048576).";
+        throw Exception(oss.str().c_str());
+    }
+    Array::resize(length, numColorComponents);
+}
+
+unsigned long Lut1DOpData::Lut3by1DArray::getNumValues() const
+{
+    return getLength() * getMaxColorComponents();
 }
 
 void Lut1DOpData::Lut3by1DArray::scale(float scaleFactor)
@@ -141,7 +158,7 @@ bool Lut1DOpData::Lut3by1DArray::isIdentity(HalfFlags halfFlags,
 
     if (Lut1DOpData::IsInputHalfDomain(halfFlags))
     {
-        const float scaleFactor = 1.0f / GetBitDepthMaxValue(outBitDepth);
+        const float scaleFactor = 1.0f / (float)GetBitDepthMaxValue(outBitDepth);
 
         for (unsigned long idx = 0; idx<dim; ++idx)
         {
@@ -178,8 +195,8 @@ bool Lut1DOpData::Lut3by1DArray::isIdentity(HalfFlags halfFlags,
         // too sensitive near zero and too loose at the high end.
         //
         const float rel_tol = 1e-5f;
-        const float abs_tol = GetBitDepthMaxValue(outBitDepth) * rel_tol;
-        const float stepValue = GetBitDepthMaxValue(outBitDepth)
+        const float abs_tol = (float)GetBitDepthMaxValue(outBitDepth) * rel_tol;
+        const float stepValue = (float)(GetBitDepthMaxValue(outBitDepth))
                                 / ((float)dim - 1.0f);
 
         for (unsigned long idx = 0; idx<dim; ++idx)
@@ -202,32 +219,25 @@ bool Lut1DOpData::Lut3by1DArray::isIdentity(HalfFlags halfFlags,
     return true;
 }
 
-unsigned long Lut1DOpData::Lut3by1DArray::getNumValues() const
-{
-    return getLength() * getMaxColorComponents();
-}
-
 Lut1DOpData::Lut1DOpData(unsigned long dimension)
     : OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
-    , m_interpolation(INTERP_LINEAR)
+    , m_interpolation(INTERP_DEFAULT)
     , m_array(getOutputBitDepth(), LUT_STANDARD, dimension)
     , m_halfFlags(LUT_STANDARD)
     , m_hueAdjust(HUE_NONE)
     , m_direction(TRANSFORM_DIR_FORWARD)
     , m_invQuality(LUT_INVERSION_FAST)
-    , m_fileBitDepth(BIT_DEPTH_UNKNOWN)
 {
 }
 
 Lut1DOpData::Lut1DOpData(unsigned long dimension, TransformDirection dir)
     : OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
-    , m_interpolation(INTERP_LINEAR)
+    , m_interpolation(INTERP_DEFAULT)
     , m_array(getOutputBitDepth(), LUT_STANDARD, dimension)
     , m_halfFlags(LUT_STANDARD)
     , m_hueAdjust(HUE_NONE)
     , m_direction(dir)
     , m_invQuality(LUT_INVERSION_FAST)
-    , m_fileBitDepth(BIT_DEPTH_UNKNOWN)
 {
 }
 
@@ -235,13 +245,13 @@ Lut1DOpData::Lut1DOpData(BitDepth inBitDepth,
                          BitDepth outBitDepth,
                          HalfFlags halfFlags)
     : OpData(inBitDepth, outBitDepth)
-    , m_interpolation(INTERP_LINEAR)
+    , m_interpolation(INTERP_DEFAULT)
     , m_array(getInputBitDepth(), getOutputBitDepth(), halfFlags)
     , m_halfFlags(halfFlags)
     , m_hueAdjust(HUE_NONE)
     , m_direction(TRANSFORM_DIR_FORWARD)
     , m_invQuality(LUT_INVERSION_FAST)
-    , m_fileBitDepth(outBitDepth)
+    , m_fileOutBitDepth(outBitDepth)
 {
 }
 
@@ -256,7 +266,7 @@ Lut1DOpData::Lut1DOpData(BitDepth inBitDepth, BitDepth outBitDepth,
     , m_hueAdjust(HUE_NONE)
     , m_direction(TRANSFORM_DIR_FORWARD)
     , m_invQuality(LUT_INVERSION_FAST)
-    , m_fileBitDepth(outBitDepth)
+    , m_fileOutBitDepth(outBitDepth)
 {
 }
 
@@ -272,7 +282,7 @@ Lut1DOpData::Lut1DOpData(BitDepth inBitDepth, BitDepth outBitDepth,
     , m_hueAdjust(HUE_NONE)
     , m_direction(TRANSFORM_DIR_FORWARD)
     , m_invQuality(LUT_INVERSION_FAST)
-    , m_fileBitDepth(outBitDepth)
+    , m_fileOutBitDepth(outBitDepth)
 {
 }
 
@@ -324,7 +334,7 @@ bool Lut1DOpData::isIdentity() const
 
 bool Lut1DOpData::hasChannelCrosstalk() const
 {
-    if (getHueAdjust() != Lut1DOpData::HUE_NONE)
+    if (getHueAdjust() != HUE_NONE)
     {
         // Returning !isIdentity() would be time consuming.
         return true;
@@ -374,8 +384,8 @@ void Lut1DOpData::setOutputBitDepth(BitDepth out)
     {
         // Scale factor is max_new_depth/max_old_depth.
         const float scaleFactor
-            = GetBitDepthMaxValue(out)
-            / GetBitDepthMaxValue(getOutputBitDepth());
+            = (float)(GetBitDepthMaxValue(out))
+            / (float)GetBitDepthMaxValue(getOutputBitDepth());
 
         // Scale array for the new bit-depth if scaleFactor != 1.
         m_array.scale(scaleFactor);
@@ -393,8 +403,8 @@ void Lut1DOpData::setInputBitDepth(BitDepth in)
 
         // Scale factor is max_new_depth/max_old_depth.
         const float scaleFactor
-            = GetBitDepthMaxValue(in)
-            / GetBitDepthMaxValue(getInputBitDepth());
+            = (float)(GetBitDepthMaxValue(in))
+            / (float)GetBitDepthMaxValue(getInputBitDepth());
 
         // Scale array for the new bit-depth if scaleFactor != 1.
         m_array.scale(scaleFactor);
@@ -568,7 +578,7 @@ Lut1DOpDataRcPtr Lut1DOpData::MakeLookupDomain(BitDepth incomingDepth)
     return std::make_shared<Lut1DOpData>(incomingDepth,
                                          incomingDepth,
                                          FormatMetadataImpl(METADATA_ROOT),
-                                         INTERP_LINEAR,
+                                         INTERP_DEFAULT,
                                          domainType);
 }
 
@@ -598,7 +608,7 @@ bool Lut1DOpData::operator==(const OpData & other) const
     return haveEqualBasics(*lop);
 }
 
-void Lut1DOpData::setHueAdjust(Lut1DOpData::HueAdjust algo)
+void Lut1DOpData::setHueAdjust(LUT1DHueAdjust algo)
 {
     m_hueAdjust = algo;
 }
@@ -681,29 +691,26 @@ Lut1DOpDataRcPtr Lut1DOpData::inverse() const
     invLut->OpData::setInputBitDepth(getOutputBitDepth());
     invLut->OpData::setOutputBitDepth(in);
 
-    invLut->invertMetadata();
-
+    // Note that any existing metadata could become stale at this point but
+    // trying to update it is also challenging since inverse() is sometimes
+    // called even during the creation of new ops.
     return invLut;
 }
 
 namespace
 {
-const char* GetHueAdjustName(Lut1DOpData::HueAdjust algo)
+const char* GetHueAdjustName(LUT1DHueAdjust algo)
 {
     switch (algo)
     {
-    case Lut1DOpData::HUE_DW3:
+    case HUE_DW3:
     {
         return "dw3";
     }
-    case Lut1DOpData::HUE_NONE:
+    case HUE_NONE:
     {
         return "none";
     }
-    case Lut1DOpData::HUE_NB_STYLES:
-	{
-		break;
-	}
     }
     throw Exception("1D LUT has an invalid hue adjust style.");
 }
@@ -954,11 +961,11 @@ Lut1DOpDataRcPtr Lut1DOpData::MakeFastLut1DFromInverse(ConstLut1DOpDataRcPtr & l
         throw Exception("MakeFastLut1DFromInverse expects an inverse 1D LUT");
     }
 
-    if (lut->m_fileBitDepth == BIT_DEPTH_UNKNOWN)
+    auto depth = lut->getFileOutputBitDepth();
+    if (depth == BIT_DEPTH_UNKNOWN || depth == BIT_DEPTH_UINT14 || depth == BIT_DEPTH_UINT32)
     {
-        throw Exception("MakeFastLut1DFromInverse expects a defined file bit-depth");
+        depth = BIT_DEPTH_UINT12;
     }
-    BitDepth depth(lut->m_fileBitDepth);
 
     // For typical LUTs (e.g. gamma tables from ICC monitor profiles)
     // we can use a smaller FastLUT on the GPU.
@@ -994,7 +1001,6 @@ Lut1DOpDataRcPtr Lut1DOpData::MakeFastLut1DFromInverse(ConstLut1DOpDataRcPtr & l
     LutStyleGuard<Lut1DOpData> guard(*lut);
 
     Compose(newDomainLut, lut, COMPOSE_RESAMPLE_NO);
-    newDomainLut->invertMetadata();
 
     return newDomainLut;
 }
@@ -1036,7 +1042,7 @@ bool Lut1DOpData::hasExtendedDomain() const
 
     // As noted elsewhere, the InBitDepth describes the scaling of the LUT entries.
     const float normalMin = 0.0f;
-    const float normalMax = GetBitDepthMaxValue(getInputBitDepth());
+    const float normalMax = (float)GetBitDepthMaxValue(getInputBitDepth());
 
     unsigned long minInd = 0;
     unsigned long maxInd = length - 1;
@@ -1262,8 +1268,6 @@ void Lut1DOpData::prepareArray()
     }
 }
 
-
-
 }
 OCIO_NAMESPACE_EXIT
 
@@ -1292,7 +1296,7 @@ OCIO_ADD_TEST(Lut1DOpData, constructor)
     OCIO_CHECK_ASSERT(!lut.isNoOp());
     OCIO_CHECK_ASSERT(lut.isIdentity());
     OCIO_CHECK_EQUAL(lut.getArray().getLength(), 2);
-    OCIO_CHECK_EQUAL(lut.getInterpolation(), OCIO::INTERP_LINEAR);
+    OCIO_CHECK_EQUAL(lut.getInterpolation(), OCIO::INTERP_DEFAULT);
     OCIO_CHECK_NO_THROW(lut.validate());
 }
 
@@ -1308,9 +1312,9 @@ OCIO_ADD_TEST(Lut1DOpData, accessors)
     OCIO_CHECK_ASSERT(l.isIdentity());
     OCIO_CHECK_NO_THROW(l.validate());
 
-    OCIO_CHECK_EQUAL(l.getHueAdjust(), OCIO::Lut1DOpData::HUE_NONE);
-    l.setHueAdjust(OCIO::Lut1DOpData::HUE_DW3);
-    OCIO_CHECK_EQUAL(l.getHueAdjust(), OCIO::Lut1DOpData::HUE_DW3);
+    OCIO_CHECK_EQUAL(l.getHueAdjust(), OCIO::HUE_NONE);
+    l.setHueAdjust(OCIO::HUE_DW3);
+    OCIO_CHECK_EQUAL(l.getHueAdjust(), OCIO::HUE_DW3);
 
     // Note: Hue and Sat adjust do not affect identity status.
     OCIO_CHECK_ASSERT(l.isIdentity());
@@ -1355,8 +1359,8 @@ OCIO_ADD_TEST(Lut1DOpData, identity_bitdepth)
     OCIO_CHECK_NO_THROW(l2.validate());
 
     const float coeff
-        = OCIO::GetBitDepthMaxValue(l2.getOutputBitDepth())
-        / OCIO::GetBitDepthMaxValue(l2.getInputBitDepth());
+        = (float)(OCIO::GetBitDepthMaxValue(l2.getOutputBitDepth()))
+        / (float)OCIO::GetBitDepthMaxValue(l2.getInputBitDepth());
 
     // To validate the result, compute the expected results
     // not using the Lut1DOp algorithm.
@@ -1450,7 +1454,7 @@ OCIO_ADD_TEST(Lut1DOpData, clone)
 {
     OCIO::Lut1DOpData ref(20);
     ref.getArray()[1] = 0.5f;
-    ref.setHueAdjust(OCIO::Lut1DOpData::HUE_DW3);
+    ref.setHueAdjust(OCIO::HUE_DW3);
 
     OCIO::Lut1DOpDataRcPtr pClone = ref.clone();
 
@@ -1458,7 +1462,7 @@ OCIO_ADD_TEST(Lut1DOpData, clone)
     OCIO_CHECK_ASSERT(!pClone->isIdentity());
     OCIO_CHECK_NO_THROW(pClone->validate());
     OCIO_CHECK_ASSERT(pClone->getArray() == ref.getArray());
-    OCIO_CHECK_EQUAL(pClone->getHueAdjust(), OCIO::Lut1DOpData::HUE_DW3);
+    OCIO_CHECK_EQUAL(pClone->getHueAdjust(), OCIO::HUE_DW3);
 }
 
 OCIO_ADD_TEST(Lut1DOpData, output_depth_scaling)
@@ -1473,8 +1477,8 @@ OCIO_ADD_TEST(Lut1DOpData, output_depth_scaling)
 
     const OCIO::BitDepth newBitdepth = OCIO::BIT_DEPTH_UINT16;
 
-    const float factor = OCIO::GetBitDepthMaxValue(newBitdepth)
-                         / OCIO::GetBitDepthMaxValue(initialBitdepth);
+    const float factor = (float)(OCIO::GetBitDepthMaxValue(newBitdepth))
+                         / (float)OCIO::GetBitDepthMaxValue(initialBitdepth);
 
     ref.setOutputBitDepth(newBitdepth);
     // Now we need to make sure that the bitdepth was changed from the overriden
@@ -1495,7 +1499,6 @@ OCIO_ADD_TEST(Lut1DOpData, output_depth_scaling)
         expectedValue = initialArrValues[i] * factor;
         OCIO_CHECK_CLOSE(expectedValue, newArrValues[i], error);
     }
-
 }
 
 OCIO_ADD_TEST(Lut1DOpData, equality_test)
@@ -1526,12 +1529,12 @@ OCIO_ADD_TEST(Lut1DOpData, equality_test)
 
     OCIO_CHECK_ASSERT(l1 == l4);
 
-    l1.setHueAdjust(OCIO::Lut1DOpData::HUE_DW3);
+    l1.setHueAdjust(OCIO::HUE_DW3);
 
     OCIO_CHECK_ASSERT(!(l1 == l4));
 
     // Inversion quality does not affect forward ops equality.
-    l4.setHueAdjust(OCIO::Lut1DOpData::HUE_DW3);
+    l4.setHueAdjust(OCIO::HUE_DW3);
     l1.setInversionQuality(OCIO::LUT_INVERSION_BEST);
 
     OCIO_CHECK_ASSERT(l1 == l4);
@@ -1564,7 +1567,7 @@ OCIO_ADD_TEST(Lut1DOpData, channel)
     OCIO_CHECK_ASSERT(!L1->hasChannelCrosstalk());
     OCIO_CHECK_ASSERT(L1->mayCompose(L2));
 
-    L1->setHueAdjust(OCIO::Lut1DOpData::HUE_DW3);
+    L1->setHueAdjust(OCIO::HUE_DW3);
     
     // True: hue restore is on, it's an identity LUT, but this is not
     // tested for efficency.
@@ -1575,12 +1578,12 @@ OCIO_ADD_TEST(Lut1DOpData, channel)
     OCIO::ConstLut1DOpDataRcPtr L1C = L1;
     OCIO_CHECK_ASSERT(!L2->mayCompose(L1C));
 
-    L1->setHueAdjust(OCIO::Lut1DOpData::HUE_NONE);
+    L1->setHueAdjust(OCIO::HUE_NONE);
     L1->getArray()[1] = 3.0f;
     // False: non-identity.
     OCIO_CHECK_ASSERT(!L1->hasChannelCrosstalk());
 
-    L1->setHueAdjust(OCIO::Lut1DOpData::HUE_DW3);
+    L1->setHueAdjust(OCIO::HUE_DW3);
     // True: non-identity w/hue restore.
     OCIO_CHECK_ASSERT(L1->hasChannelCrosstalk());
 }
@@ -1936,7 +1939,7 @@ void checkInverse_bitDepths_domain(
                      expectedInvHalfFlags);
 
     OCIO_CHECK_EQUAL(invLut1d->getHueAdjust(),
-                     OCIO::Lut1DOpData::HUE_NONE);
+                     OCIO::HUE_NONE);
 }
 
 
@@ -1993,7 +1996,7 @@ OCIO_ADD_TEST(Lut1DOpData, inverse_hueadjust)
                                OCIO::INTERP_BEST,
                                OCIO::Lut1DOpData::LUT_STANDARD);
 
-    refLut1d.setHueAdjust(OCIO::Lut1DOpData::HUE_DW3);
+    refLut1d.setHueAdjust(OCIO::HUE_DW3);
 
     // Get inverse of reference lut1d operation.
     OCIO::Lut1DOpDataRcPtr invLut1d;
@@ -2001,7 +2004,7 @@ OCIO_ADD_TEST(Lut1DOpData, inverse_hueadjust)
     OCIO_REQUIRE_ASSERT(invLut1d);
 
     OCIO_CHECK_EQUAL(invLut1d->getHueAdjust(),
-                     OCIO::Lut1DOpData::HUE_DW3);
+                     OCIO::HUE_DW3);
 }
 
 OCIO_ADD_TEST(Lut1DOpData, is_inverse)

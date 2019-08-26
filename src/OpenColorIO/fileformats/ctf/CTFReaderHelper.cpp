@@ -918,8 +918,7 @@ const char * CTFReaderOpElt::getTypeName() const
 //
 // The two design decisions related to the versioning are that first,
 // the CTF Reader has to be fully backward compatible (it means to read
-// any existing versions) and second, only the lastest version will be written
-// (TODO: write to be implemented).
+// any existing versions) and second, only the lastest version will be written.
 //
 // The macros below provides a mechanism to support versioning at the Op level.
 //
@@ -1900,8 +1899,9 @@ void CTFReaderInvLut1DElt::start(const char ** atts)
 {
     CTFReaderOpElt::start(atts);
 
-    // As the 'interpolation' element is optional,
-    // set the value to default behavior.
+    // The interpolation attribute is optional in CLF/CTF.  The INTERP_DEFAULT
+    // enum indicates that the value was not specified in the file.  When 
+    // writing, this means no interpolation attribute will be added.
     m_invLut->setInterpolation(INTERP_DEFAULT);
 
     unsigned i = 0;
@@ -1956,7 +1956,7 @@ void CTFReaderInvLut1DElt::start(const char ** atts)
                 throwMessage(oss.str());
             }
 
-            m_invLut->setHueAdjust(Lut1DOpData::HUE_DW3);
+            m_invLut->setHueAdjust(HUE_DW3);
         }
 
         i += 2;
@@ -1966,6 +1966,12 @@ void CTFReaderInvLut1DElt::start(const char ** atts)
 void CTFReaderInvLut1DElt::end()
 {
     CTFReaderOpElt::end();
+
+    // Record the original array scaling present in the file.  This is used by
+    // a heuristic involved with LUT inversion.  The bit-depth of ops is
+    // typically changed after the file is read, hence the need to store it now.
+    // For an inverse LUT, it's the input bit-depth that describes the array scaling.
+    m_invLut->setFileOutputBitDepth(m_invLut->getInputBitDepth());
     m_invLut->validate();
 }
 
@@ -2041,11 +2047,6 @@ void CTFReaderInvLut1DElt::endArray(unsigned int position)
 
     pArray->validate();
 
-    // Record the original array scaling present in the file.  This is used by
-    // a heuristic involved with LUT inversion.  The bit-depth of ops is
-    // typically changed after the file is read, hence the need to store it now.
-    m_invLut->setFileBitDepth(m_invLut->getInputBitDepth());
-
     // At this point, we have created the complete Lut1D base class.
     // Finalize will finish initializing as an inverse Lut1D.
 
@@ -2067,8 +2068,9 @@ void CTFReaderInvLut3DElt::start(const char ** atts)
 {
     CTFReaderOpElt::start(atts);
 
-    // As the 'interpolation' element is optional,
-    // set the value to default behavior.
+    // The interpolation attribute is optional in CLF/CTF.  The INTERP_DEFAULT
+    // enum indicates that the value was not specified in the file.  When 
+    // writing, this means no interpolation attribute will be added.
     m_invLut->setInterpolation(INTERP_DEFAULT);
 
     unsigned i = 0;
@@ -2094,6 +2096,8 @@ void CTFReaderInvLut3DElt::start(const char ** atts)
 void CTFReaderInvLut3DElt::end()
 {
     CTFReaderOpElt::end();
+    // For an inverse LUT, it's the input bit-depth that describes the array scaling.
+    m_invLut->setFileOutputBitDepth(m_invLut->getInputBitDepth());
     m_invLut->validate();
 }
 
@@ -2563,8 +2567,9 @@ void CTFReaderLut1DElt::start(const char ** atts)
 {
     CTFReaderOpElt::start(atts);
 
-    // As the 'interpolation' element is optional,
-    // set the value to default behavior.
+    // The interpolation attribute is optional in CLF/CTF.  The INTERP_DEFAULT
+    // enum indicates that the value was not specified in the file.  When 
+    // writing, this means no interpolation attribute will be added.
     m_lut->setInterpolation(INTERP_DEFAULT);
 
     unsigned i = 0;
@@ -2612,6 +2617,10 @@ void CTFReaderLut1DElt::start(const char ** atts)
 void CTFReaderLut1DElt::end()
 {
     CTFReaderOpElt::end();
+    // Record the original array scaling present in the file.  This is used by
+    // a heuristic involved with LUT inversion.  The bit-depth of ops is
+    // typically changed after the file is read, hence the need to store it now.
+    m_lut->setFileOutputBitDepth(m_lut->getOutputBitDepth());
     m_lut->validate();
 }
 
@@ -2684,11 +2693,6 @@ void CTFReaderLut1DElt::endArray(unsigned int position)
 
     pArray->validate();
 
-    // Record the original array scaling present in the file.  This is used by
-    // a heuristic involved with LUT inversion.  The bit-depth of ops is
-    // typically changed after the file is read, hence the need to store it now.
-    m_lut->setFileBitDepth(m_lut->getOutputBitDepth());
-
     setCompleted(true);
 }
 
@@ -2728,8 +2732,9 @@ void CTFReaderLut1DElt_1_4::start(const char ** atts)
 {
     CTFReaderOpElt::start(atts);
 
-    // As the 'interpolation' element is optional,
-    // set the value to default behavior.
+    // The interpolation attribute is optional in CLF/CTF.  The INTERP_DEFAULT
+    // enum indicates that the value was not specified in the file.  When 
+    // writing, this means no interpolation attribute will be added.
     m_lut->setInterpolation(INTERP_DEFAULT);
 
     unsigned int i = 0;
@@ -2779,7 +2784,7 @@ void CTFReaderLut1DElt_1_4::start(const char ** atts)
                        "' while parsing Lut1D. ");
             }
 
-            m_lut->setHueAdjust(Lut1DOpData::HUE_DW3);
+            m_lut->setHueAdjust(HUE_DW3);
         }
 
         i += 2;
@@ -2792,6 +2797,7 @@ void CTFReaderLut1DElt_1_4::start(const char ** atts)
 void CTFReaderLut1DElt_1_7::end()
 {
     CTFReaderOpElt::end();
+    m_lut->setFileOutputBitDepth(m_lut->getOutputBitDepth());
     m_lut->validate();
 
     // The LUT renderers do not currently support an indexMap, however for
@@ -2835,8 +2841,9 @@ void CTFReaderLut3DElt::start(const char ** atts)
 {
     CTFReaderOpElt::start(atts);
 
-    // As the 'interpolation' element is optional,
-    // set the value to default behavior.
+    // The interpolation attribute is optional in CLF/CTF.  The INTERP_DEFAULT
+    // enum indicates that the value was not specified in the file.  When 
+    // writing, this means no interpolation attribute will be added.
     m_lut->setInterpolation(INTERP_DEFAULT);
 
     unsigned i = 0;
@@ -2862,6 +2869,7 @@ void CTFReaderLut3DElt::start(const char ** atts)
 void CTFReaderLut3DElt::end()
 {
     CTFReaderOpElt::end();
+    m_lut->setFileOutputBitDepth(m_lut->getOutputBitDepth());
     m_lut->validate();
 }
 
@@ -2942,6 +2950,7 @@ void CTFReaderLut3DElt::endIndexMap(unsigned int position)
 void CTFReaderLut3DElt_1_7::end()
 {
     CTFReaderOpElt::end();
+    m_lut->setFileOutputBitDepth(m_lut->getOutputBitDepth());
     m_lut->validate();
 
     // The LUT renderers do not currently support an indexMap, however for
@@ -2982,6 +2991,9 @@ CTFReaderMatrixElt::~CTFReaderMatrixElt()
 void CTFReaderMatrixElt::end()
 {
     CTFReaderOpElt::end();
+
+    m_matrix->setFileInputBitDepth(m_matrix->getInputBitDepth());
+    m_matrix->setFileOutputBitDepth(m_matrix->getOutputBitDepth());
 
     // Validate the end result.
     m_matrix->validate();
@@ -3245,6 +3257,9 @@ CTFReaderRangeElt::~CTFReaderRangeElt()
 void CTFReaderRangeElt::end()
 {
     CTFReaderOpElt::end();
+
+    m_range->setFileInputBitDepth(m_range->getInputBitDepth());
+    m_range->setFileOutputBitDepth(m_range->getOutputBitDepth());
 
     // Validate the end result.
     m_range->validate();

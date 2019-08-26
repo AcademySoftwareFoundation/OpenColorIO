@@ -40,17 +40,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
+// INFO and DESCRIPTION are CLF XML elements described in S-2014-006.
 static constexpr const char * METADATA_INFO = "Info";
-static constexpr const char * METADATA_ROOT = "ROOT";
-static constexpr const char * METADATA_NAME = "name";
-static constexpr const char * METADATA_ID = "id";
 static constexpr const char * METADATA_DESCRIPTION = "Description";
 
+// NAME and ID are CLF XML attributes described in S-2014-006.
+static constexpr const char * METADATA_NAME = "name";
+static constexpr const char * METADATA_ID = "id";
 
 // ROOT is simply a placeholder name  for the top-level element, since each
 // instance needs a name string.  (At the file level in CLF/CTF, the actual
 // name would be ProcessList.  At the op level it would be the process node
 // name such as Matrix.)  Doesn't get written to the XML.
+static constexpr const char * METADATA_ROOT = "ROOT";
 
 // This class provides a hierarchical metadata container, similar to an XML Element.
 // It contains:

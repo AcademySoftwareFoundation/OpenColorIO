@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <sstream>
 
+#include "BitDepthUtils.h"
 #include "fileformats/ctf/CTFReaderUtils.h"
 #include "fileformats/ctf/CTFTransform.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
@@ -249,6 +250,121 @@ void GetElementsValues(const FormatMetadataImpl::Elements & elements, const std:
 
 namespace
 {
+
+CTFVersion GetOpMinimumVersion(const ConstOpDataRcPtr & op)
+{
+    CTFVersion minVersion{ CTF_PROCESS_LIST_VERSION };
+
+    static_assert(OpData::NoOpType == 11, "Need to handle new type here");
+    switch (op->getType())
+    {
+    case OpData::CDLType:
+    case OpData::MatrixType:
+    case OpData::RangeType:
+    {
+        minVersion = CTF_PROCESS_LIST_VERSION_1_3;
+        break;
+    }
+    case OpData::ExposureContrastType:
+    {
+        minVersion = CTF_PROCESS_LIST_VERSION_1_3;
+
+        auto ec = OCIO_DYNAMIC_POINTER_CAST<const ExposureContrastOpData>(op);
+        if (ec->getLogExposureStep() != ExposureContrastOpData::LOGEXPOSURESTEP_DEFAULT
+            || ec->getLogMidGray() != ExposureContrastOpData::LOGMIDGRAY_DEFAULT)
+        {
+            minVersion = CTF_PROCESS_LIST_VERSION_2_0;
+        }
+        break;
+    }
+
+    case OpData::FixedFunctionType:
+    case OpData::LogType:
+    {
+        minVersion = CTF_PROCESS_LIST_VERSION_2_0;
+        break;
+    }
+    case OpData::ExponentType:
+    {
+        auto exp = OCIO_DYNAMIC_POINTER_CAST<const ExponentOpData>(op);
+
+        minVersion = (exp->m_exp4[3] == 1.) ? CTF_PROCESS_LIST_VERSION_1_3 :
+                                              CTF_PROCESS_LIST_VERSION_1_5;
+       
+        break;
+    }
+    case OpData::GammaType:
+    {
+        auto gamma = OCIO_DYNAMIC_POINTER_CAST<const GammaOpData>(op);
+        minVersion = gamma->isAlphaComponentIdentity() ?
+            CTF_PROCESS_LIST_VERSION_1_3 :
+            CTF_PROCESS_LIST_VERSION_1_5;
+        break;
+    }
+    case OpData::Lut1DType:
+    {
+        auto lut = OCIO_DYNAMIC_POINTER_CAST<const Lut1DOpData>(op);
+        if (lut->getDirection() == TRANSFORM_DIR_FORWARD)
+        {
+            minVersion = (lut->getHueAdjust() != HUE_NONE) ?
+                CTF_PROCESS_LIST_VERSION_1_4 :
+                CTF_PROCESS_LIST_VERSION_1_3;
+        }
+        else
+        {
+            minVersion = (lut->getHueAdjust() != HUE_NONE || lut->isInputHalfDomain()) ?
+                CTF_PROCESS_LIST_VERSION_1_6 :
+                CTF_PROCESS_LIST_VERSION_1_3;
+        }
+        break;
+    }
+    case OpData::Lut3DType:
+    {
+        auto lut = OCIO_DYNAMIC_POINTER_CAST<const Lut3DOpData>(op);
+        if (lut->getDirection() == TRANSFORM_DIR_FORWARD)
+        {
+            minVersion = CTF_PROCESS_LIST_VERSION_1_3;
+        }
+        else
+        {
+            minVersion = CTF_PROCESS_LIST_VERSION_1_6;
+        }
+        break;
+    }
+    case OpData::ReferenceType:
+    {
+        throw Exception("Reference ops should have been replaced by their content.");
+        break;
+    }
+    case OpData::NoOpType:
+    {
+        minVersion = CTF_PROCESS_LIST_VERSION_1_3;
+        break;
+    }
+    }
+
+    return minVersion;
+}
+
+CTFVersion GetMinimumVersion(const ConstCTFReaderTransformPtr & transform)
+{
+    auto & opList = transform->getOps();
+
+    // Need to specify the minimum version here.  Some test transforms have no ops.
+    CTFVersion minimumVersion = CTF_PROCESS_LIST_VERSION_1_3;
+
+    for (auto & op : opList)
+    {
+        const CTFVersion version = GetOpMinimumVersion(op);
+        if (version > minimumVersion)
+        {
+            minimumVersion = version;
+        }
+    }
+
+    return minimumVersion;
+}
+
 const char * GetFirstElementValue(const FormatMetadataImpl::Elements & elements, const std::string & name)
 {
     for (auto & it : elements)
@@ -405,14 +521,14 @@ void SetOStream<double>(double, std::ostream & xml)
     xml.precision(15);
 }
 
-
-template<typename Iter>
+template<typename Iter, typename scaleType>
 void WriteValues(XmlFormatter & formatter,
                  Iter valuesBegin,
                  Iter valuesEnd,
                  unsigned valuesPerLine,
                  BitDepth bitDepth,
-                 unsigned iterStep)
+                 unsigned iterStep,
+                 scaleType scale)
 {
     std::ostream& xml = formatter.getStream();
 
@@ -423,27 +539,27 @@ void WriteValues(XmlFormatter & formatter,
         case BIT_DEPTH_UINT8:
         {
             xml.width(3);
-            xml << *it;
+            xml << (*it) * scale;
             break;
         }
         case BIT_DEPTH_UINT10:
         {
             xml.width(4);
-            xml << *it;
+            xml << (*it) * scale;
             break;
         }
 
         case BIT_DEPTH_UINT12:
         {
             xml.width(4);
-            xml << *it;
+            xml << (*it) * scale;
             break;
         }
 
         case BIT_DEPTH_UINT16:
         {
             xml.width(5);
-            xml << *it;
+            xml << (*it) * scale;
             break;
         }
 
@@ -451,14 +567,14 @@ void WriteValues(XmlFormatter & formatter,
         {
             xml.width(11);
             xml.precision(5);
-            WriteValue(*it, xml);
+            WriteValue((*it) * scale, xml);
             break;
         }
 
         case BIT_DEPTH_F32:
         {
             SetOStream(*it, xml);
-            WriteValue(*it, xml);
+            WriteValue((*it) * scale, xml);
             break;
         }
 
@@ -490,16 +606,22 @@ public:
     OpWriter(const OpWriter&) = delete;
     OpWriter& operator=(const OpWriter&) = delete;
 
-    OpWriter(XmlFormatter & formatter);
+    explicit OpWriter(XmlFormatter & formatter);
     virtual ~OpWriter();
 
     void write() const override;
+
+    inline void setInputBitdepth(BitDepth in) { m_inBitDepth = in; }
+    inline void setOutputBitdepth(BitDepth out) { m_outBitDepth = out; }
 
 protected:
     virtual ConstOpDataRcPtr getOp() const = 0;
     virtual const char * getTagName() const = 0;
     virtual void getAttributes(XmlFormatter::Attributes & attributes) const;
     virtual void writeContent() const = 0;
+    
+    BitDepth m_inBitDepth = BIT_DEPTH_UNKNOWN;
+    BitDepth m_outBitDepth = BIT_DEPTH_UNKNOWN;
 };
 
 OpWriter::OpWriter(XmlFormatter & formatter)
@@ -539,6 +661,76 @@ void OpWriter::write() const
     m_formatter.writeEndTag(tagName);
 }
 
+const char * BitDepthToCLFString(BitDepth bitDepth)
+{
+    if (bitDepth == BIT_DEPTH_UINT8) return "8i";
+    else if (bitDepth == BIT_DEPTH_UINT10) return "10i";
+    else if (bitDepth == BIT_DEPTH_UINT12) return "12i";
+    else if (bitDepth == BIT_DEPTH_UINT16) return "16i";
+    else if (bitDepth == BIT_DEPTH_F16) return "16f";
+    else if (bitDepth == BIT_DEPTH_F32) return "32f";
+    
+    throw Exception("Bitdepth has been validated before calling this.");
+}
+
+const char * GetTypeName(OpData::Type type)
+{
+    static_assert(OpData::NoOpType == 11, "Need to handle new type here");
+    switch (type)
+    {
+    case OpData::CDLType:
+        return "CDL";
+    case OpData::ExponentType:
+        return "Exponent";
+    case OpData::ExposureContrastType:
+        return "ExposureContrast";
+    case OpData::FixedFunctionType:
+        return "FixedFunction";
+    case OpData::GammaType:
+        return "Gamma";
+    case OpData::LogType:
+        return "Log";
+    case OpData::Lut1DType:
+        return "LUT1D";
+    case OpData::Lut3DType:
+        return "LUT3D";
+    case OpData::MatrixType:
+        return "Matrix";
+    case OpData::RangeType:
+        return "Range";
+    case OpData::ReferenceType:
+    case OpData::NoOpType:
+        break;
+    }
+    throw Exception("Unexpected op type.");
+}
+
+BitDepth GetValidatedFileBitDepth(BitDepth bd, OpData::Type type)
+{
+    // If we get BIT_DEPTH_UNKNOWN here, it means the client has not
+    // requested any specific bit-depth to write to the file,
+    // so we will use a default of F32.
+    if (bd == BIT_DEPTH_UNKNOWN)
+    {
+        return BIT_DEPTH_F32;
+    }
+    if ((bd == BIT_DEPTH_UINT8) ||
+        (bd == BIT_DEPTH_UINT10) ||
+        (bd == BIT_DEPTH_UINT12) ||
+        (bd == BIT_DEPTH_UINT16) ||
+        (bd == BIT_DEPTH_F16) ||
+        (bd == BIT_DEPTH_F32))
+    {
+        return bd;
+    }
+
+    const std::string typeName(GetTypeName(type));
+    std::ostringstream oss;
+    oss << "Op " << typeName << ". Bit-depth: " << bd
+        << " is not supported for writing to CLF/CTF.";
+    throw Exception(oss.str().c_str());
+}
+
 void OpWriter::getAttributes(XmlFormatter::Attributes & attributes) const
 {
     auto op = getOp();
@@ -554,11 +746,11 @@ void OpWriter::getAttributes(XmlFormatter::Attributes & attributes) const
         attributes.push_back(XmlFormatter::Attribute(ATTR_NAME, name));
     }
 
-    const char* inBitDepthName = BitDepthToString(op->getInputBitDepth());
+    const char* inBitDepthName = BitDepthToCLFString(m_inBitDepth);
     attributes.push_back(XmlFormatter::Attribute(ATTR_BITDEPTH_IN,
                                                  inBitDepthName));
 
-    const char* outBitDepthName = BitDepthToString(op->getOutputBitDepth());
+    const char* outBitDepthName = BitDepthToCLFString(m_outBitDepth);
     attributes.push_back(XmlFormatter::Attribute(ATTR_BITDEPTH_OUT,
                                                  outBitDepthName));
 
@@ -574,6 +766,9 @@ void OpWriter::getAttributes(XmlFormatter::Attributes & attributes) const
 class CDLWriter : public OpWriter
 {
 public:
+    CDLWriter() = delete;
+    CDLWriter(const CDLWriter&) = delete;
+    CDLWriter& operator=(const CDLWriter&) = delete;
     CDLWriter(XmlFormatter & formatter,
               ConstCDLOpDataRcPtr cdl);
     virtual ~CDLWriter();
@@ -647,6 +842,9 @@ void CDLWriter::writeContent() const
 class ExposureContrastWriter : public OpWriter
 {
 public:
+    ExposureContrastWriter() = delete;
+    ExposureContrastWriter(const ExposureContrastWriter&) = delete;
+    ExposureContrastWriter& operator=(const ExposureContrastWriter&) = delete;
     ExposureContrastWriter(XmlFormatter & formatter,
                            ConstExposureContrastOpDataRcPtr ec);
     virtual ~ExposureContrastWriter();
@@ -760,6 +958,9 @@ void ExposureContrastWriter::writeContent() const
 class FixedFunctionWriter : public OpWriter
 {
 public:
+    FixedFunctionWriter() = delete;
+    FixedFunctionWriter(const FixedFunctionWriter&) = delete;
+    FixedFunctionWriter& operator=(const FixedFunctionWriter&) = delete;
     FixedFunctionWriter(XmlFormatter & formatter,
                         ConstFixedFunctionOpDataRcPtr ff);
     virtual ~FixedFunctionWriter();
@@ -825,6 +1026,9 @@ void FixedFunctionWriter::writeContent() const
 class GammaWriter : public OpWriter
 {
 public:
+    GammaWriter() = delete;
+    GammaWriter(const GammaWriter&) = delete;
+    GammaWriter& operator=(const GammaWriter&) = delete;
     GammaWriter(XmlFormatter & formatter,
                 ConstGammaOpDataRcPtr gamma);
     virtual ~GammaWriter();
@@ -945,8 +1149,7 @@ void GammaWriter::writeContent() const
 
         m_formatter.writeEmptyTag(TAG_GAMMA_PARAMS, attributesB);
 
-        // TODO: sc uses minimun version.
-        //if (getOpMinimumVersion(m_gamma) >= 1.5f)
+        if (GetOpMinimumVersion(m_gamma) >= CTF_PROCESS_LIST_VERSION_1_5)
         {
             // Alpha
             XmlFormatter::Attributes attributesA;
@@ -966,6 +1169,9 @@ void GammaWriter::writeContent() const
 class LogWriter : public OpWriter
 {
 public:
+    LogWriter() = delete;
+    LogWriter(const LogWriter&) = delete;
+    LogWriter& operator=(const LogWriter&) = delete;
     LogWriter(XmlFormatter & formatter,
               ConstLogOpDataRcPtr log);
     virtual ~LogWriter();
@@ -1094,6 +1300,9 @@ void LogWriter::writeContent() const
 class Lut1DWriter : public OpWriter
 {
 public:
+    Lut1DWriter() = delete;
+    Lut1DWriter(const Lut1DWriter&) = delete;
+    Lut1DWriter& operator=(const Lut1DWriter&) = delete;
     Lut1DWriter(XmlFormatter & formatter,
                 ConstLut1DOpDataRcPtr lut);
     virtual ~Lut1DWriter();
@@ -1140,6 +1349,10 @@ void Lut1DWriter::getAttributes(XmlFormatter::Attributes & attributes) const
 {
     OpWriter::getAttributes(attributes);
     Interpolation interpolation = m_lut->getInterpolation();
+    // If the client requests INTERP_LINEAR, we want to write it to the
+    // attribute (even though linear is what CLF specifies as its default,
+    // some clients may want to lock down that behavior). INTERP_DEFAULT
+    // means "do not write the attribute".
     if (interpolation != INTERP_DEFAULT)
     {
         const char * interpolationName = GetInterpolation1DName(interpolation);
@@ -1159,14 +1372,12 @@ void Lut1DWriter::getAttributes(XmlFormatter::Attributes & attributes) const
                                                      "true"));
     }
 
-    Lut1DOpData::HueAdjust hueAdjust = m_lut->getHueAdjust();
-    if (hueAdjust == Lut1DOpData::HUE_DW3)
+    LUT1DHueAdjust hueAdjust = m_lut->getHueAdjust();
+    if (hueAdjust == HUE_DW3)
     {
-        static_assert(Lut1DOpData::HUE_NB_STYLES == 2, "Adjust code if new styles are added.");
         attributes.push_back(XmlFormatter::Attribute(ATTR_HUE_ADJUST,
                                                      "dw3"));
     }
-
 }
     
 void Lut1DWriter::writeContent() const
@@ -1186,6 +1397,12 @@ void Lut1DWriter::writeContent() const
 
     m_formatter.writeStartTag(TAG_ARRAY, attributes);
 
+    // To avoid needing to duplicate the const objects,
+    // we scale the values on-the-fly while writing.
+    const auto fbd = m_outBitDepth;
+    const auto bd = m_lut->getOutputBitDepth();
+    const float scale = (float)(GetBitDepthMaxValue(fbd) / GetBitDepthMaxValue(bd));
+
     if (m_lut->isOutputRawHalfs())
     {
         std::vector<unsigned> values;
@@ -1195,7 +1412,7 @@ void Lut1DWriter::writeContent() const
 
         for (size_t i = 0; i<maxValues; ++i)
         {
-            half h = array.getValues()[i];
+            half h = (array.getValues()[i] * scale);
             values[i] = h.bits();
         }
 
@@ -1204,7 +1421,8 @@ void Lut1DWriter::writeContent() const
                     values.end(),
                     array.getNumColorComponents(),
                     BIT_DEPTH_UINT16,
-                    array.getNumColorComponents() == 1 ? 3 : 1);
+                    array.getNumColorComponents() == 1 ? 3 : 1,
+                    1.0f);
     }
     else
     {
@@ -1213,8 +1431,9 @@ void Lut1DWriter::writeContent() const
                     values.begin(),
                     values.end(),
                     array.getNumColorComponents(),
-                    m_lut->getOutputBitDepth(),
-                    array.getNumColorComponents() == 1 ? 3 : 1);
+                    fbd,
+                    array.getNumColorComponents() == 1 ? 3 : 1,
+                    scale);
     }
 
     m_formatter.writeEndTag(TAG_ARRAY);
@@ -1225,6 +1444,9 @@ void Lut1DWriter::writeContent() const
 class Lut3DWriter : public OpWriter
 {
 public:
+    Lut3DWriter() = delete;
+    Lut3DWriter(const Lut3DWriter&) = delete;
+    Lut3DWriter& operator=(const Lut3DWriter&) = delete;
     Lut3DWriter(XmlFormatter & formatter,
                 ConstLut3DOpDataRcPtr lut);
     virtual ~Lut3DWriter();
@@ -1271,6 +1493,7 @@ void Lut3DWriter::getAttributes(XmlFormatter::Attributes & attributes) const
 {
     OpWriter::getAttributes(attributes);
     Interpolation interpolation = m_lut->getInterpolation();
+    // Please see comment in Lut1DWriter.
     if (interpolation != INTERP_DEFAULT)
     {
         const char* interpolationName = GetInterpolation3DName(interpolation);
@@ -1298,12 +1521,18 @@ void Lut3DWriter::writeContent() const
 
     m_formatter.writeStartTag(TAG_ARRAY, attributes);
 
+    // To avoid needing to duplicate the const objects,
+    // we scale the values on-the-fly while writing.
+    const auto fbd = m_outBitDepth;
+    const auto bd = m_lut->getOutputBitDepth();
+    const float scale = (float)(GetBitDepthMaxValue(fbd) / GetBitDepthMaxValue(bd));
     WriteValues(m_formatter,
                 array.getValues().begin(),
                 array.getValues().end(),
                 3,
-                m_lut->getOutputBitDepth(),
-                1);
+                fbd,
+                1,
+                scale);
 
     m_formatter.writeEndTag(TAG_ARRAY);
 }
@@ -1313,6 +1542,9 @@ void Lut3DWriter::writeContent() const
 class MatrixWriter : public OpWriter
 {
 public:
+    MatrixWriter() = delete;
+    MatrixWriter(const MatrixWriter&) = delete;
+    MatrixWriter& operator=(const MatrixWriter&) = delete;
     MatrixWriter(XmlFormatter & formatter,
                  ConstMatrixOpDataRcPtr matrix);
     virtual ~MatrixWriter();
@@ -1398,7 +1630,7 @@ void MatrixWriter::writeContent() const
                 values[12], values[13], values[14], values[15], offsets[3]
             };
 
-            WriteValues(m_formatter, v, v + 20, 5, BIT_DEPTH_F32, 1);
+            WriteValues(m_formatter, v, v + 20, 5, BIT_DEPTH_F32, 1, 1.0);
         }
         else
         {
@@ -1411,7 +1643,7 @@ void MatrixWriter::writeContent() const
                 values[12], values[13], values[14], values[15]
             };
 
-            WriteValues(m_formatter, v, v + 16, 4, BIT_DEPTH_F32, 1);
+            WriteValues(m_formatter, v, v + 16, 4, BIT_DEPTH_F32, 1, 1.0);
         }
     }
     else if (m_matrix->hasOffsets())
@@ -1424,7 +1656,7 @@ void MatrixWriter::writeContent() const
             values[8] , values[9] , values[10], offsets[2]
         };
 
-        WriteValues(m_formatter, v, v + 12, 4, BIT_DEPTH_F32, 1);
+        WriteValues(m_formatter, v, v + 12, 4, BIT_DEPTH_F32, 1, 1.0);
     }
     else
     {
@@ -1436,7 +1668,7 @@ void MatrixWriter::writeContent() const
             values[8] , values[9] , values[10]
         };
 
-        WriteValues(m_formatter, v, v + 9, 3, BIT_DEPTH_F32, 1);
+        WriteValues(m_formatter, v, v + 9, 3, BIT_DEPTH_F32, 1, 1.0);
     }
 
     m_formatter.writeEndTag(TAG_ARRAY);
@@ -1447,6 +1679,9 @@ void MatrixWriter::writeContent() const
 class RangeWriter : public OpWriter
 {
 public:
+    RangeWriter() = delete;
+    RangeWriter(const RangeWriter&) = delete;
+    RangeWriter& operator=(const RangeWriter&) = delete;
     RangeWriter(XmlFormatter & formatter,
                 ConstRangeOpDataRcPtr range);
     virtual ~RangeWriter();
@@ -1510,109 +1745,6 @@ void RangeWriter::writeContent() const
     {
         WriteTag(m_formatter, TAG_MAX_OUT_VALUE, m_range->getMaxOutValue());
     }
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-CTFVersion GetOpMinimumVersion(const ConstOpDataRcPtr & op)
-{
-    CTFVersion minVersion{ CTF_PROCESS_LIST_VERSION };
-
-    switch (op->getType())
-    {
-    case OpData::CDLType:
-    case OpData::ExposureContrastType:
-    case OpData::MatrixType:
-    case OpData::RangeType:
-    {
-        minVersion = CTF_PROCESS_LIST_VERSION_1_3;
-        break;
-    }
-    case OpData::FixedFunctionType:
-    case OpData::LogType:
-    {
-        minVersion = CTF_PROCESS_LIST_VERSION_2_0;
-        break;
-    }
-    case OpData::ExponentType:
-    {
-        auto exp = OCIO_DYNAMIC_POINTER_CAST<const ExponentOpData>(op);
-
-        minVersion = (exp->m_exp4[3] == 1.) ? CTF_PROCESS_LIST_VERSION_1_3 :
-                                              CTF_PROCESS_LIST_VERSION_1_5;
-       
-        break;
-    }
-    case OpData::GammaType:
-    {
-        auto gamma = OCIO_DYNAMIC_POINTER_CAST<const GammaOpData>(op);
-        minVersion = gamma->isAlphaComponentIdentity() ?
-            CTF_PROCESS_LIST_VERSION_1_3 :
-            CTF_PROCESS_LIST_VERSION_1_5;
-        break;
-    }
-    case OpData::Lut1DType:
-    {
-        auto lut = OCIO_DYNAMIC_POINTER_CAST<const Lut1DOpData>(op);
-        if (lut->getDirection() == TRANSFORM_DIR_FORWARD)
-        {
-            minVersion = (lut->getHueAdjust() != Lut1DOpData::HUE_NONE) ?
-                CTF_PROCESS_LIST_VERSION_1_4 :
-                CTF_PROCESS_LIST_VERSION_1_3;
-        }
-        else
-        {
-            minVersion = (lut->getHueAdjust() != Lut1DOpData::HUE_NONE || lut->isInputHalfDomain()) ?
-                CTF_PROCESS_LIST_VERSION_1_6 :
-                CTF_PROCESS_LIST_VERSION_1_3;
-        }
-        break;
-    }
-    case OpData::Lut3DType:
-    {
-        auto lut = OCIO_DYNAMIC_POINTER_CAST<const Lut3DOpData>(op);
-        if (lut->getDirection() == TRANSFORM_DIR_FORWARD)
-        {
-            minVersion = CTF_PROCESS_LIST_VERSION_1_3;
-        }
-        else
-        {
-            minVersion = CTF_PROCESS_LIST_VERSION_1_6;
-        }
-        break;
-    }
-    case OpData::ReferenceType:
-    {
-        throw Exception("Reference ops should have been replaced by their content.");
-        break;
-    }
-    case OpData::NoOpType:
-    {
-        minVersion = CTF_PROCESS_LIST_VERSION_1_3;
-        break;
-    }
-    }
-
-    return minVersion;
-}
-
-CTFVersion GetMinimumVersion(const ConstCTFReaderTransformPtr & transform)
-{
-    auto & opList = transform->getOps();
-
-    // Need to specify the minimum version here.  Some test transforms have no ops.
-    CTFVersion minimumVersion = CTF_PROCESS_LIST_VERSION_1_3;
-
-    for (auto & op : opList)
-    {
-        const CTFVersion version = GetOpMinimumVersion(op);
-        if (version > minimumVersion)
-        {
-            minimumVersion = version;
-        }
-    }
-
-    return minimumVersion;
 }
 
 } // Anonymous namespace.
@@ -1749,20 +1881,61 @@ void ThrowWriteOp(const std::string & type)
            "as CLF.  Use CTF format or Bake the transform.";
     throw Exception(oss.str().c_str());
 }
+
+BitDepth GetInputFileBD(ConstOpDataRcPtr op)
+{
+    const auto type = op->getType();
+    if (type == OpData::MatrixType)
+    {
+        auto mat = OCIO_DYNAMIC_POINTER_CAST<const MatrixOpData>(op);
+        const auto bd = mat->getFileInputBitDepth();
+        return GetValidatedFileBitDepth(bd, type);
+    }
+    else if (type == OpData::RangeType)
+    {
+        auto range = OCIO_DYNAMIC_POINTER_CAST<const RangeOpData>(op);
+        const auto bd = range->getFileInputBitDepth();
+        return GetValidatedFileBitDepth(bd, type);
+    }
+    return BIT_DEPTH_F32;
+}
+
 }
 
 void TransformWriter::writeOps() const
 {
+    BitDepth inBD = BIT_DEPTH_F32;
+    BitDepth outBD = BIT_DEPTH_F32;
+
     auto & ops = m_transform->getOps();
-    for (auto op : ops)
+    size_t numOps = ops.size();
+    if (numOps)
+    {
+        inBD = GetInputFileBD(ops[0]);
+    }
+
+    for (size_t i = 0; i < numOps; ++i)
     {
         static_assert(OpData::NoOpType == 11, "Add new types");
-        switch (op->getType())
+
+        auto & op = ops[i];
+
+        if (i + 1 < numOps)
+        {
+            auto & nextOp = ops[i + 1];
+            // Return file input bit-depth for Matrix & Range, F32 for others.
+            outBD = GetInputFileBD(nextOp);
+        }
+
+        const auto type = op->getType();
+        switch (type)
         {
         case OpData::CDLType:
         {
             auto cdl = OCIO_DYNAMIC_POINTER_CAST<const CDLOpData>(op);
             CDLWriter opWriter(m_formatter, cdl);
+            opWriter.setInputBitdepth(inBD);
+            opWriter.setOutputBitdepth(outBD);
             opWriter.write();
             break;
         }
@@ -1786,6 +1959,8 @@ void TransformWriter::writeOps() const
                                                 paramR, paramG, paramB, paramA);
 
             GammaWriter opWriter(m_formatter, gammaData);
+            opWriter.setInputBitdepth(inBD);
+            opWriter.setOutputBitdepth(outBD);
             opWriter.write();
             break;
         }
@@ -1798,6 +1973,8 @@ void TransformWriter::writeOps() const
 
             auto ec = OCIO_DYNAMIC_POINTER_CAST<const ExposureContrastOpData>(op);
             ExposureContrastWriter opWriter(m_formatter, ec);
+            opWriter.setInputBitdepth(inBD);
+            opWriter.setOutputBitdepth(outBD);
             opWriter.write();
             break;
         }
@@ -1810,6 +1987,8 @@ void TransformWriter::writeOps() const
 
             auto ff = OCIO_DYNAMIC_POINTER_CAST<const FixedFunctionOpData>(op);
             FixedFunctionWriter opWriter(m_formatter, ff);
+            opWriter.setInputBitdepth(inBD);
+            opWriter.setOutputBitdepth(outBD);
             opWriter.write();
             break;
         }
@@ -1822,6 +2001,8 @@ void TransformWriter::writeOps() const
 
             auto gamma = OCIO_DYNAMIC_POINTER_CAST<const GammaOpData>(op);
             GammaWriter opWriter(m_formatter, gamma);
+            opWriter.setInputBitdepth(inBD);
+            opWriter.setOutputBitdepth(outBD);
             opWriter.write();
             break;
         }
@@ -1834,34 +2015,87 @@ void TransformWriter::writeOps() const
 
             auto log = OCIO_DYNAMIC_POINTER_CAST<const LogOpData>(op);
             LogWriter opWriter(m_formatter, log);
+            opWriter.setInputBitdepth(inBD);
+            opWriter.setOutputBitdepth(outBD);
             opWriter.write();
             break;
         }
         case OpData::Lut1DType:
         {
             auto lut = OCIO_DYNAMIC_POINTER_CAST<const Lut1DOpData>(op);
+            if (m_isCLF)
+            {
+                if (lut->getDirection() != TRANSFORM_DIR_FORWARD)
+                {
+                    ThrowWriteOp("InverseLUT1D");
+                }
+            }
+            // Avoid copying LUT, write will take bit-depth into account.
             Lut1DWriter opWriter(m_formatter, lut);
+
+            outBD = GetValidatedFileBitDepth(lut->getFileOutputBitDepth(), type);
+            opWriter.setInputBitdepth(inBD);
+            opWriter.setOutputBitdepth(outBD);
+
             opWriter.write();
             break;
         }
         case OpData::Lut3DType:
         {
             auto lut = OCIO_DYNAMIC_POINTER_CAST<const Lut3DOpData>(op);
+            if (m_isCLF)
+            {
+                if (lut->getDirection() != TRANSFORM_DIR_FORWARD)
+                {
+                    ThrowWriteOp("InverseLUT3D");
+                }
+            }
+            // Avoid copying LUT, write will take bit-depth into account.
             Lut3DWriter opWriter(m_formatter, lut);
+
+            outBD = GetValidatedFileBitDepth(lut->getFileOutputBitDepth(), type);
+            opWriter.setInputBitdepth(inBD);
+            opWriter.setOutputBitdepth(outBD);
+
             opWriter.write();
             break;
         }
         case OpData::MatrixType:
         {
-            auto mat = OCIO_DYNAMIC_POINTER_CAST<const MatrixOpData>(op);
+            auto matSrc = OCIO_DYNAMIC_POINTER_CAST<const MatrixOpData>(op);
+            auto mat = matSrc->clone();
+
+            outBD = GetValidatedFileBitDepth(mat->getFileOutputBitDepth(), type);
+            // inBD has already been set at previous iteration.
+            // inBD can be:
+            // - This op input file bit-depth if previous op
+            //   does not define an output file bit-depth.
+            // - Previous op output file bit-depth if previous op
+            //   is a LUT, a Matrix or a Range.
+
+            mat->setInputBitDepth(inBD);
+            mat->setOutputBitDepth(outBD);
             MatrixWriter opWriter(m_formatter, mat);
+            opWriter.setInputBitdepth(inBD);
+            opWriter.setOutputBitdepth(outBD);
+
             opWriter.write();
             break;
         }
         case OpData::RangeType:
         {
-            auto range = OCIO_DYNAMIC_POINTER_CAST<const RangeOpData>(op);
+            auto rangeSrc = OCIO_DYNAMIC_POINTER_CAST<const RangeOpData>(op);
+            auto range = rangeSrc->clone();
+
+            outBD = GetValidatedFileBitDepth(range->getFileOutputBitDepth(), type);
+            // inBD has already been set at previous iteration.
+
+            range->setInputBitDepth(inBD);
+            range->setOutputBitDepth(outBD);
             RangeWriter opWriter(m_formatter, range);
+            opWriter.setInputBitdepth(inBD);
+            opWriter.setOutputBitdepth(outBD);
+
             opWriter.write();
             break;
         }
@@ -1875,6 +2109,10 @@ void TransformWriter::writeOps() const
             break;
         }
         }
+
+        // For next op.
+        inBD = outBD;
+        outBD = BIT_DEPTH_F32;
     }
 }
 
@@ -2089,7 +2327,7 @@ OCIO_ADD_TEST(CTFReaderTransform, accessors)
     }
 }
 
-OCIO_ADD_TEST(CTFReaderTransform, validate)
+OCIO_ADD_TEST(CTFReaderTransform, validate_bitdepth_agreement)
 {
     OCIO::CTFReaderTransform t;
     auto matrix = std::make_shared<OCIO::MatrixOpData>(OCIO::BIT_DEPTH_UINT10,
@@ -2113,573 +2351,5 @@ OCIO_ADD_TEST(CTFReaderTransform, validate)
     matrix->setInputBitDepth(OCIO::BIT_DEPTH_F32);
     OCIO_CHECK_NO_THROW(t.validate());
 }
-
-
-OCIO_ADD_TEST(CTFTransform, load_save_matrix)
-{
-    const std::string ctfFile("matrix_example.clf");
-    OCIO::ConstProcessorRcPtr processor;
-    OCIO_CHECK_NO_THROW(processor = OCIO::GetFileTransformProcessor(ctfFile));
-    OCIO_REQUIRE_ASSERT(processor);
-
-    // Create empty Config to use.
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-
-    std::ostringstream outputTransform;
-    processor->write(OCIO::FILEFORMAT_CTF, outputTransform);
-
-    std::istringstream inputTransform;
-    inputTransform.str(outputTransform.str());
-    
-    // Output matrix array as '3 3 3'.
-    std::string line;
-    OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(line, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-
-    OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(line, "<ProcessList version=\"1.3\""
-                           " id=\"b5cc7aed-d405-4d8b-b64b-382b2341a378\""
-                           " name=\"matrix example\">");
-    OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(pystring::strip(line),
-                     "<Description>Convert output-referred XYZ values to "
-                     "linear RGB.</Description>");
-    OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(pystring::strip(line),
-                     "<InputDescriptor>XYZ</InputDescriptor>");
-    OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(pystring::strip(line),
-                     "<OutputDescriptor>RGB</OutputDescriptor>");
-    OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(pystring::strip(line),
-                     "<Matrix id=\"c61daf06-539f-4254-81fc-9800e6d02a37\""
-                     " inBitDepth=\"32f\" outBitDepth=\"32f\">");
-    OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(pystring::strip(line),
-                    "<Description>XYZ to sRGB matrix</Description>");
-    OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(pystring::strip(line), "<Array dim=\"3 3 3\">");
-    OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(pystring::strip(line), "3.24              -1.537             -0.4985");
-    OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(pystring::strip(line), "-0.9693               1.876             0.04156");
-    OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(pystring::strip(line), "0.0556              -0.204              1.0573");
-}
-
-OCIO_ADD_TEST(CTFTransform, save_matrix_444)
-{
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
-    OCIO::MatrixTransformRcPtr mat = OCIO::MatrixTransform::Create();
-    double m[16]{  1.,  0., 0., 0.,
-                   0.,  1., 0., 0., 
-                   0.,  0., 1., 0., 
-                  0.5, 0.5, 0., 1. };
-    mat->setMatrix(m);
-    OCIO::ConstProcessorRcPtr processor = config->getProcessor(mat);
-
-    OCIO::GroupTransformRcPtr group = processor->createGroupTransform();
-    OCIO_CHECK_EQUAL(group->size(), 1);
-
-    std::ostringstream outputTransform;
-    processor->write(OCIO::FILEFORMAT_CTF, outputTransform);
-
-    // Output matrix array as '4 4 4'.
-    OCIO_CHECK_NE(outputTransform.str().find("\"4 4 4\""), std::string::npos);
-}
-
-OCIO_ADD_TEST(CTFTransform, load_edit_save_matrix)
-{
-    const std::string ctfFile("matrix_example.clf");
-    OCIO::ConstProcessorRcPtr processor;
-    OCIO_CHECK_NO_THROW(processor = OCIO::GetFileTransformProcessor(ctfFile));
-    OCIO_REQUIRE_ASSERT(processor);
-    OCIO::GroupTransformRcPtr group = processor->createGroupTransform();
-
-    group->getFormatMetadata().addAttribute(OCIO::ATTR_INVERSE_OF, "added inverseOf");
-    group->getFormatMetadata().addAttribute("Unknown", "not saved");
-    group->getFormatMetadata().addChildElement("Unknown", "not saved");
-    auto & info = group->getFormatMetadata().addChildElement(OCIO::METADATA_INFO, "Preserved");
-    info.addAttribute("attrib", "value");
-    info.addChildElement("Child", "Preserved");
-
-    OCIO_REQUIRE_EQUAL(group->size(), 1);
-    auto transform = group->getTransform(0);
-    auto matTrans = OCIO::DynamicPtrCast<OCIO::MatrixTransform>(transform);
-
-    // Validate how escape characters are saved.
-    const std::string shortName("A ' short ' \" name");
-    const std::string description1("A \" short \" description with a ' inside");
-    const std::string description2("<test\"'&>");
-    auto & desc = matTrans->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, description1.c_str());
-    desc.addAttribute("Unknown", "not saved");
-    matTrans->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, description2.c_str());
-    
-    matTrans->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, shortName.c_str());
-
-    const double offset[] = {0.1, 1.2, 2.3456789123456, 0.0};
-    matTrans->setOffset(offset);
-
-    // Create empty Config to use.
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
-    // Get the processor corresponding to the transform.
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
-
-    std::ostringstream outputTransform;
-    processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform);
-
-    // Output matrix array as '3 4 3'.
-    const std::string expectedCTF{
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-        "<ProcessList version=\"1.3\" id=\"b5cc7aed-d405-4d8b-b64b-382b2341a378\" name=\"matrix example\" inverseOf=\"added inverseOf\">\n"
-        "    <Description>Convert output-referred XYZ values to linear RGB.</Description>\n"
-        "    <InputDescriptor>XYZ</InputDescriptor>\n"
-        "    <OutputDescriptor>RGB</OutputDescriptor>\n"
-        "    <Info attrib=\"value\">\n"
-        "    Preserved\n"
-        "        <Child>Preserved</Child>\n"
-        "    </Info>\n"
-        "    <Matrix id=\"c61daf06-539f-4254-81fc-9800e6d02a37\" name=\"A &apos; short &apos; &quot; name\" inBitDepth=\"32f\" outBitDepth=\"32f\">\n"
-        "        <Description>XYZ to sRGB matrix</Description>\n"
-        "        <Description>A &quot; short &quot; description with a &apos; inside</Description>\n"
-        "        <Description>&lt;test&quot;&apos;&amp;&gt;</Description>\n"
-        "        <Array dim=\"3 4 3\">\n"
-        "               3.24              -1.537             -0.4985                 0.1\n"
-        "            -0.9693               1.876             0.04156                 1.2\n"
-        "             0.0556              -0.204              1.0573     2.3456789123456\n"
-        "        </Array>\n"
-        "    </Matrix>\n"
-        "</ProcessList>\n" };
-
-    OCIO_CHECK_EQUAL(expectedCTF.size(), outputTransform.str().size());
-    OCIO_CHECK_EQUAL(expectedCTF, outputTransform.str());
-}
-
-OCIO_ADD_TEST(CTFTransform, load_edit_save_matrix_clf)
-{
-    const std::string ctfFile("matrix_example.clf");
-    OCIO::ConstProcessorRcPtr processor;
-    OCIO_CHECK_NO_THROW(processor = OCIO::GetFileTransformProcessor(ctfFile));
-    OCIO_REQUIRE_ASSERT(processor);
-    OCIO::GroupTransformRcPtr group = processor->createGroupTransform();
-    OCIO_REQUIRE_EQUAL(group->size(), 1);
-    auto transform = group->getTransform(0);
-    auto matTrans = OCIO::DynamicPtrCast<OCIO::MatrixTransform>(transform);
-    const std::string newDescription{ "Added description" };
-    matTrans->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, newDescription.c_str());
-    const double offset[] = { 0.1, 1.2, 2.3, 1.0 };
-    matTrans->setOffset(offset);
-
-    // Create empty Config to use.
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
-    // Get the processor corresponding to the transform.
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
-
-    std::ostringstream outputTransform;
-    processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform);
-
-    // Output matrix array as '4 5 4'.
-    const std::string expectedCLF{
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-        "<ProcessList compCLFversion=\"2\" id=\"b5cc7aed-d405-4d8b-b64b-382b2341a378\" name=\"matrix example\">\n"
-        "    <Description>Convert output-referred XYZ values to linear RGB.</Description>\n"
-        "    <InputDescriptor>XYZ</InputDescriptor>\n"
-        "    <OutputDescriptor>RGB</OutputDescriptor>\n"
-        "    <Matrix id=\"c61daf06-539f-4254-81fc-9800e6d02a37\" inBitDepth=\"32f\" outBitDepth=\"32f\">\n"
-        "        <Description>XYZ to sRGB matrix</Description>\n"
-        "        <Description>Added description</Description>\n"
-        "        <Array dim=\"4 5 4\">\n"
-        "               3.24              -1.537             -0.4985                   0                 0.1\n"
-        "            -0.9693               1.876             0.04156                   0                 1.2\n"
-        "             0.0556              -0.204              1.0573                   0                 2.3\n"
-        "                  0                   0                   0                   1                   1\n"
-        "        </Array>\n"
-        "    </Matrix>\n"
-        "</ProcessList>\n" };
-
-    OCIO_CHECK_EQUAL(expectedCLF.size(), outputTransform.str().size());
-    OCIO_CHECK_EQUAL(expectedCLF, outputTransform.str());
-}
-
-OCIO_ADD_TEST(CTFTransform, legacy_cdl)
-{
-    // Create empty legacy Config to use.
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(1);
-
-    OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
-    const double sop[] = { 1.0, 1.1, 1.2,
-                           0.2, 0.3, 0.4,
-                           3.1, 3.2, 3.3 };
-    cdl->setSOP(sop);
-    cdl->setSat(2.1);
-    
-    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
-
-    // Need to specify an id so that it does not get generated.
-    group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "cdl0");
-
-    group->push_back(cdl);
-
-    // Get the processor corresponding to the transform.
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
-
-    std::ostringstream outputTransform;
-    processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform);
-
-    // For OCIO v1, an ASC CDL was implemented as a Matrix/Gamma/Matrix rather
-    // than as a dedicated op as in v2 and onward.
-    const std::string expected{
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-        "<ProcessList version=\"1.3\" id=\"cdl0\">\n"
-        "    <Matrix inBitDepth=\"32f\" outBitDepth=\"32f\">\n"
-        "        <Array dim=\"3 4 3\">\n"
-        "                  1                   0                   0                 0.2\n"
-        "                  0                 1.1                   0                 0.3\n"
-        "                  0                   0                 1.2                 0.4\n"
-        "        </Array>\n"
-        "    </Matrix>\n"
-        "    <Gamma inBitDepth=\"32f\" outBitDepth=\"32f\" style=\"basicFwd\">\n"
-        "        <GammaParams channel=\"R\" gamma=\"3.1\" />\n"
-        "        <GammaParams channel=\"G\" gamma=\"3.2\" />\n"
-        "        <GammaParams channel=\"B\" gamma=\"3.3\" />\n"
-        "        <GammaParams channel=\"A\" gamma=\"1\" />\n"
-        "    </Gamma>\n"
-        // Output matrix array as '3 3 3'.
-        "    <Matrix inBitDepth=\"32f\" outBitDepth=\"32f\">\n"
-        "        <Array dim=\"3 3 3\">\n"
-        "            1.86614            -0.78672            -0.07942\n"
-        "           -0.23386             1.31328            -0.07942\n"
-        "           -0.23386            -0.78672             2.02058\n"
-        "        </Array>\n"
-        "    </Matrix>\n"
-        "</ProcessList>\n" };
-
-    OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
-    OCIO_CHECK_EQUAL(expected, outputTransform.str());
-}
-
-OCIO_ADD_TEST(CTFTransform, cdl_clf)
-{
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
-    OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
-    const double sop[] = { 1.0, 1.1, 1.2,
-                           0.2, 0.3, 0.4,
-                           3.1, 3.2, 3.3 };
-    cdl->setSOP(sop);
-    cdl->setSat(2.1);
-    cdl->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, "CDL node for unit test");
-    cdl->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, "Adding another description");
-    cdl->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "TestCDL");
-    cdl->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "CDL42");
-
-    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
-
-    // Need to specify an id so that it does not get generated.
-    group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "cdl1");
-
-    group->push_back(cdl);
-
-    auto & info = group->getFormatMetadata().addChildElement(OCIO::METADATA_INFO);
-    info.addChildElement("Release", "2019");
-    auto & sub = info.addChildElement("Directors");
-    auto & subSub0 = sub.addChildElement("Director");
-    subSub0.addAttribute("FirstName", "David");
-    subSub0.addAttribute("LastName", "Cronenberg");
-    auto & subSub1 = sub.addChildElement("Director");
-    subSub1.addAttribute("FirstName", "David");
-    subSub1.addAttribute("LastName", "Lynch");
-    auto & subSub2 = sub.addChildElement("Director");
-    subSub2.addAttribute("FirstName", "David");
-    subSub2.addAttribute("LastName", "Fincher");
-    auto & subSub3 = sub.addChildElement("Director");
-    subSub3.addAttribute("FirstName", "David");
-    subSub3.addAttribute("LastName", "Lean");
-
-    // Get the processor corresponding to the transform.
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
-
-    std::ostringstream outputTransform;
-    processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform);
-
-    const std::string expected{
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-        "<ProcessList compCLFversion=\"2\" id=\"cdl1\">\n"
-        "    <Info>\n"
-        "        <Release>2019</Release>\n"
-        "        <Directors>\n"
-        "            <Director FirstName=\"David\" LastName=\"Cronenberg\"></Director>\n"
-        "            <Director FirstName=\"David\" LastName=\"Lynch\"></Director>\n"
-        "            <Director FirstName=\"David\" LastName=\"Fincher\"></Director>\n"
-        "            <Director FirstName=\"David\" LastName=\"Lean\"></Director>\n"
-        "        </Directors>\n"
-        "    </Info>\n"
-        "    <ASC_CDL id=\"CDL42\" name=\"TestCDL\" inBitDepth=\"32f\" outBitDepth=\"32f\" style=\"Fwd\">\n"
-        "        <Description>CDL node for unit test</Description>\n"
-        "        <Description>Adding another description</Description>\n"
-        "        <SOPNode>\n"
-        "            <Slope>1, 1.1, 1.2</Slope>\n"
-        "            <Offset>0.2, 0.3, 0.4</Offset>\n"
-        "            <Power>3.1, 3.2, 3.3</Power>\n"
-        "        </SOPNode>\n"
-        "        <SatNode>\n"
-        "            <Saturation>2.1</Saturation>\n"
-        "        </SatNode>\n"
-        "    </ASC_CDL>\n"
-        "</ProcessList>\n" };
-
-    OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
-    OCIO_CHECK_EQUAL(expected, outputTransform.str());
-}
-
-OCIO_ADD_TEST(CTFTransform, cdl_ctf)
-{
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
-    OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
-    const double sop[] = { 1.0, 1.1, 1.2,
-                           0.2, 0.3, 0.4,
-                           3.1, 3.2, 3.3 };
-    cdl->setSOP(sop);
-    cdl->setSat(2.1);
-
-    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
-
-    // Need to specify an id so that it does not get generated.
-    group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "cdl2");
-
-    group->push_back(cdl);
-
-    // Get the processor corresponding to the transform.
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
-
-    std::ostringstream outputTransform;
-    processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform);
-
-    const std::string expected{
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-        "<ProcessList version=\"1.3\" id=\"cdl2\">\n"
-        "    <ASC_CDL inBitDepth=\"32f\" outBitDepth=\"32f\" style=\"Fwd\">\n"
-        "        <SOPNode>\n"
-        "            <Slope>1, 1.1, 1.2</Slope>\n"
-        "            <Offset>0.2, 0.3, 0.4</Offset>\n"
-        "            <Power>3.1, 3.2, 3.3</Power>\n"
-        "        </SOPNode>\n"
-        "        <SatNode>\n"
-        "            <Saturation>2.1</Saturation>\n"
-        "        </SatNode>\n"
-        "    </ASC_CDL>\n"
-        "</ProcessList>\n" };
-
-    OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
-    OCIO_CHECK_EQUAL(expected, outputTransform.str());
-}
-
-OCIO_ADD_TEST(CTFTransform, range_ctf)
-{
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
-    // Non-clamping range are converted to matrix.
-    OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
-    range->setStyle(OCIO::RANGE_NO_CLAMP);
-    range->setMinInValue(0.1);
-    range->setMaxInValue(0.9);
-    range->setMinOutValue(0.0);
-    range->setMaxOutValue(1.2);
-    range->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, "Range node for unit test");
-    range->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "TestRange");
-    range->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "Range42");
-
-    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
-
-    // Need to specify an id so that it does not get generated.
-    group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "mat0");
-    
-    group->getFormatMetadata().addChildElement(OCIO::TAG_INPUT_DESCRIPTOR, "Input descpriptor");
-    group->getFormatMetadata().addChildElement(OCIO::TAG_OUTPUT_DESCRIPTOR, "Output descpriptor");
-
-    group->push_back(range);
-
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
-    std::ostringstream outputTransform;
-    processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform);
-
-    const std::string expected{
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-        "<ProcessList version=\"1.3\" id=\"mat0\">\n"
-        "    <InputDescriptor>Input descpriptor</InputDescriptor>\n"
-        "    <OutputDescriptor>Output descpriptor</OutputDescriptor>\n"
-        "    <Matrix id=\"Range42\" name=\"TestRange\" inBitDepth=\"32f\" outBitDepth=\"32f\">\n"
-        "        <Description>Range node for unit test</Description>\n"
-        "        <Array dim=\"3 4 3\">\n"
-        "                1.5                   0                   0               -0.15\n"
-        "                  0                 1.5                   0               -0.15\n"
-        "                  0                   0                 1.5               -0.15\n"
-        "        </Array>\n"
-        "    </Matrix>\n"
-        "</ProcessList>\n" };
-
-    OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
-    OCIO_CHECK_EQUAL(expected, outputTransform.str());
-}
-
-OCIO_ADD_TEST(CTFTransform, range_clf)
-{
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
-    OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
-    range->setStyle(OCIO::RANGE_CLAMP);
-    range->setMinInValue(0.1);
-    range->setMaxInValue(0.9);
-    range->setMinOutValue(0.0);
-    range->setMaxOutValue(1.2);
-    range->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, "Range node for unit test");
-    range->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "TestRange");
-    range->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "Range42");
-
-    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
-    group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
-    group->getFormatMetadata().addChildElement(OCIO::TAG_INPUT_DESCRIPTOR, "Input descpriptor");
-    group->getFormatMetadata().addChildElement(OCIO::TAG_OUTPUT_DESCRIPTOR, "Output descpriptor");
-    group->push_back(range);
-
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
-    std::ostringstream outputTransform;
-    processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform);
-
-    const std::string expected{
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-        "<ProcessList compCLFversion=\"2\" id=\"UID42\">\n"
-        "    <InputDescriptor>Input descpriptor</InputDescriptor>\n"
-        "    <OutputDescriptor>Output descpriptor</OutputDescriptor>\n"
-        "    <Range id=\"Range42\" name=\"TestRange\" inBitDepth=\"32f\" outBitDepth=\"32f\">\n"
-        "        <Description>Range node for unit test</Description>\n"
-        "        <minInValue> 0.1 </minInValue>\n"
-        "        <maxInValue> 0.9 </maxInValue>\n"
-        "        <minOutValue> 0 </minOutValue>\n"
-        "        <maxOutValue> 1.2 </maxOutValue>\n"
-        "    </Range>\n"
-        "</ProcessList>\n" };
-
-    OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
-    OCIO_CHECK_EQUAL(expected, outputTransform.str());
-}
-
-OCIO_ADD_TEST(CTFTransform, exponent_ctf)
-{
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
-    OCIO::ExponentWithLinearTransformRcPtr exp = OCIO::ExponentWithLinearTransform::Create();
-    const double gamma[] = { 1.1, 1.2, 1.3, 1.0 };
-    exp->setGamma(gamma);
-    const double offset[] = { 0.1, 0.2, 0.1, 0.0 };
-    exp->setOffset(offset);
-
-    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
-    group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
-    group->push_back(exp);
-
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
-    std::ostringstream outputTransform;
-    processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform);
-
-    const std::string expected{
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-        "<ProcessList version=\"1.3\" id=\"UID42\">\n"
-        "    <Gamma inBitDepth=\"32f\" outBitDepth=\"32f\" style=\"moncurveFwd\">\n"
-        "        <GammaParams channel=\"R\" gamma=\"1.1\" offset=\"0.1\" />\n"
-        "        <GammaParams channel=\"G\" gamma=\"1.2\" offset=\"0.2\" />\n"
-        "        <GammaParams channel=\"B\" gamma=\"1.3\" offset=\"0.1\" />\n"
-        "        <GammaParams channel=\"A\" gamma=\"1\" offset=\"0\" />\n"
-        "    </Gamma>\n"
-        "</ProcessList>\n" };
-
-    OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
-    OCIO_CHECK_EQUAL(expected, outputTransform.str());
-}
-
-OCIO_ADD_TEST(CTFTransform, fixed_function_ctf)
-{
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
-    OCIO::FixedFunctionTransformRcPtr ff = OCIO::FixedFunctionTransform::Create();
-    ff->setStyle(OCIO::FIXED_FUNCTION_REC2100_SURROUND);
-    const double val = 0.5;
-    ff->setParams(&val, 1);
-
-    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
-    group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDFF42");
-    group->push_back(ff);
-
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
-    std::ostringstream outputTransform;
-    processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform);
-
-    const std::string expected{
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-        "<ProcessList version=\"2\" id=\"UIDFF42\">\n"
-        "    <FixedFunction inBitDepth=\"32f\" outBitDepth=\"32f\" style=\"Rec2100Surround\" params=\"0.5\">\n"
-        "    </FixedFunction>\n"
-        "</ProcessList>\n" };
-
-    OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
-    OCIO_CHECK_EQUAL(expected, outputTransform.str());
-}
-
-OCIO_ADD_TEST(CTFTransform, exposure_contrast_ctf)
-{
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
-    OCIO::ExposureContrastTransformRcPtr ec = OCIO::ExposureContrastTransform::Create();
-
-    ec->setStyle(OCIO::EXPOSURE_CONTRAST_LOGARITHMIC);
-
-    ec->setExposure(0.65);
-    ec->setContrast(1.2);
-    ec->setGamma(0.5);
-    ec->setPivot(1.0);
-    ec->setLogExposureStep(0.1);
-    ec->setLogMidGray(0.5);
-
-    ec->makeExposureDynamic();
-
-    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
-    group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDEC42");
-    group->push_back(ec);
-
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
-    std::ostringstream outputTransform;
-    processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform);
-
-    const std::string expected{
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-        "<ProcessList version=\"1.3\" id=\"UIDEC42\">\n"
-        "    <ExposureContrast inBitDepth=\"32f\" outBitDepth=\"32f\" style=\"log\">\n"
-        "        <ECParams exposure=\"0.65\" contrast=\"1.2\" gamma=\"0.5\" pivot=\"1\" logExposureStep=\"0.1\" logMidGray=\"0.5\" />\n"
-        "        <DynamicParameter param=\"EXPOSURE\" />\n"
-        "    </ExposureContrast>\n"
-        "</ProcessList>\n" };
-
-    OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
-    OCIO_CHECK_EQUAL(expected, outputTransform.str());
-}
-
-// TODO:  Bring over tests.
-// synColor: xmlTransformWriter_test.cpp
-
 
 #endif

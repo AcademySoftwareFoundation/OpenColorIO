@@ -160,6 +160,8 @@ public:
 
     static const char * ConvertStyleToString(Style style);
 
+    static Style ConvertStyle(ExposureContrastStyle style, TransformDirection dir);
+
     ExposureContrastOpData();
 
     ExposureContrastOpData(const ExposureContrastOpData &) = delete;

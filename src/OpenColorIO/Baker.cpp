@@ -399,11 +399,18 @@ OCIO_ADD_TEST(Baker_Unit_Tests, bake)
     bake->setCubeSize(2);
     OCIO_CHECK_EQUAL(2, bake->getCubeSize());
     std::ostringstream os;
-    bake->bake(os);
+    OCIO_CHECK_NO_THROW(bake->bake(os));
     OCIO_CHECK_EQUAL(expectedLut, os.str());
     OCIO_CHECK_EQUAL(8, bake->getNumFormats());
     OCIO_CHECK_EQUAL("cinespace", std::string(bake->getFormatNameByIndex(2)));
     OCIO_CHECK_EQUAL("3dl", std::string(bake->getFormatExtensionByIndex(1)));
+
+    // TODO: Add CLF bake support.
+    bake->setFormat(OCIO::FILEFORMAT_CLF);
+    OCIO_CHECK_EQUAL(OCIO::FILEFORMAT_CLF, std::string(bake->getFormat()));
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception,
+                          "does not support baking");
+
 }
 
 #endif // OCIO_BUILD_TESTS

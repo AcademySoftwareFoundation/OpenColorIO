@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "GpuShaderUtils.h"
+#include "ops/Exponent/ExponentOps.h"
 #include "ops/Gamma/GammaOpCPU.h"
 #include "ops/Gamma/GammaOps.h"
 #include "ops/Gamma/GammaOpUtils.h"
@@ -260,10 +261,6 @@ void GammaOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
 
 void GammaOp::finalize(FinalizationFlags /*fFlags*/)
 {
-    // Only 32f processing is natively supported.
-    gammaData()->setInputBitDepth(BIT_DEPTH_F32);
-    gammaData()->setOutputBitDepth(BIT_DEPTH_F32);
-
     gammaData()->finalize();
 
     // Create the cacheID
@@ -373,8 +370,6 @@ void CreateGammaOp(OpRcPtrVec & ops,
                    GammaOpDataRcPtr & gammaData,
                    TransformDirection direction)
 {
-    if(gammaData->isNoOp()) return;
-
     auto gamma = gammaData;
     if (direction == TRANSFORM_DIR_INVERSE)
     {
@@ -383,6 +378,8 @@ void CreateGammaOp(OpRcPtrVec & ops,
 
     ops.push_back(std::make_shared<GammaOp>(gamma));
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void CreateGammaTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
 {
@@ -402,8 +399,6 @@ void CreateGammaTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
         {
             expTransform->setDirection(TRANSFORM_DIR_INVERSE);
         }
-        expTransform->setInputBitDepth(gamma->getInputBitDepth());
-        expTransform->setOutputBitDepth(gamma->getOutputBitDepth());
 
         auto & formatMetadata = expTransform->getFormatMetadata();
         auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
@@ -431,8 +426,6 @@ void CreateGammaTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
         {
             expTransform->setDirection(TRANSFORM_DIR_INVERSE);
         }
-        expTransform->setInputBitDepth(gamma->getInputBitDepth());
-        expTransform->setOutputBitDepth(gamma->getOutputBitDepth());
 
         auto & formatMetadata = expTransform->getFormatMetadata();
         auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
@@ -450,6 +443,80 @@ void CreateGammaTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     }
 }
 
+void BuildExponentWithLinearOps(OpRcPtrVec & ops,
+                                const Config & /*config*/,
+                                const ExponentWithLinearTransform & transform,
+                                TransformDirection dir)
+{
+    TransformDirection combinedDir 
+        = CombineTransformDirections(dir, transform.getDirection());
+    
+    double gamma4[4] = { 1., 1., 1., 1. };
+    transform.getGamma(gamma4);
+
+    double offset4[4] = { 0., 0., 0., 0. };
+    transform.getOffset(offset4);
+
+    const bool noOffset = offset4[0] == 0. && offset4[1] == 0. &&
+                          offset4[2] == 0. && offset4[3] == 0.;
+
+    const auto style = noOffset? GammaOpData::BASIC_FWD : GammaOpData::MONCURVE_FWD;
+
+    GammaOpData::Params paramR;
+    GammaOpData::Params paramG;
+    GammaOpData::Params paramB;
+    GammaOpData::Params paramA;
+
+    if (style == GammaOpData::BASIC_FWD)
+    {
+        paramR = { gamma4[0] };
+        paramG = { gamma4[1] };
+        paramB = { gamma4[2] };
+        paramA = { gamma4[3] };
+    }
+    else
+    {
+        paramR = { gamma4[0], offset4[0] };
+        paramG = { gamma4[1], offset4[1] };
+        paramB = { gamma4[2], offset4[2] };
+        paramA = { gamma4[3], offset4[3] };
+    }
+
+    auto gammaData = std::make_shared<GammaOpData>(
+        BIT_DEPTH_F32, BIT_DEPTH_F32,
+        FormatMetadataImpl(transform.getFormatMetadata()),
+        style,
+        paramR, paramG, paramB, paramA);
+
+    CreateGammaOp(ops, gammaData, combinedDir);
+}
+
+void BuildExponentOps(OpRcPtrVec & ops,
+                      const Config & config,
+                      const ExponentTransform & transform,
+                      TransformDirection dir)
+{
+    TransformDirection combinedDir = CombineTransformDirections(dir,
+        transform.getDirection());
+    
+    double vec4[4] = { 1., 1., 1., 1. };
+    transform.getValue(vec4);
+
+    if(config.getMajorVersion()==1)
+    {
+        CreateExponentOp(ops,
+                         vec4,
+                         combinedDir);
+    }
+    else
+    {
+        CreateGammaOp(ops, FormatMetadataImpl(transform.getFormatMetadata()),
+                      combinedDir==TRANSFORM_DIR_FORWARD ? GammaOpData::BASIC_FWD
+                                                         : GammaOpData::BASIC_REV,
+                      vec4, nullptr);
+    }
+}
+
 }
 OCIO_NAMESPACE_EXIT
 
@@ -463,7 +530,6 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "MathUtils.h"
 #include "ParseUtils.h"
 #include "UnitTest.h"
-
 
 namespace
 {

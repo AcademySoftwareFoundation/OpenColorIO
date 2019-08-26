@@ -41,42 +41,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
-FixedFunctionStyle ConvertStyle(FixedFunctionOpData::Style style)
-{
-    switch (style)
-    {
-    case FixedFunctionOpData::ACES_RED_MOD_03_FWD:
-    case FixedFunctionOpData::ACES_RED_MOD_03_INV:
-        return FIXED_FUNCTION_ACES_RED_MOD_03;
-
-    case FixedFunctionOpData::ACES_RED_MOD_10_FWD:
-    case FixedFunctionOpData::ACES_RED_MOD_10_INV:
-        return FIXED_FUNCTION_ACES_RED_MOD_10;
-
-    case FixedFunctionOpData::ACES_GLOW_03_FWD:
-    case FixedFunctionOpData::ACES_GLOW_03_INV:
-        return FIXED_FUNCTION_ACES_GLOW_03;
-
-    case FixedFunctionOpData::ACES_GLOW_10_FWD:
-    case FixedFunctionOpData::ACES_GLOW_10_INV:
-        return FIXED_FUNCTION_ACES_GLOW_10;
-
-    case FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD:
-    case FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV:
-        return FIXED_FUNCTION_ACES_DARK_TO_DIM_10;
-
-    case FixedFunctionOpData::REC2100_SURROUND:
-        return FIXED_FUNCTION_REC2100_SURROUND;
-    }
-
-    std::stringstream ss("Unknown FixedFunction style: ");
-    ss << style;
-
-    throw Exception(ss.str().c_str());
-
-    return FIXED_FUNCTION_ACES_RED_MOD_03;
-}
-
 namespace
 {
 
@@ -174,10 +138,6 @@ void FixedFunctionOp::combineWith(OpRcPtrVec & /*ops*/, ConstOpRcPtr & secondOp)
 
 void FixedFunctionOp::finalize(FinalizationFlags /*fFlags*/)
 {
-    // Only 32f processing is natively supported.
-    fnData()->setInputBitDepth(BIT_DEPTH_F32);
-    fnData()->setOutputBitDepth(BIT_DEPTH_F32);
-
     fnData()->finalize();
 
     // Create the cacheID
@@ -236,8 +196,6 @@ void CreateFixedFunctionOp(OpRcPtrVec & ops,
                            FixedFunctionOpDataRcPtr & funcData,
                            TransformDirection direction)
 {
-    if(funcData->isNoOp()) return;
-
     auto func = funcData;
     if (direction == TRANSFORM_DIR_INVERSE)
     {
@@ -246,6 +204,8 @@ void CreateFixedFunctionOp(OpRcPtrVec & ops,
 
     ops.push_back(std::make_shared<FixedFunctionOp>(func));
 }
+
+///////////////////////////////////////////////////////////////////////////
 
 void CreateFixedFunctionTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
 {
@@ -267,11 +227,8 @@ void CreateFixedFunctionTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op
     {
         ffTransform->setDirection(TRANSFORM_DIR_INVERSE);
     }
-    const auto transformStyle = ConvertStyle(style);
+    const auto transformStyle = FixedFunctionOpData::ConvertStyle(style);
     ffTransform->setStyle(transformStyle);
-
-    ffTransform->setInputBitDepth(ff->getInputBitDepth());
-    ffTransform->setOutputBitDepth(ff->getOutputBitDepth());
 
     auto & formatMetadata = ffTransform->getFormatMetadata();
     auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
@@ -282,6 +239,29 @@ void CreateFixedFunctionTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op
 
     group->push_back(ffTransform);
 }
+
+void BuildFixedFunctionOps(OpRcPtrVec & ops,
+                           const Config & /*config*/,
+                           const ConstContextRcPtr & /*context*/,
+                           const FixedFunctionTransform & transform,
+                           TransformDirection dir)
+{
+    const TransformDirection combinedDir 
+        = CombineTransformDirections(dir, transform.getDirection());
+
+    const size_t numParams = transform.getNumParams();
+    FixedFunctionOpData::Params params(numParams, 0.);
+    if(numParams>0) transform.getParams(&params[0]);
+
+    const auto style = FixedFunctionOpData::ConvertStyle(transform.getStyle());
+
+    auto funcData = std::make_shared<FixedFunctionOpData>(
+        BIT_DEPTH_F32, BIT_DEPTH_F32,
+        params, style);
+
+    CreateFixedFunctionOp(ops, funcData, combinedDir);
+}
+
 
 }
 OCIO_NAMESPACE_EXIT
@@ -298,7 +278,6 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "MathUtils.h"
 #include "pystring/pystring.h"
 #include "UnitTest.h"
-
 
 OCIO_ADD_TEST(FixedFunctionOps, basic)
 {
@@ -508,8 +487,6 @@ OCIO_ADD_TEST(FixedFunctionOps, create_transform)
     OCIO_CHECK_EQUAL(std::string(metadata.getAttributeValue(0)), "test");
 
     OCIO_CHECK_EQUAL(ffTransform->getDirection(), direction);
-    OCIO_CHECK_EQUAL(ffTransform->getInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
-    OCIO_CHECK_EQUAL(ffTransform->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
     OCIO_CHECK_EQUAL(ffTransform->getStyle(), OCIO::FIXED_FUNCTION_REC2100_SURROUND);
     OCIO_CHECK_EQUAL(ffTransform->getNumParams(), 1);
     double param[1];

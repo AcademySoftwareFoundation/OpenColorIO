@@ -261,10 +261,6 @@ OCIO_NAMESPACE_ENTER
 
         void ExponentOp::finalize(FinalizationFlags /*fFlags*/)
         {
-            // Only 32f processing is natively supported.
-            expData()->setInputBitDepth(BIT_DEPTH_F32);
-            expData()->setOutputBitDepth(BIT_DEPTH_F32);
-
             expData()->finalize();
 
             // Create the cacheID
@@ -320,33 +316,30 @@ OCIO_NAMESPACE_ENTER
                           ExponentOpDataRcPtr & expData,
                           TransformDirection direction)
     {
-        if (!IsVecEqualToOne(expData->m_exp4, 4))
+        if (direction == TRANSFORM_DIR_UNKNOWN)
         {
-            if (direction == TRANSFORM_DIR_UNKNOWN)
+            throw Exception("Cannot create ExponentOp with unspecified transform direction.");
+        }
+        else if (direction == TRANSFORM_DIR_INVERSE)
+        {
+            double values[4];
+            for (int i = 0; i<4; ++i)
             {
-                throw Exception("Cannot create ExponentOp with unspecified transform direction.");
-            }
-            else if (direction == TRANSFORM_DIR_INVERSE)
-            {
-                double values[4];
-                for (int i = 0; i<4; ++i)
+                if (!IsScalarEqualToZero(expData->m_exp4[i]))
                 {
-                    if (!IsScalarEqualToZero(expData->m_exp4[i]))
-                    {
-                        values[i] = 1.0 / expData->m_exp4[i];
-                    }
-                    else
-                    {
-                        throw Exception("Cannot apply ExponentOp op, Cannot apply 0.0 exponent in the inverse.");
-                    }
+                    values[i] = 1.0 / expData->m_exp4[i];
                 }
-                ExponentOpDataRcPtr expInv = std::make_shared<ExponentOpData>(values);
-                ops.push_back(std::make_shared<ExponentOp>(expInv));
+                else
+                {
+                    throw Exception("Cannot apply ExponentOp op, Cannot apply 0.0 exponent in the inverse.");
+                }
             }
-            else
-            {
-                ops.push_back(std::make_shared<ExponentOp>(expData));
-            }
+            ExponentOpDataRcPtr expInv = std::make_shared<ExponentOpData>(values);
+            ops.push_back(std::make_shared<ExponentOp>(expInv));
+        }
+        else
+        {
+            ops.push_back(std::make_shared<ExponentOp>(expData));
         }
     }
 
@@ -358,8 +351,6 @@ OCIO_NAMESPACE_ENTER
             throw Exception("CreateExponentTransform: op has to be a ExponentOp");
         }
         auto expTransform = ExponentTransform::Create();
-        expTransform->setInputBitDepth(exp->getInputBitDepth());
-        expTransform->setOutputBitDepth(exp->getOutputBitDepth());
 
         auto expData = DynamicPtrCast<const ExponentOpData>(op->data());
         auto & formatMetadata = expTransform->getFormatMetadata();
@@ -380,8 +371,8 @@ OCIO_NAMESPACE_EXIT
 
 #ifdef OCIO_UNIT_TEST
 
-#include "UnitTest.h"
 #include "ops/NoOp/NoOps.h"
+#include "UnitTest.h"
 
 OCIO_NAMESPACE_USING
 
@@ -665,12 +656,18 @@ OCIO_ADD_TEST(ExponentOps, NoOp)
 {
     const double exp1[4] = { 1.0, 1.0, 1.0, 1.0 };
 
-    // CreateExponentOp will not create a NoOp
+    // CreateExponentOp will create a NoOp
     OpRcPtrVec ops;
     OCIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
     OCIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_INVERSE));
 
-    OCIO_CHECK_EQUAL(ops.empty(), true);
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_CHECK_ASSERT(ops[0]->isNoOp());
+    OCIO_CHECK_ASSERT(ops[1]->isNoOp());
+
+    // Optimize it.
+    OCIO_CHECK_NO_THROW(OptimizeOpVec(ops, OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_EQUAL(ops.size(), 0);
 }
 
 OCIO_ADD_TEST(ExponentOps, CacheID)
@@ -710,8 +707,6 @@ OCIO_ADD_TEST(ExponentOps, create_transform)
     OCIO_REQUIRE_ASSERT(expTransform);
 
     OCIO_CHECK_EQUAL(expTransform->getDirection(), TRANSFORM_DIR_FORWARD);
-    OCIO_CHECK_EQUAL(expTransform->getInputBitDepth(), BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(expTransform->getOutputBitDepth(), BIT_DEPTH_F32);
     double expVal[4];
     expTransform->getValue(expVal);
     OCIO_CHECK_EQUAL(expVal[0], exp[0]);

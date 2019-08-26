@@ -200,9 +200,6 @@ OCIO_NAMESPACE_ENTER
         FormatMetadataImpl & getFormatMetadata() { return m_metadata;  }
         const FormatMetadataImpl & getFormatMetadata() const { return m_metadata; }
 
-        // Helper function that marks metadata as inverse.
-        void invertMetadata();
-
     protected:
         mutable Mutex m_mutex;
         mutable std::string m_cacheID;
@@ -221,8 +218,9 @@ OCIO_NAMESPACE_ENTER
     std::string SerializeOpVec(const OpRcPtrVec & ops, int indent=0);
     bool IsOpVecNoOp(const OpRcPtrVec & ops);
     
+    // Sets all ops to F32 and finalize them.
     void FinalizeOpVec(OpRcPtrVec & opVec, FinalizationFlags fFlags);
-    
+
     void OptimizeOpVec(OpRcPtrVec & result, OptimizationFlags oFlags);
 
     void UnifyDynamicProperties(OpRcPtrVec & ops);
@@ -309,8 +307,8 @@ OCIO_NAMESPACE_ENTER
             virtual BitDepth getInputBitDepth() const { return m_data->getInputBitDepth(); }
             virtual BitDepth getOutputBitDepth() const { return m_data->getOutputBitDepth(); }
 
-            virtual void setInputBitDepth(BitDepth bitdepth) { m_data->setInputBitDepth(bitdepth); }
-            virtual void setOutputBitDepth(BitDepth bitdepth) { m_data->setOutputBitDepth(bitdepth); }
+            virtual void setInputBitDepth(BitDepth bitdepth);
+            virtual void setOutputBitDepth(BitDepth bitdepth);
 
             virtual bool isDynamic() const;
             virtual bool hasDynamicProperty(DynamicPropertyType type) const;

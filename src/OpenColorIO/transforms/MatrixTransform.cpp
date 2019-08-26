@@ -31,8 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "MathUtils.h"
-#include "OpBuilders.h"
-#include "ops/Matrix/MatrixOps.h"
+#include "ops/Matrix/MatrixOpData.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -128,21 +127,21 @@ OCIO_NAMESPACE_ENTER
         }
     }
 
-    BitDepth MatrixTransform::getInputBitDepth() const
+    BitDepth MatrixTransform::getFileInputBitDepth() const
     {
-        return getImpl()->getInputBitDepth();
+        return getImpl()->getFileInputBitDepth();
     }
-    BitDepth MatrixTransform::getOutputBitDepth() const
+    BitDepth MatrixTransform::getFileOutputBitDepth() const
     {
-        return getImpl()->getOutputBitDepth();
+        return getImpl()->getFileOutputBitDepth();
     }
-    void MatrixTransform::setInputBitDepth(BitDepth bitDepth)
+    void MatrixTransform::setFileInputBitDepth(BitDepth bitDepth)
     {
-        getImpl()->setInputBitDepth(bitDepth);
+        getImpl()->setFileInputBitDepth(bitDepth);
     }
-    void MatrixTransform::setOutputBitDepth(BitDepth bitDepth)
+    void MatrixTransform::setFileOutputBitDepth(BitDepth bitDepth)
     {
-        getImpl()->setOutputBitDepth(bitDepth);
+        getImpl()->setFileOutputBitDepth(bitDepth);
     }
 
     FormatMetadata & MatrixTransform::getFormatMetadata()
@@ -638,8 +637,10 @@ OCIO_NAMESPACE_ENTER
         os.precision(DOUBLE_DECIMALS);
 
         os << "<MatrixTransform ";
-        os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
-        os << "matrix=" << matrix[0];
+        os << "direction=" << TransformDirectionToString(t.getDirection());
+        os << ", fileindepth=" << BitDepthToString(t.getFileInputBitDepth());
+        os << ", fileoutdepth=" << BitDepthToString(t.getFileOutputBitDepth());
+        os << ", matrix=" << matrix[0];
         for (int i = 1; i < 16; ++i)
         {
             os << " " << matrix[i];
@@ -653,34 +654,6 @@ OCIO_NAMESPACE_ENTER
         return os;
     }
         
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    void BuildMatrixOps(OpRcPtrVec & ops,
-                        const Config& /*config*/,
-                        const MatrixTransform & transform,
-                        TransformDirection dir)
-    {
-        TransformDirection combinedDir =
-            CombineTransformDirections(dir,
-                                       transform.getDirection());
-        
-        double matrix[16];
-        double offset[4];
-        transform.getMatrix(matrix);
-        transform.getOffset(offset);
-
-        const FormatMetadataImpl metadata(transform.getFormatMetadata());
-        MatrixOpDataRcPtr mat = std::make_shared<MatrixOpData>(transform.getInputBitDepth(),
-                                                               transform.getOutputBitDepth(),
-                                                               metadata);
-        mat->setRGBA(matrix);
-        mat->setRGBAOffsets(offset);
-
-        CreateMatrixOp(ops, mat, combinedDir);
-    }
-    
 }
 OCIO_NAMESPACE_EXIT
 
@@ -758,6 +731,28 @@ OCIO_ADD_TEST(MatrixTransform, basic)
     float m44r[16];
     float offset4r[4];
 
+    matrix->getValue(m44r, offset4r);
+
+    for (int i = 0; i < 16; ++i)
+    {
+        OCIO_CHECK_EQUAL(m44r[i], m44[i]);
+    }
+
+    OCIO_CHECK_EQUAL(offset4r[0], 1.0f);
+    OCIO_CHECK_EQUAL(offset4r[1], 1.1f);
+    OCIO_CHECK_EQUAL(offset4r[2], 1.2f);
+    OCIO_CHECK_EQUAL(offset4r[3], 1.3f);
+
+    OCIO_CHECK_EQUAL(matrix->getFileInputBitDepth(), OCIO::BIT_DEPTH_UNKNOWN);
+    OCIO_CHECK_EQUAL(matrix->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UNKNOWN);
+
+    matrix->setFileInputBitDepth(OCIO::BIT_DEPTH_UINT8);
+    matrix->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
+
+    OCIO_CHECK_EQUAL(matrix->getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OCIO_CHECK_EQUAL(matrix->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+
+    // File bit-depth does not affect values.
     matrix->getValue(m44r, offset4r);
 
     for (int i = 0; i < 16; ++i)

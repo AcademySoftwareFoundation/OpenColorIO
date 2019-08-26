@@ -1438,7 +1438,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         ProcessorRcPtr processor = Processor::Create();
-        processor->getImpl()->addColorSpaceConversion(*this, context, src, dst);
+        processor->getImpl()->setColorSpaceConversion(*this, context, src, dst);
         processor->getImpl()->computeMetadata();
         return processor;
     }
@@ -1493,7 +1493,7 @@ OCIO_NAMESPACE_ENTER
                                              TransformDirection direction) const
     {
         ProcessorRcPtr processor = Processor::Create();
-        processor->getImpl()->addTransform(*this, context, transform, direction);
+        processor->getImpl()->setTransform(*this, context, transform, direction);
         processor->getImpl()->computeMetadata();
         return processor;
     }

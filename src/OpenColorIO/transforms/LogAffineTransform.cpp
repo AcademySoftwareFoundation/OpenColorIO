@@ -33,9 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/Log/LogOpData.h"
-#include "ops/Log/LogOps.h"
-#include "ops/Log/LogUtils.h"
-#include "OpBuilders.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -128,23 +125,6 @@ OCIO_NAMESPACE_ENTER
         }
     }
 
-    BitDepth LogAffineTransform::getInputBitDepth() const
-    {
-        return getImpl()->getInputBitDepth();
-    }
-    BitDepth LogAffineTransform::getOutputBitDepth() const
-    {
-        return getImpl()->getOutputBitDepth();
-    }
-    void LogAffineTransform::setInputBitDepth(BitDepth bitDepth)
-    {
-        getImpl()->setInputBitDepth(bitDepth);
-    }
-    void LogAffineTransform::setOutputBitDepth(BitDepth bitDepth)
-    {
-        getImpl()->setOutputBitDepth(bitDepth);
-    }
-
     FormatMetadata & LogAffineTransform::getFormatMetadata()
     {
         return m_impl->getFormatMetadata();
@@ -218,33 +198,6 @@ OCIO_NAMESPACE_ENTER
         return os;
     }
     
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    void BuildLogOps(OpRcPtrVec & ops,
-                     const Config& /*config*/,
-                     const LogAffineTransform& transform,
-                     TransformDirection dir)
-    {
-        TransformDirection combinedDir =
-            CombineTransformDirections(dir,
-                                       transform.getDirection());
-
-        double base = transform.getBase();
-        double logSlope[3] = { 1.0, 1.0, 1.0 };
-        double linSlope[3] = { 1.0, 1.0, 1.0 };
-        double linOffset[3] = { 0.0, 0.0, 0.0 };
-        double logOffset[3] = { 0.0, 0.0, 0.0 };
-        
-        transform.getLogSideSlopeValue(logSlope);
-        transform.getLogSideOffsetValue(logOffset);
-        transform.getLinSideSlopeValue(linSlope);
-        transform.getLinSideOffsetValue(linOffset);
-        
-
-        CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset, combinedDir);
-    }
 }
 OCIO_NAMESPACE_EXIT
 

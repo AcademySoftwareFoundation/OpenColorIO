@@ -81,9 +81,9 @@ OCIO_NAMESPACE_ENTER
     {
         if (this != &rhs)
         {
-            m_metadata     = rhs.m_metadata;
-            m_inBitDepth   = rhs.m_inBitDepth;
-            m_outBitDepth  = rhs.m_outBitDepth;
+            m_metadata        = rhs.m_metadata;
+            m_inBitDepth      = rhs.m_inBitDepth;
+            m_outBitDepth     = rhs.m_outBitDepth;
         }
 
         return *this;
@@ -135,11 +135,6 @@ OCIO_NAMESPACE_ENTER
         return m_metadata.addAttribute(METADATA_NAME, name.c_str());
     }
 
-    void OpData::invertMetadata()
-    {
-        m_metadata.addChildElement(METADATA_DESCRIPTION, "Inverted");
-    }
-
     Op::Op()
     { }
 
@@ -158,6 +153,22 @@ OCIO_NAMESPACE_ENTER
         os << "Op: " << getInfo() << " cannot be combined. ";
         os << "A type-specific combining function is not defined.";
         throw Exception(os.str().c_str());
+    }
+
+    void Op::setInputBitDepth(BitDepth bitdepth)
+    {
+        if (!isNoOpType())
+        {
+            m_data->setInputBitDepth(bitdepth);
+        }
+    }
+    
+    void Op::setOutputBitDepth(BitDepth bitdepth)
+    {
+        if (!isNoOpType())
+        {
+            m_data->setOutputBitDepth(bitdepth);
+        }
     }
 
     bool Op::isDynamic() const
@@ -288,19 +299,17 @@ OCIO_NAMESPACE_ENTER
     // to make any necessary adjustments to the scaling of its parameter values.
     void OpRcPtrVec::adjustBitDepths()
     {
-        const size_type numOps = m_ops.size();
         BitDepth prevOutBD = BIT_DEPTH_UNKNOWN;
-
-        for(size_type idx=0; idx<numOps; ++idx)
+        for(auto & op : m_ops)
         {
-            if(!m_ops[idx]->isNoOpType())
+            if(!op->isNoOpType())
             {
                 if(prevOutBD != BIT_DEPTH_UNKNOWN 
-                    && m_ops[idx]->getInputBitDepth() != prevOutBD)
+                    && op->getInputBitDepth() != prevOutBD)
                 {
-                    m_ops[idx]->setInputBitDepth(prevOutBD);
+                    op->setInputBitDepth(prevOutBD);
                 }
-                prevOutBD = m_ops[idx]->getOutputBitDepth();
+                prevOutBD = op->getOutputBitDepth();
             }
         }
     }
@@ -376,9 +385,11 @@ OCIO_NAMESPACE_ENTER
     
     void FinalizeOpVec(OpRcPtrVec & ops, FinalizationFlags fFlags)
     {
-        for(OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
+        for (auto & op : ops)
         {
-            ops[i]->finalize(fFlags);
+            op->setInputBitDepth(BIT_DEPTH_F32);
+            op->setOutputBitDepth(BIT_DEPTH_F32);
+            op->finalize(fFlags);
         }
     }
 
@@ -557,10 +568,10 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "UnitTest.h"
 #include "ops/Matrix/MatrixOps.h"
 #include "ops/Log/LogOps.h"
 #include "ops/NoOp/NoOps.h"
+#include "UnitTest.h"
 
 OCIO_NAMESPACE_USING
 

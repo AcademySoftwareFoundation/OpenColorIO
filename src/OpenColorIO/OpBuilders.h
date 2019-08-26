@@ -131,6 +131,16 @@ OCIO_NAMESPACE_ENTER
                       const ConstContextRcPtr & context,
                       const LookParseResult & looks);
     
+    void BuildLut1DOps(OpRcPtrVec & ops,
+                       const Config& config,
+                       const LUT1DTransform & transform,
+                       TransformDirection dir);
+    
+    void BuildLut3DOps(OpRcPtrVec & ops,
+                       const Config& config,
+                       const LUT3DTransform & transform,
+                       TransformDirection dir);
+
     void BuildMatrixOps(OpRcPtrVec & ops,
                         const Config& config,
                         const MatrixTransform & transform,

@@ -118,10 +118,6 @@ OCIO_NAMESPACE_ENTER
         
         void LogOp::finalize(FinalizationFlags /*fFlags*/)
         {
-            // Only 32f processing is natively supported.
-            logData()->setInputBitDepth(BIT_DEPTH_F32);
-            logData()->setOutputBitDepth(BIT_DEPTH_F32);
-
             logData()->finalize();
 
             // Create the cacheID
@@ -192,6 +188,9 @@ OCIO_NAMESPACE_ENTER
         ops.push_back(std::make_shared<LogOp>(log));
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////
+
     void CreateLogTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     {
         auto log = DynamicPtrCast<const LogOp>(op);
@@ -200,8 +199,6 @@ OCIO_NAMESPACE_ENTER
             throw Exception("CreateRangeTransform: op has to be a RangeOp");
         }
         auto logTransform = LogAffineTransform::Create();
-        logTransform->setInputBitDepth(log->getInputBitDepth());
-        logTransform->setOutputBitDepth(log->getOutputBitDepth());
 
         auto logData = DynamicPtrCast<const LogOpData>(op->data());
         logTransform->setDirection(logData->getDirection());
@@ -223,6 +220,44 @@ OCIO_NAMESPACE_ENTER
         
         group->push_back(logTransform);
     }
+
+    void BuildLogOps(OpRcPtrVec & ops,
+                     const Config & /*config*/,
+                     const LogAffineTransform& transform,
+                     TransformDirection dir)
+    {
+        TransformDirection combinedDir =
+            CombineTransformDirections(dir,
+                                       transform.getDirection());
+
+        double base = transform.getBase();
+        double logSlope[3] = { 1.0, 1.0, 1.0 };
+        double linSlope[3] = { 1.0, 1.0, 1.0 };
+        double linOffset[3] = { 0.0, 0.0, 0.0 };
+        double logOffset[3] = { 0.0, 0.0, 0.0 };
+
+        transform.getLogSideSlopeValue(logSlope);
+        transform.getLogSideOffsetValue(logOffset);
+        transform.getLinSideSlopeValue(linSlope);
+        transform.getLinSideOffsetValue(linOffset);
+
+        auto opData = std::make_shared<LogOpData>(base, logSlope, logOffset,
+                                                  linSlope, linOffset, TRANSFORM_DIR_FORWARD);
+
+        CreateLogOp(ops, opData, combinedDir);
+    }
+
+    void BuildLogOps(OpRcPtrVec & ops,
+                     const Config& /*config*/,
+                     const LogTransform& transform,
+                     TransformDirection dir)
+    {
+        TransformDirection combinedDir =
+            CombineTransformDirections(dir,
+                                       transform.getDirection());
+        CreateLogOp(ops, transform.getBase(), combinedDir);
+    }
+
 }
 OCIO_NAMESPACE_EXIT
 

@@ -121,6 +121,42 @@ const char * ExposureContrastOpData::ConvertStyleToString(ExposureContrastOpData
     throw Exception("Unknown exposure contrast style.");
 }
 
+ExposureContrastOpData::Style ExposureContrastOpData::ConvertStyle(ExposureContrastStyle style,
+                                                                   TransformDirection dir)
+{
+    if (dir == TRANSFORM_DIR_UNKNOWN)
+    {
+        throw Exception(
+            "Cannot create ExposureContrastOp with unspecified transform direction.");
+    }
+
+    const bool isForward = dir == TRANSFORM_DIR_FORWARD;
+
+    switch (style)
+    {
+    case EXPOSURE_CONTRAST_VIDEO:
+    {
+        return (isForward) ? ExposureContrastOpData::STYLE_VIDEO:
+                             ExposureContrastOpData::STYLE_VIDEO_REV;
+    }
+    case EXPOSURE_CONTRAST_LOGARITHMIC:
+    {
+        return (isForward) ? ExposureContrastOpData::STYLE_LOGARITHMIC:
+                             ExposureContrastOpData::STYLE_LOGARITHMIC_REV;
+    }
+    case EXPOSURE_CONTRAST_LINEAR:
+    {
+        return (isForward) ? ExposureContrastOpData::STYLE_LINEAR:
+                             ExposureContrastOpData::STYLE_LINEAR_REV;
+    }
+    }
+
+    std::stringstream ss("Unknown ExposureContrast transform style: ");
+    ss << style;
+
+    throw Exception(ss.str().c_str());
+}
+
 ExposureContrastOpData::ExposureContrastOpData()
     : OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
     , m_exposure(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_EXPOSURE, 0., false))
@@ -208,7 +244,9 @@ ExposureContrastOpDataRcPtr ExposureContrastOpData::inverse() const
     ec->setInputBitDepth(getOutputBitDepth());
     ec->setOutputBitDepth(getInputBitDepth());
 
-    ec->invertMetadata();
+    // Note that any existing metadata could become stale at this point but
+    // trying to update it is also challenging since inverse() is sometimes
+    // called even during the creation of new ops.
 
     return ec;
 }

@@ -68,7 +68,6 @@ Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut)
 
     // Compose the LUT newDomain with our inverse LUT (using INV_EXACT style).
     Lut3DOpData::Compose(newDomain, lut);
-    newDomain->invertMetadata();
 
     // The INV_EXACT inversion style computes an inverse to the tetrahedral
     // style of forward evalutation.
@@ -79,6 +78,7 @@ Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut)
     return newDomain;
 }
 
+// 129 allows for a MESH dimension of 7 in the 3dl file format.
 const unsigned long Lut3DOpData::maxSupportedLength = 129;
 
 // Functional composition is a concept from mathematics where two functions
@@ -204,7 +204,7 @@ void Lut3DOpData::Lut3DArray::fill(BitDepth outBitDepth)
     Array::Values& values = getValues();
 
     const float stepValue 
-        = GetBitDepthMaxValue(outBitDepth) / ((float)length - 1.0f);
+        = (float)GetBitDepthMaxValue(outBitDepth) / ((float)length - 1.0f);
 
     const long maxEntries = length*length*length;
 
@@ -225,7 +225,7 @@ bool Lut3DOpData::Lut3DArray::isIdentity(BitDepth outBitDepth) const
     // aside from possibly a scaling for bit-depth conversion.
 
     const float stepSize =
-        GetBitDepthMaxValue(outBitDepth) / ((float)length - 1.0f);
+        (float)GetBitDepthMaxValue(outBitDepth) / ((float)length - 1.0f);
 
     const long maxEntries = length*length*length;
 
@@ -254,6 +254,19 @@ bool Lut3DOpData::Lut3DArray::isIdentity(BitDepth outBitDepth) const
         }
     }
     return true;
+}
+
+void Lut3DOpData::Lut3DArray::resize(unsigned long length, unsigned long numColorComponents)
+{
+    if (length > maxSupportedLength)
+    {
+        std::ostringstream oss;
+        oss << "LUT 3D: Grid size '" << length
+            << "' must not be greater than '" << maxSupportedLength << "'.";
+        throw Exception(oss.str().c_str());
+    }
+    Array::resize(length, numColorComponents);
+
 }
 
 unsigned long Lut3DOpData::Lut3DArray::getNumValues() const
@@ -431,9 +444,9 @@ void Lut3DOpData::validate() const
 
     if (getArray().getLength()>maxSupportedLength)
     {
+        // This should never happen. Enforced by resize.
         std::ostringstream oss;
-        oss << "Lut3D length: ";
-        oss << getArray().getLength();
+        oss << "Lut3D length: " << getArray().getLength();
         oss << " is not supported. ";
 
         throw Exception(oss.str().c_str());
@@ -457,8 +470,8 @@ void Lut3DOpData::setOutputBitDepth(BitDepth out)
     {
         // Scale factor is max_new_depth/max_old_depth.
         const float scaleFactor
-            = GetBitDepthMaxValue(out)
-            / GetBitDepthMaxValue(getOutputBitDepth());
+            = (float)(GetBitDepthMaxValue(out))
+            / (float)GetBitDepthMaxValue(getOutputBitDepth());
 
         // Scale array for the new bit-depth if scaleFactor != 1.
         m_array.scale(scaleFactor);
@@ -476,8 +489,8 @@ void Lut3DOpData::setInputBitDepth(BitDepth in)
 
         // Scale factor is max_new_depth/max_old_depth.
         const float scaleFactor
-            = GetBitDepthMaxValue(in)
-            / GetBitDepthMaxValue(getInputBitDepth());
+            = (float)(GetBitDepthMaxValue(in))
+            / (float)GetBitDepthMaxValue(getInputBitDepth());
 
         // Scale array for the new bit-depth if scaleFactor != 1.
         m_array.scale(scaleFactor);
@@ -585,8 +598,9 @@ Lut3DOpDataRcPtr Lut3DOpData::inverse() const
     invLut->OpData::setInputBitDepth(getOutputBitDepth());
     invLut->OpData::setOutputBitDepth(in);
 
-    invLut->invertMetadata();
-
+    // Note that any existing metadata could become stale at this point but
+    // trying to update it is also challenging since inverse() is sometimes
+    // called even during the creation of new ops.
     return invLut;
 }
 
@@ -699,8 +713,8 @@ OCIO_ADD_TEST(Lut3DOpData, diff_bitdepth)
     OCIO_CHECK_NO_THROW(l2.validate());
 
     const float coeff
-        = OCIO::GetBitDepthMaxValue(l2.getOutputBitDepth())
-            / OCIO::GetBitDepthMaxValue(l2.getInputBitDepth());
+        = (float)(OCIO::GetBitDepthMaxValue(l2.getOutputBitDepth()))
+            / (float)OCIO::GetBitDepthMaxValue(l2.getInputBitDepth());
 
     // To validate the result, compute the expected results
     // not using the Lut3DOp algorithm.
@@ -735,14 +749,9 @@ OCIO_ADD_TEST(Lut3DOpData, clone)
 
 OCIO_ADD_TEST(Lut3DOpData, not_supported_length)
 {
-    const OCIO::Lut3DOpData ref1(OCIO::Lut3DOpData::maxSupportedLength);
-
-    OCIO_CHECK_NO_THROW(ref1.validate());
-
-    const OCIO::Lut3DOpData ref2(OCIO::Lut3DOpData::maxSupportedLength + 1);
-
-    OCIO_CHECK_THROW_WHAT(ref2.validate(), OCIO::Exception, "is not supported");
-
+    OCIO_CHECK_NO_THROW(OCIO::Lut3DOpData{ OCIO::Lut3DOpData::maxSupportedLength });
+    OCIO_CHECK_THROW_WHAT(OCIO::Lut3DOpData{ OCIO::Lut3DOpData::maxSupportedLength + 1 },
+                          OCIO::Exception, "must not be greater");
 }
 
 OCIO_ADD_TEST(Lut3DOpData, ouput_depth_scaling)
@@ -763,8 +772,8 @@ OCIO_ADD_TEST(Lut3DOpData, ouput_depth_scaling)
     const OCIO::BitDepth newBitdepth = OCIO::BIT_DEPTH_UINT16;
 
     const float factor
-        = OCIO::GetBitDepthMaxValue(newBitdepth)
-            / OCIO::GetBitDepthMaxValue(initialBitdepth);
+        = (float)(OCIO::GetBitDepthMaxValue(newBitdepth))
+            / (float)OCIO::GetBitDepthMaxValue(initialBitdepth);
 
     ref.setOutputBitDepth(newBitdepth);
     // Now we need to make sure that the bitdepth was changed from the overriden

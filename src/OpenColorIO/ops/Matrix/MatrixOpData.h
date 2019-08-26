@@ -216,6 +216,13 @@ public:
 
     MatrixOpDataRcPtr inverse() const;
 
+    inline BitDepth getFileInputBitDepth() const { return m_fileInBitDepth; }
+    inline void setFileInputBitDepth(BitDepth in) { m_fileInBitDepth = in; }
+
+    inline BitDepth getFileOutputBitDepth() const { return m_fileOutBitDepth; }
+    inline void setFileOutputBitDepth(BitDepth out) { m_fileOutBitDepth = out; }
+
+
 private:
 
     bool isMatrixIdentity() const;
@@ -271,6 +278,12 @@ private:
 
     MatrixArray m_array;
     Offsets     m_offsets;
+
+    // In bit-depth to be used for file I/O.
+    BitDepth m_fileInBitDepth = BIT_DEPTH_UNKNOWN;
+    // Out bit-depth to be used for file I/O.
+    BitDepth m_fileOutBitDepth = BIT_DEPTH_UNKNOWN;
+
 };
 }
 OCIO_NAMESPACE_EXIT

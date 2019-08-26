@@ -397,7 +397,10 @@ CDLOpDataRcPtr CDLOpData::inverse() const
         case CDL_NO_CLAMP_FWD: cdl->setStyle(CDL_NO_CLAMP_REV); break;
         case CDL_NO_CLAMP_REV: cdl->setStyle(CDL_NO_CLAMP_FWD); break;
     }
-    cdl->invertMetadata();
+    
+    // Note that any existing metadata could become stale at this point but
+    // trying to update it is also challenging since inverse() is sometimes
+    // called even during the creation of new ops.
     return cdl;
 }
 
@@ -562,15 +565,13 @@ OCIO_ADD_TEST(CDLOpData, inverse)
         OCIO_CHECK_EQUAL(invOp->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
         OCIO_CHECK_EQUAL(invOp->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
-        // Ensure metadata is copied and a description has been added.
+        // Ensure metadata is copied
         OCIO_CHECK_EQUAL(invOp->getID(), "test_id");
-        OCIO_REQUIRE_EQUAL(invOp->getFormatMetadata().getChildrenElements().size(), 2);
+        OCIO_REQUIRE_EQUAL(invOp->getFormatMetadata().getChildrenElements().size(), 1);
         OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_DESCRIPTION),
                          invOp->getFormatMetadata().getChildrenElements()[0].getName());
-        OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_DESCRIPTION),
-                         invOp->getFormatMetadata().getChildrenElements()[1].getName());
-        OCIO_CHECK_EQUAL(std::string("Inverted"),
-                         invOp->getFormatMetadata().getChildrenElements()[1].getValue());
+        OCIO_CHECK_EQUAL(std::string("Inverse op test description"),
+                         invOp->getFormatMetadata().getChildrenElements()[0].getValue());
 
         // Ensure style is inverted
         OCIO_CHECK_EQUAL(invOp->getStyle(), OCIO::CDLOpData::CDL_V1_2_REV);
@@ -599,9 +600,9 @@ OCIO_ADD_TEST(CDLOpData, inverse)
         OCIO_CHECK_EQUAL(invOp->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
         OCIO_CHECK_EQUAL(invOp->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
-        // Ensure metadata is copied and a description has been added.
+        // Ensure metadata is copied
         OCIO_CHECK_EQUAL(invOp->getID(), "test_id");
-        OCIO_CHECK_EQUAL(invOp->getFormatMetadata().getChildrenElements().size(), 2);
+        OCIO_CHECK_EQUAL(invOp->getFormatMetadata().getChildrenElements().size(), 1);
 
         // Ensure style is inverted
         OCIO_CHECK_EQUAL(invOp->getStyle(), OCIO::CDLOpData::CDL_V1_2_FWD);
@@ -630,9 +631,9 @@ OCIO_ADD_TEST(CDLOpData, inverse)
         OCIO_CHECK_EQUAL(invOp->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
         OCIO_CHECK_EQUAL(invOp->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
-        // Ensure metadata is copied and a description has been added.
+        // Ensure metadata is copied
         OCIO_CHECK_EQUAL(invOp->getID(), "test_id");
-        OCIO_CHECK_EQUAL(invOp->getFormatMetadata().getChildrenElements().size(), 2);
+        OCIO_CHECK_EQUAL(invOp->getFormatMetadata().getChildrenElements().size(), 1);
 
         // Ensure style is inverted
         OCIO_CHECK_EQUAL(invOp->getStyle(), OCIO::CDLOpData::CDL_NO_CLAMP_REV);
@@ -660,9 +661,9 @@ OCIO_ADD_TEST(CDLOpData, inverse)
         OCIO_CHECK_EQUAL(invOp->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
         OCIO_CHECK_EQUAL(invOp->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
-        // Ensure metadata is copied and a description has been added.
+        // Ensure metadata is copied
         OCIO_CHECK_EQUAL(invOp->getID(), "test_id");
-        OCIO_CHECK_EQUAL(invOp->getFormatMetadata().getChildrenElements().size(), 2);
+        OCIO_CHECK_EQUAL(invOp->getFormatMetadata().getChildrenElements().size(), 1);
 
         // Ensure style is inverted
         OCIO_CHECK_EQUAL(invOp->getStyle(), OCIO::CDLOpData::CDL_NO_CLAMP_FWD);

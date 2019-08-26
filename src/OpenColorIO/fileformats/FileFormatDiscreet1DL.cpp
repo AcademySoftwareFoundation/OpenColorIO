@@ -887,6 +887,7 @@ OCIO_ADD_TEST(FileFormatD1DL, test_lut1d_8i_8i)
     OCIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_LINEAR);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OCIO_CHECK_EQUAL(lutFile->lut1D->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
 
     OCIO_CHECK_ASSERT(!lutFile->lut1D->isInputHalfDomain());
     OCIO_CHECK_ASSERT(!lutFile->lut1D->isOutputRawHalfs());
@@ -926,6 +927,7 @@ OCIO_ADD_TEST(FileFormatD1DL, test_lut1d_12i_16f)
     OCIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_LINEAR);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
+    OCIO_CHECK_EQUAL(lutFile->lut1D->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
     OCIO_CHECK_ASSERT(!lutFile->lut1D->isInputHalfDomain());
     OCIO_CHECK_ASSERT(!lutFile->lut1D->isOutputRawHalfs());
@@ -962,6 +964,7 @@ OCIO_ADD_TEST(FileFormatD1DL, test_lut1d_16f_16f)
     OCIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_LINEAR);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
+    OCIO_CHECK_EQUAL(lutFile->lut1D->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
     OCIO_CHECK_ASSERT(lutFile->lut1D->isInputHalfDomain());
     OCIO_CHECK_ASSERT(!lutFile->lut1D->isOutputRawHalfs());
@@ -998,6 +1001,7 @@ OCIO_ADD_TEST(FileFormatD1DL, test_lut1d_16f_12i)
     OCIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_LINEAR);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+    OCIO_CHECK_EQUAL(lutFile->lut1D->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
 
     OCIO_CHECK_ASSERT(lutFile->lut1D->isInputHalfDomain());
     OCIO_CHECK_ASSERT(!lutFile->lut1D->isOutputRawHalfs());

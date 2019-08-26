@@ -248,7 +248,7 @@ void GammaMoncurveOpCPUFwd::update(ConstGammaOpDataRcPtr & gamma)
     ComputeParamsFwd(gamma->getBlueParams(),  inBitDepth, outBitDepth, m_blue);
     ComputeParamsFwd(gamma->getAlphaParams(), inBitDepth, outBitDepth, m_alpha);
 
-    m_outScale = GetBitDepthMaxValue(outBitDepth);
+    m_outScale = (float)GetBitDepthMaxValue(outBitDepth);
 }
 
 void GammaMoncurveOpCPUFwd::apply(const void * inImg, void * outImg, long numPixels) const

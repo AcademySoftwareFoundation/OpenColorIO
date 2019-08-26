@@ -201,7 +201,10 @@ OCIO_NAMESPACE_ENTER
 
             MatrixOpDataRcPtr composedMat = firstMat->compose(secondMat);
 
-            CreateMatrixOp(ops, composedMat, TRANSFORM_DIR_FORWARD);
+            if (!composedMat->isNoOp())
+            {
+                CreateMatrixOp(ops, composedMat, TRANSFORM_DIR_FORWARD);
+            }
         }
         
         void MatrixOffsetOp::finalize(FinalizationFlags /*fFlags*/)
@@ -213,10 +216,6 @@ OCIO_NAMESPACE_ENTER
                 data() = thisMat;
                 m_direction = TRANSFORM_DIR_FORWARD;
             }
-
-            // Only 32f processing is natively supported.
-            matrixData()->setInputBitDepth(BIT_DEPTH_F32);
-            matrixData()->setOutputBitDepth(BIT_DEPTH_F32);
 
             matrixData()->finalize();
 
@@ -433,10 +432,6 @@ OCIO_NAMESPACE_ENTER
                         MatrixOpDataRcPtr & matrix,
                         TransformDirection direction)
     {
-        if (matrix->isNoOp())
-        {
-            return;
-        }
         ops.push_back(std::make_shared<MatrixOffsetOp>(matrix, direction));
     }
 
@@ -448,6 +443,8 @@ OCIO_NAMESPACE_ENTER
         ops.push_back(std::make_shared<MatrixOffsetOp>(mat, TRANSFORM_DIR_FORWARD));
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+
     void CreateMatrixTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     {
         auto mat = DynamicPtrCast<const MatrixOffsetOp>(op);
@@ -457,10 +454,16 @@ OCIO_NAMESPACE_ENTER
         }
         auto matTransform = MatrixTransform::Create();
         matTransform->setDirection(mat->getDirection());
-        matTransform->setInputBitDepth(mat->getInputBitDepth());
-        matTransform->setOutputBitDepth(mat->getOutputBitDepth());
 
-        auto matData = DynamicPtrCast<const MatrixOpData>(op->data());
+        auto matDataSrc = DynamicPtrCast<const MatrixOpData>(op->data());
+
+        // Clone to make 32F.
+        auto matData = matDataSrc->clone();
+        matData->setInputBitDepth(BIT_DEPTH_F32);
+        matData->setOutputBitDepth(BIT_DEPTH_F32);
+
+        matTransform->setFileInputBitDepth(matData->getFileInputBitDepth());
+        matTransform->setFileOutputBitDepth(matData->getFileOutputBitDepth());
         auto & formatMetadata = matTransform->getFormatMetadata();
         auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
         metadata = matData->getFormatMetadata();
@@ -477,10 +480,37 @@ OCIO_NAMESPACE_ENTER
             os << matData->getArray().getLength() << ".";
             throw Exception(os.str().c_str());
         }
+
         matTransform->setMatrix(matData->getArray().getValues().data());
         matTransform->setOffset(matData->getOffsets().getValues());
 
         group->push_back(matTransform);
+    }
+
+    void BuildMatrixOps(OpRcPtrVec & ops,
+                        const Config & /*config*/,
+                        const MatrixTransform & transform,
+                        TransformDirection dir)
+    {
+        TransformDirection combinedDir =
+            CombineTransformDirections(dir,
+                                       transform.getDirection());
+
+        double matrix[16];
+        double offset[4];
+        transform.getMatrix(matrix);
+        transform.getOffset(offset);
+
+        const FormatMetadataImpl metadata(transform.getFormatMetadata());
+        MatrixOpDataRcPtr mat = std::make_shared<MatrixOpData>(BIT_DEPTH_F32,
+                                                               BIT_DEPTH_F32,
+                                                               metadata);
+        mat->setFileInputBitDepth(transform.getFileInputBitDepth());
+        mat->setFileOutputBitDepth(transform.getFileOutputBitDepth());
+        mat->setRGBA(matrix);
+        mat->setRGBAOffsets(offset);
+
+        CreateMatrixOp(ops, mat, combinedDir);
     }
 
 }
@@ -1195,15 +1225,23 @@ OCIO_ADD_TEST(MatrixOffsetOp, no_op)
     const double offset[] = { 0.0, 0.0, 0.0, 0.0 };
     OCIO_CHECK_NO_THROW(CreateOffsetOp(ops, offset, TRANSFORM_DIR_FORWARD));
 
-    // No ops are not created.
+    // No ops are created.
+    OCIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
     OCIO_CHECK_EQUAL(ops.size(), 0);
     OCIO_CHECK_NO_THROW(CreateOffsetOp(ops, offset, TRANSFORM_DIR_INVERSE));
+    OCIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
     OCIO_CHECK_EQUAL(ops.size(), 0);
 
     const double scale[] = { 1.0, 1.0, 1.0, 1.0 };
     OCIO_CHECK_NO_THROW(CreateScaleOp(ops, scale, TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
     OCIO_CHECK_EQUAL(ops.size(), 0);
     OCIO_CHECK_NO_THROW(CreateScaleOp(ops, scale, TRANSFORM_DIR_INVERSE));
+    OCIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
     OCIO_CHECK_EQUAL(ops.size(), 0);
 
     const double matrix[16] = { 1.0, 0.0, 0.0, 0.0,
@@ -1212,14 +1250,22 @@ OCIO_ADD_TEST(MatrixOffsetOp, no_op)
                                 0.0, 0.0, 0.0, 1.0 };
 
     OCIO_CHECK_NO_THROW(CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
     OCIO_CHECK_EQUAL(ops.size(), 0);
     OCIO_CHECK_NO_THROW(CreateMatrixOp(ops, matrix, TRANSFORM_DIR_INVERSE));
+    OCIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
     OCIO_CHECK_EQUAL(ops.size(), 0);
     OCIO_CHECK_NO_THROW(
         CreateMatrixOffsetOp(ops, matrix, offset, TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
     OCIO_CHECK_EQUAL(ops.size(), 0);
     OCIO_CHECK_NO_THROW(
         CreateMatrixOffsetOp(ops, matrix, offset, TRANSFORM_DIR_INVERSE));
+    OCIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
     OCIO_CHECK_EQUAL(ops.size(), 0);
 
     const double oldmin4[4] = { 0.0, 0.0, 0.0, 0.0 };
@@ -1228,11 +1274,15 @@ OCIO_ADD_TEST(MatrixOffsetOp, no_op)
     OCIO_CHECK_NO_THROW(CreateFitOp(ops,
         oldmin4, oldmax4,
         oldmin4, oldmax4, TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
     OCIO_CHECK_EQUAL(ops.size(), 0);
 
     OCIO_CHECK_NO_THROW(CreateFitOp(ops,
         oldmin4, oldmax4,
         oldmin4, oldmax4, TRANSFORM_DIR_INVERSE));
+    OCIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
     OCIO_CHECK_EQUAL(ops.size(), 0);
 
     const double sat = 1.0;
@@ -1240,13 +1290,16 @@ OCIO_ADD_TEST(MatrixOffsetOp, no_op)
 
     OCIO_CHECK_NO_THROW(
         CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
     OCIO_CHECK_EQUAL(ops.size(), 0);
 
     OCIO_CHECK_NO_THROW(
         CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_INVERSE));
+    OCIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
     OCIO_CHECK_EQUAL(ops.size(), 0);
 
-    // Except if CreateIdentityMatrixOp is used.
     OCIO_CHECK_NO_THROW(CreateIdentityMatrixOp(ops));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO_CHECK_ASSERT(ops[0]->isNoOp());

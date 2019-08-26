@@ -38,7 +38,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "MathUtils.h"
 #include "ops/CDL/CDLOpCPU.h"
 #include "ops/CDL/CDLOps.h"
-
+#include "ops/Exponent/ExponentOps.h"
+#include "ops/Matrix/MatrixOps.h"
 
 
 OCIO_NAMESPACE_ENTER
@@ -210,10 +211,6 @@ void CDLOp::finalize(FinalizationFlags /*fFlags*/)
         data() = cdlData()->inverse();
         m_direction = TRANSFORM_DIR_FORWARD;
     }
-
-    // Only 32f processing is natively supported.
-    cdlData()->setInputBitDepth(BIT_DEPTH_F32);
-    cdlData()->setOutputBitDepth(BIT_DEPTH_F32);
 
     cdlData()->finalize();
 
@@ -392,10 +389,10 @@ void CreateCDLOp(OpRcPtrVec & ops,
                  CDLOpDataRcPtr & cdlData, 
                  TransformDirection direction)
 {
-    if(cdlData->isNoOp()) return;
-
     ops.push_back(std::make_shared<CDLOp>(cdlData, direction));
 }
+
+///////////////////////////////////////////////////////////////////////////
 
 void CreateCDLTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
 {
@@ -406,8 +403,6 @@ void CreateCDLTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     }
     auto cdlTransform = CDLTransform::Create();
     cdlTransform->setDirection(cdl->getDirection());
-    cdlTransform->setInputBitDepth(cdl->getInputBitDepth());
-    cdlTransform->setOutputBitDepth(cdl->getOutputBitDepth());
 
     const auto cdlData = DynamicPtrCast<const CDLOpData>(op->data());
     auto & formatMetadata = cdlTransform->getFormatMetadata();
@@ -424,6 +419,80 @@ void CreateCDLTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     cdlTransform->setSat(cdlData->getSaturation());
 
     group->push_back(cdlTransform);
+}
+
+void BuildCDLOps(OpRcPtrVec & ops,
+                 const Config & config,
+                 const CDLTransform & cdlTransform,
+                 TransformDirection dir)
+{
+    TransformDirection combinedDir = CombineTransformDirections(dir,
+        cdlTransform.getDirection());
+        
+    double slope4[] = { 1.0, 1.0, 1.0, 1.0 };
+    cdlTransform.getSlope(slope4);
+
+    double offset4[] = { 0.0, 0.0, 0.0, 0.0 };
+    cdlTransform.getOffset(offset4);
+
+    double power4[] = { 1.0, 1.0, 1.0, 1.0 };
+    cdlTransform.getPower(power4);
+
+    double lumaCoef3[] = { 1.0, 1.0, 1.0 };
+    cdlTransform.getSatLumaCoefs(lumaCoef3);
+
+    double sat = cdlTransform.getSat();
+
+    if(config.getMajorVersion()==1)
+    {
+        const double p[4] = { power4[0], power4[1], power4[2], power4[3] };
+            
+        if(combinedDir == TRANSFORM_DIR_FORWARD)
+        {
+            // 1) Scale + Offset
+            CreateScaleOffsetOp(ops, slope4, offset4, TRANSFORM_DIR_FORWARD);
+                
+            // 2) Power + Clamp at 0 (NB: This is not in accord with the 
+            //    ASC v1.2 spec since it also requires clamping at 1.)
+            CreateExponentOp(ops, p, TRANSFORM_DIR_FORWARD);
+                
+            // 3) Saturation (NB: Does not clamp at 0 and 1
+            //    as per ASC v1.2 spec)
+            CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_FORWARD);
+        }
+        else if(combinedDir == TRANSFORM_DIR_INVERSE)
+        {
+            // 3) Saturation (NB: Does not clamp at 0 and 1
+            //    as per ASC v1.2 spec)
+            CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_INVERSE);
+                
+            // 2) Power + Clamp at 0 (NB: This is not in accord with the 
+            //    ASC v1.2 spec since it also requires clamping at 1.)
+            CreateExponentOp(ops, p, TRANSFORM_DIR_INVERSE);
+                
+            // 1) Scale + Offset
+            CreateScaleOffsetOp(ops, slope4, offset4, TRANSFORM_DIR_INVERSE);
+        }
+
+        // TODO: how metadata should be handled?
+    }
+    else
+    {
+        // Starting with the version 2, OCIO is now using a CDL Op
+        // complying with the Common LUT Format (i.e. CLF) specification.
+        CDLOpDataRcPtr cdlData = std::make_shared<CDLOpData>(
+            BIT_DEPTH_F32, BIT_DEPTH_F32,
+            FormatMetadataImpl(cdlTransform.getFormatMetadata()),
+            CDLOpData::CDL_V1_2_FWD,
+            CDLOpData::ChannelParams(slope4[0], slope4[1], slope4[2]),
+            CDLOpData::ChannelParams(offset4[0], offset4[1], offset4[2]),
+            CDLOpData::ChannelParams(power4[0], power4[1], power4[2]),
+            sat);
+
+        CreateCDLOp(ops, 
+                    cdlData,
+                    combinedDir);
+    }
 }
 
 }
@@ -1043,8 +1112,6 @@ OCIO_ADD_TEST(CDLOps, create_transform)
     OCIO_CHECK_EQUAL(std::string(metadata.getAttributeValue(0)), "Test look: 01-A.");
 
     OCIO_CHECK_EQUAL(cdlTransform->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO_CHECK_EQUAL(cdlTransform->getInputBitDepth(), OCIO::BIT_DEPTH_UINT32);
-    OCIO_CHECK_EQUAL(cdlTransform->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
 
     double slope[3];
     cdlTransform->getSlope(slope);

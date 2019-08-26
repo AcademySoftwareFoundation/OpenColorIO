@@ -41,6 +41,7 @@ OCIO_NAMESPACE_ENTER
 {
 
     // Use whichever is most convenient; they are equally efficient.
+    // Note that op is always created even if resulting op is a no-op.
     
     void CreateScaleOp(OpRcPtrVec & ops,
                        const double * scale4,

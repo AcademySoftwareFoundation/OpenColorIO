@@ -930,11 +930,15 @@ MatrixOpDataRcPtr MatrixOpData::inverse() const
     invOp->setOffsets(invOffsets);
     invOp->getFormatMetadata() = getFormatMetadata();
 
-    invOp->invertMetadata();
+    invOp->setFileInputBitDepth(getFileOutputBitDepth());
+    invOp->setFileOutputBitDepth(getFileInputBitDepth());
 
     // No need to call validate(), the invOp will have proper dimension,
     // bit-depths, matrix and offets values.
 
+    // Note that any existing metadata could become stale at this point but
+    // trying to update it is also challenging since inverse() is sometimes
+    // called even during the creation of new ops.
     return invOp;
 }
 
@@ -1025,6 +1029,22 @@ OCIO_ADD_TEST(MatrixOpData, accessors)
     OCIO_CHECK_ASSERT(!m.isDiagonal());
     OCIO_CHECK_ASSERT(!m.isIdentity());
     OCIO_CHECK_NO_THROW(m.validate());
+
+    OCIO_CHECK_EQUAL(m.getFileInputBitDepth(), OCIO::BIT_DEPTH_UNKNOWN);
+    OCIO_CHECK_EQUAL(m.getFileOutputBitDepth(), OCIO::BIT_DEPTH_UNKNOWN);
+    m.setFileInputBitDepth(OCIO::BIT_DEPTH_UINT10);
+    m.setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT8);
+    OCIO_CHECK_EQUAL(m.getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OCIO_CHECK_EQUAL(m.getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+
+    OCIO::MatrixOpData m1{ m };
+    OCIO_CHECK_EQUAL(m1.getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OCIO_CHECK_EQUAL(m1.getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+
+    OCIO::MatrixOpData m2{};
+    m2 = m;
+    OCIO_CHECK_EQUAL(m2.getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OCIO_CHECK_EQUAL(m2.getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
 }
 
 OCIO_ADD_TEST(MatrixOpData, offsets)
@@ -1286,7 +1306,7 @@ OCIO_ADD_TEST(MatrixOpData, output_depth_scaling)
 
     const OCIO::BitDepth newBitdepth = OCIO::BIT_DEPTH_UINT16;
 
-    const float factor = OCIO::GetBitDepthMaxValue(newBitdepth)
+    const double factor = OCIO::GetBitDepthMaxValue(newBitdepth)
         / OCIO::GetBitDepthMaxValue(initialBitdepth);
 
     ref.setOutputBitDepth(newBitdepth);
@@ -1538,7 +1558,7 @@ OCIO_ADD_TEST(MatrixOpData, bitdepth_successive_changes)
 
     OCIO_CHECK_ASSERT(m1.isDiagonal());
 
-    const float scaleFactor = 
+    const double scaleFactor = 
         OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_F32)
         / OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_UINT10);
 

@@ -52,8 +52,8 @@ OCIO_NAMESPACE_ENTER
             values += 3;
         }
 
-        // NB: FinalizeOpVec() sets the bit-depths at each op interface
-        // to 32f so there is never any quantization to integer.
+        // Sets the bit-depths at each op interface to 32f so there is never
+        // any quantization to integer.
         FinalizeOpVec(ops, FINALIZATION_EXACT);
 
         for (OpRcPtrVec::size_type i = 0, size = ops.size(); i<size; ++i)

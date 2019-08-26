@@ -28,50 +28,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ops/exposurecontrast/ExposureContrastOps.h"
+#include "ops/exposurecontrast/ExposureContrastOpData.h"
 
 OCIO_NAMESPACE_ENTER
 {
-
-namespace
-{
-ExposureContrastOpData::Style ConvertStyle(ExposureContrastStyle style, TransformDirection dir)
-{
-    if (dir == TRANSFORM_DIR_UNKNOWN)
-    {
-        throw Exception(
-            "Cannot create ExposureContrastOp with unspecified transform direction.");
-    }
-
-    const bool isForward = dir == TRANSFORM_DIR_FORWARD;
-
-    switch (style)
-    {
-    case EXPOSURE_CONTRAST_VIDEO:
-    {
-        return (isForward) ? ExposureContrastOpData::STYLE_VIDEO:
-                             ExposureContrastOpData::STYLE_VIDEO_REV;
-    }
-    case EXPOSURE_CONTRAST_LOGARITHMIC:
-    {
-        return (isForward) ? ExposureContrastOpData::STYLE_LOGARITHMIC:
-                             ExposureContrastOpData::STYLE_LOGARITHMIC_REV;
-    }
-    case EXPOSURE_CONTRAST_LINEAR:
-    {
-        return (isForward) ? ExposureContrastOpData::STYLE_LINEAR:
-                             ExposureContrastOpData::STYLE_LINEAR_REV;
-    }
-    }
-
-    std::stringstream ss("Unknown ExposureContrast transform style: ");
-    ss << style;
-
-    throw Exception(ss.str().c_str());
-}
-
-}; // anon
-
 
 ExposureContrastStyle ConvertStyle(ExposureContrastOpData::Style style)
 {
@@ -188,23 +148,6 @@ void ExposureContrastTransform::validate() const
     getImpl()->validate();
 }
 
-BitDepth ExposureContrastTransform::getInputBitDepth() const
-{
-    return getImpl()->getInputBitDepth();
-}
-BitDepth ExposureContrastTransform::getOutputBitDepth() const
-{
-    return getImpl()->getOutputBitDepth();
-}
-void ExposureContrastTransform::setInputBitDepth(BitDepth bitDepth)
-{
-    getImpl()->setInputBitDepth(bitDepth);
-}
-void ExposureContrastTransform::setOutputBitDepth(BitDepth bitDepth)
-{
-    getImpl()->setOutputBitDepth(bitDepth);
-}
-
 FormatMetadata & ExposureContrastTransform::getFormatMetadata()
 {
     return m_impl->getFormatMetadata();
@@ -222,7 +165,7 @@ ExposureContrastStyle ExposureContrastTransform::getStyle() const
 
 void ExposureContrastTransform::setStyle(ExposureContrastStyle style)
 {
-    getImpl()->setStyle(ConvertStyle(style, TRANSFORM_DIR_FORWARD));
+    getImpl()->setStyle(ExposureContrastOpData::ConvertStyle(style, TRANSFORM_DIR_FORWARD));
 }
 
 double ExposureContrastTransform::getExposure() const
@@ -343,34 +286,6 @@ std::ostream& operator<< (std::ostream & os, const ExposureContrastTransform & t
 
     os << ">";
     return os;
-}
-
-///////////////////////////////////////////////////////////////////////////
-
-void BuildExposureContrastOps(OpRcPtrVec & ops,
-                              const Config& config,
-                              const ExposureContrastTransform & transform,
-                              TransformDirection dir)
-{
-    const TransformDirection combinedDir
-        = CombineTransformDirections(dir, transform.getDirection());
-
-    ExposureContrastOpDataRcPtr data = std::make_shared<ExposureContrastOpData>();
-    data->setStyle(ConvertStyle(transform.getStyle(), combinedDir));
-    data->setExposure(transform.getExposure());
-    bool dyn = transform.isExposureDynamic();
-    if (dyn) data->getExposureProperty()->makeDynamic();
-    data->setContrast(transform.getContrast());
-    dyn = transform.isContrastDynamic();
-    if (dyn) data->getContrastProperty()->makeDynamic();
-    data->setGamma(transform.getGamma());
-    dyn = transform.isGammaDynamic();
-    if (dyn) data->getGammaProperty()->makeDynamic();
-    data->setPivot(transform.getPivot());
-    data->setLogExposureStep(transform.getLogExposureStep());
-    data->setLogMidGray(transform.getLogMidGray());
-    // NB: Always use Forward here since direction is handled with the style above.
-    CreateExposureContrastOp(ops, data, TRANSFORM_DIR_FORWARD);
 }
 
 }

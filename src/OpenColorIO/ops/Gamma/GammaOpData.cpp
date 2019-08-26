@@ -189,8 +189,9 @@ GammaOpDataRcPtr GammaOpData::inverse() const
     }
     gamma->setStyle(invStyle);
 
-    gamma->invertMetadata();
-
+    // Note that any existing metadata could become stale at this point but
+    // trying to update it is also challenging since inverse() is sometimes
+    // called even during the creation of new ops.
     return gamma;
 }
 

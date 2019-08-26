@@ -31,9 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "OpBuilders.h"
-#include "ops/Exponent/ExponentOps.h"
 #include "ops/Gamma/GammaOpData.h"
-#include "ops/Gamma/GammaOps.h"
 
 
 OCIO_NAMESPACE_ENTER
@@ -136,23 +134,6 @@ void ExponentTransform::validate() const
     }
 }
 
-BitDepth ExponentTransform::getInputBitDepth() const
-{
-    return getImpl()->getInputBitDepth();
-}
-BitDepth ExponentTransform::getOutputBitDepth() const
-{
-    return getImpl()->getOutputBitDepth();
-}
-void ExponentTransform::setInputBitDepth(BitDepth bitDepth)
-{
-    getImpl()->setInputBitDepth(bitDepth);
-}
-void ExponentTransform::setOutputBitDepth(BitDepth bitDepth)
-{
-    getImpl()->setOutputBitDepth(bitDepth);
-}
-
 FormatMetadata & ExponentTransform::getFormatMetadata()
 {
     return m_impl->getFormatMetadata();
@@ -220,36 +201,6 @@ std::ostream& operator<< (std::ostream& os, const ExponentTransform & t)
 }
 
 
-    
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void BuildExponentOps(OpRcPtrVec & ops,
-                      const Config & config,
-                      const ExponentTransform & transform,
-                      TransformDirection dir)
-{
-    TransformDirection combinedDir = CombineTransformDirections(dir,
-        transform.getDirection());
-    
-    double vec4[4] = { 1., 1., 1., 1. };
-    transform.getValue(vec4);
-
-    if(config.getMajorVersion()==1)
-    {
-        CreateExponentOp(ops,
-                         vec4,
-                         combinedDir);
-    }
-    else
-    {
-        CreateGammaOp(ops, FormatMetadataImpl(transform.getFormatMetadata()),
-                      combinedDir==TRANSFORM_DIR_FORWARD ? GammaOpData::BASIC_FWD
-                                                         : GammaOpData::BASIC_REV,
-                      vec4, nullptr);
-    }
-}
-
-    
 }
 OCIO_NAMESPACE_EXIT
 

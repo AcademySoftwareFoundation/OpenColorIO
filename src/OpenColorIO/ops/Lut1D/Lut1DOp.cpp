@@ -79,7 +79,7 @@ OCIO_NAMESPACE_ENTER
         lut->luts[2].resize(idealSize);
 
         const float stepValue
-            = GetBitDepthMaxValue(outputBitDepth) / (float(idealSize) - 1.0f);
+            = (float)GetBitDepthMaxValue(outputBitDepth) / (float(idealSize) - 1.0f);
 
         for(unsigned long idx=0; idx<lut->luts[0].size(); ++idx)
         {
@@ -591,10 +591,6 @@ OCIO_NAMESPACE_ENTER
             lutData->setInversionQuality(
                 fFlags==FINALIZATION_FAST ? LUT_INVERSION_FAST: LUT_INVERSION_EXACT);
 
-            // Only 32f processing is natively supported.
-            lutData->setInputBitDepth(BIT_DEPTH_F32);
-            lutData->setOutputBitDepth(BIT_DEPTH_F32);
-
             lutData->finalize();
 
             // Rebuild the cache identifier
@@ -665,8 +661,6 @@ OCIO_NAMESPACE_ENTER
                 "the LUT for each channel must have the same dimensions.");
         }
 
-        if (lut->isNoOp()) return;
-
         // TODO: Detect if lut1d can be exactly approximated as y = mx + b
         // If so, return a mtx instead.
 
@@ -722,8 +716,6 @@ OCIO_NAMESPACE_ENTER
                        Lut1DOpDataRcPtr & lut,
                        TransformDirection direction)
     {
-        if (lut->isNoOp()) return;
-
         // TODO: Detect if 1D LUT can be exactly approximated as y = mx + b
         // If so, return a mtx instead.
 
@@ -759,6 +751,95 @@ OCIO_NAMESPACE_ENTER
             }
         }
     }
+
+    ///////////////////////////////////////////////////////////////////////////////
+
+    void CreateLut1DTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
+    {
+        auto lut = DynamicPtrCast<const Lut1DOp>(op);
+        if (!lut)
+        {
+            throw Exception("CreateLut1DTransform: op has to be a Lut1DOp");
+        }
+        auto lutData = DynamicPtrCast<const Lut1DOpData>(op->data());
+        auto lutTransform = LUT1DTransform::Create();
+
+        lutTransform->setFileOutputBitDepth(lutData->getFileOutputBitDepth());
+
+        const auto dir = lutData->getDirection();
+        lutTransform->setDirection(dir);
+
+        auto & formatMetadata = lutTransform->getFormatMetadata();
+        auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
+        metadata = lutData->getFormatMetadata();
+
+        const bool inputHalf = lutData->isInputHalfDomain();
+        const bool outputHalf = lutData->isOutputRawHalfs();
+        const LUT1DHueAdjust hue = lutData->getHueAdjust();
+        const Interpolation interp = lutData->getInterpolation();
+
+        lutTransform->setInputHalfDomain(inputHalf);
+        lutTransform->setOutputRawHalfs(outputHalf);
+        lutTransform->setHueAdjust(hue);
+        lutTransform->setInterpolation(interp);
+
+        // Scale back to F32.
+        const float scale = 1.0f /
+            ((dir == TRANSFORM_DIR_FORWARD) ? (float)GetBitDepthMaxValue(lutData->getOutputBitDepth())
+                                            : (float)GetBitDepthMaxValue(lutData->getInputBitDepth()));
+
+        auto & lutArray = lutData->getArray();
+        const unsigned long l = lutArray.getLength();
+        lutTransform->setLength(l);
+        for (unsigned int i = 0; i < l; ++i)
+        {
+            lutTransform->setValue(i, scale * lutArray[3 * i],
+                                      scale * lutArray[3 * i + 1],
+                                      scale * lutArray[3 * i + 2]);
+        }
+
+        group->push_back(lutTransform);
+    }
+
+    void BuildLut1DOps(OpRcPtrVec & ops,
+                       const Config & config,
+                       const LUT1DTransform & transform,
+                       TransformDirection dir)
+    {
+        TransformDirection combinedDir =
+            CombineTransformDirections(dir,
+                                       transform.getDirection());
+
+        const unsigned long length = transform.getLength();
+        auto halfFlags = (Lut1DOpData::HalfFlags)(
+            (transform.getInputHalfDomain() ? Lut1DOpData::LUT_INPUT_HALF_CODE :
+                                              Lut1DOpData::LUT_STANDARD) |
+                                              (transform.getOutputRawHalfs() ? Lut1DOpData::LUT_OUTPUT_HALF_CODE :
+                                                                               Lut1DOpData::LUT_STANDARD));
+
+        auto data = std::make_shared<Lut1DOpData>(
+            BIT_DEPTH_F32, BIT_DEPTH_F32,
+            transform.getFormatMetadata(),
+            transform.getInterpolation(),
+            halfFlags,
+            length);
+
+        data->setFileOutputBitDepth(transform.getFileOutputBitDepth());
+
+        data->setHueAdjust(transform.getHueAdjust());
+        for (unsigned long i = 0; i < length; ++i)
+        {
+            float r = 0.f;
+            float g = 0.f;
+            float b = 0.f;
+            transform.getValue(i, r, g, b);
+            data->getArray()[3 * i] = r;
+            data->getArray()[3 * i + 1] = g;
+            data->getArray()[3 * i + 2] = b;
+        }
+        CreateLut1DOp(ops, data, combinedDir);
+    }
+
 }
 OCIO_NAMESPACE_EXIT
 
@@ -770,6 +851,7 @@ OCIO_NAMESPACE_EXIT
 #include <cstring>
 
 namespace OCIO = OCIO_NAMESPACE;
+#include "OpBuilders.h"
 #include "UnitTest.h"
 #include "UnitTestUtils.h"
 
@@ -1380,7 +1462,7 @@ OCIO_ADD_TEST(Lut1D, basic)
     OCIO_CHECK_ASSERT(lutData->isIdentity());
     OCIO_CHECK_ASSERT(!lut.isNoOp());
 
-    const float step = OCIO::GetBitDepthMaxValue(lutData->getInputBitDepth())
+    const float step = (float)(OCIO::GetBitDepthMaxValue(lutData->getInputBitDepth()))
                        / ((float)lutData->getArray().getLength() - 1.0f);
 
     float myImage[8] = { 0.0f, 0.0f, 0.0f, 1.0f,
@@ -1437,7 +1519,7 @@ OCIO_ADD_TEST(Lut1D, half)
 
     OCIO::Lut1DOp lut(lutData);
 
-    const float step = OCIO::GetBitDepthMaxValue(lutData->getInputBitDepth())
+    const float step = (float)(OCIO::GetBitDepthMaxValue(lutData->getInputBitDepth()))
                        / ((float)lutData->getArray().getLength() - 1.0f);
 
     // No more an 'identity LUT 1D'
@@ -1453,6 +1535,8 @@ OCIO_ADD_TEST(Lut1D, half)
 
     // TODO: The SC test is intended to test half evaluation using myImage
     // as input.  Adjust after half support is added to apply.
+    lut.setInputBitDepth(OCIO::BIT_DEPTH_F32);
+    lut.setOutputBitDepth(OCIO::BIT_DEPTH_F32);
     OCIO_CHECK_NO_THROW(lut.finalize(OCIO::FINALIZATION_EXACT));
     OCIO_CHECK_NO_THROW(lut.apply(resImage, resImage, 2));
 
@@ -1487,7 +1571,7 @@ OCIO_ADD_TEST(Lut1D, nan)
     OCIO_CHECK_ASSERT(lut.isIdentity());
     OCIO_CHECK_ASSERT(!lut.isNoOp());
 
-    const float step = OCIO::GetBitDepthMaxValue(lutData->getInputBitDepth())
+    const float step = (float)(OCIO::GetBitDepthMaxValue(lutData->getInputBitDepth()))
                        / ((float)lutData->getArray().getLength() - 1.0f);
 
     float myImage[8] = {
@@ -1595,7 +1679,7 @@ OCIO_ADD_TEST(Lut1D, finite_value_hue_adjust)
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO::OpRcPtr cloned = ops[0]->clone();
     OCIO::Lut1DOpRcPtr typedRcPtr = OCIO::DynamicPtrCast<OCIO::Lut1DOp>(cloned);
-    typedRcPtr->lut1DData()->setHueAdjust(OCIO::Lut1DOpData::HUE_DW3);
+    typedRcPtr->lut1DData()->setHueAdjust(OCIO::HUE_DW3);
     
     const float outputBuffer_linearforward[4] = { 0.25f,
                                                   0.37000f, // (Hue adj modifies green here.)
@@ -1771,7 +1855,7 @@ OCIO_ADD_TEST(InvLut1D, apply_half)
     OCIO::OpRcPtrVec ops3;
     invLut = lut->inverse();
     invLut->setInversionQuality(OCIO::LUT_INVERSION_FAST);
-    invLut->setFileBitDepth(inBD);
+    invLut->setFileOutputBitDepth(inBD);
     invOp = std::make_shared<OCIO::Lut1DOp>(invLut);
     ops3.push_back(invOp);
 
@@ -1886,6 +1970,93 @@ OCIO_ADD_TEST(Lut1D, inverse_twice)
         OCIO_CHECK_CLOSE(lut1d_inputBuffer_linearinverse[i],
                          lut1d_inputBuffer_reference[i], 1e-5f);
     }
+}
+
+OCIO_ADD_TEST(Lut1D, create_transform)
+{
+    OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_FORWARD;
+
+    OCIO::Lut1DOpDataRcPtr lut = std::make_shared<OCIO::Lut1DOpData>(
+        OCIO::BIT_DEPTH_UINT8,
+        OCIO::BIT_DEPTH_UINT10,
+        OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
+        OCIO::INTERP_LINEAR,
+        OCIO::Lut1DOpData::LUT_STANDARD,
+        3);
+    lut->setFileOutputBitDepth(lut->getOutputBitDepth());
+    lut->getArray()[3] = 500.1f;
+    lut->getArray()[4] = 500.2f;
+    lut->getArray()[5] = 500.3f;
+
+    auto & metadataSource = lut->getFormatMetadata();
+    metadataSource.addAttribute(OCIO::METADATA_NAME, "test");
+
+    OCIO::OpRcPtrVec ops;
+    OCIO_CHECK_NO_THROW(OCIO::CreateLut1DOp(ops, lut, direction));
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_REQUIRE_ASSERT(ops[0]);
+
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+
+    OCIO::ConstOpRcPtr op(ops[0]);
+
+    OCIO::CreateLut1DTransform(group, op);
+    OCIO_REQUIRE_EQUAL(group->size(), 1);
+    auto transform = group->getTransform(0);
+    OCIO_REQUIRE_ASSERT(transform);
+    auto lTransform = OCIO_DYNAMIC_POINTER_CAST<OCIO::LUT1DTransform>(transform);
+    OCIO_REQUIRE_ASSERT(lTransform);
+
+    const auto & metadata = lTransform->getFormatMetadata();
+    OCIO_REQUIRE_EQUAL(metadata.getNumAttributes(), 1);
+    OCIO_CHECK_EQUAL(std::string(metadata.getAttributeName(0)), OCIO::METADATA_NAME);
+    OCIO_CHECK_EQUAL(std::string(metadata.getAttributeValue(0)), "test");
+
+    OCIO_CHECK_EQUAL(lTransform->getDirection(), direction);
+    OCIO_REQUIRE_EQUAL(lTransform->getLength(), 3);
+
+    OCIO_CHECK_EQUAL(lTransform->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+
+    float r = 0.f;
+    float g = 0.f;
+    float b = 0.f;
+    lTransform->getValue(1, r, g, b);
+
+    // Transform LUT is always 32F.
+    const float scale = (float)(OCIO::GetBitDepthMaxValue(lTransform->getFileOutputBitDepth()));
+    OCIO_CHECK_EQUAL(r * scale, 500.1f);
+    OCIO_CHECK_EQUAL(g * scale, 500.2f);
+    OCIO_CHECK_EQUAL(b * scale, 500.3f);
+}
+
+OCIO_ADD_TEST(LUT1DTransform, build_op)
+{
+    const OCIO::LUT1DTransformRcPtr lut = OCIO::LUT1DTransform::Create();
+    lut->setLength(3);
+
+    const float r = 0.51f;
+    const float g = 0.52f;
+    const float b = 0.53f;
+    lut->setValue(1, r, g, b);
+
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+
+    OCIO::OpRcPtrVec ops;
+    OCIO::BuildOps(ops, *(config.get()), config->getCurrentContext(), lut, OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_REQUIRE_ASSERT(ops[0]);
+
+    auto constop = std::const_pointer_cast<const OCIO::Op>(ops[0]);
+    OCIO_REQUIRE_ASSERT(constop);
+    auto data = constop->data();
+    auto lutdata = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Lut1DOpData>(data);
+    OCIO_REQUIRE_ASSERT(lutdata);
+
+    OCIO_CHECK_EQUAL(lutdata->getArray().getLength(), 3);
+    OCIO_CHECK_EQUAL(lutdata->getArray()[3], r);
+    OCIO_CHECK_EQUAL(lutdata->getArray()[4], g);
+    OCIO_CHECK_EQUAL(lutdata->getArray()[5], b);
 }
 
 #endif // OCIO_UNIT_TEST

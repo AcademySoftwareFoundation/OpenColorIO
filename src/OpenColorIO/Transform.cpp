@@ -39,8 +39,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ops/FixedFunction/FixedFunctionOps.h"
 #include "ops/Gamma/GammaOps.h"
 #include "ops/Log/LogOps.h"
-#include "ops/Lut1D/Lut1DOpData.h"
-#include "ops/Lut3D/Lut3DOpData.h"
+#include "ops/Lut1D/Lut1DOp.h"
+#include "ops/Lut3D/Lut3DOp.h"
 #include "ops/Matrix/MatrixOps.h"
 #include "ops/Range/RangeOps.h"
 #include "Processor.h"
@@ -138,6 +138,16 @@ OCIO_NAMESPACE_ENTER
         {
             BuildLookOps(ops, config, context, *lookTransform, dir);
         }
+        else if (ConstLUT1DTransformRcPtr lut1dTransform = \
+            DynamicPtrCast<const LUT1DTransform>(transform))
+        {
+            BuildLut1DOps(ops, config, *lut1dTransform, dir);
+        }
+        else if (ConstLUT3DTransformRcPtr lut1dTransform = \
+            DynamicPtrCast<const LUT3DTransform>(transform))
+        {
+            BuildLut3DOps(ops, config, *lut1dTransform, dir);
+        }
         else if(ConstMatrixTransformRcPtr matrixTransform = \
             DynamicPtrCast<const MatrixTransform>(transform))
         {
@@ -222,6 +232,16 @@ OCIO_NAMESPACE_ENTER
         {
             os << *lookTransform;
         }
+        else if (const LUT1DTransform * lut1dTransform = \
+            dynamic_cast<const LUT1DTransform*>(t))
+        {
+            os << *lut1dTransform;
+        }
+        else if (const LUT3DTransform * lut3dTransform = \
+            dynamic_cast<const LUT3DTransform*>(t))
+        {
+            os << *lut3dTransform;
+        }
         else if(const MatrixTransform * matrixTransform = \
             dynamic_cast<const MatrixTransform*>(t))
         {
@@ -285,13 +305,11 @@ OCIO_NAMESPACE_ENTER
         }
         else if (DynamicPtrCast<const Lut1DOpData>(data))
         {
-            // TODO: implement Lut1DTransform.
-            // BuildLut1DTransform(group, op);
+            CreateLut1DTransform(group, op);
         }
         else if (DynamicPtrCast<const Lut3DOpData>(data))
         {
-            // TODO: implement Lut3DTransform.
-            // BuildLut3DTransform(group, op);
+            CreateLut3DTransform(group, op);
         }
         else if (DynamicPtrCast<const MatrixOpData>(data))
         {

@@ -161,10 +161,6 @@ void RangeOp::finalize(FinalizationFlags /*fFlags*/)
         m_direction = TRANSFORM_DIR_FORWARD;
     }
 
-    // Only 32f processing is natively supported.
-    rangeData()->setInputBitDepth(BIT_DEPTH_F32);
-    rangeData()->setOutputBitDepth(BIT_DEPTH_F32);
-
     rangeData()->finalize();
 
     // Create the cacheID
@@ -224,10 +220,10 @@ void CreateRangeOp(OpRcPtrVec & ops, const FormatMetadataImpl & info,
 
 void CreateRangeOp(OpRcPtrVec & ops, RangeOpDataRcPtr & rangeData, TransformDirection direction)
 {
-    if (rangeData->isNoOp()) return;
-
     ops.push_back(std::make_shared<RangeOp>(rangeData, direction));
 }
+
+///////////////////////////////////////////////////////////////////////////
 
 void CreateRangeTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
 {
@@ -238,10 +234,15 @@ void CreateRangeTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     }
     auto rangeTransform = RangeTransform::Create();
     rangeTransform->setDirection(range->getDirection());
-    rangeTransform->setInputBitDepth(range->getInputBitDepth());
-    rangeTransform->setOutputBitDepth(range->getOutputBitDepth());
 
-    auto rangeData = DynamicPtrCast<const RangeOpData>(op->data());
+    auto rangeDataScr = DynamicPtrCast<const RangeOpData>(op->data());
+    rangeTransform->setFileInputBitDepth(rangeDataScr->getFileInputBitDepth());
+    rangeTransform->setFileOutputBitDepth(rangeDataScr->getFileOutputBitDepth());
+
+    // Clone to make 32F.
+    auto rangeData = rangeDataScr->clone();
+    rangeData->setInputBitDepth(BIT_DEPTH_F32);
+    rangeData->setOutputBitDepth(BIT_DEPTH_F32);
     auto & formatMetadata = rangeTransform->getFormatMetadata();
     auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
     metadata = rangeData->getFormatMetadata();
@@ -256,6 +257,34 @@ void CreateRangeTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     group->push_back(rangeTransform);
 }
 
+void BuildRangeOps(OpRcPtrVec & ops,
+                   const Config& /*config*/,
+                   const RangeTransform & transform,
+                   TransformDirection dir)
+{
+    const TransformDirection combinedDir
+        = CombineTransformDirections(dir, transform.getDirection());
+
+    RangeOpDataRcPtr rangeData = std::make_shared<RangeOpData>(
+        BIT_DEPTH_F32, BIT_DEPTH_F32,
+        FormatMetadataImpl(transform.getFormatMetadata()),
+        transform.getMinInValue(), transform.getMaxInValue(),
+        transform.getMinOutValue(), transform.getMaxOutValue());
+
+    rangeData->setFileInputBitDepth(transform.getFileInputBitDepth());
+    rangeData->setFileOutputBitDepth(transform.getFileOutputBitDepth());
+
+    if (transform.getStyle() == RANGE_CLAMP)
+    {
+        CreateRangeOp(ops, rangeData, combinedDir);
+    }
+    else
+    {
+        MatrixOpDataRcPtr m = rangeData->convertToMatrix();
+        CreateMatrixOp(ops, m, combinedDir);
+    }
+}
+
 }
 OCIO_NAMESPACE_EXIT
 
@@ -268,6 +297,7 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 
+#include "BitDepthUtils.h"
 #include "ops/Matrix/MatrixOps.h"
 #include "UnitTest.h"
 
@@ -478,6 +508,9 @@ OCIO_ADD_TEST(RangeOps, create_transform)
                                               0.1, 0.9,
                                               0.2, 0.7);
 
+    range->setFileInputBitDepth(range->getInputBitDepth());
+    range->setFileOutputBitDepth(range->getOutputBitDepth());
+
     OCIO::OpRcPtrVec ops;
     OCIO_CHECK_NO_THROW(OCIO::CreateRangeOp(ops, range, direction));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
@@ -493,8 +526,8 @@ OCIO_ADD_TEST(RangeOps, create_transform)
     OCIO_REQUIRE_ASSERT(transform);
     auto rTransform = OCIO_DYNAMIC_POINTER_CAST<OCIO::RangeTransform>(transform);
     OCIO_REQUIRE_ASSERT(rTransform);
-    OCIO_CHECK_EQUAL(rTransform->getInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
-    OCIO_CHECK_EQUAL(rTransform->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OCIO_CHECK_EQUAL(rTransform->getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OCIO_CHECK_EQUAL(rTransform->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
 
     const auto & metadata = rTransform->getFormatMetadata();
     OCIO_REQUIRE_EQUAL(metadata.getNumAttributes(), 1);
@@ -502,10 +535,80 @@ OCIO_ADD_TEST(RangeOps, create_transform)
     OCIO_CHECK_EQUAL(std::string(metadata.getAttributeValue(0)), "test");
 
     OCIO_CHECK_EQUAL(rTransform->getDirection(), direction);
-    OCIO_CHECK_EQUAL(rTransform->getMinInValue(), 0.1);
-    OCIO_CHECK_EQUAL(rTransform->getMaxInValue(), 0.9);
-    OCIO_CHECK_EQUAL(rTransform->getMinOutValue(), 0.2);
-    OCIO_CHECK_EQUAL(rTransform->getMaxOutValue(), 0.7);
+
+    const double scaleIn = OCIO::GetBitDepthMaxValue(rTransform->getFileInputBitDepth());
+    const double scaleOut = OCIO::GetBitDepthMaxValue(rTransform->getFileOutputBitDepth());
+    
+    OCIO_CHECK_EQUAL(0.1, rTransform->getMinInValue() * scaleIn);
+    OCIO_CHECK_EQUAL(0.9, rTransform->getMaxInValue() * scaleIn);
+    OCIO_CHECK_EQUAL(0.2, rTransform->getMinOutValue() * scaleOut);
+    OCIO_CHECK_EQUAL(0.7, rTransform->getMaxOutValue() * scaleOut);
+}
+
+OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
+{
+    ConfigRcPtr config = Config::Create();
+    OCIO::OpRcPtrVec ops;
+
+    OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
+    OCIO_CHECK_EQUAL(range->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(range->getStyle(), OCIO::RANGE_CLAMP);
+    OCIO_CHECK_ASSERT(!range->hasMinInValue());
+    OCIO_CHECK_ASSERT(!range->hasMaxInValue());
+    OCIO_CHECK_ASSERT(!range->hasMinOutValue());
+    OCIO_CHECK_ASSERT(!range->hasMaxOutValue());
+
+    range->setMinInValue(0.0);
+    range->setMaxInValue(0.5);
+    range->setMinOutValue(0.5);
+    range->setMaxOutValue(1.5);
+
+    // Test the resulting Range Op
+
+    OCIO_CHECK_NO_THROW(
+        BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD));
+
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OCIO_REQUIRE_EQUAL(op0->data()->getType(), OCIO::OpData::RangeType);
+
+    OCIO::ConstRangeOpDataRcPtr rangeData
+        = DynamicPtrCast<const OCIO::RangeOpData>(op0->data());
+
+    OCIO_CHECK_EQUAL(rangeData->getMinInValue(), range->getMinInValue());
+    OCIO_CHECK_EQUAL(rangeData->getMaxInValue(), range->getMaxInValue());
+    OCIO_CHECK_EQUAL(rangeData->getMinOutValue(), range->getMinOutValue());
+    OCIO_CHECK_EQUAL(rangeData->getMaxOutValue(), range->getMaxOutValue());
+
+    // Test the resulting Matrix Op
+
+    range->setStyle(OCIO::RANGE_NO_CLAMP);
+
+    OCIO_CHECK_NO_THROW(
+        BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD));
+
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO::ConstOpRcPtr op1 = ops[1];
+    OCIO_REQUIRE_EQUAL(op1->data()->getType(), OCIO::OpData::MatrixType);
+
+    OCIO::ConstMatrixOpDataRcPtr matrixData
+        = DynamicPtrCast<const OCIO::MatrixOpData>(op1->data());
+
+    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(0), rangeData->getOffset());
+
+    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(0), 0.5);
+    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(1), 0.5);
+    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(2), 0.5);
+    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(3), 0.0);
+
+    OCIO_CHECK_ASSERT(matrixData->isDiagonal());
+
+    OCIO_CHECK_EQUAL(matrixData->getArray()[0], rangeData->getScale());
+
+    OCIO_CHECK_EQUAL(matrixData->getArray()[0], 2.0);
+    OCIO_CHECK_EQUAL(matrixData->getArray()[5], 2.0);
+    OCIO_CHECK_EQUAL(matrixData->getArray()[10], 2.0);
+    OCIO_CHECK_EQUAL(matrixData->getArray()[15], 1.0);
 }
 
 #endif

@@ -147,10 +147,6 @@ void ExposureContrastOp::combineWith(OpRcPtrVec & /*ops*/, ConstOpRcPtr & second
 
 void ExposureContrastOp::finalize(FinalizationFlags /*fFlags*/)
 {
-    // Only 32f processing is natively supported.
-    ecData()->setInputBitDepth(BIT_DEPTH_F32);
-    ecData()->setOutputBitDepth(BIT_DEPTH_F32);
-
     ecData()->finalize();
 
     // Create the cacheID
@@ -209,8 +205,6 @@ void CreateExposureContrastOp(OpRcPtrVec & ops,
                               ExposureContrastOpDataRcPtr & data,
                               TransformDirection direction)
 {
-    if (data->isNoOp()) return;
-
     if (direction == TRANSFORM_DIR_FORWARD)
     {
         ops.push_back(std::make_shared<ExposureContrastOp>(data));
@@ -226,6 +220,8 @@ void CreateExposureContrastOp(OpRcPtrVec & ops,
                         "unspecified transform direction.");
     }
 }
+
+///////////////////////////////////////////////////////////////////////////
 
 void CreateExposureContrastTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
 {
@@ -247,9 +243,6 @@ void CreateExposureContrastTransform(GroupTransformRcPtr & group, ConstOpRcPtr &
     }
     const auto transformStyle = ConvertStyle(style);
     ecTransform->setStyle(transformStyle);
-
-    ecTransform->setInputBitDepth(ec->getInputBitDepth());
-    ecTransform->setOutputBitDepth(ec->getOutputBitDepth());
 
     auto & formatMetadata = ecTransform->getFormatMetadata();
     auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
@@ -283,6 +276,34 @@ void CreateExposureContrastTransform(GroupTransformRcPtr & group, ConstOpRcPtr &
     }
 
     group->push_back(ecTransform);
+}
+
+void BuildExposureContrastOps(OpRcPtrVec & ops,
+                              const Config& config,
+                              const ExposureContrastTransform & transform,
+                              TransformDirection dir)
+{
+    const TransformDirection combinedDir
+        = CombineTransformDirections(dir, transform.getDirection());
+
+    auto data = std::make_shared<ExposureContrastOpData>(
+        BIT_DEPTH_F32, BIT_DEPTH_F32,
+        ExposureContrastOpData::ConvertStyle(transform.getStyle(), combinedDir));
+
+    data->setExposure(transform.getExposure());
+    bool dyn = transform.isExposureDynamic();
+    if (dyn) data->getExposureProperty()->makeDynamic();
+    data->setContrast(transform.getContrast());
+    dyn = transform.isContrastDynamic();
+    if (dyn) data->getContrastProperty()->makeDynamic();
+    data->setGamma(transform.getGamma());
+    dyn = transform.isGammaDynamic();
+    if (dyn) data->getGammaProperty()->makeDynamic();
+    data->setPivot(transform.getPivot());
+    data->setLogExposureStep(transform.getLogExposureStep());
+    data->setLogMidGray(transform.getLogMidGray());
+    // NB: Always use Forward here since direction is handled with the style above.
+    CreateExposureContrastOp(ops, data, TRANSFORM_DIR_FORWARD);
 }
 
 }
@@ -420,8 +441,6 @@ OCIO_ADD_TEST(ExposureContrastOp, create_transform)
     OCIO_CHECK_EQUAL(std::string(metadata.getAttributeValue(0)), "test");
 
     OCIO_CHECK_EQUAL(ecTransform->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO_CHECK_EQUAL(ecTransform->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(ecTransform->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     OCIO_CHECK_EQUAL(ecTransform->getExposure(), data->getExposure());
     OCIO_CHECK_EQUAL(ecTransform->isExposureDynamic(), false);

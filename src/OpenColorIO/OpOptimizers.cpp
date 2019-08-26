@@ -421,8 +421,6 @@ OCIO_NAMESPACE_EXIT
 
 #ifdef OCIO_UNIT_TEST
 
-namespace OCIO = OCIO_NAMESPACE;
-#include "UnitTest.h"
 
 #include "ops/CDL/CDLOps.h"
 #include "ops/Exponent/ExponentOps.h"
@@ -432,7 +430,9 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "ops/Lut3D/Lut3DOp.h"
 #include "ops/Matrix/MatrixOps.h"
 #include "ops/Range/RangeOps.h"
+#include "UnitTest.h"
 
+namespace OCIO = OCIO_NAMESPACE;
 
 OCIO_ADD_TEST(OpOptimizers, RemoveInverseOps)
 {
@@ -630,7 +630,6 @@ void compareRender(OCIO::OpRcPtrVec ops1, OCIO::OpRcPtrVec ops2, unsigned line)
         OCIO_CHECK_CLOSE_FROM(img1[idx], img2[idx], 2e-5f, line);
     }
 }
-
 }
 
 OCIO_ADD_TEST(OptimizeSeparablePrefix, gamma_prefix)
