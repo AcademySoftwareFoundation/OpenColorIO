@@ -4237,7 +4237,7 @@ OCIO_ADD_TEST(FileFormatCTF, attribute_float_parse_extra_values)
     // Load file
     std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO_CHECK_THROW_WHAT(tester.Read(ctf, emptyString), OCIO::Exception,
+    OCIO_CHECK_THROW_WHAT(tester.read(ctf, emptyString), OCIO::Exception,
         "Expecting 1 value, found 2 values");
 }
 
@@ -4258,13 +4258,13 @@ OCIO_ADD_TEST(FileFormatCTF, attribute_float_parse_leading_spaces)
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr file;
-    OCIO_CHECK_NO_THROW(file = tester.Read(ctf, emptyString));
+    OCIO_CHECK_NO_THROW(file = tester.read(ctf, emptyString));
     OCIO::LocalCachedFileRcPtr cachedFile = OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
-    const OCIO::OpDataVec & fileOps = cachedFile->m_transform->getOps();
+    const auto & fileOps = cachedFile->m_transform->getOps();
 
     OCIO_REQUIRE_EQUAL(fileOps.size(), 1);
-    OCIO::OpDataRcPtr op = fileOps[0];
-    auto ec = std::dynamic_pointer_cast<OCIO::ExposureContrastOpData>(op);
+    const auto op = fileOps[0];
+    auto ec = std::dynamic_pointer_cast<const OCIO::ExposureContrastOpData>(op);
     OCIO_REQUIRE_ASSERT(ec);
 
     OCIO_CHECK_EQUAL(ec->getExposure(), -1.5);
