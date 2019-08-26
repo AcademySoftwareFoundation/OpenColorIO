@@ -208,7 +208,7 @@ inline void ApplyPower<false>(__m128& pix, const __m128& power)
 {
     __m128 negMask = _mm_cmplt_ps(pix, EZERO);
     __m128 pixPower = ssePower(pix, power);
-    pix = sseSelect(pixPower, pix, negMask);
+    pix = sseSelect(negMask, pix, pixPower);
 }
 
 // Apply the saturation component to the the pixel's values

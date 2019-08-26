@@ -61,6 +61,9 @@ OCIO_NAMESPACE_ENTER
         class MatrixOffsetOp : public Op
         {
         public:
+            MatrixOffsetOp() = delete;
+            MatrixOffsetOp(const MatrixOffsetOp &) = delete;
+
             MatrixOffsetOp(const double * m44,
                            const double * offset4,
                            TransformDirection direction);
@@ -92,8 +95,6 @@ OCIO_NAMESPACE_ENTER
             MatrixOpDataRcPtr matrixData() { return DynamicPtrCast<MatrixOpData>(data()); }
 
         private:
-            MatrixOffsetOp() = delete;
-
             TransformDirection m_direction;
         };
         

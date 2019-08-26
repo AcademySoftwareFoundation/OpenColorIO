@@ -145,8 +145,11 @@ OCIO_NAMESPACE_ENTER
         class ExponentOp : public Op
         {
         public:
-            ExponentOp(const double * exp4);
-            ExponentOp(ExponentOpDataRcPtr & exp);
+            ExponentOp() = delete;
+            ExponentOp(ExponentOp & exp) = delete;
+
+            explicit ExponentOp(const double * exp4);
+            explicit ExponentOp(ExponentOpDataRcPtr & exp);
 
             virtual ~ExponentOp();
             

@@ -45,6 +45,8 @@ namespace
 class ECRendererBase : public OpCPU
 {
 public:
+    ECRendererBase() = delete;
+    ECRendererBase(const ECRendererBase &) = delete;   
     explicit ECRendererBase(ConstExposureContrastOpDataRcPtr & ec);
     virtual ~ECRendererBase();
 

@@ -88,7 +88,7 @@ template<BitDepth inBD, BitDepth outBD>
 class BaseLut1DRenderer : public OpCPU
 {
 public:
-    BaseLut1DRenderer(ConstLut1DOpDataRcPtr & lut);
+    explicit BaseLut1DRenderer(ConstLut1DOpDataRcPtr & lut);
     BaseLut1DRenderer(ConstLut1DOpDataRcPtr & lut, BitDepth outBitDepth);
     virtual ~BaseLut1DRenderer();
 
@@ -152,7 +152,7 @@ class Lut1DRendererHalfCode : public BaseLut1DRenderer<inBD, outBD>
 public:
     Lut1DRendererHalfCode() = delete;
 
-    Lut1DRendererHalfCode(ConstLut1DOpDataRcPtr & lut)
+    explicit Lut1DRendererHalfCode(ConstLut1DOpDataRcPtr & lut)
         : BaseLut1DRenderer<inBD, outBD>(lut) {}
 
     Lut1DRendererHalfCode(ConstLut1DOpDataRcPtr & lut, BitDepth outBitDepth)
@@ -167,7 +167,7 @@ class Lut1DRenderer : public BaseLut1DRenderer<inBD, outBD>
 public:
     Lut1DRenderer() = delete;
 
-    Lut1DRenderer(ConstLut1DOpDataRcPtr & lut) 
+    explicit Lut1DRenderer(ConstLut1DOpDataRcPtr & lut) 
         : BaseLut1DRenderer<inBD, outBD>(lut) {}
 
     Lut1DRenderer(ConstLut1DOpDataRcPtr & lut, BitDepth outBitDepth)
@@ -182,7 +182,7 @@ class Lut1DRendererHueAdjust : public Lut1DRenderer<inBD, outBD>
 public:
     Lut1DRendererHueAdjust() = delete;
 
-    Lut1DRendererHueAdjust(ConstLut1DOpDataRcPtr & lut)
+    explicit Lut1DRendererHueAdjust(ConstLut1DOpDataRcPtr & lut)
         :  Lut1DRenderer<inBD, outBD>(lut, BIT_DEPTH_F32) {}
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
@@ -194,7 +194,7 @@ class Lut1DRendererHalfCodeHueAdjust : public Lut1DRendererHalfCode<inBD, outBD>
 public:
     Lut1DRendererHalfCodeHueAdjust() = delete;
 
-    Lut1DRendererHalfCodeHueAdjust(ConstLut1DOpDataRcPtr & lut)
+    explicit Lut1DRendererHalfCodeHueAdjust(ConstLut1DOpDataRcPtr & lut)
         : Lut1DRendererHalfCode<inBD, outBD>(lut, BIT_DEPTH_F32) {}
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
@@ -235,7 +235,7 @@ class InvLut1DRenderer : public OpCPU
 {
 public:
     InvLut1DRenderer() = delete;
-    InvLut1DRenderer(ConstLut1DOpDataRcPtr & lut);
+    explicit InvLut1DRenderer(ConstLut1DOpDataRcPtr & lut);
     InvLut1DRenderer(const InvLut1DRenderer&) = delete;
     InvLut1DRenderer& operator=(const InvLut1DRenderer&) = delete;
     virtual ~InvLut1DRenderer();
@@ -265,7 +265,7 @@ class InvLut1DRendererHalfCode : public InvLut1DRenderer<inBD, outBD>
 {
 public:
     InvLut1DRendererHalfCode() = delete;
-    InvLut1DRendererHalfCode(ConstLut1DOpDataRcPtr & lut);
+    explicit InvLut1DRendererHalfCode(ConstLut1DOpDataRcPtr & lut);
     InvLut1DRendererHalfCode(const InvLut1DRendererHalfCode &) = delete;
     virtual ~InvLut1DRendererHalfCode();
 
@@ -278,7 +278,7 @@ template<BitDepth inBD, BitDepth outBD>
 class InvLut1DRendererHueAdjust : public InvLut1DRenderer<inBD, outBD>
 {
 public:
-    InvLut1DRendererHueAdjust(ConstLut1DOpDataRcPtr & lut);
+    explicit InvLut1DRendererHueAdjust(ConstLut1DOpDataRcPtr & lut);
  
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
@@ -287,7 +287,7 @@ template<BitDepth inBD, BitDepth outBD>
 class InvLut1DRendererHalfCodeHueAdjust : public InvLut1DRendererHalfCode<inBD, outBD>
 {
 public:
-    InvLut1DRendererHalfCodeHueAdjust(ConstLut1DOpDataRcPtr & lut);
+    explicit InvLut1DRendererHalfCodeHueAdjust(ConstLut1DOpDataRcPtr & lut);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 };

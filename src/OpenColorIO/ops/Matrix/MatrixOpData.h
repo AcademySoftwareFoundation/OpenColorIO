@@ -116,6 +116,7 @@ public:
 public:
 
     MatrixOpData();
+    MatrixOpData(const MatrixOpData &) = default;
         
     MatrixOpData(BitDepth inBitDepth, BitDepth outBitDepth);
 

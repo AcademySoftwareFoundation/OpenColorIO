@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: CC-BY-4.0 -->
+<!-- Copyright Contributors to the OpenColorIO Project. -->
+
 # OpenColorIO Project Governance
 
 The OpenColorIO project is governed by its Committers, including a Technical

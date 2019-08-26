@@ -47,7 +47,9 @@ typedef OCIO_SHARED_PTR<const ExposureContrastOp> ConstExposureContrastOpRcPtr;
 class ExposureContrastOp : public Op
 {
 public:
-    ExposureContrastOp(ExposureContrastOpDataRcPtr & ec);
+    ExposureContrastOp() = delete;
+    ExposureContrastOp(const ExposureContrastOp &) = delete;
+    explicit ExposureContrastOp(ExposureContrastOpDataRcPtr & ec);
 
     virtual ~ExposureContrastOp();
 
@@ -84,10 +86,6 @@ protected:
     { 
         return DynamicPtrCast<ExposureContrastOpData>(data());
     }
-
-    ExposureContrastOp() = delete;
-    ExposureContrastOp(const ExposureContrastOp &) = delete;
-
 };
 
 

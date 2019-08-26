@@ -476,8 +476,7 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #ifdef OCIO_SOURCE_DIR
 
-#define _STR(x) #x
-#define STR(x) _STR(x)
+#define STR(x) FIELD_STR(x)
 
 static const std::string ociodir(STR(OCIO_SOURCE_DIR));
 

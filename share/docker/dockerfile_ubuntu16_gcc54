@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
 #
 # Ubuntu Dockerfile for OCIO
 #
@@ -35,12 +37,6 @@ RUN cd /home/devel/download/cmake-3.12.3 && \
     make -j4 && \
     make install
 RUN hash -r
-
-
-# Install Truelight library
-RUN cd /home/devel/download && \
-    wget -q -O truelight-4.0.7863_64.run --post-data 'access=public&download=truelight/4_0/truelight-4.0.7863_64.run&last_page=/support/customer-login/truelight_sp/truelight_40.php' https://www.filmlight.ltd.uk/resources/download.php && \
-    sh truelight-4.0.7863_64.run
 
 
 # Install Boost library
@@ -95,7 +91,6 @@ RUN cd /home/devel/git && \
           -DOCIO_BUILD_APPS=ON \
           -DOCIO_BUILD_PYTHON=ON \
           -DCMAKE_PREFIX_PATH=/usr/local \
-          -DTRUELIGHT_INSTALL_PATH=/usr/fl/truelight \
           ..
 
 

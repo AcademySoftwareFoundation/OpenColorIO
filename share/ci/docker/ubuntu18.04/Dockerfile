@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+
 FROM ubuntu:18.04
 
 COPY share/ci/scripts /tmp/share/ci/scripts/

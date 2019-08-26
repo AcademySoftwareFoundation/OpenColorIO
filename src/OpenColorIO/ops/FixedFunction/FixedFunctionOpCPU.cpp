@@ -41,6 +41,9 @@ OCIO_NAMESPACE_ENTER
 class FixedFunctionOpCPU : public OpCPU
 {
 public:
+    FixedFunctionOpCPU() = delete;
+    FixedFunctionOpCPU(const FixedFunctionOpCPU &) = delete;
+
     explicit FixedFunctionOpCPU(ConstFixedFunctionOpDataRcPtr & func);
 
 protected:
@@ -131,7 +134,7 @@ protected:
 class Renderer_REC2100_Surround : public FixedFunctionOpCPU
 {
 public:
-    Renderer_REC2100_Surround(ConstFixedFunctionOpDataRcPtr & func);
+    explicit Renderer_REC2100_Surround(ConstFixedFunctionOpDataRcPtr & func);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 

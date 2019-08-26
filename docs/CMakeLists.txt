@@ -1,6 +1,24 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+
+###############################################################################
+### Python ###
 find_package(PythonInterp 2.7 REQUIRED)
 if(NOT OCIO_BUILD_PYTHON)
     message(FATAL_ERROR "Doc generation requires that the python bindings be built")
+endif()
+
+###############################################################################
+### External Python dependencies ###
+
+include(FindPythonPackage)
+
+# Sphinx
+# https://pypi.python.org/pypi/Sphinx
+set(SPHINX_MIN_VERSION 1.8.5)
+find_package(Sphinx ${SPHINX_MIN_VERSION} REQUIRED)
+if(NOT SPHINX_FOUND)
+    message(FATAL_ERROR "Doc generation requires Sphinx")
 endif()
 
 ###############################################################################

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
 
 import unittest, os, sys
 import PyOpenColorIO as OCIO
@@ -201,7 +203,7 @@ class TransformsTest(unittest.TestCase):
         self.assertEqual("foobar", ft.getCCCId())
         ft.setInterpolation(OCIO.Constants.INTERP_NEAREST)
         self.assertEqual(OCIO.Constants.INTERP_NEAREST, ft.getInterpolation())
-        self.assertEqual(23, ft.getNumFormats())
+        self.assertEqual(24, ft.getNumFormats())
         self.assertEqual("flame", ft.getFormatNameByIndex(0))
         self.assertEqual("3dl", ft.getFormatExtensionByIndex(0))
 
@@ -291,28 +293,3 @@ class TransformsTest(unittest.TestCase):
         for i in range(0, 4):
             self.assertAlmostEqual(float(i+1)/10.0, offset_5[i], delta=1e-7)
         self.assertEqual(mt5.getDirection(), OCIO.Constants.TRANSFORM_DIR_INVERSE)
-
-        ### TruelightTransform ###
-        """
-        tt = OCIO.TruelightTransform()
-        tt.setConfigRoot("/some/path")
-        self.assertEqual("/some/path", tt.getConfigRoot())
-        tt.setProfile("profileA")
-        self.assertEqual("profileA", tt.getProfile())
-        tt.setCamera("incam")
-        self.assertEqual("incam", tt.getCamera())
-        tt.setInputDisplay("dellmon")
-        self.assertEqual("dellmon", tt.getInputDisplay())
-        tt.setRecorder("blah")
-        self.assertEqual("blah", tt.getRecorder())
-        tt.setPrint("kodasomething")
-        self.assertEqual("kodasomething", tt.getPrint())
-        tt.setLamp("foobar")
-        self.assertEqual("foobar", tt.getLamp())
-        tt.setOutputCamera("somecam")
-        self.assertEqual("somecam", tt.getOutputCamera())
-        tt.setDisplay("sRGB")
-        self.assertEqual("sRGB", tt.getDisplay())
-        tt.setCubeInput("log")
-        self.assertEqual("log", tt.getCubeInput())
-        """

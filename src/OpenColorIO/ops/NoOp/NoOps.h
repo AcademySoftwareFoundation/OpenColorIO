@@ -65,6 +65,7 @@ OCIO_NAMESPACE_ENTER
     {
     public:
         NoOpData() : OpData(BIT_DEPTH_UNKNOWN, BIT_DEPTH_UNKNOWN) { }
+        NoOpData(const NoOpData &) = delete;
 
         Type getType() const override { return NoOpType; }
         bool isNoOp() const override { return true; }
@@ -78,13 +79,15 @@ OCIO_NAMESPACE_ENTER
     // directly or indirectly).
     class FileNoOpData : public NoOpData
     {
-        FileNoOpData() = delete;
     public:
+        FileNoOpData() = delete;
+        FileNoOpData(const FileNoOpData &) = delete;
         FileNoOpData(const std::string & path) : NoOpData(), m_path(path) { }
 
         const std::string & getPath() const { return m_path; }
         void setComplete() const { m_complete = true; }
         bool getComplete() const { return m_complete;  }
+
     private:
         std::string m_path;
         // false while the file is still being loaded.

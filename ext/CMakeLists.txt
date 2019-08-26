@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+
 ###############################################################################
 ### External C/C++ dependencies ###
 
@@ -34,19 +37,3 @@ add_library(sampleicc::sampleicc INTERFACE IMPORTED GLOBAL)
 set_target_properties(sampleicc::sampleicc PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/sampleicc/src/include"
 )
-
-###############################################################################
-### External Python dependencies ###
-
-if(OCIO_BUILD_DOCS)
-    include(FindPythonPackage)
-
-    # Sphinx
-    # https://pypi.python.org/pypi/Sphinx
-    set(SPHINX_MIN_VERSION 1.8.5)
-    find_package(Sphinx ${SPHINX_MIN_VERSION} REQUIRED)
-    #add_dependencies(Sphinx setuptools docutils Jinja2 Pygments)
-
-    # Make sphinx-build path available in other modules
-    set(SPHINX_EXECUTABLE "${SPHINX_EXECUTABLE}" CACHE STRING "Path to sphinx-build")
-endif()

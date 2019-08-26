@@ -1,3 +1,7 @@
+..
+  SPDX-License-Identifier: CC-BY-4.0
+  Copyright Contributors to the OpenColorIO Project.
+
 .. _downloads:
 
 Downloads
@@ -16,13 +20,15 @@ Build instructions: :ref:`building-from-source`.
 
 Contributor License Agreements
 ******************************
-Please see the `Imageworks Open Source website <http://opensource.imageworks.com/cla/>`__
+Please see the `OCIO GitHub repository <https://github.com/imageworks/OpenColorIO/tree/master/docs/aswf>`__
 
 Deprecated Downloads
 ********************
+* Reference Images v1.0v3 `tgz <http://code.google.com/p/opencolorio/downloads/detail?name=ocio-images.1.0v3.tgz>`__
 * Reference Images v1.0v2 `tgz <http://code.google.com/p/opencolorio/downloads/detail?name=ocio-images.1.0v2.tgz>`__
 * Reference Images v1.0v1 `tgz <http://code.google.com/p/opencolorio/downloads/detail?name=ocio-images.1.0v1.tgz>`__
 
+* Core Library v1.1.0 -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/v1.1.0>`__ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/v1.1.0>`__
 * Core Library v1.0.9 -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/v1.0.9>`__ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/v1.0.9>`__
 * Core Library v1.0.8 -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/v1.0.8>`__ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/v1.0.8>`__
 * Core Library v1.0.7 -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/v1.0.7>`__ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/v1.0.7>`__

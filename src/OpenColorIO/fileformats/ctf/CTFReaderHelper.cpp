@@ -1157,8 +1157,7 @@ void CTFReaderACESParamsElt::start(const char **atts)
     {
         if (0 == Platform::Strcasecmp(ATTR_GAMMA, atts[i]))
         {
-            const size_t len = strlen(atts[i + 1]);
-            ParseNumber(atts[i + 1], 0, len, gamma);
+            parseScalarAttribute(atts[i], atts[i + 1], gamma);
         }
 
         i += 2;
@@ -1523,27 +1522,25 @@ void CTFReaderECParamsElt::start(const char ** atts)
     double logExposureStep = std::numeric_limits<double>::quiet_NaN();
     double logMidGray = std::numeric_limits<double>::quiet_NaN();
 
-    // Try extracting the attributes
+    // Try extracting the attributes.
     unsigned i = 0;
-    while (atts[i])
+    while (atts[i] && *atts[i])
     {
-        const size_t len = strlen(atts[i + 1]);
-
         if (0 == Platform::Strcasecmp(ATTR_EXPOSURE, atts[i]))
         {
-            ParseNumber(atts[i + 1], 0, len, exposure);
+            parseScalarAttribute(atts[i], atts[i + 1], exposure);
         }
         else if (0 == Platform::Strcasecmp(ATTR_CONTRAST, atts[i]))
         {
-            ParseNumber(atts[i + 1], 0, len, contrast);
+            parseScalarAttribute(atts[i], atts[i + 1], contrast);
         }
         else if (0 == Platform::Strcasecmp(ATTR_GAMMA, atts[i]))
         {
-            ParseNumber(atts[i + 1], 0, len, gamma);
+            parseScalarAttribute(atts[i], atts[i + 1], gamma);
         }
         else if (0 == Platform::Strcasecmp(ATTR_PIVOT, atts[i]))
         {
-            ParseNumber(atts[i + 1], 0, len, pivot);
+            parseScalarAttribute(atts[i], atts[i + 1], pivot);
         }
         else if (0 == Platform::Strcasecmp(ATTR_LOGEXPOSURESTEP, atts[i]))
         {
@@ -1742,13 +1739,11 @@ void CTFReaderGammaParamsElt::start(const char ** atts)
         }
         else if (0 == Platform::Strcasecmp(ATTR_GAMMA, atts[i]))
         {
-            const size_t len = strlen(atts[i + 1]);
-            ParseNumber(atts[i + 1], 0, len, gamma);
+            parseScalarAttribute(atts[i], atts[i + 1], gamma);
         }
         else if (0 == Platform::Strcasecmp(ATTR_OFFSET, atts[i]))
         {
-            const size_t len = strlen(atts[i + 1]);
-            ParseNumber(atts[i + 1], 0, len, offset);
+            parseScalarAttribute(atts[i], atts[i + 1], offset);
         }
 
         i += 2;
@@ -2331,12 +2326,9 @@ void CTFReaderLogParamsElt::start(const char ** atts)
     double base = std::numeric_limits<double>::quiet_NaN();
 
     // Try extracting the attributes.
-
     unsigned i = 0;
     while (atts[i])
     {
-        const size_t len = strlen(atts[i + 1]);
-
         if (0 == Platform::Strcasecmp(ATTR_CHAN, atts[i]))
         {
             if (0 == Platform::Strcasecmp("R", atts[i + 1]))
@@ -2354,29 +2346,32 @@ void CTFReaderLogParamsElt::start(const char ** atts)
             // Chan is optional but, if present, must be legal.
             else
             {
-                ThrowM(*this, "Illegal channel attribute value '",
-                       atts[i + 1], "'. ");
+                std::ostringstream arg;
+                arg << "Illegal channel attribute value '";
+                arg << atts[i + 1] << "'. ";
+
+                throwMessage(arg.str());
             }
         }
         else if (0 == Platform::Strcasecmp(ATTR_GAMMA, atts[i]))
         {
-            ParseNumber(atts[i + 1], 0, len, gamma);
+            parseScalarAttribute(atts[i], atts[i + 1], gamma);
         }
         else if (0 == Platform::Strcasecmp(ATTR_REFWHITE, atts[i]))
         {
-            ParseNumber(atts[i + 1], 0, len, refWhite);
+            parseScalarAttribute(atts[i], atts[i + 1], refWhite);
         }
         else if (0 == Platform::Strcasecmp(ATTR_REFBLACK, atts[i]))
         {
-            ParseNumber(atts[i + 1], 0, len, refBlack);
+            parseScalarAttribute(atts[i], atts[i + 1], refBlack);
         }
         else if (0 == Platform::Strcasecmp(ATTR_HIGHLIGHT, atts[i]))
         {
-            ParseNumber(atts[i + 1], 0, len, highlight);
+            parseScalarAttribute(atts[i], atts[i + 1], highlight);
         }
         else if (0 == Platform::Strcasecmp(ATTR_SHADOW, atts[i]))
         {
-            ParseNumber(atts[i + 1], 0, len, shadow);
+            parseScalarAttribute(atts[i], atts[i + 1], shadow);
         }
         else if (0 == Platform::Strcasecmp(ATTR_LINSIDESLOPE, atts[i]))
         {

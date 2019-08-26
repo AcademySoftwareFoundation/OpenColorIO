@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
 
 set(IPHONE_SDK "4.3")
 set(IPHONE_ROOT "/Developer/Platforms/iPhoneOS.platform/Developer")
@@ -34,7 +36,6 @@ set(IPHONE TRUE)
 
 set(OCIO_BUILD_SHARED FALSE)
 set(OCIO_BUILD_STATIC TRUE)
-set(OCIO_BUILD_TRUELIGHT FALSE)
 set(OCIO_BUILD_TESTBED FALSE)
 set(OCIO_BUILD_APPS FALSE)
 set(OCIO_BUILD_NUKE FALSE)

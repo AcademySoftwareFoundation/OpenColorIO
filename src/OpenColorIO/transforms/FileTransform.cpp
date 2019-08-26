@@ -994,7 +994,7 @@ OCIO_ADD_TEST(FileTransform, AllFormats)
 {
     OCIO::FormatRegistry & formatRegistry = OCIO::FormatRegistry::GetInstance();
     OCIO_CHECK_EQUAL(19, formatRegistry.getNumRawFormats());
-    OCIO_CHECK_EQUAL(23, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_READ));
+    OCIO_CHECK_EQUAL(24, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_READ));
     OCIO_CHECK_EQUAL(8, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_BAKE));
     OCIO_CHECK_EQUAL(2, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_WRITE));
 

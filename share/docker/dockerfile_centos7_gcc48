@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
 #
 # Centos 7 Dockerfile for OCIO
 #
@@ -31,12 +33,6 @@ RUN yum -y install epel-release && \
     libXmu-devel \
     libXi-devel && \
     yum -y clean all
-    
-# Install Truelight library
-RUN mkdir /home/download && \
-    cd /home/download && \
-    wget -O truelight-4.0.7863_64.run --post-data 'access=public&download=truelight/4_0/truelight-4.0.7863_64.run&last_page=/support/customer-login/truelight_sp/truelight_40.php' https://www.filmlight.ltd.uk/resources/download.php && \
-    sh truelight-4.0.7863_64.run
 
 # Install Boost
 RUN cd /home/download && \

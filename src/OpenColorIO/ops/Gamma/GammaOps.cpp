@@ -148,7 +148,9 @@ class GammaOp : public Op
 {
 public:
     GammaOp() = delete;
-    GammaOp(GammaOpDataRcPtr & gamma);
+    explicit GammaOp(GammaOpDataRcPtr & gamma);
+    GammaOp(const GammaOp &) = delete;
+
     GammaOp(BitDepth inBitDepth, 
             BitDepth outBitDepth,
             const FormatMetadataImpl & info,
@@ -747,7 +749,7 @@ OCIO_ADD_TEST(GammaOps, apply_moncurve_style_rev)
          0.00309303f,  0.01131410f,  0.06125000f,  0.76367092f,
          0.51735413f,  0.67568808f,  0.81243550f,  1.0f,
 
-#ifdef WIN32
+#ifdef _WIN32
          0.90233647f,  0.97234553f,  1.0f,         1.40423405f,
 #else
          0.90233647f,  0.97234553f,  1.0f,         1.40423429f,

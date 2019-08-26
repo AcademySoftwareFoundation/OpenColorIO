@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+
 import SpImport
 OCIO = SpImport.SpComp2("PyOpenColorIO",2)
 #import PyOpenColorIO as OCIO

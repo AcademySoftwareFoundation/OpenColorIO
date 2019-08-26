@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+#
 # Locate or install Sphinx (Python documentation generator)
 #
 # Variables defined by this module:
@@ -23,14 +26,15 @@ if(NOT TARGET Sphinx)
     set(_SPHINX_TARGET_CREATE TRUE)
 endif()
 
+if(PYTHONINTERP_FOUND AND WIN32)
+    get_filename_component(PYTHON_ROOT "${PYTHON_EXECUTABLE}" DIRECTORY)
+    set(PYTHON_SCRIPTS_DIR "${PYTHON_ROOT}/Scripts")
+endif()
+
 ###############################################################################
 ### Try to find package ###
 
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
-    if(PYTHONINTERP_FOUND AND WIN32)
-        get_filename_component(PYTHON_ROOT "${PYTHON_EXECUTABLE}" DIRECTORY)
-        set(PYTHON_SCRIPTS_DIR "${PYTHON_ROOT}/Scripts")
-    endif()
 
     # Find sphinx-build
     find_program(SPHINX_EXECUTABLE 
@@ -64,8 +68,11 @@ if(NOT SPHINX_FOUND)
     set(SPHINX_FOUND TRUE)
     if(WIN32)
         set(SPHINX_EXECUTABLE "${_EXT_DIST_ROOT}/Scripts/sphinx-build")
+        # On Windows platform, pip is in the Scripts sub-directory.
+        set(_PYTHON_PIP "${PYTHON_SCRIPTS_DIR}/pip.exe")
     else()
         set(SPHINX_EXECUTABLE "${_EXT_DIST_ROOT}/bin/sphinx-build")
+        set(_PYTHON_PIP "pip")
     endif()
 
     # Configure install target
@@ -74,9 +81,9 @@ if(NOT SPHINX_FOUND)
             TARGET
                 Sphinx
             COMMAND
-                pip install --disable-pip-version-check
-                            --install-option="--prefix=${_EXT_DIST_ROOT}"
-                            -I Sphinx==${Sphinx_FIND_VERSION}
+                ${_PYTHON_PIP} install --disable-pip-version-check
+                                       --install-option="--prefix=${_EXT_DIST_ROOT}"
+                                       -I Sphinx==${Sphinx_FIND_VERSION}
             WORKING_DIRECTORY
                 "${CMAKE_BINARY_DIR}"
         )

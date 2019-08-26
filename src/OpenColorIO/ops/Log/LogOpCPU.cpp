@@ -44,8 +44,10 @@ OCIO_NAMESPACE_ENTER
 class LogOpCPU : public OpCPU
 {
 public:
+    LogOpCPU() = delete;
+    LogOpCPU(const LogOpCPU &) = delete;
 
-    LogOpCPU(ConstLogOpDataRcPtr & log);
+    explicit LogOpCPU(ConstLogOpDataRcPtr & log);
 
 protected:
     // Update renderer parameters.
@@ -55,9 +57,6 @@ protected:
     float m_inScale;
     float m_outScale;
     float m_alphaScale;
-
-private:
-    LogOpCPU() = delete;
 };
 
 // Base class for LogToLin and LinToLog renderers.
@@ -119,8 +118,8 @@ private:
     float m_log2_base;
 };
 
-static const float LOG2_10 = ((float) 3.3219280948873623478703194294894);
-static const float LOG10_2 = ((float) 0.3010299956639811952137388947245);
+static constexpr float LOG2_10 = ((float) 3.3219280948873623478703194294894);
+static constexpr float LOG10_2 = ((float) 0.3010299956639811952137388947245);
 
 ConstOpCPURcPtr GetLogRenderer(ConstLogOpDataRcPtr & log)
 {

@@ -1,4 +1,6 @@
-#-------------------------------------------------------------------------------
+# Distributed under the OSI-approved BSD 3-Clause License.  See accompanying
+# file Copyright.txt or https://cmake.org/licensing for details.
+#
 # The PARSE_ARGUMENTS macro will take the arguments of another macro and define
 # several variables. The first argument to PARSE_ARGUMENTS is a prefix to put
 # on all variables it creates. The second argument is a list of names, and the

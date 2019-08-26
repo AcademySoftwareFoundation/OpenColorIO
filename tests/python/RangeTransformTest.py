@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
 
 import unittest, os, sys
 sys.path.append(os.path.join(sys.argv[1], "src", "pyglue"))

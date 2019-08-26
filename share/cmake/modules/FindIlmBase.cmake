@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+#
 # Locate or install ilmbase
 #
 # Variables defined by this module:
@@ -54,17 +57,31 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
             OpenEXR/include
     )
 
-    # Attempt to find static library first if this is set
+    # Lib names to search for
+    set(_ILMBASE_LIB_NAMES "Half-${_ILMBASE_LIB_VER}" Half)
+    if(BUILD_TYPE_DEBUG)
+        # Prefer Debug lib names
+        list(INSERT _ILMBASE_LIB_NAMES 0 "Half-${_ILMBASE_LIB_VER}_d")
+    endif()
+
     if(ILMBASE_STATIC_LIBRARY)
-        set(_ILMBASE_STATIC 
-            "${CMAKE_STATIC_LIBRARY_PREFIX}Half-${_ILMBASE_LIB_VER}_s${CMAKE_STATIC_LIBRARY_SUFFIX}" 
-            "${CMAKE_STATIC_LIBRARY_PREFIX}Half${CMAKE_STATIC_LIBRARY_SUFFIX}")
+        # Prefer static lib names
+        set(_ILMBASE_STATIC_LIB_NAMES 
+            "${CMAKE_STATIC_LIBRARY_PREFIX}Half-${_ILMBASE_LIB_VER}_s${CMAKE_STATIC_LIBRARY_SUFFIX}"
+            "${CMAKE_STATIC_LIBRARY_PREFIX}Half${CMAKE_STATIC_LIBRARY_SUFFIX}"
+        )
+        if(BUILD_TYPE_DEBUG)
+            # Prefer static Debug lib names
+            list(INSERT _ILMBASE_STATIC_LIB_NAMES 0
+                "${CMAKE_STATIC_LIBRARY_PREFIX}Half-${_ILMBASE_LIB_VER}_s_d${CMAKE_STATIC_LIBRARY_SUFFIX}")
+        endif()
     endif()
 
     # Find library
     find_library(ILMBASE_LIBRARY
         NAMES
-            ${_ILMBASE_STATIC} "Half-${_ILMBASE_LIB_VER}" Half
+            ${_ILMBASE_STATIC_LIB_NAMES} 
+            ${_ILMBASE_LIB_NAMES}
         HINTS
             ${_ILMBASE_SEARCH_DIRS}
         PATH_SUFFIXES
@@ -118,8 +135,15 @@ if(NOT ILMBASE_FOUND)
     set(ILMBASE_FOUND TRUE)
     set(ILMBASE_VERSION ${IlmBase_FIND_VERSION})
     set(ILMBASE_INCLUDE_DIR "${_EXT_DIST_ROOT}/include")
-    set(ILMBASE_LIBRARY 
-        "${_EXT_DIST_ROOT}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}Half-${_ILMBASE_LIB_VER}_s${CMAKE_STATIC_LIBRARY_SUFFIX}")
+
+    # Set the expected library name. "_d" is appended to Debug Windows builds 
+    # <= OpenEXR 2.3.0. In newer versions, it is appended to Debug libs on
+    # all platforms.
+    if(BUILD_TYPE_DEBUG AND (WIN32 OR ILMBASE_VERSION VERSION_GREATER "2.3.0"))
+        set(_ILMBASE_LIB_SUFFIX "_d")
+    endif()
+    set(ILMBASE_LIBRARY
+        "${_EXT_DIST_ROOT}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}Half-${_ILMBASE_LIB_VER}_s${_ILMBASE_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
     if(_ILMBASE_TARGET_CREATE)
         if(UNIX)
@@ -155,8 +179,13 @@ if(NOT ILMBASE_FOUND)
             PREFIX "${_EXT_BUILD_ROOT}/openexr"
             BUILD_BYPRODUCTS ${ILMBASE_LIBRARY}
             CMAKE_ARGS ${ILMBASE_CMAKE_ARGS}
-            BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${CMAKE_BUILD_TYPE} --target Half_static
-            INSTALL_COMMAND ${CMAKE_COMMAND} -P "IlmBase/Half/cmake_install.cmake"
+            BUILD_COMMAND
+                ${CMAKE_COMMAND} --build .
+                                 --config ${CMAKE_BUILD_TYPE}
+                                 --target Half_static
+            INSTALL_COMMAND
+                ${CMAKE_COMMAND} -DCMAKE_INSTALL_CONFIG_NAME=${CMAKE_BUILD_TYPE}
+                                 -P "IlmBase/Half/cmake_install.cmake"
             EXCLUDE_FROM_ALL TRUE
         )
 

@@ -49,8 +49,9 @@ OCIO_NAMESPACE_ENTER
 class GammaBasicOpCPU : public OpCPU
 {
 public:
-
-    GammaBasicOpCPU(ConstGammaOpDataRcPtr & gamma);
+    GammaBasicOpCPU() = delete;
+    GammaBasicOpCPU(const GammaBasicOpCPU &) = delete;
+    explicit GammaBasicOpCPU(ConstGammaOpDataRcPtr & gamma);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 
@@ -69,7 +70,7 @@ private:
 class GammaMoncurveOpCPU : public OpCPU
 {
 protected:
-    GammaMoncurveOpCPU(ConstGammaOpDataRcPtr &) : OpCPU() {}
+    explicit GammaMoncurveOpCPU(ConstGammaOpDataRcPtr &) : OpCPU() {}
 
 protected:
     RendererParams m_red;
@@ -81,7 +82,7 @@ protected:
 class GammaMoncurveOpCPUFwd : public GammaMoncurveOpCPU
 {
 public:
-    GammaMoncurveOpCPUFwd(ConstGammaOpDataRcPtr & gamma);
+    explicit GammaMoncurveOpCPUFwd(ConstGammaOpDataRcPtr & gamma);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 
@@ -95,7 +96,7 @@ private:
 class GammaMoncurveOpCPURev : public GammaMoncurveOpCPU
 {
 public:
-    GammaMoncurveOpCPURev(ConstGammaOpDataRcPtr & gamma);
+    explicit GammaMoncurveOpCPURev(ConstGammaOpDataRcPtr & gamma);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 
@@ -132,7 +133,6 @@ ConstOpCPURcPtr GetGammaRenderer(ConstGammaOpDataRcPtr & gamma)
     }
 
     throw Exception("Unsupported Gamma style");
-    return ConstOpCPURcPtr();
 }
 
 

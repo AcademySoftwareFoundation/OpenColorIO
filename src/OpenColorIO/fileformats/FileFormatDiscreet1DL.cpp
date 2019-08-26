@@ -433,7 +433,7 @@ OCIO_NAMESPACE_ENTER
             else
             {
                 char dstDepthS[16] = "";
-#ifdef WINDOWS
+#ifdef _WIN32
                 const int nummatched = sscanf(InString, "%*s %d %d %s", &numtables, &length, dstDepthS, 16);
 #else
                 const int nummatched = sscanf(InString, "%*s %d %d %s", &numtables, &length, dstDepthS);
@@ -457,7 +457,7 @@ OCIO_NAMESPACE_ENTER
                     // Optional dstDepth was specified. Validate it.
                     int dstDepth = 0;
                     char floatC = ' ';
-#ifdef WINDOWS
+#ifdef _WIN32
                     sscanf(dstDepthS, "%d%c", &dstDepth, &floatC, 1);
 #else
                     sscanf(dstDepthS, "%d%c", &dstDepth, &floatC);
@@ -823,7 +823,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 #include "UnitTestUtils.h"
 
-#ifdef WINDOWS
+#ifdef _WIN32
 #define stringCopy(to, from, size) strcpy_s(to, size, from);
 #else
 #define stringCopy(to, from, size) strncpy(to, from, size);
