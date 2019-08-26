@@ -1544,11 +1544,11 @@ void CTFReaderECParamsElt::start(const char ** atts)
         }
         else if (0 == Platform::Strcasecmp(ATTR_LOGEXPOSURESTEP, atts[i]))
         {
-            ParseNumber(atts[i + 1], 0, len, logExposureStep);
+            parseScalarAttribute(atts[i], atts[i + 1], logExposureStep);
         }
         else if (0 == Platform::Strcasecmp(ATTR_LOGMIDGRAY, atts[i]))
         {
-            ParseNumber(atts[i + 1], 0, len, logMidGray);
+            parseScalarAttribute(atts[i], atts[i + 1], logMidGray);
         }
 
 
@@ -2375,23 +2375,23 @@ void CTFReaderLogParamsElt::start(const char ** atts)
         }
         else if (0 == Platform::Strcasecmp(ATTR_LINSIDESLOPE, atts[i]))
         {
-            ParseNumber(atts[i + 1], 0, len, linSideSlope);
+            parseScalarAttribute(atts[i], atts[i + 1], linSideSlope);
         }
         else if (0 == Platform::Strcasecmp(ATTR_LINSIDEOFFSET, atts[i]))
         {
-            ParseNumber(atts[i + 1], 0, len, linSideOffset);
+            parseScalarAttribute(atts[i], atts[i + 1], linSideOffset);
         }
         else if (0 == Platform::Strcasecmp(ATTR_LOGSIDESLOPE, atts[i]))
         {
-            ParseNumber(atts[i + 1], 0, len, logSideSlope);
+            parseScalarAttribute(atts[i], atts[i + 1], logSideSlope);
         }
         else if (0 == Platform::Strcasecmp(ATTR_LOGSIDEOFFSET, atts[i]))
         {
-            ParseNumber(atts[i + 1], 0, len, logSideOffset);
+            parseScalarAttribute(atts[i], atts[i + 1], logSideOffset);
         }
         else if (0 == Platform::Strcasecmp(ATTR_BASE, atts[i]))
         {
-            ParseNumber(atts[i + 1], 0, len, base);
+            parseScalarAttribute(atts[i], atts[i + 1], base);
         }
 
         i += 2;
