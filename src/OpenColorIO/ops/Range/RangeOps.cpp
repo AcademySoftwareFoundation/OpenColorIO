@@ -85,7 +85,7 @@ protected:
     ConstRangeOpDataRcPtr rangeData() const { return DynamicPtrCast<const RangeOpData>(data()); }
     RangeOpDataRcPtr rangeData() { return DynamicPtrCast<RangeOpData>(data()); }
 
-private:            
+private:
     // The range direction
     TransformDirection m_direction;
 };
@@ -193,7 +193,7 @@ void RangeOp::finalize(FinalizationFlags /*fFlags*/)
     cacheIDStream << constThis.rangeData()->getCacheID() << " ";
     cacheIDStream << TransformDirectionToString(m_direction) << " ";
     cacheIDStream << ">";
-    
+
     m_cacheID = cacheIDStream.str();
 }
 
@@ -231,17 +231,17 @@ void RangeOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
 
 
 
-void CreateRangeOp(OpRcPtrVec & ops, 
+void CreateRangeOp(OpRcPtrVec & ops,
                    double minInValue, double maxInValue,
                    double minOutValue, double maxOutValue)
 {
-    CreateRangeOp(ops, 
+    CreateRangeOp(ops,
                   minInValue, maxInValue,
                   minOutValue, maxOutValue,
                   TRANSFORM_DIR_FORWARD);
 }
 
-void CreateRangeOp(OpRcPtrVec & ops, 
+void CreateRangeOp(OpRcPtrVec & ops,
                    double minInValue, double maxInValue,
                    double minOutValue, double maxOutValue,
                    TransformDirection direction)
@@ -270,13 +270,11 @@ OCIO_NAMESPACE_EXIT
 
 #ifdef OCIO_UNIT_TEST
 
-namespace OCIO = OCIO_NAMESPACE;
-
 #include "ops/Matrix/MatrixOps.h"
 #include "UnitTest.h"
 
+namespace OCIO = OCIO_NAMESPACE;
 
-OCIO_NAMESPACE_USING
 
 const float g_error = 1e-7f;
 
@@ -319,7 +317,7 @@ OCIO_ADD_TEST(RangeOps, combining)
     OCIO::ConstOpRcPtr op1 = ops[1];
 
     // TODO: implement Range combine
-    OCIO_CHECK_THROW_WHAT(ops[0]->combineWith(ops, op1), 
+    OCIO_CHECK_THROW_WHAT(ops[0]->combineWith(ops, op1),
                           OCIO::Exception, "TODO: Range can't be combined");
     OCIO_CHECK_EQUAL(ops.size(), 2);
 
@@ -339,7 +337,7 @@ OCIO_ADD_TEST(RangeOps, combining_with_inverse)
     OCIO::ConstOpRcPtr op1 = ops[1];
 
     // TODO: implement Range combine
-    OCIO_CHECK_THROW_WHAT(ops[0]->combineWith(ops, op1), 
+    OCIO_CHECK_THROW_WHAT(ops[0]->combineWith(ops, op1),
                           OCIO::Exception, "TODO: Range can't be combined");
     OCIO_CHECK_EQUAL(ops.size(), 2);
 
@@ -446,7 +444,7 @@ OCIO_ADD_TEST(RangeOps, bit_depth)
     OCIO_CHECK_EQUAL(o->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
     OCIO_CHECK_EQUAL(o->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT16);
 
-    OCIO::ConstRangeOpDataRcPtr r = DynamicPtrCast<const OCIO::RangeOpData>(o->data());
+    OCIO::ConstRangeOpDataRcPtr r = OCIO::DynamicPtrCast<const OCIO::RangeOpData>(o->data());
     OCIO_CHECK_EQUAL(r->getMinOutValue(), -1.);
 }
 #endif
