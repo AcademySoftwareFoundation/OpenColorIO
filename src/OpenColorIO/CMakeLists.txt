@@ -117,8 +117,6 @@ set(SOURCES
 	transforms/LookTransform.cpp
 	transforms/MatrixTransform.cpp
 	transforms/RangeTransform.cpp
-	UnitTest.cpp
-	UnitTestUtils.cpp
 )
 
 if(WIN32 AND BUILD_SHARED_LIBS)
