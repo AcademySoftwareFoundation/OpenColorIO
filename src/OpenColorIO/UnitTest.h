@@ -239,35 +239,4 @@ struct AddTest
     /* @SuppressWarnings('all') */                                      \
     static void ociotest_##group##_##name()
 
-#define OCIO_TEST_SETUP() \
-    int unit_test_failures = 0
-
-#define OCIO_TEST_APP(app)                                              \
-    UnitTests & GetUnitTests() {                                        \
-        static UnitTests oiio_unit_tests;                               \
-        return oiio_unit_tests; }                                       \
-    OCIO_TEST_SETUP();                                                  \
-    int main(int, char **) {                                            \
-        std::cerr << "\n" << FIELD_STR(app) <<"\n\n";                   \
-        const size_t numTests = GetUnitTests().size();                  \
-        for(size_t i = 0; i < numTests; ++i) {                          \
-            int _tmp = unit_test_failures;                              \
-            try {                                                       \
-                GetUnitTests()[i]->function();                          \
-            } catch(std::exception & ex) {                              \
-                std::cout << "FAILED: " << ex.what() << std::endl;      \
-                ++unit_test_failures;                                   \
-            } catch(...) { ++unit_test_failures; }                      \
-            std::string name(GetUnitTests()[i]->group);                 \
-            name += " / " + GetUnitTests()[i]->name;                    \
-            std::cerr << "[" << std::right << std::setw(3)              \
-                      << (i+1) << "/" << numTests << "] ["              \
-                      << std::left << std::setw(50)                     \
-                      << name << "] - "                                 \
-                      << (_tmp == unit_test_failures ? "PASSED" : "FAILED") \
-                      << std::endl; }                                   \
-        std::cerr << "\n" << unit_test_failures << " tests failed\n\n"; \
-        GetUnitTests().clear();                                         \
-        return unit_test_failures; }
-
 #endif /* INCLUDED_OCIO_UNITTEST_H */
