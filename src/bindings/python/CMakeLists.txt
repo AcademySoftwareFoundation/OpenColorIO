@@ -1,15 +1,16 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+###############################################################################
+# External dependencies
+
 find_package(PythonInterp 2.7 REQUIRED)
 find_package(PythonLibs 2.7 REQUIRED)
-find_package(Pybind11 2.3.0 REQUIRED)
 
-set(SOURCES
-	PyOpenColorIO.cpp
-	PyStatic.cpp
-	PyTransform.cpp
-)
+# pybind11
+# https://github.com/pybind/pybind11
+set(PYBIND11_MIN_VERSION 2.3.0)
+find_package(Pybind11 ${PYBIND11_MIN_VERSION} REQUIRED)
 
 ###############################################################################
 # PyDoc generation
@@ -22,6 +23,12 @@ set(SOURCES
 
 ###############################################################################
 # Python libs
+
+set(SOURCES
+	PyOpenColorIO.cpp
+	PyStatic.cpp
+	PyTransform.cpp
+)
 
 add_library(PyOpenColorIO MODULE ${SOURCES} ${PYDOC_OUTPUT})
 set_target_properties(PyOpenColorIO PROPERTIES
@@ -58,9 +65,9 @@ target_include_directories(PyOpenColorIO
 		PyOpenColorIO
 		${CMAKE_CURRENT_BINARY_DIR}/include
 		${CMAKE_CURRENT_SOURCE_DIR}
+		${PYBIND11_INCLUDE_DIR}
 	SYSTEM
 		${PYTHON_INCLUDE_DIRS}
-		${PYBIND11_INCLUDE_DIR}
 )
 target_link_libraries(PyOpenColorIO 
 	PUBLIC
