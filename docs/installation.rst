@@ -1,7 +1,3 @@
-..
-  SPDX-License-Identifier: CC-BY-4.0
-  Copyright Contributors to the OpenColorIO Project.
-
 .. _installation:
 
 Installation
@@ -14,7 +10,7 @@ While prebuilt binaries are not yet available for all platforms, OCIO
 is available via several platform's package managers.
 
 Fedora and RHEL
-^^^^^^^^^^^^^^^
++++++++++++++++
 
 In Fedora Core 15 and above, the following command will install OpenColorIO::
 
@@ -26,10 +22,10 @@ Providing you are using the `Fedora EPEL repository
 command will work for RedHat Enterprise Linux 6 and higher (including
 RHEL derivatives such as CentOS 6 and Scientific Linux 6)
 
-OS X using Homebrew
-^^^^^^^^^^^^^^^^^^^
+macOS using Homebrew
+++++++++++++++++++++
 
-You can use the Homebrew package manager to install OpenColorIO on OS X.
+You can use the Homebrew package manager to install OpenColorIO on macOS.
 
 First install Homebrew as per the instructions on the `Homebrew
 homepage <http://mxcl.github.com/homebrew/>`__ (or see the `Homebrew wiki
@@ -50,77 +46,24 @@ To build with the Python library use this command::
 Building from source
 ********************
 
-Dependencies
-************
+.. _macos-and-linux
 
-The basic requirements for building OCIO are:
-
-- cmake >= 3.10
-- \*Expat >= 2.2.5 (XML parser for CDL/CLF/CTF)
-- \*yaml-cpp >= 0.3.0 (YAML parser for Configs)
-- \*IlmBase (Half only) >= 2.3.0 (for half domain LUTs)
-- \*pystring >= 1.1.3
-
-Some optional components also depend on:
-
-- \*Little CMS >= 2.2 (for ociobakelut ICC profile baking)
-- Python 2.x (for the Python bindings and docs)
-    - \*Sphinx >= 1.8.5
-- Nuke 6.x or newer (for the Nuke nodes)
-- OpenImageIO (for apps including ocioconvert)
-
-Automated Installation
-^^^^^^^^^^^^^^^^^^^^^^
-
-Listed dependencies with a preceeding * can be automatically installed at 
-build time by setting the ``OCIO_INSTALL_EXT_PACKAGES`` option in your cmake 
-command (requires an internet connection). C/C++ libraries are pulled from 
-external repositories, built, and statically-linked into libOpenColorIO. Python 
-packages are installed with ``pip``. All installs are fully contained within 
-your build directory.
-
-Three ``OCIO_INSTALL_EXT_PACKAGES`` options are available::
-
-    cmake -DOCIO_INSTALL_EXT_PACKAGES=<NONE|MISING|ALL>
-
-- ``NONE`` (default): Use system installed packages. Fail if any are missing or 
-  don't meet minimum version requireements.
-- ``MISSING``: Prefer system installed packages. Install any that are not 
-  found or don't meet minimum version requireements.
-- ``ALL``: Install all required packages, regardless of availability on the 
-  current system.
-
-Existing Install Hints
-^^^^^^^^^^^^^^^^^^^^^^
-
-When using existing system libraries, the following CMake variables can be 
-defined to hint at non-standard install locations and preference of shared
-or static linking:
-
-- ``-DEXPAT_DIRS=<path>`` (include and/or library root dir)
-- ``-DEXPAT_STATIC_LIBRARY=ON`` (prefer static lib)
-- ``-DYAMLCPP_DIRS=<path>`` (include and/or library root dir)
-- ``-DYAMLCPP_STATIC_LIBRARY=ON`` (prefer static lib)
-- ``-DILMBASE_DIRS=<path>`` (include and/or library root dir)
-- ``-DILMBASE_STATIC_LIBRARY=ON`` (prefer static lib)
-- ``-DPYSTRING_DIRS=<path>`` (include and/or library root dir)
-- ``-DPYSTRING_STATIC_LIBRARY=ON`` (prefer static lib)
-- ``-DLCMS2_DIRS=<path>`` (include and/or library root dir)
-- ``-DLCMS2_STATIC_LIBRARY=ON`` (prefer static lib)
-- ``-DNUKE_INSTALL_PATH=<path>`` (or use ``NDK_PATH`` environment variable)
-
-To hint at Python package locations, add paths to the ``PYTHONPATH`` 
-environment variable prior to configuring the build.
-
-.. _osx-and-linux:
-
-OS X and Linux
-^^^^^^^^^^^^^^
+macOS and Linux
++++++++++++++++
 
 While there is a huge range of possible setups, the following steps
-should work on OS X and most Linux distros. To keep things simple, this guide 
-will use the following example paths - these will almost definitely be 
-different for you:
+should work on macOS and most Linux distros.
+
+The basic requirements are:
+
+- cmake >= 3.11
+- (optional) Python 2.x (for the Python bindings)
+- (optional) Nuke 6.x or newer (for the Nuke nodes)
+- (optional) OpenImageIO (for apps including ocioconvert)
+- (optional) Truelight SDK (for TruelightTransform)
+
+To keep things simple, this guide will use the following example
+paths - these will almost definitely be different for you:
 
 - source code: ``/source/ocio``
 - the temporary build location: ``/tmp/ociobuild``
@@ -137,11 +80,11 @@ Nuke, OpenImageIO etc
 
 As we want to install OCIO to a custom location (instead of the
 default ``/usr/local``), we will run cmake with
-``CMAKE_INSTALL_PREFIX``.
+``CMAKE_INSTALL_PREFIX``
 
 Still in ``/tmp/ociobuild``, run::
 
-    $ cmake -DCMAKE_INSTALL_PREFIX=/software/ocio /source/ocio
+    $ cmake -D CMAKE_INSTALL_PREFIX=/software/ocio /source/ocio
 
 The last argument is the location of the OCIO source code (containing
 the main CMakeLists.txt file). You should see something along the
@@ -174,10 +117,10 @@ this::
     $ ls lib/
     libOpenColorIO.a      libOpenColorIO.dylib
 
-.. _windows-build:
+.. _windows-build
 
 Windows Build
-^^^^^^^^^^^^^
++++++++++++++
 
 While build environments may vary between user, here is an example batch file
 for compiling on Windows as provided by `@hodoulp <https://github.com/hodoulp>`__::
@@ -305,7 +248,7 @@ build sequence.
 .. _enabling-optional-components:
 
 Enabling optional components
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+++++++++++++++++++++++++++++
 
 The OpenColorIO library is probably not all you want - the Python
 libraries bindings, the Nuke nodes and several applications are only
@@ -433,12 +376,12 @@ Environment variables
 
 .. envvar:: OCIO_ACTIVE_DISPLAYS
 
-   Overrides the :ref:`active-displays` configuration value.
+   Overrides the :ref:`active_displays` configuration value.
    Colon-separated list of displays, e.g ``sRGB:P3``
 
 .. envvar:: OCIO_ACTIVE_VIEWS
 
-   Overrides the :ref:`active-views` configuration
+   Overrides the :ref:`active_views` configuration
    item. Colon-separated list of view names, e.g
    ``internal:client:DI``
 
