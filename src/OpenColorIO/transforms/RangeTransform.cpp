@@ -272,7 +272,8 @@ void BuildRangeOps(OpRcPtrVec & ops,
 
     if(transform.getStyle()==RANGE_CLAMP)
     {
-        CreateRangeOp(ops, data.clone(), combinedDir);
+        auto d = data.clone();
+        CreateRangeOp(ops, d, combinedDir);
     }
     else
     {
