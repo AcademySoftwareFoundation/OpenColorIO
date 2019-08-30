@@ -3,7 +3,7 @@
 
 include(ExternalProject)
 
-# Define used for tests in tests/cpu/ContextTests.cpp
+# Define used for tests in tests/cpu/Context_tests.cpp
 add_definitions("-DOCIO_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
 
 function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
