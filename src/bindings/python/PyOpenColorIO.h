@@ -19,125 +19,292 @@ using namespace pybind11::literals;
 OCIO_NAMESPACE_ENTER
 {
 
-// Wrapper for OCIO shared pointer (RcPtr).
-// Each instance wraps an editable OR constant OCIO object. Constness at 
-// construction is enforced for the wrapper's lifetime.
+// Wrapper for OCIO shared pointer.
+//
+// Each instance wraps an editable OR constant OCIO object reference. Constness 
+// at construction is enforced for the wrapper's lifetime.
 template<typename T>
-class PyOCIOBase
+class PyOCIOObject
 {
-protected:
-    bool m_isconst;
-    OCIO_SHARED_PTR<T> m_eptr;
-    OCIO_SHARED_PTR<const T> m_cptr;
+private:
+    bool m_isConst;
+    OCIO_SHARED_PTR<T> m_rcPtr;
+    OCIO_SHARED_PTR<const T> m_constRcPtr;
 
+    PyOCIOObject() = default;
+
+protected:
+    // Check that the wrapper has a valid OCIO object reference. Throws 
+    // OCIO::Exception if it doesn't. Called prior to pointer access via 
+    // public interface.
     void checkPtr(bool checkEditable=false) const
     {
-        if((!m_isconst && !m_eptr) || (m_isconst && !m_cptr))
+        if((!m_isConst && !m_rcPtr) || (m_isConst && !m_constRcPtr))
         {
             throw Exception("OCIO object is invalid");
         }
-        if(checkEditable && m_isconst)
+        if(checkEditable && m_isConst)
         {
             throw Exception("OCIO object is not editable");
         }
     }
 
 public:
-    PyOCIOBase() : m_isconst(false), m_eptr(T()) {}
-    PyOCIOBase(OCIO_SHARED_PTR<T> e) : m_isconst(false), m_eptr(e) { checkPtr(); }
-    PyOCIOBase(OCIO_SHARED_PTR<const T> c) : m_isconst(true), m_cptr(c) { checkPtr(); }
-
-    PyOCIOBase(nullptr_t) = delete;
-    PyOCIOBase(const PyOCIOBase<T> &) = delete;
-    PyOCIOBase<T> &operator=(const PyOCIOBase<T> &) = delete;
-
-    virtual ~PyOCIOBase() {}
-
-    virtual bool isConst() const { return m_isconst; }
-
-    virtual OCIO_SHARED_PTR<T> getRcPtr() const 
+    PyOCIOObject(OCIO_SHARED_PTR<T> ptr) 
+        : m_isConst(false)
+        , m_rcPtr(ptr)
     { 
         checkPtr(true);
-        return m_eptr; 
     }
-    
-    virtual OCIO_SHARED_PTR<const T> getConstRcPtr() const 
+
+    PyOCIOObject(OCIO_SHARED_PTR<const T> ptr) 
+        : m_isConst(true)
+        , m_constRcPtr(ptr)
     { 
         checkPtr();
-        return (m_isconst ? m_cptr : m_eptr); 
     }
 
-    virtual PyOCIOBase<T> createEditableCopy() const 
+    PyOCIOObject(const PyOCIOObject<T> & rhs)
+    {
+        if(this != &rhs)
+        {
+            m_isConst = rhs.m_isConst;
+            m_rcPtr = rhs.m_rcPtr;
+            m_constRcPtr = rhs.m_constRcPtr;
+        }
+    }
+
+    // Prevent constuction from uninitialized pointer.
+    PyOCIOObject(nullptr_t) = delete;
+
+    virtual ~PyOCIOObject() {}
+
+    PyOCIOObject<T>& operator= (const PyOCIOObject<T> & rhs)
+    {
+        if (this != &rhs)
+        {
+            m_isConst = rhs.m_isConst;
+            m_rcPtr = rhs.m_rcPtr;
+            m_constRcPtr = rhs.m_constRcPtr;
+        }
+        return *this;
+    }
+
+    bool isValid() const
+    {
+        return ((!m_isConst && m_rcPtr) || (m_isConst && m_constRcPtr));
+    }
+
+    bool isEditable() const
+    {
+        return (isValid() && !m_isConst);
+    }
+
+    // Get editable OCIO object. Throws OCIO::Exception if the pointer is 
+    // invalid or not editable.
+    OCIO_SHARED_PTR<T> getRcPtr() const
+    {
+        checkPtr(true);
+        return m_rcPtr; 
+    }
+
+    // Get immutable OCIO object. Throws OCIO::Exception if the pointer is 
+    // invalid.
+    OCIO_SHARED_PTR<const T> getConstRcPtr() const
     {
         checkPtr();
-        OCIO_SHARED_PTR<T> rcPtr = (m_isconst ? m_cptr : m_eptr)->createEditableCopy();
-        return PyOCIOBase<T>(rcPtr);
+        return (m_isConst ? m_constRcPtr : m_rcPtr); 
     }
 
-    virtual const std::string repr() const
+    // Implementation of Python __repr__.
+    const std::string repr() const
     {
         std::ostringstream os;
-        os << (*(m_isconst ? m_cptr : m_eptr));
+        os << (*(m_isConst ? m_constRcPtr : m_rcPtr));
         return os.str();
     }
 };
 
-template<typename T, typename B>
-class PyOCIOPtr : public PyOCIOBase<B>
+// Wrapper for OCIO::Transform derived shared pointer.
+template<typename T>
+class PyOCIOTransform : public PyOCIOObject<Transform>
 {
 public:
-    PyOCIOPtr() : m_isconst(false), m_eptr(T::Create()) {}
-    PyOCIOPtr(OCIO_SHARED_PTR<T> e) : PyOCIOBase(e) {}
-    PyOCIOPtr(OCIO_SHARED_PTR<const T> c) : PyOCIOBase(c) {}
+    // Create new editable OCIO object and wrapper.
+    PyOCIOTransform()
+        : PyOCIOObject<Transform>(DynamicPtrCast<Transform>(T::Create()))
+    {}
 
-    PyOCIOPtr(nullptr_t) = delete;
-    PyOCIOPtr(const PyOCIOPtr<T> &) = delete;
-    PyOCIOPtr<T> &operator=(const PyOCIOPtr<T> &) = delete;
+    PyOCIOTransform(OCIO_SHARED_PTR<T> ptr) 
+        : PyOCIOObject<Transform>(DynamicPtrCast<Transform>(ptr))
+    {}
 
-    PyOCIOPtr<T> createEditableCopy() const override
+    PyOCIOTransform(OCIO_SHARED_PTR<const T> ptr) 
+        : PyOCIOObject<Transform>(DynamicPtrCast<const Transform>(ptr))
+    {}
+
+    PyOCIOTransform(const PyOCIOTransform<T> & rhs)
+        : PyOCIOObject<Transform>(rhs)
+    {}
+
+    PyOCIOTransform(nullptr_t) = delete;
+
+    PyOCIOTransform<T>& operator= (const PyOCIOTransform<T> & rhs)
     {
-        checkPtr();
-        OCIO_SHARED_PTR<T> rcPtr = (m_isconst ? m_cptr : m_eptr)->createEditableCopy();
-        return PyOCIOPtr<T>(rcPtr);
+        PyOCIOObject<Transform>::operator=(rhs);
+        return *this;
+    }
+
+    // Get editable OCIO::Transform derived object. Throws OCIO::Exception if 
+    // the pointer is invalid or not editable.
+    OCIO_SHARED_PTR<T> getTransformRcPtr() const
+    {
+        return DynamicPtrCast<T>(getRcPtr());
+    }
+
+    // Get immutable OCIO::Transform derived object. Throws OCIO::Exception if 
+    // the pointer is invalid.
+    OCIO_SHARED_PTR<const T> getConstTransformRcPtr() const
+    {
+        return DynamicPtrCast<const T>(getConstRcPtr());
+    }
+
+    // Create editable copy of OCIO object and wrapper.
+    PyOCIOTransform<T> createEditableCopy() const
+    {
+        return PyOCIOTransform<T>(
+            DynamicPtrCast<T>(getConstRcPtr()->createEditableCopy()));
+    }
+
+    void validate() const
+    {
+        getConstRcPtr()->validate();
+    }
+
+    TransformDirection getDirection() const
+    {
+        return getConstRcPtr()->getDirection();
+    }
+
+    void setDirection(TransformDirection direction)
+    {
+        getRcPtr()->setDirection(direction);
     }
 };
 
-// Core
-typedef PyOCIOPtr<Config> PyConfig;
-typedef PyOCIOPtr<ColorSpace> PyColorSpace;
-typedef PyOCIOPtr<ColorSpaceSet> PyColorSpaceSet;
-typedef PyOCIOPtr<Look> PyLook;
-typedef PyOCIOPtr<Context> PyContext;
-typedef PyOCIOPtr<Processor> PyProcessor;
-typedef PyOCIOPtr<CPUProcessor> PyCPUProcessor;
-typedef PyOCIOPtr<GPUProcessor> PyGPUProcessor;
-typedef PyOCIOPtr<ProcessorMetadata> PyProcessorMetadata;
-typedef PyOCIOPtr<Baker> PyBaker;
-typedef PyOCIOPtr<ImageDesc> PyImageDesc;
-typedef PyOCIOPtr<GpuShaderDesc> PyGpuShaderDesc;
+// Core wrapper types
+typedef PyOCIOObject<Config> PyConfig;
+typedef PyOCIOObject<ColorSpace> PyColorSpace;
+typedef PyOCIOObject<ColorSpaceSet> PyColorSpaceSet;
+typedef PyOCIOObject<Look> PyLook;
+typedef PyOCIOObject<Context> PyContext;
+typedef PyOCIOObject<Processor> PyProcessor;
+typedef PyOCIOObject<CPUProcessor> PyCPUProcessor;
+typedef PyOCIOObject<GPUProcessor> PyGPUProcessor;
+typedef PyOCIOObject<ProcessorMetadata> PyProcessorMetadata;
+typedef PyOCIOObject<Baker> PyBaker;
+typedef PyOCIOObject<ImageDesc> PyImageDesc;
+typedef PyOCIOObject<GpuShaderDesc> PyGpuShaderDesc;
+typedef PyOCIOObject<Transform> PyTransform;
 
-// Transforms
-typedef PyOCIOBase<Transform> PyTransform;
-typedef PyOCIOPtr<AllocationTransform, Transform> PyAllocationTransform;
-typedef PyOCIOPtr<CDLTransform, Transform> PyCDLTransform;
-typedef PyOCIOPtr<ColorSpaceTransform, Transform> PyColorSpaceTransform;
-typedef PyOCIOPtr<DisplayTransform, Transform> PyDisplayTransform;
-typedef PyOCIOPtr<ExponentTransform, Transform> PyExponentTransform;
-typedef PyOCIOPtr<ExponentWithLinearTransform, Transform> PyExponentWithLinearTransform;
-typedef PyOCIOPtr<ExposureContrastTransform, Transform> PyExposureContrastTransform;
-typedef PyOCIOPtr<FileTransform, Transform> PyFileTransform;
-typedef PyOCIOPtr<FixedFunctionTransform, Transform> PyFixedFunctionTransform;
-typedef PyOCIOPtr<GroupTransform, Transform> PyGroupTransform;
-typedef PyOCIOPtr<LogAffineTransform, Transform> PyLogAffineTransform;
-typedef PyOCIOPtr<LogTransform, Transform> PyLogTransform;
-typedef PyOCIOPtr<LookTransform, Transform> PyLookTransform;
-typedef PyOCIOPtr<MatrixTransform, Transform> PyMatrixTransform;
-typedef PyOCIOPtr<RangeTransform, Transform> PyRangeTransform;
+// Transform wrapper types
+typedef PyOCIOTransform<AllocationTransform> PyAllocationTransform;
+typedef PyOCIOTransform<CDLTransform> PyCDLTransform;
+typedef PyOCIOTransform<ColorSpaceTransform> PyColorSpaceTransform;
+typedef PyOCIOTransform<DisplayTransform> PyDisplayTransform;
+typedef PyOCIOTransform<ExponentTransform> PyExponentTransform;
+typedef PyOCIOTransform<ExponentWithLinearTransform> PyExponentWithLinearTransform;
+typedef PyOCIOTransform<ExposureContrastTransform> PyExposureContrastTransform;
+typedef PyOCIOTransform<FileTransform> PyFileTransform;
+typedef PyOCIOTransform<FixedFunctionTransform> PyFixedFunctionTransform;
+typedef PyOCIOTransform<GroupTransform> PyGroupTransform;
+typedef PyOCIOTransform<LogAffineTransform> PyLogAffineTransform;
+typedef PyOCIOTransform<LogTransform> PyLogTransform;
+typedef PyOCIOTransform<LookTransform> PyLookTransform;
+typedef PyOCIOTransform<MatrixTransform> PyMatrixTransform;
+typedef PyOCIOTransform<RangeTransform> PyRangeTransform;
 
+// pybind module binding declarations
 void bindPyStatic(py::module & m);
 void bindPyTransform(py::module & m);
 
 }
 OCIO_NAMESPACE_EXIT
 
-#endif
+namespace OCIO = OCIO_NAMESPACE;
+
+namespace pybind11 {
+
+// Automatic PyTransform downcaster
+template <>
+struct polymorphic_type_hook<OCIO::PyTransform>
+{
+    static const void *get(const OCIO::PyTransform *src, const std::type_info*& type)
+    {
+        if(static_cast<const OCIO::PyAllocationTransform*>(src))
+        {
+            type = &typeid(OCIO::PyAllocationTransform);
+        }
+        else if(static_cast<const OCIO::PyCDLTransform*>(src))
+        {
+            type = &typeid(OCIO::PyCDLTransform);
+        }
+        else if(static_cast<const OCIO::PyColorSpaceTransform*>(src))
+        {
+            type = &typeid(OCIO::PyColorSpaceTransform);
+        }
+        else if(static_cast<const OCIO::PyDisplayTransform*>(src))
+        {
+            type = &typeid(OCIO::PyDisplayTransform);
+        }
+        else if(static_cast<const OCIO::PyExponentTransform*>(src))
+        {
+            type = &typeid(OCIO::PyExponentTransform);
+        }
+        else if(static_cast<const OCIO::PyExponentWithLinearTransform*>(src))
+        {
+            type = &typeid(OCIO::PyExponentWithLinearTransform);
+        }
+        else if(static_cast<const OCIO::PyExposureContrastTransform*>(src))
+        {
+            type = &typeid(OCIO::PyExposureContrastTransform);
+        }
+        else if(static_cast<const OCIO::PyFileTransform*>(src))
+        {
+            type = &typeid(OCIO::PyFileTransform);
+        }
+        else if(static_cast<const OCIO::PyFixedFunctionTransform*>(src))
+        {
+            type = &typeid(OCIO::PyFixedFunctionTransform);
+        }
+        else if(static_cast<const OCIO::PyGroupTransform*>(src))
+        {
+            type = &typeid(OCIO::PyGroupTransform);
+        }
+        else if(static_cast<const OCIO::PyLogAffineTransform*>(src))
+        {
+            type = &typeid(OCIO::PyLogAffineTransform);
+        }
+        else if(static_cast<const OCIO::PyLogTransform*>(src))
+        {
+            type = &typeid(OCIO::PyLogTransform);
+        }
+        else if(static_cast<const OCIO::PyLookTransform*>(src))
+        {
+            type = &typeid(OCIO::PyLookTransform);
+        }
+        else if(static_cast<const OCIO::PyMatrixTransform*>(src))
+        {
+            type = &typeid(OCIO::PyMatrixTransform);
+        }
+        else if(static_cast<const OCIO::PyRangeTransform*>(src))
+        {
+            type = &typeid(OCIO::PyRangeTransform);
+        }
+        return src;
+    }
+};
+
+}  // pybind11
+
+#endif  // INCLUDED_OCIO_PYOPENCOLORIO_H

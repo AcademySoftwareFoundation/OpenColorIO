@@ -94,6 +94,7 @@ if(NOT PYSTRING_FOUND)
 
     # Set find_package standard args
     set(PYSTRING_FOUND TRUE)
+    set(PYSTRING_VERSION ${Pystring_FIND_VERSION})
     set(PYSTRING_INCLUDE_DIR "${_EXT_DIST_ROOT}/include")
     set(PYSTRING_LIBRARY 
         "${_EXT_DIST_ROOT}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}pystring${CMAKE_STATIC_LIBRARY_SUFFIX}")

@@ -3,6 +3,7 @@
 
 find_package(PythonInterp 2.7 REQUIRED)
 find_package(PythonLibs 2.7 REQUIRED)
+find_package(Pybind11 2.3.0 REQUIRED)
 
 set(SOURCES
 	PyOpenColorIO.cpp
@@ -24,8 +25,6 @@ set(SOURCES
 
 include_directories(
 	${PYTHON_INCLUDE_PATH}
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/bindings/python/pybind11/include"
-	#${PYBIND11_INCLUDE_DIR}
 )
 
 add_library(PyOpenColorIO MODULE ${SOURCES} ${PYDOC_OUTPUT})
@@ -65,11 +64,14 @@ target_include_directories(PyOpenColorIO
 		${CMAKE_CURRENT_SOURCE_DIR}
 	SYSTEM
 		${PYTHON_INCLUDE_DIRS}
+		${PYBIND11_INCLUDE_DIR}
 )
 target_link_libraries(PyOpenColorIO 
 	PUBLIC
 		${PYTHON_LIBRARIES}
 		OpenColorIO
+	PRIVATE
+		pybind11::pybind11
 )
 target_compile_definitions(PyOpenColorIO
 	PRIVATE

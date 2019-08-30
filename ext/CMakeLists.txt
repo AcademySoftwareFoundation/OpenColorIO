@@ -37,3 +37,10 @@ add_library(sampleicc::sampleicc INTERFACE IMPORTED GLOBAL)
 set_target_properties(sampleicc::sampleicc PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/sampleicc/src/include"
 )
+
+if(OCIO_BUILD_PYTHON)
+    # pybind11
+    # https://github.com/pybind/pybind11
+    set(PYBIND11_MIN_VERSION 2.3.0)
+    find_package(Pybind11 ${PYBIND11_MIN_VERSION} REQUIRED)
+endif()
