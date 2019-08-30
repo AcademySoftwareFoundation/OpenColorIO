@@ -119,7 +119,7 @@ void bindPyTransform(py::module & m)
             })
         .def("clear", [](PyGroupTransform & self) 
             {
-                self.getTransformRcPtr()->empty();
+                self.getTransformRcPtr()->clear();
             })
         .def("empty", [](PyGroupTransform & self) 
             {
