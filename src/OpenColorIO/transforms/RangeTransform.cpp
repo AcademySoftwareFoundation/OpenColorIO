@@ -40,210 +40,207 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
-RangeTransformRcPtr RangeTransform::Create()
-{
-    return RangeTransformRcPtr(new RangeTransform(), &deleter);
-}
-
-void RangeTransform::deleter(RangeTransform* t)
-{
-    delete t;
-}
-
-class RangeTransform::Impl : public RangeOpData
+class RangeTransformImpl : public RangeTransform
 {
 public:
-    Impl() 
-        :   RangeOpData()
-        ,   m_direction(TRANSFORM_DIR_FORWARD)
-        ,   m_style(RANGE_CLAMP)
+    RangeTransformImpl() = default;
+    RangeTransformImpl(const RangeTransformImpl &) = delete;
+    RangeTransformImpl& operator=(const RangeTransformImpl &) = delete;
+    virtual ~RangeTransformImpl() = default;
+
+    TransformRcPtr createEditableCopy() const override;
+
+    TransformDirection getDirection() const override;
+    void setDirection(TransformDirection dir) override;
+
+    RangeStyle getStyle() const override;
+    void setStyle(RangeStyle style) override;
+
+    void validate() const override;
+
+    bool equals(const RangeTransform & other) const override;
+
+    void setMinInValue(double val) override;
+    double getMinInValue() const override;
+    bool hasMinInValue() const override;
+    void unsetMinInValue() override;
+
+    void setMaxInValue(double val) override;
+    double getMaxInValue() const override;
+    bool hasMaxInValue() const override;
+    void unsetMaxInValue() override;
+
+    void setMinOutValue(double val) override;
+    double getMinOutValue() const override;
+    bool hasMinOutValue() const override;
+    void unsetMinOutValue() override;
+
+    void setMaxOutValue(double val) override;
+    double getMaxOutValue() const override;
+    bool hasMaxOutValue() const override;
+    void unsetMaxOutValue() override;
+
+    RangeOpData & data() { return m_data; }
+    const RangeOpData & data() const { return m_data; }
+
+    static void deleter(RangeTransformImpl * t)
     {
+        delete t;
     }
 
-    Impl(const Impl &) = delete;
-
-    ~Impl() {}
-
-    Impl& operator=(const Impl & rhs)
-    {
-        if(this!=&rhs)
-        {
-            RangeOpData::operator=(rhs);
-            m_direction  = rhs.m_direction;
-            m_style      = rhs.m_style;
-        }
-        return *this;
-    }
-
-    bool equals(const Impl & rhs) const
-    {
-        if(this==&rhs) return true;
-
-        return RangeOpData::operator==(rhs)
-            && m_direction == rhs.m_direction
-            && m_style     == rhs.m_style;
-    }
-
-    TransformDirection m_direction;
-    RangeStyle         m_style;
+private:
+    TransformDirection m_direction = TRANSFORM_DIR_FORWARD;
+    RangeStyle  m_style = RANGE_CLAMP;
+    RangeOpData m_data;
 };
+
+
 
 ///////////////////////////////////////////////////////////////////////////
 
 
 
-RangeTransform::RangeTransform()
-    : m_impl(new RangeTransform::Impl)
+RangeTransformRcPtr RangeTransform::Create()
 {
+    return RangeTransformRcPtr(new RangeTransformImpl(), &RangeTransformImpl::deleter);
 }
 
-TransformRcPtr RangeTransform::createEditableCopy() const
+TransformRcPtr RangeTransformImpl::createEditableCopy() const
 {
     RangeTransformRcPtr transform = RangeTransform::Create();
-    *transform->m_impl = *m_impl;
+    dynamic_cast<RangeTransformImpl*>(transform.get())->data() = data();
+    transform->setDirection(m_direction);
+    transform->setStyle(m_style);
     return transform;
 }
 
-RangeTransform::~RangeTransform()
+TransformDirection RangeTransformImpl::getDirection() const
 {
-    delete m_impl;
-    m_impl = NULL;
+    return m_direction;
 }
 
-RangeTransform& RangeTransform::operator= (const RangeTransform & rhs)
+void RangeTransformImpl::setDirection(TransformDirection dir)
 {
-    if (this != &rhs)
+    m_direction = dir;
+}
+
+RangeStyle RangeTransformImpl::getStyle() const
+{
+    return m_style;
+}
+
+void RangeTransformImpl::setStyle(RangeStyle style)
+{
+    m_style = style;
+}
+
+void RangeTransformImpl::validate() const
+{
+    try
     {
-        *m_impl = *rhs.m_impl;
+        Transform::validate();
+        data().validate();
     }
-    return *this;
+    catch(Exception & ex)
+    {
+        std::string errMsg("RangeTransform validation failed: ");
+        errMsg += ex.what();
+        throw Exception(errMsg.c_str());
+    }
 }
 
-TransformDirection RangeTransform::getDirection() const
+bool RangeTransformImpl::equals(const RangeTransform & other) const
 {
-    return getImpl()->m_direction;
+    return data() == dynamic_cast<const RangeTransformImpl*>(&other)->data()
+        && m_style == other.getStyle()
+        && m_direction == other.getDirection();
 }
 
-void RangeTransform::setDirection(TransformDirection dir)
+void RangeTransformImpl::setMinInValue(double val)
 {
-    getImpl()->m_direction = dir;
+    data().setMinInValue(val);
 }
 
-RangeStyle RangeTransform::getStyle() const
+double RangeTransformImpl::getMinInValue() const
 {
-    return getImpl()->m_style;
+    return data().getMinInValue();
 }
 
-void RangeTransform::setStyle(RangeStyle style)
+bool RangeTransformImpl::hasMinInValue() const
 {
-    getImpl()->m_style = style;
+    return data().hasMinInValue();
 }
 
-void RangeTransform::validate() const
+void RangeTransformImpl::unsetMinInValue()
 {
-        try
-        {
-            Transform::validate();
-            getImpl()->validate();
-        }
-        catch(Exception & ex)
-        {
-            std::string errMsg("RangeTransform validation failed: ");
-            errMsg += ex.what();
-            throw Exception(errMsg.c_str());
-        }
+    data().unsetMinInValue();
 }
 
-bool RangeTransform::equals(const RangeTransform & other) const
+
+void RangeTransformImpl::setMaxInValue(double val)
 {
-    return getImpl()->equals(*other.getImpl());
+    data().setMaxInValue(val);
 }
 
-void RangeTransform::setMinInValue(double val)
+double RangeTransformImpl::getMaxInValue() const
 {
-    getImpl()->setMinInValue(val);
+    return data().getMaxInValue();
 }
 
-double RangeTransform::getMinInValue() const
+bool RangeTransformImpl::hasMaxInValue() const
 {
-    return getImpl()->getMinInValue();
+    return data().hasMaxInValue();
 }
 
-bool RangeTransform::hasMinInValue() const
+void RangeTransformImpl::unsetMaxInValue()
 {
-    return getImpl()->hasMinInValue();
+    data().unsetMaxInValue();
 }
 
-void RangeTransform::unsetMinInValue()
+
+void RangeTransformImpl::setMinOutValue(double val)
 {
-    getImpl()->unsetMinInValue();
+    data().setMinOutValue(val);
 }
 
-
-void RangeTransform::setMaxInValue(double val)
+double RangeTransformImpl::getMinOutValue() const
 {
-    getImpl()->setMaxInValue(val);
+    return data().getMinOutValue();
 }
 
-double RangeTransform::getMaxInValue() const
+bool RangeTransformImpl::hasMinOutValue() const
 {
-    return getImpl()->getMaxInValue();
+    return data().hasMinOutValue();
 }
 
-bool RangeTransform::hasMaxInValue() const
+void RangeTransformImpl::unsetMinOutValue()
 {
-    return getImpl()->hasMaxInValue();
+    data().unsetMinOutValue();
 }
 
-void RangeTransform::unsetMaxInValue()
+
+void RangeTransformImpl::setMaxOutValue(double val)
 {
-    getImpl()->unsetMaxInValue();
+    data().setMaxOutValue(val);
 }
 
-
-void RangeTransform::setMinOutValue(double val)
+double RangeTransformImpl::getMaxOutValue() const
 {
-    getImpl()->setMinOutValue(val);
+    return data().getMaxOutValue();
 }
 
-double RangeTransform::getMinOutValue() const
+bool RangeTransformImpl::hasMaxOutValue() const
 {
-    return getImpl()->getMinOutValue();
+    return data().hasMaxOutValue();
 }
 
-bool RangeTransform::hasMinOutValue() const
+void RangeTransformImpl::unsetMaxOutValue()
 {
-    return getImpl()->hasMinOutValue();
-}
-
-void RangeTransform::unsetMinOutValue()
-{
-    getImpl()->unsetMinOutValue();
+    data().unsetMaxOutValue();
 }
 
 
-void RangeTransform::setMaxOutValue(double val)
-{
-    getImpl()->setMaxOutValue(val);
-}
-
-double RangeTransform::getMaxOutValue() const
-{
-    return getImpl()->getMaxOutValue();
-}
-
-bool RangeTransform::hasMaxOutValue() const
-{
-    return getImpl()->hasMaxOutValue();
-}
-
-void RangeTransform::unsetMaxOutValue()
-{
-    getImpl()->unsetMaxOutValue();
-}
-
-
-std::ostream& operator<< (std::ostream& os, const RangeTransform& t)
+std::ostream& operator<< (std::ostream & os, const RangeTransform & t)
 {
     os << "<RangeTransform ";
     os << "direction=" << TransformDirectionToString(t.getDirection());
@@ -261,31 +258,29 @@ std::ostream& operator<< (std::ostream& os, const RangeTransform& t)
 ///////////////////////////////////////////////////////////////////////////
 
 void BuildRangeOps(OpRcPtrVec & ops,
-                   const Config& /*config*/,
+                   const Config & /*config*/,
                    const RangeTransform & transform,
                    TransformDirection dir)
 {
-    const TransformDirection combinedDir 
+    const TransformDirection combinedDir
         = CombineTransformDirections(dir, transform.getDirection());
+
+    const RangeOpData & data
+        = dynamic_cast<const RangeTransformImpl*>(&transform)->data();
+
+    data.validate();
 
     if(transform.getStyle()==RANGE_CLAMP)
     {
-        CreateRangeOp(ops, 
-                      transform.getMinInValue(), transform.getMaxInValue(), 
-                      transform.getMinOutValue(), transform.getMaxOutValue(),
-                      combinedDir);
+        CreateRangeOp(ops, data.clone(), combinedDir);
     }
     else
     {
-        const RangeOpData r(BIT_DEPTH_F32, BIT_DEPTH_F32, 
-                            transform.getMinInValue(), transform.getMaxInValue(), 
-                            transform.getMinOutValue(), transform.getMaxOutValue());
-        MatrixOpDataRcPtr m = r.convertToMatrix();
-
+        MatrixOpDataRcPtr m = data.convertToMatrix();
         CreateMatrixOp(ops, m, combinedDir);
     }
 }
-    
+
 }
 OCIO_NAMESPACE_EXIT
 
@@ -297,9 +292,6 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
-
-
-OCIO_NAMESPACE_USING
 
 
 OCIO_ADD_TEST(RangeTransform, basic)
@@ -380,7 +372,7 @@ OCIO_ADD_TEST(RangeTransform, basic)
 
 OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
 {
-    ConfigRcPtr config = Config::Create();
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
     OCIO::OpRcPtrVec ops;
 
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
@@ -391,22 +383,22 @@ OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
     OCIO_CHECK_ASSERT(!range->hasMinOutValue());
     OCIO_CHECK_ASSERT(!range->hasMaxOutValue());
 
-    range->setMinInValue(0.0f);
-    range->setMaxInValue(0.5f);
-    range->setMinOutValue(0.5f);
-    range->setMaxOutValue(1.5f);
+    range->setMinInValue(0.0);
+    range->setMaxInValue(0.5);
+    range->setMinOutValue(0.5);
+    range->setMaxOutValue(1.5);
 
     // Test the resulting Range Op
 
     OCIO_CHECK_NO_THROW(
-        BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD) );
+        OCIO::BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD) );
 
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO_REQUIRE_EQUAL(op0->data()->getType(), OCIO::OpData::RangeType);
 
     OCIO::ConstRangeOpDataRcPtr rangeData
-        = DynamicPtrCast<const OCIO::RangeOpData>(op0->data());
+        = OCIO::DynamicPtrCast<const OCIO::RangeOpData>(op0->data());
 
     OCIO_CHECK_EQUAL(rangeData->getMinInValue(), range->getMinInValue());
     OCIO_CHECK_EQUAL(rangeData->getMaxInValue(), range->getMaxInValue());
@@ -418,14 +410,14 @@ OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
     range->setStyle(OCIO::RANGE_NO_CLAMP);
 
     OCIO_CHECK_NO_THROW(
-        BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD) );
+        OCIO::BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD) );
 
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
     OCIO::ConstOpRcPtr op1 = ops[1];
     OCIO_REQUIRE_EQUAL(op1->data()->getType(), OCIO::OpData::MatrixType);
 
     OCIO::ConstMatrixOpDataRcPtr matrixData
-        = DynamicPtrCast<const OCIO::MatrixOpData>(op1->data());
+        = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(op1->data());
 
     OCIO_CHECK_EQUAL(matrixData->getOffsetValue(0), rangeData->getOffset());
 

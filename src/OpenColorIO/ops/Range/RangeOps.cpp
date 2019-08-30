@@ -85,7 +85,7 @@ protected:
     ConstRangeOpDataRcPtr rangeData() const { return DynamicPtrCast<const RangeOpData>(data()); }
     RangeOpDataRcPtr rangeData() { return DynamicPtrCast<RangeOpData>(data()); }
 
-private:            
+private:
     // The range direction
     TransformDirection m_direction;
 };
@@ -101,6 +101,7 @@ RangeOp::RangeOp(RangeOpDataRcPtr & range, TransformDirection direction)
             "Cannot create RangeOp with unspecified transform direction.");
     }
 
+    range->validate();
     data() = range;
 }
 
@@ -116,9 +117,12 @@ RangeOp::RangeOp(double minInValue, double maxInValue,
             "Cannot create RangeOp with unspecified transform direction.");
     }
 
-    data().reset(new RangeOpData(BIT_DEPTH_F32, BIT_DEPTH_F32,
-                                 minInValue, maxInValue,
-                                 minOutValue, maxOutValue));
+    RangeOpDataRcPtr range
+        = std::make_shared<RangeOpData>(BIT_DEPTH_F32, BIT_DEPTH_F32,
+                                        minInValue, maxInValue,
+                                        minOutValue, maxOutValue);
+    range->validate();
+    data() = range;
 }
 
 OpRcPtr RangeOp::clone() const
@@ -193,7 +197,7 @@ void RangeOp::finalize(FinalizationFlags /*fFlags*/)
     cacheIDStream << constThis.rangeData()->getCacheID() << " ";
     cacheIDStream << TransformDirectionToString(m_direction) << " ";
     cacheIDStream << ">";
-    
+
     m_cacheID = cacheIDStream.str();
 }
 
@@ -231,17 +235,17 @@ void RangeOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
 
 
 
-void CreateRangeOp(OpRcPtrVec & ops, 
+void CreateRangeOp(OpRcPtrVec & ops,
                    double minInValue, double maxInValue,
                    double minOutValue, double maxOutValue)
 {
-    CreateRangeOp(ops, 
+    CreateRangeOp(ops,
                   minInValue, maxInValue,
                   minOutValue, maxOutValue,
                   TRANSFORM_DIR_FORWARD);
 }
 
-void CreateRangeOp(OpRcPtrVec & ops, 
+void CreateRangeOp(OpRcPtrVec & ops,
                    double minInValue, double maxInValue,
                    double minOutValue, double maxOutValue,
                    TransformDirection direction)
@@ -319,7 +323,7 @@ OCIO_ADD_TEST(RangeOps, combining)
     OCIO::ConstOpRcPtr op1 = ops[1];
 
     // TODO: implement Range combine
-    OCIO_CHECK_THROW_WHAT(ops[0]->combineWith(ops, op1), 
+    OCIO_CHECK_THROW_WHAT(ops[0]->combineWith(ops, op1),
                           OCIO::Exception, "TODO: Range can't be combined");
     OCIO_CHECK_EQUAL(ops.size(), 2);
 
@@ -339,7 +343,7 @@ OCIO_ADD_TEST(RangeOps, combining_with_inverse)
     OCIO::ConstOpRcPtr op1 = ops[1];
 
     // TODO: implement Range combine
-    OCIO_CHECK_THROW_WHAT(ops[0]->combineWith(ops, op1), 
+    OCIO_CHECK_THROW_WHAT(ops[0]->combineWith(ops, op1),
                           OCIO::Exception, "TODO: Range can't be combined");
     OCIO_CHECK_EQUAL(ops.size(), 2);
 

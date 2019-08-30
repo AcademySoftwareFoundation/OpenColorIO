@@ -36,11 +36,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    Transform::~Transform()
-    { }
-
     void Transform::validate() const
-    { 
+    {
         if (getDirection() != TRANSFORM_DIR_FORWARD
             && getDirection() != TRANSFORM_DIR_INVERSE)
         {
@@ -60,7 +57,7 @@ OCIO_NAMESPACE_ENTER
         // A null transform is valid, and corresponds to a no-op.
         if(!transform)
             return;
-        
+
         if(ConstAllocationTransformRcPtr allocationTransform = \
             DynamicPtrCast<const AllocationTransform>(transform))
         {
@@ -145,11 +142,11 @@ OCIO_NAMESPACE_ENTER
             throw Exception(error.str().c_str());
         }
     }
-    
+
     std::ostream& operator<< (std::ostream & os, const Transform & transform)
     {
         const Transform* t = &transform;
-        
+
         if(const AllocationTransform * allocationTransform = \
             dynamic_cast<const AllocationTransform*>(t))
         {
@@ -224,7 +221,7 @@ OCIO_NAMESPACE_ENTER
             throw Exception(error.str().c_str());
 
         }
-        
+
         return os;
     }
 }
