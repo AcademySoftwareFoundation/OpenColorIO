@@ -44,6 +44,11 @@ if(OCIO_USE_SSE)
 	)
 endif(OCIO_USE_SSE)
 
+if(APPLE)
+	# Mute the deprecated warning for some GLUT methods.
+	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wno-deprecated-declarations")
+endif()
+
 set_target_properties(test_gpu_exec PROPERTIES 
 	COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
 
