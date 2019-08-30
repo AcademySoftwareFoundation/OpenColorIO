@@ -23,10 +23,6 @@ set(SOURCES
 ###############################################################################
 # Python libs
 
-include_directories(
-	${PYTHON_INCLUDE_PATH}
-)
-
 add_library(PyOpenColorIO MODULE ${SOURCES} ${PYDOC_OUTPUT})
 set_target_properties(PyOpenColorIO PROPERTIES
 	PREFIX ""
