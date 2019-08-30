@@ -28,16 +28,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #ifdef __APPLE__
+
+/* Defined before OpenGL and GLUT includes to avoid deprecation messages */
+#define GL_SILENCE_DEPRECATION
+
 #include <OpenGL/gl.h>
 #include <OpenGL/glext.h>
 #include <GLUT/glut.h>
+
 #elif _WIN32
+
 #include <GL/glew.h>
 #include <GL/glut.h>
+
 #else
+
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glut.h>
+
 #endif
 
 
@@ -617,8 +626,8 @@ int main(int, char **)
     int argc = 2;
     const char* argv[] = { "main", "-glDebug" };
     glutInit(&argc, const_cast<char**>(&argv[0]));
-
-    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+    
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
     glutInitWindowSize(g_winWidth, g_winHeight);
     glutInitWindowPosition(0, 0);
 
@@ -633,7 +642,13 @@ int main(int, char **)
     }
 #endif
 
-    // Step 1: Initilize the OpenGL engine.
+    std::cout << std::endl
+              << "GL Vendor:    " << glGetString(GL_VENDOR) << std::endl
+              << "GL Renderer:  " << glGetString(GL_RENDERER) << std::endl
+              << "GL Version:   " << glGetString(GL_VERSION) << std::endl
+              << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+
+    // Step 1: Initialize the OpenGL engine.
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);           // 4-byte pixel alignment
 
