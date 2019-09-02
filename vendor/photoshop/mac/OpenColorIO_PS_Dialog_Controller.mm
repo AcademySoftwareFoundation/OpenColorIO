@@ -218,7 +218,7 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
             
             int cubesize = 32;
             int whitepointtemp = 6505;
-            std::string copyright = "OpenColorIO, Sony Imageworks";
+            std::string copyright = "";
             
             // create a description tag from the filename
             std::string description = [[[path lastPathComponent] stringByDeletingPathExtension] UTF8String];
@@ -316,7 +316,7 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
                     
                     int cubesize = 32;
                     int whitepointtemp = 6505;
-                    std::string copyright = "OpenColorIO, Sony Imageworks";
+                    std::string copyright = "";
                     
                     // create a description tag from the filename
                     std::string description = [[[path lastPathComponent] stringByDeletingPathExtension] UTF8String];

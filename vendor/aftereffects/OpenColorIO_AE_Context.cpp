@@ -664,7 +664,7 @@ bool OpenColorIO_AE_Context::ExportLUT(const std::string &path, const std::strin
     {
         int cubesize = 32;
         int whitepointtemp = 6505;
-        std::string copyright = "OpenColorIO, Sony Imageworks";
+        std::string copyright = "";
         
         // create a description tag from the filename
         size_t filename_start = path.find_last_of(delimiter) + 1;
