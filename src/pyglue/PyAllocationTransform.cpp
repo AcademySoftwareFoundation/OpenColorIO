@@ -53,7 +53,6 @@ OCIO_NAMESPACE_ENTER
         ///
         
         int PyOCIO_AllocationTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds);
-        PyObject * PyOCIO_AllocationTransform_equals(PyObject * self,  PyObject * args);
         PyObject * PyOCIO_AllocationTransform_getAllocation(PyObject * self);
         PyObject * PyOCIO_AllocationTransform_setAllocation(PyObject * self,  PyObject * args);
         PyObject * PyOCIO_AllocationTransform_getNumVars(PyObject * self);
