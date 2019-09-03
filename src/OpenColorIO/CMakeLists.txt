@@ -210,8 +210,8 @@ set_target_properties(OpenColorIO PROPERTIES
     VERSION ${OpenColorIO_VERSION}
     SOVERSION ${SOVERSION})
 
-# Install the pdb file if any.
-if(MSVC)
+if(MSVC AND BUILD_SHARED_LIBS)
+	# Install the pdb file if any.
 	install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
 endif()
 
