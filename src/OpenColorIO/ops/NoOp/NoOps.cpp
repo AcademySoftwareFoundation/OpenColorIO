@@ -45,6 +45,7 @@ OCIO_NAMESPACE_ENTER
         public:
             AllocationNoOp() = delete;
             AllocationNoOp(const AllocationNoOp &) = delete;
+            AllocationNoOp& operator=(const AllocationNoOp &) = delete;
 
             explicit AllocationNoOp(const AllocationData & allocationData)
                 :   Op()
@@ -327,6 +328,7 @@ OCIO_NAMESPACE_ENTER
         public:
             FileNoOp() = delete;
             FileNoOp(const FileNoOp &) = delete;
+            FileNoOp& operator=(const FileNoOp &) = delete;
 
             explicit FileNoOp(const std::string & fileReference)
                 : Op()
@@ -409,8 +411,9 @@ OCIO_NAMESPACE_ENTER
         public:
             LookNoOp() = delete;
             LookNoOp(const LookNoOp &) = delete;
+            LookNoOp& operator=(const LookNoOp &) = delete;
 
-            LookNoOp(const std::string & look)
+            explicit LookNoOp(const std::string & look)
                 :   Op()
                 ,   m_look(look)
             { 

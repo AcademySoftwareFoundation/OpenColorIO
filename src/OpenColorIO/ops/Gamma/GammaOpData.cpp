@@ -117,16 +117,12 @@ const char * GammaOpData::ConvertStyleToString(Style style)
     {
         case BASIC_FWD:
             return GAMMA_STYLE_BASIC_FWD;
-            break;
         case BASIC_REV:
             return GAMMA_STYLE_BASIC_REV;
-            break;
         case MONCURVE_FWD:
             return GAMMA_STYLE_MONCURVE_FWD;
-            break;
         case MONCURVE_REV:
             return GAMMA_STYLE_MONCURVE_REV;
-            break;
     }
 
     std::stringstream ss("Unknown Gamma style: ");

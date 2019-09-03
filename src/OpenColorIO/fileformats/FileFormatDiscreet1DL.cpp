@@ -227,8 +227,6 @@ OCIO_NAMESPACE_ENTER
             default:
                 return IM_LUT_UNKNOWN_BITS_PERCHANNEL;
             }
-
-            return IM_LUT_UNKNOWN_BITS_PERCHANNEL;
         }
 
         // Free an image look-up table descriptor.
