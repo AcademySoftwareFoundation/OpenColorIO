@@ -937,15 +937,27 @@ OCIO_ADD_TEST(FileTransform, LoadFileFail)
                               OCIO::Exception, "could not be loaded");
     }
 
-    // Invalid file.
+    // Invalid ASCII file.
     const std::string unKnown("error_unknown_format.txt");
     OCIO_CHECK_THROW_WHAT(OCIO::GetFileTransformProcessor(unKnown),
-                          OCIO::Exception, "could not be loaded");
+                          OCIO::Exception, "error_unknown_format.txt failed while loading ops");
+
+    // Unsupported file extension.
+    // It's in fact a binary jpg file i.e. all readers must fail.
+    const std::string binaryFile("rgb-cmy.jpg");
+    OCIO_CHECK_THROW_WHAT(OCIO::GetFileTransformProcessor(binaryFile),
+                          OCIO::Exception, "rgb-cmy.jpg failed while loading ops");
+
+    // Supported file extension with a wrong content.
+    // It's in fact a binary png file i.e. all readers must fail.
+    const std::string faultyCLFFile("image_png.clf");
+    OCIO_CHECK_THROW_WHAT(OCIO::GetFileTransformProcessor(faultyCLFFile), 
+                          OCIO::Exception, "image_png.clf' could not be loaded");
 
     // Missing file.
     const std::string missing("missing.file");
     OCIO_CHECK_THROW_WHAT(OCIO::GetFileTransformProcessor(missing),
-                          OCIO::Exception, "could not be located");
+                          OCIO::Exception, "missing.file' could not be located");
 }
 
 bool FormatNameFoundByExtension(const std::string & extension, const std::string & formatName)

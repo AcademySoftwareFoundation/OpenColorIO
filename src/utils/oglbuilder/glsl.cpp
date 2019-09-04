@@ -28,13 +28,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #ifdef __APPLE__
+
+/* Defined before OpenGL and GLUT includes to avoid deprecation messages */
+#define GL_SILENCE_DEPRECATION
+
 #include <OpenGL/gl.h>
 #include <OpenGL/glext.h>
+
 #elif _WIN32
+
 #include <GL/glew.h>
+
 #else
+
 #include <GL/glew.h>
 #include <GL/gl.h>
+
 #endif
 
 #include <sstream>
