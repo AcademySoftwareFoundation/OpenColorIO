@@ -30,8 +30,9 @@ OpenColorIO is released as version 1.0 and has been in development since 2003.
 OCIO represents the culmination of years of production experience earned on
 such films as SpiderMan 2 (2004), Surf's Up (2007), Cloudy with a Chance of
 Meatballs (2009), Alice in Wonderland (2010), and many more. OpenColorIO is
-natively supported in commercial applications like Katana, Mari, Nuke,
-Silhouette FX, and others.
+natively supported in commercial applications like Katana, Mari, Nuke, Maya,
+Houdini, Silhouette FX, and
+[others](https://opencolorio.org/CompatibleSoftware.html).
 
 OpenColorIO is free and open source software ([LICENSE.md](LICENSE.md)), and
 one of several projects actvively sponsored by the ASWF
