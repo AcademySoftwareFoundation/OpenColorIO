@@ -38,10 +38,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
-// This is used for normalizing various integer bit-depths relative to float.
-float GetBitDepthMaxValue(BitDepth in);
+// Returns a double since often times a ratio of calls to this function is used
+// to calculate a scale factor and this ratio needs to be done at double
+// precision to avoid slight errors in the scaled values.
+double GetBitDepthMaxValue(BitDepth in);
 
-// True if the bit depth is a float
+// True if the bit depth is a float.
 bool IsFloatBitDepth(BitDepth in);
 
 
@@ -95,7 +97,7 @@ template<> struct BitDepthInfo<BIT_DEPTH_F32>
 };
 
 
-// Clamp helper method
+// Clamp helper method.
 #define CLAMP(a, min, max) \
   ((a)>(max) ? (max) : ((min)>(a) ? (min) : (a)))
 

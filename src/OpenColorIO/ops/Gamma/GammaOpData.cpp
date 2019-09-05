@@ -147,30 +147,13 @@ GammaOpData::GammaOpData()
 
 GammaOpData::GammaOpData(BitDepth inBitDepth,
                          BitDepth outBitDepth,
+                         const FormatMetadataImpl & info,
                          const Style & style,
                          const Params & redParams,
                          const Params & greenParams,
                          const Params & blueParams,
                          const Params & alphaParams)
-    :   OpData(inBitDepth, outBitDepth)
-    ,   m_style(style)
-    ,   m_redParams(redParams)
-    ,   m_greenParams(greenParams)
-    ,   m_blueParams(blueParams)
-    ,   m_alphaParams(alphaParams)
-{
-}
-
-GammaOpData::GammaOpData(BitDepth inBitDepth,
-                         BitDepth outBitDepth,
-                         const std::string & id,
-                         const OpData::Descriptions & desc,
-                         const Style & style,
-                         const Params & redParams,
-                         const Params & greenParams,
-                         const Params & blueParams,
-                         const Params & alphaParams)
-    :   OpData(inBitDepth, outBitDepth, id, desc)
+    :   OpData(inBitDepth, outBitDepth, info)
     ,   m_style(style)
     ,   m_redParams(redParams)
     ,   m_greenParams(greenParams)
@@ -190,6 +173,10 @@ GammaOpDataRcPtr GammaOpData::clone() const
 
 GammaOpDataRcPtr GammaOpData::inverse() const
 {
+    GammaOpDataRcPtr gamma = clone();
+    gamma->setInputBitDepth(getOutputBitDepth());
+    gamma->setOutputBitDepth(getInputBitDepth());
+
     Style invStyle = BASIC_FWD;
     switch(getStyle())
     {
@@ -198,11 +185,12 @@ GammaOpDataRcPtr GammaOpData::inverse() const
       case MONCURVE_FWD:  invStyle = MONCURVE_REV;  break;
       case MONCURVE_REV:  invStyle = MONCURVE_FWD;  break;
     }
+    gamma->setStyle(invStyle);
 
-    return std::make_shared<GammaOpData>(getOutputBitDepth(), getInputBitDepth(),
-                                         "", Descriptions(), invStyle,
-                                         getRedParams(), getGreenParams(),
-                                         getBlueParams(), getAlphaParams() );
+    // Note that any existing metadata could become stale at this point but
+    // trying to update it is also challenging since inverse() is sometimes
+    // called even during the creation of new ops.
+    return gamma;
 }
 
 bool GammaOpData::isInverse(const GammaOpData & B) const
@@ -479,6 +467,7 @@ OpDataRcPtr GammaOpData::getIdentityReplacement() const
         {
             op = std::make_shared<RangeOpData>(getInputBitDepth(),
                                                getOutputBitDepth(),
+                                               getFormatMetadata(),
                                                0.,
                                                RangeOpData::EmptyValue(), // Don't clamp high end.
                                                0.,
@@ -491,7 +480,8 @@ OpDataRcPtr GammaOpData::getIdentityReplacement() const
         case MONCURVE_FWD:
         case MONCURVE_REV:
         {
-            op = std::make_shared<MatrixOpData>(getInputBitDepth(), getOutputBitDepth());
+            op = std::make_shared<MatrixOpData>(getInputBitDepth(), getOutputBitDepth(),
+                                                getFormatMetadata());
             break;
         }
     }
@@ -542,23 +532,19 @@ GammaOpDataRcPtr GammaOpData::compose(const GammaOpData & B) const
     GammaOpData::Params paramsA;
     paramsA.push_back(1.);
 
-    Descriptions newDesc = getDescriptions();
-    newDesc += B.getDescriptions();
-
-    std::string id(getID());
-    id += B.getID();
-
-    GammaOpDataRcPtr outOp 
-    = std::make_shared<GammaOpData>(getInputBitDepth(),
-                                    B.getOutputBitDepth(),
-                                    id.c_str(), newDesc,
-                                    style,
-                                    params,
-                                    params,
-                                    params,
-                                    paramsA);
-
     // TODO: May want to revisit how the metadata is set.
+    FormatMetadataImpl newDesc = getFormatMetadata();
+    newDesc.combine(B.getFormatMetadata());
+
+    GammaOpDataRcPtr outOp = 
+        std::make_shared<GammaOpData>(getInputBitDepth(),
+                                      B.getOutputBitDepth(),
+                                      newDesc,
+                                      style,
+                                      params,
+                                      params,
+                                      params,
+                                      paramsA);
 
     return outOp;
 }
@@ -613,11 +599,10 @@ namespace OCIO = OCIO_NAMESPACE;
 
 namespace
 {
-    const OCIO::BitDepth inBitDepth  = OCIO::BIT_DEPTH_UINT8;
-    const OCIO::BitDepth outBitDepth = OCIO::BIT_DEPTH_F16;
+const OCIO::BitDepth inBitDepth  = OCIO::BIT_DEPTH_UINT8;
+const OCIO::BitDepth outBitDepth = OCIO::BIT_DEPTH_F16;
 
-    const std::string id;
-    const OCIO::OpData::Descriptions desc;
+const OCIO::FormatMetadataImpl desc(OCIO::METADATA_ROOT);
 }
 
 
@@ -628,7 +613,7 @@ OCIO_ADD_TEST(GammaOpData, accessors)
     const OCIO::GammaOpData::Params paramsB = { 2.0, 0.4 };
     const OCIO::GammaOpData::Params paramsA = { 1.8, 0.6 };
 
-    OCIO::GammaOpData g1(inBitDepth, outBitDepth, id, desc,
+    OCIO::GammaOpData g1(inBitDepth, outBitDepth, desc,
                          OCIO::GammaOpData::MONCURVE_FWD,
                          paramsR, paramsG, paramsB, paramsA);
 
@@ -690,7 +675,7 @@ OCIO_ADD_TEST(GammaOpData, identity_style_basic)
         //
         // Basic identity gamma.
         //
-        OCIO::GammaOpData g(inBitDepth, outBitDepth, id, desc,
+        OCIO::GammaOpData g(inBitDepth, outBitDepth, desc,
                             OCIO::GammaOpData::BASIC_FWD,
                             IdentityParams, IdentityParams,
                             IdentityParams, IdentityParams);
@@ -724,7 +709,7 @@ OCIO_ADD_TEST(GammaOpData, identity_style_basic)
         //
         // Non-identity check for basic style.
         //
-        OCIO::GammaOpData g(inBitDepth, outBitDepth, id, desc,
+        OCIO::GammaOpData g(inBitDepth, outBitDepth, desc,
                             OCIO::GammaOpData::BASIC_FWD,
                             paramsR, paramsG, paramsB, paramsA);
         OCIO_CHECK_ASSERT(!g.isIdentity());
@@ -761,7 +746,7 @@ OCIO_ADD_TEST(GammaOpData, identity_style_moncurve)
         //
         // Identity test for moncurve.
         //
-        OCIO::GammaOpData g(inBitDepth, outBitDepth, id, desc,
+        OCIO::GammaOpData g(inBitDepth, outBitDepth, desc,
                             OCIO::GammaOpData::MONCURVE_FWD,
                             IdentityParams, IdentityParams,
                             IdentityParams, IdentityParams);
@@ -793,7 +778,7 @@ OCIO_ADD_TEST(GammaOpData, identity_style_moncurve)
         //
         // Non-identity test for moncurve.
         //
-        OCIO::GammaOpData g(inBitDepth, outBitDepth, id, desc,
+        OCIO::GammaOpData g(inBitDepth, outBitDepth, desc,
                             OCIO::GammaOpData::MONCURVE_FWD,
                             paramsR, paramsG, paramsB, paramsA);
         OCIO_CHECK_ASSERT(!g.isIdentity());
@@ -827,7 +812,7 @@ OCIO_ADD_TEST(GammaOpData, noop_style_basic)
         //
         // NoOp test, basic style.
         //
-        OCIO::GammaOpData g(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, id, desc,
+        OCIO::GammaOpData g(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, desc,
                             OCIO::GammaOpData::BASIC_FWD,
                             IdentityParams, IdentityParams,
                             IdentityParams, IdentityParams);
@@ -845,7 +830,7 @@ OCIO_ADD_TEST(GammaOpData, noop_style_basic)
         //
         // Non-NoOp test, basic style.
         //
-        OCIO::GammaOpData g(inBitDepth, outBitDepth, id, desc,
+        OCIO::GammaOpData g(inBitDepth, outBitDepth, desc,
                             OCIO::GammaOpData::BASIC_FWD,
                             paramsR, paramsG, paramsB, paramsA);
         OCIO_CHECK_ASSERT(!g.isIdentity());
@@ -865,7 +850,7 @@ OCIO_ADD_TEST(GammaOpData, noop_style_moncurve)
         //
         // NoOp test, moncurve style.
         //
-        OCIO::GammaOpData g(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, id, desc,
+        OCIO::GammaOpData g(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, desc,
                             OCIO::GammaOpData::MONCURVE_FWD,
                             IdentityParams, IdentityParams,
                             IdentityParams, IdentityParams);
@@ -883,7 +868,7 @@ OCIO_ADD_TEST(GammaOpData, noop_style_moncurve)
         //
         // Non-NoOp test, moncurve style.
         //
-        OCIO::GammaOpData g(inBitDepth, outBitDepth, id, desc,
+        OCIO::GammaOpData g(inBitDepth, outBitDepth, desc,
                             OCIO::GammaOpData::MONCURVE_FWD,
                             paramsR, paramsG, paramsB, paramsA);
         OCIO_CHECK_ASSERT(!g.isIdentity());
@@ -903,7 +888,7 @@ OCIO_ADD_TEST(GammaOpData, validate)
     const OCIO::GammaOpData::Params paramsA = { 1.8, 0.6 };
 
     {
-        OCIO::GammaOpData g1(inBitDepth, outBitDepth, id, desc,
+        OCIO::GammaOpData g1(inBitDepth, outBitDepth, desc,
                              OCIO::GammaOpData::MONCURVE_FWD,
                              paramsR, paramsG, params, paramsA);
         OCIO_CHECK_THROW_WHAT(g1.validate(),
@@ -912,7 +897,7 @@ OCIO_ADD_TEST(GammaOpData, validate)
     }
 
     {
-        OCIO::GammaOpData g1(inBitDepth, outBitDepth, id, desc,
+        OCIO::GammaOpData g1(inBitDepth, outBitDepth, desc,
                              OCIO::GammaOpData::BASIC_FWD,
                              paramsB, paramsB, paramsB, paramsB);
         OCIO_CHECK_THROW_WHAT(g1.validate(),
@@ -923,7 +908,7 @@ OCIO_ADD_TEST(GammaOpData, validate)
     {
         const OCIO::GammaOpData::Params params1 = { 0.006 }; // valid range is [0.01, 100]
 
-        OCIO::GammaOpData g1(inBitDepth, outBitDepth, id, desc,
+        OCIO::GammaOpData g1(inBitDepth, outBitDepth, desc,
                              OCIO::GammaOpData::BASIC_FWD,
                              params1, params1, params1, params1);
         OCIO_CHECK_THROW_WHAT(g1.validate(),
@@ -934,7 +919,7 @@ OCIO_ADD_TEST(GammaOpData, validate)
     {
         const OCIO::GammaOpData::Params params1 = { 110. }; // valid range is [0.01, 100]
         
-        OCIO::GammaOpData g1(inBitDepth, outBitDepth, id, desc,
+        OCIO::GammaOpData g1(inBitDepth, outBitDepth, desc,
                              OCIO::GammaOpData::BASIC_FWD,
                              params1, params1, params1, params1);
         OCIO_CHECK_THROW_WHAT(g1.validate(),
@@ -947,7 +932,7 @@ OCIO_ADD_TEST(GammaOpData, validate)
         const OCIO::GammaOpData::Params params1 = { 1.,    // valid range is [1, 10]
                                                     11. }; // valid range is [0, 0.9]
 
-        OCIO::GammaOpData g1(inBitDepth, outBitDepth, id, desc,
+        OCIO::GammaOpData g1(inBitDepth, outBitDepth, desc,
                              OCIO::GammaOpData::MONCURVE_FWD,
                              params1, params1, params1, params1);
         OCIO_CHECK_THROW_WHAT(g1.validate(),
@@ -959,7 +944,7 @@ OCIO_ADD_TEST(GammaOpData, validate)
         const OCIO::GammaOpData::Params params1 = { 1.,   // valid range is [1, 10]
                                                     0. }; // valid range is [0, 0.9]
 
-        OCIO::GammaOpData g1(inBitDepth, outBitDepth, id, desc,
+        OCIO::GammaOpData g1(inBitDepth, outBitDepth, desc,
                              OCIO::GammaOpData::MONCURVE_FWD,
                              params1, params1, params1, params1);
 
@@ -970,7 +955,7 @@ OCIO_ADD_TEST(GammaOpData, validate)
         const OCIO::GammaOpData::Params params1 = { 1.,     // valid range is [1, 10]
                                                    -1e-6 }; // valid range is [0, 0.9]
 
-        OCIO::GammaOpData g1(inBitDepth, outBitDepth, id, desc,
+        OCIO::GammaOpData g1(inBitDepth, outBitDepth, desc,
                              OCIO::GammaOpData::MONCURVE_FWD,
                              params1, params1, params1, params1);
         OCIO_CHECK_THROW_WHAT(g1.validate(),
@@ -986,7 +971,7 @@ OCIO_ADD_TEST(GammaOpData, equality)
     const OCIO::GammaOpData::Params paramsB1 = { 2.0, 0.4 };
     const OCIO::GammaOpData::Params paramsA1 = { 1.8, 0.6 };
 
-    OCIO::GammaOpData g1(inBitDepth, outBitDepth, id, desc,
+    OCIO::GammaOpData g1(inBitDepth, outBitDepth, desc,
                          OCIO::GammaOpData::MONCURVE_FWD,
                          paramsR1, paramsG1, paramsB1, paramsA1);
 
@@ -995,13 +980,13 @@ OCIO_ADD_TEST(GammaOpData, equality)
     const OCIO::GammaOpData::Params paramsB2 = paramsB1;
     const OCIO::GammaOpData::Params paramsA2 = paramsA1;
 
-    OCIO::GammaOpData g2(inBitDepth, outBitDepth, id, desc,
+    OCIO::GammaOpData g2(inBitDepth, outBitDepth, desc,
                          OCIO::GammaOpData::MONCURVE_FWD,
                          paramsR2, paramsG2, paramsB2, paramsA2);
 
     OCIO_CHECK_ASSERT(!(g1 == g2));
 
-    OCIO::GammaOpData g3(inBitDepth, outBitDepth, id, desc, 
+    OCIO::GammaOpData g3(inBitDepth, outBitDepth, desc, 
                          OCIO::GammaOpData::MONCURVE_REV,
                          paramsR1, paramsG1, paramsB1, paramsA1);
 
@@ -1012,7 +997,7 @@ OCIO_ADD_TEST(GammaOpData, equality)
 
     OCIO_CHECK_ASSERT(g3 == g1);
 
-    OCIO::GammaOpData g4(inBitDepth, outBitDepth, id, desc,
+    OCIO::GammaOpData g4(inBitDepth, outBitDepth, desc,
                          OCIO::GammaOpData::MONCURVE_FWD,
                          paramsR1, paramsG1, paramsB1, paramsA1);
 
@@ -1035,7 +1020,7 @@ void CheckGammaInverse(OCIO::BitDepth in,
                        const OCIO::GammaOpData::Params & invParamsB,
                        const OCIO::GammaOpData::Params & invParamsA )
 {
-    OCIO::GammaOpData refGammaOp(in, out, id, desc, 
+    OCIO::GammaOpData refGammaOp(in, out, desc, 
                                  refStyle,
                                  refParamsR,
                                  refParamsG,
@@ -1105,16 +1090,16 @@ OCIO_ADD_TEST(GammaOpData, is_inverse)
     OCIO::GammaOpData::Params paramsR = { 2.4  };   // gamma
     OCIO::GammaOpData::Params paramsG = { 2.41 };   // gamma
 
-    OCIO::GammaOpData GammaOp1(inBitDepth, outBitDepth, id, desc,
+    OCIO::GammaOpData GammaOp1(inBitDepth, outBitDepth, desc,
                                OCIO::GammaOpData::BASIC_FWD, 
                                paramsR, paramsG, paramsR, paramsR);
 
-    OCIO::GammaOpData GammaOp2(inBitDepth, outBitDepth, id, desc,
+    OCIO::GammaOpData GammaOp2(inBitDepth, outBitDepth, desc,
                                OCIO::GammaOpData::BASIC_REV, 
                                paramsR, paramsG, paramsR, paramsR);
 
     // Set B param differently.
-    OCIO::GammaOpData GammaOp3(inBitDepth, outBitDepth, id, desc,
+    OCIO::GammaOpData GammaOp3(inBitDepth, outBitDepth, desc,
                                OCIO::GammaOpData::BASIC_REV, 
                                paramsR, paramsG, paramsG, paramsR);
 
@@ -1124,16 +1109,16 @@ OCIO_ADD_TEST(GammaOpData, is_inverse)
     paramsR.push_back(0.1);    // offset
     paramsG.push_back(0.1);    // offset
 
-    OCIO::GammaOpData GammaOp1m(inBitDepth, outBitDepth, id, desc,
+    OCIO::GammaOpData GammaOp1m(inBitDepth, outBitDepth, desc,
                                 OCIO::GammaOpData::MONCURVE_FWD, 
                                 paramsR, paramsG, paramsR, paramsR);
 
-    OCIO::GammaOpData GammaOp2m(inBitDepth, outBitDepth, id, desc,
+    OCIO::GammaOpData GammaOp2m(inBitDepth, outBitDepth, desc,
                                 OCIO::GammaOpData::MONCURVE_REV, 
                                 paramsR, paramsG, paramsR, paramsR);
 
     // Set blue param differently.
-    OCIO::GammaOpData GammaOp3m(inBitDepth, outBitDepth, id, desc,
+    OCIO::GammaOpData GammaOp3m(inBitDepth, outBitDepth, desc,
                                 OCIO::GammaOpData::MONCURVE_REV, 
                                 paramsR, paramsG, paramsG, paramsR);
 
@@ -1148,10 +1133,10 @@ OCIO_ADD_TEST(GammaOpData, mayCompose)
     OCIO::GammaOpData::Params params3 = { 2.6 };
 
     {
-        OCIO::GammaOpData g1(inBitDepth, OCIO::BIT_DEPTH_UINT8, id, desc,
+        OCIO::GammaOpData g1(inBitDepth, OCIO::BIT_DEPTH_UINT8, desc,
                              OCIO::GammaOpData::BASIC_FWD,
                              params2, params2, params2, params1);
-        OCIO::GammaOpData g2(OCIO::BIT_DEPTH_F16, outBitDepth, id, desc,
+        OCIO::GammaOpData g2(OCIO::BIT_DEPTH_F16, outBitDepth, desc,
                              OCIO::GammaOpData::BASIC_FWD,
                              params2, params2, params2, params1);
         // Note: Bit-depths don't need to match.
@@ -1159,10 +1144,10 @@ OCIO_ADD_TEST(GammaOpData, mayCompose)
     }
 
     {
-        OCIO::GammaOpData g1(inBitDepth, outBitDepth, id, desc,
+        OCIO::GammaOpData g1(inBitDepth, outBitDepth, desc,
                              OCIO::GammaOpData::BASIC_FWD,
                              params2, params2, params2, params2);
-        OCIO::GammaOpData g2(inBitDepth, outBitDepth, id, desc,
+        OCIO::GammaOpData g2(inBitDepth, outBitDepth, desc,
                              OCIO::GammaOpData::BASIC_FWD,
                              params2, params2, params2, params2);
         // Non-identity alpha.
@@ -1170,10 +1155,10 @@ OCIO_ADD_TEST(GammaOpData, mayCompose)
     }
 
     {
-        OCIO::GammaOpData g1(inBitDepth, outBitDepth, id, desc,
+        OCIO::GammaOpData g1(inBitDepth, outBitDepth, desc,
                              OCIO::GammaOpData::BASIC_FWD,
                              params2, params2, params2, params1);
-        OCIO::GammaOpData g2(inBitDepth, outBitDepth, id, desc,
+        OCIO::GammaOpData g2(inBitDepth, outBitDepth, desc,
                              OCIO::GammaOpData::BASIC_REV,
                              params3, params3, params3, params1);
         // Basic may be fwd or rev.
@@ -1181,10 +1166,10 @@ OCIO_ADD_TEST(GammaOpData, mayCompose)
     }
 
     {
-        OCIO::GammaOpData g1(inBitDepth, outBitDepth, id, desc,
+        OCIO::GammaOpData g1(inBitDepth, outBitDepth, desc,
                              OCIO::GammaOpData::BASIC_FWD,
                              params2, params2, params1, params1);
-        OCIO::GammaOpData g2(inBitDepth, outBitDepth, id, desc,
+        OCIO::GammaOpData g2(inBitDepth, outBitDepth, desc,
                              OCIO::GammaOpData::BASIC_FWD,
                              params2, params2, params2, params1);
         // R == G != B params.
@@ -1192,12 +1177,12 @@ OCIO_ADD_TEST(GammaOpData, mayCompose)
     }
 
     {
-        OCIO::GammaOpData g1(inBitDepth, outBitDepth, id, desc,
+        OCIO::GammaOpData g1(inBitDepth, outBitDepth, desc,
                              OCIO::GammaOpData::BASIC_FWD,
                              params2, params2, params2, params1);
         params1.push_back(0.0);
         params3.push_back(0.1);
-        OCIO::GammaOpData g2(inBitDepth, outBitDepth, id, desc,
+        OCIO::GammaOpData g2(inBitDepth, outBitDepth, desc,
                              OCIO::GammaOpData::MONCURVE_FWD,
                              params3, params3, params3, params1);
         // Moncurve not allowed.
@@ -1217,11 +1202,11 @@ void CheckGammaCompose(OCIO::GammaOpData::Style style1,
 {
     static const OCIO::GammaOpData::Params paramsA = { 1. };
 
-    const OCIO::GammaOpData g1(inBitDepth, outBitDepth, id, desc,
+    const OCIO::GammaOpData g1(inBitDepth, outBitDepth, desc,
                                style1, 
                                params1, params1, params1, paramsA);
 
-    const OCIO::GammaOpData g2(inBitDepth, outBitDepth, id, desc,
+    const OCIO::GammaOpData g2(inBitDepth, outBitDepth, desc,
                                style2, 
                                params2, params2, params2, paramsA);
 
@@ -1285,14 +1270,14 @@ OCIO_ADD_TEST(GammaOpData, compose)
     {
         const OCIO::GammaOpData::Params params1 = { 4. };
         OCIO::GammaOpData::Params paramsA = { 1. };
-        OCIO::GammaOpData g1(inBitDepth, outBitDepth, id, desc,
+        OCIO::GammaOpData g1(inBitDepth, outBitDepth, desc,
                              OCIO::GammaOpData::BASIC_REV, 
                              params1, params1, params1, paramsA);
 
         OCIO::GammaOpData::Params params2 = {2., 0.1};
         paramsA.push_back(0.0);
 
-        OCIO::GammaOpData g2(inBitDepth, outBitDepth, id, desc,
+        OCIO::GammaOpData g2(inBitDepth, outBitDepth, desc,
                              OCIO::GammaOpData::MONCURVE_REV, 
                              params2, params2, params2, paramsA);
 

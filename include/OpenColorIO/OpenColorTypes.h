@@ -112,9 +112,10 @@ OCIO_NAMESPACE_ENTER
     //!cpp:type::
     typedef OCIO_SHARED_PTR<Baker> BakerRcPtr;
     
-    //!cpp:type::
     class OCIOEXPORT ImageDesc;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<ImageDesc> ImageDescRcPtr;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<const ImageDesc> ConstImageDescRcPtr;
 
     class OCIOEXPORT Exception;
@@ -219,7 +220,19 @@ OCIO_NAMESPACE_ENTER
     typedef OCIO_SHARED_PTR<const LookTransform> ConstLookTransformRcPtr;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<LookTransform> LookTransformRcPtr;
-    
+
+    class OCIOEXPORT LUT1DTransform;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const LUT1DTransform> ConstLUT1DTransformRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<LUT1DTransform> LUT1DTransformRcPtr;
+
+    class OCIOEXPORT LUT3DTransform;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const LUT3DTransform> ConstLUT3DTransformRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<LUT3DTransform> LUT3DTransformRcPtr;
+
     class OCIOEXPORT MatrixTransform;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<const MatrixTransform> ConstMatrixTransformRcPtr;
@@ -317,7 +330,14 @@ OCIO_NAMESPACE_ENTER
         BIT_DEPTH_F16,
         BIT_DEPTH_F32
     };
-    
+
+    //!cpp:type:: Used by :cpp:class`LUT1DTransform` to control optional hue restoration algorithm.
+    enum LUT1DHueAdjust
+    {
+        HUE_NONE = 0, // No adjustment.
+        HUE_DW3       // Algorithm used in ACES Output Transforms through v0.7.
+    };
+
     //!cpp:type:: Used by :cpp:class`PackedImageDesc` to indicate the channel ordering 
     //            of the image to process.
     enum ChannelOrdering

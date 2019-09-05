@@ -49,13 +49,13 @@ OCIO_NAMESPACE_ENTER
         public:
             LocalCachedFile()
             {
-                memset(m44, 0, 16*sizeof(float));
-                memset(offset4, 0, 4*sizeof(float));
+                memset(m44, 0, 16*sizeof(double));
+                memset(offset4, 0, 4*sizeof(double));
             };
             ~LocalCachedFile() {};
             
-            float m44[16];
-            float offset4[4];
+            double m44[16];
+            double offset4[4];
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -68,21 +68,21 @@ OCIO_NAMESPACE_ENTER
             
             ~LocalFileFormat() {};
             
-            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
+            void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
             
-            virtual CachedFileRcPtr Read(
+            CachedFileRcPtr read(
                 std::istream & istream,
-                const std::string & fileName) const;
+                const std::string & fileName) const override;
             
-            virtual void BuildFileOps(OpRcPtrVec & ops,
-                         const Config& config,
-                         const ConstContextRcPtr & context,
-                         CachedFileRcPtr untypedCachedFile,
-                         const FileTransform& fileTransform,
-                         TransformDirection dir) const;
+            void buildFileOps(OpRcPtrVec & ops,
+                              const Config& config,
+                              const ConstContextRcPtr & context,
+                              CachedFileRcPtr untypedCachedFile,
+                              const FileTransform& fileTransform,
+                              TransformDirection dir) const override;
         };
         
-        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
+        void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
             info.name = "spimtx";
@@ -91,8 +91,7 @@ OCIO_NAMESPACE_ENTER
             formatInfoVec.push_back(info);
         }
         
-        CachedFileRcPtr
-        LocalFileFormat::Read(
+        CachedFileRcPtr LocalFileFormat::read(
             std::istream & istream,
             const std::string & fileName) const
         {
@@ -112,7 +111,7 @@ OCIO_NAMESPACE_ENTER
             }
 
             // Turn it into parts
-            std::vector<std::string> lineParts;
+            StringVec lineParts;
             pystring::split(pystring::strip(fileStream.str()), lineParts);
             if(lineParts.size() != 12)
             {
@@ -139,40 +138,40 @@ OCIO_NAMESPACE_ENTER
             // Put the bits in the right place
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
 
-            cachedFile->m44[0] = floatArray[0];
-            cachedFile->m44[1] = floatArray[1];
-            cachedFile->m44[2] = floatArray[2];
-            cachedFile->m44[3] = 0.0f;
-
-            cachedFile->m44[4] = floatArray[4];
-            cachedFile->m44[5] = floatArray[5];
-            cachedFile->m44[6] = floatArray[6];
-            cachedFile->m44[7] = 0.0f;
-
-            cachedFile->m44[8] = floatArray[8];
-            cachedFile->m44[9] = floatArray[9];
+            cachedFile->m44[0] =  floatArray[0];
+            cachedFile->m44[1] =  floatArray[1];
+            cachedFile->m44[2] =  floatArray[2];
+            cachedFile->m44[3] =  0.0;
+                                  
+            cachedFile->m44[4] =  floatArray[4];
+            cachedFile->m44[5] =  floatArray[5];
+            cachedFile->m44[6] =  floatArray[6];
+            cachedFile->m44[7] =  0.0;
+                                  
+            cachedFile->m44[8] =  floatArray[8];
+            cachedFile->m44[9] =  floatArray[9];
             cachedFile->m44[10] = floatArray[10];
-            cachedFile->m44[11] = 0.0f;
+            cachedFile->m44[11] = 0.0;
 
-            cachedFile->m44[12] = 0.0f;
-            cachedFile->m44[13] = 0.0f;
-            cachedFile->m44[14] = 0.0f;
-            cachedFile->m44[15] = 1.0f;
+            cachedFile->m44[12] = 0.0;
+            cachedFile->m44[13] = 0.0;
+            cachedFile->m44[14] = 0.0;
+            cachedFile->m44[15] = 1.0;
 
-            cachedFile->offset4[0] = floatArray[3] / 65535.0f;
-            cachedFile->offset4[1] = floatArray[7] / 65535.0f;
-            cachedFile->offset4[2] = floatArray[11] / 65535.0f;
-            cachedFile->offset4[3] = 0.0f;
+            cachedFile->offset4[0] = floatArray[3] / 65535.0;
+            cachedFile->offset4[1] = floatArray[7] / 65535.0;
+            cachedFile->offset4[2] = floatArray[11] / 65535.0;
+            cachedFile->offset4[3] = 0.0;
 
             return cachedFile;
         }
         
-        void LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
-                                      const Config& /*config*/,
-                                      const ConstContextRcPtr & /*context*/,
-                                      CachedFileRcPtr untypedCachedFile,
-                                      const FileTransform& fileTransform,
-                                      TransformDirection dir) const
+        void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
+                                           const Config& /*config*/,
+                                           const ConstContextRcPtr & /*context*/,
+                                           CachedFileRcPtr untypedCachedFile,
+                                           const FileTransform& fileTransform,
+                                           TransformDirection dir) const
         {
             LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
 
@@ -210,7 +209,7 @@ OCIO_ADD_TEST(FileFormatSpiMtx, FormatInfo)
 {
     OCIO::FormatInfoVec formatInfoVec;
     OCIO::LocalFileFormat tester;
-    tester.GetFormatInfo(formatInfoVec);
+    tester.getFormatInfo(formatInfoVec);
 
     OCIO_CHECK_EQUAL(1, formatInfoVec.size());
     OCIO_CHECK_EQUAL("spimtx", formatInfoVec[0].name);
@@ -232,30 +231,30 @@ OCIO_ADD_TEST(FileFormatSpiMtx, Test)
     OCIO_CHECK_NO_THROW(cachedFile = LoadLutFile(spiMtxFile));
 
     OCIO_REQUIRE_ASSERT((bool)cachedFile);
-    OCIO_CHECK_EQUAL(0.0f, cachedFile->offset4[0]);
-    OCIO_CHECK_EQUAL(0.0f, cachedFile->offset4[1]);
-    OCIO_CHECK_EQUAL(0.0f, cachedFile->offset4[2]);
-    OCIO_CHECK_EQUAL(0.0f, cachedFile->offset4[3]);
+    OCIO_CHECK_EQUAL(0.0, cachedFile->offset4[0]);
+    OCIO_CHECK_EQUAL(0.0, cachedFile->offset4[1]);
+    OCIO_CHECK_EQUAL(0.0, cachedFile->offset4[2]);
+    OCIO_CHECK_EQUAL(0.0, cachedFile->offset4[3]);
 
-    OCIO_CHECK_EQUAL(0.754338638f, cachedFile->m44[0]);
-    OCIO_CHECK_EQUAL(0.133697046f, cachedFile->m44[1]);
-    OCIO_CHECK_EQUAL(0.111968437f, cachedFile->m44[2]);
-    OCIO_CHECK_EQUAL(0.0f, cachedFile->m44[3]);
+    OCIO_CHECK_EQUAL(0.754338638f, (float)cachedFile->m44[0]);
+    OCIO_CHECK_EQUAL(0.133697046f, (float)cachedFile->m44[1]);
+    OCIO_CHECK_EQUAL(0.111968437f, (float)cachedFile->m44[2]);
+    OCIO_CHECK_EQUAL(0.0, cachedFile->m44[3]);
 
-    OCIO_CHECK_EQUAL(0.021198141f, cachedFile->m44[4]);
-    OCIO_CHECK_EQUAL(1.005410934f, cachedFile->m44[5]);
-    OCIO_CHECK_EQUAL(-0.026610548f, cachedFile->m44[6]);
-    OCIO_CHECK_EQUAL(0.0f, cachedFile->m44[7]);
+    OCIO_CHECK_EQUAL(0.021198141f, (float)cachedFile->m44[4]);
+    OCIO_CHECK_EQUAL(1.005410934f, (float)cachedFile->m44[5]);
+    OCIO_CHECK_EQUAL(-0.026610548f, (float)cachedFile->m44[6]);
+    OCIO_CHECK_EQUAL(0.0, cachedFile->m44[7]);
 
-    OCIO_CHECK_CLOSE(-0.00975699, cachedFile->m44[8], 1e-6f);
-    OCIO_CHECK_EQUAL(0.004508563f, cachedFile->m44[9]);
-    OCIO_CHECK_EQUAL(1.005253201f, cachedFile->m44[10]);
-    OCIO_CHECK_EQUAL(0.0f, cachedFile->m44[11]);
+    OCIO_CHECK_EQUAL(-0.009756991f, (float)cachedFile->m44[8]);
+    OCIO_CHECK_EQUAL(0.004508563f, (float)cachedFile->m44[9]);
+    OCIO_CHECK_EQUAL(1.005253201f, (float)cachedFile->m44[10]);
+    OCIO_CHECK_EQUAL(0.0, cachedFile->m44[11]);
 
-    OCIO_CHECK_EQUAL(0.0f, cachedFile->m44[12]);
-    OCIO_CHECK_EQUAL(0.0f, cachedFile->m44[13]);
-    OCIO_CHECK_EQUAL(0.0f, cachedFile->m44[14]);
-    OCIO_CHECK_EQUAL(1.0f, cachedFile->m44[15]);
+    OCIO_CHECK_EQUAL(0.0, cachedFile->m44[12]);
+    OCIO_CHECK_EQUAL(0.0, cachedFile->m44[13]);
+    OCIO_CHECK_EQUAL(0.0, cachedFile->m44[14]);
+    OCIO_CHECK_EQUAL(1.0, cachedFile->m44[15]);
 }
 
 OCIO::LocalCachedFileRcPtr ReadSpiMtx(const std::string & fileContent)
@@ -266,7 +265,7 @@ OCIO::LocalCachedFileRcPtr ReadSpiMtx(const std::string & fileContent)
     // Read file
     OCIO::LocalFileFormat tester;
     const std::string SAMPLE_NAME("Memory File");
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(is, SAMPLE_NAME);
+    OCIO::CachedFileRcPtr cachedFile = tester.read(is, SAMPLE_NAME);
 
     return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
 }
@@ -284,10 +283,10 @@ OCIO_ADD_TEST(FileFormatSpiMtx, ReadOffset)
         OCIO::LocalCachedFileRcPtr cachedFile;
         OCIO_CHECK_NO_THROW(cachedFile = ReadSpiMtx(SAMPLE_FILE));
         OCIO_REQUIRE_ASSERT((bool)cachedFile);
-        OCIO_CHECK_EQUAL(0.1f, cachedFile->offset4[0]);
-        OCIO_CHECK_EQUAL(0.5f, cachedFile->offset4[1]);
-        OCIO_CHECK_EQUAL(1.0f, cachedFile->offset4[2]);
-        OCIO_CHECK_EQUAL(0.0f, cachedFile->offset4[3]);
+        OCIO_CHECK_EQUAL(0.1, cachedFile->offset4[0]);
+        OCIO_CHECK_EQUAL(0.5, cachedFile->offset4[1]);
+        OCIO_CHECK_EQUAL(1.0, cachedFile->offset4[2]);
+        OCIO_CHECK_EQUAL(0.0, cachedFile->offset4[3]);
     }
 }
 
