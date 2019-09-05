@@ -43,7 +43,7 @@ OCIO_NAMESPACE_ENTER
 // precision to avoid slight errors in the scaled values.
 double GetBitDepthMaxValue(BitDepth in);
 
-// True if the bit depth is a float
+// True if the bit depth is a float.
 bool IsFloatBitDepth(BitDepth in);
 
 
@@ -97,7 +97,7 @@ template<> struct BitDepthInfo<BIT_DEPTH_F32>
 };
 
 
-// Clamp helper method
+// Clamp helper method.
 #define CLAMP(a, min, max) \
   ((a)>(max) ? (max) : ((min)>(a) ? (min) : (a)))
 
