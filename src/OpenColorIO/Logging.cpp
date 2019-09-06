@@ -34,8 +34,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Logging.h"
 #include "Mutex.h"
-#include "pystring/pystring.h"
 #include "Platform.h"
+#include "PrivateTypes.h"
+#include "pystring/pystring.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -108,7 +109,7 @@ OCIO_NAMESPACE_ENTER
         
         if(g_logginglevel<LOGGING_LEVEL_WARNING) return;
         
-        std::vector<std::string> parts;
+        StringVec parts;
         pystring::split( pystring::rstrip(text), parts, "\n");
         
         for(unsigned int i=0; i<parts.size(); ++i)
@@ -124,7 +125,7 @@ OCIO_NAMESPACE_ENTER
         
         if(g_logginglevel<LOGGING_LEVEL_INFO) return;
         
-        std::vector<std::string> parts;
+        StringVec parts;
         pystring::split( pystring::rstrip(text), parts, "\n");
         
         for(unsigned int i=0; i<parts.size(); ++i)
@@ -140,7 +141,7 @@ OCIO_NAMESPACE_ENTER
         
         if(g_logginglevel<LOGGING_LEVEL_DEBUG) return;
         
-        std::vector<std::string> parts;
+        StringVec parts;
         pystring::split( pystring::rstrip(text), parts, "\n");
         
         for(unsigned int i=0; i<parts.size(); ++i)

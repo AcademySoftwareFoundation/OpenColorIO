@@ -42,17 +42,17 @@ OCIO_ADD_TEST(FileFormat3DL, FormatInfo)
 {
     OCIO::FormatInfoVec formatInfoVec;
     OCIO::LocalFileFormat tester;
-    tester.GetFormatInfo(formatInfoVec);
+    tester.getFormatInfo(formatInfoVec);
 
     OCIO_CHECK_EQUAL(2, formatInfoVec.size());
     OCIO_CHECK_EQUAL("flame", formatInfoVec[0].name);
     OCIO_CHECK_EQUAL("lustre", formatInfoVec[1].name);
     OCIO_CHECK_EQUAL("3dl", formatInfoVec[0].extension);
     OCIO_CHECK_EQUAL("3dl", formatInfoVec[1].extension);
-    OCIO_CHECK_EQUAL((OCIO::FORMAT_CAPABILITY_READ
-        | OCIO::FORMAT_CAPABILITY_WRITE), formatInfoVec[0].capabilities);
-    OCIO_CHECK_EQUAL((OCIO::FORMAT_CAPABILITY_READ
-        | OCIO::FORMAT_CAPABILITY_WRITE), formatInfoVec[1].capabilities);
+    OCIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ | OCIO::FORMAT_CAPABILITY_BAKE,
+                     formatInfoVec[0].capabilities);
+    OCIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ | OCIO::FORMAT_CAPABILITY_BAKE,
+                     formatInfoVec[1].capabilities);
 }
 
 OCIO_ADD_TEST(FileFormat3DL, Bake)

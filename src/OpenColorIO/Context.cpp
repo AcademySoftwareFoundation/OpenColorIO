@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "HashUtils.h"
 #include "Mutex.h"
 #include "PathUtils.h"
+#include "PrivateTypes.h"
 #include "pystring/pystring.h"
 
 OCIO_NAMESPACE_ENTER
@@ -44,10 +45,8 @@ OCIO_NAMESPACE_ENTER
 
 namespace
 {
-    typedef std::map< std::string, std::string> StringMap;
-    
-    void GetAbsoluteSearchPaths(std::vector<std::string> & searchpaths,
-                                const std::vector<std::string> & pathStrings,
+    void GetAbsoluteSearchPaths(StringVec & searchpaths,
+                                const StringVec & pathStrings,
                                 const std::string & configRootDir,
                                 const EnvMap & map);
 }
@@ -56,7 +55,7 @@ namespace
     {
     public:
         // New platform-agnostic search paths vector.
-        std::vector<std::string> searchPaths_;
+        StringVec searchPaths_;
         // Original concatenated string search paths (keeping it for now to
         // avoid changes to the original API).
         std::string searchPath_;
@@ -375,7 +374,7 @@ namespace
         // Load a relative file reference
         // Prep the search path vector
         // TODO: Cache this prepped vector?
-        std::vector<std::string> searchpaths;
+        StringVec searchpaths;
         GetAbsoluteSearchPaths(searchpaths,
                                getImpl()->searchPaths_,
                                getImpl()->workingDir_,
@@ -432,8 +431,8 @@ namespace
 
 namespace
 {
-    void GetAbsoluteSearchPaths(std::vector<std::string> & searchpaths,
-                                const std::vector<std::string> & pathStrings,
+    void GetAbsoluteSearchPaths(StringVec & searchpaths,
+                                const StringVec & pathStrings,
                                 const std::string & workingDir,
                                 const EnvMap & map)
     {
