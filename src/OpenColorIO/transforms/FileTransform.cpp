@@ -274,7 +274,7 @@ OCIO_NAMESPACE_ENTER
     void FormatRegistry::registerFileFormat(FileFormat* format)
     {
         FormatInfoVec formatInfoVec;
-        format->GetFormatInfo(formatInfoVec);
+        format->getFormatInfo(formatInfoVec);
         
         if(formatInfoVec.empty())
         {
@@ -312,7 +312,13 @@ OCIO_NAMESPACE_ENTER
                 m_readFormatNames.push_back(formatInfoVec[i].name);
                 m_readFormatExtensions.push_back(formatInfoVec[i].extension);
             }
-            
+
+            if (formatInfoVec[i].capabilities & FORMAT_CAPABILITY_BAKE)
+            {
+                m_bakeFormatNames.push_back(formatInfoVec[i].name);
+                m_bakeFormatExtensions.push_back(formatInfoVec[i].extension);
+            }
+
             if(formatInfoVec[i].capabilities & FORMAT_CAPABILITY_WRITE)
             {
                 m_writeFormatNames.push_back(formatInfoVec[i].name);
@@ -344,7 +350,11 @@ OCIO_NAMESPACE_ENTER
         {
             return static_cast<int>(m_readFormatNames.size());
         }
-        else if(capability == FORMAT_CAPABILITY_WRITE)
+        else if (capability == FORMAT_CAPABILITY_BAKE)
+        {
+            return static_cast<int>(m_bakeFormatNames.size());
+        }
+        else if (capability == FORMAT_CAPABILITY_WRITE)
         {
             return static_cast<int>(m_writeFormatNames.size());
         }
@@ -361,6 +371,14 @@ OCIO_NAMESPACE_ENTER
                 return "";
             }
             return m_readFormatNames[index].c_str();
+        }
+        else if (capability == FORMAT_CAPABILITY_BAKE)
+        {
+            if (index<0 || index >= static_cast<int>(m_bakeFormatNames.size()))
+            {
+                return "";
+            }
+            return m_bakeFormatNames[index].c_str();
         }
         else if(capability == FORMAT_CAPABILITY_WRITE)
         {
@@ -385,6 +403,15 @@ OCIO_NAMESPACE_ENTER
             }
             return m_readFormatExtensions[index].c_str();
         }
+        else if (capability == FORMAT_CAPABILITY_BAKE)
+        {
+            if (index<0
+                || index >= static_cast<int>(m_bakeFormatExtensions.size()))
+            {
+                return "";
+            }
+            return m_bakeFormatExtensions[index].c_str();
+        }
         else if(capability == FORMAT_CAPABILITY_WRITE)
         {
             if(index<0 
@@ -407,7 +434,7 @@ OCIO_NAMESPACE_ENTER
     std::string FileFormat::getName() const
     {
         FormatInfoVec infoVec;
-        GetFormatInfo(infoVec);
+        getFormatInfo(infoVec);
         if(infoVec.size()>0)
         {
             return infoVec[0].name;
@@ -417,7 +444,17 @@ OCIO_NAMESPACE_ENTER
         
     
     
-    void FileFormat::Write(const Baker & /*baker*/,
+    void FileFormat::bake(const Baker & /*baker*/,
+                          const std::string & formatName,
+                          std::ostream & /*ostream*/) const
+    {
+        std::ostringstream os;
+        os << "Format " << formatName << " does not support baking.";
+        throw Exception(os.str().c_str());
+    }
+    
+    void FileFormat::write(const OpRcPtrVec & /*ops*/,
+                           const FormatMetadataImpl & /*metadata*/,
                            const std::string & formatName,
                            std::ostream & /*ostream*/) const
     {
@@ -425,7 +462,7 @@ OCIO_NAMESPACE_ENTER
         os << "Format " << formatName << " does not support writing.";
         throw Exception(os.str().c_str());
     }
-    
+
     namespace
     {
     
@@ -466,7 +503,7 @@ OCIO_NAMESPACE_ENTER
                     // Open the filePath
                     filestream.open(
                         filepath.c_str(),
-                        tryFormat->IsBinary()
+                        tryFormat->isBinary()
                             ? std::ios_base::binary : std::ios_base::in);
                     if (!filestream.good())
                     {
@@ -478,7 +515,7 @@ OCIO_NAMESPACE_ENTER
                         throw Exception(os.str().c_str());
                     }
 
-                    CachedFileRcPtr cachedFile = tryFormat->Read(
+                    CachedFileRcPtr cachedFile = tryFormat->read(
                         filestream,
                         filepath);
                     
@@ -538,7 +575,7 @@ OCIO_NAMESPACE_ENTER
                 std::ifstream filestream;
                 try
                 {
-                    filestream.open(filepath.c_str(), altFormat->IsBinary()
+                    filestream.open(filepath.c_str(), altFormat->isBinary()
                         ? std::ios_base::binary : std::ios_base::in);
                     if (!filestream.good())
                     {
@@ -551,7 +588,7 @@ OCIO_NAMESPACE_ENTER
                         throw Exception(os.str().c_str());
                     }
 
-                    cachedFile = altFormat->Read(filestream, filepath);
+                    cachedFile = altFormat->read(filestream, filepath);
                     
                     if(IsDebugLoggingEnabled())
                     {
@@ -768,17 +805,18 @@ OCIO_NAMESPACE_ENTER
             GetCachedFileAndFormat(format, cachedFile, filepath);
             // Add FileNoOp and keep track of it.
             CreateFileNoOp(ops, filepath);
-            ConstOpRcPtr fileNoOp = ops.back();
+            ConstOpRcPtr fileNoOpConst = ops.back();
+            OpRcPtr fileNoOp = ops.back();
 
-            // CTF implementation of FileFormat::BuildFileOps might call
+            // CTF implementation of FileFormat::buildFileOps might call
             // BuildFileTransformOps for References.
-            format->BuildFileOps(ops,
+            format->buildFileOps(ops,
                                  config, context,
                                  cachedFile, fileTransform,
                                  dir);
 
             // File has been loaded completely. It may now be referenced again.
-            ConstOpDataRcPtr data = fileNoOp->data();
+            ConstOpDataRcPtr data = fileNoOpConst->data();
             auto fileData = DynamicPtrCast<const FileNoOpData>(data);
             if (fileData)
             {
@@ -952,7 +990,7 @@ bool FormatExtensionFoundByName(const std::string & extension, const std::string
     if (fileFormat)
     {
         OCIO::FormatInfoVec formatInfoVec;
-        fileFormat->GetFormatInfo(formatInfoVec);
+        fileFormat->getFormatInfo(formatInfoVec);
 
         for (unsigned int i = 0; i < formatInfoVec.size() && !foundIt; ++i)
         {
@@ -969,13 +1007,14 @@ OCIO_ADD_TEST(FileTransform, AllFormats)
     OCIO::FormatRegistry & formatRegistry = OCIO::FormatRegistry::GetInstance();
     OCIO_CHECK_EQUAL(19, formatRegistry.getNumRawFormats());
     OCIO_CHECK_EQUAL(24, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_READ));
-    OCIO_CHECK_EQUAL(8, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_WRITE));
+    OCIO_CHECK_EQUAL(8, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_BAKE));
+    OCIO_CHECK_EQUAL(2, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_WRITE));
 
     OCIO_CHECK_ASSERT(FormatNameFoundByExtension("3dl", "flame"));
     OCIO_CHECK_ASSERT(FormatNameFoundByExtension("cc", "ColorCorrection"));
     OCIO_CHECK_ASSERT(FormatNameFoundByExtension("ccc", "ColorCorrectionCollection"));
     OCIO_CHECK_ASSERT(FormatNameFoundByExtension("cdl", "ColorDecisionList"));
-    OCIO_CHECK_ASSERT(FormatNameFoundByExtension("clf", "Academy/ASC Common LUT Format"));
+    OCIO_CHECK_ASSERT(FormatNameFoundByExtension("clf", OCIO::FILEFORMAT_CLF));
     OCIO_CHECK_ASSERT(FormatNameFoundByExtension("csp", "cinespace"));
     OCIO_CHECK_ASSERT(FormatNameFoundByExtension("cub", "truelight"));
     OCIO_CHECK_ASSERT(FormatNameFoundByExtension("cube", "iridas_cube"));
@@ -995,15 +1034,15 @@ OCIO_ADD_TEST(FileTransform, AllFormats)
     OCIO_CHECK_ASSERT(!FormatNameFoundByExtension("3dl", "lustre"));
     OCIO_CHECK_ASSERT(!FormatNameFoundByExtension("m3d", "pandora_m3d"));
     OCIO_CHECK_ASSERT(!FormatNameFoundByExtension("icm", "Image Color Matching"));
-    OCIO_CHECK_ASSERT(!FormatNameFoundByExtension("ctf", "Color Transform Format"));
+    OCIO_CHECK_ASSERT(!FormatNameFoundByExtension("ctf", OCIO::FILEFORMAT_CTF));
 
     OCIO_CHECK_ASSERT(FormatExtensionFoundByName("3dl", "flame"));
     OCIO_CHECK_ASSERT(FormatExtensionFoundByName("3dl", "lustre"));
     OCIO_CHECK_ASSERT(FormatExtensionFoundByName("cc", "ColorCorrection"));
     OCIO_CHECK_ASSERT(FormatExtensionFoundByName("ccc", "ColorCorrectionCollection"));
     OCIO_CHECK_ASSERT(FormatExtensionFoundByName("cdl", "ColorDecisionList"));
-    OCIO_CHECK_ASSERT(FormatExtensionFoundByName("clf", "Academy/ASC Common LUT Format"));
-    OCIO_CHECK_ASSERT(FormatExtensionFoundByName("ctf", "Color Transform Format"));
+    OCIO_CHECK_ASSERT(FormatExtensionFoundByName("clf", OCIO::FILEFORMAT_CLF));
+    OCIO_CHECK_ASSERT(FormatExtensionFoundByName("ctf", OCIO::FILEFORMAT_CTF));
     OCIO_CHECK_ASSERT(FormatExtensionFoundByName("csp", "cinespace"));
     OCIO_CHECK_ASSERT(FormatExtensionFoundByName("cub", "truelight"));
     OCIO_CHECK_ASSERT(FormatExtensionFoundByName("cube", "iridas_cube"));
@@ -1043,6 +1082,7 @@ OCIO_ADD_TEST(FileTransform, FormatByIndex)
 {
     OCIO::FormatRegistry & formatRegistry = OCIO::FormatRegistry::GetInstance();
     ValidateFormatByIndex(formatRegistry, OCIO::FORMAT_CAPABILITY_WRITE);
+    ValidateFormatByIndex(formatRegistry, OCIO::FORMAT_CAPABILITY_BAKE);
     ValidateFormatByIndex(formatRegistry, OCIO::FORMAT_CAPABILITY_READ);
 }
 

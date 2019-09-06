@@ -71,9 +71,9 @@ protected:
 ECRendererBase::ECRendererBase(ConstExposureContrastOpDataRcPtr & ec)
     : OpCPU()
 {
-    m_inScale = GetBitDepthMaxValue(ec->getInputBitDepth());
+    m_inScale = (float)GetBitDepthMaxValue(ec->getInputBitDepth());
 
-    m_outScale = GetBitDepthMaxValue(ec->getOutputBitDepth());
+    m_outScale = (float)GetBitDepthMaxValue(ec->getOutputBitDepth());
 
     m_alphaScale = m_outScale / m_inScale;
 
@@ -1036,8 +1036,8 @@ OCIO_ADD_TEST(ExposureContrastRenderer, log)
 
     renderer->apply(rgba.data(), rgba.data(), 4);
 
-    const float inMax = OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_F32);
-    const float outMax = OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_F32);
+    const float inMax = (float)OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_F32);
+    const float outMax = (float)OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_F32);
 
     OCIO_CHECK_EQUAL(rgba[0], logECVal(rgbaImage[0], const_ec, inMax, outMax));
     OCIO_CHECK_EQUAL(rgba[1], logECVal(rgbaImage[1], const_ec, inMax, outMax));

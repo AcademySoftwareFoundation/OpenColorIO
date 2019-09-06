@@ -93,8 +93,10 @@ set(SOURCES
 	fileformats/FileFormatSpiMtx.cpp
 	fileformats/FileFormatTruelight.cpp
 	fileformats/FileFormatVF.cpp
+	fileformats/FormatMetadata.cpp
 	fileformats/xmlutils/XMLReaderHelper.cpp
 	fileformats/xmlutils/XMLReaderUtils.cpp
+	fileformats/xmlutils/XMLWriterUtils.cpp
 	GPUProcessor.cpp
 	GpuShader.cpp
 	GpuShaderDesc.cpp
@@ -144,7 +146,6 @@ set(SOURCES
 	ops/Matrix/MatrixOpCPU.cpp
 	ops/Matrix/MatrixOpData.cpp
 	ops/Matrix/MatrixOps.cpp
-	ops/Metadata.cpp
 	ops/NoOp/NoOps.cpp
 	ops/Range/RangeOpCPU.cpp
 	ops/Range/RangeOpData.cpp
@@ -172,6 +173,8 @@ set(SOURCES
 	transforms/LogAffineTransform.cpp
 	transforms/LogTransform.cpp
 	transforms/LookTransform.cpp
+	transforms/LUT1DTransform.cpp
+	transforms/LUT3DTransform.cpp
 	transforms/MatrixTransform.cpp
 	transforms/RangeTransform.cpp
 	UnitTest.cpp

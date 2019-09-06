@@ -33,9 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/Log/LogOpData.h"
-#include "ops/Log/LogOps.h"
-#include "ops/Log/LogUtils.h"
-#include "OpBuilders.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -128,6 +125,16 @@ OCIO_NAMESPACE_ENTER
         }
     }
 
+    FormatMetadata & LogTransform::getFormatMetadata()
+    {
+        return m_impl->getFormatMetadata();
+    }
+
+    const FormatMetadata & LogTransform::getFormatMetadata() const
+    {
+        return m_impl->getFormatMetadata();
+    }
+
     double LogTransform::getBase() const
     {
         return getImpl()->getBase();
@@ -148,20 +155,6 @@ OCIO_NAMESPACE_ENTER
         return os;
     }
     
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    void BuildLogOps(OpRcPtrVec & ops,
-                     const Config& /*config*/,
-                     const LogTransform& transform,
-                     TransformDirection dir)
-    {
-        TransformDirection combinedDir =
-            CombineTransformDirections(dir,
-                                       transform.getDirection());
-        CreateLogOp(ops, transform.getBase(), combinedDir);
-    }
 }
 OCIO_NAMESPACE_EXIT
 

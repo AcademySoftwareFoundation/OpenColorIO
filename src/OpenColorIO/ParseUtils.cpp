@@ -445,9 +445,23 @@ OCIO_NAMESPACE_ENTER
         return pretty.str();
     }
     
-    
+    std::string DoubleVecToString(const double * val, unsigned int size)
+    {
+        if (size <= 0) return "";
+
+        std::ostringstream pretty;
+        pretty.precision(DOUBLE_DECIMALS);
+        for (unsigned int i = 0; i<size; ++i)
+        {
+            if (i != 0) pretty << " ";
+            pretty << val[i];
+        }
+
+        return pretty.str();
+    }
+
     bool StringVecToFloatVec(std::vector<float> &floatArray,
-                             const std::vector<std::string> &lineParts)
+                             const StringVec &lineParts)
     {
         floatArray.resize(lineParts.size());
         
@@ -469,7 +483,7 @@ OCIO_NAMESPACE_ENTER
     // Returns true if all lineParts have been recognized as int.
     // Content of intArray will be unknown if function returns false.
     bool StringVecToIntVec(std::vector<int> &intArray,
-                           const std::vector<std::string> &lineParts)
+                           const StringVec &lineParts)
     {
         intArray.resize(lineParts.size());
         
@@ -524,7 +538,7 @@ OCIO_NAMESPACE_ENTER
     // Otherwise, assume a single string.
     // Also, strip whitespace from all parts.
     
-    void SplitStringEnvStyle(std::vector<std::string> & outputvec, const char * str)
+    void SplitStringEnvStyle(StringVec & outputvec, const char * str)
     {
         if(!str) return;
         
@@ -548,7 +562,7 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    std::string JoinStringEnvStyle(const std::vector<std::string> & outputvec)
+    std::string JoinStringEnvStyle(const StringVec & outputvec)
     {
         return pystring::join(", ", outputvec);
     }
@@ -556,10 +570,10 @@ OCIO_NAMESPACE_ENTER
     // Return a vector of strings that are both in vec1 and vec2.
     // Case is ignored to find strings.
     // Ordering and capitalization from vec1 are preserved.
-    std::vector<std::string> IntersectStringVecsCaseIgnore(const std::vector<std::string> & vec1,
-                                                           const std::vector<std::string> & vec2)
+    StringVec IntersectStringVecsCaseIgnore(const StringVec & vec1,
+                                            const StringVec & vec2)
     {
-        std::vector<std::string> newvec;
+        StringVec newvec;
         std::set<std::string> allvalues;
         
         // Seed the set with all values from vec2
@@ -581,7 +595,7 @@ OCIO_NAMESPACE_ENTER
     }
     
     
-    int FindInStringVecCaseIgnore(const std::vector<std::string> & vec, const std::string & str)
+    int FindInStringVecCaseIgnore(const StringVec & vec, const std::string & str)
     {
         std::string teststr = pystring::lower(str);
         for(unsigned int i=0; i<vec.size(); ++i)
@@ -956,7 +970,7 @@ OCIO_ADD_TEST(ParseUtils, FloatDouble)
 OCIO_ADD_TEST(ParseUtils, StringVecToIntVec)
 {
     std::vector<int> intArray;
-    std::vector<std::string> lineParts;
+    OCIO::StringVec lineParts;
     bool success = OCIO::StringVecToIntVec(intArray, lineParts);
     OCIO_CHECK_EQUAL(true, success);
     OCIO_CHECK_EQUAL(0, intArray.size());
@@ -1015,7 +1029,7 @@ OCIO_ADD_TEST(ParseUtils, StringVecToIntVec)
 
 OCIO_ADD_TEST(ParseUtils, SplitStringEnvStyle)
 {
-    std::vector<std::string> outputvec;
+    OCIO::StringVec outputvec;
     OCIO::SplitStringEnvStyle(outputvec, "This:is:a:test");
     OCIO_CHECK_EQUAL(4, outputvec.size());
     OCIO_CHECK_EQUAL("This", outputvec[0]);
@@ -1051,8 +1065,8 @@ OCIO_ADD_TEST(ParseUtils, SplitStringEnvStyle)
 
 OCIO_ADD_TEST(ParseUtils, IntersectStringVecsCaseIgnore)
 {
-    std::vector<std::string> source1;
-    std::vector<std::string> source2;
+    OCIO::StringVec source1;
+    OCIO::StringVec source2;
     source1.push_back("111");
     source1.push_back("This");
     source1.push_back("is");
@@ -1067,7 +1081,7 @@ OCIO_ADD_TEST(ParseUtils, IntersectStringVecsCaseIgnore)
     source2.push_back("a");
     source2.push_back("IS");
 
-    std::vector<std::string> resInter = OCIO::IntersectStringVecsCaseIgnore(source1, source2);
+    OCIO::StringVec resInter = OCIO::IntersectStringVecsCaseIgnore(source1, source2);
     OCIO_CHECK_EQUAL(4, resInter.size());
     OCIO_CHECK_EQUAL("This", resInter[0]);
     OCIO_CHECK_EQUAL("is", resInter[1]);

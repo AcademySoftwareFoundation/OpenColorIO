@@ -40,22 +40,22 @@ static const std::string errBDNotSupported("Bit depth is not supported: ");
 
 OCIO_NAMESPACE_ENTER
 {
-    float GetBitDepthMaxValue(BitDepth in)
+    double GetBitDepthMaxValue(BitDepth in)
     {
         switch(in)
         {
             case BIT_DEPTH_UINT8:
-                return (float)BitDepthInfo<BIT_DEPTH_UINT8>::maxValue;
+                return (double)BitDepthInfo<BIT_DEPTH_UINT8>::maxValue;
             case BIT_DEPTH_UINT10:
-                return (float)BitDepthInfo<BIT_DEPTH_UINT10>::maxValue;
+                return (double)BitDepthInfo<BIT_DEPTH_UINT10>::maxValue;
             case BIT_DEPTH_UINT12:
-                return (float)BitDepthInfo<BIT_DEPTH_UINT12>::maxValue;
+                return (double)BitDepthInfo<BIT_DEPTH_UINT12>::maxValue;
             case BIT_DEPTH_UINT16:
-                return (float)BitDepthInfo<BIT_DEPTH_UINT16>::maxValue;
+                return (double)BitDepthInfo<BIT_DEPTH_UINT16>::maxValue;
             case BIT_DEPTH_F16:
-                return (float)BitDepthInfo<BIT_DEPTH_F16>::maxValue;
+                return (double)BitDepthInfo<BIT_DEPTH_F16>::maxValue;
             case BIT_DEPTH_F32:
-                return (float)BitDepthInfo<BIT_DEPTH_F32>::maxValue;
+                return (double)BitDepthInfo<BIT_DEPTH_F32>::maxValue;
 
             case BIT_DEPTH_UNKNOWN:
             case BIT_DEPTH_UINT14:
@@ -113,11 +113,11 @@ namespace OCIO = OCIO_NAMESPACE;
 
 OCIO_ADD_TEST(BitDepthUtils, GetBitDepthMaxValue)
 {
-    OCIO_CHECK_EQUAL(OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_UINT8), 255.0f);
-    OCIO_CHECK_EQUAL(OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_UINT16), 65535.0f);
+    OCIO_CHECK_EQUAL(OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_UINT8), 255.0);
+    OCIO_CHECK_EQUAL(OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_UINT16), 65535.0);
 
-    OCIO_CHECK_EQUAL(OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_F16), 1.0f);
-    OCIO_CHECK_EQUAL(OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_F32), 1.0f);
+    OCIO_CHECK_EQUAL(OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_F16), 1.0);
+    OCIO_CHECK_EQUAL(OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_F32), 1.0);
 
     OCIO_CHECK_THROW_WHAT(
         OCIO::GetBitDepthMaxValue((OCIO::BitDepth)42), OCIO::Exception, "not supported");
