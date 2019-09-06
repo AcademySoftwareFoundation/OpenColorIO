@@ -1,3 +1,7 @@
+branches:
+  only:
+    - /^RB-.*$/
+
 version: '{branch}-{build}'
 image: Visual Studio 2013
 clone_folder: C:\source\ocio

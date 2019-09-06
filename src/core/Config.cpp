@@ -330,7 +330,7 @@ OCIO_NAMESPACE_ENTER
                 sanitytext_ = rhs.sanitytext_;
                 
                 cacheids_ = rhs.cacheids_;
-                cacheidnocontext_ = cacheidnocontext_;
+                cacheidnocontext_ = rhs.cacheidnocontext_;
             }
             return *this;
         }

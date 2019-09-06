@@ -10,6 +10,18 @@ if(NOT DEFINED CMAKE_FIRST_RUN)
 endif()
 
 ###############################################################################
+### C++ configuration ###
+
+if(CMAKE_CXX_STANDARD AND NOT CMAKE_CXX_STANDARD EQUAL 98)
+    message(WARNING " CMAKE_CXX_STANDARD ${CMAKE_CXX_STANDARD} is not officially supported. Use 98 for full support.")
+elseif(NOT CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 98)
+endif()
+
+# Disable fallback to other C++ version if standard is not supported.
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+###############################################################################
 ### GLOBAL ###
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
