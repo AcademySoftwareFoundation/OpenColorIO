@@ -163,6 +163,12 @@ else()
 		PRIVATE
 			OpenColorIO_EXPORTS
 	)
+endif()
+
+if(BUILD_SHARED_LIBS OR (OCIO_BUILD_PYTHON AND UNIX))
+	# The Python bindings is a 'module' which is a dynamic library on Linux 
+	# (i.e. '-fPIC' needed), but a static library on Windows.
+
 	# If supported for the target machine, emit position-independent code 
 	# suitable for dynamic linking.
 	set_property(TARGET OpenColorIO PROPERTY POSITION_INDEPENDENT_CODE ON)
