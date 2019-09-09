@@ -120,8 +120,6 @@ set(SOURCES
 	transforms/LUT3DTransform.cpp
 	transforms/MatrixTransform.cpp
 	transforms/RangeTransform.cpp
-	UnitTest.cpp
-	UnitTestUtils.cpp
 )
 
 if(WIN32 AND BUILD_SHARED_LIBS)
