@@ -365,7 +365,7 @@ void BaseLut1DRenderer<inBD, outBD>::updateData(ConstLut1DOpDataRcPtr & lut)
 
     m_dim = lut->getArray().getLength();
 
-    const float outMax = GetBitDepthMaxValue(outBD);
+    const float outMax = (float)GetBitDepthMaxValue(outBD);
     const float outMin = 0.0f;
 
     // (Used by L_ADJUST macro.)
@@ -422,11 +422,11 @@ void BaseLut1DRenderer<inBD, outBD>::updateData(ConstLut1DOpDataRcPtr & lut)
         }
     }
 
-    m_alphaScaling = GetBitDepthMaxValue(outBD)
-                     / GetBitDepthMaxValue(inBD);
+    m_alphaScaling = (float)GetBitDepthMaxValue(outBD)
+                     / (float)GetBitDepthMaxValue(inBD);
 
     m_step = ((float)m_dim - 1.0f)
-                 / GetBitDepthMaxValue(lut->getInputBitDepth());
+             / (float)GetBitDepthMaxValue(lut->getInputBitDepth());
 
     m_dimMinusOne = m_dim - 1.0f;
 }
@@ -1240,9 +1240,9 @@ void InvLut1DRenderer<inBD, outBD>::updateData(ConstLut1DOpDataRcPtr & lut)
         }
     }
 
-    const float outMax = GetBitDepthMaxValue(lut->getOutputBitDepth());
+    const float outMax = (float)GetBitDepthMaxValue(lut->getOutputBitDepth());
 
-    m_alphaScaling = outMax / GetBitDepthMaxValue(lut->getInputBitDepth());
+    m_alphaScaling = outMax / (float)GetBitDepthMaxValue(lut->getInputBitDepth());
 
     // Converts from index units to inDepth units of the original LUT.
     // (Note that inDepth of the original LUT is outDepth of the inverse LUT.)
@@ -1442,9 +1442,9 @@ void InvLut1DRendererHalfCode<inBD, outBD>::updateData(ConstLut1DOpDataRcPtr & l
         }
     }
 
-    const float outMax = GetBitDepthMaxValue(lut->getOutputBitDepth());
+    const float outMax = (float)GetBitDepthMaxValue(lut->getOutputBitDepth());
 
-    this->m_alphaScaling = outMax / GetBitDepthMaxValue(lut->getInputBitDepth());
+    this->m_alphaScaling = outMax / (float)GetBitDepthMaxValue(lut->getInputBitDepth());
 
     // Note the difference for half domain LUTs, since the distance between
     // between adjacent entries is not constant, we cannot roll it into the
@@ -1634,7 +1634,7 @@ OpCPURcPtr GetForwardLut1DRenderer(ConstLut1DOpDataRcPtr & lut)
     //     may not be changed.
     if (lut->isInputHalfDomain())
     {
-        if (lut->getHueAdjust() == Lut1DOpData::HUE_NONE)
+        if (lut->getHueAdjust() == HUE_NONE)
         {
             return std::make_shared< Lut1DRendererHalfCode<inBD, outBD> >(lut);
         }
@@ -1645,7 +1645,7 @@ OpCPURcPtr GetForwardLut1DRenderer(ConstLut1DOpDataRcPtr & lut)
     }
     else
     {
-        if (lut->getHueAdjust() == Lut1DOpData::HUE_NONE)
+        if (lut->getHueAdjust() == HUE_NONE)
         {
             return std::make_shared< Lut1DRenderer<inBD, outBD> >(lut);
         }
@@ -1678,7 +1678,7 @@ ConstOpCPURcPtr GetLut1DRenderer_OutBitDepth(ConstLut1DOpDataRcPtr & lut)
         {
             if (lut->isInputHalfDomain())
             {
-                if (lut->getHueAdjust() == Lut1DOpData::HUE_NONE)
+                if (lut->getHueAdjust() == HUE_NONE)
                 {
                     return std::make_shared< InvLut1DRendererHalfCode<inBD, outBD> >(lut);
                 }
@@ -1689,7 +1689,7 @@ ConstOpCPURcPtr GetLut1DRenderer_OutBitDepth(ConstLut1DOpDataRcPtr & lut)
             }
             else
             {
-                if (lut->getHueAdjust() == Lut1DOpData::HUE_NONE)
+                if (lut->getHueAdjust() == HUE_NONE)
                 {
                     return std::make_shared< InvLut1DRenderer<inBD, outBD> >(lut);
                 }
@@ -1951,7 +1951,7 @@ OCIO_ADD_TEST(Lut1DRenderer, nan_half_test)
 {
     OCIO::Lut1DOpDataRcPtr lut = std::make_shared<OCIO::Lut1DOpData>(
         OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_F32,
-        "", OCIO::OpData::Descriptions(),
+        OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
         OCIO::INTERP_LINEAR,
         OCIO::Lut1DOpData::LUT_INPUT_HALF_CODE);
 

@@ -36,10 +36,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "DynamicProperty.h"
+#include "fileformats/FormatMetadata.h"
 #include "Mutex.h"
 
 OCIO_NAMESPACE_ENTER
 {
+
     struct AllocationData
     {
         Allocation allocation;
@@ -88,6 +90,7 @@ OCIO_NAMESPACE_ENTER
     typedef OCIO_SHARED_PTR<OpData> OpDataRcPtr;
     typedef OCIO_SHARED_PTR<const OpData> ConstOpDataRcPtr;
     typedef std::vector<OpDataRcPtr> OpDataVec;
+    typedef std::vector<ConstOpDataRcPtr> ConstOpDataVec;
 
     // The OpData class is a helper class to hold the data part of an Op 
     // with some basic behaviors (i.e. isNoop(), isIdentity() …). The Op class 
@@ -141,85 +144,19 @@ OCIO_NAMESPACE_ENTER
             NoOpType
         };
 
-        class Descriptions
-        {
-            typedef std::vector<std::string> List;
-            List m_descriptions;
-
-        public:
-            typedef typename List::size_type size_type;
-
-            typedef typename List::reference reference;
-            typedef typename List::const_reference const_reference;
-
-            typedef typename List::iterator iterator;
-            typedef typename List::const_iterator const_iterator;
-
-            Descriptions() = default;
-
-            Descriptions(const_reference str)
-            {
-                m_descriptions.push_back(str);
-            }
-
-            inline bool empty() const noexcept { return m_descriptions.empty(); }
-            size_type size() const noexcept { return m_descriptions.size(); }
-
-            Descriptions & operator+=(const_reference str)
-            {
-                m_descriptions.push_back(str);
-                return *this;
-            }
-
-            Descriptions& operator +=(const Descriptions& rhs)
-            {
-                if (this != &rhs)
-                {
-                    m_descriptions.insert(m_descriptions.end(),
-                                          rhs.m_descriptions.begin(),
-                                          rhs.m_descriptions.end());
-                }
-                return *this;
-            }
-
-            bool operator==(const Descriptions & other) const noexcept
-            {
-                if (this == &other) return true;
-                return (m_descriptions == other.m_descriptions);
-            }
-
-            bool operator!=(const Descriptions & other) const noexcept
-            {
-                return !(*this==other);
-            }
-
-            iterator begin() noexcept { return m_descriptions.begin(); }
-            iterator end() noexcept { return m_descriptions.end(); }
-            const_iterator begin() const noexcept { return m_descriptions.begin(); }
-            const_iterator end() const noexcept { return m_descriptions.end(); }
-
-            reference operator[] (size_type n) { return m_descriptions[n]; }
-            const_reference operator[] (size_type n) const { return m_descriptions[n]; }
-        };
-
     public:
         OpData(BitDepth inBitDepth, BitDepth outBitDepth);
         OpData(BitDepth inBitDepth, BitDepth outBitDepth,
-               const std::string & id, 
-               const Descriptions & desc);
-        OpData(const OpData& rhs);
-        OpData& operator=(const OpData& rhs);
+               const FormatMetadataImpl & info);
+        OpData(const OpData & rhs);
+        OpData & operator=(const OpData & rhs);
         virtual ~OpData();
 
-        inline const std::string & getID() const { return m_id; }
-        void setID(const std::string & id) { m_id = id; }
+        const std::string & getID() const;
+        void setID(const std::string & id);
 
-        inline const std::string& getName() const { return m_name; }
-        void setName(const std::string& name) { m_name = name; }
-
-        inline const Descriptions & getDescriptions() const { return m_descriptions; }
-        inline Descriptions & getDescriptions() { return m_descriptions; }
-        void setDescriptions(const Descriptions & desc) { m_descriptions = desc; }
+        const std::string & getName() const;
+        void setName(const std::string & name);
 
         inline BitDepth getInputBitDepth() const { return m_inBitDepth; }
         virtual void setInputBitDepth(BitDepth in) { m_inBitDepth = in; }
@@ -259,16 +196,18 @@ OCIO_NAMESPACE_ENTER
         // and Op::finalize() consumes it to compute the Op cache identifier.
         virtual std::string getCacheID() const { return m_cacheID; }
 
+        // FormatMetadata.
+        FormatMetadataImpl & getFormatMetadata() { return m_metadata;  }
+        const FormatMetadataImpl & getFormatMetadata() const { return m_metadata; }
+
     protected:
         mutable Mutex m_mutex;
         mutable std::string m_cacheID;
 
     private:
-        std::string  m_id;
-        std::string  m_name;
-        Descriptions m_descriptions;
-        BitDepth     m_inBitDepth;
-        BitDepth     m_outBitDepth;
+        FormatMetadataImpl m_metadata;
+        BitDepth           m_inBitDepth;
+        BitDepth           m_outBitDepth;
     };
     
     class Op;
@@ -279,18 +218,19 @@ OCIO_NAMESPACE_ENTER
     std::string SerializeOpVec(const OpRcPtrVec & ops, int indent=0);
     bool IsOpVecNoOp(const OpRcPtrVec & ops);
     
+    // Sets all ops to F32 and finalize them.
     void FinalizeOpVec(OpRcPtrVec & opVec, FinalizationFlags fFlags);
-    
+
     void OptimizeOpVec(OpRcPtrVec & result, OptimizationFlags oFlags);
 
     void UnifyDynamicProperties(OpRcPtrVec & ops);
    
     void CreateOpVecFromOpData(OpRcPtrVec & ops,
-                               const OpDataRcPtr & opData,
+                               const ConstOpDataRcPtr & opData,
                                TransformDirection dir);
 
     void CreateOpVecFromOpDataVec(OpRcPtrVec & ops,
-                                  const OpDataVec & opDataVec,
+                                  const ConstOpDataVec & opDataVec,
                                   TransformDirection dir);
 
     class Op
@@ -367,8 +307,8 @@ OCIO_NAMESPACE_ENTER
             virtual BitDepth getInputBitDepth() const { return m_data->getInputBitDepth(); }
             virtual BitDepth getOutputBitDepth() const { return m_data->getOutputBitDepth(); }
 
-            virtual void setInputBitDepth(BitDepth bitdepth) { m_data->setInputBitDepth(bitdepth); }
-            virtual void setOutputBitDepth(BitDepth bitdepth) { m_data->setOutputBitDepth(bitdepth); }
+            virtual void setInputBitDepth(BitDepth bitdepth);
+            virtual void setOutputBitDepth(BitDepth bitdepth);
 
             virtual bool isDynamic() const;
             virtual bool hasDynamicProperty(DynamicPropertyType type) const;
@@ -404,6 +344,7 @@ OCIO_NAMESPACE_ENTER
     {
         typedef std::vector<OpRcPtr> Type;
         Type m_ops;
+        FormatMetadataImpl m_metadata;
 
     public:
         typedef Type::value_type value_type;
@@ -415,8 +356,9 @@ OCIO_NAMESPACE_ENTER
         typedef Type::reference reference;
         typedef Type::const_reference const_reference;
 
-        OpRcPtrVec() {}
+        OpRcPtrVec();
         ~OpRcPtrVec() {}
+
         OpRcPtrVec(const OpRcPtrVec & v);
         OpRcPtrVec & operator=(const OpRcPtrVec & v);
         // Note: It copies elements i.e. no clone.
@@ -457,8 +399,12 @@ OCIO_NAMESPACE_ENTER
 
         OpRcPtrVec clone() const;
 
+        FormatMetadataImpl & getFormatMetadata() { return m_metadata; }
+        const FormatMetadataImpl & getFormatMetadata() const { return m_metadata; }
+
     protected:
         void adjustBitDepths();
+
     };
 
 }

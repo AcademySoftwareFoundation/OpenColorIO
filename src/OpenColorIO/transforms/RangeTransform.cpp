@@ -32,9 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "MathUtils.h"
-#include "OpBuilders.h"
 #include "ops/Range/RangeOpData.h"
-#include "ops/Range/RangeOps.h"
 
 
 OCIO_NAMESPACE_ENTER
@@ -154,6 +152,33 @@ void RangeTransform::validate() const
         }
 }
 
+BitDepth RangeTransform::getFileInputBitDepth() const
+{
+    return getImpl()->getFileInputBitDepth();
+}
+BitDepth RangeTransform::getFileOutputBitDepth() const
+{
+    return getImpl()->getFileOutputBitDepth();
+}
+void RangeTransform::setFileInputBitDepth(BitDepth bitDepth)
+{
+    getImpl()->setFileInputBitDepth(bitDepth);
+}
+void RangeTransform::setFileOutputBitDepth(BitDepth bitDepth)
+{
+    getImpl()->setFileOutputBitDepth(bitDepth);
+}
+
+FormatMetadata & RangeTransform::getFormatMetadata()
+{
+    return m_impl->getFormatMetadata();
+}
+
+const FormatMetadata & RangeTransform::getFormatMetadata() const
+{
+    return m_impl->getFormatMetadata();
+}
+
 bool RangeTransform::equals(const RangeTransform & other) const
 {
     return getImpl()->equals(*other.getImpl());
@@ -247,6 +272,8 @@ std::ostream& operator<< (std::ostream& os, const RangeTransform& t)
 {
     os << "<RangeTransform ";
     os << "direction=" << TransformDirectionToString(t.getDirection());
+    os << ", fileindepth=" << BitDepthToString(t.getFileInputBitDepth());
+    os << ", fileoutdepth=" << BitDepthToString(t.getFileOutputBitDepth());
     if(t.getStyle()!=RANGE_CLAMP) os << ", style="       << RangeStyleToString(t.getStyle());
     if(t.hasMinInValue())         os << ", minInValue="  << t.getMinInValue();
     if(t.hasMaxInValue())         os << ", maxInValue="  << t.getMaxInValue();
@@ -254,36 +281,6 @@ std::ostream& operator<< (std::ostream& os, const RangeTransform& t)
     if(t.hasMaxOutValue())        os << ", maxOutValue=" << t.getMaxOutValue();
     os << ">";
     return os;
-}
-
-
-
-///////////////////////////////////////////////////////////////////////////
-
-void BuildRangeOps(OpRcPtrVec & ops,
-                   const Config& /*config*/,
-                   const RangeTransform & transform,
-                   TransformDirection dir)
-{
-    const TransformDirection combinedDir 
-        = CombineTransformDirections(dir, transform.getDirection());
-
-    if(transform.getStyle()==RANGE_CLAMP)
-    {
-        CreateRangeOp(ops, 
-                      transform.getMinInValue(), transform.getMaxInValue(), 
-                      transform.getMinOutValue(), transform.getMaxOutValue(),
-                      combinedDir);
-    }
-    else
-    {
-        const RangeOpData r(BIT_DEPTH_F32, BIT_DEPTH_F32, 
-                            transform.getMinInValue(), transform.getMaxInValue(), 
-                            transform.getMinOutValue(), transform.getMaxOutValue());
-        MatrixOpDataRcPtr m = r.convertToMatrix();
-
-        CreateMatrixOp(ops, m, combinedDir);
-    }
 }
     
 }
@@ -318,34 +315,50 @@ OCIO_ADD_TEST(RangeTransform, basic)
     range->setStyle(OCIO::RANGE_NO_CLAMP);
     OCIO_CHECK_EQUAL(range->getStyle(), OCIO::RANGE_NO_CLAMP);
 
-    range->setMinInValue(-0.5f);
-    OCIO_CHECK_EQUAL(range->getMinInValue(), -0.5f);
+    range->setMinInValue(-0.5);
+    OCIO_CHECK_EQUAL(range->getMinInValue(), -0.5);
     OCIO_CHECK_ASSERT(range->hasMinInValue());
 
     OCIO::RangeTransformRcPtr range2 = OCIO::RangeTransform::Create();
     range2->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-    range2->setMinInValue(-0.5f);
+    range2->setMinInValue(-0.5);
     range2->setStyle(OCIO::RANGE_NO_CLAMP);
     OCIO_CHECK_ASSERT(range2->equals(*range));
 
     range2->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    range2->setMinInValue(-1.5);
+    range2->setMaxInValue(-0.5);
+    range2->setMinOutValue(1.5);
+    range2->setMaxOutValue(4.5);
+
+    OCIO_CHECK_EQUAL(range2->getFileInputBitDepth(), OCIO::BIT_DEPTH_UNKNOWN);
+    OCIO_CHECK_EQUAL(range2->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UNKNOWN);
+
+    range2->setFileInputBitDepth(OCIO::BIT_DEPTH_UINT8);
+    range2->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
+
+    OCIO_CHECK_EQUAL(range2->getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OCIO_CHECK_EQUAL(range2->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+
+    OCIO_CHECK_EQUAL(range2->getMinInValue(), -1.5);
+    OCIO_CHECK_EQUAL(range2->getMaxInValue(), -0.5);
+    OCIO_CHECK_EQUAL(range2->getMinOutValue(), 1.5);
+    OCIO_CHECK_EQUAL(range2->getMaxOutValue(), 4.5);
+
     range2->unsetMinInValue();
-    range2->setMaxInValue(-0.5f);
-    range2->setMinOutValue(1.5f);
-    range2->setMaxOutValue(4.5f);
 
     // (Note that the transform would not validate at this point.)
 
     OCIO_CHECK_ASSERT(!range2->hasMinInValue());
-    OCIO_CHECK_EQUAL(range2->getMaxInValue(), -0.5f);
-    OCIO_CHECK_EQUAL(range2->getMinOutValue(), 1.5f);
-    OCIO_CHECK_EQUAL(range2->getMaxOutValue(), 4.5f);
+    OCIO_CHECK_EQUAL(range2->getMaxInValue(), -0.5);
+    OCIO_CHECK_EQUAL(range2->getMinOutValue(), 1.5);
+    OCIO_CHECK_EQUAL(range2->getMaxOutValue(), 4.5);
 
     range2->setMinInValue(-1.5f);
-    OCIO_CHECK_EQUAL(range2->getMinInValue(), -1.5f);
-    OCIO_CHECK_EQUAL(range2->getMaxInValue(), -0.5f);
-    OCIO_CHECK_EQUAL(range2->getMinOutValue(), 1.5f);
-    OCIO_CHECK_EQUAL(range2->getMaxOutValue(), 4.5f);
+    OCIO_CHECK_EQUAL(range2->getMinInValue(), -1.5);
+    OCIO_CHECK_EQUAL(range2->getMaxInValue(), -0.5);
+    OCIO_CHECK_EQUAL(range2->getMinOutValue(), 1.5);
+    OCIO_CHECK_EQUAL(range2->getMaxOutValue(), 4.5);
 
     OCIO_CHECK_ASSERT(range2->hasMinInValue());
     OCIO_CHECK_ASSERT(range2->hasMaxInValue());
@@ -375,73 +388,6 @@ OCIO_ADD_TEST(RangeTransform, basic)
     OCIO_CHECK_ASSERT(!range2->hasMaxInValue());
     OCIO_CHECK_ASSERT(!range2->hasMinOutValue());
     OCIO_CHECK_ASSERT(!range2->hasMaxOutValue());
-}
-
-
-OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
-{
-    ConfigRcPtr config = Config::Create();
-    OCIO::OpRcPtrVec ops;
-
-    OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
-    OCIO_CHECK_EQUAL(range->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO_CHECK_EQUAL(range->getStyle(), OCIO::RANGE_CLAMP);
-    OCIO_CHECK_ASSERT(!range->hasMinInValue());
-    OCIO_CHECK_ASSERT(!range->hasMaxInValue());
-    OCIO_CHECK_ASSERT(!range->hasMinOutValue());
-    OCIO_CHECK_ASSERT(!range->hasMaxOutValue());
-
-    range->setMinInValue(0.0f);
-    range->setMaxInValue(0.5f);
-    range->setMinOutValue(0.5f);
-    range->setMaxOutValue(1.5f);
-
-    // Test the resulting Range Op
-
-    OCIO_CHECK_NO_THROW(
-        BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD) );
-
-    OCIO_REQUIRE_EQUAL(ops.size(), 1);
-    OCIO::ConstOpRcPtr op0 = ops[0];
-    OCIO_REQUIRE_EQUAL(op0->data()->getType(), OCIO::OpData::RangeType);
-
-    OCIO::ConstRangeOpDataRcPtr rangeData
-        = DynamicPtrCast<const OCIO::RangeOpData>(op0->data());
-
-    OCIO_CHECK_EQUAL(rangeData->getMinInValue(), range->getMinInValue());
-    OCIO_CHECK_EQUAL(rangeData->getMaxInValue(), range->getMaxInValue());
-    OCIO_CHECK_EQUAL(rangeData->getMinOutValue(), range->getMinOutValue());
-    OCIO_CHECK_EQUAL(rangeData->getMaxOutValue(), range->getMaxOutValue());
-
-    // Test the resulting Matrix Op
-
-    range->setStyle(OCIO::RANGE_NO_CLAMP);
-
-    OCIO_CHECK_NO_THROW(
-        BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD) );
-
-    OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    OCIO::ConstOpRcPtr op1 = ops[1];
-    OCIO_REQUIRE_EQUAL(op1->data()->getType(), OCIO::OpData::MatrixType);
-
-    OCIO::ConstMatrixOpDataRcPtr matrixData
-        = DynamicPtrCast<const OCIO::MatrixOpData>(op1->data());
-
-    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(0), rangeData->getOffset());
-
-    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(0), 0.5);
-    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(1), 0.5);
-    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(2), 0.5);
-    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(3), 0.0);
-
-    OCIO_CHECK_ASSERT(matrixData->isDiagonal());
-
-    OCIO_CHECK_EQUAL(matrixData->getArray()[0], rangeData->getScale());
-
-    OCIO_CHECK_EQUAL(matrixData->getArray()[ 0], 2.0);
-    OCIO_CHECK_EQUAL(matrixData->getArray()[ 5], 2.0);
-    OCIO_CHECK_EQUAL(matrixData->getArray()[10], 2.0);
-    OCIO_CHECK_EQUAL(matrixData->getArray()[15], 1.0);
 }
 
 #endif

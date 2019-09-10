@@ -65,18 +65,18 @@ OCIO_NAMESPACE_ENTER
             
             ~LocalFileFormat() {};
             
-            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
+            void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
             
-            virtual CachedFileRcPtr Read(
+            CachedFileRcPtr read(
                 std::istream & istream,
-                const std::string & fileName) const;
+                const std::string & fileName) const override;
             
-            virtual void BuildFileOps(OpRcPtrVec & ops,
+            void buildFileOps(OpRcPtrVec & ops,
                          const Config& config,
                          const ConstContextRcPtr & context,
                          CachedFileRcPtr untypedCachedFile,
                          const FileTransform& fileTransform,
-                         TransformDirection dir) const;
+                         TransformDirection dir) const override;
 
         private:
             static void ThrowErrorMessage(const std::string & error,
@@ -104,7 +104,7 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
 
-        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
+        void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
             info.name = "pandora_mga";
@@ -119,8 +119,7 @@ OCIO_NAMESPACE_ENTER
             formatInfoVec.push_back(info2);
         }
         
-        CachedFileRcPtr
-        LocalFileFormat::Read(
+        CachedFileRcPtr LocalFileFormat::read(
             std::istream & istream,
             const std::string & fileName) const
         {
@@ -141,7 +140,7 @@ OCIO_NAMESPACE_ENTER
             std::vector<int> raw3d;
             
             {
-                std::vector<std::string> parts;
+                StringVec parts;
                 std::vector<int> tmpints;
                 bool inLut3d = false;
                 int lineNumber = 0;
@@ -304,7 +303,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         void
-        LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
+        LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                                       const Config& /*config*/,
                                       const ConstContextRcPtr & /*context*/,
                                       CachedFileRcPtr untypedCachedFile,
@@ -361,7 +360,7 @@ OCIO_ADD_TEST(FileFormatPandora, FormatInfo)
 {
     OCIO::FormatInfoVec formatInfoVec;
     OCIO::LocalFileFormat tester;
-    tester.GetFormatInfo(formatInfoVec);
+    tester.getFormatInfo(formatInfoVec);
 
     OCIO_CHECK_EQUAL(2, formatInfoVec.size());
     OCIO_CHECK_EQUAL("pandora_mga", formatInfoVec[0].name);
@@ -382,7 +381,7 @@ void ReadPandora(const std::string & fileContent)
     // Read file
     OCIO::LocalFileFormat tester;
     const std::string SAMPLE_NAME("Memory File");
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(is, SAMPLE_NAME);
+    OCIO::CachedFileRcPtr cachedFile = tester.read(is, SAMPLE_NAME);
 }
 
 OCIO_ADD_TEST(FileFormatPandora, ReadFailure)
