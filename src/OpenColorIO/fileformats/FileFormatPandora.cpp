@@ -285,7 +285,7 @@ OCIO_NAMESPACE_ENTER
             // lutArray and LUT in file are blue fastest.
             for (size_t i = 0; i < raw3d.size(); ++i)
             {
-                lutArray[i] = static_cast<float>(raw3d[i]) * scale;
+                lutArray[(unsigned long)i] = static_cast<float>(raw3d[i]) * scale;
             }
 
             return cachedFile;

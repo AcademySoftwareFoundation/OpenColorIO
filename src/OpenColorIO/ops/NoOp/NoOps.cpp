@@ -515,7 +515,7 @@ void CreateGenericLutOp(OCIO::OpRcPtrVec & ops)
 {
     // Make a LUT that squares the input.
     const unsigned long size = 256;
-    Lut1DOpDataRcPtr lut = std::make_shared<OCIO::Lut1DOpData>(size);
+    OCIO::Lut1DOpDataRcPtr lut = std::make_shared<OCIO::Lut1DOpData>(size);
     auto & lutArray = lut->getArray();
 
     for(unsigned long i = 0; i < size; ++i)
@@ -529,7 +529,7 @@ void CreateGenericLutOp(OCIO::OpRcPtrVec & ops)
         }
     }
 
-    CreateLut1DOp(ops, lut, TRANSFORM_DIR_FORWARD);
+    OCIO::CreateLut1DOp(ops, lut, OCIO::TRANSFORM_DIR_FORWARD);
 }
 
 } // anon.
