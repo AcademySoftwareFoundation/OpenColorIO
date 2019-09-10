@@ -1479,8 +1479,8 @@ OCIO_ADD_TEST(FileFormatIridasLook, simple3d)
     {
         // OpData::Lut3D Array index, b changes fastest.
         const unsigned long arrayIdx =
-            GetLut3DIndex_BlueFast(r, g, b,
-                                   lutSize, lutSize, lutSize);
+            OCIO::GetLut3DIndex_BlueFast(r, g, b,
+                                         lutSize, lutSize, lutSize);
 
         OCIO_CHECK_CLOSE(cube[i * 3 + 0], lutArray[arrayIdx + 0], 1e-4);
         OCIO_CHECK_CLOSE(cube[i * 3 + 1], lutArray[arrayIdx + 1], 1e-4);
