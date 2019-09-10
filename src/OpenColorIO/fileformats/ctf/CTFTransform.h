@@ -34,8 +34,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "fileformats/FormatMetadata.h"
+#include "fileformats/xmlutils/XMLWriterUtils.h"
 #include "Op.h"
-#include "ops/Metadata.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -154,6 +155,7 @@ class CTFReaderTransform
 {
 public:
     CTFReaderTransform();
+    CTFReaderTransform(const OpRcPtrVec & ops, const FormatMetadataImpl & metadata);
 
     ~CTFReaderTransform()
     {
@@ -183,23 +185,27 @@ public:
     {
         m_inverseOfId = id;
     }
-    Metadata & getInfo()
+    FormatMetadataImpl & getInfoMetadata()
     {
-        return m_info;
+        return m_infoMetadata;
     }
-    const OpDataVec & getOps() const
+    const FormatMetadataImpl & getInfoMetadata() const
+    {
+        return m_infoMetadata;
+    }
+    const ConstOpDataVec & getOps() const
     {
         return m_ops;
     }
-    OpDataVec & getOps()
+    ConstOpDataVec & getOps()
     {
         return m_ops;
     }
-    const OpData::Descriptions & getDescriptions() const
+    const StringVec & getDescriptions() const
     {
         return m_descriptions;
     }
-    OpData::Descriptions & getDescriptions()
+    StringVec & getDescriptions()
     {
         return m_descriptions;
     }
@@ -231,15 +237,19 @@ public:
 
     void validate();
 
+    void fromMetadata(const FormatMetadataImpl & metadata);
+    void toMetadata(FormatMetadataImpl & metadata) const;
+
 private:
     std::string m_id;
     std::string m_name;
     std::string m_inverseOfId;
     std::string m_inDescriptor;
     std::string m_outDescriptor;
-    Metadata m_info;
-    OpDataVec m_ops;
-    OpData::Descriptions m_descriptions;
+    FormatMetadataImpl m_infoMetadata;
+    
+    ConstOpDataVec m_ops;
+    StringVec m_descriptions;
                 
     // CTF version used even for CLF files.
     // CLF versions <= 2.0 are interpreted as CTF version 1.7.
@@ -251,6 +261,38 @@ private:
 };
 
 typedef OCIO_SHARED_PTR<CTFReaderTransform> CTFReaderTransformPtr;
+typedef OCIO_SHARED_PTR<const CTFReaderTransform> ConstCTFReaderTransformPtr;
+
+class TransformWriter : public XmlElementWriter
+{
+public:
+    TransformWriter() = delete;
+    TransformWriter(const TransformWriter &) = delete;
+    TransformWriter& operator=(const TransformWriter &) = delete;
+
+    TransformWriter(XmlFormatter & formatter,
+                    ConstCTFReaderTransformPtr transform,
+                    bool isCLF);
+
+    virtual ~TransformWriter();
+
+    void write() const override;
+
+private:
+    void writeProcessListMetadata(const FormatMetadataImpl & m) const;
+    void writeOpMetadata(const FormatMetadataImpl & m) const;
+    void writeOps() const;
+
+private:
+    ConstCTFReaderTransformPtr m_transform;
+    bool                       m_isCLF;
+};
+
+
+// Helper function to extract the values of FormatMetadata elements with a
+// given name. Used to get Description values.
+void GetElementsValues(const FormatMetadataImpl::Elements & elements,
+                       const std::string & name, StringVec & values);
 
 }
 OCIO_NAMESPACE_EXIT

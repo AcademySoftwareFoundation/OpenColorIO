@@ -65,11 +65,12 @@ RangeOpData::RangeOpData()
 
 RangeOpData::RangeOpData(BitDepth inBitDepth,
                          BitDepth outBitDepth,
+                         const FormatMetadataImpl & info,
                          double minInValue,
                          double maxInValue,
                          double minOutValue,
                          double maxOutValue)
-    :   OpData(inBitDepth, outBitDepth)
+    :   OpData(inBitDepth, outBitDepth, info)
     ,   m_minInValue(minInValue)
     ,   m_maxInValue(maxInValue)
     ,   m_minOutValue(minOutValue)
@@ -664,7 +665,7 @@ bool RangeOpData::wouldClip(double val) const
 MatrixOpDataRcPtr RangeOpData::convertToMatrix() const
 {
     // Create an identity matrix
-    MatrixOpDataRcPtr mtx(new MatrixOpData(getInputBitDepth(), getOutputBitDepth()));
+    MatrixOpDataRcPtr mtx(new MatrixOpData(getInputBitDepth(), getOutputBitDepth(), getFormatMetadata()));
 
     const double scale = getScale();
     mtx->setArrayValue(0, scale);
@@ -726,12 +727,19 @@ RangeOpDataRcPtr RangeOpData::inverse() const
 
     RangeOpDataRcPtr invOp = std::make_shared<RangeOpData>(getOutputBitDepth(),
                                                            getInputBitDepth(),
+                                                           getFormatMetadata(),
                                                            getMinOutValue(),
                                                            getMaxOutValue(),
                                                            getMinInValue(),
                                                            getMaxInValue());
+    invOp->setFileInputBitDepth(getFileOutputBitDepth());
+    invOp->setFileOutputBitDepth(getFileInputBitDepth());
+
     invOp->validate();
 
+    // Note that any existing metadata could become stale at this point but
+    // trying to update it is also challenging since inverse() is sometimes
+    // called even during the creation of new ops.
     return invOp;
 }
 
@@ -794,6 +802,7 @@ OCIO_ADD_TEST(RangeOpData, accessors)
     const float g_error = 1e-7f;
 
     OCIO::RangeOpData range(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
+                            OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                             0.0f, 1.0f, 0.5f, 1.5f);
 
     OCIO_CHECK_EQUAL(range.getMinInValue(), 0.);
@@ -839,6 +848,7 @@ OCIO_ADD_TEST(RangeOpData, validation)
 OCIO_ADD_TEST(RangeOpData, set_bit_depth)
 {
     OCIO::RangeOpData r1(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_F16,
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                          16., 235., -0.5, 2. );
 
     OCIO::BitDepth newBitdepth = OCIO::BIT_DEPTH_UINT10;
@@ -855,7 +865,8 @@ OCIO_ADD_TEST(RangeOpData, set_bit_depth)
     OCIO_CHECK_EQUAL((float)r1.getMinOutValue(), -0.5f);
     OCIO_CHECK_EQUAL((float)r1.getMaxOutValue(), 2.f);
 
-    OCIO::RangeOpData r2(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_UINT10, 
+    OCIO::RangeOpData r2(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_UINT10,
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                          -0.5, 2.0, 0., 1023. );
 
     newBitdepth = OCIO::BIT_DEPTH_UINT10;
@@ -901,42 +912,43 @@ OCIO_ADD_TEST(RangeOpData, set_bit_depth)
 OCIO_ADD_TEST(RangeOpData, clamp_identity )
 {
     OCIO::RangeOpData r1(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_F16, 
-                         0., 255., 0., 1. );
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 255., 0., 1. );
     OCIO_CHECK_ASSERT( r1.clampsToLutDomain() );
     OCIO_CHECK_ASSERT( r1.isClampIdentity() );
     OCIO_CHECK_ASSERT( ! r1.isClampNegs() );
 
     OCIO::RangeOpData r2(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_F16,
-                         16., 300., -0.5, 2. );
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 16., 300., -0.5, 2. );
     OCIO_CHECK_ASSERT( ! r2.clampsToLutDomain() );
     OCIO_CHECK_ASSERT( ! r2.isClampIdentity() );
     OCIO_CHECK_ASSERT( ! r2.isClampNegs() );
 
     OCIO::RangeOpData r3(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_F16,
-                         -16., 300., -0.5, 2. );
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), -16., 300., -0.5, 2. );
     OCIO_CHECK_ASSERT( ! r3.clampsToLutDomain() );
     OCIO_CHECK_ASSERT( ! r3.isClampIdentity() );
     OCIO_CHECK_ASSERT( ! r3.isClampNegs() );
 
     OCIO::RangeOpData r4(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_UINT8,
-                         0., 1., 8., 255. );
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 1., 8., 255. );
     OCIO_CHECK_ASSERT( r4.clampsToLutDomain() );
     OCIO_CHECK_ASSERT( ! r4.isClampIdentity() );
     OCIO_CHECK_ASSERT( ! r4.isClampNegs() );
 
     OCIO::RangeOpData r5(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_UINT8, 
-                         0.1, 1., -8., 255. );
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0.1, 1., -8., 255. );
     OCIO_CHECK_ASSERT( r5.clampsToLutDomain() );
     OCIO_CHECK_ASSERT( ! r5.isClampIdentity() );
     OCIO_CHECK_ASSERT( ! r5.isClampNegs() );
 
     OCIO::RangeOpData r6(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_UINT8, 
-                         -0.1, 1.1, -255. * 0.1, 255. * 1.1 );
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), -0.1, 1.1, -255. * 0.1, 255. * 1.1 );
     OCIO_CHECK_ASSERT( ! r6.clampsToLutDomain() );
     OCIO_CHECK_ASSERT( r6.isClampIdentity() );
     OCIO_CHECK_ASSERT( ! r6.isClampNegs() );
 
     OCIO::RangeOpData r7(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_UINT8, 
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                          0., OCIO::RangeOpData::EmptyValue(), 
                          0., OCIO::RangeOpData::EmptyValue());
     OCIO_CHECK_ASSERT( ! r7.clampsToLutDomain() );
@@ -944,6 +956,7 @@ OCIO_ADD_TEST(RangeOpData, clamp_identity )
     OCIO_CHECK_ASSERT( r7.isClampNegs() );
 
     OCIO::RangeOpData r8(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_F32, 
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                          OCIO::RangeOpData::EmptyValue(), 1., 
                          OCIO::RangeOpData::EmptyValue(), 1. );
     OCIO_CHECK_ASSERT( ! r8.clampsToLutDomain() );
@@ -954,6 +967,7 @@ OCIO_ADD_TEST(RangeOpData, clamp_identity )
 OCIO_ADD_TEST(RangeOpData, identity)
 {
     OCIO::RangeOpData r4(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_F16,
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                          OCIO::RangeOpData::EmptyValue(), 
                          OCIO::RangeOpData::EmptyValue(), 
                          OCIO::RangeOpData::EmptyValue(), 
@@ -968,7 +982,7 @@ OCIO_ADD_TEST(RangeOpData, identity)
     OCIO_CHECK_ASSERT(r4.maxIsEmpty());
 
     OCIO::RangeOpData r5(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT10,
-                         0., 255., 0., 1023. );
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 255., 0., 1023. );
     OCIO_CHECK_ASSERT(!r5.wouldClip(0.));
     OCIO_CHECK_ASSERT(!r5.wouldClip(255.));
     OCIO_CHECK_ASSERT(!r5.scales(true));
@@ -982,7 +996,7 @@ OCIO_ADD_TEST(RangeOpData, identity)
     OCIO_CHECK_ASSERT(!r5.maxIsEmpty());
 
     OCIO::RangeOpData r6(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
-                         0., 255., -1., 65540. );
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 255., -1., 65540. );
     OCIO_CHECK_ASSERT(!r6.isIdentity());
     OCIO_CHECK_ASSERT(!r6.isNoOp());
     OCIO_CHECK_ASSERT(!r6.hasChannelCrosstalk());
@@ -996,35 +1010,37 @@ OCIO_ADD_TEST(RangeOpData, identity)
 OCIO_ADD_TEST(RangeOpData, equality)
 {
     OCIO::RangeOpData r1(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
-                         0., 255., -1., 65540. );
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 255., -1., 65540. );
 
     OCIO::RangeOpData r2(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
-                         0.123, 255., -1., 65540. );
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0.123, 255., -1., 65540. );
 
     OCIO_CHECK_ASSERT(!(r1 == r2));
 
     OCIO::RangeOpData r3(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
-                         0., 252., -1., 65540. );
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 252., -1., 65540. );
 
     OCIO_CHECK_ASSERT(!(r1 == r3));
 
     OCIO::RangeOpData r4(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
-                         0., 255., -12., 65540. );
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 255., -12., 65540. );
 
     OCIO_CHECK_ASSERT(!(r1 == r4));
 
     OCIO::RangeOpData r5(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
-                         0., 255., -1., 65540. );
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 255., -1., 65540. );
 
     OCIO_CHECK_ASSERT(r5 == r1);
 
     OCIO::RangeOpData r6(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_F16,
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                          OCIO::RangeOpData::EmptyValue(),
                          OCIO::RangeOpData::EmptyValue(),
                          OCIO::RangeOpData::EmptyValue(),
                          OCIO::RangeOpData::EmptyValue() );
 
     OCIO::RangeOpData r7(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_F16,
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                          OCIO::RangeOpData::EmptyValue(),
                          OCIO::RangeOpData::EmptyValue(), 
                          OCIO::RangeOpData::EmptyValue(),
@@ -1037,7 +1053,7 @@ OCIO_ADD_TEST(RangeOpData, faulty)
 {
     {
         OCIO::RangeOpData range(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                                0.0f, 1.0f, 0.5f, 1.5f);
+                                OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0.0f, 1.0f, 0.5f, 1.5f);
         OCIO_CHECK_NO_THROW(range.validate());
 
         OCIO_CHECK_NO_THROW(range.unsetMinInValue()); 
@@ -1048,7 +1064,7 @@ OCIO_ADD_TEST(RangeOpData, faulty)
 
     {
         OCIO::RangeOpData range(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                                0.0f, 1.0f, 0.5f, 1.5f);
+                                OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0.0f, 1.0f, 0.5f, 1.5f);
         OCIO_CHECK_NO_THROW(range.validate());
 
         OCIO_CHECK_NO_THROW(range.unsetMinInValue()); 
@@ -1058,7 +1074,7 @@ OCIO_ADD_TEST(RangeOpData, faulty)
 
     {
         OCIO::RangeOpData range(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                                0.0f, 1.0f, 0.5f, 1.5f);
+                                OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0.0f, 1.0f, 0.5f, 1.5f);
         OCIO_CHECK_NO_THROW(range.validate());
 
         OCIO_CHECK_NO_THROW(range.unsetMaxInValue()); 
@@ -1069,7 +1085,7 @@ OCIO_ADD_TEST(RangeOpData, faulty)
 
     {
         OCIO::RangeOpData range(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                                0.0f, 1.0f, 0.5f, 1.5f);
+                                OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0.0f, 1.0f, 0.5f, 1.5f);
         OCIO_CHECK_NO_THROW(range.validate());
 
         OCIO_CHECK_NO_THROW(range.unsetMaxInValue()); 
@@ -1079,7 +1095,7 @@ OCIO_ADD_TEST(RangeOpData, faulty)
 
     {
         OCIO::RangeOpData range(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                                0.0f, 1.0f, 0.5f, 1.5f);
+                                OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0.0f, 1.0f, 0.5f, 1.5f);
         OCIO_CHECK_NO_THROW(range.validate());
 
         OCIO_CHECK_NO_THROW(range.setMaxInValue(-125.)); 
@@ -1090,7 +1106,7 @@ OCIO_ADD_TEST(RangeOpData, faulty)
 
     {
         OCIO::RangeOpData range(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                                0.0f, 1.0f, 0.5f, 1.5f);
+                                OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0.0f, 1.0f, 0.5f, 1.5f);
         OCIO_CHECK_NO_THROW(range.validate());
 
         OCIO_CHECK_NO_THROW(range.setMaxOutValue(-125.)); 
@@ -1109,7 +1125,7 @@ namespace
                       double revMinIn, double revMaxIn,
                       double revMinOut, double revMaxOut)
     {
-        OCIO::RangeOpData refOp( in, out, fwdMinIn, fwdMaxIn, fwdMinOut, fwdMaxOut);
+        OCIO::RangeOpData refOp( in, out, OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), fwdMinIn, fwdMaxIn, fwdMinOut, fwdMaxOut);
 
         OCIO::RangeOpDataRcPtr invOp = refOp.inverse();
 
@@ -1184,7 +1200,7 @@ OCIO_ADD_TEST(RangeOpData, computed_identifier)
     std::string id1, id2;
 
     OCIO::RangeOpData range(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                            0.0f, 1.0f, 0.5f, 1.5f);
+                            OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0.0f, 1.0f, 0.5f, 1.5f);
     OCIO_CHECK_NO_THROW( range.finalize() );
     OCIO_CHECK_NO_THROW( id1 = range.getCacheID() );
 

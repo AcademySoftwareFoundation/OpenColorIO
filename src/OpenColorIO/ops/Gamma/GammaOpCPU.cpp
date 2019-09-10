@@ -140,8 +140,8 @@ ConstOpCPURcPtr GetGammaRenderer(ConstGammaOpDataRcPtr & gamma)
 
 GammaBasicOpCPU::GammaBasicOpCPU(ConstGammaOpDataRcPtr & gamma)
     :   OpCPU()
-    ,   m_inScale(0.0f)
-    ,   m_outScale(0.0f)
+    ,   m_inScale(1.0f)
+    ,   m_outScale(1.0f)
     ,   m_redGamma(0.0f)
     ,   m_grnGamma(0.0f)
     ,   m_bluGamma(0.0f)
@@ -248,7 +248,7 @@ void GammaMoncurveOpCPUFwd::update(ConstGammaOpDataRcPtr & gamma)
     ComputeParamsFwd(gamma->getBlueParams(),  inBitDepth, outBitDepth, m_blue);
     ComputeParamsFwd(gamma->getAlphaParams(), inBitDepth, outBitDepth, m_alpha);
 
-    m_outScale = GetBitDepthMaxValue(outBitDepth);
+    m_outScale = (float)GetBitDepthMaxValue(outBitDepth);
 }
 
 void GammaMoncurveOpCPUFwd::apply(const void * inImg, void * outImg, long numPixels) const
@@ -335,7 +335,7 @@ void GammaMoncurveOpCPUFwd::apply(const void * inImg, void * outImg, long numPix
 
 GammaMoncurveOpCPURev::GammaMoncurveOpCPURev(ConstGammaOpDataRcPtr & gamma)
     :   GammaMoncurveOpCPU(gamma)
-    ,   m_inScale(0.0f)
+    ,   m_inScale(1.0f)
 {
     update(gamma);
 }
