@@ -1474,17 +1474,17 @@ OCIO_NAMESPACE_ENTER
         static RangeTransformRcPtr Create();
 
         //!cpp:function:: Creates a copy of this.
-        virtual TransformRcPtr createEditableCopy() const;
+        virtual TransformRcPtr createEditableCopy() const = 0;
         
         //!cpp:function::
-        virtual TransformDirection getDirection() const;
+        virtual TransformDirection getDirection() const = 0;
         //!cpp:function:: Set the direction the Range should be evaluated in.
         // Note that this only affects the evaluation and not the values stored
         // in the object.
-        virtual void setDirection(TransformDirection dir);
+        virtual void setDirection(TransformDirection dir) = 0;
 
         //!cpp:function::
-        virtual RangeStyle getStyle() const;
+        virtual RangeStyle getStyle() const = 0;
         //!cpp:function:: Set the Range style to clamp or not input values.
         virtual void setStyle(RangeStyle style) = 0;
 
@@ -1492,9 +1492,9 @@ OCIO_NAMESPACE_ENTER
         virtual void validate() const = 0;
 
         //!cpp:function::
-        const FormatMetadata & getFormatMetadata() const;
+        virtual const FormatMetadata & getFormatMetadata() const = 0;
         //!cpp:function::
-        FormatMetadata & getFormatMetadata();
+        virtual FormatMetadata & getFormatMetadata() = 0;
 
         //!cpp:function:: Checks if this equals other.
         virtual bool equals(const RangeTransform & other) const = 0;
@@ -1512,13 +1512,13 @@ OCIO_NAMESPACE_ENTER
         // scaling is done on the way from or to file formats such as CLF.
 
         //!cpp:function::
-        BitDepth getFileInputBitDepth() const;
+        virtual BitDepth getFileInputBitDepth() const = 0;
         //!cpp:function::
-        void setFileInputBitDepth(BitDepth bitDepth);
+        virtual void setFileInputBitDepth(BitDepth bitDepth) = 0;
         //!cpp:function::
-        BitDepth getFileOutputBitDepth() const;
+        virtual BitDepth getFileOutputBitDepth() const = 0;
         //!cpp:function::
-        void setFileOutputBitDepth(BitDepth bitDepth);
+        virtual void setFileOutputBitDepth(BitDepth bitDepth) = 0;
 
         //!rst:: **Range values**
         //

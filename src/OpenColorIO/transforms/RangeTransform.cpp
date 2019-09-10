@@ -51,6 +51,14 @@ public:
     TransformDirection getDirection() const override;
     void setDirection(TransformDirection dir) override;
 
+    FormatMetadata & getFormatMetadata() override;
+    const FormatMetadata & getFormatMetadata() const override;
+
+    BitDepth getFileInputBitDepth() const override;
+    BitDepth getFileOutputBitDepth() const override;
+    void setFileInputBitDepth(BitDepth bitDepth) override;
+    void setFileOutputBitDepth(BitDepth bitDepth) override;
+
     RangeStyle getStyle() const override;
     void setStyle(RangeStyle style) override;
 
@@ -147,31 +155,31 @@ void RangeTransformImpl::validate() const
     }
 }
 
-BitDepth RangeTransformImpl::getFileInputBitDepth() const
-{
-    return getImpl()->getFileInputBitDepth();
-}
-BitDepth RangeTransformImpl::getFileOutputBitDepth() const
-{
-    return getImpl()->getFileOutputBitDepth();
-}
-void RangeTransformImpl::setFileInputBitDepth(BitDepth bitDepth)
-{
-    getImpl()->setFileInputBitDepth(bitDepth);
-}
-void RangeTransformImpl::setFileOutputBitDepth(BitDepth bitDepth)
-{
-    getImpl()->setFileOutputBitDepth(bitDepth);
-}
-
 FormatMetadata & RangeTransformImpl::getFormatMetadata()
 {
-    return m_impl->getFormatMetadata();
+	return data().getFormatMetadata();
 }
 
 const FormatMetadata & RangeTransformImpl::getFormatMetadata() const
 {
-    return m_impl->getFormatMetadata();
+	return data().getFormatMetadata();
+}
+
+BitDepth RangeTransformImpl::getFileInputBitDepth() const
+{
+    return data().getFileInputBitDepth();
+}
+BitDepth RangeTransformImpl::getFileOutputBitDepth() const
+{
+    return data().getFileOutputBitDepth();
+}
+void RangeTransformImpl::setFileInputBitDepth(BitDepth bitDepth)
+{
+    data().setFileInputBitDepth(bitDepth);
+}
+void RangeTransformImpl::setFileOutputBitDepth(BitDepth bitDepth)
+{
+    data().setFileOutputBitDepth(bitDepth);
 }
 
 bool RangeTransformImpl::equals(const RangeTransform & other) const
@@ -282,33 +290,6 @@ std::ostream& operator<< (std::ostream & os, const RangeTransform & t)
 
 
 
-///////////////////////////////////////////////////////////////////////////
-
-void BuildRangeOps(OpRcPtrVec & ops,
-                   const Config & /*config*/,
-                   const RangeTransform & transform,
-                   TransformDirection dir)
-{
-    const TransformDirection combinedDir
-        = CombineTransformDirections(dir, transform.getDirection());
-
-    const RangeOpData & data
-        = dynamic_cast<const RangeTransformImpl*>(&transform)->data();
-
-    data.validate();
-
-    if(transform.getStyle()==RANGE_CLAMP)
-    {
-        auto d = data.clone();
-        CreateRangeOp(ops, d, combinedDir);
-    }
-    else
-    {
-        MatrixOpDataRcPtr m = data.convertToMatrix();
-        CreateMatrixOp(ops, m, combinedDir);
-    }
-}
-
 }
 OCIO_NAMESPACE_EXIT
 
@@ -411,72 +392,6 @@ OCIO_ADD_TEST(RangeTransform, basic)
     OCIO_CHECK_ASSERT(!range2->hasMaxInValue());
     OCIO_CHECK_ASSERT(!range2->hasMinOutValue());
     OCIO_CHECK_ASSERT(!range2->hasMaxOutValue());
-}
-
-OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
-{
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    OCIO::OpRcPtrVec ops;
-
-    OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
-    OCIO_CHECK_EQUAL(range->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO_CHECK_EQUAL(range->getStyle(), OCIO::RANGE_CLAMP);
-    OCIO_CHECK_ASSERT(!range->hasMinInValue());
-    OCIO_CHECK_ASSERT(!range->hasMaxInValue());
-    OCIO_CHECK_ASSERT(!range->hasMinOutValue());
-    OCIO_CHECK_ASSERT(!range->hasMaxOutValue());
-
-    range->setMinInValue(0.0);
-    range->setMaxInValue(0.5);
-    range->setMinOutValue(0.5);
-    range->setMaxOutValue(1.5);
-
-    // Test the resulting Range Op
-
-    OCIO_CHECK_NO_THROW(
-        OCIO::BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD) );
-
-    OCIO_REQUIRE_EQUAL(ops.size(), 1);
-    OCIO::ConstOpRcPtr op0 = ops[0];
-    OCIO_REQUIRE_EQUAL(op0->data()->getType(), OCIO::OpData::RangeType);
-
-    OCIO::ConstRangeOpDataRcPtr rangeData
-        = OCIO::DynamicPtrCast<const OCIO::RangeOpData>(op0->data());
-
-    OCIO_CHECK_EQUAL(rangeData->getMinInValue(), range->getMinInValue());
-    OCIO_CHECK_EQUAL(rangeData->getMaxInValue(), range->getMaxInValue());
-    OCIO_CHECK_EQUAL(rangeData->getMinOutValue(), range->getMinOutValue());
-    OCIO_CHECK_EQUAL(rangeData->getMaxOutValue(), range->getMaxOutValue());
-
-    // Test the resulting Matrix Op
-
-    range->setStyle(OCIO::RANGE_NO_CLAMP);
-
-    OCIO_CHECK_NO_THROW(
-        OCIO::BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD) );
-
-    OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    OCIO::ConstOpRcPtr op1 = ops[1];
-    OCIO_REQUIRE_EQUAL(op1->data()->getType(), OCIO::OpData::MatrixType);
-
-    OCIO::ConstMatrixOpDataRcPtr matrixData
-        = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(op1->data());
-
-    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(0), rangeData->getOffset());
-
-    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(0), 0.5);
-    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(1), 0.5);
-    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(2), 0.5);
-    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(3), 0.0);
-
-    OCIO_CHECK_ASSERT(matrixData->isDiagonal());
-
-    OCIO_CHECK_EQUAL(matrixData->getArray()[0], rangeData->getScale());
-
-    OCIO_CHECK_EQUAL(matrixData->getArray()[ 0], 2.0);
-    OCIO_CHECK_EQUAL(matrixData->getArray()[ 5], 2.0);
-    OCIO_CHECK_EQUAL(matrixData->getArray()[10], 2.0);
-    OCIO_CHECK_EQUAL(matrixData->getArray()[15], 1.0);
 }
 
 #endif
