@@ -39,8 +39,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace OCIO = OCIO_NAMESPACE;
 
-OCIO_NAMESPACE_USING
-
 
 // TODO: Add ctf file unit tests when the CLF reader is in.
 
@@ -55,13 +53,13 @@ const float power[3]  = { 0.93f,  0.81f, 1.27f };
 // Use the legacy shader description with the CDL from OCIO v1 implementation
 OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1_legacy_shader)
 {
-    CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
+    OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
     cdl->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
     cdl->setSlope(CDL_Data_1::slope);
     cdl->setOffset(CDL_Data_1::offset);
     cdl->setPower(CDL_Data_1::power);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(32);
 
     test.setContext(cdl, shaderDesc);
@@ -77,7 +75,7 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1_legacy_shader)
 // Use the generic shader description with the CDL from OCIO v1 implementation
 OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1)
 {
-    CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
+    OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
     cdl->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
     cdl->setSlope(CDL_Data_1::slope);
     cdl->setOffset(CDL_Data_1::offset);
@@ -97,7 +95,7 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1)
 // (i.e. use the CDL Op (with the fwd clamp style) and a forward direction)
 OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v2)
 {
-    CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
+    OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
     cdl->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
     cdl->setSlope(CDL_Data_1::slope);
     cdl->setOffset(CDL_Data_1::offset);
@@ -119,7 +117,7 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v2)
 // (i.e. use the CDL Op (with the fwd clamp style) and an inverse direction)
 OCIO_ADD_GPU_TEST(CDLOp, clamp_inv_v2)
 {
-    CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
+    OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
     cdl->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
     cdl->setSlope(CDL_Data_1::slope);
     cdl->setOffset(CDL_Data_1::offset);
@@ -149,7 +147,7 @@ const float power[3]  = { 1.20f, 0.95f, 1.13f };
 // (i.e. use the CDL Op (with the fwd clamp style) and a forward direction)
 OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v2_Data_2)
 {
-    CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
+    OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
     cdl->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
     cdl->setSlope(CDL_Data_2::slope);
     cdl->setOffset(CDL_Data_2::offset);
@@ -180,7 +178,7 @@ const float power[3]  = {  1.095f,  1.095f,  1.095f };
 // (i.e. use the CDL Op (with the fwd clamp style) and a forward direction)
 OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v2_Data_3)
 {
-    CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
+    OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
     cdl->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
     cdl->setSlope(CDL_Data_3::slope);
     cdl->setOffset(CDL_Data_3::offset);
@@ -197,4 +195,3 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v2_Data_3)
     test.setRelativeComparison(false);
     test.setErrorThreshold(1e-5f);
 }
-
