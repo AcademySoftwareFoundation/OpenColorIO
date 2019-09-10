@@ -250,16 +250,20 @@ OCIO_NAMESPACE_ENTER
 
             if(!IsVecEqualToOne(combined, 4))
             {
-                ops.push_back(std::make_shared<ExponentOp>(combined) );
+                auto combinedOp = std::make_shared<ExponentOp>(combined);
+
+                // Combine metadata.
+                // TODO: May want to revisit how the metadata is set.
+                FormatMetadataImpl newDesc = expData()->getFormatMetadata();
+                newDesc.combine(typedRcPtr->expData()->getFormatMetadata());
+                combinedOp->expData()->getFormatMetadata() = newDesc;
+
+                ops.push_back(combinedOp);
             }
         }
 
         void ExponentOp::finalize(FinalizationFlags /*fFlags*/)
         {
-            // Only 32f processing is natively supported.
-            expData()->setInputBitDepth(BIT_DEPTH_F32);
-            expData()->setOutputBitDepth(BIT_DEPTH_F32);
-
             expData()->finalize();
 
             // Create the cacheID
@@ -315,35 +319,53 @@ OCIO_NAMESPACE_ENTER
                           ExponentOpDataRcPtr & expData,
                           TransformDirection direction)
     {
-        if (!IsVecEqualToOne(expData->m_exp4, 4))
+        if (direction == TRANSFORM_DIR_UNKNOWN)
         {
-            if (direction == TRANSFORM_DIR_UNKNOWN)
+            throw Exception("Cannot create ExponentOp with unspecified transform direction.");
+        }
+        else if (direction == TRANSFORM_DIR_INVERSE)
+        {
+            double values[4];
+            for (int i = 0; i<4; ++i)
             {
-                throw Exception("Cannot create ExponentOp with unspecified transform direction.");
-            }
-            else if (direction == TRANSFORM_DIR_INVERSE)
-            {
-                double values[4];
-                for (int i = 0; i<4; ++i)
+                if (!IsScalarEqualToZero(expData->m_exp4[i]))
                 {
-                    if (!IsScalarEqualToZero(expData->m_exp4[i]))
-                    {
-                        values[i] = 1.0 / expData->m_exp4[i];
-                    }
-                    else
-                    {
-                        throw Exception("Cannot apply ExponentOp op, Cannot apply 0.0 exponent in the inverse.");
-                    }
+                    values[i] = 1.0 / expData->m_exp4[i];
                 }
-                ExponentOpDataRcPtr expInv = std::make_shared<ExponentOpData>(values);
-                ops.push_back(std::make_shared<ExponentOp>(expInv));
+                else
+                {
+                    throw Exception("Cannot apply ExponentOp op, Cannot apply 0.0 exponent in the inverse.");
+                }
             }
-            else
-            {
-                ops.push_back(std::make_shared<ExponentOp>(expData));
-            }
+            ExponentOpDataRcPtr expInv = std::make_shared<ExponentOpData>(values);
+            ops.push_back(std::make_shared<ExponentOp>(expInv));
+        }
+        else
+        {
+            ops.push_back(std::make_shared<ExponentOp>(expData));
         }
     }
+
+    void CreateExponentTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
+    {
+        auto exp = DynamicPtrCast<const ExponentOp>(op);
+        if (!exp)
+        {
+            throw Exception("CreateExponentTransform: op has to be a ExponentOp");
+        }
+        auto expTransform = ExponentTransform::Create();
+
+        auto expData = DynamicPtrCast<const ExponentOpData>(op->data());
+        auto & formatMetadata = expTransform->getFormatMetadata();
+        auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
+        metadata = expData->getFormatMetadata();
+
+        expTransform->setValue(expData->m_exp4);
+
+        group->push_back(expTransform);
+    }
+
+
 }
 OCIO_NAMESPACE_EXIT
 
@@ -472,10 +494,20 @@ OCIO_ADD_TEST(ExponentOps, Combining)
     {
     const double exp1[4] = { 2.0, 2.0, 2.0, 1.0 };
     const double exp2[4] = { 1.2, 1.2, 1.2, 1.0 };
+    
+    auto expData1 = std::make_shared<OCIO::ExponentOpData>(exp1);
+    auto expData2 = std::make_shared<OCIO::ExponentOpData>(exp2);
+    expData1->setName("Exp1");
+    expData1->setID("ID1");
+    expData1->getFormatMetadata().addChildElement(METADATA_DESCRIPTION, "First exponent");
+    expData2->setName("Exp2");
+    expData2->setID("ID2");
+    expData2->getFormatMetadata().addChildElement(METADATA_DESCRIPTION, "Second exponent");
+    expData2->getFormatMetadata().addAttribute("Attrib", "value");
 
     OCIO::OpRcPtrVec ops;
-    OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_FORWARD));
-    OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, exp2, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(CreateExponentOp(ops, expData1, TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(CreateExponentOp(ops, expData2, TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
     OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
@@ -484,8 +516,8 @@ OCIO_ADD_TEST(ExponentOps, Combining)
 
     const float source[] = {  0.9f, 0.4f, 0.1f, 0.5f, };
     const float result[] = { 0.776572466f, 0.110903174f,
-        0.00398107106f, 0.5f };
-
+                             0.00398107106f, 0.5f };
+    
     float tmp[4];
     memcpy(tmp, source, 4*sizeof(float));
     ops[0]->apply(tmp, tmp, 1);
@@ -500,7 +532,25 @@ OCIO_ADD_TEST(ExponentOps, Combining)
     OCIO_CHECK_NO_THROW(ops[0]->combineWith(combined, op1));
     OCIO_CHECK_EQUAL(combined.size(), 1);
 
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(combined, OCIO::FINALIZATION_EXACT));
+    auto combinedData = OCIO_DYNAMIC_POINTER_CAST<const Op>(combined[0])->data();
+    
+    // Check metadata of combined op.
+    OCIO_CHECK_EQUAL(combinedData->getName(), "Exp1 + Exp2");
+    OCIO_CHECK_EQUAL(combinedData->getID(), "ID1 + ID2");
+    OCIO_REQUIRE_EQUAL(combinedData->getFormatMetadata().getNumChildrenElements(), 2);
+    const auto & child0 = combinedData->getFormatMetadata().getChildElement(0);
+    OCIO_CHECK_EQUAL(std::string(child0.getName()), METADATA_DESCRIPTION);
+    OCIO_CHECK_EQUAL(std::string(child0.getValue()), "First exponent");
+    const auto & child1 = combinedData->getFormatMetadata().getChildElement(1);
+    OCIO_CHECK_EQUAL(std::string(child1.getName()), METADATA_DESCRIPTION);
+    OCIO_CHECK_EQUAL(std::string(child1.getValue()), "Second exponent");
+    // 3 attributes: name, id and Attrib.
+    OCIO_CHECK_EQUAL(combinedData->getFormatMetadata().getNumAttributes(), 3);
+    auto & attribs = combinedData->getFormatMetadata().getAttributes();
+    OCIO_CHECK_EQUAL(attribs[2].first, "Attrib");
+    OCIO_CHECK_EQUAL(attribs[2].second, "value");
+
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(combined, FINALIZATION_EXACT));
 
     float tmp2[4];
     memcpy(tmp2, source, 4*sizeof(float));
@@ -610,12 +660,18 @@ OCIO_ADD_TEST(ExponentOps, NoOp)
 {
     const double exp1[4] = { 1.0, 1.0, 1.0, 1.0 };
 
-    // CreateExponentOp will not create a NoOp
+    // CreateExponentOp will create a NoOp
     OCIO::OpRcPtrVec ops;
     OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_INVERSE));
 
-    OCIO_CHECK_EQUAL(ops.empty(), true);
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_CHECK_ASSERT(ops[0]->isNoOp());
+    OCIO_CHECK_ASSERT(ops[1]->isNoOp());
+
+    // Optimize it.
+    OCIO_CHECK_NO_THROW(OptimizeOpVec(ops, OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_EQUAL(ops.size(), 0);
 }
 
 OCIO_ADD_TEST(ExponentOps, CacheID)
@@ -638,6 +694,29 @@ OCIO_ADD_TEST(ExponentOps, CacheID)
 
     OCIO_CHECK_EQUAL(opCacheID0, opCacheID2);
     OCIO_CHECK_NE(opCacheID0, opCacheID1);
+}
+
+OCIO_ADD_TEST(ExponentOps, create_transform)
+{
+    const double exp[4] = { 2.0, 2.1, 3.0, 3.1 };
+    ExponentOp * expOp = new ExponentOp(exp);
+
+    GroupTransformRcPtr group = GroupTransform::Create();
+    ConstOpRcPtr op(expOp);
+    CreateExponentTransform(group, op);
+    OCIO_REQUIRE_EQUAL(group->size(), 1);
+    auto transform = group->getTransform(0);
+    OCIO_REQUIRE_ASSERT(transform);
+    auto expTransform = OCIO_DYNAMIC_POINTER_CAST<ExponentTransform>(transform);
+    OCIO_REQUIRE_ASSERT(expTransform);
+
+    OCIO_CHECK_EQUAL(expTransform->getDirection(), TRANSFORM_DIR_FORWARD);
+    double expVal[4];
+    expTransform->getValue(expVal);
+    OCIO_CHECK_EQUAL(expVal[0], exp[0]);
+    OCIO_CHECK_EQUAL(expVal[1], exp[1]);
+    OCIO_CHECK_EQUAL(expVal[2], exp[2]);
+    OCIO_CHECK_EQUAL(expVal[3], exp[3]);
 }
 
 

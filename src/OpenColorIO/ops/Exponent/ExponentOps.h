@@ -72,6 +72,10 @@ OCIO_NAMESPACE_ENTER
     void CreateExponentOp(OpRcPtrVec & ops,
                           ExponentOpDataRcPtr & expData,
                           TransformDirection direction);
+
+    // Create a copy of the exponent transform in the op and append it to the GroupTransform.
+    void CreateExponentTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op);
+
 }
 OCIO_NAMESPACE_EXIT
 

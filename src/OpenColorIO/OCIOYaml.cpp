@@ -272,16 +272,16 @@ OCIO_NAMESPACE_ENTER
 #endif
         }
         
-        inline void load(const YAML::Node& node, std::vector<std::string>& x)
+        inline void load(const YAML::Node & node, StringVec & x)
         {
 #ifdef OLDYAML
             node >> x;
 #else
-            x = node.as<std::vector<std::string> >();
+            x = node.as<StringVec>();
 #endif
         }
         
-        inline void load(const YAML::Node& node, std::vector<float>& x)
+        inline void load(const YAML::Node & node, std::vector<float> & x)
         {
 #ifdef OLDYAML
             node >> x;
@@ -565,7 +565,7 @@ OCIO_NAMESPACE_ENTER
             t = CDLTransform::Create();
             
             std::string key;
-            std::vector<float> floatvecval;
+            std::vector<double> floatvecval;
             
             for (Iterator iter = node.begin();
                  iter != node.end();
@@ -616,7 +616,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 else if(key == "saturation" || key == "sat")
                 {
-                    float val = 0.0f;
+                    double val = 0.0f;
                     load(second, val);
                     t->setSat(val);
                 }
@@ -638,7 +638,7 @@ OCIO_NAMESPACE_ENTER
             out << YAML::VerbatimTag("CDLTransform");
             out << YAML::Flow << YAML::BeginMap;
             
-            std::vector<float> slope(3);
+            std::vector<double> slope(3);
             t->getSlope(&slope[0]);
             if(!IsVecEqualToOne(&slope[0], 3))
             {
@@ -646,7 +646,7 @@ OCIO_NAMESPACE_ENTER
                 out << YAML::Value << YAML::Flow << slope;
             }
             
-            std::vector<float> offset(3);
+            std::vector<double> offset(3);
             t->getOffset(&offset[0]);
             if(!IsVecEqualToZero(&offset[0], 3))
             {
@@ -654,7 +654,7 @@ OCIO_NAMESPACE_ENTER
                 out << YAML::Value << YAML::Flow << offset;
             }
             
-            std::vector<float> power(3);
+            std::vector<double> power(3);
             t->getPower(&power[0]);
             if(!IsVecEqualToOne(&power[0], 3))
             {
@@ -1656,7 +1656,7 @@ OCIO_NAMESPACE_ENTER
                 
                 if (second.Type() == YAML::NodeType::Null) continue;
                 
-                double val = 0.0f;
+                double val = 0.0;
 
                 // TODO: parsing could be more strict (same applies for other transforms)
                 // Could enforce that second is 1 float only and that keys
@@ -1945,7 +1945,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 else if(key == "categories")
                 {
-                    std::vector<std::string> categories;
+                    StringVec categories;
                     load(second, categories);
                     for(auto name : categories)
                     {
@@ -2003,7 +2003,7 @@ OCIO_NAMESPACE_ENTER
 
             if(cs->getNumCategories() > 0)
             {
-                std::vector<std::string> categories;
+                StringVec categories;
                 for(int idx=0; idx<cs->getNumCategories(); ++idx)
                 {
                     categories.push_back(cs->getCategory(idx));
@@ -2253,7 +2253,7 @@ OCIO_NAMESPACE_ENTER
                     }
                     else
                     {
-                        std::vector<std::string> paths;
+                        StringVec paths;
                         load(second, paths);
                         for (auto & path : paths)
                         {
@@ -2328,14 +2328,14 @@ OCIO_NAMESPACE_ENTER
                 }
                 else if(key == "active_displays")
                 {
-                    std::vector<std::string> display;
+                    StringVec display;
                     load(second, display);
                     std::string displays = JoinStringEnvStyle(display);
                     c->setActiveDisplays(displays.c_str());
                 }
                 else if(key == "active_views")
                 {
-                    std::vector<std::string> view;
+                    StringVec view;
                     load(second, view);
                     std::string views = JoinStringEnvStyle(view);
                     c->setActiveViews(views.c_str());
@@ -2474,7 +2474,7 @@ OCIO_NAMESPACE_ENTER
             }
             else
             {
-                std::vector<std::string> searchPaths;
+                StringVec searchPaths;
                 const int numSP = c->getNumSearchPaths();
                 for (int i = 0; i < c->getNumSearchPaths(); ++i)
                 {
@@ -2567,12 +2567,12 @@ OCIO_NAMESPACE_ENTER
 #endif
             out << YAML::Newline;
             out << YAML::Key << "active_displays";
-            std::vector<std::string> active_displays;
+            StringVec active_displays;
             if(c->getActiveDisplays() != NULL && strlen(c->getActiveDisplays()) > 0)
                 SplitStringEnvStyle(active_displays, c->getActiveDisplays());
             out << YAML::Value << YAML::Flow << active_displays;
             out << YAML::Key << "active_views";
-            std::vector<std::string> active_views;
+            StringVec active_views;
             if(c->getActiveViews() != NULL && strlen(c->getActiveViews()) > 0)
                 SplitStringEnvStyle(active_views, c->getActiveViews());
             out << YAML::Value << YAML::Flow << active_views;

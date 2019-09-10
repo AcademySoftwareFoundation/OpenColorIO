@@ -77,6 +77,7 @@ public:
 
     RangeOpData(BitDepth inBitDepth,  // Requested bit depth for the input
                 BitDepth outBitDepth, // Requested bit depth for the output
+                const FormatMetadataImpl & info,
                 double minInValue,    // Lower bound of the domain
                 double maxInValue,    // Upper bound of the domain
                 double minOutValue,   // Lower bound of the range
@@ -210,6 +211,12 @@ public:
 
     virtual void finalize() override;
 
+    inline BitDepth getFileInputBitDepth() const { return m_fileInBitDepth; }
+    inline void setFileInputBitDepth(BitDepth in) { m_fileInBitDepth = in; }
+
+    inline BitDepth getFileOutputBitDepth() const { return m_fileOutBitDepth; }
+    inline void setFileOutputBitDepth(BitDepth out) { m_fileOutBitDepth = out; }
+
 private:
     void fillScaleOffset() const;
     double clipOverride(bool isLower) const;
@@ -225,6 +232,10 @@ private:
     mutable double m_lowBound;      // Lower clip point calculated from the limits
     mutable double m_highBound;     // Upper clip point calculated from the limits
     mutable double m_alphaScale;    // Bit-depth scaling for the alpha channel
+
+    BitDepth m_fileInBitDepth  = BIT_DEPTH_UNKNOWN; // In bit-depth to be used for file I/O
+    BitDepth m_fileOutBitDepth = BIT_DEPTH_UNKNOWN; // Out bit-depth to be used for file I/O
+
 };
 
 }

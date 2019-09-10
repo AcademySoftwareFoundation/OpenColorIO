@@ -76,7 +76,7 @@ public:
     ArrayT(const ArrayT&) = default;
     ArrayT& operator= (const ArrayT&) = default;
 
-    void resize(unsigned long length, unsigned long numColorComponents)
+    virtual void resize(unsigned long length, unsigned long numColorComponents)
     {
         m_length = length;
         m_numColorComponents = numColorComponents;

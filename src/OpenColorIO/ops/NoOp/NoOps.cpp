@@ -507,7 +507,7 @@ void CreateGenericAllocationOp(OCIO::OpRcPtrVec & ops)
 
 void CreateGenericScaleOp(OCIO::OpRcPtrVec & ops)
 {
-    const float scale4[4] = { 1.04f, 1.05f, 1.06f, 1.0f };
+    const double scale4[4] = { 1.04, 1.05, 1.06, 1.0 };
     OCIO::CreateScaleOp(ops, scale4, OCIO::TRANSFORM_DIR_FORWARD);
 }
 

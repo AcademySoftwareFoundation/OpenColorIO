@@ -110,8 +110,6 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v2)
 
     test.setTestWideRange(true);
     test.setRelativeComparison(false);
-    // TODO: How to explain the threshold difference compare to the previous test
-    //       (i.e. CDL v1 versus v2)
     test.setErrorThreshold(1e-5f);
 }
 
@@ -134,7 +132,7 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_inv_v2)
 
     test.setTestWideRange(true);
     test.setRelativeComparison(false);
-    test.setErrorThreshold(1e-5f);
+    test.setErrorThreshold(1e-4f);
 }
 
 namespace CDL_Data_2

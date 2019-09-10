@@ -121,6 +121,42 @@ const char * ExposureContrastOpData::ConvertStyleToString(ExposureContrastOpData
     throw Exception("Unknown exposure contrast style.");
 }
 
+ExposureContrastOpData::Style ExposureContrastOpData::ConvertStyle(ExposureContrastStyle style,
+                                                                   TransformDirection dir)
+{
+    if (dir == TRANSFORM_DIR_UNKNOWN)
+    {
+        throw Exception(
+            "Cannot create ExposureContrastOp with unspecified transform direction.");
+    }
+
+    const bool isForward = dir == TRANSFORM_DIR_FORWARD;
+
+    switch (style)
+    {
+    case EXPOSURE_CONTRAST_VIDEO:
+    {
+        return (isForward) ? ExposureContrastOpData::STYLE_VIDEO:
+                             ExposureContrastOpData::STYLE_VIDEO_REV;
+    }
+    case EXPOSURE_CONTRAST_LOGARITHMIC:
+    {
+        return (isForward) ? ExposureContrastOpData::STYLE_LOGARITHMIC:
+                             ExposureContrastOpData::STYLE_LOGARITHMIC_REV;
+    }
+    case EXPOSURE_CONTRAST_LINEAR:
+    {
+        return (isForward) ? ExposureContrastOpData::STYLE_LINEAR:
+                             ExposureContrastOpData::STYLE_LINEAR_REV;
+    }
+    }
+
+    std::stringstream ss("Unknown ExposureContrast transform style: ");
+    ss << style;
+
+    throw Exception(ss.str().c_str());
+}
+
 ExposureContrastOpData::ExposureContrastOpData()
     : OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
     , m_exposure(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_EXPOSURE, 0., false))
@@ -207,6 +243,10 @@ ExposureContrastOpDataRcPtr ExposureContrastOpData::inverse() const
 
     ec->setInputBitDepth(getOutputBitDepth());
     ec->setOutputBitDepth(getInputBitDepth());
+
+    // Note that any existing metadata could become stale at this point but
+    // trying to update it is also challenging since inverse() is sometimes
+    // called even during the creation of new ops.
 
     return ec;
 }
@@ -453,8 +493,10 @@ OCIO_ADD_TEST(ExposureContrastOpData, accessors)
     OCIO_CHECK_EQUAL(ec0.getContrast(), 1.0);
     OCIO_CHECK_EQUAL(ec0.getGamma(), 1.0);
     OCIO_CHECK_EQUAL(ec0.getPivot(), 0.18);
-    OCIO_CHECK_EQUAL(ec0.getLogExposureStep(), 0.088);
-    OCIO_CHECK_EQUAL(ec0.getLogMidGray(), 0.435);
+    OCIO_CHECK_EQUAL(ec0.getLogExposureStep(),
+                     OCIO::ExposureContrastOpData::LOGEXPOSURESTEP_DEFAULT);
+    OCIO_CHECK_EQUAL(ec0.getLogMidGray(),
+                     OCIO::ExposureContrastOpData::LOGMIDGRAY_DEFAULT);
 
     OCIO_CHECK_ASSERT(ec0.isIdentity());
     OCIO_CHECK_ASSERT(ec0.isNoOp());
@@ -486,8 +528,10 @@ OCIO_ADD_TEST(ExposureContrastOpData, accessors)
     OCIO_CHECK_EQUAL(ec.getContrast(), 1.0);
     OCIO_CHECK_EQUAL(ec.getGamma(), 1.0);
     OCIO_CHECK_EQUAL(ec.getPivot(), 0.18);
-    OCIO_CHECK_EQUAL(ec.getLogExposureStep(), 0.088);
-    OCIO_CHECK_EQUAL(ec.getLogMidGray(), 0.435);
+    OCIO_CHECK_EQUAL(ec.getLogExposureStep(),
+                     OCIO::ExposureContrastOpData::LOGEXPOSURESTEP_DEFAULT);
+    OCIO_CHECK_EQUAL(ec.getLogMidGray(),
+                     OCIO::ExposureContrastOpData::LOGMIDGRAY_DEFAULT);
 
     OCIO_CHECK_ASSERT(ec.isNoOp());
 
