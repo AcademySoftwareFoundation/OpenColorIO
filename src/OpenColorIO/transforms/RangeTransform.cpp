@@ -51,7 +51,7 @@ void RangeTransform::deleter(RangeTransform* t)
 class RangeTransform::Impl : public RangeOpData
 {
 public:
-    Impl() 
+    Impl()
         :   RangeOpData()
         ,   m_direction(TRANSFORM_DIR_FORWARD)
         ,   m_style(RANGE_CLAMP)
@@ -292,11 +292,9 @@ OCIO_NAMESPACE_EXIT
 
 #ifdef OCIO_UNIT_TEST
 
-namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-
-OCIO_NAMESPACE_USING
+namespace OCIO = OCIO_NAMESPACE;
 
 
 OCIO_ADD_TEST(RangeTransform, basic)

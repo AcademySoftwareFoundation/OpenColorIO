@@ -51,7 +51,7 @@ void FixedFunctionTransform::deleter(FixedFunctionTransform* t)
 class FixedFunctionTransform::Impl : public FixedFunctionOpData
 {
 public:
-    Impl() 
+    Impl()
         :   FixedFunctionOpData()
         ,   m_direction(TRANSFORM_DIR_FORWARD)
     {
@@ -201,11 +201,9 @@ OCIO_NAMESPACE_EXIT
 
 #ifdef OCIO_UNIT_TEST
 
-namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-
-OCIO_NAMESPACE_USING
+namespace OCIO = OCIO_NAMESPACE;
 
 
 OCIO_ADD_TEST(FixedFunctionTransform, basic)
@@ -227,7 +225,7 @@ OCIO_ADD_TEST(FixedFunctionTransform, basic)
     OCIO_CHECK_NO_THROW(func->validate());
 
     OCIO_CHECK_NO_THROW(func->setStyle(OCIO::FIXED_FUNCTION_REC2100_SURROUND));
-    OCIO_CHECK_THROW_WHAT(func->validate(), OCIO::Exception, 
+    OCIO_CHECK_THROW_WHAT(func->validate(), OCIO::Exception,
                           "The style 'REC2100_Surround' must have "
                           "one parameter but 0 found.");
 
@@ -242,7 +240,7 @@ OCIO_ADD_TEST(FixedFunctionTransform, basic)
     OCIO_CHECK_NO_THROW(func->validate());
 
     OCIO_CHECK_NO_THROW(func->setStyle(OCIO::FIXED_FUNCTION_ACES_DARK_TO_DIM_10));
-    OCIO_CHECK_THROW_WHAT(func->validate(), OCIO::Exception, 
+    OCIO_CHECK_THROW_WHAT(func->validate(), OCIO::Exception,
                           "The style 'ACES_DarkToDim10 (Forward)' must have "
                           "zero parameters but 1 found.");
 }

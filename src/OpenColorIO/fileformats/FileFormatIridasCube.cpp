@@ -53,7 +53,7 @@ TITLE "title"
 #where M is the size of the texture
 #a 3D texture has the size M x M x M
 #e.g. LUT_3D_SIZE 16 creates a 16 x 16 x 16 3D texture
-LUT_3D_SIZE 2 
+LUT_3D_SIZE 2
 
 #Default input value range (domain) is 0.0 (black) to 1.0 (white)
 #Specify other min/max values to map the cube to any custom input
@@ -138,7 +138,7 @@ OCIO_NAMESPACE_ENTER
                                           int line,
                                           const std::string & lineContent);
         };
-        
+
         void LocalFileFormat::ThrowErrorMessage(const std::string & error,
                                                 const std::string & fileName,
                                                 int line,
@@ -166,7 +166,7 @@ OCIO_NAMESPACE_ENTER
             info.capabilities = FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE;
             formatInfoVec.push_back(info);
         }
-        
+
         CachedFileRcPtr
         LocalFileFormat::read(
             std::istream & istream,
@@ -177,35 +177,35 @@ OCIO_NAMESPACE_ENTER
             {
                 throw Exception ("File stream empty when trying to read Iridas .cube LUT");
             }
-            
+
             // Parse the file
             std::vector<float> raw;
             
             int size3d = 0;
             int size1d = 0;
-            
+
             bool in1d = false;
             bool in3d = false;
-            
+
             float domain_min[] = { 0.0f, 0.0f, 0.0f };
             float domain_max[] = { 1.0f, 1.0f, 1.0f };
-            
+
             {
                 std::string line;
                 StringVec parts;
                 std::vector<float> tmpfloats;
                 int lineNumber = 0;
-                
+
                 while(nextline(istream, line))
                 {
                     ++lineNumber;
                     // All lines starting with '#' are comments
                     if(pystring::startswith(line,"#")) continue;
-                    
+
                     // Strip, lowercase, and split the line
                     pystring::split(pystring::lower(pystring::strip(line)), parts);
                     if(parts.empty()) continue;
-                    
+
                     if(pystring::lower(parts[0]) == "title")
                     {
                         // Optional, and currently unhandled
@@ -221,7 +221,7 @@ OCIO_NAMESPACE_ENTER
                                 lineNumber,
                                 line);
                         }
-                        
+
                         raw.reserve(3*size1d);
                         in1d = true;
                     }
@@ -236,7 +236,7 @@ OCIO_NAMESPACE_ENTER
                     else if(pystring::lower(parts[0]) == "lut_3d_size")
                     {
                         int size = 0;
-                        
+
                         if(parts.size() != 2
                             || !StringToInt( &size, parts[1].c_str()))
                         {
@@ -253,7 +253,7 @@ OCIO_NAMESPACE_ENTER
                     }
                     else if(pystring::lower(parts[0]) == "domain_min")
                     {
-                        if(parts.size() != 4 || 
+                        if(parts.size() != 4 ||
                             !StringToFloat( &domain_min[0], parts[1].c_str()) ||
                             !StringToFloat( &domain_min[1], parts[2].c_str()) ||
                             !StringToFloat( &domain_min[2], parts[3].c_str()))
@@ -267,7 +267,7 @@ OCIO_NAMESPACE_ENTER
                     }
                     else if(pystring::lower(parts[0]) == "domain_max")
                     {
-                        if(parts.size() != 4 || 
+                        if(parts.size() != 4 ||
                             !StringToFloat( &domain_max[0], parts[1].c_str()) ||
                             !StringToFloat( &domain_max[1], parts[2].c_str()) ||
                             !StringToFloat( &domain_max[2], parts[3].c_str()))
@@ -282,7 +282,7 @@ OCIO_NAMESPACE_ENTER
                     else
                     {
                         // It must be a float triple!
-                        
+
                         if(!StringVecToFloatVec(tmpfloats, parts) || tmpfloats.size() != 3)
                         {
                             ThrowErrorMessage(
@@ -291,7 +291,7 @@ OCIO_NAMESPACE_ENTER
                                 lineNumber,
                                 line);
                         }
-                        
+
                         for(int i=0; i<3; ++i)
                         {
                             raw.push_back(tmpfloats[i]);
@@ -303,7 +303,7 @@ OCIO_NAMESPACE_ENTER
             // Interpret the parsed data, validate LUT sizes.
             
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
-            
+
             if(in1d)
             {
                 if(size1d != static_cast<int>(raw.size()/3))
@@ -316,7 +316,7 @@ OCIO_NAMESPACE_ENTER
                         os.str().c_str(),
                         fileName, -1, "");
                 }
-                
+
                 // Reformat 1D data
                 if(size1d>0)
                 {
@@ -482,6 +482,7 @@ OCIO_NAMESPACE_ENTER
 
             const double dmin[]{ cachedFile->domain_min[0], cachedFile->domain_min[1], cachedFile->domain_min[2] };
             const double dmax[]{ cachedFile->domain_max[0], cachedFile->domain_max[1], cachedFile->domain_max[2] };
+
             if(newDir == TRANSFORM_DIR_FORWARD)
             {
                 CreateMinMaxOp(ops, dmin, dmax, newDir);
@@ -508,7 +509,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
     }
-    
+
     FileFormat * CreateFileFormatIridasCube()
     {
         return new LocalFileFormat();
@@ -521,9 +522,9 @@ OCIO_NAMESPACE_EXIT
 
 #ifdef OCIO_UNIT_TEST
 
-namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 #include "UnitTestUtils.h"
+namespace OCIO = OCIO_NAMESPACE;
 
 OCIO_ADD_TEST(FileFormatIridasCube, format_info)
 {
@@ -693,7 +694,7 @@ OCIO_ADD_TEST(FileFormatIridasCube, no_shaper)
         cs->setFamily("target");
         config->addColorSpace(cs);
     }
-    
+
     std::ostringstream bout;
     bout << "# Alexa conversion LUT, logc2video. Full in/full out." << "\n";
     bout << "# created by alexalutconv (2.11)"                      << "\n";
@@ -707,7 +708,7 @@ OCIO_ADD_TEST(FileFormatIridasCube, no_shaper)
     bout << "1.000000 0.000000 1.000000"                            << "\n";
     bout << "0.000000 1.000000 1.000000"                            << "\n";
     bout << "1.000000 1.000000 1.000000"                            << "\n";
-    
+
     OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     baker->setConfig(config);
     std::ostringstream metadata;
@@ -720,7 +721,7 @@ OCIO_ADD_TEST(FileFormatIridasCube, no_shaper)
     baker->setCubeSize(2);
     std::ostringstream output;
     baker->bake(output);
-    
+
     //
     std::vector<std::string> osvec;
     pystring::splitlines(output.str(), osvec);
