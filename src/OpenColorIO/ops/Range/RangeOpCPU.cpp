@@ -402,8 +402,8 @@ OCIO_ADD_TEST(RangeOpCPU, identity)
 OCIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings)
 {
     OCIO::RangeOpDataRcPtr range 
-        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 
-                                              0., 1., 0.5, 1.5);
+        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
+                                              OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 1., 0.5, 1.5);
 
     OCIO_CHECK_NO_THROW(range->validate());
     OCIO_CHECK_NO_THROW(range->finalize());
@@ -479,7 +479,8 @@ OCIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings)
 OCIO_ADD_TEST(RangeOpCPU, scale_with_low_clipping)
 {
     OCIO::RangeOpDataRcPtr range 
-        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 
+        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
+                                              OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                                               0.,  OCIO::RangeOpData::EmptyValue(), 
                                               0.5, OCIO::RangeOpData::EmptyValue());
 
@@ -557,7 +558,8 @@ OCIO_ADD_TEST(RangeOpCPU, scale_with_low_clipping)
 OCIO_ADD_TEST(RangeOpCPU, scale_with_high_clipping)
 {
     OCIO::RangeOpDataRcPtr range 
-        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 
+        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
+                                              OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                                               OCIO::RangeOpData::EmptyValue(), 1., 
                                               OCIO::RangeOpData::EmptyValue(), 1.5);
 
@@ -636,7 +638,7 @@ OCIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings_2)
 {
     OCIO::RangeOpDataRcPtr range 
         = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 
-                                              0., 1., 0., 1.5);
+                                              OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 1., 0., 1.5);
 
     OCIO_CHECK_NO_THROW(range->validate());
     OCIO_CHECK_NO_THROW(range->finalize());
@@ -675,7 +677,7 @@ OCIO_ADD_TEST(RangeOpCPU, offset_with_low_and_high_clippings)
 {
     OCIO::RangeOpDataRcPtr range 
         = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 
-                                              0., 1., 1., 2.);
+                                              OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 1., 1., 2.);
 
     OCIO_CHECK_NO_THROW(range->validate());
     OCIO_CHECK_NO_THROW(range->finalize());
@@ -714,7 +716,7 @@ OCIO_ADD_TEST(RangeOpCPU, low_and_high_clippings)
 {
     OCIO::RangeOpDataRcPtr range 
         = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 
-                                              1., 2., 1., 2.);
+                                              OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 1., 2., 1., 2.);
 
     OCIO_CHECK_NO_THROW(range->validate());
     OCIO_CHECK_NO_THROW(range->finalize());
@@ -759,6 +761,7 @@ OCIO_ADD_TEST(RangeOpCPU, low_clipping)
 {
     OCIO::RangeOpDataRcPtr range 
         = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 
+                                              OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                                               -0.1, OCIO::RangeOpData::EmptyValue(), 
                                               -0.1, OCIO::RangeOpData::EmptyValue());
 
@@ -799,6 +802,7 @@ OCIO_ADD_TEST(RangeOpCPU, high_clipping)
 {
     OCIO::RangeOpDataRcPtr range 
         = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 
+                                              OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                                               OCIO::RangeOpData::EmptyValue(), 1.1, 
                                               OCIO::RangeOpData::EmptyValue(), 1.1);
 

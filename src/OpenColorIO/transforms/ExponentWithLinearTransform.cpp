@@ -32,7 +32,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "OpBuilders.h"
 #include "ops/Gamma/GammaOpData.h"
-#include "ops/Gamma/GammaOps.h"
 
 
 OCIO_NAMESPACE_ENTER
@@ -138,6 +137,16 @@ void ExponentWithLinearTransform::validate() const
     }
 }
 
+FormatMetadata & ExponentWithLinearTransform::getFormatMetadata()
+{
+    return m_impl->getFormatMetadata();
+}
+
+const FormatMetadata & ExponentWithLinearTransform::getFormatMetadata() const
+{
+    return m_impl->getFormatMetadata();
+}
+
 void ExponentWithLinearTransform::setGamma(const double(&values)[4])
 {
     getImpl()->getRedParams()  [0] = values[0];
@@ -200,29 +209,6 @@ std::ostream& operator<< (std::ostream& os, const ExponentWithLinearTransform & 
 
     os << ">";
     return os;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void BuildExponentWithLinearOps(OpRcPtrVec & ops,
-                                const Config & /*config*/,
-                                const ExponentWithLinearTransform & transform,
-                                TransformDirection dir)
-{
-    TransformDirection combinedDir 
-        = CombineTransformDirections(dir, transform.getDirection());
-    
-    double gamma4[4] = { 1., 1., 1., 1. };
-    transform.getGamma(gamma4);
-
-    double offset4[4] = { 0., 0., 0., 0. };
-    transform.getOffset(offset4);
-
-    CreateGammaOp(ops, "", OpData::Descriptions(),
-                  combinedDir==TRANSFORM_DIR_FORWARD ? GammaOpData::MONCURVE_FWD
-                                                     : GammaOpData::MONCURVE_REV,
-                  gamma4, offset4);
 }
 
 }

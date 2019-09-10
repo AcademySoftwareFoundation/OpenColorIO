@@ -5,6 +5,7 @@ if(OCIO_BUILD_APPS)
 	add_subdirectory(apputils)
 	add_subdirectory(ociobakelut)
 	add_subdirectory(ociocheck)
+	add_subdirectory(ociowrite)
 
 	if(TARGET OpenImageIO)
 		add_subdirectory(ociolutimage)

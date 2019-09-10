@@ -660,11 +660,10 @@ OCIO_NAMESPACE_ENTER
                     ? Lut1DOpData::LUT_INPUT_HALF_CODE
                     : Lut1DOpData::LUT_STANDARD;
 
-                OpData::Descriptions desc;
+                FormatMetadataImpl info(METADATA_ROOT);
                 lut1D = std::make_shared<Lut1DOpData>(inBitDepth,
                                                       outBitDepth,
-                                                      "",
-                                                      desc,
+                                                      info,
                                                       INTERP_LINEAR,
                                                       halfFlags,
                                                       dimension);
@@ -684,22 +683,22 @@ OCIO_NAMESPACE_ENTER
             
             ~LocalFileFormat() {};
             
-            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
+            void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
             
-            virtual CachedFileRcPtr Read(
+            CachedFileRcPtr read(
                 std::istream & istream,
-                const std::string & fileName) const;
+                const std::string & fileName) const override;
             
-            virtual void BuildFileOps(OpRcPtrVec & ops,
-                                      const Config& config,
-                                      const ConstContextRcPtr & context,
-                                      CachedFileRcPtr untypedCachedFile,
-                                      const FileTransform& fileTransform,
-                                      TransformDirection dir) const;
+            void buildFileOps(OpRcPtrVec & ops,
+                              const Config& config,
+                              const ConstContextRcPtr & context,
+                              CachedFileRcPtr untypedCachedFile,
+                              const FileTransform& fileTransform,
+                              TransformDirection dir) const override;
         };
         
         
-        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
+        void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
             info.name = "Discreet 1D LUT";
@@ -711,7 +710,7 @@ OCIO_NAMESPACE_ENTER
         // Try and load the format
         // Raise an exception if it can't be loaded.
         
-        CachedFileRcPtr LocalFileFormat::Read(
+        CachedFileRcPtr LocalFileFormat::read(
             std::istream & istream,
             const std::string & filePath) const
         {
@@ -778,7 +777,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         void
-        LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
+        LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                                       const Config& /*config*/,
                                       const ConstContextRcPtr & /*context*/,
                                       CachedFileRcPtr untypedCachedFile,
@@ -882,12 +881,11 @@ OCIO_ADD_TEST(FileFormatD1DL, test_lut1d_8i_8i)
 
     OCIO_CHECK_EQUAL(lutFile->lut1D->getID(), "");
     OCIO_CHECK_EQUAL(lutFile->lut1D->getName(), "");
-    const OCIO::OpData::Descriptions & desc = lutFile->lut1D->getDescriptions();
-    OCIO_CHECK_EQUAL(desc.size(), 0);
 
     OCIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_LINEAR);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OCIO_CHECK_EQUAL(lutFile->lut1D->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
 
     OCIO_CHECK_ASSERT(!lutFile->lut1D->isInputHalfDomain());
     OCIO_CHECK_ASSERT(!lutFile->lut1D->isOutputRawHalfs());
@@ -923,12 +921,11 @@ OCIO_ADD_TEST(FileFormatD1DL, test_lut1d_12i_16f)
 
     OCIO_CHECK_EQUAL(lutFile->lut1D->getID(), "");
     OCIO_CHECK_EQUAL(lutFile->lut1D->getName(), "");
-    const OCIO::OpData::Descriptions & desc = lutFile->lut1D->getDescriptions();
-    OCIO_CHECK_EQUAL(desc.size(), 0);
 
     OCIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_LINEAR);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
+    OCIO_CHECK_EQUAL(lutFile->lut1D->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
     OCIO_CHECK_ASSERT(!lutFile->lut1D->isInputHalfDomain());
     OCIO_CHECK_ASSERT(!lutFile->lut1D->isOutputRawHalfs());
@@ -965,6 +962,7 @@ OCIO_ADD_TEST(FileFormatD1DL, test_lut1d_16f_16f)
     OCIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_LINEAR);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
+    OCIO_CHECK_EQUAL(lutFile->lut1D->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
     OCIO_CHECK_ASSERT(lutFile->lut1D->isInputHalfDomain());
     OCIO_CHECK_ASSERT(!lutFile->lut1D->isOutputRawHalfs());
@@ -1001,6 +999,7 @@ OCIO_ADD_TEST(FileFormatD1DL, test_lut1d_16f_12i)
     OCIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_LINEAR);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+    OCIO_CHECK_EQUAL(lutFile->lut1D->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
 
     OCIO_CHECK_ASSERT(lutFile->lut1D->isInputHalfDomain());
     OCIO_CHECK_ASSERT(!lutFile->lut1D->isOutputRawHalfs());

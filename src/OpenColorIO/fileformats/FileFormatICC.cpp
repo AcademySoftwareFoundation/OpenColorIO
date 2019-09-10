@@ -58,7 +58,7 @@ OCIO_NAMESPACE_ENTER
         ~LocalCachedFile() {};
 
         // Matrix part
-        float mMatrix44[16];
+        double mMatrix44[16];
 
         // Gamma
         float mGammaRGB[4];
@@ -74,20 +74,20 @@ OCIO_NAMESPACE_ENTER
     public:
         ~LocalFileFormat() {};
 
-        virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
+        void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-        virtual CachedFileRcPtr Read(
+        CachedFileRcPtr read(
             std::istream & istream,
-            const std::string & fileName) const;
+            const std::string & fileName) const override;
 
-        virtual void BuildFileOps(OpRcPtrVec & ops,
-            const Config& config,
-            const ConstContextRcPtr & context,
-            CachedFileRcPtr untypedCachedFile,
-            const FileTransform& fileTransform,
-            TransformDirection dir) const;
+        void buildFileOps(OpRcPtrVec & ops,
+                          const Config& config,
+                          const ConstContextRcPtr & context,
+                          CachedFileRcPtr untypedCachedFile,
+                          const FileTransform& fileTransform,
+                          TransformDirection dir) const override;
 
-        virtual bool IsBinary() const
+        bool isBinary() const override
         {
             return true;
         }
@@ -97,7 +97,7 @@ OCIO_NAMESPACE_ENTER
             const std::string & fileName);
     };
 
-    void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
+    void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
     {
         FormatInfo info;
         info.name = "International Color Consortium profile";
@@ -128,7 +128,7 @@ OCIO_NAMESPACE_ENTER
 
     // Try and load the format
     // Raise an exception if it can't be loaded.
-    CachedFileRcPtr LocalFileFormat::Read(
+    CachedFileRcPtr LocalFileFormat::read(
         std::istream & istream,
         const std::string & fileName) const
     {
@@ -228,25 +228,25 @@ OCIO_NAMESPACE_ENTER
                     fileName);
             }
 
-            cachedFile->mMatrix44[0] = (float)(*red).GetXYZ().X / 65536.0f;
-            cachedFile->mMatrix44[1] = (float)(*green).GetXYZ().X / 65536.0f;
-            cachedFile->mMatrix44[2] = (float)(*blue).GetXYZ().X / 65536.0f;
-            cachedFile->mMatrix44[3] = 0.0f;
+            cachedFile->mMatrix44[0] =  (double)(*red).GetXYZ().X / 65536.0;
+            cachedFile->mMatrix44[1] =  (double)(*green).GetXYZ().X / 65536.0;
+            cachedFile->mMatrix44[2] =  (double)(*blue).GetXYZ().X / 65536.0;
+            cachedFile->mMatrix44[3] =  0.0;
+                                        
+            cachedFile->mMatrix44[4] =  (double)(*red).GetXYZ().Y / 65536.0;
+            cachedFile->mMatrix44[5] =  (double)(*green).GetXYZ().Y / 65536.0;
+            cachedFile->mMatrix44[6] =  (double)(*blue).GetXYZ().Y / 65536.0;
+            cachedFile->mMatrix44[7] =  0.0;
+                                        
+            cachedFile->mMatrix44[8] =  (double)(*red).GetXYZ().Z / 65536.0;
+            cachedFile->mMatrix44[9] =  (double)(*green).GetXYZ().Z / 65536.0;
+            cachedFile->mMatrix44[10] = (double)(*blue).GetXYZ().Z / 65536.0;
+            cachedFile->mMatrix44[11] = 0.0;
 
-            cachedFile->mMatrix44[4] = (float)(*red).GetXYZ().Y / 65536.0f;
-            cachedFile->mMatrix44[5] = (float)(*green).GetXYZ().Y / 65536.0f;
-            cachedFile->mMatrix44[6] = (float)(*blue).GetXYZ().Y / 65536.0f;
-            cachedFile->mMatrix44[7] = 0.0f;
-
-            cachedFile->mMatrix44[8] = (float)(*red).GetXYZ().Z / 65536.0f;
-            cachedFile->mMatrix44[9] = (float)(*green).GetXYZ().Z / 65536.0f;
-            cachedFile->mMatrix44[10] = (float)(*blue).GetXYZ().Z / 65536.0f;
-            cachedFile->mMatrix44[11] = 0.0f;
-
-            cachedFile->mMatrix44[12] = 0.0f;
-            cachedFile->mMatrix44[13] = 0.0f;
-            cachedFile->mMatrix44[14] = 0.0f;
-            cachedFile->mMatrix44[15] = 1.0f;
+            cachedFile->mMatrix44[12] = 0.0;
+            cachedFile->mMatrix44[13] = 0.0;
+            cachedFile->mMatrix44[14] = 0.0;
+            cachedFile->mMatrix44[15] = 1.0;
         }
 
         // Extract the "B" Curve part of the Matrix/TRC Model
@@ -364,7 +364,7 @@ OCIO_NAMESPACE_ENTER
     }
 
     void
-    LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
+    LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         const Config& /*config*/,
         const ConstContextRcPtr & /*context*/,
         CachedFileRcPtr untypedCachedFile,
@@ -405,11 +405,11 @@ OCIO_NAMESPACE_ENTER
         // a D50 XYZ to a D65 XYZ.
         // In most cases, combining this with the matrix in the ICC profile
         // recovers what would be the actual matrix for a D65 native monitor.
-        static const float D50_to_D65_m44[] = {
-            0.955509474537f,  -0.023074829492f, 0.063312392987f, 0.0f,
-            -0.028327238868f,  1.00994465504f,  0.021055592145f, 0.0f,
-            0.012329273379f,  -0.020536209966f, 1.33072998567f,  0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f
+        static const double D50_to_D65_m44[] = {
+             0.955509474537, -0.023074829492, 0.063312392987, 0.0,
+            -0.028327238868,  1.00994465504,  0.021055592145, 0.0,
+             0.012329273379, -0.020536209966, 1.33072998567,  0.0,
+             0.0,             0.0,            0.0,            1.0
         };
 
         // The matrix/TRC transform in the ICC profile converts
@@ -429,7 +429,7 @@ OCIO_NAMESPACE_ENTER
                                         cachedFile->mGammaRGB[1],
                                         cachedFile->mGammaRGB[2],
                                         cachedFile->mGammaRGB[3] };
-                CreateGammaOp(ops, std::string(), OpData::Descriptions(),
+                CreateGammaOp(ops, FormatMetadataImpl(METADATA_ROOT),
                               GammaOpData::BASIC_FWD, &val[0], nullptr);
             }
 
@@ -459,7 +459,7 @@ OCIO_NAMESPACE_ENTER
                                         cachedFile->mGammaRGB[2],
                                         cachedFile->mGammaRGB[3] };
 
-                CreateGammaOp(ops, std::string(), OpData::Descriptions(),
+                CreateGammaOp(ops, FormatMetadataImpl(METADATA_ROOT),
                               GammaOpData::BASIC_REV, &val[0], nullptr);
             }
         }
@@ -539,9 +539,9 @@ OCIO_ADD_TEST(FileFormatICC, TestFile)
 
         tmp = v2;
         ops[1]->apply(&tmp[0], 1);
-        OCIO_CHECK_EQUAL(-0.0502183102f, tmp[0]);
+        OCIO_CHECK_EQUAL(-0.0502183065f, tmp[0]);
         OCIO_CHECK_EQUAL(-0.0170795303f, tmp[1]);
-        OCIO_CHECK_EQUAL(0.751668990f, tmp[2]);
+        OCIO_CHECK_EQUAL(0.751668930f, tmp[2]);
         OCIO_CHECK_EQUAL(0.0f, tmp[3]);
 
         tmp = v3;

@@ -26,17 +26,16 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 #ifndef INCLUDED_OCIO_PARSEUTILS_H
 #define INCLUDED_OCIO_PARSEUTILS_H
-
-#include <OpenColorIO/OpenColorIO.h>
-
-#include "PrivateTypes.h"
 
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include <OpenColorIO/OpenColorIO.h>
+
+#include "PrivateTypes.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -49,15 +48,16 @@ OCIO_NAMESPACE_ENTER
     std::string FloatVecToString(const float * fval, unsigned int size);
     
     std::string DoubleToString(double value);
-    
+    std::string DoubleVecToString(const double * fval, unsigned int size);
+
     bool StringToFloat(float * fval, const char * str);
     bool StringToInt(int * ival, const char * str, bool failIfLeftoverChars=false);
     
     bool StringVecToFloatVec(std::vector<float> & floatArray,
-                             const std::vector<std::string> & lineParts);
+                             const StringVec & lineParts);
     
     bool StringVecToIntVec(std::vector<int> & intArray,
-                           const std::vector<std::string> & lineParts);
+                           const StringVec & lineParts);
     
     //////////////////////////////////////////////////////////////////////////
     
@@ -73,19 +73,19 @@ OCIO_NAMESPACE_ENTER
     // Otherwise, assume a single string.
     // Also, strip whitespace from all parts.
     
-    void SplitStringEnvStyle(std::vector<std::string> & outputvec, const char * str);
+    void SplitStringEnvStyle(StringVec & outputvec, const char * str);
     
     // Join on ','
-    std::string JoinStringEnvStyle(const std::vector<std::string> & outputvec);
+    std::string JoinStringEnvStyle(const StringVec & outputvec);
     
     // Ordering and capitalization from vec1 is preserved
-    std::vector<std::string> IntersectStringVecsCaseIgnore(const std::vector<std::string> & vec1,
-                                                           const std::vector<std::string> & vec2);
+    StringVec IntersectStringVecsCaseIgnore(const StringVec & vec1,
+                                            const StringVec & vec2);
     
     // Find the index of the specified string, ignoring case.
     // return -1 if not found.
     
-    int FindInStringVecCaseIgnore(const std::vector<std::string> & vec, const std::string & str);
+    int FindInStringVecCaseIgnore(const StringVec & vec, const std::string & str);
     
 }
 OCIO_NAMESPACE_EXIT

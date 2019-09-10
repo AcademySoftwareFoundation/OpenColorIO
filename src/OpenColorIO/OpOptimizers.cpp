@@ -420,8 +420,6 @@ OCIO_NAMESPACE_EXIT
 
 #ifdef OCIO_UNIT_TEST
 
-namespace OCIO = OCIO_NAMESPACE;
-#include "UnitTest.h"
 
 #include "ops/CDL/CDLOps.h"
 #include "ops/Exponent/ExponentOps.h"
@@ -431,7 +429,9 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "ops/Lut3D/Lut3DOp.h"
 #include "ops/Matrix/MatrixOps.h"
 #include "ops/Range/RangeOps.h"
+#include "UnitTest.h"
 
+namespace OCIO = OCIO_NAMESPACE;
 
 OCIO_ADD_TEST(OpOptimizers, RemoveInverseOps)
 {
@@ -474,10 +474,10 @@ OCIO_ADD_TEST(OpOptimizers, RemoveInverseOps)
 
 OCIO_ADD_TEST(OpOptimizers, CombineOps)
 {
-    float m1[4] = { 2.0f, 2.0f, 2.0f, 1.0f };
-    float m2[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
-    float m3[4] = { 0.6f, 0.6f, 0.6f, 1.0f };
-    float m4[4] = { 0.7f, 0.7f, 0.7f, 1.0f };
+    double m1[4] = { 2.0, 2.0, 2.0, 1.0 };
+    double m2[4] = { 0.5, 0.5, 0.5, 1.0 };
+    double m3[4] = { 0.6, 0.6, 0.6, 1.0 };
+    double m4[4] = { 0.7, 0.7, 0.7, 1.0 };
     
     const double exp[4] = { 1.2, 1.3, 1.4, 1.5 };
     
@@ -572,6 +572,7 @@ OCIO_ADD_TEST(OptimizeSeparablePrefix, inexpensive_prefix)
     
     OCIO::RangeOpDataRcPtr range
         = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
+                                              OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                                               0., 255., -1., 65540.);
 
     OCIO_CHECK_NO_THROW(OCIO::CreateRangeOp(originalOps, range, OCIO::TRANSFORM_DIR_FORWARD));
@@ -628,7 +629,6 @@ void compareRender(OCIO::OpRcPtrVec ops1, OCIO::OpRcPtrVec ops2, unsigned line)
         OCIO_CHECK_CLOSE_FROM(img1[idx], img2[idx], 2e-5f, line);
     }
 }
-
 }
 
 OCIO_ADD_TEST(OptimizeSeparablePrefix, gamma_prefix)
@@ -640,6 +640,7 @@ OCIO_ADD_TEST(OptimizeSeparablePrefix, gamma_prefix)
 
     OCIO::GammaOpDataRcPtr gamma1
         = std::make_shared<OCIO::GammaOpData>(OCIO::BIT_DEPTH_UINT16, OCIO::BIT_DEPTH_UINT16,
+                                              OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                                               OCIO::GammaOpData::BASIC_REV, 
                                               params1, params1, params1, paramsA);
 
@@ -676,6 +677,7 @@ OCIO_ADD_TEST(OptimizeSeparablePrefix, gamma_prefix)
 
     OCIO::GammaOpDataRcPtr gamma2
         = std::make_shared<OCIO::GammaOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_UINT16,
+                                              OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                                               OCIO::GammaOpData::BASIC_REV, 
                                               params1, params1, params1, paramsA);
 
@@ -705,6 +707,7 @@ OCIO_ADD_TEST(OptimizeSeparablePrefix, multi_op_prefix)
     
     OCIO::RangeOpDataRcPtr range
         = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
+                                              OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                                               0., 255., -1000., 66000.);
 
     OCIO_CHECK_NO_THROW(OCIO::CreateRangeOp(originalOps, range, OCIO::TRANSFORM_DIR_FORWARD));

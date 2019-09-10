@@ -337,7 +337,7 @@ void CPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
     {
         // Support an empty list.
 
-        const float scale = GetBitDepthMaxValue(out) / GetBitDepthMaxValue(in);
+        const double scale = GetBitDepthMaxValue(out) / GetBitDepthMaxValue(in);
 
         if(scale==1.0f)
         {
@@ -348,7 +348,7 @@ void CPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
         else
         {
             // Note: CreateScaleOp will not add an op if scale == 1.
-            const float scale4[4] = {scale, scale, scale, scale};
+            const double scale4[4] = {scale, scale, scale, scale};
             CreateScaleOp(ops, scale4, TRANSFORM_DIR_FORWARD);
         }
     }

@@ -77,7 +77,7 @@ OCIO_SHARED_PTR<LocalCachedFile> LoadTestFile(
 
     // Read file
     LocalFileFormat tester;
-    OCIO_SHARED_PTR<CachedFile> cachedFile = tester.Read(filestream, filePath);
+    OCIO_SHARED_PTR<CachedFile> cachedFile = tester.read(filestream, filePath);
 
     filestream.close();
 

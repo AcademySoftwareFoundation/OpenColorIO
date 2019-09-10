@@ -72,30 +72,31 @@ void CDLReaderColorCorrectionElt::end()
 
     transform->setID(m_transformData->getID().c_str());
 
-    OpData::Descriptions & desc = m_transformData->getDescriptions();
-    if (!desc.empty())
+    const int descId = m_transformData->getFormatMetadata().getFirstChildIndex(TAG_DESCRIPTION);
+    if (descId != -1)
     {
-        transform->setDescription(desc[0].c_str());
+        auto & desc = m_transformData->getFormatMetadata().getChildrenElements()[descId];
+        transform->setDescription(desc.getValue());
     }
     
-    float vec9[9];
+    double vec9[9];
     const CDLOpData::ChannelParams & slopes = m_transformData->getSlopeParams();
-    vec9[0] = (float)slopes[0];
-    vec9[1] = (float)slopes[1];
-    vec9[2] = (float)slopes[2];
+    vec9[0] = slopes[0];
+    vec9[1] = slopes[1];
+    vec9[2] = slopes[2];
 
     const CDLOpData::ChannelParams & offsets = m_transformData->getOffsetParams();
-    vec9[3] = (float)offsets[0];
-    vec9[4] = (float)offsets[1];
-    vec9[5] = (float)offsets[2];
+    vec9[3] = offsets[0];
+    vec9[4] = offsets[1];
+    vec9[5] = offsets[2];
 
     const CDLOpData::ChannelParams & powers = m_transformData->getPowerParams();
-    vec9[6] = (float)powers[0];
-    vec9[7] = (float)powers[1];
-    vec9[8] = (float)powers[2];
+    vec9[6] = powers[0];
+    vec9[7] = powers[1];
+    vec9[8] = powers[2];
     transform->setSOP(vec9);
 
-    transform->setSat((float)m_transformData->getSaturation());
+    transform->setSat(m_transformData->getSaturation());
 
     transform->validate();
     m_transformList->push_back(transform);
