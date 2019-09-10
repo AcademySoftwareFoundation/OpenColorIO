@@ -920,12 +920,12 @@ OCIO_ADD_TEST(MatrixOffsetOp, combining)
         mat1->getFormatMetadata().addAttribute("Attrib", "1");
         OCIO_CHECK_NO_THROW(CreateMatrixOp(ops, mat1, OCIO::TRANSFORM_DIR_FORWARD));
 
-        auto mat2 = std::make_shared<MatrixOpData>();
+        auto mat2 = std::make_shared<OCIO::MatrixOpData>();
         mat2->setRGBA(m2);
         mat2->setRGBAOffsets(v2);
         mat2->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "ID2");
         mat2->getFormatMetadata().addAttribute("Attrib", "2");
-        OCIO_CHECK_NO_THROW(CreateMatrixOp(ops, mat2, TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_NO_THROW(CreateMatrixOp(ops, mat2, OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
         OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
@@ -937,7 +937,7 @@ OCIO_ADD_TEST(MatrixOffsetOp, combining)
         OCIO_REQUIRE_EQUAL(combined.size(), 1);
         OCIO_CHECK_NO_THROW(combined[0]->finalize(OCIO::FINALIZATION_EXACT));
 
-        auto combinedData = OCIO_DYNAMIC_POINTER_CAST<const Op>(combined[0])->data();
+        auto combinedData = OCIO::DynamicPtrCast<const OCIO::Op>(combined[0])->data();
 
         // Check metadata of combined op.
         OCIO_CHECK_EQUAL(combinedData->getName(), "mat1");
@@ -976,8 +976,8 @@ OCIO_ADD_TEST(MatrixOffsetOp, combining)
         OCIO::OpRcPtr op0 = ops[0];
         OCIO::OpRcPtr op1 = ops[1];
 
-        OCIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
-        OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+        OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
         OCIO_REQUIRE_EQUAL(ops.size(), 1);
 
         const std::string cacheIDOptimized = ops[0]->getCacheID();
@@ -1230,7 +1230,7 @@ OCIO_ADD_TEST(MatrixOffsetOp, no_op)
     OCIO_CHECK_EQUAL(ops.size(), 1);
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
     OCIO_CHECK_EQUAL(ops.size(), 0);
-    OCIO_CHECK_NO_THROW(CreateOffsetOp(ops, offset, TRANSFORM_DIR_INVERSE));
+    OCIO_CHECK_NO_THROW(OCIO::CreateOffsetOp(ops, offset, OCIO::TRANSFORM_DIR_INVERSE));
     OCIO_CHECK_EQUAL(ops.size(), 1);
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
     OCIO_CHECK_EQUAL(ops.size(), 0);

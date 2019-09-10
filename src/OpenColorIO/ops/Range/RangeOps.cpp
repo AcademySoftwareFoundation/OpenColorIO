@@ -545,7 +545,7 @@ OCIO_ADD_TEST(RangeOps, create_transform)
 
 OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
 {
-    ConfigRcPtr config = Config::Create();
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
     OCIO::OpRcPtrVec ops;
 
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
@@ -564,14 +564,14 @@ OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
     // Test the resulting Range Op
 
     OCIO_CHECK_NO_THROW(
-        BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO::BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD));
 
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO_REQUIRE_EQUAL(op0->data()->getType(), OCIO::OpData::RangeType);
 
     OCIO::ConstRangeOpDataRcPtr rangeData
-        = DynamicPtrCast<const OCIO::RangeOpData>(op0->data());
+        = OCIO::DynamicPtrCast<const OCIO::RangeOpData>(op0->data());
 
     OCIO_CHECK_EQUAL(rangeData->getMinInValue(), range->getMinInValue());
     OCIO_CHECK_EQUAL(rangeData->getMaxInValue(), range->getMaxInValue());
@@ -583,14 +583,14 @@ OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
     range->setStyle(OCIO::RANGE_NO_CLAMP);
 
     OCIO_CHECK_NO_THROW(
-        BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO::BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD));
 
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
     OCIO::ConstOpRcPtr op1 = ops[1];
     OCIO_REQUIRE_EQUAL(op1->data()->getType(), OCIO::OpData::MatrixType);
 
     OCIO::ConstMatrixOpDataRcPtr matrixData
-        = DynamicPtrCast<const OCIO::MatrixOpData>(op1->data());
+        = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(op1->data());
 
     OCIO_CHECK_EQUAL(matrixData->getOffsetValue(0), rangeData->getOffset());
 

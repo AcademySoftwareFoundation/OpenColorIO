@@ -812,13 +812,13 @@ namespace
 {
 
 // Create some empty metadata as a test argument.
-static OCIO::FormatMetadataImpl metadata(METADATA_ROOT);
+static OCIO::FormatMetadataImpl metadata(OCIO::METADATA_ROOT);
 
 }
 
 OCIO_ADD_TEST(CreateOpVecFromOpDataVec, basic)
 {
-    OCIO::OpDataVec opDataVec;
+    OCIO::ConstOpDataVec opDataVec;
     auto mat = OCIO::MatrixOpData::CreateDiagonalMatrix(OCIO::BIT_DEPTH_F32,
                                                         OCIO::BIT_DEPTH_F32,
                                                         2.0);
@@ -826,15 +826,16 @@ OCIO_ADD_TEST(CreateOpVecFromOpDataVec, basic)
 
     auto range = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32,
                                                      OCIO::BIT_DEPTH_F32,
+                                                     OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                                                      0.0, 1.0, 0.5, 1.5);
 
     opDataVec.push_back(range);
 
     OCIO_REQUIRE_EQUAL(opDataVec.size(), 2);
-
+	
     {
         OCIO::OpRcPtrVec ops;
-        OCIO_CHECK_NO_THROW(CreateOpVecFromOpDataVec(ops, opDataVec, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_NO_THROW(OCIO::CreateOpVecFromOpDataVec(ops, opDataVec, OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
         OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
@@ -843,7 +844,7 @@ OCIO_ADD_TEST(CreateOpVecFromOpDataVec, basic)
 
     {
         OCIO::OpRcPtrVec ops;
-        OCIO_CHECK_NO_THROW(CreateOpVecFromOpDataVec(ops, opDataVec, OCIO::TRANSFORM_DIR_INVERSE));
+        OCIO_CHECK_NO_THROW(OCIO::CreateOpVecFromOpDataVec(ops, opDataVec, OCIO::TRANSFORM_DIR_INVERSE));
         OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
         OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<RangeOp>");
@@ -1082,6 +1083,7 @@ OCIO_ADD_TEST(OpData, equality)
 
     auto range = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32,
                                                      OCIO::BIT_DEPTH_F32,
+                                                     OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                                                      0.0, 1.0, 0.5, 1.5);
 
     // Use the MatrixOpData::operator==().

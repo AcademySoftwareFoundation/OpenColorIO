@@ -499,18 +499,18 @@ OCIO_ADD_TEST(ExponentOps, Combining)
     auto expData2 = std::make_shared<OCIO::ExponentOpData>(exp2);
     expData1->setName("Exp1");
     expData1->setID("ID1");
-    expData1->getFormatMetadata().addChildElement(METADATA_DESCRIPTION, "First exponent");
+    expData1->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, "First exponent");
     expData2->setName("Exp2");
     expData2->setID("ID2");
-    expData2->getFormatMetadata().addChildElement(METADATA_DESCRIPTION, "Second exponent");
+    expData2->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, "Second exponent");
     expData2->getFormatMetadata().addAttribute("Attrib", "value");
 
     OCIO::OpRcPtrVec ops;
-    OCIO_CHECK_NO_THROW(CreateExponentOp(ops, expData1, TRANSFORM_DIR_FORWARD));
-    OCIO_CHECK_NO_THROW(CreateExponentOp(ops, expData2, TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, expData1, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, expData2, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
 
     OCIO::ConstOpRcPtr op1 = ops[1];
 
@@ -532,17 +532,17 @@ OCIO_ADD_TEST(ExponentOps, Combining)
     OCIO_CHECK_NO_THROW(ops[0]->combineWith(combined, op1));
     OCIO_CHECK_EQUAL(combined.size(), 1);
 
-    auto combinedData = OCIO_DYNAMIC_POINTER_CAST<const Op>(combined[0])->data();
+    auto combinedData = OCIO::DynamicPtrCast<const OCIO::Op>(combined[0])->data();
     
     // Check metadata of combined op.
     OCIO_CHECK_EQUAL(combinedData->getName(), "Exp1 + Exp2");
     OCIO_CHECK_EQUAL(combinedData->getID(), "ID1 + ID2");
     OCIO_REQUIRE_EQUAL(combinedData->getFormatMetadata().getNumChildrenElements(), 2);
     const auto & child0 = combinedData->getFormatMetadata().getChildElement(0);
-    OCIO_CHECK_EQUAL(std::string(child0.getName()), METADATA_DESCRIPTION);
+    OCIO_CHECK_EQUAL(std::string(child0.getName()), OCIO::METADATA_DESCRIPTION);
     OCIO_CHECK_EQUAL(std::string(child0.getValue()), "First exponent");
     const auto & child1 = combinedData->getFormatMetadata().getChildElement(1);
-    OCIO_CHECK_EQUAL(std::string(child1.getName()), METADATA_DESCRIPTION);
+    OCIO_CHECK_EQUAL(std::string(child1.getName()), OCIO::METADATA_DESCRIPTION);
     OCIO_CHECK_EQUAL(std::string(child1.getValue()), "Second exponent");
     // 3 attributes: name, id and Attrib.
     OCIO_CHECK_EQUAL(combinedData->getFormatMetadata().getNumAttributes(), 3);
@@ -550,7 +550,7 @@ OCIO_ADD_TEST(ExponentOps, Combining)
     OCIO_CHECK_EQUAL(attribs[2].first, "Attrib");
     OCIO_CHECK_EQUAL(attribs[2].second, "value");
 
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(combined, FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(combined, OCIO::FINALIZATION_EXACT));
 
     float tmp2[4];
     memcpy(tmp2, source, 4*sizeof(float));
@@ -670,7 +670,7 @@ OCIO_ADD_TEST(ExponentOps, NoOp)
     OCIO_CHECK_ASSERT(ops[1]->isNoOp());
 
     // Optimize it.
-    OCIO_CHECK_NO_THROW(OptimizeOpVec(ops, OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
     OCIO_CHECK_EQUAL(ops.size(), 0);
 }
 
@@ -699,18 +699,17 @@ OCIO_ADD_TEST(ExponentOps, CacheID)
 OCIO_ADD_TEST(ExponentOps, create_transform)
 {
     const double exp[4] = { 2.0, 2.1, 3.0, 3.1 };
-    ExponentOp * expOp = new ExponentOp(exp);
+    OCIO::ConstOpRcPtr op(new OCIO::ExponentOp(exp));
 
-    GroupTransformRcPtr group = GroupTransform::Create();
-    ConstOpRcPtr op(expOp);
-    CreateExponentTransform(group, op);
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+    OCIO::CreateExponentTransform(group, op);
     OCIO_REQUIRE_EQUAL(group->size(), 1);
     auto transform = group->getTransform(0);
     OCIO_REQUIRE_ASSERT(transform);
-    auto expTransform = OCIO_DYNAMIC_POINTER_CAST<ExponentTransform>(transform);
+    auto expTransform = OCIO::DynamicPtrCast<OCIO::ExponentTransform>(transform);
     OCIO_REQUIRE_ASSERT(expTransform);
 
-    OCIO_CHECK_EQUAL(expTransform->getDirection(), TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(expTransform->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
     double expVal[4];
     expTransform->getValue(expVal);
     OCIO_CHECK_EQUAL(expVal[0], exp[0]);
