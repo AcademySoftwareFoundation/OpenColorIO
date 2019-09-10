@@ -78,18 +78,18 @@ OCIO_NAMESPACE_ENTER
             
             ~LocalFileFormat() {};
             
-            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
+            void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
             
-            virtual CachedFileRcPtr Read(
+            CachedFileRcPtr read(
                 std::istream & istream,
-                const std::string & fileName) const;
+                const std::string & fileName) const override;
             
-            virtual void BuildFileOps(OpRcPtrVec & ops,
-                         const Config& config,
-                         const ConstContextRcPtr & context,
-                         CachedFileRcPtr untypedCachedFile,
-                         const FileTransform& fileTransform,
-                         TransformDirection dir) const;
+            void buildFileOps(OpRcPtrVec & ops,
+                              const Config& config,
+                              const ConstContextRcPtr & context,
+                              CachedFileRcPtr untypedCachedFile,
+                              const FileTransform& fileTransform,
+                              TransformDirection dir) const override;
         private:
             static void ThrowErrorMessage(const std::string & error,
                 const std::string & fileName,
@@ -97,7 +97,7 @@ OCIO_NAMESPACE_ENTER
                 const std::string & lineContent);
         };
         
-        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
+        void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
             info.name = "spi1d";
@@ -109,7 +109,7 @@ OCIO_NAMESPACE_ENTER
         // Try and load the format
         // Raise an exception if it can't be loaded.
 
-        CachedFileRcPtr LocalFileFormat::Read(
+        CachedFileRcPtr LocalFileFormat::read(
             std::istream & istream,
             const std::string & fileName ) const
         {
@@ -272,12 +272,12 @@ OCIO_NAMESPACE_ENTER
             return cachedFile;
         }
 
-        void LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
-                                  const Config& /*config*/,
-                                  const ConstContextRcPtr & /*context*/,
-                                  CachedFileRcPtr untypedCachedFile,
-                                  const FileTransform& fileTransform,
-                                  TransformDirection dir) const
+        void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
+                                           const Config& /*config*/,
+                                           const ConstContextRcPtr & /*context*/,
+                                           CachedFileRcPtr untypedCachedFile,
+                                           const FileTransform& fileTransform,
+                                           TransformDirection dir) const
         {
             LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
 
@@ -334,7 +334,7 @@ OCIO_ADD_TEST(FileFormatSpi1D, FormatInfo)
 {
     OCIO::FormatInfoVec formatInfoVec;
     OCIO::LocalFileFormat tester;
-    tester.GetFormatInfo(formatInfoVec);
+    tester.getFormatInfo(formatInfoVec);
 
     OCIO_CHECK_EQUAL(1, formatInfoVec.size());
     OCIO_CHECK_EQUAL("spi1d", formatInfoVec[0].name);
@@ -385,7 +385,7 @@ void ReadSpi1d(const std::string & fileContent)
     // Read file
     OCIO::LocalFileFormat tester;
     const std::string SAMPLE_NAME("Memory File");
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(is, SAMPLE_NAME);
+    OCIO::CachedFileRcPtr cachedFile = tester.read(is, SAMPLE_NAME);
 }
 
 OCIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
