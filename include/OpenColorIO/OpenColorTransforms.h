@@ -294,11 +294,12 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         void setID(const char * id);
         
-        //!cpp:function:: Textual description of color correction (stored on
-        // the SOP). If there is already a description, the setter will replace
-        // it with the supplied text.
+        //!cpp:function:: Deprecated. Use `getFormatMetadata`.
+        // First textual description of color correction (stored
+        // on the SOP). If there is already a description, the setter will
+        // replace it with the supplied text.
         const char * getDescription() const;
-        //!cpp:function::
+        //!cpp:function:: Deprecated. Use `getFormatMetadata`.
         void setDescription(const char * desc);
     
     private:

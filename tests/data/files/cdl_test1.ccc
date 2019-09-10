@@ -3,18 +3,10 @@
 <!-- Note that the file may contain unknown elements that we should ignore. -->
 <!-- These might be used by customers for their internal workflows. -->
 
-	<Description>
-This is a color correction collection example.
-	</Description>
-	<Description>
-It includes all possible description uses.
-	</Description>
-	<InputDescription>
-These should be applied in ACESproxy color space.
-	</InputDescription>
-	<ViewingDescription>
-View using the ACES RRT+ODT transforms.
-	</ViewingDescription>
+	<Description>This is a color correction collection example.</Description>
+	<Description>It includes all possible description uses.</Description>
+	<InputDescription>These should be applied in ACESproxy color space.</InputDescription>
+	<ViewingDescription>View using the ACES RRT+ODT transforms.</ViewingDescription>
 
 		<ColorCorrection id="cc0001">
 			<Description>CC-level description 1a</Description>

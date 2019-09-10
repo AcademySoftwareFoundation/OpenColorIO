@@ -226,9 +226,9 @@ void CTFReaderTransformElt::end()
     }
 }
 
-void CTFReaderTransformElt::appendDescription(const std::string & desc)
+void CTFReaderTransformElt::appendMetadata(const std::string & /*name*/, const std::string & value)
 {
-    getTransform()->getDescriptions().push_back(desc);
+    getTransform()->getDescriptions().push_back(value);
 }
 
 const CTFReaderTransformPtr & CTFReaderTransformElt::getTransform() const
@@ -807,9 +807,9 @@ const std::string & CTFReaderOpElt::getIdentifier() const
     return getOp()->getID();
 }
 
-void CTFReaderOpElt::appendDescription(const std::string & desc)
+void CTFReaderOpElt::appendMetadata(const std::string & name, const std::string & value)
 {
-    FormatMetadataImpl item(TAG_DESCRIPTION, desc);
+    FormatMetadataImpl item(name, value);
     getOp()->getFormatMetadata().getChildrenElements().push_back(item);
 }
 

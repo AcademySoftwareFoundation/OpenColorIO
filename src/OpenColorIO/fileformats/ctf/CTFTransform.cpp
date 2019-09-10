@@ -45,6 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ops/Range/RangeOpData.h"
 #include "ops/reference/ReferenceOpData.h"
 #include "Platform.h"
+#include "transforms/CDLTransform.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -471,11 +472,11 @@ void CTFReaderTransform::toMetadata(FormatMetadataImpl & metadata) const
 
 namespace
 {
-void WriteDescriptions(XmlFormatter & fmt, const StringVec & descriptions)
+void WriteDescriptions(XmlFormatter & fmt, const char * tag, const StringVec & descriptions)
 {
     for (auto & it : descriptions)
     {
-        fmt.writeContentTag(TAG_DESCRIPTION, it);
+        fmt.writeContentTag(tag, it);
     }
 }
 
@@ -619,7 +620,8 @@ protected:
     virtual const char * getTagName() const = 0;
     virtual void getAttributes(XmlFormatter::Attributes & attributes) const;
     virtual void writeContent() const = 0;
-    
+    virtual void writeFormatMetadata() const;
+
     BitDepth m_inBitDepth = BIT_DEPTH_UNKNOWN;
     BitDepth m_outBitDepth = BIT_DEPTH_UNKNOWN;
 };
@@ -642,11 +644,7 @@ void OpWriter::write() const
     m_formatter.writeStartTag(tagName, attributes);
     {
         XmlScopeIndent scopeIndent(m_formatter);
-        auto op = getOp();
-        StringVec desc;
-        GetElementsValues(op->getFormatMetadata().getChildrenElements(),
-                          TAG_DESCRIPTION, desc);
-        WriteDescriptions(m_formatter, desc);
+        writeFormatMetadata();
 
         // TODO: Bypass Dynamic Property converts to Look Dynamic Property in ctf format.
         /*if (op->getBypass()->isDynamic())
@@ -659,6 +657,15 @@ void OpWriter::write() const
         writeContent();
     }
     m_formatter.writeEndTag(tagName);
+}
+
+void OpWriter::writeFormatMetadata() const
+{
+    auto op = getOp();
+    StringVec desc;
+    GetElementsValues(op->getFormatMetadata().getChildrenElements(),
+                      TAG_DESCRIPTION, desc);
+    WriteDescriptions(m_formatter, TAG_DESCRIPTION, desc);
 }
 
 const char * BitDepthToCLFString(BitDepth bitDepth)
@@ -778,6 +785,7 @@ protected:
     const char * getTagName() const override;
     void getAttributes(XmlFormatter::Attributes& attributes) const override;
     void writeContent() const override;
+    void writeFormatMetadata() const override;
 
 private:
     ConstCDLOpDataRcPtr m_cdl;
@@ -815,11 +823,16 @@ void CDLWriter::getAttributes(XmlFormatter::Attributes & attributes) const
 void CDLWriter::writeContent() const
 {
     XmlFormatter::Attributes attributes;
-
+    auto op = getOp();
     // SOPNode.
     m_formatter.writeStartTag(TAG_SOPNODE, attributes);
     {
         XmlScopeIndent scopeIndent(m_formatter);
+
+        StringVec desc;
+        GetElementsValues(op->getFormatMetadata().getChildrenElements(),
+                          METADATA_SOP_DESCRIPTION, desc);
+        WriteDescriptions(m_formatter, TAG_DESCRIPTION, desc);
 
         m_formatter.writeContentTag(TAG_SLOPE, m_cdl->getSlopeString());
         m_formatter.writeContentTag(TAG_OFFSET, m_cdl->getOffsetString());
@@ -832,9 +845,31 @@ void CDLWriter::writeContent() const
     {
         XmlScopeIndent scopeIndent(m_formatter);
 
+        StringVec desc;
+        GetElementsValues(op->getFormatMetadata().getChildrenElements(),
+                          METADATA_SAT_DESCRIPTION, desc);
+        WriteDescriptions(m_formatter, TAG_DESCRIPTION, desc);
+
         m_formatter.writeContentTag(TAG_SATURATION, m_cdl->getSaturationString());
     }
     m_formatter.writeEndTag(TAG_SATNODE);
+}
+
+void CDLWriter::writeFormatMetadata() const
+{
+    auto op = getOp();
+    StringVec desc;
+    GetElementsValues(op->getFormatMetadata().getChildrenElements(),
+                      METADATA_DESCRIPTION, desc);
+    WriteDescriptions(m_formatter, TAG_DESCRIPTION, desc);
+    desc.clear();
+    GetElementsValues(op->getFormatMetadata().getChildrenElements(),
+                      METADATA_INPUT_DESCRIPTION, desc);
+    WriteDescriptions(m_formatter, METADATA_INPUT_DESCRIPTION, desc);
+    desc.clear();
+    GetElementsValues(op->getFormatMetadata().getChildrenElements(),
+                      METADATA_VIEWING_DESCRIPTION, desc);
+    WriteDescriptions(m_formatter, METADATA_VIEWING_DESCRIPTION, desc);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1817,7 +1852,7 @@ void TransformWriter::write() const
     {
         XmlScopeIndent scopeIndent(m_formatter);
 
-        WriteDescriptions(m_formatter, m_transform->getDescriptions());
+        WriteDescriptions(m_formatter, TAG_DESCRIPTION, m_transform->getDescriptions());
 
         const std::string & inputDesc = m_transform->getInputDescriptor();
         if (!inputDesc.empty())

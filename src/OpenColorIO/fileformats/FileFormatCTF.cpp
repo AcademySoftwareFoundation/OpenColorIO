@@ -626,8 +626,9 @@ private:
                                 pImpl->getXmlFilename()));
                     }
                 }
-                else if (SupportedElement(name, pElt, TAG_DESCRIPTION,
-                                          "", recognizedName))
+                else if (SupportedElement(name, pElt, TAG_DESCRIPTION, "", recognizedName) ||
+                         SupportedElement(name, pElt, METADATA_INPUT_DESCRIPTION, TAG_CDL, recognizedName) ||
+                         SupportedElement(name, pElt, METADATA_VIEWING_DESCRIPTION, TAG_CDL, recognizedName))
                 {
                     pImpl->m_elms.push_back(
                         std::make_shared<XmlReaderDescriptionElt>(
@@ -4616,6 +4617,14 @@ OCIO_ADD_TEST(CTFTransform, save_cdl)
     const float sat = 0.7f;
     cdlTransform->setSat(sat);
     cdlTransform->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "test-cdl-1");
+    cdlTransform->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, "CDL description 1");
+    cdlTransform->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, "CDL description 2");
+    cdlTransform->getFormatMetadata().addChildElement(OCIO::METADATA_INPUT_DESCRIPTION, "Input");
+    cdlTransform->getFormatMetadata().addChildElement(OCIO::METADATA_VIEWING_DESCRIPTION, "Viewing");
+    cdlTransform->getFormatMetadata().addChildElement(OCIO::METADATA_SOP_DESCRIPTION, "SOP description 1");
+    cdlTransform->getFormatMetadata().addChildElement(OCIO::METADATA_SOP_DESCRIPTION, "SOP description 2");
+    cdlTransform->getFormatMetadata().addChildElement(OCIO::METADATA_SAT_DESCRIPTION, "Sat description 1");
+    cdlTransform->getFormatMetadata().addChildElement(OCIO::METADATA_SAT_DESCRIPTION, "Sat description 2");
 
     OCIO::LocalCachedFileRcPtr cachedFile = WriteRead(cdlTransform);
     const OCIO::ConstOpDataVec & fileOps = cachedFile->m_transform->getOps();
@@ -4624,6 +4633,16 @@ OCIO_ADD_TEST(CTFTransform, save_cdl)
     OCIO::ConstCDLOpDataRcPtr cdl = OCIO::DynamicPtrCast<const OCIO::CDLOpData>(op);
     OCIO_REQUIRE_ASSERT(cdl);
     OCIO_CHECK_EQUAL(cdl->getID(), "test-cdl-1");
+    const auto & metadata = cdl->getFormatMetadata();
+    OCIO_REQUIRE_EQUAL(metadata.getNumChildrenElements(), 8);
+    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_DESCRIPTION), metadata.getChildElement(0).getName());
+    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_DESCRIPTION), metadata.getChildElement(1).getName());
+    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_INPUT_DESCRIPTION), metadata.getChildElement(2).getName());
+    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_VIEWING_DESCRIPTION), metadata.getChildElement(3).getName());
+    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_SOP_DESCRIPTION), metadata.getChildElement(4).getName());
+    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_SOP_DESCRIPTION), metadata.getChildElement(5).getName());
+    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_SAT_DESCRIPTION), metadata.getChildElement(6).getName());
+    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_SAT_DESCRIPTION), metadata.getChildElement(7).getName());
     auto params = cdl->getSlopeParams();
     OCIO_CHECK_EQUAL((float)params[0], slope[0]);
     OCIO_CHECK_EQUAL((float)params[1], slope[1]);
@@ -5268,10 +5287,18 @@ OCIO_ADD_TEST(CTFTransform, cdl_clf)
                            3.1, 3.2, 3.3 };
     cdl->setSOP(sop);
     cdl->setSat(2.1);
-    cdl->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, "CDL node for unit test");
-    cdl->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, "Adding another description");
     cdl->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "TestCDL");
     cdl->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "CDL42");
+
+    cdl->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, "CDL node for unit test");
+    cdl->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, "Adding another description");
+    cdl->getFormatMetadata().addChildElement(OCIO::METADATA_INPUT_DESCRIPTION, "Input");
+    cdl->getFormatMetadata().addChildElement(OCIO::METADATA_VIEWING_DESCRIPTION, "Viewing");
+    cdl->getFormatMetadata().addChildElement(OCIO::METADATA_SOP_DESCRIPTION, "SOP description 1");
+    cdl->getFormatMetadata().addChildElement(OCIO::METADATA_SOP_DESCRIPTION, "SOP description 2");
+    cdl->getFormatMetadata().addChildElement(OCIO::METADATA_SAT_DESCRIPTION, "Sat description 1");
+    cdl->getFormatMetadata().addChildElement(OCIO::METADATA_SAT_DESCRIPTION, "Sat description 2");
+
 
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
 
@@ -5320,12 +5347,18 @@ OCIO_ADD_TEST(CTFTransform, cdl_clf)
     <ASC_CDL id="CDL42" name="TestCDL" inBitDepth="32f" outBitDepth="32f" style="Fwd">
         <Description>CDL node for unit test</Description>
         <Description>Adding another description</Description>
+        <InputDescription>Input</InputDescription>
+        <ViewingDescription>Viewing</ViewingDescription>
         <SOPNode>
+            <Description>SOP description 1</Description>
+            <Description>SOP description 2</Description>
             <Slope>1, 1.1, 1.2</Slope>
             <Offset>0.2, 0.3, 0.4</Offset>
             <Power>3.1, 3.2, 3.3</Power>
         </SOPNode>
         <SatNode>
+            <Description>Sat description 1</Description>
+            <Description>Sat description 2</Description>
             <Saturation>2.1</Saturation>
         </SatNode>
     </ASC_CDL>

@@ -39,6 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "OpBuilders.h"
 #include "ops/CDL/CDLOpData.h"
 #include "ParseUtils.h"
+#include "Platform.h"
 #include "pystring/pystring.h"
 
 
@@ -61,15 +62,66 @@ OCIO_NAMESPACE_ENTER
 </ColorCorrection>
         
  */
-        
+        // Note: OCIO v1 supported a single <Description> element as a child of <SOPNode>.
+        // In OCIO v2, we added support for an arbitrary number of <Description> elements
+        // as children of <SOPNode> or <SatNode>.  We also added support for <Description>,
+        // <InputDescription>, and <ViewingDescription> elements as children of
+        // <ColorCorrection> (per the ASC CDL spec).  All of these elements are also read
+        // and written from CLF/CTF files.
         std::string BuildXML(const CDLTransform & cdl)
         {
+            const auto & metadata = cdl.getFormatMetadata();
+            StringVec mainDesc;
+            StringVec inputDesc;
+            StringVec viewingDesc;
+            StringVec sopDesc;
+            StringVec satDesc;
+            const int nbElt = metadata.getNumChildrenElements();
+            for (int i = 0; i < nbElt; ++i)
+            {
+                const auto & elt = metadata.getChildElement(i);
+                if (0 == Platform::Strcasecmp(elt.getName(), METADATA_DESCRIPTION))
+                {
+                    mainDesc.push_back(ConvertSpecialCharToXmlToken(elt.getValue()));
+                }
+                else if (0 == Platform::Strcasecmp(elt.getName(), METADATA_INPUT_DESCRIPTION))
+                {
+                    inputDesc.push_back(ConvertSpecialCharToXmlToken(elt.getValue()));
+                }
+                else if (0 == Platform::Strcasecmp(elt.getName(), METADATA_VIEWING_DESCRIPTION))
+                {
+                    viewingDesc.push_back(ConvertSpecialCharToXmlToken(elt.getValue()));
+                }
+                else if (0 == Platform::Strcasecmp(elt.getName(), METADATA_SOP_DESCRIPTION))
+                {
+                    sopDesc.push_back(ConvertSpecialCharToXmlToken(elt.getValue()));
+                }
+                else if (0 == Platform::Strcasecmp(elt.getName(), METADATA_SAT_DESCRIPTION))
+                {
+                    satDesc.push_back(ConvertSpecialCharToXmlToken(elt.getValue()));
+                }
+            }
+
             std::ostringstream os;
             std::string id(ConvertSpecialCharToXmlToken(cdl.getID()));
             os << "<ColorCorrection id=\"" << id << "\">\n";
+            for (const auto & desc : mainDesc)
+            {
+                os << "    <Description>" << desc << "</Description>\n";
+            }
+            for (const auto & desc : inputDesc)
+            {
+                os << "    <InputDescription>" << desc << "</InputDescription>\n";
+            }
+            for (const auto & desc : viewingDesc)
+            {
+                os << "    <ViewingDescription>" << desc << "</ViewingDescription>\n";
+            }
             os << "    <SOPNode>\n";
-            std::string desc(ConvertSpecialCharToXmlToken(cdl.getDescription()));
-            os << "        <Description>" << desc << "</Description>\n";
+            for (const auto & desc : sopDesc)
+            {
+                os << "        <Description>" << desc << "</Description>\n";
+            }
             double slopeval[3];
             cdl.getSlope(slopeval);
             os << "        <Slope>" << DoubleVecToString(slopeval, 3) << "</Slope>\n";
@@ -81,6 +133,10 @@ OCIO_NAMESPACE_ENTER
             os << "        <Power>" << DoubleVecToString(powerval, 3)  << "</Power>\n";
             os << "    </SOPNode>\n";
             os << "    <SatNode>\n";
+            for (const auto & desc : satDesc)
+            {
+                os << "        <Description>" << desc << "</Description>\n";
+            }
             os << "        <Saturation>" << DoubleToString(cdl.getSat()) << "</Saturation>\n";
             os << "    </SatNode>\n";
             os << "</ColorCorrection>";
@@ -114,7 +170,14 @@ OCIO_NAMESPACE_ENTER
         parser.getCDLTransform(cdlRcPtr);
 
         cdl.setID(cdlRcPtr->getID());
-        cdl.setDescription(cdlRcPtr->getDescription());
+
+        const auto & srcFormatMetadata = cdlRcPtr->getFormatMetadata();
+        const auto & srcMetadata = dynamic_cast<const FormatMetadataImpl &>(srcFormatMetadata);
+
+        auto & formatMetadata = cdl.getFormatMetadata();
+        auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
+        metadata = srcMetadata;
+
         double slope[3] = { 0., 0., 0. };
         cdlRcPtr->getSlope(slope);
         cdl.setSlope(slope);
@@ -247,7 +310,9 @@ OCIO_NAMESPACE_ENTER
             // into the cache
             CDLTransformMap transformMap;
             CDLTransformVec transformVec;
-            parser.getCDLTransforms(transformMap, transformVec);
+            FormatMetadataImpl metadata{ METADATA_ROOT };
+
+            parser.getCDLTransforms(transformMap, transformVec, metadata);
             
             if(transformVec.empty())
             {
@@ -666,21 +731,17 @@ OCIO_NAMESPACE_ENTER
     void CDLTransform::setDescription(const char * desc)
     {
         auto & info = getImpl()->getFormatMetadata();
-        int descIndex = info.getFirstChildIndex(METADATA_DESCRIPTION);
-        if (descIndex == -1)
+        info.getChildrenElements().clear();
+        if (desc)
         {
-            info.getChildrenElements().emplace_back(METADATA_DESCRIPTION, desc ? desc : "");
-        }
-        else
-        {
-            info.getChildrenElements()[descIndex].setValue(desc ? desc : "");
+            info.getChildrenElements().emplace_back(METADATA_SOP_DESCRIPTION, desc);
         }
     }
     
     const char * CDLTransform::getDescription() const
     {
         const auto & info = getImpl()->getFormatMetadata();
-        int descIndex = info.getFirstChildIndex(METADATA_DESCRIPTION);
+        int descIndex = info.getFirstChildIndex(METADATA_SOP_DESCRIPTION);
         if (descIndex == -1)
         {
             return "";
@@ -746,7 +807,7 @@ OCIO_ADD_TEST(CDLTransform, equality)
     OCIO_CHECK_ASSERT(cdl3->equals(cdl3));
 }
 
-OCIO_ADD_TEST(CDLTransform, CreateFromCCFile)
+OCIO_ADD_TEST(CDLTransform, create_from_cc_file)
 {
     const std::string filePath(std::string(OCIO::getTestFilesDir())
                                + "/cdl_test1.cc");
@@ -797,8 +858,7 @@ OCIO_ADD_TEST(CDLTransform, CreateFromCCFile)
     {
         std::string idStr(transformCDL->getID());
         OCIO_CHECK_EQUAL("foo", idStr);
-        std::string descStr(transformCDL->getDescription());
-        OCIO_CHECK_EQUAL("this is a description", descStr);
+
         float slope[3] = { 0.f, 0.f, 0.f };
         OCIO_CHECK_NO_THROW(transformCDL->getSlope(slope));
         OCIO_CHECK_EQUAL(1.1f, slope[0]);
@@ -818,7 +878,7 @@ OCIO_ADD_TEST(CDLTransform, CreateFromCCFile)
     }
 }
 
-OCIO_ADD_TEST(CDLTransform, CreateFromCCCFile)
+OCIO_ADD_TEST(CDLTransform, create_from_ccc_file)
 {
     const std::string filePath(std::string(OCIO::getTestFilesDir())
                                + "/cdl_test1.ccc");
@@ -828,8 +888,12 @@ OCIO_ADD_TEST(CDLTransform, CreateFromCCCFile)
             OCIO::CDLTransform::CreateFromFile(filePath.c_str(), "cc0003");
         std::string idStr(transform->getID());
         OCIO_CHECK_EQUAL("cc0003", idStr);
-        std::string descStr(transform->getDescription());
-        OCIO_CHECK_EQUAL("golden", descStr);
+
+        const auto & metadata = transform->getFormatMetadata();
+        OCIO_REQUIRE_EQUAL(metadata.getNumChildrenElements(), 6);
+        OCIO_CHECK_EQUAL(std::string(metadata.getChildElement(3).getName()), "SOPDescription");
+        OCIO_CHECK_EQUAL(std::string(metadata.getChildElement(3).getValue()), "golden");
+
         float slope[3] = { 0.f, 0.f, 0.f };
         OCIO_CHECK_NO_THROW(transform->getSlope(slope));
         OCIO_CHECK_EQUAL(1.2f, slope[0]);
@@ -853,8 +917,7 @@ OCIO_ADD_TEST(CDLTransform, CreateFromCCCFile)
             OCIO::CDLTransform::CreateFromFile(filePath.c_str(), "3");
         std::string idStr(transform->getID());
         OCIO_CHECK_EQUAL("", idStr);
-        std::string descStr(transform->getDescription());
-        OCIO_CHECK_EQUAL("", descStr);
+
         float slope[3] = { 0.f, 0.f, 0.f };
         OCIO_CHECK_NO_THROW(transform->getSlope(slope));
         OCIO_CHECK_EQUAL(4.0f, slope[0]);
@@ -874,7 +937,7 @@ OCIO_ADD_TEST(CDLTransform, CreateFromCCCFile)
     }
 }
 
-OCIO_ADD_TEST(CDLTransform, CreateFromCCCFileFailure)
+OCIO_ADD_TEST(CDLTransform, create_from_ccc_file_failure)
 {
     const std::string filePath(std::string(OCIO::getTestFilesDir())
         + "/cdl_test1.ccc");
@@ -892,7 +955,7 @@ OCIO_ADD_TEST(CDLTransform, CreateFromCCCFileFailure)
     }
 }
 
-OCIO_ADD_TEST(CDLTransform, EscapeXML)
+OCIO_ADD_TEST(CDLTransform, escape_xml)
 {
     const std::string inputXML(
         "<ColorCorrection id=\"Esc &lt; &amp; &quot; &apos; &gt;\">\n"
@@ -907,13 +970,17 @@ OCIO_ADD_TEST(CDLTransform, EscapeXML)
         "    </SatNode>\n"
         "</ColorCorrection>");
 
-    // parse again using setXML
+    // Parse again using setXML.
     OCIO::CDLTransformRcPtr transformCDL = OCIO::CDLTransform::Create();
     transformCDL->setXML(inputXML.c_str());
     {
         std::string idStr(transformCDL->getID());
         OCIO_CHECK_EQUAL("Esc < & \" ' >", idStr);
-        std::string descStr(transformCDL->getDescription());
+
+        const auto & metadata = transformCDL->getFormatMetadata();
+        OCIO_REQUIRE_EQUAL(metadata.getNumChildrenElements(), 1);
+
+        std::string descStr(metadata.getChildElement(0).getValue());
         OCIO_CHECK_EQUAL("These: < & \" ' > are escape chars", descStr);
     }
 }
@@ -1097,6 +1164,39 @@ OCIO_ADD_TEST(CDLTransform, buildops)
     OCIO_CHECK_EQUAL(op->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
     auto cdldata = OCIO::DynamicPtrCast<const OCIO::CDLOpData>(op->data());
     OCIO_REQUIRE_ASSERT(cdldata);
+}
+
+OCIO_ADD_TEST(CDLTransform, description)
+{
+    auto cdl = OCIO::CDLTransform::Create();
+
+    const std::string id("TestCDL");
+    cdl->setID(id.c_str());
+
+    const std::string initialDesc(cdl->getDescription());
+    OCIO_CHECK_ASSERT(initialDesc.empty());
+
+    auto & metadata = cdl->getFormatMetadata();
+    metadata.addChildElement(OCIO::METADATA_DESCRIPTION, "Desc");
+    metadata.addChildElement(OCIO::METADATA_INPUT_DESCRIPTION, "Input Desc");
+    const std::string sopDesc("SOP Desc");
+    metadata.addChildElement(OCIO::METADATA_SOP_DESCRIPTION, sopDesc.c_str());
+    metadata.addChildElement(OCIO::METADATA_SAT_DESCRIPTION, "Sat Desc");
+
+    OCIO_CHECK_EQUAL(sopDesc, cdl->getDescription());
+
+    const std::string newSopDesc("SOP Desc New");
+    cdl->setDescription(newSopDesc.c_str());
+
+    OCIO_CHECK_EQUAL(newSopDesc, cdl->getDescription());
+    // setDescription will replace all existing children.
+    OCIO_CHECK_EQUAL(metadata.getNumChildrenElements(), 1);
+    // Not the ID.
+    OCIO_CHECK_EQUAL(id, cdl->getID());
+
+    // NULL description is removing all children.
+    cdl->setDescription(nullptr);
+    OCIO_CHECK_EQUAL(metadata.getNumChildrenElements(), 0);
 }
 
 #endif

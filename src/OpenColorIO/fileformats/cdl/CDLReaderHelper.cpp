@@ -38,7 +38,6 @@ CDLReaderColorCorrectionElt::CDLReaderColorCorrectionElt(
     unsigned xmlLocation,
     const std::string & xmlFile)
     : XmlReaderComplexElt(name, pParent, xmlLocation, xmlFile)
-    , m_transformList()
     , m_transformData(std::make_shared<CDLOpData>())
 {
 }
@@ -72,13 +71,6 @@ void CDLReaderColorCorrectionElt::end()
 
     transform->setID(m_transformData->getID().c_str());
 
-    const int descId = m_transformData->getFormatMetadata().getFirstChildIndex(TAG_DESCRIPTION);
-    if (descId != -1)
-    {
-        auto & desc = m_transformData->getFormatMetadata().getChildrenElements()[descId];
-        transform->setDescription(desc.getValue());
-    }
-    
     double vec9[9];
     const CDLOpData::ChannelParams & slopes = m_transformData->getSlopeParams();
     vec9[0] = slopes[0];
@@ -98,19 +90,25 @@ void CDLReaderColorCorrectionElt::end()
 
     transform->setSat(m_transformData->getSaturation());
 
+    auto & formatMetadata = transform->getFormatMetadata();
+    auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
+    metadata = m_transformData->getFormatMetadata();
+
     transform->validate();
-    m_transformList->push_back(transform);
+
+    m_parsingInfo->m_transforms.push_back(transform);
 }
 
-void CDLReaderColorCorrectionElt::setCDLTransformList(CDLTransformVecRcPtr pTransformList)
+void CDLReaderColorCorrectionElt::setCDLParsingInfo(const CDLParsingInfoRcPtr & pTransformList)
 {
-    m_transformList = pTransformList;
+    m_parsingInfo = pTransformList;
 }
 
-void CDLReaderColorCorrectionElt::appendDescription(const std::string & /*desc*/)
+void CDLReaderColorCorrectionElt::appendMetadata(const std::string & name, const std::string & value)
 {
-    // TODO: OCIO only keeps the description on the SOP.
-    //m_transform->setDescription(desc.c_str());
+    // Keeps description as metadata with supplied name.
+    FormatMetadataImpl item(name, value);
+    m_transformData->getFormatMetadata().getChildrenElements().push_back(item);
 }
 
 

@@ -115,7 +115,7 @@ void XmlReaderDescriptionElt::end()
     {
         // Note: eXpat automatically replaces escaped characters with 
         //       their original values.
-        getParent()->appendDescription(m_description);
+        getParent()->appendMetadata(getIdentifier(), m_description);
     }
 }
 
