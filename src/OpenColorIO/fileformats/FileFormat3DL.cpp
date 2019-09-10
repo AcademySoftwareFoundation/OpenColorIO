@@ -242,7 +242,7 @@ OCIO_NAMESPACE_ENTER
             const float stepValue = (float)GetBitDepthMaxValue(outBitDepth)
                 / ((float)dim - 1.0f);
 
-            for (unsigned int i = 0, p = 0; i < dim; ++i)
+            for (unsigned int i = 0; i < dim; ++i)
             {
                 if (fabs((float)i * stepValue - (float)rawshaper[i]) >= 2.0f)
                 {

@@ -225,7 +225,7 @@ OCIO_NAMESPACE_ENTER
                         pystring::split(pystring::strip(lineBuffer), inputLUT);
                         values.clear();
                         if (!StringVecToFloatVec(values, inputLUT)
-                            || components != values.size())
+                            || components != (int)values.size())
                         {
                             std::ostringstream os;
                             os << "Malformed LUT line. Expecting a ";

@@ -283,7 +283,7 @@ OCIO_NAMESPACE_ENTER
             float scale = 1.0f / ((float)outputBitDepthMaxValue - 1.0f);
 
             // lutArray and LUT in file are blue fastest.
-            for (int i = 0; i < raw3d.size(); ++i)
+            for (size_t i = 0; i < raw3d.size(); ++i)
             {
                 lutArray[i] = static_cast<float>(raw3d[i]) * scale;
             }
@@ -488,9 +488,9 @@ OCIO_ADD_TEST(FileFormatPandora, load_op)
     OCIO_CHECK_EQUAL("<FileNoOp>", ops[0]->getInfo());
     OCIO_CHECK_EQUAL("<Lut3DOp>", ops[1]->getInfo());
 
-    auto & op1 = std::const_pointer_cast<const OCIO::Op>(ops[1]);
-    auto & opData1 = op1->data();
-    auto & lut = std::dynamic_pointer_cast<const OCIO::Lut3DOpData>(opData1);
+    auto op1 = std::const_pointer_cast<const OCIO::Op>(ops[1]);
+    auto opData1 = op1->data();
+    auto lut = std::dynamic_pointer_cast<const OCIO::Lut3DOpData>(opData1);
     OCIO_REQUIRE_ASSERT(lut);
     OCIO_CHECK_EQUAL(lut->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
     OCIO_CHECK_EQUAL(lut->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);

@@ -420,9 +420,9 @@ OCIO_ADD_TEST(FileFormatVF, load_ops)
     OCIO_CHECK_EQUAL("<MatrixOffsetOp>", ops[1]->getInfo());
     OCIO_CHECK_EQUAL("<Lut3DOp>", ops[2]->getInfo());
 
-    auto & op1 = std::const_pointer_cast<const OCIO::Op>(ops[1]);
-    auto & opData1 = op1->data();
-    auto & mat = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opData1);
+    auto op1 = std::const_pointer_cast<const OCIO::Op>(ops[1]);
+    auto opData1 = op1->data();
+    auto mat = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opData1);
     OCIO_REQUIRE_ASSERT(mat);
     auto & matArray = mat->getArray();
     OCIO_CHECK_EQUAL(matArray[0], 2.0f);
@@ -442,9 +442,9 @@ OCIO_ADD_TEST(FileFormatVF, load_ops)
     OCIO_CHECK_EQUAL(matArray[14], 0.0f);
     OCIO_CHECK_EQUAL(matArray[15], 1.0f);
 
-    auto & op2 = std::const_pointer_cast<const OCIO::Op>(ops[2]);
-    auto & opData2 = op2->data();
-    auto & lut = std::dynamic_pointer_cast<const OCIO::Lut3DOpData>(opData2);
+    auto op2 = std::const_pointer_cast<const OCIO::Op>(ops[2]);
+    auto opData2 = op2->data();
+    auto lut = std::dynamic_pointer_cast<const OCIO::Lut3DOpData>(opData2);
     OCIO_REQUIRE_ASSERT(lut);
     OCIO_CHECK_EQUAL(lut->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
     OCIO_CHECK_EQUAL(lut->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
