@@ -511,29 +511,23 @@ void CreateGenericScaleOp(OpRcPtrVec & ops)
 
 void CreateGenericLutOp(OpRcPtrVec & ops)
 {
-    // Make a LUT that squares the input
-    Lut1DRcPtr lut = Lut1D::Create();
+    // Make a LUT that squares the input.
+    const unsigned long size = 256;
+    Lut1DOpDataRcPtr lut = std::make_shared<OCIO::Lut1DOpData>(size);
+    auto & lutArray = lut->getArray();
+    
+    for(unsigned long i = 0; i < size; ++i)
     {
-        lut->from_min[0] = 0.0f;
-        lut->from_min[1] = 0.0f;
-        lut->from_min[2] = 0.0f;
-        lut->from_max[0] = 1.0f;
-        lut->from_max[1] = 1.0f;
-        lut->from_max[2] = 1.0f;
-        const int size = 256;
-        for(int i=0; i<size; ++i)
+        const float x = (float)i / (float)(size-1);
+        const float x2 = x*x;
+
+        for(int c=0; c<3; ++c)
         {
-            const float x = (float)i / (float)(size-1);
-            const float x2 = x*x;
-            
-            for(int c=0; c<3; ++c)
-            {
-                lut->luts[c].push_back(x2);
-            }
+            lutArray[3 * i +  c] = x2;
         }
     }
-    
-    CreateLut1DOp(ops, lut, INTERP_LINEAR, TRANSFORM_DIR_FORWARD);
+
+    CreateLut1DOp(ops, lut, TRANSFORM_DIR_FORWARD);
 }
 
 OCIO_ADD_TEST(NoOps, PartitionGPUOps)

@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "BitDepthUtils.h"
 #include "ops/Lut1D/Lut1DOp.h"
 #include "ops/Lut3D/Lut3DOp.h"
 #include "ParseUtils.h"
@@ -45,25 +46,22 @@ OCIO_NAMESPACE_ENTER
         class LocalCachedFile : public CachedFile
         {
         public:
-            LocalCachedFile ()
-            {
-                lut3D = Lut3D::Create();
-            };
-            ~LocalCachedFile() {};
-            
-            // TODO: Switch to the OpData class.
-            Lut3DRcPtr lut3D;
+            LocalCachedFile () = default;
+            ~LocalCachedFile() = default;
+
+            Lut3DOpDataRcPtr lut3D;
         };
-        
+
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
-        
-        
-        
+
+
+
         class LocalFileFormat : public FileFormat
         {
         public:
             
-            ~LocalFileFormat() {};
+            LocalFileFormat() = default;
+            ~LocalFileFormat() = default;
             
             void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
             
@@ -72,11 +70,11 @@ OCIO_NAMESPACE_ENTER
                 const std::string & fileName) const override;
             
             void buildFileOps(OpRcPtrVec & ops,
-                         const Config& config,
-                         const ConstContextRcPtr & context,
-                         CachedFileRcPtr untypedCachedFile,
-                         const FileTransform& fileTransform,
-                         TransformDirection dir) const override;
+                              const Config & config,
+                              const ConstContextRcPtr & context,
+                              CachedFileRcPtr untypedCachedFile,
+                              const FileTransform & fileTransform,
+                              TransformDirection dir) const override;
 
         private:
             static void ThrowErrorMessage(const std::string & error,
@@ -111,7 +109,7 @@ OCIO_NAMESPACE_ENTER
             info.extension = "mga";
             info.capabilities = FORMAT_CAPABILITY_READ;
             formatInfoVec.push_back(info);
-            
+
             FormatInfo info2;
             info2.name = "pandora_m3d";
             info2.extension = "m3d";
@@ -129,16 +127,16 @@ OCIO_NAMESPACE_ENTER
                 throw Exception ("File stream empty when trying "
                                  "to read Pandora LUT");
             }
-            
+
             // Validate the file type
             std::string line;
-            
+
             // Parse the file
             std::string format;
             int lutEdgeLen = 0;
             int outputBitDepthMaxValue = 0;
             std::vector<int> raw3d;
-            
+
             {
                 StringVec parts;
                 std::vector<int> tmpints;
@@ -153,10 +151,10 @@ OCIO_NAMESPACE_ENTER
                     pystring::split(pystring::lower(pystring::strip(line)),
                                     parts);
                     if(parts.empty()) continue;
-                    
+
                     // Skip all lines starting with '#'
                     if(pystring::startswith(parts[0],"#")) continue;
-                    
+
                     if(parts[0] == "channel")
                     {
                         if(parts.size() != 2 
@@ -225,7 +223,7 @@ OCIO_NAMESPACE_ENTER
                                 lineNumber,
                                 line);
                         }
-                        
+
                         inLut3d = true;
                     }
                     else if(inLut3d)
@@ -238,14 +236,14 @@ OCIO_NAMESPACE_ENTER
                                 lineNumber,
                                 line);
                         }
-                        
+
                         raw3d.push_back(tmpints[1]);
                         raw3d.push_back(tmpints[2]);
                         raw3d.push_back(tmpints[3]);
                     }
                 }
             }
-            
+
             // Interpret the parsed data, validate LUT sizes
             if(lutEdgeLen*lutEdgeLen*lutEdgeLen != static_cast<int>(raw3d.size()/3))
             {
@@ -257,51 +255,42 @@ OCIO_NAMESPACE_ENTER
                     os.str().c_str(),
                     fileName, -1, "");
             }
-            
+
             if(lutEdgeLen*lutEdgeLen*lutEdgeLen == 0)
             {
                 ThrowErrorMessage(
                     "No 3D LUT entries found.",
                     fileName, -1, "");
             }
-            
+
             if(outputBitDepthMaxValue <= 0)
             {
                 ThrowErrorMessage(
                     "A valid 'out' tag was not found.",
                     fileName, -1, "");
             }
-            
+
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
-            
-            // Reformat 3D data
-            cachedFile->lut3D->size[0] = lutEdgeLen;
-            cachedFile->lut3D->size[1] = lutEdgeLen;
-            cachedFile->lut3D->size[2] = lutEdgeLen;
-            cachedFile->lut3D->lut.reserve(raw3d.size());
-            
+
+            // Copy raw3d vector into LutOpData object.
+            cachedFile->lut3D = std::make_shared<Lut3DOpData>(lutEdgeLen);
+
+            BitDepth fileBD = GetBitdepthFromMaxValue(outputBitDepthMaxValue);
+            cachedFile->lut3D->setFileOutputBitDepth(fileBD);
+
+            auto & lutArray = cachedFile->lut3D->getArray();
+
             float scale = 1.0f / ((float)outputBitDepthMaxValue - 1.0f);
-            
-            // lut3D->lut is red fastest (loop on B, G then R to push values)
-            for (int bIndex = 0; bIndex<lutEdgeLen; ++bIndex)
+
+            // lutArray and LUT in file are blue fastest.
+            for (int i = 0; i < raw3d.size(); ++i)
             {
-                for(int gIndex=0; gIndex<lutEdgeLen; ++gIndex)
-                {
-                    for (int rIndex = 0; rIndex<lutEdgeLen; ++rIndex)
-                    {
-                        // In file, LUT is blue fastest
-                        int i = GetLut3DIndex_BlueFast(rIndex, gIndex, bIndex,
-                                                      lutEdgeLen, lutEdgeLen, lutEdgeLen);
-                        cachedFile->lut3D->lut.push_back(static_cast<float>(raw3d[i+0]) * scale);
-                        cachedFile->lut3D->lut.push_back(static_cast<float>(raw3d[i+1]) * scale);
-                        cachedFile->lut3D->lut.push_back(static_cast<float>(raw3d[i+2]) * scale);
-                    }
-                }
+                lutArray[i] = static_cast<float>(raw3d[i]) * scale;
             }
-            
+
             return cachedFile;
         }
-        
+
         void
         LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                                       const Config& /*config*/,
@@ -311,7 +300,7 @@ OCIO_NAMESPACE_ENTER
                                       TransformDirection dir) const
         {
             LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
-            
+
             // This should never happen.
             if(!cachedFile)
             {
@@ -319,7 +308,7 @@ OCIO_NAMESPACE_ENTER
                 os << "Cannot build Pandora LUT. Invalid cache type.";
                 throw Exception(os.str().c_str());
             }
-            
+
             TransformDirection newDir = CombineTransformDirections(dir,
                 fileTransform.getDirection());
             if(newDir == TRANSFORM_DIR_UNKNOWN)
@@ -329,20 +318,15 @@ OCIO_NAMESPACE_ENTER
                 os << " unspecified transform direction.";
                 throw Exception(os.str().c_str());
             }
-            
-            if(newDir == TRANSFORM_DIR_FORWARD)
+
+            if (cachedFile->lut3D)
             {
-                CreateLut3DOp(ops, cachedFile->lut3D,
-                              fileTransform.getInterpolation(), newDir);
-            }
-            else if(newDir == TRANSFORM_DIR_INVERSE)
-            {
-                CreateLut3DOp(ops, cachedFile->lut3D,
-                              fileTransform.getInterpolation(), newDir);
+                cachedFile->lut3D->setInterpolation(fileTransform.getInterpolation());
+                CreateLut3DOp(ops, cachedFile->lut3D, newDir);
             }
         }
     }
-    
+
     FileFormat * CreateFileFormatPandora()
     {
         return new LocalFileFormat();
@@ -354,9 +338,9 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
-#include <fstream>
+#include "UnitTestUtils.h"
 
-OCIO_ADD_TEST(FileFormatPandora, FormatInfo)
+OCIO_ADD_TEST(FileFormatPandora, format_info)
 {
     OCIO::FormatInfoVec formatInfoVec;
     OCIO::LocalFileFormat tester;
@@ -384,7 +368,7 @@ void ReadPandora(const std::string & fileContent)
     OCIO::CachedFileRcPtr cachedFile = tester.read(is, SAMPLE_NAME);
 }
 
-OCIO_ADD_TEST(FileFormatPandora, ReadFailure)
+OCIO_ADD_TEST(FileFormatPandora, read_failure)
 {
     {
         // Validate stream can be read with no error.
@@ -490,6 +474,55 @@ OCIO_ADD_TEST(FileFormatPandora, ReadFailure)
                               OCIO::Exception,
                               "Incorrect number of 3D LUT entries");
     }
+}
+
+OCIO_ADD_TEST(FileFormatPandora, load_op)
+{
+    const std::string fileName("pandora_3d.m3d");
+    OCIO::OpRcPtrVec ops;
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
+    OCIO_CHECK_NO_THROW(BuildOpsTest(ops, fileName, context,
+        OCIO::TRANSFORM_DIR_FORWARD));
+
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_CHECK_EQUAL("<FileNoOp>", ops[0]->getInfo());
+    OCIO_CHECK_EQUAL("<Lut3DOp>", ops[1]->getInfo());
+
+    auto & op1 = std::const_pointer_cast<const OCIO::Op>(ops[1]);
+    auto & opData1 = op1->data();
+    auto & lut = std::dynamic_pointer_cast<const OCIO::Lut3DOpData>(opData1);
+    OCIO_REQUIRE_ASSERT(lut);
+    OCIO_CHECK_EQUAL(lut->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(lut->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(lut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+
+    auto & lutArray = lut->getArray();
+    OCIO_REQUIRE_EQUAL(lutArray.getNumValues(), 24);
+    const float error = 1e-7f;
+    OCIO_CHECK_CLOSE(lutArray[0], 0.0f, error);
+    OCIO_CHECK_CLOSE(lutArray[1], 0.0f, error);
+    OCIO_CHECK_CLOSE(lutArray[2], 0.0f, error);
+    OCIO_CHECK_CLOSE(lutArray[3], 0.0f, error);
+    OCIO_CHECK_CLOSE(lutArray[4], 0.0f, error);
+    OCIO_CHECK_CLOSE(lutArray[5], 0.8f, error);
+    OCIO_CHECK_CLOSE(lutArray[6], 0.0f, error);
+    OCIO_CHECK_CLOSE(lutArray[7], 0.8f, error);
+    OCIO_CHECK_CLOSE(lutArray[8], 0.0f, error);
+    OCIO_CHECK_CLOSE(lutArray[9], 0.0f, error);
+    OCIO_CHECK_CLOSE(lutArray[10], 0.8f, error);
+    OCIO_CHECK_CLOSE(lutArray[11], 0.8f, error);
+    OCIO_CHECK_CLOSE(lutArray[12], 1.0f, error);
+    OCIO_CHECK_CLOSE(lutArray[13], 0.0f, error);
+    OCIO_CHECK_CLOSE(lutArray[14], 0.0f, error);
+    OCIO_CHECK_CLOSE(lutArray[15], 1.0f, error);
+    OCIO_CHECK_CLOSE(lutArray[16], 0.0f, error);
+    OCIO_CHECK_CLOSE(lutArray[17], 1.0f, error);
+    OCIO_CHECK_CLOSE(lutArray[18], 1.0f, error);
+    OCIO_CHECK_CLOSE(lutArray[19], 1.0f, error);
+    OCIO_CHECK_CLOSE(lutArray[20], 0.0f, error);
+    OCIO_CHECK_CLOSE(lutArray[21], 1.2f, error);
+    OCIO_CHECK_CLOSE(lutArray[22], 1.0f, error);
+    OCIO_CHECK_CLOSE(lutArray[23], 1.2f, error);
 }
 
 #endif // OCIO_UNIT_TEST

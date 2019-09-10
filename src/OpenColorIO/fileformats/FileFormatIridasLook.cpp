@@ -501,14 +501,10 @@ OCIO_NAMESPACE_ENTER
         class LocalCachedFile : public CachedFile
         {
         public:
-            LocalCachedFile ()
-            {
-                lut3D = Lut3D::Create();
-            };
-            ~LocalCachedFile() {};
+            LocalCachedFile () = default;
+            ~LocalCachedFile()  = default;
 
-            // TODO: Switch to the OpData class.
-            Lut3DRcPtr lut3D;
+            Lut3DOpDataRcPtr lut3D;
         };
 
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -516,8 +512,8 @@ OCIO_NAMESPACE_ENTER
         class LocalFileFormat : public FileFormat
         {
         public:
-
-            ~LocalFileFormat() {};
+            LocalFileFormat() = default;
+            ~LocalFileFormat() = default;
 
             void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
@@ -526,10 +522,10 @@ OCIO_NAMESPACE_ENTER
                 const std::string & fileName) const override;
 
             void buildFileOps(OpRcPtrVec & ops,
-                              const Config& config,
+                              const Config & config,
                               const ConstContextRcPtr & context,
                               CachedFileRcPtr untypedCachedFile,
-                              const FileTransform& fileTransform,
+                              const FileTransform & fileTransform,
                               TransformDirection dir) const override;
         };
 
@@ -557,10 +553,13 @@ OCIO_NAMESPACE_ENTER
             // Validate LUT sizes, and create cached file object
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
 
-            parser.getLut(cachedFile->lut3D->size[0], cachedFile->lut3D->lut);
+            int gridSize = 0;
+            std::vector<float> raw;
+            parser.getLut(gridSize, raw);
 
-            cachedFile->lut3D->size[1] = cachedFile->lut3D->size[0];
-            cachedFile->lut3D->size[2] = cachedFile->lut3D->size[0];
+            cachedFile->lut3D = std::make_shared<Lut3DOpData>(gridSize);
+            cachedFile->lut3D->setFileOutputBitDepth(BIT_DEPTH_F32);
+            cachedFile->lut3D->setArrayFromRedFastestOrder(raw);
 
             return cachedFile;
         }
@@ -594,8 +593,11 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
 
-            CreateLut3DOp(ops, cachedFile->lut3D,
-                          fileTransform.getInterpolation(), newDir);
+            if (cachedFile->lut3D)
+            {
+                cachedFile->lut3D->setInterpolation(fileTransform.getInterpolation());
+                CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+            }
         }
     }
 
@@ -945,12 +947,12 @@ OCIO_ADD_TEST(FileFormatIridasLook, simple3d)
     LocalCachedFileRcPtr looklut = DynamicPtrCast<LocalCachedFile>(cachedFile);
 
     // Check LUT size is correct
-    OCIO_CHECK_EQUAL(looklut->lut3D->size[0], 8);
-    OCIO_CHECK_EQUAL(looklut->lut3D->size[1], 8);
-    OCIO_CHECK_EQUAL(looklut->lut3D->size[2], 8);
+    const auto & lutArray = looklut->lut3D->getArray();
+    const int lutSize = 8;
+    OCIO_CHECK_EQUAL(lutArray.getLength(), lutSize);
 
     // Check LUT values
-    OCIO_CHECK_EQUAL(looklut->lut3D->lut.size(), 8*8*8*3);
+    OCIO_CHECK_EQUAL(lutArray.getNumValues(), (size_t)8*8*8*3);
 
     double cube[8 * 8 * 8 * 3] = {
         -0.00000, -0.00000, -0.00000,
@@ -1468,8 +1470,36 @@ OCIO_ADD_TEST(FileFormatIridasLook, simple3d)
     };
 
     // check cube data
-    for(unsigned int i = 0; i < looklut->lut3D->lut.size(); ++i) {
-        OCIO_CHECK_CLOSE(cube[i], looklut->lut3D->lut[i], 1e-4);
+    int r = 0;
+    int g = 0;
+    int b = 0;
+
+    const int num3dentries = lutSize * lutSize * lutSize;
+
+    for(unsigned int i = 0; i < num3dentries; ++i)
+    {
+        // OpData::Lut3D Array index, b changes fastest.
+        const unsigned long arrayIdx =
+            GetLut3DIndex_BlueFast(r, g, b,
+                                   lutSize, lutSize, lutSize);
+
+        OCIO_CHECK_CLOSE(cube[i * 3 + 0], lutArray[arrayIdx + 0], 1e-4);
+        OCIO_CHECK_CLOSE(cube[i * 3 + 1], lutArray[arrayIdx + 1], 1e-4);
+        OCIO_CHECK_CLOSE(cube[i * 3 + 2], lutArray[arrayIdx + 2], 1e-4);
+
+        // cube stores the LUT in red-fastest order.
+        r += 1;
+        if (r == lutSize)
+        {
+            r = 0;
+            g += 1;
+            if (g == lutSize)
+            {
+                g = 0;
+                b += 1;
+            }
+        }
+
     }
 }
 

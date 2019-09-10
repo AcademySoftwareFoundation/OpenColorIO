@@ -87,33 +87,29 @@ OpRcPtrVec Create3DLut(const OpRcPtrVec & ops, unsigned edgelen)
     const unsigned lut3DEdgeLen   = edgelen;
     const unsigned lut3DNumPixels = lut3DEdgeLen*lut3DEdgeLen*lut3DEdgeLen;
 
-    Lut3DRcPtr lut = Lut3D::Create();
-    lut->size[0] = lut3DEdgeLen;
-    lut->size[1] = lut3DEdgeLen;
-    lut->size[2] = lut3DEdgeLen;
+    Lut3DOpDataRcPtr lut = std::make_shared<Lut3DOpData>(lut3DEdgeLen);
 
-    lut->lut.resize(lut3DNumPixels*3);
-    
     // Allocate 3D LUT image, RGBA
     std::vector<float> lut3D(lut3DNumPixels*4);
-    GenerateIdentityLut3D(&lut3D[0], lut3DEdgeLen, 4, LUT3DORDER_FAST_RED);
-    
+    GenerateIdentityLut3D(&lut3D[0], lut3DEdgeLen, 4, LUT3DORDER_FAST_BLUE);
+
     // Apply the lattice ops to it
     for(const auto & op : ops)
     {
         op->apply(&lut3D[0], &lut3D[0], lut3DNumPixels);
     }
-    
-    // Convert the RGBA image to an RGB image, in place.           
+
+    // Convert the RGBA image to an RGB image, in place.
+    auto & lutArray = lut->getArray();
     for(unsigned i=0; i<lut3DNumPixels; ++i)
     {
-        lut->lut[3*i+0] = lut3D[4*i+0];
-        lut->lut[3*i+1] = lut3D[4*i+1];
-        lut->lut[3*i+2] = lut3D[4*i+2];
+        lutArray[3*i+0] = lut3D[4*i+0];
+        lutArray[3*i+1] = lut3D[4*i+1];
+        lutArray[3*i+2] = lut3D[4*i+2];
     }
 
     OpRcPtrVec newOps;
-    CreateLut3DOp(newOps, lut, INTERP_LINEAR, TRANSFORM_DIR_FORWARD);
+    CreateLut3DOp(newOps, lut, TRANSFORM_DIR_FORWARD);
     return newOps;
 }
 

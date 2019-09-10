@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "ops/Lut1D/Lut1DOp.h"
 #include "ops/Lut3D/Lut3DOp.h"
+#include "ops/Matrix/MatrixOps.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
@@ -82,6 +83,7 @@ DOMAIN_MAX 1.0 1.0 1.0
 #IRIDAS applications generally use a floating point pipeline
 #with little or no clipping
 
+#A LUT may contain a 1D or 3D LUT but not both.
 
 */
 
@@ -93,31 +95,25 @@ OCIO_NAMESPACE_ENTER
         class LocalCachedFile : public CachedFile
         {
         public:
-            LocalCachedFile () : 
-                has1D(false),
-                has3D(false)
-            {
-                lut1D = Lut1D::Create();
-                lut3D = Lut3D::Create();
-            };
-            ~LocalCachedFile() {};
-            
-            bool has1D;
-            bool has3D;
-            // TODO: Switch to the OpData classes.
-            Lut1DRcPtr lut1D;
-            Lut3DRcPtr lut3D;
+            LocalCachedFile() = default;
+            ~LocalCachedFile() = default;
+
+            Lut1DOpDataRcPtr lut1D;
+            Lut3DOpDataRcPtr lut3D;
+            float domain_min[3]{ 0.0f, 0.0f, 0.0f };
+            float domain_max[3]{ 1.0f, 1.0f, 1.0f };
         };
-        
+
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
-        
-        
-        
+
+
+
         class LocalFileFormat : public FileFormat
         {
         public:
             
-            ~LocalFileFormat() {};
+            LocalFileFormat() = default;
+            ~LocalFileFormat() = default;
             
             void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
             
@@ -130,22 +126,23 @@ OCIO_NAMESPACE_ENTER
                       std::ostream & ostream) const override;
             
             void buildFileOps(OpRcPtrVec & ops,
-                         const Config& config,
-                         const ConstContextRcPtr & context,
-                         CachedFileRcPtr untypedCachedFile,
-                         const FileTransform& fileTransform,
-                         TransformDirection dir) const override;
+                              const Config & config,
+                              const ConstContextRcPtr & context,
+                              CachedFileRcPtr untypedCachedFile,
+                              const FileTransform & fileTransform,
+                              TransformDirection dir) const override;
+							  
         private:
             static void ThrowErrorMessage(const std::string & error,
-                const std::string & fileName,
-                int line,
-                const std::string & lineContent);
+                                          const std::string & fileName,
+                                          int line,
+                                          const std::string & lineContent);
         };
         
         void LocalFileFormat::ThrowErrorMessage(const std::string & error,
-            const std::string & fileName,
-            int line,
-            const std::string & lineContent)
+                                                const std::string & fileName,
+                                                int line,
+                                                const std::string & lineContent)
         {
             std::ostringstream os;
             os << "Error parsing Iridas .cube file (";
@@ -184,7 +181,7 @@ OCIO_NAMESPACE_ENTER
             // Parse the file
             std::vector<float> raw;
             
-            int size3d[] = { 0, 0, 0 };
+            int size3d = 0;
             int size1d = 0;
             
             bool in1d = false;
@@ -249,11 +246,9 @@ OCIO_NAMESPACE_ENTER
                                 lineNumber,
                                 line);
                         }
-                        size3d[0] = size;
-                        size3d[1] = size;
-                        size3d[2] = size;
+                        size3d = size;
                         
-                        raw.reserve(3*size3d[0]*size3d[1]*size3d[2]);
+                        raw.reserve(3*size3d*size3d*size3d);
                         in3d = true;
                     }
                     else if(pystring::lower(parts[0]) == "domain_min")
@@ -305,7 +300,7 @@ OCIO_NAMESPACE_ENTER
                 }
             }
             
-            // Interpret the parsed data, validate LUT sizes
+            // Interpret the parsed data, validate LUT sizes.
             
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
             
@@ -325,58 +320,43 @@ OCIO_NAMESPACE_ENTER
                 // Reformat 1D data
                 if(size1d>0)
                 {
-                    cachedFile->has1D = true;
-                    memcpy(cachedFile->lut1D->from_min, domain_min, 3*sizeof(float));
-                    memcpy(cachedFile->lut1D->from_max, domain_max, 3*sizeof(float));
-                    
-                    for(int channel=0; channel<3; ++channel)
+                    memcpy(cachedFile->domain_min, domain_min, 3 * sizeof(float));
+                    memcpy(cachedFile->domain_max, domain_max, 3 * sizeof(float));
+
+                    const auto lutLenght = static_cast<unsigned long>(size1d);
+                    cachedFile->lut1D = std::make_shared<Lut1DOpData>(lutLenght);
+
+                    cachedFile->lut1D->setFileOutputBitDepth(BIT_DEPTH_F32);
+
+                    auto & lutArray = cachedFile->lut1D->getArray();
+
+                    const auto numVals = lutArray.getNumValues();
+                    for(unsigned long i = 0; i < numVals; ++i)
                     {
-                        cachedFile->lut1D->luts[channel].resize(size1d);
-                        for(int i=0; i<size1d; ++i)
-                        {
-                            cachedFile->lut1D->luts[channel][i] = raw[3*i+channel];
-                        }
+                        lutArray[i] = raw[i];
                     }
-                    
-                    // 1e-5 rel error is a good threshold when float numbers near 0
-                    // are written out with 6 decimal places of precision.  This is
-                    // a bit aggressive, I.e., changes in the 6th decimal place will
-                    // be considered roundoff error, but changes in the 5th decimal
-                    // will be considered LUT 'intent'.
-                    // 1.0
-                    // 1.000005 equal to 1.0
-                    // 1.000007 equal to 1.0
-                    // 1.000010 not equal
-                    // 0.0
-                    // 0.000001 not equal
-                    
-                    cachedFile->lut1D->maxerror = 1e-5f;
-                    cachedFile->lut1D->errortype = Lut1D::ERROR_RELATIVE;
                 }
             }
             else if(in3d)
             {
-                cachedFile->has3D = true;
-                
-                if(size3d[0]*size3d[1]*size3d[2] 
+                if(size3d*size3d*size3d 
                     != static_cast<int>(raw.size()/3))
                 {
                     std::ostringstream os;
                     os << "Incorrect number of 3D LUT entries. ";
                     os << "Found " << raw.size() / 3 << ", expected ";
-                    os << size3d[0] * size3d[1] * size3d[2] << ".";
+                    os << size3d * size3d * size3d << ".";
                     ThrowErrorMessage(
                         os.str().c_str(),
                         fileName, -1, "");
                 }
-                
+
                 // Reformat 3D data
-                memcpy(cachedFile->lut3D->from_min, domain_min, 3*sizeof(float));
-                memcpy(cachedFile->lut3D->from_max, domain_max, 3*sizeof(float));
-                cachedFile->lut3D->size[0] = size3d[0];
-                cachedFile->lut3D->size[1] = size3d[1];
-                cachedFile->lut3D->size[2] = size3d[2];
-                cachedFile->lut3D->lut = raw;
+                memcpy(cachedFile->domain_min, domain_min, 3*sizeof(float));
+                memcpy(cachedFile->domain_max, domain_max, 3*sizeof(float));
+                cachedFile->lut3D = std::make_shared<Lut3DOpData>(size3d);
+                cachedFile->lut3D->setFileOutputBitDepth(BIT_DEPTH_F32);
+                cachedFile->lut3D->setArrayFromRedFastestOrder(raw);
             }
             else
             {
@@ -384,7 +364,7 @@ OCIO_NAMESPACE_ENTER
                     "LUT type (1D/3D) unspecified.",
                     fileName, -1, "");
             }
-            
+
             return cachedFile;
         }
         
@@ -392,9 +372,9 @@ OCIO_NAMESPACE_ENTER
                                    const std::string & formatName,
                                    std::ostream & ostream) const
         {
-            
+
             static const int DEFAULT_CUBE_SIZE = 32;
-            
+
             if(formatName != "iridas_cube")
             {
                 std::ostringstream os;
@@ -402,18 +382,18 @@ OCIO_NAMESPACE_ENTER
                 os << formatName << "'.";
                 throw Exception(os.str().c_str());
             }
-            
+
             ConstConfigRcPtr config = baker.getConfig();
-            
+
             int cubeSize = baker.getCubeSize();
             if(cubeSize==-1) cubeSize = DEFAULT_CUBE_SIZE;
             cubeSize = std::max(2, cubeSize); // smallest cube is 2x2x2
-            
+
             std::vector<float> cubeData;
             cubeData.resize(cubeSize*cubeSize*cubeSize*3);
             GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_RED);
             PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
-            
+
             // Apply our conversion from the input space to the output space.
             ConstProcessorRcPtr inputToTarget;
             std::string looks = baker.getLooks();
@@ -431,7 +411,7 @@ OCIO_NAMESPACE_ENTER
             }
             ConstCPUProcessorRcPtr cpu = inputToTarget->getDefaultCPUProcessor();
             cpu->apply(cubeImg);
-            
+
             if(baker.getMetadata() != NULL)
             {
                 std::string metadata = baker.getMetadata();
@@ -451,7 +431,7 @@ OCIO_NAMESPACE_ENTER
             {
                 throw Exception("Internal cube size exception");
             }
-            
+
             // Set to a fixed 6 decimal precision
             ostream.setf(std::ios::fixed, std::ios::floatfield);
             ostream.precision(6);
@@ -462,17 +442,17 @@ OCIO_NAMESPACE_ENTER
                         << cubeData[3*i+2] << "\n";
             }
         }
-        
+
         void
         LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
-                                      const Config& /*config*/,
+                                      const Config & /*config*/,
                                       const ConstContextRcPtr & /*context*/,
                                       CachedFileRcPtr untypedCachedFile,
-                                      const FileTransform& fileTransform,
+                                      const FileTransform & fileTransform,
                                       TransformDirection dir) const
         {
             LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
-            
+
             // This should never happen.
             if(!cachedFile)
             {
@@ -480,7 +460,7 @@ OCIO_NAMESPACE_ENTER
                 os << "Cannot build Iridas .cube Op. Invalid cache type.";
                 throw Exception(os.str().c_str());
             }
-            
+
             TransformDirection newDir = CombineTransformDirections(dir,
                 fileTransform.getDirection());
             if(newDir == TRANSFORM_DIR_UNKNOWN)
@@ -490,37 +470,41 @@ OCIO_NAMESPACE_ENTER
                 os << " unspecified transform direction.";
                 throw Exception(os.str().c_str());
             }
-            
-            // TODO: INTERP_LINEAR should not be hard-coded.
-            // Instead query 'highest' interpolation?
-            // (right now, it's linear). If cubic is added, consider
-            // using it
-            
+
+            if (cachedFile->lut3D)
+            {
+                cachedFile->lut3D->setInterpolation(fileTransform.getInterpolation());
+            }
+            else if (cachedFile->lut1D)
+            {
+                cachedFile->lut1D->setInterpolation(fileTransform.getInterpolation());
+            }
+
+            const double dmin[]{ cachedFile->domain_min[0], cachedFile->domain_min[1], cachedFile->domain_min[2] };
+            const double dmax[]{ cachedFile->domain_max[0], cachedFile->domain_max[1], cachedFile->domain_max[2] };
             if(newDir == TRANSFORM_DIR_FORWARD)
             {
-                if(cachedFile->has1D)
+                CreateMinMaxOp(ops, dmin, dmax, newDir);
+                if(cachedFile->lut1D)
                 {
-                    CreateLut1DOp(ops, cachedFile->lut1D,
-                                  INTERP_LINEAR, newDir);
+                    CreateLut1DOp(ops, cachedFile->lut1D, newDir);
                 }
-                if(cachedFile->has3D)
+                else if(cachedFile->lut3D)
                 {
-                    CreateLut3DOp(ops, cachedFile->lut3D,
-                                  fileTransform.getInterpolation(), newDir);
+                    CreateLut3DOp(ops, cachedFile->lut3D, newDir);
                 }
             }
             else if(newDir == TRANSFORM_DIR_INVERSE)
             {
-                if(cachedFile->has3D)
+                if(cachedFile->lut3D)
                 {
-                    CreateLut3DOp(ops, cachedFile->lut3D,
-                                  fileTransform.getInterpolation(), newDir);
+                    CreateLut3DOp(ops, cachedFile->lut3D, newDir);
                 }
-                if(cachedFile->has1D)
+                else if(cachedFile->lut1D)
                 {
-                    CreateLut1DOp(ops, cachedFile->lut1D,
-                                  INTERP_LINEAR, newDir);
+                    CreateLut1DOp(ops, cachedFile->lut1D, newDir);
                 }
+                CreateMinMaxOp(ops, dmin, dmax, newDir);
             }
         }
     }
@@ -539,9 +523,9 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
-#include <fstream>
+#include "UnitTestUtils.h"
 
-OCIO_ADD_TEST(FileFormatIridasCube, FormatInfo)
+OCIO_ADD_TEST(FileFormatIridasCube, format_info)
 {
     OCIO::FormatInfoVec formatInfoVec;
     OCIO::LocalFileFormat tester;
@@ -567,7 +551,7 @@ OCIO::LocalCachedFileRcPtr ReadIridasCube(const std::string & fileContent)
     return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
 }
 
-OCIO_ADD_TEST(FileFormatIridasCube, ReadFailure)
+OCIO_ADD_TEST(FileFormatIridasCube, read_failure)
 {
     {
         // Validate stream can be read with no error.
@@ -747,6 +731,152 @@ OCIO_ADD_TEST(FileFormatIridasCube, no_shaper)
     {
         OCIO_CHECK_EQUAL(osvec[i], resvec[i]);
     }
+}
+
+OCIO_ADD_TEST(FileFormatIridasCube, load_1d_op)
+{
+    const std::string fileName("iridas_1d.cube");
+    OCIO::OpRcPtrVec ops;
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
+    OCIO_CHECK_NO_THROW(BuildOpsTest(ops, fileName, context,
+        OCIO::TRANSFORM_DIR_FORWARD));
+
+    OCIO_REQUIRE_EQUAL(ops.size(), 3);
+    OCIO_CHECK_EQUAL("<FileNoOp>", ops[0]->getInfo());
+    OCIO_CHECK_EQUAL("<MatrixOffsetOp>", ops[1]->getInfo());
+    OCIO_CHECK_EQUAL("<Lut1DOp>", ops[2]->getInfo());
+
+    auto & op1 = std::const_pointer_cast<const OCIO::Op>(ops[1]);
+    auto & opData1 = op1->data();
+    auto & mat = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opData1);
+    OCIO_REQUIRE_ASSERT(mat);
+    auto & matArray = mat->getArray();
+    OCIO_CHECK_EQUAL(matArray[0], 0.25f);
+    OCIO_CHECK_EQUAL(matArray[1], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[2], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[3], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[4], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[5], 1.0f);
+    OCIO_CHECK_EQUAL(matArray[6], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[7], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[8], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[9], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[10], 1.0f);
+    OCIO_CHECK_EQUAL(matArray[11], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[12], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[13], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[14], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[15], 1.0f);
+
+    auto & matOffsets = mat->getOffsets();
+    OCIO_CHECK_EQUAL(matOffsets[0], 0.5f);
+    OCIO_CHECK_EQUAL(matOffsets[1], -1.0f);
+    OCIO_CHECK_EQUAL(matOffsets[2], 0.0f);
+    OCIO_CHECK_EQUAL(matOffsets[3], 0.0f);
+
+    auto & op2 = std::const_pointer_cast<const OCIO::Op>(ops[2]);
+    auto & opData2 = op2->data();
+    auto & lut = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opData2);
+    OCIO_REQUIRE_ASSERT(lut);
+    OCIO_CHECK_EQUAL(lut->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(lut->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(lut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
+    auto & lutArray = lut->getArray();
+    OCIO_REQUIRE_EQUAL(lutArray.getNumValues(), 15);
+
+    OCIO_CHECK_EQUAL(lutArray[0], -1.0f);
+    OCIO_CHECK_EQUAL(lutArray[1], -2.0f);
+    OCIO_CHECK_EQUAL(lutArray[2], -3.0f);
+    OCIO_CHECK_EQUAL(lutArray[3], 0.0f);
+    OCIO_CHECK_EQUAL(lutArray[4], 0.1f);
+    OCIO_CHECK_EQUAL(lutArray[5], 0.2f);
+    OCIO_CHECK_EQUAL(lutArray[6], 0.4f);
+    OCIO_CHECK_EQUAL(lutArray[7], 0.5f);
+    OCIO_CHECK_EQUAL(lutArray[8], 0.6f);
+    OCIO_CHECK_EQUAL(lutArray[9], 0.8f);
+    OCIO_CHECK_EQUAL(lutArray[10], 0.9f);
+    OCIO_CHECK_EQUAL(lutArray[11], 1.0f);
+    OCIO_CHECK_EQUAL(lutArray[12], 1.0f);
+    OCIO_CHECK_EQUAL(lutArray[13], 2.1f);
+    OCIO_CHECK_EQUAL(lutArray[14], 3.2f);
+}
+
+OCIO_ADD_TEST(FileFormatIridasCube, load_3d_op)
+{
+    const std::string fileName("iridas_3d.cube");
+    OCIO::OpRcPtrVec ops;
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
+    OCIO_CHECK_NO_THROW(BuildOpsTest(ops, fileName, context,
+        OCIO::TRANSFORM_DIR_FORWARD));
+
+    OCIO_REQUIRE_EQUAL(ops.size(), 3);
+    OCIO_CHECK_EQUAL("<FileNoOp>", ops[0]->getInfo());
+    OCIO_CHECK_EQUAL("<MatrixOffsetOp>", ops[1]->getInfo());
+    OCIO_CHECK_EQUAL("<Lut3DOp>", ops[2]->getInfo());
+
+    auto & op1 = std::const_pointer_cast<const OCIO::Op>(ops[1]);
+    auto & opData1 = op1->data();
+    auto & mat = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opData1);
+    OCIO_REQUIRE_ASSERT(mat);
+    auto & matArray = mat->getArray();
+    OCIO_CHECK_EQUAL(matArray[0], 0.5f);
+    OCIO_CHECK_EQUAL(matArray[1], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[2], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[3], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[4], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[5], 1.0f);
+    OCIO_CHECK_EQUAL(matArray[6], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[7], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[8], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[9], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[10], 1.0f);
+    OCIO_CHECK_EQUAL(matArray[11], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[12], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[13], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[14], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[15], 1.0f);
+
+    auto & matOffsets = mat->getOffsets();
+    OCIO_CHECK_EQUAL(matOffsets[0], 0.0f);
+    OCIO_CHECK_EQUAL(matOffsets[1], -1.0f);
+    OCIO_CHECK_EQUAL(matOffsets[2], 0.0f);
+    OCIO_CHECK_EQUAL(matOffsets[3], 0.0f);
+
+    auto & op2 = std::const_pointer_cast<const OCIO::Op>(ops[2]);
+    auto & opData2 = op2->data();
+    auto & lut = std::dynamic_pointer_cast<const OCIO::Lut3DOpData>(opData2);
+    OCIO_REQUIRE_ASSERT(lut);
+    OCIO_CHECK_EQUAL(lut->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(lut->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(lut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
+    auto & lutArray = lut->getArray();
+    OCIO_REQUIRE_EQUAL(lutArray.getNumValues(), 24);
+    OCIO_CHECK_EQUAL(lutArray[0], 0.0f);
+    OCIO_CHECK_EQUAL(lutArray[1], 0.0f);
+    OCIO_CHECK_EQUAL(lutArray[2], 0.0f);
+    OCIO_CHECK_EQUAL(lutArray[3], 0.0f);
+    OCIO_CHECK_EQUAL(lutArray[4], 0.0f);
+    OCIO_CHECK_EQUAL(lutArray[5], 2.0f);
+    OCIO_CHECK_EQUAL(lutArray[6], 0.0f);
+    OCIO_CHECK_EQUAL(lutArray[7], 2.0f);
+    OCIO_CHECK_EQUAL(lutArray[8], 0.0f);
+    OCIO_CHECK_EQUAL(lutArray[9], 0.0f);
+    OCIO_CHECK_EQUAL(lutArray[10], 2.0f);
+    OCIO_CHECK_EQUAL(lutArray[11], 2.0f);
+    OCIO_CHECK_EQUAL(lutArray[12], 2.0f);
+    OCIO_CHECK_EQUAL(lutArray[13], 0.0f);
+    OCIO_CHECK_EQUAL(lutArray[14], 0.0f);
+    OCIO_CHECK_EQUAL(lutArray[15], 2.0f);
+    OCIO_CHECK_EQUAL(lutArray[16], 0.0f);
+    OCIO_CHECK_EQUAL(lutArray[17], 2.0f);
+    OCIO_CHECK_EQUAL(lutArray[18], 2.0f);
+    OCIO_CHECK_EQUAL(lutArray[19], 2.0f);
+    OCIO_CHECK_EQUAL(lutArray[20], 0.0f);
+    OCIO_CHECK_EQUAL(lutArray[21], 2.0f);
+    OCIO_CHECK_EQUAL(lutArray[22], 2.0f);
+    OCIO_CHECK_EQUAL(lutArray[23], 2.0f);
 }
 
 #endif // OCIO_UNIT_TEST

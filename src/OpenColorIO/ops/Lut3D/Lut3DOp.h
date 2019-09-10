@@ -36,31 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    // Temporaly restore old structure that is still used to store data
-    // when loading files. After loading the structure is converted to 
-    // Lut3DOpData by CreateLut3DOp.
-    struct Lut3D;
-    typedef OCIO_SHARED_PTR<Lut3D> Lut3DRcPtr;
-
-    struct Lut3D
-    {
-        static Lut3DRcPtr Create();
-
-        float from_min[3];
-        float from_max[3];
-        int size[3];
-
-        typedef std::vector<float> fv_t;
-        fv_t lut;
-
-        std::string getCacheID() const;
-
-    private:
-        Lut3D();
-        mutable std::string m_cacheID;
-        mutable Mutex m_cacheidMutex;
-    };
-
     // RGB channel ordering.
     // LUT entries ordered in such a way that the red coordinate changes fastest,
     // then the green coordinate, and finally, the blue coordinate changes slowest
@@ -99,11 +74,6 @@ OCIO_NAMESPACE_ENTER
     // Essentially the cube root, but will throw an exception if the
     // cube root is not exact.
     int Get3DLutEdgeLenFromNumPixels(int numPixels);
-
-    void CreateLut3DOp(OpRcPtrVec & ops,
-                       Lut3DRcPtr lut,
-                       Interpolation interpolation,
-                       TransformDirection direction);
 
     void CreateLut3DOp(OpRcPtrVec & ops,
                        Lut3DOpDataRcPtr & lut,

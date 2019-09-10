@@ -54,17 +54,16 @@ OCIO_NAMESPACE_ENTER
     class LocalCachedFile : public CachedFile
     {
     public:
-        LocalCachedFile() {};
-        ~LocalCachedFile() {};
+        LocalCachedFile() = default;
+        ~LocalCachedFile() = default;
 
         // Matrix part
-        double mMatrix44[16];
+        double mMatrix44[16]{ 0.0 };
 
         // Gamma
-        float mGammaRGB[4];
+        float mGammaRGB[4]{ 1.0f };
 
-        // TODO: Switch to the OpData class.
-        Lut1DRcPtr lut;
+        Lut1DOpDataRcPtr lut;
     };
 
     typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -72,7 +71,8 @@ OCIO_NAMESPACE_ENTER
     class LocalFileFormat : public FileFormat
     {
     public:
-        ~LocalFileFormat() {};
+        LocalFileFormat() = default;
+        ~LocalFileFormat() = default;
 
         void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
@@ -81,10 +81,10 @@ OCIO_NAMESPACE_ENTER
             const std::string & fileName) const override;
 
         void buildFileOps(OpRcPtrVec & ops,
-                          const Config& config,
+                          const Config & config,
                           const ConstContextRcPtr & context,
                           CachedFileRcPtr untypedCachedFile,
-                          const FileTransform& fileTransform,
+                          const FileTransform & fileTransform,
                           TransformDirection dir) const override;
 
         bool isBinary() const override
@@ -353,10 +353,25 @@ OCIO_NAMESPACE_ENTER
                 // normalized by 65535 to interpret them as [0,1].
                 // The LUT will be inverted to convert output-linear values
                 // into values that may be sent to the display.
-                cachedFile->lut = Lut1D::Create();
-                cachedFile->lut->luts[0] = red->GetCurve();
-                cachedFile->lut->luts[1] = green->GetCurve();
-                cachedFile->lut->luts[2] = blue->GetCurve();
+                const auto lutLength = static_cast<unsigned long>(curveSize);
+                cachedFile->lut = std::make_shared<Lut1DOpData>(lutLength);
+
+                const auto & rc = red->GetCurve();
+                const auto & gc = green->GetCurve();
+                const auto & bc = blue->GetCurve();
+
+                auto & lutData = cachedFile->lut->getArray();
+
+                for (unsigned long i = 0; i < lutLength; ++i)
+                {
+                    lutData[i * 3 + 0] = rc[i];
+                    lutData[i * 3 + 1] = gc[i];
+                    lutData[i * 3 + 2] = bc[i];
+                }
+
+                // Set the file bit-depth based on what is in the ICC profile
+                // (even though SampleICC has normalized the values).
+                cachedFile->lut->setFileOutputBitDepth(BIT_DEPTH_UINT16);
             }
         }
 
@@ -365,11 +380,11 @@ OCIO_NAMESPACE_ENTER
 
     void
     LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
-        const Config& /*config*/,
-        const ConstContextRcPtr & /*context*/,
-        CachedFileRcPtr untypedCachedFile,
-        const FileTransform& fileTransform,
-        TransformDirection dir) const
+                                  const Config & /*config*/,
+                                  const ConstContextRcPtr & /*context*/,
+                                  CachedFileRcPtr untypedCachedFile,
+                                  const FileTransform & fileTransform,
+                                  TransformDirection dir) const
     {
         LocalCachedFileRcPtr cachedFile =
             DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
@@ -412,16 +427,20 @@ OCIO_NAMESPACE_ENTER
              0.0,             0.0,            0.0,            1.0
         };
 
+        if (cachedFile->lut)
+        {
+            cachedFile->lut->setInterpolation(fileTransform.getInterpolation());
+        }
+
         // The matrix/TRC transform in the ICC profile converts
         // display device code values to the CIE XYZ based version 
         // of the ICC profile connection space (PCS).
         // So we will adopt this convention as the "forward" direction.
         if (newDir == TRANSFORM_DIR_FORWARD)
         {
-            if (cachedFile->lut.get())
+            if (cachedFile->lut)
             {
-                CreateLut1DOp(ops, cachedFile->lut,
-                    INTERP_LINEAR, TRANSFORM_DIR_FORWARD);
+                CreateLut1DOp(ops, cachedFile->lut, TRANSFORM_DIR_FORWARD);
             }
             else
             {
@@ -447,10 +466,9 @@ OCIO_NAMESPACE_ENTER
 
             // The LUT / gamma stored in the ICC profile works in
             // the gamma->linear direction.
-            if (cachedFile->lut.get())
+            if (cachedFile->lut)
             {
-                CreateLut1DOp(ops, cachedFile->lut,
-                    INTERP_LINEAR, TRANSFORM_DIR_INVERSE);
+                CreateLut1DOp(ops, cachedFile->lut, TRANSFORM_DIR_INVERSE);
             }
             else
             {
@@ -479,7 +497,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 #include "UnitTestUtils.h"
 
-OCIO_ADD_TEST(FileFormatICC, Types)
+OCIO_ADD_TEST(FileFormatICC, types)
 {
     // Test types used
     OCIO_CHECK_EQUAL(1, sizeof(icUInt8Number));
@@ -497,7 +515,7 @@ OCIO::LocalCachedFileRcPtr LoadICCFile(const std::string & fileName)
         fileName, std::ios_base::binary);
 }
 
-OCIO_ADD_TEST(FileFormatICC, TestFile)
+OCIO_ADD_TEST(FileFormatICC, test_file)
 {
     OCIO::LocalCachedFileRcPtr iccFile;
     {
@@ -597,19 +615,17 @@ OCIO_ADD_TEST(FileFormatICC, TestFile)
         // Get cached file to access LUT size
         OCIO_CHECK_NO_THROW(iccFile = LoadICCFile(iccFileName));
 
-        OCIO_CHECK_ASSERT((bool)iccFile);
-        OCIO_CHECK_ASSERT((bool)(iccFile->lut));
+        OCIO_REQUIRE_ASSERT(iccFile);
+        OCIO_REQUIRE_ASSERT(iccFile->lut);
 
-        OCIO_CHECK_EQUAL(0.0f, iccFile->lut->from_min[0]);
-        OCIO_CHECK_EQUAL(1.0f, iccFile->lut->from_max[0]);
+        OCIO_CHECK_EQUAL(iccFile->lut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT16);
 
-        OCIO_CHECK_EQUAL(1024, iccFile->lut->luts[0].size());
-        OCIO_CHECK_EQUAL(1024, iccFile->lut->luts[1].size());
-        OCIO_CHECK_EQUAL(1024, iccFile->lut->luts[2].size());
+        const auto & lutArray = iccFile->lut->getArray();
+        OCIO_CHECK_EQUAL(1024, lutArray.getLength());
 
-        OCIO_CHECK_EQUAL(0.0317235067f, iccFile->lut->luts[0][200]);
-        OCIO_CHECK_EQUAL(0.0317235067f, iccFile->lut->luts[1][200]);
-        OCIO_CHECK_EQUAL(0.0317235067f, iccFile->lut->luts[2][200]);
+        OCIO_CHECK_EQUAL(0.0317235067f, lutArray[200 * 3 + 0]);
+        OCIO_CHECK_EQUAL(0.0317235067f, lutArray[200 * 3 + 1]);
+        OCIO_CHECK_EQUAL(0.0317235067f, lutArray[200 * 3 + 2]);
     }
 
     {
@@ -683,7 +699,7 @@ OCIO_ADD_TEST(FileFormatICC, TestFile)
     }
 }
 
-OCIO_ADD_TEST(FileFormatICC, TestApply)
+OCIO_ADD_TEST(FileFormatICC, test_apply)
 {
     OCIO::ContextRcPtr context = OCIO::Context::Create();
     {
@@ -815,7 +831,7 @@ OCIO_ADD_TEST(FileFormatICC, TestApply)
 
 }
 
-OCIO_ADD_TEST(FileFormatICC, Endian)
+OCIO_ADD_TEST(FileFormatICC, endian)
 {
     unsigned char test[8];
     test[0] = 0x11;

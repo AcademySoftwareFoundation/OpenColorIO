@@ -69,6 +69,27 @@ OCIO_NAMESPACE_ENTER
         }
     }
 
+    BitDepth GetBitdepthFromMaxValue(unsigned maxValue)
+    {
+        if (maxValue < 126)
+        {
+            return BIT_DEPTH_F32;
+        }
+        else if (maxValue < 639)
+        {
+            return BIT_DEPTH_UINT8;
+        }
+        else if (maxValue < 2559)
+        {
+            return BIT_DEPTH_UINT10;
+        }
+        else if (maxValue < 34815)
+        {
+            return BIT_DEPTH_UINT12;
+        }
+        return BIT_DEPTH_UINT16;
+    }
+
 
     bool IsFloatBitDepth(BitDepth in)
     {

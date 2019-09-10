@@ -96,6 +96,7 @@ template<> struct BitDepthInfo<BIT_DEPTH_F32>
     static const unsigned maxValue = 1;
 };
 
+BitDepth GetBitdepthFromMaxValue(unsigned maxValue);
 
 // Clamp helper method.
 #define CLAMP(a, min, max) \
