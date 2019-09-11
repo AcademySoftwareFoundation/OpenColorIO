@@ -29,11 +29,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 
-namespace OCIO = OCIO_NAMESPACE;
 #include "GPUUnitTest.h"
 
-OCIO_NAMESPACE_USING
-
+namespace OCIO = OCIO_NAMESPACE;
 
 
 const int LUT3D_EDGE_SIZE = 32;
@@ -41,7 +39,7 @@ const float g_epsilon = 5e-7f;
 
 
 // Helper method to build unit tests
-void AddMatrixTest(OCIOGPUTest & test, TransformDirection direction, 
+void AddMatrixTest(OCIOGPUTest & test, OCIO::TransformDirection direction,
                    const float * m, const float * o, bool genericShaderDesc)
 {
     OCIO::MatrixTransformRcPtr matrix = OCIO::MatrixTransform::Create();
@@ -55,7 +53,7 @@ void AddMatrixTest(OCIOGPUTest & test, TransformDirection direction,
         matrix->setOffset(o);
     }
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = genericShaderDesc ? OCIO::GpuShaderDesc::CreateShaderDesc()
           : OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
@@ -72,7 +70,7 @@ OCIO_ADD_GPU_TEST(MatrixOps, matrix)
                           0.2f, 0.1f, 1.1f, 0.2f,
                           0.3f, 0.4f, 0.5f, 1.6f };
 
-    AddMatrixTest(test, TRANSFORM_DIR_FORWARD, m, 0x0, false);
+    AddMatrixTest(test, OCIO::TRANSFORM_DIR_FORWARD, m, 0x0, false);
 }
 
 
@@ -83,7 +81,7 @@ OCIO_ADD_GPU_TEST(MatrixOps, scale)
                           0.0f, 0.0f, 0.6f, 0.0f,
                           0.0f, 0.0f, 0.0f, 1.0f };
 
-    AddMatrixTest(test, TRANSFORM_DIR_FORWARD, m, 0x0, false);
+    AddMatrixTest(test, OCIO::TRANSFORM_DIR_FORWARD, m, 0x0, false);
 }
 
 
@@ -91,7 +89,7 @@ OCIO_ADD_GPU_TEST(MatrixOps, offset)
 {
     const float o[4] = { -0.5f, +0.25f, -0.25f, 0.0f };
 
-    AddMatrixTest(test, TRANSFORM_DIR_FORWARD, 0x0, o, false);
+    AddMatrixTest(test, OCIO::TRANSFORM_DIR_FORWARD, 0x0, o, false);
 }
 
 
@@ -103,8 +101,8 @@ OCIO_ADD_GPU_TEST(MatrixOps, matrix_offset)
                           0.3f, 0.4f, 0.5f, 1.6f };
 
     const float o[4] = { -0.5f, -0.25f, 0.25f, 0.0f };
-    
-    AddMatrixTest(test, TRANSFORM_DIR_FORWARD, m, o, false);
+
+    AddMatrixTest(test, OCIO::TRANSFORM_DIR_FORWARD, m, o, false);
 }
 
 
@@ -115,7 +113,7 @@ OCIO_ADD_GPU_TEST(MatrixOps, matrix_inverse)
                           0.2f, 0.1f, 1.1f, 0.2f,
                           0.3f, 0.4f, 0.5f, 1.6f };
 
-    AddMatrixTest(test, TRANSFORM_DIR_INVERSE, m, 0x0, false);
+    AddMatrixTest(test, OCIO::TRANSFORM_DIR_INVERSE, m, 0x0, false);
 }
 
 
@@ -126,7 +124,7 @@ OCIO_ADD_GPU_TEST(MatrixOps, scale_inverse)
                           0.0f, 0.0f, 0.6f, 0.0f,
                           0.0f, 0.0f, 0.0f, 1.0f };
 
-    AddMatrixTest(test, TRANSFORM_DIR_INVERSE, m, 0x0, false);
+    AddMatrixTest(test, OCIO::TRANSFORM_DIR_INVERSE, m, 0x0, false);
 }
 
 
@@ -134,7 +132,7 @@ OCIO_ADD_GPU_TEST(MatrixOps, offset_inverse)
 {
     const float o[4] = { -0.5f, +0.25f, -0.25f, 0.0f };
 
-    AddMatrixTest(test, TRANSFORM_DIR_INVERSE, 0x0, o, false);
+    AddMatrixTest(test, OCIO::TRANSFORM_DIR_INVERSE, 0x0, o, false);
 }
 
 
@@ -146,8 +144,8 @@ OCIO_ADD_GPU_TEST(MatrixOps, matrix_offset_inverse)
                           0.3f, 0.4f, 0.5f, 1.6f };
 
     const float o[4] = { -0.5f, -0.25f, 0.25f, 0.0f };
-    
-    AddMatrixTest(test, TRANSFORM_DIR_INVERSE, m, o, false);
+
+    AddMatrixTest(test, OCIO::TRANSFORM_DIR_INVERSE, m, o, false);
 }
 
 
@@ -159,8 +157,8 @@ OCIO_ADD_GPU_TEST(MatrixOps, matrix_offset_generic_shader)
                           0.3f, 0.4f, 0.5f, 1.6f };
 
     const float o[4] = { -0.5f, -0.25f, 0.25f, 0.0f };
-    
-    AddMatrixTest(test, TRANSFORM_DIR_FORWARD, m, o, true);
+
+    AddMatrixTest(test, OCIO::TRANSFORM_DIR_FORWARD, m, o, true);
 }
 
 
@@ -172,8 +170,8 @@ OCIO_ADD_GPU_TEST(MatrixOps, matrix_offset_inverse_generic_shader)
                           0.3f, 0.4f, 0.5f, 1.6f };
 
     const float o[4] = { -0.5f, -0.25f, 0.25f, 0.0f };
-    
-    AddMatrixTest(test, TRANSFORM_DIR_INVERSE, m, o, true);
+
+    AddMatrixTest(test, OCIO::TRANSFORM_DIR_INVERSE, m, o, true);
 }
 
 

@@ -34,16 +34,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef OCIO_UNIT_TEST
 
-namespace OCIO = OCIO_NAMESPACE;
-
 #include <sstream>
 
 #include "MathUtils.h"
 #include "SSE.h"
 #include "UnitTest.h"
 
+namespace OCIO = OCIO_NAMESPACE;
 
-OCIO_NAMESPACE_USING
+
 
 OCIO_ADD_TEST(SSE, sse2_log2_test)
 {
@@ -68,6 +67,9 @@ OCIO_ADD_TEST(SSE, sse2_log2_test)
     }
 }
 
+namespace
+{
+
 std::string GetErrorMessage(const std::string & operation, float expected, float actual)
 {
     std::ostringstream oss;
@@ -91,7 +93,7 @@ void CheckFloat(const std::string& operation,
 {
 
     if ((IsInfinity(expected) && IsInfinity(actual)) ||
-        (IsNan(expected) && IsNan(actual)))
+        (OCIO::IsNan(expected) && OCIO::IsNan(actual)))
     {
         return;
     }
@@ -128,6 +130,8 @@ void CheckPower(const float base, const float exponent)
     CheckSSE(operation, cpuResult, sseResult, 12);
 }
 
+} // anon.
+
 OCIO_ADD_TEST(SSE, sse2_power_test)
 {
     const float values[] = {
@@ -142,6 +146,8 @@ OCIO_ADD_TEST(SSE, sse2_power_test)
     }
 }
 
+namespace
+{
 
 unsigned GetULPDifference(const float a, const float b)
 {
@@ -213,6 +219,8 @@ std::string GetErrorMessage(const std::string& operation, const float expected, 
     return oss.str();
 }
 
+} // anon.
+
 OCIO_ADD_TEST(SSE, sse2_exp2_test)
 {
     const unsigned ulp_tolerance = 50;
@@ -274,20 +282,20 @@ OCIO_ADD_TEST(SSE, sse2_exp2_test)
     //
     // Note: We want log2_min_float_inside_one_ulp to be -125.9999..., but since addULP ignores the sign and
     // just modifies the mantissa, we actually need to subtract one.
-    const float log2_max_float_inside_one_ulp = AddULP(log2_max_float, -1);
-    const float log2_min_float_inside_one_ulp = AddULP(log2_min_float, -1);
+    const float log2_max_float_inside_one_ulp = OCIO::AddULP(log2_max_float, -1);
+    const float log2_min_float_inside_one_ulp = OCIO::AddULP(log2_min_float, -1);
     {
         // The result should be a large number, but not infinity
         // Create a tight bound for the large number based on the log2_max_float limit
-        const float large_threshold = (float)pow(2.0, (double)AddULP(log2_max_float, -2));
+        const float large_threshold = (float)pow(2.0, (double)OCIO::AddULP(log2_max_float, -2));
 
         EvaluateExp2(log2_max_float_inside_one_ulp, sseResult);
-        OCIO_CHECK_ASSERT(AreAllInRange(sseResult, large_threshold, 
+        OCIO_CHECK_ASSERT(AreAllInRange(sseResult, large_threshold,
                                         std::numeric_limits<float>::infinity()));
 
         // The result should be a small number, but not zero
         // Create a tight bound for the small number based on the log2_min_float limit
-        const float small_threshold = (float)pow(2.0, (double)AddULP(log2_min_float, -2));
+        const float small_threshold = (float)pow(2.0, (double)OCIO::AddULP(log2_min_float, -2));
 
         EvaluateExp2(log2_min_float_inside_one_ulp, sseResult);
         OCIO_CHECK_ASSERT(AreAllInRange(sseResult, 0.0f, small_threshold));
@@ -296,11 +304,11 @@ OCIO_ADD_TEST(SSE, sse2_exp2_test)
     // Verify that the log2_max_float and log2_min_float limits, expanded by one ULP,
     // still return Infinity and zero, respectively.
     //
-    // Note: As above, it is perhaps counter-intuitive, but we want to make 
+    // Note: As above, it is perhaps counter-intuitive, but we want to make
     // log2_min_float_outside_one_ulp just slightly more negative than -126 and
     // so need to increment the mantissa.
-    const float log2_max_float_outside_one_ulp = AddULP(log2_max_float, 1);
-    const float log2_min_float_outside_one_ulp = AddULP(log2_min_float, 1);
+    const float log2_max_float_outside_one_ulp = OCIO::AddULP(log2_max_float, 1);
+    const float log2_min_float_outside_one_ulp = OCIO::AddULP(log2_min_float, 1);
     {
         EvaluateExp2(log2_max_float_outside_one_ulp, sseResult);
         OCIO_CHECK_ASSERT(AreAllInfinity(sseResult));

@@ -25,11 +25,11 @@ set(SOURCES
 	CDLOps_test.cpp
 	Config_test.cpp
 	ECOps_test.cpp
-	ExpOps_Test.cpp
+	ExpOps_test.cpp
 	FixedFunctionOps_test.cpp
 	GPUHelpers.cpp
 	GPUUnitTest.cpp
-	LogOps_Test.cpp
+	LogOps_test.cpp
 	Lut1DOp_test.cpp
 	Lut3DOp_test.cpp
 	MatrixOps_test.cpp

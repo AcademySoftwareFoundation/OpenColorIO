@@ -3,7 +3,7 @@
 
 include(ExternalProject)
 
-# Define used for tests in src/OpenColorIO/Context.cpp
+# Define used for tests in tests/cpu/Context_tests.cpp
 add_definitions("-DOCIO_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
 
 function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
@@ -31,6 +31,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 		target_include_directories(${TEST_BINARY}
 			PRIVATE
 				"${CMAKE_SOURCE_DIR}/src/OpenColorIO"
+				"${CMAKE_SOURCE_DIR}/tests/cpu"
 		)
 	endif(PRIVATE_INCLUDES)
 	if(OCIO_USE_SSE)
@@ -53,7 +54,6 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 	add_test(${TEST_NAME} ${TEST_BINARY})
 endfunction(add_ocio_test)
 
-
 # Eventually we will factor out each test into it's own executable
 # but for now, we will maintain the status quo and copy all from the
 # OpenColorIO target
@@ -64,7 +64,6 @@ set(SOURCES
 	ColorSpace.cpp
 	ColorSpaceSet.cpp
 	Config.cpp
-	Context.cpp
 	CPUProcessor.cpp
 	Display.cpp
 	DynamicProperty.cpp
@@ -74,7 +73,6 @@ set(SOURCES
 	fileformats/ctf/CTFReaderHelper.cpp
 	fileformats/ctf/CTFReaderUtils.cpp
 	fileformats/ctf/CTFTransform.cpp
-	fileformats/FileFormat3DL.cpp
 	fileformats/FileFormatCCC.cpp
 	fileformats/FileFormatCC.cpp
 	fileformats/FileFormatCDL.cpp
@@ -177,6 +175,11 @@ set(SOURCES
 	transforms/LUT3DTransform.cpp
 	transforms/MatrixTransform.cpp
 	transforms/RangeTransform.cpp
+)
+
+set(TESTS
+    Context_tests.cpp
+    fileformats/FileFormat3DL_tests.cpp
 	UnitTest.cpp
 	UnitTestUtils.cpp
 )
@@ -190,5 +193,7 @@ function(prepend var prefix)
 endfunction(prepend)
 
 prepend(SOURCES "${CMAKE_SOURCE_DIR}/src/OpenColorIO/" ${SOURCES})
+
+list(APPEND SOURCES ${TESTS})
 
 add_ocio_test(cpu "${SOURCES}" TRUE)
