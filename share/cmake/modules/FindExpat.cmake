@@ -163,6 +163,7 @@ if(NOT EXPAT_FOUND)
             -DBUILD_examples:BOOL=OFF
             -DBUILD_tests:BOOL=OFF
             -DBUILD_shared:BOOL=OFF
+            -DBUILD_doc:BOOL=OFF
             -DCMAKE_C_FLAGS=${EXPAT_C_FLAGS}
             -DCMAKE_CXX_FLAGS=${EXPAT_CXX_FLAGS}
             -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
