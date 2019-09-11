@@ -27,12 +27,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#include <OpenColorIO/OpenColorIO.h>
-namespace OCIO = OCIO_NAMESPACE;
-
-#include "GPUUnitTest.h"
-
-
 #ifdef __APPLE__
 
 /* Defined before OpenGL and GLUT includes to avoid deprecation messages */
@@ -66,8 +60,12 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <cmath>
 #include <algorithm>
 
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "glsl.h"
+#include "GPUUnitTest.h"
+
+namespace OCIO = OCIO_NAMESPACE;
 
 
 namespace Shader
@@ -152,7 +150,7 @@ namespace Shader
         return false;
     }
 
-    // Return ture if diff has been updated. 
+    // Return ture if diff has been updated.
     inline bool ComputeDiff(float x1, float x2, bool rel, float min_x1, float & diff)
     {
         if (rel)
@@ -169,9 +167,9 @@ namespace Shader
 }
 
 
-OCIOGPUTest::OCIOGPUTest(const std::string& testgroup, 
-                         const std::string& testname, 
-                         OCIOTestFuncCallback test) 
+OCIOGPUTest::OCIOGPUTest(const std::string& testgroup,
+                         const std::string& testname,
+                         OCIOTestFuncCallback test)
     :   m_group(testgroup)
     ,   m_name(testname)
     ,   m_function(test)
@@ -183,7 +181,7 @@ OCIOGPUTest::~OCIOGPUTest()
 {
 }
 
-void OCIOGPUTest::setContext(OCIO_NAMESPACE::TransformRcPtr transform, 
+void OCIOGPUTest::setContext(OCIO_NAMESPACE::TransformRcPtr transform,
                              OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc)
 {
     OCIO_NAMESPACE::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
@@ -191,7 +189,7 @@ void OCIOGPUTest::setContext(OCIO_NAMESPACE::TransformRcPtr transform,
 }
 
 void OCIOGPUTest::setContext(OCIO_NAMESPACE::ConstConfigRcPtr config,
-                             OCIO_NAMESPACE::TransformRcPtr transform, 
+                             OCIO_NAMESPACE::TransformRcPtr transform,
                              OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc)
 {
     setContextProcessor(config->getProcessor(transform), shaderDesc);
@@ -276,24 +274,24 @@ namespace
         glEnable(GL_TEXTURE_2D);
             glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glColor3f(1, 1, 1);       
+            glColor3f(1, 1, 1);
             glPushMatrix();
                 glBegin(GL_QUADS);
                     glTexCoord2f(0.0f, 1.0f);
                     glVertex2f(0.0f, (float)g_winHeight);
-                    
+
                     glTexCoord2f(0.0f, 0.0f);
                     glVertex2f(0.0f, 0.0f);
-                    
+
                     glTexCoord2f(1.0f, 0.0f);
                     glVertex2f((float)g_winWidth, 0.0f);
-                    
+
                     glTexCoord2f(1.0f, 1.0f);
                     glVertex2f((float)g_winWidth, (float)g_winHeight);
                 glEnd();
-            glPopMatrix();   
+            glPopMatrix();
         glDisable(GL_TEXTURE_2D);
-        
+
         glutSwapBuffers();
     }
 
@@ -311,7 +309,7 @@ namespace
 
     void UpdateImageTexture(OCIOGPUTestRcPtr & test)
     {
-        // Note: User-specified custom values are padded out 
+        // Note: User-specified custom values are padded out
         // to the preferred size (g_winWidth x g_winHeight).
 
         const unsigned predefinedNumEntries
@@ -426,7 +424,7 @@ namespace
         // Step 1: Update the GPU shader description.
         shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
 
-        // Step 2: Collect the shader program information for a specific processor.   
+        // Step 2: Collect the shader program information for a specific processor.
         OCIO::ConstGPUProcessorRcPtr gpuProcessor
             = processor->getDefaultGPUProcessor();
         gpuProcessor->extractGpuShaderInfo(shaderDesc);
@@ -501,7 +499,7 @@ namespace
 
         // Compute the width & height to avoid testing the padded values.
 
-        const size_t numPixels 
+        const size_t numPixels
             = test->getCustomValues().m_originalInputValueSize / g_components;
 
         size_t width, height = 0;
@@ -634,7 +632,7 @@ int main(int, char **)
     glutInitWindowPosition(0, 0);
 
     g_win = glutCreateWindow(argv[0]);
-    
+
 #ifndef __APPLE__
     glewInit();
     if (!glewIsSupported("GL_VERSION_2_0"))
@@ -704,7 +702,7 @@ int main(int, char **)
     for(size_t idx=0; idx<numTests; ++idx)
     {
         const unsigned curr_failures = failures;
-     
+
         OCIOGPUTestRcPtr test = tests[idx];
 
         bool enabledTest = true;
@@ -716,7 +714,7 @@ int main(int, char **)
             std::string name(test->group());
             name += " / " + test->name();
 
-            std::cerr << "[" 
+            std::cerr << "["
                       << std::right << std::setw(3)
                       << (idx+1) << "/" << numTests << "] ["
                       << std::left << std::setw(50)
@@ -726,7 +724,7 @@ int main(int, char **)
             {
                 // Set the rendering destination to FBO.
                 glBindFramebuffer(GL_FRAMEBUFFER, fboId);
-                
+
                 // Initialize the texture with the RGBA values to be processed.
                 UpdateImageTexture(test);
 
@@ -734,7 +732,7 @@ int main(int, char **)
                 UpdateOCIOGLState(test);
 
                 const size_t numRetest = test->getNumRetests();
-                // Need to run once and for each retest.  
+                // Need to run once and for each retest.
                 for (size_t idx = 0; idx <= numRetest; ++idx)
                 {
                     if (idx != 0) // Skip first run.

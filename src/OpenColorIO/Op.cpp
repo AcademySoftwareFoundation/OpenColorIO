@@ -568,14 +568,14 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
+
 #include "ops/Matrix/MatrixOps.h"
 #include "ops/Log/LogOps.h"
 #include "ops/NoOp/NoOps.h"
 #include "UnitTest.h"
 
-OCIO_NAMESPACE_USING
 
-void Apply(const OpRcPtrVec & ops, float * source, long numPixels)
+void Apply(const OCIO::OpRcPtrVec & ops, float * source, long numPixels)
 {
     for(const auto & op : ops)
     {
@@ -611,9 +611,9 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
 
     // Combining ops
     {
-        OpRcPtrVec ops;
-        OCIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_FORWARD));
-        OCIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m2, v2, TRANSFORM_DIR_FORWARD));
+        OCIO::OpRcPtrVec ops;
+        OCIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m2, v2, OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_CHECK_EQUAL(ops.size(), 2);
      
         // No optimize: keep both matrix ops
@@ -644,10 +644,10 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
 
     // remove NoOp at the beginning
     {
-        OpRcPtrVec ops;
+        OCIO::OpRcPtrVec ops;
         // NoOp
         OCIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
-        OCIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
                                         linSlope, linOffset,
                                         OCIO::TRANSFORM_DIR_FORWARD));
@@ -684,8 +684,8 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
 
     // remove NoOp in the middle
     {
-        OpRcPtrVec ops;
-        OCIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_FORWARD));
+        OCIO::OpRcPtrVec ops;
+        OCIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, OCIO::TRANSFORM_DIR_FORWARD));
         // NoOp
         OCIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
         OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
@@ -724,8 +724,8 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
 
     // remove NoOp in the end
     {
-        OpRcPtrVec ops;
-        OCIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_FORWARD));
+        OCIO::OpRcPtrVec ops;
+        OCIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
                                         linSlope, linOffset,
                                         OCIO::TRANSFORM_DIR_FORWARD));
@@ -764,11 +764,11 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
 
     // remove several NoOp
     {
-        OpRcPtrVec ops;
+        OCIO::OpRcPtrVec ops;
         OCIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
         OCIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
         OCIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
-        OCIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
         OCIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
         OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
@@ -810,30 +810,32 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
 
 namespace
 {
+
 // Create some empty metadata as a test argument.
-static OCIO::FormatMetadataImpl metadata(METADATA_ROOT);
+static OCIO::FormatMetadataImpl metadata(OCIO::METADATA_ROOT);
+
 }
 
 OCIO_ADD_TEST(CreateOpVecFromOpDataVec, basic)
 {
-    ConstOpDataVec opDataVec;
-    auto mat = MatrixOpData::CreateDiagonalMatrix(BIT_DEPTH_F32,
-                                                  BIT_DEPTH_F32,
-                                                  2.0);
+    OCIO::ConstOpDataVec opDataVec;
+    auto mat = OCIO::MatrixOpData::CreateDiagonalMatrix(OCIO::BIT_DEPTH_F32,
+                                                        OCIO::BIT_DEPTH_F32,
+                                                        2.0);
     opDataVec.push_back(mat);
 
-    auto range = std::make_shared<RangeOpData>(BIT_DEPTH_F32,
-                                               BIT_DEPTH_F32,
-                                               metadata,
-                                               0.0, 1.0, 0.5, 1.5);
+    auto range = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32,
+                                                     OCIO::BIT_DEPTH_F32,
+                                                     OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
+                                                     0.0, 1.0, 0.5, 1.5);
 
     opDataVec.push_back(range);
 
     OCIO_REQUIRE_EQUAL(opDataVec.size(), 2);
-
+	
     {
-        OpRcPtrVec ops;
-        OCIO_CHECK_NO_THROW(CreateOpVecFromOpDataVec(ops, opDataVec, TRANSFORM_DIR_FORWARD));
+        OCIO::OpRcPtrVec ops;
+        OCIO_CHECK_NO_THROW(OCIO::CreateOpVecFromOpDataVec(ops, opDataVec, OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
         OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
@@ -841,8 +843,8 @@ OCIO_ADD_TEST(CreateOpVecFromOpDataVec, basic)
     }
 
     {
-        OpRcPtrVec ops;
-        OCIO_CHECK_NO_THROW(CreateOpVecFromOpDataVec(ops, opDataVec, TRANSFORM_DIR_INVERSE));
+        OCIO::OpRcPtrVec ops;
+        OCIO_CHECK_NO_THROW(OCIO::CreateOpVecFromOpDataVec(ops, opDataVec, OCIO::TRANSFORM_DIR_INVERSE));
         OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
         OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<RangeOp>");
@@ -1079,10 +1081,10 @@ OCIO_ADD_TEST(OpData, equality)
     // Use the MatrixOpData::operator==().
     OCIO_CHECK_ASSERT(*mat2==*mat1);
 
-    auto range = std::make_shared<RangeOpData>(BIT_DEPTH_F32,
-                                               BIT_DEPTH_F32,
-                                               metadata,
-                                               0.0, 1.0, 0.5, 1.5);
+    auto range = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32,
+                                                     OCIO::BIT_DEPTH_F32,
+                                                     OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
+                                                     0.0, 1.0, 0.5, 1.5);
 
     // Use the MatrixOpData::operator==().
     OCIO_CHECK_ASSERT( !(*mat2==*range) );
@@ -1091,11 +1093,11 @@ OCIO_ADD_TEST(OpData, equality)
     OCIO_CHECK_ASSERT( !(*range==*mat1) );
 
     // Use the OpData::operator==().
-    auto op1 = DynamicPtrCast<OpData>(range);
+    auto op1 = OCIO::DynamicPtrCast<OCIO::OpData>(range);
     OCIO_CHECK_ASSERT( !(*op1==*mat1) );    
 
     // Use the OpData::operator==().
-    auto op2 = DynamicPtrCast<OpData>(mat2);
+    auto op2 = OCIO::DynamicPtrCast<OCIO::OpData>(mat2);
     OCIO_CHECK_ASSERT( !(*op2==*op1) );
 
     // Change something.
