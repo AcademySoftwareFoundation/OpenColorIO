@@ -43,7 +43,7 @@ OCIO_NAMESPACE_ENTER
     namespace
     {
         const int MAX_OPTIMIZATION_PASSES = 8;
-        
+
         void RemoveNoOpTypes(OpRcPtrVec & opVec)
         {
             OpRcPtrVec::iterator iter = opVec.begin();
@@ -60,11 +60,11 @@ OCIO_NAMESPACE_ENTER
                 }
             }
         }
-        
+
         int RemoveNoOps(OpRcPtrVec & opVec)
         {
             int count = 0;
-            
+
             OpRcPtrVec::iterator iter = opVec.begin();
             while(iter != opVec.end())
             {
@@ -78,20 +78,20 @@ OCIO_NAMESPACE_ENTER
                     ++iter;
                 }
             }
-            
+
             return count;
         }
-        
+
         int RemoveInverseOps(OpRcPtrVec & opVec)
         {
             int count = 0;
             int firstindex = 0; // this must be a signed int
-            
+
             while(firstindex < static_cast<int>(opVec.size()-1))
             {
                 ConstOpRcPtr first = opVec[firstindex];
                 ConstOpRcPtr second = opVec[firstindex+1];
-                
+
                 // The common case of inverse ops is to have a deep nesting:
                 // ..., A, B, B', A', ...
                 //
@@ -102,7 +102,7 @@ OCIO_NAMESPACE_ENTER
                 //
                 // We will remove B and B'.
                 // Firstindex remains pointing at the original location:
-                // 
+                //
                 //         |
                 // ..., A, A', ...
                 //
@@ -112,13 +112,13 @@ OCIO_NAMESPACE_ENTER
                 //      |            <-- firstindex decremented
                 // ..., A, A', ...
                 //
-                
+
                 if(first->isSameType(second) && first->isInverse(second))
                 {
                     opVec.erase(opVec.begin() + firstindex,
                         opVec.begin() + firstindex + 2);
                     ++count;
-                    
+
                     firstindex = std::max(0, firstindex-1);
                 }
                 else
@@ -126,48 +126,48 @@ OCIO_NAMESPACE_ENTER
                     ++firstindex;
                 }
             }
-            
+
             return count;
         }
-        
+
         int CombineOps(OpRcPtrVec & opVec)
         {
             int count = 0;
             int firstindex = 0; // this must be a signed int
-            
+
             OpRcPtrVec tmpops;
-            
+
             while(firstindex < static_cast<int>(opVec.size()-1))
             {
                 ConstOpRcPtr first = opVec[firstindex];
                 ConstOpRcPtr second = opVec[firstindex+1];
-                
+
                 if(first->canCombineWith(second))
                 {
                     tmpops.clear();
                     first->combineWith(tmpops, second);
-                    
+
                     // tmpops may have any number of ops in it. (0, 1, 2, ...)
-                    // (size 0 would occur potentially iff the combination 
+                    // (size 0 would occur potentially iff the combination
                     // results in a no-op)
                     //
                     // No matter the number, we need to swap them in for the
                     // original ops
-                    
+
                     // Erase the initial two ops we've combined
                     opVec.erase(opVec.begin() + firstindex,
                         opVec.begin() + firstindex + 2);
-                    
+
                     // Insert the new ops (which may be empty) at
                     // this location
                     opVec.insert(opVec.begin() + firstindex, tmpops.begin(), tmpops.end());
-                    
+
                     // Decrement firstindex by 1,
                     // to backstep and reconsider the A, A' case.
                     // See RemoveInverseOps for the full discussion of
                     // why this is appropriate
                     firstindex = std::max(0, firstindex-1);
-                    
+
                     // We've done something so increment the count!
                     ++count;
                 }
@@ -176,11 +176,11 @@ OCIO_NAMESPACE_ENTER
                     ++firstindex;
                 }
             }
-            
+
             return count;
         }
     }
-    
+
     // (Note: the term "separable" in mathematics refers to a multi-dimensional
     // function where the dimensions are independent of each other.)
     //
@@ -275,7 +275,7 @@ OCIO_NAMESPACE_ENTER
         return prefixLen;
     }
 
-    // Use functional composition to replace a string of separable ops at the head of 
+    // Use functional composition to replace a string of separable ops at the head of
     // the op list with a single 1D LUT that is built to do a look-up for the input bit-depth.
     void OptimizeSeparablePrefix(OpRcPtrVec & ops, OptimizationFlags /*oFlags*/)
     {
@@ -288,7 +288,7 @@ OCIO_NAMESPACE_ENTER
 
         const BitDepth inputBitDepth = ops[0]->getInputBitDepth();
 
-        // TODO: Investigate whether even the F32 case could be sped up via interpolating 
+        // TODO: Investigate whether even the F32 case could be sped up via interpolating
         //       in a half-domain Lut1D (e.g. replacing a string of exponent, log, etc.).
         if(inputBitDepth==BIT_DEPTH_F32 || inputBitDepth==BIT_DEPTH_UINT32)
         {
@@ -346,23 +346,23 @@ OCIO_NAMESPACE_ENTER
         int total_inverseops = 0;
         int total_combines = 0;
         int passes = 0;
-        
+
         while(passes<=MAX_OPTIMIZATION_PASSES)
         {
             int noops = RemoveNoOps(ops);
             int inverseops = RemoveInverseOps(ops);
             int combines = CombineOps(ops);
-            
+
             if(noops == 0 && inverseops==0 && combines==0)
             {
                 // No optimization progress was made, so stop trying.
                 break;
             }
-            
+
             total_noops += noops;
             total_inverseops += inverseops;
             total_combines += combines;
-            
+
             ++passes;
         }
 
@@ -388,7 +388,7 @@ OCIO_NAMESPACE_ENTER
         }
 
         OpRcPtrVec::size_type finalSize = ops.size();
-        
+
         if(passes == MAX_OPTIMIZATION_PASSES)
         {
             std::ostringstream os;
@@ -399,7 +399,7 @@ OCIO_NAMESPACE_ENTER
             os << "(undo-ing / redo-ing the other's results).";
             LogDebug(os.str());
         }
-        
+
         if(IsDebugLoggingEnabled())
         {
             std::ostringstream os;
@@ -427,37 +427,37 @@ OCIO_NAMESPACE_EXIT
 #include "ops/exposurecontrast/ExposureContrastOps.h"
 #include "ops/Gamma/GammaOps.h"
 #include "ops/Log/LogOps.h"
-#include "ops/Lut3D/Lut3DOp.h"
 #include "ops/Matrix/MatrixOps.h"
 #include "ops/Range/RangeOps.h"
 #include "UnitTest.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
+
 OCIO_ADD_TEST(OpOptimizers, RemoveInverseOps)
 {
     OCIO::OpRcPtrVec ops;
-    
+
     const double exp[4] = { 1.2, 1.3, 1.4, 1.5 };
-    
-    double logSlope[3] = { 0.18, 0.18, 0.18 };
-    double linSlope[3] = { 2.0, 2.0, 2.0 };
-    double linOffset[3] = { 0.1, 0.1, 0.1 };
-    double base = 10.0;
-    double logOffset[3] = { 1.0, 1.0, 1.0 };
-    
+
+    const double logSlope[3] = { 0.18, 0.18, 0.18 };
+    const double linSlope[3] = { 2.0, 2.0, 2.0 };
+    const double linOffset[3] = { 0.1, 0.1, 0.1 };
+    const double base = 10.0;
+    const double logOffset[3] = { 1.0, 1.0, 1.0 };
+
     OCIO::CreateExponentOp(ops, exp, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
                       OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
                       OCIO::TRANSFORM_DIR_INVERSE);
     OCIO::CreateExponentOp(ops, exp, OCIO::TRANSFORM_DIR_INVERSE);
-    
+
     OCIO_CHECK_EQUAL(ops.size(), 4);
     OCIO::RemoveInverseOps(ops);
     OCIO_CHECK_EQUAL(ops.size(), 0);
-    
-    
+
+
     ops.clear();
     OCIO::CreateExponentOp(ops, exp, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateExponentOp(ops, exp, OCIO::TRANSFORM_DIR_INVERSE);
@@ -466,7 +466,7 @@ OCIO_ADD_TEST(OpOptimizers, RemoveInverseOps)
     OCIO::CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
                       OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateExponentOp(ops, exp, OCIO::TRANSFORM_DIR_FORWARD);
-    
+
     OCIO_CHECK_EQUAL(ops.size(), 5);
     OCIO::RemoveInverseOps(ops);
     OCIO_CHECK_EQUAL(ops.size(), 1);
@@ -481,57 +481,57 @@ OCIO_ADD_TEST(OpOptimizers, CombineOps)
     double m4[4] = { 0.7, 0.7, 0.7, 1.0 };
     
     const double exp[4] = { 1.2, 1.3, 1.4, 1.5 };
-    
+
     {
     OCIO::OpRcPtrVec ops;
     OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
-    
+
     OCIO_CHECK_EQUAL(ops.size(), 1);
     OCIO::CombineOps(ops);
     OCIO_CHECK_EQUAL(ops.size(), 1);
     }
-    
+
     {
     OCIO::OpRcPtrVec ops;
     OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateScaleOp(ops, m3, OCIO::TRANSFORM_DIR_FORWARD);
-    
+
     OCIO_CHECK_EQUAL(ops.size(), 2);
     OCIO::CombineOps(ops);
     OCIO_CHECK_EQUAL(ops.size(), 1);
     }
-    
+
     {
     OCIO::OpRcPtrVec ops;
     OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateScaleOp(ops, m3, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateScaleOp(ops, m4, OCIO::TRANSFORM_DIR_FORWARD);
-    
+
     OCIO_CHECK_EQUAL(ops.size(), 3);
     OCIO::CombineOps(ops);
     OCIO_CHECK_EQUAL(ops.size(), 1);
     }
-    
+
     {
     OCIO::OpRcPtrVec ops;
     OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateScaleOp(ops, m2, OCIO::TRANSFORM_DIR_FORWARD);
-    
+
     OCIO_CHECK_EQUAL(ops.size(), 2);
     OCIO::CombineOps(ops);
     OCIO_CHECK_EQUAL(ops.size(), 0);
     }
-    
+
     {
     OCIO::OpRcPtrVec ops;
     OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_INVERSE);
-    
+
     OCIO_CHECK_EQUAL(ops.size(), 2);
     OCIO::CombineOps(ops);
     OCIO_CHECK_EQUAL(ops.size(), 0);
     }
-    
+
     {
     OCIO::OpRcPtrVec ops;
     OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
@@ -539,19 +539,19 @@ OCIO_ADD_TEST(OpOptimizers, CombineOps)
     OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
-    
+
     OCIO_CHECK_EQUAL(ops.size(), 5);
     OCIO::CombineOps(ops);
     OCIO_CHECK_EQUAL(ops.size(), 1);
     }
-    
+
     {
     OCIO::OpRcPtrVec ops;
     OCIO::CreateExponentOp(ops, exp, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateScaleOp(ops, m2, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateExponentOp(ops, exp, OCIO::TRANSFORM_DIR_INVERSE);
-    
+
     OCIO_CHECK_EQUAL(ops.size(), 4);
     OCIO::CombineOps(ops);
     OCIO_CHECK_EQUAL(ops.size(), 0);
@@ -570,7 +570,7 @@ OCIO_ADD_TEST(OptimizeSeparablePrefix, inexpensive_prefix)
 
     OCIO_CHECK_NO_THROW(OCIO::CreateMatrixOp(originalOps, matrix, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(originalOps.size(), 1);
-    
+
     OCIO::RangeOpDataRcPtr range
         = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
                                               OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
@@ -595,10 +595,10 @@ OCIO_ADD_TEST(OptimizeSeparablePrefix, inexpensive_prefix)
     OCIO_CHECK_NO_THROW(FinalizeOpVec(originalOps, OCIO::FINALIZATION_DEFAULT));
     OCIO_CHECK_NO_THROW(FinalizeOpVec(optimizedOps, OCIO::FINALIZATION_DEFAULT));
 
-    OCIO_CHECK_EQUAL(std::string(originalOps[0]->getCacheID()), 
+    OCIO_CHECK_EQUAL(std::string(originalOps[0]->getCacheID()),
                      std::string(optimizedOps[0]->getCacheID()));
 
-    OCIO_CHECK_EQUAL(std::string(originalOps[1]->getCacheID()), 
+    OCIO_CHECK_EQUAL(std::string(originalOps[1]->getCacheID()),
                      std::string(optimizedOps[1]->getCacheID()));
 }
 
@@ -705,7 +705,7 @@ OCIO_ADD_TEST(OptimizeSeparablePrefix, multi_op_prefix)
 
     OCIO_CHECK_NO_THROW(OCIO::CreateMatrixOp(originalOps, matrix, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(originalOps.size(), 1);
-    
+
     OCIO::RangeOpDataRcPtr range
         = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
                                               OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
@@ -720,8 +720,8 @@ OCIO_ADD_TEST(OptimizeSeparablePrefix, multi_op_prefix)
     const double saturation = 1.;
 
     OCIO::CDLOpDataRcPtr cdl
-        = std::make_shared<OCIO::CDLOpData>(OCIO::BIT_DEPTH_UINT16, OCIO::BIT_DEPTH_UINT16, 
-                                            OCIO::CDLOpData::CDL_V1_2_FWD, 
+        = std::make_shared<OCIO::CDLOpData>(OCIO::BIT_DEPTH_UINT16, OCIO::BIT_DEPTH_UINT16,
+                                            OCIO::CDLOpData::CDL_V1_2_FWD,
                                             slope, offset, power, saturation);
 
     OCIO_CHECK_NO_THROW(OCIO::CreateCDLOp(originalOps, cdl, OCIO::TRANSFORM_DIR_FORWARD));
@@ -789,7 +789,7 @@ OCIO_ADD_TEST(OptimizeSeparablePrefix, op_with_dyn_properties)
     OCIO_CHECK_EQUAL(oData->getType(), OCIO::OpData::Lut1DType);
 
     o = originalOps[1];
-    OCIO::ConstExposureContrastOpDataRcPtr exp 
+    OCIO::ConstExposureContrastOpDataRcPtr exp
         = OCIO::DynamicPtrCast<const OCIO::ExposureContrastOpData>(o->data());
 
     OCIO_CHECK_ASSERT(exp);
@@ -799,7 +799,7 @@ OCIO_ADD_TEST(OptimizeSeparablePrefix, op_with_dyn_properties)
 
 OCIO_ADD_TEST(OpOptimizers, optimizations_with_bit_depths)
 {
-    // Test that optimization of a transform preserves 
+    // Test that optimization of a transform preserves
     // the input and output bit-depths.
 
     OCIO::OpRcPtrVec ops;
@@ -813,7 +813,7 @@ OCIO_ADD_TEST(OpOptimizers, optimizations_with_bit_depths)
     matrix->setArrayValue(0, 2.);
     OCIO_CHECK_NO_THROW(OCIO::CreateMatrixOp(ops, matrix, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    
+
     // Optimize it.
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
 
@@ -824,7 +824,7 @@ OCIO_ADD_TEST(OpOptimizers, optimizations_with_bit_depths)
 }
 
 
-// TODO: Add separable prefix tests that mix in more non-separable ops. 
+// TODO: Add separable prefix tests that mix in more non-separable ops.
 
 // TODO: Add synColor unit tests opt_prefix_test1
 

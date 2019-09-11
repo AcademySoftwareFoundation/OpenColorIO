@@ -81,7 +81,7 @@ protected:
     ConstRangeOpDataRcPtr rangeData() const { return DynamicPtrCast<const RangeOpData>(data()); }
     RangeOpDataRcPtr rangeData() { return DynamicPtrCast<RangeOpData>(data()); }
 
-private:            
+private:
     // The range direction
     TransformDirection m_direction;
 };
@@ -169,7 +169,7 @@ void RangeOp::finalize(FinalizationFlags /*fFlags*/)
     cacheIDStream << constThis.rangeData()->getCacheID() << " ";
     cacheIDStream << TransformDirectionToString(m_direction) << " ";
     cacheIDStream << ">";
-    
+
     m_cacheID = cacheIDStream.str();
 }
 
@@ -295,14 +295,12 @@ OCIO_NAMESPACE_EXIT
 
 #ifdef OCIO_UNIT_TEST
 
-namespace OCIO = OCIO_NAMESPACE;
-
 #include "BitDepthUtils.h"
 #include "ops/Matrix/MatrixOps.h"
 #include "UnitTest.h"
 
+namespace OCIO = OCIO_NAMESPACE;
 
-OCIO_NAMESPACE_USING
 
 const float g_error = 1e-7f;
 
@@ -351,7 +349,7 @@ OCIO_ADD_TEST(RangeOps, combining)
     OCIO::ConstOpRcPtr op1 = ops[1];
 
     // TODO: implement Range combine
-    OCIO_CHECK_THROW_WHAT(ops[0]->combineWith(ops, op1), 
+    OCIO_CHECK_THROW_WHAT(ops[0]->combineWith(ops, op1),
                           OCIO::Exception, "TODO: Range can't be combined");
     OCIO_CHECK_EQUAL(ops.size(), 2);
 
@@ -373,7 +371,7 @@ OCIO_ADD_TEST(RangeOps, combining_with_inverse)
     OCIO::ConstOpRcPtr op1 = ops[1];
 
     // TODO: implement Range combine
-    OCIO_CHECK_THROW_WHAT(ops[0]->combineWith(ops, op1), 
+    OCIO_CHECK_THROW_WHAT(ops[0]->combineWith(ops, op1),
                           OCIO::Exception, "TODO: Range can't be combined");
     OCIO_CHECK_EQUAL(ops.size(), 2);
 
@@ -490,7 +488,7 @@ OCIO_ADD_TEST(RangeOps, bit_depth)
     OCIO_CHECK_EQUAL(o->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
     OCIO_CHECK_EQUAL(o->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT16);
 
-    OCIO::ConstRangeOpDataRcPtr r = DynamicPtrCast<const OCIO::RangeOpData>(o->data());
+    OCIO::ConstRangeOpDataRcPtr r = OCIO::DynamicPtrCast<const OCIO::RangeOpData>(o->data());
     OCIO_CHECK_EQUAL(r->getMinOutValue(), -1.);
 }
 
@@ -547,7 +545,7 @@ OCIO_ADD_TEST(RangeOps, create_transform)
 
 OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
 {
-    ConfigRcPtr config = Config::Create();
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
     OCIO::OpRcPtrVec ops;
 
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
@@ -566,14 +564,14 @@ OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
     // Test the resulting Range Op
 
     OCIO_CHECK_NO_THROW(
-        BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO::BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD));
 
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO_REQUIRE_EQUAL(op0->data()->getType(), OCIO::OpData::RangeType);
 
     OCIO::ConstRangeOpDataRcPtr rangeData
-        = DynamicPtrCast<const OCIO::RangeOpData>(op0->data());
+        = OCIO::DynamicPtrCast<const OCIO::RangeOpData>(op0->data());
 
     OCIO_CHECK_EQUAL(rangeData->getMinInValue(), range->getMinInValue());
     OCIO_CHECK_EQUAL(rangeData->getMaxInValue(), range->getMaxInValue());
@@ -585,14 +583,14 @@ OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
     range->setStyle(OCIO::RANGE_NO_CLAMP);
 
     OCIO_CHECK_NO_THROW(
-        BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO::BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD));
 
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
     OCIO::ConstOpRcPtr op1 = ops[1];
     OCIO_REQUIRE_EQUAL(op1->data()->getType(), OCIO::OpData::MatrixType);
 
     OCIO::ConstMatrixOpDataRcPtr matrixData
-        = DynamicPtrCast<const OCIO::MatrixOpData>(op1->data());
+        = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(op1->data());
 
     OCIO_CHECK_EQUAL(matrixData->getOffsetValue(0), rangeData->getOffset());
 

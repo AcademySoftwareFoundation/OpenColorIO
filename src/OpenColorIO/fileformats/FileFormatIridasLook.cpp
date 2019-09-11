@@ -108,16 +108,16 @@ OCIO_NAMESPACE_ENTER
                 ival = static_cast<char>(10+character-97);
                 return true;
             }
-            
+
             ival = 0;
             return false;
         }
-        
+
         // convert array of 8 hex ascii to f32
         // The input hexascii is required to be a little-endian representation
         // as used in the iridas file format
         // "AD10753F" -> 0.9572857022285461f on ALL architectures
-        
+
         bool hexasciitofloat(float& fval, const char * ascii)
         {
             // Convert all ASCII numbers to their numerical representations
@@ -129,9 +129,9 @@ OCIO_NAMESPACE_ENTER
                     return false;
                 }
             }
-            
+
             unsigned char * fvalbytes = reinterpret_cast<unsigned char *>(&fval);
-            
+
 #if OCIO_LITTLE_ENDIAN
             // Since incoming values are little endian, and we're on little endian
             // preserve the byte order
@@ -613,69 +613,68 @@ OCIO_NAMESPACE_EXIT
 
 #include "UnitTest.h"
 
-OCIO_NAMESPACE_USING
-
+namespace OCIO = OCIO_NAMESPACE;
 
 
 OCIO_ADD_TEST(FileFormatIridasLook, hexasciitoint)
 {
     {
     char ival = 0;
-    bool success = hexasciitoint(ival, 'a');
+    bool success = OCIO::hexasciitoint(ival, 'a');
     OCIO_CHECK_EQUAL(success, true); OCIO_CHECK_EQUAL(ival, 10);
     }
-    
+
     {
     char ival = 0;
-    bool success = hexasciitoint(ival, 'A');
+    bool success = OCIO::hexasciitoint(ival, 'A');
     OCIO_CHECK_EQUAL(success, true); OCIO_CHECK_EQUAL(ival, 10);
     }
-    
+
     {
     char ival = 0;
-    bool success = hexasciitoint(ival, 'f');
+    bool success = OCIO::hexasciitoint(ival, 'f');
     OCIO_CHECK_EQUAL(success, true); OCIO_CHECK_EQUAL(ival, 15);
     }
-    
+
     {
     char ival = 0;
-    bool success = hexasciitoint(ival, 'F');
+    bool success = OCIO::hexasciitoint(ival, 'F');
     OCIO_CHECK_EQUAL(success, true); OCIO_CHECK_EQUAL(ival, 15);
     }
-    
+
     {
     char ival = 0;
-    bool success = hexasciitoint(ival, '0');
+    bool success = OCIO::hexasciitoint(ival, '0');
     OCIO_CHECK_EQUAL(success, true); OCIO_CHECK_EQUAL(ival, 0);
     }
-    
+
     {
     char ival = 0;
-    bool success = hexasciitoint(ival, '0');
+    bool success = OCIO::hexasciitoint(ival, '0');
     OCIO_CHECK_EQUAL(success, true); OCIO_CHECK_EQUAL(ival, 0);
     }
-    
+
     {
     char ival = 0;
-    bool success = hexasciitoint(ival, '9');
+    bool success = OCIO::hexasciitoint(ival, '9');
     OCIO_CHECK_EQUAL(success, true); OCIO_CHECK_EQUAL(ival, 9);
     }
-    
+
     {
     char ival = 0;
-    bool success = hexasciitoint(ival, '\n');
+    bool success = OCIO::hexasciitoint(ival, '\n');
     OCIO_CHECK_EQUAL(success, false);
     }
-    
+
     {
     char ival = 0;
-    bool success = hexasciitoint(ival, 'j');
+    bool success = OCIO::hexasciitoint(ival, 'j');
     OCIO_CHECK_EQUAL(success, false);
     }
-    
+
     {
     char ival = 0;
-    bool success = hexasciitoint(ival, 'x');
+    bool success = OCIO::hexasciitoint(ival, 'x');
     OCIO_CHECK_EQUAL(success, false);
     }
 }
@@ -686,28 +685,28 @@ OCIO_ADD_TEST(FileFormatIridasLook, hexasciitofloat)
     //>>> import binascii, struct
     //>> struct.unpack("<f", binascii.unhexlify("AD10753F"))[0]
     //0.9572857022285461
-    
+
     {
     float fval = 0.0f;
-    bool success = hexasciitofloat(fval, "0000003F");
+    bool success = OCIO::hexasciitofloat(fval, "0000003F");
     OCIO_CHECK_EQUAL(success, true); OCIO_CHECK_EQUAL(fval, 0.5f);
     }
-    
+
     {
     float fval = 0.0f;
-    bool success = hexasciitofloat(fval, "0000803F");
+    bool success = OCIO::hexasciitofloat(fval, "0000803F");
     OCIO_CHECK_EQUAL(success, true); OCIO_CHECK_EQUAL(fval, 1.0f);
     }
-    
+
     {
     float fval = 0.0f;
-    bool success = hexasciitofloat(fval, "AD10753F");
+    bool success = OCIO::hexasciitofloat(fval, "AD10753F");
     OCIO_CHECK_EQUAL(success, true); OCIO_CHECK_EQUAL(fval, 0.9572857022285461f);
     }
-    
+
     {
     float fval = 0.0f;
-    bool success = hexasciitofloat(fval, "AD10X53F");
+    bool success = OCIO::hexasciitofloat(fval, "AD10X53F");
     OCIO_CHECK_EQUAL(success, false);
     }
 }
@@ -940,9 +939,9 @@ OCIO_ADD_TEST(FileFormatIridasLook, simple3d)
 
     // Read file
     std::string emptyString;
-    LocalFileFormat tester;
-    CachedFileRcPtr cachedFile = tester.read(simple1D, emptyString);
-    LocalCachedFileRcPtr looklut = DynamicPtrCast<LocalCachedFile>(cachedFile);
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr cachedFile = tester.read(simple1D, emptyString);
+    OCIO::LocalCachedFileRcPtr looklut = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
 
     // Check LUT size is correct
     OCIO_CHECK_EQUAL(looklut->lut3D->size[0], 8);
@@ -1537,12 +1536,12 @@ OCIO_ADD_TEST(FileFormatIridasLook, fail_on_mask)
     infile.str(strebuf.str());
 
     // Read file
-    LocalFileFormat tester;
+    OCIO::LocalFileFormat tester;
     std::string emptyString;
 
     OCIO_CHECK_THROW_WHAT(
         tester.read(infile, emptyString),
-        Exception, "Cannot load .look LUT containing mask");
+        OCIO::Exception, "Cannot load .look LUT containing mask");
 
 }
 
