@@ -299,8 +299,9 @@ OCIO_NAMESPACE_EXIT
 
 #ifdef OCIO_UNIT_TEST
 
-namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
+
+namespace OCIO = OCIO_NAMESPACE;
 
 
 OCIO_ADD_TEST(RangeTransform, basic)

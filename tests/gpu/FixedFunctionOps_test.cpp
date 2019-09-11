@@ -29,11 +29,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-
-namespace OCIO = OCIO_NAMESPACE;
 #include "GPUUnitTest.h"
 
-OCIO_NAMESPACE_USING
+namespace OCIO = OCIO_NAMESPACE;
 
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces_redmod03_fwd)
@@ -46,8 +44,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_redmod03_fwd)
     test.setContext(func->createEditableCopy(), shaderDesc);
 
     OCIOGPUTest::CustomValues values;
-    values.m_inputValues = 
-        { 
+    values.m_inputValues =
+        {
             0.90f,  0.05f,   0.22f,   0.50f,
             0.97f,  0.097f,  0.0097f, 1.0f,
             0.89f,  0.15f,   0.56f,   0.0f,
@@ -68,8 +66,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_redmod03_inv)
     test.setContext(func->createEditableCopy(), shaderDesc);
 
     OCIOGPUTest::CustomValues values;
-    values.m_inputValues = 
-        { 
+    values.m_inputValues =
+        {
             0.90f,  0.05f,   0.22f,   0.50f,
             0.97f,  0.097f,  0.0097f, 1.0f,
             0.89f,  0.15f,   0.56f,   0.0f,
@@ -90,8 +88,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_redmod10_fwd)
     test.setContext(func->createEditableCopy(), shaderDesc);
 
     OCIOGPUTest::CustomValues values;
-    values.m_inputValues = 
-        { 
+    values.m_inputValues =
+        {
             0.90f,  0.05f,   0.22f,   0.50f,
             0.97f,  0.097f,  0.0097f, 1.0f,
             0.89f,  0.15f,   0.56f,   0.0f,
@@ -112,8 +110,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_redmod10_inv)
     test.setContext(func->createEditableCopy(), shaderDesc);
 
     OCIOGPUTest::CustomValues values;
-    values.m_inputValues = 
-        { 
+    values.m_inputValues =
+        {
             0.90f,  0.05f,   0.22f,   0.50f,
             0.97f,  0.097f,  0.0097f, 1.0f,
             0.89f,  0.15f,   0.56f,   0.0f,
@@ -134,8 +132,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_glow03_fwd)
     test.setContext(func->createEditableCopy(), shaderDesc);
 
     OCIOGPUTest::CustomValues values;
-    values.m_inputValues = 
-        { 
+    values.m_inputValues =
+        {
             0.11f, 0.02f, 0.f,   0.5f, // YC = 0.10
             0.01f, 0.02f, 0.03f, 1.0f, // YC = 0.03
             0.11f, 0.91f, 0.01f, 0.f,  // YC = 0.84
@@ -155,8 +153,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_glow03_inv)
     test.setContext(func->createEditableCopy(), shaderDesc);
 
     OCIOGPUTest::CustomValues values;
-    values.m_inputValues = 
-        { 
+    values.m_inputValues =
+        {
             0.11f, 0.02f, 0.f,   0.5f, // YC = 0.10
             0.01f, 0.02f, 0.03f, 1.0f, // YC = 0.03
             0.11f, 0.91f, 0.01f, 0.f,  // YC = 0.84
@@ -176,8 +174,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_glow10_fwd)
     test.setContext(func->createEditableCopy(), shaderDesc);
 
     OCIOGPUTest::CustomValues values;
-    values.m_inputValues = 
-        { 
+    values.m_inputValues =
+        {
             0.11f, 0.02f, 0.f,   0.5f, // YC = 0.10
             0.01f, 0.02f, 0.03f, 1.0f, // YC = 0.03
             0.11f, 0.91f, 0.01f, 0.f,  // YC = 0.84
@@ -197,7 +195,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_glow10_inv)
     test.setContext(func->createEditableCopy(), shaderDesc);
 
     OCIOGPUTest::CustomValues values;
-    values.m_inputValues = 
+    values.m_inputValues =
         {
             0.11f, 0.02f, 0.f,   0.5f, // YC = 0.10
             0.01f, 0.02f, 0.03f, 1.0f, // YC = 0.03

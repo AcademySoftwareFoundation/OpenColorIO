@@ -27,22 +27,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#include <OpenColorIO/OpenColorIO.h>
-
-
-namespace OCIO = OCIO_NAMESPACE;
-#include "GPUUnitTest.h"
-
 #include <sstream>
 
-OCIO_NAMESPACE_USING
+#include <OpenColorIO/OpenColorIO.h>
+
+#include "GPUUnitTest.h"
+
+namespace OCIO = OCIO_NAMESPACE;
 
 
 #ifndef OCIO_UNIT_TEST_FILES_DIR
 #error Expecting OCIO_UNIT_TEST_FILES_DIR to be defined for tests. Check relevant CMakeLists.txt
 #endif
 
-// For explanation, refer to https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html 
+// For explanation, refer to https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html
 #define _STR(x) #x
 #define STR(x) _STR(x)
 

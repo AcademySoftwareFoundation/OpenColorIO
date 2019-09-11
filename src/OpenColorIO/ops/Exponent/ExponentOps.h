@@ -34,8 +34,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Op.h"
 
-#include <vector>
-
 OCIO_NAMESPACE_ENTER
 {
     class ExponentOpData;
@@ -66,7 +64,7 @@ OCIO_NAMESPACE_ENTER
 
     // If the exponent is 1.0, this will return without clamping
     // Otherwise, will be clamped between [0.0, inf]
-    
+
     void CreateExponentOp(OpRcPtrVec & ops,
                           const double(&vec4)[4],
                           TransformDirection direction);
