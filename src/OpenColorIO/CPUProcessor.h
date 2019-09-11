@@ -61,8 +61,11 @@ public:
 
     void apply(ImageDesc & imgDesc) const;
     void apply(const ImageDesc & srcImgDesc, ImageDesc & dstImgDesc) const;
-    void applyRGB(void * pixel) const;
-    void applyRGBA(void * pixel) const;
+
+    // Note that the method only accepts one packed RGB and 32-bit float pixel.
+    void applyRGB(float * pixel) const;
+    // Note that the method only accepts one packed RGBA and 32-bit float pixel.
+    void applyRGBA(float * pixel) const;
 
     ////////////////////////////////////////////
     //
@@ -83,8 +86,6 @@ private:
     bool               m_hasChannelCrosstalk = true;
     std::string        m_cacheID;
     Mutex              m_mutex;
-
-    std::unique_ptr<ScanlineHelper> m_scanlineBuilder;
 };
 
 

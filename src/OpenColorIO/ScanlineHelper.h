@@ -37,18 +37,30 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
+// All potential processing optimizations.
+enum Optimizations
+{
+    NO_OPTIMIZATION     = 0x00,
+    PACKED_OPTIMIZATION = 0x01,  // The image is a packed RGBA buffer.
+    FLOAT_OPTIMIZATION  = 0x02,  // The image is a F32 i.e. 32-bit float.
+
+    PACKED_FLOAT_OPTIMIZATION = (PACKED_OPTIMIZATION|FLOAT_OPTIMIZATION)
+};
+
+Optimizations GetOptimizationMode(const GenericImageDesc & imgDesc);
+
 
 class ScanlineHelper
 {
 public:
-    ScanlineHelper() {};
+    ScanlineHelper() = default;
     ScanlineHelper(const ScanlineHelper &) = delete;
-    ScanlineHelper& operator= (const ScanlineHelper &) = delete;
+    ScanlineHelper& operator=(const ScanlineHelper &) = delete;
 
-    virtual ~ScanlineHelper() {}
+    virtual ~ScanlineHelper() = default;
 
-    virtual void init(const ImageDesc & srcImg, ImageDesc & dstImg) = 0;
-    virtual void init(ImageDesc & img) = 0;
+    virtual void init(const ImageDesc & srcImg, const ImageDesc & dstImg) = 0;
+    virtual void init(const ImageDesc & img) = 0;
 
     virtual void prepRGBAScanline(float** buffer, long & numPixels) = 0;
     
@@ -60,24 +72,27 @@ class GenericScanlineHelper : public ScanlineHelper
 {
 public:
     GenericScanlineHelper() = delete;
-    GenericScanlineHelper(BitDepth inputBitDepth, ConstOpCPURcPtr & inBitDepthOp,
-                          BitDepth outputBitDepth, ConstOpCPURcPtr & outBitDepthOp);
+    GenericScanlineHelper(const GenericScanlineHelper&) = delete;
+    GenericScanlineHelper& operator=(const GenericScanlineHelper&) = delete;
 
-    void init(const ImageDesc & srcImg, ImageDesc & dstImg) override;
-    void init(ImageDesc & img) override;
-    
-    ~GenericScanlineHelper();
-    
+    GenericScanlineHelper(BitDepth inputBitDepth, const ConstOpCPURcPtr & inBitDepthOp,
+                          BitDepth outputBitDepth, const ConstOpCPURcPtr & outBitDepthOp);
+
+    void init(const ImageDesc & srcImg, const ImageDesc & dstImg) override;
+    void init(const ImageDesc & img) override;
+
+    ~GenericScanlineHelper() override;
+
     // Copy from the src image to our scanline, in our preferred
     // pixel layout. Return the number of pixels to process.
-    
+
     void prepRGBAScanline(float** buffer, long & numPixels) override;
-    
+
     // Write back the result of our work, from the scanline to our
     // destination image.
-    
+
     void finishRGBAScanline() override;
-    
+
 private:
     BitDepth m_inputBitDepth;
     BitDepth m_outputBitDepth;
@@ -86,27 +101,28 @@ private:
 
     GenericImageDesc m_srcImg; // Description of the source image.
     GenericImageDesc m_dstImg; // Description of the destination image.
-    
-    // Copy mode
-    // The mode needs an intermediate RGBA F32 buffer.
-    std::vector<float> m_buffer;
-    long m_imagePixelIndex;
-    int m_numPixelsCopied;
 
-    // Need additional buffers of the same pixel type as the input/output
+    Optimizations m_inOptimizedMode;  // Optimization applicable to the input buffer.
+    Optimizations m_outOptimizedMode; // Optimization applicable to the output buffer.
+
+    // Processing needs an intermediate buffer as CPU Ops only process packed RGBA F32.
+    std::vector<float> m_rgbaFloatBuffer;
+
+    // Processing needs additional buffers of the same pixel type as the input/output
     // in order to convert arbitrary channel order from/to RGBA.
     std::vector<InType> m_inBitDepthBuffer;
     std::vector<OutType> m_outBitDepthBuffer;
-    
-    // Number of pixels to process when inplace processing is not possible.
-    long m_defaultWidth;
 
-    // In place mode i.e. RGBA F32 only support.
+    // The index of the current line to process.
     int m_yIndex;
-    bool m_inPlaceMode;
+
+    // If the destination buffer is packed RGBA F32 it could then be used
+    // as the internal processing buffer (i.e. instead of m_rgbaFloatBuffer
+    // and m_outBitDepthBuffer).
+    bool m_useDstBuffer;
 };
 
-    
+
 }
 OCIO_NAMESPACE_EXIT
 

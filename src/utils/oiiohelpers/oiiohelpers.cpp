@@ -51,8 +51,6 @@ BitDepth GetBitDepth(const OIIO::ImageSpec & spec)
     std::stringstream ss;
     ss << "Error: Unsupported format: " << spec.format;
     throw Exception(ss.str().c_str());
-
-    return BIT_DEPTH_F32;
 }
 
 
@@ -88,89 +86,38 @@ ChannelOrdering GetChannelOrdering(const OIIO::ImageSpec & spec)
     std::stringstream ss;
     ss << "Error: Unsupported channel ordering: " << channels;
     throw Exception(ss.str().c_str());
-
-    return CHANNEL_ORDERING_RGBA;
 }
 
-ImageDescRcPtr CreateImageDesc(const OIIO::ImageSpec & spec, 
-                              int imgWidth, int imgHeight, 
-                              void * imgBuffer)
+ImageDescRcPtr CreateImageDesc(const OIIO::ImageSpec & spec, void * imgBuffer)
 {
-    return std::make_shared<PackedImageDesc>(imgBuffer, 
-                                             imgWidth,
-                                             imgHeight,
+    return std::make_shared<PackedImageDesc>(imgBuffer,
+                                             spec.width,
+                                             spec.height,
                                              GetChannelOrdering(spec),
+                                             GetBitDepth(spec),
                                              spec.channel_bytes(),
                                              spec.pixel_bytes(),
                                              spec.scanline_bytes());
 }
 
-ImageDescRcPtr CreateImageDesc(const OIIO::ImageSpec & spec, void * imgBuffer)
-{
-    return CreateImageDesc(spec, spec.width, spec.height, imgBuffer);
-}
-
-void * AllocateImageBuffer(const OIIO::ImageSpec & spec, int imgWidth, int imgHeight)
-{
-    const size_t imgSize = imgWidth * imgHeight * spec.nchannels;
-
-    if(spec.format==OIIO::TypeDesc::FLOAT)
-    {
-        return new float[imgSize];
-    }
-    else if(spec.format==OIIO::TypeDesc::HALF)
-    {
-        return new half[imgSize];
-    }
-    else if(spec.format==OIIO::TypeDesc::UINT16)
-    {
-        return new uint16_t[imgSize];
-    }
-    else if(spec.format==OIIO::TypeDesc::UINT8)
-    {
-        return new uint8_t[imgSize];
-    }
-
-    std::stringstream ss;
-    ss << "Error: Unsupported image type: " << spec.format << std::endl;
-    throw Exception(ss.str().c_str());
-
-    return nullptr;  
-}
-
 void * AllocateImageBuffer(const OIIO::ImageSpec & spec)
 {
-    return AllocateImageBuffer(spec, spec.width, spec.height);
+    const size_t imgSizeInChars = spec.scanline_bytes() * spec.height;
+    return (void *)new char[imgSizeInChars];
 }
 
-void DesallocateImageBuffer(const OIIO::ImageSpec & spec, void * & img)
+void DeallocateImageBuffer(const OIIO::ImageSpec & spec, void * & img)
 {
-    if(spec.format==OIIO::TypeDesc::FLOAT)
-    {
-        delete [](float*)img;
-        img = nullptr;
-    }
-    else if(spec.format==OIIO::TypeDesc::HALF)
-    {
-        delete [] (half*)img;
-    }
-    else if(spec.format==OIIO::TypeDesc::UINT16)
-    {
-        delete [](uint16_t*)img;
-        img = nullptr;
-    }
-    else if(spec.format==OIIO::TypeDesc::UINT8)
-    {
-        delete [](uint8_t*)img;
-        img = nullptr;
-    }
-    else
-    {
-        std::stringstream ss;
-        ss << "Error: Unsupported image type: " << spec.format << std::endl;
-        throw Exception(ss.str().c_str());
-    }   
+    delete [](char*)img;
+    img = nullptr;
 }
+
+void CopyImageBuffer(void * dstBuffer, void * srcBuffer, const OIIO::ImageSpec & spec)
+{
+    const size_t imgSizeInChars = spec.scanline_bytes() * spec.height;
+    memcpy(dstBuffer, srcBuffer, imgSizeInChars);
+}
+
 
 } // anon
 
@@ -222,20 +169,46 @@ void PrintImageSpec(const OIIO::ImageSpec & spec, bool verbose)
                       << val << std::endl;
         }
     }
+    else
+    {
+        std::cout << std::endl;
+        std::cout << "Image: [" << spec.width << "x" << spec.height << "] "
+                  << spec.format << " ";
+        for(int i = 0; i < spec.nchannels; ++i)
+        {
+            if(i < (int)spec.channelnames.size())
+            {
+                std::cout << spec.channelnames[i];
+            }
+            else
+            {
+                std::cout << "Unknown";
+            }
+        }
+        std::cout << std::endl;
+    }
 }
 
 ImgBuffer::ImgBuffer(const OIIO::ImageSpec & spec)
     :   m_spec(spec)
     ,   m_buffer(nullptr)
-{ 
-    allocate(m_spec);
+{
+    m_buffer = AllocateImageBuffer(m_spec);
 }
 
-ImgBuffer::~ImgBuffer() 
-{ 
+ImgBuffer::ImgBuffer(const ImgBuffer & img)
+    :   m_spec(img.m_spec)
+    ,   m_buffer(nullptr)
+{
+    m_buffer = AllocateImageBuffer(m_spec);
+    CopyImageBuffer(m_buffer, img.m_buffer, img.m_spec);
+}
+
+ImgBuffer::~ImgBuffer()
+{
     if(m_buffer!=nullptr)
     {
-        DesallocateImageBuffer(m_spec, m_buffer);
+        DeallocateImageBuffer(m_spec, m_buffer);
         m_buffer = nullptr;
     }
 }
@@ -244,7 +217,7 @@ void ImgBuffer::allocate(const OIIO::ImageSpec & spec)
 {
     if(m_buffer!=nullptr)
     {
-        DesallocateImageBuffer(m_spec, m_buffer);
+        DeallocateImageBuffer(m_spec, m_buffer);
     }
 
     m_spec = spec;
@@ -255,7 +228,7 @@ ImgBuffer & ImgBuffer::operator= (ImgBuffer && img)
 {
     if(this!=&img)
     {
-        DesallocateImageBuffer(m_spec, m_buffer);
+        DeallocateImageBuffer(m_spec, m_buffer);
 
         m_spec   = img.m_spec;
         m_buffer = img.m_buffer;

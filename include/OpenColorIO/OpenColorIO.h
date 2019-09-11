@@ -1088,8 +1088,9 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         bool hasChannelCrosstalk() const;
 
-        //!cpp:function:: Bit-depths of the input and output pixel buffers.
+        //!cpp:function:: Bit-depth of the input pixel buffer.
         BitDepth getInputBitDepth() const;
+        //!cpp:function:: Bit-depth of the output pixel buffer.
         BitDepth getOutputBitDepth() const;
 
         //!cpp:function:: Refer to :cpp:func:`GPUProcessor::getDynamicProperty`.
@@ -1107,7 +1108,7 @@ OCIO_NAMESPACE_ENTER
 
         //!rst::
         // Apply to a single pixel respecting that the input and output bit-depths
-        // be identical.
+        // be 32-bit float and the image buffer be packed RGB/RGBA.
         // 
         // .. note::
         //    This is not as efficient as applying to an entire image at once.
@@ -1115,9 +1116,9 @@ OCIO_NAMESPACE_ENTER
         //    use the above function instead.
 
         //!cpp:function:: 
-        void applyRGB(void * pixel) const;
+        void applyRGB(float * pixel) const;
         //!cpp:function:: 
-        void applyRGBA(void * pixel) const;
+        void applyRGBA(float * pixel) const;
 
     private:
         CPUProcessor();
@@ -1369,16 +1370,50 @@ OCIO_NAMESPACE_ENTER
     //!cpp:class::
     // This is a light-weight wrapper around an image, that provides a context
     // for pixel access. This does NOT claim ownership of the pixels or copy
-    // image data
+    // image data.
     
     class OCIOEXPORT ImageDesc
     {
     public:
         //!cpp:function::
+        ImageDesc();
+        //!cpp:function::
         virtual ~ImageDesc();
 
+        //!cpp:function:: Get a pointer to the red channel of the first pixel.
+        virtual void * getRData() const = 0;
+        //!cpp:function:: Get a pointer to the green channel of the first pixel.
+        virtual void * getGData() const = 0;
+        //!cpp:function:: Get a pointer to the blue channel of the first pixel.
+        virtual void * getBData() const = 0;
+        //!cpp:function:: Get a pointer to the alpha channel of the first pixel
+        // or null as alpha channel is optional.
+        virtual void * getAData() const = 0;
+
+        //!cpp:function:: Get the bit-depth.
+        virtual BitDepth getBitDepth() const = 0;
+
+        //!cpp:function:: Get the width to process (where x position starts at 0 and ends at width-1).
+        virtual long getWidth() const = 0;
+        //!cpp:function:: Get the height to process (where y position starts at 0 and ends at height-1).
+        virtual long getHeight() const = 0;
+
+        //!cpp:function:: Get the step in bytes to find the same color channel of the next pixel.
+        virtual ptrdiff_t getXStrideBytes() const = 0;
+        //!cpp:function:: Get the step in bytes to find the same color channel 
+        // of the pixel at the same position in the next line.
+        virtual ptrdiff_t getYStrideBytes() const = 0;
+
+        //!cpp:function:: Is the image buffer in packed mode with the 4 color channels?
+        // ("Packed" here means that XStrideBytes is 4x the bytes per channel, so it is more specific 
+        // than simply any PackedImageDesc.)
+        virtual bool isRGBAPacked() const = 0;
+        //!cpp:function:: Is the image buffer 32-bit float?
+        virtual bool isFloat() const = 0;
+
     private:
-        ImageDesc& operator= (const ImageDesc &);
+        ImageDesc(const ImageDesc &);
+        ImageDesc & operator= (const ImageDesc &);
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ImageDesc&);
@@ -1419,7 +1454,8 @@ OCIO_NAMESPACE_ENTER
         //    numChannels smust be 3 (RGB) or 4 (RGBA).
         PackedImageDesc(void * data,
                         long width, long height,
-                        long numChannels,
+                        long numChannels,  // must be 3 (RGB) or 4 (RGBA)
+                        BitDepth bitDepth,
                         ptrdiff_t chanStrideBytes,
                         ptrdiff_t xStrideBytes,
                         ptrdiff_t yStrideBytes);
@@ -1433,6 +1469,7 @@ OCIO_NAMESPACE_ENTER
         PackedImageDesc(void * data,
                         long width, long height,
                         ChannelOrdering chanOrder,
+                        BitDepth bitDepth,
                         ptrdiff_t chanStrideBytes,
                         ptrdiff_t xStrideBytes,
                         ptrdiff_t yStrideBytes);
@@ -1443,23 +1480,39 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: Get the channel ordering of all the pixels.
         ChannelOrdering getChannelOrder() const;
 
+        //!cpp:function:: Get the bit-depth.
+        BitDepth getBitDepth() const override;
+
         //!cpp:function:: Get a pointer to the first color channel of the first pixel.
         void * getData() const;
 
-        //!cpp:function:: Get the width to process (where x position starts at 0 and ends at width-1).
-        long getWidth() const;
-        //!cpp:function:: Get the height to process (where y position starts at 0 and ends at height-1).
-        long getHeight() const;
-        //!cpp:function:: Get the number of color channels.
+        //!cpp:function::
+        void * getRData() const override;
+        //!cpp:function::
+        void * getGData() const override;
+        //!cpp:function::
+        void * getBData() const override;
+        //!cpp:function::
+        void * getAData() const override;
+
+        //!cpp:function::
+        long getWidth() const override;
+        //!cpp:function::
+        long getHeight() const override;
+        //!cpp:function::
         long getNumChannels() const;
 
-        //!cpp:function:: Get the step in bytes to find the next color channel in the same pixel.
+        //!cpp:function::
         ptrdiff_t getChanStrideBytes() const;
-        //!cpp:function:: Get the step in bytes to find the same color channel in the next pixel.
-        ptrdiff_t getXStrideBytes() const;
-        //!cpp:function:: Get the step in bytes to find the same color channel 
-        // of the pixel at the same position in the next line.
-        ptrdiff_t getYStrideBytes() const;
+        //!cpp:function::
+        ptrdiff_t getXStrideBytes() const override;
+        //!cpp:function::
+        ptrdiff_t getYStrideBytes() const override;
+
+        //!cpp:function::
+        bool isRGBAPacked() const override;
+        //!cpp:function::
+        bool isFloat() const override;
 
     private:
         struct Impl;
@@ -1497,35 +1550,46 @@ OCIO_NAMESPACE_ENTER
                         long width, long height);
 
         //!cpp:function::
+        // Note that although PlanarImageDesc is powerful enough to also describe 
+        // all :cpp:class:`PackedImageDesc` scenarios, it is recommended to use 
+        // a PackedImageDesc where possible since that allows for additional
+        // optimizations.
         PlanarImageDesc(void * rData, void * gData, void * bData, void * aData,
                         long width, long height,
+                        BitDepth bitDepth,
                         ptrdiff_t xStrideBytes,
                         ptrdiff_t yStrideBytes);
 
         //!cpp:function::
         virtual ~PlanarImageDesc();
 
-        //!cpp:function:: Get a pointer to the red channel of the first pixel.
-        void * getRData() const;
-        //!cpp:function:: Get a pointer to the green channel of the first pixel.
-        void * getGData() const;
-        //!cpp:function:: Get a pointer to the blue channel of the first pixel.
-        void * getBData() const;
-        //!cpp:function:: Get a pointer to the alpha channel of the first pixel
-        // or null as alpha channel is optional.
-        void * getAData() const;
-        
-        //!cpp:function:: Get the width to process (where x position starts at 0 and ends at width-1).
-        long getWidth() const;
-        //!cpp:function:: Get the height to process (where y position starts at 0 and ends at height-1).
-        long getHeight() const;
-        
-        //!cpp:function:: Get the step in bytes to find the same color channel of the next pixel.
-        ptrdiff_t getXStrideBytes() const;
-        //!cpp:function:: Get the step in bytes to find the same color channel 
-        // of the pixel at the same position in the next line.
-        ptrdiff_t getYStrideBytes() const;
-        
+        //!cpp:function::
+        void * getRData() const override;
+        //!cpp:function::
+        void * getGData() const override;
+        //!cpp:function::
+        void * getBData() const override;
+        //!cpp:function::
+        void * getAData() const override;
+
+        //!cpp:function:: Get the bit-depth.
+        BitDepth getBitDepth() const override;
+
+        //!cpp:function::
+        long getWidth() const override;
+        //!cpp:function::
+        long getHeight() const override;
+
+        //!cpp:function::
+        ptrdiff_t getXStrideBytes() const override;
+        //!cpp:function::
+        ptrdiff_t getYStrideBytes() const override;
+
+        //!cpp:function::
+        bool isRGBAPacked() const override;
+        //!cpp:function::
+        bool isFloat() const override;
+
     private:
         struct Impl;
         Impl * m_impl;

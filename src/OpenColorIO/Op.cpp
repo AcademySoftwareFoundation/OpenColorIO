@@ -385,7 +385,7 @@ OCIO_NAMESPACE_ENTER
     
     void FinalizeOpVec(OpRcPtrVec & ops, FinalizationFlags fFlags)
     {
-        for (auto & op : ops)
+        for(auto & op : ops)
         {
             op->setInputBitDepth(BIT_DEPTH_F32);
             op->setOutputBitDepth(BIT_DEPTH_F32);
@@ -1057,7 +1057,10 @@ OCIO_ADD_TEST(OpRcPtrVec, bit_depth_with_filenoop)
 
     // Remove FileNoOp and adjust the bit-depths.
 
-    OCIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OptimizeOpVec(ops, 
+                                      ops.front()->getInputBitDepth(),
+                                      ops.back()->getOutputBitDepth(),
+                                      OCIO::OPTIMIZATION_DEFAULT));
 
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
     OCIO_CHECK_EQUAL(ops[0]->getInputBitDepth(),  OCIO::BIT_DEPTH_F32);
