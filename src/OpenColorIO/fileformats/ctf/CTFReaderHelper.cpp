@@ -1320,7 +1320,7 @@ void CTFReaderFixedFunctionElt::start(const char **atts)
         {
             std::vector<double> data;
             const char* paramsStr = atts[i + 1];
-            const size_t len = strlen(paramsStr);
+            const size_t len = paramsStr ? strlen(paramsStr) : 0;
             try
             {
                 data = GetNumbers<double>(paramsStr, len);
