@@ -123,6 +123,7 @@ class ArgParse {
 public:
     ArgParse ();
     ArgParse (const ArgParse & ) = delete;
+    ArgParse & operator= (const ArgParse & ) = delete;
     ArgParse (int argc, const char **argv);
     ~ArgParse ();
 
