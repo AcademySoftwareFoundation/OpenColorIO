@@ -267,6 +267,7 @@ public:
     InvLut1DRendererHalfCode() = delete;
     explicit InvLut1DRendererHalfCode(ConstLut1DOpDataRcPtr & lut);
     InvLut1DRendererHalfCode(const InvLut1DRendererHalfCode &) = delete;
+    InvLut1DRendererHalfCode& operator=(const InvLut1DRendererHalfCode &) = delete;
     virtual ~InvLut1DRendererHalfCode();
 
     void updateData(ConstLut1DOpDataRcPtr & lut) override;

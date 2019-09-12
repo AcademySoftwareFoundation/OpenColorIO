@@ -46,8 +46,10 @@ using OCIOTestFuncCallback = std::function<void(void)>;
 
 struct OCIOTest
 {
-    OCIOTest(std::string testgroup, std::string testname, OCIOTestFuncCallback test) :
-        group(testgroup), name(testname), function(test) { };
+    OCIOTest(const std::string & testgroup, const std::string & testname, const OCIOTestFuncCallback & test)
+        :    group(testgroup), name(testname), function(test)
+    { };
+
     std::string group, name;
     OCIOTestFuncCallback function;
 };
@@ -59,7 +61,7 @@ UnitTests & GetUnitTests();
 
 struct AddTest
 { 
-    explicit AddTest(OCIOTestRcPtr test)
+    explicit AddTest(const OCIOTestRcPtr & test)
     {
         GetUnitTests().push_back(test);
     }
