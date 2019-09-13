@@ -118,7 +118,7 @@ const char * GetInterpolation3DName(Interpolation interp)
     {
     case INTERP_LINEAR:
         return INTERPOLATION_3D_LINEAR;
-    case INTERP_CUBIC:
+    case INTERP_TETRAHEDRAL:
         return INTERPOLATION_3D_TETRAHEDRAL;
     case INTERP_DEFAULT:
     default:
