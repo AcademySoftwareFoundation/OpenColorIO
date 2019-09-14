@@ -45,26 +45,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
-// For gcc 3.4.4 & SSE2, these two intrinsic methods do not exist
-//
-//  Copy & Paste the code from gcc 4.1.2
-//  /usr/lib/gcc/x86_64-redhat-linux/4.1.1/include/emmintrin.h
-
-#if !defined(_MSC_VER) && defined(__GNUC__) && (__GNUC__ < 4)
-
-inline __m128i _mm_castps_si128(__m128 __A)
-{
-  return (__m128i) __A;
-}
-
-inline __m128 _mm_castsi128_ps(__m128i __A)
-{
-  return (__m128) __A;
-}
-
-#endif
-
-
 // Macros for alignment declarations
 #define OCIO_SIMD_BYTES 16
 #if defined( _MSC_VER )
