@@ -245,7 +245,7 @@ void GetLut1DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
     ss.newLine() << "{";
     ss.indent();
 
-    if (lutData->getHueAdjust() == Lut1DOpData::HUE_DW3)
+    if (lutData->getHueAdjust() == HUE_DW3)
     {
         ss.newLine() << "// Add the pre hue adjustment";
         ss.newLine() << ss.vec3fDecl("maxval")
@@ -285,7 +285,7 @@ void GetLut1DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
                         << ss.sampleTex1D(name, name + "_coords.b") << ".b;";
     }
 
-    if (lutData->getHueAdjust() == Lut1DOpData::HUE_DW3)
+    if (lutData->getHueAdjust() == HUE_DW3)
     {
         ss.newLine() << "";
         ss.newLine() << "// Add the post hue adjustment";

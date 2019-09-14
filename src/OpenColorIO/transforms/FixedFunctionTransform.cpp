@@ -33,100 +33,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "OpBuilders.h"
 #include "ops/FixedFunction/FixedFunctionOpData.h"
-#include "ops/FixedFunction/FixedFunctionOps.h"
 
 
 OCIO_NAMESPACE_ENTER
 {
-
-namespace
-{
-
-FixedFunctionOpData::Style ConvertStyle(FixedFunctionStyle style, TransformDirection dir)
-{
-    if(dir==TRANSFORM_DIR_UNKNOWN)
-    {
-        throw Exception(
-            "Cannot create FixedFunctionOp with unspecified transform direction.");
-    }
-
-    const bool isForward = dir==TRANSFORM_DIR_FORWARD;
-
-    switch(style)
-    {
-        case FIXED_FUNCTION_ACES_RED_MOD_03:
-        {
-            if(isForward) return FixedFunctionOpData::ACES_RED_MOD_03_FWD;
-            else          return FixedFunctionOpData::ACES_RED_MOD_03_INV;
-        }
-        case FIXED_FUNCTION_ACES_RED_MOD_10:
-        {
-            if(isForward) return FixedFunctionOpData::ACES_RED_MOD_10_FWD;
-            else          return FixedFunctionOpData::ACES_RED_MOD_10_INV;
-        }
-        case FIXED_FUNCTION_ACES_GLOW_03:
-        {
-            if(isForward) return FixedFunctionOpData::ACES_GLOW_03_FWD;
-            else          return FixedFunctionOpData::ACES_GLOW_03_INV;
-        }
-        case FIXED_FUNCTION_ACES_GLOW_10:
-        {
-            if(isForward) return FixedFunctionOpData::ACES_GLOW_10_FWD;
-            else          return FixedFunctionOpData::ACES_GLOW_10_INV;
-        }
-        case FIXED_FUNCTION_ACES_DARK_TO_DIM_10:
-        {
-            if(isForward) return FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD;
-            else          return FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV;
-        }
-        case FIXED_FUNCTION_REC2100_SURROUND:
-        {
-            return FixedFunctionOpData::REC2100_SURROUND;
-        }
-    }
-
-    std::stringstream ss("Unknown FixedFunction transform style: ");
-    ss << style;
-
-    throw Exception(ss.str().c_str());
-}
-
-FixedFunctionStyle ConvertStyle(FixedFunctionOpData::Style style)
-{
-    switch(style)
-    {
-        case FixedFunctionOpData::ACES_RED_MOD_03_FWD:
-        case FixedFunctionOpData::ACES_RED_MOD_03_INV:
-            return FIXED_FUNCTION_ACES_RED_MOD_03;
-
-        case FixedFunctionOpData::ACES_RED_MOD_10_FWD:
-        case FixedFunctionOpData::ACES_RED_MOD_10_INV:
-            return FIXED_FUNCTION_ACES_RED_MOD_10;
-
-        case FixedFunctionOpData::ACES_GLOW_03_FWD:
-        case FixedFunctionOpData::ACES_GLOW_03_INV:
-            return FIXED_FUNCTION_ACES_GLOW_03;
-
-        case FixedFunctionOpData::ACES_GLOW_10_FWD:
-        case FixedFunctionOpData::ACES_GLOW_10_INV:
-            return FIXED_FUNCTION_ACES_GLOW_10;
-
-        case FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD:
-        case FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV:
-            return FIXED_FUNCTION_ACES_DARK_TO_DIM_10;
-
-        case FixedFunctionOpData::REC2100_SURROUND:
-            return FIXED_FUNCTION_REC2100_SURROUND;
-    }
-
-    std::stringstream ss("Unknown FixedFunction style: ");
-    ss << style;
-
-    throw Exception(ss.str().c_str());
-}
-
-}; // anon
-
 
 FixedFunctionTransformRcPtr FixedFunctionTransform::Create()
 {
@@ -141,7 +51,7 @@ void FixedFunctionTransform::deleter(FixedFunctionTransform* t)
 class FixedFunctionTransform::Impl : public FixedFunctionOpData
 {
 public:
-    Impl() 
+    Impl()
         :   FixedFunctionOpData()
         ,   m_direction(TRANSFORM_DIR_FORWARD)
     {
@@ -219,14 +129,24 @@ void FixedFunctionTransform::validate() const
     getImpl()->validate();
 }
 
+FormatMetadata & FixedFunctionTransform::getFormatMetadata()
+{
+    return m_impl->getFormatMetadata();
+}
+
+const FormatMetadata & FixedFunctionTransform::getFormatMetadata() const
+{
+    return m_impl->getFormatMetadata();
+}
+
 FixedFunctionStyle FixedFunctionTransform::getStyle() const
 {
-    return ConvertStyle(getImpl()->getStyle());
+    return FixedFunctionOpData::ConvertStyle(getImpl()->getStyle());
 }
 
 void FixedFunctionTransform::setStyle(FixedFunctionStyle style)
 {
-    getImpl()->setStyle(ConvertStyle(style, TRANSFORM_DIR_FORWARD));
+    getImpl()->setStyle(FixedFunctionOpData::ConvertStyle(style));
 }
 
 size_t FixedFunctionTransform::getNumParams() const
@@ -272,26 +192,6 @@ std::ostream& operator<< (std::ostream & os, const FixedFunctionTransform & t)
     return os;
 }
 
-
-///////////////////////////////////////////////////////////////////////////
-
-void BuildFixedFunctionOps(OpRcPtrVec & ops,
-                           const Config & /*config*/,
-                           const ConstContextRcPtr & /*context*/,
-                           const FixedFunctionTransform & transform,
-                           TransformDirection dir)
-{
-    const TransformDirection combinedDir 
-        = CombineTransformDirections(dir, transform.getDirection());
-
-    const size_t numParams = transform.getNumParams();
-    FixedFunctionOpData::Params params(numParams, 0.);
-    if(numParams>0) transform.getParams(&params[0]);
-
-    CreateFixedFunctionOp(ops, params, ConvertStyle(transform.getStyle(), combinedDir));
-}
-
-
 }
 OCIO_NAMESPACE_EXIT
 
@@ -301,11 +201,9 @@ OCIO_NAMESPACE_EXIT
 
 #ifdef OCIO_UNIT_TEST
 
-namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-
-OCIO_NAMESPACE_USING
+namespace OCIO = OCIO_NAMESPACE;
 
 
 OCIO_ADD_TEST(FixedFunctionTransform, basic)
@@ -327,7 +225,7 @@ OCIO_ADD_TEST(FixedFunctionTransform, basic)
     OCIO_CHECK_NO_THROW(func->validate());
 
     OCIO_CHECK_NO_THROW(func->setStyle(OCIO::FIXED_FUNCTION_REC2100_SURROUND));
-    OCIO_CHECK_THROW_WHAT(func->validate(), OCIO::Exception, 
+    OCIO_CHECK_THROW_WHAT(func->validate(), OCIO::Exception,
                           "The style 'REC2100_Surround' must have "
                           "one parameter but 0 found.");
 
@@ -342,7 +240,7 @@ OCIO_ADD_TEST(FixedFunctionTransform, basic)
     OCIO_CHECK_NO_THROW(func->validate());
 
     OCIO_CHECK_NO_THROW(func->setStyle(OCIO::FIXED_FUNCTION_ACES_DARK_TO_DIM_10));
-    OCIO_CHECK_THROW_WHAT(func->validate(), OCIO::Exception, 
+    OCIO_CHECK_THROW_WHAT(func->validate(), OCIO::Exception,
                           "The style 'ACES_DarkToDim10 (Forward)' must have "
                           "zero parameters but 1 found.");
 }

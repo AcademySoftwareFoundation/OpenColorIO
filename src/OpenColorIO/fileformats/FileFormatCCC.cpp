@@ -61,21 +61,21 @@ OCIO_NAMESPACE_ENTER
             
             ~LocalFileFormat() {};
             
-            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
+            void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
             
-            virtual CachedFileRcPtr Read(
+            CachedFileRcPtr read(
                 std::istream & istream,
-                const std::string & fileName) const;
+                const std::string & fileName) const override;
             
-            virtual void BuildFileOps(OpRcPtrVec & ops,
-                                      const Config& config,
-                                      const ConstContextRcPtr & context,
-                                      CachedFileRcPtr untypedCachedFile,
-                                      const FileTransform& fileTransform,
-                                      TransformDirection dir) const;
+            void buildFileOps(OpRcPtrVec & ops,
+                              const Config& config,
+                              const ConstContextRcPtr & context,
+                              CachedFileRcPtr untypedCachedFile,
+                              const FileTransform& fileTransform,
+                              TransformDirection dir) const override;
         };
         
-        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
+        void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
             info.name = "ColorCorrectionCollection";
@@ -87,7 +87,7 @@ OCIO_NAMESPACE_ENTER
         // Try and load the format
         // Raise an exception if it can't be loaded.
         
-        CachedFileRcPtr LocalFileFormat::Read(
+        CachedFileRcPtr LocalFileFormat::read(
             std::istream & istream,
             const std::string & fileName) const
         {
@@ -103,7 +103,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         void
-        LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
+        LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                                       const Config& config,
                                       const ConstContextRcPtr & context,
                                       CachedFileRcPtr untypedCachedFile,
@@ -236,7 +236,8 @@ OCIO_ADD_TEST(FileFormatCCC, TestCCC)
     OCIO_CHECK_NO_THROW(cccFile = LoadCCCFile(fileName));
     
     OCIO_CHECK_EQUAL(5, cccFile->transformVec.size());
-    // Map key is the ID and 2 don't have an ID
+    // Two of the five CDLs in the file don't have an id attribute and are not
+    // included in the transformMap since it used the id as the key.
     OCIO_CHECK_EQUAL(3, cccFile->transformMap.size());
     {
         std::string idStr(cccFile->transformVec[0]->getID());
@@ -259,7 +260,7 @@ OCIO_ADD_TEST(FileFormatCCC, TestCCC)
         OCIO_CHECK_EQUAL(1.25f, power[0]);
         OCIO_CHECK_EQUAL(1.0f, power[1]);
         OCIO_CHECK_EQUAL(1.0f, power[2]);
-        OCIO_CHECK_EQUAL(1.7f, cccFile->transformVec[0]->getSat());
+        OCIO_CHECK_EQUAL(1.7, cccFile->transformVec[0]->getSat());
     }
     {
         std::string idStr(cccFile->transformVec[1]->getID());
@@ -281,7 +282,7 @@ OCIO_ADD_TEST(FileFormatCCC, TestCCC)
         OCIO_CHECK_EQUAL(0.9f, power[0]);
         OCIO_CHECK_EQUAL(0.9f, power[1]);
         OCIO_CHECK_EQUAL(0.9f, power[2]);
-        OCIO_CHECK_EQUAL(0.7f, cccFile->transformVec[1]->getSat());
+        OCIO_CHECK_EQUAL(0.7, cccFile->transformVec[1]->getSat());
     }
     {
         std::string idStr(cccFile->transformVec[2]->getID());
@@ -303,7 +304,7 @@ OCIO_ADD_TEST(FileFormatCCC, TestCCC)
         OCIO_CHECK_EQUAL(0.9f, power[0]);
         OCIO_CHECK_EQUAL(1.0f, power[1]);
         OCIO_CHECK_EQUAL(1.2f, power[2]);
-        OCIO_CHECK_EQUAL(1.0f, cccFile->transformVec[2]->getSat());
+        OCIO_CHECK_EQUAL(1.0, cccFile->transformVec[2]->getSat());
     }
     {
         std::string idStr(cccFile->transformVec[3]->getID());
@@ -326,7 +327,7 @@ OCIO_ADD_TEST(FileFormatCCC, TestCCC)
         OCIO_CHECK_EQUAL(1.0f, power[1]);
         OCIO_CHECK_EQUAL(1.2f, power[2]);
         // SatNode missing from XML, uses a default of 1.0.
-        OCIO_CHECK_EQUAL(1.0f, cccFile->transformVec[3]->getSat());
+        OCIO_CHECK_EQUAL(1.0, cccFile->transformVec[3]->getSat());
     }
     {
         std::string idStr(cccFile->transformVec[4]->getID());
@@ -350,7 +351,7 @@ OCIO_ADD_TEST(FileFormatCCC, TestCCC)
         OCIO_CHECK_EQUAL(1.0f, power[1]);
         OCIO_CHECK_EQUAL(1.0f, power[2]);
 
-        OCIO_CHECK_EQUAL(0.0f, cccFile->transformVec[4]->getSat());
+        OCIO_CHECK_EQUAL(0.0, cccFile->transformVec[4]->getSat());
     }
 
 }

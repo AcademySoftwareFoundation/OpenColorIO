@@ -26,18 +26,16 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorIO/OpenColorIO.h>
-
-
-namespace OCIO = OCIO_NAMESPACE;
-#include "GPUUnitTest.h"
-#include "GPUHelpers.h"
-
 #include <stdio.h>
 #include <sstream>
 #include <string>
 
-OCIO_NAMESPACE_USING
+#include <OpenColorIO/OpenColorIO.h>
+
+#include "GPUHelpers.h"
+#include "GPUUnitTest.h"
+
+namespace OCIO = OCIO_NAMESPACE;
 
 
 const int LUT3D_EDGE_SIZE = 32;
@@ -80,7 +78,7 @@ OCIO_ADD_GPU_TEST(Lut3DOp, red_only_using_CSP_file_legacy_shader)
     file->setSrc(filename.c_str());
     file->setInterpolation(OCIO::INTERP_LINEAR);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
     test.setContext(file->createEditableCopy(), shaderDesc);
 
@@ -124,7 +122,7 @@ OCIO_ADD_GPU_TEST(Lut3DOp, green_only_using_CSP_file_legacy_shader)
     file->setSrc(filename.c_str());
     file->setInterpolation(OCIO::INTERP_LINEAR);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
     test.setContext(file->createEditableCopy(), shaderDesc);
 
@@ -168,7 +166,7 @@ OCIO_ADD_GPU_TEST(Lut3DOp, blue_only_using_CSP_file_legacy_shader)
     file->setSrc(filename.c_str());
     file->setInterpolation(OCIO::INTERP_LINEAR);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
     test.setContext(file->createEditableCopy(), shaderDesc);
 
@@ -213,7 +211,7 @@ OCIO_ADD_GPU_TEST(Lut3DOp, arbitrary_using_CSP_file_legacy_shader)
     file->setSrc(filename.c_str());
     file->setInterpolation(OCIO::INTERP_LINEAR);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
     test.setContext(file->createEditableCopy(), shaderDesc);
@@ -260,7 +258,7 @@ OCIO_ADD_GPU_TEST(Lut3DOp, arbitrary_using_CSP_file)
     test.setContext(file->createEditableCopy(), shaderDesc);
 
     // TODO: Small LUTs not being resampled for now, such error threshold is expected
-    //       The legacy shader has a better error threashold because 
+    //       The legacy shader has a better error threashold because
     //       it converts all LUTs in one 3D LUT of dimension LUT3D_EDGE_SIZE
     //       which performs a resampling of small LUTs.
     test.setErrorThreshold(1e-2f);
@@ -273,7 +271,7 @@ OCIO_ADD_GPU_TEST(Lut3DOp, arbitrary_using_CSP_file)
 #endif
 
 
-// For explanation, refer to https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html 
+// For explanation, refer to https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html
 #define _STR(x) #x
 #define STR(x) _STR(x)
 
@@ -284,7 +282,7 @@ namespace
 {
     OCIO::FileTransformRcPtr GetFileTransform(const std::string & filename)
     {
-        const std::string 
+        const std::string
             filepath(ocioTestFilesDir + std::string("/") + filename);
 
         OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
@@ -301,7 +299,7 @@ OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_legacy_shader)
 {
     OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_1.spi3d");
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
     test.setContext(file->createEditableCopy(), shaderDesc);
 
@@ -343,7 +341,7 @@ OCIO_ADD_GPU_TEST(Lut3DOp, inv3dlut_file_spi3d_linear)
 #endif
     // The test uses the FAST style of inverse on both CPU and GPU.
     // The FAST style uses EXACT inversion to build an approximate inverse
-    // that may be applied as a forward Lut3D.  
+    // that may be applied as a forward Lut3D.
     OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_1.spi3d");
     file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 

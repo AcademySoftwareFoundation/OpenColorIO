@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
+Copyright (c) 2019 Autodesk Inc., et al.
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -26,20 +26,19 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifdef OCIO_UNIT_TEST
+#ifndef INCLUDED_OCIO_TRANSFORMBUILDER_H
+#define INCLUDED_OCIO_TRANSFORMBUILDER_H
 
-#ifndef _WIN32
-#pragma GCC visibility push(default)
+#include <OpenColorIO/OpenColorIO.h>
+
+#include "Op.h"
+
+OCIO_NAMESPACE_ENTER
+{
+
+void CreateTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op);
+
+}
+OCIO_NAMESPACE_EXIT
+
 #endif
-
-#include <memory>
-
-
-#include "UnitTest.h" // OCIO unit tests header
-OCIO_TEST_APP(OpenColorIO_Core_Unit_Tests)
-
-#ifndef _WIN32
-#pragma GCC visibility pop
-#endif
-
-#endif // OCIO_UNIT_TEST

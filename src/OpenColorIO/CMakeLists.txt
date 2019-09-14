@@ -37,8 +37,10 @@ set(SOURCES
 	fileformats/FileFormatSpiMtx.cpp
 	fileformats/FileFormatTruelight.cpp
 	fileformats/FileFormatVF.cpp
+	fileformats/FormatMetadata.cpp
 	fileformats/xmlutils/XMLReaderHelper.cpp
 	fileformats/xmlutils/XMLReaderUtils.cpp
+	fileformats/xmlutils/XMLWriterUtils.cpp
 	GPUProcessor.cpp
 	GpuShader.cpp
 	GpuShaderDesc.cpp
@@ -88,7 +90,6 @@ set(SOURCES
 	ops/Matrix/MatrixOpCPU.cpp
 	ops/Matrix/MatrixOpData.cpp
 	ops/Matrix/MatrixOps.cpp
-	ops/Metadata.cpp
 	ops/NoOp/NoOps.cpp
 	ops/Range/RangeOpCPU.cpp
 	ops/Range/RangeOpData.cpp
@@ -115,10 +116,10 @@ set(SOURCES
 	transforms/LogAffineTransform.cpp
 	transforms/LogTransform.cpp
 	transforms/LookTransform.cpp
+	transforms/LUT1DTransform.cpp
+	transforms/LUT3DTransform.cpp
 	transforms/MatrixTransform.cpp
 	transforms/RangeTransform.cpp
-	UnitTest.cpp
-	UnitTestUtils.cpp
 )
 
 if(WIN32 AND BUILD_SHARED_LIBS)
@@ -149,6 +150,7 @@ target_link_libraries(OpenColorIO
 		expat::expat
 		ilmbase::ilmbase
 )
+
 if(NOT BUILD_SHARED_LIBS)
 	target_compile_definitions(OpenColorIO
 		PRIVATE
@@ -172,17 +174,23 @@ if(OCIO_USE_SSE)
 	)
 endif()
 
+if(MSVC AND BUILD_TYPE_DEBUG AND BUILD_SHARED_LIBS)
+    set_target_properties(OpenColorIO PROPERTIES
+        PDB_NAME ${PROJECT_NAME}_${LIBNAME_SUFFIX}
+    )
+endif()
+
 if(WIN32)
     # A windows application linking to eXpat static libraries must
     # have the global macro XML_STATIC defined
-    target_compile_definitions(OpenColorIO
+    target_compile_definitions(OpenColorIO 
         PRIVATE
             XML_STATIC
     )
 
     if(BUILD_SHARED_LIBS)
 
-        # Impose a versioned name on Windows to avoid binary name clashes 
+        # Impose a versioned name on Windows to avoid binary name clashes
         # between different versions of the same library.
 
         # Note: Do not append the PATCH to allow Apps to use the
@@ -196,12 +204,17 @@ if(WIN32)
     endif()
 endif()
 
-set_target_properties(OpenColorIO PROPERTIES 
+set_target_properties(OpenColorIO PROPERTIES
 	COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
 
 set_target_properties(OpenColorIO PROPERTIES
     VERSION ${OpenColorIO_VERSION}
     SOVERSION ${SOVERSION})
+
+if(MSVC AND BUILD_SHARED_LIBS)
+	# Install the pdb file if any.
+	install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+endif()
 
 install(TARGETS OpenColorIO
 	LIBRARY DESTINATION lib

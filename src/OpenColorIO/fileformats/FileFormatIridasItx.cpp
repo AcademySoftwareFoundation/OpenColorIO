@@ -92,22 +92,22 @@ OCIO_NAMESPACE_ENTER
             
             ~LocalFileFormat() {};
             
-            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
+            void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
             
-            virtual CachedFileRcPtr Read(
+            CachedFileRcPtr read(
                 std::istream & istream,
-                const std::string & fileName) const;
+                const std::string & fileName) const override;
             
-            virtual void Write(const Baker & baker,
-                               const std::string & formatName,
-                               std::ostream & ostream) const;
+            void bake(const Baker & baker,
+                      const std::string & formatName,
+                      std::ostream & ostream) const override;
             
-            virtual void BuildFileOps(OpRcPtrVec & ops,
-                         const Config& config,
-                         const ConstContextRcPtr & context,
-                         CachedFileRcPtr untypedCachedFile,
-                         const FileTransform& fileTransform,
-                         TransformDirection dir) const;
+            void buildFileOps(OpRcPtrVec & ops,
+                              const Config& config,
+                              const ConstContextRcPtr & context,
+                              CachedFileRcPtr untypedCachedFile,
+                              const FileTransform& fileTransform,
+                              TransformDirection dir) const override;
 
         private:
             static void ThrowErrorMessage(const std::string & error,
@@ -135,17 +135,17 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
 
-        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
+        void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
             info.name = "iridas_itx";
             info.extension = "itx";
-            info.capabilities = (FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_WRITE);
+            info.capabilities = (FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
             formatInfoVec.push_back(info);
         }
         
         CachedFileRcPtr
-        LocalFileFormat::Read(
+        LocalFileFormat::read(
             std::istream & istream,
             const std::string & fileName) const
         {
@@ -163,7 +163,7 @@ OCIO_NAMESPACE_ENTER
             
             {
                 std::string line;
-                std::vector<std::string> parts;
+                StringVec parts;
                 std::vector<float> tmpfloats;
                 int lineNumber = 0;
 
@@ -253,9 +253,9 @@ OCIO_NAMESPACE_ENTER
             return cachedFile;
         }
         
-        void LocalFileFormat::Write(const Baker & baker,
-                                    const std::string & formatName,
-                                    std::ostream & ostream) const
+        void LocalFileFormat::bake(const Baker & baker,
+                                   const std::string & formatName,
+                                   std::ostream & ostream) const
         {
             int DEFAULT_CUBE_SIZE = 64;
             
@@ -323,7 +323,7 @@ OCIO_NAMESPACE_ENTER
         
         
         void
-        LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
+        LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                                       const Config& /*config*/,
                                       const ConstContextRcPtr & /*context*/,
                                       CachedFileRcPtr untypedCachedFile,
@@ -389,7 +389,7 @@ void ReadIridasItx(const std::string & fileContent)
     // Read file
     OCIO::LocalFileFormat tester;
     const std::string SAMPLE_NAME("Memory File");
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(is, SAMPLE_NAME);
+    OCIO::CachedFileRcPtr cachedFile = tester.read(is, SAMPLE_NAME);
 }
 
 OCIO_ADD_TEST(FileFormatIridasItx, ReadFailure)

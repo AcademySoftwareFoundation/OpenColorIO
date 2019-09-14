@@ -118,10 +118,6 @@ OCIO_NAMESPACE_ENTER
         
         void LogOp::finalize(FinalizationFlags /*fFlags*/)
         {
-            // Only 32f processing is natively supported.
-            logData()->setInputBitDepth(BIT_DEPTH_F32);
-            logData()->setOutputBitDepth(BIT_DEPTH_F32);
-
             logData()->finalize();
 
             // Create the cacheID
@@ -192,6 +188,76 @@ OCIO_NAMESPACE_ENTER
         ops.push_back(std::make_shared<LogOp>(log));
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    void CreateLogTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
+    {
+        auto log = DynamicPtrCast<const LogOp>(op);
+        if (!log)
+        {
+            throw Exception("CreateRangeTransform: op has to be a RangeOp");
+        }
+        auto logTransform = LogAffineTransform::Create();
+
+        auto logData = DynamicPtrCast<const LogOpData>(op->data());
+        logTransform->setDirection(logData->getDirection());
+
+        auto & formatMetadata = logTransform->getFormatMetadata();
+        auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
+        metadata = logData->getFormatMetadata();
+
+        logTransform->setBase(logData->getBase());
+        double logSlope[3]{ 0.0 };
+        double logOffset[3]{ 0.0 };
+        double linSlope[3]{ 0.0 };
+        double linOffset[3]{ 0.0 };
+        logData->getParameters(logSlope, logOffset, linSlope, linOffset);
+        logTransform->setLogSideSlopeValue(logSlope);
+        logTransform->setLogSideOffsetValue(logOffset);
+        logTransform->setLinSideSlopeValue(linSlope);
+        logTransform->setLinSideOffsetValue(linOffset);
+        
+        group->push_back(logTransform);
+    }
+
+    void BuildLogOps(OpRcPtrVec & ops,
+                     const Config & /*config*/,
+                     const LogAffineTransform& transform,
+                     TransformDirection dir)
+    {
+        TransformDirection combinedDir =
+            CombineTransformDirections(dir,
+                                       transform.getDirection());
+
+        double base = transform.getBase();
+        double logSlope[3] = { 1.0, 1.0, 1.0 };
+        double linSlope[3] = { 1.0, 1.0, 1.0 };
+        double linOffset[3] = { 0.0, 0.0, 0.0 };
+        double logOffset[3] = { 0.0, 0.0, 0.0 };
+
+        transform.getLogSideSlopeValue(logSlope);
+        transform.getLogSideOffsetValue(logOffset);
+        transform.getLinSideSlopeValue(linSlope);
+        transform.getLinSideOffsetValue(linOffset);
+
+        auto opData = std::make_shared<LogOpData>(base, logSlope, logOffset,
+                                                  linSlope, linOffset, TRANSFORM_DIR_FORWARD);
+
+        CreateLogOp(ops, opData, combinedDir);
+    }
+
+    void BuildLogOps(OpRcPtrVec & ops,
+                     const Config& /*config*/,
+                     const LogTransform& transform,
+                     TransformDirection dir)
+    {
+        TransformDirection combinedDir =
+            CombineTransformDirections(dir,
+                                       transform.getDirection());
+        CreateLogOp(ops, transform.getBase(), combinedDir);
+    }
+
 }
 OCIO_NAMESPACE_EXIT
 
@@ -231,7 +297,7 @@ OCIO_ADD_TEST(LogOps, lin_to_log)
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO_REQUIRE_ASSERT((bool)ops[0]);
 
-    // No chache ID before operator has been finalized.
+    // No chacheID before operator has been finalized.
     std::string opCache = ops[0]->getCacheID();
     OCIO_CHECK_EQUAL(opCache.size(), 0);
 
@@ -443,6 +509,64 @@ OCIO_ADD_TEST(LogOps, throw_direction)
                     linSlope, linOffset,
                     OCIO::TRANSFORM_DIR_UNKNOWN),
         OCIO::Exception, "unspecified transform direction");
+}
+
+OCIO_ADD_TEST(LogOps, create_transform)
+{
+    OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_FORWARD;
+
+    const double base = 1.0;
+    const double logSlope[] = { 1.5, 1.6, 1.7 };
+    const double linSlope[] = { 1.1, 1.2, 1.3 };
+    const double linOffset[] = { 1.0, 2.0, 3.0 };
+    const double logOffset[] = { 10.0, 20.0, 30.0 };
+
+    OCIO::LogOpDataRcPtr log
+        = std::make_shared<OCIO::LogOpData>(base, logSlope, logOffset, linSlope, linOffset, direction);
+
+    auto & metadataSource = log->getFormatMetadata();
+    metadataSource.addAttribute("name", "test");
+
+    OCIO::OpRcPtrVec ops;
+    OCIO_CHECK_NO_THROW(OCIO::CreateLogOp(ops, log, direction));
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_REQUIRE_ASSERT(ops[0]);
+
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+
+    OCIO::ConstOpRcPtr op(ops[0]);
+
+    OCIO::CreateLogTransform(group, op);
+    OCIO_REQUIRE_EQUAL(group->size(), 1);
+    auto transform = group->getTransform(0);
+    OCIO_REQUIRE_ASSERT(transform);
+    auto lTransform = OCIO_DYNAMIC_POINTER_CAST<OCIO::LogAffineTransform>(transform);
+    OCIO_REQUIRE_ASSERT(lTransform);
+
+    const auto & metadata = lTransform->getFormatMetadata();
+    OCIO_REQUIRE_EQUAL(metadata.getNumAttributes(), 1);
+    OCIO_CHECK_EQUAL(std::string(metadata.getAttributeName(0)), "name");
+    OCIO_CHECK_EQUAL(std::string(metadata.getAttributeValue(0)), "test");
+
+    OCIO_CHECK_EQUAL(lTransform->getDirection(), direction);
+    OCIO_CHECK_EQUAL(lTransform->getBase(), base);
+    double values[3]{ 0.0 };
+    lTransform->getLogSideSlopeValue(values);
+    OCIO_CHECK_EQUAL(values[0], logSlope[0]);
+    OCIO_CHECK_EQUAL(values[1], logSlope[1]);
+    OCIO_CHECK_EQUAL(values[2], logSlope[2]);
+    lTransform->getLogSideOffsetValue(values);
+    OCIO_CHECK_EQUAL(values[0], logOffset[0]);
+    OCIO_CHECK_EQUAL(values[1], logOffset[1]);
+    OCIO_CHECK_EQUAL(values[2], logOffset[2]);
+    lTransform->getLinSideSlopeValue(values);
+    OCIO_CHECK_EQUAL(values[0], linSlope[0]);
+    OCIO_CHECK_EQUAL(values[1], linSlope[1]);
+    OCIO_CHECK_EQUAL(values[2], linSlope[2]);
+    lTransform->getLinSideOffsetValue(values);
+    OCIO_CHECK_EQUAL(values[0], linOffset[0]);
+    OCIO_CHECK_EQUAL(values[1], linOffset[1]);
+    OCIO_CHECK_EQUAL(values[2], linOffset[2]);
 }
 
 #endif // OCIO_UNIT_TEST

@@ -29,8 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 
-namespace OCIO = OCIO_NAMESPACE;
 #include "GPUUnitTest.h"
+
+namespace OCIO = OCIO_NAMESPACE;
+
 
 OCIO_ADD_GPU_TEST(ExposureContrast, style_linear_fwd)
 {
