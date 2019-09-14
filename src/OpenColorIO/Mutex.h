@@ -57,22 +57,6 @@ OCIO_NAMESPACE_ENTER
     };
 #endif
 
-    /** Automatically acquire and release lock within enclosing scope. */
-    template <class T>
-    class AutoLock
-    {
-    public:
-        AutoLock() = delete;
-        AutoLock & operator=(const AutoLock &) = delete;
-        AutoLock & operator=(AutoLock &&) = delete;
-
-        AutoLock(T & m) : _m(m) { _m.lock();   }
-        ~AutoLock()             { _m.unlock(); }
-
-    private:
-	   T & _m;
-    };
-
 #ifndef NDEBUG
     // add debug wrappers to mutex
     typedef DebugLock<std::mutex> Mutex;
@@ -80,7 +64,7 @@ OCIO_NAMESPACE_ENTER
     typedef std::mutex Mutex;
 #endif
 
-    typedef AutoLock<std::mutex> AutoMutex;
+    typedef std::lock_guard<std::mutex> AutoMutex;
 
 }
 OCIO_NAMESPACE_EXIT
