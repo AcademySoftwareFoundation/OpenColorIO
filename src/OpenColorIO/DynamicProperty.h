@@ -43,6 +43,7 @@ class DynamicPropertyImpl : public DynamicProperty
 public:
     DynamicPropertyImpl(DynamicPropertyType type, double value, bool dynamic);
     DynamicPropertyImpl(DynamicPropertyImpl & rhs);
+    virtual ~DynamicPropertyImpl() = default;
 
     double getDoubleValue() const override;
     void setValue(double value) override;
@@ -79,6 +80,7 @@ public:
 
 private:
     DynamicPropertyImpl() = delete;
+    DynamicPropertyImpl & operator=(DynamicPropertyImpl &) = delete;
     
     DynamicPropertyType m_type = DYNAMIC_PROPERTY_EXPOSURE;
 
