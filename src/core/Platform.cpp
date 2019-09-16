@@ -3,9 +3,12 @@
 //
 //
 
+#include <vector>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Platform.h"
+
 
 OCIO_NAMESPACE_ENTER
 {
@@ -18,26 +21,16 @@ OCIO_NAMESPACE_ENTER
         // 
         void getenv (const char* name, std::string& value)
         {
-#ifdef WINDOWS
-            // To remove the security compilation warning, the _dupenv_s method
-            // must be used (instead of the getenv). The improvement is that
-            // the buffer length is now under control to mitigate buffer overflow attacks.
-            //
-            char * val;
-            size_t len = 0;
-            // At least _dupenv_s validates the memory size by returning ENOMEM
-            //  in case of allocation size issue.
-            const errno_t err = ::_dupenv_s(&val, &len, name);
-            if(err!=0 || len==0 || !val || !*val)
+#ifdef _WIN32
+            if(uint32_t size = GetEnvironmentVariable(name, nullptr, 0))
             {
-                if(val) free(val);
-                value.resize(0);
+                std::vector<char> buffer(size);
+                GetEnvironmentVariable(name, buffer.data(), size);
+                value = std::string(buffer.data());
             }
             else
             {
-                value.resize(len+1);
-                ::snprintf(&value[0], len, "%s", val);
-                if(val) free(val);
+                value.clear();
             }
 #else
             const char* val = ::getenv(name);
@@ -95,6 +88,27 @@ OIIO_ADD_TEST(Platform, putenv)
         OIIO_CHECK_ASSERT(!env.empty());
         OIIO_CHECK_ASSERT(0==strcmp("SomeValue", env.c_str()));
     }
+	
+#ifdef _WIN32
+    {
+        SetEnvironmentVariable("MY_WINDOWS_DUMMY_ENV", "1");
+        std::string env;
+        OCIO::Platform::getenv("MY_WINDOWS_DUMMY_ENV", env);
+        OIIO_CHECK_EQUAL(env, std::string("1"));
+    }
+    {
+        SetEnvironmentVariable("MY_WINDOWS_DUMMY_ENV", " ");
+        std::string env;
+        OCIO::Platform::getenv("MY_WINDOWS_DUMMY_ENV", env);
+        OIIO_CHECK_EQUAL(env, std::string(" "));
+    }
+    {
+        SetEnvironmentVariable("MY_WINDOWS_DUMMY_ENV", "");
+        std::string env;
+        OCIO::Platform::getenv("MY_WINDOWS_DUMMY_ENV", env);
+        OIIO_CHECK_ASSERT(env.empty());
+    }
+#endif
 }
 
 #endif // OCIO_UNIT_TEST
