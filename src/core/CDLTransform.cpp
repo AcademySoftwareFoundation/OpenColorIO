@@ -364,6 +364,7 @@ OCIO_NAMESPACE_ENTER
     {
         AutoMutex lock(g_cacheMutex);
         g_cache.clear();
+        g_cacheSrcIsCC.clear();
     }
     
     // TODO: Expose functions for introspecting in ccc file
@@ -847,3 +848,103 @@ OCIO_NAMESPACE_ENTER
     }
 }
 OCIO_NAMESPACE_EXIT
+
+
+
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+
+#include "Platform.h"
+#include "unittest.h"
+
+
+namespace
+{
+    static const std::string kContentsA = {
+        "<ColorCorrectionCollection>\n"
+        "    <ColorCorrection id=\"cc03343\">\n"
+        "        <SOPNode>\n"
+        "            <Slope>0.1 0.2 0.3 </Slope>\n"
+        "            <Offset>0.8 0.1 0.3 </Offset>\n"
+        "            <Power>0.5 0.5 0.5 </Power>\n"
+        "        </SOPNode>\n"
+        "        <SATNode>\n"
+        "            <Saturation>1</Saturation>\n"
+        "        </SATNode>\n"
+        "    </ColorCorrection>\n"
+        "    <ColorCorrection id=\"cc03344\">\n"
+        "        <SOPNode>\n"
+        "            <Slope>1.2 1.3 1.4 </Slope>\n"
+        "            <Offset>0.3 0 0 </Offset>\n"
+        "            <Power>0.75 0.75 0.75 </Power>\n"
+        "        </SOPNode>\n"
+        "        <SATNode>\n"
+        "            <Saturation>1</Saturation>\n"
+        "        </SATNode>\n"
+        "    </ColorCorrection>\n"
+        "</ColorCorrectionCollection>\n"
+        };
+
+    static const std::string kContentsB = {
+        "<ColorCorrectionCollection>\n"
+        "    <ColorCorrection id=\"cc03343\">\n"
+        "        <SOPNode>\n"
+        "            <Slope>1.1 2.2 3.3 </Slope>\n"
+        "            <Offset>0.8 0.1 0.3 </Offset>\n"
+        "            <Power>0.5 0.5 0.5 </Power>\n"
+        "        </SOPNode>\n"
+        "        <SATNode>\n"
+        "            <Saturation>1</Saturation>\n"
+        "        </SATNode>\n"
+        "    </ColorCorrection>\n"
+        "    <ColorCorrection id=\"cc03344\">\n"
+        "        <SOPNode>\n"
+        "            <Slope>1.2 1.3 1.4 </Slope>\n"
+        "            <Offset>0.3 0 0 </Offset>\n"
+        "            <Power>0.75 0.75 0.75 </Power>\n"
+        "        </SOPNode>\n"
+        "        <SATNode>\n"
+        "            <Saturation>1</Saturation>\n"
+        "        </SATNode>\n"
+        "    </ColorCorrection>\n"
+        "</ColorCorrectionCollection>\n"
+        };
+
+
+}
+
+OIIO_ADD_TEST(CDLTransform, clear_caches)
+{
+    std::string filename;
+    OIIO_CHECK_NO_THROW(OCIO::Platform::createTempFilename(filename, ""));
+
+    std::fstream stream(filename, std::ios_base::out|std::ios_base::trunc);
+    stream << kContentsA;
+    stream.close();
+
+    OCIO::CDLTransformRcPtr transform; 
+    OIIO_CHECK_NO_THROW(transform = OCIO::CDLTransform::CreateFromFile(filename.c_str(), "cc03343"));
+
+    float slope[3];
+
+    OIIO_CHECK_NO_THROW(transform->getSlope(slope));
+    OIIO_CHECK_EQUAL(slope[0], 0.1f);
+    OIIO_CHECK_EQUAL(slope[1], 0.2f);
+    OIIO_CHECK_EQUAL(slope[2], 0.3f);
+
+    stream.open(filename, std::ios_base::out|std::ios_base::trunc);
+    stream << kContentsB;
+    stream.close();
+
+    OIIO_CHECK_NO_THROW(OCIO::ClearAllCaches());
+
+    OIIO_CHECK_NO_THROW(transform = OCIO::CDLTransform::CreateFromFile(filename.c_str(), "cc03343"));
+    OIIO_CHECK_NO_THROW(transform->getSlope(slope));
+
+    OIIO_CHECK_EQUAL(slope[0], 1.1f);
+    OIIO_CHECK_EQUAL(slope[1], 2.2f);
+    OIIO_CHECK_EQUAL(slope[2], 3.3f);
+}
+
+#endif
