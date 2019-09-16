@@ -235,7 +235,6 @@ OCIO_NAMESPACE_ENTER
             {
                 // Non-separable ops (should never get here).
                 throw Exception("Non-separable op.");
-                return 0;
             }
 
             ConstOpRcPtr constOp = op;
