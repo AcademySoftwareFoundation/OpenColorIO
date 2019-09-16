@@ -2372,7 +2372,7 @@ OCIO_ADD_TEST(Lut1DOpData, inverse_half_domain)
     OCIO_CHECK_EQUAL(blueProperties.negEndDomain, 64511u);
 
     // Check reversals are removed.
-    half act, aim;
+    half act;
     act = invValues[16000 * 3];
     OCIO_CHECK_EQUAL(act.bits(), 15922);  // halfToFloat(15000) * 2 - 0.1
     act = invValues[52000 * 3];
