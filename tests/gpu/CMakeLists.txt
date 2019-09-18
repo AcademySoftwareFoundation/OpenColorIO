@@ -1,11 +1,25 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-find_package(OpenGL REQUIRED)
-if(NOT APPLE)
-	find_package(GLEW REQUIRED)
+find_package(OpenGL QUIET)
+if(NOT OpenGL_FOUND)
+	message(WARNING "OpenGL not found. Skipping the GPU unit tests.")
+	return()
 endif()
-find_package(GLUT REQUIRED)
+
+if(NOT APPLE)
+	find_package(GLEW QUIET)
+	if(NOT GLEW_FOUND)
+		message(WARNING "GLEW not found. Skipping the GPU unit tests.")
+		return()
+	endif()
+endif()
+
+find_package(GLUT QUIET)
+if(NOT GLUT_FOUND)
+	message(WARNING "GLUT not found. Skipping the GPU unit tests.")
+	return()
+endif()
 
 set(SOURCES
 	CDLOps_test.cpp

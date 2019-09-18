@@ -87,10 +87,6 @@ else()
 		# Use of 'register' specifier must be removed for C++17 support.
 		set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wno-deprecated-register")
 	endif()
-
-	if(BUILD_SHARED_LIBS OR OCIO_BUILD_SHARED)
-	    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -fPIC")
-	endif()
 endif()
 
 if(OCIO_WARNING_AS_ERROR)
