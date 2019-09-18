@@ -1930,7 +1930,12 @@ void TransformWriter::writeOps() const
             }
 
             const auto type = op->getType();
-            ++numSavedOps;
+
+            if (type != OpData::NoOpType)
+            {
+                op->validate();
+                ++numSavedOps;
+            }
 
             switch (type)
             {
@@ -2067,6 +2072,19 @@ void TransformWriter::writeOps() const
             case OpData::MatrixType:
             {
                 auto matSrc = OCIO_DYNAMIC_POINTER_CAST<const MatrixOpData>(op);
+
+                if (m_isCLF)
+                {
+                    if (matSrc->hasAlpha())
+                    {
+                        std::ostringstream oss;
+                        oss << "Transform uses a Matrix op that has an alpha "
+                               "component, so it cannot be written as CLF.  "
+                               "Use CTF format for this transform.";
+                        throw Exception(oss.str().c_str());
+                    }
+                }
+
                 auto mat = matSrc->clone();
 
                 outBD = GetValidatedFileBitDepth(mat->getFileOutputBitDepth(), type);
@@ -2110,7 +2128,6 @@ void TransformWriter::writeOps() const
             }
             case OpData::NoOpType:
             {
-                --numSavedOps;
                 break;
             }
             }

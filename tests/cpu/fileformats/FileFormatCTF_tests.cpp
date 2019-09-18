@@ -3643,6 +3643,18 @@ OCIO_ADD_TEST(CTFTransform, save_lut1d_f32)
     OCIO_CHECK_EQUAL(lut->getArray()[21], values[7]);
 }
 
+OCIO_ADD_TEST(CTFTransform, save_invalid_lut_1d)
+{
+    OCIO::LUT1DTransformRcPtr lutT = OCIO::LUT1DTransform::Create();
+    lutT->setFileOutputBitDepth(OCIO::BIT_DEPTH_F32);
+
+    lutT->setLength(8);
+    lutT->setInputHalfDomain(true);
+
+    OCIO_CHECK_THROW_WHAT(WriteRead(lutT), OCIO::Exception,
+                          "65536 required for halfDomain 1D LUT");
+}
+
 OCIO_ADD_TEST(CTFTransform, save_lut_3d)
 {
     const std::string ctfFile("lut3d_2x2x2_32f_32f.clf");
@@ -3781,7 +3793,7 @@ OCIO_ADD_TEST(CTFTransform, load_edit_save_matrix_clf)
     auto matTrans = OCIO::DynamicPtrCast<OCIO::MatrixTransform>(transform);
     const std::string newDescription{ "Added description" };
     matTrans->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, newDescription.c_str());
-    const double offset[] = { 0.1, 1.2, 2.3, 1.0 };
+    const double offset[] = { 0.1, 1.2, 2.3, 0.0 };
     matTrans->setOffset(offset);
 
     // Create empty Config to use.
@@ -3794,27 +3806,56 @@ OCIO_ADD_TEST(CTFTransform, load_edit_save_matrix_clf)
     std::ostringstream outputTransform;
     OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform));
 
-    // Output matrix array as '4 5 4'.
     const std::string expectedCLF{
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-        "<ProcessList compCLFversion=\"2\" id=\"b5cc7aed-d405-4d8b-b64b-382b2341a378\" name=\"matrix example\">\n"
-        "    <Description>Convert output-referred XYZ values to linear RGB.</Description>\n"
-        "    <InputDescriptor>XYZ</InputDescriptor>\n"
-        "    <OutputDescriptor>RGB</OutputDescriptor>\n"
-        "    <Matrix id=\"c61daf06-539f-4254-81fc-9800e6d02a37\" inBitDepth=\"32f\" outBitDepth=\"32f\">\n"
-        "        <Description>XYZ to sRGB matrix</Description>\n"
-        "        <Description>Added description</Description>\n"
-        "        <Array dim=\"4 5 4\">\n"
-        "               3.24              -1.537             -0.4985                   0                 0.1\n"
-        "            -0.9693               1.876             0.04156                   0                 1.2\n"
-        "             0.0556              -0.204              1.0573                   0                 2.3\n"
-        "                  0                   0                   0                   1                   1\n"
-        "        </Array>\n"
-        "    </Matrix>\n"
-        "</ProcessList>\n" };
+R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="2" id="b5cc7aed-d405-4d8b-b64b-382b2341a378" name="matrix example">
+    <Description>Convert output-referred XYZ values to linear RGB.</Description>
+    <InputDescriptor>XYZ</InputDescriptor>
+    <OutputDescriptor>RGB</OutputDescriptor>
+    <Matrix id="c61daf06-539f-4254-81fc-9800e6d02a37" inBitDepth="32f" outBitDepth="32f">
+        <Description>XYZ to sRGB matrix</Description>
+        <Description>Added description</Description>
+        <Array dim="3 4 3">
+               3.24              -1.537             -0.4985                 0.1
+            -0.9693               1.876             0.04156                 1.2
+             0.0556              -0.204              1.0573                 2.3
+        </Array>
+    </Matrix>
+</ProcessList>
+)" };
 
     OCIO_CHECK_EQUAL(expectedCLF.size(), outputTransform.str().size());
     OCIO_CHECK_EQUAL(expectedCLF, outputTransform.str());
+
+    const double offsetAlpha[] = { 0.1, 1.2, 2.3, 0.9 };
+    matTrans->setOffset(offsetAlpha);
+
+    OCIO::ConstProcessorRcPtr processorGroupAlpha = config->getProcessor(group);
+
+    std::ostringstream outputTransformCTF;
+    OCIO_CHECK_NO_THROW(processorGroupAlpha->write(OCIO::FILEFORMAT_CTF, outputTransformCTF));
+
+    const std::string expectedCTF{
+R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="1.3" id="b5cc7aed-d405-4d8b-b64b-382b2341a378" name="matrix example">
+    <Description>Convert output-referred XYZ values to linear RGB.</Description>
+    <InputDescriptor>XYZ</InputDescriptor>
+    <OutputDescriptor>RGB</OutputDescriptor>
+    <Matrix id="c61daf06-539f-4254-81fc-9800e6d02a37" inBitDepth="32f" outBitDepth="32f">
+        <Description>XYZ to sRGB matrix</Description>
+        <Description>Added description</Description>
+        <Array dim="4 5 4">
+               3.24              -1.537             -0.4985                   0                 0.1
+            -0.9693               1.876             0.04156                   0                 1.2
+             0.0556              -0.204              1.0573                   0                 2.3
+                  0                   0                   0                   1                 0.9
+        </Array>
+    </Matrix>
+</ProcessList>
+)" };
+
+    OCIO_CHECK_EQUAL(expectedCTF.size(), outputTransformCTF.str().size());
+    OCIO_CHECK_EQUAL(expectedCTF, outputTransformCTF.str());
 }
 
 OCIO_ADD_TEST(CTFTransform, matrix3x3_clf)
@@ -3896,6 +3937,10 @@ OCIO_ADD_TEST(CTFTransform, matrix_offset_alpha_ctf)
 
     OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
     OCIO_CHECK_EQUAL(expected, outputTransform.str());
+
+    // Alpha not handled by CLF.
+    OCIO_CHECK_THROW_WHAT(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform),
+                          OCIO::Exception, "alpha component, so it cannot be written as CLF");
 }
 
 OCIO_ADD_TEST(CTFTransform, matrix_offset_alpha_bitdepth_ctf)
