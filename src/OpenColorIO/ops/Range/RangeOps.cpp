@@ -97,9 +97,9 @@ RangeOp::RangeOp(RangeOpDataRcPtr & range, TransformDirection direction)
             "Cannot create RangeOp with unspecified transform direction.");
     }
 
+    range->validate();
     data() = range;
 }
-
 
 OpRcPtr RangeOp::clone() const
 {

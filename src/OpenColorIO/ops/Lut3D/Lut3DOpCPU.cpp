@@ -40,13 +40,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Platform.h"
 #include "SSE.h"
 
-
-// Suppress bogus warning when compiling with gcc
-#if __GNUC__ && __GNUC__ <= 5
-    #pragma GCC diagnostic ignored "-Warray-bounds"
-#endif
-
-
 OCIO_NAMESPACE_ENTER
 {
 namespace

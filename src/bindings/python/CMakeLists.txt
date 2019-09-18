@@ -58,10 +58,19 @@ set_target_properties(PyOpenColorIO PROPERTIES
 	COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
 
 if(NOT BUILD_SHARED_LIBS)
-    target_compile_definitions(PyOpenColorIO
-        PRIVATE
-        OpenColorIO_SKIP_IMPORTS
-    )
+	target_compile_definitions(PyOpenColorIO
+		PRIVATE
+			OpenColorIO_SKIP_IMPORTS
+	)
+endif()
+
+if(UNIX)
+	# A 'module' is a dynamic library on Linux (i.e. '-fPIC' needed),
+	# but a static library on Windows.
+
+	# If supported for the target machine, emit position-independent code 
+	# suitable for dynamic linking.
+	set_property(TARGET PyOpenColorIO PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif()
 
 # OSX demands that the linker resolve all symbols at build time
