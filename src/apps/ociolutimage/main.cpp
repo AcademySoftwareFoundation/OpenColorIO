@@ -3,7 +3,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
-OCIO_NAMESPACE_USING;
+
 
 #include <OpenImageIO/imageio.h>
 #include <OpenImageIO/typedesc.h>
@@ -78,7 +78,7 @@ void Generate(int cubesize, int maxwidth,
             std::ostringstream os;
             os << "You must specify an OCIO configuration ";
             os << "(either with --config or $OCIO).";
-            throw Exception(os.str().c_str());
+            throw OCIO::Exception(os.str().c_str());
         }
         
         OCIO::ConstCPUProcessorRcPtr processor = 
@@ -96,7 +96,7 @@ void Generate(int cubesize, int maxwidth,
 #endif
     if(!f)
     {
-        throw Exception( "Could not create output image.");
+        throw OCIO::Exception( "Could not create output image.");
     }
     
     OIIO::ImageSpec spec(width, height, numchannels, OIIO::TypeDesc::TypeFloat);
@@ -108,7 +108,7 @@ void Generate(int cubesize, int maxwidth,
     {
         std::stringstream ss;
         ss << "Error writing \"" << outputfile << "\" : " << f->geterror() << "\n";
-        throw Exception(ss.str().c_str());
+        throw OCIO::Exception(ss.str().c_str());
     }
 
     f->close();
@@ -130,7 +130,7 @@ void Extract(int cubesize, int maxwidth,
 #endif
     if(!f)
     {
-        throw Exception("Could not create input image.");
+        throw OCIO::Exception("Could not create input image.");
     }
     
     OIIO::ImageSpec spec;
@@ -141,7 +141,7 @@ void Extract(int cubesize, int maxwidth,
     {
         std::ostringstream os;
         os << "Error loading image " << error;
-        throw Exception(os.str().c_str());
+        throw OCIO::Exception(os.str().c_str());
     }
     
     int width = 0;
@@ -154,19 +154,19 @@ void Extract(int cubesize, int maxwidth,
         os << "Image does not have expected dimensions. ";
         os << "Expected " << width << "x" << height << ", ";
         os << "Found " << spec.width << "x" << spec.height;
-        throw Exception(os.str().c_str());
+        throw OCIO::Exception(os.str().c_str());
     }
     
     if(spec.nchannels<3)
     {
-        throw Exception("Image must have 3 or more channels.");
+        throw OCIO::Exception("Image must have 3 or more channels.");
     }
     
     int lut3DNumPixels = cubesize*cubesize*cubesize;
     
     if(spec.width*spec.height<lut3DNumPixels)
     {
-        throw Exception("Image is not large enough to contain expected 3D LUT.");
+        throw OCIO::Exception("Image is not large enough to contain expected 3D LUT.");
     }
     
     // TODO: confirm no data window?
@@ -316,7 +316,7 @@ void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels,
     if(!img) return;
     if(numChannels < 3)
     {
-        throw Exception("Cannot generate identity 3D LUT with less than 3 channels.");
+        throw OCIO::Exception("Cannot generate identity 3D LUT with less than 3 channels.");
     }
     
     float c = 1.0f / ((float)edgeLen - 1.0f);
@@ -341,7 +341,7 @@ void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels,
     }
     else
     {
-        throw Exception("Unknown Lut3DOrder.");
+        throw OCIO::Exception("Unknown Lut3DOrder.");
     }
 }
 
@@ -353,7 +353,7 @@ void WriteLut3D(const std::string & filename, const float* lutdata, int edgeLen)
         os << "Only .spi3d writing is currently supported. ";
         os << "As a work around, please write a .spi3d file, and then use ";
         os << "ociobakelut for transcoding.";
-        throw Exception(os.str().c_str());
+        throw OCIO::Exception(os.str().c_str());
     }
     
     std::ofstream output;
@@ -362,7 +362,7 @@ void WriteLut3D(const std::string & filename, const float* lutdata, int edgeLen)
     {
         std::ostringstream os;
         os <<  "Error opening " << filename << " for writing.";
-        throw Exception(os.str().c_str());
+        throw OCIO::Exception(os.str().c_str());
     }
     
     output << "SPILUT 1.0\n";

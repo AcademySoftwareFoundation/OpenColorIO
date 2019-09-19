@@ -7,6 +7,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "PrivateTypes.h"
 #include "pystring/pystring.h"
 
 
@@ -43,7 +44,7 @@ OCIO_NAMESPACE_ENTER
         bool toRefSpecified_;
         bool fromRefSpecified_;
 
-        typedef std::vector<std::string> Categories;
+        typedef StringVec Categories;
         Categories categories_;
         
         Impl() :

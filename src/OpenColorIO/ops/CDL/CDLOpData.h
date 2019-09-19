@@ -137,8 +137,7 @@ public:
 
     CDLOpData(BitDepth inBitDepth,
               BitDepth outBitDepth,
-              const std::string & id,
-              const Descriptions & descriptions,
+              const FormatMetadataImpl & info,
               const Style & style,
               const ChannelParams & slopeParams,
               const ChannelParams & offsetParams,

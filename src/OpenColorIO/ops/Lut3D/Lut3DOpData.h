@@ -38,12 +38,11 @@ public:
     Lut3DOpData(long gridSize, TransformDirection dir);
 
     Lut3DOpData(
-        BitDepth             inBitDepth,
-        BitDepth             outBitDepth,
-        const std::string &  id,
-        const Descriptions & descriptions,
-        Interpolation        interpolation,
-        unsigned long        gridSize
+        BitDepth                   inBitDepth,
+        BitDepth                   outBitDepth,
+        const FormatMetadataImpl & metadata,
+        Interpolation              interpolation,
+        unsigned long              gridSize
     );
 
     virtual ~Lut3DOpData();
@@ -57,7 +56,7 @@ public:
     void setInterpolation(Interpolation algo);
 
     TransformDirection getDirection() const { return m_direction; }
-
+    
     // There are two inversion algorithms provided for 3D LUT, an exact
     // method (that assumes use of tetrahedral in the forward direction)
     // and a fast method that bakes the inverse out as another forward
@@ -107,6 +106,9 @@ public:
 
     void finalize() override;
 
+    inline BitDepth getFileOutputBitDepth() const { return m_fileOutBitDepth; }
+    inline void setFileOutputBitDepth(BitDepth out) { m_fileOutBitDepth = out; }
+
 protected:
     // Test core parts of LUTs for equality.
     bool haveEqualBasics(const Lut3DOpData & B) const;
@@ -128,6 +130,8 @@ public:
         Lut3DArray& operator=(const Array& a);
 
         bool isIdentity(BitDepth outBitDepth) const;
+
+        void resize(unsigned long length, unsigned long numColorComponents) override;
 
         unsigned long getNumValues() const override;
 
@@ -151,6 +155,10 @@ private:
 
     TransformDirection  m_direction;
     LutInversionQuality m_invQuality;
+
+    // Out bit-depth to be used for file I/O.
+    BitDepth m_fileOutBitDepth = BIT_DEPTH_UNKNOWN;
+
 };
 
 // Make a forward Lut3DOpData that approximates the exact inverse Lut3DOpData

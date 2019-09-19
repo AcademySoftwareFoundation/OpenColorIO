@@ -36,21 +36,21 @@ OCIO_NAMESPACE_ENTER
             
             ~LocalFileFormat() {};
             
-            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
+            void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
             
-            virtual CachedFileRcPtr Read(
+            CachedFileRcPtr read(
                 std::istream & istream,
-                const std::string & fileName) const;
+                const std::string & fileName) const override;
             
-            virtual void BuildFileOps(OpRcPtrVec & ops,
-                                      const Config& config,
-                                      const ConstContextRcPtr & context,
-                                      CachedFileRcPtr untypedCachedFile,
-                                      const FileTransform& fileTransform,
-                                      TransformDirection dir) const;
+            void buildFileOps(OpRcPtrVec & ops,
+                              const Config& config,
+                              const ConstContextRcPtr & context,
+                              CachedFileRcPtr untypedCachedFile,
+                              const FileTransform& fileTransform,
+                              TransformDirection dir) const override;
         };
         
-        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
+        void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
             info.name = "ColorCorrection";
@@ -62,7 +62,7 @@ OCIO_NAMESPACE_ENTER
         // Try and load the format
         // Raise an exception if it can't be loaded.
         
-        CachedFileRcPtr LocalFileFormat::Read(
+        CachedFileRcPtr LocalFileFormat::read(
             std::istream & istream,
             const std::string & fileName) const
         {
@@ -87,7 +87,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         void
-        LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
+        LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                                       const Config& config,
                                       const ConstContextRcPtr & /*context*/,
                                       CachedFileRcPtr untypedCachedFile,
@@ -168,7 +168,7 @@ OCIO_ADD_TEST(FileFormatCC, TestCC1)
     OCIO_CHECK_EQUAL(3.1f, power[0]);
     OCIO_CHECK_EQUAL(3.2f, power[1]);
     OCIO_CHECK_EQUAL(3.3f, power[2]);
-    OCIO_CHECK_EQUAL(0.7f, ccFile->transform->getSat());
+    OCIO_CHECK_EQUAL(0.7, ccFile->transform->getSat());
 }
 
 OCIO_ADD_TEST(FileFormatCC, TestCC2)
@@ -199,7 +199,7 @@ OCIO_ADD_TEST(FileFormatCC, TestCC2)
     OCIO_CHECK_EQUAL(1.25f, power[0]);
     OCIO_CHECK_EQUAL(1.0f, power[1]);
     OCIO_CHECK_EQUAL(1.0f, power[2]);
-    OCIO_CHECK_EQUAL(1.7f, ccFile->transform->getSat());
+    OCIO_CHECK_EQUAL(1.7, ccFile->transform->getSat());
 }
 
 OCIO_ADD_TEST(FileFormatCC, TestCC_SATNode)
@@ -211,7 +211,7 @@ OCIO_ADD_TEST(FileFormatCC, TestCC_SATNode)
     OCIO_CHECK_NO_THROW(ccFile = LoadCCFile(fileName));
 
     // "SATNode" is recognized.
-    OCIO_CHECK_EQUAL(0.42f, ccFile->transform->getSat());
+    OCIO_CHECK_EQUAL(0.42, ccFile->transform->getSat());
 }
 
 OCIO_ADD_TEST(FileFormatCC, TestCC_ASC_SAT)
@@ -223,7 +223,7 @@ OCIO_ADD_TEST(FileFormatCC, TestCC_ASC_SAT)
     OCIO_CHECK_NO_THROW(ccFile = LoadCCFile(fileName));
 
     // "ASC_SAT" is not recognized. Default value is returned.
-    OCIO_CHECK_EQUAL(1.0f, ccFile->transform->getSat());
+    OCIO_CHECK_EQUAL(1.0, ccFile->transform->getSat());
 }
 
 OCIO_ADD_TEST(FileFormatCC, TestCC_ASC_SOP)

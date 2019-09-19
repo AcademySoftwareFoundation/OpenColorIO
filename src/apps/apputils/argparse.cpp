@@ -211,27 +211,29 @@ void
 ArgOption::set_parameter (int i, const char *argv)
 {
     assert(i < m_count);
+
+    static const std::string nullStr;
     
     switch (m_code[i]) {
     case 'd':
-        *(int *)m_param[i] = atoi(argv);
+        *(int *)m_param[i] = argv ? atoi(argv) : 0;
         break;
 
     case 'f':
     case 'g':
-        *(float *)m_param[i] = (float)atof(argv);
+        *(float *)m_param[i] = argv ? (float)atof(argv) : 0.0f;
         break;
 
     case 'F':
-        *(double *)m_param[i] = atof(argv);
+        *(double *)m_param[i] = argv ? atof(argv) : 0.;
         break;
 
     case 's':
-        *(std::string *)m_param[i] = argv;
+        *(std::string *)m_param[i] = argv ? argv : nullStr;
         break;
 
     case 'S':
-        *(std::string *)m_param[i] = argv;
+        *(std::string *)m_param[i] = argv ? argv : nullStr;
         break;
 
     case 'L':

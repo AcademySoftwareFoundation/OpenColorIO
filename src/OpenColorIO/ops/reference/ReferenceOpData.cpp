@@ -117,6 +117,8 @@ OCIO_ADD_TEST(Reference, accessors)
     OCIO_CHECK_EQUAL(r.getPath(), file);
 }
 
+namespace
+{
 // Use OCIO public interface to load a file transform.
 // We can't validate what the processor contains.
 OCIO::ConstProcessorRcPtr GetTransformFileProcessor(const std::string & fileName)
@@ -136,6 +138,7 @@ OCIO::ConstProcessorRcPtr GetTransformFileProcessor(const std::string & fileName
     pConfig->addSearchPath(OCIO::getTestFilesDir());
 
     return pConfig->getProcessor(pFileTransform);
+}
 }
 
 OCIO_ADD_TEST(Reference, load_path_resolve_failing)

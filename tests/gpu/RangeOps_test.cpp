@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <OpenColorIO/OpenColorIO.h>
-
-namespace OCIO = OCIO_NAMESPACE;
-#include "GPUUnitTest.h"
-#include "GPUHelpers.h"
-
 #include <stdio.h>
 #include <sstream>
 #include <string>
 
-OCIO_NAMESPACE_USING
+#include <OpenColorIO/OpenColorIO.h>
+
+#include "GPUHelpers.h"
+#include "GPUUnitTest.h"
+
+namespace OCIO = OCIO_NAMESPACE;
+
 
 const float g_epsilon = 1e-6f;
 

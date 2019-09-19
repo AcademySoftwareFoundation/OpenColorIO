@@ -13,7 +13,8 @@
 #include "HashUtils.h"
 #include "OpBuilders.h"
 #include "Processor.h"
-
+#include "TransformBuilder.h"
+#include "transforms/FileTransform.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -138,11 +139,51 @@ OCIO_NAMESPACE_ENTER
         return getImpl()->hasChannelCrosstalk();
     }
     
-    ConstProcessorMetadataRcPtr Processor::getMetadata() const
+    ConstProcessorMetadataRcPtr Processor::getProcessorMetadata() const
     {
-        return getImpl()->getMetadata();
+        return getImpl()->getProcessorMetadata();
+    }
+    
+    const FormatMetadata & Processor::getFormatMetadata() const
+    {
+        return getImpl()->getFormatMetadata();
     }
 
+    int Processor::getNumTransforms() const
+    {
+        return getImpl()->getNumTransforms();
+    }
+
+    const FormatMetadata & Processor::getTransformFormatMetadata(int index) const
+    {
+        return getImpl()->getTransformFormatMetadata(index);
+    }
+
+    GroupTransformRcPtr Processor::createGroupTransform() const
+    {
+        return getImpl()->createGroupTransform();
+    }
+
+    void Processor::write(const char * formatName, std::ostream & os) const
+    {
+        getImpl()->write(formatName, os);
+    }
+
+    int Processor::getNumWriteFormats()
+    {
+        return FormatRegistry::GetInstance().getNumFormats(FORMAT_CAPABILITY_WRITE);
+    }
+
+    const char * Processor::getFormatNameByIndex(int index)
+    {
+        return FormatRegistry::GetInstance().getFormatNameByIndex(FORMAT_CAPABILITY_WRITE, index);
+    }
+
+    const char * Processor::getFormatExtensionByIndex(int index)
+    {
+        return FormatRegistry::GetInstance().getFormatExtensionByIndex(FORMAT_CAPABILITY_WRITE, index);
+	}
+	
     bool Processor::hasDynamicProperty(DynamicPropertyType type) const
     {
         return getImpl()->hasDynamicProperty(type);
@@ -213,21 +254,79 @@ OCIO_NAMESPACE_ENTER
         return false;
     }
     
-    ConstProcessorMetadataRcPtr Processor::Impl::getMetadata() const
+    ConstProcessorMetadataRcPtr Processor::Impl::getProcessorMetadata() const
     {
         return m_metadata;
     }
 
+    
+    const FormatMetadata & Processor::Impl::getFormatMetadata() const
+    {
+        return m_ops.getFormatMetadata();
+    }
+
+    int Processor::Impl::getNumTransforms() const
+    {
+        return (int)m_ops.size();
+    }
+
+    const FormatMetadata & Processor::Impl::getTransformFormatMetadata(int index) const
+    {
+        auto op = OCIO_DYNAMIC_POINTER_CAST<const Op>(m_ops[index]);
+        return op->data()->getFormatMetadata();
+    }
+
+    GroupTransformRcPtr Processor::Impl::createGroupTransform() const
+    {
+        GroupTransformRcPtr group = GroupTransform::Create();
+        
+        // Copy format metadata.
+        group->getFormatMetadata() = getFormatMetadata();
+
+        // Build transforms from ops.
+        for (ConstOpRcPtr op : m_ops)
+        {
+            CreateTransform(group, op);
+        }
+
+        return group;
+    }
+
+    void Processor::Impl::write(const char * formatName, std::ostream & os) const
+    {
+        FileFormat* fmt = FormatRegistry::GetInstance().getFileFormatByName(formatName);
+
+        if (!fmt)
+        {
+            std::ostringstream err;
+            err << "The format named '" << formatName;
+            err << "' could not be found. ";
+            throw Exception(err.str().c_str());
+        }
+
+        try
+        {
+            std::string fName{ formatName };
+            fmt->write(m_ops, getFormatMetadata(), fName, os);
+        }
+        catch (std::exception & e)
+        {
+            std::ostringstream err;
+            err << "Error writing " << formatName << ":";
+            err << e.what();
+            throw Exception(err.str().c_str());
+        }
+    }
+
     bool Processor::Impl::hasDynamicProperty(DynamicPropertyType type) const
     {
-        for(const auto & op : m_ops)
+        for (const auto & op : m_ops)
         {
-            if(op->hasDynamicProperty(type))
+            if (op->hasDynamicProperty(type))
             {
                 return true;
             }
         }
-
         return false;
     }
 
@@ -332,27 +431,32 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
 
 
-    void Processor::Impl::addColorSpaceConversion(const Config & config,
+    void Processor::Impl::setColorSpaceConversion(const Config & config,
                                                   const ConstContextRcPtr & context,
                                                   const ConstColorSpaceRcPtr & srcColorSpace,
                                                   const ConstColorSpaceRcPtr & dstColorSpace)
     {
+        if (!m_ops.empty())
+        {
+            throw Exception("Internal error: Processor should be empty");
+        }
         BuildColorSpaceOps(m_ops, config, context, srcColorSpace, dstColorSpace);
+        FinalizeOpVec(m_ops, FINALIZATION_EXACT);
         UnifyDynamicProperties(m_ops);
     }
     
-    void Processor::Impl::addTransform(const Config & config,
+    void Processor::Impl::setTransform(const Config & config,
                                        const ConstContextRcPtr & context,
                                        const ConstTransformRcPtr& transform,
                                        TransformDirection direction)
     {
+        if (!m_ops.empty())
+        {
+            throw Exception("Internal error: Processor should be empty");
+        }
+        transform->validate();
         BuildOps(m_ops, config, context, transform, direction);
-        UnifyDynamicProperties(m_ops);
-    }
-
-    void Processor::Impl::addOps(const OpRcPtrVec & ops)
-    {
-        m_ops = ops.clone();
+        FinalizeOpVec(m_ops, FINALIZATION_EXACT);
         UnifyDynamicProperties(m_ops);
     }
 
@@ -377,6 +481,26 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "ops/exposurecontrast/ExposureContrastOps.h"
 #include "UnitTest.h"
+
+OCIO_ADD_TEST(Processor, basic)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+
+    auto processorEmptyGroup = config->getProcessor(group);
+    OCIO_CHECK_EQUAL(processorEmptyGroup->getNumTransforms(), 0);
+    OCIO_CHECK_EQUAL(std::string(processorEmptyGroup->getCacheID()), "<NOOP>");
+
+    auto mat = OCIO::MatrixTransform::Create();
+    double offset[4]{ 0.1, 0.2, 0.3, 0.4 };
+    mat->setOffset(offset);
+
+    auto processorMat = config->getProcessor(mat);
+    OCIO_CHECK_EQUAL(processorMat->getNumTransforms(), 1);
+
+    OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "$c15dfc9b251ee075f33c4ccb3eb1e4b8");
+}
 
 OCIO_ADD_TEST(Processor, shared_dynamic_properties)
 {

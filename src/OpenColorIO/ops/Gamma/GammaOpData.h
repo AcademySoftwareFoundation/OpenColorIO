@@ -72,16 +72,7 @@ public:
 
     GammaOpData(BitDepth inBitDepth,
                 BitDepth outBitDepth,
-                const Style & style,
-                const Params & redParams,
-                const Params & greenParams,
-                const Params & blueParams,
-                const Params & alphaParams);
-
-    GammaOpData(BitDepth inBitDepth,
-                BitDepth outBitDepth,
-                const std::string & id,
-                const OpData::Descriptions & desc,
+                const FormatMetadataImpl & info,
                 const Style & style,
                 const Params & redParams,
                 const Params & greenParams,

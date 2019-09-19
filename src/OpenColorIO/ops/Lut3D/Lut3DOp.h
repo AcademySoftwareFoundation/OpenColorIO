@@ -84,6 +84,9 @@ OCIO_NAMESPACE_ENTER
                        Lut3DOpDataRcPtr & lut,
                        TransformDirection direction);
 
+    // Create a LUT3DTransform decoupled from op and append it to the GroupTransform.
+    void CreateLut3DTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op);
+
 }
 OCIO_NAMESPACE_EXIT
 

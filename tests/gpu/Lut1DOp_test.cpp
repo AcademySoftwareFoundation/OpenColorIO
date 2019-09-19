@@ -2,18 +2,16 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <OpenColorIO/OpenColorIO.h>
-
-
-namespace OCIO = OCIO_NAMESPACE;
-#include "GPUUnitTest.h"
-#include "GPUHelpers.h"
-
 #include <stdio.h>
 #include <sstream>
 #include <string>
 
-OCIO_NAMESPACE_USING
+#include <OpenColorIO/OpenColorIO.h>
+
+#include "GPUUnitTest.h"
+#include "GPUHelpers.h"
+
+namespace OCIO = OCIO_NAMESPACE;
 
 
 const int LUT3D_EDGE_SIZE = 32;
@@ -23,7 +21,7 @@ const int LUT3D_EDGE_SIZE = 32;
 #error Expecting OCIO_UNIT_TEST_FILES_DIR to be defined for tests. Check relevant CMakeLists.txt
 #endif
 
-// For explanation, refer to https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html 
+// For explanation, refer to https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html
 #define _STR(x) #x
 #define STR(x) _STR(x)
 
@@ -34,7 +32,7 @@ namespace
 {
     OCIO::FileTransformRcPtr GetFileTransform(const std::string & filename)
     {
-        const std::string 
+        const std::string
             filepath(ocioTestFilesDir + std::string("/") + filename);
 
         OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
@@ -56,11 +54,11 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_legacy_shader)
 {
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_1.spi1d");
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
     test.setContext(file->createEditableCopy(), shaderDesc);
 
-    test.setErrorThreshold(1e-6f);
+    test.setErrorThreshold(1e-4f);
 }
 
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_inverse_legacy_shader)
@@ -68,11 +66,11 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_inverse_legacy_shader)
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_1.spi1d");
     file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
     test.setContext(file->createEditableCopy(), shaderDesc);
 
-    test.setErrorThreshold(1e-6f);
+    test.setErrorThreshold(1e-4f);
 }
 
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_generic_shader)
@@ -82,7 +80,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
     test.setContext(file->createEditableCopy(), shaderDesc);
 
-    test.setErrorThreshold(1e-6f);
+    test.setErrorThreshold(5e-6f);
 }
 
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_inverse_generic_shader)
@@ -94,13 +92,14 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_inverse_generic_shader)
     test.setContext(file->createEditableCopy(), shaderDesc);
 
     test.setErrorThreshold(1e-6f);
+    test.setTestNaN(false);
 }
 
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_legacy_shader)
 {
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_2.spi1d");
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
     test.setContext(file->createEditableCopy(), shaderDesc);
 
@@ -112,7 +111,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_inverse_legacy_shader)
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_2.spi1d");
     file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
     test.setContext(file->createEditableCopy(), shaderDesc);
 
@@ -150,11 +149,11 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_legacy_shader)
 {
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_3.spi1d");
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
     test.setContext(file->createEditableCopy(), shaderDesc);
 
-    test.setErrorThreshold(1e-6f);
+    test.setErrorThreshold(1e-4f);
 }
 
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_inverse_legacy_shader)
@@ -162,11 +161,11 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_inverse_legacy_shader)
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_3.spi1d");
     file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
     test.setContext(file->createEditableCopy(), shaderDesc);
 
-    test.setErrorThreshold(1e-6f);
+    test.setErrorThreshold(1e-4f);
 }
 
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_generic_shader)
@@ -177,6 +176,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_generic_shader)
     test.setContext(file->createEditableCopy(), shaderDesc);
 
     test.setErrorThreshold(1e-6f);
+    test.setTestNaN(false);
 }
 
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_inverse_generic_shader)
@@ -188,6 +188,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_inverse_generic_shader)
     test.setContext(file->createEditableCopy(), shaderDesc);
 
     test.setErrorThreshold(1e-6f);
+    test.setTestNaN(false);
 }
 
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_nearest_generic_shader)
@@ -199,13 +200,14 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_nearest_generic_shader)
     test.setContext(file->createEditableCopy(), shaderDesc);
 
     test.setErrorThreshold(1e-6f);
+    test.setTestNaN(false);
 }
 
 OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_legacy_shader)
 {
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_4.spi1d");
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
     test.setContext(file->createEditableCopy(), shaderDesc);
 
@@ -224,7 +226,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_inverse_legacy_shader)
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_4.spi1d");
     file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
     test.setContext(file->createEditableCopy(), shaderDesc);
 
@@ -308,7 +310,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_file2_test)
 
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
     test.setContext(file->createEditableCopy(), shaderDesc);
-    
+
     // LUT has just 32 entries and thus requires a larger tolerance due to
     // index quantization on GPUs.
     test.setErrorThreshold(1e-4f);

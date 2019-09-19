@@ -8,6 +8,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "BitDepthUtils.h"
 #include "GpuShaderUtils.h"
 #include "HashUtils.h"
 #include "MathUtils.h"
@@ -652,10 +653,6 @@ namespace
         lutData->setInversionQuality(
             fFlags==FINALIZATION_FAST ? LUT_INVERSION_FAST: LUT_INVERSION_EXACT);
 
-        // Only 32f processing is natively supported.
-        lutData->setInputBitDepth(BIT_DEPTH_F32);
-        lutData->setOutputBitDepth(BIT_DEPTH_F32);
-
         lutData->finalize();
 
         std::ostringstream cacheIDStream;
@@ -757,27 +754,28 @@ void CreateLut3DOp(OpRcPtrVec & ops,
         }
     }
 
+    const double min[] = { lut->from_min[0], lut->from_min[1], lut->from_min[2] };
+    const double max[] = { lut->from_max[0], lut->from_max[1], lut->from_max[2] };
     if (direction == TRANSFORM_DIR_FORWARD)
     {
         // NB: CreateMinMaxOp will not add the matrix if from_min & from_max
         //     are at their defaults.
-        CreateMinMaxOp(ops, lut->from_min, lut->from_max, TRANSFORM_DIR_FORWARD);
+        CreateMinMaxOp(ops, min, max, TRANSFORM_DIR_FORWARD);
         CreateLut3DOp(ops, lutBF, TRANSFORM_DIR_FORWARD);
     }
     else
     {
         CreateLut3DOp(ops, lutBF, TRANSFORM_DIR_INVERSE);
-        CreateMinMaxOp(ops, lut->from_min, lut->from_max, TRANSFORM_DIR_INVERSE);
+        CreateMinMaxOp(ops, min, max, TRANSFORM_DIR_INVERSE);
     }
 }
 
+///////////////////////////////////////////////////////////////////////////
 
 void CreateLut3DOp(OpRcPtrVec & ops,
                    Lut3DOpDataRcPtr & lut,
                    TransformDirection direction)
 {
-    if (lut->isNoOp()) return;
-
     if (direction == TRANSFORM_DIR_FORWARD)
     {
         ops.push_back(std::make_shared<Lut3DOp>(lut));
@@ -791,6 +789,89 @@ void CreateLut3DOp(OpRcPtrVec & ops,
     {
         throw Exception("Cannot apply Lut3DOp op, unspecified transform direction.");
     }
+}
+
+void CreateLut3DTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
+{
+    auto lut = DynamicPtrCast<const Lut3DOp>(op);
+    if (!lut)
+    {
+        throw Exception("CreateLut3DTransform: op has to be a Lut3DOp");
+    }
+    auto lutData = DynamicPtrCast<const Lut3DOpData>(op->data());
+    auto lutTransform = LUT3DTransform::Create();
+
+    const auto dir = lutData->getDirection();
+    lutTransform->setDirection(dir);
+
+    lutTransform->setFileOutputBitDepth(lutData->getFileOutputBitDepth());
+
+    auto & formatMetadata = lutTransform->getFormatMetadata();
+    auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
+    metadata = lutData->getFormatMetadata();
+
+    const Interpolation interp = lutData->getInterpolation();
+    lutTransform->setInterpolation(interp);
+
+    auto & lutArray = lutData->getArray();
+    const unsigned long l = lutArray.getLength();
+    lutTransform->setGridSize(l);
+
+    // Scale back to F32.
+    const float scale = 1.0f / 
+        ((dir == TRANSFORM_DIR_FORWARD) ? (float)GetBitDepthMaxValue(lutData->getOutputBitDepth())
+                                        : (float)GetBitDepthMaxValue(lutData->getInputBitDepth()));
+
+    for (unsigned long r = 0; r < l; ++r)
+    {
+        for (unsigned long g = 0; g < l; ++g)
+        {
+            for (unsigned long b = 0; b < l; ++b)
+            {
+                // Array is in blue-fastest order.
+                const unsigned long arrayIdx = 3 * ((r*l + g)*l + b);
+                lutTransform->setValue(r, g ,b, scale * lutArray[arrayIdx],
+                                                scale * lutArray[arrayIdx + 1],
+                                                scale * lutArray[arrayIdx + 2]);
+            }
+        }
+    }
+
+    group->push_back(lutTransform);
+}
+
+void BuildLut3DOps(OpRcPtrVec & ops,
+                   const Config & config,
+                   const LUT3DTransform & transform,
+                   TransformDirection dir)
+{
+    TransformDirection combinedDir =
+        CombineTransformDirections(dir,
+                                   transform.getDirection());
+    const unsigned long gridSize = transform.getGridSize();
+    auto data = std::make_shared<Lut3DOpData>(gridSize, TRANSFORM_DIR_FORWARD);
+    data->getFormatMetadata() = transform.getFormatMetadata();
+    data->setFileOutputBitDepth(transform.getFileOutputBitDepth());
+    data->setInterpolation(transform.getInterpolation());
+    for (unsigned long r = 0; r < gridSize; ++r)
+    {
+        for (unsigned long g = 0; g < gridSize; ++g)
+        {
+            for (unsigned long b = 0; b < gridSize; ++b)
+            {
+                // Array is in blue-fastest order.
+                const unsigned long i = 3 * ((r*gridSize + g)*gridSize + b);
+                float rv = 0.f;
+                float gv = 0.f;
+                float bv = 0.f;
+                transform.getValue(r, g, b, rv, gv, bv);
+                data->getArray()[i] = rv;
+                data->getArray()[i + 1] = gv;
+                data->getArray()[i + 2] = bv;
+            }
+        }
+    }
+    CreateLut3DOp(ops, data, combinedDir);
 }
 
 }
@@ -809,6 +890,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 
 #include "BitDepthUtils.h"
+#include "OpBuilders.h"
 #include "UnitTest.h"
 #include "UnitTestUtils.h"
 
@@ -1356,7 +1438,7 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_lut3d)
     OCIO::Lut3DOpDataRcPtr
         lutData = std::make_shared<OCIO::Lut3DOpData>(
             bitDepth, bitDepth,
-            "", OCIO::OpData::Descriptions(),
+            OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
             OCIO::INTERP_LINEAR, 33);
 
     OCIO::Lut3DOp lut(lutData);
@@ -1368,7 +1450,7 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_lut3d)
     // Use an input value exactly at a grid point so the output value is 
     // just the grid value, regardless of interpolation.
     const float step =
-        OCIO::GetBitDepthMaxValue(lutData->getInputBitDepth())
+        (float)(OCIO::GetBitDepthMaxValue(lutData->getInputBitDepth()))
         / ((float)lutData->getArray().getLength() - 1.0f);
 
     float myImage[8] = { 0.0f, 0.0f, 0.0f, 0.0f,
@@ -1644,6 +1726,98 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_lut3d_with_nan)
     OCIO_CHECK_EQUAL(myImage[19], 0.0f);
 }
 
+OCIO_ADD_TEST(Lut3D, create_transform)
+{
+    OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_FORWARD;
+
+    OCIO::Lut3DOpDataRcPtr lut = std::make_shared<OCIO::Lut3DOpData>(3);
+
+    lut->setInputBitDepth(OCIO::BIT_DEPTH_UINT8);
+    lut->setOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
+    lut->setFileOutputBitDepth(lut->getOutputBitDepth());
+
+    lut->getArray()[39] = 510.1f;
+    lut->getArray()[40] = 502.2f;
+    lut->getArray()[41] = 533.3f;
+
+    auto & metadataSource = lut->getFormatMetadata();
+    metadataSource.addAttribute(OCIO::METADATA_NAME, "test");
+
+    OCIO::OpRcPtrVec ops;
+    OCIO_CHECK_NO_THROW(OCIO::CreateLut3DOp(ops, lut, direction));
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_REQUIRE_ASSERT(ops[0]);
+
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+
+    OCIO::ConstOpRcPtr op(ops[0]);
+
+    OCIO::CreateLut3DTransform(group, op);
+    OCIO_REQUIRE_EQUAL(group->size(), 1);
+    auto transform = group->getTransform(0);
+    OCIO_REQUIRE_ASSERT(transform);
+    auto lTransform = OCIO_DYNAMIC_POINTER_CAST<OCIO::LUT3DTransform>(transform);
+    OCIO_REQUIRE_ASSERT(lTransform);
+
+    const auto & metadata = lTransform->getFormatMetadata();
+    OCIO_REQUIRE_EQUAL(metadata.getNumAttributes(), 1);
+    OCIO_CHECK_EQUAL(std::string(metadata.getAttributeName(0)), OCIO::METADATA_NAME);
+    OCIO_CHECK_EQUAL(std::string(metadata.getAttributeValue(0)), "test");
+
+    OCIO_CHECK_EQUAL(lTransform->getDirection(), direction);
+    OCIO_REQUIRE_EQUAL(lTransform->getGridSize(), 3);
+    
+    OCIO_CHECK_EQUAL(lTransform->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+
+    float r = 0.f;
+    float g = 0.f;
+    float b = 0.f;
+    lTransform->getValue(1, 1, 1, r, g, b);
+
+    // Transform LUT is always 32F.
+    const float scale = (float)OCIO::GetBitDepthMaxValue(lTransform->getFileOutputBitDepth());
+
+    OCIO_CHECK_EQUAL(r * scale, 510.1f);
+    OCIO_CHECK_EQUAL(g * scale, 502.2f);
+    OCIO_CHECK_EQUAL(b * scale, 533.3f);
+}
+
+OCIO_ADD_TEST(LUT3DTransform, build_op)
+{
+    const OCIO::LUT3DTransformRcPtr lut = OCIO::LUT3DTransform::Create();
+    const unsigned long gs = 4;
+    lut->setGridSize(gs);
+
+    const float r = 0.51f;
+    const float g = 0.52f;
+    const float b = 0.53f;
+
+    const unsigned long ri = 1;
+    const unsigned long gi = 2;
+    const unsigned long bi = 3;
+    lut->setValue(ri, gi, bi, r, g, b);
+
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+
+    OCIO::OpRcPtrVec ops;
+    OCIO::BuildOps(ops, *(config.get()), config->getCurrentContext(), lut, OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_REQUIRE_ASSERT(ops[0]);
+
+    auto constop = std::const_pointer_cast<const OCIO::Op>(ops[0]);
+    OCIO_REQUIRE_ASSERT(constop);
+    auto data = constop->data();
+    auto lutdata = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Lut3DOpData>(data);
+    OCIO_REQUIRE_ASSERT(lutdata);
+
+    // Blue fast.
+    const unsigned long i = 3 * ((ri*gs + gi)*gs + bi);
+    OCIO_CHECK_EQUAL(lutdata->getArray().getLength(), gs);
+    OCIO_CHECK_EQUAL(lutdata->getArray()[i], r);
+    OCIO_CHECK_EQUAL(lutdata->getArray()[i + 1], g);
+    OCIO_CHECK_EQUAL(lutdata->getArray()[i + 2], b);
+}
 
 
 // TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT3D_Blue

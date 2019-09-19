@@ -18,8 +18,7 @@ OCIO_NAMESPACE_ENTER
 {
 
     void CreateGammaOp(OpRcPtrVec & ops,
-                       const std::string & id,
-                       const OpData::Descriptions & descr,
+                       const FormatMetadataImpl & info,
                        GammaOpData::Style style,
                        const double * gamma4,
                        const double * offset4);
@@ -27,6 +26,9 @@ OCIO_NAMESPACE_ENTER
     void CreateGammaOp(OpRcPtrVec & ops, 
                        GammaOpDataRcPtr & gammaData,
                        TransformDirection direction);
+
+    // Create a copy of the gamma transform in the op and append it to the GroupTransform.
+    void CreateGammaTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op);
 
 }
 OCIO_NAMESPACE_EXIT

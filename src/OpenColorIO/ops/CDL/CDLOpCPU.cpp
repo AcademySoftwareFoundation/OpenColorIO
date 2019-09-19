@@ -298,8 +298,8 @@ CDLOpCPU::CDLOpCPU(ConstCDLOpDataRcPtr & cdl)
     ,   m_outScale(1.0f)
     ,   m_alphaScale(1.0f)
 {
-    m_inScale = 1.0f / GetBitDepthMaxValue(cdl->getInputBitDepth());
-    m_outScale = GetBitDepthMaxValue(cdl->getOutputBitDepth());
+    m_inScale = 1.0f / (float)GetBitDepthMaxValue(cdl->getInputBitDepth());
+    m_outScale = (float)GetBitDepthMaxValue(cdl->getOutputBitDepth());
     m_alphaScale = m_inScale * m_outScale;
 
     m_renderParams.update(cdl);

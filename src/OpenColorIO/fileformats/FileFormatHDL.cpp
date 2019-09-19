@@ -43,7 +43,7 @@ OCIO_NAMESPACE_ENTER
         // HDL parser helpers
 
         // HDL headers/LUT's are shoved into these datatypes
-        typedef std::map<std::string, std::vector<std::string> > StringToStringVecMap;
+        typedef std::map<std::string, StringVec > StringToStringVecMap;
         typedef std::map<std::string, std::vector<float> > StringToFloatVecMap;
 
         void
@@ -53,7 +53,7 @@ OCIO_NAMESPACE_ENTER
             std::string line;
             while(nextline(istream, line))
             {
-                std::vector<std::string> chunks;
+                StringVec chunks;
 
                 // Remove trailing/leading whitespace, lower-case and
                 // split into words
@@ -77,7 +77,7 @@ OCIO_NAMESPACE_ENTER
         // exception if not found, or if number of chunks in value is
         // not between min_vals and max_vals (e.g the "length" key
         // must exist, and must have either 1 or 2 values)
-        std::vector<std::string>
+        StringVec
         findHeaderItem(StringToStringVecMap& headers,
                        const std::string key,
                        const unsigned int min_vals,
@@ -119,7 +119,7 @@ OCIO_NAMESPACE_ENTER
 
         // Simple wrapper to call findHeaderItem with a fixed number
         // of values (e.g "version" should have a single value)
-        std::vector<std::string>
+        StringVec
         findHeaderItem(StringToStringVecMap& chunks,
                        const std::string key,
                        const unsigned int numvals)
@@ -250,35 +250,35 @@ OCIO_NAMESPACE_ENTER
             
             ~LocalFileFormat() {};
             
-            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
+            void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
             
-            virtual CachedFileRcPtr Read(
+            CachedFileRcPtr read(
                 std::istream & istream,
-                const std::string & fileName) const;
+                const std::string & fileName) const override;
             
-            virtual void Write(const Baker & baker,
-                               const std::string & formatName,
-                               std::ostream & ostream) const;
+            void bake(const Baker & baker,
+                      const std::string & formatName,
+                      std::ostream & ostream) const override;
             
-            virtual void BuildFileOps(OpRcPtrVec & ops,
-                                      const Config& config,
-                                      const ConstContextRcPtr & context,
-                                      CachedFileRcPtr untypedCachedFile,
-                                      const FileTransform& fileTransform,
-                                      TransformDirection dir) const;
+            void buildFileOps(OpRcPtrVec & ops,
+                              const Config& config,
+                              const ConstContextRcPtr & context,
+                              CachedFileRcPtr untypedCachedFile,
+                              const FileTransform& fileTransform,
+                              TransformDirection dir) const override;
         };
         
-        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
+        void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
             info.name = "houdini";
             info.extension = "lut";
-            info.capabilities = FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_WRITE;
+            info.capabilities = FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE;
             formatInfoVec.push_back(info);
         }
         
         CachedFileRcPtr
-        LocalFileFormat::Read(
+        LocalFileFormat::read(
             std::istream & istream,
             const std::string & /* fileName unused */) const
         {
@@ -301,7 +301,7 @@ OCIO_NAMESPACE_ENTER
             readHeaders(header_chunks, istream);
 
             // Grab useful values from headers
-            std::vector<std::string> value;
+            StringVec value;
 
             // "Version 3" - format version (currently one version
             // number per LUT type)
@@ -553,9 +553,9 @@ OCIO_NAMESPACE_ENTER
             return cachedFile;
         }
         
-        void LocalFileFormat::Write(const Baker & baker,
-                                    const std::string & formatName,
-                                    std::ostream & ostream) const
+        void LocalFileFormat::bake(const Baker & baker,
+                                   const std::string & formatName,
+                                   std::ostream & ostream) const
         {
 
             if(formatName != "houdini")
@@ -885,7 +885,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         void
-        LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
+        LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                                     const Config& /*config*/,
                                     const ConstContextRcPtr & /*context*/,
                                     CachedFileRcPtr untypedCachedFile,
@@ -1008,7 +1008,7 @@ OCIO_ADD_TEST(FileFormatHDL, Read1D)
     // Load file
     std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D1D, emptyString);
+    OCIO::CachedFileRcPtr cachedFile = tester.read(simple3D1D, emptyString);
     OCIO::CachedFileHDLRcPtr lut = OCIO::DynamicPtrCast<OCIO::CachedFileHDL>(cachedFile);
     
     //
@@ -1119,9 +1119,9 @@ OCIO_ADD_TEST(FileFormatHDL, Bake1D)
     //std::cerr << "Expected:" << std::endl << bout << std::endl;
     
     //
-    std::vector<std::string> osvec;
+    OCIO::StringVec osvec;
     pystring::splitlines(output.str(), osvec);
-    std::vector<std::string> resvec;
+    OCIO::StringVec resvec;
     pystring::splitlines(bout, resvec);
     OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
@@ -1157,7 +1157,7 @@ OCIO_ADD_TEST(FileFormatHDL, Read3D)
     // Load file
     std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D1D, emptyString);
+    OCIO::CachedFileRcPtr cachedFile = tester.read(simple3D1D, emptyString);
     OCIO::CachedFileHDLRcPtr lut = OCIO::DynamicPtrCast<OCIO::CachedFileHDL>(cachedFile);
     
     //
@@ -1328,7 +1328,7 @@ OCIO_ADD_TEST(FileFormatHDL, Read3D1D)
     // Load file
     std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D1D, emptyString);
+    OCIO::CachedFileRcPtr cachedFile = tester.read(simple3D1D, emptyString);
     OCIO::CachedFileHDLRcPtr lut = OCIO::DynamicPtrCast<OCIO::CachedFileHDL>(cachedFile);
     
     //

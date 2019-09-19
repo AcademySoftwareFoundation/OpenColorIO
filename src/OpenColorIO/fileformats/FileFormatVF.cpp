@@ -25,13 +25,13 @@ OCIO_NAMESPACE_ENTER
                 useMatrix(false)
             {
                 lut3D = Lut3D::Create();
-                memset(m44, 0, 16*sizeof(float));
+                memset(m44, 0, 16*sizeof(double));
             };
             ~LocalCachedFile() {};
             
             // TODO: Switch to the OpData classes.
             Lut3DRcPtr lut3D;
-            float m44[16];
+            double m44[16];
             bool useMatrix;
         };
         
@@ -45,18 +45,18 @@ OCIO_NAMESPACE_ENTER
             
             ~LocalFileFormat() {};
             
-            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
+            void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
             
-            virtual CachedFileRcPtr Read(
+            CachedFileRcPtr read(
                 std::istream & istream,
-                const std::string & fileName) const;
+                const std::string & fileName) const override;
             
-            virtual void BuildFileOps(OpRcPtrVec & ops,
-                         const Config& config,
-                         const ConstContextRcPtr & context,
-                         CachedFileRcPtr untypedCachedFile,
-                         const FileTransform& fileTransform,
-                         TransformDirection dir) const;
+            void buildFileOps(OpRcPtrVec & ops,
+                              const Config& config,
+                              const ConstContextRcPtr & context,
+                              CachedFileRcPtr untypedCachedFile,
+                              const FileTransform& fileTransform,
+                              TransformDirection dir) const override;
 
         private:
             static void ThrowErrorMessage(const std::string & error,
@@ -84,7 +84,7 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
         
-        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
+        void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
             info.name = "nukevf";
@@ -93,8 +93,7 @@ OCIO_NAMESPACE_ENTER
             formatInfoVec.push_back(info);
         }
         
-        CachedFileRcPtr
-        LocalFileFormat::Read(
+        CachedFileRcPtr LocalFileFormat::read(
             std::istream & istream,
             const std::string & fileName) const
         {
@@ -120,7 +119,7 @@ OCIO_NAMESPACE_ENTER
             std::vector<float> global_transform;
             
             {
-                std::vector<std::string> parts;
+                StringVec parts;
                 std::vector<float> tmpfloats;
                 
                 bool in3d = false;
@@ -219,9 +218,12 @@ OCIO_NAMESPACE_ENTER
                     global_transform[4*i+0] *= static_cast<float>(size3d[0]);
                     global_transform[4*i+1] *= static_cast<float>(size3d[1]);
                     global_transform[4*i+2] *= static_cast<float>(size3d[2]);
+                    cachedFile->m44[4*i+0] = global_transform[4*i+0];
+                    cachedFile->m44[4*i+1] = global_transform[4*i+1];
+                    cachedFile->m44[4*i+2] = global_transform[4*i+2];
+                    cachedFile->m44[4*i+3] = global_transform[4*i+3];
                 }
                 
-                memcpy(cachedFile->m44, &global_transform[0], 16*sizeof(float));
                 cachedFile->useMatrix = true;
             }
             
@@ -253,7 +255,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         void
-        LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
+        LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                                       const Config& /*config*/,
                                       const ConstContextRcPtr & /*context*/,
                                       CachedFileRcPtr untypedCachedFile,
@@ -323,7 +325,7 @@ OCIO_ADD_TEST(FileFormatVF, FormatInfo)
 {
     OCIO::FormatInfoVec formatInfoVec;
     OCIO::LocalFileFormat tester;
-    tester.GetFormatInfo(formatInfoVec);
+    tester.getFormatInfo(formatInfoVec);
 
     OCIO_CHECK_EQUAL(1, formatInfoVec.size());
     OCIO_CHECK_EQUAL("nukevf", formatInfoVec[0].name);
@@ -337,10 +339,10 @@ void ReadVF(const std::string & fileContent)
     std::istringstream is;
     is.str(fileContent);
 
-    // Read file
+    // Read file.
     OCIO::LocalFileFormat tester;
     const std::string SAMPLE_NAME("Memory File");
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(is, SAMPLE_NAME);
+    OCIO::CachedFileRcPtr cachedFile = tester.read(is, SAMPLE_NAME);
 }
 
 OCIO_ADD_TEST(FileFormatVF, ReadFailure)

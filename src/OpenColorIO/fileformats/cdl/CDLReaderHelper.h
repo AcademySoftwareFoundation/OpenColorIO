@@ -45,17 +45,17 @@ public:
 
     void appendDescription(const std::string & desc) override
     {
-        m_descriptions += desc;
+        m_descriptions.push_back(desc);
     }
 
-    const OpData::Descriptions & getDescriptions() const
+    const StringVec & getDescriptions() const
     {
         return m_descriptions;
     }
 
 private:
     CDLTransformVecRcPtr m_transformList;
-    OpData::Descriptions m_descriptions;
+    StringVec m_descriptions;
 
 };
 
@@ -80,17 +80,17 @@ public:
 
     void appendDescription(const std::string & desc) override
     {
-        m_descriptions += desc;
+        m_descriptions.push_back(desc);
     }
 
 
-    const OpData::Descriptions & getDescriptions() const
+    const StringVec & getDescriptions() const
     {
         return m_descriptions;
     }
 
 private:
-    OpData::Descriptions m_descriptions;
+    StringVec m_descriptions;
 };
 
 class CDLReaderColorCorrectionCollectionElt : public XmlReaderContainerElt
@@ -129,17 +129,17 @@ public:
 
     void appendDescription(const std::string & desc) override
     {
-        m_descriptions += desc;
+        m_descriptions.push_back(desc);
     }
 
-    const OpData::Descriptions & getDescriptions() const
+    const StringVec & getDescriptions() const
     {
         return m_descriptions;
     }
 
 private:
     CDLTransformVecRcPtr m_transformList;
-    OpData::Descriptions m_descriptions;
+    StringVec m_descriptions;
 
 };
 

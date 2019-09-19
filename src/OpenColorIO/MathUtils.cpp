@@ -16,7 +16,7 @@ OCIO_NAMESPACE_ENTER
 template<typename T>
 bool IsScalarEqualToZero(T v)
 {
-    static_assert(std::is_floating_point<T>::value, 
+    static_assert(std::is_floating_point<T>::value,
                   "Only single and double precision floats are supported");
 
     return !FloatsDiffer(0.0f, (float)v, 2, false);
@@ -28,7 +28,7 @@ template bool IsScalarEqualToZero(double v);
 template<typename T>
 bool IsScalarEqualToOne(T v)
 {
-    static_assert(std::is_floating_point<T>::value, 
+    static_assert(std::is_floating_point<T>::value,
                   "Only single and double precision floats are supported");
 
     return !FloatsDiffer(1.0f, (float)v, 2, false);
@@ -40,7 +40,7 @@ template bool IsScalarEqualToOne(double v);
 template<typename T>
 bool IsVecEqualToZero(const T * v, unsigned int size)
 {
-    static_assert(std::is_floating_point<T>::value, 
+    static_assert(std::is_floating_point<T>::value,
                   "Only single and double precision floats are supported");
 
     for(unsigned int i=0; i<size; ++i)
@@ -56,7 +56,7 @@ template bool IsVecEqualToZero(const double * v, unsigned int size);
 template<typename T>
 bool IsVecEqualToOne(const T * v, unsigned int size)
 {
-    static_assert(std::is_floating_point<T>::value, 
+    static_assert(std::is_floating_point<T>::value,
                   "Only single and double precision floats are supported");
 
     for(unsigned int i=0; i<size; ++i)
@@ -74,7 +74,7 @@ bool VecsEqualWithRelError(const T * v1, unsigned int size1,
                            const T * v2, unsigned int size2,
                            T e)
 {
-    static_assert(std::is_floating_point<T>::value, 
+    static_assert(std::is_floating_point<T>::value,
                   "Only single and double precision floats are supported");
 
     if (size1 != size2) return false;
@@ -161,7 +161,7 @@ float SanitizeFloat(float f)
 template<typename T>
 bool IsM44Identity(const T * m44)
 {
-    static_assert(std::is_floating_point<T>::value, 
+    static_assert(std::is_floating_point<T>::value,
                   "Only single and double precision floats are supported");
 
     unsigned int index=0;
@@ -182,7 +182,7 @@ bool IsM44Identity(const T * m44)
             }
         }
     }
-    
+
     return true;
 }
 
@@ -197,7 +197,7 @@ bool IsM44Diagonal(const float* m44)
         if((i%5)==0) continue; // If we're on the diagonal, skip it
         if(!IsScalarEqualToZero(m44[i])) return false;
     }
-    
+
     return true;
 }
 
@@ -218,47 +218,47 @@ bool GetM44Inverse(float* inverse_out, const float* m_)
 {
     double m[16];
     for(unsigned int i=0; i<16; ++i) m[i] = (double)m_[i];
-    
+
     double d10_21 = m[4]*m[9] - m[5]*m[8];
     double d10_22 = m[4]*m[10] - m[6]*m[8];
     double d10_23 = m[4]*m[11] - m[7]*m[8];
     double d11_22 = m[5]*m[10] - m[6]*m[9];
     double d11_23 = m[5]*m[11] - m[7]*m[9];
     double d12_23 = m[6]*m[11] - m[7]*m[10];
-    
+
     double a00 = m[13]*d12_23 - m[14]*d11_23 + m[15]*d11_22;
     double a10 = m[14]*d10_23 - m[15]*d10_22 - m[12]*d12_23;
     double a20 = m[12]*d11_23 - m[13]*d10_23 + m[15]*d10_21;
     double a30 = m[13]*d10_22 - m[14]*d10_21 - m[12]*d11_22;
-    
+
     double det = a00*m[0] + a10*m[1] + a20*m[2] + a30*m[3];
-    
+
     if(IsScalarEqualToZero((float)det)) return false;
-    
+
     det = 1.0/det;
-    
+
     double d00_31 = m[0]*m[13] - m[1]*m[12];
     double d00_32 = m[0]*m[14] - m[2]*m[12];
     double d00_33 = m[0]*m[15] - m[3]*m[12];
     double d01_32 = m[1]*m[14] - m[2]*m[13];
     double d01_33 = m[1]*m[15] - m[3]*m[13];
     double d02_33 = m[2]*m[15] - m[3]*m[14];
-    
+
     double a01 = m[9]*d02_33 - m[10]*d01_33 + m[11]*d01_32;
     double a11 = m[10]*d00_33 - m[11]*d00_32 - m[8]*d02_33;
     double a21 = m[8]*d01_33 - m[9]*d00_33 + m[11]*d00_31;
     double a31 = m[9]*d00_32 - m[10]*d00_31 - m[8]*d01_32;
-    
+
     double a02 = m[6]*d01_33 - m[7]*d01_32 - m[5]*d02_33;
     double a12 = m[4]*d02_33 - m[6]*d00_33 + m[7]*d00_32;
     double a22 = m[5]*d00_33 - m[7]*d00_31 - m[4]*d01_33;
     double a32 = m[4]*d01_32 - m[5]*d00_32 + m[6]*d00_31;
-    
+
     double a03 = m[2]*d11_23 - m[3]*d11_22 - m[1]*d12_23;
     double a13 = m[0]*d12_23 - m[2]*d10_23 + m[3]*d10_22;
     double a23 = m[1]*d10_23 - m[3]*d10_21 - m[0]*d11_23;
     double a33 = m[0]*d11_22 - m[1]*d10_22 + m[2]*d10_21;
-    
+
     inverse_out[0] = (float) (a00*det);
     inverse_out[1] = (float) (a01*det);
     inverse_out[2] = (float) (a02*det);
@@ -275,7 +275,7 @@ bool GetM44Inverse(float* inverse_out, const float* m_)
     inverse_out[13] = (float) (a31*det);
     inverse_out[14] = (float) (a32*det);
     inverse_out[15] = (float) (a33*det);
-    
+
     return true;
 }
 
@@ -285,7 +285,7 @@ void GetM44M44Product(float* mout, const float* m1_, const float* m2_)
     float m2[16];
     memcpy(m1, m1_, 16*sizeof(float));
     memcpy(m2, m2_, 16*sizeof(float));
-    
+
     mout[ 0] = m1[ 0]*m2[0] + m1[ 1]*m2[4] + m1[ 2]*m2[ 8] + m1[ 3]*m2[12];
     mout[ 1] = m1[ 0]*m2[1] + m1[ 1]*m2[5] + m1[ 2]*m2[ 9] + m1[ 3]*m2[13];
     mout[ 2] = m1[ 0]*m2[2] + m1[ 1]*m2[6] + m1[ 2]*m2[10] + m1[ 3]*m2[14];
@@ -293,7 +293,7 @@ void GetM44M44Product(float* mout, const float* m1_, const float* m2_)
     mout[ 4] = m1[ 4]*m2[0] + m1[ 5]*m2[4] + m1[ 6]*m2[ 8] + m1[ 7]*m2[12];
     mout[ 5] = m1[ 4]*m2[1] + m1[ 5]*m2[5] + m1[ 6]*m2[ 9] + m1[ 7]*m2[13];
     mout[ 6] = m1[ 4]*m2[2] + m1[ 5]*m2[6] + m1[ 6]*m2[10] + m1[ 7]*m2[14];
-    mout[ 7] = m1[ 4]*m2[3] + m1[ 5]*m2[7] + m1[ 6]*m2[11] + m1[ 7]*m2[15];   
+    mout[ 7] = m1[ 4]*m2[3] + m1[ 5]*m2[7] + m1[ 6]*m2[11] + m1[ 7]*m2[15];
     mout[ 8] = m1[ 8]*m2[0] + m1[ 9]*m2[4] + m1[10]*m2[ 8] + m1[11]*m2[12];
     mout[ 9] = m1[ 8]*m2[1] + m1[ 9]*m2[5] + m1[10]*m2[ 9] + m1[11]*m2[13];
     mout[10] = m1[ 8]*m2[2] + m1[ 9]*m2[6] + m1[10]*m2[10] + m1[11]*m2[14];
@@ -311,7 +311,7 @@ void GetM44V4Product(float* vout, const float* m, const float* v_)
 {
     float v[4];
     memcpy(v, v_, 4*sizeof(float));
-    
+
     vout[0] = m[ 0]*v[0] + m[ 1]*v[1] + m[ 2]*v[2] + m[ 3]*v[3];
     vout[1] = m[ 4]*v[0] + m[ 5]*v[1] + m[ 6]*v[2] + m[ 7]*v[3];
     vout[2] = m[ 8]*v[0] + m[ 9]*v[1] + m[10]*v[2] + m[11]*v[3];
@@ -344,7 +344,7 @@ void GetMxbCombine(float* mout, float* vout,
     memcpy(v1, v1_, 4*sizeof(float));
     memcpy(m2, m2_, 16*sizeof(float));
     memcpy(v2, v2_, 4*sizeof(float));
-    
+
     GetM44M44Product(mout, m2, m1);
     GetM44V4Product(vout, m2, v1);
     GetV4Sum(vout, vout, v2);
@@ -359,13 +359,13 @@ bool GetMxbInverse(float* mout, float* vout,
     memcpy(v, v_, 4*sizeof(float));
 
     if(!GetM44Inverse(mout, m)) return false;
-    
+
     for(int i=0; i<4; ++i)
     {
         v[i] = -v[i];
     }
     GetM44V4Product(vout, mout, v);
-    
+
     return true;
 }
 
@@ -387,7 +387,7 @@ bool GetMxbInverse(float* mout, float* vout,
 //  the negative representations and shift them to 0x00000000. As a last adjustment,
 //  since we don't want to have distinct representations for zero and negative zero, we
 //  discard negative zero and shift the negative representations to 0x00000001.
-//  
+//
 //  As a reference, some interesting values and their corresponding mappings are:
 //
 // +--------------------------------------------+---------------------------+---------------------------+
@@ -588,150 +588,141 @@ OCIO_NAMESPACE_EXIT
 
 #ifdef OCIO_UNIT_TEST
 
-OCIO_NAMESPACE_USING
-
 #include <limits>
 #include "UnitTest.h"
 
+namespace OCIO = OCIO_NAMESPACE;
+
+
 namespace
 {
-    
+
     void GetMxbResult(float* vout, float* m, float* x, float* v)
     {
-        GetM44V4Product(vout, m, x);
-        GetV4Sum(vout, vout, v);
+        OCIO::GetM44V4Product(vout, m, x);
+        OCIO::GetV4Sum(vout, vout, v);
     }
-    
+
 }
 
-   
+
 OCIO_ADD_TEST(MathUtils, M44_is_diagonal)
 {
-    {
-        float m44[] = { 1.0f, 0.0f, 0.0f, 0.0f,
-                        0.0f, 1.0f, 0.0f, 0.0f,
-                        0.0f, 0.0f, 1.0f, 0.0f,
-                        0.0f, 0.0f, 0.0f, 1.0f };
-        bool isdiag = IsM44Diagonal(m44);
-        OCIO_CHECK_EQUAL(isdiag, true);
+    float m44[] = { 1.0f, 0.0f, 0.0f, 0.0f,
+                    0.0f, 1.0f, 0.0f, 0.0f,
+                    0.0f, 0.0f, 1.0f, 0.0f,
+                    0.0f, 0.0f, 0.0f, 1.0f };
+    bool isdiag = OCIO::IsM44Diagonal(m44);
+    OCIO_CHECK_EQUAL(isdiag, true);
 
-        m44[1] += 1e-8f;
-        isdiag = IsM44Diagonal(m44);
-        OCIO_CHECK_EQUAL(isdiag, false);
-    }
+    m44[1] += 1e-8f;
+    isdiag = OCIO::IsM44Diagonal(m44);
+    OCIO_CHECK_EQUAL(isdiag, false);
 }
 
 
 OCIO_ADD_TEST(MathUtils, IsScalarEqualToZero)
 {
-        OCIO_CHECK_EQUAL(IsScalarEqualToZero(0.0f), true);
-        OCIO_CHECK_EQUAL(IsScalarEqualToZero(-0.0f), true);
-        
-        OCIO_CHECK_EQUAL(IsScalarEqualToZero(-1.072883670794056e-09f), false);
-        OCIO_CHECK_EQUAL(IsScalarEqualToZero(1.072883670794056e-09f), false);
-        
-        OCIO_CHECK_EQUAL(IsScalarEqualToZero(-1.072883670794056e-03f), false);
-        OCIO_CHECK_EQUAL(IsScalarEqualToZero(1.072883670794056e-03f), false);
-        
-        OCIO_CHECK_EQUAL(IsScalarEqualToZero(-1.072883670794056e-01f), false);
-        OCIO_CHECK_EQUAL(IsScalarEqualToZero(1.072883670794056e-01f), false);
+    OCIO_CHECK_EQUAL(OCIO::IsScalarEqualToZero(0.0f), true);
+    OCIO_CHECK_EQUAL(OCIO::IsScalarEqualToZero(-0.0f), true);
+
+    OCIO_CHECK_EQUAL(OCIO::IsScalarEqualToZero(-1.072883670794056e-09f), false);
+    OCIO_CHECK_EQUAL(OCIO::IsScalarEqualToZero(1.072883670794056e-09f), false);
+
+    OCIO_CHECK_EQUAL(OCIO::IsScalarEqualToZero(-1.072883670794056e-03f), false);
+    OCIO_CHECK_EQUAL(OCIO::IsScalarEqualToZero(1.072883670794056e-03f), false);
+
+    OCIO_CHECK_EQUAL(OCIO::IsScalarEqualToZero(-1.072883670794056e-01f), false);
+    OCIO_CHECK_EQUAL(OCIO::IsScalarEqualToZero(1.072883670794056e-01f), false);
 }
 
 OCIO_ADD_TEST(MathUtils, GetM44Inverse)
 {
-        // This is a degenerate matrix, and shouldnt be invertible.
-        float m[] = { 0.3f, 0.3f, 0.3f, 0.0f,
-                      0.3f, 0.3f, 0.3f, 0.0f,
-                      0.3f, 0.3f, 0.3f, 0.0f,
-                      0.0f, 0.0f, 0.0f, 1.0f };
-        
-        float mout[16];
-        bool invertsuccess = GetM44Inverse(mout, m);
-        OCIO_CHECK_EQUAL(invertsuccess, false);
+    // This is a degenerate matrix, and shouldnt be invertible.
+    float m[] = { 0.3f, 0.3f, 0.3f, 0.0f,
+                  0.3f, 0.3f, 0.3f, 0.0f,
+                  0.3f, 0.3f, 0.3f, 0.0f,
+                  0.0f, 0.0f, 0.0f, 1.0f };
+
+    float mout[16];
+    bool invertsuccess = OCIO::GetM44Inverse(mout, m);
+    OCIO_CHECK_EQUAL(invertsuccess, false);
 }
 
 
 OCIO_ADD_TEST(MathUtils, M44_M44_product)
 {
+    float mout[16];
+    float m1[] = { 1.0f, 2.0f, 0.0f, 0.0f,
+                   0.0f, 1.0f, 1.0f, 0.0f,
+                   1.0f, 0.0f, 1.0f, 0.0f,
+                   0.0f, 1.0f, 3.0f, 1.0f };
+    float m2[] = { 1.0f, 1.0f, 0.0f, 0.0f,
+                   0.0f, 1.0f, 0.0f, 0.0f,
+                   0.0f, 0.0f, 1.0f, 0.0f,
+                   2.0f, 0.0f, 0.0f, 1.0f };
+    OCIO::GetM44M44Product(mout, m1, m2);
+
+    float mcorrect[] = { 1.0f, 3.0f, 0.0f, 0.0f,
+                   0.0f, 1.0f, 1.0f, 0.0f,
+                   1.0f, 1.0f, 1.0f, 0.0f,
+                   2.0f, 1.0f, 3.0f, 1.0f };
+
+    for(int i=0; i<16; ++i)
     {
-        float mout[16];
-        float m1[] = { 1.0f, 2.0f, 0.0f, 0.0f,
-                       0.0f, 1.0f, 1.0f, 0.0f,
-                       1.0f, 0.0f, 1.0f, 0.0f,
-                       0.0f, 1.0f, 3.0f, 1.0f };
-        float m2[] = { 1.0f, 1.0f, 0.0f, 0.0f,
-                       0.0f, 1.0f, 0.0f, 0.0f,
-                       0.0f, 0.0f, 1.0f, 0.0f,
-                       2.0f, 0.0f, 0.0f, 1.0f };
-        GetM44M44Product(mout, m1, m2);
-        
-        float mcorrect[] = { 1.0f, 3.0f, 0.0f, 0.0f,
-                       0.0f, 1.0f, 1.0f, 0.0f,
-                       1.0f, 1.0f, 1.0f, 0.0f,
-                       2.0f, 1.0f, 3.0f, 1.0f };
-        
-        for(int i=0; i<16; ++i)
-        {
-            OCIO_CHECK_EQUAL(mout[i], mcorrect[i]);
-        }
+        OCIO_CHECK_EQUAL(mout[i], mcorrect[i]);
     }
 }
 
 OCIO_ADD_TEST(MathUtils, M44_V4_product)
 {
+    float vout[4];
+    float m[] = { 1.0f, 2.0f, 0.0f, 0.0f,
+                  0.0f, 1.0f, 1.0f, 0.0f,
+                  1.0f, 0.0f, 1.0f, 0.0f,
+                  0.0f, 1.0f, 3.0f, 1.0f };
+    float v[] = { 1.0f, 2.0f, 3.0f, 4.0f };
+    OCIO::GetM44V4Product(vout, m, v);
+
+    float vcorrect[] = { 5.0f, 5.0f, 4.0f, 15.0f };
+
+    for(int i=0; i<4; ++i)
     {
-        float vout[4];
-        float m[] = { 1.0f, 2.0f, 0.0f, 0.0f,
-                      0.0f, 1.0f, 1.0f, 0.0f,
-                      1.0f, 0.0f, 1.0f, 0.0f,
-                      0.0f, 1.0f, 3.0f, 1.0f };
-        float v[] = { 1.0f, 2.0f, 3.0f, 4.0f };
-        GetM44V4Product(vout, m, v);
-        
-        float vcorrect[] = { 5.0f, 5.0f, 4.0f, 15.0f };
-        
-        for(int i=0; i<4; ++i)
-        {
-            OCIO_CHECK_EQUAL(vout[i], vcorrect[i]);
-        }
+        OCIO_CHECK_EQUAL(vout[i], vcorrect[i]);
     }
 }
 
 OCIO_ADD_TEST(MathUtils, V4_add)
 {
+    float vout[4];
+    float v1[] = { 1.0f, 2.0f, 3.0f, 4.0f };
+    float v2[] = { 3.0f, 1.0f, 4.0f, 1.0f };
+    OCIO::GetV4Sum(vout, v1, v2);
+
+    float vcorrect[] = { 4.0f, 3.0f, 7.0f, 5.0f };
+
+    for(int i=0; i<4; ++i)
     {
-        float vout[4];
-        float v1[] = { 1.0f, 2.0f, 3.0f, 4.0f };
-        float v2[] = { 3.0f, 1.0f, 4.0f, 1.0f };
-        GetV4Sum(vout, v1, v2);
-        
-        float vcorrect[] = { 4.0f, 3.0f, 7.0f, 5.0f };
-        
-        for(int i=0; i<4; ++i)
-        {
-            OCIO_CHECK_EQUAL(vout[i], vcorrect[i]);
-        }
+        OCIO_CHECK_EQUAL(vout[i], vcorrect[i]);
     }
 }
 
 OCIO_ADD_TEST(MathUtils, mxb_eval)
 {
+    float vout[4];
+    float m[] = { 1.0f, 2.0f, 0.0f, 0.0f,
+                  0.0f, 1.0f, 1.0f, 0.0f,
+                  1.0f, 0.0f, 1.0f, 0.0f,
+                  0.0f, 1.0f, 3.0f, 1.0f };
+    float x[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    float v[] = { 1.0f, 2.0f, 3.0f, 4.0f };
+    GetMxbResult(vout, m, x, v);
+
+    float vcorrect[] = { 4.0f, 4.0f, 5.0f, 9.0f };
+
+    for(int i=0; i<4; ++i)
     {
-        float vout[4];
-        float m[] = { 1.0f, 2.0f, 0.0f, 0.0f,
-                      0.0f, 1.0f, 1.0f, 0.0f,
-                      1.0f, 0.0f, 1.0f, 0.0f,
-                      0.0f, 1.0f, 3.0f, 1.0f };
-        float x[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-        float v[] = { 1.0f, 2.0f, 3.0f, 4.0f };
-        GetMxbResult(vout, m, x, v);
-        
-        float vcorrect[] = { 4.0f, 4.0f, 5.0f, 9.0f };
-        
-        for(int i=0; i<4; ++i)
-        {
-            OCIO_CHECK_EQUAL(vout[i], vcorrect[i]);
-        }
+        OCIO_CHECK_EQUAL(vout[i], vcorrect[i]);
     }
 }
 
@@ -755,51 +746,51 @@ OCIO_ADD_TEST(MathUtils, Combine_two_mxb)
 
         // Combine two mx+b operations, and apply to test point
         float mout[16];
-        float vcombined[4];      
-        GetMxbCombine(mout, vout, m1, v1, m2, v2);
+        float vcombined[4];
+        OCIO::GetMxbCombine(mout, vout, m1, v1, m2, v2);
         GetMxbResult(vcombined, mout, x, vout);
-        
+
         // Sequentially apply the two mx+b operations.
         GetMxbResult(vout, m1, x, v1);
         GetMxbResult(vout, m2, vout, v2);
-        
+
         // Compare outputs
         for(int i=0; i<4; ++i)
         {
             OCIO_CHECK_CLOSE(vcombined[i], vout[i], tolerance);
         }
     }
-    
+
     {
         float x[] = { 6.0f, 0.5f, -2.0f, -0.1f };
         float vout[4];
 
         float mout[16];
         float vcombined[4];
-        GetMxbCombine(mout, vout, m1, v1, m2, v2);
+        OCIO::GetMxbCombine(mout, vout, m1, v1, m2, v2);
         GetMxbResult(vcombined, mout, x, vout);
-        
+
         GetMxbResult(vout, m1, x, v1);
         GetMxbResult(vout, m2, vout, v2);
-        
+
         for(int i=0; i<4; ++i)
         {
             OCIO_CHECK_CLOSE(vcombined[i], vout[i], tolerance);
         }
     }
-    
+
     {
         float x[] = { 26.0f, -0.5f, 0.005f, 12.1f };
         float vout[4];
 
         float mout[16];
         float vcombined[4];
-        GetMxbCombine(mout, vout, m1, v1, m2, v2);
+        OCIO::GetMxbCombine(mout, vout, m1, v1, m2, v2);
         GetMxbResult(vcombined, mout, x, vout);
-        
+
         GetMxbResult(vout, m1, x, v1);
         GetMxbResult(vout, m2, vout, v2);
-        
+
         // We pick a not so small tolerance, as we're dealing with
         // large numbers, and the error for CHECK_CLOSE is absolute.
         for(int i=0; i<4; ++i)
@@ -818,35 +809,35 @@ OCIO_ADD_TEST(MathUtils, mxb_invert)
                       0.0f, 1.0f, 3.0f, 1.0f };
         float x[] = { 1.0f, 0.5f, -1.0f, 60.0f };
         float v[] = { 1.0f, 2.0f, 3.0f, 4.0f };
-        
+
         float vresult[4];
         float mout[16];
         float vout[4];
-        
+
         GetMxbResult(vresult, m, x, v);
-        bool invertsuccess = GetMxbInverse(mout, vout, m, v);
+        bool invertsuccess = OCIO::GetMxbInverse(mout, vout, m, v);
         OCIO_CHECK_EQUAL(invertsuccess, true);
-        
+
         GetMxbResult(vresult, mout, vresult, vout);
-        
+
         float tolerance = 1e-9f;
         for(int i=0; i<4; ++i)
         {
             OCIO_CHECK_CLOSE(vresult[i], x[i], tolerance);
         }
     }
-    
+
     {
         float m[] = { 0.3f, 0.3f, 0.3f, 0.0f,
                       0.3f, 0.3f, 0.3f, 0.0f,
                       0.3f, 0.3f, 0.3f, 0.0f,
                       0.0f, 0.0f, 0.0f, 1.0f };
         float v[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-        
+
         float mout[16];
         float vout[4];
-        
-        bool invertsuccess = GetMxbInverse(mout, vout, m, v);
+
+        bool invertsuccess = OCIO::GetMxbInverse(mout, vout, m, v);
         OCIO_CHECK_EQUAL(invertsuccess, false);
     }
 }
@@ -857,7 +848,7 @@ OCIO_ADD_TEST(MathUtils, mxb_invert)
 #define KEEP_DENORMS      false
 #define COMPRESS_DENORMS  true
 
-#define TEST_CHECK_MESSAGE(a, msg) if(!(a)) throw Exception(msg.c_str())
+#define TEST_CHECK_MESSAGE(a, msg) if(!(a)) throw OCIO::Exception(msg.c_str())
 
 
 namespace
@@ -887,7 +878,7 @@ const float negrandom = -12.345f;
 // We use these variables to validate the threshold comparison of FloatsDiffer.
 //
 #define DECLARE_FLOAT(VAR_NAME, REFERENCE, ULP) \
-  const float VAR_NAME = AddULP(REFERENCE, ULP)
+  const float VAR_NAME = OCIO::AddULP(REFERENCE, ULP)
 
 #define DECLARE_FLOAT_PLUS_ULP(VAR_PREFIX, REFERENCE, ULP1, ULP2, ULP3, ULP4, ULP5, ULP6) \
   DECLARE_FLOAT(VAR_PREFIX##ULP1, REFERENCE, ULP1); \
@@ -953,30 +944,30 @@ const float negrandom = -12.345f;
 // from a reference value, within a given tolerance threshold, and considering
 // that denormalized values are being compressed or kept.
 //
-std::string getErrorMessageDifferent(const float a, 
-                                     const float b, 
+std::string getErrorMessageDifferent(const float a,
+                                     const float b,
                                      const int tolerance,
                                      const bool compressDenorms)
 {
     std::ostringstream oss;
     oss << "The values " << a << " "
-        << "(" << std::hex << std::showbase << FloatAsInt(a) << std::dec << ") "
+        << "(" << std::hex << std::showbase << OCIO::FloatAsInt(a) << std::dec << ") "
         << "and " << b << " "
-        << "(" << std::hex << std::showbase << FloatAsInt(b) << std::dec << ") "
+        << "(" << std::hex << std::showbase << OCIO::FloatAsInt(b) << std::dec << ") "
         << "are expected to be DIFFERENT within a tolerance of " << tolerance << " ULPs "
         << ( compressDenorms ? "(when compressing denormalized numbers)."
                              : "(when keeping denormalized numbers)." );
 
     return oss.str();
 }
-                           
+
 void checkFloatsAreDifferent(const float ref, const int tolerance, const bool compressDenorms,
                              const float a)
 {
-    TEST_CHECK_MESSAGE(FloatsDiffer(ref, a, tolerance, compressDenorms),
+    TEST_CHECK_MESSAGE(OCIO::FloatsDiffer(ref, a, tolerance, compressDenorms),
                        getErrorMessageDifferent(ref, a, tolerance, compressDenorms) );
 
-    TEST_CHECK_MESSAGE(FloatsDiffer(a, ref, tolerance, compressDenorms),
+    TEST_CHECK_MESSAGE(OCIO::FloatsDiffer(a, ref, tolerance, compressDenorms),
                        getErrorMessageDifferent(a, ref, tolerance, compressDenorms) );
 }
 
@@ -1027,23 +1018,23 @@ std::string getErrorMessageClose(const float a, const float b, const int toleran
 {
     std::ostringstream oss;
     oss << "The values " << a << " "
-        << "(" << std::hex << std::showbase << FloatAsInt(a) << std::dec << ") "
+        << "(" << std::hex << std::showbase << OCIO::FloatAsInt(a) << std::dec << ") "
         << "and " << b << " "
-        << "(" << std::hex << std::showbase << FloatAsInt(b) << std::dec << ") "
+        << "(" << std::hex << std::showbase << OCIO::FloatAsInt(b) << std::dec << ") "
         << "are expected to be CLOSE within a tolerance of " << tolerance << " ULPs "
         << ( compressDenorms ? "(when compressing denormalized numbers)."
                              : "(when keeping denormalized numbers)." );
 
     return oss.str();
 }
-                               
+
 void checkFloatsAreClose(const float ref, const int tolerance, const bool compressDenorms,
                          const float a)
 {
-    TEST_CHECK_MESSAGE(!FloatsDiffer(ref, a, tolerance, compressDenorms),
+    TEST_CHECK_MESSAGE(!OCIO::FloatsDiffer(ref, a, tolerance, compressDenorms),
                        getErrorMessageClose(ref, a, tolerance, compressDenorms) );
 
-    TEST_CHECK_MESSAGE(!FloatsDiffer(a, ref, tolerance, compressDenorms),
+    TEST_CHECK_MESSAGE(!OCIO::FloatsDiffer(a, ref, tolerance, compressDenorms),
                        getErrorMessageClose(a, ref, tolerance, compressDenorms) );
 }
 
@@ -1093,9 +1084,9 @@ std::string getErrorMessageEqual(const float a, const float b, const bool compre
 {
     std::ostringstream oss;
     oss << "The values " << a << " "
-        << "(" << std::hex << std::showbase << FloatAsInt(a) << std::dec << ") "
+        << "(" << std::hex << std::showbase << OCIO::FloatAsInt(a) << std::dec << ") "
         << "and " << b << " "
-        << "(" << std::hex << std::showbase << FloatAsInt(b) << std::dec << ") "
+        << "(" << std::hex << std::showbase << OCIO::FloatAsInt(b) << std::dec << ") "
         << "are expected to be EQUAL "
         << ( compressDenorms ? "(when compressing denormalized numbers)."
                              : "(when keeping denormalized numbers)." );
@@ -1105,14 +1096,14 @@ std::string getErrorMessageEqual(const float a, const float b, const bool compre
 
 void checkFloatsAreEqual(const float ref, const bool compressDenorms, const float a)
 {
-    TEST_CHECK_MESSAGE(!FloatsDiffer(ref, a, 0, compressDenorms),
+    TEST_CHECK_MESSAGE(!OCIO::FloatsDiffer(ref, a, 0, compressDenorms),
                        getErrorMessageEqual(ref, a, compressDenorms) );
 
-    TEST_CHECK_MESSAGE(!FloatsDiffer(a, ref, 0, compressDenorms),
+    TEST_CHECK_MESSAGE(!OCIO::FloatsDiffer(a, ref, 0, compressDenorms),
                        getErrorMessageEqual(a, ref, compressDenorms) );
 }
 
-void checkFloatsAreEqual(const float ref, const bool compressDenorms, 
+void checkFloatsAreEqual(const float ref, const bool compressDenorms,
                          const float a, const float b)
 {
     checkFloatsAreEqual(ref, compressDenorms, a);
@@ -1134,7 +1125,7 @@ void checkFloatsDenormInvariant(const bool compressDenorms)
 
     // Check positive infinity limits
     //
-    checkFloatsAreDifferent(posinf, tol, compressDenorms, 
+    checkFloatsAreDifferent(posinf, tol, compressDenorms,
                             posinf_p1, posinf_p4, posinf_p7,
                             posinf_p8, posinf_p9, posinf_p16);
 
@@ -1144,11 +1135,11 @@ void checkFloatsDenormInvariant(const bool compressDenorms)
 
     // Check negative infinity limits
     //
-    checkFloatsAreDifferent(neginf, tol, compressDenorms, 
+    checkFloatsAreDifferent(neginf, tol, compressDenorms,
                             neginf_p1, neginf_p4, neginf_p7,
                             neginf_p8, neginf_p9, neginf_p16);
 
-    checkFloatsAreDifferent(neginf, tol, compressDenorms, 
+    checkFloatsAreDifferent(neginf, tol, compressDenorms,
                             neginf_m1, neginf_m4, neginf_m7,
                             neginf_m8, neginf_m9, neginf_m16);
 
@@ -1161,7 +1152,7 @@ void checkFloatsDenormInvariant(const bool compressDenorms)
                             posmaxfloat_p1, posmaxfloat_p4, posmaxfloat_p7,
                             posmaxfloat_p8, posmaxfloat_p9, posmaxfloat_p16 );
 
-    checkFloatsAreClose(posmaxfloat, tol, compressDenorms, 
+    checkFloatsAreClose(posmaxfloat, tol, compressDenorms,
                         posmaxfloat_m1, posmaxfloat_m4,
                         posmaxfloat_m7, posmaxfloat_m8);
 
@@ -1172,11 +1163,11 @@ void checkFloatsDenormInvariant(const bool compressDenorms)
     checkFloatsAreEqual(negmaxfloat, compressDenorms, neginf_m1);
     checkFloatsAreEqual(negmaxfloat_p1, compressDenorms, neginf);
 
-    checkFloatsAreDifferent(negmaxfloat, tol, compressDenorms, 
+    checkFloatsAreDifferent(negmaxfloat, tol, compressDenorms,
                             negmaxfloat_p1, negmaxfloat_p4, negmaxfloat_p7,
                             negmaxfloat_p8, negmaxfloat_p9, negmaxfloat_p16 );
 
-    checkFloatsAreClose(negmaxfloat, tol, compressDenorms, 
+    checkFloatsAreClose(negmaxfloat, tol, compressDenorms,
                         negmaxfloat_m1, negmaxfloat_m4,
                         negmaxfloat_m7, negmaxfloat_m8);
 
@@ -1198,16 +1189,16 @@ void checkFloatsDenormInvariant(const bool compressDenorms)
 
     // Check positive and negative random value
     checkFloatsAreDifferent(posrandom, tol, compressDenorms, posrandom_m16, posrandom_m9);
-    checkFloatsAreClose(posrandom, tol, compressDenorms, 
+    checkFloatsAreClose(posrandom, tol, compressDenorms,
                         posrandom_m8, posrandom_m7, posrandom_m4, posrandom_m1);
-    checkFloatsAreClose(posrandom, tol, compressDenorms, 
+    checkFloatsAreClose(posrandom, tol, compressDenorms,
                         posrandom_p1, posrandom_p4, posrandom_p7, posrandom_p8);
     checkFloatsAreDifferent(posrandom, tol, compressDenorms, posrandom_p9, posrandom_p16);
 
     checkFloatsAreDifferent(negrandom, tol, compressDenorms, negrandom_m16, negrandom_m9);
-    checkFloatsAreClose(negrandom, tol, compressDenorms, 
+    checkFloatsAreClose(negrandom, tol, compressDenorms,
                         negrandom_m8, negrandom_m7, negrandom_m4, negrandom_m1);
-    checkFloatsAreClose(negrandom, tol, compressDenorms, negrandom_p1, 
+    checkFloatsAreClose(negrandom, tol, compressDenorms, negrandom_p1,
                         negrandom_p4, negrandom_p7, negrandom_p8);
     checkFloatsAreDifferent(negrandom, tol, compressDenorms, negrandom_p9, negrandom_p16);
 }
@@ -1221,7 +1212,7 @@ OCIO_ADD_TEST(MathUtils, float_diff_keep_denorms_test)
     // Check positive minimum float
     //
     checkFloatsAreDifferent(posminfloat, tol, KEEP_DENORMS, posminfloat_m16, posminfloat_m9);
-    checkFloatsAreClose(posminfloat, tol, KEEP_DENORMS, 
+    checkFloatsAreClose(posminfloat, tol, KEEP_DENORMS,
                         posminfloat_m8, posminfloat_m7,
                         posminfloat_m4, posminfloat_m1);
     checkFloatsAreClose(posminfloat, tol, KEEP_DENORMS,
@@ -1232,10 +1223,10 @@ OCIO_ADD_TEST(MathUtils, float_diff_keep_denorms_test)
     // Check negative minimum float
     //
     checkFloatsAreDifferent(negminfloat, tol, KEEP_DENORMS, negminfloat_m16, negminfloat_m9);
-    checkFloatsAreClose(negminfloat, tol, KEEP_DENORMS, 
+    checkFloatsAreClose(negminfloat, tol, KEEP_DENORMS,
                         negminfloat_m8, negminfloat_m7,
                         negminfloat_m4, negminfloat_m1);
-    checkFloatsAreClose(negminfloat, tol, KEEP_DENORMS, 
+    checkFloatsAreClose(negminfloat, tol, KEEP_DENORMS,
                         negminfloat_p1, negminfloat_p4,
                         negminfloat_p7, negminfloat_p8);
     checkFloatsAreDifferent(negminfloat, tol, KEEP_DENORMS, negminfloat_p9, negminfloat_p16);
@@ -1253,7 +1244,7 @@ OCIO_ADD_TEST(MathUtils, float_diff_keep_denorms_test)
     checkFloatsAreDifferent(negzero, tol, KEEP_DENORMS, zero_p9, zero_p16);
 
     // Compare negative zero and negative denorms
-    checkFloatsAreClose(negzero, tol, KEEP_DENORMS, 
+    checkFloatsAreClose(negzero, tol, KEEP_DENORMS,
                         negzero_p1, negzero_p4, negzero_p7, negzero_p8);
     checkFloatsAreDifferent(negzero, tol, KEEP_DENORMS, negzero_p9, negzero_p16);
 
@@ -1262,10 +1253,10 @@ OCIO_ADD_TEST(MathUtils, float_diff_keep_denorms_test)
     checkFloatsAreDifferent(zero_p1, tol, KEEP_DENORMS, negzero_p8, negzero_p9, negzero_p16);
 
     checkFloatsAreClose(zero_p4, tol, KEEP_DENORMS, negzero_p1, negzero_p4);
-    checkFloatsAreDifferent(zero_p4, tol, KEEP_DENORMS, 
+    checkFloatsAreDifferent(zero_p4, tol, KEEP_DENORMS,
                             negzero_p7, negzero_p8, negzero_p9, negzero_p16);
 
-    checkFloatsAreDifferent(zero_p9, tol, KEEP_DENORMS, 
+    checkFloatsAreDifferent(zero_p9, tol, KEEP_DENORMS,
                             negzero_p1, negzero_p4, negzero_p7,
                             negzero_p8, negzero_p9, negzero_p16);
 
@@ -1287,7 +1278,7 @@ OCIO_ADD_TEST(MathUtils, float_diff_keep_denorms_test)
     checkFloatsAreDifferent(posminfloat, tol, KEEP_DENORMS, zero_p1, zero_p4, zero_p7,
                                                           zero_p8, zero_p9, zero_p16);
 
-    checkFloatsAreDifferent(posminfloat, tol, KEEP_DENORMS, 
+    checkFloatsAreDifferent(posminfloat, tol, KEEP_DENORMS,
                             negzero_p1, negzero_p4, negzero_p7,
                             negzero_p8, negzero_p9, negzero_p16);
 
@@ -1305,11 +1296,11 @@ OCIO_ADD_TEST(MathUtils, float_diff_keep_denorms_test)
     checkFloatsAreDifferent(negminfloat, tol, KEEP_DENORMS, negzero_p1, negzero_p4, negzero_p7,
                                                           negzero_p8, negzero_p9, negzero_p16);
 
-    checkFloatsAreDifferent(negminfloat, tol, KEEP_DENORMS, 
+    checkFloatsAreDifferent(negminfloat, tol, KEEP_DENORMS,
                             posminfloat_p1, posminfloat_p4, posminfloat_p7,
                             posminfloat_p8, posminfloat_p9, posminfloat_p16);
 
-    checkFloatsAreDifferent(negminfloat, tol, KEEP_DENORMS, 
+    checkFloatsAreDifferent(negminfloat, tol, KEEP_DENORMS,
                             posminfloat_m1, posminfloat_m4, posminfloat_m7,
                             posminfloat_m8, posminfloat_m9, posminfloat_m16);
 }
@@ -1321,10 +1312,10 @@ OCIO_ADD_TEST(MathUtils, float_diff_compress_denorms_test )
     // Check positive minimum float
     //
     // Note: posminfloat_m* are mapped to zero when compressing denormalized values.
-    checkFloatsAreClose(posminfloat, tol, COMPRESS_DENORMS, 
+    checkFloatsAreClose(posminfloat, tol, COMPRESS_DENORMS,
                         posminfloat_m16, posminfloat_m9, posminfloat_m8,
                         posminfloat_m7, posminfloat_m4, posminfloat_m1);
-    checkFloatsAreClose(posminfloat, tol, COMPRESS_DENORMS, 
+    checkFloatsAreClose(posminfloat, tol, COMPRESS_DENORMS,
                         posminfloat_p1, posminfloat_p4,
                         posminfloat_p7, posminfloat_p8);
     checkFloatsAreDifferent(posminfloat, tol, COMPRESS_DENORMS, posminfloat_p9, posminfloat_p16);
@@ -1332,7 +1323,7 @@ OCIO_ADD_TEST(MathUtils, float_diff_compress_denorms_test )
     // Check negative minimum float
     //
     // Note: negminfloat_m* are mapped to zero when compressing denormalized values.
-    checkFloatsAreClose(negminfloat, tol, COMPRESS_DENORMS, 
+    checkFloatsAreClose(negminfloat, tol, COMPRESS_DENORMS,
                         negminfloat_m16, negminfloat_m9, negminfloat_m8,
                         negminfloat_m7, negminfloat_m4, negminfloat_m1);
     checkFloatsAreClose(negminfloat, tol, COMPRESS_DENORMS,
@@ -1356,20 +1347,20 @@ OCIO_ADD_TEST(MathUtils, float_diff_compress_denorms_test )
     // Compare negative zero and positive denorms
     //
     // Note: zero_p* are mapped to zero when compressing denormalized values.
-    checkFloatsAreClose(negzero, tol, COMPRESS_DENORMS, 
+    checkFloatsAreClose(negzero, tol, COMPRESS_DENORMS,
                         zero_p1, zero_p4, zero_p7, zero_p8, zero_p9, zero_p16);
 
     // Compare negative zero and negative denorms
     //
     // Note: negzero_p* are mapped to zero when compressing denormalized values.
-    checkFloatsAreClose(negzero, tol, COMPRESS_DENORMS, 
+    checkFloatsAreClose(negzero, tol, COMPRESS_DENORMS,
                         negzero_p1, negzero_p4, negzero_p7,
                         negzero_p8, negzero_p9, negzero_p16);
 
     // Compare positive denorms and negative denorms
     //
     // Note: negzero_p* are mapped to zero when compressing denormalized values.
-    checkFloatsAreClose(zero_p1, tol, COMPRESS_DENORMS, 
+    checkFloatsAreClose(zero_p1, tol, COMPRESS_DENORMS,
                         negzero_p1, negzero_p4, negzero_p7,
                         negzero_p8, negzero_p9, negzero_p16);
 
@@ -1381,13 +1372,13 @@ OCIO_ADD_TEST(MathUtils, float_diff_compress_denorms_test )
                         negzero_p1, negzero_p4, negzero_p7,
                         negzero_p8, negzero_p9, negzero_p16);
 
-    checkFloatsAreClose(negzero_p1, tol, COMPRESS_DENORMS, 
+    checkFloatsAreClose(negzero_p1, tol, COMPRESS_DENORMS,
                         zero_p1, zero_p4, zero_p7, zero_p8, zero_p9, zero_p16);
 
-    checkFloatsAreClose(negzero_p4, tol, COMPRESS_DENORMS, 
+    checkFloatsAreClose(negzero_p4, tol, COMPRESS_DENORMS,
                         zero_p1, zero_p4, zero_p7, zero_p8, zero_p9, zero_p16);
 
-    checkFloatsAreClose(negzero_p9, tol, COMPRESS_DENORMS, 
+    checkFloatsAreClose(negzero_p9, tol, COMPRESS_DENORMS,
                         zero_p1, zero_p4, zero_p7, zero_p8, zero_p9, zero_p16);
 
     // Compare negative and positive minimum floats
@@ -1401,32 +1392,32 @@ OCIO_ADD_TEST(MathUtils, float_diff_compress_denorms_test )
     checkFloatsAreClose(zero, 1, COMPRESS_DENORMS, posminfloat);
     checkFloatsAreClose(posminfloat, 2, COMPRESS_DENORMS, negminfloat);
 
-    checkFloatsAreClose(posminfloat, tol, COMPRESS_DENORMS, 
+    checkFloatsAreClose(posminfloat, tol, COMPRESS_DENORMS,
                         negzero_p1, negzero_p4, negzero_p7,
                         negzero_p8, negzero_p9, negzero_p16);
 
     checkFloatsAreClose(posminfloat, tol, COMPRESS_DENORMS, negminfloat_p1, negminfloat_p4);
-    checkFloatsAreDifferent(posminfloat, tol, COMPRESS_DENORMS, 
+    checkFloatsAreDifferent(posminfloat, tol, COMPRESS_DENORMS,
                             negminfloat_p7, negminfloat_p8,
                             negminfloat_p9, negminfloat_p16);
 
-    checkFloatsAreClose(posminfloat, tol, COMPRESS_DENORMS, 
+    checkFloatsAreClose(posminfloat, tol, COMPRESS_DENORMS,
                         negminfloat_m1, negminfloat_m4, negminfloat_m7,
                         negminfloat_m8, negminfloat_m9, negminfloat_m16);
 
-    checkFloatsAreClose(negminfloat, tol, COMPRESS_DENORMS, 
+    checkFloatsAreClose(negminfloat, tol, COMPRESS_DENORMS,
                         zero_p1, zero_p4, zero_p7, zero_p8, zero_p9, zero_p16);
 
-    checkFloatsAreClose(negminfloat, tol, COMPRESS_DENORMS, 
+    checkFloatsAreClose(negminfloat, tol, COMPRESS_DENORMS,
                         negzero_p1, negzero_p4, negzero_p7,
                         negzero_p8, negzero_p9, negzero_p16);
 
     checkFloatsAreClose(negminfloat, tol, COMPRESS_DENORMS, posminfloat_p1, posminfloat_p4);
-    checkFloatsAreDifferent(negminfloat, tol, COMPRESS_DENORMS, 
+    checkFloatsAreDifferent(negminfloat, tol, COMPRESS_DENORMS,
                             posminfloat_p7, posminfloat_p8,
                             posminfloat_p9, posminfloat_p16);
 
-    checkFloatsAreClose(negminfloat, tol, COMPRESS_DENORMS, 
+    checkFloatsAreClose(negminfloat, tol, COMPRESS_DENORMS,
                         posminfloat_m1, posminfloat_m4, posminfloat_m7,
                         posminfloat_m8, posminfloat_m9, posminfloat_m16);
 }
@@ -1434,13 +1425,13 @@ OCIO_ADD_TEST(MathUtils, float_diff_compress_denorms_test )
 OCIO_ADD_TEST(MathUtils, half_bits_test)
 {
     // Sanity check.
-    OCIO_CHECK_EQUAL(0.5f, ConvertHalfBitsToFloat(0x3800));
+    OCIO_CHECK_EQUAL(0.5f, OCIO::ConvertHalfBitsToFloat(0x3800));
 
     // Preserve negatives.
-    OCIO_CHECK_EQUAL(-1.f, ConvertHalfBitsToFloat(0xbc00));
+    OCIO_CHECK_EQUAL(-1.f, OCIO::ConvertHalfBitsToFloat(0xbc00));
 
     // Preserve values > 1.
-    OCIO_CHECK_EQUAL(1024.f, ConvertHalfBitsToFloat(0x6400));
+    OCIO_CHECK_EQUAL(1024.f, OCIO::ConvertHalfBitsToFloat(0x6400));
 }
 
 OCIO_ADD_TEST(MathUtils, halfs_differ_test)
@@ -1455,38 +1446,38 @@ OCIO_ADD_TEST(MathUtils, halfs_differ_test)
     half neg_zero;  neg_zero.setBits(32768);  // -0
     half pos_small; pos_small.setBits(4);     // +small
     half neg_small; neg_small.setBits(32772); // -small
-    half pos_1;     pos_1.setBits(15360);     // 
-    half pos_2;     pos_2.setBits(15365);     // 
-    half neg_1;     neg_1.setBits(50000);     // 
-    half neg_2;     neg_2.setBits(50005);     // 
+    half pos_1;     pos_1.setBits(15360);     //
+    half pos_2;     pos_2.setBits(15365);     //
+    half neg_1;     neg_1.setBits(50000);     //
+    half neg_2;     neg_2.setBits(50005);     //
 
     int tol = 10;
 
-    OCIO_CHECK_ASSERT(HalfsDiffer(pos_inf, neg_inf, tol));
-    OCIO_CHECK_ASSERT(HalfsDiffer(pos_inf, pos_nan, tol));
-    OCIO_CHECK_ASSERT(HalfsDiffer(neg_inf, neg_nan, tol));
-    OCIO_CHECK_ASSERT(HalfsDiffer(pos_max, pos_inf, tol));
-    OCIO_CHECK_ASSERT(HalfsDiffer(neg_max, neg_inf, tol));
-    OCIO_CHECK_ASSERT(HalfsDiffer(pos_1, neg_1, tol));
-    OCIO_CHECK_ASSERT(HalfsDiffer(pos_2, pos_1, 0));
-    OCIO_CHECK_ASSERT(HalfsDiffer(neg_2, neg_1, 0));
+    OCIO_CHECK_ASSERT(OCIO::HalfsDiffer(pos_inf, neg_inf, tol));
+    OCIO_CHECK_ASSERT(OCIO::HalfsDiffer(pos_inf, pos_nan, tol));
+    OCIO_CHECK_ASSERT(OCIO::HalfsDiffer(neg_inf, neg_nan, tol));
+    OCIO_CHECK_ASSERT(OCIO::HalfsDiffer(pos_max, pos_inf, tol));
+    OCIO_CHECK_ASSERT(OCIO::HalfsDiffer(neg_max, neg_inf, tol));
+    OCIO_CHECK_ASSERT(OCIO::HalfsDiffer(pos_1, neg_1, tol));
+    OCIO_CHECK_ASSERT(OCIO::HalfsDiffer(pos_2, pos_1, 0));
+    OCIO_CHECK_ASSERT(OCIO::HalfsDiffer(neg_2, neg_1, 0));
 
-    OCIO_CHECK_ASSERT(!HalfsDiffer(pos_zero, neg_zero, 0));
-    OCIO_CHECK_ASSERT(!HalfsDiffer(pos_small, neg_small, tol));
-    OCIO_CHECK_ASSERT(!HalfsDiffer(pos_2, pos_1, tol));
-    OCIO_CHECK_ASSERT(!HalfsDiffer(neg_2, neg_1, tol));
+    OCIO_CHECK_ASSERT(!OCIO::HalfsDiffer(pos_zero, neg_zero, 0));
+    OCIO_CHECK_ASSERT(!OCIO::HalfsDiffer(pos_small, neg_small, tol));
+    OCIO_CHECK_ASSERT(!OCIO::HalfsDiffer(pos_2, pos_1, tol));
+    OCIO_CHECK_ASSERT(!OCIO::HalfsDiffer(neg_2, neg_1, tol));
 }
 
 OCIO_ADD_TEST(MathUtils, clamp)
 {
-    OCIO_CHECK_EQUAL(-1.0f, Clamp(std::numeric_limits<float>::quiet_NaN(), -1.0f, 1.0f));
+    OCIO_CHECK_EQUAL(-1.0f, OCIO::Clamp(std::numeric_limits<float>::quiet_NaN(), -1.0f, 1.0f));
 
-    OCIO_CHECK_EQUAL(10.0f, Clamp( std::numeric_limits<float>::infinity(),  5.0f, 10.0f));
-    OCIO_CHECK_EQUAL(5.0f, Clamp(-std::numeric_limits<float>::infinity(),  5.0f, 10.0f));
+    OCIO_CHECK_EQUAL(10.0f, OCIO::Clamp( std::numeric_limits<float>::infinity(),  5.0f, 10.0f));
+    OCIO_CHECK_EQUAL(5.0f, OCIO::Clamp(-std::numeric_limits<float>::infinity(),  5.0f, 10.0f));
 
-    OCIO_CHECK_EQUAL(0.0000005f, Clamp( 0.0000005f, 0.0f, 1.0f));
-    OCIO_CHECK_EQUAL(0.0f,       Clamp(-0.0000005f, 0.0f, 1.0f));
-    OCIO_CHECK_EQUAL(1.0f,       Clamp( 1.0000005f, 0.0f, 1.0f));
+    OCIO_CHECK_EQUAL(0.0000005f, OCIO::Clamp( 0.0000005f, 0.0f, 1.0f));
+    OCIO_CHECK_EQUAL(0.0f,       OCIO::Clamp(-0.0000005f, 0.0f, 1.0f));
+    OCIO_CHECK_EQUAL(1.0f,       OCIO::Clamp( 1.0000005f, 0.0f, 1.0f));
 }
 
 #endif

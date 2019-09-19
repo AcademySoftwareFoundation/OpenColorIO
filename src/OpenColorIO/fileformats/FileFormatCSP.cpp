@@ -321,22 +321,22 @@ OCIO_NAMESPACE_ENTER
             
             ~LocalFileFormat() {};
             
-            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
+            void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
             
-            virtual CachedFileRcPtr Read(
+            CachedFileRcPtr read(
                 std::istream & istream,
-                const std::string & fileName) const;
+                const std::string & fileName) const override;
             
-            virtual void Write(const Baker & baker,
-                               const std::string & formatName,
-                               std::ostream & ostream) const;
+            void bake(const Baker & baker,
+                      const std::string & formatName,
+                      std::ostream & ostream) const override;
             
-            virtual void BuildFileOps(OpRcPtrVec & ops,
+            void buildFileOps(OpRcPtrVec & ops,
                                       const Config& config,
                                       const ConstContextRcPtr & context,
                                       CachedFileRcPtr untypedCachedFile,
                                       const FileTransform& fileTransform,
-                                      TransformDirection dir) const;
+                                      TransformDirection dir) const override;
         };
 
 
@@ -350,17 +350,16 @@ OCIO_NAMESPACE_ENTER
         }
         */
         
-        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
+        void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
             info.name = "cinespace";
             info.extension = "csp";
-            info.capabilities = (FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_WRITE);
+            info.capabilities = (FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
             formatInfoVec.push_back(info);
         }
         
-        CachedFileRcPtr
-        LocalFileFormat::Read(
+        CachedFileRcPtr LocalFileFormat::read(
             std::istream & istream,
             const std::string & /* fileName unused */) const
         {
@@ -439,7 +438,7 @@ OCIO_NAMESPACE_ENTER
                 
                 if(cpoints>=2)
                 {
-                    std::vector<std::string> inputparts, outputparts;
+                    StringVec inputparts, outputparts;
                     
                     nextline (istream, line);
                     pystring::split(pystring::strip(line), inputparts);
@@ -625,9 +624,9 @@ OCIO_NAMESPACE_ENTER
         }
         
         
-        void LocalFileFormat::Write(const Baker & baker,
-                                    const std::string & /*formatName*/,
-                                    std::ostream & ostream) const
+        void LocalFileFormat::bake(const Baker & baker,
+                                   const std::string & /*formatName*/,
+                                   std::ostream & ostream) const
         {
             const int DEFAULT_CUBE_SIZE = 32;
             const int DEFAULT_SHAPER_SIZE = 1024;
@@ -833,7 +832,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         void
-        LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
+        LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                                     const Config& /*config*/,
                                     const ConstContextRcPtr & /*context*/,
                                     CachedFileRcPtr untypedCachedFile,
@@ -906,12 +905,12 @@ namespace OCIO = OCIO_NAMESPACE;
 void compareFloats(const std::string& floats1, const std::string& floats2)
 {
     // number comparison
-    std::vector<std::string> strings1;
+    OCIO::StringVec strings1;
     pystring::split(pystring::strip(floats1), strings1);
     std::vector<float> numbers1;
     OCIO::StringVecToFloatVec(numbers1, strings1);
 
-    std::vector<std::string> strings2;
+    OCIO::StringVec strings2;
     pystring::split(pystring::strip(floats2), strings2);
     std::vector<float> numbers2;
     OCIO::StringVecToFloatVec(numbers2, strings2);
@@ -961,7 +960,7 @@ OCIO_ADD_TEST(FileFormatCSP, simple1D)
     // Read file
     std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple1D, emptyString);
+    OCIO::CachedFileRcPtr cachedFile = tester.read(simple1D, emptyString);
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);
 
     // check metadata
@@ -1038,7 +1037,7 @@ OCIO_ADD_TEST(FileFormatCSP, simple3D)
     // Load file
     std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D, emptyString);
+    OCIO::CachedFileRcPtr cachedFile = tester.read(simple3D, emptyString);
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);
     
     // check metadata
@@ -1356,7 +1355,7 @@ OCIO_ADD_TEST(FileFormatCSP, lessStrictParse)
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile;
-    OCIO_CHECK_NO_THROW(cachedFile = tester.Read(simple3D, emptyString));
+    OCIO_CHECK_NO_THROW(cachedFile = tester.read(simple3D, emptyString));
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);   
     
     // check metadata

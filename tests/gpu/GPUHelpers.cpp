@@ -2,11 +2,6 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <OpenColorIO/OpenColorIO.h>
-namespace OCIO = OCIO_NAMESPACE;
-
-#include "GPUHelpers.h"
-
 #include <stdio.h>
 #include <fstream>
 
@@ -15,6 +10,12 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <stdlib.h>
 #include <time.h>
 #endif
+
+#include <OpenColorIO/OpenColorIO.h>
+
+#include "GPUHelpers.h"
+
+namespace OCIO = OCIO_NAMESPACE;
 
 
 // TODO: Make OCIO::Platform::CreateTempFilename() public so it could be used here.
@@ -35,7 +36,7 @@ std::string createTempFile(const std::string& fileExt, const std::string& fileCo
 
     filename = tmpFilename;
     filename += fileExt;
-    
+
 #else
 
     std::stringstream ss;

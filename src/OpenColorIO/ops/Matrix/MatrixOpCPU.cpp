@@ -51,7 +51,7 @@ public:
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 private:
-                                
+
     float m_column1[4];
     float m_column2[4];
     float m_column3[4];
@@ -194,7 +194,7 @@ MatrixWithOffsetRenderer::MatrixWithOffsetRenderer(ConstMatrixOpDataRcPtr & mat)
 //     rgbaBuffer[2] = r*m[8] + g*m[9] + b*m[10] + a*m[11];
 //     rgbaBuffer[3] = r*m[12] + g*m[13] + b*m[14] + a*m[15];
 // }
-// 
+//
 // To better understand the SSE implementation of this algorithm,
 // you have to notice that:
 // 1) you have four multiplications:
@@ -429,8 +429,10 @@ OCIO_NAMESPACE_EXIT
 
 #ifdef OCIO_UNIT_TEST
 
-namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
+
+namespace OCIO = OCIO_NAMESPACE;
+
 
 // TODO: syncolor also tests various bit-depths and pixel formats.
 // CPURenderer_cases.cpp_inc - CPURendererMatrix
@@ -440,17 +442,15 @@ namespace OCIO = OCIO_NAMESPACE;
 // CPURenderer_cases.cpp_inc - CPURendererMatrixWithOffsets4_check_scaling
 // CPURenderer_cases.cpp_inc - CPURendererMatrix_half
 
-OCIO_NAMESPACE_USING
-
 OCIO_ADD_TEST(MatrixOpCPU, scale_renderer)
 {
-    ConstMatrixOpDataRcPtr mat(MatrixOpData::CreateDiagonalMatrix(
+    OCIO::ConstMatrixOpDataRcPtr mat(OCIO::MatrixOpData::CreateDiagonalMatrix(
         OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 2.0));
 
-    ConstOpCPURcPtr op = GetMatrixRenderer(mat);
+    OCIO::ConstOpCPURcPtr op = OCIO::GetMatrixRenderer(mat);
     OCIO_CHECK_ASSERT((bool)op);
 
-    const ScaleRenderer* scaleOp = dynamic_cast<const ScaleRenderer*>(op.get());
+    const OCIO::ScaleRenderer* scaleOp = dynamic_cast<const OCIO::ScaleRenderer*>(op.get());
     OCIO_CHECK_ASSERT(scaleOp);
 
     float rgba[4] = { 4.f, 3.f, 2.f, 1.f };
@@ -465,19 +465,20 @@ OCIO_ADD_TEST(MatrixOpCPU, scale_renderer)
 
 OCIO_ADD_TEST(MatrixOpCPU, scale_with_offset_renderer)
 {
-    MatrixOpDataRcPtr mat(MatrixOpData::CreateDiagonalMatrix(
+    OCIO::MatrixOpDataRcPtr mat(OCIO::MatrixOpData::CreateDiagonalMatrix(
         OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 2.0));
-    
+
     mat->setOffsetValue(0, 1.f);
     mat->setOffsetValue(1, 2.f);
     mat->setOffsetValue(2, 3.f);
     mat->setOffsetValue(3, 4.f);
 
     OCIO::ConstMatrixOpDataRcPtr m = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(mat);
-    ConstOpCPURcPtr op = GetMatrixRenderer(m);
+    OCIO::ConstOpCPURcPtr op = OCIO::GetMatrixRenderer(m);
     OCIO_CHECK_ASSERT((bool)op);
 
-    const ScaleWithOffsetRenderer* scaleOffOp = dynamic_cast<const ScaleWithOffsetRenderer*>(op.get());
+    const OCIO::ScaleWithOffsetRenderer * scaleOffOp
+        = dynamic_cast<const OCIO::ScaleWithOffsetRenderer*>(op.get());
     OCIO_CHECK_ASSERT(scaleOffOp);
 
     float rgba[4] = { 4.f, 3.f, 2.f, 1.f };
@@ -493,7 +494,7 @@ OCIO_ADD_TEST(MatrixOpCPU, scale_with_offset_renderer)
 
 OCIO_ADD_TEST(MatrixOpCPU, matrix_with_offset_renderer)
 {
-    MatrixOpDataRcPtr mat(MatrixOpData::CreateDiagonalMatrix(
+    OCIO::MatrixOpDataRcPtr mat(OCIO::MatrixOpData::CreateDiagonalMatrix(
         OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 2.0));
 
     // set offset
@@ -506,10 +507,11 @@ OCIO_ADD_TEST(MatrixOpCPU, matrix_with_offset_renderer)
     mat->setArrayValue(3, 0.5f);
 
     OCIO::ConstMatrixOpDataRcPtr m = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(mat);
-    ConstOpCPURcPtr op = GetMatrixRenderer(m);
+    OCIO::ConstOpCPURcPtr op = OCIO::GetMatrixRenderer(m);
     OCIO_CHECK_ASSERT((bool)op);
 
-    const MatrixWithOffsetRenderer* matOffOp = dynamic_cast<const MatrixWithOffsetRenderer*>(op.get());
+    const OCIO::MatrixWithOffsetRenderer * matOffOp
+        = dynamic_cast<const OCIO::MatrixWithOffsetRenderer*>(op.get());
     OCIO_CHECK_ASSERT(matOffOp);
 
     float rgba[4] = { 4.f, 3.f, 2.f, 1.f };
@@ -524,17 +526,17 @@ OCIO_ADD_TEST(MatrixOpCPU, matrix_with_offset_renderer)
 
 OCIO_ADD_TEST(MatrixOpCPU, matrix_renderer)
 {
-    MatrixOpDataRcPtr mat(MatrixOpData::CreateDiagonalMatrix(
+    OCIO::MatrixOpDataRcPtr mat(OCIO::MatrixOpData::CreateDiagonalMatrix(
         OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 2.0));
 
     // Make not diagonal.
     mat->setArrayValue(3, 0.5f);
 
     OCIO::ConstMatrixOpDataRcPtr m = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(mat);
-    ConstOpCPURcPtr op = GetMatrixRenderer(m);
+    OCIO::ConstOpCPURcPtr op = OCIO::GetMatrixRenderer(m);
     OCIO_CHECK_ASSERT((bool)op);
 
-    const MatrixRenderer* matOp = dynamic_cast<const MatrixRenderer*>(op.get());
+    const OCIO::MatrixRenderer* matOp = dynamic_cast<const OCIO::MatrixRenderer*>(op.get());
     OCIO_CHECK_ASSERT(matOp);
 
     float rgba[4] = { 4.f, 3.f, 2.f, 1.f };

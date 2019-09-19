@@ -6,6 +6,7 @@
 
 #include "fileformats/xmlutils/XMLReaderHelper.h"
 #include "fileformats/ctf/CTFTransform.h"
+#include "fileformats/FormatMetadata.h"
 #include "ops/OpArray.h"
 #include "ops/CDL/CDLOpData.h"
 #include "ops/exposurecontrast/ExposureContrastOpData.h"
@@ -16,7 +17,6 @@
 #include "ops/Log/LogUtils.h"
 #include "ops/Lut1D/Lut1DOpData.h"
 #include "ops/Lut3D/Lut3DOpData.h"
-#include "ops/Metadata.h"
 #include "ops/Range/RangeOpData.h"
 #include "ops/reference/ReferenceOpData.h"
 
@@ -87,10 +87,10 @@ public:
 
     void setRawData(const char * str, size_t len, unsigned int xmlLine);
 
-    Metadata & getMetadata() { return m_metadata; }
+    FormatMetadataImpl & getMetadata() { return m_metadata; }
 
 protected:
-    Metadata m_metadata;
+    FormatMetadataImpl m_metadata;
 
 private:
     CTFReaderMetadataElt() = delete;
@@ -322,7 +322,7 @@ public:
     // Enumeration of all possible reader types.
     enum Type
     {
-        CDLType,
+        CDLType = 0,
         Lut1DType,
         Lut3DType,
         MatrixType,
@@ -618,8 +618,21 @@ public:
         return m_ctfParams;
     }
 
+    enum ParamType
+    {
+        NO_PARAMS = 0,
+        LEGACY_PARAMS,
+        NEW_PARAMS
+    };
+    ParamType getParamType() const { return m_paramType; }
+    void setParamType(ParamType paramType) { m_paramType = paramType; }
+
+    void setBase(double base);
+
 protected:
     LogUtil::CTFParams m_ctfParams;
+    ParamType m_paramType = NO_PARAMS;
+    bool m_baseSet = false;
     LogOpDataRcPtr m_log;
 };
 

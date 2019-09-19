@@ -11,6 +11,7 @@
 #include "DynamicProperty.h"
 #include "GpuShader.h"
 #include "HashUtils.h"
+#include "ops/Lut3D/Lut3DOpData.h"
 #include "Platform.h"
 
 
@@ -19,10 +20,6 @@ OCIO_NAMESPACE_ENTER
 
 namespace
 {
-
-// 129 allows for a MESH dimension of 7 in the 3dl file format.
-const unsigned max3DLUTDimension = 129;
-
 
 static void  CreateArray(const float * buf, 
                          unsigned w, unsigned h, unsigned d, 
@@ -133,7 +130,7 @@ public:
 
     virtual ~PrivateImpl() {}
 
-    inline unsigned get3dLutMaxDimension() const { return max3DLUTDimension; }
+    inline unsigned get3dLutMaxDimension() const { return Lut3DOpData::maxSupportedLength; }
 
     inline unsigned get1dLutMaxWidth() const { return m_max1DLUTWidth; }
     inline void set1dLutMaxWidth(unsigned maxWidth) { m_max1DLUTWidth = maxWidth; }

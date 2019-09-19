@@ -46,8 +46,10 @@ using OCIOTestFuncCallback = std::function<void(void)>;
 
 struct OCIOTest
 {
-    OCIOTest(std::string testgroup, std::string testname, OCIOTestFuncCallback test) :
-        group(testgroup), name(testname), function(test) { };
+    OCIOTest(const std::string & testgroup, const std::string & testname, const OCIOTestFuncCallback & test)
+        :    group(testgroup), name(testname), function(test)
+    { };
+
     std::string group, name;
     OCIOTestFuncCallback function;
 };
@@ -59,7 +61,7 @@ UnitTests & GetUnitTests();
 
 struct AddTest
 { 
-    explicit AddTest(OCIOTestRcPtr test)
+    explicit AddTest(const OCIOTestRcPtr & test)
     {
         GetUnitTests().push_back(test);
     }
@@ -98,12 +100,14 @@ struct AddTest
                        << "FAILED: " << FIELD_STR(x) << "\n"),          \
             (void)++unit_test_failures))
 
-#define OCIO_REQUIRE_ASSERT(x)                                          \
+#define OCIO_REQUIRE_ASSERT_FROM(x, line)                               \
     if(!(x)) {                                                          \
         std::stringstream ss;                                           \
-        ss <<  __FILE__ << ":" << __LINE__ << ":\n"                     \
+        ss <<  __FILE__ << ":" << line << ":\n"                         \
            << "FAILED: " << FIELD_STR(x) << "\n";                       \
         throw OCIO_NAMESPACE::Exception(ss.str().c_str()); }
+
+#define OCIO_REQUIRE_ASSERT(x) OCIO_REQUIRE_ASSERT_FROM(x, __LINE__)
 
 #define OCIO_CHECK_ASSERT_MESSAGE(x, M)                                 \
     ((x) ? ((void)0)                                                    \
@@ -127,13 +131,15 @@ struct AddTest
              << "\tvalues were '" << (x) << "' and '" << (y) << "'\n"), \
             (void)++unit_test_failures))
 
-#define OCIO_REQUIRE_EQUAL(x,y)                                         \
+#define OCIO_REQUIRE_EQUAL_FROM(x,y, line)                              \
     if((x)!=(y)) {                                                      \
         std::stringstream ss;                                           \
-        ss <<  __FILE__ << ":" << __LINE__ << ":\n"                     \
+        ss <<  __FILE__ << ":" << line << ":\n"                         \
            << "FAILED: " << FIELD_STR(x) << " == " << FIELD_STR(y) << "\n" \
            << "\tvalues were '" << (x) << "' and '" << (y) << "'\n";    \
         throw OCIO_NAMESPACE::Exception(ss.str().c_str()); }
+
+#define OCIO_REQUIRE_EQUAL(x,y) OCIO_REQUIRE_EQUAL_FROM(x,y, __LINE__)                                        \
 
 #define OCIO_CHECK_NE(x,y)                                              \
     (((x) != (y)) ? ((void)0)                                           \

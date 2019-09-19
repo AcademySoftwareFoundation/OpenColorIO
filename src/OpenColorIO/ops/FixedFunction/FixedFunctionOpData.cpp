@@ -123,6 +123,78 @@ FixedFunctionOpData::Style FixedFunctionOpData::GetStyle(const char * name)
     throw Exception(st.c_str());
 }
 
+FixedFunctionOpData::Style FixedFunctionOpData::ConvertStyle(FixedFunctionStyle style)
+{
+    switch (style)
+    {
+        case FIXED_FUNCTION_ACES_RED_MOD_03:
+        {
+            return FixedFunctionOpData::ACES_RED_MOD_03_FWD;
+        }
+        case FIXED_FUNCTION_ACES_RED_MOD_10:
+        {
+            return FixedFunctionOpData::ACES_RED_MOD_10_FWD;
+        }
+        case FIXED_FUNCTION_ACES_GLOW_03:
+        {
+            return FixedFunctionOpData::ACES_GLOW_03_FWD;
+        }
+        case FIXED_FUNCTION_ACES_GLOW_10:
+        {
+            return FixedFunctionOpData::ACES_GLOW_10_FWD;
+        }
+        case FIXED_FUNCTION_ACES_DARK_TO_DIM_10:
+        {
+            return FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD;
+        }
+        case FIXED_FUNCTION_REC2100_SURROUND:
+        {
+            return FixedFunctionOpData::REC2100_SURROUND;
+        }
+    }
+
+    std::stringstream ss("Unknown FixedFunction transform style: ");
+    ss << style;
+
+    throw Exception(ss.str().c_str());
+}
+
+FixedFunctionStyle FixedFunctionOpData::ConvertStyle(FixedFunctionOpData::Style style)
+{
+    switch (style)
+    {
+    case FixedFunctionOpData::ACES_RED_MOD_03_FWD:
+    case FixedFunctionOpData::ACES_RED_MOD_03_INV:
+        return FIXED_FUNCTION_ACES_RED_MOD_03;
+
+    case FixedFunctionOpData::ACES_RED_MOD_10_FWD:
+    case FixedFunctionOpData::ACES_RED_MOD_10_INV:
+        return FIXED_FUNCTION_ACES_RED_MOD_10;
+
+    case FixedFunctionOpData::ACES_GLOW_03_FWD:
+    case FixedFunctionOpData::ACES_GLOW_03_INV:
+        return FIXED_FUNCTION_ACES_GLOW_03;
+
+    case FixedFunctionOpData::ACES_GLOW_10_FWD:
+    case FixedFunctionOpData::ACES_GLOW_10_INV:
+        return FIXED_FUNCTION_ACES_GLOW_10;
+
+    case FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD:
+    case FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV:
+        return FIXED_FUNCTION_ACES_DARK_TO_DIM_10;
+
+    case FixedFunctionOpData::REC2100_SURROUND:
+        return FIXED_FUNCTION_REC2100_SURROUND;
+    }
+
+    std::stringstream ss("Unknown FixedFunction style: ");
+    ss << style;
+
+    throw Exception(ss.str().c_str());
+
+    return FIXED_FUNCTION_ACES_RED_MOD_03;
+}
+
 FixedFunctionOpData::FixedFunctionOpData()
     :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
     ,   m_style(ACES_RED_MOD_03_FWD)
@@ -268,6 +340,10 @@ void FixedFunctionOpData::invert()
     const BitDepth inBD = getInputBitDepth();
     setInputBitDepth(getOutputBitDepth());
     setOutputBitDepth(inBD);
+
+    // Note that any existing metadata could become stale at this point but
+    // trying to update it is also challenging since inverse() is sometimes
+    // called even during the creation of new ops.
 }
 
 FixedFunctionOpDataRcPtr FixedFunctionOpData::inverse() const

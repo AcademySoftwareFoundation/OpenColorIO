@@ -928,9 +928,43 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: True if the image transformation is non-separable.
         // For example, if a change in red may also cause a change in green or blue.
         bool hasChannelCrosstalk() const;
+        
+        //!cpp:function:: The ProcessorMetadata contains technical information
+        //                such as the number of files and looks used in the processor.
+        ConstProcessorMetadataRcPtr getProcessorMetadata() const;
 
-        //!cpp:function::
-        ConstProcessorMetadataRcPtr getMetadata() const;
+        //!cpp:function:: Get a FormatMetadata containing the top level metadata
+        //                for the processor.  For a processor from a CLF file,
+        //                this corresponds to the ProcessList metadata.
+        const FormatMetadata & getFormatMetadata() const;
+
+        //!cpp:function:: Get the number of transforms that comprise the processor.
+        //                Each transform has a (potentially empty) FormatMetadata.
+        int getNumTransforms() const;
+        //!cpp:function:: Get a FormatMetadata containing the metadata for a
+        //                transform within the processor. For a processor from
+        //                a CLF file, this corresponds to the metadata associated
+        //                with an individual process node.
+        const FormatMetadata & getTransformFormatMetadata(int index) const;
+
+        //!cpp:function:: Return a cpp:class:`GroupTransform` that contains a
+        //                copy of the transforms that comprise the processor.
+        //                (Changes to it will not modify the original processor.)
+        GroupTransformRcPtr createGroupTransform() const;
+
+        //!cpp:function:: Write the transforms comprising the processor to the stream.
+        //                Writing (as opposed to Baking) is a lossless process.
+        //                An exception is thrown if the processor cannot be
+        //                losslessly written to the specified file format.
+        void write(const char * formatName, std::ostream & os) const;
+
+        //!cpp:function:: Get the number of writers.
+        static int getNumWriteFormats();
+
+        //!cpp:function:: Get the writer at index, return empty string if
+        //                an invalid index is specified.
+        static const char * getFormatNameByIndex(int index);
+        static const char * getFormatExtensionByIndex(int index);
 
         // TODO: Revisit the dynamic property access.
         //!cpp:function::

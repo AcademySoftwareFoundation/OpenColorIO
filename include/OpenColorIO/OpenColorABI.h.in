@@ -45,13 +45,8 @@
 	#endif
     #define OCIOHIDDEN
 #elif defined __GNUC__
-    #if __GNUC__ >= 4
-        #define OCIOEXPORT __attribute__ ((visibility("default")))
-        #define OCIOHIDDEN __attribute__ ((visibility("hidden")))
-    #else
-        #define OCIOEXPORT
-        #define OCIOHIDDEN
-    #endif
+    #define OCIOEXPORT __attribute__ ((visibility("default")))
+    #define OCIOHIDDEN __attribute__ ((visibility("hidden")))
 #else // Others platforms not supported atm
     #define OCIOEXPORT
     #define OCIOHIDDEN

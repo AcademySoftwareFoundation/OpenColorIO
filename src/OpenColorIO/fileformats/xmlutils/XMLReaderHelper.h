@@ -10,6 +10,7 @@
 
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "ops/CDL/CDLOpData.h"
+#include "PrivateTypes.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -256,7 +257,7 @@ public:
     }
 
 private:
-    std::vector<std::string> m_rawData;
+    StringVec m_rawData;
 };
 
 typedef OCIO_SHARED_PTR<XmlReaderDummyElt> DummyEltRcPtr;
@@ -388,13 +389,12 @@ public:
     void appendDescription(const std::string & desc) override
     {
         // TODO: OCIO only keep the first description.
-        OpData::Descriptions & curDesc = getCDL()->getDescriptions();
-        if (curDesc.empty())
+        if (-1 == getCDL()->getFormatMetadata().getFirstChildIndex(TAG_DESCRIPTION))
         {
-            curDesc += desc;
+            FormatMetadataImpl item(TAG_DESCRIPTION, desc);
+            getCDL()->getFormatMetadata().getChildrenElements().push_back(item);
         }
     }
-
 
 private:
     XmlReaderSOPNodeBaseElt() = delete;

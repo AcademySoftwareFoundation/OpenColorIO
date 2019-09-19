@@ -53,6 +53,7 @@ Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut)
     return newDomain;
 }
 
+// 129 allows for a MESH dimension of 7 in the 3dl file format.
 const unsigned long Lut3DOpData::maxSupportedLength = 129;
 
 // Functional composition is a concept from mathematics where two functions
@@ -90,8 +91,8 @@ void Lut3DOpData::Compose(Lut3DOpDataRcPtr & A,
     {
         // The range of the first LUT becomes the domain to interp in the second.
 
-        const float iScale = 1.f / GetBitDepthMaxValue(A->getOutputBitDepth());
-        const float iScale4[4] = { iScale, iScale, iScale, 1.0f };
+        const double iScale = 1.f / GetBitDepthMaxValue(A->getOutputBitDepth());
+        const double iScale4[4] = { iScale, iScale, iScale, 1.0 };
         CreateScaleOp(ops, iScale4, TRANSFORM_DIR_FORWARD);
 
         // Use the original domain.
@@ -107,8 +108,7 @@ void Lut3DOpData::Compose(Lut3DOpDataRcPtr & A,
         //       Perhaps add a utility function to be shared with the constructor.
         domain = std::make_shared<Lut3DOpData>(A->getInputBitDepth(),
                                                BIT_DEPTH_F32,
-                                               A->getID(),
-                                               A->getDescriptions(),
+                                               A->getFormatMetadata(),
                                                A->getInterpolation(),
                                                min_sz);
 
@@ -121,17 +121,16 @@ void Lut3DOpData::Compose(Lut3DOpDataRcPtr & A,
     Lut3DOpDataRcPtr clonedB = B->clone();
     CreateLut3DOp(ops, clonedB, TRANSFORM_DIR_FORWARD);
 
-    const float iScale = GetBitDepthMaxValue(B->getOutputBitDepth());
-
-    const float iScale4[4] = { iScale, iScale, iScale, 1.0f };
+    const double iScale = GetBitDepthMaxValue(B->getOutputBitDepth());
+    const double iScale4[4] = { iScale, iScale, iScale, 1.0 };
     CreateScaleOp(ops, iScale4, TRANSFORM_DIR_FORWARD);
 
-    OpData::Descriptions newDesc = A->getDescriptions();
-    newDesc += B->getDescriptions();
     // TODO: May want to revisit metadata propagation.
+    FormatMetadataImpl newDesc = A->getFormatMetadata();
+    newDesc.combine(B->getFormatMetadata());
+
     A = std::make_shared<Lut3DOpData>(A->getInputBitDepth(),
                                       B->getOutputBitDepth(),
-                                      A->getID() + B->getID(),
                                       newDesc,
                                       A->getInterpolation(),
                                       2);  // we replace it anyway
@@ -180,7 +179,7 @@ void Lut3DOpData::Lut3DArray::fill(BitDepth outBitDepth)
     Array::Values& values = getValues();
 
     const float stepValue 
-        = GetBitDepthMaxValue(outBitDepth) / ((float)length - 1.0f);
+        = (float)GetBitDepthMaxValue(outBitDepth) / ((float)length - 1.0f);
 
     const long maxEntries = length*length*length;
 
@@ -201,7 +200,7 @@ bool Lut3DOpData::Lut3DArray::isIdentity(BitDepth outBitDepth) const
     // aside from possibly a scaling for bit-depth conversion.
 
     const float stepSize =
-        GetBitDepthMaxValue(outBitDepth) / ((float)length - 1.0f);
+        (float)GetBitDepthMaxValue(outBitDepth) / ((float)length - 1.0f);
 
     const long maxEntries = length*length*length;
 
@@ -230,6 +229,19 @@ bool Lut3DOpData::Lut3DArray::isIdentity(BitDepth outBitDepth) const
         }
     }
     return true;
+}
+
+void Lut3DOpData::Lut3DArray::resize(unsigned long length, unsigned long numColorComponents)
+{
+    if (length > maxSupportedLength)
+    {
+        std::ostringstream oss;
+        oss << "LUT 3D: Grid size '" << length
+            << "' must not be greater than '" << maxSupportedLength << "'.";
+        throw Exception(oss.str().c_str());
+    }
+    Array::resize(length, numColorComponents);
+
 }
 
 unsigned long Lut3DOpData::Lut3DArray::getNumValues() const
@@ -297,11 +309,10 @@ Lut3DOpData::Lut3DOpData(long gridSize, TransformDirection dir)
 
 Lut3DOpData::Lut3DOpData(BitDepth inBitDepth,
                          BitDepth outBitDepth,
-                         const std::string& id,
-                         const Descriptions& descriptions,
+                         const FormatMetadataImpl & metadata,
                          Interpolation interpolation,
                          unsigned long gridSize)
-    : OpData(inBitDepth, outBitDepth, id, descriptions)
+    : OpData(inBitDepth, outBitDepth, metadata)
     , m_interpolation(interpolation)
     , m_array(gridSize, getOutputBitDepth())
     , m_direction(TRANSFORM_DIR_FORWARD)
@@ -408,9 +419,9 @@ void Lut3DOpData::validate() const
 
     if (getArray().getLength()>maxSupportedLength)
     {
+        // This should never happen. Enforced by resize.
         std::ostringstream oss;
-        oss << "Lut3D length: ";
-        oss << getArray().getLength();
+        oss << "Lut3D length: " << getArray().getLength();
         oss << " is not supported. ";
 
         throw Exception(oss.str().c_str());
@@ -434,8 +445,8 @@ void Lut3DOpData::setOutputBitDepth(BitDepth out)
     {
         // Scale factor is max_new_depth/max_old_depth.
         const float scaleFactor
-            = GetBitDepthMaxValue(out)
-            / GetBitDepthMaxValue(getOutputBitDepth());
+            = (float)(GetBitDepthMaxValue(out))
+            / (float)GetBitDepthMaxValue(getOutputBitDepth());
 
         // Scale array for the new bit-depth if scaleFactor != 1.
         m_array.scale(scaleFactor);
@@ -453,8 +464,8 @@ void Lut3DOpData::setInputBitDepth(BitDepth in)
 
         // Scale factor is max_new_depth/max_old_depth.
         const float scaleFactor
-            = GetBitDepthMaxValue(in)
-            / GetBitDepthMaxValue(getInputBitDepth());
+            = (float)(GetBitDepthMaxValue(in))
+            / (float)GetBitDepthMaxValue(getInputBitDepth());
 
         // Scale array for the new bit-depth if scaleFactor != 1.
         m_array.scale(scaleFactor);
@@ -471,6 +482,7 @@ OpDataRcPtr Lut3DOpData::getIdentityReplacement() const
     return 
         OpDataRcPtr(new RangeOpData(inBD,
                                     outBD,
+                                    FormatMetadataImpl(METADATA_ROOT),
                                     0.,
                                     GetBitDepthMaxValue(inBD),
                                     0.,
@@ -561,6 +573,9 @@ Lut3DOpDataRcPtr Lut3DOpData::inverse() const
     invLut->OpData::setInputBitDepth(getOutputBitDepth());
     invLut->OpData::setOutputBitDepth(in);
 
+    // Note that any existing metadata could become stale at this point but
+    // trying to update it is also challenging since inverse() is sometimes
+    // called even during the creation of new ops.
     return invLut;
 }
 
@@ -615,8 +630,11 @@ OCIO_ADD_TEST(Lut3DOpData, accessors)
 {
     OCIO::Interpolation interpol = OCIO::INTERP_LINEAR;
 
+    OCIO::FormatMetadataImpl metadata(OCIO::METADATA_ROOT);
+    metadata.addAttribute(OCIO::METADATA_ID, "uid");
+
     OCIO::Lut3DOpData l(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                        "uid", OCIO::OpData::Descriptions(),
+                        metadata,
                         interpol, 33);
 
     OCIO_CHECK_EQUAL(l.getInterpolation(), interpol);
@@ -653,12 +671,15 @@ OCIO_ADD_TEST(Lut3DOpData, accessors)
 
 OCIO_ADD_TEST(Lut3DOpData, diff_bitdepth)
 {
+    OCIO::FormatMetadataImpl metadata(OCIO::METADATA_ROOT);
+    metadata.addAttribute(OCIO::METADATA_ID, "uid");
+
     OCIO::Interpolation interpol = OCIO::INTERP_LINEAR;
     OCIO::Lut3DOpData l1(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8,
-                         "uid", OCIO::OpData::Descriptions(),
+                         metadata,
                          interpol, 33);
     OCIO::Lut3DOpData l2(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT10,
-                         "uid", OCIO::OpData::Descriptions(),
+                         metadata,
                          interpol, 33);
 
     OCIO_CHECK_ASSERT(l1.isIdentity());
@@ -667,8 +688,8 @@ OCIO_ADD_TEST(Lut3DOpData, diff_bitdepth)
     OCIO_CHECK_NO_THROW(l2.validate());
 
     const float coeff
-        = OCIO::GetBitDepthMaxValue(l2.getOutputBitDepth())
-            / OCIO::GetBitDepthMaxValue(l2.getInputBitDepth());
+        = (float)(OCIO::GetBitDepthMaxValue(l2.getOutputBitDepth()))
+            / (float)OCIO::GetBitDepthMaxValue(l2.getInputBitDepth());
 
     // To validate the result, compute the expected results
     // not using the Lut3DOp algorithm.
@@ -703,21 +724,19 @@ OCIO_ADD_TEST(Lut3DOpData, clone)
 
 OCIO_ADD_TEST(Lut3DOpData, not_supported_length)
 {
-    const OCIO::Lut3DOpData ref1(OCIO::Lut3DOpData::maxSupportedLength);
-
-    OCIO_CHECK_NO_THROW(ref1.validate());
-
-    const OCIO::Lut3DOpData ref2(OCIO::Lut3DOpData::maxSupportedLength + 1);
-
-    OCIO_CHECK_THROW_WHAT(ref2.validate(), OCIO::Exception, "is not supported");
-
+    OCIO_CHECK_NO_THROW(OCIO::Lut3DOpData{ OCIO::Lut3DOpData::maxSupportedLength });
+    OCIO_CHECK_THROW_WHAT(OCIO::Lut3DOpData{ OCIO::Lut3DOpData::maxSupportedLength + 1 },
+                          OCIO::Exception, "must not be greater");
 }
 
 OCIO_ADD_TEST(Lut3DOpData, ouput_depth_scaling)
 {
+    OCIO::FormatMetadataImpl metadata(OCIO::METADATA_ROOT);
+    metadata.addAttribute(OCIO::METADATA_ID, "uid");
+
     OCIO::Interpolation interpol = OCIO::INTERP_LINEAR;
     OCIO::Lut3DOpData ref(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT10,
-                          "uid", OCIO::OpData::Descriptions(),
+                          metadata,
                           interpol, 33);
 
     // Get the array values and keep them to compare later.
@@ -728,8 +747,8 @@ OCIO_ADD_TEST(Lut3DOpData, ouput_depth_scaling)
     const OCIO::BitDepth newBitdepth = OCIO::BIT_DEPTH_UINT16;
 
     const float factor
-        = OCIO::GetBitDepthMaxValue(newBitdepth)
-            / OCIO::GetBitDepthMaxValue(initialBitdepth);
+        = (float)(OCIO::GetBitDepthMaxValue(newBitdepth))
+            / (float)OCIO::GetBitDepthMaxValue(initialBitdepth);
 
     ref.setOutputBitDepth(newBitdepth);
     // Now we need to make sure that the bitdepth was changed from the overriden
@@ -757,23 +776,23 @@ OCIO_ADD_TEST(Lut3DOpData, ouput_depth_scaling)
 OCIO_ADD_TEST(Lut3DOpData, equality)
 {
     OCIO::Lut3DOpData l1(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                         "", OCIO::OpData::Descriptions(), 
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                          OCIO::INTERP_LINEAR, 33);
 
     OCIO::Lut3DOpData l2(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                         "", OCIO::OpData::Descriptions(), 
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                          OCIO::INTERP_BEST, 33);  
 
     OCIO_CHECK_ASSERT(!(l1 == l2));
 
     OCIO::Lut3DOpData l3(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_F32,
-                         "", OCIO::OpData::Descriptions(), 
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                          OCIO::INTERP_LINEAR, 33);
 
     OCIO_CHECK_ASSERT(!(l1 == l3) && !(l2 == l3));
 
     OCIO::Lut3DOpData l4(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                         "", OCIO::OpData::Descriptions(),
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                          OCIO::INTERP_LINEAR, 33);  
 
     OCIO_CHECK_ASSERT(l1 == l4);
@@ -863,12 +882,6 @@ OCIO_ADD_TEST(Lut3DOpData, inversion_quality)
     OCIO_CHECK_NO_THROW(l.validate());
 }
 
-namespace
-{
-const char uid[] = "uid";
-const OCIO::OpData::Descriptions desc;
-};
-
 void checkInverse_bitDepths_domain(
     const OCIO::BitDepth refInputBitDepth,
     const OCIO::BitDepth refOutputBitDepth,
@@ -877,9 +890,12 @@ void checkInverse_bitDepths_domain(
     const OCIO::BitDepth expectedInvOutputBitDepth,
     const OCIO::Interpolation expectedInvInterpolationAlgo)
 {
+    OCIO::FormatMetadataImpl metadata(OCIO::METADATA_ROOT);
+    metadata.addAttribute(OCIO::METADATA_ID, "uid");
+
     OCIO::Lut3DOpData refLut3d(
         refInputBitDepth, refOutputBitDepth,
-        uid, desc,
+        metadata,
         refInterpolationAlgo, 5);
 
     // Get inverse of reference 3D LUT operation 
@@ -918,10 +934,13 @@ OCIO_ADD_TEST(Lut3DOpData, inverse_bitDepth_domain)
 
 OCIO_ADD_TEST(Lut3DOpData, is_inverse)
 {
+    OCIO::FormatMetadataImpl metadata(OCIO::METADATA_ROOT);
+    metadata.addAttribute(OCIO::METADATA_ID, "uid");
+
     // Create forward LUT.
     OCIO::Lut3DOpDataRcPtr L1NC =
         std::make_shared<OCIO::Lut3DOpData>(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT10,
-                                            uid, desc, OCIO::INTERP_LINEAR, 5);
+                                            metadata, OCIO::INTERP_LINEAR, 5);
     // Make it not an identity.
     OCIO::Array& array = L1NC->getArray();
     OCIO::Array::Values& values = array.getValues();
@@ -988,7 +1007,23 @@ OCIO_ADD_TEST(Lut3DOpData, compose)
     OCIO_REQUIRE_ASSERT(lutData1);
 
     OCIO::Lut3DOpDataRcPtr composed = lutData0->clone();
-    OCIO::Lut3DOpData::Compose(composed, lutData1);
+    composed->setName("lut1");
+    composed->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, "description of lut1");
+    OCIO::Lut3DOpDataRcPtr lutData1Cloned = lutData1->clone();
+    lutData1Cloned->setName("lut2");
+    lutData1Cloned->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, "description of lut2");
+    OCIO::ConstLut3DOpDataRcPtr lutData1ClonedConst = lutData1Cloned;
+    OCIO::Lut3DOpData::Compose(composed, lutData1ClonedConst);
+
+    // FormatMetadata composition.
+    OCIO_CHECK_EQUAL(composed->getName(), "lut1 + lut2");
+    OCIO_REQUIRE_EQUAL(composed->getFormatMetadata().getNumChildrenElements(), 2);
+    const auto & desc1 = composed->getFormatMetadata().getChildElement(0);
+    OCIO_CHECK_EQUAL(std::string(desc1.getName()), OCIO::METADATA_DESCRIPTION);
+    OCIO_CHECK_EQUAL(std::string(desc1.getValue()), "description of lut1");
+    const auto & desc2 = composed->getFormatMetadata().getChildElement(1);
+    OCIO_CHECK_EQUAL(std::string(desc2.getName()), OCIO::METADATA_DESCRIPTION);
+    OCIO_CHECK_EQUAL(std::string(desc2.getValue()), "description of lut2");
 
     OCIO_CHECK_EQUAL(composed->getArray().getLength(), (unsigned long)32);
     OCIO_CHECK_EQUAL(composed->getArray().getNumColorComponents(),

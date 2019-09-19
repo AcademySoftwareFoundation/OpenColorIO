@@ -3,9 +3,9 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "GPUUnitTest.h"
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "GPUUnitTest.h"
 
 
 const int LUT3D_EDGE_SIZE = 32;
@@ -19,7 +19,7 @@ enum Version : unsigned
 };
 
 // Helper method to build unit tests
-void AddExponent(OCIOGPUTest & test, 
+void AddExponent(OCIOGPUTest & test,
                  OCIO::GpuShaderDescRcPtr & shaderDesc,
                  OCIO::TransformDirection direction,
                  const float * gamma,
@@ -38,14 +38,14 @@ void AddExponent(OCIOGPUTest & test,
 }
 
 // Helper method to build unit tests
-void AddExponentWithLinear(OCIOGPUTest & test, 
+void AddExponentWithLinear(OCIOGPUTest & test,
                            OCIO::GpuShaderDescRcPtr & shaderDesc,
                            OCIO::TransformDirection direction,
                            const double(&gamma)[4],
                            const double(&offset)[4],
                            float epsilon)
 {
-    OCIO::ExponentWithLinearTransformRcPtr 
+    OCIO::ExponentWithLinearTransformRcPtr
         exp = OCIO::ExponentWithLinearTransform::Create();
     exp->setDirection(direction);
     exp->setGamma(gamma);
@@ -63,7 +63,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, legacy_shader_v1)
 {
     const float exp[4] = { 2.6f, 2.4f, 1.8f, 1.1f };
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
     AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, exp, 1e-5f, OCIO_VERSION_1);
@@ -77,7 +77,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, forward_v1)
 {
     const float exp[4] = { 2.6f, 2.4f, 1.8f, 1.1f };
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, exp, 1e-5f, OCIO_VERSION_1);
@@ -88,7 +88,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, forward)
 {
     const float exp[4] = { 2.6f, 2.4f, 1.8f, 1.1f };
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, exp,
@@ -105,7 +105,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, inverse_legacy_shader_v1)
 {
     const float exp[4] = { 2.6f, 2.4f, 1.8f, 1.1f };
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
     AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, exp, g_epsilon, OCIO_VERSION_1);
@@ -117,7 +117,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, inverse_v1)
 {
     const float exp[4] = { 2.6f, 2.4f, 1.8f, 1.1f };
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, exp, g_epsilon, OCIO_VERSION_1);
@@ -129,7 +129,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, inverse)
 {
     const float exp[4] = { 2.6f, 2.4f, 1.8f, 1.1f };
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, exp,
@@ -149,7 +149,7 @@ const double offset[4] = {  .01,  .02,  .03,  .05 };
 
 OCIO_ADD_GPU_TEST(ExponentWithLinearOp, legacy_shader)
 {
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
     AddExponentWithLinear(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, gamma, offset,
@@ -165,7 +165,7 @@ OCIO_ADD_GPU_TEST(ExponentWithLinearOp, legacy_shader)
 
 OCIO_ADD_GPU_TEST(ExponentWithLinearOp, inverse_legacy_shader)
 {
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
     AddExponentWithLinear(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, gamma, offset,
@@ -181,7 +181,7 @@ OCIO_ADD_GPU_TEST(ExponentWithLinearOp, inverse_legacy_shader)
 
 OCIO_ADD_GPU_TEST(ExponentWithLinearOp, forward)
 {
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     AddExponentWithLinear(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, gamma, offset,
@@ -197,7 +197,7 @@ OCIO_ADD_GPU_TEST(ExponentWithLinearOp, forward)
 
 OCIO_ADD_GPU_TEST(ExponentWithLinearOp, inverse)
 {
-    OCIO::GpuShaderDescRcPtr shaderDesc 
+    OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     AddExponentWithLinear(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, gamma, offset,
@@ -220,4 +220,3 @@ OCIO_ADD_GPU_TEST(ExponentWithLinearOp, inverse)
 //      GPURendererGamma6_test
 //      GPURendererGamma7_test
 //      GPURendererGamma8_test
-

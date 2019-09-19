@@ -72,12 +72,12 @@ inline bool IsNumberDelimiter(char c)
 // Delimiters checked are spaces, commas, tabs and newlines.
 inline size_t FindNextTokenStart(const char * str, size_t len, size_t pos)
 {
-    const char * ptr = str + pos;
-
-    if (pos == len)
+    if (pos >= len)
     {
-        return pos;
+        return len;
     }
+
+    const char * ptr = str + pos;
 
     while (IsNumberDelimiter(*ptr))
     {
@@ -96,12 +96,12 @@ inline size_t FindNextTokenStart(const char * str, size_t len, size_t pos)
 // Delimiters checked are spaces and commas.
 inline size_t FindDelim(const char * str, size_t len, size_t pos)
 {
-    const char * ptr = str + pos;
-
-    if (pos == len)
+    if (pos >= len)
     {
-        return pos;
+        return len;
     }
+
+    const char * ptr = str + pos;
 
     while (!IsNumberDelimiter(*ptr))
     {
@@ -146,7 +146,8 @@ void ParseNumber(const char * str, size_t startPos, size_t endPos, T & value)
     const char * startParse = str + startPos;
 
     double val = 0.0f;
-    char * endParse;
+    char * endParse = nullptr;
+
     // The strtod expects a C string and str might not be null terminated.
     // However since strtod will stop parsing when it encounters characters
     // that it cannot convert to a number, in practice it does not need to

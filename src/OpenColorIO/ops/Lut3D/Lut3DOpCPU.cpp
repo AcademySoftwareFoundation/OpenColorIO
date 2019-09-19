@@ -15,13 +15,6 @@
 #include "Platform.h"
 #include "SSE.h"
 
-
-// Suppress bogus warning when compiling with gcc
-#if __GNUC__ && __GNUC__ <= 5
-    #pragma GCC diagnostic ignored "-Warray-bounds"
-#endif
-
-
 OCIO_NAMESPACE_ENTER
 {
 namespace
@@ -327,15 +320,15 @@ BaseLut3DRenderer::~BaseLut3DRenderer()
 
 void BaseLut3DRenderer::updateData(ConstLut3DOpDataRcPtr & lut)
 {
-    m_alphaScale = GetBitDepthMaxValue(lut->getOutputBitDepth())
-                   / GetBitDepthMaxValue(lut->getInputBitDepth());
+    m_alphaScale = (float)(GetBitDepthMaxValue(lut->getOutputBitDepth()))
+                   / (float)GetBitDepthMaxValue(lut->getInputBitDepth());
 
     m_dim = lut->getArray().getLength();
 
     m_maxIdx = (float)(m_dim - 1);
 
     m_step = ((float)m_dim - 1.0f)
-             / GetBitDepthMaxValue(lut->getInputBitDepth());
+             / (float)GetBitDepthMaxValue(lut->getInputBitDepth());
 
 #ifdef USE_SSE
     Platform::AlignedFree(m_optLut);
@@ -1632,9 +1625,9 @@ void InvLut3DRenderer::updateData(ConstLut3DOpDataRcPtr & lut)
     m_tree.initialize(m_grvec.data(), m_dim);
     //m_tree.print();
 
-    float outMax = GetBitDepthMaxValue(lut->getOutputBitDepth());
+    float outMax = (float)GetBitDepthMaxValue(lut->getOutputBitDepth());
 
-    m_alphaScaling = outMax / GetBitDepthMaxValue(lut->getInputBitDepth());
+    m_alphaScaling = outMax / (float)GetBitDepthMaxValue(lut->getInputBitDepth());
 
     // Converts from index units to inDepth units of the original LUT.
     // (Note that inDepth of the original LUT is outDepth of the inverse LUT.)
@@ -1644,7 +1637,7 @@ void InvLut3DRenderer::updateData(ConstLut3DOpDataRcPtr & lut)
 
     // TODO: Should improve this based on actual LUT contents since it
     // is legal for LUT contents to exceed the typical scaling range.
-    m_inMax = GetBitDepthMaxValue(lut->getInputBitDepth());
+    m_inMax = (float)GetBitDepthMaxValue(lut->getInputBitDepth());
 }
 
 void InvLut3DRenderer::extrapolate3DArray(ConstLut3DOpDataRcPtr & lut)
@@ -1674,7 +1667,7 @@ void InvLut3DRenderer::extrapolate3DArray(ConstLut3DOpDataRcPtr & lut)
         }
     }
 
-    const float center = GetBitDepthMaxValue(depth) * 0.5f;
+    const float center = (float)GetBitDepthMaxValue(depth) * 0.5f;
     const float scale = 4.f;
 
     // Extrapolate faces.
@@ -1972,11 +1965,13 @@ namespace OCIO = OCIO_NAMESPACE;
 
 void Lut3DRendererNaNTest(OCIO::Interpolation interpol)
 {
+    OCIO::FormatMetadataImpl metadata(OCIO::METADATA_ROOT);
+    metadata.addAttribute(OCIO::METADATA_ID, "uid");
+
     OCIO::Lut3DOpDataRcPtr lut =
         std::make_shared<OCIO::Lut3DOpData>(OCIO::BIT_DEPTH_F32,
                                             OCIO::BIT_DEPTH_F32,
-                                            "uid",
-                                            OCIO::OpData::Descriptions(),
+                                            metadata,
                                             interpol,
                                             4);
 

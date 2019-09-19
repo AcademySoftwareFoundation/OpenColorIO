@@ -6,9 +6,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "OpBuilders.h"
-#include "ops/Exponent/ExponentOps.h"
 #include "ops/Gamma/GammaOpData.h"
-#include "ops/Gamma/GammaOps.h"
 
 
 OCIO_NAMESPACE_ENTER
@@ -111,6 +109,16 @@ void ExponentTransform::validate() const
     }
 }
 
+FormatMetadata & ExponentTransform::getFormatMetadata()
+{
+    return m_impl->getFormatMetadata();
+}
+
+const FormatMetadata & ExponentTransform::getFormatMetadata() const
+{
+    return m_impl->getFormatMetadata();
+}
+
 void ExponentTransform::setValue(const float * vec4)
 {
     if(vec4)
@@ -168,36 +176,6 @@ std::ostream& operator<< (std::ostream& os, const ExponentTransform & t)
 }
 
 
-    
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void BuildExponentOps(OpRcPtrVec & ops,
-                      const Config & config,
-                      const ExponentTransform & transform,
-                      TransformDirection dir)
-{
-    TransformDirection combinedDir = CombineTransformDirections(dir,
-        transform.getDirection());
-    
-    double vec4[4] = { 1., 1., 1., 1. };
-    transform.getValue(vec4);
-
-    if(config.getMajorVersion()==1)
-    {
-        CreateExponentOp(ops,
-                         vec4,
-                         combinedDir);
-    }
-    else
-    {
-        CreateGammaOp(ops, "", OpData::Descriptions(),
-                      combinedDir==TRANSFORM_DIR_FORWARD ? GammaOpData::BASIC_FWD
-                                                         : GammaOpData::BASIC_REV,
-                      vec4, nullptr);
-    }
-}
-
-    
 }
 OCIO_NAMESPACE_EXIT
 

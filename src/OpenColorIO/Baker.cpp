@@ -99,17 +99,17 @@ OCIO_NAMESPACE_ENTER
     
     int Baker::getNumFormats()
     {
-        return FormatRegistry::GetInstance().getNumFormats(FORMAT_CAPABILITY_WRITE);
+        return FormatRegistry::GetInstance().getNumFormats(FORMAT_CAPABILITY_BAKE);
     }
     
     const char * Baker::getFormatNameByIndex(int index)
     {
-        return FormatRegistry::GetInstance().getFormatNameByIndex(FORMAT_CAPABILITY_WRITE, index);
+        return FormatRegistry::GetInstance().getFormatNameByIndex(FORMAT_CAPABILITY_BAKE, index);
     }
     
     const char * Baker::getFormatExtensionByIndex(int index)
     {
-        return FormatRegistry::GetInstance().getFormatExtensionByIndex(FORMAT_CAPABILITY_WRITE, index);
+        return FormatRegistry::GetInstance().getFormatExtensionByIndex(FORMAT_CAPABILITY_BAKE, index);
     }
     
     void Baker::setFormat(const char * formatName)
@@ -216,7 +216,7 @@ OCIO_NAMESPACE_ENTER
         
         try
         {
-            fmt->Write(*this, getImpl()->formatName_, os);
+            fmt->bake(*this, getImpl()->formatName_, os);
         }
         catch(std::exception & e)
         {
@@ -374,11 +374,18 @@ OCIO_ADD_TEST(Baker_Unit_Tests, bake)
     bake->setCubeSize(2);
     OCIO_CHECK_EQUAL(2, bake->getCubeSize());
     std::ostringstream os;
-    bake->bake(os);
+    OCIO_CHECK_NO_THROW(bake->bake(os));
     OCIO_CHECK_EQUAL(expectedLut, os.str());
     OCIO_CHECK_EQUAL(8, bake->getNumFormats());
     OCIO_CHECK_EQUAL("cinespace", std::string(bake->getFormatNameByIndex(2)));
     OCIO_CHECK_EQUAL("3dl", std::string(bake->getFormatExtensionByIndex(1)));
+
+    // TODO: Add CLF bake support.
+    bake->setFormat(OCIO::FILEFORMAT_CLF);
+    OCIO_CHECK_EQUAL(OCIO::FILEFORMAT_CLF, std::string(bake->getFormat()));
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception,
+                          "does not support baking");
+
 }
 
 #endif // OCIO_BUILD_TESTS

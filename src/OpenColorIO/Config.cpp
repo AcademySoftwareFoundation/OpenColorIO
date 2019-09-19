@@ -21,8 +21,8 @@
 #include "OpBuilders.h"
 #include "PathUtils.h"
 #include "ParseUtils.h"
-#include "Processor.h"
 #include "PrivateTypes.h"
+#include "Processor.h"
 #include "pystring/pystring.h"
 #include "OCIOYaml.h"
 #include "Platform.h"
@@ -1413,7 +1413,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         ProcessorRcPtr processor = Processor::Create();
-        processor->getImpl()->addColorSpaceConversion(*this, context, src, dst);
+        processor->getImpl()->setColorSpaceConversion(*this, context, src, dst);
         processor->getImpl()->computeMetadata();
         return processor;
     }
@@ -1468,7 +1468,7 @@ OCIO_NAMESPACE_ENTER
                                              TransformDirection direction) const
     {
         ProcessorRcPtr processor = Processor::Create();
-        processor->getImpl()->addTransform(*this, context, transform, direction);
+        processor->getImpl()->setTransform(*this, context, transform, direction);
         processor->getImpl()->computeMetadata();
         return processor;
     }

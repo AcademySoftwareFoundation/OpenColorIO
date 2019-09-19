@@ -41,6 +41,8 @@ public:
 
     static const char * ConvertStyleToString(Style style, bool detailed);
     static Style GetStyle(const char * name);
+    static Style ConvertStyle(FixedFunctionStyle style);
+    static FixedFunctionStyle ConvertStyle(Style style);
 
     typedef std::vector<double> Params;
 

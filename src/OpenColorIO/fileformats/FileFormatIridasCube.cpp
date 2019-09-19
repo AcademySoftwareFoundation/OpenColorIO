@@ -27,7 +27,7 @@ TITLE "title"
 #where M is the size of the texture
 #a 3D texture has the size M x M x M
 #e.g. LUT_3D_SIZE 16 creates a 16 x 16 x 16 3D texture
-LUT_3D_SIZE 2 
+LUT_3D_SIZE 2
 
 #Default input value range (domain) is 0.0 (black) to 1.0 (white)
 #Specify other min/max values to map the cube to any custom input
@@ -68,7 +68,7 @@ OCIO_NAMESPACE_ENTER
         class LocalCachedFile : public CachedFile
         {
         public:
-            LocalCachedFile () : 
+            LocalCachedFile () :
                 has1D(false),
                 has3D(false)
             {
@@ -76,47 +76,47 @@ OCIO_NAMESPACE_ENTER
                 lut3D = Lut3D::Create();
             };
             ~LocalCachedFile() {};
-            
+
             bool has1D;
             bool has3D;
             // TODO: Switch to the OpData classes.
             Lut1DRcPtr lut1D;
             Lut3DRcPtr lut3D;
         };
-        
+
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
-        
-        
-        
+
+
+
         class LocalFileFormat : public FileFormat
         {
         public:
-            
+
             ~LocalFileFormat() {};
             
-            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
+            void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
             
-            virtual CachedFileRcPtr Read(
+            CachedFileRcPtr read(
                 std::istream & istream,
-                const std::string & fileName) const;
+                const std::string & fileName) const override;
             
-            virtual void Write(const Baker & baker,
-                               const std::string & formatName,
-                               std::ostream & ostream) const;
+            void bake(const Baker & baker,
+                      const std::string & formatName,
+                      std::ostream & ostream) const override;
             
-            virtual void BuildFileOps(OpRcPtrVec & ops,
-                         const Config& config,
-                         const ConstContextRcPtr & context,
-                         CachedFileRcPtr untypedCachedFile,
-                         const FileTransform& fileTransform,
-                         TransformDirection dir) const;
+            void buildFileOps(OpRcPtrVec & ops,
+                              const Config& config,
+                              const ConstContextRcPtr & context,
+                              CachedFileRcPtr untypedCachedFile,
+                              const FileTransform& fileTransform,
+                              TransformDirection dir) const override;
         private:
             static void ThrowErrorMessage(const std::string & error,
                 const std::string & fileName,
                 int line,
                 const std::string & lineContent);
         };
-        
+
         void LocalFileFormat::ThrowErrorMessage(const std::string & error,
             const std::string & fileName,
             int line,
@@ -136,17 +136,17 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
 
-        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
+        void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
             info.name = "iridas_cube";
             info.extension = "cube";
-            info.capabilities = FORMAT_CAPABILITY_ALL;
+            info.capabilities = FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE;
             formatInfoVec.push_back(info);
         }
-        
+
         CachedFileRcPtr
-        LocalFileFormat::Read(
+        LocalFileFormat::read(
             std::istream & istream,
             const std::string & fileName) const
         {
@@ -155,35 +155,35 @@ OCIO_NAMESPACE_ENTER
             {
                 throw Exception ("File stream empty when trying to read Iridas .cube LUT");
             }
-            
+
             // Parse the file
             std::vector<float> raw;
-            
+
             int size3d[] = { 0, 0, 0 };
             int size1d = 0;
-            
+
             bool in1d = false;
             bool in3d = false;
-            
+
             float domain_min[] = { 0.0f, 0.0f, 0.0f };
             float domain_max[] = { 1.0f, 1.0f, 1.0f };
-            
+
             {
                 std::string line;
-                std::vector<std::string> parts;
+                StringVec parts;
                 std::vector<float> tmpfloats;
                 int lineNumber = 0;
-                
+
                 while(nextline(istream, line))
                 {
                     ++lineNumber;
                     // All lines starting with '#' are comments
                     if(pystring::startswith(line,"#")) continue;
-                    
+
                     // Strip, lowercase, and split the line
                     pystring::split(pystring::lower(pystring::strip(line)), parts);
                     if(parts.empty()) continue;
-                    
+
                     if(pystring::lower(parts[0]) == "title")
                     {
                         // Optional, and currently unhandled
@@ -199,7 +199,7 @@ OCIO_NAMESPACE_ENTER
                                 lineNumber,
                                 line);
                         }
-                        
+
                         raw.reserve(3*size1d);
                         in1d = true;
                     }
@@ -214,7 +214,7 @@ OCIO_NAMESPACE_ENTER
                     else if(pystring::lower(parts[0]) == "lut_3d_size")
                     {
                         int size = 0;
-                        
+
                         if(parts.size() != 2
                             || !StringToInt( &size, parts[1].c_str()))
                         {
@@ -227,13 +227,13 @@ OCIO_NAMESPACE_ENTER
                         size3d[0] = size;
                         size3d[1] = size;
                         size3d[2] = size;
-                        
+
                         raw.reserve(3*size3d[0]*size3d[1]*size3d[2]);
                         in3d = true;
                     }
                     else if(pystring::lower(parts[0]) == "domain_min")
                     {
-                        if(parts.size() != 4 || 
+                        if(parts.size() != 4 ||
                             !StringToFloat( &domain_min[0], parts[1].c_str()) ||
                             !StringToFloat( &domain_min[1], parts[2].c_str()) ||
                             !StringToFloat( &domain_min[2], parts[3].c_str()))
@@ -247,7 +247,7 @@ OCIO_NAMESPACE_ENTER
                     }
                     else if(pystring::lower(parts[0]) == "domain_max")
                     {
-                        if(parts.size() != 4 || 
+                        if(parts.size() != 4 ||
                             !StringToFloat( &domain_max[0], parts[1].c_str()) ||
                             !StringToFloat( &domain_max[1], parts[2].c_str()) ||
                             !StringToFloat( &domain_max[2], parts[3].c_str()))
@@ -262,7 +262,7 @@ OCIO_NAMESPACE_ENTER
                     else
                     {
                         // It must be a float triple!
-                        
+
                         if(!StringVecToFloatVec(tmpfloats, parts) || tmpfloats.size() != 3)
                         {
                             ThrowErrorMessage(
@@ -271,7 +271,7 @@ OCIO_NAMESPACE_ENTER
                                 lineNumber,
                                 line);
                         }
-                        
+
                         for(int i=0; i<3; ++i)
                         {
                             raw.push_back(tmpfloats[i]);
@@ -279,11 +279,11 @@ OCIO_NAMESPACE_ENTER
                     }
                 }
             }
-            
+
             // Interpret the parsed data, validate LUT sizes
-            
+
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
-            
+
             if(in1d)
             {
                 if(size1d != static_cast<int>(raw.size()/3))
@@ -296,14 +296,14 @@ OCIO_NAMESPACE_ENTER
                         os.str().c_str(),
                         fileName, -1, "");
                 }
-                
+
                 // Reformat 1D data
                 if(size1d>0)
                 {
                     cachedFile->has1D = true;
                     memcpy(cachedFile->lut1D->from_min, domain_min, 3*sizeof(float));
                     memcpy(cachedFile->lut1D->from_max, domain_max, 3*sizeof(float));
-                    
+
                     for(int channel=0; channel<3; ++channel)
                     {
                         cachedFile->lut1D->luts[channel].resize(size1d);
@@ -312,7 +312,7 @@ OCIO_NAMESPACE_ENTER
                             cachedFile->lut1D->luts[channel][i] = raw[3*i+channel];
                         }
                     }
-                    
+
                     // 1e-5 rel error is a good threshold when float numbers near 0
                     // are written out with 6 decimal places of precision.  This is
                     // a bit aggressive, I.e., changes in the 6th decimal place will
@@ -324,7 +324,7 @@ OCIO_NAMESPACE_ENTER
                     // 1.000010 not equal
                     // 0.0
                     // 0.000001 not equal
-                    
+
                     cachedFile->lut1D->maxerror = 1e-5f;
                     cachedFile->lut1D->errortype = Lut1D::ERROR_RELATIVE;
                 }
@@ -332,8 +332,8 @@ OCIO_NAMESPACE_ENTER
             else if(in3d)
             {
                 cachedFile->has3D = true;
-                
-                if(size3d[0]*size3d[1]*size3d[2] 
+
+                if(size3d[0]*size3d[1]*size3d[2]
                     != static_cast<int>(raw.size()/3))
                 {
                     std::ostringstream os;
@@ -344,7 +344,7 @@ OCIO_NAMESPACE_ENTER
                         os.str().c_str(),
                         fileName, -1, "");
                 }
-                
+
                 // Reformat 3D data
                 memcpy(cachedFile->lut3D->from_min, domain_min, 3*sizeof(float));
                 memcpy(cachedFile->lut3D->from_max, domain_max, 3*sizeof(float));
@@ -359,17 +359,17 @@ OCIO_NAMESPACE_ENTER
                     "LUT type (1D/3D) unspecified.",
                     fileName, -1, "");
             }
-            
+
             return cachedFile;
         }
         
-        void LocalFileFormat::Write(const Baker & baker,
-                                    const std::string & formatName,
-                                    std::ostream & ostream) const
+        void LocalFileFormat::bake(const Baker & baker,
+                                   const std::string & formatName,
+                                   std::ostream & ostream) const
         {
-            
+
             static const int DEFAULT_CUBE_SIZE = 32;
-            
+
             if(formatName != "iridas_cube")
             {
                 std::ostringstream os;
@@ -377,18 +377,18 @@ OCIO_NAMESPACE_ENTER
                 os << formatName << "'.";
                 throw Exception(os.str().c_str());
             }
-            
+
             ConstConfigRcPtr config = baker.getConfig();
-            
+
             int cubeSize = baker.getCubeSize();
             if(cubeSize==-1) cubeSize = DEFAULT_CUBE_SIZE;
             cubeSize = std::max(2, cubeSize); // smallest cube is 2x2x2
-            
+
             std::vector<float> cubeData;
             cubeData.resize(cubeSize*cubeSize*cubeSize*3);
             GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_RED);
             PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
-            
+
             // Apply our conversion from the input space to the output space.
             ConstProcessorRcPtr inputToTarget;
             std::string looks = baker.getLooks();
@@ -406,11 +406,11 @@ OCIO_NAMESPACE_ENTER
             }
             ConstCPUProcessorRcPtr cpu = inputToTarget->getDefaultCPUProcessor();
             cpu->apply(cubeImg);
-            
+
             if(baker.getMetadata() != NULL)
             {
                 std::string metadata = baker.getMetadata();
-                std::vector<std::string> metadatavec;
+                StringVec metadatavec;
                 pystring::split(pystring::strip(metadata), metadatavec, "\n");
                 if(metadatavec.size() > 0)
                 {
@@ -426,7 +426,7 @@ OCIO_NAMESPACE_ENTER
             {
                 throw Exception("Internal cube size exception");
             }
-            
+
             // Set to a fixed 6 decimal precision
             ostream.setf(std::ios::fixed, std::ios::floatfield);
             ostream.precision(6);
@@ -437,9 +437,9 @@ OCIO_NAMESPACE_ENTER
                         << cubeData[3*i+2] << "\n";
             }
         }
-        
+
         void
-        LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
+        LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                                       const Config& /*config*/,
                                       const ConstContextRcPtr & /*context*/,
                                       CachedFileRcPtr untypedCachedFile,
@@ -447,7 +447,7 @@ OCIO_NAMESPACE_ENTER
                                       TransformDirection dir) const
         {
             LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
-            
+
             // This should never happen.
             if(!cachedFile)
             {
@@ -455,7 +455,7 @@ OCIO_NAMESPACE_ENTER
                 os << "Cannot build Iridas .cube Op. Invalid cache type.";
                 throw Exception(os.str().c_str());
             }
-            
+
             TransformDirection newDir = CombineTransformDirections(dir,
                 fileTransform.getDirection());
             if(newDir == TRANSFORM_DIR_UNKNOWN)
@@ -465,12 +465,12 @@ OCIO_NAMESPACE_ENTER
                 os << " unspecified transform direction.";
                 throw Exception(os.str().c_str());
             }
-            
+
             // TODO: INTERP_LINEAR should not be hard-coded.
             // Instead query 'highest' interpolation?
             // (right now, it's linear). If cubic is added, consider
             // using it
-            
+
             if(newDir == TRANSFORM_DIR_FORWARD)
             {
                 if(cachedFile->has1D)
@@ -499,7 +499,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
     }
-    
+
     FileFormat * CreateFileFormatIridasCube()
     {
         return new LocalFileFormat();
@@ -512,21 +512,24 @@ OCIO_NAMESPACE_EXIT
 
 #ifdef OCIO_UNIT_TEST
 
-namespace OCIO = OCIO_NAMESPACE;
-#include "UnitTest.h"
 #include <fstream>
+
+#include "UnitTest.h"
+
+namespace OCIO = OCIO_NAMESPACE;
+
 
 OCIO_ADD_TEST(FileFormatIridasCube, FormatInfo)
 {
     OCIO::FormatInfoVec formatInfoVec;
     OCIO::LocalFileFormat tester;
-    tester.GetFormatInfo(formatInfoVec);
+    tester.getFormatInfo(formatInfoVec);
 
     OCIO_CHECK_EQUAL(1, formatInfoVec.size());
     OCIO_CHECK_EQUAL("iridas_cube", formatInfoVec[0].name);
     OCIO_CHECK_EQUAL("cube", formatInfoVec[0].extension);
-    OCIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ | OCIO::FORMAT_CAPABILITY_WRITE,
-        formatInfoVec[0].capabilities);
+    OCIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ | OCIO::FORMAT_CAPABILITY_BAKE,
+                     formatInfoVec[0].capabilities);
 }
 
 OCIO::LocalCachedFileRcPtr ReadIridasCube(const std::string & fileContent)
@@ -537,7 +540,7 @@ OCIO::LocalCachedFileRcPtr ReadIridasCube(const std::string & fileContent)
     // Read file
     OCIO::LocalFileFormat tester;
     const std::string SAMPLE_NAME("Memory File");
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(is, SAMPLE_NAME);
+    OCIO::CachedFileRcPtr cachedFile = tester.read(is, SAMPLE_NAME);
 
     return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
 }
@@ -684,7 +687,7 @@ OCIO_ADD_TEST(FileFormatIridasCube, no_shaper)
         cs->setFamily("target");
         config->addColorSpace(cs);
     }
-    
+
     std::ostringstream bout;
     bout << "# Alexa conversion LUT, logc2video. Full in/full out." << "\n";
     bout << "# created by alexalutconv (2.11)"                      << "\n";
@@ -698,7 +701,7 @@ OCIO_ADD_TEST(FileFormatIridasCube, no_shaper)
     bout << "1.000000 0.000000 1.000000"                            << "\n";
     bout << "0.000000 1.000000 1.000000"                            << "\n";
     bout << "1.000000 1.000000 1.000000"                            << "\n";
-    
+
     OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     baker->setConfig(config);
     std::ostringstream metadata;
@@ -711,7 +714,7 @@ OCIO_ADD_TEST(FileFormatIridasCube, no_shaper)
     baker->setCubeSize(2);
     std::ostringstream output;
     baker->bake(output);
-    
+
     //
     std::vector<std::string> osvec;
     pystring::splitlines(output.str(), osvec);

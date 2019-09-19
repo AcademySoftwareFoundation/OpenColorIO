@@ -51,7 +51,7 @@ OCIO_NAMESPACE_ENTER
         
         const char initMessage[] =
             "ProcessorMetadata objects cannot be instantiated directly. "
-            "Please use processor.getMetadata() instead.";
+            "Please use processor.getProcessorMetadata() instead.";
         
     }
     

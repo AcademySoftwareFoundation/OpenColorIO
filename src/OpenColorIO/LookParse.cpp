@@ -69,10 +69,10 @@ OCIO_NAMESPACE_ENTER
             return m_options;
         }
         
-        std::vector<std::string> options;
+        StringVec options;
         pystring::split(strippedlooks, options, "|");
         
-        std::vector<std::string> vec;
+        StringVec vec;
         
         for(unsigned int optionsindex=0;
             optionsindex<options.size();

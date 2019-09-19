@@ -212,6 +212,7 @@ OpDataRcPtr LogOpData::getIdentityReplacement() const
             // The first op logarithm is not defined for negative values.
             resOp = std::make_shared<RangeOpData>(
                 BIT_DEPTH_F32, BIT_DEPTH_F32,
+                getFormatMetadata(),
                 0.,
                 // Don't clamp high end.
                 RangeOpData::EmptyValue(),
@@ -226,7 +227,7 @@ OpDataRcPtr LogOpData::getIdentityReplacement() const
             // E.g., log10(FLOAT_MIN) = -37.93, but this is so small that it makes
             // more sense to consider it an exact inverse.
             resOp = std::make_shared<MatrixOpData>(
-                getInputBitDepth(), getOutputBitDepth());
+                getInputBitDepth(), getOutputBitDepth(), getFormatMetadata());
         }
     }
     else
@@ -236,6 +237,7 @@ OpDataRcPtr LogOpData::getIdentityReplacement() const
             // Minimum value allowed is -linOffset/linSlope so that linSlope*x+linOffset > 0.
             const double minValue = -m_redParams[LIN_SIDE_OFFSET] / m_redParams[LIN_SIDE_SLOPE];
             resOp = std::make_shared<RangeOpData>(BIT_DEPTH_F32, BIT_DEPTH_F32,
+                                                  getFormatMetadata(),
                                                   minValue,
                                                   // Don't clamp high end.
                                                   RangeOpData::EmptyValue(),
@@ -246,7 +248,7 @@ OpDataRcPtr LogOpData::getIdentityReplacement() const
         else
         {
             resOp = std::make_shared<MatrixOpData>(
-                getInputBitDepth(), getOutputBitDepth());
+                getInputBitDepth(), getOutputBitDepth(), getFormatMetadata());
         }
     }
 
@@ -309,17 +311,16 @@ LogOpDataRcPtr LogOpData::clone() const
 
 LogOpDataRcPtr LogOpData::inverse() const
 {
-    LogOpDataRcPtr invOp = std::make_shared<LogOpData>(
-        getOutputBitDepth(),
-        getInputBitDepth(),
-        GetInverseTransformDirection(m_direction),
-        getBase(),
-        getRedParams(),
-        getGreenParams(),
-        getBlueParams());
+    LogOpDataRcPtr invOp = clone();
+    invOp->setInputBitDepth(getOutputBitDepth());
+    invOp->setOutputBitDepth(getInputBitDepth());
 
+    invOp->setDirection(GetInverseTransformDirection(m_direction));
     invOp->validate();
 
+    // Note that any existing metadata could become stale at this point but
+    // trying to update it is also challenging since inverse() is sometimes
+    // called even during the creation of new ops.
     return invOp;
 }
 
