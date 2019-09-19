@@ -222,19 +222,9 @@ OCIO_NAMESPACE_ENTER
         return *this;
     }
 
-// gcc 4.8 partially supports C++11.
-// Note: gcc 4.8 C++11 does not support C++11 changes for 
-//       std::vector::erase() & std::vector::insert() methods.
-#if __GNUC__ <= 4
-    // Convert a const iterator to a non const iterator.
-    #define ITER(pos) (m_ops.begin()+(pos-m_ops.begin())) 
-#else
-    #define ITER(pos) pos 
-#endif
-
     OpRcPtrVec::iterator OpRcPtrVec::erase(OpRcPtrVec::const_iterator position) 
     { 
-        OpRcPtrVec::iterator iter = m_ops.erase(ITER(position)); 
+        OpRcPtrVec::iterator iter = m_ops.erase(position); 
         adjustBitDepths();
         return iter;
     }
@@ -242,7 +232,7 @@ OCIO_NAMESPACE_ENTER
     OpRcPtrVec::iterator OpRcPtrVec::erase(OpRcPtrVec::const_iterator first, 
                                            OpRcPtrVec::const_iterator last)
     { 
-        OpRcPtrVec::iterator iter = m_ops.erase(ITER(first), ITER(last)); 
+        OpRcPtrVec::iterator iter = m_ops.erase(first, last); 
         adjustBitDepths();
         return iter;
     }
@@ -251,7 +241,7 @@ OCIO_NAMESPACE_ENTER
                             OpRcPtrVec::const_iterator first, 
                             OpRcPtrVec::const_iterator last)
     {
-        m_ops.insert(ITER(position), first, last);
+        m_ops.insert(position, first, last);
         adjustBitDepths();
     }
 
