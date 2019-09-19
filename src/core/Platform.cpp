@@ -82,11 +82,31 @@ OIIO_ADD_TEST(Platform, getenv)
 OIIO_ADD_TEST(Platform, putenv)
 {
     {
-        ::putenv("MY_DUMMY_ENV=SomeValue");
+        const std::string value("MY_DUMMY_ENV=SomeValue");
+        ::putenv(const_cast<char*>(value.c_str()));
         std::string env;
         OCIO::Platform::getenv("MY_DUMMY_ENV", env);
         OIIO_CHECK_ASSERT(!env.empty());
+
         OIIO_CHECK_ASSERT(0==strcmp("SomeValue", env.c_str()));
+        OIIO_CHECK_EQUAL(strlen("SomeValue"), env.size());
+    }
+    {
+        const std::string value("MY_DUMMY_ENV= ");
+        ::putenv(const_cast<char*>(value.c_str()));
+        std::string env;
+        OCIO::Platform::getenv("MY_DUMMY_ENV", env);
+        OIIO_CHECK_ASSERT(!env.empty());
+
+        OIIO_CHECK_ASSERT(0==strcmp(" ", env.c_str()));
+        OIIO_CHECK_EQUAL(strlen(" "), env.size());
+    }
+    {
+        const std::string value("MY_DUMMY_ENV=");
+        ::putenv(const_cast<char*>(value.c_str()));
+        std::string env;
+        OCIO::Platform::getenv("MY_DUMMY_ENV", env);
+        OIIO_CHECK_ASSERT(env.empty());
     }
 	
 #ifdef _WIN32
