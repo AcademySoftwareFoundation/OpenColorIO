@@ -69,21 +69,41 @@ OCIO_NAMESPACE_ENTER
         }
     }
 
+    namespace
+    {
+    
+    template<BitDepth A, BitDepth B>
+    constexpr unsigned MiddleMaxValue()
+    {
+        return (BitDepthInfo<A>::maxValue + BitDepthInfo<B>::maxValue) / 2;
+    }
+    
+    }
+
+    // For formats that do not explicitly identify the intended bit-depth scaling,
+    // we must infer it based on the LUT values. However LUTs sometimes contain
+    // values that extend outside the nominal ranges. For example, a LUT that
+    // started out in a floating point format with values going up to 1.09 may get
+    // converted to another format that uses 10-bit values and those extend up to
+    // 1.09 * 1023 = 1115. In this case we want the "auto detection" to return
+    // 10-bit rather than 12-bit. Hence rather than using breakpoints of 1024,
+    // 2048, 4096, etc., we use breakpoints that are midway between in order to
+    // better handle LUTs with occasional over-range values.
     BitDepth GetBitdepthFromMaxValue(unsigned maxValue)
     {
-        if (maxValue < 126)
+        if (maxValue < MiddleMaxValue<BIT_DEPTH_F32, BIT_DEPTH_UINT8>()) // 128
         {
             return BIT_DEPTH_F32;
         }
-        else if (maxValue < 639)
+        else if (maxValue < MiddleMaxValue<BIT_DEPTH_UINT8, BIT_DEPTH_UINT10>()) // 639
         {
             return BIT_DEPTH_UINT8;
         }
-        else if (maxValue < 2559)
+        else if (maxValue < MiddleMaxValue<BIT_DEPTH_UINT10, BIT_DEPTH_UINT12>()) // 2559
         {
             return BIT_DEPTH_UINT10;
         }
-        else if (maxValue < 34815)
+        else if (maxValue < MiddleMaxValue<BIT_DEPTH_UINT12, BIT_DEPTH_UINT16>()) // 34815
         {
             return BIT_DEPTH_UINT12;
         }
