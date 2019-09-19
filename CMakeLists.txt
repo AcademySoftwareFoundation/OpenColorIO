@@ -1,13 +1,25 @@
 project(OpenColorIO)
 set(OCIO_VERSION_MAJOR 1)
 set(OCIO_VERSION_MINOR 1)
-set(OCIO_VERSION_PATCH 0)
+set(OCIO_VERSION_PATCH 1)
 
 cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/share/cmake)
 if(NOT DEFINED CMAKE_FIRST_RUN)
     SET(CMAKE_FIRST_RUN 1 CACHE INTERNAL "")
 endif()
+
+###############################################################################
+### C++ configuration ###
+
+if(CMAKE_CXX_STANDARD AND NOT CMAKE_CXX_STANDARD EQUAL 98)
+    message(WARNING " CMAKE_CXX_STANDARD ${CMAKE_CXX_STANDARD} is not officially supported. Use 98 for full support.")
+elseif(NOT CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 98)
+endif()
+
+# Disable fallback to other C++ version if standard is not supported.
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 ###############################################################################
 ### GLOBAL ###

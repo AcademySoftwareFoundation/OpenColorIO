@@ -330,11 +330,13 @@ OCIO_NAMESPACE_ENTER
     namespace
     {
     
+#if defined(OCIO_UNIT_TEST)
     void GetMxbResult(float* vout, float* m, float* x, float* v)
     {
         GetM44V4Product(vout, m, x);
         GetV4Sum(vout, vout, v);
     }
+#endif
     
     } // anon namespace
     
