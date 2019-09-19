@@ -74,7 +74,7 @@ Acknowledgements
 ----------------
 
 OpenColorIO represents the generous contributions of many organizations and
-indivuduals. The "Contributors to the OpenColorIO Project" copyright statement
+individuals. The "Contributors to the OpenColorIO Project" copyright statement
 used throughout the project reflects that the OCIO source is a collaborative
 effort, often with multiple copyright holders within a single file. Copyright
 for specific portions of code can be traced to an originating contributor using
