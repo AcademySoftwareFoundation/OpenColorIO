@@ -43,4 +43,6 @@ public class GpuLanguage extends LoadLibrary
       GPU_LANGUAGE_GLSL_1_0 = new GpuLanguage(2);
     public static final GpuLanguage
       GPU_LANGUAGE_GLSL_1_3 = new GpuLanguage(3);
+    public static final GpuLanguage
+      GPU_LANGUAGE_GLSL_4_0 = new GpuLanguage(4);
 }

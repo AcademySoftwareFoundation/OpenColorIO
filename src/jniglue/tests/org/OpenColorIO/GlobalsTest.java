@@ -133,6 +133,8 @@ public class GlobalsTest extends TestCase {
         assertEquals(globals.GpuLanguageFromString("glsl_1.0"), GpuLanguage.GPU_LANGUAGE_GLSL_1_0);
         assertEquals(globals.GpuLanguageToString(GpuLanguage.GPU_LANGUAGE_GLSL_1_3), "glsl_1.3");
         assertEquals(globals.GpuLanguageFromString("glsl_1.3"), GpuLanguage.GPU_LANGUAGE_GLSL_1_3);
+        assertEquals(globals.GpuLanguageToString(GpuLanguage.GPU_LANGUAGE_GLSL_4_0), "glsl_4.0");
+        assertEquals(globals.GpuLanguageFromString("glsl_4.0"), GpuLanguage.GPU_LANGUAGE_GLSL_4_0);
         
         // EnvironmentMode
         assertEquals(globals.EnvironmentModeToString(EnvironmentMode.ENV_ENVIRONMENT_UNKNOWN), "unknown");
