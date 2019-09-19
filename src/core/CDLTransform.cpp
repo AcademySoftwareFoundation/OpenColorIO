@@ -861,7 +861,7 @@ namespace OCIO = OCIO_NAMESPACE;
 
 namespace
 {
-    static const std::string kContentsA = {
+    static const std::string kContentsA(
         "<ColorCorrectionCollection>\n"
         "    <ColorCorrection id=\"cc03343\">\n"
         "        <SOPNode>\n"
@@ -884,9 +884,9 @@ namespace
         "        </SATNode>\n"
         "    </ColorCorrection>\n"
         "</ColorCorrectionCollection>\n"
-        };
+        );
 
-    static const std::string kContentsB = {
+    static const std::string kContentsB(
         "<ColorCorrectionCollection>\n"
         "    <ColorCorrection id=\"cc03343\">\n"
         "        <SOPNode>\n"
@@ -909,7 +909,7 @@ namespace
         "        </SATNode>\n"
         "    </ColorCorrection>\n"
         "</ColorCorrectionCollection>\n"
-        };
+        );
 
 
 }
@@ -919,7 +919,7 @@ OIIO_ADD_TEST(CDLTransform, clear_caches)
     std::string filename;
     OIIO_CHECK_NO_THROW(OCIO::Platform::createTempFilename(filename, ""));
 
-    std::fstream stream(filename, std::ios_base::out|std::ios_base::trunc);
+    std::fstream stream(filename.c_str(), std::ios_base::out|std::ios_base::trunc);
     stream << kContentsA;
     stream.close();
 
@@ -933,7 +933,7 @@ OIIO_ADD_TEST(CDLTransform, clear_caches)
     OIIO_CHECK_EQUAL(slope[1], 0.2f);
     OIIO_CHECK_EQUAL(slope[2], 0.3f);
 
-    stream.open(filename, std::ios_base::out|std::ios_base::trunc);
+    stream.open(filename.c_str(), std::ios_base::out|std::ios_base::trunc);
     stream << kContentsB;
     stream.close();
 
