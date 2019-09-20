@@ -148,6 +148,8 @@ OCIO_NAMESPACE_ENTER
             const_cast<char*>(GpuLanguageToString(GPU_LANGUAGE_GLSL_1_0)));
         PyModule_AddStringConstant(m, "GPU_LANGUAGE_GLSL_1_3",
             const_cast<char*>(GpuLanguageToString(GPU_LANGUAGE_GLSL_1_3)));
+        PyModule_AddStringConstant(m, "GPU_LANGUAGE_GLSL_4_0",
+            const_cast<char*>(GpuLanguageToString(GPU_LANGUAGE_GLSL_4_0)));
         
         PyModule_AddStringConstant(m, "ENV_ENVIRONMENT_UNKNOWN",
             const_cast<char*>(EnvironmentModeToString(ENV_ENVIRONMENT_UNKNOWN)));
