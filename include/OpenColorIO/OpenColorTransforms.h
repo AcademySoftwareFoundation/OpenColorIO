@@ -1,30 +1,5 @@
-/*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 
 #ifndef INCLUDED_OCIO_OPENCOLORTRANSFORMS_H
@@ -111,17 +86,13 @@ OCIO_NAMESPACE_ENTER
 };
 
     //!rst:: //////////////////////////////////////////////////////////////////
-    
+
     //!cpp:class:: Base class for all the transform classes
     class OCIOEXPORT Transform
     {
     public:
-        //!cpp:function::
-        virtual ~Transform();
-        //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const = 0;
-        
-        //!cpp:function::
+
         virtual TransformDirection getDirection() const = 0;
         //!cpp:function::
         virtual void setDirection(TransformDirection dir) = 0;
@@ -129,16 +100,21 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: Will throw if data is not valid.
         virtual void validate() const;
 
+    protected:
+        Transform() = default;
+        virtual ~Transform() = default;
+
     private:
-        Transform & operator=(const Transform &);
+        Transform(const Transform &) = delete;
+        Transform & operator= (const Transform &) = delete;
     };
-    
+
     //!cpp:function::
-    extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const Transform &);
-    
-    
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Transform&);
+
+
     //!rst:: //////////////////////////////////////////////////////////////////
-    
+
     //!cpp:class:: Forward direction wraps the 'expanded' range into the
     // specified, often compressed, range.
     class OCIOEXPORT AllocationTransform : public Transform
@@ -146,10 +122,10 @@ OCIO_NAMESPACE_ENTER
     public:
         //!cpp:function::
         static AllocationTransformRcPtr Create();
-        
+
         //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const;
-        
+
         //!cpp:function::
         virtual TransformDirection getDirection() const;
         //!cpp:function::
@@ -162,38 +138,38 @@ OCIO_NAMESPACE_ENTER
         Allocation getAllocation() const;
         //!cpp:function::
         void setAllocation(Allocation allocation);
-        
+
         //!cpp:function::
         int getNumVars() const;
         //!cpp:function::
         void getVars(float * vars) const;
         //!cpp:function::
         void setVars(int numvars, const float * vars);
-    
+
     private:
         AllocationTransform();
         AllocationTransform(const AllocationTransform &);
         virtual ~AllocationTransform();
-        
-        AllocationTransform & operator=(const AllocationTransform &);
-        
+
+        AllocationTransform & operator= (const AllocationTransform &);
+
         static void deleter(AllocationTransform * t);
-        
+
         class Impl;
         Impl * m_impl;
         Impl * getImpl() { return m_impl; }
         const Impl * getImpl() const { return m_impl; }
     };
-    
+
     //!cpp:function::
-    extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const AllocationTransform &);
-    
-    
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const AllocationTransform&);
+
+
     //!rst:: //////////////////////////////////////////////////////////////////
-    
+
     //!cpp:class:: An implementation of the ASC CDL Transfer Functions and
     // Interchange - Syntax (Based on the version 1.2 document)
-    // 
+    //
     // .. note::
     //    the clamping portion of the CDL is only applied if a non-identity
     //    power is specified.
@@ -208,10 +184,10 @@ OCIO_NAMESPACE_ENTER
         // src must be an absolute path reference, no relative directory
         // or envvar resolution is performed.
         static CDLTransformRcPtr CreateFromFile(const char * src, const char * cccid);
-        
+
         //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const;
-        
+
         //!cpp:function::
         virtual TransformDirection getDirection() const;
         //!cpp:function::
@@ -219,7 +195,7 @@ OCIO_NAMESPACE_ENTER
 
         //!cpp:function:: Will throw if data is not valid.
         virtual void validate() const;
-       
+
         //!cpp:function::
         FormatMetadata & getFormatMetadata();
         //!cpp:function::
@@ -227,18 +203,18 @@ OCIO_NAMESPACE_ENTER
 
         //!cpp:function::
         bool equals(const ConstCDLTransformRcPtr & other) const;
-        
+
         //!cpp:function::
         const char * getXML() const;
         //!cpp:function::
         void setXML(const char * xml);
-        
+
         //!rst:: **ASC_SOP**
         //
         // Slope, offset, power::
-        //    
+        //
         //    out = clamp( (in * slope) + offset ) ^ power
-        
+
         //!cpp:function::
         void getSlope(double * rgb) const;
         //!cpp:function::
@@ -284,7 +260,7 @@ OCIO_NAMESPACE_ENTER
         void getSatLumaCoefs(float * rgb) const;
 
         //!rst:: **Metadata**
-        // 
+        //
         // These do not affect the image processing, but
         // are often useful for pipeline purposes and are
         // included in the serialization.
@@ -315,23 +291,23 @@ OCIO_NAMESPACE_ENTER
         Impl * getImpl() { return m_impl; }
         const Impl * getImpl() const { return m_impl; }
     };
-    
+
     //!cpp:function::
     extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const CDLTransform &);
     
     
     //!rst:: //////////////////////////////////////////////////////////////////
-    
+
     //!cpp:class::
     class OCIOEXPORT ColorSpaceTransform : public Transform
     {
     public:
         //!cpp:function::
         static ColorSpaceTransformRcPtr Create();
-        
+
         //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const;
-        
+
         //!cpp:function::
         virtual TransformDirection getDirection() const;
         //!cpp:function::
@@ -344,12 +320,12 @@ OCIO_NAMESPACE_ENTER
         const char * getSrc() const;
         //!cpp:function::
         void setSrc(const char * src);
-        
+
         //!cpp:function::
         const char * getDst() const;
         //!cpp:function::
         void setDst(const char * dst);
-        
+
     private:
         ColorSpaceTransform();
         ColorSpaceTransform(const ColorSpaceTransform &);
@@ -364,23 +340,23 @@ OCIO_NAMESPACE_ENTER
         Impl * getImpl() { return m_impl; }
         const Impl * getImpl() const { return m_impl; }
     };
-    
+
     //!cpp:function::
     extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const ColorSpaceTransform &);
     
     
     //!rst:: //////////////////////////////////////////////////////////////////
-    
+
     //!cpp:class::
     class OCIOEXPORT DisplayTransform : public Transform
     {
     public:
         //!cpp:function::
         static DisplayTransformRcPtr Create();
-        
+
         //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const;
-        
+
         //!cpp:function::
         virtual TransformDirection getDirection() const;
         //!cpp:function::
@@ -465,7 +441,7 @@ OCIO_NAMESPACE_ENTER
         Impl * getImpl() { return m_impl; }
         const Impl * getImpl() const { return m_impl; }
     };
-    
+
     //!cpp:function::
     extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const DisplayTransform &);
     
@@ -478,18 +454,18 @@ OCIO_NAMESPACE_ENTER
     {
     public:
 
-        //!cpp:function:: 
+        //!cpp:function::
         virtual DynamicPropertyType getType() const = 0;
 
-        //!cpp:function:: 
+        //!cpp:function::
         virtual DynamicPropertyValueType getValueType() const = 0;
 
-        //!cpp:function:: 
+        //!cpp:function::
         virtual double getDoubleValue() const = 0;
-        //!cpp:function:: 
+        //!cpp:function::
         virtual void setValue(double value) = 0;
 
-        //!cpp:function:: 
+        //!cpp:function::
         virtual bool isDynamic() const = 0;
 
     protected:
@@ -502,10 +478,10 @@ OCIO_NAMESPACE_ENTER
     };
 
     //!rst:: //////////////////////////////////////////////////////////////////
-    
+
     //!cpp:class:: Represents exponent transform: pow( clamp(color), value)
-    // 
-    // For configs with version == 1: If the exponent is 1.0, this will not clamp. 
+    //
+    // For configs with version == 1: If the exponent is 1.0, this will not clamp.
     // Otherwise, the input color will be clamped between [0.0, inf].
     // For configs with version > 1: Negative values are always clamped.
     class OCIOEXPORT ExponentTransform : public Transform
@@ -513,10 +489,10 @@ OCIO_NAMESPACE_ENTER
     public:
         //!cpp:function::
         static ExponentTransformRcPtr Create();
-        
+
         //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const;
-        
+
         //!cpp:function::
         virtual TransformDirection getDirection() const;
         //!cpp:function::
@@ -552,7 +528,7 @@ OCIO_NAMESPACE_ENTER
         Impl * getImpl() { return m_impl; }
         const Impl * getImpl() const { return m_impl; }
     };
-    
+
     //!cpp:function::
     extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const ExponentTransform &);
     
@@ -573,10 +549,10 @@ OCIO_NAMESPACE_ENTER
     public:
         //!cpp:function::
         static ExponentWithLinearTransformRcPtr Create();
-        
+
         //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const;
-        
+
         //!cpp:function::
         virtual TransformDirection getDirection() const;
         //!cpp:function::
@@ -735,17 +711,17 @@ OCIO_NAMESPACE_ENTER
                                                 const ExposureContrastTransform &);
 
     //!rst:: //////////////////////////////////////////////////////////////////
-    
+
     //!cpp:class::
     class OCIOEXPORT FileTransform : public Transform
     {
     public:
         //!cpp:function::
         static FileTransformRcPtr Create();
-        
+
         //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const;
-        
+
         //!cpp:function::
         virtual TransformDirection getDirection() const;
         //!cpp:function::
@@ -758,12 +734,12 @@ OCIO_NAMESPACE_ENTER
         const char * getSrc() const;
         //!cpp:function::
         void setSrc(const char * src);
-        
+
         //!cpp:function::
         const char * getCCCId() const;
         //!cpp:function::
         void setCCCId(const char * id);
-        
+
         //!cpp:function::
         Interpolation getInterpolation() const;
         //!cpp:function::
@@ -778,7 +754,7 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: Get the LUT reader extension at index, return empty string if
         // an invalid index is specified.
         static const char * getFormatExtensionByIndex(int index);
-        
+
     private:
         FileTransform();
         FileTransform(const FileTransform &);
@@ -793,24 +769,24 @@ OCIO_NAMESPACE_ENTER
         Impl * getImpl() { return m_impl; }
         const Impl * getImpl() const { return m_impl; }
     };
-    
+
     //!cpp:function::
     extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const FileTransform &);
 
 
     //!rst:: //////////////////////////////////////////////////////////////////
 
-    //!cpp:class:: Provides a set of hard-coded algorithmic building blocks 
+    //!cpp:class:: Provides a set of hard-coded algorithmic building blocks
     // that are needed to accurately implement various common color transformations.
     class OCIOEXPORT FixedFunctionTransform : public Transform
     {
     public:
         //!cpp:function::
         static FixedFunctionTransformRcPtr Create();
-        
+
         //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const;
-        
+
         //!cpp:function::
         virtual TransformDirection getDirection() const;
         //!cpp:function::
@@ -844,29 +820,29 @@ OCIO_NAMESPACE_ENTER
         FixedFunctionTransform & operator=(const FixedFunctionTransform &);
         
         static void deleter(FixedFunctionTransform * t);
-        
+
         class Impl;
         Impl * m_impl;
         Impl * getImpl() { return m_impl; }
         const Impl * getImpl() const { return m_impl; }
     };
-    
+
     //!cpp:function::
     extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const FixedFunctionTransform &);
 
-    
+
     //!rst:: //////////////////////////////////////////////////////////////////
-    
+
     //!cpp:class::
     class OCIOEXPORT GroupTransform : public Transform
     {
     public:
         //!cpp:function::
         static GroupTransformRcPtr Create();
-        
+
         //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const;
-        
+
         //!cpp:function::
         virtual TransformDirection getDirection() const;
         //!cpp:function::
@@ -896,7 +872,7 @@ OCIO_NAMESPACE_ENTER
         void clear();
         //!cpp:function::
         bool empty() const;
-    
+
     private:
         GroupTransform();
         GroupTransform(const GroupTransform &);
@@ -911,7 +887,7 @@ OCIO_NAMESPACE_ENTER
         Impl * getImpl() { return m_impl; }
         const Impl * getImpl() const { return m_impl; }
     };
-    
+
     //!cpp:function::
     extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GroupTransform &);
     
@@ -992,9 +968,9 @@ OCIO_NAMESPACE_ENTER
 
 
     //!rst:: //////////////////////////////////////////////////////////////////
-    
+
     //!cpp:class:: Represents log transform: log(color, base)
-    // 
+    //
     // * The input will be clamped for negative numbers.
     // * Default base is 2.0.
     // * The alpha channel is not affected.
@@ -1003,10 +979,10 @@ OCIO_NAMESPACE_ENTER
     public:
         //!cpp:function::
         static LogTransformRcPtr Create();
-        
+
         //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const;
-        
+
         //!cpp:function::
         virtual TransformDirection getDirection() const;
         //!cpp:function::
@@ -1039,23 +1015,23 @@ OCIO_NAMESPACE_ENTER
         Impl * getImpl() { return m_impl; }
         const Impl * getImpl() const { return m_impl; }
     };
-    
+
     //!cpp:function::
     extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const LogTransform &);
 
 
     //!rst:: //////////////////////////////////////////////////////////////////
-    
+
     //!cpp:class::
     class OCIOEXPORT LookTransform : public Transform
     {
     public:
         //!cpp:function::
         static LookTransformRcPtr Create();
-        
+
         //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const;
-        
+
         //!cpp:function::
         virtual TransformDirection getDirection() const;
         //!cpp:function::
@@ -1068,7 +1044,7 @@ OCIO_NAMESPACE_ENTER
         const char * getSrc() const;
         //!cpp:function::
         void setSrc(const char * src);
-        
+
         //!cpp:function::
         const char * getDst() const;
         //!cpp:function::
@@ -1096,7 +1072,7 @@ OCIO_NAMESPACE_ENTER
         Impl * getImpl() { return m_impl; }
         const Impl * getImpl() const { return m_impl; }
     };
-    
+
     //!cpp:function::
     extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const LookTransform &);
     
@@ -1312,10 +1288,10 @@ OCIO_NAMESPACE_ENTER
     public:
         //!cpp:function::
         static MatrixTransformRcPtr Create();
-        
+
         //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const;
-        
+
         //!cpp:function::
         virtual TransformDirection getDirection() const;
         //!cpp:function:: Set the direction the matrix should be evaluated in.
@@ -1336,7 +1312,7 @@ OCIO_NAMESPACE_ENTER
 
         //!cpp:function:: Checks if this exactly equals other.
         bool equals(const MatrixTransform & other) const;
-        
+
         //!cpp:function::
         void getValue(float * m44, float * offset4) const;
         //!cpp:function::
@@ -1419,13 +1395,13 @@ OCIO_NAMESPACE_ENTER
                         double sat, const double * lumaCoef3);
         static void Sat(float * m44, float * offset4,
                         float sat, const float * lumaCoef3);
-        
+
         //!cpp:function::
         static void Scale(double * m44, double * offset4,
                           const double * scale4);
         static void Scale(float * m44, float * offset4,
                           const float * scale4);
-        
+
         //!cpp:function::
         static void View(double * m44, double * offset4,
                          int * channelHot4,
@@ -1433,7 +1409,7 @@ OCIO_NAMESPACE_ENTER
         static void View(float * m44, float * offset4,
                          int * channelHot4,
                          const float * lumaCoef3);
-    
+
     private:
         MatrixTransform();
         MatrixTransform(const MatrixTransform &);
@@ -1448,7 +1424,7 @@ OCIO_NAMESPACE_ENTER
         Impl * getImpl() { return m_impl; }
         const Impl * getImpl() const { return m_impl; }
     };
-    
+
     //!cpp:function::
     extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const MatrixTransform &);
 
@@ -1471,32 +1447,32 @@ OCIO_NAMESPACE_ENTER
     public:
         //!cpp:function:: Creates an instance of RangeTransform.
         static RangeTransformRcPtr Create();
-        
+
         //!cpp:function:: Creates a copy of this.
-        virtual TransformRcPtr createEditableCopy() const;
+        virtual TransformRcPtr createEditableCopy() const = 0;
         
         //!cpp:function::
-        virtual TransformDirection getDirection() const;
+        virtual TransformDirection getDirection() const = 0;
         //!cpp:function:: Set the direction the Range should be evaluated in.
         // Note that this only affects the evaluation and not the values stored
         // in the object.
-        virtual void setDirection(TransformDirection dir);
+        virtual void setDirection(TransformDirection dir) = 0;
 
         //!cpp:function::
-        virtual RangeStyle getStyle() const;
+        virtual RangeStyle getStyle() const = 0;
         //!cpp:function:: Set the Range style to clamp or not input values.
-        virtual void setStyle(RangeStyle style);
+        virtual void setStyle(RangeStyle style) = 0;
 
         //!cpp:function:: Will throw if data is not valid.
-        virtual void validate() const;
+        virtual void validate() const = 0;
 
         //!cpp:function::
-        const FormatMetadata & getFormatMetadata() const;
+        virtual const FormatMetadata & getFormatMetadata() const = 0;
         //!cpp:function::
-        FormatMetadata & getFormatMetadata();
+        virtual FormatMetadata & getFormatMetadata() = 0;
 
         //!cpp:function:: Checks if this equals other.
-        bool equals(const RangeTransform & other) const;
+        virtual bool equals(const RangeTransform & other) const = 0;
 
         //!rst:: **File bit-depth**
         //
@@ -1511,13 +1487,13 @@ OCIO_NAMESPACE_ENTER
         // scaling is done on the way from or to file formats such as CLF.
 
         //!cpp:function::
-        BitDepth getFileInputBitDepth() const;
+        virtual BitDepth getFileInputBitDepth() const = 0;
         //!cpp:function::
-        void setFileInputBitDepth(BitDepth bitDepth);
+        virtual void setFileInputBitDepth(BitDepth bitDepth) = 0;
         //!cpp:function::
-        BitDepth getFileOutputBitDepth() const;
+        virtual BitDepth getFileOutputBitDepth() const = 0;
         //!cpp:function::
-        void setFileOutputBitDepth(BitDepth bitDepth);
+        virtual void setFileOutputBitDepth(BitDepth bitDepth) = 0;
 
         //!rst:: **Range values**
         //
@@ -1529,56 +1505,50 @@ OCIO_NAMESPACE_ENTER
         // extend outside [0,1].
 
         //!cpp:function:: Get the minimum value for the input.
-        double getMinInValue() const;
+        virtual double getMinInValue() const = 0;
         //!cpp:function:: Set the minimum value for the input.
-        void setMinInValue(double val);
+        virtual void setMinInValue(double val) = 0;
         //!cpp:function:: Is the minimum value for the input set?
-        bool hasMinInValue() const;
+        virtual bool hasMinInValue() const = 0;
         //!cpp:function:: Unset the minimum value for the input
-        void unsetMinInValue();
+        virtual void unsetMinInValue() = 0;
 
-        //!cpp:function:: Get the maximum value for the input.
-        double getMaxInValue() const;
         //!cpp:function:: Set the maximum value for the input.
-        void setMaxInValue(double val);
+        virtual void setMaxInValue(double val) = 0;
+        //!cpp:function:: Get the maximum value for the input.
+        virtual double getMaxInValue() const = 0;
         //!cpp:function:: Is the maximum value for the input set?
-        bool hasMaxInValue() const;
+        virtual bool hasMaxInValue() const = 0;
         //!cpp:function:: Unset the maximum value for the input.
-        void unsetMaxInValue();
+        virtual void unsetMaxInValue() = 0;
 
-        //!cpp:function:: Get the minimum value for the output.
-        double getMinOutValue() const;
         //!cpp:function:: Set the minimum value for the output.
-        void setMinOutValue(double val);
+        virtual void setMinOutValue(double val) = 0;
+        //!cpp:function:: Get the minimum value for the output.
+        virtual double getMinOutValue() const = 0;
         //!cpp:function:: Is the minimum value for the output set?
-        bool hasMinOutValue() const;
+        virtual bool hasMinOutValue() const = 0;
         //!cpp:function:: Unset the minimum value for the output.
-        void unsetMinOutValue();
+        virtual void unsetMinOutValue() = 0;
 
-        //!cpp:function:: Get the maximum value for the output.
-        double getMaxOutValue() const;
         //!cpp:function:: Set the maximum value for the output.
-        void setMaxOutValue(double val);
+        virtual void setMaxOutValue(double val) = 0;
+        //!cpp:function:: Get the maximum value for the output.
+        virtual double getMaxOutValue() const = 0;
         //!cpp:function:: Is the maximum value for the output set?
-        bool hasMaxOutValue() const;
+        virtual bool hasMaxOutValue() const = 0;
         //!cpp:function:: Unset the maximum value for the output.
-        void unsetMaxOutValue();
+        virtual void unsetMaxOutValue() = 0;
+
+    protected:
+        RangeTransform() = default;
+        virtual ~RangeTransform() = default;
 
     private:
-        RangeTransform();
-        RangeTransform(const RangeTransform &);
-        virtual ~RangeTransform();
-        
-        RangeTransform & operator=(const RangeTransform &);
-        
-        static void deleter(RangeTransform * t);
-        
-        class Impl;
-        Impl * m_impl;
-        Impl * getImpl() { return m_impl; }
-        const Impl * getImpl() const { return m_impl; }
+        RangeTransform(const RangeTransform &) = delete;
+        RangeTransform & operator= (const RangeTransform &) = delete;
     };
-    
+
     //!cpp:function::
     extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const RangeTransform &);
 

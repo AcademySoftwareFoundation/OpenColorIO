@@ -1,30 +1,5 @@
-/*
-Copyright (c) 2018 Autodesk Inc., et al.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 
 #include <cstring>
@@ -38,237 +13,242 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
-RangeTransformRcPtr RangeTransform::Create()
-{
-    return RangeTransformRcPtr(new RangeTransform(), &deleter);
-}
-
-void RangeTransform::deleter(RangeTransform* t)
-{
-    delete t;
-}
-
-class RangeTransform::Impl : public RangeOpData
+class RangeTransformImpl : public RangeTransform
 {
 public:
-    Impl()
-        :   RangeOpData()
-        ,   m_direction(TRANSFORM_DIR_FORWARD)
-        ,   m_style(RANGE_CLAMP)
+    RangeTransformImpl() = default;
+    RangeTransformImpl(const RangeTransformImpl &) = delete;
+    RangeTransformImpl& operator=(const RangeTransformImpl &) = delete;
+    virtual ~RangeTransformImpl() = default;
+
+    TransformRcPtr createEditableCopy() const override;
+
+    TransformDirection getDirection() const override;
+    void setDirection(TransformDirection dir) override;
+
+    FormatMetadata & getFormatMetadata() override;
+    const FormatMetadata & getFormatMetadata() const override;
+
+    BitDepth getFileInputBitDepth() const override;
+    BitDepth getFileOutputBitDepth() const override;
+    void setFileInputBitDepth(BitDepth bitDepth) override;
+    void setFileOutputBitDepth(BitDepth bitDepth) override;
+
+    RangeStyle getStyle() const override;
+    void setStyle(RangeStyle style) override;
+
+    void validate() const override;
+
+    bool equals(const RangeTransform & other) const override;
+
+    void setMinInValue(double val) override;
+    double getMinInValue() const override;
+    bool hasMinInValue() const override;
+    void unsetMinInValue() override;
+
+    void setMaxInValue(double val) override;
+    double getMaxInValue() const override;
+    bool hasMaxInValue() const override;
+    void unsetMaxInValue() override;
+
+    void setMinOutValue(double val) override;
+    double getMinOutValue() const override;
+    bool hasMinOutValue() const override;
+    void unsetMinOutValue() override;
+
+    void setMaxOutValue(double val) override;
+    double getMaxOutValue() const override;
+    bool hasMaxOutValue() const override;
+    void unsetMaxOutValue() override;
+
+    RangeOpData & data() { return m_data; }
+    const RangeOpData & data() const { return m_data; }
+
+    static void deleter(RangeTransformImpl * t)
     {
+        delete t;
     }
 
-    Impl(const Impl &) = delete;
-
-    ~Impl() {}
-
-    Impl& operator=(const Impl & rhs)
-    {
-        if(this!=&rhs)
-        {
-            RangeOpData::operator=(rhs);
-            m_direction  = rhs.m_direction;
-            m_style      = rhs.m_style;
-        }
-        return *this;
-    }
-
-    bool equals(const Impl & rhs) const
-    {
-        if(this==&rhs) return true;
-
-        return RangeOpData::operator==(rhs)
-            && m_direction == rhs.m_direction
-            && m_style     == rhs.m_style;
-    }
-
-    TransformDirection m_direction;
-    RangeStyle         m_style;
+private:
+    TransformDirection m_direction = TRANSFORM_DIR_FORWARD;
+    RangeStyle  m_style = RANGE_CLAMP;
+    RangeOpData m_data;
 };
+
+
 
 ///////////////////////////////////////////////////////////////////////////
 
 
 
-RangeTransform::RangeTransform()
-    : m_impl(new RangeTransform::Impl)
+RangeTransformRcPtr RangeTransform::Create()
 {
+    return RangeTransformRcPtr(new RangeTransformImpl(), &RangeTransformImpl::deleter);
 }
 
-TransformRcPtr RangeTransform::createEditableCopy() const
+TransformRcPtr RangeTransformImpl::createEditableCopy() const
 {
     RangeTransformRcPtr transform = RangeTransform::Create();
-    *transform->m_impl = *m_impl;
+    dynamic_cast<RangeTransformImpl*>(transform.get())->data() = data();
+    transform->setDirection(m_direction);
+    transform->setStyle(m_style);
     return transform;
 }
 
-RangeTransform::~RangeTransform()
+TransformDirection RangeTransformImpl::getDirection() const
 {
-    delete m_impl;
-    m_impl = NULL;
+    return m_direction;
 }
 
-RangeTransform& RangeTransform::operator= (const RangeTransform & rhs)
+void RangeTransformImpl::setDirection(TransformDirection dir)
 {
-    if (this != &rhs)
+    m_direction = dir;
+}
+
+RangeStyle RangeTransformImpl::getStyle() const
+{
+    return m_style;
+}
+
+void RangeTransformImpl::setStyle(RangeStyle style)
+{
+    m_style = style;
+}
+
+void RangeTransformImpl::validate() const
+{
+    try
     {
-        *m_impl = *rhs.m_impl;
+        Transform::validate();
+        data().validate();
     }
-    return *this;
+    catch(Exception & ex)
+    {
+        std::string errMsg("RangeTransform validation failed: ");
+        errMsg += ex.what();
+        throw Exception(errMsg.c_str());
+    }
 }
 
-TransformDirection RangeTransform::getDirection() const
+FormatMetadata & RangeTransformImpl::getFormatMetadata()
 {
-    return getImpl()->m_direction;
+	return data().getFormatMetadata();
 }
 
-void RangeTransform::setDirection(TransformDirection dir)
+const FormatMetadata & RangeTransformImpl::getFormatMetadata() const
 {
-    getImpl()->m_direction = dir;
+	return data().getFormatMetadata();
 }
 
-RangeStyle RangeTransform::getStyle() const
+BitDepth RangeTransformImpl::getFileInputBitDepth() const
 {
-    return getImpl()->m_style;
+    return data().getFileInputBitDepth();
 }
-
-void RangeTransform::setStyle(RangeStyle style)
+BitDepth RangeTransformImpl::getFileOutputBitDepth() const
 {
-    getImpl()->m_style = style;
+    return data().getFileOutputBitDepth();
 }
-
-void RangeTransform::validate() const
+void RangeTransformImpl::setFileInputBitDepth(BitDepth bitDepth)
 {
-        try
-        {
-            Transform::validate();
-            getImpl()->validate();
-        }
-        catch(Exception & ex)
-        {
-            std::string errMsg("RangeTransform validation failed: ");
-            errMsg += ex.what();
-            throw Exception(errMsg.c_str());
-        }
+    data().setFileInputBitDepth(bitDepth);
 }
-
-BitDepth RangeTransform::getFileInputBitDepth() const
+void RangeTransformImpl::setFileOutputBitDepth(BitDepth bitDepth)
 {
-    return getImpl()->getFileInputBitDepth();
+    data().setFileOutputBitDepth(bitDepth);
 }
-BitDepth RangeTransform::getFileOutputBitDepth() const
+
+bool RangeTransformImpl::equals(const RangeTransform & other) const
 {
-    return getImpl()->getFileOutputBitDepth();
+    return data() == dynamic_cast<const RangeTransformImpl*>(&other)->data()
+        && m_style == other.getStyle()
+        && m_direction == other.getDirection();
 }
-void RangeTransform::setFileInputBitDepth(BitDepth bitDepth)
+
+void RangeTransformImpl::setMinInValue(double val)
 {
-    getImpl()->setFileInputBitDepth(bitDepth);
+    data().setMinInValue(val);
 }
-void RangeTransform::setFileOutputBitDepth(BitDepth bitDepth)
+
+double RangeTransformImpl::getMinInValue() const
 {
-    getImpl()->setFileOutputBitDepth(bitDepth);
+    return data().getMinInValue();
 }
 
-FormatMetadata & RangeTransform::getFormatMetadata()
+bool RangeTransformImpl::hasMinInValue() const
 {
-    return m_impl->getFormatMetadata();
+    return data().hasMinInValue();
 }
 
-const FormatMetadata & RangeTransform::getFormatMetadata() const
+void RangeTransformImpl::unsetMinInValue()
 {
-    return m_impl->getFormatMetadata();
+    data().unsetMinInValue();
 }
 
-bool RangeTransform::equals(const RangeTransform & other) const
+
+void RangeTransformImpl::setMaxInValue(double val)
 {
-    return getImpl()->equals(*other.getImpl());
+    data().setMaxInValue(val);
 }
 
-void RangeTransform::setMinInValue(double val)
+double RangeTransformImpl::getMaxInValue() const
 {
-    getImpl()->setMinInValue(val);
+    return data().getMaxInValue();
 }
 
-double RangeTransform::getMinInValue() const
+bool RangeTransformImpl::hasMaxInValue() const
 {
-    return getImpl()->getMinInValue();
+    return data().hasMaxInValue();
 }
 
-bool RangeTransform::hasMinInValue() const
+void RangeTransformImpl::unsetMaxInValue()
 {
-    return getImpl()->hasMinInValue();
+    data().unsetMaxInValue();
 }
 
-void RangeTransform::unsetMinInValue()
+
+void RangeTransformImpl::setMinOutValue(double val)
 {
-    getImpl()->unsetMinInValue();
+    data().setMinOutValue(val);
 }
 
-
-void RangeTransform::setMaxInValue(double val)
+double RangeTransformImpl::getMinOutValue() const
 {
-    getImpl()->setMaxInValue(val);
+    return data().getMinOutValue();
 }
 
-double RangeTransform::getMaxInValue() const
+bool RangeTransformImpl::hasMinOutValue() const
 {
-    return getImpl()->getMaxInValue();
+    return data().hasMinOutValue();
 }
 
-bool RangeTransform::hasMaxInValue() const
+void RangeTransformImpl::unsetMinOutValue()
 {
-    return getImpl()->hasMaxInValue();
+    data().unsetMinOutValue();
 }
 
-void RangeTransform::unsetMaxInValue()
+
+void RangeTransformImpl::setMaxOutValue(double val)
 {
-    getImpl()->unsetMaxInValue();
+    data().setMaxOutValue(val);
 }
 
-
-void RangeTransform::setMinOutValue(double val)
+double RangeTransformImpl::getMaxOutValue() const
 {
-    getImpl()->setMinOutValue(val);
+    return data().getMaxOutValue();
 }
 
-double RangeTransform::getMinOutValue() const
+bool RangeTransformImpl::hasMaxOutValue() const
 {
-    return getImpl()->getMinOutValue();
+    return data().hasMaxOutValue();
 }
 
-bool RangeTransform::hasMinOutValue() const
+void RangeTransformImpl::unsetMaxOutValue()
 {
-    return getImpl()->hasMinOutValue();
-}
-
-void RangeTransform::unsetMinOutValue()
-{
-    getImpl()->unsetMinOutValue();
+    data().unsetMaxOutValue();
 }
 
 
-void RangeTransform::setMaxOutValue(double val)
-{
-    getImpl()->setMaxOutValue(val);
-}
-
-double RangeTransform::getMaxOutValue() const
-{
-    return getImpl()->getMaxOutValue();
-}
-
-bool RangeTransform::hasMaxOutValue() const
-{
-    return getImpl()->hasMaxOutValue();
-}
-
-void RangeTransform::unsetMaxOutValue()
-{
-    getImpl()->unsetMaxOutValue();
-}
-
-
-std::ostream& operator<< (std::ostream& os, const RangeTransform& t)
+std::ostream& operator<< (std::ostream & os, const RangeTransform & t)
 {
     os << "<RangeTransform ";
     os << "direction=" << TransformDirectionToString(t.getDirection());
@@ -282,7 +262,9 @@ std::ostream& operator<< (std::ostream& os, const RangeTransform& t)
     os << ">";
     return os;
 }
-    
+
+
+
 }
 OCIO_NAMESPACE_EXIT
 
