@@ -752,7 +752,7 @@ static void DoExport(HWND hwndDlg)
 	                    
 						int cubesize = 32;
 						int whitepointtemp = 6505;
-						std::string copyright = "OpenColorIO, Sony Imageworks";
+						std::string copyright = "";
 	                    
 						// create a description tag from the filename
 						const char delimiter = '\\';
