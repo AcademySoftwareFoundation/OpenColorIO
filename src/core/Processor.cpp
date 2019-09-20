@@ -241,7 +241,7 @@ OCIO_NAMESPACE_ENTER
                 shader << "vec4 " << fcnName << "(vec4 inPixel, \n";
                 shader << "    sampler3D " << lut3dName << ") \n";
             }
-            else if(lang == GPU_LANGUAGE_GLSL_1_3)
+            else if(lang == GPU_LANGUAGE_GLSL_1_3 || lang == GPU_LANGUAGE_GLSL_4_0)
             {
                 shader << "vec4 " << fcnName << "(in vec4 inPixel, \n";
                 shader << "    const sampler3D " << lut3dName << ") \n";
@@ -254,7 +254,7 @@ OCIO_NAMESPACE_ENTER
             {
                 shader << "half4 " << pixelName << " = inPixel; \n";
             }
-            else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
+            else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3 || lang == GPU_LANGUAGE_GLSL_4_0)
             {
                 shader << "vec4 " << pixelName << " = inPixel; \n";
             }

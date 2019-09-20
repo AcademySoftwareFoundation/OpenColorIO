@@ -58,6 +58,7 @@ class ConstantsTest(unittest.TestCase):
         self.assertEqual(OCIO.Constants.GPU_LANGUAGE_CG, "cg")
         self.assertEqual(OCIO.Constants.GPU_LANGUAGE_GLSL_1_0, "glsl_1.0")
         self.assertEqual(OCIO.Constants.GPU_LANGUAGE_GLSL_1_3, "glsl_1.3")
+        self.assertEqual(OCIO.Constants.GPU_LANGUAGE_GLSL_4_0, "glsl_4.0")
         
         # EnvironmentMode
         self.assertEqual(OCIO.Constants.ENV_ENVIRONMENT_UNKNOWN, "unknown")
