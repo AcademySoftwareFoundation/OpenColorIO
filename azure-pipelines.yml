@@ -47,7 +47,7 @@ jobs:
         buildType: Release
         cxxCompiler: g++
         cCompiler: gcc
-      CentOS 7 VFX CY2019 (No SSE):
+      CentOS 7 VFX CY2019 (no SSE):
         containerImage: aswfstaging/ci-ocio:2019
         useSSE: OFF
         buildType: Release
@@ -214,7 +214,7 @@ jobs:
         buildPython: ON
         buildDocs: ON
         installPython: false
-      2016 MSVC 14.16 (Static):
+      2016 MSVC 14.16 (static):
         agentImage: 'vs2017-win2016'
         buildType: Release
         buildSharedLibs: OFF
