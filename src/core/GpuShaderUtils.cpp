@@ -48,7 +48,7 @@ OCIO_NAMESPACE_ENTER
             }
             os << ")";
         }
-        else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
+        else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3 || lang == GPU_LANGUAGE_GLSL_4_0)
         {
             os << "mat4(";
             for(int i=0; i<16; i++)
@@ -76,7 +76,7 @@ OCIO_NAMESPACE_ENTER
             }
             os << ")";
         }
-        else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
+        else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3 || lang == GPU_LANGUAGE_GLSL_4_0)
         {
             os << "vec4(";
             for(int i=0; i<4; i++)
@@ -104,7 +104,7 @@ OCIO_NAMESPACE_ENTER
             }
             os << ")";
         }
-        else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
+        else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3 || lang == GPU_LANGUAGE_GLSL_4_0)
         {
             os << "vec3(";
             for(int i=0; i<3; i++)
@@ -153,7 +153,7 @@ OCIO_NAMESPACE_ENTER
         {
             os << "mul( " << mtx << ", " << vec << ")";
         }
-        else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
+        else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3 || lang == GPU_LANGUAGE_GLSL_4_0)
         {
             os << vec << " * " << mtx;
         }
@@ -180,6 +180,12 @@ OCIO_NAMESPACE_ENTER
         else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
         {
             os << "texture3D(";
+            os << lutName << ", ";
+            os << m << " * " << variableName << ".rgb + " << b << ").rgb;" << std::endl;
+        }
+        else if(lang == GPU_LANGUAGE_GLSL_4_0)
+        {
+            os << "texture(";
             os << lutName << ", ";
             os << m << " * " << variableName << ".rgb + " << b << ").rgb;" << std::endl;
         }
