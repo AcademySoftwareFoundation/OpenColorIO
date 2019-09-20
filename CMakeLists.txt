@@ -148,6 +148,10 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     # Enable a bunch of compiler warnings...
     # http://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wshadow -Wconversion -Wcast-qual -Wformat=2")
+    # GCC 8 and above has a new heuristic to detect invalid pointer
+    # casts. However, this results in false positives on the Python
+    # C API which we compile against to generate Python bindings.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-cast-function-type")
     # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic")
 endif(CMAKE_COMPILER_IS_GNUCXX)
 
