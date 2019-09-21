@@ -2089,10 +2089,8 @@ OCIO_ADD_TEST(config, env_check)
     "\n";
     
     
-    const std::string test("SHOW=bar");
-    putenv(const_cast<char *>(test.c_str()));
-    const std::string test2("TASK=lighting");
-    putenv(const_cast<char *>(test2.c_str()));
+    OCIO::Platform::Setenv("SHOW", "bar");
+    OCIO::Platform::Setenv("TASK", "lighting");
     
     std::istringstream is;
     is.str(SIMPLE_PROFILE);
@@ -2217,8 +2215,7 @@ OCIO_ADD_TEST(Config, env_colorspace_name)
 
     {
         // Test when the env. variable exists but its content is wrong
-        const std::string env("OCIO_TEST=FaultyColorSpaceName");
-        putenv(const_cast<char*>(env.c_str()));
+        OCIO::Platform::Setenv("OCIO_TEST", "FaultyColorSpaceName");
 
         const std::string 
             myConfigStr = MY_OCIO_CONFIG
@@ -2235,8 +2232,7 @@ OCIO_ADD_TEST(Config, env_colorspace_name)
 
     {
         // Test when the env. variable exists and its content is right
-        const std::string env("OCIO_TEST=lnh");
-        putenv(const_cast<char*>(env.c_str()));
+        OCIO::Platform::Setenv("OCIO_TEST", "lnh");
 
         const std::string 
             myConfigStr = MY_OCIO_CONFIG
@@ -2253,8 +2249,7 @@ OCIO_ADD_TEST(Config, env_colorspace_name)
 
     {
         // Check that the serialization preserves the env. variable
-        const std::string env("OCIO_TEST=lnh");
-        putenv(const_cast<char*>(env.c_str()));
+        OCIO::Platform::Setenv("OCIO_TEST", "lnh");
 
         const std::string 
             myConfigStr = MY_OCIO_CONFIG
@@ -3144,9 +3139,7 @@ OCIO_ADD_TEST(Config, display)
             "active_views: []\n"
             + SIMPLE_PROFILE_FOOTER;
 
-        const std::string active_displays(
-            std::string(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR) + "= sRGB_3, sRGB_2");
-        putenv(const_cast<char *>(active_displays.c_str()));
+        OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR, " sRGB_3, sRGB_2");
 
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
@@ -3165,9 +3158,7 @@ OCIO_ADD_TEST(Config, display)
             "active_views: []\n"
             + SIMPLE_PROFILE_FOOTER;
 
-        const std::string active_displays(
-            std::string(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR) + "= sRGB_3, sRGB_2");
-        putenv(const_cast<char *>(active_displays.c_str()));
+        OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR, " sRGB_3, sRGB_2");
 
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
@@ -3179,9 +3170,7 @@ OCIO_ADD_TEST(Config, display)
     }
 
     {
-        const std::string active_displays(
-            std::string(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR) + "="); // No value
-        putenv(const_cast<char *>(active_displays.c_str()));
+        OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR, ""); // No value
 
         std::string myProfile = 
             SIMPLE_PROFILE_HEADER
@@ -3200,9 +3189,7 @@ OCIO_ADD_TEST(Config, display)
     }
 
     {
-        const std::string active_displays(
-            std::string(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR) + "= "); // No value, but misleading space
-        putenv(const_cast<char *>(active_displays.c_str()));
+        OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR, " "); // No value, but misleading space
 
         std::string myProfile = 
             SIMPLE_PROFILE_HEADER
@@ -3339,9 +3326,7 @@ OCIO_ADD_TEST(Config, view)
             "active_views: []\n"
             + SIMPLE_PROFILE_FOOTER;
 
-        const std::string active_displays(
-            std::string(OCIO::OCIO_ACTIVE_VIEWS_ENVVAR) + "= View_3, View_2");
-        putenv(const_cast<char *>(active_displays.c_str()));
+        OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_VIEWS_ENVVAR, " View_3, View_2");
 
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
@@ -3365,9 +3350,7 @@ OCIO_ADD_TEST(Config, view)
             "active_views: []\n"
             + SIMPLE_PROFILE_FOOTER;
 
-        const std::string active_displays(
-            std::string(OCIO::OCIO_ACTIVE_VIEWS_ENVVAR) + "="); // No value.
-        putenv(const_cast<char *>(active_displays.c_str()));
+        OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_VIEWS_ENVVAR, ""); // No value.
 
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
@@ -3391,9 +3374,7 @@ OCIO_ADD_TEST(Config, view)
             "active_views: []\n"
             + SIMPLE_PROFILE_FOOTER;
 
-        const std::string active_displays(
-            std::string(OCIO::OCIO_ACTIVE_VIEWS_ENVVAR) + "= "); // No value, but misleading space
-        putenv(const_cast<char *>(active_displays.c_str()));
+        OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_VIEWS_ENVVAR, " "); // No value, but misleading space
 
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
