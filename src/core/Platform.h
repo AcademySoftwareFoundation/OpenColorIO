@@ -103,7 +103,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 #define snprintf sprintf_s
 #define strtok_r strtok_s
 #define sscanf sscanf_s
-#define putenv _putenv
 typedef __int64 FilePos;
 #define fseeko _fseeki64
 #define ftello _ftelli64
@@ -158,6 +157,7 @@ OCIO_NAMESPACE_ENTER
   namespace Platform
   {
     void getenv (const char* name, std::string& value);
+    void setenv (const char* name, const std::string& value);
   }
 
 }
