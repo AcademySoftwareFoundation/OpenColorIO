@@ -807,7 +807,8 @@ void TestToolsStripBlank(
     const std::string & stringResult)
 {
     char stringToStrip[200];
-    stringCopy(stringToStrip, stringToStripChar, 200);
+    stringCopy(stringToStrip, stringToStripChar, 199);
+    stringToStrip[199] = '\0';
     OCIO::ReplaceTabsAndStripSpaces(stringToStrip);
     std::string strippedString(stringToStrip);
     OCIO_CHECK_EQUAL(stringResult, strippedString);
@@ -818,7 +819,8 @@ void TestToolsStripEndNewLine(
     const std::string & stringResult)
 {
     char stringToStrip[200];
-    stringCopy(stringToStrip, stringToStripChar, 200);
+    stringCopy(stringToStrip, stringToStripChar, 199);
+    stringToStrip[199] = '\0';
     OCIO::StripEndNewLine(stringToStrip);
     std::string strippedString(stringToStrip);
     OCIO_CHECK_EQUAL(stringResult, strippedString);
