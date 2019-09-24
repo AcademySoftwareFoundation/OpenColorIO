@@ -21,49 +21,6 @@
 OCIO_NAMESPACE_ENTER
 {
 
-Lut3D::Lut3D()
-{
-    for (int i = 0; i<3; ++i)
-    {
-        from_min[i] = 0.0f;
-        from_max[i] = 1.0f;
-        size[i] = 0;
-    }
-}
-
-Lut3DRcPtr Lut3D::Create()
-{
-    return Lut3DRcPtr(new Lut3D());
-}
-
-std::string Lut3D::getCacheID() const
-{
-    AutoMutex lock(m_cacheidMutex);
-
-    if (lut.empty())
-        throw Exception("Cannot compute cacheID of invalid Lut3D");
-
-    if (!m_cacheID.empty())
-        return m_cacheID;
-
-    md5_state_t state;
-    md5_byte_t digest[16];
-
-    md5_init(&state);
-
-    md5_append(&state, (const md5_byte_t *)from_min, (int)(3 * sizeof(float)));
-    md5_append(&state, (const md5_byte_t *)from_max, (int)(3 * sizeof(float)));
-    md5_append(&state, (const md5_byte_t *)size,     (int)(3 * sizeof(int)));
-    md5_append(&state, (const md5_byte_t *)&lut[0],  (int)(lut.size() * sizeof(float)));
-
-    md5_finish(&state, digest);
-
-    m_cacheID = GetPrintableHash(digest);
-
-    return m_cacheID;
-}
-
-
 namespace
 {
     // Linear
@@ -142,365 +99,7 @@ namespace
         return static_cast<int>(roundf(std::max(std::min(k, maxVal), minVal)));
     }
 
-    ///////////////////////////////////////////////////////////////////////
-    // Nearest Forward
-
-#ifdef OCIO_UNIT_TEST
-    void Lut3D_Nearest(float* rgbaBuffer, long numPixels, const Lut3D & lut)
-    {
-        float maxIndex[3];
-        float mInv[3];
-        float b[3];
-        float mInv_x_maxIndex[3];
-        int lutSize[3];
-        const float* startPos = &(lut.lut[0]);
-
-        for (int i = 0; i<3; ++i)
-        {
-            maxIndex[i] = (float)(lut.size[i] - 1);
-            mInv[i] = 1.0f / (lut.from_max[i] - lut.from_min[i]);
-            b[i] = lut.from_min[i];
-            mInv_x_maxIndex[i] = (float)(mInv[i] * maxIndex[i]);
-
-            lutSize[i] = lut.size[i];
-        }
-
-        int localIndex[3];
-
-        for (long pixelIndex = 0; pixelIndex<numPixels; ++pixelIndex)
-        {
-            if (IsNan(rgbaBuffer[0]) || IsNan(rgbaBuffer[1]) || IsNan(rgbaBuffer[2]))
-            {
-                rgbaBuffer[0] = std::numeric_limits<float>::quiet_NaN();
-                rgbaBuffer[1] = std::numeric_limits<float>::quiet_NaN();
-                rgbaBuffer[2] = std::numeric_limits<float>::quiet_NaN();
-            }
-            else
-            {
-                localIndex[0] = clamp(mInv_x_maxIndex[0] * (rgbaBuffer[0] - b[0]), 0.0f, maxIndex[0]);
-                localIndex[1] = clamp(mInv_x_maxIndex[1] * (rgbaBuffer[1] - b[1]), 0.0f, maxIndex[1]);
-                localIndex[2] = clamp(mInv_x_maxIndex[2] * (rgbaBuffer[2] - b[2]), 0.0f, maxIndex[2]);
-
-                lookupNearest_3D_rgb(rgbaBuffer, localIndex[0], localIndex[1], localIndex[2],
-                    lutSize[0], lutSize[1], lutSize[2], startPos);
-            }
-
-            rgbaBuffer += 4;
-        }
-    }
-
-    ///////////////////////////////////////////////////////////////////////
-    // Linear Forward
-
-    void Lut3D_Linear(float* rgbaBuffer, long numPixels, const Lut3D & lut)
-    {
-        float maxIndex[3];
-        float mInv[3];
-        float b[3];
-        float mInv_x_maxIndex[3];
-        int lutSize[3];
-        const float* startPos = &(lut.lut[0]);
-
-        for (int i = 0; i<3; ++i)
-        {
-            maxIndex[i] = (float)(lut.size[i] - 1);
-            mInv[i] = 1.0f / (lut.from_max[i] - lut.from_min[i]);
-            b[i] = lut.from_min[i];
-            mInv_x_maxIndex[i] = (float)(mInv[i] * maxIndex[i]);
-
-            lutSize[i] = lut.size[i];
-        }
-
-        for (long pixelIndex = 0; pixelIndex<numPixels; ++pixelIndex)
-        {
-
-            if (IsNan(rgbaBuffer[0]) || IsNan(rgbaBuffer[1]) || IsNan(rgbaBuffer[2]))
-            {
-                rgbaBuffer[0] = std::numeric_limits<float>::quiet_NaN();
-                rgbaBuffer[1] = std::numeric_limits<float>::quiet_NaN();
-                rgbaBuffer[2] = std::numeric_limits<float>::quiet_NaN();
-            }
-            else
-            {
-                float localIndex[3];
-                int indexLow[3];
-                int indexHigh[3];
-                float delta[3];
-                float a[3];
-                float b_[3];
-                float c[3];
-                float d[3];
-                float e[3];
-                float f[3];
-                float g[3];
-                float h[4];
-                float x[4];
-                float y[4];
-                float z[4];
-
-                localIndex[0] = std::max(std::min(mInv_x_maxIndex[0] * (rgbaBuffer[0] - b[0]), maxIndex[0]), 0.0f);
-                localIndex[1] = std::max(std::min(mInv_x_maxIndex[1] * (rgbaBuffer[1] - b[1]), maxIndex[1]), 0.0f);
-                localIndex[2] = std::max(std::min(mInv_x_maxIndex[2] * (rgbaBuffer[2] - b[2]), maxIndex[2]), 0.0f);
-
-                indexLow[0] = static_cast<int>(std::floor(localIndex[0]));
-                indexLow[1] = static_cast<int>(std::floor(localIndex[1]));
-                indexLow[2] = static_cast<int>(std::floor(localIndex[2]));
-
-                indexHigh[0] = static_cast<int>(std::ceil(localIndex[0]));
-                indexHigh[1] = static_cast<int>(std::ceil(localIndex[1]));
-                indexHigh[2] = static_cast<int>(std::ceil(localIndex[2]));
-
-                delta[0] = localIndex[0] - static_cast<float>(indexLow[0]);
-                delta[1] = localIndex[1] - static_cast<float>(indexLow[1]);
-                delta[2] = localIndex[2] - static_cast<float>(indexLow[2]);
-
-                // Lookup 8 corners of cube
-                lookupNearest_3D_rgb(a, indexLow[0],  indexLow[1],  indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos);
-                lookupNearest_3D_rgb(b_, indexLow[0],  indexLow[1],  indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos);
-                lookupNearest_3D_rgb(c, indexLow[0],  indexHigh[1], indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos);
-                lookupNearest_3D_rgb(d, indexLow[0],  indexHigh[1], indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos);
-                lookupNearest_3D_rgb(e, indexHigh[0], indexLow[1],  indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos);
-                lookupNearest_3D_rgb(f, indexHigh[0], indexLow[1],  indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos);
-                lookupNearest_3D_rgb(g, indexHigh[0], indexHigh[1], indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos);
-                lookupNearest_3D_rgb(h, indexHigh[0], indexHigh[1], indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos);
-
-                // Also store the 3d interpolation coordinates
-                x[0] = delta[0]; x[1] = delta[0]; x[2] = delta[0];
-                y[0] = delta[1]; y[1] = delta[1]; y[2] = delta[1];
-                z[0] = delta[2]; z[1] = delta[2]; z[2] = delta[2];
-
-                // Do a trilinear interpolation of the 8 corners
-                // 4726.8 scanlines/sec
-
-                lerp_rgb(rgbaBuffer, a, b_, c, d, e, f, g, h,
-                    x, y, z);
-            }
-
-            rgbaBuffer += 4;
-        }
-    }
-#endif
 }
-
-#ifdef OCIO_UNIT_TEST
-void Lut3D_Tetrahedral(float* rgbaBuffer, long numPixels, const Lut3D & lut)
-{
-    // Tetrahedral interoplation, as described by:
-    // http://www.filmlight.ltd.uk/pdf/whitepapers/FL-TL-TN-0057-SoftwareLib.pdf
-    // http://blogs.mathworks.com/steve/2006/11/24/tetrahedral-interpolation-for-colorspace-conversion/
-    // http://www.hpl.hp.com/techreports/98/HPL-98-95.html
-
-    float maxIndex[3];
-    float mInv[3];
-    float b[3];
-    float mInv_x_maxIndex[3];
-    int lutSize[3];
-    const float* startPos = &(lut.lut[0]);
-
-    for (int i = 0; i<3; ++i)
-    {
-        maxIndex[i] = (float)(lut.size[i] - 1);
-        mInv[i] = 1.0f / (lut.from_max[i] - lut.from_min[i]);
-        b[i] = lut.from_min[i];
-        mInv_x_maxIndex[i] = (float)(mInv[i] * maxIndex[i]);
-
-        lutSize[i] = lut.size[i];
-    }
-
-    for (long pixelIndex = 0; pixelIndex<numPixels; ++pixelIndex)
-    {
-
-        if (IsNan(rgbaBuffer[0]) || IsNan(rgbaBuffer[1]) || IsNan(rgbaBuffer[2]))
-        {
-            rgbaBuffer[0] = std::numeric_limits<float>::quiet_NaN();
-            rgbaBuffer[1] = std::numeric_limits<float>::quiet_NaN();
-            rgbaBuffer[2] = std::numeric_limits<float>::quiet_NaN();
-        }
-        else
-        {
-            float localIndex[3];
-            int indexLow[3];
-            int indexHigh[3];
-            float delta[3];
-
-            // Same index/delta calculation as linear interpolation
-            localIndex[0] = std::max(std::min(mInv_x_maxIndex[0] * (rgbaBuffer[0] - b[0]), maxIndex[0]), 0.0f);
-            localIndex[1] = std::max(std::min(mInv_x_maxIndex[1] * (rgbaBuffer[1] - b[1]), maxIndex[1]), 0.0f);
-            localIndex[2] = std::max(std::min(mInv_x_maxIndex[2] * (rgbaBuffer[2] - b[2]), maxIndex[2]), 0.0f);
-
-            indexLow[0] = static_cast<int>(std::floor(localIndex[0]));
-            indexLow[1] = static_cast<int>(std::floor(localIndex[1]));
-            indexLow[2] = static_cast<int>(std::floor(localIndex[2]));
-
-            indexHigh[0] = static_cast<int>(std::ceil(localIndex[0]));
-            indexHigh[1] = static_cast<int>(std::ceil(localIndex[1]));
-            indexHigh[2] = static_cast<int>(std::ceil(localIndex[2]));
-
-            delta[0] = localIndex[0] - static_cast<float>(indexLow[0]);
-            delta[1] = localIndex[1] - static_cast<float>(indexLow[1]);
-            delta[2] = localIndex[2] - static_cast<float>(indexLow[2]);
-
-            // Rebind for consistency with Truelight paper
-            float fx = delta[0];
-            float fy = delta[1];
-            float fz = delta[2];
-
-            // Compute index into LUT for surrounding corners
-            const int n000 =
-                GetLut3DIndex_RedFast(indexLow[0], indexLow[1], indexLow[2],
-                    lutSize[0], lutSize[1], lutSize[2]);
-            const int n100 =
-                GetLut3DIndex_RedFast(indexHigh[0], indexLow[1], indexLow[2],
-                    lutSize[0], lutSize[1], lutSize[2]);
-            const int n010 =
-                GetLut3DIndex_RedFast(indexLow[0], indexHigh[1], indexLow[2],
-                    lutSize[0], lutSize[1], lutSize[2]);
-            const int n001 =
-                GetLut3DIndex_RedFast(indexLow[0], indexLow[1], indexHigh[2],
-                    lutSize[0], lutSize[1], lutSize[2]);
-            const int n110 =
-                GetLut3DIndex_RedFast(indexHigh[0], indexHigh[1], indexLow[2],
-                    lutSize[0], lutSize[1], lutSize[2]);
-            const int n101 =
-                GetLut3DIndex_RedFast(indexHigh[0], indexLow[1], indexHigh[2],
-                    lutSize[0], lutSize[1], lutSize[2]);
-            const int n011 =
-                GetLut3DIndex_RedFast(indexLow[0], indexHigh[1], indexHigh[2],
-                    lutSize[0], lutSize[1], lutSize[2]);
-            const int n111 =
-                GetLut3DIndex_RedFast(indexHigh[0], indexHigh[1], indexHigh[2],
-                    lutSize[0], lutSize[1], lutSize[2]);
-
-            if (fx > fy) {
-                if (fy > fz) {
-                    rgbaBuffer[0] =
-                        (1 - fx)  * startPos[n000] +
-                        (fx - fy) * startPos[n100] +
-                        (fy - fz) * startPos[n110] +
-                        (fz)* startPos[n111];
-
-                    rgbaBuffer[1] =
-                        (1 - fx)  * startPos[n000 + 1] +
-                        (fx - fy) * startPos[n100 + 1] +
-                        (fy - fz) * startPos[n110 + 1] +
-                        (fz)* startPos[n111 + 1];
-
-                    rgbaBuffer[2] =
-                        (1 - fx)  * startPos[n000 + 2] +
-                        (fx - fy) * startPos[n100 + 2] +
-                        (fy - fz) * startPos[n110 + 2] +
-                        (fz)* startPos[n111 + 2];
-                }
-                else if (fx > fz)
-                {
-                    rgbaBuffer[0] =
-                        (1 - fx)  * startPos[n000] +
-                        (fx - fz) * startPos[n100] +
-                        (fz - fy) * startPos[n101] +
-                        (fy)* startPos[n111];
-
-                    rgbaBuffer[1] =
-                        (1 - fx)  * startPos[n000 + 1] +
-                        (fx - fz) * startPos[n100 + 1] +
-                        (fz - fy) * startPos[n101 + 1] +
-                        (fy)* startPos[n111 + 1];
-
-                    rgbaBuffer[2] =
-                        (1 - fx)  * startPos[n000 + 2] +
-                        (fx - fz) * startPos[n100 + 2] +
-                        (fz - fy) * startPos[n101 + 2] +
-                        (fy)* startPos[n111 + 2];
-                }
-                else
-                {
-                    rgbaBuffer[0] =
-                        (1 - fz)  * startPos[n000] +
-                        (fz - fx) * startPos[n001] +
-                        (fx - fy) * startPos[n101] +
-                        (fy)* startPos[n111];
-
-                    rgbaBuffer[1] =
-                        (1 - fz)  * startPos[n000 + 1] +
-                        (fz - fx) * startPos[n001 + 1] +
-                        (fx - fy) * startPos[n101 + 1] +
-                        (fy)* startPos[n111 + 1];
-
-                    rgbaBuffer[2] =
-                        (1 - fz)  * startPos[n000 + 2] +
-                        (fz - fx) * startPos[n001 + 2] +
-                        (fx - fy) * startPos[n101 + 2] +
-                        (fy)* startPos[n111 + 2];
-                }
-            }
-            else
-            {
-                if (fz > fy)
-                {
-                    rgbaBuffer[0] =
-                        (1 - fz)  * startPos[n000] +
-                        (fz - fy) * startPos[n001] +
-                        (fy - fx) * startPos[n011] +
-                        (fx)* startPos[n111];
-
-                    rgbaBuffer[1] =
-                        (1 - fz)  * startPos[n000 + 1] +
-                        (fz - fy) * startPos[n001 + 1] +
-                        (fy - fx) * startPos[n011 + 1] +
-                        (fx)* startPos[n111 + 1];
-
-                    rgbaBuffer[2] =
-                        (1 - fz)  * startPos[n000 + 2] +
-                        (fz - fy) * startPos[n001 + 2] +
-                        (fy - fx) * startPos[n011 + 2] +
-                        (fx)* startPos[n111 + 2];
-                }
-                else if (fz > fx)
-                {
-                    rgbaBuffer[0] =
-                        (1 - fy)  * startPos[n000] +
-                        (fy - fz) * startPos[n010] +
-                        (fz - fx) * startPos[n011] +
-                        (fx)* startPos[n111];
-
-                    rgbaBuffer[1] =
-                        (1 - fy)  * startPos[n000 + 1] +
-                        (fy - fz) * startPos[n010 + 1] +
-                        (fz - fx) * startPos[n011 + 1] +
-                        (fx)* startPos[n111 + 1];
-
-                    rgbaBuffer[2] =
-                        (1 - fy)  * startPos[n000 + 2] +
-                        (fy - fz) * startPos[n010 + 2] +
-                        (fz - fx) * startPos[n011 + 2] +
-                        (fx)* startPos[n111 + 2];
-                }
-                else
-                {
-                    rgbaBuffer[0] =
-                        (1 - fy)  * startPos[n000] +
-                        (fy - fx) * startPos[n010] +
-                        (fx - fz) * startPos[n110] +
-                        (fz)* startPos[n111];
-
-                    rgbaBuffer[1] =
-                        (1 - fy)  * startPos[n000 + 1] +
-                        (fy - fx) * startPos[n010 + 1] +
-                        (fx - fz) * startPos[n110 + 1] +
-                        (fz)* startPos[n111 + 1];
-
-                    rgbaBuffer[2] =
-                        (1 - fy)  * startPos[n000 + 2] +
-                        (fy - fx) * startPos[n010 + 2] +
-                        (fx - fz) * startPos[n110 + 2] +
-                        (fz)* startPos[n111 + 2];
-                }
-            }
-        } // !IsNan
-
-        rgbaBuffer += 4;
-    }
-}
-#endif
 
 void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels, Lut3DOrder lut3DOrder)
 {
@@ -693,86 +292,6 @@ namespace
 }
 
 void CreateLut3DOp(OpRcPtrVec & ops,
-                   Lut3DRcPtr lut,
-                   Interpolation interpolation,
-                   TransformDirection direction)
-{
-    if (direction != TRANSFORM_DIR_FORWARD
-        && direction != TRANSFORM_DIR_INVERSE)
-    {
-        throw Exception("Cannot apply Lut3DOp op, "
-                        "unspecified transform direction.");
-    }
-    if (interpolation != INTERP_NEAREST
-        && interpolation != INTERP_LINEAR
-        && interpolation != INTERP_TETRAHEDRAL
-        && interpolation != INTERP_DEFAULT
-        && interpolation != INTERP_BEST)
-    {
-        throw Exception("Cannot apply LUT 3D op, "
-                        "invalid interpolation specified.");
-    }
-    if (!lut || lut->size[0]<2
-        || lut->size[0] != lut->size[1]
-        || lut->size[0] != lut->size[2])
-    {
-        throw Exception("Cannot apply Lut3DOp op, "
-                        "invalid lut specified.");
-    }
-
-    const unsigned long lutSize = lut->size[0];
-    if (lut->lut.size() != lutSize*lutSize*lutSize * 3)
-    {
-        throw Exception("Cannot apply Lut3DOp op, "
-            "specified size does not match data.");
-    }
-
-    // Convert Lut3D struct into Lut3DOpData.
-    // Code assumes that LUT coming in are LUT3DORDER_FAST_RED.
-    // Need to transform to Blue fast for OpData::Lut3D.
-    Lut3DOpDataRcPtr lutBF(new Lut3DOpData(lutSize));
-    lutBF->setInterpolation(interpolation);
-
-    Array & lutArray = lutBF->getArray();
-
-    for (unsigned long b = 0; b < lutSize; ++b)
-    {
-        for (unsigned long g = 0; g < lutSize; ++g)
-        {
-            for (unsigned long r = 0; r < lutSize; ++r)
-            {
-                // OpData::Lut3D Array index. b changes fastest.
-                const unsigned long arrayIdx = 3 * ((r*lutSize + g)*lutSize + b);
-
-                // Lut3D struct index. r changes fastest.
-                const unsigned long ocioIdx = 3 * ((b*lutSize + g)*lutSize + r);
-
-                lutArray[arrayIdx    ] = lut->lut[ocioIdx    ];
-                lutArray[arrayIdx + 1] = lut->lut[ocioIdx + 1];
-                lutArray[arrayIdx + 2] = lut->lut[ocioIdx + 2];
-            }
-        }
-    }
-
-    const double min[] = { lut->from_min[0], lut->from_min[1], lut->from_min[2] };
-    const double max[] = { lut->from_max[0], lut->from_max[1], lut->from_max[2] };
-    if (direction == TRANSFORM_DIR_FORWARD)
-    {
-        // NB: CreateMinMaxOp will not add the matrix if from_min & from_max
-        //     are at their defaults.
-        CreateMinMaxOp(ops, min, max, TRANSFORM_DIR_FORWARD);
-        CreateLut3DOp(ops, lutBF, TRANSFORM_DIR_FORWARD);
-    }
-    else
-    {
-        CreateLut3DOp(ops, lutBF, TRANSFORM_DIR_INVERSE);
-        CreateMinMaxOp(ops, min, max, TRANSFORM_DIR_INVERSE);
-    }
-}
-
-///////////////////////////////////////////////////////////////////////////
-
-void CreateLut3DOp(OpRcPtrVec & ops,
                    Lut3DOpDataRcPtr & lut,
                    TransformDirection direction)
 {
@@ -894,247 +413,21 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 #include "UnitTestUtils.h"
 
-OCIO_ADD_TEST(Lut3DOpStruct, nan_inf_value_check)
+OCIO_ADD_TEST(Lut3DOp, inverse_comparison_check)
 {
-    OCIO::Lut3DRcPtr lut = OCIO::Lut3D::Create();
-    
-    lut->size[0] = 3;
-    lut->size[1] = 3;
-    lut->size[2] = 3;
-    
-    lut->lut.resize(lut->size[0]*lut->size[1]*lut->size[2]*3);
-    
-    OCIO_CHECK_NO_THROW(GenerateIdentityLut3D(
-        &lut->lut[0], lut->size[0], 3, OCIO::LUT3DORDER_FAST_RED));
-    for(size_t i=0; i<lut->lut.size(); ++i)
-    {
-        lut->lut[i] = powf(lut->lut[i], 2.0f);
-    }
-    
-    const float reference[4] = {  std::numeric_limits<float>::signaling_NaN(),
-                                  std::numeric_limits<float>::quiet_NaN(),
-                                  std::numeric_limits<float>::infinity(),
-                                  -std::numeric_limits<float>::infinity() };
-    float color[4];
-    
-    memcpy(color, reference, 4*sizeof(float));
-    OCIO::Lut3D_Nearest(color, 1, *lut);
-    
-    memcpy(color, reference, 4*sizeof(float));
-    OCIO::Lut3D_Linear(color, 1, *lut);
-}
-
-
-OCIO_ADD_TEST(Lut3DOpStruct, value_check)
-{
-    const float error = 1e-5f;
-
-    OCIO::Lut3DRcPtr lut = OCIO::Lut3D::Create();
-
-    for (int i = 0; i < 3; ++i)
-    {
-        OCIO_CHECK_CLOSE(lut->from_min[i], 0.0f, error);
-        OCIO_CHECK_CLOSE(lut->from_max[i], 1.0f, error);
-    }
-
-    lut->size[0] = 32;
-    lut->size[1] = 32;
-    lut->size[2] = 32;
-
-    lut->lut.resize(lut->size[0] * lut->size[1] * lut->size[2] * 3);
-    OCIO_CHECK_NO_THROW(GenerateIdentityLut3D(
-        &lut->lut[0], lut->size[0], 3, OCIO::LUT3DORDER_FAST_RED));
-    for (size_t i = 0; i < lut->lut.size(); ++i)
-    {
-        lut->lut[i] = powf(lut->lut[i], 2.0f);
-    }
-
-    OCIO::OpRcPtrVec ops;
-    OCIO_CHECK_NO_THROW(CreateLut3DOp(ops, lut, OCIO::INTERP_NEAREST,
-                                      OCIO::TRANSFORM_DIR_FORWARD));
-    OCIO_CHECK_NO_THROW(CreateLut3DOp(ops, lut, OCIO::INTERP_LINEAR,
-                                      OCIO::TRANSFORM_DIR_FORWARD));
-    OCIO_CHECK_NO_THROW(CreateLut3DOp(ops, lut, OCIO::INTERP_TETRAHEDRAL,
-                                      OCIO::TRANSFORM_DIR_FORWARD));
-    OCIO_REQUIRE_EQUAL(ops.size(), 3);
-    ops[0]->finalize(OCIO::FINALIZATION_EXACT);
-    ops[1]->finalize(OCIO::FINALIZATION_EXACT);
-    ops[2]->finalize(OCIO::FINALIZATION_EXACT);
-
-    const float reference[] = { 0.0f, 0.2f, 0.3f, 1.0f,
-                                0.1234f, 0.4567f, 0.9876f, 1.0f,
-                                11.0f, -0.5f, 0.5010f, 1.0f
-    };
-    const float nearest[] = { 0.0f, 0.03746097535f, 0.0842871964f, 1.0f,
-                              0.01664932258f, 0.2039542049f, 1.0f, 1.0f,
-                              1.0f, 0.0f, 0.2663891613f, 1.0f
-    };
-    const float linear[] = { 0.0f, 0.04016649351f, 0.09021852165f, 1.0f,
-                             0.01537752338f, 0.2087130845f, 0.9756000042f, 1.0f,
-                             1.0f, 0.0f, 0.2512601018f, 1.0f
-    };
-    const float tetrahedral[] = { 0.0f, 0.0401664972f, 0.0902185217f, 1.0f,
-                                  0.0153775234f, 0.208713099f, 0.975600004f, 1.0f,
-                                  1.0f, 0.0f, 0.251260102f, 1.0f
-    };
-
-    float color[12];
-    float color2[12];
-
-    // Check nearest
-    memcpy(color, reference, 12*sizeof(float));
-    OCIO::Lut3D_Nearest(color, 3, *lut);
-    memcpy(color2, reference, 12 * sizeof(float));
-    ops[0]->apply(color2, 3);
-    for(long i=0; i<12; ++i)
-    {
-        OCIO_CHECK_CLOSE(color[i], nearest[i], 1e-8);
-        // NB: In OCIO v2, INTERP_NEAREST is implemented as trilinear.
-        OCIO_CHECK_CLOSE(color2[i], linear[i], 1e-8);
-    }
-
-    // Check linear.
-    memcpy(color, reference, 12*sizeof(float));
-    OCIO::Lut3D_Linear(color, 3, *lut);
-    memcpy(color2, reference, 12 * sizeof(float));
-    ops[1]->apply(color2, 3);
-    for(long i=0; i<12; ++i)
-    {
-        OCIO_CHECK_CLOSE(color[i], linear[i], 1e-8);
-        OCIO_CHECK_CLOSE(color2[i], linear[i], 1e-8);
-    }
-
-    // Check tetrahedral
-    memcpy(color, reference, 12*sizeof(float));
-    OCIO::Lut3D_Tetrahedral(color, 3, *lut);
-    memcpy(color2, reference, 12 * sizeof(float));
-    ops[2]->apply(color2, 3);
-    for(long i=0; i<12; ++i)
-    {
-        OCIO_CHECK_CLOSE(color[i], tetrahedral[i], 1e-8);
-        OCIO_CHECK_CLOSE(color2[i], tetrahedral[i], 1e-7);
-    }
-}
-
-OCIO_ADD_TEST(Lut3DOp, lut3d_tetrahedral)
-{
-    OCIO::Lut3DRcPtr lut = OCIO::Lut3D::Create();
-    lut->size[0] = 3;
-    lut->size[1] = 3;
-    lut->size[2] = 3;
-
-    // Similar to lut3d_bizarre.spi3d.
-    lut->lut = { -0.0586510263f,  0.00488758599f,  0.0733137801f,
-                  0.0977517143f, -0.00488758599f, -0.0733137801f,
-                  1.62267840f,   -0.0488758534f,  -0.0977517143f,
-                 -0.0391006842f,  0.488758564f,   -0.0293255132f,
-                  0.0391006842f,  0.586510241f,    0.0293255132f,
-                  1.21212125f,    0.293255121f,   -0.0488758534f,
-                 -0.0293255132f,  1.46627569f,    -0.0195503421f,
-                  0.518084049f,   1.46627569f,    -0.0488758534f,
-                  1.00684261f,   -0.0977517143f,  -0.0488758534f,
-                 -0.00977517106f, 0.0488758534f,   0.391006857f,
-                  0.195503414f,  -0.0488758534f,   0.586510241f,
-                  1.47605085f,    0.146627560f,    0.195503414f,
-                 -0.0782013685f,  0.391006857f,    0.488758564f,
-                  0.371456504f,   0.391006857f,    0.391006857f,
-                  0.957966745f,   0.488758564f,    0.586510241f,
-                 -0.0488758534f,  1.00000000f,     0.0977517143f,
-                  0.439882696f,   1.20234609f,     0.488758564f,
-                  1.02639294f,    0.804496586f,    0.195503414f,
-                  0.000000000f,   0.0977517143f,   1.17302048f,
-                  0.293255121f,   0.0977517143f,   1.17302048f,
-                  0.879765391f,  -0.0391006842f,   0.879765391f,
-                 -0.0195503421f,  0.293255121f,    0.879765391f,
-                  0.0195503421f,  0.195503414f,    1.07526886f,
-                  0.801564038f,   0.391006857f,    0.782013714f,
-                 -0.00977517106f, 0.782013714f,    0.293255121f,
-                  0.596285462f,   1.75953078f,     0.293255121f,
-                  1.08504403f,    0.879765391f,    1.17302048f };
-
-    OCIO::OpRcPtrVec ops;
-    OCIO_CHECK_NO_THROW(CreateLut3DOp(ops, lut, OCIO::INTERP_LINEAR,
-                                      OCIO::TRANSFORM_DIR_FORWARD));
-    OCIO_CHECK_NO_THROW(CreateLut3DOp(ops, lut, OCIO::INTERP_TETRAHEDRAL,
-                                      OCIO::TRANSFORM_DIR_FORWARD));
-    OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    ops[0]->finalize(OCIO::FINALIZATION_EXACT);
-    ops[1]->finalize(OCIO::FINALIZATION_EXACT);
-
-
-    const float reference[] = { 0.778210117f, 0.823987182f, 0.88502327f, 0.5f,
-                                0.044556344f, 0.014404517f, 0.88158999f, 1.0f };
-
-    const float linear[] = { 0.7271368f,  0.8984065f,  0.7267998457f, 0.5f,
-                             0.02071510f, 0.09061456f, 0.9863739f,    1.0f };
-
-    const float tetrahedral[] = { 0.7461370f,   0.76439046f, 0.9007148f,  0.5f,
-                                  0.015932627f, 0.08899306f, 0.98500788f, 1.0f };
-    
-    float color[8];
-    float color2[8];
-
-    // Check linear
-    memcpy(color, reference, 8 * sizeof(float));
-    OCIO::Lut3D_Linear(color, 2, *lut);
-    memcpy(color2, reference, 8 * sizeof(float));
-    ops[0]->apply(color2, 2);
-    for (long i = 0; i < 8; ++i)
-    {
-        OCIO_CHECK_CLOSE(color[i], linear[i], 1e-7);
-        OCIO_CHECK_CLOSE(color2[i], linear[i], 1e-7);
-    }
-
-    // Check tetrahedral.
-    memcpy(color, reference, 8 * sizeof(float));
-    OCIO::Lut3D_Tetrahedral(color, 2, *lut);
-    memcpy(color2, reference, 8 * sizeof(float));
-    ops[1]->apply(color2, 2);
-    for (long i = 0; i < 8; ++i)
-    {
-        OCIO_CHECK_CLOSE(color[i], tetrahedral[i], 1e-7);
-        OCIO_CHECK_CLOSE(color2[i], tetrahedral[i], 1e-7);
-    }
-
-}
-
-
-OCIO_ADD_TEST(Lut3DOpStruct, inverse_comparison_check)
-{
-    OCIO::Lut3DRcPtr lut_a = OCIO::Lut3D::Create();
-    lut_a->size[0] = 32;
-    lut_a->size[1] = 32;
-    lut_a->size[2] = 32;
-    lut_a->lut.resize(lut_a->size[0]*lut_a->size[1]*lut_a->size[2]*3);
-    OCIO_CHECK_NO_THROW(GenerateIdentityLut3D(
-        &lut_a->lut[0], lut_a->size[0], 3, OCIO::LUT3DORDER_FAST_RED));
-    
-    OCIO::Lut3DRcPtr lut_b = OCIO::Lut3D::Create();
-    lut_b->from_min[0] = 0.5f;
-    lut_b->from_min[1] = 0.5f;
-    lut_b->from_min[2] = 0.5f;
-    lut_b->from_max[0] = 1.0f;
-    lut_b->from_max[1] = 1.0f;
-    lut_b->from_max[2] = 1.0f;
-    lut_b->size[0] = 16;
-    lut_b->size[1] = 16;
-    lut_b->size[2] = 16;
-    lut_b->lut.resize(lut_b->size[0]*lut_b->size[1]*lut_b->size[2]*3);
-    OCIO_CHECK_NO_THROW(GenerateIdentityLut3D(
-        &lut_b->lut[0], lut_b->size[0], 3, OCIO::LUT3DORDER_FAST_RED));
+    OCIO::Lut3DOpDataRcPtr lut_a = std::make_shared<OCIO::Lut3DOpData>(32);
+    OCIO::Lut3DOpDataRcPtr lut_b = std::make_shared<OCIO::Lut3DOpData>(16);
     
     OCIO::OpRcPtrVec ops;
-    OCIO_CHECK_NO_THROW(CreateLut3DOp(ops,
-        lut_a, OCIO::INTERP_NEAREST, OCIO::TRANSFORM_DIR_FORWARD));
-    OCIO_CHECK_NO_THROW(CreateLut3DOp(ops,
-        lut_a, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_INVERSE));
+    OCIO_CHECK_NO_THROW(CreateLut3DOp(ops, lut_a, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(CreateLut3DOp(ops, lut_a, OCIO::TRANSFORM_DIR_INVERSE));
     // Add Matrix and LUT.
-    OCIO_CHECK_NO_THROW(CreateLut3DOp(ops,
-        lut_b, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(CreateMinMaxOp(ops, 0.5f, 1.0f, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(CreateLut3DOp(ops, lut_b, OCIO::TRANSFORM_DIR_FORWARD));
     // Add LUT and Matrix.
-    OCIO_CHECK_NO_THROW(CreateLut3DOp(ops,
-        lut_b, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_INVERSE));
-    
+    OCIO_CHECK_NO_THROW(CreateLut3DOp(ops, lut_b, OCIO::TRANSFORM_DIR_INVERSE));
+    OCIO_CHECK_NO_THROW(CreateMinMaxOp(ops, 0.5f, 1.0f, OCIO::TRANSFORM_DIR_INVERSE));
+
     OCIO_REQUIRE_EQUAL(ops.size(), 6);
 
     OCIO::ConstOpRcPtr op1 = ops[1];
@@ -1220,26 +513,18 @@ OCIO_ADD_TEST(Lut3DOp, PerformanceCheck)
 }
 */
 
-OCIO_ADD_TEST(Lut3DOpStruct, throw_lut)
+OCIO_ADD_TEST(GenerateIdentityLut3D, throw_lut)
 {
-    // std::string Lut3D::getCacheID() const when LUT is empty.
-    OCIO::Lut3DRcPtr lut = OCIO::Lut3D::Create();
-    OCIO_CHECK_THROW_WHAT(lut->getCacheID(), OCIO::Exception, "invalid Lut3D");
-
-    // GenerateIdentityLut3D with less than 3 channels
-    lut->size[0] = 3;
-    lut->size[1] = 3;
-    lut->size[2] = 3;
-
-    lut->lut.resize(lut->size[0] * lut->size[1] * lut->size[2] * 3);
+    const int lutSize = 3;
+    std::vector<float> lut(lutSize * lutSize * lutSize * 3);
 
     OCIO_CHECK_THROW_WHAT(GenerateIdentityLut3D(
-        &lut->lut[0], lut->size[0], 2, OCIO::LUT3DORDER_FAST_RED),
+        lut.data(), lutSize, 2, OCIO::LUT3DORDER_FAST_RED),
         OCIO::Exception, "less than 3 channels");
 
     // GenerateIdentityLut3D with unknown order.
     OCIO_CHECK_THROW_WHAT(GenerateIdentityLut3D(
-        &lut->lut[0], lut->size[0], 3, (OCIO::Lut3DOrder)42),
+        lut.data(), lutSize, 3, (OCIO::Lut3DOrder)42),
         OCIO::Exception, "Unknown Lut3DOrder");
 
     // Get3DLutEdgeLenFromNumPixels with not cubic size.
@@ -1247,61 +532,35 @@ OCIO_ADD_TEST(Lut3DOpStruct, throw_lut)
         OCIO::Exception, "Cannot infer 3D LUT size");
 }
 
-OCIO_ADD_TEST(Lut3DOpStruct, throw_lut_op)
+OCIO_ADD_TEST(Lut3DOpData, create_op)
 {
-    OCIO::Lut3DRcPtr lut = OCIO::Lut3D::Create();
-    lut->size[0] = 3;
-    lut->size[1] = 3;
-    lut->size[2] = 3;
-    lut->lut.resize(lut->size[0] * lut->size[1] * lut->size[2] * 3);
-
-    OCIO_CHECK_NO_THROW(GenerateIdentityLut3D(
-        &lut->lut[0], lut->size[0], 3, OCIO::LUT3DORDER_FAST_RED));
+    OCIO::Lut3DOpDataRcPtr lut = std::make_shared<OCIO::Lut3DOpData>(3);
 
     OCIO::OpRcPtrVec ops;
     OCIO_CHECK_NO_THROW(CreateLut3DOp(ops,
-        lut, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_INVERSE));
+                                      lut,
+                                      OCIO::TRANSFORM_DIR_INVERSE));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
 
     // Inverse is fine
     OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
     ops.clear();
 
-    // Only valid interpolation.
+    // Only valid direction.
     OCIO_CHECK_THROW_WHAT(CreateLut3DOp(ops,
                                         lut,
-                                        OCIO::INTERP_UNKNOWN,
-                                        OCIO::TRANSFORM_DIR_FORWARD),
+                                        (OCIO::TransformDirection)42),
                           OCIO::Exception,
-                          "invalid interpolation");
-    ops.clear();
-
-    // Change size so that it does not match.
-    lut->lut.resize(lut->size[0] * lut->size[1] * lut->size[2]);
-    OCIO_CHECK_THROW_WHAT(CreateLut3DOp(ops,
-                                        lut,
-                                        OCIO::INTERP_LINEAR,
-                                        OCIO::TRANSFORM_DIR_FORWARD),
-                          OCIO::Exception,
-                          "size does not match");
-
+                          "unspecified transform direction");
 }
 
-OCIO_ADD_TEST(Lut3DOpStruct, cache_id)
+OCIO_ADD_TEST(Lut3DOp, cache_id)
 {
     OCIO::OpRcPtrVec ops;
     for (int i = 0; i < 2; ++i)
     {
-        OCIO::Lut3DRcPtr lut = OCIO::Lut3D::Create();
-        lut->size[0] = 3;
-        lut->size[1] = 3;
-        lut->size[2] = 3;
-        lut->lut.resize(lut->size[0] * lut->size[1] * lut->size[2] * 3);
-
-        OCIO_CHECK_NO_THROW(GenerateIdentityLut3D(
-            &lut->lut[0], lut->size[0], 3, OCIO::LUT3DORDER_FAST_RED));
-
-        OCIO_CHECK_NO_THROW(CreateLut3DOp(ops, lut, OCIO::INTERP_LINEAR,
+        OCIO::Lut3DOpDataRcPtr lut = std::make_shared<OCIO::Lut3DOpData>(3);
+        OCIO_CHECK_NO_THROW(CreateLut3DOp(ops, lut,
                                           OCIO::TRANSFORM_DIR_FORWARD));
     }
 
@@ -1333,84 +592,54 @@ OCIO_ADD_TEST(Lut3DOp, edge_len_from_num_pixels)
 
 OCIO_ADD_TEST(Lut3DOpStruct, lut3d_order)
 {
-    OCIO::Lut3DRcPtr lut_r = OCIO::Lut3D::Create();
-
-    lut_r->size[0] = 3;
-    lut_r->size[1] = 3;
-    lut_r->size[2] = 3;
-
-    lut_r->lut.resize(lut_r->size[0] * lut_r->size[1] * lut_r->size[2] * 3);
+    const int lutSize = 3;
+    std::vector<float> lut(lutSize * lutSize * lutSize * 3);
 
     OCIO_CHECK_NO_THROW(GenerateIdentityLut3D(
-        &lut_r->lut[0], lut_r->size[0], 3, OCIO::LUT3DORDER_FAST_RED));
+        lut.data(), lutSize, 3, OCIO::LUT3DORDER_FAST_RED));
 
     // First 3 values have red changing.
-    OCIO_CHECK_EQUAL(lut_r->lut[0], 0.0f);
-    OCIO_CHECK_EQUAL(lut_r->lut[3], 0.5f);
-    OCIO_CHECK_EQUAL(lut_r->lut[6], 1.0f);
+    OCIO_CHECK_EQUAL(lut[0], 0.0f);
+    OCIO_CHECK_EQUAL(lut[3], 0.5f);
+    OCIO_CHECK_EQUAL(lut[6], 1.0f);
     // Blue is all 0.
-    OCIO_CHECK_EQUAL(lut_r->lut[2], 0.0f);
-    OCIO_CHECK_EQUAL(lut_r->lut[5], 0.0f);
-    OCIO_CHECK_EQUAL(lut_r->lut[8], 0.0f);
+    OCIO_CHECK_EQUAL(lut[2], 0.0f);
+    OCIO_CHECK_EQUAL(lut[5], 0.0f);
+    OCIO_CHECK_EQUAL(lut[8], 0.0f);
     // Last 3 values have red changing.
-    OCIO_CHECK_EQUAL(lut_r->lut[72], 0.0f);
-    OCIO_CHECK_EQUAL(lut_r->lut[75], 0.5f);
-    OCIO_CHECK_EQUAL(lut_r->lut[78], 1.0f);
+    OCIO_CHECK_EQUAL(lut[72], 0.0f);
+    OCIO_CHECK_EQUAL(lut[75], 0.5f);
+    OCIO_CHECK_EQUAL(lut[78], 1.0f);
     // Blue is all 1.
-    OCIO_CHECK_EQUAL(lut_r->lut[74], 1.0f);
-    OCIO_CHECK_EQUAL(lut_r->lut[77], 1.0f);
-    OCIO_CHECK_EQUAL(lut_r->lut[80], 1.0f);
-
-    OCIO::Lut3DRcPtr lut_b = OCIO::Lut3D::Create();
-
-    lut_b->size[0] = 3;
-    lut_b->size[1] = 3;
-    lut_b->size[2] = 3;
-
-    lut_b->lut.resize(lut_b->size[0] * lut_b->size[1] * lut_b->size[2] * 3);
+    OCIO_CHECK_EQUAL(lut[74], 1.0f);
+    OCIO_CHECK_EQUAL(lut[77], 1.0f);
+    OCIO_CHECK_EQUAL(lut[80], 1.0f);
 
     OCIO_CHECK_NO_THROW(GenerateIdentityLut3D(
-        &lut_b->lut[0], lut_b->size[0], 3, OCIO::LUT3DORDER_FAST_BLUE));
+        lut.data(), lutSize, 3, OCIO::LUT3DORDER_FAST_BLUE));
 
     // First 3 values have blue changing.
-    OCIO_CHECK_EQUAL(lut_b->lut[2], 0.0f);
-    OCIO_CHECK_EQUAL(lut_b->lut[5], 0.5f);
-    OCIO_CHECK_EQUAL(lut_b->lut[8], 1.0f);
+    OCIO_CHECK_EQUAL(lut[2], 0.0f);
+    OCIO_CHECK_EQUAL(lut[5], 0.5f);
+    OCIO_CHECK_EQUAL(lut[8], 1.0f);
     // Red is all 0.
-    OCIO_CHECK_EQUAL(lut_b->lut[0], 0.0f);
-    OCIO_CHECK_EQUAL(lut_b->lut[3], 0.0f);
-    OCIO_CHECK_EQUAL(lut_b->lut[6], 0.0f);
+    OCIO_CHECK_EQUAL(lut[0], 0.0f);
+    OCIO_CHECK_EQUAL(lut[3], 0.0f);
+    OCIO_CHECK_EQUAL(lut[6], 0.0f);
     // Last 3 values have blue changing.
-    OCIO_CHECK_EQUAL(lut_b->lut[74], 0.0f);
-    OCIO_CHECK_EQUAL(lut_b->lut[77], 0.5f);
-    OCIO_CHECK_EQUAL(lut_b->lut[80], 1.0f);
+    OCIO_CHECK_EQUAL(lut[74], 0.0f);
+    OCIO_CHECK_EQUAL(lut[77], 0.5f);
+    OCIO_CHECK_EQUAL(lut[80], 1.0f);
     // Red is all 1.
-    OCIO_CHECK_EQUAL(lut_b->lut[72], 1.0f);
-    OCIO_CHECK_EQUAL(lut_b->lut[75], 1.0f);
-    OCIO_CHECK_EQUAL(lut_b->lut[78], 1.0f);
+    OCIO_CHECK_EQUAL(lut[72], 1.0f);
+    OCIO_CHECK_EQUAL(lut[75], 1.0f);
+    OCIO_CHECK_EQUAL(lut[78], 1.0f);
 
 }
 
-OCIO_ADD_TEST(Lut3DOp, convert_lut)
+OCIO_ADD_TEST(Lut3DOpData, lut_order)
 {
-    OCIO::Lut3DRcPtr lut_r = OCIO::Lut3D::Create();
-
-    lut_r->size[0] = 3;
-    lut_r->size[1] = 3;
-    lut_r->size[2] = 3;
-
-    lut_r->lut.resize(lut_r->size[0] * lut_r->size[1] * lut_r->size[2] * 3);
-
-    OCIO_CHECK_NO_THROW(GenerateIdentityLut3D(
-        &lut_r->lut[0], lut_r->size[0], 3, OCIO::LUT3DORDER_FAST_RED));
-
-    OCIO::OpRcPtrVec ops;
-    OCIO_CHECK_NO_THROW(CreateLut3DOp(ops, lut_r, OCIO::INTERP_LINEAR,
-                                      OCIO::TRANSFORM_DIR_FORWARD));
-
-    OCIO_REQUIRE_EQUAL(ops.size(), 1);
-
-    const OCIO::Lut3DOpRcPtr pLB = OCIO::DynamicPtrCast<OCIO::Lut3DOp>(ops[0]);
+    OCIO::Lut3DOpDataRcPtr pLB = std::make_shared<OCIO::Lut3DOpData>(3);
 
     // First 3 values have blue changing.
     OCIO_CHECK_EQUAL(pLB->getArray().getValues()[2], 0.0f);
