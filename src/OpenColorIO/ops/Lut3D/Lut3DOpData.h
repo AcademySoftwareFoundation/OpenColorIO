@@ -76,6 +76,8 @@ public:
     inline const Array & getArray() const { return m_array; }
     inline Array & getArray() { return m_array; }
 
+    void setArrayFromRedFastestOrder(const std::vector<float> & lut);
+
     // Get the grid dimensions of the array (array is N x N x N x 3).
     // Returns the dimension N.
     inline long getGridSize() const { return m_array.getLength(); }
