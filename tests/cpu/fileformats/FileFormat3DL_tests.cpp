@@ -7,13 +7,14 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 #include "UnitTestUtils.h"
 
+
 OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & fileName)
 {
     return OCIO::LoadTestFile<OCIO::LocalFileFormat, OCIO::LocalCachedFile>(
         fileName, std::ios_base::in);
 }
 
-OCIO_ADD_TEST(FileFormat3DL, FormatInfo)
+OCIO_ADD_TEST(FileFormat3DL, format_info)
 {
     OCIO::FormatInfoVec formatInfoVec;
     OCIO::LocalFileFormat tester;
@@ -30,7 +31,7 @@ OCIO_ADD_TEST(FileFormat3DL, FormatInfo)
                      formatInfoVec[1].capabilities);
 }
 
-OCIO_ADD_TEST(FileFormat3DL, Bake)
+OCIO_ADD_TEST(FileFormat3DL, bake)
 {
 
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
@@ -114,7 +115,7 @@ OCIO_ADD_TEST(FileFormat3DL, Bake)
 // 14-bit    16383           [8192, 32767]
 // 16-bit    65535           [32768, 131071]
 
-OCIO_ADD_TEST(FileFormat3DL, GetLikelyLutBitDepth)
+OCIO_ADD_TEST(FileFormat3DL, get_likely_lut_bitdepth)
 {
     OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(-1), -1);
     
@@ -123,28 +124,28 @@ OCIO_ADD_TEST(FileFormat3DL, GetLikelyLutBitDepth)
     OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(255), 8);
     OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(256), 8);
     OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(511), 8);
-    
+
     OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(512), 10);
     OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(1023), 10);
     OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(1024), 10);
     OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(2047), 10);
-    
+
     OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(2048), 12);
     OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(4095), 12);
     OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(4096), 12);
     OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(8191), 12);
-    
-    OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(16383), 14);
-    
+
+    OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(16383), 16);
+
     OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(65535), 16);
     OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(65536), 16);
     OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(131071), 16);
-    
+
     OCIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(131072), 16);
 }
 
 
-OCIO_ADD_TEST(FileFormat3DL, TestLoad)
+OCIO_ADD_TEST(FileFormat3DL, load)
 {
     // Discreet 3D LUT file
     const std::string discree3DtLut("discreet-3d-lut.3dl");
@@ -152,27 +153,25 @@ OCIO_ADD_TEST(FileFormat3DL, TestLoad)
     OCIO::LocalCachedFileRcPtr lutFile;
     OCIO_CHECK_NO_THROW(lutFile = LoadLutFile(discree3DtLut));
 
-    OCIO_CHECK_ASSERT(lutFile->has1D);
-    OCIO_CHECK_ASSERT(lutFile->has3D);
-    OCIO_CHECK_EQUAL(OCIO::Lut1D::ERROR_ABSOLUTE, lutFile->lut1D->errortype);
-    OCIO_CHECK_EQUAL(0.00195503421f, lutFile->lut1D->maxerror);
-    OCIO_CHECK_EQUAL(0.0f, lutFile->lut1D->from_min[1]);
-    OCIO_CHECK_EQUAL(1.0f, lutFile->lut1D->from_max[1]);
-    OCIO_CHECK_EQUAL(17, lutFile->lut1D->luts[0].size());
-    OCIO_CHECK_EQUAL(0.0f, lutFile->lut1D->luts[0][0]);
-    OCIO_CHECK_EQUAL(0.563049853f, lutFile->lut1D->luts[0][9]);
-    OCIO_CHECK_EQUAL(1.0f, lutFile->lut1D->luts[0][16]);
-    OCIO_CHECK_EQUAL(17, lutFile->lut3D->size[0]);
-    OCIO_CHECK_EQUAL(17, lutFile->lut3D->size[1]);
-    OCIO_CHECK_EQUAL(17, lutFile->lut3D->size[2]);
-    OCIO_CHECK_EQUAL(17*17*17*3, lutFile->lut3D->lut.size());
-    // LUT is R fast, file is B fast ([3..5] is [867..869] in file)
-    OCIO_CHECK_EQUAL(0.00854700897f, lutFile->lut3D->lut[3]);
-    OCIO_CHECK_EQUAL(0.00244200253f, lutFile->lut3D->lut[4]);
-    OCIO_CHECK_EQUAL(0.00708180759f, lutFile->lut3D->lut[5]);
-    OCIO_CHECK_EQUAL(0.0f, lutFile->lut3D->lut[4335]);
-    OCIO_CHECK_EQUAL(0.0368742384f, lutFile->lut3D->lut[4336]);
-    OCIO_CHECK_EQUAL(0.0705738738f, lutFile->lut3D->lut[4337]);
+    OCIO_REQUIRE_ASSERT(!lutFile->lut1D);
+    OCIO_REQUIRE_ASSERT(lutFile->lut3D);
+
+    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT10, lutFile->lut3D->getInputBitDepth());
+    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT12, lutFile->lut3D->getOutputBitDepth());
+    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT12, lutFile->lut3D->getFileOutputBitDepth());
+    OCIO_CHECK_EQUAL(17, lutFile->lut3D->getGridSize());
+
+    // File and lut are using the same order.
+    // 41: 54 323 597
+    const auto & lutArray = lutFile->lut3D->getArray();
+    OCIO_CHECK_EQUAL( 54.f, lutArray[41 * 3]);
+    OCIO_CHECK_EQUAL(323.f, lutArray[41 * 3 + 1]);
+    OCIO_CHECK_EQUAL(597.f, lutArray[41 * 3 + 2]);
+
+    // 4591: 4025 3426 0
+    OCIO_CHECK_EQUAL(4025.f, lutArray[4591 * 3]);
+    OCIO_CHECK_EQUAL(3426.f, lutArray[4591 * 3 + 1]);
+    OCIO_CHECK_EQUAL(   0.f, lutArray[4591 * 3 + 2]);
 
     const std::string discree3DtLutFail("error_truncated_file.3dl");
 
@@ -180,4 +179,70 @@ OCIO_ADD_TEST(FileFormat3DL, TestLoad)
                           OCIO::Exception,
                           "Cannot infer 3D LUT size");
 
+}
+
+OCIO::LocalCachedFileRcPtr Read3dl(const std::string & fileContent)
+{
+    std::istringstream is;
+    is.str(fileContent);
+
+    // Read file
+    OCIO::LocalFileFormat tester;
+    const std::string SAMPLE_NAME("Memory File");
+    OCIO::CachedFileRcPtr cachedFile = tester.read(is, SAMPLE_NAME);
+    return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
+}
+
+OCIO_ADD_TEST(FileFormat3DL, parse_1d)
+{
+    {
+        // Rounding down test.
+        const std::string NO3DLUT =
+            "#Tokens required by applications - do not edit\n"
+            "\n"
+            "3DMESH\n"
+            "Mesh 4 10\n"
+            "0 63 127 191 255 319 383 447 511 575 639 703 767 831 895 959 1023\n";
+
+        OCIO::LocalCachedFileRcPtr lutFile = Read3dl(NO3DLUT);
+
+        OCIO_REQUIRE_ASSERT(lutFile);
+
+        OCIO_CHECK_ASSERT(!lutFile->lut1D);
+        OCIO_CHECK_ASSERT(!lutFile->lut3D);
+    }
+    {
+        // Rounding up test.
+        const std::string NO3DLUT =
+            "#Tokens required by applications - do not edit\n"
+            "\n"
+            "3DMESH\n"
+            "Mesh 4 10\n"
+            "0 64 128 192 256 320 384 448 512 576 640 704 768 832 896 960 1023\n";
+
+        OCIO::LocalCachedFileRcPtr lutFile = Read3dl(NO3DLUT);
+
+        OCIO_REQUIRE_ASSERT(lutFile);
+
+        OCIO_CHECK_ASSERT(!lutFile->lut1D);
+    }
+    {
+        // Not an identity test.
+        const std::string NO3DLUT =
+            "#Tokens required by applications - do not edit\n"
+            "\n"
+            "3DMESH\n"
+            "Mesh 4 10\n"
+            "0 64 128 192 256 320 384 448 512 576 640 704 768 832 896 960 1020\n";
+
+        OCIO::LocalCachedFileRcPtr lutFile = Read3dl(NO3DLUT);
+
+        OCIO_REQUIRE_ASSERT(lutFile);
+
+        OCIO_REQUIRE_ASSERT(lutFile->lut1D);
+        OCIO_CHECK_EQUAL(lutFile->lut1D->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
+        OCIO_CHECK_EQUAL(lutFile->lut1D->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+        OCIO_CHECK_EQUAL(lutFile->lut1D->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+
+    }
 }

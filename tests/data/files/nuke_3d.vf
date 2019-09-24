@@ -1,0 +1,12 @@
+#Inventor V2.1 ascii
+grid_size 2 2 2
+global_transform 1 0 0 0  0 1 0 0  0 0 1 0  0 0 0 1
+data
+0 0 0
+0 0 2
+0 2 0
+0 2 2
+2 0 0
+2 0 2
+2 2 0
+2 2 2

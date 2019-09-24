@@ -404,6 +404,16 @@ OCIO_NAMESPACE_ENTER
         }
     }
 
+    void CreateMinMaxOp(OpRcPtrVec & ops,
+                        float from_min,
+                        float from_max,
+                        TransformDirection direction)
+    {
+        const double min[3] = { from_min, from_min, from_min };
+        const double max[3] = { from_max, from_max, from_max };
+        CreateMinMaxOp(ops, min, max, direction);
+    }
+
     void CreateMatrixOp(OpRcPtrVec & ops,
                         MatrixOpDataRcPtr & matrix,
                         TransformDirection direction)

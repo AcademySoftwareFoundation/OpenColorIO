@@ -16,6 +16,7 @@
 #include "MathUtils.h"
 #include "ops/Lut1D/Lut1DOp.h"
 #include "ops/Lut3D/Lut3DOp.h"
+#include "ops/Matrix/MatrixOps.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
@@ -288,24 +289,19 @@ OCIO_NAMESPACE_ENTER
         class CachedFileCSP : public CachedFile
         {
         public:
-            CachedFileCSP () :
-                hasprelut(false),
-                csptype("unknown"),
-                metadata("none")
+            CachedFileCSP ()
+                : metadata("none")
             {
-                prelut = Lut1D::Create();
-                lut1D = Lut1D::Create();
-                lut3D = Lut3D::Create();
-            };
-            ~CachedFileCSP() {};
+            }
+            ~CachedFileCSP() = default;
             
-            bool hasprelut;
-            std::string csptype;
             std::string metadata;
-            // TODO: Switch to the OpData classes.
-            Lut1DRcPtr prelut;
-            Lut1DRcPtr lut1D;
-            Lut3DRcPtr lut3D;
+
+            double prelut_from_min[3] = { 0.0, 0.0, 0.0 };
+            double prelut_from_max[3] = { 1.0, 1.0, 1.0 };
+            Lut1DOpDataRcPtr prelut;
+            Lut1DOpDataRcPtr lut1D;
+            Lut3DOpDataRcPtr lut3D;
         };
         typedef OCIO_SHARED_PTR<CachedFileCSP> CachedFileCSPRcPtr;
         
@@ -318,29 +314,29 @@ OCIO_NAMESPACE_ENTER
         class LocalFileFormat : public FileFormat
         {
         public:
-            
-            ~LocalFileFormat() {};
-            
+            LocalFileFormat() = default;
+            ~LocalFileFormat() = default;
+
             void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
-            
+
             CachedFileRcPtr read(
                 std::istream & istream,
                 const std::string & fileName) const override;
-            
+
             void bake(const Baker & baker,
                       const std::string & formatName,
                       std::ostream & ostream) const override;
-            
+
             void buildFileOps(OpRcPtrVec & ops,
-                                      const Config& config,
-                                      const ConstContextRcPtr & context,
-                                      CachedFileRcPtr untypedCachedFile,
-                                      const FileTransform& fileTransform,
-                                      TransformDirection dir) const override;
+                              const Config & config,
+                              const ConstContextRcPtr & context,
+                              CachedFileRcPtr untypedCachedFile,
+                              const FileTransform & fileTransform,
+                              TransformDirection dir) const override;
         };
 
 
-        // TODO: remove this when we don't need to debug
+        // Note: Remove this when we don't need to debug.
         /*
         template<class T>
         std::ostream& operator<< (std::ostream& os, const std::vector<T>& v)
@@ -361,43 +357,43 @@ OCIO_NAMESPACE_ENTER
         
         CachedFileRcPtr LocalFileFormat::read(
             std::istream & istream,
-            const std::string & /* fileName unused */) const
+            const std::string & fileName) const
         {
+            Lut1DOpDataRcPtr lut1d_ptr;
+            Lut3DOpDataRcPtr lut3d_ptr;
 
-            // this shouldn't happen
-            if (!istream)
-            {
-                throw Exception ("file stream empty when trying to read csp LUT");
-            }
-            
-            // TODO: Switch to the OpData classes.
-            Lut1DRcPtr prelut_ptr = Lut1D::Create();
-            Lut1DRcPtr lut1d_ptr = Lut1D::Create();
-            Lut3DRcPtr lut3d_ptr = Lut3D::Create();
-
-            // try and read the LUT header
+            // Try and read the LUT header.
             std::string line;
-            nextline (istream, line);
-            if (!startswithU(line, "CSPLUTV100"))
+            bool notEmpty = nextline (istream, line);
+
+            if (!notEmpty)
             {
                 std::ostringstream os;
-                os << "LUT doesn't seem to be a csp file, expected 'CSPLUTV100'.";
-                os << "First line: '" << line << "'.";
+                os << "File " << fileName;
+                os << ": file stream empty when trying to read csp LUT.";
                 throw Exception(os.str().c_str());
             }
 
-            // next line tells us if we are reading a 1D or 3D LUT
+            if (!startswithU(line, "CSPLUTV100"))
+            {
+                std::ostringstream os;
+                os << "File " << fileName << " doesn't seem to be a csp LUT, ";
+                os << "expected 'CSPLUTV100'. First line: '" << line << "'.";
+                throw Exception(os.str().c_str());
+            }
+
+            // Next line tells us if we are reading a 1D or 3D LUT.
             nextline (istream, line);
             if (!startswithU(line, "1D") && !startswithU(line, "3D"))
             {
                 std::ostringstream os;
                 os << "Unsupported CSP LUT type. Require 1D or 3D. ";
-                os << "Found, '" << line << "'.";
+                os << "Found, '" << line << "' in " << fileName << ".";
                 throw Exception(os.str().c_str());
             }
             std::string csptype = line;
 
-            // read meta data block
+            // Read meta data block.
             std::string metadata;
             bool lineUpdateNeeded = false;
             nextline (istream, line);
@@ -411,18 +407,18 @@ OCIO_NAMESPACE_ENTER
                         metadata += line + "\n";
                 }
                 lineUpdateNeeded = true;
-            }// else line update not needed
+            } // Else line update not needed.
             
             
-            // Make 3 vectors of prelut inputs + output values
+            // Make 3 vectors of prelut inputs + output values.
             std::vector<float> prelut_in[3];
             std::vector<float> prelut_out[3];
             bool useprelut[3] = { false, false, false };
             
-            // Parse the prelut block
+            // Parse the prelut block.
             for (int c = 0; c < 3; ++c)
             {
-                // how many points do we have for this channel
+                // How many points do we have for this channel.
                 if (lineUpdateNeeded)
                     nextline (istream, line);
 
@@ -432,7 +428,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::ostringstream os;
                     os << "Prelut does not specify valid dimension size on channel '";
-                    os << c << ": " << line;
+                    os << c << ": '" << line << "' in " << fileName << ".";
                     throw Exception(os.str().c_str());
                 }
                 
@@ -453,6 +449,7 @@ OCIO_NAMESPACE_ENTER
                         os << "Prelut does not specify the expected number of data points. ";
                         os << "Expected: " << cpoints << ".";
                         os << "Found: " << inputparts.size() << ", " << outputparts.size() << ".";
+                        os << " In " << fileName << ".";
                         throw Exception(os.str().c_str());
                     }
                     
@@ -460,7 +457,8 @@ OCIO_NAMESPACE_ENTER
                        !StringVecToFloatVec(prelut_out[c], outputparts))
                     {
                         std::ostringstream os;
-                        os << "Prelut data is malformed, cannot to float array.";
+                        os << "Prelut data is malformed, cannot convert to float array.";
+                        os << " In " << fileName << ".";
                         throw Exception(os.str().c_str());
                     }
                     
@@ -473,7 +471,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     // Even though it's probably not part of the spec, why not allow for a size 0
                     // in a channel to be specified?  It should be synonymous with identity,
-                    // and allows the code lower down to assume all 3 channels exist
+                    // and allows the code lower down to assume all 3 channels exist.
                     
                     prelut_in[c].push_back(0.0f);
                     prelut_in[c].push_back(1.0f);
@@ -486,140 +484,206 @@ OCIO_NAMESPACE_ENTER
 
             if (csptype == "1D")
             {
-
-                // how many 1D LUT points do we have
+                // How many 1D LUT points do we have.
                 nextline (istream, line);
-                int points1D = atoi (line.c_str());
-
-                //
-                float from_min = 0.0;
-                float from_max = 1.0;
-                for(int i=0; i<3; ++i)
+                int points1D = std::stoi(line.c_str());
+                
+                if (points1D <= 0)
                 {
-                    lut1d_ptr->from_min[i] = from_min;
-                    lut1d_ptr->from_max[i] = from_max;
-                    lut1d_ptr->luts[i].clear();
-                    lut1d_ptr->luts[i].reserve(points1D);
+                    std::ostringstream os;
+                    os << "A csp 1D LUT with invalid number of entries (";
+                    os << points1D << "): " << line << " .";
+                    os << " In " << fileName << ".";
+                    throw Exception(os.str().c_str());
                 }
+
+                lut1d_ptr = std::make_shared<Lut1DOpData>(points1D);
+                lut1d_ptr->setFileOutputBitDepth(BIT_DEPTH_F32);
+                Array & lutArray = lut1d_ptr->getArray();
 
                 for(int i = 0; i < points1D; ++i)
                 {
-
-                    // scan for the three floats
-                    float lp[3];
+                    // Scan for the three floats.
                     nextline (istream, line);
-                    if (sscanf (line.c_str(), "%f %f %f",
-                        &lp[0], &lp[1], &lp[2]) != 3) {
-                        throw Exception ("malformed 1D csp LUT");
+
+                    std::vector<std::string> lineParts;
+                    pystring::split(line, lineParts);
+                    
+                    std::vector<float> floatArray;
+
+                    if (!StringVecToFloatVec(floatArray, lineParts)
+                        || 3 != floatArray.size())
+                    {
+                        std::ostringstream os;
+                        os << "Malformed 1D csp LUT. Each line of LUT values ";
+                        os << "must contain three numbers. Line: '";
+                        os << line << "'. File: ";
+                        os << fileName << ".";
+                        throw Exception(os.str().c_str());
                     }
 
-                    // store each channel
-                    lut1d_ptr->luts[0].push_back(lp[0]);
-                    lut1d_ptr->luts[1].push_back(lp[1]);
-                    lut1d_ptr->luts[2].push_back(lp[2]);
+                    // Store each channel.
+                    lutArray[i*3 + 0] = floatArray[0];
+                    lutArray[i*3 + 1] = floatArray[1];
+                    lutArray[i*3 + 2] = floatArray[2];
 
                 }
 
             }
             else if (csptype == "3D")
             {
-                // read the cube size
+                // Read the cube size.
                 nextline (istream, line);
-                if (sscanf (line.c_str(), "%d %d %d",
-                    &lut3d_ptr->size[0],
-                    &lut3d_ptr->size[1],
-                    &lut3d_ptr->size[2]) != 3 ) {
-                    throw Exception("malformed 3D csp LUT, couldn't read cube size");
+
+                std::vector<std::string> lineParts;
+                pystring::split(line, lineParts);
+
+                std::vector<int> cubeSize;
+
+                if (!StringVecToIntVec(cubeSize, lineParts)
+                    || 3 != cubeSize.size())
+                {
+                    std::ostringstream os;
+                    os << "Malformed 3D csp in LUT file, couldn't read cube size. '";
+                    os << line << "'. In file: ";
+                    os << fileName << ".";
+                    throw Exception(os.str().c_str());
                 }
                 
+                // TODO: Support nonuniform cube sizes.
+                int lutSize = cubeSize[0];
+                if (lutSize != cubeSize[1] || lutSize != cubeSize[2])
+                {
+                    std::ostringstream os;
+                    os << "A csp 3D LUT with nonuniform cube sizes is not supported (";
+                    os << cubeSize[0] << ", " << cubeSize[1] << ", " << cubeSize[2];
+                    os << "): " << line << " .";
+                    throw Exception(os.str().c_str());
+                }
+
+                if (lutSize <= 0)
+                {
+                    std::ostringstream os;
+                    os << "A csp 3D LUT with invalid cube size (";
+                    os << lutSize << "): " << line << "' in " << fileName << ".";
+                    throw Exception(os.str().c_str());
+                }
+
+                lut3d_ptr = std::make_shared<Lut3DOpData>(lutSize);
+                lut3d_ptr->setFileOutputBitDepth(BIT_DEPTH_F32);
+
+                Array & lutArray = lut3d_ptr->getArray();
+                int num3dentries = lutSize * lutSize * lutSize;
                 
-                // resize cube
-                int num3dentries = lut3d_ptr->size[0] * lut3d_ptr->size[1] * lut3d_ptr->size[2];
-                lut3d_ptr->lut.resize(num3dentries * 3);
-                
+                int r = 0;
+                int g = 0;
+                int b = 0;
+
                 for(int i=0; i<num3dentries; ++i)
                 {
-                    // load the cube
+                    // Load the cube.
                     nextline (istream, line);
                     
-                    if(sscanf (line.c_str(), "%f %f %f",
-                       &lut3d_ptr->lut[3*i+0],
-                       &lut3d_ptr->lut[3*i+1],
-                       &lut3d_ptr->lut[3*i+2]) != 3 )
+                    // OpData::Lut3D Array index, b changes fastest.
+                    const unsigned long arrayIdx =
+                        GetLut3DIndex_BlueFast(r, g, b,
+                                               lutSize, lutSize, lutSize);
+
+                    std::vector<std::string> lineParts;
+                    pystring::split(line, lineParts);
+
+                    std::vector<float> floatArray;
+
+                    if (!StringVecToFloatVec(floatArray, lineParts)
+                        || 3 != floatArray.size())
                     {
                         std::ostringstream os;
                         os << "Malformed 3D csp LUT, couldn't read cube row (";
-                        os << i << "): " << line << " .";
+                        os << i << "): " << line << "' in " << fileName << ".";
                         throw Exception(os.str().c_str());
                     }
+
+                    lutArray[arrayIdx + 0] = floatArray[0];
+                    lutArray[arrayIdx + 1] = floatArray[1];
+                    lutArray[arrayIdx + 2] = floatArray[2];
+
+                    // CSP stores the LUT in red-fastest order.
+                    r += 1;
+                    if (r == lutSize)
+                    {
+                        r = 0;
+                        g += 1;
+                        if (g == lutSize)
+                        {
+                            g = 0;
+                            b += 1;
+                        }
+                    }
+
                 }
             }
             
             CachedFileCSPRcPtr cachedFile = CachedFileCSPRcPtr (new CachedFileCSP ());
-            cachedFile->csptype = csptype;
             cachedFile->metadata = metadata;
             
             if(useprelut[0] || useprelut[1] || useprelut[2])
             {
-                cachedFile->hasprelut = true;
-                
+                Lut1DOpDataRcPtr prelut_ptr = std::make_shared<Lut1DOpData>(NUM_PRELUT_SAMPLES);
+                prelut_ptr->setFileOutputBitDepth(BIT_DEPTH_F32);
+
                 for (int c = 0; c < 3; ++c)
                 {
                     size_t prelut_numpts = prelut_in[c].size();
                     float from_min = prelut_in[c][0];
                     float from_max = prelut_in[c][prelut_numpts-1];
                     
-                    // Allocate the interpolator
+                    // Allocate the interpolator.
                     rsr_Interpolator1D_Raw * cprelut_raw = 
                         rsr_Interpolator1D_Raw_create(static_cast<unsigned int>(prelut_numpts));
                     
-                    // Copy our prelut data into the interpolator
+                    // Copy our prelut data into the interpolator.
                     for(size_t i=0; i<prelut_numpts; ++i)
                     {
                         cprelut_raw->stims[i] = prelut_in[c][i];
                         cprelut_raw->values[i] = prelut_out[c][i];
                     }
                     
-                    // Create interpolater, to resample to simple 1D LUT
+                    // Create interpolater, to resample to simple 1D LUT.
                     rsr_Interpolator1D * interpolater =
                         rsr_Interpolator1D_createFromRaw(cprelut_raw);
                     
-                    // Resample into 1D LUT
-                    // TODO: Fancy spline analysis to determine required number of samples
-                    prelut_ptr->from_min[c] = from_min;
-                    prelut_ptr->from_max[c] = from_max;
-                    prelut_ptr->luts[c].clear();
-                    prelut_ptr->luts[c].reserve(NUM_PRELUT_SAMPLES);
+                    // Resample into 1D LUT.
+                    // TODO: Fancy spline analysis to determine required number of samples.
+                    cachedFile->prelut_from_min[c] = from_min;
+                    cachedFile->prelut_from_max[c] = from_max;
+                    Array & prelutArray = prelut_ptr->getArray();
                     
                     for (int i = 0; i < NUM_PRELUT_SAMPLES; ++i)
                     {
                         float interpo = float(i) / float(NUM_PRELUT_SAMPLES-1);
                         float srcval = lerpf(from_min, from_max, interpo);
                         float newval = rsr_Interpolator1D_interpolate(srcval, interpolater);
-                        prelut_ptr->luts[c].push_back(newval);
+                        prelutArray[i*3 + c] = newval;
                     }
 
                     rsr_Interpolator1D_Raw_destroy(cprelut_raw);
                     rsr_Interpolator1D_destroy(interpolater);
                 }
                 
-                prelut_ptr->maxerror = 1e-6f;
-                prelut_ptr->errortype = Lut1D::ERROR_RELATIVE;
-                
+                prelut_ptr->setInterpolation(PRELUT_INTERPOLATION);
                 cachedFile->prelut = prelut_ptr;
             }
             
             if(csptype == "1D")
             {
-                lut1d_ptr->maxerror = 0.0f;
-                lut1d_ptr->errortype = Lut1D::ERROR_RELATIVE;
                 cachedFile->lut1D = lut1d_ptr;
             }
             else if (csptype == "3D")
             {
                 cachedFile->lut3D = lut3d_ptr;
             }
-            
+            // If file contains neither it throws earlier.
+
             return cachedFile;
         }
         
@@ -633,7 +697,7 @@ OCIO_NAMESPACE_ENTER
             
             ConstConfigRcPtr config = baker.getConfig();
             
-            // TODO: Add 1D/3D LUT writing switch, using hasChannelCrosstalk
+            // TODO: Add 1D/3D LUT writing switch, using hasChannelCrosstalk.
             int cubeSize = baker.getCubeSize();
             if(cubeSize==-1) cubeSize = DEFAULT_CUBE_SIZE;
             cubeSize = std::max(2, cubeSize); // smallest cube is 2x2x2
@@ -647,9 +711,9 @@ OCIO_NAMESPACE_ENTER
             std::vector<float> shaperInData;
             std::vector<float> shaperOutData;
             
-            // Use an explicitly shaper space
+            // Use an explicitly shaper space.
             // TODO: Use the optional allocation for the shaper space,
-            //       instead of the implied 0-1 uniform allocation
+            //       instead of the implied 0-1 uniform allocation.
             std::string shaperSpace = baker.getShaperSpace();
             if(!shaperSpace.empty())
             {
@@ -705,7 +769,7 @@ OCIO_NAMESPACE_ENTER
             else
             {
                 // A shaper is not specified, let's fake one, using the input space allocation as
-                // our guide
+                // our guide.
                 
                 ConstColorSpaceRcPtr inputColorSpace = config->getColorSpace(baker.getInputSpace());
 
@@ -716,11 +780,11 @@ OCIO_NAMESPACE_ENTER
                     throw Exception(os.str().c_str());
                 }
 
-                // Let's make an allocation transform for this colorspace
+                // Let's make an allocation transform for this colorspace.
                 AllocationTransformRcPtr allocationTransform = AllocationTransform::Create();
                 allocationTransform->setAllocation(inputColorSpace->getAllocation());
                 
-                // numVars may be '0'
+                // numVars may be '0'.
                 int numVars = inputColorSpace->getAllocationNumVars();
                 if(numVars>0)
                 {
@@ -751,11 +815,12 @@ OCIO_NAMESPACE_ENTER
                 // Apply the forward to the allocation to the output shaper y axis, and the cube
                 ConstCPUProcessorRcPtr shaperToInput
                     = config->getProcessor(allocationTransform, TRANSFORM_DIR_INVERSE)->getDefaultCPUProcessor();
+
                 PackedImageDesc shaperInImg(&shaperInData[0], shaperSize, 1, 3);
                 shaperToInput->apply(shaperInImg);
                 shaperToInput->apply(cubeImg);
                 
-                // Apply the 3D LUT to the remainder (from the input to the output)
+                // Apply the 3D LUT to the remainder (from the input to the output).
                 ConstProcessorRcPtr inputToTarget;
                 if (!looks.empty())
                 {
@@ -764,7 +829,7 @@ OCIO_NAMESPACE_ENTER
                     transform->setSrc(baker.getInputSpace());
                     transform->setDst(baker.getTargetSpace());
                     inputToTarget = config->getProcessor(transform, 
-                        TRANSFORM_DIR_FORWARD);
+                                                         TRANSFORM_DIR_FORWARD);
                 }
                 else
                 {
@@ -774,7 +839,7 @@ OCIO_NAMESPACE_ENTER
                 cpu->apply(cubeImg);
             }
             
-            // Write out the file
+            // Write out the file.
             ostream << "CSPLUTV100\n";
             ostream << "3D\n";
             ostream << "\n";
@@ -787,7 +852,7 @@ OCIO_NAMESPACE_ENTER
             ostream << "END METADATA\n";
             ostream << "\n";
             
-            // Write out the 1D Prelut
+            // Write out the 1D Prelut.
             ostream.setf(std::ios::fixed, std::ios::floatfield);
             ostream.precision(6);
             
@@ -818,7 +883,7 @@ OCIO_NAMESPACE_ENTER
             }
             ostream << "\n";
             
-            // Write out the 3D Cube
+            // Write out the 3D Cube.
             if(cubeSize < 2)
             {
                 throw Exception("Internal cube size exception.");
@@ -833,11 +898,11 @@ OCIO_NAMESPACE_ENTER
         
         void
         LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
-                                    const Config& /*config*/,
-                                    const ConstContextRcPtr & /*context*/,
-                                    CachedFileRcPtr untypedCachedFile,
-                                    const FileTransform& fileTransform,
-                                    TransformDirection dir) const
+                                      const Config & /*config*/,
+                                      const ConstContextRcPtr & /*context*/,
+                                      CachedFileRcPtr untypedCachedFile,
+                                      const FileTransform & fileTransform,
+                                      TransformDirection dir) const
         {
 
             CachedFileCSPRcPtr cachedFile = DynamicPtrCast<CachedFileCSP>(untypedCachedFile);
@@ -850,35 +915,49 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
 
-            TransformDirection newDir = CombineTransformDirections(dir,
-                fileTransform.getDirection());
+            TransformDirection newDir = fileTransform.getDirection();
+            newDir = CombineTransformDirections(dir, newDir);
 
             if(newDir == TRANSFORM_DIR_FORWARD)
             {
-                if(cachedFile->hasprelut)
+                if(cachedFile->prelut)
                 {
-                    CreateLut1DOp(ops, cachedFile->prelut,
-                                  PRELUT_INTERPOLATION, newDir);
+                    CreateMinMaxOp(ops,
+                                   cachedFile->prelut_from_min,
+                                   cachedFile->prelut_from_max,
+                                   newDir);
+                    CreateLut1DOp(ops, cachedFile->prelut, newDir);
                 }
-                if(cachedFile->csptype == "1D")
-                    CreateLut1DOp(ops, cachedFile->lut1D,
-                                  fileTransform.getInterpolation(), newDir);
-                else if(cachedFile->csptype == "3D")
-                    CreateLut3DOp(ops, cachedFile->lut3D,
-                                  fileTransform.getInterpolation(), newDir);
+                if (cachedFile->lut1D)
+                {
+                    cachedFile->lut1D->setInterpolation(fileTransform.getInterpolation());
+                    CreateLut1DOp(ops, cachedFile->lut1D, newDir);
+                }
+                else if (cachedFile->lut3D)
+                {
+                    cachedFile->lut3D->setInterpolation(fileTransform.getInterpolation());
+                    CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+                }
             }
             else if(newDir == TRANSFORM_DIR_INVERSE)
             {
-                if(cachedFile->csptype == "1D")
-                    CreateLut1DOp(ops, cachedFile->lut1D,
-                                  fileTransform.getInterpolation(), newDir);
-                else if(cachedFile->csptype == "3D")
-                    CreateLut3DOp(ops, cachedFile->lut3D,
-                                  fileTransform.getInterpolation(), newDir);
-                if(cachedFile->hasprelut)
+                if (cachedFile->lut1D)
                 {
-                    CreateLut1DOp(ops, cachedFile->prelut,
-                                  PRELUT_INTERPOLATION, newDir);
+                    cachedFile->lut1D->setInterpolation(fileTransform.getInterpolation());
+                    CreateLut1DOp(ops, cachedFile->lut1D, newDir);
+                }
+                else if (cachedFile->lut3D)
+                {
+                    cachedFile->lut3D->setInterpolation(fileTransform.getInterpolation());
+                    CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+                }
+                if(cachedFile->prelut)
+                {
+                    CreateLut1DOp(ops, cachedFile->prelut, newDir);
+                    CreateMinMaxOp(ops,
+                                   cachedFile->prelut_from_min,
+                                   cachedFile->prelut_from_max,
+                                   newDir);
                 }
             }
 
@@ -904,7 +983,7 @@ namespace OCIO = OCIO_NAMESPACE;
 
 void compareFloats(const std::string& floats1, const std::string& floats2)
 {
-    // number comparison
+    // Number comparison.
     OCIO::StringVec strings1;
     pystring::split(pystring::strip(floats1), strings1);
     std::vector<float> numbers1;
@@ -957,43 +1036,56 @@ OCIO_ADD_TEST(FileFormatCSP, simple1D)
     std::istringstream simple1D;
     simple1D.str(strebuf.str());
     
-    // Read file
+    // Read file.
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile = tester.read(simple1D, emptyString);
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);
 
-    // check metadata
+    // Check metadata.
     OCIO_CHECK_EQUAL(csplut->metadata, std::string("foobar\n"));
 
-    // check prelut data
-    OCIO_CHECK_ASSERT(csplut->hasprelut);
+    // Check prelut data.
+    OCIO_REQUIRE_ASSERT(csplut->prelut);
+    OCIO_CHECK_EQUAL(csplut->prelut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
-    // check prelut data (note: the spline is resampled into a 1D LUT)
-    for(int c=0; c<3; ++c)
+    const OCIO::Array & prelutArray = csplut->prelut->getArray();
+
+    // Check prelut data (note: the spline is resampled into a 1D LUT).
+    const unsigned long length = prelutArray.getLength();
+    for (unsigned int i = 0; i < length; i += 128)
     {
-        for (unsigned int i = 0; i < csplut->prelut->luts[c].size(); i += 128)
-        {
-            float input = float(i) / float(csplut->prelut->luts[c].size()-1);
-            float output = csplut->prelut->luts[c][i];
-            OCIO_CHECK_CLOSE(input*2.0f, output, 1e-4);
-        }
+        float input = float(i) / float(length - 1);
+        float output = prelutArray[i * 3];
+        OCIO_CHECK_CLOSE(input*2.0f, output, 1e-4);
     }
 
-    // check 1D data
-    // red
+    // Check 1D data.
+    OCIO_REQUIRE_ASSERT(csplut->lut1D);
+    OCIO_CHECK_EQUAL(csplut->lut1D->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
+    const OCIO::Array & lutArray = csplut->lut1D->getArray();
+    const unsigned long lutlength = lutArray.getLength();
+    OCIO_REQUIRE_EQUAL(lutlength, 6);
+    // Red.
     unsigned int i;
-    for(i = 0; i < csplut->lut1D->luts[0].size(); ++i)
-        OCIO_CHECK_EQUAL(red[i], csplut->lut1D->luts[0][i]);
-    // green
-    for(i = 0; i < csplut->lut1D->luts[1].size(); ++i)
-        OCIO_CHECK_EQUAL(green[i], csplut->lut1D->luts[1][i]);
-    // blue
-    for(i = 0; i < csplut->lut1D->luts[2].size(); ++i)
-        OCIO_CHECK_EQUAL(blue[i], csplut->lut1D->luts[2][i]);
+    for (i = 0; i < lutlength; ++i)
+    {
+        OCIO_CHECK_EQUAL(red[i], lutArray[i * 3]);
+    }
+    // Green.
+    for (i = 0; i < lutlength; ++i)
+    {
+        OCIO_CHECK_EQUAL(green[i], lutArray[i * 3 + 1]);
+    }
+    // Blue.
+    for (i = 0; i < lutlength; ++i)
+    {
+        OCIO_CHECK_EQUAL(blue[i], lutArray[i * 3 + 2]);
+    }
     
-    // check 3D data
-    OCIO_CHECK_EQUAL(csplut->lut3D->lut.size(), 0);
+    // Check 3D data.
+    OCIO_CHECK_ASSERT(!csplut->lut3D);
 }
 
 OCIO_ADD_TEST(FileFormatCSP, simple3D)
@@ -1016,51 +1108,96 @@ OCIO_ADD_TEST(FileFormatCSP, simple3D)
     strebuf << "0.0 0.25       0.5 0.6 0.7"                  << "\n";
     strebuf << "0.0 0.25000001 0.5 0.6 0.7"                  << "\n";
     strebuf << ""                                            << "\n";
-    strebuf << "1 2 3"                                       << "\n";
+    strebuf << "3 3 3"                                       << "\n";
     strebuf << "0.0 0.0 0.0"                                 << "\n";
+    strebuf << "0.5 0.0 0.0"                                 << "\n";
     strebuf << "1.0 0.0 0.0"                                 << "\n";
     strebuf << "0.0 0.5 0.0"                                 << "\n";
+    strebuf << "0.5 0.5 0.0"                                 << "\n";
     strebuf << "1.0 0.5 0.0"                                 << "\n";
     strebuf << "0.0 1.0 0.0"                                 << "\n";
+    strebuf << "0.5 1.0 0.0"                                 << "\n";
     strebuf << "1.0 1.0 0.0"                                 << "\n";
+    strebuf << "0.0 0.0 0.5"                                 << "\n";
+    strebuf << "0.5 0.0 0.5"                                 << "\n";
+    strebuf << "1.0 0.0 0.5"                                 << "\n";
+    strebuf << "0.0 0.5 0.5"                                 << "\n";
+    strebuf << "0.5 0.5 0.5"                                 << "\n";
+    strebuf << "1.0 0.5 0.5"                                 << "\n";
+    strebuf << "0.0 1.0 0.5"                                 << "\n";
+    strebuf << "0.5 1.0 0.5"                                 << "\n";
+    strebuf << "1.0 1.0 0.5"                                 << "\n";
+    strebuf << "0.0 0.0 1.0"                                 << "\n";
+    strebuf << "0.5 0.0 1.0"                                 << "\n";
+    strebuf << "1.0 0.0 1.0"                                 << "\n";
+    strebuf << "0.0 0.5 1.0"                                 << "\n";
+    strebuf << "0.5 0.5 1.0"                                 << "\n";
+    strebuf << "1.0 0.5 1.0"                                 << "\n";
+    strebuf << "0.0 1.0 1.0"                                 << "\n";
+    strebuf << "0.5 1.0 1.0"                                 << "\n";
+    strebuf << "1.0 1.0 1.0"                                 << "\n";
     
-    float cube[1 * 2 * 3 * 3] = { 0.0, 0.0, 0.0,
-                                  1.0, 0.0, 0.0,
+    float cube[3 * 3 * 3 * 3] = { 0.0, 0.0, 0.0,
+                                  0.0, 0.0, 0.5,
+                                  0.0, 0.0, 1.0,
                                   0.0, 0.5, 0.0,
-                                  1.0, 0.5, 0.0,
+                                  0.0, 0.5, 0.5,
+                                  0.0, 0.5, 1.0,
                                   0.0, 1.0, 0.0,
-                                  1.0, 1.0, 0.0 };
+                                  0.0, 1.0, 0.5,
+                                  0.0, 1.0, 1.0,
+                                  0.5, 0.0, 0.0,
+                                  0.5, 0.0, 0.5,
+                                  0.5, 0.0, 1.0,
+                                  0.5, 0.5, 0.0,
+                                  0.5, 0.5, 0.5,
+                                  0.5, 0.5, 1.0,
+                                  0.5, 1.0, 0.0,
+                                  0.5, 1.0, 0.5,
+                                  0.5, 1.0, 1.0,
+                                  1.0, 0.0, 0.0,
+                                  1.0, 0.0, 0.5,
+                                  1.0, 0.0, 1.0,
+                                  1.0, 0.5, 0.0,
+                                  1.0, 0.5, 0.5,
+                                  1.0, 0.5, 1.0,
+                                  1.0, 1.0, 0.0,
+                                  1.0, 1.0, 0.5,
+                                  1.0, 1.0, 1.0 };
     
     std::istringstream simple3D;
     simple3D.str(strebuf.str());
     
-    // Load file
+    // Load file.
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile = tester.read(simple3D, emptyString);
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);
     
-    // check metadata
+    // Check metadata.
     OCIO_CHECK_EQUAL(csplut->metadata, std::string("foobar\n"));
 
-    // check prelut data
-    OCIO_CHECK_ASSERT(!csplut->hasprelut); // as in & out preLut values are the same
-                                           // there is nothing to do.
+    // Check prelut data.
+    OCIO_CHECK_ASSERT(!csplut->prelut); // As in & out preLut values are the same
+                                        // there is nothing to do.
     
-    // check cube data
-    for(unsigned int i = 0; i < csplut->lut3D->lut.size(); ++i) {
-        OCIO_CHECK_EQUAL(cube[i], csplut->lut3D->lut[i]);
+    // Check cube data.
+    OCIO_REQUIRE_ASSERT(csplut->lut3D);
+    const OCIO::Array & lutArray = csplut->lut3D->getArray();
+    const unsigned long lutlength = lutArray.getLength();
+
+    for(unsigned int i = 0; i < lutlength; ++i)
+    {
+        OCIO_CHECK_EQUAL(cube[i], lutArray[i]);
     }
 
-    // check 1D data
-    OCIO_CHECK_EQUAL(csplut->lut1D->luts[0].size(), 0);
-    OCIO_CHECK_EQUAL(csplut->lut1D->luts[1].size(), 0);
-    OCIO_CHECK_EQUAL(csplut->lut1D->luts[2].size(), 0);
+    // Check 1D data.
+    OCIO_CHECK_ASSERT(!csplut->lut1D);
 }
 
 OCIO_ADD_TEST(FileFormatCSP, complete3D)
 {
-    // check baker output
+    // Check baker output.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
@@ -1141,7 +1278,7 @@ OCIO_ADD_TEST(FileFormatCSP, complete3D)
     {
         if(i>6)
         {
-            // number comparison
+            // Number comparison.
             compareFloats(osvec[i], resvec[i]);
         }
         else
@@ -1154,7 +1291,7 @@ OCIO_ADD_TEST(FileFormatCSP, complete3D)
 
 OCIO_ADD_TEST(FileFormatCSP, shaper_hdr)
 {
-    // check baker output
+    // Check baker output.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
@@ -1235,7 +1372,7 @@ OCIO_ADD_TEST(FileFormatCSP, shaper_hdr)
     {
         if(i>6)
         {
-            // number comparison
+            // Number comparison.
             compareFloats(osvec[i], resvec[i]);
         }
         else
@@ -1248,7 +1385,7 @@ OCIO_ADD_TEST(FileFormatCSP, shaper_hdr)
 
 OCIO_ADD_TEST(FileFormatCSP, no_shaper)
 {
-    // check baker output
+    // Check baker output.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
@@ -1320,7 +1457,7 @@ OCIO_ADD_TEST(FileFormatCSP, no_shaper)
     }
 }
 
-OCIO_ADD_TEST(FileFormatCSP, lessStrictParse)
+OCIO_ADD_TEST(FileFormatCSP, less_strict_parse)
 {
     std::ostringstream strebuf;
     strebuf << " CspluTV100 malformed"                       << "\n";
@@ -1340,30 +1477,620 @@ OCIO_ADD_TEST(FileFormatCSP, lessStrictParse)
     strebuf << "0.0 0.25       0.5 0.6 0.7"                  << "\n";
     strebuf << "0.0 0.25000001 0.5 0.6 0.7"                  << "\n";
     strebuf << ""                                            << "\n";
-    strebuf << "1 2 3"                                       << "\n";
-    strebuf << "0.0 0.0 0.0"                                 << "\n";
-    strebuf << "1.0 0.0 0.0"                                 << "\n";
-    strebuf << "0.0 0.5 0.0"                                 << "\n";
-    strebuf << "1.0 0.5 0.0"                                 << "\n";
-    strebuf << "0.0 1.0 0.0"                                 << "\n";
-    strebuf << "1.0 1.0 0.0"                                 << "\n";
-    
+    strebuf << "2 2 2"                                       << "\n";
+    strebuf << "0.100000 0.100000 0.100000"                  << "\n";
+    strebuf << "1.100000 0.100000 0.100000"                  << "\n";
+    strebuf << "0.100000 1.100000 0.100000"                  << "\n";
+    strebuf << "1.100000 1.100000 0.100000"                  << "\n";
+    strebuf << "0.100000 0.100000 1.100000"                  << "\n";
+    strebuf << "1.100000 0.100000 1.100000"                  << "\n";
+    strebuf << "0.100000 1.100000 1.100000"                  << "\n";
+    strebuf << "1.100000 1.100000 1.100000"                  << "\n";
+
     std::istringstream simple3D;
     simple3D.str(strebuf.str());
     
-    // Load file
+    // Load file.
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile;
     OCIO_CHECK_NO_THROW(cachedFile = tester.read(simple3D, emptyString));
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);   
     
-    // check metadata
+    // Check metadata.
     OCIO_CHECK_EQUAL(csplut->metadata, std::string("foobar\n"));
 
-    // check prelut data
-    OCIO_CHECK_ASSERT(!csplut->hasprelut); // as in & out from the preLut are the same,
-                                           //  there is nothing to do.
+    // Check prelut data.
+    OCIO_CHECK_ASSERT(!csplut->prelut); // As in & out from the preLut are the same,
+                                        // there is nothing to do.
+}
+
+OCIO_ADD_TEST(FileFormatCSP, failures1D)
+{
+    {
+        // Empty.
+        std::istringstream lutStream;
+
+        // Read file.
+        std::string fileName("file.name");
+        OCIO::LocalFileFormat tester;
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+                              OCIO::Exception, "file stream empty");
+    }
+    {
+        // Wrong first line.
+        std::ostringstream strebuf;
+        strebuf << "CSPLUTV2000" << "\n"; // Wrong.
+        strebuf << "1D" << "\n";
+        strebuf << "" << "\n";
+
+        std::istringstream lutStream;
+        lutStream.str(strebuf.str());
+
+        // Read file.
+        std::string fileName("file.name");
+        OCIO::LocalFileFormat tester;
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+                              OCIO::Exception, "expected 'CSPLUTV100'");
+    }
+    {
+        // Missing LUT.
+        std::ostringstream strebuf;
+        strebuf << "CSPLUTV100" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "BEGIN METADATA" << "\n";
+        strebuf << "foobar" << "\n";
+        strebuf << "END METADATA" << "\n";
+
+        std::istringstream lutStream;
+        lutStream.str(strebuf.str());
+
+        // Read file.
+        std::string fileName("file.name");
+        OCIO::LocalFileFormat tester;
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+                              OCIO::Exception, "Require 1D or 3D");
+    }
+    {
+        // Can't read prelut size.
+        std::ostringstream strebuf;
+        strebuf << "CSPLUTV100" << "\n";
+        strebuf << "1D" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "BEGIN METADATA" << "\n";
+        strebuf << "foobar" << "\n";
+        strebuf << "END METADATA" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "A" << "\n";    // <------------ Wrong.
+        strebuf << "0.0 1.0" << "\n";
+        strebuf << "0.0 2.0" << "\n";
+        strebuf << "6" << "\n";
+        strebuf << "0.0 0.2 0.4 0.6 0.8 1.0" << "\n";
+        strebuf << "0.0 0.4 0.8 1.2 1.6 2.0" << "\n";
+        strebuf << "3" << "\n";
+        strebuf << "0.0 0.1 1.0" << "\n";
+        strebuf << "0.0 0.2 2.0" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "6" << "\n";
+        strebuf << "0.0 0.0 0.0" << "\n";
+        strebuf << "0.2 0.3 0.1" << "\n";
+        strebuf << "0.4 0.5 0.2" << "\n";
+        strebuf << "0.5 0.6 0.3" << "\n";
+        strebuf << "0.6 0.8 0.4" << "\n";
+        strebuf << "1.0 0.9 0.5" << "\n";
+
+        std::istringstream lutStream;
+        lutStream.str(strebuf.str());
+
+        // Read file.
+        std::string fileName("file.name");
+        OCIO::LocalFileFormat tester;
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+                              OCIO::Exception,
+                              "Prelut does not specify valid dimension size");
+    }
+    {
+        // Prelut has too many points.
+        std::ostringstream strebuf;
+        strebuf << "CSPLUTV100" << "\n";
+        strebuf << "1D" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "BEGIN METADATA" << "\n";
+        strebuf << "foobar" << "\n";
+        strebuf << "END METADATA" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "2" << "\n";
+        strebuf << "0.0 1.0 1.0" << "\n"; // <-------- Wrong.
+        strebuf << "0.0 2.0" << "\n";
+        strebuf << "6" << "\n";
+        strebuf << "0.0 0.2 0.4 0.6 0.8 1.0" << "\n";
+        strebuf << "0.0 0.4 0.8 1.2 1.6 2.0" << "\n";
+        strebuf << "3" << "\n";
+        strebuf << "0.0 0.1 1.0" << "\n";
+        strebuf << "0.0 0.2 2.0" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "6" << "\n";
+        strebuf << "0.0 0.0 0.0" << "\n";
+        strebuf << "0.2 0.3 0.1" << "\n";
+        strebuf << "0.4 0.5 0.2" << "\n";
+        strebuf << "0.5 0.6 0.3" << "\n";
+        strebuf << "0.6 0.8 0.4" << "\n";
+        strebuf << "1.0 0.9 0.5" << "\n";
+
+        std::istringstream lutStream;
+        lutStream.str(strebuf.str());
+
+        // Read file.
+        std::string fileName("File.name");
+        OCIO::LocalFileFormat tester;
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+                              OCIO::Exception,
+                              "expected number of data points");
+    }
+    {
+        // Can't read a float in prelut.
+        std::ostringstream strebuf;
+        strebuf << "CSPLUTV100" << "\n";
+        strebuf << "1D" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "BEGIN METADATA" << "\n";
+        strebuf << "foobar" << "\n";
+        strebuf << "END METADATA" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "2" << "\n";
+        strebuf << "0.0 notFloat" << "\n";
+        strebuf << "0.0 2.0" << "\n";
+        strebuf << "6" << "\n";
+        strebuf << "0.0 0.2 0.4 0.6 0.8 1.0" << "\n";
+        strebuf << "0.0 0.4 0.8 1.2 1.6 2.0" << "\n";
+        strebuf << "3" << "\n";
+        strebuf << "0.0 0.1 1.0" << "\n";
+        strebuf << "0.0 0.2 2.0" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "6" << "\n";
+        strebuf << "0.0 0.0 0.0" << "\n";
+        strebuf << "0.2 0.3 0.1" << "\n";
+        strebuf << "0.4 0.5 0.2" << "\n";
+        strebuf << "0.5 0.6 0.3" << "\n";
+        strebuf << "0.6 0.8 0.4" << "\n";
+        strebuf << "1.0 0.9 0.5" << "\n";
+
+        std::istringstream lutStream;
+        lutStream.str(strebuf.str());
+
+        // Read file.
+        std::string fileName("file.name");
+        OCIO::LocalFileFormat tester;
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+                              OCIO::Exception, "Prelut data is malformed");
+    }
+    {
+        // Bad number of LUT entries.
+        std::ostringstream strebuf;
+        strebuf << "CSPLUTV100" << "\n";
+        strebuf << "1D" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "BEGIN METADATA" << "\n";
+        strebuf << "foobar" << "\n";
+        strebuf << "END METADATA" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "2" << "\n";
+        strebuf << "0.0 1.0" << "\n";
+        strebuf << "0.0 2.0" << "\n";
+        strebuf << "6" << "\n";
+        strebuf << "0.0 0.2 0.4 0.6 0.8 1.0" << "\n";
+        strebuf << "0.0 0.4 0.8 1.2 1.6 2.0" << "\n";
+        strebuf << "3" << "\n";
+        strebuf << "0.0 0.1 1.0" << "\n";
+        strebuf << "0.0 0.2 2.0" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "-6" << "\n";       // <------------ Wrong.
+        strebuf << "0.0 0.0 0.0" << "\n";
+        strebuf << "0.2 0.3 0.1" << "\n";
+        strebuf << "0.4 0.5 0.2" << "\n";
+        strebuf << "0.5 0.6 0.3" << "\n";
+        strebuf << "0.6 0.8 0.4" << "\n";
+        strebuf << "1.0 0.9 0.5" << "\n";
+
+        std::istringstream lutStream;
+        lutStream.str(strebuf.str());
+
+        // Read file.
+        std::string fileName("file.name");
+        OCIO::LocalFileFormat tester;
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+                              OCIO::Exception,
+                              "1D LUT with invalid number of entries");
+    }
+    {
+        // Too many components on LUT entry.
+        std::ostringstream strebuf;
+        strebuf << "CSPLUTV100" << "\n";
+        strebuf << "1D" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "BEGIN METADATA" << "\n";
+        strebuf << "foobar" << "\n";
+        strebuf << "END METADATA" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "2" << "\n";
+        strebuf << "0.0 1.0" << "\n";
+        strebuf << "0.0 2.0" << "\n";
+        strebuf << "6" << "\n";
+        strebuf << "0.0 0.2 0.4 0.6 0.8 1.0" << "\n";
+        strebuf << "0.0 0.4 0.8 1.2 1.6 2.0" << "\n";
+        strebuf << "3" << "\n";
+        strebuf << "0.0 0.1 1.0" << "\n";
+        strebuf << "0.0 0.2 2.0" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "6" << "\n";
+        strebuf << "0.0 0.0 0.0 0.0" << "\n"; // <------------ Wrong.
+        strebuf << "0.2 0.3 0.1" << "\n";
+        strebuf << "0.4 0.5 0.2" << "\n";
+        strebuf << "0.5 0.6 0.3" << "\n";
+        strebuf << "0.6 0.8 0.4" << "\n";
+        strebuf << "1.0 0.9 0.5" << "\n";
+
+        std::istringstream lutStream;
+        lutStream.str(strebuf.str());
+
+        // Read file.
+        std::string fileName("file.name");
+        OCIO::LocalFileFormat tester;
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+                              OCIO::Exception, "must contain three numbers");
+    }
+}
+
+OCIO_ADD_TEST(FileFormatCSP, failures3D)
+{
+    {
+        // Cube size has only 2 entries.
+        std::ostringstream strebuf;
+        strebuf << "CSPLUTV100" << "\n";
+        strebuf << "3D" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "BEGIN METADATA" << "\n";
+        strebuf << "foobar" << "\n";
+        strebuf << "END METADATA" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "11" << "\n";
+        strebuf << "0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0" << "\n";
+        strebuf << "0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0" << "\n";
+        strebuf << "6" << "\n";
+        strebuf << "0.0 0.2       0.4 0.6 0.8 1.0" << "\n";
+        strebuf << "0.0 0.2000000 0.4 0.6 0.8 1.0" << "\n";
+        strebuf << "5" << "\n";
+        strebuf << "0.0 0.25       0.5 0.6 0.7" << "\n";
+        strebuf << "0.0 0.25000001 0.5 0.6 0.7" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "3 3" << "\n";   // <------------ Wrong.
+        strebuf << "0.0 0.0 0.0" << "\n";
+        strebuf << "0.5 0.0 0.0" << "\n";
+        strebuf << "1.0 0.0 0.0" << "\n";
+        strebuf << "0.0 0.5 0.0" << "\n";
+        strebuf << "0.5 0.5 0.0" << "\n";
+        strebuf << "1.0 0.5 0.0" << "\n";
+        strebuf << "0.0 1.0 0.0" << "\n";
+        strebuf << "0.5 1.0 0.0" << "\n";
+        strebuf << "1.0 1.0 0.0" << "\n";
+        strebuf << "0.0 0.0 0.5" << "\n";
+        strebuf << "0.5 0.0 0.5" << "\n";
+        strebuf << "1.0 0.0 0.5" << "\n";
+        strebuf << "0.0 0.5 0.5" << "\n";
+        strebuf << "0.5 0.5 0.5" << "\n";
+        strebuf << "1.0 0.5 0.5" << "\n";
+        strebuf << "0.0 1.0 0.5" << "\n";
+        strebuf << "0.5 1.0 0.5" << "\n";
+        strebuf << "1.0 1.0 0.5" << "\n";
+        strebuf << "0.0 0.0 1.0" << "\n";
+        strebuf << "0.5 0.0 1.0" << "\n";
+        strebuf << "1.0 0.0 1.0" << "\n";
+        strebuf << "0.0 0.5 1.0" << "\n";
+        strebuf << "0.5 0.5 1.0" << "\n";
+        strebuf << "1.0 0.5 1.0" << "\n";
+        strebuf << "0.0 1.0 1.0" << "\n";
+        strebuf << "0.5 1.0 1.0" << "\n";
+        strebuf << "1.0 1.0 1.0" << "\n";
+
+        std::istringstream lutStream;
+        lutStream.str(strebuf.str());
+
+        // Read file.
+        std::string fileName("file.name");
+        OCIO::LocalFileFormat tester;
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+                              OCIO::Exception, "couldn't read cube size");
+    }
+    {
+        // Cube sizes are not equal.
+        std::ostringstream strebuf;
+        strebuf << "CSPLUTV100" << "\n";
+        strebuf << "3D" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "BEGIN METADATA" << "\n";
+        strebuf << "foobar" << "\n";
+        strebuf << "END METADATA" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "11" << "\n";
+        strebuf << "0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0" << "\n";
+        strebuf << "0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0" << "\n";
+        strebuf << "6" << "\n";
+        strebuf << "0.0 0.2       0.4 0.6 0.8 1.0" << "\n";
+        strebuf << "0.0 0.2000000 0.4 0.6 0.8 1.0" << "\n";
+        strebuf << "5" << "\n";
+        strebuf << "0.0 0.25       0.5 0.6 0.7" << "\n";
+        strebuf << "0.0 0.25000001 0.5 0.6 0.7" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "3 3 4" << "\n";  // <------------ Wrong.
+        strebuf << "0.0 0.0 0.0" << "\n";
+        strebuf << "0.5 0.0 0.0" << "\n";
+        strebuf << "1.0 0.0 0.0" << "\n";
+        strebuf << "0.0 0.5 0.0" << "\n";
+        strebuf << "0.5 0.5 0.0" << "\n";
+        strebuf << "1.0 0.5 0.0" << "\n";
+        strebuf << "0.0 1.0 0.0" << "\n";
+        strebuf << "0.5 1.0 0.0" << "\n";
+        strebuf << "1.0 1.0 0.0" << "\n";
+        strebuf << "0.0 0.0 0.5" << "\n";
+        strebuf << "0.5 0.0 0.5" << "\n";
+        strebuf << "1.0 0.0 0.5" << "\n";
+        strebuf << "0.0 0.5 0.5" << "\n";
+        strebuf << "0.5 0.5 0.5" << "\n";
+        strebuf << "1.0 0.5 0.5" << "\n";
+        strebuf << "0.0 1.0 0.5" << "\n";
+        strebuf << "0.5 1.0 0.5" << "\n";
+        strebuf << "1.0 1.0 0.5" << "\n";
+        strebuf << "0.0 0.0 1.0" << "\n";
+        strebuf << "0.5 0.0 1.0" << "\n";
+        strebuf << "1.0 0.0 1.0" << "\n";
+        strebuf << "0.0 0.5 1.0" << "\n";
+        strebuf << "0.5 0.5 1.0" << "\n";
+        strebuf << "1.0 0.5 1.0" << "\n";
+        strebuf << "0.0 1.0 1.0" << "\n";
+        strebuf << "0.5 1.0 1.0" << "\n";
+        strebuf << "1.0 1.0 1.0" << "\n";
+
+        std::istringstream lutStream;
+        lutStream.str(strebuf.str());
+
+        // Read file.
+        std::string fileName("file.name");
+        OCIO::LocalFileFormat tester;
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+                              OCIO::Exception, "nonuniform cube sizes");
+    }
+    {
+        // Cube size is not >0.
+        std::ostringstream strebuf;
+        strebuf << "CSPLUTV100" << "\n";
+        strebuf << "3D" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "BEGIN METADATA" << "\n";
+        strebuf << "foobar" << "\n";
+        strebuf << "END METADATA" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "11" << "\n";
+        strebuf << "0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0" << "\n";
+        strebuf << "0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0" << "\n";
+        strebuf << "6" << "\n";
+        strebuf << "0.0 0.2       0.4 0.6 0.8 1.0" << "\n";
+        strebuf << "0.0 0.2000000 0.4 0.6 0.8 1.0" << "\n";
+        strebuf << "5" << "\n";
+        strebuf << "0.0 0.25       0.5 0.6 0.7" << "\n";
+        strebuf << "0.0 0.25000001 0.5 0.6 0.7" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "-3 -3 -3" << "\n"; // <------------ Wrong.
+        strebuf << "0.0 0.0 0.0" << "\n";
+        strebuf << "0.5 0.0 0.0" << "\n";
+        strebuf << "1.0 0.0 0.0" << "\n";
+        strebuf << "0.0 0.5 0.0" << "\n";
+        strebuf << "0.5 0.5 0.0" << "\n";
+        strebuf << "1.0 0.5 0.0" << "\n";
+        strebuf << "0.0 1.0 0.0" << "\n";
+        strebuf << "0.5 1.0 0.0" << "\n";
+        strebuf << "1.0 1.0 0.0" << "\n";
+        strebuf << "0.0 0.0 0.5" << "\n";
+        strebuf << "0.5 0.0 0.5" << "\n";
+        strebuf << "1.0 0.0 0.5" << "\n";
+        strebuf << "0.0 0.5 0.5" << "\n";
+        strebuf << "0.5 0.5 0.5" << "\n";
+        strebuf << "1.0 0.5 0.5" << "\n";
+        strebuf << "0.0 1.0 0.5" << "\n";
+        strebuf << "0.5 1.0 0.5" << "\n";
+        strebuf << "1.0 1.0 0.5" << "\n";
+        strebuf << "0.0 0.0 1.0" << "\n";
+        strebuf << "0.5 0.0 1.0" << "\n";
+        strebuf << "1.0 0.0 1.0" << "\n";
+        strebuf << "0.0 0.5 1.0" << "\n";
+        strebuf << "0.5 0.5 1.0" << "\n";
+        strebuf << "1.0 0.5 1.0" << "\n";
+        strebuf << "0.0 1.0 1.0" << "\n";
+        strebuf << "0.5 1.0 1.0" << "\n";
+        strebuf << "1.0 1.0 1.0" << "\n";
+
+        std::istringstream lutStream;
+        lutStream.str(strebuf.str());
+
+        // Read file.
+        std::string fileName("file.name");
+        OCIO::LocalFileFormat tester;
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+                              OCIO::Exception, "invalid cube size");
+    }
+    {
+        // One LUT entry has 4 components.
+        std::ostringstream strebuf;
+        strebuf << "CSPLUTV100" << "\n";
+        strebuf << "3D" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "BEGIN METADATA" << "\n";
+        strebuf << "foobar" << "\n";
+        strebuf << "END METADATA" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "11" << "\n";
+        strebuf << "0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0" << "\n";
+        strebuf << "0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0" << "\n";
+        strebuf << "6" << "\n";
+        strebuf << "0.0 0.2       0.4 0.6 0.8 1.0" << "\n";
+        strebuf << "0.0 0.2000000 0.4 0.6 0.8 1.0" << "\n";
+        strebuf << "5" << "\n";
+        strebuf << "0.0 0.25       0.5 0.6 0.7" << "\n";
+        strebuf << "0.0 0.25000001 0.5 0.6 0.7" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "3 3 3" << "\n";
+        strebuf << "0.0 0.0 0.0" << "\n";
+        strebuf << "0.5 0.0 0.0" << "\n";
+        strebuf << "1.0 0.0 0.0" << "\n";
+        strebuf << "0.0 0.5 0.0" << "\n";
+        strebuf << "0.5 0.5 0.0 1.0" << "\n"; // <------------ Wrong.
+        strebuf << "1.0 0.5 0.0" << "\n";
+        strebuf << "0.0 1.0 0.0" << "\n";
+        strebuf << "0.5 1.0 0.0" << "\n";
+        strebuf << "1.0 1.0 0.0" << "\n";
+        strebuf << "0.0 0.0 0.5" << "\n";
+        strebuf << "0.5 0.0 0.5" << "\n";
+        strebuf << "1.0 0.0 0.5" << "\n";
+        strebuf << "0.0 0.5 0.5" << "\n";
+        strebuf << "0.5 0.5 0.5" << "\n";
+        strebuf << "1.0 0.5 0.5" << "\n";
+        strebuf << "0.0 1.0 0.5" << "\n";
+        strebuf << "0.5 1.0 0.5" << "\n";
+        strebuf << "1.0 1.0 0.5" << "\n";
+        strebuf << "0.0 0.0 1.0" << "\n";
+        strebuf << "0.5 0.0 1.0" << "\n";
+        strebuf << "1.0 0.0 1.0" << "\n";
+        strebuf << "0.0 0.5 1.0" << "\n";
+        strebuf << "0.5 0.5 1.0" << "\n";
+        strebuf << "1.0 0.5 1.0" << "\n";
+        strebuf << "0.0 1.0 1.0" << "\n";
+        strebuf << "0.5 1.0 1.0" << "\n";
+        strebuf << "1.0 1.0 1.0" << "\n";
+
+        std::istringstream lutStream;
+        lutStream.str(strebuf.str());
+
+        // Read file.
+        std::string fileName("file.name");
+        OCIO::LocalFileFormat tester;
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+                              OCIO::Exception, "couldn't read cube row");
+    }
+    {
+        // One LUT entry has 2 components.
+        std::ostringstream strebuf;
+        strebuf << "CSPLUTV100" << "\n";
+        strebuf << "3D" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "BEGIN METADATA" << "\n";
+        strebuf << "foobar" << "\n";
+        strebuf << "END METADATA" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "11" << "\n";
+        strebuf << "0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0" << "\n";
+        strebuf << "0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0" << "\n";
+        strebuf << "6" << "\n";
+        strebuf << "0.0 0.2       0.4 0.6 0.8 1.0" << "\n";
+        strebuf << "0.0 0.2000000 0.4 0.6 0.8 1.0" << "\n";
+        strebuf << "5" << "\n";
+        strebuf << "0.0 0.25       0.5 0.6 0.7" << "\n";
+        strebuf << "0.0 0.25000001 0.5 0.6 0.7" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "3 3 3" << "\n";
+        strebuf << "0.0 0.0 0.0" << "\n";
+        strebuf << "0.5 0.0 0.0" << "\n";
+        strebuf << "1.0 0.0 0.0" << "\n";
+        strebuf << "0.0 0.5 0.0" << "\n";
+        strebuf << "0.5 0.5 0.0" << "\n";
+        strebuf << "1.0 0.5 0.0" << "\n";
+        strebuf << "0.0 1.0 0.0" << "\n";
+        strebuf << "0.5 1.0 0.0" << "\n";
+        strebuf << "1.0 1.0" << "\n";     // <------------ Wrong.
+        strebuf << "0.0 0.0 0.5" << "\n";
+        strebuf << "0.5 0.0 0.5" << "\n";
+        strebuf << "1.0 0.0 0.5" << "\n";
+        strebuf << "0.0 0.5 0.5" << "\n";
+        strebuf << "0.5 0.5 0.5" << "\n";
+        strebuf << "1.0 0.5 0.5" << "\n";
+        strebuf << "0.0 1.0 0.5" << "\n";
+        strebuf << "0.5 1.0 0.5" << "\n";
+        strebuf << "1.0 1.0 0.5" << "\n";
+        strebuf << "0.0 0.0 1.0" << "\n";
+        strebuf << "0.5 0.0 1.0" << "\n";
+        strebuf << "1.0 0.0 1.0" << "\n";
+        strebuf << "0.0 0.5 1.0" << "\n";
+        strebuf << "0.5 0.5 1.0" << "\n";
+        strebuf << "1.0 0.5 1.0" << "\n";
+        strebuf << "0.0 1.0 1.0" << "\n";
+        strebuf << "0.5 1.0 1.0" << "\n";
+        strebuf << "1.0 1.0 1.0" << "\n";
+
+        std::istringstream lutStream;
+        lutStream.str(strebuf.str());
+
+        // Read file.
+        std::string fileName("file.name");
+        OCIO::LocalFileFormat tester;
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+                              OCIO::Exception, "couldn't read cube row");
+    }
+    {
+        // One LUT entry can't be converted to 3 floats.
+        std::ostringstream strebuf;
+        strebuf << "CSPLUTV100" << "\n";
+        strebuf << "3D" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "BEGIN METADATA" << "\n";
+        strebuf << "foobar" << "\n";
+        strebuf << "END METADATA" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "11" << "\n";
+        strebuf << "0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0" << "\n";
+        strebuf << "0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0" << "\n";
+        strebuf << "6" << "\n";
+        strebuf << "0.0 0.2       0.4 0.6 0.8 1.0" << "\n";
+        strebuf << "0.0 0.2000000 0.4 0.6 0.8 1.0" << "\n";
+        strebuf << "5" << "\n";
+        strebuf << "0.0 0.25       0.5 0.6 0.7" << "\n";
+        strebuf << "0.0 0.25000001 0.5 0.6 0.7" << "\n";
+        strebuf << "" << "\n";
+        strebuf << "3 3 3" << "\n";
+        strebuf << "0.0 0.0 0.0" << "\n";
+        strebuf << "0.5 0.0 0.0" << "\n";
+        strebuf << "1.0 0.0 0.0" << "\n";
+        strebuf << "0.0 0.5 0.0" << "\n";
+        strebuf << "0.5 0.5 0.0" << "\n";
+        strebuf << "1.0 0.5 One" << "\n";  // <------------ Wrong.
+        strebuf << "0.0 1.0 0.0" << "\n";
+        strebuf << "0.5 1.0 0.0" << "\n";
+        strebuf << "1.0 1.0 0.0" << "\n";
+        strebuf << "0.0 0.0 0.5" << "\n";
+        strebuf << "0.5 0.0 0.5" << "\n";
+        strebuf << "1.0 0.0 0.5" << "\n";
+        strebuf << "0.0 0.5 0.5" << "\n";
+        strebuf << "0.5 0.5 0.5" << "\n";
+        strebuf << "1.0 0.5 0.5" << "\n";
+        strebuf << "0.0 1.0 0.5" << "\n";
+        strebuf << "0.5 1.0 0.5" << "\n";
+        strebuf << "1.0 1.0 0.5" << "\n";
+        strebuf << "0.0 0.0 1.0" << "\n";
+        strebuf << "0.5 0.0 1.0" << "\n";
+        strebuf << "1.0 0.0 1.0" << "\n";
+        strebuf << "0.0 0.5 1.0" << "\n";
+        strebuf << "0.5 0.5 1.0" << "\n";
+        strebuf << "1.0 0.5 1.0" << "\n";
+        strebuf << "0.0 1.0 1.0" << "\n";
+        strebuf << "0.5 1.0 1.0" << "\n";
+        strebuf << "1.0 1.0 1.0" << "\n";
+
+        std::istringstream lutStream;
+        lutStream.str(strebuf.str());
+
+        // Read file.
+        std::string fileName("file.name");
+        OCIO::LocalFileFormat tester;
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+                              OCIO::Exception, "couldn't read cube row");
+    }
 }
 
 // TODO: More strenuous tests of prelut resampling (non-noop preluts)

@@ -5,6 +5,8 @@
 
 #include "transforms/FileTransform.h"
 #include "ops/Lut1D/Lut1DOp.h"
+#include "ops/Matrix/MatrixOps.h"
+#include "ParseUtils.h"
 #include "Platform.h"
 #include "pystring/pystring.h"
 
@@ -34,14 +36,12 @@ OCIO_NAMESPACE_ENTER
         class LocalCachedFile : public CachedFile
         {
         public:
-            LocalCachedFile()
-            {
-                lut = Lut1D::Create();
-            };
-            ~LocalCachedFile() {};
+            LocalCachedFile() = default;
+            ~LocalCachedFile() = default;
             
-            // TODO: Switch to the OpData class.
-            Lut1DRcPtr lut;
+            Lut1DOpDataRcPtr lut;
+            float from_min = 0.0f;
+            float from_max = 1.0f;
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -50,26 +50,27 @@ OCIO_NAMESPACE_ENTER
         class LocalFileFormat : public FileFormat
         {
         public:
-            
-            ~LocalFileFormat() {};
-            
+            LocalFileFormat() = default;
+            ~LocalFileFormat() = default;
+
             void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
-            
+
             CachedFileRcPtr read(
                 std::istream & istream,
                 const std::string & fileName) const override;
-            
+
             void buildFileOps(OpRcPtrVec & ops,
-                              const Config& config,
+                              const Config & config,
                               const ConstContextRcPtr & context,
                               CachedFileRcPtr untypedCachedFile,
-                              const FileTransform& fileTransform,
+                              const FileTransform & fileTransform,
                               TransformDirection dir) const override;
+
         private:
             static void ThrowErrorMessage(const std::string & error,
-                const std::string & fileName,
-                int line,
-                const std::string & lineContent);
+                                          const std::string & fileName,
+                                          int line,
+                                          const std::string & lineContent);
         };
         
         void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
@@ -81,16 +82,14 @@ OCIO_NAMESPACE_ENTER
             formatInfoVec.push_back(info);
         }
         
-        // Try and load the format
+        // Try and load the format.
         // Raise an exception if it can't be loaded.
 
         CachedFileRcPtr LocalFileFormat::read(
             std::istream & istream,
             const std::string & fileName ) const
         {
-            Lut1DRcPtr lut1d = Lut1D::Create();
-
-            // Parse Header Info
+            // Parse Header Info.
             int lut_size = -1;
             float from_min = 0.0;
             float from_max = 1.0;
@@ -118,12 +117,12 @@ OCIO_NAMESPACE_ENTER
                         if (sscanf(lineBuffer, "Version %d", &version) != 1)
                         {
                             ThrowErrorMessage("Invalid 'Version' Tag.",
-                                fileName, currentLine, headerLine);
+                                              fileName, currentLine, headerLine);
                         }
                         else if (version != 1)
                         {
                             ThrowErrorMessage("Only format version 1 supported.",
-                                fileName, currentLine, headerLine);
+                                              fileName, currentLine, headerLine);
                         }
                     }
                     else if(pystring::startswith(headerLine, "From"))
@@ -131,7 +130,7 @@ OCIO_NAMESPACE_ENTER
                         if (sscanf(lineBuffer, "From %f %f", &from_min, &from_max) != 2)
                         {
                             ThrowErrorMessage("Invalid 'From' Tag.",
-                                fileName, currentLine, headerLine);
+                                              fileName, currentLine, headerLine);
                         }
                     }
                     else if(pystring::startswith(headerLine, "Components"))
@@ -139,7 +138,7 @@ OCIO_NAMESPACE_ENTER
                         if (sscanf(lineBuffer, "Components %d", &components) != 1)
                         {
                             ThrowErrorMessage("Invalid 'Components' Tag.",
-                                fileName, currentLine, headerLine);
+                                              fileName, currentLine, headerLine);
                         }
                     }
                     else if(pystring::startswith(headerLine, "Length"))
@@ -147,7 +146,7 @@ OCIO_NAMESPACE_ENTER
                         if (sscanf(lineBuffer, "Length %d", &lut_size) != 1)
                         {
                             ThrowErrorMessage("Invalid 'Length' Tag.",
-                                fileName, currentLine, headerLine);
+                                              fileName, currentLine, headerLine);
                         }
                     }
                 }
@@ -157,98 +156,110 @@ OCIO_NAMESPACE_ENTER
             if (version == -1)
             {
                 ThrowErrorMessage("Could not find 'Version' Tag.",
-                    fileName, -1, "");
+                                  fileName, -1, "");
             }
             if (lut_size == -1)
             {
                 ThrowErrorMessage("Could not find 'Length' Tag.",
-                    fileName, -1, "");
+                                  fileName, -1, "");
             }
             if (components == -1)
             {
                 ThrowErrorMessage("Could not find 'Components' Tag.",
-                    fileName, -1, "");
+                                   fileName, -1, "");
             }
             if (components < 0 || components>3)
             {
                 ThrowErrorMessage("Components must be [1,2,3].",
-                    fileName, -1, "");
+                                  fileName, -1, "");
             }
 
-            for(int i=0; i<3; ++i)
-            {
-                lut1d->from_min[i] = from_min;
-                lut1d->from_max[i] = from_max;
-                lut1d->luts[i].clear();
-                lut1d->luts[i].reserve(lut_size);
-            }
-
+            Lut1DOpDataRcPtr lut1d = std::make_shared<Lut1DOpData>(lut_size);
+            lut1d->setFileOutputBitDepth(BIT_DEPTH_F32);
+            Array & lutArray = lut1d->getArray();
+            unsigned long i = 0;
             {
                 istream.getline(lineBuffer, MAX_LINE_SIZE);
+                ++currentLine;
 
                 int lineCount=0;
-                float values[4];
+                
+                std::vector<std::string> inputLUT;
+                std::vector<float> values;
 
                 while (istream.good())
                 {
-                    // If 1 component is specificed, use x1 x1 x1 defaultA
-                    if(components==1 && sscanf(lineBuffer,"%f",&values[0])==1)
+                    const std::string line = pystring::strip(std::string(lineBuffer));
+                    if (Platform::Strcasecmp(line.c_str(), "}") == 0)
                     {
-                        lut1d->luts[0].push_back(values[0]);
-                        lut1d->luts[1].push_back(values[0]);
-                        lut1d->luts[2].push_back(values[0]);
-                        ++lineCount;
-                    }
-                    // If 2 components are specificed, use x1 x2 0.0
-                    else if(components==2 && sscanf(lineBuffer,"%f %f",&values[0],&values[1])==2)
-                    {
-                        lut1d->luts[0].push_back(values[0]);
-                        lut1d->luts[1].push_back(values[1]);
-                        lut1d->luts[2].push_back(0.0);
-                        ++lineCount;
-                    }
-                    // If 3 component is specificed, use x1 x2 x3 defaultA
-                    else if(components==3 && sscanf(lineBuffer,"%f %f %f",&values[0],&values[1],&values[2])==3)
-                    {
-                        lut1d->luts[0].push_back(values[0]);
-                        lut1d->luts[1].push_back(values[1]);
-                        lut1d->luts[2].push_back(values[2]);
-                        ++lineCount;
+                        break;
                     }
 
-                    if(lineCount == lut_size) break;
+                    if (line.length() != 0)
+                    {
+                        pystring::split(pystring::strip(lineBuffer), inputLUT);
+                        values.clear();
+                        if (!StringVecToFloatVec(values, inputLUT)
+                            || components != (int)values.size())
+                        {
+                            std::ostringstream os;
+                            os << "Malformed LUT line. Expecting a ";
+                            os << components << " components entry.";
+
+                            ThrowErrorMessage("Malformed LUT line.",
+                                              fileName, currentLine, line);
+                        }
+
+                        // If 1 component is specified, use x1 x1 x1.
+                        if (components == 1)
+                        {
+                            lutArray[i]     = values[0];
+                            lutArray[i + 1] = values[0];
+                            lutArray[i + 2] = values[0];
+                            i += 3;
+                            ++lineCount;
+                        }
+                        // If 2 components are specified, use x1 x2 0.0.
+                        else if (components == 2)
+                        {
+                            lutArray[i]     = values[0];
+                            lutArray[i + 1] = values[1];
+                            lutArray[i + 2] = 0.0f;
+                            i += 3;
+                            ++lineCount;
+                        }
+                        // If 3 component is specified, use x1 x2 x3.
+                        else if (components == 3)
+                        {
+                            lutArray[i]     = values[0];
+                            lutArray[i + 1] = values[1];
+                            lutArray[i + 2] = values[2];
+                            i += 3;
+                            ++lineCount;
+                        }
+                        // No other case, components is in [1..3].
+                    }
 
                     istream.getline(lineBuffer, MAX_LINE_SIZE);
+                    ++currentLine;
                 }
 
                 if (lineCount != lut_size)
                 {
                     ThrowErrorMessage("Not enough entries found.",
-                        fileName, -1, "");
+                                      fileName, -1, "");
                 }
             }
 
-            // 1e-5 rel error is a good threshold when float numbers near 0
-            // are written out with 6 decimal places of precision.  This is
-            // a bit aggressive, I.e., changes in the 6th decimal place will
-            // be considered roundoff error, but changes in the 5th decimal
-            // will be considered LUT 'intent'.
-            // 1.0
-            // 1.000005 equal to 1.0
-            // 1.000007 equal to 1.0
-            // 1.000010 not equal
-            // 0.0
-            // 0.000001 not equal
-            lut1d->maxerror = 1e-5f;
-            lut1d->errortype = Lut1D::ERROR_RELATIVE;
-
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
             cachedFile->lut = lut1d;
+            cachedFile->from_min = from_min;
+            cachedFile->from_max = from_max;
             return cachedFile;
         }
 
         void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
-                                           const Config& /*config*/,
+                                           const Config & /*config*/,
                                            const ConstContextRcPtr & /*context*/,
                                            CachedFileRcPtr untypedCachedFile,
                                            const FileTransform& fileTransform,
@@ -263,19 +274,36 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
 
-            TransformDirection newDir = CombineTransformDirections(dir,
-                fileTransform.getDirection());
+            TransformDirection newDir = fileTransform.getDirection();
+            newDir = CombineTransformDirections(dir, newDir);
 
-            CreateLut1DOp(ops,
-                          cachedFile->lut,
-                          fileTransform.getInterpolation(),
-                          newDir);
+
+            const double min[3] = { cachedFile->from_min,
+                                    cachedFile->from_min,
+                                    cachedFile->from_min };
+
+            const double max[3] = { cachedFile->from_max,
+                                    cachedFile->from_max,
+                                    cachedFile->from_max };
+
+            cachedFile->lut->setInterpolation(fileTransform.getInterpolation());
+
+            if (newDir == TRANSFORM_DIR_FORWARD)
+            {
+                CreateMinMaxOp(ops, min, max, TRANSFORM_DIR_FORWARD);
+                CreateLut1DOp(ops, cachedFile->lut, TRANSFORM_DIR_FORWARD);
+            }
+            else
+            {
+                CreateLut1DOp(ops, cachedFile->lut, TRANSFORM_DIR_INVERSE);
+                CreateMinMaxOp(ops, min, max, TRANSFORM_DIR_INVERSE);
+            }
         }
 
         void LocalFileFormat::ThrowErrorMessage(const std::string & error,
-            const std::string & fileName,
-            int line,
-            const std::string & lineContent)
+                                                const std::string & fileName,
+                                                int line,
+                                                const std::string & lineContent)
         {
             std::ostringstream os;
             os << "Error parsing .spi1d file (";
@@ -305,7 +333,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 #include "UnitTestUtils.h"
 
-OCIO_ADD_TEST(FileFormatSpi1D, FormatInfo)
+OCIO_ADD_TEST(FileFormatSpi1D, format_info)
 {
     OCIO::FormatInfoVec formatInfoVec;
     OCIO::LocalFileFormat tester;
@@ -315,7 +343,7 @@ OCIO_ADD_TEST(FileFormatSpi1D, FormatInfo)
     OCIO_CHECK_EQUAL("spi1d", formatInfoVec[0].name);
     OCIO_CHECK_EQUAL("spi1d", formatInfoVec[0].extension);
     OCIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ,
-        formatInfoVec[0].capabilities);
+                     formatInfoVec[0].capabilities);
 }
 
 OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & fileName)
@@ -324,46 +352,44 @@ OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & fileName)
         fileName, std::ios_base::in);
 }
 
-OCIO_ADD_TEST(FileFormatSpi1D, Test)
+OCIO_ADD_TEST(FileFormatSpi1D, test)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string spi1dFile("cpf.spi1d");
     OCIO_CHECK_NO_THROW(cachedFile = LoadLutFile(spi1dFile));
 
-    OCIO_CHECK_ASSERT((bool)cachedFile);
-    OCIO_CHECK_ASSERT((bool)(cachedFile->lut));
+    OCIO_REQUIRE_ASSERT(cachedFile);
+    OCIO_REQUIRE_ASSERT(cachedFile->lut);
+    OCIO_CHECK_EQUAL(cachedFile->lut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
-    OCIO_CHECK_EQUAL(0.0f, cachedFile->lut->from_min[0]);
-    OCIO_CHECK_EQUAL(1.0f, cachedFile->lut->from_max[0]);
+    OCIO_CHECK_EQUAL(0.0f, cachedFile->from_min);
+    OCIO_CHECK_EQUAL(1.0f, cachedFile->from_max);
 
-    OCIO_CHECK_EQUAL(2048, cachedFile->lut->luts[0].size());
-    OCIO_CHECK_EQUAL(2048, cachedFile->lut->luts[1].size());
-    OCIO_CHECK_EQUAL(2048, cachedFile->lut->luts[2].size());
+    const OCIO::Array & lutArray = cachedFile->lut->getArray();
+    OCIO_CHECK_EQUAL(2048ul, lutArray.getLength());
 
-    OCIO_CHECK_EQUAL(0.0f, cachedFile->lut->luts[0][0]);
-    OCIO_CHECK_EQUAL(0.0f, cachedFile->lut->luts[1][0]);
-    OCIO_CHECK_EQUAL(0.0f, cachedFile->lut->luts[2][0]);
+    OCIO_CHECK_EQUAL(0.0f, lutArray[0]);
+    OCIO_CHECK_EQUAL(0.0f, lutArray[1]);
+    OCIO_CHECK_EQUAL(0.0f, lutArray[2]);
 
-    OCIO_CHECK_EQUAL(4.511920005404118f, cachedFile->lut->luts[0][1970]);
-    OCIO_CHECK_EQUAL(4.511920005404118f, cachedFile->lut->luts[1][1970]);
-    OCIO_CHECK_EQUAL(4.511920005404118f, cachedFile->lut->luts[2][1970]);
-
-    OCIO_CHECK_EQUAL(1e-5f, cachedFile->lut->maxerror);
-    OCIO_CHECK_EQUAL(OCIO::Lut1D::ERROR_RELATIVE, cachedFile->lut->errortype);
+    OCIO_CHECK_EQUAL(4.511920005404118f, lutArray[1970*3]);
+    OCIO_CHECK_EQUAL(4.511920005404118f, lutArray[1970*3 + 1]);
+    OCIO_CHECK_EQUAL(4.511920005404118f, lutArray[1970*3 + 2]);
 }
 
-void ReadSpi1d(const std::string & fileContent)
+OCIO::LocalCachedFileRcPtr ReadSpi1d(const std::string & fileContent)
 {
     std::istringstream is;
     is.str(fileContent);
 
-    // Read file
+    // Read file.
     OCIO::LocalFileFormat tester;
     const std::string SAMPLE_NAME("Memory File");
     OCIO::CachedFileRcPtr cachedFile = tester.read(is, SAMPLE_NAME);
+    return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
 }
 
-OCIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
+OCIO_ADD_TEST(FileFormatSpi1D, read_failure)
 {
     {
         // Validate stream can be read with no error.
@@ -375,13 +401,14 @@ OCIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "Components 1\n"
             "{\n"
             "0.0\n"
+            "\n"
             "1.0\n"
             "}\n";
 
         OCIO_CHECK_NO_THROW(ReadSpi1d(SAMPLE_NO_ERROR));
     }
     {
-        // Version missing
+        // Version missing.
         const std::string SAMPLE_ERROR =
             "From 0.0 1.0\n"
             "Length 2\n"
@@ -396,7 +423,7 @@ OCIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
                               "Could not find 'Version' Tag");
     }
     {
-        // Version is not 1
+        // Version is not 1.
         const std::string SAMPLE_ERROR =
             "Version 2\n"
             "From 0.0 1.0\n"
@@ -412,7 +439,7 @@ OCIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
                               "Only format version 1 supported");
     }
     {
-        // Version can't be scanned
+        // Version can't be scanned.
         const std::string SAMPLE_ERROR =
             "Version A\n"
             "From 0.0 1.0\n"
@@ -428,7 +455,7 @@ OCIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
                               "Invalid 'Version' Tag");
     }
     {
-        // Version case is wrong
+        // Version case is wrong.
         const std::string SAMPLE_ERROR =
             "VERSION 1\n"
             "From 0.0 1.0\n"
@@ -444,7 +471,7 @@ OCIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
                               "Could not find 'Version' Tag");
     }
     {
-        // From does not specify 2 floats
+        // From does not specify 2 floats.
         const std::string SAMPLE_ERROR =
             "Version 1\n"
             "From 0.0\n"
@@ -460,7 +487,7 @@ OCIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
                               "Invalid 'From' Tag");
     }
     {
-        // Length is missing
+        // Length is missing.
         const std::string SAMPLE_ERROR =
             "Version 1\n"
             "From 0.0 1.0\n"
@@ -475,7 +502,7 @@ OCIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
                               "Could not find 'Length' Tag");
     }
     {
-        // Length can't be read
+        // Length can't be read.
         const std::string SAMPLE_ERROR =
             "Version 1\n"
             "From 0.0 1.0\n"
@@ -491,7 +518,7 @@ OCIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
                               "Invalid 'Length' Tag");
     }
     {
-        // Component is missing
+        // Component is missing.
         const std::string SAMPLE_ERROR =
             "Version 1\n"
             "From 0.0 1.0\n"
@@ -506,7 +533,7 @@ OCIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
                               "Could not find 'Components' Tag");
     }
     {
-        // Component can't be read
+        // Component can't be read.
         const std::string SAMPLE_ERROR =
             "Version 1\n"
             "From 0.0 1.0\n"
@@ -522,7 +549,7 @@ OCIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
                               "Invalid 'Components' Tag");
     }
     {
-        // Component not 1 or 2 or 3
+        // Component not 1 or 2 or 3.
         const std::string SAMPLE_ERROR =
             "Version 1\n"
             "From 0.0 1.0\n"
@@ -538,7 +565,7 @@ OCIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
                               "Components must be [1,2,3]");
     }
     {
-        // LUT too short
+        // LUT too short.
         const std::string SAMPLE_ERROR =
             "Version 1\n"
             "From 0.0 1.0\n"
@@ -552,6 +579,61 @@ OCIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
                               OCIO::Exception,
                               "Not enough entries found");
     }
+    {
+        // Components==1 but two components specified in LUT.
+        const std::string SAMPLE_ERROR =
+            "Version 1\n"
+            "From 0.0 1.0\n"
+            "Length 2\n"
+            "Components 1\n"
+            "{\n"
+            "0.0\n"
+            "1.0 1.0\n"
+            "}\n";
+
+        OCIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Malformed LUT line");
+    }
+}
+
+OCIO_ADD_TEST(FileFormatSpi1D, identity)
+{
+    {
+        const std::string SAMPLE_LUT =
+            "Version 1\n"
+            "From 0.0 1.0\n"
+            "Length 2\n"
+            "Components 1\n"
+            "{\n"
+            "0.0\n"
+            "1.000007\n"
+            "}\n";
+
+        OCIO::LocalCachedFileRcPtr parsedLUT;
+        OCIO_CHECK_NO_THROW(parsedLUT = ReadSpi1d(SAMPLE_LUT));
+        OCIO_REQUIRE_ASSERT(parsedLUT);
+        OCIO_REQUIRE_ASSERT(parsedLUT->lut);
+        OCIO_CHECK_ASSERT(parsedLUT->lut->isIdentity());
+    }
+    {
+        const std::string SAMPLE_LUT =
+            "Version 1\n"
+            "From 0.0 1.0\n"
+            "Length 2\n"
+            "Components 1\n"
+            "{\n"
+            "0.0\n"
+            "1.00001\n"
+            "}\n";
+
+        OCIO::LocalCachedFileRcPtr parsedLUT;
+        OCIO_CHECK_NO_THROW(parsedLUT = ReadSpi1d(SAMPLE_LUT));
+        OCIO_REQUIRE_ASSERT(parsedLUT);
+        OCIO_REQUIRE_ASSERT(parsedLUT->lut);
+        OCIO_CHECK_ASSERT(!parsedLUT->lut->isIdentity());
+    }
+
 }
 
 #endif // OCIO_UNIT_TEST
