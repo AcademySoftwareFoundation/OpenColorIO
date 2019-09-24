@@ -62,6 +62,11 @@ OCIO_NAMESPACE_ENTER
                         const double * from_max3,
                         TransformDirection direction);
 
+    void CreateMinMaxOp(OpRcPtrVec & ops,
+                        float from_min,
+                        float from_max,
+                        TransformDirection direction);
+
     void CreateMatrixOp(OpRcPtrVec & ops,
                         MatrixOpDataRcPtr & matrix,
                         TransformDirection direction);

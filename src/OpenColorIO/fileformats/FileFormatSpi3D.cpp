@@ -34,14 +34,10 @@ OCIO_NAMESPACE_ENTER
         class LocalCachedFile : public CachedFile
         {
         public:
-            LocalCachedFile()
-            {
-                lut = Lut3D::Create();
-            };
-            ~LocalCachedFile() {};
+            LocalCachedFile() = default;
+            ~LocalCachedFile() = default;
             
-            // TODO: Switch to the OpData class.
-            Lut3DRcPtr lut;
+            Lut3DOpDataRcPtr lut;
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -51,8 +47,8 @@ OCIO_NAMESPACE_ENTER
         class LocalFileFormat : public FileFormat
         {
         public:
-            
-            ~LocalFileFormat() {};
+            LocalFileFormat() = default;
+            ~LocalFileFormat() = default;
             
             void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
             
@@ -61,10 +57,10 @@ OCIO_NAMESPACE_ENTER
                 const std::string & fileName) const override;
             
             void buildFileOps(OpRcPtrVec & ops,
-                              const Config& config,
+                              const Config & config,
                               const ConstContextRcPtr & context,
                               CachedFileRcPtr untypedCachedFile,
-                              const FileTransform& fileTransform,
+                              const FileTransform & fileTransform,
                               TransformDirection dir) const override;
         };
         
@@ -84,9 +80,6 @@ OCIO_NAMESPACE_ENTER
         {
             const int MAX_LINE_SIZE = 4096;
             char lineBuffer[MAX_LINE_SIZE];
-
-            // TODO: Switch to the OpData class.
-            Lut3DRcPtr lut3d = Lut3D::Create();
 
             // Read header information
             istream.getline(lineBuffer, MAX_LINE_SIZE);
@@ -118,10 +111,20 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
 
-            lut3d->size[0] = rSize;
-            lut3d->size[1] = gSize;
-            lut3d->size[2] = bSize;
-            lut3d->lut.resize(rSize * gSize * bSize * 3);
+            // TODO: Support nonuniformly sized LUTs.
+            if (rSize != gSize || rSize != bSize)
+            {
+                std::ostringstream os;
+                os << "Error parsing .spi3d file (";
+                os << fileName;
+                os << "). ";
+                os << "LUT size should be the same for all components. Found: '";
+                os << lineBuffer << "'.";
+                throw Exception(os.str().c_str());
+            }
+
+            Lut3DOpDataRcPtr lut3d = std::make_shared<Lut3DOpData>((unsigned long)rSize);
+            lut3d->setFileOutputBitDepth(BIT_DEPTH_F32);
 
             // Parse table
             int index = 0;
@@ -129,7 +132,8 @@ OCIO_NAMESPACE_ENTER
             float redValue, greenValue, blueValue;
 
             int entriesRemaining = rSize * gSize * bSize;
-
+            Array & lutArray = lut3d->getArray();
+            unsigned long numVal = lutArray.getNumValues();
             while (istream.good() && entriesRemaining > 0)
             {
                 istream.getline(lineBuffer, MAX_LINE_SIZE);
@@ -147,9 +151,9 @@ OCIO_NAMESPACE_ENTER
                     }
                     else
                     {
-                        index = GetLut3DIndex_RedFast(rIndex, gIndex, bIndex,
-                            rSize, gSize, bSize);
-                        if (index < 0 || index >= (int)lut3d->lut.size())
+                        index = GetLut3DIndex_BlueFast(rIndex, gIndex, bIndex,
+                                                       rSize, gSize, bSize);
+                        if (index < 0 || index >= (int)numVal)
                         {
                             invalidIndex = true;
                         }
@@ -169,9 +173,9 @@ OCIO_NAMESPACE_ENTER
                         throw Exception(os.str().c_str());
                     }
 
-                    lut3d->lut[index+0] = redValue;
-                    lut3d->lut[index+1] = greenValue;
-                    lut3d->lut[index+2] = blueValue;
+                    lutArray[index+0] = redValue;
+                    lutArray[index+1] = greenValue;
+                    lutArray[index+2] = blueValue;
 
                     entriesRemaining--;
                 }
@@ -194,10 +198,10 @@ OCIO_NAMESPACE_ENTER
         }
 
         void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
-                                           const Config& /*config*/,
+                                           const Config & /*config*/,
                                            const ConstContextRcPtr & /*context*/,
                                            CachedFileRcPtr untypedCachedFile,
-                                           const FileTransform& fileTransform,
+                                           const FileTransform & fileTransform,
                                            TransformDirection dir) const
         {
             LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
@@ -209,12 +213,12 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
 
-            TransformDirection newDir = CombineTransformDirections(dir,
-                fileTransform.getDirection());
-
+            TransformDirection newDir = fileTransform.getDirection();
+            newDir = CombineTransformDirections(dir, newDir);
+            
+            cachedFile->lut->setInterpolation(fileTransform.getInterpolation());
             CreateLut3DOp(ops,
                           cachedFile->lut,
-                          fileTransform.getInterpolation(),
                           newDir);
         }
     }
@@ -232,7 +236,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 #include "UnitTestUtils.h"
 
-OCIO_ADD_TEST(FileFormatSpi3D, FormatInfo)
+OCIO_ADD_TEST(FileFormatSpi3D, format_info)
 {
     OCIO::FormatInfoVec formatInfoVec;
     OCIO::LocalFileFormat tester;
@@ -251,7 +255,7 @@ OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & fileName)
         fileName, std::ios_base::in);
 }
 
-OCIO_ADD_TEST(FileFormatSpi3D, Test)
+OCIO_ADD_TEST(FileFormatSpi3D, test)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string spi3dFile("spi_ocio_srgb_test.spi3d");
@@ -260,18 +264,17 @@ OCIO_ADD_TEST(FileFormatSpi3D, Test)
     OCIO_CHECK_ASSERT((bool)cachedFile);
     OCIO_CHECK_ASSERT((bool)(cachedFile->lut));
 
-    OCIO_CHECK_EQUAL(32, cachedFile->lut->size[0]);
-    OCIO_CHECK_EQUAL(32, cachedFile->lut->size[1]);
-    OCIO_CHECK_EQUAL(32, cachedFile->lut->size[2]);
-    OCIO_CHECK_EQUAL(32*32*32*3, cachedFile->lut->lut.size());
+    const OCIO::Array & lutArray = cachedFile->lut->getArray();
+    OCIO_CHECK_EQUAL(32, lutArray.getLength());
+    OCIO_CHECK_EQUAL(32*32*32*3, lutArray.getNumValues());
 
-    OCIO_CHECK_EQUAL(0.040157f, cachedFile->lut->lut[0]);
-    OCIO_CHECK_EQUAL(0.038904f, cachedFile->lut->lut[1]);
-    OCIO_CHECK_EQUAL(0.028316f, cachedFile->lut->lut[2]);
+    OCIO_CHECK_EQUAL(0.040157f, lutArray[0]);
+    OCIO_CHECK_EQUAL(0.038904f, lutArray[1]);
+    OCIO_CHECK_EQUAL(0.028316f, lutArray[2]);
     // 10 2 12
-    OCIO_CHECK_EQUAL(0.102161f, cachedFile->lut->lut[37086]);
-    OCIO_CHECK_EQUAL(0.032187f, cachedFile->lut->lut[37087]);
-    OCIO_CHECK_EQUAL(0.175453f, cachedFile->lut->lut[37088]);
+    OCIO_CHECK_EQUAL(0.102161f, lutArray[30948]);
+    OCIO_CHECK_EQUAL(0.032187f, lutArray[30949]);
+    OCIO_CHECK_EQUAL(0.175453f, lutArray[30950]);
 }
 
 void ReadSpi3d(const std::string & fileContent)
@@ -285,7 +288,7 @@ void ReadSpi3d(const std::string & fileContent)
     OCIO::CachedFileRcPtr cachedFile = tester.read(is, SAMPLE_NAME);
 }
 
-OCIO_ADD_TEST(FileFormatSpi3D, ReadFailure)
+OCIO_ADD_TEST(FileFormatSpi3D, read_failure)
 {
     {
         // Validate stream can be read with no error.

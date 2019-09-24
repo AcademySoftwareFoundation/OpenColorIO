@@ -10,6 +10,7 @@
 
 #include "ops/Lut1D/Lut1DOp.h"
 #include "ops/Lut3D/Lut3DOp.h"
+#include "ops/Matrix/MatrixOps.h"
 #include "ParseUtils.h"
 #include "MathUtils.h"
 #include "Logging.h"
@@ -175,31 +176,28 @@ OCIO_NAMESPACE_ENTER
         class LocalCachedFile : public CachedFile
         {
         public:
-            LocalCachedFile () : 
-                has1D(false),
-                has3D(false)
-            {
-                lut1D = Lut1D::Create();
-                lut3D = Lut3D::Create();
-            };
-            ~LocalCachedFile() {};
-            
-            bool has1D;
-            bool has3D;
-            // TODO: Switch to the OpData classes.
-            Lut1DRcPtr lut1D;
-            Lut3DRcPtr lut3D;
+            LocalCachedFile() = default;
+            ~LocalCachedFile() = default;
+
+            Lut1DOpDataRcPtr lut1D;
+            float range1d_min = 0.0f;
+            float range1d_max = 1.0f;
+
+            Lut3DOpDataRcPtr lut3D;
+            float range3d_min = 0.0f;
+            float range3d_max = 1.0f;
         };
-        
+
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
-        
-        
-        
+
+
+
         class LocalFileFormat : public FileFormat
         {
         public:
             
-            ~LocalFileFormat() {};
+            LocalFileFormat() = default;
+            ~LocalFileFormat() = default;
             
             void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
             
@@ -212,10 +210,10 @@ OCIO_NAMESPACE_ENTER
                       std::ostream & ostream) const override;
             
             void buildFileOps(OpRcPtrVec & ops,
-                              const Config& config,
+                              const Config & config,
                               const ConstContextRcPtr & context,
                               CachedFileRcPtr untypedCachedFile,
-                              const FileTransform& fileTransform,
+                              const FileTransform & fileTransform,
                               TransformDirection dir) const override;
         private:
             static void ThrowErrorMessage(const std::string & error,
@@ -223,7 +221,7 @@ OCIO_NAMESPACE_ENTER
                 int line,
                 const std::string & lineContent);
         };
-        
+
         void LocalFileFormat::ThrowErrorMessage(const std::string & error,
             const std::string & fileName,
             int line,
@@ -256,29 +254,29 @@ OCIO_NAMESPACE_ENTER
             std::istream & istream,
             const std::string & fileName) const
         {
-            
+
             // this shouldn't happen
             if(!istream)
             {
                 throw Exception ("File stream empty when trying to read Resolve .cube lut");
             }
-            
+
             // Parse the file
             std::vector<float> raw1d;
             std::vector<float> raw3d;
-            
+
             int size3d = 0;
             int size1d = 0;
-            
+
             bool has1d = false;
             bool has3d = false;
-            
+
             float range1d_min = 0.0f;
             float range1d_max = 1.0f;
-            
+
             float range3d_min = 0.0f;
             float range3d_max = 1.0f;
-            
+
             {
                 std::string line;
                 StringVec parts;
@@ -286,11 +284,11 @@ OCIO_NAMESPACE_ENTER
                 int lineNumber = 0;
                 bool headerComplete = false;
                 int tripletNumber = 0;
-                
+
                 while(nextline(istream, line))
                 {
                     ++lineNumber;
-                    
+
                     // All lines starting with '#' are comments
                     if(pystring::startswith(line,"#"))
                     {
@@ -307,11 +305,11 @@ OCIO_NAMESPACE_ENTER
                             continue;
                         }
                     }
-                    
+
                     // Strip, lowercase, and split the line
                     pystring::split(pystring::lower(pystring::strip(line)), parts);
                     if(parts.empty()) continue;
-                    
+
                     if(pystring::lower(parts[0]) == "title")
                     {
                         ThrowErrorMessage(
@@ -331,7 +329,7 @@ OCIO_NAMESPACE_ENTER
                                 lineNumber,
                                 line);
                         }
-                        
+
                         raw1d.reserve(3*size1d);
                         has1d = true;
                     }
@@ -354,7 +352,7 @@ OCIO_NAMESPACE_ENTER
                                 lineNumber,
                                 line);
                         }
-                        
+
                         raw3d.reserve(3*size3d*size3d*size3d);
                         has3d = true;
                     }
@@ -387,7 +385,7 @@ OCIO_NAMESPACE_ENTER
                     else
                     {
                         headerComplete = true;
-                        
+
                         // It must be a float triple!
                         if(!StringVecToFloatVec(tmpfloats, parts) || tmpfloats.size() != 3)
                         {
@@ -397,7 +395,7 @@ OCIO_NAMESPACE_ENTER
                                 lineNumber,
                                 line);
                         }
-                        
+
                         for(int i=0; i<3; ++i)
                         {
                             if(has1d && tripletNumber < size1d)
@@ -409,16 +407,16 @@ OCIO_NAMESPACE_ENTER
                                 raw3d.push_back(tmpfloats[i]);
                             }
                         }
-                        
+
                         ++tripletNumber;
                     }
                 }
             }
-            
+
             // Interpret the parsed data, validate lut sizes
-            
+
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
-            
+
             if(has1d)
             {
                 if(size1d != static_cast<int>(raw1d.size()/3))
@@ -431,47 +429,27 @@ OCIO_NAMESPACE_ENTER
                         os.str().c_str(),
                         fileName, -1, "");
                 }
-                
+
                 // Reformat 1D data
                 if(size1d>0)
                 {
-                    cachedFile->has1D = true;
-                    
-                    for(size_t i=0; i<3; ++i)
+                    cachedFile->lut1D = std::make_shared<Lut1DOpData>(size1d);
+
+                    cachedFile->lut1D->setFileOutputBitDepth(BIT_DEPTH_F32);
+
+                    cachedFile->range1d_min = range1d_min;
+                    cachedFile->range1d_max = range1d_max;
+
+                    auto & lutArray = cachedFile->lut1D->getArray();
+
+                    for (unsigned long i = 0; i < raw1d.size(); ++i)
                     {
-                        cachedFile->lut1D->from_min[i] = range1d_min;
-                        cachedFile->lut1D->from_max[i] = range1d_max;
+                        lutArray[i] = raw1d[i];
                     }
-                    
-                    for(int channel=0; channel<3; ++channel)
-                    {
-                        cachedFile->lut1D->luts[channel].resize(size1d);
-                        for(int i=0; i<size1d; ++i)
-                        {
-                            cachedFile->lut1D->luts[channel][i] = raw1d[3*i+channel];
-                        }
-                    }
-                    
-                    // 1e-5 rel error is a good threshold when float numbers near 0
-                    // are written out with 6 decimal places of precision.  This is
-                    // a bit aggressive, I.e., changes in the 6th decimal place will
-                    // be considered roundoff error, but changes in the 5th decimal
-                    // will be considered lut 'intent'.
-                    // 1.0
-                    // 1.000005 equal to 1.0
-                    // 1.000007 equal to 1.0
-                    // 1.000010 not equal
-                    // 0.0
-                    // 0.000001 not equal
-                    
-                    cachedFile->lut1D->maxerror = 1e-5f;
-                    cachedFile->lut1D->errortype = Lut1D::ERROR_RELATIVE;
                 }
             }
             if(has3d)
             {
-                cachedFile->has3D = true;
-                
                 if(size3d*size3d*size3d 
                     != static_cast<int>(raw3d.size()/3))
                 {
@@ -483,15 +461,14 @@ OCIO_NAMESPACE_ENTER
                         os.str().c_str(),
                         fileName, -1, "");
                 }
-                
+
                 // Reformat 3D data
-                for(size_t i=0; i<3; ++i)
-                {
-                    cachedFile->lut3D->from_min[i] = range3d_min;
-                    cachedFile->lut3D->from_max[i] = range3d_max;
-                    cachedFile->lut3D->size[i] = size3d;
-                }
-                cachedFile->lut3D->lut = raw3d;
+                cachedFile->range3d_min = range3d_min;
+                cachedFile->range3d_max = range3d_max;
+
+                cachedFile->lut3D = std::make_shared<Lut3DOpData>(size3d);
+                cachedFile->lut3D->setFileOutputBitDepth(BIT_DEPTH_F32);
+                cachedFile->lut3D->setArrayFromRedFastestOrder(raw3d);
             }
             if(!has1d && !has3d)
             {
@@ -499,7 +476,7 @@ OCIO_NAMESPACE_ENTER
                     "Lut type (1D/3D) unspecified.",
                     fileName, -1, "");
             }
-            
+
             return cachedFile;
         }
         
@@ -507,11 +484,11 @@ OCIO_NAMESPACE_ENTER
                                    const std::string & formatName,
                                    std::ostream & ostream) const
         {
-            
+
             const int DEFAULT_1D_SIZE = 4096;
             const int DEFAULT_SHAPER_SIZE = 4096;
             const int DEFAULT_3D_SIZE = 64;
-            
+
             if(formatName != "resolve_cube")
             {
                 std::ostringstream os;
@@ -519,13 +496,13 @@ OCIO_NAMESPACE_ENTER
                 os << formatName << "'.";
                 throw Exception(os.str().c_str());
             }
-            
+
             //
             // Initialize config and data
             //
-            
+
             ConstConfigRcPtr config = baker.getConfig();
-            
+
             int onedSize = baker.getCubeSize();
             if(onedSize==-1) onedSize = DEFAULT_1D_SIZE;
             if(onedSize<2)
@@ -534,11 +511,11 @@ OCIO_NAMESPACE_ENTER
                 os << "1D LUT size must be higher than 2 (was " << onedSize << ")";
                 throw Exception(os.str().c_str());
             }
-            
+
             int cubeSize = baker.getCubeSize();
             if(cubeSize==-1) cubeSize = DEFAULT_3D_SIZE;
             cubeSize = std::max(2, cubeSize); // smallest cube is 2x2x2
-            
+
             int shaperSize = baker.getShaperSize();
             if(shaperSize<0) shaperSize = DEFAULT_SHAPER_SIZE;
             if(shaperSize<2)
@@ -548,21 +525,21 @@ OCIO_NAMESPACE_ENTER
                 os << " been specified, so the shaper size must be 2 or larger";
                 throw Exception(os.str().c_str());
             }
-            
+
             // Get spaces from baker
             const std::string shaperSpace = baker.getShaperSpace();
             const std::string inputSpace = baker.getInputSpace();
             const std::string targetSpace = baker.getTargetSpace();
             const std::string looks = baker.getLooks();
-            
+
             //
             // Determine required LUT type
             //
-            
+
             const int CUBE_1D = 1; // 1D LUT version number
             const int CUBE_3D = 2; // 3D LUT version number
             const int CUBE_1D_3D = 3; // 3D LUT with 1D prelut
-            
+
             ConstProcessorRcPtr inputToTargetProc;
             if (!looks.empty())
             {
@@ -579,9 +556,9 @@ OCIO_NAMESPACE_ENTER
                     inputSpace.c_str(),
                     targetSpace.c_str());
             }
-            
+
             int required_lut = -1;
-            
+
             if(inputToTargetProc->hasChannelCrosstalk())
             {
                 if(shaperSpace.empty())
@@ -607,16 +584,16 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(
                     "Internal logic error, LUT type was not determined");
             }
-            
+
             //
             // Generate Shaper
             //
-            
+
             std::vector<float> shaperData;
-            
+
             float fromInStart = 0;
             float fromInEnd = 1;
-            
+
             if(required_lut == CUBE_1D_3D)
             {
                 // TODO: Later we only grab the green channel for the prelut,
@@ -625,7 +602,7 @@ OCIO_NAMESPACE_ENTER
                 ConstProcessorRcPtr inputToShaperProc = config->getProcessor(
                     inputSpace.c_str(),
                     shaperSpace.c_str());
-                
+
                 if(inputToShaperProc->hasChannelCrosstalk())
                 {
                     // TODO: Automatically turn shaper into
@@ -637,7 +614,7 @@ OCIO_NAMESPACE_ENTER
                     os << " omit this option.";
                     throw Exception(os.str().c_str());
                 }
-                
+
                 // Calculate min/max value
                 {
                     // Get input value of 1.0 in shaper space, as this
@@ -662,7 +639,7 @@ OCIO_NAMESPACE_ENTER
                 // Generate the identity shaper values, then apply the transform.
                 // Shaper is linearly sampled from fromInStart to fromInEnd
                 shaperData.resize(shaperSize*3);
-                
+
                 for (int i = 0; i < shaperSize; ++i)
                 {
                     const float x = (float)(double(i) / double(shaperSize - 1));
@@ -672,23 +649,23 @@ OCIO_NAMESPACE_ENTER
                     shaperData[3*i+1] = cur_value;
                     shaperData[3*i+2] = cur_value;
                 }
-                
+
                 PackedImageDesc shaperImg(&shaperData[0], shaperSize, 1, 3);
                 ConstCPUProcessorRcPtr cpu = inputToShaperProc->getDefaultCPUProcessor();
                 cpu->apply(shaperImg);
             }
-            
+
             //
             // Generate 3DLUT
             //
-            
+
             std::vector<float> cubeData;
             if(required_lut == CUBE_3D || required_lut == CUBE_1D_3D)
             {
                 cubeData.resize(cubeSize*cubeSize*cubeSize*3);
                 GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_RED);
                 PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
-                
+
                 ConstProcessorRcPtr cubeProc;
                 if(required_lut == CUBE_1D_3D)
                 {
@@ -717,11 +694,11 @@ OCIO_NAMESPACE_ENTER
                 ConstCPUProcessorRcPtr cpu = cubeProc->getDefaultCPUProcessor();
                 cpu->apply(cubeImg);
             }
-            
+
             //
             // Generate 1DLUT
             //
-            
+
             std::vector<float> onedData;
             if(required_lut == CUBE_1D)
             {
@@ -732,15 +709,15 @@ OCIO_NAMESPACE_ENTER
                 ConstCPUProcessorRcPtr cpu = inputToTargetProc->getDefaultCPUProcessor();
                 cpu->apply(onedImg);
             }
-            
+
             //
             // Write LUT
             //
-            
+
             // Set to a fixed 6 decimal precision
             ostream.setf(std::ios::fixed, std::ios::floatfield);
             ostream.precision(6);
-            
+
             // Comments
             if(baker.getMetadata() != NULL)
             {
@@ -756,7 +733,7 @@ OCIO_NAMESPACE_ENTER
                     ostream << "\n";
                 }
             }
-            
+
             // Header
             // Note about LUT_ND_INPUT_RANGE tags :
             // These tags are optional and will default to the 0..1 range,
@@ -777,7 +754,7 @@ OCIO_NAMESPACE_ENTER
                 ostream << "LUT_3D_SIZE " << cubeSize << "\n";
                 //ostream << "LUT_3D_INPUT_RANGE 0.0 1.0\n";
             }
-            
+
             // Write 1D data
             if(required_lut == CUBE_1D)
             {
@@ -797,7 +774,7 @@ OCIO_NAMESPACE_ENTER
                             << shaperData[3*i+2] << "\n";
                 }
             }
-            
+
             // Write 3D data
             if(required_lut == CUBE_3D || required_lut == CUBE_1D_3D)
             {
@@ -809,17 +786,17 @@ OCIO_NAMESPACE_ENTER
                 }
             }
         }
-        
+
         void
         LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
-                                      const Config& /*config*/,
+                                      const Config & /*config*/,
                                       const ConstContextRcPtr & /*context*/,
                                       CachedFileRcPtr untypedCachedFile,
-                                      const FileTransform& fileTransform,
+                                      const FileTransform & fileTransform,
                                       TransformDirection dir) const
         {
             LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
-            
+
             // This should never happen.
             if(!cachedFile)
             {
@@ -827,7 +804,7 @@ OCIO_NAMESPACE_ENTER
                 os << "Cannot build Resolve .cube Op. Invalid cache type.";
                 throw Exception(os.str().c_str());
             }
-            
+
             TransformDirection newDir = CombineTransformDirections(dir,
                 fileTransform.getDirection());
             if(newDir == TRANSFORM_DIR_UNKNOWN)
@@ -837,41 +814,57 @@ OCIO_NAMESPACE_ENTER
                 os << " unspecified transform direction.";
                 throw Exception(os.str().c_str());
             }
-            
-            // TODO: INTERP_LINEAR should not be hard-coded.
-            // Instead query 'highest' interpolation?
-            // (right now, it's linear). If cubic is added, consider
-            // using it
-            
+
+            if (cachedFile->lut3D)
+            {
+                cachedFile->lut3D->setInterpolation(fileTransform.getInterpolation());
+            }
+            else if (cachedFile->lut1D)
+            {
+                cachedFile->lut1D->setInterpolation(fileTransform.getInterpolation());
+            }
+
             if(newDir == TRANSFORM_DIR_FORWARD)
             {
-                if(cachedFile->has1D)
+                if(cachedFile->lut1D)
                 {
-                    CreateLut1DOp(ops, cachedFile->lut1D,
-                                  INTERP_LINEAR, newDir);
+                    CreateMinMaxOp(ops,
+                                   cachedFile->range1d_min,
+                                   cachedFile->range1d_max,
+                                   newDir);
+                    CreateLut1DOp(ops, cachedFile->lut1D, newDir);
                 }
-                if(cachedFile->has3D)
+                if(cachedFile->lut3D)
                 {
-                    CreateLut3DOp(ops, cachedFile->lut3D,
-                                  fileTransform.getInterpolation(), newDir);
+                    CreateMinMaxOp(ops,
+                                   cachedFile->range3d_min,
+                                   cachedFile->range3d_max,
+                                   newDir);
+                    CreateLut3DOp(ops, cachedFile->lut3D, newDir);
                 }
             }
             else if(newDir == TRANSFORM_DIR_INVERSE)
             {
-                if(cachedFile->has3D)
+                if(cachedFile->lut3D)
                 {
-                    CreateLut3DOp(ops, cachedFile->lut3D,
-                                  fileTransform.getInterpolation(), newDir);
+                    CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+                    CreateMinMaxOp(ops,
+                                   cachedFile->range3d_min,
+                                   cachedFile->range3d_max,
+                                   newDir);
                 }
-                if(cachedFile->has1D)
+                if(cachedFile->lut1D)
                 {
-                    CreateLut1DOp(ops, cachedFile->lut1D,
-                                  INTERP_LINEAR, newDir);
+                    CreateLut1DOp(ops, cachedFile->lut1D, newDir);
+                    CreateMinMaxOp(ops,
+                                   cachedFile->range1d_min,
+                                   cachedFile->range1d_max,
+                                   newDir);
                 }
             }
         }
     }
-    
+
     FileFormat * CreateFileFormatResolveCube()
     {
         return new LocalFileFormat();
@@ -886,7 +879,7 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
-#include <fstream>
+#include "UnitTestUtils.h"
 
 OCIO::LocalCachedFileRcPtr ReadResolveCube(const std::string & fileContent)
 {
@@ -901,7 +894,7 @@ OCIO::LocalCachedFileRcPtr ReadResolveCube(const std::string & fileContent)
     return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
 }
 
-OCIO_ADD_TEST(FileFormatResolveCube, FormatInfo)
+OCIO_ADD_TEST(FileFormatResolveCube, format_info)
 {
     OCIO::FormatInfoVec formatInfoVec;
     OCIO::LocalFileFormat tester;
@@ -914,7 +907,7 @@ OCIO_ADD_TEST(FileFormatResolveCube, FormatInfo)
                      formatInfoVec[0].capabilities);
 }
 
-OCIO_ADD_TEST(FileFormatResolveCube, Read1D)
+OCIO_ADD_TEST(FileFormatResolveCube, read_1d)
 {
     const std::string SAMPLE =
         "LUT_1D_SIZE 2\n"
@@ -926,7 +919,7 @@ OCIO_ADD_TEST(FileFormatResolveCube, Read1D)
     OCIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE));
 }
 
-OCIO_ADD_TEST(FileFormatResolveCube, Read3D)
+OCIO_ADD_TEST(FileFormatResolveCube, read_3d)
 {
     const std::string SAMPLE =
         "LUT_3D_SIZE 2\n"
@@ -944,7 +937,7 @@ OCIO_ADD_TEST(FileFormatResolveCube, Read3D)
     OCIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE));
 }
 
-OCIO_ADD_TEST(FileFormatResolveCube, Read1D3D)
+OCIO_ADD_TEST(FileFormatResolveCube, read_1d_3d)
 {
     const std::string SAMPLE =
         "LUT_1D_SIZE 6\n"
@@ -989,7 +982,7 @@ OCIO_ADD_TEST(FileFormatResolveCube, Read1D3D)
     OCIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE));
 }
 
-OCIO_ADD_TEST(FileFormatResolveCube, ReadDefaultRange)
+OCIO_ADD_TEST(FileFormatResolveCube, read_default_range)
 {
     const std::string SAMPLE_1D =
         "LUT_1D_SIZE 2\n"
@@ -1032,7 +1025,7 @@ OCIO_ADD_TEST(FileFormatResolveCube, ReadDefaultRange)
 }
 
 
-OCIO_ADD_TEST(FileFormatResolveCube, ReadFailure)
+OCIO_ADD_TEST(FileFormatResolveCube, read_failure)
 {
     {
         // Wrong LUT_3D_SIZE tag
@@ -1123,7 +1116,7 @@ OCIO_ADD_TEST(FileFormatResolveCube, ReadFailure)
     }
 }
 
-OCIO_ADD_TEST(FileFormatResolveCube, Bake1D)
+OCIO_ADD_TEST(FileFormatResolveCube, bake_1d)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     {
@@ -1168,7 +1161,7 @@ OCIO_ADD_TEST(FileFormatResolveCube, Bake1D)
     }
 }
 
-OCIO_ADD_TEST(FileFormatResolveCube, Bake3D)
+OCIO_ADD_TEST(FileFormatResolveCube, bake_3d)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     {
@@ -1230,7 +1223,7 @@ OCIO_ADD_TEST(FileFormatResolveCube, Bake3D)
     }
 }
 
-OCIO_ADD_TEST(FileFormatResolveCube, Bake1D3D)
+OCIO_ADD_TEST(FileFormatResolveCube, bake_1d_3d)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     {
@@ -1309,6 +1302,133 @@ OCIO_ADD_TEST(FileFormatResolveCube, Bake1D3D)
     {
         OCIO_CHECK_EQUAL(osvec[i], resvec[i]);
     }
+}
+
+OCIO_ADD_TEST(FileFormatResolveCube, load_ops)
+{
+    const std::string fileName("resolve_1d3d.cube");
+    OCIO::OpRcPtrVec ops;
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
+    OCIO_CHECK_NO_THROW(BuildOpsTest(ops, fileName, context,
+        OCIO::TRANSFORM_DIR_FORWARD));
+
+    OCIO_REQUIRE_EQUAL(ops.size(), 5);
+    OCIO_CHECK_EQUAL("<FileNoOp>", ops[0]->getInfo());
+    OCIO_CHECK_EQUAL("<MatrixOffsetOp>", ops[1]->getInfo());
+    OCIO_CHECK_EQUAL("<Lut1DOp>", ops[2]->getInfo());
+    OCIO_CHECK_EQUAL("<MatrixOffsetOp>", ops[3]->getInfo());
+    OCIO_CHECK_EQUAL("<Lut3DOp>", ops[4]->getInfo());
+
+    auto op1 = std::const_pointer_cast<const OCIO::Op>(ops[1]);
+    auto opData1 = op1->data();
+    auto mat = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opData1);
+    OCIO_REQUIRE_ASSERT(mat);
+    auto & matArray = mat->getArray();
+    OCIO_CHECK_EQUAL(matArray[0], 0.25f);
+    OCIO_CHECK_EQUAL(matArray[1], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[2], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[3], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[4], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[5], 0.25f);
+    OCIO_CHECK_EQUAL(matArray[6], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[7], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[8], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[9], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[10], 0.25f);
+    OCIO_CHECK_EQUAL(matArray[11], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[12], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[13], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[14], 0.0f);
+    OCIO_CHECK_EQUAL(matArray[15], 1.0f);
+
+    auto & matOffsets = mat->getOffsets();
+    OCIO_CHECK_EQUAL(matOffsets[0], 0.25f);
+    OCIO_CHECK_EQUAL(matOffsets[1], 0.25f);
+    OCIO_CHECK_EQUAL(matOffsets[2], 0.25f);
+    OCIO_CHECK_EQUAL(matOffsets[3], 0.0f);
+
+    auto op2 = std::const_pointer_cast<const OCIO::Op>(ops[2]);
+    auto opData2 = op2->data();
+    auto lut = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opData2);
+    OCIO_REQUIRE_ASSERT(lut);
+    OCIO_CHECK_EQUAL(lut->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(lut->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(lut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
+    auto & lutArray = lut->getArray();
+    OCIO_REQUIRE_EQUAL(lutArray.getNumValues(), 18);
+
+    OCIO_CHECK_EQUAL(lutArray[0], 3.3f);
+    OCIO_CHECK_EQUAL(lutArray[1], 3.4f);
+    OCIO_CHECK_EQUAL(lutArray[2], 3.5f);
+    OCIO_CHECK_EQUAL(lutArray[3], 3.0f);
+    OCIO_CHECK_EQUAL(lutArray[4], 3.1f);
+    OCIO_CHECK_EQUAL(lutArray[5], 3.2f);
+    OCIO_CHECK_EQUAL(lutArray[6], 2.2f);
+    OCIO_CHECK_EQUAL(lutArray[7], 2.3f);
+    OCIO_CHECK_EQUAL(lutArray[8], 2.4f);
+    OCIO_CHECK_EQUAL(lutArray[9], 2.1f);
+    OCIO_CHECK_EQUAL(lutArray[10], 2.0f);
+    OCIO_CHECK_EQUAL(lutArray[11], 2.0f);
+    OCIO_CHECK_EQUAL(lutArray[12], 1.0f);
+    OCIO_CHECK_EQUAL(lutArray[13], 1.0f);
+    OCIO_CHECK_EQUAL(lutArray[14], 1.0f);
+    OCIO_CHECK_EQUAL(lutArray[15], 0.0f);
+    OCIO_CHECK_EQUAL(lutArray[16], 0.0f);
+    OCIO_CHECK_EQUAL(lutArray[17], 0.0f);
+
+    auto op3 = std::const_pointer_cast<const OCIO::Op>(ops[3]);
+    auto opData3 = op3->data();
+    auto mat3 = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opData3);
+    OCIO_REQUIRE_ASSERT(mat3);
+    auto & mat3Array = mat3->getArray();
+    OCIO_CHECK_EQUAL(mat3Array[0], 0.25f);
+    OCIO_CHECK_EQUAL(mat3Array[1], 0.0f);
+    OCIO_CHECK_EQUAL(mat3Array[2], 0.0f);
+    OCIO_CHECK_EQUAL(mat3Array[3], 0.0f);
+    OCIO_CHECK_EQUAL(mat3Array[4], 0.0f);
+    OCIO_CHECK_EQUAL(mat3Array[5], 0.25f);
+    OCIO_CHECK_EQUAL(mat3Array[6], 0.0f);
+    OCIO_CHECK_EQUAL(mat3Array[7], 0.0f);
+    OCIO_CHECK_EQUAL(mat3Array[8], 0.0f);
+    OCIO_CHECK_EQUAL(mat3Array[9], 0.0f);
+    OCIO_CHECK_EQUAL(mat3Array[10], 0.25f);
+    OCIO_CHECK_EQUAL(mat3Array[11], 0.0f);
+    OCIO_CHECK_EQUAL(mat3Array[12], 0.0f);
+    OCIO_CHECK_EQUAL(mat3Array[13], 0.0f);
+    OCIO_CHECK_EQUAL(mat3Array[14], 0.0f);
+    OCIO_CHECK_EQUAL(mat3Array[15], 1.0f);
+
+    auto & mat3Offsets = mat->getOffsets();
+    OCIO_CHECK_EQUAL(mat3Offsets[0], 0.25f);
+    OCIO_CHECK_EQUAL(mat3Offsets[1], 0.25f);
+    OCIO_CHECK_EQUAL(mat3Offsets[2], 0.25f);
+    OCIO_CHECK_EQUAL(mat3Offsets[3], 0.0f);
+
+    auto op4 = std::const_pointer_cast<const OCIO::Op>(ops[4]);
+    auto opData4 = op4->data();
+    auto lut4 = std::dynamic_pointer_cast<const OCIO::Lut3DOpData>(opData4);
+    OCIO_REQUIRE_ASSERT(lut4);
+    OCIO_CHECK_EQUAL(lut4->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
+    auto & lut4Array = lut4->getArray();
+    OCIO_REQUIRE_EQUAL(lut4Array.getNumValues(), 81);
+
+    // File line 11 - R:0 - G:0 - B:0
+    OCIO_CHECK_EQUAL(lut4Array[0], 1.1f);
+    OCIO_CHECK_EQUAL(lut4Array[1], 1.1f);
+    OCIO_CHECK_EQUAL(lut4Array[2], 1.1f);
+
+    // File line 23 - R:0 - G:1 - B:1
+    OCIO_CHECK_EQUAL(lut4Array[12], 1.0f);
+    OCIO_CHECK_EQUAL(lut4Array[13], 0.5f);
+    OCIO_CHECK_EQUAL(lut4Array[14], 0.5f);
+
+    // File line 31 - R:2 - G:0 - B:2
+    OCIO_CHECK_EQUAL(lut4Array[60], 0.0f);
+    OCIO_CHECK_EQUAL(lut4Array[61], 1.0f);
+    OCIO_CHECK_EQUAL(lut4Array[62], 0.0f);
+
 }
 
 #endif // OCIO_UNIT_TEST
