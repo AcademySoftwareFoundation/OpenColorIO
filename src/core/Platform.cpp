@@ -45,6 +45,14 @@ OCIO_NAMESPACE_ENTER
             value = (val && *val) ? val : "";
 #endif 
         }
+        void setenv (const char* name, const std::string& value)
+        {
+#ifdef WINDOWS
+            ::_putenv_s(name, value.c_str());
+#else
+            ::setenv(name, value.c_str(), 1);
+#endif
+        }
 
     }//namespace platform
 
@@ -87,11 +95,10 @@ OIIO_ADD_TEST(Platform, getenv)
     }
 }
 
-OIIO_ADD_TEST(Platform, putenv)
+OIIO_ADD_TEST(Platform, setenv)
 {
     {
-        const std::string value("MY_DUMMY_ENV=SomeValue");
-        ::putenv(const_cast<char*>(value.c_str()));
+        OCIO::Platform::setenv("MY_DUMMY_ENV", "SomeValue");
         std::string env;
         OCIO::Platform::getenv("MY_DUMMY_ENV", env);
         OIIO_CHECK_ASSERT(!env.empty());
@@ -100,8 +107,7 @@ OIIO_ADD_TEST(Platform, putenv)
         OIIO_CHECK_EQUAL(strlen("SomeValue"), env.size());
     }
     {
-        const std::string value("MY_DUMMY_ENV= ");
-        ::putenv(const_cast<char*>(value.c_str()));
+        OCIO::Platform::setenv("MY_DUMMY_ENV", " ");
         std::string env;
         OCIO::Platform::getenv("MY_DUMMY_ENV", env);
         OIIO_CHECK_ASSERT(!env.empty());
@@ -110,8 +116,7 @@ OIIO_ADD_TEST(Platform, putenv)
         OIIO_CHECK_EQUAL(strlen(" "), env.size());
     }
     {
-        const std::string value("MY_DUMMY_ENV=");
-        ::putenv(const_cast<char*>(value.c_str()));
+        OCIO::Platform::setenv("MY_DUMMY_ENV", "");
         std::string env;
         OCIO::Platform::getenv("MY_DUMMY_ENV", env);
         OIIO_CHECK_ASSERT(env.empty());
