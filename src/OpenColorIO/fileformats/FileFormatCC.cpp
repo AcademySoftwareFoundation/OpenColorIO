@@ -21,7 +21,7 @@ OCIO_NAMESPACE_ENTER
                 transform = CDLTransform::Create();
             };
             
-            ~LocalCachedFile() {};
+            ~LocalCachedFile() = default;
             
             CDLTransformRcPtr transform;
         };
@@ -33,8 +33,8 @@ OCIO_NAMESPACE_ENTER
         class LocalFileFormat : public FileFormat
         {
         public:
-            
-            ~LocalFileFormat() {};
+            LocalFileFormat() = default;
+            ~LocalFileFormat() = default;
             
             void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
             
@@ -149,10 +149,16 @@ OCIO_ADD_TEST(FileFormatCC, TestCC1)
     OCIO::LocalCachedFileRcPtr ccFile;
     OCIO_CHECK_NO_THROW(ccFile = LoadCCFile(fileName));
 
+    OCIO_REQUIRE_ASSERT(ccFile);
+
+    auto & formatMetadata = ccFile->transform->getFormatMetadata();
+    OCIO_REQUIRE_EQUAL(formatMetadata.getNumChildrenElements(), 1);
+    OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(0).getName()), "SOPDescription");
+    OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(0).getValue()), "this is a description");
+
     std::string idStr(ccFile->transform->getID());
     OCIO_CHECK_EQUAL("foo", idStr);
-    std::string descStr(ccFile->transform->getDescription());
-    OCIO_CHECK_EQUAL("this is a description", descStr);
+
     float slope[3] = { 0.f, 0.f, 0.f };
     OCIO_CHECK_NO_THROW(ccFile->transform->getSlope(slope));
     OCIO_CHECK_EQUAL(1.1f, slope[0]);
@@ -179,11 +185,18 @@ OCIO_ADD_TEST(FileFormatCC, TestCC2)
     OCIO::LocalCachedFileRcPtr ccFile;
     OCIO_CHECK_NO_THROW(ccFile = LoadCCFile(fileName));
 
+    OCIO_REQUIRE_ASSERT(ccFile);
+
+    auto & formatMetadata = ccFile->transform->getFormatMetadata();
+    OCIO_REQUIRE_EQUAL(formatMetadata.getNumChildrenElements(), 2);
+    OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(0).getName()), "SOPDescription");
+    OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(0).getValue()), "Example look");
+    OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(1).getName()), "SATDescription");
+    OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(1).getValue()), "boosting sat");
+
     std::string idStr(ccFile->transform->getID());
     OCIO_CHECK_EQUAL("cc0001", idStr);
-    // OCIO keeps only the first SOPNode description
-    std::string descStr(ccFile->transform->getDescription());
-    OCIO_CHECK_EQUAL("Example look", descStr);
+
     float slope[3] = { 0.f, 0.f, 0.f };
     OCIO_CHECK_NO_THROW(ccFile->transform->getSlope(slope));
     OCIO_CHECK_EQUAL(1.0f, slope[0]);
@@ -210,6 +223,8 @@ OCIO_ADD_TEST(FileFormatCC, TestCC_SATNode)
     OCIO::LocalCachedFileRcPtr ccFile;
     OCIO_CHECK_NO_THROW(ccFile = LoadCCFile(fileName));
 
+    OCIO_REQUIRE_ASSERT(ccFile);
+
     // "SATNode" is recognized.
     OCIO_CHECK_EQUAL(0.42, ccFile->transform->getSat());
 }
@@ -221,6 +236,8 @@ OCIO_ADD_TEST(FileFormatCC, TestCC_ASC_SAT)
 
     OCIO::LocalCachedFileRcPtr ccFile;
     OCIO_CHECK_NO_THROW(ccFile = LoadCCFile(fileName));
+
+    OCIO_REQUIRE_ASSERT(ccFile);
 
     // "ASC_SAT" is not recognized. Default value is returned.
     OCIO_CHECK_EQUAL(1.0, ccFile->transform->getSat());
@@ -234,9 +251,12 @@ OCIO_ADD_TEST(FileFormatCC, TestCC_ASC_SOP)
     OCIO::LocalCachedFileRcPtr ccFile;
     OCIO_CHECK_NO_THROW(ccFile = LoadCCFile(fileName));
 
+    OCIO_REQUIRE_ASSERT(ccFile);
+
     // "ASC_SOP" is not recognized. Default values are used.
-    std::string descStr(ccFile->transform->getDescription());
-    OCIO_CHECK_EQUAL("", descStr);
+    auto & formatMetadata = ccFile->transform->getFormatMetadata();
+    OCIO_REQUIRE_EQUAL(formatMetadata.getNumChildrenElements(), 0);
+
     float slope[3] = { 0.f, 0.f, 0.f };
     OCIO_CHECK_NO_THROW(ccFile->transform->getSlope(slope));
     OCIO_CHECK_EQUAL(1.0f, slope[0]);
