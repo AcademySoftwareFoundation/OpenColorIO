@@ -601,8 +601,9 @@ private:
                                 pImpl->getXmlFilename()));
                     }
                 }
-                else if (SupportedElement(name, pElt, TAG_DESCRIPTION,
-                                          "", recognizedName))
+                else if (SupportedElement(name, pElt, TAG_DESCRIPTION, "", recognizedName) ||
+                         SupportedElement(name, pElt, METADATA_INPUT_DESCRIPTION, TAG_CDL, recognizedName) ||
+                         SupportedElement(name, pElt, METADATA_VIEWING_DESCRIPTION, TAG_CDL, recognizedName))
                 {
                     pImpl->m_elms.push_back(
                         std::make_shared<XmlReaderDescriptionElt>(
