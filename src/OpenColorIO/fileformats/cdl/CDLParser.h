@@ -14,6 +14,8 @@
 OCIO_NAMESPACE_ENTER
 {
 
+class FormatMetadataImpl;
+
 class CDLParser
 {
 public:
@@ -24,7 +26,8 @@ public:
 
     // Can be called after parse
     void getCDLTransforms(CDLTransformMap & transformMap,
-                          CDLTransformVec & transformVec) const;
+                          CDLTransformVec & transformVec,
+                          FormatMetadataImpl & metadata) const;
 
     // Can be called after parse
     void getCDLTransform(CDLTransformRcPtr & transform) const;
