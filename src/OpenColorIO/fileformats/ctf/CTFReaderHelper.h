@@ -43,7 +43,7 @@ public:
 
     void end() override;
 
-    void appendDescription(const std::string & desc) override;
+    void appendMetadata(const std::string & name, const std::string & value) override;
 
     // Get its parent which is a Transform.
     const CTFReaderTransformPtr & getTransform() const;
@@ -354,7 +354,7 @@ public:
 
     virtual const OpDataRcPtr getOp() const = 0;
 
-    void appendDescription(const std::string & desc) override;
+    void appendMetadata(const std::string & name, const std::string & value) override;
 
     void start(const char ** atts) override;
 
