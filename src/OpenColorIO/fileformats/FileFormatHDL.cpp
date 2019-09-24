@@ -2,20 +2,20 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 /*
-    
+
     Houdini LUTs
     http://www.sidefx.com/docs/hdk11.0/hdk_io_lut.html
-    
+
     Types:
       - 1D LUT (partial support)
       - 3D LUT
       - 3D LUT with 1D Prelut
-    
-    TODO:
+
+      TODO:
         - Add support for other 1D types (R, G, B, A, RGB, RGBA, All)
           we only support type 'C' atm.
         - Add support for 'Sampling' tag
-    
+
 */
 
 #include <algorithm>
@@ -32,6 +32,7 @@
 #include "MathUtils.h"
 #include "ops/Lut1D/Lut1DOp.h"
 #include "ops/Lut3D/Lut3DOp.h"
+#include "ops/Matrix/MatrixOps.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
@@ -221,34 +222,48 @@ OCIO_NAMESPACE_ENTER
         {
         public:
             CachedFileHDL ()
+                : hdlversion("unknown")
+                , hdlformat("unknown")
+                , hdltype("unknown")
             {
-                hdlversion = "unknown";
-                hdlformat = "unknown";
-                hdltype = "unknown";
-                hdlblack = 0.0;
-                hdlwhite = 1.0;
-                lut1D = Lut1D::Create();
-                lut3D = Lut3D::Create();
-            };
-            ~CachedFileHDL() {};
+            }
+            ~CachedFileHDL() = default;
+
+            void setLUT1D(const std::vector<float> & values)
+            {
+                auto lutSize = static_cast<unsigned long>(values.size());
+                lut1D = std::make_shared<Lut1DOpData>(lutSize);
+                lut1D->setFileOutputBitDepth(BIT_DEPTH_F32);
+
+                auto & lutArray = lut1D->getArray();
+                for (unsigned long i = 0; i < lutSize; ++i)
+                {
+                    lutArray[3 * i + 0] = values[i];
+                    lutArray[3 * i + 1] = values[i];
+                    lutArray[3 * i + 2] = values[i];
+                }
+            }
+
             std::string hdlversion;
             std::string hdlformat;
             std::string hdltype;
-            float to_min; // TODO: maybe add this to Lut1DOp?
-            float to_max; // TODO: maybe add this to Lut1DOp?
-            float hdlblack;
-            float hdlwhite;
-            // TODO: Switch to the OpData classes.
-            Lut1DRcPtr lut1D;
-            Lut3DRcPtr lut3D;
+            float from_min = 0.0f;
+            float from_max = 1.0f;
+            float to_min = 0.0f;
+            float to_max = 1.0f;
+            float hdlblack = 0.0f;
+            float hdlwhite = 1.0f;
+
+            Lut1DOpDataRcPtr lut1D;
+            Lut3DOpDataRcPtr lut3D;
         };
         typedef OCIO_SHARED_PTR<CachedFileHDL> CachedFileHDLRcPtr;
-        
+
         class LocalFileFormat : public FileFormat
         {
         public:
-            
-            ~LocalFileFormat() {};
+            LocalFileFormat() = default;
+            ~LocalFileFormat() = default;
             
             void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
             
@@ -261,10 +276,10 @@ OCIO_NAMESPACE_ENTER
                       std::ostream & ostream) const override;
             
             void buildFileOps(OpRcPtrVec & ops,
-                              const Config& config,
+                              const Config & config,
                               const ConstContextRcPtr & context,
                               CachedFileRcPtr untypedCachedFile,
-                              const FileTransform& fileTransform,
+                              const FileTransform & fileTransform,
                               TransformDirection dir) const override;
         };
         
@@ -276,22 +291,21 @@ OCIO_NAMESPACE_ENTER
             info.capabilities = FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE;
             formatInfoVec.push_back(info);
         }
-        
+
         CachedFileRcPtr
         LocalFileFormat::read(
             std::istream & istream,
             const std::string & /* fileName unused */) const
         {
-            
+
             // this shouldn't happen
             if (!istream)
                 throw Exception ("file stream empty when trying to read Houdini LUT");
 
             //
             CachedFileHDLRcPtr cachedFile = CachedFileHDLRcPtr (new CachedFileHDL ());
-            // TODO: Switch to the OpData classes.
-            Lut1DRcPtr lut1d_ptr = Lut1D::Create();
-            Lut3DRcPtr lut3d_ptr = Lut3D::Create();
+
+            Lut3DOpDataRcPtr lut3d_ptr;
 
             // Parse headers into key-value pairs
             StringToStringVecMap header_chunks;
@@ -322,8 +336,8 @@ OCIO_NAMESPACE_ENTER
 
             // "From 0.0 1.0" - range of input values
             {
-                float from_min, from_max;
-
+                float from_min = 0.0f;
+                float from_max = 1.0f;
                 value = findHeaderItem(header_chunks, "from", 2);
 
                 if(!StringToFloat(&from_min, value[0].c_str()) ||
@@ -334,12 +348,8 @@ OCIO_NAMESPACE_ENTER
                     os << value[0] << "' and '"  << value[1] << "'";
                     throw Exception(os.str().c_str());
                 }
-
-                for(int i = 0; i < 3; ++i)
-                {
-                    lut1d_ptr->from_min[i] = from_min;
-                    lut1d_ptr->from_max[i] = from_max;
-                }
+                cachedFile->from_min = from_min;
+                cachedFile->from_max = from_max;
             }
 
 
@@ -437,9 +447,8 @@ OCIO_NAMESPACE_ENTER
                     // Set cube size
                     size_3d = lut_sizes[0];
 
-                    lut3d_ptr->size[0] = lut_sizes[0];
-                    lut3d_ptr->size[1] = lut_sizes[0];
-                    lut3d_ptr->size[2] = lut_sizes[0];
+                    lut3d_ptr = std::make_shared<Lut3DOpData>(lut_sizes[0]);
+                    lut3d_ptr->setFileOutputBitDepth(BIT_DEPTH_F32);
                 }
 
                 if(cachedFile->hdltype == "c")
@@ -479,12 +488,7 @@ OCIO_NAMESPACE_ENTER
                     throw Exception(os.str().c_str());
                 }
 
-                lut1d_ptr->luts[0] = lut_iter->second;
-                lut1d_ptr->luts[1] = lut_iter->second;
-                lut1d_ptr->luts[2] = lut_iter->second;
-                lut1d_ptr->maxerror = 0.0f;
-                lut1d_ptr->errortype = Lut1D::ERROR_RELATIVE;
-                cachedFile->lut1D = lut1d_ptr;
+                cachedFile->setLUT1D(lut_iter->second);
             }
 
             if(cachedFile->hdltype == "3d" ||
@@ -517,7 +521,7 @@ OCIO_NAMESPACE_ENTER
                     throw Exception(os.str().c_str());
                 }
 
-                lut3d_ptr->lut = lut_iter->second;
+                lut3d_ptr->setArrayFromRedFastestOrder(lut_iter->second);
 
                 // Bind to cachedFile
                 cachedFile->lut3D = lut3d_ptr;
@@ -542,12 +546,7 @@ OCIO_NAMESPACE_ENTER
                     throw Exception(os.str().c_str());
                 }
 
-                lut1d_ptr->luts[0] = lut_iter->second;
-                lut1d_ptr->luts[1] = lut_iter->second;
-                lut1d_ptr->luts[2] = lut_iter->second;
-                lut1d_ptr->maxerror = 0.0f;
-                lut1d_ptr->errortype = Lut1D::ERROR_RELATIVE;
-                cachedFile->lut1D = lut1d_ptr;
+                cachedFile->setLUT1D(lut_iter->second);
             }
 
             return cachedFile;
@@ -587,7 +586,7 @@ OCIO_NAMESPACE_ENTER
             // FIXME: Misusing cube size to set 1D LUT size, as it seemed
             // slightly less confusing than using the shaper LUT size
             int onedSize = baker.getCubeSize();
-            
+
             // Defaults and sanity check on cube size
             if(cubeSize == -1) cubeSize = DEFAULT_CUBE_SIZE;
             if(cubeSize < 0) cubeSize = DEFAULT_CUBE_SIZE;
@@ -597,7 +596,7 @@ OCIO_NAMESPACE_ENTER
                 os << "Cube size must be 2 or larger (was " << cubeSize << ")";
                 throw Exception(os.str().c_str());
             }
-            
+
             // ..and same for shaper size
             if(shaperSize<0) shaperSize = DEFAULT_SHAPER_SIZE;
             if(shaperSize<2)
@@ -607,7 +606,7 @@ OCIO_NAMESPACE_ENTER
                 os << " been specified, so the shaper size must be 2 or larger";
                 throw Exception(os.str().c_str());
             }
-            
+
             // ..and finally, for the 1D LUT size
             if(onedSize == -1) onedSize = DEFAULT_1D_SIZE;
             if(onedSize < 2)
@@ -616,12 +615,12 @@ OCIO_NAMESPACE_ENTER
                 os << "1D LUT size must be higher than 2 (was " << onedSize << ")";
                 throw Exception(os.str().c_str());
             }
-            
+
             // Version numbers
             const int HDL_1D = 1; // 1D LUT version number
             const int HDL_3D = 2; // 3D LUT version number
             const int HDL_3D1D = 3; // 3D LUT with 1D prelut
-            
+
             // Get spaces from baker
             const std::string shaperSpace = baker.getShaperSpace();
             const std::string inputSpace = baker.getInputSpace();
@@ -647,7 +646,7 @@ OCIO_NAMESPACE_ENTER
             }
 
             int required_lut = -1;
-            
+
             if(inputToTargetProc->hasChannelCrosstalk())
             {
                 if(shaperSpace.empty())
@@ -673,22 +672,22 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(
                     "Internal logic error, LUT type was not determined");
             }
-            
+
             // Make prelut
             std::vector<float> prelutData;
-            
+
             float fromInStart = 0; // for "From:" part of header
             float fromInEnd = 1;
-            
+
             if(required_lut == HDL_3D1D)
             {
                 // TODO: Later we only grab the green channel for the prelut,
                 // should ensure the prelut is monochromatic somehow?
-                
+
                 ConstProcessorRcPtr inputToShaperProc = config->getProcessor(
                     inputSpace.c_str(),
                     shaperSpace.c_str());
-                
+
                 if(inputToShaperProc->hasChannelCrosstalk())
                 {
                     // TODO: Automatically turn shaper into
@@ -700,7 +699,7 @@ OCIO_NAMESPACE_ENTER
                     os << " omit this option.";
                     throw Exception(os.str().c_str());
                 }
-                
+
                 // Calculate min/max value
                 {
                     // Get input value of 1.0 in shaper space, as this
@@ -716,7 +715,7 @@ OCIO_NAMESPACE_ENTER
 
                     shaperToInputProc->applyRGB(minval);
                     shaperToInputProc->applyRGB(maxval);
-                    
+
                     // Grab green channel, as this is the one used later
                     fromInStart = minval[1];
                     fromInEnd = maxval[1];
@@ -725,7 +724,7 @@ OCIO_NAMESPACE_ENTER
                 // Generate the identity prelut values, then apply the transform.
                 // Prelut is linearly sampled from fromInStart to fromInEnd
                 prelutData.resize(shaperSize*3);
-                
+
                 for (int i = 0; i < shaperSize; ++i)
                 {
                     const float x = (float)(double(i) / double(shaperSize - 1));
@@ -741,18 +740,18 @@ OCIO_NAMESPACE_ENTER
                 ConstCPUProcessorRcPtr cpu = inputToShaperProc->getDefaultCPUProcessor();
                 cpu->apply(prelutImg);
             }
-            
+
             // TODO: Do same "auto prelut" input-space allocation as FileFormatCSP?
-            
+
             // Make 3D LUT
             std::vector<float> cubeData;
             if(required_lut == HDL_3D || required_lut == HDL_3D1D)
             {
                 cubeData.resize(cubeSize*cubeSize*cubeSize*3);
-                
+
                 GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_RED);
                 PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
-                
+
                 ConstProcessorRcPtr cubeProc;
                 if(required_lut == HDL_3D1D)
                 {
@@ -781,25 +780,25 @@ OCIO_NAMESPACE_ENTER
                 ConstCPUProcessorRcPtr cpu = cubeProc->getDefaultCPUProcessor();
                 cpu->apply(cubeImg);
             }
-            
-            
+
+
             // Make 1D LUT
             std::vector<float> onedData;
             if(required_lut == HDL_1D)
             {
                 onedData.resize(onedSize * 3);
-                
+
                 GenerateIdentityLut1D(&onedData[0], onedSize, 3);
                 PackedImageDesc onedImg(&onedData[0], onedSize, 1, 3);
                 ConstCPUProcessorRcPtr cpu = inputToTargetProc->getDefaultCPUProcessor();
                 cpu->apply(onedImg);
             }
-            
-            
+
+
             // Write the file contents
             ostream << "Version\t\t" << required_lut << "\n";
             ostream << "Format\t\t" << "any" << "\n";
-            
+
             ostream << "Type\t\t";
             if(required_lut == HDL_1D)
                 ostream << "RGB";
@@ -808,21 +807,21 @@ OCIO_NAMESPACE_ENTER
             if(required_lut == HDL_3D1D)
                 ostream << "3D+1D";
             ostream << "\n";
-            
+
             ostream << "From\t\t" << fromInStart << " " << fromInEnd << "\n";
             ostream << "To\t\t" << 0.0f << " " << 1.0f << "\n";
             ostream << "Black\t\t" << 0.0f << "\n";
             ostream << "White\t\t" << 1.0f << "\n";
-            
+
             if(required_lut == HDL_3D1D)
                 ostream << "Length\t\t" << cubeSize << " " << shaperSize << "\n";
             if(required_lut == HDL_3D)
                 ostream << "Length\t\t" << cubeSize << "\n";
             if(required_lut == HDL_1D)
                 ostream << "Length\t\t" << onedSize << "\n";
-            
+
             ostream << "LUT:\n";
-            
+
             // Write prelut
             if(required_lut == HDL_3D1D)
             {
@@ -834,19 +833,19 @@ OCIO_NAMESPACE_ENTER
                 }
                 ostream << "}\n";
             }
-            
+
             // Write "3D {" part of output of 3D+1D LUT
             if(required_lut == HDL_3D1D)
             {
                 ostream << "3D {\n";
             }
-            
+
             // Write the slightly-different "{" without line for the 3D-only LUT
             if(required_lut == HDL_3D)
             {
                 ostream << " {\n";
             }
-            
+
             // Write the cube data after the "{"
             if(required_lut == HDL_3D || required_lut == HDL_3D1D)
             {
@@ -859,11 +858,11 @@ OCIO_NAMESPACE_ENTER
                     ostream << " "  << cubeData[3*i+1];
                     ostream << " "  << cubeData[3*i+2] << "\n";
                 }
-                
+
                 // Write closing "}"
                 ostream << " }\n";
             }
-            
+
             // Write out channels for 1D LUT
             if(required_lut == HDL_1D)
             {
@@ -883,18 +882,18 @@ OCIO_NAMESPACE_ENTER
                 ostream << "}\n";
             }
         }
-        
+
         void
         LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
-                                    const Config& /*config*/,
+                                    const Config & /*config*/,
                                     const ConstContextRcPtr & /*context*/,
                                     CachedFileRcPtr untypedCachedFile,
-                                    const FileTransform& fileTransform,
+                                    const FileTransform & fileTransform,
                                     TransformDirection dir) const
         {
-            
+
             CachedFileHDLRcPtr cachedFile = DynamicPtrCast<CachedFileHDL>(untypedCachedFile);
-            
+
             // This should never happen.
             if(!cachedFile)
             {
@@ -902,49 +901,57 @@ OCIO_NAMESPACE_ENTER
                 os << "Cannot build Houdini Op. Invalid cache type.";
                 throw Exception(os.str().c_str());
             }
-            
+
             TransformDirection newDir = CombineTransformDirections(dir,
                 fileTransform.getDirection());
-            
-            if(newDir == TRANSFORM_DIR_FORWARD) {
+
+            if (cachedFile->lut3D)
+            {
+                cachedFile->lut3D->setInterpolation(fileTransform.getInterpolation());
+            }
+            else if (cachedFile->lut1D)
+            {
+                cachedFile->lut1D->setInterpolation(fileTransform.getInterpolation());
+            }
+
+            if(newDir == TRANSFORM_DIR_FORWARD)
+            {
                 if(cachedFile->hdltype == "c")
                 {
-                    CreateLut1DOp(ops, cachedFile->lut1D,
-                                  fileTransform.getInterpolation(), newDir);
+                    CreateMinMaxOp(ops, cachedFile->from_min, cachedFile->from_max, newDir);
+                    CreateLut1DOp(ops, cachedFile->lut1D, newDir);
                 }
                 else if(cachedFile->hdltype == "3d")
                 {
-                    CreateLut3DOp(ops, cachedFile->lut3D,
-                                  fileTransform.getInterpolation(), newDir);
+                    CreateLut3DOp(ops, cachedFile->lut3D, newDir);
                 }
                 else if(cachedFile->hdltype == "3d+1d")
                 {
-                    CreateLut1DOp(ops, cachedFile->lut1D,
-                                  fileTransform.getInterpolation(), newDir);
-                    CreateLut3DOp(ops, cachedFile->lut3D,
-                                  fileTransform.getInterpolation(), newDir);
+                    CreateMinMaxOp(ops, cachedFile->from_min, cachedFile->from_max, newDir);
+                    CreateLut1DOp(ops, cachedFile->lut1D, newDir);
+                    CreateLut3DOp(ops, cachedFile->lut3D, newDir);
                 }
                 else
                 {
                     throw Exception("Unhandled hdltype while creating forward ops");
                 }
-            } else if(newDir == TRANSFORM_DIR_INVERSE) {
+            }
+            else if(newDir == TRANSFORM_DIR_INVERSE)
+            {
                 if(cachedFile->hdltype == "c")
                 {
-                    CreateLut1DOp(ops, cachedFile->lut1D,
-                                  fileTransform.getInterpolation(), newDir);
+                    CreateLut1DOp(ops, cachedFile->lut1D, newDir);
+                    CreateMinMaxOp(ops, cachedFile->from_min, cachedFile->from_max, newDir);
                 }
                 else if(cachedFile->hdltype == "3d")
                 {
-                    CreateLut3DOp(ops, cachedFile->lut3D,
-                                  fileTransform.getInterpolation(), newDir);
+                    CreateLut3DOp(ops, cachedFile->lut3D, newDir);
                 }
                 else if(cachedFile->hdltype == "3d+1d")
                 {
-                    CreateLut3DOp(ops, cachedFile->lut3D,
-                                  fileTransform.getInterpolation(), newDir);
-                    CreateLut1DOp(ops, cachedFile->lut1D,
-                                  fileTransform.getInterpolation(), newDir);
+                    CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+                    CreateLut1DOp(ops, cachedFile->lut1D, newDir);
+                    CreateMinMaxOp(ops, cachedFile->from_min, cachedFile->from_max, newDir);
                 }
                 else
                 {
@@ -954,7 +961,7 @@ OCIO_NAMESPACE_ENTER
             return;
         }
     }
-    
+
     FileFormat * CreateFileFormatHDL()
     {
         return new LocalFileFormat();
@@ -969,7 +976,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-OCIO_ADD_TEST(FileFormatHDL, Read1D)
+OCIO_ADD_TEST(FileFormatHDL, read_1d)
 {
     std::ostringstream strebuf;
     strebuf << "Version\t\t1" << "\n";
@@ -991,7 +998,7 @@ OCIO_ADD_TEST(FileFormatHDL, Read1D)
     strebuf << "\t0.0058651" << "\n";
     strebuf << "\t0.999022" << "\n";
     strebuf << "\t1.67 }" << "\n";
-    
+
     //
     float from_min = 0.1f;
     float from_max = 3.2f;
@@ -1001,40 +1008,46 @@ OCIO_ADD_TEST(FileFormatHDL, Read1D)
     float white = 0.99f;
     float lut1d[9] = { 0.0f, 0.000977517f, 0.00195503f, 0.00293255f,
         0.00391007f, 0.00488759f, 0.0058651f, 0.999022f, 1.67f };
-    
+
     std::istringstream simple3D1D;
     simple3D1D.str(strebuf.str());
-    
+
     // Load file
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile = tester.read(simple3D1D, emptyString);
     OCIO::CachedFileHDLRcPtr lut = OCIO::DynamicPtrCast<OCIO::CachedFileHDL>(cachedFile);
-    
+    OCIO_REQUIRE_ASSERT(lut);
+    OCIO_REQUIRE_ASSERT(lut->lut1D);
+
+    OCIO_CHECK_EQUAL(lut->lut1D->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
     //
     OCIO_CHECK_EQUAL(to_min, lut->to_min);
     OCIO_CHECK_EQUAL(to_max, lut->to_max);
     OCIO_CHECK_EQUAL(black, lut->hdlblack);
     OCIO_CHECK_EQUAL(white, lut->hdlwhite);
     
-    // check 1D data (each channel has the same data)
-    for(int c = 0; c < 3; ++c) {
-        OCIO_CHECK_EQUAL(from_min, lut->lut1D->from_min[c]);
-        OCIO_CHECK_EQUAL(from_max, lut->lut1D->from_max[c]);
+    // Check 1D data
+    OCIO_CHECK_EQUAL(from_min, lut->from_min);
+    OCIO_CHECK_EQUAL(from_max, lut->from_max);
 
-        OCIO_CHECK_EQUAL(9, lut->lut1D->luts[c].size());
+    const auto & lutArray = lut->lut1D->getArray();
+    OCIO_CHECK_EQUAL(9, lutArray.getLength());
 
-        for(unsigned int i = 0; i < lut->lut1D->luts[c].size(); ++i) {
-            OCIO_CHECK_EQUAL(lut1d[i], lut->lut1D->luts[c][i]);
-        }
+    for(unsigned int i = 0; i < lutArray.getLength(); ++i)
+    {
+        OCIO_CHECK_EQUAL(lut1d[i], lutArray[i * 3 + 0]);
+        OCIO_CHECK_EQUAL(lut1d[i], lutArray[i * 3 + 1]);
+        OCIO_CHECK_EQUAL(lut1d[i], lutArray[i * 3 + 2]);
     }
 }
 
-OCIO_ADD_TEST(FileFormatHDL, Bake1D)
+OCIO_ADD_TEST(FileFormatHDL, bake_1d)
 {
-    
+
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    
+
     // Add lnf space
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
@@ -1043,7 +1056,7 @@ OCIO_ADD_TEST(FileFormatHDL, Bake1D)
         config->addColorSpace(cs);
         config->setRole(OCIO::ROLE_REFERENCE, cs->getName());
     }
-    
+
     // Add target space
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
@@ -1057,7 +1070,7 @@ OCIO_ADD_TEST(FileFormatHDL, Bake1D)
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
         config->addColorSpace(cs);
     }
-        
+
     std::string bout =
     "Version\t\t1\n"
     "Format\t\tany\n"
@@ -1104,7 +1117,7 @@ OCIO_ADD_TEST(FileFormatHDL, Bake1D)
     "\t0.988889\n"
     "\t1.100000\n"
     " }\n";
-    
+
     //
     OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     baker->setConfig(config);
@@ -1114,10 +1127,10 @@ OCIO_ADD_TEST(FileFormatHDL, Bake1D)
     baker->setCubeSize(10); // FIXME: Misusing the cube size to set the 1D LUT size
     std::ostringstream output;
     baker->bake(output);
-    
+
     //std::cerr << "The LUT: " << std::endl << output.str() << std::endl;
     //std::cerr << "Expected:" << std::endl << bout << std::endl;
-    
+
     //
     OCIO::StringVec osvec;
     pystring::splitlines(output.str(), osvec);
@@ -1126,10 +1139,10 @@ OCIO_ADD_TEST(FileFormatHDL, Bake1D)
     OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
         OCIO_CHECK_EQUAL(pystring::strip(osvec[i]), pystring::strip(resvec[i]));
-    
+
 }
 
-OCIO_ADD_TEST(FileFormatHDL, Read3D)
+OCIO_ADD_TEST(FileFormatHDL, read_3d)
 {
     std::ostringstream strebuf;
     strebuf << "Version         2" << "\n";
@@ -1151,7 +1164,7 @@ OCIO_ADD_TEST(FileFormatHDL, Read3D)
     strebuf << " 0 0.601016 0" << "\n";
     strebuf << " 0 0.601016 0.917034" << "\n";
     strebuf << " }" << "\n";
-    
+
     std::istringstream simple3D1D;
     simple3D1D.str(strebuf.str());
     // Load file
@@ -1159,10 +1172,10 @@ OCIO_ADD_TEST(FileFormatHDL, Read3D)
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile = tester.read(simple3D1D, emptyString);
     OCIO::CachedFileHDLRcPtr lut = OCIO::DynamicPtrCast<OCIO::CachedFileHDL>(cachedFile);
-    
-    //
-    //float from_min = 0.2;
-    //float from_max = 0.9;
+    OCIO_REQUIRE_ASSERT(lut);
+    OCIO_REQUIRE_ASSERT(lut->lut3D);
+
+    // from_min & from_max are only stored when there is a 1D LUT.
     float to_min = 0.001f;
     float to_max = 0.999f;
     float black = 0.002f;
@@ -1176,31 +1189,48 @@ OCIO_ADD_TEST(FileFormatHDL, Read3D)
         0.f, 0.f, 0.599397f,
         0.f, 0.601016f, 0.f,
         0.f, 0.601016f, 0.917034f };
-    
+
     //
     OCIO_CHECK_EQUAL(to_min, lut->to_min);
     OCIO_CHECK_EQUAL(to_max, lut->to_max);
     OCIO_CHECK_EQUAL(black, lut->hdlblack);
     OCIO_CHECK_EQUAL(white, lut->hdlwhite);
-    
-    // check cube data
-    OCIO_CHECK_EQUAL(2*2*2*3, lut->lut3D->lut.size());
 
-    for(unsigned int i = 0; i < lut->lut3D->lut.size(); ++i) {
-        OCIO_CHECK_EQUAL(cube[i], lut->lut3D->lut[i]);
+    // Check cube data
+    const auto & lutArray = lut->lut3D->getArray();
+    const unsigned long lutSize = lutArray.getLength();
+    OCIO_CHECK_EQUAL(2, lutSize);
+
+    for (unsigned long b = 0; b < lutSize; ++b)
+    {
+        for (unsigned long g = 0; g < lutSize; ++g)
+        {
+            for (unsigned long r = 0; r < lutSize; ++r)
+            {
+                // OpData::Lut3D Array index: blue changes fastest.
+                const unsigned long arrayIdx = 3 * ((r*lutSize + g)*lutSize + b);
+
+                // Houdini order, red changes fastest.
+                const unsigned long ocioIdx = 3 * ((b*lutSize + g)*lutSize + r);
+
+                OCIO_CHECK_EQUAL(lutArray[arrayIdx], cube[ocioIdx]);
+                OCIO_CHECK_EQUAL(lutArray[arrayIdx + 1], cube[ocioIdx + 1]);
+                OCIO_CHECK_EQUAL(lutArray[arrayIdx + 2], cube[ocioIdx + 2]);
+            }
+        }
     }
 }
 
-OCIO_ADD_TEST(FileFormatHDL, Bake3D)
+OCIO_ADD_TEST(FileFormatHDL, bake_3d)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    
+
     // Set luma coef's to simple values
     {
         float lumaCoef[3] = {0.333f, 0.333f, 0.333f};
         config->setDefaultLumaCoefs(lumaCoef);
     }
-    
+
     // Add lnf space
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
@@ -1209,7 +1239,7 @@ OCIO_ADD_TEST(FileFormatHDL, Bake3D)
         config->addColorSpace(cs);
         config->setRole(OCIO::ROLE_REFERENCE, cs->getName());
     }
-    
+
     // Add target space
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
@@ -1223,28 +1253,28 @@ OCIO_ADD_TEST(FileFormatHDL, Bake3D)
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
         config->addColorSpace(cs);
     }
-        
-    std::string bout = 
-    "Version\t\t2\n"
-    "Format\t\tany\n"
-    "Type\t\t3D\n"
-    "From\t\t0.000000 1.000000\n"
-    "To\t\t0.000000 1.000000\n"
-    "Black\t\t0.000000\n"
-    "White\t\t1.000000\n"
-    "Length\t\t2\n"
-    "LUT:\n"
-    " {\n"
-    "\t0.000000 0.000000 0.000000\n"
-    "\t0.606300 0.106300 0.106300\n"
-    "\t0.357600 0.857600 0.357600\n"
-    "\t0.963900 0.963900 0.463900\n"
-    "\t0.036100 0.036100 0.536100\n"
-    "\t0.642400 0.142400 0.642400\n"
-    "\t0.393700 0.893700 0.893700\n"
-    "\t1.000000 1.000000 1.000000\n"
-    " }\n";
-    
+
+    std::string bout =
+        "Version\t\t2\n"
+        "Format\t\tany\n"
+        "Type\t\t3D\n"
+        "From\t\t0.000000 1.000000\n"
+        "To\t\t0.000000 1.000000\n"
+        "Black\t\t0.000000\n"
+        "White\t\t1.000000\n"
+        "Length\t\t2\n"
+        "LUT:\n"
+        " {\n"
+        "\t0.000000 0.000000 0.000000\n"
+        "\t0.606300 0.106300 0.106300\n"
+        "\t0.357600 0.857600 0.357600\n"
+        "\t0.963900 0.963900 0.463900\n"
+        "\t0.036100 0.036100 0.536100\n"
+        "\t0.642400 0.142400 0.642400\n"
+        "\t0.393700 0.893700 0.893700\n"
+        "\t1.000000 1.000000 1.000000\n"
+        " }\n";
+
     //
     OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     baker->setConfig(config);
@@ -1254,21 +1284,23 @@ OCIO_ADD_TEST(FileFormatHDL, Bake3D)
     baker->setCubeSize(2);
     std::ostringstream output;
     baker->bake(output);
-    
+
     //std::cerr << "The LUT: " << std::endl << output.str() << std::endl;
     //std::cerr << "Expected:" << std::endl << bout << std::endl;
-    
+
     //
     std::vector<std::string> osvec;
     pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
     pystring::splitlines(bout, resvec);
     OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
-    for(unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
+    for (unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
+    {
         OCIO_CHECK_EQUAL(pystring::strip(osvec[i]), pystring::strip(resvec[i]));
+    }
 }
 
-OCIO_ADD_TEST(FileFormatHDL, Read3D1D)
+OCIO_ADD_TEST(FileFormatHDL, read_3d_1d)
 {
     std::ostringstream strebuf;
     strebuf << "Version         3" << "\n";
@@ -1302,7 +1334,7 @@ OCIO_ADD_TEST(FileFormatHDL, Read3D1D)
     strebuf << "    0.187109 0.093776 0.093776" << "\n";
     strebuf << "    0.209939 0.093776 0.093776" << "\n";
     strebuf << "}" << "\n";
-    
+
     //
     float from_min = 0.005478f;
     float from_max = 14.080103f;
@@ -1321,46 +1353,70 @@ OCIO_ADD_TEST(FileFormatHDL, Read3D1D)
         0.166761f, 0.093776f, 0.093776f,
         0.187109f, 0.093776f, 0.093776f,
         0.209939f, 0.093776f, 0.093776f };
-    
+
     std::istringstream simple3D1D;
     simple3D1D.str(strebuf.str());
-    
+
     // Load file
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile = tester.read(simple3D1D, emptyString);
     OCIO::CachedFileHDLRcPtr lut = OCIO::DynamicPtrCast<OCIO::CachedFileHDL>(cachedFile);
-    
+    OCIO_REQUIRE_ASSERT(lut);
+    OCIO_REQUIRE_ASSERT(lut->lut1D);
+    OCIO_REQUIRE_ASSERT(lut->lut3D);
+
+    OCIO_CHECK_EQUAL(lut->lut1D->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
     //
     OCIO_CHECK_EQUAL(to_min, lut->to_min);
     OCIO_CHECK_EQUAL(to_max, lut->to_max);
     OCIO_CHECK_EQUAL(black, lut->hdlblack);
     OCIO_CHECK_EQUAL(white, lut->hdlwhite);
-    
-    // check prelut data (each channel has the same data)
-    for(int c = 0; c < 3; ++c) {
-        OCIO_CHECK_EQUAL(from_min, lut->lut1D->from_min[c]);
-        OCIO_CHECK_EQUAL(from_max, lut->lut1D->from_max[c]);
-        OCIO_CHECK_EQUAL(10, lut->lut1D->luts[c].size());
 
-        for(unsigned int i = 0; i < lut->lut1D->luts[c].size(); ++i) {
-            OCIO_CHECK_EQUAL(prelut[i], lut->lut1D->luts[c][i]);
-        }
+    // Check prelut data
+    OCIO_CHECK_EQUAL(from_min, lut->from_min);
+    OCIO_CHECK_EQUAL(from_max, lut->from_max);
+    const auto & preLutArray = lut->lut1D->getArray();
+    OCIO_CHECK_EQUAL(10, preLutArray.getLength());
+
+    for(unsigned int i = 0; i < preLutArray.getLength(); ++i)
+    {
+        OCIO_CHECK_EQUAL(prelut[i], preLutArray[3 * i + 0]);
+        OCIO_CHECK_EQUAL(prelut[i], preLutArray[3 * i + 1]);
+        OCIO_CHECK_EQUAL(prelut[i], preLutArray[3 * i + 2]);
     }
 
-    OCIO_CHECK_EQUAL(2*2*2*3, lut->lut3D->lut.size());
-    
     // check cube data
-    for(unsigned int i = 0; i < lut->lut3D->lut.size(); ++i) {
-        OCIO_CHECK_EQUAL(cube[i], lut->lut3D->lut[i]);
+    const auto & lutArray = lut->lut3D->getArray();
+    const unsigned long lutSize = lutArray.getLength();
+    OCIO_CHECK_EQUAL(2, lutSize);
+
+    for (unsigned long b = 0; b < lutSize; ++b)
+    {
+        for (unsigned long g = 0; g < lutSize; ++g)
+        {
+            for (unsigned long r = 0; r < lutSize; ++r)
+            {
+                // OpData::Lut3D Array index: blue changes fastest.
+                const unsigned long arrayIdx = 3 * ((r*lutSize + g)*lutSize + b);
+
+                // Houdini order, red changes fastest.
+                const unsigned long ocioIdx = 3 * ((b*lutSize + g)*lutSize + r);
+
+                OCIO_CHECK_EQUAL(lutArray[arrayIdx], cube[ocioIdx]);
+                OCIO_CHECK_EQUAL(lutArray[arrayIdx + 1], cube[ocioIdx + 1]);
+                OCIO_CHECK_EQUAL(lutArray[arrayIdx + 2], cube[ocioIdx + 2]);
+            }
+        }
     }
 }
 
-OCIO_ADD_TEST(FileFormatHDL, Bake3D1D)
+OCIO_ADD_TEST(FileFormatHDL, bake_3d_1d)
 {
     // check baker output
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    
+
     // Set luma coef's to simple values
     {
         float lumaCoef[3] = {0.333f, 0.333f, 0.333f};
@@ -1375,7 +1431,7 @@ OCIO_ADD_TEST(FileFormatHDL, Bake3D1D)
         config->addColorSpace(cs);
         config->setRole(OCIO::ROLE_REFERENCE, cs->getName());
     }
-    
+
     // Add shaper space
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
@@ -1387,7 +1443,7 @@ OCIO_ADD_TEST(FileFormatHDL, Bake3D1D)
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_TO_REFERENCE);
         config->addColorSpace(cs);
     }
-    
+
     // Add target space
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
@@ -1401,7 +1457,7 @@ OCIO_ADD_TEST(FileFormatHDL, Bake3D1D)
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
         config->addColorSpace(cs);
     }
-    
+
     std::string bout = 
     "Version\t\t3\n"
     "Format\t\tany\n"
@@ -1434,7 +1490,7 @@ OCIO_ADD_TEST(FileFormatHDL, Bake3D1D)
     "\t0.393700 0.893700 0.893700\n"
     "\t1.000000 1.000000 1.000000\n"
     "}\n";
-    
+
     //
     OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     baker->setConfig(config);
@@ -1456,7 +1512,7 @@ OCIO_ADD_TEST(FileFormatHDL, Bake3D1D)
     std::vector<std::string> resvec;
     pystring::splitlines(bout, resvec);
     OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
-    
+
     // TODO: Get this working on osx
     /*
     for(unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
@@ -1465,7 +1521,7 @@ OCIO_ADD_TEST(FileFormatHDL, Bake3D1D)
 }
 
 
-OCIO_ADD_TEST(FileFormatHDL, LookTest)
+OCIO_ADD_TEST(FileFormatHDL, look_test)
 {
     // Note this sets up a Look with the same parameters as the Bake3D1D test
     // however it uses a different shaper space, to ensure we catch that case.
@@ -1483,26 +1539,26 @@ OCIO_ADD_TEST(FileFormatHDL, LookTest)
         config->addColorSpace(cs);
         config->setRole(OCIO::ROLE_REFERENCE, cs->getName());
     }
-    
+
     // Add shaper space
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
         cs->setName("shaper");
         cs->setFamily("shaper");
         OCIO::ExponentTransformRcPtr transform1 = OCIO::ExponentTransform::Create();
-        float test[4] = {2.2f, 2.2f, 2.2f, 1.0f};
+        float test[4] = { 2.2f, 2.2f, 2.2f, 1.0f };
         transform1->setValue(test);
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_TO_REFERENCE);
         config->addColorSpace(cs);
     }
-    
+
     // Add Look process space
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
         cs->setName("look_process");
         cs->setFamily("look_process");
         OCIO::ExponentTransformRcPtr transform1 = OCIO::ExponentTransform::Create();
-        float test[4] = {2.6f, 2.6f, 2.6f, 1.0f};
+        float test[4] = { 2.6f, 2.6f, 2.6f, 1.0f };
         transform1->setValue(test);
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_TO_REFERENCE);
         config->addColorSpace(cs);
@@ -1521,60 +1577,60 @@ OCIO_ADD_TEST(FileFormatHDL, LookTest)
         look->setTransform(transform1);
         config->addLook(look);
     }
-    
-    
-    std::string bout = 
-    "Version\t\t3\n"
-    "Format\t\tany\n"
-    "Type\t\t3D+1D\n"
-    "From\t\t0.000000 1.000000\n"
-    "To\t\t0.000000 1.000000\n"
-    "Black\t\t0.000000\n"
-    "White\t\t1.000000\n"
-    "Length\t\t3 10\n"
-    "LUT:\n"
-    "Pre {\n"
-    "\t0.000000\n"
-    "\t0.368344\n"
-    "\t0.504760\n"
-    "\t0.606913\n"
-    "\t0.691699\n"
-    "\t0.765539\n"
-    "\t0.831684\n"
-    "\t0.892049\n"
-    "\t0.947870\n"
-    "\t1.000000\n"
-    "}\n"
-    "3D {\n"
-    "\t0.000000 0.000000 0.000000\n"
-    "\t0.276787 0.035360 0.035360\n"
-    "\t0.553575 0.070720 0.070720\n"
-    "\t0.148309 0.416989 0.148309\n"
-    "\t0.478739 0.478739 0.201718\n"
-    "\t0.774120 0.528900 0.245984\n"
-    "\t0.296618 0.833978 0.296618\n"
-    "\t0.650361 0.902354 0.355417\n"
-    "\t0.957478 0.957478 0.403436\n"
-    "\t0.009867 0.009867 0.239325\n"
-    "\t0.296368 0.049954 0.296368\n"
-    "\t0.575308 0.086766 0.343137\n"
-    "\t0.166161 0.437812 0.437812\n"
-    "\t0.500000 0.500000 0.500000\n"
-    "\t0.796987 0.550484 0.550484\n"
-    "\t0.316402 0.857106 0.607391\n"
-    "\t0.672631 0.925760 0.672631\n"
-    "\t0.981096 0.981096 0.725386\n"
-    "\t0.019735 0.019735 0.478650\n"
-    "\t0.312132 0.062101 0.541651\n"
-    "\t0.592736 0.099909 0.592736\n"
-    "\t0.180618 0.454533 0.695009\n"
-    "\t0.517061 0.517061 0.761560\n"
-    "\t0.815301 0.567796 0.815301\n"
-    "\t0.332322 0.875624 0.875624\n"
-    "\t0.690478 0.944497 0.944497\n"
-    "\t1.000000 1.000000 1.000000\n"
-    "}\n";
-    
+
+
+    std::string bout =
+        "Version\t\t3\n"
+        "Format\t\tany\n"
+        "Type\t\t3D+1D\n"
+        "From\t\t0.000000 1.000000\n"
+        "To\t\t0.000000 1.000000\n"
+        "Black\t\t0.000000\n"
+        "White\t\t1.000000\n"
+        "Length\t\t3 10\n"
+        "LUT:\n"
+        "Pre {\n"
+        "\t0.000000\n"
+        "\t0.368344\n"
+        "\t0.504760\n"
+        "\t0.606913\n"
+        "\t0.691699\n"
+        "\t0.765539\n"
+        "\t0.831684\n"
+        "\t0.892049\n"
+        "\t0.947870\n"
+        "\t1.000000\n"
+        "}\n"
+        "3D {\n"
+        "\t0.000000 0.000000 0.000000\n"
+        "\t0.276787 0.035360 0.035360\n"
+        "\t0.553575 0.070720 0.070720\n"
+        "\t0.148309 0.416989 0.148309\n"
+        "\t0.478739 0.478739 0.201718\n"
+        "\t0.774120 0.528900 0.245984\n"
+        "\t0.296618 0.833978 0.296618\n"
+        "\t0.650361 0.902354 0.355417\n"
+        "\t0.957478 0.957478 0.403436\n"
+        "\t0.009867 0.009867 0.239325\n"
+        "\t0.296368 0.049954 0.296368\n"
+        "\t0.575308 0.086766 0.343137\n"
+        "\t0.166161 0.437812 0.437812\n"
+        "\t0.500000 0.500000 0.500000\n"
+        "\t0.796987 0.550484 0.550484\n"
+        "\t0.316402 0.857106 0.607391\n"
+        "\t0.672631 0.925760 0.672631\n"
+        "\t0.981096 0.981096 0.725386\n"
+        "\t0.019735 0.019735 0.478650\n"
+        "\t0.312132 0.062101 0.541651\n"
+        "\t0.592736 0.099909 0.592736\n"
+        "\t0.180618 0.454533 0.695009\n"
+        "\t0.517061 0.517061 0.761560\n"
+        "\t0.815301 0.567796 0.815301\n"
+        "\t0.332322 0.875624 0.875624\n"
+        "\t0.690478 0.944497 0.944497\n"
+        "\t1.000000 1.000000 1.000000\n"
+        "}\n";
+
     //
     OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     baker->setConfig(config);
@@ -1597,9 +1653,11 @@ OCIO_ADD_TEST(FileFormatHDL, LookTest)
     std::vector<std::string> resvec;
     pystring::splitlines(bout, resvec);
     OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
-    
-    for(unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
+
+    for (unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
+    {
         OCIO_CHECK_EQUAL(pystring::strip(osvec[i]), pystring::strip(resvec[i]));
+    }
 }
 
 #endif // OCIO_BUILD_TESTS
