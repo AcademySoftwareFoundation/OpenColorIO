@@ -320,7 +320,7 @@ OCIO_NAMESPACE_ENTER
 
                 if (isdigit(*InString))
                 {
-                    ptable[Count++] = (unsigned short)atoi(InString);
+                    ptable[Count++] = (unsigned short)std::stoi(InString);
                     if (Count >= length)
                         break;
                 }
@@ -400,7 +400,7 @@ OCIO_NAMESPACE_ENTER
                 }
 
                 // Load first table value.
-                (lut->tables[0])[0] = (unsigned short)atoi(InString);
+                (lut->tables[0])[0] = (unsigned short)std::stoi(InString);
                 tablestart = 1;
             }
             else
@@ -643,7 +643,7 @@ OCIO_NAMESPACE_ENTER
                                                       halfFlags,
                                                       dimension);
             };
-            ~LocalCachedFile() {};
+            ~LocalCachedFile() = default;
             
             Lut1DOpDataRcPtr lut1D;
         };
@@ -655,8 +655,8 @@ OCIO_NAMESPACE_ENTER
         class LocalFileFormat : public FileFormat
         {
         public:
-            
-            ~LocalFileFormat() {};
+            LocalFileFormat() = default;
+            ~LocalFileFormat() = default;
             
             void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
             
@@ -665,10 +665,10 @@ OCIO_NAMESPACE_ENTER
                 const std::string & fileName) const override;
             
             void buildFileOps(OpRcPtrVec & ops,
-                              const Config& config,
+                              const Config & config,
                               const ConstContextRcPtr & context,
                               CachedFileRcPtr untypedCachedFile,
-                              const FileTransform& fileTransform,
+                              const FileTransform & fileTransform,
                               TransformDirection dir) const override;
         };
         
@@ -753,10 +753,10 @@ OCIO_NAMESPACE_ENTER
         
         void
         LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
-                                      const Config& /*config*/,
+                                      const Config & /*config*/,
                                       const ConstContextRcPtr & /*context*/,
                                       CachedFileRcPtr untypedCachedFile,
-                                      const FileTransform& fileTransform,
+                                      const FileTransform & fileTransform,
                                       TransformDirection dir) const
         {
             LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);

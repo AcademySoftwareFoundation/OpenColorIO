@@ -1361,6 +1361,11 @@ OCIO_ADD_TEST(Lut1DOpData, identity_bitdepth)
                          OCIO::Lut1DOpData::LUT_INPUT_HALF_CODE);
 
     OCIO_CHECK_ASSERT(l3.isIdentity());
+    OCIO_CHECK_ASSERT(l3.isNoOp());
+    l3.getArray()[0] += 0.001f;
+
+    OCIO_CHECK_ASSERT(!l3.isIdentity());
+    OCIO_CHECK_ASSERT(!l3.isNoOp());
 }
 
 OCIO_ADD_TEST(Lut1DOpData, is_identity)

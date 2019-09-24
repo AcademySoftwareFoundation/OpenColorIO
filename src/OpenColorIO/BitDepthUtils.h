@@ -71,6 +71,8 @@ template<> struct BitDepthInfo<BIT_DEPTH_F32>
     static const unsigned maxValue = 1;
 };
 
+// Infer the bit-depth scaling based on the largest value contained in the LUT.
+BitDepth GetBitdepthFromMaxValue(unsigned maxValue);
 
 // Clamp helper method.
 #define CLAMP(a, min, max) \
