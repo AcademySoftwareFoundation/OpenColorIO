@@ -223,7 +223,9 @@ struct AddTest
         << "FAILED: " << FIELD_STR(E) << " is expected to be thrown\n"; \
         ++unit_test_failures; }
 
-#define OCIO_CHECK_NO_THROW(S)                                          \
+#define OCIO_CHECK_NO_THROW(S) OCIO_CHECK_NO_THROW_FROM(S, __LINE__)
+
+#define OCIO_CHECK_NO_THROW_FROM(S, line)                               \
     try {                                                               \
         S;                                                              \
     } catch (std::exception & ex ) {                                    \
