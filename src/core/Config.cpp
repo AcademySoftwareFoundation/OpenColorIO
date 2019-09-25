@@ -1915,11 +1915,8 @@ OIIO_ADD_TEST(Config, EnvCheck)
     "  - !<View> {name: Raw, colorspace: raw}\n"
     "\n";
     
-    
-    std::string test("SHOW=bar");
-    putenv((char *)test.c_str());
-    std::string test2("TASK=lighting");
-    putenv((char *)test2.c_str());
+    OCIO::Platform::setenv("SHOW", "bar");
+    OCIO::Platform::setenv("TASK", "lighting");
     
     std::istringstream is;
     is.str(SIMPLE_PROFILE);
@@ -2040,8 +2037,7 @@ OIIO_ADD_TEST(Config, Env_colorspace_name)
     }
 
     {
-        char * env = (char *)"CAMERARAW=lnh";
-        putenv(env);
+        OCIO::Platform::setenv("CAMERARAW", "lnh");
 
         std::istringstream is;
         is.str(MY_OCIO_CONFIG);
@@ -2054,9 +2050,7 @@ OIIO_ADD_TEST(Config, Env_colorspace_name)
 
     {
         // Test when the env. variable content is wrong
-
-        char * env = (char *)"CAMERARAW=FaultyColorSpaceName";
-        putenv(env);
+        OCIO::Platform::setenv("CAMERARAW", "FaultyColorSpaceName");
 
         std::istringstream is;
         is.str(MY_OCIO_CONFIG);

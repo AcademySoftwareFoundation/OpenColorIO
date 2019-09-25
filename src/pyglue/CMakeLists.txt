@@ -11,6 +11,10 @@ endif()
 if(CMAKE_COMPILER_IS_GNUCXX)
     # Python breaks strict-aliasing rules. Disable the warning here.
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-strict-aliasing -Wno-missing-field-initializers")
+    # GCC 8 and above has a new heuristic to detect invalid pointer
+    # casts. However, this results in false positives on the Python
+    # C API which we compile against to generate Python bindings.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-cast-function-type")
 endif()
 
 if(WIN32)
