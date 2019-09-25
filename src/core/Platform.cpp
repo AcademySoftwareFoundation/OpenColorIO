@@ -3,6 +3,8 @@
 //
 //
 
+#include <cstdlib>
+#include <sstream>
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -15,10 +17,6 @@ OCIO_NAMESPACE_ENTER
 
     namespace Platform
     {
-        // Unlike the ::getenv(), the method does not use any static buffer 
-        // for the Windows platform only. *nix platforms are still using
-        // the ::getenv method, but reducing the static vairable usage.
-        // 
         void getenv (const char* name, std::string& value)
         {
 #ifdef _WIN32
@@ -45,6 +43,33 @@ OCIO_NAMESPACE_ENTER
 #else
             ::setenv(name, value.c_str(), 1);
 #endif
+        }
+
+        void createTempFilename(std::string & filename, const std::string & filenameExt)
+        {
+            // Note: Because of security issue, tmpnam could not be used.
+
+#ifdef _WIN32
+
+            char tmpFilename[L_tmpnam];
+            if(tmpnam_s(tmpFilename))
+            {
+                throw Exception("Could not create a temporary file.");
+            }
+
+            filename = tmpFilename;
+
+#else
+
+            std::stringstream ss;
+            ss << "/tmp/ocio";
+            ss << std::rand();
+
+            filename = ss.str();
+
+#endif
+
+            filename += filenameExt;
         }
 
     }//namespace platform
@@ -134,6 +159,19 @@ OIIO_ADD_TEST(Platform, setenv)
         OCIO::Platform::getenv("MY_DUMMY_ENV", env);
         OIIO_CHECK_ASSERT(env.empty());
     }
+}
+
+OIIO_ADD_TEST(Platform, createTempFilename)
+{
+    std::string f1, f2;
+
+    OIIO_CHECK_NO_THROW(OCIO::Platform::createTempFilename(f1, ""));
+    OIIO_CHECK_NO_THROW(OCIO::Platform::createTempFilename(f2, ""));
+    OIIO_CHECK_ASSERT(f1!=f2);
+
+    OIIO_CHECK_NO_THROW(OCIO::Platform::createTempFilename(f1, ".ctf"));
+    OIIO_CHECK_NO_THROW(OCIO::Platform::createTempFilename(f2, ".ctf"));
+    OIIO_CHECK_ASSERT(f1!=f2);
 }
 
 #endif // OCIO_UNIT_TEST

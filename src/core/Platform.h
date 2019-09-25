@@ -158,6 +158,9 @@ OCIO_NAMESPACE_ENTER
   {
     void getenv (const char* name, std::string& value);
     void setenv (const char* name, const std::string& value);
+	
+    // Create a temporary filename where filenameExt could be empty.
+    void createTempFilename(std::string & filename, const std::string & filenameExt);
   }
 
 }
