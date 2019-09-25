@@ -18,14 +18,10 @@ OCIO_NAMESPACE_ENTER
 {
 
 
-// TODO: GENERIC CASE, SLOW BUT ALWAYS WORKS
-
-    
 template<typename Type>
 void Generic<Type>::PackRGBAFromImageDesc(const GenericImageDesc & srcImg,
                                           Type * inBitDepthBuffer,
                                           float * outputBuffer,
-                                          int & numPixelsCopied,
                                           int outputBufferSize,
                                           long imagePixelStartIndex)
 {
@@ -37,40 +33,40 @@ void Generic<Type>::PackRGBAFromImageDesc(const GenericImageDesc & srcImg,
     const long imgWidth  = srcImg.m_width;
     const long imgHeight = srcImg.m_height;
     const long imgPixels = imgWidth * imgHeight;
-    
+
     if(imagePixelStartIndex<0 || imagePixelStartIndex>=imgPixels)
     {
-        numPixelsCopied = 0;
-        return;
+        throw Exception("Invalid output image position.");
     }
-    
+
     const ptrdiff_t xStrideBytes = srcImg.m_xStrideBytes;
     const ptrdiff_t yStrideBytes = srcImg.m_yStrideBytes;
 
-    long yIndex = imagePixelStartIndex / imgWidth;
+    const long yIndex = imagePixelStartIndex / imgWidth;
     long xIndex = imagePixelStartIndex % imgWidth;
-    
+
     // Figure out our initial ptr positions
-    char * rRow = reinterpret_cast<char*>(srcImg.m_rData) + yStrideBytes * yIndex;
-    char * gRow = reinterpret_cast<char*>(srcImg.m_gData) + yStrideBytes * yIndex;
-    char * bRow = reinterpret_cast<char*>(srcImg.m_bData) + yStrideBytes * yIndex;
+    char * rRow = srcImg.m_rData + yStrideBytes * yIndex;
+    char * gRow = srcImg.m_gData + yStrideBytes * yIndex;
+    char * bRow = srcImg.m_bData + yStrideBytes * yIndex;
     char * aRow = nullptr;
-    
+
     Type * rPtr = reinterpret_cast<Type*>(rRow + xStrideBytes * xIndex);
     Type * gPtr = reinterpret_cast<Type*>(gRow + xStrideBytes * xIndex);
     Type * bPtr = reinterpret_cast<Type*>(bRow + xStrideBytes * xIndex);
     Type * aPtr = nullptr;
-    
+
     if(srcImg.m_aData)
     {
-        aRow = reinterpret_cast<char*>(srcImg.m_aData) + yStrideBytes * yIndex;
+        aRow = srcImg.m_aData + yStrideBytes * yIndex;
         aPtr = reinterpret_cast<Type*>(aRow + xStrideBytes*xIndex);
     }
 
+    // Process one single, complete scanline.
     int pixelsCopied = 0;
     while(pixelsCopied < outputBufferSize)
     {
-        // Reorder channels from arbitrary channel ordering to RGBA.
+        // Reorder channels from arbitrary channel ordering to RGBA 32-bit float.
         inBitDepthBuffer[4*pixelsCopied+0] = *rPtr;
         inBitDepthBuffer[4*pixelsCopied+1] = *gPtr;
         inBitDepthBuffer[4*pixelsCopied+2] = *bPtr;
@@ -79,103 +75,68 @@ void Generic<Type>::PackRGBAFromImageDesc(const GenericImageDesc & srcImg,
         pixelsCopied++;
         xIndex++;
 
-        // Jump to the next scanline
-        if(xIndex == imgWidth)
+        rPtr = reinterpret_cast<Type*>(reinterpret_cast<char*>(rPtr) + xStrideBytes);
+        gPtr = reinterpret_cast<Type*>(reinterpret_cast<char*>(gPtr) + xStrideBytes);
+        bPtr = reinterpret_cast<Type*>(reinterpret_cast<char*>(bPtr) + xStrideBytes);
+        if(aPtr)
         {
-            yIndex += 1;
-            if(yIndex == imgHeight)
-            {
-                // Convert from the input bit-depth to F32 (i.e always in RGBA).
-                srcImg.m_bitDepthOp->apply(&inBitDepthBuffer[0], outputBuffer, pixelsCopied);
-
-                numPixelsCopied = pixelsCopied;
-                return;
-            }
-            
-            xIndex = 0;
-            rRow += yStrideBytes;
-            gRow += yStrideBytes;
-            bRow += yStrideBytes;
-            if(aPtr) aRow += yStrideBytes;
-            
-            rPtr = reinterpret_cast<Type*>(rRow);
-            gPtr = reinterpret_cast<Type*>(gRow);
-            bPtr = reinterpret_cast<Type*>(bRow);
-            if(aPtr) aPtr = reinterpret_cast<Type*>(aRow);
-        }
-        // Jump to the next pixel
-        else
-        {
-            rPtr = reinterpret_cast<Type*>(
-                reinterpret_cast<char*>(rPtr) + xStrideBytes);
-            gPtr = reinterpret_cast<Type*>(
-                reinterpret_cast<char*>(gPtr) + xStrideBytes);
-            bPtr = reinterpret_cast<Type*>(
-                reinterpret_cast<char*>(bPtr) + xStrideBytes);
-            if(aPtr)
-            {
-                aPtr = reinterpret_cast<Type*>(
-                    reinterpret_cast<char*>(aPtr) + xStrideBytes);
-            }
+            aPtr = reinterpret_cast<Type*>(reinterpret_cast<char*>(aPtr) + xStrideBytes);
         }
     }
-    
+
     // Convert from the input bit-depth to F32 (i.e always in RGBA).
     srcImg.m_bitDepthOp->apply(&inBitDepthBuffer[0], outputBuffer, pixelsCopied);
-
-    numPixelsCopied = pixelsCopied;
 }
 
 template<>
 void Generic<float>::PackRGBAFromImageDesc(const GenericImageDesc & srcImg,
                                            float * /*inBitDepthBuffer*/,
                                            float * outputBuffer,
-                                           int & numPixelsCopied,
                                            int outputBufferSize,
                                            long imagePixelStartIndex)
 {
     if(outputBuffer==nullptr)
     {
-        throw Exception("Invalid output image buffer");
+        throw Exception("Invalid output image buffer.");
     }
 
     const long imgWidth  = srcImg.m_width;
     const long imgHeight = srcImg.m_height;
     const long imgPixels = imgWidth * imgHeight;
-    
+
     if(imagePixelStartIndex<0 || imagePixelStartIndex>=imgPixels)
     {
-        numPixelsCopied = 0;
-        return;
+        throw Exception("Invalid output image position.");
     }
-    
+
     const ptrdiff_t xStrideBytes = srcImg.m_xStrideBytes;
     const ptrdiff_t yStrideBytes = srcImg.m_yStrideBytes;
 
-    long yIndex = imagePixelStartIndex / imgWidth;
+    const long yIndex = imagePixelStartIndex / imgWidth;
     long xIndex = imagePixelStartIndex % imgWidth;
-    
+
     // Figure out our initial ptr positions
-    char * rRow = reinterpret_cast<char*>(srcImg.m_rData) + yStrideBytes * yIndex;
-    char * gRow = reinterpret_cast<char*>(srcImg.m_gData) + yStrideBytes * yIndex;
-    char * bRow = reinterpret_cast<char*>(srcImg.m_bData) + yStrideBytes * yIndex;
+    char * rRow = srcImg.m_rData + yStrideBytes * yIndex;
+    char * gRow = srcImg.m_gData + yStrideBytes * yIndex;
+    char * bRow = srcImg.m_bData + yStrideBytes * yIndex;
     char * aRow = nullptr;
-    
+
     float * rPtr = reinterpret_cast<float*>(rRow + xStrideBytes * xIndex);
     float * gPtr = reinterpret_cast<float*>(gRow + xStrideBytes * xIndex);
     float * bPtr = reinterpret_cast<float*>(bRow + xStrideBytes * xIndex);
     float * aPtr = nullptr;
-    
+
     if(srcImg.m_aData)
     {
-        aRow = reinterpret_cast<char*>(srcImg.m_aData) + yStrideBytes * yIndex;
+        aRow = srcImg.m_aData + yStrideBytes * yIndex;
         aPtr = reinterpret_cast<float*>(aRow + xStrideBytes*xIndex);
     }
 
+    // Process one single, complete scanline.
     int pixelsCopied = 0;
     while(pixelsCopied < outputBufferSize)
     {
-        // Reorder channels from arbitrary channel ordering to RGBA.
+        // Reorder channels from arbitrary channel ordering to RGBA 32-bit float.
         outputBuffer[4*pixelsCopied+0] = *rPtr;
         outputBuffer[4*pixelsCopied+1] = *gPtr;
         outputBuffer[4*pixelsCopied+2] = *bPtr;
@@ -184,53 +145,17 @@ void Generic<float>::PackRGBAFromImageDesc(const GenericImageDesc & srcImg,
         pixelsCopied++;
         xIndex++;
 
-        // Jump to the next scanline
-        if(xIndex == imgWidth)
+        rPtr = reinterpret_cast<float*>(reinterpret_cast<char*>(rPtr) + xStrideBytes);
+        gPtr = reinterpret_cast<float*>(reinterpret_cast<char*>(gPtr) + xStrideBytes);
+        bPtr = reinterpret_cast<float*>(reinterpret_cast<char*>(bPtr) + xStrideBytes);
+        if(aPtr)
         {
-            yIndex += 1;
-            if(yIndex == imgHeight)
-            {
-                // In the float specialization, the BitDepthOp is the first Op
-                // of the color processing.
-                srcImg.m_bitDepthOp->apply(&outputBuffer[0], &outputBuffer[0], pixelsCopied);
-
-                numPixelsCopied = pixelsCopied;
-                return;
-            }
-            
-            xIndex = 0;
-            rRow += yStrideBytes;
-            gRow += yStrideBytes;
-            bRow += yStrideBytes;
-            if(aRow) aRow += yStrideBytes;
-            
-            rPtr = reinterpret_cast<float*>(rRow);
-            gPtr = reinterpret_cast<float*>(gRow);
-            bPtr = reinterpret_cast<float*>(bRow);
-            if(aPtr) aPtr = reinterpret_cast<float*>(aRow);
-        }
-        // Jump to the next pixel
-        else
-        {
-            rPtr = reinterpret_cast<float*>(
-                reinterpret_cast<char*>(rPtr) + xStrideBytes);
-            gPtr = reinterpret_cast<float*>(
-                reinterpret_cast<char*>(gPtr) + xStrideBytes);
-            bPtr = reinterpret_cast<float*>(
-                reinterpret_cast<char*>(bPtr) + xStrideBytes);
-            if(aPtr)
-            {
-                aPtr = reinterpret_cast<float*>(
-                    reinterpret_cast<char*>(aPtr) + xStrideBytes);
-            }
+            aPtr = reinterpret_cast<float*>(reinterpret_cast<char*>(aPtr) + xStrideBytes);
         }
     }
-    
-    // In the float specialization, the BitDepthOp is the first Op
-    // of the color processing.
-    srcImg.m_bitDepthOp->apply(&outputBuffer[0], &outputBuffer[0], pixelsCopied);
 
-    numPixelsCopied = pixelsCopied;
+    // In the float specialization, the BitDepthOp is the first Op of the color processing.
+    srcImg.m_bitDepthOp->apply(&outputBuffer[0], &outputBuffer[0], pixelsCopied);
 }
 
 template<typename Type>
@@ -248,38 +173,39 @@ void Generic<Type>::UnpackRGBAToImageDesc(GenericImageDesc & dstImg,
     const long imgWidth  = dstImg.m_width;
     const long imgHeight = dstImg.m_height;
     const long imgPixels = imgWidth * imgHeight;
-    
+
     if(imagePixelStartIndex<0 || imagePixelStartIndex>=imgPixels)
     {
         return;
     }
-    
+
     const ptrdiff_t xStrideBytes = dstImg.m_xStrideBytes;
     const ptrdiff_t yStrideBytes = dstImg.m_yStrideBytes;
 
-    long yIndex = imagePixelStartIndex / imgWidth;
+    const long yIndex = imagePixelStartIndex / imgWidth;
     long xIndex = imagePixelStartIndex % imgWidth;
-    
+
     // Figure out our initial ptr positions
-    char * rRow = reinterpret_cast<char*>(dstImg.m_rData) + yStrideBytes * yIndex;
-    char * gRow = reinterpret_cast<char*>(dstImg.m_gData) + yStrideBytes * yIndex;
-    char * bRow = reinterpret_cast<char*>(dstImg.m_bData) + yStrideBytes * yIndex;
+    char * rRow = dstImg.m_rData + yStrideBytes * yIndex;
+    char * gRow = dstImg.m_gData + yStrideBytes * yIndex;
+    char * bRow = dstImg.m_bData + yStrideBytes * yIndex;
     char * aRow = nullptr;
-    
+
     Type * rPtr = reinterpret_cast<Type*>(rRow + xStrideBytes * xIndex);
     Type * gPtr = reinterpret_cast<Type*>(gRow + xStrideBytes * xIndex);
     Type * bPtr = reinterpret_cast<Type*>(bRow + xStrideBytes * xIndex);
     Type * aPtr = nullptr;
-    
+
     if(dstImg.m_aData)
     {
-        aRow = reinterpret_cast<char*>(dstImg.m_aData) + yStrideBytes * yIndex;
+        aRow = dstImg.m_aData + yStrideBytes * yIndex;
         aPtr = reinterpret_cast<Type*>(aRow + xStrideBytes * xIndex);
     }
-    
+
     // Convert from F32 to the output bit-depth (i.e always RGBA).
     dstImg.m_bitDepthOp->apply(&inputBuffer[0], &outBitDepthBuffer[0], numPixelsToUnpack);
 
+    // Process one single, complete scanline.
     int pixelsCopied = 0;
     while(pixelsCopied < numPixelsToUnpack)
     {
@@ -291,41 +217,13 @@ void Generic<Type>::UnpackRGBAToImageDesc(GenericImageDesc & dstImg,
 
         pixelsCopied++;
         xIndex++;
-        
-        // Jump to the next scanline
-        if(xIndex == imgWidth)
+
+        rPtr = reinterpret_cast<Type*>(reinterpret_cast<char*>(rPtr) + xStrideBytes);
+        gPtr = reinterpret_cast<Type*>(reinterpret_cast<char*>(gPtr) + xStrideBytes);
+        bPtr = reinterpret_cast<Type*>(reinterpret_cast<char*>(bPtr) + xStrideBytes);
+        if(aPtr)
         {
-            yIndex += 1;
-            if(yIndex == imgHeight)
-            {
-                return;
-            }
-            
-            xIndex = 0;
-            rRow += yStrideBytes;
-            gRow += yStrideBytes;
-            bRow += yStrideBytes;
-            if(aPtr) aRow += yStrideBytes;
-            
-            rPtr = reinterpret_cast<Type*>(rRow);
-            gPtr = reinterpret_cast<Type*>(gRow);
-            bPtr = reinterpret_cast<Type*>(bRow);
-            if(aPtr) aPtr = reinterpret_cast<Type*>(aRow);
-        }
-        // Jump to the next pixel
-        else
-        {
-            rPtr = reinterpret_cast<Type*>(
-                reinterpret_cast<char*>(rPtr) + xStrideBytes);
-            gPtr = reinterpret_cast<Type*>(
-                reinterpret_cast<char*>(gPtr) + xStrideBytes);
-            bPtr = reinterpret_cast<Type*>(
-                reinterpret_cast<char*>(bPtr) + xStrideBytes);
-            if(aPtr)
-            {
-                aPtr = reinterpret_cast<Type*>(
-                    reinterpret_cast<char*>(aPtr) + xStrideBytes);
-            }
+            aPtr = reinterpret_cast<Type*>(reinterpret_cast<char*>(aPtr) + xStrideBytes);
         }
     }
 }
@@ -345,38 +243,39 @@ void Generic<float>::UnpackRGBAToImageDesc(GenericImageDesc & dstImg,
     const long imgWidth  = dstImg.m_width;
     const long imgHeight = dstImg.m_height;
     const long imgPixels = imgWidth * imgHeight;
-    
+
     if(imagePixelStartIndex<0 || imagePixelStartIndex>=imgPixels)
     {
         return;
     }
-    
+
     const ptrdiff_t xStrideBytes = dstImg.m_xStrideBytes;
     const ptrdiff_t yStrideBytes = dstImg.m_yStrideBytes;
 
-    long yIndex = imagePixelStartIndex / imgWidth;
+    const long yIndex = imagePixelStartIndex / imgWidth;
     long xIndex = imagePixelStartIndex % imgWidth;
-    
+
     // Figure out our initial ptr positions
-    char * rRow = reinterpret_cast<char*>(dstImg.m_rData) + yStrideBytes * yIndex;
-    char * gRow = reinterpret_cast<char*>(dstImg.m_gData) + yStrideBytes * yIndex;
-    char * bRow = reinterpret_cast<char*>(dstImg.m_bData) + yStrideBytes * yIndex;
+    char * rRow = dstImg.m_rData + yStrideBytes * yIndex;
+    char * gRow = dstImg.m_gData + yStrideBytes * yIndex;
+    char * bRow = dstImg.m_bData + yStrideBytes * yIndex;
     char * aRow = nullptr;
-    
+
     float * rPtr = reinterpret_cast<float*>(rRow + xStrideBytes * xIndex);
     float * gPtr = reinterpret_cast<float*>(gRow + xStrideBytes * xIndex);
     float * bPtr = reinterpret_cast<float*>(bRow + xStrideBytes * xIndex);
     float * aPtr = nullptr;
-    
+
     if(dstImg.m_aData)
     {
-        aRow = reinterpret_cast<char*>(dstImg.m_aData) + yStrideBytes * yIndex;
+        aRow = dstImg.m_aData + yStrideBytes * yIndex;
         aPtr = reinterpret_cast<float*>(aRow + xStrideBytes * xIndex);
     }
-    
+
     // In the float specialization, the BitDepthOp is the last Op of the color processing.
     dstImg.m_bitDepthOp->apply(&inputBuffer[0], &inputBuffer[0], numPixelsToUnpack);
 
+    // Process one single, complete scanline.
     int pixelsCopied = 0;
     while(pixelsCopied < numPixelsToUnpack)
     {
@@ -388,106 +287,16 @@ void Generic<float>::UnpackRGBAToImageDesc(GenericImageDesc & dstImg,
 
         pixelsCopied++;
         xIndex++;
-        
-        // Jump to the next scanline
-        if(xIndex == imgWidth)
+
+        rPtr = reinterpret_cast<float*>(reinterpret_cast<char*>(rPtr) + xStrideBytes);
+        gPtr = reinterpret_cast<float*>(reinterpret_cast<char*>(gPtr) + xStrideBytes);
+        bPtr = reinterpret_cast<float*>(reinterpret_cast<char*>(bPtr) + xStrideBytes);
+        if(aPtr)
         {
-            yIndex += 1;
-            if(yIndex == imgHeight)
-            {
-                return;
-            }
-            
-            xIndex = 0;
-            rRow += yStrideBytes;
-            gRow += yStrideBytes;
-            bRow += yStrideBytes;
-            if(aPtr) aRow += yStrideBytes;
-            
-            rPtr = reinterpret_cast<float*>(rRow);
-            gPtr = reinterpret_cast<float*>(gRow);
-            bPtr = reinterpret_cast<float*>(bRow);
-            if(aPtr) aPtr = reinterpret_cast<float*>(aRow);
-        }
-        // Jump to the next pixel
-        else
-        {
-            rPtr = reinterpret_cast<float*>(
-                reinterpret_cast<char*>(rPtr) + xStrideBytes);
-            gPtr = reinterpret_cast<float*>(
-                reinterpret_cast<char*>(gPtr) + xStrideBytes);
-            bPtr = reinterpret_cast<float*>(
-                reinterpret_cast<char*>(bPtr) + xStrideBytes);
-            if(aPtr)
-            {
-                aPtr = reinterpret_cast<float*>(
-                    reinterpret_cast<char*>(aPtr) + xStrideBytes);
-            }
+            aPtr = reinterpret_cast<float*>(reinterpret_cast<char*>(aPtr) + xStrideBytes);
         }
     }
 }
-    
-    
-    /*
-    namespace
-    {
-    
-        void PackRGBAFromImageDesc_RGBAMemcpy(const GenericImageDesc& srcImg,
-                                              float* outputBuffer,
-                                              int* numPixelsCopied,
-                                              int outputBufferSize,
-                                              int imagePixelStartIndex)
-        {
-            assert(outputBuffer);
-            assert(numPixelsCopied);
-            
-            long imgWidth = srcImg.getWidth();
-            long imgHeight = srcImg.getHeight();
-            long imgPixels = srcImg.getNumPixels();
-            
-            if(imagePixelStartIndex<0 || imagePixelStartIndex>=imgPixels)
-            {
-                *numPixelsCopied = 0;
-                return;
-            }
-            
-            ptrdiff_t xStrideBytes  = srcImg.getXStrideBytes();
-            ptrdiff_t yStrideBytes  = srcImg.getYStrideBytes();
-            int yIndex = imagePixelStartIndex / imgWidth;
-            int xIndex = imagePixelStartIndex % imgWidth;
-            
-            // Figure out our initial ptr positions
-            char* imgRow = reinterpret_cast<char*>(srcImg.getRData()) +
-                yStrideBytes * yIndex;
-            
-            char* imgPtr = imgRow + xStrideBytes*xIndex;
-            
-            int totalPixelsCopied = 0;
-            int pixelsRemainingToCopy = outputBufferSize;
-            
-            while(pixelsRemainingToCopy>0 && yIndex < imgHeight)
-            {
-                int imgScanlinePixels = imgWidth - xIndex;
-                int numPixels = std::min(imgScanlinePixels,
-                                         pixelsRemainingToCopy);
-                memcpy(outputBuffer+totalPixelsCopied,
-                       imgPtr, numPixels);
-                
-                yIndex += 1;
-                xIndex = 0;
-                
-                imgRow += yStrideBytes;
-                imgPtr = imgRow;
-                totalPixelsCopied += numPixels;
-                pixelsRemainingToCopy -= numPixels;
-            }
-            
-            if(numPixelsCopied) *numPixelsCopied = totalPixelsCopied;
-        }
-    }
-    */
-
-
 
 
 

@@ -29,8 +29,8 @@ class ImgBuffer
 public:
     ImgBuffer() = default;
     ImgBuffer(const OIIO::ImageSpec & spec);
+    ImgBuffer(const ImgBuffer & img);
 
-    ImgBuffer(const ImgBuffer &) = delete;
     ImgBuffer(ImgBuffer &&) = delete;
 
     ImgBuffer & operator = (const ImgBuffer &) = delete;

@@ -11,6 +11,7 @@
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "ops/CDL/CDLOpData.h"
 #include "PrivateTypes.h"
+#include "transforms/CDLTransform.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -129,7 +130,7 @@ public:
         return true;
     }
 
-    virtual void appendDescription(const std::string & desc) = 0;
+    virtual void appendMetadata(const std::string & name, const std::string & value) = 0;
 
 private:
     XmlReaderContainerElt() = delete;
@@ -205,7 +206,7 @@ class XmlReaderDummyElt : public XmlReaderPlainElt
         {
         }
 
-        void appendDescription(const std::string & desc) override
+        void appendMetadata(const std::string & /*name*/, const std::string & /*value*/) override
         {
         }
 
@@ -333,7 +334,7 @@ public:
         return getName().c_str();
     }
 
-    void appendDescription(const std::string & desc) override
+    void appendMetadata(const std::string & /*name*/, const std::string & /*value*/) override
     {
     }
 
@@ -386,14 +387,11 @@ public:
     void setIsOffsetInit(bool status) { m_isOffsetInit = status; }
     void setIsPowerInit(bool status) { m_isPowerInit = status; }
 
-    void appendDescription(const std::string & desc) override
+    void appendMetadata(const std::string & name, const std::string & value) override
     {
-        // TODO: OCIO only keep the first description.
-        if (-1 == getCDL()->getFormatMetadata().getFirstChildIndex(TAG_DESCRIPTION))
-        {
-            FormatMetadataImpl item(TAG_DESCRIPTION, desc);
-            getCDL()->getFormatMetadata().getChildrenElements().push_back(item);
-        }
+        // Add description to parent and override name.
+        FormatMetadataImpl item(METADATA_SOP_DESCRIPTION, value);
+        getCDL()->getFormatMetadata().getChildrenElements().push_back(item);
     }
 
 private:
@@ -448,6 +446,14 @@ public:
     }
 
     virtual const CDLOpDataRcPtr & getCDL() const = 0;
+
+    void appendMetadata(const std::string & name, const std::string & value) override
+    {
+        // Add description to parent and override name.
+        FormatMetadataImpl item(METADATA_SAT_DESCRIPTION, value);
+        getCDL()->getFormatMetadata().getChildrenElements().push_back(item);
+    }
+
 
 private:
     XmlReaderSatNodeBaseElt() = delete;

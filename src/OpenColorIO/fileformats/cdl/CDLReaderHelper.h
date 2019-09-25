@@ -11,7 +11,18 @@
 OCIO_NAMESPACE_ENTER
 {
 
-typedef OCIO_SHARED_PTR<CDLTransformVec> CDLTransformVecRcPtr;
+class CDLParsingInfo
+{
+public:
+    CDLParsingInfo()
+        : m_metadata(METADATA_ROOT)
+    {
+    }
+
+    CDLTransformVec m_transforms;
+    FormatMetadataImpl m_metadata;
+};
+typedef OCIO_SHARED_PTR<CDLParsingInfo> CDLParsingInfoRcPtr;
 
 class CDLReaderColorDecisionListElt : public XmlReaderContainerElt
 {
@@ -20,7 +31,7 @@ public:
                                   unsigned int xmlLineNumber,
                                   const std::string & xmlFile)
         : XmlReaderContainerElt(name, xmlLineNumber, xmlFile)
-        , m_transformList(new CDLTransformVec)
+        , m_parsingInfo(std::make_shared<CDLParsingInfo>())
     {
     }
 
@@ -38,24 +49,23 @@ public:
         return getName().c_str();
     }
 
-    const CDLTransformVecRcPtr & getCDLTransformList() const
+    const CDLParsingInfoRcPtr & getCDLParsingInfo() const
     {
-        return m_transformList;
+        return m_parsingInfo;
     }
 
-    void appendDescription(const std::string & desc) override
+    void appendMetadata(const std::string & name, const std::string & value) override
     {
-        m_descriptions.push_back(desc);
+        m_parsingInfo->m_metadata.addChildElement(name.c_str(), value.c_str());
     }
 
-    const StringVec & getDescriptions() const
+    const FormatMetadataImpl & getMetadata() const
     {
-        return m_descriptions;
+        return m_parsingInfo->m_metadata;
     }
 
 private:
-    CDLTransformVecRcPtr m_transformList;
-    StringVec m_descriptions;
+    CDLParsingInfoRcPtr m_parsingInfo;
 
 };
 
@@ -67,6 +77,7 @@ public:
                               unsigned int xmlLineNumber,
                               const std::string & xmlFile)
         : XmlReaderComplexElt(name, pParent, xmlLineNumber, xmlFile)
+        , m_metadata(METADATA_ROOT)
     {
     }
 
@@ -78,19 +89,19 @@ public:
     {
     }
 
-    void appendDescription(const std::string & desc) override
+    void appendMetadata(const std::string & name, const std::string & value) override
     {
-        m_descriptions.push_back(desc);
+        m_metadata.addChildElement(name.c_str(), value.c_str());
     }
 
 
-    const StringVec & getDescriptions() const
+    const FormatMetadataImpl & getMetadata() const
     {
-        return m_descriptions;
+        return m_metadata;
     }
 
 private:
-    StringVec m_descriptions;
+    FormatMetadataImpl m_metadata;
 };
 
 class CDLReaderColorCorrectionCollectionElt : public XmlReaderContainerElt
@@ -100,7 +111,7 @@ public:
                                           unsigned int xmlLineNumber,
                                           const std::string & xmlFile)
         : XmlReaderContainerElt(name, xmlLineNumber, xmlFile)
-        , m_transformList(new CDLTransformVec)
+        , m_parsingInfo(std::make_shared<CDLParsingInfo>())
     {
     }
 
@@ -122,24 +133,23 @@ public:
         return getName().c_str();
     }
 
-    const CDLTransformVecRcPtr & getCDLTransformList() const
+    const CDLParsingInfoRcPtr & getCDLParsingInfo() const
     {
-        return m_transformList;
+        return m_parsingInfo;
     }
 
-    void appendDescription(const std::string & desc) override
+    void appendMetadata(const std::string & name, const std::string & value) override
     {
-        m_descriptions.push_back(desc);
+        m_parsingInfo->m_metadata.addChildElement(name.c_str(), value.c_str());
     }
 
-    const StringVec & getDescriptions() const
+    const FormatMetadataImpl & getMetadata() const
     {
-        return m_descriptions;
+        return m_parsingInfo->m_metadata;
     }
 
 private:
-    CDLTransformVecRcPtr m_transformList;
-    StringVec m_descriptions;
+    CDLParsingInfoRcPtr m_parsingInfo;
 
 };
 
@@ -157,12 +167,12 @@ public:
 
     const CDLOpDataRcPtr & getCDL() const { return m_transformData; }
 
-    void setCDLTransformList(CDLTransformVecRcPtr pTransformList);
+    void setCDLParsingInfo(const CDLParsingInfoRcPtr & parsingInfo);
 
-    void appendDescription(const std::string & desc) override;
+    void appendMetadata(const std::string & name, const std::string & value) override;
 
 private:
-    CDLTransformVecRcPtr m_transformList;
+    CDLParsingInfoRcPtr m_parsingInfo;
     CDLOpDataRcPtr m_transformData;
 };
 
