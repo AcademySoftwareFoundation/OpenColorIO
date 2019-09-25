@@ -197,6 +197,10 @@ OCIO_NAMESPACE_ENTER
     void FinalizeOpVec(OpRcPtrVec & opVec, FinalizationFlags fFlags);
 
     void OptimizeOpVec(OpRcPtrVec & result, OptimizationFlags oFlags);
+    void OptimizeOpVec(OpRcPtrVec & result,
+                       const BitDepth & inBitDepth,
+                       const BitDepth & outBitDepth,
+                       OptimizationFlags oFlags);
 
     void UnifyDynamicProperties(OpRcPtrVec & ops);
    
