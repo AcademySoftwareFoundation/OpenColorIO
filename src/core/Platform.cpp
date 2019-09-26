@@ -3,8 +3,9 @@
 //
 //
 
-#include <sstream>
 #include <cstdlib>
+#include <sstream>
+#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -16,48 +17,33 @@ OCIO_NAMESPACE_ENTER
 
     namespace Platform
     {
-        // Unlike the ::getenv(), the method does not use any static buffer 
-        // for the Windows platform only. *nix platforms are still using
-        // the ::getenv method, but reducing the static vairable usage.
-        // 
         void getenv (const char* name, std::string& value)
         {
-#ifdef WINDOWS
-            // To remove the security compilation warning, the _dupenv_s method
-            // must be used (instead of the getenv). The improvement is that
-            // the buffer length is now under control to mitigate buffer overflow attacks.
-            //
-            char * val;
-            size_t len = 0;
-            // At least _dupenv_s validates the memory size by returning ENOMEM
-            //  in case of allocation size issue.
-            const errno_t err = ::_dupenv_s(&val, &len, name);
-            if(err!=0 || len==0 || !val || !*val)
+#ifdef _WIN32
+            if(uint32_t size = GetEnvironmentVariable(name, nullptr, 0))
             {
-                if(val) free(val);
-                value.resize(0);
+                std::vector<char> buffer(size);
+                GetEnvironmentVariable(name, buffer.data(), size);
+                value = std::string(buffer.data());
             }
             else
             {
-                // NB: len is the sizeof() of a string ( i.e. not its strlen() )
-                value = val;
-                value.resize(len-1);
-                if(val) free(val);
+                value.clear();
             }
 #else
             const char* val = ::getenv(name);
             value = (val && *val) ? val : "";
 #endif 
         }
+
         void setenv (const char* name, const std::string& value)
         {
-#ifdef WINDOWS
+#ifdef _WIN32
             ::_putenv_s(name, value.c_str());
 #else
             ::setenv(name, value.c_str(), 1);
 #endif
         }
-
 
         void createTempFilename(std::string & filename, const std::string & filenameExt)
         {
@@ -125,6 +111,26 @@ OIIO_ADD_TEST(Platform, getenv)
         OCIO::Platform::getenv("PATH", env);
         OIIO_CHECK_ASSERT(!env.empty());
     }
+#ifdef _WIN32
+    {
+        SetEnvironmentVariable("MY_WINDOWS_DUMMY_ENV", "1");
+        std::string env;
+        OCIO::Platform::getenv("MY_WINDOWS_DUMMY_ENV", env);
+        OIIO_CHECK_EQUAL(env, std::string("1"));
+    }
+    {
+        SetEnvironmentVariable("MY_WINDOWS_DUMMY_ENV", " ");
+        std::string env;
+        OCIO::Platform::getenv("MY_WINDOWS_DUMMY_ENV", env);
+        OIIO_CHECK_EQUAL(env, std::string(" "));
+    }
+    {
+        SetEnvironmentVariable("MY_WINDOWS_DUMMY_ENV", "");
+        std::string env;
+        OCIO::Platform::getenv("MY_WINDOWS_DUMMY_ENV", env);
+        OIIO_CHECK_ASSERT(env.empty());
+    }
+#endif  
 }
 
 OIIO_ADD_TEST(Platform, setenv)
