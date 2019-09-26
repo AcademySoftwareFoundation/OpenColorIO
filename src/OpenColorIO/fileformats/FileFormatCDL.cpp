@@ -45,11 +45,18 @@ OCIO_NAMESPACE_ENTER
         class LocalCachedFile : public CachedFile
         {
         public:
-            LocalCachedFile () {};
-            ~LocalCachedFile() {};
+            LocalCachedFile ()
+                : metadata(METADATA_ROOT)
+            {
+            }
+            ~LocalCachedFile() = default;
             
             CDLTransformMap transformMap;
             CDLTransformVec transformVec;
+            // Descriptive element children of <ColorDecisonList> are
+            // stored here.  Descriptive elements of SOPNode and SatNode are
+            // stored in the transforms.
+            FormatMetadataImpl metadata;
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -57,8 +64,8 @@ OCIO_NAMESPACE_ENTER
         class LocalFileFormat : public FileFormat
         {
         public:
-            
-            ~LocalFileFormat() {};
+            LocalFileFormat() = default;
+            ~LocalFileFormat() = default;
             
             void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
             
@@ -96,7 +103,8 @@ OCIO_NAMESPACE_ENTER
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
             
             parser.getCDLTransforms(cachedFile->transformMap,
-                                    cachedFile->transformVec);
+                                    cachedFile->transformVec,
+                                    cachedFile->metadata);
 
             return cachedFile;
         }
@@ -233,16 +241,54 @@ OCIO_ADD_TEST(FileFormatCDL, TestCDL)
 
     OCIO::LocalCachedFileRcPtr cdlFile;
     OCIO_CHECK_NO_THROW(cdlFile = LoadCDLFile(fileName));
+    OCIO_REQUIRE_ASSERT(cdlFile);
+
+    // Check that Descriptive element children of <ColorDecisionList> are preserved.
+    OCIO_REQUIRE_EQUAL(cdlFile->metadata.getNumChildrenElements(), 4);
+    OCIO_CHECK_EQUAL(std::string(cdlFile->metadata.getChildElement(0).getName()),
+                     "Description");
+    OCIO_CHECK_EQUAL(std::string(cdlFile->metadata.getChildElement(0).getValue()),
+                     "This is a color decision list example.");
+    OCIO_CHECK_EQUAL(std::string(cdlFile->metadata.getChildElement(1).getName()),
+                     "InputDescription");
+    OCIO_CHECK_EQUAL(std::string(cdlFile->metadata.getChildElement(1).getValue()),
+                     "These should be applied in ACESproxy color space.");
+    OCIO_CHECK_EQUAL(std::string(cdlFile->metadata.getChildElement(2).getName()),
+                     "ViewingDescription");
+    OCIO_CHECK_EQUAL(std::string(cdlFile->metadata.getChildElement(2).getValue()),
+                     "View using the ACES RRT+ODT transforms.");
+    OCIO_CHECK_EQUAL(std::string(cdlFile->metadata.getChildElement(3).getName()),
+                     "Description");
+    OCIO_CHECK_EQUAL(std::string(cdlFile->metadata.getChildElement(3).getValue()),
+                     "It includes all possible description uses.");
+
     OCIO_CHECK_EQUAL(5, cdlFile->transformVec.size());
     // Two of the five CDLs in the file don't have an id attribute and are not
     // included in the transformMap since it used the id as the key.
     OCIO_CHECK_EQUAL(3, cdlFile->transformMap.size());
     {
+        // Note: Descriptive elements that are children of <ColorDecision> are not preserved.
+
         std::string idStr(cdlFile->transformVec[0]->getID());
         OCIO_CHECK_EQUAL("cc0001", idStr);
-        std::string descStr(cdlFile->transformVec[0]->getDescription());
-        // OCIO keeps only the first SOPNode description.
-        OCIO_CHECK_EQUAL("Example look", descStr);
+
+        // Check that Descriptive element children of <ColorCorrection> are preserved.
+        auto & formatMetadata = cdlFile->transformVec[0]->getFormatMetadata();
+        OCIO_REQUIRE_EQUAL(formatMetadata.getNumChildrenElements(), 6);
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(0).getName()), "Description");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(0).getValue()), "CC-level description 1");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(1).getName()), "InputDescription");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(1).getValue()), "CC-level input description 1");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(2).getName()), "ViewingDescription");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(2).getValue()), "CC-level viewing description 1");
+        // Check that Descriptive element children of SOPNode and SatNode are preserved.
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(3).getName()), "SOPDescription");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(3).getValue()), "Example look");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(4).getName()), "SOPDescription");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(4).getValue()), "For scenes 1 and 2");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(5).getName()), "SATDescription");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(5).getValue()), "boosting sat");
+
         float slope[3] = { 0.f, 0.f, 0.f };
         OCIO_CHECK_NO_THROW(cdlFile->transformVec[0]->getSlope(slope));
         OCIO_CHECK_EQUAL(1.0f, slope[0]);
@@ -263,8 +309,22 @@ OCIO_ADD_TEST(FileFormatCDL, TestCDL)
     {
         std::string idStr(cdlFile->transformVec[1]->getID());
         OCIO_CHECK_EQUAL("cc0002", idStr);
-        std::string descStr(cdlFile->transformVec[1]->getDescription());
-        OCIO_CHECK_EQUAL("pastel", descStr);
+
+        auto & formatMetadata = cdlFile->transformVec[1]->getFormatMetadata();
+        OCIO_REQUIRE_EQUAL(formatMetadata.getNumChildrenElements(), 6);
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(0).getName()), "Description");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(0).getValue()), "CC-level description 2");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(1).getName()), "InputDescription");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(1).getValue()), "CC-level input description 2");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(2).getName()), "ViewingDescription");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(2).getValue()), "CC-level viewing description 2");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(3).getName()), "SOPDescription");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(3).getValue()), "pastel");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(4).getName()), "SOPDescription");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(4).getValue()), "another example");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(5).getName()), "SATDescription");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(5).getValue()), "dropping sat");
+
         float slope[3] = { 0.f, 0.f, 0.f };
         OCIO_CHECK_NO_THROW(cdlFile->transformVec[1]->getSlope(slope));
         OCIO_CHECK_EQUAL(0.9f, slope[0]);
@@ -285,8 +345,22 @@ OCIO_ADD_TEST(FileFormatCDL, TestCDL)
     {
         std::string idStr(cdlFile->transformVec[2]->getID());
         OCIO_CHECK_EQUAL("cc0003", idStr);
-        std::string descStr(cdlFile->transformVec[2]->getDescription());
-        OCIO_CHECK_EQUAL("golden", descStr);
+
+        auto & formatMetadata = cdlFile->transformVec[2]->getFormatMetadata();
+        OCIO_REQUIRE_EQUAL(formatMetadata.getNumChildrenElements(), 6);
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(0).getName()), "Description");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(0).getValue()), "CC-level description 3");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(1).getName()), "InputDescription");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(1).getValue()), "CC-level input description 3");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(2).getName()), "ViewingDescription");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(2).getValue()), "CC-level viewing description 3");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(3).getName()), "SOPDescription");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(3).getValue()), "golden");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(4).getName()), "SATDescription");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(4).getValue()), "no sat change");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(5).getName()), "SATDescription");
+        OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(5).getValue()), "sat==1");
+
         float slope[3] = { 0.f, 0.f, 0.f };
         OCIO_CHECK_NO_THROW(cdlFile->transformVec[2]->getSlope(slope));
         OCIO_CHECK_EQUAL(1.2f, slope[0]);
@@ -307,8 +381,10 @@ OCIO_ADD_TEST(FileFormatCDL, TestCDL)
     {
         std::string idStr(cdlFile->transformVec[3]->getID());
         OCIO_CHECK_EQUAL("", idStr);
-        std::string descStr(cdlFile->transformVec[3]->getDescription());
-        OCIO_CHECK_EQUAL("", descStr);
+
+        auto & formatMetadata = cdlFile->transformVec[3]->getFormatMetadata();
+        OCIO_CHECK_EQUAL(formatMetadata.getNumChildrenElements(), 0);
+
         float slope[3] = { 0.f, 0.f, 0.f };
         OCIO_CHECK_NO_THROW(cdlFile->transformVec[3]->getSlope(slope));
         OCIO_CHECK_EQUAL(1.2f, slope[0]);
@@ -330,8 +406,10 @@ OCIO_ADD_TEST(FileFormatCDL, TestCDL)
     {
         std::string idStr(cdlFile->transformVec[4]->getID());
         OCIO_CHECK_EQUAL("", idStr);
-        std::string descStr(cdlFile->transformVec[4]->getDescription());
-        OCIO_CHECK_EQUAL("", descStr);
+
+        auto & formatMetadata = cdlFile->transformVec[4]->getFormatMetadata();
+        OCIO_CHECK_EQUAL(formatMetadata.getNumChildrenElements(), 0);
+
         // SOPNode missing from XML, uses default values.
         float slope[3] = { 0.f, 0.f, 0.f };
         OCIO_CHECK_NO_THROW(cdlFile->transformVec[4]->getSlope(slope));

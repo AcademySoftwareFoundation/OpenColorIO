@@ -3,18 +3,10 @@
 <!-- Note that the file may contain unknown elements that we should ignore. -->
 <!-- These might be used by customers for their internal workflows. -->
 
-	<Description>
-This is a color decision list example.
-	</Description>
-	<InputDescription>
-These should be applied in ACESproxy color space.
-	</InputDescription>
-	<ViewingDescription>
-View using the ACES RRT+ODT transforms.
-	</ViewingDescription>
-	<Description>
-It includes all possible description uses.
-	</Description>
+	<Description>This is a color decision list example.</Description>
+	<InputDescription>These should be applied in ACESproxy color space.</InputDescription>
+	<ViewingDescription>View using the ACES RRT+ODT transforms.</ViewingDescription>
+	<Description>It includes all possible description uses.</Description>
 
 	<ColorDecision>
 		<Description>ColorDecision-level description 1a</Description>

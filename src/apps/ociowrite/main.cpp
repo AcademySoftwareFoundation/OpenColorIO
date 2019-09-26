@@ -47,25 +47,25 @@ int main(int argc, const char **argv)
 			   "--file %s", &filepath, pathDesc.c_str(),
                NULL);
 
-    if(argc <= 1 || ap.parse(argc, argv) < 0)
+    if (argc <= 1 || ap.parse(argc, argv) < 0)
     {
         std::cerr << ap.geterror() << std::endl;
         ap.usage();
         exit(1);
     }
 
-    if(help)
+    if (help)
     {
         ap.usage();
         exit(1);
     }
 
-    if(verbose)
+    if (verbose)
     {
         std::cout << std::endl;
         std::cout << "OCIO Version: " << OCIO::GetVersion() << std::endl;
         const char * env = getenv("OCIO");
-        if(env && *env)
+        if (env && *env)
         {
             try
             {
@@ -82,7 +82,7 @@ int main(int argc, const char **argv)
         }
     }
 
-    if(filepath.empty())
+    if (filepath.empty())
     {
         std::cerr << std::endl;
         std::cerr << "The output transform filepath is missing." << std::endl;
@@ -113,6 +113,11 @@ int main(int argc, const char **argv)
         std::cerr << filepath << "'. " << formats.str() << std::endl;
         exit(1);
     }
+    else if (verbose)
+    {
+        std::cout << std::endl;
+        std::cout << "File format being used: " << transformFileFormat << std::endl;
+    }
 
     std::cout << std::endl;
 
@@ -122,26 +127,39 @@ int main(int argc, const char **argv)
         // Load the current config.
 
         OCIO::ConstProcessorRcPtr processor;
-        if(!inputColorSpace.empty() && !outputColorSpace.empty())
+        if (!inputColorSpace.empty() && !outputColorSpace.empty())
         {
-            if(verbose)
+            const char * env = getenv("OCIO");
+            if(env && *env)
             {
-                const char * env = getenv("OCIO");
-                if(env && *env)
+                if (verbose)
                 {
-                    std::cerr << std::endl;
+                    std::cout << std::endl;
                     std::cout << "Processing from '" << inputColorSpace << "' to '"
                               << outputColorSpace << "'" << std::endl;
                 }
-                else
-                {
-                    std::cerr << std::endl;
-                    std::cerr << "Missing the ${OCIO} env. variable." << std::endl;
-                    exit(1);
-                }
+            }
+            else
+            {
+                std::cerr << std::endl;
+                std::cerr << "Missing the ${OCIO} env. variable." << std::endl;
+                exit(1);
             }
 
             OCIO::ConstConfigRcPtr config  = OCIO::Config::CreateFromEnv();
+
+            if (verbose)
+            {
+                std::cout << std::endl;
+                std::cout << "Config: " << config->getDescription()
+                          << " - version: " << config->getMajorVersion();
+                const auto minor = config->getMinorVersion();
+                if (minor)
+                {
+                    std::cout << "." << minor;
+                }
+                std::cout << std::endl;
+            }
 
             // Get the processor.
             processor = config->getProcessor(inputColorSpace.c_str(), outputColorSpace.c_str());

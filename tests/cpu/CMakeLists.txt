@@ -72,12 +72,10 @@ set(SOURCES
 	fileformats/cdl/CDLReaderHelper.cpp
 	fileformats/ctf/CTFReaderHelper.cpp
 	fileformats/ctf/CTFReaderUtils.cpp
-	fileformats/ctf/CTFTransform.cpp
 	fileformats/FileFormatCCC.cpp
 	fileformats/FileFormatCC.cpp
 	fileformats/FileFormatCDL.cpp
 	fileformats/FileFormatCSP.cpp
-	fileformats/FileFormatCTF.cpp
 	fileformats/FileFormatDiscreet1DL.cpp
 	fileformats/FileFormatHDL.cpp
 	fileformats/FileFormatICC.cpp
@@ -154,7 +152,6 @@ set(SOURCES
 	ParseUtils.cpp
 	PathUtils.cpp
 	Platform.cpp
-	Processor.cpp
 	ScanlineHelper.cpp
 	SSE.cpp
 	Transform.cpp
@@ -165,7 +162,6 @@ set(SOURCES
 	transforms/ExponentTransform.cpp
 	transforms/ExponentWithLinearTransform.cpp
 	transforms/ExposureContrastTransform.cpp
-	transforms/FileTransform.cpp
 	transforms/FixedFunctionTransform.cpp
 	transforms/GroupTransform.cpp
 	transforms/LogAffineTransform.cpp
@@ -178,8 +174,12 @@ set(SOURCES
 )
 
 set(TESTS
-    Context_tests.cpp
-    fileformats/FileFormat3DL_tests.cpp
+	Context_tests.cpp
+	fileformats/ctf/CTFTransform_tests.cpp
+	fileformats/FileFormat3DL_tests.cpp
+	fileformats/FileFormatCTF_tests.cpp
+	Processor_tests.cpp
+	transforms/FileTransform_tests.cpp
 	UnitTest.cpp
 	UnitTestUtils.cpp
 )

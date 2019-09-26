@@ -20,6 +20,7 @@
 #include "ops/Range/RangeOpData.h"
 #include "ops/reference/ReferenceOpData.h"
 #include "Platform.h"
+#include "transforms/CDLTransform.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -234,10 +235,8 @@ CTFVersion GetOpMinimumVersion(const ConstOpDataRcPtr & op)
     switch (op->getType())
     {
     case OpData::CDLType:
-    case OpData::MatrixType:
-    case OpData::RangeType:
     {
-        minVersion = CTF_PROCESS_LIST_VERSION_1_3;
+        minVersion = CTF_PROCESS_LIST_VERSION_1_7;
         break;
     }
     case OpData::ExposureContrastType:
@@ -252,7 +251,6 @@ CTFVersion GetOpMinimumVersion(const ConstOpDataRcPtr & op)
         }
         break;
     }
-
     case OpData::FixedFunctionType:
     case OpData::LogType:
     {
@@ -304,6 +302,12 @@ CTFVersion GetOpMinimumVersion(const ConstOpDataRcPtr & op)
         {
             minVersion = CTF_PROCESS_LIST_VERSION_1_6;
         }
+        break;
+    }
+    case OpData::MatrixType:
+    case OpData::RangeType:
+    {
+        minVersion = CTF_PROCESS_LIST_VERSION_1_3;
         break;
     }
     case OpData::ReferenceType:
@@ -446,11 +450,11 @@ void CTFReaderTransform::toMetadata(FormatMetadataImpl & metadata) const
 
 namespace
 {
-void WriteDescriptions(XmlFormatter & fmt, const StringVec & descriptions)
+void WriteDescriptions(XmlFormatter & fmt, const char * tag, const StringVec & descriptions)
 {
     for (auto & it : descriptions)
     {
-        fmt.writeContentTag(TAG_DESCRIPTION, it);
+        fmt.writeContentTag(tag, it);
     }
 }
 
@@ -594,7 +598,8 @@ protected:
     virtual const char * getTagName() const = 0;
     virtual void getAttributes(XmlFormatter::Attributes & attributes) const;
     virtual void writeContent() const = 0;
-    
+    virtual void writeFormatMetadata() const;
+
     BitDepth m_inBitDepth = BIT_DEPTH_UNKNOWN;
     BitDepth m_outBitDepth = BIT_DEPTH_UNKNOWN;
 };
@@ -617,11 +622,7 @@ void OpWriter::write() const
     m_formatter.writeStartTag(tagName, attributes);
     {
         XmlScopeIndent scopeIndent(m_formatter);
-        auto op = getOp();
-        StringVec desc;
-        GetElementsValues(op->getFormatMetadata().getChildrenElements(),
-                          TAG_DESCRIPTION, desc);
-        WriteDescriptions(m_formatter, desc);
+        writeFormatMetadata();
 
         // TODO: Bypass Dynamic Property converts to Look Dynamic Property in ctf format.
         /*if (op->getBypass()->isDynamic())
@@ -634,6 +635,15 @@ void OpWriter::write() const
         writeContent();
     }
     m_formatter.writeEndTag(tagName);
+}
+
+void OpWriter::writeFormatMetadata() const
+{
+    auto op = getOp();
+    StringVec desc;
+    GetElementsValues(op->getFormatMetadata().getChildrenElements(),
+                      TAG_DESCRIPTION, desc);
+    WriteDescriptions(m_formatter, TAG_DESCRIPTION, desc);
 }
 
 const char * BitDepthToCLFString(BitDepth bitDepth)
@@ -753,6 +763,7 @@ protected:
     const char * getTagName() const override;
     void getAttributes(XmlFormatter::Attributes& attributes) const override;
     void writeContent() const override;
+    void writeFormatMetadata() const override;
 
 private:
     ConstCDLOpDataRcPtr m_cdl;
@@ -790,11 +801,16 @@ void CDLWriter::getAttributes(XmlFormatter::Attributes & attributes) const
 void CDLWriter::writeContent() const
 {
     XmlFormatter::Attributes attributes;
-
+    auto op = getOp();
     // SOPNode.
     m_formatter.writeStartTag(TAG_SOPNODE, attributes);
     {
         XmlScopeIndent scopeIndent(m_formatter);
+
+        StringVec desc;
+        GetElementsValues(op->getFormatMetadata().getChildrenElements(),
+                          METADATA_SOP_DESCRIPTION, desc);
+        WriteDescriptions(m_formatter, TAG_DESCRIPTION, desc);
 
         m_formatter.writeContentTag(TAG_SLOPE, m_cdl->getSlopeString());
         m_formatter.writeContentTag(TAG_OFFSET, m_cdl->getOffsetString());
@@ -807,9 +823,31 @@ void CDLWriter::writeContent() const
     {
         XmlScopeIndent scopeIndent(m_formatter);
 
+        StringVec desc;
+        GetElementsValues(op->getFormatMetadata().getChildrenElements(),
+                          METADATA_SAT_DESCRIPTION, desc);
+        WriteDescriptions(m_formatter, TAG_DESCRIPTION, desc);
+
         m_formatter.writeContentTag(TAG_SATURATION, m_cdl->getSaturationString());
     }
     m_formatter.writeEndTag(TAG_SATNODE);
+}
+
+void CDLWriter::writeFormatMetadata() const
+{
+    auto op = getOp();
+    StringVec desc;
+    GetElementsValues(op->getFormatMetadata().getChildrenElements(),
+                      METADATA_DESCRIPTION, desc);
+    WriteDescriptions(m_formatter, TAG_DESCRIPTION, desc);
+    desc.clear();
+    GetElementsValues(op->getFormatMetadata().getChildrenElements(),
+                      METADATA_INPUT_DESCRIPTION, desc);
+    WriteDescriptions(m_formatter, METADATA_INPUT_DESCRIPTION, desc);
+    desc.clear();
+    GetElementsValues(op->getFormatMetadata().getChildrenElements(),
+                      METADATA_VIEWING_DESCRIPTION, desc);
+    WriteDescriptions(m_formatter, METADATA_VIEWING_DESCRIPTION, desc);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1792,7 +1830,7 @@ void TransformWriter::write() const
     {
         XmlScopeIndent scopeIndent(m_formatter);
 
-        WriteDescriptions(m_formatter, m_transform->getDescriptions());
+        WriteDescriptions(m_formatter, TAG_DESCRIPTION, m_transform->getDescriptions());
 
         const std::string & inputDesc = m_transform->getInputDescriptor();
         if (!inputDesc.empty())
@@ -1884,447 +1922,244 @@ void TransformWriter::writeOps() const
 
     auto & ops = m_transform->getOps();
     size_t numOps = ops.size();
+    size_t numSavedOps = 0;
     if (numOps)
     {
         inBD = GetInputFileBD(ops[0]);
-    }
+        for (size_t i = 0; i < numOps; ++i)
+        {
+            static_assert(OpData::NoOpType == 11, "Add new types");
 
-    for (size_t i = 0; i < numOps; ++i)
+            auto & op = ops[i];
+
+            if (i + 1 < numOps)
+            {
+                auto & nextOp = ops[i + 1];
+                // Return file input bit-depth for Matrix & Range, F32 for others.
+                outBD = GetInputFileBD(nextOp);
+            }
+
+            const auto type = op->getType();
+
+            if (type != OpData::NoOpType)
+            {
+                op->validate();
+                ++numSavedOps;
+            }
+
+            switch (type)
+            {
+            case OpData::CDLType:
+            {
+                auto cdl = OCIO_DYNAMIC_POINTER_CAST<const CDLOpData>(op);
+                CDLWriter opWriter(m_formatter, cdl);
+                opWriter.setInputBitdepth(inBD);
+                opWriter.setOutputBitdepth(outBD);
+                opWriter.write();
+                break;
+            }
+            case OpData::ExponentType:
+            {
+                if (m_isCLF)
+                {
+                    ThrowWriteOp("Exponent");
+                }
+                auto exp = OCIO_DYNAMIC_POINTER_CAST<const ExponentOpData>(op);
+
+                GammaOpData::Params paramR{ exp->m_exp4[0] };
+                GammaOpData::Params paramG{ exp->m_exp4[1] };
+                GammaOpData::Params paramB{ exp->m_exp4[2] };
+                GammaOpData::Params paramA{ exp->m_exp4[3] };
+
+                GammaOpDataRcPtr gammaData
+                    = std::make_shared<GammaOpData>(BIT_DEPTH_F32, BIT_DEPTH_F32,
+                        exp->getFormatMetadata(),
+                        GammaOpData::BASIC_FWD,
+                        paramR, paramG, paramB, paramA);
+
+                GammaWriter opWriter(m_formatter, gammaData);
+                opWriter.setInputBitdepth(inBD);
+                opWriter.setOutputBitdepth(outBD);
+                opWriter.write();
+                break;
+            }
+            case OpData::ExposureContrastType:
+            {
+                if (m_isCLF)
+                {
+                    ThrowWriteOp("ExposureContrast");
+                }
+
+                auto ec = OCIO_DYNAMIC_POINTER_CAST<const ExposureContrastOpData>(op);
+                ExposureContrastWriter opWriter(m_formatter, ec);
+                opWriter.setInputBitdepth(inBD);
+                opWriter.setOutputBitdepth(outBD);
+                opWriter.write();
+                break;
+            }
+            case OpData::FixedFunctionType:
+            {
+                if (m_isCLF)
+                {
+                    ThrowWriteOp("FixedFunction");
+                }
+
+                auto ff = OCIO_DYNAMIC_POINTER_CAST<const FixedFunctionOpData>(op);
+                FixedFunctionWriter opWriter(m_formatter, ff);
+                opWriter.setInputBitdepth(inBD);
+                opWriter.setOutputBitdepth(outBD);
+                opWriter.write();
+                break;
+            }
+            case OpData::GammaType:
+            {
+                if (m_isCLF)
+                {
+                    ThrowWriteOp("Gamma");
+                }
+
+                auto gamma = OCIO_DYNAMIC_POINTER_CAST<const GammaOpData>(op);
+                GammaWriter opWriter(m_formatter, gamma);
+                opWriter.setInputBitdepth(inBD);
+                opWriter.setOutputBitdepth(outBD);
+                opWriter.write();
+                break;
+            }
+            case OpData::LogType:
+            {
+                if (m_isCLF)
+                {
+                    ThrowWriteOp("Log");
+                }
+
+                auto log = OCIO_DYNAMIC_POINTER_CAST<const LogOpData>(op);
+                LogWriter opWriter(m_formatter, log);
+                opWriter.setInputBitdepth(inBD);
+                opWriter.setOutputBitdepth(outBD);
+                opWriter.write();
+                break;
+            }
+            case OpData::Lut1DType:
+            {
+                auto lut = OCIO_DYNAMIC_POINTER_CAST<const Lut1DOpData>(op);
+                if (m_isCLF)
+                {
+                    if (lut->getDirection() != TRANSFORM_DIR_FORWARD)
+                    {
+                        ThrowWriteOp("InverseLUT1D");
+                    }
+                }
+                // Avoid copying LUT, write will take bit-depth into account.
+                Lut1DWriter opWriter(m_formatter, lut);
+
+                outBD = GetValidatedFileBitDepth(lut->getFileOutputBitDepth(), type);
+                opWriter.setInputBitdepth(inBD);
+                opWriter.setOutputBitdepth(outBD);
+
+                opWriter.write();
+                break;
+            }
+            case OpData::Lut3DType:
+            {
+                auto lut = OCIO_DYNAMIC_POINTER_CAST<const Lut3DOpData>(op);
+                if (m_isCLF)
+                {
+                    if (lut->getDirection() != TRANSFORM_DIR_FORWARD)
+                    {
+                        ThrowWriteOp("InverseLUT3D");
+                    }
+                }
+                // Avoid copying LUT, write will take bit-depth into account.
+                Lut3DWriter opWriter(m_formatter, lut);
+
+                outBD = GetValidatedFileBitDepth(lut->getFileOutputBitDepth(), type);
+                opWriter.setInputBitdepth(inBD);
+                opWriter.setOutputBitdepth(outBD);
+
+                opWriter.write();
+                break;
+            }
+            case OpData::MatrixType:
+            {
+                auto matSrc = OCIO_DYNAMIC_POINTER_CAST<const MatrixOpData>(op);
+
+                if (m_isCLF)
+                {
+                    if (matSrc->hasAlpha())
+                    {
+                        std::ostringstream oss;
+                        oss << "Transform uses a Matrix op that has an alpha "
+                               "component, so it cannot be written as CLF.  "
+                               "Use CTF format for this transform.";
+                        throw Exception(oss.str().c_str());
+                    }
+                }
+
+                auto mat = matSrc->clone();
+
+                outBD = GetValidatedFileBitDepth(mat->getFileOutputBitDepth(), type);
+                // inBD has already been set at previous iteration.
+                // inBD can be:
+                // - This op input file bit-depth if previous op
+                //   does not define an output file bit-depth.
+                // - Previous op output file bit-depth if previous op
+                //   is a LUT, a Matrix or a Range.
+
+                mat->setInputBitDepth(inBD);
+                mat->setOutputBitDepth(outBD);
+                MatrixWriter opWriter(m_formatter, mat);
+                opWriter.setInputBitdepth(inBD);
+                opWriter.setOutputBitdepth(outBD);
+
+                opWriter.write();
+                break;
+            }
+            case OpData::RangeType:
+            {
+                auto rangeSrc = OCIO_DYNAMIC_POINTER_CAST<const RangeOpData>(op);
+                auto range = rangeSrc->clone();
+
+                outBD = GetValidatedFileBitDepth(range->getFileOutputBitDepth(), type);
+                // inBD has already been set at previous iteration.
+
+                range->setInputBitDepth(inBD);
+                range->setOutputBitDepth(outBD);
+                RangeWriter opWriter(m_formatter, range);
+                opWriter.setInputBitdepth(inBD);
+                opWriter.setOutputBitdepth(outBD);
+
+                opWriter.write();
+                break;
+            }
+            case OpData::ReferenceType:
+            {
+                throw Exception("Reference ops should have been replaced by their content.");
+                break;
+            }
+            case OpData::NoOpType:
+            {
+                break;
+            }
+            }
+
+            // For next op.
+            inBD = outBD;
+            outBD = BIT_DEPTH_F32;
+        }
+    }
+    if (numSavedOps == 0)
     {
-        static_assert(OpData::NoOpType == 11, "Add new types");
+        // When there are no ops, save an identity matrix.
+        auto mat = std::make_shared<MatrixOpData>();
 
-        auto & op = ops[i];
+        MatrixWriter opWriter(m_formatter, mat);
+        opWriter.setInputBitdepth(BIT_DEPTH_F32);
+        opWriter.setOutputBitdepth(BIT_DEPTH_F32);
 
-        if (i + 1 < numOps)
-        {
-            auto & nextOp = ops[i + 1];
-            // Return file input bit-depth for Matrix & Range, F32 for others.
-            outBD = GetInputFileBD(nextOp);
-        }
-
-        const auto type = op->getType();
-        switch (type)
-        {
-        case OpData::CDLType:
-        {
-            auto cdl = OCIO_DYNAMIC_POINTER_CAST<const CDLOpData>(op);
-            CDLWriter opWriter(m_formatter, cdl);
-            opWriter.setInputBitdepth(inBD);
-            opWriter.setOutputBitdepth(outBD);
-            opWriter.write();
-            break;
-        }
-        case OpData::ExponentType:
-        {
-            if (m_isCLF)
-            {
-                ThrowWriteOp("Exponent");
-            }
-            auto exp = OCIO_DYNAMIC_POINTER_CAST<const ExponentOpData>(op);
-
-            GammaOpData::Params paramR{ exp->m_exp4[0] };
-            GammaOpData::Params paramG{ exp->m_exp4[1] };
-            GammaOpData::Params paramB{ exp->m_exp4[2] };
-            GammaOpData::Params paramA{ exp->m_exp4[3] };
-
-            GammaOpDataRcPtr gammaData
-                = std::make_shared<GammaOpData>(BIT_DEPTH_F32, BIT_DEPTH_F32,
-                                                exp->getFormatMetadata(),
-                                                GammaOpData::BASIC_FWD,
-                                                paramR, paramG, paramB, paramA);
-
-            GammaWriter opWriter(m_formatter, gammaData);
-            opWriter.setInputBitdepth(inBD);
-            opWriter.setOutputBitdepth(outBD);
-            opWriter.write();
-            break;
-        }
-        case OpData::ExposureContrastType:
-        {
-            if (m_isCLF)
-            {
-                ThrowWriteOp("ExposureContrast");
-            }
-
-            auto ec = OCIO_DYNAMIC_POINTER_CAST<const ExposureContrastOpData>(op);
-            ExposureContrastWriter opWriter(m_formatter, ec);
-            opWriter.setInputBitdepth(inBD);
-            opWriter.setOutputBitdepth(outBD);
-            opWriter.write();
-            break;
-        }
-        case OpData::FixedFunctionType:
-        {
-            if (m_isCLF) 
-            {
-                ThrowWriteOp("FixedFunction");
-            }
-
-            auto ff = OCIO_DYNAMIC_POINTER_CAST<const FixedFunctionOpData>(op);
-            FixedFunctionWriter opWriter(m_formatter, ff);
-            opWriter.setInputBitdepth(inBD);
-            opWriter.setOutputBitdepth(outBD);
-            opWriter.write();
-            break;
-        }
-        case OpData::GammaType:
-        {
-            if (m_isCLF)
-            {
-                ThrowWriteOp("Gamma");
-            }
-
-            auto gamma = OCIO_DYNAMIC_POINTER_CAST<const GammaOpData>(op);
-            GammaWriter opWriter(m_formatter, gamma);
-            opWriter.setInputBitdepth(inBD);
-            opWriter.setOutputBitdepth(outBD);
-            opWriter.write();
-            break;
-        }
-        case OpData::LogType:
-        {
-            if (m_isCLF) 
-            {
-                ThrowWriteOp("Log");
-            }
-
-            auto log = OCIO_DYNAMIC_POINTER_CAST<const LogOpData>(op);
-            LogWriter opWriter(m_formatter, log);
-            opWriter.setInputBitdepth(inBD);
-            opWriter.setOutputBitdepth(outBD);
-            opWriter.write();
-            break;
-        }
-        case OpData::Lut1DType:
-        {
-            auto lut = OCIO_DYNAMIC_POINTER_CAST<const Lut1DOpData>(op);
-            if (m_isCLF)
-            {
-                if (lut->getDirection() != TRANSFORM_DIR_FORWARD)
-                {
-                    ThrowWriteOp("InverseLUT1D");
-                }
-            }
-            // Avoid copying LUT, write will take bit-depth into account.
-            Lut1DWriter opWriter(m_formatter, lut);
-
-            outBD = GetValidatedFileBitDepth(lut->getFileOutputBitDepth(), type);
-            opWriter.setInputBitdepth(inBD);
-            opWriter.setOutputBitdepth(outBD);
-
-            opWriter.write();
-            break;
-        }
-        case OpData::Lut3DType:
-        {
-            auto lut = OCIO_DYNAMIC_POINTER_CAST<const Lut3DOpData>(op);
-            if (m_isCLF)
-            {
-                if (lut->getDirection() != TRANSFORM_DIR_FORWARD)
-                {
-                    ThrowWriteOp("InverseLUT3D");
-                }
-            }
-            // Avoid copying LUT, write will take bit-depth into account.
-            Lut3DWriter opWriter(m_formatter, lut);
-
-            outBD = GetValidatedFileBitDepth(lut->getFileOutputBitDepth(), type);
-            opWriter.setInputBitdepth(inBD);
-            opWriter.setOutputBitdepth(outBD);
-
-            opWriter.write();
-            break;
-        }
-        case OpData::MatrixType:
-        {
-            auto matSrc = OCIO_DYNAMIC_POINTER_CAST<const MatrixOpData>(op);
-            auto mat = matSrc->clone();
-
-            outBD = GetValidatedFileBitDepth(mat->getFileOutputBitDepth(), type);
-            // inBD has already been set at previous iteration.
-            // inBD can be:
-            // - This op input file bit-depth if previous op
-            //   does not define an output file bit-depth.
-            // - Previous op output file bit-depth if previous op
-            //   is a LUT, a Matrix or a Range.
-
-            mat->setInputBitDepth(inBD);
-            mat->setOutputBitDepth(outBD);
-            MatrixWriter opWriter(m_formatter, mat);
-            opWriter.setInputBitdepth(inBD);
-            opWriter.setOutputBitdepth(outBD);
-
-            opWriter.write();
-            break;
-        }
-        case OpData::RangeType:
-        {
-            auto rangeSrc = OCIO_DYNAMIC_POINTER_CAST<const RangeOpData>(op);
-            auto range = rangeSrc->clone();
-
-            outBD = GetValidatedFileBitDepth(range->getFileOutputBitDepth(), type);
-            // inBD has already been set at previous iteration.
-
-            range->setInputBitDepth(inBD);
-            range->setOutputBitDepth(outBD);
-            RangeWriter opWriter(m_formatter, range);
-            opWriter.setInputBitdepth(inBD);
-            opWriter.setOutputBitdepth(outBD);
-
-            opWriter.write();
-            break;
-        }
-        case OpData::ReferenceType:
-        {
-            throw Exception("Reference ops should have been replaced by their content.");
-            break;
-        }
-        case OpData::NoOpType:
-        {
-            break;
-        }
-        }
-
-        // For next op.
-        inBD = outBD;
-        outBD = BIT_DEPTH_F32;
+        opWriter.write();
     }
+
 }
 
 }
 OCIO_NAMESPACE_EXIT
-
-///////////////////////////////////////////////////////////////////////////////
-
-#ifdef OCIO_UNIT_TEST
-
-namespace OCIO = OCIO_NAMESPACE;
-#include "transforms/FileTransform.h"
-#include "ops/Matrix/MatrixOpData.h"
-#include "UnitTest.h"
-#include "UnitTestUtils.h"
-
-OCIO_ADD_TEST(CTFVersion, read_version)
-{
-    {
-        const OCIO::CTFVersion version1(1, 2, 3);
-        const OCIO::CTFVersion version2(1, 2, 3);
-        OCIO_CHECK_EQUAL(version1, version2);
-        {
-            const OCIO::CTFVersion version3(0, 0, 1);
-            OCIO_CHECK_ASSERT(false == (version1 == version3));
-            OCIO_CHECK_ASSERT(version3 < version1);
-        }
-        {
-            const OCIO::CTFVersion version3(0, 1, 0);
-            OCIO_CHECK_ASSERT(false == (version1 == version3));
-            OCIO_CHECK_ASSERT(version3 < version1);
-        }
-        {
-            const OCIO::CTFVersion version3(1, 0, 0);
-            OCIO_CHECK_ASSERT(false == (version1 == version3));
-            OCIO_CHECK_ASSERT(version3 < version1);
-        }
-        {
-            const OCIO::CTFVersion version3(1, 2, 0);
-            OCIO_CHECK_ASSERT(false == (version1 == version3));
-            OCIO_CHECK_ASSERT(version3 < version1);
-        }
-        {
-            const OCIO::CTFVersion version3(1, 2, 2);
-            OCIO_CHECK_ASSERT(false == (version1 == version3));
-            OCIO_CHECK_ASSERT(version3 < version1);
-        }
-    }
-
-    OCIO::CTFVersion versionRead;
-    {
-        OCIO_CHECK_NO_THROW(OCIO::CTFVersion::ReadVersion("1.2.3", versionRead));
-        const OCIO::CTFVersion version(1, 2, 3);
-        OCIO_CHECK_EQUAL(version, versionRead);
-    }
-    {
-        OCIO_CHECK_NO_THROW(OCIO::CTFVersion::ReadVersion("1.2", versionRead));
-        const OCIO::CTFVersion version(1, 2, 0);
-        OCIO_CHECK_EQUAL(version, versionRead);
-    }
-    {
-        OCIO_CHECK_NO_THROW(OCIO::CTFVersion::ReadVersion("1", versionRead));
-        const OCIO::CTFVersion version(1, 0, 0);
-        OCIO_CHECK_EQUAL(version, versionRead);
-    }
-    {
-        OCIO_CHECK_NO_THROW(OCIO::CTFVersion::ReadVersion("1.10", versionRead));
-        const OCIO::CTFVersion version(1, 10, 0);
-        OCIO_CHECK_EQUAL(version, versionRead);
-    }
-    {
-        OCIO_CHECK_NO_THROW(OCIO::CTFVersion::ReadVersion("1.1.0", versionRead));
-        const OCIO::CTFVersion version(1, 1, 0);
-        OCIO_CHECK_EQUAL(version, versionRead);
-    }
-    {
-        OCIO_CHECK_NO_THROW(OCIO::CTFVersion::ReadVersion("1.01", versionRead));
-        const OCIO::CTFVersion version(1, 1, 0);
-        OCIO_CHECK_EQUAL(version, versionRead);
-    }
-
-    OCIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion("", versionRead),
-                          OCIO::Exception, 
-                          "is not a valid version");
-    OCIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion("1 2", versionRead),
-                          OCIO::Exception, 
-                          "is not a valid version");
-    OCIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion("1-2", versionRead),
-                          OCIO::Exception, 
-                          "is not a valid version");
-    OCIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion("a", versionRead),
-                          OCIO::Exception, 
-                          "is not a valid version");
-    OCIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion("1.", versionRead),
-                          OCIO::Exception, 
-                          "is not a valid version");
-    OCIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion(".2", versionRead),
-                          OCIO::Exception, 
-                          "is not a valid version");
-    OCIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion("1.0 2", versionRead),
-                          OCIO::Exception,
-                          "is not a valid version");
-    OCIO_CHECK_THROW_WHAT(OCIO::CTFVersion::ReadVersion("-1", versionRead),
-                          OCIO::Exception,
-                          "is not a valid version");
-}
-
-OCIO_ADD_TEST(CTFVersion, version_write)
-{
-    {
-        const OCIO::CTFVersion version(1, 2, 3);
-        std::ostringstream ostream;
-        ostream << version;
-        OCIO_CHECK_EQUAL(ostream.str(), "1.2.3");
-    }
-    {
-        const OCIO::CTFVersion version(1, 0, 3);
-        std::ostringstream ostream;
-        ostream << version;
-        OCIO_CHECK_EQUAL(ostream.str(), "1.0.3");
-    }
-    {
-        const OCIO::CTFVersion version(1, 2, 0);
-        std::ostringstream ostream;
-        ostream << version;
-        OCIO_CHECK_EQUAL(ostream.str(), "1.2");
-    }
-    {
-        const OCIO::CTFVersion version(1, 20, 0);
-        std::ostringstream ostream;
-        ostream << version;
-        OCIO_CHECK_EQUAL(ostream.str(), "1.20");
-    }
-    {
-        const OCIO::CTFVersion version(1, 0, 0);
-        std::ostringstream ostream;
-        ostream << version;
-        OCIO_CHECK_EQUAL(ostream.str(), "1");
-    }
-    {
-        const OCIO::CTFVersion version(0, 0, 0);
-        std::ostringstream ostream;
-        ostream << version;
-        OCIO_CHECK_EQUAL(ostream.str(), "0");
-    }
-}
-
-OCIO_ADD_TEST(CTFReaderTransform, accessors)
-{
-    OCIO::CTFReaderTransform t;
-    {
-        const OCIO::CTFReaderTransform & ct = t;
-
-        OCIO::FormatMetadataImpl & info = t.getInfoMetadata();
-        const OCIO::FormatMetadataImpl & cinfo = t.getInfoMetadata();
-
-        OCIO_CHECK_EQUAL(std::string(info.getName()), OCIO::METADATA_INFO);
-        OCIO_CHECK_EQUAL(std::string(cinfo.getName()), OCIO::METADATA_INFO);
-
-        OCIO_CHECK_EQUAL(t.getID(), "");
-        OCIO_CHECK_EQUAL(ct.getID(), "");
-        OCIO_CHECK_EQUAL(t.getName(), "");
-        OCIO_CHECK_EQUAL(ct.getName(), "");
-        OCIO_CHECK_EQUAL(t.getInverseOfId(), "");
-        OCIO_CHECK_EQUAL(ct.getInverseOfId(), "");
-        OCIO_CHECK_EQUAL(t.getInputDescriptor(), "");
-        OCIO_CHECK_EQUAL(ct.getInputDescriptor(), "");
-        OCIO_CHECK_EQUAL(t.getOutputDescriptor(), "");
-        OCIO_CHECK_EQUAL(ct.getOutputDescriptor(), "");
-
-        OCIO_CHECK_ASSERT(t.getOps().empty());
-        OCIO_CHECK_ASSERT(ct.getOps().empty());
-
-        OCIO_CHECK_ASSERT(t.getDescriptions().empty());
-        OCIO_CHECK_ASSERT(ct.getDescriptions().empty());
-    }
-    t.setName("Name");
-    t.setID("123");
-    t.setInverseOfId("654");
-    t.setInputDescriptor("input");
-    t.setOutputDescriptor("output");
-    
-    auto matrixOp = std::make_shared<OCIO::MatrixOpData>();
-    t.getOps().push_back(matrixOp);
-
-    t.getDescriptions().push_back("One");
-    t.getDescriptions().push_back("Two");
-
-    {
-        const OCIO::CTFReaderTransform & ct = t;
-
-        OCIO_CHECK_EQUAL(t.getID(), "123");
-        OCIO_CHECK_EQUAL(ct.getID(), "123");
-        OCIO_CHECK_EQUAL(t.getName(), "Name");
-        OCIO_CHECK_EQUAL(ct.getName(), "Name");
-        OCIO_CHECK_EQUAL(t.getInverseOfId(), "654");
-        OCIO_CHECK_EQUAL(ct.getInverseOfId(), "654");
-        OCIO_CHECK_EQUAL(t.getInputDescriptor(), "input");
-        OCIO_CHECK_EQUAL(ct.getInputDescriptor(), "input");
-        OCIO_CHECK_EQUAL(t.getOutputDescriptor(), "output");
-        OCIO_CHECK_EQUAL(ct.getOutputDescriptor(), "output");
-
-        OCIO_CHECK_EQUAL(t.getOps().size(), 1);
-        OCIO_CHECK_EQUAL(ct.getOps().size(), 1);
-
-        OCIO_CHECK_EQUAL(t.getDescriptions().size(), 2);
-        OCIO_CHECK_EQUAL(ct.getDescriptions().size(), 2);
-        OCIO_CHECK_EQUAL(t.getDescriptions()[0], "One");
-        OCIO_CHECK_EQUAL(ct.getDescriptions()[0], "One");
-        OCIO_CHECK_EQUAL(t.getDescriptions()[1], "Two");
-        OCIO_CHECK_EQUAL(ct.getDescriptions()[1], "Two");
-    }
-}
-
-OCIO_ADD_TEST(CTFReaderTransform, validate_bitdepth_agreement)
-{
-    OCIO::CTFReaderTransform t;
-    auto matrix = std::make_shared<OCIO::MatrixOpData>(OCIO::BIT_DEPTH_UINT10,
-                                                       OCIO::BIT_DEPTH_F32);
-    t.getOps().push_back(matrix);
-
-    matrix = std::make_shared<OCIO::MatrixOpData>(OCIO::BIT_DEPTH_F32,
-                                                  OCIO::BIT_DEPTH_F32);
-
-    t.getOps().push_back(matrix);
-
-    OCIO_CHECK_NO_THROW(t.validate());
-
-    matrix = std::make_shared<OCIO::MatrixOpData>(OCIO::BIT_DEPTH_F16,
-                                                  OCIO::BIT_DEPTH_F32);
-    t.getOps().push_back(matrix);
-
-    OCIO_CHECK_THROW_WHAT(t.validate(), OCIO::Exception,
-                          "Bitdepth missmatch between ops");
-
-    matrix->setInputBitDepth(OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_NO_THROW(t.validate());
-}
-
-#endif
