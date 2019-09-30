@@ -100,7 +100,6 @@ set(SOURCES
 	HashUtils.cpp
 	ImageDesc.cpp
 	ImagePacking.cpp
-	Logging.cpp
 	Look.cpp
 	LookParse.cpp
 	MathUtils.cpp
@@ -178,6 +177,7 @@ set(TESTS
 	fileformats/ctf/CTFTransform_tests.cpp
 	fileformats/FileFormat3DL_tests.cpp
 	fileformats/FileFormatCTF_tests.cpp
+	Logging_tests.cpp
 	Processor_tests.cpp
 	transforms/FileTransform_tests.cpp
 	UnitTest.cpp

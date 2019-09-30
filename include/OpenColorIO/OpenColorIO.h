@@ -134,8 +134,13 @@ OCIO_NAMESPACE_ENTER
     
     //!cpp:function:: Set the global logging level.
     extern OCIOEXPORT void SetLoggingLevel(LoggingLevel level);
-    
-    
+
+    //!cpp:function::
+    // Set the logging function to use; otherwise, use the default (i.e. std::cerr).
+    extern OCIOEXPORT void SetLoggingFunction(LoggingFunction logFunction);
+    extern OCIOEXPORT void ResetToDefaultLoggingFunction();
+
+
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
     // Config

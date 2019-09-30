@@ -1613,6 +1613,7 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
+#include "UnitTestUtils.h"
 
 #include <sys/stat.h>
 #include "pystring/pystring.h"
@@ -2055,7 +2056,6 @@ OCIO_ADD_TEST(Config, sanity_check)
 
 OCIO_ADD_TEST(config, env_check)
 {
-    {
     std::string SIMPLE_PROFILE =
     "ocio_profile_version: 1\n"
     "environment:\n"
@@ -2125,7 +2125,10 @@ OCIO_ADD_TEST(config, env_check)
     edit->addEnvironmentVar("test", "bar${cheese}");
     edit->addEnvironmentVar("cheese", "chedder");
     
-    //Test
+    // As a warning message is expected, please mute it.
+    OCIO::MuteLogging mute;
+
+    // Test
     OCIO::LoggingLevel loglevel = OCIO::GetLoggingLevel();
     OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_DEBUG);
     is.str(SIMPLE_PROFILE2);
@@ -2138,8 +2141,6 @@ OCIO_ADD_TEST(config, env_check)
     OCIO_CHECK_EQUAL(edit->getEnvironmentMode(), OCIO::ENV_ENVIRONMENT_LOAD_PREDEFINED);
     edit->setEnvironmentMode(OCIO::ENV_ENVIRONMENT_LOAD_ALL);
     OCIO_CHECK_EQUAL(edit->getEnvironmentMode(), OCIO::ENV_ENVIRONMENT_LOAD_ALL);
-    
-    }
 }
 
 OCIO_ADD_TEST(Config, role_without_colorspace)
