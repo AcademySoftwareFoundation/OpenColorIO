@@ -14,12 +14,10 @@
 OCIO_NAMESPACE_ENTER
 {
 
-const char CDL_TAG_COLOR_DECISION_LIST[] = "ColorDecisionList";
-const char CDL_TAG_COLOR_CORRECTION_COLLECTION[] = "ColorCorrectionCollection";
-const char CDL_TAG_COLOR_DECISION[] = "ColorDecision";
-const char CDL_TAG_COLOR_CORRECTION[] = "ColorCorrection";
-const char CDL_TAG_INPUT_DESCRIPTION[] = "InputDescription";
-const char CDL_TAG_VIEWING_DESCRIPTION[] = "ViewingDescription";
+static constexpr const char * CDL_TAG_COLOR_DECISION_LIST = "ColorDecisionList";
+static constexpr const char * CDL_TAG_COLOR_CORRECTION_COLLECTION = "ColorCorrectionCollection";
+static constexpr const char * CDL_TAG_COLOR_DECISION = "ColorDecision";
+static constexpr const char * CDL_TAG_COLOR_CORRECTION = "ColorCorrection";
 
 class CDLParser::Impl
 {
@@ -34,8 +32,7 @@ public:
     // Parse a CDL stream.
     void parse(std::istream & istream);
 
-    // Get the CDLTransformList.
-    const CDLTransformVecRcPtr & getCDLTransformList() const;
+    const CDLParsingInfoRcPtr & getCDLParsingInfo() const;
 
     unsigned int getXmlLocation() const;
 
@@ -160,7 +157,7 @@ protected:
 private:
     XML_Parser m_parser;
     XmlReaderElementStack m_elms;
-    CDLTransformVecRcPtr m_transformList;
+    CDLParsingInfoRcPtr m_parsingInfo;
     unsigned int m_lineNumber;
     std::string m_fileName;
     bool m_isCC;
@@ -169,7 +166,6 @@ private:
 
 CDLParser::Impl::Impl(const std::string & fileName)
     : m_parser(XML_ParserCreate(NULL))
-    , m_transformList()
     , m_lineNumber(0)
     , m_fileName(fileName)
     , m_isCC(false)
@@ -287,9 +283,9 @@ void CDLParser::Impl::parse(const std::string & buffer, bool lastLine)
 
 }
 
-const CDLTransformVecRcPtr& CDLParser::Impl::getCDLTransformList() const
+const CDLParsingInfoRcPtr & CDLParser::Impl::getCDLParsingInfo() const
 {
-    return m_transformList;
+    return m_parsingInfo;
 }
 
 bool FindRootElement(const std::string& header, const std::string& tag)
@@ -325,7 +321,7 @@ void CDLParser::Impl::initializeHandlers(const char* buffer)
         m_isCC = true;
 
         // If parsing a CC, initialize the TransformList explicitely.
-        m_transformList = CDLTransformVecRcPtr(new CDLTransformVec);
+        m_parsingInfo = std::make_shared<CDLParsingInfo>();
     }
     else
     {
@@ -343,10 +339,10 @@ void CDLParser::Impl::validateParsing() const
         throwMessage(error);
     }
 
-    const CDLTransformVecRcPtr& pTransformList = getCDLTransformList();
-    for (unsigned int i = 0; i<pTransformList->size(); ++i)
+    const CDLTransformVec& pTransformList = getCDLParsingInfo()->m_transforms;
+    for (size_t i = 0; i<pTransformList.size(); ++i)
     {
-        const CDLTransformRcPtr& pTransform = pTransformList->at(i);
+        const CDLTransformRcPtr& pTransform = pTransformList.at(i);
         if (pTransform.use_count() == 0)
         {
             static const std::string error("CDL parsing error: "
@@ -369,9 +365,9 @@ const std::string& CDLParser::Impl::getXmlFilename() const
 
 void CDLParser::Impl::reset()
 {
-    if (m_transformList)
+    if (m_parsingInfo)
     {
-        m_transformList->clear();
+        m_parsingInfo->m_transforms.clear();
     }
 
     m_elms.clear();
@@ -421,8 +417,8 @@ bool CDLParser::Impl::IsValidDescriptionTag(const std::string& currentId,
 
     const bool isDesc = (0 == strcmp(currId, TAG_DESCRIPTION));
     const bool isInputViewingDesc =
-        (0 == strcmp(currId, CDL_TAG_INPUT_DESCRIPTION)) ||
-        (0 == strcmp(currId, CDL_TAG_VIEWING_DESCRIPTION));
+        (0 == strcmp(currId, METADATA_INPUT_DESCRIPTION)) ||
+        (0 == strcmp(currId, METADATA_VIEWING_DESCRIPTION));
     const bool isSOPSat = (0 == strcmp(parId, TAG_SOPNODE)) ||
                           (0 == strcmp(parId, TAG_SATNODE)) ||
                           (0 == strcmp(parId, TAG_SATNODEALT));
@@ -510,7 +506,7 @@ bool CDLParser::Impl::HandleColorDecisionListStartElement(CDLParser::Impl* pImpl
     if ((0 == strcmp(name, CDL_TAG_COLOR_DECISION_LIST)))
     {
         ElementRcPtr pElt;
-        if (!pImpl->m_transformList || pImpl->m_transformList->size() == 0)
+        if (!pImpl->m_parsingInfo || pImpl->m_parsingInfo->m_transforms.empty())
         {
             pElt = std::make_shared<CDLReaderColorDecisionListElt>(
                 name,
@@ -521,7 +517,7 @@ bool CDLParser::Impl::HandleColorDecisionListStartElement(CDLParser::Impl* pImpl
             // ColorDecisionList element.
             CDLReaderColorDecisionListElt* pCDLElt =
                 dynamic_cast<CDLReaderColorDecisionListElt*>(pElt.get());
-            pImpl->m_transformList = pCDLElt->getCDLTransformList();
+            pImpl->m_parsingInfo = pCDLElt->getCDLParsingInfo();
         }
         else
         {
@@ -565,7 +561,7 @@ bool CDLParser::Impl::HandleColorCorrectionCollectionStartElement(
     if ((0 == strcmp(name, CDL_TAG_COLOR_CORRECTION_COLLECTION)))
     {
         ElementRcPtr pElt;
-        if (!pImpl->m_transformList || pImpl->m_transformList->size() == 0)
+        if (!pImpl->m_parsingInfo || pImpl->m_parsingInfo->m_transforms.empty())
         {
             pElt = std::make_shared<CDLReaderColorCorrectionCollectionElt>(
                 name, pImpl->getXmlLocation(), pImpl->getXmlFilename());
@@ -574,7 +570,7 @@ bool CDLParser::Impl::HandleColorCorrectionCollectionStartElement(
             // ColorCorrectionCollection element.
             CDLReaderColorCorrectionCollectionElt* pCCCElt =
                 dynamic_cast<CDLReaderColorCorrectionCollectionElt*>(pElt.get());
-            pImpl->m_transformList = pCCCElt->getCDLTransformList();
+            pImpl->m_parsingInfo = pCCCElt->getCDLParsingInfo();
         }
         else
         {
@@ -611,7 +607,7 @@ bool CDLParser::Impl::HandleColorCorrectionCDLStartElement(CDLParser::Impl* pImp
             CDLReaderColorDecisionListElt* pCDLElt =
                 dynamic_cast<CDLReaderColorDecisionListElt*>(pCDElt->getParent().get());
 
-            pCCElt->setCDLTransformList(pCDLElt->getCDLTransformList());
+            pCCElt->setCDLParsingInfo(pCDLElt->getCDLParsingInfo());
         }
         else
         {
@@ -647,7 +643,7 @@ bool CDLParser::Impl::HandleColorCorrectionCCCStartElement(CDLParser::Impl* pImp
             CDLReaderColorCorrectionCollectionElt* pCCCElt =
                 dynamic_cast<CDLReaderColorCorrectionCollectionElt*>(pCCElt->getParent().get());
 
-            pCCElt->setCDLTransformList(pCCCElt->getCDLTransformList());
+            pCCElt->setCDLParsingInfo(pCCCElt->getCDLParsingInfo());
         }
         else
         {
@@ -673,8 +669,8 @@ bool CDLParser::Impl::HandleColorCorrectionCCStartElement(
         ElementRcPtr pElt;
 
         // If parsing a CC, make sure it is the only CDLTransform.
-        if ((!pImpl->m_transformList ||
-             pImpl->m_transformList->size() == 0))
+        if (!pImpl->m_parsingInfo ||
+            pImpl->m_parsingInfo->m_transforms.empty())
         {
             pElt = pImpl->createElement<CDLReaderColorCorrectionElt>(name);
 
@@ -683,7 +679,7 @@ bool CDLParser::Impl::HandleColorCorrectionCCStartElement(
             CDLReaderColorCorrectionElt* pCCElt =
                 dynamic_cast<CDLReaderColorCorrectionElt*>(pElt.get());
 
-            pCCElt->setCDLTransformList(pImpl->getCDLTransformList());
+            pCCElt->setCDLParsingInfo(pImpl->getCDLParsingInfo());
         }
         else
         {
@@ -975,15 +971,16 @@ void CDLParser::parse(std::istream & istream) const
 }
 
 void CDLParser::getCDLTransforms(CDLTransformMap & transformMap,
-                                 CDLTransformVec & transformVec) const
+                                 CDLTransformVec & transformVec,
+                                 FormatMetadataImpl & metadata) const
 {
-    const CDLTransformVecRcPtr& pTransformList = m_impl->getCDLTransformList();
-    for (unsigned int i = 0; i < pTransformList->size(); ++i)
+    const CDLTransformVec& pTransformList = m_impl->getCDLParsingInfo()->m_transforms;
+    for (size_t i = 0; i < pTransformList.size(); ++i)
     {
-        const CDLTransformRcPtr& pTransform = pTransformList->at(i);
+        const CDLTransformRcPtr& pTransform = pTransformList.at(i);
         transformVec.push_back(pTransform);
 
-        std::string id = pTransform->getID();
+        const std::string id = pTransform->getID();
         if (!id.empty())
         {
             CDLTransformMap::iterator iter = transformMap.find(id);
@@ -999,16 +996,17 @@ void CDLParser::getCDLTransforms(CDLTransformMap & transformMap,
             transformMap[id] = pTransform;
         }
     }
+    metadata = m_impl->getCDLParsingInfo()->m_metadata;
 }
 
 void CDLParser::getCDLTransform(CDLTransformRcPtr & transform) const
 {
-    const CDLTransformVecRcPtr& pTransformList = m_impl->getCDLTransformList();
-    if (pTransformList->size() < 1)
+    const CDLTransformVec& pTransformList = m_impl->getCDLParsingInfo()->m_transforms;
+    if (pTransformList.empty())
     {
         throw Exception("No transform found.");
     }
-    transform = pTransformList->at(0);
+    transform = pTransformList.at(0);
 }
 
 bool CDLParser::isCC() const

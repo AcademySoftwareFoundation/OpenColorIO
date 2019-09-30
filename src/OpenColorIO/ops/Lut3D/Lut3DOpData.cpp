@@ -370,6 +370,36 @@ void Lut3DOpData::setInversionQuality(LutInversionQuality style)
     m_invQuality = style;
 }
 
+void Lut3DOpData::setArrayFromRedFastestOrder(const std::vector<float> & lut)
+{
+    Array & lutArray = getArray();
+    const auto lutSize = lutArray.getLength();
+
+    if (lutSize * lutSize * lutSize * 3 != lut.size())
+    {
+        throw Exception("Lut3DOpData length does not match the vector size.");
+    }
+
+    for (unsigned long b = 0; b < lutSize; ++b)
+    {
+        for (unsigned long g = 0; g < lutSize; ++g)
+        {
+            for (unsigned long r = 0; r < lutSize; ++r)
+            {
+                // Lut3DOpData Array index. Blue changes fastest.
+                const unsigned long blueFastIdx = 3 * ((r*lutSize + g)*lutSize + b);
+
+                // Float array index. Red changes fastest.
+                const unsigned long redFastIdx = 3 * ((b*lutSize + g)*lutSize + r);
+
+                lutArray[blueFastIdx + 0] = lut[redFastIdx + 0];
+                lutArray[blueFastIdx + 1] = lut[redFastIdx + 1];
+                lutArray[blueFastIdx + 2] = lut[redFastIdx + 2];
+            }
+        }
+    }
+}
+
 namespace
 {
 bool IsValid(const Interpolation & interpolation)

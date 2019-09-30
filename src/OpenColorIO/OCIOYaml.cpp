@@ -2130,13 +2130,13 @@ OCIO_NAMESPACE_ENTER
 
                 if(results.size()==1)
                 {
-                    profile_major_version = atoi(results[0].c_str());
+                    profile_major_version = std::stoi(results[0].c_str());
                     profile_minor_version = 0;
                 }
                 else if(results.size()==2)
                 {
-                    profile_major_version = atoi(results[0].c_str());
-                    profile_minor_version = atoi(results[1].c_str());
+                    profile_major_version = std::stoi(results[0].c_str());
+                    profile_minor_version = std::stoi(results[1].c_str());
                 }
                 else
                 {
