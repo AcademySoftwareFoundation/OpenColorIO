@@ -68,4 +68,4 @@ private:
 OCIO_NAMESPACE_EXIT
 
 
-#endif
+#endif // INCLUDED_OCIO_CPUPROCESSOR_H
