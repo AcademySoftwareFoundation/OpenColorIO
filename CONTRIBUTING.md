@@ -4,7 +4,26 @@
 # Contributing to OpenColorIO
 
 Thank you for your interest in contributing to OpenColorIO. This document
-explains our contribution process and procedures, so please review it first.
+explains our contribution process and procedures, so please review it first:
+
+* [Get Connected](#Get-Connected)
+* [Legal Requirements](#Legal-Requirements)
+* [Getting Started](#Getting-Started)
+* [Repository Structure](#Repository-Structure)
+* [Development and Pull Requests](#Development-and-Pull-Requests)
+* [Required Approvals](#Required-Approvals)
+* [Coding Standards](#Coding-Standards)
+* [Test Policy](#Test-Policy)
+* [Versioning Policy](#Versioning-Policy)
+* [Creating a Release](#Creating-a-Release)
+
+For a description of the roles and responsibilities of the various
+members of the OpenColorIO community, see [GOVERNANCE](GOVERNANCE.md), and
+for further details, see the project's
+[Technical Charter](docs/aswf/Charter.md). Briefly, Contributors are anyone
+who submits content to the project, Committers review and approve such
+submissions, and the Technical Steering Committee provides general project
+oversight.
 
 ## Get Connected
 
@@ -32,13 +51,64 @@ real-time communication around OCIO. The group is invitation only, but just
 email us and we'll add anyone who is interested in participating in the
 discussion.
 
-* [GitHub Issues](https://github.com/imageworks/OpenColorIO/issues):
+* [GitHub Issues](https://github.com/AcademySoftwareFoundation/OpenColorIO/issues):
 GitHub **issues** are a great place to start a conversation! Issues aren’t
 restricted to bugs; we happily welcome feature requests and other suggestions
 submitted as issues. The only conversations we would direct away from issues are
 questions in the form of “How do I do X”. Please direct these to the ocio-dev or
 ocio-user mail lists, and consider contributing what you've learned to our
 docs if appropriate!
+
+## Legal Requirements
+
+OpenColorIO is a project of the Academy Software Foundation and follows the
+open source software best practice policies of the Linux Foundation.
+
+### License
+
+OpenColorIO is licensed under the [BSD-3-Clause](LICENSE.md)
+license. Contributions to the library should abide by that standard
+license.
+
+### Contributor License Agreements
+
+Developers who wish to contribute code to be considered for inclusion
+in OpenColorIO must first complete a **Contributor License Agreement**.
+
+OCIO uses EasyCLA for managing CLAs, which automatically checks to ensure CLAs
+are signed by a contributor before a commit can be merged.
+
+* If you are an individual writing the code on your own time and
+  you're SURE you are the sole owner of any intellectual property you
+  contribute, you can 
+  [sign the CLA as an individual contributor](https://github.com/communitybridge/easycla/blob/master/docs/Sign-a-CLA-as-an-Individual-Contributor-to-GitHub.md).
+
+* If you are writing the code as part of your job, or if there is any
+  possibility that your employers might think they own any
+  intellectual property you create, then you should use the 
+  [Corporate Contributor Licence Agreement](https://github.com/communitybridge/easycla/blob/master/docs/Contribute-to-a-GitHub-Company-Project.md).
+
+The OCIO CLA's are the standard forms used by Linux Foundation
+projects and
+[recommended by the ASWF TAC](https://github.com/AcademySoftwareFoundation/tac/blob/master/process/contributing.md#contributor-license-agreement-cla).
+
+### Commit Sign-Off
+
+Every commit must be signed off. That is, every commit log message must include
+a “`Signed-off-by`” line (generated, for example, with
+“`git commit --signoff`”), indicating that the committer wrote the code and has
+the right to release it under the
+[Modified-BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
+license. See the
+[ASWF TAC CONTRIBUTING.md](https://github.com/AcademySoftwareFoundation/tac/blob/master/process/contributing.md#contribution-sign-off)
+file for more information on this requirement.
+
+### Copyright Notices
+
+All new source files should begin with a copyright and license stating:
+
+    // SPDX-License-Identifier: BSD-3-Clause
+    // Copyright Contributors to the OpenColorIO Project.
 
 ## Getting Started
 
@@ -188,3 +258,45 @@ for a reference on project code style and best practices.
 
 For standards on contributing to documentation, see the
 [Documentation guidelines](http://opencolorio.org/developers/documentation_guidelines.html).
+
+## Test Policy
+
+All functionality in OpenColorIO must be covered by an automated test. Tests
+should be implemented in a separate source file under the ``tests`` project
+in an appropriate subdirectory. This test suite is collectively expected to
+validate the behavior of every part of the OCIO:
+
+* Any new functionality should be accompanied by a test that validates
+  its behavior.
+
+* Any change to existing functionality should have tests added if they
+  don't already exist.
+
+The test should should be run, via ``ctest``, before submitting a pull request.
+
+## Versioning Policy
+
+OpenColorIO uses [semantic versioning](https://semver.org), which labels each
+version with three numbers: Major.Minor.Patch, where:
+
+* **MAJOR** indicates incompatible API changes
+* **MINOR** indicates functionality added in a backwards-compatible manner
+* **PATCH** indicates backwards-compatible bug fixes
+
+## Creating a Release
+
+To create a new release from the master branch:
+
+1. Update the release notes in ``CHANGELOG.md`` with a high-level summary of
+   the features and improvements. Also include the summary in the Release
+   comments.
+
+2. Create a new release on the GitHub Releases page.
+
+3. Tag the release with name beginning with '``v``', e.g. '``v2.1.0``'.
+
+4. Download and sign the release tarball, as described
+   [here](https://wiki.debian.org/Creating%20signed%20GitHub%20releases),
+
+5. Attach the detached ``.asc`` signature file to the GitHub release as a
+   binary file.

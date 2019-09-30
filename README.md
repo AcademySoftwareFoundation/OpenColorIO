@@ -91,7 +91,7 @@ authored the majority of OCIO 2.0 code in the years since.
 
 Significant contributions have also been made by Industrial Light & Magic,
 DNEG, and many individuals. See
-[Contributors](https://github.com/imageworks/OpenColorIO/graphs/contributors)
+[Contributors](https://github.com/AcademySoftwareFoundation/OpenColorIO/graphs/contributors)
 for a complete list.
 
 See [LICENSE-THIRD-PARTY.md](LICENSE-THIRD-PARTY.md) for license information
