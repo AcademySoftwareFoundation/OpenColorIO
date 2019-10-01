@@ -61,8 +61,9 @@ docs if appropriate!
 
 ## Legal Requirements
 
-OpenColorIO is a project hosted by the Academy Software Foundation (ASWF) and follows the
-open source software best practice policies of the ASWF TAC with the guideance from the Linux Foundation.
+OpenColorIO is a project hosted by the Academy Software Foundation (ASWF) and
+follows the open source software best practice policies of the ASWF TAC with the
+guidance from the Linux Foundation.
 
 ### License
 
@@ -73,10 +74,12 @@ license unless otherwised approved by the OCIO TSC and ASWF Governing Board.
 ### Contributor License Agreements
 
 Developers who wish to contribute code to be considered for inclusion
-in OpenColorIO (OCIO) must first complete a **Contributor License Agreement (CLA)**.
+in OpenColorIO (OCIO) must first complete a **Contributor License Agreement
+(CLA)**.
 
-OCIO uses [EasyCLA](https://corporate.lfcla.com/) for managing CLAs, which automatically checks to ensure CLAs
-are signed by a contributor before a commit can be merged.
+OCIO uses [EasyCLA](https://corporate.lfcla.com/) for managing CLAs, which
+automatically checks to ensure CLAs are signed by a contributor before a commit
+can be merged.
 
 * If you are an individual writing the code on your own time and
   you're SURE you are the sole owner of any intellectual property you
