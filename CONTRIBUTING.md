@@ -80,7 +80,7 @@ are signed by a contributor before a commit can be merged.
 
 * If you are an individual writing the code on your own time and
   you're SURE you are the sole owner of any intellectual property you
-  contribute, you can 
+  contribute, you can
   [sign the CLA as an individual contributor](https://github.com/communitybridge/easycla/blob/master/docs/Sign-a-CLA-as-an-Individual-Contributor-to-GitHub.md).
 
 * If you are writing the code as part of your job, or if there is any
@@ -96,10 +96,22 @@ projects and
 
 Every commit must be signed off. That is, every commit log message must include
 a “`Signed-off-by`” line (generated, for example, with
-“`git commit --signoff`”), indicating that the committer wrote the code and has
-the right to release it under the
+“`git commit --signoff`” or "`git commit -s`"), indicating that the committer
+wrote the code and has the right to release it under the
 [Modified-BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
-license. See the
+license.
+
+Here is an example Signed-off-by line, which indicates that the submitter
+accepts the DCO:
+
+`Signed-off-by: John Doe <john.doe@example.com>`
+
+If John Doe has signed an individual CLA, or his corporation's CLA Manager
+has included his GitHub account in a corporate CLA whitelist, his pull request
+can be merged. Otherwise the EasyCLA system will provide instructions on
+signing a CLA, or request inclusion in an existing corporate CLA whitelist.
+
+See the
 [ASWF TAC CONTRIBUTING.md](https://github.com/AcademySoftwareFoundation/tac/blob/master/process/contributing.md#contribution-sign-off)
 file for more information on this requirement.
 
@@ -262,9 +274,10 @@ For standards on contributing to documentation, see the
 ## Test Policy
 
 All functionality in OpenColorIO must be covered by an automated test. Tests
-should be implemented in a separate source file under the ``tests`` project
-in an appropriate subdirectory. This test suite is collectively expected to
-validate the behavior of every part of the OCIO:
+should be implemented in a separate but clearly associated source file under
+the `tests` subdirectory (e.g. tests for `src/OpenColorIO/Context.cpp` are
+located in `tests/cpu/Context_tests.cpp`). This test suite is collectively
+expected to validate the behavior of every part of OCIO:
 
 * Any new functionality should be accompanied by a test that validates
   its behavior.
