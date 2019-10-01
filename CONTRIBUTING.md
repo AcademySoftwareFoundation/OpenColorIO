@@ -61,21 +61,21 @@ docs if appropriate!
 
 ## Legal Requirements
 
-OpenColorIO is a project of the Academy Software Foundation and follows the
-open source software best practice policies of the Linux Foundation.
+OpenColorIO is a project hosted by the Academy Software Foundation (ASWF) and follows the
+open source software best practice policies of the ASWF TAC with the guideance from the Linux Foundation.
 
 ### License
 
 OpenColorIO is licensed under the [BSD-3-Clause](LICENSE.md)
-license. Contributions to the library should abide by that standard
-license.
+license. Contributions to the library should abide by that 
+license unless otherwised approved by the OCIO TSC and ASWF Governing Board.
 
 ### Contributor License Agreements
 
 Developers who wish to contribute code to be considered for inclusion
-in OpenColorIO must first complete a **Contributor License Agreement**.
+in OpenColorIO (OCIO) must first complete a **Contributor License Agreement (CLA)**.
 
-OCIO uses EasyCLA for managing CLAs, which automatically checks to ensure CLAs
+OCIO uses [EasyCLA](https://corporate.lfcla.com/) for managing CLAs, which automatically checks to ensure CLAs
 are signed by a contributor before a commit can be merged.
 
 * If you are an individual writing the code on your own time and
@@ -88,8 +88,7 @@ are signed by a contributor before a commit can be merged.
   intellectual property you create, then you should use the 
   [Corporate Contributor Licence Agreement](https://github.com/communitybridge/easycla/blob/master/docs/Contribute-to-a-GitHub-Company-Project.md).
 
-The OCIO CLA's are the standard forms used by Linux Foundation
-projects and
+The OCIO CLA's are the standard forms used by Linux Foundation projects and
 [recommended by the ASWF TAC](https://github.com/AcademySoftwareFoundation/tac/blob/master/process/contributing.md#contributor-license-agreement-cla).
 
 ### Commit Sign-Off
