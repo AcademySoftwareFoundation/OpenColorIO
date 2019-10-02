@@ -1,4 +1,4 @@
-See [LICENSE.md](LICENSE.md) for the main open source license of original
+See [LICENSE](LICENSE) for the main open source license of original
 code written for the OpenColorIO project.
 
 The remainder of this file reproduces the open source licensing details
