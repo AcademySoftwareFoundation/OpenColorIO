@@ -34,7 +34,7 @@ natively supported in commercial applications like Katana, Mari, Nuke, Maya,
 Houdini, Silhouette FX, and
 [others](https://opencolorio.org/CompatibleSoftware.html).
 
-OpenColorIO is free and open source software ([LICENSE.md](LICENSE.md)), and
+OpenColorIO is free and open source software ([LICENSE](LICENSE)), and
 one of several projects actvively sponsored by the ASWF
 ([Academy Software Foundation](https://www.aswf.io/)).
 
@@ -91,10 +91,10 @@ authored the majority of OCIO 2.0 code in the years since.
 
 Significant contributions have also been made by Industrial Light & Magic,
 DNEG, and many individuals. See
-[Contributors](https://github.com/imageworks/OpenColorIO/graphs/contributors)
+[Contributors](https://github.com/AcademySoftwareFoundation/OpenColorIO/graphs/contributors)
 for a complete list.
 
-See [LICENSE-THIRD-PARTY.md](LICENSE-THIRD-PARTY.md) for license information
+See [THIRD-PARTY.md](THIRD-PARTY.md) for license information
 about portions of OpenColorIO that have been imported from other projects.
 
 ---
