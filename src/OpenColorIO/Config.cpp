@@ -48,7 +48,7 @@ OCIO_NAMESPACE_ENTER
         const float DEFAULT_LUMA_COEFF_B = 0.0722f;
         
         const char * INTERNAL_RAW_PROFILE = 
-        "ocio_profile_version: 1\n"
+        "ocio_profile_version: 2\n"
         "strictparsing: false\n"
         "roles:\n"
         "  default: raw\n"
@@ -330,7 +330,17 @@ OCIO_NAMESPACE_ENTER
     {
         delete c;
     }
-    
+
+    ConstConfigRcPtr Config::CreateRaw()
+    {
+        std::istringstream istream;
+        istream.str(INTERNAL_RAW_PROFILE);
+        
+        ConfigRcPtr config = Config::Create();
+        config->getImpl()->io_.open(istream, config);
+        return config;
+    }
+
     ConstConfigRcPtr Config::CreateFromEnv()
     {
         std::string file;
@@ -341,13 +351,8 @@ OCIO_NAMESPACE_ENTER
         os << "Color management disabled. ";
         os << "(Specify the $OCIO environment variable to enable.)";
         LogInfo(os.str());
-        
-        std::istringstream istream;
-        istream.str(INTERNAL_RAW_PROFILE);
-        
-        ConfigRcPtr config = Config::Create();
-        config->getImpl()->io_.open(istream, config);
-        return config;
+
+        return CreateRaw();
     }
     
     ConstConfigRcPtr Config::CreateFromFile(const char * filename)
@@ -1689,81 +1694,94 @@ OCIO_ADD_TEST(Config, internal_raw_profile)
 {
     std::istringstream is;
     is.str(OCIO::INTERNAL_RAW_PROFILE);
+
     OCIO_CHECK_NO_THROW(OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromStream(is));
+}
+
+OCIO_ADD_TEST(Config, create_raw_config)
+{
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateRaw());
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 1);
+    OCIO_CHECK_EQUAL(std::string(config->getColorSpaceNameByIndex(0)), std::string("raw"));
+
+    OCIO::ConstProcessorRcPtr proc;
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor("raw", "raw"));
+    OCIO_CHECK_NO_THROW(proc->getDefaultCPUProcessor());
 }
 
 OCIO_ADD_TEST(Config, simple_config)
 {
     
-    std::string SIMPLE_PROFILE =
-    "ocio_profile_version: 1\n"
-    "resource_path: luts\n"
-    "strictparsing: false\n"
-    "luma: [0.2126, 0.7152, 0.0722]\n"
-    "roles:\n"
-    "  compositing_log: lgh\n"
-    "  default: raw\n"
-    "  scene_linear: lnh\n"
-    "displays:\n"
-    "  sRGB:\n"
-    "  - !<View> {name: Film1D, colorspace: vd8}\n"
-    "  - !<View> {name: Log, colorspace: lg10}\n"
-    "  - !<View> {name: Raw, colorspace: raw}\n"
-    "colorspaces:\n"
-    "  - !<ColorSpace>\n"
-    "      name: raw\n"
-    "      family: raw\n"
-    "      equalitygroup: \n"
-    "      bitdepth: 32f\n"
-    "      description: |\n"
-    "        A raw color space. Conversions to and from this space are no-ops.\n"
-    "      isdata: true\n"
-    "      allocation: uniform\n"
-    "  - !<ColorSpace>\n"
-    "      name: lnh\n"
-    "      family: ln\n"
-    "      equalitygroup: \n"
-    "      bitdepth: 16f\n"
-    "      description: |\n"
-    "        The show reference space. This is a sensor referred linear\n"
-    "        representation of the scene with primaries that correspond to\n"
-    "        scanned film. 0.18 in this space corresponds to a properly\n"
-    "        exposed 18% grey card.\n"
-    "      isdata: false\n"
-    "      allocation: lg2\n"
-    "  - !<ColorSpace>\n"
-    "      name: loads_of_transforms\n"
-    "      family: vd8\n"
-    "      equalitygroup: \n"
-    "      bitdepth: 8ui\n"
-    "      description: 'how many transforms can we use?'\n"
-    "      isdata: false\n"
-    "      allocation: uniform\n"
-    "      to_reference: !<GroupTransform>\n"
-    "        direction: forward\n"
-    "        children:\n"
-    "          - !<FileTransform>\n"
-    "            src: diffusemult.spimtx\n"
-    "            interpolation: unknown\n"
-    "          - !<ColorSpaceTransform>\n"
-    "            src: vd8\n"
-    "            dst: lnh\n"
-    "          - !<ExponentTransform>\n"
-    "            value: [2.2, 2.2, 2.2, 1]\n"
-    "          - !<MatrixTransform>\n"
-    "            matrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]\n"
-    "            offset: [0, 0, 0, 0]\n"
-    "          - !<CDLTransform>\n"
-    "            slope: [1, 1, 1]\n"
-    "            offset: [0, 0, 0]\n"
-    "            power: [1, 1, 1]\n"
-    "            saturation: 1\n"
-    "\n";
-    
+    constexpr const char SIMPLE_PROFILE[] =
+        "ocio_profile_version: 1\n"
+        "resource_path: luts\n"
+        "strictparsing: false\n"
+        "luma: [0.2126, 0.7152, 0.0722]\n"
+        "roles:\n"
+        "  default: raw\n"
+        "  scene_linear: lnh\n"
+        "displays:\n"
+        "  sRGB:\n"
+        "  - !<View> {name: Film1D, colorspace: loads_of_transforms}\n"
+        "  - !<View> {name: Ln, colorspace: lnh}\n"
+        "  - !<View> {name: Raw, colorspace: raw}\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "      name: raw\n"
+        "      family: raw\n"
+        "      equalitygroup: \n"
+        "      bitdepth: 32f\n"
+        "      description: |\n"
+        "        A raw color space. Conversions to and from this space are no-ops.\n"
+        "      isdata: true\n"
+        "      allocation: uniform\n"
+        "  - !<ColorSpace>\n"
+        "      name: lnh\n"
+        "      family: ln\n"
+        "      equalitygroup: \n"
+        "      bitdepth: 16f\n"
+        "      description: |\n"
+        "        The show reference space. This is a sensor referred linear\n"
+        "        representation of the scene with primaries that correspond to\n"
+        "        scanned film. 0.18 in this space corresponds to a properly\n"
+        "        exposed 18% grey card.\n"
+        "      isdata: false\n"
+        "      allocation: lg2\n"
+        "  - !<ColorSpace>\n"
+        "      name: loads_of_transforms\n"
+        "      family: vd8\n"
+        "      equalitygroup: \n"
+        "      bitdepth: 8ui\n"
+        "      description: 'how many transforms can we use?'\n"
+        "      isdata: false\n"
+        "      allocation: uniform\n"
+        "      to_reference: !<GroupTransform>\n"
+        "        direction: forward\n"
+        "        children:\n"
+        "          - !<FileTransform>\n"
+        "            src: diffusemult.spimtx\n"
+        "            interpolation: unknown\n"
+        "          - !<ColorSpaceTransform>\n"
+        "            src: raw\n"
+        "            dst: lnh\n"
+        "          - !<ExponentTransform>\n"
+        "            value: [2.2, 2.2, 2.2, 1]\n"
+        "          - !<MatrixTransform>\n"
+        "            matrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]\n"
+        "            offset: [0, 0, 0, 0]\n"
+        "          - !<CDLTransform>\n"
+        "            slope: [1, 1, 1]\n"
+        "            offset: [0, 0, 0]\n"
+        "            power: [1, 1, 1]\n"
+        "            saturation: 1\n"
+        "\n";
+
     std::istringstream is;
     is.str(SIMPLE_PROFILE);
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(config->sanityCheck());
 }
 
 OCIO_ADD_TEST(Config, roles)
