@@ -34,7 +34,7 @@ natively supported in commercial applications like Katana, Mari, Nuke, Maya,
 Houdini, Silhouette FX, and
 [others](https://opencolorio.org/CompatibleSoftware.html).
 
-OpenColorIO is free and open source software ([LICENSE.md](LICENSE.md)), and
+OpenColorIO is free and open source software ([LICENSE](LICENSE)), and
 one of several projects actvively sponsored by the ASWF
 ([Academy Software Foundation](https://www.aswf.io/)).
 
