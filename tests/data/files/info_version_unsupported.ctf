@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="1f1a6d04-03a0-47b3-9976-d3ff30d901cc" name="unsupported_version" version="1.3">
+    <Info version="3.0">
+        <Release>2017.0.63</Release>
+        <Category>
+            <Tags>
+                <SceneLinearWorkingSpace />
+                <Maya />
+                <Flame />
+                <Input />
+            </Tags>
+        </Category>
+        <OutputSpace>
+            <ImageState>scene</ImageState>
+            <ShortName>ACES</ShortName>
+            <ID>1</ID>
+        </OutputSpace>
+        <InputSpace>
+            <ImageState>scene</ImageState>
+            <ShortName>ACEScg</ShortName>
+            <ID>387b23d1-f1ce-3f69-8544-e5601f45f78b</ID>
+        </InputSpace>
+        <Copyright>Copyright Contributors to the OpenColorIO Project.</Copyright>
+    </Info>
+    <Description>ACEScg to ACES2065-1</Description>
+    <InputDescriptor>ACEScg</InputDescriptor>
+    <OutputDescriptor>ACES2065-1</OutputDescriptor>
+    <Matrix inBitDepth="16f" outBitDepth="16f">
+        <Array dim="3 3 3">
+ 0.695452241357  0.14067869647   0.163869062172
+ 0.044794563372  0.859671118456  0.095534318172
+-0.005525882558  0.004025210306  1.001500672252
+        </Array>
+    </Matrix>
+</ProcessList>

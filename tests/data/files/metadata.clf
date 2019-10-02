@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="1.3" id="1" name="info metadata example">
+    <Description>Example of Info metadata</Description>
+    <InputDescriptor>inputDesc</InputDescriptor>
+    <OutputDescriptor>outputDesc</OutputDescriptor>
+
+    <Info>
+        <Copyright>Copyright Contributors to the OpenColorIO Project.</Copyright>
+        <Release>2015</Release>
+        <InputColorSpace>
+            <Description>Input color space description</Description>
+            <Profile>Input color space profile</Profile>
+            <Empty/>
+        </InputColorSpace>
+        <OutputColorSpace>
+            <Description>Output color space description</Description>
+            <Profile>Output color space profile</Profile>
+        </OutputColorSpace>
+        <Category>
+            <Name att1="test1" att2="test2">Category name</Name>
+        </Category>
+    </Info>
+
+    <Matrix outBitDepth="12i" name="identity" inBitDepth="32f">
+        <Array dim="4 4 4">
+            4095 0 0 0
+            0 4095 0 0
+            0 0 4095 0
+            0 0 0 4095
+        </Array>
+    </Matrix>
+</ProcessList>

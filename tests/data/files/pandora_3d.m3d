@@ -1,0 +1,13 @@
+channel 3d
+in 8
+out 256
+format lut
+values red green blue
+0 0     0   0
+1 0     0 204
+2 0   204   0
+3 0   204 204
+4 255   0   0
+5 255   0 255
+6 255 255   0
+7 306 255 306

@@ -1,3 +1,7 @@
+..
+  SPDX-License-Identifier: CC-BY-4.0
+  Copyright Contributors to the OpenColorIO Project.
+
 .. _developers-usageexamples:
 
 Usage Examples
@@ -254,20 +258,21 @@ Python
     config = OCIO.GetCurrentConfig()
 
     # Step 2: Lookup the display ColorSpace
-    device = config.getDefaultDisplayDeviceName()
-    transformName = config.getDefaultDisplayTransformName(device)
-    displayColorSpace = config.getDisplayColorSpaceName(device, transformName)
+    display = config.getDefaultDisplay()
+    view = config.getDefaultView(display)
 
-    # Step 3: Create a DisplayTransform, and set the input and display ColorSpaces
+    # Step 3: Create a DisplayTransform, and set the input, display, and view
     # (This example assumes the input is scene linear. Adapt as needed.)
 
     transform = OCIO.DisplayTransform()
     transform.setInputColorSpaceName(OCIO.Constants.ROLE_SCENE_LINEAR)
-    transform.setDisplayColorSpaceName(displayColorSpace)
+    transform.setDisplay(display)
+    transform.setView(view)
 
     # Step 4: Add custom transforms for a 'canonical' Display Pipeline
 
     # Add an fstop exposure control (in SCENE_LINEAR)
+    exposure = 0 # Example data: zero exposure adjustment
     gain = 2**exposure
     slope3f = (gain, gain, gain)
 
@@ -294,6 +299,7 @@ Python
     # And then process the image normally.
     processor = config.getProcessor(transform)
 
+    imageData = [0,0,0, 1,0,0] # Example data: A black and a red pixel
     print processor.applyRGB(imageData)
 
 

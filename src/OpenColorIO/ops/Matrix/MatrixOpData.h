@@ -1,30 +1,5 @@
-/*
-Copyright (c) 2018 Autodesk Inc., et al.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 
 #ifndef INCLUDED_OCIO_MATRIXOPDATA_H
@@ -116,13 +91,13 @@ public:
 public:
 
     MatrixOpData();
+    MatrixOpData(const MatrixOpData &) = default;
         
     MatrixOpData(BitDepth inBitDepth, BitDepth outBitDepth);
 
     MatrixOpData(BitDepth inBitDepth,
                  BitDepth outBitDepth,
-                 const std::string & id,
-                 const Descriptions & descriptions);
+                 const FormatMetadataImpl & info);
 
     virtual ~MatrixOpData();
 
@@ -158,6 +133,11 @@ public:
     }
 
     inline void setRGBAOffsets(const float * offsets)
+    {
+        m_offsets.setRGBA(offsets);
+    }
+
+    inline void setRGBAOffsets(const double * offsets)
     {
         m_offsets.setRGBA(offsets);
     }
@@ -199,18 +179,25 @@ public:
 
     bool hasAlpha() const;
 
-    virtual void setOutputBitDepth(BitDepth out);
+    virtual void setOutputBitDepth(BitDepth out) override;
 
-    virtual void setInputBitDepth(BitDepth in);
+    virtual void setInputBitDepth(BitDepth in) override;
 
     MatrixOpDataRcPtr compose(ConstMatrixOpDataRcPtr & B) const;
 
     // Used by composition to remove small errors.
     void cleanUp(double offsetScale);
 
-    bool operator==(const OpData & other) const;
+    bool operator==(const OpData & other) const override;
 
     MatrixOpDataRcPtr inverse() const;
+
+    inline BitDepth getFileInputBitDepth() const { return m_fileInBitDepth; }
+    inline void setFileInputBitDepth(BitDepth in) { m_fileInBitDepth = in; }
+
+    inline BitDepth getFileOutputBitDepth() const { return m_fileOutBitDepth; }
+    inline void setFileOutputBitDepth(BitDepth out) { m_fileOutBitDepth = out; }
+
 
 private:
 
@@ -267,6 +254,12 @@ private:
 
     MatrixArray m_array;
     Offsets     m_offsets;
+
+    // In bit-depth to be used for file I/O.
+    BitDepth m_fileInBitDepth = BIT_DEPTH_UNKNOWN;
+    // Out bit-depth to be used for file I/O.
+    BitDepth m_fileOutBitDepth = BIT_DEPTH_UNKNOWN;
+
 };
 }
 OCIO_NAMESPACE_EXIT

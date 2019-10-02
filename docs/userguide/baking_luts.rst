@@ -1,3 +1,7 @@
+..
+  SPDX-License-Identifier: CC-BY-4.0
+  Copyright Contributors to the OpenColorIO Project.
+
 .. _userguide-bakelut:
 
 Baking LUT's
@@ -59,7 +63,7 @@ So, to create a LUT that transforms from ``lg10`` to ``srgb8``::
     bash$ ociobakelut --format houdini --inputspace lg10 --outputspace srgb8 log_to_display.lut
 
 We could then load this LUT into MPlay and view a lg10 image
-correctly! (note that by MPlay tries to linearise ".cin" files by
+correctly! (note that by MPlay tries to linearize ".cin" files by
 default, which can be disabled in the preferences, "Convert form 10bit
 Log")
 
@@ -124,9 +128,9 @@ their allocation variables set correctly, we could simplify the
 This command creates a very different prelut to the explicitly
 specified ``--shaperspace lg10`` in the previous example. Explicitly
 specifying a shaper can produce better results, however the
-allocation-based prelut usually works nicely, and is convinient
+allocation-based prelut usually works nicely, and is convenient
 
-Note that allocation-var based preluts is baker-format dependant, and
+Note that allocation-var based preluts is baker-format dependent, and
 not all formats currently implement them
 
 
@@ -196,12 +200,12 @@ Photoshop. This is the colorspace in which matte-paintings will be
 performed (likely a different colorspace that used for
 texture-painting, as these have different requirements)
 
-The working space should be a "0-1 colorspace", reversable, and for
+The working space should be a "0-1 colorspace", reversible, and for
 matte-paintings ideally allow painting values over "diffuse white" (in
 other words, to paint values over 1.0 when converted to linear-light
 in comp)
 
-This is a facility-dependant workflow choice.
+This is a facility-dependent workflow choice.
 
 For this example we will use the ``vd16`` colorspace, as described by
 the :ref:`config-spivfx`
@@ -296,7 +300,7 @@ On OS X, these can be put into::
 
     /Library/ColorSync/Profiles/
 
-(or the equivelant directory in your home-directory)
+(or the equivalent directory in your home-directory)
 
 On Windows, right-click the profile and select "Install profile"
 
@@ -346,7 +350,7 @@ LUT-reference-image (ideally toggling between Photoshop and Nuke):
     :align:   center
 
 
-The most improtant settings are in the "View > Proof Setup > Custom
+The most important settings are in the "View > Proof Setup > Custom
 ..." menu.
 
 The recommended "Preserve RGB" setting works sometimes. Other times

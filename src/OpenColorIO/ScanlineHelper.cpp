@@ -1,123 +1,208 @@
-/*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
-All Rights Reserved.
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+#include <algorithm>
 
 #include <OpenColorIO/OpenColorIO.h>
+
+#include "BitDepthUtils.h"
 #include "ScanlineHelper.h"
 
-#include <cassert>
-#include <cstdlib>
-#include <sstream>
 
 OCIO_NAMESPACE_ENTER
 {
-    namespace
+
+Optimizations GetOptimizationMode(const GenericImageDesc & imgDesc)
+{
+    Optimizations optim = NO_OPTIMIZATION;
+
+    if(imgDesc.isRGBAPacked())
     {
-        const int PIXELS_PER_LINE = 4096;
+        optim = PACKED_OPTIMIZATION;
+
+        if(imgDesc.isFloat())
+        {
+            optim = PACKED_FLOAT_OPTIMIZATION;
+        }
     }
-    
-    ////////////////////////////////////////////////////////////////////////////
-    
-    ScanlineHelper::ScanlineHelper(ImageDesc& img):
-                                   m_buffer(0),
-                                   m_imagePixelIndex(0),
-                                   m_numPixelsCopied(0),
-                                   m_yIndex(0),
-                                   m_inPlaceMode(false)
-        {
-            m_img.init(img);
-            
-            if(m_img.isPackedRGBA())
-            {
-                m_inPlaceMode = true;
-            }
-            else
-            {
-                // TODO: Re-use memory from thread-safe memory pool, rather
-                // than doing a new allocation each time.
-                
-                m_buffer = (float*)malloc(sizeof(float)*PIXELS_PER_LINE*4);
-            }
-        }
-        
-        ScanlineHelper::~ScanlineHelper()
-        {
-            free(m_buffer);
-        }
-        
-        // Copy from the src image to our scanline, in our preferred
-        // pixel layout.
-        
-        void ScanlineHelper::prepRGBAScanline(float** buffer, long* numPixels)
-        {
-            if(m_inPlaceMode)
-            {
-                // TODO: what if scanline is too short, or too long?
-                if(m_yIndex >= m_img.height)
-                {
-                    *numPixels = 0;
-                    return;
-                }
-                
-                char* rowPtr = reinterpret_cast<char*>(m_img.rData);
-                rowPtr += m_img.yStrideBytes*m_yIndex;
-                
-                *buffer = reinterpret_cast<float*>(rowPtr);
-                *numPixels = m_img.width;
-            }
-            else
-            {
-                PackRGBAFromImageDesc(m_img, m_buffer,
-                                      &m_numPixelsCopied,
-                                      PIXELS_PER_LINE,
-                                      m_imagePixelIndex);
-                *buffer = m_buffer;
-                *numPixels = m_numPixelsCopied;
-            }
-        }
-        
-        // Write back the result of our work, from the scanline to our
-        // destination image.
-        
-        void ScanlineHelper::finishRGBAScanline()
-        {
-            if(m_inPlaceMode)
-            {
-                m_yIndex += 1;
-            }
-            else
-            {
-                UnpackRGBAToImageDesc(m_img,
-                                      m_buffer,
-                                      m_numPixelsCopied,
-                                      m_imagePixelIndex);
-                m_imagePixelIndex += m_numPixelsCopied;
-            }
-        }
+
+    return optim;
+}
+
+
+template<typename InType, typename OutType>
+GenericScanlineHelper<InType, OutType>::GenericScanlineHelper(BitDepth inputBitDepth,
+                                                              const ConstOpCPURcPtr & inBitDepthOp,
+                                                              BitDepth outputBitDepth,
+                                                              const ConstOpCPURcPtr & outBitDepthOp)
+    :   ScanlineHelper()
+    ,   m_inputBitDepth(inputBitDepth)
+    ,   m_outputBitDepth(outputBitDepth)
+    ,   m_inBitDepthOp(inBitDepthOp)
+    ,   m_outBitDepthOp(outBitDepthOp)
+    ,   m_inOptimizedMode(NO_OPTIMIZATION)
+    ,   m_outOptimizedMode(NO_OPTIMIZATION)
+    ,   m_yIndex(0)
+    ,   m_useDstBuffer(false)
+{
+}
+
+template<typename InType, typename OutType>
+void GenericScanlineHelper<InType, OutType>::init(const ImageDesc & srcImg, const ImageDesc & dstImg)
+{
+    m_yIndex = 0;
+
+    m_srcImg.init(srcImg, m_inputBitDepth, m_inBitDepthOp);
+    m_dstImg.init(dstImg, m_outputBitDepth, m_outBitDepthOp);
+
+    if(m_srcImg.m_width!=m_dstImg.m_width || m_srcImg.m_height!=m_dstImg.m_height)
+    {
+        throw Exception("Dimension inconsistency between source and destination image buffers.");
+    }
+
+    m_inOptimizedMode  = GetOptimizationMode(m_srcImg);
+    m_outOptimizedMode = GetOptimizationMode(m_dstImg);
+
+    // Can the output buffer be used as the internal RGBA F32 buffer?
+    m_useDstBuffer
+        = (m_outOptimizedMode & PACKED_FLOAT_OPTIMIZATION) == PACKED_FLOAT_OPTIMIZATION;
+
+    if( (m_inOptimizedMode & PACKED_OPTIMIZATION) != PACKED_OPTIMIZATION)
+    {
+        const long bufferSize = 4 * m_dstImg.m_width;
+        m_inBitDepthBuffer.resize(bufferSize);
+    }
+
+    if(!m_useDstBuffer)
+    {
+        const long bufferSize = 4 * m_dstImg.m_width;
+        m_rgbaFloatBuffer.resize(bufferSize);
+        m_outBitDepthBuffer.resize(bufferSize);
+    }
+}
+
+template<typename InType, typename OutType>
+void GenericScanlineHelper<InType, OutType>::init(const ImageDesc & img)
+{
+    m_yIndex = 0;
+
+    m_srcImg.init(img, m_inputBitDepth, m_inBitDepthOp);
+    m_dstImg.init(img, m_outputBitDepth, m_outBitDepthOp);
+
+    m_inOptimizedMode  = GetOptimizationMode(m_srcImg);
+    m_outOptimizedMode = m_inOptimizedMode;
+
+    // Can the output buffer be used as the internal RGBA F32 buffer?
+    m_useDstBuffer
+        = (m_outOptimizedMode & PACKED_FLOAT_OPTIMIZATION) == PACKED_FLOAT_OPTIMIZATION;
+
+    if(!m_useDstBuffer)
+    {
+        // TODO: Re-use memory from thread-safe memory pool, rather
+        // than doing a new allocation each time.
+
+        const long bufferSize = 4 * m_dstImg.m_width;
+
+        m_rgbaFloatBuffer.resize(bufferSize);
+        m_inBitDepthBuffer.resize(bufferSize);
+        m_outBitDepthBuffer.resize(bufferSize);
+    }
+}
+
+template<typename InType, typename OutType>
+GenericScanlineHelper<InType, OutType>::~GenericScanlineHelper()
+{
+}
+
+// Copy from the src image to our scanline, in our preferred pixel layout.
+template<typename InType, typename OutType>
+void GenericScanlineHelper<InType, OutType>::prepRGBAScanline(float** buffer, long & numPixels)
+{
+    // Note that only a line-by-line processing is done on the image buffer.
+
+    if(m_yIndex >= m_dstImg.m_height)
+    {
+        numPixels = 0;
+        return;
+    }
+
+    *buffer = m_useDstBuffer ? (float*)(m_dstImg.m_rData + m_dstImg.m_yStrideBytes * m_yIndex)
+                             : &m_rgbaFloatBuffer[0];
+
+    if((m_inOptimizedMode&PACKED_OPTIMIZATION)==PACKED_OPTIMIZATION)
+    {
+        const void * inBuffer = (void*)(m_srcImg.m_rData + m_srcImg.m_yStrideBytes * m_yIndex);
+
+        m_srcImg.m_bitDepthOp->apply(inBuffer, *buffer, m_dstImg.m_width);
+    }
+    else
+    {
+        // Pack from any channel ordering & bit-depth to a packed RGBA F32 buffer.
+
+        Generic<InType>::PackRGBAFromImageDesc(m_srcImg,
+                                               &m_inBitDepthBuffer[0],
+                                               *buffer,
+                                               m_dstImg.m_width,
+                                               m_yIndex * m_dstImg.m_width);
+    }
+
+    numPixels = m_dstImg.m_width;
+}
+
+// Write back the result of our work, from the scanline to our destination image.
+template<typename InType, typename OutType>
+void GenericScanlineHelper<InType, OutType>::finishRGBAScanline()
+{
+    // Note that only a line-by-line processing is done on the image buffer.
+
+    if((m_outOptimizedMode&PACKED_OPTIMIZATION)==PACKED_OPTIMIZATION)
+    {
+        void * out = (void*)(m_dstImg.m_rData + m_dstImg.m_yStrideBytes * m_yIndex);
+
+        const void * in  = m_useDstBuffer ? out : (void*)&m_rgbaFloatBuffer[0];
+
+        m_dstImg.m_bitDepthOp->apply(in, out, m_dstImg.m_width);
+    }
+    else
+    {
+        // Unpack from packed RGBA F32 to any channel ordering & bit-depth.
+        Generic<OutType>::UnpackRGBAToImageDesc(m_dstImg,
+                                                &m_rgbaFloatBuffer[0],
+                                                &m_outBitDepthBuffer[0],
+                                                m_dstImg.m_width,
+                                                m_yIndex * m_dstImg.m_width);
+    }
+
+    ++m_yIndex;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////
+
+
+
+
+template class GenericScanlineHelper<uint8_t, uint8_t>;
+template class GenericScanlineHelper<uint8_t, uint16_t>;
+template class GenericScanlineHelper<uint8_t, half>;
+template class GenericScanlineHelper<uint8_t, float>;
+
+template class GenericScanlineHelper<uint16_t, uint8_t>;
+template class GenericScanlineHelper<uint16_t, uint16_t>;
+template class GenericScanlineHelper<uint16_t, half>;
+template class GenericScanlineHelper<uint16_t, float>;
+
+template class GenericScanlineHelper<half, uint8_t>;
+template class GenericScanlineHelper<half, uint16_t>;
+template class GenericScanlineHelper<half, half>;
+template class GenericScanlineHelper<half, float>;
+
+template class GenericScanlineHelper<float, uint8_t>;
+template class GenericScanlineHelper<float, uint16_t>;
+template class GenericScanlineHelper<float, half>;
+template class GenericScanlineHelper<float, float>;
+
 
 }
 OCIO_NAMESPACE_EXIT

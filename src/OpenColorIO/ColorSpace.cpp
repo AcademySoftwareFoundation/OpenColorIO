@@ -1,30 +1,5 @@
-/*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 #include <cstring>
 #include <sstream>
@@ -32,6 +7,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "PrivateTypes.h"
 #include "pystring/pystring.h"
 
 
@@ -68,7 +44,7 @@ OCIO_NAMESPACE_ENTER
         bool toRefSpecified_;
         bool fromRefSpecified_;
 
-        typedef std::vector<std::string> Categories;
+        typedef StringVec Categories;
         Categories categories_;
         
         Impl() :
@@ -78,6 +54,8 @@ OCIO_NAMESPACE_ENTER
             toRefSpecified_(false),
             fromRefSpecified_(false)
         { }
+
+        Impl(const Impl &) = delete;
         
         ~Impl()
         { }
@@ -248,7 +226,7 @@ OCIO_NAMESPACE_ENTER
 
     const char * ColorSpace::getCategory(int index) const
     {
-        if(index<0 || index>=getImpl()->categories_.size()) return nullptr;
+        if(index<0 || index>=(int)getImpl()->categories_.size()) return nullptr;
 
         return getImpl()->categories_[index].c_str();
     }
@@ -375,44 +353,44 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(ColorSpace, category)
+OCIO_ADD_TEST(ColorSpace, category)
 {
     OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
-    OIIO_CHECK_EQUAL(cs->getNumCategories(), 0);
+    OCIO_CHECK_EQUAL(cs->getNumCategories(), 0);
 
-    OIIO_CHECK_ASSERT(!cs->hasCategory("linear"));
-    OIIO_CHECK_ASSERT(!cs->hasCategory("rendering"));
-    OIIO_CHECK_ASSERT(!cs->hasCategory("log"));
+    OCIO_CHECK_ASSERT(!cs->hasCategory("linear"));
+    OCIO_CHECK_ASSERT(!cs->hasCategory("rendering"));
+    OCIO_CHECK_ASSERT(!cs->hasCategory("log"));
 
-    OIIO_CHECK_NO_THROW(cs->addCategory("linear"));
-    OIIO_CHECK_NO_THROW(cs->addCategory("rendering"));
-    OIIO_CHECK_EQUAL(cs->getNumCategories(), 2);
+    OCIO_CHECK_NO_THROW(cs->addCategory("linear"));
+    OCIO_CHECK_NO_THROW(cs->addCategory("rendering"));
+    OCIO_CHECK_EQUAL(cs->getNumCategories(), 2);
 
-    OIIO_CHECK_ASSERT(cs->hasCategory("linear"));
-    OIIO_CHECK_ASSERT(cs->hasCategory("rendering"));
-    OIIO_CHECK_ASSERT(!cs->hasCategory("log"));
+    OCIO_CHECK_ASSERT(cs->hasCategory("linear"));
+    OCIO_CHECK_ASSERT(cs->hasCategory("rendering"));
+    OCIO_CHECK_ASSERT(!cs->hasCategory("log"));
 
-    OIIO_CHECK_EQUAL(std::string(cs->getCategory(0)), std::string("linear"));
-    OIIO_CHECK_EQUAL(std::string(cs->getCategory(1)), std::string("rendering"));
+    OCIO_CHECK_EQUAL(std::string(cs->getCategory(0)), std::string("linear"));
+    OCIO_CHECK_EQUAL(std::string(cs->getCategory(1)), std::string("rendering"));
     // Check with an invalid index.
-    OIIO_CHECK_NO_THROW(cs->getCategory(2));
-    OIIO_CHECK_ASSERT(cs->getCategory(2) == nullptr);
+    OCIO_CHECK_NO_THROW(cs->getCategory(2));
+    OCIO_CHECK_ASSERT(cs->getCategory(2) == nullptr);
 
-    OIIO_CHECK_NO_THROW(cs->removeCategory("linear"));
-    OIIO_CHECK_EQUAL(cs->getNumCategories(), 1);
-    OIIO_CHECK_ASSERT(!cs->hasCategory("linear"));
-    OIIO_CHECK_ASSERT(cs->hasCategory("rendering"));
-    OIIO_CHECK_ASSERT(!cs->hasCategory("log"));
+    OCIO_CHECK_NO_THROW(cs->removeCategory("linear"));
+    OCIO_CHECK_EQUAL(cs->getNumCategories(), 1);
+    OCIO_CHECK_ASSERT(!cs->hasCategory("linear"));
+    OCIO_CHECK_ASSERT(cs->hasCategory("rendering"));
+    OCIO_CHECK_ASSERT(!cs->hasCategory("log"));
 
     // Remove a category not in the color space.
-    OIIO_CHECK_NO_THROW(cs->removeCategory("log"));
-    OIIO_CHECK_EQUAL(cs->getNumCategories(), 1);
-    OIIO_CHECK_ASSERT(cs->hasCategory("rendering"));
+    OCIO_CHECK_NO_THROW(cs->removeCategory("log"));
+    OCIO_CHECK_EQUAL(cs->getNumCategories(), 1);
+    OCIO_CHECK_ASSERT(cs->hasCategory("rendering"));
 
-    OIIO_CHECK_NO_THROW(cs->clearCategories());
-    OIIO_CHECK_EQUAL(cs->getNumCategories(), 0);
+    OCIO_CHECK_NO_THROW(cs->clearCategories());
+    OCIO_CHECK_EQUAL(cs->getNumCategories(), 0);
 }
 
 #endif // OCIO_UNIT_TEST

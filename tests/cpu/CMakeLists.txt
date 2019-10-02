@@ -1,4 +1,10 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+
 include(ExternalProject)
+
+# Define used for tests in tests/cpu/Context_tests.cpp
+add_definitions("-DOCIO_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
 
 function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 	set(TEST_BINARY "test_${NAME}_exec")
@@ -14,18 +20,18 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 		PUBLIC
 			public_api
 		PRIVATE
-			yamlcpp
-			pystring
-			sampleicc
-			oiio_unittest
+			yamlcpp::yamlcpp
+			pystring::pystring
+			sampleicc::sampleicc
 			unittest_data
-			libexpat
-			ilmbase
+			expat::expat
+			ilmbase::ilmbase
 	)
 	if(PRIVATE_INCLUDES)
 		target_include_directories(${TEST_BINARY}
 			PRIVATE
 				"${CMAKE_SOURCE_DIR}/src/OpenColorIO"
+				"${CMAKE_SOURCE_DIR}/tests/cpu"
 		)
 	endif(PRIVATE_INCLUDES)
 	if(OCIO_USE_SSE)
@@ -48,7 +54,6 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 	add_test(${TEST_NAME} ${TEST_BINARY})
 endfunction(add_ocio_test)
 
-
 # Eventually we will factor out each test into it's own executable
 # but for now, we will maintain the status quo and copy all from the
 # OpenColorIO target
@@ -59,12 +64,14 @@ set(SOURCES
 	ColorSpace.cpp
 	ColorSpaceSet.cpp
 	Config.cpp
-	Context.cpp
+	CPUProcessor.cpp
 	Display.cpp
+	DynamicProperty.cpp
 	Exception.cpp
 	fileformats/cdl/CDLParser.cpp
 	fileformats/cdl/CDLReaderHelper.cpp
-	fileformats/FileFormat3DL.cpp
+	fileformats/ctf/CTFReaderHelper.cpp
+	fileformats/ctf/CTFReaderUtils.cpp
 	fileformats/FileFormatCCC.cpp
 	fileformats/FileFormatCC.cpp
 	fileformats/FileFormatCDL.cpp
@@ -82,6 +89,11 @@ set(SOURCES
 	fileformats/FileFormatSpiMtx.cpp
 	fileformats/FileFormatTruelight.cpp
 	fileformats/FileFormatVF.cpp
+	fileformats/FormatMetadata.cpp
+	fileformats/xmlutils/XMLReaderHelper.cpp
+	fileformats/xmlutils/XMLReaderUtils.cpp
+	fileformats/xmlutils/XMLWriterUtils.cpp
+	GPUProcessor.cpp
 	GpuShader.cpp
 	GpuShaderDesc.cpp
 	GpuShaderUtils.cpp
@@ -101,7 +113,24 @@ set(SOURCES
 	ops/CDL/CDLOpData.cpp
 	ops/CDL/CDLOps.cpp
 	ops/Exponent/ExponentOps.cpp
+	ops/exposurecontrast/ExposureContrastOpCPU.cpp
+	ops/exposurecontrast/ExposureContrastOpData.cpp
+	ops/exposurecontrast/ExposureContrastOpGPU.cpp
+	ops/exposurecontrast/ExposureContrastOps.cpp
+	ops/FixedFunction/FixedFunctionOpCPU.cpp
+	ops/FixedFunction/FixedFunctionOpData.cpp
+	ops/FixedFunction/FixedFunctionOpGPU.cpp
+	ops/FixedFunction/FixedFunctionOps.cpp
+	ops/Gamma/GammaOpCPU.cpp
+	ops/Gamma/GammaOpData.cpp
+	ops/Gamma/GammaOpUtils.cpp
+	ops/Gamma/GammaOps.cpp
+	ops/IndexMapping.cpp
+	ops/Log/LogOpCPU.cpp
+	ops/Log/LogOpData.cpp
+	ops/Log/LogOpGPU.cpp
 	ops/Log/LogOps.cpp
+	ops/Log/LogUtils.cpp
 	ops/Lut1D/Lut1DOp.cpp
 	ops/Lut1D/Lut1DOpCPU.cpp
 	ops/Lut1D/Lut1DOpData.cpp
@@ -118,12 +147,11 @@ set(SOURCES
 	ops/Range/RangeOpData.cpp
 	ops/Range/RangeOpGPU.cpp
 	ops/Range/RangeOps.cpp
-	ops/Truelight/TruelightOp.cpp
+	ops/reference/ReferenceOpData.cpp
 	OpTools.cpp
 	ParseUtils.cpp
 	PathUtils.cpp
 	Platform.cpp
-	Processor.cpp
 	ScanlineHelper.cpp
 	SSE.cpp
 	Transform.cpp
@@ -132,14 +160,28 @@ set(SOURCES
 	transforms/ColorSpaceTransform.cpp
 	transforms/DisplayTransform.cpp
 	transforms/ExponentTransform.cpp
-	transforms/FileTransform.cpp
+	transforms/ExponentWithLinearTransform.cpp
+	transforms/ExposureContrastTransform.cpp
+	transforms/FixedFunctionTransform.cpp
 	transforms/GroupTransform.cpp
+	transforms/LogAffineTransform.cpp
 	transforms/LogTransform.cpp
 	transforms/LookTransform.cpp
+	transforms/LUT1DTransform.cpp
+	transforms/LUT3DTransform.cpp
 	transforms/MatrixTransform.cpp
 	transforms/RangeTransform.cpp
-	transforms/TruelightTransform.cpp
+)
+
+set(TESTS
+	Context_tests.cpp
+	fileformats/ctf/CTFTransform_tests.cpp
+	fileformats/FileFormat3DL_tests.cpp
+	fileformats/FileFormatCTF_tests.cpp
+	Processor_tests.cpp
+	transforms/FileTransform_tests.cpp
 	UnitTest.cpp
+	UnitTestUtils.cpp
 )
 
 function(prepend var prefix)
@@ -151,5 +193,7 @@ function(prepend var prefix)
 endfunction(prepend)
 
 prepend(SOURCES "${CMAKE_SOURCE_DIR}/src/OpenColorIO/" ${SOURCES})
+
+list(APPEND SOURCES ${TESTS})
 
 add_ocio_test(cpu "${SOURCES}" TRUE)

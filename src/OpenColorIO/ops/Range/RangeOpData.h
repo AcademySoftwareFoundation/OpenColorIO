@@ -1,30 +1,5 @@
-/*
-Copyright (c) 2018 Autodesk Inc., et al.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 
 #ifndef INCLUDED_OCIO_RANGEOPDATA_H
@@ -44,6 +19,7 @@ class RangeOpData;
 typedef OCIO_SHARED_PTR<RangeOpData> RangeOpDataRcPtr;
 typedef OCIO_SHARED_PTR<const RangeOpData> ConstRangeOpDataRcPtr;
 
+class IndexMapping;
 
 // The class represents the Range op data.
 // 
@@ -72,19 +48,28 @@ class RangeOpData : public OpData
 public:
     RangeOpData();
 
+    RangeOpData( const RangeOpData &) = default;
+
     RangeOpData(BitDepth inBitDepth,  // Requested bit depth for the input
                 BitDepth outBitDepth, // Requested bit depth for the output
+                const FormatMetadataImpl & info,
                 double minInValue,    // Lower bound of the domain
                 double maxInValue,    // Upper bound of the domain
                 double minOutValue,   // Lower bound of the range
                 double maxOutValue    // Upper bound of the range
                 );
 
+    // Constructor from a 2-entry index map from a Lut1D or Lut3D.
+    // Note: Throws if the index map is not appropriate.
+    RangeOpData(const IndexMapping& pIM, BitDepth inDepth, unsigned int len);
+
     virtual ~RangeOpData();
 
     // Return the value used to set the value of an empty boundary.
     // (May be used to set arguments to the constructor.)
     static double EmptyValue();
+
+    RangeOpDataRcPtr clone() const;
 
     //
     // Note: The setters below do not call validate and are only for use 
@@ -201,6 +186,12 @@ public:
 
     virtual void finalize() override;
 
+    inline BitDepth getFileInputBitDepth() const { return m_fileInBitDepth; }
+    inline void setFileInputBitDepth(BitDepth in) { m_fileInBitDepth = in; }
+
+    inline BitDepth getFileOutputBitDepth() const { return m_fileOutBitDepth; }
+    inline void setFileOutputBitDepth(BitDepth out) { m_fileOutBitDepth = out; }
+
 private:
     void fillScaleOffset() const;
     double clipOverride(bool isLower) const;
@@ -216,6 +207,10 @@ private:
     mutable double m_lowBound;      // Lower clip point calculated from the limits
     mutable double m_highBound;     // Upper clip point calculated from the limits
     mutable double m_alphaScale;    // Bit-depth scaling for the alpha channel
+
+    BitDepth m_fileInBitDepth  = BIT_DEPTH_UNKNOWN; // In bit-depth to be used for file I/O
+    BitDepth m_fileOutBitDepth = BIT_DEPTH_UNKNOWN; // Out bit-depth to be used for file I/O
+
 };
 
 }

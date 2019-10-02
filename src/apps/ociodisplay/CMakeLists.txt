@@ -1,6 +1,12 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+
 find_package(OpenGL REQUIRED)
-find_package(GLEW REQUIRED)
+if(NOT APPLE)
+	find_package(GLEW REQUIRED)
+endif()
 find_package(GLUT REQUIRED)
+
 set(SOURCES
 	main.cpp
 )
@@ -10,7 +16,7 @@ add_executable(ociodisplay ${SOURCES})
 if(NOT BUILD_SHARED_LIBS)
     target_compile_definitions(ociodisplay
         PRIVATE
-        OpenColorIO_SKIP_IMPORTS
+        	OpenColorIO_SKIP_IMPORTS
     )
 endif()
 
@@ -27,8 +33,7 @@ target_include_directories(ociodisplay
 target_link_libraries(ociodisplay
 	PRIVATE 
 		apputils
-		openglbuilder
-	PUBLIC
+		oglbuilder
 		OpenColorIO
 		OpenImageIO
 		${OPENGL_LIBRARIES}

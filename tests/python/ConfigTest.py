@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
 
 import unittest, os, sys
 import PyOpenColorIO as OCIO
@@ -219,11 +221,20 @@ return out_pixel;
         
         # TODO: these should work in-place
         rgbfoo = _proc.applyRGB([0.48, 0.18, 0.18])
-        self.assertAlmostEqual(1.9351075, rgbfoo[0], delta=1e-7);
+        self.assertAlmostEqual(1.9351077, rgbfoo[0], delta=1e-7);
         # TODO: these should work in-place
         rgbafoo = _proc.applyRGBA([0.48, 0.18, 0.18, 1.0])
         self.assertAlmostEqual(1.0, rgbafoo[3], delta=1e-8)
         #self.assertEqual("$a92ef63abd9edf61ad5a7855da064648", _proc.getCpuCacheID())
         
+        _cfge.clearSearchPaths()
+        self.assertEqual(0, _cfge.getNumSearchPaths())
+        _cfge.addSearchPath("First/ Path")
+        self.assertEqual(1, _cfge.getNumSearchPaths())
+        _cfge.addSearchPath("D:\\Second\\Path\\")
+        self.assertEqual(2, _cfge.getNumSearchPaths())
+        self.assertEqual("First/ Path", _cfge.getSearchPathByIndex(0))
+        self.assertEqual("D:\\Second\\Path\\", _cfge.getSearchPathByIndex(1))
+
         del _cfge
         del _cfg

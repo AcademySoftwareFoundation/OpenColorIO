@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: CC-BY-4.0 -->
+<!-- Copyright Contributors to the OpenColorIO Project. -->
+
 # Contributing to OpenColorIO
 
 Thank you for your interest in contributing to OpenColorIO. This document
@@ -14,11 +17,11 @@ save yourself a lot of time by asking first.
 
 How do you talk to us? There are several ways to get in touch:
 
-* [ocio-dev](https://groups.google.com/forum/#!forum/ocio-dev):
+* [ocio-dev](https://lists.aswf.io/g/ocio-dev):
 This is a development focused mail list with a deep history of technical
 conversations and decisions that have shaped the project.
 
-* [ocio-users](https://groups.google.com/forum/#!forum/ocio-users):
+* [ocio-user](https://lists.aswf.io/g/ocio-user):
 This is an end-user oriented mail list, focused on how to use OCIO’s features
 within a host application. Common topics include crafting configs, DCC behavior,
 and general color questions.
@@ -34,7 +37,7 @@ GitHub **issues** are a great place to start a conversation! Issues aren’t
 restricted to bugs; we happily welcome feature requests and other suggestions
 submitted as issues. The only conversations we would direct away from issues are
 questions in the form of “How do I do X”. Please direct these to the ocio-dev or
-ocio-users mail lists, and consider contributing what you've learned to our
+ocio-user mail lists, and consider contributing what you've learned to our
 docs if appropriate!
 
 ## Getting Started
@@ -121,6 +124,10 @@ the work.
 in [Required Approvals](#required-approvals)), a Committer other than the PR
 contributor may squash and merge changes into the master branch.
 
+See also (from the OCIO Developer Guide):
+* [Getting started](http://opencolorio.org/developers/getting_started.html)
+* [Submitting Changes](http://opencolorio.org/developers/submitting_changes.html)
+
 ## Required Approvals
 
 Modifications of the contents of the OpenColorIO repository are made on a
@@ -172,3 +179,12 @@ through discussion.
 Committers may opt to elevate significant or controversial modifications to the
 TSC by assigning the `tsc-review` label to a pull request or issue. The TSC
 should serve as the final arbiter where required.
+
+## Coding Standards
+
+Please see the OpenColorIO
+[Coding guidelines](http://opencolorio.org/developers/coding_guidelines.html)
+for a reference on project code style and best practices.
+
+For standards on contributing to documentation, see the
+[Documentation guidelines](http://opencolorio.org/developers/documentation_guidelines.html).

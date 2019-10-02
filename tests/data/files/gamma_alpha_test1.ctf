@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="1.3" id="id">
+    <Description>2.4 gamma</Description>
+    <Gamma inBitDepth="16f" outBitDepth="8i" style="basicFwd">
+        <!-- If there is only one Params, use it for R, G and B. -->
+        <!-- This will set the gamma parameters for the alpha channel to identity parameters. -->
+        <GammaParams gamma="2.4" />
+    </Gamma>
+</ProcessList>

@@ -1,30 +1,5 @@
-/*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 
 #ifndef INCLUDED_OCIO_OPENCOLORTYPES_H
@@ -88,6 +63,18 @@ OCIO_NAMESPACE_ENTER
     //!cpp:type::
     typedef OCIO_SHARED_PTR<Processor> ProcessorRcPtr;
     
+    class OCIOEXPORT CPUProcessor;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const CPUProcessor> ConstCPUProcessorRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<CPUProcessor> CPUProcessorRcPtr;
+    
+    class OCIOEXPORT GPUProcessor;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const GPUProcessor> ConstGPUProcessorRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<GPUProcessor> GPUProcessorRcPtr;
+
     class OCIOEXPORT ProcessorMetadata;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<const ProcessorMetadata> ConstProcessorMetadataRcPtr;
@@ -101,11 +88,17 @@ OCIO_NAMESPACE_ENTER
     typedef OCIO_SHARED_PTR<Baker> BakerRcPtr;
     
     class OCIOEXPORT ImageDesc;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<ImageDesc> ImageDescRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const ImageDesc> ConstImageDescRcPtr;
+
     class OCIOEXPORT Exception;
     
-    //!cpp:type::
     class OCIOEXPORT GpuShaderDesc;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<GpuShaderDesc> GpuShaderDescRcPtr;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<const GpuShaderDesc> ConstGpuShaderDescRcPtr;
     
     
@@ -143,17 +136,41 @@ OCIO_NAMESPACE_ENTER
     //!cpp:type::
     typedef OCIO_SHARED_PTR<DisplayTransform> DisplayTransformRcPtr;
     
+    class OCIOEXPORT DynamicProperty;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const DynamicProperty> ConstDynamicPropertyRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<DynamicProperty> DynamicPropertyRcPtr;
+    
     class OCIOEXPORT ExponentTransform;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<const ExponentTransform> ConstExponentTransformRcPtr;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<ExponentTransform> ExponentTransformRcPtr;
     
+    class OCIOEXPORT ExponentWithLinearTransform;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const ExponentWithLinearTransform> ConstExponentWithLinearTransformRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<ExponentWithLinearTransform> ExponentWithLinearTransformRcPtr;
+    
+    class OCIOEXPORT ExposureContrastTransform;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const ExposureContrastTransform> ConstExposureContrastTransformRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<ExposureContrastTransform> ExposureContrastTransformRcPtr;
+
     class OCIOEXPORT FileTransform;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<const FileTransform> ConstFileTransformRcPtr;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<FileTransform> FileTransformRcPtr;
+    
+    class OCIOEXPORT FixedFunctionTransform;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const FixedFunctionTransform> ConstFixedFunctionTransformRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<FixedFunctionTransform> FixedFunctionTransformRcPtr;
     
     class OCIOEXPORT GroupTransform;
     //!cpp:type::
@@ -166,13 +183,31 @@ OCIO_NAMESPACE_ENTER
     typedef OCIO_SHARED_PTR<const LogTransform> ConstLogTransformRcPtr;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<LogTransform> LogTransformRcPtr;
-    
+
+    class OCIOEXPORT LogAffineTransform;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const LogAffineTransform> ConstLogAffineTransformRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<LogAffineTransform> LogAffineTransformRcPtr;
+
     class OCIOEXPORT LookTransform;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<const LookTransform> ConstLookTransformRcPtr;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<LookTransform> LookTransformRcPtr;
-    
+
+    class OCIOEXPORT LUT1DTransform;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const LUT1DTransform> ConstLUT1DTransformRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<LUT1DTransform> LUT1DTransformRcPtr;
+
+    class OCIOEXPORT LUT3DTransform;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const LUT3DTransform> ConstLUT3DTransformRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<LUT3DTransform> LUT3DTransformRcPtr;
+
     class OCIOEXPORT MatrixTransform;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<const MatrixTransform> ConstMatrixTransformRcPtr;
@@ -184,12 +219,6 @@ OCIO_NAMESPACE_ENTER
     typedef OCIO_SHARED_PTR<const RangeTransform> ConstRangeTransformRcPtr;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<RangeTransform> RangeTransformRcPtr;
-    
-    class OCIOEXPORT TruelightTransform;
-    //!cpp:type::
-    typedef OCIO_SHARED_PTR<const TruelightTransform> ConstTruelightTransformRcPtr;
-    //!cpp:type::
-    typedef OCIO_SHARED_PTR<TruelightTransform> TruelightTransformRcPtr;
     
     template <class T, class U>
     inline OCIO_SHARED_PTR<T> DynamicPtrCast(OCIO_SHARED_PTR<U> const & ptr)
@@ -246,11 +275,9 @@ OCIO_NAMESPACE_ENTER
     // 1D LUT INTERP_BEST: LINEAR
     // 3D LUT INTERP_BEST: TETRAHEDRAL
     //
-    // Note: INTERP_BEST is subject to change in minor releases, so if you
-    // care about locking off on a specific interpolation type, we'd recommend
-    // directly specifying it.
-    //
-    // Note: The tetrahedral method is always used when inverting 3D LUTs.
+    // Note: INTERP_BEST and INTERP_DEFAULT are subject to change in minor
+    // releases, so if you care about locking off on a specific interpolation
+    // type, we'd recommend directly specifying it.
     //
     enum Interpolation
     {
@@ -258,13 +285,16 @@ OCIO_NAMESPACE_ENTER
         INTERP_NEAREST = 1,     //! nearest neighbor in all dimensions
         INTERP_LINEAR = 2,      //! linear interpolation in all dimensions
         INTERP_TETRAHEDRAL = 3, //! tetrahedral interpolation in all directions
+        INTERP_CUBIC = 4,       //! cubic interpolation in all dimensions
 
         INTERP_DEFAULT = 254,   //! the default interpolation type
         INTERP_BEST = 255       //! the 'best' suitable interpolation type
     };
     
-    //!cpp:type::
-    enum BitDepth {
+    //!cpp:type:: Used by :cpp:class`CPUProcessor` to indicate the input and output bit-depths 
+    //            of the image to process.
+    enum BitDepth
+    {
         BIT_DEPTH_UNKNOWN = 0,
         BIT_DEPTH_UINT8,
         BIT_DEPTH_UINT10,
@@ -275,7 +305,25 @@ OCIO_NAMESPACE_ENTER
         BIT_DEPTH_F16,
         BIT_DEPTH_F32
     };
-    
+
+    //!cpp:type:: Used by :cpp:class`LUT1DTransform` to control optional hue restoration algorithm.
+    enum LUT1DHueAdjust
+    {
+        HUE_NONE = 0, // No adjustment.
+        HUE_DW3       // Algorithm used in ACES Output Transforms through v0.7.
+    };
+
+    //!cpp:type:: Used by :cpp:class`PackedImageDesc` to indicate the channel ordering 
+    //            of the image to process.
+    enum ChannelOrdering
+    {
+        CHANNEL_ORDERING_RGBA = 0,
+        CHANNEL_ORDERING_BGRA,
+        CHANNEL_ORDERING_ABGR,
+        CHANNEL_ORDERING_RGB,
+        CHANNEL_ORDERING_BGR
+    };
+
     //!cpp:type::
     enum Allocation {
         ALLOCATION_UNKNOWN = 0,
@@ -302,13 +350,118 @@ OCIO_NAMESPACE_ENTER
         ENV_ENVIRONMENT_LOAD_ALL
     };
 
-    //!cpp:type::
+    //!cpp:type:: A RangeTransform may be set to clamp the values, or not.
     enum RangeStyle
     {
         RANGE_NO_CLAMP = 0,
         RANGE_CLAMP
     };
     
+    //!cpp:type:: Enumeration of the :cpp:class:`FixedFunctionTransform` transform algorithms.
+    enum FixedFunctionStyle
+    {
+        FIXED_FUNCTION_ACES_RED_MOD_03 = 0, //! Red modifier (ACES 0.3/0.7)
+        FIXED_FUNCTION_ACES_RED_MOD_10,     //! Red modifier (ACES 1.0)
+        FIXED_FUNCTION_ACES_GLOW_03,        //! Glow function (ACES 0.3/0.7)
+        FIXED_FUNCTION_ACES_GLOW_10,        //! Glow function (ACES 1.0)
+        FIXED_FUNCTION_ACES_DARK_TO_DIM_10, //! Dark to dim surround correction (ACES 1.0)
+        FIXED_FUNCTION_REC2100_SURROUND     //! Rec.2100 surround correction (takes one double for the gamma param)
+    };
+
+    //!cpp:type:: Enumeration of the :cpp:class:`ExposureContrastTransform` transform algorithms.
+    enum ExposureContrastStyle
+    {
+        EXPOSURE_CONTRAST_LINEAR = 0,      //! E/C to be applied to a linear space image
+        EXPOSURE_CONTRAST_VIDEO,           //! E/C to be applied to a video space image
+        EXPOSURE_CONTRAST_LOGARITHMIC      //! E/C to be applied to a log space image
+    };
+
+    enum DynamicPropertyType
+    {
+        DYNAMIC_PROPERTY_EXPOSURE = 0, //! Image exposure value (double floating point value)
+        DYNAMIC_PROPERTY_CONTRAST,     //! Image contrast value (double floating point value)
+        DYNAMIC_PROPERTY_GAMMA         //! Image gamma value (double floating point value)
+    };
+
+    enum DynamicPropertyValueType
+    {
+        DYNAMIC_PROPERTY_DOUBLE, //! Value is a double
+        DYNAMIC_PROPERTY_BOOL    //! Value is a bool
+    };
+
+    //!cpp:type:: Provides control over how the ops in a Processor are combined 
+    //            in order to improve performance.
+    enum OptimizationFlags
+    {
+        // Below are listed all the optimization types.
+
+        // TODO: Partially supported for now.
+
+        // No optimization type to apply.
+        OPTIMIZATION_NONE                  = 0x0000,
+
+        // Can replace any op producing an identity by its type-based identity replacement op.
+        OPTIMIZATION_IDENTITY              = 0x0001,
+        // Can remove a clamping identity op if the following op also clamps 
+        // to the same domain.
+        OPTIMIZATION_PAIR_IDENTITY_CLAMP   = 0x0002, 
+        // Can replace two 1D LUT ops producing an identity by the type-based identity replacement op.
+        OPTIMIZATION_PAIR_IDENTITY_LUT1D   = 0x0004,
+        // Can replace two 3D LUT ops producing an identity by the type-based identity replacement op.
+        OPTIMIZATION_PAIR_IDENTITY_LUT3D   = 0x0008,
+        // Can replace two gamma ops producing an identity by the type-based identity replacement op.
+        OPTIMIZATION_PAIR_IDENTITY_GAMMA   = 0x0010,
+        // Can replace two log ops producing an identity by the type-based identity replacement op.
+        OPTIMIZATION_PAIR_IDENTITY_LOG     = 0x0020,
+        // Can combine Matrix ops.
+        OPTIMIZATION_COMP_MATRIX           = 0x0040,
+        // Can combine 1D LUT ops.
+        OPTIMIZATION_COMP_LUT1D            = 0x0080,
+        // Can combine 3D LUT ops.
+        OPTIMIZATION_COMP_LUT3D            = 0x0100,
+        // Can combine gamma ops.
+        OPTIMIZATION_COMP_GAMMA            = 0x0200,
+        // For integer input bit-depth only, replace separable ops 
+        // (i.e. no channel crosstalk ops) by a single 1D LUT of input bit-depth domain.
+        OPTIMIZATION_COMP_SEPARABLE_PREFIX = 0x0400,
+
+        // Can apply all the optimization types.
+        OPTIMIZATION_ALL                   = 0xFFFF,
+
+        // Below are listed all the optimization grades from the highest to lowest quality.
+
+        OPTIMIZATION_LOSSLESS   = (OPTIMIZATION_IDENTITY
+                                    | OPTIMIZATION_PAIR_IDENTITY_CLAMP
+                                    | OPTIMIZATION_PAIR_IDENTITY_LUT1D
+                                    | OPTIMIZATION_PAIR_IDENTITY_LUT3D
+                                    | OPTIMIZATION_PAIR_IDENTITY_GAMMA
+                                    | OPTIMIZATION_PAIR_IDENTITY_LOG
+                                    | OPTIMIZATION_COMP_MATRIX
+                                    | OPTIMIZATION_COMP_GAMMA),
+
+        OPTIMIZATION_VERY_GOOD  = (OPTIMIZATION_LOSSLESS
+                                    | OPTIMIZATION_COMP_LUT1D
+                                    | OPTIMIZATION_COMP_SEPARABLE_PREFIX),
+
+        OPTIMIZATION_GOOD       = OPTIMIZATION_VERY_GOOD | OPTIMIZATION_COMP_LUT3D,
+
+        // For quite lossy optimizations.
+        OPTIMIZATION_DRAFT      = OPTIMIZATION_ALL,
+
+
+        OPTIMIZATION_DEFAULT    = OPTIMIZATION_VERY_GOOD
+    };
+
+    //!cpp:type::
+    enum FinalizationFlags
+    {
+        FINALIZATION_EXACT = 0,
+        FINALIZATION_FAST,
+
+        FINALIZATION_DEFAULT = FINALIZATION_FAST
+    };
+   
+
     //!rst::
     // Conversion
     // **********
@@ -373,7 +526,17 @@ OCIO_NAMESPACE_ENTER
     //!cpp:function::
     extern OCIOEXPORT RangeStyle RangeStyleFromString(const char * style);
     
+    //!cpp:function::
+    extern OCIOEXPORT const char * FixedFunctionStyleToString(FixedFunctionStyle style);
+    //!cpp:function::
+    extern OCIOEXPORT FixedFunctionStyle FixedFunctionStyleFromString(const char * style);
     
+    //!cpp:function::
+    extern OCIOEXPORT const char * ExposureContrastStyleToString(ExposureContrastStyle style);
+    //!cpp:function::
+    extern OCIOEXPORT ExposureContrastStyle ExposureContrastStyleFromString(const char * style);
+
+
     /*!rst::
     Roles
     *****

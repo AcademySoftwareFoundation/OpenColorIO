@@ -1,30 +1,5 @@
-/*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 
 #ifndef INCLUDED_OCIO_SSE_H
@@ -45,26 +20,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
-// For gcc 3.4.4 & SSE2, these two intrinsic methods do not exist
-//
-//  Copy & Paste the code from gcc 4.1.2
-//  /usr/lib/gcc/x86_64-redhat-linux/4.1.1/include/emmintrin.h
-
-#if !defined(_MSC_VER) && defined(__GNUC__) && (__GNUC__ < 4)
-
-inline __m128i _mm_castps_si128(__m128 __A)
-{
-  return (__m128i) __A;
-}
-
-inline __m128 _mm_castsi128_ps(__m128i __A)
-{
-  return (__m128) __A;
-}
-
-#endif
-
-
 // Macros for alignment declarations
 #define OCIO_SIMD_BYTES 16
 #if defined( _MSC_VER )
@@ -79,22 +34,20 @@ inline __m128 _mm_castsi128_ps(__m128i __A)
 
 #include <limits>
 
-#define EXP_MASK     0x7F800000
-#define EXP_BIAS     127
-#define EXP_SHIFT    23
-#define SIGN_SHIFT   31
+static constexpr int EXP_MASK   = 0x7F800000;
+static constexpr int EXP_BIAS   = 127;
+static constexpr int EXP_SHIFT  = 23;
+static constexpr int SIGN_SHIFT = 31;
 
-#define EMASK  _mm_set1_epi32( EXP_MASK )
-#define EBIAS  _mm_set1_epi32( EXP_BIAS )
+static const __m128i EMASK = _mm_set1_epi32(EXP_MASK);
+static const __m128i EBIAS = _mm_set1_epi32(EXP_BIAS);
 
-#define EONE       _mm_set1_ps( 1.0f )
-#define ENEGONE    _mm_set1_ps( -1.0f )
-#define EZERO      _mm_set1_ps( 0.0f )
-#define EDOT5      _mm_set1_ps( 0.5f )
-#define ENEG126    _mm_set1_ps( -126.0f )
-#define EPOS127    _mm_set1_ps(  127.0f )
+static const __m128 EONE    = _mm_set1_ps(1.0f);
+static const __m128 EZERO   = _mm_set1_ps(0.0f);
+static const __m128 ENEG126 = _mm_set1_ps(-126.0f);
+static const __m128 EPOS127 = _mm_set1_ps(127.0f);
 
-#define EPOSINF    _mm_set1_ps( std::numeric_limits<float>::infinity() )
+static const __m128 EPOSINF = _mm_set1_ps(std::numeric_limits<float>::infinity());
 
 // Debug function to print out the contents of a floating-point SSE register
 inline void ssePrintRegister(const char* msg, __m128& reg)
@@ -150,28 +103,27 @@ inline __m128 isNegativeSpecial(const __m128 x)
 //   because it requires only one SEE register while the common
 //   solution requires two registers.
 //
-// TODO: Change the signature to a more natural ordering: sseSelect(condition, arg_true, arg_false)
-inline __m128 sseSelect(const __m128& arg_false, const __m128& arg_true, const __m128& mask)
+inline __m128 sseSelect(const __m128& mask, const __m128& arg_true, const __m128& arg_false)
 {
     return _mm_xor_ps( arg_false, _mm_and_ps( mask, _mm_xor_ps( arg_true, arg_false ) ) );
 }
 
 // Coefficients of Chebyshev (minimax) degree 5 polynomial
 // approximation to log2() over the range [1.0, 2.0[.
-#define PNLOG5 _mm_set1_ps( (float)+4.487361286440374006195e-2 )
-#define PNLOG4 _mm_set1_ps( (float)-4.165637071209677112635e-1 )
-#define PNLOG3 _mm_set1_ps( (float)+1.631148826119436277100    )
-#define PNLOG2 _mm_set1_ps( (float)-3.550793018041176193407    )
-#define PNLOG1 _mm_set1_ps( (float)+5.091710879305474367557    )
-#define PNLOG0 _mm_set1_ps( (float)-2.800364054395965731506    )
+static const __m128 PNLOG5 = _mm_set1_ps((float)+4.487361286440374006195e-2);
+static const __m128 PNLOG4 = _mm_set1_ps((float)-4.165637071209677112635e-1);
+static const __m128 PNLOG3 = _mm_set1_ps((float)+1.631148826119436277100);
+static const __m128 PNLOG2 = _mm_set1_ps((float)-3.550793018041176193407);
+static const __m128 PNLOG1 = _mm_set1_ps((float)+5.091710879305474367557);
+static const __m128 PNLOG0 = _mm_set1_ps((float)-2.800364054395965731506);
 
 // Coefficients of Chebyshev (minimax) degree 4 polynomial
 // approximation to exp2() over the range [0.0, 1.0[.
-#define PNEXP4 _mm_set1_ps( (float)1.353416792833547468620e-2 )
-#define PNEXP3 _mm_set1_ps( (float)5.201146058412685018921e-2 )
-#define PNEXP2 _mm_set1_ps( (float)2.414427569091865207710e-1 )
-#define PNEXP1 _mm_set1_ps( (float)6.930038344665415134202e-1 )
-#define PNEXP0 _mm_set1_ps( (float)1.000002593370603213644    )
+static const __m128 PNEXP4 = _mm_set1_ps((float)1.353416792833547468620e-2);
+static const __m128 PNEXP3 = _mm_set1_ps((float)5.201146058412685018921e-2);
+static const __m128 PNEXP2 = _mm_set1_ps((float)2.414427569091865207710e-1);
+static const __m128 PNEXP1 = _mm_set1_ps((float)6.930038344665415134202e-1);
+static const __m128 PNEXP0 = _mm_set1_ps((float)1.000002593370603213644);
 
 // log2 function in SSE version 2
 //
@@ -282,7 +234,7 @@ inline __m128 sseExp2(__m128 x)
     // If the (unbiased) exponent of zf is greater than 127, the result is larger than
     // the largest representable floating-point number and an overflow computation is
     // potentially happening. When this happens, force the result to positive infinity.
-    exp2 = sseSelect(exp2, EPOSINF, _mm_cmpgt_ps(iexp, EPOS127));
+    exp2 = sseSelect(_mm_cmpgt_ps(iexp, EPOS127), EPOSINF, exp2);
 
     return exp2;
 }
@@ -318,8 +270,6 @@ inline __m128 ssePower(__m128 x, __m128 exp)
 
     return values;
 }
-
-// TODO: Move other defines above to static constants.
 
 static const __m128 ESIGN_MASK = _mm_castsi128_ps(_mm_set1_epi32(0x80000000));
 static const __m128 EABS_MASK  = _mm_castsi128_ps(_mm_set1_epi32(0x7fffffff));
@@ -366,7 +316,7 @@ inline __m128 sseAtan(const __m128 x)
     // Apply identity atan(x) = PI/2 - atan(1/x) to reduce domain to [0,1]
     __m128 inv_mask = _mm_cmpgt_ps(abs_x, EONE);
     __m128 inv_abs_x = _mm_div_ps(EONE, abs_x);
-    __m128 norm_x = sseSelect(abs_x, inv_abs_x, inv_mask);
+    __m128 norm_x = sseSelect(inv_mask, inv_abs_x, abs_x);
 
     // compute atan using a normalized input
     __m128 norm_x2 = _mm_mul_ps(norm_x, norm_x);
@@ -397,7 +347,7 @@ inline __m128 sseAtan(const __m128 x)
 
     // If the input was inverted during domain reduction,
     // correct the result by subtracting it from PI/2.
-    res = sseSelect(res, _mm_sub_ps(E_PI_2, res), inv_mask);
+    res = sseSelect(inv_mask, _mm_sub_ps(E_PI_2, res), res);
 
     // If the input was negated during domain reduction,
     // correct the result by negating it again.
@@ -616,7 +566,7 @@ inline void sseSinCos(const __m128 x, __m128& sin_x, __m128& cos_x)
     // much error. However, in this case, sin(x) ~ x, and we can use xr to 
     // approximate sin(x) instead.
     __m128 sin_x2 = _mm_sub_ps(EONE, _mm_mul_ps(cos_x, cos_x));
-    sin_x2 = sseSelect(xr2, sin_x2, _mm_cmpgt_ps(xr2, SINE_THRESHOLD_SQUARED));
+    sin_x2 = sseSelect(_mm_cmpgt_ps(xr2, SINE_THRESHOLD_SQUARED), sin_x2, xr2);
     sin_x = _mm_sqrt_ps(sin_x2);
 
     // Flip the sign of sin(x) if the angle was in quadrants 3 or 4.

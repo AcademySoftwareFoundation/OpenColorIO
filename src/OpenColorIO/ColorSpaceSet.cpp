@@ -1,30 +1,5 @@
-/*
-Copyright (c) 2018 Autodesk Inc., et al.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 #include <sstream>
 
@@ -42,6 +17,8 @@ class ColorSpaceSet::Impl
 public:
     Impl() { }
     ~Impl() { }
+
+    Impl(const Impl &) = delete;
     
     Impl & operator= (const Impl & rhs)
     {
@@ -348,23 +325,23 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(ColorSpaceSet, basic)
+OCIO_ADD_TEST(ColorSpaceSet, basic)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
 
     OCIO::ConstColorSpaceSetRcPtr css1;
-    OIIO_CHECK_NO_THROW(css1 = config->getColorSpaces(nullptr));
-    OIIO_CHECK_EQUAL(css1->getNumColorSpaces(), 0);
+    OCIO_CHECK_NO_THROW(css1 = config->getColorSpaces(nullptr));
+    OCIO_CHECK_EQUAL(css1->getNumColorSpaces(), 0);
 
     // No category.
 
     OCIO::ColorSpaceRcPtr cs1 = OCIO::ColorSpace::Create();
     cs1->setName("cs1");
-    OIIO_CHECK_ASSERT(!cs1->hasCategory("linear"));
-    OIIO_CHECK_ASSERT(!cs1->hasCategory("rendering"));
-    OIIO_CHECK_ASSERT(!cs1->hasCategory("log"));
+    OCIO_CHECK_ASSERT(!cs1->hasCategory("linear"));
+    OCIO_CHECK_ASSERT(!cs1->hasCategory("rendering"));
+    OCIO_CHECK_ASSERT(!cs1->hasCategory("log"));
 
     // Having categories to filter with.
 
@@ -372,136 +349,136 @@ OIIO_ADD_TEST(ColorSpaceSet, basic)
     cs2->setName("cs2");
     cs2->addCategory("linear");
     cs2->addCategory("rendering");
-    OIIO_CHECK_ASSERT(cs2->hasCategory("linear"));
-    OIIO_CHECK_ASSERT(cs2->hasCategory("rendering"));
-    OIIO_CHECK_ASSERT(!cs2->hasCategory("log"));
+    OCIO_CHECK_ASSERT(cs2->hasCategory("linear"));
+    OCIO_CHECK_ASSERT(cs2->hasCategory("rendering"));
+    OCIO_CHECK_ASSERT(!cs2->hasCategory("log"));
 
-    OIIO_CHECK_NO_THROW(cs2->addCategory("log"));
-    OIIO_CHECK_ASSERT(cs2->hasCategory("log"));
-    OIIO_CHECK_NO_THROW(cs2->removeCategory("log"));
-    OIIO_CHECK_ASSERT(!cs2->hasCategory("log"));
+    OCIO_CHECK_NO_THROW(cs2->addCategory("log"));
+    OCIO_CHECK_ASSERT(cs2->hasCategory("log"));
+    OCIO_CHECK_NO_THROW(cs2->removeCategory("log"));
+    OCIO_CHECK_ASSERT(!cs2->hasCategory("log"));
 
     // Update config.
 
-    OIIO_CHECK_NO_THROW(config->addColorSpace(cs1));
-    OIIO_CHECK_NO_THROW(config->addColorSpace(cs2));
+    OCIO_CHECK_NO_THROW(config->addColorSpace(cs1));
+    OCIO_CHECK_NO_THROW(config->addColorSpace(cs2));
 
     // Search some color spaces based on criteria.
 
-    OIIO_CHECK_NO_THROW(css1 = config->getColorSpaces(nullptr));
-    OIIO_CHECK_EQUAL(css1->getNumColorSpaces(), 2);
-    OIIO_CHECK_EQUAL(config->getNumColorSpaces(), 2);
+    OCIO_CHECK_NO_THROW(css1 = config->getColorSpaces(nullptr));
+    OCIO_CHECK_EQUAL(css1->getNumColorSpaces(), 2);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 2);
 
-    OIIO_CHECK_NO_THROW(css1 = config->getColorSpaces(""));
-    OIIO_CHECK_EQUAL(css1->getNumColorSpaces(), 2);
+    OCIO_CHECK_NO_THROW(css1 = config->getColorSpaces(""));
+    OCIO_CHECK_EQUAL(css1->getNumColorSpaces(), 2);
 
-    OIIO_CHECK_NO_THROW(css1 = config->getColorSpaces("log"));
-    OIIO_CHECK_EQUAL(css1->getNumColorSpaces(), 0);
+    OCIO_CHECK_NO_THROW(css1 = config->getColorSpaces("log"));
+    OCIO_CHECK_EQUAL(css1->getNumColorSpaces(), 0);
 
-    OIIO_CHECK_NO_THROW(css1 = config->getColorSpaces("linear"));
-    OIIO_REQUIRE_EQUAL(css1->getNumColorSpaces(), 1);
-    OIIO_CHECK_EQUAL(std::string(css1->getColorSpaceNameByIndex(0)), std::string("cs2"));
+    OCIO_CHECK_NO_THROW(css1 = config->getColorSpaces("linear"));
+    OCIO_REQUIRE_EQUAL(css1->getNumColorSpaces(), 1);
+    OCIO_CHECK_EQUAL(std::string(css1->getColorSpaceNameByIndex(0)), std::string("cs2"));
 
-    OIIO_CHECK_NO_THROW(css1 = config->getColorSpaces("LinEar"));
-    OIIO_REQUIRE_EQUAL(css1->getNumColorSpaces(), 1);
-    OIIO_CHECK_EQUAL(std::string(css1->getColorSpaceNameByIndex(0)), std::string("cs2"));
+    OCIO_CHECK_NO_THROW(css1 = config->getColorSpaces("LinEar"));
+    OCIO_REQUIRE_EQUAL(css1->getNumColorSpaces(), 1);
+    OCIO_CHECK_EQUAL(std::string(css1->getColorSpaceNameByIndex(0)), std::string("cs2"));
 
-    OIIO_CHECK_NO_THROW(css1 = config->getColorSpaces(" LinEar "));
-    OIIO_REQUIRE_EQUAL(css1->getNumColorSpaces(), 1);
-    OIIO_CHECK_EQUAL(std::string(css1->getColorSpaceNameByIndex(0)), std::string("cs2"));
-    OIIO_CHECK_EQUAL(std::string(css1->getColorSpaceByIndex(0)->getName()), std::string("cs2"));
+    OCIO_CHECK_NO_THROW(css1 = config->getColorSpaces(" LinEar "));
+    OCIO_REQUIRE_EQUAL(css1->getNumColorSpaces(), 1);
+    OCIO_CHECK_EQUAL(std::string(css1->getColorSpaceNameByIndex(0)), std::string("cs2"));
+    OCIO_CHECK_EQUAL(std::string(css1->getColorSpaceByIndex(0)->getName()), std::string("cs2"));
 
     // Test some faulty requests.
 
-    OIIO_CHECK_NO_THROW(css1 = config->getColorSpaces("lin ear"));
-    OIIO_REQUIRE_EQUAL(css1->getNumColorSpaces(), 0);
+    OCIO_CHECK_NO_THROW(css1 = config->getColorSpaces("lin ear"));
+    OCIO_REQUIRE_EQUAL(css1->getNumColorSpaces(), 0);
 
-    OIIO_CHECK_NO_THROW(css1 = config->getColorSpaces("[linear]"));
-    OIIO_REQUIRE_EQUAL(css1->getNumColorSpaces(), 0);
+    OCIO_CHECK_NO_THROW(css1 = config->getColorSpaces("[linear]"));
+    OCIO_REQUIRE_EQUAL(css1->getNumColorSpaces(), 0);
 
-    OIIO_CHECK_NO_THROW(css1 = config->getColorSpaces("linear log"));
-    OIIO_REQUIRE_EQUAL(css1->getNumColorSpaces(), 0);
+    OCIO_CHECK_NO_THROW(css1 = config->getColorSpaces("linear log"));
+    OCIO_REQUIRE_EQUAL(css1->getNumColorSpaces(), 0);
 
-    OIIO_CHECK_NO_THROW(css1 = config->getColorSpaces("linearlog"));
-    OIIO_REQUIRE_EQUAL(css1->getNumColorSpaces(), 0);
+    OCIO_CHECK_NO_THROW(css1 = config->getColorSpaces("linearlog"));
+    OCIO_REQUIRE_EQUAL(css1->getNumColorSpaces(), 0);
 
     // Empty the config.
 
-    OIIO_CHECK_NO_THROW(css1 = config->getColorSpaces("linear"));
-    OIIO_REQUIRE_EQUAL(css1->getNumColorSpaces(), 1);
+    OCIO_CHECK_NO_THROW(css1 = config->getColorSpaces("linear"));
+    OCIO_REQUIRE_EQUAL(css1->getNumColorSpaces(), 1);
 
-    OIIO_CHECK_NO_THROW(config->clearColorSpaces());
-    OIIO_CHECK_EQUAL(config->getNumColorSpaces(), 0);
+    OCIO_CHECK_NO_THROW(config->clearColorSpaces());
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 0);
     // But existing sets are preserved.
-    OIIO_CHECK_EQUAL(css1->getNumColorSpaces(), 1);
+    OCIO_CHECK_EQUAL(css1->getNumColorSpaces(), 1);
 
     OCIO::ConstColorSpaceSetRcPtr css2;
-    OIIO_CHECK_NO_THROW(css2 = config->getColorSpaces(nullptr));
-    OIIO_CHECK_EQUAL(css2->getNumColorSpaces(), 0);
+    OCIO_CHECK_NO_THROW(css2 = config->getColorSpaces(nullptr));
+    OCIO_CHECK_EQUAL(css2->getNumColorSpaces(), 0);
 }
 
-OIIO_ADD_TEST(ColorSpaceSet, decoupled_sets)
+OCIO_ADD_TEST(ColorSpaceSet, decoupled_sets)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
 
     OCIO::ColorSpaceRcPtr cs1 = OCIO::ColorSpace::Create();
     cs1->setName("cs1");
-    OIIO_CHECK_NO_THROW(cs1->addCategory("linear"));
-    OIIO_CHECK_ASSERT(cs1->hasCategory("linear"));
-    OIIO_CHECK_NO_THROW(config->addColorSpace(cs1));
+    OCIO_CHECK_NO_THROW(cs1->addCategory("linear"));
+    OCIO_CHECK_ASSERT(cs1->hasCategory("linear"));
+    OCIO_CHECK_NO_THROW(config->addColorSpace(cs1));
 
     OCIO::ConstColorSpaceSetRcPtr css1;
-    OIIO_CHECK_NO_THROW(css1 = config->getColorSpaces(nullptr));
-    OIIO_REQUIRE_EQUAL(css1->getNumColorSpaces(), 1);
-    OIIO_CHECK_EQUAL(std::string(css1->getColorSpaceNameByIndex(0)), std::string("cs1"));
+    OCIO_CHECK_NO_THROW(css1 = config->getColorSpaces(nullptr));
+    OCIO_REQUIRE_EQUAL(css1->getNumColorSpaces(), 1);
+    OCIO_CHECK_EQUAL(std::string(css1->getColorSpaceNameByIndex(0)), std::string("cs1"));
 
     OCIO::ConstColorSpaceSetRcPtr css2;
-    OIIO_CHECK_NO_THROW(css2 = config->getColorSpaces("linear"));
-    OIIO_CHECK_EQUAL(css2->getNumColorSpaces(), 1);
-    OIIO_CHECK_EQUAL(std::string(css2->getColorSpaceNameByIndex(0)), std::string("cs1"));
+    OCIO_CHECK_NO_THROW(css2 = config->getColorSpaces("linear"));
+    OCIO_CHECK_EQUAL(css2->getNumColorSpaces(), 1);
+    OCIO_CHECK_EQUAL(std::string(css2->getColorSpaceNameByIndex(0)), std::string("cs1"));
 
     // Change the original color space.
 
     cs1->setName("new_cs1");
 
     // Check that color spaces in existing sets are not changed.
-    OIIO_CHECK_EQUAL(std::string(config->getColorSpaceNameByIndex(0)), std::string("cs1"));
+    OCIO_CHECK_EQUAL(std::string(config->getColorSpaceNameByIndex(0)), std::string("cs1"));
 
-    OIIO_CHECK_EQUAL(css1->getNumColorSpaces(), 1);
-    OIIO_CHECK_EQUAL(std::string(css1->getColorSpaceNameByIndex(0)), std::string("cs1"));
+    OCIO_CHECK_EQUAL(css1->getNumColorSpaces(), 1);
+    OCIO_CHECK_EQUAL(std::string(css1->getColorSpaceNameByIndex(0)), std::string("cs1"));
 
-    OIIO_CHECK_EQUAL(css2->getNumColorSpaces(), 1);
-    OIIO_CHECK_EQUAL(std::string(css2->getColorSpaceNameByIndex(0)), std::string("cs1"));
+    OCIO_CHECK_EQUAL(css2->getNumColorSpaces(), 1);
+    OCIO_CHECK_EQUAL(std::string(css2->getColorSpaceNameByIndex(0)), std::string("cs1"));
 
     // Change the color space from the config instance.
 
-    OIIO_CHECK_ASSERT(!cs1->isData());
+    OCIO_CHECK_ASSERT(!cs1->isData());
     config->clearColorSpaces();
     config->addColorSpace(cs1);
     cs1->setIsData(true);
 
-    OIIO_CHECK_EQUAL(std::string(cs1->getName()), std::string("new_cs1"));
-    OIIO_CHECK_ASSERT(cs1->isData());
-    OIIO_CHECK_EQUAL(std::string(config->getColorSpaceNameByIndex(0)), std::string("new_cs1"));
+    OCIO_CHECK_EQUAL(std::string(cs1->getName()), std::string("new_cs1"));
+    OCIO_CHECK_ASSERT(cs1->isData());
+    OCIO_CHECK_EQUAL(std::string(config->getColorSpaceNameByIndex(0)), std::string("new_cs1"));
     // NB: ColorSpace would need to be re-added to the config to reflect the change to isData.
-    OIIO_CHECK_ASSERT(!config->getColorSpace("new_cs1")->isData());
+    OCIO_CHECK_ASSERT(!config->getColorSpace("new_cs1")->isData());
 
-    OIIO_CHECK_EQUAL(css1->getNumColorSpaces(), 1);
-    OIIO_CHECK_EQUAL(std::string(css1->getColorSpaceNameByIndex(0)), std::string("cs1"));
-    OIIO_CHECK_ASSERT(!css1->getColorSpace("cs1")->isData());
+    OCIO_CHECK_EQUAL(css1->getNumColorSpaces(), 1);
+    OCIO_CHECK_EQUAL(std::string(css1->getColorSpaceNameByIndex(0)), std::string("cs1"));
+    OCIO_CHECK_ASSERT(!css1->getColorSpace("cs1")->isData());
 
-    OIIO_CHECK_EQUAL(css2->getNumColorSpaces(), 1);
-    OIIO_CHECK_EQUAL(std::string(css2->getColorSpaceNameByIndex(0)), std::string("cs1"));
-    OIIO_CHECK_ASSERT(!css2->getColorSpace("cs1")->isData());
+    OCIO_CHECK_EQUAL(css2->getNumColorSpaces(), 1);
+    OCIO_CHECK_EQUAL(std::string(css2->getColorSpaceNameByIndex(0)), std::string("cs1"));
+    OCIO_CHECK_ASSERT(!css2->getColorSpace("cs1")->isData());
 }
 
-OIIO_ADD_TEST(ColorSpaceSet, order_validation)
+OCIO_ADD_TEST(ColorSpaceSet, order_validation)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
 
     OCIO::ConstColorSpaceSetRcPtr css1;
-    OIIO_CHECK_NO_THROW(css1 = config->getColorSpaces(nullptr));
-    OIIO_CHECK_EQUAL(css1->getNumColorSpaces(), 0);
+    OCIO_CHECK_NO_THROW(css1 = config->getColorSpaces(nullptr));
+    OCIO_CHECK_EQUAL(css1->getNumColorSpaces(), 0);
 
     // Create some color spaces.
 
@@ -521,29 +498,29 @@ OIIO_ADD_TEST(ColorSpaceSet, order_validation)
 
     // Add the color spaces.
 
-    OIIO_CHECK_NO_THROW(config->addColorSpace(cs1));
-    OIIO_CHECK_NO_THROW(config->addColorSpace(cs2));
-    OIIO_CHECK_NO_THROW(config->addColorSpace(cs3));
+    OCIO_CHECK_NO_THROW(config->addColorSpace(cs1));
+    OCIO_CHECK_NO_THROW(config->addColorSpace(cs2));
+    OCIO_CHECK_NO_THROW(config->addColorSpace(cs3));
 
     // Check the color space order for the category "linear".
 
-    OIIO_CHECK_NO_THROW(css1 = config->getColorSpaces("linear"));
-    OIIO_REQUIRE_EQUAL(css1->getNumColorSpaces(), 2);
+    OCIO_CHECK_NO_THROW(css1 = config->getColorSpaces("linear"));
+    OCIO_REQUIRE_EQUAL(css1->getNumColorSpaces(), 2);
 
-    OIIO_CHECK_EQUAL(std::string(css1->getColorSpaceNameByIndex(0)), std::string("cs1"));
-    OIIO_CHECK_EQUAL(std::string(css1->getColorSpaceNameByIndex(1)), std::string("cs2"));
+    OCIO_CHECK_EQUAL(std::string(css1->getColorSpaceNameByIndex(0)), std::string("cs1"));
+    OCIO_CHECK_EQUAL(std::string(css1->getColorSpaceNameByIndex(1)), std::string("cs2"));
 
     // Check the color space order for the category "rendering".
 
-    OIIO_CHECK_NO_THROW(css1 = config->getColorSpaces("rendering"));
-    OIIO_REQUIRE_EQUAL(css1->getNumColorSpaces(), 3);
+    OCIO_CHECK_NO_THROW(css1 = config->getColorSpaces("rendering"));
+    OCIO_REQUIRE_EQUAL(css1->getNumColorSpaces(), 3);
 
-    OIIO_CHECK_EQUAL(std::string(css1->getColorSpaceNameByIndex(0)), std::string("cs1"));
-    OIIO_CHECK_EQUAL(std::string(css1->getColorSpaceNameByIndex(1)), std::string("cs2"));
-    OIIO_CHECK_EQUAL(std::string(css1->getColorSpaceNameByIndex(2)), std::string("cs3"));
+    OCIO_CHECK_EQUAL(std::string(css1->getColorSpaceNameByIndex(0)), std::string("cs1"));
+    OCIO_CHECK_EQUAL(std::string(css1->getColorSpaceNameByIndex(1)), std::string("cs2"));
+    OCIO_CHECK_EQUAL(std::string(css1->getColorSpaceNameByIndex(2)), std::string("cs3"));
 }
 
-OIIO_ADD_TEST(ColorSpaceSet, operations_on_set)
+OCIO_ADD_TEST(ColorSpaceSet, operations_on_set)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
 
@@ -551,7 +528,7 @@ OIIO_ADD_TEST(ColorSpaceSet, operations_on_set)
 
     OCIO::ColorSpaceRcPtr cs1 = OCIO::ColorSpace::Create();
     cs1->setName("cs1");
-    OIIO_CHECK_NO_THROW(config->addColorSpace(cs1));
+    OCIO_CHECK_NO_THROW(config->addColorSpace(cs1));
 
     // Having categories to filter with.
 
@@ -559,13 +536,13 @@ OIIO_ADD_TEST(ColorSpaceSet, operations_on_set)
     cs2->setName("cs2");
     cs2->addCategory("linear");
     cs2->addCategory("rendering");
-    OIIO_CHECK_NO_THROW(config->addColorSpace(cs2));
+    OCIO_CHECK_NO_THROW(config->addColorSpace(cs2));
 
     OCIO::ColorSpaceRcPtr cs3 = OCIO::ColorSpace::Create();
     cs3->setName("cs3");
     cs3->addCategory("log");
     cs3->addCategory("rendering");
-    OIIO_CHECK_NO_THROW(config->addColorSpace(cs3));
+    OCIO_CHECK_NO_THROW(config->addColorSpace(cs3));
 
 
     // Recap. of the existing color spaces:
@@ -575,18 +552,18 @@ OIIO_ADD_TEST(ColorSpaceSet, operations_on_set)
 
 
     OCIO::ConstColorSpaceSetRcPtr css1;
-    OIIO_CHECK_NO_THROW(css1 = config->getColorSpaces(nullptr));
-    OIIO_CHECK_EQUAL(css1->getNumColorSpaces(), 3);
+    OCIO_CHECK_NO_THROW(css1 = config->getColorSpaces(nullptr));
+    OCIO_CHECK_EQUAL(css1->getNumColorSpaces(), 3);
 
     OCIO::ConstColorSpaceSetRcPtr css2;
-    OIIO_CHECK_NO_THROW(css2 = config->getColorSpaces("linear"));
-    OIIO_CHECK_EQUAL(css2->getNumColorSpaces(), 1);
-    OIIO_CHECK_EQUAL(std::string(css2->getColorSpaceNameByIndex(0)), std::string("cs2"));
+    OCIO_CHECK_NO_THROW(css2 = config->getColorSpaces("linear"));
+    OCIO_CHECK_EQUAL(css2->getNumColorSpaces(), 1);
+    OCIO_CHECK_EQUAL(std::string(css2->getColorSpaceNameByIndex(0)), std::string("cs2"));
 
     OCIO::ConstColorSpaceSetRcPtr css3;
-    OIIO_CHECK_NO_THROW(css3 = config->getColorSpaces("log"));
-    OIIO_CHECK_EQUAL(css3->getNumColorSpaces(), 1);
-    OIIO_CHECK_EQUAL(std::string(css3->getColorSpaceNameByIndex(0)), std::string("cs3"));
+    OCIO_CHECK_NO_THROW(css3 = config->getColorSpaces("log"));
+    OCIO_CHECK_EQUAL(css3->getNumColorSpaces(), 1);
+    OCIO_CHECK_EQUAL(std::string(css3->getColorSpaceNameByIndex(0)), std::string("cs3"));
 
 
     // Recap. of the existing color space sets:
@@ -598,62 +575,62 @@ OIIO_ADD_TEST(ColorSpaceSet, operations_on_set)
     // Test the union.
 
     OCIO::ConstColorSpaceSetRcPtr css4 = css2 || css3;
-    OIIO_CHECK_EQUAL(css4->getNumColorSpaces(), 2); // {cs2, cs3}
+    OCIO_CHECK_EQUAL(css4->getNumColorSpaces(), 2); // {cs2, cs3}
 
     css4 = css1 || css2;
-    OIIO_CHECK_EQUAL(css4->getNumColorSpaces(), 3); // no duplication i.e. all color spaces
+    OCIO_CHECK_EQUAL(css4->getNumColorSpaces(), 3); // no duplication i.e. all color spaces
 
     // Test the intersection.
 
     css4 = css2 && css3;
-    OIIO_CHECK_EQUAL(css4->getNumColorSpaces(), 0);
+    OCIO_CHECK_EQUAL(css4->getNumColorSpaces(), 0);
 
     css4 = css2 && css1;
-    OIIO_REQUIRE_EQUAL(css4->getNumColorSpaces(), 1); // {cs2}
-    OIIO_CHECK_EQUAL(std::string(css4->getColorSpaceNameByIndex(0)), std::string("cs2"));
-    OIIO_CHECK_EQUAL(std::string(css4->getColorSpaceByIndex(0)->getName()), std::string("cs2"));
+    OCIO_REQUIRE_EQUAL(css4->getNumColorSpaces(), 1); // {cs2}
+    OCIO_CHECK_EQUAL(std::string(css4->getColorSpaceNameByIndex(0)), std::string("cs2"));
+    OCIO_CHECK_EQUAL(std::string(css4->getColorSpaceByIndex(0)->getName()), std::string("cs2"));
 
     // Test the difference.
 
     css4 = css1 - css3;
-    OIIO_REQUIRE_EQUAL(css4->getNumColorSpaces(), 2); // {cs1, cs2}
-    OIIO_CHECK_EQUAL(std::string(css4->getColorSpaceNameByIndex(0)), std::string("cs1"));
-    OIIO_CHECK_EQUAL(std::string(css4->getColorSpaceNameByIndex(1)), std::string("cs2"));
+    OCIO_REQUIRE_EQUAL(css4->getNumColorSpaces(), 2); // {cs1, cs2}
+    OCIO_CHECK_EQUAL(std::string(css4->getColorSpaceNameByIndex(0)), std::string("cs1"));
+    OCIO_CHECK_EQUAL(std::string(css4->getColorSpaceNameByIndex(1)), std::string("cs2"));
 
     css4 = css1 - css2;
-    OIIO_REQUIRE_EQUAL(css4->getNumColorSpaces(), 2); // {cs1, cs3}
-    OIIO_CHECK_EQUAL(std::string(css4->getColorSpaceNameByIndex(0)), std::string("cs1"));
-    OIIO_CHECK_EQUAL(std::string(css4->getColorSpaceNameByIndex(1)), std::string("cs3"));
+    OCIO_REQUIRE_EQUAL(css4->getNumColorSpaces(), 2); // {cs1, cs3}
+    OCIO_CHECK_EQUAL(std::string(css4->getColorSpaceNameByIndex(0)), std::string("cs1"));
+    OCIO_CHECK_EQUAL(std::string(css4->getColorSpaceNameByIndex(1)), std::string("cs3"));
 
     // Test with several embedded operations.
 
     css4 = css1 - (css2 || css3);
-    OIIO_REQUIRE_EQUAL(css4->getNumColorSpaces(), 1); // {cs1}
-    OIIO_CHECK_EQUAL(std::string(css4->getColorSpaceNameByIndex(0)), std::string("cs1"));
+    OCIO_REQUIRE_EQUAL(css4->getNumColorSpaces(), 1); // {cs1}
+    OCIO_CHECK_EQUAL(std::string(css4->getColorSpaceNameByIndex(0)), std::string("cs1"));
 
     OCIO::ColorSpaceSetRcPtr css5;
-    OIIO_CHECK_NO_THROW(css5 = config->getColorSpaces("rendering"));
-    OIIO_CHECK_EQUAL(css5->getNumColorSpaces(), 2); // {cs2, cs3}
+    OCIO_CHECK_NO_THROW(css5 = config->getColorSpaces("rendering"));
+    OCIO_CHECK_EQUAL(css5->getNumColorSpaces(), 2); // {cs2, cs3}
     // Manipulate the result with few tests.
-    OIIO_CHECK_NO_THROW(css5->addColorSpace(cs1));
-    OIIO_CHECK_EQUAL(css5->getNumColorSpaces(), 3); // {cs1, cs2, cs3}
-    OIIO_CHECK_NO_THROW(css5->removeColorSpace("cs2"));
-    OIIO_CHECK_NO_THROW(css5->removeColorSpace("cs1"));
-    OIIO_CHECK_EQUAL(css5->getNumColorSpaces(), 1);
-    OIIO_CHECK_EQUAL(std::string(css5->getColorSpaceNameByIndex(0)), std::string("cs3"));
-    OIIO_CHECK_NO_THROW(css5->clearColorSpaces());
-    OIIO_CHECK_EQUAL(css5->getNumColorSpaces(), 0);
+    OCIO_CHECK_NO_THROW(css5->addColorSpace(cs1));
+    OCIO_CHECK_EQUAL(css5->getNumColorSpaces(), 3); // {cs1, cs2, cs3}
+    OCIO_CHECK_NO_THROW(css5->removeColorSpace("cs2"));
+    OCIO_CHECK_NO_THROW(css5->removeColorSpace("cs1"));
+    OCIO_CHECK_EQUAL(css5->getNumColorSpaces(), 1);
+    OCIO_CHECK_EQUAL(std::string(css5->getColorSpaceNameByIndex(0)), std::string("cs3"));
+    OCIO_CHECK_NO_THROW(css5->clearColorSpaces());
+    OCIO_CHECK_EQUAL(css5->getNumColorSpaces(), 0);
 
-    OIIO_CHECK_NO_THROW(css5 = config->getColorSpaces("rendering"));
-    OIIO_REQUIRE_EQUAL(css5->getNumColorSpaces(), 2); // {cs2, cs3}
-    OIIO_CHECK_EQUAL(std::string(css5->getColorSpaceNameByIndex(0)), std::string("cs2"));
-    OIIO_CHECK_EQUAL(std::string(css5->getColorSpaceNameByIndex(1)), std::string("cs3"));
+    OCIO_CHECK_NO_THROW(css5 = config->getColorSpaces("rendering"));
+    OCIO_REQUIRE_EQUAL(css5->getNumColorSpaces(), 2); // {cs2, cs3}
+    OCIO_CHECK_EQUAL(std::string(css5->getColorSpaceNameByIndex(0)), std::string("cs2"));
+    OCIO_CHECK_EQUAL(std::string(css5->getColorSpaceNameByIndex(1)), std::string("cs3"));
 
     css4 = (css1  - css5)  // ( {cs1, cs2, cs3} - {cs2, cs3} ) --> {cs1}
            && 
            (css2 || css3); // ( {cs2} || {cs3} )               --> {cs2, cs3}
 
-    OIIO_CHECK_EQUAL(css4->getNumColorSpaces(), 0);
+    OCIO_CHECK_EQUAL(css4->getNumColorSpaces(), 0);
 }
 
 #endif // OCIO_UNIT_TEST

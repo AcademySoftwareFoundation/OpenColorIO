@@ -1,0 +1,273 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+#
+# azure-pipelines build file
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=azure-devops&tabs=schema
+
+# TODO: Add gh-pages deployment on tag trigger
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - master
+    - RB-*
+    - ci_test
+
+pr:
+  autoCancel: true
+  branches:
+    include:
+    - master
+    - RB-*
+
+schedules:
+  - cron: "0 0 * * 0"
+    displayName: Weekly Sunday build
+    branches:
+      include:
+        - master
+    always: true
+
+jobs:
+
+# ------------------------------------------------------------------------------
+# Linux
+# ------------------------------------------------------------------------------
+# Note: 'agentImage' is the Microsoft-hosted agent. 'containerImage' is the
+#       Docker container where the build occurs.
+# Note: 'containerImage' images are hosted on DockerHub.
+
+- job: Linux
+  strategy:
+    matrix:
+      CentOS 7 VFX CY2019:
+        containerImage: aswfstaging/ci-ocio:2019
+        useSSE: ON
+        buildType: Release
+        cxxCompiler: g++
+        cCompiler: gcc
+      CentOS 7 VFX CY2019 (no SSE):
+        containerImage: aswfstaging/ci-ocio:2019
+        useSSE: OFF
+        buildType: Release
+        cxxCompiler: g++
+        cCompiler: gcc
+      CentOS 7 Clang 7:
+        containerImage: aswfstaging/ci-ocio:2019
+        useSSE: ON
+        buildType: Release
+        cxxCompiler: clang++
+        cCompiler: clang
+      CentOS 7 Clang 7 (Debug):
+        containerImage: aswfstaging/ci-ocio:2019
+        useSSE: ON
+        buildType: Debug
+        cxxCompiler: clang++
+        cCompiler: clang
+  pool:
+    vmImage: 'ubuntu-16.04'
+  container: $[ variables['containerImage'] ]
+
+  steps:
+  - template: share/ci/templates/checkout.yml
+  - template: share/ci/templates/configure.yml
+    parameters:
+      useSSE: $(useSSE)
+      buildType: $(buildType)
+      cxxCompiler: $(cxxCompiler)
+      cCompiler: $(cCompiler)
+
+  - template: share/ci/templates/build.yml
+    parameters:
+      buildType: $(buildType)
+      cxxCompiler: $(cxxCompiler)
+      cCompiler: $(cCompiler)
+      cmakeOpts: -- -j2
+
+# ----------------------------------
+# Latest dependency tags (cron only)
+# ----------------------------------
+# TODO: Set yaml-cpp to "latest" when 0.6.x is supported
+
+- job: Latest
+  strategy:
+    matrix:
+      Linux CentOS 7 VFX CY2019:
+        containerImage: aswfstaging/ci-ocio:2019
+        cxxCompiler: g++
+        cCompiler: gcc
+      Linux CentOS 7 Clang 7:
+        containerImage: aswfstaging/ci-ocio:2019
+        cxxCompiler: clang++
+        cCompiler: clang
+  pool:
+    vmImage: 'ubuntu-16.04'
+  container: $[ variables['containerImage'] ]
+  condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
+
+  steps:
+  - template: share/ci/templates/checkout.yml
+  - bash: |
+      share/ci/scripts/linux/install_expat.sh latest
+      share/ci/scripts/linux/install_lcms2.sh latest
+      share/ci/scripts/linux/install_yaml-cpp.sh 0.3.0
+      share/ci/scripts/linux/install_pystring.sh latest
+      share/ci/scripts/linux/install_openexr.sh latest
+      share/ci/scripts/linux/install_oiio.sh latest
+      share/ci/scripts/linux/install_sphinx.sh latest
+    displayName: Install dependencies
+
+  - template: share/ci/templates/configure.yml
+    parameters:
+      installExtPkgs: NONE
+      cxxCompiler: $(cxxCompiler)
+      cCompiler: $(cCompiler)
+      cmakeOpts: |
+        -DEXPAT_DIRS="/usr/local" \
+        -DLCMS2_DIRS="/usr/local" \
+        -DYAMLCPP_DIRS="/usr/local" \
+        -DPYSTRING_DIRS="/usr/local" \
+        -DILMBASE_DIRS="/usr/local"
+
+  - template: share/ci/templates/build.yml
+    parameters:
+      cxxCompiler: $(cxxCompiler)
+      cCompiler: $(cCompiler)
+      cmakeOpts: -- -j2
+
+# --------------------------------------
+# SonarCloud static analysis (cron only)
+# --------------------------------------
+- job: SonarCloud
+  strategy:
+    matrix:
+      Linux CentOS 7 VFX CY2019:
+        containerImage: aswfstaging/ci-ocio:2019
+  pool:
+    vmImage: 'ubuntu-16.04'
+  container: $[ variables['containerImage'] ]
+  condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
+
+  steps:
+  - template: share/ci/templates/checkout.yml
+  - template: share/ci/templates/configure.yml
+    parameters:
+      cxxFlags: -g -O0 -fprofile-arcs -ftest-coverage
+      cmakeOpts: |
+        -DCMAKE_EXE_LINKER_FLAGS="-lgcov" \
+        -DCMAKE_CXX_OUTPUT_EXTENSION_REPLACE=ON
+
+  - template: share/ci/templates/build_sonar.yml
+
+# ------------------------------------------------------------------------------
+# macOS
+# ------------------------------------------------------------------------------
+- job: macOS
+  strategy:
+    matrix:
+      10.14 AppleClang 10.0:
+        agentImage: 'macOS-10.14'
+        buildType: Release
+      10.14 AppleClang 10.0 (Debug):
+        agentImage: 'macOS-10.14'
+        buildType: Debug
+      10.13 AppleClang 10.0:
+        agentImage: 'macOS-10.13'
+        buildType: Release
+  pool:
+    vmImage: $(agentImage)
+
+  steps:
+  - template: share/ci/templates/checkout.yml
+  - bash: |
+      share/ci/scripts/macos/install.sh
+      share/ci/scripts/macos/install_python.sh 2.7.16
+    displayName: Install dependencies
+
+  - template: share/ci/templates/configure.yml
+    parameters:
+      buildType: $(buildType)
+      cmakeOpts: |
+        -DPYTHON_INCLUDE_DIR=$(python-config --prefix)/include/python2.7 \
+        -DPYTHON_LIBRARY=$(python-config --prefix)/lib/libpython2.7.dylib \
+        -DPYTHON_EXECUTABLE=$(which python2)
+
+  - template: share/ci/templates/build.yml
+    parameters:
+      buildType: $(buildType)
+      cmakeOpts: -- -j2
+
+# ------------------------------------------------------------------------------
+# Windows
+# ------------------------------------------------------------------------------
+# TODO: Install pythonXX_d.lib (or work around it being needed) to support Debug
+# build testing with Python bindings and docs enabled.
+
+- job: Windows
+  strategy:
+    matrix:
+      2016 MSVC 14.16:
+        agentImage: 'vs2017-win2016'
+        buildType: Release
+        buildSharedLibs: ON
+        buildPython: ON
+        buildDocs: ON
+        installPython: false
+      2016 MSVC 14.16 (static):
+        agentImage: 'vs2017-win2016'
+        buildType: Release
+        buildSharedLibs: OFF
+        buildPython: ON
+        buildDocs: OFF
+        installPython: false
+      2016 MSVC 14.16 (Debug):
+        agentImage: 'vs2017-win2016'
+        buildType: Debug
+        buildSharedLibs: ON
+        buildPython: OFF
+        buildDocs: OFF
+        installPython: false
+      2012 MSVC 14.0:
+        agentImage: 'vs2015-win2012r2'
+        buildType: Release
+        buildSharedLibs: ON
+        buildPython: ON
+        buildDocs: ON
+        installPython: true
+  pool:
+    vmImage: $(agentImage)
+
+  steps:
+  - template: share/ci/templates/checkout.yml
+  - powershell: |
+      share/ci/scripts/windows/install_cmake.ps1 3.11.0
+    displayName: Install CMake
+
+  - powershell: |
+      share/ci/scripts/windows/install_python.ps1 2.7.16
+    displayName: Install Python
+    condition: and(succeeded(), eq(variables['installPython'], 'true'))
+
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '2.7'
+      addToPath: true
+      architecture: 'x64'
+    displayName: Configure Python
+    condition: and(succeeded(), eq(variables['installPython'], 'false'))
+
+  - template: share/ci/templates/configure.yml
+    parameters:
+      buildType: $(buildType)
+      buildSharedLibs: $(buildSharedLibs)
+      buildPython: $(buildPython)
+      buildDocs: $(buildDocs)
+      verbose: ON
+      cmakeOpts: |
+        -DCMAKE_GENERATOR_PLATFORM=x64 \
+        -DPYTHON_EXECUTABLE=$(which python)
+
+  - template: share/ci/templates/build.yml
+    parameters:
+      buildType: $(buildType)

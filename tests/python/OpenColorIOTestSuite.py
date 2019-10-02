@@ -1,6 +1,11 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+
 import unittest, os, sys
 
 build_location = sys.argv[1]
+
+opencolorio_sse = sys.argv[2].lower() == 'true'
 
 opencolorio_dir = os.path.join(build_location, "src", "OpenColorIO")
 pyopencolorio_dir = os.path.join(build_location, "src", "bindings", "python")
@@ -8,9 +13,9 @@ pyopencolorio_dir = os.path.join(build_location, "src", "bindings", "python")
 if os.name == 'nt':
     # On Windows we must append the build type to the build dirs and add the main library to PATH
     # Note: Only when compiling within Microsoft Visual Studio editor i.e. not on command line.
-    if len(sys.argv)==3:
-        opencolorio_dir = os.path.join(opencolorio_dir, sys.argv[2])
-        pyopencolorio_dir = os.path.join(pyopencolorio_dir, sys.argv[2])
+    if len(sys.argv)==4:
+        opencolorio_dir = os.path.join(opencolorio_dir, sys.argv[3])
+        pyopencolorio_dir = os.path.join(pyopencolorio_dir, sys.argv[3])
 
     os.environ['PATH'] = "{0};{1}".format(opencolorio_dir, os.environ.get('PATH',""))
 elif sys.platform == 'darwin':
@@ -46,7 +51,6 @@ def suite():
     suite.addTest(ContextTest("test_interface"))
     suite.addTest(LookTest("test_interface"))
     suite.addTest(ColorSpaceTest("test_interface"))
-    suite.addTest(TransformsTest("test_interface"))
     suite.addTest(CDLTransformTest("test_interface"))
     suite.addTest(CDLTransformTest("test_equality"))
     suite.addTest(CDLTransformTest("test_validation"))
@@ -57,7 +61,7 @@ def suite():
     # Processor
     # ProcessorMetadata
     suite.addTest(GpuShaderDescTest("test_interface"))
-    suite.addTest(BakerTest("test_interface"))
+    suite.addTest(BakerTest("test_interface", opencolorio_sse))
     # PackedImageDesc
     # PlanarImageDesc
     return suite

@@ -1,41 +1,18 @@
-/*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
-All Rights Reserved.
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
-#include <map>
-#include <string>
+#include <cstring>
 #include <iostream>
+#include <map>
 #include <sstream>
+#include <string>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "HashUtils.h"
 #include "Mutex.h"
 #include "PathUtils.h"
+#include "PrivateTypes.h"
 #include "pystring/pystring.h"
 
 OCIO_NAMESPACE_ENTER
@@ -43,10 +20,8 @@ OCIO_NAMESPACE_ENTER
 
 namespace
 {
-    typedef std::map< std::string, std::string> StringMap;
-    
-    void GetAbsoluteSearchPaths(std::vector<std::string> & searchpaths,
-                                const std::string & pathString,
+    void GetAbsoluteSearchPaths(StringVec & searchpaths,
+                                const StringVec & pathStrings,
                                 const std::string & configRootDir,
                                 const EnvMap & map);
 }
@@ -54,6 +29,10 @@ namespace
     class Context::Impl
     {
     public:
+        // New platform-agnostic search paths vector.
+        StringVec searchPaths_;
+        // Original concatenated string search paths (keeping it for now to
+        // avoid changes to the original API).
         std::string searchPath_;
         std::string workingDir_;
         EnvironmentMode envmode_;
@@ -80,6 +59,7 @@ namespace
                 AutoMutex lock1(resultsCacheMutex_);
                 AutoMutex lock2(rhs.resultsCacheMutex_);
                 
+                searchPaths_ = rhs.searchPaths_;
                 searchPath_ = rhs.searchPath_;
                 workingDir_ = rhs.workingDir_;
                 envMap_ = rhs.envMap_;
@@ -133,7 +113,14 @@ namespace
         if(getImpl()->cacheID_.empty())
         {
             std::ostringstream cacheid;
-            cacheid << "Search Path " << getImpl()->searchPath_ << " ";
+            if (!getImpl()->searchPaths_.empty())
+            {
+                cacheid << "Search Path ";
+                for (auto & path : getImpl()->searchPaths_)
+                {
+                    cacheid << path << " ";
+                }
+            }
             cacheid << "Working Dir " << getImpl()->workingDir_ << " ";
             cacheid << "Environment Mode " << getImpl()->envmode_ << " ";
             
@@ -155,6 +142,8 @@ namespace
     {
         AutoMutex lock(getImpl()->resultsCacheMutex_);
         
+        pystring::split(path, getImpl()->searchPaths_, ":");
+        
         getImpl()->searchPath_ = path;
         getImpl()->resultsCache_.clear();
         getImpl()->cacheID_ = "";
@@ -165,6 +154,45 @@ namespace
         return getImpl()->searchPath_.c_str();
     }
     
+    int Context::getNumSearchPaths() const
+    {
+        return (int)getImpl()->searchPaths_.size();
+    }
+
+    const char * Context::getSearchPath(int index) const
+    {
+        if (index < 0 || index >= (int)getImpl()->searchPaths_.size()) return "";
+        return getImpl()->searchPaths_[index].c_str();
+    }
+
+    void Context::clearSearchPaths()
+    {
+        AutoMutex lock(getImpl()->resultsCacheMutex_);
+
+        getImpl()->searchPath_ = "";
+        getImpl()->searchPaths_.clear();
+        getImpl()->resultsCache_.clear();
+        getImpl()->cacheID_ = "";
+    }
+
+    void Context::addSearchPath(const char * path)
+    {
+        AutoMutex lock(getImpl()->resultsCacheMutex_);
+
+        if (strlen(path) != 0)
+        {
+            getImpl()->searchPaths_.emplace_back(path);
+            getImpl()->resultsCache_.clear();
+            getImpl()->cacheID_ = "";
+
+            if (getImpl()->searchPath_.size() != 0)
+            {
+                getImpl()->searchPath_ += ":";
+            }
+            getImpl()->searchPath_ += getImpl()->searchPaths_.back();
+        }
+    }
+
     void Context::setWorkingDir(const char * dirname)
     {
         AutoMutex lock(getImpl()->resultsCacheMutex_);
@@ -308,7 +336,7 @@ namespace
         {
             if(FileExists(expandedfullpath))
             {
-                getImpl()->resultsCache_[filename] = expandedfullpath;
+                getImpl()->resultsCache_[filename] = pystring::os::path::normpath(expandedfullpath);
                 return getImpl()->resultsCache_[filename].c_str();
             }
             std::ostringstream errortext;
@@ -321,9 +349,9 @@ namespace
         // Load a relative file reference
         // Prep the search path vector
         // TODO: Cache this prepped vector?
-        std::vector<std::string> searchpaths;
+        StringVec searchpaths;
         GetAbsoluteSearchPaths(searchpaths,
-                               getImpl()->searchPath_,
+                               getImpl()->searchPaths_,
                                getImpl()->workingDir_,
                                getImpl()->envMap_);
         
@@ -340,7 +368,7 @@ namespace
             std::string expandedfullpath = EnvExpand(fullpath, getImpl()->envMap_);
             if(FileExists(expandedfullpath))
             {
-                getImpl()->resultsCache_[filename] = expandedfullpath;
+                getImpl()->resultsCache_[filename] = pystring::os::path::normpath(expandedfullpath);
                 return getImpl()->resultsCache_[filename].c_str();
             }
             if(i!=0) errortext << " : ";
@@ -353,8 +381,17 @@ namespace
     std::ostream& operator<< (std::ostream& os, const Context& context)
     {
         os << "<Context";
-        os << " searchPath=" << context.getSearchPath();
-        os << ", workingDir=" << context.getWorkingDir();
+        os << " searchPath=[";
+        const int numSP = context.getNumSearchPaths();
+        for (int i = 0; i < numSP; ++i)
+        {
+            os << "\"" << context.getSearchPath(i) << "\"";
+            if (i != numSP - 1)
+            {
+                os << ", ";
+            }
+        }
+        os << "], workingDir=" << context.getWorkingDir();
         os << ", environmentMode=" << EnvironmentModeToString(context.getEnvironmentMode());
         os << ", environment=";
         for(int i=0; i<context.getNumStringVars(); ++i)
@@ -369,24 +406,21 @@ namespace
 
 namespace
 {
-    void GetAbsoluteSearchPaths(std::vector<std::string> & searchpaths,
-                                const std::string & pathString,
+    void GetAbsoluteSearchPaths(StringVec & searchpaths,
+                                const StringVec & pathStrings,
                                 const std::string & workingDir,
                                 const EnvMap & map)
     {
-        if(pathString.empty())
+        if(pathStrings.empty())
         {
             searchpaths.push_back(workingDir);
             return;
         }
         
-        std::vector<std::string> parts;
-        pystring::split(pathString, parts, ":");
-        
-        for (unsigned int i = 0; i < parts.size(); ++i)
+        for (unsigned int i = 0; i < pathStrings.size(); ++i)
         {
-            // Expand variables incase the expansion adds slashes
-            std::string expanded = EnvExpand(parts[i], map);
+            // Expand variables in case the expansion adds slashes
+            std::string expanded = EnvExpand(pathStrings[i], map);
 
             // Remove trailing "/", and spaces
             std::string dirname = pystring::rstrip(pystring::strip(expanded), "/");
@@ -405,72 +439,3 @@ namespace
 }
 OCIO_NAMESPACE_EXIT
 
-///////////////////////////////////////////////////////////////////////////////
-
-#ifdef OCIO_UNIT_TEST
-
-namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
-#include <algorithm>
-
-#ifdef OCIO_SOURCE_DIR
-
-#define _STR(x) #x
-#define STR(x) _STR(x)
-
-#ifdef WINDOWS
-    // FIXME: On Windows remove the 'C:' from the absolute path as the ':' is
-    //        used for the search path delimiter. The selected character
-    //        is problematic on Windows.
-    static const std::string ociodir(&std::string(STR(OCIO_SOURCE_DIR)).c_str()[2]);
-
-    // Method to avoid using boost filesystem library to compare paths
-    std::string sanatizepath(const char* path)
-    {
-        std::string s(path);
-        std::replace(s.begin(), s.end(), '\\', '/');
-        return s;
-    }
-#else
-    static const std::string ociodir(STR(OCIO_SOURCE_DIR));
-    std::string sanatizepath(const char* path)
-    {
-        return std::string(path);
-    }
-#endif
-    static const std::string contextpath(ociodir+std::string("/src/core/Context.cpp"));
-
-OIIO_ADD_TEST(Context, ABSPath)
-{
-    OCIO::ContextRcPtr con = OCIO::Context::Create();
-    con->setSearchPath(ociodir.c_str());
-    
-    con->setStringVar("non_abs", "src/core/Context.cpp");
-    con->setStringVar("is_abs", contextpath.c_str());
-    
-    OIIO_CHECK_NO_THROW(con->resolveFileLocation("${non_abs}"));
-
-    OIIO_CHECK_ASSERT(strcmp(sanatizepath(con->resolveFileLocation("${non_abs}")).c_str(), 
-                                            contextpath.c_str()) == 0);
-    
-    OIIO_CHECK_NO_THROW(con->resolveFileLocation("${is_abs}"));
-    OIIO_CHECK_ASSERT(strcmp(con->resolveFileLocation("${is_abs}"), contextpath.c_str()) == 0);
-   
-}
-
-OIIO_ADD_TEST(Context, VarSearchPath)
-{
-    OCIO::ContextRcPtr context = OCIO::Context::Create();
-
-    context->setStringVar("SOURCE_DIR", ociodir.c_str());
-    context->setSearchPath("${SOURCE_DIR}/src/core");
-
-    OIIO_CHECK_NO_THROW(context->resolveFileLocation("Context.cpp"));
-    OIIO_CHECK_ASSERT(strcmp(sanatizepath(context->resolveFileLocation("Context.cpp")).c_str(), 
-                                contextpath.c_str()) == 0);
-
-}
-
-#endif // OCIO_SOURCE_DIR
-
-#endif // OCIO_UNIT_TEST

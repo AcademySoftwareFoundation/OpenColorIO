@@ -1,0 +1,733 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
+
+#include <sstream>
+
+#include <OpenColorIO/OpenColorIO.h>
+
+#include "ops/exposurecontrast/ExposureContrastOpData.h"
+#include "Platform.h"
+
+OCIO_NAMESPACE_ENTER
+{
+
+namespace
+{
+static constexpr const char * EC_STYLE_LINEAR          = "linear";
+static constexpr const char * EC_STYLE_LINEAR_REV      = "linearRev";
+static constexpr const char * EC_STYLE_VIDEO           = "video";
+static constexpr const char * EC_STYLE_VIDEO_REV       = "videoRev";
+static constexpr const char * EC_STYLE_LOGARITHMIC     = "log";
+static constexpr const char * EC_STYLE_LOGARITHMIC_REV = "logRev";
+}
+
+namespace DefaultValues
+{
+const int FLOAT_DECIMALS = 7;
+}
+
+ExposureContrastOpData::Style ExposureContrastOpData::ConvertStringToStyle(const char * str)
+{
+    if (str && *str)
+    {
+        if (0 == Platform::Strcasecmp(str, EC_STYLE_LINEAR))
+        {
+            return STYLE_LINEAR;
+        }
+        else if (0 == Platform::Strcasecmp(str, EC_STYLE_LINEAR_REV))
+        {
+            return STYLE_LINEAR_REV;
+        }
+        else if (0 == Platform::Strcasecmp(str, EC_STYLE_VIDEO))
+        {
+            return STYLE_VIDEO;
+        }
+        else if (0 == Platform::Strcasecmp(str, EC_STYLE_VIDEO_REV))
+        {
+            return STYLE_VIDEO_REV;
+        }
+        else if (0 == Platform::Strcasecmp(str, EC_STYLE_LOGARITHMIC))
+        {
+            return STYLE_LOGARITHMIC;
+        }
+        else if (0 == Platform::Strcasecmp(str, EC_STYLE_LOGARITHMIC_REV))
+        {
+            return STYLE_LOGARITHMIC_REV;
+        }
+
+        std::ostringstream os;
+        os << "Unknown exposure contrast style: '" << str << "'.";
+
+        throw Exception(os.str().c_str());
+    }
+    throw Exception("Missing exposure contrast style.");
+}
+
+const char * ExposureContrastOpData::ConvertStyleToString(ExposureContrastOpData::Style style)
+{
+    switch (style)
+    {
+    case STYLE_LINEAR:
+    {
+        return EC_STYLE_LINEAR;
+    }
+    case STYLE_LINEAR_REV:
+    {
+        return EC_STYLE_LINEAR_REV;
+    }
+    case STYLE_VIDEO:
+    {
+        return EC_STYLE_VIDEO;
+    }
+    case STYLE_VIDEO_REV:
+    {
+        return EC_STYLE_VIDEO_REV;
+    }
+    case STYLE_LOGARITHMIC:
+    {
+        return EC_STYLE_LOGARITHMIC;
+    }
+    case STYLE_LOGARITHMIC_REV:
+    {
+        return EC_STYLE_LOGARITHMIC_REV;
+    }
+    }
+
+    throw Exception("Unknown exposure contrast style.");
+}
+
+ExposureContrastOpData::Style ExposureContrastOpData::ConvertStyle(ExposureContrastStyle style,
+                                                                   TransformDirection dir)
+{
+    if (dir == TRANSFORM_DIR_UNKNOWN)
+    {
+        throw Exception(
+            "Cannot create ExposureContrastOp with unspecified transform direction.");
+    }
+
+    const bool isForward = dir == TRANSFORM_DIR_FORWARD;
+
+    switch (style)
+    {
+    case EXPOSURE_CONTRAST_VIDEO:
+    {
+        return (isForward) ? ExposureContrastOpData::STYLE_VIDEO:
+                             ExposureContrastOpData::STYLE_VIDEO_REV;
+    }
+    case EXPOSURE_CONTRAST_LOGARITHMIC:
+    {
+        return (isForward) ? ExposureContrastOpData::STYLE_LOGARITHMIC:
+                             ExposureContrastOpData::STYLE_LOGARITHMIC_REV;
+    }
+    case EXPOSURE_CONTRAST_LINEAR:
+    {
+        return (isForward) ? ExposureContrastOpData::STYLE_LINEAR:
+                             ExposureContrastOpData::STYLE_LINEAR_REV;
+    }
+    }
+
+    std::stringstream ss("Unknown ExposureContrast transform style: ");
+    ss << style;
+
+    throw Exception(ss.str().c_str());
+}
+
+ExposureContrastOpData::ExposureContrastOpData()
+    : OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
+    , m_exposure(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_EXPOSURE, 0., false))
+    , m_contrast(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_CONTRAST, 1., false))
+    , m_gamma(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_GAMMA, 1., false))
+{
+}
+
+ExposureContrastOpData::ExposureContrastOpData(BitDepth inBitDepth,
+                                               BitDepth outBitDepth,
+                                               Style style)
+    : OpData(inBitDepth, outBitDepth)
+    , m_style(style)
+    , m_exposure(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_EXPOSURE, 0., false))
+    , m_contrast(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_CONTRAST, 1., false))
+    , m_gamma(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_GAMMA, 1., false))
+{
+}
+
+ExposureContrastOpData::~ExposureContrastOpData()
+{
+}
+
+ExposureContrastOpDataRcPtr ExposureContrastOpData::clone() const
+{
+    ExposureContrastOpDataRcPtr res =
+        std::make_shared<ExposureContrastOpData>(getInputBitDepth(),
+                                                 getOutputBitDepth(),
+                                                 getStyle());
+    *res = *this;
+
+    return res;
+}
+
+void ExposureContrastOpData::validate() const
+{
+    OpData::validate();
+}
+
+bool ExposureContrastOpData::isNoOp() const
+{
+    return isIdentity();
+}
+
+bool ExposureContrastOpData::isIdentity() const
+{
+    return !isDynamic() &&
+           (m_exposure->getDoubleValue() == 0.) &&
+           (m_contrast->getDoubleValue() == 1.) &&
+           (m_gamma->getDoubleValue() == 1.);
+}
+
+bool ExposureContrastOpData::isDynamic() const
+{
+    return m_exposure->isDynamic() ||
+           m_contrast->isDynamic() ||
+           m_gamma->isDynamic();
+
+}
+
+bool ExposureContrastOpData::isInverse(ConstExposureContrastOpDataRcPtr & r) const
+{
+    // NB: Please see note in DynamicProperty.h describing how dynamic
+    //     properties are compared for equality.
+    return *r == *inverse();
+}
+
+ExposureContrastOpDataRcPtr ExposureContrastOpData::inverse() const
+{
+    ExposureContrastOpDataRcPtr ec = clone();
+    
+    Style invStyle = STYLE_LINEAR;
+    switch (getStyle())
+    {
+    case STYLE_LINEAR:          invStyle = STYLE_LINEAR_REV;          break;
+    case STYLE_LINEAR_REV:      invStyle = STYLE_LINEAR;              break;
+    case STYLE_VIDEO:           invStyle = STYLE_VIDEO_REV;           break;
+    case STYLE_VIDEO_REV:       invStyle = STYLE_VIDEO;               break;
+    case STYLE_LOGARITHMIC:     invStyle = STYLE_LOGARITHMIC_REV;     break;
+    case STYLE_LOGARITHMIC_REV: invStyle = STYLE_LOGARITHMIC;         break;
+    }
+
+    ec->setStyle(invStyle);
+
+    ec->setInputBitDepth(getOutputBitDepth());
+    ec->setOutputBitDepth(getInputBitDepth());
+
+    // Note that any existing metadata could become stale at this point but
+    // trying to update it is also challenging since inverse() is sometimes
+    // called even during the creation of new ops.
+
+    return ec;
+}
+
+void ExposureContrastOpData::finalize()
+{
+    AutoMutex lock(m_mutex);
+
+    std::ostringstream cacheIDStream;
+    cacheIDStream << getID();
+
+    cacheIDStream.precision(DefaultValues::FLOAT_DECIMALS);
+
+    cacheIDStream << ConvertStyleToString(m_style) << " ";
+
+    if (!m_exposure->isDynamic())
+    {
+        cacheIDStream << "E: " << m_exposure->getDoubleValue() << " ";
+    }
+    if (!m_contrast->isDynamic())
+    {
+        cacheIDStream << "C: " << m_contrast->getDoubleValue() << " ";
+    }
+    if (!m_gamma->isDynamic())
+    {
+        cacheIDStream << "G: " << m_gamma->getDoubleValue() << " ";
+    }
+    cacheIDStream << "P: " << m_pivot << " ";
+    cacheIDStream << "LES: " << m_logExposureStep << " ";
+    cacheIDStream << "LMG: " << m_logMidGray;
+
+    m_cacheID = cacheIDStream.str();
+}
+
+bool ExposureContrastOpData::operator==(const OpData & other) const
+{
+    if (this == &other) return true;
+
+    if (!OpData::operator==(other)) return false;
+
+    const ExposureContrastOpData * ec = static_cast<const ExposureContrastOpData *>(&other);
+
+    // NB: Please see note in DynamicProperty.h describing how dynamic
+    //     properties are compared for equality.
+    return getStyle() == ec->getStyle()
+        && getPivot() == ec->getPivot()
+        && getLogExposureStep() == ec->getLogExposureStep()
+        && getLogMidGray() == ec->getLogMidGray()
+        && *m_exposure == *(ec->m_exposure)
+        && *m_contrast == *(ec->m_contrast)
+        && *m_gamma == *(ec->m_gamma);
+}
+
+bool ExposureContrastOpData::hasDynamicProperty(DynamicPropertyType type) const
+{
+    bool res = false;
+    switch (type)
+    {
+    case DYNAMIC_PROPERTY_EXPOSURE:
+        res = m_exposure->isDynamic();
+        break;
+    case DYNAMIC_PROPERTY_CONTRAST:
+        res = m_contrast->isDynamic();
+        break;
+    case DYNAMIC_PROPERTY_GAMMA:
+        res = m_gamma->isDynamic();
+        break;
+    default:
+        break;
+    }
+    
+    return res;
+}
+
+DynamicPropertyRcPtr
+ExposureContrastOpData::getDynamicProperty(DynamicPropertyType type) const
+{
+    switch (type)
+    {
+    case DYNAMIC_PROPERTY_EXPOSURE:
+        if (m_exposure->isDynamic())
+        {
+            return m_exposure;
+        }
+        break;
+    case DYNAMIC_PROPERTY_CONTRAST:
+        if (m_contrast->isDynamic())
+        {
+            return m_contrast;
+        }
+        break;
+    case DYNAMIC_PROPERTY_GAMMA:
+        if (m_gamma->isDynamic())
+        {
+            return m_gamma;
+        }
+        break;
+    default:
+        throw Exception("Dynamic property type not supported by ExposureContrast.");
+    }
+    throw Exception("ExposureContrast property is not dynamic.");
+}
+
+void ExposureContrastOpData::replaceDynamicProperty(DynamicPropertyType type,
+                                                    DynamicPropertyImplRcPtr prop)
+{
+    switch (type)
+    {
+    case DYNAMIC_PROPERTY_EXPOSURE:
+        if (m_exposure->isDynamic())
+        {
+            m_exposure = prop;
+            return;
+        }
+        break;
+    case DYNAMIC_PROPERTY_CONTRAST:
+        if (m_contrast->isDynamic())
+        {
+            m_contrast = prop;
+            return;
+        }
+        break;
+    case DYNAMIC_PROPERTY_GAMMA:
+        if (m_gamma->isDynamic())
+        {
+            m_gamma = prop;
+            return;
+        }
+        break;
+    default:
+        throw Exception("Dynamic property type not supported by ExposureContrast.");
+    }
+    throw Exception("ExposureContrast property is not dynamic.");
+}
+
+ExposureContrastOpData &
+ExposureContrastOpData::operator=(const ExposureContrastOpData & rhs)
+{
+    if (this == &rhs) return *this;
+
+    OpData::operator=(rhs);
+
+    m_style = rhs.m_style;
+    // Copy dynamic properties. Sharing happens when needed, with CPUop for instance.
+    m_exposure->setValue(rhs.m_exposure->getDoubleValue());
+    m_contrast->setValue(rhs.m_contrast->getDoubleValue());
+    m_gamma->setValue(rhs.m_gamma->getDoubleValue());
+    if (rhs.m_exposure->isDynamic())
+    {
+        m_exposure->makeDynamic();
+    }
+    if (rhs.m_contrast->isDynamic())
+    {
+        m_contrast->makeDynamic();
+    }
+    if (rhs.m_gamma->isDynamic())
+    {
+        m_gamma->makeDynamic();
+    }
+    m_pivot = rhs.m_pivot;
+    m_logExposureStep = rhs.m_logExposureStep;
+    m_logMidGray = rhs.m_logMidGray;
+
+    return *this;
+}
+
+}
+OCIO_NAMESPACE_EXIT
+
+///////////////////////////////////////////////////////////////////////////
+
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+#include "UnitTest.h"
+
+OCIO_ADD_TEST(ExposureContrastOpData, style)
+{
+    OCIO::ExposureContrastOpData::Style style = 
+        OCIO::ExposureContrastOpData::STYLE_LOGARITHMIC_REV;
+    const auto & ConvertToStyle =
+        OCIO::ExposureContrastOpData::ConvertStringToStyle;
+    OCIO_CHECK_NO_THROW(style =
+        ConvertToStyle(OCIO::EC_STYLE_LINEAR));
+    OCIO_CHECK_EQUAL(style, OCIO::ExposureContrastOpData::STYLE_LINEAR);
+    OCIO_CHECK_NO_THROW(style =
+        ConvertToStyle(OCIO::EC_STYLE_LINEAR_REV));
+    OCIO_CHECK_EQUAL(style, OCIO::ExposureContrastOpData::STYLE_LINEAR_REV);
+    OCIO_CHECK_NO_THROW(style =
+        ConvertToStyle(OCIO::EC_STYLE_VIDEO));
+    OCIO_CHECK_EQUAL(style, OCIO::ExposureContrastOpData::STYLE_VIDEO);
+    OCIO_CHECK_NO_THROW(style =
+        ConvertToStyle(OCIO::EC_STYLE_VIDEO_REV));
+    OCIO_CHECK_EQUAL(style, OCIO::ExposureContrastOpData::STYLE_VIDEO_REV);
+    OCIO_CHECK_NO_THROW(style =
+        ConvertToStyle(OCIO::EC_STYLE_LOGARITHMIC));
+    OCIO_CHECK_EQUAL(style, OCIO::ExposureContrastOpData::STYLE_LOGARITHMIC);
+    OCIO_CHECK_NO_THROW(style =
+        ConvertToStyle(OCIO::EC_STYLE_LOGARITHMIC_REV));
+    OCIO_CHECK_EQUAL(style, OCIO::ExposureContrastOpData::STYLE_LOGARITHMIC_REV);
+
+    OCIO_CHECK_THROW_WHAT(
+        ConvertToStyle("Unknown exposure contrast style"),
+        OCIO::Exception, "Unknown exposure contrast style");
+
+    OCIO_CHECK_THROW_WHAT(
+        ConvertToStyle(nullptr),
+        OCIO::Exception, "Missing exposure contrast style");
+
+    const auto & ConvertToString =
+        OCIO::ExposureContrastOpData::ConvertStyleToString;
+    std::string styleName;
+    OCIO_CHECK_NO_THROW(styleName =
+        ConvertToString(OCIO::ExposureContrastOpData::STYLE_LINEAR));
+    OCIO_CHECK_EQUAL(styleName, OCIO::EC_STYLE_LINEAR);
+    OCIO_CHECK_NO_THROW(styleName =
+        ConvertToString(OCIO::ExposureContrastOpData::STYLE_LINEAR_REV));
+    OCIO_CHECK_EQUAL(styleName, OCIO::EC_STYLE_LINEAR_REV);
+    OCIO_CHECK_NO_THROW(styleName =
+        ConvertToString(OCIO::ExposureContrastOpData::STYLE_VIDEO));
+    OCIO_CHECK_EQUAL(styleName, OCIO::EC_STYLE_VIDEO);
+    OCIO_CHECK_NO_THROW(styleName =
+        ConvertToString(OCIO::ExposureContrastOpData::STYLE_VIDEO_REV));
+    OCIO_CHECK_EQUAL(styleName, OCIO::EC_STYLE_VIDEO_REV);
+    OCIO_CHECK_NO_THROW(styleName =
+        ConvertToString(OCIO::ExposureContrastOpData::STYLE_LOGARITHMIC));
+    OCIO_CHECK_EQUAL(styleName, OCIO::EC_STYLE_LOGARITHMIC);
+    OCIO_CHECK_NO_THROW(styleName =
+        ConvertToString(OCIO::ExposureContrastOpData::STYLE_LOGARITHMIC_REV));
+    OCIO_CHECK_EQUAL(styleName, OCIO::EC_STYLE_LOGARITHMIC_REV);
+
+    OCIO_CHECK_THROW_WHAT(
+        ConvertToString((OCIO::ExposureContrastOpData::Style)-1),
+        OCIO::Exception, "Unknown exposure contrast style");
+}
+
+OCIO_ADD_TEST(ExposureContrastOpData, accessors)
+{
+    OCIO::ExposureContrastOpData ec0;
+    OCIO_CHECK_EQUAL(ec0.getType(), OCIO::OpData::ExposureContrastType);
+    OCIO_CHECK_EQUAL(ec0.getStyle(), OCIO::ExposureContrastOpData::STYLE_LINEAR);
+
+    OCIO_CHECK_EQUAL(ec0.getExposure(), 0.0);
+    OCIO_CHECK_EQUAL(ec0.getContrast(), 1.0);
+    OCIO_CHECK_EQUAL(ec0.getGamma(), 1.0);
+    OCIO_CHECK_EQUAL(ec0.getPivot(), 0.18);
+    OCIO_CHECK_EQUAL(ec0.getLogExposureStep(),
+                     OCIO::ExposureContrastOpData::LOGEXPOSURESTEP_DEFAULT);
+    OCIO_CHECK_EQUAL(ec0.getLogMidGray(),
+                     OCIO::ExposureContrastOpData::LOGMIDGRAY_DEFAULT);
+
+    OCIO_CHECK_ASSERT(ec0.isIdentity());
+    OCIO_CHECK_ASSERT(ec0.isNoOp());
+    OCIO_CHECK_ASSERT(!ec0.hasChannelCrosstalk());
+    OCIO_CHECK_NO_THROW(ec0.validate());
+    ec0.finalize();
+    const std::string cacheID(ec0.getCacheID());
+    const std::string expected("linear E: 0 C: 1 G: 1 P: 0.18 LES: 0.088 LMG: 0.435");
+    OCIO_CHECK_ASSERT(OCIO::Platform::Strcasecmp(cacheID.c_str(),
+                                                 expected.c_str()) == 0);
+
+    ec0.setExposure(0.1);
+    OCIO_CHECK_ASSERT(!ec0.isIdentity());
+    OCIO_CHECK_ASSERT(!ec0.isNoOp());
+    OCIO_CHECK_ASSERT(!ec0.hasChannelCrosstalk());
+    ec0.finalize();
+    OCIO_CHECK_ASSERT(cacheID != std::string(ec0.getCacheID()));
+
+    OCIO::ExposureContrastOpData ec(OCIO::BIT_DEPTH_UINT8,
+                                    OCIO::BIT_DEPTH_F16,
+                                    OCIO::ExposureContrastOpData::STYLE_VIDEO);
+    OCIO_CHECK_EQUAL(ec.getType(), OCIO::OpData::ExposureContrastType);
+    OCIO_CHECK_EQUAL(ec.getStyle(), OCIO::ExposureContrastOpData::STYLE_VIDEO);
+
+    OCIO_CHECK_EQUAL(ec.getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OCIO_CHECK_EQUAL(ec.getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
+
+    OCIO_CHECK_EQUAL(ec.getExposure(), 0.0);
+    OCIO_CHECK_EQUAL(ec.getContrast(), 1.0);
+    OCIO_CHECK_EQUAL(ec.getGamma(), 1.0);
+    OCIO_CHECK_EQUAL(ec.getPivot(), 0.18);
+    OCIO_CHECK_EQUAL(ec.getLogExposureStep(),
+                     OCIO::ExposureContrastOpData::LOGEXPOSURESTEP_DEFAULT);
+    OCIO_CHECK_EQUAL(ec.getLogMidGray(),
+                     OCIO::ExposureContrastOpData::LOGMIDGRAY_DEFAULT);
+
+    OCIO_CHECK_ASSERT(ec.isNoOp());
+
+    OCIO_CHECK_ASSERT(!ec.getExposureProperty()->isDynamic());
+    OCIO_CHECK_ASSERT(!ec.getContrastProperty()->isDynamic());
+    OCIO_CHECK_ASSERT(!ec.getGammaProperty()->isDynamic());
+    OCIO_CHECK_ASSERT(!ec.isDynamic());
+
+    // Never treated as NoOp when dynamic.
+    ec.getExposureProperty()->makeDynamic();
+    OCIO_CHECK_ASSERT(!ec.isNoOp());
+    OCIO_CHECK_ASSERT(ec.isDynamic());
+    OCIO_CHECK_ASSERT(ec.hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
+
+    ec.setExposure(0.1);
+    ec.setContrast(0.8);
+    ec.setGamma(1.1);
+    ec.setPivot(0.2);
+    ec.setLogExposureStep(0.07);
+    ec.setLogMidGray(0.5);
+
+    OCIO_CHECK_EQUAL(ec.getExposure(), 0.1);
+    OCIO_CHECK_EQUAL(ec.getContrast(), 0.8);
+    OCIO_CHECK_EQUAL(ec.getGamma(), 1.1);
+    OCIO_CHECK_EQUAL(ec.getPivot(), 0.2);
+    OCIO_CHECK_EQUAL(ec.getLogExposureStep(), 0.07);
+    OCIO_CHECK_EQUAL(ec.getLogMidGray(), 0.5);
+
+    OCIO::DynamicPropertyRcPtr dpExp;
+    OCIO::DynamicPropertyRcPtr dpContrast;
+    OCIO::DynamicPropertyRcPtr dpGamma;
+
+    // Property must be set as dynamic to accept a dynamic value.
+    OCIO_CHECK_ASSERT(!ec.hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST));
+    OCIO_CHECK_ASSERT(!ec.hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA));
+    OCIO_CHECK_THROW_WHAT(ec.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST),
+                          OCIO::Exception,
+                          "not dynamic")
+
+    OCIO_CHECK_NO_THROW(dpExp = ec.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
+    OCIO_CHECK_EQUAL(dpExp->getDoubleValue(), 0.1);
+    OCIO_CHECK_ASSERT(!ec.hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST));
+    OCIO_CHECK_ASSERT(!ec.hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA));
+    dpExp->setValue(1.5);
+    OCIO_CHECK_EQUAL(ec.getExposure(), 1.5);
+    dpExp->setValue(0.7);
+    OCIO_CHECK_EQUAL(ec.getExposure(), 0.7);
+
+    ec.getContrastProperty()->makeDynamic();
+    ec.getGammaProperty()->makeDynamic();
+    OCIO_CHECK_NO_THROW(dpContrast = ec.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST));
+    OCIO_CHECK_NO_THROW(dpGamma = ec.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA));
+    dpContrast->setValue(1.42);
+    dpGamma->setValue(0.88);
+    OCIO_CHECK_EQUAL(ec.getContrast(), 1.42);
+    OCIO_CHECK_EQUAL(ec.getGamma(), 0.88);
+}
+
+OCIO_ADD_TEST(ExposureContrastOpData, clone)
+{
+    OCIO::ExposureContrastOpData ec;
+    ec.setExposure(-1.4);
+    ec.setContrast(0.8);
+    ec.setGamma(1.1);
+    ec.setPivot(0.2);
+
+    ec.getExposureProperty()->makeDynamic();
+    OCIO::DynamicPropertyRcPtr dpExp;
+
+    OCIO_CHECK_NO_THROW(dpExp = ec.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
+    OCIO_CHECK_EQUAL(dpExp->getDoubleValue(), -1.4);
+    dpExp->setValue(1.5);
+    OCIO::ExposureContrastOpDataRcPtr ecCloned = ec.clone();
+    OCIO_REQUIRE_ASSERT(ecCloned);
+
+    OCIO_CHECK_EQUAL(ec.getExposure(), ecCloned->getExposure());
+    OCIO_CHECK_EQUAL(ec.getContrast(), ecCloned->getContrast());
+    OCIO_CHECK_EQUAL(ec.getGamma(), ecCloned->getGamma());
+    OCIO_CHECK_EQUAL(ec.getPivot(), ecCloned->getPivot());
+    OCIO_CHECK_EQUAL(ec.getLogExposureStep(), ecCloned->getLogExposureStep());
+    OCIO_CHECK_EQUAL(ec.getLogMidGray(), ecCloned->getLogMidGray());
+
+    OCIO_CHECK_EQUAL(ec.getExposureProperty()->isDynamic(),
+                     ecCloned->getExposureProperty()->isDynamic());
+    OCIO_CHECK_EQUAL(ec.getContrastProperty()->isDynamic(),
+                     ecCloned->getContrastProperty()->isDynamic());
+    OCIO_CHECK_EQUAL(ec.getGammaProperty()->isDynamic(),
+                     ecCloned->getGammaProperty()->isDynamic());
+
+    // Clone makes a copy of the dynamic property rather than sharing the original.
+    dpExp->setValue(0.21);
+    OCIO_CHECK_NE(ec.getExposure(), ecCloned->getExposure());
+    OCIO_CHECK_EQUAL(ec.getExposure(), 0.21);
+    OCIO_CHECK_EQUAL(ecCloned->getExposure(), 1.5);
+}
+
+OCIO_ADD_TEST(ExposureContrastOpData, inverse)
+{
+    OCIO::ExposureContrastOpData ec(OCIO::BIT_DEPTH_UINT8,
+                                    OCIO::BIT_DEPTH_F16,
+                                    OCIO::ExposureContrastOpData::STYLE_VIDEO);
+    
+    ec.setContrast(0.8);
+    ec.setGamma(1.1);
+    ec.setPivot(0.2);
+
+    ec.getExposureProperty()->makeDynamic();
+    OCIO::DynamicPropertyRcPtr dpExp;
+
+    OCIO_CHECK_NO_THROW(dpExp = ec.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
+    dpExp->setValue(1.5);
+    OCIO::ExposureContrastOpDataRcPtr ecInv = ec.inverse();
+    OCIO_REQUIRE_ASSERT(ecInv);
+
+    OCIO::ConstExposureContrastOpDataRcPtr ecInvConst = ecInv;
+    OCIO_CHECK_ASSERT(ec.isInverse(ecInvConst));
+
+    OCIO_CHECK_EQUAL(ecInv->getOutputBitDepth(), ec.getInputBitDepth());
+    OCIO_CHECK_EQUAL(ecInv->getInputBitDepth(), ec.getOutputBitDepth());
+
+    OCIO_CHECK_EQUAL(ecInv->getStyle(),
+                     OCIO::ExposureContrastOpData::STYLE_VIDEO_REV);
+
+    OCIO_CHECK_EQUAL(ec.getExposure(), ecInv->getExposure());
+    OCIO_CHECK_EQUAL(ec.getContrast(), ecInv->getContrast());
+    OCIO_CHECK_EQUAL(ec.getGamma(), ecInv->getGamma());
+    OCIO_CHECK_EQUAL(ec.getPivot(), ecInv->getPivot());
+    OCIO_CHECK_EQUAL(ec.getLogExposureStep(), ecInv->getLogExposureStep());
+    OCIO_CHECK_EQUAL(ec.getLogMidGray(), ecInv->getLogMidGray());
+
+    OCIO_CHECK_EQUAL(ec.getExposureProperty()->isDynamic(),
+                     ecInv->getExposureProperty()->isDynamic());
+    OCIO_CHECK_EQUAL(ec.getContrastProperty()->isDynamic(),
+                     ecInv->getContrastProperty()->isDynamic());
+    OCIO_CHECK_EQUAL(ec.getGammaProperty()->isDynamic(),
+                     ecInv->getGammaProperty()->isDynamic());
+
+    // Inverse makes a copy of the dynamic property rather than sharing the original.
+    dpExp->setValue(0.21);
+    OCIO_CHECK_NE(ec.getExposure(), ecInv->getExposure());
+    OCIO_CHECK_EQUAL(ec.getExposure(), 0.21);
+    OCIO_CHECK_EQUAL(ecInv->getExposure(), 1.5);
+    
+    // Exposure is dynamic in both, so value does not matter.
+    OCIO_CHECK_ASSERT(ec.isInverse(ecInvConst));
+
+    ecInv->getContrastProperty()->makeDynamic();
+
+    // Contrast is dynamic in one and not in the other.
+    OCIO_CHECK_ASSERT(!ec.isInverse(ecInvConst));
+
+    ec.getContrastProperty()->makeDynamic();
+    OCIO_CHECK_ASSERT(ec.isInverse(ecInvConst));
+
+    // Gamma values are now different.
+    ec.setGamma(1.2);
+    OCIO_CHECK_ASSERT(!ec.isInverse(ecInvConst));
+}
+
+OCIO_ADD_TEST(ExposureContrastOpData, equality)
+{
+    OCIO::ExposureContrastOpData ec0;
+    OCIO::ExposureContrastOpData ec1;
+    OCIO_CHECK_ASSERT(ec0 == ec1);
+
+    // Change style.
+    ec0.setStyle(OCIO::ExposureContrastOpData::STYLE_VIDEO);
+    OCIO_CHECK_ASSERT(!(ec0 == ec1));
+    ec1.setStyle(OCIO::ExposureContrastOpData::STYLE_VIDEO);
+    OCIO_CHECK_ASSERT(ec0 == ec1);
+
+    // Change dynamic.
+    ec0.getExposureProperty()->makeDynamic();
+    OCIO_CHECK_ASSERT(!(ec0 == ec1));
+    ec1.getExposureProperty()->makeDynamic();
+    OCIO_CHECK_ASSERT(ec0 == ec1);
+
+    // Change value of enabled dynamic property.
+    ec0.setExposure(0.5);
+    OCIO_CHECK_ASSERT(ec0 == ec1);
+    
+    // Change value of dynamic property not enabled.
+    ec1.setContrast(0.5);
+    OCIO_CHECK_ASSERT(!(ec0 == ec1));
+    
+    ec0.setContrast(0.5);
+    OCIO_CHECK_ASSERT(ec0 == ec1);
+}
+
+OCIO_ADD_TEST(ExposureContrastOpData, replace_dynamic_property)
+{
+    OCIO::ExposureContrastOpData ec0;
+    OCIO::ExposureContrastOpData ec1;
+    
+    ec0.setExposure(0.0);
+    ec1.setExposure(1.0);
+
+    ec0.getExposureProperty()->makeDynamic();
+    ec1.getExposureProperty()->makeDynamic();
+
+    auto dpe0 = ec0.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE);
+    auto dpe1 = ec1.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE);
+    
+    // These are 2 different pointers.
+    OCIO_CHECK_NE(dpe0.get(), dpe1.get());
+
+    ec1.replaceDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE, ec0.getExposureProperty());
+    dpe1 = ec1.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE);
+
+    // Now, this is the same pointer.
+    OCIO_CHECK_EQUAL(dpe0.get(), dpe1.get());
+
+    ec0.getContrastProperty()->makeDynamic();
+    // Contrast is not enabled in ec1.
+    OCIO_CHECK_THROW(ec1.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST), OCIO::Exception);
+
+    // The property is not replaced if dynamic is not enabled.
+    OCIO_CHECK_THROW(ec1.replaceDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST,
+                                                ec0.getContrastProperty()),
+                     OCIO::Exception);
+    OCIO_CHECK_THROW(ec1.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST), OCIO::Exception);
+}
+
+#endif

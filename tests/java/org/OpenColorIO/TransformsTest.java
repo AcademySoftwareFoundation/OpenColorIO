@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 import junit.framework.TestCase;
 import org.OpenColorIO.*;
@@ -205,29 +207,6 @@ public class TransformsTest extends TestCase {
         assertEquals(0.9f, m44_2[0]);
         mt.View(m44_2, offset_2, new int[]{1, 1, 1, 0}, new float[]{0.2126f, 0.7152f, 0.0722f});
         assertEquals(0.0722f, m44_2[2]);
-        
-        //// TruelightTransform ////
-        TruelightTransform tt = new TruelightTransform().Create();
-        tt.setConfigRoot("/some/path");
-        assertEquals("/some/path", tt.getConfigRoot());
-        tt.setProfile("profileA");
-        assertEquals("profileA", tt.getProfile());
-        tt.setCamera("incam");
-        assertEquals("incam", tt.getCamera());
-        tt.setInputDisplay("dellmon");
-        assertEquals("dellmon", tt.getInputDisplay());
-        tt.setRecorder("blah");
-        assertEquals("blah", tt.getRecorder());
-        tt.setPrint("kodasomething");
-        assertEquals("kodasomething", tt.getPrint());
-        tt.setLamp("foobar");
-        assertEquals("foobar", tt.getLamp());
-        tt.setOutputCamera("somecam");
-        assertEquals("somecam", tt.getOutputCamera());
-        tt.setDisplay("sRGB");
-        assertEquals("sRGB", tt.getDisplay());
-        tt.setCubeInput("log");
-        assertEquals("log", tt.getCubeInput());
         
         try {
         } catch (Exception e) { System.out.println(e); }

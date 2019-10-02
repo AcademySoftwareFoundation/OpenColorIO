@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+
 set(SOURCES
 	Baker.cpp
 	BitDepthUtils.cpp
@@ -6,15 +9,21 @@ set(SOURCES
 	ColorSpaceSet.cpp
 	Config.cpp
 	Context.cpp
+	CPUProcessor.cpp
 	Display.cpp
+	DynamicProperty.cpp
 	Exception.cpp
 	fileformats/cdl/CDLParser.cpp
 	fileformats/cdl/CDLReaderHelper.cpp
+	fileformats/ctf/CTFReaderHelper.cpp
+	fileformats/ctf/CTFReaderUtils.cpp
+	fileformats/ctf/CTFTransform.cpp
 	fileformats/FileFormat3DL.cpp
 	fileformats/FileFormatCCC.cpp
 	fileformats/FileFormatCC.cpp
 	fileformats/FileFormatCDL.cpp
 	fileformats/FileFormatCSP.cpp
+	fileformats/FileFormatCTF.cpp
 	fileformats/FileFormatDiscreet1DL.cpp
 	fileformats/FileFormatHDL.cpp
 	fileformats/FileFormatICC.cpp
@@ -28,6 +37,11 @@ set(SOURCES
 	fileformats/FileFormatSpiMtx.cpp
 	fileformats/FileFormatTruelight.cpp
 	fileformats/FileFormatVF.cpp
+	fileformats/FormatMetadata.cpp
+	fileformats/xmlutils/XMLReaderHelper.cpp
+	fileformats/xmlutils/XMLReaderUtils.cpp
+	fileformats/xmlutils/XMLWriterUtils.cpp
+	GPUProcessor.cpp
 	GpuShader.cpp
 	GpuShaderDesc.cpp
 	GpuShaderUtils.cpp
@@ -47,7 +61,24 @@ set(SOURCES
 	ops/CDL/CDLOpData.cpp
 	ops/CDL/CDLOps.cpp
 	ops/Exponent/ExponentOps.cpp
+	ops/exposurecontrast/ExposureContrastOpCPU.cpp
+	ops/exposurecontrast/ExposureContrastOpData.cpp
+	ops/exposurecontrast/ExposureContrastOpGPU.cpp
+	ops/exposurecontrast/ExposureContrastOps.cpp
+	ops/FixedFunction/FixedFunctionOpCPU.cpp
+	ops/FixedFunction/FixedFunctionOpData.cpp
+	ops/FixedFunction/FixedFunctionOpGPU.cpp
+	ops/FixedFunction/FixedFunctionOps.cpp
+	ops/Gamma/GammaOpCPU.cpp
+	ops/Gamma/GammaOpData.cpp
+	ops/Gamma/GammaOpUtils.cpp
+	ops/Gamma/GammaOps.cpp
+	ops/IndexMapping.cpp
+	ops/Log/LogOpCPU.cpp
+	ops/Log/LogOpData.cpp
+	ops/Log/LogOpGPU.cpp
 	ops/Log/LogOps.cpp
+	ops/Log/LogUtils.cpp
 	ops/Lut1D/Lut1DOp.cpp
 	ops/Lut1D/Lut1DOpCPU.cpp
 	ops/Lut1D/Lut1DOpData.cpp
@@ -64,7 +95,7 @@ set(SOURCES
 	ops/Range/RangeOpData.cpp
 	ops/Range/RangeOpGPU.cpp
 	ops/Range/RangeOps.cpp
-	ops/Truelight/TruelightOp.cpp
+	ops/reference/ReferenceOpData.cpp
 	OpTools.cpp
 	ParseUtils.cpp
 	PathUtils.cpp
@@ -77,17 +108,34 @@ set(SOURCES
 	transforms/ColorSpaceTransform.cpp
 	transforms/DisplayTransform.cpp
 	transforms/ExponentTransform.cpp
+	transforms/ExponentWithLinearTransform.cpp
+	transforms/ExposureContrastTransform.cpp
 	transforms/FileTransform.cpp
+	transforms/FixedFunctionTransform.cpp
 	transforms/GroupTransform.cpp
+	transforms/LogAffineTransform.cpp
 	transforms/LogTransform.cpp
 	transforms/LookTransform.cpp
+	transforms/LUT1DTransform.cpp
+	transforms/LUT3DTransform.cpp
 	transforms/MatrixTransform.cpp
 	transforms/RangeTransform.cpp
-	transforms/TruelightTransform.cpp
-	UnitTest.cpp
 )
 
+if(WIN32 AND BUILD_SHARED_LIBS)
+
+    # To be appended to the binary file name.
+    set(LIBNAME_SUFFIX 
+        ${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}
+    )
+
+    # Create the version.rc file for the Windows DLL.
+    configure_file(res/version.rc.in ${CMAKE_CURRENT_BINARY_DIR}/version.rc @ONLY)
+    set(SOURCES ${SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
+endif()
+
 add_library(OpenColorIO ${SOURCES})
+
 target_include_directories(OpenColorIO
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
 )
@@ -96,22 +144,33 @@ target_link_libraries(OpenColorIO
 	PUBLIC 
 		public_api
 	PRIVATE
-		yamlcpp
-		pystring
-		sampleicc
-		libexpat
-		ilmbase
+		yamlcpp::yamlcpp
+		pystring::pystring
+		sampleicc::sampleicc
+		expat::expat
+		ilmbase::ilmbase
 )
+
 if(NOT BUILD_SHARED_LIBS)
 	target_compile_definitions(OpenColorIO
 		PRIVATE
-		OpenColorIO_SKIP_IMPORTS
+			OpenColorIO_SKIP_IMPORTS
 	)
 else()
+	# Only exports selected symbols.
 	target_compile_definitions(OpenColorIO
 		PRIVATE
-		OpenColorIO_EXPORTS
+			OpenColorIO_EXPORTS
 	)
+endif()
+
+if(BUILD_SHARED_LIBS OR (OCIO_BUILD_PYTHON AND UNIX))
+	# The Python bindings is a 'module' which is a dynamic library on Linux 
+	# (i.e. '-fPIC' needed), but a static library on Windows.
+
+	# If supported for the target machine, emit position-independent code 
+	# suitable for dynamic linking.
+	set_property(TARGET OpenColorIO PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif()
 
 if(OCIO_USE_SSE)
@@ -120,21 +179,48 @@ if(OCIO_USE_SSE)
 			USE_SSE
 	)
 endif()
-if(WIN32)
-	# A windows application linking to eXpat static libraries must
-    # have the global macro XML_STATIC defined
-	target_compile_definitions(OpenColorIO
-		PRIVATE
-			XML_STATIC
-	)
+
+if(MSVC AND BUILD_TYPE_DEBUG AND BUILD_SHARED_LIBS)
+    set_target_properties(OpenColorIO PROPERTIES
+        PDB_NAME ${PROJECT_NAME}_${LIBNAME_SUFFIX}
+    )
 endif()
 
-set_target_properties(OpenColorIO PROPERTIES 
+if(WIN32)
+    # A windows application linking to eXpat static libraries must
+    # have the global macro XML_STATIC defined
+    target_compile_definitions(OpenColorIO 
+        PRIVATE
+            XML_STATIC
+    )
+
+    if(BUILD_SHARED_LIBS)
+
+        # Impose a versioned name on Windows to avoid binary name clashes
+        # between different versions of the same library.
+
+        # Note: Do not append the PATCH to allow Apps to use the
+        #       latest binary compatible library.
+
+        set_target_properties(OpenColorIO
+            PROPERTIES PREFIX ""
+                       SUFFIX "_${LIBNAME_SUFFIX}.dll"
+        )
+
+    endif()
+endif()
+
+set_target_properties(OpenColorIO PROPERTIES
 	COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
 
 set_target_properties(OpenColorIO PROPERTIES
     VERSION ${OpenColorIO_VERSION}
     SOVERSION ${SOVERSION})
+
+if(MSVC AND BUILD_SHARED_LIBS)
+	# Install the pdb file if any.
+	install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+endif()
 
 install(TARGETS OpenColorIO
 	LIBRARY DESTINATION lib

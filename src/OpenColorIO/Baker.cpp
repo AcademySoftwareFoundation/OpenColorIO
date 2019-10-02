@@ -1,30 +1,5 @@
-/*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 #include <vector>
 #include <iostream>
@@ -68,6 +43,8 @@ OCIO_NAMESPACE_ENTER
             cubesize_(-1)
         {
         }
+
+        Impl(const Impl &) = delete;
         
         ~Impl()
         {
@@ -79,6 +56,8 @@ OCIO_NAMESPACE_ENTER
             {
                 config_ = rhs.config_;
                 formatName_ = rhs.formatName_;
+                type_ = rhs.type_;
+                metadata_ = rhs.metadata_;
                 inputSpace_ = rhs.inputSpace_;
                 shaperSpace_ = rhs.shaperSpace_;
                 looks_ = rhs.looks_;
@@ -120,17 +99,17 @@ OCIO_NAMESPACE_ENTER
     
     int Baker::getNumFormats()
     {
-        return FormatRegistry::GetInstance().getNumFormats(FORMAT_CAPABILITY_WRITE);
+        return FormatRegistry::GetInstance().getNumFormats(FORMAT_CAPABILITY_BAKE);
     }
     
     const char * Baker::getFormatNameByIndex(int index)
     {
-        return FormatRegistry::GetInstance().getFormatNameByIndex(FORMAT_CAPABILITY_WRITE, index);
+        return FormatRegistry::GetInstance().getFormatNameByIndex(FORMAT_CAPABILITY_BAKE, index);
     }
     
     const char * Baker::getFormatExtensionByIndex(int index)
     {
-        return FormatRegistry::GetInstance().getFormatExtensionByIndex(FORMAT_CAPABILITY_WRITE, index);
+        return FormatRegistry::GetInstance().getFormatExtensionByIndex(FORMAT_CAPABILITY_BAKE, index);
     }
     
     void Baker::setFormat(const char * formatName)
@@ -237,7 +216,7 @@ OCIO_NAMESPACE_ENTER
         
         try
         {
-            fmt->Write(*this, getImpl()->formatName_, os);
+            fmt->bake(*this, getImpl()->formatName_, os);
         }
         catch(std::exception & e)
         {
@@ -271,10 +250,10 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
 /*
-OIIO_ADD_TEST(Baker_Unit_Tests, test_listlutwriters)
+OCIO_ADD_TEST(Baker_Unit_Tests, test_listlutwriters)
 {
     
     std::vector<std::string> current_writers;
@@ -283,17 +262,131 @@ OIIO_ADD_TEST(Baker_Unit_Tests, test_listlutwriters)
     
     OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     
-    OIIO_CHECK_EQUAL(baker->getNumFormats(), (int)current_writers.size());
+    OCIO_CHECK_EQUAL(baker->getNumFormats(), (int)current_writers.size());
     
     std::vector<std::string> test;
     for(int i = 0; i < baker->getNumFormats(); ++i)
         test.push_back(baker->getFormatNameByIndex(i));
     
     for(unsigned int i = 0; i < current_writers.size(); ++i)
-        OIIO_CHECK_EQUAL(current_writers[i], test[i]);
+        OCIO_CHECK_EQUAL(current_writers[i], test[i]);
     
 }
 */
+
+OCIO_ADD_TEST(Baker_Unit_Tests, bake)
+{
+    // SSE aware test, similar to python test.
+    OCIO::BakerRcPtr bake = OCIO::Baker::Create();
+
+    static const std::string myProfile =
+        "ocio_profile_version: 1\n"
+        "\n"
+        "strictparsing: false\n"
+        "\n"
+        "colorspaces :\n"
+        "  - !<ColorSpace>\n"
+        "    name : lnh\n"
+        "    bitdepth : 16f\n"
+        "    isdata : false\n"
+        "    allocation : lg2\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name : test\n"
+        "    bitdepth : 8ui\n"
+        "    isdata : false\n"
+        "    allocation : uniform\n"
+        "    to_reference : !<ExponentTransform> {value: [2.2, 2.2, 2.2, 1]}\n";
+
+    static const std::string expectedLut =
+        "CSPLUTV100\n"
+        "3D\n"
+        "\n"
+        "BEGIN METADATA\n"
+        "this is some metadata!\n"
+        "END METADATA\n"
+        "\n"
+#ifdef USE_SSE
+        "4\n"
+        "0.000977 0.039373 1.587398 64.000168\n"
+        "0.000000 0.333333 0.666667 1.000000\n"
+        "4\n"
+        "0.000977 0.039373 1.587398 64.000168\n"
+        "0.000000 0.333333 0.666667 1.000000\n"
+        "4\n"
+        "0.000977 0.039373 1.587398 64.000168\n"
+        "0.000000 0.333333 0.666667 1.000000\n"
+        "\n"
+        "2 2 2\n"
+        "0.042823 0.042823 0.042823\n"
+        "6.622035 0.042823 0.042823\n"
+        "0.042823 6.622035 0.042823\n"
+        "6.622035 6.622035 0.042823\n"
+        "0.042823 0.042823 6.622035\n"
+        "6.622035 0.042823 6.622035\n"
+        "0.042823 6.622035 6.622035\n"
+        "6.622035 6.622035 6.622035\n"
+#else
+        "4\n"
+        "0.000977 0.039373 1.587401 64.000000\n"
+        "0.000000 0.333333 0.666667 1.000000\n"
+        "4\n"
+        "0.000977 0.039373 1.587401 64.000000\n"
+        "0.000000 0.333333 0.666667 1.000000\n"
+        "4\n"
+        "0.000977 0.039373 1.587401 64.000000\n"
+        "0.000000 0.333333 0.666667 1.000000\n"
+        "\n"
+        "2 2 2\n"
+        "0.042823 0.042823 0.042823\n"
+        "6.622026 0.042823 0.042823\n"
+        "0.042823 6.622026 0.042823\n"
+        "6.622026 6.622026 0.042823\n"
+        "0.042823 0.042823 6.622026\n"
+        "6.622026 0.042823 6.622026\n"
+        "0.042823 6.622026 6.622026\n"
+        "6.622026 6.622026 6.622026\n"
+#endif // USE_SSE
+        "\n";
+    std::istringstream is(myProfile);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(), 2);
+    bake->setConfig(config);
+    auto cfg2 = bake->getConfig();
+    OCIO_REQUIRE_EQUAL(cfg2->getNumColorSpaces(), 2);
+
+    bake->setFormat("cinespace");
+    OCIO_CHECK_EQUAL("cinespace", std::string(bake->getFormat()));
+    bake->setType("3D");
+    OCIO_CHECK_EQUAL("3D", std::string(bake->getType()));
+    bake->setMetadata("this is some metadata!");
+    OCIO_CHECK_EQUAL("this is some metadata!", std::string(bake->getMetadata()));
+    bake->setInputSpace("lnh");
+    OCIO_CHECK_EQUAL("lnh", std::string(bake->getInputSpace()));
+    bake->setLooks("foo, +bar");
+    OCIO_CHECK_EQUAL("foo, +bar", std::string(bake->getLooks()));
+    bake->setLooks("");
+    bake->setTargetSpace("test");
+    OCIO_CHECK_EQUAL("test", std::string(bake->getTargetSpace()));
+    bake->setShaperSize(4);
+    OCIO_CHECK_EQUAL(4, bake->getShaperSize());
+    bake->setCubeSize(2);
+    OCIO_CHECK_EQUAL(2, bake->getCubeSize());
+    std::ostringstream os;
+    OCIO_CHECK_NO_THROW(bake->bake(os));
+    OCIO_CHECK_EQUAL(expectedLut, os.str());
+    OCIO_CHECK_EQUAL(8, bake->getNumFormats());
+    OCIO_CHECK_EQUAL("cinespace", std::string(bake->getFormatNameByIndex(2)));
+    OCIO_CHECK_EQUAL("3dl", std::string(bake->getFormatExtensionByIndex(1)));
+
+    // TODO: Add CLF bake support.
+    bake->setFormat(OCIO::FILEFORMAT_CLF);
+    OCIO_CHECK_EQUAL(OCIO::FILEFORMAT_CLF, std::string(bake->getFormat()));
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception,
+                          "does not support baking");
+
+}
 
 #endif // OCIO_BUILD_TESTS
 

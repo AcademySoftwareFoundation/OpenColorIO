@@ -1,30 +1,5 @@
-/*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -36,32 +11,26 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    // This method converts a float to a string adding a dot when
+    // This method converts a float/double to a string adding a dot when
     // the float does not have a fractional part. Hence, it ensures
     // that the shader understand that number as a float and not as an integer.
-    std::string getFloatString(float v, GpuLanguage lang)
+    // 
+    // Note: The template selects the appropriate number of digits for either single 
+    // or double arguments to losslessly represent the value as a string.
+    // 
+    template<typename T>
+    std::string getFloatString(T v, GpuLanguage lang)
     {
-        const float value = (lang==GPU_LANGUAGE_CG) ? float(ClampToNormHalf(v)) : v;
+        static_assert(!std::numeric_limits<T>::is_integer, "Only floating point values");
 
-        float integerpart = 0.0f;
-        const float fracpart = modff(value, &integerpart);
+        const T value = (lang == GPU_LANGUAGE_CG) ? (T)ClampToNormHalf(v) : v;
+
+        T integerpart = (T)0;
+        const T fracpart = std::modf(value, &integerpart);
 
         std::ostringstream oss;
-        oss.precision(16);
-        oss << value << ((fracpart==0.0f) ? "." : "");
-        return oss.str();
-    }
-
-    std::string getFloatString(double v, GpuLanguage lang)
-    {
-        const float value = (lang == GPU_LANGUAGE_CG) ? float(ClampToNormHalf(v)) : (float)v;
-
-        float integerpart = 0.0f;
-        const float fracpart = modff(value, &integerpart);
-
-        std::ostringstream oss;
-        oss.precision(16);
-        oss << value << ((fracpart == 0.0f) ? "." : "");
+        oss.precision(std::numeric_limits<T>::max_digits10);
+        oss << value << ((fracpart == (T)0) ? "." : "");
         return oss.str();
     }
 
@@ -228,6 +197,12 @@ OCIO_NAMESPACE_ENTER
         return *this;
     }
 
+    GpuShaderText::GpuShaderLine& GpuShaderText::GpuShaderLine::operator<<(double value)
+    {
+        m_text->m_ossLine << getFloatString(value, m_text->m_lang);
+        return *this;
+    }
+
     GpuShaderText::GpuShaderLine& GpuShaderText::GpuShaderLine::operator<<(unsigned value)
     {
         m_text->m_ossLine << value;
@@ -337,6 +312,13 @@ OCIO_NAMESPACE_ENTER
                           getFloatString(z, m_lang));
     }
 
+    std::string GpuShaderText::vec3fConst(double x, double y, double z) const
+    {
+        return vec3fConst(getFloatString(x, m_lang), 
+                          getFloatString(y, m_lang), 
+                          getFloatString(z, m_lang));
+    }
+
     std::string GpuShaderText::vec3fConst(const std::string& x, 
                                           const std::string& y,
                                           const std::string& z) const
@@ -347,6 +329,11 @@ OCIO_NAMESPACE_ENTER
     }
 
     std::string GpuShaderText::vec3fConst(const float v) const
+    {
+        return vec3fConst(getFloatString(v, m_lang));
+    }
+
+    std::string GpuShaderText::vec3fConst(const double v) const
     {
         return vec3fConst(getFloatString(v, m_lang));
     }
@@ -367,7 +354,7 @@ OCIO_NAMESPACE_ENTER
     }
 
     void GpuShaderText::declareVec3f(const std::string & name, 
-                                  const float x, const float y, const float z)
+                                     float x, float y, float z)
     {
         declareVec3f(name, getFloatString(x, m_lang), 
                            getFloatString(y, m_lang), 
@@ -375,9 +362,17 @@ OCIO_NAMESPACE_ENTER
     }
 
     void GpuShaderText::declareVec3f(const std::string & name, 
-                                  const std::string & x,
-                                  const std::string & y,
-                                  const std::string & z)
+                                     double x, double y, double z)
+    {
+        declareVec3f(name, getFloatString(x, m_lang), 
+                           getFloatString(y, m_lang), 
+                           getFloatString(z, m_lang));
+    }
+
+    void GpuShaderText::declareVec3f(const std::string & name, 
+                                     const std::string & x,
+                                     const std::string & y,
+                                     const std::string & z)
     {
         newLine() << vec3fDecl(name) << " = " << vec3fConst(x, y, z) << ";";
     }
@@ -438,11 +433,11 @@ OCIO_NAMESPACE_ENTER
         return vec4fKeyword() + " " + name;
     }
 
-    void GpuShaderText::declareVec4f(const std::string& name,
-                                  const float x,
-                                  const float y, 
-                                  const float z,
-                                  const float w)
+    void GpuShaderText::declareVec4f(const std::string & name,
+                                     const float x,
+                                     const float y, 
+                                     const float z,
+                                     const float w)
     {
         declareVec4f(name, getFloatString(x, m_lang), 
                            getFloatString(y, m_lang), 
@@ -450,11 +445,23 @@ OCIO_NAMESPACE_ENTER
                            getFloatString(w, m_lang));
     }
 
-    void GpuShaderText::declareVec4f(const std::string& name,
-                                  const std::string& x, 
-                                  const std::string& y,
-                                  const std::string& z,
-                                  const std::string& w)
+    void GpuShaderText::declareVec4f(const std::string & name,
+                                     const double x,
+                                     const double y, 
+                                     const double z,
+                                     const double w)
+    {
+        declareVec4f(name, getFloatString(x, m_lang), 
+                           getFloatString(y, m_lang), 
+                           getFloatString(z, m_lang),
+                           getFloatString(w, m_lang));
+    }
+
+    void GpuShaderText::declareVec4f(const std::string & name,
+                                     const std::string & x, 
+                                     const std::string & y,
+                                     const std::string & z,
+                                     const std::string & w)
     {
         newLine() << vec4fDecl(name) << " = " << vec4fConst(x, y, z, w) << ";";
     }
@@ -528,6 +535,12 @@ OCIO_NAMESPACE_ENTER
                                            const std::string& coords) const
     {
         return getTexSample<3>(m_lang, textureName, getSamplerName(textureName), coords);
+    }
+
+
+    void GpuShaderText::declareUniformFloat(const std::string & uniformName)
+    {
+        newLine() << "uniform float " << uniformName << ";";
     }
 
     // Keep the method private as only float & double types are expected
@@ -685,15 +698,15 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(GpuShaderUtils, FloatToString)
+OCIO_ADD_TEST(GpuShaderUtils, FloatToString)
 {
-    OIIO_CHECK_EQUAL(OCIO::getFloatString(1.0f, OCIO::GPU_LANGUAGE_GLSL_1_3), "1.");
-    OIIO_CHECK_EQUAL(OCIO::getFloatString(-11.0f, OCIO::GPU_LANGUAGE_GLSL_1_3), "-11.");
-    OIIO_CHECK_EQUAL(OCIO::getFloatString(-1.0f, OCIO::GPU_LANGUAGE_GLSL_1_3), "-1.");
-    OIIO_CHECK_EQUAL(OCIO::getFloatString((float)-1, OCIO::GPU_LANGUAGE_GLSL_1_3), "-1.");
-    OIIO_CHECK_EQUAL(OCIO::getFloatString((float)1, OCIO::GPU_LANGUAGE_GLSL_1_3), "1.");
+    OCIO_CHECK_EQUAL(OCIO::getFloatString(1.0f, OCIO::GPU_LANGUAGE_GLSL_1_3), "1.");
+    OCIO_CHECK_EQUAL(OCIO::getFloatString(-11.0f, OCIO::GPU_LANGUAGE_GLSL_1_3), "-11.");
+    OCIO_CHECK_EQUAL(OCIO::getFloatString(-1.0f, OCIO::GPU_LANGUAGE_GLSL_1_3), "-1.");
+    OCIO_CHECK_EQUAL(OCIO::getFloatString((float)-1, OCIO::GPU_LANGUAGE_GLSL_1_3), "-1.");
+    OCIO_CHECK_EQUAL(OCIO::getFloatString((float)1, OCIO::GPU_LANGUAGE_GLSL_1_3), "1.");
 }
 
 #endif // OCIO_UNIT_TEST

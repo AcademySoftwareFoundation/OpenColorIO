@@ -1,30 +1,5 @@
-/*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 #include <iostream>
 #include <set>
@@ -289,12 +264,88 @@ OCIO_NAMESPACE_ENTER
     
     RangeStyle RangeStyleFromString(const char * style)
     {
+        if(style && *style)
+        {
+            const std::string str = pystring::lower(style);
+            if(str == "noclamp") return RANGE_NO_CLAMP;
+            else if(str == "clamp") return RANGE_CLAMP;
+        }
+
+        std::string msg("Wrong Range style: ");
+        msg += (style && *style) ? style : "<null>";
+
+        throw Exception(msg.c_str());
+    }
+
+    const char * FixedFunctionStyleToString(FixedFunctionStyle style)
+    {
+        switch(style)
+        {
+            case FIXED_FUNCTION_ACES_RED_MOD_03:     return "ACES_RedMod03";
+            case FIXED_FUNCTION_ACES_RED_MOD_10:     return "ACES_RedMod10";
+            case FIXED_FUNCTION_ACES_GLOW_03:        return "ACES_Glow03";
+            case FIXED_FUNCTION_ACES_GLOW_10:        return "ACES_Glow10";
+            case FIXED_FUNCTION_ACES_DARK_TO_DIM_10: return "ACES_DarkToDim10";
+            case FIXED_FUNCTION_REC2100_SURROUND:    return "REC2100_Surround";
+        }
+
+        // Default style is meaningless.
+        throw Exception("Unknown Fixed FunctionOp style");
+    }
+
+    FixedFunctionStyle FixedFunctionStyleFromString(const char * style)
+    {
         std::string str = pystring::lower(style);
-        if(str == "noclamp") return RANGE_NO_CLAMP;
-        else if(str == "clamp") return RANGE_CLAMP;
-        return RANGE_CLAMP;
+
+        if(str == "aces_redmod03")           return FIXED_FUNCTION_ACES_RED_MOD_03;
+        else if(str == "aces_redmod10")      return FIXED_FUNCTION_ACES_RED_MOD_10;
+        else if(str == "aces_glow03")        return FIXED_FUNCTION_ACES_GLOW_03;
+        else if(str == "aces_glow10")        return FIXED_FUNCTION_ACES_GLOW_10;
+        else if(str == "aces_darktodim10")   return FIXED_FUNCTION_ACES_DARK_TO_DIM_10;
+        else if(str == "rec2100_surround")   return FIXED_FUNCTION_REC2100_SURROUND;
+
+        // Default style is meaningless.
+        std::stringstream ss;
+        ss << "Unknown Fixed FunctionOp style: " << style;
+
+        throw Exception(ss.str().c_str());
+    }
+
+    namespace
+    {
+        static constexpr const char * EC_STYLE_VIDEO = "video";
+        static constexpr const char * EC_STYLE_LOGARITHMIC = "log";
+        static constexpr const char * EC_STYLE_LINEAR = "linear";
+    }
+
+    const char * ExposureContrastStyleToString(ExposureContrastStyle style)
+    {
+        switch (style)
+        {
+        case EXPOSURE_CONTRAST_VIDEO:       return EC_STYLE_VIDEO;
+        case EXPOSURE_CONTRAST_LOGARITHMIC: return EC_STYLE_LOGARITHMIC;
+        case EXPOSURE_CONTRAST_LINEAR:      return EC_STYLE_LINEAR;
+        }
+
+        // Default style is meaningless.
+        throw Exception("Unknown exposure contrast style");
     }
     
+    ExposureContrastStyle ExposureContrastStyleFromString(const char * style)
+    {
+        std::string str = pystring::lower(style);
+
+        if      (str == EC_STYLE_LINEAR)      return EXPOSURE_CONTRAST_LINEAR;
+        else if (str == EC_STYLE_VIDEO)       return EXPOSURE_CONTRAST_VIDEO;
+        else if (str == EC_STYLE_LOGARITHMIC) return EXPOSURE_CONTRAST_LOGARITHMIC;
+
+        // Default style is meaningless.
+        std::stringstream ss;
+        ss << "Unknown exposure contrast style: " << style;
+
+        throw Exception(ss.str().c_str());
+    }
+
     const char * ROLE_DEFAULT = "default";
     const char * ROLE_REFERENCE = "reference";
     const char * ROLE_DATA = "data";
@@ -310,7 +361,7 @@ OCIO_NAMESPACE_ENTER
         const int FLOAT_DECIMALS = 7;
         const int DOUBLE_DECIMALS = 16;
     }
-    
+
     std::string FloatToString(float value)
     {
         std::ostringstream pretty;
@@ -369,9 +420,23 @@ OCIO_NAMESPACE_ENTER
         return pretty.str();
     }
     
-    
+    std::string DoubleVecToString(const double * val, unsigned int size)
+    {
+        if (size <= 0) return "";
+
+        std::ostringstream pretty;
+        pretty.precision(DOUBLE_DECIMALS);
+        for (unsigned int i = 0; i<size; ++i)
+        {
+            if (i != 0) pretty << " ";
+            pretty << val[i];
+        }
+
+        return pretty.str();
+    }
+
     bool StringVecToFloatVec(std::vector<float> &floatArray,
-                             const std::vector<std::string> &lineParts)
+                             const StringVec &lineParts)
     {
         floatArray.resize(lineParts.size());
         
@@ -393,7 +458,7 @@ OCIO_NAMESPACE_ENTER
     // Returns true if all lineParts have been recognized as int.
     // Content of intArray will be unknown if function returns false.
     bool StringVecToIntVec(std::vector<int> &intArray,
-                           const std::vector<std::string> &lineParts)
+                           const StringVec &lineParts)
     {
         intArray.resize(lineParts.size());
         
@@ -448,7 +513,7 @@ OCIO_NAMESPACE_ENTER
     // Otherwise, assume a single string.
     // Also, strip whitespace from all parts.
     
-    void SplitStringEnvStyle(std::vector<std::string> & outputvec, const char * str)
+    void SplitStringEnvStyle(StringVec & outputvec, const char * str)
     {
         if(!str) return;
         
@@ -472,7 +537,7 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    std::string JoinStringEnvStyle(const std::vector<std::string> & outputvec)
+    std::string JoinStringEnvStyle(const StringVec & outputvec)
     {
         return pystring::join(", ", outputvec);
     }
@@ -480,10 +545,10 @@ OCIO_NAMESPACE_ENTER
     // Return a vector of strings that are both in vec1 and vec2.
     // Case is ignored to find strings.
     // Ordering and capitalization from vec1 are preserved.
-    std::vector<std::string> IntersectStringVecsCaseIgnore(const std::vector<std::string> & vec1,
-                                                           const std::vector<std::string> & vec2)
+    StringVec IntersectStringVecsCaseIgnore(const StringVec & vec1,
+                                            const StringVec & vec2)
     {
-        std::vector<std::string> newvec;
+        StringVec newvec;
         std::set<std::string> allvalues;
         
         // Seed the set with all values from vec2
@@ -505,7 +570,7 @@ OCIO_NAMESPACE_ENTER
     }
     
     
-    int FindInStringVecCaseIgnore(const std::vector<std::string> & vec, const std::string & str)
+    int FindInStringVecCaseIgnore(const StringVec & vec, const std::string & str)
     {
         std::string teststr = pystring::lower(str);
         for(unsigned int i=0; i<vec.size(); ++i)
@@ -526,371 +591,371 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(ParseUtils, XMLText)
+OCIO_ADD_TEST(ParseUtils, XMLText)
 {
     const std::string in("abc \" def ' ghi < jkl > mnop & efg");
     const std::string ref("abc &quot; def &apos; ghi &lt; jkl &gt; mnop &amp; efg");
 
     std::string out1 = OCIO::ConvertSpecialCharToXmlToken(in);
-    OIIO_CHECK_EQUAL(out1, ref);
+    OCIO_CHECK_EQUAL(out1, ref);
 }
 
-OIIO_ADD_TEST(ParseUtils, BoolString)
+OCIO_ADD_TEST(ParseUtils, BoolString)
 {
     std::string resStr = OCIO::BoolToString(true);
-    OIIO_CHECK_EQUAL("true", resStr);
+    OCIO_CHECK_EQUAL("true", resStr);
 
     resStr = OCIO::BoolToString(false);
-    OIIO_CHECK_EQUAL("false", resStr);
+    OCIO_CHECK_EQUAL("false", resStr);
 
     bool resBool = OCIO::BoolFromString("yes");
-    OIIO_CHECK_EQUAL(true, resBool);
+    OCIO_CHECK_EQUAL(true, resBool);
 
     resBool = OCIO::BoolFromString("Yes");
-    OIIO_CHECK_EQUAL(true, resBool);
+    OCIO_CHECK_EQUAL(true, resBool);
 
     resBool = OCIO::BoolFromString("YES");
-    OIIO_CHECK_EQUAL(true, resBool);
+    OCIO_CHECK_EQUAL(true, resBool);
 
     resBool = OCIO::BoolFromString("YeS");
-    OIIO_CHECK_EQUAL(true, resBool);
+    OCIO_CHECK_EQUAL(true, resBool);
 
     resBool = OCIO::BoolFromString("yEs");
-    OIIO_CHECK_EQUAL(true, resBool);
+    OCIO_CHECK_EQUAL(true, resBool);
 
     resBool = OCIO::BoolFromString("true");
-    OIIO_CHECK_EQUAL(true, resBool);
+    OCIO_CHECK_EQUAL(true, resBool);
 
     resBool = OCIO::BoolFromString("TRUE");
-    OIIO_CHECK_EQUAL(true, resBool);
+    OCIO_CHECK_EQUAL(true, resBool);
 
     resBool = OCIO::BoolFromString("True");
-    OIIO_CHECK_EQUAL(true, resBool);
+    OCIO_CHECK_EQUAL(true, resBool);
 
     resBool = OCIO::BoolFromString("tRUe");
-    OIIO_CHECK_EQUAL(true, resBool);
+    OCIO_CHECK_EQUAL(true, resBool);
 
     resBool = OCIO::BoolFromString("tRUE");
-    OIIO_CHECK_EQUAL(true, resBool);
+    OCIO_CHECK_EQUAL(true, resBool);
 
     resBool = OCIO::BoolFromString("yes ");
-    OIIO_CHECK_EQUAL(false, resBool);
+    OCIO_CHECK_EQUAL(false, resBool);
 
     resBool = OCIO::BoolFromString(" true ");
-    OIIO_CHECK_EQUAL(false, resBool);
+    OCIO_CHECK_EQUAL(false, resBool);
 
     resBool = OCIO::BoolFromString("false");
-    OIIO_CHECK_EQUAL(false, resBool);
+    OCIO_CHECK_EQUAL(false, resBool);
 
     resBool = OCIO::BoolFromString("");
-    OIIO_CHECK_EQUAL(false, resBool);
+    OCIO_CHECK_EQUAL(false, resBool);
 
     resBool = OCIO::BoolFromString("no");
-    OIIO_CHECK_EQUAL(false, resBool);
+    OCIO_CHECK_EQUAL(false, resBool);
 
     resBool = OCIO::BoolFromString("valid");
-    OIIO_CHECK_EQUAL(false, resBool);
+    OCIO_CHECK_EQUAL(false, resBool);
 
     resBool = OCIO::BoolFromString("success");
-    OIIO_CHECK_EQUAL(false, resBool);
+    OCIO_CHECK_EQUAL(false, resBool);
 
     resBool = OCIO::BoolFromString("anything");
-    OIIO_CHECK_EQUAL(false, resBool);
+    OCIO_CHECK_EQUAL(false, resBool);
 }
 
-OIIO_ADD_TEST(ParseUtils, TransformDirection)
+OCIO_ADD_TEST(ParseUtils, TransformDirection)
 {
     std::string resStr;
     resStr = OCIO::TransformDirectionToString(OCIO::TRANSFORM_DIR_FORWARD);
-    OIIO_CHECK_EQUAL("forward", resStr);
+    OCIO_CHECK_EQUAL("forward", resStr);
     resStr = OCIO::TransformDirectionToString(OCIO::TRANSFORM_DIR_INVERSE);
-    OIIO_CHECK_EQUAL("inverse", resStr);
+    OCIO_CHECK_EQUAL("inverse", resStr);
     resStr = OCIO::TransformDirectionToString(OCIO::TRANSFORM_DIR_UNKNOWN);
-    OIIO_CHECK_EQUAL("unknown", resStr);
+    OCIO_CHECK_EQUAL("unknown", resStr);
 
     OCIO::TransformDirection resDir;
     resDir = OCIO::TransformDirectionFromString("forward");
-    OIIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, resDir);
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, resDir);
     resDir = OCIO::TransformDirectionFromString("inverse");
-    OIIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_INVERSE, resDir);
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_INVERSE, resDir);
     resDir = OCIO::TransformDirectionFromString("Forward");
-    OIIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, resDir);
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, resDir);
     resDir = OCIO::TransformDirectionFromString("Inverse");
-    OIIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_INVERSE, resDir);
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_INVERSE, resDir);
     resDir = OCIO::TransformDirectionFromString("FORWARD");
-    OIIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, resDir);
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, resDir);
     resDir = OCIO::TransformDirectionFromString("INVERSE");
-    OIIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_INVERSE, resDir);
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_INVERSE, resDir);
     resDir = OCIO::TransformDirectionFromString("unknown");
-    OIIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_UNKNOWN, resDir);
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_UNKNOWN, resDir);
     resDir = OCIO::TransformDirectionFromString("");
-    OIIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_UNKNOWN, resDir);
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_UNKNOWN, resDir);
     resDir = OCIO::TransformDirectionFromString("anything");
-    OIIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_UNKNOWN, resDir);
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_UNKNOWN, resDir);
 
     resDir = OCIO::CombineTransformDirections(OCIO::TRANSFORM_DIR_UNKNOWN,
         OCIO::TRANSFORM_DIR_FORWARD);
-    OIIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_UNKNOWN, resDir);
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_UNKNOWN, resDir);
     resDir = OCIO::CombineTransformDirections(OCIO::TRANSFORM_DIR_INVERSE,
         OCIO::TRANSFORM_DIR_UNKNOWN);
-    OIIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_UNKNOWN, resDir);
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_UNKNOWN, resDir);
     resDir = OCIO::CombineTransformDirections(OCIO::TRANSFORM_DIR_UNKNOWN,
         OCIO::TRANSFORM_DIR_UNKNOWN);
-    OIIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_UNKNOWN, resDir);
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_UNKNOWN, resDir);
     resDir = OCIO::CombineTransformDirections(OCIO::TRANSFORM_DIR_INVERSE,
         OCIO::TRANSFORM_DIR_INVERSE);
-    OIIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, resDir);
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, resDir);
     resDir = OCIO::CombineTransformDirections(OCIO::TRANSFORM_DIR_FORWARD,
         OCIO::TRANSFORM_DIR_FORWARD);
-    OIIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, resDir);
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, resDir);
     resDir = OCIO::CombineTransformDirections(OCIO::TRANSFORM_DIR_INVERSE,
         OCIO::TRANSFORM_DIR_FORWARD);
-    OIIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_INVERSE, resDir);
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_INVERSE, resDir);
     resDir = OCIO::CombineTransformDirections(OCIO::TRANSFORM_DIR_FORWARD,
         OCIO::TRANSFORM_DIR_INVERSE);
-    OIIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_INVERSE, resDir);
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_INVERSE, resDir);
 
     resDir = OCIO::GetInverseTransformDirection(OCIO::TRANSFORM_DIR_UNKNOWN);
-    OIIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_UNKNOWN, resDir);
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_UNKNOWN, resDir);
     resDir = OCIO::GetInverseTransformDirection(OCIO::TRANSFORM_DIR_INVERSE);
-    OIIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, resDir);
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, resDir);
     resDir = OCIO::GetInverseTransformDirection(OCIO::TRANSFORM_DIR_FORWARD);
-    OIIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_INVERSE, resDir);
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_INVERSE, resDir);
 }
 
-OIIO_ADD_TEST(ParseUtils, ColorSpace)
+OCIO_ADD_TEST(ParseUtils, ColorSpace)
 {
     std::string resStr;
     resStr = OCIO::ColorSpaceDirectionToString(
         OCIO::COLORSPACE_DIR_TO_REFERENCE);
-    OIIO_CHECK_EQUAL("to_reference", resStr);
+    OCIO_CHECK_EQUAL("to_reference", resStr);
     resStr = OCIO::ColorSpaceDirectionToString(
         OCIO::COLORSPACE_DIR_FROM_REFERENCE);
-    OIIO_CHECK_EQUAL("from_reference", resStr);
+    OCIO_CHECK_EQUAL("from_reference", resStr);
     resStr = OCIO::ColorSpaceDirectionToString(
         OCIO::COLORSPACE_DIR_UNKNOWN);
-    OIIO_CHECK_EQUAL("unknown", resStr);
+    OCIO_CHECK_EQUAL("unknown", resStr);
 
     OCIO::ColorSpaceDirection resCSD;
     resCSD = OCIO::ColorSpaceDirectionFromString("to_reference");
-    OIIO_CHECK_EQUAL(OCIO::COLORSPACE_DIR_TO_REFERENCE, resCSD);
+    OCIO_CHECK_EQUAL(OCIO::COLORSPACE_DIR_TO_REFERENCE, resCSD);
     resCSD = OCIO::ColorSpaceDirectionFromString("from_reference");
-    OIIO_CHECK_EQUAL(OCIO::COLORSPACE_DIR_FROM_REFERENCE, resCSD);
+    OCIO_CHECK_EQUAL(OCIO::COLORSPACE_DIR_FROM_REFERENCE, resCSD);
     resCSD = OCIO::ColorSpaceDirectionFromString("unkwon");
-    OIIO_CHECK_EQUAL(OCIO::COLORSPACE_DIR_UNKNOWN, resCSD);
+    OCIO_CHECK_EQUAL(OCIO::COLORSPACE_DIR_UNKNOWN, resCSD);
     resCSD = OCIO::ColorSpaceDirectionFromString("");
-    OIIO_CHECK_EQUAL(OCIO::COLORSPACE_DIR_UNKNOWN, resCSD);
+    OCIO_CHECK_EQUAL(OCIO::COLORSPACE_DIR_UNKNOWN, resCSD);
 }
 
-OIIO_ADD_TEST(ParseUtils, BitDepth)
+OCIO_ADD_TEST(ParseUtils, BitDepth)
 {
     std::string resStr;
     resStr = OCIO::BitDepthToString(OCIO::BIT_DEPTH_UINT8);
-    OIIO_CHECK_EQUAL("8ui", resStr);
+    OCIO_CHECK_EQUAL("8ui", resStr);
     resStr = OCIO::BitDepthToString(OCIO::BIT_DEPTH_UINT10);
-    OIIO_CHECK_EQUAL("10ui", resStr);
+    OCIO_CHECK_EQUAL("10ui", resStr);
     resStr = OCIO::BitDepthToString(OCIO::BIT_DEPTH_UINT12);
-    OIIO_CHECK_EQUAL("12ui", resStr);
+    OCIO_CHECK_EQUAL("12ui", resStr);
     resStr = OCIO::BitDepthToString(OCIO::BIT_DEPTH_UINT14);
-    OIIO_CHECK_EQUAL("14ui", resStr);
+    OCIO_CHECK_EQUAL("14ui", resStr);
     resStr = OCIO::BitDepthToString(OCIO::BIT_DEPTH_UINT16);
-    OIIO_CHECK_EQUAL("16ui", resStr);
+    OCIO_CHECK_EQUAL("16ui", resStr);
     resStr = OCIO::BitDepthToString(OCIO::BIT_DEPTH_UINT32);
-    OIIO_CHECK_EQUAL("32ui", resStr);
+    OCIO_CHECK_EQUAL("32ui", resStr);
     resStr = OCIO::BitDepthToString(OCIO::BIT_DEPTH_F16);
-    OIIO_CHECK_EQUAL("16f", resStr);
+    OCIO_CHECK_EQUAL("16f", resStr);
     resStr = OCIO::BitDepthToString(OCIO::BIT_DEPTH_F32);
-    OIIO_CHECK_EQUAL("32f", resStr);
+    OCIO_CHECK_EQUAL("32f", resStr);
     resStr = OCIO::BitDepthToString(OCIO::BIT_DEPTH_UNKNOWN);
-    OIIO_CHECK_EQUAL("unknown", resStr);
+    OCIO_CHECK_EQUAL("unknown", resStr);
     
     OCIO::BitDepth resBD;
     resBD = OCIO::BitDepthFromString("8ui");
-    OIIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT8, resBD);
+    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT8, resBD);
     resBD = OCIO::BitDepthFromString("8Ui");
-    OIIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT8, resBD);
+    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT8, resBD);
     resBD = OCIO::BitDepthFromString("8UI");
-    OIIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT8, resBD);
+    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT8, resBD);
     resBD = OCIO::BitDepthFromString("8uI");
-    OIIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT8, resBD);
+    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT8, resBD);
     resBD = OCIO::BitDepthFromString("10ui");
-    OIIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT10, resBD);
+    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT10, resBD);
     resBD = OCIO::BitDepthFromString("12ui");
-    OIIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT12, resBD);
+    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT12, resBD);
     resBD = OCIO::BitDepthFromString("14ui");
-    OIIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT14, resBD);
+    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT14, resBD);
     resBD = OCIO::BitDepthFromString("16ui");
-    OIIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT16, resBD);
+    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT16, resBD);
     resBD = OCIO::BitDepthFromString("32ui");
-    OIIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT32, resBD);
+    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT32, resBD);
     resBD = OCIO::BitDepthFromString("16f");
-    OIIO_CHECK_EQUAL(OCIO::BIT_DEPTH_F16, resBD);
+    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_F16, resBD);
     resBD = OCIO::BitDepthFromString("32f");
-    OIIO_CHECK_EQUAL(OCIO::BIT_DEPTH_F32, resBD);
+    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_F32, resBD);
     resBD = OCIO::BitDepthFromString("7ui");
-    OIIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UNKNOWN, resBD);
+    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UNKNOWN, resBD);
     resBD = OCIO::BitDepthFromString("unknown");
-    OIIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UNKNOWN, resBD);
+    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UNKNOWN, resBD);
     resBD = OCIO::BitDepthFromString("");
-    OIIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UNKNOWN, resBD);
+    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UNKNOWN, resBD);
 
 
     bool resBool;
     resBool = OCIO::BitDepthIsFloat(OCIO::BIT_DEPTH_F16);
-    OIIO_CHECK_EQUAL(true, resBool);
+    OCIO_CHECK_EQUAL(true, resBool);
     resBool = OCIO::BitDepthIsFloat(OCIO::BIT_DEPTH_F32);
-    OIIO_CHECK_EQUAL(true, resBool);
+    OCIO_CHECK_EQUAL(true, resBool);
     resBool = OCIO::BitDepthIsFloat(OCIO::BIT_DEPTH_UINT8);
-    OIIO_CHECK_EQUAL(false, resBool);
+    OCIO_CHECK_EQUAL(false, resBool);
     resBool = OCIO::BitDepthIsFloat(OCIO::BIT_DEPTH_UINT10);
-    OIIO_CHECK_EQUAL(false, resBool);
+    OCIO_CHECK_EQUAL(false, resBool);
     resBool = OCIO::BitDepthIsFloat(OCIO::BIT_DEPTH_UINT12);
-    OIIO_CHECK_EQUAL(false, resBool);
+    OCIO_CHECK_EQUAL(false, resBool);
     resBool = OCIO::BitDepthIsFloat(OCIO::BIT_DEPTH_UINT14);
-    OIIO_CHECK_EQUAL(false, resBool);
+    OCIO_CHECK_EQUAL(false, resBool);
     resBool = OCIO::BitDepthIsFloat(OCIO::BIT_DEPTH_UINT16);
-    OIIO_CHECK_EQUAL(false, resBool);
+    OCIO_CHECK_EQUAL(false, resBool);
     resBool = OCIO::BitDepthIsFloat(OCIO::BIT_DEPTH_UINT32);
-    OIIO_CHECK_EQUAL(false, resBool);
+    OCIO_CHECK_EQUAL(false, resBool);
     resBool = OCIO::BitDepthIsFloat(OCIO::BIT_DEPTH_UNKNOWN);
-    OIIO_CHECK_EQUAL(false, resBool);
+    OCIO_CHECK_EQUAL(false, resBool);
 
     int resInt;
     resInt = OCIO::BitDepthToInt(OCIO::BIT_DEPTH_UINT8);
-    OIIO_CHECK_EQUAL(8, resInt);
+    OCIO_CHECK_EQUAL(8, resInt);
     resInt = OCIO::BitDepthToInt(OCIO::BIT_DEPTH_UINT10);
-    OIIO_CHECK_EQUAL(10, resInt);
+    OCIO_CHECK_EQUAL(10, resInt);
     resInt = OCIO::BitDepthToInt(OCIO::BIT_DEPTH_UINT12);
-    OIIO_CHECK_EQUAL(12, resInt);
+    OCIO_CHECK_EQUAL(12, resInt);
     resInt = OCIO::BitDepthToInt(OCIO::BIT_DEPTH_UINT14);
-    OIIO_CHECK_EQUAL(14, resInt);
+    OCIO_CHECK_EQUAL(14, resInt);
     resInt = OCIO::BitDepthToInt(OCIO::BIT_DEPTH_UINT16);
-    OIIO_CHECK_EQUAL(16, resInt);
+    OCIO_CHECK_EQUAL(16, resInt);
     resInt = OCIO::BitDepthToInt(OCIO::BIT_DEPTH_UINT32);
-    OIIO_CHECK_EQUAL(32, resInt);
+    OCIO_CHECK_EQUAL(32, resInt);
     resInt = OCIO::BitDepthToInt(OCIO::BIT_DEPTH_F16);
-    OIIO_CHECK_EQUAL(0, resInt);
+    OCIO_CHECK_EQUAL(0, resInt);
     resInt = OCIO::BitDepthToInt(OCIO::BIT_DEPTH_F32);
-    OIIO_CHECK_EQUAL(0, resInt);
+    OCIO_CHECK_EQUAL(0, resInt);
     resInt = OCIO::BitDepthToInt(OCIO::BIT_DEPTH_UNKNOWN);
-    OIIO_CHECK_EQUAL(0, resInt);
+    OCIO_CHECK_EQUAL(0, resInt);
 
 }
 
-OIIO_ADD_TEST(ParseUtils, StringToInt)
+OCIO_ADD_TEST(ParseUtils, StringToInt)
 {
     int ival = 0;
     bool success = false;
     
     success = OCIO::StringToInt(&ival, "", false);
-    OIIO_CHECK_EQUAL(success, false);
+    OCIO_CHECK_EQUAL(success, false);
     
     success = OCIO::StringToInt(&ival, "9", false);
-    OIIO_CHECK_EQUAL(success, true);
-    OIIO_CHECK_EQUAL(ival, 9);
+    OCIO_CHECK_EQUAL(success, true);
+    OCIO_CHECK_EQUAL(ival, 9);
     
     success = OCIO::StringToInt(&ival, " 10 ", false);
-    OIIO_CHECK_EQUAL(success, true);
-    OIIO_CHECK_EQUAL(ival, 10);
+    OCIO_CHECK_EQUAL(success, true);
+    OCIO_CHECK_EQUAL(ival, 10);
     
     success = OCIO::StringToInt(&ival, " 101", true);
-    OIIO_CHECK_EQUAL(success, true);
-    OIIO_CHECK_EQUAL(ival, 101);
+    OCIO_CHECK_EQUAL(success, true);
+    OCIO_CHECK_EQUAL(ival, 101);
     
     success = OCIO::StringToInt(&ival, " 11x ", false);
-    OIIO_CHECK_EQUAL(success, true);
-    OIIO_CHECK_EQUAL(ival, 11);
+    OCIO_CHECK_EQUAL(success, true);
+    OCIO_CHECK_EQUAL(ival, 11);
     
     success = OCIO::StringToInt(&ival, " 12x ", true);
-    OIIO_CHECK_EQUAL(success, false);
+    OCIO_CHECK_EQUAL(success, false);
     
     success = OCIO::StringToInt(&ival, "13", true);
-    OIIO_CHECK_EQUAL(success, true);
-    OIIO_CHECK_EQUAL(ival, 13);
+    OCIO_CHECK_EQUAL(success, true);
+    OCIO_CHECK_EQUAL(ival, 13);
     
     success = OCIO::StringToInt(&ival, "-14", true);
-    OIIO_CHECK_EQUAL(success, true);
-    OIIO_CHECK_EQUAL(ival, -14);
+    OCIO_CHECK_EQUAL(success, true);
+    OCIO_CHECK_EQUAL(ival, -14);
     
     success = OCIO::StringToInt(&ival, "x-15", false);
-    OIIO_CHECK_EQUAL(success, false);
+    OCIO_CHECK_EQUAL(success, false);
     
     success = OCIO::StringToInt(&ival, "x-16", false);
-    OIIO_CHECK_EQUAL(success, false);
+    OCIO_CHECK_EQUAL(success, false);
 }
 
-OIIO_ADD_TEST(ParseUtils, StringToFloat)
+OCIO_ADD_TEST(ParseUtils, StringToFloat)
 {
     float fval = 0;
     bool success = false;
 
     success = OCIO::StringToFloat(&fval, "");
-    OIIO_CHECK_EQUAL(success, false);
+    OCIO_CHECK_EQUAL(success, false);
 
     success = OCIO::StringToFloat(&fval, "1.0");
-    OIIO_CHECK_EQUAL(success, true);
-    OIIO_CHECK_EQUAL(fval, 1.0f);
+    OCIO_CHECK_EQUAL(success, true);
+    OCIO_CHECK_EQUAL(fval, 1.0f);
 
     success = OCIO::StringToFloat(&fval, "1");
-    OIIO_CHECK_EQUAL(success, true);
-    OIIO_CHECK_EQUAL(fval, 1.0f);
+    OCIO_CHECK_EQUAL(success, true);
+    OCIO_CHECK_EQUAL(fval, 1.0f);
 
     success = OCIO::StringToFloat(&fval, "a1");
-    OIIO_CHECK_EQUAL(success, false);
+    OCIO_CHECK_EQUAL(success, false);
 
     success = OCIO::StringToFloat(&fval,
         "1 do we really want this to succeed?");
-    OIIO_CHECK_EQUAL(success, true);
-    OIIO_CHECK_EQUAL(fval, 1.0f);
+    OCIO_CHECK_EQUAL(success, true);
+    OCIO_CHECK_EQUAL(fval, 1.0f);
 
     success = OCIO::StringToFloat(&fval, "1Success");
-    OIIO_CHECK_EQUAL(success, true);
-    OIIO_CHECK_EQUAL(fval, 1.0f);
+    OCIO_CHECK_EQUAL(success, true);
+    OCIO_CHECK_EQUAL(fval, 1.0f);
 
     success = OCIO::StringToFloat(&fval,
         "1.0000000000000000000000000000000000000000000001");
-    OIIO_CHECK_EQUAL(success, true);
-    OIIO_CHECK_EQUAL(fval, 1.0f);
+    OCIO_CHECK_EQUAL(success, true);
+    OCIO_CHECK_EQUAL(fval, 1.0f);
 }
 
-OIIO_ADD_TEST(ParseUtils, FloatDouble)
+OCIO_ADD_TEST(ParseUtils, FloatDouble)
 {
     std::string resStr;
     resStr = OCIO::FloatToString(0.0f);
-    OIIO_CHECK_EQUAL("0", resStr);
+    OCIO_CHECK_EQUAL("0", resStr);
 
     resStr = OCIO::FloatToString(0.1111001f);
-    OIIO_CHECK_EQUAL("0.1111001", resStr);
+    OCIO_CHECK_EQUAL("0.1111001", resStr);
 
     resStr = OCIO::FloatToString(0.11000001f);
-    OIIO_CHECK_EQUAL("0.11", resStr);
+    OCIO_CHECK_EQUAL("0.11", resStr);
 
     resStr = OCIO::DoubleToString(0.11000001);
-    OIIO_CHECK_EQUAL("0.11000001", resStr);
+    OCIO_CHECK_EQUAL("0.11000001", resStr);
 
     resStr = OCIO::DoubleToString(0.1100000000000001);
-    OIIO_CHECK_EQUAL("0.1100000000000001", resStr);
+    OCIO_CHECK_EQUAL("0.1100000000000001", resStr);
 
     resStr = OCIO::DoubleToString(0.11000000000000001);
-    OIIO_CHECK_EQUAL("0.11", resStr);
+    OCIO_CHECK_EQUAL("0.11", resStr);
 }
 
-OIIO_ADD_TEST(ParseUtils, StringVecToIntVec)
+OCIO_ADD_TEST(ParseUtils, StringVecToIntVec)
 {
     std::vector<int> intArray;
-    std::vector<std::string> lineParts;
+    OCIO::StringVec lineParts;
     bool success = OCIO::StringVecToIntVec(intArray, lineParts);
-    OIIO_CHECK_EQUAL(true, success);
-    OIIO_CHECK_EQUAL(0, intArray.size());
+    OCIO_CHECK_EQUAL(true, success);
+    OCIO_CHECK_EQUAL(0, intArray.size());
 
     lineParts.push_back("42");
     lineParts.push_back("");
 
     success = OCIO::StringVecToIntVec(intArray, lineParts);
-    OIIO_CHECK_EQUAL(false, success);
-    OIIO_CHECK_EQUAL(2, intArray.size());
+    OCIO_CHECK_EQUAL(false, success);
+    OCIO_CHECK_EQUAL(2, intArray.size());
 
     intArray.clear();
     lineParts.clear();
@@ -899,10 +964,10 @@ OIIO_ADD_TEST(ParseUtils, StringVecToIntVec)
     lineParts.push_back("0");
 
     success = OCIO::StringVecToIntVec(intArray, lineParts);
-    OIIO_CHECK_EQUAL(true, success);
-    OIIO_CHECK_EQUAL(2, intArray.size());
-    OIIO_CHECK_EQUAL(42, intArray[0]);
-    OIIO_CHECK_EQUAL(0, intArray[1]);
+    OCIO_CHECK_EQUAL(true, success);
+    OCIO_CHECK_EQUAL(2, intArray.size());
+    OCIO_CHECK_EQUAL(42, intArray[0]);
+    OCIO_CHECK_EQUAL(0, intArray[1]);
 
     intArray.clear();
     lineParts.clear();
@@ -911,10 +976,10 @@ OIIO_ADD_TEST(ParseUtils, StringVecToIntVec)
     lineParts.push_back("021");
 
     success = OCIO::StringVecToIntVec(intArray, lineParts);
-    OIIO_CHECK_EQUAL(true, success);
-    OIIO_CHECK_EQUAL(2, intArray.size());
-    OIIO_CHECK_EQUAL(42, intArray[0]);
-    OIIO_CHECK_EQUAL(21, intArray[1]);
+    OCIO_CHECK_EQUAL(true, success);
+    OCIO_CHECK_EQUAL(2, intArray.size());
+    OCIO_CHECK_EQUAL(42, intArray[0]);
+    OCIO_CHECK_EQUAL(21, intArray[1]);
 
     intArray.clear();
     lineParts.clear();
@@ -923,8 +988,8 @@ OIIO_ADD_TEST(ParseUtils, StringVecToIntVec)
     lineParts.push_back("0x21");
 
     success = OCIO::StringVecToIntVec(intArray, lineParts);
-    OIIO_CHECK_EQUAL(false, success);
-    OIIO_CHECK_EQUAL(2, intArray.size());
+    OCIO_CHECK_EQUAL(false, success);
+    OCIO_CHECK_EQUAL(2, intArray.size());
 
     intArray.clear();
     lineParts.clear();
@@ -933,50 +998,50 @@ OIIO_ADD_TEST(ParseUtils, StringVecToIntVec)
     lineParts.push_back("21");
 
     success = OCIO::StringVecToIntVec(intArray, lineParts);
-    OIIO_CHECK_EQUAL(false, success);
-    OIIO_CHECK_EQUAL(2, intArray.size());
+    OCIO_CHECK_EQUAL(false, success);
+    OCIO_CHECK_EQUAL(2, intArray.size());
 }
 
-OIIO_ADD_TEST(ParseUtils, SplitStringEnvStyle)
+OCIO_ADD_TEST(ParseUtils, SplitStringEnvStyle)
 {
-    std::vector<std::string> outputvec;
+    OCIO::StringVec outputvec;
     OCIO::SplitStringEnvStyle(outputvec, "This:is:a:test");
-    OIIO_CHECK_EQUAL(4, outputvec.size());
-    OIIO_CHECK_EQUAL("This", outputvec[0]);
-    OIIO_CHECK_EQUAL("is", outputvec[1]);
-    OIIO_CHECK_EQUAL("a", outputvec[2]);
-    OIIO_CHECK_EQUAL("test", outputvec[3]);
+    OCIO_CHECK_EQUAL(4, outputvec.size());
+    OCIO_CHECK_EQUAL("This", outputvec[0]);
+    OCIO_CHECK_EQUAL("is", outputvec[1]);
+    OCIO_CHECK_EQUAL("a", outputvec[2]);
+    OCIO_CHECK_EQUAL("test", outputvec[3]);
     outputvec.clear();
     OCIO::SplitStringEnvStyle(outputvec, "   This  : is   :   a:   test  ");
-    OIIO_CHECK_EQUAL(4, outputvec.size());
-    OIIO_CHECK_EQUAL("This", outputvec[0]);
-    OIIO_CHECK_EQUAL("is", outputvec[1]);
-    OIIO_CHECK_EQUAL("a", outputvec[2]);
-    OIIO_CHECK_EQUAL("test", outputvec[3]);
+    OCIO_CHECK_EQUAL(4, outputvec.size());
+    OCIO_CHECK_EQUAL("This", outputvec[0]);
+    OCIO_CHECK_EQUAL("is", outputvec[1]);
+    OCIO_CHECK_EQUAL("a", outputvec[2]);
+    OCIO_CHECK_EQUAL("test", outputvec[3]);
     outputvec.clear();
     OCIO::SplitStringEnvStyle(outputvec, "   This  , is   ,   a,   test  ");
-    OIIO_CHECK_EQUAL(4, outputvec.size());
-    OIIO_CHECK_EQUAL("This", outputvec[0]);
-    OIIO_CHECK_EQUAL("is", outputvec[1]);
-    OIIO_CHECK_EQUAL("a", outputvec[2]);
-    OIIO_CHECK_EQUAL("test", outputvec[3]);
+    OCIO_CHECK_EQUAL(4, outputvec.size());
+    OCIO_CHECK_EQUAL("This", outputvec[0]);
+    OCIO_CHECK_EQUAL("is", outputvec[1]);
+    OCIO_CHECK_EQUAL("a", outputvec[2]);
+    OCIO_CHECK_EQUAL("test", outputvec[3]);
     outputvec.clear();
     OCIO::SplitStringEnvStyle(outputvec, "This:is   ,   a:test  ");
-    OIIO_CHECK_EQUAL(2, outputvec.size());
-    OIIO_CHECK_EQUAL("This:is", outputvec[0]);
-    OIIO_CHECK_EQUAL("a:test", outputvec[1]);
+    OCIO_CHECK_EQUAL(2, outputvec.size());
+    OCIO_CHECK_EQUAL("This:is", outputvec[0]);
+    OCIO_CHECK_EQUAL("a:test", outputvec[1]);
     outputvec.clear();
     OCIO::SplitStringEnvStyle(outputvec, ",,");
-    OIIO_CHECK_EQUAL(3, outputvec.size());
-    OIIO_CHECK_EQUAL("", outputvec[0]);
-    OIIO_CHECK_EQUAL("", outputvec[1]);
-    OIIO_CHECK_EQUAL("", outputvec[2]);
+    OCIO_CHECK_EQUAL(3, outputvec.size());
+    OCIO_CHECK_EQUAL("", outputvec[0]);
+    OCIO_CHECK_EQUAL("", outputvec[1]);
+    OCIO_CHECK_EQUAL("", outputvec[2]);
 }
 
-OIIO_ADD_TEST(ParseUtils, IntersectStringVecsCaseIgnore)
+OCIO_ADD_TEST(ParseUtils, IntersectStringVecsCaseIgnore)
 {
-    std::vector<std::string> source1;
-    std::vector<std::string> source2;
+    OCIO::StringVec source1;
+    OCIO::StringVec source2;
     source1.push_back("111");
     source1.push_back("This");
     source1.push_back("is");
@@ -991,12 +1056,12 @@ OIIO_ADD_TEST(ParseUtils, IntersectStringVecsCaseIgnore)
     source2.push_back("a");
     source2.push_back("IS");
 
-    std::vector<std::string> resInter = OCIO::IntersectStringVecsCaseIgnore(source1, source2);
-    OIIO_CHECK_EQUAL(4, resInter.size());
-    OIIO_CHECK_EQUAL("This", resInter[0]);
-    OIIO_CHECK_EQUAL("is", resInter[1]);
-    OIIO_CHECK_EQUAL("a", resInter[2]);
-    OIIO_CHECK_EQUAL("test", resInter[3]);
+    OCIO::StringVec resInter = OCIO::IntersectStringVecsCaseIgnore(source1, source2);
+    OCIO_CHECK_EQUAL(4, resInter.size());
+    OCIO_CHECK_EQUAL("This", resInter[0]);
+    OCIO_CHECK_EQUAL("is", resInter[1]);
+    OCIO_CHECK_EQUAL("a", resInter[2]);
+    OCIO_CHECK_EQUAL("test", resInter[3]);
 }
 
 #endif // OCIO_UNIT_TEST

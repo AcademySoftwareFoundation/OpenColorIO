@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
 
 import unittest, os, sys
 import PyOpenColorIO as OCIO
@@ -24,6 +26,14 @@ class ContextTest(unittest.TestCase):
         self.assertEqual(OCIO.Constants.ENV_ENVIRONMENT_LOAD_PREDEFINED, cont.getEnvironmentMode())
         cont.setEnvironmentMode(OCIO.Constants.ENV_ENVIRONMENT_LOAD_ALL)
         self.assertEqual(OCIO.Constants.ENV_ENVIRONMENT_LOAD_ALL, cont.getEnvironmentMode())
+        cont.clearSearchPaths()
+        self.assertEqual(0, cont.getNumSearchPaths())
+        cont.addSearchPath("First/ Path")
+        self.assertEqual(1, cont.getNumSearchPaths())
+        cont.addSearchPath("D:\\Second\\Path\\")
+        self.assertEqual(2, cont.getNumSearchPaths())
+        self.assertEqual("First/ Path", cont.getSearchPathByIndex(0))
+        self.assertEqual("D:\\Second\\Path\\", cont.getSearchPathByIndex(1))
         try:
             cont.setSearchPath("testing123")
             foo = cont.resolveFileLocation("test.lut")

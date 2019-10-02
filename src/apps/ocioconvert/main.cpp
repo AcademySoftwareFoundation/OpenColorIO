@@ -1,33 +1,11 @@
-/*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
-All Rights Reserved.
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+#include <chrono>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
+#include <utility>
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -52,7 +30,10 @@ namespace OIIO = OIIO_NAMESPACE;
 #include <GL/gl.h>
 #include <GL/glut.h>
 #endif
+
 #include "glsl.h"
+#include "OpenEXR/half.h"
+#include "oiiohelpers.h"
 
 
 #include "argparse.h"
@@ -88,6 +69,9 @@ private:
     {
     }
 
+    GPUManagement(const GPUManagement &) = delete;
+    GPUManagement & operator=(const GPUManagement &) = delete;
+
     ~GPUManagement()
     {
         if (m_initState != STATE_CREATED)
@@ -104,7 +88,7 @@ public:
         return inst;
     }
 
-    void init()
+    void init(bool verbose)
     {
         if (m_initState != STATE_CREATED) return;
             
@@ -122,10 +106,19 @@ public:
         glewInit();
         if (!glewIsSupported("GL_VERSION_2_0"))
         {
-            std::cout << "OpenGL 2.0 not supported" << std::endl;
+            std::cerr << "OpenGL 2.0 not supported" << std::endl;
             exit(1);
         }
 #endif
+
+        if(verbose)
+        {
+            std::cout << std::endl
+                      << "GL Vendor:    " << glGetString(GL_VENDOR) << std::endl
+                      << "GL Renderer:  " << glGetString(GL_RENDERER) << std::endl
+                      << "GL Version:   " << glGetString(GL_VERSION) << std::endl
+                      << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+        }
 
         // Initilize the OpenGL engine
         glPixelStorei(GL_UNPACK_ALIGNMENT, 4);           // 4-byte pixel alignment
@@ -222,10 +215,12 @@ public:
         shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
 
         // Collect the shader program information for a specific processor    
-        processor->extractGpuShaderInfo(shaderDesc);
+        OCIO::ConstGPUProcessorRcPtr gpuProcessor
+            = processor->getDefaultGPUProcessor();
+        gpuProcessor->extractGpuShaderInfo(shaderDesc);
 
         // Use the helper OpenGL builder
-        m_oglBuilder = OpenGLBuilder::Create(shaderDesc);
+        m_oglBuilder = OCIO::OpenGLBuilder::Create(shaderDesc);
         m_oglBuilder->setVerbose(gpuinfo);
 
         // Allocate & upload all the LUTs
@@ -246,8 +241,12 @@ public:
 
         // Enable the fragment shader program, and all needed textures
         m_oglBuilder->useProgram();
+        // The image texture
         glUniform1i(glGetUniformLocation(m_oglBuilder->getProgramHandle(), "img"), 0);
+        // The LUT textures
         m_oglBuilder->useAllTextures();
+        // Enable uniforms for dynamic properties
+        m_oglBuilder->useAllUniforms();
 
         m_initState = STATE_SHADER_UPDATED;
     }
@@ -293,7 +292,7 @@ public:
         m_initState = STATE_IMAGE_PROCESSED;
     }
 
-    void readImage(std::vector<float>& image)
+    void readImage(const float * image)
     {
         if (m_initState != STATE_IMAGE_PROCESSED)
         {
@@ -302,7 +301,7 @@ public:
         }
 
         glReadBuffer(GL_COLOR_ATTACHMENT0);
-        glReadPixels(0, 0, m_width, m_height, m_format, GL_FLOAT, (GLvoid*)&image[0]);
+        glReadPixels(0, 0, m_width, m_height, m_format, GL_FLOAT, (GLvoid*)image);
 
         // Current implementation only has to process 1 image.
         // To handle more images we could go back to STATE_INITIALIZED
@@ -326,9 +325,10 @@ private:
         STATE_IMAGE_PROCESSED,
         STATE_IMAGE_READ
     };
-    State m_initState;
+
     GLint m_glwin;
-    OpenGLBuilderRcPtr m_oglBuilder;
+    State m_initState;
+    OCIO::OpenGLBuilderRcPtr m_oglBuilder;
     GLuint m_imageTexID;
     GLenum m_format;
     long m_width;
@@ -356,6 +356,7 @@ int main(int argc, const char **argv)
     bool usegpu = false;
     bool usegpuLegacy = false;
     bool outputgpuInfo = false;
+    bool verbose = false;
 
     ap.options("ocioconvert -- apply colorspace transform to an image \n\n"
                "usage: ocioconvert [options]  inputimage inputcolorspace outputimage outputcolorspace\n\n",
@@ -370,6 +371,7 @@ int main(int argc, const char **argv)
                "--gpulegacy", &usegpuLegacy, "Use the legacy (i.e. baked) GPU color processing "
                                              "instead of the CPU one (--gpu is ignored)",
                "--gpuinfo", &outputgpuInfo, "Output the OCIO shader program",
+               "--v", &verbose, "Display general information",
                NULL
                );
     if (ap.parse (argc, argv) < 0) {
@@ -384,13 +386,39 @@ int main(int argc, const char **argv)
       exit(1);
     }
 
+    if(verbose)
+    {
+        std::cout << std::endl;
+        std::cout << "OIIO Version: " << OIIO_VERSION_STRING << std::endl;
+        std::cout << "OCIO Version: " << OCIO::GetVersion() << std::endl;
+        const char * env = getenv("OCIO");
+        if(env && *env)
+        {
+            try
+            {
+                std::cout << std::endl;
+                std::cout << "OCIO Configuration: '" << env << "'" << std::endl;
+                OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+                std::cout << "OCIO search_path:    " << config->getSearchPath() << std::endl;
+            }
+            catch(...)
+            {
+
+                std::cerr << "Error loading the config file: '" << env << "'";
+                exit(1);
+            }
+        }
+    }
+    
     if (usegpuLegacy)
     {
-        std::cerr << "Using legacy OCIO v1 GPU color processing." << std::endl;
+        std::cout << std::endl;
+        std::cout << "Using legacy OCIO v1 GPU color processing." << std::endl;
     }
     else if (usegpu)
     {
-        std::cerr << "Using GPU color processing." << std::endl;
+        std::cout << std::endl;
+        std::cout << "Using GPU color processing." << std::endl;
     }
 
     const char * inputimage = args[0].c_str();
@@ -399,17 +427,22 @@ int main(int argc, const char **argv)
     const char * outputcolorspace = args[3].c_str();
     
     OIIO::ImageSpec spec;
-    std::vector<float> img;
+    OCIO::ImgBuffer img;
     int imgwidth = 0;
     int imgheight = 0;
     int components = 0;
     
 
     // Load the image
-    std::cerr << "Loading " << inputimage << std::endl;
+    std::cout << std::endl;
+    std::cout << "Loading " << inputimage << std::endl;
     try
     {
+#if OIIO_VERSION < 10903
+        OIIO::ImageInput* f = OIIO::ImageInput::create(inputimage);
+#else
         auto f = OIIO::ImageInput::create(inputimage);
+#endif
         if(!f)
         {
             std::cerr << "Could not create image input." << std::endl;
@@ -424,22 +457,50 @@ int main(int argc, const char **argv)
             std::cerr << "Error loading image " << error << std::endl;
             exit(1);
         }
+
+        OCIO::PrintImageSpec(spec, verbose);
         
         imgwidth = spec.width;
         imgheight = spec.height;
         components = spec.nchannels;
         
-        img.resize(imgwidth*imgheight*components);
-        memset(&img[0], 0, imgwidth*imgheight*components*sizeof(float));
-        
-        f->read_image(OIIO::TypeDesc::TypeFloat, &img[0]);
+        if (usegpu || usegpuLegacy)
+        {
+            spec.format = OIIO::TypeDesc::FLOAT;
+            img.allocate(spec);
+
+            const bool ok = f->read_image(spec.format, img.getBuffer());
+            if(!ok)
+            {
+                std::cerr << "Error reading \"" << inputimage << "\" : " << f->geterror() << "\n";
+                exit(1);
+            }
+
+            if(croptofull)
+            {
+                std::cerr << "Error: Crop disabled in GPU mode" << std::endl;
+                exit(1);
+            }
+        }
+        else
+        {
+            img.allocate(spec);
+
+            const bool ok = f->read_image(spec.format, img.getBuffer());
+            if(!ok)
+            {
+                std::cerr << "Error reading \"" << inputimage << "\" : " << f->geterror() << "\n";
+                exit(1);
+            }
+        }
+
 #if OIIO_VERSION < 10903
         OIIO::ImageInput::destroy(f);
 #endif
         
         std::vector<int> kchannels;
         //parse --ch argument
-        if (keepChannels != "" && !StringToVector(&kchannels,keepChannels.c_str()))
+        if (keepChannels != "" && !StringToVector(&kchannels, keepChannels.c_str()))
         {
             std::cerr << "Error: --ch: '" << keepChannels << "' should be comma-seperated integers\n";
             exit(1);
@@ -454,22 +515,35 @@ int main(int argc, const char **argv)
                 kchannels[channel] = channel;
             }
         }
-        
+
         if (croptofull)
         {
             imgwidth = spec.full_width;
             imgheight = spec.full_height;
-            std::cerr << "cropping to " << imgwidth;
-            std::cerr << "x" << imgheight << std::endl;
+
+            std::cout << "cropping to " << imgwidth
+                      << "x" << imgheight << std::endl;
         }
         
         if (croptofull || (int)kchannels.size() < spec.nchannels)
         {
+            // Redefine the spec so it matches the new bounding box.
+            OIIO::ImageSpec croppedSpec = spec;
+
+            croppedSpec.x = 0;
+            croppedSpec.y = 0;
+            croppedSpec.height    = imgheight;
+            croppedSpec.width     = imgwidth;
+            croppedSpec.nchannels = (int)(kchannels.size());
+
+            OCIO::ImgBuffer croppedImg(croppedSpec);
+
+            void * croppedBuf = croppedImg.getBuffer();
+            void * imgBuf     = img.getBuffer();
+
             // crop down bounding box and ditch all but n channels
             // img is a flattened 3 dimensional matrix heightxwidthxchannels
             // fill croppedimg with only the needed pixels
-            std::vector<float> croppedimg;
-            croppedimg.resize(imgwidth*imgheight*kchannels.size());
             for (int y=0 ; y < spec.height ; y++)
             {
                 for (int x=0 ; x < spec.width; x++)
@@ -485,27 +559,44 @@ int main(int argc, const char **argv)
                             current_pixel_y < imgheight &&
                             current_pixel_x < imgwidth)
                         {
-                            // get the value at the desired pixel
-                            float current_pixel = img[(y*spec.width*components)
-                                                      + (x*components)+channel];
-                            // put in croppedimg.
-                            croppedimg[(current_pixel_y*imgwidth*kchannels.size())
-                                       + (current_pixel_x*kchannels.size())
-                                       + channel] = current_pixel;
+                            const size_t imgIdx = (y * spec.width * components) 
+                                                    + (x * components) + channel;
+
+                            const size_t cropIdx = (current_pixel_y * imgwidth * kchannels.size())
+                                                    + (current_pixel_x * kchannels.size())
+                                                    + channel;
+
+                            if(spec.format==OIIO::TypeDesc::FLOAT)
+                            {
+                                ((float*)croppedBuf)[cropIdx] = ((float*)imgBuf)[imgIdx];
+                            }
+                            else if(spec.format==OIIO::TypeDesc::HALF)
+                            {
+                                ((half*)croppedBuf)[cropIdx] = ((half*)imgBuf)[imgIdx];
+                            }
+                            else if(spec.format==OIIO::TypeDesc::UINT16)
+                            {
+                                ((uint16_t*)croppedBuf)[cropIdx] = ((uint16_t*)imgBuf)[imgIdx];
+                            }
+                            else if(spec.format==OIIO::TypeDesc::UINT8)
+                            {
+                                ((uint8_t*)croppedBuf)[cropIdx] = ((uint8_t*)imgBuf)[imgIdx];
+                            }
+                            else
+                            {
+                                std::cerr << "Error: Unsupported image type: " 
+                                          << spec.format << std::endl;
+                                exit(1);
+                            }
                         }
                     }
                 }
             }
-            // redefine the spec so it matches the new bounding box
-            spec.x = 0;
-            spec.y = 0;
-            spec.height = imgheight;
-            spec.width = imgwidth;
-            spec.nchannels = (int)(kchannels.size());
+
             components = (int)(kchannels.size());
-            img = croppedimg;
+
+            img = std::move(croppedImg);
         }
-    
     }
     catch(...)
     {
@@ -517,8 +608,8 @@ int main(int argc, const char **argv)
     if (usegpu || usegpuLegacy)
     {
         GPUManagement & gpuMgmt = GPUManagement::Instance();
-        gpuMgmt.init();
-        gpuMgmt.prepareImage(&img[0], imgwidth, imgheight, components);
+        gpuMgmt.init(verbose);
+        gpuMgmt.prepareImage((float *)img.getBuffer(), imgwidth, imgheight, components);
     }
 
     // Process the image
@@ -528,7 +619,8 @@ int main(int argc, const char **argv)
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
         
         // Get the processor
-        OCIO::ConstProcessorRcPtr processor = config->getProcessor(inputcolorspace, outputcolorspace);
+        OCIO::ConstProcessorRcPtr processor
+            = config->getProcessor(inputcolorspace, outputcolorspace);
 
         if (usegpu || usegpuLegacy)
         {
@@ -540,15 +632,35 @@ int main(int argc, const char **argv)
             gpuMgmt.processImage();
 
             // Read the result
-            gpuMgmt.readImage(img);
+            gpuMgmt.readImage((float *)img.getBuffer());
         }
         else
         {
-            // Wrap the image in a light-weight ImageDescription
-            OCIO::PackedImageDesc imageDesc(&img[0], imgwidth, imgheight, components);
-            
-            // Apply the color transformation (in place)
-            processor->apply(imageDesc);
+            const OCIO::BitDepth bitDepth = OCIO::GetBitDepth(spec);
+
+            OCIO::ConstCPUProcessorRcPtr cpuProcessor 
+                = processor->getOptimizedCPUProcessor(bitDepth, bitDepth,
+                                                      OCIO::OPTIMIZATION_DEFAULT,
+                                                      OCIO::FINALIZATION_DEFAULT);
+
+            const std::chrono::high_resolution_clock::time_point start
+                = std::chrono::high_resolution_clock::now();
+
+            OCIO::ImageDescRcPtr imgDesc = OCIO::CreateImageDesc(spec, img);
+            cpuProcessor->apply(*imgDesc);
+
+            if(verbose)
+            {
+                const std::chrono::high_resolution_clock::time_point end
+                    = std::chrono::high_resolution_clock::now();
+
+                std::chrono::duration<float, std::milli> duration = end - start;
+
+                std::cout << std::endl;
+                std::cout << "CPU processing took: " 
+                          << duration.count()
+                          <<  " ms" << std::endl;
+            }
         }
     }
     catch(OCIO::Exception & exception)
@@ -623,7 +735,11 @@ int main(int argc, const char **argv)
     // Write out the result
     try
     {
+#if OIIO_VERSION < 10903
+        OIIO::ImageOutput* f = OIIO::ImageOutput::create(outputimage);
+#else
         auto f = OIIO::ImageOutput::create(outputimage);
+#endif
         if(!f)
         {
             std::cerr << "Could not create output input." << std::endl;
@@ -631,7 +747,13 @@ int main(int argc, const char **argv)
         }
         
         f->open(outputimage, spec);
-        f->write_image(OIIO::TypeDesc::FLOAT, &img[0]);
+
+        if(!f->write_image(spec.format, img.getBuffer()))
+        {
+            std::cerr << "Error writing \"" << outputimage << "\" : " << f->geterror() << "\n";
+            exit(1);
+        }
+
         f->close();
 #if OIIO_VERSION < 10903
         OIIO::ImageOutput::destroy(f);
@@ -643,7 +765,8 @@ int main(int argc, const char **argv)
         exit(1);
     }
     
-    std::cerr << "Wrote " << outputimage << std::endl;
+    std::cout << std::endl;
+    std::cout << "Wrote " << outputimage << std::endl;
     
     return 0;
 }

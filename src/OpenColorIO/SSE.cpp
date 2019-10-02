@@ -1,30 +1,5 @@
-/*
-Copyright (c) 2018 Autodesk Inc., et al.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 #ifdef USE_SSE
 
@@ -34,18 +9,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef OCIO_UNIT_TEST
 
-namespace OCIO = OCIO_NAMESPACE;
-
 #include <sstream>
 
 #include "MathUtils.h"
 #include "SSE.h"
-#include "unittest.h"
+#include "UnitTest.h"
+
+namespace OCIO = OCIO_NAMESPACE;
 
 
-OCIO_NAMESPACE_USING
 
-OIIO_ADD_TEST(SSE, sse2_log2_test)
+OCIO_ADD_TEST(SSE, sse2_log2_test)
 {
     const float values[8] = { 1e-010f, .1f, .5f, 1.f,
                               11.f, 112.f, 2425.f, 2e015f };
@@ -64,9 +38,12 @@ OIIO_ADD_TEST(SSE, sse2_log2_test)
         mm_sseResult = OCIO::sseLog2(_mm_set1_ps(values[i]));
         _mm_storeu_ps(sseResult, mm_sseResult);
 
-        OIIO_CHECK_CLOSE(cpuResult, sseResult[0], rtol);
+        OCIO_CHECK_CLOSE(cpuResult, sseResult[0], rtol);
     }
 }
+
+namespace
+{
 
 std::string GetErrorMessage(const std::string & operation, float expected, float actual)
 {
@@ -91,13 +68,13 @@ void CheckFloat(const std::string& operation,
 {
 
     if ((IsInfinity(expected) && IsInfinity(actual)) ||
-        (isnan(expected) && isnan(actual)))
+        (OCIO::IsNan(expected) && OCIO::IsNan(actual)))
     {
         return;
     }
 
     const float rtol = powf(2.f, -((float)precision));
-    OIIO_CHECK_ASSERT_MESSAGE(OCIO::EqualWithAbsError(expected, actual, rtol),
+    OCIO_CHECK_ASSERT_MESSAGE(OCIO::EqualWithAbsError(expected, actual, rtol),
                               GetErrorMessage(operation, expected, actual));
 }
 
@@ -128,7 +105,9 @@ void CheckPower(const float base, const float exponent)
     CheckSSE(operation, cpuResult, sseResult, 12);
 }
 
-OIIO_ADD_TEST(SSE, sse2_power_test)
+} // anon.
+
+OCIO_ADD_TEST(SSE, sse2_power_test)
 {
     const float values[] = {
         1e-010f, .1f, .5f, 1.f,
@@ -142,6 +121,8 @@ OIIO_ADD_TEST(SSE, sse2_power_test)
     }
 }
 
+namespace
+{
 
 unsigned GetULPDifference(const float a, const float b)
 {
@@ -213,7 +194,9 @@ std::string GetErrorMessage(const std::string& operation, const float expected, 
     return oss.str();
 }
 
-OIIO_ADD_TEST(SSE, sse2_exp2_test)
+} // anon.
+
+OCIO_ADD_TEST(SSE, sse2_exp2_test)
 {
     const unsigned ulp_tolerance = 50;
 
@@ -235,7 +218,7 @@ OIIO_ADD_TEST(SSE, sse2_exp2_test)
         const float expected = powf(2.0f, values[i]);
 
         EvaluateExp2(values[i], sseResult);
-        OIIO_CHECK_ASSERT_MESSAGE(AreAllClose(sseResult, expected, ulp_tolerance),
+        OCIO_CHECK_ASSERT_MESSAGE(AreAllClose(sseResult, expected, ulp_tolerance),
                                   GetErrorMessage(GetOperation("exp2", values[i]), expected, sseResult));
     }
 
@@ -245,7 +228,7 @@ OIIO_ADD_TEST(SSE, sse2_exp2_test)
         const float expected = powf(2.0f, -values[i]);
 
         EvaluateExp2(-values[i], sseResult);
-        OIIO_CHECK_ASSERT_MESSAGE(AreAllClose(sseResult, expected, ulp_tolerance),
+        OCIO_CHECK_ASSERT_MESSAGE(AreAllClose(sseResult, expected, ulp_tolerance),
                                   GetErrorMessage(GetOperation("exp2", -values[i]), expected, sseResult));
     }
 
@@ -262,10 +245,10 @@ OIIO_ADD_TEST(SSE, sse2_exp2_test)
     // Check the log2_max_float and log2_min_float limits
     {
         EvaluateExp2(log2_max_float, sseResult);
-        OIIO_CHECK_ASSERT(AreAllInfinity(sseResult));
+        OCIO_CHECK_ASSERT(AreAllInfinity(sseResult));
 
         EvaluateExp2(log2_min_float, sseResult);
-        OIIO_CHECK_ASSERT(AreAllZero(sseResult));
+        OCIO_CHECK_ASSERT(AreAllZero(sseResult));
     }
 
     // The valid domain of exp2 is actually reduced by one ULP
@@ -274,39 +257,39 @@ OIIO_ADD_TEST(SSE, sse2_exp2_test)
     //
     // Note: We want log2_min_float_inside_one_ulp to be -125.9999..., but since addULP ignores the sign and
     // just modifies the mantissa, we actually need to subtract one.
-    const float log2_max_float_inside_one_ulp = AddULP(log2_max_float, -1);
-    const float log2_min_float_inside_one_ulp = AddULP(log2_min_float, -1);
+    const float log2_max_float_inside_one_ulp = OCIO::AddULP(log2_max_float, -1);
+    const float log2_min_float_inside_one_ulp = OCIO::AddULP(log2_min_float, -1);
     {
         // The result should be a large number, but not infinity
         // Create a tight bound for the large number based on the log2_max_float limit
-        const float large_threshold = (float)pow(2.0, (double)AddULP(log2_max_float, -2));
+        const float large_threshold = (float)pow(2.0, (double)OCIO::AddULP(log2_max_float, -2));
 
         EvaluateExp2(log2_max_float_inside_one_ulp, sseResult);
-        OIIO_CHECK_ASSERT(AreAllInRange(sseResult, large_threshold, 
+        OCIO_CHECK_ASSERT(AreAllInRange(sseResult, large_threshold,
                                         std::numeric_limits<float>::infinity()));
 
         // The result should be a small number, but not zero
         // Create a tight bound for the small number based on the log2_min_float limit
-        const float small_threshold = (float)pow(2.0, (double)AddULP(log2_min_float, -2));
+        const float small_threshold = (float)pow(2.0, (double)OCIO::AddULP(log2_min_float, -2));
 
         EvaluateExp2(log2_min_float_inside_one_ulp, sseResult);
-        OIIO_CHECK_ASSERT(AreAllInRange(sseResult, 0.0f, small_threshold));
+        OCIO_CHECK_ASSERT(AreAllInRange(sseResult, 0.0f, small_threshold));
     }
 
     // Verify that the log2_max_float and log2_min_float limits, expanded by one ULP,
     // still return Infinity and zero, respectively.
     //
-    // Note: As above, it is perhaps counter-intuitive, but we want to make 
+    // Note: As above, it is perhaps counter-intuitive, but we want to make
     // log2_min_float_outside_one_ulp just slightly more negative than -126 and
     // so need to increment the mantissa.
-    const float log2_max_float_outside_one_ulp = AddULP(log2_max_float, 1);
-    const float log2_min_float_outside_one_ulp = AddULP(log2_min_float, 1);
+    const float log2_max_float_outside_one_ulp = OCIO::AddULP(log2_max_float, 1);
+    const float log2_min_float_outside_one_ulp = OCIO::AddULP(log2_min_float, 1);
     {
         EvaluateExp2(log2_max_float_outside_one_ulp, sseResult);
-        OIIO_CHECK_ASSERT(AreAllInfinity(sseResult));
+        OCIO_CHECK_ASSERT(AreAllInfinity(sseResult));
 
         EvaluateExp2(log2_min_float_outside_one_ulp, sseResult);
-        OIIO_CHECK_ASSERT(AreAllZero(sseResult));
+        OCIO_CHECK_ASSERT(AreAllZero(sseResult));
     }
 }
 
@@ -316,7 +299,7 @@ void EvaluateAtan(const float x, float* result)
     _mm_storeu_ps(result, mm_sseResult);
 }
 
-OIIO_ADD_TEST(SSE, sse2_atan_test)
+OCIO_ADD_TEST(SSE, sse2_atan_test)
 {
     const float sign_values[] = { -1.0f, 1.0f };
 
@@ -353,7 +336,7 @@ OIIO_ADD_TEST(SSE, sse2_atan_test)
     }
 }
 
-OIIO_ADD_TEST(SSE, scalar_atan_test)
+OCIO_ADD_TEST(SSE, scalar_atan_test)
 {
     const float sign_values[] = { -1.0f, 1.0f };
 
@@ -394,7 +377,7 @@ void EvaluateAtan2(const float y, const float x, float* result)
     _mm_storeu_ps(result, mm_sseResult);
 }
 
-OIIO_ADD_TEST(SSE, sse2_atan2_test)
+OCIO_ADD_TEST(SSE, sse2_atan2_test)
 {
     const float sign_values[] = { -1.0f, 1.0f };
 
@@ -449,7 +432,7 @@ OIIO_ADD_TEST(SSE, sse2_atan2_test)
     }
 }
 
-OIIO_ADD_TEST(SSE, scalar_atan2_test)
+OCIO_ADD_TEST(SSE, scalar_atan2_test)
 {
     const float sign_values[] = { -1.0f, 1.0f };
 
@@ -508,7 +491,7 @@ void EvaluateCos(const float x, float* result)
     _mm_storeu_ps(result, mm_sseResult);
 }
 
-OIIO_ADD_TEST(SSE, sse2_cos_test)
+OCIO_ADD_TEST(SSE, sse2_cos_test)
 {
     const float sign_values[] = { -1.0f, 1.0f };
 
@@ -556,7 +539,7 @@ void EvaluateSin(const float x, float* result)
     _mm_storeu_ps(result, mm_sseResult);
 }
 
-OIIO_ADD_TEST(SSE, sse2_sin_test)
+OCIO_ADD_TEST(SSE, sse2_sin_test)
 {
     const float sign_values[] = { -1.0f, 1.0f };
 
@@ -606,7 +589,7 @@ void EvaluateSinCos(const float x, float* resultSin, float* resultCos)
     _mm_storeu_ps(resultCos, sseResultCos);
 }
 
-OIIO_ADD_TEST(SSE, sse2_sin_cos_test)
+OCIO_ADD_TEST(SSE, sse2_sin_cos_test)
 {
     const float sign_values[] = { -1.0f, 1.0f };
 
@@ -651,7 +634,7 @@ OIIO_ADD_TEST(SSE, sse2_sin_cos_test)
     }
 }
 
-OIIO_ADD_TEST(SSE, scalar_sin_cos_test)
+OCIO_ADD_TEST(SSE, scalar_sin_cos_test)
 {
     const float sign_values[] = { -1.0f, 1.0f };
 

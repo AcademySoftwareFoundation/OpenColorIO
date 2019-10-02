@@ -1,32 +1,8 @@
-/*
-Copyright (c) 2018 Autodesk Inc., et al.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 #include <algorithm>
+#include <iterator>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -59,29 +35,36 @@ void PadLutChannels(unsigned long width,
         const unsigned long step = width - 1;
         for (unsigned long i = 0; i < (currWidth - step); i += step)
         {
-            chn.insert(chn.end(), &channel[3 * i], &channel[3 * (i + step)]);
+            std::transform(&channel[3 * i],
+                           &channel[3 * (i + step)],
+                           std::back_inserter(chn),
+                           [](float val) {return SanitizeFloat(val); });
 
-            chn.push_back(channel[3 * (i + step) + 0]);
-            chn.push_back(channel[3 * (i + step) + 1]);
-            chn.push_back(channel[3 * (i + step) + 2]);
+            chn.push_back(SanitizeFloat(channel[3 * (i + step) + 0]));
+            chn.push_back(SanitizeFloat(channel[3 * (i + step) + 1]));
+            chn.push_back(SanitizeFloat(channel[3 * (i + step) + 2]));
             leftover -= step;
         }
 
         // If there are still texels to fill, add them to the texture data.
         if (leftover > 0)
         {
-            chn.insert(chn.end(),
-                       &channel[3 * (currWidth - leftover)],
-                       &channel[3 * (currWidth - 1)]);
+            std::transform(&channel[3 * (currWidth - leftover)],
+                           &channel[3 * (currWidth - 1)],
+                           std::back_inserter(chn),
+                           [](float val) {return SanitizeFloat(val); });
 
-            chn.push_back(channel[3 * (currWidth - 1) + 0]);
-            chn.push_back(channel[3 * (currWidth - 1) + 1]);
-            chn.push_back(channel[3 * (currWidth - 1) + 2]);
+            chn.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 0]));
+            chn.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 1]));
+            chn.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 2]));
         }
     }
     else
     {
-        chn = channel;
+        for (auto & val : channel)
+        {
+            chn.push_back(SanitizeFloat(val));
+        }
     }
 
     // Pad the remaining of the texture with the last LUT entry.
@@ -90,9 +73,9 @@ void PadLutChannels(unsigned long width,
     unsigned long missingEntries = width*height - ((unsigned long)chn.size() / 3);
     for (unsigned long idx = 0; idx < missingEntries; ++idx)
     {
-        chn.push_back(channel[3 * (currWidth - 1) + 0]);
-        chn.push_back(channel[3 * (currWidth - 1) + 1]);
-        chn.push_back(channel[3 * (currWidth - 1) + 2]);
+        chn.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 0]));
+        chn.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 1]));
+        chn.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 2]));
     }
 }
 }
@@ -109,9 +92,11 @@ void GetLut1DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
     // Adjust LUT texture to allow for correct 2d linear interpolation, if needed.
 
     std::vector<float> values;
+    values.reserve(width*height*3);
+
     PadLutChannels(width, height, lutData->getArray().getValues(), values);
 
-    // Register the RGB LUT
+    // Register the RGB LUT.
 
     std::ostringstream resName;
     resName << shaderDesc->getResourcePrefix()
@@ -235,7 +220,7 @@ void GetLut1DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
     ss.newLine() << "{";
     ss.indent();
 
-    if (lutData->getHueAdjust() == Lut1DOpData::HUE_DW3)
+    if (lutData->getHueAdjust() == HUE_DW3)
     {
         ss.newLine() << "// Add the pre hue adjustment";
         ss.newLine() << ss.vec3fDecl("maxval")
@@ -275,7 +260,7 @@ void GetLut1DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
                         << ss.sampleTex1D(name, name + "_coords.b") << ".b;";
     }
 
-    if (lutData->getHueAdjust() == Lut1DOpData::HUE_DW3)
+    if (lutData->getHueAdjust() == HUE_DW3)
     {
         ss.newLine() << "";
         ss.newLine() << "// Add the post hue adjustment";
@@ -306,9 +291,9 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(Lut1DOp, pad_lut_one_dimension)
+OCIO_ADD_TEST(Lut1DOp, pad_lut_one_dimension)
 {
     const unsigned width = 6;
 
@@ -329,21 +314,21 @@ OIIO_ADD_TEST(Lut1DOp, pad_lut_one_dimension)
     // Pad the texture values.
 
     std::vector<float> chn;
-    OIIO_CHECK_NO_THROW(OCIO::PadLutChannels(width, 1, channel, chn));
+    OCIO_CHECK_NO_THROW(OCIO::PadLutChannels(width, 1, channel, chn));
 
     // Check the values.
 
     const float res[18] = { 0.0f, 0.1f, 0.2f, 1.0f, 1.1f, 1.2f,
                             2.0f, 2.1f, 2.2f, 3.0f, 3.1f, 3.2f,
                             3.0f, 3.1f, 3.2f, 3.0f, 3.1f, 3.2f };
-    OIIO_CHECK_EQUAL(chn.size(), 18);
+    OCIO_CHECK_EQUAL(chn.size(), 18);
     for (unsigned idx = 0; idx<chn.size(); ++idx)
     {
-        OIIO_CHECK_EQUAL(chn[idx], res[idx]);
+        OCIO_CHECK_EQUAL(chn[idx], res[idx]);
     }
 }
 
-OIIO_ADD_TEST(Lut1DOp, pad_lut_two_dimension_1)
+OCIO_ADD_TEST(Lut1DOp, pad_lut_two_dimension_1)
 {
     const unsigned width = 4;
     const unsigned height = 3;
@@ -359,20 +344,20 @@ OIIO_ADD_TEST(Lut1DOp, pad_lut_two_dimension_1)
     }
 
     std::vector<float> chn;
-    OIIO_CHECK_NO_THROW(OCIO::PadLutChannels(width, height, channel, chn));
+    OCIO_CHECK_NO_THROW(OCIO::PadLutChannels(width, height, channel, chn));
 
     const float res[] = {
         0.0f, 0.1f, 0.2f, 1.0f, 1.1f, 1.2f, 2.0f, 2.1f, 2.2f, 3.0f, 3.1f, 3.2f,
         3.0f, 3.1f, 3.2f, 4.0f, 4.1f, 4.2f, 5.0f, 5.1f, 5.2f, 6.0f, 6.1f, 6.2f, 
         6.0f, 6.1f, 6.2f, 7.0f, 7.1f, 7.2f, 7.0f, 7.1f, 7.2f, 7.0f, 7.1f, 7.2f };
-    OIIO_CHECK_EQUAL(chn.size(), 36);
+    OCIO_CHECK_EQUAL(chn.size(), 36);
     for (unsigned idx = 0; idx<chn.size(); ++idx)
     {
-        OIIO_CHECK_EQUAL(chn[idx], res[idx]);
+        OCIO_CHECK_EQUAL(chn[idx], res[idx]);
     }
 }
 
-OIIO_ADD_TEST(Lut1DOp, pad_lut_two_dimension_2)
+OCIO_ADD_TEST(Lut1DOp, pad_lut_two_dimension_2)
 {
     const unsigned width = 4;
     const unsigned height = 3;
@@ -389,7 +374,7 @@ OIIO_ADD_TEST(Lut1DOp, pad_lut_two_dimension_2)
 
     // Special case where size%(width-1) = 0
     std::vector<float> chn;
-    OIIO_CHECK_NO_THROW(OCIO::PadLutChannels(width, height, channel, chn));
+    OCIO_CHECK_NO_THROW(OCIO::PadLutChannels(width, height, channel, chn));
 
     // Check the values
 
@@ -398,11 +383,11 @@ OIIO_ADD_TEST(Lut1DOp, pad_lut_two_dimension_2)
         3.0f, 3.1f, 3.2f, 4.0f, 4.1f, 4.2f, 5.0f, 5.1f, 5.2f, 6.0f, 6.1f, 6.2f,
         6.0f, 6.1f, 6.2f, 7.0f, 7.1f, 7.2f, 8.0f, 8.1f, 8.2f, 8.0f, 8.1f, 8.2f };
     
-    OIIO_CHECK_EQUAL(chn.size(), 36);
+    OCIO_CHECK_EQUAL(chn.size(), 36);
 
     for (unsigned idx = 0; idx<chn.size(); ++idx)
     {
-        OIIO_CHECK_EQUAL(chn[idx], res[idx]);
+        OCIO_CHECK_EQUAL(chn[idx], res[idx]);
     }
 }
 

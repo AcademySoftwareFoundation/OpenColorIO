@@ -1,30 +1,5 @@
-/*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 #include <algorithm>
 #include <cstdio>
@@ -63,61 +38,52 @@ OCIO_NAMESPACE_ENTER
         class LocalCachedFile : public CachedFile
         {
         public:
-            LocalCachedFile () : 
-                has1D(false),
-                has3D(false)
-            {
-                lut1D = Lut1D::Create();
-                lut3D = Lut3D::Create();
-            };
-            ~LocalCachedFile() {};
-            
-            bool has1D;
-            bool has3D;
-            // TODO: Switch to the OpData class.
-            Lut1DRcPtr lut1D;
-            Lut3DRcPtr lut3D;
+            LocalCachedFile() = default;
+            ~LocalCachedFile() = default;
+
+            Lut1DOpDataRcPtr lut1D;
+            Lut3DOpDataRcPtr lut3D;
         };
-        
+
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
-        
-        
-        
+
+
         class LocalFileFormat : public FileFormat
         {
         public:
-            
-            ~LocalFileFormat() {};
-            
-            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
-            
-            virtual CachedFileRcPtr Read(
+
+            LocalFileFormat() = default;
+            ~LocalFileFormat() = default;
+
+            void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
+
+            CachedFileRcPtr read(
                 std::istream & istream,
-                const std::string & fileName) const;
+                const std::string & fileName) const override;
             
-            virtual void Write(const Baker & baker,
-                               const std::string & formatName,
-                               std::ostream & ostream) const;
+            void bake(const Baker & baker,
+                      const std::string & formatName,
+                      std::ostream & ostream) const override;
             
-            virtual void BuildFileOps(OpRcPtrVec & ops,
-                         const Config& config,
-                         const ConstContextRcPtr & context,
-                         CachedFileRcPtr untypedCachedFile,
-                         const FileTransform& fileTransform,
-                         TransformDirection dir) const;
+            void buildFileOps(OpRcPtrVec & ops,
+                              const Config & config,
+                              const ConstContextRcPtr & context,
+                              CachedFileRcPtr untypedCachedFile,
+                              const FileTransform & fileTransform,
+                              TransformDirection dir) const override;
         };
         
-        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
+        void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
             info.name = "truelight";
             info.extension = "cub";
-            info.capabilities = (FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_WRITE);
+            info.capabilities = (FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
             formatInfoVec.push_back(info);
         }
-        
+
         CachedFileRcPtr
-        LocalFileFormat::Read(
+        LocalFileFormat::read(
             std::istream & istream,
             const std::string & /* fileName unused */) const
         {
@@ -126,7 +92,7 @@ OCIO_NAMESPACE_ENTER
             {
                 throw Exception ("File stream empty when trying to read Truelight .cub LUT");
             }
-            
+
             // Validate the file type
             std::string line;
             if(!nextline(istream, line) || 
@@ -134,31 +100,31 @@ OCIO_NAMESPACE_ENTER
             {
                 throw Exception("LUT doesn't seem to be a Truelight .cub LUT.");
             }
-            
+
             // Parse the file
             std::vector<float> raw1d;
             std::vector<float> raw3d;
             int size3d[] = { 0, 0, 0 };
             int size1d = 0;
             {
-                std::vector<std::string> parts;
+                StringVec parts;
                 std::vector<float> tmpfloats;
-                
+
                 bool in1d = false;
                 bool in3d = false;
-                
+
                 while(nextline(istream, line))
                 {
                     // Strip, lowercase, and split the line
                     pystring::split(pystring::lower(pystring::strip(line)), parts);
-                    
+
                     if(parts.empty()) continue;
-                    
+
                     // Parse header metadata (which starts with #)
                     if(pystring::startswith(parts[0],"#"))
                     {
                         if(parts.size() < 2) continue;
-                        
+
                         if(parts[1] == "width")
                         {
                             if(parts.size() != 5 || 
@@ -168,7 +134,18 @@ OCIO_NAMESPACE_ENTER
                             {
                                 throw Exception("Malformed width tag in Truelight .cub LUT.");
                             }
-                            
+
+                            if (size3d[0] != size3d[1] ||
+                                size3d[0] != size3d[2])
+                            {
+                                std::ostringstream os;
+                                os << "Truelight .cub LUT. ";
+                                os << "Only equal grid size LUTs are supported. Found ";
+                                os << "grid size: " << size3d[0] << " x ";
+                                os << size3d[1] << " x " << size3d[2] << ".";
+                                throw Exception(os.str().c_str());
+                            }
+
                             raw3d.reserve(3*size3d[0]*size3d[1]*size3d[2]);
                         }
                         else if(parts[1] == "lutlength")
@@ -194,13 +171,13 @@ OCIO_NAMESPACE_ENTER
                         {
                             in3d = false;
                             in1d = false;
-                            
+
                             // If we hit the end tag, don't bother searching further in the file.
                             break;
                         }
                     }
-                    
-                    
+
+
                     if(in1d || in3d)
                     {
                         if(StringVecToFloatVec(tmpfloats, parts) && (tmpfloats.size() == 3))
@@ -221,9 +198,9 @@ OCIO_NAMESPACE_ENTER
                     }
                 }
             }
-            
+
             // Interpret the parsed data, validate LUT sizes
-            
+
             if(size1d != static_cast<int>(raw1d.size()/3))
             {
                 std::ostringstream os;
@@ -232,7 +209,7 @@ OCIO_NAMESPACE_ENTER
                 os << "Found " << raw1d.size()/3 << ", expected " << size1d << ".";
                 throw Exception(os.str().c_str());
             }
-            
+
             if(size3d[0]*size3d[1]*size3d[2] != static_cast<int>(raw3d.size()/3))
             {
                 std::ostringstream os;
@@ -241,69 +218,54 @@ OCIO_NAMESPACE_ENTER
                 os << "Found " << raw3d.size()/3 << ", expected " << size3d[0]*size3d[1]*size3d[2] << ".";
                 throw Exception(os.str().c_str());
             }
-            
-            
+
+
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
-            
-            cachedFile->has1D = (size1d>0);
-            cachedFile->has3D = (size3d[0]*size3d[1]*size3d[2]>0);
-            
+
+            const bool has3D = (size3d[0] * size3d[1] * size3d[2] > 0);
+
             // Reformat 1D data
-            if(cachedFile->has1D)
+            if(size1d>0)
             {
-                for(int channel=0; channel<3; ++channel)
+                cachedFile->lut1D = std::make_shared<Lut1DOpData>(size1d);
+                cachedFile->lut1D->setFileOutputBitDepth(BIT_DEPTH_F32);
+
+                auto & lutArray = cachedFile->lut1D->getArray();
+
+                // Determine the scale factor for the 1D LUT. Example:
+                // The inputlut feeding a 6x6x6 3D LUT should be scaled from 0.0-5.0.
+                // Beware: Nuke Truelight Writer (at least 6.3 and before) is busted
+                // and does this scaling incorrectly.
+
+                float descale = 1.0f;
+                if(has3D)
                 {
-                    // Determine the scale factor for the 1D LUT. Example:
-                    // The inputlut feeding a 6x6x6 3D LUT should be scaled from 0.0-5.0.
-                    // Beware: Nuke Truelight Writer (at least 6.3 and before) is busted
-                    // and does this scaling incorrectly.
-                    
-                    float descale = 1.0f;
-                    if(cachedFile->has3D)
-                    {
-                        descale = 1.0f / static_cast<float>(size3d[channel]-1);
-                    }
-                    
-                    cachedFile->lut1D->luts[channel].resize(size1d);
-                    for(int i=0; i<size1d; ++i)
-                    {
-                        cachedFile->lut1D->luts[channel][i] = raw1d[3*i+channel] * descale;
-                    }
+                    descale = 1.0f / static_cast<float>(size3d[0]-1);
                 }
-                
-                // 1e-5 rel error is a good threshold when float numbers near 0
-                // are written out with 6 decimal places of precision.  This is
-                // a bit aggressive, I.e., changes in the 6th decimal place will
-                // be considered roundoff error, but changes in the 5th decimal
-                // will be considered LUT 'intent'.
-                // 1.0
-                // 1.000005 equal to 1.0
-                // 1.000007 equal to 1.0
-                // 1.000010 not equal
-                // 0.0
-                // 0.000001 not equal
-                
-                cachedFile->lut1D->maxerror = 1e-5f;
-                cachedFile->lut1D->errortype = Lut1D::ERROR_RELATIVE;
+
+                const auto nv = lutArray.getNumValues();
+                for(unsigned long i = 0; i < nv; ++i)
+                {
+                    lutArray[i] = raw1d[i] * descale;
+                }
             }
-            
-            // Reformat 3D data
-            if(cachedFile->has3D)
+
+            if (has3D)
             {
-                cachedFile->lut3D->size[0] = size3d[0];
-                cachedFile->lut3D->size[1] = size3d[1];
-                cachedFile->lut3D->size[2] = size3d[2];
-                cachedFile->lut3D->lut = raw3d;
+                // Reformat 3D data
+                cachedFile->lut3D = std::make_shared<Lut3DOpData>(size3d[0]);
+                cachedFile->lut3D->setFileOutputBitDepth(BIT_DEPTH_F32);
+                cachedFile->lut3D->setArrayFromRedFastestOrder(raw3d);
             }
-            
+
             return cachedFile;
         }
 
 
         void
-        LocalFileFormat::Write(const Baker & baker,
-                               const std::string & /*formatName*/,
-                               std::ostream & ostream) const
+        LocalFileFormat::bake(const Baker & baker,
+                              const std::string & /*formatName*/,
+                              std::ostream & ostream) const
         {
             const int DEFAULT_CUBE_SIZE = 32;
             const int DEFAULT_SHAPER_SIZE = 1024;
@@ -318,12 +280,14 @@ OCIO_NAMESPACE_ENTER
             cubeData.resize(cubeSize*cubeSize*cubeSize*3);
             GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_RED);
             PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
-            
+
             // Apply processor to LUT data
-            ConstProcessorRcPtr inputToTarget;
-            inputToTarget = config->getProcessor(baker.getInputSpace(), baker.getTargetSpace());
+            ConstCPUProcessorRcPtr inputToTarget;
+            inputToTarget
+                = config->getProcessor(baker.getInputSpace(), 
+                                       baker.getTargetSpace())->getDefaultCPUProcessor();
             inputToTarget->apply(cubeImg);
-            
+
             int shaperSize = baker.getShaperSize();
             if (shaperSize==-1) shaperSize = DEFAULT_SHAPER_SIZE;
             shaperSize = std::max(2, shaperSize); // smallest shaper is 2x2x2
@@ -358,12 +322,12 @@ OCIO_NAMESPACE_ENTER
             {
                 ostream << cubeData[3*i+0] << " " << cubeData[3*i+1] << " " << cubeData[3*i+2] << "\n";
             }
-            
+
             ostream << "# end\n";
         }
-        
+
         void
-        LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
+        LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                                       const Config& /*config*/,
                                       const ConstContextRcPtr & /*context*/,
                                       CachedFileRcPtr untypedCachedFile,
@@ -371,7 +335,7 @@ OCIO_NAMESPACE_ENTER
                                       TransformDirection dir) const
         {
             LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
-            
+
             // This should never happen.
             if(!cachedFile)
             {
@@ -379,47 +343,53 @@ OCIO_NAMESPACE_ENTER
                 os << "Cannot build Truelight .cub Op. Invalid cache type.";
                 throw Exception(os.str().c_str());
             }
-            
+
             TransformDirection newDir = CombineTransformDirections(dir,
                 fileTransform.getDirection());
-            if(newDir == TRANSFORM_DIR_UNKNOWN)
+            if (newDir == TRANSFORM_DIR_UNKNOWN)
             {
                 std::ostringstream os;
                 os << "Cannot build file format transform,";
                 os << " unspecified transform direction.";
                 throw Exception(os.str().c_str());
             }
-            
-            // TODO: INTERP_LINEAR should not be hard-coded.
-            // Instead query 'highest' interpolation?
-            // (right now, it's linear). If cubic is added, consider
-            // using it
-            
-            if(newDir == TRANSFORM_DIR_FORWARD)
+
+            if (cachedFile->lut3D)
             {
-                if(cachedFile->has1D)
-                {
-                    CreateLut1DOp(ops, cachedFile->lut1D,
-                                  INTERP_LINEAR, newDir);
-                }
-                
-                CreateLut3DOp(ops, cachedFile->lut3D,
-                              fileTransform.getInterpolation(), newDir);
+                cachedFile->lut3D->setInterpolation(fileTransform.getInterpolation());
             }
-            else if(newDir == TRANSFORM_DIR_INVERSE)
+            else if (cachedFile->lut1D)
             {
-                CreateLut3DOp(ops, cachedFile->lut3D,
-                              fileTransform.getInterpolation(), newDir);
-                
-                if(cachedFile->has1D)
+                cachedFile->lut1D->setInterpolation(fileTransform.getInterpolation());
+            }
+
+            if (newDir == TRANSFORM_DIR_FORWARD)
+            {
+                if (cachedFile->lut1D)
                 {
-                    CreateLut1DOp(ops, cachedFile->lut1D,
-                                  INTERP_LINEAR, newDir);
+                    CreateLut1DOp(ops, cachedFile->lut1D, newDir);
+                }
+
+                if (cachedFile->lut3D)
+                {
+                    CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+                }
+            }
+            else if (newDir == TRANSFORM_DIR_INVERSE)
+            {
+                if (cachedFile->lut3D)
+                {
+                    CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+                }
+
+                if (cachedFile->lut1D)
+                {
+                    CreateLut1DOp(ops, cachedFile->lut1D, newDir);
                 }
             }
         }
     }
-    
+
     FileFormat * CreateFileFormatTruelight()
     {
         return new LocalFileFormat();
@@ -433,9 +403,9 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(FileFormatTruelight, ShaperAndLut3D)
+OCIO_ADD_TEST(FileFormatTruelight, shaper_and_lut_3d)
 {
     // This lowers the red channel by 0.5, other channels are unaffected.
     const char * luttext = "# Truelight Cube v2.0\n"
@@ -489,55 +459,58 @@ OIIO_ADD_TEST(FileFormatTruelight, ShaperAndLut3D)
        "\n"
        " # This last line confirms 'end' tag is obeyed\n"
        " 1.23456 1.23456 1.23456\n";
-    
+
     std::istringstream lutIStream;
     lutIStream.str(luttext);
-    
+
     // Read file
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile;
-    OIIO_CHECK_NO_THROW(cachedFile = tester.Read(lutIStream, emptyString));
+    OCIO_CHECK_NO_THROW(cachedFile = tester.read(lutIStream, emptyString));
     OCIO::LocalCachedFileRcPtr lut = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
-    
-    OIIO_CHECK_ASSERT(lut->has1D);
-    OIIO_CHECK_ASSERT(lut->has3D);
-    
+
+    OCIO_REQUIRE_ASSERT(lut);
+
+    OCIO_REQUIRE_ASSERT(lut->lut1D);
+    OCIO_REQUIRE_ASSERT(lut->lut3D);
+    OCIO_CHECK_EQUAL(lut->lut1D->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(lut->lut3D->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
     float data[4*3] = { 0.1f, 0.2f, 0.3f, 0.0f,
                         1.0f, 0.5f, 0.123456f, 0.0f,
                        -1.0f, 1.5f, 0.5f, 0.0f };
-    
+
     float result[4*3] = { 0.05f, 0.2f, 0.3f, 0.0f,
                           0.50f, 0.5f, 0.123456f, 0.0f,
                           0.0f, 1.0f, 0.5f, 0.0f };
-    
+
     OCIO::OpRcPtrVec ops;
-    if(lut->has1D)
+    if(lut->lut1D)
     {
-        CreateLut1DOp(ops, lut->lut1D,
-                      OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD);
+        CreateLut1DOp(ops, lut->lut1D, OCIO::TRANSFORM_DIR_FORWARD);
     }
-    if(lut->has3D)
+    if(lut->lut3D)
     {
-        CreateLut3DOp(ops, lut->lut3D,
-                      OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD);
+        CreateLut3DOp(ops, lut->lut3D, OCIO::TRANSFORM_DIR_FORWARD);
     }
-    FinalizeOpVec(ops);
-    
-    
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+
+
     // Apply the result
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
     {
         ops[i]->apply(data, 3);
     }
-    
+
     for(int i=0; i<4*3; ++i)
     {
-        OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-6 );
+        OCIO_CHECK_CLOSE( data[i], result[i], 1.0e-6 );
     }
 }
 
-OIIO_ADD_TEST(FileFormatTruelight, Shaper)
+OCIO_ADD_TEST(FileFormatTruelight, shaper)
 {
     const char * luttext = "# Truelight Cube v2.0\n"
        "# lutLength 11\n"
@@ -558,57 +531,55 @@ OIIO_ADD_TEST(FileFormatTruelight, Shaper)
        " 2.000 1.000 -1.000\n"
        "\n\n\n"
        "# end\n";
-    
+
     std::istringstream lutIStream;
     lutIStream.str(luttext);
-    
+
     // Read file
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile;
-    OIIO_CHECK_NO_THROW(cachedFile = tester.Read(lutIStream, emptyString));
+    OCIO_CHECK_NO_THROW(cachedFile = tester.read(lutIStream, emptyString));
     
     OCIO::LocalCachedFileRcPtr lut = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
-    
-    OIIO_CHECK_ASSERT(lut->has1D);
-    OIIO_CHECK_ASSERT(!lut->has3D);
-    
+
+    OCIO_CHECK_ASSERT(lut->lut1D);
+    OCIO_CHECK_ASSERT(!lut->lut3D);
+
     float data[4*3] = { 0.1f, 0.2f, 0.3f, 0.0f,
                         1.0f, 0.5f, 0.123456f, 0.0f,
                        -1.0f, 1.5f, 0.5f, 0.0f };
-    
+
     float result[4*3] = { 0.2f, 0.04f, -0.3f, 0.0f,
                           2.0f, 0.25f, -0.123456f, 0.0f,
                           0.0f, 1.0f, -0.5f, 0.0f };
-    
+
     OCIO::OpRcPtrVec ops;
-    if(lut->has1D)
+    if(lut->lut1D)
     {
-        CreateLut1DOp(ops, lut->lut1D,
-                      OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD);
+        CreateLut1DOp(ops, lut->lut1D, OCIO::TRANSFORM_DIR_FORWARD);
     }
-    if(lut->has3D)
+    if(lut->lut3D)
     {
-        CreateLut3DOp(ops, lut->lut3D,
-                      OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD);
+        CreateLut3DOp(ops, lut->lut3D, OCIO::TRANSFORM_DIR_FORWARD);
     }
-    FinalizeOpVec(ops);
-    
-    
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+
     // Apply the result
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
     {
         ops[i]->apply(data, 3);
     }
-    
+
     for(int i=0; i<4*3; ++i)
     {
-        OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-6 );
+        OCIO_CHECK_CLOSE( data[i], result[i], 1.0e-6 );
     }
 }
 
 
-OIIO_ADD_TEST(FileFormatTruelight, Lut3D)
+OCIO_ADD_TEST(FileFormatTruelight, lut_3d)
 {
     // This lowers the red channel by 0.5, other channels are unaffected.
     const char * luttext = "# Truelight Cube v2.0\n"
@@ -646,51 +617,49 @@ OIIO_ADD_TEST(FileFormatTruelight, Lut3D)
        " 0.500000 1.000000 1.000000\n"
        "\n"
        "# end\n";
-    
+
     std::istringstream lutIStream;
     lutIStream.str(luttext);
-    
+
     // Read file
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile;
-    OIIO_CHECK_NO_THROW(cachedFile = tester.Read(lutIStream, emptyString));
+    OCIO_CHECK_NO_THROW(cachedFile = tester.read(lutIStream, emptyString));
     OCIO::LocalCachedFileRcPtr lut = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
-    
-    OIIO_CHECK_ASSERT(!lut->has1D);
-    OIIO_CHECK_ASSERT(lut->has3D);
-    
+
+    OCIO_CHECK_ASSERT(!lut->lut1D);
+    OCIO_CHECK_ASSERT(lut->lut3D);
+
     float data[4*3] = { 0.1f, 0.2f, 0.3f, 0.0f,
                         1.0f, 0.5f, 0.123456f, 0.0f,
                        -1.0f, 1.5f, 0.5f, 0.0f };
-    
+
     float result[4*3] = { 0.05f, 0.2f, 0.3f, 0.0f,
                           0.50f, 0.5f, 0.123456f, 0.0f,
                           0.0f, 1.0f, 0.5f, 0.0f };
-    
+
     OCIO::OpRcPtrVec ops;
-    if(lut->has1D)
+    if(lut->lut1D)
     {
-        CreateLut1DOp(ops, lut->lut1D,
-                      OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD);
+        CreateLut1DOp(ops, lut->lut1D, OCIO::TRANSFORM_DIR_FORWARD);
     }
-    if(lut->has3D)
+    if(lut->lut3D)
     {
-        CreateLut3DOp(ops, lut->lut3D,
-                      OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD);
+        CreateLut3DOp(ops, lut->lut3D, OCIO::TRANSFORM_DIR_FORWARD);
     }
-    FinalizeOpVec(ops);
-    
-    
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+
     // Apply the result
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
     {
         ops[i]->apply(data, 3);
     }
-    
+
     for(int i=0; i<4*3; ++i)
     {
-        OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-6 );
+        OCIO_CHECK_CLOSE( data[i], result[i], 1.0e-6 );
     }
 }
 

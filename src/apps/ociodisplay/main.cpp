@@ -1,30 +1,5 @@
-/*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 
 #include <cstdlib>
@@ -68,7 +43,7 @@ GLint g_win = 0;
 int g_winWidth = 0;
 int g_winHeight = 0;
 
-OpenGLBuilderRcPtr g_oglBuilder;
+OCIO::OpenGLBuilderRcPtr g_oglBuilder;
 
 GLuint g_imageTexID;
 float g_imageAspect;
@@ -101,7 +76,11 @@ static void InitImageTexture(const char * filename)
         std::cout << "loading: " << filename << std::endl;
         try
         {
+#if OIIO_VERSION < 10903
+            OIIO::ImageInput* f = OIIO::ImageInput::create(filename);
+#else
             auto f = OIIO::ImageInput::create(filename);
+#endif
             if(!f)
             {
                 std::cerr << "Could not create image input." << std::endl;
@@ -125,13 +104,13 @@ static void InitImageTexture(const char * filename)
             img.resize(texWidth*texHeight*components);
             memset(&img[0], 0, texWidth*texHeight*components*sizeof(float));
 
-            f->read_image(
-#if (OIIO_VERSION >= 10800)
-                OIIO::TypeFloat, 
-#else
-                OIIO::TypeDesc::TypeFloat, 
-#endif
-                &img[0]);
+            const bool ok = f->read_image(OIIO::TypeDesc::FLOAT, &img[0]);
+            if(!ok)
+            {
+                std::cerr << "Error reading \"" << filename << "\" : " << f->geterror() << "\n";
+                exit(1);
+            }
+
 #if OIIO_VERSION < 10903
             OIIO::ImageInput::destroy(f);
 #endif
@@ -491,10 +470,12 @@ void UpdateOCIOGLState()
     shaderDesc->setResourcePrefix("ocio_");
 
     // Step 2: Collect the shader program information for a specific processor    
-    processor->extractGpuShaderInfo(shaderDesc);
+    OCIO::ConstGPUProcessorRcPtr gpuProcessor
+        = processor->getDefaultGPUProcessor();
+    gpuProcessor->extractGpuShaderInfo(shaderDesc);
 
     // Step 3: Use the helper OpenGL builder
-    g_oglBuilder = OpenGLBuilder::Create(shaderDesc);
+    g_oglBuilder = OCIO::OpenGLBuilder::Create(shaderDesc);
     g_oglBuilder->setVerbose(g_gpuinfo);
 
     // Step 4: Allocate & upload all the LUTs
@@ -506,13 +487,15 @@ void UpdateOCIOGLState()
     
     // Step 5: Build the fragment shader program
     g_oglBuilder->buildProgram(g_fragShaderText);
-    
+
     // Step 6: Enable the fragment shader program, and all needed textures
     g_oglBuilder->useProgram();
     // The image texture
     glUniform1i(glGetUniformLocation(g_oglBuilder->getProgramHandle(), "tex1"), 0);
     // The LUT textures
     g_oglBuilder->useAllTextures();
+    // Enable uniforms for dynamic properties
+    g_oglBuilder->useAllUniforms();
 }
 
 void menuCallback(int /*id*/)
@@ -705,28 +688,6 @@ void parseArguments(int argc, char **argv)
             g_filename = argv[i];
         }
     }
-
-    if(g_verbose)
-    {
-        std::cout << std::endl;
-        if(!g_filename.empty())
-        {
-            std::cout << "Image:" << std::endl
-                      << "\t" << g_filename << std::endl;
-        }
-        std::cout << std::endl;
-        std::cout << "OIIO: " << std::endl
-                  << "\tversion       = " << OIIO_VERSION_STRING << std::endl;
-        std::cout << std::endl;
-        std::cout << "OCIO: " << std::endl
-                  << "\tversion       = " << OCIO::GetVersion() << std::endl;
-        if(getenv("OCIO"))
-        {
-            std::cout << "\tconfiguration = " << getenv("OCIO") << std::endl;
-            OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-            std::cout << "\tsearch_path   = " << config->getSearchPath() << std::endl;
-        }
-    }
 }
 
 int main(int argc, char **argv)
@@ -745,7 +706,7 @@ int main(int argc, char **argv)
     glewInit();
     if (!glewIsSupported("GL_VERSION_2_0"))
     {
-        printf("OpenGL 2.0 not supported\n");
+        std::cerr << "OpenGL 2.0 not supported" << std::endl;
         exit(1);
     }
 #endif
@@ -754,13 +715,52 @@ int main(int argc, char **argv)
     glutKeyboardFunc(Key);
     glutSpecialFunc(SpecialKey);
     glutDisplayFunc(Redisplay);
+
+    if(g_verbose)
+    {
+        std::cout << std::endl
+                  << "GL Vendor:    " << glGetString(GL_VENDOR) << std::endl
+                  << "GL Renderer:  " << glGetString(GL_RENDERER) << std::endl
+                  << "GL Version:   " << glGetString(GL_VERSION) << std::endl
+                  << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+
+        if(!g_filename.empty())
+        {
+            std::cout << std::endl;
+            std::cout << "Image: " << g_filename << std::endl;
+        }
+        std::cout << std::endl;
+        std::cout << "OIIO Version: " << OIIO_VERSION_STRING << std::endl;
+        std::cout << "OCIO Version: " << OCIO::GetVersion() << std::endl;
+    }
+
+    OCIO::ConstConfigRcPtr config;
+    try
+    {
+        config = OCIO::GetCurrentConfig();
+    }
+    catch(...)
+    {
+        const char * env = getenv("OCIO");
+        std::cerr << "Error loading the config file: '" << (env ? env : "") << "'";
+        exit(1);
+    }
+
+    if(g_verbose)
+    {
+        const char * env = getenv("OCIO");
+
+        if(env && *env)
+        {
+            std::cout << std::endl;
+            std::cout << "OCIO Configuration: '" << env << "'" << std::endl;
+            std::cout << "OCIO search_path:    " << config->getSearchPath() << std::endl;
+        }
+    }
     
+    std::cout << std::endl;
     std::cout << USAGE_TEXT << std::endl;
     
-    // TODO: switch profiles based on shading language
-    std::cout << "GL_SHADING_LANGUAGE_VERSION: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
-    std::cout << std::endl;
-
     InitImageTexture(g_filename.c_str());
     try
     {

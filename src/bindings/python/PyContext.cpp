@@ -1,30 +1,5 @@
-/*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 #include <Python.h>
 #include <OpenColorIO/OpenColorIO.h>
@@ -84,6 +59,10 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Context_getCacheID(PyObject * self, PyObject *);
         PyObject * PyOCIO_Context_getSearchPath(PyObject * self, PyObject *);
         PyObject * PyOCIO_Context_setSearchPath(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Context_getNumSearchPaths(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Context_getSearchPathByIndex(PyObject * self, PyObject *args);
+        PyObject * PyOCIO_Context_clearSearchPaths(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Context_addSearchPath(PyObject * self, PyObject *args);
         PyObject * PyOCIO_Context_getWorkingDir(PyObject * self, PyObject *);
         PyObject * PyOCIO_Context_setWorkingDir(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Context_getStringVar(PyObject * self, PyObject * args);
@@ -111,6 +90,14 @@ OCIO_NAMESPACE_ENTER
             (PyCFunction) PyOCIO_Context_getSearchPath, METH_NOARGS, CONTEXT_GETSEARCHPATH__DOC__ },
             { "setSearchPath",
             PyOCIO_Context_setSearchPath, METH_VARARGS, CONTEXT_SETSEARCHPATH__DOC__ },
+            { "getNumSearchPaths",
+            (PyCFunction)PyOCIO_Context_getNumSearchPaths, METH_NOARGS, CONTEXT_GETNUMSEARCHPATHS__DOC__ },
+            { "getSearchPathByIndex",
+            (PyCFunction)PyOCIO_Context_getSearchPathByIndex, METH_VARARGS, CONTEXT_GETSEARCHPATHBYINDEX__DOC__ },
+            { "clearSearchPaths",
+            (PyCFunction)PyOCIO_Context_clearSearchPaths, METH_NOARGS, CONTEXT_CLEARSEARCHPATHS__DOC__ },
+            { "addSearchPath",
+            (PyCFunction)PyOCIO_Context_addSearchPath, METH_VARARGS, CONTEXT_ADDSEARCHPATH__DOC__ },
             { "getWorkingDir",
             (PyCFunction) PyOCIO_Context_getWorkingDir, METH_NOARGS, CONTEXT_GETWORKINGDIR__DOC__ },
             { "setWorkingDir",
@@ -256,6 +243,46 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
+        PyObject * PyOCIO_Context_getNumSearchPaths(PyObject * self, PyObject *)
+        {
+            OCIO_PYTRY_ENTER()
+            ConstContextRcPtr context = GetConstContext(self, true);
+            return PyInt_FromLong(context->getNumSearchPaths());
+            OCIO_PYTRY_EXIT(NULL)
+        }
+
+        PyObject * PyOCIO_Context_getSearchPathByIndex(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            int index = 0;
+            if (!PyArg_ParseTuple(args, "i:getSearchPathByIndex",
+                &index)) return NULL;
+            ConstContextRcPtr context = GetConstContext(self, true);
+            return PyString_FromString(context->getSearchPath(index));
+            OCIO_PYTRY_EXIT(NULL)
+        }
+
+        PyObject * PyOCIO_Context_clearSearchPaths(PyObject * self, PyObject *)
+        {
+            OCIO_PYTRY_ENTER()
+            ContextRcPtr context = GetEditableContext(self);
+            context->clearSearchPaths();
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
+        }
+
+        PyObject * PyOCIO_Context_addSearchPath(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            char* path = 0;
+            if (!PyArg_ParseTuple(args, "s:addSearchPath",
+                &path)) return NULL;
+            ContextRcPtr context = GetEditableContext(self);
+            context->addSearchPath(path);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
+        }
+
         PyObject * PyOCIO_Context_getWorkingDir(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()

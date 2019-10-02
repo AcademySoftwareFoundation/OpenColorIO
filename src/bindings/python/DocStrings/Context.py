@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
 
 class Context:
     """
@@ -14,6 +16,14 @@ class Context:
     def getSearchPath(self):
         pass
     def setSearchPath(self, searchPath):
+        pass
+    def getNumSearchPaths(self):
+        pass
+    def getSearchPathByIndex(self, index):
+        pass
+    def clearSearchPaths(self):
+        pass
+    def addSearchPath(self, path):
         pass
     def getWorkingDir(self):
         pass

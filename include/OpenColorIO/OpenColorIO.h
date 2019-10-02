@@ -1,30 +1,5 @@
-/*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 
 #ifndef INCLUDED_OCIO_OPENCOLORIO_H
@@ -89,9 +64,15 @@ OCIO_NAMESPACE_ENTER
     {
     public:
         //!cpp:function:: Constructor that takes a string as the exception message.
-        Exception(const char *) throw();
+        explicit Exception(const char *);
         //!cpp:function:: Constructor that takes an existing exception.
-        Exception(const Exception&) throw();
+        Exception(const Exception &);
+
+        ~Exception();
+
+    private:
+        Exception();
+        Exception & operator= (const Exception &);
     };
     
     //!cpp:class:: An exception class for errors detected at
@@ -105,9 +86,15 @@ OCIO_NAMESPACE_ENTER
     {
     public:
         //!cpp:function:: Constructor that takes a string as the exception message.
-        ExceptionMissingFile(const char *) throw();
+        explicit ExceptionMissingFile(const char *);
         //!cpp:function:: Constructor that takes an existing exception.
-        ExceptionMissingFile(const ExceptionMissingFile&) throw();
+        ExceptionMissingFile(const ExceptionMissingFile &);
+
+        ~ExceptionMissingFile();
+
+    private:
+        ExceptionMissingFile();
+        ExceptionMissingFile & operator= (const ExceptionMissingFile &);
     };
     
     ///////////////////////////////////////////////////////////////////////////
@@ -291,12 +278,32 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function::
         const char * getSearchPath() const;
-        //!cpp:function::
+        //!cpp:function:: Set all search paths as a concatenated string, using
+        // ':' to separate the paths.  See addSearchPath for a more robust and
+        // platform-agnostic method of setting the search paths.
         void setSearchPath(const char * path);
         
         //!cpp:function::
-        const char * getWorkingDir() const;
+        int getNumSearchPaths() const;
+        //!cpp:function:: Get a search path from the list. The paths are in the
+        // order they will be searched (that is, highest to lowest priority).
+        const char * getSearchPath(int index) const;
         //!cpp:function::
+        void clearSearchPaths();
+        //!cpp:function:: Add a single search path to the end of the list.
+        // Paths may be either absolute or relative. Relative paths are
+        // relative to the working directory. Forward slashes will be
+        // normalized to reverse for Windows. Environment (context) variables
+        // may be used in paths.
+        void addSearchPath(const char * path);
+
+        //!cpp:function::
+        const char * getWorkingDir() const;
+        //!cpp:function:: The working directory defaults to the location of the
+        // config file. It is used to convert any relative paths to absolute.
+        // If no search paths have been set, the working directory will be used
+        // as the fallback search path. No environment (context) variables may
+        // be used in the working directory.
         void setWorkingDir(const char * dirname);
         
         ///////////////////////////////////////////////////////////////////////////
@@ -305,8 +312,8 @@ OCIO_NAMESPACE_ENTER
         // ColorSpaces
         // ^^^^^^^^^^^
 
-        //!cpp:function:: Get all color spaces having a specific category
-        //                in the order they appear in the config file.
+        //!cpp:function:: Get all color spaces having a specific category 
+        // in the order they appear in the config file.
         //
         // .. note::
         //    If the category is null or empty, the method returns 
@@ -337,6 +344,7 @@ OCIO_NAMESPACE_ENTER
         int getIndexForColorSpace(const char * name) const;
         
         //!cpp:function:: Add a color space to the configuration.
+        //
         // .. note::
         //    If another color space is already registered with the same name,
         //    this will overwrite it. This stores a copy of the specified
@@ -347,6 +355,7 @@ OCIO_NAMESPACE_ENTER
         void addColorSpace(const ConstColorSpaceRcPtr & cs);
 
         //!cpp:function:: Remove all the color spaces from the configuration.
+        //
         // .. note::
         //    Removing color spaces from a Config does not affect 
         //    any ColorSpaceSets that have already been created.
@@ -504,20 +513,10 @@ OCIO_NAMESPACE_ENTER
         // Processors
         // ^^^^^^^^^^
         //
-        // Convert from inputColorSpace to outputColorSpace
-        // 
-        // .. note::
-        //    This may provide higher fidelity than anticipated due to internal
-        //    optimizations. For example, if the inputcolorspace and the
-        //    outputColorSpace are members of the same family, no conversion
-        //    will be applied, even though strictly speaking quantization
-        //    should be added.
-        // 
-        // If you wish to test these calls for quantization characteristics,
-        // apply in two steps; the image must contain RGB triples (though
-        // arbitrary numbers of additional channels can be supported (ignored)
-        // using the pixelStrideBytes arg).
-        
+        // Create a :cpp:class:`Processor` to assemble a transformation between two 
+        // color spaces.  It may then be used to create a :cpp:class:`CPUProcessor` 
+        // or :cpp:class:`GPUProcessor` to process/convert pixels.
+
         //!cpp:function::
         ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
                                          const ConstColorSpaceRcPtr & srcColorSpace,
@@ -526,7 +525,7 @@ OCIO_NAMESPACE_ENTER
         ConstProcessorRcPtr getProcessor(const ConstColorSpaceRcPtr & srcColorSpace,
                                          const ConstColorSpaceRcPtr & dstColorSpace) const;
         
-            //!cpp:function::
+        //!cpp:function::
         // .. note::
         //    Names can be colorspace name, role name, or a combination of both.
         ConstProcessorRcPtr getProcessor(const char * srcName,
@@ -550,7 +549,7 @@ OCIO_NAMESPACE_ENTER
         ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
                                          const ConstTransformRcPtr& transform,
                                          TransformDirection direction) const;
-        
+
     private:
         Config();
         ~Config();
@@ -797,6 +796,7 @@ OCIO_NAMESPACE_ENTER
         int getIndexForColorSpace(const char * name) const;
 
         //!cpp:function:: Add color space(s).
+        //
         // .. note::
         //    If another color space is already registered with the same name,
         //    this will overwrite it. This stores a copy of the specified
@@ -805,7 +805,9 @@ OCIO_NAMESPACE_ENTER
         void addColorSpaces(const ConstColorSpaceSetRcPtr & cs);
 
         //!cpp:function:: Remove color space(s) using color space names (i.e. no role name).
-        // .. note:: The removal of a missing color space does nothing.
+        //
+        // .. note::
+        //    The removal of a missing color space does nothing.
         void removeColorSpace(const char * name);
         void removeColorSpaces(const ConstColorSpaceSetRcPtr & cs);
 
@@ -913,56 +915,118 @@ OCIO_NAMESPACE_ENTER
     //!rst::
     // Processor
     // *********
-    
+    // The *Processor* represents a specific color transformation which is 
+    // the result of :cpp:func:`Config::getProcessor`.
+
     //!cpp:class::
     class OCIOEXPORT Processor
     {
     public:
         //!cpp:function::
-        static ProcessorRcPtr Create();
-        
-        //!cpp:function::
         bool isNoOp() const;
         
-        //!cpp:function:: does the processor represent an image transformation that
-        //                introduces crosstalk between the image channels
+        //!cpp:function:: True if the image transformation is non-separable.
+        // For example, if a change in red may also cause a change in green or blue.
         bool hasChannelCrosstalk() const;
         
+        //!cpp:function:: The ProcessorMetadata contains technical information
+        //                such as the number of files and looks used in the processor.
+        ConstProcessorMetadataRcPtr getProcessorMetadata() const;
+
+        //!cpp:function:: Get a FormatMetadata containing the top level metadata
+        //                for the processor.  For a processor from a CLF file,
+        //                this corresponds to the ProcessList metadata.
+        const FormatMetadata & getFormatMetadata() const;
+
+        //!cpp:function:: Get the number of transforms that comprise the processor.
+        //                Each transform has a (potentially empty) FormatMetadata.
+        int getNumTransforms() const;
+        //!cpp:function:: Get a FormatMetadata containing the metadata for a
+        //                transform within the processor. For a processor from
+        //                a CLF file, this corresponds to the metadata associated
+        //                with an individual process node.
+        const FormatMetadata & getTransformFormatMetadata(int index) const;
+
+        //!cpp:function:: Return a cpp:class:`GroupTransform` that contains a
+        //                copy of the transforms that comprise the processor.
+        //                (Changes to it will not modify the original processor.)
+        GroupTransformRcPtr createGroupTransform() const;
+
+        //!cpp:function:: Write the transforms comprising the processor to the stream.
+        //                Writing (as opposed to Baking) is a lossless process.
+        //                An exception is thrown if the processor cannot be
+        //                losslessly written to the specified file format.
+        void write(const char * formatName, std::ostream & os) const;
+
+        //!cpp:function:: Get the number of writers.
+        static int getNumWriteFormats();
+
+        //!cpp:function:: Get the writer at index, return empty string if
+        //                an invalid index is specified.
+        static const char * getFormatNameByIndex(int index);
+        static const char * getFormatExtensionByIndex(int index);
+
+        // TODO: Revisit the dynamic property access.
         //!cpp:function::
-        ConstProcessorMetadataRcPtr getMetadata() const;
+        DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
+        bool hasDynamicProperty(DynamicPropertyType type) const;
+
+        //!cpp:function:: 
+        const char * getCacheID() const;
+
+        ///////////////////////////////////////////////////////////////////////////
+        //!rst::
+        // GPU Renderer
+        // ^^^^^^^^^^^^
+        // Get an optimized :cpp:class:`GPUProcessor` instance.
+
+        //!cpp:function::        
+        ConstGPUProcessorRcPtr getDefaultGPUProcessor() const;
+        //!cpp:function::        
+        ConstGPUProcessorRcPtr getOptimizedGPUProcessor(OptimizationFlags oFlags, 
+                                                        FinalizationFlags fFlags) const;
         
         ///////////////////////////////////////////////////////////////////////////
         //!rst::
         // CPU Renderer
         // ^^^^^^^^^^^^
-        
-        //!cpp:function:: Apply to an image.
-        void apply(ImageDesc& img) const;
-        
-        //!rst::
-        // Apply to a single pixel.
-        // 
+        // Get an optimized :cpp:class:`CPUProcessor` instance.
+        //        
         // .. note::
-        //    This is not as efficient as applying to an entire image at once.
-        //    If you are processing multiple pixels, and have the flexibility,
-        //    use the above function instead.
-        
-        //!cpp:function:: 
-        void applyRGB(float * pixel) const;
-        //!cpp:function:: 
-        void applyRGBA(float * pixel) const;
-        
-        //!cpp:function:: 
-        const char * getCpuCacheID() const;
-        
-        ///////////////////////////////////////////////////////////////////////////
-        //!rst::
-        // GPU Renderer
-        // ^^^^^^^^^^^^
-        // Get the GPU shader program and its description
-        
-        //!cpp:function:: Extract the shader information to implement the color processing
-        void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
+        //    This may provide higher fidelity than anticipated due to internal
+        //    optimizations. For example, if the inputColorSpace and the
+        //    outputColorSpace are members of the same family, no conversion
+        //    will be applied, even though strictly speaking quantization
+        //    should be added.
+
+
+        // .. note::
+        //    The typical use case to apply color processing to an image is:
+        // 
+        // .. code-block:: cpp
+        //
+        //     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+        // 
+        //     OCIO::ConstProcessorRcPtr processor 
+        //         = config->getProcessor(colorSpace1, colorSpace2);
+        //
+        //     OCIO::ConstCPUProcessorRcPtr cpuProcessor
+        //         = processor->getDefaultCPUProcessor();
+        //
+        //     OCIO::PackedImageDesc img(imgDataPtr, imgWidth, imgHeight, imgChannels);
+        //     cpuProcessor->apply(img);
+        //     
+
+        //!cpp:function::        
+        ConstCPUProcessorRcPtr getDefaultCPUProcessor() const;
+        //!cpp:function::        
+        ConstCPUProcessorRcPtr getOptimizedCPUProcessor(OptimizationFlags oFlags, 
+                                                        FinalizationFlags fFlags) const;
+        //!cpp:function::        
+        ConstCPUProcessorRcPtr getOptimizedCPUProcessor(BitDepth inBitDepth,
+                                                        BitDepth outBitDepth,
+                                                        OptimizationFlags oFlags, 
+                                                        FinalizationFlags fFlags) const;
 
     private:
         Processor();
@@ -971,18 +1035,136 @@ OCIO_NAMESPACE_ENTER
         Processor(const Processor &);
         Processor& operator= (const Processor &);
         
+        static ProcessorRcPtr Create();
+        
         static void deleter(Processor* c);
         
         friend class Config;
         
         class Impl;
-        friend class Impl;
         Impl * m_impl;
         Impl * getImpl() { return m_impl; }
         const Impl * getImpl() const { return m_impl; }
     };
     
     
+    ///////////////////////////////////////////////////////////////////////////
+    //!rst::
+    // CPUProcessor
+    // ************
+    
+    //!cpp:class::
+    class CPUProcessor
+    {
+    public:
+        //!cpp:function::
+        const char * getCacheID() const;
+
+        //!cpp:function::
+        bool hasChannelCrosstalk() const;
+
+        //!cpp:function:: Bit-depth of the input pixel buffer.
+        BitDepth getInputBitDepth() const;
+        //!cpp:function:: Bit-depth of the output pixel buffer.
+        BitDepth getOutputBitDepth() const;
+
+        //!cpp:function:: Refer to :cpp:func:`GPUProcessor::getDynamicProperty`.
+        DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
+
+        ///////////////////////////////////////////////////////////////////////////
+        //!rst::
+        // Apply to an image with any kind of channel ordering while respecting 
+        // the input and output bit-depths.
+
+        //!cpp:function:: 
+        void apply(ImageDesc & imgDesc) const;
+        //!cpp:function:: 
+        void apply(const ImageDesc & srcImgDesc, ImageDesc & dstImgDesc) const;
+
+        //!rst::
+        // Apply to a single pixel respecting that the input and output bit-depths
+        // be 32-bit float and the image buffer be packed RGB/RGBA.
+        // 
+        // .. note::
+        //    This is not as efficient as applying to an entire image at once.
+        //    If you are processing multiple pixels, and have the flexibility,
+        //    use the above function instead.
+
+        //!cpp:function:: 
+        void applyRGB(float * pixel) const;
+        //!cpp:function:: 
+        void applyRGBA(float * pixel) const;
+
+    private:
+        CPUProcessor();
+        ~CPUProcessor();
+        
+        CPUProcessor(const CPUProcessor &);
+        CPUProcessor& operator= (const CPUProcessor &);
+        
+        static void deleter(CPUProcessor * c);
+
+        friend class Processor;
+
+        class Impl;
+        Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
+    };
+    
+
+    ///////////////////////////////////////////////////////////////////////////
+    //!rst::
+    // GPUProcessor
+    // ************
+    
+    //!cpp:class::
+    class GPUProcessor
+    {
+    public:
+        //!cpp:function::
+        bool isNoOp() const;
+        
+        //!cpp:function::
+        const char * getCacheID() const;
+
+        //!cpp:function::
+        bool hasChannelCrosstalk() const;
+
+        //!cpp:function:: The returned pointer may be used to set the value of any
+        //                dynamic properties of the requested type.  Throws if the
+        //                requested property is not found.  Note that if the
+        //                processor contains several ops that support the
+        //                requested property, only ones for which dynamic has
+        //                been enabled will be controlled.
+        //
+        // .. note:: 
+        //    The dynamic properties in this object are decoupled from the ones 
+        //    in the :cpp:class:`Processor` it was generated from.
+        //
+        DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
+
+        //!cpp:function:: Extract the shader information to implement the color processing.
+        void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
+
+    private:
+        GPUProcessor();
+        ~GPUProcessor();
+        
+        GPUProcessor(const GPUProcessor &);
+        GPUProcessor& operator= (const GPUProcessor &);
+        
+        static void deleter(GPUProcessor * c);
+
+        friend class Processor;
+
+        class Impl;
+        Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
+    };
+    
+
     //!cpp:class::
     // This class contains meta information about the process that generated
     // this processor.  The results of these functions do not
@@ -1163,15 +1345,50 @@ OCIO_NAMESPACE_ENTER
     //!cpp:class::
     // This is a light-weight wrapper around an image, that provides a context
     // for pixel access. This does NOT claim ownership of the pixels or copy
-    // image data
+    // image data.
     
     class OCIOEXPORT ImageDesc
     {
     public:
         //!cpp:function::
+        ImageDesc();
+        //!cpp:function::
         virtual ~ImageDesc();
+
+        //!cpp:function:: Get a pointer to the red channel of the first pixel.
+        virtual void * getRData() const = 0;
+        //!cpp:function:: Get a pointer to the green channel of the first pixel.
+        virtual void * getGData() const = 0;
+        //!cpp:function:: Get a pointer to the blue channel of the first pixel.
+        virtual void * getBData() const = 0;
+        //!cpp:function:: Get a pointer to the alpha channel of the first pixel
+        // or null as alpha channel is optional.
+        virtual void * getAData() const = 0;
+
+        //!cpp:function:: Get the bit-depth.
+        virtual BitDepth getBitDepth() const = 0;
+
+        //!cpp:function:: Get the width to process (where x position starts at 0 and ends at width-1).
+        virtual long getWidth() const = 0;
+        //!cpp:function:: Get the height to process (where y position starts at 0 and ends at height-1).
+        virtual long getHeight() const = 0;
+
+        //!cpp:function:: Get the step in bytes to find the same color channel of the next pixel.
+        virtual ptrdiff_t getXStrideBytes() const = 0;
+        //!cpp:function:: Get the step in bytes to find the same color channel 
+        // of the pixel at the same position in the next line.
+        virtual ptrdiff_t getYStrideBytes() const = 0;
+
+        //!cpp:function:: Is the image buffer in packed mode with the 4 color channels?
+        // ("Packed" here means that XStrideBytes is 4x the bytes per channel, so it is more specific 
+        // than simply any PackedImageDesc.)
+        virtual bool isRGBAPacked() const = 0;
+        //!cpp:function:: Is the image buffer 32-bit float?
+        virtual bool isFloat() const = 0;
+
     private:
-        ImageDesc& operator= (const ImageDesc &);
+        ImageDesc(const ImageDesc &);
+        ImageDesc & operator= (const ImageDesc &);
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ImageDesc&);
@@ -1181,50 +1398,104 @@ OCIO_NAMESPACE_ENTER
     //!rst::
     // PackedImageDesc
     // ^^^^^^^^^^^^^^^
-    
+
     //!cpp:class::
     class OCIOEXPORT PackedImageDesc : public ImageDesc
     {
     public:
-        //!cpp:function::
-        // Pass the pointer to packed image data: rgbrgbrgb, etc.
-        // The number of channels must be greater than or equal to 3
+
+        //!rst::
+        // All the constructors expect a pointer to packed image data (such as 
+        // rgbrgbrgb or rgbargbargba) starting at the first color channel of 
+        // the first pixel to process (which does not need to be the first pixel 
+        // of the image). The number of channels must be greater than or equal to 3.
         // If a 4th channel is specified, it is assumed to be alpha
         // information.  Channels > 4 will be ignored.
-        
-        PackedImageDesc(float * data,
+        //
+        // .. note:: 
+        // The methods assume the CPUProcessor bit-depth type for the data pointer.
+
+        //!cpp:function::
+        //
+        // .. note:: 
+        //    numChannels must be 3 (RGB) or 4 (RGBA).
+        PackedImageDesc(void * data,
                         long width, long height,
-                        long numChannels,
-                        ptrdiff_t chanStrideBytes = AutoStride,
-                        ptrdiff_t xStrideBytes = AutoStride,
-                        ptrdiff_t yStrideBytes = AutoStride);
+                        long numChannels);
+
+        //!cpp:function::
+        //
+        // .. note:: 
+        //    numChannels smust be 3 (RGB) or 4 (RGBA).
+        PackedImageDesc(void * data,
+                        long width, long height,
+                        long numChannels,  // must be 3 (RGB) or 4 (RGBA)
+                        BitDepth bitDepth,
+                        ptrdiff_t chanStrideBytes,
+                        ptrdiff_t xStrideBytes,
+                        ptrdiff_t yStrideBytes);
+
+        //!cpp:function::
+        PackedImageDesc(void * data,
+                        long width, long height,
+                        ChannelOrdering chanOrder);
+
+        //!cpp:function::
+        PackedImageDesc(void * data,
+                        long width, long height,
+                        ChannelOrdering chanOrder,
+                        BitDepth bitDepth,
+                        ptrdiff_t chanStrideBytes,
+                        ptrdiff_t xStrideBytes,
+                        ptrdiff_t yStrideBytes);
+
         //!cpp:function::
         virtual ~PackedImageDesc();
-        
+
+        //!cpp:function:: Get the channel ordering of all the pixels.
+        ChannelOrdering getChannelOrder() const;
+
+        //!cpp:function:: Get the bit-depth.
+        BitDepth getBitDepth() const override;
+
+        //!cpp:function:: Get a pointer to the first color channel of the first pixel.
+        void * getData() const;
+
         //!cpp:function::
-        float * getData() const;
-        
+        void * getRData() const override;
         //!cpp:function::
-        long getWidth() const;
+        void * getGData() const override;
         //!cpp:function::
-        long getHeight() const;
+        void * getBData() const override;
+        //!cpp:function::
+        void * getAData() const override;
+
+        //!cpp:function::
+        long getWidth() const override;
+        //!cpp:function::
+        long getHeight() const override;
         //!cpp:function::
         long getNumChannels() const;
-        
+
         //!cpp:function::
         ptrdiff_t getChanStrideBytes() const;
         //!cpp:function::
-        ptrdiff_t getXStrideBytes() const;
+        ptrdiff_t getXStrideBytes() const override;
         //!cpp:function::
-        ptrdiff_t getYStrideBytes() const;
-        
+        ptrdiff_t getYStrideBytes() const override;
+
+        //!cpp:function::
+        bool isRGBAPacked() const override;
+        //!cpp:function::
+        bool isFloat() const override;
+
     private:
-        class Impl;
-        friend class Impl;
+        struct Impl;
         Impl * m_impl;
         Impl * getImpl() { return m_impl; }
         const Impl * getImpl() const { return m_impl; }
         
+        PackedImageDesc();
         PackedImageDesc(const PackedImageDesc &);
         PackedImageDesc& operator= (const PackedImageDesc &);
     };
@@ -1239,41 +1510,68 @@ OCIO_NAMESPACE_ENTER
     class OCIOEXPORT PlanarImageDesc : public ImageDesc
     {
     public:
+
+        //!rst::
+        // All the constructors expect pointers to the specified image planes 
+        // (i.e. rrrr gggg bbbb) starting at the first color channel of the 
+        // first pixel to process (which need not be the first pixel of the image).
+        // Pass NULL for aData if no alpha exists (r/g/bData must not be NULL).
+        //
+        // .. note:: 
+        // The methods assume the CPUProcessor bit-depth type for the R/G/B/A data pointers.
+
         //!cpp:function::
-        // Pass the pointer to the specified image planes: rrrr gggg bbbb, etc.
-        // aData is optional, pass NULL if no alpha exists.
-        // {r,g,b} Data must be specified
-        
-        PlanarImageDesc(float * rData, float * gData, float * bData, float * aData,
+        PlanarImageDesc(void * rData, void * gData, void * bData, void * aData,
+                        long width, long height);
+
+        //!cpp:function::
+        // Note that although PlanarImageDesc is powerful enough to also describe 
+        // all :cpp:class:`PackedImageDesc` scenarios, it is recommended to use 
+        // a PackedImageDesc where possible since that allows for additional
+        // optimizations.
+        PlanarImageDesc(void * rData, void * gData, void * bData, void * aData,
                         long width, long height,
-                        ptrdiff_t yStrideBytes = AutoStride);
+                        BitDepth bitDepth,
+                        ptrdiff_t xStrideBytes,
+                        ptrdiff_t yStrideBytes);
+
         //!cpp:function::
         virtual ~PlanarImageDesc();
-        
+
         //!cpp:function::
-        float* getRData() const;
+        void * getRData() const override;
         //!cpp:function::
-        float* getGData() const;
+        void * getGData() const override;
         //!cpp:function::
-        float* getBData() const;
+        void * getBData() const override;
         //!cpp:function::
-        float* getAData() const;
-        
+        void * getAData() const override;
+
+        //!cpp:function:: Get the bit-depth.
+        BitDepth getBitDepth() const override;
+
         //!cpp:function::
-        long getWidth() const;
+        long getWidth() const override;
         //!cpp:function::
-        long getHeight() const;
-        
+        long getHeight() const override;
+
         //!cpp:function::
-        ptrdiff_t getYStrideBytes() const;
-        
+        ptrdiff_t getXStrideBytes() const override;
+        //!cpp:function::
+        ptrdiff_t getYStrideBytes() const override;
+
+        //!cpp:function::
+        bool isRGBAPacked() const override;
+        //!cpp:function::
+        bool isFloat() const override;
+
     private:
-        class Impl;
-        friend class Impl;
+        struct Impl;
         Impl * m_impl;
         Impl * getImpl() { return m_impl; }
         const Impl * getImpl() const { return m_impl; }
         
+        PlanarImageDesc();
         PlanarImageDesc(const PlanarImageDesc &);
         PlanarImageDesc& operator= (const PlanarImageDesc &);
     };
@@ -1465,7 +1763,6 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::  Set a prefix to the resource name
         //
         // .. note::
-        //
         //   Some applications require that textures, uniforms, 
         //   and helper methods be uniquely named because several 
         //   processor instances could coexist.
@@ -1485,27 +1782,21 @@ OCIO_NAMESPACE_ENTER
             TEXTURE_RGB_CHANNEL
         };
 
-        enum UniformType
-        {
-            UNIFORM_BOOL_TYPE,
-            UNIFORM_FLOAT_TYPE
-        };
-
-        // Note: Support for uniforms will be added in a follow-up
+        //!cpp:function:: Dynamic Property related methods.
         virtual unsigned getNumUniforms() const = 0;
         virtual void getUniform(unsigned index, const char *& name, 
-                                UniformType & type, void *& value) const = 0;
-        virtual void addUniform(unsigned index, const char * name, 
-                                UniformType type, void * value) = 0;
+                                DynamicPropertyRcPtr & value) const = 0;
+        virtual bool addUniform(const char * name, 
+                                const DynamicPropertyRcPtr & value) = 0;
 
         //!cpp:function:: 1D lut related methods
         virtual unsigned getTextureMaxWidth() const = 0;
         virtual void setTextureMaxWidth(unsigned maxWidth) = 0;
         virtual unsigned getNumTextures() const = 0;
-        virtual void addTexture(
-            const char * name, const char * id, unsigned width, unsigned height,
-            TextureType channel, Interpolation interpolation,
-            const float * values) = 0;
+        virtual void addTexture(const char * name, const char * id, 
+                                unsigned width, unsigned height,
+                                TextureType channel, Interpolation interpolation,
+                                const float * values) = 0;
         virtual void getTexture(unsigned index, const char *& name, const char *& id, 
                                 unsigned & width, unsigned & height,
                                 TextureType & channel, Interpolation & interpolation) const = 0;
@@ -1628,6 +1919,15 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         const char * getSearchPath() const;
         
+        //!cpp:function::
+        int getNumSearchPaths() const;
+        //!cpp:function::
+        const char * getSearchPath(int index) const;
+        //!cpp:function::
+        void clearSearchPaths();
+        //!cpp:function::
+        void addSearchPath(const char * path);
+
         //!cpp:function::
         void setWorkingDir(const char * dirname);
         //!cpp:function::

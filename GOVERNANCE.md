@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: CC-BY-4.0 -->
+<!-- Copyright Contributors to the OpenColorIO Project. -->
+
 # OpenColorIO Project Governance
 
 The OpenColorIO project is governed by its Committers, including a Technical
@@ -100,8 +103,8 @@ project at all ASWF TAC meetings.
 
 ### TSC Leaders
 
-* Chair: TBD
-* Chief Architect: TBD
+* Chair: Michael Dolan
+* Chief Architect: Doug Walker
 
 ### TSC Members
 

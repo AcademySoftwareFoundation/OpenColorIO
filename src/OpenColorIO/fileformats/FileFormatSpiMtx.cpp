@@ -1,30 +1,5 @@
-/*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -49,13 +24,13 @@ OCIO_NAMESPACE_ENTER
         public:
             LocalCachedFile()
             {
-                memset(m44, 0, 16*sizeof(float));
-                memset(offset4, 0, 4*sizeof(float));
+                memset(m44, 0, 16*sizeof(double));
+                memset(offset4, 0, 4*sizeof(double));
             };
             ~LocalCachedFile() {};
             
-            float m44[16];
-            float offset4[4];
+            double m44[16];
+            double offset4[4];
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -68,21 +43,21 @@ OCIO_NAMESPACE_ENTER
             
             ~LocalFileFormat() {};
             
-            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
+            void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
             
-            virtual CachedFileRcPtr Read(
+            CachedFileRcPtr read(
                 std::istream & istream,
-                const std::string & fileName) const;
+                const std::string & fileName) const override;
             
-            virtual void BuildFileOps(OpRcPtrVec & ops,
-                         const Config& config,
-                         const ConstContextRcPtr & context,
-                         CachedFileRcPtr untypedCachedFile,
-                         const FileTransform& fileTransform,
-                         TransformDirection dir) const;
+            void buildFileOps(OpRcPtrVec & ops,
+                              const Config& config,
+                              const ConstContextRcPtr & context,
+                              CachedFileRcPtr untypedCachedFile,
+                              const FileTransform& fileTransform,
+                              TransformDirection dir) const override;
         };
         
-        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
+        void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
             info.name = "spimtx";
@@ -91,8 +66,7 @@ OCIO_NAMESPACE_ENTER
             formatInfoVec.push_back(info);
         }
         
-        CachedFileRcPtr
-        LocalFileFormat::Read(
+        CachedFileRcPtr LocalFileFormat::read(
             std::istream & istream,
             const std::string & fileName) const
         {
@@ -112,7 +86,7 @@ OCIO_NAMESPACE_ENTER
             }
 
             // Turn it into parts
-            std::vector<std::string> lineParts;
+            StringVec lineParts;
             pystring::split(pystring::strip(fileStream.str()), lineParts);
             if(lineParts.size() != 12)
             {
@@ -139,40 +113,40 @@ OCIO_NAMESPACE_ENTER
             // Put the bits in the right place
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
 
-            cachedFile->m44[0] = floatArray[0];
-            cachedFile->m44[1] = floatArray[1];
-            cachedFile->m44[2] = floatArray[2];
-            cachedFile->m44[3] = 0.0f;
-
-            cachedFile->m44[4] = floatArray[4];
-            cachedFile->m44[5] = floatArray[5];
-            cachedFile->m44[6] = floatArray[6];
-            cachedFile->m44[7] = 0.0f;
-
-            cachedFile->m44[8] = floatArray[8];
-            cachedFile->m44[9] = floatArray[9];
+            cachedFile->m44[0] =  floatArray[0];
+            cachedFile->m44[1] =  floatArray[1];
+            cachedFile->m44[2] =  floatArray[2];
+            cachedFile->m44[3] =  0.0;
+                                  
+            cachedFile->m44[4] =  floatArray[4];
+            cachedFile->m44[5] =  floatArray[5];
+            cachedFile->m44[6] =  floatArray[6];
+            cachedFile->m44[7] =  0.0;
+                                  
+            cachedFile->m44[8] =  floatArray[8];
+            cachedFile->m44[9] =  floatArray[9];
             cachedFile->m44[10] = floatArray[10];
-            cachedFile->m44[11] = 0.0f;
+            cachedFile->m44[11] = 0.0;
 
-            cachedFile->m44[12] = 0.0f;
-            cachedFile->m44[13] = 0.0f;
-            cachedFile->m44[14] = 0.0f;
-            cachedFile->m44[15] = 1.0f;
+            cachedFile->m44[12] = 0.0;
+            cachedFile->m44[13] = 0.0;
+            cachedFile->m44[14] = 0.0;
+            cachedFile->m44[15] = 1.0;
 
-            cachedFile->offset4[0] = floatArray[3] / 65535.0f;
-            cachedFile->offset4[1] = floatArray[7] / 65535.0f;
-            cachedFile->offset4[2] = floatArray[11] / 65535.0f;
-            cachedFile->offset4[3] = 0.0f;
+            cachedFile->offset4[0] = floatArray[3] / 65535.0;
+            cachedFile->offset4[1] = floatArray[7] / 65535.0;
+            cachedFile->offset4[2] = floatArray[11] / 65535.0;
+            cachedFile->offset4[3] = 0.0;
 
             return cachedFile;
         }
         
-        void LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
-                                      const Config& /*config*/,
-                                      const ConstContextRcPtr & /*context*/,
-                                      CachedFileRcPtr untypedCachedFile,
-                                      const FileTransform& fileTransform,
-                                      TransformDirection dir) const
+        void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
+                                           const Config& /*config*/,
+                                           const ConstContextRcPtr & /*context*/,
+                                           CachedFileRcPtr untypedCachedFile,
+                                           const FileTransform& fileTransform,
+                                           TransformDirection dir) const
         {
             LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
 
@@ -203,19 +177,19 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
-#include "UnitTestFiles.h"
+#include "UnitTest.h"
+#include "UnitTestUtils.h"
 
-OIIO_ADD_TEST(FileFormatSpiMtx, FormatInfo)
+OCIO_ADD_TEST(FileFormatSpiMtx, FormatInfo)
 {
     OCIO::FormatInfoVec formatInfoVec;
     OCIO::LocalFileFormat tester;
-    tester.GetFormatInfo(formatInfoVec);
+    tester.getFormatInfo(formatInfoVec);
 
-    OIIO_CHECK_EQUAL(1, formatInfoVec.size());
-    OIIO_CHECK_EQUAL("spimtx", formatInfoVec[0].name);
-    OIIO_CHECK_EQUAL("spimtx", formatInfoVec[0].extension);
-    OIIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ,
+    OCIO_CHECK_EQUAL(1, formatInfoVec.size());
+    OCIO_CHECK_EQUAL("spimtx", formatInfoVec[0].name);
+    OCIO_CHECK_EQUAL("spimtx", formatInfoVec[0].extension);
+    OCIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ,
         formatInfoVec[0].capabilities);
 }
 
@@ -225,37 +199,37 @@ OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & fileName)
         fileName, std::ios_base::in);
 }
 
-OIIO_ADD_TEST(FileFormatSpiMtx, Test)
+OCIO_ADD_TEST(FileFormatSpiMtx, Test)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string spiMtxFile("camera_to_aces.spimtx");
-    OIIO_CHECK_NO_THROW(cachedFile = LoadLutFile(spiMtxFile));
+    OCIO_CHECK_NO_THROW(cachedFile = LoadLutFile(spiMtxFile));
 
-    OIIO_REQUIRE_ASSERT((bool)cachedFile);
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->offset4[0]);
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->offset4[1]);
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->offset4[2]);
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->offset4[3]);
+    OCIO_REQUIRE_ASSERT((bool)cachedFile);
+    OCIO_CHECK_EQUAL(0.0, cachedFile->offset4[0]);
+    OCIO_CHECK_EQUAL(0.0, cachedFile->offset4[1]);
+    OCIO_CHECK_EQUAL(0.0, cachedFile->offset4[2]);
+    OCIO_CHECK_EQUAL(0.0, cachedFile->offset4[3]);
 
-    OIIO_CHECK_EQUAL(0.754338638f, cachedFile->m44[0]);
-    OIIO_CHECK_EQUAL(0.133697046f, cachedFile->m44[1]);
-    OIIO_CHECK_EQUAL(0.111968437f, cachedFile->m44[2]);
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->m44[3]);
+    OCIO_CHECK_EQUAL(0.754338638f, (float)cachedFile->m44[0]);
+    OCIO_CHECK_EQUAL(0.133697046f, (float)cachedFile->m44[1]);
+    OCIO_CHECK_EQUAL(0.111968437f, (float)cachedFile->m44[2]);
+    OCIO_CHECK_EQUAL(0.0, cachedFile->m44[3]);
 
-    OIIO_CHECK_EQUAL(0.021198141f, cachedFile->m44[4]);
-    OIIO_CHECK_EQUAL(1.005410934f, cachedFile->m44[5]);
-    OIIO_CHECK_EQUAL(-0.026610548f, cachedFile->m44[6]);
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->m44[7]);
+    OCIO_CHECK_EQUAL(0.021198141f, (float)cachedFile->m44[4]);
+    OCIO_CHECK_EQUAL(1.005410934f, (float)cachedFile->m44[5]);
+    OCIO_CHECK_EQUAL(-0.026610548f, (float)cachedFile->m44[6]);
+    OCIO_CHECK_EQUAL(0.0, cachedFile->m44[7]);
 
-    OIIO_CHECK_CLOSE(-0.00975699, cachedFile->m44[8], 1e-6f);
-    OIIO_CHECK_EQUAL(0.004508563f, cachedFile->m44[9]);
-    OIIO_CHECK_EQUAL(1.005253201f, cachedFile->m44[10]);
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->m44[11]);
+    OCIO_CHECK_EQUAL(-0.009756991f, (float)cachedFile->m44[8]);
+    OCIO_CHECK_EQUAL(0.004508563f, (float)cachedFile->m44[9]);
+    OCIO_CHECK_EQUAL(1.005253201f, (float)cachedFile->m44[10]);
+    OCIO_CHECK_EQUAL(0.0, cachedFile->m44[11]);
 
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->m44[12]);
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->m44[13]);
-    OIIO_CHECK_EQUAL(0.0f, cachedFile->m44[14]);
-    OIIO_CHECK_EQUAL(1.0f, cachedFile->m44[15]);
+    OCIO_CHECK_EQUAL(0.0, cachedFile->m44[12]);
+    OCIO_CHECK_EQUAL(0.0, cachedFile->m44[13]);
+    OCIO_CHECK_EQUAL(0.0, cachedFile->m44[14]);
+    OCIO_CHECK_EQUAL(1.0, cachedFile->m44[15]);
 }
 
 OCIO::LocalCachedFileRcPtr ReadSpiMtx(const std::string & fileContent)
@@ -266,12 +240,12 @@ OCIO::LocalCachedFileRcPtr ReadSpiMtx(const std::string & fileContent)
     // Read file
     OCIO::LocalFileFormat tester;
     const std::string SAMPLE_NAME("Memory File");
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(is, SAMPLE_NAME);
+    OCIO::CachedFileRcPtr cachedFile = tester.read(is, SAMPLE_NAME);
 
     return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
 }
 
-OIIO_ADD_TEST(FileFormatSpiMtx, ReadOffset)
+OCIO_ADD_TEST(FileFormatSpiMtx, ReadOffset)
 {
     {
         // Validate stream can be read with no error.
@@ -282,16 +256,16 @@ OIIO_ADD_TEST(FileFormatSpiMtx, ReadOffset)
             "0 0 1 65535.0\n";
 
         OCIO::LocalCachedFileRcPtr cachedFile;
-        OIIO_CHECK_NO_THROW(cachedFile = ReadSpiMtx(SAMPLE_FILE));
-        OIIO_REQUIRE_ASSERT((bool)cachedFile);
-        OIIO_CHECK_EQUAL(0.1f, cachedFile->offset4[0]);
-        OIIO_CHECK_EQUAL(0.5f, cachedFile->offset4[1]);
-        OIIO_CHECK_EQUAL(1.0f, cachedFile->offset4[2]);
-        OIIO_CHECK_EQUAL(0.0f, cachedFile->offset4[3]);
+        OCIO_CHECK_NO_THROW(cachedFile = ReadSpiMtx(SAMPLE_FILE));
+        OCIO_REQUIRE_ASSERT((bool)cachedFile);
+        OCIO_CHECK_EQUAL(0.1, cachedFile->offset4[0]);
+        OCIO_CHECK_EQUAL(0.5, cachedFile->offset4[1]);
+        OCIO_CHECK_EQUAL(1.0, cachedFile->offset4[2]);
+        OCIO_CHECK_EQUAL(0.0, cachedFile->offset4[3]);
     }
 }
 
-OIIO_ADD_TEST(FileFormatSpiMtx, ReadFailure)
+OCIO_ADD_TEST(FileFormatSpiMtx, ReadFailure)
 {
     {
         // Validate stream can be read with no error.
@@ -301,7 +275,7 @@ OIIO_ADD_TEST(FileFormatSpiMtx, ReadFailure)
             "0.0 1.0 0.0 0.0\n"
             "0.0 0.0 1.0 0.0\n";
 
-        OIIO_CHECK_NO_THROW(ReadSpiMtx(SAMPLE_NO_ERROR));
+        OCIO_CHECK_NO_THROW(ReadSpiMtx(SAMPLE_NO_ERROR));
     }
     {
         // Wrong number of elements
@@ -310,7 +284,7 @@ OIIO_ADD_TEST(FileFormatSpiMtx, ReadFailure)
             "0.0 1.0 0.0\n"
             "0.0 0.0 1.0\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadSpiMtx(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadSpiMtx(SAMPLE_ERROR),
                               OCIO::Exception,
                               "File must contain 12 float entries");
     }
@@ -321,7 +295,7 @@ OIIO_ADD_TEST(FileFormatSpiMtx, ReadFailure)
             "0.0 error 0.0 0.0\n"
             "0.0 0.0 1.0 0.0\n";
 
-        OIIO_CHECK_THROW_WHAT(ReadSpiMtx(SAMPLE_ERROR),
+        OCIO_CHECK_THROW_WHAT(ReadSpiMtx(SAMPLE_ERROR),
                               OCIO::Exception,
                               "File must contain all float entries");
     }

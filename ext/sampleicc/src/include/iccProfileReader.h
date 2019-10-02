@@ -54,6 +54,8 @@ see <http://www.color.org/>.
 /*
 This code has been copied and modified from http://sampleicc.sourceforge.net/
 This is the minimal amount of code needed to read icc profiles.
+
+Modifications Copyright Contributors to the OpenColorIO Project.
 */
 
 

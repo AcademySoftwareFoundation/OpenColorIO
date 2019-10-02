@@ -1,30 +1,5 @@
-/*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 #include <cstdio>
 #include <cstring>
@@ -32,7 +7,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "expat/expat.h"
+#include "expat.h"
 #include "ops/Lut1D/Lut1DOp.h"
 #include "ops/Lut3D/Lut3DOp.h"
 #include "ParseUtils.h"
@@ -108,16 +83,16 @@ OCIO_NAMESPACE_ENTER
                 ival = static_cast<char>(10+character-97);
                 return true;
             }
-            
+
             ival = 0;
             return false;
         }
-        
+
         // convert array of 8 hex ascii to f32
         // The input hexascii is required to be a little-endian representation
         // as used in the iridas file format
         // "AD10753F" -> 0.9572857022285461f on ALL architectures
-        
+
         bool hexasciitofloat(float& fval, const char * ascii)
         {
             // Convert all ASCII numbers to their numerical representations
@@ -129,9 +104,9 @@ OCIO_NAMESPACE_ENTER
                     return false;
                 }
             }
-            
+
             unsigned char * fvalbytes = reinterpret_cast<unsigned char *>(&fval);
-            
+
 #if OCIO_LITTLE_ENDIAN
             // Since incoming values are little endian, and we're on little endian
             // preserve the byte order
@@ -156,6 +131,10 @@ OCIO_NAMESPACE_ENTER
         class XMLParserHelper
         {
         public:
+            XMLParserHelper() = delete;
+            XMLParserHelper(const XMLParserHelper &) = delete;
+            XMLParserHelper & operator=(const XMLParserHelper &) = delete;
+
             XMLParserHelper(const std::string & fileName)
                 : m_parser(XML_ParserCreate(NULL))
                 , m_fileName(fileName)
@@ -184,33 +163,30 @@ OCIO_NAMESPACE_ENTER
                 while (istream.good())
                 {
                     std::getline(istream, line);
+                    line.push_back('\n');
                     ++m_lineNumber;
 
-                    Parse(line);
+                    Parse(line, !istream.good());
                 }
             }
-            void Parse(const std::string & buffer)
+            void Parse(const std::string & buffer, bool lastLine)
             {
-                int done = 0;
+                const int done = lastLine?1:0;
 
-                do
+                if (XML_STATUS_ERROR == XML_Parse(m_parser, buffer.c_str(), (int)buffer.size(), done))
                 {
-                    if (XML_STATUS_ERROR == XML_Parse(m_parser, buffer.c_str(), (int)buffer.size(), done))
+                    XML_Error eXpatErrorCode = XML_GetErrorCode(m_parser);
+                    if (eXpatErrorCode == XML_ERROR_TAG_MISMATCH)
                     {
-                        XML_Error eXpatErrorCode = XML_GetErrorCode(m_parser);
-                        if (eXpatErrorCode == XML_ERROR_TAG_MISMATCH)
-                        {
-                            Throw("XML parsing error (unbalanced element tags)");
-                        }
-                        else
-                        {
-                            std::string error("XML parsing error: ");
-                            error += XML_ErrorString(XML_GetErrorCode(m_parser));
-                            Throw(error);
-                        }
+                        Throw("XML parsing error (unbalanced element tags)");
                     }
-                } while (done);
-
+                    else
+                    {
+                        std::string error("XML parsing error: ");
+                        error += XML_ErrorString(XML_GetErrorCode(m_parser));
+                        Throw(error);
+                    }
+                }
             }
 
             void getLut(int & lutSize, std::vector<float> & lut) const
@@ -269,12 +245,10 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
 
-            XMLParserHelper() {};
-
             // Start the parsing of one element
             static void StartElementHandler(void *userData,
                 const XML_Char *name,
-                const XML_Char **atts)
+                const XML_Char ** /*atts*/)
             {
                 XMLParserHelper * pImpl = (XMLParserHelper*)userData;
 
@@ -431,11 +405,12 @@ OCIO_NAMESPACE_ENTER
                 }
 
                 if (len == 0) return;
-
                 if (len<0 || !s || !*s)
                 {
                     pImpl->Throw("XML parsing error: attribute illegal");
                 }
+                // Parsing a single new line. This is valid.
+                if (len == 1 && s[0] == '\n') return;
 
                 if (pImpl->m_size)
                 {
@@ -501,14 +476,10 @@ OCIO_NAMESPACE_ENTER
         class LocalCachedFile : public CachedFile
         {
         public:
-            LocalCachedFile ()
-            {
-                lut3D = Lut3D::Create();
-            };
-            ~LocalCachedFile() {};
+            LocalCachedFile () = default;
+            ~LocalCachedFile()  = default;
 
-            // TODO: Switch to the OpData class.
-            Lut3DRcPtr lut3D;
+            Lut3DOpDataRcPtr lut3D;
         };
 
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -516,24 +487,24 @@ OCIO_NAMESPACE_ENTER
         class LocalFileFormat : public FileFormat
         {
         public:
+            LocalFileFormat() = default;
+            ~LocalFileFormat() = default;
 
-            ~LocalFileFormat() {};
+            void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
-
-            virtual CachedFileRcPtr Read(
+            CachedFileRcPtr read(
                 std::istream & istream,
-                const std::string & fileName) const;
+                const std::string & fileName) const override;
 
-            virtual void BuildFileOps(OpRcPtrVec & ops,
-                         const Config& config,
-                         const ConstContextRcPtr & context,
-                         CachedFileRcPtr untypedCachedFile,
-                         const FileTransform& fileTransform,
-                         TransformDirection dir) const;
+            void buildFileOps(OpRcPtrVec & ops,
+                              const Config & config,
+                              const ConstContextRcPtr & context,
+                              CachedFileRcPtr untypedCachedFile,
+                              const FileTransform & fileTransform,
+                              TransformDirection dir) const override;
         };
 
-        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
+        void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
             info.name = "iridas_look";
@@ -542,8 +513,7 @@ OCIO_NAMESPACE_ENTER
             formatInfoVec.push_back(info);
         }
 
-        CachedFileRcPtr
-        LocalFileFormat::Read(
+        CachedFileRcPtr LocalFileFormat::read(
             std::istream & istream,
             const std::string & fileName) const
         {
@@ -558,17 +528,20 @@ OCIO_NAMESPACE_ENTER
             // Validate LUT sizes, and create cached file object
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
 
-            parser.getLut(cachedFile->lut3D->size[0], cachedFile->lut3D->lut);
+            int gridSize = 0;
+            std::vector<float> raw;
+            parser.getLut(gridSize, raw);
 
-            cachedFile->lut3D->size[1] = cachedFile->lut3D->size[0];
-            cachedFile->lut3D->size[2] = cachedFile->lut3D->size[0];
+            cachedFile->lut3D = std::make_shared<Lut3DOpData>(gridSize);
+            cachedFile->lut3D->setFileOutputBitDepth(BIT_DEPTH_F32);
+            cachedFile->lut3D->setArrayFromRedFastestOrder(raw);
 
             return cachedFile;
         }
 
 
         void
-        LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
+        LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                                       const Config& /*config*/,
                                       const ConstContextRcPtr & /*context*/,
                                       CachedFileRcPtr untypedCachedFile,
@@ -595,8 +568,11 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
 
-            CreateLut3DOp(ops, cachedFile->lut3D,
-                          fileTransform.getInterpolation(), newDir);
+            if (cachedFile->lut3D)
+            {
+                cachedFile->lut3D->setInterpolation(fileTransform.getInterpolation());
+                CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+            }
         }
     }
 
@@ -612,109 +588,108 @@ OCIO_NAMESPACE_EXIT
 
 #ifdef OCIO_UNIT_TEST
 
-#include "unittest.h"
+#include "UnitTest.h"
 
-OCIO_NAMESPACE_USING
+namespace OCIO = OCIO_NAMESPACE;
 
 
-
-OIIO_ADD_TEST(FileFormatIridasLook, hexasciitoint)
+OCIO_ADD_TEST(FileFormatIridasLook, hexasciitoint)
 {
     {
     char ival = 0;
-    bool success = hexasciitoint(ival, 'a');
-    OIIO_CHECK_EQUAL(success, true); OIIO_CHECK_EQUAL(ival, 10);
+    bool success = OCIO::hexasciitoint(ival, 'a');
+    OCIO_CHECK_EQUAL(success, true); OCIO_CHECK_EQUAL(ival, 10);
     }
-    
+
     {
     char ival = 0;
-    bool success = hexasciitoint(ival, 'A');
-    OIIO_CHECK_EQUAL(success, true); OIIO_CHECK_EQUAL(ival, 10);
+    bool success = OCIO::hexasciitoint(ival, 'A');
+    OCIO_CHECK_EQUAL(success, true); OCIO_CHECK_EQUAL(ival, 10);
     }
-    
+
     {
     char ival = 0;
-    bool success = hexasciitoint(ival, 'f');
-    OIIO_CHECK_EQUAL(success, true); OIIO_CHECK_EQUAL(ival, 15);
+    bool success = OCIO::hexasciitoint(ival, 'f');
+    OCIO_CHECK_EQUAL(success, true); OCIO_CHECK_EQUAL(ival, 15);
     }
-    
+
     {
     char ival = 0;
-    bool success = hexasciitoint(ival, 'F');
-    OIIO_CHECK_EQUAL(success, true); OIIO_CHECK_EQUAL(ival, 15);
+    bool success = OCIO::hexasciitoint(ival, 'F');
+    OCIO_CHECK_EQUAL(success, true); OCIO_CHECK_EQUAL(ival, 15);
     }
-    
+
     {
     char ival = 0;
-    bool success = hexasciitoint(ival, '0');
-    OIIO_CHECK_EQUAL(success, true); OIIO_CHECK_EQUAL(ival, 0);
+    bool success = OCIO::hexasciitoint(ival, '0');
+    OCIO_CHECK_EQUAL(success, true); OCIO_CHECK_EQUAL(ival, 0);
     }
-    
+
     {
     char ival = 0;
-    bool success = hexasciitoint(ival, '0');
-    OIIO_CHECK_EQUAL(success, true); OIIO_CHECK_EQUAL(ival, 0);
+    bool success = OCIO::hexasciitoint(ival, '0');
+    OCIO_CHECK_EQUAL(success, true); OCIO_CHECK_EQUAL(ival, 0);
     }
-    
+
     {
     char ival = 0;
-    bool success = hexasciitoint(ival, '9');
-    OIIO_CHECK_EQUAL(success, true); OIIO_CHECK_EQUAL(ival, 9);
+    bool success = OCIO::hexasciitoint(ival, '9');
+    OCIO_CHECK_EQUAL(success, true); OCIO_CHECK_EQUAL(ival, 9);
     }
-    
+
     {
     char ival = 0;
-    bool success = hexasciitoint(ival, '\n');
-    OIIO_CHECK_EQUAL(success, false);
+    bool success = OCIO::hexasciitoint(ival, '\n');
+    OCIO_CHECK_EQUAL(success, false);
     }
-    
+
     {
     char ival = 0;
-    bool success = hexasciitoint(ival, 'j');
-    OIIO_CHECK_EQUAL(success, false);
+    bool success = OCIO::hexasciitoint(ival, 'j');
+    OCIO_CHECK_EQUAL(success, false);
     }
-    
+
     {
     char ival = 0;
-    bool success = hexasciitoint(ival, 'x');
-    OIIO_CHECK_EQUAL(success, false);
+    bool success = OCIO::hexasciitoint(ival, 'x');
+    OCIO_CHECK_EQUAL(success, false);
     }
 }
 
 
-OIIO_ADD_TEST(FileFormatIridasLook, hexasciitofloat)
+OCIO_ADD_TEST(FileFormatIridasLook, hexasciitofloat)
 {
     //>>> import binascii, struct
     //>> struct.unpack("<f", binascii.unhexlify("AD10753F"))[0]
     //0.9572857022285461
-    
+
     {
     float fval = 0.0f;
-    bool success = hexasciitofloat(fval, "0000003F");
-    OIIO_CHECK_EQUAL(success, true); OIIO_CHECK_EQUAL(fval, 0.5f);
+    bool success = OCIO::hexasciitofloat(fval, "0000003F");
+    OCIO_CHECK_EQUAL(success, true); OCIO_CHECK_EQUAL(fval, 0.5f);
     }
-    
+
     {
     float fval = 0.0f;
-    bool success = hexasciitofloat(fval, "0000803F");
-    OIIO_CHECK_EQUAL(success, true); OIIO_CHECK_EQUAL(fval, 1.0f);
+    bool success = OCIO::hexasciitofloat(fval, "0000803F");
+    OCIO_CHECK_EQUAL(success, true); OCIO_CHECK_EQUAL(fval, 1.0f);
     }
-    
+
     {
     float fval = 0.0f;
-    bool success = hexasciitofloat(fval, "AD10753F");
-    OIIO_CHECK_EQUAL(success, true); OIIO_CHECK_EQUAL(fval, 0.9572857022285461f);
+    bool success = OCIO::hexasciitofloat(fval, "AD10753F");
+    OCIO_CHECK_EQUAL(success, true); OCIO_CHECK_EQUAL(fval, 0.9572857022285461f);
     }
-    
+
     {
     float fval = 0.0f;
-    bool success = hexasciitofloat(fval, "AD10X53F");
-    OIIO_CHECK_EQUAL(success, false);
+    bool success = OCIO::hexasciitofloat(fval, "AD10X53F");
+    OCIO_CHECK_EQUAL(success, false);
     }
 }
 
 
-OIIO_ADD_TEST(FileFormatIridasLook, simple3d)
+OCIO_ADD_TEST(FileFormatIridasLook, simple3d)
 {
     std::ostringstream strebuf;
     strebuf << "<?xml version=\"1.0\" ?>" << "\n";
@@ -941,17 +916,17 @@ OIIO_ADD_TEST(FileFormatIridasLook, simple3d)
 
     // Read file
     std::string emptyString;
-    LocalFileFormat tester;
-    CachedFileRcPtr cachedFile = tester.Read(simple1D, emptyString);
-    LocalCachedFileRcPtr looklut = DynamicPtrCast<LocalCachedFile>(cachedFile);
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr cachedFile = tester.read(simple1D, emptyString);
+    OCIO::LocalCachedFileRcPtr looklut = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
 
     // Check LUT size is correct
-    OIIO_CHECK_EQUAL(looklut->lut3D->size[0], 8);
-    OIIO_CHECK_EQUAL(looklut->lut3D->size[1], 8);
-    OIIO_CHECK_EQUAL(looklut->lut3D->size[2], 8);
+    const auto & lutArray = looklut->lut3D->getArray();
+    const int lutSize = 8;
+    OCIO_CHECK_EQUAL(lutArray.getLength(), lutSize);
 
     // Check LUT values
-    OIIO_CHECK_EQUAL(looklut->lut3D->lut.size(), 8*8*8*3);
+    OCIO_CHECK_EQUAL(lutArray.getNumValues(), (size_t)8*8*8*3);
 
     double cube[8 * 8 * 8 * 3] = {
         -0.00000, -0.00000, -0.00000,
@@ -1469,13 +1444,41 @@ OIIO_ADD_TEST(FileFormatIridasLook, simple3d)
     };
 
     // check cube data
-    for(unsigned int i = 0; i < looklut->lut3D->lut.size(); ++i) {
-        OIIO_CHECK_CLOSE(cube[i], looklut->lut3D->lut[i], 1e-4);
+    int r = 0;
+    int g = 0;
+    int b = 0;
+
+    const int num3dentries = lutSize * lutSize * lutSize;
+
+    for(unsigned int i = 0; i < num3dentries; ++i)
+    {
+        // OpData::Lut3D Array index, b changes fastest.
+        const unsigned long arrayIdx =
+            OCIO::GetLut3DIndex_BlueFast(r, g, b,
+                                         lutSize, lutSize, lutSize);
+
+        OCIO_CHECK_CLOSE(cube[i * 3 + 0], lutArray[arrayIdx + 0], 1e-4);
+        OCIO_CHECK_CLOSE(cube[i * 3 + 1], lutArray[arrayIdx + 1], 1e-4);
+        OCIO_CHECK_CLOSE(cube[i * 3 + 2], lutArray[arrayIdx + 2], 1e-4);
+
+        // cube stores the LUT in red-fastest order.
+        r += 1;
+        if (r == lutSize)
+        {
+            r = 0;
+            g += 1;
+            if (g == lutSize)
+            {
+                g = 0;
+                b += 1;
+            }
+        }
+
     }
 }
 
 
-OIIO_ADD_TEST(FileFormatIridasLook, fail_on_mask)
+OCIO_ADD_TEST(FileFormatIridasLook, fail_on_mask)
 {
     std::ostringstream strebuf;
     strebuf << "<?xml version=\"1.0\" ?>" << "\n";
@@ -1538,12 +1541,12 @@ OIIO_ADD_TEST(FileFormatIridasLook, fail_on_mask)
     infile.str(strebuf.str());
 
     // Read file
-    LocalFileFormat tester;
+    OCIO::LocalFileFormat tester;
     std::string emptyString;
 
-    OIIO_CHECK_THROW_WHAT(
-        tester.Read(infile, emptyString),
-        Exception, "Cannot load .look LUT containing mask");
+    OCIO_CHECK_THROW_WHAT(
+        tester.read(infile, emptyString),
+        OCIO::Exception, "Cannot load .look LUT containing mask");
 
 }
 

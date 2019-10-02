@@ -1,30 +1,5 @@
-/*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 
 #ifndef INCLUDED_OCIO_OP_H
@@ -35,10 +10,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "DynamicProperty.h"
+#include "fileformats/FormatMetadata.h"
 #include "Mutex.h"
 
 OCIO_NAMESPACE_ENTER
 {
+
     struct AllocationData
     {
         Allocation allocation;
@@ -56,6 +34,9 @@ OCIO_NAMESPACE_ENTER
 
     class OpCPU;
     typedef OCIO_SHARED_PTR<OpCPU> OpCPURcPtr;
+    typedef OCIO_SHARED_PTR<const OpCPU> ConstOpCPURcPtr;
+    typedef std::vector<OpCPURcPtr> OpCPURcPtrVec;
+    typedef std::vector<ConstOpCPURcPtr> ConstOpCPURcPtrVec;
 
 
     // OpCPU is a helper class to define the CPU pixel processing method signature.
@@ -71,23 +52,20 @@ OCIO_NAMESPACE_ENTER
         OpCPU() {}
         virtual ~OpCPU() {}
 
-        virtual void apply(float * rgbaBuffer, long numPixels) const = 0;
+        // All the Ops assume float pointers (i.e. always float bit depths) except 
+        // the 1D LUT CPU Op where the finalization depends on input and output bit depths.
+        virtual void apply(const void * inImg, void * outImg, long numPixels) const = 0;
+
+        virtual bool hasDynamicProperty(DynamicPropertyType type) const;
+        virtual DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
+
     };
 
-    // This class is to be used when no processing is needed.
-    class NoOpCPU : public OpCPU
-    {
-    public:
-        NoOpCPU() : OpCPU() {}
-
-        virtual void apply(float *, long) const { };
-    };
-
-    
     class OpData;
     typedef OCIO_SHARED_PTR<OpData> OpDataRcPtr;
     typedef OCIO_SHARED_PTR<const OpData> ConstOpDataRcPtr;
-
+    typedef std::vector<OpDataRcPtr> OpDataVec;
+    typedef std::vector<ConstOpDataRcPtr> ConstOpDataVec;
 
     // The OpData class is a helper class to hold the data part of an Op 
     // with some basic behaviors (i.e. isNoop(), isIdentity() …). The Op class 
@@ -122,95 +100,38 @@ OCIO_NAMESPACE_ENTER
     {
     public:
 
-        // Enumeration of all possible operator types
+        // Enumeration of all possible operator types.
         enum Type
         {
-            Lut1DType,        // A 1D LUT
-            Lut3DType,        // A 3D LUT
-            MatrixType,       // A matrix
-            LogType,          // A log
-            ExponentType,     // An exponent
-            RangeType,        // A range
-            CDLType,          // A Color Decision List (aka CDL)
+            CDLType,           // A Color Decision List (aka CDL)
+            ExponentType,      // An exponent
+            ExposureContrastType, // An op for making interactive viewport adjustments
+            FixedFunctionType, // A fixed function (i.e. where the style defines the behavior)
+            GammaType,         // A gamma (i.e. enhancement of the Exponent)
+            LogType,           // A log
+            Lut1DType,         // A 1D LUT
+            Lut3DType,         // A 3D LUT
+            MatrixType,        // A matrix
+            RangeType,         // A range
+            ReferenceType,     // A reference to an external file
 
+            // Note: Keep at end of list.
             NoOpType
-        };
-
-        class Descriptions
-        {
-            typedef std::vector<std::string> List;
-            List m_descriptions;
-
-        public:
-            typedef typename List::size_type size_type;
-
-            typedef typename List::reference reference;
-            typedef typename List::const_reference const_reference;
-
-            typedef typename List::iterator iterator;
-            typedef typename List::const_iterator const_iterator;
-
-            Descriptions() = default;
-
-            Descriptions(const_reference str)
-            {
-                m_descriptions.push_back(str);
-            }
-
-            inline bool empty() const noexcept { return m_descriptions.empty(); }
-            size_type size() const noexcept { return m_descriptions.size(); }
-
-            Descriptions & operator+=(const_reference str)
-            {
-                m_descriptions.push_back(str);
-                return *this;
-            }
-
-            Descriptions& operator +=(const Descriptions& rhs)
-            {
-                if (this != &rhs)
-                {
-                    m_descriptions.insert(m_descriptions.end(),
-                                          rhs.m_descriptions.begin(),
-                                          rhs.m_descriptions.end());
-                }
-                return *this;
-            }
-
-            bool operator==(const Descriptions & other) const noexcept
-            {
-                if (this == &other) return true;
-                return (m_descriptions == other.m_descriptions);
-            }
-
-            bool operator!=(const Descriptions & other) const noexcept
-            {
-                return !(*this==other);
-            }
-
-            iterator begin() noexcept { return m_descriptions.begin(); }
-            const_iterator begin() const noexcept { return m_descriptions.begin(); }
-            const_iterator end() const noexcept { return m_descriptions.end(); }
-
-            reference operator[] (size_type n) { return m_descriptions[n]; }
-            const_reference operator[] (size_type n) const { return m_descriptions[n]; }
         };
 
     public:
         OpData(BitDepth inBitDepth, BitDepth outBitDepth);
         OpData(BitDepth inBitDepth, BitDepth outBitDepth,
-               const std::string & id, 
-               const Descriptions & desc);
-        OpData(const OpData& rhs);
-        OpData& operator=(const OpData& rhs);
+               const FormatMetadataImpl & info);
+        OpData(const OpData & rhs);
+        OpData & operator=(const OpData & rhs);
         virtual ~OpData();
 
-        inline const std::string & getId() const { return m_id; }
-        void setId(const std::string & id) { m_id = id; }
+        const std::string & getID() const;
+        void setID(const std::string & id);
 
-        inline const Descriptions & getDescriptions() const { return m_descriptions; }
-        inline Descriptions & getDescriptions() { return m_descriptions; }
-        void setDescriptions(const Descriptions & desc) { m_descriptions = desc; }
+        const std::string & getName() const;
+        void setName(const std::string & name);
 
         inline BitDepth getInputBitDepth() const { return m_inBitDepth; }
         virtual void setInputBitDepth(BitDepth in) { m_inBitDepth = in; }
@@ -241,7 +162,8 @@ OCIO_NAMESPACE_ENTER
         // returns true if the op's output does not combine input channels
         virtual bool hasChannelCrosstalk() const = 0;
 
-        virtual bool operator==(const OpData& other) const;
+        virtual bool operator==(const OpData & other) const;
+        bool operator!=(const OpData & other) const = delete;
 
         virtual void finalize() = 0;
 
@@ -249,34 +171,54 @@ OCIO_NAMESPACE_ENTER
         // and Op::finalize() consumes it to compute the Op cache identifier.
         virtual std::string getCacheID() const { return m_cacheID; }
 
+        // FormatMetadata.
+        FormatMetadataImpl & getFormatMetadata() { return m_metadata;  }
+        const FormatMetadataImpl & getFormatMetadata() const { return m_metadata; }
+
     protected:
         mutable Mutex m_mutex;
         mutable std::string m_cacheID;
 
     private:
-        std::string m_id;
-        Descriptions m_descriptions;
-        BitDepth m_inBitDepth;
-        BitDepth m_outBitDepth;
+        FormatMetadataImpl m_metadata;
+        BitDepth           m_inBitDepth;
+        BitDepth           m_outBitDepth;
     };
     
     class Op;
     typedef OCIO_SHARED_PTR<Op> OpRcPtr;
     typedef OCIO_SHARED_PTR<const Op> ConstOpRcPtr;
-    typedef std::vector<OpRcPtr> OpRcPtrVec;
+    class OpRcPtrVec;
     
     std::string SerializeOpVec(const OpRcPtrVec & ops, int indent=0);
     bool IsOpVecNoOp(const OpRcPtrVec & ops);
     
-    void FinalizeOpVec(OpRcPtrVec & opVec, bool optimize=true);
-    
-    void OptimizeOpVec(OpRcPtrVec & result);
-    
+    // Sets all ops to F32 and finalize them.
+    void FinalizeOpVec(OpRcPtrVec & opVec, FinalizationFlags fFlags);
+
+    void OptimizeOpVec(OpRcPtrVec & result, OptimizationFlags oFlags);
+    void OptimizeOpVec(OpRcPtrVec & result,
+                       const BitDepth & inBitDepth,
+                       const BitDepth & outBitDepth,
+                       OptimizationFlags oFlags);
+
+    void UnifyDynamicProperties(OpRcPtrVec & ops);
+   
+    void CreateOpVecFromOpData(OpRcPtrVec & ops,
+                               const ConstOpDataRcPtr & opData,
+                               TransformDirection dir);
+
+    void CreateOpVecFromOpDataVec(OpRcPtrVec & ops,
+                                  const ConstOpDataVec & opDataVec,
+                                  TransformDirection dir);
+
     class Op
     {
         public:
             virtual ~Op();
             
+            virtual TransformDirection getDirection() const noexcept = 0;
+
             virtual OpRcPtr clone() const = 0;
             
             // Something short, and printable.
@@ -285,7 +227,10 @@ OCIO_NAMESPACE_ENTER
             
             // This should yield a string of not unreasonable length.
             // It can only be called after finalize()
-            virtual std::string getCacheID() const { return m_cacheID; }            
+            virtual std::string getCacheID() const { return m_cacheID; }
+
+            virtual bool isNoOpType() const { return m_data->getType() == OpData::NoOpType; }
+
             // Is the processing a noop? I.e, does apply do nothing.
             // (Even no-ops may define Allocation though.)
             // This must be implemented in a manner where its valid to
@@ -316,18 +261,22 @@ OCIO_NAMESPACE_ENTER
             // This is called a single time after construction.
             // Final pre-processing and safety checks should happen here,
             // rather than in the constructor.
-            
-            virtual void finalize() = 0;
-            
+
+            virtual void finalize(FinalizationFlags fFlags) = 0;
+
             // Render the specified pixels.
             //
             // This must be safe to call in a multi-threaded context.
             // Ops that have mutable data internally, or rely on external
             // caching, must thus be appropriately mutexed.
-            
-            virtual void apply(float* rgbaBuffer, long numPixels) const = 0;
-            
-            
+
+            virtual void apply(void * img, long numPixels) const
+            { getCPUOp()->apply(img, img, numPixels); }
+
+            virtual void apply(const void * inImg, void * outImg, long numPixels) const
+            { getCPUOp()->apply(inImg, outImg, numPixels); }
+
+
             // Is this op supported by the legacy shader text generator ?
             virtual bool supportedByLegacyShader() const { return true; }
 
@@ -337,8 +286,17 @@ OCIO_NAMESPACE_ENTER
             virtual BitDepth getInputBitDepth() const { return m_data->getInputBitDepth(); }
             virtual BitDepth getOutputBitDepth() const { return m_data->getOutputBitDepth(); }
 
-            virtual void setInputBitDepth(BitDepth bitdepth) { m_data->setInputBitDepth(bitdepth); }
-            virtual void setOutputBitDepth(BitDepth bitdepth) { m_data->setOutputBitDepth(bitdepth); }
+            virtual void setInputBitDepth(BitDepth bitdepth);
+            virtual void setOutputBitDepth(BitDepth bitdepth);
+
+            virtual bool isDynamic() const;
+            virtual bool hasDynamicProperty(DynamicPropertyType type) const;
+            virtual DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
+            virtual void replaceDynamicProperty(DynamicPropertyType type,
+                                                DynamicPropertyImplRcPtr prop);
+
+            // On-demand creation of the OpCPU instance.
+            virtual ConstOpCPURcPtr getCPUOp() const = 0;
 
             ConstOpDataRcPtr data() const { return std::const_pointer_cast<const OpData>(m_data); }
 
@@ -349,12 +307,85 @@ OCIO_NAMESPACE_ENTER
             std::string m_cacheID;
 
         private:
-            Op(const Op &);
-            Op& operator= (const Op &);
+            Op(const Op &) = delete;
+            Op& operator= (const Op &) = delete;
+
+            // The OpData instance holds the parameters (LUT values, matrix coefs, etc.) being used.
             OpDataRcPtr m_data;
     };
     
     std::ostream& operator<< (std::ostream&, const Op&);
+
+    // The class handles a list of ops and enforces bit depth consistency between ops.
+    //
+    // Note: List only manages shared pointers i.e. it never clones ops.
+    class OpRcPtrVec
+    {
+        typedef std::vector<OpRcPtr> Type;
+        Type m_ops;
+        FormatMetadataImpl m_metadata;
+
+    public:
+        typedef Type::value_type value_type;
+        typedef Type::size_type size_type;
+
+        typedef Type::iterator iterator;
+        typedef Type::const_iterator const_iterator;
+
+        typedef Type::reference reference;
+        typedef Type::const_reference const_reference;
+
+        OpRcPtrVec();
+        ~OpRcPtrVec() {}
+
+        OpRcPtrVec(const OpRcPtrVec & v);
+        OpRcPtrVec & operator=(const OpRcPtrVec & v);
+        // Note: It copies elements i.e. no clone.
+        OpRcPtrVec & operator+=(const OpRcPtrVec & v);
+
+        size_type size() const { return m_ops.size(); }
+
+        iterator begin() noexcept { return m_ops.begin(); }
+        const_iterator begin() const noexcept { return m_ops.begin(); }
+        iterator end() noexcept { return m_ops.end(); }
+        const_iterator end() const noexcept { return m_ops.end(); }
+
+        const OpRcPtr & operator[](size_type idx) const { return m_ops[idx]; }
+
+        iterator erase(const_iterator position);       
+        iterator erase(const_iterator first, const_iterator last);
+
+        // Insert at the 'position' the elements from the range ['first', 'last'[ 
+        // respecting the element's order. Inserting elements at a given position 
+        // shifts elements starting at 'position' to the right.
+        // 
+        // Note: Inserting an empty range will do nothing and inserting 
+        // in an empty list appends elements from the range ['first', 'last'[.
+        //
+        // Note: It copies elements i.e. no clone.
+        void insert(const_iterator position, const_iterator first, const_iterator last);
+
+        void clear() noexcept { m_ops.clear(); }
+        bool empty() const noexcept { return m_ops.empty(); }
+
+        void push_back(const value_type & val);
+
+        const_reference back() const;
+        const_reference front() const;
+
+        // Validate the bit depth consistency between Ops.
+        void validate() const;
+
+        OpRcPtrVec clone() const;
+
+        FormatMetadataImpl & getFormatMetadata() { return m_metadata; }
+        const FormatMetadataImpl & getFormatMetadata() const { return m_metadata; }
+
+    protected:
+        void adjustBitDepths();
+
+    };
+
 }
 OCIO_NAMESPACE_EXIT
 

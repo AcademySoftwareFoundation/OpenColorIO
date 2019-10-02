@@ -1,30 +1,6 @@
-/*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
-All Rights Reserved.
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -40,7 +16,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Platform.h"
 #include "pystring/pystring.h"
 
-#if !defined(WINDOWS)
+#if !defined(_WIN32)
 #include <sys/param.h>
 #else
 #include <direct.h>
@@ -50,7 +26,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #if defined(__APPLE__) && !defined(__IPHONE__)
 #include <crt_externs.h> // _NSGetEnviron()
 #include <unistd.h>
-#elif !defined(WINDOWS)
+#elif !defined(_WIN32)
 #include <unistd.h>
 extern char **environ;
 #endif
@@ -141,13 +117,11 @@ OCIO_NAMESPACE_ENTER
         g_fastFileHashCache.clear();
     }
     
-    namespace pystring
+    namespace
     {
-    namespace os
-    {
-        std::string getcwd()
+        std::string GetCwd()
         {
-#ifdef WINDOWS
+#ifdef _WIN32
             char path[MAXPATHLEN];
             _getcwd(path, MAXPATHLEN);
             return path;
@@ -165,17 +139,13 @@ OCIO_NAMESPACE_ENTER
             return std::string(&current_dir[0]);
 #endif
         }
-        
-    namespace path
+    }
+
+    std::string AbsPath(const std::string & path)
     {
-        std::string abspath(const std::string & path)
-        {
-            std::string p = path;
-            if(!isabs(p)) p = join(getcwd(), p);
-            return normpath(p);
-        }
-    } // namespace path
-    } // namespace os
+        std::string p = path;
+        if(!pystring::os::path::isabs(p)) p = pystring::os::path::join(GetCwd(), p);
+        return pystring::os::path::normpath(p);
     }
     
     namespace
@@ -191,8 +161,6 @@ OCIO_NAMESPACE_ENTER
             return environ;
 #endif
         }
-        
-        const int MAX_PATH_LENGTH = 4096;
     }
     
     void LoadEnvironment(EnvMap & map, bool update)
@@ -260,9 +228,9 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
+#include "UnitTest.h"
 
-OIIO_ADD_TEST(PathUtils, EnvExpand)
+OCIO_ADD_TEST(PathUtils, EnvExpand)
 {
     // build env by hand for unit test
     OCIO::EnvMap env_map; // = OCIO::GetEnvMap();
@@ -276,7 +244,7 @@ OIIO_ADD_TEST(PathUtils, EnvExpand)
     std::string foo = "/a/b/${TEST1}/${TEST1NG}/$TEST1/$TEST1NG/${FOO_${TEST1}}/";
     std::string foo_result = "/a/b/foo.bar/bar.foo/foo.bar/bar.foo/cheese/";
     std::string testresult = OCIO::EnvExpand(foo, env_map);
-    OIIO_CHECK_ASSERT( testresult == foo_result );
+    OCIO_CHECK_ASSERT( testresult == foo_result );
 }
 
 #endif // OCIO_BUILD_TESTS

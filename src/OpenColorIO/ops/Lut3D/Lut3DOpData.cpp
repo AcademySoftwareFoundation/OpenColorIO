@@ -1,30 +1,5 @@
-/*
-Copyright (c) 2018 Autodesk Inc., et al.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 #include <sstream>
 
@@ -43,36 +18,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
-// Allow us to temporarily manipulate the style without cloning the object.
-class Lut3DStyleGuard
-{
-public:
-    Lut3DStyleGuard(ConstLut3DOpDataRcPtr & lut)
-        : m_wasFast(lut->getInvStyle() == Lut3DOpData::INV_FAST)
-    {
-        m_lut = std::const_pointer_cast<Lut3DOpData>(lut);
-        m_lut->setInvStyle(Lut3DOpData::INV_EXACT);
-    }
-
-    ~Lut3DStyleGuard()
-    {
-        if (m_wasFast)
-        {
-            m_lut->setInvStyle(Lut3DOpData::INV_FAST);
-        }
-    }
-
-private:
-    Lut3DOpDataRcPtr m_lut;
-    bool             m_wasFast;
-};
-
 Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut)
 {
     if (lut->getDirection() != TRANSFORM_DIR_INVERSE)
     {
         throw Exception("MakeFastLut3DFromInverse expects an inverse LUT");
     }
+
+    // The composition needs to use the EXACT renderer.
+    // (Also avoids infinite loop.)
+    // So temporarily set the style to EXACT.
+    LutStyleGuard<Lut3DOpData> guard(*lut);
 
     // Make a domain for the composed Lut3D.
     // TODO: Using a large number like 48 here is better for accuracy, 
@@ -84,11 +40,6 @@ Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut)
     // actual depth so that scaling is done correctly.
     newDomain->setInputBitDepth(lut->getInputBitDepth());
     newDomain->setOutputBitDepth(lut->getInputBitDepth());
-
-    // The composition needs to use the INV_EXACT renderer.
-    // (Also avoids infinite loop.)
-    // So temporarily set the style to INV_EXACT.
-    Lut3DStyleGuard guard(lut);
 
     // Compose the LUT newDomain with our inverse LUT (using INV_EXACT style).
     Lut3DOpData::Compose(newDomain, lut);
@@ -102,6 +53,7 @@ Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut)
     return newDomain;
 }
 
+// 129 allows for a MESH dimension of 7 in the 3dl file format.
 const unsigned long Lut3DOpData::maxSupportedLength = 129;
 
 // Functional composition is a concept from mathematics where two functions
@@ -139,8 +91,8 @@ void Lut3DOpData::Compose(Lut3DOpDataRcPtr & A,
     {
         // The range of the first LUT becomes the domain to interp in the second.
 
-        const float iScale = 1.f / GetBitDepthMaxValue(A->getOutputBitDepth());
-        const float iScale4[4] = { iScale, iScale, iScale, 1.0f };
+        const double iScale = 1.f / GetBitDepthMaxValue(A->getOutputBitDepth());
+        const double iScale4[4] = { iScale, iScale, iScale, 1.0 };
         CreateScaleOp(ops, iScale4, TRANSFORM_DIR_FORWARD);
 
         // Use the original domain.
@@ -156,8 +108,7 @@ void Lut3DOpData::Compose(Lut3DOpDataRcPtr & A,
         //       Perhaps add a utility function to be shared with the constructor.
         domain = std::make_shared<Lut3DOpData>(A->getInputBitDepth(),
                                                BIT_DEPTH_F32,
-                                               A->getId(),
-                                               A->getDescriptions(),
+                                               A->getFormatMetadata(),
                                                A->getInterpolation(),
                                                min_sz);
 
@@ -170,17 +121,16 @@ void Lut3DOpData::Compose(Lut3DOpDataRcPtr & A,
     Lut3DOpDataRcPtr clonedB = B->clone();
     CreateLut3DOp(ops, clonedB, TRANSFORM_DIR_FORWARD);
 
-    const float iScale = GetBitDepthMaxValue(B->getOutputBitDepth());
-
-    const float iScale4[4] = { iScale, iScale, iScale, 1.0f };
+    const double iScale = GetBitDepthMaxValue(B->getOutputBitDepth());
+    const double iScale4[4] = { iScale, iScale, iScale, 1.0 };
     CreateScaleOp(ops, iScale4, TRANSFORM_DIR_FORWARD);
 
-    OpData::Descriptions newDesc = A->getDescriptions();
-    newDesc += B->getDescriptions();
     // TODO: May want to revisit metadata propagation.
+    FormatMetadataImpl newDesc = A->getFormatMetadata();
+    newDesc.combine(B->getFormatMetadata());
+
     A = std::make_shared<Lut3DOpData>(A->getInputBitDepth(),
                                       B->getOutputBitDepth(),
-                                      A->getId() + B->getId(),
                                       newDesc,
                                       A->getInterpolation(),
                                       2);  // we replace it anyway
@@ -200,7 +150,7 @@ void Lut3DOpData::Compose(Lut3DOpDataRcPtr & A,
     // TODO: Code to handle dynamic properties should go here.
 }
 
-Lut3DOpData::Lut3DArray::Lut3DArray(long length,
+Lut3DOpData::Lut3DArray::Lut3DArray(unsigned long length,
                                     BitDepth outBitDepth)
 {
     resize(length, getMaxColorComponents());
@@ -229,7 +179,7 @@ void Lut3DOpData::Lut3DArray::fill(BitDepth outBitDepth)
     Array::Values& values = getValues();
 
     const float stepValue 
-        = GetBitDepthMaxValue(outBitDepth) / ((float)length - 1.0f);
+        = (float)GetBitDepthMaxValue(outBitDepth) / ((float)length - 1.0f);
 
     const long maxEntries = length*length*length;
 
@@ -250,7 +200,7 @@ bool Lut3DOpData::Lut3DArray::isIdentity(BitDepth outBitDepth) const
     // aside from possibly a scaling for bit-depth conversion.
 
     const float stepSize =
-        GetBitDepthMaxValue(outBitDepth) / ((float)length - 1.0f);
+        (float)GetBitDepthMaxValue(outBitDepth) / ((float)length - 1.0f);
 
     const long maxEntries = length*length*length;
 
@@ -279,6 +229,19 @@ bool Lut3DOpData::Lut3DArray::isIdentity(BitDepth outBitDepth) const
         }
     }
     return true;
+}
+
+void Lut3DOpData::Lut3DArray::resize(unsigned long length, unsigned long numColorComponents)
+{
+    if (length > maxSupportedLength)
+    {
+        std::ostringstream oss;
+        oss << "LUT 3D: Grid size '" << length
+            << "' must not be greater than '" << maxSupportedLength << "'.";
+        throw Exception(oss.str().c_str());
+    }
+    Array::resize(length, numColorComponents);
+
 }
 
 unsigned long Lut3DOpData::Lut3DArray::getNumValues() const
@@ -326,26 +289,34 @@ void Lut3DOpData::Lut3DArray::scale(float scaleFactor)
     }
 }
 
-Lut3DOpData::Lut3DOpData(long gridSize)
+Lut3DOpData::Lut3DOpData(unsigned long gridSize)
     : OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
     , m_interpolation(INTERP_DEFAULT)
     , m_array(gridSize, getOutputBitDepth())
     , m_direction(TRANSFORM_DIR_FORWARD)
-    , m_invStyle(INV_FAST)
+    , m_invQuality(LUT_INVERSION_FAST)
+{
+}
+
+Lut3DOpData::Lut3DOpData(long gridSize, TransformDirection dir)
+    : OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
+    , m_interpolation(INTERP_DEFAULT)
+    , m_array(gridSize, getOutputBitDepth())
+    , m_direction(dir)
+    , m_invQuality(LUT_INVERSION_FAST)
 {
 }
 
 Lut3DOpData::Lut3DOpData(BitDepth inBitDepth,
                          BitDepth outBitDepth,
-                         const std::string& id,
-                         const Descriptions& descriptions,
+                         const FormatMetadataImpl & metadata,
                          Interpolation interpolation,
-                         long gridSize)
-    : OpData(inBitDepth, outBitDepth, id, descriptions)
+                         unsigned long gridSize)
+    : OpData(inBitDepth, outBitDepth, metadata)
     , m_interpolation(interpolation)
     , m_array(gridSize, getOutputBitDepth())
     , m_direction(TRANSFORM_DIR_FORWARD)
-    , m_invStyle(INV_FAST)
+    , m_invQuality(LUT_INVERSION_FAST)
 {
 }
 
@@ -368,6 +339,7 @@ Interpolation Lut3DOpData::getConcreteInterpolation() const
 
     case INTERP_DEFAULT:
     case INTERP_LINEAR:
+    case INTERP_CUBIC:
     case INTERP_NEAREST:
         // NB: In OCIO v2, INTERP_NEAREST is implemented as trilinear,
         // this is a change from OCIO v1.
@@ -378,9 +350,54 @@ Interpolation Lut3DOpData::getConcreteInterpolation() const
     }
 }
 
-void Lut3DOpData::setInvStyle(InvStyle style)
+LutInversionQuality Lut3DOpData::getConcreteInversionQuality() const
 {
-    m_invStyle = style;
+    switch (m_invQuality)
+    {
+    case LUT_INVERSION_EXACT:
+    case LUT_INVERSION_BEST:
+        return LUT_INVERSION_EXACT;
+
+    case LUT_INVERSION_FAST:
+    case LUT_INVERSION_DEFAULT:
+    default:
+        return LUT_INVERSION_FAST;
+    }
+}
+
+void Lut3DOpData::setInversionQuality(LutInversionQuality style)
+{
+    m_invQuality = style;
+}
+
+void Lut3DOpData::setArrayFromRedFastestOrder(const std::vector<float> & lut)
+{
+    Array & lutArray = getArray();
+    const auto lutSize = lutArray.getLength();
+
+    if (lutSize * lutSize * lutSize * 3 != lut.size())
+    {
+        throw Exception("Lut3DOpData length does not match the vector size.");
+    }
+
+    for (unsigned long b = 0; b < lutSize; ++b)
+    {
+        for (unsigned long g = 0; g < lutSize; ++g)
+        {
+            for (unsigned long r = 0; r < lutSize; ++r)
+            {
+                // Lut3DOpData Array index. Blue changes fastest.
+                const unsigned long blueFastIdx = 3 * ((r*lutSize + g)*lutSize + b);
+
+                // Float array index. Red changes fastest.
+                const unsigned long redFastIdx = 3 * ((b*lutSize + g)*lutSize + r);
+
+                lutArray[blueFastIdx + 0] = lut[redFastIdx + 0];
+                lutArray[blueFastIdx + 1] = lut[redFastIdx + 1];
+                lutArray[blueFastIdx + 2] = lut[redFastIdx + 2];
+            }
+        }
+    }
 }
 
 namespace
@@ -395,6 +412,7 @@ bool IsValid(const Interpolation & interpolation)
     case INTERP_LINEAR:
     case INTERP_NEAREST:
         return true;
+    case INTERP_CUBIC:
     case INTERP_UNKNOWN:
     default:
         return false;
@@ -431,9 +449,9 @@ void Lut3DOpData::validate() const
 
     if (getArray().getLength()>maxSupportedLength)
     {
+        // This should never happen. Enforced by resize.
         std::ostringstream oss;
-        oss << "Lut3D length: ";
-        oss << getArray().getLength();
+        oss << "Lut3D length: " << getArray().getLength();
         oss << " is not supported. ";
 
         throw Exception(oss.str().c_str());
@@ -457,8 +475,8 @@ void Lut3DOpData::setOutputBitDepth(BitDepth out)
     {
         // Scale factor is max_new_depth/max_old_depth.
         const float scaleFactor
-            = GetBitDepthMaxValue(out)
-            / GetBitDepthMaxValue(getOutputBitDepth());
+            = (float)(GetBitDepthMaxValue(out))
+            / (float)GetBitDepthMaxValue(getOutputBitDepth());
 
         // Scale array for the new bit-depth if scaleFactor != 1.
         m_array.scale(scaleFactor);
@@ -476,8 +494,8 @@ void Lut3DOpData::setInputBitDepth(BitDepth in)
 
         // Scale factor is max_new_depth/max_old_depth.
         const float scaleFactor
-            = GetBitDepthMaxValue(in)
-            / GetBitDepthMaxValue(getInputBitDepth());
+            = (float)(GetBitDepthMaxValue(in))
+            / (float)GetBitDepthMaxValue(getInputBitDepth());
 
         // Scale array for the new bit-depth if scaleFactor != 1.
         m_array.scale(scaleFactor);
@@ -494,6 +512,7 @@ OpDataRcPtr Lut3DOpData::getIdentityReplacement() const
     return 
         OpDataRcPtr(new RangeOpData(inBD,
                                     outBD,
+                                    FormatMetadataImpl(METADATA_ROOT),
                                     0.,
                                     GetBitDepthMaxValue(inBD),
                                     0.,
@@ -512,18 +531,13 @@ bool Lut3DOpData::operator==(const OpData & other) const
 {
     if (this == &other) return true;
 
-    if (getType() != other.getType()) return false;
+    if (!OpData::operator==(other)) return false;
 
     const Lut3DOpData* lop = static_cast<const Lut3DOpData*>(&other);
 
+    // NB: The m_invQuality is not currently included.
     if (m_direction != lop->m_direction
-        || m_interpolation != lop->m_interpolation
-        || m_invStyle != lop->m_invStyle)
-    {
-        return false;
-    }
-
-    if (!OpData::operator==(other))
+        || m_interpolation != lop->m_interpolation)
     {
         return false;
     }
@@ -589,34 +603,17 @@ Lut3DOpDataRcPtr Lut3DOpData::inverse() const
     invLut->OpData::setInputBitDepth(getOutputBitDepth());
     invLut->OpData::setOutputBitDepth(in);
 
+    // Note that any existing metadata could become stale at this point but
+    // trying to update it is also challenging since inverse() is sometimes
+    // called even during the creation of new ops.
     return invLut;
-}
-
-namespace
-{
-const char* GetInvStyleName(Lut3DOpData::InvStyle invStyle)
-{
-    switch (invStyle)
-    {
-    case Lut3DOpData::INV_EXACT:
-    {
-        return "exact";
-        break;
-    }
-    case Lut3DOpData::INV_FAST:
-    {
-        return "fast";
-        break;
-    }
-    }
-
-    throw Exception("3D LUT has an invalid inverse style.");
-}
 }
 
 void Lut3DOpData::finalize()
 {
     AutoMutex lock(m_mutex);
+
+    validate();
 
     md5_state_t state;
     md5_byte_t digest[16];
@@ -632,8 +629,8 @@ void Lut3DOpData::finalize()
     cacheIDStream << InterpolationToString(m_interpolation) << " ";
     cacheIDStream << TransformDirectionToString(m_direction) << " ";
     cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
-    cacheIDStream << BitDepthToString(getOutputBitDepth()) << " ";
-    cacheIDStream << GetInvStyleName(m_invStyle);
+    cacheIDStream << BitDepthToString(getOutputBitDepth());
+    // NB: The m_invQuality is not currently included.
 
     m_cacheID = cacheIDStream.str();
 }
@@ -644,126 +641,132 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
-#include "UnitTestFiles.h"
+#include "UnitTest.h"
+#include "UnitTestUtils.h"
 
-OIIO_ADD_TEST(OpDataLut3D, TestEmpty)
+OCIO_ADD_TEST(Lut3DOpData, empty)
 {
     OCIO::Lut3DOpData l(2);
-    OIIO_CHECK_NO_THROW(l.validate());
-    OIIO_CHECK_ASSERT(l.isIdentity());
-    OIIO_CHECK_ASSERT(!l.isNoOp());
-    OIIO_CHECK_EQUAL(l.getType(), OCIO::OpData::Lut3DType);
-    OIIO_CHECK_EQUAL(l.getInvStyle(), OCIO::Lut3DOpData::INV_FAST);
-    OIIO_CHECK_EQUAL(l.getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_NO_THROW(l.validate());
+    OCIO_CHECK_ASSERT(l.isIdentity());
+    OCIO_CHECK_ASSERT(!l.isNoOp());
+    OCIO_CHECK_EQUAL(l.getType(), OCIO::OpData::Lut3DType);
+    OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_FAST);
+    OCIO_CHECK_EQUAL(l.getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_ASSERT(l.hasChannelCrosstalk());
 }
 
-OIIO_ADD_TEST(OpDataLut3D, TestAccessors)
+OCIO_ADD_TEST(Lut3DOpData, accessors)
 {
     OCIO::Interpolation interpol = OCIO::INTERP_LINEAR;
 
+    OCIO::FormatMetadataImpl metadata(OCIO::METADATA_ROOT);
+    metadata.addAttribute(OCIO::METADATA_ID, "uid");
+
     OCIO::Lut3DOpData l(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                        "uid", OCIO::OpData::Descriptions(),
+                        metadata,
                         interpol, 33);
 
-    OIIO_CHECK_EQUAL(l.getInterpolation(), interpol);
-    OIIO_CHECK_ASSERT(l.isIdentity());
+    OCIO_CHECK_EQUAL(l.getInterpolation(), interpol);
+    OCIO_CHECK_ASSERT(l.isIdentity());
 
-    OIIO_CHECK_NO_THROW(l.validate());
+    OCIO_CHECK_NO_THROW(l.validate());
 
     l.getArray()[0] = 1.0f;
 
-    OIIO_CHECK_ASSERT(!l.isIdentity());
-    OIIO_CHECK_NO_THROW(l.validate());
+    OCIO_CHECK_ASSERT(!l.isIdentity());
+    OCIO_CHECK_NO_THROW(l.validate());
 
     interpol = OCIO::INTERP_TETRAHEDRAL;
     l.setInterpolation(interpol);
-    OIIO_CHECK_EQUAL(l.getInterpolation(), interpol);
+    OCIO_CHECK_EQUAL(l.getInterpolation(), interpol);
 
-    OIIO_CHECK_EQUAL(l.getInvStyle(), OCIO::Lut3DOpData::INV_FAST);
-    l.setInvStyle(OCIO::Lut3DOpData::INV_EXACT);
-    OIIO_CHECK_EQUAL(l.getInvStyle(), OCIO::Lut3DOpData::INV_EXACT);
-    l.setInvStyle(OCIO::Lut3DOpData::INV_FAST);
+    OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_FAST);
+    l.setInversionQuality(OCIO::LUT_INVERSION_BEST);
+    OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_BEST);
+    OCIO_CHECK_EQUAL(l.getConcreteInversionQuality(), OCIO::LUT_INVERSION_EXACT);
+    l.setInversionQuality(OCIO::LUT_INVERSION_FAST);
 
-    OIIO_CHECK_EQUAL(l.getArray().getLength(), (long)33);
-    OIIO_CHECK_EQUAL(l.getArray().getNumValues(), (long)33 * 33 * 33 * 3);
-    OIIO_CHECK_EQUAL(l.getArray().getNumColorComponents(), (long)3);
+    OCIO_CHECK_EQUAL(l.getArray().getLength(), (long)33);
+    OCIO_CHECK_EQUAL(l.getArray().getNumValues(), (long)33 * 33 * 33 * 3);
+    OCIO_CHECK_EQUAL(l.getArray().getNumColorComponents(), (long)3);
 
     l.getArray().resize(17, 3);
 
-    OIIO_CHECK_EQUAL(l.getArray().getLength(), (long)17);
-    OIIO_CHECK_EQUAL(l.getArray().getNumValues(), (long)17 * 17 * 17 * 3);
-    OIIO_CHECK_EQUAL(l.getArray().getNumColorComponents(), (long)3);
-    OIIO_CHECK_NO_THROW(l.validate());
+    OCIO_CHECK_EQUAL(l.getArray().getLength(), (long)17);
+    OCIO_CHECK_EQUAL(l.getArray().getNumValues(), (long)17 * 17 * 17 * 3);
+    OCIO_CHECK_EQUAL(l.getArray().getNumColorComponents(), (long)3);
+    OCIO_CHECK_NO_THROW(l.validate());
 }
 
-OIIO_ADD_TEST(OpDataLut3D, TestDiffBitdepth)
+OCIO_ADD_TEST(Lut3DOpData, diff_bitdepth)
 {
+    OCIO::FormatMetadataImpl metadata(OCIO::METADATA_ROOT);
+    metadata.addAttribute(OCIO::METADATA_ID, "uid");
+
     OCIO::Interpolation interpol = OCIO::INTERP_LINEAR;
     OCIO::Lut3DOpData l1(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8,
-                         "uid", OCIO::OpData::Descriptions(),
+                         metadata,
                          interpol, 33);
     OCIO::Lut3DOpData l2(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT10,
-                         "uid", OCIO::OpData::Descriptions(),
+                         metadata,
                          interpol, 33);
 
-    OIIO_CHECK_ASSERT(l1.isIdentity());
-    OIIO_CHECK_NO_THROW(l1.validate());
-    OIIO_CHECK_ASSERT(l2.isIdentity());
-    OIIO_CHECK_NO_THROW(l2.validate());
+    OCIO_CHECK_ASSERT(l1.isIdentity());
+    OCIO_CHECK_NO_THROW(l1.validate());
+    OCIO_CHECK_ASSERT(l2.isIdentity());
+    OCIO_CHECK_NO_THROW(l2.validate());
 
     const float coeff
-        = OCIO::GetBitDepthMaxValue(l2.getOutputBitDepth())
-            / OCIO::GetBitDepthMaxValue(l2.getInputBitDepth());
+        = (float)(OCIO::GetBitDepthMaxValue(l2.getOutputBitDepth()))
+            / (float)OCIO::GetBitDepthMaxValue(l2.getInputBitDepth());
 
     // To validate the result, compute the expected results
     // not using the Lut3DOp algorithm.
     const float error = 1e-4f;
     for (unsigned long idx = 0; idx<l2.getArray().getLength(); ++idx)
     {
-        OIIO_CHECK_CLOSE(l1.getArray().getValues()[idx * 3 + 0] * coeff,
+        OCIO_CHECK_CLOSE(l1.getArray().getValues()[idx * 3 + 0] * coeff,
                          l2.getArray().getValues()[idx * 3 + 0],
                          error);
-        OIIO_CHECK_CLOSE(l1.getArray().getValues()[idx * 3 + 1] * coeff,
+        OCIO_CHECK_CLOSE(l1.getArray().getValues()[idx * 3 + 1] * coeff,
                          l2.getArray().getValues()[idx * 3 + 1],
                          error);
-        OIIO_CHECK_CLOSE(l1.getArray().getValues()[idx * 3 + 2] * coeff,
+        OCIO_CHECK_CLOSE(l1.getArray().getValues()[idx * 3 + 2] * coeff,
                          l2.getArray().getValues()[idx * 3 + 2],
                          error);
     }
 }
 
-OIIO_ADD_TEST(OpDataLut3D, Clone)
+OCIO_ADD_TEST(Lut3DOpData, clone)
 {
     OCIO::Lut3DOpData ref(33);
     ref.getArray()[1] = 0.1f;
 
     OCIO::Lut3DOpDataRcPtr pClone = ref.clone();
 
-    OIIO_CHECK_ASSERT(pClone.get());
-    OIIO_CHECK_ASSERT(!pClone->isNoOp());
-    OIIO_CHECK_ASSERT(!pClone->isIdentity());
-    OIIO_CHECK_NO_THROW(pClone->validate());
-    OIIO_CHECK_ASSERT(pClone->getArray()==ref.getArray());
+    OCIO_CHECK_ASSERT(pClone.get());
+    OCIO_CHECK_ASSERT(!pClone->isNoOp());
+    OCIO_CHECK_ASSERT(!pClone->isIdentity());
+    OCIO_CHECK_NO_THROW(pClone->validate());
+    OCIO_CHECK_ASSERT(pClone->getArray()==ref.getArray());
 }
 
-OIIO_ADD_TEST(OpDataLut3D, NotSupportedLength)
+OCIO_ADD_TEST(Lut3DOpData, not_supported_length)
 {
-    const OCIO::Lut3DOpData ref1(OCIO::Lut3DOpData::maxSupportedLength);
-
-    OIIO_CHECK_NO_THROW(ref1.validate());
-
-    const OCIO::Lut3DOpData ref2(OCIO::Lut3DOpData::maxSupportedLength + 1);
-
-    OIIO_CHECK_THROW_WHAT(ref2.validate(), OCIO::Exception, "is not supported");
-
+    OCIO_CHECK_NO_THROW(OCIO::Lut3DOpData{ OCIO::Lut3DOpData::maxSupportedLength });
+    OCIO_CHECK_THROW_WHAT(OCIO::Lut3DOpData{ OCIO::Lut3DOpData::maxSupportedLength + 1 },
+                          OCIO::Exception, "must not be greater");
 }
 
-OIIO_ADD_TEST(OpDataLut3D, OuputDepthScaling)
+OCIO_ADD_TEST(Lut3DOpData, ouput_depth_scaling)
 {
+    OCIO::FormatMetadataImpl metadata(OCIO::METADATA_ROOT);
+    metadata.addAttribute(OCIO::METADATA_ID, "uid");
+
     OCIO::Interpolation interpol = OCIO::INTERP_LINEAR;
     OCIO::Lut3DOpData ref(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT10,
-                          "uid", OCIO::OpData::Descriptions(),
+                          metadata,
                           interpol, 33);
 
     // Get the array values and keep them to compare later.
@@ -774,103 +777,140 @@ OIIO_ADD_TEST(OpDataLut3D, OuputDepthScaling)
     const OCIO::BitDepth newBitdepth = OCIO::BIT_DEPTH_UINT16;
 
     const float factor
-        = OCIO::GetBitDepthMaxValue(newBitdepth)
-            / OCIO::GetBitDepthMaxValue(initialBitdepth);
+        = (float)(OCIO::GetBitDepthMaxValue(newBitdepth))
+            / (float)OCIO::GetBitDepthMaxValue(initialBitdepth);
 
     ref.setOutputBitDepth(newBitdepth);
     // Now we need to make sure that the bitdepth was changed from the overriden
     // method.
-    OIIO_CHECK_EQUAL(ref.getOutputBitDepth(), newBitdepth);
+    OCIO_CHECK_EQUAL(ref.getOutputBitDepth(), newBitdepth);
 
     // Now we need to check if the scaling between the new array and initial array
     // matches the factor computed above.
     const OCIO::Array::Values& newArrValues = ref.getArray().getValues();
 
     // Sanity check first.
-    OIIO_CHECK_EQUAL(initialArrValues.size(), newArrValues.size());
+    OCIO_CHECK_EQUAL(initialArrValues.size(), newArrValues.size());
 
     float expectedValue = 0.0f;
 
-    for (long i = 0; i < newArrValues.size(); i++)
+    for(unsigned long i = 0; i < (unsigned long)newArrValues.size(); i++)
     {
         expectedValue = initialArrValues[i] * factor;
-        OIIO_CHECK_ASSERT(OCIO::EqualWithAbsError(expectedValue,
+        OCIO_CHECK_ASSERT(OCIO::EqualWithAbsError(expectedValue,
                                                   newArrValues[i],
                                                   0.0001f));
     }
 }
 
-OIIO_ADD_TEST(OpDataLut3D, Equality)
+OCIO_ADD_TEST(Lut3DOpData, equality)
 {
     OCIO::Lut3DOpData l1(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                         "", OCIO::OpData::Descriptions(), 
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                          OCIO::INTERP_LINEAR, 33);
 
     OCIO::Lut3DOpData l2(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                         "", OCIO::OpData::Descriptions(), 
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                          OCIO::INTERP_BEST, 33);  
 
-    OIIO_CHECK_ASSERT(!(l1 == l2));
+    OCIO_CHECK_ASSERT(!(l1 == l2));
 
     OCIO::Lut3DOpData l3(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_F32,
-                         "", OCIO::OpData::Descriptions(), 
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                          OCIO::INTERP_LINEAR, 33);
 
-    OIIO_CHECK_ASSERT(!(l1 == l3) && !(l2 == l3));
+    OCIO_CHECK_ASSERT(!(l1 == l3) && !(l2 == l3));
 
     OCIO::Lut3DOpData l4(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                         "", OCIO::OpData::Descriptions(),
+                         OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                          OCIO::INTERP_LINEAR, 33);  
 
-    OIIO_CHECK_ASSERT(l1 == l4);
+    OCIO_CHECK_ASSERT(l1 == l4);
+
+    // Inversion quality does not affect forward ops equality.
+    l1.setInversionQuality(OCIO::LUT_INVERSION_BEST);
+
+    OCIO_CHECK_ASSERT(l1 == l4);
+
+    // Inversion quality does not affect inverse ops equality.
+    // Even so applying the ops could lead to small differences.
+    auto l5 = l1.inverse();
+    auto l6 = l4.inverse();
+
+    OCIO_CHECK_ASSERT(*l5 == *l6);
 }
 
-
-OIIO_ADD_TEST(OpDataLut3D, Interpolation)
+OCIO_ADD_TEST(Lut3DOpData, interpolation)
 {
     OCIO::Lut3DOpData l(2);
     l.setInputBitDepth(OCIO::BIT_DEPTH_F32);
     l.setOutputBitDepth(OCIO::BIT_DEPTH_F32);
     
     l.setInterpolation(OCIO::INTERP_LINEAR);
-    OIIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_LINEAR);
-    OIIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
-    OIIO_CHECK_NO_THROW(l.validate());
+    OCIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_LINEAR);
+    OCIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
+    OCIO_CHECK_NO_THROW(l.validate());
+
+    l.setInterpolation(OCIO::INTERP_CUBIC);
+    OCIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_CUBIC);
+    OCIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
+    OCIO_CHECK_THROW_WHAT(l.validate(), OCIO::Exception, "invalid interpolation");
 
     l.setInterpolation(OCIO::INTERP_TETRAHEDRAL);
-    OIIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_TETRAHEDRAL);
-    OIIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_TETRAHEDRAL);
-    OIIO_CHECK_NO_THROW(l.validate());
+    OCIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_TETRAHEDRAL);
+    OCIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_TETRAHEDRAL);
+    OCIO_CHECK_NO_THROW(l.validate());
 
     l.setInterpolation(OCIO::INTERP_DEFAULT);
-    OIIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_DEFAULT);
-    OIIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
-    OIIO_CHECK_NO_THROW(l.validate());
+    OCIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_DEFAULT);
+    OCIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
+    OCIO_CHECK_NO_THROW(l.validate());
 
     l.setInterpolation(OCIO::INTERP_BEST);
-    OIIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_BEST);
-    OIIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_TETRAHEDRAL);
-    OIIO_CHECK_NO_THROW(l.validate());
+    OCIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_BEST);
+    OCIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_TETRAHEDRAL);
+    OCIO_CHECK_NO_THROW(l.validate());
 
     // NB: INTERP_NEAREST is currently implemented as INTERP_LINEAR.
     l.setInterpolation(OCIO::INTERP_NEAREST);
-    OIIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_NEAREST);
-    OIIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
-    OIIO_CHECK_NO_THROW(l.validate());
+    OCIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_NEAREST);
+    OCIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
+    OCIO_CHECK_NO_THROW(l.validate());
 
     // Invalid interpolation type are implemented as INTERP_LINEAR
     // but can not be used because validation throws.
     l.setInterpolation(OCIO::INTERP_UNKNOWN);
-    OIIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_UNKNOWN);
-    OIIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
-    OIIO_CHECK_THROW_WHAT(l.validate(), OCIO::Exception, "invalid interpolation");
+    OCIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_UNKNOWN);
+    OCIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
+    OCIO_CHECK_THROW_WHAT(l.validate(), OCIO::Exception, "invalid interpolation");
 }
 
-namespace
+OCIO_ADD_TEST(Lut3DOpData, inversion_quality)
 {
-const char uid[] = "uid";
-const OCIO::OpData::Descriptions desc;
-};
+    OCIO::Lut3DOpData l(2);
+    l.setInputBitDepth(OCIO::BIT_DEPTH_F32);
+    l.setOutputBitDepth(OCIO::BIT_DEPTH_F32);
+
+    l.setInversionQuality(OCIO::LUT_INVERSION_EXACT);
+    OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_EXACT);
+    OCIO_CHECK_EQUAL(l.getConcreteInversionQuality(), OCIO::LUT_INVERSION_EXACT);
+    OCIO_CHECK_NO_THROW(l.validate());
+
+    l.setInversionQuality(OCIO::LUT_INVERSION_FAST);
+    OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_FAST);
+    OCIO_CHECK_EQUAL(l.getConcreteInversionQuality(), OCIO::LUT_INVERSION_FAST);
+    OCIO_CHECK_NO_THROW(l.validate());
+
+    l.setInversionQuality(OCIO::LUT_INVERSION_DEFAULT);
+    OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_DEFAULT);
+    OCIO_CHECK_EQUAL(l.getConcreteInversionQuality(), OCIO::LUT_INVERSION_FAST);
+    OCIO_CHECK_NO_THROW(l.validate());
+
+    l.setInversionQuality(OCIO::LUT_INVERSION_BEST);
+    OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_BEST);
+    OCIO_CHECK_EQUAL(l.getConcreteInversionQuality(), OCIO::LUT_INVERSION_EXACT);
+    OCIO_CHECK_NO_THROW(l.validate());
+}
 
 void checkInverse_bitDepths_domain(
     const OCIO::BitDepth refInputBitDepth,
@@ -880,27 +920,30 @@ void checkInverse_bitDepths_domain(
     const OCIO::BitDepth expectedInvOutputBitDepth,
     const OCIO::Interpolation expectedInvInterpolationAlgo)
 {
+    OCIO::FormatMetadataImpl metadata(OCIO::METADATA_ROOT);
+    metadata.addAttribute(OCIO::METADATA_ID, "uid");
+
     OCIO::Lut3DOpData refLut3d(
         refInputBitDepth, refOutputBitDepth,
-        uid, desc,
+        metadata,
         refInterpolationAlgo, 5);
 
     // Get inverse of reference 3D LUT operation 
     OCIO::Lut3DOpDataRcPtr invLut3d = refLut3d.inverse();
 
-    OIIO_CHECK_ASSERT(invLut3d);
+    OCIO_CHECK_ASSERT(invLut3d);
 
-    OIIO_CHECK_EQUAL(invLut3d->getInputBitDepth(),
+    OCIO_CHECK_EQUAL(invLut3d->getInputBitDepth(),
                      expectedInvInputBitDepth);
 
-    OIIO_CHECK_EQUAL(invLut3d->getOutputBitDepth(),
+    OCIO_CHECK_EQUAL(invLut3d->getOutputBitDepth(),
                      expectedInvOutputBitDepth);
 
-    OIIO_CHECK_EQUAL(invLut3d->getInterpolation(),
+    OCIO_CHECK_EQUAL(invLut3d->getInterpolation(),
                      expectedInvInterpolationAlgo);
 }
 
-OIIO_ADD_TEST(OpDataInvLut3D, inverse_bitDepth_domain)
+OCIO_ADD_TEST(Lut3DOpData, inverse_bitDepth_domain)
 {
     checkInverse_bitDepths_domain(
         // reference
@@ -919,60 +962,65 @@ OIIO_ADD_TEST(OpDataInvLut3D, inverse_bitDepth_domain)
         OCIO::INTERP_TETRAHEDRAL);
 }
 
-OIIO_ADD_TEST(OpDataInvLut3D, isInverse_test)
+OCIO_ADD_TEST(Lut3DOpData, is_inverse)
 {
+    OCIO::FormatMetadataImpl metadata(OCIO::METADATA_ROOT);
+    metadata.addAttribute(OCIO::METADATA_ID, "uid");
+
     // Create forward LUT.
     OCIO::Lut3DOpDataRcPtr L1NC =
         std::make_shared<OCIO::Lut3DOpData>(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT10,
-                                            uid, desc, OCIO::INTERP_LINEAR, 5);
+                                            metadata, OCIO::INTERP_LINEAR, 5);
     // Make it not an identity.
     OCIO::Array& array = L1NC->getArray();
     OCIO::Array::Values& values = array.getValues();
     values[0] = 20.f;
-    OIIO_CHECK_ASSERT(!L1NC->isIdentity());
+    OCIO_CHECK_ASSERT(!L1NC->isIdentity());
 
     // Create an inverse LUT with same basics.
     OCIO::ConstLut3DOpDataRcPtr L1 = L1NC;
     OCIO::ConstLut3DOpDataRcPtr L2 = L1->inverse();
     OCIO::ConstLut3DOpDataRcPtr L3 = L2->inverse();
-    OIIO_CHECK_ASSERT(*L3 == *L1);
-    OIIO_CHECK_ASSERT(!(*L1 == *L2));
+    OCIO_CHECK_ASSERT(*L3 == *L1);
+    OCIO_CHECK_ASSERT(!(*L1 == *L2));
 
     // Check isInverse.
-    OIIO_CHECK_ASSERT(L1->isInverse(L2));
-    OIIO_CHECK_ASSERT(L2->isInverse(L1));
+    OCIO_CHECK_ASSERT(L1->isInverse(L2));
+    OCIO_CHECK_ASSERT(L2->isInverse(L1));
 
     // This should pass, since the arrays are actually the same if you
     // normalize for the scaling difference.
     L1NC->setOutputBitDepth(OCIO::BIT_DEPTH_UINT12);
-    OIIO_CHECK_ASSERT(L1->isInverse(L2));
-    OIIO_CHECK_ASSERT(L2->isInverse(L1));
+    OCIO_CHECK_ASSERT(L1->isInverse(L2));
+    OCIO_CHECK_ASSERT(L2->isInverse(L1));
 
     // Catch the situation where the arrays are the same even though the
     // bit-depths don't match and hence the arrays effectively aren't the same.
     L1NC->setOutputBitDepth(OCIO::BIT_DEPTH_UINT10);  // restore original
-    OIIO_CHECK_ASSERT(L1->isInverse(L2));
+    OCIO_CHECK_ASSERT(L1->isInverse(L2));
     L1NC->OpData::setOutputBitDepth(OCIO::BIT_DEPTH_UINT12);
-    OIIO_CHECK_ASSERT(!L1->isInverse(L2));
-    OIIO_CHECK_ASSERT(!L2->isInverse(L1));
+    OCIO_CHECK_ASSERT(!L1->isInverse(L2));
+    OCIO_CHECK_ASSERT(!L2->isInverse(L1));
 }
 
-OIIO_ADD_TEST(OpDataLut3D, ComposeTest)
+OCIO_ADD_TEST(Lut3DOpData, compose)
 {
     const std::string spi3dFile("spi_ocio_srgb_test.spi3d");
     OCIO::OpRcPtrVec ops;
 
-    OIIO_CHECK_NO_THROW(BuildOps(spi3dFile, ops,
-                                 OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
+    OCIO_CHECK_NO_THROW(BuildOpsTest(ops, spi3dFile, context,
+                                     OCIO::TRANSFORM_DIR_FORWARD));
 
-    OIIO_REQUIRE_EQUAL(2, ops.size());
+    // First op is a FileNoOp.
+    OCIO_REQUIRE_EQUAL(2, ops.size());
 
     const std::string spi3dFile1("comp2.spi3d");
     OCIO::OpRcPtrVec ops1;
-    OIIO_CHECK_NO_THROW(BuildOps(spi3dFile1, ops1,
-                                 OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(BuildOpsTest(ops1, spi3dFile1, context,
+                                     OCIO::TRANSFORM_DIR_FORWARD));
 
-    OIIO_REQUIRE_EQUAL(2, ops1.size());
+    OCIO_REQUIRE_EQUAL(2, ops1.size());
 
     OCIO_SHARED_PTR<const OCIO::Op> op0 = ops[1];
     OCIO_SHARED_PTR<const OCIO::Op> op1 = ops1[1];
@@ -985,37 +1033,131 @@ OIIO_ADD_TEST(OpDataLut3D, ComposeTest)
     OCIO::ConstLut3DOpDataRcPtr lutData1 =
         OCIO::DynamicPtrCast<const OCIO::Lut3DOpData>(opData1);
 
-    OIIO_REQUIRE_ASSERT(lutData0);
-    OIIO_REQUIRE_ASSERT(lutData1);
+    OCIO_REQUIRE_ASSERT(lutData0);
+    OCIO_REQUIRE_ASSERT(lutData1);
 
     OCIO::Lut3DOpDataRcPtr composed = lutData0->clone();
-    OCIO::Lut3DOpData::Compose(composed, lutData1);
+    composed->setName("lut1");
+    composed->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, "description of lut1");
+    OCIO::Lut3DOpDataRcPtr lutData1Cloned = lutData1->clone();
+    lutData1Cloned->setName("lut2");
+    lutData1Cloned->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, "description of lut2");
+    OCIO::ConstLut3DOpDataRcPtr lutData1ClonedConst = lutData1Cloned;
+    OCIO::Lut3DOpData::Compose(composed, lutData1ClonedConst);
 
-    OIIO_CHECK_EQUAL(composed->getArray().getLength(), (unsigned long)32);
-    OIIO_CHECK_EQUAL(composed->getArray().getNumColorComponents(),
+    // FormatMetadata composition.
+    OCIO_CHECK_EQUAL(composed->getName(), "lut1 + lut2");
+    OCIO_REQUIRE_EQUAL(composed->getFormatMetadata().getNumChildrenElements(), 2);
+    const auto & desc1 = composed->getFormatMetadata().getChildElement(0);
+    OCIO_CHECK_EQUAL(std::string(desc1.getName()), OCIO::METADATA_DESCRIPTION);
+    OCIO_CHECK_EQUAL(std::string(desc1.getValue()), "description of lut1");
+    const auto & desc2 = composed->getFormatMetadata().getChildElement(1);
+    OCIO_CHECK_EQUAL(std::string(desc2.getName()), OCIO::METADATA_DESCRIPTION);
+    OCIO_CHECK_EQUAL(std::string(desc2.getValue()), "description of lut2");
+
+    OCIO_CHECK_EQUAL(composed->getArray().getLength(), (unsigned long)32);
+    OCIO_CHECK_EQUAL(composed->getArray().getNumColorComponents(),
         (unsigned long)3);
-    OIIO_CHECK_EQUAL(composed->getArray().getNumValues(),
+    OCIO_CHECK_EQUAL(composed->getArray().getNumValues(),
         (unsigned long)32 * 32 * 32 * 3);
 
-    OIIO_CHECK_CLOSE(composed->getArray().getValues()[0], 0.0288210791f, 1e-7f);
-    OIIO_CHECK_CLOSE(composed->getArray().getValues()[1], 0.0280428901f, 1e-7f);
-    OIIO_CHECK_CLOSE(composed->getArray().getValues()[2], 0.0262413863f, 1e-7f);
+    OCIO_CHECK_CLOSE(composed->getArray().getValues()[0], 0.0288210791f, 1e-7f);
+    OCIO_CHECK_CLOSE(composed->getArray().getValues()[1], 0.0280428901f, 1e-7f);
+    OCIO_CHECK_CLOSE(composed->getArray().getValues()[2], 0.0262413863f, 1e-7f);
 
-    OIIO_CHECK_CLOSE(composed->getArray().getValues()[666], 0.0f, 1e-7f);
-    OIIO_CHECK_CLOSE(composed->getArray().getValues()[667], 0.274289876f, 1e-7f);
-    OIIO_CHECK_CLOSE(composed->getArray().getValues()[668], 0.854598403f, 1e-7f);
+    OCIO_CHECK_CLOSE(composed->getArray().getValues()[666], 0.0f, 1e-7f);
+    OCIO_CHECK_CLOSE(composed->getArray().getValues()[667], 0.274289876f, 1e-7f);
+    OCIO_CHECK_CLOSE(composed->getArray().getValues()[668], 0.854598403f, 1e-7f);
 
-    OIIO_CHECK_CLOSE(composed->getArray().getValues()[1800], 0.0f, 1e-7f);
-    OIIO_CHECK_CLOSE(composed->getArray().getValues()[1801], 0.411249638f, 1e-7f);
-    OIIO_CHECK_CLOSE(composed->getArray().getValues()[1802], 0.881694913f, 1e-7f);
+    OCIO_CHECK_CLOSE(composed->getArray().getValues()[1800], 0.0f, 1e-7f);
+    OCIO_CHECK_CLOSE(composed->getArray().getValues()[1801], 0.411249638f, 1e-7f);
+    OCIO_CHECK_CLOSE(composed->getArray().getValues()[1802], 0.881694913f, 1e-7f);
 
-    OIIO_CHECK_CLOSE(composed->getArray().getValues()[96903], 1.0f, 1e-7f);
-    OIIO_CHECK_CLOSE(composed->getArray().getValues()[96904], 0.588273168f, 1e-7f);
-    OIIO_CHECK_CLOSE(composed->getArray().getValues()[96905], 0.0f, 1e-7f);
+    OCIO_CHECK_CLOSE(composed->getArray().getValues()[96903], 1.0f, 1e-7f);
+    OCIO_CHECK_CLOSE(composed->getArray().getValues()[96904], 0.588273168f, 1e-7f);
+    OCIO_CHECK_CLOSE(composed->getArray().getValues()[96905], 0.0f, 1e-7f);
 
 }
 
-// TODO: Bring tests using CLF parsing once available
+OCIO_ADD_TEST(Lut3DOpData, compose_2)
+{
+    const std::string clfFile("lut3d_bizarre.clf");
+    OCIO::OpRcPtrVec ops;
+
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
+    OCIO_CHECK_NO_THROW(BuildOpsTest(ops, clfFile, context,
+                                     OCIO::TRANSFORM_DIR_FORWARD));
+
+    OCIO_REQUIRE_EQUAL(2, ops.size());
+
+    const std::string clfFile1("lut3d_17x17x17_10i_12i.clf");
+    OCIO::OpRcPtrVec ops1;
+    OCIO_CHECK_NO_THROW(BuildOpsTest(ops1, clfFile1, context,
+                                     OCIO::TRANSFORM_DIR_FORWARD));
+
+    OCIO_REQUIRE_EQUAL(2, ops1.size());
+
+    OCIO_SHARED_PTR<const OCIO::Op> op0 = ops[1];
+    OCIO_SHARED_PTR<const OCIO::Op> op1 = ops1[1];
+
+    OCIO::ConstOpDataRcPtr opData0 = op0->data();
+    OCIO::ConstOpDataRcPtr opData1 = op1->data();
+
+    OCIO::ConstLut3DOpDataRcPtr lutData0 =
+        OCIO::DynamicPtrCast<const OCIO::Lut3DOpData>(opData0);
+    OCIO::ConstLut3DOpDataRcPtr lutData1 =
+        OCIO::DynamicPtrCast<const OCIO::Lut3DOpData>(opData1);
+
+    OCIO_REQUIRE_ASSERT(lutData0);
+    OCIO_REQUIRE_ASSERT(lutData1);
+
+    OCIO::Lut3DOpDataRcPtr composed = lutData0->clone();
+    OCIO_CHECK_NO_THROW(OCIO::Lut3DOpData::Compose(composed, lutData1));
+
+    OCIO_CHECK_EQUAL(composed->getArray().getLength(), (unsigned long)17);
+    const std::vector<float> & a = composed->getArray().getValues();
+    OCIO_CHECK_CLOSE(a[6]     / 4095.0f,    2.5942142f  / 4095.0f, 1e-7f);
+    OCIO_CHECK_CLOSE(a[7]     / 4095.0f,   29.60961342f / 4095.0f, 1e-7f);
+    OCIO_CHECK_CLOSE(a[8]     / 4095.0f,  154.82646179f / 4095.0f, 1e-7f);
+    OCIO_CHECK_CLOSE(a[8289]  / 4095.0f, 1184.69213867f / 4095.0f, 1e-6f);
+    OCIO_CHECK_CLOSE(a[8290]  / 4095.0f, 1854.97229004f / 4095.0f, 1e-7f);
+    OCIO_CHECK_CLOSE(a[8291]  / 4095.0f, 1996.75830078f / 4095.0f, 1e-7f);
+    OCIO_CHECK_CLOSE(a[14736] / 4095.0f, 4094.07617188f / 4095.0f, 1e-7f);
+    OCIO_CHECK_CLOSE(a[14737] / 4095.0f, 4067.37231445f / 4095.0f, 1e-6f);
+    OCIO_CHECK_CLOSE(a[14738] / 4095.0f, 4088.30493164f / 4095.0f, 1e-6f);
+
+    // Check that if the connecting bit-depths don't match, it's an exception.
+    OCIO::Lut3DOpDataRcPtr composed1 = lutData1->clone();
+    OCIO_CHECK_THROW_WHAT(OCIO::Lut3DOpData::Compose(composed1, lutData0),
+                          OCIO::Exception, "bit depth mismatch");
+
+}
+
+OCIO_ADD_TEST(Lut3DOpData, inv_lut3d_lut_size)
+{
+    const std::string fileName("lut3d_17x17x17_10i_12i.clf");
+    OCIO::OpRcPtrVec ops;
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
+    OCIO_CHECK_NO_THROW(BuildOpsTest(ops, fileName, context,
+                                     OCIO::TRANSFORM_DIR_FORWARD));
+
+    OCIO_REQUIRE_EQUAL(2, ops.size());
+
+    auto op1 = std::dynamic_pointer_cast<const OCIO::Op>(ops[1]);
+    OCIO_REQUIRE_ASSERT(op1);
+    auto fwdLutData = std::dynamic_pointer_cast<const OCIO::Lut3DOpData>(op1->data());
+    OCIO_REQUIRE_ASSERT(fwdLutData);
+    OCIO::ConstLut3DOpDataRcPtr invLutData = fwdLutData->inverse();
+
+    OCIO::Lut3DOpDataRcPtr invFastLutData = MakeFastLut3DFromInverse(invLutData);
+
+    // NB: Avoid finalizing the transform since this will reset the bit-depths
+    // and prevent checking that the inversion swapped them correctly.
+    OCIO_CHECK_EQUAL(invFastLutData->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+    OCIO_CHECK_EQUAL(invFastLutData->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+
+    OCIO_CHECK_EQUAL(invFastLutData->getArray().getLength(), 48);
+}
 
 #endif
 

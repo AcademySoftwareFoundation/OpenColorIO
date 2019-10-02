@@ -1,30 +1,5 @@
-/*
-Copyright (c) 2018 Autodesk Inc., et al.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 #ifndef INCLUDED_OCIO_LUT1DOPDATA_H
 #define INCLUDED_OCIO_LUT1DOPDATA_H
@@ -33,6 +8,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Op.h"
 #include "ops/OpArray.h"
+#include "PrivateTypes.h"
+
 
 OCIO_NAMESPACE_ENTER
 {
@@ -59,20 +36,6 @@ public:
         LUT_INPUT_OUTPUT_HALF_CODE =
         LUT_INPUT_HALF_CODE
         | LUT_OUTPUT_HALF_CODE       // Indices and values are half float codes.
-    };
-
-    // Enum to control optional hue restoration algorithm.
-    enum HueAdjust
-    {
-        HUE_NONE = 0, // No adjustment.
-        HUE_DW3       // Algorithm used in ACES Output Transforms through v0.7.
-    };
-
-    // Enumeration of the inverse 1D LUT styles.
-    enum InvStyle
-    {
-        INV_EXACT = 0,  // Exact, but slow, inverse processing.
-        INV_FAST        // Fast, but approximate, inverse processing.
     };
 
     // Contains properties needed for inversion of a single channel of a LUT.
@@ -104,6 +67,12 @@ public:
         COMPOSE_RESAMPLE_BIG = 2      // Min size is 65536.
     };
 
+    // Calculate a new LUT by evaluating a new domain (A) through a set of ops (B).
+    // A is used as in/out parameter. As input it is the first LUT in the composition,
+    // as output it is the result of the composition.
+    // B is the second LUT to compose and will not be modified.
+    static void ComposeVec(Lut1DOpDataRcPtr & A, const OpRcPtrVec & B);
+
     // Use functional composition to generate a single op that 
     // approximates the effect of the pair of ops.
     // A is used as in/out parameter. As input is it the first LUT in the composition,
@@ -117,19 +86,20 @@ public:
     static unsigned long GetLutIdealSize(BitDepth incomingBitDepth);
 
     explicit Lut1DOpData(unsigned long dimension);
+
+    Lut1DOpData(unsigned long dimension, TransformDirection dir);
+
     Lut1DOpData(BitDepth inBitDepth, BitDepth outBitDepth, HalfFlags halfFlags);
 
     Lut1DOpData(BitDepth inBitDepth,
                 BitDepth outBitDepth,
-                const std::string & id,
-                const Descriptions & descriptions,
+                const FormatMetadataImpl & info,
                 Interpolation interpolation,
                 HalfFlags halfFlags);
 
     Lut1DOpData(BitDepth inBitDepth,
                 BitDepth outBitDepth,
-                const std::string & id,
-                const Descriptions & descriptions,
+                const FormatMetadataImpl & info,
                 Interpolation interpolation,
                 HalfFlags halfFlags,
                 unsigned long dimension);
@@ -146,9 +116,12 @@ public:
 
     TransformDirection getDirection() const { return m_direction; }
 
-    inline InvStyle getInvStyle() const { return m_invStyle; }
+    inline LutInversionQuality getInversionQuality() const { return m_invQuality; }
 
-    void setInvStyle(InvStyle style);
+    // LUT_INVERSION_BEST and LUT_INVERSION_DEFAULT are translated to what should be used.
+    LutInversionQuality getConcreteInversionQuality() const;
+
+    void setInversionQuality(LutInversionQuality style);
 
     Type getType() const override { return Lut1DType; }
 
@@ -160,12 +133,6 @@ public:
 
     void setOutputBitDepth(BitDepth out) override;
     void setInputBitDepth(BitDepth in) override;
-
-    // The file readers should call this to record the original scaling of the LUT values.
-    void setFileBitDepth(BitDepth depth)
-    {
-        m_fileBitDepth = depth;
-    }
 
     void finalize() override;
 
@@ -196,9 +163,9 @@ public:
 
     inline HalfFlags getHalfFlags() const { return m_halfFlags; }
 
-    inline HueAdjust getHueAdjust() const { return m_hueAdjust; }
+    inline LUT1DHueAdjust getHueAdjust() const { return m_hueAdjust; }
 
-    void setHueAdjust(HueAdjust algo);
+    void setHueAdjust(LUT1DHueAdjust algo);
 
     // Get an array containing the LUT elements.
     // The elements are stored as a vector [r0,g0,b0, r1,g1,b1, r2,g2,b2, ...].
@@ -229,7 +196,7 @@ public:
     // lookup rather than interpolation.
     bool mayLookup(BitDepth incomingDepth) const;
 
-    bool operator==(const OpData & other) const;
+    bool operator==(const OpData & other) const override;
 
     OpDataRcPtr getIdentityReplacement() const;
 
@@ -253,6 +220,44 @@ public:
         return m_componentProperties[2];
     }
 
+    inline BitDepth getFileOutputBitDepth() const { return m_fileOutBitDepth; }
+    // The file readers should call this to record the original scaling of the LUT values.
+    inline void setFileOutputBitDepth(BitDepth out) { m_fileOutBitDepth = out; }
+
+protected:
+    class Lut3by1DArray : public Array
+    {
+    public:
+        Lut3by1DArray(BitDepth  inBitDepth,
+            BitDepth  outBitDepth,
+            HalfFlags halfFlags);
+
+        Lut3by1DArray(BitDepth  outBitDepth,
+            HalfFlags halfFlags,
+            unsigned long length);
+
+        ~Lut3by1DArray();
+
+        bool isIdentity(HalfFlags halfFlags, BitDepth outBitDepth) const;
+
+        void resize(unsigned long length, unsigned long numColorComponents) override;
+
+        unsigned long getNumValues() const override;
+
+        void scale(float scaleFactor);
+
+    protected:
+        // Fill the LUT 1D with appropriate default values 
+        // representing an identity LUT.
+        void fill(HalfFlags halfFlags, BitDepth outBitDepth);
+
+    public:
+        // Default copy constructor and assignation operator are fine.
+        Lut3by1DArray() = default;
+        Lut3by1DArray(const Lut3by1DArray &) = default;
+        Lut3by1DArray & operator= (const Lut3by1DArray &) = default;
+    };
+
 private:
     static bool IsInverse(const Lut1DOpData * lutfwd,
                           const Lut1DOpData * lutinv);
@@ -272,37 +277,6 @@ private:
     // Make the array monotonic and prepare params for the renderer.
     void prepareArray();
 
-    class Lut3by1DArray : public Array
-    {
-    public:
-        Lut3by1DArray(BitDepth  inBitDepth,
-                      BitDepth  outBitDepth,
-                      HalfFlags halfFlags);
-
-        Lut3by1DArray(BitDepth  outBitDepth,
-                      HalfFlags halfFlags,
-                      unsigned long length);
-
-        ~Lut3by1DArray();
-
-        bool isIdentity(HalfFlags halfFlags, BitDepth outBitDepth) const;
-
-        unsigned long getNumValues() const override;
-
-        void scale(float scaleFactor);
-
-    protected:
-        // Fill the LUT 1D with appropriate default values 
-        // representing an identity LUT.
-        void fill(HalfFlags halfFlags, BitDepth outBitDepth);
-
-    public:
-        // Default copy constructor and assignation operator are fine.
-        Lut3by1DArray() = default;
-        Lut3by1DArray(const Lut3by1DArray &) = default;
-        Lut3by1DArray & operator= (const Lut3by1DArray &) = default;
-    };
-
     // Get the LUT length that would allow a look-up for inputBitDepth.
     // - halfFlags except if the LUT has a half domain, always return 65536
     static unsigned long GetLutIdealSize(BitDepth inputBitDepth,
@@ -311,21 +285,18 @@ private:
     Interpolation       m_interpolation;
     Lut3by1DArray       m_array;
     HalfFlags           m_halfFlags;
-    HueAdjust           m_hueAdjust;
+    LUT1DHueAdjust      m_hueAdjust;
                         
     TransformDirection  m_direction;
 
     // Members for inverse LUT.
-    InvStyle            m_invStyle;
+    LutInversionQuality m_invQuality;
 
     ComponentProperties m_componentProperties[3];
 
-    // The original LUT scaling from the file.
-    // Must be set by the file reader.
-    // Note: This is hopefully only needed temporarily.
-    //       Used in MakeFastLut1DFromInverse.
-    BitDepth            m_fileBitDepth;
-
+    // The LUT scaling for/from the file.
+    // Used by MakeFastLut1DFromInverse and for saving to CLF/CTF.
+    BitDepth m_fileOutBitDepth = BIT_DEPTH_UNKNOWN;
 };
 
 }

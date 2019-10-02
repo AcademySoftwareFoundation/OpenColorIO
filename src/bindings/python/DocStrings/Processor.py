@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
 
 class Processor:
     """
@@ -37,9 +39,9 @@ class Processor:
         """
         pass
     
-    def getMetadata(self):
+    def getProcessorMetadata(self):
         """
-        getMetadata()
+        getProcessorMetadata()
         
         Returns information about the process that generated this processor. 
         

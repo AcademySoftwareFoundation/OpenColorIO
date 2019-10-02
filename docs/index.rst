@@ -1,3 +1,7 @@
+..
+  SPDX-License-Identifier: CC-BY-4.0
+  Copyright Contributors to the OpenColorIO Project.
+
 Home
 ====
 
@@ -23,11 +27,11 @@ Mailing Lists
 
 There are two mailing lists associated with OpenColorIO:
 
-`ocio-users <http://groups.google.com/group/ocio-users>`__\ ``@googlegroups.com``
+`ocio-user <https://lists.aswf.io/g/ocio-user>`__\ ``@lists.aswf.io``
     For end users (artists, often) interested in OCIO profile design,
     facility color management, and workflow.
 
-`ocio-dev <http://groups.google.com/group/ocio-dev>`__\ ``@googlegroups.com``
+`ocio-dev <https://lists.aswf.io/g/ocio-dev>`__\ ``@lists.aswf.io``
     For developers interested OCIO APIs, code integration, compilation, etc.
 
 Quick Start
@@ -40,7 +44,7 @@ each application.
 Note that OCIO configurations are required to do any 'real' work, and are
 available separately on the :ref:`downloads` section of this site. Example
 images are also available. For assistance customizing .ocio configurations,
-contact `ocio-users <http://groups.google.com/group/ocio-users>`__\.
+contact `ocio-user <https://lists.aswf.io/g/ocio-user>`__\.
 
 - Step 1:  set the OCIO environment-variable to /path/to/your/profile.ocio
 - Step 2:  Launch supported application.
@@ -51,7 +55,7 @@ provide a menu option to select a different OCIO configuration after launch.
 Please be sure to select a profile that matches your color workflow (VFX work
 typically requires a different profile than animated features). If you need
 assistance picking a profile, email 
-`ocio-users <http://groups.google.com/group/ocio-users>`__\.
+`ocio-user <https://lists.aswf.io/g/ocio-user>`__\.
 
 Downloading and Building the Code
 *********************************
@@ -64,7 +68,7 @@ Download a `.zip <http://github.com/imageworks/OpenColorIO/zipball/master>`_ or
 current state of the repository.
 
 Please see the :ref:`developer-guide` for more info, and contact `ocio-dev
-<http://groups.google.com/group/ocio-dev>`__\  with any questions.
+<https://lists.aswf.io/g/ocio-dev>`__\  with any questions.
 
 .. toctree::
     :hidden:
@@ -84,8 +88,8 @@ Please see the :ref:`developer-guide` for more info, and contact `ocio-dev
     FAQ
     downloads
     
-    CHANGELOG
-    LICENSE
+    ChangeLog
+    License
 
 --------------------------------------------------------------------------------
 

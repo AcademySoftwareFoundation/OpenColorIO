@@ -1,30 +1,5 @@
-/*
-Copyright (c) 2018 Autodesk Inc., et al.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-* Neither the name of Sony Pictures Imageworks nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
 #include <algorithm>
 #include <math.h>
@@ -40,31 +15,35 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Platform.h"
 #include "SSE.h"
 
+
 #define L_ADJUST(val) \
-    ((isOutInteger) ? clamp((val)+0.5f, outMin,  outMax) : SanitizeFloat(val))
+    (T)((isOutInteger) ? Clamp((val)+0.5f, outMin,  outMax) : SanitizeFloat(val))
+
 
 OCIO_NAMESPACE_ENTER
 {
+
 namespace
 {
-inline uint8_t GetLookupValue(const uint8_t& val)
+
+inline uint8_t GetLookupValue(const uint8_t & val)
 {
     return val;
 }
 
-inline uint16_t GetLookupValue(const uint16_t& val)
+inline uint16_t GetLookupValue(const uint16_t & val)
 {
     return val;
 }
 
-inline unsigned short GetLookupValue(const half& val)
+inline unsigned short GetLookupValue(const half & val)
 {
     return val.bits();
 }
 
 // When instantiating all templates this case is needed.
 // But it will never be used as the 32f is not a lookup case.
-inline uint16_t GetLookupValue(const float& val)
+inline uint16_t GetLookupValue(const float & val)
 {
     return (uint16_t)val;
 }
@@ -72,34 +51,51 @@ inline uint16_t GetLookupValue(const float& val)
 template<typename InType, typename OutType>
 struct LookupLut
 {
-    static inline OutType compute(const OutType* lutData,
-                                  const InType& val)
+    static inline OutType compute(const OutType * lutData,
+                                  const InType & val)
     {
         return lutData[GetLookupValue(val)];
     }
 };
 
+
+template<BitDepth inBD, BitDepth outBD>
 class BaseLut1DRenderer : public OpCPU
 {
 public:
-    BaseLut1DRenderer(ConstLut1DOpDataRcPtr & lut);
+    explicit BaseLut1DRenderer(ConstLut1DOpDataRcPtr & lut);
+    BaseLut1DRenderer(ConstLut1DOpDataRcPtr & lut, BitDepth outBitDepth);
     virtual ~BaseLut1DRenderer();
 
-    virtual void updateData(ConstLut1DOpDataRcPtr & lut) = 0;
+    // NB: 1D LUT as Lookup table is so important for the performance
+    //     that having a way to test it is critical.
+    constexpr bool isLookup() const noexcept { return inBD != BIT_DEPTH_F32; }
 
+protected:
+
+    virtual void update(ConstLut1DOpDataRcPtr & lut);
+
+    template<typename T>
+    void updateData(ConstLut1DOpDataRcPtr & lut);
+
+    void reset();
+
+    template<typename T>
     void resetData();
 
 protected:
-    unsigned long m_dim;
+    unsigned long m_dim = 0;
 
-    // TODO: Anticipates tmpLut eventually allowing integer data types.
-    std::vector<float> m_tmpLutR;
-    std::vector<float> m_tmpLutG;
-    std::vector<float> m_tmpLutB;
+    void * m_tmpLutR = nullptr;
+    void * m_tmpLutG = nullptr;
+    void * m_tmpLutB = nullptr;
 
-    float m_alphaScaling;
+    float m_alphaScaling = 0.0f;
 
-    BitDepth m_outBitDepth;
+    BitDepth m_outBitDepth = BIT_DEPTH_UNKNOWN;
+
+    float m_step = 1.0f;
+    float m_dimMinusOne = 0.0f;
 
 private:
     BaseLut1DRenderer() = delete;
@@ -107,112 +103,126 @@ private:
     BaseLut1DRenderer & operator=(const BaseLut1DRenderer &) = delete;
 };
 
-class Lut1DRendererHalfCode : public BaseLut1DRenderer
+// Structure used to keep track of the interpolation data for
+// special case 16f/64k 1D LUT.
+struct IndexPair
 {
-public:
-    explicit Lut1DRendererHalfCode(ConstLut1DOpDataRcPtr & lut);
-    virtual ~Lut1DRendererHalfCode();
+    unsigned short valA;
+    unsigned short valB;
+    float fraction;
 
-    // Structure used to keep track of the interpolation data for
-    // special case 16f/64k 1D LUT.
-    struct IndexPair
+    IndexPair()
     {
-        unsigned short valA;
-        unsigned short valB;
-        float fraction;
+        valA = 0;
+        valB = 0;
+        fraction = 0.0f;
+    }
 
-    public:
-        IndexPair()
-        {
-            valA = 0;
-            valB = 0;
-            fraction = 0.0f;
-        }
-    };
-
-    void updateData(ConstLut1DOpDataRcPtr & lut) override;
-
-    void apply(float * rgbaBuffer, long numPixels) const override;
-
-protected:
-    // Interpolation helper to gather data.
-    IndexPair getEdgeFloatValues(float fIn) const;
+    static IndexPair GetEdgeFloatValues(float fIn);
 };
 
-class Lut1DRenderer : public BaseLut1DRenderer
+template<BitDepth inBD, BitDepth outBD>
+class Lut1DRendererHalfCode : public BaseLut1DRenderer<inBD, outBD>
 {
 public:
+    Lut1DRendererHalfCode() = delete;
 
-    Lut1DRenderer(ConstLut1DOpDataRcPtr & lut);
-    virtual ~Lut1DRenderer();
+    explicit Lut1DRendererHalfCode(ConstLut1DOpDataRcPtr & lut)
+        : BaseLut1DRenderer<inBD, outBD>(lut) {}
 
-    void updateData(ConstLut1DOpDataRcPtr & lut) override;
+    Lut1DRendererHalfCode(ConstLut1DOpDataRcPtr & lut, BitDepth outBitDepth)
+        : BaseLut1DRenderer<inBD, outBD>(lut, outBitDepth) {}
 
-    void apply(float * rgbaBuffer, long numPixels) const override;
-
-protected:
-    float m_step;
-    float m_dimMinusOne;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
-class Lut1DRendererHueAdjust : public Lut1DRenderer
+template<BitDepth inBD, BitDepth outBD>
+class Lut1DRenderer : public BaseLut1DRenderer<inBD, outBD>
 {
 public:
-    Lut1DRendererHueAdjust(ConstLut1DOpDataRcPtr & lut);
-    virtual ~Lut1DRendererHueAdjust();
+    Lut1DRenderer() = delete;
 
-    void apply(float * rgbaBuffer, long numPixels) const override;
+    explicit Lut1DRenderer(ConstLut1DOpDataRcPtr & lut) 
+        : BaseLut1DRenderer<inBD, outBD>(lut) {}
+
+    Lut1DRenderer(ConstLut1DOpDataRcPtr & lut, BitDepth outBitDepth)
+        : BaseLut1DRenderer<inBD, outBD>(lut, outBitDepth) {}
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
-class Lut1DRendererHalfCodeHueAdjust : public Lut1DRendererHalfCode
+template<BitDepth inBD, BitDepth outBD>
+class Lut1DRendererHueAdjust : public Lut1DRenderer<inBD, outBD>
 {
 public:
-    Lut1DRendererHalfCodeHueAdjust(ConstLut1DOpDataRcPtr & lut);
-    virtual ~Lut1DRendererHalfCodeHueAdjust();
+    Lut1DRendererHueAdjust() = delete;
 
-    void apply(float * rgbaBuffer, long numPixels) const override;
+    explicit Lut1DRendererHueAdjust(ConstLut1DOpDataRcPtr & lut)
+        :  Lut1DRenderer<inBD, outBD>(lut, BIT_DEPTH_F32) {}
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
+template<BitDepth inBD, BitDepth outBD>
+class Lut1DRendererHalfCodeHueAdjust : public Lut1DRendererHalfCode<inBD, outBD>
+{
+public:
+    Lut1DRendererHalfCodeHueAdjust() = delete;
+
+    explicit Lut1DRendererHalfCodeHueAdjust(ConstLut1DOpDataRcPtr & lut)
+        : Lut1DRendererHalfCode<inBD, outBD>(lut, BIT_DEPTH_F32) {}
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+};
+
+// Holds the parameters of a color component.
+// Note: The structure does not own any of the pointers.
+struct ComponentParams
+{
+    ComponentParams()
+        :   lutStart(nullptr)
+        ,   startOffset(0.f)
+        ,   lutEnd(nullptr)
+        ,   negLutStart(nullptr)
+        ,   negStartOffset(0.f)
+        ,   negLutEnd(nullptr)
+        ,   flipSign(1.f)
+        ,   bisectPoint(0.f)
+    {}
+
+    const float * lutStart;   // Copy of the pointer to start of effective lutData.
+    float startOffset;        // Difference between real and effective start of lut.
+    const float * lutEnd;     // Copy of the pointer to end of effective lutData.
+    const float * negLutStart;// lutStart for negative part of half domain LUT.
+    float negStartOffset;     // startOffset for negative part of half domain LUT.
+    const float * negLutEnd;  // lutEnd for negative part of half domain LUT.
+    float flipSign;           // Flip the sign of value to handle decreasing luts.
+    float bisectPoint;        // Point of switching from pos to neg of half domain.
+
+    static void setComponentParams(ComponentParams & params,
+                                   const Lut1DOpData::ComponentProperties & properties,
+                                   const float * lutPtr,
+                                   float lutZeroEntry);
+};
+
+template<BitDepth inBD, BitDepth outBD>
 class InvLut1DRenderer : public OpCPU
 {
 public:
-    InvLut1DRenderer(ConstLut1DOpDataRcPtr & lut);
+    InvLut1DRenderer() = delete;
+    explicit InvLut1DRenderer(ConstLut1DOpDataRcPtr & lut);
+    InvLut1DRenderer(const InvLut1DRenderer&) = delete;
+    InvLut1DRenderer& operator=(const InvLut1DRenderer&) = delete;
     virtual ~InvLut1DRenderer();
 
-    void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 
     void resetData();
 
     virtual void updateData(ConstLut1DOpDataRcPtr & lut);
 
-public:
-    // Holds the parameters of a color component.
-    // Note: The structure does not own any of the pointers.
-    struct ComponentParams
-    {
-        ComponentParams()
-            : lutStart(nullptr), startOffset(0.f), lutEnd(nullptr)
-            , negLutStart(nullptr), negStartOffset(0.f), negLutEnd(nullptr)
-            , flipSign(1.f), bisectPoint(0.f)
-        {}
-
-        const float * lutStart;   // copy of the pointer to start of effective lutData
-        float startOffset;        // difference between real and effective start of lut
-        const float * lutEnd;     // copy of the pointer to end of effective lutData
-        const float * negLutStart;// lutStart for negative part of half domain LUT
-        float negStartOffset;     // startOffset for negative part of half domain LUT
-        const float * negLutEnd;  // lutEnd for negative part of half domain LUT
-        float flipSign;           // flip the sign of value to handle decreasing luts
-        float bisectPoint;        // point of switching from pos to neg of half domain
-    };
-
-    void setComponentParams(ComponentParams & params,
-                            const Lut1DOpData::ComponentProperties & properties,
-                            const float * lutPtr,
-                            const float lutZeroEntry);
-
 protected:
-    float m_scale; // output scaling for the r, g and b components
+    float m_scale; // Output scaling for the r, g and b components.
 
     ComponentParams m_paramsR;
     ComponentParams m_paramsG;
@@ -222,200 +232,305 @@ protected:
     std::vector<float> m_tmpLutR;
     std::vector<float> m_tmpLutG;
     std::vector<float> m_tmpLutB;
-    float              m_alphaScaling;  // bit-depth scale factor for alpha channel
-
-private:
-    InvLut1DRenderer() = delete;
-    InvLut1DRenderer(const InvLut1DRenderer&) = delete;
-    InvLut1DRenderer& operator=(const InvLut1DRenderer&) = delete;
+    float              m_alphaScaling;  // Bit-depth scale factor for alpha channel.
 };
 
-class InvLut1DRendererHalfCode : public InvLut1DRenderer
+template<BitDepth inBD, BitDepth outBD>
+class InvLut1DRendererHalfCode : public InvLut1DRenderer<inBD, outBD>
 {
 public:
-    InvLut1DRendererHalfCode(ConstLut1DOpDataRcPtr & lut);
+    InvLut1DRendererHalfCode() = delete;
+    explicit InvLut1DRendererHalfCode(ConstLut1DOpDataRcPtr & lut);
+    InvLut1DRendererHalfCode(const InvLut1DRendererHalfCode &) = delete;
+    InvLut1DRendererHalfCode& operator=(const InvLut1DRendererHalfCode &) = delete;
     virtual ~InvLut1DRendererHalfCode();
 
     void updateData(ConstLut1DOpDataRcPtr & lut) override;
 
-    void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
-class InvLut1DRendererHueAdjust : public InvLut1DRenderer
+template<BitDepth inBD, BitDepth outBD>
+class InvLut1DRendererHueAdjust : public InvLut1DRenderer<inBD, outBD>
 {
 public:
-    InvLut1DRendererHueAdjust(ConstLut1DOpDataRcPtr & lut);
-    virtual ~InvLut1DRendererHueAdjust();
-
-    void apply(float * rgbaBuffer, long numPixels) const override;
+    explicit InvLut1DRendererHueAdjust(ConstLut1DOpDataRcPtr & lut);
+ 
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
-class InvLut1DRendererHalfCodeHueAdjust : public InvLut1DRendererHalfCode
+template<BitDepth inBD, BitDepth outBD>
+class InvLut1DRendererHalfCodeHueAdjust : public InvLut1DRendererHalfCode<inBD, outBD>
 {
 public:
-    InvLut1DRendererHalfCodeHueAdjust(ConstLut1DOpDataRcPtr & lut);
-    virtual ~InvLut1DRendererHalfCodeHueAdjust();
+    explicit InvLut1DRendererHalfCodeHueAdjust(ConstLut1DOpDataRcPtr & lut);
 
-    void apply(float * rgbaBuffer, long numPixels) const override;
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
-BaseLut1DRenderer::BaseLut1DRenderer(ConstLut1DOpDataRcPtr & lut)
+
+template<BitDepth inBD, BitDepth outBD>
+BaseLut1DRenderer<inBD, outBD>::BaseLut1DRenderer(ConstLut1DOpDataRcPtr & lut)
     :   OpCPU()
     ,   m_dim(lut->getArray().getLength())
-    ,   m_alphaScaling(0.0f)
     ,   m_outBitDepth(lut->getOutputBitDepth())
 {
+    static_assert(inBD!=BIT_DEPTH_UINT32 && inBD!=BIT_DEPTH_UINT14, "Unsupported bit depth.");
+
+    if(inBD!=lut->getInputBitDepth() || outBD!=lut->getOutputBitDepth())
+    {
+        throw Exception("Bit depth mismatch between the 1D LUT and the CPU processing.");
+    }
+
+    update(lut);
 }
 
-void BaseLut1DRenderer::resetData()
+template<BitDepth inBD, BitDepth outBD>
+BaseLut1DRenderer<inBD, outBD>::BaseLut1DRenderer(ConstLut1DOpDataRcPtr & lut, BitDepth outBitDepth)
+    :   OpCPU()
+    ,   m_dim(lut->getArray().getLength())
+    ,   m_outBitDepth(outBitDepth)
 {
-    m_tmpLutR.resize(0);
-    m_tmpLutG.resize(0);
-    m_tmpLutB.resize(0);
+    static_assert(inBD!=BIT_DEPTH_UINT32 && inBD!=BIT_DEPTH_UINT14, "Unsupported bit depth.");
+
+    if(inBD!=lut->getInputBitDepth() || outBD!=lut->getOutputBitDepth())
+    {
+        throw Exception("Bit depth mismatch between the 1D LUT and the CPU processing.");
+    }
+
+    update(lut);
 }
 
-BaseLut1DRenderer::~BaseLut1DRenderer()
+template<BitDepth inBD, BitDepth outBD>
+void BaseLut1DRenderer<inBD, outBD>::update(ConstLut1DOpDataRcPtr & lut)
 {
-    resetData();
+    switch(m_outBitDepth)
+    {
+        case BIT_DEPTH_UINT8:
+            updateData<BitDepthInfo<BIT_DEPTH_UINT8>::Type>(lut);
+            break;
+        case BIT_DEPTH_UINT10:
+            updateData<BitDepthInfo<BIT_DEPTH_UINT10>::Type>(lut);
+            break;
+        case BIT_DEPTH_UINT12:
+            updateData<BitDepthInfo<BIT_DEPTH_UINT12>::Type>(lut);
+            break;
+        case BIT_DEPTH_UINT16:
+            updateData<BitDepthInfo<BIT_DEPTH_UINT16>::Type>(lut);
+            break;
+        case BIT_DEPTH_F16:
+            updateData<BitDepthInfo<BIT_DEPTH_F16>::Type>(lut);
+            break;
+        case BIT_DEPTH_F32:
+            updateData<BitDepthInfo<BIT_DEPTH_F32>::Type>(lut);
+            break;
+
+        case BIT_DEPTH_UINT14:
+        case BIT_DEPTH_UINT32:
+        case BIT_DEPTH_UNKNOWN:
+        default:
+            break;
+    }
 }
 
-Lut1DRendererHalfCode::Lut1DRendererHalfCode(ConstLut1DOpDataRcPtr & lut)
-    :  BaseLut1DRenderer(lut)
+template<BitDepth inBD, BitDepth outBD>
+template<typename T>
+void BaseLut1DRenderer<inBD, outBD>::updateData(ConstLut1DOpDataRcPtr & lut)
 {
-    updateData(lut);
-}
-
-void Lut1DRendererHalfCode::updateData(ConstLut1DOpDataRcPtr & lut)
-{
-    resetData();
+    resetData<T>();
 
     m_dim = lut->getArray().getLength();
 
-    const BitDepth inBD = lut->getInputBitDepth();
-    const BitDepth outBD = lut->getOutputBitDepth();
-
-    const float outMax = GetBitDepthMaxValue(outBD);
+    const float outMax = (float)GetBitDepthMaxValue(outBD);
     const float outMin = 0.0f;
 
-    const bool isLookup = inBD != BIT_DEPTH_F32 && inBD != BIT_DEPTH_UINT32;
-
+    // (Used by L_ADJUST macro.)
     const bool isOutInteger = !IsFloatBitDepth(outBD);
 
     const bool mustResample = !lut->mayLookup(inBD);
 
-    // If we are able to lookup, need to resample the LUT based on inBitDepth.
-    if (isLookup && mustResample)
+    if (isLookup())
     {
-        Lut1DOpDataRcPtr newLut
-            = Lut1DOpData::MakeLookupDomain(inBD);
+        ConstLut1DOpDataRcPtr newLut = lut;
 
-        // Note: Compose should render at 32f, to avoid infinite recursion.
-        Lut1DOpData::Compose(newLut,
-                             lut,
-                             // Prevent compose from modifying newLut domain.
-                             Lut1DOpData::COMPOSE_RESAMPLE_NO);
+        // If we are able to lookup, need to resample the LUT based on inBitDepth.
+        if(mustResample)
+        {
+            Lut1DOpDataRcPtr newLutTmp = Lut1DOpData::MakeLookupDomain(inBD);
+
+            // Note: Compose should render at 32f, to avoid infinite recursion.
+            Lut1DOpData::Compose(newLutTmp,
+                                 lut,
+                                 // Prevent compose from modifying newLut domain.
+                                 Lut1DOpData::COMPOSE_RESAMPLE_NO);
+            newLut = newLutTmp;
+        }
 
         m_dim = newLut->getArray().getLength();
 
-        m_tmpLutR.resize(m_dim);
-        m_tmpLutG.resize(m_dim);
-        m_tmpLutB.resize(m_dim);
+        m_tmpLutR = new T[m_dim];
+        m_tmpLutG = new T[m_dim];
+        m_tmpLutB = new T[m_dim];
 
-        const Array::Values & 
-            lutValues = newLut->getArray().getValues();
+        const Array::Values & lutValues = newLut->getArray().getValues();
 
         // TODO: Would be faster if R, G, B were adjacent in memory?
         for(unsigned long i=0; i<m_dim; ++i)
         {
-            m_tmpLutR[i] = L_ADJUST(lutValues[i*3+0]);
-            m_tmpLutG[i] = L_ADJUST(lutValues[i*3+1]);
-            m_tmpLutB[i] = L_ADJUST(lutValues[i*3+2]);
+            ((T*)m_tmpLutR)[i] = L_ADJUST(lutValues[i*3+0]);
+            ((T*)m_tmpLutG)[i] = L_ADJUST(lutValues[i*3+1]);
+            ((T*)m_tmpLutB)[i] = L_ADJUST(lutValues[i*3+2]);
         }
     }
     else
     {
-        const Array::Values & 
-            lutValues = lut->getArray().getValues();
+        const Array::Values & lutValues = lut->getArray().getValues();
 
-        m_tmpLutR.resize(m_dim);
-        m_tmpLutG.resize(m_dim);
-        m_tmpLutB.resize(m_dim);
+        m_tmpLutR = new float[m_dim];
+        m_tmpLutG = new float[m_dim];
+        m_tmpLutB = new float[m_dim];
 
         for(unsigned long i=0; i<m_dim; ++i)
         {
-            m_tmpLutR[i] = L_ADJUST(lutValues[i*3+0]);
-            m_tmpLutG[i] = L_ADJUST(lutValues[i*3+1]);
-            m_tmpLutB[i] = L_ADJUST(lutValues[i*3+2]);
+            ((float*)m_tmpLutR)[i] = SanitizeFloat(lutValues[i*3+0]);
+            ((float*)m_tmpLutG)[i] = SanitizeFloat(lutValues[i*3+1]);
+            ((float*)m_tmpLutB)[i] = SanitizeFloat(lutValues[i*3+2]);
         }
     }
 
-    m_alphaScaling = GetBitDepthMaxValue(outBD)
-                     / GetBitDepthMaxValue(inBD);
+    m_alphaScaling = (float)GetBitDepthMaxValue(outBD)
+                     / (float)GetBitDepthMaxValue(inBD);
+
+    m_step = ((float)m_dim - 1.0f)
+             / (float)GetBitDepthMaxValue(lut->getInputBitDepth());
+
+    m_dimMinusOne = m_dim - 1.0f;
 }
 
-Lut1DRendererHalfCode::~Lut1DRendererHalfCode()
+template<BitDepth inBD, BitDepth outBD>
+void BaseLut1DRenderer<inBD, outBD>::reset()
 {
-}
+    if(!m_tmpLutR && !m_tmpLutG && !m_tmpLutB) return;
 
-void Lut1DRendererHalfCode::apply(float * rgbaBuffer, long numPixels) const
-{
-    // TODO: Add ability for input or output to be an integer rather than
-    // always float.
-
-    // TODO: To uncomment when apply bit-depth is in.
-    // const bool isLookup = GET_BIT_DEPTH( PF_IN ) != OCIO::BIT_DEPTH_F32;
-    const bool isLookup = false; 
-
-    const float * lutR = m_tmpLutR.data();
-    const float * lutG = m_tmpLutG.data();
-    const float * lutB = m_tmpLutB.data();
-
-    if (isLookup)
+    if (isLookup())
     {
-        float * rgba = rgbaBuffer;
+        switch(m_outBitDepth)
+        {
+            case BIT_DEPTH_UINT8:
+                resetData<BitDepthInfo<BIT_DEPTH_UINT8>::Type>();
+                break;
+            case BIT_DEPTH_UINT10:
+                resetData<BitDepthInfo<BIT_DEPTH_UINT10>::Type>();
+                break;
+            case BIT_DEPTH_UINT12:
+                resetData<BitDepthInfo<BIT_DEPTH_UINT12>::Type>();
+                break;
+            case BIT_DEPTH_UINT16:
+                resetData<BitDepthInfo<BIT_DEPTH_UINT16>::Type>();
+                break;
+            case BIT_DEPTH_F16:
+                resetData<BitDepthInfo<BIT_DEPTH_F16>::Type>();
+                break;
+            case BIT_DEPTH_F32:
+                resetData<BitDepthInfo<BIT_DEPTH_F32>::Type>();
+                break;
+
+            case BIT_DEPTH_UINT14:
+            case BIT_DEPTH_UINT32:
+            case BIT_DEPTH_UNKNOWN:
+            default:
+                break;
+        }
+    }
+    else
+    {
+        resetData<float>();
+    }
+}
+
+template<BitDepth inBD, BitDepth outBD>
+template<typename T>
+void BaseLut1DRenderer<inBD, outBD>::resetData()
+{
+    delete [](T*)m_tmpLutR; m_tmpLutR = nullptr;
+    delete [](T*)m_tmpLutG; m_tmpLutG = nullptr;
+    delete [](T*)m_tmpLutB; m_tmpLutB = nullptr;
+}
+
+template<BitDepth inBD, BitDepth outBD>
+BaseLut1DRenderer<inBD, outBD>::~BaseLut1DRenderer()
+{
+    reset();
+}
+
+template<BitDepth inBD, BitDepth outBD>
+void Lut1DRendererHalfCode<inBD, outBD>::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    typedef typename BitDepthInfo<inBD>::Type InType;
+    typedef typename BitDepthInfo<outBD>::Type OutType;
+
+    const InType * in = (InType *)inImg;
+    OutType * out = (OutType *)outImg;
+
+    // Input pixel format allows lookup rather than interpolation.
+    //
+    // NB: The if/else is expanded at compile time based on the template args.
+    //     (Should be no runtime cost.)
+    if(inBD != BIT_DEPTH_F32)
+    {
+        const OutType * lutR = (const OutType *)this->m_tmpLutR;
+        const OutType * lutG = (const OutType *)this->m_tmpLutG;
+        const OutType * lutB = (const OutType *)this->m_tmpLutB;
 
         for(long idx=0; idx<numPixels; ++idx)
         {
-            rgba[0] = LookupLut<float, float>::compute(lutR, rgba[0]);
-            rgba[1] = LookupLut<float, float>::compute(lutG, rgba[1]);
-            rgba[2] = LookupLut<float, float>::compute(lutB, rgba[2]);
-            rgba[3] = rgba[3] * m_alphaScaling;
+            out[0] = LookupLut<InType, OutType>::compute(lutR, in[0]);
+            out[1] = LookupLut<InType, OutType>::compute(lutG, in[1]);
+            out[2] = LookupLut<InType, OutType>::compute(lutB, in[2]);
+            out[3] = OutType(in[3] * this->m_alphaScaling);
 
-            rgba += 4;
+            in  += 4;
+            out += 4;
         }
     }
     else  // Need to interpolate rather than simply lookup.
     {
-        float * rgba = rgbaBuffer;
+        const float * lutR = (const float *)this->m_tmpLutR;
+        const float * lutG = (const float *)this->m_tmpLutG;
+        const float * lutB = (const float *)this->m_tmpLutB;
 
         for(long idx=0; idx<numPixels; ++idx)
         {
-            IndexPair redInterVals = getEdgeFloatValues(rgba[0]);
-            IndexPair greenInterVals = getEdgeFloatValues(rgba[1]);
-            IndexPair blueInterVals = getEdgeFloatValues(rgba[2]);
+            const IndexPair redInterVals   = IndexPair::GetEdgeFloatValues(in[0]);
+            const IndexPair greenInterVals = IndexPair::GetEdgeFloatValues(in[1]);
+            const IndexPair blueInterVals  = IndexPair::GetEdgeFloatValues(in[2]);
 
             // Since fraction is in the domain [0, 1), interpolate using
             // 1-fraction in order to avoid cases like -/+Inf * 0.
-            rgba[0] = lerpf(lutR[redInterVals.valB],
-                            lutR[redInterVals.valA],
-                            1.0f-redInterVals.fraction);
+            out[0] = Converter<outBD>::CastValue(
+                        lerpf(lutR[redInterVals.valB],
+                              lutR[redInterVals.valA],
+                              1.0f-redInterVals.fraction));
 
-            rgba[1] = lerpf(lutG[greenInterVals.valB],
-                            lutG[greenInterVals.valA],
-                            1.0f-greenInterVals.fraction);
+            out[1] = Converter<outBD>::CastValue(
+                        lerpf(lutG[greenInterVals.valB],
+                              lutG[greenInterVals.valA],
+                              1.0f-greenInterVals.fraction));
 
-            rgba[2] = lerpf(lutB[blueInterVals.valB],
-                            lutB[blueInterVals.valA],
-                            1.0f-blueInterVals.fraction);
+            out[2] = Converter<outBD>::CastValue(
+                        lerpf(lutB[blueInterVals.valB],
+                              lutB[blueInterVals.valA],
+                              1.0f-blueInterVals.fraction));
 
-            rgba[3] = rgba[3] * m_alphaScaling;
+            out[3] = Converter<outBD>::CastValue(in[3] * this->m_alphaScaling);
 
-            rgba += 4;
+            in  += 4;
+            out += 4;
         }
     }
 }
 
-Lut1DRendererHalfCode::IndexPair Lut1DRendererHalfCode::getEdgeFloatValues(float fIn) const
+IndexPair IndexPair::GetEdgeFloatValues(float fIn)
 {
     // TODO: Could we speed this up (perhaps alternate nan/inf behavior)?
 
@@ -462,148 +577,60 @@ Lut1DRendererHalfCode::IndexPair Lut1DRendererHalfCode::getEdgeFloatValues(float
 
     idxPair.fraction = (fIn - fA) / (fB - fA);
 
-    if (isnan(idxPair.fraction)) idxPair.fraction = 0.0f;
+    if (IsNan(idxPair.fraction)) idxPair.fraction = 0.0f;
 
     return idxPair;
 }
 
-Lut1DRenderer::Lut1DRenderer(ConstLut1DOpDataRcPtr & lut)
-    :  BaseLut1DRenderer(lut)
-    ,   m_step(0.0f)
-    ,   m_dimMinusOne(0.0f)
+template<BitDepth inBD, BitDepth outBD>
+void Lut1DRenderer<inBD, outBD>::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    updateData(lut);
-}
+    typedef typename BitDepthInfo<inBD>::Type InType;
+    typedef typename BitDepthInfo<outBD>::Type OutType;
 
-void Lut1DRenderer::updateData(ConstLut1DOpDataRcPtr & lut)
-{
-    resetData();
+    const InType * in = (InType *)inImg;
+    OutType * out = (OutType *)outImg;
 
-    m_dim = lut->getArray().getLength();
-
-    const BitDepth inBD = lut->getInputBitDepth();
-    const BitDepth outBD= lut->getOutputBitDepth();
-
-    const float outMin = 0.0f;
-    const float outMax = GetBitDepthMaxValue(outBD);
-
-    // TODO: To uncomment when apply bit-depth will be in
-    const bool isLookup = false; //GET_BIT_DEPTH( PF_IN ) != BIT_DEPTH_F32;
-
-    const bool isOutInteger = !IsFloatBitDepth(outBD);
-
-    const bool mustResample = !lut->mayLookup(inBD);
-
-    // If we are able to lookup, need to resample the LUT based on inBitDepth.
-    if (isLookup && mustResample)
-    {
-        Lut1DOpDataRcPtr newLut
-            = Lut1DOpData::MakeLookupDomain(lut->getInputBitDepth());
-
-        // Note: Compose should render at 32f, to avoid infinite recursion.
-        Lut1DOpData::Compose(newLut,
-                             lut,
-                             // Prevent compose from modifying newLut domain.
-                             Lut1DOpData::COMPOSE_RESAMPLE_NO);
-
-        m_dim = newLut->getArray().getLength();
-
-        const Array::Values& lutValues = newLut->getArray().getValues();
-
-        m_tmpLutR.resize(m_dim);
-        m_tmpLutG.resize(m_dim);
-        m_tmpLutB.resize(m_dim);
-
-        // TODO: Would be faster if R, G, B were adjacent in memory?
-        for(unsigned long i=0; i<m_dim; ++i)
-        {
-            m_tmpLutR[i] = L_ADJUST(lutValues[i*3+0]);
-            m_tmpLutG[i] = L_ADJUST(lutValues[i*3+1]);
-            m_tmpLutB[i] = L_ADJUST(lutValues[i*3+2]);
-        }
-    }
-    else  // Just copy the array into tmpLut.
-    {
-        m_step = ((float)m_dim - 1.0f)
-                 / GetBitDepthMaxValue(lut->getInputBitDepth());
-
-        const Array::Values & lutValues = lut->getArray().getValues();
-
-        m_tmpLutR.resize(m_dim);
-        m_tmpLutG.resize(m_dim);
-        m_tmpLutB.resize(m_dim);
-
-        // TODO: Would be faster if R, G, B were adjacent in memory?
-        for(unsigned long i=0; i<m_dim; ++i)
-        {
-            // Urgent TODO: The tmpLut must contain unclamped floats.
-            // Clamping/quantizing before interpolation will cause errors.
-            // TODO: We need two tmpLut arrays, a float array that can be
-            // used when we're interpolating and a templated type that
-            // gets used for lookups.
-            m_tmpLutR[i] = L_ADJUST(lutValues[i*3+0]);
-            m_tmpLutG[i] = L_ADJUST(lutValues[i*3+1]);
-            m_tmpLutB[i] = L_ADJUST(lutValues[i*3+2]);
-        }
-    }
-
-    m_alphaScaling = GetBitDepthMaxValue(outBD)
-                        / GetBitDepthMaxValue(inBD);
-
-    m_dimMinusOne = (float)m_dim - 1.0f;
-
-}
-
-Lut1DRenderer::~Lut1DRenderer()
-{
-}
-
-void Lut1DRenderer::apply(float * rgbaBuffer, long numPixels) const
-{
-    const float * lutR = m_tmpLutR.data();
-    const float * lutG = m_tmpLutG.data();
-    const float * lutB = m_tmpLutB.data();
-
-    // TODO: To uncomment when apply bit depth is in.
-    // const bool isLookup = GET_BIT_DEPTH( PF_IN ) != BIT_DEPTH_F32;
-    const bool isLookup = false; 
-
+    // Input pixel format allows lookup rather than interpolation.
+    //
     // NB: The if/else is expanded at compile time based on the template args.
     //     (Should be no runtime cost.)
-    if (isLookup)
+    if (inBD != BIT_DEPTH_F32)
     {
-        float * rgba = rgbaBuffer;
+        const OutType * lutR = (const OutType *)this->m_tmpLutR;
+        const OutType * lutG = (const OutType *)this->m_tmpLutG;
+        const OutType * lutB = (const OutType *)this->m_tmpLutB;
 
         for(long idx=0; idx<numPixels; ++idx)
         {
-            rgba[0] = LookupLut<float, float>::compute(lutR, rgba[0]);
-            rgba[1] = LookupLut<float, float>::compute(lutG, rgba[1]);
-            rgba[2] = LookupLut<float, float>::compute(lutB, rgba[2]);
-            rgba[3] = rgba[3] * m_alphaScaling;
+            out[0] = LookupLut<InType, OutType>::compute(lutR, in[0]);
+            out[1] = LookupLut<InType, OutType>::compute(lutG, in[1]);
+            out[2] = LookupLut<InType, OutType>::compute(lutB, in[2]);
+            out[3] = OutType(in[3] * this->m_alphaScaling);
 
-            rgba += 4;
+            in  += 4;
+            out += 4;
         }
     }
     else  // Need to interpolate rather than simply lookup.
     {
-        float * rgba = rgbaBuffer;
+        const float * lutR = (const float *)this->m_tmpLutR;
+        const float * lutG = (const float *)this->m_tmpLutG;
+        const float * lutB = (const float *)this->m_tmpLutB;
+
+#ifdef USE_SSE
+        __m128 step = _mm_set_ps(1.0f, this->m_step, this->m_step, this->m_step);
+        __m128 dimMinusOne = _mm_set1_ps(this->m_dimMinusOne);
+#endif
 
         for(long i=0; i<numPixels; ++i)
         {
 #ifdef USE_SSE
             __m128 idx
-                = _mm_mul_ps(_mm_set_ps(rgba[3],
-                                        rgba[2],
-                                        rgba[1],
-                                        rgba[0]),
-                             _mm_set_ps(1.0f,
-                                        m_step,
-                                        m_step,
-                                        m_step));
+                = _mm_mul_ps(_mm_set_ps(in[3], in[2], in[1], in[0]), step);
 
             // _mm_max_ps => NaNs become 0
-            idx = _mm_min_ps(_mm_max_ps(idx, EZERO),
-                             _mm_set1_ps(m_dimMinusOne));
+            idx = _mm_min_ps(_mm_max_ps(idx, EZERO), dimMinusOne);
 
             // zero < std::floor(idx) < maxIdx
             // SSE => zero < truncate(idx) < maxIdx
@@ -614,26 +641,25 @@ void Lut1DRenderer::apply(float * rgbaBuffer, long numPixels) const
             // SSE => (lowIdx (already truncated) + 1) < maxIdx
             // then clamp to prevent hIdx from falling off the end
             // of the LUT
-            __m128 hIdx = _mm_min_ps(_mm_add_ps(lIdx, EONE),
-                                     _mm_set1_ps(m_dimMinusOne));
+            __m128 hIdx = _mm_min_ps(_mm_add_ps(lIdx, EONE), dimMinusOne);
 
             // Computing delta relative to high rather than lowIdx
             // to save computing (1-delta) below.
             __m128 d = _mm_sub_ps(hIdx, idx);
 
-            float delta[4];   _mm_storeu_ps(delta, d);
-            float lowIdx[4];  _mm_storeu_ps(lowIdx, lIdx);
-            float highIdx[4]; _mm_storeu_ps(highIdx, hIdx);
+            OCIO_ALIGN(float delta[4]);   _mm_store_ps(delta, d);
+            OCIO_ALIGN(float lowIdx[4]);  _mm_store_ps(lowIdx, lIdx);
+            OCIO_ALIGN(float highIdx[4]); _mm_store_ps(highIdx, hIdx);
 #else
             float idx[3];
-            idx[0] = m_step * rgba[0];
-            idx[1] = m_step * rgba[1];
-            idx[2] = m_step * rgba[2];
+            idx[0] = this->m_step * in[0];
+            idx[1] = this->m_step * in[1];
+            idx[2] = this->m_step * in[2];
 
             // NaNs become 0
-            idx[0] = std::min(std::max(0.f, idx[0]), m_dimMinusOne);
-            idx[1] = std::min(std::max(0.f, idx[1]), m_dimMinusOne);
-            idx[2] = std::min(std::max(0.f, idx[2]), m_dimMinusOne);
+            idx[0] = std::min(std::max(0.f, idx[0]), this->m_dimMinusOne);
+            idx[1] = std::min(std::max(0.f, idx[1]), this->m_dimMinusOne);
+            idx[2] = std::min(std::max(0.f, idx[2]), this->m_dimMinusOne);
 
             unsigned int lowIdx[3];
             lowIdx[0] = static_cast<unsigned int>(std::floor(idx[0]));
@@ -657,23 +683,27 @@ void Lut1DRenderer::apply(float * rgbaBuffer, long numPixels) const
             delta[2] = (float)highIdx[2] - idx[2];
 
 #endif
-            // TODO: If the LUT is a lookup one and the
-            //       the output bit-depth is different from float,
-            //       then this computation implicitely introduces
-            //       several type conversions.
-            //       Could it impact performance ?
-            //       To be investigated...
-
             // Since fraction is in the domain [0, 1), interpolate using 1-fraction
             // in order to avoid cases like -/+Inf * 0. Therefore we never multiply by 0 and
             // thus handle the case where A or B is infinity and return infinity rather than
             // 0*Infinity (which is NaN).
-            rgba[0] = lerpf(lutR[(unsigned int)highIdx[0]], lutR[(unsigned int)lowIdx[0]], delta[0]);
-            rgba[1] = lerpf(lutG[(unsigned int)highIdx[1]], lutG[(unsigned int)lowIdx[1]], delta[1]);
-            rgba[2] = lerpf(lutB[(unsigned int)highIdx[2]], lutB[(unsigned int)lowIdx[2]], delta[2]);
-            rgba[3] = rgba[3] * m_alphaScaling;
 
-            rgba += 4;
+            out[0] = Converter<outBD>::CastValue(
+                        lerpf(lutR[(unsigned int)highIdx[0]], 
+                              lutR[(unsigned int)lowIdx[0]], 
+                              delta[0]));
+            out[1] = Converter<outBD>::CastValue(
+                        lerpf(lutG[(unsigned int)highIdx[1]],
+                              lutG[(unsigned int)lowIdx[1]],
+                              delta[1]));
+            out[2] = Converter<outBD>::CastValue(
+                        lerpf(lutB[(unsigned int)highIdx[2]], 
+                              lutB[(unsigned int)lowIdx[2]],
+                              delta[2]));
+            out[3] = Converter<outBD>::CastValue(in[3] * this->m_alphaScaling);
+
+            in  += 4;
+            out += 4;
         }
     }
 }
@@ -707,43 +737,26 @@ namespace GamutMapUtils
 // to implement the hueAdjust versions quickly and without risk of breaking
 // the original renderers.
 
-Lut1DRendererHalfCodeHueAdjust::Lut1DRendererHalfCodeHueAdjust(ConstLut1DOpDataRcPtr & lut)
-    :  Lut1DRendererHalfCode(lut)
+template<BitDepth inBD, BitDepth outBD>
+void Lut1DRendererHalfCodeHueAdjust<inBD, outBD>::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    // Regardless of the desired out-depth, we need the LUT1D to produce a 32f
-    // result to be used in the hue adjust post-process.
-    m_outBitDepth = BIT_DEPTH_F32;
+    typedef typename BitDepthInfo<inBD>::Type InType;
+    typedef typename BitDepthInfo<outBD>::Type OutType;
 
-    updateData(lut);
-}
+    const float * lutR = (const float *)this->m_tmpLutR;
+    const float * lutG = (const float *)this->m_tmpLutG;
+    const float * lutB = (const float *)this->m_tmpLutB;
 
-Lut1DRendererHalfCodeHueAdjust::~Lut1DRendererHalfCodeHueAdjust()
-{
-}
-
-void Lut1DRendererHalfCodeHueAdjust::apply(float * rgbaBuffer, long numPixels) const
-{
-    // TODO: To uncomment when apply bit-depth will be in
-    const bool isLookup = false; //GET_BIT_DEPTH( PF_IN ) != BIT_DEPTH_F32;
-
-    // The LUT entries should always be 32f in this case 
-    // since we need to do additional computations.
-    const float* lutR = m_tmpLutR.data();
-    const float* lutG = m_tmpLutG.data();
-    const float* lutB = m_tmpLutB.data();
+    const InType * in = (InType *)inImg;
+    OutType * out = (OutType *)outImg;
 
     // NB: The if/else is expanded at compile time based on the template args.
     // (Should be no runtime cost.)
-
-    if (isLookup)
+    if (inBD != BIT_DEPTH_F32)
     {
-        float * rgba = rgbaBuffer;
-
         for(long idx=0; idx<numPixels; ++idx)
         {
-            const float RGB[] = {rgba[0], rgba[1], rgba[2]};
-
-            // TODO: Refactor to use SSE2 intrinsic instructions.
+            const float RGB[] = {(float)in[0], (float)in[1], (float)in[2]};
 
             int min, mid, max;
             GamutMapUtils::Order3( RGB, min, mid, max);
@@ -754,35 +767,35 @@ void Lut1DRendererHalfCodeHueAdjust::apply(float * rgbaBuffer, long numPixels) c
                                       :  (RGB[mid] - RGB[min]) / orig_chroma;
 
             float RGB2[] = {
-                LookupLut<float, float>::compute(lutR, rgba[0]),
-                LookupLut<float, float>::compute(lutG, rgba[1]),
-                LookupLut<float, float>::compute(lutB, rgba[2])   };
+                LookupLut<InType, float>::compute(lutR, in[0]),
+                LookupLut<InType, float>::compute(lutG, in[1]),
+                LookupLut<InType, float>::compute(lutB, in[2])   };
 
             const float new_chroma = RGB2[max] - RGB2[min];
 
             RGB2[mid] = hue_factor * new_chroma + RGB2[min];
 
-            rgba[0] = RGB2[0];
-            rgba[1] = RGB2[1];
-            rgba[2] = RGB2[2];
-            rgba[3] = rgba[3] * m_alphaScaling;
+            out[0] = OutType(RGB2[0]);
+            out[1] = OutType(RGB2[1]);
+            out[2] = OutType(RGB2[2]);
+            out[3] = OutType(in[3] * this->m_alphaScaling);
 
-            rgba += 4;
+            in  += 4;
+            out += 4;
         }
     }
     else  // Need to interpolate rather than simply lookup.
     {
-        float * rgba = rgbaBuffer;
-
         for(long idx=0; idx<numPixels; ++idx)
         {
-            const float RGB[] = {rgba[0], rgba[1], rgba[2]};
+            const float RGB[] = {(float)in[0], (float)in[1], (float)in[2]};
 
             int min, mid, max;
             GamutMapUtils::Order3(RGB, min, mid, max);
-            IndexPair redInterVals = getEdgeFloatValues(RGB[0]);
-            IndexPair greenInterVals = getEdgeFloatValues(RGB[1]);
-            IndexPair blueInterVals = getEdgeFloatValues(RGB[2]);
+
+            const IndexPair redInterVals   = IndexPair::GetEdgeFloatValues(RGB[0]);
+            const IndexPair greenInterVals = IndexPair::GetEdgeFloatValues(RGB[1]);
+            const IndexPair blueInterVals  = IndexPair::GetEdgeFloatValues(RGB[2]);
 
             // Since fraction is in the domain [0, 1), interpolate using
             // 1-fraction in order to avoid cases like -/+Inf * 0.
@@ -808,53 +821,37 @@ void Lut1DRendererHalfCodeHueAdjust::apply(float * rgbaBuffer, long numPixels) c
             const float new_chroma = RGB2[max] - RGB2[min];
             RGB2[mid] = hue_factor * new_chroma + RGB2[min];
 
-            rgba[0] = RGB2[0];
-            rgba[1] = RGB2[1];
-            rgba[2] = RGB2[2];
-            rgba[3] = rgba[3] * m_alphaScaling;
+            out[0] = Converter<outBD>::CastValue(RGB2[0]);
+            out[1] = Converter<outBD>::CastValue(RGB2[1]);
+            out[2] = Converter<outBD>::CastValue(RGB2[2]);
+            out[3] = Converter<outBD>::CastValue(in[3] * this->m_alphaScaling);
 
-            rgba += 4;
+            in  += 4;
+            out += 4;
         }
     }
 }
 
-Lut1DRendererHueAdjust::Lut1DRendererHueAdjust(ConstLut1DOpDataRcPtr & lut)
-    :  Lut1DRenderer(lut)
+template<BitDepth inBD, BitDepth outBD>
+void Lut1DRendererHueAdjust<inBD, outBD>::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    // Regardless of the desired out-depth, we need the LUT1D to produce a 32f
-    // result to be used in the hue adjust post-process.
-    m_outBitDepth = BIT_DEPTH_F32;
+    typedef typename BitDepthInfo<inBD>::Type InType;
+    typedef typename BitDepthInfo<outBD>::Type OutType;
 
-    // Need to recalculate the tmpLUTs at 32f outdepth.
-    updateData(lut);
-}
+    const float * lutR = (const float *)this->m_tmpLutR;
+    const float * lutG = (const float *)this->m_tmpLutG;
+    const float * lutB = (const float *)this->m_tmpLutB;
 
-Lut1DRendererHueAdjust::~Lut1DRendererHueAdjust()
-{
-}
-
-void Lut1DRendererHueAdjust::apply(float * rgbaBuffer, long numPixels) const
-{
-    // TODO: To uncomment when apply bit-depth will be in
-    //const bool isLookup = GET_BIT_DEPTH( PF_IN ) != OCIO::BIT_DEPTH_F32;
-    const bool isLookup = false; 
-
-    // The LUT entries should always be 32f in this case 
-    // since we need to do additional computations.
-    const float * lutR = m_tmpLutR.data();
-    const float * lutG = m_tmpLutG.data();
-    const float * lutB = m_tmpLutB.data();
+    const InType * in = (InType *)inImg;
+    OutType * out = (OutType *)outImg;
 
     // NB: The if/else is expanded at compile time based on the template args.
     // (Should be no runtime cost.)
-
-    if (isLookup)
+    if (inBD != BIT_DEPTH_F32)
     {
-        float * rgba = rgbaBuffer;
-
         for(long idx=0; idx<numPixels; ++idx)
         {
-            const float RGB[] = {rgba[0], rgba[1], rgba[2]};
+            const float RGB[] = {(float)in[0], (float)in[1], (float)in[2]};
 
             int min, mid, max;
             GamutMapUtils::Order3(RGB, min, mid, max);
@@ -865,30 +862,29 @@ void Lut1DRendererHueAdjust::apply(float * rgbaBuffer, long numPixels) const
                                      : (RGB[mid] - RGB[min]) / orig_chroma;
 
             float RGB2[] = {
-                LookupLut<float, float>::compute(lutR, rgba[0]),
-                LookupLut<float, float>::compute(lutG, rgba[1]),
-                LookupLut<float, float>::compute(lutB, rgba[2])
+                LookupLut<InType, float>::compute(lutR, in[0]),
+                LookupLut<InType, float>::compute(lutG, in[1]),
+                LookupLut<InType, float>::compute(lutB, in[2])
             };
 
             const float new_chroma = RGB2[max] - RGB2[min];
 
             RGB2[mid] = hue_factor * new_chroma + RGB2[min];
 
-            rgba[0] = RGB2[0];
-            rgba[1] = RGB2[1];
-            rgba[2] = RGB2[2];
-            rgba[3] = rgba[3] * m_alphaScaling;
+            out[0] = OutType(RGB2[0]);
+            out[1] = OutType(RGB2[1]);
+            out[2] = OutType(RGB2[2]);
+            out[3] = OutType(in[3] * this->m_alphaScaling);
 
-            rgba += 4;
+            in  += 4;
+            out += 4;
         }
     }
     else  // Need to interpolate rather than simply lookup.
     {
-        float * rgba = rgbaBuffer;
-
         for(long i=0; i<numPixels; ++i)
         {
-            const float RGB[] = {rgba[0], rgba[1], rgba[2]};
+            const float RGB[] = {(float)in[0], (float)in[1], (float)in[2]};
 
             int min, mid, max;
             GamutMapUtils::Order3( RGB, min, mid, max);
@@ -900,18 +896,18 @@ void Lut1DRendererHueAdjust::apply(float * rgbaBuffer, long numPixels) const
 
 #ifdef USE_SSE
             __m128 idx
-                = _mm_mul_ps(_mm_set_ps(rgba[3],
+                = _mm_mul_ps(_mm_set_ps(in[3],
                                         RGB[2],
                                         RGB[1],
                                         RGB[0]),
                              _mm_set_ps(1.0f,
-                                        m_step,
-                                        m_step,
-                                        m_step));
+                                        this->m_step,
+                                        this->m_step,
+                                        this->m_step));
 
             // _mm_max_ps => NaNs become 0
             idx = _mm_min_ps(_mm_max_ps(idx, EZERO),
-                             _mm_set1_ps(m_dimMinusOne));
+                             _mm_set1_ps(this->m_dimMinusOne));
 
             // zero < std::floor(idx) < maxIdx
             // SSE => zero < truncate(idx) < maxIdx
@@ -922,25 +918,25 @@ void Lut1DRendererHueAdjust::apply(float * rgbaBuffer, long numPixels) const
             // zero < std::ceil(idx) < maxIdx
             // SSE => (lowIdx (already truncated) + 1) < maxIdx
             __m128 hIdx = _mm_min_ps(_mm_add_ps(lIdx, EONE),
-                                     _mm_set1_ps(m_dimMinusOne));
+                                     _mm_set1_ps(this->m_dimMinusOne));
 
             // Computing delta relative to high rather than lowIdx
             // to save computing (1-delta) below.
             __m128 d = _mm_sub_ps(hIdx, idx);
 
-            float delta[4];   _mm_storeu_ps(delta, d);
-            float lowIdx[4];  _mm_storeu_ps(lowIdx, lIdx);
-            float highIdx[4]; _mm_storeu_ps(highIdx, hIdx);
+            OCIO_ALIGN(float delta[4]);   _mm_store_ps(delta, d);
+            OCIO_ALIGN(float lowIdx[4]);  _mm_store_ps(lowIdx, lIdx);
+            OCIO_ALIGN(float highIdx[4]); _mm_store_ps(highIdx, hIdx);
 #else
             float idx[3];
-            idx[0] = m_step * RGB[0];
-            idx[1] = m_step * RGB[1];
-            idx[2] = m_step * RGB[2];
+            idx[0] = this->m_step * RGB[0];
+            idx[1] = this->m_step * RGB[1];
+            idx[2] = this->m_step * RGB[2];
 
             // NaNs become 0
-            idx[0] = std::min(std::max(0.f, idx[0]), m_dimMinusOne);
-            idx[1] = std::min(std::max(0.f, idx[1]), m_dimMinusOne);
-            idx[2] = std::min(std::max(0.f, idx[2]), m_dimMinusOne);
+            idx[0] = std::min(std::max(0.f, idx[0]), this->m_dimMinusOne);
+            idx[1] = std::min(std::max(0.f, idx[1]), this->m_dimMinusOne);
+            idx[2] = std::min(std::max(0.f, idx[2]), this->m_dimMinusOne);
 
             unsigned int lowIdx[3];
             lowIdx[0] = static_cast<unsigned int>(std::floor(idx[0]));
@@ -963,13 +959,6 @@ void Lut1DRendererHueAdjust::apply(float * rgbaBuffer, long numPixels) const
             delta[1] = (float)highIdx[1] - idx[1];
             delta[2] = (float)highIdx[2] - idx[2];
 #endif
-            // TODO: If the LUT is a lookup one and the
-            //       the output bit-depth is different from float,
-            //       then this computation implicitely introduces
-            //       several type conversions.
-            //       Could it impact performance ?
-            //       To be investigated...
-
             // Since fraction is in the domain [0, 1), interpolate using 1-fraction
             // in order to avoid cases like -/+Inf * 0. Therefore we never multiply by 0 and
             // thus handle the case where A or B is infinity and return infinity rather than
@@ -984,12 +973,13 @@ void Lut1DRendererHueAdjust::apply(float * rgbaBuffer, long numPixels) const
 
             RGB2[mid] = hue_factor * new_chroma + RGB2[min];
 
-            rgba[0] = RGB2[0];
-            rgba[1] = RGB2[1];
-            rgba[2] = RGB2[2];
-            rgba[3] = rgba[3] * m_alphaScaling;
+            out[0] = Converter<outBD>::CastValue(RGB2[0]);
+            out[1] = Converter<outBD>::CastValue(RGB2[1]);
+            out[2] = Converter<outBD>::CastValue(RGB2[2]);
+            out[3] = Converter<outBD>::CastValue(in[3] * this->m_alphaScaling);
 
-            rgba += 4;
+            in  += 4;
+            out += 4;
         }
     }
 }
@@ -1127,24 +1117,30 @@ float FindLutInvHalf(const float * start,
 }
 }
 
-InvLut1DRenderer::InvLut1DRenderer(ConstLut1DOpDataRcPtr & lut) 
+template<BitDepth inBD, BitDepth outBD>
+InvLut1DRenderer<inBD, outBD>::InvLut1DRenderer(ConstLut1DOpDataRcPtr & lut) 
     :   OpCPU()
     ,   m_dim(0)
     ,   m_alphaScaling(0.0f)
 {
+    if(inBD!=lut->getInputBitDepth() || outBD!=lut->getOutputBitDepth())
+    {
+        throw Exception("Bit depth mismatch between the 1D LUT and the CPU processing.");
+    }
+
     updateData(lut);
 }
 
-InvLut1DRenderer::~InvLut1DRenderer()
+template<BitDepth inBD, BitDepth outBD>
+InvLut1DRenderer<inBD, outBD>::~InvLut1DRenderer()
 {
     resetData();
 }
 
-void InvLut1DRenderer::setComponentParams(
-    InvLut1DRenderer::ComponentParams & params,
-    const Lut1DOpData::ComponentProperties & properties,
-    const float * lutPtr,
-    const float lutZeroEntry)
+void ComponentParams::setComponentParams(ComponentParams & params,
+                                         const Lut1DOpData::ComponentProperties & properties,
+                                         const float * lutPtr,
+                                         float lutZeroEntry)
 {
     params.flipSign = properties.isIncreasing ? 1.f: -1.f;
     params.bisectPoint = lutZeroEntry;
@@ -1156,14 +1152,16 @@ void InvLut1DRenderer::setComponentParams(
     params.negLutEnd   = lutPtr + properties.negEndDomain;
 }
 
-void InvLut1DRenderer::resetData()
+template<BitDepth inBD, BitDepth outBD>
+void InvLut1DRenderer<inBD, outBD>::resetData()
 {
     m_tmpLutR.resize(0);
     m_tmpLutG.resize(0);
     m_tmpLutB.resize(0);
 }
 
-void InvLut1DRenderer::updateData(ConstLut1DOpDataRcPtr & lut)
+template<BitDepth inBD, BitDepth outBD>
+void InvLut1DRenderer<inBD, outBD>::updateData(ConstLut1DOpDataRcPtr & lut)
 {
     resetData();
 
@@ -1184,21 +1182,21 @@ void InvLut1DRenderer::updateData(ConstLut1DOpDataRcPtr & lut)
     }
 
     // Get component properties and initialize component parameters structure.
-    const Lut1DOpData::ComponentProperties & redProperties = lut->getRedProperties();
+    const Lut1DOpData::ComponentProperties & redProperties   = lut->getRedProperties();
     const Lut1DOpData::ComponentProperties & greenProperties = lut->getGreenProperties();
-    const Lut1DOpData::ComponentProperties & blueProperties = lut->getBlueProperties();
+    const Lut1DOpData::ComponentProperties & blueProperties  = lut->getBlueProperties();
 
-    setComponentParams(m_paramsR, redProperties, m_tmpLutR.data(), 0.f);
+    ComponentParams::setComponentParams(this->m_paramsR, redProperties, m_tmpLutR.data(), 0.f);
 
     if( hasSingleLut )
     {
         // NB: All pointers refer to _tmpLutR.
-        m_paramsB = m_paramsG = m_paramsR;
+        this->m_paramsB = this->m_paramsG = this->m_paramsR;
     }
     else
     {
-        setComponentParams(m_paramsG, greenProperties, m_tmpLutG.data(), 0.f);
-        setComponentParams(m_paramsB, blueProperties, m_tmpLutB.data(), 0.f);
+        ComponentParams::setComponentParams(this->m_paramsG, greenProperties, m_tmpLutG.data(), 0.f);
+        ComponentParams::setComponentParams(this->m_paramsB, blueProperties, m_tmpLutB.data(), 0.f);
     }
 
     // Fill temporary LUT.
@@ -1218,69 +1216,80 @@ void InvLut1DRenderer::updateData(ConstLut1DOpDataRcPtr & lut)
         }
     }
 
-    const float outMax = GetBitDepthMaxValue(lut->getOutputBitDepth());
+    const float outMax = (float)GetBitDepthMaxValue(lut->getOutputBitDepth());
 
-    m_alphaScaling = outMax / GetBitDepthMaxValue(lut->getInputBitDepth());
+    m_alphaScaling = outMax / (float)GetBitDepthMaxValue(lut->getInputBitDepth());
 
     // Converts from index units to inDepth units of the original LUT.
     // (Note that inDepth of the original LUT is outDepth of the inverse LUT.)
     m_scale = outMax / (float) (m_dim - 1);
 }
 
-void InvLut1DRenderer::apply(float * rgbaBuffer, long numPixels) const
+template<BitDepth inBD, BitDepth outBD>
+void InvLut1DRenderer<inBD, outBD>::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    float * rgba = rgbaBuffer;
+    typedef typename BitDepthInfo<inBD>::Type InType;
+    typedef typename BitDepthInfo<outBD>::Type OutType;
+
+    const InType * in = (InType *)inImg;
+    OutType * out = (OutType *)outImg;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
         // red
-        rgba[0] = FindLutInv(m_paramsR.lutStart,
-                             m_paramsR.startOffset,
-                             m_paramsR.lutEnd,
-                             m_paramsR.flipSign,
-                             m_scale,
-                             rgba[0]);
+        out[0] = Converter<outBD>::CastValue(
+                    FindLutInv(this->m_paramsR.lutStart,
+                               this->m_paramsR.startOffset,
+                               this->m_paramsR.lutEnd,
+                               this->m_paramsR.flipSign,
+                               m_scale,
+                               (float)in[0]));
 
         // green
-        rgba[1] = FindLutInv(m_paramsG.lutStart,
-                             m_paramsG.startOffset,
-                             m_paramsG.lutEnd,
-                             m_paramsG.flipSign,
-                             m_scale,
-                             rgba[1]);
+        out[1] = Converter<outBD>::CastValue(
+                    FindLutInv(this->m_paramsG.lutStart,
+                               this->m_paramsG.startOffset,
+                               this->m_paramsG.lutEnd,
+                               this->m_paramsG.flipSign,
+                               m_scale,
+                               (float)in[1]));
 
         // blue
-        rgba[2] = FindLutInv(m_paramsB.lutStart,
-                             m_paramsB.startOffset,
-                             m_paramsB.lutEnd,
-                             m_paramsB.flipSign,
-                             m_scale,
-                             rgba[2]);
+        out[2] = Converter<outBD>::CastValue(
+                    FindLutInv(this->m_paramsB.lutStart,
+                               this->m_paramsB.startOffset,
+                               this->m_paramsB.lutEnd,
+                               this->m_paramsB.flipSign,
+                               m_scale,
+                               (float)in[2]));
 
         // alpha
-        rgba[3] = rgba[3] * m_alphaScaling;
+        out[3] = Converter<outBD>::CastValue(in[3] * m_alphaScaling);
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
-InvLut1DRendererHueAdjust::InvLut1DRendererHueAdjust(ConstLut1DOpDataRcPtr & lut) 
-    :  InvLut1DRenderer(lut)
+template<BitDepth inBD, BitDepth outBD>
+InvLut1DRendererHueAdjust<inBD, outBD>::InvLut1DRendererHueAdjust(ConstLut1DOpDataRcPtr & lut) 
+    :  InvLut1DRenderer<inBD, outBD>(lut)
 {
-    updateData(lut);
+    this->updateData(lut);
 }
 
-InvLut1DRendererHueAdjust::~InvLut1DRendererHueAdjust()
+template<BitDepth inBD, BitDepth outBD>
+void InvLut1DRendererHueAdjust<inBD, outBD>::apply(const void * inImg, void * outImg, long numPixels) const
 {
-}
+    typedef typename BitDepthInfo<inBD>::Type InType;
+    typedef typename BitDepthInfo<outBD>::Type OutType;
 
-void InvLut1DRendererHueAdjust::apply(float * rgbaBuffer, long numPixels) const
-{
-    float * rgba = rgbaBuffer;
+    const InType * in = (InType *)inImg;
+    OutType * out = (OutType *)outImg;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        const float RGB[] = {rgba[0], rgba[1], rgba[2]};
+        const float RGB[] = {(float)in[0], (float)in[1], (float)in[2]};
 
         int min, mid, max;
         GamutMapUtils::Order3(RGB, min, mid, max);
@@ -1292,25 +1301,25 @@ void InvLut1DRendererHueAdjust::apply(float * rgbaBuffer, long numPixels) const
 
         float RGB2[] = {
             // red
-            FindLutInv(m_paramsR.lutStart,
-                       m_paramsR.startOffset,
-                       m_paramsR.lutEnd,
-                       m_paramsR.flipSign,
-                       m_scale,
+            FindLutInv(this->m_paramsR.lutStart,
+                       this->m_paramsR.startOffset,
+                       this->m_paramsR.lutEnd,
+                       this->m_paramsR.flipSign,
+                       this->m_scale,
                        RGB[0]),
             // green
-            FindLutInv(m_paramsG.lutStart,
-                       m_paramsG.startOffset,
-                       m_paramsG.lutEnd,
-                       m_paramsG.flipSign,
-                       m_scale,
+            FindLutInv(this->m_paramsG.lutStart,
+                       this->m_paramsG.startOffset,
+                       this->m_paramsG.lutEnd,
+                       this->m_paramsG.flipSign,
+                       this->m_scale,
                        RGB[1]),
             // blue
-            FindLutInv(m_paramsB.lutStart,
-                       m_paramsB.startOffset,
-                       m_paramsB.lutEnd,
-                       m_paramsB.flipSign,
-                       m_scale,
+            FindLutInv(this->m_paramsB.lutStart,
+                       this->m_paramsB.startOffset,
+                       this->m_paramsB.lutEnd,
+                       this->m_paramsB.flipSign,
+                       this->m_scale,
                        RGB[2])
         };
 
@@ -1318,64 +1327,68 @@ void InvLut1DRendererHueAdjust::apply(float * rgbaBuffer, long numPixels) const
 
         RGB2[mid] = hue_factor * new_chroma + RGB2[min];
 
-        rgba[0] = RGB2[0];
-        rgba[1] = RGB2[1];
-        rgba[2] = RGB2[2];
-        rgba[3] = rgba[3] * m_alphaScaling;
+        out[0] = Converter<outBD>::CastValue(RGB2[0]);
+        out[1] = Converter<outBD>::CastValue(RGB2[1]);
+        out[2] = Converter<outBD>::CastValue(RGB2[2]);
+        out[3] = Converter<outBD>::CastValue(in[3] * this->m_alphaScaling);
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
-InvLut1DRendererHalfCode::InvLut1DRendererHalfCode(ConstLut1DOpDataRcPtr & lut) 
-    :  InvLut1DRenderer(lut)
+template<BitDepth inBD, BitDepth outBD>
+InvLut1DRendererHalfCode<inBD, outBD>::InvLut1DRendererHalfCode(ConstLut1DOpDataRcPtr & lut) 
+    :  InvLut1DRenderer<inBD, outBD>(lut)
 {
-    updateData(lut);
+    this->updateData(lut);
 }
 
-InvLut1DRendererHalfCode::~InvLut1DRendererHalfCode()
+template<BitDepth inBD, BitDepth outBD>
+InvLut1DRendererHalfCode<inBD, outBD>::~InvLut1DRendererHalfCode()
 {
-    resetData();
+    this->resetData();
 }
 
-void InvLut1DRendererHalfCode::updateData(ConstLut1DOpDataRcPtr & lut)
+template<BitDepth inBD, BitDepth outBD>
+void InvLut1DRendererHalfCode<inBD, outBD>::updateData(ConstLut1DOpDataRcPtr & lut)
 {
-    resetData();
+    this->resetData();
 
     const bool hasSingleLut = lut->hasSingleLut();
 
-    m_dim = lut->getArray().getLength();
+    this->m_dim = lut->getArray().getLength();
 
     // Allocated temporary LUT(s)
 
-    m_tmpLutR.resize(m_dim);
-    m_tmpLutG.resize(0);
-    m_tmpLutB.resize(0);
+    this->m_tmpLutR.resize(this->m_dim);
+    this->m_tmpLutG.resize(0);
+    this->m_tmpLutB.resize(0);
 
     if( !hasSingleLut )
     {
-        m_tmpLutG.resize(m_dim);
-        m_tmpLutB.resize(m_dim);
+        this->m_tmpLutG.resize(this->m_dim);
+        this->m_tmpLutB.resize(this->m_dim);
     }
 
     // Get component properties and initialize component parameters structure.
-    const Lut1DOpData::ComponentProperties & redProperties = lut->getRedProperties();
+    const Lut1DOpData::ComponentProperties & redProperties   = lut->getRedProperties();
     const Lut1DOpData::ComponentProperties & greenProperties = lut->getGreenProperties();
-    const Lut1DOpData::ComponentProperties & blueProperties = lut->getBlueProperties();
+    const Lut1DOpData::ComponentProperties & blueProperties  = lut->getBlueProperties();
 
     const Array::Values & lutValues = lut->getArray().getValues();
 
-    setComponentParams(m_paramsR, redProperties, m_tmpLutR.data(), lutValues[0]);
+    ComponentParams::setComponentParams(this->m_paramsR, redProperties, this->m_tmpLutR.data(), lutValues[0]);
 
     if( hasSingleLut )
     {
         // NB: All pointers refer to m_tmpLutR.
-        m_paramsB = m_paramsG = m_paramsR;
+        this->m_paramsB = this->m_paramsG = this->m_paramsR;
     }
     else
     {
-        setComponentParams(m_paramsG, greenProperties, m_tmpLutG.data(), lutValues[1]);
-        setComponentParams(m_paramsB, blueProperties, m_tmpLutB.data(), lutValues[2]);
+        ComponentParams::setComponentParams(this->m_paramsG, greenProperties, this->m_tmpLutG.data(), lutValues[1]);
+        ComponentParams::setComponentParams(this->m_paramsB, blueProperties,  this->m_tmpLutB.data(), lutValues[2]);
     }
 
     // Fill temporary LUT.
@@ -1384,44 +1397,49 @@ void InvLut1DRendererHalfCode::updateData(ConstLut1DOpDataRcPtr & lut)
     // of smallest to largest.
     for(unsigned long i = 0; i < 32768; ++i)     // positive half domain
     {
-        m_tmpLutR[i] = redProperties.isIncreasing ? lutValues[i*3+0]: -lutValues[i*3+0];
+        this->m_tmpLutR[i] = redProperties.isIncreasing ? lutValues[i*3+0]: -lutValues[i*3+0];
 
         if( !hasSingleLut )
         {
-            m_tmpLutG[i] = greenProperties.isIncreasing ? lutValues[i*3+1]: -lutValues[i*3+1];
-            m_tmpLutB[i] = blueProperties.isIncreasing ? lutValues[i*3+2]: -lutValues[i*3+2];
+            this->m_tmpLutG[i] = greenProperties.isIncreasing ? lutValues[i*3+1]: -lutValues[i*3+1];
+            this->m_tmpLutB[i] = blueProperties.isIncreasing ? lutValues[i*3+2]: -lutValues[i*3+2];
         }
     }
 
     for(unsigned long i = 32768; i < 65536; ++i) // negative half domain
     {
         // (Per above, the LUT must be increasing, so negative half domain is sign reversed.)
-        m_tmpLutR[i] = redProperties.isIncreasing ? -lutValues[i*3+0]: lutValues[i*3+0];
+        this->m_tmpLutR[i] = redProperties.isIncreasing ? -lutValues[i*3+0]: lutValues[i*3+0];
 
         if( !hasSingleLut )
         {
-            m_tmpLutG[i] = greenProperties.isIncreasing ? -lutValues[i*3+1]: lutValues[i*3+1];
-            m_tmpLutB[i] = blueProperties.isIncreasing ? -lutValues[i*3+2]: lutValues[i*3+2];
+            this->m_tmpLutG[i] = greenProperties.isIncreasing ? -lutValues[i*3+1]: lutValues[i*3+1];
+            this->m_tmpLutB[i] = blueProperties.isIncreasing ? -lutValues[i*3+2]: lutValues[i*3+2];
         }
     }
 
-    const float outMax = GetBitDepthMaxValue(lut->getOutputBitDepth());
+    const float outMax = (float)GetBitDepthMaxValue(lut->getOutputBitDepth());
 
-    m_alphaScaling = outMax / GetBitDepthMaxValue(lut->getInputBitDepth());
+    this->m_alphaScaling = outMax / (float)GetBitDepthMaxValue(lut->getInputBitDepth());
 
     // Note the difference for half domain LUTs, since the distance between
     // between adjacent entries is not constant, we cannot roll it into the
     // scale.
-    m_scale = outMax;
+    this->m_scale = outMax;
 }
 
-void InvLut1DRendererHalfCode::apply(float * rgbaBuffer, long numPixels) const
+template<BitDepth inBD, BitDepth outBD>
+void InvLut1DRendererHalfCode<inBD, outBD>::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    const bool redIsIncreasing = m_paramsR.flipSign > 0.f;
-    const bool grnIsIncreasing = m_paramsG.flipSign > 0.f;
-    const bool bluIsIncreasing = m_paramsB.flipSign > 0.f;
+    typedef typename BitDepthInfo<inBD>::Type InType;
+    typedef typename BitDepthInfo<outBD>::Type OutType;
 
-    float * rgba = rgbaBuffer;
+    const InType * in = (InType *)inImg;
+    OutType * out = (OutType *)outImg;
+
+    const bool redIsIncreasing = this->m_paramsR.flipSign > 0.f;
+    const bool grnIsIncreasing = this->m_paramsG.flipSign > 0.f;
+    const bool bluIsIncreasing = this->m_paramsB.flipSign > 0.f;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
@@ -1434,84 +1452,87 @@ void InvLut1DRendererHalfCode::apply(float * rgbaBuffer, long numPixels) const
         // the neg effective domain starts.
         // If this proves to be a problem, could move the clamp here instead.
 
-        const float redIn = rgba[0];
+        const float redIn = in[0];
         const float redOut 
-            = (redIsIncreasing == (redIn >= m_paramsR.bisectPoint)) 
-                ? FindLutInvHalf(m_paramsR.lutStart,
-                                 m_paramsR.startOffset,
-                                 m_paramsR.lutEnd,
-                                 m_paramsR.flipSign,
-                                 m_scale,
+            = (redIsIncreasing == (redIn >= this->m_paramsR.bisectPoint)) 
+                ? FindLutInvHalf(this->m_paramsR.lutStart,
+                                 this->m_paramsR.startOffset,
+                                 this->m_paramsR.lutEnd,
+                                 this->m_paramsR.flipSign,
+                                 this->m_scale,
                                  redIn) 
-                : FindLutInvHalf(m_paramsR.negLutStart,
-                                 m_paramsR.negStartOffset,
-                                 m_paramsR.negLutEnd,
-                                 -m_paramsR.flipSign,
-                                 m_scale,
+                : FindLutInvHalf(this->m_paramsR.negLutStart,
+                                 this->m_paramsR.negStartOffset,
+                                 this->m_paramsR.negLutEnd,
+                                 -this->m_paramsR.flipSign,
+                                 this->m_scale,
                                  redIn);
 
-        const float grnIn = rgba[1];
+        const float grnIn = in[1];
         const float grnOut 
-            = (grnIsIncreasing == (grnIn >= m_paramsG.bisectPoint)) 
-                ? FindLutInvHalf(m_paramsG.lutStart,
-                                 m_paramsG.startOffset,
-                                 m_paramsG.lutEnd,
-                                 m_paramsG.flipSign,
-                                 m_scale,
+            = (grnIsIncreasing == (grnIn >= this->m_paramsG.bisectPoint)) 
+                ? FindLutInvHalf(this->m_paramsG.lutStart,
+                                 this->m_paramsG.startOffset,
+                                 this->m_paramsG.lutEnd,
+                                 this->m_paramsG.flipSign,
+                                 this->m_scale,
                                  grnIn) 
-                : FindLutInvHalf(m_paramsG.negLutStart,
-                                 m_paramsG.negStartOffset,
-                                 m_paramsG.negLutEnd,
-                                 -m_paramsG.flipSign,
-                                 m_scale,
+                : FindLutInvHalf(this->m_paramsG.negLutStart,
+                                 this->m_paramsG.negStartOffset,
+                                 this->m_paramsG.negLutEnd,
+                                 -this->m_paramsG.flipSign,
+                                 this->m_scale,
                                  grnIn);
 
-        const float bluIn = rgba[2];
+        const float bluIn = in[2];
         const float bluOut 
-            = (bluIsIncreasing == (bluIn >= m_paramsB.bisectPoint)) 
-                ? FindLutInvHalf(m_paramsB.lutStart,
-                                 m_paramsB.startOffset,
-                                 m_paramsB.lutEnd,
-                                 m_paramsB.flipSign,
-                                 m_scale,
+            = (bluIsIncreasing == (bluIn >= this->m_paramsB.bisectPoint)) 
+                ? FindLutInvHalf(this->m_paramsB.lutStart,
+                                 this->m_paramsB.startOffset,
+                                 this->m_paramsB.lutEnd,
+                                 this->m_paramsB.flipSign,
+                                 this->m_scale,
                                  bluIn)
-                : FindLutInvHalf(m_paramsB.negLutStart,
-                                 m_paramsB.negStartOffset,
-                                 m_paramsB.negLutEnd,
-                                 -m_paramsR.flipSign,
-                                 m_scale,
+                : FindLutInvHalf(this->m_paramsB.negLutStart,
+                                 this->m_paramsB.negStartOffset,
+                                 this->m_paramsB.negLutEnd,
+                                 -this->m_paramsR.flipSign,
+                                 this->m_scale,
                                  bluIn);
 
-        rgba[0] = redOut;
-        rgba[1] = grnOut;
-        rgba[2] = bluOut;
-        rgba[3] = rgba[3] * m_alphaScaling;
+        out[0] = Converter<outBD>::CastValue(redOut);
+        out[1] = Converter<outBD>::CastValue(grnOut);
+        out[2] = Converter<outBD>::CastValue(bluOut);
+        out[3] = Converter<outBD>::CastValue(in[3] * this->m_alphaScaling);
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
-InvLut1DRendererHalfCodeHueAdjust::InvLut1DRendererHalfCodeHueAdjust(ConstLut1DOpDataRcPtr & lut) 
-    :  InvLut1DRendererHalfCode(lut)
+template<BitDepth inBD, BitDepth outBD>
+InvLut1DRendererHalfCodeHueAdjust<inBD, outBD>::InvLut1DRendererHalfCodeHueAdjust(ConstLut1DOpDataRcPtr & lut) 
+    :  InvLut1DRendererHalfCode<inBD, outBD>(lut)
 {
-    updateData(lut);
+    this->updateData(lut);
 }
 
-InvLut1DRendererHalfCodeHueAdjust::~InvLut1DRendererHalfCodeHueAdjust()
+template<BitDepth inBD, BitDepth outBD>
+void InvLut1DRendererHalfCodeHueAdjust<inBD, outBD>::apply(const void * inImg, void * outImg, long numPixels) const
 {
-}
+    typedef typename BitDepthInfo<inBD>::Type InType;
+    typedef typename BitDepthInfo<outBD>::Type OutType;
 
-void InvLut1DRendererHalfCodeHueAdjust::apply(float * rgbaBuffer, long numPixels) const
-{
-    const bool redIsIncreasing = m_paramsR.flipSign > 0.f;
-    const bool grnIsIncreasing = m_paramsG.flipSign > 0.f;
-    const bool bluIsIncreasing = m_paramsB.flipSign > 0.f;
+    const InType * in = (InType *)inImg;
+    OutType * out = (OutType *)outImg;
 
-    float * rgba = rgbaBuffer;
+    const bool redIsIncreasing = this->m_paramsR.flipSign > 0.f;
+    const bool grnIsIncreasing = this->m_paramsG.flipSign > 0.f;
+    const bool bluIsIncreasing = this->m_paramsB.flipSign > 0.f;
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        const float RGB[] = {rgba[0], rgba[1], rgba[2]};
+        const float RGB[] = {(float)in[0], (float)in[1], (float)in[2]};
 
         int min, mid, max;
         GamutMapUtils::Order3( RGB, min, mid, max);
@@ -1522,48 +1543,48 @@ void InvLut1DRendererHalfCodeHueAdjust::apply(float * rgbaBuffer, long numPixels
                                  : (RGB[mid] - RGB[min]) / orig_chroma;
 
         const float redOut 
-            = (redIsIncreasing == (RGB[0] >= m_paramsR.bisectPoint)) 
-                ? FindLutInvHalf(m_paramsR.lutStart,
-                                 m_paramsR.startOffset,
-                                 m_paramsR.lutEnd,
-                                 m_paramsR.flipSign,
-                                 m_scale,
+            = (redIsIncreasing == (RGB[0] >= this->m_paramsR.bisectPoint)) 
+                ? FindLutInvHalf(this->m_paramsR.lutStart,
+                                 this->m_paramsR.startOffset,
+                                 this->m_paramsR.lutEnd,
+                                 this->m_paramsR.flipSign,
+                                 this->m_scale,
                                  RGB[0])
-                : FindLutInvHalf(m_paramsR.negLutStart,
-                                 m_paramsR.negStartOffset,
-                                 m_paramsR.negLutEnd,
-                                 -m_paramsR.flipSign,
-                                 m_scale,
+                : FindLutInvHalf(this->m_paramsR.negLutStart,
+                                 this->m_paramsR.negStartOffset,
+                                 this->m_paramsR.negLutEnd,
+                                 -this->m_paramsR.flipSign,
+                                 this->m_scale,
                                  RGB[0]);
 
         const float grnOut 
-            = (grnIsIncreasing == (RGB[1] >= m_paramsG.bisectPoint)) 
-                ? FindLutInvHalf(m_paramsG.lutStart,
-                                 m_paramsG.startOffset,
-                                 m_paramsG.lutEnd,
-                                 m_paramsG.flipSign,
-                                 m_scale,
+            = (grnIsIncreasing == (RGB[1] >= this->m_paramsG.bisectPoint)) 
+                ? FindLutInvHalf(this->m_paramsG.lutStart,
+                                 this->m_paramsG.startOffset,
+                                 this->m_paramsG.lutEnd,
+                                 this->m_paramsG.flipSign,
+                                 this->m_scale,
                                  RGB[1]) 
-                : FindLutInvHalf(m_paramsG.negLutStart,
-                                 m_paramsG.negStartOffset,
-                                 m_paramsG.negLutEnd,
-                                 -m_paramsG.flipSign,
-                                 m_scale,
+                : FindLutInvHalf(this->m_paramsG.negLutStart,
+                                 this->m_paramsG.negStartOffset,
+                                 this->m_paramsG.negLutEnd,
+                                 -this->m_paramsG.flipSign,
+                                 this->m_scale,
                                  RGB[1]);
 
         const float bluOut 
-            = (bluIsIncreasing == (RGB[2] >= m_paramsB.bisectPoint)) 
-                ? FindLutInvHalf(m_paramsB.lutStart,
-                                 m_paramsB.startOffset,
-                                 m_paramsB.lutEnd,
-                                 m_paramsB.flipSign,
-                                 m_scale,
+            = (bluIsIncreasing == (RGB[2] >= this->m_paramsB.bisectPoint)) 
+                ? FindLutInvHalf(this->m_paramsB.lutStart,
+                                 this->m_paramsB.startOffset,
+                                 this->m_paramsB.lutEnd,
+                                 this->m_paramsB.flipSign,
+                                 this->m_scale,
                                  RGB[2]) 
-                : FindLutInvHalf(m_paramsB.negLutStart,
-                                 m_paramsB.negStartOffset,
-                                 m_paramsB.negLutEnd,
-                                 -m_paramsR.flipSign,
-                                 m_scale,
+                : FindLutInvHalf(this->m_paramsB.negLutStart,
+                                 this->m_paramsB.negStartOffset,
+                                 this->m_paramsB.negLutEnd,
+                                 -this->m_paramsR.flipSign,
+                                 this->m_scale,
                                  RGB[2]);
 
         float RGB2[] = { redOut, grnOut, bluOut };
@@ -1572,97 +1593,173 @@ void InvLut1DRendererHalfCodeHueAdjust::apply(float * rgbaBuffer, long numPixels
 
         RGB2[mid] = hue_factor * new_chroma + RGB2[min];
 
-        rgba[0] = RGB2[0];
-        rgba[1] = RGB2[1];
-        rgba[2] = RGB2[2];
-        rgba[3] = rgba[3] * m_alphaScaling;
+        out[0] = Converter<outBD>::CastValue(RGB2[0]);
+        out[1] = Converter<outBD>::CastValue(RGB2[1]);
+        out[2] = Converter<outBD>::CastValue(RGB2[2]);
+        out[3] = Converter<outBD>::CastValue(in[3] * this->m_alphaScaling);
 
-        rgba += 4;
+        in  += 4;
+        out += 4;
     }
 }
 
+template<BitDepth inBD, BitDepth outBD>
 OpCPURcPtr GetForwardLut1DRenderer(ConstLut1DOpDataRcPtr & lut)
 {
     // NB: Unlike bit-depth, the half domain status of a LUT
     //     may not be changed.
     if (lut->isInputHalfDomain())
     {
-        if (lut->getHueAdjust() == Lut1DOpData::HUE_NONE)
+        if (lut->getHueAdjust() == HUE_NONE)
         {
-            return std::make_shared<Lut1DRendererHalfCode>(lut);
+            return std::make_shared< Lut1DRendererHalfCode<inBD, outBD> >(lut);
         }
         else
         {
-            return std::make_shared<Lut1DRendererHalfCodeHueAdjust>(lut);
+            return std::make_shared< Lut1DRendererHalfCodeHueAdjust<inBD, outBD> >(lut);
         }
     }
     else
     {
-        if (lut->getHueAdjust() == Lut1DOpData::HUE_NONE)
+        if (lut->getHueAdjust() == HUE_NONE)
         {
-            return std::make_shared<Lut1DRenderer>(lut);
+            return std::make_shared< Lut1DRenderer<inBD, outBD> >(lut);
         }
         else
         {
-            return std::make_shared<Lut1DRendererHueAdjust>(lut);
+            return std::make_shared< Lut1DRendererHueAdjust<inBD, outBD> >(lut);
         }
     }
 }
+
 }
 
-OpCPURcPtr GetLut1DRenderer(ConstLut1DOpDataRcPtr & lut)
+template<BitDepth inBD, BitDepth outBD>
+ConstOpCPURcPtr GetLut1DRenderer_OutBitDepth(ConstLut1DOpDataRcPtr & lut)
 {
     if (lut->getDirection() == TRANSFORM_DIR_FORWARD)
     {
-        return GetForwardLut1DRenderer(lut);
+        return GetForwardLut1DRenderer<inBD, outBD>(lut);
     }
     else
     {
-        if (lut->getInvStyle() == Lut1DOpData::INV_FAST)
+        if (lut->getConcreteInversionQuality() == LUT_INVERSION_FAST)
         {
             ConstLut1DOpDataRcPtr newLut = Lut1DOpData::MakeFastLut1DFromInverse(lut, false);
 
             // Render with a Lut1D renderer.
-            return GetForwardLut1DRenderer(newLut);
+            return GetForwardLut1DRenderer<inBD, outBD>(newLut);
         }
         else  // INV_EXACT
         {
             if (lut->isInputHalfDomain())
             {
-                if (lut->getHueAdjust() == Lut1DOpData::HUE_NONE)
+                if (lut->getHueAdjust() == HUE_NONE)
                 {
-                    return std::make_shared<InvLut1DRendererHalfCode>(lut);
+                    return std::make_shared< InvLut1DRendererHalfCode<inBD, outBD> >(lut);
                 }
                 else
                 {
-                    return std::make_shared<InvLut1DRendererHalfCodeHueAdjust>(lut);
+                    return std::make_shared< InvLut1DRendererHalfCodeHueAdjust<inBD, outBD> >(lut);
                 }
             }
             else
             {
-                if (lut->getHueAdjust() == Lut1DOpData::HUE_NONE)
+                if (lut->getHueAdjust() == HUE_NONE)
                 {
-                    return std::make_shared<InvLut1DRenderer>(lut);
+                    return std::make_shared< InvLut1DRenderer<inBD, outBD> >(lut);
                 }
                 else
                 {
-                    return std::make_shared<InvLut1DRendererHueAdjust>(lut);
+                    return std::make_shared< InvLut1DRendererHueAdjust<inBD, outBD> >(lut);
                 }
             }
         }
     }
 }
 
+template<BitDepth inBD>
+ConstOpCPURcPtr GetLut1DRenderer_InBitDepth(ConstLut1DOpDataRcPtr & lut, BitDepth outBD)
+{
+    if(lut->getOutputBitDepth()!=outBD)
+    {
+        throw Exception("Bit depth mismatch between the 1D LUT and the CPU processing.");
+    }
+
+    switch(outBD)
+    {
+        case BIT_DEPTH_UINT8:
+            return GetLut1DRenderer_OutBitDepth<inBD, BIT_DEPTH_UINT8>(lut); break;
+        case BIT_DEPTH_UINT10:
+            return GetLut1DRenderer_OutBitDepth<inBD, BIT_DEPTH_UINT10>(lut); break;
+        case BIT_DEPTH_UINT12:
+            return GetLut1DRenderer_OutBitDepth<inBD, BIT_DEPTH_UINT12>(lut); break;
+        case BIT_DEPTH_UINT16:
+            return GetLut1DRenderer_OutBitDepth<inBD, BIT_DEPTH_UINT16>(lut); break;
+        case BIT_DEPTH_F16:
+            return GetLut1DRenderer_OutBitDepth<inBD, BIT_DEPTH_F16>(lut); break;
+        case BIT_DEPTH_F32:
+            return GetLut1DRenderer_OutBitDepth<inBD, BIT_DEPTH_F32>(lut); break;
+
+        case BIT_DEPTH_UINT14:
+        case BIT_DEPTH_UINT32:
+        case BIT_DEPTH_UNKNOWN:
+        default:
+            break;
+    }
+
+    throw Exception("Unsupported output bit depth");
+    return ConstOpCPURcPtr();
+}
+
+ConstOpCPURcPtr GetLut1DRenderer(ConstLut1DOpDataRcPtr & lut, BitDepth inBD, BitDepth outBD)
+{
+    if(lut->getInputBitDepth()!=inBD)
+    {
+        throw Exception("Bit depth mismatch between the 1D LUT and the CPU processing.");
+    }
+
+    switch(inBD)
+    {
+        case BIT_DEPTH_UINT8:
+            return GetLut1DRenderer_InBitDepth<BIT_DEPTH_UINT8>(lut, outBD); break;
+        case BIT_DEPTH_UINT10:
+            return GetLut1DRenderer_InBitDepth<BIT_DEPTH_UINT10>(lut, outBD); break;
+        case BIT_DEPTH_UINT12:
+            return GetLut1DRenderer_InBitDepth<BIT_DEPTH_UINT12>(lut, outBD); break;
+        case BIT_DEPTH_UINT16:
+            return GetLut1DRenderer_InBitDepth<BIT_DEPTH_UINT16>(lut, outBD); break;
+        case BIT_DEPTH_F16:
+            return GetLut1DRenderer_InBitDepth<BIT_DEPTH_F16>(lut, outBD); break;
+        case BIT_DEPTH_F32:
+            return GetLut1DRenderer_InBitDepth<BIT_DEPTH_F32>(lut, outBD); break;
+
+        case BIT_DEPTH_UINT14:
+        case BIT_DEPTH_UINT32:
+        case BIT_DEPTH_UNKNOWN:
+        default:
+            break;
+    }
+
+    throw Exception("Unsupported input bit depth");
+    return ConstOpCPURcPtr();
+}
+
+
 }
 OCIO_NAMESPACE_EXIT
+
+
 
 
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
 
-OIIO_ADD_TEST(GamutMapUtil, order3_test)
+#include "UnitTest.h"
+
+
+OCIO_ADD_TEST(GamutMapUtil, order3_test)
 {
     const float posinf = std::numeric_limits<float>::infinity();
     const float qnan = std::numeric_limits<float>::quiet_NaN();
@@ -1672,45 +1769,45 @@ OIIO_ADD_TEST(GamutMapUtil, order3_test)
         const float RGB[] = { 65504.f, -qnan, 0.f };
         int min, mid, max;
         OCIO::GamutMapUtils::Order3(RGB, min, mid, max);
-        OIIO_CHECK_EQUAL(max, 2);
-        OIIO_CHECK_EQUAL(mid, 1);
-        OIIO_CHECK_EQUAL(min, 0);
+        OCIO_CHECK_EQUAL(max, 2);
+        OCIO_CHECK_EQUAL(mid, 1);
+        OCIO_CHECK_EQUAL(min, 0);
     }
     // Triple NaN test.
     {
     const float RGB[] = { qnan, qnan, -qnan };
     int min, mid, max;
     OCIO::GamutMapUtils::Order3(RGB, min, mid, max);
-    OIIO_CHECK_EQUAL(max, 2);
-    OIIO_CHECK_EQUAL(mid, 1);
-    OIIO_CHECK_EQUAL(min, 0);
+    OCIO_CHECK_EQUAL(max, 2);
+    OCIO_CHECK_EQUAL(mid, 1);
+    OCIO_CHECK_EQUAL(min, 0);
     }
     // -Inf test.
     {
         const float RGB[] = { 65504.f, -posinf, 0.f };
         int min, mid, max;
         OCIO::GamutMapUtils::Order3(RGB, min, mid, max);
-        OIIO_CHECK_EQUAL(max, 0);
-        OIIO_CHECK_EQUAL(mid, 2);
-        OIIO_CHECK_EQUAL(min, 1);
+        OCIO_CHECK_EQUAL(max, 0);
+        OCIO_CHECK_EQUAL(mid, 2);
+        OCIO_CHECK_EQUAL(min, 1);
     }
     // Inf test.
     {
         const float RGB[] = { 0.f, posinf, -65504.f };
         int min, mid, max;
         OCIO::GamutMapUtils::Order3(RGB, min, mid, max);
-        OIIO_CHECK_EQUAL(max, 1);
-        OIIO_CHECK_EQUAL(mid, 0);
-        OIIO_CHECK_EQUAL(min, 2);
+        OCIO_CHECK_EQUAL(max, 1);
+        OCIO_CHECK_EQUAL(mid, 0);
+        OCIO_CHECK_EQUAL(min, 2);
     }
     // Double Inf test.
     {
         const float RGB[] = { posinf, posinf, -65504.f };
         int min, mid, max;
         OCIO::GamutMapUtils::Order3(RGB, min, mid, max);
-        OIIO_CHECK_EQUAL(max, 1);
-        OIIO_CHECK_EQUAL(mid, 0);
-        OIIO_CHECK_EQUAL(min, 2);
+        OCIO_CHECK_EQUAL(max, 1);
+        OCIO_CHECK_EQUAL(mid, 0);
+        OCIO_CHECK_EQUAL(min, 2);
     }
 
     // Equal values.
@@ -1720,9 +1817,9 @@ OIIO_ADD_TEST(GamutMapUtil, order3_test)
         OCIO::GamutMapUtils::Order3(RGB, min, mid, max);
         // In this case we only really care that they are distinct and in [0,2]
         // so this test could be changed (it is ok, but overly restrictive).
-        OIIO_CHECK_EQUAL(max, 2);
-        OIIO_CHECK_EQUAL(mid, 1);
-        OIIO_CHECK_EQUAL(min, 0);
+        OCIO_CHECK_EQUAL(max, 2);
+        OCIO_CHECK_EQUAL(mid, 1);
+        OCIO_CHECK_EQUAL(min, 0);
     }
 
     // Now test the six typical possibilities.
@@ -1730,54 +1827,54 @@ OIIO_ADD_TEST(GamutMapUtil, order3_test)
         const float RGB[] = { 3.f, 2.f, 1.f };
         int min, mid, max;
         OCIO::GamutMapUtils::Order3(RGB, min, mid, max);
-        OIIO_CHECK_EQUAL(max, 0);
-        OIIO_CHECK_EQUAL(mid, 1);
-        OIIO_CHECK_EQUAL(min, 2);
+        OCIO_CHECK_EQUAL(max, 0);
+        OCIO_CHECK_EQUAL(mid, 1);
+        OCIO_CHECK_EQUAL(min, 2);
     }
     {
         const float RGB[] = { -3.f, -2.f, 1.f };
         int min, mid, max;
         OCIO::GamutMapUtils::Order3(RGB, min, mid, max);
-        OIIO_CHECK_EQUAL(max, 2);
-        OIIO_CHECK_EQUAL(mid, 1);
-        OIIO_CHECK_EQUAL(min, 0);
+        OCIO_CHECK_EQUAL(max, 2);
+        OCIO_CHECK_EQUAL(mid, 1);
+        OCIO_CHECK_EQUAL(min, 0);
     }
     {
         const float RGB[] = { -3.f, 2.f, 1.f };
         int min, mid, max;
         OCIO::GamutMapUtils::Order3(RGB, min, mid, max);
-        OIIO_CHECK_EQUAL(max, 1);
-        OIIO_CHECK_EQUAL(mid, 2);
-        OIIO_CHECK_EQUAL(min, 0);
+        OCIO_CHECK_EQUAL(max, 1);
+        OCIO_CHECK_EQUAL(mid, 2);
+        OCIO_CHECK_EQUAL(min, 0);
     }
     {
         const float RGB[] = { -0.3f, 2.f, -1.f };
         int min, mid, max;
         OCIO::GamutMapUtils::Order3(RGB, min, mid, max);
-        OIIO_CHECK_EQUAL(max, 1);
-        OIIO_CHECK_EQUAL(mid, 0);
-        OIIO_CHECK_EQUAL(min, 2);
+        OCIO_CHECK_EQUAL(max, 1);
+        OCIO_CHECK_EQUAL(mid, 0);
+        OCIO_CHECK_EQUAL(min, 2);
     }
     {
         const float RGB[] = { 3.f, -2.f, 1.f };
         int min, mid, max;
         OCIO::GamutMapUtils::Order3(RGB, min, mid, max);
-        OIIO_CHECK_EQUAL(max, 0);
-        OIIO_CHECK_EQUAL(mid, 2);
-        OIIO_CHECK_EQUAL(min, 1);
+        OCIO_CHECK_EQUAL(max, 0);
+        OCIO_CHECK_EQUAL(mid, 2);
+        OCIO_CHECK_EQUAL(min, 1);
     }
     {
         const float RGB[] = { 3.f, -2.f, 10.f };
         int min, mid, max;
         OCIO::GamutMapUtils::Order3(RGB, min, mid, max);
-        OIIO_CHECK_EQUAL(max, 2);
-        OIIO_CHECK_EQUAL(mid, 0);
-        OIIO_CHECK_EQUAL(min, 1);
+        OCIO_CHECK_EQUAL(max, 2);
+        OCIO_CHECK_EQUAL(mid, 0);
+        OCIO_CHECK_EQUAL(min, 1);
     }
 
 }
 
-OIIO_ADD_TEST(Lut1DRenderer, nan_test)
+OCIO_ADD_TEST(Lut1DRenderer, nan_test)
 {
     OCIO::Lut1DOpDataRcPtr lut =
         std::make_shared<OCIO::Lut1DOpData>(OCIO::BIT_DEPTH_F32,
@@ -1797,28 +1894,40 @@ OIIO_ADD_TEST(Lut1DRenderer, nan_test)
     values[21] = 1.0f;      values[22] = 1.0f;      values[23] = 1.0f;
 
     OCIO::ConstLut1DOpDataRcPtr lutConst = lut;
-    OCIO::OpCPURcPtr renderer = OCIO::GetLut1DRenderer(lutConst);
+    OCIO::ConstOpCPURcPtr renderer 
+        = OCIO::GetLut1DRenderer(lutConst, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32);
 
     const float qnan = std::numeric_limits<float>::quiet_NaN();
-    float pixels[16] = { qnan, 0.5f, 0.3f, -0.2f, 
+    const float inf = std::numeric_limits<float>::infinity();
+
+    float pixels[24] = { qnan, 0.5f, 0.3f, -0.2f,
                          0.5f, qnan, 0.3f, 0.2f, 
                          0.5f, 0.3f, qnan, 1.2f,
-                         0.5f, 0.3f, 0.2f, qnan };
+                         0.5f, 0.3f, 0.2f, qnan,
+                         inf,  inf,  inf,  inf,
+                         -inf, -inf, -inf, -inf };
 
-    renderer->apply(pixels, 4);
+    renderer->apply(pixels, pixels, 6);
 
-    OIIO_CHECK_CLOSE(pixels[0], values[0], 1e-7f);
-    OIIO_CHECK_CLOSE(pixels[5], values[1], 1e-7f);
-    OIIO_CHECK_CLOSE(pixels[10], values[2], 1e-7f);
-    OIIO_CHECK_ASSERT(std::isnan(pixels[15]));
-
+    OCIO_CHECK_CLOSE(pixels[0], values[0], 1e-7f);
+    OCIO_CHECK_CLOSE(pixels[5], values[1], 1e-7f);
+    OCIO_CHECK_CLOSE(pixels[10], values[2], 1e-7f);
+    OCIO_CHECK_ASSERT(OCIO::IsNan(pixels[15]));
+    OCIO_CHECK_CLOSE(pixels[16], values[21], 1e-7f);
+    OCIO_CHECK_CLOSE(pixels[17], values[22], 1e-7f);
+    OCIO_CHECK_CLOSE(pixels[18], values[23], 1e-7f);
+    OCIO_CHECK_EQUAL(pixels[19], inf);
+    OCIO_CHECK_CLOSE(pixels[20], values[0], 1e-7f);
+    OCIO_CHECK_CLOSE(pixels[21], values[1], 1e-7f);
+    OCIO_CHECK_CLOSE(pixels[22], values[2], 1e-7f);
+    OCIO_CHECK_EQUAL(pixels[23], -inf);
 }
 
-OIIO_ADD_TEST(Lut1DRenderer, nan_half_test)
+OCIO_ADD_TEST(Lut1DRenderer, nan_half_test)
 {
     OCIO::Lut1DOpDataRcPtr lut = std::make_shared<OCIO::Lut1DOpData>(
         OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_F32,
-        "", OCIO::OpData::Descriptions(),
+        OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
         OCIO::INTERP_LINEAR,
         OCIO::Lut1DOpData::LUT_INPUT_HALF_CODE);
 
@@ -1830,8 +1939,10 @@ OIIO_ADD_TEST(Lut1DRenderer, nan_half_test)
     values[nanIdRed + 1] = -2.0f;
     values[nanIdRed + 2] = -3.0f;
 
+    lut->setInputBitDepth(OCIO::BIT_DEPTH_F32);
     OCIO::ConstLut1DOpDataRcPtr lutConst = lut;
-    OCIO::OpCPURcPtr renderer = OCIO::GetLut1DRenderer(lutConst);
+    OCIO::ConstOpCPURcPtr renderer 
+        = OCIO::GetLut1DRenderer(lutConst, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32);
 
     const float qnan = std::numeric_limits<float>::quiet_NaN();
     float pixels[16] = { qnan, 0.5f, 0.3f, -0.2f,
@@ -1839,11 +1950,588 @@ OIIO_ADD_TEST(Lut1DRenderer, nan_half_test)
                          0.5f, 0.3f, qnan, 1.2f,
                          0.5f, 0.3f, 0.2f, qnan };
 
-    renderer->apply(pixels, 4);
+    renderer->apply(pixels, pixels, 4);
 
-    OIIO_CHECK_CLOSE(pixels[0], values[nanIdRed], 1e-7f);
-    OIIO_CHECK_CLOSE(pixels[5], values[nanIdRed + 1], 1e-7f);
-    OIIO_CHECK_CLOSE(pixels[10], values[nanIdRed + 2], 1e-7f);
-    OIIO_CHECK_ASSERT(std::isnan(pixels[15]));
+    // This verifies that a half-domain Lut1D can map NaNs to whatever the LUT author wants.
+    // In this test, a different value for R, G, and B.
+
+    OCIO_CHECK_CLOSE(pixels[0], values[nanIdRed], 1e-7f);
+    OCIO_CHECK_CLOSE(pixels[5], values[nanIdRed + 1], 1e-7f);
+    OCIO_CHECK_CLOSE(pixels[10], values[nanIdRed + 2], 1e-7f);
+    OCIO_CHECK_ASSERT(OCIO::IsNan(pixels[15]));
 }
+
+OCIO_ADD_TEST(Lut1DRenderer, bit_depth_support)
+{
+    // Unit test to validate the pixel bit depth processing with the 1D LUT.
+
+    // Note: Copy & paste of logtolin_8to8.lut
+
+    OCIO::Lut1DOpDataRcPtr lutData 
+        = std::make_shared<OCIO::Lut1DOpData>(OCIO::BIT_DEPTH_UINT8,
+                                              OCIO::BIT_DEPTH_UINT8,
+                                              OCIO::Lut1DOpData::LUT_STANDARD);
+
+    OCIO::Array::Values & vals = lutData->getArray().getValues();
+
+    static const std::vector<float> lutValues = { 
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         0.0f,          0.0f,          0.0f,
+         1.0f,          1.0f,          1.0f,
+         1.0f,          1.0f,          1.0f,
+         2.0f,          2.0f,          2.0f,
+         2.0f,          2.0f,          2.0f,
+         3.0f,          3.0f,          3.0f,
+         3.0f,          3.0f,          3.0f,
+         4.0f,          4.0f,          4.0f,
+         5.0f,          5.0f,          5.0f,
+         5.0f,          5.0f,          5.0f,
+         6.0f,          6.0f,          6.0f,
+         6.0f,          6.0f,          6.0f,
+         7.0f,          7.0f,          7.0f,
+         8.0f,          8.0f,          8.0f,
+         8.0f,          8.0f,          8.0f,
+         9.0f,          9.0f,          9.0f,
+        10.0f,         10.0f,         10.0f,
+        10.0f,         10.0f,         10.0f,
+        11.0f,         11.0f,         11.0f,
+        12.0f,         12.0f,         12.0f,
+        12.0f,         12.0f,         12.0f,
+        13.0f,         13.0f,         13.0f,
+        14.0f,         14.0f,         14.0f,
+        15.0f,         15.0f,         15.0f,
+        15.0f,         15.0f,         15.0f,
+        16.0f,         16.0f,         16.0f,
+        17.0f,         17.0f,         17.0f,
+        18.0f,         18.0f,         18.0f,
+        18.0f,         18.0f,         18.0f,
+        19.0f,         19.0f,         19.0f,
+        20.0f,         20.0f,         20.0f,
+        21.0f,         21.0f,         21.0f,
+        22.0f,         22.0f,         22.0f,
+        22.0f,         22.0f,         22.0f,
+        23.0f,         23.0f,         23.0f,
+        24.0f,         24.0f,         24.0f,
+        25.0f,         25.0f,         25.0f,
+        26.0f,         26.0f,         26.0f,
+        27.0f,         27.0f,         27.0f,
+        28.0f,         28.0f,         28.0f,
+        29.0f,         29.0f,         29.0f,
+        30.0f,         30.0f,         30.0f,
+        30.0f,         30.0f,         30.0f,
+        31.0f,         31.0f,         31.0f,
+        32.0f,         32.0f,         32.0f,
+        33.0f,         33.0f,         33.0f,
+        34.0f,         34.0f,         34.0f,
+        35.0f,         35.0f,         35.0f,
+        36.0f,         36.0f,         36.0f,
+        37.0f,         37.0f,         37.0f,
+        39.0f,         39.0f,         39.0f,
+        40.0f,         40.0f,         40.0f,
+        41.0f,         41.0f,         41.0f,
+        42.0f,         42.0f,         42.0f,
+        43.0f,         43.0f,         43.0f,
+        44.0f,         44.0f,         44.0f,
+        45.0f,         45.0f,         45.0f,
+        46.0f,         46.0f,         46.0f,
+        48.0f,         48.0f,         48.0f,
+        49.0f,         49.0f,         49.0f,
+        50.0f,         50.0f,         50.0f,
+        51.0f,         51.0f,         51.0f,
+        52.0f,         52.0f,         52.0f,
+        54.0f,         54.0f,         54.0f,
+        55.0f,         55.0f,         55.0f,
+        56.0f,         56.0f,         56.0f,
+        58.0f,         58.0f,         58.0f,
+        59.0f,         59.0f,         59.0f,
+        60.0f,         60.0f,         60.0f,
+        62.0f,         62.0f,         62.0f,
+        63.0f,         63.0f,         63.0f,
+        64.0f,         64.0f,         64.0f,
+        66.0f,         66.0f,         66.0f,
+        67.0f,         67.0f,         67.0f,
+        69.0f,         69.0f,         69.0f,
+        70.0f,         70.0f,         70.0f,
+        72.0f,         72.0f,         72.0f,
+        73.0f,         73.0f,         73.0f,
+        75.0f,         75.0f,         75.0f,
+        76.0f,         76.0f,         76.0f,
+        78.0f,         78.0f,         78.0f,
+        80.0f,         80.0f,         80.0f,
+        81.0f,         81.0f,         81.0f,
+        83.0f,         83.0f,         83.0f,
+        85.0f,         85.0f,         85.0f,
+        86.0f,         86.0f,         86.0f,
+        88.0f,         88.0f,         88.0f,
+        90.0f,         90.0f,         90.0f,
+        92.0f,         92.0f,         92.0f,
+        94.0f,         94.0f,         94.0f,
+        95.0f,         95.0f,         95.0f,
+        97.0f,         97.0f,         97.0f,
+        99.0f,         99.0f,         99.0f,
+       101.0f,        101.0f,        101.0f,
+       103.0f,        103.0f,        103.0f,
+       105.0f,        105.0f,        105.0f,
+       107.0f,        107.0f,        107.0f,
+       109.0f,        109.0f,        109.0f,
+       111.0f,        111.0f,        111.0f,
+       113.0f,        113.0f,        113.0f,
+       115.0f,        115.0f,        115.0f,
+       117.0f,        117.0f,        117.0f,
+       120.0f,        120.0f,        120.0f,
+       122.0f,        122.0f,        122.0f,
+       124.0f,        124.0f,        124.0f,
+       126.0f,        126.0f,        126.0f,
+       129.0f,        129.0f,        129.0f,
+       131.0f,        131.0f,        131.0f,
+       133.0f,        133.0f,        133.0f,
+       136.0f,        136.0f,        136.0f,
+       138.0f,        138.0f,        138.0f,
+       140.0f,        140.0f,        140.0f,
+       143.0f,        143.0f,        143.0f,
+       145.0f,        145.0f,        145.0f,
+       148.0f,        148.0f,        148.0f,
+       151.0f,        151.0f,        151.0f,
+       153.0f,        153.0f,        153.0f,
+       156.0f,        156.0f,        156.0f,
+       159.0f,        159.0f,        159.0f,
+       161.0f,        161.0f,        161.0f,
+       164.0f,        164.0f,        164.0f,
+       167.0f,        167.0f,        167.0f,
+       170.0f,        170.0f,        170.0f,
+       173.0f,        173.0f,        173.0f,
+       176.0f,        176.0f,        176.0f,
+       179.0f,        179.0f,        179.0f,
+       182.0f,        182.0f,        182.0f,
+       185.0f,        185.0f,        185.0f,
+       188.0f,        188.0f,        188.0f,
+       191.0f,        191.0f,        191.0f,
+       194.0f,        194.0f,        194.0f,
+       198.0f,        198.0f,        198.0f,
+       201.0f,        201.0f,        201.0f,
+       204.0f,        204.0f,        204.0f,
+       208.0f,        208.0f,        208.0f,
+       211.0f,        211.0f,        211.0f,
+       214.0f,        214.0f,        214.0f,
+       218.0f,        218.0f,        218.0f,
+       222.0f,        222.0f,        222.0f,
+       225.0f,        225.0f,        225.0f,
+       229.0f,        229.0f,        229.0f,
+       233.0f,        233.0f,        233.0f,
+       236.0f,        236.0f,        236.0f,
+       240.0f,        240.0f,        240.0f,
+       244.0f,        244.0f,        244.0f,
+       248.0f,        248.0f,        248.0f,
+       252.0f,        252.0f,        252.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f,
+       255.0f,        255.0f,        255.0f   };
+
+    vals = lutValues;
+
+    const unsigned NB_PIXELS = 4;
+
+    const std::vector<uint8_t> uint8_inImg = { 
+          0,   1,   2,   0,
+         50,  51,  52, 255,
+        150, 151, 152,   0,
+        230, 240, 250, 255  };
+
+    const std::vector<uint16_t> uint16_outImg = {
+            0,     0,     0,     0,
+         4369,  4626,  4626, 65535,
+        46774, 47545, 48316,     0,
+        65535, 65535, 65535, 65535 };
+
+    // Processing from UINT8 to UINT8.
+    {
+        OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
+        OCIO::ConstOpCPURcPtr cpuOp
+            = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
+
+        const bool isLookup
+            = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8, 
+                                                                 OCIO::BIT_DEPTH_UINT8>>(cpuOp)->isLookup();
+        OCIO_CHECK_ASSERT(isLookup);
+
+        std::vector<uint8_t> outImg(NB_PIXELS * 4, 0);
+
+        OCIO_CHECK_NO_THROW( cpuOp->apply(&uint8_inImg[0], &outImg[0], NB_PIXELS) );
+
+        OCIO_CHECK_EQUAL(outImg[ 0],   0);
+        OCIO_CHECK_EQUAL(outImg[ 1],   0);
+        OCIO_CHECK_EQUAL(outImg[ 2],   0);
+        OCIO_CHECK_EQUAL(outImg[ 3],   0);
+
+        OCIO_CHECK_EQUAL(outImg[ 4],  17);
+        OCIO_CHECK_EQUAL(outImg[ 5],  18);
+        OCIO_CHECK_EQUAL(outImg[ 6],  18);
+        OCIO_CHECK_EQUAL(outImg[ 7], 255);
+
+        OCIO_CHECK_EQUAL(outImg[ 8], 182);
+        OCIO_CHECK_EQUAL(outImg[ 9], 185);
+        OCIO_CHECK_EQUAL(outImg[10], 188);
+        OCIO_CHECK_EQUAL(outImg[11],   0);
+
+        OCIO_CHECK_EQUAL(outImg[12], 255);
+        OCIO_CHECK_EQUAL(outImg[13], 255);
+        OCIO_CHECK_EQUAL(outImg[14], 255);
+        OCIO_CHECK_EQUAL(outImg[15], 255);
+    }
+
+    // Processing from UINT8 to UINT8, using the inverse LUT.
+    {
+        OCIO::Lut1DOpDataRcPtr lutDataCloned = lutData->inverse();
+        OCIO::ConstLut1DOpDataRcPtr constLut = lutDataCloned;
+
+        OCIO::ConstOpCPURcPtr cpuOp
+            = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
+
+        const bool isLookup
+            = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8, 
+                                                                 OCIO::BIT_DEPTH_UINT8>>(cpuOp)->isLookup();
+        OCIO_CHECK_ASSERT(isLookup);
+
+        std::vector<uint8_t> outImg(NB_PIXELS * 4, 0);
+
+        OCIO_CHECK_NO_THROW( cpuOp->apply(&uint8_inImg[0], &outImg[0], NB_PIXELS) );
+
+        OCIO_CHECK_EQUAL(outImg[ 0],  24);
+        OCIO_CHECK_EQUAL(outImg[ 1],  25);
+        OCIO_CHECK_EQUAL(outImg[ 2],  27);
+        OCIO_CHECK_EQUAL(outImg[ 3],   0);
+
+        OCIO_CHECK_EQUAL(outImg[ 4],  84);
+        OCIO_CHECK_EQUAL(outImg[ 5],  85);
+        OCIO_CHECK_EQUAL(outImg[ 6],  86);
+        OCIO_CHECK_EQUAL(outImg[ 7], 255);
+
+        OCIO_CHECK_EQUAL(outImg[ 8], 139);
+        OCIO_CHECK_EQUAL(outImg[ 9], 139);
+        OCIO_CHECK_EQUAL(outImg[10], 140);
+        OCIO_CHECK_EQUAL(outImg[11],   0);
+
+        OCIO_CHECK_EQUAL(outImg[12], 164);
+        OCIO_CHECK_EQUAL(outImg[13], 167);
+        OCIO_CHECK_EQUAL(outImg[14], 170);
+        OCIO_CHECK_EQUAL(outImg[15], 255);
+    }
+
+    // Processing from UINT8 to UINT16.
+    {
+        OCIO::Lut1DOpDataRcPtr lutDataCloned = lutData->clone();
+        lutDataCloned->setOutputBitDepth(OCIO::BIT_DEPTH_UINT16);
+
+        OCIO::ConstLut1DOpDataRcPtr constLut = lutDataCloned;
+
+        OCIO::ConstOpCPURcPtr cpuOp
+            = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16);
+
+        const bool isLookup
+            = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8, 
+                                                                 OCIO::BIT_DEPTH_UINT16>>(cpuOp)->isLookup();
+        OCIO_CHECK_ASSERT(isLookup);
+
+        std::vector<uint16_t> outImg(NB_PIXELS * 4, 0);
+
+        OCIO_CHECK_NO_THROW( cpuOp->apply(&uint8_inImg[0], &outImg[0], NB_PIXELS) );
+
+        OCIO_CHECK_EQUAL(outImg[ 0], uint16_outImg[ 0]);
+        OCIO_CHECK_EQUAL(outImg[ 1], uint16_outImg[ 1]);
+        OCIO_CHECK_EQUAL(outImg[ 2], uint16_outImg[ 2]);
+        OCIO_CHECK_EQUAL(outImg[ 3], uint16_outImg[ 3]);
+
+        OCIO_CHECK_EQUAL(outImg[ 4], uint16_outImg[ 4]);
+        OCIO_CHECK_EQUAL(outImg[ 5], uint16_outImg[ 5]);
+        OCIO_CHECK_EQUAL(outImg[ 6], uint16_outImg[ 6]);
+        OCIO_CHECK_EQUAL(outImg[ 7], uint16_outImg[ 7]);
+
+        OCIO_CHECK_EQUAL(outImg[ 8], uint16_outImg[ 8]);
+        OCIO_CHECK_EQUAL(outImg[ 9], uint16_outImg[ 9]);
+        OCIO_CHECK_EQUAL(outImg[10], uint16_outImg[10]);
+        OCIO_CHECK_EQUAL(outImg[11], uint16_outImg[11]);
+
+        OCIO_CHECK_EQUAL(outImg[12], uint16_outImg[12]);
+        OCIO_CHECK_EQUAL(outImg[13], uint16_outImg[13]);
+        OCIO_CHECK_EQUAL(outImg[14], uint16_outImg[14]);
+        OCIO_CHECK_EQUAL(outImg[15], uint16_outImg[15]);
+    }
+
+    // Processing from UINT8 to F16.
+    {
+        OCIO::Lut1DOpDataRcPtr lutDataCloned = lutData->clone();
+        lutDataCloned->setOutputBitDepth(OCIO::BIT_DEPTH_F16);
+
+        OCIO::ConstLut1DOpDataRcPtr constLut = lutDataCloned;
+
+        OCIO::ConstOpCPURcPtr cpuOp
+            = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_F16);
+
+        const bool isLookup
+            = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8, 
+                                                                 OCIO::BIT_DEPTH_F16>>(cpuOp)->isLookup();
+        OCIO_CHECK_ASSERT(isLookup);
+
+        std::vector<half> outImg(NB_PIXELS * 4, 0);
+
+        OCIO_CHECK_NO_THROW( cpuOp->apply(&uint8_inImg[0], &outImg[0], NB_PIXELS) );
+
+        OCIO_CHECK_EQUAL(outImg[ 0], 0.0f);
+        OCIO_CHECK_EQUAL(outImg[ 1], 0.0f);
+        OCIO_CHECK_EQUAL(outImg[ 2], 0.0f);
+        OCIO_CHECK_EQUAL(outImg[ 3], 0.0f);
+
+        OCIO_CHECK_CLOSE(outImg[ 4], 0.066650390625f, 1e-6f);
+        OCIO_CHECK_CLOSE(outImg[ 5], 0.070617675781f, 1e-6f);
+        OCIO_CHECK_CLOSE(outImg[ 6], 0.070617675781f, 1e-6f);
+        OCIO_CHECK_EQUAL(outImg[ 7], 1.0f);
+
+        OCIO_CHECK_CLOSE(outImg[ 8], 0.7138671875f, 1e-6f);
+        OCIO_CHECK_CLOSE(outImg[ 9], 0.7255859375f, 1e-6f);
+        OCIO_CHECK_CLOSE(outImg[10], 0.7373046875f, 1e-6f);
+        OCIO_CHECK_EQUAL(outImg[11], 0.0f);
+
+        OCIO_CHECK_EQUAL(outImg[12], 1.0f);
+        OCIO_CHECK_EQUAL(outImg[13], 1.0f);
+        OCIO_CHECK_EQUAL(outImg[14], 1.0f);
+        OCIO_CHECK_EQUAL(outImg[15], 1.0f);
+    }
+
+    // Processing from UINT8 to F32.
+    {
+        OCIO::Lut1DOpDataRcPtr lutDataCloned = lutData->clone();
+        lutDataCloned->setOutputBitDepth(OCIO::BIT_DEPTH_F32);
+
+        OCIO::ConstLut1DOpDataRcPtr constLut = lutDataCloned;
+
+        OCIO::ConstOpCPURcPtr cpuOp
+            = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_F32);
+
+        const bool isLookup
+            = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8, 
+                                                                 OCIO::BIT_DEPTH_F32>>(cpuOp)->isLookup();
+        OCIO_CHECK_ASSERT(isLookup);
+
+        std::vector<float> outImg(NB_PIXELS * 4, 0);
+
+        OCIO_CHECK_NO_THROW( cpuOp->apply(&uint8_inImg[0], &outImg[0], NB_PIXELS) );
+
+        OCIO_CHECK_EQUAL(outImg[ 0], 0.0f);
+        OCIO_CHECK_EQUAL(outImg[ 1], 0.0f);
+        OCIO_CHECK_EQUAL(outImg[ 2], 0.0f);
+        OCIO_CHECK_EQUAL(outImg[ 3], 0.0f);
+
+        OCIO_CHECK_CLOSE(outImg[ 4], 0.06666666666666667f, 1e-6f);
+        OCIO_CHECK_CLOSE(outImg[ 5], 0.07058823529411765f, 1e-6f);
+        OCIO_CHECK_CLOSE(outImg[ 6], 0.07058823529411765f, 1e-6f);
+        OCIO_CHECK_EQUAL(outImg[ 7], 1.0f);
+
+        OCIO_CHECK_CLOSE(outImg[ 8], 0.7137254901960784f, 1e-6f);
+        OCIO_CHECK_CLOSE(outImg[ 9], 0.7254901960784313f, 1e-6f);
+        OCIO_CHECK_CLOSE(outImg[10], 0.7372549019607844f, 1e-6f);
+        OCIO_CHECK_EQUAL(outImg[11], 0.0f);
+
+        OCIO_CHECK_EQUAL(outImg[12], 1.0f);
+        OCIO_CHECK_EQUAL(outImg[13], 1.0f);
+        OCIO_CHECK_EQUAL(outImg[14], 1.0f);
+        OCIO_CHECK_EQUAL(outImg[15], 1.0f);
+    }
+
+    // Use scaled previous input values so previous output values could be 
+    // reused (i.e. uint16_outImg) to validate the pixel bit depth processing.
+
+    const std::vector<float> float_inImg = { 
+        uint8_inImg[ 0]/255.0f, uint8_inImg[ 1]/255.0f, uint8_inImg[ 2]/255.0f, uint8_inImg[ 3]/255.0f,
+        uint8_inImg[ 4]/255.0f, uint8_inImg[ 5]/255.0f, uint8_inImg[ 6]/255.0f, uint8_inImg[ 7]/255.0f,
+        uint8_inImg[ 8]/255.0f, uint8_inImg[ 9]/255.0f, uint8_inImg[10]/255.0f, uint8_inImg[11]/255.0f,
+        uint8_inImg[12]/255.0f, uint8_inImg[13]/255.0f, uint8_inImg[14]/255.0f, uint8_inImg[15]/255.0f };
+
+    // LUT will not be a lookup table.
+    {
+        OCIO::Lut1DOpDataRcPtr lutDataCloned = lutData->clone();
+        lutDataCloned->setInputBitDepth(OCIO::BIT_DEPTH_F32);
+        lutDataCloned->setOutputBitDepth(OCIO::BIT_DEPTH_UINT8);
+
+        OCIO::ConstLut1DOpDataRcPtr constLut = lutDataCloned;
+
+        OCIO::ConstOpCPURcPtr cpuOp
+            = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_UINT8);
+
+        const bool isLookup
+            = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_F32, 
+                                                                 OCIO::BIT_DEPTH_UINT8>>(cpuOp)->isLookup();
+        OCIO_CHECK_ASSERT(!isLookup);
+
+        std::vector<uint8_t> outImg(NB_PIXELS * 4, 0);
+
+        OCIO_CHECK_NO_THROW( cpuOp->apply(&float_inImg[0], &outImg[0], NB_PIXELS) );
+
+        OCIO_CHECK_EQUAL(outImg[ 0],   0);
+        OCIO_CHECK_EQUAL(outImg[ 1],   0);
+        OCIO_CHECK_EQUAL(outImg[ 2],   0);
+        OCIO_CHECK_EQUAL(outImg[ 3],   0);
+
+        OCIO_CHECK_EQUAL(outImg[ 4],  17);
+        OCIO_CHECK_EQUAL(outImg[ 5],  18);
+        OCIO_CHECK_EQUAL(outImg[ 6],  18);
+        OCIO_CHECK_EQUAL(outImg[ 7], 255);
+
+        OCIO_CHECK_EQUAL(outImg[ 8], 182);
+        OCIO_CHECK_EQUAL(outImg[ 9], 185);
+        OCIO_CHECK_EQUAL(outImg[10], 188);
+        OCIO_CHECK_EQUAL(outImg[11],   0);
+
+        OCIO_CHECK_EQUAL(outImg[12], 255);
+        OCIO_CHECK_EQUAL(outImg[13], 255);
+        OCIO_CHECK_EQUAL(outImg[14], 255);
+        OCIO_CHECK_EQUAL(outImg[15], 255);
+    }
+
+    // LUT will not be a lookup table.
+    {
+        OCIO::Lut1DOpDataRcPtr lutDataCloned = lutData->clone();
+        lutDataCloned->setInputBitDepth(OCIO::BIT_DEPTH_F32);
+        lutDataCloned->setOutputBitDepth(OCIO::BIT_DEPTH_UINT16);
+
+        OCIO::ConstLut1DOpDataRcPtr constLut = lutDataCloned;
+
+        OCIO::ConstOpCPURcPtr cpuOp
+            = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_UINT16);
+
+        const bool isLookup
+            = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_F32, 
+                                                                 OCIO::BIT_DEPTH_UINT16>>(cpuOp)->isLookup();
+        OCIO_CHECK_ASSERT(!isLookup);
+
+        std::vector<uint16_t> outImg(NB_PIXELS * 4, 0);
+
+        OCIO_CHECK_NO_THROW( cpuOp->apply(&float_inImg[0], &outImg[0], NB_PIXELS) );
+
+        OCIO_CHECK_EQUAL(outImg[ 0], uint16_outImg[ 0]);
+        OCIO_CHECK_EQUAL(outImg[ 1], uint16_outImg[ 1]);
+        OCIO_CHECK_EQUAL(outImg[ 2], uint16_outImg[ 2]);
+        OCIO_CHECK_EQUAL(outImg[ 3], uint16_outImg[ 3]);
+
+        OCIO_CHECK_EQUAL(outImg[ 4], uint16_outImg[ 4]);
+        OCIO_CHECK_EQUAL(outImg[ 5], uint16_outImg[ 5]);
+        OCIO_CHECK_EQUAL(outImg[ 6], uint16_outImg[ 6]);
+        OCIO_CHECK_EQUAL(outImg[ 7], uint16_outImg[ 7]);
+
+        OCIO_CHECK_EQUAL(outImg[ 8], uint16_outImg[ 8]);
+        OCIO_CHECK_EQUAL(outImg[ 9], uint16_outImg[ 9]);
+        OCIO_CHECK_EQUAL(outImg[10], uint16_outImg[10]);
+        OCIO_CHECK_EQUAL(outImg[11], uint16_outImg[11]);
+
+        OCIO_CHECK_EQUAL(outImg[12], uint16_outImg[12]);
+        OCIO_CHECK_EQUAL(outImg[13], uint16_outImg[13]);
+        OCIO_CHECK_EQUAL(outImg[14], uint16_outImg[14]);
+        OCIO_CHECK_EQUAL(outImg[15], uint16_outImg[15]);
+    }
+}
+
 #endif
