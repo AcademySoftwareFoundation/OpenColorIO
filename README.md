@@ -5,8 +5,8 @@ OpenColorIO
 ===========
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
-[![Build Status](https://dev.azure.com/imageworks/OpenColorIO/_apis/build/status/imageworks.OpenColorIO?branchName=master)](https://dev.azure.com/imageworks/OpenColorIO/_build/latest?definitionId=1&branchName=master)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=imageworks_OpenColorIO&metric=alert_status)](https://sonarcloud.io/dashboard?id=imageworks_OpenColorIO)
+[![Build Status](https://dev.azure.com/academysoftwarefoundation/Academy%20Software%20Foundation/_apis/build/status/academysoftwarefoundation.OpenColorIO)](https://dev.azure.com/academysoftwarefoundation/Academy%20Software%20Foundation/_build?definitionId=3&_a=summary)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=AcademySoftwareFoundation_OpenColorIO&metric=alert_status)](https://sonarcloud.io/dashboard?id=AcademySoftwareFoundation_OpenColorIO)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2612/badge)](https://bestpractices.coreinfrastructure.org/projects/2612)
 
 Introduction
