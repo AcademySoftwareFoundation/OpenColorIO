@@ -2,7 +2,7 @@ OpenColorIO
 ===========
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
-[![Build Status](https://travis-ci.org/imageworks/OpenColorIO.svg?branch=master)](https://travis-ci.org/imageworks/OpenColorIO)
+[![Build Status](https://travis-ci.org/AcademySoftwareFoundation/OpenColorIO.svg?branch=RB-1.1)](https://travis-ci.org/AcademySoftwareFoundation/OpenColorIO)
 [![Windows Build Status](https://ci.appveyor.com/api/projects/status/fidyv9jkxeigyd2a/branch/master?svg=true)]()
 
 Introduction
