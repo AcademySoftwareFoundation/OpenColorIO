@@ -78,7 +78,7 @@ RUN cd /home/devel/git && \
 
 # Install everything to compile OCIO
 RUN cd /home/devel/git && \
-    git clone https://github.com/imageworks/OpenColorIO.git ocio && \
+    git clone https://github.com/AcademySoftwareFoundation/OpenColorIO.git ocio && \
     cd /home/devel/git/ocio && \
     mkdir /home/devel/git/ocio/build && \
     cd /home/devel/git/ocio/build && \

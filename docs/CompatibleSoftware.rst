@@ -24,7 +24,7 @@ After Effects
 An OpenColorIO plugin is available for use in After Effects.
 
 See `src/aftereffects
-<http://github.com/imageworks/OpenColorIO/tree/master/src/aftereffects>`__
+<http://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/src/aftereffects>`__
 if you are interested in building your own OCIO plugins.
 
 Pre-built binaries are also available for `download
@@ -149,13 +149,13 @@ C++
 
 The core OpenColorIO API is available for use in C++. See the `export
 directory
-<http://github.com/imageworks/OpenColorIO/tree/master/export/OpenColorIO>`__
+<http://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/export/OpenColorIO>`__
 for the C++ API headers.  Minimal code examples are also available in
 the source code distribution. Of particular note are
 `src/apps/ocioconvert/
-<https://github.com/imageworks/OpenColorIO/tree/master/src/apps/ocioconvert>`__
+<https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/src/apps/ocioconvert>`__
 and `src/apps/ociodisplay/
-<https://github.com/imageworks/OpenColorIO/tree/master/src/apps/ociodisplay>`__
+<https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/src/apps/ociodisplay>`__
 
 Also see the :ref:`developer-guide`
 
@@ -255,7 +255,7 @@ the OpenColorIO section of the `RV User Manual
 Java (Beta)
 ***********
 The OpenColorIO API is available for use in Java. See the `jniglue directory
-<http://github.com/imageworks/OpenColorIO/tree/master/src/jniglue>`__
+<http://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/src/jniglue>`__
 in the codebase.
 
 This integration is currently considered a work in progress, and should not be
