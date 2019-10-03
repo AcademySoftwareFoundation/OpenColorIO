@@ -10,7 +10,7 @@ Getting started
 Checking Out The Codebase
 *************************
 
-The master code repository is available on Github:  http://github.com/imageworks/OpenColorIO
+The master code repository is available on Github:  http://github.com/AcademySoftwareFoundation/OpenColorIO
 
 For those unfamiliar with git, the wonderful part about it is that even though
 only a limited number people have write access to the master repository, anyone
@@ -28,11 +28,11 @@ available at: http://help.github.com/
 
 To check out a read-only version of the repository (no GitHub signup required)::
 
-    git clone git://github.com/imageworks/OpenColorIO.git ocio
+    git clone git://github.com/AcademySoftwareFoundation/OpenColorIO.git ocio
 
 For write-access, you must first register for a GitHub account (free).  Then,
 you must create a local fork of the OpenColorIO repository by visiting
-http://github.com/imageworks/OpenColorIO and clicking the "Fork" icon. If you
+http://github.com/AcademySoftwareFoundation/OpenColorIO and clicking the "Fork" icon. If you
 get hung up on this, further instructions on this process are available at
 http://help.github.com/forking/
 
@@ -52,7 +52,7 @@ as a remote. This will allow you to more easily fetch updates as they become
 available::
 
     cd ocio
-    git remote add upstream git://github.com/imageworks/OpenColorIO.git
+    git remote add upstream git://github.com/AcademySoftwareFoundation/OpenColorIO.git
 
 Optionally, you may then add any additional users who have individual working
 forks (just as you've done).  This will allow you to track, view, and
