@@ -97,7 +97,7 @@ endif()
 #
 # TODO: This wont let the normal shared library symbols work on OSX.
 # We should explore whether this should be built as a normal dylib, instead
-# of as a bundle. See https://github.com/imageworks/OpenColorIO/pull/175
+# of as a bundle. See https://github.com/AcademySoftwareFoundation/OpenColorIO/pull/175
 
 if(OCIO_PYGLUE_SONAME)
     message(STATUS "Setting PyOCIO SOVERSION to: ${SOVERSION}")

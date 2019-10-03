@@ -32,15 +32,15 @@ assistance.
 * cd into the cloned directory
 * Connect your cloned repo to the original upstream repository as a remote::
 
-    git remote add upstream https://github.com/imageworks/OpenColorIO.git
+    git remote add upstream https://github.com/AcademySoftwareFoundation/OpenColorIO.git
 
 * You should now have two remotes::
 
     git remote -v
     origin https://github.com/$USER/OpenColorIO (fetch)
     origin https://github.com/$USER/OpenColorIO (fetch)
-    upstream https://github.com/imageworks/OpenColorIO (fetch)
-    upstream https://github.com/imageworks/OpenColorIO (push)
+    upstream https://github.com/AcademySoftwareFoundation/OpenColorIO (fetch)
+    upstream https://github.com/AcademySoftwareFoundation/OpenColorIO (push)
 
 * Pull the latest changes from upstream::
 
