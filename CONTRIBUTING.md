@@ -67,7 +67,7 @@ guidance from the Linux Foundation.
 
 ### License
 
-OpenColorIO is licensed under the [BSD-3-Clause](LICENSE.md)
+OpenColorIO is licensed under the [BSD-3-Clause](LICENSE)
 license. Contributions to the library should abide by that 
 license unless otherwised approved by the OCIO TSC and ASWF Governing Board.
 
