@@ -21,7 +21,7 @@ fi
 brew install pyenv openssl
 
 # Greatly reduce log warnings during Python install
-export CFLAGS="-I$(brew --prefix openssl)/include"
+export CFLAGS="-I$(brew --prefix openssl)/include -Wno-nullability-completeness"
 export LDFLAGS="-L$(brew --prefix openssl)/lib $LDFLAGS"
 
 echo 'eval "$(pyenv init -)"' >> .bash_profile
