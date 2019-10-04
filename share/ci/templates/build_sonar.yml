@@ -10,9 +10,6 @@ parameters:
   cxxCompiler: ''
   cCompiler: ''
 
-variables:
-- group: sonar
-
 steps:
 - bash: |
     if [ "$CXXCOMPILER" ]; then
