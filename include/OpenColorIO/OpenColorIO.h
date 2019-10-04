@@ -841,14 +841,14 @@ OCIO_NAMESPACE_ENTER
     //    where the result contains copied color spaces and no duplicates.
 
     //!cpp:function:: Perform the union of two sets.
-    ConstColorSpaceSetRcPtr operator||(const ConstColorSpaceSetRcPtr & lcss, 
-                                       const ConstColorSpaceSetRcPtr & rcss);
+    extern OCIOEXPORT ConstColorSpaceSetRcPtr operator||(const ConstColorSpaceSetRcPtr & lcss, 
+                                                         const ConstColorSpaceSetRcPtr & rcss);
     //!cpp:function:: Perform the intersection of two sets.
-    ConstColorSpaceSetRcPtr operator&&(const ConstColorSpaceSetRcPtr & lcss, 
-                                       const ConstColorSpaceSetRcPtr & rcss);
+    extern OCIOEXPORT ConstColorSpaceSetRcPtr operator&&(const ConstColorSpaceSetRcPtr & lcss, 
+                                                         const ConstColorSpaceSetRcPtr & rcss);
     //!cpp:function:: Perform the difference of two sets.
-    ConstColorSpaceSetRcPtr operator-(const ConstColorSpaceSetRcPtr & lcss, 
-                                      const ConstColorSpaceSetRcPtr & rcss);
+    extern OCIOEXPORT ConstColorSpaceSetRcPtr operator-(const ConstColorSpaceSetRcPtr & lcss, 
+                                                        const ConstColorSpaceSetRcPtr & rcss);
 
 
 
