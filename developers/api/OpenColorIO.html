@@ -94,10 +94,10 @@
 <div class="section" id="c-api">
 <h1>C++ API<a class="headerlink" href="#c-api" title="Permalink to this headline">¶</a></h1>
 <p><strong>Usage Example:</strong> <em>Compositing plugin that converts from &#8220;log&#8221; to &#8220;lin&#8221;</em></p>
-<div class="highlight-cpp"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;OpenColorIO/OpenColorIO.h&gt;</span><span class="cp"></span>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="cp">#include &lt;OpenColorIO/OpenColorIO.h&gt;</span>
 <span class="k">namespace</span> <span class="n">OCIO</span> <span class="o">=</span> <span class="n">OCIO_NAMESPACE</span><span class="p">;</span>
 
-<span class="k">try</span>
+<span class="n">try</span>
 <span class="p">{</span>
     <span class="c1">// Get the global OpenColorIO config</span>
     <span class="c1">// This will auto-initialize (using $OCIO) on first use</span>
@@ -1099,7 +1099,7 @@ void <tt class="descclassname">ProcessorMetadata::</tt><tt class="descname">addL
 of application specific lut formats. The Baker can be used to create lut
 formats that ocio supports for writing.</p>
 <p><strong>Usage Example:</strong> <em>Bake a houdini sRGB viewer lut</em></p>
-<div class="highlight-cpp"><div class="highlight"><pre><span></span><span class="n">OCIO</span><span class="o">::</span><span class="n">ConstConfigRcPtr</span> <span class="n">config</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">::</span><span class="n">Config</span><span class="o">::</span><span class="n">CreateFromEnv</span><span class="p">();</span>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="n">OCIO</span><span class="o">::</span><span class="n">ConstConfigRcPtr</span> <span class="n">config</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">::</span><span class="n">Config</span><span class="o">::</span><span class="n">CreateFromEnv</span><span class="p">();</span>
 <span class="n">OCIO</span><span class="o">::</span><span class="n">BakerRcPtr</span> <span class="n">baker</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">::</span><span class="n">Baker</span><span class="o">::</span><span class="n">Create</span><span class="p">();</span>
 <span class="n">baker</span><span class="o">-&gt;</span><span class="n">setConfig</span><span class="p">(</span><span class="n">config</span><span class="p">);</span>
 <span class="n">baker</span><span class="o">-&gt;</span><span class="n">setFormat</span><span class="p">(</span><span class="s">&quot;houdini&quot;</span><span class="p">);</span> <span class="c1">// set the houdini type</span>

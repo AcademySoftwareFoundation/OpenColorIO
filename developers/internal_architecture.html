@@ -174,10 +174,10 @@ and the <a class="reference internal" href="api/OpenColorIO.html#colorspace-sect
 &#8220;apply&#8221; function.  For the CPU veseion, first wrap your image in an
 ImageDesc class, and then call apply to process in place.</p>
 <p>Example:</p>
-<div class="highlight-cpp"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;OpenColorIO/OpenColorIO.h&gt;</span><span class="cp"></span>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="cp">#include &lt;OpenColorIO/OpenColorIO.h&gt;</span>
 <span class="k">namespace</span> <span class="n">OCIO</span> <span class="o">=</span> <span class="n">OCIO_NAMESPACE</span><span class="p">;</span>
 
-<span class="k">try</span>
+<span class="n">try</span>
 <span class="p">{</span>
    <span class="c1">// Get the global OpenColorIO config</span>
    <span class="c1">// This will auto-initialize (using $OCIO) on first use</span>
@@ -222,7 +222,7 @@ simpler to make light-weight processing operations, which the transforms can
 create to do the dirty work as needed.</p>
 <p>All image processing operations (ops) are a class that present the same
 interface, and it&#8217;s rather simple:</p>
-<div class="highlight-cpp"><div class="highlight"><pre><span></span><span class="k">virtual</span> <span class="kt">void</span> <span class="n">apply</span><span class="p">(</span><span class="kt">float</span><span class="o">*</span> <span class="n">rgbaBuffer</span><span class="p">,</span> <span class="kt">long</span> <span class="n">numPixels</span><span class="p">)</span>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="k">virtual</span> <span class="kt">void</span> <span class="n">apply</span><span class="p">(</span><span class="kt">float</span><span class="o">*</span> <span class="n">rgbaBuffer</span><span class="p">,</span> <span class="kt">long</span> <span class="n">numPixels</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Basically, given a packed float array with the specified number of pixels, process em.</p>
@@ -232,7 +232,7 @@ for converting themselves to a list of ops.  A simple FileTransform that only ha
 a single 1D lut internally may just generate a single Lut1DOp, but a
 FileTransform that references a more complex format (such as the houdini lut case
 referenced above) may generate a few ops:</p>
-<div class="highlight-cpp"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="n">FileFormatHDL</span><span class="o">::</span><span class="n">BuildFileOps</span><span class="p">(</span><span class="n">OpRcPtrVec</span> <span class="o">&amp;</span> <span class="n">ops</span><span class="p">,</span>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="kt">void</span> <span class="n">FileFormatHDL</span><span class="o">::</span><span class="n">BuildFileOps</span><span class="p">(</span><span class="n">OpRcPtrVec</span> <span class="o">&amp;</span> <span class="n">ops</span><span class="p">,</span>
                          <span class="k">const</span> <span class="n">Config</span><span class="o">&amp;</span> <span class="cm">/*config*/</span><span class="p">,</span>
                          <span class="k">const</span> <span class="n">ConstContextRcPtr</span> <span class="o">&amp;</span> <span class="cm">/*context*/</span><span class="p">,</span>
                          <span class="n">CachedFileRcPtr</span> <span class="n">untypedCachedFile</span><span class="p">,</span>
@@ -268,11 +268,11 @@ are loaded, etc.</p>
 <div class="section" id="cpu-code-path">
 <h3>CPU CODE PATH<a class="headerlink" href="#cpu-code-path" title="Permalink to this headline">¶</a></h3>
 <p>The master list of ops is then optimized, and stored internally in the processor.</p>
-<div class="highlight-cpp"><div class="highlight"><pre><span></span><span class="n">FinalizeOpVec</span><span class="p">(</span><span class="n">m_cpuOps</span><span class="p">);</span>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="n">FinalizeOpVec</span><span class="p">(</span><span class="n">m_cpuOps</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>During Processor::apply(...), a subunit of pixels in the image are formatted into a sequential rgba block.  (Block size is optimized for computational (SSE) simplicity and performance, and is typically similar in size to an image scanline)</p>
-<div class="highlight-cpp"><div class="highlight"><pre><span></span><span class="kt">float</span> <span class="o">*</span> <span class="n">rgbaBuffer</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="kt">float</span> <span class="o">*</span> <span class="n">rgbaBuffer</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
 <span class="kt">long</span> <span class="n">numPixels</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
 <span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">)</span> <span class="p">{</span>
    <span class="n">scanlineHelper</span><span class="p">.</span><span class="n">prepRGBAScanline</span><span class="p">(</span><span class="o">&amp;</span><span class="n">rgbaBuffer</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">numPixels</span><span class="p">);</span>
@@ -280,14 +280,14 @@ are loaded, etc.</p>
 </pre></div>
 </div>
 <p>Then for each op, op-&gt;apply is called in-place.</p>
-<div class="highlight-cpp"><div class="highlight"><pre><span></span><span class="k">for</span><span class="p">(</span><span class="n">OpRcPtrVec</span><span class="o">::</span><span class="n">size_type</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="n">m_cpuOps</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">size</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="k">for</span><span class="p">(</span><span class="n">OpRcPtrVec</span><span class="o">::</span><span class="n">size_type</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="n">m_cpuOps</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">size</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
 <span class="p">{</span>
    <span class="n">m_cpuOps</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">apply</span><span class="p">(</span><span class="n">rgbaBuffer</span><span class="p">,</span> <span class="n">numPixels</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p>After all ops have been applied, the results are copied back to the source</p>
-<div class="highlight-cpp"><div class="highlight"><pre><span></span><span class="n">scanlineHelper</span><span class="p">.</span><span class="n">finishRGBAScanline</span><span class="p">();</span>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="n">scanlineHelper</span><span class="p">.</span><span class="n">finishRGBAScanline</span><span class="p">();</span>
 </pre></div>
 </div>
 </div>
@@ -309,7 +309,7 @@ analyze the op-stream metadata and determine the appropriate allocation to use.
 (to minimize clamping, quantization, etc). This is accounted for here by
 interserting a forward allocation to the end of the pre-ops, and the inverse
 allocation to the start of the lattice ops.</p>
-<p>See <a class="reference external" href="https://github.com/imageworks/OpenColorIO/blob/master/src/core/NoOps.cpp#L183">https://github.com/imageworks/OpenColorIO/blob/master/src/core/NoOps.cpp#L183</a></p>
+<p>See <a class="reference external" href="https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/master/src/core/NoOps.cpp#L183">https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/master/src/core/NoOps.cpp#L183</a></p>
 <p>#. The 3 lists of ops are then optimized individually, and stored on the processor.
 The Lut3d is computed by applying the gpu-lattice ops, on the CPU, to a lut3d
 image.</p>

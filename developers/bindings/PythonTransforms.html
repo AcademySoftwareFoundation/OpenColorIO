@@ -124,7 +124,7 @@
 </div>
 <div class="section" id="allocationtransform">
 <h2>AllocationTransform<a class="headerlink" href="#allocationtransform" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
 <span class="n">transform</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">AllocationTransform</span><span class="p">()</span>
 <span class="n">transform</span><span class="o">.</span><span class="n">setAllocation</span><span class="p">(</span><span class="n">OCIO</span><span class="o">.</span><span class="n">Constants</span><span class="o">.</span><span class="n">ALLOCATION_LG2</span><span class="p">)</span>
 </pre></div>
@@ -225,10 +225,10 @@ enum, defined in Constants.</p>
 </div>
 <div class="section" id="cdltransform">
 <h2>CDLTransform<a class="headerlink" href="#cdltransform" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
 
 <span class="n">cdl</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">CDLTransform</span><span class="p">()</span>
-<span class="c1"># Set the slope, offset, power, and saturation for each channel.</span>
+<span class="c"># Set the slope, offset, power, and saturation for each channel.</span>
 <span class="n">cdl</span><span class="o">.</span><span class="n">setSOP</span><span class="p">([,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">])</span>
 <span class="n">cdl</span><span class="o">.</span><span class="n">setSat</span><span class="p">([,</span> <span class="p">,</span> <span class="p">])</span>
 <span class="n">cdl</span><span class="o">.</span><span class="n">getSatLumaCoefs</span><span class="p">()</span>
@@ -460,7 +460,7 @@ enum, defined in Constants.</p>
 <p class="first admonition-title">Note</p>
 <p class="last">Careless use of this may create infinite loops, so avoid referencing the colorspace you&#8217;re in.</p>
 </div>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
 <span class="n">transform</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">ColorSpaceTransform</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -553,7 +553,7 @@ enum, defined in Constants.</p>
 </div>
 <div class="section" id="displaytransform">
 <h2>DisplayTransform<a class="headerlink" href="#displaytransform" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
 <span class="n">transform</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">DisplayTransform</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -873,7 +873,7 @@ overriding <a class="reference internal" href="PythonAPI.html#PyOpenColorIO.Conf
 </div>
 <div class="section" id="exponenttransform">
 <h2>ExponentTransform<a class="headerlink" href="#exponenttransform" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
 <span class="n">transform</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">ExponentTransform</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -1076,7 +1076,7 @@ overriding <a class="reference internal" href="PythonAPI.html#PyOpenColorIO.Conf
 </div>
 <div class="section" id="logtransform">
 <h2>LogTransform<a class="headerlink" href="#logtransform" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
 </pre></div>
 </div>
 <p><a class="reference internal" href="#PyOpenColorIO.LogTransform" title="PyOpenColorIO.LogTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.LogTransform</span></tt></a> is used to define a log transform. The direction of
