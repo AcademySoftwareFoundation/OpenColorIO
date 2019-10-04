@@ -20,8 +20,8 @@ fi
 
 brew install pyenv openssl 
 
-CFLAGS="-I/usr/local/Cellar/openssl/1.0.2s/include"
-LDFLAGS="-L/usr/local/Cellar/openssl/1.0.2s/lib"
+CFLAGS="-I$(brew --prefix openssl)/include"
+LDFLAGS="-L$(brew --prefix openssl)/lib $LDFLAGS"
 
 echo 'eval "$(pyenv init -)"' >> .bash_profile
 source .bash_profile
