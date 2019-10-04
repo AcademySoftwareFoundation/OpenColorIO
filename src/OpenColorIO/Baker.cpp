@@ -213,7 +213,14 @@ OCIO_NAMESPACE_ENTER
             err << "' could not be found. ";
             throw Exception(err.str().c_str());
         }
-        
+
+        if(!getConfig())
+        {
+            std::ostringstream err;
+            err << "No OCIO config has been set";
+            throw Exception(err.str().c_str());
+        }
+   
         try
         {
             fmt->bake(*this, getImpl()->formatName_, os);
@@ -386,6 +393,16 @@ OCIO_ADD_TEST(Baker_Unit_Tests, bake)
     OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception,
                           "does not support baking");
 
+}
+
+OCIO_ADD_TEST(Baker_Unit_Tests, bake_empty_config)
+{
+    // Verify that running bake with an empty configuration
+    // throws an exception and does not segfault.
+    OCIO::BakerRcPtr bake = OCIO::Baker::Create();
+    bake->setFormat("cinespace");
+    std::ostringstream os;
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "No OCIO config has been set");
 }
 
 #endif // OCIO_BUILD_TESTS
