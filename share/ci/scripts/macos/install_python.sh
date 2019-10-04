@@ -18,7 +18,10 @@ if [[ "$MACOS_MAJOR" -gt 9 && "$MACOS_MINOR" -gt 13 ]]; then
         -target /
 fi
 
-brew install pyenv
+brew install pyenv openssl 
+
+CFLAGS="-I/usr/local/Cellar/openssl/1.0.2s/include"
+LDFLAGS="-L/usr/local/Cellar/openssl/1.0.2s/lib"
 
 echo 'eval "$(pyenv init -)"' >> .bash_profile
 source .bash_profile
