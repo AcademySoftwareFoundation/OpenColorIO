@@ -30,6 +30,4 @@ steps:
   displayName: Generate code coverage report
 
 - bash: sonar-scanner -X -Dsonar.login=$SONAR_TOKEN
-  env:
-    SONAR_TOKEN: $(tokens.sonarCloud)
   displayName: Run sonar-scanner

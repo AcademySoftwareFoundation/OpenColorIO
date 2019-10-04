@@ -99,11 +99,11 @@ jobs:
   strategy:
     matrix:
       Linux CentOS 7 VFX CY2019:
-        containerImage: aswfstaging/ci-common:1.0
+        containerImage: aswfstaging/ci-base:2019
         cxxCompiler: g++
         cCompiler: gcc
       Linux CentOS 7 Clang 7:
-        containerImage: aswfstaging/ci-common:1.0
+        containerImage: aswfstaging/ci-base:2019
         cxxCompiler: clang++
         cCompiler: clang
   pool:
