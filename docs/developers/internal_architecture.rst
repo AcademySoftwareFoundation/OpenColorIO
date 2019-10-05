@@ -268,7 +268,7 @@ analyze the op-stream metadata and determine the appropriate allocation to use.
 interserting a forward allocation to the end of the pre-ops, and the inverse
 allocation to the start of the lattice ops.
 
-See https://github.com/imageworks/OpenColorIO/blob/master/src/core/NoOps.cpp#L183
+See https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/master/src/core/NoOps.cpp#L183
 
 #. The 3 lists of ops are then optimized individually, and stored on the processor.
 The Lut3d is computed by applying the gpu-lattice ops, on the CPU, to a lut3d
