@@ -114,7 +114,22 @@ OCIO_NAMESPACE_ENTER
     
     void Baker::setFormat(const char * formatName)
     {
-        getImpl()->formatName_ = formatName;
+        FileFormat* fmt = FormatRegistry::GetInstance().getFileFormatByName(formatName);
+        FormatInfoVec formatInfoVec;
+        fmt->getFormatInfo(formatInfoVec);
+        for(unsigned int i=0; i<formatInfoVec.size(); ++i)
+        {
+            if(formatInfoVec[i].capabilities & FORMAT_CAPABILITY_BAKE)
+            {
+                getImpl()->formatName_ = formatName;
+                return;
+            }
+        }
+
+        std::ostringstream os;
+        os << "File format " << formatName;
+        os << " does not support baking.";
+        throw Exception(os.str().c_str());
     }
     
     const char * Baker::getFormat() const
@@ -213,7 +228,12 @@ OCIO_NAMESPACE_ENTER
             err << "' could not be found. ";
             throw Exception(err.str().c_str());
         }
-        
+
+        if(!getConfig())
+        {
+            throw Exception("No OCIO config has been set");
+        }
+   
         try
         {
             fmt->bake(*this, getImpl()->formatName_, os);
@@ -274,7 +294,7 @@ OCIO_ADD_TEST(Baker_Unit_Tests, test_listlutwriters)
 }
 */
 
-OCIO_ADD_TEST(Baker_Unit_Tests, bake)
+OCIO_ADD_TEST(Baker, bake)
 {
     // SSE aware test, similar to python test.
     OCIO::BakerRcPtr bake = OCIO::Baker::Create();
@@ -381,11 +401,19 @@ OCIO_ADD_TEST(Baker_Unit_Tests, bake)
     OCIO_CHECK_EQUAL("3dl", std::string(bake->getFormatExtensionByIndex(1)));
 
     // TODO: Add CLF bake support.
-    bake->setFormat(OCIO::FILEFORMAT_CLF);
-    OCIO_CHECK_EQUAL(OCIO::FILEFORMAT_CLF, std::string(bake->getFormat()));
-    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception,
-                          "does not support baking");
+    OCIO_CHECK_THROW_WHAT(bake->setFormat(OCIO::FILEFORMAT_CLF),
+                          OCIO::Exception, "does not support baking");
 
+}
+
+OCIO_ADD_TEST(Baker, empty_config)
+{
+    // Verify that running bake with an empty configuration
+    // throws an exception and does not segfault.
+    OCIO::BakerRcPtr bake = OCIO::Baker::Create();
+    bake->setFormat("cinespace");
+    std::ostringstream os;
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "No OCIO config has been set");
 }
 
 #endif // OCIO_BUILD_TESTS
