@@ -116,7 +116,7 @@ OCIO_NAMESPACE_ENTER
             if (!node.Read<bool>(x))
             {
                 std::ostringstream os;
-                os << "At line " << (node.GetMark().line + 1)
+                os << "At line " << (node.Mark().line + 1)
                    << ", '" << node.Tag() << "' parsing boolean failed.";
 
                 throw Exception(os.str().c_str());
@@ -129,7 +129,7 @@ OCIO_NAMESPACE_ENTER
             catch (const std::exception & e)
             {
                 std::ostringstream os;
-                os << "At line " << (node.GetMark().line + 1)
+                os << "At line " << (node.Mark().line + 1)
                    << ", '" << node.Tag() << "' parsing boolean failed "
                    << "with: " << e.what();
                 throw Exception(os.str().c_str());
@@ -143,7 +143,7 @@ OCIO_NAMESPACE_ENTER
             if (!node.Read<int>(x))
             {
                 std::ostringstream os;
-                os << "At line " << (node.GetMark().line + 1)
+                os << "At line " << (node.Mark().line + 1)
                    << ", '" << node.Tag() << "' parsing integer failed.";
 
                 throw Exception(os.str().c_str());
@@ -156,7 +156,7 @@ OCIO_NAMESPACE_ENTER
             catch (const std::exception & e)
             {
                 std::ostringstream os;
-                os << "At line " << (node.GetMark().line + 1)
+                os << "At line " << (node.Mark().line + 1)
                    << ", '" << node.Tag() << "' parsing integer failed "
                    << "with: " << e.what();
                 throw Exception(os.str().c_str());
@@ -171,7 +171,7 @@ OCIO_NAMESPACE_ENTER
             if (!node.Read<float>(x))
             {
                 std::ostringstream os;
-                os << "At line " << (node.GetMark().line + 1)
+                os << "At line " << (node.Mark().line + 1)
                    << ", '" << node.Tag() << "' parsing float failed.";
 
                 throw Exception(os.str().c_str());
@@ -184,7 +184,7 @@ OCIO_NAMESPACE_ENTER
             catch (const std::exception & e)
             {
                 std::ostringstream os;
-                os << "At line " << (node.GetMark().line + 1)
+                os << "At line " << (node.Mark().line + 1)
                    << ", '" << node.Tag() << "' parsing float failed "
                    << "with: " << e.what();
                 throw Exception(os.str().c_str());
@@ -199,7 +199,7 @@ OCIO_NAMESPACE_ENTER
             if (!node.Read<double>(x))
             {
                 std::ostringstream os;
-                os << "At line " << (node.GetMark().line + 1)
+                os << "At line " << (node.Mark().line + 1)
                    << ", '" << node.Tag() << "' parsing double failed.";
 
                 throw Exception(os.str().c_str());
@@ -212,7 +212,7 @@ OCIO_NAMESPACE_ENTER
             catch (const std::exception & e)
             {
                 std::ostringstream os;
-                os << "At line " << (node.GetMark().line + 1)
+                os << "At line " << (node.Mark().line + 1)
                    << ", '" << node.Tag() << "' parsing double failed "
                    << "with: " << e.what();
                 throw Exception(os.str().c_str());
@@ -226,7 +226,7 @@ OCIO_NAMESPACE_ENTER
             if (!node.Read<std::string>(x))
             {
                 std::ostringstream os;
-                os << "At line " << (node.GetMark().line + 1)
+                os << "At line " << (node.Mark().line + 1)
                    << ", '" << node.Tag() << "' parsing string failed.";
 
                 throw Exception(os.str().c_str());
@@ -239,7 +239,7 @@ OCIO_NAMESPACE_ENTER
             catch (const std::exception & e)
             {
                 std::ostringstream os;
-                os << "At line " << (node.GetMark().line + 1)
+                os << "At line " << (node.Mark().line + 1)
                    << ", '" << node.Tag() << "' parsing string failed "
                    << "with: " << e.what();
                 throw Exception(os.str().c_str());
@@ -345,7 +345,7 @@ OCIO_NAMESPACE_ENTER
             load(key, keyName);
         
             std::ostringstream os;
-            os << "At line " << (key.GetMark().line + 1)
+            os << "At line " << (key.Mark().line + 1)
                << ", unknown key '" << keyName << "' in '" << node.Tag() << "'.";
 
             LogWarning(os.str());
@@ -366,7 +366,7 @@ OCIO_NAMESPACE_ENTER
                                const std::string & msg)
         {
             std::ostringstream os;
-            os << "At line " << (node.GetMark().line + 1) 
+            os << "At line " << (node.Mark().line + 1) 
                << ", '" << node.Tag() << "' parsing failed: " 
                << msg;
 
@@ -381,7 +381,7 @@ OCIO_NAMESPACE_ENTER
             load(key, keyName);
         
             std::ostringstream os;
-            os << "At line " << (key.GetMark().line + 1) 
+            os << "At line " << (key.Mark().line + 1) 
                << ", the value parsing of the key '" << keyName 
                << "' from '" << nodeName << "' failed: " << msg;
 
