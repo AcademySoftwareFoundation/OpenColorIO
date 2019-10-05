@@ -46,7 +46,6 @@
 #define snprintf sprintf_s
 #define strtok_r strtok_s
 #define sscanf sscanf_s
-#define putenv _putenv
 typedef __int64 FilePos;
 #define fseeko _fseeki64
 #define ftello _ftelli64
@@ -72,6 +71,8 @@ namespace Platform
 {
 
 void Getenv (const char* name, std::string& value);
+
+void Setenv (const char* name, const std::string& value);
 
 // Case insensitive string comparison
 int Strcasecmp(const char* str1, const char* str2);
