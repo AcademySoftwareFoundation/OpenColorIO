@@ -315,7 +315,7 @@ OCIO_NAMESPACE_ENTER
         
         // Get all internal transforms (to generate cacheIDs, validation, etc).
         // This currently crawls colorspaces + looks
-        void getAllIntenalTransforms(ConstTransformVec & transformVec) const;
+        void getAllInternalTransforms(ConstTransformVec & transformVec) const;
     };
     
     
@@ -611,7 +611,7 @@ OCIO_NAMESPACE_ENTER
         // the named space exists and that all Transforms are valid.
         {
             ConstTransformVec allTransforms;
-            getImpl()->getAllIntenalTransforms(allTransforms);
+            getImpl()->getAllInternalTransforms(allTransforms);
             
             std::set<std::string> colorSpaceNames;
             for(unsigned int i=0; i<allTransforms.size(); ++i)
@@ -680,7 +680,7 @@ OCIO_NAMESPACE_ENTER
 
         // Validate all transforms
         ConstTransformVec allTransforms;
-        getImpl()->getAllIntenalTransforms(allTransforms);
+        getImpl()->getAllInternalTransforms(allTransforms);
          for (unsigned int i = 0; i<allTransforms.size(); ++i)
         {
             allTransforms[i]->validate();
@@ -1517,7 +1517,7 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream filehash;
             
             ConstTransformVec allTransforms;
-            getImpl()->getAllIntenalTransforms(allTransforms);
+            getImpl()->getAllInternalTransforms(allTransforms);
             
             std::set<std::string> files;
             for(unsigned int i=0; i<allTransforms.size(); ++i)
@@ -1577,7 +1577,7 @@ OCIO_NAMESPACE_ENTER
         sanitytext_ = "";
     }
     
-    void Config::Impl::getAllIntenalTransforms(ConstTransformVec & transformVec) const
+    void Config::Impl::getAllInternalTransforms(ConstTransformVec & transformVec) const
     {
         // Grab all transforms from the ColorSpaces
         for(int i=0; i<colorspaces_->getNumColorSpaces(); ++i)
