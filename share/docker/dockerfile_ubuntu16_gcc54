@@ -63,9 +63,9 @@ RUN cd /home/devel/git && \
     make install -j4
 
 
-# Install OpenImageIO 
+# Install OpenImageIO
 RUN cd /home/devel/git && \
-    git clone https://github.com/OpenImageIO/oiio.git -b RB-1.7 && \
+    git clone https://github.com/OpenImageIO/oiio.git -b RB-2.0 && \
     cd /home/devel/git/oiio && \
     mkdir build && \
     cd /home/devel/git/oiio/build && \
