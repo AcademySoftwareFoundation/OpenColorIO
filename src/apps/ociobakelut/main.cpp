@@ -345,6 +345,11 @@ int main (int argc, const char* argv[])
             else
             {
                 std::ofstream f(outputfile.c_str());
+                if(f.fail())
+                {
+                    std::cerr << "ERROR: Non-writable file path " << outputfile << " specified." << std::endl;
+                    return 1;
+                }
                 baker->bake(f);
                 if(verbose)
                     std::cout << "[OpenColorIO INFO]: Wrote '" << outputfile << "'" << std::endl;
