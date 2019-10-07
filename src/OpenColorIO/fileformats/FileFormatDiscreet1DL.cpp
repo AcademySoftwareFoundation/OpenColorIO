@@ -796,18 +796,13 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 #include "UnitTestUtils.h"
 
-#ifdef _WIN32
-#define stringCopy(to, from, size) strcpy_s(to, size, from);
-#else
-#define stringCopy(to, from, size) strncpy(to, from, size);
-#endif
-
 void TestToolsStripBlank(
     const char * stringToStripChar,
     const std::string & stringResult)
 {
-    char stringToStrip[200];
-    stringCopy(stringToStrip, stringToStripChar, 200);
+    constexpr const size_t stringToStripSize = 200;
+    char stringToStrip[stringToStripSize];
+    snprintf(stringToStrip, stringToStripSize, "%s", stringToStripChar);
     OCIO::ReplaceTabsAndStripSpaces(stringToStrip);
     std::string strippedString(stringToStrip);
     OCIO_CHECK_EQUAL(stringResult, strippedString);
@@ -817,8 +812,10 @@ void TestToolsStripEndNewLine(
     const char * stringToStripChar,
     const std::string & stringResult)
 {
-    char stringToStrip[200];
-    stringCopy(stringToStrip, stringToStripChar, 200);
+
+    constexpr const size_t stringToStripSize = 200;
+    char stringToStrip[stringToStripSize];
+    snprintf(stringToStrip, stringToStripSize, "%s", stringToStripChar);
     OCIO::StripEndNewLine(stringToStrip);
     std::string strippedString(stringToStrip);
     OCIO_CHECK_EQUAL(stringResult, strippedString);
