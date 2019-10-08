@@ -5,8 +5,10 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "Logging.h"
 #include "OpBuilders.h"
 #include "UnitTestUtils.h"
+
 
 OCIO_NAMESPACE_ENTER
 {
@@ -71,6 +73,28 @@ ConstProcessorRcPtr GetFileTransformProcessor(const std::string & fileName)
     // Get the processor corresponding to the transform.
     return config->getProcessor(fileTransform);
 }
+
+namespace
+{
+
+void MuteLoggingFunction(const char * message)
+{
+    // Does nothing on purpose.
+}
+
+}
+
+
+MuteLogging::MuteLogging()
+{
+    SetLoggingFunction(MuteLoggingFunction);
+}
+
+MuteLogging::~MuteLogging()
+{
+    ResetToDefaultLoggingFunction();
+}
+
 
 }
 OCIO_NAMESPACE_EXIT

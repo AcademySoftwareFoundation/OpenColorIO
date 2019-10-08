@@ -128,12 +128,15 @@ OCIO_NAMESPACE_ENTER
 }
 OCIO_NAMESPACE_EXIT
 
-#ifdef OCIO_UNIT_TEST
 
-namespace OCIO = OCIO_NAMESPACE;
+
+#ifdef OCIO_UNIT_TEST
 
 #include "UnitTest.h"
 #include "UnitTestUtils.h"
+
+namespace OCIO = OCIO_NAMESPACE;
+
 
 OCIO::LocalCachedFileRcPtr LoadCCFile(const std::string & fileName)
 {
@@ -231,6 +234,9 @@ OCIO_ADD_TEST(FileFormatCC, TestCC_SATNode)
 
 OCIO_ADD_TEST(FileFormatCC, TestCC_ASC_SAT)
 {
+    // As a warning message is expected, please mute it.
+    OCIO::MuteLogging mute;
+
     // CC file
     const std::string fileName("cdl_test_ASC_SAT.cc");
 
@@ -245,6 +251,9 @@ OCIO_ADD_TEST(FileFormatCC, TestCC_ASC_SAT)
 
 OCIO_ADD_TEST(FileFormatCC, TestCC_ASC_SOP)
 {
+    // As a warning message is expected, please mute it.
+    OCIO::MuteLogging mute;
+
     // CC file
     const std::string fileName("cdl_test_ASC_SOP.cc");
 

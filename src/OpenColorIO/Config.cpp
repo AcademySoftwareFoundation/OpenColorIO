@@ -315,7 +315,7 @@ OCIO_NAMESPACE_ENTER
         
         // Get all internal transforms (to generate cacheIDs, validation, etc).
         // This currently crawls colorspaces + looks
-        void getAllIntenalTransforms(ConstTransformVec & transformVec) const;
+        void getAllInternalTransforms(ConstTransformVec & transformVec) const;
     };
     
     
@@ -611,7 +611,7 @@ OCIO_NAMESPACE_ENTER
         // the named space exists and that all Transforms are valid.
         {
             ConstTransformVec allTransforms;
-            getImpl()->getAllIntenalTransforms(allTransforms);
+            getImpl()->getAllInternalTransforms(allTransforms);
             
             std::set<std::string> colorSpaceNames;
             for(unsigned int i=0; i<allTransforms.size(); ++i)
@@ -680,7 +680,7 @@ OCIO_NAMESPACE_ENTER
 
         // Validate all transforms
         ConstTransformVec allTransforms;
-        getImpl()->getAllIntenalTransforms(allTransforms);
+        getImpl()->getAllInternalTransforms(allTransforms);
          for (unsigned int i = 0; i<allTransforms.size(); ++i)
         {
             allTransforms[i]->validate();
@@ -1525,7 +1525,7 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream filehash;
             
             ConstTransformVec allTransforms;
-            getImpl()->getAllIntenalTransforms(allTransforms);
+            getImpl()->getAllInternalTransforms(allTransforms);
             
             std::set<std::string> files;
             for(unsigned int i=0; i<allTransforms.size(); ++i)
@@ -1585,7 +1585,7 @@ OCIO_NAMESPACE_ENTER
         sanitytext_ = "";
     }
     
-    void Config::Impl::getAllIntenalTransforms(ConstTransformVec & transformVec) const
+    void Config::Impl::getAllInternalTransforms(ConstTransformVec & transformVec) const
     {
         // Grab all transforms from the ColorSpaces
         for(int i=0; i<colorspaces_->getNumColorSpaces(); ++i)
@@ -1621,6 +1621,7 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
+#include "UnitTestUtils.h"
 
 #include <sys/stat.h>
 #include "pystring/pystring.h"
@@ -2060,7 +2061,6 @@ OCIO_ADD_TEST(Config, sanity_check)
 
 OCIO_ADD_TEST(config, env_check)
 {
-    {
     std::string SIMPLE_PROFILE =
     "ocio_profile_version: 1\n"
     "environment:\n"
@@ -2094,10 +2094,8 @@ OCIO_ADD_TEST(config, env_check)
     "\n";
     
     
-    const std::string test("SHOW=bar");
-    putenv(const_cast<char *>(test.c_str()));
-    const std::string test2("TASK=lighting");
-    putenv(const_cast<char *>(test2.c_str()));
+    OCIO::Platform::Setenv("SHOW", "bar");
+    OCIO::Platform::Setenv("TASK", "lighting");
     
     std::istringstream is;
     is.str(SIMPLE_PROFILE);
@@ -2130,7 +2128,10 @@ OCIO_ADD_TEST(config, env_check)
     edit->addEnvironmentVar("test", "bar${cheese}");
     edit->addEnvironmentVar("cheese", "chedder");
     
-    //Test
+    // As a warning message is expected, please mute it.
+    OCIO::MuteLogging mute;
+
+    // Test
     OCIO::LoggingLevel loglevel = OCIO::GetLoggingLevel();
     OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_DEBUG);
     is.str(SIMPLE_PROFILE2);
@@ -2143,8 +2144,6 @@ OCIO_ADD_TEST(config, env_check)
     OCIO_CHECK_EQUAL(edit->getEnvironmentMode(), OCIO::ENV_ENVIRONMENT_LOAD_PREDEFINED);
     edit->setEnvironmentMode(OCIO::ENV_ENVIRONMENT_LOAD_ALL);
     OCIO_CHECK_EQUAL(edit->getEnvironmentMode(), OCIO::ENV_ENVIRONMENT_LOAD_ALL);
-    
-    }
 }
 
 OCIO_ADD_TEST(Config, role_without_colorspace)
@@ -2222,8 +2221,7 @@ OCIO_ADD_TEST(Config, env_colorspace_name)
 
     {
         // Test when the env. variable exists but its content is wrong
-        const std::string env("OCIO_TEST=FaultyColorSpaceName");
-        putenv(const_cast<char*>(env.c_str()));
+        OCIO::Platform::Setenv("OCIO_TEST", "FaultyColorSpaceName");
 
         const std::string 
             myConfigStr = MY_OCIO_CONFIG
@@ -2240,8 +2238,7 @@ OCIO_ADD_TEST(Config, env_colorspace_name)
 
     {
         // Test when the env. variable exists and its content is right
-        const std::string env("OCIO_TEST=lnh");
-        putenv(const_cast<char*>(env.c_str()));
+        OCIO::Platform::Setenv("OCIO_TEST", "lnh");
 
         const std::string 
             myConfigStr = MY_OCIO_CONFIG
@@ -2258,8 +2255,7 @@ OCIO_ADD_TEST(Config, env_colorspace_name)
 
     {
         // Check that the serialization preserves the env. variable
-        const std::string env("OCIO_TEST=lnh");
-        putenv(const_cast<char*>(env.c_str()));
+        OCIO::Platform::Setenv("OCIO_TEST", "lnh");
 
         const std::string 
             myConfigStr = MY_OCIO_CONFIG
@@ -3149,9 +3145,7 @@ OCIO_ADD_TEST(Config, display)
             "active_views: []\n"
             + SIMPLE_PROFILE_FOOTER;
 
-        const std::string active_displays(
-            std::string(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR) + "= sRGB_3, sRGB_2");
-        putenv(const_cast<char *>(active_displays.c_str()));
+        OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR, " sRGB_3, sRGB_2");
 
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
@@ -3170,9 +3164,7 @@ OCIO_ADD_TEST(Config, display)
             "active_views: []\n"
             + SIMPLE_PROFILE_FOOTER;
 
-        const std::string active_displays(
-            std::string(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR) + "= sRGB_3, sRGB_2");
-        putenv(const_cast<char *>(active_displays.c_str()));
+        OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR, " sRGB_3, sRGB_2");
 
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
@@ -3184,9 +3176,7 @@ OCIO_ADD_TEST(Config, display)
     }
 
     {
-        const std::string active_displays(
-            std::string(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR) + "="); // No value
-        putenv(const_cast<char *>(active_displays.c_str()));
+        OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR, ""); // No value
 
         std::string myProfile = 
             SIMPLE_PROFILE_HEADER
@@ -3205,9 +3195,7 @@ OCIO_ADD_TEST(Config, display)
     }
 
     {
-        const std::string active_displays(
-            std::string(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR) + "= "); // No value, but misleading space
-        putenv(const_cast<char *>(active_displays.c_str()));
+        OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR, " "); // No value, but misleading space
 
         std::string myProfile = 
             SIMPLE_PROFILE_HEADER
@@ -3344,9 +3332,7 @@ OCIO_ADD_TEST(Config, view)
             "active_views: []\n"
             + SIMPLE_PROFILE_FOOTER;
 
-        const std::string active_displays(
-            std::string(OCIO::OCIO_ACTIVE_VIEWS_ENVVAR) + "= View_3, View_2");
-        putenv(const_cast<char *>(active_displays.c_str()));
+        OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_VIEWS_ENVVAR, " View_3, View_2");
 
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
@@ -3370,9 +3356,7 @@ OCIO_ADD_TEST(Config, view)
             "active_views: []\n"
             + SIMPLE_PROFILE_FOOTER;
 
-        const std::string active_displays(
-            std::string(OCIO::OCIO_ACTIVE_VIEWS_ENVVAR) + "="); // No value.
-        putenv(const_cast<char *>(active_displays.c_str()));
+        OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_VIEWS_ENVVAR, ""); // No value.
 
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
@@ -3396,9 +3380,7 @@ OCIO_ADD_TEST(Config, view)
             "active_views: []\n"
             + SIMPLE_PROFILE_FOOTER;
 
-        const std::string active_displays(
-            std::string(OCIO::OCIO_ACTIVE_VIEWS_ENVVAR) + "= "); // No value, but misleading space
-        putenv(const_cast<char *>(active_displays.c_str()));
+        OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_VIEWS_ENVVAR, " "); // No value, but misleading space
 
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
