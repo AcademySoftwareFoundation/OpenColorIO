@@ -34,14 +34,6 @@ RUN yum -y install epel-release && \
     libXi-devel && \
     yum -y clean all
 
-# Install Boost
-RUN cd /home/download && \
-    wget https://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.tar.gz && \
-    tar -xzf boost_1_61_0.tar.gz && \
-    cd boost_1_61_0 && \
-    sh bootstrap.sh && \
-    ./b2 install --prefix=/usr/local
-
 # Install OpenEXR
 RUN mkdir /home/git && \
     cd /home/git && \
