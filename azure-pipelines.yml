@@ -4,15 +4,12 @@
 # azure-pipelines build file
 # https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=azure-devops&tabs=schema
 
-# TODO: Add gh-pages deployment on tag trigger
-
 trigger:
   batch: true
   branches:
     include:
     - master
     - RB-*
-    - ci_test
 
 pr:
   autoCancel: true
@@ -21,13 +18,24 @@ pr:
     - master
     - RB-*
 
+# TODO: Replace nightly build with PR SonarCloud check once quality gate is 
+#       passing.
+
 schedules:
   - cron: "0 0 * * 0"
-    displayName: Weekly Sunday build
+    displayName: Full weekly build (always)
     branches:
       include:
         - master
     always: true
+  - cron: "0 0 * * 1-6"
+    displayName: Full nightly build (if changed)
+    branches:
+      include:
+        - master
+
+variables:
+- group: sonar
 
 jobs:
 
@@ -94,11 +102,11 @@ jobs:
   strategy:
     matrix:
       Linux CentOS 7 VFX CY2019:
-        containerImage: aswfstaging/ci-ocio:2019
+        containerImage: aswfstaging/ci-base:2019
         cxxCompiler: g++
         cCompiler: gcc
       Linux CentOS 7 Clang 7:
-        containerImage: aswfstaging/ci-ocio:2019
+        containerImage: aswfstaging/ci-base:2019
         cxxCompiler: clang++
         cCompiler: clang
   pool:
@@ -123,12 +131,6 @@ jobs:
       installExtPkgs: NONE
       cxxCompiler: $(cxxCompiler)
       cCompiler: $(cCompiler)
-      cmakeOpts: |
-        -DEXPAT_DIRS="/usr/local" \
-        -DLCMS2_DIRS="/usr/local" \
-        -DYAMLCPP_DIRS="/usr/local" \
-        -DPYSTRING_DIRS="/usr/local" \
-        -DILMBASE_DIRS="/usr/local"
 
   - template: share/ci/templates/build.yml
     parameters:
@@ -202,7 +204,7 @@ jobs:
 # Windows
 # ------------------------------------------------------------------------------
 # TODO: Install pythonXX_d.lib (or work around it being needed) to support Debug
-# build testing with Python bindings and docs enabled.
+#       build testing with Python bindings and docs enabled.
 
 - job: Windows
   strategy:
