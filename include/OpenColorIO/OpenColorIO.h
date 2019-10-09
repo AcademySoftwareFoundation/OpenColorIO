@@ -200,13 +200,17 @@ OCIO_NAMESPACE_ENTER
         // Initialization
         // ^^^^^^^^^^^^^^
         
-        //!cpp:function:: Constructor a default empty configuration.
+        //!cpp:function:: Create a default empty configuration.
         static ConfigRcPtr Create();
-        //!cpp:function::  Constructor a configuration using the OCIO environmnet variable.
+        //!cpp:function:: Create a fall-back config.  This may be useful to allow client apps 
+        // to launch in cases when the supplied config path is not loadable.
+        static ConstConfigRcPtr CreateRaw();
+        //!cpp:function:: Create a configuration using the OCIO environment variable.  If the 
+        // variable is missing or empty, returns the same result as :cpp:func:`Config::CreateRaw`.
         static ConstConfigRcPtr CreateFromEnv();
-        //!cpp:function:: Constructor a configuration using a specific config file.
+        //!cpp:function:: Create a configuration using a specific config file.
         static ConstConfigRcPtr CreateFromFile(const char * filename);
-        //!cpp:function::
+        //!cpp:function:: Create a configuration using a stream.
         static ConstConfigRcPtr CreateFromStream(std::istream & istream);
         
         //!cpp:function::
