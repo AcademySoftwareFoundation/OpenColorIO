@@ -134,8 +134,13 @@ OCIO_NAMESPACE_ENTER
     
     //!cpp:function:: Set the global logging level.
     extern OCIOEXPORT void SetLoggingLevel(LoggingLevel level);
-    
-    
+
+    //!cpp:function::
+    // Set the logging function to use; otherwise, use the default (i.e. std::cerr).
+    extern OCIOEXPORT void SetLoggingFunction(LoggingFunction logFunction);
+    extern OCIOEXPORT void ResetToDefaultLoggingFunction();
+
+
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
     // Config
@@ -350,19 +355,28 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: Add a color space to the configuration.
         //
         // .. note::
-        //    If another color space is already registered with the same name,
+        //    If another color space is already present with the same name,
         //    this will overwrite it. This stores a copy of the specified
         //    color space.
         // .. note::
-        //    Adding a color space to a Config does not affect any ColorSpaceSets 
-        //    that have already been created.
+        //    Adding a color space to a :cpp:class:`Config` does not affect any 
+        //    :cpp:class:`ColorSpaceSet`s that have already been created.
         void addColorSpace(const ConstColorSpaceRcPtr & cs);
+
+        //!cpp:function:: Remove a color space from the configuration.
+        //
+        // .. note::
+        //    It does not throw an exception if the color space is not present.
+        // .. note::
+        //    Removing a color space to a :cpp:class:`Config` does not affect any 
+        //    :cpp:class:`ColorSpaceSet`s that have already been created.
+        void removeColorSpace(const char * name);
 
         //!cpp:function:: Remove all the color spaces from the configuration.
         //
         // .. note::
-        //    Removing color spaces from a Config does not affect 
-        //    any ColorSpaceSets that have already been created.
+        //    Removing color spaces from a :cpp:class:`Config` does not affect 
+        //    any :cpp:class:`ColorSpaceSet`s that have already been created.
         void clearColorSpaces();
         
         //!cpp:function:: Given the specified string, get the longest,
@@ -840,14 +854,14 @@ OCIO_NAMESPACE_ENTER
     //    where the result contains copied color spaces and no duplicates.
 
     //!cpp:function:: Perform the union of two sets.
-    ConstColorSpaceSetRcPtr operator||(const ConstColorSpaceSetRcPtr & lcss, 
-                                       const ConstColorSpaceSetRcPtr & rcss);
+    extern OCIOEXPORT ConstColorSpaceSetRcPtr operator||(const ConstColorSpaceSetRcPtr & lcss, 
+                                                         const ConstColorSpaceSetRcPtr & rcss);
     //!cpp:function:: Perform the intersection of two sets.
-    ConstColorSpaceSetRcPtr operator&&(const ConstColorSpaceSetRcPtr & lcss, 
-                                       const ConstColorSpaceSetRcPtr & rcss);
+    extern OCIOEXPORT ConstColorSpaceSetRcPtr operator&&(const ConstColorSpaceSetRcPtr & lcss, 
+                                                         const ConstColorSpaceSetRcPtr & rcss);
     //!cpp:function:: Perform the difference of two sets.
-    ConstColorSpaceSetRcPtr operator-(const ConstColorSpaceSetRcPtr & lcss, 
-                                      const ConstColorSpaceSetRcPtr & rcss);
+    extern OCIOEXPORT ConstColorSpaceSetRcPtr operator-(const ConstColorSpaceSetRcPtr & lcss, 
+                                                        const ConstColorSpaceSetRcPtr & rcss);
 
 
 

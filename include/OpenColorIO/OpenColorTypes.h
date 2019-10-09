@@ -13,6 +13,8 @@
 
 #include <limits>
 #include <string>
+#include <functional>
+
 
 /*!rst::
 C++ Types
@@ -225,8 +227,9 @@ OCIO_NAMESPACE_ENTER
     {
         return OCIO_DYNAMIC_POINTER_CAST<T,U>(ptr);
     }
-    
-    
+
+    using LoggingFunction = std::function<void(const char*)>;
+
     //!rst::
     // Enums
     // *****
@@ -237,7 +240,9 @@ OCIO_NAMESPACE_ENTER
         LOGGING_LEVEL_WARNING = 1,
         LOGGING_LEVEL_INFO = 2,
         LOGGING_LEVEL_DEBUG = 3,
-        LOGGING_LEVEL_UNKNOWN = 255
+        LOGGING_LEVEL_UNKNOWN = 255,
+
+        LOGGING_LEVEL_DEFAULT = LOGGING_LEVEL_INFO
     };
     
     //!cpp:type::

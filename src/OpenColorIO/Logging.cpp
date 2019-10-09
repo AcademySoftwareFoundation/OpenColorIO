@@ -17,11 +17,12 @@ OCIO_NAMESPACE_ENTER
 {
     namespace
     {
-        const char * OCIO_LOGGING_LEVEL_ENVVAR = "OCIO_LOGGING_LEVEL";
-        const LoggingLevel OCIO_DEFAULT_LOGGING_LEVEL = LOGGING_LEVEL_INFO;
+        constexpr static const char * OCIO_LOGGING_LEVEL_ENVVAR = "OCIO_LOGGING_LEVEL";
         
         Mutex g_logmutex;
+
         LoggingLevel g_logginglevel = LOGGING_LEVEL_UNKNOWN;
+
         bool g_initialized = false;
         bool g_loggingOverride = false;
         
@@ -44,12 +45,38 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::cerr << "[OpenColorIO Warning]: Invalid $OCIO_LOGGING_LEVEL specified. ";
                     std::cerr << "Options: none (0), warning (1), info (2), debug (3)" << std::endl;
-                    g_logginglevel = OCIO_DEFAULT_LOGGING_LEVEL;
+                    g_logginglevel = LOGGING_LEVEL_DEFAULT;
                 }
             }
             else
             {
-                g_logginglevel = OCIO_DEFAULT_LOGGING_LEVEL;
+                g_logginglevel = LOGGING_LEVEL_DEFAULT;
+            }
+        }
+
+        // That's the default logging function.
+        void DefaultLoggingFunction(const char * message)
+        {
+            std::cerr << message;
+        }
+
+        // Hold the default logging function.
+        LoggingFunction g_loggingFunction = DefaultLoggingFunction;
+
+        // If the message contains multiple lines, then preprocess it 
+        // to output the content line by line.
+        void LogMessage(const char * messagePrefix, const std::string & message)
+        {
+            StringVec parts;
+            pystring::split( pystring::rstrip(message), parts, "\n");
+
+            for(size_t i=0; i<parts.size(); ++i)
+            {
+                std::string msg(messagePrefix);
+                msg += parts[i];
+                msg += "\n";
+
+                g_loggingFunction(msg.c_str());
             }
         }
     }
@@ -76,21 +103,25 @@ OCIO_NAMESPACE_ENTER
             g_logginglevel = level;
         }
     }
-    
+
+    void SetLoggingFunction(LoggingFunction logFunction)
+    {
+        g_loggingFunction = logFunction;
+    }
+
+    void ResetToDefaultLoggingFunction()
+    {
+        g_loggingFunction = DefaultLoggingFunction;
+    }
+
     void LogWarning(const std::string & text)
     {
         AutoMutex lock(g_logmutex);
         InitLogging();
         
         if(g_logginglevel<LOGGING_LEVEL_WARNING) return;
-        
-        StringVec parts;
-        pystring::split( pystring::rstrip(text), parts, "\n");
-        
-        for(unsigned int i=0; i<parts.size(); ++i)
-        {
-            std::cerr << "[OpenColorIO Warning]: " << parts[i] << std::endl;
-        }
+
+        LogMessage("[OpenColorIO Warning]: ", text);
     }
     
     void LogInfo(const std::string & text)
@@ -99,14 +130,8 @@ OCIO_NAMESPACE_ENTER
         InitLogging();
         
         if(g_logginglevel<LOGGING_LEVEL_INFO) return;
-        
-        StringVec parts;
-        pystring::split( pystring::rstrip(text), parts, "\n");
-        
-        for(unsigned int i=0; i<parts.size(); ++i)
-        {
-            std::cerr << "[OpenColorIO Info]: " << parts[i] << std::endl;
-        }
+
+        LogMessage("[OpenColorIO Info]: ", text);
     }
     
     void LogDebug(const std::string & text)
@@ -116,13 +141,7 @@ OCIO_NAMESPACE_ENTER
         
         if(g_logginglevel<LOGGING_LEVEL_DEBUG) return;
         
-        StringVec parts;
-        pystring::split( pystring::rstrip(text), parts, "\n");
-        
-        for(unsigned int i=0; i<parts.size(); ++i)
-        {
-            std::cerr << "[OpenColorIO Debug]: " << parts[i] << std::endl;
-        }
+        LogMessage("[OpenColorIO Debug]: ", text);
     }
     
     bool IsDebugLoggingEnabled()

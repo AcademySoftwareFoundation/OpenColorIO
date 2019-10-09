@@ -139,7 +139,7 @@ struct AddTest
            << "\tvalues were '" << (x) << "' and '" << (y) << "'\n";    \
         throw OCIO_NAMESPACE::Exception(ss.str().c_str()); }
 
-#define OCIO_REQUIRE_EQUAL(x,y) OCIO_REQUIRE_EQUAL_FROM(x,y, __LINE__)                                        \
+#define OCIO_REQUIRE_EQUAL(x,y) OCIO_REQUIRE_EQUAL_FROM(x,y, __LINE__)
 
 #define OCIO_CHECK_NE(x,y)                                              \
     (((x) != (y)) ? ((void)0)                                           \

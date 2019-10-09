@@ -221,12 +221,17 @@ OCIO_NAMESPACE_ENTER
 }
 OCIO_NAMESPACE_EXIT
 
-#ifdef OCIO_UNIT_TEST
 
-namespace OCIO = OCIO_NAMESPACE;
+
+
+
+#ifdef OCIO_UNIT_TEST
 
 #include "UnitTest.h"
 #include "UnitTestUtils.h"
+
+namespace OCIO = OCIO_NAMESPACE;
+
 
 OCIO::LocalCachedFileRcPtr LoadCDLFile(const std::string & fileName)
 {
@@ -236,6 +241,9 @@ OCIO::LocalCachedFileRcPtr LoadCDLFile(const std::string & fileName)
 
 OCIO_ADD_TEST(FileFormatCDL, TestCDL)
 {
+    // As a warning message is expected, please mute it.
+    OCIO::MuteLogging mute;
+
     // CDL file
     const std::string fileName("cdl_test1.cdl");
 
