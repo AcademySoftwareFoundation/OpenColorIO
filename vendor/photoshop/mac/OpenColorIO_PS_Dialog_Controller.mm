@@ -73,9 +73,10 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
         
         [[configurationMenu lastItem] setTag:CSOURCE_ENVIRONMENT];
         
-        char *envFile = std::getenv("OCIO");
+        std::string env;
+        OpenColorIO_PS_Context::getenvOCIO(env);
         
-        if(envFile == NULL || strlen(envFile) == 0)
+        if(!env.empty())
             [[configurationMenu lastItem] setEnabled:FALSE];
         
         
@@ -208,6 +209,7 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
                 const OCIO::Interpolation interp = (interpolation == CINTERP_NEAREST ? OCIO::INTERP_NEAREST :
                                                     interpolation == CINTERP_LINEAR ? OCIO::INTERP_LINEAR :
                                                     interpolation == CINTERP_TETRAHEDRAL ? OCIO::INTERP_TETRAHEDRAL :
+                                                    interpolation == CINTERP_CUBIC ? OCIO::INTERP_CUBIC :
                                                     OCIO::INTERP_BEST);
                 
                 const OCIO::TransformDirection direction = (invert ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
@@ -289,7 +291,7 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
                         throw OCIO::Exception("Failed to get ICC profile");
 
                     
-                    OCIO::ConstProcessorRcPtr processor;
+                    OCIO::ConstCPUProcessorRcPtr processor;
                     
                     if(action == CACTION_CONVERT)
                     {
@@ -306,6 +308,7 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
                         const OCIO::Interpolation interp = (interpolation == CINTERP_NEAREST ? OCIO::INTERP_NEAREST :
                                                             interpolation == CINTERP_LINEAR ? OCIO::INTERP_LINEAR :
                                                             interpolation == CINTERP_TETRAHEDRAL ? OCIO::INTERP_TETRAHEDRAL :
+                                                            interpolation == CINTERP_CUBIC ? OCIO::INTERP_CUBIC :
                                                             OCIO::INTERP_BEST);
                         
                         const OCIO::TransformDirection direction = (invert ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
@@ -387,6 +390,7 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
                     const OCIO::Interpolation interp = (interpolation == CINTERP_NEAREST ? OCIO::INTERP_NEAREST :
                                                         interpolation == CINTERP_LINEAR ? OCIO::INTERP_LINEAR :
                                                         interpolation == CINTERP_TETRAHEDRAL ? OCIO::INTERP_TETRAHEDRAL :
+                                                        interpolation == CINTERP_CUBIC ? OCIO::INTERP_CUBIC :
                                                         OCIO::INTERP_BEST);
                     
                     const OCIO::TransformDirection direction = (invert ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
@@ -495,11 +499,12 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
     
     if(source == CSOURCE_ENVIRONMENT)
     {
-        char *envFile = std::getenv("OCIO");
-        
-        if(envFile != NULL && strlen(envFile) > 0)
+        std::string env;
+        OpenColorIO_PS_Context::getenvOCIO(env);
+
+        if(!env.empty())
         {
-            configPath = [NSString stringWithUTF8String:envFile];
+            configPath = [NSString stringWithUTF8String:env.c_str()];
         }
     }
     else if(source == CSOURCE_CUSTOM)
@@ -623,17 +628,8 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
                 [interpolationMenu addItemWithTitle:@"Tetrahedral"];
                 [[interpolationMenu lastItem] setTag:CINTERP_TETRAHEDRAL];
                 
-                const bool canTetrahedral = !context->canInvertLUT();
-                
-                if(!canTetrahedral)
-                {
-                    [interpolationMenu setAutoenablesItems:NO];
-                
-                    [[interpolationMenu lastItem] setEnabled:NO];
-                    
-                    if(interpolation == CINTERP_TETRAHEDRAL)
-                        interpolation = CINTERP_LINEAR;
-                }
+                [interpolationMenu addItemWithTitle:@"Cubic"];
+                [[interpolationMenu lastItem] setTag:CINTERP_CUBIC];
                 
                 [[interpolationMenu menu] addItem:[NSMenuItem separatorItem]];
                 

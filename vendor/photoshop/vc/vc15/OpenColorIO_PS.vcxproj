@@ -1,0 +1,446 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{7C8F26C0-1ADD-4A2B-961E-3FDFDF5E6D2B}</ProjectGuid>
+    <RootNamespace>Dissolve</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">build\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">build\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">build\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">build\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.8bf</TargetExt>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.8bf</TargetExt>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.8bf</TargetExt>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.8bf</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <TargetName>OpenColorIO PS</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <TargetName>OpenColorIO PS</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <TargetName>OpenColorIO PS</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <TargetName>OpenColorIO PS</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Midl>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TargetEnvironment>Win32</TargetEnvironment>
+      <TypeLibraryName>.\..\..\..\Output\Objs\Dissolve\Release/Dissolve.tlb</TypeLibraryName>
+      <HeaderFileName>
+      </HeaderFileName>
+    </Midl>
+    <ClCompile>
+      <AdditionalOptions>/MP /GS %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>..\..;..\..\..\aftereffects;..\..\..\aftereffects\vc\vc15;..\..\..\..\include;..\..\..\..\src\utils\oglbuilder;..\..\..\..\src\apps\ociobakelut;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\Photoshop;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\PICA_SP;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\filter\dissolve\common;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Includes;..\..\..\..\ext\Little-CMS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;SUPPLY_HINSTANCE;_CRT_SECURE_NO_DEPRECATE;ISOLATION_AWARE_ENABLED=1;WIN32=1;NDEBUG;_WINDOWS;_USRDLL;DISSOLVE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <AssemblerListingLocation>.\..\..\..\Output\Objs\Dissolve\Release/</AssemblerListingLocation>
+      <ObjectFileName>.\..\..\..\Output\Objs\Dissolve\Release/</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\..\..\Output\Objs\Dissolve\Release/</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <CompileAs>Default</CompileAs>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>OpenColorIO.lib;expat.lib;ilmbasehalf.lib;yaml.lib;pystring.lib;lcms.lib;mscms.lib;odbc32.lib;odbccp32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+      <GenerateMapFile>true</GenerateMapFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\..\..\aftereffects\vc\vc15\build\$(Platform)\$(Configuration);..\..\..\aftereffects\vc\vc15\ext\build\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Midl>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TargetEnvironment>X64</TargetEnvironment>
+      <TypeLibraryName>.\..\..\..\Output\Objs\Dissolve\Release64/Dissolve.tlb</TypeLibraryName>
+      <HeaderFileName>
+      </HeaderFileName>
+    </Midl>
+    <ClCompile>
+      <AdditionalOptions>/MP /GS %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>..\..;..\..\..\aftereffects;..\..\..\aftereffects\vc\vc15;..\..\..\..\include;..\..\..\..\src\utils\oglbuilder;..\..\..\..\src\apps\ociobakelut;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\Photoshop;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\PICA_SP;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\filter\dissolve\common;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Includes;..\..\..\..\ext\Little-CMS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;SUPPLY_HINSTANCE;_CRT_SECURE_NO_DEPRECATE;ISOLATION_AWARE_ENABLED=1;WIN32=1;NDEBUG;_WINDOWS;_USRDLL;DISSOLVE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <AssemblerListingLocation>.\..\..\..\Output\Objs\Dissolve\Release64/</AssemblerListingLocation>
+      <ObjectFileName>.\..\..\..\Output\Objs\Dissolve\Release64/</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\..\..\Output\Objs\Dissolve\Release64/</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <CompileAs>Default</CompileAs>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>OpenColorIO.lib;expat.lib;ilmbasehalf.lib;yaml.lib;pystring.lib;lcms.lib;mscms.lib;odbc32.lib;odbccp32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX64</TargetMachine>
+      <GenerateMapFile>true</GenerateMapFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\..\..\aftereffects\vc\vc15\build\$(Platform)\$(Configuration);..\..\..\aftereffects\vc\vc15\ext\build\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Midl>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TargetEnvironment>Win32</TargetEnvironment>
+      <TypeLibraryName>.\..\..\..\Output\Objs\Dissolve\Debug/Dissolve.tlb</TypeLibraryName>
+      <HeaderFileName>
+      </HeaderFileName>
+    </Midl>
+    <ClCompile>
+      <AdditionalOptions>/MP /GS %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..;..\..\..\aftereffects;..\..\..\aftereffects\vc\vc15;..\..\..\..\include;..\..\..\..\src\utils\oglbuilder;..\..\..\..\src\apps\ociobakelut;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\Photoshop;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\PICA_SP;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\filter\dissolve\common;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Includes;..\..\..\..\ext\Little-CMS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;SUPPLY_HINSTANCE;ISOLATION_AWARE_ENABLED=1;WIN32=1;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_WINDOWS;_USRDLL;DISSOLVE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <BrowseInformation>true</BrowseInformation>
+      <WarningLevel>Level4</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <CompileAs>Default</CompileAs>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>OpenColorIO.lib;expat.lib;ilmbasehalf.lib;yaml.lib;pystring.lib;lcms.lib;mscms.lib;Mscms.lib;odbc32.lib;odbccp32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+      <GenerateMapFile>true</GenerateMapFile>
+      <AdditionalLibraryDirectories>..\..\..\aftereffects\vc\vc15\build\$(Platform)\$(Configuration);..\..\..\aftereffects\vc\vc15\ext\build\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Midl>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TargetEnvironment>X64</TargetEnvironment>
+      <TypeLibraryName>.\..\..\..\Output\Objs\Dissolve\Debug64/Dissolve.tlb</TypeLibraryName>
+      <HeaderFileName>
+      </HeaderFileName>
+    </Midl>
+    <ClCompile>
+      <AdditionalOptions>/MP /GS %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..;..\..\..\aftereffects;..\..\..\aftereffects\vc\vc15;..\..\..\..\include;..\..\..\..\src\utils\oglbuilder;..\..\..\..\src\apps\ociobakelut;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\Photoshop;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\PICA_SP;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\filter\dissolve\common;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Includes;..\..\..\..\ext\Little-CMS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;SUPPLY_HINSTANCE;ISOLATION_AWARE_ENABLED=1;WIN32=1;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_WINDOWS;_USRDLL;DISSOLVE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <BrowseInformation>true</BrowseInformation>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>OpenColorIO.lib;expat.lib;ilmbasehalf.lib;yaml.lib;pystring.lib;lcms.lib;mscms.lib;Mscms.lib;odbc32.lib;odbccp32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX64</TargetMachine>
+      <GenerateMapFile>true</GenerateMapFile>
+      <AdditionalLibraryDirectories>..\..\..\aftereffects\vc\vc15\build\$(Platform)\$(Configuration);..\..\..\aftereffects\vc\vc15\ext\build\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\sources\Logger.cpp" />
+    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\sources\PIUFile.cpp" />
+    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\sources\Timer.cpp" />
+    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\sources\DialogUtilitiesWin.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ISOLATION_AWARE_ENABLED=1;WIN32=1;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">EnableFastChecks</BasicRuntimeChecks>
+      <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</BrowseInformation>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Disabled</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">ISOLATION_AWARE_ENABLED=1;WIN32=1;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">EnableFastChecks</BasicRuntimeChecks>
+      <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BrowseInformation>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">_CRT_SECURE_NO_DEPRECATE;ISOLATION_AWARE_ENABLED=1;WIN32=1;NDEBUG;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_CRT_SECURE_NO_DEPRECATE;ISOLATION_AWARE_ENABLED=1;WIN32=1;NDEBUG;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\sources\FilterBigDocument.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ISOLATION_AWARE_ENABLED=1;WIN32=1;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">EnableFastChecks</BasicRuntimeChecks>
+      <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</BrowseInformation>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Disabled</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">ISOLATION_AWARE_ENABLED=1;WIN32=1;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">EnableFastChecks</BasicRuntimeChecks>
+      <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BrowseInformation>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">ISOLATION_AWARE_ENABLED=1;WIN32=1;NDEBUG;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ISOLATION_AWARE_ENABLED=1;WIN32=1;NDEBUG;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\sources\PIDLLInstance.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ISOLATION_AWARE_ENABLED=1;WIN32=1;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">EnableFastChecks</BasicRuntimeChecks>
+      <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</BrowseInformation>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Disabled</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">ISOLATION_AWARE_ENABLED=1;WIN32=1;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">EnableFastChecks</BasicRuntimeChecks>
+      <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BrowseInformation>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">ISOLATION_AWARE_ENABLED=1;WIN32=1;NDEBUG;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ISOLATION_AWARE_ENABLED=1;WIN32=1;NDEBUG;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\sources\PIUSuites.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ISOLATION_AWARE_ENABLED=1;WIN32=1;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">EnableFastChecks</BasicRuntimeChecks>
+      <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</BrowseInformation>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Disabled</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">ISOLATION_AWARE_ENABLED=1;WIN32=1;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">EnableFastChecks</BasicRuntimeChecks>
+      <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BrowseInformation>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">ISOLATION_AWARE_ENABLED=1;WIN32=1;NDEBUG;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ISOLATION_AWARE_ENABLED=1;WIN32=1;NDEBUG;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\sources\PIUtilities.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ISOLATION_AWARE_ENABLED=1;WIN32=1;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">EnableFastChecks</BasicRuntimeChecks>
+      <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</BrowseInformation>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Disabled</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">ISOLATION_AWARE_ENABLED=1;WIN32=1;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">EnableFastChecks</BasicRuntimeChecks>
+      <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BrowseInformation>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">_CRT_SECURE_NO_DEPRECATE;ISOLATION_AWARE_ENABLED=1;WIN32=1;NDEBUG;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_CRT_SECURE_NO_DEPRECATE;ISOLATION_AWARE_ENABLED=1;WIN32=1;NDEBUG;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\sources\PIUtilitiesWin.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ISOLATION_AWARE_ENABLED=1;WIN32=1;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">EnableFastChecks</BasicRuntimeChecks>
+      <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</BrowseInformation>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Disabled</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">ISOLATION_AWARE_ENABLED=1;WIN32=1;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">EnableFastChecks</BasicRuntimeChecks>
+      <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BrowseInformation>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">_CRT_SECURE_NO_DEPRECATE;ISOLATION_AWARE_ENABLED=1;WIN32=1;NDEBUG;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_CRT_SECURE_NO_DEPRECATE;ISOLATION_AWARE_ENABLED=1;WIN32=1;NDEBUG;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\apps\ociobakelut\ocioicc.cpp" />
+    <ClCompile Include="..\..\..\aftereffects\win\OpenColorIO_AE_Dialogs_Win.cpp" />
+    <ClCompile Include="..\..\OpenColorIO_PS.cpp" />
+    <ClCompile Include="..\..\OpenColorIO_PS_Context.cpp" />
+    <ClCompile Include="..\..\win\OpenColorIO_PS_Dialogs_Win.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\..\OpenColorIO_PS.r">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cl /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Includes /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\Photoshop /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\PICA_SP /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Resources /EP /DMSWindows=1 /DWIN32=1 /Tc"%(FullPath)" &gt; "$(IntDir)%(Filename).rr"
+..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\resources\cnvtpipl.exe "$(IntDir)%(Filename).rr" "$(ProjectDir)%(Filename)_PiPL.rc"
+del "$(IntDir)%(Filename).rr"
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)%(Filename)_PiPL.rc;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cl /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Includes /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\Photoshop /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\PICA_SP /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Resources /EP /DMSWindows=1 /DWIN32=1 /Tc"%(FullPath)" &gt; "$(IntDir)%(Filename).rr"
+..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\resources\cnvtpipl.exe "$(IntDir)%(Filename).rr" "$(ProjectDir)%(Filename)_PiPL.rc"
+del "$(IntDir)%(Filename).rr"
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)%(Filename)_PiPL.rc;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cl /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Includes /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\Photoshop /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\PICA_SP /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Resources /EP /DMSWindows=1 /DWIN32=1 /Tc"%(FullPath)" &gt; "$(IntDir)%(Filename).rr"
+..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\resources\cnvtpipl.exe "$(IntDir)%(Filename).rr" "$(ProjectDir)%(Filename)_PiPL.rc"
+del "$(IntDir)%(Filename).rr"
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)%(Filename)_PiPL.rc;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">cl /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Includes /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\Photoshop /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\PICA_SP /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Resources /EP /DMSWindows=1 /DWIN32=1 /Tc"%(FullPath)" &gt; "$(IntDir)%(Filename).rr"
+..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\resources\cnvtpipl.exe "$(IntDir)%(Filename).rr" "$(ProjectDir)%(Filename)_PiPL.rc"
+del "$(IntDir)%(Filename).rr"
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)%(Filename)_PiPL.rc;%(Outputs)</Outputs>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\aftereffects\win\OpenColorIO.rc" />
+    <ResourceCompile Include="..\..\win\OpenColorIO_PS_Dialog.rc" />
+    <ResourceCompile Include="OpenColorIO_PS_PiPL.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\src\apps\ociobakelut\ocioicc.h" />
+    <ClInclude Include="..\..\..\aftereffects\OpenColorIO_AE_Dialogs.h" />
+    <ClInclude Include="..\..\OpenColorIO_PS.h" />
+    <ClInclude Include="..\..\OpenColorIO_PS_Context.h" />
+    <ClInclude Include="..\..\OpenColorIO_PS_Dialog.h" />
+    <ClInclude Include="..\..\OpenColorIO_PS_Terminology.h" />
+    <ClInclude Include="..\..\OpenColorIO_PS_Version.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

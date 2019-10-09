@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug_4ByteStruct|Win32">
+      <Configuration>Debug_4ByteStruct</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug_4ByteStruct|x64">
+      <Configuration>Debug_4ByteStruct</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_4ByteStruct|Win32">
+      <Configuration>Release_4ByteStruct</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_4ByteStruct|x64">
+      <Configuration>Release_4ByteStruct</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\Baker.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\BitDepthUtils.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\Caching.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ColorSpace.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ColorSpaceSet.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\Config.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\Context.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\CPUProcessor.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\Display.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\DynamicProperty.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\Exception.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\cdl\CDLParser.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\cdl\CDLReaderHelper.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\ctf\CTFReaderHelper.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\ctf\CTFReaderUtils.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\ctf\CTFTransform.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\FileFormat3DL.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\FileFormatCC.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\FileFormatCCC.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\FileFormatCDL.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\FileFormatCSP.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\FileFormatCTF.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\FileFormatDiscreet1DL.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\FileFormatHDL.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\FileFormatICC.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\FileFormatIridasCube.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\FileFormatIridasItx.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\FileFormatIridasLook.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\FileFormatPandora.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\FileFormatResolveCube.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\FileFormatSpi1D.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\FileFormatSpi3D.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\FileFormatSpiMtx.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\FileFormatTruelight.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\FileFormatVF.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\FormatMetadata.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\xmlutils\XMLReaderHelper.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\xmlutils\XMLReaderUtils.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\xmlutils\XMLWriterUtils.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\GPUProcessor.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\GpuShader.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\GpuShaderDesc.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\GpuShaderUtils.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\HashUtils.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ImageDesc.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ImagePacking.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\Logging.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\Look.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\LookParse.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\MathUtils.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\md5\md5.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\OCIOYaml.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\Op.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\OpOptimizers.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Allocation\AllocationOp.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\CDL\CDLOpCPU.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\CDL\CDLOpData.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\CDL\CDLOps.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Exponent\ExponentOps.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\exposurecontrast\ExposureContrastOpCPU.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\exposurecontrast\ExposureContrastOpData.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\exposurecontrast\ExposureContrastOpGPU.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\exposurecontrast\ExposureContrastOps.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\FixedFunction\FixedFunctionOpCPU.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\FixedFunction\FixedFunctionOpData.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\FixedFunction\FixedFunctionOpGPU.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\FixedFunction\FixedFunctionOps.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Gamma\GammaOpCPU.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Gamma\GammaOpData.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Gamma\GammaOps.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Gamma\GammaOpUtils.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\IndexMapping.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Log\LogOpCPU.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Log\LogOpData.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Log\LogOpGPU.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Log\LogOps.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Log\LogUtils.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Lut1D\Lut1DOp.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Lut1D\Lut1DOpCPU.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Lut1D\Lut1DOpData.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Lut1D\Lut1DOpGPU.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Lut3D\Lut3DOp.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Lut3D\Lut3DOpCPU.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Lut3D\Lut3DOpData.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Lut3D\Lut3DOpGPU.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Matrix\MatrixOpCPU.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Matrix\MatrixOpData.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Matrix\MatrixOps.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\NoOp\NoOps.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Range\RangeOpCPU.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Range\RangeOpData.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Range\RangeOpGPU.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\Range\RangeOps.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ops\reference\ReferenceOpData.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\OpTools.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ParseUtils.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\PathUtils.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\Platform.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\Processor.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\ScanlineHelper.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\SSE.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\Transform.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\transforms\AllocationTransform.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\transforms\CDLTransform.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\transforms\ColorSpaceTransform.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\transforms\DisplayTransform.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\transforms\ExponentTransform.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\transforms\ExponentWithLinearTransform.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\transforms\ExposureContrastTransform.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\transforms\FileTransform.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\transforms\FixedFunctionTransform.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\transforms\GroupTransform.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\transforms\LogAffineTransform.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\transforms\LogTransform.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\transforms\LookTransform.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\transforms\LUT1DTransform.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\transforms\LUT3DTransform.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\transforms\MatrixTransform.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\transforms\RangeTransform.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\BitDepthUtils.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\CPUProcessor.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\Display.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\DynamicProperty.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\fileformats\cdl\CDLParser.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\fileformats\cdl\CDLReaderHelper.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\fileformats\ctf\CTFReaderHelper.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\fileformats\ctf\CTFReaderUtils.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\fileformats\ctf\CTFTransform.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\fileformats\FormatMetadata.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\fileformats\xmlutils\XMLReaderHelper.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\fileformats\xmlutils\XMLReaderUtils.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\fileformats\xmlutils\XMLWriterUtils.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\GPUProcessor.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\GpuShader.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\GpuShaderUtils.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\HashUtils.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ImagePacking.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\Logging.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\LookParse.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\MathUtils.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\md5\md5.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\Mutex.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\OCIOYaml.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\Op.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\OpBuilders.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Allocation\AllocationOp.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\CDL\CDLOpCPU.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\CDL\CDLOpData.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\CDL\CDLOps.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Exponent\ExponentOps.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\exposurecontrast\ExposureContrastOpCPU.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\exposurecontrast\ExposureContrastOpData.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\exposurecontrast\ExposureContrastOpGPU.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\exposurecontrast\ExposureContrastOps.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\FixedFunction\FixedFunctionOpCPU.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\FixedFunction\FixedFunctionOpData.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\FixedFunction\FixedFunctionOpGPU.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\FixedFunction\FixedFunctionOps.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Gamma\GammaOpCPU.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Gamma\GammaOpData.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Gamma\GammaOps.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Gamma\GammaOpUtils.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\IndexMapping.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Log\LogOpCPU.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Log\LogOpData.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Log\LogOpGPU.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Log\LogOps.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Log\LogUtils.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Lut1D\Lut1DOp.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Lut1D\Lut1DOpCPU.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Lut1D\Lut1DOpData.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Lut1D\Lut1DOpGPU.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Lut3D\Lut3DOp.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Lut3D\Lut3DOpCPU.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Lut3D\Lut3DOpData.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Lut3D\Lut3DOpGPU.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Matrix\MatrixOpCPU.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Matrix\MatrixOpData.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Matrix\MatrixOps.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\NoOp\NoOps.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\OpArray.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Range\RangeOpCPU.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Range\RangeOpData.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Range\RangeOpGPU.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\Range\RangeOps.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ops\reference\ReferenceOpData.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\OpTools.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ParseUtils.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\PathUtils.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\Platform.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\PrivateTypes.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\Processor.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\ScanlineHelper.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\SSE.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\transforms\CDLTransform.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\transforms\FileTransform.h" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{B2B0EDC1-016D-40C6-ACB6-1CBF00E4A338}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>OpenColorIO</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_4ByteStruct|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_4ByteStruct|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_4ByteStruct|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_4ByteStruct|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_4ByteStruct|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_4ByteStruct|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_4ByteStruct|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_4ByteStruct|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>build\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_4ByteStruct|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>build\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>build\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_4ByteStruct|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>build\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>build\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_4ByteStruct|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>build\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>build\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_4ByteStruct|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>build\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;OLDYAML;XML_STATIC;_SCL_SECURE_NO_WARNINGS;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>.;..\..\..\..\include;..\..\..\..\src\OpenColorIO;..\..\..\..\src\utils;..\..\..\..\ext\openexr\IlmBase;..\..\..\..\ext\yaml-cpp\include;..\..\..\..\ext\libexpat\expat\expat;..\..\..\..\ext\pystring;..\..\..\..\ext\sampleicc\src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/wd4146</AdditionalOptions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_4ByteStruct|x64'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;OLDYAML;XML_STATIC;_SCL_SECURE_NO_WARNINGS;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>.;..\..\..\..\include;..\..\..\..\src\OpenColorIO;..\..\..\..\src\utils;..\..\..\..\ext\openexr\IlmBase;..\..\..\..\ext\yaml-cpp\include;..\..\..\..\ext\libexpat\expat\expat;..\..\..\..\ext\pystring;..\..\..\..\ext\sampleicc\src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/wd4146</AdditionalOptions>
+      <StructMemberAlignment>4Bytes</StructMemberAlignment>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>.;..\..\..\..\include;..\..\..\..\src\OpenColorIO;..\..\..\..\src\utils;..\..\..\..\ext\openexr\IlmBase;..\..\..\..\ext\yaml-cpp\include;..\..\..\..\ext\libexpat\expat\expat;..\..\..\..\ext\pystring;..\..\..\..\ext\sampleicc\src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/wd4146</AdditionalOptions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_4ByteStruct|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>.;..\..\..\..\include;..\..\..\..\src\OpenColorIO;..\..\..\..\src\utils;..\..\..\..\ext\openexr\IlmBase;..\..\..\..\ext\yaml-cpp\include;..\..\..\..\ext\libexpat\expat\expat;..\..\..\..\ext\pystring;..\..\..\..\ext\sampleicc\src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/wd4146</AdditionalOptions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>.;..\..\..\..\include;..\..\..\..\src\OpenColorIO;..\..\..\..\src\utils;..\..\..\..\ext\openexr\IlmBase;..\..\..\..\ext\yaml-cpp\include;..\..\..\..\ext\libexpat\expat\expat;..\..\..\..\ext\pystring;..\..\..\..\ext\sampleicc\src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/wd4146</AdditionalOptions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_4ByteStruct|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>.;..\..\..\..\include;..\..\..\..\src\OpenColorIO;..\..\..\..\src\utils;..\..\..\..\ext\openexr\IlmBase;..\..\..\..\ext\yaml-cpp\include;..\..\..\..\ext\libexpat\expat\expat;..\..\..\..\ext\pystring;..\..\..\..\ext\sampleicc\src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/wd4146</AdditionalOptions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;OLDYAML;XML_STATIC;_SCL_SECURE_NO_WARNINGS;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>.;..\..\..\..\include;..\..\..\..\src\OpenColorIO;..\..\..\..\src\utils;..\..\..\..\ext\openexr\IlmBase;..\..\..\..\ext\yaml-cpp\include;..\..\..\..\ext\libexpat\expat\expat;..\..\..\..\ext\pystring;..\..\..\..\ext\sampleicc\src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/wd4146</AdditionalOptions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_4ByteStruct|x64'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;OLDYAML;XML_STATIC;_SCL_SECURE_NO_WARNINGS;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>.;..\..\..\..\include;..\..\..\..\src\OpenColorIO;..\..\..\..\src\utils;..\..\..\..\ext\openexr\IlmBase;..\..\..\..\ext\yaml-cpp\include;..\..\..\..\ext\libexpat\expat\expat;..\..\..\..\ext\pystring;..\..\..\..\ext\sampleicc\src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/wd4146</AdditionalOptions>
+      <StructMemberAlignment>4Bytes</StructMemberAlignment>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

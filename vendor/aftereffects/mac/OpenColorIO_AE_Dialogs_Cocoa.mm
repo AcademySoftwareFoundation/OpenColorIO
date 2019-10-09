@@ -216,7 +216,7 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
         
         NSString *colorSpacePath = nil;
         
-        if(family == NULL)
+        if(family == NULL || family == std::string(""))
         {
             colorSpacePath = [NSString stringWithUTF8String:colorSpaceName];
         }
