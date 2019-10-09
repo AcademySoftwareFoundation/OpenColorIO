@@ -908,7 +908,15 @@ OCIO_NAMESPACE_ENTER
         AutoMutex lock(getImpl()->cacheidMutex_);
         getImpl()->resetCacheIDs();
     }
-    
+
+    void Config::removeColorSpace(const char * name)
+    {
+        getImpl()->colorspaces_->removeColorSpace(name);
+        
+        AutoMutex lock(getImpl()->cacheidMutex_);
+        getImpl()->resetCacheIDs();
+    }
+
     void Config::clearColorSpaces()
     {
         getImpl()->colorspaces_->clearColorSpaces();
@@ -1805,8 +1813,10 @@ OCIO_ADD_TEST(Config, roles)
     
 }
 
-OCIO_ADD_TEST(Config, serialize)
+OCIO_ADD_TEST(Config, serialize_group_transform)
 {
+    // The unit test validates that a group transform is correctly serialized.
+
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
@@ -1816,7 +1826,7 @@ OCIO_ADD_TEST(Config, serialize)
             OCIO::FileTransform::Create();
         OCIO::GroupTransformRcPtr groupTransform = OCIO::GroupTransform::Create();
         groupTransform->push_back(transform1);
-        cs->setTransform(groupTransform, OCIO::COLORSPACE_DIR_TO_REFERENCE);
+        cs->setTransform(groupTransform, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
         config->addColorSpace(cs);
         config->setRole( OCIO::ROLE_COMPOSITING_LOG, cs->getName() );
     }
@@ -1832,11 +1842,6 @@ OCIO_ADD_TEST(Config, serialize)
         config->addColorSpace(cs);
         config->setRole( OCIO::ROLE_COMPOSITING_LOG, cs->getName() );
     }
-    
-    // for testing
-    //std::ofstream outfile("/tmp/test.ocio");
-    //config->serialize(outfile);
-    //outfile.close();
     
     std::ostringstream os;
     config->serialize(os);
@@ -1865,7 +1870,7 @@ OCIO_ADD_TEST(Config, serialize)
     "    bitdepth: unknown\n"
     "    isdata: false\n"
     "    allocation: uniform\n"
-    "    to_reference: !<GroupTransform>\n"
+    "    from_reference: !<GroupTransform>\n"
     "      children:\n"
     "        - !<FileTransform> {src: \"\", interpolation: unknown}\n"
     "\n"
@@ -4045,6 +4050,67 @@ OCIO_ADD_TEST(Config, matrix_serialization)
     std::stringstream ss;
     ss << *config.get();
     OCIO_CHECK_EQUAL(ss.str(), str);
+}
+
+OCIO_ADD_TEST(Config, add_color_space)
+{
+    // The unit test validates that the color space is correctly added to the configuration.
+
+    // Note that the new C++11 u8 notation for UTF-8 string literals is used
+    // to partially validate non-english language support.
+
+    const std::string str
+        = PROFILE_V2 + SIMPLE_PROFILE
+            + u8"    from_reference: !<MatrixTransform> {offset: [-1, -2, -3, -4]}\n";
+
+    std::istringstream is;
+    is.str(str);
+
+    OCIO::ConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 2);
+
+    OCIO::ColorSpaceRcPtr cs;
+    OCIO_CHECK_NO_THROW(cs = OCIO::ColorSpace::Create());
+    cs->setName(u8"astéroïde");                           // Color space name with accents.
+    cs->setDescription(u8"é À Â Ç É È ç -- $ € 円 £ 元"); // Some accents and some money symbols.
+
+    OCIO::FixedFunctionTransformRcPtr tr;
+    OCIO_CHECK_NO_THROW(tr = OCIO::FixedFunctionTransform::Create());
+
+    OCIO_CHECK_NO_THROW(cs->setTransform(tr, OCIO::COLORSPACE_DIR_TO_REFERENCE));
+
+    constexpr const char csName[] = u8"astéroïde";
+
+    OCIO_CHECK_EQUAL(config->getIndexForColorSpace(csName), -1);
+    OCIO_CHECK_NO_THROW(config->addColorSpace(cs));
+    OCIO_CHECK_EQUAL(config->getIndexForColorSpace(csName), 2);
+
+    const std::string res 
+        = str
+        + u8"\n"
+        + u8"  - !<ColorSpace>\n"
+        + u8"    name: " + csName + u8"\n"
+        + u8"    family: \"\"\n"
+        + u8"    equalitygroup: \"\"\n"
+        + u8"    bitdepth: unknown\n"
+        + u8"    description: |\n"
+        + u8"      é À Â Ç É È ç -- $ € 円 £ 元\n"
+        + u8"    isdata: false\n"
+        + u8"    allocation: uniform\n"
+        + u8"    to_reference: !<FixedFunctionTransform> {style: ACES_RedMod03}\n";
+
+    std::stringstream ss;
+    ss << *config.get();
+    OCIO_CHECK_EQUAL(ss.str(), res);
+
+    OCIO_CHECK_NO_THROW(config->removeColorSpace(csName));
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 2);
+    OCIO_CHECK_EQUAL(config->getIndexForColorSpace(csName), -1);
+
+    OCIO_CHECK_NO_THROW(config->clearColorSpaces());
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 0);
 }
 
 #endif // OCIO_UNIT_TEST
