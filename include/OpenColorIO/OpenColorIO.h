@@ -134,8 +134,13 @@ OCIO_NAMESPACE_ENTER
     
     //!cpp:function:: Set the global logging level.
     extern OCIOEXPORT void SetLoggingLevel(LoggingLevel level);
-    
-    
+
+    //!cpp:function::
+    // Set the logging function to use; otherwise, use the default (i.e. std::cerr).
+    extern OCIOEXPORT void SetLoggingFunction(LoggingFunction logFunction);
+    extern OCIOEXPORT void ResetToDefaultLoggingFunction();
+
+
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
     // Config
@@ -195,13 +200,17 @@ OCIO_NAMESPACE_ENTER
         // Initialization
         // ^^^^^^^^^^^^^^
         
-        //!cpp:function:: Constructor a default empty configuration.
+        //!cpp:function:: Create a default empty configuration.
         static ConfigRcPtr Create();
-        //!cpp:function::  Constructor a configuration using the OCIO environmnet variable.
+        //!cpp:function:: Create a fall-back config.  This may be useful to allow client apps 
+        // to launch in cases when the supplied config path is not loadable.
+        static ConstConfigRcPtr CreateRaw();
+        //!cpp:function:: Create a configuration using the OCIO environment variable.  If the 
+        // variable is missing or empty, returns the same result as :cpp:func:`Config::CreateRaw`.
         static ConstConfigRcPtr CreateFromEnv();
-        //!cpp:function:: Constructor a configuration using a specific config file.
+        //!cpp:function:: Create a configuration using a specific config file.
         static ConstConfigRcPtr CreateFromFile(const char * filename);
-        //!cpp:function::
+        //!cpp:function:: Create a configuration using a stream.
         static ConstConfigRcPtr CreateFromStream(std::istream & istream);
         
         //!cpp:function::
@@ -346,19 +355,28 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: Add a color space to the configuration.
         //
         // .. note::
-        //    If another color space is already registered with the same name,
+        //    If another color space is already present with the same name,
         //    this will overwrite it. This stores a copy of the specified
         //    color space.
         // .. note::
-        //    Adding a color space to a Config does not affect any ColorSpaceSets 
-        //    that have already been created.
+        //    Adding a color space to a :cpp:class:`Config` does not affect any 
+        //    :cpp:class:`ColorSpaceSet`s that have already been created.
         void addColorSpace(const ConstColorSpaceRcPtr & cs);
+
+        //!cpp:function:: Remove a color space from the configuration.
+        //
+        // .. note::
+        //    It does not throw an exception if the color space is not present.
+        // .. note::
+        //    Removing a color space to a :cpp:class:`Config` does not affect any 
+        //    :cpp:class:`ColorSpaceSet`s that have already been created.
+        void removeColorSpace(const char * name);
 
         //!cpp:function:: Remove all the color spaces from the configuration.
         //
         // .. note::
-        //    Removing color spaces from a Config does not affect 
-        //    any ColorSpaceSets that have already been created.
+        //    Removing color spaces from a :cpp:class:`Config` does not affect 
+        //    any :cpp:class:`ColorSpaceSet`s that have already been created.
         void clearColorSpaces();
         
         //!cpp:function:: Given the specified string, get the longest,

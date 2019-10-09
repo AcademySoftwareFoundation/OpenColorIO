@@ -76,12 +76,20 @@ int main(int, char **)
         { 
             ++unit_test_failures; 
         }
-        
+
+        constexpr const size_t maxCharToDisplay = 49;
+
         std::string name(GetUnitTests()[i]->group);
         name += " / " + GetUnitTests()[i]->name;
+
+        if (name.size() > maxCharToDisplay)
+        {
+            name.resize(maxCharToDisplay);
+        }
+
         std::cerr << "[" << std::right << std::setw(3)
                   << (i+1) << "/" << numTests << "] ["
-                  << std::left << std::setw(50)
+                  << std::left << std::setw(maxCharToDisplay+1)
                   << name << "] - "
                   << (_tmp == unit_test_failures ? "PASSED" : "FAILED")
                   << std::endl;

@@ -73,7 +73,7 @@ XmlReaderDummyElt::XmlReaderDummyElt(const std::string & name,
     oss << "' (line " << getParent()->getXmlLineNumber() << ") ";
     oss << (msg ? msg : "") << ": " << getXmlFile().c_str();
 
-    LogDebug(oss.str());
+    LogWarning(oss.str());
 }
 
 const std::string & XmlReaderDummyElt::getIdentifier() const

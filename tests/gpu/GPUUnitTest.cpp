@@ -686,13 +686,20 @@ int main(int, char **)
             test->setup();
             enabledTest = test->isEnabled();
 
+            constexpr const size_t maxCharToDisplay = 49;
+
             std::string name(test->group());
             name += " / " + test->name();
+
+            if (name.size() > maxCharToDisplay)
+            {
+                name.resize(maxCharToDisplay);
+            }
 
             std::cerr << "["
                       << std::right << std::setw(3)
                       << (idx+1) << "/" << numTests << "] ["
-                      << std::left << std::setw(50)
+                      << std::left << std::setw(maxCharToDisplay+1)
                       << name << "] - ";
 
             if(test->isValid() && enabledTest)

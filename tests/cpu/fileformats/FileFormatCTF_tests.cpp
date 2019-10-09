@@ -790,13 +790,71 @@ OCIO_ADD_TEST(FileFormatCTF, check_utf8)
 
 }
 
+namespace
+{
+
+std::string output;
+
+// The custom logging function for testing.
+void CustomLoggingFunction(const char * message)
+{
+    output += message;
+}
+
+// Preserve the default log settings.
+class LogGuard
+{
+public:
+    LogGuard()
+    {
+        OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_DEBUG);
+        OCIO::SetLoggingFunction(CustomLoggingFunction);
+        output.clear();
+    }
+
+    ~LogGuard()
+    {
+        OCIO::ResetToDefaultLoggingFunction();
+        OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_DEFAULT);
+    }
+
+    LogGuard(const LogGuard &) = delete;
+    LogGuard & operator=(const LogGuard &) = delete;
+};
+
+
+}
+
+
 OCIO_ADD_TEST(FileFormatCTF, error_checker)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
-    // NB: This file has some added unknown elements A, B, and C as a test.
-    const std::string ctfFile("unknown_elements.clf");
-    OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
-    OCIO_REQUIRE_ASSERT((bool)cachedFile);
+
+    {
+        constexpr static const char ErrorOutputs[3][1024] = 
+        {
+            "[OpenColorIO Warning]: Ignore element 'B' (line 34) where its parent is 'ProcessList' (line 2) : Unknown element",
+            "[OpenColorIO Warning]: Ignore element 'C' (line 34) where its parent is 'B' (line 34)",
+            "[OpenColorIO Warning]: Ignore element 'A' (line 36) where its parent is 'Description' (line 36)"
+        };
+
+        LogGuard guard;
+
+        // NB: This file has some added unknown elements A, B, and C as a test.
+        const std::string ctfFile("unknown_elements.clf");
+        OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
+        OCIO_REQUIRE_ASSERT((bool)cachedFile);
+
+        OCIO::StringVec parts;
+        pystring::split(pystring::rstrip(output), parts, "\n");
+
+        OCIO_REQUIRE_EQUAL(parts.size(), 3);
+
+        for (size_t i = 0; i < parts.size(); ++i)
+        {
+            OCIO_CHECK_ASSERT(pystring::startswith(parts[i], ErrorOutputs[i]));
+        }
+    }
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 4);
@@ -921,27 +979,48 @@ OCIO_ADD_TEST(FileFormatCTF, error_checker)
     OCIO_CHECK_EQUAL(a3.getValues()[78], 1023.0f);
     OCIO_CHECK_EQUAL(a3.getValues()[79], 1023.0f);
     OCIO_CHECK_EQUAL(a3.getValues()[80], 1023.0f);
-
-    // TODO: check log for parsing warnings.
-    // DummyElt is logging at debug level.
-    // Ignore element 'B' (line 34) where its parent is 'ProcessList' (line 2) : Unknown element : unknown_elements.clf
-    // Ignore element 'C' (line 34) where its parent is 'B' (line 34) : unknown_elements.clf
-    // Ignore element 'A' (line 36) where its parent is 'Description' (line 36) : unknown_elements.clf
 }
 
 OCIO_ADD_TEST(FileFormatCTF, binary_file)
 {
     const std::string ctfFile("image_png.clf");
-    OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception,
-                          "is not a CTF/CLF file.");
+    OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception, "is not a CTF/CLF file.");
 }
 
 OCIO_ADD_TEST(FileFormatCTF, error_checker_for_difficult_xml)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
-    const std::string ctfFile("difficult_test1_v1.ctf");
-    OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
-    OCIO_REQUIRE_ASSERT((bool)cachedFile);
+
+    {
+        constexpr static const char ErrorOutputs[9][1024] = 
+        {
+            "[OpenColorIO Warning]: Ignore element 'Ignore' (line 10) where its parent is 'ProcessList' (line 8) : Unknown element",
+            "[OpenColorIO Warning]: Ignore element 'ProcessList' (line 27) where its parent is 'ProcessList' (line 8) : The Transform already exists",
+            "[OpenColorIO Warning]: Ignore element 'Array' (line 30) where its parent is 'Matrix' (line 16) : Only one Array allowed per op",
+            "[OpenColorIO Warning]: Ignore element 'just_ignore' (line 37) where its parent is 'ProcessList' (line 8) : Unknown element",
+            "[OpenColorIO Warning]: Ignore element 'just_ignore' (line 69) where its parent is 'Description' (line 66)",
+            "[OpenColorIO Warning]: Ignore element 'just_ignore' (line 70) where its parent is 'just_ignore' (line 69)",
+            "[OpenColorIO Warning]: Ignore element 'Matrix' (line 75) where its parent is 'LUT1D' (line 43) : 'Matrix' not allowed in this element",
+            "[OpenColorIO Warning]: Ignore element 'Description' (line 76) where its parent is 'Matrix' (line 75)",
+            "[OpenColorIO Warning]: Ignore element 'Array' (line 77) where its parent is 'Matrix' (line 75)"
+        };
+
+        LogGuard guard;
+
+        const std::string ctfFile("difficult_test1_v1.ctf");
+        OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
+        OCIO_REQUIRE_ASSERT((bool)cachedFile);
+
+        OCIO::StringVec parts;
+        pystring::split(pystring::rstrip(output), parts, "\n");
+
+        OCIO_REQUIRE_EQUAL(parts.size(), 9);
+
+        for (size_t i = 0; i < parts.size(); ++i)
+        {
+            OCIO_CHECK_ASSERT(pystring::startswith(parts[i], ErrorOutputs[i]));
+        }
+    }
 
     // Defaults to 1.2
     const OCIO::CTFVersion ctfVersion =
@@ -1008,18 +1087,6 @@ OCIO_ADD_TEST(FileFormatCTF, error_checker_for_difficult_xml)
     OCIO_CHECK_EQUAL(array2.getValues()[45], 0.97109f);
     OCIO_CHECK_EQUAL(array2.getValues()[46], 0.97109f);
     OCIO_CHECK_EQUAL(array2.getValues()[47], 0.97109f);
-
-    // TODO: check log for parsing warnings.
-    // DummyElt is logging at debug level.
-    // Ignore element 'Ignore' (line 10) where its parent is 'ProcessList' (line 8) : Unknown element : difficult_test1_v1.ctf
-    // Ignore element 'ProcessList' (line 27) where its parent is 'ProcessList' (line 8) : The Color::Transform already exists : difficult_test1_v1.ctf
-    // Ignore element 'Array' (line 30) where its parent is 'Matrix' (line 16) : Only one Color::Array allowed per op : difficult_test1_v1.ctf
-    // Ignore element 'just_ignore' (line 37) where its parent is 'ProcessList' (line 8) : Unknown element : difficult_test1_v1.ctf
-    // Ignore element 'just_ignore' (line 69) where its parent is 'Description' (line 66) : difficult_test1_v1.ctf
-    // Ignore element 'just_ignore' (line 70) where its parent is 'just_ignore' (line 69) : difficult_test1_v1.ctf
-    // Ignore element 'Matrix' (line 75) where its parent is 'LUT1D' (line 43) : The Matrix's parent can only be a Transform: difficult_test1_v1.ctf
-    // Ignore element 'Description' (line 76) where its parent is 'Matrix' (line 75) : difficult_test1_v1.ctf
-    // Ignore element 'Array' (line 77) where its parent is 'Matrix' (line 75) : difficult_test1_v1.ctf
 }
 
 OCIO_ADD_TEST(FileFormatCTF, invalid_transform)
