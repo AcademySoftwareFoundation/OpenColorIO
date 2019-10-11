@@ -337,7 +337,7 @@ OCIO_NAMESPACE_ENTER
 
         expTransform->setValue(expData->m_exp4);
 
-        group->push_back(expTransform);
+        group->appendTransform(expTransform);
     }
 
 
@@ -678,7 +678,7 @@ OCIO_ADD_TEST(ExponentOps, create_transform)
 
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
     OCIO::CreateExponentTransform(group, op);
-    OCIO_REQUIRE_EQUAL(group->size(), 1);
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
     auto transform = group->getTransform(0);
     OCIO_REQUIRE_ASSERT(transform);
     auto expTransform = OCIO::DynamicPtrCast<OCIO::ExponentTransform>(transform);

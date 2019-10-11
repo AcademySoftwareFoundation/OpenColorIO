@@ -22,7 +22,7 @@ enum Version : unsigned
 void AddExponent(OCIOGPUTest & test,
                  OCIO::GpuShaderDescRcPtr & shaderDesc,
                  OCIO::TransformDirection direction,
-                 const float * gamma,
+                 const double(&gamma)[4],
                  float epsilon,
                  Version ver)
 {
@@ -61,7 +61,7 @@ void AddExponentWithLinear(OCIOGPUTest & test,
 
 OCIO_ADD_GPU_TEST(ExponentOp, legacy_shader_v1)
 {
-    const float exp[4] = { 2.6f, 2.4f, 1.8f, 1.1f };
+    const double exp[4] = { 2.6, 2.4, 1.8, 1.1 };
 
     OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
@@ -75,7 +75,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, legacy_shader_v1)
 
 OCIO_ADD_GPU_TEST(ExponentOp, forward_v1)
 {
-    const float exp[4] = { 2.6f, 2.4f, 1.8f, 1.1f };
+    const double exp[4] = { 2.6, 2.4, 1.8, 1.1 };
 
     OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateShaderDesc();
@@ -86,7 +86,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, forward_v1)
 
 OCIO_ADD_GPU_TEST(ExponentOp, forward)
 {
-    const float exp[4] = { 2.6f, 2.4f, 1.8f, 1.1f };
+    const double exp[4] = { 2.6, 2.4, 1.8, 1.1 };
 
     OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateShaderDesc();
@@ -103,7 +103,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, forward)
 
 OCIO_ADD_GPU_TEST(ExponentOp, inverse_legacy_shader_v1)
 {
-    const float exp[4] = { 2.6f, 2.4f, 1.8f, 1.1f };
+    const double exp[4] = { 2.6, 2.4, 1.8, 1.1 };
 
     OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
@@ -115,7 +115,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, inverse_legacy_shader_v1)
 
 OCIO_ADD_GPU_TEST(ExponentOp, inverse_v1)
 {
-    const float exp[4] = { 2.6f, 2.4f, 1.8f, 1.1f };
+    const double exp[4] = { 2.6, 2.4, 1.8, 1.1 };
 
     OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateShaderDesc();
@@ -127,7 +127,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, inverse_v1)
 
 OCIO_ADD_GPU_TEST(ExponentOp, inverse)
 {
-    const float exp[4] = { 2.6f, 2.4f, 1.8f, 1.1f };
+    const double exp[4] = { 2.6, 2.4, 1.8, 1.1 };
 
     OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateShaderDesc();

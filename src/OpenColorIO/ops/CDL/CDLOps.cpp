@@ -393,7 +393,7 @@ void CreateCDLTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     cdlTransform->setSOP(vec9);
     cdlTransform->setSat(cdlData->getSaturation());
 
-    group->push_back(cdlTransform);
+    group->appendTransform(cdlTransform);
 }
 
 void BuildCDLOps(OpRcPtrVec & ops,
@@ -1084,7 +1084,7 @@ OCIO_ADD_TEST(CDLOps, create_transform)
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
     OCIO::ConstOpRcPtr op(cdlOp);
     OCIO::CreateCDLTransform(group, op);
-    OCIO_REQUIRE_EQUAL(group->size(), 1);
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
     auto transform = group->getTransform(0);
     OCIO_REQUIRE_ASSERT(transform);
     auto cdlTransform = OCIO_DYNAMIC_POINTER_CAST<OCIO::CDLTransform>(transform);

@@ -495,9 +495,9 @@ OCIO_NAMESPACE_ENTER
         //    interesting in using it.
         
         //!cpp:function::
-        void getDefaultLumaCoefs(float * rgb) const;
+        void getDefaultLumaCoefs(double * rgb) const;
         //!cpp:function:: These should be normalized (sum to 1.0 exactly).
-        void setDefaultLumaCoefs(const float * rgb);
+        void setDefaultLumaCoefs(const double * rgb);
         
         
         ///////////////////////////////////////////////////////////////////////////

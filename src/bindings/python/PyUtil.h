@@ -297,7 +297,7 @@ OCIO_NAMESPACE_ENTER
     bool FillFloatVectorFromPySequence(PyObject* datalist, std::vector<float> &data);
     bool FillDoubleVectorFromPySequence(PyObject* datalist, std::vector<double> &data);
     bool FillStringVectorFromPySequence(PyObject* datalist, std::vector<std::string> &data);
-    bool FillTransformVectorFromPySequence(PyObject* datalist, std::vector<ConstTransformRcPtr> &data);
+    bool FillTransformVectorFromPySequence(PyObject* datalist, std::vector<TransformRcPtr> &data);
     
     ///////////////////////////////////////////////////////////////////////////
     

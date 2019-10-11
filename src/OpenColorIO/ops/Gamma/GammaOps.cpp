@@ -394,7 +394,7 @@ void CreateGammaTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
         expTransform->setGamma(gammaVal);
         expTransform->setOffset(offset);
 
-        group->push_back(expTransform);
+        group->appendTransform(expTransform);
     }
     else
     {
@@ -416,7 +416,7 @@ void CreateGammaTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
 
         expTransform->setValue(expVal);
 
-        group->push_back(expTransform);
+        group->appendTransform(expTransform);
     }
 }
 
@@ -925,7 +925,7 @@ OCIO_ADD_TEST(GammaOps, create_transform)
     OCIO::ConstOpRcPtr op(ops[0]);
 
     OCIO::CreateGammaTransform(group, op);
-    OCIO_REQUIRE_EQUAL(group->size(), 1);
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
     auto transform = group->getTransform(0);
     OCIO_REQUIRE_ASSERT(transform);
     auto gTransform = OCIO_DYNAMIC_POINTER_CAST<OCIO::ExponentWithLinearTransform>(transform);
@@ -970,7 +970,7 @@ OCIO_ADD_TEST(GammaOps, create_transform)
     OCIO::ConstOpRcPtr op0(ops[1]);
 
     OCIO::CreateGammaTransform(group, op0);
-    OCIO_REQUIRE_EQUAL(group->size(), 2);
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 2);
     auto transform0 = group->getTransform(1);
     OCIO_REQUIRE_ASSERT(transform0);
     auto eTransform = OCIO_DYNAMIC_POINTER_CAST<OCIO::ExponentTransform>(transform0);

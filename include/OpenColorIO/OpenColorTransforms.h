@@ -220,32 +220,20 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         void setSlope(const double * rgb);
 
-        void getSlope(float * rgb) const;
-        void setSlope(const float * rgb);
-
         //!cpp:function::
         void getOffset(double * rgb) const;
         //!cpp:function::
         void setOffset(const double * rgb);
-
-        void getOffset(float * rgb) const;
-        void setOffset(const float * rgb);
 
         //!cpp:function::
         void getPower(double * rgb) const;
         //!cpp:function::
         void setPower(const double * rgb);
 
-        void getPower(float * rgb) const;
-        void setPower(const float * rgb);
-
         //!cpp:function::
         void getSOP(double * vec9) const;
         //!cpp:function::
         void setSOP(const double * vec9);
-
-        void getSOP(float * vec9) const;
-        void setSOP(const float * vec9);
 
         //!rst:: **ASC_SAT**
         //
@@ -257,7 +245,6 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function:: These are hard-coded, by spec, to r709.
         void getSatLumaCoefs(double * rgb) const;
-        void getSatLumaCoefs(float * rgb) const;
 
         //!rst:: **Metadata**
         //
@@ -511,9 +498,6 @@ OCIO_NAMESPACE_ENTER
         void getValue(double(&vec4)[4]) const;
         //!cpp:function::
         void setValue(const double(&vec4)[4]);
-
-        void getValue(float * vec4) const;
-        void setValue(const float * vec4);
 
     private:
         ExponentTransform();
@@ -864,15 +848,9 @@ OCIO_NAMESPACE_ENTER
         TransformRcPtr & getTransform(int index);
 
         //!cpp:function::
-        int size() const;
-        //!cpp:function:: Adds a copy of transform to the group.
-        void push_back(const ConstTransformRcPtr & transform);
-        //!cpp:function:: Adds transform to the group.
-        void push_back(TransformRcPtr & transform);
-        //!cpp:function:: Clears transforms (not the FormatMetadata).
-        void clear();
-        //!cpp:function::
-        bool empty() const;
+        int getNumTransforms() const;
+        //!cpp:function:: Adds a pointer to the transform to the end of the group.
+        void appendTransform(TransformRcPtr transform);
 
     private:
         GroupTransform();
@@ -1315,11 +1293,6 @@ OCIO_NAMESPACE_ENTER
         bool equals(const MatrixTransform & other) const;
 
         //!cpp:function::
-        void getValue(float * m44, float * offset4) const;
-        //!cpp:function::
-        void setValue(const float * m44, const float * offset4);
-        
-        //!cpp:function::
         void getMatrix(double * m44) const;
         //!cpp:function:: Get or set the values of a Matrix. Expects 16 values,
         // where the first four are the coefficients to generate the R output
@@ -1332,9 +1305,6 @@ OCIO_NAMESPACE_ENTER
         // extend outside [0,1].
         void setMatrix(const double * m44);
 
-        void getMatrix(float * m44) const;
-        void setMatrix(const float * m44);
-        
         //!cpp:function::
         void getOffset(double * offset4) const;
         //!cpp:function:: Get or set the R, G, B, A offsets to be applied
@@ -1346,9 +1316,6 @@ OCIO_NAMESPACE_ENTER
         // to 1.0. The values here are unclamped and may extend
         // outside [0,1].
         void setOffset(const double * offset4);
-        
-        void getOffset(float * offset4) const;
-        void setOffset(const float * offset4);
 
         //!rst:: **File bit-depth**
         //
@@ -1380,37 +1347,25 @@ OCIO_NAMESPACE_ENTER
         //    ``oldmin == oldmax. (divide by 0)``
 
         //!cpp:function::
-        static void Fit(float * m44, float * offset4,
-                        const float * oldmin4, const float * oldmax4,
-                        const float * newmin4, const float * newmax4);
         static void Fit(double * m44, double* offset4,
                         const double * oldmin4, const double * oldmax4,
                         const double * newmin4, const double * newmax4);
         
         //!cpp:function::
         static void Identity(double * m44, double * offset4);
-        static void Identity(float * m44, float * offset4);
 
         //!cpp:function::
         static void Sat(double * m44, double * offset4,
                         double sat, const double * lumaCoef3);
-        static void Sat(float * m44, float * offset4,
-                        float sat, const float * lumaCoef3);
-
+        
         //!cpp:function::
         static void Scale(double * m44, double * offset4,
                           const double * scale4);
-        static void Scale(float * m44, float * offset4,
-                          const float * scale4);
-
+        
         //!cpp:function::
         static void View(double * m44, double * offset4,
                          int * channelHot4,
                          const double * lumaCoef3);
-        static void View(float * m44, float * offset4,
-                         int * channelHot4,
-                         const float * lumaCoef3);
-
     private:
         MatrixTransform();
         MatrixTransform(const MatrixTransform &);

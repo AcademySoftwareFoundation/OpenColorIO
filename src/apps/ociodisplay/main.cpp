@@ -415,32 +415,34 @@ void UpdateOCIOGLState()
     // Add optional transforms to create a full-featured, "canonical" display pipeline
     // Fstop exposure control (in SCENE_LINEAR)
     {
-        float gain = powf(2.0f, g_exposure_fstop);
-        const float slope4f[] = { gain, gain, gain, gain };
-        float m44[16];
-        float offset4[4];
+        double gain = powf(2.0f, g_exposure_fstop);
+        const double slope4f[] = { gain, gain, gain, gain };
+        double m44[16];
+        double offset4[4];
         OCIO::MatrixTransform::Scale(m44, offset4, slope4f);
         OCIO::MatrixTransformRcPtr mtx =  OCIO::MatrixTransform::Create();
-        mtx->setValue(m44, offset4);
+        mtx->setMatrix(m44);
+        mtx->setOffset(offset4);
         transform->setLinearCC(mtx);
     }
     
     // Channel swizzling
     {
-        float lumacoef[3];
+        double lumacoef[3];
         config->getDefaultLumaCoefs(lumacoef);
-        float m44[16];
-        float offset[4];
+        double m44[16];
+        double offset[4];
         OCIO::MatrixTransform::View(m44, offset, g_channelHot, lumacoef);
         OCIO::MatrixTransformRcPtr swizzle = OCIO::MatrixTransform::Create();
-        swizzle->setValue(m44, offset);
+        swizzle->setMatrix(m44);
+        swizzle->setOffset(offset);
         transform->setChannelView(swizzle);
     }
     
     // Post-display transform gamma
     {
-        float exponent = 1.0f/std::max(1e-6f, static_cast<float>(g_display_gamma));
-        const float exponent4f[] = { exponent, exponent, exponent, exponent };
+        double exponent = 1.0/std::max(1e-6, static_cast<double>(g_display_gamma));
+        const double exponent4f[4] = { exponent, exponent, exponent, exponent };
         OCIO::ExponentTransformRcPtr expTransform =  OCIO::ExponentTransform::Create();
         expTransform->setValue(exponent4f);
         transform->setDisplayCC(expTransform);

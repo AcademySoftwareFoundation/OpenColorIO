@@ -47,7 +47,7 @@ OCIO_ADD_TEST(FileFormat3DL, bake)
         cs->setName("target");
         cs->setFamily("target");
         OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
-        float rgb[3] = { 0.0f, 0.1f, 0.2f };
+        const double rgb[3] = { 0.0, 0.1, 0.2 };
         transform1->setOffset(rgb);
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
         config->addColorSpace(cs);

@@ -161,7 +161,7 @@ int main (int argc, const char* argv[])
     
     // If --luts have been specified, synthesize a new (temporary) configuration
     // with the transformation embedded in a colorspace.
-    if(!groupTransform->empty())
+    if(groupTransform->getNumTransforms() > 0)
     {
         if(!inputspace.empty())
         {
@@ -416,7 +416,7 @@ parse_luts(int argc, const char *argv[])
             {
                 t->setCCCId(lastCCCId);
             }
-            groupTransform->push_back(t);
+            groupTransform->appendTransform(t);
             
             i += 1;
         }
@@ -442,7 +442,7 @@ parse_luts(int argc, const char *argv[])
             t->setSrc(argv[i+1]);
             t->setInterpolation(OCIO::INTERP_BEST);
             t->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-            groupTransform->push_back(t);
+            groupTransform->appendTransform(t);
             
             i += 1;
         }
@@ -455,12 +455,12 @@ parse_luts(int argc, const char *argv[])
             
             OCIO::CDLTransformRcPtr t = OCIO::CDLTransform::Create();
             
-            float scale[3];
-            scale[0] = (float) atof(argv[i+1]);
-            scale[1] = (float) atof(argv[i+2]);
-            scale[2] = (float) atof(argv[i+3]);
+            double scale[3];
+            scale[0] = atof(argv[i+1]);
+            scale[1] = atof(argv[i+2]);
+            scale[2] = atof(argv[i+3]);
             t->setSlope(scale);
-            groupTransform->push_back(t);
+            groupTransform->appendTransform(t);
             
             i += 3;
         }
@@ -473,12 +473,12 @@ parse_luts(int argc, const char *argv[])
             
             OCIO::CDLTransformRcPtr t = OCIO::CDLTransform::Create();
             
-            float offset[3];
-            offset[0] = (float) atof(argv[i+1]);
-            offset[1] = (float) atof(argv[i+2]);
-            offset[2] = (float) atof(argv[i+3]);
+            double offset[3];
+            offset[0] = atof(argv[i+1]);
+            offset[1] = atof(argv[i+2]);
+            offset[2] = atof(argv[i+3]);
             t->setOffset(offset);
-            groupTransform->push_back(t);
+            groupTransform->appendTransform(t);
             
             i += 3;
         }
@@ -491,12 +491,12 @@ parse_luts(int argc, const char *argv[])
             
             OCIO::CDLTransformRcPtr t = OCIO::CDLTransform::Create();
             
-            float offset[3];
-            offset[0] = (float) atof(argv[i+1]) / 1023.0f;
-            offset[1] = (float) atof(argv[i+2]) / 1023.0f;
-            offset[2] = (float) atof(argv[i+3]) / 1023.0f;
+            double offset[3];
+            offset[0] = atof(argv[i+1]) / 1023.0;
+            offset[1] = atof(argv[i+2]) / 1023.0;
+            offset[2] = atof(argv[i+3]) / 1023.0;
             t->setOffset(offset);
-            groupTransform->push_back(t);
+            groupTransform->appendTransform(t);
             i += 3;
         }
         else if(arg == "--power" || arg == "-power")
@@ -508,12 +508,12 @@ parse_luts(int argc, const char *argv[])
             
             OCIO::CDLTransformRcPtr t = OCIO::CDLTransform::Create();
             
-            float power[3];
-            power[0] = (float) atof(argv[i+1]);
-            power[1] = (float) atof(argv[i+2]);
-            power[2] = (float) atof(argv[i+3]);
+            double power[3];
+            power[0] = atof(argv[i+1]);
+            power[1] = atof(argv[i+2]);
+            power[2] = atof(argv[i+3]);
             t->setPower(power);
-            groupTransform->push_back(t);
+            groupTransform->appendTransform(t);
             
             i += 3;
         }
@@ -525,8 +525,8 @@ parse_luts(int argc, const char *argv[])
             }
             
             OCIO::CDLTransformRcPtr t = OCIO::CDLTransform::Create();
-            t->setSat((float) atof(argv[i+1]));
-            groupTransform->push_back(t);
+            t->setSat(atof(argv[i+1]));
+            groupTransform->appendTransform(t);
             
             i += 1;
         }

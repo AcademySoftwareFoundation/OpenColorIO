@@ -193,7 +193,7 @@ OCIO_NAMESPACE_ENTER
         logTransform->setLinSideSlopeValue(linSlope);
         logTransform->setLinSideOffsetValue(linOffset);
         
-        group->push_back(logTransform);
+        group->appendTransform(logTransform);
     }
 
     void BuildLogOps(OpRcPtrVec & ops,
@@ -512,7 +512,7 @@ OCIO_ADD_TEST(LogOps, create_transform)
     OCIO::ConstOpRcPtr op(ops[0]);
 
     OCIO::CreateLogTransform(group, op);
-    OCIO_REQUIRE_EQUAL(group->size(), 1);
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
     auto transform = group->getTransform(0);
     OCIO_REQUIRE_ASSERT(transform);
     auto lTransform = OCIO_DYNAMIC_POINTER_CAST<OCIO::LogAffineTransform>(transform);

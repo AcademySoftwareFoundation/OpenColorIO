@@ -470,7 +470,7 @@ OCIO_NAMESPACE_ENTER
         matTransform->setMatrix(matData->getArray().getValues().data());
         matTransform->setOffset(matData->getOffsets().getValues());
 
-        group->push_back(matTransform);
+        group->appendTransform(matTransform);
     }
 
     void BuildMatrixOps(OpRcPtrVec & ops,
@@ -1446,7 +1446,7 @@ OCIO_ADD_TEST(MatrixOffsetOp, create_transform)
     OCIO::ConstOpRcPtr op(ops[0]);
 
     OCIO::CreateMatrixTransform(group, op);
-    OCIO_REQUIRE_EQUAL(group->size(), 1);
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
     auto transform = group->getTransform(0);
     OCIO_REQUIRE_ASSERT(transform);
     auto mTransform = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(transform);

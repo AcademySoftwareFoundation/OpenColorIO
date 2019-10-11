@@ -458,16 +458,7 @@ OCIO_NAMESPACE_ENTER
         return *(getImpl()) == *(other->getImpl())
             && getImpl()->m_direction == other->getImpl()->m_direction;
     }
-    
-    void CDLTransform::setSlope(const float * rgb)
-    {
-        if(!rgb)
-        {
-            throw Exception("CDLTransform: Invalid input pointer");
-        }
 
-        getImpl()->setSlopeParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
-    }
     void CDLTransform::setSlope(const double * rgb)
     {
         if (!rgb)
@@ -478,19 +469,6 @@ OCIO_NAMESPACE_ENTER
         getImpl()->setSlopeParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
     }
 
-    
-    void CDLTransform::getSlope(float * rgb) const
-    {
-        if(!rgb)
-        {
-            throw Exception("CDLTransform: Invalid input pointer");
-        }
-
-        const CDLOpData::ChannelParams & params = getImpl()->getSlopeParams();
-        rgb[0] = (float)params[0];
-        rgb[1] = (float)params[1];
-        rgb[2] = (float)params[2];
-    }
     void CDLTransform::getSlope(double * rgb) const
     {
         if (!rgb)
@@ -504,15 +482,6 @@ OCIO_NAMESPACE_ENTER
         rgb[2] = params[2];
     }
 
-    void CDLTransform::setOffset(const float * rgb)
-    {
-        if(!rgb)
-        {
-            throw Exception("CDLTransform: Invalid input pointer");
-        }
-
-        getImpl()->setOffsetParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
-    }
     void CDLTransform::setOffset(const double * rgb)
     {
         if (!rgb)
@@ -523,18 +492,6 @@ OCIO_NAMESPACE_ENTER
         getImpl()->setOffsetParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
     }
 
-    void CDLTransform::getOffset(float * rgb) const
-    {
-        if(!rgb)
-        {
-            throw Exception("CDLTransform: Invalid input pointer");
-        }
-
-        const CDLOpData::ChannelParams & params = getImpl()->getOffsetParams();
-        rgb[0] = (float)params[0];
-        rgb[1] = (float)params[1];
-        rgb[2] = (float)params[2];
-    }
     void CDLTransform::getOffset(double * rgb) const
     {
         if (!rgb)
@@ -548,15 +505,6 @@ OCIO_NAMESPACE_ENTER
         rgb[2] = params[2];
     }
 
-    void CDLTransform::setPower(const float * rgb)
-    {
-        if(!rgb)
-        {
-            throw Exception("CDLTransform: Invalid input pointer");
-        }
-
-        getImpl()->setPowerParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
-    }
     void CDLTransform::setPower(const double * rgb)
     {
         if (!rgb)
@@ -567,18 +515,6 @@ OCIO_NAMESPACE_ENTER
         getImpl()->setPowerParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
     }
 
-    void CDLTransform::getPower(float * rgb) const
-    {
-        if(!rgb)
-        {
-            throw Exception("CDLTransform: Invalid input pointer");
-        }
-
-        const CDLOpData::ChannelParams & params = getImpl()->getPowerParams();
-        rgb[0] = (float)params[0];
-        rgb[1] = (float)params[1];
-        rgb[2] = (float)params[2];
-    }
     void CDLTransform::getPower(double * rgb) const
     {
         if (!rgb)
@@ -592,17 +528,6 @@ OCIO_NAMESPACE_ENTER
         rgb[2] = params[2];
     }
 
-    void CDLTransform::setSOP(const float * vec9)
-    {
-        if(!vec9)
-        {
-            throw Exception("CDLTransform: Invalid input pointer");
-        }
-
-        getImpl()->setSlopeParams(CDLOpData::ChannelParams(vec9[0], vec9[1], vec9[2]));
-        getImpl()->setOffsetParams(CDLOpData::ChannelParams(vec9[3], vec9[4], vec9[5]));
-        getImpl()->setPowerParams(CDLOpData::ChannelParams(vec9[6], vec9[7], vec9[8]));
-    }
     void CDLTransform::setSOP(const double * vec9)
     {
         if (!vec9)
@@ -615,28 +540,6 @@ OCIO_NAMESPACE_ENTER
         getImpl()->setPowerParams(CDLOpData::ChannelParams(vec9[6], vec9[7], vec9[8]));
     }
 
-    void CDLTransform::getSOP(float * vec9) const
-    {
-        if(!vec9)
-        {
-            throw Exception("CDLTransform: Invalid input pointer");
-        }
-
-        const CDLOpData::ChannelParams & slopes = getImpl()->getSlopeParams();
-        vec9[0] = (float)slopes[0];
-        vec9[1] = (float)slopes[1];
-        vec9[2] = (float)slopes[2];
-
-        const CDLOpData::ChannelParams & offsets = getImpl()->getOffsetParams();
-        vec9[3] = (float)offsets[0];
-        vec9[4] = (float)offsets[1];
-        vec9[5] = (float)offsets[2];
-
-        const CDLOpData::ChannelParams & powers = getImpl()->getPowerParams();
-        vec9[6] = (float)powers[0];
-        vec9[7] = (float)powers[1];
-        vec9[8] = (float)powers[2];
-    }
     void CDLTransform::getSOP(double * vec9) const
     {
         if (!vec9)
@@ -670,17 +573,6 @@ OCIO_NAMESPACE_ENTER
         return getImpl()->getSaturation();
     }
 
-    void CDLTransform::getSatLumaCoefs(float * rgb) const
-    {
-        if(!rgb)
-        {
-            throw Exception("CDLTransform: Invalid input pointer");
-        }
-
-        rgb[0] = 0.2126f;
-        rgb[1] = 0.7152f;
-        rgb[2] = 0.0722f;
-    }
     void CDLTransform::getSatLumaCoefs(double * rgb) const
     {
         if (!rgb)
@@ -757,13 +649,14 @@ OCIO_NAMESPACE_ENTER
 }
 OCIO_NAMESPACE_EXIT
 
+///////////////////////////////////////////////////////////////////////////////
+
 #ifdef OCIO_UNIT_TEST
 
-namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 #include "UnitTestUtils.h"
 #include "Platform.h"
-
+namespace OCIO = OCIO_NAMESPACE;
 
 OCIO_ADD_TEST(CDLTransform, equality)
 {
@@ -794,21 +687,21 @@ OCIO_ADD_TEST(CDLTransform, create_from_cc_file)
         OCIO_CHECK_EQUAL("foo", idStr);
         std::string descStr(transform->getDescription());
         OCIO_CHECK_EQUAL("this is a description", descStr);
-        float slope[3] = {0.f, 0.f, 0.f};
+        double slope[3] = {0., 0., 0.};
         OCIO_CHECK_NO_THROW(transform->getSlope(slope));
-        OCIO_CHECK_EQUAL(1.1f, slope[0]);
-        OCIO_CHECK_EQUAL(1.2f, slope[1]);
-        OCIO_CHECK_EQUAL(1.3f, slope[2]);
-        float offset[3] = { 0.f, 0.f, 0.f };
+        OCIO_CHECK_EQUAL(1.1, slope[0]);
+        OCIO_CHECK_EQUAL(1.2, slope[1]);
+        OCIO_CHECK_EQUAL(1.3, slope[2]);
+        double offset[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(transform->getOffset(offset));
-        OCIO_CHECK_EQUAL(2.1f, offset[0]);
-        OCIO_CHECK_EQUAL(2.2f, offset[1]);
-        OCIO_CHECK_EQUAL(2.3f, offset[2]);
-        float power[3] = { 0.f, 0.f, 0.f };
+        OCIO_CHECK_EQUAL(2.1, offset[0]);
+        OCIO_CHECK_EQUAL(2.2, offset[1]);
+        OCIO_CHECK_EQUAL(2.3, offset[2]);
+        double power[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(transform->getPower(power));
-        OCIO_CHECK_EQUAL(3.1f, power[0]);
-        OCIO_CHECK_EQUAL(3.2f, power[1]);
-        OCIO_CHECK_EQUAL(3.3f, power[2]);
+        OCIO_CHECK_EQUAL(3.1, power[0]);
+        OCIO_CHECK_EQUAL(3.2, power[1]);
+        OCIO_CHECK_EQUAL(3.3, power[2]);
         OCIO_CHECK_EQUAL(0.7, transform->getSat());
     }
 
@@ -834,21 +727,21 @@ OCIO_ADD_TEST(CDLTransform, create_from_cc_file)
         std::string idStr(transformCDL->getID());
         OCIO_CHECK_EQUAL("foo", idStr);
 
-        float slope[3] = { 0.f, 0.f, 0.f };
+        double slope[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(transformCDL->getSlope(slope));
-        OCIO_CHECK_EQUAL(1.1f, slope[0]);
-        OCIO_CHECK_EQUAL(1.2f, slope[1]);
-        OCIO_CHECK_EQUAL(1.3f, slope[2]);
-        float offset[3] = { 0.f, 0.f, 0.f };
+        OCIO_CHECK_EQUAL(1.1, slope[0]);
+        OCIO_CHECK_EQUAL(1.2, slope[1]);
+        OCIO_CHECK_EQUAL(1.3, slope[2]);
+        double offset[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(transformCDL->getOffset(offset));
-        OCIO_CHECK_EQUAL(2.1f, offset[0]);
-        OCIO_CHECK_EQUAL(2.2f, offset[1]);
-        OCIO_CHECK_EQUAL(2.3f, offset[2]);
-        float power[3] = { 0.f, 0.f, 0.f };
+        OCIO_CHECK_EQUAL(2.1, offset[0]);
+        OCIO_CHECK_EQUAL(2.2, offset[1]);
+        OCIO_CHECK_EQUAL(2.3, offset[2]);
+        double power[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(transformCDL->getPower(power));
-        OCIO_CHECK_EQUAL(3.1f, power[0]);
-        OCIO_CHECK_EQUAL(3.2f, power[1]);
-        OCIO_CHECK_EQUAL(3.3f, power[2]);
+        OCIO_CHECK_EQUAL(3.1, power[0]);
+        OCIO_CHECK_EQUAL(3.2, power[1]);
+        OCIO_CHECK_EQUAL(3.3, power[2]);
         OCIO_CHECK_EQUAL(0.7, transformCDL->getSat());
     }
 }
@@ -869,22 +762,22 @@ OCIO_ADD_TEST(CDLTransform, create_from_ccc_file)
         OCIO_CHECK_EQUAL(std::string(metadata.getChildElement(3).getName()), "SOPDescription");
         OCIO_CHECK_EQUAL(std::string(metadata.getChildElement(3).getValue()), "golden");
 
-        float slope[3] = { 0.f, 0.f, 0.f };
+        double slope[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(transform->getSlope(slope));
-        OCIO_CHECK_EQUAL(1.2f, slope[0]);
-        OCIO_CHECK_EQUAL(1.1f, slope[1]);
-        OCIO_CHECK_EQUAL(1.0f, slope[2]);
-        float offset[3] = { 0.f, 0.f, 0.f };
+        OCIO_CHECK_EQUAL(1.2, slope[0]);
+        OCIO_CHECK_EQUAL(1.1, slope[1]);
+        OCIO_CHECK_EQUAL(1.0, slope[2]);
+        double offset[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(transform->getOffset(offset));
-        OCIO_CHECK_EQUAL(0.0f, offset[0]);
-        OCIO_CHECK_EQUAL(0.0f, offset[1]);
-        OCIO_CHECK_EQUAL(0.0f, offset[2]);
-        float power[3] = { 0.f, 0.f, 0.f };
+        OCIO_CHECK_EQUAL(0.0, offset[0]);
+        OCIO_CHECK_EQUAL(0.0, offset[1]);
+        OCIO_CHECK_EQUAL(0.0, offset[2]);
+        double power[3] = { 0.f, 0.f, 0.f };
         OCIO_CHECK_NO_THROW(transform->getPower(power));
-        OCIO_CHECK_EQUAL(0.9f, power[0]);
-        OCIO_CHECK_EQUAL(1.0f, power[1]);
-        OCIO_CHECK_EQUAL(1.2f, power[2]);
-        OCIO_CHECK_EQUAL(1.0f, transform->getSat());
+        OCIO_CHECK_EQUAL(0.9, power[0]);
+        OCIO_CHECK_EQUAL(1.0, power[1]);
+        OCIO_CHECK_EQUAL(1.2, power[2]);
+        OCIO_CHECK_EQUAL(1.0, transform->getSat());
     }
     {
         // Using 0 based index
@@ -893,21 +786,21 @@ OCIO_ADD_TEST(CDLTransform, create_from_ccc_file)
         std::string idStr(transform->getID());
         OCIO_CHECK_EQUAL("", idStr);
 
-        float slope[3] = { 0.f, 0.f, 0.f };
+        double slope[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(transform->getSlope(slope));
-        OCIO_CHECK_EQUAL(4.0f, slope[0]);
-        OCIO_CHECK_EQUAL(5.0f, slope[1]);
-        OCIO_CHECK_EQUAL(6.0f, slope[2]);
-        float offset[3] = { 0.f, 0.f, 0.f };
+        OCIO_CHECK_EQUAL(4.0, slope[0]);
+        OCIO_CHECK_EQUAL(5.0, slope[1]);
+        OCIO_CHECK_EQUAL(6.0, slope[2]);
+        double offset[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(transform->getOffset(offset));
-        OCIO_CHECK_EQUAL(0.0f, offset[0]);
-        OCIO_CHECK_EQUAL(0.0f, offset[1]);
-        OCIO_CHECK_EQUAL(0.0f, offset[2]);
-        float power[3] = { 0.f, 0.f, 0.f };
+        OCIO_CHECK_EQUAL(0.0, offset[0]);
+        OCIO_CHECK_EQUAL(0.0, offset[1]);
+        OCIO_CHECK_EQUAL(0.0, offset[2]);
+        double power[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(transform->getPower(power));
-        OCIO_CHECK_EQUAL(0.9f, power[0]);
-        OCIO_CHECK_EQUAL(1.0f, power[1]);
-        OCIO_CHECK_EQUAL(1.2f, power[2]);
+        OCIO_CHECK_EQUAL(0.9, power[0]);
+        OCIO_CHECK_EQUAL(1.0, power[1]);
+        OCIO_CHECK_EQUAL(1.2, power[2]);
         OCIO_CHECK_EQUAL(1.0f, transform->getSat());
     }
 }
@@ -1027,12 +920,12 @@ OCIO_ADD_TEST(CDLTransform, clear_caches)
     OCIO::CDLTransformRcPtr transform; 
     OCIO_CHECK_NO_THROW(transform = OCIO::CDLTransform::CreateFromFile(filename.c_str(), "cc03343"));
 
-    float slope[3];
+    double slope[3];
 
     OCIO_CHECK_NO_THROW(transform->getSlope(slope));
-    OCIO_CHECK_EQUAL(slope[0], 0.1f);
-    OCIO_CHECK_EQUAL(slope[1], 0.2f);
-    OCIO_CHECK_EQUAL(slope[2], 0.3f);
+    OCIO_CHECK_EQUAL(slope[0], 0.1);
+    OCIO_CHECK_EQUAL(slope[1], 0.2);
+    OCIO_CHECK_EQUAL(slope[2], 0.3);
 
     stream.open(filename, std::ios_base::out|std::ios_base::trunc);
     stream << kContentsB;
@@ -1043,9 +936,9 @@ OCIO_ADD_TEST(CDLTransform, clear_caches)
     OCIO_CHECK_NO_THROW(transform = OCIO::CDLTransform::CreateFromFile(filename.c_str(), "cc03343"));
     OCIO_CHECK_NO_THROW(transform->getSlope(slope));
 
-    OCIO_CHECK_EQUAL(slope[0], 1.1f);
-    OCIO_CHECK_EQUAL(slope[1], 2.2f);
-    OCIO_CHECK_EQUAL(slope[2], 3.3f);
+    OCIO_CHECK_EQUAL(slope[0], 1.1);
+    OCIO_CHECK_EQUAL(slope[1], 2.2);
+    OCIO_CHECK_EQUAL(slope[2], 3.3);
 }
 
 OCIO_ADD_TEST(CDLTransform, faulty_file_content)

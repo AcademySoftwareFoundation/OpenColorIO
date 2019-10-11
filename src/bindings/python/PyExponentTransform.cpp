@@ -106,14 +106,15 @@ OCIO_NAMESPACE_ENTER
             int ret = BuildPyTransformObject<ExponentTransformRcPtr>(self, ptr);
             if(pyvalue != Py_None)
             {
-                std::vector<float> data;
-                if(!FillFloatVectorFromPySequence(pyvalue, data) ||
+                std::vector<double> data;
+                if(!FillDoubleVectorFromPySequence(pyvalue, data) ||
                     (data.size() != 4))
                 {
-                    PyErr_SetString(PyExc_TypeError, "Value argument must be a float array, size 4");
+                    PyErr_SetString(PyExc_TypeError, "Value argument must be a double array, size 4");
                     return -1;
                 }
-                ptr->setValue(&data[0]);
+				const double exp4[4] { data[0], data[1], data[2], data[3] };
+                ptr->setValue(exp4);
             }
             if(direction) ptr->setDirection(TransformDirectionFromString(direction));
             return ret;
@@ -124,9 +125,10 @@ OCIO_NAMESPACE_ENTER
         {
             OCIO_PYTRY_ENTER()
             ConstExponentTransformRcPtr transform = GetConstExponentTransform(self);
-            std::vector<float> data(4);
-            transform->getValue(&data[0]);
-            return CreatePyListFromFloatVector(data);
+            double data[4];
+            transform->getValue(data);
+			std::vector<double> dataVec{ data, data + sizeof(data) / sizeof(double)  };
+            return CreatePyListFromDoubleVector(dataVec);
             OCIO_PYTRY_EXIT(NULL)
         }
         
@@ -137,12 +139,13 @@ OCIO_NAMESPACE_ENTER
             if (!PyArg_ParseTuple(args, "O:setValue",
                 &pyData)) return NULL;
             ExponentTransformRcPtr transform = GetEditableExponentTransform(self);
-            std::vector<float> data;
-            if(!FillFloatVectorFromPySequence(pyData, data) || (data.size() != 4)) {
-                PyErr_SetString(PyExc_TypeError, "First argument must be a float array, size 4");
+            std::vector<double> data;
+            if(!FillDoubleVectorFromPySequence(pyData, data) || (data.size() != 4)) {
+                PyErr_SetString(PyExc_TypeError, "First argument must be a double array, size 4");
                 return 0;
             }
-            transform->setValue(&data[0]);
+			const double exp4[4] { data[0], data[1], data[2], data[3] };
+            transform->setValue(exp4);
             Py_RETURN_NONE;
             OCIO_PYTRY_EXIT(NULL)
         }

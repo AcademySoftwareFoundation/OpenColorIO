@@ -973,8 +973,8 @@ OCIO_NAMESPACE_EXIT
 
 #ifdef OCIO_UNIT_TEST
 
-namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
+namespace OCIO = OCIO_NAMESPACE;
 
 OCIO_ADD_TEST(FileFormatHDL, read_1d)
 {
@@ -1064,7 +1064,7 @@ OCIO_ADD_TEST(FileFormatHDL, bake_1d)
         cs->setFamily("target");
         OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
         
-        float rgb[3] = {0.1f, 0.1f, 0.1f};
+        double rgb[3] = {0.1, 0.1, 0.1};
         transform1->setOffset(rgb);
         
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
@@ -1227,7 +1227,7 @@ OCIO_ADD_TEST(FileFormatHDL, bake_3d)
 
     // Set luma coef's to simple values
     {
-        float lumaCoef[3] = {0.333f, 0.333f, 0.333f};
+        double lumaCoef[3] = {0.333, 0.333, 0.333};
         config->setDefaultLumaCoefs(lumaCoef);
     }
 
@@ -1419,7 +1419,7 @@ OCIO_ADD_TEST(FileFormatHDL, bake_3d_1d)
 
     // Set luma coef's to simple values
     {
-        float lumaCoef[3] = {0.333f, 0.333f, 0.333f};
+        double lumaCoef[3] = {0.333, 0.333, 0.333};
         config->setDefaultLumaCoefs(lumaCoef);
     }
 
@@ -1438,7 +1438,7 @@ OCIO_ADD_TEST(FileFormatHDL, bake_3d_1d)
         cs->setName("shaper");
         cs->setFamily("shaper");
         OCIO::ExponentTransformRcPtr transform1 = OCIO::ExponentTransform::Create();
-        float test[4] = {2.6f, 2.6f, 2.6f, 1.0f};
+        double test[4] = {2.6, 2.6, 2.6, 1.0};
         transform1->setValue(test);
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_TO_REFERENCE);
         config->addColorSpace(cs);
@@ -1452,7 +1452,7 @@ OCIO_ADD_TEST(FileFormatHDL, bake_3d_1d)
         OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
 
         // Set saturation to cause channel crosstalk, making a 3D LUT
-        transform1->setSat(0.5f);
+        transform1->setSat(0.5);
 
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
         config->addColorSpace(cs);
@@ -1546,7 +1546,7 @@ OCIO_ADD_TEST(FileFormatHDL, look_test)
         cs->setName("shaper");
         cs->setFamily("shaper");
         OCIO::ExponentTransformRcPtr transform1 = OCIO::ExponentTransform::Create();
-        float test[4] = { 2.2f, 2.2f, 2.2f, 1.0f };
+        double test[4] = {2.2, 2.2, 2.2, 1.0};
         transform1->setValue(test);
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_TO_REFERENCE);
         config->addColorSpace(cs);
@@ -1558,7 +1558,7 @@ OCIO_ADD_TEST(FileFormatHDL, look_test)
         cs->setName("look_process");
         cs->setFamily("look_process");
         OCIO::ExponentTransformRcPtr transform1 = OCIO::ExponentTransform::Create();
-        float test[4] = { 2.6f, 2.6f, 2.6f, 1.0f };
+        double test[4] = {2.6, 2.6, 2.6, 1.0};
         transform1->setValue(test);
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_TO_REFERENCE);
         config->addColorSpace(cs);
@@ -1660,4 +1660,4 @@ OCIO_ADD_TEST(FileFormatHDL, look_test)
     }
 }
 
-#endif // OCIO_BUILD_TESTS
+#endif

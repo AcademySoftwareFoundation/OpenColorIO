@@ -631,7 +631,7 @@ OCIO_ADD_TEST(CPUProcessor, with_one_matrix)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
 
     OCIO::MatrixTransformRcPtr transform = OCIO::MatrixTransform::Create();
-    constexpr const float offset4[4] = { 1.4002f, 0.4005f, 0.8007f, 0.5f };
+    constexpr const double offset4[4] = { 1.4002, 0.4005, 0.8007, 0.5 };
     transform->setOffset( offset4 );
 
     OCIO::ConstProcessorRcPtr processor;
@@ -1680,7 +1680,7 @@ OCIO::ConstCPUProcessorRcPtr BuildCPUProcessor(OCIO::TransformDirection dir)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
 
     OCIO::MatrixTransformRcPtr transform = OCIO::MatrixTransform::Create();
-    const float offset4[4] = { 1.4002f, 0.4005f, 0.8007f, 0.5007f };
+    const double offset4[4] = { 1.4002, 0.4005, 0.8007, 0.5007 };
     transform->setOffset(offset4);
     transform->setDirection(dir);
 
@@ -2379,7 +2379,7 @@ void ComputeImage(unsigned width, unsigned height, unsigned nChannels,
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
 
     OCIO::MatrixTransformRcPtr transform = OCIO::MatrixTransform::Create();
-    const float offset4[4] = { 1.2002f, 0.4005f, 0.8007f, 0.5f };
+    const double offset4[4] = { 1.2002, 0.4005, 0.8007, 0.5 };
     transform->setOffset( offset4 );
 
     OCIO::ConstProcessorRcPtr processor;
@@ -2421,11 +2421,11 @@ void ComputeImage(unsigned width, unsigned height, unsigned nChannels,
     {
         // Manual computation of the results.
 
-        const float pxl[4]{ (float(inValues[idx+0]) * inScale + offset4[0]) * outScale,
-                            (float(inValues[idx+1]) * inScale + offset4[1]) * outScale,
-                            (float(inValues[idx+2]) * inScale + offset4[2]) * outScale,
+        const float pxl[4]{ (float(inValues[idx+0]) * inScale + (float)offset4[0]) * outScale,
+                            (float(inValues[idx+1]) * inScale + (float)offset4[1]) * outScale,
+                            (float(inValues[idx+2]) * inScale + (float)offset4[2]) * outScale,
                             nChannels==4 
-                                ? ((float(inValues[idx+3]) * inScale + offset4[3]) * outScale) 
+                                ? ((float(inValues[idx+3]) * inScale + (float)offset4[3]) * outScale) 
                                 : 0.0f 
                           };
 

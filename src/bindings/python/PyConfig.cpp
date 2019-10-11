@@ -935,10 +935,10 @@ OCIO_NAMESPACE_ENTER
             PyObject* pyCoef = 0;
             if (!PyArg_ParseTuple(args, "O:setDefaultLumaCoefs",
                 &pyCoef)) return 0;
-            std::vector<float> coef;
-            if(!FillFloatVectorFromPySequence(pyCoef, coef) || (coef.size() != 3))
+            std::vector<double> coef;
+            if(!FillDoubleVectorFromPySequence(pyCoef, coef) || (coef.size() != 3))
             {
-                PyErr_SetString(PyExc_TypeError, "First argument must be a float array, size 3");
+                PyErr_SetString(PyExc_TypeError, "First argument must be a double array, size 3");
                 return 0;
             }
             config->setDefaultLumaCoefs(&coef[0]);
@@ -950,9 +950,9 @@ OCIO_NAMESPACE_ENTER
         {
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
-            std::vector<float> coef(3);
+            std::vector<double> coef(3);
             config->getDefaultLumaCoefs(&coef[0]);
-            return CreatePyListFromFloatVector(coef);
+            return CreatePyListFromDoubleVector(coef);
             OCIO_PYTRY_EXIT(NULL)
         }
         
