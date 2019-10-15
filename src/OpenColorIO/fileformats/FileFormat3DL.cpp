@@ -451,11 +451,6 @@ OCIO_NAMESPACE_ENTER
                 // which is the same order used by Lut3DOpData, so no
                 // transposition of LUT entries is needed in this case.
 
-                BitDepth in3DBD = BIT_DEPTH_F32;
-                if (out1DBD != BIT_DEPTH_UNKNOWN)
-                {
-                    in3DBD = out1DBD;
-                }
                 BitDepth out3DBD = GetOCIOBitdepth(lut3dbitdepth);
 
                 cachedFile->lut3D = std::make_shared<Lut3DOpData>(lutEdgeLen);

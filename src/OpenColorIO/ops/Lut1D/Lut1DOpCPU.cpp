@@ -2608,8 +2608,6 @@ OCIO_ADD_TEST(Lut1DRenderer, half)
 
 OCIO_ADD_TEST(Lut1DRenderer, nan)
 {
-    const OCIO::BitDepth bitDepth = OCIO::BIT_DEPTH_F32;
-
     // By default, this constructor creates an 'identity LUT'.
     OCIO::Lut1DOpDataRcPtr lutData =
         std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 65536);
@@ -3254,7 +3252,6 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_identity_half)
     {
         half hVal;
         hVal.setBits((unsigned short)i);
-        const float fVal = (float)hVal;
 
         if (hVal.isNan())
         {
@@ -3603,18 +3600,29 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_decreasing_reversals)
     // and values outside the typical range.
     OCIO::Array::Values & vals = lutData->getArray().getValues();
     int i = 0;
-    vals[i++] = vals[i++] = vals[i++] =  90.f / 255.f;
-    vals[i++] = vals[i++] = vals[i++] =  90.f / 255.f;
-    vals[i++] = vals[i++] = vals[i++] = 100.f / 255.f;
-    vals[i++] = vals[i++] = vals[i++] =  80.f / 255.f;
-    vals[i++] = vals[i++] = vals[i++] =  70.f / 255.f;
-    vals[i++] = vals[i++] = vals[i++] =  50.f / 255.f;
-    vals[i++] = vals[i++] = vals[i++] =  60.f / 255.f;
-    vals[i++] = vals[i++] = vals[i++] =  70.f / 255.f;
-    vals[i++] = vals[i++] = vals[i++] =  40.f / 255.f;
-    vals[i++] = vals[i++] = vals[i++] =  20.f / 255.f;
-    vals[i++] = vals[i++] = vals[i++] = -10.f / 255.f; // note: LUT vals may exceed [0,255]
-    vals[i++] = vals[i++] = vals[i++] = -10.f / 255.f;
+    vals[i] = vals[i+1] = vals[i+2] =  90.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  90.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] = 100.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  80.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  70.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  50.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  60.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  70.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  40.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  20.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] = -10.f / 255.f; // note: LUT vals may exceed [0,255]
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] = -10.f / 255.f;
 
     auto invLut = lutData->inverse();
 
@@ -3693,18 +3701,29 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_clamp_to_range)
     // the LUT has no flat spots at start or end.
     OCIO::Array::Values & vals = lutData->getArray().getValues();
     int i = 0;
-    vals[i++] = vals[i++] = vals[i++] =  30.f / 255.f;
-    vals[i++] = vals[i++] = vals[i++] =  40.f / 255.f;
-    vals[i++] = vals[i++] = vals[i++] =  60.f / 255.f;
-    vals[i++] = vals[i++] = vals[i++] =  65.f / 255.f;
-    vals[i++] = vals[i++] = vals[i++] =  70.f / 255.f;
-    vals[i++] = vals[i++] = vals[i++] =  50.f / 255.f;
-    vals[i++] = vals[i++] = vals[i++] =  60.f / 255.f;
-    vals[i++] = vals[i++] = vals[i++] =  70.f / 255.f;
-    vals[i++] = vals[i++] = vals[i++] = 100.f / 255.f;
-    vals[i++] = vals[i++] = vals[i++] = 190.f / 255.f;
-    vals[i++] = vals[i++] = vals[i++] = 200.f / 255.f;
-    vals[i++] = vals[i++] = vals[i++] = 210.f / 255.f;
+    vals[i] = vals[i+1] = vals[i+2] =  30.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  40.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  60.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  65.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  70.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  50.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  60.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  70.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] = 100.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] = 190.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] = 200.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] = 210.f / 255.f;
 
     auto invLut = lutData->inverse();
     // Render as 32f in depth so we can test negative input vals.
