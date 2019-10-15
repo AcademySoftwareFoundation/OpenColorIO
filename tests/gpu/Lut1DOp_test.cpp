@@ -332,7 +332,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_hue_adjust_test)
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_half_domain_hue_adjust_test)
 {
     // Note: This LUT is half domain and also a "big LUT" so it tests that path.
-    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_hd_hueAdjust.ctf");
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_hd_hue_adjust.ctf");
     file->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
@@ -367,7 +367,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_inverse_file2_test)
 {
     // This LUT has an extended domain (entries outside [0,1]) and hence the fast LUT
     // that gets built from it must have a halfDomain for both CPU and GPU.
-    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_inverse_gpu_err.ctf");
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_inverse_gpu.ctf");
     file->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();

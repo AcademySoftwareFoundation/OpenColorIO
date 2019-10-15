@@ -68,9 +68,6 @@ protected:
     const RenderParams & getRenderParams() const { return m_renderParams; }
 
 protected:
-    float m_inScale;
-    float m_outScale;
-    float m_alphaScale;
     RenderParams m_renderParams;
 
 private:

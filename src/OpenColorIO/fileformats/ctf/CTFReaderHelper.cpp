@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include "BitDepthUtils.h"
 #include "fileformats/ctf/CTFReaderHelper.h"
 #include "fileformats/ctf/CTFReaderUtils.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
@@ -191,14 +192,6 @@ void CTFReaderTransformElt::start(const char ** atts)
 
 void CTFReaderTransformElt::end()
 {
-    try
-    {
-        m_transform->validate();
-    }
-    catch (Exception& e)
-    {
-        throwMessage(e.what());
-    }
 }
 
 void CTFReaderTransformElt::appendMetadata(const std::string & /*name*/, const std::string & value)
@@ -632,7 +625,7 @@ CTFReaderMetadataElt::CTFReaderMetadataElt(const std::string & name,
                                            unsigned int xmlLineNumber,
                                            const std::string & xmlFile)
     : XmlReaderComplexElt(name, pParent, xmlLineNumber, xmlFile)
-    , m_metadata(name)
+    , m_metadata(name, "")
 {
 }
 
@@ -823,7 +816,7 @@ void CTFReaderOpElt::start(const char ** atts)
             {
                 ThrowM(*this, "inBitDepth unknown value (", atts[i + 1], ")");
             }
-            getOp()->setInputBitDepth(bitdepth);
+            m_inBitDepth = bitdepth;
             bitDepthFound |= INPUT_BIT_DEPTH;
         }
         else if (0 == Platform::Strcasecmp(ATTR_BITDEPTH_OUT, atts[i]))
@@ -833,7 +826,7 @@ void CTFReaderOpElt::start(const char ** atts)
             {
                 ThrowM(*this, "outBitDepth unknown value (", atts[i + 1], ")");
             }
-            getOp()->setOutputBitDepth(bitdepth);
+            m_outBitDepth = bitdepth;
             bitDepthFound |= OUTPUT_BIT_DEPTH;
         }
         /* TODO: CTF
@@ -864,6 +857,25 @@ void CTFReaderOpElt::start(const char ** atts)
     else if ((bitDepthFound&OUTPUT_BIT_DEPTH) == NO_BIT_DEPTH)
     {
         throwMessage("outBitDepth is missing.");
+    }
+
+    // Ensure bit-depths consistency between ops in the file.
+
+    const BitDepth prevOutBD = m_transform->getPreviousOutBitDepth();
+    m_transform->setPreviousOutBitDepth(m_outBitDepth);
+    if (prevOutBD != BIT_DEPTH_UNKNOWN) // Unknown for first op.
+    {
+        if (prevOutBD != m_inBitDepth)
+        {
+            const std::string inBD(BitDepthToString(m_inBitDepth));
+            const std::string prevBD(BitDepthToString(prevOutBD));
+            std::ostringstream os;
+            os << "Bit-depth missmatch between ops. Previous op output ";
+            os << "bit-depth is: '" << prevBD;
+            os << "' and this op input bit-depth is '" << inBD;
+            os << "'. ";
+            throwMessage(os.str());
+        }
     }
 }
 
@@ -1937,11 +1949,16 @@ void CTFReaderInvLut1DElt::end()
 {
     CTFReaderOpElt::end();
 
+    // Array values for inverse LUTs are scaled based on the inBitDepth
+    // (rather than outBD), normalize them.
+    const float scale = 1.0f / (float)GetBitDepthMaxValue(m_inBitDepth);
+    m_invLut->scale(scale);
+
     // Record the original array scaling present in the file.  This is used by
     // a heuristic involved with LUT inversion.  The bit-depth of ops is
     // typically changed after the file is read, hence the need to store it now.
     // For an inverse LUT, it's the input bit-depth that describes the array scaling.
-    m_invLut->setFileOutputBitDepth(m_invLut->getInputBitDepth());
+    m_invLut->setFileOutputBitDepth(m_inBitDepth);
     m_invLut->validate();
 }
 
@@ -2066,8 +2083,14 @@ void CTFReaderInvLut3DElt::start(const char ** atts)
 void CTFReaderInvLut3DElt::end()
 {
     CTFReaderOpElt::end();
+
+    // Array values for inverse LUTs are scaled based on the inBitDepth
+    // (rather than outBD), normalize them.
+    const float scale = 1.0f / (float)GetBitDepthMaxValue(m_inBitDepth);
+    m_invLut->scale(scale);
+
     // For an inverse LUT, it's the input bit-depth that describes the array scaling.
-    m_invLut->setFileOutputBitDepth(m_invLut->getInputBitDepth());
+    m_invLut->setFileOutputBitDepth(m_inBitDepth);
     m_invLut->validate();
 }
 
@@ -2587,10 +2610,14 @@ void CTFReaderLut1DElt::start(const char ** atts)
 void CTFReaderLut1DElt::end()
 {
     CTFReaderOpElt::end();
+
+    const float scale = 1.0f / (float)GetBitDepthMaxValue(m_outBitDepth);
+    m_lut->scale(scale);
+
     // Record the original array scaling present in the file.  This is used by
     // a heuristic involved with LUT inversion.  The bit-depth of ops is
     // typically changed after the file is read, hence the need to store it now.
-    m_lut->setFileOutputBitDepth(m_lut->getOutputBitDepth());
+    m_lut->setFileOutputBitDepth(m_outBitDepth);
     m_lut->validate();
 }
 
@@ -2767,7 +2794,11 @@ void CTFReaderLut1DElt_1_4::start(const char ** atts)
 void CTFReaderLut1DElt_1_7::end()
 {
     CTFReaderOpElt::end();
-    m_lut->setFileOutputBitDepth(m_lut->getOutputBitDepth());
+
+    const float scale = 1.0f / (float)GetBitDepthMaxValue(m_outBitDepth);
+    m_lut->scale(scale);
+
+    m_lut->setFileOutputBitDepth(m_outBitDepth);
     m_lut->validate();
 
     // The LUT renderers do not currently support an indexMap, however for
@@ -2778,8 +2809,8 @@ void CTFReaderLut1DElt_1_7::end()
         // This will throw if the indexMap is not length 2.
         RangeOpDataRcPtr pRng = std::make_shared<RangeOpData>(
             m_indexMapping,
-            m_lut->getInputBitDepth(),
-            m_lut->getArray().getLength());
+            m_lut->getArray().getLength(),
+            m_inBitDepth);
 
         // Insert the range before the LUT that was appended to m_transform
         // in OpElt::start.
@@ -2839,7 +2870,11 @@ void CTFReaderLut3DElt::start(const char ** atts)
 void CTFReaderLut3DElt::end()
 {
     CTFReaderOpElt::end();
-    m_lut->setFileOutputBitDepth(m_lut->getOutputBitDepth());
+
+    const float scale = 1.0f / (float)GetBitDepthMaxValue(m_outBitDepth);
+    m_lut->scale(scale);
+
+    m_lut->setFileOutputBitDepth(m_outBitDepth);
     m_lut->validate();
 }
 
@@ -2920,7 +2955,11 @@ void CTFReaderLut3DElt::endIndexMap(unsigned int position)
 void CTFReaderLut3DElt_1_7::end()
 {
     CTFReaderOpElt::end();
-    m_lut->setFileOutputBitDepth(m_lut->getOutputBitDepth());
+
+    const float scale = 1.0f / (float)GetBitDepthMaxValue(m_outBitDepth);
+    m_lut->scale(scale);
+
+    m_lut->setFileOutputBitDepth(m_outBitDepth);
     m_lut->validate();
 
     // The LUT renderers do not currently support an indexMap, however for
@@ -2931,8 +2970,8 @@ void CTFReaderLut3DElt_1_7::end()
         // This will throw if the indexMap is not length 2.
         RangeOpDataRcPtr pRng = std::make_shared<RangeOpData>(
             m_indexMapping,
-            m_lut->getInputBitDepth(),
-            m_lut->getArray().getLength());
+            m_lut->getArray().getLength(),
+            m_inBitDepth);
 
         // Insert the range before the LUT that was appended to m_transform
         // in OpElt::start.
@@ -2962,8 +3001,10 @@ void CTFReaderMatrixElt::end()
 {
     CTFReaderOpElt::end();
 
-    m_matrix->setFileInputBitDepth(m_matrix->getInputBitDepth());
-    m_matrix->setFileOutputBitDepth(m_matrix->getOutputBitDepth());
+    m_matrix->scale(GetBitDepthMaxValue(m_inBitDepth), 1.0 / GetBitDepthMaxValue(m_outBitDepth));
+
+    m_matrix->setFileInputBitDepth(m_inBitDepth);
+    m_matrix->setFileOutputBitDepth(m_outBitDepth);
 
     // Validate the end result.
     m_matrix->validate();
@@ -3228,8 +3269,10 @@ void CTFReaderRangeElt::end()
 {
     CTFReaderOpElt::end();
 
-    m_range->setFileInputBitDepth(m_range->getInputBitDepth());
-    m_range->setFileOutputBitDepth(m_range->getOutputBitDepth());
+    m_range->scale(1.0 / GetBitDepthMaxValue(m_inBitDepth), 1.0 / GetBitDepthMaxValue(m_outBitDepth));
+
+    m_range->setFileInputBitDepth(m_inBitDepth);
+    m_range->setFileOutputBitDepth(m_outBitDepth);
 
     // Validate the end result.
     m_range->validate();

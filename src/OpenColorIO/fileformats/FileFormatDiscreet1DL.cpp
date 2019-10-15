@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
+#include <sstream>
+#include <iostream>
+
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "transforms/FileTransform.h"
+#include "BitDepthUtils.h"
 #include "ops/Lut1D/Lut1DOp.h"
 #include "ops/Lut3D/Lut3DOp.h"
 #include "MathUtils.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
 #include "Platform.h"
+#include "transforms/FileTransform.h"
 
-#include <algorithm>
-#include <cmath>
-#include <cstdio>
-#include <sstream>
-
-
-#include <iostream>
 
 // This format is a 1D LUT format that was used by the Discreet (now Autodesk)
 // creative finishing products such as Flame and Smoke.
@@ -635,13 +635,9 @@ OCIO_NAMESPACE_ENTER
                     ? Lut1DOpData::LUT_INPUT_HALF_CODE
                     : Lut1DOpData::LUT_STANDARD;
 
-                FormatMetadataImpl info(METADATA_ROOT);
-                lut1D = std::make_shared<Lut1DOpData>(inBitDepth,
-                                                      outBitDepth,
-                                                      info,
-                                                      INTERP_LINEAR,
-                                                      halfFlags,
-                                                      dimension);
+                lut1D = std::make_shared<Lut1DOpData>(halfFlags, dimension);
+                lut1D->setInterpolation(INTERP_LINEAR);
+                lut1D->setFileOutputBitDepth(outBitDepth);
             };
             ~LocalCachedFile() = default;
             
@@ -725,7 +721,7 @@ OCIO_NAMESPACE_ENTER
                                                            outputBD,
                                                            (unsigned long)lutSize));
 
-
+            const float scale = (float)GetBitDepthMaxValue(outputBD);
             Array & array = cachedFile->lut1D->getArray();
             const int srcTableLimit = discreetLut1d->numtables - 1;
             for (int i = 0, p = 0; i< lutSize; ++i)
@@ -742,7 +738,7 @@ OCIO_NAMESPACE_ENTER
                     }
                     else
                     {
-                        array[p] = (float)discreetLut1d->tables[srcTable][i];
+                        array[p] = (float)discreetLut1d->tables[srcTable][i] / scale;
                     }
                 }
             }
@@ -855,8 +851,6 @@ OCIO_ADD_TEST(FileFormatD1DL, test_lut1d_8i_8i)
     OCIO_CHECK_EQUAL(lutFile->lut1D->getName(), "");
 
     OCIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_LINEAR);
-    OCIO_CHECK_EQUAL(lutFile->lut1D->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
-    OCIO_CHECK_EQUAL(lutFile->lut1D->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
 
     OCIO_CHECK_ASSERT(!lutFile->lut1D->isInputHalfDomain());
@@ -881,7 +875,7 @@ OCIO_ADD_TEST(FileFormatD1DL, test_lut1d_8i_8i)
     const OCIO::Array::Values & lut1DValues = lutFile->lut1D->getArray().getValues();
     for (unsigned long li = 0, ei = 0; li<lut1DValues.size(); li += sampleInterval, ++ei)
     {
-        OCIO_CHECK_EQUAL(lut1DValues[li], expectedSampleValues[ei]);
+        OCIO_CHECK_EQUAL(lut1DValues[li] * 255.0f, expectedSampleValues[ei]);
     }
 }
 
@@ -895,8 +889,6 @@ OCIO_ADD_TEST(FileFormatD1DL, test_lut1d_12i_16f)
     OCIO_CHECK_EQUAL(lutFile->lut1D->getName(), "");
 
     OCIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_LINEAR);
-    OCIO_CHECK_EQUAL(lutFile->lut1D->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
-    OCIO_CHECK_EQUAL(lutFile->lut1D->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
     OCIO_CHECK_ASSERT(!lutFile->lut1D->isInputHalfDomain());
@@ -932,8 +924,6 @@ OCIO_ADD_TEST(FileFormatD1DL, test_lut1d_16f_16f)
     OCIO_CHECK_NO_THROW(lutFile = LoadLutFile(discreetLut16fp16fp));
 
     OCIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_LINEAR);
-    OCIO_CHECK_EQUAL(lutFile->lut1D->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
-    OCIO_CHECK_EQUAL(lutFile->lut1D->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
     OCIO_CHECK_ASSERT(lutFile->lut1D->isInputHalfDomain());
@@ -969,8 +959,6 @@ OCIO_ADD_TEST(FileFormatD1DL, test_lut1d_16f_12i)
     OCIO_CHECK_NO_THROW(lutFile = LoadLutFile(discreetLut16fp12));
 
     OCIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_LINEAR);
-    OCIO_CHECK_EQUAL(lutFile->lut1D->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
-    OCIO_CHECK_EQUAL(lutFile->lut1D->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
 
     OCIO_CHECK_ASSERT(lutFile->lut1D->isInputHalfDomain());
@@ -995,7 +983,7 @@ OCIO_ADD_TEST(FileFormatD1DL, test_lut1d_16f_12i)
     const OCIO::Array::Values & lut1DValues = lutFile->lut1D->getArray().getValues();
     for (unsigned li = 0, ei = 0; li<lut1DValues.size(); li += sampleInterval, ++ei)
     {
-        OCIO_CHECK_EQUAL(lut1DValues[li], expectedSampleValues[ei]);
+        OCIO_CHECK_EQUAL(lut1DValues[li] * 4095.0f, expectedSampleValues[ei]);
     }
 }
 

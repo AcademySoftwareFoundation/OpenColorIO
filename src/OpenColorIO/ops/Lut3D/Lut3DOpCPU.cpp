@@ -40,8 +40,6 @@ protected:
     float*        m_optLut;
     unsigned long m_dim;
     float         m_step;
-    float         m_maxIdx;
-    float         m_alphaScale;
 
 private:
     BaseLut3DRenderer() = delete;
@@ -176,9 +174,6 @@ protected:
     float              m_scale;        // output scaling for r, g and b
                                        // components
     long               m_dim;          // grid size of the extrapolated 3d-LUT
-    float              m_alphaScaling; // bit-depth scale factor for alpha
-                                       // channel
-    float              m_inMax;        // value to clamp inputs to apply method
     RangeTree          m_tree;         // object to allow fast range queries of
                                        // the LUT
     std::vector<float> m_grvec;        // extrapolated 3d-LUT values
@@ -303,8 +298,6 @@ BaseLut3DRenderer::BaseLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
     , m_optLut(0x0)
     , m_dim(0)
     , m_step(0.0f)
-    , m_maxIdx(0)
-    , m_alphaScale(0.)
 {
     updateData(lut);
 }
@@ -320,15 +313,9 @@ BaseLut3DRenderer::~BaseLut3DRenderer()
 
 void BaseLut3DRenderer::updateData(ConstLut3DOpDataRcPtr & lut)
 {
-    m_alphaScale = (float)(GetBitDepthMaxValue(lut->getOutputBitDepth()))
-                   / (float)GetBitDepthMaxValue(lut->getInputBitDepth());
-
     m_dim = lut->getArray().getLength();
 
-    m_maxIdx = (float)(m_dim - 1);
-
-    m_step = ((float)m_dim - 1.0f)
-             / (float)GetBitDepthMaxValue(lut->getInputBitDepth());
+    m_step = ((float)m_dim - 1.0f);
 
 #ifdef USE_SSE
     Platform::AlignedFree(m_optLut);
@@ -406,7 +393,7 @@ void Lut3DTetrahedralRenderer::apply(const void * inImg, void * outImg, long num
 
     for (long i = 0; i < numPixels; ++i)
     {
-        float newAlpha = (float)in[3] * m_alphaScale;
+        float newAlpha = (float)in[3];
         
         __m128 data = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
@@ -607,7 +594,7 @@ void Lut3DTetrahedralRenderer::apply(const void * inImg, void * outImg, long num
 
     for (long i = 0; i < numPixels; ++i)
     {
-        float newAlpha = (float)in[3] * m_alphaScale;
+        float newAlpha = (float)in[3];
 
         float idx[3];
         idx[0] = in[0] * m_step;
@@ -820,7 +807,7 @@ void Lut3DRenderer::apply(const void * inImg, void * outImg, long numPixels) con
 
     for (long i = 0; i < numPixels; ++i)
     {
-        float newAlpha = (float)in[3] * m_alphaScale;
+        float newAlpha = (float)in[3];
 
         __m128 data = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
@@ -915,7 +902,7 @@ void Lut3DRenderer::apply(const void * inImg, void * outImg, long numPixels) con
 
     for (long i = 0; i < numPixels; ++i)
     {
-        float newAlpha = (float)in[3] * m_alphaScale;
+        float newAlpha = (float)in[3];
 
         float idx[3];
         idx[0] = in[0] * m_step;
@@ -1605,8 +1592,6 @@ InvLut3DRenderer::InvLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
     : OpCPU()
     , m_scale(0.0f)
     , m_dim(0)
-    , m_alphaScaling(0.0f)
-    , m_inMax(0.0f)
     , m_tree()
 {
     updateData(lut);
@@ -1625,19 +1610,11 @@ void InvLut3DRenderer::updateData(ConstLut3DOpDataRcPtr & lut)
     m_tree.initialize(m_grvec.data(), m_dim);
     //m_tree.print();
 
-    float outMax = (float)GetBitDepthMaxValue(lut->getOutputBitDepth());
-
-    m_alphaScaling = outMax / (float)GetBitDepthMaxValue(lut->getInputBitDepth());
-
     // Converts from index units to inDepth units of the original LUT.
     // (Note that inDepth of the original LUT is outDepth of the inverse LUT.)
     // (Note that the result should be relative to the unextrapolated LUT,
     //  hence the dim - 3.)
-    m_scale = outMax / (float)(m_dim - 3);
-
-    // TODO: Should improve this based on actual LUT contents since it
-    // is legal for LUT contents to exceed the typical scaling range.
-    m_inMax = (float)GetBitDepthMaxValue(lut->getInputBitDepth());
+    m_scale = 1.0f / (float)(m_dim - 3);
 }
 
 void InvLut3DRenderer::extrapolate3DArray(ConstLut3DOpDataRcPtr & lut)
@@ -1648,10 +1625,7 @@ void InvLut3DRenderer::extrapolate3DArray(ConstLut3DOpDataRcPtr & lut)
     const Lut3DOpData::Lut3DArray& array =
         static_cast<const Lut3DOpData::Lut3DArray&>(lut->getArray());
 
-    // Note: By the time this function is called, the InDepth is the OutDepth
-    // of the original LUT.  That is what determines the scaling of the values.
-    BitDepth depth = lut->getInputBitDepth();
-    Lut3DOpData::Lut3DArray newArray(newDim, depth);
+    Lut3DOpData::Lut3DArray newArray(newDim);
 
     // Copy center values.
     for (unsigned long idx = 0; idx<dim; idx++)
@@ -1667,7 +1641,7 @@ void InvLut3DRenderer::extrapolate3DArray(ConstLut3DOpDataRcPtr & lut)
         }
     }
 
-    const float center = (float)GetBitDepthMaxValue(depth) * 0.5f;
+    const float center = 0.5f;
     const float scale = 4.f;
 
     // Extrapolate faces.
@@ -1839,9 +1813,13 @@ void InvLut3DRenderer::apply(const void * inImg, void * outImg, long numPixels) 
     {
         // Although the inverse LUT has been extrapolated, it may not be enough
         // to cover an HDR float image, so need to clamp.
-        const float R = Clamp(in[0], 0.f, m_inMax);
-        const float G = Clamp(in[1], 0.f, m_inMax);
-        const float B = Clamp(in[2], 0.f, m_inMax);
+
+        // TODO: Should improve this based on actual LUT contents since it
+        // is legal for LUT contents to exceed the typical scaling range.
+        constexpr float inMax = 1.0f;
+        const float R = Clamp(in[0], 0.f, inMax);
+        const float G = Clamp(in[1], 0.f, inMax);
+        const float B = Clamp(in[2], 0.f, inMax);
 
         const long depthm1 = depth - 1;
         unsigned long baseIndx[3] = {0, 0, 0};
@@ -1908,7 +1886,7 @@ void InvLut3DRenderer::apply(const void * inImg, void * outImg, long numPixels) 
             out[0] = Clamp(result[0] - 1.f, 0.f, maxDim) * m_scale;
             out[1] = Clamp(result[1] - 1.f, 0.f, maxDim) * m_scale;
             out[2] = Clamp(result[2] - 1.f, 0.f, maxDim) * m_scale;
-            out[3] = in[3] * m_alphaScaling;
+            out[3] = in[3];
         }
 
         in  += 4;
@@ -1965,15 +1943,7 @@ namespace OCIO = OCIO_NAMESPACE;
 
 void Lut3DRendererNaNTest(OCIO::Interpolation interpol)
 {
-    OCIO::FormatMetadataImpl metadata(OCIO::METADATA_ROOT);
-    metadata.addAttribute(OCIO::METADATA_ID, "uid");
-
-    OCIO::Lut3DOpDataRcPtr lut =
-        std::make_shared<OCIO::Lut3DOpData>(OCIO::BIT_DEPTH_F32,
-                                            OCIO::BIT_DEPTH_F32,
-                                            metadata,
-                                            interpol,
-                                            4);
+    OCIO::Lut3DOpDataRcPtr lut = std::make_shared<OCIO::Lut3DOpData>(interpol, 4);
 
     float * values = &lut->getArray().getValues()[0];
     // Change LUT so that it is not identity.

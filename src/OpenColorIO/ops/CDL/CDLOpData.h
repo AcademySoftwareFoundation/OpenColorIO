@@ -135,18 +135,7 @@ public:
 
     CDLOpData();
 
-    CDLOpData(BitDepth inBitDepth,
-              BitDepth outBitDepth,
-              const FormatMetadataImpl & info,
-              const Style & style,
-              const ChannelParams & slopeParams,
-              const ChannelParams & offsetParams,
-              const ChannelParams & powerParams,
-              double saturation);
-
-    CDLOpData(BitDepth inBitDepth,
-              BitDepth outBitDepth,
-              const Style & style,
+    CDLOpData(const Style & style,
               const ChannelParams & slopeParams,
               const ChannelParams & offsetParams,
               const ChannelParams & powerParams,

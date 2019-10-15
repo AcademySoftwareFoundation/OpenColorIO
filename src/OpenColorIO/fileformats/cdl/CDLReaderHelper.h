@@ -15,7 +15,7 @@ class CDLParsingInfo
 {
 public:
     CDLParsingInfo()
-        : m_metadata(METADATA_ROOT)
+        : m_metadata()
     {
     }
 
@@ -77,7 +77,7 @@ public:
                               unsigned int xmlLineNumber,
                               const std::string & xmlFile)
         : XmlReaderComplexElt(name, pParent, xmlLineNumber, xmlFile)
-        , m_metadata(METADATA_ROOT)
+        , m_metadata()
     {
     }
 
