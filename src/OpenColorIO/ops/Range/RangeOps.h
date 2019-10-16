@@ -2,8 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#ifndef INCLUDED_OCIO_RANGE_H
-#define INCLUDED_OCIO_RANGE_H
+#ifndef INCLUDED_OCIO_RANGEOP_H
+#define INCLUDED_OCIO_RANGEOP_H
 
 
 #include <vector>
@@ -16,7 +16,7 @@
 
 OCIO_NAMESPACE_ENTER
 {
-    
+
 // Create a range op from its input and output bounds.
 void CreateRangeOp(OpRcPtrVec & ops, const FormatMetadataImpl & info,
                    double minInValue, double maxInValue,
@@ -24,7 +24,7 @@ void CreateRangeOp(OpRcPtrVec & ops, const FormatMetadataImpl & info,
                    TransformDirection direction);
 
 // Create a range op from an OpData Range.
-void CreateRangeOp(OpRcPtrVec & ops, 
+void CreateRangeOp(OpRcPtrVec & ops,
                    RangeOpDataRcPtr & rangeData,
                    TransformDirection direction);
 
