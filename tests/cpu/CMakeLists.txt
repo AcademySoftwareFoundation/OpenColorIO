@@ -169,7 +169,6 @@ set(SOURCES
 	transforms/LUT1DTransform.cpp
 	transforms/LUT3DTransform.cpp
 	transforms/MatrixTransform.cpp
-	transforms/RangeTransform.cpp
 )
 
 set(TESTS
@@ -180,6 +179,7 @@ set(TESTS
 	Logging_tests.cpp
 	Processor_tests.cpp
 	transforms/FileTransform_tests.cpp
+	transforms/RangeTransform_tests.cpp
 	UnitTest.cpp
 	UnitTestUtils.cpp
 )
