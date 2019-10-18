@@ -14,6 +14,7 @@
 #include "ops/Range/RangeOpCPU.h"
 #include "ops/Range/RangeOpGPU.h"
 #include "ops/Range/RangeOps.h"
+#include "transforms/RangeTransform.h"
 
 
 OCIO_NAMESPACE_ENTER
@@ -200,50 +201,45 @@ void CreateRangeTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     {
         throw Exception("CreateRangeTransform: op has to be a RangeOp");
     }
-    auto rangeTransform = RangeTransform::Create();
+
+    RangeTransformRcPtr rangeTransform = RangeTransform::Create();
+
+    RangeOpData & data
+        = dynamic_cast<RangeTransformImpl*>(rangeTransform.get())->data();
+
+    ConstRangeOpDataRcPtr rangeDataSrc = DynamicPtrCast<const RangeOpData>(op->data());    
+
+    data = *rangeDataSrc;
+    data.getFormatMetadata() = rangeDataSrc->getFormatMetadata();
+
     rangeTransform->setDirection(range->getDirection());
-
-    auto rangeDataScr = DynamicPtrCast<const RangeOpData>(op->data());
-    rangeTransform->setFileInputBitDepth(rangeDataScr->getFileInputBitDepth());
-    rangeTransform->setFileOutputBitDepth(rangeDataScr->getFileOutputBitDepth());
-
-    auto & formatMetadata = rangeTransform->getFormatMetadata();
-    auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
-    metadata = rangeDataScr->getFormatMetadata();
-
-    // A RangeOp always clamps. (Non-clamping Range transforms become MatrixOps rather than RangeOps.)
-    rangeTransform->setStyle(RANGE_CLAMP);
-    rangeTransform->setMinInValue(rangeDataScr->getMinInValue());
-    rangeTransform->setMaxInValue(rangeDataScr->getMaxInValue());
-    rangeTransform->setMinOutValue(rangeDataScr->getMinOutValue());
-    rangeTransform->setMaxOutValue(rangeDataScr->getMaxOutValue());
+    rangeTransform->setFileInputBitDepth(rangeDataSrc->getFileInputBitDepth());
+    rangeTransform->setFileOutputBitDepth(rangeDataSrc->getFileOutputBitDepth());
 
     group->push_back(rangeTransform);
 }
 
 void BuildRangeOps(OpRcPtrVec & ops,
-                   const Config& /*config*/,
+                   const Config & /*config*/,
                    const RangeTransform & transform,
                    TransformDirection dir)
 {
     const TransformDirection combinedDir
         = CombineTransformDirections(dir, transform.getDirection());
 
-    RangeOpDataRcPtr rangeData = std::make_shared<RangeOpData>(
-        transform.getMinInValue(), transform.getMaxInValue(),
-        transform.getMinOutValue(), transform.getMaxOutValue());
+    const RangeOpData & data
+        = dynamic_cast<const RangeTransformImpl*>(&transform)->data();
 
-    rangeData->getFormatMetadata() = transform.getFormatMetadata();
-    rangeData->setFileInputBitDepth(transform.getFileInputBitDepth());
-    rangeData->setFileOutputBitDepth(transform.getFileOutputBitDepth());
+    data.validate();
 
-    if (transform.getStyle() == RANGE_CLAMP)
+    if(transform.getStyle()==RANGE_CLAMP)
     {
-        CreateRangeOp(ops, rangeData, combinedDir);
+        auto d = data.clone();
+        CreateRangeOp(ops, d, combinedDir);
     }
     else
     {
-        MatrixOpDataRcPtr m = rangeData->convertToMatrix();
+        MatrixOpDataRcPtr m = data.convertToMatrix();
         CreateMatrixOp(ops, m, combinedDir);
     }
 }
