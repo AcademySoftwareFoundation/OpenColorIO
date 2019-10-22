@@ -25,6 +25,7 @@ target_link_libraries(ocioperf
         OpenColorIO
         OpenImageIO
         ilmbase::ilmbase
+        pystring::pystring
 )
 
 install(TARGETS ocioperf
