@@ -29,9 +29,9 @@ class OpenColorIO_PS_Context
     
     OCIO::ConstConfigRcPtr getConfig() const { return _config; }
     
-    OCIO::ConstProcessorRcPtr getConvertProcessor(const std::string &inputSpace, const std::string &outputSpace) const;
-    OCIO::ConstProcessorRcPtr getDisplayProcessor(const std::string &inputSpace, const std::string &device, const std::string &transform) const;
-    OCIO::ConstProcessorRcPtr getLUTProcessor(OCIO::Interpolation interpolation, OCIO::TransformDirection direction) const;
+    OCIO::ConstCPUProcessorRcPtr getConvertProcessor(const std::string &inputSpace, const std::string &outputSpace) const;
+    OCIO::ConstCPUProcessorRcPtr getDisplayProcessor(const std::string &inputSpace, const std::string &device, const std::string &transform) const;
+    OCIO::ConstCPUProcessorRcPtr getLUTProcessor(OCIO::Interpolation interpolation, OCIO::TransformDirection direction) const;
     
     OCIO::BakerRcPtr getConvertBaker(const std::string &inputSpace, const std::string &outputSpace) const;
     OCIO::BakerRcPtr getDisplayBaker(const std::string &inputSpace, const std::string &device, const std::string &transform) const;
@@ -45,6 +45,10 @@ class OpenColorIO_PS_Context
     
     SpaceVec getTransforms(const std::string &device) const;
     std::string getDefaultTransform(const std::string &device) const;
+
+    static void getenv(const char *name, std::string &value);
+
+    static void getenvOCIO(std::string &value) { getenv("OCIO", value); }
 
   private:
     std::string _path;

@@ -42,6 +42,7 @@ DialogResult OpenColorIO_PS_Dialog(DialogParams &params, const void *plugHndl, c
         ControllerInterp interpolation = (params.interpolation == INTERPO_NEAREST ? CINTERP_NEAREST :
                                             params.interpolation == INTERPO_LINEAR ? CINTERP_LINEAR :
                                             params.interpolation == INTERPO_TETRAHEDRAL ? CINTERP_TETRAHEDRAL :
+                                            params.interpolation == INTERPO_CUBIC ? CINTERP_CUBIC :
                                             CINTERP_BEST);
                                                 
         NSString *configuration = (params.config.empty() ? nil : [NSString stringWithUTF8String:params.config.c_str()]);
@@ -84,6 +85,7 @@ DialogResult OpenColorIO_PS_Dialog(DialogParams &params, const void *plugHndl, c
                 params.interpolation = (interpolation == CINTERP_NEAREST ? INTERPO_NEAREST :
                                         interpolation == CINTERP_LINEAR ? INTERPO_LINEAR :
                                         interpolation == CINTERP_TETRAHEDRAL ? INTERPO_TETRAHEDRAL :
+                                        interpolation == CINTERP_CUBIC ? INTERPO_CUBIC :
                                         INTERPO_BEST);
                 
                 if([controller configuration] != nil)
