@@ -28,4 +28,5 @@
 #define interpNearest       'tNer'
 #define interpLinear        'tLin'
 #define interpTetrahedral   'tTet'
+#define interpCubic         'tCub'
 #define interpBest          'tBst'

@@ -22,8 +22,6 @@
 #include "PIDefines.h"
 
 #ifdef __PIMac__
-    #include "Types.r"
-    #include "SysTypes.r"
     #include "PIGeneral.r"
     #include "PIUtilities.r"
 #elif defined(__PIWin__)
@@ -266,6 +264,10 @@ resource 'aete' (ResourceID, plugInName " dictionary", purgeable)
                 "Tetrahedral",
                 interpTetrahedral,
                 "Tetrahedral Interpolation",
+                
+                "Cubic",
+                interpCubic,
+                "Cubic Interpolation",
                 
                 "Best",
                 interpBest,

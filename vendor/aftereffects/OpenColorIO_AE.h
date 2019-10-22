@@ -72,6 +72,13 @@ enum {
 typedef A_u_char OCIO_Storage;
 
 enum {
+    OCIO_INVERT_OFF = 0,
+    OCIO_INVERT_ON,
+    OCIO_INVERT_EXACT
+};
+typedef A_u_char OCIO_Invert;
+
+enum {
     OCIO_SOURCE_NONE = 0,
     OCIO_SOURCE_ENVIRONMENT,
     OCIO_SOURCE_STANDARD,
@@ -84,6 +91,7 @@ enum {
     OCIO_INTERP_NEAREST = 1,
     OCIO_INTERP_LINEAR = 2,
     OCIO_INTERP_TETRAHEDRAL = 3,
+    OCIO_INTERP_CUBIC = 4,
     OCIO_INTERP_BEST = 255
 };
 typedef A_u_char OCIO_Interp;
@@ -91,7 +99,7 @@ typedef A_u_char OCIO_Interp;
 typedef struct {
     A_u_char        version; // version of this data structure
     OCIO_Action     action;
-    A_Boolean       invert; // only used for LUTs
+    OCIO_Invert     invert; // only used for LUTs
     OCIO_Storage    storage; // storage not used...yet
     A_u_long        storage_size;
     OCIO_Source     source;

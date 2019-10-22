@@ -11,12 +11,14 @@
 #include "OpenColorIO_AE.h"
 #include "OpenColorIO_AE_GL.h"
 
+#include "glsl.h"
+
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
 
 
-// yeah, this probably could/should go in a seperate file
+// yeah, this probably could/should go in a separate file
 class Path
 {
   public:
@@ -57,7 +59,7 @@ class OpenColorIO_AE_Context
     
     void setupConvert(const char *input, const char *output);
     void setupDisplay(const char *input, const char *device, const char *transform);
-    void setupLUT(bool invert, OCIO_Interp interpolation);
+    void setupLUT(OCIO_Invert invert, OCIO_Interp interpolation);
   
     typedef std::vector<std::string> SpaceVec;
 
@@ -72,10 +74,16 @@ class OpenColorIO_AE_Context
     
     OCIO::ConstConfigRcPtr config() const { return _config; }
     OCIO::ConstProcessorRcPtr processor() const { return _processor; }
+    OCIO::ConstCPUProcessorRcPtr cpu_processor() const { return _cpu_processor; }
+    OCIO::ConstGPUProcessorRcPtr gpu_processor() const { return _gpu_processor; }
     
     bool ExportLUT(const std::string &path, const std::string &display_icc_path);
     
     bool ProcessWorldGL(PF_EffectWorld *float_world);
+
+    static void getenv(const char *name, std::string &value);
+
+    static void getenvOCIO(std::string &value) { getenv("OCIO", value); }
 
   private:
     std::string _path;
@@ -93,18 +101,19 @@ class OpenColorIO_AE_Context
     SpaceVec _devices;
     SpaceVec _transforms;
     
-    bool _invert;
+    OCIO_Invert _invert;
     OCIO_Interp _interpolation;
     
     
     OCIO::ConstConfigRcPtr      _config;
     OCIO::ConstProcessorRcPtr   _processor;
+    OCIO::ConstCPUProcessorRcPtr   _cpu_processor;
+    OCIO::ConstGPUProcessorRcPtr   _gpu_processor;
     
     
     bool _gl_init;
     
-    GLuint _fragShader;
-    GLuint _program;
+    OCIO::OpenGLBuilderRcPtr _oglBuilder;
 
     GLuint _imageTexID;
 
