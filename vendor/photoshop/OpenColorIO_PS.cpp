@@ -8,6 +8,10 @@
 
 #include "OpenColorIO_PS_Context.h"
 
+#include "PIUFile.h"
+
+#include <assert.h>
+
 #ifdef __PIWin__
 //#include <Windows.h>
 #include <Shlobj.h>
@@ -114,7 +118,7 @@ static Boolean ReadScriptParams(GPtr globals)
                 }
                 else if(key == ocioKeyConfigFileHandle)
                 {
-                    PIGetAlias(token, (Handle *)&globals->configFileHandle);
+                    PIGetAlias(token, &globals->configFileHandle);
                 }
                 else if(key == ocioKeyAction)
                 {
@@ -135,6 +139,7 @@ static Boolean ReadScriptParams(GPtr globals)
                     globals->action = (ostypeStoreValue == interpNearest ? OCIO_INTERP_NEAREST :
                                         ostypeStoreValue == interpLinear ? OCIO_INTERP_LINEAR :
                                         ostypeStoreValue == interpTetrahedral ? OCIO_INTERP_TETRAHEDRAL :
+                                        ostypeStoreValue == interpCubic ? OCIO_INTERP_CUBIC :
                                         OCIO_INTERP_BEST);
                 }
                 else if(key == ocioKeyInputSpace)
@@ -185,7 +190,7 @@ static OSErr WriteScriptParams(GPtr globals)
             }
             else if(globals->source == OCIO_SOURCE_CUSTOM)
             {
-                PIPutAlias(token, ocioKeyConfigFileHandle, (Handle)globals->configFileHandle);
+                PIPutAlias(token, ocioKeyConfigFileHandle, globals->configFileHandle);
             }
             
             
@@ -199,6 +204,7 @@ static OSErr WriteScriptParams(GPtr globals)
                 PIPutEnum(token, ocioKeyInterpolation, typeInterpolation, (globals->interpolation == OCIO_INTERP_NEAREST ? interpNearest :
                                                                         globals->interpolation == OCIO_INTERP_LINEAR ? interpLinear :
                                                                         globals->interpolation == OCIO_INTERP_TETRAHEDRAL ? interpTetrahedral :
+                                                                        globals->interpolation == OCIO_INTERP_CUBIC ? interpCubic :
                                                                         interpBest));
                                                                         
             }
@@ -297,11 +303,12 @@ static void InitGlobals(Ptr globalPtr)
     
     
     // set default with environment variable if it's set
-    char *file = std::getenv("OCIO");
+    std::string env;
+    OpenColorIO_PS_Context::getenvOCIO(env);
     
-    if(file)
+    if(!env.empty())
     {
-        std::string path = file;
+        std::string path = env;
         
         if( !path.empty() )
         {
@@ -337,7 +344,7 @@ static void InitGlobals(Ptr globalPtr)
             }
             catch(...)
             {
-                gResult = formatCannotRead;
+                gResult = filterBadParameters;
             }
         }
     }
@@ -371,7 +378,7 @@ static inline float Clamp(const float &f)
 }
 
 template <typename T, int max, bool round, bool clamp>
-static void ConvertRow(T *row, int len, OCIO::ConstProcessorRcPtr processor)
+static void ConvertRow(T *row, int len, OCIO::ConstCPUProcessorRcPtr processor)
 {
     float *floatRow = NULL;
     
@@ -422,7 +429,7 @@ static void ConvertRow(T *row, int len, OCIO::ConstProcessorRcPtr processor)
 }
 
 
-static void ProcessTile(GPtr globals, void *tileData, VRect &tileRect, int32 rowBytes, OCIO::ConstProcessorRcPtr processor)
+static void ProcessTile(GPtr globals, void *tileData, VRect &tileRect, int32 rowBytes, OCIO::ConstCPUProcessorRcPtr processor)
 {
 
     const uint32 rectHeight = tileRect.bottom - tileRect.top;
@@ -472,32 +479,14 @@ static void DoStart(GPtr globals)
         
         if(globals->source == OCIO_SOURCE_CUSTOM)
         {
-        #ifdef __PIMac__
             assert(globals->configFileHandle != NULL);
         
-            FSRef fsref;
-            Boolean wasChanged;
-        
-            if(noErr == FSResolveAlias(NULL, globals->configFileHandle, &fsref, &wasChanged))
-            {
-                char file_path[256];
-                file_path[0] = '\0';
-
-                FSRefMakePath(&fsref, (UInt8 *)file_path, 255);
-                
-                dialogParams.config = file_path;
-            }
-            else
-            {
-                dialogParams.source = SOURCE_ENVIRONMENT;
-            }
-        #else
-            assert(globals->configFileHandle != NULL);
-
-            dialogParams.config = PILockHandle(globals->configFileHandle, true);
-
-            PIUnlockHandle(globals->configFileHandle);
-        #endif
+            char file_path[256];
+            file_path[0] = '\0';
+            
+            AliasToFullPath(globals->configFileHandle, file_path, 255);
+            
+            dialogParams.config = file_path;
         }
         else if(globals->source == OCIO_SOURCE_STANDARD)
         {
@@ -513,6 +502,7 @@ static void DoStart(GPtr globals)
         dialogParams.interpolation = (globals->interpolation == OCIO_INTERP_NEAREST ? INTERPO_NEAREST :
                                         globals->interpolation == OCIO_INTERP_LINEAR ? INTERPO_LINEAR :
                                         globals->interpolation == OCIO_INTERP_TETRAHEDRAL ? INTERPO_TETRAHEDRAL :
+                                        globals->interpolation == OCIO_INTERP_CUBIC ? INTERPO_CUBIC :
                                         INTERPO_BEST);
                                         
         dialogParams.inputSpace = myP2CString(globals->inputSpace);
@@ -541,29 +531,11 @@ static void DoStart(GPtr globals)
             
             if(dialogParams.source == SOURCE_CUSTOM)
             {
-            #ifdef __PIMac__
-                FSRef temp_fsref;
+                char file_path[256];
+                strncpy(file_path, dialogParams.config.c_str(), 256);
+                file_path[255] = '\0';
                 
-                if(noErr == FSPathMakeRef((UInt8 *)dialogParams.config.c_str(), &temp_fsref, NULL) )
-                {
-                    FSNewAlias(NULL, &temp_fsref, &globals->configFileHandle);
-                }
-                else
-                {
-                    globals->source = OCIO_SOURCE_NONE;
-                }
-            #else
-                if(globals->configFileHandle)
-                    PISetHandleSize(globals->configFileHandle, (dialogParams.config.length() + 1) * sizeof(char));
-                else    
-                    globals->configFileHandle = PINewHandle((dialogParams.config.length() + 1) * sizeof(char));
-                    
-                char *path_buf = PILockHandle(globals->configFileHandle, true);
-
-                strcpy(path_buf, dialogParams.config.c_str());
-
-                PIUnlockHandle(globals->configFileHandle);
-            #endif
+                FullPathToAlias(file_path, globals->configFileHandle);
             }
             else if(dialogParams.source == SOURCE_STANDARD)
             {
@@ -579,6 +551,7 @@ static void DoStart(GPtr globals)
             globals->interpolation = (dialogParams.interpolation == INTERPO_NEAREST ? OCIO_INTERP_NEAREST :
                                         dialogParams.interpolation == INTERPO_LINEAR ? OCIO_INTERP_LINEAR :
                                         dialogParams.interpolation == INTERPO_TETRAHEDRAL ? OCIO_INTERP_TETRAHEDRAL :
+                                        dialogParams.interpolation == INTERPO_CUBIC ? OCIO_INTERP_CUBIC :
                                         OCIO_INTERP_BEST);
                                         
             myC2PString(globals->inputSpace, dialogParams.inputSpace.c_str());
@@ -606,37 +579,24 @@ static void DoStart(GPtr globals)
     {
         if(globals->source == OCIO_SOURCE_ENVIRONMENT)
         {
-            char *envFile = std::getenv("OCIO");
+            std::string env;
+            OpenColorIO_PS_Context::getenvOCIO(env);
             
-            if(envFile != NULL && strlen(envFile) > 0)
+            if(!env.empty())
             {
-                path = envFile;
+                path = env;
             }
         }
         else if(globals->source == OCIO_SOURCE_CUSTOM)
         {
-        #ifdef __PIMac__
             assert(globals->configFileHandle != NULL);
         
-            FSRef fsref;
-            Boolean wasChanged;
-        
-            if(noErr == FSResolveAlias(NULL, globals->configFileHandle, &fsref, &wasChanged))
-            {
-                char file_path[256];
-                file_path[0] = '\0';
-
-                FSRefMakePath(&fsref, (UInt8 *)file_path, 255);
-                
-                path = file_path;
-            }
-        #else
-            assert(globals->configFileHandle != NULL);
-
-            path = PILockHandle(globals->configFileHandle, true);
-
-            PIUnlockHandle(globals->configFileHandle);
-        #endif
+            char file_path[256];
+            file_path[0] = '\0';
+            
+            AliasToFullPath(globals->configFileHandle, file_path, 255);
+            
+            path = file_path;
         }
         else
         {
@@ -674,7 +634,7 @@ static void DoStart(GPtr globals)
         {
             OpenColorIO_PS_Context context(path);
             
-            OCIO::ConstProcessorRcPtr processor;
+            OCIO::ConstCPUProcessorRcPtr processor;
             
             if( context.isLUT() )
             {
@@ -683,6 +643,7 @@ static void DoStart(GPtr globals)
                 const OCIO::Interpolation interpolation = (globals->interpolation == OCIO_INTERP_NEAREST ? OCIO::INTERP_NEAREST :
                                                             globals->interpolation == OCIO_INTERP_LINEAR ? OCIO::INTERP_LINEAR :
                                                             globals->interpolation == OCIO_INTERP_TETRAHEDRAL ? OCIO::INTERP_TETRAHEDRAL :
+                                                            globals->interpolation == OCIO_INTERP_CUBIC ? OCIO::INTERP_CUBIC :
                                                             OCIO::INTERP_BEST);
                                                             
                 const OCIO::TransformDirection direction = (globals->invert ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
@@ -825,11 +786,11 @@ DLLExport SPAPI void PluginMain(const int16 selector,
         GPtr globals = NULL;        // actual globals
 
 
-        globalPtr = AllocateGlobals ((allocateGlobalsPointer)result,
-                                        (allocateGlobalsPointer)filterRecord,
+        globalPtr = AllocateGlobals ((void *)result,
+                                        (void *)filterRecord,
                                         filterRecord->handleProcs,
                                         sizeof(Globals),
-                                        data,
+                                        (intptr_t *)data,
                                         InitGlobals);
 
         if(globalPtr == NULL)

@@ -27,7 +27,7 @@ PF_Err ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,
             arb_data->version           = CURRENT_ARB_VERSION;
             
             arb_data->action            = OCIO_ACTION_NONE;
-            arb_data->invert            = FALSE;
+            arb_data->invert            = OCIO_INVERT_OFF;
             
             arb_data->storage           = OCIO_STORAGE_NONE;
             arb_data->storage_size      = 0;
@@ -45,15 +45,16 @@ PF_Err ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,
             
             
             // set default with environment variable if it's set
-            char *file = std::getenv("OCIO");
-            
-            if(file)
+            std::string env;
+            OpenColorIO_AE_Context::getenvOCIO(env);
+
+            if(!env.empty())
             {
                 try
                 {
-                    OpenColorIO_AE_Context context(file, OCIO_SOURCE_ENVIRONMENT);
+                    OpenColorIO_AE_Context context(env, OCIO_SOURCE_ENVIRONMENT);
                     
-                    strncpy(arb_data->path, file, ARB_PATH_LEN);
+                    strncpy(arb_data->path, env.c_str(), ARB_PATH_LEN);
                     
                     arb_data->action = context.getAction();
                     arb_data->source = OCIO_SOURCE_ENVIRONMENT;
