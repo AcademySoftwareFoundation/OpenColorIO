@@ -30,9 +30,7 @@
     [menu setAutoenablesItems:FALSE];
     
     
-    NSUInteger i;
-    
-    for(i=0; i < [menu_items count]; i++)
+    for(NSUInteger i=0; i < [menu_items count]; i++)
     {
         if( [[menu_items objectAtIndex:i] isEqualToString:@"(-"] )
         {
@@ -63,7 +61,7 @@
     }
     
     
-    id fakeMouseEvent=[NSEvent mouseEventWithType:NSLeftMouseDown
+    id fakeMouseEvent = [NSEvent mouseEventWithType:NSLeftMouseDown
                         location: [[NSApp keyWindow] convertScreenToBase:[NSEvent mouseLocation]]
                         modifierFlags:0 
                         timestamp:0

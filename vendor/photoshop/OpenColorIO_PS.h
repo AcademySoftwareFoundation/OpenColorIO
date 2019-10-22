@@ -7,6 +7,7 @@
 //#include "PIDefines.h"
 #include "PIFilter.h"
 #include "PIUtilities.h"
+//#include "FileUtilities.h"
 #include "FilterBigDocument.h"
 
 
@@ -31,6 +32,7 @@ enum {
     OCIO_INTERP_NEAREST = 1,
     OCIO_INTERP_LINEAR = 2,
     OCIO_INTERP_TETRAHEDRAL = 3,
+    OCIO_INTERP_CUBIC = 4,
     OCIO_INTERP_BEST = 255
 };
 typedef uint8 OCIO_Interp;
@@ -46,7 +48,7 @@ typedef struct Globals
     
     OCIO_Source             source;
     Str255                  configName;
-    PIPlatformFileHandle    configFileHandle;
+    Handle                  configFileHandle;       // Not using PIPlatformFileHandle anymore apparently
     OCIO_Action             action;
     Boolean                 invert;
     OCIO_Interp             interpolation;

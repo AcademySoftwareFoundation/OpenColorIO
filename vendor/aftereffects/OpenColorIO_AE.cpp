@@ -464,7 +464,7 @@ static PF_Err Process_Iterate(
 
         OCIO::PackedImageDesc img(rOut, i_data->width, 1, 4);
                                                 
-        i_data->context->processor()->apply(img);
+        i_data->context->cpu_processor()->apply(img);
     }
     catch(...)
     {
@@ -609,9 +609,10 @@ static PF_Err DoRender(
                 
                 if(arb_data->source == OCIO_SOURCE_ENVIRONMENT)
                 {
-                    char *file = std::getenv("OCIO");
+                    std::string env;
+                    OpenColorIO_AE_Context::getenvOCIO(env);
                     
-                    if(file == NULL)
+                    if(env.empty())
                         seq_data->status = STATUS_FILE_MISSING;
                 }
                 else if(arb_data->source == OCIO_SOURCE_STANDARD)
@@ -987,9 +988,10 @@ static PF_Err GetExternalDependencies(
         }
         else if(extra->check_type == PF_DepCheckType_MISSING_DEPENDENCIES)
         {
-            char *file = std::getenv("OCIO");
+            std::string env;
+            OpenColorIO_AE_Context::getenvOCIO(env);
             
-            if(!file)
+            if(env.empty())
                 dependency = "$OCIO environment variable";
         }
     }

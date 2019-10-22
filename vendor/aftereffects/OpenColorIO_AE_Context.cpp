@@ -8,6 +8,8 @@
 #include <map>
 #include <sstream>
 
+#include <assert.h>
+
 #include "ocioicc.h"
 
 #include "OpenColorIO_AE_Dialogs.h"
@@ -295,11 +297,12 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const std::string &path, OCIO_Sou
     
     if(_source == OCIO_SOURCE_ENVIRONMENT)
     {
-        char *file = getenv("OCIO");
+        std::string env;
+        getenvOCIO(env);
         
-        if(file)
+        if(!env.empty())
         {
-            _path = file;
+            _path = env;
         }
         else
             throw OCIO::Exception("No $OCIO environment variable.");
@@ -387,11 +390,12 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, co
     
     if(_source == OCIO_SOURCE_ENVIRONMENT)
     {
-        char *file = getenv("OCIO");
+        std::string env;
+        getenvOCIO(env);
         
-        if(file)
+        if(!env.empty())
         {
-            _path = file;
+            _path = env;
         }
         else
             throw OCIO::Exception("No $OCIO environment variable.");
@@ -482,8 +486,6 @@ OpenColorIO_AE_Context::~OpenColorIO_AE_Context()
 {
     if(_gl_init)
     {
-        glDeleteShader(_fragShader);
-        glDeleteProgram(_program);
         glDeleteTextures(1, &_imageTexID);
         
         if(_bufferWidth != 0 && _bufferHeight != 0)
@@ -537,7 +539,7 @@ bool OpenColorIO_AE_Context::Verify(const ArbitraryData *arb_data, const std::st
     // Returning false means the context will be deleted and rebuilt.
     if(arb_data->action == OCIO_ACTION_LUT)
     {
-        if(_invert != (bool)arb_data->invert ||
+        if(_invert != arb_data->invert ||
             _interpolation != arb_data->interpolation ||
             force_reset)
         {
@@ -584,6 +586,9 @@ void OpenColorIO_AE_Context::setupConvert(const char *input, const char *output)
     
     _processor = _config->getProcessor(transform);
     
+    _cpu_processor = _processor->getDefaultCPUProcessor();
+    _gpu_processor = _processor->getDefaultGPUProcessor();
+    
     _action = OCIO_ACTION_CONVERT;
     
     UpdateOCIOGLState();
@@ -623,28 +628,43 @@ void OpenColorIO_AE_Context::setupDisplay(const char *input, const char *device,
 
     _processor = _config->getProcessor(transform);
     
+    _cpu_processor = _processor->getDefaultCPUProcessor();
+    _gpu_processor = _processor->getDefaultGPUProcessor();
+    
     _action = OCIO_ACTION_DISPLAY;
     
     UpdateOCIOGLState();
 }
 
 
-void OpenColorIO_AE_Context::setupLUT(bool invert, OCIO_Interp interpolation)
+void OpenColorIO_AE_Context::setupLUT(OCIO_Invert invert, OCIO_Interp interpolation)
 {
     OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
     
     if(interpolation != OCIO_INTERP_NEAREST && interpolation != OCIO_INTERP_LINEAR &&
-        interpolation != OCIO_INTERP_TETRAHEDRAL && interpolation != OCIO_INTERP_BEST)
+        interpolation != OCIO_INTERP_TETRAHEDRAL && interpolation != OCIO_INTERP_CUBIC &&
+        interpolation != OCIO_INTERP_BEST)
     {
         interpolation = OCIO_INTERP_LINEAR;
     }
     
     transform->setSrc( _path.c_str() );
     transform->setInterpolation(static_cast<OCIO::Interpolation>(interpolation));
-    transform->setDirection(invert ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
+    transform->setDirection(invert > OCIO_INVERT_OFF ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
     
     _processor = _config->getProcessor(transform);
     
+    if(invert == OCIO_INVERT_EXACT)
+    {
+        _cpu_processor = _processor->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_DEFAULT, OCIO::FINALIZATION_EXACT);
+        _gpu_processor = _processor->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_DEFAULT, OCIO::FINALIZATION_EXACT);
+    }
+    else
+    {
+        _cpu_processor = _processor->getDefaultCPUProcessor();
+        _gpu_processor = _processor->getDefaultGPUProcessor();
+    }
+
     _invert = invert;
     _interpolation = interpolation;
     
@@ -673,7 +693,7 @@ bool OpenColorIO_AE_Context::ExportLUT(const std::string &path, const std::strin
         std::string description = path.substr(path.find_last_of(delimiter) + 1,
                                             1 + filename_end - filename_start);
         
-        SaveICCProfileToFile(path, _processor, cubesize, whitepointtemp,
+        SaveICCProfileToFile(path, _cpu_processor, cubesize, whitepointtemp,
                                 display_icc_path, description, copyright, false);
     }
     else
@@ -804,9 +824,6 @@ void OpenColorIO_AE_Context::InitOCIOGL()
                         LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
                             0, GL_RGB,GL_FLOAT, &_lut3d[0]);
                             
-        _fragShader = 0;
-        _program = 0;
-        
         _bufferWidth = _bufferHeight = 0;
         
         _gl_init = true;
@@ -819,12 +836,11 @@ void OpenColorIO_AE_Context::InitOCIOGL()
 static const char * g_fragShaderText = ""
 "\n"
 "uniform sampler2D tex1;\n"
-"uniform sampler3D tex2;\n"
 "\n"
 "void main()\n"
 "{\n"
 "    vec4 col = texture2D(tex1, gl_TexCoord[0].st);\n"
-"    gl_FragColor = OCIODisplay(col, tex2);\n"
+"    gl_FragColor = OCIODisplay(col);\n"
 "}\n";
 
 
@@ -885,34 +901,27 @@ void OpenColorIO_AE_Context::UpdateOCIOGLState()
         SetPluginContext();
         
         // Step 1: Create a GPU Shader Description
-        OCIO::GpuShaderDesc shaderDesc;
-        shaderDesc.setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_0);
-        shaderDesc.setFunctionName("OCIODisplay");
-        shaderDesc.setLut3DEdgeLen(LUT3D_EDGE_SIZE);
+        OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_0);
+        shaderDesc->setFunctionName("OCIODisplay");
+        shaderDesc->setResourcePrefix("ocio_");
         
-        // Step 2: Compute the 3D LUT
-        std::string lut3dCacheID = _processor->getGpuLut3DCacheID(shaderDesc);
-        if(lut3dCacheID != _lut3dcacheid)
-        {
-            _lut3dcacheid = lut3dCacheID;
-            _processor->getGpuLut3D(&_lut3d[0], shaderDesc);
-        }
+        // Step 2: Collect the shader program information for a specific processor
+        _gpu_processor->extractGpuShaderInfo(shaderDesc);
         
-        // Step 3: Compute the Shader
-        std::string shaderCacheID = _processor->getGpuShaderTextCacheID(shaderDesc);
-        if(_program == 0 || shaderCacheID != _shadercacheid)
-        {
-            _shadercacheid = shaderCacheID;
-            
-            std::ostringstream os;
-            os << _processor->getGpuShaderText(shaderDesc) << "\n";
-            os << g_fragShaderText;
-            
-            if(_fragShader) glDeleteShader(_fragShader);
-            _fragShader = CompileShaderText(GL_FRAGMENT_SHADER, os.str().c_str());
-            if(_program) glDeleteProgram(_program);
-            _program = LinkShaders(_fragShader);
-        }
+        // Step 3: Use the helper OpenGL builder
+        _oglBuilder = OCIO::OpenGLBuilder::Create(shaderDesc);
+        //oglBuilder->setVerbose(false);
+        
+        // Step 4: Allocate & upload all the LUTs
+        //
+        // NB: The start index for the texture indices is 1 as one texture
+        //     was already created for the input image.
+        //
+        _oglBuilder->allocateAllTextures(1);
+        
+        // Step 5: Build the fragment shader program
+        _oglBuilder->buildProgram(g_fragShaderText);
         
         SetAEContext();
     }
@@ -928,7 +937,7 @@ bool OpenColorIO_AE_Context::ProcessWorldGL(PF_EffectWorld *float_world)
     }
     
     
-    if(_program == 0 || _fragShader == 0)
+    if(!_oglBuilder)
         return false;
     
     
@@ -966,9 +975,10 @@ bool OpenColorIO_AE_Context::ProcessWorldGL(PF_EffectWorld *float_world)
                     GL_RGB, GL_FLOAT, &_lut3d[0]);
     
     
-    glUseProgram(_program);
-    glUniform1i(glGetUniformLocation(_program, "tex1"), 0);
-    glUniform1i(glGetUniformLocation(_program, "tex2"), 1);
+    // Step 6: Enable the fragment shader program, and all needed textures
+    _oglBuilder->useProgram();
+    glUniform1i(glGetUniformLocation(_oglBuilder->getProgramHandle(), "tex1"), 0);
+    _oglBuilder->useAllTextures();
     
     
     if(GL_NO_ERROR != glGetError())
@@ -1050,4 +1060,20 @@ bool OpenColorIO_AE_Context::ProcessWorldGL(PF_EffectWorld *float_world)
     SetAEContext();
     
     return true;
+}
+
+
+void OpenColorIO_AE_Context::getenv(const char *name, std::string &value)
+{
+#ifdef WIN_ENV
+    char env[1024] = { '\0' };
+
+    const DWORD result = GetEnvironmentVariable(name, env, 1023);
+
+    value = (result > 0 ? env : "");
+#else
+    char *env = std::getenv(name);
+
+    value = (env != NULL ? env : "");
+#endif
 }
