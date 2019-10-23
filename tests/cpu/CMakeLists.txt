@@ -100,7 +100,6 @@ set(SOURCES
 	HashUtils.cpp
 	ImageDesc.cpp
 	ImagePacking.cpp
-	Logging.cpp
 	Look.cpp
 	LookParse.cpp
 	MathUtils.cpp
@@ -170,7 +169,6 @@ set(SOURCES
 	transforms/LUT1DTransform.cpp
 	transforms/LUT3DTransform.cpp
 	transforms/MatrixTransform.cpp
-	transforms/RangeTransform.cpp
 )
 
 set(TESTS
@@ -178,8 +176,10 @@ set(TESTS
 	fileformats/ctf/CTFTransform_tests.cpp
 	fileformats/FileFormat3DL_tests.cpp
 	fileformats/FileFormatCTF_tests.cpp
+	Logging_tests.cpp
 	Processor_tests.cpp
 	transforms/FileTransform_tests.cpp
+	transforms/RangeTransform_tests.cpp
 	UnitTest.cpp
 	UnitTestUtils.cpp
 )

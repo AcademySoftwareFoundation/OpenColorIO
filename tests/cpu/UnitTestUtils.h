@@ -59,6 +59,17 @@ OCIO_SHARED_PTR<LocalCachedFile> LoadTestFile(
     return DynamicPtrCast<LocalCachedFile>(cachedFile);
 }
 
+
+// Utility to mute the logging mechanism so the unit test output is clean.
+class MuteLogging
+{
+public:
+    MuteLogging();
+    MuteLogging(const MuteLogging &) = delete;
+    MuteLogging & operator=(const MuteLogging &) = delete;
+    ~MuteLogging();
+};
+
 }
 OCIO_NAMESPACE_EXIT
 

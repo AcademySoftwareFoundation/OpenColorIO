@@ -22,6 +22,7 @@ typedef enum ControllerInterp
     CINTERP_NEAREST,
     CINTERP_LINEAR,
     CINTERP_TETRAHEDRAL,
+    CINTERP_CUBIC,
     CINTERP_BEST
 };
  

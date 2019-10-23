@@ -1,0 +1,244 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{82675920-EFDC-4880-84E3-4D234C1C86BC}</ProjectGuid>
+    <RootNamespace>OpenColorIO_AE</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">build\$(Platform)\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">build\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</IgnoreImportLibrary>
+    <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</IgnoreImportLibrary>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.aex</TargetExt>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.aex</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <TargetName>OpenColorIO</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <TargetName>OpenColorIO</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Midl>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TargetEnvironment>X64</TargetEnvironment>
+      <TypeLibraryName>.\Debug/OpenColorIO_AE.tlb</TypeLibraryName>
+      <HeaderFileName>
+      </HeaderFileName>
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..;..\..\..;..\..\..\..\..\include;..\..\..\..\..\src\utils\oglbuilder;..\..\..\..\..\src\apps\ociobakelut;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\SP;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\Win;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Resources;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Util;..\..\..\..\..\ext\glew-2.2.0\include;..\..\..\..\..\ext\Little-CMS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;GLEW_STATIC;MSWindows;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <StructMemberAlignment>4Bytes</StructMemberAlignment>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <PrecompiledHeaderFile>AE_Effect.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>$(IntDir)vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
+      <BrowseInformation>true</BrowseInformation>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <ShowProgress>NotSet</ShowProgress>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(IntDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <SubSystem>
+      </SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <ImportLibrary>$(IntDir)/$(TargetName).lib</ImportLibrary>
+      <TargetMachine>MachineX64</TargetMachine>
+      <AdditionalLibraryDirectories>..\build\$(Platform)\$(Configuration)_4ByteStruct;..\ext\build\$(Platform)\$(Configuration)_4ByteStruct</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OpenColorIO.lib;expat.lib;ilmbasehalf.lib;yaml.lib;pystring.lib;lcms.lib;glew.lib;opengl32.lib;glu32.lib;Mscms.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <Bscmake>
+      <OutputFile>$(IntDir)$(TargetName).bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Midl>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TargetEnvironment>X64</TargetEnvironment>
+      <TypeLibraryName>.\Debug/OpenColorIO_AE.tlb</TypeLibraryName>
+      <HeaderFileName>
+      </HeaderFileName>
+    </Midl>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <AdditionalIncludeDirectories>..;..\..\..;..\..\..\..\..\include;..\..\..\..\..\src\utils\oglbuilder;..\..\..\..\..\src\apps\ociobakelut;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\SP;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\Win;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Resources;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Util;..\..\..\..\..\ext\glew-2.2.0\include;..\..\..\..\..\ext\Little-CMS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;GLEW_STATIC;MSWindows;WIN32;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <StructMemberAlignment>4Bytes</StructMemberAlignment>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <PrecompiledHeaderFile>AE_Effect.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>$(IntDir)vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
+      <BrowseInformation>true</BrowseInformation>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <ShowProgress>NotSet</ShowProgress>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <GenerateDebugInformation>
+      </GenerateDebugInformation>
+      <ProgramDatabaseFile>$(IntDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <SubSystem>
+      </SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <ImportLibrary>$(IntDir)/$(TargetName).lib</ImportLibrary>
+      <TargetMachine>MachineX64</TargetMachine>
+      <AdditionalLibraryDirectories>..\build\$(Platform)\$(Configuration)_4ByteStruct;..\ext\build\$(Platform)\$(Configuration)_4ByteStruct</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OpenColorIO.lib;expat.lib;ilmbasehalf.lib;yaml.lib;pystring.lib;lcms.lib;glew.lib;opengl32.lib;glu32.lib;Mscms.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <Bscmake>
+      <OutputFile>$(IntDir)$(TargetName).bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\AEFX_SuiteHandlerTemplate.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\AE_PluginData.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Util\Smart_Utils.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Util\String_Utils.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\A.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\AE_Effect.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\AE_EffectCB.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\AE_EffectCBSuites.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\AE_EffectSuites.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Util\AE_EffectSuitesHelper.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\AE_EffectUI.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\AE_GeneralPlug.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\AE_GeneralPlugOld.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\AE_IO.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\AE_Macros.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Util\AEGP_SuiteHandler.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Util\entry.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\FIEL_Public.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Util\Param_Utils.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\PF_Masks.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Util\PF_Suite_Helper.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\PR_Public.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\PrSDKAESupport.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\PrSDKAEUI.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\PrSDKPixelFormat.h" />
+    <ClInclude Include="..\..\..\..\..\src\apps\ociobakelut\ocioicc.h" />
+    <ClInclude Include="..\..\..\..\..\src\utils\oglbuilder\glsl.h" />
+    <ClInclude Include="..\..\..\DrawbotBot.h" />
+    <ClInclude Include="..\..\..\OpenColorIO_AE.h" />
+    <ClInclude Include="..\..\..\OpenColorIO_AE_Context.h" />
+    <ClInclude Include="..\..\..\OpenColorIO_AE_Dialogs.h" />
+    <ClInclude Include="..\..\..\OpenColorIO_AE_GL.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\..\..\OpenColorIO_AE_PiPL.r">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling the PiPL</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling the PiPL</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cl /I "$(ProjectDir)..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers" /EP "..\..\..\%(Filename).r" &gt; "$(IntDir)"\\"%(Filename).rr"
+"$(ProjectDir)..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Resources\PiPLTool" "$(IntDir)%(Filename).rr" "$(IntDir)%(Filename).rrc"
+cl /D "MSWindows" /EP $(IntDir)%(Filename).rrc &gt;               "$(ProjectDir)"\\"%(Filename)".rc
+</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">cl /I "$(ProjectDir)..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers" /EP "..\..\..\%(Filename).r" &gt; "$(IntDir)"\\"%(Filename).rr"
+"$(ProjectDir)..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Resources\PiPLTool" "$(IntDir)%(Filename).rr" "$(IntDir)%(Filename).rrc"
+cl /D "MSWindows" /EP $(IntDir)%(Filename).rrc &gt;               "$(ProjectDir)"\\"%(Filename)".rc
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)%(Filename).rc;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)%(Filename).rc;%(Outputs)</Outputs>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\win\OpenColorIO.rc" />
+    <ResourceCompile Include="OpenColorIO_AE_PiPL.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Util\AEGP_SuiteHandler.cpp" />
+    <ClCompile Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Util\MissingSuiteError.cpp" />
+    <ClCompile Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Util\Smart_Utils.cpp" />
+    <ClCompile Include="..\..\..\..\..\src\apps\ociobakelut\ocioicc.cpp" />
+    <ClCompile Include="..\..\..\..\..\src\utils\oglbuilder\glsl.cpp" />
+    <ClCompile Include="..\..\..\DrawbotBot.cpp" />
+    <ClCompile Include="..\..\..\OpenColorIO_AE.cpp" />
+    <ClCompile Include="..\..\..\OpenColorIO_AE_ArbData.cpp" />
+    <ClCompile Include="..\..\..\OpenColorIO_AE_Context.cpp" />
+    <ClCompile Include="..\..\..\OpenColorIO_AE_UI.cpp" />
+    <ClCompile Include="..\..\..\win\OpenColorIO_AE_Dialogs_Win.cpp" />
+    <ClCompile Include="..\..\..\win\OpenColorIO_AE_GL_Win.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

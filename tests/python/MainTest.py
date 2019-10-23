@@ -6,7 +6,7 @@ import PyOpenColorIO as OCIO
 
 class MainTest(unittest.TestCase):
     
-    FOO ="""ocio_profile_version: 1
+    FOO ="""ocio_profile_version: 2
 
 search_path: \"\"
 strictparsing: false
