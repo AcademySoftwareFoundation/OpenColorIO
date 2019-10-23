@@ -59,7 +59,7 @@ RUN mkdir /home/git && \
 
 # Install OIIO
 RUN cd /home/git && \
-    git clone https://github.com/OpenImageIO/oiio.git -b RB-1.7 && \
+    git clone https://github.com/OpenImageIO/oiio.git -b RB-2.0 && \
     cd /home/git/oiio && \
     mkdir build && \
     cd /home/git/oiio/build && \
