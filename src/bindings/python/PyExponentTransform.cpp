@@ -113,7 +113,7 @@ OCIO_NAMESPACE_ENTER
                     PyErr_SetString(PyExc_TypeError, "Value argument must be a double array, size 4");
                     return -1;
                 }
-				const double exp4[4] { data[0], data[1], data[2], data[3] };
+                const double exp4[4] { data[0], data[1], data[2], data[3] };
                 ptr->setValue(exp4);
             }
             if(direction) ptr->setDirection(TransformDirectionFromString(direction));
@@ -127,7 +127,7 @@ OCIO_NAMESPACE_ENTER
             ConstExponentTransformRcPtr transform = GetConstExponentTransform(self);
             double data[4];
             transform->getValue(data);
-			std::vector<double> dataVec{ data, data + sizeof(data) / sizeof(double)  };
+            std::vector<double> dataVec{ data, data + sizeof(data) / sizeof(double)  };
             return CreatePyListFromDoubleVector(dataVec);
             OCIO_PYTRY_EXIT(NULL)
         }
@@ -144,7 +144,7 @@ OCIO_NAMESPACE_ENTER
                 PyErr_SetString(PyExc_TypeError, "First argument must be a double array, size 4");
                 return 0;
             }
-			const double exp4[4] { data[0], data[1], data[2], data[3] };
+            const double exp4[4] { data[0], data[1], data[2], data[3] };
             transform->setValue(exp4);
             Py_RETURN_NONE;
             OCIO_PYTRY_EXIT(NULL)
