@@ -176,7 +176,6 @@ OCIO_NAMESPACE_ENTER
             case 14:
             default:
                 return BIT_DEPTH_UNKNOWN;
-                break;
             }
         }
 
