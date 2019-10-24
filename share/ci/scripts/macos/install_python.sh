@@ -15,6 +15,7 @@ MACOS_MINOR="$(sw_vers -productVersion | cut -f 2 -d .)"
 if [[ "$MACOS_MAJOR" -gt 9 && "$MACOS_MINOR" -gt 13 ]]; then
     sudo installer \
         -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_${MACOS_MAJOR}.${MACOS_MINOR}.pkg \
+		-allowUntrusted \
         -target /
 fi
 
