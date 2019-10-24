@@ -43,9 +43,9 @@ OCIO_NAMESPACE_ENTER
         };
         
         // These are the 709 primaries specified by the ASC.
-        const double DEFAULT_LUMA_COEFF_R = 0.2126;
-        const double DEFAULT_LUMA_COEFF_G = 0.7152;
-        const double DEFAULT_LUMA_COEFF_B = 0.0722;
+        constexpr double DEFAULT_LUMA_COEFF_R = 0.2126;
+        constexpr double DEFAULT_LUMA_COEFF_G = 0.7152;
+        constexpr double DEFAULT_LUMA_COEFF_B = 0.0722;
         
         const char * INTERNAL_RAW_PROFILE = 
         "ocio_profile_version: 2\n"
@@ -1722,7 +1722,7 @@ OCIO_ADD_TEST(Config, create_raw_config)
 OCIO_ADD_TEST(Config, simple_config)
 {
     
-    constexpr const char SIMPLE_PROFILE[] =
+    constexpr char SIMPLE_PROFILE[] =
         "ocio_profile_version: 1\n"
         "resource_path: luts\n"
         "strictparsing: false\n"
@@ -4099,7 +4099,7 @@ OCIO_ADD_TEST(Config, add_color_space)
 
     OCIO_CHECK_NO_THROW(cs->setTransform(tr, OCIO::COLORSPACE_DIR_TO_REFERENCE));
 
-    constexpr const char csName[] = u8"astéroïde";
+    constexpr char csName[] = u8"astéroïde";
 
     OCIO_CHECK_EQUAL(config->getIndexForColorSpace(csName), -1);
     OCIO_CHECK_NO_THROW(config->addColorSpace(cs));

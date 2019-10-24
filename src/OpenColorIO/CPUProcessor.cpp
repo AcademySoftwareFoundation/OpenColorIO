@@ -631,13 +631,13 @@ OCIO_ADD_TEST(CPUProcessor, with_one_matrix)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
 
     OCIO::MatrixTransformRcPtr transform = OCIO::MatrixTransform::Create();
-    constexpr const double offset4[4] = { 1.4002, 0.4005, 0.8007, 0.5 };
+    constexpr double offset4[4] = { 1.4002, 0.4005, 0.8007, 0.5 };
     transform->setOffset( offset4 );
 
     OCIO::ConstProcessorRcPtr processor;
     OCIO_CHECK_NO_THROW(processor = config->getProcessor(transform));
 
-    constexpr const unsigned NB_PIXELS = 3;
+    constexpr unsigned NB_PIXELS = 3;
 
     const std::vector<float> f_inImg =
         {  -1.0000f, -0.8000f, -0.1000f,  0.0f,
@@ -926,7 +926,7 @@ OCIO_ADD_TEST(CPUProcessor, with_one_1d_lut)
     OCIO::ConstProcessorRcPtr processor;
     OCIO_CHECK_NO_THROW(processor = config->getProcessor(transform));
 
-    constexpr const unsigned NB_PIXELS = 4;
+    constexpr unsigned NB_PIXELS = 4;
 
     const std::vector<float> f_inImg =
         {  -1.0000f, -0.8000f, -0.1000f,  0.0f,
@@ -1125,7 +1125,7 @@ OCIO_ADD_TEST(CPUProcessor, with_several_ops)
         OCIO::ConstProcessorRcPtr processor;
         OCIO_CHECK_NO_THROW(processor = config->getProcessor("cs1", "cs2"));
 
-        constexpr const unsigned NB_PIXELS = 4;
+        constexpr unsigned NB_PIXELS = 4;
 
         const std::vector<float> f_inImg =
             {  -1.0000f, -0.8000f, -0.1000f,  0.0f,
@@ -1592,7 +1592,7 @@ OCIO_ADD_TEST(CPUProcessor, image_desc)
 namespace
 {
 
-constexpr const unsigned NB_PIXELS = 6;
+constexpr unsigned NB_PIXELS = 6;
 
 std::vector<float> inImgR =
     {  -1.000012f,
@@ -1680,7 +1680,7 @@ OCIO::ConstCPUProcessorRcPtr BuildCPUProcessor(OCIO::TransformDirection dir)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
 
     OCIO::MatrixTransformRcPtr transform = OCIO::MatrixTransform::Create();
-    const double offset4[4] = { 1.4002, 0.4005, 0.8007, 0.5007 };
+    constexpr double offset4[4] = { 1.4002, 0.4005, 0.8007, 0.5007 };
     transform->setOffset(offset4);
     transform->setDirection(dir);
 
@@ -2379,7 +2379,7 @@ void ComputeImage(unsigned width, unsigned height, unsigned nChannels,
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
 
     OCIO::MatrixTransformRcPtr transform = OCIO::MatrixTransform::Create();
-    const double offset4[4] = { 1.2002, 0.4005, 0.8007, 0.5 };
+    constexpr double offset4[4] = { 1.2002, 0.4005, 0.8007, 0.5 };
     transform->setOffset( offset4 );
 
     OCIO::ConstProcessorRcPtr processor;
@@ -2464,9 +2464,9 @@ OCIO_ADD_TEST(CPUProcessor, optimizations)
     // by the ScanlineHelper class. To fully validate these paths a 'normal' image
     // must be used (i.e. 'few pixels' image is not enough).
 
-    constexpr static const unsigned width     = 640;
-    constexpr static const unsigned height    = 480;
-    constexpr static const unsigned nChannels = 4;
+    constexpr const unsigned width     = 640;
+    constexpr const unsigned height    = 480;
+    constexpr const unsigned nChannels = 4;
 
     // Input and Output are not packed RGBA i.e no optimizations.
     {
