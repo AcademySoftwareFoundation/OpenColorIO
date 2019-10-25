@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
+
 #include "OpenColorIO_PS_Context.h"
+
+#include <assert.h>
+
+#ifndef __APPLE__
+#include <Windows.h>
+#endif
+
 
 int
 FindSpace(const SpaceVec &spaceVec, const std::string &space)
@@ -93,7 +101,7 @@ OpenColorIO_PS_Context::OpenColorIO_PS_Context(const std::string &path) :
     }
 }
 
-OCIO::ConstProcessorRcPtr
+OCIO::ConstCPUProcessorRcPtr
 OpenColorIO_PS_Context::getConvertProcessor(const std::string &inputSpace, const std::string &outputSpace) const
 {
     assert( !isLUT() );
@@ -106,11 +114,13 @@ OpenColorIO_PS_Context::getConvertProcessor(const std::string &inputSpace, const
     
     OCIO::ConstProcessorRcPtr processor = _config->getProcessor(transform);
     
-    return processor;
+    OCIO::ConstCPUProcessorRcPtr cpu_processor = processor->getDefaultCPUProcessor();
+    
+    return cpu_processor;
 }
 
 
-OCIO::ConstProcessorRcPtr
+OCIO::ConstCPUProcessorRcPtr
 OpenColorIO_PS_Context::getDisplayProcessor(const std::string &inputSpace, const std::string &device, const std::string &transform) const
 {
     assert( !isLUT() );
@@ -123,11 +133,13 @@ OpenColorIO_PS_Context::getDisplayProcessor(const std::string &inputSpace, const
 
     OCIO::ConstProcessorRcPtr processor = _config->getProcessor(ocio_transform);
     
-    return processor;
+    OCIO::ConstCPUProcessorRcPtr cpu_processor = processor->getDefaultCPUProcessor();
+    
+    return cpu_processor;
 }
 
 
-OCIO::ConstProcessorRcPtr
+OCIO::ConstCPUProcessorRcPtr
 OpenColorIO_PS_Context::getLUTProcessor(OCIO::Interpolation interpolation, OCIO::TransformDirection direction) const
 {
     assert( isLUT() );
@@ -140,7 +152,9 @@ OpenColorIO_PS_Context::getLUTProcessor(OCIO::Interpolation interpolation, OCIO:
     
     OCIO::ConstProcessorRcPtr processor = _config->getProcessor(transform);
     
-    return processor;
+    OCIO::ConstCPUProcessorRcPtr cpu_processor = processor->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_DEFAULT, OCIO::FINALIZATION_EXACT);
+    
+    return cpu_processor;
 }
 
 
@@ -258,3 +272,19 @@ OpenColorIO_PS_Context::getDefaultTransform(const std::string &device) const
     return _config->getDefaultView( device.c_str() );
 }
 
+
+void
+OpenColorIO_PS_Context::getenv(const char *name, std::string &value)
+{
+#ifdef __APPLE__
+    char *env = std::getenv(name);
+
+    value = (env != NULL ? env : "");
+#else
+    char env[1024] = { '\0' };
+
+    const DWORD result = GetEnvironmentVariable(name, env, 1023);
+
+    value = (result > 0 ? env : "");
+#endif
+}
