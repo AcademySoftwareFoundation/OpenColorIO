@@ -6,7 +6,7 @@ set -ex
 
 PYTHON_VERSION="$1"
 
-brew install pyenv openssl xqurtz
+brew install pyenv openssl xquartz
 
 # Greatly reduce log warnings during Python install
 export CFLAGS="-I$(brew --prefix openssl)/include -Wno-nullability-completeness"
