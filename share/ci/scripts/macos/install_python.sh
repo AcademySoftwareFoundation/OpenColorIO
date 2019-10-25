@@ -6,13 +6,18 @@ set -ex
 
 PYTHON_VERSION="$1"
 
-brew install pyenv openssl
+brew install pyenv openssl xqurtz
 
-# Include openssl, disable nullability warning, to greatly reduce log noise during Python install
+# Greatly reduce log warnings during Python install
+export CFLAGS="-I$(brew --prefix openssl)/include -Wno-nullability-completeness"
+export LDFLAGS="-L$(brew --prefix openssl)/lib $LDFLAGS"
+
+# Make X11 headers available to build tkinter extension
+export CFLAGS="$CFLAGS -I$(brew --prefix xquartz)/include"
+
 # Include macOS SDK headers, required for macOS >= 10.14:
 #   https://apple.stackexchange.com/questions/337940/why-is-usr-include-missing-i-have-xcode-and-command-line-tools-installed-moja
-export CFLAGS="-I$(brew --prefix openssl)/include -Wno-nullability-completeness -isysroot $(xcrun --show-sdk-path)"
-export LDFLAGS="-L$(brew --prefix openssl)/lib $LDFLAGS"
+export CFLAGS="$CFLAGS -isysroot $(xcrun --show-sdk-path)"
 
 echo 'eval "$(pyenv init -)"' >> .bash_profile
 source .bash_profile
