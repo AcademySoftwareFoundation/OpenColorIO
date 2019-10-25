@@ -51,7 +51,7 @@ set(BUILD_TYPE_DEBUG ${_BUILD_TYPE_DEBUG} CACHE BOOL "Case-insensitive CMAKE_BUI
 
 option(BUILD_SHARED_LIBS "Set to OFF to build static libraries" ON)
 option(OCIO_BUILD_APPS "Set to OFF to disable command-line apps" ON)
-option(OCIO_BUILD_NUKE "Set to OFF to disable building nuke plugins" OFF)
+option(OCIO_BUILD_NUKE "Specify whether to build nuke plugins" OFF)
 option(OCIO_BUILD_DOCS "Specify whether to build documentation" OFF)
 option(OCIO_BUILD_TESTS "Specify whether to build unittests" ON)
 option(OCIO_BUILD_GPU_TESTS "Specify whether to build gpu unittests" ON)
