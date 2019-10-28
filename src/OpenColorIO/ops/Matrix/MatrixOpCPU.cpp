@@ -444,8 +444,7 @@ namespace OCIO = OCIO_NAMESPACE;
 
 OCIO_ADD_TEST(MatrixOpCPU, scale_renderer)
 {
-    OCIO::ConstMatrixOpDataRcPtr mat(OCIO::MatrixOpData::CreateDiagonalMatrix(
-        OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 2.0));
+    OCIO::ConstMatrixOpDataRcPtr mat(OCIO::MatrixOpData::CreateDiagonalMatrix(2.0));
 
     OCIO::ConstOpCPURcPtr op = OCIO::GetMatrixRenderer(mat);
     OCIO_CHECK_ASSERT((bool)op);
@@ -465,9 +464,8 @@ OCIO_ADD_TEST(MatrixOpCPU, scale_renderer)
 
 OCIO_ADD_TEST(MatrixOpCPU, scale_with_offset_renderer)
 {
-    OCIO::MatrixOpDataRcPtr mat(OCIO::MatrixOpData::CreateDiagonalMatrix(
-        OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 2.0));
-
+    OCIO::MatrixOpDataRcPtr mat(OCIO::MatrixOpData::CreateDiagonalMatrix(2.0));
+    
     mat->setOffsetValue(0, 1.f);
     mat->setOffsetValue(1, 2.f);
     mat->setOffsetValue(2, 3.f);
@@ -494,8 +492,7 @@ OCIO_ADD_TEST(MatrixOpCPU, scale_with_offset_renderer)
 
 OCIO_ADD_TEST(MatrixOpCPU, matrix_with_offset_renderer)
 {
-    OCIO::MatrixOpDataRcPtr mat(OCIO::MatrixOpData::CreateDiagonalMatrix(
-        OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 2.0));
+    OCIO::MatrixOpDataRcPtr mat(OCIO::MatrixOpData::CreateDiagonalMatrix(2.0));
 
     // set offset
     mat->setOffsetValue(0, 1.f);
@@ -526,8 +523,7 @@ OCIO_ADD_TEST(MatrixOpCPU, matrix_with_offset_renderer)
 
 OCIO_ADD_TEST(MatrixOpCPU, matrix_renderer)
 {
-    OCIO::MatrixOpDataRcPtr mat(OCIO::MatrixOpData::CreateDiagonalMatrix(
-        OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 2.0));
+    OCIO::MatrixOpDataRcPtr mat(OCIO::MatrixOpData::CreateDiagonalMatrix(2.0));
 
     // Make not diagonal.
     mat->setArrayValue(3, 0.5f);

@@ -173,6 +173,18 @@ public:
             && (m_data == a.m_data);
     }
 
+    void scale(T scale)
+    {
+        if (scale != (T)1.)
+        {
+            const size_t nbVal = m_data.size();
+            for (size_t i = 0; i < nbVal; ++i)
+            {
+                m_data[i] *= scale;
+            }
+        }
+    }
+
 protected:
     unsigned long m_length;
     unsigned long m_numColorComponents;

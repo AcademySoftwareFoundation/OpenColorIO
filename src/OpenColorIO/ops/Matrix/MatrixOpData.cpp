@@ -5,7 +5,6 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "BitDepthUtils.h"
 #include "HashUtils.h"
 #include "MathUtils.h"
 #include "ops/Matrix/MatrixOpData.h"
@@ -90,12 +89,8 @@ void MatrixOpData::Offsets::scale(double s)
     }
 }
 
-MatrixOpData::MatrixArray::MatrixArray(BitDepth inBitDepth,
-                                       BitDepth outBitDepth,
-                                       unsigned long dimension,
+MatrixOpData::MatrixArray::MatrixArray(unsigned long dimension,
                                        unsigned long numColorComponents)
-    : m_inBitDepth(inBitDepth)
-    , m_outBitDepth(outBitDepth)
 {
     resize(dimension, numColorComponents);
     fill();
@@ -127,11 +122,7 @@ MatrixOpData::MatrixArrayPtr
     const ArrayDouble::Values & Bvals = B_4x4.getValues();
     const unsigned long dim = 4;
 
-    MatrixArrayPtr OutPtr = std::make_shared<MatrixArray>(
-        BIT_DEPTH_F32,
-        BIT_DEPTH_F32,
-        dim,
-        4);
+    MatrixArrayPtr OutPtr = std::make_shared<MatrixArray>(dim, 4);
     ArrayDouble::Values& Ovals = OutPtr->getValues();
 
     // Note: The matrix elements are stored in the vector
@@ -180,14 +171,9 @@ MatrixOpData::MatrixArrayPtr
     MatrixArray t(*this);
 
     const unsigned long dim = 4;
-    // Create a new matrix array, with swapped input/output bit-depths.
+    // Create a new matrix array.
     // The new matrix is initialized as identity.
-    // Note: The coefficients also apply Out/In bit depth scaling.
-    MatrixArrayPtr invPtr = std::make_shared<MatrixArray>(
-        m_outBitDepth,
-        m_inBitDepth,
-        dim,
-        4);
+    MatrixArrayPtr invPtr = std::make_shared<MatrixArray>(dim, 4);
     MatrixArray & s = *invPtr;
 
     // Inversion starts with identity (without bit-depth scaling).
@@ -311,14 +297,10 @@ void MatrixOpData::MatrixArray::setRGB(const T * values)
     v[10] = values[8];
     v[11] = (T)0.0;
 
-    const double scaleFactor
-        = (double)GetBitDepthMaxValue(m_outBitDepth)
-        / (double)GetBitDepthMaxValue(m_inBitDepth);
-
     v[12] = (T)0.0;
     v[13] = (T)0.0;
     v[14] = (T)0.0;
-    v[15] = (T)scaleFactor;
+    v[15] = (T)1.0;
 }
 
 template void MatrixOpData::MatrixArray::setRGB(const float * values);
@@ -363,10 +345,6 @@ void MatrixOpData::MatrixArray::fill()
     const unsigned long dim = getLength();
     ArrayDouble::Values & values = getValues();
 
-    const double scaleFactor
-        = (double)GetBitDepthMaxValue(m_outBitDepth)
-        / (double)GetBitDepthMaxValue(m_inBitDepth);
-
     memset(&values[0], 0, values.size() * sizeof(double));
 
     for (unsigned long i = 0; i<dim; ++i)
@@ -375,7 +353,7 @@ void MatrixOpData::MatrixArray::fill()
         {
             if (i == j)
             {
-                values[i*dim + j] = scaleFactor;
+                values[i*dim + j] = 1.0;
             }
         }
     }
@@ -441,61 +419,11 @@ void MatrixOpData::MatrixArray::validate() const
     }
 }
 
-
-void MatrixOpData::MatrixArray::setOutputBitDepth(BitDepth out)
-{
-    // Scale factor is max_new_depth/max_old_depth.
-    const double scaleFactor
-        = (double)GetBitDepthMaxValue(out)
-        / (double)GetBitDepthMaxValue(m_outBitDepth);
-
-    m_outBitDepth = out;
-
-    Values & v = getValues();
-    const size_t size = v.size();
-
-    for (unsigned long i = 0; i < size; ++i) {
-        v[i] *= scaleFactor;
-    }
-}
-
-void MatrixOpData::MatrixArray::setInputBitDepth(BitDepth in)
-{
-    // Scale factor is max_old_depth/max_new_depth.
-    const double scaleFactor
-        = (double)GetBitDepthMaxValue(m_inBitDepth)
-        / (double)GetBitDepthMaxValue(in);
-
-    m_inBitDepth = in;
-
-    Values & v = getValues();
-    const size_t size = v.size();
-
-    for (unsigned long i = 0; i < size; ++i) {
-        v[i] *= scaleFactor;
-    }
-}
-
 ////////////////////////////////////////////////
 
 MatrixOpData::MatrixOpData()
-    : OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
-    , m_array(getInputBitDepth(), getOutputBitDepth(), 4, 4)
-{
-}
-
-MatrixOpData::MatrixOpData(BitDepth inBitDepth,
-                           BitDepth outBitDepth)
-    : OpData(inBitDepth, outBitDepth)
-    , m_array(getInputBitDepth(), getOutputBitDepth(), 4, 4)
-{
-}
-
-MatrixOpData::MatrixOpData(BitDepth inBitDepth,
-                           BitDepth outBitDepth,
-                           const FormatMetadataImpl & info)
-    : OpData(inBitDepth, outBitDepth, info)
-    , m_array(getInputBitDepth(), getOutputBitDepth(), 4, 4)
+    : OpData()
+    , m_array(4, 4)
 {
 }
 
@@ -564,7 +492,7 @@ bool MatrixOpData::isUnityDiagonal() const
 
 bool MatrixOpData::isNoOp() const
 {
-    return (getInputBitDepth() == getOutputBitDepth()) && isIdentity();
+    return isIdentity();
 }
 
 // For all ops, an "Identity" is an op that only does bit-depth conversion
@@ -582,11 +510,8 @@ bool MatrixOpData::isIdentity() const
 bool MatrixOpData::isMatrixIdentity() const
 {
     // Now check the diagonal elements.
-    const double scaleFactor
-        = (double)GetBitDepthMaxValue(getOutputBitDepth())
-        / (double)GetBitDepthMaxValue(getInputBitDepth());
 
-    const double maxDiff = scaleFactor * 1e-6;
+    const double maxDiff = 1e-6;
 
     const ArrayDouble & a = getArray();
     const ArrayDouble::Values & m = a.getValues();
@@ -598,9 +523,7 @@ bool MatrixOpData::isMatrixIdentity() const
         {
             if (i == j)
             {
-                if (!EqualWithAbsError(m[i*dim + j],
-                                       scaleFactor,
-                                       maxDiff))
+                if (!EqualWithAbsError(m[i*dim + j], 1.0, maxDiff))
                 {
                     return false;
                 }
@@ -638,10 +561,8 @@ bool MatrixOpData::hasAlpha() const
     const ArrayDouble::Values & m = a.getValues();
 
     // Now check the diagonal elements.
-    const double scaleFactor
-        = (double)GetBitDepthMaxValue(getOutputBitDepth())
-        / (double)GetBitDepthMaxValue(getInputBitDepth());
-    const double maxDiff = scaleFactor * 1e-6;
+
+    const double maxDiff = 1e-6;
 
     return
 
@@ -651,7 +572,7 @@ bool MatrixOpData::hasAlpha() const
         (m[11] != 0.0) ||
 
         // Diagonal.
-        !EqualWithAbsError(m[15], scaleFactor, maxDiff) ||
+        !EqualWithAbsError(m[15], 1.0, maxDiff) ||
 
         // Bottom row.
         (m[12] != 0.0) || // Strict comparison intended
@@ -663,13 +584,10 @@ bool MatrixOpData::hasAlpha() const
 
 }
 
-MatrixOpDataRcPtr MatrixOpData::CreateDiagonalMatrix(
-    BitDepth inBitDepth,
-    BitDepth outBitDepth,
-    double diagValue)
+MatrixOpDataRcPtr MatrixOpData::CreateDiagonalMatrix(double diagValue)
 {
     // Create a matrix with no offset.
-    MatrixOpDataRcPtr pM = std::make_shared<MatrixOpData>(inBitDepth, outBitDepth);
+    MatrixOpDataRcPtr pM = std::make_shared<MatrixOpData>();
 
     pM->validate();
 
@@ -719,40 +637,8 @@ void MatrixOpData::setOffsetValue(unsigned long index, double value)
     m_offsets[index] = value;
 }
 
-void MatrixOpData::setOutputBitDepth(BitDepth out)
-{
-    // Scale factor is max_new_depth/max_old_depth.
-    const double scaleFactor
-        = (double)GetBitDepthMaxValue(out)
-        / (double)GetBitDepthMaxValue(getOutputBitDepth());
-
-    OpData::setOutputBitDepth(out);
-    m_array.setOutputBitDepth(out);
-
-    m_offsets.scale(scaleFactor);
-}
-
-void MatrixOpData::setInputBitDepth(BitDepth in)
-{
-    OpData::setInputBitDepth(in);
-
-    m_array.setInputBitDepth(in);
-}
-
 MatrixOpDataRcPtr MatrixOpData::compose(ConstMatrixOpDataRcPtr & B) const
 {
-    if (getOutputBitDepth() != B->getInputBitDepth())
-    {
-        std::ostringstream oss;
-        oss << "Matrix bit-depth missmatch between '";
-        oss << getID();
-        oss << "' and '";
-        oss << B->getID();
-        oss << "'. ";
-
-        throw Exception(oss.str().c_str());
-    }
-
     // Ensure that both matrices will have the right dimension (ie. 4x4).
     if (m_array.getLength() != 4 || B->m_array.getLength() != 4)
     {
@@ -766,9 +652,10 @@ MatrixOpDataRcPtr MatrixOpData::compose(ConstMatrixOpDataRcPtr & B) const
     FormatMetadataImpl newDesc = getFormatMetadata();
     newDesc.combine(B->getFormatMetadata());
 
-    MatrixOpDataRcPtr out = std::make_shared<MatrixOpData>(
-        getInputBitDepth(),
-        B->getOutputBitDepth());
+    MatrixOpDataRcPtr out = std::make_shared<MatrixOpData>();
+
+    out->setFileInputBitDepth(getFileInputBitDepth());
+    out->setFileOutputBitDepth(B->getFileOutputBitDepth());
 
     out->getFormatMetadata() = newDesc;
 
@@ -900,13 +787,13 @@ MatrixOpDataRcPtr MatrixOpData::inverse() const
         invOffsets.scale(-1);
     }
 
-    MatrixOpDataRcPtr invOp = std::make_shared<MatrixOpData>(getOutputBitDepth(), getInputBitDepth());
+    MatrixOpDataRcPtr invOp = std::make_shared<MatrixOpData>();
+    invOp->setFileInputBitDepth(getFileOutputBitDepth());
+    invOp->setFileOutputBitDepth(getFileInputBitDepth());
+
     invOp->setRGBA(&(invMatrixArray->getValues()[0]));
     invOp->setOffsets(invOffsets);
     invOp->getFormatMetadata() = getFormatMetadata();
-
-    invOp->setFileInputBitDepth(getFileOutputBitDepth());
-    invOp->setFileOutputBitDepth(getFileInputBitDepth());
 
     // No need to call validate(), the invOp will have proper dimension,
     // bit-depths, matrix and offets values.
@@ -919,8 +806,7 @@ MatrixOpDataRcPtr MatrixOpData::inverse() const
 
 OpDataRcPtr MatrixOpData::getIdentityReplacement() const
 {
-    return std::make_shared<MatrixOpData>(
-        getInputBitDepth(), getOutputBitDepth());
+    return std::make_shared<MatrixOpData>();
 }
 
 void MatrixOpData::finalize()
@@ -947,6 +833,14 @@ void MatrixOpData::finalize()
 
     cacheIDStream << GetPrintableHash(digest);
     m_cacheID = cacheIDStream.str();
+}
+
+void MatrixOpData::scale(double inScale, double outScale)
+{
+    const double combinedScale = inScale * outScale;
+    getArray().scale(combinedScale);
+
+    m_offsets.scale(outScale);
 }
 
 }
@@ -981,7 +875,7 @@ OCIO_ADD_TEST(MatrixOpData, empty)
 
 OCIO_ADD_TEST(MatrixOpData, accessors)
 {
-    OCIO::MatrixOpData m(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
+    OCIO::MatrixOpData m;
     OCIO_CHECK_ASSERT(m.isNoOp());
     OCIO_CHECK_ASSERT(m.isUnityDiagonal());
     OCIO_CHECK_ASSERT(m.isDiagonal());
@@ -1016,7 +910,7 @@ OCIO_ADD_TEST(MatrixOpData, accessors)
     OCIO_CHECK_EQUAL(m1.getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
     OCIO_CHECK_EQUAL(m1.getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
 
-    OCIO::MatrixOpData m2{};
+    OCIO::MatrixOpData m2;
     m2 = m;
     OCIO_CHECK_EQUAL(m2.getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
     OCIO_CHECK_EQUAL(m2.getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
@@ -1024,7 +918,7 @@ OCIO_ADD_TEST(MatrixOpData, accessors)
 
 OCIO_ADD_TEST(MatrixOpData, offsets)
 {
-    OCIO::MatrixOpData m(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
+    OCIO::MatrixOpData m;
     OCIO_CHECK_ASSERT(m.isNoOp());
     OCIO_CHECK_ASSERT(m.isUnityDiagonal());
     OCIO_CHECK_ASSERT(m.isDiagonal());
@@ -1042,7 +936,7 @@ OCIO_ADD_TEST(MatrixOpData, offsets)
 
 OCIO_ADD_TEST(MatrixOpData, offsets4)
 {
-    OCIO::MatrixOpData m(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
+    OCIO::MatrixOpData m;
     OCIO_CHECK_ASSERT(m.isNoOp());
     OCIO_CHECK_ASSERT(m.isUnityDiagonal());
     OCIO_CHECK_ASSERT(m.isDiagonal());
@@ -1060,10 +954,7 @@ OCIO_ADD_TEST(MatrixOpData, offsets4)
 
 OCIO_ADD_TEST(MatrixOpData, diagonal)
 {
-    OCIO::MatrixOpDataRcPtr pM = OCIO::MatrixOpData::CreateDiagonalMatrix(
-        OCIO::BIT_DEPTH_UINT8,
-        OCIO::BIT_DEPTH_UINT8, 
-        0.5);
+    OCIO::MatrixOpDataRcPtr pM = OCIO::MatrixOpData::CreateDiagonalMatrix(0.5);
 
     OCIO_CHECK_ASSERT(pM->isDiagonal());
     OCIO_CHECK_ASSERT(!pM->hasOffsets());
@@ -1148,44 +1039,12 @@ OCIO_ADD_TEST(MatrixOpData, clone_offsets4)
     OCIO_CHECK_ASSERT(pClone->getArray() == ref.getArray());
 }
 
-OCIO_ADD_TEST(MatrixOpData, diff_bitdepth)
-{
-    OCIO::MatrixOpData m1(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
-    OCIO_CHECK_ASSERT(m1.isNoOp());
-    OCIO_CHECK_ASSERT(m1.isUnityDiagonal());
-    OCIO_CHECK_ASSERT(m1.isDiagonal());
-    OCIO_CHECK_ASSERT(!m1.hasOffsets());
-    OCIO_CHECK_NO_THROW(m1.validate());
-
-    OCIO::MatrixOpData m2(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT10);
-    OCIO_CHECK_ASSERT(!m2.isNoOp());
-    OCIO_CHECK_ASSERT(!m2.isUnityDiagonal());
-    OCIO_CHECK_ASSERT(m2.isDiagonal());
-    OCIO_CHECK_ASSERT(!m2.hasOffsets());
-    OCIO_CHECK_NO_THROW(m2.validate());
-
-    const double coeff
-        = (double)OCIO::GetBitDepthMaxValue(m2.getOutputBitDepth())
-        / (double)OCIO::GetBitDepthMaxValue(m2.getInputBitDepth());
-
-    const double error = 1e-6f;
-    // To validate the result, compute the expected results
-    // not using the MatrixOpData algorithm.
-    for (unsigned long idx = 0; idx<3; ++idx)
-    {
-        OCIO_CHECK_CLOSE(m1.getArray().getValues()[idx * 5] * coeff,
-                         m2.getArray().getValues()[idx * 5], error);
-    }
-}
-
 OCIO_ADD_TEST(MatrixOpData, test_construct)
 {
     OCIO::MatrixOpData matOp;
 
     OCIO_CHECK_EQUAL(matOp.getID(), "");
     OCIO_CHECK_EQUAL(matOp.getType(), OCIO::OpData::MatrixType);
-    OCIO_CHECK_EQUAL(matOp.getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(matOp.getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
     OCIO_CHECK_ASSERT(matOp.getFormatMetadata().getChildrenElements().empty());
     OCIO_CHECK_EQUAL(matOp.getOffsets()[0], 0.0f);
     OCIO_CHECK_EQUAL(matOp.getOffsets()[1], 0.0f);
@@ -1229,173 +1088,6 @@ OCIO_ADD_TEST(MatrixOpData, test_construct)
     OCIO_CHECK_EQUAL(matOp.getArray().getNumValues(), 16);
     OCIO_CHECK_EQUAL(matOp.getArray().getLength(), 4);
     OCIO_CHECK_EQUAL(matOp.getArray().getNumColorComponents(), 4);
-
-
-    const OCIO::BitDepth bitDepth = OCIO::BIT_DEPTH_UINT8;
-
-    OCIO::MatrixOpData m(bitDepth, bitDepth);
-    OCIO_CHECK_NO_THROW(m.validate());
-
-    OCIO_CHECK_EQUAL(m.getInputBitDepth(), bitDepth);
-    OCIO_CHECK_EQUAL(m.getOutputBitDepth(), bitDepth);
-}
-
-OCIO_ADD_TEST(MatrixOpData, output_depth_scaling)
-{
-    OCIO::MatrixOpData ref(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
-
-    // Set arbitrary matrix and offset values.
-    ref.setArrayValue(0, 3.24f);
-    ref.setArrayValue(1, -1.537f);
-    ref.setArrayValue(2, -0.49850f);
-    ref.setArrayValue(3, 0);
-    ref.setArrayValue(4, -0.9693f);
-    ref.setArrayValue(5, 1.876f);
-    ref.setArrayValue(6, 0.04156f);
-    ref.setArrayValue(7, 0);
-    ref.setArrayValue(8, 0.0556f);
-    ref.setArrayValue(9, -0.2040f);
-    ref.setArrayValue(10, 1.0573f);
-    ref.setArrayValue(11, 0);
-    ref.setArrayValue(12, 0);
-    ref.setArrayValue(13, 0);
-    ref.setArrayValue(14, 0);
-    ref.setArrayValue(15, 1);
-
-    ref.setOffsetValue(0, -0.111f);
-    ref.setOffsetValue(1, 0.297f);
-    ref.setOffsetValue(2, -0.118f);
-    ref.setOffsetValue(3, 0.425f);
-
-    // Get the array values and keep them to compare later.
-    const OCIO::ArrayDouble::Values initialCoeff
-        = ref.getArray().getValues();
-    double initialOffset[4];
-
-    initialOffset[0] = ref.getOffsets()[0];
-    initialOffset[1] = ref.getOffsets()[1];
-    initialOffset[2] = ref.getOffsets()[2];
-    initialOffset[3] = ref.getOffsets()[3];
-
-    const OCIO::BitDepth initialBitdepth = ref.getOutputBitDepth();
-
-    const OCIO::BitDepth newBitdepth = OCIO::BIT_DEPTH_UINT16;
-
-    const double factor = OCIO::GetBitDepthMaxValue(newBitdepth)
-        / OCIO::GetBitDepthMaxValue(initialBitdepth);
-
-    ref.setOutputBitDepth(newBitdepth);
-    // Make sure that the bit-depth was changed from
-    // the overriden method.
-    OCIO_CHECK_EQUAL(ref.getOutputBitDepth(), newBitdepth);
-
-    // Check that the scaling between the new coefficients and
-    // initial coefficients matches the factor computed above.
-    const OCIO::ArrayDouble::Values & newCoeff = ref.getArray().getValues();
-
-    // Sanity check first.
-    OCIO_CHECK_EQUAL(initialCoeff.size(), newCoeff.size());
-
-    double expectedValue;
-
-    // Coefficient check.
-    for (unsigned long i = 0; i < newCoeff.size(); i++)
-    {
-        expectedValue = initialCoeff[i] * factor;
-        OCIO_CHECK_EQUAL(expectedValue, newCoeff[i]);
-    }
-
-    // Offset check.
-    const unsigned long dim = ref.getArray().getLength();
-    for (unsigned long i = 0; i<dim; i++)
-    {
-        expectedValue = initialOffset[i] * factor;
-        OCIO_CHECK_EQUAL(expectedValue, ref.getOffsets()[i]);
-    }
-}
-
-OCIO_ADD_TEST(MatrixOpData, input_depth_scaling)
-{
-    OCIO::MatrixOpData ref(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
-
-    // Set arbitrary matrix and offset values.
-    ref.setArrayValue(0, 3.24f);
-    ref.setArrayValue(1, -1.537f);
-    ref.setArrayValue(2, -0.49850f);
-    ref.setArrayValue(3, 0);
-    ref.setArrayValue(4, -0.9693f);
-    ref.setArrayValue(5, 1.876f);
-    ref.setArrayValue(6, 0.04156f);
-    ref.setArrayValue(7, 0);
-    ref.setArrayValue(8, 0.0556f);
-    ref.setArrayValue(9, -0.2040f);
-    ref.setArrayValue(10, 1.0573f);
-    ref.setArrayValue(11, 0);
-    ref.setArrayValue(12, 0);
-    ref.setArrayValue(13, 0);
-    ref.setArrayValue(14, 0);
-    ref.setArrayValue(15, 1);
-
-    ref.setOffsetValue(0, -0.111f);
-    ref.setOffsetValue(1, 0.297f);
-    ref.setOffsetValue(2,-0.118f);
-    ref.setOffsetValue(3, 0.425f);
-
-    // Get the array values and keep them to compare later.
-    const OCIO::ArrayDouble::Values initialCoeff
-        = ref.getArray().getValues();
-    double initialOffset[4];
-
-    initialOffset[0] = ref.getOffsets()[0];
-    initialOffset[1] = ref.getOffsets()[1];
-    initialOffset[2] = ref.getOffsets()[2];
-    initialOffset[3] = ref.getOffsets()[3];
-
-    const OCIO::BitDepth initialBitdepth = ref.getInputBitDepth();
-
-    const OCIO::BitDepth newBitdepth = OCIO::BIT_DEPTH_UINT16;
-
-    const double factor = OCIO::GetBitDepthMaxValue(initialBitdepth)
-        / OCIO::GetBitDepthMaxValue(newBitdepth);
-
-    ref.setInputBitDepth(newBitdepth);
-    // Make sure that the bit-depth was changed from the
-    // overriden method.
-    OCIO_CHECK_EQUAL(ref.getInputBitDepth(), newBitdepth);
-
-    // Check that the scaling between the new coefficients and
-    // initial coefficients matches the factor computed above.
-    const OCIO::ArrayDouble::Values & newCoeff = ref.getArray().getValues();
-
-    // Sanity check first.
-    OCIO_CHECK_EQUAL(initialCoeff.size(), newCoeff.size());
-
-    const double error = 1e-10;
-    // Coefficient check.
-    for (unsigned long i = 0; i < newCoeff.size(); i++)
-    {
-        OCIO_CHECK_CLOSE((initialCoeff[i] * factor), newCoeff[i], error);
-    }
-
-    // Offset need to be unchanged.
-    const unsigned long dim = ref.getArray().getLength();
-    for (unsigned long i = 0; i<dim; i++) 
-    {
-        OCIO_CHECK_EQUAL(initialOffset[i], ref.getOffsets()[i]);
-    }
-}
-
-// Test that setting bit-depth does not affect Identity status.
-OCIO_ADD_TEST(MatrixOpData, identity)
-{
-    OCIO::MatrixOpData m1(OCIO::BIT_DEPTH_UINT16, OCIO::BIT_DEPTH_F16);
-    OCIO_CHECK_ASSERT( m1.isIdentity() );  // 16i --> 16f
-
-    m1.setInputBitDepth(OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_ASSERT( m1.isIdentity() );  // 32f --> 16f
-
-    m1.setOutputBitDepth(OCIO::BIT_DEPTH_UINT16);
-    OCIO_CHECK_ASSERT( m1.isIdentity() );  // 32f --> 16i
 }
 
 // Validate matrix composition.
@@ -1408,7 +1100,10 @@ OCIO_ADD_TEST(MatrixOpData, composition)
                             11, 12, 13, 14 };
     const float offsA[] = { 10, 11, 12, 13 };
 
-    OCIO::MatrixOpData mA(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_F16);
+    OCIO::MatrixOpData mA;
+    mA.setFileInputBitDepth(OCIO::BIT_DEPTH_UINT8);
+    mA.setFileOutputBitDepth(OCIO::BIT_DEPTH_F16);
+
     mA.setRGBA(mtxA);
     mA.setRGBAOffsets(offsA);
 
@@ -1418,8 +1113,10 @@ OCIO_ADD_TEST(MatrixOpData, composition)
                            31, 32, 33, 34 };
     const float offsB[] = { 30, 31, 32, 33 };
 
-    OCIO::MatrixOpDataRcPtr mB = std::make_shared<OCIO::MatrixOpData>(
-        OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_UINT10);
+    OCIO::MatrixOpDataRcPtr mB = std::make_shared<OCIO::MatrixOpData>();
+    mB->setFileInputBitDepth(OCIO::BIT_DEPTH_F16);
+    mB->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
+
     mB->setRGBA(mtxB);
     mB->setRGBAOffsets(offsB);
 
@@ -1435,8 +1132,8 @@ OCIO_ADD_TEST(MatrixOpData, composition)
     OCIO::MatrixOpDataRcPtr result(mA.compose(mBConst));
 
     // Check bit-depths copied correctly.
-    OCIO_CHECK_EQUAL(result->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
-    OCIO_CHECK_EQUAL(result->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OCIO_CHECK_EQUAL(result->getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OCIO_CHECK_EQUAL(result->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
 
     const OCIO::ArrayDouble::Values& newCoeff = result->getArray().getValues();
 
@@ -1459,22 +1156,26 @@ OCIO_ADD_TEST(MatrixOpData, composition)
 
 OCIO_ADD_TEST(MatrixOpData, equality)
 {
-    OCIO::MatrixOpData m1(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
+    OCIO::MatrixOpData m1;
     m1.setArrayValue(0, 2);
 
-    OCIO::MatrixOpData m2(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
+    OCIO::MatrixOpData m2;
     m2.setID("invalid_u_id_test");
     m2.setArrayValue(0, 2);
 
     // id is part of metadata. FormatMetadataImpl is ignored for ==.
     OCIO_CHECK_ASSERT(m1 == m2);
 
-    OCIO::MatrixOpData m3(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
+    // File bit-depth is ignored for ==.
+    m1.setFileInputBitDepth(OCIO::BIT_DEPTH_UINT8);
+    OCIO_CHECK_ASSERT(m1 == m2);
+
+    OCIO::MatrixOpData m3;
     m3.setArrayValue(0, 6);
 
     OCIO_CHECK_ASSERT(!(m1 == m3));
 
-    OCIO::MatrixOpData m4(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
+    OCIO::MatrixOpData m4;
     m4.setArrayValue(0, 2);
 
     OCIO_CHECK_ASSERT(m1 == m4);
@@ -1486,7 +1187,7 @@ OCIO_ADD_TEST(MatrixOpData, equality)
 
 OCIO_ADD_TEST(MatrixOpData, rgb)
 {
-    OCIO::MatrixOpData m(OCIO::BIT_DEPTH_UINT16, OCIO::BIT_DEPTH_UINT16);
+    OCIO::MatrixOpData m;
 
     const float rgb[9] = { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
     m.setRGB(rgb);
@@ -1515,7 +1216,7 @@ OCIO_ADD_TEST(MatrixOpData, rgb)
 
 OCIO_ADD_TEST(MatrixOpData, rgba)
 {
-    OCIO::MatrixOpData m(OCIO::BIT_DEPTH_UINT16, OCIO::BIT_DEPTH_UINT16);
+    OCIO::MatrixOpData m;
 
     const float rgba[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15 };
     m.setRGBA(rgba);
@@ -1527,67 +1228,12 @@ OCIO_ADD_TEST(MatrixOpData, rgba)
     }
 }
 
-OCIO_ADD_TEST(MatrixOpData, bitdepth_successive_changes)
-{
-    OCIO::MatrixOpData m1(OCIO::BIT_DEPTH_UINT10, OCIO::BIT_DEPTH_F32);
-
-    OCIO_CHECK_ASSERT(m1.isDiagonal());
-
-    const double scaleFactor = 
-        OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_F32)
-        / OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_UINT10);
-
-    const OCIO::ArrayDouble::Values& m1Coeff = m1.getArray().getValues();
-
-    const double error = 1e-10;
-
-    const unsigned long dim = m1.getArray().getLength();
-    for (unsigned long i = 0; i<dim; ++i)
-    {
-        for (unsigned long j = 0; j<dim; ++j)
-        {
-            if (i == j)
-            {
-                OCIO_CHECK_CLOSE(m1Coeff[i*dim + j], scaleFactor, error);
-            }
-        }
-    }
-
-    OCIO::MatrixOpData m2(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_UINT8);
-
-    m2.setInputBitDepth(OCIO::BIT_DEPTH_UINT8);
-    m2.setOutputBitDepth(OCIO::BIT_DEPTH_UINT12);
-
-    m2.setInputBitDepth(OCIO::BIT_DEPTH_F32);
-    m2.setOutputBitDepth(OCIO::BIT_DEPTH_UINT8);
-
-    m2.setInputBitDepth(OCIO::BIT_DEPTH_UINT10);
-    m2.setOutputBitDepth(OCIO::BIT_DEPTH_UINT16);
-
-    m2.setInputBitDepth(OCIO::BIT_DEPTH_UINT16);
-    m2.setOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
-
-    m2.setInputBitDepth(OCIO::BIT_DEPTH_UINT10);
-    m2.setOutputBitDepth(OCIO::BIT_DEPTH_F32);
-
-    OCIO_CHECK_ASSERT(m2.isDiagonal());
-
-    const OCIO::ArrayDouble::Values & m2Coeff = m2.getArray().getValues();
-
-    const size_t m1Size = m1Coeff.size();
-    const size_t m2Size = m2Coeff.size();
-    OCIO_CHECK_EQUAL(m1Size, m2Size);
-
-    for (size_t i = 0; i < m1Size; ++i)
-    {
-        OCIO_CHECK_CLOSE(m1Coeff[i], m2Coeff[i], error);
-    }
-}
-
 OCIO_ADD_TEST(MatrixOpData, matrixInverse_identity)
 {
-    OCIO::MatrixOpData
-        refMatrixOp(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_UINT12);
+    OCIO::MatrixOpData refMatrixOp;
+
+    refMatrixOp.setFileInputBitDepth(OCIO::BIT_DEPTH_F32);
+    refMatrixOp.setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT12);
 
     OCIO_CHECK_ASSERT(refMatrixOp.isDiagonal());
     OCIO_CHECK_ASSERT(refMatrixOp.isIdentity());
@@ -1600,10 +1246,10 @@ OCIO_ADD_TEST(MatrixOpData, matrixInverse_identity)
     OCIO_REQUIRE_ASSERT(invMatrixOp);
 
     // Inverse op should have its input/output bit-depth inverted.
-    OCIO_CHECK_EQUAL(invMatrixOp->getInputBitDepth(),
-                     refMatrixOp.getOutputBitDepth());
-    OCIO_CHECK_EQUAL(invMatrixOp->getOutputBitDepth(),
-                     refMatrixOp.getInputBitDepth());
+    OCIO_CHECK_EQUAL(invMatrixOp->getFileInputBitDepth(),
+                     refMatrixOp.getFileOutputBitDepth());
+    OCIO_CHECK_EQUAL(invMatrixOp->getFileOutputBitDepth(),
+                     refMatrixOp.getFileInputBitDepth());
 
     // But still be an identity matrix.
     OCIO_CHECK_ASSERT(invMatrixOp->isDiagonal());
@@ -1613,8 +1259,7 @@ OCIO_ADD_TEST(MatrixOpData, matrixInverse_identity)
 
 OCIO_ADD_TEST(MatrixOpData, matrixInverse_singular)
 {
-    OCIO::MatrixOpData singularMatrixOp(OCIO::BIT_DEPTH_F32,
-        OCIO::BIT_DEPTH_UINT12);
+    OCIO::MatrixOpData singularMatrixOp;
 
     // Set singular matrix values.
     const float mat[16] 
@@ -1639,8 +1284,7 @@ OCIO_ADD_TEST(MatrixOpData, matrixInverse_singular)
 
 OCIO_ADD_TEST(MatrixOpData, inverse)
 {
-    OCIO::MatrixOpData
-        refMatrixOp(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32);
+    OCIO::MatrixOpData refMatrixOp;
 
     // Set arbitrary matrix and offset values.
     const float matrix[16] = { 0.9f,  0.8f, -0.7f, 0.6f,
@@ -1656,12 +1300,6 @@ OCIO_ADD_TEST(MatrixOpData, inverse)
     OCIO::MatrixOpDataRcPtr invMatrixOp;
     OCIO_CHECK_NO_THROW(invMatrixOp = refMatrixOp.inverse());
     OCIO_REQUIRE_ASSERT(invMatrixOp);
-
-    // Input/output bit-depths swapped.
-    OCIO_CHECK_EQUAL(invMatrixOp->getInputBitDepth(),
-                     refMatrixOp.getOutputBitDepth());
-    OCIO_CHECK_EQUAL(invMatrixOp->getOutputBitDepth(),
-                     refMatrixOp.getInputBitDepth());
 
     const float expectedMatrix[16] = {
         0.75f,                3.5f,               3.5f,              -2.75f,
@@ -1691,8 +1329,7 @@ OCIO_ADD_TEST(MatrixOpData, inverse)
 
 OCIO_ADD_TEST(MatrixOpData, channel)
 {
-    OCIO::MatrixOpData refMatrixOp(OCIO::BIT_DEPTH_F32,
-                                   OCIO::BIT_DEPTH_UINT12);
+    OCIO::MatrixOpData refMatrixOp;
 
     OCIO_CHECK_ASSERT(!refMatrixOp.hasChannelCrosstalk());
 

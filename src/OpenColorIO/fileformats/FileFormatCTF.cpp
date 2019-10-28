@@ -1071,51 +1071,10 @@ void BuildOp(OpRcPtrVec & ops,
             fileTransform->setSrc(ref->getPath().c_str());
             FileTransform * pFileTranform = fileTransform.get();
 
-            size_t sizeBefore = ops.size();
             // This might call LocalFileFormat::buildFileOps if the file
             // is a CTF. BuildFileTransformOps is making sure there is no
             // cycling recursion.
             BuildFileTransformOps(ops, config, context, *pFileTranform, dir);
-
-            // The original in/out bit-depths of the loaded opvec need
-            // to be set to match the depths of the Reference element
-            // that they replace.
-            size_t sizeAfter = ops.size();
-            if (sizeBefore != sizeAfter)
-            {
-                // Set the input depth of the first op in the loaded opvec
-                // to match the Reference.
-                while (sizeBefore < sizeAfter)
-                {
-                    ConstOpRcPtr op = ops[sizeBefore];
-                    ConstOpDataRcPtr data = op->data();
-                    auto fileData = DynamicPtrCast<const FileNoOpData>(data);
-                    // Ignore the FileNoOps that are inserted in order to
-                    // properly handle nested References.
-                    if (!fileData)
-                    {
-                        ops[sizeBefore]->setInputBitDepth(
-                            ref->getInputBitDepth());
-                        break;
-                    }
-                    ++sizeBefore;
-                }
-                // Set the output depth of the last op in the loaded opvec
-                // to match the Reference.
-                while (sizeAfter > sizeBefore)
-                {
-                    --sizeAfter;
-                    ConstOpRcPtr op = ops[sizeAfter];
-                    ConstOpDataRcPtr data = op->data();
-                    auto fileData = DynamicPtrCast<const FileNoOpData>(data);
-                    if (!fileData)
-                    {
-                        ops[sizeAfter]->setOutputBitDepth(
-                            ref->getOutputBitDepth());
-                        break;
-                    }
-                }
-            }
         }
     }
     else

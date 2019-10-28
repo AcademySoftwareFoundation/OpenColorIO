@@ -67,12 +67,9 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         virtual FormatMetadata & getChildElement(int i) = 0;
 
-        //!cpp:function:: Add a child element with a given name. Name has to be
-        // non-empty. Return a reference to the added element.
-        virtual FormatMetadata & addChildElement(const char * name) = 0;
-
-        //!cpp:function:: Add a child element with a given name and value. Name
-        // has to be non-empty. Return a reference to the added element.
+        //!cpp:function:: Add a child element with a given name and value. Name has to be
+        // non-empty. Value may be empty, particularly if this element will have children.
+        // Return a reference to the added element.
         virtual FormatMetadata & addChildElement(const char * name, const char * value) = 0;
 
         //!cpp:function::
@@ -83,7 +80,10 @@ OCIO_NAMESPACE_ENTER
     protected:
         FormatMetadata();
         virtual ~FormatMetadata();
-};
+
+    private:
+        FormatMetadata(const FormatMetadata & rhs) = delete;
+    };
 
     //!rst:: //////////////////////////////////////////////////////////////////
 

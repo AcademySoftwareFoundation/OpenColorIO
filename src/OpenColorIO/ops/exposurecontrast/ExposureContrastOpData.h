@@ -141,9 +141,7 @@ public:
 
     ExposureContrastOpData(const ExposureContrastOpData &) = delete;
 
-    ExposureContrastOpData(BitDepth inBitDepth,
-                           BitDepth outBitDepth,
-                           Style style);
+    ExposureContrastOpData(Style style);
 
     virtual ~ExposureContrastOpData();
 

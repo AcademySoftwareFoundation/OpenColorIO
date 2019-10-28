@@ -17,12 +17,6 @@
 OCIO_NAMESPACE_ENTER
 {
 
-    void CreateGammaOp(OpRcPtrVec & ops,
-                       const FormatMetadataImpl & info,
-                       GammaOpData::Style style,
-                       const double * gamma4,
-                       const double * offset4);
-
     void CreateGammaOp(OpRcPtrVec & ops, 
                        GammaOpDataRcPtr & gammaData,
                        TransformDirection direction);

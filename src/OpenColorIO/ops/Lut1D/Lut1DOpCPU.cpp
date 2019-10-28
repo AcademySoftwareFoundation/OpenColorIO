@@ -158,7 +158,7 @@ public:
     Lut1DRendererHueAdjust() = delete;
 
     explicit Lut1DRendererHueAdjust(ConstLut1DOpDataRcPtr & lut)
-        :  Lut1DRenderer<inBD, outBD>(lut, BIT_DEPTH_F32) {}
+        :  Lut1DRenderer<inBD, outBD>(lut, BIT_DEPTH_F32) {} // HueAdjust needs float processing.
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
@@ -170,7 +170,7 @@ public:
     Lut1DRendererHalfCodeHueAdjust() = delete;
 
     explicit Lut1DRendererHalfCodeHueAdjust(ConstLut1DOpDataRcPtr & lut)
-        : Lut1DRendererHalfCode<inBD, outBD>(lut, BIT_DEPTH_F32) {}
+        : Lut1DRendererHalfCode<inBD, outBD>(lut, BIT_DEPTH_F32) {} // HueAdjust needs float processing.
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
@@ -273,15 +273,9 @@ template<BitDepth inBD, BitDepth outBD>
 BaseLut1DRenderer<inBD, outBD>::BaseLut1DRenderer(ConstLut1DOpDataRcPtr & lut)
     :   OpCPU()
     ,   m_dim(lut->getArray().getLength())
-    ,   m_outBitDepth(lut->getOutputBitDepth())
+    ,   m_outBitDepth(outBD)
 {
     static_assert(inBD!=BIT_DEPTH_UINT32 && inBD!=BIT_DEPTH_UINT14, "Unsupported bit depth.");
-
-    if(inBD!=lut->getInputBitDepth() || outBD!=lut->getOutputBitDepth())
-    {
-        throw Exception("Bit depth mismatch between the 1D LUT and the CPU processing.");
-    }
-
     update(lut);
 }
 
@@ -292,12 +286,6 @@ BaseLut1DRenderer<inBD, outBD>::BaseLut1DRenderer(ConstLut1DOpDataRcPtr & lut, B
     ,   m_outBitDepth(outBitDepth)
 {
     static_assert(inBD!=BIT_DEPTH_UINT32 && inBD!=BIT_DEPTH_UINT14, "Unsupported bit depth.");
-
-    if(inBD!=lut->getInputBitDepth() || outBD!=lut->getOutputBitDepth())
-    {
-        throw Exception("Bit depth mismatch between the 1D LUT and the CPU processing.");
-    }
-
     update(lut);
 }
 
@@ -377,9 +365,9 @@ void BaseLut1DRenderer<inBD, outBD>::updateData(ConstLut1DOpDataRcPtr & lut)
         // TODO: Would be faster if R, G, B were adjacent in memory?
         for(unsigned long i=0; i<m_dim; ++i)
         {
-            ((T*)m_tmpLutR)[i] = L_ADJUST(lutValues[i*3+0]);
-            ((T*)m_tmpLutG)[i] = L_ADJUST(lutValues[i*3+1]);
-            ((T*)m_tmpLutB)[i] = L_ADJUST(lutValues[i*3+2]);
+            ((T*)m_tmpLutR)[i] = L_ADJUST(lutValues[i*3+0] * outMax);
+            ((T*)m_tmpLutG)[i] = L_ADJUST(lutValues[i*3+1] * outMax);
+            ((T*)m_tmpLutB)[i] = L_ADJUST(lutValues[i*3+2] * outMax);
         }
     }
     else
@@ -392,17 +380,16 @@ void BaseLut1DRenderer<inBD, outBD>::updateData(ConstLut1DOpDataRcPtr & lut)
 
         for(unsigned long i=0; i<m_dim; ++i)
         {
-            ((float*)m_tmpLutR)[i] = SanitizeFloat(lutValues[i*3+0]);
-            ((float*)m_tmpLutG)[i] = SanitizeFloat(lutValues[i*3+1]);
-            ((float*)m_tmpLutB)[i] = SanitizeFloat(lutValues[i*3+2]);
+            ((float*)m_tmpLutR)[i] = SanitizeFloat(lutValues[i*3+0] * outMax);
+            ((float*)m_tmpLutG)[i] = SanitizeFloat(lutValues[i*3+1] * outMax);
+            ((float*)m_tmpLutB)[i] = SanitizeFloat(lutValues[i*3+2] * outMax);
         }
     }
 
     m_alphaScaling = (float)GetBitDepthMaxValue(outBD)
                      / (float)GetBitDepthMaxValue(inBD);
 
-    m_step = ((float)m_dim - 1.0f)
-             / (float)GetBitDepthMaxValue(lut->getInputBitDepth());
+    m_step = ((float)m_dim - 1.0f) / (float)GetBitDepthMaxValue(inBD);
 
     m_dimMinusOne = m_dim - 1.0f;
 }
@@ -476,13 +463,13 @@ void Lut1DRendererHalfCode<inBD, outBD>::apply(const void * inImg, void * outImg
     //
     // NB: The if/else is expanded at compile time based on the template args.
     //     (Should be no runtime cost.)
-    if(inBD != BIT_DEPTH_F32)
+    if (inBD != BIT_DEPTH_F32)
     {
         const OutType * lutR = (const OutType *)this->m_tmpLutR;
         const OutType * lutG = (const OutType *)this->m_tmpLutG;
         const OutType * lutB = (const OutType *)this->m_tmpLutB;
 
-        for(long idx=0; idx<numPixels; ++idx)
+        for (long idx=0; idx<numPixels; ++idx)
         {
             out[0] = LookupLut<InType, OutType>::compute(lutR, in[0]);
             out[1] = LookupLut<InType, OutType>::compute(lutG, in[1]);
@@ -1123,11 +1110,6 @@ InvLut1DRenderer<inBD, outBD>::InvLut1DRenderer(ConstLut1DOpDataRcPtr & lut)
     ,   m_dim(0)
     ,   m_alphaScaling(0.0f)
 {
-    if(inBD!=lut->getInputBitDepth() || outBD!=lut->getOutputBitDepth())
-    {
-        throw Exception("Bit depth mismatch between the 1D LUT and the CPU processing.");
-    }
-
     updateData(lut);
 }
 
@@ -1204,21 +1186,26 @@ void InvLut1DRenderer<inBD, outBD>::updateData(ConstLut1DOpDataRcPtr & lut)
     // decreasing we negate the values to obtain the required sort order
     // of smallest to largest.
 
+    const float lutScale = (float)GetBitDepthMaxValue(inBD);
+
     const Array::Values& lutValues = lut->getArray().getValues();
     for(unsigned long i = 0; i<m_dim; ++i)
     {
-        m_tmpLutR[i] = redProperties.isIncreasing ? lutValues[i*3+0]: -lutValues[i*3+0];
+        m_tmpLutR[i] = redProperties.isIncreasing ? lutValues[i*3+0] * lutScale :
+                                                    -lutValues[i*3+0] * lutScale;
 
         if(!hasSingleLut)
         {
-            m_tmpLutG[i] = greenProperties.isIncreasing ? lutValues[i*3+1]: -lutValues[i*3+1];
-            m_tmpLutB[i] = blueProperties.isIncreasing ? lutValues[i*3+2]: -lutValues[i*3+2];
+            m_tmpLutG[i] = greenProperties.isIncreasing ? lutValues[i*3+1] * lutScale :
+                                                          -lutValues[i*3+1] * lutScale;
+            m_tmpLutB[i] = blueProperties.isIncreasing ? lutValues[i*3+2] * lutScale :
+                                                         -lutValues[i*3+2] * lutScale;
         }
     }
 
-    const float outMax = (float)GetBitDepthMaxValue(lut->getOutputBitDepth());
+    const float outMax = (float)GetBitDepthMaxValue(outBD);
 
-    m_alphaScaling = outMax / (float)GetBitDepthMaxValue(lut->getInputBitDepth());
+    m_alphaScaling = outMax / (float)GetBitDepthMaxValue(inBD);
 
     // Converts from index units to inDepth units of the original LUT.
     // (Note that inDepth of the original LUT is outDepth of the inverse LUT.)
@@ -1391,36 +1378,44 @@ void InvLut1DRendererHalfCode<inBD, outBD>::updateData(ConstLut1DOpDataRcPtr & l
         ComponentParams::setComponentParams(this->m_paramsB, blueProperties,  this->m_tmpLutB.data(), lutValues[2]);
     }
 
+    const float lutScale = (float)GetBitDepthMaxValue(inBD);
+
     // Fill temporary LUT.
     // Note: Since FindLutInv requires increasing arrays, if the LUT is
     // decreasing we negate the values to obtain the required sort order
     // of smallest to largest.
     for(unsigned long i = 0; i < 32768; ++i)     // positive half domain
     {
-        this->m_tmpLutR[i] = redProperties.isIncreasing ? lutValues[i*3+0]: -lutValues[i*3+0];
+        this->m_tmpLutR[i] = redProperties.isIncreasing ? lutValues[i*3+0] * lutScale :
+                                                          -lutValues[i*3+0] * lutScale;
 
         if( !hasSingleLut )
         {
-            this->m_tmpLutG[i] = greenProperties.isIncreasing ? lutValues[i*3+1]: -lutValues[i*3+1];
-            this->m_tmpLutB[i] = blueProperties.isIncreasing ? lutValues[i*3+2]: -lutValues[i*3+2];
+            this->m_tmpLutG[i] = greenProperties.isIncreasing ? lutValues[i*3+1] * lutScale :
+                                                                -lutValues[i*3+1] * lutScale;
+            this->m_tmpLutB[i] = blueProperties.isIncreasing ? lutValues[i*3+2] * lutScale :
+                                                               -lutValues[i*3+2] * lutScale;
         }
     }
 
     for(unsigned long i = 32768; i < 65536; ++i) // negative half domain
     {
         // (Per above, the LUT must be increasing, so negative half domain is sign reversed.)
-        this->m_tmpLutR[i] = redProperties.isIncreasing ? -lutValues[i*3+0]: lutValues[i*3+0];
+        this->m_tmpLutR[i] = redProperties.isIncreasing ? -lutValues[i*3+0] * lutScale :
+                                                          lutValues[i*3+0] * lutScale;
 
         if( !hasSingleLut )
         {
-            this->m_tmpLutG[i] = greenProperties.isIncreasing ? -lutValues[i*3+1]: lutValues[i*3+1];
-            this->m_tmpLutB[i] = blueProperties.isIncreasing ? -lutValues[i*3+2]: lutValues[i*3+2];
+            this->m_tmpLutG[i] = greenProperties.isIncreasing ? -lutValues[i*3+1] * lutScale :
+                                                                lutValues[i*3+1] * lutScale;
+            this->m_tmpLutB[i] = blueProperties.isIncreasing ? -lutValues[i*3+2] * lutScale :
+                                                               lutValues[i*3+2] * lutScale;
         }
     }
 
-    const float outMax = (float)GetBitDepthMaxValue(lut->getOutputBitDepth());
+    const float outMax = (float)GetBitDepthMaxValue(outBD);
 
-    this->m_alphaScaling = outMax / (float)GetBitDepthMaxValue(lut->getInputBitDepth());
+    this->m_alphaScaling = outMax / (float)GetBitDepthMaxValue(inBD);
 
     // Note the difference for half domain LUTs, since the distance between
     // between adjacent entries is not constant, we cannot roll it into the
@@ -1681,11 +1676,6 @@ ConstOpCPURcPtr GetLut1DRenderer_OutBitDepth(ConstLut1DOpDataRcPtr & lut)
 template<BitDepth inBD>
 ConstOpCPURcPtr GetLut1DRenderer_InBitDepth(ConstLut1DOpDataRcPtr & lut, BitDepth outBD)
 {
-    if(lut->getOutputBitDepth()!=outBD)
-    {
-        throw Exception("Bit depth mismatch between the 1D LUT and the CPU processing.");
-    }
-
     switch(outBD)
     {
         case BIT_DEPTH_UINT8:
@@ -1714,11 +1704,6 @@ ConstOpCPURcPtr GetLut1DRenderer_InBitDepth(ConstLut1DOpDataRcPtr & lut, BitDept
 
 ConstOpCPURcPtr GetLut1DRenderer(ConstLut1DOpDataRcPtr & lut, BitDepth inBD, BitDepth outBD)
 {
-    if(lut->getInputBitDepth()!=inBD)
-    {
-        throw Exception("Bit depth mismatch between the 1D LUT and the CPU processing.");
-    }
-
     switch(inBD)
     {
         case BIT_DEPTH_UINT8:
@@ -1757,7 +1742,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 
 #include "UnitTest.h"
-
+#include "UnitTestUtils.h"
 
 OCIO_ADD_TEST(GamutMapUtil, order3_test)
 {
@@ -1876,12 +1861,8 @@ OCIO_ADD_TEST(GamutMapUtil, order3_test)
 
 OCIO_ADD_TEST(Lut1DRenderer, nan_test)
 {
-    OCIO::Lut1DOpDataRcPtr lut =
-        std::make_shared<OCIO::Lut1DOpData>(OCIO::BIT_DEPTH_F32,
-                                            OCIO::BIT_DEPTH_F32,
-                                            OCIO::Lut1DOpData::LUT_STANDARD);
+    OCIO::Lut1DOpDataRcPtr lut = std::make_shared<OCIO::Lut1DOpData>(8);
 
-    lut->getArray().resize(8, 3);
     float * values = &lut->getArray().getValues()[0];
 
     values[0]  = 0.0f;      values[1]  = 0.0f;      values[2]  = 0.002333f;
@@ -1894,8 +1875,10 @@ OCIO_ADD_TEST(Lut1DRenderer, nan_test)
     values[21] = 1.0f;      values[22] = 1.0f;      values[23] = 1.0f;
 
     OCIO::ConstLut1DOpDataRcPtr lutConst = lut;
-    OCIO::ConstOpCPURcPtr renderer 
-        = OCIO::GetLut1DRenderer(lutConst, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32);
+    OCIO::ConstOpCPURcPtr renderer;
+    OCIO_CHECK_NO_THROW(renderer = OCIO::GetLut1DRenderer(lutConst,
+                                                          OCIO::BIT_DEPTH_F32,
+                                                          OCIO::BIT_DEPTH_F32));
 
     const float qnan = std::numeric_limits<float>::quiet_NaN();
     const float inf = std::numeric_limits<float>::infinity();
@@ -1926,23 +1909,21 @@ OCIO_ADD_TEST(Lut1DRenderer, nan_test)
 OCIO_ADD_TEST(Lut1DRenderer, nan_half_test)
 {
     OCIO::Lut1DOpDataRcPtr lut = std::make_shared<OCIO::Lut1DOpData>(
-        OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_F32,
-        OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
-        OCIO::INTERP_LINEAR,
-        OCIO::Lut1DOpData::LUT_INPUT_HALF_CODE);
+        OCIO::Lut1DOpData::LUT_INPUT_HALF_CODE, 65536);
 
     float * values = &lut->getArray().getValues()[0];
 
     // Changed values for nan input.
-    const int nanIdRed = 32256 * 3;
+    constexpr int nanIdRed = 32256 * 3;
     values[nanIdRed] = -1.0f;
     values[nanIdRed + 1] = -2.0f;
     values[nanIdRed + 2] = -3.0f;
 
-    lut->setInputBitDepth(OCIO::BIT_DEPTH_F32);
     OCIO::ConstLut1DOpDataRcPtr lutConst = lut;
-    OCIO::ConstOpCPURcPtr renderer 
-        = OCIO::GetLut1DRenderer(lutConst, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32);
+    OCIO::ConstOpCPURcPtr renderer;
+    OCIO_CHECK_NO_THROW(renderer = OCIO::GetLut1DRenderer(lutConst,
+                                                          OCIO::BIT_DEPTH_F32,
+                                                          OCIO::BIT_DEPTH_F32));
 
     const float qnan = std::numeric_limits<float>::quiet_NaN();
     float pixels[16] = { qnan, 0.5f, 0.3f, -0.2f,
@@ -1967,10 +1948,7 @@ OCIO_ADD_TEST(Lut1DRenderer, bit_depth_support)
 
     // Note: Copy & paste of logtolin_8to8.lut
 
-    OCIO::Lut1DOpDataRcPtr lutData 
-        = std::make_shared<OCIO::Lut1DOpData>(OCIO::BIT_DEPTH_UINT8,
-                                              OCIO::BIT_DEPTH_UINT8,
-                                              OCIO::Lut1DOpData::LUT_STANDARD);
+    OCIO::Lut1DOpDataRcPtr lutData = std::make_shared<OCIO::Lut1DOpData>(256);
 
     OCIO::Array::Values & vals = lutData->getArray().getValues();
 
@@ -2233,8 +2211,10 @@ OCIO_ADD_TEST(Lut1DRenderer, bit_depth_support)
        255.0f,        255.0f,        255.0f   };
 
     vals = lutValues;
+    lutData->getArray().scale(1.0f / 255.0f);
+    OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
 
-    const unsigned NB_PIXELS = 4;
+    constexpr unsigned NB_PIXELS = 4;
 
     const std::vector<uint8_t> uint8_inImg = { 
           0,   1,   2,   0,
@@ -2251,17 +2231,20 @@ OCIO_ADD_TEST(Lut1DRenderer, bit_depth_support)
     // Processing from UINT8 to UINT8.
     {
         OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
-        OCIO::ConstOpCPURcPtr cpuOp
-            = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
+        OCIO::ConstOpCPURcPtr cpuOp;
+        OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constLut,
+                                                           OCIO::BIT_DEPTH_UINT8,
+                                                           OCIO::BIT_DEPTH_UINT8));
 
-        const bool isLookup
-            = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8, 
-                                                                 OCIO::BIT_DEPTH_UINT8>>(cpuOp)->isLookup();
+        auto op = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8,
+                                                                     OCIO::BIT_DEPTH_UINT8>>(cpuOp);
+        OCIO_REQUIRE_ASSERT(op);
+        const bool isLookup = op->isLookup();
         OCIO_CHECK_ASSERT(isLookup);
 
         std::vector<uint8_t> outImg(NB_PIXELS * 4, 0);
 
-        OCIO_CHECK_NO_THROW( cpuOp->apply(&uint8_inImg[0], &outImg[0], NB_PIXELS) );
+        cpuOp->apply(&uint8_inImg[0], &outImg[0], NB_PIXELS);
 
         OCIO_CHECK_EQUAL(outImg[ 0],   0);
         OCIO_CHECK_EQUAL(outImg[ 1],   0);
@@ -2286,20 +2269,23 @@ OCIO_ADD_TEST(Lut1DRenderer, bit_depth_support)
 
     // Processing from UINT8 to UINT8, using the inverse LUT.
     {
-        OCIO::Lut1DOpDataRcPtr lutDataCloned = lutData->inverse();
-        OCIO::ConstLut1DOpDataRcPtr constLut = lutDataCloned;
+        OCIO::Lut1DOpDataRcPtr lutInvData = lutData->inverse();
+        OCIO::ConstLut1DOpDataRcPtr constInvLut = lutInvData;
 
-        OCIO::ConstOpCPURcPtr cpuOp
-            = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
+        OCIO::ConstOpCPURcPtr cpuOp;
+        OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constInvLut,
+                                                           OCIO::BIT_DEPTH_UINT8,
+                                                           OCIO::BIT_DEPTH_UINT8));
 
-        const bool isLookup
-            = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8, 
-                                                                 OCIO::BIT_DEPTH_UINT8>>(cpuOp)->isLookup();
+        auto op = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8,
+                                                                     OCIO::BIT_DEPTH_UINT8>>(cpuOp);
+        OCIO_REQUIRE_ASSERT(op);
+        const bool isLookup = op->isLookup();
         OCIO_CHECK_ASSERT(isLookup);
 
         std::vector<uint8_t> outImg(NB_PIXELS * 4, 0);
 
-        OCIO_CHECK_NO_THROW( cpuOp->apply(&uint8_inImg[0], &outImg[0], NB_PIXELS) );
+        cpuOp->apply(&uint8_inImg[0], &outImg[0], NB_PIXELS);
 
         OCIO_CHECK_EQUAL(outImg[ 0],  24);
         OCIO_CHECK_EQUAL(outImg[ 1],  25);
@@ -2324,22 +2310,20 @@ OCIO_ADD_TEST(Lut1DRenderer, bit_depth_support)
 
     // Processing from UINT8 to UINT16.
     {
-        OCIO::Lut1DOpDataRcPtr lutDataCloned = lutData->clone();
-        lutDataCloned->setOutputBitDepth(OCIO::BIT_DEPTH_UINT16);
+        OCIO::ConstOpCPURcPtr cpuOp;
+        OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constLut,
+                                                           OCIO::BIT_DEPTH_UINT8,
+                                                           OCIO::BIT_DEPTH_UINT16));
 
-        OCIO::ConstLut1DOpDataRcPtr constLut = lutDataCloned;
-
-        OCIO::ConstOpCPURcPtr cpuOp
-            = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16);
-
-        const bool isLookup
-            = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8, 
-                                                                 OCIO::BIT_DEPTH_UINT16>>(cpuOp)->isLookup();
+        auto op = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8,
+                                                                     OCIO::BIT_DEPTH_UINT16>>(cpuOp);
+        OCIO_REQUIRE_ASSERT(op);
+        const bool isLookup = op->isLookup();
         OCIO_CHECK_ASSERT(isLookup);
 
         std::vector<uint16_t> outImg(NB_PIXELS * 4, 0);
 
-        OCIO_CHECK_NO_THROW( cpuOp->apply(&uint8_inImg[0], &outImg[0], NB_PIXELS) );
+        cpuOp->apply(&uint8_inImg[0], &outImg[0], NB_PIXELS);
 
         OCIO_CHECK_EQUAL(outImg[ 0], uint16_outImg[ 0]);
         OCIO_CHECK_EQUAL(outImg[ 1], uint16_outImg[ 1]);
@@ -2364,22 +2348,20 @@ OCIO_ADD_TEST(Lut1DRenderer, bit_depth_support)
 
     // Processing from UINT8 to F16.
     {
-        OCIO::Lut1DOpDataRcPtr lutDataCloned = lutData->clone();
-        lutDataCloned->setOutputBitDepth(OCIO::BIT_DEPTH_F16);
+        OCIO::ConstOpCPURcPtr cpuOp;
+        OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constLut,
+                                                           OCIO::BIT_DEPTH_UINT8,
+                                                           OCIO::BIT_DEPTH_F16));
 
-        OCIO::ConstLut1DOpDataRcPtr constLut = lutDataCloned;
-
-        OCIO::ConstOpCPURcPtr cpuOp
-            = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_F16);
-
-        const bool isLookup
-            = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8, 
-                                                                 OCIO::BIT_DEPTH_F16>>(cpuOp)->isLookup();
+        auto op = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8,
+                                                                     OCIO::BIT_DEPTH_F16>>(cpuOp);
+        OCIO_REQUIRE_ASSERT(op);
+        const bool isLookup = op->isLookup();
         OCIO_CHECK_ASSERT(isLookup);
 
         std::vector<half> outImg(NB_PIXELS * 4, 0);
 
-        OCIO_CHECK_NO_THROW( cpuOp->apply(&uint8_inImg[0], &outImg[0], NB_PIXELS) );
+        cpuOp->apply(&uint8_inImg[0], &outImg[0], NB_PIXELS);
 
         OCIO_CHECK_EQUAL(outImg[ 0], 0.0f);
         OCIO_CHECK_EQUAL(outImg[ 1], 0.0f);
@@ -2404,22 +2386,20 @@ OCIO_ADD_TEST(Lut1DRenderer, bit_depth_support)
 
     // Processing from UINT8 to F32.
     {
-        OCIO::Lut1DOpDataRcPtr lutDataCloned = lutData->clone();
-        lutDataCloned->setOutputBitDepth(OCIO::BIT_DEPTH_F32);
+        OCIO::ConstOpCPURcPtr cpuOp;
+        OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constLut,
+                                                           OCIO::BIT_DEPTH_UINT8,
+                                                           OCIO::BIT_DEPTH_F32));
 
-        OCIO::ConstLut1DOpDataRcPtr constLut = lutDataCloned;
-
-        OCIO::ConstOpCPURcPtr cpuOp
-            = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_F32);
-
-        const bool isLookup
-            = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8, 
-                                                                 OCIO::BIT_DEPTH_F32>>(cpuOp)->isLookup();
+        auto op = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_UINT8,
+                                                                     OCIO::BIT_DEPTH_F32>>(cpuOp);
+        OCIO_REQUIRE_ASSERT(op);
+        const bool isLookup = op->isLookup();
         OCIO_CHECK_ASSERT(isLookup);
 
         std::vector<float> outImg(NB_PIXELS * 4, 0);
 
-        OCIO_CHECK_NO_THROW( cpuOp->apply(&uint8_inImg[0], &outImg[0], NB_PIXELS) );
+        cpuOp->apply(&uint8_inImg[0], &outImg[0], NB_PIXELS);
 
         OCIO_CHECK_EQUAL(outImg[ 0], 0.0f);
         OCIO_CHECK_EQUAL(outImg[ 1], 0.0f);
@@ -2451,25 +2431,22 @@ OCIO_ADD_TEST(Lut1DRenderer, bit_depth_support)
         uint8_inImg[ 8]/255.0f, uint8_inImg[ 9]/255.0f, uint8_inImg[10]/255.0f, uint8_inImg[11]/255.0f,
         uint8_inImg[12]/255.0f, uint8_inImg[13]/255.0f, uint8_inImg[14]/255.0f, uint8_inImg[15]/255.0f };
 
-    // LUT will not be a lookup table.
+    // LUT will be used for interpolation, not look-up.
     {
-        OCIO::Lut1DOpDataRcPtr lutDataCloned = lutData->clone();
-        lutDataCloned->setInputBitDepth(OCIO::BIT_DEPTH_F32);
-        lutDataCloned->setOutputBitDepth(OCIO::BIT_DEPTH_UINT8);
+        OCIO::ConstOpCPURcPtr cpuOp;
+        OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constLut,
+                                                           OCIO::BIT_DEPTH_F32,
+                                                           OCIO::BIT_DEPTH_UINT8));
 
-        OCIO::ConstLut1DOpDataRcPtr constLut = lutDataCloned;
-
-        OCIO::ConstOpCPURcPtr cpuOp
-            = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_UINT8);
-
-        const bool isLookup
-            = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_F32, 
-                                                                 OCIO::BIT_DEPTH_UINT8>>(cpuOp)->isLookup();
+        auto op = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_F32,
+                                                                     OCIO::BIT_DEPTH_UINT8>>(cpuOp);
+        OCIO_REQUIRE_ASSERT(op);
+        const bool isLookup = op->isLookup();
         OCIO_CHECK_ASSERT(!isLookup);
 
         std::vector<uint8_t> outImg(NB_PIXELS * 4, 0);
 
-        OCIO_CHECK_NO_THROW( cpuOp->apply(&float_inImg[0], &outImg[0], NB_PIXELS) );
+        cpuOp->apply(&float_inImg[0], &outImg[0], NB_PIXELS);
 
         OCIO_CHECK_EQUAL(outImg[ 0],   0);
         OCIO_CHECK_EQUAL(outImg[ 1],   0);
@@ -2492,25 +2469,21 @@ OCIO_ADD_TEST(Lut1DRenderer, bit_depth_support)
         OCIO_CHECK_EQUAL(outImg[15], 255);
     }
 
-    // LUT will not be a lookup table.
+    // LUT will be used for interpolation, not look-up.
     {
-        OCIO::Lut1DOpDataRcPtr lutDataCloned = lutData->clone();
-        lutDataCloned->setInputBitDepth(OCIO::BIT_DEPTH_F32);
-        lutDataCloned->setOutputBitDepth(OCIO::BIT_DEPTH_UINT16);
-
-        OCIO::ConstLut1DOpDataRcPtr constLut = lutDataCloned;
-
-        OCIO::ConstOpCPURcPtr cpuOp
-            = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_UINT16);
-
-        const bool isLookup
-            = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_F32, 
-                                                                 OCIO::BIT_DEPTH_UINT16>>(cpuOp)->isLookup();
+        OCIO::ConstOpCPURcPtr cpuOp;
+        OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constLut,
+                                                           OCIO::BIT_DEPTH_F32,
+                                                           OCIO::BIT_DEPTH_UINT16));
+        auto op = OCIO::DynamicPtrCast<const OCIO::BaseLut1DRenderer<OCIO::BIT_DEPTH_F32,
+                                                                     OCIO::BIT_DEPTH_UINT16>>(cpuOp);
+        OCIO_REQUIRE_ASSERT(op);
+        const bool isLookup = op->isLookup();
         OCIO_CHECK_ASSERT(!isLookup);
 
         std::vector<uint16_t> outImg(NB_PIXELS * 4, 0);
 
-        OCIO_CHECK_NO_THROW( cpuOp->apply(&float_inImg[0], &outImg[0], NB_PIXELS) );
+        cpuOp->apply(&float_inImg[0], &outImg[0], NB_PIXELS);
 
         OCIO_CHECK_EQUAL(outImg[ 0], uint16_outImg[ 0]);
         OCIO_CHECK_EQUAL(outImg[ 1], uint16_outImg[ 1]);
@@ -2533,5 +2506,1809 @@ OCIO_ADD_TEST(Lut1DRenderer, bit_depth_support)
         OCIO_CHECK_EQUAL(outImg[15], uint16_outImg[15]);
     }
 }
+
+OCIO_ADD_TEST(Lut1DRenderer, basic)
+{
+    // By default, this constructor creates an 'identity LUT'.
+    OCIO::Lut1DOpDataRcPtr lutData =
+        std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 65536);
+
+    lutData->setFileOutputBitDepth(OCIO::BIT_DEPTH_F32);
+
+    OCIO_CHECK_NO_THROW(lutData->finalize());
+
+    const float step = 1.f / ((float)lutData->getArray().getLength() - 1.0f);
+
+    const float inImg[8] = {
+        0.0f, 0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, step, 1.0f };
+
+    const float error = 1e-6f;
+    {
+        OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
+        OCIO::ConstOpCPURcPtr cpuOp;
+        OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32));
+
+        std::vector<float> outImg(2 * 4, 1);
+        cpuOp->apply(&inImg[0], &outImg[0], 2);
+
+        OCIO_CHECK_CLOSE(outImg[0], 0.0f, error);
+        OCIO_CHECK_CLOSE(outImg[1], 0.0f, error);
+        OCIO_CHECK_CLOSE(outImg[2], 0.0f, error);
+        OCIO_CHECK_CLOSE(outImg[3], 1.0f, error);
+
+        OCIO_CHECK_CLOSE(outImg[4], 0.0f, error);
+        OCIO_CHECK_CLOSE(outImg[5], 0.0f, error);
+        OCIO_CHECK_CLOSE(outImg[6], step, error);
+        OCIO_CHECK_CLOSE(outImg[7], 1.0f, error);
+    }
+
+    // No more an 'identity LUT 1D'.
+    const float arbitraryVal = 0.123456f;
+
+    lutData->getArray()[5] = arbitraryVal;
+
+    OCIO_CHECK_NO_THROW(lutData->finalize());
+    OCIO_CHECK_ASSERT(!lutData->isIdentity());
+    {
+        OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
+        OCIO::ConstOpCPURcPtr cpuOp;
+        OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32));
+
+        std::vector<float> outImg(2 * 4, 1);
+        cpuOp->apply(&inImg[0], &outImg[0], 2);
+
+        OCIO_CHECK_CLOSE(outImg[0], 0.0f, error);
+        OCIO_CHECK_CLOSE(outImg[1], 0.0f, error);
+        OCIO_CHECK_CLOSE(outImg[2], 0.0f, error);
+        OCIO_CHECK_CLOSE(outImg[3], 1.0f, error);
+
+        OCIO_CHECK_CLOSE(outImg[4], 0.0f, error);
+        OCIO_CHECK_CLOSE(outImg[5], 0.0f, error);
+        OCIO_CHECK_CLOSE(outImg[6], arbitraryVal, error);
+        OCIO_CHECK_CLOSE(outImg[7], 1.0f, error);
+    }
+}
+
+OCIO_ADD_TEST(Lut1DRenderer, half)
+{
+    OCIO::Lut1DOpDataRcPtr lutData
+        = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 65536);
+
+    const float step = 1.f / ((float)lutData->getArray().getLength() - 1.0f);
+
+    // No more an 'identity LUT 1D'.
+    constexpr float arbitraryVal = 0.123456f;
+    lutData->getArray()[5] = arbitraryVal;
+    OCIO_CHECK_ASSERT(!lutData->isIdentity());
+
+    const half inImg[8] = {
+        0.1f, 0.3f, 0.4f, 1.0f,
+        0.0f, 0.9f, step, 0.0f };
+
+    OCIO_CHECK_NO_THROW(lutData->finalize());
+
+    OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
+    OCIO::ConstOpCPURcPtr cpuOp;
+    OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_F32));
+
+    std::vector<float> outImg(2 * 4, -1.f);
+    cpuOp->apply(&inImg[0], &outImg[0], 2);
+
+    OCIO_CHECK_EQUAL(outImg[0], inImg[0]);
+    OCIO_CHECK_EQUAL(outImg[1], inImg[1]);
+    OCIO_CHECK_EQUAL(outImg[2], inImg[2]);
+    OCIO_CHECK_EQUAL(outImg[3], inImg[3]);
+
+    OCIO_CHECK_EQUAL(outImg[4], inImg[4]);
+    OCIO_CHECK_EQUAL(outImg[5], inImg[5]);
+    OCIO_CHECK_CLOSE(outImg[6], arbitraryVal, 1e-5f);
+    OCIO_CHECK_EQUAL(outImg[7], inImg[7]);
+}
+
+OCIO_ADD_TEST(Lut1DRenderer, nan)
+{
+    // By default, this constructor creates an 'identity LUT'.
+    OCIO::Lut1DOpDataRcPtr lutData =
+        std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 65536);
+
+    OCIO_CHECK_NO_THROW(lutData->finalize());
+
+    OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
+    OCIO::ConstOpCPURcPtr cpuOp;
+    OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32));
+
+    const float step = 1.f / ((float)lutData->getArray().getLength() - 1.0f);
+
+    float myImage[8] = {
+        std::numeric_limits<float>::quiet_NaN(), 0.0f, 0.0f, 1.0f,
+                                           0.0f, 0.0f, step, 1.0f };
+
+    std::vector<float> outImg(2 * 4);
+    cpuOp->apply(&myImage[0], &outImg[0], 2);
+
+    OCIO_CHECK_EQUAL(outImg[0], 0.0f);
+    OCIO_CHECK_EQUAL(outImg[1], 0.0f);
+    OCIO_CHECK_EQUAL(outImg[2], 0.0f);
+    OCIO_CHECK_EQUAL(outImg[3], 1.0f);
+
+    OCIO_CHECK_EQUAL(outImg[4], 0.0f);
+    OCIO_CHECK_EQUAL(outImg[5], 0.0f);
+    OCIO_CHECK_EQUAL(outImg[6], step);
+    OCIO_CHECK_EQUAL(outImg[7], 1.0f);
+}
+
+OCIO_ADD_TEST(Lut1DRenderer, lut_1d_red)
+{
+    OCIO::Lut1DOpDataRcPtr lutData =
+        std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 32);
+
+    OCIO::Array::Values & vals = lutData->getArray().getValues();
+    const std::vector<float> lutValues = {
+            0.f / 1023.f, 0.f, 0.f,
+           33.f / 1023.f, 0.f, 0.f,
+           66.f / 1023.f, 0.f, 0.f,
+           99.f / 1023.f, 0.f, 0.f,
+          132.f / 1023.f, 0.f, 0.f,
+          165.f / 1023.f, 0.f, 0.f,
+          198.f / 1023.f, 0.f, 0.f,
+          231.f / 1023.f, 0.f, 0.f,
+          264.f / 1023.f, 0.f, 0.f,
+          297.f / 1023.f, 0.f, 0.f,
+          330.f / 1023.f, 0.f, 0.f,
+          363.f / 1023.f, 0.f, 0.f,
+          396.f / 1023.f, 0.f, 0.f,
+          429.f / 1023.f, 0.f, 0.f,
+          462.f / 1023.f, 0.f, 0.f,
+          495.f / 1023.f, 0.f, 0.f,
+          528.f / 1023.f, 0.f, 0.f,
+          561.f / 1023.f, 0.f, 0.f,
+          594.f / 1023.f, 0.f, 0.f,
+          627.f / 1023.f, 0.f, 0.f,
+          660.f / 1023.f, 0.f, 0.f,
+          693.f / 1023.f, 0.f, 0.f,
+          726.f / 1023.f, 0.f, 0.f,
+          759.f / 1023.f, 0.f, 0.f,
+          792.f / 1023.f, 0.f, 0.f,
+          825.f / 1023.f, 0.f, 0.f,
+          858.f / 1023.f, 0.f, 0.f,
+          891.f / 1023.f, 0.f, 0.f,
+          924.f / 1023.f, 0.f, 0.f,
+          957.f / 1023.f, 0.f, 0.f,
+          990.f / 1023.f, 0.f, 0.f,
+         1023.f / 1023.f, 0.f, 0.f
+    };
+    vals = lutValues;
+
+    OCIO_CHECK_NO_THROW(lutData->finalize());
+
+    OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
+    OCIO::ConstOpCPURcPtr cpuOp;
+    OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constLut, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_UINT16));
+
+    constexpr float step = 1.f / 31.f;
+    const std::vector<float> inImg = {
+        0.f,   0.f,  0.f,  0.f,
+        step,  0.f,  0.f,  0.f,
+        0.f,  step,  0.f,  0.f,
+        0.f,   0.f, step,  0.f,
+        step, step, step,  0.f };
+
+    std::vector<uint16_t> outImg(5 * 4, 1);
+    cpuOp->apply(&inImg[0], &outImg[0], 5);
+
+    const uint16_t scaledStep = (uint16_t)roundf(step * 65535.0f);
+
+    OCIO_CHECK_EQUAL(outImg[0], 0);
+    OCIO_CHECK_EQUAL(outImg[1], 0);
+    OCIO_CHECK_EQUAL(outImg[2], 0);
+    OCIO_CHECK_EQUAL(outImg[3], 0);
+
+    OCIO_CHECK_EQUAL(outImg[4], scaledStep);
+    OCIO_CHECK_EQUAL(outImg[5], 0);
+    OCIO_CHECK_EQUAL(outImg[6], 0);
+    OCIO_CHECK_EQUAL(outImg[7], 0);
+
+    OCIO_CHECK_EQUAL(outImg[8], 0);
+    OCIO_CHECK_EQUAL(outImg[9], 0);
+    OCIO_CHECK_EQUAL(outImg[10], 0);
+    OCIO_CHECK_EQUAL(outImg[11], 0);
+
+    OCIO_CHECK_EQUAL(outImg[12], 0);
+    OCIO_CHECK_EQUAL(outImg[13], 0);
+    OCIO_CHECK_EQUAL(outImg[14], 0);
+    OCIO_CHECK_EQUAL(outImg[15], 0);
+
+    OCIO_CHECK_EQUAL(outImg[16], scaledStep);
+    OCIO_CHECK_EQUAL(outImg[17], 0);
+    OCIO_CHECK_EQUAL(outImg[18], 0);
+    OCIO_CHECK_EQUAL(outImg[19], 0);
+}
+
+OCIO_ADD_TEST(Lut1DRenderer, lut_1d_green)
+{
+    OCIO::Lut1DOpDataRcPtr lutData
+        = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 32);
+
+    OCIO::Array::Values & vals = lutData->getArray().getValues();
+    const std::vector<float> lutValues = {
+        0.f,    0.f / 1023.f, 0.f,
+        0.f,   33.f / 1023.f, 0.f,
+        0.f,   66.f / 1023.f, 0.f,
+        0.f,   99.f / 1023.f, 0.f,
+        0.f,  132.f / 1023.f, 0.f,
+        0.f,  165.f / 1023.f, 0.f,
+        0.f,  198.f / 1023.f, 0.f,
+        0.f,  231.f / 1023.f, 0.f,
+        0.f,  264.f / 1023.f, 0.f,
+        0.f,  297.f / 1023.f, 0.f,
+        0.f,  330.f / 1023.f, 0.f,
+        0.f,  363.f / 1023.f, 0.f,
+        0.f,  396.f / 1023.f, 0.f,
+        0.f,  429.f / 1023.f, 0.f,
+        0.f,  462.f / 1023.f, 0.f,
+        0.f,  495.f / 1023.f, 0.f,
+        0.f,  528.f / 1023.f, 0.f,
+        0.f,  561.f / 1023.f, 0.f,
+        0.f,  594.f / 1023.f, 0.f,
+        0.f,  627.f / 1023.f, 0.f,
+        0.f,  660.f / 1023.f, 0.f,
+        0.f,  693.f / 1023.f, 0.f,
+        0.f,  726.f / 1023.f, 0.f,
+        0.f,  759.f / 1023.f, 0.f,
+        0.f,  792.f / 1023.f, 0.f,
+        0.f,  825.f / 1023.f, 0.f,
+        0.f,  858.f / 1023.f, 0.f,
+        0.f,  891.f / 1023.f, 0.f,
+        0.f,  924.f / 1023.f, 0.f,
+        0.f,  957.f / 1023.f, 0.f,
+        0.f,  990.f / 1023.f, 0.f,
+        0.f, 1023.f / 1023.f, 0.f
+    };
+    vals = lutValues;
+
+    OCIO_CHECK_NO_THROW(lutData->finalize());
+
+    OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
+    OCIO::ConstOpCPURcPtr cpuOp;
+    OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constLut,
+                                                       OCIO::BIT_DEPTH_UINT16,
+                                                       OCIO::BIT_DEPTH_F32));
+
+    constexpr uint16_t step = (uint16_t)(65535 / 31);
+    const std::vector<uint16_t> uint16_inImg = {
+        0,    0,    0,    0,
+        step, 0,    0,    0,
+        0,    step, 0,    0,
+        0,    0,    step, 0,
+        step, step, step, 0 };
+
+    std::vector<float> outImg(5 * 4, -1.f);
+    cpuOp->apply(&uint16_inImg[0], &outImg[0], 5);
+
+    constexpr float scaledStep = (float)step / 65535.0f;
+
+    OCIO_CHECK_EQUAL(outImg[0], 0.f);
+    OCIO_CHECK_EQUAL(outImg[1], 0.f);
+    OCIO_CHECK_EQUAL(outImg[2], 0.f);
+    OCIO_CHECK_EQUAL(outImg[3], 0.f);
+
+    OCIO_CHECK_EQUAL(outImg[4], 0.f);
+    OCIO_CHECK_EQUAL(outImg[5], 0.f);
+    OCIO_CHECK_EQUAL(outImg[6], 0.f);
+    OCIO_CHECK_EQUAL(outImg[7], 0.f);
+
+    OCIO_CHECK_EQUAL(outImg[8], 0.f);
+    OCIO_CHECK_EQUAL(outImg[9], scaledStep);
+    OCIO_CHECK_EQUAL(outImg[10], 0.f);
+    OCIO_CHECK_EQUAL(outImg[11], 0.f);
+
+    OCIO_CHECK_EQUAL(outImg[12], 0.f);
+    OCIO_CHECK_EQUAL(outImg[13], 0.f);
+    OCIO_CHECK_EQUAL(outImg[14], 0.f);
+    OCIO_CHECK_EQUAL(outImg[15], 0.f);
+
+    OCIO_CHECK_EQUAL(outImg[16], 0.f);
+    OCIO_CHECK_EQUAL(outImg[17], scaledStep);
+    OCIO_CHECK_EQUAL(outImg[18], 0.f);
+    OCIO_CHECK_EQUAL(outImg[19], 0.f);
+}
+
+OCIO_ADD_TEST(Lut1DRenderer, lut_1d_blue)
+{
+    OCIO::Lut1DOpDataRcPtr lutData
+        = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 32);
+
+    OCIO::Array::Values & vals = lutData->getArray().getValues();
+    const std::vector<float> lutValues = {
+        0.f, 0.f,    0.f / 1023.f,
+        0.f, 0.f,   33.f / 1023.f,
+        0.f, 0.f,   66.f / 1023.f,
+        0.f, 0.f,   99.f / 1023.f,
+        0.f, 0.f,  132.f / 1023.f,
+        0.f, 0.f,  165.f / 1023.f,
+        0.f, 0.f,  198.f / 1023.f,
+        0.f, 0.f,  231.f / 1023.f,
+        0.f, 0.f,  264.f / 1023.f,
+        0.f, 0.f,  297.f / 1023.f,
+        0.f, 0.f,  330.f / 1023.f,
+        0.f, 0.f,  363.f / 1023.f,
+        0.f, 0.f,  396.f / 1023.f,
+        0.f, 0.f,  429.f / 1023.f,
+        0.f, 0.f,  462.f / 1023.f,
+        0.f, 0.f,  495.f / 1023.f,
+        0.f, 0.f,  528.f / 1023.f,
+        0.f, 0.f,  561.f / 1023.f,
+        0.f, 0.f,  594.f / 1023.f,
+        0.f, 0.f,  627.f / 1023.f,
+        0.f, 0.f,  660.f / 1023.f,
+        0.f, 0.f,  693.f / 1023.f,
+        0.f, 0.f,  726.f / 1023.f,
+        0.f, 0.f,  759.f / 1023.f,
+        0.f, 0.f,  792.f / 1023.f,
+        0.f, 0.f,  825.f / 1023.f,
+        0.f, 0.f,  858.f / 1023.f,
+        0.f, 0.f,  891.f / 1023.f,
+        0.f, 0.f,  924.f / 1023.f,
+        0.f, 0.f,  957.f / 1023.f,
+        0.f, 0.f,  990.f / 1023.f,
+        0.f, 0.f, 1023.f / 1023.f
+    };
+    vals = lutValues;
+
+    OCIO_CHECK_NO_THROW(lutData->finalize());
+
+    OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
+    OCIO::ConstOpCPURcPtr cpuOp;
+    OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constLut,
+                                                       OCIO::BIT_DEPTH_UINT16,
+                                                       OCIO::BIT_DEPTH_UINT16));
+
+    constexpr uint16_t step = (uint16_t)(65535 / 31);
+    const std::vector<uint16_t> uint16_inImg = {
+        0,    0,    0,    0,
+        step, 0,    0,    0,
+        0,    step, 0,    0,
+        0,    0,    step, 0,
+        step, step, step, 0 };
+
+    std::vector<uint16_t> outImg(5 * 4, 2000);
+    cpuOp->apply(&uint16_inImg[0], &outImg[0], 5);
+
+    OCIO_CHECK_EQUAL(outImg[0], 0);
+    OCIO_CHECK_EQUAL(outImg[1], 0);
+    OCIO_CHECK_EQUAL(outImg[2], 0);
+    OCIO_CHECK_EQUAL(outImg[3], 0);
+
+    OCIO_CHECK_EQUAL(outImg[4], 0);
+    OCIO_CHECK_EQUAL(outImg[5], 0);
+    OCIO_CHECK_EQUAL(outImg[6], 0);
+    OCIO_CHECK_EQUAL(outImg[7], 0);
+
+    OCIO_CHECK_EQUAL(outImg[8], 0);
+    OCIO_CHECK_EQUAL(outImg[9], 0);
+    OCIO_CHECK_EQUAL(outImg[10], 0);
+    OCIO_CHECK_EQUAL(outImg[11], 0);
+
+    OCIO_CHECK_EQUAL(outImg[12], 0);
+    OCIO_CHECK_EQUAL(outImg[13], 0);
+    OCIO_CHECK_EQUAL(outImg[14], step);
+    OCIO_CHECK_EQUAL(outImg[15], 0);
+
+    OCIO_CHECK_EQUAL(outImg[16], 0);
+    OCIO_CHECK_EQUAL(outImg[17], 0);
+    OCIO_CHECK_EQUAL(outImg[18], step);
+    OCIO_CHECK_EQUAL(outImg[19], 0);
+}
+
+OCIO_ADD_TEST(Lut1DRenderer, lut_1d_special_values)
+{
+    // Create empty Config to use.
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+
+    const std::string ctfLUT("lut1d_infinity.ctf");
+    OCIO::FileTransformRcPtr fileTransform = OCIO::CreateFileTransform(ctfLUT);
+
+    OCIO::ConstProcessorRcPtr proc;
+    // Get the processor corresponding to the transform.
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+
+    // This test should use the "interpolation" renderer path.
+    OCIO::ConstCPUProcessorRcPtr cpuFwd;
+    OCIO_CHECK_NO_THROW(cpuFwd = proc->getDefaultCPUProcessor());
+
+    constexpr float step = 1.f / 65535.f;
+
+    float inImage[] = {
+                  0.0f,     0.5f * step,            step, 1.0f,
+        3000.0f * step, 32000.0f * step, 65535.0f * step, 1.0f
+    };
+
+    std::vector<float> outImage(2 * 4, -12.345f);
+    OCIO::PackedImageDesc srcImgDesc((void*)&inImage[0], 2, 1, 4);
+    OCIO::PackedImageDesc dstImgDesc((void*)&outImage[0], 2, 1, 4);
+    cpuFwd->apply(srcImgDesc, dstImgDesc);
+
+    // -Inf is mapped to -MAX_FLOAT
+    const float negmax = -std::numeric_limits<float>::max();
+
+    const float lutElem_1 = -3216.000488281f;
+    const float lutElem_3000 = -539.565734863f;
+
+    const float rtol = powf(2.f, -14.f);
+
+    // LUT output bit-depth is 12i so normalize to F32.
+    const float outRange = 4095.f;
+
+    OCIO_CHECK_CLOSE(outImage[0], negmax, rtol);
+    OCIO_CHECK_CLOSE(outImage[1], (lutElem_1 / outRange + negmax) * 0.5f, rtol);
+    OCIO_CHECK_CLOSE(outImage[2], lutElem_1 / outRange, rtol);
+    OCIO_CHECK_EQUAL(outImage[3], 1.0f);
+
+    OCIO_CHECK_CLOSE(outImage[4], lutElem_3000 / outRange, rtol);
+    OCIO_CHECK_CLOSE(outImage[5], negmax, rtol);
+    OCIO_CHECK_CLOSE(outImage[6], negmax, rtol);
+    OCIO_CHECK_EQUAL(outImage[7], 1.0f);
+}
+
+OCIO_ADD_TEST(Lut1DRenderer, lut_1d_hue_adjust)
+{
+    // Create empty Config to use.
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+
+    const std::string ctfLUT("lut1d_1024_hue_adjust_test.ctf");
+    OCIO::FileTransformRcPtr fileTransform = OCIO::CreateFileTransform(ctfLUT);
+
+    OCIO::ConstProcessorRcPtr proc;
+    // Get the processor corresponding to the transform.
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+
+    // This test should use the "lookup" renderer path.
+    OCIO::ConstCPUProcessorRcPtr cpuFwd;
+    OCIO_CHECK_NO_THROW(cpuFwd = proc->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_UINT16,
+                                                                OCIO::BIT_DEPTH_UINT16,
+                                                                OCIO::OPTIMIZATION_DEFAULT,
+                                                                OCIO::FINALIZATION_EXACT));
+
+    constexpr long NB_PIXELS = 2;
+    // TODO: use UINT10 when implemented by ImageDesc.
+    const uint16_t inImage[NB_PIXELS * 4] = {
+        100 * 65535 / 1023, 500 * 65535 / 1023, 800 * 65535 / 1023,  200 * 65535 / 1023,
+        400 * 65535 / 1023, 700 * 65535 / 1023, 300 * 65535 / 1023, 1023 * 65535 / 1023 };
+
+    std::vector<uint16_t> outImage(NB_PIXELS * 4, 2000);
+    OCIO::PackedImageDesc srcImgDesc((void*)&inImage[0], NB_PIXELS, 1, 4,
+                                     OCIO::BIT_DEPTH_UINT16,
+                                     sizeof(uint16_t),
+                                     OCIO::AutoStride,
+                                     OCIO::AutoStride);
+    OCIO::PackedImageDesc dstImgDesc((void*)&outImage[0], NB_PIXELS, 1, 4,
+                                     OCIO::BIT_DEPTH_UINT16,
+                                     sizeof(uint16_t),
+                                     OCIO::AutoStride,
+                                     OCIO::AutoStride);
+    cpuFwd->apply(srcImgDesc, dstImgDesc);
+
+    OCIO_CHECK_EQUAL(outImage[0], 1523);
+    OCIO_CHECK_EQUAL(outImage[1], 33883);  // Would be 31583 w/out hue adjust.
+    OCIO_CHECK_EQUAL(outImage[2], 58154);
+    OCIO_CHECK_EQUAL(outImage[3], 12812);
+
+    OCIO_CHECK_EQUAL(outImage[4], 22319);  // Would be 21710 w/out hue adjust.
+    OCIO_CHECK_EQUAL(outImage[5], 50648);
+    OCIO_CHECK_EQUAL(outImage[6], 12877);
+    OCIO_CHECK_EQUAL(outImage[7], 65535);
+
+    // This test should use the "interpolation" renderer path.
+    float inFloatImage[8];
+    for (int i = 0; i < 8; ++i)
+    {
+        inFloatImage[i] = (float)inImage[i] / 65535.f;
+    }
+    std::fill(outImage.begin(), outImage.end(), 200);
+    OCIO::PackedImageDesc srcImgFDesc((void*)&inFloatImage[0], NB_PIXELS, 1, 4,
+                                      OCIO::BIT_DEPTH_F32,
+                                      sizeof(float),
+                                      OCIO::AutoStride,
+                                      OCIO::AutoStride);
+
+    OCIO::ConstCPUProcessorRcPtr cpuFwdFast;
+    OCIO_CHECK_NO_THROW(cpuFwdFast = proc->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F32,
+                                                                    OCIO::BIT_DEPTH_UINT16,
+                                                                    OCIO::OPTIMIZATION_DEFAULT,
+                                                                    OCIO::FINALIZATION_DEFAULT));
+    
+    cpuFwdFast->apply(srcImgFDesc, dstImgDesc);
+    OCIO_CHECK_EQUAL(outImage[0], 1523);
+    OCIO_CHECK_EQUAL(outImage[1], 33883);  // Would be 31583 w/out hue adjust.
+    OCIO_CHECK_EQUAL(outImage[2], 58154);
+    OCIO_CHECK_EQUAL(outImage[3], 12812);
+
+    OCIO_CHECK_EQUAL(outImage[4], 22319);  // Would be 21710 w/out hue adjust.
+    OCIO_CHECK_EQUAL(outImage[5], 50648);
+    OCIO_CHECK_EQUAL(outImage[6], 12877);
+    OCIO_CHECK_EQUAL(outImage[7], 65535);
+}
+
+OCIO_ADD_TEST(Lut1DRenderer, lut_1d_half_domain_hue_adjust)
+{
+    // Create empty Config to use.
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+
+    const std::string ctfLUT("lut1d_hd_hue_adjust.ctf");
+    OCIO::FileTransformRcPtr fileTransform = OCIO::CreateFileTransform(ctfLUT);
+
+    OCIO::ConstProcessorRcPtr proc;
+    // Get the processor corresponding to the transform.
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+
+    // This test should use the "interpolation" renderer path.
+    OCIO::ConstCPUProcessorRcPtr cpuFwd;
+    OCIO_CHECK_NO_THROW(cpuFwd = proc->getDefaultCPUProcessor());
+
+    const float inImage[] = {
+        0.05f, 0.18f, 1.1f, 0.5f,
+        2.3f, 0.01f, 0.3f, 1.0f };
+
+    std::vector<float> outImage(2 * 4, -1.f);
+    OCIO::PackedImageDesc srcImgDesc((void*)&inImage[0], 2, 1, 4);
+    OCIO::PackedImageDesc dstImgDesc((void*)&outImage[0], 2, 1, 4);
+    cpuFwd->apply(srcImgDesc, dstImgDesc);
+
+    constexpr float rtol = 1e-6f;
+    constexpr float minExpected = 1e-3f;
+
+    OCIO_CHECK_ASSERT(
+        OCIO::EqualWithSafeRelError(outImage[0], 0.54780269f, rtol, minExpected));
+    OCIO_CHECK_ASSERT(
+        OCIO::EqualWithSafeRelError(outImage[1],
+                                    9.57448578f, // Would be 5.0 w/out hue adjust.
+                                    rtol, minExpected));
+    OCIO_CHECK_ASSERT(
+        OCIO::EqualWithSafeRelError(outImage[2], 73.45562744f, rtol, minExpected));
+    OCIO_CHECK_EQUAL(outImage[3], 0.5f);
+
+    OCIO_CHECK_ASSERT(
+        OCIO::EqualWithSafeRelError(outImage[4], 188.087067f, rtol, minExpected));
+    OCIO_CHECK_ASSERT(
+        OCIO::EqualWithSafeRelError(outImage[5], 0.0324990489f, rtol, minExpected));
+    OCIO_CHECK_ASSERT(
+        OCIO::EqualWithSafeRelError(outImage[6],
+                                    23.8472710f, // Would be 11.3372078 w/out hue adjust.
+                                    rtol, minExpected));
+    OCIO_CHECK_EQUAL(outImage[7], 1.0f);
+
+    // This test should use the "lookup" renderer path.
+    OCIO_CHECK_NO_THROW(cpuFwd = proc->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_UINT16,
+                                                                OCIO::BIT_DEPTH_F32,
+                                                                OCIO::OPTIMIZATION_DEFAULT,
+                                                                OCIO::FINALIZATION_EXACT));
+
+    // TODO: Use 10i when ImageDesc handles 10i.
+    const uint16_t inImageInt[] = {
+        200 * 65535 / 1023, 800 * 65535 / 1023, 500 * 65535 / 1023, 0,
+        400 * 65535 / 1023, 100 * 65535 / 1023, 700 * 65535 / 1023, 1023 * 65535 / 1023
+    };
+
+    std::fill(outImage.begin(), outImage.end(), -1.f);
+    OCIO::PackedImageDesc srcImgIntDesc((void*)&inImageInt[0], 2, 1, 4,
+                                        OCIO::BIT_DEPTH_UINT16,
+                                        sizeof(uint16_t),
+                                        OCIO::AutoStride,
+                                        OCIO::AutoStride);
+    cpuFwd->apply(srcImgIntDesc, dstImgDesc);
+
+    OCIO_CHECK_ASSERT(OCIO::EqualWithSafeRelError(outImage[0],
+                                                  5.72640753f, rtol, minExpected));
+    OCIO_CHECK_ASSERT(OCIO::EqualWithSafeRelError(outImage[1],
+                                                  46.2259789f, rtol, minExpected));
+    OCIO_CHECK_ASSERT(
+        OCIO::EqualWithSafeRelError(outImage[2],
+                                    25.9756680f, // Would be 23.6895752 w/out hue adjust.
+                                    rtol, minExpected));
+    OCIO_CHECK_EQUAL(outImage[3], 0.0f);
+
+    OCIO_CHECK_ASSERT(
+        OCIO::EqualWithSafeRelError(outImage[4],
+                                    20.0804043f, // Would be 17.0063152 w/out hue adjust.
+                                    rtol, minExpected));
+    OCIO_CHECK_ASSERT(OCIO::EqualWithSafeRelError(outImage[5],
+                                                  1.78572845f, rtol, minExpected));
+    OCIO_CHECK_ASSERT(OCIO::EqualWithSafeRelError(outImage[6],
+                                                  38.3760300f, rtol, minExpected));
+    OCIO_CHECK_EQUAL(outImage[7], 1.0f);
+}
+
+namespace
+{
+std::string GetErrorMessage(float expected, float actual)
+{
+    std::ostringstream oss;
+    oss << "expected: " << expected << " != " << "actual: " << actual;
+    return oss.str();
+}
+}
+
+OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_hue_adjust)
+{
+    const std::string ctfLUT("lut1d_1024_hue_adjust_test.ctf");
+
+    OCIO::OpRcPtrVec ops;
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
+    OCIO_CHECK_NO_THROW(OCIO::BuildOpsTest(ops, ctfLUT, context,
+                        OCIO::TRANSFORM_DIR_FORWARD));
+
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+    auto op = std::const_pointer_cast<const OCIO::Op>(ops[1]);
+    auto opData = op->data();
+    OCIO_CHECK_EQUAL(opData->getType(), OCIO::OpData::Lut1DType);
+    auto lut = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opData);
+
+    auto lutData = lut->clone();
+
+    // Currently need to set this to 16i in order for style == FAST to pass.
+    // See comment in Lut1DOpData::MakeFastLut1DFromInverse.
+    lutData->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT16);
+
+    OCIO_CHECK_NO_THROW(lutData->finalize());
+    OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
+    OCIO::ConstOpCPURcPtr cpuOp;
+    OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constLut,
+                                                       OCIO::BIT_DEPTH_F32,
+                                                       OCIO::BIT_DEPTH_F32));
+
+    const float inImage[] = {
+        0.1f,  0.25f, 0.7f,  0.f,
+        0.66f, 0.25f, 0.81f, 0.5f,
+        // 0.18f, 0.80f, 0.45f, 1.f }; // This one is easier to get correct.
+        0.18f, 0.99f, 0.45f, 1.f };    // Setting G way up on the s-curve is harder.
+    constexpr long NB_PIXELS = 3;
+
+    std::vector<float> outImage(NB_PIXELS * 4);
+    cpuOp->apply(inImage, &outImage[0], NB_PIXELS);
+
+    // Inverse using LUT_INVERSION_FAST.
+    lutData->setInversionQuality(OCIO::LUT_INVERSION_FAST);
+    auto lutDataInv = lutData->inverse();
+
+    OCIO::ConstLut1DOpDataRcPtr constLutInv = lutDataInv;
+    OCIO_CHECK_NO_THROW(lutDataInv->finalize());
+    OCIO::ConstOpCPURcPtr cpuOpInv;
+    OCIO_CHECK_NO_THROW(cpuOpInv = OCIO::GetLut1DRenderer(constLutInv,
+                                                          OCIO::BIT_DEPTH_F32,
+                                                          OCIO::BIT_DEPTH_F32));
+
+    std::vector<float> backImage(NB_PIXELS * 4, -1.f);
+    cpuOpInv->apply(&outImage[0], &backImage[0], NB_PIXELS);
+
+    for (long i = 0; i < NB_PIXELS * 4; ++i)
+    {
+        OCIO_CHECK_ASSERT_MESSAGE(!OCIO::FloatsDiffer(inImage[i], backImage[i], 130, false),
+                                  GetErrorMessage(inImage[i], backImage[i]));
+    }
+
+    // Repeat with LUT_INVERSION_EXACT.
+    lutData->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
+    auto lutDataInv2 = lutData->inverse();
+
+    OCIO::ConstLut1DOpDataRcPtr constLutInv2 = lutDataInv2;
+    OCIO_CHECK_NO_THROW(lutDataInv2->finalize());
+    OCIO::ConstOpCPURcPtr cpuOpInv2;
+    OCIO_CHECK_NO_THROW(cpuOpInv2 = OCIO::GetLut1DRenderer(constLutInv2,
+                                                           OCIO::BIT_DEPTH_F32,
+                                                           OCIO::BIT_DEPTH_F32));
+
+    std::fill(backImage.begin(), backImage.end(), -1.f),
+    cpuOpInv2->apply(&outImage[0], &backImage[0], NB_PIXELS);
+
+    for (long i = 0; i < NB_PIXELS * 4; ++i)
+    {
+        OCIO_CHECK_ASSERT_MESSAGE(!OCIO::FloatsDiffer(inImage[i], backImage[i], 50, false),
+                                  GetErrorMessage(inImage[i], backImage[i]));
+    }
+}
+
+OCIO_ADD_TEST(Lut1DRenderer, lut_1d_identity_half)
+{
+    // Create the 64k 16f Identity 1D LUT and the test Image.
+
+    // By default, this constructor creates an 'identity lut'.
+    OCIO::Lut1DOpDataRcPtr lutData
+        = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_INPUT_OUTPUT_HALF_CODE,
+                                              65536);
+
+    OCIO_CHECK_NO_THROW(lutData->finalize());
+
+    OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
+    OCIO::ConstOpCPURcPtr cpuOp;
+    OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constLut,
+                                                       OCIO::BIT_DEPTH_F16,
+                                                       OCIO::BIT_DEPTH_F16));
+
+    constexpr unsigned nbPixels = 65536;
+    std::vector<half> myImage(nbPixels * 4);
+
+    unsigned imgCntr = 0;
+
+    for (unsigned i = 0; i < nbPixels; i++)
+    {
+        half hVal;
+        hVal.setBits((unsigned short)i);
+
+        myImage[imgCntr++] = hVal;
+        myImage[imgCntr++] = hVal;
+        myImage[imgCntr++] = hVal;
+        myImage[imgCntr++] = 1.0f;
+    }
+
+    std::vector<half> outImg(nbPixels * 4);
+    cpuOp->apply(&myImage[0], &outImg[0], nbPixels);
+
+    imgCntr = 0;
+    for (unsigned i = 0; i < nbPixels; i++, imgCntr += 4)
+    {
+        half hVal;
+        hVal.setBits((unsigned short)i);
+
+        if (hVal.isNan())
+        {
+            OCIO_CHECK_EQUAL((float)outImg[imgCntr + 0], 0.f);
+            OCIO_CHECK_EQUAL((float)outImg[imgCntr + 1], 0.f);
+            OCIO_CHECK_EQUAL((float)outImg[imgCntr + 2], 0.f);
+            OCIO_CHECK_EQUAL((float)outImg[imgCntr + 3], 1.f);
+        }
+        else if (hVal.isInfinity())
+        {
+            OCIO_CHECK_ASSERT(outImg[imgCntr + 0].isInfinity());
+            OCIO_CHECK_ASSERT(outImg[imgCntr + 1].isInfinity());
+            OCIO_CHECK_ASSERT(outImg[imgCntr + 2].isInfinity());
+            OCIO_CHECK_EQUAL((float)outImg[imgCntr + 3], 1.f);
+        }
+        else
+        {
+            OCIO_CHECK_EQUAL(outImg[imgCntr + 0], hVal);
+            OCIO_CHECK_EQUAL(outImg[imgCntr + 1], hVal);
+            OCIO_CHECK_EQUAL(outImg[imgCntr + 2], hVal);
+            OCIO_CHECK_EQUAL((float)outImg[imgCntr + 3], 1.f);
+        }
+    }
+}
+
+OCIO_ADD_TEST(Lut1DRenderer, lut_1d_identity_half_to_int)
+{
+    // Create the 64k 16f Identity 1D LUT and the test Image.
+
+    // By default, this constructor creates an 'identity lut'.
+    OCIO::Lut1DOpDataRcPtr lutData
+        = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_INPUT_OUTPUT_HALF_CODE, 65536);
+
+    OCIO_CHECK_NO_THROW(lutData->finalize());
+
+    OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
+    OCIO::ConstOpCPURcPtr cpuOp;
+    OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constLut,
+                                                       OCIO::BIT_DEPTH_F16,
+                                                       OCIO::BIT_DEPTH_UINT16));
+
+    constexpr unsigned nbPixels = 65536;
+    std::vector<half> myImage(nbPixels * 4);
+
+    unsigned imgCntr = 0;
+
+    for (unsigned i = 0; i < nbPixels; i++)
+    {
+        half hVal;
+        hVal.setBits((unsigned short)i);
+
+        myImage[imgCntr++] = hVal;
+        myImage[imgCntr++] = hVal;
+        myImage[imgCntr++] = hVal;
+        myImage[imgCntr++] = 1.0f;
+    }
+
+    std::vector<uint16_t> outImg(nbPixels * 4);
+    cpuOp->apply(&myImage[0], &outImg[0], nbPixels);
+
+    const float scaleFactor = (float)OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_UINT16);
+
+    imgCntr = 0;
+    for (unsigned i = 0; i < nbPixels; i++, imgCntr += 4)
+    {
+        half hVal;
+        hVal.setBits((unsigned short)i);
+        const float fVal = scaleFactor * (float)hVal;
+
+        const uint16_t val = (uint16_t)OCIO::Clamp(fVal + 0.5f, 0.0f, scaleFactor);
+
+        OCIO_CHECK_EQUAL(val, outImg[imgCntr + 0]);
+        OCIO_CHECK_EQUAL(val, outImg[imgCntr + 1]);
+        OCIO_CHECK_EQUAL(val, outImg[imgCntr + 2]);
+        OCIO_CHECK_EQUAL(1.0f*scaleFactor, outImg[imgCntr + 3]);
+    }
+}
+
+OCIO_ADD_TEST(Lut1DRenderer, lut_1d_identity_int_to_half)
+{
+    // Create the 64k 16f Identity 1D LUT and the test Image.
+
+    // By default, this constructor creates an 'identity lut'.
+    OCIO::Lut1DOpDataRcPtr lutData
+        = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_INPUT_OUTPUT_HALF_CODE, 65536);
+
+    OCIO_CHECK_NO_THROW(lutData->finalize());
+
+    OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
+    OCIO::ConstOpCPURcPtr cpuOp;
+    OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constLut,
+                                                       OCIO::BIT_DEPTH_UINT16,
+                                                       OCIO::BIT_DEPTH_F16));
+
+    constexpr unsigned nbPixels = 65536;
+    std::vector<uint16_t> myImage(nbPixels * 4);
+
+    unsigned imgCntr = 0;
+
+    for (unsigned i = 0; i < nbPixels; i++)
+    {
+        myImage[imgCntr++] = (uint16_t)i;
+        myImage[imgCntr++] = (uint16_t)i;
+        myImage[imgCntr++] = (uint16_t)i;
+        myImage[imgCntr++] = 1;
+    }
+
+    std::vector<half> outImg(nbPixels * 4);
+    cpuOp->apply(&myImage[0], &outImg[0], nbPixels);
+
+    const float scaleFactor = 1.f / (float)OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_UINT16);
+    const half hScaleFactor = scaleFactor;
+    imgCntr = 0;
+    constexpr int tol = 1;
+    for (unsigned i = 0; i < nbPixels; i++, imgCntr += 4)
+    {
+        const half hVal = scaleFactor * i;
+
+        OCIO_CHECK_ASSERT(!OCIO::HalfsDiffer(outImg[imgCntr + 0], hVal, tol));
+        OCIO_CHECK_ASSERT(!OCIO::HalfsDiffer(outImg[imgCntr + 1], hVal, tol));
+        OCIO_CHECK_ASSERT(!OCIO::HalfsDiffer(outImg[imgCntr + 2], hVal, tol));
+        OCIO_CHECK_EQUAL(outImg[imgCntr + 3].bits(), hScaleFactor.bits());
+    }
+}
+
+OCIO_ADD_TEST(Lut1DRenderer, lut_1d_identity_half_code)
+{
+    // Create the 64k 16f Identity 1D LUT and the test Image.
+
+    // By default, this constructor creates an 'identity lut'.
+    OCIO::Lut1DOpDataRcPtr lutData
+        = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_INPUT_OUTPUT_HALF_CODE, 65536);
+
+    OCIO_CHECK_NO_THROW(lutData->finalize());
+
+    OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
+    OCIO::ConstOpCPURcPtr cpuOp;
+    OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constLut,
+                                                       OCIO::BIT_DEPTH_F16,
+                                                       OCIO::BIT_DEPTH_F16));
+
+    constexpr unsigned nbPixels = 5;
+    std::vector<half> myImage(nbPixels * 4);
+
+    myImage[0] = 0.0f;
+    myImage[1] = 0.0f;
+    myImage[2] = 0.0f;
+    myImage[3] = 1.0f;
+
+    // Use values between points to test interpolation code.
+    for (unsigned i = 4; i < 4 * nbPixels; i += 4)
+    {
+        half hVal1, hVal2;
+        hVal1.setBits((unsigned short)i);
+        hVal2.setBits((unsigned short)(i + 1));
+        const float delta = fabs(hVal2 - hVal1);
+        const float min = hVal1 < hVal2 ? hVal1 : hVal2;
+
+        myImage[i + 0] = min + (delta / i);
+        myImage[i + 1] = min + (delta / i);
+        myImage[i + 2] = min + (delta / i);
+        myImage[i + 3] = 1.0f;
+    }
+
+    std::vector<half> outImg(nbPixels * 4);
+    cpuOp->apply(&myImage[0], &outImg[0], nbPixels);
+
+    for (unsigned i = 0; i < 4 * nbPixels; i += 4)
+    {
+        OCIO_CHECK_EQUAL(outImg[i + 0].bits(), myImage[i + 0].bits());
+        OCIO_CHECK_EQUAL(outImg[i + 1].bits(), myImage[i + 1].bits());
+        OCIO_CHECK_EQUAL(outImg[i + 2].bits(), myImage[i + 2].bits());
+        OCIO_CHECK_EQUAL((float)outImg[i + 3], 1.f);
+    }
+}
+
+OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_identity)
+{
+    // By default, this constructor creates an 'identity lut'.
+    const auto dim = OCIO::Lut1DOpData::GetLutIdealSize(OCIO::BIT_DEPTH_UINT10);
+
+    OCIO::Lut1DOpDataRcPtr lutData
+        = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, dim);
+
+    lutData->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
+
+    OCIO_CHECK_EQUAL(lutData->getInversionQuality(), OCIO::LUT_INVERSION_FAST);
+    auto invLut = lutData->inverse();
+    OCIO_CHECK_NO_THROW(invLut->finalize());
+
+    OCIO::ConstLut1DOpDataRcPtr constLut = invLut;
+    OCIO::ConstOpCPURcPtr cpuOp;
+    OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constLut,
+                                                       OCIO::BIT_DEPTH_UINT10,
+                                                       OCIO::BIT_DEPTH_F32));
+
+    constexpr uint16_t stepui = 700;  // relative to 10i.
+    constexpr float step = stepui / 1023.f;
+
+    const uint16_t inImage[] = {
+        0,      0,      0,      0,
+        stepui, 0,      0,      0,
+        0,      stepui, 0,      0,
+        0,      0,      stepui, 0,
+        stepui, stepui, stepui, 0 };
+
+    float outImage[] = {
+        -1.f, -1.f, -1.f, -1.f,
+        -1.f, -1.f, -1.f, -1.f,
+        -1.f, -1.f, -1.f, -1.f,
+        -1.f, -1.f, -1.f, -1.f,
+        -1.f, -1.f, -1.f, -1.f };
+
+    // Inverse of identity should still be identity.
+    const float expected[] = {
+        0.f,   0.f,  0.f, 0.f,
+        step,  0.f,  0.f, 0.f,
+        0.f,  step,  0.f, 0.f,
+        0.f,   0.f, step, 0.f,
+        step, step, step, 0.f };
+
+    cpuOp->apply(&inImage[0], &outImage[0], 5);
+
+    for (unsigned i = 0; i < 20; ++i)
+    {
+        OCIO_CHECK_CLOSE(outImage[i], expected[i], 1e-6f);
+    }
+
+    // Repeat with LUT_INVERSION_EXACT.
+    invLut->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
+    OCIO::ConstOpCPURcPtr cpuOpExact;
+    OCIO_CHECK_NO_THROW(cpuOpExact = OCIO::GetLut1DRenderer(constLut,
+                                                            OCIO::BIT_DEPTH_UINT10,
+                                                            OCIO::BIT_DEPTH_F32));
+
+    cpuOpExact->apply(&inImage[0], &outImage[0], 5);
+
+    for (unsigned i = 0; i < 20; ++i)
+    {
+        OCIO_CHECK_CLOSE(outImage[i], expected[i], 1e-6f);
+    }
+}
+
+OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_increasing)
+{
+    OCIO::Lut1DOpDataRcPtr lutData = std::make_shared<OCIO::Lut1DOpData>(32);
+    lutData->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
+
+    // This is a typical "easy" lut with a simple power function.
+    // Linear to 1/2.2 gamma corrected code values.
+    OCIO::Array::Values & vals = lutData->getArray().getValues();
+    int i = 0;
+    vals[i] = vals[i+1] = vals[i+2] =    0.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  215.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  294.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  354.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  403.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  446.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  485.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  520.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  553.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  583.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  612.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  639.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  665.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  689.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  713.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  735.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  757.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  779.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  799.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  819.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  838.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  857.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  875.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  893.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  911.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  928.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  944.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  961.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  977.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  992.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] = 1008.f / 1023.f;
+    i += 3;
+    vals[i] = vals[i+1] = vals[i+2] = 1023.f / 1023.f;
+
+    auto invLut = lutData->inverse();
+    OCIO_CHECK_NO_THROW(invLut->finalize());
+
+    invLut->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
+    OCIO::ConstLut1DOpDataRcPtr constInvLut = invLut;
+    OCIO::ConstOpCPURcPtr cpuOp;
+    OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constInvLut,
+                                                       OCIO::BIT_DEPTH_UINT10,
+                                                       OCIO::BIT_DEPTH_UINT16));
+
+    // The first 2 rows are actual LUT entries, the others are intermediate values.
+    const uint16_t inImage[] = {  // scaled to 10i
+        (uint16_t)   0, (uint16_t) 215, (uint16_t) 446, (uint16_t)   0,
+        (uint16_t) 639, (uint16_t) 944, (uint16_t)1023, (uint16_t) 445, // also test alpha
+        (uint16_t)  40, (uint16_t) 190, (uint16_t) 260, (uint16_t) 685,
+        (uint16_t) 380, (uint16_t) 540, (uint16_t) 767, (uint16_t)1023,
+        (uint16_t) 888, (uint16_t)1000, (uint16_t)1018, (uint16_t)   0 };
+
+    uint16_t outImage[] = {
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1 };
+
+    const uint16_t expected[] = { // scaled to 16i
+        (uint16_t)    0, (uint16_t)  2114, (uint16_t)10570, (uint16_t)    0,
+        (uint16_t)23254, (uint16_t) 54965, (uint16_t)65535, (uint16_t)28507,
+        (uint16_t)  393, (uint16_t)  1868, (uint16_t) 3318, (uint16_t)43882,
+        (uint16_t) 7464, (uint16_t) 16079, (uint16_t)34785, (uint16_t)65535,
+        (uint16_t)48036, (uint16_t) 62364, (uint16_t)64830, (uint16_t)    0 };
+
+    cpuOp->apply(&inImage[0], &outImage[0], 5);
+
+    for (unsigned i = 0; i < 20; ++i)
+    {
+        OCIO_CHECK_EQUAL(outImage[i], expected[i]);
+    }
+
+    // Repeat with LUT_INVERSION_FAST.
+    invLut->setInversionQuality(OCIO::LUT_INVERSION_FAST);
+    OCIO::ConstOpCPURcPtr cpuOpFast;
+    OCIO_CHECK_NO_THROW(cpuOpFast = OCIO::GetLut1DRenderer(constInvLut,
+                                                           OCIO::BIT_DEPTH_UINT10,
+                                                           OCIO::BIT_DEPTH_UINT16));
+
+    cpuOpFast->apply(&inImage[0], &outImage[0], 5);
+
+    for (unsigned i = 0; i < 20; ++i)
+    {
+        OCIO_CHECK_EQUAL(outImage[i], expected[i]);
+    }
+}
+
+OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_decreasing_reversals)
+{
+    OCIO::Lut1DOpDataRcPtr lutData = std::make_shared<OCIO::Lut1DOpData>(12);
+    lutData->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT8);
+
+    // This is a more "difficult" LUT that is decreasing and has reversals
+    // and values outside the typical range.
+    OCIO::Array::Values & vals = lutData->getArray().getValues();
+    int i = 0;
+    vals[i] = vals[i+1] = vals[i+2] =  90.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  90.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] = 100.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  80.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  70.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  50.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  60.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  70.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  40.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  20.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] = -10.f / 255.f; // note: LUT vals may exceed [0,255]
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] = -10.f / 255.f;
+
+    auto invLut = lutData->inverse();
+
+    // Render as 32f in depth so we can test negative input vals.
+    OCIO_CHECK_NO_THROW(invLut->finalize());
+
+    // Default InvStyle should be 'FAST' but we test the 'EXACT' InvStyle first.
+    invLut->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
+    OCIO::ConstLut1DOpDataRcPtr constInvLut = invLut;
+    OCIO::ConstOpCPURcPtr cpuOp;
+    OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constInvLut,
+                                                       OCIO::BIT_DEPTH_F32,
+                                                       OCIO::BIT_DEPTH_UINT16));
+
+    // Render as 32f in depth so we can test negative input vals.
+    const float inScaleFactor = 1.0f / (float)OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_UINT8);
+
+    const float inImage[] = {  // scaled to 32f
+        100.f * inScaleFactor, 90.f * inScaleFactor,  85.f * inScaleFactor, 0.f,
+         75.f * inScaleFactor, 60.f * inScaleFactor,  50.f * inScaleFactor, 0.f,
+         45.f * inScaleFactor, 30.f * inScaleFactor, -10.f * inScaleFactor, 0.f,
+        -20.f * inScaleFactor, 75.f * inScaleFactor,  30.f * inScaleFactor, 0.f };
+
+    uint16_t outImage[] = {
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1 };
+
+    uint16_t expected[] = { // scaled to 16i
+        (uint16_t)11915, (uint16_t)11915, (uint16_t)14894, (uint16_t)0,
+        (uint16_t)20852, (uint16_t)26810, (uint16_t)29789, (uint16_t)0,
+        (uint16_t)44683, (uint16_t)50641, (uint16_t)59577, (uint16_t)0,
+        (uint16_t)59577, (uint16_t)20852, (uint16_t)50641, (uint16_t)0 };
+
+    cpuOp->apply(&inImage[0], &outImage[0], 4);
+
+    for (unsigned i = 0; i < 16; ++i)
+    {
+        OCIO_CHECK_EQUAL(outImage[i], expected[i]);
+    }
+
+    // Repeat with LUT_INVERSION_FAST.
+    invLut->setInversionQuality(OCIO::LUT_INVERSION_FAST);
+    OCIO::ConstOpCPURcPtr cpuOpFast;
+    OCIO_CHECK_NO_THROW(cpuOpFast = OCIO::GetLut1DRenderer(constInvLut,
+                                                           OCIO::BIT_DEPTH_F32,
+                                                           OCIO::BIT_DEPTH_UINT16));
+
+    cpuOpFast->apply(&inImage[0], &outImage[0], 4);
+
+    // Note: When there are flat spots in the original LUT, the approximate 
+    // inverse LUT used in FAST mode has vertical jumps and so one would expect
+    // significant differences from EXACT mode (which returns the left edge).
+    // Since any value that is within the flat spot would result in the original
+    // value on forward interpolation, we may loosen the tolerance for the inverse
+    // to the domain of the flat spot.  Also, note that this is only an issue for
+    // 32f inDepths since in all other cases EXACT mode is used to compute a LUT
+    // that is used for look-up rather than interpolation.
+    expected[1] = 11924;
+    expected[6] = 38433;
+
+    for (unsigned i = 0; i < 16; ++i)
+    {
+        OCIO_CHECK_EQUAL(outImage[i], expected[i]);
+    }
+}
+
+OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_clamp_to_range)
+{
+    OCIO::Lut1DOpDataRcPtr lutData = std::make_shared<OCIO::Lut1DOpData>(12);
+    lutData->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT8);
+
+    // Note that the start and end values do not span the full [0,255] range
+    // so we test that input values are clamped correctly to this range when
+    // the LUT has no flat spots at start or end.
+    OCIO::Array::Values & vals = lutData->getArray().getValues();
+    int i = 0;
+    vals[i] = vals[i+1] = vals[i+2] =  30.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  40.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  60.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  65.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  70.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  50.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  60.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] =  70.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] = 100.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] = 190.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] = 200.f / 255.f;
+	i += 3;
+    vals[i] = vals[i+1] = vals[i+2] = 210.f / 255.f;
+
+    auto invLut = lutData->inverse();
+    // Render as 32f in depth so we can test negative input vals.
+    OCIO_CHECK_NO_THROW(invLut->finalize());
+
+    invLut->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
+    OCIO::ConstLut1DOpDataRcPtr constInvLut = invLut;
+    OCIO::ConstOpCPURcPtr cpuOp;
+    OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constInvLut,
+                                                       OCIO::BIT_DEPTH_F32,
+                                                       OCIO::BIT_DEPTH_UINT16));
+
+    const float inScaleFactor = 1.0f / (float)OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_UINT8);
+
+    const float inImage[] = {  // scaled to 32f
+          0.f * inScaleFactor,  10.f * inScaleFactor,  30.f * inScaleFactor, 0.f,
+         35.f * inScaleFactor, 202.f * inScaleFactor, 210.f * inScaleFactor, 0.f,
+        -10.f * inScaleFactor, 255.f * inScaleFactor, 355.f * inScaleFactor, 0.f, };
+
+    uint16_t outImage[] = {
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1 };
+
+    uint16_t expected[] = { // scaled to 16i
+        (uint16_t)    0, (uint16_t)    0, (uint16_t)    0, (uint16_t)0,
+        (uint16_t) 2979, (uint16_t)60769, (uint16_t)65535, (uint16_t)0,
+        (uint16_t)    0, (uint16_t)65535, (uint16_t)65535, (uint16_t)0, };
+
+    cpuOp->apply(&inImage[0], &outImage[0], 3);
+
+    for (unsigned i = 0; i < 12; ++i)
+    {
+        OCIO_CHECK_EQUAL(outImage[i], expected[i]);
+    }
+
+    // Repeat with LUT_INVERSION_FAST.
+    invLut->setInversionQuality(OCIO::LUT_INVERSION_FAST);
+    OCIO::ConstOpCPURcPtr cpuOpFast;
+    OCIO_CHECK_NO_THROW(cpuOpFast = OCIO::GetLut1DRenderer(constInvLut,
+                                                           OCIO::BIT_DEPTH_F32,
+                                                           OCIO::BIT_DEPTH_UINT16));
+
+    cpuOpFast->apply(&inImage[0], &outImage[0], 3);
+
+    for (unsigned i = 0; i < 12; ++i)
+    {
+        OCIO_CHECK_EQUAL(outImage[i], expected[i]);
+    }
+}
+
+OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_flat_start_or_end)
+{
+    OCIO::Lut1DOpDataRcPtr lutData = std::make_shared<OCIO::Lut1DOpData>(9);
+    lutData->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
+
+    // This LUT tests that flat spots at beginning and end of various lengths
+    // are handled for increasing and decreasing LUTs (it also verifies that
+    // LUTs with different R, G, B values are handled correctly).
+    OCIO::Array::Values & vals = lutData->getArray().getValues();
+    const std::vector<float> lutValues = { // scaled to 32f
+        900.f / 1023.f,  70.f / 1023.f,  70.f / 1023.f,
+        900.f / 1023.f,  70.f / 1023.f, 120.f / 1023.f,
+        900.f / 1023.f, 120.f / 1023.f, 300.f / 1023.f,
+        900.f / 1023.f, 300.f / 1023.f, 450.f / 1023.f,
+        450.f / 1023.f, 450.f / 1023.f, 900.f / 1023.f,
+        300.f / 1023.f, 900.f / 1023.f, 900.f / 1023.f,
+        120.f / 1023.f, 900.f / 1023.f, 900.f / 1023.f,
+         70.f / 1023.f, 900.f / 1023.f, 900.f / 1023.f,
+         70.f / 1023.f, 900.f / 1023.f, 900.f / 1023.f };
+
+    vals = lutValues;
+
+    auto invLut = lutData->inverse();
+    OCIO_CHECK_NO_THROW(invLut->finalize());
+
+    invLut->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
+    OCIO::ConstLut1DOpDataRcPtr constInvLut = invLut;
+    OCIO::ConstOpCPURcPtr cpuOp;
+    OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constInvLut,
+                                                       OCIO::BIT_DEPTH_UINT10,
+                                                       OCIO::BIT_DEPTH_UINT16));
+
+    const uint16_t inImage[] = {  // scaled to 10i
+        (uint16_t)1023, (uint16_t)1023, (uint16_t)1023, (uint16_t)0,
+        (uint16_t) 900, (uint16_t) 900, (uint16_t) 900, (uint16_t)0,
+        (uint16_t) 800, (uint16_t) 800, (uint16_t) 800, (uint16_t)0,
+        (uint16_t) 500, (uint16_t) 500, (uint16_t) 500, (uint16_t)0,
+        (uint16_t) 450, (uint16_t) 450, (uint16_t) 450, (uint16_t)0,
+        (uint16_t) 330, (uint16_t) 330, (uint16_t) 330, (uint16_t)0,
+        (uint16_t) 150, (uint16_t) 150, (uint16_t) 150, (uint16_t)0,
+        (uint16_t) 120, (uint16_t) 120, (uint16_t) 120, (uint16_t)0,
+        (uint16_t)  80, (uint16_t)  80, (uint16_t)  80, (uint16_t)0,
+        (uint16_t)  70, (uint16_t)  70, (uint16_t)  70, (uint16_t)0,
+        (uint16_t)  60, (uint16_t)  60, (uint16_t)  60, (uint16_t)0,
+        (uint16_t)   0, (uint16_t)   0, (uint16_t)   0, (uint16_t)0 };
+
+    uint16_t outImage[] = {
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1 };
+
+    const uint16_t expected[] = { // scaled to 16i
+        (uint16_t)24576, (uint16_t)40959, (uint16_t)32768, (uint16_t)0,
+        (uint16_t)24576, (uint16_t)40959, (uint16_t)32768, (uint16_t)0,
+        (uint16_t)26396, (uint16_t)39139, (uint16_t)30947, (uint16_t)0,
+        (uint16_t)31857, (uint16_t)33678, (uint16_t)25486, (uint16_t)0,
+        (uint16_t)32768, (uint16_t)32768, (uint16_t)24576, (uint16_t)0,
+        (uint16_t)39321, (uint16_t)26214, (uint16_t)18022, (uint16_t)0,
+        (uint16_t)47786, (uint16_t)17749, (uint16_t) 9557, (uint16_t)0,
+        (uint16_t)49151, (uint16_t)16384, (uint16_t) 8192, (uint16_t)0,
+        (uint16_t)55705, (uint16_t) 9830, (uint16_t) 1638, (uint16_t)0,
+        (uint16_t)57343, (uint16_t) 8192, (uint16_t)    0, (uint16_t)0,
+        (uint16_t)57343, (uint16_t) 8192, (uint16_t)    0, (uint16_t)0,
+        (uint16_t)57343, (uint16_t) 8192, (uint16_t)    0, (uint16_t)0 };
+
+    cpuOp->apply(&inImage[0], &outImage[0], 12);
+
+    for (unsigned i = 0; i < 12 * 4; ++i)
+    {
+        OCIO_CHECK_EQUAL(outImage[i], expected[i]);
+    }
+
+    // Repeat with LUT_INVERSION_FAST.
+    invLut->setInversionQuality(OCIO::LUT_INVERSION_FAST);
+    OCIO::ConstOpCPURcPtr cpuOpFast;
+    OCIO_CHECK_NO_THROW(cpuOpFast = OCIO::GetLut1DRenderer(constInvLut,
+                                                           OCIO::BIT_DEPTH_UINT10,
+                                                           OCIO::BIT_DEPTH_UINT16));
+
+    cpuOpFast->apply(&inImage[0], &outImage[0], 12);
+
+    for (unsigned i = 0; i < 12 * 4; ++i)
+    {
+        OCIO_CHECK_EQUAL(outImage[i], expected[i]);
+    }
+
+}
+
+OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_input)
+{
+    constexpr unsigned dim = 15;
+    OCIO::Lut1DOpDataRcPtr lutData = std::make_shared<OCIO::Lut1DOpData>(dim);
+    lutData->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT8);
+
+    // LUT entries.
+    const float lutEntries[] = {
+        0.00f, 0.05f, 0.10f, 0.15f, 0.20f,
+        0.30f, 0.40f, 0.50f, 0.60f, 0.70f,
+        0.80f, 0.85f, 0.90f, 0.95f, 1.00f };
+
+    lutData->getArray().resize(dim, 1);
+    for (unsigned i = 0; i < dim; ++i)
+    {
+        lutData->getArray()[i * 3 + 0] = lutEntries[i];
+        lutData->getArray()[i * 3 + 1] = lutEntries[i];
+        lutData->getArray()[i * 3 + 2] = lutEntries[i];
+    }
+
+    auto invLut = lutData->inverse();
+    OCIO_CHECK_NO_THROW(invLut->finalize());
+
+    invLut->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
+    OCIO::ConstLut1DOpDataRcPtr constInvLut = invLut;
+    OCIO::ConstOpCPURcPtr cpuOp;
+    OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constInvLut,
+                                                       OCIO::BIT_DEPTH_F16,
+                                                       OCIO::BIT_DEPTH_F16));
+
+    const half inImage[] = {
+        1.00f, 0.91f, 0.85f, 0.f,
+        0.75f, 0.02f, 0.53f, 0.f,
+        0.47f, 0.30f, 0.21f, 0.f,
+        0.50f, 0.11f, 0.00f, 0.f };
+
+    half outImage[] = {
+        -1.f, -1.f, -1.f, -1.f,
+        -1.f, -1.f, -1.f, -1.f,
+        -1.f, -1.f, -1.f, -1.f,
+        -1.f, -1.f, -1.f, -1.f };
+
+    // (dist + (val-low)/(high-low)) / (dim-1)
+    const half expected[] = {
+        1.0000000000f, 0.8714285714f, 0.7857142857f, 0.f,
+        0.6785714285f, 0.0285714285f, 0.5214285714f, 0.f,
+        0.4785714285f, 0.3571428571f, 0.2928571428f, 0.f,
+        0.5000000000f, 0.1571428571f, 0.0000000000f, 0.f };
+
+    cpuOp->apply(&inImage[0], &outImage[0], 4);
+
+    for (unsigned i = 0; i < 4 * 4; ++i)
+    {
+        OCIO_CHECK_CLOSE(outImage[i].bits(), expected[i].bits(), 1.1f);
+    }
+
+    // Repeat with LUT_INVERSION_FAST.
+    invLut->setInversionQuality(OCIO::LUT_INVERSION_FAST);
+    OCIO::ConstOpCPURcPtr cpuOpFast;
+    OCIO_CHECK_NO_THROW(cpuOpFast = OCIO::GetLut1DRenderer(constInvLut,
+                                                           OCIO::BIT_DEPTH_F16,
+                                                           OCIO::BIT_DEPTH_F16));
+
+    cpuOpFast->apply(&inImage[0], &outImage[0], 4);
+
+    for (unsigned i = 0; i < 4 * 4; ++i)
+    {
+        OCIO_CHECK_CLOSE(outImage[i].bits(), expected[i].bits(), 1.1f);
+    }
+}
+
+OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_identity)
+{
+    // Need to do 10i-->32f and vice versa to check that
+    // both the in scaling and out scaling are working correctly.
+
+    constexpr uint16_t stepui = 700;  // relative to 10i
+    constexpr float step = stepui / 1023.f;
+
+    // Process from 10i to 32f bit-depths.
+    {
+        // By default, this constructor creates an 'identity LUT'.
+        OCIO::Lut1DOpDataRcPtr lutData
+            = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_INPUT_HALF_CODE, 65536);
+        lutData->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
+
+        auto invLut = lutData->inverse();
+        OCIO_CHECK_NO_THROW(invLut->finalize());
+
+        invLut->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
+        OCIO::ConstLut1DOpDataRcPtr constInvLut = invLut;
+        OCIO::ConstOpCPURcPtr cpuOp;
+        OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constInvLut,
+                                                           OCIO::BIT_DEPTH_UINT10,
+                                                           OCIO::BIT_DEPTH_F32));
+
+        const uint16_t inImage[] = {
+            0,      0,      0,      0,
+            stepui, 0,      0,      0,
+            0,      stepui, 0,      0,
+            0,      0,      stepui, 0,
+            stepui, stepui, stepui, 0 };
+
+        float outImage[] = {
+            -1.f, -1.f, -1.f, -1.f,
+            -1.f, -1.f, -1.f, -1.f,
+            -1.f, -1.f, -1.f, -1.f,
+            -1.f, -1.f, -1.f, -1.f,
+            -1.f, -1.f, -1.f, -1.f };
+
+        // Inverse of identity should still be identity.
+        const float expected[] = {
+            0.f,   0.f,  0.f, 0.f,
+            step,  0.f,  0.f, 0.f,
+            0.f,  step,  0.f, 0.f,
+            0.f,   0.f, step, 0.f,
+            step, step, step, 0.f };
+
+        cpuOp->apply(&inImage[0], &outImage[0], 5);
+
+        for (unsigned i = 0; i < 5 * 4; ++i)
+        {
+            OCIO_CHECK_CLOSE(outImage[i], expected[i], 1e-6f);
+        }
+
+        // Repeat with LUT_INVERSION_FAST.
+        invLut->setInversionQuality(OCIO::LUT_INVERSION_FAST);
+        OCIO::ConstOpCPURcPtr cpuOpFast;
+        OCIO_CHECK_NO_THROW(cpuOpFast = OCIO::GetLut1DRenderer(constInvLut,
+                                                               OCIO::BIT_DEPTH_UINT10,
+                                                               OCIO::BIT_DEPTH_F32));
+
+        cpuOpFast->apply(&inImage[0], &outImage[0], 5);
+
+        for (unsigned i = 0; i < 5 * 4; ++i)
+        {
+            OCIO_CHECK_CLOSE(outImage[i], expected[i], 1e-6f);
+        }
+    }
+    // Process from 32f to 10i bit-depths.
+    {
+        // By default, this constructor creates an 'identity LUT'.
+        OCIO::Lut1DOpDataRcPtr lutData
+            = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_INPUT_HALF_CODE,
+                                                  65536);
+        lutData->setFileOutputBitDepth(OCIO::BIT_DEPTH_F32);
+
+        auto invLut = lutData->inverse();
+        OCIO_CHECK_NO_THROW(invLut->finalize());
+
+        invLut->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
+        OCIO::ConstLut1DOpDataRcPtr constInvLut = invLut;
+        OCIO::ConstOpCPURcPtr cpuOp;
+        OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constInvLut,
+                                                           OCIO::BIT_DEPTH_F32,
+                                                           OCIO::BIT_DEPTH_UINT10));
+
+        const float inImage[] = {
+            0.f,   0.f,  0.f, 0.f,
+            step,  0.f,  0.f, 0.f,
+            0.f,  step,  0.f, 0.f,
+            0.f,   0.f, step, 0.f,
+            step, step, step, 0.f };
+
+        uint16_t outImage[] = {
+            10000, 10000, 10000, 10000,
+            10000, 10000, 10000, 10000,
+            10000, 10000, 10000, 10000,
+            10000, 10000, 10000, 10000,
+            10000, 10000, 10000, 10000 };
+
+        // Inverse of identity should still be identity.
+        const uint16_t expected[] = {
+            0,      0,      0,      0,
+            stepui, 0,      0,      0,
+            0,      stepui, 0,      0,
+            0,      0,      stepui, 0,
+            stepui, stepui, stepui, 0 };
+        cpuOp->apply(&inImage[0], &outImage[0], 5);
+
+        for (unsigned i = 0; i < 5 * 4; ++i)
+        {
+            OCIO_CHECK_EQUAL(outImage[i], expected[i]);
+        }
+
+        // Repeat with LUT_INVERSION_FAST.
+        invLut->setInversionQuality(OCIO::LUT_INVERSION_FAST);
+        OCIO::ConstOpCPURcPtr cpuOpFast;
+        OCIO_CHECK_NO_THROW(cpuOpFast = OCIO::GetLut1DRenderer(constInvLut,
+                                                               OCIO::BIT_DEPTH_F32,
+                                                               OCIO::BIT_DEPTH_UINT10));
+
+        cpuOpFast->apply(&inImage[0], &outImage[0], 5);
+
+        for (unsigned i = 0; i < 5 * 4; ++i)
+        {
+            OCIO_CHECK_EQUAL(outImage[i], expected[i]);
+        }
+    }
+}
+
+OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_ctf)
+{
+    // Create empty Config to use.
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+
+    // This ctf has increasing R & B channels and decreasing G channel.
+    // It also has flat spots.
+    const std::string ctfLUT("lut1d_halfdom.ctf");
+    OCIO::FileTransformRcPtr fileTransform = OCIO::CreateFileTransform(ctfLUT);
+
+    OCIO::ConstProcessorRcPtr proc;
+    // Get the processor corresponding to the transform.
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+
+    // This test should use the "interpolation" renderer path.
+    OCIO::ConstCPUProcessorRcPtr cpuFwd;
+    OCIO_CHECK_NO_THROW(cpuFwd = proc->getDefaultCPUProcessor());
+
+    const float inImage[12] = {
+         1.f,    1.f,   0.5f, 0.f,
+         0.001f, 0.1f,  4.f,  0.5f,  // test positive half domain of R, G, B channels
+        -0.08f, -1.f, -10.f,  1.f }; // test negative half domain of R, G, B channels
+
+    // Apply forward LUT.
+    std::vector<float> outImage(12, -1.f);
+    OCIO::PackedImageDesc srcImgDesc((void*)&inImage[0], 3, 1, 4);
+    OCIO::PackedImageDesc dstImgDesc((void*)&outImage[0], 3, 1, 4);
+    cpuFwd->apply(srcImgDesc, dstImgDesc);
+
+    // Apply inverse LUT.
+    // Inverse using LUT_INVERSION_FAST.
+    fileTransform->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+    OCIO::ConstCPUProcessorRcPtr cpuOpInv;
+    OCIO_CHECK_NO_THROW(cpuOpInv = proc->getDefaultCPUProcessor());
+
+    std::vector<float> backImage(12, -1.f);
+    OCIO::PackedImageDesc backImgDesc((void*)&backImage[0], 3, 1, 4);
+    cpuOpInv->apply(dstImgDesc, backImgDesc);
+
+    for (unsigned i = 0; i < 12; ++i)
+    {
+        OCIO_CHECK_ASSERT_MESSAGE(!OCIO::FloatsDiffer(inImage[i], backImage[i], 50, false),
+                                  GetErrorMessage(inImage[i], backImage[i]));
+    }
+
+    // Repeat with LUT_INVERSION_EXACT.
+    OCIO::ConstCPUProcessorRcPtr cpuInvFast;
+    std::fill(backImage.begin(), backImage.end(), -1.f);
+    OCIO_CHECK_NO_THROW(cpuInvFast = proc->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_DEFAULT,
+                                                                    OCIO::FINALIZATION_EXACT));
+    cpuInvFast->apply(dstImgDesc, backImgDesc);
+
+    for (unsigned i = 0; i < 12; ++i)
+    {
+        OCIO_CHECK_ASSERT_MESSAGE(!OCIO::FloatsDiffer(inImage[i], backImage[i], 50, false),
+                                  GetErrorMessage(inImage[i], backImage[i]));
+    }
+}
+
+OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_fclut)
+{
+    // Create empty Config to use.
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+
+    // TODO: Review the test to add LUT & inverse LUT together when optimization is reworked.
+
+    // Lustre log_default.fclut.  All positive halfs map to unique 16-bit ints
+    // so it's a good test to see that the inverse can restore the halfs losslessly.
+    const std::string ctfLUT("lut1d_hd_16f_16i_1chan.ctf");
+    OCIO::FileTransformRcPtr fileTransform = OCIO::CreateFileTransform(ctfLUT);
+
+    OCIO::ConstProcessorRcPtr proc;
+    // Get the processor corresponding to the transform.
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+    OCIO::ConstCPUProcessorRcPtr cpuOp;
+    OCIO_CHECK_NO_THROW(cpuOp = proc->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F16,
+                                                               OCIO::BIT_DEPTH_F32,
+                                                               OCIO::OPTIMIZATION_DEFAULT,
+                                                               OCIO::FINALIZATION_EXACT));
+
+    // Test all positive halfs (less than inf) round-trip losslessly.
+    const int nbPixels = 31744;
+    std::vector<half> inImage(nbPixels * 4);
+    std::vector<float> outImage(nbPixels * 4, -1.f);
+    for (unsigned short i = 0; i < nbPixels; ++i)
+    {
+        inImage[i * 4 + 0].setBits(i);
+        inImage[i * 4 + 1].setBits(i);
+        inImage[i * 4 + 2].setBits(i);
+        inImage[i * 4 + 3].setBits(i);
+    }
+
+    OCIO::PackedImageDesc srcImgDesc((void*)&inImage[0], nbPixels, 1, 4,
+                                     OCIO::BIT_DEPTH_F16,
+                                     sizeof(half),
+                                     OCIO::AutoStride,
+                                     OCIO::AutoStride);
+    OCIO::PackedImageDesc dstImgDesc((void*)&outImage[0], nbPixels, 1, 4);
+    cpuOp->apply(srcImgDesc, dstImgDesc);
+
+    fileTransform->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+    OCIO::ConstCPUProcessorRcPtr cpuOpInv;
+    OCIO_CHECK_NO_THROW(cpuOpInv = proc->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F32,
+                                                                  OCIO::BIT_DEPTH_F16,
+                                                                  OCIO::OPTIMIZATION_DEFAULT,
+                                                                  OCIO::FINALIZATION_EXACT));
+
+    std::vector<half> backImage(nbPixels * 4, -1.f);
+    OCIO::PackedImageDesc backImgDesc((void*)&backImage[0], nbPixels, 1, 4,
+                                      OCIO::BIT_DEPTH_F16,
+                                      sizeof(half),
+                                      OCIO::AutoStride,
+                                      OCIO::AutoStride);
+
+    cpuOpInv->apply(dstImgDesc, backImgDesc);
+
+    for (unsigned short i = 0; i < nbPixels; ++i)
+    {
+        OCIO_CHECK_EQUAL(inImage[i * 4 + 0].bits(), backImage[i * 4 + 0].bits());
+        OCIO_CHECK_EQUAL(inImage[i * 4 + 1].bits(), backImage[i * 4 + 1].bits());
+        OCIO_CHECK_EQUAL(inImage[i * 4 + 2].bits(), backImage[i * 4 + 2].bits());
+        OCIO_CHECK_EQUAL(inImage[i * 4 + 3].bits(), backImage[i * 4 + 3].bits());
+    }
+
+    // Repeat with LUT_INVERSION_FAST.
+    OCIO_CHECK_NO_THROW(cpuOpInv = proc->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F32,
+                                                                  OCIO::BIT_DEPTH_F16,
+                                                                  OCIO::OPTIMIZATION_DEFAULT,
+                                                                  OCIO::FINALIZATION_FAST));
+
+    std::fill(backImage.begin(), backImage.end(), -1.f);
+    cpuOpInv->apply(dstImgDesc, backImgDesc);
+
+    for (unsigned short i = 0; i < nbPixels; ++i)
+    {
+        OCIO_CHECK_EQUAL(inImage[i * 4 + 0].bits(), backImage[i * 4 + 0].bits());
+        OCIO_CHECK_EQUAL(inImage[i * 4 + 1].bits(), backImage[i * 4 + 1].bits());
+        OCIO_CHECK_EQUAL(inImage[i * 4 + 2].bits(), backImage[i * 4 + 2].bits());
+        OCIO_CHECK_EQUAL(inImage[i * 4 + 3].bits(), backImage[i * 4 + 3].bits());
+    }
+
+}
+
+OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_domain_hue_adjust)
+{
+    // Create empty Config to use.
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+
+    const std::string ctfLUT("lut1d_hd_hue_adjust.ctf");
+    OCIO::FileTransformRcPtr fileTransform = OCIO::CreateFileTransform(ctfLUT);
+
+    OCIO::ConstProcessorRcPtr proc;
+    // Get the processor corresponding to the transform.
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+    OCIO::ConstCPUProcessorRcPtr cpuFwd;
+    OCIO_CHECK_NO_THROW(cpuFwd = proc->getDefaultCPUProcessor());
+
+    constexpr long NB_PIXELS = 3;
+    const float inImage[NB_PIXELS * 4] = {
+        0.1f,  0.25f, 0.7f,  0.f,
+        0.66f, 0.25f, 0.81f, 0.5f,
+        0.18f, 0.99f, 0.45f, 1.f };
+
+    std::vector<float> outImage(NB_PIXELS * 4, 1.f);
+    OCIO::PackedImageDesc srcImgDesc((void*)&inImage[0], NB_PIXELS, 1, 4);
+    OCIO::PackedImageDesc dstImgDesc((void*)&outImage[0], NB_PIXELS, 1, 4);
+    cpuFwd->apply(srcImgDesc, dstImgDesc);
+
+    // Inverse using LUT_INVERSION_FAST.
+    fileTransform->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+    OCIO::ConstCPUProcessorRcPtr cpuInv;
+    OCIO_CHECK_NO_THROW(cpuInv = proc->getDefaultCPUProcessor());
+
+    std::vector<float> backImage(NB_PIXELS * 4, -1.f);
+    OCIO::PackedImageDesc backImgDesc((void*)&backImage[0], NB_PIXELS, 1, 4);
+    cpuInv->apply(dstImgDesc, backImgDesc);
+
+    for (long i = 0; i < NB_PIXELS * 4; ++i)
+    {
+        OCIO_CHECK_ASSERT_MESSAGE(!OCIO::FloatsDiffer(inImage[i], backImage[i], 50, false),
+                                  GetErrorMessage(inImage[i], backImage[i]));
+    }
+
+    // Repeat with LUT_INVERSION_EXACT.
+    OCIO::ConstCPUProcessorRcPtr cpuInvFast;
+    OCIO_CHECK_NO_THROW(cpuInvFast = proc->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_DEFAULT,
+                                                                    OCIO::FINALIZATION_EXACT));
+    std::fill(backImage.begin(), backImage.end(), -1.f);
+    cpuInvFast->apply(dstImgDesc, backImgDesc);
+
+    for (long i = 0; i < NB_PIXELS * 4; ++i)
+    {
+        OCIO_CHECK_ASSERT_MESSAGE(!OCIO::FloatsDiffer(inImage[i], backImage[i], 50, false),
+                                  GetErrorMessage(inImage[i], backImage[i]));
+    }
+}
+
 
 #endif

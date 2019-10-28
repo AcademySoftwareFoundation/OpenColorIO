@@ -133,17 +133,15 @@ ExposureContrastOpData::Style ExposureContrastOpData::ConvertStyle(ExposureContr
 }
 
 ExposureContrastOpData::ExposureContrastOpData()
-    : OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
+    : OpData()
     , m_exposure(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_EXPOSURE, 0., false))
     , m_contrast(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_CONTRAST, 1., false))
     , m_gamma(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_GAMMA, 1., false))
 {
 }
 
-ExposureContrastOpData::ExposureContrastOpData(BitDepth inBitDepth,
-                                               BitDepth outBitDepth,
-                                               Style style)
-    : OpData(inBitDepth, outBitDepth)
+ExposureContrastOpData::ExposureContrastOpData(Style style)
+    : OpData()
     , m_style(style)
     , m_exposure(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_EXPOSURE, 0., false))
     , m_contrast(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_CONTRAST, 1., false))
@@ -158,9 +156,7 @@ ExposureContrastOpData::~ExposureContrastOpData()
 ExposureContrastOpDataRcPtr ExposureContrastOpData::clone() const
 {
     ExposureContrastOpDataRcPtr res =
-        std::make_shared<ExposureContrastOpData>(getInputBitDepth(),
-                                                 getOutputBitDepth(),
-                                                 getStyle());
+        std::make_shared<ExposureContrastOpData>(getStyle());
     *res = *this;
 
     return res;
@@ -215,9 +211,6 @@ ExposureContrastOpDataRcPtr ExposureContrastOpData::inverse() const
     }
 
     ec->setStyle(invStyle);
-
-    ec->setInputBitDepth(getOutputBitDepth());
-    ec->setOutputBitDepth(getInputBitDepth());
 
     // Note that any existing metadata could become stale at this point but
     // trying to update it is also challenging since inverse() is sometimes
@@ -490,14 +483,9 @@ OCIO_ADD_TEST(ExposureContrastOpData, accessors)
     ec0.finalize();
     OCIO_CHECK_ASSERT(cacheID != std::string(ec0.getCacheID()));
 
-    OCIO::ExposureContrastOpData ec(OCIO::BIT_DEPTH_UINT8,
-                                    OCIO::BIT_DEPTH_F16,
-                                    OCIO::ExposureContrastOpData::STYLE_VIDEO);
+    OCIO::ExposureContrastOpData ec(OCIO::ExposureContrastOpData::STYLE_VIDEO);
     OCIO_CHECK_EQUAL(ec.getType(), OCIO::OpData::ExposureContrastType);
     OCIO_CHECK_EQUAL(ec.getStyle(), OCIO::ExposureContrastOpData::STYLE_VIDEO);
-
-    OCIO_CHECK_EQUAL(ec.getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
-    OCIO_CHECK_EQUAL(ec.getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
     OCIO_CHECK_EQUAL(ec.getExposure(), 0.0);
     OCIO_CHECK_EQUAL(ec.getContrast(), 1.0);
@@ -605,9 +593,7 @@ OCIO_ADD_TEST(ExposureContrastOpData, clone)
 
 OCIO_ADD_TEST(ExposureContrastOpData, inverse)
 {
-    OCIO::ExposureContrastOpData ec(OCIO::BIT_DEPTH_UINT8,
-                                    OCIO::BIT_DEPTH_F16,
-                                    OCIO::ExposureContrastOpData::STYLE_VIDEO);
+    OCIO::ExposureContrastOpData ec(OCIO::ExposureContrastOpData::STYLE_VIDEO);
     
     ec.setContrast(0.8);
     ec.setGamma(1.1);
@@ -623,9 +609,6 @@ OCIO_ADD_TEST(ExposureContrastOpData, inverse)
 
     OCIO::ConstExposureContrastOpDataRcPtr ecInvConst = ecInv;
     OCIO_CHECK_ASSERT(ec.isInverse(ecInvConst));
-
-    OCIO_CHECK_EQUAL(ecInv->getOutputBitDepth(), ec.getInputBitDepth());
-    OCIO_CHECK_EQUAL(ecInv->getInputBitDepth(), ec.getOutputBitDepth());
 
     OCIO_CHECK_EQUAL(ecInv->getStyle(),
                      OCIO::ExposureContrastOpData::STYLE_VIDEO_REV);

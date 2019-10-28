@@ -112,16 +112,9 @@ void GPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
 
     // Prepare the list of ops.
 
-    m_ops = rawOps.clone();
+    m_ops = rawOps;
 
-    // GPU Processor only supports F32.
-    for(auto & op : m_ops)
-    {
-        op->setInputBitDepth(BIT_DEPTH_F32);
-        op->setOutputBitDepth(BIT_DEPTH_F32);
-    }
-
-    OptimizeOpVec(m_ops, oFlags);
+    OptimizeOpVec(m_ops, BIT_DEPTH_F32, oFlags);
     FinalizeOpVec(m_ops, fFlags);
     UnifyDynamicProperties(m_ops);
 
@@ -160,7 +153,7 @@ void GPUProcessor::Impl::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) c
     LegacyGpuShaderDesc * legacy = dynamic_cast<LegacyGpuShaderDesc*>(shaderDesc.get());
     if(legacy)
     {
-        gpuOps = m_ops.clone();
+        gpuOps = m_ops;
 
         // GPU Process setup
         //
@@ -193,7 +186,7 @@ void GPUProcessor::Impl::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) c
         gpuOps += gpuLut;
         gpuOps += gpuOpsHwPostProcess;
 
-        OptimizeOpVec(gpuOps, OPTIMIZATION_DEFAULT);
+        OptimizeOpVec(gpuOps, BIT_DEPTH_F32, OPTIMIZATION_DEFAULT);
         FinalizeOpVec(gpuOps, FINALIZATION_DEFAULT);
     }
     else

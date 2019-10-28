@@ -234,8 +234,7 @@ OCIO_ADD_TEST(LogUtil, ctf_to_ocio_ok)
     OCIO_CHECK_EQUAL(paramsR[OCIO::LOG_SIDE_OFFSET], 0.);
     OCIO_CHECK_EQUAL(dir, OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO::LogOpData logOp(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, dir,
-                          base, paramsR, paramsG, paramsB);
+    OCIO::LogOpData logOp(dir, base, paramsR, paramsG, paramsB);
 
     OCIO_CHECK_ASSERT(!logOp.isIdentity());
     OCIO_CHECK_ASSERT(!logOp.hasChannelCrosstalk());
@@ -251,8 +250,7 @@ OCIO_ADD_TEST(LogUtil, ctf_to_ocio_ok)
     OCIO_CHECK_EQUAL(paramsR[OCIO::LOG_SIDE_OFFSET], 0.);
     OCIO_CHECK_EQUAL(dir, OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO::LogOpData logOp2(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, dir,
-                           base, paramsR, paramsG, paramsB);
+    OCIO::LogOpData logOp2(dir, base, paramsR, paramsG, paramsB);
     OCIO_CHECK_NO_THROW(logOp2.validate());
 
     ctfParams.m_style = OCIO::LogUtil::ANTI_LOG10;
@@ -265,8 +263,7 @@ OCIO_ADD_TEST(LogUtil, ctf_to_ocio_ok)
     OCIO_CHECK_EQUAL(paramsR[OCIO::LOG_SIDE_OFFSET], 0.);
     OCIO_CHECK_EQUAL(dir, OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO::LogOpData logOp3(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, dir,
-                           base, paramsR, paramsG, paramsB);
+    OCIO::LogOpData logOp3(dir, base, paramsR, paramsG, paramsB);
     OCIO_CHECK_NO_THROW(logOp3.validate());
 
     ctfParams.m_style = OCIO::LogUtil::ANTI_LOG2;
@@ -279,8 +276,7 @@ OCIO_ADD_TEST(LogUtil, ctf_to_ocio_ok)
     OCIO_CHECK_EQUAL(paramsR[OCIO::LOG_SIDE_OFFSET], 0.);
     OCIO_CHECK_EQUAL(dir, OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO::LogOpData logOp4(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, dir,
-                           base, paramsR, paramsG, paramsB);
+    OCIO::LogOpData logOp4(dir, base, paramsR, paramsG, paramsB);
     OCIO_CHECK_NO_THROW(logOp4.validate());
 
     auto & redP = ctfParams.get(OCIO::LogUtil::CTFParams::red);
@@ -317,16 +313,14 @@ OCIO_ADD_TEST(LogUtil, ctf_to_ocio_ok)
 
     OCIO_CHECK_EQUAL(dir, OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO::LogOpData logOp5(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, dir,
-                           base, paramsR, paramsG, paramsB);
+    OCIO::LogOpData logOp5(dir, base, paramsR, paramsG, paramsB);
     OCIO_CHECK_NO_THROW(logOp5.validate());
 
     ctfParams.m_style = OCIO::LogUtil::LOG_TO_LIN;
     OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB, dir);
     OCIO_CHECK_EQUAL(dir, OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO::LogOpData logOp6(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, dir,
-                           base, paramsR, paramsG, paramsB);
+    OCIO::LogOpData logOp6(dir, base, paramsR, paramsG, paramsB);
     OCIO_CHECK_NO_THROW(logOp6.validate());
 }
 

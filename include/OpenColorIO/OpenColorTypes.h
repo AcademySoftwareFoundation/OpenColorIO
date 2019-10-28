@@ -296,8 +296,10 @@ OCIO_NAMESPACE_ENTER
         INTERP_BEST = 255       //! the 'best' suitable interpolation type
     };
     
-    //!cpp:type:: Used by :cpp:class`CPUProcessor` to indicate the input and output bit-depths 
-    //            of the image to process.
+    //!cpp:type:: Used in a configuration file to indicate the bit-depth of a color space,
+    // and by the :cpp:class`Processor` to specify the input and output bit-depths of 
+    // images to process.
+    // Note that :cpp:class`Processor` only supports: UINT8, UINT10, UINT12, UINT16, F16 and F32.
     enum BitDepth
     {
         BIT_DEPTH_UNKNOWN = 0,
