@@ -64,7 +64,7 @@ int main(int argc, const char **argv)
     {
         std::cout << std::endl;
         std::cout << "OCIO Version: " << OCIO::GetVersion() << std::endl;
-        const char * env = getenv("OCIO");
+        const char * env = OCIO::GetEnvVariable("OCIO");
         if (env && *env)
         {
             try
@@ -129,7 +129,7 @@ int main(int argc, const char **argv)
         OCIO::ConstProcessorRcPtr processor;
         if (!inputColorSpace.empty() && !outputColorSpace.empty())
         {
-            const char * env = getenv("OCIO");
+            const char * env = OCIO::GetEnvVariable("OCIO");
             if(env && *env)
             {
                 if (verbose)

@@ -242,10 +242,13 @@ int main (int argc, const char* argv[])
                 std::cout << "[OpenColorIO INFO]: Loading " << inputconfig << std::endl;
             config = OCIO::Config::CreateFromFile(inputconfig.c_str());
         }
-        else if(getenv("OCIO"))
+        else if(OCIO::GetEnvVariable("OCIO"))
         {
             if(!usestdout && verbose)
-                std::cout << "[OpenColorIO INFO]: Loading $OCIO " << getenv("OCIO") << std::endl;
+            {
+                std::cout << "[OpenColorIO INFO]: Loading $OCIO " 
+                          << OCIO::GetEnvVariable("OCIO") << std::endl;
+            }
             config = OCIO::Config::CreateFromEnv();
         }
         else

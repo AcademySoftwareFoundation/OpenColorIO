@@ -191,8 +191,6 @@ FixedFunctionStyle FixedFunctionOpData::ConvertStyle(FixedFunctionOpData::Style 
     ss << style;
 
     throw Exception(ss.str().c_str());
-
-    return FIXED_FUNCTION_ACES_RED_MOD_03;
 }
 
 FixedFunctionOpData::FixedFunctionOpData()

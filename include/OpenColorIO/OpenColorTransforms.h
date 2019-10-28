@@ -80,7 +80,10 @@ OCIO_NAMESPACE_ENTER
     protected:
         FormatMetadata();
         virtual ~FormatMetadata();
-};
+
+    private:
+        FormatMetadata(const FormatMetadata & rhs) = delete;
+    };
 
     //!rst:: //////////////////////////////////////////////////////////////////
 
