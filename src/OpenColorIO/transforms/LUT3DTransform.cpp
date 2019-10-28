@@ -55,7 +55,7 @@ public:
     void reset(unsigned long gridSize)
     {
         auto & lutArray = getArray();
-        lutArray = Lut3DArray(gridSize, getOutputBitDepth());
+        lutArray = Lut3DArray(gridSize);
     }
 
     TransformDirection m_direction = TRANSFORM_DIR_FORWARD;

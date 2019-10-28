@@ -404,6 +404,7 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
+#include "UnitTestUtils.h"
 
 OCIO_ADD_TEST(FileFormatTruelight, shaper_and_lut_3d)
 {
@@ -494,10 +495,8 @@ OCIO_ADD_TEST(FileFormatTruelight, shaper_and_lut_3d)
     {
         CreateLut3DOp(ops, lut->lut3D, OCIO::TRANSFORM_DIR_FORWARD);
     }
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
-
-
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
+    
     // Apply the result
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
     {
@@ -563,9 +562,8 @@ OCIO_ADD_TEST(FileFormatTruelight, shaper)
     {
         CreateLut3DOp(ops, lut->lut3D, OCIO::TRANSFORM_DIR_FORWARD);
     }
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
-
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
+    
     // Apply the result
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
     {
@@ -648,9 +646,8 @@ OCIO_ADD_TEST(FileFormatTruelight, lut_3d)
     {
         CreateLut3DOp(ops, lut->lut3D, OCIO::TRANSFORM_DIR_FORWARD);
     }
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
-
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
+    
     // Apply the result
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
     {

@@ -294,30 +294,17 @@ inline void ApplyPower<false>(float * pix, const float * power)
 
 CDLOpCPU::CDLOpCPU(ConstCDLOpDataRcPtr & cdl)
     :   OpCPU()
-    ,   m_inScale(1.0f)
-    ,   m_outScale(1.0f)
-    ,   m_alphaScale(1.0f)
 {
-    m_inScale = 1.0f / (float)GetBitDepthMaxValue(cdl->getInputBitDepth());
-    m_outScale = (float)GetBitDepthMaxValue(cdl->getOutputBitDepth());
-    m_alphaScale = m_inScale * m_outScale;
-
     m_renderParams.update(cdl);
 }
 
 #ifdef USE_SSE
-void LoadRenderParams(float inScaleVal,
-                      float outScaleVal,
-                      const RenderParams & renderParams,
-                      __m128 & inScale,
-                      __m128 & outScale,
+void LoadRenderParams(const RenderParams & renderParams,
                       __m128 & slope,
                       __m128 & offset,
                       __m128 & power,
                       __m128 & saturation)
 {
-    inScale    = _mm_set1_ps(inScaleVal);
-    outScale   = _mm_set1_ps(outScaleVal);
     slope      = _mm_loadu_ps(renderParams.getSlope());
     offset     = _mm_loadu_ps(renderParams.getOffset());
     power      = _mm_loadu_ps(renderParams.getPower());
@@ -339,21 +326,14 @@ template<bool CLAMP>
 void CDLRendererV1_2Fwd::_apply(const float * inImg, float * outImg, long numPixels) const
 {
 #ifdef USE_SSE
-    __m128 inScale, outScale, slope, offset, power, saturation, pix;
-    LoadRenderParams(m_inScale,
-                     m_outScale,
-                     m_renderParams,
-                     inScale,
-                     outScale,
+    __m128 slope, offset, power, saturation, pix;
+    LoadRenderParams(m_renderParams,
                      slope,
                      offset,
                      power,
                      saturation);
 
     float inAlpha;
-
-    // Combine scale and slope so that they can be applied at the same time
-    __m128 inScaleSlope = _mm_mul_ps(slope, inScale);
 
     const float * in = inImg;
     float * out = outImg;
@@ -362,8 +342,7 @@ void CDLRendererV1_2Fwd::_apply(const float * inImg, float * outImg, long numPix
     {
         pix = LoadPixel(in, inAlpha);
 
-        // inScale is combined with slope
-        ApplySlope(pix, inScaleSlope);
+        ApplySlope(pix, slope);
         ApplyOffset(pix, offset);
 
         ApplyPower<CLAMP>(pix, power);
@@ -371,9 +350,7 @@ void CDLRendererV1_2Fwd::_apply(const float * inImg, float * outImg, long numPix
         ApplySaturation(pix, saturation);
         ApplyClamp<CLAMP>(pix);
 
-        ApplyOutScale(pix, outScale);
-
-        StorePixel(out, pix, inAlpha * m_alphaScale);
+        StorePixel(out, pix, inAlpha);
 
         in  += 4;
         out += 4;
@@ -384,8 +361,7 @@ void CDLRendererV1_2Fwd::_apply(const float * inImg, float * outImg, long numPix
 
     // Combine inScale and slope
     const float * slope = m_renderParams.getSlope();
-    float inScaleSlope[3] = {slope[0], slope[1], slope[2]};
-    ApplyScale(inScaleSlope, m_inScale);
+    float inSlope[3] = {slope[0], slope[1], slope[2]};
 
     for (long idx = 0; idx<numPixels; ++idx)
     {
@@ -394,7 +370,7 @@ void CDLRendererV1_2Fwd::_apply(const float * inImg, float * outImg, long numPix
         // NB: 'in' and 'out' could be pointers to the same memory buffer.
         memcpy(out, in, 4 * sizeof(float));
 
-        ApplySlope(out, inScaleSlope);
+        ApplySlope(out, inSlope);
         ApplyOffset(out, m_renderParams.getOffset());
 
         ApplyPower<CLAMP>(out, m_renderParams.getPower());
@@ -402,9 +378,7 @@ void CDLRendererV1_2Fwd::_apply(const float * inImg, float * outImg, long numPix
         ApplySaturation(out, m_renderParams.getSaturation());
         ApplyClamp<CLAMP>(out);
 
-        ApplyScale(out, m_outScale);
-
-        out[3] = inAlpha * m_alphaScale;
+        out[3] = inAlpha;
 
         in  += 4;
         out += 4;
@@ -436,12 +410,8 @@ template<bool CLAMP>
 void CDLRendererV1_2Rev::_apply(const float * inImg, float * outImg, long numPixels) const
 {
 #ifdef USE_SSE
-    __m128 inScale, outScale, slopeRev, offsetRev, powerRev, saturationRev, pix;
-    LoadRenderParams(m_inScale,
-                     m_outScale,
-                     m_renderParams,
-                     inScale,
-                     outScale, 
+    __m128 slopeRev, offsetRev, powerRev, saturationRev, pix;
+    LoadRenderParams(m_renderParams,
                      slopeRev,
                      offsetRev,
                      powerRev,
@@ -456,8 +426,6 @@ void CDLRendererV1_2Rev::_apply(const float * inImg, float * outImg, long numPix
     {
         pix = LoadPixel(in, inAlpha);
 
-        ApplyInScale(pix, inScale);
-
         ApplyClamp<CLAMP>(pix);
         ApplySaturation(pix, saturationRev);
 
@@ -467,8 +435,7 @@ void CDLRendererV1_2Rev::_apply(const float * inImg, float * outImg, long numPix
         ApplySlope(pix, slopeRev);
         ApplyClamp<CLAMP>(pix);
 
-        ApplyOutScale(pix, outScale);
-        StorePixel(out, pix, inAlpha * m_alphaScale);
+        StorePixel(out, pix, inAlpha);
 
         in  += 4;
         out += 4;
@@ -484,8 +451,6 @@ void CDLRendererV1_2Rev::_apply(const float * inImg, float * outImg, long numPix
         // NB: 'in' and 'out' could be pointers to the same memory buffer.
         memcpy(out, in, 4 * sizeof(float));
 
-        ApplyScale(out, m_inScale);
-
         ApplyClamp<CLAMP>(out);
         ApplySaturation(out, m_renderParams.getSaturation());
 
@@ -495,9 +460,7 @@ void CDLRendererV1_2Rev::_apply(const float * inImg, float * outImg, long numPix
         ApplySlope(out, m_renderParams.getSlope());
         ApplyClamp<CLAMP>(out);
 
-        ApplyScale(out, m_outScale);
-
-        out[3] = inAlpha * m_alphaScale;
+        out[3] = inAlpha;
 
         in  += 4;
         out += 4;

@@ -35,15 +35,11 @@ struct RendererParams
 // Utility function to compute the rendering coefficients for the forward 
 // monitor curve gamma op.
 void ComputeParamsFwd(const GammaOpData::Params & gParams,
-                      BitDepth inBitDepth,
-                      BitDepth outBitDepth,
                       RendererParams & rParams);
 
 // Utility function to compute the rendering coefficients for the reverse 
 // monitor curve gamma op.
 void ComputeParamsRev(const GammaOpData::Params & gParams,
-                      BitDepth inBitDepth,
-                      BitDepth outBitDepth,
                       RendererParams & rParams);
 
 }

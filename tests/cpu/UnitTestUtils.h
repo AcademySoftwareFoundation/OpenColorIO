@@ -26,6 +26,9 @@ void BuildOpsTest(OpRcPtrVec & fileOps,
                   ContextRcPtr & context,
                   TransformDirection dir);
 
+// Create a FileTransform.
+FileTransformRcPtr CreateFileTransform(const std::string & fileName);
+
 // Create processor for a given file.
 ConstProcessorRcPtr GetFileTransformProcessor(const std::string & fileName);
 
@@ -59,7 +62,6 @@ OCIO_SHARED_PTR<LocalCachedFile> LoadTestFile(
     return DynamicPtrCast<LocalCachedFile>(cachedFile);
 }
 
-
 // Utility to mute the logging mechanism so the unit test output is clean.
 class MuteLogging
 {
@@ -69,6 +71,17 @@ public:
     MuteLogging & operator=(const MuteLogging &) = delete;
     ~MuteLogging();
 };
+
+inline void OptimizeOpVec(OpRcPtrVec & ops)
+{
+    OptimizeOpVec(ops, BIT_DEPTH_F32, OPTIMIZATION_DEFAULT);
+}
+
+inline void OptimizeFinalizeOpVec(OpRcPtrVec & ops)
+{
+    OptimizeOpVec(ops, BIT_DEPTH_F32, OPTIMIZATION_DEFAULT);
+    FinalizeOpVec(ops, FINALIZATION_EXACT);
+}
 
 }
 OCIO_NAMESPACE_EXIT
