@@ -609,7 +609,7 @@ OCIO_ADD_TEST(CPUProcessor, with_one_matrix)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
 
     OCIO::MatrixTransformRcPtr transform = OCIO::MatrixTransform::Create();
-    constexpr double offset4[4] = { 1.4002, 0.4005, 0.8007, 0.5 };
+    constexpr double offset4[4] = { 1.4002, 0.4005, 0.0807, 0.5 };
     transform->setOffset( offset4 );
 
     OCIO::ConstProcessorRcPtr processor;
