@@ -27,11 +27,6 @@ public:
 protected:
     // Update renderer parameters.
     virtual void updateData(ConstLogOpDataRcPtr & pL);
-
-protected:
-    float m_inScale;
-    float m_outScale;
-    float m_alphaScale;
 };
 
 // Base class for LogToLin and LinToLog renderers.
@@ -136,21 +131,11 @@ ConstOpCPURcPtr GetLogRenderer(ConstLogOpDataRcPtr & log)
 
 LogOpCPU::LogOpCPU(ConstLogOpDataRcPtr & log)
     : OpCPU()
-    , m_inScale(1.f)
-    , m_outScale(1.f)
-    , m_alphaScale(1.f)
 {
 }
 
 void LogOpCPU::updateData(ConstLogOpDataRcPtr & pL)
 {
-    m_inScale = (float)(
-        1. / GetBitDepthMaxValue(pL->getInputBitDepth()));
-
-    m_outScale = (float)(
-        GetBitDepthMaxValue(pL->getOutputBitDepth()));
-
-    m_alphaScale = m_inScale * m_outScale;
 }
 
 
@@ -225,7 +210,7 @@ inline void ApplyExp2(float * pix)
 void LogRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
     //
-    // out = log2( max(in*inScale, minValue) ) * logScale * outScale;
+    // out = log2( max(in, minValue) ) * logScale;
     //
     const float minValue = std::numeric_limits<float>::min();
 
@@ -233,21 +218,19 @@ void LogRenderer::apply(const void * inImg, void * outImg, long numPixels) const
     float * out = (float *)outImg;
 
 #ifdef USE_SSE
-    const __m128 mm_inScale = _mm_set1_ps(m_inScale);
     const __m128 mm_minValue = _mm_set1_ps(minValue);
-    const __m128 mm_outScale = _mm_set1_ps(m_outScale * m_logScale);
+    const __m128 mm_logScale = _mm_set1_ps(m_logScale);
 
     __m128 mm_pixel;
 
     for (long idx = 0; idx<numPixels; ++idx)
     {
         mm_pixel = _mm_set_ps(0.0f, in[2], in[1], in[0]);
-        mm_pixel = _mm_mul_ps(mm_pixel, mm_inScale);
         mm_pixel = _mm_max_ps(mm_pixel, mm_minValue);
         mm_pixel = sseLog2(mm_pixel);
-        mm_pixel = _mm_mul_ps(mm_pixel, mm_outScale);
+        mm_pixel = _mm_mul_ps(mm_pixel, mm_logScale);
 
-        const float alphares = in[3] * m_alphaScale;
+        const float alphares = in[3];
 
         _mm_storeu_ps(out, mm_pixel);
         out[3] = alphares;
@@ -256,26 +239,22 @@ void LogRenderer::apply(const void * inImg, void * outImg, long numPixels) const
         out += 4;
     }
 #else
-    const float outScale = m_outScale * m_logScale;
-
     for (long idx = 0; idx<numPixels; ++idx)
     {
-        const float alphares = in[3] * m_alphaScale;
+        const float alphares = in[3];
 
         // NB: 'in' and 'out' could be pointers to the same memory buffer.
         memcpy(out, in, 4 * sizeof(float));
 
-        ApplyScale(out, m_inScale);
         ApplyMax(out, minValue);
         ApplyLog2(out);
-        ApplyScale(out, outScale);
+        ApplyScale(out, m_logScale);
 
         out[3] = alphares;
 
         in  += 4;
         out += 4;
     }
-
 #endif
 }
 
@@ -290,10 +269,10 @@ AntiLogRenderer::AntiLogRenderer(ConstLogOpDataRcPtr & log, float log2base)
 void AntiLogRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
     //
-    // out = pow(base, in*inScale) * outScale;
+    // out = pow(base, in);
     //
     // This computation is decomposed into:
-    //   out = exp2( log2(base) * (in*inScale) ) * outScale;
+    //   out = exp2( log2(base) * in);
     //   so that the constant factor log2(base) can be moved outside the loop.
     //
 
@@ -301,8 +280,6 @@ void AntiLogRenderer::apply(const void * inImg, void * outImg, long numPixels) c
     float * out = (float *)outImg;
 
 #ifdef USE_SSE
-    const __m128 mm_inScale = _mm_set1_ps(m_inScale);
-    const __m128 mm_outScale = _mm_set1_ps(m_outScale);
     const __m128 mm_log2_base = _mm_set1_ps(m_log2_base);
 
     __m128 mm_pixel;
@@ -310,11 +287,9 @@ void AntiLogRenderer::apply(const void * inImg, void * outImg, long numPixels) c
     for (long idx = 0; idx<numPixels; ++idx)
     {
         mm_pixel = _mm_set_ps(0.0f, in[2], in[1], in[0]);
-        mm_pixel = _mm_mul_ps(mm_pixel, mm_inScale);
         mm_pixel = sseExp2(_mm_mul_ps(mm_pixel, mm_log2_base));
-        mm_pixel = _mm_mul_ps(mm_pixel, mm_outScale);
 
-        const float alphares = in[3] * m_alphaScale;
+        const float alphares = in[3];
 
         _mm_storeu_ps(out, mm_pixel);
         out[3] = alphares;
@@ -323,18 +298,15 @@ void AntiLogRenderer::apply(const void * inImg, void * outImg, long numPixels) c
         out += 4;
     }
 #else
-    const float inScale = m_inScale * m_log2_base;
-
     for (long idx = 0; idx<numPixels; ++idx)
     {
-        const float alphares = in[3] * m_alphaScale;
+        const float alphares = in[3];
 
         // NB: 'in' and 'out' could be pointers to the same memory buffer.
         memcpy(out, in, 4 * sizeof(float));
 
-        ApplyScale(out, inScale);
+        ApplyScale(out, m_log2_base);
         ApplyExp2(out);
-        ApplyScale(out, m_outScale);
 
         out[3] = alphares;
 
@@ -354,45 +326,43 @@ Log2LinRenderer::Log2LinRenderer(ConstLogOpDataRcPtr & log)
 void Log2LinRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
     //
-    // out = ( pow( base, (in*inScale - logOffset) / logSlope ) - linOffset )
-    //       * outScale / linSlope;
+    // out = ( pow( base, (in - logOffset) / logSlope ) - linOffset ) / linSlope;
     //
-    // out = ( exp2( log2(base)*inScale/logSlope * (in - logOffset/inScale) ) - linOffset )
-    //       * outScale / linSlope;
+    // out = ( exp2( log2(base)/logSlope * (in - logOffset) ) - linOffset ) / linSlope;
     //
     // The power computation is decomposed into:
     //   pow(base, exponent) = exp2( log2(base) * exponent )
     //   so that the constant factor log2(base) can be moved outside the loop.
     //
-    const float inscalekinv[] = {
-        m_inScale * log2f(m_base) / (float)m_paramsR[LOG_SIDE_SLOPE],
-        m_inScale * log2f(m_base) / (float)m_paramsG[LOG_SIDE_SLOPE],
-        m_inScale * log2f(m_base) / (float)m_paramsB[LOG_SIDE_SLOPE] };
+    const float kinv[] = {
+        log2f(m_base) / (float)m_paramsR[LOG_SIDE_SLOPE],
+        log2f(m_base) / (float)m_paramsG[LOG_SIDE_SLOPE],
+        log2f(m_base) / (float)m_paramsB[LOG_SIDE_SLOPE] };
     const float minuskb[] = {
-        -(float)m_paramsR[LOG_SIDE_OFFSET] / m_inScale,
-        -(float)m_paramsG[LOG_SIDE_OFFSET] / m_inScale,
-        -(float)m_paramsB[LOG_SIDE_OFFSET] / m_inScale };
+        -(float)m_paramsR[LOG_SIDE_OFFSET],
+        -(float)m_paramsG[LOG_SIDE_OFFSET],
+        -(float)m_paramsB[LOG_SIDE_OFFSET] };
     const float minusb[] = {
         -(float)m_paramsR[LIN_SIDE_OFFSET],
         -(float)m_paramsG[LIN_SIDE_OFFSET],
         -(float)m_paramsB[LIN_SIDE_OFFSET] };
-    const float outscaleminv[] = {
-        m_outScale / (float)m_paramsR[LIN_SIDE_SLOPE],
-        m_outScale / (float)m_paramsG[LIN_SIDE_SLOPE],
-        m_outScale / (float)m_paramsB[LIN_SIDE_SLOPE] };
+    const float minv[] = {
+        1.0f / (float)m_paramsR[LIN_SIDE_SLOPE],
+        1.0f / (float)m_paramsG[LIN_SIDE_SLOPE],
+        1.0f / (float)m_paramsB[LIN_SIDE_SLOPE] };
 
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
 
 #ifdef USE_SSE
-    const __m128 mm_inscalekinv = _mm_set_ps(
-        0.0f, inscalekinv[2], inscalekinv[1], inscalekinv[0]);
+    const __m128 mm_kinv = _mm_set_ps(
+        0.0f, kinv[2], kinv[1], kinv[0]);
     const __m128 mm_minuskb = _mm_set_ps(
         0.0f, minuskb[2], minuskb[1], minuskb[0]);
     const __m128 mm_minusb = _mm_set_ps(
         0.0f, minusb[2], minusb[1], minusb[0]);
-    const __m128 mm_outscaleminv = _mm_set_ps(
-        0.0f, outscaleminv[2], outscaleminv[1], outscaleminv[0]);
+    const __m128 mm_minv = _mm_set_ps(
+        0.0f, minv[2], minv[1], minv[0]);
 
     __m128 mm_pixel;
 
@@ -400,12 +370,12 @@ void Log2LinRenderer::apply(const void * inImg, void * outImg, long numPixels) c
     {
         mm_pixel = _mm_set_ps(0.0f, in[2], in[1], in[0]);
         mm_pixel = _mm_add_ps(mm_pixel, mm_minuskb);
-        mm_pixel = _mm_mul_ps(mm_pixel, mm_inscalekinv);
+        mm_pixel = _mm_mul_ps(mm_pixel, mm_kinv);
         mm_pixel = sseExp2(mm_pixel);
         mm_pixel = _mm_add_ps(mm_pixel, mm_minusb);
-        mm_pixel = _mm_mul_ps(mm_pixel, mm_outscaleminv);
+        mm_pixel = _mm_mul_ps(mm_pixel, mm_minv);
 
-        const float alphares = in[3] * m_alphaScale;
+        const float alphares = in[3];
 
         _mm_storeu_ps(out, mm_pixel);
         out[3] = alphares;
@@ -414,19 +384,18 @@ void Log2LinRenderer::apply(const void * inImg, void * outImg, long numPixels) c
         in  += 4;
     }
 #else
-
     for (long idx = 0; idx<numPixels; ++idx)
     {
-        const float alphares = in[3] * m_alphaScale;
+        const float alphares = in[3];
 
         // NB: 'in' and 'out' could be pointers to the same memory buffer.
         memcpy(out, in, 4 * sizeof(float));
 
         ApplyAdd(out, minuskb);
-        ApplyScale(out, inscalekinv);
+        ApplyScale(out, kinv);
         ApplyExp2(out);
         ApplyAdd(out, minusb);
-        ApplyScale(out, outscaleminv);
+        ApplyScale(out, minv);
 
         out[3] = alphares;
 
@@ -445,29 +414,28 @@ Lin2LogRenderer::Lin2LogRenderer(ConstLogOpDataRcPtr & log)
 
 void Lin2LogRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    // out = ( logSlope * log( base, max( minValue, (in*linSlope*inScale + linOffset) ) ) + logOffset ) * outscale
+    // out = ( logSlope * log( base, max( minValue, (in*linSlope + linOffset) ) ) + logOffset )
     //
-    // out = log2( max( minValue, (in*linSlope*inScale + linOffset) ) ) * logSlope * outscale / log2(base) 
-    //       + logOffset * outscale
+    // out = log2( max( minValue, (in*linSlope + linOffset) ) ) * logSlope / log2(base) + logOffset
     //
     const float minValue = std::numeric_limits<float>::min();
 
-    const float inscalem[] = {
-        m_inScale * (float)m_paramsR[LIN_SIDE_SLOPE],
-        m_inScale * (float)m_paramsG[LIN_SIDE_SLOPE],
-        m_inScale * (float)m_paramsB[LIN_SIDE_SLOPE] };
+    const float m[] = {
+        (float)m_paramsR[LIN_SIDE_SLOPE],
+        (float)m_paramsG[LIN_SIDE_SLOPE],
+        (float)m_paramsB[LIN_SIDE_SLOPE] };
     const float b[] = {
         (float)m_paramsR[LIN_SIDE_OFFSET],
         (float)m_paramsG[LIN_SIDE_OFFSET],
         (float)m_paramsB[LIN_SIDE_OFFSET] };
-    const float klogoutscale[] = {
-        (float)(m_outScale * m_paramsR[LOG_SIDE_SLOPE] / log2(m_base)),
-        (float)(m_outScale * m_paramsG[LOG_SIDE_SLOPE] / log2(m_base)),
-        (float)(m_outScale * m_paramsB[LOG_SIDE_SLOPE] / log2(m_base)) };
-    const float kboutscale[] = {
-        (float)m_paramsR[LOG_SIDE_OFFSET] * m_outScale,
-        (float)m_paramsG[LOG_SIDE_OFFSET] * m_outScale,
-        (float)m_paramsB[LOG_SIDE_OFFSET] * m_outScale };
+    const float klog[] = {
+        (float)(m_paramsR[LOG_SIDE_SLOPE] / log2(m_base)),
+        (float)(m_paramsG[LOG_SIDE_SLOPE] / log2(m_base)),
+        (float)(m_paramsB[LOG_SIDE_SLOPE] / log2(m_base)) };
+    const float kb[] = {
+        (float)m_paramsR[LOG_SIDE_OFFSET],
+        (float)m_paramsG[LOG_SIDE_OFFSET],
+        (float)m_paramsB[LOG_SIDE_OFFSET] };
 
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
@@ -475,28 +443,28 @@ void Lin2LogRenderer::apply(const void * inImg, void * outImg, long numPixels) c
 #ifdef USE_SSE
     const __m128 mm_minValue = _mm_set1_ps(minValue);
 
-    const __m128 mm_inscalem = _mm_set_ps(
-        0.0f, inscalem[2], inscalem[1], inscalem[0]);
+    const __m128 mm_m = _mm_set_ps(
+        0.0f, m[2], m[1], m[0]);
     const __m128 mm_b = _mm_set_ps(
         0.0f, b[2], b[1], b[0]);
-    const __m128 mm_klogoutscale = _mm_set_ps(
-        0.0f, klogoutscale[2], klogoutscale[1], klogoutscale[0]);
-    const __m128 mm_kboutscale = _mm_set_ps(
-        0.0f, kboutscale[2], kboutscale[1], kboutscale[0]);
+    const __m128 mm_klog = _mm_set_ps(
+        0.0f, klog[2], klog[1], klog[0]);
+    const __m128 mm_kb = _mm_set_ps(
+        0.0f, kb[2], kb[1], kb[0]);
 
     __m128 mm_pixel;
 
     for (long idx = 0; idx<numPixels; ++idx)
     {
         mm_pixel = _mm_set_ps(0.0f, in[2], in[1], in[0]);
-        mm_pixel = _mm_mul_ps(mm_pixel, mm_inscalem);
+        mm_pixel = _mm_mul_ps(mm_pixel, mm_m);
         mm_pixel = _mm_add_ps(mm_pixel, mm_b);
         mm_pixel = _mm_max_ps(mm_pixel, mm_minValue);
         mm_pixel = sseLog2(mm_pixel);
-        mm_pixel = _mm_mul_ps(mm_pixel, mm_klogoutscale);
-        mm_pixel = _mm_add_ps(mm_pixel, mm_kboutscale);
+        mm_pixel = _mm_mul_ps(mm_pixel, mm_klog);
+        mm_pixel = _mm_add_ps(mm_pixel, mm_kb);
 
-        const float alphares = in[3] * m_alphaScale;
+        const float alphares = in[3];
 
         _mm_storeu_ps(out, mm_pixel);
         out[3] = alphares;
@@ -512,14 +480,14 @@ void Lin2LogRenderer::apply(const void * inImg, void * outImg, long numPixels) c
 
     for (long idx = 0; idx<numPixels; ++idx)
     {
-        const float alphares = in[3] * m_alphaScale;
+        const float alphares = in[3];
 
-        ApplyScale(out, inscalem);
+        ApplyScale(out, m);
         ApplyAdd(out, b);
         ApplyMax(out, minValue);
         ApplyLog2(out);
-        ApplyScale(out, klogoutscale);
-        ApplyAdd(out, kboutscale);
+        ApplyScale(out, klog);
+        ApplyAdd(out, kb);
 
         out[3] = alphares;
 
@@ -743,7 +711,6 @@ OCIO_ADD_TEST(LogOpCPU, log2lin_test)
     OCIO::LogUtil::ConvertLogParameters(params, base, paramsR, paramsG, paramsB, dir);
 
     OCIO::ConstLogOpDataRcPtr logOp = std::make_shared<OCIO::LogOpData>(
-        OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
         dir, base, paramsR, paramsG, paramsB);
 
     OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
@@ -872,7 +839,6 @@ OCIO_ADD_TEST(LogOpCPU, lin2log_test)
     OCIO::LogUtil::ConvertLogParameters(params, base, paramsR, paramsG, paramsB, dir);
 
     OCIO::ConstLogOpDataRcPtr logOp = std::make_shared<OCIO::LogOpData>(
-        OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
         dir, base, paramsR, paramsG, paramsB);
 
     OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);

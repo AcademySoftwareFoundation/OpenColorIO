@@ -120,9 +120,7 @@ OCIO_NAMESPACE_ENTER
         };
 
     public:
-        OpData(BitDepth inBitDepth, BitDepth outBitDepth);
-        OpData(BitDepth inBitDepth, BitDepth outBitDepth,
-               const FormatMetadataImpl & info);
+        OpData();
         OpData(const OpData & rhs);
         OpData & operator=(const OpData & rhs);
         virtual ~OpData();
@@ -133,23 +131,14 @@ OCIO_NAMESPACE_ENTER
         const std::string & getName() const;
         void setName(const std::string & name);
 
-        inline BitDepth getInputBitDepth() const { return m_inBitDepth; }
-        virtual void setInputBitDepth(BitDepth in) { m_inBitDepth = in; }
-
-        inline BitDepth getOutputBitDepth() const { return m_outBitDepth; }
-        virtual void setOutputBitDepth(BitDepth out) { m_outBitDepth = out; }
-
         virtual void validate() const;
 
         virtual Type getType() const = 0;
 
-        // A "no-op" is an op where inBitDepth==outBitDepth 
-        // and isIdentity is true, therefore the output pixels
-        // will be unchanged.
+        // A "no-op" is an op that will not change the output pixels.
         virtual bool isNoOp() const = 0;
 
-        // An identity is an op that only does bit-depth conversion
-        // and/or clamping.
+        // An identity is an op that only does clamping.
         // Each op will overload this with the appropriate calculation.
         // An op where isIdentity() is true will typically be removed
         // or replaced during the optimization process.
@@ -181,8 +170,6 @@ OCIO_NAMESPACE_ENTER
 
     private:
         FormatMetadataImpl m_metadata;
-        BitDepth           m_inBitDepth;
-        BitDepth           m_outBitDepth;
     };
     
     class Op;
@@ -196,10 +183,8 @@ OCIO_NAMESPACE_ENTER
     // Sets all ops to F32 and finalize them.
     void FinalizeOpVec(OpRcPtrVec & opVec, FinalizationFlags fFlags);
 
-    void OptimizeOpVec(OpRcPtrVec & result, OptimizationFlags oFlags);
     void OptimizeOpVec(OpRcPtrVec & result,
                        const BitDepth & inBitDepth,
-                       const BitDepth & outBitDepth,
                        OptimizationFlags oFlags);
 
     void UnifyDynamicProperties(OpRcPtrVec & ops);
@@ -277,17 +262,11 @@ OCIO_NAMESPACE_ENTER
             { getCPUOp()->apply(inImg, outImg, numPixels); }
 
 
-            // Is this op supported by the legacy shader text generator ?
+            // Is this op supported by the legacy shader text generator?
             virtual bool supportedByLegacyShader() const { return true; }
 
             // Create & add the gpu shader information needed by the op
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const = 0;
-
-            virtual BitDepth getInputBitDepth() const { return m_data->getInputBitDepth(); }
-            virtual BitDepth getOutputBitDepth() const { return m_data->getOutputBitDepth(); }
-
-            virtual void setInputBitDepth(BitDepth bitdepth);
-            virtual void setOutputBitDepth(BitDepth bitdepth);
 
             virtual bool isDynamic() const;
             virtual bool hasDynamicProperty(DynamicPropertyType type) const;
@@ -316,7 +295,7 @@ OCIO_NAMESPACE_ENTER
     
     std::ostream& operator<< (std::ostream&, const Op&);
 
-    // The class handles a list of ops and enforces bit depth consistency between ops.
+    // The class handles a list of ops.
     //
     // Note: List only manages shared pointers i.e. it never clones ops.
     class OpRcPtrVec
@@ -373,16 +352,8 @@ OCIO_NAMESPACE_ENTER
         const_reference back() const;
         const_reference front() const;
 
-        // Validate the bit depth consistency between Ops.
-        void validate() const;
-
-        OpRcPtrVec clone() const;
-
         FormatMetadataImpl & getFormatMetadata() { return m_metadata; }
         const FormatMetadataImpl & getFormatMetadata() const { return m_metadata; }
-
-    protected:
-        void adjustBitDepths();
 
     };
 

@@ -131,11 +131,6 @@ ConstOpCPURcPtr FixedFunctionOp::getCPUOp() const
 
 void FixedFunctionOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
 {
-    if(getInputBitDepth()!=BIT_DEPTH_F32 || getOutputBitDepth()!=BIT_DEPTH_F32)
-    {
-        throw Exception("Only 32F bit depth is supported for the GPU shader");
-    }
-
     GpuShaderText ss(shaderDesc->getLanguage());
     ss.indent();
 
@@ -161,8 +156,7 @@ void CreateFixedFunctionOp(OpRcPtrVec & ops,
                            FixedFunctionOpData::Style style)
 {
     FixedFunctionOpDataRcPtr funcData 
-        = std::make_shared<FixedFunctionOpData>(BIT_DEPTH_F32, BIT_DEPTH_F32,
-                                                params, style);
+        = std::make_shared<FixedFunctionOpData>(params, style);
     CreateFixedFunctionOp(ops, funcData, TRANSFORM_DIR_FORWARD);
 }
 
@@ -229,9 +223,7 @@ void BuildFixedFunctionOps(OpRcPtrVec & ops,
 
     const auto style = FixedFunctionOpData::ConvertStyle(transform.getStyle());
 
-    auto funcData = std::make_shared<FixedFunctionOpData>(
-        BIT_DEPTH_F32, BIT_DEPTH_F32,
-        params, style);
+    auto funcData = std::make_shared<FixedFunctionOpData>(params, style);
 
     CreateFixedFunctionOp(ops, funcData, combinedDir);
 }
@@ -265,9 +257,6 @@ OCIO_ADD_TEST(FixedFunctionOps, basic)
     OCIO::ConstFixedFunctionOpRcPtr func
         = OCIO::DynamicPtrCast<OCIO::FixedFunctionOp>(ops[0]);
 
-    OCIO_REQUIRE_EQUAL(func->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_REQUIRE_EQUAL(func->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
-
     OCIO_CHECK_ASSERT(!func->isNoOp());
     OCIO_CHECK_ASSERT(!func->isIdentity());
 
@@ -285,8 +274,7 @@ OCIO_ADD_TEST(FixedFunctionOps, glow03_cpu_engine)
     const OCIO::FixedFunctionOpData::Params data;
 
     OCIO::FixedFunctionOpDataRcPtr funcData 
-        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                                                data, style);
+        = std::make_shared<OCIO::FixedFunctionOpData>(data, style);
 
     OCIO::FixedFunctionOp func(funcData);
     OCIO_CHECK_NO_THROW(func.finalize(OCIO::FINALIZATION_EXACT));
@@ -305,8 +293,7 @@ OCIO_ADD_TEST(FixedFunctionOps, darktodim10_cpu_engine)
     const OCIO::FixedFunctionOpData::Params data;
 
     OCIO::FixedFunctionOpDataRcPtr funcData 
-        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                                                      data, style);
+        = std::make_shared<OCIO::FixedFunctionOpData>(data, style);
 
     OCIO::FixedFunctionOp func(funcData);
     OCIO_CHECK_NO_THROW(func.finalize(OCIO::FINALIZATION_EXACT));
@@ -434,9 +421,7 @@ OCIO_ADD_TEST(FixedFunctionOps, create_transform)
     const OCIO::FixedFunctionOpData::Style style = OCIO::FixedFunctionOpData::REC2100_SURROUND;
 
     OCIO::FixedFunctionOpDataRcPtr funcData
-        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::BIT_DEPTH_UINT10,
-                                                      OCIO::BIT_DEPTH_F32,
-                                                      data, style);
+        = std::make_shared<OCIO::FixedFunctionOpData>(data, style);
     funcData->getFormatMetadata().addAttribute("name", "test");
 
     OCIO::OpRcPtrVec ops;

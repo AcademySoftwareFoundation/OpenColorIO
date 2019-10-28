@@ -20,14 +20,11 @@ FormatMetadata::~FormatMetadata()
 {
 }
 
-FormatMetadataImpl::FormatMetadataImpl(const std::string & name)
+FormatMetadataImpl::FormatMetadataImpl()
     : FormatMetadata()
-    , m_name(name)
+    , m_name(METADATA_ROOT)
+    , m_value("")
 {
-    if (name.empty())
-    {
-        throw Exception("FormatMetadata has to have a non empty name.");
-    }
 }
 
 FormatMetadataImpl::FormatMetadataImpl(const std::string & name, const std::string & value)
@@ -307,12 +304,6 @@ const FormatMetadata & FormatMetadataImpl::getChildElement(int i) const
     throw Exception("Invalid index for metadata object.");
 }
 
-FormatMetadata & FormatMetadataImpl::addChildElement(const char * name)
-{
-    m_elements.emplace_back(name);
-    return m_elements.back();
-}
-
 FormatMetadata & FormatMetadataImpl::addChildElement(const char * name, const char * value)
 {
     m_elements.emplace_back(name, value);
@@ -349,7 +340,7 @@ namespace OCIO = OCIO_NAMESPACE;
 
 OCIO_ADD_TEST(FormatMetadataImpl, test_accessors)
 {
-    OCIO::FormatMetadataImpl info(OCIO::METADATA_INFO);
+    OCIO::FormatMetadataImpl info(OCIO::METADATA_INFO, "");
     OCIO_CHECK_EQUAL(std::string(info.getName()), OCIO::METADATA_INFO);
 
     // Make sure that we can add attributes and that existing attributes will get
@@ -379,7 +370,7 @@ OCIO_ADD_TEST(FormatMetadataImpl, test_accessors)
     OCIO_CHECK_EQUAL(std::string(info.getChildrenElements()[1].getValue()), "2015");
 
     // Add input color space metadata.
-    info.getChildrenElements().emplace_back("InputColorSpace");
+    info.getChildrenElements().emplace_back("InputColorSpace", "");
     OCIO::FormatMetadataImpl & inCS = info.getChildrenElements().back();
     // 2 elements can have the same name.
     inCS.getChildrenElements().emplace_back(OCIO::METADATA_DESCRIPTION, "Input color space description");
@@ -425,7 +416,7 @@ OCIO_ADD_TEST(FormatMetadataImpl, test_accessors)
 
     // Add category.
     // Assign value directly to the metadata element.
-    info.getChildrenElements().emplace_back("Category");
+    info.getChildrenElements().emplace_back("Category", "");
     OCIO::FormatMetadataImpl & cat = info.getChildrenElements().back();
     cat.getChildrenElements().emplace_back("Name", "Color space category name");
     cat.getChildrenElements().emplace_back("Importance", "High");
@@ -497,7 +488,7 @@ OCIO_ADD_TEST(FormatMetadataImpl, test_accessors)
     OCIO_CHECK_EQUAL(std::string(info1.getName()), "Release");
     OCIO_CHECK_EQUAL(std::string(info1.getValue()), "2015");
 
-    auto & icInfo = info.addChildElement("InputColorSpace");
+    auto & icInfo = info.addChildElement("InputColorSpace", "" );
     OCIO_REQUIRE_EQUAL(info.getNumChildrenElements(), 3);
     // 2 elements can have the same name.
     icInfo.addChildElement(OCIO::METADATA_DESCRIPTION, "Input color space description");
@@ -524,11 +515,11 @@ OCIO_ADD_TEST(FormatMetadataImpl, test_accessors)
 
 OCIO_ADD_TEST(FormatMetadataImpl, combine)
 {
-    OCIO::FormatMetadataImpl root0(OCIO::METADATA_ROOT);
+    OCIO::FormatMetadataImpl root0;
     root0.addAttribute(OCIO::METADATA_NAME, "root0");
     root0.addAttribute(OCIO::METADATA_ID, "ID0");
     root0.addChildElement("test0", "val0");
-    OCIO::FormatMetadataImpl root1(OCIO::METADATA_ROOT);
+    OCIO::FormatMetadataImpl root1;
     root1.addAttribute(OCIO::METADATA_NAME, "root1");
     root1.addAttribute(OCIO::METADATA_ID, "ID1");
     auto & sub1 = root1.addChildElement("test1", "val1");
@@ -594,10 +585,10 @@ OCIO_ADD_TEST(FormatMetadataImpl, combine)
     OCIO_CHECK_EQUAL(std::string("att2"), root0.getAttributeName(4));
     OCIO_CHECK_EQUAL(std::string("attval2"), root0.getAttributeValue(4));
 
-    OCIO::FormatMetadataImpl root2(OCIO::METADATA_ROOT);
+    OCIO::FormatMetadataImpl root2;
     root2.addAttribute(OCIO::METADATA_NAME, "root2");
     root2.addChildElement("test", "val2");
-    OCIO::FormatMetadataImpl root3(OCIO::METADATA_ROOT);
+    OCIO::FormatMetadataImpl root3;
     root3.addAttribute(OCIO::METADATA_ID, "ID3");
     root3.addChildElement("test", "val3");
 
@@ -637,7 +628,7 @@ OCIO_ADD_TEST(FormatMetadataImpl, combine)
     OCIO_CHECK_EQUAL(std::string("test"), root2.getChildrenElements()[1].getName());
     OCIO_CHECK_EQUAL(std::string("val3"), root2.getChildrenElements()[1].getValue());
 
-    OCIO::FormatMetadataImpl metainfo(OCIO::METADATA_INFO);
+    OCIO::FormatMetadataImpl metainfo(OCIO::METADATA_INFO, "");
     OCIO_CHECK_THROW_WHAT(metainfo.combine(root3), OCIO::Exception,
                           "Only FormatMetadata with the same name");
 

@@ -199,6 +199,24 @@ OCIO_NAMESPACE_ENTER
                     }
                     break;
                 }
+                case BIT_DEPTH_UINT10:
+                {
+                    // Note that a 10-bit integer bit-depth value is stored in a uint16_t type.
+                    if(m_chanStrideBytes!=sizeof(BitDepthInfo<BIT_DEPTH_UINT10>::Type))
+                    {
+                        return false;
+                    }
+                    break;
+                }
+                case BIT_DEPTH_UINT12:
+                {
+                    // Note that a 12-bit integer bit-depth value is stored in a uint16_t type.
+                    if(m_chanStrideBytes!=sizeof(BitDepthInfo<BIT_DEPTH_UINT12>::Type))
+                    {
+                        return false;
+                    }
+                    break;
+                }
                 case BIT_DEPTH_UINT16:
                 {
                     if(m_chanStrideBytes!=sizeof(BitDepthInfo<BIT_DEPTH_UINT16>::Type))
@@ -209,6 +227,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 case BIT_DEPTH_F16:
                 {
+                    // Note that a 16-bit float bit-depth value is stored in a half type.
                     if(m_chanStrideBytes!=sizeof(BitDepthInfo<BIT_DEPTH_F16>::Type))
                     {
                         return false;
@@ -224,7 +243,10 @@ OCIO_NAMESPACE_ENTER
                 }
                 default:
                 {
-                    throw Exception("PackedImageDesc Error: Unsupported bit-depth.");
+                    std::string err("PackedImageDesc Error: Unsupported bit-depth: ");
+                    err += BitDepthToString(m_bitDepth);
+                    err += ".";
+                    throw Exception(err.c_str());
                 }
             }
 

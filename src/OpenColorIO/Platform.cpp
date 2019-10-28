@@ -19,6 +19,19 @@
 OCIO_NAMESPACE_ENTER
 {
 
+const char * GetEnvVariable(const char * name)
+{
+    static std::string value;
+    Platform::Getenv(name, value);
+    return value.c_str();
+}
+
+void SetEnvVariable(const char * name, const char * value)
+{
+    Platform::Setenv(name, value);
+}
+
+
 namespace Platform
 {
 void Getenv (const char * name, std::string & value)
@@ -122,10 +135,12 @@ void CreateTempFilename(std::string & filename, const std::string & filenameExt)
 }
 
 
-}//namespace platform
+} // Platform
 
 }
 OCIO_NAMESPACE_EXIT
+
+
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -133,6 +148,25 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
+
+
+OCIO_ADD_TEST(Platform, envVariable)
+{
+    // Only validates the public API.
+    // Complete validations are done below using the private methods.
+
+    const char * path = OCIO::GetEnvVariable("PATH");
+    OCIO_CHECK_ASSERT(path && *path);
+
+    OCIO::SetEnvVariable("MY_DUMMY_ENV", "SomeValue");
+    const char * value = OCIO::GetEnvVariable("MY_DUMMY_ENV");
+    OCIO_CHECK_ASSERT(value && *value);
+    OCIO_CHECK_EQUAL(std::string(value), "SomeValue");
+
+    OCIO::SetEnvVariable("MY_DUMMY_ENV", "");
+    value = OCIO::GetEnvVariable("MY_DUMMY_ENV");
+    OCIO_CHECK_ASSERT(!value || !*value);
+}
 
 OCIO_ADD_TEST(Platform, getenv)
 {

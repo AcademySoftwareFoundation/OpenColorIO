@@ -27,6 +27,7 @@ UnitTests & GetUnitTests()
 int unit_test_failures = 0;
 
 
+
 OCIO_ADD_TEST(UnitTest, windows_debug)
 {
     // The debug VC++ CRT libraries do pop an 'assert' dialog box 
@@ -59,6 +60,8 @@ int main(int, char **)
 
     std::cerr << "\n OpenColorIO_Core_Unit_Tests \n\n";
 
+    int unit_test_failed = 0;
+
     const size_t numTests = GetUnitTests().size();
     for(size_t i = 0; i < numTests; ++i)
     {
@@ -79,6 +82,11 @@ int main(int, char **)
 
         constexpr const size_t maxCharToDisplay = 49;
 
+        const bool passing = (_tmp == unit_test_failures);
+        if (!passing)
+        {
+            ++unit_test_failed;
+        }
         std::string name(GetUnitTests()[i]->group);
         name += " / " + GetUnitTests()[i]->name;
 
@@ -91,11 +99,11 @@ int main(int, char **)
                   << (i+1) << "/" << numTests << "] ["
                   << std::left << std::setw(maxCharToDisplay+1)
                   << name << "] - "
-                  << (_tmp == unit_test_failures ? "PASSED" : "FAILED")
+                  << (passing ? "PASSED" : "FAILED")
                   << std::endl;
     }
 
-    std::cerr << "\n" << unit_test_failures << " tests failed\n\n";
+    std::cerr << "\n" << unit_test_failed << " tests failed with " << unit_test_failures << " errors.\n\n";
 
     GetUnitTests().clear();
 

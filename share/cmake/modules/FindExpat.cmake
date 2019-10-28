@@ -153,6 +153,11 @@ if(NOT EXPAT_FOUND)
             set(EXPAT_CXX_FLAGS "${EXPAT_CXX_FLAGS} -fPIC")
         endif()
 
+        if(MSVC)
+            set(EXPAT_C_FLAGS "${EXPAT_C_FLAGS} /EHsc")
+            set(EXPAT_CXX_FLAGS "${EXPAT_CXX_FLAGS} /EHsc")
+        endif()
+
         string(STRIP "${EXPAT_C_FLAGS}" EXPAT_C_FLAGS)
         string(STRIP "${EXPAT_CXX_FLAGS}" EXPAT_CXX_FLAGS)
 
@@ -179,6 +184,7 @@ if(NOT EXPAT_FOUND)
         ExternalProject_Add(expat_install
             GIT_REPOSITORY "https://github.com/libexpat/libexpat.git"
             GIT_TAG "R_${Expat_FIND_VERSION_MAJOR}_${Expat_FIND_VERSION_MINOR}_${Expat_FIND_VERSION_PATCH}"
+            GIT_CONFIG advice.detachedHead=false
             GIT_SHALLOW TRUE
             PREFIX "${_EXT_BUILD_ROOT}/libexpat"
             BUILD_BYPRODUCTS ${EXPAT_LIBRARY}

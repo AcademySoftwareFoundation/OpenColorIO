@@ -38,9 +38,7 @@ public:
 
     Impl(unsigned long length,
          Lut1DOpData::HalfFlags halfFlag)
-        : Lut1DOpData(BIT_DEPTH_F32, BIT_DEPTH_F32,
-                      FormatMetadataImpl(METADATA_ROOT),
-                      INTERP_DEFAULT, halfFlag, length)
+        : Lut1DOpData(halfFlag, length)
     { }
 
     ~Impl()
@@ -59,7 +57,7 @@ public:
     void reset(unsigned long length)
     {
         auto & lutArray = getArray();
-        lutArray = Lut3by1DArray(BIT_DEPTH_F32, getHalfFlags(), length);
+        lutArray = Lut3by1DArray(getHalfFlags(), length);
     }
 
     TransformDirection m_direction = TRANSFORM_DIR_FORWARD;

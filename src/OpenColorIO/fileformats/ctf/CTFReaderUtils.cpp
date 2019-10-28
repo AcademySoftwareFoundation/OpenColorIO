@@ -57,8 +57,8 @@ const char * GetInterpolation1DName(Interpolation interp)
     case INTERP_DEFAULT:
     default:
         return INTERPOLATION_DEFAULT;
-    break;
     };
+
     return INTERPOLATION_DEFAULT;
 }
 
@@ -98,8 +98,8 @@ const char * GetInterpolation3DName(Interpolation interp)
     case INTERP_DEFAULT:
     default:
         return INTERPOLATION_DEFAULT;
-        break;
     };
+
     return INTERPOLATION_DEFAULT;
 }
 

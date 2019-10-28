@@ -63,15 +63,14 @@ public:
     enum ComposeMethod
     {
         COMPOSE_RESAMPLE_NO = 0,      // Preserve original domain.
-        COMPOSE_RESAMPLE_INDEPTH = 1, // InDepth controls min size.
-        COMPOSE_RESAMPLE_BIG = 2      // Min size is 65536.
+        COMPOSE_RESAMPLE_BIG = 1      // Min size is 65536.
     };
 
     // Calculate a new LUT by evaluating a new domain (A) through a set of ops (B).
     // A is used as in/out parameter. As input it is the first LUT in the composition,
     // as output it is the result of the composition.
-    // B is the second LUT to compose and will not be modified.
-    static void ComposeVec(Lut1DOpDataRcPtr & A, const OpRcPtrVec & B);
+    // B is a set of ops to compose the LUT with. It will be finalized.
+    static void ComposeVec(Lut1DOpDataRcPtr & A, OpRcPtrVec & B);
 
     // Use functional composition to generate a single op that 
     // approximates the effect of the pair of ops.
@@ -89,19 +88,7 @@ public:
 
     Lut1DOpData(unsigned long dimension, TransformDirection dir);
 
-    Lut1DOpData(BitDepth inBitDepth, BitDepth outBitDepth, HalfFlags halfFlags);
-
-    Lut1DOpData(BitDepth inBitDepth,
-                BitDepth outBitDepth,
-                const FormatMetadataImpl & info,
-                Interpolation interpolation,
-                HalfFlags halfFlags);
-
-    Lut1DOpData(BitDepth inBitDepth,
-                BitDepth outBitDepth,
-                const FormatMetadataImpl & info,
-                Interpolation interpolation,
-                HalfFlags halfFlags,
+    Lut1DOpData(HalfFlags halfFlags,
                 unsigned long dimension);
 
     virtual ~Lut1DOpData();
@@ -130,9 +117,6 @@ public:
     bool isIdentity() const override;
 
     bool hasChannelCrosstalk() const override;
-
-    void setOutputBitDepth(BitDepth out) override;
-    void setInputBitDepth(BitDepth in) override;
 
     void finalize() override;
 
@@ -224,32 +208,29 @@ public:
     // The file readers should call this to record the original scaling of the LUT values.
     inline void setFileOutputBitDepth(BitDepth out) { m_fileOutBitDepth = out; }
 
+    void scale(float scale);
+
 protected:
     class Lut3by1DArray : public Array
     {
     public:
-        Lut3by1DArray(BitDepth  inBitDepth,
-            BitDepth  outBitDepth,
-            HalfFlags halfFlags);
+        Lut3by1DArray(HalfFlags halfFlags);
 
-        Lut3by1DArray(BitDepth  outBitDepth,
-            HalfFlags halfFlags,
-            unsigned long length);
+        Lut3by1DArray(HalfFlags halfFlags,
+                      unsigned long length);
 
         ~Lut3by1DArray();
 
-        bool isIdentity(HalfFlags halfFlags, BitDepth outBitDepth) const;
+        bool isIdentity(HalfFlags halfFlags) const;
 
         void resize(unsigned long length, unsigned long numColorComponents) override;
 
         unsigned long getNumValues() const override;
 
-        void scale(float scaleFactor);
-
     protected:
         // Fill the LUT 1D with appropriate default values 
         // representing an identity LUT.
-        void fill(HalfFlags halfFlags, BitDepth outBitDepth);
+        void fill(HalfFlags halfFlags);
 
     public:
         // Default copy constructor and assignation operator are fine.

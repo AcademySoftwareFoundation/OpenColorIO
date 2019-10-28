@@ -293,7 +293,7 @@ int main(int argc, const char **argv)
         std::cout << std::endl;
         std::cout << "OIIO Version: " << OIIO_VERSION_STRING << std::endl;
         std::cout << "OCIO Version: " << OCIO::GetVersion() << std::endl;
-        const char * env = getenv("OCIO");
+        const char * env = OCIO::GetEnvVariable("OCIO");
         if(env && *env)
         {
             try
@@ -342,7 +342,7 @@ int main(int argc, const char **argv)
         {
             if(verbose)
             {
-                const char * env = getenv("OCIO");
+                const char * env = OCIO::GetEnvVariable("OCIO");
                 if(env && *env)
                 {
                     std::cerr << std::endl;

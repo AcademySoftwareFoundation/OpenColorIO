@@ -49,8 +49,7 @@ public:
     typedef std::pair<std::string, std::string> Attribute;
     typedef std::vector<Attribute> Attributes;
 
-    FormatMetadataImpl() = delete;
-    FormatMetadataImpl(const std::string & name);
+    FormatMetadataImpl();
     FormatMetadataImpl(const std::string & name,
                        const std::string & value);
 
@@ -96,7 +95,6 @@ public:
     int getNumChildrenElements() const override;
     FormatMetadata & getChildElement(int i) override;
     const FormatMetadata & getChildElement(int i) const override;
-    FormatMetadata & addChildElement(const char * name) override;
     FormatMetadata & addChildElement(const char * name, const char * value) override;
 
     // Reset the contents of a metadata element. The name, value,

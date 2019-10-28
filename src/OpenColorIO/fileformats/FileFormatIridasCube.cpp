@@ -754,8 +754,6 @@ OCIO_ADD_TEST(FileFormatIridasCube, load_1d_op)
     auto opData2 = op2->data();
     auto lut = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opData2);
     OCIO_REQUIRE_ASSERT(lut);
-    OCIO_CHECK_EQUAL(lut->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(lut->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
     OCIO_CHECK_EQUAL(lut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     auto & lutArray = lut->getArray();
@@ -823,8 +821,6 @@ OCIO_ADD_TEST(FileFormatIridasCube, load_3d_op)
     auto opData2 = op2->data();
     auto lut = std::dynamic_pointer_cast<const OCIO::Lut3DOpData>(opData2);
     OCIO_REQUIRE_ASSERT(lut);
-    OCIO_CHECK_EQUAL(lut->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(lut->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
     OCIO_CHECK_EQUAL(lut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     auto & lutArray = lut->getArray();

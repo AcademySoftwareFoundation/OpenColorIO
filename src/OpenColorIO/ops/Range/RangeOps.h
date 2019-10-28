@@ -18,7 +18,7 @@ OCIO_NAMESPACE_ENTER
 {
 
 // Create a range op from its input and output bounds.
-void CreateRangeOp(OpRcPtrVec & ops, const FormatMetadataImpl & info,
+void CreateRangeOp(OpRcPtrVec & ops,
                    double minInValue, double maxInValue,
                    double minOutValue, double maxOutValue,
                    TransformDirection direction);
