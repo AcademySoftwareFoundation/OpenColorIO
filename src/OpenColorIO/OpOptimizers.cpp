@@ -248,7 +248,7 @@ OCIO_NAMESPACE_ENTER
 
     // Use functional composition to replace a string of separable ops at the head of
     // the op list with a single 1D LUT that is built to do a look-up for the input bit-depth.
-    void OptimizeSeparablePrefix(OpRcPtrVec & ops, const BitDepth & inBitDepth)
+    void OptimizeSeparablePrefix(OpRcPtrVec & ops, BitDepth in, OptimizationFlags /*oFlags*/)
     {
         // TODO: Take care of the dynamic properties.
 
@@ -257,9 +257,9 @@ OCIO_NAMESPACE_ENTER
             return;
         }
 
-        // TODO: Investigate whether even the F32 case could be sped up via interpolating
+        // TODO: Investigate whether even the F32 case could be sped up via interpolating 
         //       in a half-domain Lut1D (e.g. replacing a string of exponent, log, etc.).
-        if (inBitDepth == BIT_DEPTH_F32 || inBitDepth == BIT_DEPTH_UINT32)
+        if(in == BIT_DEPTH_F32 || in == BIT_DEPTH_UINT32)
         {
             return;
         }
@@ -277,7 +277,7 @@ OCIO_NAMESPACE_ENTER
         }
 
         // Make a domain for the LUT.  (Will be half-domain for target == 16f.)
-        Lut1DOpDataRcPtr newDomain = Lut1DOpData::MakeLookupDomain(inBitDepth);
+        Lut1DOpDataRcPtr newDomain = Lut1DOpData::MakeLookupDomain(in);
 
         // Send the domain through the prefix ops.
         // Note: This sets the outBitDepth of newDomain to match prefixOps.
@@ -293,13 +293,7 @@ OCIO_NAMESPACE_ENTER
         ops.insert(ops.begin(), lutOps.begin(), lutOps.end());
     }
 
-    // TODO: Temporary method to limit code changes.
-    void OptimizeSeparablePrefix(OpRcPtrVec & ops, OptimizationFlags /*oFlags*/)
-    {
-        OptimizeSeparablePrefix(ops, BIT_DEPTH_F32);
-    }
-
-    void OptimizeOpVec(OpRcPtrVec & ops, const BitDepth & inBitDepth, const BitDepth & outBitDepth,
+    void OptimizeOpVec(OpRcPtrVec & ops, const BitDepth & inBitDepth,
                        OptimizationFlags oFlags)
     {
         if (ops.empty())
@@ -342,15 +336,10 @@ OCIO_NAMESPACE_ENTER
 
         if (!ops.empty())
         {
-            if ((oFlags & OPTIMIZATION_COMP_SEPARABLE_PREFIX) == OPTIMIZATION_COMP_SEPARABLE_PREFIX)
+            if((oFlags & OPTIMIZATION_COMP_SEPARABLE_PREFIX)
+                    == OPTIMIZATION_COMP_SEPARABLE_PREFIX)
             {
-                // Adjust the op list to the input and output bit-depths
-                // to enable the separable optimization.
-
-                ops.front()->setInputBitDepth(inBitDepth);
-                ops.back()->setOutputBitDepth(outBitDepth);
-
-                OptimizeSeparablePrefix(ops, inBitDepth);
+                OptimizeSeparablePrefix(ops, inBitDepth, oFlags);
             }
         }
 
@@ -381,11 +370,6 @@ OCIO_NAMESPACE_ENTER
         }
     }
 
-    // TODO: Temporary method to limit code changes.
-    void OptimizeOpVec(OpRcPtrVec & ops, OptimizationFlags oFlags)
-    {
-        OptimizeOpVec(ops, BIT_DEPTH_F32, BIT_DEPTH_F32, oFlags);
-    }
 }
 OCIO_NAMESPACE_EXIT
 
@@ -532,16 +516,14 @@ OCIO_ADD_TEST(OptimizeSeparablePrefix, inexpensive_prefix)
 
     OCIO::OpRcPtrVec originalOps;
 
-    OCIO::MatrixOpDataRcPtr matrix =
-        std::make_shared<OCIO::MatrixOpData>(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
+    OCIO::MatrixOpDataRcPtr matrix = std::make_shared<OCIO::MatrixOpData>();
     matrix->setArrayValue(0, 2.);
 
     OCIO_CHECK_NO_THROW(OCIO::CreateMatrixOp(originalOps, matrix, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(originalOps.size(), 1);
 
-    OCIO::RangeOpDataRcPtr range = std::make_shared<OCIO::RangeOpData>(
-        OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
-        OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 255., -1., 65540.);
+    OCIO::RangeOpDataRcPtr range
+        = std::make_shared<OCIO::RangeOpData>(0., 1., -1. / 65535, 65540. / 65535.);
 
     OCIO_CHECK_NO_THROW(OCIO::CreateRangeOp(originalOps, range, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(originalOps.size(), 2);
@@ -553,8 +535,9 @@ OCIO_ADD_TEST(OptimizeSeparablePrefix, inexpensive_prefix)
     }
 
     // Optimize it.
-    OCIO_CHECK_NO_THROW(
-        OCIO::OptimizeSeparablePrefix(optimizedOps, optimizedOps.front()->getInputBitDepth()));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeSeparablePrefix(optimizedOps,
+                                                      OCIO::BIT_DEPTH_UINT8,
+                                                      OCIO::OPTIMIZATION_VERY_GOOD));
 
     // Validate the result.
 
@@ -607,10 +590,9 @@ OCIO_ADD_TEST(OptimizeSeparablePrefix, gamma_prefix)
     OCIO::GammaOpData::Params params1 = {2.6};
     OCIO::GammaOpData::Params paramsA = {1.};
 
-    OCIO::GammaOpDataRcPtr gamma1 = std::make_shared<OCIO::GammaOpData>(
-        OCIO::BIT_DEPTH_UINT16, OCIO::BIT_DEPTH_UINT16,
-        OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), OCIO::GammaOpData::BASIC_REV, params1,
-        params1, params1, paramsA);
+    OCIO::GammaOpDataRcPtr gamma1
+        = std::make_shared<OCIO::GammaOpData>(OCIO::GammaOpData::BASIC_REV, 
+                                              params1, params1, params1, paramsA);
 
     OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(originalOps, gamma1, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(originalOps.size(), 1);
@@ -622,8 +604,9 @@ OCIO_ADD_TEST(OptimizeSeparablePrefix, gamma_prefix)
     }
 
     // Optimize it.
-    OCIO_CHECK_NO_THROW(
-        OCIO::OptimizeSeparablePrefix(optimizedOps, optimizedOps.front()->getInputBitDepth()));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeSeparablePrefix(optimizedOps,
+                                                      OCIO::BIT_DEPTH_UINT16,
+                                                      OCIO::OPTIMIZATION_VERY_GOOD));
 
     // Validate the result.
 
@@ -644,16 +627,17 @@ OCIO_ADD_TEST(OptimizeSeparablePrefix, gamma_prefix)
 
     originalOps.clear();
 
-    OCIO::GammaOpDataRcPtr gamma2 = std::make_shared<OCIO::GammaOpData>(
-        OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_UINT16, OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
-        OCIO::GammaOpData::BASIC_REV, params1, params1, params1, paramsA);
+    OCIO::GammaOpDataRcPtr gamma2
+        = std::make_shared<OCIO::GammaOpData>(OCIO::GammaOpData::BASIC_REV, 
+                                              params1, params1, params1, paramsA);
 
     OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(originalOps, gamma2, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(originalOps.size(), 1);
 
     // Optimize it.
-    OCIO_CHECK_NO_THROW(
-        OCIO::OptimizeSeparablePrefix(originalOps, originalOps.front()->getInputBitDepth()));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeSeparablePrefix(originalOps,
+                                                      OCIO::BIT_DEPTH_F32,
+                                                      OCIO::OPTIMIZATION_VERY_GOOD));
 
     OCIO_REQUIRE_EQUAL(originalOps.size(), 1);
     OCIO::ConstOpRcPtr o2 = originalOps[0];
@@ -666,16 +650,14 @@ OCIO_ADD_TEST(OptimizeSeparablePrefix, multi_op_prefix)
 
     OCIO::OpRcPtrVec originalOps;
 
-    OCIO::MatrixOpDataRcPtr matrix =
-        std::make_shared<OCIO::MatrixOpData>(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
+    OCIO::MatrixOpDataRcPtr matrix = std::make_shared<OCIO::MatrixOpData>();
     matrix->setArrayValue(0, 2.);
 
     OCIO_CHECK_NO_THROW(OCIO::CreateMatrixOp(originalOps, matrix, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(originalOps.size(), 1);
 
-    OCIO::RangeOpDataRcPtr range = std::make_shared<OCIO::RangeOpData>(
-        OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT16,
-        OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 255., -1000., 66000.);
+    OCIO::RangeOpDataRcPtr range
+        = std::make_shared<OCIO::RangeOpData>(0., 1., -1000./65535., 66000./65535);
 
     OCIO_CHECK_NO_THROW(OCIO::CreateRangeOp(originalOps, range, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(originalOps.size(), 2);
@@ -685,18 +667,19 @@ OCIO_ADD_TEST(OptimizeSeparablePrefix, multi_op_prefix)
     const OCIO::CDLOpData::ChannelParams power(1.27, 0.81, 0.2);
     const double saturation = 1.;
 
-    OCIO::CDLOpDataRcPtr cdl = std::make_shared<OCIO::CDLOpData>(
-        OCIO::BIT_DEPTH_UINT16, OCIO::BIT_DEPTH_UINT16, OCIO::CDLOpData::CDL_V1_2_FWD, slope,
-        offset, power, saturation);
+    OCIO::CDLOpDataRcPtr cdl
+        = std::make_shared<OCIO::CDLOpData>(OCIO::CDLOpData::CDL_V1_2_FWD, 
+                                            slope, offset, power, saturation);
 
     OCIO_CHECK_NO_THROW(OCIO::CreateCDLOp(originalOps, cdl, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(originalOps.size(), 3);
 
-    OCIO::OpRcPtrVec optimizedOps = originalOps.clone();
+    OCIO::OpRcPtrVec optimizedOps = originalOps;
 
     // Optimize it.
-    OCIO_CHECK_NO_THROW(
-        OCIO::OptimizeSeparablePrefix(optimizedOps, optimizedOps.front()->getInputBitDepth()));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeSeparablePrefix(optimizedOps,
+                                                      OCIO::BIT_DEPTH_UINT8,
+                                                      OCIO::OPTIMIZATION_VERY_GOOD));
 
     // Validate the result.
 
@@ -719,8 +702,7 @@ OCIO_ADD_TEST(OptimizeSeparablePrefix, op_with_dyn_properties)
 
     OCIO::OpRcPtrVec originalOps;
 
-    OCIO::MatrixOpDataRcPtr matrix =
-        std::make_shared<OCIO::MatrixOpData>(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
+    OCIO::MatrixOpDataRcPtr matrix = std::make_shared<OCIO::MatrixOpData>();
     matrix->setArrayValue(0, 2.);
 
     OCIO_CHECK_NO_THROW(OCIO::CreateMatrixOp(originalOps, matrix, OCIO::TRANSFORM_DIR_FORWARD));
@@ -744,8 +726,9 @@ OCIO_ADD_TEST(OptimizeSeparablePrefix, op_with_dyn_properties)
 
     // Optimize it.
 
-    OCIO_CHECK_NO_THROW(
-        OCIO::OptimizeSeparablePrefix(originalOps, originalOps.front()->getInputBitDepth()));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeSeparablePrefix(originalOps,
+                                                      OCIO::BIT_DEPTH_UINT8,
+                                                      OCIO::OPTIMIZATION_VERY_GOOD));
 
     // Validate the result.
 
@@ -763,34 +746,6 @@ OCIO_ADD_TEST(OptimizeSeparablePrefix, op_with_dyn_properties)
     OCIO_CHECK_ASSERT(exp);
     OCIO_CHECK_EQUAL(exp->getType(), OCIO::OpData::ExposureContrastType);
     OCIO_CHECK_ASSERT(exp->isDynamic());
-}
-
-OCIO_ADD_TEST(OpOptimizers, optimizations_with_bit_depths)
-{
-    // Test that optimization of a transform preserves
-    // the input and output bit-depths.
-
-    OCIO::OpRcPtrVec ops;
-
-    OCIO::MatrixOpDataRcPtr matrix =
-        std::make_shared<OCIO::MatrixOpData>(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT12);
-    OCIO_CHECK_NO_THROW(OCIO::CreateMatrixOp(ops, matrix, OCIO::TRANSFORM_DIR_FORWARD));
-    OCIO_REQUIRE_EQUAL(ops.size(), 1);
-
-    matrix = std::make_shared<OCIO::MatrixOpData>(OCIO::BIT_DEPTH_UINT12, OCIO::BIT_DEPTH_UINT16);
-    matrix->setArrayValue(0, 2.);
-    OCIO_CHECK_NO_THROW(OCIO::CreateMatrixOp(ops, matrix, OCIO::TRANSFORM_DIR_FORWARD));
-    OCIO_REQUIRE_EQUAL(ops.size(), 2);
-
-    // Optimize it.
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, ops.front()->getInputBitDepth(),
-                                            ops.back()->getOutputBitDepth(),
-                                            OCIO::OPTIMIZATION_DEFAULT));
-
-    // Validate the bit-depths.
-    OCIO_REQUIRE_EQUAL(ops.size(), 1U);
-    OCIO_CHECK_EQUAL(ops.front()->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
-    OCIO_CHECK_EQUAL(ops.back()->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT16);
 }
 
 // TODO: Add separable prefix tests that mix in more non-separable ops.

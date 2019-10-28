@@ -12,7 +12,7 @@ OCIO_NAMESPACE_ENTER
 {
 
 ReferenceOpData::ReferenceOpData()
-    : OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
+    : OpData()
 {
 }
 
@@ -231,13 +231,9 @@ OCIO_ADD_TEST(Reference, load_one_reference)
     // Ops contains [FileNoOp, FileNoOp, Matrix].
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
 
-    OCIO_CHECK_NO_THROW(ops.validate());
-
     OCIO::ConstOpRcPtr op = ops[2];
     auto matrixData = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(op->data());
     OCIO_REQUIRE_ASSERT(matrixData);
-    OCIO_CHECK_EQUAL(op->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
-    OCIO_CHECK_EQUAL(op->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
 }
 
 OCIO_ADD_TEST(Reference, load_multiple_resolve_internal)
@@ -263,9 +259,6 @@ OCIO_ADD_TEST(Reference, load_multiple_resolve_internal)
     op = ops[2];
     auto matrixData = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(op->data());
     OCIO_REQUIRE_ASSERT(matrixData);
-    OCIO_CHECK_EQUAL(op->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    // (OutDepth was 32f in referenced file.)
-    OCIO_CHECK_EQUAL(op->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
 
     OCIO_REQUIRE_ASSERT(ops[3]);
     op = ops[3];
@@ -277,17 +270,11 @@ OCIO_ADD_TEST(Reference, load_multiple_resolve_internal)
     auto lutData = OCIO::DynamicPtrCast<const OCIO::Lut1DOpData>(op->data());
     OCIO_REQUIRE_ASSERT(lutData);
     OCIO_CHECK_EQUAL(lutData->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
-    // (InDepth was 32f in original.)
-    OCIO_CHECK_EQUAL(op->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
-    OCIO_CHECK_EQUAL(op->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     OCIO_REQUIRE_ASSERT(ops[5]);
     op = ops[5];
     auto matrixData2 = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(op->data());
     OCIO_REQUIRE_ASSERT(matrixData2);
-    OCIO_CHECK_EQUAL(op->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    // (OutDepth was 32f in referenced file.)
-    OCIO_CHECK_EQUAL(op->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
 
     OCIO_REQUIRE_ASSERT(ops[6]);
     op = ops[6];
@@ -303,9 +290,6 @@ OCIO_ADD_TEST(Reference, load_multiple_resolve_internal)
     op = ops[8];
     auto cdlData = OCIO::DynamicPtrCast<const OCIO::CDLOpData>(op->data());
     OCIO_REQUIRE_ASSERT(cdlData);
-    // (OutDepth was 16f in original.)
-    OCIO_CHECK_EQUAL(op->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(op->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 }
 
 OCIO_ADD_TEST(Reference, load_nested_resolve_internal)

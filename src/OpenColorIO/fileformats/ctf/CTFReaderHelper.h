@@ -372,6 +372,8 @@ protected:
 
 protected:
     CTFReaderTransformPtr m_transform;  // The parent
+    BitDepth m_inBitDepth = BIT_DEPTH_UNKNOWN;
+    BitDepth m_outBitDepth = BIT_DEPTH_UNKNOWN;
 };
 
 class CTFReaderACESElt : public CTFReaderOpElt

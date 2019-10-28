@@ -39,7 +39,7 @@ OCIO_NAMESPACE_ENTER
     class NoOpData : public OpData
     {
     public:
-        NoOpData() : OpData(BIT_DEPTH_UNKNOWN, BIT_DEPTH_UNKNOWN) { }
+        NoOpData() : OpData() { }
         NoOpData(const NoOpData &) = delete;
 
         Type getType() const override { return NoOpType; }

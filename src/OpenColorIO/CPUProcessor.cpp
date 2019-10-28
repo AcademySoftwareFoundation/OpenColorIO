@@ -119,29 +119,8 @@ case in:                                              \
     throw Exception("Unsupported bit-depths");
 }
 
-// 1D LUT is the only op natively supporting bit-depths.
-ConstOpCPURcPtr CreateLut1DHelper(ConstLut1DOpDataRcPtr & lut, BitDepth in, BitDepth out)
-{
-    if(in==out && in==BIT_DEPTH_F32)
-    {
-        if(lut->getInputBitDepth()!=BIT_DEPTH_F32
-            || lut->getOutputBitDepth()!=BIT_DEPTH_F32)
-        {
-            throw Exception("Unsupported 1D LUT bit-depths.");
-        }
-
-        return GetLut1DRenderer(lut, in, out);
-    }
-
-    Lut1DOpDataRcPtr l = lut->clone();
-    l->setInputBitDepth(in);
-    l->setOutputBitDepth(out);
-    ConstLut1DOpDataRcPtr tmp = l;
-    return GetLut1DRenderer(tmp, in, out);
-}
-
-void CreateCPUEngine(const OpRcPtrVec & ops,
-                     BitDepth in,
+void CreateCPUEngine(const OpRcPtrVec & ops, 
+                     BitDepth in, 
                      BitDepth out,
                      // The bit-depth 'cast' or the first CPU Op.
                      ConstOpCPURcPtr & inBitDepthOp,
@@ -161,7 +140,7 @@ void CreateCPUEngine(const OpRcPtrVec & ops,
             if(opData->getType()==OpData::Lut1DType)
             {
                 ConstLut1DOpDataRcPtr lut = DynamicPtrCast<const Lut1DOpData>(opData);
-                inBitDepthOp = CreateLut1DHelper(lut, in, BIT_DEPTH_F32);
+                inBitDepthOp = GetLut1DRenderer(lut, in, BIT_DEPTH_F32);
             }
             else if(in==BIT_DEPTH_F32)
             {
@@ -183,7 +162,7 @@ void CreateCPUEngine(const OpRcPtrVec & ops,
             if(opData->getType()==OpData::Lut1DType)
             {
                 ConstLut1DOpDataRcPtr lut = DynamicPtrCast<const Lut1DOpData>(opData);
-                outBitDepthOp = CreateLut1DHelper(lut, BIT_DEPTH_F32, out);
+                outBitDepthOp = GetLut1DRenderer(lut, BIT_DEPTH_F32, out);
             }
             else if(out==BIT_DEPTH_F32)
             {
@@ -287,13 +266,12 @@ void CPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
 {
     AutoMutex lock(m_mutex);
 
-    OpRcPtrVec ops = rawOps.clone();
+    OpRcPtrVec ops = rawOps;
 
     if(!ops.empty())
     {
         // Optimize the ops.
-
-        OptimizeOpVec(ops, in, out, oFlags);
+        OptimizeOpVec(ops, in, oFlags);
     }
 
     if(ops.empty())
@@ -1332,11 +1310,21 @@ OCIO_ADD_TEST(CPUProcessor, with_several_ops)
                      0.0f,  0.08474064f,  0.01450117f,  0.0f,
                      0.0f,  0.24826171f, 56.39490891f,  1.0f };
 
-            ComputeValues<OCIO::BIT_DEPTH_UINT16,
-                          OCIO::BIT_DEPTH_F32, __LINE__>(processor,
-                                                         &i_inImg[0], OCIO::CHANNEL_ORDERING_RGBA,
-                                                         &resImg[0],  OCIO::CHANNEL_ORDERING_RGBA,
-                                                         NB_PIXELS, 1e-7f);
+            auto cpuProcessor = ComputeValues<OCIO::BIT_DEPTH_UINT16,
+                                              OCIO::BIT_DEPTH_F32,
+                                              __LINE__>(processor, 
+                                                        &i_inImg[0], OCIO::CHANNEL_ORDERING_RGBA, 
+                                                        &resImg[0],  OCIO::CHANNEL_ORDERING_RGBA, 
+                                                        NB_PIXELS, 1e-7f);
+
+            const std::string cacheID{ cpuProcessor->getCacheID() };
+
+            const std::string expectedID("CPU Processor: from 16ui to 32f oFlags 1791 fFlags 1 ops"
+                " : <Lut1D $a57d7444e629d796d2234c18a0539c74 forward default standard domain none >");
+
+            // Test integer optimization. The ops should be optimized into a single LUT
+            // when finalizing with an integer input bit-depth.
+            OCIO_CHECK_EQUAL(cacheID, expectedID);
         }
 
         {

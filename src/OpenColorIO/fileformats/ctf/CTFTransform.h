@@ -210,10 +210,18 @@ public:
 
     const CTFVersion & getCTFVersion() const;
 
-    void validate();
-
     void fromMetadata(const FormatMetadataImpl & metadata);
     void toMetadata(FormatMetadataImpl & metadata) const;
+
+    // Helper methods to keep the output bit-depth of the Op currently parsed.
+    void setPreviousOutBitDepth(BitDepth out)
+    {
+        m_prevOutBD = out;
+    }
+    BitDepth getPreviousOutBitDepth() const
+    {
+        return m_prevOutBD;
+    }
 
 private:
     std::string m_id;
@@ -233,6 +241,8 @@ private:
     // Original CLF version (for reference).
     CTFVersion m_versionCLF;
 
+    // Track bit-depth of ops when loading a CTFTransform.
+    BitDepth m_prevOutBD = BIT_DEPTH_UNKNOWN;
 };
 
 typedef OCIO_SHARED_PTR<CTFReaderTransform> CTFReaderTransformPtr;

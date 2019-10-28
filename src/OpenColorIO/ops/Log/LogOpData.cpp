@@ -66,7 +66,7 @@ void ValidateParams(const LogOpData::Params & params, TransformDirection directi
 }
 
 LogOpData::LogOpData(double base, TransformDirection direction)
-    : OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
+    : OpData()
     , m_base(base)
     , m_direction(direction)
 {
@@ -85,7 +85,7 @@ LogOpData::LogOpData(double base,
                      const double(&linSlope)[3],
                      const double(&linOffset)[3],
                      TransformDirection direction)
-    : OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
+    : OpData()
     , m_base(base)
     , m_direction(direction)
 {
@@ -96,14 +96,12 @@ LogOpData::LogOpData(double base,
     setParameters(logSlope, logOffset, linSlope, linOffset);
 }
 
-LogOpData::LogOpData(BitDepth inBitDepth,
-                     BitDepth outBitDepth,
-                     TransformDirection dir,
+LogOpData::LogOpData(TransformDirection dir,
                      double base,
                      const Params & redParams,
                      const Params & greenParams,
                      const Params & blueParams)
-    : OpData(inBitDepth, outBitDepth)
+    : OpData()
     , m_redParams(redParams)
     , m_greenParams(greenParams)
     , m_blueParams(blueParams)
@@ -211,8 +209,6 @@ OpDataRcPtr LogOpData::getIdentityReplacement() const
         {
             // The first op logarithm is not defined for negative values.
             resOp = std::make_shared<RangeOpData>(
-                BIT_DEPTH_F32, BIT_DEPTH_F32,
-                getFormatMetadata(),
                 0.,
                 // Don't clamp high end.
                 RangeOpData::EmptyValue(),
@@ -226,8 +222,7 @@ OpDataRcPtr LogOpData::getIdentityReplacement() const
             // to a very small positive number and this imposes a limit.
             // E.g., log10(FLOAT_MIN) = -37.93, but this is so small that it makes
             // more sense to consider it an exact inverse.
-            resOp = std::make_shared<MatrixOpData>(
-                getInputBitDepth(), getOutputBitDepth(), getFormatMetadata());
+            resOp = std::make_shared<MatrixOpData>();
         }
     }
     else
@@ -236,9 +231,7 @@ OpDataRcPtr LogOpData::getIdentityReplacement() const
         {
             // Minimum value allowed is -linOffset/linSlope so that linSlope*x+linOffset > 0.
             const double minValue = -m_redParams[LIN_SIDE_OFFSET] / m_redParams[LIN_SIDE_SLOPE];
-            resOp = std::make_shared<RangeOpData>(BIT_DEPTH_F32, BIT_DEPTH_F32,
-                                                  getFormatMetadata(),
-                                                  minValue,
+            resOp = std::make_shared<RangeOpData>(minValue,
                                                   // Don't clamp high end.
                                                   RangeOpData::EmptyValue(),
                                                   minValue,
@@ -247,14 +240,10 @@ OpDataRcPtr LogOpData::getIdentityReplacement() const
         }
         else
         {
-            resOp = std::make_shared<MatrixOpData>(
-                getInputBitDepth(), getOutputBitDepth(), getFormatMetadata());
+            resOp = std::make_shared<MatrixOpData>();
         }
     }
-
-    // The argument is the first half of the identity pair, so set the in-depth.
-    // The caller must set the output depth to match the second half.
-    resOp->setInputBitDepth(getInputBitDepth());
+    resOp->getFormatMetadata() = getFormatMetadata();
     return resOp;
 }
 
@@ -300,20 +289,18 @@ bool LogOpData::operator==(const OpData& other) const
 
 LogOpDataRcPtr LogOpData::clone() const
 {
-    return std::make_shared<LogOpData>(getInputBitDepth(),
-                                       getOutputBitDepth(),
-                                       m_direction,
-                                       getBase(),
-                                       getRedParams(),
-                                       getGreenParams(),
-                                       getBlueParams());
+    auto clone = std::make_shared<LogOpData>(m_direction,
+                                             getBase(),
+                                             getRedParams(),
+                                             getGreenParams(),
+                                             getBlueParams());
+    clone->getFormatMetadata() = getFormatMetadata();
+    return clone;
 }
 
 LogOpDataRcPtr LogOpData::inverse() const
 {
     LogOpDataRcPtr invOp = clone();
-    invOp->setInputBitDepth(getOutputBitDepth());
-    invOp->setOutputBitDepth(getInputBitDepth());
 
     invOp->setDirection(GetInverseTransformDirection(m_direction));
     invOp->validate();
@@ -465,14 +452,10 @@ OCIO_ADD_TEST(LogOpData, accessor_test)
     OCIO::TransformDirection dir;
     OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB, dir);
 
-    OCIO::BitDepth inBitDepth = OCIO::BIT_DEPTH_UINT8;
-    OCIO::BitDepth outBitDepth = OCIO::BIT_DEPTH_F16;
-    OCIO::LogOpData logOp(inBitDepth, outBitDepth, dir,
+    OCIO::LogOpData logOp(dir,
                           base, paramsR, paramsG, paramsB);
 
     OCIO_CHECK_EQUAL(logOp.getType(), OCIO::OpData::LogType);
-    OCIO_CHECK_EQUAL(logOp.getInputBitDepth(), inBitDepth);
-    OCIO_CHECK_EQUAL(logOp.getOutputBitDepth(), outBitDepth);
 
     OCIO_CHECK_ASSERT(!logOp.allComponentsEqual());
     OCIO_CHECK_EQUAL(logOp.getBase(), base);
@@ -485,8 +468,7 @@ OCIO_ADD_TEST(LogOpData, accessor_test)
     blueP = redP;
     OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB, dir);
 
-    OCIO::LogOpData logOp2(inBitDepth, outBitDepth, dir,
-                           base, paramsR, paramsG, paramsB);
+    OCIO::LogOpData logOp2(dir, base, paramsR, paramsG, paramsB);
 
     OCIO_CHECK_ASSERT(logOp2.allComponentsEqual());
     OCIO_CHECK_ASSERT(logOp2.getRedParams() == paramsR);
@@ -502,8 +484,7 @@ OCIO_ADD_TEST(LogOpData, accessor_test)
 
     OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB, dir);
 
-    OCIO::LogOpData logOp3(inBitDepth, outBitDepth, dir,
-                           base, paramsR, paramsG, paramsB);
+    OCIO::LogOpData logOp3(dir, base, paramsR, paramsG, paramsB);
 
     OCIO_CHECK_ASSERT(!logOp3.allComponentsEqual());
     OCIO_CHECK_ASSERT(logOp3.getRedParams() == paramsR);
@@ -520,8 +501,7 @@ OCIO_ADD_TEST(LogOpData, accessor_test)
 
     OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB, dir);
 
-    OCIO::LogOpData logOp4(inBitDepth, outBitDepth, dir,
-                           base, paramsR, paramsG, paramsB);
+    OCIO::LogOpData logOp4(dir, base, paramsR, paramsG, paramsB);
     OCIO_CHECK_ASSERT(!logOp4.allComponentsEqual());
     OCIO_CHECK_ASSERT(logOp4.getRedParams() == paramsR);
     OCIO_CHECK_ASSERT(logOp4.getGreenParams() == paramsG);
@@ -537,8 +517,7 @@ OCIO_ADD_TEST(LogOpData, accessor_test)
 
     OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB, dir);
 
-    OCIO::LogOpData logOp5(inBitDepth, outBitDepth, dir,
-                           base, paramsR, paramsG, paramsB);
+    OCIO::LogOpData logOp5(dir, base, paramsR, paramsG, paramsB);
     OCIO_CHECK_ASSERT(!logOp5.allComponentsEqual());
     OCIO_CHECK_ASSERT(logOp5.getRedParams() == paramsR);
     OCIO_CHECK_ASSERT(logOp5.getGreenParams() == paramsG);
@@ -629,7 +608,7 @@ OCIO_ADD_TEST(LogOpData, log_inverse)
     OCIO::LogOpData::Params paramB{ 1.7, 30.0, 1.3, 3.0 };
     const double base = 10.0;
 
-    OCIO::LogOpData logOp0(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_UINT10, OCIO::TRANSFORM_DIR_FORWARD,
+    OCIO::LogOpData logOp0(OCIO::TRANSFORM_DIR_FORWARD,
                            base, paramR, paramG, paramB);
     OCIO::ConstLogOpDataRcPtr invLogOp0 = logOp0.inverse();
 
@@ -637,14 +616,11 @@ OCIO_ADD_TEST(LogOpData, log_inverse)
     OCIO_CHECK_ASSERT(logOp0.getGreenParams() == invLogOp0->getGreenParams());
     OCIO_CHECK_ASSERT(logOp0.getBlueParams() == invLogOp0->getBlueParams());
 
-    OCIO_CHECK_EQUAL(logOp0.getInputBitDepth(), invLogOp0->getOutputBitDepth());
-    OCIO_CHECK_EQUAL(logOp0.getOutputBitDepth(), invLogOp0->getInputBitDepth());
-
     // When components are not equals, ops are not considered inverse.
     OCIO_CHECK_ASSERT(!logOp0.isInverse(invLogOp0));
 
     // Using equal components.
-    OCIO::LogOpData logOp1(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_UINT10, OCIO::TRANSFORM_DIR_FORWARD,
+    OCIO::LogOpData logOp1(OCIO::TRANSFORM_DIR_FORWARD,
                            base, paramR, paramR, paramR);
     OCIO::ConstLogOpDataRcPtr invLogOp1 = logOp1.inverse();
 
@@ -656,26 +632,21 @@ OCIO_ADD_TEST(LogOpData, identity_replacement)
 {
     OCIO::LogOpData::Params paramsR{ 1.5, 10.0, 2.0, 1.0 };
     const double base = 2.0;
-    OCIO::BitDepth inBitDepth = OCIO::BIT_DEPTH_UINT8;
-    OCIO::BitDepth outBitDepth = OCIO::BIT_DEPTH_F16;
-
     {
-        OCIO::LogOpData logOp(inBitDepth, outBitDepth,
-                              OCIO::TRANSFORM_DIR_INVERSE,
+        OCIO::LogOpData logOp(OCIO::TRANSFORM_DIR_INVERSE,
                               base, paramsR, paramsR, paramsR);
         OCIO_CHECK_EQUAL(logOp.getIdentityReplacement()->getType(),
                          OCIO::OpData::MatrixType);
     }
     {
-        OCIO::LogOpData logOp(OCIO::BIT_DEPTH_UINT16, OCIO::BIT_DEPTH_F32,
-                              OCIO::TRANSFORM_DIR_FORWARD,
+        OCIO::LogOpData logOp(OCIO::TRANSFORM_DIR_FORWARD,
                               base, paramsR, paramsR, paramsR);
         auto op = logOp.getIdentityReplacement();
         OCIO_CHECK_EQUAL(op->getType(),
                          OCIO::OpData::RangeType);
         auto r = std::dynamic_pointer_cast<OCIO::RangeOpData>(op);
-        // -32767.5 = -(1.0/2.0) * 65535
-        OCIO_CHECK_EQUAL((int)(r->getMinInValue()), (int)-32767.5);
+        // -(1.0/2.0)
+        OCIO_CHECK_EQUAL(r->getMinInValue(), -0.5);
         OCIO_CHECK_ASSERT(r->maxIsEmpty());
     }
 

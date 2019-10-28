@@ -36,9 +36,7 @@ class MatrixOpData : public OpData
 {
 public:
 
-    static MatrixOpDataRcPtr CreateDiagonalMatrix(BitDepth inBitDepth,
-                                                  BitDepth outBitDepth,
-                                                  double diagValue);
+    static MatrixOpDataRcPtr CreateDiagonalMatrix(double diagValue);
 
 public:
     class Offsets
@@ -92,12 +90,6 @@ public:
 
     MatrixOpData();
     MatrixOpData(const MatrixOpData &) = default;
-        
-    MatrixOpData(BitDepth inBitDepth, BitDepth outBitDepth);
-
-    MatrixOpData(BitDepth inBitDepth,
-                 BitDepth outBitDepth,
-                 const FormatMetadataImpl & info);
 
     virtual ~MatrixOpData();
 
@@ -179,10 +171,6 @@ public:
 
     bool hasAlpha() const;
 
-    virtual void setOutputBitDepth(BitDepth out) override;
-
-    virtual void setInputBitDepth(BitDepth in) override;
-
     MatrixOpDataRcPtr compose(ConstMatrixOpDataRcPtr & B) const;
 
     // Used by composition to remove small errors.
@@ -198,6 +186,7 @@ public:
     inline BitDepth getFileOutputBitDepth() const { return m_fileOutBitDepth; }
     inline void setFileOutputBitDepth(BitDepth out) { m_fileOutBitDepth = out; }
 
+    void scale(double inScale, double outScale);
 
 private:
 
@@ -209,9 +198,7 @@ private:
     class MatrixArray : public ArrayDouble
     {
     public:
-        MatrixArray(BitDepth inBitDepth,
-                    BitDepth outBitDepth,
-                    unsigned long dimension,
+        MatrixArray(unsigned long dimension,
                     unsigned long numColorComponents);
 
         ~MatrixArray();
@@ -238,17 +225,10 @@ private:
         void setRGBA(const float * values);
         void setRGBA(const double * values);
 
-        void setOutputBitDepth(BitDepth out);
-        void setInputBitDepth(BitDepth in);
-
     protected:
         void fill();
 
         void expandFrom3x3To4x4();
-
-    private:
-        BitDepth m_inBitDepth;
-        BitDepth m_outBitDepth;
 
     };
 

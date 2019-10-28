@@ -48,12 +48,9 @@ class RangeOpData : public OpData
 public:
     RangeOpData();
 
-    RangeOpData( const RangeOpData &) = default;
+    RangeOpData(const RangeOpData &) = default;
 
-    RangeOpData(BitDepth inBitDepth,  // Requested bit depth for the input
-                BitDepth outBitDepth, // Requested bit depth for the output
-                const FormatMetadataImpl & info,
-                double minInValue,    // Lower bound of the domain
+    RangeOpData(double minInValue,    // Lower bound of the domain
                 double maxInValue,    // Upper bound of the domain
                 double minOutValue,   // Lower bound of the range
                 double maxOutValue    // Upper bound of the range
@@ -61,7 +58,7 @@ public:
 
     // Constructor from a 2-entry index map from a Lut1D or Lut3D.
     // Note: Throws if the index map is not appropriate.
-    RangeOpData(const IndexMapping& pIM, BitDepth inDepth, unsigned int len);
+    RangeOpData(const IndexMapping & pIM, unsigned int len, BitDepth bitdepth);
 
     virtual ~RangeOpData();
 
@@ -106,15 +103,6 @@ public:
     // Get the offset used in computation
     inline double getOffset() const { return m_offset; }
 
-    // Get the lower clip used in computation
-    inline double getLowBound() const { return m_lowBound; }
-
-    // Get the upper clip used in computation
-    inline double getHighBound() const { return m_highBound; }
-
-    // Get the scale factor used in computation for alpha
-    inline double getAlphaScale() const { return m_alphaScale; }
-
     // Validate the state of the instance and initialize private members.
     void validate() const override;
 
@@ -142,16 +130,6 @@ public:
 
     bool hasChannelCrosstalk() const override { return false; }
 
-    // Set the output bit depth
-    // - out the output bit depth
-    // Note: Multiple set operations are lossless.
-    void setOutputBitDepth(BitDepth out) override;
-
-    // Set the input bit depth
-    // - in the input bit depth
-    // Note: Multiple set operations are lossless.
-    void setInputBitDepth(BitDepth in) override;
-
     // True if minIn & minOut do not request clipping
     bool minIsEmpty() const;
 
@@ -159,17 +137,7 @@ public:
     bool maxIsEmpty() const;
 
     // True if the scale and offset are not the identity
-    // - ignoreBitDepth to ignore the scaling needed for depth conversion
-    bool scales(bool ignoreBitDepth) const;
-
-    // True if the supplied value would be clipped
-    bool wouldClip(double val) const;
-
-    // True if low clipping is needed (at the current in & out bit-depths)
-    bool minClips() const;
-
-    // True if high clipping is needed (at the current in & out bit-depths)
-    bool maxClips() const;
+    bool scales() const;
 
     // Create a MatrixOp that is equivalent to the Range except does not clamp.
     MatrixOpDataRcPtr convertToMatrix() const;
@@ -181,9 +149,6 @@ public:
 
     RangeOpDataRcPtr inverse() const;
 
-    // True if the double (i.e. bound values) differs
-    static bool FloatsDiffer(double x1, double x2);
-
     virtual void finalize() override;
 
     inline BitDepth getFileInputBitDepth() const { return m_fileInBitDepth; }
@@ -192,10 +157,13 @@ public:
     inline BitDepth getFileOutputBitDepth() const { return m_fileOutBitDepth; }
     inline void setFileOutputBitDepth(BitDepth out) { m_fileOutBitDepth = out; }
 
+    void scale(double inScale, double outScale);
+
 private:
     void fillScaleOffset() const;
-    double clipOverride(bool isLower) const;
-    void fillBounds() const;
+
+    // True if the double (i.e. bound values) differs
+    static bool FloatsDiffer(double x1, double x2);
 
 private:
     double m_minInValue;            // Minimum for the input value
@@ -204,9 +172,6 @@ private:
     double m_maxOutValue;           // Maximum for the output value
     mutable double m_scale;         // Scaling calculated from the limits
     mutable double m_offset;        // Offset calculated from the limits
-    mutable double m_lowBound;      // Lower clip point calculated from the limits
-    mutable double m_highBound;     // Upper clip point calculated from the limits
-    mutable double m_alphaScale;    // Bit-depth scaling for the alpha channel
 
     BitDepth m_fileInBitDepth  = BIT_DEPTH_UNKNOWN; // In bit-depth to be used for file I/O
     BitDepth m_fileOutBitDepth = BIT_DEPTH_UNKNOWN; // Out bit-depth to be used for file I/O
