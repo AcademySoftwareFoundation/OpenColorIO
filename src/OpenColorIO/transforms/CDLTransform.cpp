@@ -285,7 +285,7 @@ OCIO_NAMESPACE_ENTER
             // into the cache
             CDLTransformMap transformMap;
             CDLTransformVec transformVec;
-            FormatMetadataImpl metadata{ METADATA_ROOT };
+            FormatMetadataImpl metadata;
 
             parser.getCDLTransforms(transformMap, transformVec, metadata);
             
@@ -986,7 +986,7 @@ OCIO_ADD_TEST(CDLTransform, buildops)
     OCIO::BuildCDLOps(ops, *config, *cdl,
                       OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_CHECK_EQUAL(ops.size(), 3);
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
     OCIO_CHECK_EQUAL(ops.size(), 0);
 
     ops.clear();
@@ -995,20 +995,16 @@ OCIO_ADD_TEST(CDLTransform, buildops)
     OCIO::BuildCDLOps(ops, *config, *cdl,
                       OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
     OCIO_CHECK_EQUAL(ops.size(), 1);
-    OCIO_CHECK_EQUAL(ops[0]->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(ops[ops.size() - 1]->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     ops.clear();
     cdl->setSat(1.5);
     OCIO::BuildCDLOps(ops, *config, *cdl,
                       OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    OCIO_CHECK_EQUAL(ops[0]->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(ops[ops.size() - 1]->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     ops.clear();
     const double offset[]{ 0.0, 0.1, 0.0 };
@@ -1016,9 +1012,7 @@ OCIO_ADD_TEST(CDLTransform, buildops)
     OCIO::BuildCDLOps(ops, *config, *cdl,
                       OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
-    OCIO_CHECK_EQUAL(ops[0]->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(ops[ops.size() - 1]->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
 
     // Testing v2 onward behavior.
@@ -1028,8 +1022,6 @@ OCIO_ADD_TEST(CDLTransform, buildops)
                       OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO::ConstOpRcPtr op = OCIO::DynamicPtrCast<const OCIO::Op>(ops[0]);
-    OCIO_CHECK_EQUAL(op->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(op->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
     auto cdldata = OCIO::DynamicPtrCast<const OCIO::CDLOpData>(op->data());
     OCIO_REQUIRE_ASSERT(cdldata);
 }

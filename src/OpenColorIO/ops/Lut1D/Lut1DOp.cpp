@@ -125,11 +125,6 @@ OCIO_NAMESPACE_ENTER
 
         void Lut1DOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
         {
-            if (getInputBitDepth() != BIT_DEPTH_F32 || getOutputBitDepth() != BIT_DEPTH_F32)
-            {
-                throw Exception("Only 32F bit depth is supported for the GPU shader");
-            }
-
             ConstLut1DOpDataRcPtr lutData = lut1DData();
             if (lutData->getDirection() == TRANSFORM_DIR_INVERSE)
             {
@@ -223,19 +218,14 @@ OCIO_NAMESPACE_ENTER
         lutTransform->setHueAdjust(hue);
         lutTransform->setInterpolation(interp);
 
-        // Scale back to F32.
-        const float scale = 1.0f /
-            ((dir == TRANSFORM_DIR_FORWARD) ? (float)GetBitDepthMaxValue(lutData->getOutputBitDepth())
-                                            : (float)GetBitDepthMaxValue(lutData->getInputBitDepth()));
-
         auto & lutArray = lutData->getArray();
         const unsigned long l = lutArray.getLength();
         lutTransform->setLength(l);
         for (unsigned int i = 0; i < l; ++i)
         {
-            lutTransform->setValue(i, scale * lutArray[3 * i],
-                                      scale * lutArray[3 * i + 1],
-                                      scale * lutArray[3 * i + 2]);
+            lutTransform->setValue(i, lutArray[3 * i],
+                                      lutArray[3 * i + 1],
+                                      lutArray[3 * i + 2]);
         }
 
         group->appendTransform(lutTransform);
@@ -258,12 +248,11 @@ OCIO_NAMESPACE_ENTER
                                                                                Lut1DOpData::LUT_STANDARD));
 
         auto data = std::make_shared<Lut1DOpData>(
-            BIT_DEPTH_F32, BIT_DEPTH_F32,
-            transform.getFormatMetadata(),
-            transform.getInterpolation(),
             halfFlags,
             length);
 
+        data->setInterpolation(transform.getInterpolation());
+        data->getFormatMetadata() = transform.getFormatMetadata();
         data->setFileOutputBitDepth(transform.getFileOutputBitDepth());
 
         data->setHueAdjust(transform.getHueAdjust());
@@ -394,7 +383,7 @@ OCIO_ADD_TEST(Lut1DOp, inverse)
 
     // Optimize will remove LUT forward and inverse (0+1, 2+3 and 4+5).
     // Clamping is lost.
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
     OCIO_CHECK_EQUAL(ops.size(), 0);
 }
 
@@ -453,8 +442,7 @@ OCIO_ADD_TEST(Lut1DOp, gpu)
     OCIO::OpRcPtrVec ops;
     OCIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut, OCIO::TRANSFORM_DIR_FORWARD));
     
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO_CHECK_EQUAL(ops[0]->supportedByLegacyShader(), false);
 }
@@ -485,154 +473,7 @@ OCIO_ADD_TEST(Lut1DOp, identity_lut_1d)
     }
 }
 
-OCIO_ADD_TEST(Lut1D, basic)
-{
-    const OCIO::BitDepth bitDepth = OCIO::BIT_DEPTH_F32;
-
-    // By default, this constructor creates an 'identity LUT'.
-    OCIO::Lut1DOpDataRcPtr lutData =
-        std::make_shared<OCIO::Lut1DOpData>(bitDepth, bitDepth,
-                                            OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
-                                            OCIO::INTERP_LINEAR,
-                                            OCIO::Lut1DOpData::LUT_STANDARD);
-
-    OCIO::Lut1DOp lut(lutData);
-
-    OCIO_CHECK_NO_THROW(lut.finalize(OCIO::FINALIZATION_EXACT));
-    OCIO_CHECK_ASSERT(lutData->isIdentity());
-    OCIO_CHECK_ASSERT(!lut.isNoOp());
-
-    const float step = (float)(OCIO::GetBitDepthMaxValue(lutData->getInputBitDepth()))
-                       / ((float)lutData->getArray().getLength() - 1.0f);
-
-    float myImage[8] = { 0.0f, 0.0f, 0.0f, 1.0f,
-                         0.0f, 0.0f, step, 1.0f };
-
-    const float error = 1e-6f;
-    {
-        OCIO_CHECK_NO_THROW(lut.apply(myImage, myImage, 2));
-
-        OCIO_CHECK_CLOSE(myImage[0], 0.0f, error);
-        OCIO_CHECK_CLOSE(myImage[1], 0.0f, error);
-        OCIO_CHECK_CLOSE(myImage[2], 0.0f, error);
-        OCIO_CHECK_CLOSE(myImage[3], 1.0f, error);
-
-        OCIO_CHECK_CLOSE(myImage[4], 0.0f, error);
-        OCIO_CHECK_CLOSE(myImage[5], 0.0f, error);
-        OCIO_CHECK_CLOSE(myImage[6], step, error);
-        OCIO_CHECK_CLOSE(myImage[7], 1.0f, error);
-    }
-
-    // No more an 'identity LUT 1D'.
-    const float arbitraryVal = 0.123456f;
-
-    lutData->getArray()[5] = arbitraryVal;
-
-    OCIO_CHECK_NO_THROW(lut.finalize(OCIO::FINALIZATION_EXACT));
-    OCIO_CHECK_ASSERT(!lutData->isIdentity());
-    OCIO_CHECK_ASSERT(!lut.isNoOp());
-
-    {
-        OCIO_CHECK_NO_THROW(lut.apply(myImage, myImage, 2));
-
-        OCIO_CHECK_CLOSE(myImage[0], 0.0f, error);
-        OCIO_CHECK_CLOSE(myImage[1], 0.0f, error);
-        OCIO_CHECK_CLOSE(myImage[2], 0.0f, error);
-        OCIO_CHECK_CLOSE(myImage[3], 1.0f, error);
-
-        OCIO_CHECK_CLOSE(myImage[4], 0.0f, error);
-        OCIO_CHECK_CLOSE(myImage[5], 0.0f, error);
-        OCIO_CHECK_CLOSE(myImage[6], arbitraryVal, error);
-        OCIO_CHECK_CLOSE(myImage[7], 1.0f, error);
-    }
-
-}
-
-OCIO_ADD_TEST(Lut1D, half)
-{
-    OCIO::Lut1DOpDataRcPtr
-        lutData(
-            new OCIO::Lut1DOpData(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_F32,
-                                  OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
-                                  OCIO::INTERP_LINEAR,
-                                  OCIO::Lut1DOpData::LUT_STANDARD));
-
-    OCIO::Lut1DOp lut(lutData);
-
-    const float step = (float)(OCIO::GetBitDepthMaxValue(lutData->getInputBitDepth()))
-                       / ((float)lutData->getArray().getLength() - 1.0f);
-
-    // No more an 'identity LUT 1D'
-    const float arbitraryVal = 0.123456f;
-    lutData->getArray()[5] = arbitraryVal;
-    OCIO_CHECK_ASSERT(!lutData->isIdentity());
-
-    const half myImage[8] = { 0.1f, 0.3f, 0.4f, 1.0f,
-                              0.0f, 0.9f, step, 0.0f };
-
-    float resImage[8] = { 0.1f, 0.3f, 0.4f, 1.0f,
-                          0.0f, 0.9f, step, 0.0f };
-
-    // TODO: The SC test is intended to test half evaluation using myImage
-    // as input.  Adjust after half support is added to apply.
-    lut.setInputBitDepth(OCIO::BIT_DEPTH_F32);
-    lut.setOutputBitDepth(OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_NO_THROW(lut.finalize(OCIO::FINALIZATION_EXACT));
-    OCIO_CHECK_NO_THROW(lut.apply(resImage, resImage, 2));
-
-    const float error = 1e-4f;
-
-    OCIO_CHECK_CLOSE(resImage[0], (float)myImage[0], error);
-    OCIO_CHECK_CLOSE(resImage[1], (float)myImage[1], error);
-    OCIO_CHECK_CLOSE(resImage[2], (float)myImage[2], error);
-    OCIO_CHECK_CLOSE(resImage[3], (float)myImage[3], error);
-
-    OCIO_CHECK_CLOSE(resImage[4], (float)myImage[4], error);
-    OCIO_CHECK_CLOSE(resImage[5], (float)myImage[5], error);
-    OCIO_CHECK_CLOSE(resImage[6], arbitraryVal, error);
-    OCIO_CHECK_CLOSE(resImage[7], (float)myImage[7], error);
-}
-
-OCIO_ADD_TEST(Lut1D, nan)
-{
-    const OCIO::BitDepth bitDepth = OCIO::BIT_DEPTH_F32;
-
-    // By default, this constructor creates an 'identity LUT'
-    OCIO::Lut1DOpDataRcPtr
-        lutData(
-            new OCIO::Lut1DOpData(bitDepth, bitDepth,
-                                  OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
-                                  OCIO::INTERP_LINEAR,
-                                  OCIO::Lut1DOpData::LUT_STANDARD));
-
-    OCIO::Lut1DOp lut(lutData);
-
-    OCIO_CHECK_NO_THROW(lut.finalize(OCIO::FINALIZATION_EXACT));
-    OCIO_CHECK_ASSERT(lut.isIdentity());
-    OCIO_CHECK_ASSERT(!lut.isNoOp());
-
-    const float step = (float)(OCIO::GetBitDepthMaxValue(lutData->getInputBitDepth()))
-                       / ((float)lutData->getArray().getLength() - 1.0f);
-
-    float myImage[8] = {
-        std::numeric_limits<float>::quiet_NaN(), 0.0f, 0.0f, 1.0f,
-                                           0.0f, 0.0f, step, 1.0f };
-
-    const float error = 1e-6f;
-    OCIO_CHECK_NO_THROW(lut.apply(myImage, myImage, 2));
-
-    OCIO_CHECK_CLOSE(myImage[0], 0.0f, error);
-    OCIO_CHECK_CLOSE(myImage[1], 0.0f, error);
-    OCIO_CHECK_CLOSE(myImage[2], 0.0f, error);
-    OCIO_CHECK_CLOSE(myImage[3], 1.0f, error);
-
-    OCIO_CHECK_CLOSE(myImage[4], 0.0f, error);
-    OCIO_CHECK_CLOSE(myImage[5], 0.0f, error);
-    OCIO_CHECK_CLOSE(myImage[6], step, error);
-    OCIO_CHECK_CLOSE(myImage[7], 1.0f, error);
-}
-
-OCIO_ADD_TEST(Lut1D, finite_value_hue_adjust)
+OCIO_ADD_TEST(Lut1DRenderer, finite_value_hue_adjust)
 {
     // Make a LUT that squares the input.
     OCIO::Lut1DOpDataRcPtr lutData = CreateSquareLut();
@@ -686,155 +527,6 @@ OCIO_ADD_TEST(Lut1D, finite_value_hue_adjust)
     }
 }
 
-
-//
-// Unit tests using clf files.
-//
-
-namespace
-{
-
-void Apply(const OCIO::OpRcPtrVec & ops, float * img, long numPixels)
-{
-    for (auto op : ops)
-    {
-        op->apply(img, numPixels);
-    }
-}
-
-}
-
-OCIO_ADD_TEST(Lut1D, apply_half_domain_hue_adjust)
-{
-    const std::string ctfFile("lut1d_hd_hueAdjust.ctf");
-
-    OCIO::OpRcPtrVec ops;
-    OCIO::ContextRcPtr context = OCIO::Context::Create();
-    OCIO_CHECK_NO_THROW(BuildOpsTest(ops, ctfFile, context,
-                                     OCIO::TRANSFORM_DIR_FORWARD));
-
-    OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    auto op = std::const_pointer_cast<const OCIO::Op>(ops[1]);
-    auto opData = op->data();
-    OCIO_CHECK_EQUAL(opData->getType(), OCIO::OpData::Lut1DType);
-
-    auto lut = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opData);
-    OCIO_REQUIRE_ASSERT(lut);
-
-    float inputFrame[] = {
-        0.05f, 0.18f, 1.1f, 0.5f,
-        2.3f, 0.01f, 0.3f, 1.0f };
-
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
-    OCIO_CHECK_NO_THROW(Apply(ops, inputFrame, 2));
-
-    const float rtol = 1e-6f;
-    const float minExpected = 1e-3f;
-
-    OCIO_CHECK_ASSERT(
-        OCIO::EqualWithSafeRelError(inputFrame[0], 0.54780269f, rtol, minExpected));
-
-    OCIO_CHECK_ASSERT(
-        OCIO::EqualWithSafeRelError(inputFrame[1],
-                                    9.57448578f,
-                                    rtol, minExpected));  // would be 5.0 w/out hue adjust
-
-    OCIO_CHECK_ASSERT(
-        OCIO::EqualWithSafeRelError(inputFrame[2], 73.45562744f, rtol, minExpected));
-
-    OCIO_CHECK_EQUAL(inputFrame[3], 0.5f);
-
-    OCIO_CHECK_ASSERT(
-        OCIO::EqualWithSafeRelError(inputFrame[4], 188.087067f, rtol, minExpected));
-    OCIO_CHECK_ASSERT(
-        OCIO::EqualWithSafeRelError(inputFrame[5], 0.0324990489f, rtol, minExpected));
-    OCIO_CHECK_ASSERT(
-        OCIO::EqualWithSafeRelError(inputFrame[6],
-                                    23.8472710f,
-                                    rtol, minExpected));  // would be 11.3372078 w/out hue adjust
-
-    OCIO_CHECK_EQUAL(inputFrame[7], 1.0f);
-}
-
-OCIO_ADD_TEST(InvLut1D, apply_half)
-{
-    const OCIO::BitDepth inBD = OCIO::BIT_DEPTH_F32;
-    const OCIO::BitDepth outBD = OCIO::BIT_DEPTH_F32;
-
-    static const std::string ctfFile("lut1d_halfdom.ctf");
-
-    OCIO::OpRcPtrVec ops;
-    OCIO::ContextRcPtr context = OCIO::Context::Create();
-    OCIO_CHECK_NO_THROW(BuildOpsTest(ops, ctfFile, context,
-                                     OCIO::TRANSFORM_DIR_FORWARD));
-
-    OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    auto op = std::const_pointer_cast<const OCIO::Op>(ops[1]);
-    auto opData = op->data();
-    OCIO_CHECK_EQUAL(opData->getType(), OCIO::OpData::Lut1DType);
-
-    auto lut = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opData);
-    OCIO_REQUIRE_ASSERT(lut);
-
-    auto fwdLut = lut->clone();
-    fwdLut->setInputBitDepth(outBD);
-    fwdLut->setOutputBitDepth(inBD);
-
-    OCIO::OpRcPtrVec ops1;
-    auto fwdOp = std::make_shared<OCIO::Lut1DOp>(fwdLut);
-    ops1.push_back(fwdOp);
-
-    const float inImage[12] = {
-         1.f,    1.f,   0.5f, 0.f,
-         0.001f, 0.1f,  4.f,  0.5f,  // test positive half domain of R, G, B channels
-        -0.08f, -1.f, -10.f,  1.f }; // test negative half domain of R, G, B channels
-
-    float inImage1[12];
-    memcpy(inImage1, inImage, 12 * sizeof(float));
-
-    // Apply forward LUT.
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops1, OCIO::FINALIZATION_EXACT));
-    OCIO_CHECK_NO_THROW(Apply(ops1, inImage1, 3));
-
-    // Apply inverse LUT.
-    OCIO::OpRcPtrVec ops2;
-    auto invLut = lut->inverse();
-    invLut->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
-    auto invOp = std::make_shared<OCIO::Lut1DOp>(invLut);
-    ops2.push_back(invOp);
-
-    float inImage2[12];
-    memcpy(inImage2, inImage1, 12 * sizeof(float));
-
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops2, OCIO::FINALIZATION_EXACT));
-    OCIO_CHECK_NO_THROW(Apply(ops2, inImage2, 3));
-
-    // Compare the two applys
-    for (unsigned i = 0; i < 12; ++i)
-    {
-        OCIO_CHECK_ASSERT(!OCIO::FloatsDiffer(inImage2[i], inImage[i], 50, false));
-    }
-
-    // Repeat with style = LUT_INVERSION_FAST.
-    OCIO::OpRcPtrVec ops3;
-    invLut = lut->inverse();
-    invLut->setInversionQuality(OCIO::LUT_INVERSION_FAST);
-    invLut->setFileOutputBitDepth(inBD);
-    invOp = std::make_shared<OCIO::Lut1DOp>(invLut);
-    ops3.push_back(invOp);
-
-    memcpy(inImage2, inImage1, 12 * sizeof(float));
-
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops3, OCIO::FINALIZATION_EXACT));
-    OCIO_CHECK_NO_THROW(Apply(ops3, inImage2, 3));
-
-    // Compare the two applys
-    for (unsigned i = 0; i < 12; ++i)
-    {
-        OCIO_CHECK_ASSERT(!OCIO::FloatsDiffer(inImage2[i], inImage[i], 50, false));
-    }
-}
-
 OCIO_ADD_TEST(Lut1D, lut_1d_compose_with_bit_depth)
 {
     const std::string ctfFile("lut1d_comp.clf");
@@ -870,19 +562,19 @@ OCIO_ADD_TEST(Lut1D, lut_1d_compose_with_bit_depth)
     }
     {
         auto lutComposed = lut1->clone();
-        OCIO::Lut1DOpData::Compose(lutComposed, lut2, OCIO::Lut1DOpData::COMPOSE_RESAMPLE_INDEPTH);
+        OCIO::Lut1DOpData::Compose(lutComposed, lut2, OCIO::Lut1DOpData::COMPOSE_RESAMPLE_BIG);
 
         const float error = 1e-5f;
-        OCIO_CHECK_EQUAL(lutComposed->getArray().getLength(), 256);
+        OCIO_CHECK_EQUAL(lutComposed->getArray().getLength(), 65536);
         OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[0], 0.00744791f, error);
         OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[1], 0.03172233f, error);
         OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[2], 0.07058375f, error);
-        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[383], 0.28073114f, error);
-        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[384], 0.09914176f, error);
-        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[385], 0.1866852f, error);
-        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[765], 0.3513808f, error);
-        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[766], 0.51819527f, error);
-        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[767], 0.67463773f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[98688], 0.09914176f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[98689], 0.1866852f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[98690], 0.2830042f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[196605], 0.3513808f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[196606], 0.51819527f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[196607], 0.67463773f, error);
     }
 }
 
@@ -933,17 +625,11 @@ OCIO_ADD_TEST(Lut1D, create_transform)
 {
     OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_FORWARD;
 
-    OCIO::Lut1DOpDataRcPtr lut = std::make_shared<OCIO::Lut1DOpData>(
-        OCIO::BIT_DEPTH_UINT8,
-        OCIO::BIT_DEPTH_UINT10,
-        OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
-        OCIO::INTERP_LINEAR,
-        OCIO::Lut1DOpData::LUT_STANDARD,
-        3);
-    lut->setFileOutputBitDepth(lut->getOutputBitDepth());
-    lut->getArray()[3] = 500.1f;
-    lut->getArray()[4] = 500.2f;
-    lut->getArray()[5] = 500.3f;
+    auto lut = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 3);
+    lut->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
+    lut->getArray()[3] = 0.51f;
+    lut->getArray()[4] = 0.52f;
+    lut->getArray()[5] = 0.53f;
 
     auto & metadataSource = lut->getFormatMetadata();
     metadataSource.addAttribute(OCIO::METADATA_NAME, "test");
@@ -979,11 +665,9 @@ OCIO_ADD_TEST(Lut1D, create_transform)
     float b = 0.f;
     lTransform->getValue(1, r, g, b);
 
-    // Transform LUT is always 32F.
-    const float scale = (float)(OCIO::GetBitDepthMaxValue(lTransform->getFileOutputBitDepth()));
-    OCIO_CHECK_EQUAL(r * scale, 500.1f);
-    OCIO_CHECK_EQUAL(g * scale, 500.2f);
-    OCIO_CHECK_EQUAL(b * scale, 500.3f);
+    OCIO_CHECK_EQUAL(r , 0.51f);
+    OCIO_CHECK_EQUAL(g , 0.52f);
+    OCIO_CHECK_EQUAL(b , 0.53f);
 }
 
 OCIO_ADD_TEST(LUT1DTransform, build_op)
@@ -1017,23 +701,3 @@ OCIO_ADD_TEST(LUT1DTransform, build_op)
 }
 
 #endif // OCIO_UNIT_TEST
-
-// TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT3D_Blue
-// TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT3D_Green
-// TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT3D_Red
-// TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT1D_hue_adjust
-// TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT1D_identity_half
-// TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT1D_identity_half_to_integer
-// TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT1D_identity_integer_to_half
-// TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT1D_HALF_CODE
-// TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererInvLUT1D_identity
-// TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererInvLUT1D_increasing
-// TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererInvLUT1D_decreasing_reversals
-// TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererInvLUT1D_clamp_to_lut_range
-// TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererInvLUT1D_flat_start_or_end
-// TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererInvLUT1D_halfinput
-// TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererInvLUT1DHalf_identity
-// TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererInvLUT1DHalf_ctf
-// TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererInvLUT1DHalf_fclut
-// TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererInvLUT1D_hueAdjust
-// TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererInvLUT1DHalf_hueAdjust

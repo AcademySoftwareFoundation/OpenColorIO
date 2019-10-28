@@ -139,11 +139,6 @@ ConstOpCPURcPtr ExposureContrastOp::getCPUOp() const
 
 void ExposureContrastOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
 {
-    if (getInputBitDepth() != BIT_DEPTH_F32 || getOutputBitDepth() != BIT_DEPTH_F32)
-    {
-        throw Exception("Only 32F bit depth is supported for the GPU shader");
-    }
-
     ConstExposureContrastOpDataRcPtr ecOpData = ecData();
     GetExposureContrastGPUShaderProgram(shaderDesc, ecOpData);
 }
@@ -260,7 +255,6 @@ void BuildExposureContrastOps(OpRcPtrVec & ops,
         = CombineTransformDirections(dir, transform.getDirection());
 
     auto data = std::make_shared<ExposureContrastOpData>(
-        BIT_DEPTH_F32, BIT_DEPTH_F32,
         ExposureContrastOpData::ConvertStyle(transform.getStyle(), combinedDir));
 
     data->setExposure(transform.getExposure());

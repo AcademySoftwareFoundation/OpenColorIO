@@ -206,28 +206,3 @@ OCIO_ADD_TEST(CTFReaderTransform, accessors)
         OCIO_CHECK_EQUAL(ct.getDescriptions()[1], "Two");
     }
 }
-
-OCIO_ADD_TEST(CTFReaderTransform, validate_bitdepth_agreement)
-{
-    OCIO::CTFReaderTransform t;
-    auto matrix = std::make_shared<OCIO::MatrixOpData>(OCIO::BIT_DEPTH_UINT10,
-        OCIO::BIT_DEPTH_F32);
-    t.getOps().push_back(matrix);
-
-    matrix = std::make_shared<OCIO::MatrixOpData>(OCIO::BIT_DEPTH_F32,
-        OCIO::BIT_DEPTH_F32);
-
-    t.getOps().push_back(matrix);
-
-    OCIO_CHECK_NO_THROW(t.validate());
-
-    matrix = std::make_shared<OCIO::MatrixOpData>(OCIO::BIT_DEPTH_F16,
-        OCIO::BIT_DEPTH_F32);
-    t.getOps().push_back(matrix);
-
-    OCIO_CHECK_THROW_WHAT(t.validate(), OCIO::Exception,
-        "Bitdepth missmatch between ops");
-
-    matrix->setInputBitDepth(OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_NO_THROW(t.validate());
-}

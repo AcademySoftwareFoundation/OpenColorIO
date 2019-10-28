@@ -63,8 +63,9 @@ OCIO_ADD_TEST(FileFormatCTF, clf_spec)
         OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::Lut1DType);
         OCIO_CHECK_EQUAL(opList[0]->getName(), "4valueLut");
         OCIO_CHECK_EQUAL(opList[0]->getID(), "lut-23");
-        OCIO_CHECK_EQUAL(opList[0]->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
-        OCIO_CHECK_EQUAL(opList[0]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+        auto lut = OCIO::DynamicPtrCast<const OCIO::Lut1DOpData>(opList[0]);
+        OCIO_REQUIRE_ASSERT(lut);
+        OCIO_CHECK_EQUAL(lut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
         OCIO::StringVec desc;
         GetElementsValues(opList[0]->getFormatMetadata().getChildrenElements(),
                           OCIO::TAG_DESCRIPTION, desc);
@@ -84,11 +85,11 @@ OCIO_ADD_TEST(FileFormatCTF, clf_spec)
                          " 3D LUT example from spec ");
         const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
         OCIO_REQUIRE_EQUAL(opList.size(), 1);
-        OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::Lut3DType);
         OCIO_CHECK_EQUAL(opList[0]->getName(), "identity");
         OCIO_CHECK_EQUAL(opList[0]->getID(), "lut-24");
-        OCIO_CHECK_EQUAL(opList[0]->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
-        OCIO_CHECK_EQUAL(opList[0]->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
+        auto lut = OCIO::DynamicPtrCast<const OCIO::Lut3DOpData>(opList[0]);
+        OCIO_REQUIRE_ASSERT(lut);
+        OCIO_CHECK_EQUAL(lut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F16);
         OCIO::StringVec desc;
         GetElementsValues(opList[0]->getFormatMetadata().getChildrenElements(),
                           OCIO::TAG_DESCRIPTION, desc);
@@ -110,11 +111,12 @@ OCIO_ADD_TEST(FileFormatCTF, clf_spec)
                          " Used by unit tests ");
         const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
         OCIO_REQUIRE_EQUAL(opList.size(), 1);
-        OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::MatrixType);
         OCIO_CHECK_EQUAL(opList[0]->getName(), "colorspace conversion");
         OCIO_CHECK_EQUAL(opList[0]->getID(), "mat-25");
-        OCIO_CHECK_EQUAL(opList[0]->getInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
-        OCIO_CHECK_EQUAL(opList[0]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+        auto mat = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(opList[0]);
+        OCIO_REQUIRE_ASSERT(mat);
+        OCIO_CHECK_EQUAL(mat->getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+        OCIO_CHECK_EQUAL(mat->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
         OCIO::StringVec desc;
         GetElementsValues(opList[0]->getFormatMetadata().getChildrenElements(),
                           OCIO::TAG_DESCRIPTION, desc);
@@ -135,23 +137,20 @@ OCIO_ADD_TEST(FileFormatCTF, clf_spec)
                          " IndexMap LUT example from spec ");
         const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
         OCIO_REQUIRE_EQUAL(opList.size(), 2);
-        OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::RangeType);
         auto pR = std::dynamic_pointer_cast<const OCIO::RangeOpData>(opList[0]);
         OCIO_REQUIRE_ASSERT(pR);
+        OCIO_CHECK_EQUAL(pR->getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+        OCIO_CHECK_EQUAL(pR->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+        OCIO_CHECK_EQUAL(pR->getMinInValue(), 64. / 1023.);
+        OCIO_CHECK_EQUAL(pR->getMaxInValue(), 940. / 1023.);
+        OCIO_CHECK_EQUAL(pR->getMinOutValue(), 0. / 1023.);
+        OCIO_CHECK_EQUAL(pR->getMaxOutValue(), 1023. / 1023.);
 
-        OCIO_CHECK_EQUAL(pR->getInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
-        OCIO_CHECK_EQUAL(pR->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
-
-        OCIO_CHECK_EQUAL(pR->getMinInValue(), 64.);
-        OCIO_CHECK_EQUAL(pR->getMaxInValue(), 940.);
-        OCIO_CHECK_EQUAL(pR->getMinOutValue(), 0.);
-        OCIO_CHECK_EQUAL(pR->getMaxOutValue(), 1023.);
-
-        OCIO_CHECK_EQUAL(opList[1]->getType(), OCIO::OpData::Lut1DType);
         OCIO_CHECK_EQUAL(opList[1]->getName(), "IndexMap LUT");
         OCIO_CHECK_EQUAL(opList[1]->getID(), "lut-26");
-        OCIO_CHECK_EQUAL(opList[1]->getInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
-        OCIO_CHECK_EQUAL(opList[1]->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
+        auto lut = OCIO::DynamicPtrCast<const OCIO::Lut1DOpData>(opList[1]);
+        OCIO_REQUIRE_ASSERT(lut);
+        OCIO_CHECK_EQUAL(lut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F16);
         OCIO::StringVec desc;
         GetElementsValues(opList[1]->getFormatMetadata().getChildrenElements(),
                           OCIO::TAG_DESCRIPTION, desc);
@@ -178,7 +177,6 @@ OCIO_ADD_TEST(FileFormatCTF, lut_1d)
         const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
         OCIO_REQUIRE_EQUAL(opList.size(), 1);
 
-        OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::Lut1DType);
         auto pLut = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[0]);
         OCIO_REQUIRE_ASSERT(pLut);
 
@@ -191,8 +189,7 @@ OCIO_ADD_TEST(FileFormatCTF, lut_1d)
         OCIO_CHECK_ASSERT(!pLut->isOutputRawHalfs());
         OCIO_CHECK_EQUAL(pLut->getHueAdjust(), OCIO::HUE_NONE);
 
-        OCIO_CHECK_EQUAL(pLut->getInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
-        OCIO_CHECK_EQUAL(pLut->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+        OCIO_CHECK_EQUAL(pLut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
         OCIO_CHECK_ASSERT(pLut->getName() == "1d-lut example op");
 
         // TODO: bypass is for CTF
@@ -211,15 +208,15 @@ OCIO_ADD_TEST(FileFormatCTF, lut_1d)
         OCIO_CHECK_EQUAL(array.getValues()[0], 0.0f);
         OCIO_CHECK_EQUAL(array.getValues()[1], 0.0f);
         OCIO_CHECK_EQUAL(array.getValues()[2], 0.0f);
-        OCIO_CHECK_EQUAL(array.getValues()[3], 215.0f);
-        OCIO_CHECK_EQUAL(array.getValues()[4], 215.0f);
-        OCIO_CHECK_EQUAL(array.getValues()[5], 215.0f);
-        OCIO_CHECK_EQUAL(array.getValues()[6], 294.0f);
+        OCIO_CHECK_EQUAL(array.getValues()[3], 215.0f / 1023.0f);
+        OCIO_CHECK_EQUAL(array.getValues()[4], 215.0f / 1023.0f);
+        OCIO_CHECK_EQUAL(array.getValues()[5], 215.0f / 1023.0f);
+        OCIO_CHECK_EQUAL(array.getValues()[6], 294.0f / 1023.0f);
         // and many more
-        OCIO_CHECK_EQUAL(array.getValues()[92], 1008.0f);
-        OCIO_CHECK_EQUAL(array.getValues()[93], 1023.0f);
-        OCIO_CHECK_EQUAL(array.getValues()[94], 1023.0f);
-        OCIO_CHECK_EQUAL(array.getValues()[95], 1023.0f);
+        OCIO_CHECK_EQUAL(array.getValues()[92], 1008.0f / 1023.0f);
+        OCIO_CHECK_EQUAL(array.getValues()[93], 1023.0f / 1023.0f);
+        OCIO_CHECK_EQUAL(array.getValues()[94], 1023.0f / 1023.0f);
+        OCIO_CHECK_EQUAL(array.getValues()[95], 1023.0f / 1023.0f);
     }
 
     // Test the hue adjust attribute.
@@ -230,7 +227,6 @@ OCIO_ADD_TEST(FileFormatCTF, lut_1d)
 
         const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
         OCIO_REQUIRE_EQUAL(opList.size(), 1);
-        OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::Lut1DType);
         auto pLut = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[0]);
         OCIO_REQUIRE_ASSERT(pLut);
         OCIO_CHECK_EQUAL(pLut->getHueAdjust(), OCIO::HUE_DW3);
@@ -250,16 +246,14 @@ OCIO_ADD_TEST(FileFormatCTF, matrix4x4)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::MatrixType);
-    auto pMatrix =
-        std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
+    auto pMatrix = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pMatrix);
 
     OCIO_CHECK_ASSERT(cachedFile->m_transform->getInputDescriptor() == "XYZ");
     OCIO_CHECK_ASSERT(cachedFile->m_transform->getOutputDescriptor() == "RGB");
 
-    OCIO_CHECK_EQUAL(pMatrix->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pMatrix->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(pMatrix->getFileInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(pMatrix->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     // In file, matrix is defined by a 4x4 array.
     const OCIO::ArrayDouble & array = pMatrix->getArray();
@@ -312,16 +306,14 @@ OCIO_ADD_TEST(FileFormatCTF, matrix_1_3_3x3)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::MatrixType);
-    auto pMatrix =
-        std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
+    auto pMatrix = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pMatrix);
 
     OCIO_CHECK_ASSERT(cachedFile->m_transform->getInputDescriptor() == "XYZ");
     OCIO_CHECK_ASSERT(cachedFile->m_transform->getOutputDescriptor() == "RGB");
 
-    OCIO_CHECK_EQUAL(pMatrix->getInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
-    OCIO_CHECK_EQUAL(pMatrix->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OCIO_CHECK_EQUAL(pMatrix->getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OCIO_CHECK_EQUAL(pMatrix->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
 
     // 3x3 array gets extended to 4x4.
     const OCIO::ArrayDouble & array = pMatrix->getArray();
@@ -372,16 +364,8 @@ OCIO_ADD_TEST(FileFormatCTF, matrix_1_3_4x4)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::MatrixType);
-    auto pMatrix =
-        std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
+    auto pMatrix = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pMatrix);
-
-    OCIO_CHECK_ASSERT(cachedFile->m_transform->getInputDescriptor() == "XYZ");
-    OCIO_CHECK_ASSERT(cachedFile->m_transform->getOutputDescriptor() == "RGB");
-
-    OCIO_CHECK_EQUAL(pMatrix->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pMatrix->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     const OCIO::ArrayDouble & array = pMatrix->getArray();
     OCIO_CHECK_EQUAL(array.getLength(), 4);
@@ -432,16 +416,8 @@ OCIO_ADD_TEST(FileFormatCTF, matrix_1_3_offsets)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::MatrixType);
-    auto pMatrix =
-        std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
+    auto pMatrix = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pMatrix);
-
-    OCIO_CHECK_ASSERT(cachedFile->m_transform->getInputDescriptor() == "XYZ");
-    OCIO_CHECK_ASSERT(cachedFile->m_transform->getOutputDescriptor() == "RGB");
-
-    OCIO_CHECK_EQUAL(pMatrix->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pMatrix->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     const OCIO::ArrayDouble & array = pMatrix->getArray();
     OCIO_CHECK_EQUAL(array.getLength(), 4);
@@ -491,16 +467,8 @@ OCIO_ADD_TEST(FileFormatCTF, matrix_1_3_alpha_offsets)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::MatrixType);
-    auto pMatrix =
-        std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
+    auto pMatrix = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pMatrix);
-
-    OCIO_CHECK_ASSERT(cachedFile->m_transform->getInputDescriptor() == "XYZ");
-    OCIO_CHECK_ASSERT(cachedFile->m_transform->getOutputDescriptor() == "RGB");
-
-    OCIO_CHECK_EQUAL(pMatrix->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pMatrix->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     const OCIO::ArrayDouble & array = pMatrix->getArray();
     OCIO_CHECK_EQUAL(array.getLength(), 4);
@@ -545,13 +513,8 @@ OCIO_ADD_TEST(FileFormatCTF, 3by1d_lut)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 2);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::MatrixType);
-    auto pMatrix =
-        std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
+    auto pMatrix = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pMatrix);
-
-    OCIO_CHECK_EQUAL(pMatrix->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pMatrix->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     const OCIO::ArrayDouble & a1 = pMatrix->getArray();
     OCIO_CHECK_EQUAL(a1.getLength(), 4);
@@ -583,8 +546,7 @@ OCIO_ADD_TEST(FileFormatCTF, 3by1d_lut)
         std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[1]);
     OCIO_REQUIRE_ASSERT(pLut);
     OCIO_CHECK_EQUAL(pLut->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO_CHECK_EQUAL(pLut->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pLut->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(pLut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     const OCIO::Array & a2 = pLut->getArray();
     OCIO_CHECK_EQUAL(a2.getLength(), 17);
@@ -617,13 +579,8 @@ OCIO_ADD_TEST(FileFormatCTF, lut1d_inv)
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 2);
 
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::MatrixType);
-    auto pMatrix =
-        std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
-
+    auto pMatrix = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pMatrix);
-    OCIO_CHECK_EQUAL(pMatrix->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pMatrix->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     const OCIO::ArrayDouble & a1 = pMatrix->getArray();
     OCIO_CHECK_EQUAL(a1.getLength(), 4);
@@ -651,13 +608,9 @@ OCIO_ADD_TEST(FileFormatCTF, lut1d_inv)
     OCIO_CHECK_EQUAL(a1.getValues()[14], 0.0);
     OCIO_CHECK_EQUAL(a1.getValues()[15], 1.0);
 
-    OCIO_CHECK_EQUAL(opList[1]->getType(), OCIO::OpData::Lut1DType);
-    auto pLut =
-        std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[1]);
-
+    auto pLut = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[1]);
     OCIO_REQUIRE_ASSERT(pLut);
-    OCIO_CHECK_EQUAL(pLut->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pLut->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OCIO_CHECK_EQUAL(pLut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
     OCIO_CHECK_EQUAL(pLut->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
 
     const OCIO::Array & a2 = pLut->getArray();
@@ -694,13 +647,10 @@ OCIO_ADD_TEST(FileFormatCTF, lut3d)
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
 
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::Lut3DType);
-    auto pLut =
-        std::dynamic_pointer_cast<const OCIO::Lut3DOpData>(opList[0]);
+    auto pLut = std::dynamic_pointer_cast<const OCIO::Lut3DOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pLut);
     OCIO_CHECK_EQUAL(pLut->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO_CHECK_EQUAL(pLut->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pLut->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+    OCIO_CHECK_EQUAL(pLut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
 
     const OCIO::Array & array = pLut->getArray();
     OCIO_CHECK_EQUAL(array.getLength(), 17);
@@ -711,17 +661,17 @@ OCIO_ADD_TEST(FileFormatCTF, lut3d)
                      *pLut->getArray().getMaxColorComponents());
 
     OCIO_REQUIRE_EQUAL(array.getValues().size(), array.getNumValues());
-    OCIO_CHECK_EQUAL(array.getValues()[0], 10.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[0], 10.0f / 4095.0f);
     OCIO_CHECK_EQUAL(array.getValues()[1], 0.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[2], 5.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[2], 5.0f / 4095.0f);
 
-    OCIO_CHECK_EQUAL(array.getValues()[18], 26.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[19], 308.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[20], 580.0f);
+    OCIO_CHECK_CLOSE(array.getValues()[18], 26.0f / 4095.0f, 1e-8f);
+    OCIO_CHECK_EQUAL(array.getValues()[19], 308.0f / 4095.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[20], 580.0f / 4095.0f);
 
     OCIO_CHECK_EQUAL(array.getValues()[30], 0.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[31], 586.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[32], 1350.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[31], 586.0f / 4095.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[32], 1350.0f / 4095.0f);
 }
 
 OCIO_ADD_TEST(FileFormatCTF, lut3d_inv)
@@ -735,13 +685,10 @@ OCIO_ADD_TEST(FileFormatCTF, lut3d_inv)
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
 
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::Lut3DType);
-    auto pLut =
-        std::dynamic_pointer_cast<const OCIO::Lut3DOpData>(opList[0]);
+    auto pLut = std::dynamic_pointer_cast<const OCIO::Lut3DOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pLut);
 
-    OCIO_CHECK_EQUAL(pLut->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
-    OCIO_CHECK_EQUAL(pLut->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(pLut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
     OCIO_CHECK_EQUAL(pLut->getInterpolation(), OCIO::INTERP_TETRAHEDRAL);
     OCIO_CHECK_EQUAL(pLut->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
 
@@ -753,17 +700,17 @@ OCIO_ADD_TEST(FileFormatCTF, lut3d_inv)
     OCIO_REQUIRE_EQUAL(array.getValues().size(), array.getNumValues());
 
     OCIO_CHECK_EQUAL(array.getLength(), 17);
-    OCIO_CHECK_EQUAL(array.getValues()[0], 25.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[1], 30.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[2], 33.0f);
+    OCIO_CHECK_CLOSE(array.getValues()[0], 25.0f / 4095.0f, 1e-8f);
+    OCIO_CHECK_CLOSE(array.getValues()[1], 30.0f / 4095.0f, 1e-8f);
+    OCIO_CHECK_EQUAL(array.getValues()[2], 33.0f / 4095.0f);
 
-    OCIO_CHECK_EQUAL(array.getValues()[18], 26.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[19], 308.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[20], 580.0f);
+    OCIO_CHECK_CLOSE(array.getValues()[18], 26.0f / 4095.0f, 1e-8f);
+    OCIO_CHECK_EQUAL(array.getValues()[19], 308.0f / 4095.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[20], 580.0f / 4095.0f);
 
     OCIO_CHECK_EQUAL(array.getValues()[30], 0.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[31], 586.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[32], 1350.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[31], 586.0f / 4095.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[32], 1350.0f / 4095.0f);
 }
 
 OCIO_ADD_TEST(FileFormatCTF, check_utf8)
@@ -859,13 +806,8 @@ OCIO_ADD_TEST(FileFormatCTF, error_checker)
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 4);
 
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::MatrixType);
-    auto pMatrix =
-        std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
+    auto pMatrix = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pMatrix);
-
-    OCIO_CHECK_EQUAL(pMatrix->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pMatrix->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     const OCIO::ArrayDouble & a1 = pMatrix->getArray();
     OCIO_CHECK_EQUAL(a1.getLength(), 4);
@@ -893,12 +835,8 @@ OCIO_ADD_TEST(FileFormatCTF, error_checker)
     OCIO_CHECK_EQUAL(a1.getValues()[14], 0.0);
     OCIO_CHECK_EQUAL(a1.getValues()[15], 1.0);
 
-    OCIO_CHECK_EQUAL(opList[1]->getType(), OCIO::OpData::Lut1DType);
-    auto pLut1 =
-        std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[1]);
+    auto pLut1 = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[1]);
     OCIO_REQUIRE_ASSERT(pLut1);
-    OCIO_CHECK_EQUAL(pLut1->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pLut1->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     const OCIO::Array & a2 = pLut1->getArray();
     OCIO_CHECK_EQUAL(a2.getLength(), 17);
@@ -926,12 +864,9 @@ OCIO_ADD_TEST(FileFormatCTF, error_checker)
     OCIO_CHECK_EQUAL(a2.getValues()[49], 1.0f);
     OCIO_CHECK_EQUAL(a2.getValues()[50], 1.0f);
 
-    OCIO_CHECK_EQUAL(opList[2]->getType(), OCIO::OpData::Lut1DType);
-    auto pLut2 =
-        std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[2]);
+    auto pLut2 = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[2]);
     OCIO_REQUIRE_ASSERT(pLut2);
-    OCIO_CHECK_EQUAL(pLut2->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pLut2->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OCIO_CHECK_EQUAL(pLut2->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
 
     const OCIO::Array & array = pLut2->getArray();
     OCIO_CHECK_EQUAL(array.getLength(), 32);
@@ -944,22 +879,19 @@ OCIO_ADD_TEST(FileFormatCTF, error_checker)
     OCIO_CHECK_EQUAL(array.getValues()[0], 0.0f);
     OCIO_CHECK_EQUAL(array.getValues()[1], 0.0f);
     OCIO_CHECK_EQUAL(array.getValues()[2], 0.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[3], 215.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[4], 215.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[5], 215.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[6], 294.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[3], 215.0f / 1023.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[4], 215.0f / 1023.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[5], 215.0f / 1023.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[6], 294.0f / 1023.0f);
     // and many more
-    OCIO_CHECK_EQUAL(array.getValues()[92], 1008.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[93], 1023.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[94], 1023.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[95], 1023.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[92], 1008.0f / 1023.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[93], 1023.0f / 1023.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[94], 1023.0f / 1023.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[95], 1023.0f / 1023.0f);
 
-    OCIO_CHECK_EQUAL(opList[3]->getType(), OCIO::OpData::Lut3DType);
-    auto pLut3 =
-        std::dynamic_pointer_cast<const OCIO::Lut3DOpData>(opList[3]);
+    auto pLut3 = std::dynamic_pointer_cast<const OCIO::Lut3DOpData>(opList[3]);
     OCIO_REQUIRE_ASSERT(pLut3);
-    OCIO_CHECK_EQUAL(pLut3->getInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
-    OCIO_CHECK_EQUAL(pLut3->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OCIO_CHECK_EQUAL(pLut3->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
 
     const OCIO::Array & a3 = pLut3->getArray();
     OCIO_CHECK_EQUAL(a3.getLength(), 3);
@@ -970,15 +902,15 @@ OCIO_ADD_TEST(FileFormatCTF, error_checker)
 
     OCIO_REQUIRE_EQUAL(a3.getValues().size(), a3.getNumValues());
     OCIO_CHECK_EQUAL(a3.getValues()[0], 0.0f);
-    OCIO_CHECK_EQUAL(a3.getValues()[1], 30.0f);
-    OCIO_CHECK_EQUAL(a3.getValues()[2], 33.0f);
+    OCIO_CHECK_EQUAL(a3.getValues()[1], 30.0f / 1023.0f);
+    OCIO_CHECK_EQUAL(a3.getValues()[2], 33.0f / 1023.0f);
     OCIO_CHECK_EQUAL(a3.getValues()[3], 0.0f);
     OCIO_CHECK_EQUAL(a3.getValues()[4], 0.0f);
-    OCIO_CHECK_EQUAL(a3.getValues()[5], 133.0f);
+    OCIO_CHECK_EQUAL(a3.getValues()[5], 133.0f / 1023.0f);
 
-    OCIO_CHECK_EQUAL(a3.getValues()[78], 1023.0f);
-    OCIO_CHECK_EQUAL(a3.getValues()[79], 1023.0f);
-    OCIO_CHECK_EQUAL(a3.getValues()[80], 1023.0f);
+    OCIO_CHECK_EQUAL(a3.getValues()[78], 1023.0f / 1023.0f);
+    OCIO_CHECK_EQUAL(a3.getValues()[79], 1023.0f / 1023.0f);
+    OCIO_CHECK_EQUAL(a3.getValues()[80], 1023.0f / 1023.0f);
 }
 
 OCIO_ADD_TEST(FileFormatCTF, binary_file)
@@ -1030,12 +962,8 @@ OCIO_ADD_TEST(FileFormatCTF, error_checker_for_difficult_xml)
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 2);
 
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::MatrixType);
-    auto pMatrix =
-        std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
+    auto pMatrix = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pMatrix);
-    OCIO_CHECK_EQUAL(pMatrix->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pMatrix->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     const OCIO::ArrayDouble & array = pMatrix->getArray();
     OCIO_CHECK_EQUAL(array.getLength(), 4u);
@@ -1066,8 +994,6 @@ OCIO_ADD_TEST(FileFormatCTF, error_checker_for_difficult_xml)
 
     auto pLut = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[1]);
     OCIO_REQUIRE_ASSERT(pLut);
-    OCIO_CHECK_EQUAL(pLut->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pLut->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     const OCIO::Array & array2 = pLut->getArray();
     OCIO_CHECK_EQUAL(array2.getLength(), 17);
@@ -1208,10 +1134,13 @@ OCIO_ADD_TEST(FileFormatCTF, transform_id_empty)
 
 OCIO_ADD_TEST(FileFormatCTF, transform_with_bitdepth_mismatch)
 {
+    // Even though we normalize the bit-depths after reading, any mismatches in
+    // the file are an indication of improper/unreliable formatting and an
+    // exception should be thrown.
     const std::string ctfFile("transform_bitdepth_mismatch.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile),
                           OCIO::Exception,
-                          "Bitdepth missmatch");
+                          "Bit-depth missmatch");
 }
 
 OCIO_ADD_TEST(FileFormatCTF, check_index_map)
@@ -1237,13 +1166,8 @@ OCIO_ADD_TEST(FileFormatCTF, matrix_with_offset)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::MatrixType);
-    auto pMatrix =
-        std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
+    auto pMatrix = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pMatrix);
-
-    OCIO_CHECK_EQUAL(pMatrix->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pMatrix->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     const OCIO::ArrayDouble & array = pMatrix->getArray();
     OCIO_CHECK_EQUAL(array.getLength(), 4);
@@ -1295,9 +1219,7 @@ OCIO_ADD_TEST(FileFormatCTF, lut_3by1d_with_nan_infinity)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::Lut1DType);
-    auto pLut1d =
-        std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[0]);
+    auto pLut1d = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pLut1d);
 
     const OCIO::Array & array = pLut1d->getArray();
@@ -1349,23 +1271,21 @@ OCIO_ADD_TEST(FileFormatCTF, lut1d_half_domain_raw_half_set)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::Lut1DType);
-    auto pLut1d =
-        std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[0]);
+    auto pLut1d = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pLut1d);
 
     OCIO_CHECK_ASSERT(pLut1d->isInputHalfDomain());
     OCIO_CHECK_ASSERT(pLut1d->isOutputRawHalfs());
     
-    OCIO_CHECK_EQUAL(pLut1d->getArray().getValues()[0],
+    OCIO_CHECK_EQUAL(pLut1d->getArray().getValues()[0] * 1023.0f,
                      OCIO::ConvertHalfBitsToFloat(0));
-    OCIO_CHECK_EQUAL(pLut1d->getArray().getValues()[3],
+    OCIO_CHECK_EQUAL(pLut1d->getArray().getValues()[3] * 1023.0f,
                      OCIO::ConvertHalfBitsToFloat(215));
-    OCIO_CHECK_EQUAL(pLut1d->getArray().getValues()[6],
+    OCIO_CHECK_EQUAL(pLut1d->getArray().getValues()[6] * 1023.0f,
                      OCIO::ConvertHalfBitsToFloat(294));
-    OCIO_CHECK_EQUAL(pLut1d->getArray().getValues()[9],
+    OCIO_CHECK_EQUAL(pLut1d->getArray().getValues()[9] * 1023.0f,
                      OCIO::ConvertHalfBitsToFloat(354));
-    OCIO_CHECK_EQUAL(pLut1d->getArray().getValues()[12],
+    OCIO_CHECK_EQUAL(pLut1d->getArray().getValues()[12] * 1023.0f,
                      OCIO::ConvertHalfBitsToFloat(403));
 }
 
@@ -1399,16 +1319,14 @@ OCIO_ADD_TEST(FileFormatCTF, range1)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::RangeType);
     auto pR = std::dynamic_pointer_cast<const OCIO::RangeOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pR);
 
-    OCIO_CHECK_EQUAL(pR->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
-    OCIO_CHECK_EQUAL(pR->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
-
+    OCIO_CHECK_EQUAL(pR->getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OCIO_CHECK_EQUAL(pR->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
     // NB: All exactly representable as flt
-    OCIO_CHECK_EQUAL(pR->getMinInValue(), 16.);
-    OCIO_CHECK_EQUAL(pR->getMaxInValue(), 235.);
+    OCIO_CHECK_EQUAL(pR->getMinInValue(), 16. / 255.);
+    OCIO_CHECK_EQUAL(pR->getMaxInValue(), 235. / 255.);
     OCIO_CHECK_EQUAL(pR->getMinOutValue(), -0.5);
     OCIO_CHECK_EQUAL(pR->getMaxOutValue(), 2.);
 
@@ -1425,11 +1343,10 @@ OCIO_ADD_TEST(FileFormatCTF, range2)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::RangeType);
     auto pR = std::dynamic_pointer_cast<const OCIO::RangeOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pR);
-    OCIO_CHECK_EQUAL(pR->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pR->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
+    OCIO_CHECK_EQUAL(pR->getFileInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(pR->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
     OCIO_CHECK_EQUAL((float)pR->getMinInValue(), 0.1f);
     OCIO_CHECK_EQUAL((float)pR->getMinOutValue(), -0.1f);
@@ -1447,11 +1364,10 @@ OCIO_ADD_TEST(FileFormatCTF, range3)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::RangeType);
     auto pR = std::dynamic_pointer_cast<const OCIO::RangeOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pR);
-    OCIO_CHECK_EQUAL(pR->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
-    OCIO_CHECK_EQUAL(pR->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(pR->getFileInputBitDepth(), OCIO::BIT_DEPTH_F16);
+    OCIO_CHECK_EQUAL(pR->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     OCIO_CHECK_ASSERT(pR->minIsEmpty());
     OCIO_CHECK_ASSERT(pR->maxIsEmpty());
@@ -1471,12 +1387,8 @@ OCIO_ADD_TEST(FileFormatCTF, gamma1)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::GammaType);
     auto pG = std::dynamic_pointer_cast<const OCIO::GammaOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pG);
-
-    OCIO_CHECK_EQUAL(pG->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
-    OCIO_CHECK_EQUAL(pG->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
 
     OCIO_CHECK_EQUAL(pG->getStyle(), OCIO::GammaOpData::BASIC_FWD);
 
@@ -1504,12 +1416,8 @@ OCIO_ADD_TEST(FileFormatCTF, gamma2)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::GammaType);
     auto pG = std::dynamic_pointer_cast<const OCIO::GammaOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pG);
-
-    OCIO_CHECK_EQUAL(pG->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pG->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
 
     OCIO_CHECK_EQUAL(pG->getStyle(), OCIO::GammaOpData::BASIC_REV);
     OCIO::GammaOpData::Params paramsR;
@@ -1539,12 +1447,8 @@ OCIO_ADD_TEST(FileFormatCTF, gamma3)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::GammaType);
     auto pG = std::dynamic_pointer_cast<const OCIO::GammaOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pG);
-
-    OCIO_CHECK_EQUAL(pG->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
-    OCIO_CHECK_EQUAL(pG->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
 
     OCIO_CHECK_EQUAL(pG->getStyle(), OCIO::GammaOpData::MONCURVE_FWD);
     OCIO::GammaOpData::Params params;
@@ -1573,12 +1477,8 @@ OCIO_ADD_TEST(FileFormatCTF, gamma4)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::GammaType);
     auto pG = std::dynamic_pointer_cast<const OCIO::GammaOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pG);
-
-    OCIO_CHECK_EQUAL(pG->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
-    OCIO_CHECK_EQUAL(pG->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     OCIO_CHECK_EQUAL(pG->getStyle(), OCIO::GammaOpData::MONCURVE_REV);
     OCIO::GammaOpData::Params paramsR;
@@ -1624,12 +1524,8 @@ OCIO_ADD_TEST(FileFormatCTF, gamma6)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::GammaType);
     auto pG = std::dynamic_pointer_cast<const OCIO::GammaOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pG);
-
-    OCIO_CHECK_EQUAL(pG->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
-    OCIO_CHECK_EQUAL(pG->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
 
     OCIO_CHECK_EQUAL(pG->getStyle(), OCIO::GammaOpData::MONCURVE_FWD);
     OCIO_CHECK_ASSERT(pG->areAllComponentsEqual());
@@ -1658,12 +1554,9 @@ OCIO_ADD_TEST(FileFormatCTF, gamma_alpha1)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::GammaType);
     auto pG = std::dynamic_pointer_cast<const OCIO::GammaOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pG);
 
-    OCIO_CHECK_EQUAL(pG->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
-    OCIO_CHECK_EQUAL(pG->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
     OCIO_CHECK_EQUAL(pG->getStyle(), OCIO::GammaOpData::BASIC_FWD);
 
     OCIO::GammaOpData::Params params;
@@ -1692,12 +1585,9 @@ OCIO_ADD_TEST(FileFormatCTF, gamma_alpha2)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::GammaType);
     auto pG = std::dynamic_pointer_cast<const OCIO::GammaOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pG);
 
-    OCIO_CHECK_EQUAL(pG->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pG->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
     OCIO_CHECK_EQUAL(pG->getStyle(), OCIO::GammaOpData::BASIC_REV);
 
     OCIO::GammaOpData::Params paramsR;
@@ -1731,12 +1621,9 @@ OCIO_ADD_TEST(FileFormatCTF, gamma_alpha3)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::GammaType);
     auto pG = std::dynamic_pointer_cast<const OCIO::GammaOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pG);
 
-    OCIO_CHECK_EQUAL(pG->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
-    OCIO_CHECK_EQUAL(pG->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
     OCIO_CHECK_EQUAL(pG->getStyle(), OCIO::GammaOpData::MONCURVE_FWD);
 
     OCIO::GammaOpData::Params params;
@@ -1766,12 +1653,9 @@ OCIO_ADD_TEST(FileFormatCTF, gamma_alpha4)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::GammaType);
     auto pG = std::dynamic_pointer_cast<const OCIO::GammaOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pG);
 
-    OCIO_CHECK_EQUAL(pG->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
-    OCIO_CHECK_EQUAL(pG->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
     OCIO_CHECK_EQUAL(pG->getStyle(), OCIO::GammaOpData::MONCURVE_REV);
 
     OCIO::GammaOpData::Params paramsR;
@@ -1810,12 +1694,9 @@ OCIO_ADD_TEST(FileFormatCTF, gamma_alpha5)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::GammaType);
     auto pG = std::dynamic_pointer_cast<const OCIO::GammaOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pG);
 
-    OCIO_CHECK_EQUAL(pG->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
-    OCIO_CHECK_EQUAL(pG->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
     OCIO_CHECK_EQUAL(pG->getStyle(), OCIO::GammaOpData::MONCURVE_FWD);
 
     OCIO::GammaOpData::Params params;
@@ -1908,7 +1789,6 @@ OCIO_ADD_TEST(FileFormatCTF, cdl)
     OCIO_CHECK_EQUAL(cachedFile->m_transform->getOutputDescriptor(),
                      "outputDesc");
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::CDLType);
     auto pCDL = std::dynamic_pointer_cast<const OCIO::CDLOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pCDL);
 
@@ -1921,9 +1801,6 @@ OCIO_ADD_TEST(FileFormatCTF, cdl)
 
     OCIO_REQUIRE_EQUAL(descriptions.size(), 1u);
     OCIO_CHECK_EQUAL(descriptions[0], std::string("ASC CDL operation"));
-
-    OCIO_CHECK_EQUAL(pCDL->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pCDL->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
     OCIO_CHECK_EQUAL(pCDL->getStyle(), OCIO::CDLOpData::CDL_V1_2_FWD);
     std::string styleName(OCIO::CDLOpData::GetStyleName(pCDL->getStyle()));
@@ -1996,9 +1873,7 @@ OCIO_ADD_TEST(FileFormatCTF, cdl_no_sop_node)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::CDLType);
-    auto pCDL =
-        std::dynamic_pointer_cast<const OCIO::CDLOpData>(opList[0]);
+    auto pCDL = std::dynamic_pointer_cast<const OCIO::CDLOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pCDL);
 
     OCIO_CHECK_ASSERT(pCDL->getSlopeParams()
@@ -2019,7 +1894,6 @@ OCIO_ADD_TEST(FileFormatCTF, cdl_no_sat_node)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::CDLType);
     auto pCDL = std::dynamic_pointer_cast<const OCIO::CDLOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pCDL);
 
@@ -2041,7 +1915,6 @@ OCIO_ADD_TEST(FileFormatCTF, cdl_various_in_ctf)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 8);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::CDLType);
     auto pCDL = std::dynamic_pointer_cast<const OCIO::CDLOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pCDL);
     OCIO_CHECK_EQUAL(pCDL->getStyle(), OCIO::CDLOpData::CDL_V1_2_FWD);
@@ -2103,8 +1976,8 @@ OCIO_ADD_TEST(FileFormatCTF, metadata)
     OCIO_REQUIRE_ASSERT(pMatrix);
     OCIO_CHECK_EQUAL(pMatrix->getName(), "identity");
 
-    OCIO_CHECK_EQUAL(pMatrix->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pMatrix->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+    OCIO_CHECK_EQUAL(pMatrix->getFileInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(pMatrix->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
 
     const OCIO::FormatMetadataImpl & info = cachedFile->m_transform->getInfoMetadata();
 
@@ -2160,25 +2033,22 @@ OCIO_ADD_TEST(FileFormatCTF, index_map_1)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 2);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::RangeType);
     auto pR = std::dynamic_pointer_cast<const OCIO::RangeOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pR);
 
     // Check that the indexMap caused a Range to be inserted.
-    OCIO_CHECK_EQUAL(pR->getMinInValue(), 64.5);
-    OCIO_CHECK_EQUAL(pR->getMaxInValue(), 940.);
-    OCIO_CHECK_EQUAL((int)(pR->getMinOutValue() + 0.5), 132);  // 4*1023/31
-    OCIO_CHECK_EQUAL((int)(pR->getMaxOutValue() + 0.5), 1089); // 33*1023/31
-    OCIO_CHECK_EQUAL(pR->getInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
-    OCIO_CHECK_EQUAL(pR->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OCIO_CHECK_EQUAL(pR->getMinInValue() * 1023., 64.5);
+    OCIO_CHECK_EQUAL(pR->getMaxInValue() * 1023., 940.);
+    OCIO_CHECK_EQUAL(pR->getMinOutValue() * 1023.0, 132.0);  // 4*1023/31
+    OCIO_CHECK_EQUAL(pR->getMaxOutValue() * 1023.0, 1089.0); // 33*1023/31
+    OCIO_CHECK_EQUAL(pR->getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OCIO_CHECK_EQUAL(pR->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
 
     // Check the LUT is ok.
     auto pL = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[1]);
     OCIO_REQUIRE_ASSERT(pL);
-    OCIO_CHECK_EQUAL(pL->getType(), OCIO::OpData::Lut1DType);
     OCIO_CHECK_EQUAL(pL->getArray().getLength(), 32u);
-    OCIO_CHECK_EQUAL(pL->getInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
-    OCIO_CHECK_EQUAL(pL->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+    OCIO_CHECK_EQUAL(pL->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
 }
 
 OCIO_ADD_TEST(FileFormatCTF, index_map_2)
@@ -2190,23 +2060,20 @@ OCIO_ADD_TEST(FileFormatCTF, index_map_2)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 2);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::RangeType);
     auto pR = std::dynamic_pointer_cast<const OCIO::RangeOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pR);
     OCIO_CHECK_EQUAL(pR->getMinInValue(), -0.1f);
     OCIO_CHECK_EQUAL(pR->getMaxInValue(), 19.f);
     OCIO_CHECK_EQUAL(pR->getMinOutValue(), 0.f);
     OCIO_CHECK_EQUAL(pR->getMaxOutValue(), 1.f);
-    OCIO_CHECK_EQUAL(pR->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pR->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(pR->getFileInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(pR->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     // Check the LUT is ok.
     auto pL = std::dynamic_pointer_cast<const OCIO::Lut3DOpData>(opList[1]);
     OCIO_REQUIRE_ASSERT(pL);
-    OCIO_CHECK_EQUAL(pL->getType(), OCIO::OpData::Lut3DType);
     OCIO_CHECK_EQUAL(pL->getArray().getLength(), 2u);
-    OCIO_CHECK_EQUAL(pL->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pL->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OCIO_CHECK_EQUAL(pL->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
 }
 
 OCIO_ADD_TEST(FileFormatCTF, index_map_3)
@@ -2238,14 +2105,8 @@ OCIO_ADD_TEST(FileFormatCTF, clf_1)
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 6);
     // First one is a CDL
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::CDLType);
-    auto cdlOpData =
-        std::dynamic_pointer_cast<const OCIO::CDLOpData>(opList[0]);
+    auto cdlOpData = std::dynamic_pointer_cast<const OCIO::CDLOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(cdlOpData);
-    OCIO_CHECK_EQUAL(cdlOpData->getName(), "");
-    OCIO_CHECK_EQUAL(cdlOpData->getID(), "cc01234");
-    OCIO_CHECK_EQUAL(cdlOpData->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
-    OCIO_CHECK_EQUAL(cdlOpData->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
     OCIO::StringVec desc;
     GetElementsValues(cdlOpData->getFormatMetadata().getChildrenElements(),
                       OCIO::TAG_DESCRIPTION, desc);
@@ -2263,26 +2124,19 @@ OCIO_ADD_TEST(FileFormatCTF, clf_1)
 
     // Next one in file is a lut1d, but it has an index map,
     // thus a range was inserted before the LUT.
-    OCIO_CHECK_EQUAL(opList[1]->getType(), OCIO::OpData::RangeType);
-    auto rangeOpData =
-        std::dynamic_pointer_cast<const OCIO::RangeOpData>(opList[1]);
+    auto rangeOpData = std::dynamic_pointer_cast<const OCIO::RangeOpData>(opList[1]);
     OCIO_REQUIRE_ASSERT(rangeOpData);
-    OCIO_CHECK_EQUAL(rangeOpData->getInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
-    OCIO_CHECK_EQUAL(rangeOpData->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
-    OCIO_CHECK_EQUAL(rangeOpData->getMinInValue(), 64.5);
-    OCIO_CHECK_EQUAL(rangeOpData->getMaxInValue(), 940.);
-    OCIO_CHECK_EQUAL((int)(rangeOpData->getMinOutValue() + 0.5), 132);  // 4*1023/31
-    OCIO_CHECK_EQUAL((int)(rangeOpData->getMaxOutValue() + 0.5), 957); // 29*1023/31
+    OCIO_CHECK_EQUAL(rangeOpData->getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OCIO_CHECK_EQUAL(rangeOpData->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OCIO_CHECK_EQUAL(rangeOpData->getMinInValue() * 1023., 64.5);
+    OCIO_CHECK_EQUAL(rangeOpData->getMaxInValue() * 1023., 940.);
+    OCIO_CHECK_EQUAL(rangeOpData->getMinOutValue() * 1023., 132.);  // 4*1023/31
+    OCIO_CHECK_EQUAL(rangeOpData->getMaxOutValue() * 1023., 957.); // 29*1023/31
 
     // Lut1D.
-    OCIO_CHECK_EQUAL(opList[2]->getType(), OCIO::OpData::Lut1DType);
-    auto l1OpData =
-        std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[2]);
+    auto l1OpData = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[2]);
     OCIO_REQUIRE_ASSERT(l1OpData);
-    OCIO_CHECK_EQUAL(l1OpData->getName(), "");
-    OCIO_CHECK_EQUAL(l1OpData->getID(), "");
-    OCIO_CHECK_EQUAL(l1OpData->getInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
-    OCIO_CHECK_EQUAL(l1OpData->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+    OCIO_CHECK_EQUAL(l1OpData->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
     desc.clear();
     GetElementsValues(l1OpData->getFormatMetadata().getChildrenElements(),
                       OCIO::TAG_DESCRIPTION, desc);
@@ -2290,13 +2144,13 @@ OCIO_ADD_TEST(FileFormatCTF, clf_1)
     OCIO_CHECK_EQUAL(l1OpData->getArray().getLength(), 32u);
 
     // Check that the noClamp style Range became a Matrix.
-    OCIO_CHECK_EQUAL(opList[3]->getType(), OCIO::OpData::MatrixType);
-    auto matOpData =
-        std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[3]);
+    auto matOpData = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[3]);
     OCIO_REQUIRE_ASSERT(matOpData);
-    OCIO_CHECK_EQUAL(matOpData->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
-    OCIO_CHECK_EQUAL(matOpData->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OCIO_CHECK_EQUAL(matOpData->getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+    OCIO_CHECK_EQUAL(matOpData->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
 
+    const double outScale = OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_UINT10);
+    const double matScale = OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_UINT12) / outScale;
     const OCIO::ArrayDouble & array = matOpData->getArray();
     OCIO_CHECK_EQUAL(array.getLength(), 4u);
     OCIO_CHECK_EQUAL(array.getNumColorComponents(), 4u);
@@ -2310,48 +2164,44 @@ OCIO_ADD_TEST(FileFormatCTF, clf_1)
     const int offset = (int)(prec * offsetf);
 
     OCIO_REQUIRE_EQUAL(array.getValues().size(), array.getNumValues());
-    OCIO_CHECK_EQUAL((int)(prec * array.getValues()[0]), scale);
+    OCIO_CHECK_EQUAL((int)(prec * array.getValues()[0] / matScale), scale);
     OCIO_CHECK_EQUAL(array.getValues()[1], 0.);
     OCIO_CHECK_EQUAL(array.getValues()[2], 0.);
     OCIO_CHECK_EQUAL(array.getValues()[3], 0.);
 
     OCIO_CHECK_EQUAL(array.getValues()[4], 0.);
-    OCIO_CHECK_EQUAL((int)(prec * array.getValues()[5]), scale);
+    OCIO_CHECK_EQUAL((int)(prec * array.getValues()[5] / matScale), scale);
     OCIO_CHECK_EQUAL(array.getValues()[6], 0.);
     OCIO_CHECK_EQUAL(array.getValues()[7], 0.);
 
     OCIO_CHECK_EQUAL(array.getValues()[8], 0.);
     OCIO_CHECK_EQUAL(array.getValues()[9], 0.);
-    OCIO_CHECK_EQUAL((int)(prec * array.getValues()[10]), scale);
+    OCIO_CHECK_EQUAL((int)(prec * array.getValues()[10] / matScale), scale);
     OCIO_CHECK_EQUAL(array.getValues()[11], 0.);
 
     OCIO_CHECK_EQUAL(array.getValues()[12], 0.);
     OCIO_CHECK_EQUAL(array.getValues()[13], 0.);
     OCIO_CHECK_EQUAL(array.getValues()[14], 0.);
-    OCIO_CHECK_EQUAL((int)(prec * array.getValues()[15]),
+    OCIO_CHECK_EQUAL((int)(prec * array.getValues()[15] / matScale),
                      (int)(prec * 1023. / 4095.));
 
     const OCIO::MatrixOpData::Offsets & offsets = matOpData->getOffsets();
-    OCIO_CHECK_EQUAL((int)(prec * offsets[0]), offset);
-    OCIO_CHECK_EQUAL((int)(prec * offsets[1]), offset);
-    OCIO_CHECK_EQUAL((int)(prec * offsets[2]), offset);
+    OCIO_CHECK_EQUAL((int)(prec * offsets[0] * outScale), offset);
+    OCIO_CHECK_EQUAL((int)(prec * offsets[1] * outScale), offset);
+    OCIO_CHECK_EQUAL((int)(prec * offsets[2] * outScale), offset);
     OCIO_CHECK_EQUAL(offsets[3], 0.f);
 
     // A range with Clamp.
-    OCIO_CHECK_EQUAL(opList[4]->getType(), OCIO::OpData::RangeType);
-    rangeOpData =
-        std::dynamic_pointer_cast<const OCIO::RangeOpData>(opList[4]);
+    rangeOpData = std::dynamic_pointer_cast<const OCIO::RangeOpData>(opList[4]);
     OCIO_REQUIRE_ASSERT(rangeOpData);
-    OCIO_CHECK_EQUAL(rangeOpData->getInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
-    OCIO_CHECK_EQUAL(rangeOpData->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OCIO_CHECK_EQUAL(rangeOpData->getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OCIO_CHECK_EQUAL(rangeOpData->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
 
     // A range without style defaults to clamp.
-    OCIO_CHECK_EQUAL(opList[5]->getType(), OCIO::OpData::RangeType);
-    rangeOpData =
-        std::dynamic_pointer_cast<const OCIO::RangeOpData>(opList[5]);
+    rangeOpData = std::dynamic_pointer_cast<const OCIO::RangeOpData>(opList[5]);
     OCIO_REQUIRE_ASSERT(rangeOpData);
-    OCIO_CHECK_EQUAL(rangeOpData->getInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
-    OCIO_CHECK_EQUAL(rangeOpData->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OCIO_CHECK_EQUAL(rangeOpData->getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OCIO_CHECK_EQUAL(rangeOpData->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
 }
 
 OCIO_ADD_TEST(FileFormatCTF, tabluation_support)
@@ -2365,13 +2215,10 @@ OCIO_ADD_TEST(FileFormatCTF, tabluation_support)
     OCIO_CHECK_EQUAL(cachedFile->m_transform->getID(), "none");
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
 
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::Lut3DType);
-
     auto pL = std::dynamic_pointer_cast<const OCIO::Lut3DOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pL);
 
-    OCIO_CHECK_EQUAL(pL->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
-    OCIO_CHECK_EQUAL(pL->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+    OCIO_CHECK_EQUAL(pL->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
 
     const OCIO::Array & array = pL->getArray();
     OCIO_CHECK_EQUAL(array.getLength(), 33U);
@@ -2385,23 +2232,23 @@ OCIO_ADD_TEST(FileFormatCTF, tabluation_support)
 
     OCIO_CHECK_EQUAL(array.getValues()[3], 0.0f);
     OCIO_CHECK_EQUAL(array.getValues()[4], 0.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[5], 13.0f);
+    OCIO_CHECK_CLOSE(array.getValues()[5] * 4095.0f, 13.0f, 1e-6f);
 
-    OCIO_CHECK_EQUAL(array.getValues()[6], 1.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[7], 0.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[8], 44.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[6] * 4095.0f, 1.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[7] * 4095.0f, 0.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[8] * 4095.0f, 44.0f);
 
     OCIO_CHECK_EQUAL(array.getValues()[9], 0.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[10], 1.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[11], 94.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[10] * 4095.0f, 1.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[11] * 4095.0f, 94.0f);
 
-    OCIO_CHECK_EQUAL(array.getValues()[3 * 33 + 0], 1.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[3 * 33 + 1], 32.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[3 * 33 + 0] * 4095.0f, 1.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[3 * 33 + 1] * 4095.0f, 32.0f);
     OCIO_CHECK_EQUAL(array.getValues()[3 * 33 + 2], 0.0f);
 
-    OCIO_CHECK_EQUAL(array.getValues()[3 * 35936 + 0], 4095.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[3 * 35936 + 1], 4095.0f);
-    OCIO_CHECK_EQUAL(array.getValues()[3 * 35936 + 2], 4095.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[3 * 35936 + 0] * 4095.0f, 4095.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[3 * 35936 + 1] * 4095.0f, 4095.0f);
+    OCIO_CHECK_EQUAL(array.getValues()[3 * 35936 + 2] * 4095.0f, 4095.0f);
 }
 
 OCIO_ADD_TEST(FileFormatCTF, matrix_windows_eol)
@@ -2416,8 +2263,6 @@ OCIO_ADD_TEST(FileFormatCTF, matrix_windows_eol)
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
     OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::MatrixType);
     OCIO_CHECK_EQUAL(opList[0]->getID(), "mat42");
-    OCIO_CHECK_EQUAL(opList[0]->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
-    OCIO_CHECK_EQUAL(opList[0]->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
 }
 
 OCIO_ADD_TEST(FileFormatCTF, lut_3d_file_with_xml_extension)
@@ -2499,9 +2344,6 @@ OCIO_ADD_TEST(Log, load_log10)
     OCIO_REQUIRE_EQUAL(desc.size(), 1);
     OCIO_CHECK_EQUAL(desc[0], "Log10 logarithm operation");
 
-    OCIO_CHECK_EQUAL(log->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(log->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
-
     OCIO_CHECK_ASSERT(log->isLog10());
     OCIO_CHECK_EQUAL(log->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
 }
@@ -2516,9 +2358,6 @@ OCIO_ADD_TEST(Log, load_log2)
     auto op = fileOps[0];
     auto log = std::dynamic_pointer_cast<const OCIO::LogOpData>(op);
     OCIO_REQUIRE_ASSERT(log);
-
-    OCIO_CHECK_EQUAL(log->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(log->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     OCIO_CHECK_ASSERT(log->isLog2());
     OCIO_CHECK_EQUAL(log->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
@@ -2535,9 +2374,6 @@ OCIO_ADD_TEST(Log, load_antilog10)
     auto log = std::dynamic_pointer_cast<const OCIO::LogOpData>(op);
     OCIO_REQUIRE_ASSERT(log);
 
-    OCIO_CHECK_EQUAL(log->getInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
-    OCIO_CHECK_EQUAL(log->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
-
     OCIO_CHECK_ASSERT(log->isLog10());
     OCIO_CHECK_EQUAL(log->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
 }
@@ -2553,9 +2389,6 @@ OCIO_ADD_TEST(Log, load_antilog2)
     auto log = std::dynamic_pointer_cast<const OCIO::LogOpData>(op);
     OCIO_REQUIRE_ASSERT(log);
 
-    OCIO_CHECK_EQUAL(log->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
-    OCIO_CHECK_EQUAL(log->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
-
     OCIO_CHECK_ASSERT(log->isLog2());
     OCIO_CHECK_EQUAL(log->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
 }
@@ -2570,9 +2403,6 @@ OCIO_ADD_TEST(Log, load_log_to_lin)
     auto op = fileOps[0];
     auto log = std::dynamic_pointer_cast<const OCIO::LogOpData>(op);
     OCIO_REQUIRE_ASSERT(log);
-
-    OCIO_CHECK_EQUAL(log->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(log->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     OCIO_CHECK_EQUAL(log->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_CHECK_ASSERT(!log->isLog2());
@@ -2597,9 +2427,6 @@ OCIO_ADD_TEST(Log, load_lin_to_log)
     auto op = fileOps[0];
     auto log = std::dynamic_pointer_cast<const OCIO::LogOpData>(op);
     OCIO_REQUIRE_ASSERT(log);
-
-    OCIO_CHECK_EQUAL(log->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(log->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     OCIO_CHECK_EQUAL(log->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_CHECK_ASSERT(!log->allComponentsEqual());
@@ -2703,8 +2530,6 @@ OCIO_ADD_TEST(Log, load_ocio_params_channels)
     auto op = fileOps[0];
     auto log = std::dynamic_pointer_cast<const OCIO::LogOpData>(op);
     OCIO_REQUIRE_ASSERT(log);
-    OCIO_CHECK_EQUAL(log->getInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
-    OCIO_CHECK_EQUAL(log->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
     OCIO_CHECK_EQUAL(log->getBase(), 9.0);
     OCIO_CHECK_ASSERT(!log->allComponentsEqual());
     const auto & rParams = log->getRedParams();
@@ -2787,8 +2612,6 @@ OCIO_ADD_TEST(Reference, load_alias)
     OCIO_REQUIRE_ASSERT(ref);
     OCIO_CHECK_EQUAL(ref->getName(), "name");
     OCIO_CHECK_EQUAL(ref->getID(), "uuid");
-    OCIO_CHECK_EQUAL(ref->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
-    OCIO_CHECK_EQUAL(ref->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
     OCIO_CHECK_EQUAL(ref->getReferenceStyle(), OCIO::REF_ALIAS);
     OCIO_CHECK_EQUAL(ref->getPath(), "");
     OCIO_CHECK_EQUAL(ref->getAlias(), "alias");
@@ -2826,8 +2649,6 @@ OCIO_ADD_TEST(Reference, load_multiple)
     OCIO_REQUIRE_ASSERT(ref0);
     OCIO_CHECK_EQUAL(ref0->getReferenceStyle(), OCIO::REF_PATH);
     OCIO_CHECK_EQUAL(ref0->getPath(), "matrix_example.clf");
-    OCIO_CHECK_EQUAL(ref0->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(ref0->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
     OCIO_CHECK_EQUAL(ref0->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
     
     OCIO::ConstOpDataRcPtr op1 = fileOps[1];
@@ -2835,8 +2656,6 @@ OCIO_ADD_TEST(Reference, load_multiple)
     OCIO_REQUIRE_ASSERT(ref1);
     OCIO_CHECK_EQUAL(ref1->getReferenceStyle(), OCIO::REF_PATH);
     OCIO_CHECK_EQUAL(ref1->getPath(), "xyz_to_rgb.clf");
-    OCIO_CHECK_EQUAL(ref1->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
-    OCIO_CHECK_EQUAL(ref1->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
     OCIO_CHECK_EQUAL(ref1->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
 
     OCIO::ConstOpDataRcPtr op2 = fileOps[2];
@@ -2848,8 +2667,6 @@ OCIO_ADD_TEST(Reference, load_multiple)
     OCIO_REQUIRE_ASSERT(ref3);
     OCIO_CHECK_EQUAL(ref3->getReferenceStyle(), OCIO::REF_PATH);
     OCIO_CHECK_EQUAL(ref3->getPath(), "cdl_clamp_fwd.clf");
-    OCIO_CHECK_EQUAL(ref3->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(ref3->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
     // Note: This tests that the "inverted" attribute set to anything other than
     // true does not result in an inverted transform.
     OCIO_CHECK_EQUAL(ref3->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
@@ -2889,13 +2706,8 @@ OCIO_ADD_TEST(FileFormatCTF, exposure_contrast_video)
     OCIO_REQUIRE_EQUAL(opList.size(), 2);
 
     OCIO_REQUIRE_ASSERT(opList[0]);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::ExposureContrastType);
-
     auto pEC = std::dynamic_pointer_cast<const OCIO::ExposureContrastOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pEC);
-
-    OCIO_CHECK_EQUAL(pEC->getInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
-    OCIO_CHECK_EQUAL(pEC->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
     OCIO_CHECK_EQUAL(pEC->getStyle(), OCIO::ExposureContrastOpData::STYLE_VIDEO);
 
@@ -2909,8 +2721,6 @@ OCIO_ADD_TEST(FileFormatCTF, exposure_contrast_video)
     OCIO_CHECK_ASSERT(!pEC->getGammaProperty()->isDynamic());
 
     OCIO_REQUIRE_ASSERT(opList[1]);
-    OCIO_CHECK_EQUAL(opList[1]->getType(), OCIO::OpData::ExposureContrastType);
-
     auto pECRev = std::dynamic_pointer_cast<const OCIO::ExposureContrastOpData>(opList[1]);
     OCIO_REQUIRE_ASSERT(pECRev);
     OCIO_CHECK_ASSERT(!pECRev->isDynamic());
@@ -2929,13 +2739,8 @@ OCIO_ADD_TEST(FileFormatCTF, exposure_contrast_log)
     OCIO_REQUIRE_EQUAL(opList.size(), 2);
 
     OCIO_REQUIRE_ASSERT(opList[0]);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::ExposureContrastType);
-
     auto pEC = std::dynamic_pointer_cast<const OCIO::ExposureContrastOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pEC);
-
-    OCIO_CHECK_EQUAL(pEC->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pEC->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     OCIO_CHECK_EQUAL(pEC->getStyle(), OCIO::ExposureContrastOpData::STYLE_LOGARITHMIC);
 
@@ -2950,8 +2755,6 @@ OCIO_ADD_TEST(FileFormatCTF, exposure_contrast_log)
     OCIO_CHECK_ASSERT(pEC->getGammaProperty()->isDynamic());
 
     OCIO_REQUIRE_ASSERT(opList[1]);
-    OCIO_CHECK_EQUAL(opList[1]->getType(), OCIO::OpData::ExposureContrastType);
-
     auto pECRev = std::dynamic_pointer_cast<const OCIO::ExposureContrastOpData>(opList[1]);
     OCIO_REQUIRE_ASSERT(pECRev);
 
@@ -2973,13 +2776,8 @@ OCIO_ADD_TEST(FileFormatCTF, exposure_contrast_linear)
     OCIO_REQUIRE_EQUAL(opList.size(), 2);
 
     OCIO_REQUIRE_ASSERT(opList[0]);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::ExposureContrastType);
-
     auto pEC = std::dynamic_pointer_cast<const OCIO::ExposureContrastOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pEC);
-
-    OCIO_CHECK_EQUAL(pEC->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
-    OCIO_CHECK_EQUAL(pEC->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     OCIO_CHECK_EQUAL(pEC->getStyle(), OCIO::ExposureContrastOpData::STYLE_LINEAR);
 
@@ -2994,8 +2792,6 @@ OCIO_ADD_TEST(FileFormatCTF, exposure_contrast_linear)
     OCIO_CHECK_ASSERT(pEC->getGammaProperty()->isDynamic());
 
     OCIO_REQUIRE_ASSERT(opList[1]);
-    OCIO_CHECK_EQUAL(opList[1]->getType(), OCIO::OpData::ExposureContrastType);
-
     auto pECRev = std::dynamic_pointer_cast<const OCIO::ExposureContrastOpData>(opList[1]);
     OCIO_REQUIRE_ASSERT(pECRev);
 
@@ -3017,13 +2813,8 @@ OCIO_ADD_TEST(FileFormatCTF, exposure_contrast_no_gamma)
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
 
     OCIO_REQUIRE_ASSERT(opList[0]);
-    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::ExposureContrastType);
-
     auto pEC = std::dynamic_pointer_cast<const OCIO::ExposureContrastOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pEC);
-
-    OCIO_CHECK_EQUAL(pEC->getInputBitDepth(), OCIO::BIT_DEPTH_F16);
-    OCIO_CHECK_EQUAL(pEC->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
     OCIO_CHECK_EQUAL(pEC->getStyle(), OCIO::ExposureContrastOpData::STYLE_VIDEO);
 
@@ -3110,9 +2901,6 @@ OCIO_ADD_TEST(FixedFunction, load_ff_aces_redmod)
     auto func = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(op);
     OCIO_REQUIRE_ASSERT(func);
 
-    OCIO_CHECK_EQUAL(func->getInputBitDepth(), OCIO::BIT_DEPTH_UINT16);
-    OCIO_CHECK_EQUAL(func->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
-
     OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::ACES_RED_MOD_03_INV);
 }
 
@@ -3127,9 +2915,6 @@ OCIO_ADD_TEST(FixedFunction, load_ff_aces_surround)
     auto op = fileOps[0];
     auto func = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(op);
     OCIO_REQUIRE_ASSERT(func);
-
-    OCIO_CHECK_EQUAL(func->getInputBitDepth(), OCIO::BIT_DEPTH_UINT16);
-    OCIO_CHECK_EQUAL(func->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::REC2100_SURROUND);
 
@@ -3186,9 +2971,6 @@ OCIO_ADD_TEST(FixedFunction, load_ff_surround)
     auto op = fileOps[0];
     auto func = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(op);
     OCIO_REQUIRE_ASSERT(func);
-
-    OCIO_CHECK_EQUAL(func->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(func->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::REC2100_SURROUND);
 
@@ -3596,8 +3378,7 @@ OCIO_ADD_TEST(CTFTransform, save_lut1d_halfdomain)
     OCIO::ConstOpDataRcPtr op = fileOps[0];
     OCIO::ConstLut1DOpDataRcPtr lut = OCIO::DynamicPtrCast<const OCIO::Lut1DOpData>(op);
     OCIO_REQUIRE_ASSERT(lut);
-    OCIO_CHECK_EQUAL(lut->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(lut->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+    OCIO_CHECK_EQUAL(lut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
     OCIO_CHECK_ASSERT(lut->isInputHalfDomain());
 
     OCIO_REQUIRE_EQUAL(lut->getArray().getLength(), size);
@@ -3606,7 +3387,7 @@ OCIO_ADD_TEST(CTFTransform, save_lut1d_halfdomain)
     {
         half expected;
         expected.setBits((unsigned short)i);
-        const float loadedVal = lut->getArray()[3 * i] / 1023.0f;
+        const float loadedVal = lut->getArray()[3 * i];
         const half loaded(loadedVal);
         if (expected.isNan())
         {
@@ -3617,8 +3398,8 @@ OCIO_ADD_TEST(CTFTransform, save_lut1d_halfdomain)
         else
         {
             OCIO_CHECK_EQUAL(loaded, expected);
-            OCIO_CHECK_EQUAL(loadedVal, lut->getArray()[3 * i + 1] / 1023.0f);
-            OCIO_CHECK_EQUAL(loadedVal, lut->getArray()[3 * i + 2] / 1023.0f);
+            OCIO_CHECK_EQUAL(loadedVal, lut->getArray()[3 * i + 1]);
+            OCIO_CHECK_EQUAL(loadedVal, lut->getArray()[3 * i + 2]);
         }
     }
 }
@@ -3646,7 +3427,7 @@ OCIO_ADD_TEST(CTFTransform, save_lut1d_f16_raw)
     OCIO::ConstOpDataRcPtr op = fileOps[0];
     OCIO::ConstLut1DOpDataRcPtr lut = OCIO::DynamicPtrCast<const OCIO::Lut1DOpData>(op);
     OCIO_REQUIRE_ASSERT(lut);
-    OCIO_CHECK_EQUAL(lut->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
+    OCIO_CHECK_EQUAL(lut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
     OCIO_REQUIRE_EQUAL(lut->getArray().getLength(), 2);
 
@@ -3688,8 +3469,7 @@ OCIO_ADD_TEST(CTFTransform, save_lut1d_f32)
     OCIO::ConstOpDataRcPtr op = fileOps[0];
     OCIO::ConstLut1DOpDataRcPtr lut = OCIO::DynamicPtrCast<const OCIO::Lut1DOpData>(op);
     OCIO_REQUIRE_ASSERT(lut);
-    OCIO_CHECK_EQUAL(lut->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(lut->getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(lut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     OCIO_REQUIRE_EQUAL(lut->getArray().getLength(), 8);
 
@@ -4182,19 +3962,19 @@ OCIO_ADD_TEST(CTFTransform, cdl_clf)
 
     group->appendTransform(cdl);
 
-    auto & info = group->getFormatMetadata().addChildElement(OCIO::METADATA_INFO);
+    auto & info = group->getFormatMetadata().addChildElement(OCIO::METADATA_INFO, "");
     info.addChildElement("Release", "2019");
-    auto & sub = info.addChildElement("Directors");
-    auto & subSub0 = sub.addChildElement("Director");
+    auto & sub = info.addChildElement("Directors", "");
+    auto & subSub0 = sub.addChildElement("Director", "");
     subSub0.addAttribute("FirstName", "David");
     subSub0.addAttribute("LastName", "Cronenberg");
-    auto & subSub1 = sub.addChildElement("Director");
+    auto & subSub1 = sub.addChildElement("Director", "");
     subSub1.addAttribute("FirstName", "David");
     subSub1.addAttribute("LastName", "Lynch");
-    auto & subSub2 = sub.addChildElement("Director");
+    auto & subSub2 = sub.addChildElement("Director", "");
     subSub2.addAttribute("FirstName", "David");
     subSub2.addAttribute("LastName", "Fincher");
-    auto & subSub3 = sub.addChildElement("Director");
+    auto & subSub3 = sub.addChildElement("Director", "");
     subSub3.addAttribute("FirstName", "David");
     subSub3.addAttribute("LastName", "Lean");
 

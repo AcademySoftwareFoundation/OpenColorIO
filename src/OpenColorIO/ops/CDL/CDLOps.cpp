@@ -34,10 +34,7 @@ public:
 
     CDLOp(CDLOpDataRcPtr & cdl, TransformDirection direction);
 
-    CDLOp(BitDepth inBitDepth,
-          BitDepth outBitDepth,
-          const FormatMetadataImpl & info,
-          CDLOpData::Style style,
+    CDLOp(CDLOpData::Style style,
           const double * slope3,
           const double * offset3,
           const double * power3,
@@ -86,10 +83,7 @@ CDLOp::CDLOp(CDLOpDataRcPtr & cdl, TransformDirection direction)
     data() = cdl;
 }
 
-CDLOp::CDLOp(BitDepth inBitDepth,
-             BitDepth outBitDepth,
-             const FormatMetadataImpl & info,
-             CDLOpData::Style style,
+CDLOp::CDLOp(CDLOpData::Style style,
              const double * slope3,
              const double * offset3,
              const double * power3,
@@ -110,9 +104,7 @@ CDLOp::CDLOp(BitDepth inBitDepth,
     }
 
     data().reset(
-        new CDLOpData(inBitDepth, outBitDepth,
-                      info,
-                      style, 
+        new CDLOpData(style, 
                       CDLOpData::ChannelParams(slope3[0], slope3[1], slope3[2]), 
                       CDLOpData::ChannelParams(offset3[0], offset3[1], offset3[2]), 
                       CDLOpData::ChannelParams(power3[0], power3[1], power3[2]), 
@@ -211,12 +203,6 @@ void CDLOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
     {
         throw Exception(
             "CDLOp direction should have been set to forward by finalize");
-    }
-
-    if(getInputBitDepth()!=BIT_DEPTH_F32 || getOutputBitDepth()!=BIT_DEPTH_F32)
-    {
-        throw Exception(
-            "Only 32F bit depth is supported for the GPU shader");
     }
 
     RenderParams params;
@@ -340,7 +326,6 @@ void CDLOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
 
 
 void CreateCDLOp(OpRcPtrVec & ops,
-                 const FormatMetadataImpl & info,
                  CDLOpData::Style style,
                  const double * slope3,
                  const double * offset3,
@@ -349,9 +334,8 @@ void CreateCDLOp(OpRcPtrVec & ops,
                  TransformDirection direction)
 {
 
-    CDLOpDataRcPtr cdlData(
-        new CDLOpData(BIT_DEPTH_F32, BIT_DEPTH_F32,
-                      info, style,
+    CDLOpDataRcPtr cdlData( 
+        new CDLOpData(style,
                       CDLOpData::ChannelParams(slope3[0], slope3[1], slope3[2]),
                       CDLOpData::ChannelParams(offset3[0], offset3[1], offset3[2]),
                       CDLOpData::ChannelParams(power3[0], power3[1], power3[2]),
@@ -448,21 +432,18 @@ void BuildCDLOps(OpRcPtrVec & ops,
             // 1) Scale + Offset
             CreateScaleOffsetOp(ops, slope4, offset4, TRANSFORM_DIR_INVERSE);
         }
-
-        // TODO: how metadata should be handled?
     }
     else
     {
         // Starting with the version 2, OCIO is now using a CDL Op
         // complying with the Common LUT Format (i.e. CLF) specification.
         CDLOpDataRcPtr cdlData = std::make_shared<CDLOpData>(
-            BIT_DEPTH_F32, BIT_DEPTH_F32,
-            FormatMetadataImpl(cdlTransform.getFormatMetadata()),
             CDLOpData::CDL_V1_2_FWD,
             CDLOpData::ChannelParams(slope4[0], slope4[1], slope4[2]),
             CDLOpData::ChannelParams(offset4[0], offset4[1], offset4[2]),
             CDLOpData::ChannelParams(power4[0], power4[1], power4[2]),
             sat);
+        cdlData->getFormatMetadata() = cdlTransform.getFormatMetadata();
 
         CreateCDLOp(ops, 
                     cdlData,
@@ -494,9 +475,7 @@ void ApplyCDL(float * in, const float * ref, unsigned numPixels,
               OCIO::CDLOpData::Style style,
               float errorThreshold)
 {
-    OCIO::CDLOp cdlOp(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                      OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
-                      style, slope, offset, power, saturation, 
+    OCIO::CDLOp cdlOp(style, slope, offset, power, saturation, 
                       OCIO::TRANSFORM_DIR_FORWARD);
 
     OCIO_CHECK_NO_THROW(cdlOp.finalize(OCIO::FINALIZATION_EXACT));
@@ -541,7 +520,6 @@ OCIO_ADD_TEST(CDLOps, computed_identifier)
     OCIO::OpRcPtrVec ops;
 
     OCIO::CreateCDLOp(ops, 
-                      OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                       OCIO::CDLOpData::CDL_V1_2_FWD, 
                       CDL_DATA_1::slope, CDL_DATA_1::offset,
                       CDL_DATA_1::power, CDL_DATA_1::saturation, 
@@ -549,7 +527,6 @@ OCIO_ADD_TEST(CDLOps, computed_identifier)
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
 
     OCIO::CreateCDLOp(ops, 
-                      OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                       OCIO::CDLOpData::CDL_V1_2_FWD, 
                       CDL_DATA_1::slope, CDL_DATA_1::offset,
                       CDL_DATA_1::power, CDL_DATA_1::saturation, 
@@ -561,13 +538,24 @@ OCIO_ADD_TEST(CDLOps, computed_identifier)
 
     OCIO_CHECK_EQUAL( ops[0]->getCacheID(), ops[1]->getCacheID() );
 
-    OCIO::FormatMetadataImpl metadata(OCIO::METADATA_ROOT);
-	metadata.addAttribute(OCIO::METADATA_ID, "1");
-    OCIO::CreateCDLOp(ops, 
-                      metadata,
-                      OCIO::CDLOpData::CDL_V1_2_FWD, 
-                      CDL_DATA_1::slope, CDL_DATA_1::offset,
-                      CDL_DATA_1::power, CDL_DATA_1::saturation, 
+    const OCIO::CDLOpData::ChannelParams slope(CDL_DATA_1::slope[0],
+                                               CDL_DATA_1::slope[1],
+                                               CDL_DATA_1::slope[2]);
+    const OCIO::CDLOpData::ChannelParams offset(CDL_DATA_1::offset[0],
+                                                CDL_DATA_1::offset[1],
+                                                CDL_DATA_1::offset[2]);
+    const OCIO::CDLOpData::ChannelParams power(CDL_DATA_1::power[0],
+                                               CDL_DATA_1::power[1],
+                                               CDL_DATA_1::power[2]);
+
+    auto cdlData
+        = std::make_shared<OCIO::CDLOpData>(OCIO::CDLOpData::CDL_V1_2_FWD,
+                                            slope, offset,
+                                            power, CDL_DATA_1::saturation);
+    cdlData->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "1");
+    OCIO_CHECK_EQUAL(cdlData->getID(), "1");
+
+    OCIO::CreateCDLOp(ops, cdlData,
                       OCIO::TRANSFORM_DIR_FORWARD);
 
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
@@ -578,7 +566,6 @@ OCIO_ADD_TEST(CDLOps, computed_identifier)
     OCIO_CHECK_ASSERT( ops[1]->getCacheID() != ops[2]->getCacheID() );
 
     OCIO::CreateCDLOp(ops, 
-                      metadata,
                       OCIO::CDLOpData::CDL_V1_2_FWD, 
                       CDL_DATA_1::slope, CDL_DATA_1::offset,
                       CDL_DATA_1::power, CDL_DATA_1::saturation + 0.002f, 
@@ -593,7 +580,6 @@ OCIO_ADD_TEST(CDLOps, computed_identifier)
     OCIO_CHECK_ASSERT( ops[2]->getCacheID() != ops[3]->getCacheID() );
 
     OCIO::CreateCDLOp(ops, 
-                      metadata,
                       OCIO::CDLOpData::CDL_V1_2_FWD, 
                       CDL_DATA_1::slope, CDL_DATA_1::offset,
                       CDL_DATA_1::power, CDL_DATA_1::saturation + 0.002f, 
@@ -609,7 +595,6 @@ OCIO_ADD_TEST(CDLOps, computed_identifier)
     OCIO_CHECK_ASSERT( ops[3]->getCacheID() == ops[4]->getCacheID() );
 
     OCIO::CreateCDLOp(ops, 
-                      metadata,
                       OCIO::CDLOpData::CDL_NO_CLAMP_FWD, 
                       CDL_DATA_1::slope, CDL_DATA_1::offset,
                       CDL_DATA_1::power, CDL_DATA_1::saturation + 0.002f, 
@@ -628,7 +613,6 @@ OCIO_ADD_TEST(CDLOps, is_inverse)
     OCIO::OpRcPtrVec ops;
 
     OCIO::CreateCDLOp(ops, 
-                      OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                       OCIO::CDLOpData::CDL_V1_2_FWD, 
                       CDL_DATA_1::slope, CDL_DATA_1::offset,
                       CDL_DATA_1::power, CDL_DATA_1::saturation, 
@@ -636,7 +620,6 @@ OCIO_ADD_TEST(CDLOps, is_inverse)
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
 
     OCIO::CreateCDLOp(ops, 
-                      OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                       OCIO::CDLOpData::CDL_V1_2_FWD, 
                       CDL_DATA_1::slope, CDL_DATA_1::offset,
                       CDL_DATA_1::power, CDL_DATA_1::saturation, 
@@ -651,7 +634,6 @@ OCIO_ADD_TEST(CDLOps, is_inverse)
     OCIO_CHECK_ASSERT(ops[1]->isInverse(op0));
 
     OCIO::CreateCDLOp(ops, 
-                      OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                       OCIO::CDLOpData::CDL_V1_2_FWD, 
                       CDL_DATA_1::slope, CDL_DATA_1::offset, 
                       CDL_DATA_1::power, 1.30, 
@@ -666,7 +648,6 @@ OCIO_ADD_TEST(CDLOps, is_inverse)
     OCIO_CHECK_ASSERT(!ops[2]->isInverse(op1));
 
     OCIO::CreateCDLOp(ops, 
-                      OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                       OCIO::CDLOpData::CDL_V1_2_REV, 
                       CDL_DATA_1::slope, CDL_DATA_1::offset, 
                       CDL_DATA_1::power, 1.30, 
@@ -678,7 +659,6 @@ OCIO_ADD_TEST(CDLOps, is_inverse)
     OCIO_CHECK_ASSERT(ops[2]->isInverse(op3));
 
     OCIO::CreateCDLOp(ops,
-                      OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                       OCIO::CDLOpData::CDL_V1_2_REV, 
                       CDL_DATA_1::slope, CDL_DATA_1::offset, 
                       CDL_DATA_1::power, 1.30, 
@@ -691,7 +671,6 @@ OCIO_ADD_TEST(CDLOps, is_inverse)
     OCIO_CHECK_ASSERT(ops[3]->isInverse(op4));
 
     OCIO::CreateCDLOp(ops,
-                      OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                       OCIO::CDLOpData::CDL_NO_CLAMP_FWD, 
                       CDL_DATA_1::slope, CDL_DATA_1::offset, 
                       CDL_DATA_1::power, 1.30, 
@@ -705,7 +684,6 @@ OCIO_ADD_TEST(CDLOps, is_inverse)
     OCIO_CHECK_ASSERT(!ops[4]->isInverse(op5));
 
     OCIO::CreateCDLOp(ops,
-                      OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
                       OCIO::CDLOpData::CDL_NO_CLAMP_FWD, 
                       CDL_DATA_1::slope, CDL_DATA_1::offset, 
                       CDL_DATA_1::power, 1.30, 
@@ -1068,18 +1046,22 @@ OCIO_ADD_TEST(CDLOps, apply_noclamp_fwd_3)
 
 OCIO_ADD_TEST(CDLOps, create_transform)
 {
-    OCIO::FormatMetadataImpl metadataSource(OCIO::METADATA_ROOT);
-    metadataSource.addAttribute(OCIO::METADATA_ID, "Test look: 01-A.");
+    const OCIO::CDLOpData::ChannelParams sp(CDL_DATA_1::slope[0],
+                                            CDL_DATA_1::slope[1],
+                                            CDL_DATA_1::slope[2]);
+    const OCIO::CDLOpData::ChannelParams so(CDL_DATA_1::offset[0],
+                                            CDL_DATA_1::offset[1],
+                                            CDL_DATA_1::offset[2]);
+    const OCIO::CDLOpData::ChannelParams sw(CDL_DATA_1::power[0],
+                                            CDL_DATA_1::power[1],
+                                            CDL_DATA_1::power[2]);
 
-    OCIO::CDLOp * cdlOp = new OCIO::CDLOp(OCIO::BIT_DEPTH_UINT32,
-                                          OCIO::BIT_DEPTH_UINT10,
-                                          metadataSource,
-                                          OCIO::CDLOpData::CDL_V1_2_FWD,
-                                          CDL_DATA_1::slope,
-                                          CDL_DATA_1::offset,
-                                          CDL_DATA_1::power,
-                                          CDL_DATA_1::saturation,
-                                          OCIO::TRANSFORM_DIR_FORWARD);
+    auto cdlData = std::make_shared<OCIO::CDLOpData>(OCIO::CDLOpData::CDL_V1_2_FWD,
+                                                     sp, so, sw,
+                                                     CDL_DATA_1::saturation);
+    auto & metadataSrc = cdlData->getFormatMetadata();
+    metadataSrc.addAttribute(OCIO::METADATA_ID, "Test look: 01-A.");
+    auto cdlOp = std::make_shared<OCIO::CDLOp>(cdlData, OCIO::TRANSFORM_DIR_FORWARD);
 
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
     OCIO::ConstOpRcPtr op(cdlOp);
@@ -1094,7 +1076,6 @@ OCIO_ADD_TEST(CDLOps, create_transform)
     OCIO_REQUIRE_EQUAL(metadata.getNumAttributes(), 1);
     OCIO_CHECK_EQUAL(std::string(metadata.getAttributeName(0)), OCIO::METADATA_ID);
     OCIO_CHECK_EQUAL(std::string(metadata.getAttributeValue(0)), "Test look: 01-A.");
-
     OCIO_CHECK_EQUAL(cdlTransform->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
 
     double slope[3];

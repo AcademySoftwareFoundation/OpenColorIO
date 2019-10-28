@@ -23,7 +23,7 @@ OCIO_NAMESPACE_ENTER
         {
         public:
             LocalCachedFile () 
-                : metadata(METADATA_ROOT)
+                : metadata()
             {
             }
             ~LocalCachedFile() = default;

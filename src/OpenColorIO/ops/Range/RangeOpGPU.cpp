@@ -22,7 +22,7 @@ void GetRangeGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
     ss.newLine() << "// Add a Range processing";
     ss.newLine() << "";
 
-    if(range->scales(true))
+    if(range->scales())
     {
         const double scale[3]
             = { range->getScale(),
@@ -40,22 +40,14 @@ void GetRangeGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
                      << " + "
                      << ss.vec3fConst(offset[0], offset[1], offset[2])
                      << ";";
-    
-        const double alphaScale = range->getAlphaScale();
-        if (alphaScale != 1.0)
-        {
-            ss.newLine() << shaderDesc->getPixelName() << ".w = "
-                         << shaderDesc->getPixelName() << ".w * " << (float)alphaScale
-                         << ";";
-        }
     }
 
-    if(range->minClips())
+    if(!range->minIsEmpty())
     {
         const double lowerBound[3] 
-            = { range->getLowBound(), 
-                range->getLowBound(), 
-                range->getLowBound() };
+            = { range->getMinOutValue(), 
+                range->getMinOutValue(), 
+                range->getMinOutValue() };
 
         ss.newLine() << shaderDesc->getPixelName() << ".rgb = "
                      << "max(" << ss.vec3fConst(lowerBound[0],
@@ -65,12 +57,12 @@ void GetRangeGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
                      << ".rgb);";
     }
 
-    if (range->maxClips())
+    if (!range->maxIsEmpty())
     {
         const double upperBound[3]
-            = { range->getHighBound(),
-                range->getHighBound(),
-                range->getHighBound() };
+            = { range->getMaxOutValue(),
+                range->getMaxOutValue(),
+                range->getMaxOutValue() };
 
         ss.newLine() << shaderDesc->getPixelName() << ".rgb = "
             << "min(" << ss.vec3fConst(upperBound[0],

@@ -112,12 +112,6 @@ OCIO_NAMESPACE_ENTER
 
         void LogOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
         {
-            if (getInputBitDepth()!=BIT_DEPTH_F32 
-                || getOutputBitDepth()!=BIT_DEPTH_F32)
-            {
-                throw Exception("Only 32F bit depth is supported for the GPU shader");
-            }
-
             ConstLogOpDataRcPtr data = logData();
             GetLogGPUShaderProgram(shaderDesc, data);
         }
@@ -242,6 +236,7 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
+#include "UnitTestUtils.h"
 
 OCIO_ADD_TEST(LogOps, lin_to_log)
 {
@@ -264,9 +259,9 @@ OCIO_ADD_TEST(LogOps, lin_to_log)
                               1.0f };
     
     OCIO::OpRcPtrVec ops;
-    OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
-                                    linSlope, linOffset,
-                                    OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(OCIO::CreateLogOp(ops, base, logSlope, logOffset,
+                                          linSlope, linOffset,
+                                          OCIO::TRANSFORM_DIR_FORWARD));
 
     // One operator has been created.
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
@@ -276,8 +271,7 @@ OCIO_ADD_TEST(LogOps, lin_to_log)
     std::string opCache = ops[0]->getCacheID();
     OCIO_CHECK_EQUAL(opCache.size(), 0);
 
-    OCIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
 
     // Validate properties.
     opCache = ops[0]->getCacheID();
@@ -318,12 +312,11 @@ OCIO_ADD_TEST(LogOps, log_to_lin)
                               10.0f, 100.0f, 1000.0f, 1.0f, };
     
     OCIO::OpRcPtrVec ops;
-    OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
-                                    linSlope, linOffset,
-                                    OCIO::TRANSFORM_DIR_INVERSE));
+    OCIO_CHECK_NO_THROW(OCIO::CreateLogOp(ops, base, logSlope, logOffset,
+                                          linSlope, linOffset,
+                                          OCIO::TRANSFORM_DIR_INVERSE));
     
-    OCIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
     
     // Apply the result.
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
@@ -347,22 +340,22 @@ OCIO_ADD_TEST(LogOps, inverse)
     const double logSlope2[3] = { 0.5, 1.0, 1.5 };
 
     OCIO::OpRcPtrVec ops;
-    OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
-                                    OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(OCIO::CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
+                                          OCIO::TRANSFORM_DIR_FORWARD));
     
-    OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
-                                    OCIO::TRANSFORM_DIR_INVERSE));
+    OCIO_CHECK_NO_THROW(OCIO::CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
+                                          OCIO::TRANSFORM_DIR_INVERSE));
     
     base += 1.0;
-    OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
-                                    OCIO::TRANSFORM_DIR_INVERSE));
-    OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
-                                    OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(OCIO::CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
+                                          OCIO::TRANSFORM_DIR_INVERSE));
+    OCIO_CHECK_NO_THROW(OCIO::CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset,
+                                          OCIO::TRANSFORM_DIR_FORWARD));
 
-    OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope2, logOffset, linSlope, linOffset,
-                                    OCIO::TRANSFORM_DIR_INVERSE));
-    OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope2, logOffset, linSlope, linOffset,
-                                    OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(OCIO::CreateLogOp(ops, base, logSlope2, logOffset, linSlope, linOffset,
+                                          OCIO::TRANSFORM_DIR_INVERSE));
+    OCIO_CHECK_NO_THROW(OCIO::CreateLogOp(ops, base, logSlope2, logOffset, linSlope, linOffset,
+                                          OCIO::TRANSFORM_DIR_FORWARD));
 
     OCIO_REQUIRE_EQUAL(ops.size(), 6);
     OCIO::ConstOpRcPtr op0 = ops[0];
@@ -442,17 +435,17 @@ OCIO_ADD_TEST(LogOps, cache_id)
     double logOffset[3] = { 1.0, 1.0, 1.0 };
 
     OCIO::OpRcPtrVec ops;
-    OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
-                                    linSlope, linOffset,
-                                    OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(OCIO::CreateLogOp(ops, base, logSlope, logOffset,
+                                          linSlope, linOffset,
+                                          OCIO::TRANSFORM_DIR_FORWARD));
     logOffset[0] += 1.0f;
-    OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
-                                    linSlope, linOffset,
-                                    OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(OCIO::CreateLogOp(ops, base, logSlope, logOffset,
+                                          linSlope, linOffset,
+                                          OCIO::TRANSFORM_DIR_FORWARD));
     logOffset[0] -= 1.0f;
-    OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
-                                    linSlope, linOffset,
-                                    OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(OCIO::CreateLogOp(ops, base, logSlope, logOffset,
+                                          linSlope, linOffset,
+                                          OCIO::TRANSFORM_DIR_FORWARD));
 
     // 3 operators have been created
     OCIO_CHECK_EQUAL(ops.size(), 3);
@@ -460,8 +453,7 @@ OCIO_ADD_TEST(LogOps, cache_id)
     OCIO_REQUIRE_ASSERT((bool)ops[1]);
     OCIO_REQUIRE_ASSERT((bool)ops[2]);
 
-    OCIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
 
     const std::string opCacheID0 = ops[0]->getCacheID();
     const std::string opCacheID1 = ops[1]->getCacheID();
@@ -480,9 +472,9 @@ OCIO_ADD_TEST(LogOps, throw_direction)
 
     OCIO::OpRcPtrVec ops;
     OCIO_CHECK_THROW_WHAT(
-        CreateLogOp(ops, base, logSlope, logOffset,
-                    linSlope, linOffset,
-                    OCIO::TRANSFORM_DIR_UNKNOWN),
+        OCIO::CreateLogOp(ops, base, logSlope, logOffset,
+                          linSlope, linOffset,
+                          OCIO::TRANSFORM_DIR_UNKNOWN),
         OCIO::Exception, "unspecified transform direction");
 }
 

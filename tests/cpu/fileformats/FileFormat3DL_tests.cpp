@@ -156,22 +156,21 @@ OCIO_ADD_TEST(FileFormat3DL, load)
     OCIO_REQUIRE_ASSERT(!lutFile->lut1D);
     OCIO_REQUIRE_ASSERT(lutFile->lut3D);
 
-    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT10, lutFile->lut3D->getInputBitDepth());
-    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT12, lutFile->lut3D->getOutputBitDepth());
     OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT12, lutFile->lut3D->getFileOutputBitDepth());
     OCIO_CHECK_EQUAL(17, lutFile->lut3D->getGridSize());
 
+    const float scale = (float)OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_UINT12);
     // File and lut are using the same order.
     // 41: 54 323 597
     const auto & lutArray = lutFile->lut3D->getArray();
-    OCIO_CHECK_EQUAL( 54.f, lutArray[41 * 3]);
-    OCIO_CHECK_EQUAL(323.f, lutArray[41 * 3 + 1]);
-    OCIO_CHECK_EQUAL(597.f, lutArray[41 * 3 + 2]);
+    OCIO_CHECK_EQUAL( 54.f, scale * lutArray[41 * 3]);
+    OCIO_CHECK_EQUAL(323.f, scale * lutArray[41 * 3 + 1]);
+    OCIO_CHECK_EQUAL(597.f, scale * lutArray[41 * 3 + 2]);
 
     // 4591: 4025 3426 0
-    OCIO_CHECK_EQUAL(4025.f, lutArray[4591 * 3]);
-    OCIO_CHECK_EQUAL(3426.f, lutArray[4591 * 3 + 1]);
-    OCIO_CHECK_EQUAL(   0.f, lutArray[4591 * 3 + 2]);
+    OCIO_CHECK_EQUAL(4025.f, scale * lutArray[4591 * 3]);
+    OCIO_CHECK_EQUAL(3426.f, scale * lutArray[4591 * 3 + 1]);
+    OCIO_CHECK_EQUAL(   0.f, scale * lutArray[4591 * 3 + 2]);
 
     const std::string discree3DtLutFail("error_truncated_file.3dl");
 
@@ -240,8 +239,6 @@ OCIO_ADD_TEST(FileFormat3DL, parse_1d)
         OCIO_REQUIRE_ASSERT(lutFile);
 
         OCIO_REQUIRE_ASSERT(lutFile->lut1D);
-        OCIO_CHECK_EQUAL(lutFile->lut1D->getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-        OCIO_CHECK_EQUAL(lutFile->lut1D->getOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
         OCIO_CHECK_EQUAL(lutFile->lut1D->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
 
     }

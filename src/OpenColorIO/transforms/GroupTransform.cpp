@@ -31,7 +31,7 @@ OCIO_NAMESPACE_ENTER
         
         Impl()
             : dir_(TRANSFORM_DIR_FORWARD)
-            , m_metadata(METADATA_ROOT)
+            , m_metadata()
         { }
 
         Impl(const Impl &) = delete;
@@ -187,9 +187,9 @@ OCIO_NAMESPACE_ENTER
     
     
     void BuildGroupOps(OpRcPtrVec & ops,
-                       const Config& config,
+                       const Config & config,
                        const ConstContextRcPtr & context,
-                       const GroupTransform& groupTransform,
+                       const GroupTransform & groupTransform,
                        TransformDirection dir)
     {
         if (ops.size() == 0)
@@ -199,8 +199,8 @@ OCIO_NAMESPACE_ENTER
             processorData = groupTransform.getFormatMetadata();
         }
 
-        TransformDirection combinedDir = CombineTransformDirections(dir,
-                                                  groupTransform.getDirection());
+        TransformDirection combinedDir
+            = CombineTransformDirections(dir, groupTransform.getDirection());
         
         if(combinedDir == TRANSFORM_DIR_FORWARD)
         {

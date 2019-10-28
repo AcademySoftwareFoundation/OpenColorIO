@@ -21,7 +21,7 @@ OCIO_NAMESPACE_ENTER
     }
 
     ExponentOpData::ExponentOpData()
-        :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
+        :   OpData()
     {
         for(unsigned i=0; i<4; ++i)
         {
@@ -30,7 +30,7 @@ OCIO_NAMESPACE_ENTER
     }
 
     ExponentOpData::ExponentOpData(const ExponentOpData & rhs)
-        :   OpData(rhs.getInputBitDepth(), rhs.getOutputBitDepth())
+        :   OpData()
     {
         if(this!=&rhs)
         {
@@ -39,7 +39,7 @@ OCIO_NAMESPACE_ENTER
     }
 
     ExponentOpData::ExponentOpData(const double * exp4)
-        :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
+        :   OpData()
     {
         memcpy(m_exp4, exp4, 4*sizeof(double));
     }
@@ -57,7 +57,7 @@ OCIO_NAMESPACE_ENTER
 
     bool ExponentOpData::isNoOp() const
     {
-        return (getInputBitDepth() == getOutputBitDepth()) && isIdentity();
+        return isIdentity();
     }
 
     bool ExponentOpData::isIdentity() const
@@ -256,12 +256,6 @@ OCIO_NAMESPACE_ENTER
 
         void ExponentOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
         {
-            if(getInputBitDepth()!=BIT_DEPTH_F32
-                || getOutputBitDepth()!=BIT_DEPTH_F32)
-            {
-                throw Exception("Only 32F bit depth is supported for the GPU shader");
-            }
-
             GpuShaderText ss(shaderDesc->getLanguage());
             ss.indent();
 
@@ -351,6 +345,7 @@ OCIO_NAMESPACE_EXIT
 
 #include "ops/NoOp/NoOps.h"
 #include "UnitTest.h"
+#include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -587,8 +582,7 @@ OCIO_ADD_TEST(ExponentOps, Combining)
         OCIO_CHECK_CLOSE(tmp[i], result[i], error);
     }
 
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
     OCIO_CHECK_EQUAL(ops.size(), 1);
 
     memcpy(tmp, source, 4 * sizeof(float));
@@ -645,7 +639,7 @@ OCIO_ADD_TEST(ExponentOps, NoOp)
     OCIO_CHECK_ASSERT(ops[1]->isNoOp());
 
     // Optimize it.
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
     OCIO_CHECK_EQUAL(ops.size(), 0);
 }
 
