@@ -34,12 +34,15 @@ C++ API
        // Get the processor corresponding to this transform.
        OCIO::ConstProcessorRcPtr processor = config->getProcessor(OCIO::ROLE_COMPOSITING_LOG,
                                                                   OCIO::ROLE_SCENE_LINEAR);
+
+       // Get the corresponding CPU processor for 32-bit float image processing.
+       OCIO::ConstCPUProcessorRcPtr cpuProcessor = processor->getDefaultCPUProcessor();
     
        // Wrap the image in a light-weight ImageDescription
        OCIO::PackedImageDesc img(imageData, w, h, 4);
        
        // Apply the color transformation (in place)
-       processor->apply(img);
+       cpuProcessor->apply(img);
    }
    catch(OCIO::Exception & exception)
    {
@@ -139,6 +142,16 @@ OCIO_NAMESPACE_ENTER
     // Set the logging function to use; otherwise, use the default (i.e. std::cerr).
     extern OCIOEXPORT void SetLoggingFunction(LoggingFunction logFunction);
     extern OCIOEXPORT void ResetToDefaultLoggingFunction();
+
+    //
+    // Note that the following env. variable access methods are not thread safe.
+    //
+
+    //!cpp:function:: Another call modifies the string obtained from a previous call
+    // as the method always uses the same memory buffer.
+    extern OCIOEXPORT const char * GetEnvVariable(const char * name);
+    //!cpp:function::
+    extern OCIOEXPORT void SetEnvVariable(const char * name, const char * value);
 
 
     ///////////////////////////////////////////////////////////////////////////

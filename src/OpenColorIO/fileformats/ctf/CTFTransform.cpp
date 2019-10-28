@@ -284,7 +284,6 @@ CTFVersion GetOpMinimumVersion(const ConstOpDataRcPtr & op)
     case OpData::ReferenceType:
     {
         throw Exception("Reference ops should have been replaced by their content.");
-        break;
     }
     case OpData::NoOpType:
     {
@@ -2102,7 +2101,6 @@ void TransformWriter::writeOps() const
             case OpData::ReferenceType:
             {
                 throw Exception("Reference ops should have been replaced by their content.");
-                break;
             }
             case OpData::NoOpType:
             {

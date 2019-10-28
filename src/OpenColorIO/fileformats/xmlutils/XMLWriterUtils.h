@@ -87,6 +87,7 @@ class XmlScopeIndent
 public:
     XmlScopeIndent() = delete;
     XmlScopeIndent(XmlFormatter & formatter);
+    XmlScopeIndent& operator=(XmlFormatter & formatter) = delete;
 
     ~XmlScopeIndent();
 

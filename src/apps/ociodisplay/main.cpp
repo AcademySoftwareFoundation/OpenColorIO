@@ -743,14 +743,14 @@ int main(int argc, char **argv)
     }
     catch(...)
     {
-        const char * env = getenv("OCIO");
+        const char * env = OCIO::GetEnvVariable("OCIO");
         std::cerr << "Error loading the config file: '" << (env ? env : "") << "'";
         exit(1);
     }
 
     if(g_verbose)
     {
-        const char * env = getenv("OCIO");
+        const char * env = OCIO::GetEnvVariable("OCIO");
 
         if(env && *env)
         {
