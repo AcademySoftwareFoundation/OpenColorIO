@@ -124,6 +124,10 @@ if(NOT LCMS2_FOUND)
             set(LCMS2_C_FLAGS "${LCMS2_C_FLAGS} -fPIC")
         endif()
 
+        if("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
+            set(LCMS2_C_FLAGS "${LCMS2_C_FLAGS} -Wno-aggressive-loop-optimizations")
+        endif()
+
         string(STRIP "${LCMS2_C_FLAGS}" LCMS2_C_FLAGS)
 
         set(LCMS2_CMAKE_ARGS
@@ -144,6 +148,7 @@ if(NOT LCMS2_FOUND)
         ExternalProject_Add(lcms2_install
             GIT_REPOSITORY "https://github.com/mm2/Little-CMS.git"
             GIT_TAG "lcms${LCMS2_VERSION}"
+            GIT_CONFIG advice.detachedHead=false
             GIT_SHALLOW TRUE
             PREFIX "${_EXT_BUILD_ROOT}/Little-CMS"
             BUILD_BYPRODUCTS ${LCMS2_LIBRARY}
