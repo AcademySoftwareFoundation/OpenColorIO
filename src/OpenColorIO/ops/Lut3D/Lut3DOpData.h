@@ -28,8 +28,7 @@ public:
 
     // Use functional composition to generate a single op that 
     // approximates the effect of the pair of ops.
-    static void Compose(Lut3DOpDataRcPtr & A,
-                        ConstLut3DOpDataRcPtr & B);
+    static void Compose(Lut3DOpDataRcPtr & A, ConstLut3DOpDataRcPtr & B);
 
 public:
     // The gridSize parameter is the length of the cube axis.
@@ -37,13 +36,7 @@ public:
 
     Lut3DOpData(long gridSize, TransformDirection dir);
 
-    Lut3DOpData(
-        BitDepth                   inBitDepth,
-        BitDepth                   outBitDepth,
-        const FormatMetadataImpl & metadata,
-        Interpolation              interpolation,
-        unsigned long              gridSize
-    );
+    Lut3DOpData(Interpolation interpolation, unsigned long gridSize);
 
     virtual ~Lut3DOpData();
 
@@ -94,10 +87,6 @@ public:
 
     OpDataRcPtr getIdentityReplacement() const;
 
-    void setInputBitDepth(BitDepth in) override;
-
-    void setOutputBitDepth(BitDepth out) override;
-
     Lut3DOpDataRcPtr clone() const;
 
     bool isInverse(ConstLut3DOpDataRcPtr & lut) const;
@@ -111,18 +100,18 @@ public:
     inline BitDepth getFileOutputBitDepth() const { return m_fileOutBitDepth; }
     inline void setFileOutputBitDepth(BitDepth out) { m_fileOutBitDepth = out; }
 
+    void scale(float scale);
+
 protected:
     // Test core parts of LUTs for equality.
     bool haveEqualBasics(const Lut3DOpData & B) const;
-
-    static bool isInverse(const Lut3DOpData * lutfwd, const Lut3DOpData * lutinv);
 
 public:
     // Class which encapsulates an array dedicated to a 3D LUT.
     class Lut3DArray : public Array
     {
     public:
-        Lut3DArray(unsigned long dimension, BitDepth outBitDepth);
+        Lut3DArray(unsigned long dimension);
 
         Lut3DArray(const Lut3DArray &) = default;
         Lut3DArray & operator= (const Lut3DArray &) = default;
@@ -131,7 +120,7 @@ public:
 
         Lut3DArray& operator=(const Array& a);
 
-        bool isIdentity(BitDepth outBitDepth) const;
+        bool isIdentity() const;
 
         void resize(unsigned long length, unsigned long numColorComponents) override;
 
@@ -145,7 +134,7 @@ public:
 
     protected:
         // Fill the LUT 3D with appropriate default values.
-        void fill(BitDepth outBitDepth);
+        void fill();
 
     };
 

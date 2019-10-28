@@ -48,9 +48,7 @@ public:
 
     FixedFunctionOpData();
 
-    FixedFunctionOpData(BitDepth inBitDepth,
-                        BitDepth outBitDepth,
-                        const Params & params,
+    FixedFunctionOpData(const Params & params,
                         Style style);
 
     virtual ~FixedFunctionOpData();

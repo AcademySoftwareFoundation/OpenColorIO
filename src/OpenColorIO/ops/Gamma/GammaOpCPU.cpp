@@ -34,8 +34,6 @@ protected:
     void update(ConstGammaOpDataRcPtr & gamma);
 
 private:
-    float m_inScale;
-    float m_outScale;
     float m_redGamma;
     float m_grnGamma;
     float m_bluGamma;
@@ -63,9 +61,6 @@ public:
 
 protected:
     void update(ConstGammaOpDataRcPtr & gamma);
-
-private:
-    float m_outScale;
 };
 
 class GammaMoncurveOpCPURev : public GammaMoncurveOpCPU
@@ -78,8 +73,6 @@ public:
 protected:
     void update(ConstGammaOpDataRcPtr & gamma);
 
-private:
-    float m_inScale;
 };
 
 
@@ -115,8 +108,6 @@ ConstOpCPURcPtr GetGammaRenderer(ConstGammaOpDataRcPtr & gamma)
 
 GammaBasicOpCPU::GammaBasicOpCPU(ConstGammaOpDataRcPtr & gamma)
     :   OpCPU()
-    ,   m_inScale(1.0f)
-    ,   m_outScale(1.0f)
     ,   m_redGamma(0.0f)
     ,   m_grnGamma(0.0f)
     ,   m_bluGamma(0.0f)
@@ -129,11 +120,6 @@ void GammaBasicOpCPU::update(ConstGammaOpDataRcPtr & gamma)
 {
     // The gamma calculations are done in normalized space.
     // Compute the scale factors for integer in/out depths.
-    m_inScale = (float)(
-        1. / GetBitDepthMaxValue(gamma->getInputBitDepth()));
-
-    m_outScale = (float)(
-        GetBitDepthMaxValue(gamma->getOutputBitDepth()));
 
     // Calculate the actual power used in the function.
     m_redGamma = (float)(
@@ -165,18 +151,11 @@ void GammaBasicOpCPU::apply(const void * inImg, void * outImg, long numPixels) c
 #ifdef USE_SSE
     const __m128 gamma = _mm_set_ps(m_alpGamma, m_bluGamma, m_grnGamma, m_redGamma);
       
-    const __m128 inScale  = _mm_set1_ps(m_inScale);
-    const __m128 outScale = _mm_set1_ps(m_outScale);
-
     for(long idx=0; idx<numPixels; ++idx)
     {
         __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
-        pixel = _mm_mul_ps(pixel, inScale);
-
         pixel = ssePower(pixel, gamma);
-
-        pixel = _mm_mul_ps(pixel, outScale);
 
         _mm_storeu_ps(out, pixel);
 
@@ -191,10 +170,10 @@ void GammaBasicOpCPU::apply(const void * inImg, void * outImg, long numPixels) c
                                  std::max(0.0f, in[2]),
                                  std::max(0.0f, in[3]) };
 
-        out[0] = powf(pixel[0] * m_inScale, m_redGamma) * m_outScale;
-        out[1] = powf(pixel[1] * m_inScale, m_grnGamma) * m_outScale;
-        out[2] = powf(pixel[2] * m_inScale, m_bluGamma) * m_outScale;
-        out[3] = powf(pixel[3] * m_inScale, m_alpGamma) * m_outScale;
+        out[0] = powf(pixel[0], m_redGamma);
+        out[1] = powf(pixel[1], m_grnGamma);
+        out[2] = powf(pixel[2], m_bluGamma);
+        out[3] = powf(pixel[3], m_alpGamma);
 
         in  += 4;
         out += 4;
@@ -204,26 +183,16 @@ void GammaBasicOpCPU::apply(const void * inImg, void * outImg, long numPixels) c
 
 GammaMoncurveOpCPUFwd::GammaMoncurveOpCPUFwd(ConstGammaOpDataRcPtr & gamma)
     :   GammaMoncurveOpCPU(gamma)
-    ,   m_outScale(0.0f)
 {
     update(gamma);
 }
 
 void GammaMoncurveOpCPUFwd::update(ConstGammaOpDataRcPtr & gamma)
 {
-    // NB: The power function is applied in normalized space
-    // but we fold the in/out depth conversion into the other scaling
-    // to minimize the number of multiplies.
-
-    const BitDepth inBitDepth  = gamma->getInputBitDepth();
-    const BitDepth outBitDepth = gamma->getOutputBitDepth();
-
-    ComputeParamsFwd(gamma->getRedParams(),   inBitDepth, outBitDepth, m_red);
-    ComputeParamsFwd(gamma->getGreenParams(), inBitDepth, outBitDepth, m_green);
-    ComputeParamsFwd(gamma->getBlueParams(),  inBitDepth, outBitDepth, m_blue);
-    ComputeParamsFwd(gamma->getAlphaParams(), inBitDepth, outBitDepth, m_alpha);
-
-    m_outScale = (float)GetBitDepthMaxValue(outBitDepth);
+    ComputeParamsFwd(gamma->getRedParams(),   m_red);
+    ComputeParamsFwd(gamma->getGreenParams(), m_green);
+    ComputeParamsFwd(gamma->getBlueParams(),  m_blue);
+    ComputeParamsFwd(gamma->getAlphaParams(), m_alpha);
 }
 
 void GammaMoncurveOpCPUFwd::apply(const void * inImg, void * outImg, long numPixels) const
@@ -252,8 +221,6 @@ void GammaMoncurveOpCPUFwd::apply(const void * inImg, void * outImg, long numPix
       = _mm_set_ps(m_alpha.slope, m_blue.slope,
                    m_green.slope, m_red.slope);
 
-    const __m128 outScale = _mm_set1_ps(m_outScale);
-
     for(long idx=0; idx<numPixels; ++idx)
     {
         __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
@@ -261,8 +228,6 @@ void GammaMoncurveOpCPUFwd::apply(const void * inImg, void * outImg, long numPix
         __m128 data = _mm_add_ps(_mm_mul_ps(pixel, scale), offset);
 
         data = ssePower(data, gamma);
-
-        data = _mm_mul_ps(data, outScale);
 
         __m128 flag = _mm_cmpgt_ps( pixel, breakPnt);
 
@@ -292,10 +257,10 @@ void GammaMoncurveOpCPUFwd::apply(const void * inImg, void * outImg, long numPix
     {
         const float pixel[4] = { in[0], in[1], in[2], in[3] };
 
-        const float data[4] = { powf(pixel[0] * red[0] + red[1], red[2]) * m_outScale,
-                                powf(pixel[1] * grn[0] + grn[1], grn[2]) * m_outScale,
-                                powf(pixel[2] * blu[0] + blu[1], blu[2]) * m_outScale,
-                                powf(pixel[3] * alp[0] + alp[1], alp[2]) * m_outScale };
+        const float data[4] = { powf(pixel[0] * red[0] + red[1], red[2]),
+                                powf(pixel[1] * grn[0] + grn[1], grn[2]),
+                                powf(pixel[2] * blu[0] + blu[1], blu[2]),
+                                powf(pixel[3] * alp[0] + alp[1], alp[2]) };
 
         out[0] = pixel[0]<=red[3] ? pixel[0] * red[4] : data[0];
         out[1] = pixel[1]<=grn[3] ? pixel[1] * grn[4] : data[1];
@@ -310,26 +275,16 @@ void GammaMoncurveOpCPUFwd::apply(const void * inImg, void * outImg, long numPix
 
 GammaMoncurveOpCPURev::GammaMoncurveOpCPURev(ConstGammaOpDataRcPtr & gamma)
     :   GammaMoncurveOpCPU(gamma)
-    ,   m_inScale(1.0f)
 {
     update(gamma);
 }
 
 void GammaMoncurveOpCPURev::update(ConstGammaOpDataRcPtr & gamma)
 {
-    // NB: The power function is applied in normalized space
-    // but we fold the in/out depth conversion into the other scaling
-    // to minimize the number of multiplies.
-
-    const BitDepth inBitDepth  = gamma->getInputBitDepth();
-    const BitDepth outBitDepth = gamma->getOutputBitDepth();
-
-    ComputeParamsRev(gamma->getRedParams(),   inBitDepth, outBitDepth, m_red);
-    ComputeParamsRev(gamma->getGreenParams(), inBitDepth, outBitDepth, m_green);
-    ComputeParamsRev(gamma->getBlueParams(),  inBitDepth, outBitDepth, m_blue);
-    ComputeParamsRev(gamma->getAlphaParams(), inBitDepth, outBitDepth, m_alpha);
-
-    m_inScale = (float)(1. / GetBitDepthMaxValue(inBitDepth));
+    ComputeParamsRev(gamma->getRedParams(),   m_red);
+    ComputeParamsRev(gamma->getGreenParams(), m_green);
+    ComputeParamsRev(gamma->getBlueParams(),  m_blue);
+    ComputeParamsRev(gamma->getAlphaParams(), m_alpha);
 }
 
 void GammaMoncurveOpCPURev::apply(const void * inImg, void * outImg, long numPixels) const
@@ -358,15 +313,11 @@ void GammaMoncurveOpCPURev::apply(const void * inImg, void * outImg, long numPix
       = _mm_set_ps(m_alpha.slope, m_blue.slope,
                    m_green.slope, m_red.slope);
 
-    const __m128 inScale = _mm_set1_ps(m_inScale);
-
     for(long idx=0; idx<numPixels; ++idx)
     {
         __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
-        __m128 data  = _mm_mul_ps(pixel, inScale);
-
-        data = ssePower(data, gamma);
+        __m128 data = ssePower(pixel, gamma);
 
         data = _mm_sub_ps(_mm_mul_ps(data, scale), offset);
 
@@ -398,10 +349,10 @@ void GammaMoncurveOpCPURev::apply(const void * inImg, void * outImg, long numPix
     {
         const float pixel[4] = { in[0], in[1], in[2], in[3] };
 
-        const float data[4] = { powf(pixel[0] * m_inScale, red[0]) * red[1] - red[2],
-                                powf(pixel[1] * m_inScale, grn[0]) * grn[1] - grn[2],
-                                powf(pixel[2] * m_inScale, blu[0]) * blu[1] - blu[2],
-                                powf(pixel[3] * m_inScale, alp[0]) * alp[1] - alp[2] };
+        const float data[4] = { powf(pixel[0], red[0]) * red[1] - red[2],
+                                powf(pixel[1], grn[0]) * grn[1] - grn[2],
+                                powf(pixel[2], blu[0]) * blu[1] - blu[2],
+                                powf(pixel[3], alp[0]) * alp[1] - alp[2] };
 
         out[0] = pixel[0]<=red[3] ? pixel[0] * red[4] : data[0];
         out[1] = pixel[1]<=grn[3] ? pixel[1] * grn[4] : data[1];

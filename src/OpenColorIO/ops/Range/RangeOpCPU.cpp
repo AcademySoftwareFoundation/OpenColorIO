@@ -24,7 +24,6 @@ protected:
     float m_offset;
     float m_lowerBound;
     float m_upperBound;
-    float m_alphaScale;
 
 private:
     RangeOpCPU() = delete;
@@ -93,13 +92,11 @@ RangeOpCPU::RangeOpCPU(ConstRangeOpDataRcPtr & range)
     ,   m_offset(0.0f)
     ,   m_lowerBound(0.0f)
     ,   m_upperBound(0.0f)
-    ,   m_alphaScale(0.0f)
 {
     m_scale      = (float)range->getScale();
     m_offset     = (float)range->getOffset();
-    m_lowerBound = (float)range->getLowBound();
-    m_upperBound = (float)range->getHighBound();
-    m_alphaScale = (float)range->getAlphaScale();
+    m_lowerBound = (float)range->getMinOutValue();
+    m_upperBound = (float)range->getMaxOutValue();
 }
 
 RangeScaleMinMaxRenderer::RangeScaleMinMaxRenderer(ConstRangeOpDataRcPtr & range)
@@ -122,7 +119,7 @@ void RangeScaleMinMaxRenderer::apply(const void * inImg, void * outImg, long num
         out[0] = Clamp(t[0], m_lowerBound, m_upperBound);
         out[1] = Clamp(t[1], m_lowerBound, m_upperBound);
         out[2] = Clamp(t[2], m_lowerBound, m_upperBound);
-        out[3] = in[3] * m_alphaScale;
+        out[3] = in[3];
 
         in  += 4;
         out += 4;
@@ -149,7 +146,7 @@ void RangeScaleMinRenderer::apply(const void * inImg, void * outImg, long numPix
         out[0] = std::max(m_lowerBound, out[0]);
         out[1] = std::max(m_lowerBound, out[1]);
         out[2] = std::max(m_lowerBound, out[2]);
-        out[3] = in[3] * m_alphaScale;
+        out[3] = in[3];
 
         in  += 4;
         out += 4;
@@ -176,7 +173,7 @@ void RangeScaleMaxRenderer::apply(const void * inImg, void * outImg, long numPix
         out[0] = std::min(m_upperBound, out[0]),
         out[1] = std::min(m_upperBound, out[1]),
         out[2] = std::min(m_upperBound, out[2]),
-        out[3] = in[3] * m_alphaScale;
+        out[3] = in[3];
 
         in  += 4;
         out += 4;
@@ -203,7 +200,7 @@ void RangeScaleRenderer::apply(const void * inImg, void * outImg, long numPixels
         out[0] = in[0] * m_scale + m_offset;
         out[1] = in[1] * m_scale + m_offset;
         out[2] = in[2] * m_scale + m_offset;
-        out[3] = in[3] * m_alphaScale;
+        out[3] = in[3];
 
         in  += 4;
         out += 4;
@@ -245,11 +242,6 @@ void RangeMinRenderer::apply(const void * inImg, void * outImg, long numPixels) 
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        // Note: Although m_scale is not applied in this renderer, it is ok.
-        // The dispatcher will only call this renderer if m_scale == 1, so this
-        // renderer would not be called if there is a bit-depth conversion.
-        // Likewise, m_alphaScale = 1, so no need to scale alpha.
-
         // NaNs become m_lowerBound.
         out[0] = std::max(m_lowerBound, in[0]);
         out[1] = std::max(m_lowerBound, in[1]);
@@ -287,11 +279,11 @@ void RangeMaxRenderer::apply(const void * inImg, void * outImg, long numPixels) 
 
 ConstOpCPURcPtr GetRangeRenderer(ConstRangeOpDataRcPtr & range)
 {
-    if (range->scales(false))
+    if (range->scales())
     {
-        if (range->minClips())
+        if (!range->minIsEmpty())
         {
-            if (range->maxClips())
+            if (!range->maxIsEmpty())
             {
                 return std::make_shared<RangeScaleMinMaxRenderer>(range);
             }
@@ -302,7 +294,7 @@ ConstOpCPURcPtr GetRangeRenderer(ConstRangeOpDataRcPtr & range)
         }
         else
         {
-            if (range->maxClips())
+            if (!range->maxIsEmpty())
             {
                 return std::make_shared<RangeScaleMaxRenderer>(range);
             }
@@ -313,11 +305,11 @@ ConstOpCPURcPtr GetRangeRenderer(ConstRangeOpDataRcPtr & range)
             }
         }
     }
-    else  // implies m_scale = 1, m_alphaScale = 1, m_offset = 0
+    else  // implies m_scale = 1, m_offset = 0
     {
-        if (range->minClips())
+        if (!range->minIsEmpty())
         {
-            if (range->maxClips())
+            if (!range->maxIsEmpty())
             {
                 return std::make_shared<RangeMinMaxRenderer>(range);
             }
@@ -326,7 +318,7 @@ ConstOpCPURcPtr GetRangeRenderer(ConstRangeOpDataRcPtr & range)
                 return std::make_shared<RangeMinRenderer>(range);
             }
         }
-        else if (range->maxClips())
+        else if (!range->maxIsEmpty())
         {
             return std::make_shared<RangeMaxRenderer>(range);
         }
@@ -377,8 +369,7 @@ OCIO_ADD_TEST(RangeOpCPU, identity)
 OCIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings)
 {
     OCIO::RangeOpDataRcPtr range 
-        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                                              OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 1., 0.5, 1.5);
+        = std::make_shared<OCIO::RangeOpData>(0., 1., 0.5, 1.5);
 
     OCIO_CHECK_NO_THROW(range->validate());
     OCIO_CHECK_NO_THROW(range->finalize());
@@ -454,9 +445,7 @@ OCIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings)
 OCIO_ADD_TEST(RangeOpCPU, scale_with_low_clipping)
 {
     OCIO::RangeOpDataRcPtr range 
-        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                                              OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
-                                              0.,  OCIO::RangeOpData::EmptyValue(), 
+        = std::make_shared<OCIO::RangeOpData>(0.,  OCIO::RangeOpData::EmptyValue(), 
                                               0.5, OCIO::RangeOpData::EmptyValue());
 
     OCIO_CHECK_NO_THROW(range->validate());
@@ -533,9 +522,7 @@ OCIO_ADD_TEST(RangeOpCPU, scale_with_low_clipping)
 OCIO_ADD_TEST(RangeOpCPU, scale_with_high_clipping)
 {
     OCIO::RangeOpDataRcPtr range 
-        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                                              OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
-                                              OCIO::RangeOpData::EmptyValue(), 1., 
+        = std::make_shared<OCIO::RangeOpData>(OCIO::RangeOpData::EmptyValue(), 1., 
                                               OCIO::RangeOpData::EmptyValue(), 1.5);
 
     OCIO_CHECK_NO_THROW(range->validate());
@@ -611,9 +598,7 @@ OCIO_ADD_TEST(RangeOpCPU, scale_with_high_clipping)
 
 OCIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings_2)
 {
-    OCIO::RangeOpDataRcPtr range 
-        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 
-                                              OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 1., 0., 1.5);
+    OCIO::RangeOpDataRcPtr range = std::make_shared<OCIO::RangeOpData>(0., 1., 0., 1.5);
 
     OCIO_CHECK_NO_THROW(range->validate());
     OCIO_CHECK_NO_THROW(range->finalize());
@@ -650,9 +635,7 @@ OCIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings_2)
 
 OCIO_ADD_TEST(RangeOpCPU, offset_with_low_and_high_clippings)
 {
-    OCIO::RangeOpDataRcPtr range 
-        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 
-                                              OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 0., 1., 1., 2.);
+    OCIO::RangeOpDataRcPtr range = std::make_shared<OCIO::RangeOpData>(0., 1., 1., 2.);
 
     OCIO_CHECK_NO_THROW(range->validate());
     OCIO_CHECK_NO_THROW(range->finalize());
@@ -689,9 +672,7 @@ OCIO_ADD_TEST(RangeOpCPU, offset_with_low_and_high_clippings)
 
 OCIO_ADD_TEST(RangeOpCPU, low_and_high_clippings)
 {
-    OCIO::RangeOpDataRcPtr range 
-        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 
-                                              OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT), 1., 2., 1., 2.);
+    OCIO::RangeOpDataRcPtr range = std::make_shared<OCIO::RangeOpData>(1., 2., 1., 2.);
 
     OCIO_CHECK_NO_THROW(range->validate());
     OCIO_CHECK_NO_THROW(range->finalize());
@@ -734,10 +715,8 @@ OCIO_ADD_TEST(RangeOpCPU, low_and_high_clippings)
 
 OCIO_ADD_TEST(RangeOpCPU, low_clipping)
 {
-    OCIO::RangeOpDataRcPtr range 
-        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 
-                                              OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
-                                              -0.1, OCIO::RangeOpData::EmptyValue(), 
+    OCIO::RangeOpDataRcPtr range
+        = std::make_shared<OCIO::RangeOpData>(-0.1, OCIO::RangeOpData::EmptyValue(), 
                                               -0.1, OCIO::RangeOpData::EmptyValue());
 
     OCIO_CHECK_NO_THROW(range->validate());
@@ -776,9 +755,7 @@ OCIO_ADD_TEST(RangeOpCPU, low_clipping)
 OCIO_ADD_TEST(RangeOpCPU, high_clipping)
 {
     OCIO::RangeOpDataRcPtr range 
-        = std::make_shared<OCIO::RangeOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, 
-                                              OCIO::FormatMetadataImpl(OCIO::METADATA_ROOT),
-                                              OCIO::RangeOpData::EmptyValue(), 1.1, 
+        = std::make_shared<OCIO::RangeOpData>(OCIO::RangeOpData::EmptyValue(), 1.1, 
                                               OCIO::RangeOpData::EmptyValue(), 1.1);
 
     OCIO_CHECK_NO_THROW(range->validate());

@@ -148,7 +148,7 @@ bool CTFVersion::operator>(const CTFVersion & rhs) const
 }
 
 CTFReaderTransform::CTFReaderTransform()
-    : m_infoMetadata(METADATA_INFO)
+    : m_infoMetadata(METADATA_INFO, "")
     , m_version(CTF_PROCESS_LIST_VERSION)
     , m_versionCLF(0, 0)
 {
@@ -156,7 +156,7 @@ CTFReaderTransform::CTFReaderTransform()
 
 CTFReaderTransform::CTFReaderTransform(const OpRcPtrVec & ops,
                                        const FormatMetadataImpl & metadata)
-    : m_infoMetadata(METADATA_INFO)
+    : m_infoMetadata(METADATA_INFO, "")
     , m_version(CTF_PROCESS_LIST_VERSION)
     , m_versionCLF(0, 0)
 {
@@ -182,35 +182,6 @@ void CTFReaderTransform::setCLFVersion(const CTFVersion & ver)
 const CTFVersion & CTFReaderTransform::getCTFVersion() const
 {
     return m_version;
-}
-
-void CTFReaderTransform::validate()
-{
-    BitDepth bitdepth = BIT_DEPTH_UNKNOWN;
-
-    const size_t max = m_ops.size();
-    for (size_t i = 0; i<max; ++i)
-    {
-        ConstOpDataRcPtr & op = m_ops[i];
-
-        op->validate();
-
-        if (i > 0 && bitdepth != op->getInputBitDepth())
-        {
-            std::ostringstream os;
-            os << "Bitdepth missmatch between ops";
-            os << "'. Op " << i - 1;
-            os << " (" << m_ops[i - 1]->getID();
-            os << ") output bitdepth is ";
-            os << bitdepth << ". Op " << i;
-            os << " (" << op->getID();
-            os << ") intput bitdepth is ";
-            os << op->getInputBitDepth();
-            throw Exception(os.str().c_str());
-        }
-
-        bitdepth = op->getOutputBitDepth();
-    }
 }
 
 void GetElementsValues(const FormatMetadataImpl::Elements & elements, const std::string & name, StringVec & values)
@@ -1411,9 +1382,7 @@ void Lut1DWriter::writeContent() const
 
     // To avoid needing to duplicate the const objects,
     // we scale the values on-the-fly while writing.
-    const auto fbd = m_outBitDepth;
-    const auto bd = m_lut->getOutputBitDepth();
-    const float scale = (float)(GetBitDepthMaxValue(fbd) / GetBitDepthMaxValue(bd));
+    const float scale = (float)GetBitDepthMaxValue(m_outBitDepth);
 
     if (m_lut->isOutputRawHalfs())
     {
@@ -1443,7 +1412,7 @@ void Lut1DWriter::writeContent() const
                     values.begin(),
                     values.end(),
                     array.getNumColorComponents(),
-                    fbd,
+                    m_outBitDepth,
                     array.getNumColorComponents() == 1 ? 3 : 1,
                     scale);
     }
@@ -1535,14 +1504,12 @@ void Lut3DWriter::writeContent() const
 
     // To avoid needing to duplicate the const objects,
     // we scale the values on-the-fly while writing.
-    const auto fbd = m_outBitDepth;
-    const auto bd = m_lut->getOutputBitDepth();
-    const float scale = (float)(GetBitDepthMaxValue(fbd) / GetBitDepthMaxValue(bd));
+    const float scale = (float)GetBitDepthMaxValue(m_outBitDepth);
     WriteValues(m_formatter,
                 array.getValues().begin(),
                 array.getValues().end(),
                 3,
-                fbd,
+                m_outBitDepth,
                 1,
                 scale);
 
@@ -1626,8 +1593,11 @@ void MatrixWriter::writeContent() const
 
     m_formatter.writeStartTag(TAG_ARRAY, attributes);
 
-    const ArrayDouble::Values& values = m_matrix->getArray().getValues();
-    const MatrixOpData::Offsets& offsets = m_matrix->getOffsets();
+    const ArrayDouble::Values & values = m_matrix->getArray().getValues();
+    const MatrixOpData::Offsets & offsets = m_matrix->getOffsets();
+
+    const double outScale = GetBitDepthMaxValue(m_outBitDepth);
+    const double inOutScale = outScale / GetBitDepthMaxValue(m_inBitDepth);
 
     if (m_matrix->hasAlpha())
     {
@@ -1636,10 +1606,10 @@ void MatrixWriter::writeContent() const
             // Write in 4x5x4 mode.
             const double v[20]
             {
-                values[0] , values[1] , values[2] , values[3] , offsets[0],
-                values[4] , values[5] , values[6] , values[7] , offsets[1],
-                values[8] , values[9] , values[10], values[11], offsets[2],
-                values[12], values[13], values[14], values[15], offsets[3]
+                values[0]  * inOutScale, values[1] * inOutScale, values[2]  * inOutScale, values[3]  * inOutScale, offsets[0] * outScale,
+                values[4]  * inOutScale, values[5] * inOutScale, values[6]  * inOutScale, values[7]  * inOutScale, offsets[1] * outScale,
+                values[8]  * inOutScale, values[9] * inOutScale, values[10] * inOutScale, values[11] * inOutScale, offsets[2] * outScale,
+                values[12] * inOutScale, values[13]* inOutScale, values[14] * inOutScale, values[15] * inOutScale, offsets[3] * outScale
             };
 
             WriteValues(m_formatter, v, v + 20, 5, BIT_DEPTH_F32, 1, 1.0);
@@ -1649,10 +1619,10 @@ void MatrixWriter::writeContent() const
             // Write in 4x4x4 compact mode.
             const double v[16]
             {
-                values[0] , values[1] , values[2] , values[3] ,
-                values[4] , values[5] , values[6] , values[7] ,
-                values[8] , values[9] , values[10], values[11],
-                values[12], values[13], values[14], values[15]
+                values[0]  * inOutScale, values[1]  * inOutScale, values[2]  * inOutScale, values[3]  * inOutScale,
+                values[4]  * inOutScale, values[5]  * inOutScale, values[6]  * inOutScale, values[7]  * inOutScale,
+                values[8]  * inOutScale, values[9]  * inOutScale, values[10] * inOutScale, values[11] * inOutScale,
+                values[12] * inOutScale, values[13] * inOutScale, values[14] * inOutScale, values[15] * inOutScale
             };
 
             WriteValues(m_formatter, v, v + 16, 4, BIT_DEPTH_F32, 1, 1.0);
@@ -1663,9 +1633,9 @@ void MatrixWriter::writeContent() const
         // Write in 3x4x3 compact mode.
         const double v[12]
         {
-            values[0] , values[1] , values[2] , offsets[0],
-            values[4] , values[5] , values[6] , offsets[1],
-            values[8] , values[9] , values[10], offsets[2]
+            values[0] * inOutScale, values[1] * inOutScale, values[2]  * inOutScale, offsets[0] * outScale,
+            values[4] * inOutScale, values[5] * inOutScale, values[6]  * inOutScale, offsets[1] * outScale,
+            values[8] * inOutScale, values[9] * inOutScale, values[10] * inOutScale, offsets[2] * outScale
         };
 
         WriteValues(m_formatter, v, v + 12, 4, BIT_DEPTH_F32, 1, 1.0);
@@ -1675,9 +1645,9 @@ void MatrixWriter::writeContent() const
         // Write in 3x3x3 compact mode.
         const double v[9]
         {
-            values[0] , values[1] , values[2] ,
-            values[4] , values[5] , values[6] ,
-            values[8] , values[9] , values[10]
+            values[0] * inOutScale, values[1] * inOutScale, values[2]  * inOutScale,
+            values[4] * inOutScale, values[5] * inOutScale, values[6]  * inOutScale,
+            values[8] * inOutScale, values[9] * inOutScale, values[10] * inOutScale
         };
 
         WriteValues(m_formatter, v, v + 9, 3, BIT_DEPTH_F32, 1, 1.0);
@@ -1738,24 +1708,27 @@ void WriteTag(XmlFormatter & fmt, const char * tag, double value)
 
 void RangeWriter::writeContent() const
 {
+    const double outScale = GetBitDepthMaxValue(m_outBitDepth);
+    const double inScale = GetBitDepthMaxValue(m_inBitDepth);
+
     if (!m_range->minIsEmpty())
     {
-        WriteTag(m_formatter, TAG_MIN_IN_VALUE, m_range->getMinInValue());
+        WriteTag(m_formatter, TAG_MIN_IN_VALUE, m_range->getMinInValue() * inScale);
     }
 
     if (!m_range->maxIsEmpty())
     {
-        WriteTag(m_formatter, TAG_MAX_IN_VALUE, m_range->getMaxInValue());
+        WriteTag(m_formatter, TAG_MAX_IN_VALUE, m_range->getMaxInValue() * inScale);
     }
 
     if (!m_range->minIsEmpty())
     {
-        WriteTag(m_formatter, TAG_MIN_OUT_VALUE, m_range->getMinOutValue());
+        WriteTag(m_formatter, TAG_MIN_OUT_VALUE, m_range->getMinOutValue() * outScale);
     }
 
     if (!m_range->maxIsEmpty())
     {
-        WriteTag(m_formatter, TAG_MAX_OUT_VALUE, m_range->getMaxOutValue());
+        WriteTag(m_formatter, TAG_MAX_OUT_VALUE, m_range->getMaxOutValue() * outScale);
     }
 }
 
@@ -1970,11 +1943,10 @@ void TransformWriter::writeOps() const
                 GammaOpData::Params paramB{ exp->m_exp4[2] };
                 GammaOpData::Params paramA{ exp->m_exp4[3] };
 
-                GammaOpDataRcPtr gammaData
-                    = std::make_shared<GammaOpData>(BIT_DEPTH_F32, BIT_DEPTH_F32,
-                        exp->getFormatMetadata(),
-                        GammaOpData::BASIC_FWD,
-                        paramR, paramG, paramB, paramA);
+				GammaOpDataRcPtr gammaData
+					= std::make_shared<GammaOpData>(GammaOpData::BASIC_FWD,
+													paramR, paramG, paramB, paramA);
+				gammaData->getFormatMetadata() = exp->getFormatMetadata();
 
                 GammaWriter opWriter(m_formatter, gammaData);
                 opWriter.setInputBitdepth(inBD);
@@ -2104,8 +2076,6 @@ void TransformWriter::writeOps() const
                 // - Previous op output file bit-depth if previous op
                 //   is a LUT, a Matrix or a Range.
 
-                mat->setInputBitDepth(inBD);
-                mat->setOutputBitDepth(outBD);
                 MatrixWriter opWriter(m_formatter, mat);
                 opWriter.setInputBitdepth(inBD);
                 opWriter.setOutputBitdepth(outBD);
@@ -2121,8 +2091,6 @@ void TransformWriter::writeOps() const
                 outBD = GetValidatedFileBitDepth(range->getFileOutputBitDepth(), type);
                 // inBD has already been set at previous iteration.
 
-                range->setInputBitDepth(inBD);
-                range->setOutputBitDepth(outBD);
                 RangeWriter opWriter(m_formatter, range);
                 opWriter.setInputBitdepth(inBD);
                 opWriter.setOutputBitdepth(outBD);

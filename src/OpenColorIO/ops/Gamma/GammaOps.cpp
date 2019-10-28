@@ -50,10 +50,10 @@ void AddMoncurveFwdShader(ConstGammaOpDataRcPtr gamma, GpuShaderText & ss)
 {
     RendererParams red, green, blue, alpha;
     
-    ComputeParamsFwd(gamma->getRedParams(), BIT_DEPTH_F32, BIT_DEPTH_F32, red);
-    ComputeParamsFwd(gamma->getGreenParams(), BIT_DEPTH_F32, BIT_DEPTH_F32, green);
-    ComputeParamsFwd(gamma->getBlueParams(), BIT_DEPTH_F32, BIT_DEPTH_F32, blue);
-    ComputeParamsFwd(gamma->getAlphaParams(), BIT_DEPTH_F32, BIT_DEPTH_F32, alpha);
+    ComputeParamsFwd(gamma->getRedParams(),   red);
+    ComputeParamsFwd(gamma->getGreenParams(), green);
+    ComputeParamsFwd(gamma->getBlueParams(),  blue);
+    ComputeParamsFwd(gamma->getAlphaParams(), alpha);
 
     // Even if all components are the same, on OS X, a vec4 needs to be
     // declared.  This code will work in both cases.
@@ -85,10 +85,10 @@ void AddMoncurveRevShader(ConstGammaOpDataRcPtr gamma, GpuShaderText & ss)
 {
     RendererParams red, green, blue, alpha;
 
-    ComputeParamsRev(gamma->getRedParams(), BIT_DEPTH_F32, BIT_DEPTH_F32, red);
-    ComputeParamsRev(gamma->getGreenParams(), BIT_DEPTH_F32, BIT_DEPTH_F32, green);
-    ComputeParamsRev(gamma->getBlueParams(), BIT_DEPTH_F32, BIT_DEPTH_F32, blue);
-    ComputeParamsRev(gamma->getAlphaParams(), BIT_DEPTH_F32, BIT_DEPTH_F32, alpha);
+    ComputeParamsRev(gamma->getRedParams(),   red);
+    ComputeParamsRev(gamma->getGreenParams(), green);
+    ComputeParamsRev(gamma->getBlueParams(),  blue);
+    ComputeParamsRev(gamma->getAlphaParams(), alpha);
 
     // Even if all components are the same, on OS X, a vec4 needs to be
     // declared.  This code will work in both cases.
@@ -126,10 +126,7 @@ public:
     explicit GammaOp(GammaOpDataRcPtr & gamma);
     GammaOp(const GammaOp &) = delete;
 
-    GammaOp(BitDepth inBitDepth, 
-            BitDepth outBitDepth,
-            const FormatMetadataImpl & info,
-            GammaOpData::Style style,
+    GammaOp(GammaOpData::Style style,
             GammaOpData::Params red,
             GammaOpData::Params green,
             GammaOpData::Params blue,
@@ -166,21 +163,14 @@ GammaOp::GammaOp(GammaOpDataRcPtr & gamma)
     data() = gamma;
 }
 
-GammaOp::GammaOp(BitDepth inBitDepth, 
-                 BitDepth outBitDepth,
-                 const FormatMetadataImpl & info,
-                 GammaOpData::Style style,
+GammaOp::GammaOp(GammaOpData::Style style,
                  GammaOpData::Params red,
                  GammaOpData::Params green,
                  GammaOpData::Params blue,
                  GammaOpData::Params alpha)
     :   Op()
 {
-    GammaOpDataRcPtr gamma
-        = std::make_shared<GammaOpData>(inBitDepth, outBitDepth,
-                                        info,
-                                        style,
-                                        red, green, blue, alpha);
+    GammaOpDataRcPtr gamma = std::make_shared<GammaOpData>(style, red, green, blue, alpha);
 
     data() = gamma;
 }
@@ -257,12 +247,6 @@ ConstOpCPURcPtr GammaOp::getCPUOp() const
 
 void GammaOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
 {
-    if(getInputBitDepth()!=BIT_DEPTH_F32 || getOutputBitDepth()!=BIT_DEPTH_F32)
-    {
-        throw Exception(
-            "Only 32F bit depth is supported for the GPU shader");
-    }
-
     GpuShaderText ss(shaderDesc->getLanguage());
     ss.indent();
 
@@ -308,41 +292,6 @@ void GammaOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
 
 }  // Anon namespace
     
-void CreateGammaOp(OpRcPtrVec & ops,
-                   const FormatMetadataImpl & info,
-                   GammaOpData::Style style,
-                   const double * gamma4,
-                   const double * offset4)
-{
-    GammaOpData::Params paramR;
-    GammaOpData::Params paramG;
-    GammaOpData::Params paramB;
-    GammaOpData::Params paramA;
-
-    if(style==GammaOpData::BASIC_FWD || style==GammaOpData::BASIC_REV)
-    {
-        paramR = { gamma4[0] };
-        paramG = { gamma4[1] };
-        paramB = { gamma4[2] };
-        paramA = { gamma4[3] };
-    }
-    else
-    {
-        paramR = { gamma4[0], offset4 ? offset4[0] : 0. };
-        paramG = { gamma4[1], offset4 ? offset4[1] : 0. };
-        paramB = { gamma4[2], offset4 ? offset4[2] : 0. };
-        paramA = { gamma4[3], offset4 ? offset4[3] : 0. };
-    }
-
-    GammaOpDataRcPtr gammaData 
-        = std::make_shared<GammaOpData>(BIT_DEPTH_F32, BIT_DEPTH_F32,
-                                        info, 
-                                        style,
-                                        paramR, paramG, paramB, paramA);
-
-    CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
-}
-
 void CreateGammaOp(OpRcPtrVec & ops, 
                    GammaOpDataRcPtr & gammaData,
                    TransformDirection direction)
@@ -428,14 +377,14 @@ void BuildExponentWithLinearOps(OpRcPtrVec & ops,
     TransformDirection combinedDir 
         = CombineTransformDirections(dir, transform.getDirection());
     
-    double gamma4[4] = { 1., 1., 1., 1. };
-    transform.getGamma(gamma4);
+    double gammaVals[4] = { 1., 1., 1., 1. };
+    transform.getGamma(gammaVals);
 
-    double offset4[4] = { 0., 0., 0., 0. };
-    transform.getOffset(offset4);
+    double offsetVals[4] = { 0., 0., 0., 0. };
+    transform.getOffset(offsetVals);
 
-    const bool noOffset = offset4[0] == 0. && offset4[1] == 0. &&
-                          offset4[2] == 0. && offset4[3] == 0.;
+    const bool noOffset = offsetVals[0] == 0. && offsetVals[1] == 0. &&
+                          offsetVals[2] == 0. && offsetVals[3] == 0.;
 
     const auto style = noOffset? GammaOpData::BASIC_FWD : GammaOpData::MONCURVE_FWD;
 
@@ -446,25 +395,22 @@ void BuildExponentWithLinearOps(OpRcPtrVec & ops,
 
     if (style == GammaOpData::BASIC_FWD)
     {
-        paramR = { gamma4[0] };
-        paramG = { gamma4[1] };
-        paramB = { gamma4[2] };
-        paramA = { gamma4[3] };
+        paramR = { gammaVals[0] };
+        paramG = { gammaVals[1] };
+        paramB = { gammaVals[2] };
+        paramA = { gammaVals[3] };
     }
     else
     {
-        paramR = { gamma4[0], offset4[0] };
-        paramG = { gamma4[1], offset4[1] };
-        paramB = { gamma4[2], offset4[2] };
-        paramA = { gamma4[3], offset4[3] };
+        paramR = { gammaVals[0], offsetVals[0] };
+        paramG = { gammaVals[1], offsetVals[1] };
+        paramB = { gammaVals[2], offsetVals[2] };
+        paramA = { gammaVals[3], offsetVals[3] };
     }
 
-    auto gammaData = std::make_shared<GammaOpData>(
-        BIT_DEPTH_F32, BIT_DEPTH_F32,
-        FormatMetadataImpl(transform.getFormatMetadata()),
-        style,
-        paramR, paramG, paramB, paramA);
+    auto gammaData = std::make_shared<GammaOpData>(style, paramR, paramG, paramB, paramA);
 
+    gammaData->getFormatMetadata() = transform.getFormatMetadata();
     CreateGammaOp(ops, gammaData, combinedDir);
 }
 
@@ -473,8 +419,7 @@ void BuildExponentOps(OpRcPtrVec & ops,
                       const ExponentTransform & transform,
                       TransformDirection dir)
 {
-    TransformDirection combinedDir = CombineTransformDirections(dir,
-        transform.getDirection());
+    TransformDirection combinedDir = CombineTransformDirections(dir, transform.getDirection());
     
     double vec4[4] = { 1., 1., 1., 1. };
     transform.getValue(vec4);
@@ -487,10 +432,22 @@ void BuildExponentOps(OpRcPtrVec & ops,
     }
     else
     {
-        CreateGammaOp(ops, FormatMetadataImpl(transform.getFormatMetadata()),
-                      combinedDir==TRANSFORM_DIR_FORWARD ? GammaOpData::BASIC_FWD
-                                                         : GammaOpData::BASIC_REV,
-                      vec4, nullptr);
+        const auto style = combinedDir == TRANSFORM_DIR_FORWARD ? GammaOpData::BASIC_FWD
+                                                                : GammaOpData::BASIC_REV;
+
+        GammaOpData::Params redParams   = { vec4[0] };
+        GammaOpData::Params greenParams = { vec4[1] };
+        GammaOpData::Params blueParams  = { vec4[2] };
+        GammaOpData::Params alphaParams = { vec4[3] };
+
+        auto gammaData = std::make_shared<GammaOpData>(style, 
+                                                       redParams,
+                                                       greenParams,
+                                                       blueParams,
+                                                       alphaParams);
+
+        gammaData->getFormatMetadata() = transform.getFormatMetadata();
+        CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
     }
 }
 
@@ -507,11 +464,10 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "MathUtils.h"
 #include "ParseUtils.h"
 #include "UnitTest.h"
+#include "UnitTestUtils.h"
 
 namespace
 {
-const OCIO::FormatMetadataImpl desc(OCIO::METADATA_ROOT);
-
 void ApplyGamma(const OCIO::OpRcPtr & op, 
                 float * image, const float * result,
                 long numPixels, 
@@ -558,7 +514,7 @@ OCIO_ADD_TEST(GammaOps, apply_basic_style_fwd)
          0.80f,    0.95f,    1.0f,       1.5f,
          1.005f,   1.05f,    1.5f,      -0.25f }; 
 
-    const std::vector<double> gamma4 = { 1.2, 2.12, 1.123, 1.05 };
+    const std::vector<double> gammaVals = { 1.2, 2.12, 1.123, 1.05 };
 
 #ifdef USE_SSE
     const float expected_32f[numPixels*4] = {
@@ -573,25 +529,33 @@ OCIO_ADD_TEST(GammaOps, apply_basic_style_fwd)
         0.0f,        0.0f,        0.0f,        0.0f,
         0.0f,        0.0f,        0.00001478f, 0.48296818f,
         0.00010933f, 0.00001323f, 0.03458942f, 0.73928916f,
-        powf(input_32f[12], (float)gamma4[0]),
-        powf(input_32f[13], (float)gamma4[1]),
-        powf(input_32f[14], (float)gamma4[2]),
-        powf(input_32f[15], (float)gamma4[3]),
-        powf(input_32f[16], (float)gamma4[0]),
-        powf(input_32f[17], (float)gamma4[1]),
-        powf(input_32f[18], (float)gamma4[2]),
-        powf(input_32f[19], (float)gamma4[3]),
+        powf(input_32f[12], (float)gammaVals[0]),
+        powf(input_32f[13], (float)gammaVals[1]),
+        powf(input_32f[14], (float)gammaVals[2]),
+        powf(input_32f[15], (float)gammaVals[3]),
+        powf(input_32f[16], (float)gammaVals[0]),
+        powf(input_32f[17], (float)gammaVals[1]),
+        powf(input_32f[18], (float)gammaVals[2]),
+        powf(input_32f[19], (float)gammaVals[3]),
         1.00600302f, 1.10897374f, 1.57670521f, 0.0f  };
 #endif
 
     OCIO::OpRcPtrVec ops;
 
-    OCIO_CHECK_NO_THROW(
-        OCIO::CreateGammaOp(ops, desc, OCIO::GammaOpData::BASIC_FWD,
-                            &gamma4[0], nullptr));
+    const OCIO::GammaOpData::Params redParams   = { gammaVals[0] };
+    const OCIO::GammaOpData::Params greenParams = { gammaVals[1] };
+    const OCIO::GammaOpData::Params blueParams  = { gammaVals[2] };
+    const OCIO::GammaOpData::Params alphaParams = { gammaVals[3] };
 
-    OCIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    auto gammaData = std::make_shared<OCIO::GammaOpData>(OCIO::GammaOpData::BASIC_FWD,
+                                                         redParams,
+                                                         greenParams,
+                                                         blueParams,
+                                                         alphaParams);
+
+    OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(ops, gammaData, OCIO::TRANSFORM_DIR_FORWARD));
+
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
 
     ApplyGamma(ops[0], input_32f, expected_32f, numPixels, errorThreshold);
@@ -610,7 +574,7 @@ OCIO_ADD_TEST(GammaOps, apply_basic_style_rev)
          0.80f,    0.95f,    1.0f,       1.5f,
          1.005f,   1.05f,    1.5f,      -0.25f }; 
 
-    const std::vector<double> gamma4 = { 1.2, 2.12, 1.123, 1.05 };
+    const std::vector<double> gammaVals = { 1.2, 2.12, 1.123, 1.05 };
 
 #ifdef USE_SSE
     const float expected_32f[numPixels*4] = {
@@ -625,25 +589,33 @@ OCIO_ADD_TEST(GammaOps, apply_basic_style_rev)
         0.0f,        0.0f,        0.0f,        0.0f,
         0.0f,        0.0f,        0.00014792f, 0.51677888f,
         0.00177476f, 0.08215017f, 0.06941755f, 0.76034504f,
-        powf(input_32f[12], (float)(1./gamma4[0])),
-        powf(input_32f[13], (float)(1./gamma4[1])),
-        powf(input_32f[14], (float)(1./gamma4[2])),
-        powf(input_32f[15], (float)(1./gamma4[3])),
-        powf(input_32f[16], (float)(1./gamma4[0])),
-        powf(input_32f[17], (float)(1./gamma4[1])),
-        powf(input_32f[18], (float)(1./gamma4[2])),
-        powf(input_32f[19], (float)(1./gamma4[3])),
+        powf(input_32f[12], (float)(1./gammaVals[0])),
+        powf(input_32f[13], (float)(1./gammaVals[1])),
+        powf(input_32f[14], (float)(1./gammaVals[2])),
+        powf(input_32f[15], (float)(1./gammaVals[3])),
+        powf(input_32f[16], (float)(1./gammaVals[0])),
+        powf(input_32f[17], (float)(1./gammaVals[1])),
+        powf(input_32f[18], (float)(1./gammaVals[2])),
+        powf(input_32f[19], (float)(1./gammaVals[3])),
         1.00416493f, 1.02328109f, 1.43484282f, 0.0f };
 #endif
 
     OCIO::OpRcPtrVec ops;
 
-    OCIO_CHECK_NO_THROW(
-        OCIO::CreateGammaOp(ops, desc, OCIO::GammaOpData::BASIC_REV,
-                            &gamma4[0], nullptr));
+    const OCIO::GammaOpData::Params redParams   = { gammaVals[0] };
+    const OCIO::GammaOpData::Params greenParams = { gammaVals[1] };
+    const OCIO::GammaOpData::Params blueParams  = { gammaVals[2] };
+    const OCIO::GammaOpData::Params alphaParams = { gammaVals[3] };
 
-    OCIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    auto gammaData = std::make_shared<OCIO::GammaOpData>(OCIO::GammaOpData::BASIC_REV,
+                                                         redParams,
+                                                         greenParams,
+                                                         blueParams,
+                                                         alphaParams);
+
+    OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(ops, gammaData, OCIO::TRANSFORM_DIR_FORWARD));
+
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
 
     ApplyGamma(ops[0], input_32f, expected_32f, numPixels, errorThreshold);
@@ -682,15 +654,19 @@ OCIO_ADD_TEST(GammaOps, apply_moncurve_style_fwd)
 
     OCIO::OpRcPtrVec ops;
 
-    const std::vector<double> gamma4 = { 2.4,   2.2, 2.0, 1.8 };
-    const std::vector<double> offset4= { 0.055, 0.2, 0.4, 0.6 };
+    const OCIO::GammaOpData::Params redParams   = { 2.4, 0.055 };
+    const OCIO::GammaOpData::Params greenParams = { 2.2, 0.2 };
+    const OCIO::GammaOpData::Params blueParams  = { 2.0, 0.4 };
+    const OCIO::GammaOpData::Params alphaParams = { 1.8, 0.6 };
 
-    OCIO_CHECK_NO_THROW(
-        OCIO::CreateGammaOp(ops, desc, OCIO::GammaOpData::MONCURVE_FWD,
-                            &gamma4[0], &offset4[0]));
+    auto gammaData = std::make_shared<OCIO::GammaOpData>(OCIO::GammaOpData::MONCURVE_FWD,
+                                                         redParams,
+                                                         greenParams,
+                                                         blueParams,
+                                                         alphaParams);
+    OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(ops, gammaData, OCIO::TRANSFORM_DIR_FORWARD));
 
-    OCIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
 
     ApplyGamma(ops[0], input_32f, expected_32f, numPixels, errorThreshold);
@@ -735,15 +711,19 @@ OCIO_ADD_TEST(GammaOps, apply_moncurve_style_rev)
 
     OCIO::OpRcPtrVec ops;
 
-    const std::vector<double> gamma4 = { 2.4, 2.2, 2.0, 1.8 };
-    const std::vector<double> offset4= { 0.1, 0.2, 0.4, 0.6 };
+    const OCIO::GammaOpData::Params redParams   = { 2.4, 0.1 };
+    const OCIO::GammaOpData::Params greenParams = { 2.2, 0.2 };
+    const OCIO::GammaOpData::Params blueParams  = { 2.0, 0.4 };
+    const OCIO::GammaOpData::Params alphaParams = { 1.8, 0.6 };
 
-    OCIO_CHECK_NO_THROW(
-        OCIO::CreateGammaOp(ops, desc, OCIO::GammaOpData::MONCURVE_REV,
-                            &gamma4[0], &offset4[0]));
+    auto gammaData = std::make_shared<OCIO::GammaOpData>(OCIO::GammaOpData::MONCURVE_REV,
+                                                         redParams,
+                                                         greenParams,
+                                                         blueParams,
+                                                         alphaParams);
+    OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(ops, gammaData, OCIO::TRANSFORM_DIR_FORWARD));
 
-    OCIO_CHECK_NO_THROW(OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
 
     ApplyGamma(ops[0], input_32f, expected_32f, numPixels, errorThreshold);
@@ -753,25 +733,22 @@ OCIO_ADD_TEST(GammaOps, combining)
 {
     OCIO::OpRcPtrVec ops;
 
-    const std::vector<double> gamma4_1 = { 1.201, 1.201, 1.201, 1. };
-    const std::vector<double> gamma4_2 = { 2.345, 2.345, 2.345, 1. };
-
     const OCIO::GammaOpData::Params param1R{ 1.201 };
     const OCIO::GammaOpData::Params param1G{ 1.201 };
     const OCIO::GammaOpData::Params param1B{ 1.201 };
     const OCIO::GammaOpData::Params param1A{ 1. };
 
-    OCIO::FormatMetadataImpl info1{ OCIO::METADATA_ROOT };
+    OCIO::GammaOpDataRcPtr gammaData1
+        = std::make_shared<OCIO::GammaOpData>(
+            OCIO::GammaOpData::BASIC_FWD,
+            param1R, param1G, param1B, param1A);
+
+    OCIO::FormatMetadataImpl & info1 = gammaData1->getFormatMetadata();
     info1.addAttribute(OCIO::METADATA_NAME, "gamma1");
     info1.addAttribute(OCIO::METADATA_ID, "ID1");
     info1.addAttribute("Attrib", "1");
     info1.addAttribute("Attrib1", "10");
     auto & child1 = info1.addChildElement("Gamma1Child", "Some content");
-    OCIO::GammaOpDataRcPtr gammaData1
-        = std::make_shared<OCIO::GammaOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-            info1,
-            OCIO::GammaOpData::BASIC_FWD,
-            param1R, param1G, param1B, param1A);
 
     OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(ops, gammaData1, OCIO::TRANSFORM_DIR_FORWARD));
 
@@ -780,17 +757,16 @@ OCIO_ADD_TEST(GammaOps, combining)
     const OCIO::GammaOpData::Params param2B{ 2.345 };
     const OCIO::GammaOpData::Params param2A{ 1. };
 
-    OCIO::FormatMetadataImpl info2{ OCIO::METADATA_ROOT };
+    OCIO::GammaOpDataRcPtr gammaData2
+        = std::make_shared<OCIO::GammaOpData>(OCIO::GammaOpData::BASIC_FWD,
+                                              param2R, param2G, param2B, param2A);
+
+    OCIO::FormatMetadataImpl & info2 = gammaData2->getFormatMetadata();
     info2.addAttribute(OCIO::METADATA_NAME, "gamma2");
     info2.addAttribute(OCIO::METADATA_ID, "ID2");
     info2.addAttribute("Attrib", "2");
     info2.addAttribute("Attrib2", "20");
     auto & child2 = info2.addChildElement("Gamma2Child", "Other content");
-    OCIO::GammaOpDataRcPtr gammaData2
-        = std::make_shared<OCIO::GammaOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-            info2,
-            OCIO::GammaOpData::BASIC_FWD,
-            param2R, param2G, param2B, param2A);
 
     OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(ops, gammaData2, OCIO::TRANSFORM_DIR_FORWARD));
 
@@ -836,15 +812,24 @@ OCIO_ADD_TEST(GammaOps, is_inverse)
 {
     OCIO::OpRcPtrVec ops;
 
-    const std::vector<double> gamma4 = { 1.001, 1., 1., 1. };
+    const OCIO::GammaOpData::Params redParams   = { 1.001 };
+    const OCIO::GammaOpData::Params greenParams = { 1. };
+    const OCIO::GammaOpData::Params blueParams  = { 1. };
+    const OCIO::GammaOpData::Params alphaParams = { 1. };
 
-    OCIO_CHECK_NO_THROW(
-        OCIO::CreateGammaOp(ops, desc, OCIO::GammaOpData::BASIC_FWD,
-                            &gamma4[0], nullptr));
+    auto gamma1 = std::make_shared<OCIO::GammaOpData>(OCIO::GammaOpData::BASIC_FWD,
+                                                      redParams,
+                                                      greenParams,
+                                                      blueParams,
+                                                      alphaParams);
+    OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(ops, gamma1, OCIO::TRANSFORM_DIR_FORWARD));
 
-    OCIO_CHECK_NO_THROW(
-        OCIO::CreateGammaOp(ops, desc, OCIO::GammaOpData::BASIC_REV,
-                            &gamma4[0], nullptr));
+    auto gamma2 = std::make_shared<OCIO::GammaOpData>(OCIO::GammaOpData::BASIC_REV,
+                                                      redParams,
+                                                      greenParams,
+                                                      blueParams,
+                                                      alphaParams);
+    OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(ops, gamma2, OCIO::TRANSFORM_DIR_FORWARD));
 
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
     OCIO::ConstOpRcPtr op1 = ops[1];
@@ -855,27 +840,35 @@ OCIO_ADD_TEST(GammaOps, computed_identifier)
 {
     OCIO::OpRcPtrVec ops;
 
-    std::vector<double> gamma4 = { 1.001, 1., 1., 1. };
+    const OCIO::GammaOpData::Params redParams   = { 1.001 };
+    OCIO::GammaOpData::Params greenParams       = { 1. };
+    const OCIO::GammaOpData::Params blueParams  = { 1. };
+    const OCIO::GammaOpData::Params alphaParams = { 1. };
 
-    OCIO_CHECK_NO_THROW(
-        OCIO::CreateGammaOp(ops, desc, OCIO::GammaOpData::BASIC_FWD,
-                            &gamma4[0], nullptr));
+    auto gamma1 = std::make_shared<OCIO::GammaOpData>(OCIO::GammaOpData::BASIC_FWD,
+                                                      redParams,
+                                                      greenParams,
+                                                      blueParams,
+                                                      alphaParams);
+    OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(ops, gamma1, OCIO::TRANSFORM_DIR_FORWARD));
+
     OCIO_CHECK_EQUAL(ops.size(), 1);
 
-    gamma4[1] = 1.001;
-    OCIO_CHECK_NO_THROW(
-        OCIO::CreateGammaOp(ops, desc, OCIO::GammaOpData::BASIC_FWD,
-                            &gamma4[0], nullptr));
+    greenParams[0] = 1.001;
+    auto gamma2 = std::make_shared<OCIO::GammaOpData>(OCIO::GammaOpData::BASIC_FWD,
+                                                      redParams,
+                                                      greenParams,
+                                                      blueParams,
+                                                      alphaParams);
+    OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(ops, gamma2, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_CHECK_EQUAL(ops.size(), 2);
 
     OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
 
     OCIO_CHECK_ASSERT(ops[0]->getCacheID() != ops[1]->getCacheID());
 
+    OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(ops, gamma2, OCIO::TRANSFORM_DIR_FORWARD));
 
-    OCIO_CHECK_NO_THROW(
-        OCIO::CreateGammaOp(ops, desc, OCIO::GammaOpData::BASIC_FWD,
-                            &gamma4[0], nullptr));
     OCIO_CHECK_EQUAL(ops.size(), 3);
 
     OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
@@ -883,10 +876,13 @@ OCIO_ADD_TEST(GammaOps, computed_identifier)
     OCIO_CHECK_ASSERT(ops[0]->getCacheID() != ops[2]->getCacheID());
     OCIO_CHECK_ASSERT(ops[1]->getCacheID() == ops[2]->getCacheID());
 
+    auto gamma3 = std::make_shared<OCIO::GammaOpData>(OCIO::GammaOpData::BASIC_REV,
+                                                      redParams,
+                                                      greenParams,
+                                                      blueParams,
+                                                      alphaParams);
+    OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(ops, gamma3, OCIO::TRANSFORM_DIR_FORWARD));
 
-    OCIO_CHECK_NO_THROW(
-        OCIO::CreateGammaOp(ops, desc, OCIO::GammaOpData::BASIC_REV,
-                            &gamma4[0], nullptr));
     OCIO_CHECK_EQUAL(ops.size(), 4);
 
     OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
@@ -900,20 +896,16 @@ OCIO_ADD_TEST(GammaOps, create_transform)
 {
     OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_FORWARD;
 
-    OCIO::FormatMetadataImpl metadataSource(OCIO::METADATA_ROOT);
-    metadataSource.addAttribute("name", "test");
-
     const OCIO::GammaOpData::Params red{2., 0.2};
     const OCIO::GammaOpData::Params green{3., 0.3};
     const OCIO::GammaOpData::Params blue{4., 0.4};
     const OCIO::GammaOpData::Params alpha{2.5, 0.25};
 
     OCIO::GammaOpDataRcPtr gamma
-        = std::make_shared<OCIO::GammaOpData>(OCIO::BIT_DEPTH_F32,
-                                              OCIO::BIT_DEPTH_F32,
-                                              metadataSource,
-                                              OCIO::GammaOpData::MONCURVE_FWD,
+        = std::make_shared<OCIO::GammaOpData>(OCIO::GammaOpData::MONCURVE_FWD,
                                               red, green, blue, alpha);
+
+    gamma->getFormatMetadata().addAttribute("name", "test");
 
     OCIO::OpRcPtrVec ops;
     OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(ops, gamma, direction));
@@ -957,11 +949,10 @@ OCIO_ADD_TEST(GammaOps, create_transform)
     const OCIO::GammaOpData::Params alpha0{ 2.5 };
 
     OCIO::GammaOpDataRcPtr gamma0
-        = std::make_shared<OCIO::GammaOpData>(OCIO::BIT_DEPTH_F32,
-                                              OCIO::BIT_DEPTH_F32,
-                                              metadataSource,
-                                              OCIO::GammaOpData::BASIC_REV,
+        = std::make_shared<OCIO::GammaOpData>(OCIO::GammaOpData::BASIC_REV,
                                               red0, green0, blue0, alpha0);
+
+    gamma0->getFormatMetadata().addAttribute("name", "test");
 
     OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(ops, gamma0, direction));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);

@@ -25,10 +25,7 @@ protected:
     void updateParams(ConstFixedFunctionOpDataRcPtr & func);
 
 protected:
-    float m_inScale;
-    float m_outScale;
-    float m_alphaScale;
-    float m_noiseLimit;
+    const float m_noiseLimit = 1e-2f;
 };
 
 class Renderer_ACES_RedMod03_Fwd : public FixedFunctionOpCPU
@@ -103,7 +100,6 @@ public:
 
 protected:
     float m_gamma;
-    float m_invInScale;
 };
 
 class Renderer_REC2100_Surround : public FixedFunctionOpCPU
@@ -115,7 +111,6 @@ public:
 
 protected:
     float m_gamma;
-    float m_invInScale;
 };
 
 
@@ -128,19 +123,11 @@ protected:
 
 FixedFunctionOpCPU::FixedFunctionOpCPU(ConstFixedFunctionOpDataRcPtr & func)
     :   OpCPU()
-    ,   m_inScale(1.0f)
-    ,   m_outScale(1.0f)
-    ,   m_alphaScale(1.0f)
-    ,   m_noiseLimit(1e-2f)
 {
 }
 
 void FixedFunctionOpCPU::updateParams(ConstFixedFunctionOpDataRcPtr & func)
 {
-    m_inScale    = (float)(GetBitDepthMaxValue(func->getInputBitDepth()));
-    m_outScale   = (float)(GetBitDepthMaxValue(func->getOutputBitDepth()));
-    m_alphaScale = m_outScale / m_inScale;
-    m_noiseLimit = 1e-2f * m_inScale;
 }
 
 // Calculate a saturation measure in a safe manner.
@@ -165,8 +152,7 @@ Renderer_ACES_RedMod03_Fwd::Renderer_ACES_RedMod03_Fwd(ConstFixedFunctionOpDataR
 
     // Constants that define a scale and offset to be applied to the red channel.
     m_1minusScale = 1.f - 0.85f;   // (1. - scale) from the original ctl code
-    m_pivot = 0.03f;
-    m_pivot = m_pivot * m_inScale; // offset will be applied to unnormalized input values
+    m_pivot = 0.03f; // offset will be applied to unnormalized input values
 
     //float width = 120;  // width of hue region (in degrees)
     // Actually want to multiply by 4 / width (in radians).
@@ -263,10 +249,10 @@ void Renderer_ACES_RedMod03_Fwd::apply(const void * inImg, void * outImg, long n
             red = newRed;
         }
 
-        out[0] = red * m_alphaScale;
-        out[1] = grn * m_alphaScale;
-        out[2] = blu * m_alphaScale;
-        out[3] = in[3] * m_alphaScale;
+        out[0] = red;
+        out[1] = grn;
+        out[2] = blu;
+        out[3] = in[3];
 
         in  += 4;
         out += 4;
@@ -315,10 +301,10 @@ void Renderer_ACES_RedMod03_Inv::apply(const void * inImg, void * outImg, long n
             red = newRed;
         }
 
-        out[0] = red * m_alphaScale;
-        out[1] = grn * m_alphaScale;
-        out[2] = blu * m_alphaScale;
-        out[3] = in[3] * m_alphaScale;
+        out[0] = red;
+        out[1] = grn;
+        out[2] = blu;
+        out[3] = in[3];
 
         in  += 4;
         out += 4;
@@ -332,8 +318,7 @@ Renderer_ACES_RedMod10_Fwd::Renderer_ACES_RedMod10_Fwd(ConstFixedFunctionOpDataR
 
     // Constants that define a scale and offset to be applied to the red channel.
     m_1minusScale = 1.f - 0.82f;  // (1. - scale) from the original ctl code
-    m_pivot = 0.03f;
-    m_pivot = m_pivot * m_inScale;  // offset will be applied to unnormalized input values
+    m_pivot = 0.03f;  // offset will be applied to unnormalized input values
 
     //float width = 135;  // width of hue region (in degrees)
     // Actually want to multiply by 4 / width (in radians).
@@ -368,10 +353,10 @@ void Renderer_ACES_RedMod10_Fwd::apply(const void * inImg, void * outImg, long n
             red = red + f_H * f_S * (m_pivot - red) * m_1minusScale;
         }
 
-        out[0] = red * m_alphaScale;
-        out[1] = grn * m_alphaScale;
-        out[2] = blu * m_alphaScale;
-        out[3] = in[3] * m_alphaScale;
+        out[0] = red;
+        out[1] = grn;
+        out[2] = blu;
+        out[3] = in[3];
 
         in  += 4;
         out += 4;
@@ -407,10 +392,10 @@ void Renderer_ACES_RedMod10_Inv::apply(const void * inImg, void * outImg, long n
             red = ( -b - sqrt( b * b - 4.f * a * c)) / ( 2.f * a);
         }
 
-        out[0] = red * m_alphaScale;
-        out[1] = grn * m_alphaScale;
-        out[2] = blu * m_alphaScale;
-        out[3] = in[3] * m_alphaScale;
+        out[0] = red;
+        out[1] = grn;
+        out[2] = blu;
+        out[3] = in[3];
 
         in  += 4;
         out += 4;
@@ -465,7 +450,7 @@ void Renderer_ACES_Glow03_Fwd::apply(const void * inImg, void * outImg, long num
         const float s = SigmoidShaper(sat);
 
         const float GlowGain = m_glowGain * s;
-        const float GlowMid = m_glowMid * m_inScale;
+        const float GlowMid = m_glowMid;
 
         // Apply FwdGlow.
         float glowGainOut;
@@ -484,12 +469,11 @@ void Renderer_ACES_Glow03_Fwd::apply(const void * inImg, void * outImg, long num
 
         // Calculate glow factor.
         const float addedGlow = 1.f + glowGainOut;
-        const float scaleFac = m_alphaScale * addedGlow;
 
-        out[0] = red * scaleFac;
-        out[1] = grn * scaleFac;
-        out[2] = blu * scaleFac;
-        out[3] = in[3] * m_alphaScale;
+        out[0] = red * addedGlow;
+        out[1] = grn * addedGlow;
+        out[2] = blu * addedGlow;
+        out[3] = in[3];
 
         in  += 4;
         out += 4;
@@ -522,7 +506,7 @@ void Renderer_ACES_Glow03_Inv::apply(const void * inImg, void * outImg, long num
         const float s = SigmoidShaper(sat);
 
         const float GlowGain = m_glowGain * s;
-        const float GlowMid = m_glowMid * m_inScale;
+        const float GlowMid = m_glowMid;
 
         // Apply InvGlow.
         float glowGainOut;
@@ -541,12 +525,11 @@ void Renderer_ACES_Glow03_Inv::apply(const void * inImg, void * outImg, long num
 
         // Calculate glow factor.
         const float reducedGlow = 1.f + glowGainOut;
-        const float scaleFac = m_alphaScale * reducedGlow;
 
-        out[0] = red * scaleFac;
-        out[1] = grn * scaleFac;
-        out[2] = blu * scaleFac;
-        out[3] = in[3] * m_alphaScale;
+        out[0] = red * reducedGlow;
+        out[1] = grn * reducedGlow;
+        out[2] = blu * reducedGlow;
+        out[3] = in[3];
 
         in  += 4;
         out += 4;
@@ -559,7 +542,6 @@ Renderer_ACES_DarkToDim10_Fwd::Renderer_ACES_DarkToDim10_Fwd(ConstFixedFunctionO
 {
     updateParams(func);
     m_gamma = gamma - 1.f;  // compute Y^gamma / Y
-    m_invInScale = 1.f / m_inScale;
 }
 
 void Renderer_ACES_DarkToDim10_Fwd::apply(const void * inImg, void * outImg, long numPixels) const
@@ -579,20 +561,18 @@ void Renderer_ACES_DarkToDim10_Fwd::apply(const void * inImg, void * outImg, lon
         const float minLum = 1e-10f;
 
         // Calculate luminance assuming input is AP1 RGB.
-        const float Y = std::max( minLum, m_invInScale * ( 0.27222871678091454f  * red + 
-                                                           0.67408176581114831f  * grn + 
-                                                           0.053689517407937051f * blu ) );
+        const float Y = std::max( minLum, ( 0.27222871678091454f  * red + 
+                                            0.67408176581114831f  * grn + 
+                                            0.053689517407937051f * blu ) );
 
         // TODO: Currently our fast approx. requires SSE registers.
         //       Either make this whole routine SSE or make fast scalar pow.
         const float Ypow_over_Y = powf(Y, m_gamma);
 
-        const float scaleFac = m_alphaScale * Ypow_over_Y;
-
-        out[0] = red * scaleFac;
-        out[1] = grn * scaleFac;
-        out[2] = blu * scaleFac;
-        out[3] = in[3] * m_alphaScale;
+        out[0] = red * Ypow_over_Y;
+        out[1] = grn * Ypow_over_Y;
+        out[2] = blu * Ypow_over_Y;
+        out[3] = in[3];
 
         in  += 4;
         out += 4;
@@ -607,7 +587,6 @@ Renderer_REC2100_Surround::Renderer_REC2100_Surround(ConstFixedFunctionOpDataRcP
     const float gamma = (float)func->getParams()[0];
 
     m_gamma = gamma - 1.f;  // compute Y^gamma / Y
-    m_invInScale = 1.f / m_inScale;
 }
 
 void Renderer_REC2100_Surround::apply(const void * inImg, void * outImg, long numPixels) const
@@ -631,20 +610,18 @@ void Renderer_REC2100_Surround::apply(const void * inImg, void * outImg, long nu
 
         // Calculate luminance assuming input is Rec.2100 RGB.
         // TODO: Add another parameter to allow using other primaries.
-        const float Y = std::max( minLum, m_invInScale * ( 0.2627f * red + 
-                                                           0.6780f * grn + 
-                                                           0.0593f * blu ) );
+        const float Y = std::max( minLum, ( 0.2627f * red + 
+                                            0.6780f * grn + 
+                                            0.0593f * blu ) );
 
         // TODO: Currently our fast approx. requires SSE registers.
         //       Either make this whole routine SSE or make fast scalar pow.
         const float Ypow_over_Y = powf(Y, m_gamma);
 
-        const float scaleFac = m_alphaScale * Ypow_over_Y;
-
-        out[0] = red * scaleFac;
-        out[1] = grn * scaleFac;
-        out[2] = blu * scaleFac;
-        out[3] = in[3] * m_alphaScale;
+        out[0] = red * Ypow_over_Y;
+        out[1] = grn * Ypow_over_Y;
+        out[2] = blu * Ypow_over_Y;
+        out[3] = in[3];
 
         in  += 4;
         out += 4;
@@ -785,8 +762,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_red_mod_03)
 
     {
         OCIO::ConstFixedFunctionOpDataRcPtr funcData 
-            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                                                          params, 
+            = std::make_shared<OCIO::FixedFunctionOpData>(params, 
                                                           OCIO::FixedFunctionOpData::ACES_RED_MOD_03_FWD);
 
         ApplyFixedFunction(&output_32f[0], &expected_32f[0], num_samples, 
@@ -796,8 +772,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_red_mod_03)
 
     {
         OCIO::ConstFixedFunctionOpDataRcPtr funcData 
-            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                                                          params, 
+            = std::make_shared<OCIO::FixedFunctionOpData>(params, 
                                                           OCIO::FixedFunctionOpData::ACES_RED_MOD_03_INV);
 
         ApplyFixedFunction(&output_32f[0], &input_32f[0], num_samples, 
@@ -831,8 +806,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_red_mod_10)
 
     {
         OCIO::ConstFixedFunctionOpDataRcPtr funcData 
-            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                                                          params, 
+            = std::make_shared<OCIO::FixedFunctionOpData>(params, 
                                                           OCIO::FixedFunctionOpData::ACES_RED_MOD_10_FWD);
 
         ApplyFixedFunction(&output_32f[0], &expected_32f[0], num_samples, 
@@ -842,8 +816,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_red_mod_10)
 
     {
         OCIO::ConstFixedFunctionOpDataRcPtr funcData 
-            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                                                          params, 
+            = std::make_shared<OCIO::FixedFunctionOpData>(params, 
                                                           OCIO::FixedFunctionOpData::ACES_RED_MOD_10_INV);
 
         float adjusted_input_32f[num_samples*4];
@@ -887,8 +860,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_glow_03)
 
     {
         OCIO::ConstFixedFunctionOpDataRcPtr funcData 
-            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                                                          params, 
+            = std::make_shared<OCIO::FixedFunctionOpData>(params, 
                                                           OCIO::FixedFunctionOpData::ACES_GLOW_03_FWD);
 
         ApplyFixedFunction(&output_32f[0], &expected_32f[0], num_samples, 
@@ -898,8 +870,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_glow_03)
 
     {
         OCIO::ConstFixedFunctionOpDataRcPtr funcData 
-            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                                                          params, 
+            = std::make_shared<OCIO::FixedFunctionOpData>(params, 
                                                           OCIO::FixedFunctionOpData::ACES_GLOW_03_INV);
 
         ApplyFixedFunction(&output_32f[0], &input_32f[0], num_samples, 
@@ -933,8 +904,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_glow_10)
 
     {
         OCIO::ConstFixedFunctionOpDataRcPtr funcData 
-            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                                                          params, 
+            = std::make_shared<OCIO::FixedFunctionOpData>(params, 
                                                           OCIO::FixedFunctionOpData::ACES_GLOW_10_FWD);
 
         ApplyFixedFunction(&output_32f[0], &expected_32f[0], num_samples, 
@@ -944,8 +914,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_glow_10)
 
     {
         OCIO::ConstFixedFunctionOpDataRcPtr funcData 
-            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                                                          params, 
+            = std::make_shared<OCIO::FixedFunctionOpData>(params, 
                                                           OCIO::FixedFunctionOpData::ACES_GLOW_10_INV);
 
         ApplyFixedFunction(&output_32f[0], &input_32f[0], num_samples, 
@@ -979,8 +948,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_dark_to_dim_10)
 
     {
         OCIO::ConstFixedFunctionOpDataRcPtr funcData 
-            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                                                          params, 
+            = std::make_shared<OCIO::FixedFunctionOpData>(params, 
                                                           OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD);
 
         ApplyFixedFunction(&output_32f[0], &expected_32f[0], num_samples, 
@@ -990,8 +958,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_dark_to_dim_10)
 
     {
         OCIO::ConstFixedFunctionOpDataRcPtr funcData 
-            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                                                          params, 
+            = std::make_shared<OCIO::FixedFunctionOpData>(params, 
                                                           OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV);
 
         ApplyFixedFunction(&output_32f[0], &input_32f[0], num_samples, 
@@ -1020,8 +987,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, rec2100_surround)
 
     OCIO::FixedFunctionOpData::Params params = { 0.78 };
     OCIO::ConstFixedFunctionOpDataRcPtr funcData 
-        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
-                                                      params, 
+        = std::make_shared<OCIO::FixedFunctionOpData>(params, 
                                                       OCIO::FixedFunctionOpData::REC2100_SURROUND);
 
     ApplyFixedFunction(&input_32f[0], &expected_32f[0], num_samples, 

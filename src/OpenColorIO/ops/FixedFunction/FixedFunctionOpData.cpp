@@ -194,16 +194,14 @@ FixedFunctionStyle FixedFunctionOpData::ConvertStyle(FixedFunctionOpData::Style 
 }
 
 FixedFunctionOpData::FixedFunctionOpData()
-    :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
+    :   OpData()
     ,   m_style(ACES_RED_MOD_03_FWD)
 {
 }
 
-FixedFunctionOpData::FixedFunctionOpData(BitDepth inBitDepth,
-                                         BitDepth outBitDepth,
-                                         const Params & params,
+FixedFunctionOpData::FixedFunctionOpData(const Params & params,
                                          Style style)
-    :   OpData(inBitDepth, outBitDepth)
+    :   OpData()
     ,   m_style(style)
     ,   m_params(params)
 {
@@ -216,9 +214,7 @@ FixedFunctionOpData::~FixedFunctionOpData()
 
 FixedFunctionOpDataRcPtr FixedFunctionOpData::clone() const
 {
-    return std::make_shared<FixedFunctionOpData>(getInputBitDepth(), 
-                                                 getOutputBitDepth(),
-                                                 getParams(),
+    return std::make_shared<FixedFunctionOpData>(getParams(),
                                                  getStyle());
 }
 
@@ -335,10 +331,6 @@ void FixedFunctionOpData::invert()
         }
     }
 
-    const BitDepth inBD = getInputBitDepth();
-    setInputBitDepth(getOutputBitDepth());
-    setOutputBitDepth(inBD);
-
     // Note that any existing metadata could become stale at this point but
     // trying to update it is also challenging since inverse() is sometimes
     // called even during the creation of new ops.
@@ -394,7 +386,6 @@ namespace OCIO = OCIO_NAMESPACE;
 OCIO_ADD_TEST(FixedFunctionOpData, aces_red_mod_style)
 {
     OCIO::FixedFunctionOpData func;
-    OCIO_CHECK_NO_THROW(func.setInputBitDepth(OCIO::BIT_DEPTH_UINT8));
     OCIO_CHECK_EQUAL(func.getStyle(), OCIO::FixedFunctionOpData::ACES_RED_MOD_03_FWD);
     OCIO_CHECK_EQUAL(func.getParams().size(), 0);
     OCIO_CHECK_NO_THROW(func.validate());
@@ -412,8 +403,6 @@ OCIO_ADD_TEST(FixedFunctionOpData, aces_red_mod_style)
     OCIO_CHECK_EQUAL(inv->getStyle(), OCIO::FixedFunctionOpData::ACES_RED_MOD_10_INV);
     OCIO_CHECK_EQUAL(inv->getParams().size(), 0);
     OCIO_CHECK_ASSERT(cacheID!=std::string(inv->getCacheID()));
-    OCIO_CHECK_EQUAL(inv->getInputBitDepth(), func.getOutputBitDepth());
-    OCIO_CHECK_EQUAL(inv->getOutputBitDepth(), func.getInputBitDepth());
 
     OCIO::FixedFunctionOpData::Params p = func.getParams();
     p.push_back(1.);
@@ -425,8 +414,7 @@ OCIO_ADD_TEST(FixedFunctionOpData, aces_red_mod_style)
 
 OCIO_ADD_TEST(FixedFunctionOpData, aces_dark_to_dim10_style)
 {
-    OCIO::FixedFunctionOpData func(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_F32, 
-                                   OCIO::FixedFunctionOpData::Params(), 
+    OCIO::FixedFunctionOpData func(OCIO::FixedFunctionOpData::Params(), 
                                    OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD);
 
     OCIO_CHECK_EQUAL(func.getStyle(), OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD);
@@ -439,8 +427,6 @@ OCIO_ADD_TEST(FixedFunctionOpData, aces_dark_to_dim10_style)
     OCIO_CHECK_EQUAL(inv->getStyle(), OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV);
     OCIO_CHECK_EQUAL(inv->getParams().size(), 0);
     OCIO_CHECK_ASSERT(cacheID!=std::string(inv->getCacheID()));
-    OCIO_CHECK_EQUAL(inv->getInputBitDepth(), func.getOutputBitDepth());
-    OCIO_CHECK_EQUAL(inv->getOutputBitDepth(), func.getInputBitDepth());
 
     OCIO::FixedFunctionOpData::Params p = func.getParams();
     p.push_back(1.);
@@ -453,8 +439,7 @@ OCIO_ADD_TEST(FixedFunctionOpData, aces_dark_to_dim10_style)
 OCIO_ADD_TEST(FixedFunctionOpData, rec2100_surround_style)
 {
     OCIO::FixedFunctionOpData::Params params = { 2.0 };
-        OCIO::FixedFunctionOpData func(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_F32, 
-                                   params, OCIO::FixedFunctionOpData::REC2100_SURROUND);
+    OCIO::FixedFunctionOpData func(params, OCIO::FixedFunctionOpData::REC2100_SURROUND);
     OCIO_CHECK_NO_THROW(func.validate());
     OCIO_CHECK_NO_THROW(func.finalize());
     const std::string cacheID(func.getCacheID());
@@ -462,8 +447,6 @@ OCIO_ADD_TEST(FixedFunctionOpData, rec2100_surround_style)
 
     OCIO::FixedFunctionOpDataRcPtr inv = func.inverse();
     OCIO_CHECK_EQUAL(inv->getParams()[0], 1. / func.getParams()[0]);
-    OCIO_CHECK_EQUAL(inv->getInputBitDepth(), func.getOutputBitDepth());
-    OCIO_CHECK_EQUAL(inv->getOutputBitDepth(), func.getInputBitDepth());
     OCIO_CHECK_ASSERT(cacheID!=std::string(inv->getCacheID()));
 
     OCIO_CHECK_ASSERT(func == func);

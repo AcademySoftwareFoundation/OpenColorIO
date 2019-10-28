@@ -80,7 +80,7 @@ const char * CDLOpData::GetStyleName(CDLOpData::Style style)
 }
 
 CDLOpData::CDLOpData()
-    :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
+    :   OpData()
     ,   m_style(GetDefaultStyle())
     ,   m_slopeParams(1.0)
     ,   m_offsetParams(0.0)
@@ -89,32 +89,12 @@ CDLOpData::CDLOpData()
 {
 }
 
-CDLOpData::CDLOpData(BitDepth inBitDepth,
-                     BitDepth outBitDepth,
-                     const FormatMetadataImpl & info,
-                     const CDLOpData::Style & style,
+CDLOpData::CDLOpData(const CDLOpData::Style & style,
                      const ChannelParams & slopeParams,
                      const ChannelParams & offsetParams,
                      const ChannelParams & powerParams,
                      const double saturation)
-    :   OpData(inBitDepth, outBitDepth, info)
-    ,   m_style(style)
-    ,   m_slopeParams(slopeParams)
-    ,   m_offsetParams(offsetParams)
-    ,   m_powerParams(powerParams)
-    ,   m_saturation(saturation)
-{
-    validate();
-}
-
-CDLOpData::CDLOpData(BitDepth inBitDepth,
-                     BitDepth outBitDepth,
-                     const CDLOpData::Style & style,
-                     const ChannelParams & slopeParams,
-                     const ChannelParams & offsetParams,
-                     const ChannelParams & powerParams,
-                     const double saturation)
-    :   OpData(inBitDepth, outBitDepth)
+    :   OpData()
     ,   m_style(style)
     ,   m_slopeParams(slopeParams)
     ,   m_offsetParams(offsetParams)
@@ -241,8 +221,7 @@ void validateParams(const CDLOpData::ChannelParams& slopeParams,
 
 bool CDLOpData::isNoOp() const
 {
-    return getInputBitDepth() == getOutputBitDepth()
-        && isIdentity()
+    return isIdentity()
         && !isClamping();
 }
 
@@ -263,13 +242,10 @@ OpDataRcPtr CDLOpData::getIdentityReplacement() const
         case CDL_V1_2_FWD:
         case CDL_V1_2_REV:
         {
-            op.reset(new RangeOpData(getInputBitDepth(),
-                                     getOutputBitDepth(),
-                                     getFormatMetadata(),
-                                     0.,
-                                     RangeOpData::EmptyValue(), // don't clamp high end
-                                     0.,
-                                     RangeOpData::EmptyValue()));
+            op = std::make_shared<RangeOpData>(0.,
+                                               RangeOpData::EmptyValue(), // don't clamp high end
+                                               0.,
+                                               RangeOpData::EmptyValue());
             break;
         }
 
@@ -277,11 +253,11 @@ OpDataRcPtr CDLOpData::getIdentityReplacement() const
         case CDL_NO_CLAMP_FWD:
         case CDL_NO_CLAMP_REV:
         {
-            op.reset(new MatrixOpData(getInputBitDepth(), getOutputBitDepth(),
-                                      getFormatMetadata()));
+            op = std::make_shared<MatrixOpData>();
             break;
         }
     }
+    op->getFormatMetadata() = getFormatMetadata();
     return op;
 }
 
@@ -362,8 +338,6 @@ bool CDLOpData::isInverse(ConstCDLOpDataRcPtr & r) const
 CDLOpDataRcPtr CDLOpData::inverse() const
 {
     CDLOpDataRcPtr cdl = clone();
-    cdl->setInputBitDepth(getOutputBitDepth());
-    cdl->setOutputBitDepth(getInputBitDepth());
 
     switch(cdl->getStyle())
     {
@@ -414,8 +388,7 @@ OCIO_ADD_TEST(CDLOpData, accessors)
     OCIO::CDLOpData::ChannelParams offsetParams(0.05, -0.23, 0.11);
     OCIO::CDLOpData::ChannelParams powerParams(0.93, 0.81, 1.27);
 
-    OCIO::CDLOpData cdlOp(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_F16,
-                          OCIO::CDLOpData::CDL_V1_2_FWD,
+    OCIO::CDLOpData cdlOp(OCIO::CDLOpData::CDL_V1_2_FWD,
                           slopeParams, offsetParams, powerParams, 1.23);
 
     // Update slope parameters with the same value.
@@ -461,8 +434,6 @@ OCIO_ADD_TEST(CDLOpData, constructors)
     OCIO::CDLOpData cdlOpDefault;
 
     OCIO_CHECK_EQUAL(cdlOpDefault.getType(), OCIO::CDLOpData::CDLType);
-    OCIO_CHECK_EQUAL(cdlOpDefault.getInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(cdlOpDefault.getOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     OCIO_CHECK_EQUAL(cdlOpDefault.getID(), "");
     OCIO_CHECK_ASSERT(cdlOpDefault.getFormatMetadata().getChildrenElements().empty());
@@ -481,27 +452,20 @@ OCIO_ADD_TEST(CDLOpData, constructors)
     OCIO_CHECK_EQUAL(cdlOpDefault.getSaturation(), 1.0);
 
     // Check complete constructor.
-    OCIO::FormatMetadataImpl info(OCIO::METADATA_ROOT);
-    OCIO::FormatMetadataImpl item("Test", "first_test_description");
-    info.getChildrenElements().push_back(item);
-    item.setValue("second_test_description");
-    info.getChildrenElements().push_back(item);
-    info.addAttribute(OCIO::METADATA_ID, "test_id");
-
-    OCIO::CDLOpData cdlOpComplete(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_UINT12,
-                                  info,
-                                  OCIO::CDLOpData::CDL_NO_CLAMP_REV,
+    OCIO::CDLOpData cdlOpComplete(OCIO::CDLOpData::CDL_NO_CLAMP_REV,
                                   OCIO::CDLOpData::ChannelParams(1.35, 1.1, 0.71),
                                   OCIO::CDLOpData::ChannelParams(0.05, -0.23, 0.11),
                                   OCIO::CDLOpData::ChannelParams(0.93, 0.81, 1.27),
                                   1.23);
 
-    OCIO_CHECK_EQUAL(cdlOpComplete.getType(), OCIO::OpData::CDLType);
-    OCIO_CHECK_EQUAL(cdlOpComplete.getInputBitDepth(), OCIO::BIT_DEPTH_F16);
-    OCIO_CHECK_EQUAL(cdlOpComplete.getOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+    auto & metadata = cdlOpComplete.getFormatMetadata();
+    metadata.addAttribute(OCIO::METADATA_NAME, "cdl-name");
+    metadata.addAttribute(OCIO::METADATA_ID, "cdl-id");
 
-    OCIO_CHECK_EQUAL(cdlOpComplete.getID(), "test_id");
-    OCIO_CHECK_ASSERT(cdlOpComplete.getFormatMetadata() == info);
+    OCIO_CHECK_EQUAL(cdlOpComplete.getName(), "cdl-name");
+    OCIO_CHECK_EQUAL(cdlOpComplete.getID(), "cdl-id");
+
+    OCIO_CHECK_EQUAL(cdlOpComplete.getType(), OCIO::OpData::CDLType);
 
     OCIO_CHECK_EQUAL(cdlOpComplete.getStyle(),
                      OCIO::CDLOpData::CDL_NO_CLAMP_REV);
@@ -519,26 +483,18 @@ OCIO_ADD_TEST(CDLOpData, constructors)
 
 OCIO_ADD_TEST(CDLOpData, inverse)
 {
-    OCIO::FormatMetadataImpl metadata(OCIO::METADATA_ROOT);
-    metadata.addAttribute(OCIO::METADATA_ID, "test_id");
-    metadata.addChildElement(OCIO::METADATA_DESCRIPTION, "Inverse op test description");
-
-    OCIO::CDLOpData cdlOp(OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_UINT12,
-                          metadata,
-                          OCIO::CDLOpData::CDL_V1_2_FWD,
+    OCIO::CDLOpData cdlOp(OCIO::CDLOpData::CDL_V1_2_FWD,
                           OCIO::CDLOpData::ChannelParams(1.35, 1.1, 0.71),
                           OCIO::CDLOpData::ChannelParams(0.05, -0.23, 0.11),
                           OCIO::CDLOpData::ChannelParams(0.93, 0.81, 1.27),
                           1.23);
+    cdlOp.getFormatMetadata().addAttribute(OCIO::METADATA_ID, "test_id");
+    cdlOp.getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, "Inverse op test description");
 
     // Test CDL_V1_2_FWD inverse
     {
         cdlOp.setStyle(OCIO::CDLOpData::CDL_V1_2_FWD);
         const OCIO::CDLOpDataRcPtr invOp = cdlOp.inverse();
-
-        // Ensure bit depths are swapped
-        OCIO_CHECK_EQUAL(invOp->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
-        OCIO_CHECK_EQUAL(invOp->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
         // Ensure metadata is copied
         OCIO_CHECK_EQUAL(invOp->getID(), "test_id");
@@ -571,10 +527,6 @@ OCIO_ADD_TEST(CDLOpData, inverse)
         cdlOp.setStyle(OCIO::CDLOpData::CDL_V1_2_REV);
         const OCIO::CDLOpDataRcPtr invOp = cdlOp.inverse();
 
-        // Ensure bit depths are swapped
-        OCIO_CHECK_EQUAL(invOp->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
-        OCIO_CHECK_EQUAL(invOp->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
-
         // Ensure metadata is copied
         OCIO_CHECK_EQUAL(invOp->getID(), "test_id");
         OCIO_CHECK_EQUAL(invOp->getFormatMetadata().getChildrenElements().size(), 1);
@@ -602,10 +554,6 @@ OCIO_ADD_TEST(CDLOpData, inverse)
         cdlOp.setStyle(OCIO::CDLOpData::CDL_NO_CLAMP_FWD);
         const OCIO::CDLOpDataRcPtr invOp = cdlOp.inverse();
 
-        // Ensure bit depths are swapped
-        OCIO_CHECK_EQUAL(invOp->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
-        OCIO_CHECK_EQUAL(invOp->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
-
         // Ensure metadata is copied
         OCIO_CHECK_EQUAL(invOp->getID(), "test_id");
         OCIO_CHECK_EQUAL(invOp->getFormatMetadata().getChildrenElements().size(), 1);
@@ -631,10 +579,6 @@ OCIO_ADD_TEST(CDLOpData, inverse)
     {
         cdlOp.setStyle(OCIO::CDLOpData::CDL_NO_CLAMP_REV);
         const OCIO::CDLOpDataRcPtr invOp = cdlOp.inverse();
-
-        // Ensure bit depths are swapped
-        OCIO_CHECK_EQUAL(invOp->getInputBitDepth(), OCIO::BIT_DEPTH_UINT12);
-        OCIO_CHECK_EQUAL(invOp->getOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
         // Ensure metadata is copied
         OCIO_CHECK_EQUAL(invOp->getID(), "test_id");

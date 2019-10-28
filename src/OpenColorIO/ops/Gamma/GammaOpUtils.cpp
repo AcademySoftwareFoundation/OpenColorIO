@@ -108,36 +108,23 @@ double monCurveScaleRev(const GammaOpData::Params & p)
 };
 
 void ComputeParamsFwd(const GammaOpData::Params & gParams,
-                      BitDepth inBitDepth,
-                      BitDepth outBitDepth,
                       RendererParams & rParams)
 {
     rParams.gamma    = float(monCurveGammaFwd(gParams));
     rParams.offset   = float(monCurveOffsetFwd(gParams));
-    rParams.breakPnt = float(monCurveBreakFwd(gParams) 
-                        * GetBitDepthMaxValue(inBitDepth));
-    rParams.slope    = float(monCurveSlopeFwd(gParams) 
-                        * GetBitDepthMaxValue(outBitDepth) 
-                        / GetBitDepthMaxValue(inBitDepth));
-    rParams.scale    = float(monCurveScaleFwd(gParams)
-                        / GetBitDepthMaxValue(inBitDepth));
+    rParams.breakPnt = float(monCurveBreakFwd(gParams));
+    rParams.slope    = float(monCurveSlopeFwd(gParams));
+    rParams.scale    = float(monCurveScaleFwd(gParams));
 }
 
 void ComputeParamsRev(const GammaOpData::Params & gParams,
-                      BitDepth inBitDepth,
-                      BitDepth outBitDepth,
                       RendererParams & rParams)
 {
     rParams.gamma    = float(monCurveGammaRev(gParams));
-    rParams.offset   = float(monCurveOffsetRev(gParams)
-                        * GetBitDepthMaxValue(outBitDepth));
-    rParams.breakPnt = float(monCurveBreakRev(gParams)
-                        * GetBitDepthMaxValue(inBitDepth));
-    rParams.slope    = float(monCurveSlopeRev(gParams)
-                        * GetBitDepthMaxValue(outBitDepth)
-                        / GetBitDepthMaxValue(inBitDepth));
-    rParams.scale    = float(monCurveScaleRev(gParams)
-                        * GetBitDepthMaxValue(outBitDepth));
+    rParams.offset   = float(monCurveOffsetRev(gParams));
+    rParams.breakPnt = float(monCurveBreakRev(gParams));
+    rParams.slope    = float(monCurveSlopeRev(gParams));
+    rParams.scale    = float(monCurveScaleRev(gParams));
 }
 
 }
@@ -158,31 +145,14 @@ OCIO_ADD_TEST(GammaOpUtils, compute_params_forward)
     const OCIO::GammaOpData::Params gParams = { 2.0f, 0.1f };
     OCIO::RendererParams rParams;
 
-    // F32 to F32
+    ComputeParamsFwd(gParams, rParams);
 
-    {
-        ComputeParamsFwd(gParams, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, rParams);
+    OCIO_CHECK_EQUAL(rParams.gamma,    2.0f);
+    OCIO_CHECK_EQUAL(rParams.offset,   float(0.1 / (1. + 0.1)));
+    OCIO_CHECK_EQUAL(rParams.breakPnt, float(0.1 / (2. - 1. )));
+    OCIO_CHECK_EQUAL(rParams.scale,    float(1.  / (1. + 0.1)));
 
-        OCIO_CHECK_EQUAL(rParams.gamma,    2.0f);
-        OCIO_CHECK_EQUAL(rParams.offset,   float(0.1 / (1. + 0.1)));
-        OCIO_CHECK_EQUAL(rParams.breakPnt, float(0.1 / (2. - 1. )));
-        OCIO_CHECK_EQUAL(rParams.scale,    float(1.  / (1. + 0.1)));
-
-        OCIO_CHECK_ASSERT(OCIO::EqualWithAbsError(rParams.slope, 0.33057851f, 1e-7f));
-    }
-
-    // UINT10 to F16
-
-    {
-        ComputeParamsFwd(gParams, OCIO::BIT_DEPTH_UINT10, OCIO::BIT_DEPTH_F16, rParams);
-
-        OCIO_CHECK_EQUAL(rParams.gamma,    2.0f);
-        OCIO_CHECK_EQUAL(rParams.offset,   float( 0.1 / (1. + 0.1)));
-        OCIO_CHECK_EQUAL(rParams.breakPnt, float((0.1 / (2. - 1. )) * 1023.));
-        OCIO_CHECK_EQUAL(rParams.scale,    float((1.  / (1. + 0.1)) / 1023.));
-
-        OCIO_CHECK_ASSERT(OCIO::EqualWithAbsError(rParams.slope, 0.00032314f, 1e-7f));
-    }
+    OCIO_CHECK_ASSERT(OCIO::EqualWithAbsError(rParams.slope, 0.33057851f, 1e-7f));
 }
 
 
@@ -191,32 +161,14 @@ OCIO_ADD_TEST(GammaOpUtils, compute_params_reverse)
     const OCIO::GammaOpData::Params gParams = { 2.0f, 0.1f };
     OCIO::RendererParams rParams;
 
-    // F32 to F32
+    ComputeParamsRev(gParams, rParams);
 
-    {
-        ComputeParamsRev(gParams, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32, rParams);
+    OCIO_CHECK_EQUAL(rParams.gamma,    0.5f );
+    OCIO_CHECK_EQUAL(rParams.offset,   0.1f);
+    OCIO_CHECK_EQUAL(rParams.scale,    1.0f + 0.1f);
 
-        OCIO_CHECK_EQUAL(rParams.gamma,    0.5f );
-        OCIO_CHECK_EQUAL(rParams.offset,   0.1f);
-        OCIO_CHECK_EQUAL(rParams.scale,    1.0f + 0.1f);
-
-        OCIO_CHECK_ASSERT(OCIO::EqualWithAbsError(rParams.breakPnt, 0.03305785f, 1e-7f));
-        OCIO_CHECK_ASSERT(OCIO::EqualWithAbsError(rParams.slope,    3.02499986f, 1e-7f));
-    }
-
-    // UINT10 to F16
-
-    {
-        ComputeParamsRev(gParams, OCIO::BIT_DEPTH_UINT10, OCIO::BIT_DEPTH_F16, rParams);
-
-        OCIO_CHECK_EQUAL(rParams.gamma,    0.5f);
-        OCIO_CHECK_EQUAL(rParams.offset,   0.1f);
-        OCIO_CHECK_EQUAL(rParams.scale,    1.0f + 0.1f);
-
-        OCIO_CHECK_ASSERT(OCIO::EqualWithAbsError(rParams.breakPnt, 33.81818390f, 1e-7f));
-        OCIO_CHECK_ASSERT(OCIO::EqualWithAbsError(rParams.slope,     0.00295698f, 1e-7f));
-    }
-
+    OCIO_CHECK_ASSERT(OCIO::EqualWithAbsError(rParams.breakPnt, 0.03305785f, 1e-7f));
+    OCIO_CHECK_ASSERT(OCIO::EqualWithAbsError(rParams.slope,    3.02499986f, 1e-7f));
 }
 
 

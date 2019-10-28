@@ -399,19 +399,16 @@ OCIO_NAMESPACE_ENTER
                 if (!IsIdentity(rawshaper, out1DBD))
                 {
                     unsigned long length = (unsigned long)rawshaper.size();
-                    cachedFile->lut1D = std::make_shared<Lut1DOpData>(BIT_DEPTH_F32,
-                                                                      out1DBD,
-                                                                      FormatMetadataImpl(METADATA_ROOT),
-                                                                      INTERP_DEFAULT,
-                                                                      Lut1DOpData::LUT_STANDARD,
-                                                                      length);
+                    cachedFile->lut1D = std::make_shared<Lut1DOpData>(length);
+                    cachedFile->lut1D->setFileOutputBitDepth(out1DBD);
 
+                    const float scale = (float)GetBitDepthMaxValue(out1DBD);
                     Array & lutArray = cachedFile->lut1D->getArray();
                     for (unsigned int i = 0, p = 0; i < rawshaper.size(); ++i)
                     {
                         for (int j = 0; j < 3; ++j, ++p)
                         {
-                            lutArray[p] = static_cast<float>(rawshaper[i]);
+                            lutArray[p] = static_cast<float>(rawshaper[i]) / scale;
                         }
                     }
                 }
@@ -453,25 +450,16 @@ OCIO_NAMESPACE_ENTER
                 // which is the same order used by Lut3DOpData, so no
                 // transposition of LUT entries is needed in this case.
 
-                BitDepth in3DBD = BIT_DEPTH_F32;
-                if (out1DBD != BIT_DEPTH_UNKNOWN)
-                {
-                    in3DBD = out1DBD;
-                }
                 BitDepth out3DBD = GetOCIOBitdepth(lut3dbitdepth);
 
-                cachedFile->lut3D = std::make_shared<Lut3DOpData>(in3DBD,
-                                                                  out3DBD,
-                                                                  FormatMetadataImpl(METADATA_ROOT),
-                                                                  INTERP_DEFAULT,
-                                                                  lutEdgeLen);
-
+                cachedFile->lut3D = std::make_shared<Lut3DOpData>(lutEdgeLen);
                 cachedFile->lut3D->setFileOutputBitDepth(out3DBD);
-                Array & lutArray = cachedFile->lut3D->getArray();
 
+                const float scale = (float)GetBitDepthMaxValue(out3DBD);
+                Array & lutArray = cachedFile->lut3D->getArray();
                 for (size_t i = 0; i < raw3d.size(); ++i)
                 {
-                    lutArray[(unsigned long)i] = static_cast<float>(raw3d[i]);
+                    lutArray[(unsigned long)i] = static_cast<float>(raw3d[i]) / scale;
                 }
             }
             return cachedFile;
