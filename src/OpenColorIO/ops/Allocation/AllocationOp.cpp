@@ -111,6 +111,7 @@ OCIO_NAMESPACE_USING
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
+#include "UnitTestUtils.h"
 
 OCIO_ADD_TEST(AllocationOps, Create)
 {
@@ -170,8 +171,7 @@ OCIO_ADD_TEST(AllocationOps, Create)
     OCIO::ConstOpRcPtr op1 = ops[1];
     // second op is a fit transform
     OCIO_CHECK_EQUAL(forwardFitOp->isSameType(op1), true);
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
     ConstOpRcPtr defaultLogOp = ops[0];
     ConstOpRcPtr defaultFitOp = ops[1];
@@ -240,7 +240,7 @@ OCIO_ADD_TEST(AllocationOps, Create)
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
     // Identity is removed.
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     op0 = ops[0];
     OCIO_CHECK_EQUAL(defaultLogOp->isSameType(op0), true);
@@ -249,7 +249,7 @@ OCIO_ADD_TEST(AllocationOps, Create)
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_INVERSE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
     // Identity is removed.
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     op0 = ops[0];
     OCIO_CHECK_EQUAL(defaultLogOp->isSameType(op0), true);
@@ -264,7 +264,7 @@ OCIO_ADD_TEST(AllocationOps, Create)
     OCIO_CHECK_NO_THROW(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_FORWARD));
     OCIO_CHECK_EQUAL(ops.size(), 2);
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     ops[0]->finalize(OCIO::FINALIZATION_EXACT);
 

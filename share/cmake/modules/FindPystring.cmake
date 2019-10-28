@@ -106,6 +106,10 @@ if(NOT PYSTRING_FOUND)
             endif()
         endif()
 
+        if(MSVC)
+            set(PYSTRING_CXX_FLAGS "${PYSTRING_CXX_FLAGS} /EHsc")
+        endif()
+
         string(STRIP "${PYSTRING_CXX_FLAGS}" PYSTRING_CXX_FLAGS)
 
         set(PYSTRING_CMAKE_ARGS
@@ -134,6 +138,7 @@ if(NOT PYSTRING_FOUND)
         ExternalProject_Add(pystring_install
             GIT_REPOSITORY "https://github.com/imageworks/pystring.git"
             GIT_TAG "v${Pystring_FIND_VERSION}"
+            GIT_CONFIG advice.detachedHead=false
             GIT_SHALLOW TRUE
             PREFIX "${_EXT_BUILD_ROOT}/pystring"
             BUILD_BYPRODUCTS ${PYSTRING_LIBRARY}

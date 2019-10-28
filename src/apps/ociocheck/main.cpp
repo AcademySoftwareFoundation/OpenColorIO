@@ -64,9 +64,9 @@ int main(int argc, const char **argv)
             std::cout << "Loading " << inputconfig << std::endl;
             config = OCIO::Config::CreateFromFile(inputconfig.c_str());
         }
-        else if(getenv("OCIO"))
+        else if(OCIO::GetEnvVariable("OCIO"))
         {
-            std::cout << "Loading $OCIO " << getenv("OCIO") << std::endl;
+            std::cout << "Loading $OCIO " << OCIO::GetEnvVariable("OCIO") << std::endl;
             config = OCIO::Config::CreateFromEnv();
         }
         else

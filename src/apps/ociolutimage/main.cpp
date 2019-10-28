@@ -69,7 +69,7 @@ void Generate(int cubesize, int maxwidth,
         {
             config = OCIO::Config::CreateFromFile(configfile.c_str());
         }
-        else if(getenv("OCIO"))
+        else if(OCIO::GetEnvVariable("OCIO"))
         {
             config = OCIO::Config::CreateFromEnv();
         }

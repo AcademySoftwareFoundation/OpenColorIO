@@ -48,9 +48,7 @@ public:
               const double(&linOffset)[3],
               TransformDirection direction);
 
-    LogOpData(BitDepth inBitDepth,
-              BitDepth outBitDepth,
-              TransformDirection dir,
+    LogOpData(TransformDirection dir,
               double base,
               const Params & redParams,
               const Params & greenParams,

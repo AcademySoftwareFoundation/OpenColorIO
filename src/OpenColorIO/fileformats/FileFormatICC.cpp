@@ -419,12 +419,16 @@ OCIO_NAMESPACE_ENTER
             }
             else
             {
-                const double val[4] = { cachedFile->mGammaRGB[0],
-                                        cachedFile->mGammaRGB[1],
-                                        cachedFile->mGammaRGB[2],
-                                        cachedFile->mGammaRGB[3] };
-                CreateGammaOp(ops, FormatMetadataImpl(METADATA_ROOT),
-                              GammaOpData::BASIC_FWD, &val[0], nullptr);
+                const GammaOpData::Params redParams   = { cachedFile->mGammaRGB[0] };
+                const GammaOpData::Params greenParams = { cachedFile->mGammaRGB[1] };
+                const GammaOpData::Params blueParams  = { cachedFile->mGammaRGB[2] };
+                const GammaOpData::Params alphaParams = { cachedFile->mGammaRGB[3] };
+                auto gamma = std::make_shared<GammaOpData>(GammaOpData::BASIC_FWD, 
+                                                           redParams,
+                                                           greenParams,
+                                                           blueParams,
+                                                           alphaParams);
+                CreateGammaOp(ops, gamma, TRANSFORM_DIR_FORWARD);
             }
 
             CreateMatrixOp(ops, cachedFile->mMatrix44, TRANSFORM_DIR_FORWARD);
@@ -447,13 +451,17 @@ OCIO_NAMESPACE_ENTER
             }
             else
             {
-                const double val[4] = { cachedFile->mGammaRGB[0],
-                                        cachedFile->mGammaRGB[1],
-                                        cachedFile->mGammaRGB[2],
-                                        cachedFile->mGammaRGB[3] };
+                const GammaOpData::Params redParams   = { cachedFile->mGammaRGB[0] };
+                const GammaOpData::Params greenParams = { cachedFile->mGammaRGB[1] };
+                const GammaOpData::Params blueParams  = { cachedFile->mGammaRGB[2] };
+                const GammaOpData::Params alphaParams = { cachedFile->mGammaRGB[3] };
+                auto gamma = std::make_shared<GammaOpData>(GammaOpData::BASIC_REV,
+                                                           redParams,
+                                                           greenParams,
+                                                           blueParams,
+                                                           alphaParams);
 
-                CreateGammaOp(ops, FormatMetadataImpl(METADATA_ROOT),
-                              GammaOpData::BASIC_REV, &val[0], nullptr);
+                CreateGammaOp(ops, gamma, TRANSFORM_DIR_FORWARD);
             }
         }
 
@@ -683,8 +691,7 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
         OCIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context,
                                          OCIO::TRANSFORM_DIR_FORWARD));
 
-        OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
-        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+        OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
 
         // apply ops
         float srcImage[] = {
@@ -714,8 +721,7 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
         OCIO::OpRcPtrVec opsInv;
         OCIO_CHECK_NO_THROW(BuildOpsTest(opsInv, iccFileName, context,
                                          OCIO::TRANSFORM_DIR_INVERSE));
-        OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(opsInv, OCIO::OPTIMIZATION_DEFAULT));
-        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(opsInv, OCIO::FINALIZATION_EXACT));
+        OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(opsInv));
 
         numOps = opsInv.size();
         for (OCIO::OpRcPtrVec::size_type i = 0; i < numOps; ++i)
@@ -742,8 +748,7 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
         OCIO::OpRcPtrVec ops;
         OCIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context,
                                          OCIO::TRANSFORM_DIR_FORWARD));
-        OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::OPTIMIZATION_DEFAULT));
-        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+        OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
 
         // apply ops
         float srcImage[] = {
@@ -780,8 +785,7 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
         OCIO::OpRcPtrVec opsInv;
         OCIO_CHECK_NO_THROW(BuildOpsTest(opsInv, iccFileName, context,
                                          OCIO::TRANSFORM_DIR_INVERSE));
-        OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(opsInv, OCIO::OPTIMIZATION_DEFAULT));
-        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(opsInv, OCIO::FINALIZATION_EXACT));
+        OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(opsInv));
 
         numOps = opsInv.size();
         for (OCIO::OpRcPtrVec::size_type i = 0; i < numOps; ++i)

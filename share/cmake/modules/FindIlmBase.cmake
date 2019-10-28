@@ -142,6 +142,7 @@ if(NOT ILMBASE_FOUND)
     if(BUILD_TYPE_DEBUG AND (WIN32 OR ILMBASE_VERSION VERSION_GREATER "2.3.0"))
         set(_ILMBASE_LIB_SUFFIX "_d")
     endif()
+
     set(ILMBASE_LIBRARY
         "${_EXT_DIST_ROOT}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}Half-${_ILMBASE_LIB_VER}_s${_ILMBASE_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
@@ -150,20 +151,27 @@ if(NOT ILMBASE_FOUND)
             set(ILMBASE_CXX_FLAGS "${ILMBASE_CXX_FLAGS} -fPIC")
         endif()
 
+        if(MSVC)
+            set(ILMBASE_CXX_FLAGS "${ILMBASE_CXX_FLAGS} /EHsc")
+        endif()
+
         string(STRIP "${ILMBASE_CXX_FLAGS}" ILMBASE_CXX_FLAGS)
 
         set(ILMBASE_CMAKE_ARGS
             ${ILMBASE_CMAKE_ARGS}
             -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            -DOPENEXR_BUILD_ILMBASE:BOOL=ON
             -DOPENEXR_BUILD_OPENEXR:BOOL=OFF
             -DOPENEXR_BUILD_PYTHON_LIBS:BOOL=OFF
             -DOPENEXR_BUILD_SHARED:BOOL=OFF
             -DOPENEXR_BUILD_STATIC:BOOL=ON
-            -DOPENEXR_ENABLE_TESTS:BOOL=OFF
+            -DOPENEXR_BUILD_UTILS:BOOL=OFF
+            -DOPENEXR_BUILD_TESTS:BOOL=OFF
             -DCMAKE_CXX_FLAGS=${ILMBASE_CXX_FLAGS}
             -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
         )
+
         if(CMAKE_TOOLCHAIN_FILE)
             set(ILMBASE_CMAKE_ARGS
                 ${ILMBASE_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
@@ -175,6 +183,7 @@ if(NOT ILMBASE_FOUND)
         ExternalProject_Add(ilmbase_install
             GIT_REPOSITORY "https://github.com/openexr/openexr.git"
             GIT_TAG "v${ILMBASE_VERSION}"
+            GIT_CONFIG advice.detachedHead=false
             GIT_SHALLOW TRUE
             PREFIX "${_EXT_BUILD_ROOT}/openexr"
             BUILD_BYPRODUCTS ${ILMBASE_LIBRARY}

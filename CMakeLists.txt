@@ -51,7 +51,7 @@ set(BUILD_TYPE_DEBUG ${_BUILD_TYPE_DEBUG} CACHE BOOL "Case-insensitive CMAKE_BUI
 
 option(BUILD_SHARED_LIBS "Set to OFF to build static libraries" ON)
 option(OCIO_BUILD_APPS "Set to OFF to disable command-line apps" ON)
-option(OCIO_BUILD_NUKE "Set to OFF to disable building nuke plugins" ON)
+option(OCIO_BUILD_NUKE "Specify whether to build nuke plugins" OFF)
 option(OCIO_BUILD_DOCS "Specify whether to build documentation" OFF)
 option(OCIO_BUILD_TESTS "Specify whether to build unittests" ON)
 option(OCIO_BUILD_GPU_TESTS "Specify whether to build gpu unittests" ON)
@@ -62,7 +62,7 @@ option(OCIO_BUILD_JAVA "Specify whether to build java bindings" OFF)
 option(OCIO_WARNING_AS_ERROR "Set build error level for CI testing" OFF)
 
 ###############################################################################
-# Optimisation / internal linking preferences
+# Optimization / internal linking preferences
 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
 option(OCIO_INLINES_HIDDEN "Specify whether to build with -fvisibility-inlines-hidden" ${UNIX})
@@ -147,3 +147,4 @@ add_subdirectory(src)
 if(OCIO_BUILD_DOCS)
 	add_subdirectory(docs)
 endif()
+add_subdirectory(vendor)

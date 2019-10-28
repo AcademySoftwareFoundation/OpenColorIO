@@ -149,6 +149,9 @@ if(NOT YAMLCPP_FOUND)
                 OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
             # C++11 deprecates std::auto_ptr
             set(YAMLCPP_CXX_FLAGS "${YAMLCPP_CXX_FLAGS} -Wno-deprecated-declarations")
+            set(YAMLCPP_CXX_FLAGS "${YAMLCPP_CXX_FLAGS} -Wno-uninitialized")
+        elseif(MSVC)
+            set(YAMLCPP_CXX_FLAGS "${YAMLCPP_CXX_FLAGS} /EHsc /wd4267")
         endif()
 
         if(UNIX)
@@ -165,7 +168,6 @@ if(NOT YAMLCPP_FOUND)
             -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DBUILD_SHARED_LIBS:BOOL=OFF
-            -DYAML_CPP_BUILD_TESTS:BOOL=OFF
             -DYAML_CPP_BUILD_TOOLS:BOOL=OFF
             -DYAML_CPP_BUILD_CONTRIB:BOOL=OFF
             -DCMAKE_CXX_FLAGS=${YAMLCPP_CXX_FLAGS}
@@ -188,6 +190,7 @@ if(NOT YAMLCPP_FOUND)
             set(YAMLCPP_GIT_TAG "release-${YAMLCPP_VERSION}")
         else()
             set(YAMLCPP_GIT_TAG "yaml-cpp-${YAMLCPP_VERSION}")
+            set(YAMLCPP_CMAKE_ARGS ${YAMLCPP_CMAKE_ARGS} -DYAML_CPP_BUILD_TESTS:BOOL=OFF)
         endif()
 
         # Hack to let imported target be built from ExternalProject_Add
@@ -196,6 +199,7 @@ if(NOT YAMLCPP_FOUND)
         ExternalProject_Add(yamlcpp_install
             GIT_REPOSITORY "https://github.com/jbeder/yaml-cpp.git"
             GIT_TAG ${YAMLCPP_GIT_TAG}
+            GIT_CONFIG advice.detachedHead=false
             GIT_SHALLOW TRUE
             PREFIX "${_EXT_BUILD_ROOT}/yaml-cpp"
             BUILD_BYPRODUCTS ${YAMLCPP_LIBRARY}
