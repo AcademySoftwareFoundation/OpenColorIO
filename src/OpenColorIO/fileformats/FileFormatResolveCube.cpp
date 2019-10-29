@@ -872,15 +872,16 @@ OCIO_NAMESPACE_ENTER
 }
 OCIO_NAMESPACE_EXIT
 
-
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifdef OCIO_UNIT_TEST
 
-namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 #include "UnitTestUtils.h"
+namespace OCIO = OCIO_NAMESPACE;
 
+namespace
+{
 OCIO::LocalCachedFileRcPtr ReadResolveCube(const std::string & fileContent)
 {
     std::istringstream is;
@@ -892,6 +893,7 @@ OCIO::LocalCachedFileRcPtr ReadResolveCube(const std::string & fileContent)
     OCIO::CachedFileRcPtr cachedFile = tester.read(is, SAMPLE_NAME);
 
     return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
+}
 }
 
 OCIO_ADD_TEST(FileFormatResolveCube, format_info)
@@ -1238,7 +1240,7 @@ OCIO_ADD_TEST(FileFormatResolveCube, bake_1d_3d)
         cs->setName("shaper");
         cs->setFamily("shaper");
         OCIO::ExponentTransformRcPtr transform1 = OCIO::ExponentTransform::Create();
-        float test[4] = {2.2f, 2.2f, 2.2f, 1.0f};
+        double test[4] = {2.2, 2.2, 2.2, 1.0};
         transform1->setValue(test);
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_TO_REFERENCE);
         config->addColorSpace(cs);

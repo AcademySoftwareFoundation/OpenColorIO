@@ -268,8 +268,8 @@ void Prepare2ECDynamic(OCIOGPUTest & test, bool firstDyn, bool secondDyn)
     if (secondDyn) ec2->makeExposureDynamic();
 
     OCIO::GroupTransformRcPtr grp = OCIO::GroupTransform::Create();
-    grp->push_back(ec1);
-    grp->push_back(ec2);
+    grp->appendTransform(ec1);
+    grp->appendTransform(ec2);
 
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
     test.setContext(grp->createEditableCopy(), shaderDesc);

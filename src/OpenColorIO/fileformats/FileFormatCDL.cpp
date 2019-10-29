@@ -221,14 +221,13 @@ OCIO_NAMESPACE_ENTER
 }
 OCIO_NAMESPACE_EXIT
 
-
-
-
+///////////////////////////////////////////////////////////////////////////////
 
 #ifdef OCIO_UNIT_TEST
 
 #include "UnitTest.h"
 #include "UnitTestUtils.h"
+namespace OCIO = OCIO_NAMESPACE;
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -297,21 +296,21 @@ OCIO_ADD_TEST(FileFormatCDL, TestCDL)
         OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(5).getName()), "SATDescription");
         OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(5).getValue()), "boosting sat");
 
-        float slope[3] = { 0.f, 0.f, 0.f };
+        double slope[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(cdlFile->transformVec[0]->getSlope(slope));
-        OCIO_CHECK_EQUAL(1.0f, slope[0]);
-        OCIO_CHECK_EQUAL(1.0f, slope[1]);
-        OCIO_CHECK_EQUAL(0.9f, slope[2]);
-        float offset[3] = { 0.f, 0.f, 0.f };
+        OCIO_CHECK_EQUAL(1.0, slope[0]);
+        OCIO_CHECK_EQUAL(1.0, slope[1]);
+        OCIO_CHECK_EQUAL(0.9, slope[2]);
+        double offset[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(cdlFile->transformVec[0]->getOffset(offset));
-        OCIO_CHECK_EQUAL(-0.03f, offset[0]);
-        OCIO_CHECK_EQUAL(-0.02f, offset[1]);
-        OCIO_CHECK_EQUAL(0.0f, offset[2]);
-        float power[3] = { 0.f, 0.f, 0.f };
+        OCIO_CHECK_EQUAL(-0.03, offset[0]);
+        OCIO_CHECK_EQUAL(-0.02, offset[1]);
+        OCIO_CHECK_EQUAL(0.0, offset[2]);
+        double power[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(cdlFile->transformVec[0]->getPower(power));
-        OCIO_CHECK_EQUAL(1.25f, power[0]);
-        OCIO_CHECK_EQUAL(1.0f, power[1]);
-        OCIO_CHECK_EQUAL(1.0f, power[2]);
+        OCIO_CHECK_EQUAL(1.25, power[0]);
+        OCIO_CHECK_EQUAL(1.0, power[1]);
+        OCIO_CHECK_EQUAL(1.0, power[2]);
         OCIO_CHECK_EQUAL(1.7, cdlFile->transformVec[0]->getSat());
     }
     {
@@ -333,21 +332,21 @@ OCIO_ADD_TEST(FileFormatCDL, TestCDL)
         OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(5).getName()), "SATDescription");
         OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(5).getValue()), "dropping sat");
 
-        float slope[3] = { 0.f, 0.f, 0.f };
+        double slope[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(cdlFile->transformVec[1]->getSlope(slope));
-        OCIO_CHECK_EQUAL(0.9f, slope[0]);
-        OCIO_CHECK_EQUAL(0.7f, slope[1]);
-        OCIO_CHECK_EQUAL(0.6f, slope[2]);
-        float offset[3] = { 0.f, 0.f, 0.f };
+        OCIO_CHECK_EQUAL(0.9, slope[0]);
+        OCIO_CHECK_EQUAL(0.7, slope[1]);
+        OCIO_CHECK_EQUAL(0.6, slope[2]);
+        double offset[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(cdlFile->transformVec[1]->getOffset(offset));
-        OCIO_CHECK_EQUAL(0.1f, offset[0]);
-        OCIO_CHECK_EQUAL(0.1f, offset[1]);
-        OCIO_CHECK_EQUAL(0.1f, offset[2]);
-        float power[3] = { 0.f, 0.f, 0.f };
+        OCIO_CHECK_EQUAL(0.1, offset[0]);
+        OCIO_CHECK_EQUAL(0.1, offset[1]);
+        OCIO_CHECK_EQUAL(0.1, offset[2]);
+        double power[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(cdlFile->transformVec[1]->getPower(power));
-        OCIO_CHECK_EQUAL(0.9f, power[0]);
-        OCIO_CHECK_EQUAL(0.9f, power[1]);
-        OCIO_CHECK_EQUAL(0.9f, power[2]);
+        OCIO_CHECK_EQUAL(0.9, power[0]);
+        OCIO_CHECK_EQUAL(0.9, power[1]);
+        OCIO_CHECK_EQUAL(0.9, power[2]);
         OCIO_CHECK_EQUAL(0.7, cdlFile->transformVec[1]->getSat());
     }
     {
@@ -369,21 +368,21 @@ OCIO_ADD_TEST(FileFormatCDL, TestCDL)
         OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(5).getName()), "SATDescription");
         OCIO_CHECK_EQUAL(std::string(formatMetadata.getChildElement(5).getValue()), "sat==1");
 
-        float slope[3] = { 0.f, 0.f, 0.f };
+        double slope[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(cdlFile->transformVec[2]->getSlope(slope));
-        OCIO_CHECK_EQUAL(1.2f, slope[0]);
-        OCIO_CHECK_EQUAL(1.1f, slope[1]);
-        OCIO_CHECK_EQUAL(1.0f, slope[2]);
-        float offset[3] = { 0.f, 0.f, 0.f };
+        OCIO_CHECK_EQUAL(1.2, slope[0]);
+        OCIO_CHECK_EQUAL(1.1, slope[1]);
+        OCIO_CHECK_EQUAL(1.0, slope[2]);
+        double offset[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(cdlFile->transformVec[2]->getOffset(offset));
-        OCIO_CHECK_EQUAL(0.0f, offset[0]);
-        OCIO_CHECK_EQUAL(0.0f, offset[1]);
-        OCIO_CHECK_EQUAL(0.0f, offset[2]);
-        float power[3] = { 0.f, 0.f, 0.f };
+        OCIO_CHECK_EQUAL(0.0, offset[0]);
+        OCIO_CHECK_EQUAL(0.0, offset[1]);
+        OCIO_CHECK_EQUAL(0.0, offset[2]);
+        double power[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(cdlFile->transformVec[2]->getPower(power));
-        OCIO_CHECK_EQUAL(0.9f, power[0]);
-        OCIO_CHECK_EQUAL(1.0f, power[1]);
-        OCIO_CHECK_EQUAL(1.2f, power[2]);
+        OCIO_CHECK_EQUAL(0.9, power[0]);
+        OCIO_CHECK_EQUAL(1.0, power[1]);
+        OCIO_CHECK_EQUAL(1.2, power[2]);
         OCIO_CHECK_EQUAL(1.0, cdlFile->transformVec[2]->getSat());
     }
     {
@@ -393,21 +392,21 @@ OCIO_ADD_TEST(FileFormatCDL, TestCDL)
         auto & formatMetadata = cdlFile->transformVec[3]->getFormatMetadata();
         OCIO_CHECK_EQUAL(formatMetadata.getNumChildrenElements(), 0);
 
-        float slope[3] = { 0.f, 0.f, 0.f };
+        double slope[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(cdlFile->transformVec[3]->getSlope(slope));
-        OCIO_CHECK_EQUAL(1.2f, slope[0]);
-        OCIO_CHECK_EQUAL(1.1f, slope[1]);
-        OCIO_CHECK_EQUAL(1.0f, slope[2]);
-        float offset[3] = { 0.f, 0.f, 0.f };
+        OCIO_CHECK_EQUAL(1.2, slope[0]);
+        OCIO_CHECK_EQUAL(1.1, slope[1]);
+        OCIO_CHECK_EQUAL(1.0, slope[2]);
+        double offset[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(cdlFile->transformVec[3]->getOffset(offset));
-        OCIO_CHECK_EQUAL(0.0f, offset[0]);
-        OCIO_CHECK_EQUAL(0.0f, offset[1]);
-        OCIO_CHECK_EQUAL(0.0f, offset[2]);
-        float power[3] = { 0.f, 0.f, 0.f };
+        OCIO_CHECK_EQUAL(0.0, offset[0]);
+        OCIO_CHECK_EQUAL(0.0, offset[1]);
+        OCIO_CHECK_EQUAL(0.0, offset[2]);
+        double power[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(cdlFile->transformVec[3]->getPower(power));
-        OCIO_CHECK_EQUAL(0.9f, power[0]);
-        OCIO_CHECK_EQUAL(1.0f, power[1]);
-        OCIO_CHECK_EQUAL(1.2f, power[2]);
+        OCIO_CHECK_EQUAL(0.9, power[0]);
+        OCIO_CHECK_EQUAL(1.0, power[1]);
+        OCIO_CHECK_EQUAL(1.2, power[2]);
         // SatNode missing from XML, uses a default of 1.0.
         OCIO_CHECK_EQUAL(1.0, cdlFile->transformVec[3]->getSat());
     }
@@ -419,21 +418,21 @@ OCIO_ADD_TEST(FileFormatCDL, TestCDL)
         OCIO_CHECK_EQUAL(formatMetadata.getNumChildrenElements(), 0);
 
         // SOPNode missing from XML, uses default values.
-        float slope[3] = { 0.f, 0.f, 0.f };
+        double slope[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(cdlFile->transformVec[4]->getSlope(slope));
-        OCIO_CHECK_EQUAL(1.0f, slope[0]);
-        OCIO_CHECK_EQUAL(1.0f, slope[1]);
-        OCIO_CHECK_EQUAL(1.0f, slope[2]);
-        float offset[3] = { 0.f, 0.f, 0.f };
+        OCIO_CHECK_EQUAL(1.0, slope[0]);
+        OCIO_CHECK_EQUAL(1.0, slope[1]);
+        OCIO_CHECK_EQUAL(1.0, slope[2]);
+        double offset[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(cdlFile->transformVec[4]->getOffset(offset));
-        OCIO_CHECK_EQUAL(0.0f, offset[0]);
-        OCIO_CHECK_EQUAL(0.0f, offset[1]);
-        OCIO_CHECK_EQUAL(0.0f, offset[2]);
-        float power[3] = { 0.f, 0.f, 0.f };
+        OCIO_CHECK_EQUAL(0.0, offset[0]);
+        OCIO_CHECK_EQUAL(0.0, offset[1]);
+        OCIO_CHECK_EQUAL(0.0, offset[2]);
+        double power[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(cdlFile->transformVec[4]->getPower(power));
-        OCIO_CHECK_EQUAL(1.0f, power[0]);
-        OCIO_CHECK_EQUAL(1.0f, power[1]);
-        OCIO_CHECK_EQUAL(1.0f, power[2]);
+        OCIO_CHECK_EQUAL(1.0, power[0]);
+        OCIO_CHECK_EQUAL(1.0, power[1]);
+        OCIO_CHECK_EQUAL(1.0, power[2]);
         OCIO_CHECK_EQUAL(0.0, cdlFile->transformVec[4]->getSat());
     }
 }

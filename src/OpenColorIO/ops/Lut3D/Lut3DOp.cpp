@@ -346,7 +346,7 @@ void CreateLut3DTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
         }
     }
 
-    group->push_back(lutTransform);
+    group->appendTransform(lutTransform);
 }
 
 void BuildLut3DOps(OpRcPtrVec & ops,
@@ -963,7 +963,7 @@ OCIO_ADD_TEST(Lut3D, create_transform)
     OCIO::ConstOpRcPtr op(ops[0]);
 
     OCIO::CreateLut3DTransform(group, op);
-    OCIO_REQUIRE_EQUAL(group->size(), 1);
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
     auto transform = group->getTransform(0);
     OCIO_REQUIRE_ASSERT(transform);
     auto lTransform = OCIO_DYNAMIC_POINTER_CAST<OCIO::LUT3DTransform>(transform);

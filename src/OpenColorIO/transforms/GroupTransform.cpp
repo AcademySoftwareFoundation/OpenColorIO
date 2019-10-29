@@ -118,7 +118,7 @@ OCIO_NAMESPACE_ENTER
     {
         Transform::validate();
 
-        for (int i = 0; i<size(); ++i)
+        for (int i = 0; i<getNumTransforms(); ++i)
         {
             getTransform(i)->validate();
         }
@@ -134,7 +134,7 @@ OCIO_NAMESPACE_ENTER
         return m_impl->getFormatMetadata();
     }
 
-    int GroupTransform::size() const
+    int GroupTransform::getNumTransforms() const
     {
         return static_cast<int>(getImpl()->vec_.size());
     }
@@ -163,32 +163,17 @@ OCIO_NAMESPACE_ENTER
         return getImpl()->vec_[index];
     }
 
-    void GroupTransform::push_back(const ConstTransformRcPtr& transform)
-    {
-        getImpl()->vec_.push_back(transform->createEditableCopy());
-    }
-    
-    void GroupTransform::push_back(TransformRcPtr& transform)
+    void GroupTransform::appendTransform(TransformRcPtr transform)
     {
         getImpl()->vec_.push_back(transform);
     }
 
-    void GroupTransform::clear()
-    {
-        getImpl()->vec_.clear();
-    }
-    
-    bool GroupTransform::empty() const
-    {
-        return getImpl()->vec_.empty();
-    }
-    
     std::ostream& operator<< (std::ostream& os, const GroupTransform& groupTransform)
     {
         os << "<GroupTransform ";
         os << "direction=" << TransformDirectionToString(groupTransform.getDirection()) << ", ";
         os << "transforms=";
-        for(int i=0; i<groupTransform.size(); ++i)
+        for(int i=0; i<groupTransform.getNumTransforms(); ++i)
         {
             ConstTransformRcPtr transform = groupTransform.getTransform(i);
             os << "\n\t" << *transform;
@@ -219,7 +204,7 @@ OCIO_NAMESPACE_ENTER
         
         if(combinedDir == TRANSFORM_DIR_FORWARD)
         {
-            for(int i=0; i<groupTransform.size(); ++i)
+            for(int i=0; i<groupTransform.getNumTransforms(); ++i)
             {
                 ConstTransformRcPtr childTransform = groupTransform.getTransform(i);
                 BuildOps(ops, config, context, childTransform, TRANSFORM_DIR_FORWARD);
@@ -227,7 +212,7 @@ OCIO_NAMESPACE_ENTER
         }
         else if(combinedDir == TRANSFORM_DIR_INVERSE)
         {
-            for(int i=groupTransform.size()-1; i>=0; --i)
+            for(int i=groupTransform.getNumTransforms()-1; i>=0; --i)
             {
                 ConstTransformRcPtr childTransform = groupTransform.getTransform(i);
                 BuildOps(ops, config, context, childTransform, TRANSFORM_DIR_INVERSE);
@@ -253,8 +238,7 @@ OCIO_ADD_TEST(GroupTransform, basic)
     group->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_CHECK_EQUAL(group->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO_CHECK_ASSERT(group->empty());
-    OCIO_CHECK_EQUAL(group->size(), 0);
+    OCIO_CHECK_EQUAL(group->getNumTransforms(), 0);
 
     auto & groupData = group->getFormatMetadata();
     OCIO_CHECK_EQUAL(std::string(groupData.getName()), OCIO::METADATA_ROOT);
@@ -262,12 +246,11 @@ OCIO_ADD_TEST(GroupTransform, basic)
     OCIO_CHECK_EQUAL(groupData.getNumChildrenElements(), 0);
 
     OCIO::MatrixTransformRcPtr matrix = OCIO::MatrixTransform::Create();
-    group->push_back(matrix);
+    group->appendTransform(matrix);
     OCIO::FixedFunctionTransformRcPtr ff =  OCIO::FixedFunctionTransform::Create();
-    group->push_back(ff);
+    group->appendTransform(ff);
 
-    OCIO_CHECK_ASSERT(!group->empty());
-    OCIO_CHECK_EQUAL(group->size(), 2);
+    OCIO_CHECK_EQUAL(group->getNumTransforms(), 2);
 
     auto t0 = group->getTransform(0);
     auto m0 = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(t0);
@@ -284,13 +267,6 @@ OCIO_ADD_TEST(GroupTransform, basic)
     OCIO_CHECK_EQUAL(metadata.getNumChildrenElements(), 0);
     metadata.addAttribute("att1", "val1");
     metadata.addChildElement("child1", "content1");
-
-    group->clear();
-    OCIO_CHECK_ASSERT(group->empty());
-
-    const auto & metadataCheck = group->getFormatMetadata();
-    OCIO_CHECK_EQUAL(metadataCheck.getNumAttributes(), 1);
-    OCIO_CHECK_EQUAL(metadataCheck.getNumChildrenElements(), 1);
 }
 
 #endif

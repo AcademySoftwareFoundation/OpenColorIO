@@ -628,7 +628,7 @@ OCIO_NAMESPACE_ENTER
     
     
     
-    bool FillTransformVectorFromPySequence(PyObject* datalist, std::vector<ConstTransformRcPtr> &data)
+    bool FillTransformVectorFromPySequence(PyObject* datalist, std::vector<TransformRcPtr> &data)
     {
         data.clear();
         
@@ -640,10 +640,10 @@ OCIO_NAMESPACE_ENTER
             for(int i=0; i < sequenceSize; i++)
             {
                 PyObject* item = PyListOrTuple_GET_ITEM(datalist, i);
-                ConstTransformRcPtr val;
+                TransformRcPtr val;
                 try
                 {
-                    val = GetConstTransform(item, true);
+                    val = GetEditableTransform(item);
                 }
                 catch(...)
                 {
@@ -666,10 +666,10 @@ OCIO_NAMESPACE_ENTER
             }
             while((item = PyIter_Next(iter)) != NULL)
             {
-                ConstTransformRcPtr val;
+                TransformRcPtr val;
                 try
                 {
-                    val = GetConstTransform(item, true);
+                    val = GetEditableTransform(item);
                 }
                 catch(...)
                 {

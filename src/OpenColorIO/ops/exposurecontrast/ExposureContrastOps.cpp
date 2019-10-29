@@ -243,7 +243,7 @@ void CreateExposureContrastTransform(GroupTransformRcPtr & group, ConstOpRcPtr &
         ecTransform->makeGammaDynamic();
     }
 
-    group->push_back(ecTransform);
+    group->appendTransform(ecTransform);
 }
 
 void BuildExposureContrastOps(OpRcPtrVec & ops,
@@ -396,7 +396,7 @@ OCIO_ADD_TEST(ExposureContrastOp, create_transform)
     OCIO::ConstOpRcPtr op(ops[0]);
 
     OCIO::CreateExposureContrastTransform(group, op);
-    OCIO_REQUIRE_EQUAL(group->size(), 1);
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
     auto transform = group->getTransform(0);
     OCIO_REQUIRE_ASSERT(transform);
     auto ecTransform = OCIO_DYNAMIC_POINTER_CAST<OCIO::ExposureContrastTransform>(transform);

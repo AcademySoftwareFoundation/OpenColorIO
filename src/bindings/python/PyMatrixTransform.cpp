@@ -26,8 +26,6 @@ OCIO_NAMESPACE_ENTER
         
         int PyOCIO_MatrixTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds);
         PyObject * PyOCIO_MatrixTransform_equals(PyObject * self,  PyObject * args);
-        PyObject * PyOCIO_MatrixTransform_getValue(PyObject * self, PyObject *);
-        PyObject * PyOCIO_MatrixTransform_setValue(PyObject * self,  PyObject * args);
         PyObject * PyOCIO_MatrixTransform_getMatrix(PyObject * self, PyObject *);
         PyObject * PyOCIO_MatrixTransform_setMatrix(PyObject * self,  PyObject * args);
         PyObject * PyOCIO_MatrixTransform_getOffset(PyObject * self, PyObject *);
@@ -44,10 +42,6 @@ OCIO_NAMESPACE_ENTER
         PyMethodDef PyOCIO_MatrixTransform_methods[] = {
             { "equals",
             PyOCIO_MatrixTransform_equals, METH_VARARGS, MATRIXTRANSFORM_EQUALS__DOC__ },
-            { "getValue",
-            (PyCFunction) PyOCIO_MatrixTransform_getValue, METH_NOARGS, MATRIXTRANSFORM_GETVALUE__DOC__ },
-            { "setValue",
-            PyOCIO_MatrixTransform_setValue, METH_VARARGS, MATRIXTRANSFORM_SETVALUE__DOC__ },
             { "getMatrix",
             (PyCFunction) PyOCIO_MatrixTransform_getMatrix, METH_NOARGS, MATRIXTRANSFORM_GETMATRIX__DOC__ },
             { "setMatrix",
@@ -136,24 +130,24 @@ OCIO_NAMESPACE_ENTER
                 &pymatrix, &pyoffset, &direction)) return -1;
             if (pymatrix)
             {
-                std::vector<float> matrix;
-                if(!FillFloatVectorFromPySequence(pymatrix, matrix) ||
+                std::vector<double> matrix;
+                if(!FillDoubleVectorFromPySequence(pymatrix, matrix) ||
                     (matrix.size() != 16))
                 {
                     PyErr_SetString(PyExc_TypeError,
-                        "matrix must be a float array, size 16");
+                        "matrix must be a double array, size 16");
                     return 0;
                 }
                 ptr->setMatrix(&matrix[0]);
             }
             if (pyoffset)
             {
-                std::vector<float> offset;
-                if(!FillFloatVectorFromPySequence(pyoffset, offset) ||
+                std::vector<double> offset;
+                if(!FillDoubleVectorFromPySequence(pyoffset, offset) ||
                     (offset.size() != 4))
                 {
                     PyErr_SetString(PyExc_TypeError,
-                        "offset must be a float array, size 4");
+                        "offset must be a double array, size 4");
                     return 0;
                 }
                 ptr->setOffset(&offset[0]);
@@ -177,58 +171,13 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_MatrixTransform_getValue(PyObject * self, PyObject *)
-        {
-            OCIO_PYTRY_ENTER()
-            ConstMatrixTransformRcPtr transform = GetConstMatrixTransform(self);
-            std::vector<float> matrix(16);
-            std::vector<float> offset(4);
-            transform->getValue(&matrix[0], &offset[0]);
-            PyObject* pymatrix = CreatePyListFromFloatVector(matrix);
-            PyObject* pyoffset = CreatePyListFromFloatVector(offset);
-            PyObject* pyreturnval = Py_BuildValue("(OO)", pymatrix, pyoffset);
-            Py_DECREF(pymatrix);
-            Py_DECREF(pyoffset);
-            return pyreturnval;
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_MatrixTransform_setValue(PyObject * self, PyObject * args)
-        {
-            OCIO_PYTRY_ENTER()
-            PyObject* pymatrix = 0;
-            PyObject* pyoffset = 0;
-            if (!PyArg_ParseTuple(args, "OO:setValue",
-                &pymatrix, &pyoffset)) return NULL;
-            std::vector<float> matrix;
-            std::vector<float> offset;
-            if(!FillFloatVectorFromPySequence(pymatrix, matrix) ||
-                (matrix.size() != 16))
-            {
-                PyErr_SetString(PyExc_TypeError,
-                    "First argument must be a float array, size 16");
-                return 0;
-            }
-            if(!FillFloatVectorFromPySequence(pyoffset, offset) ||
-                (offset.size() != 4))
-            {
-                PyErr_SetString(PyExc_TypeError,
-                    "Second argument must be a float array, size 4");
-                return 0;
-            }
-            MatrixTransformRcPtr transform = GetEditableMatrixTransform(self);
-            transform->setValue(&matrix[0], &offset[0]);
-            Py_RETURN_NONE;
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
         PyObject * PyOCIO_MatrixTransform_getMatrix(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstMatrixTransformRcPtr transform = GetConstMatrixTransform(self);
-            std::vector<float> matrix(16);
+            std::vector<double> matrix(16);
             transform->getMatrix(&matrix[0]);
-            return CreatePyListFromFloatVector(matrix);
+            return CreatePyListFromDoubleVector(matrix);
             OCIO_PYTRY_EXIT(NULL)
         }
         
@@ -238,12 +187,12 @@ OCIO_NAMESPACE_ENTER
             PyObject* pymatrix = 0;
             if (!PyArg_ParseTuple(args,"O:setValue",
                 &pymatrix)) return NULL;
-            std::vector<float> matrix;
-            if(!FillFloatVectorFromPySequence(pymatrix, matrix) ||
+            std::vector<double> matrix;
+            if(!FillDoubleVectorFromPySequence(pymatrix, matrix) ||
                 (matrix.size() != 16))
             {
                 PyErr_SetString(PyExc_TypeError,
-                    "First argument must be a float array, size 16");
+                    "First argument must be a double array, size 16");
                 return 0;
             }
             MatrixTransformRcPtr transform = GetEditableMatrixTransform(self);
@@ -256,9 +205,9 @@ OCIO_NAMESPACE_ENTER
         {
             OCIO_PYTRY_ENTER()
             ConstMatrixTransformRcPtr transform = GetConstMatrixTransform(self);
-            std::vector<float> offset(4);
+            std::vector<double> offset(4);
             transform->getOffset(&offset[0]);
-            return CreatePyListFromFloatVector(offset);
+            return CreatePyListFromDoubleVector(offset);
             OCIO_PYTRY_EXIT(NULL)
         }
         
@@ -268,12 +217,12 @@ OCIO_NAMESPACE_ENTER
             PyObject* pyoffset = 0;
             if (!PyArg_ParseTuple(args, "O:setValue",
                 &pyoffset)) return NULL;
-            std::vector<float> offset;
-            if(!FillFloatVectorFromPySequence(pyoffset, offset) ||
+            std::vector<double> offset;
+            if(!FillDoubleVectorFromPySequence(pyoffset, offset) ||
                 (offset.size() != 4))
             {
                 PyErr_SetString(PyExc_TypeError,
-                    "First argument must be a float array, size 4");
+                    "First argument must be a double array, size 4");
                 return 0;
             }
             MatrixTransformRcPtr transform = GetEditableMatrixTransform(self);
@@ -285,11 +234,11 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_MatrixTransform_Identity(PyObject *, PyObject * /*self*, *args*/)
         {
             OCIO_PYTRY_ENTER()
-            std::vector<float> matrix(16);
-            std::vector<float> offset(4);
+            std::vector<double> matrix(16);
+            std::vector<double> offset(4);
             MatrixTransform::Identity(&matrix[0], &offset[0]);
-            PyObject* pymatrix = CreatePyListFromFloatVector(matrix);
-            PyObject* pyoffset = CreatePyListFromFloatVector(offset);
+            PyObject* pymatrix = CreatePyListFromDoubleVector(matrix);
+            PyObject* pyoffset = CreatePyListFromDoubleVector(offset);
             PyObject* pyreturnval = Py_BuildValue("(OO)", pymatrix, pyoffset);
             Py_DECREF(pymatrix);
             Py_DECREF(pyoffset);
@@ -308,49 +257,49 @@ OCIO_NAMESPACE_ENTER
             if (!PyArg_ParseTuple(args,"OOOO:Fit",
                 &pyoldmin, &pyoldmax, &pynewmin, &pynewmax)) return NULL;
             
-            std::vector<float> oldmin;
-            if(!FillFloatVectorFromPySequence(pyoldmin, oldmin) ||
+            std::vector<double> oldmin;
+            if(!FillDoubleVectorFromPySequence(pyoldmin, oldmin) ||
                 (oldmin.size() != 4))
             {
                 PyErr_SetString(PyExc_TypeError,
-                    "First argument must be a float array, size 4");
+                    "First argument must be a double array, size 4");
                 return 0;
             }
             
-            std::vector<float> oldmax;
-            if(!FillFloatVectorFromPySequence(pyoldmax, oldmax) ||
+            std::vector<double> oldmax;
+            if(!FillDoubleVectorFromPySequence(pyoldmax, oldmax) ||
                 (oldmax.size() != 4))
             {
                 PyErr_SetString(PyExc_TypeError,
-                    "Second argument must be a float array, size 4");
+                    "Second argument must be a double array, size 4");
                 return 0;
             }
             
-            std::vector<float> newmin;
-            if(!FillFloatVectorFromPySequence(pynewmin, newmin) ||
+            std::vector<double> newmin;
+            if(!FillDoubleVectorFromPySequence(pynewmin, newmin) ||
                 (newmin.size() != 4))
             {
                 PyErr_SetString(PyExc_TypeError,
-                    "Third argument must be a float array, size 4");
+                    "Third argument must be a double array, size 4");
                 return 0;
             }
             
-            std::vector<float> newmax;
-            if(!FillFloatVectorFromPySequence(pynewmax, newmax) ||
+            std::vector<double> newmax;
+            if(!FillDoubleVectorFromPySequence(pynewmax, newmax) ||
                 (newmax.size() != 4))
             {
                 PyErr_SetString(PyExc_TypeError,
-                    "Fourth argument must be a float array, size 4");
+                    "Fourth argument must be a double array, size 4");
                 return 0;
             }
             
-            std::vector<float> matrix(16);
-            std::vector<float> offset(4);
+            std::vector<double> matrix(16);
+            std::vector<double> offset(4);
             MatrixTransform::Fit(&matrix[0], &offset[0],
                                  &oldmin[0], &oldmax[0],
                                  &newmin[0], &newmax[0]);
-            PyObject* pymatrix = CreatePyListFromFloatVector(matrix);
-            PyObject* pyoffset = CreatePyListFromFloatVector(offset);
+            PyObject* pymatrix = CreatePyListFromDoubleVector(matrix);
+            PyObject* pyoffset = CreatePyListFromDoubleVector(offset);
             PyObject* pyreturnval = Py_BuildValue("(OO)", pymatrix, pyoffset);
             Py_DECREF(pymatrix);
             Py_DECREF(pyoffset);
@@ -363,26 +312,26 @@ OCIO_NAMESPACE_ENTER
         {
             OCIO_PYTRY_ENTER()
             
-            float sat = 0.0;
+            double sat = 0.0;
             PyObject* pyluma = 0;
-            if (!PyArg_ParseTuple(args,"fO:Sat",
+            if (!PyArg_ParseTuple(args,"dO:Sat",
                 &sat, &pyluma)) return NULL;
                 
-            std::vector<float> luma;
-            if(!FillFloatVectorFromPySequence(pyluma, luma) ||
+            std::vector<double> luma;
+            if(!FillDoubleVectorFromPySequence(pyluma, luma) ||
                 (luma.size() != 3))
             {
                 PyErr_SetString(PyExc_TypeError,
-                    "Second argument must be a float array, size 3");
+                    "Second argument must be a double array, size 3");
                 return 0;
             }
             
-            std::vector<float> matrix(16);
-            std::vector<float> offset(4);
+            std::vector<double> matrix(16);
+            std::vector<double> offset(4);
             MatrixTransform::Sat(&matrix[0], &offset[0],
                                  sat, &luma[0]);
-            PyObject* pymatrix = CreatePyListFromFloatVector(matrix);
-            PyObject* pyoffset = CreatePyListFromFloatVector(offset);
+            PyObject* pymatrix = CreatePyListFromDoubleVector(matrix);
+            PyObject* pyoffset = CreatePyListFromDoubleVector(offset);
             PyObject* pyreturnval = Py_BuildValue("(OO)", pymatrix, pyoffset);
             Py_DECREF(pymatrix);
             Py_DECREF(pyoffset);
@@ -399,20 +348,20 @@ OCIO_NAMESPACE_ENTER
             if (!PyArg_ParseTuple(args,"O:Scale",
                 &pyscale)) return NULL;
             
-            std::vector<float> scale;
-            if(!FillFloatVectorFromPySequence(pyscale, scale) ||
+            std::vector<double> scale;
+            if(!FillDoubleVectorFromPySequence(pyscale, scale) ||
                 (scale.size() != 4))
             {
                 PyErr_SetString(PyExc_TypeError,
-                    "Second argument must be a float array, size 4");
+                    "Second argument must be a double array, size 4");
                 return 0;
             }
             
-            std::vector<float> matrix(16);
-            std::vector<float> offset(4);
+            std::vector<double> matrix(16);
+            std::vector<double> offset(4);
             MatrixTransform::Scale(&matrix[0], &offset[0], &scale[0]);
-            PyObject* pymatrix = CreatePyListFromFloatVector(matrix);
-            PyObject* pyoffset = CreatePyListFromFloatVector(offset);
+            PyObject* pymatrix = CreatePyListFromDoubleVector(matrix);
+            PyObject* pyoffset = CreatePyListFromDoubleVector(offset);
             PyObject* pyreturnval = Py_BuildValue("(OO)", pymatrix, pyoffset);
             Py_DECREF(pymatrix);
             Py_DECREF(pyoffset);
@@ -439,21 +388,21 @@ OCIO_NAMESPACE_ENTER
                 return 0;
             }
             
-            std::vector<float> luma;
-            if(!FillFloatVectorFromPySequence(pyluma, luma) ||
+            std::vector<double> luma;
+            if(!FillDoubleVectorFromPySequence(pyluma, luma) ||
                 (luma.size() != 3))
             {
                 PyErr_SetString(PyExc_TypeError,
-                    "Second argument must be a float array, size 3");
+                    "Second argument must be a double array, size 3");
                 return 0;
             }
             
-            std::vector<float> matrix(16);
-            std::vector<float> offset(4);
+            std::vector<double> matrix(16);
+            std::vector<double> offset(4);
             MatrixTransform::View(&matrix[0], &offset[0],
                                   &channelhot[0], &luma[0]);
-            PyObject* pymatrix = CreatePyListFromFloatVector(matrix);
-            PyObject* pyoffset = CreatePyListFromFloatVector(offset);
+            PyObject* pymatrix = CreatePyListFromDoubleVector(matrix);
+            PyObject* pyoffset = CreatePyListFromDoubleVector(offset);
             PyObject* pyreturnval = Py_BuildValue("(OO)", pymatrix, pyoffset);
             Py_DECREF(pymatrix);
             Py_DECREF(pyoffset);

@@ -439,8 +439,8 @@ OCIO_ADD_TEST(ExposureContrastTransform, processor_several_ec)
     //
     OCIO::GroupTransformRcPtr grp1 = OCIO::GroupTransform::Create();
     ec2->setExposure(a);
-    grp1->push_back(ec1);  // ec1 exposure is a
-    grp1->push_back(ec2);  // ec2 exposure is a
+    grp1->appendTransform(ec1);  // ec1 exposure is a
+    grp1->appendTransform(ec2);  // ec2 exposure is a
 
     {
         OCIO::ConstProcessorRcPtr processor = config->getProcessor(grp1);
@@ -480,8 +480,8 @@ OCIO_ADD_TEST(ExposureContrastTransform, processor_several_ec)
     // Test with two E/C where both are dynamic.
     //
     OCIO::GroupTransformRcPtr grp2 = OCIO::GroupTransform::Create();
-    grp2->push_back(ec1);
-    grp2->push_back(ec2);
+    grp2->appendTransform(ec1);
+    grp2->appendTransform(ec2);
 
     // Change both exposure values.
     ec1->setExposure(0.123);
