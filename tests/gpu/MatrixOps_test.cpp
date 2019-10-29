@@ -15,7 +15,7 @@ const float g_epsilon = 5e-7f;
 
 // Helper method to build unit tests
 void AddMatrixTest(OCIOGPUTest & test, OCIO::TransformDirection direction,
-                   const float * m, const float * o, bool genericShaderDesc)
+                   const double * m, const double * o, bool genericShaderDesc)
 {
     OCIO::MatrixTransformRcPtr matrix = OCIO::MatrixTransform::Create();
     matrix->setDirection(direction);
@@ -40,10 +40,10 @@ void AddMatrixTest(OCIOGPUTest & test, OCIO::TransformDirection direction,
 
 OCIO_ADD_GPU_TEST(MatrixOps, matrix)
 {
-    const float m[16] = { 1.1f, 0.2f, 0.3f, 0.4f,
-                          0.5f, 1.6f, 0.7f, 0.8f,
-                          0.2f, 0.1f, 1.1f, 0.2f,
-                          0.3f, 0.4f, 0.5f, 1.6f };
+    const double m[16] = { 1.1, 0.2, 0.3, 0.4,
+                           0.5, 1.6, 0.7, 0.8,
+                           0.2, 0.1, 1.1, 0.2,
+                           0.3, 0.4, 0.5, 1.6 };
 
     AddMatrixTest(test, OCIO::TRANSFORM_DIR_FORWARD, m, 0x0, false);
 }
@@ -51,10 +51,10 @@ OCIO_ADD_GPU_TEST(MatrixOps, matrix)
 
 OCIO_ADD_GPU_TEST(MatrixOps, scale)
 {
-    const float m[16] = { 1.0f, 0.0f, 0.0f, 0.0f,
-                          0.0f, -0.3f, 0.0f, 0.0f,
-                          0.0f, 0.0f, 0.6f, 0.0f,
-                          0.0f, 0.0f, 0.0f, 1.0f };
+    const double m[16] = { 1.0,  0.0, 0.0, 0.0,
+                           0.0, -0.3, 0.0, 0.0,
+                           0.0,  0.0, 0.6, 0.0,
+                           0.0,  0.0, 0.0, 1.0 };
 
     AddMatrixTest(test, OCIO::TRANSFORM_DIR_FORWARD, m, 0x0, false);
 }
@@ -62,7 +62,7 @@ OCIO_ADD_GPU_TEST(MatrixOps, scale)
 
 OCIO_ADD_GPU_TEST(MatrixOps, offset)
 {
-    const float o[4] = { -0.5f, +0.25f, -0.25f, 0.0f };
+    const double o[4] = { -0.5, +0.25, -0.25, 0.0 };
 
     AddMatrixTest(test, OCIO::TRANSFORM_DIR_FORWARD, 0x0, o, false);
 }
@@ -70,12 +70,12 @@ OCIO_ADD_GPU_TEST(MatrixOps, offset)
 
 OCIO_ADD_GPU_TEST(MatrixOps, matrix_offset)
 {
-    const float m[16] = { 1.1f, 0.2f, 0.3f, 0.4f,
-                          0.5f, 1.6f, 0.7f, 0.8f,
-                          0.2f, 0.1f, 1.1f, 0.2f,
-                          0.3f, 0.4f, 0.5f, 1.6f };
+    const double m[16] = { 1.1, 0.2, 0.3, 0.4,
+                           0.5, 1.6, 0.7, 0.8,
+                           0.2, 0.1, 1.1, 0.2,
+                           0.3, 0.4, 0.5, 1.6 };
 
-    const float o[4] = { -0.5f, -0.25f, 0.25f, 0.0f };
+    const double o[4] = { -0.5, -0.25, 0.25, 0.0 };
 
     AddMatrixTest(test, OCIO::TRANSFORM_DIR_FORWARD, m, o, false);
 }
@@ -83,10 +83,10 @@ OCIO_ADD_GPU_TEST(MatrixOps, matrix_offset)
 
 OCIO_ADD_GPU_TEST(MatrixOps, matrix_inverse)
 {
-    const float m[16] = { 1.1f, 0.2f, 0.3f, 0.4f,
-                          0.5f, 1.6f, 0.7f, 0.8f,
-                          0.2f, 0.1f, 1.1f, 0.2f,
-                          0.3f, 0.4f, 0.5f, 1.6f };
+    const double m[16] = { 1.1, 0.2, 0.3, 0.4,
+                           0.5, 1.6, 0.7, 0.8,
+                           0.2, 0.1, 1.1, 0.2,
+                           0.3, 0.4, 0.5, 1.6 };
 
     AddMatrixTest(test, OCIO::TRANSFORM_DIR_INVERSE, m, 0x0, false);
 }
@@ -94,10 +94,10 @@ OCIO_ADD_GPU_TEST(MatrixOps, matrix_inverse)
 
 OCIO_ADD_GPU_TEST(MatrixOps, scale_inverse)
 {
-    const float m[16] = { 1.0f, 0.0f, 0.0f, 0.0f,
-                          0.0f, -0.3f, 0.0f, 0.0f,
-                          0.0f, 0.0f, 0.6f, 0.0f,
-                          0.0f, 0.0f, 0.0f, 1.0f };
+    const double m[16] = { 1.0,  0.0, 0.0, 0.0,
+                           0.0, -0.3, 0.0, 0.0,
+                           0.0,  0.0, 0.6, 0.0,
+                           0.0,  0.0, 0.0, 1.0 };
 
     AddMatrixTest(test, OCIO::TRANSFORM_DIR_INVERSE, m, 0x0, false);
 }
@@ -105,7 +105,7 @@ OCIO_ADD_GPU_TEST(MatrixOps, scale_inverse)
 
 OCIO_ADD_GPU_TEST(MatrixOps, offset_inverse)
 {
-    const float o[4] = { -0.5f, +0.25f, -0.25f, 0.0f };
+    const double o[4] = { -0.5, +0.25, -0.25, 0.0 };
 
     AddMatrixTest(test, OCIO::TRANSFORM_DIR_INVERSE, 0x0, o, false);
 }
@@ -113,12 +113,12 @@ OCIO_ADD_GPU_TEST(MatrixOps, offset_inverse)
 
 OCIO_ADD_GPU_TEST(MatrixOps, matrix_offset_inverse)
 {
-    const float m[16] = { 1.1f, 0.2f, 0.3f, 0.4f,
-                          0.5f, 1.6f, 0.7f, 0.8f,
-                          0.2f, 0.1f, 1.1f, 0.2f,
-                          0.3f, 0.4f, 0.5f, 1.6f };
+    const double m[16] = { 1.1, 0.2, 0.3, 0.4,
+                           0.5, 1.6, 0.7, 0.8,
+                           0.2, 0.1, 1.1, 0.2,
+                           0.3, 0.4, 0.5, 1.6 };
 
-    const float o[4] = { -0.5f, -0.25f, 0.25f, 0.0f };
+    const double o[4] = { -0.5, -0.25, 0.25, 0.0 };
 
     AddMatrixTest(test, OCIO::TRANSFORM_DIR_INVERSE, m, o, false);
 }
@@ -126,12 +126,12 @@ OCIO_ADD_GPU_TEST(MatrixOps, matrix_offset_inverse)
 
 OCIO_ADD_GPU_TEST(MatrixOps, matrix_offset_generic_shader)
 {
-    const float m[16] = { 1.1f, 0.2f, 0.3f, 0.4f,
-                          0.5f, 1.6f, 0.7f, 0.8f,
-                          0.2f, 0.1f, 1.1f, 0.2f,
-                          0.3f, 0.4f, 0.5f, 1.6f };
+    const double m[16] = { 1.1, 0.2, 0.3, 0.4,
+                           0.5, 1.6, 0.7, 0.8,
+                           0.2, 0.1, 1.1, 0.2,
+                           0.3, 0.4, 0.5, 1.6 };
 
-    const float o[4] = { -0.5f, -0.25f, 0.25f, 0.0f };
+    const double o[4] = { -0.f, -0.25, 0.25, 0.0 };
 
     AddMatrixTest(test, OCIO::TRANSFORM_DIR_FORWARD, m, o, true);
 }
@@ -139,12 +139,12 @@ OCIO_ADD_GPU_TEST(MatrixOps, matrix_offset_generic_shader)
 
 OCIO_ADD_GPU_TEST(MatrixOps, matrix_offset_inverse_generic_shader)
 {
-    const float m[16] = { 1.1f, 0.2f, 0.3f, 0.4f,
-                          0.5f, 1.6f, 0.7f, 0.8f,
-                          0.2f, 0.1f, 1.1f, 0.2f,
-                          0.3f, 0.4f, 0.5f, 1.6f };
+    const double m[16] = { 1.1, 0.2, 0.3, 0.4,
+                           0.5, 1.6, 0.7, 0.8,
+                           0.2, 0.1, 1.1, 0.2,
+                           0.3, 0.4, 0.5, 1.6 };
 
-    const float o[4] = { -0.5f, -0.25f, 0.25f, 0.0f };
+    const double o[4] = { -0.5, -0.25, 0.25, 0.0 };
 
     AddMatrixTest(test, OCIO::TRANSFORM_DIR_INVERSE, m, o, true);
 }

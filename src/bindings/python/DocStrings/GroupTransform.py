@@ -7,17 +7,9 @@ class GroupTransform:
     """
     def __init__(self):
         pass
-    def getTransform(self):
+    def getTransform(self, index):
         pass
-    def getTransforms(self):
+    def getNumTransforms(self):
         pass
-    def setTransforms(self, transforms):
-        pass
-    def size(self):
-        pass
-    def push_back(self, transform):
-        pass
-    def clear(self):
-        pass
-    def empty(self):
+    def appendTransform(self, transform):
         pass

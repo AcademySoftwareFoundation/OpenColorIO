@@ -205,7 +205,7 @@ void CreateFixedFunctionTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op
     auto & params = ffData->getParams();
     ffTransform->setParams(params.data(), params.size());
 
-    group->push_back(ffTransform);
+    group->appendTransform(ffTransform);
 }
 
 void BuildFixedFunctionOps(OpRcPtrVec & ops,
@@ -434,7 +434,7 @@ OCIO_ADD_TEST(FixedFunctionOps, create_transform)
     OCIO::ConstOpRcPtr op(ops[0]);
 
     OCIO::CreateFixedFunctionTransform(group, op);
-    OCIO_REQUIRE_EQUAL(group->size(), 1);
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
     auto transform = group->getTransform(0);
     OCIO_REQUIRE_ASSERT(transform);
     auto ffTransform = OCIO_DYNAMIC_POINTER_CAST<OCIO::FixedFunctionTransform>(transform);

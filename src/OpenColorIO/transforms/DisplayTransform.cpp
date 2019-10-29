@@ -307,10 +307,10 @@ OCIO_NAMESPACE_ENTER
             displayTransform.getChannelView());
         if(typedChannelView)
         {
-            float matrix44[16];
-            typedChannelView->getValue(matrix44, 0x0);
+            double matrix44[16];
+            typedChannelView->getMatrix(matrix44);
             
-            if((matrix44[3]>0.0f) || (matrix44[7]>0.0f) || (matrix44[11]>0.0f))
+            if((matrix44[3]>0.0) || (matrix44[7]>0.0) || (matrix44[11]>0.0))
             {
                 skipColorSpaceConversions = true;
             }

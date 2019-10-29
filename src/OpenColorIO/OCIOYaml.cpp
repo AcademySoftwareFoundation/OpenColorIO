@@ -1225,7 +1225,7 @@ OCIO_NAMESPACE_ENTER
                                             "Child transform could not be parsed.");
                         }
                         
-                        t->push_back(childTransform);
+                        t->appendTransform(childTransform);
                     }
                 }
                 else if(key == "direction")
@@ -1251,7 +1251,7 @@ OCIO_NAMESPACE_ENTER
             out << YAML::Value;
             
             out << YAML::BeginSeq;
-            for(int i = 0; i < t->size(); ++i)
+            for(int i = 0; i < t->getNumTransforms(); ++i)
             {
                 save(out, t->getTransform(i));
             }
@@ -2248,7 +2248,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 else if(key == "luma")
                 {
-                    std::vector<float> val;
+                    std::vector<double> val;
                     load(second, val);
                     if(val.size() != 3)
                     {
@@ -2471,7 +2471,7 @@ OCIO_NAMESPACE_ENTER
             }
             out << YAML::Key << "strictparsing" << YAML::Value << c->isStrictParsingEnabled();
             
-            std::vector<float> luma(3, 0.f);
+            std::vector<double> luma(3, 0.f);
             c->getDefaultLumaCoefs(&luma[0]);
             out << YAML::Key << "luma" << YAML::Value << YAML::Flow << luma;
             

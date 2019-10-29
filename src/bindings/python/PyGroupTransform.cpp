@@ -26,13 +26,8 @@ OCIO_NAMESPACE_ENTER
         
         int PyOCIO_GroupTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds);
         PyObject * PyOCIO_GroupTransform_getTransform(PyObject * self,  PyObject * args);
-        PyObject * PyOCIO_GroupTransform_getTransforms(PyObject * self, PyObject *);
-        PyObject * PyOCIO_GroupTransform_setTransforms(PyObject * self,  PyObject * args);
-        // TODO: make these appear more like a pysequence. .append, len(), etc
-        PyObject * PyOCIO_GroupTransform_size(PyObject * self, PyObject *);
-        PyObject * PyOCIO_GroupTransform_push_back(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_GroupTransform_clear(PyObject * self, PyObject *);
-        PyObject * PyOCIO_GroupTransform_empty(PyObject * self, PyObject *);
+        PyObject * PyOCIO_GroupTransform_getNumTransforms(PyObject * self, PyObject *);
+        PyObject * PyOCIO_GroupTransform_appendTransform(PyObject * self, PyObject * args);
         
         ///////////////////////////////////////////////////////////////////////
         ///
@@ -40,18 +35,10 @@ OCIO_NAMESPACE_ENTER
         PyMethodDef PyOCIO_GroupTransform_methods[] = {
             { "getTransform",
             PyOCIO_GroupTransform_getTransform, METH_VARARGS, GROUPTRANSFORM_GETTRANSFORM__DOC__ },
-            { "getTransforms",
-            (PyCFunction) PyOCIO_GroupTransform_getTransforms, METH_NOARGS, GROUPTRANSFORM_GETTRANSFORMS__DOC__ },
-            { "setTransforms",
-            PyOCIO_GroupTransform_setTransforms, METH_VARARGS, GROUPTRANSFORM_SETTRANSFORMS__DOC__ },
-            { "size",
-            (PyCFunction) PyOCIO_GroupTransform_size, METH_NOARGS, GROUPTRANSFORM_SIZE__DOC__ },
-            { "push_back",
-            PyOCIO_GroupTransform_push_back, METH_VARARGS, GROUPTRANSFORM_PUSH_BACK__DOC__ },
-            { "clear",
-            (PyCFunction) PyOCIO_GroupTransform_clear, METH_NOARGS, GROUPTRANSFORM_CLEAR__DOC__ },
-            { "empty",
-            (PyCFunction) PyOCIO_GroupTransform_empty, METH_NOARGS, GROUPTRANSFORM_EMPTY__DOC__ },
+            { "getNumTransforms",
+            (PyCFunction) PyOCIO_GroupTransform_getNumTransforms, METH_NOARGS, GROUPTRANSFORM_GETNUMTRANSFORMS__DOC__ },
+            { "appendTransform",
+            PyOCIO_GroupTransform_appendTransform, METH_VARARGS, GROUPTRANSFORM_APPENDTRANSFORM__DOC__ },
             { NULL, NULL, 0, NULL }
         };
         
@@ -122,7 +109,7 @@ OCIO_NAMESPACE_ENTER
                 &pytransforms, &direction )) return -1;
             if(pytransforms != Py_None)
             {
-                std::vector<ConstTransformRcPtr> data;
+                std::vector<TransformRcPtr> data;
                 if(!FillTransformVectorFromPySequence(pytransforms, data))
                 {
                     PyErr_SetString(PyExc_TypeError,
@@ -130,7 +117,7 @@ OCIO_NAMESPACE_ENTER
                     return -1;
                 }
                 for(unsigned int i=0; i<data.size(); ++i)
-                    ptr->push_back(data[i]);
+                    ptr->appendTransform(data[i]);
             }
             if(direction)
                 ptr->setDirection(TransformDirectionFromString(direction));
@@ -144,79 +131,31 @@ OCIO_NAMESPACE_ENTER
             int index = 0;
             if (!PyArg_ParseTuple(args,"i:getTransform",
                 &index)) return NULL;
-            ConstGroupTransformRcPtr transform = GetConstGroupTransform(self);
-            ConstTransformRcPtr childTransform = transform->getTransform(index);
+            GroupTransformRcPtr transform = GetEditableGroupTransform(self);
+            TransformRcPtr childTransform = transform->getTransform(index);
             return BuildConstPyTransform(childTransform);
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_GroupTransform_getTransforms(PyObject * self, PyObject *)
+        PyObject * PyOCIO_GroupTransform_getNumTransforms(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstGroupTransformRcPtr transform = GetConstGroupTransform(self);
-            std::vector<ConstTransformRcPtr> transforms;
-            for(int i = 0; i < transform->size(); ++i)
-                transforms.push_back(transform->getTransform(i));
-            return CreatePyListFromTransformVector(transforms);
+            return PyInt_FromLong(transform->getNumTransforms());
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_GroupTransform_setTransforms(PyObject * self, PyObject * args)
-        {
-            OCIO_PYTRY_ENTER()
-            PyObject* pytransforms = 0;
-            if (!PyArg_ParseTuple(args,"O:setTransforms",
-                &pytransforms)) return NULL;
-            GroupTransformRcPtr transform = GetEditableGroupTransform(self);
-            std::vector<ConstTransformRcPtr> data;
-            if(!FillTransformVectorFromPySequence(pytransforms, data))
-            {
-                PyErr_SetString(PyExc_TypeError, "First argument must be a transform array.");
-                return 0;
-            }
-            transform->clear();
-            for(unsigned int i = 0; i < data.size(); ++i)
-                transform->push_back(data[i]);
-            Py_RETURN_NONE;
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_GroupTransform_size(PyObject * self, PyObject *)
-        {
-            OCIO_PYTRY_ENTER()
-            ConstGroupTransformRcPtr transform = GetConstGroupTransform(self);
-            return PyInt_FromLong(transform->size());
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_GroupTransform_push_back(PyObject * self, PyObject * args)
+        PyObject * PyOCIO_GroupTransform_appendTransform(PyObject * self, PyObject * args)
         {
             OCIO_PYTRY_ENTER()
             PyObject* pytransform = 0;
-            if (!PyArg_ParseTuple(args,"O:push_back",
+            if (!PyArg_ParseTuple(args,"O:appendTransform",
                 &pytransform)) return NULL;
             GroupTransformRcPtr transform = GetEditableGroupTransform(self);
             if(!IsPyTransform(pytransform))
-                throw Exception("GroupTransform.push_back requires a transform as the first arg.");
-            transform->push_back(GetConstTransform(pytransform, true));
+                throw Exception("GroupTransform.appendTransform requires a transform as the first arg.");
+            transform->appendTransform(GetEditableTransform(pytransform));
             Py_RETURN_NONE;
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_GroupTransform_clear(PyObject * self, PyObject *)
-        {
-            OCIO_PYTRY_ENTER()
-            GroupTransformRcPtr transform = GetEditableGroupTransform(self);
-            transform->clear();
-            Py_RETURN_NONE;
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_GroupTransform_empty(PyObject * self, PyObject *)
-        {
-            OCIO_PYTRY_ENTER()
-            ConstGroupTransformRcPtr transform = GetConstGroupTransform(self);
-            return PyBool_FromLong(transform->empty());
             OCIO_PYTRY_EXIT(NULL)
         }
         

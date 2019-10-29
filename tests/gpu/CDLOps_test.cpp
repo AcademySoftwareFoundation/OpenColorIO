@@ -20,9 +20,9 @@ namespace OCIO = OCIO_NAMESPACE;
 
 namespace CDL_Data_1
 {
-const float slope[3]  = { 1.35f,  1.10f, 0.71f };
-const float offset[3] = { 0.05f, -0.23f, 0.11f };
-const float power[3]  = { 0.93f,  0.81f, 1.27f };
+const double slope[3]  = { 1.35,  1.10, 0.71 };
+const double offset[3] = { 0.05, -0.23, 0.11 };
+const double power[3]  = { 0.93,  0.81, 1.27 };
 };
 
 // Use the legacy shader description with the CDL from OCIO v1 implementation
@@ -112,9 +112,9 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_inv_v2)
 
 namespace CDL_Data_2
 {
-const float slope[3]  = { 1.15f, 1.10f, 0.90f };
-const float offset[3] = { 0.05f, 0.02f, 0.07f };
-const float power[3]  = { 1.20f, 0.95f, 1.13f };
+const double slope[3]  = { 1.15, 1.10, 0.90 };
+const double offset[3] = { 0.05, 0.02, 0.07 };
+const double power[3]  = { 1.20, 0.95, 1.13 };
 };
 
 
@@ -143,9 +143,9 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v2_Data_2)
 
 namespace CDL_Data_3
 {
-const float slope[3]  = {  3.405f,  1.0f,    1.0f   };
-const float offset[3] = { -0.178f, -0.178f, -0.178f };
-const float power[3]  = {  1.095f,  1.095f,  1.095f };
+const double slope[3]  = {  3.405,  1.0,    1.0   };
+const double offset[3] = { -0.178, -0.178, -0.178 };
+const double power[3]  = {  1.095,  1.095,  1.095 };
 };
 
 

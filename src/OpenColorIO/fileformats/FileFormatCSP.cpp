@@ -978,9 +978,11 @@ OCIO_NAMESPACE_EXIT
 
 #ifdef OCIO_UNIT_TEST
 
-namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
+namespace OCIO = OCIO_NAMESPACE;
 
+namespace
+{
 void compareFloats(const std::string& floats1, const std::string& floats2)
 {
     // Number comparison.
@@ -999,6 +1001,7 @@ void compareFloats(const std::string& floats1, const std::string& floats2)
     {
         OCIO_CHECK_CLOSE(numbers1[j], numbers2[j], 1e-5f);
     }
+}
 }
 
 OCIO_ADD_TEST(FileFormatCSP, simple1D)
@@ -1211,7 +1214,7 @@ OCIO_ADD_TEST(FileFormatCSP, complete3D)
         cs->setName("shaper");
         cs->setFamily("shaper");
         OCIO::ExponentTransformRcPtr transform1 = OCIO::ExponentTransform::Create();
-        float test[4] = {2.6f, 2.6f, 2.6f, 1.0f};
+        double test[4] = {2.6, 2.6, 2.6, 1.0};
         transform1->setValue(test);
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_TO_REFERENCE);
         config->addColorSpace(cs);
@@ -1221,7 +1224,7 @@ OCIO_ADD_TEST(FileFormatCSP, complete3D)
         cs->setName("target");
         cs->setFamily("target");
         OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
-        float rgb[3] = {0.1f, 0.1f, 0.1f};
+        double rgb[3] = {0.1, 0.1, 0.1};
         transform1->setOffset(rgb);
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
         config->addColorSpace(cs);
@@ -1305,7 +1308,7 @@ OCIO_ADD_TEST(FileFormatCSP, shaper_hdr)
         cs->setName("lnf_tweak");
         cs->setFamily("lnf_tweak");
         OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
-        float rgb[3] = {2.0f, -2.0f, 0.9f};
+        double rgb[3] = {2.0, -2.0, 0.9};
         transform1->setOffset(rgb);
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
         config->addColorSpace(cs);
@@ -1315,7 +1318,7 @@ OCIO_ADD_TEST(FileFormatCSP, shaper_hdr)
         cs->setName("target");
         cs->setFamily("target");
         OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
-        float rgb[3] = {0.1f, 0.1f, 0.1f};
+        double rgb[3] = {0.1, 0.1, 0.1};
         transform1->setOffset(rgb);
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
         config->addColorSpace(cs);
@@ -1399,7 +1402,7 @@ OCIO_ADD_TEST(FileFormatCSP, no_shaper)
         cs->setName("target");
         cs->setFamily("target");
         OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
-        float rgb[3] = {0.1f, 0.1f, 0.1f};
+        double rgb[3] = {0.1, 0.1, 0.1};
         transform1->setOffset(rgb);
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
         config->addColorSpace(cs);

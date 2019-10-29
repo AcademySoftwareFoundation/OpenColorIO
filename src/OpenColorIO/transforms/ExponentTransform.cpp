@@ -119,34 +119,12 @@ const FormatMetadata & ExponentTransform::getFormatMetadata() const
     return m_impl->getFormatMetadata();
 }
 
-void ExponentTransform::setValue(const float * vec4)
-{
-    if(vec4)
-    {
-        getImpl()->getRedParams()  [0] = vec4[0];
-        getImpl()->getGreenParams()[0] = vec4[1];
-        getImpl()->getBlueParams() [0] = vec4[2];
-        getImpl()->getAlphaParams()[0] = vec4[3];
-    }
-}
-
 void ExponentTransform::setValue(const double(&vec4)[4])
 {
     getImpl()->getRedParams()  [0] = vec4[0];
     getImpl()->getGreenParams()[0] = vec4[1];
     getImpl()->getBlueParams() [0] = vec4[2];
     getImpl()->getAlphaParams()[0] = vec4[3];
-}
-
-void ExponentTransform::getValue(float * vec4) const
-{
-    if(vec4)
-    {
-        vec4[0] = (float)getImpl()->getRedParams()  [0];
-        vec4[1] = (float)getImpl()->getGreenParams()[0];
-        vec4[2] = (float)getImpl()->getBlueParams() [0];
-        vec4[3] = (float)getImpl()->getAlphaParams()[0];
-    }
 }
 
 void ExponentTransform::getValue(double(&vec4)[4]) const
@@ -159,7 +137,7 @@ void ExponentTransform::getValue(double(&vec4)[4]) const
 
 std::ostream& operator<< (std::ostream& os, const ExponentTransform & t)
 {
-    float value[4];
+    double value[4];
     t.getValue(value);
 
     os << "<ExponentTransform ";
@@ -197,14 +175,20 @@ OCIO_ADD_TEST(ExponentTransform, basic)
     exp->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_CHECK_EQUAL(exp->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
 
-    std::vector<float> val4(4, 1.), identity_val4(4, 1.);
-    OCIO_CHECK_NO_THROW(exp->getValue(&val4[0]));
-    OCIO_CHECK_ASSERT(val4 == identity_val4);
+    double val4[4]{ 0., 0., 0., 0. };
+    OCIO_CHECK_NO_THROW(exp->getValue(val4));
+    OCIO_CHECK_EQUAL(val4[0], 1.);
+    OCIO_CHECK_EQUAL(val4[1], 1.);
+    OCIO_CHECK_EQUAL(val4[2], 1.);
+    OCIO_CHECK_EQUAL(val4[3], 1.);
 
     val4[1] = 2.;
-    OCIO_CHECK_NO_THROW(exp->setValue(&val4[0]));
-    OCIO_CHECK_NO_THROW(exp->getValue(&val4[0]));
-    OCIO_CHECK_ASSERT(val4 != identity_val4);
+    OCIO_CHECK_NO_THROW(exp->setValue(val4));
+    OCIO_CHECK_NO_THROW(exp->getValue(val4));
+    OCIO_CHECK_EQUAL(val4[0], 1.);
+    OCIO_CHECK_EQUAL(val4[1], 2.);
+    OCIO_CHECK_EQUAL(val4[2], 1.);
+    OCIO_CHECK_EQUAL(val4[3], 1.);
 }
 
 namespace
