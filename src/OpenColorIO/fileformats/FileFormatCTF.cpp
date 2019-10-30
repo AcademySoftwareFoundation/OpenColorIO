@@ -129,7 +129,7 @@ public:
 
     void bake(const Baker & baker,
               const std::string & formatName,
-              std::ostream & ostream) const;
+              std::ostream & ostream) const override;
 
     void write(const OpRcPtrVec & ops,
                const FormatMetadataImpl & metadata,
