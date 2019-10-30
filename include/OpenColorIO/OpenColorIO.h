@@ -1244,21 +1244,23 @@ OCIO_NAMESPACE_ENTER
     // *****
     // 
     // In certain situations it is necessary to serialize transforms into a variety
-    // of application specific lut formats. The Baker can be used to create lut
-    // formats that ocio supports for writing.
+    // of application specific LUT formats. Note that not all file formats that may
+    // be read also support baking.
     // 
-    // **Usage Example:** *Bake a houdini sRGB viewer lut*
+    // **Usage Example:** *Bake a CSP sRGB viewer LUT*
     // 
     // .. code-block:: cpp
     //    
     //    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromEnv();
     //    OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     //    baker->setConfig(config);
-    //    baker->setFormat("houdini"); // set the houdini type
-    //    baker->setType("3D"); // we want a 3D lut
+    //    baker->setFormat("csp");
     //    baker->setInputSpace("lnf");
     //    baker->setShaperSpace("log");
     //    baker->setTargetSpace("sRGB");
+    //    auto & metadata = baker->getFormatMetadata();
+    //    metadata.addChildElement(OCIO::METADATA_DESCRIPTION, "A first comment");
+    //    metadata.addChildElement(OCIO::METADATA_DESCRIPTION, "A second comment");
     //    std::ostringstream out;
     //    baker->bake(out); // fresh bread anyone!
     //    std::cout << out.str();
@@ -1266,94 +1268,94 @@ OCIO_NAMESPACE_ENTER
     class OCIOEXPORT Baker
     {
     public:
-        //!cpp:function:: create a new Baker
+        //!cpp:function:: Create a new Baker.
         static BakerRcPtr Create();
-        
-        //!cpp:function:: create a copy of this Baker
-        BakerRcPtr createEditableCopy() const;
-        
-        //!cpp:function:: set the config to use
-        void setConfig(const ConstConfigRcPtr & config);
-        //!cpp:function:: get the config to use
-        ConstConfigRcPtr getConfig() const;
-        
-        //!cpp:function:: set the lut output format
-        void setFormat(const char * formatName);
-        //!cpp:function:: get the lut output format
-        const char * getFormat() const;
-        
-        // TODO: Change this to an enum
-        //!cpp:function:: set the lut output type (1D or 3D)
-        void setType(const char * type);
-        //!cpp:function:: get the lut output type
-        const char * getType() const;
-        
-        //!cpp:function:: set *optional* meta data for luts that support it
-        void setMetadata(const char * metadata);
-        //!cpp:function:: get the meta data that has been set
-        const char * getMetadata() const;
-        
-        //!cpp:function:: set the input ColorSpace that the lut will be
-        // applied to
-        void setInputSpace(const char * inputSpace);
-        //!cpp:function:: get the input ColorSpace that has been set
-        const char * getInputSpace() const;
-        
-        //!cpp:function:: set an *optional* ColorSpace to be used to shape /
-        // transfer the input colorspace. This is mostly used to allocate
-        // an HDR luminance range into an LDR one. If a shaper space
-        // is not explicitly specified, and the file format supports one,
-        // the ColorSpace Allocation will be used
-        
-        void setShaperSpace(const char * shaperSpace);
-        //!cpp:function:: get the shaper colorspace that has been set
-        const char * getShaperSpace() const;
 
-        //!cpp:function:: set the looks to be applied during baking
-        // Looks is a potentially comma (or colon) delimited list of lookNames,
-        // Where +/- prefixes are optionally allowed to denote forward/inverse
-        // look specification. (And forward is assumed in the absence of either)
-        void setLooks(const char * looks);
-        //!cpp:function:: get the looks to be applied during baking
+        //!cpp:function:: Create a copy of this Baker.
+        BakerRcPtr createEditableCopy() const;
+
+        //!cpp:function::
+        ConstConfigRcPtr getConfig() const;
+        //!cpp:function:: Set the config to use.
+        void setConfig(const ConstConfigRcPtr & config);
+
+        //!cpp:function::
+        const char * getFormat() const;
+        //!cpp:function:: Set the LUT output format.
+        void setFormat(const char * formatName);
+
+
+        //!cpp:function::
+        const FormatMetadata & getFormatMetadata() const;
+        //!cpp:function:: Get editable *optional* format metadata. The metadata that will be used
+        // varies based on the capability of the given file format.  Formats such as CSP,
+        // IridasCube, and ResolveCube will create comments in the file header using the value of
+        // any first-level children elements of the formatMetadata.  The CLF/CTF formats will make
+        // use of the top-level "id" and "name" attributes and children elements "Description",
+        // "InputDescriptor", "OutputDescriptor", and "Info".
+        FormatMetadata & getFormatMetadata();
+
+        //!cpp:function::
+        const char * getInputSpace() const;
+        //!cpp:function:: Set the input ColorSpace that the LUT will be applied to.
+        void setInputSpace(const char * inputSpace);
+
+        //!cpp:function::
+        const char * getShaperSpace() const;
+        //!cpp:function:: Set an *optional* ColorSpace to be used to shape / transfer the input
+        // colorspace. This is mostly used to allocate an HDR luminance range into an LDR one.
+        // If a shaper space is not explicitly specified, and the file format supports one, the
+        // ColorSpace Allocation will be used (not implemented for all formats).
+        void setShaperSpace(const char * shaperSpace);
+
+        //!cpp:function::
         const char * getLooks() const;
-        
-        //!cpp:function:: set the target device colorspace for the lut
-        void setTargetSpace(const char * targetSpace);
-        //!cpp:function:: get the target colorspace that has been set
+        //!cpp:function:: Set the looks to be applied during baking. Looks is a potentially comma
+        // (or colon) delimited list of lookNames, where +/- prefixes are optionally allowed to
+        // denote forward/inverse look specification. (And forward is assumed in the absence of
+        // either).
+        void setLooks(const char * looks);
+
+        //!cpp:function::
         const char * getTargetSpace() const;
-        
-        //!cpp:function:: override the default the shaper sample size,
-        // default: <format specific>
-        void setShaperSize(int shapersize);
-        //!cpp:function:: get the shaper sample size
+        //!cpp:function:: Set the target device colorspace for the LUT.
+        void setTargetSpace(const char * targetSpace);
+
+        //!cpp:function::
         int getShaperSize() const;
-        
-        //!cpp:function:: override the default cube sample size
+        //!cpp:function:: Override the default shaper LUT size. Default value is -1, which allows
+        // each format to use its own most appropriate size. For the CLF format, the default uses
+        // a half-domain LUT1D (which is ideal for scene-linear inputs).
+        void setShaperSize(int shapersize);
+
+        //!cpp:function::
+        int getCubeSize() const;
+        //!cpp:function:: Override the default cube sample size.
         // default: <format specific>
         void setCubeSize(int cubesize);
-        //!cpp:function:: get the cube sample size
-        int getCubeSize() const;
-        
-        //!cpp:function:: bake the lut into the output stream
+
+        //!cpp:function:: Bake the LUT into the output stream.
         void bake(std::ostream & os) const;
-        
-        //!cpp:function:: get the number of lut writers
+
+        //!cpp:function:: Get the number of LUT bakers.
         static int getNumFormats();
-        
-        //!cpp:function:: get the lut writer at index, return empty string if
-        // an invalid index is specified
+
+        //!cpp:function:: Get the LUT baker format name at index, return empty string if an invalid
+        // index is specified.
         static const char * getFormatNameByIndex(int index);
+        //!cpp:function:: Get the LUT baker format extension at index, return empty string if an
+        // invalid index is specified.
         static const char * getFormatExtensionByIndex(int index);
-        
+
     private:
         Baker();
         ~Baker();
-        
+
         Baker(const Baker &);
         Baker& operator= (const Baker &);
-        
+
         static void deleter(Baker* o);
-        
+
         class Impl;
         friend class Impl;
         Impl * m_impl;

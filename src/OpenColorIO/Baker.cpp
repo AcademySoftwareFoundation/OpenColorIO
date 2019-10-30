@@ -29,8 +29,7 @@ OCIO_NAMESPACE_ENTER
         
         ConfigRcPtr config_;
         std::string formatName_;
-        std::string type_;
-        std::string metadata_;
+        FormatMetadataImpl formatMetadata_{ METADATA_ROOT, "" };
         std::string inputSpace_;
         std::string shaperSpace_;
         std::string looks_;
@@ -56,8 +55,7 @@ OCIO_NAMESPACE_ENTER
             {
                 config_ = rhs.config_;
                 formatName_ = rhs.formatName_;
-                type_ = rhs.type_;
-                metadata_ = rhs.metadata_;
+                formatMetadata_ = rhs.formatMetadata_;
                 inputSpace_ = rhs.inputSpace_;
                 shaperSpace_ = rhs.shaperSpace_;
                 looks_ = rhs.looks_;
@@ -136,27 +134,17 @@ OCIO_NAMESPACE_ENTER
     {
         return getImpl()->formatName_.c_str();
     }
-    
-    void Baker::setType(const char * type)
+
+    const FormatMetadata & Baker::getFormatMetadata() const
     {
-        getImpl()->type_ = type;
+        return getImpl()->formatMetadata_;
     }
-    
-    const char * Baker::getType() const
+
+    FormatMetadata & Baker::getFormatMetadata()
     {
-        return getImpl()->type_.c_str();
+        return getImpl()->formatMetadata_;
     }
-    
-    void Baker::setMetadata(const char * metadata)
-    {
-        getImpl()->metadata_ = metadata;
-    }
-    
-    const char * Baker::getMetadata() const
-    {
-        return getImpl()->metadata_.c_str();
-    }
-    
+
     void Baker::setInputSpace(const char * inputSpace)
     {
         getImpl()->inputSpace_ = inputSpace;
@@ -376,12 +364,14 @@ OCIO_ADD_TEST(Baker, bake)
     auto cfg2 = bake->getConfig();
     OCIO_REQUIRE_EQUAL(cfg2->getNumColorSpaces(), 2);
 
+    const std::string testString{ "this is some metadata!" };
+    bake->getFormatMetadata().addChildElement("Desc", testString.c_str());
+    const auto & data = bake->getFormatMetadata();
+    OCIO_CHECK_EQUAL(data.getNumChildrenElements(), 1);
+    OCIO_CHECK_EQUAL(testString, data.getChildElement(0).getValue());
+
     bake->setFormat("cinespace");
     OCIO_CHECK_EQUAL("cinespace", std::string(bake->getFormat()));
-    bake->setType("3D");
-    OCIO_CHECK_EQUAL("3D", std::string(bake->getType()));
-    bake->setMetadata("this is some metadata!");
-    OCIO_CHECK_EQUAL("this is some metadata!", std::string(bake->getMetadata()));
     bake->setInputSpace("lnh");
     OCIO_CHECK_EQUAL("lnh", std::string(bake->getInputSpace()));
     bake->setLooks("foo, +bar");
@@ -396,14 +386,9 @@ OCIO_ADD_TEST(Baker, bake)
     std::ostringstream os;
     OCIO_CHECK_NO_THROW(bake->bake(os));
     OCIO_CHECK_EQUAL(expectedLut, os.str());
-    OCIO_CHECK_EQUAL(8, bake->getNumFormats());
-    OCIO_CHECK_EQUAL("cinespace", std::string(bake->getFormatNameByIndex(2)));
+    OCIO_CHECK_EQUAL(10, bake->getNumFormats());
+    OCIO_CHECK_EQUAL("cinespace", std::string(bake->getFormatNameByIndex(4)));
     OCIO_CHECK_EQUAL("3dl", std::string(bake->getFormatExtensionByIndex(1)));
-
-    // TODO: Add CLF bake support.
-    OCIO_CHECK_THROW_WHAT(bake->setFormat(OCIO::FILEFORMAT_CLF),
-                          OCIO::Exception, "does not support baking");
-
 }
 
 OCIO_ADD_TEST(Baker, empty_config)
