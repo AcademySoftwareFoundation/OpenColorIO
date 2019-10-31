@@ -184,21 +184,16 @@ jobs:
   - template: share/ci/templates/checkout.yml
   - bash: |
       share/ci/scripts/macos/install.sh
+      share/ci/scripts/macos/install_python.sh 2.7.16
     displayName: Install dependencies
-
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '2.7'
-      addToPath: true
-    displayName: Configure Python
 
   - template: share/ci/templates/configure.yml
     parameters:
       buildType: $(buildType)
       cmakeOpts: |
         -DPYTHON_INCLUDE_DIR=$(python-config --prefix)/include/python2.7 \
-        -DPYTHON_LIBRARY=$(python-config --prefix)/lib/libpython2.7.a \
-        -DPYTHON_EXECUTABLE=$(which python)
+        -DPYTHON_LIBRARY=$(python-config --prefix)/lib/libpython2.7.dylib \
+        -DPYTHON_EXECUTABLE=$(which python2)
 
   - template: share/ci/templates/build.yml
     parameters:
