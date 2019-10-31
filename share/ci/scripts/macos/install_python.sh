@@ -8,13 +8,12 @@ PYTHON_VERSION="$1"
 
 brew install pyenv openssl readline
 
-# Workaround Python build errors:
+# pyenv build dependencies:
 #   https://github.com/pyenv/pyenv/wiki/common-build-problems
 export CFLAGS="$CLFAGS -I$(brew --prefix openssl)/include -I$(brew --prefix readline)/include"
 export LDFLAGS="-L$(brew --prefix openssl)/lib -L$(brew --prefix readline)/lib $LDFLAGS"
 
-# Include macOS SDK headers, required for macOS >= 10.14:
-#   https://apple.stackexchange.com/questions/337940/why-is-usr-include-missing-i-have-xcode-and-command-line-tools-installed-moja
+# Include macOS SDK headers, required for macOS >= 10.14
 export CFLAGS="$CFLAGS -I$(xcrun --show-sdk-path)/usr/include"
 
 # Silence Python build warnings
