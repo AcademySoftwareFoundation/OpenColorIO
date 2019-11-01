@@ -5,5 +5,4 @@
 set -ex
 
 brew update
-brew upgrade cmake
 brew install glew
