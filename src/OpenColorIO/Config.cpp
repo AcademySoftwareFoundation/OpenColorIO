@@ -1060,46 +1060,7 @@ OCIO_NAMESPACE_ENTER
     
     const char * Config::getDefaultDisplay() const
     {
-        if(getImpl()->displayCache_.empty())
-        {
-            ComputeDisplays(getImpl()->displayCache_,
-                            getImpl()->displays_,
-                            getImpl()->activeDisplays_,
-                            getImpl()->activeDisplaysEnvOverride_);
-        }
-        
-        int index = -1;
-        
-        if(!getImpl()->activeDisplaysEnvOverride_.empty())
-        {
-            StringVec orderedDisplays = IntersectStringVecsCaseIgnore(getImpl()->activeDisplaysEnvOverride_,
-                                                           getImpl()->displayCache_);
-            if(!orderedDisplays.empty())
-            {
-                index = FindInStringVecCaseIgnore(getImpl()->displayCache_, orderedDisplays[0]);
-            }
-        }
-        else if(!getImpl()->activeDisplays_.empty())
-        {
-            StringVec orderedDisplays = IntersectStringVecsCaseIgnore(getImpl()->activeDisplays_,
-                                                           getImpl()->displayCache_);
-            if(!orderedDisplays.empty())
-            {
-                index = FindInStringVecCaseIgnore(getImpl()->displayCache_, orderedDisplays[0]);
-            }
-        }
-        
-        if(index >= 0)
-        {
-            return getImpl()->displayCache_[index].c_str();
-        }
-        
-        if(!getImpl()->displayCache_.empty())
-        {
-            return getImpl()->displayCache_[0].c_str();
-        }
-        
-        return "";
+        return getDisplay(0);
     }
 
 
@@ -1136,59 +1097,7 @@ OCIO_NAMESPACE_ENTER
     
     const char * Config::getDefaultView(const char * display) const
     {
-        if(getImpl()->displayCache_.empty())
-        {
-            ComputeDisplays(getImpl()->displayCache_,
-                            getImpl()->displays_,
-                            getImpl()->activeDisplays_,
-                            getImpl()->activeDisplaysEnvOverride_);
-        }
-        
-        if(!display) return "";
-        
-        DisplayMap::const_iterator iter = find_display_const(getImpl()->displays_, display);
-        if(iter == getImpl()->displays_.end()) return "";
-        
-        const ViewVec & views = iter->second;
-        
-        StringVec masterViews;
-        for(unsigned int i=0; i<views.size(); ++i)
-        {
-            masterViews.push_back(views[i].name);
-        }
-        
-        int index = -1;
-        
-        if(!getImpl()->activeViewsEnvOverride_.empty())
-        {
-            StringVec orderedViews = IntersectStringVecsCaseIgnore(getImpl()->activeViewsEnvOverride_,
-                                                           masterViews);
-            if(!orderedViews.empty())
-            {
-                index = FindInStringVecCaseIgnore(masterViews, orderedViews[0]);
-            }
-        }
-        else if(!getImpl()->activeViews_.empty())
-        {
-            StringVec orderedViews = IntersectStringVecsCaseIgnore(getImpl()->activeViews_,
-                                                           masterViews);
-            if(!orderedViews.empty())
-            {
-                index = FindInStringVecCaseIgnore(masterViews, orderedViews[0]);
-            }
-        }
-        
-        if(index >= 0)
-        {
-            return views[index].name.c_str();
-        }
-        
-        if(!views.empty())
-        {
-            return views[0].name.c_str();
-        }
-        
-        return "";
+        return getView(display, 0);
     }
 
     int Config::getNumViews(const char * display) const
@@ -1207,7 +1116,35 @@ OCIO_NAMESPACE_ENTER
         if(iter == getImpl()->displays_.end()) return 0;
         
         const ViewVec & views = iter->second;
-        return static_cast<int>(views.size());
+
+        StringVec masterViews;
+        for(unsigned int i=0; i<views.size(); ++i)
+        {
+            masterViews.push_back(views[i].name);
+        }
+
+        if(!getImpl()->activeViewsEnvOverride_.empty())
+        {
+            const StringVec orderedViews
+                = IntersectStringVecsCaseIgnore(getImpl()->activeViewsEnvOverride_, masterViews);
+
+            if(!orderedViews.empty())
+            {
+                return static_cast<int>(orderedViews.size());
+            }
+        }
+        else if(!getImpl()->activeViews_.empty())
+        {
+            const StringVec orderedViews
+                = IntersectStringVecsCaseIgnore(getImpl()->activeViews_, masterViews);
+
+            if(!orderedViews.empty())
+            {
+                return static_cast<int>(orderedViews.size());
+            }
+        }
+
+        return static_cast<int>(masterViews.size());
     }
 
     const char * Config::getView(const char * display, int index) const
@@ -1226,7 +1163,47 @@ OCIO_NAMESPACE_ENTER
         if(iter == getImpl()->displays_.end()) return "";
         
         const ViewVec & views = iter->second;
-        return views[index].name.c_str();
+
+        StringVec masterViews;
+        for(unsigned int i = 0; i < views.size(); ++i)
+        {
+            masterViews.push_back(views[i].name);
+        }
+
+        int idx = index;
+        
+        if(!getImpl()->activeViewsEnvOverride_.empty())
+        {
+            const StringVec orderedViews
+                = IntersectStringVecsCaseIgnore(getImpl()->activeViewsEnvOverride_, masterViews);
+
+            if(!orderedViews.empty())
+            {
+                idx = FindInStringVecCaseIgnore(masterViews, orderedViews[index]);
+            }
+        }
+        else if(!getImpl()->activeViews_.empty())
+        {
+            const StringVec orderedViews
+                = IntersectStringVecsCaseIgnore(getImpl()->activeViews_, masterViews);
+
+            if(!orderedViews.empty())
+            {
+                idx = FindInStringVecCaseIgnore(masterViews, orderedViews[index]);
+            }
+        }
+
+        if(idx >= 0)
+        {
+            return views[idx].name.c_str();
+        }
+        
+        if(!views.empty())
+        {
+            return views[0].name.c_str();
+        }
+        
+        return "";
     }
 
     const char * Config::getDisplayColorSpaceName(const char * display, const char * view) const
@@ -3065,6 +3042,18 @@ OCIO_ADD_TEST(Config, categories)
 
 OCIO_ADD_TEST(Config, display)
 {
+    // Guard to automatically unset the env. variable.
+    class Guard
+    {
+    public:
+        Guard() = default;
+        ~Guard()
+        {
+            OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR, "");
+        }
+    } guard;
+
+
     static const std::string SIMPLE_PROFILE_HEADER =
         "ocio_profile_version: 1\n"
         "\n"
@@ -3234,6 +3223,18 @@ OCIO_ADD_TEST(Config, display)
 
 OCIO_ADD_TEST(Config, view)
 {
+    // Guard to automatically unset the env. variable.
+    class Guard
+    {
+    public:
+        Guard() = default;
+        ~Guard()
+        {
+            OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_VIEWS_ENVVAR, "");
+        }
+    } guard;
+
+
     static const std::string SIMPLE_PROFILE_HEADER =
         "ocio_profile_version: 1\n"
         "\n"
@@ -3288,12 +3289,15 @@ OCIO_ADD_TEST(Config, view)
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_1")), "View_1");
+        OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_1"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 0)), "View_1");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 1)), "View_2");
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_2")), "View_2");
+        OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_2"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 0)), "View_2");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 1)), "View_3");
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_3")), "View_3");
+        OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_3"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 0)), "View_3");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 1)), "View_1");
     }
@@ -3310,14 +3314,15 @@ OCIO_ADD_TEST(Config, view)
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_1")), "View_1");
+        OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_1"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 0)), "View_1");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 1)), "View_2");
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_2")), "View_3");
-        OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 0)), "View_2");
-        OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 1)), "View_3");
+        OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_2"), 1);
+        OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 0)), "View_3");
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_3")), "View_3");
+        OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_3"), 1);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 0)), "View_3");
-        OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 1)), "View_1");
     }
 
     {
@@ -3332,12 +3337,15 @@ OCIO_ADD_TEST(Config, view)
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_1")), "View_2");
-        OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 0)), "View_1");
-        OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 1)), "View_2");
+        OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_1"), 2);
+        OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 0)), "View_2");
+        OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 1)), "View_1");
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_2")), "View_3");
-        OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 0)), "View_2");
-        OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 1)), "View_3");
+        OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_2"), 2);
+        OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 0)), "View_3");
+        OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 1)), "View_2");
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_3")), "View_3");
+        OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_3"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 0)), "View_3");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 1)), "View_1");
     }
@@ -3356,14 +3364,15 @@ OCIO_ADD_TEST(Config, view)
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_1")), "View_2");
-        OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 0)), "View_1");
-        OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 1)), "View_2");
+        OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_1"), 1);
+        OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 0)), "View_2");
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_2")), "View_3");
-        OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 0)), "View_2");
-        OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 1)), "View_3");
+        OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_2"), 2);
+        OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 0)), "View_3");
+        OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 1)), "View_2");
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_3")), "View_3");
+        OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_3"), 1);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 0)), "View_3");
-        OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 1)), "View_1");
     }
 
     {
@@ -3380,12 +3389,15 @@ OCIO_ADD_TEST(Config, view)
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_1")), "View_1");
+        OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_1"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 0)), "View_1");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 1)), "View_2");
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_2")), "View_2");
+        OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_2"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 0)), "View_2");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 1)), "View_3");
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_3")), "View_3");
+        OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_3"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 0)), "View_3");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 1)), "View_1");
     }
@@ -3404,15 +3416,73 @@ OCIO_ADD_TEST(Config, view)
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_1")), "View_1");
+        OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_1"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 0)), "View_1");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 1)), "View_2");
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_2")), "View_2");
+        OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_2"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 0)), "View_2");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 1)), "View_3");
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_3")), "View_3");
+        OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_3"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 0)), "View_3");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 1)), "View_1");
     }
+}
+
+OCIO_ADD_TEST(Config, display_view_order)
+{
+    constexpr const char * SIMPLE_CONFIG { R"(
+        ocio_profile_version: 2
+
+        displays:
+          sRGB_B:
+            - !<View> {name: View_2, colorspace: raw}
+            - !<View> {name: View_1, colorspace: raw}
+          sRGB_D:
+            - !<View> {name: View_2, colorspace: raw}
+            - !<View> {name: View_3, colorspace: raw}
+          sRGB_A:
+            - !<View> {name: View_3, colorspace: raw}
+            - !<View> {name: View_1, colorspace: raw}
+          sRGB_C:
+            - !<View> {name: View_4, colorspace: raw}
+            - !<View> {name: View_1, colorspace: raw}
+
+        colorspaces:
+          - !<ColorSpace>
+            name: raw
+            allocation: uniform
+
+          - !<ColorSpace>
+            name: lnh
+            allocation: uniform
+        )" };
+
+    std::istringstream is(SIMPLE_CONFIG);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+    OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 4);
+
+    // TODO: When active_displays is not defined to impose an order,
+    // the displays are currently returned in faulty alphabetical order rather
+    // than config order.
+
+    OCIO_CHECK_EQUAL(std::string(config->getDefaultDisplay()), "sRGB_A");
+
+    OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), "sRGB_A");
+    OCIO_CHECK_EQUAL(std::string(config->getDisplay(1)), "sRGB_B");
+    OCIO_CHECK_EQUAL(std::string(config->getDisplay(2)), "sRGB_C");
+    OCIO_CHECK_EQUAL(std::string(config->getDisplay(3)), "sRGB_D");
+
+    // When active_views is not defined, the views are returned in config order.
+
+    OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_B"), 2);
+    OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_B", 0)), "View_2");
+    OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_B", 1)), "View_1");
+    OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_B")), "View_2");
 }
 
 OCIO_ADD_TEST(Config, log_serialization)
