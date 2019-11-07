@@ -70,58 +70,13 @@ OCIO_NAMESPACE_ENTER
 {
     
     namespace
-    {
-    
-#ifdef OLDYAML
-        typedef YAML::Iterator Iterator;
-#else
+    {  
         typedef YAML::const_iterator Iterator;
-#endif
 
-        // Iterator access
-        // Note: The ownership semantics have changed between yaml-cpp 0.3.x and 0.5.x .
-        // Returning a const reference to a yaml node screws with the internal yaml-cpp smart ptr 
-        // implementation in the newer version. Luckily, the compiler does not care if we maintain
-        // const YAML::Node & = get_first(iter) syntax at the call site even when returning an actual object
-        // (instead of the reference as expected).
-#ifdef OLDYAML
-        inline const YAML::Node& get_first(const Iterator &it)
-        {
-            return it.first();
-        }
-#else
-        inline YAML::Node get_first(const Iterator &it)
-        {
-            return it->first;
-        }
-#endif
-        
-#ifdef OLDYAML
-        inline const YAML::Node& get_second(const Iterator &it)
-        {
-            return it.second();
-        }
-#else
-        inline YAML::Node get_second(const Iterator &it)
-        {
-            return it->second;
-        }
-#endif
-        
         // Basic types
         
         inline void load(const YAML::Node& node, bool& x)
         {
-#ifdef OLDYAML
-            if (!node.Read<bool>(x))
-            {
-                std::ostringstream os;
-                os << "At line " << (node.GetMark().line + 1)
-                   << ", '" << node.Tag() << "' parsing boolean failed.";
-
-                throw Exception(os.str().c_str());
-            }
-#else
             try
             {
                 x = node.as<bool>();
@@ -129,26 +84,15 @@ OCIO_NAMESPACE_ENTER
             catch (const std::exception & e)
             {
                 std::ostringstream os;
-                os << "At line " << (node.GetMark().line + 1)
+                os << "At line " << (node.Mark().line + 1)
                    << ", '" << node.Tag() << "' parsing boolean failed "
                    << "with: " << e.what();
                 throw Exception(os.str().c_str());
             }
-#endif
         }
         
         inline void load(const YAML::Node& node, int& x)
         {
-#ifdef OLDYAML
-            if (!node.Read<int>(x))
-            {
-                std::ostringstream os;
-                os << "At line " << (node.GetMark().line + 1)
-                   << ", '" << node.Tag() << "' parsing integer failed.";
-
-                throw Exception(os.str().c_str());
-            }
-#else
             try
             {
                 x = node.as<int>();
@@ -156,27 +100,15 @@ OCIO_NAMESPACE_ENTER
             catch (const std::exception & e)
             {
                 std::ostringstream os;
-                os << "At line " << (node.GetMark().line + 1)
+                os << "At line " << (node.Mark().line + 1)
                    << ", '" << node.Tag() << "' parsing integer failed "
                    << "with: " << e.what();
                 throw Exception(os.str().c_str());
             }
-
-#endif
         }
         
         inline void load(const YAML::Node& node, float& x)
         {
-#ifdef OLDYAML
-            if (!node.Read<float>(x))
-            {
-                std::ostringstream os;
-                os << "At line " << (node.GetMark().line + 1)
-                   << ", '" << node.Tag() << "' parsing float failed.";
-
-                throw Exception(os.str().c_str());
-            }
-#else
             try
             {
                 x = node.as<float>();
@@ -184,27 +116,15 @@ OCIO_NAMESPACE_ENTER
             catch (const std::exception & e)
             {
                 std::ostringstream os;
-                os << "At line " << (node.GetMark().line + 1)
+                os << "At line " << (node.Mark().line + 1)
                    << ", '" << node.Tag() << "' parsing float failed "
                    << "with: " << e.what();
                 throw Exception(os.str().c_str());
             }
-
-#endif
         }
         
         inline void load(const YAML::Node& node, double& x)
         {
-#ifdef OLDYAML
-            if (!node.Read<double>(x))
-            {
-                std::ostringstream os;
-                os << "At line " << (node.GetMark().line + 1)
-                   << ", '" << node.Tag() << "' parsing double failed.";
-
-                throw Exception(os.str().c_str());
-            }
-#else
             try
             {
                 x = node.as<double>();
@@ -212,26 +132,15 @@ OCIO_NAMESPACE_ENTER
             catch (const std::exception & e)
             {
                 std::ostringstream os;
-                os << "At line " << (node.GetMark().line + 1)
+                os << "At line " << (node.Mark().line + 1)
                    << ", '" << node.Tag() << "' parsing double failed "
                    << "with: " << e.what();
                 throw Exception(os.str().c_str());
             }
-#endif
         }
         
         inline void load(const YAML::Node& node, std::string& x)
         {
-#ifdef OLDYAML
-            if (!node.Read<std::string>(x))
-            {
-                std::ostringstream os;
-                os << "At line " << (node.GetMark().line + 1)
-                   << ", '" << node.Tag() << "' parsing string failed.";
-
-                throw Exception(os.str().c_str());
-            }
-#else
             try
             {
                 x = node.as<std::string>();
@@ -239,39 +148,26 @@ OCIO_NAMESPACE_ENTER
             catch (const std::exception & e)
             {
                 std::ostringstream os;
-                os << "At line " << (node.GetMark().line + 1)
+                os << "At line " << (node.Mark().line + 1)
                    << ", '" << node.Tag() << "' parsing string failed "
                    << "with: " << e.what();
                 throw Exception(os.str().c_str());
             }
-#endif
         }
         
         inline void load(const YAML::Node & node, StringVec & x)
         {
-#ifdef OLDYAML
-            node >> x;
-#else
             x = node.as<StringVec>();
-#endif
         }
         
         inline void load(const YAML::Node & node, std::vector<float> & x)
         {
-#ifdef OLDYAML
-            node >> x;
-#else
             x = node.as<std::vector<float> >();
-#endif
         }
         
         inline void load(const YAML::Node& node, std::vector<double>& x)
         {
-#ifdef OLDYAML
-            node >> x;
-#else
             x = node.as<std::vector<double> >();
-#endif
         }
         
         // Enums
@@ -345,7 +241,7 @@ OCIO_NAMESPACE_ENTER
             load(key, keyName);
         
             std::ostringstream os;
-            os << "At line " << (key.GetMark().line + 1)
+            os << "At line " << (key.Mark().line + 1)
                << ", unknown key '" << keyName << "' in '" << node.Tag() << "'.";
 
             LogWarning(os.str());
@@ -366,7 +262,7 @@ OCIO_NAMESPACE_ENTER
                                const std::string & msg)
         {
             std::ostringstream os;
-            os << "At line " << (node.GetMark().line + 1) 
+            os << "At line " << (node.Mark().line + 1)
                << ", '" << node.Tag() << "' parsing failed: " 
                << msg;
 
@@ -381,7 +277,7 @@ OCIO_NAMESPACE_ENTER
             load(key, keyName);
         
             std::ostringstream os;
-            os << "At line " << (key.GetMark().line + 1) 
+            os << "At line " << (key.Mark().line + 1)
                << ", the value parsing of the key '" << keyName 
                << "' from '" << nodeName << "' failed: " << msg;
 
@@ -401,9 +297,9 @@ OCIO_NAMESPACE_ENTER
                  iter != node.end();
                  ++iter)
             {
-                const YAML::Node& first = get_first(iter);
-                const YAML::Node& second = get_second(iter);
-                
+                const YAML::Node& first = iter->first;
+                const YAML::Node& second = iter->second;
+
                 load(first, key);
                 
                 if (second.Type() == YAML::NodeType::Null) continue;
@@ -477,8 +373,8 @@ OCIO_NAMESPACE_ENTER
                  iter != node.end();
                  ++iter)
             {
-                const YAML::Node& first = get_first(iter);
-                const YAML::Node& second = get_second(iter);
+                const YAML::Node& first = iter->first;
+                const YAML::Node& second = iter->second;
                 
                 load(first, key);
                 
@@ -546,9 +442,9 @@ OCIO_NAMESPACE_ENTER
                  iter != node.end();
                  ++iter)
             {
-                const YAML::Node& first = get_first(iter);
-                const YAML::Node& second = get_second(iter);
-                
+                const YAML::Node& first = iter->first;
+                const YAML::Node& second = iter->second;
+
                 load(first, key);
                 
                 if (second.Type() == YAML::NodeType::Null) continue;
@@ -658,9 +554,9 @@ OCIO_NAMESPACE_ENTER
                  iter != node.end();
                  ++iter)
             {
-                const YAML::Node& first = get_first(iter);
-                const YAML::Node& second = get_second(iter);
-                
+                const YAML::Node& first = iter->first;
+                const YAML::Node& second = iter->second;
+
                 load(first, key);
                 
                 if (second.Type() == YAML::NodeType::Null) continue;
@@ -710,9 +606,9 @@ OCIO_NAMESPACE_ENTER
                  iter != node.end();
                  ++iter)
             {
-                const YAML::Node& first = get_first(iter);
-                const YAML::Node& second = get_second(iter);
-                
+                const YAML::Node& first = iter->first;
+                const YAML::Node& second = iter->second;
+
                 load(first, key);
                 
                 if (second.Type() == YAML::NodeType::Null) continue;
@@ -783,9 +679,9 @@ OCIO_NAMESPACE_ENTER
                  iter != node.end();
                  ++iter)
             {
-                const YAML::Node& first = get_first(iter);
-                const YAML::Node& second = get_second(iter);
-                
+                const YAML::Node& first = iter->first;
+                const YAML::Node& second = iter->second;
+
                 load(first, key);
                 
                 if (second.Type() == YAML::NodeType::Null) continue;
@@ -900,16 +796,16 @@ OCIO_NAMESPACE_ENTER
                     ++it)
                 {
                     std::string k;
-                    const YAML::Node& first = get_first(it);
+                    const YAML::Node& first = it->first;
                     load(first, k);
                     if (k == "value")
                     {
-                        load(get_second(it), dp.m_value);
+                        load(it->second, dp.m_value);
                         dp.m_valueRead = true;
                     }
                     else if (k == "dynamic")
                     {
-                        load(get_second(it), dp.m_dynamic);
+                        load(it->second, dp.m_dynamic);
                         dp.m_dynamicRead = true;
                     }
                     else
@@ -939,8 +835,8 @@ OCIO_NAMESPACE_ENTER
                 iter != node.end();
                 ++iter)
             {
-                const YAML::Node& first = get_first(iter);
-                const YAML::Node& second = get_second(iter);
+                const YAML::Node& first = iter->first;
+                const YAML::Node& second = iter->second;
 
                 load(first, key);
 
@@ -1069,9 +965,9 @@ OCIO_NAMESPACE_ENTER
                  iter != node.end();
                  ++iter)
             {
-                const YAML::Node& first = get_first(iter);
-                const YAML::Node& second = get_second(iter);
-                
+                const YAML::Node& first = iter->first;
+                const YAML::Node& second = iter->second;
+
                 load(first, key);
                 
                 if (second.Type() == YAML::NodeType::Null) continue;
@@ -1135,9 +1031,9 @@ OCIO_NAMESPACE_ENTER
                  iter != node.end();
                  ++iter)
             {
-                const YAML::Node& first = get_first(iter);
-                const YAML::Node& second = get_second(iter);
-                
+                const YAML::Node& first = iter->first;
+                const YAML::Node& second = iter->second;
+
                 load(first, key);
                 
                 if (second.Type() == YAML::NodeType::Null) continue;
@@ -1203,9 +1099,9 @@ OCIO_NAMESPACE_ENTER
                  iter != node.end();
                  ++iter)
             {
-                const YAML::Node& first = get_first(iter);
-                const YAML::Node& second = get_second(iter);
-                
+                const YAML::Node& first = iter->first;
+                const YAML::Node& second = iter->second;
+
                 load(first, key);
                 
                 if (second.Type() == YAML::NodeType::Null) continue;
@@ -1306,9 +1202,9 @@ OCIO_NAMESPACE_ENTER
                  iter != node.end();
                  ++iter)
             {
-                const YAML::Node& first = get_first(iter);
-                const YAML::Node& second = get_second(iter);
-                
+                const YAML::Node& first = iter->first;
+                const YAML::Node& second = iter->second;
+
                 load(first, key);
                 
                 if (second.Type() == YAML::NodeType::Null) continue;
@@ -1421,8 +1317,8 @@ OCIO_NAMESPACE_ENTER
                 iter != node.end();
                 ++iter)
             {
-                const YAML::Node& first = get_first(iter);
-                const YAML::Node& second = get_second(iter);
+                const YAML::Node& first = iter->first;
+                const YAML::Node& second = iter->second;
 
                 load(first, key);
 
@@ -1483,9 +1379,9 @@ OCIO_NAMESPACE_ENTER
                  iter != node.end();
                  ++iter)
             {
-                const YAML::Node& first = get_first(iter);
-                const YAML::Node& second = get_second(iter);
-                
+                const YAML::Node& first = iter->first;
+                const YAML::Node& second = iter->second;
+
                 load(first, key);
                 
                 if (second.Type() == YAML::NodeType::Null) continue;
@@ -1541,9 +1437,9 @@ OCIO_NAMESPACE_ENTER
                  iter != node.end();
                  ++iter)
             {
-                const YAML::Node& first = get_first(iter);
-                const YAML::Node& second = get_second(iter);
-                
+                const YAML::Node& first = iter->first;
+                const YAML::Node& second = iter->second;
+
                 load(first, key);
                 
                 if (second.Type() == YAML::NodeType::Null) continue;
@@ -1624,9 +1520,9 @@ OCIO_NAMESPACE_ENTER
                  iter != node.end();
                  ++iter)
             {
-                const YAML::Node& first = get_first(iter);
-                const YAML::Node& second = get_second(iter);
-                
+                const YAML::Node& first = iter->first;
+                const YAML::Node& second = iter->second;
+
                 load(first, key);
                 
                 if (second.Type() == YAML::NodeType::Null) continue;
@@ -1880,9 +1776,9 @@ OCIO_NAMESPACE_ENTER
                  iter != node.end();
                  ++iter)
             {
-                const YAML::Node& first = get_first(iter);
-                const YAML::Node& second = get_second(iter);
-                
+                const YAML::Node& first = iter->first;
+                const YAML::Node& second = iter->second;
+
                 load(first, key);
                 
                 if (second.Type() == YAML::NodeType::Null) continue;
@@ -2030,9 +1926,9 @@ OCIO_NAMESPACE_ENTER
                  iter != node.end();
                  ++iter)
             {
-                const YAML::Node& first = get_first(iter);
-                const YAML::Node& second = get_second(iter);
-                
+                const YAML::Node& first = iter->first;
+                const YAML::Node& second = iter->second;
+
                 load(first, key);
                 
                 if (second.Type() == YAML::NodeType::Null) continue;
@@ -2112,12 +2008,7 @@ OCIO_NAMESPACE_ENTER
             int profile_major_version = 0;
             int profile_minor_version = 0;
 
-            bool faulty_version
-#ifdef OLDYAML
-             = node.FindValue("ocio_profile_version") == NULL;
-#else
-             = node["ocio_profile_version"] == NULL;
-#endif
+            bool faulty_version = node["ocio_profile_version"] == NULL;
 
             std::string version;
             std::vector< std::string > results;
@@ -2192,9 +2083,9 @@ OCIO_NAMESPACE_ENTER
                  iter != node.end();
                  ++iter)
             {
-                const YAML::Node& first = get_first(iter);
-                const YAML::Node& second = get_second(iter);
-                
+                const YAML::Node& first = iter->first;
+                const YAML::Node& second = iter->second;
+
                 load(first, key);
                 
                 if (second.Type() == YAML::NodeType::Null) continue;
@@ -2214,8 +2105,8 @@ OCIO_NAMESPACE_ENTER
                          ++it)
                     {
                         std::string k, v;
-                        load(get_first(it), k);
-                        load(get_second(it), v);
+                        load(it->first, k);
+                        load(it->second, v);
                         c->addEnvironmentVar(k.c_str(), v.c_str());
                     }
                 }
@@ -2272,8 +2163,8 @@ OCIO_NAMESPACE_ENTER
                          ++it)
                     {
                         std::string k, v;
-                        load(get_first(it), k);
-                        load(get_second(it), v);
+                        load(it->first, k);
+                        load(it->second, v);
                         c->setRole(k.c_str(), v.c_str());
                     }
                 }
@@ -2290,8 +2181,8 @@ OCIO_NAMESPACE_ENTER
                          ++it)
                     {
                         std::string display;
-                        load(get_first(it), display);
-                        const YAML::Node& dsecond = get_second(it);
+                        load(it->first, display);
+                        const YAML::Node& dsecond = it->second;
                         for(unsigned i = 0; i < dsecond.size(); ++i)
                         {
                             View view;
@@ -2424,9 +2315,7 @@ OCIO_NAMESPACE_ENTER
             out << YAML::BeginMap;
             out << YAML::Key << "ocio_profile_version" << YAML::Value << ss.str();
             out << YAML::Newline;
-#ifndef OLDYAML
             out << YAML::Newline;
-#endif
             
             if(c->getNumEnvironmentVars() > 0)
             {
@@ -2485,9 +2374,7 @@ OCIO_NAMESPACE_ENTER
             
             // Roles
             out << YAML::Newline;
-#ifndef OLDYAML
             out << YAML::Newline;
-#endif
             out << YAML::Key << "roles";
             out << YAML::Value << YAML::BeginMap;
             for(int i = 0; i < c->getNumRoles(); ++i)
@@ -2510,9 +2397,7 @@ OCIO_NAMESPACE_ENTER
                 }
             }
             out << YAML::EndMap;
-#ifndef OLDYAML
             out << YAML::Newline;
-#endif
             
             // Displays
             out << YAML::Newline;
@@ -2537,9 +2422,7 @@ OCIO_NAMESPACE_ENTER
             }
             out << YAML::EndMap;
             
-#ifndef OLDYAML
             out << YAML::Newline;
-#endif
             out << YAML::Newline;
             out << YAML::Key << "active_displays";
             StringVec active_displays;
@@ -2551,9 +2434,7 @@ OCIO_NAMESPACE_ENTER
             if(c->getActiveViews() != NULL && strlen(c->getActiveViews()) > 0)
                 SplitStringEnvStyle(active_views, c->getActiveViews());
             out << YAML::Value << YAML::Flow << active_views;
-#ifndef OLDYAML
             out << YAML::Newline;
-#endif
             
             // Looks
             if(c->getNumLooks() > 0)
@@ -2594,13 +2475,7 @@ OCIO_NAMESPACE_ENTER
     {
         try
         {
-#ifdef OLDYAML
-            YAML::Parser parser(istream);
-            YAML::Node node;
-            parser.GetNextDocument(node);
-#else
             YAML::Node node = YAML::Load(istream);
-#endif
             load(node, c, filename);
         }
         catch(const std::exception & e)
@@ -2616,6 +2491,7 @@ OCIO_NAMESPACE_ENTER
     void OCIOYaml::write(std::ostream& ostream, const Config* c) const
     {
         YAML::Emitter out;
+        out.SetDoublePrecision(15);
         save(out, c);
         ostream << out.c_str();
     }

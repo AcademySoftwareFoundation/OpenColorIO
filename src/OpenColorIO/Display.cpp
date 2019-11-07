@@ -53,7 +53,7 @@ OCIO_NAMESPACE_ENTER
         {
             ViewVec views;
             views.push_back( View(view, colorspace, looks) );
-            displays[display] = views;
+            displays.push_back(std::make_pair(display, views));
         }
         else
         {

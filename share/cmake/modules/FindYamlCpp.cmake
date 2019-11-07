@@ -148,10 +148,10 @@ if(NOT YAMLCPP_FOUND)
         if("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU"
                 OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
             # C++11 deprecates std::auto_ptr
-            set(YAMLCPP_CXX_FLAGS "${YAMLCPP_CXX_FLAGS} -Wno-deprecated-declarations")
-            set(YAMLCPP_CXX_FLAGS "${YAMLCPP_CXX_FLAGS} -Wno-uninitialized")
+	    #set(YAMLCPP_CXX_FLAGS "${YAMLCPP_CXX_FLAGS} -Wno-deprecated-declarations")
+	    #set(YAMLCPP_CXX_FLAGS "${YAMLCPP_CXX_FLAGS} -Wno-uninitialized")
         elseif(MSVC)
-            set(YAMLCPP_CXX_FLAGS "${YAMLCPP_CXX_FLAGS} /EHsc /wd4267")
+            set(YAMLCPP_CXX_FLAGS "${YAMLCPP_CXX_FLAGS} /EHsc")
         endif()
 
         if(UNIX)
@@ -218,11 +218,6 @@ endif()
 ### Configure target ###
 
 if(_YAMLCPP_TARGET_CREATE)
-    if(YAMLCPP_VERSION VERSION_LESS "0.5.0")
-        set_target_properties(yamlcpp::yamlcpp PROPERTIES
-            INTERFACE_COMPILE_DEFINITIONS "OLDYAML")
-    endif()
-
     set_target_properties(yamlcpp::yamlcpp PROPERTIES
         IMPORTED_LOCATION ${YAMLCPP_LIBRARY}
         INTERFACE_INCLUDE_DIRECTORIES ${YAMLCPP_INCLUDE_DIR}

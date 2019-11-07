@@ -611,6 +611,81 @@ OCIO_NAMESPACE_ENTER
             getImpl()->sanitytext_ = os.str();
             throw Exception(getImpl()->sanitytext_.c_str());
         }
+
+
+        ///// ACTIVE DISPLAYS & VIEWS
+
+        StringVec displays;
+        for (DisplayMap::const_iterator iter = getImpl()->displays_.begin();
+            iter != getImpl()->displays_.end();
+            ++iter)
+        {
+            displays.push_back(iter->first);
+        }
+
+
+        if (!getImpl()->activeDisplaysEnvOverride_.empty())
+        {
+            const bool useAllDisplays
+                = getImpl()->activeDisplaysEnvOverride_.size()==1
+                    && getImpl()->activeDisplaysEnvOverride_[0] == "";
+
+            if (!useAllDisplays)
+            {
+                const StringVec orderedDisplays 
+                    = IntersectStringVecsCaseIgnore(getImpl()->activeDisplaysEnvOverride_, displays);
+                if (orderedDisplays.empty())
+                {
+                    std::stringstream ss;
+                    ss << "The content of the env. variable for the list of active displays ["
+                        << JoinStringEnvStyle(getImpl()->activeDisplaysEnvOverride_)
+                        << "] is invalid.";
+                    throw Exception(ss.str().c_str());
+                }
+                if (orderedDisplays.size()!=getImpl()->activeDisplaysEnvOverride_.size())
+                {
+                    std::stringstream ss;
+                    ss << "The content of the env. variable for the list of active displays ["
+                        << JoinStringEnvStyle(getImpl()->activeDisplaysEnvOverride_)
+                        << "] contains invalid display name(s).";
+                    throw Exception(ss.str().c_str());
+                }
+            }
+        }
+        else if(!getImpl()->activeDisplays_.empty())
+        {
+            const bool useAllDisplays
+                = getImpl()->activeDisplays_.size()==1
+                    && getImpl()->activeDisplays_[0] == "";
+
+            if (!useAllDisplays)
+            {
+                const StringVec orderedDisplays
+                    = IntersectStringVecsCaseIgnore(getImpl()->activeDisplays_, displays);
+                if (orderedDisplays.empty())
+                {
+                    std::stringstream ss;
+                    ss << "The list of active displays ["
+                        << JoinStringEnvStyle(getImpl()->activeDisplays_)
+                        << "] from the config file is invalid.";
+                    throw Exception(ss.str().c_str());
+                }
+                if (orderedDisplays.size()!=getImpl()->activeDisplays_.size())
+                {
+                    std::stringstream ss;
+                    ss << "The list of active displays ["
+                        << JoinStringEnvStyle(getImpl()->activeDisplays_)
+                        << "] from the config file contains invalid display name(s).";
+                    throw Exception(ss.str().c_str());
+                }
+            }
+        }
+
+        // TODO: Add validation for active views.
+
+
+        ///// TRANSFORMS
+        
         
         // Confirm for all Transforms that reference internal colorspaces,
         // the named space exists and that all Transforms are valid.
@@ -3055,7 +3130,7 @@ OCIO_ADD_TEST(Config, display)
 
 
     static const std::string SIMPLE_PROFILE_HEADER =
-        "ocio_profile_version: 1\n"
+        "ocio_profile_version: 2\n"
         "\n"
         "search_path: luts\n"
         "strictparsing: true\n"
@@ -3066,11 +3141,17 @@ OCIO_ADD_TEST(Config, display)
         "  scene_linear: lnh\n"
         "\n"
         "displays:\n"
-        "  sRGB_1:\n"
-        "    - !<View> {name: Raw, colorspace: raw}\n"
         "  sRGB_2:\n"
         "    - !<View> {name: Raw, colorspace: raw}\n"
+        "  sRGB_F:\n"
+        "    - !<View> {name: Raw, colorspace: raw}\n"
+        "  sRGB_1:\n"
+        "    - !<View> {name: Raw, colorspace: raw}\n"
         "  sRGB_3:\n"
+        "    - !<View> {name: Raw, colorspace: raw}\n"
+        "  sRGB_B:\n"
+        "    - !<View> {name: Raw, colorspace: raw}\n"
+        "  sRGB_A:\n"
         "    - !<View> {name: Raw, colorspace: raw}\n"
         "\n";
 
@@ -3094,7 +3175,7 @@ OCIO_ADD_TEST(Config, display)
         "    allocation: uniform\n";
 
     {
-        std::string myProfile = 
+        const std::string myProfile = 
             SIMPLE_PROFILE_HEADER
             +
             "active_displays: []\n"
@@ -3104,15 +3185,24 @@ OCIO_ADD_TEST(Config, display)
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_EQUAL(config->getNumDisplays(), 3);
-        OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_1"));
-        OCIO_CHECK_EQUAL(std::string(config->getDisplay(1)), std::string("sRGB_2"));
-        OCIO_CHECK_EQUAL(std::string(config->getDisplay(2)), std::string("sRGB_3"));
-        OCIO_CHECK_EQUAL(std::string(config->getDefaultDisplay()), "sRGB_1");
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+        OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 6);
+        OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_2"));
+        OCIO_CHECK_EQUAL(std::string(config->getDisplay(1)), std::string("sRGB_F"));
+        OCIO_CHECK_EQUAL(std::string(config->getDisplay(2)), std::string("sRGB_1"));
+        OCIO_CHECK_EQUAL(std::string(config->getDisplay(3)), std::string("sRGB_3"));
+        OCIO_CHECK_EQUAL(std::string(config->getDisplay(4)), std::string("sRGB_B"));
+        OCIO_CHECK_EQUAL(std::string(config->getDisplay(5)), std::string("sRGB_A"));
+        OCIO_CHECK_EQUAL(std::string(config->getDefaultDisplay()), "sRGB_2");
+
+        std::stringstream ss;
+        ss << *config.get();
+        OCIO_CHECK_EQUAL(ss.str(), myProfile);
     }
 
     {
-        std::string myProfile = 
+        const std::string myProfile = 
             SIMPLE_PROFILE_HEADER
             +
             "active_displays: [sRGB_1]\n"
@@ -3122,13 +3212,15 @@ OCIO_ADD_TEST(Config, display)
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_EQUAL(config->getNumDisplays(), 1);
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+        OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 1);
         OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_1"));
         OCIO_CHECK_EQUAL(std::string(config->getDefaultDisplay()), "sRGB_1");
     }
 
     {
-        std::string myProfile = 
+        const std::string myProfile = 
             SIMPLE_PROFILE_HEADER
             +
             "active_displays: [sRGB_2, sRGB_1]\n"
@@ -3138,14 +3230,15 @@ OCIO_ADD_TEST(Config, display)
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_EQUAL(config->getNumDisplays(), 2);
+
+        OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 2);
         OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_2"));
         OCIO_CHECK_EQUAL(std::string(config->getDisplay(1)), std::string("sRGB_1"));
         OCIO_CHECK_EQUAL(std::string(config->getDefaultDisplay()), "sRGB_2");
     }
 
     {
-        std::string myProfile = 
+        const std::string myProfile = 
             SIMPLE_PROFILE_HEADER
             +
             "active_displays: []\n"
@@ -3157,14 +3250,16 @@ OCIO_ADD_TEST(Config, display)
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_EQUAL(config->getNumDisplays(), 2);
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+        OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 2);
         OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_3"));
         OCIO_CHECK_EQUAL(std::string(config->getDisplay(1)), std::string("sRGB_2"));
         OCIO_CHECK_EQUAL(std::string(config->getDefaultDisplay()), "sRGB_3");
     }
 
     {
-        std::string myProfile = 
+        const std::string myProfile = 
             SIMPLE_PROFILE_HEADER
             +
             "active_displays: [sRGB_2, sRGB_1]\n"
@@ -3176,7 +3271,9 @@ OCIO_ADD_TEST(Config, display)
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_EQUAL(config->getNumDisplays(), 2);
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+        OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 2);
         OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_3"));
         OCIO_CHECK_EQUAL(std::string(config->getDisplay(1)), std::string("sRGB_2"));
         OCIO_CHECK_EQUAL(std::string(config->getDefaultDisplay()), "sRGB_3");
@@ -3185,7 +3282,7 @@ OCIO_ADD_TEST(Config, display)
     {
         OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR, ""); // No value
 
-        std::string myProfile = 
+        const std::string myProfile = 
             SIMPLE_PROFILE_HEADER
             +
             "active_displays: [sRGB_2, sRGB_1]\n"
@@ -3195,16 +3292,20 @@ OCIO_ADD_TEST(Config, display)
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_EQUAL(config->getNumDisplays(), 2);
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+        OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 2);
         OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_2"));
         OCIO_CHECK_EQUAL(std::string(config->getDisplay(1)), std::string("sRGB_1"));
         OCIO_CHECK_EQUAL(std::string(config->getDefaultDisplay()), "sRGB_2");
     }
 
     {
-        OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR, " "); // No value, but misleading space
+        // No value, but misleading space.
 
-        std::string myProfile = 
+        OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR, " ");
+
+        const std::string myProfile = 
             SIMPLE_PROFILE_HEADER
             +
             "active_displays: [sRGB_2, sRGB_1]\n"
@@ -3214,10 +3315,94 @@ OCIO_ADD_TEST(Config, display)
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_EQUAL(config->getNumDisplays(), 2);
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+        OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 2);
         OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_2"));
         OCIO_CHECK_EQUAL(std::string(config->getDisplay(1)), std::string("sRGB_1"));
         OCIO_CHECK_EQUAL(std::string(config->getDefaultDisplay()), "sRGB_2");
+    }
+
+    {
+        // Test an unknown display name using the env. variable.
+
+        OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR, "ABCDEF");
+
+        const std::string myProfile = 
+            SIMPLE_PROFILE_HEADER
+            +
+            "active_displays: [sRGB_2, sRGB_1]\n"
+            "active_views: []\n"
+            + SIMPLE_PROFILE_FOOTER;
+
+        std::istringstream is(myProfile);
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_THROW_WHAT(config->sanityCheck(),
+                              OCIO::Exception,
+                              "The content of the env. variable for the list of active displays [ABCDEF] is invalid.");
+    }
+
+    {
+        // Test an unknown display name using the env. variable.
+
+        OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR, "sRGB_2, sRGB_1, ABCDEF");
+
+        const std::string myProfile = 
+            SIMPLE_PROFILE_HEADER
+            +
+            "active_displays: [sRGB_2, sRGB_1]\n"
+            "active_views: []\n"
+            + SIMPLE_PROFILE_FOOTER;
+
+        std::istringstream is(myProfile);
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_THROW_WHAT(config->sanityCheck(),
+                              OCIO::Exception,
+                              "The content of the env. variable for the list of active displays"\
+                              " [sRGB_2, sRGB_1, ABCDEF] contains invalid display name(s).");
+    }
+
+    {
+        // Test an unknown display name in the config active displays.
+
+        OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR, ""); // Unset the env. variable.
+
+        const std::string myProfile = 
+            SIMPLE_PROFILE_HEADER
+            +
+            "active_displays: [ABCDEF]\n"
+            "active_views: []\n"
+            + SIMPLE_PROFILE_FOOTER;
+
+        std::istringstream is(myProfile);
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_THROW_WHAT(config->sanityCheck(),
+                              OCIO::Exception,
+                              "The list of active displays [ABCDEF] from the config file is invalid.");
+    }
+
+    {
+        // Test an unknown display name in the config active displays.
+
+        OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR, ""); // Unset the env. variable.
+
+        const std::string myProfile = 
+            SIMPLE_PROFILE_HEADER
+            +
+            "active_displays: [sRGB_2, sRGB_1, ABCDEF]\n"
+            "active_views: []\n"
+            + SIMPLE_PROFILE_FOOTER;
+
+        std::istringstream is(myProfile);
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_THROW_WHAT(config->sanityCheck(),
+                              OCIO::Exception,
+                              "The list of active displays [sRGB_2, sRGB_1, ABCDEF] "\
+                              "from the config file contains invalid display name(s)");
     }
 }
 
@@ -3466,23 +3651,22 @@ OCIO_ADD_TEST(Config, display_view_order)
 
     OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 4);
 
-    // TODO: When active_displays is not defined to impose an order,
-    // the displays are currently returned in faulty alphabetical order rather
-    // than config order.
+    // When active_displays is not defined, the displays are returned in config order.
 
-    OCIO_CHECK_EQUAL(std::string(config->getDefaultDisplay()), "sRGB_A");
+    OCIO_CHECK_EQUAL(std::string(config->getDefaultDisplay()), "sRGB_B");
 
-    OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), "sRGB_A");
-    OCIO_CHECK_EQUAL(std::string(config->getDisplay(1)), "sRGB_B");
-    OCIO_CHECK_EQUAL(std::string(config->getDisplay(2)), "sRGB_C");
-    OCIO_CHECK_EQUAL(std::string(config->getDisplay(3)), "sRGB_D");
+    OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), "sRGB_B");
+    OCIO_CHECK_EQUAL(std::string(config->getDisplay(1)), "sRGB_D");
+    OCIO_CHECK_EQUAL(std::string(config->getDisplay(2)), "sRGB_A");
+    OCIO_CHECK_EQUAL(std::string(config->getDisplay(3)), "sRGB_C");
 
     // When active_views is not defined, the views are returned in config order.
+
+    OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_B")), "View_2");
 
     OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_B"), 2);
     OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_B", 0)), "View_2");
     OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_B", 1)), "View_1");
-    OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_B")), "View_2");
 }
 
 OCIO_ADD_TEST(Config, log_serialization)
