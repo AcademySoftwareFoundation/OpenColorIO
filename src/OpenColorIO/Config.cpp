@@ -1756,13 +1756,14 @@ OCIO_ADD_TEST(Config, internal_raw_profile)
     std::istringstream is;
     is.str(OCIO::INTERNAL_RAW_PROFILE);
 
-    OCIO_CHECK_NO_THROW(OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(OCIO::Config::CreateFromStream(is));
 }
 
 OCIO_ADD_TEST(Config, create_raw_config)
 {
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateRaw());
+    OCIO_CHECK_NO_THROW(config->sanityCheck());
     OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 1);
     OCIO_CHECK_EQUAL(std::string(config->getColorSpaceNameByIndex(0)), std::string("raw"));
 
