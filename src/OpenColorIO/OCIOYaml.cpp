@@ -51,6 +51,11 @@ namespace YAML {
 #pragma warning( disable: 4146 )
 #endif
 
+// The Clang 7 (and higher) optimizations conflict with Yaml 0.6.x.
+#ifdef __clang__
+#pragma clang optimize off
+#endif
+
 #include <yaml-cpp/yaml.h>
 
 #ifdef _MSC_VER
@@ -2544,3 +2549,7 @@ OCIO_NAMESPACE_ENTER
     
 }
 OCIO_NAMESPACE_EXIT
+
+#ifdef __clang__
+#pragma clang optimize on
+#endif
