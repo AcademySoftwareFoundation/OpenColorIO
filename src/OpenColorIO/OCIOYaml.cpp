@@ -302,7 +302,7 @@ OCIO_NAMESPACE_ENTER
 
                 load(first, key);
                 
-                if (second.Type() == YAML::NodeType::Null) continue;
+                if (second.IsNull() || !second.IsDefined()) continue;
                 
                 if(key == "name")
                 {
@@ -378,7 +378,7 @@ OCIO_NAMESPACE_ENTER
                 
                 load(first, key);
                 
-                if (second.Type() == YAML::NodeType::Null) continue;
+                if (second.IsNull() || !second.IsDefined()) continue;
                 
                 if(key == "allocation")
                 {
@@ -447,7 +447,7 @@ OCIO_NAMESPACE_ENTER
 
                 load(first, key);
                 
-                if (second.Type() == YAML::NodeType::Null) continue;
+                if (second.IsNull() || !second.IsDefined()) continue;
                 
                 if(key == "slope")
                 {
@@ -559,7 +559,7 @@ OCIO_NAMESPACE_ENTER
 
                 load(first, key);
                 
-                if (second.Type() == YAML::NodeType::Null) continue;
+                if (second.IsNull() || !second.IsDefined()) continue;
                 
                 if(key == "src")
                 {
@@ -611,7 +611,7 @@ OCIO_NAMESPACE_ENTER
 
                 load(first, key);
                 
-                if (second.Type() == YAML::NodeType::Null) continue;
+                if (second.IsNull() || !second.IsDefined()) continue;
                 
                 if(key == "value")
                 {
@@ -684,7 +684,7 @@ OCIO_NAMESPACE_ENTER
 
                 load(first, key);
                 
-                if (second.Type() == YAML::NodeType::Null) continue;
+                if (second.IsNull() || !second.IsDefined()) continue;
                 
                 if(key == "gamma")
                 {
@@ -840,7 +840,7 @@ OCIO_NAMESPACE_ENTER
 
                 load(first, key);
 
-                if (second.Type() == YAML::NodeType::Null) continue;
+                if (second.IsNull() || !second.IsDefined()) continue;
 
                 if (key == "exposure")
                 {
@@ -970,7 +970,7 @@ OCIO_NAMESPACE_ENTER
 
                 load(first, key);
                 
-                if (second.Type() == YAML::NodeType::Null) continue;
+                if (second.IsNull() || !second.IsDefined()) continue;
                 
                 if(key == "src")
                 {
@@ -1036,7 +1036,7 @@ OCIO_NAMESPACE_ENTER
 
                 load(first, key);
                 
-                if (second.Type() == YAML::NodeType::Null) continue;
+                if (second.IsNull() || !second.IsDefined()) continue;
                 
                 if(key == "params")
                 {
@@ -1104,14 +1104,14 @@ OCIO_NAMESPACE_ENTER
 
                 load(first, key);
                 
-                if (second.Type() == YAML::NodeType::Null) continue;
+                if (second.IsNull() || !second.IsDefined()) continue;
                 
                 if(key == "children")
                 {
-                    for(unsigned i = 0; i < second.size(); ++i)
+                    for(const auto & val : second)
                     {
                         TransformRcPtr childTransform;
-                        load(second[i], childTransform);
+                        load(val, childTransform);
                         
                         // TODO: consider the forwards-compatibility implication of
                         // throwing an exception.  Should this be a warning, instead?
@@ -1207,7 +1207,7 @@ OCIO_NAMESPACE_ENTER
 
                 load(first, key);
                 
-                if (second.Type() == YAML::NodeType::Null) continue;
+                if (second.IsNull() || !second.IsDefined()) continue;
                 
                 if (key == "base")
                 {
@@ -1322,7 +1322,7 @@ OCIO_NAMESPACE_ENTER
 
                 load(first, key);
 
-                if (second.Type() == YAML::NodeType::Null) continue;
+                if (second.IsNull() || !second.IsDefined()) continue;
 
                 if (key == "base")
                 {
@@ -1384,7 +1384,7 @@ OCIO_NAMESPACE_ENTER
 
                 load(first, key);
                 
-                if (second.Type() == YAML::NodeType::Null) continue;
+                if (second.IsNull() || !second.IsDefined()) continue;
                 
                 if(key == "src")
                 {
@@ -1442,7 +1442,7 @@ OCIO_NAMESPACE_ENTER
 
                 load(first, key);
                 
-                if (second.Type() == YAML::NodeType::Null) continue;
+                if (second.IsNull() || !second.IsDefined()) continue;
                 
                 if(key == "matrix")
                 {
@@ -1525,7 +1525,7 @@ OCIO_NAMESPACE_ENTER
 
                 load(first, key);
                 
-                if (second.Type() == YAML::NodeType::Null) continue;
+                if (second.IsNull() || !second.IsDefined()) continue;
                 
                 double val = 0.0;
 
@@ -1768,7 +1768,14 @@ OCIO_NAMESPACE_ENTER
         {
             if(node.Tag() != "ColorSpace")
                 return; // not a !<ColorSpace> tag
-            
+
+            if(node.Type() != YAML::NodeType::Map)
+            {
+                std::ostringstream os;
+                os << "The '!<ColorSpace>' content needs to be a map.";
+                throwError(node, os.str());
+            }
+
             std::string key, stringval;
             bool boolval;
             
@@ -1781,7 +1788,7 @@ OCIO_NAMESPACE_ENTER
 
                 load(first, key);
                 
-                if (second.Type() == YAML::NodeType::Null) continue;
+                if (second.IsNull() || !second.IsDefined()) continue;
                 
                 if(key == "name")
                 {
@@ -1931,7 +1938,7 @@ OCIO_NAMESPACE_ENTER
 
                 load(first, key);
                 
-                if (second.Type() == YAML::NodeType::Null) continue;
+                if (second.IsNull() || !second.IsDefined()) continue;
                 
                 if(key == "name")
                 {
@@ -2088,7 +2095,7 @@ OCIO_NAMESPACE_ENTER
 
                 load(first, key);
                 
-                if (second.Type() == YAML::NodeType::Null) continue;
+                if (second.IsNull() || !second.IsDefined()) continue;
                 
                 if(key == "ocio_profile_version") { } // Already handled above.
                 else if(key == "environment")
@@ -2121,7 +2128,7 @@ OCIO_NAMESPACE_ENTER
                     {
                         StringVec paths;
                         load(second, paths);
-                        for (auto & path : paths)
+                        for (const auto & path : paths)
                         {
                             c->addSearchPath(path.c_str());
                         }
@@ -2182,11 +2189,17 @@ OCIO_NAMESPACE_ENTER
                     {
                         std::string display;
                         load(it->first, display);
+
                         const YAML::Node& dsecond = it->second;
-                        for(unsigned i = 0; i < dsecond.size(); ++i)
+                        if(dsecond.Type() != YAML::NodeType::Sequence)
+                        {
+                            throwValueError(node.Tag(), first, "The view list is a sequence.");
+                        }
+
+                        for(const auto & val : dsecond)
                         {
                             View view;
-                            load(dsecond[i], view);
+                            load(val, view);
                             c->addDisplay(display.c_str(), view.name.c_str(),
                                           view.colorspace.c_str(), view.looks.c_str());
                         }
@@ -2214,12 +2227,12 @@ OCIO_NAMESPACE_ENTER
                         os << "'colorspaces' field needs to be a (- !<ColorSpace>) list.";
                         throwError(node, os.str());
                     }
-                    for(unsigned i = 0; i < second.size(); ++i)
+                    for(const auto & val : second)
                     {
-                        if(second[i].Tag() == "ColorSpace")
+                        if(val.Tag() == "ColorSpace")
                         {
                             ColorSpaceRcPtr cs = ColorSpace::Create();
-                            load(second[i], cs);
+                            load(val, cs);
                             for(int ii = 0; ii < c->getNumColorSpaces(); ++ii)
                             {
                                 if(strcmp(c->getColorSpaceNameByIndex(ii), cs->getName()) == 0)
@@ -2235,7 +2248,7 @@ OCIO_NAMESPACE_ENTER
                         {
                             std::ostringstream os;
                             os << "Unknown element found in colorspaces:";
-                            os << second[i].Tag() << ". Only ColorSpace(s)";
+                            os << val.Tag() << ". Only ColorSpace(s)";
                             os << " currently handled.";
                             LogWarning(os.str());
                         }
@@ -2250,19 +2263,19 @@ OCIO_NAMESPACE_ENTER
                         throwError(node, os.str());
                     }
                     
-                    for(unsigned i = 0; i < second.size(); ++i)
+                    for(const auto & val : second)
                     {
-                        if(second[i].Tag() == "Look")
+                        if(val.Tag() == "Look")
                         {
                             LookRcPtr look = Look::Create();
-                            load(second[i], look);
+                            load(val, look);
                             c->addLook(look);
                         }
                         else
                         {
                             std::ostringstream os;
                             os << "Unknown element found in looks:";
-                            os << second[i].Tag() << ". Only Look(s)";
+                            os << val.Tag() << ". Only Look(s)";
                             os << " currently handled.";
                             LogWarning(os.str());
                         }
