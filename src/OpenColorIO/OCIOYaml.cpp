@@ -157,17 +157,50 @@ OCIO_NAMESPACE_ENTER
         
         inline void load(const YAML::Node & node, StringVec & x)
         {
-            x = node.as<StringVec>();
+            try
+            {
+                x = node.as<StringVec>();
+            }
+            catch (const std::exception & e)
+            {
+                std::ostringstream os;
+                os << "At line " << (node.Mark().line + 1)
+                   << ", '" << node.Tag() << "' parsing StringVec failed "
+                   << "with: " << e.what();
+                throw Exception(os.str().c_str());
+            }
         }
         
         inline void load(const YAML::Node & node, std::vector<float> & x)
         {
-            x = node.as<std::vector<float> >();
+            try
+            {
+                x = node.as<std::vector<float> >();
+            }
+            catch (const std::exception & e)
+            {
+                std::ostringstream os;
+                os << "At line " << (node.Mark().line + 1)
+                   << ", '" << node.Tag() << "' parsing vector<float> failed "
+                   << "with: " << e.what();
+                throw Exception(os.str().c_str());
+            }
         }
         
         inline void load(const YAML::Node& node, std::vector<double>& x)
         {
-            x = node.as<std::vector<double> >();
+            try
+            {
+                x = node.as<std::vector<double> >();
+            }
+            catch (const std::exception & e)
+            {
+                std::ostringstream os;
+                os << "At line " << (node.Mark().line + 1)
+                   << ", '" << node.Tag() << "' parsing vector<double> failed "
+                   << "with: " << e.what();
+                throw Exception(os.str().c_str());
+            }
         }
         
         // Enums
@@ -2015,7 +2048,7 @@ OCIO_NAMESPACE_ENTER
             int profile_major_version = 0;
             int profile_minor_version = 0;
 
-            bool faulty_version = node["ocio_profile_version"] == NULL;
+            bool faulty_version = !node["ocio_profile_version"].IsDefined();
 
             std::string version;
             std::vector< std::string > results;
