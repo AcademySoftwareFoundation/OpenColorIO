@@ -145,12 +145,7 @@ if(NOT YAMLCPP_FOUND)
         "${_EXT_DIST_ROOT}/lib/libyaml-cpp${_YAMLCPP_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
     if(_YAMLCPP_TARGET_CREATE)
-        if("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU"
-                OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-            # C++11 deprecates std::auto_ptr
-	    #set(YAMLCPP_CXX_FLAGS "${YAMLCPP_CXX_FLAGS} -Wno-deprecated-declarations")
-	    #set(YAMLCPP_CXX_FLAGS "${YAMLCPP_CXX_FLAGS} -Wno-uninitialized")
-        elseif(MSVC)
+        if(MSVC)
             set(YAMLCPP_CXX_FLAGS "${YAMLCPP_CXX_FLAGS} /EHsc")
         endif()
 
@@ -168,6 +163,8 @@ if(NOT YAMLCPP_FOUND)
             -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DBUILD_SHARED_LIBS:BOOL=OFF
+            -DYAML_BUILD_SHARED_LIBS:BOOL=OFF
+            -DYAML_CPP_BUILD_TESTS:BOOL=OFF
             -DYAML_CPP_BUILD_TOOLS:BOOL=OFF
             -DYAML_CPP_BUILD_CONTRIB:BOOL=OFF
             -DCMAKE_CXX_FLAGS=${YAMLCPP_CXX_FLAGS}
@@ -186,12 +183,7 @@ if(NOT YAMLCPP_FOUND)
             )
         endif()
 
-        if(YamlCpp_FIND_VERSION_MINOR LESS 6 AND YamlCpp_FIND_VERSION_PATCH LESS 3)
-            set(YAMLCPP_GIT_TAG "release-${YAMLCPP_VERSION}")
-        else()
-            set(YAMLCPP_GIT_TAG "yaml-cpp-${YAMLCPP_VERSION}")
-            set(YAMLCPP_CMAKE_ARGS ${YAMLCPP_CMAKE_ARGS} -DYAML_CPP_BUILD_TESTS:BOOL=OFF)
-        endif()
+        set(YAMLCPP_GIT_TAG "yaml-cpp-${YAMLCPP_VERSION}")
 
         # Hack to let imported target be built from ExternalProject_Add
         file(MAKE_DIRECTORY ${YAMLCPP_INCLUDE_DIR})
