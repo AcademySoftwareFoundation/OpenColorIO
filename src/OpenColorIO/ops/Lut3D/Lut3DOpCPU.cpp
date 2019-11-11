@@ -1917,7 +1917,7 @@ ConstOpCPURcPtr GetLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
     }
     else
     {
-        if (lut->getConcreteInversionQuality() == LUT_INVERSION_FAST)
+        if (lut->getInversionQuality() == LUT_INVERSION_FAST)
         {
             ConstLut3DOpDataRcPtr newLut = MakeFastLut3DFromInverse(lut);
 

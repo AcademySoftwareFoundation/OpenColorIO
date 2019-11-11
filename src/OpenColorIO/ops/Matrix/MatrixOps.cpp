@@ -48,7 +48,7 @@ OCIO_NAMESPACE_ENTER
 
             virtual ~MatrixOffsetOp();
 
-            TransformDirection getDirection() const noexcept override { return m_direction; }
+            TransformDirection getDirection() const noexcept { return m_direction; }
 
             OpRcPtr clone() const override;
 
@@ -59,7 +59,7 @@ OCIO_NAMESPACE_ENTER
             bool canCombineWith(ConstOpRcPtr & op) const override;
             void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
 
-            void finalize(FinalizationFlags fFlags) override;
+            void finalize(OptimizationFlags oFlags) override;
 
             ConstOpCPURcPtr getCPUOp() const override;
 
@@ -131,47 +131,67 @@ OCIO_NAMESPACE_ENTER
 
         bool MatrixOffsetOp::isInverse(ConstOpRcPtr & op) const
         {
-            if (canCombineWith(op))
-            {
-                OpRcPtrVec ops;
-                combineWith(ops, op);
-
-                // If combined matrix isNoOp nothing is added.
-                if (ops.size() == 0)
-                {
-                    return true;
-                }
-            }
+            // It is simpler to handle a pair of inverses by combining them and then removing
+            // the identity.  So we just return false here.
             return false;
         }
 
         bool MatrixOffsetOp::canCombineWith(ConstOpRcPtr & op) const
         {
-            return isSameType(op);
+            // TODO: Could combine with certain ASC_CDL ops.
+            if (isSameType(op))
+            {
+                if (m_direction == TRANSFORM_DIR_INVERSE)
+                {
+                    try
+                    {
+                        matrixData()->inverse();
+                    }
+                    catch(...)
+                    {
+                        return false;
+                    }
+                }
+                ConstMatrixOffsetOpRcPtr typedRcPtr = DynamicPtrCast<const MatrixOffsetOp>(op);
+
+                if (typedRcPtr->getDirection() == TRANSFORM_DIR_INVERSE)
+                {
+                    auto otherMat = OCIO_DYNAMIC_POINTER_CAST<const MatrixOpData>(op->data());
+                    if (otherMat)
+                    {
+                        try
+                        {
+                            otherMat->inverse();
+                        }
+                        catch(...)
+                        {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+            return false;
         }
 
         void MatrixOffsetOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
         {
-            ConstMatrixOffsetOpRcPtr typedRcPtr = DynamicPtrCast<const MatrixOffsetOp>(secondOp);
-            if(!typedRcPtr)
+            if (!canCombineWith(secondOp))
             {
-                std::ostringstream os;
-                os << "MatrixOffsetOp can only be combined with other ";
-                os << "MatrixOffsetOps.  secondOp:" << secondOp->getInfo();
-                throw Exception(os.str().c_str());
+                throw Exception("MatrixOffsetOp: canCombineWith must be checked "
+                                "before calling combineWith.");
             }
+            ConstMatrixOffsetOpRcPtr typedRcPtr = DynamicPtrCast<const MatrixOffsetOp>(secondOp);
 
             ConstMatrixOpDataRcPtr firstMat = matrixData();
             if (m_direction == TRANSFORM_DIR_INVERSE)
             {
-                // Could throw.
                 firstMat = firstMat->inverse();
             }
 
             ConstMatrixOpDataRcPtr secondMat = typedRcPtr->matrixData();
             if (typedRcPtr->m_direction == TRANSFORM_DIR_INVERSE)
             {
-                // Could throw.
                 secondMat = secondMat->inverse();
             }
 
@@ -183,7 +203,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
 
-        void MatrixOffsetOp::finalize(FinalizationFlags /*fFlags*/)
+        void MatrixOffsetOp::finalize(OptimizationFlags /*oFlags*/)
         {
             if(m_direction == TRANSFORM_DIR_INVERSE)
             {
@@ -216,7 +236,7 @@ OCIO_NAMESPACE_ENTER
             if (m_direction == TRANSFORM_DIR_INVERSE)
             {
                 throw Exception("MatrixOp direction should have been"
-                    " set to forward by finalize");
+                                " set to forward by finalize");
             }
 
             // TODO: Review implementation to handle bitdepth
@@ -524,14 +544,14 @@ OCIO_ADD_TEST(MatrixOffsetOp, scale)
 
     std::string cacheID = ops[0]->getCacheID();
     OCIO_REQUIRE_ASSERT(cacheID.empty());
-    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
 
     cacheID = ops[0]->getCacheID();
     OCIO_REQUIRE_ASSERT(!cacheID.empty());
 
     OCIO_CHECK_NO_THROW(OCIO::CreateScaleOp(ops, scale, OCIO::TRANSFORM_DIR_INVERSE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::OPTIMIZATION_NONE));
 
     const unsigned long NB_PIXELS = 3;
     const float src[NB_PIXELS*4] = {  0.1004f,  0.2f, 0.3f,   0.4f,
@@ -569,11 +589,11 @@ OCIO_ADD_TEST(MatrixOffsetOp, offset)
     OCIO_CHECK_NO_THROW(OCIO::CreateOffsetOp(ops, offset, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
-    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
 
     OCIO_CHECK_NO_THROW(OCIO::CreateOffsetOp(ops, offset, OCIO::TRANSFORM_DIR_INVERSE));
     OCIO_CHECK_EQUAL(ops.size(), 2);
-    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::OPTIMIZATION_NONE));
 
     const unsigned long NB_PIXELS = 3;
     const float src[NB_PIXELS*4] = {  0.1004f,  0.2f, 0.3f,  0.4f,
@@ -615,11 +635,11 @@ OCIO_ADD_TEST(MatrixOffsetOp, matrix)
     OCIO_CHECK_NO_THROW(OCIO::CreateMatrixOp(ops, matrix, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
-    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
 
     OCIO_CHECK_NO_THROW(OCIO::CreateMatrixOp(ops, matrix, OCIO::TRANSFORM_DIR_INVERSE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::OPTIMIZATION_NONE));
 
     const unsigned long NB_PIXELS = 3;
     const float src[NB_PIXELS*4] = {  0.1004f,  0.201f, 0.303f, 0.408f,
@@ -669,12 +689,12 @@ OCIO_ADD_TEST(MatrixOffsetOp, arbitrary)
         OCIO::CreateMatrixOffsetOp(ops, matrix, offset, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
-    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
 
     OCIO_CHECK_NO_THROW(
         OCIO::CreateMatrixOffsetOp(ops, matrix, offset, OCIO::TRANSFORM_DIR_INVERSE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::OPTIMIZATION_NONE));
 
     const unsigned long NB_PIXELS = 3;
     const float src[NB_PIXELS*4] = {
@@ -719,7 +739,7 @@ OCIO_ADD_TEST(MatrixOffsetOp, arbitrary)
     std::string cacheIDCloned = clonedOp->getCacheID();
 
     OCIO_CHECK_ASSERT(cacheIDCloned.empty());
-    OCIO_CHECK_NO_THROW(clonedOp->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(clonedOp->finalize(OCIO::OPTIMIZATION_NONE));
 
     cacheIDCloned = clonedOp->getCacheID();
 
@@ -742,13 +762,13 @@ OCIO_ADD_TEST(MatrixOffsetOp, create_fit_op)
                                           newmin4, newmax4, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
-    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
 
     OCIO_CHECK_NO_THROW(OCIO::CreateFitOp(ops,
                                           oldmin4, oldmax4,
                                           newmin4, newmax4, OCIO::TRANSFORM_DIR_INVERSE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::OPTIMIZATION_NONE));
 
     const unsigned long NB_PIXELS = 3;
     const float src[NB_PIXELS * 4] = {  0.1004f, 0.201f, 0.303f, 0.408f,
@@ -790,12 +810,12 @@ OCIO_ADD_TEST(MatrixOffsetOp, create_saturation_op)
 
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
-    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
 
     OCIO_CHECK_NO_THROW(
         OCIO::CreateSaturationOp(ops, sat, lumaCoef3, OCIO::TRANSFORM_DIR_INVERSE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::OPTIMIZATION_NONE));
 
     const unsigned long NB_PIXELS = 3;
     const float src[NB_PIXELS * 4] = { 0.1004f, 0.201f, 0.303f, 0.408f,
@@ -836,7 +856,7 @@ OCIO_ADD_TEST(MatrixOffsetOp, create_min_max_op)
     OCIO_CHECK_NO_THROW(CreateMinMaxOp(ops, min3, max3, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
-    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
 
     const unsigned long NB_PIXELS = 5;
     const float src[NB_PIXELS * 4] = { 1.0f, 2.0f, 3.0f,  1.0f,
@@ -898,14 +918,14 @@ OCIO_ADD_TEST(MatrixOffsetOp, combining)
         OCIO_CHECK_NO_THROW(CreateMatrixOp(ops, mat2, OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
-        OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
-        OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
+        OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::OPTIMIZATION_NONE));
 
         OCIO::OpRcPtrVec combined;
         OCIO::ConstOpRcPtr opc1 = ops[1];
         OCIO_CHECK_NO_THROW(ops[0]->combineWith(combined, opc1));
         OCIO_REQUIRE_EQUAL(combined.size(), 1);
-        OCIO_CHECK_NO_THROW(combined[0]->finalize(OCIO::FINALIZATION_EXACT));
+        OCIO_CHECK_NO_THROW(combined[0]->finalize(OCIO::OPTIMIZATION_NONE));
 
         auto combinedData = OCIO::DynamicPtrCast<const OCIO::Op>(combined[0])->data();
 
@@ -954,8 +974,8 @@ OCIO_ADD_TEST(MatrixOffsetOp, combining)
 
         OCIO_CHECK_EQUAL(cacheIDCombined, cacheIDOptimized);
 
-        op0->finalize(OCIO::FINALIZATION_EXACT);
-        op1->finalize(OCIO::FINALIZATION_EXACT);
+        op0->finalize(OCIO::OPTIMIZATION_NONE);
+        op1->finalize(OCIO::OPTIMIZATION_NONE);
 
         for (int test = 0; test<3; ++test)
         {
@@ -983,14 +1003,14 @@ OCIO_ADD_TEST(MatrixOffsetOp, combining)
         OCIO_CHECK_NO_THROW(
             OCIO::CreateMatrixOffsetOp(ops, m2, v2, OCIO::TRANSFORM_DIR_INVERSE));
         OCIO_REQUIRE_EQUAL(ops.size(), 2);
-        OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
-        OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
+        OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::OPTIMIZATION_NONE));
 
         OCIO::OpRcPtrVec combined;
         OCIO::ConstOpRcPtr opc1 = ops[1];
         OCIO_CHECK_NO_THROW(ops[0]->combineWith(combined, opc1));
         OCIO_REQUIRE_EQUAL(combined.size(), 1);
-        OCIO_CHECK_NO_THROW(combined[0]->finalize(OCIO::FINALIZATION_EXACT));
+        OCIO_CHECK_NO_THROW(combined[0]->finalize(OCIO::OPTIMIZATION_NONE));
 
         for(int test=0; test<3; ++test)
         {
@@ -1017,14 +1037,14 @@ OCIO_ADD_TEST(MatrixOffsetOp, combining)
         OCIO_CHECK_NO_THROW(
             OCIO::CreateMatrixOffsetOp(ops, m2, v2, OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_REQUIRE_EQUAL(ops.size(), 2);
-        OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
-        OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
+        OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::OPTIMIZATION_NONE));
 
         OCIO::OpRcPtrVec combined;
         OCIO::ConstOpRcPtr opc1 = ops[1];
         OCIO_CHECK_NO_THROW(ops[0]->combineWith(combined, opc1));
         OCIO_REQUIRE_EQUAL(combined.size(), 1);
-        OCIO_CHECK_NO_THROW(combined[0]->finalize(OCIO::FINALIZATION_EXACT));
+        OCIO_CHECK_NO_THROW(combined[0]->finalize(OCIO::OPTIMIZATION_NONE));
 
         for(int test=0; test<3; ++test)
         {
@@ -1051,14 +1071,14 @@ OCIO_ADD_TEST(MatrixOffsetOp, combining)
         OCIO_CHECK_NO_THROW(
             OCIO::CreateMatrixOffsetOp(ops, m2, v2, OCIO::TRANSFORM_DIR_INVERSE));
         OCIO_REQUIRE_EQUAL(ops.size(), 2);
-        OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
-        OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
+        OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::OPTIMIZATION_NONE));
 
         OCIO::OpRcPtrVec combined;
         OCIO::ConstOpRcPtr op1 = ops[1];
         OCIO_CHECK_NO_THROW(ops[0]->combineWith(combined, op1));
         OCIO_REQUIRE_EQUAL(combined.size(), 1);
-        OCIO_CHECK_NO_THROW(combined[0]->finalize(OCIO::FINALIZATION_EXACT));
+        OCIO_CHECK_NO_THROW(combined[0]->finalize(OCIO::OPTIMIZATION_NONE));
 
         for(int test=0; test<3; ++test)
         {
@@ -1076,6 +1096,36 @@ OCIO_ADD_TEST(MatrixOffsetOp, combining)
                 OCIO_CHECK_CLOSE(tmp2[i], tmp[i], error);
             }
         }
+    }
+
+    {
+        OCIO::OpRcPtrVec ops;
+        const double offset[] = { 1.1, -1.3, 0.3, 0.0 };
+        const double offsetInv[] = { -1.1, 1.3, -0.3, 0.0 };
+        OCIO_CHECK_NO_THROW(OCIO::CreateOffsetOp(ops, offset, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_EQUAL(ops.size(), 1);
+        OCIO_CHECK_NO_THROW(OCIO::CreateOffsetOp(ops, offset, OCIO::TRANSFORM_DIR_INVERSE));
+        OCIO_REQUIRE_EQUAL(ops.size(), 2);
+        OCIO_CHECK_NO_THROW(OCIO::CreateOffsetOp(ops, offsetInv, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_REQUIRE_EQUAL(ops.size(), 3);
+
+        OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops[2]->finalize(OCIO::OPTIMIZATION_NONE));
+
+        // Combining offset (FWD) and offset (INV) becomes an identity and is optimized out.
+
+        OCIO::OpRcPtrVec combined;
+        OCIO::ConstOpRcPtr op1 = ops[1];
+        OCIO_CHECK_NO_THROW(ops[0]->combineWith(combined, op1));
+        OCIO_CHECK_EQUAL(combined.size(), 0);
+        combined.clear();
+
+        // Combining offset (FWD) and offsetInv (FWD) becomes an identity and is optimized out.
+
+        OCIO::ConstOpRcPtr op2 = ops[2];
+        OCIO_CHECK_NO_THROW(ops[0]->combineWith(combined, op2));
+        OCIO_CHECK_EQUAL(combined.size(), 0);
     }
 }
 
@@ -1121,7 +1171,7 @@ OCIO_ADD_TEST(MatrixOffsetOp, throw_finalize)
     const double scale[] = { 0.0, 1.3, 0.3, 1.0 };
     OCIO_CHECK_NO_THROW(OCIO::CreateScaleOp(ops, scale, OCIO::TRANSFORM_DIR_INVERSE));
 
-    OCIO_CHECK_THROW_WHAT(ops[0]->finalize(OCIO::FINALIZATION_EXACT),
+    OCIO_CHECK_THROW_WHAT(ops[0]->finalize(OCIO::OPTIMIZATION_NONE),
         OCIO::Exception, "Singular Matrix can't be inverted");
 }
 
@@ -1137,10 +1187,11 @@ OCIO_ADD_TEST(MatrixOffsetOp, throw_combine)
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
     OCIO::ConstOpRcPtr op1 = ops[1];
 
+    OCIO_CHECK_ASSERT(!ops[0]->canCombineWith(op1));
     OCIO::OpRcPtrVec combinedOps;
     OCIO_CHECK_THROW_WHAT(
         ops[0]->combineWith(combinedOps, op1),
-        OCIO::Exception, "can only be combined with other MatrixOffsetOps");
+        OCIO::Exception, "canCombineWith must be checked before");
 
     // Combining forward with inverse that can't be inverted.
     ops.clear();
@@ -1150,9 +1201,10 @@ OCIO_ADD_TEST(MatrixOffsetOp, throw_combine)
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
     op1 = ops[1];
 
+    OCIO_CHECK_ASSERT(!ops[0]->canCombineWith(op1));
     OCIO_CHECK_THROW_WHAT(
         ops[0]->combineWith(combinedOps, op1),
-        OCIO::Exception, "Singular Matrix can't be inverted");
+        OCIO::Exception, "MatrixOffsetOp: canCombineWith must be checked before");
 
     // Combining inverse that can't be inverted with forward.
     ops.clear();
@@ -1161,9 +1213,10 @@ OCIO_ADD_TEST(MatrixOffsetOp, throw_combine)
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
     op1 = ops[1];
 
+    OCIO_CHECK_ASSERT(!ops[0]->canCombineWith(op1));
     OCIO_CHECK_THROW_WHAT(
         ops[0]->combineWith(combinedOps, op1),
-        OCIO::Exception, "Singular Matrix can't be inverted");
+        OCIO::Exception, "MatrixOffsetOp: canCombineWith must be checked before");
 
     // Combining inverse with inverse that can't be inverted.
     ops.clear();
@@ -1172,9 +1225,10 @@ OCIO_ADD_TEST(MatrixOffsetOp, throw_combine)
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
     op1 = ops[1];
 
+    OCIO_CHECK_ASSERT(!ops[0]->canCombineWith(op1));
     OCIO_CHECK_THROW_WHAT(
         ops[0]->combineWith(combinedOps, op1),
-        OCIO::Exception, "Singular Matrix can't be inverted");
+        OCIO::Exception, "MatrixOffsetOp: canCombineWith must be checked before");
 
     // Combining inverse that can't be inverted with inverse.
     ops.clear();
@@ -1183,9 +1237,10 @@ OCIO_ADD_TEST(MatrixOffsetOp, throw_combine)
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
     op1 = ops[1];
 
+    OCIO_CHECK_ASSERT(!ops[0]->canCombineWith(op1));
     OCIO_CHECK_THROW_WHAT(
         ops[0]->combineWith(combinedOps, op1),
-        OCIO::Exception, "Singular Matrix can't be inverted");
+        OCIO::Exception, "MatrixOffsetOp: canCombineWith must be checked before");
 
 }
 
@@ -1275,7 +1330,7 @@ OCIO_ADD_TEST(MatrixOffsetOp, no_op)
     OCIO_CHECK_NO_THROW(CreateIdentityMatrixOp(ops));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO_CHECK_ASSERT(ops[0]->isNoOp());
-    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_CHECK_ASSERT(ops[0]->isNoOp());
 }
 
@@ -1314,40 +1369,6 @@ OCIO_ADD_TEST(MatrixOffsetOp, is_same_type)
     OCIO_CHECK_ASSERT(!ops[2]->isSameType(op1));
 }
 
-OCIO_ADD_TEST(MatrixOffsetOp, is_inverse)
-{
-    OCIO::OpRcPtrVec ops;
-    const double offset[] = { 1.1, -1.3, 0.3, 0.0 };
-    const double offsetInv[] = { -1.1, 1.3, -0.3, 0.0 };
-    OCIO_CHECK_NO_THROW(OCIO::CreateOffsetOp(ops, offset, OCIO::TRANSFORM_DIR_FORWARD));
-    OCIO_CHECK_EQUAL(ops.size(), 1);
-    OCIO_CHECK_NO_THROW(OCIO::CreateOffsetOp(ops, offset, OCIO::TRANSFORM_DIR_INVERSE));
-    OCIO_CHECK_EQUAL(ops.size(), 2);
-    OCIO_CHECK_NO_THROW(OCIO::CreateOffsetOp(ops, offsetInv, OCIO::TRANSFORM_DIR_FORWARD));
-    OCIO_CHECK_EQUAL(ops.size(), 3);
-
-    const double base = 10.0;
-    const double logSlope[3] = { 0.18, 0.5, 0.3 };
-    const double linSlope[3] = { 2.0, 4.0, 8.0 };
-    const double linOffset[3] = { 0.1, 0.1, 0.1 };
-    const double logOffset[3] = { 1.0, 1.0, 1.0 };
-    OCIO_CHECK_NO_THROW(
-        OCIO::CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset, OCIO::TRANSFORM_DIR_FORWARD));
-    OCIO_REQUIRE_EQUAL(ops.size(), 4);
-    OCIO::ConstOpRcPtr op0 = ops[0];
-    OCIO::ConstOpRcPtr op1 = ops[1];
-    OCIO::ConstOpRcPtr op2 = ops[2];
-    OCIO::ConstOpRcPtr op3 = ops[3];
-
-    OCIO_CHECK_ASSERT(ops[0]->isInverse(op1));
-    OCIO_CHECK_ASSERT(ops[1]->isInverse(op0));
-
-    OCIO_CHECK_ASSERT(ops[0]->isInverse(op2));
-    OCIO_CHECK_ASSERT(ops[2]->isInverse(op0));
-    OCIO_CHECK_ASSERT(!ops[2]->isInverse(op3));
-    OCIO_CHECK_ASSERT(!ops[3]->isInverse(op2));
-}
-
 OCIO_ADD_TEST(MatrixOffsetOp, has_channel_crosstalk)
 {
     const double scale[] = { 1.1, 1.3, 0.3, 1.0 };
@@ -1357,11 +1378,11 @@ OCIO_ADD_TEST(MatrixOffsetOp, has_channel_crosstalk)
     OCIO::OpRcPtrVec ops;
     OCIO_CHECK_NO_THROW(OCIO::CreateScaleOp(ops, scale, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
-    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_CHECK_NO_THROW(
         OCIO::CreateSaturationOp(ops, sat, lumaCoef3, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::OPTIMIZATION_NONE));
 
     OCIO_CHECK_ASSERT(!ops[0]->hasChannelCrosstalk());
     OCIO_CHECK_ASSERT(ops[1]->hasChannelCrosstalk());
@@ -1376,7 +1397,7 @@ OCIO_ADD_TEST(MatrixOffsetOp, removing_red_green)
     OCIO_CHECK_NO_THROW(
         OCIO::CreateMatrixOp(ops, mat, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
-    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
 
     const unsigned long NB_PIXELS = 6;
     const float src[NB_PIXELS * 4] = {

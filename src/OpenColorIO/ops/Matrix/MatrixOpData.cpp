@@ -495,8 +495,6 @@ bool MatrixOpData::isNoOp() const
     return isIdentity();
 }
 
-// For all ops, an "Identity" is an op that only does bit-depth conversion
-// and is therefore a candidate for the optimizer to remove.
 bool MatrixOpData::isIdentity() const
 {
     if (hasOffsets() || hasAlpha() || !isDiagonal())
@@ -504,11 +502,6 @@ bool MatrixOpData::isIdentity() const
         return false;
     }
 
-    return isMatrixIdentity();
-}
-         
-bool MatrixOpData::isMatrixIdentity() const
-{
     // Now check the diagonal elements.
 
     const double maxDiff = 1e-6;
@@ -762,8 +755,6 @@ void MatrixOpData::cleanUp(double offsetScale)
 
 bool MatrixOpData::operator==(const OpData & other) const
 {
-    if (this == &other) return true;
-
     if (!OpData::operator==(other)) return false;
 
     const MatrixOpData* mop = static_cast<const MatrixOpData*>(&other);
@@ -777,6 +768,7 @@ MatrixOpDataRcPtr MatrixOpData::inverse() const
     // Get the inverse matrix.
     MatrixArrayPtr invMatrixArray = m_array.inverse();
     // MatrixArray::inverse() will throw for singular matrices.
+    // TODO: Perhaps calculate pseudo-inverse rather than throw.
 
     // Calculate the inverse offset.
     const Offsets& offsets = getOffsets();
@@ -802,11 +794,6 @@ MatrixOpDataRcPtr MatrixOpData::inverse() const
     // trying to update it is also challenging since inverse() is sometimes
     // called even during the creation of new ops.
     return invOp;
-}
-
-OpDataRcPtr MatrixOpData::getIdentityReplacement() const
-{
-    return std::make_shared<MatrixOpData>();
 }
 
 void MatrixOpData::finalize()

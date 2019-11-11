@@ -43,6 +43,11 @@ public:
         m_isDynamic = true;
     }
 
+    void makeNonDynamic()
+    {
+        m_isDynamic = false;
+    }
+
     // When comparing properties for equality, the following rules apply:
     // - If neither of the objects are dynamic, simply compare the values as usual.
     // - If both objects are dynamic, always return true. Even if the values are

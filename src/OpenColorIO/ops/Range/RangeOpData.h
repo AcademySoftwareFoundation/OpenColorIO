@@ -111,15 +111,6 @@ public:
     bool isNoOp() const override;
     bool isIdentity() const override;
 
-    // Make an op to replace an identity (or pair identity) of this op type.
-    // (Note: For a pair identity, call this on the first half and then set
-    // the result's output bit-depth to match the second half.)
-    // returns the opData (to be managed by caller)
-    OpDataRcPtr getIdentityReplacement() const;
-
-    // True if the op does not scale and does not clamp the normal domain.
-    bool isClampIdentity() const;
-
     // True if the op limits the incoming pixels as least as much as
     // a 1d or 3d LUT would.  I.e., the min/max clamps are at least as narrow
     // as [0, getBitDepthMaxValue()].
@@ -144,9 +135,6 @@ public:
 
     bool operator==(const OpData& other) const override;
 
-    // True if the op is the inverse
-    bool isInverse(ConstRangeOpDataRcPtr & r) const;
-
     RangeOpDataRcPtr inverse() const;
 
     virtual void finalize() override;
@@ -157,7 +145,9 @@ public:
     inline BitDepth getFileOutputBitDepth() const { return m_fileOutBitDepth; }
     inline void setFileOutputBitDepth(BitDepth out) { m_fileOutBitDepth = out; }
 
-    void scale(double inScale, double outScale);
+    void normalize();
+
+    RangeOpDataRcPtr compose(ConstRangeOpDataRcPtr & r) const;
 
 private:
     void fillScaleOffset() const;

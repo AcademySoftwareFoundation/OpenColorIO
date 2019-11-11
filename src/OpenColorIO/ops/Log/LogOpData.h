@@ -62,7 +62,7 @@ public:
 
     bool isIdentity() const override;
 
-    OpDataRcPtr getIdentityReplacement() const;
+    OpDataRcPtr getIdentityReplacement() const override;
 
     bool isNoOp() const override;
 

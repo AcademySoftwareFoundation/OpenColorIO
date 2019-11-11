@@ -46,7 +46,7 @@ OCIO_NAMESPACE_ENTER
     {
         if (this != &rhs)
         {
-            m_metadata        = rhs.m_metadata;
+            m_metadata = rhs.m_metadata;
         }
 
         return *this;
@@ -57,6 +57,11 @@ OCIO_NAMESPACE_ENTER
 
     void OpData::validate() const
     {
+    }
+
+    OpDataRcPtr OpData::getIdentityReplacement() const
+    {
+        return std::make_shared<MatrixOpData>();
     }
 
     bool OpData::operator==(const OpData & other) const
@@ -85,6 +90,38 @@ OCIO_NAMESPACE_ENTER
     void OpData::setName(const std::string & name)
     {
         return m_metadata.addAttribute(METADATA_NAME, name.c_str());
+    }
+
+    const char * GetTypeName(OpData::Type type)
+    {
+        static_assert(OpData::NoOpType == 11, "Need to handle new type here");
+        switch (type)
+        {
+        case OpData::CDLType:
+            return "CDL";
+        case OpData::ExponentType:
+            return "Exponent";
+        case OpData::ExposureContrastType:
+            return "ExposureContrast";
+        case OpData::FixedFunctionType:
+            return "FixedFunction";
+        case OpData::GammaType:
+            return "Gamma";
+        case OpData::LogType:
+            return "Log";
+        case OpData::Lut1DType:
+            return "LUT1D";
+        case OpData::Lut3DType:
+            return "LUT3D";
+        case OpData::MatrixType:
+            return "Matrix";
+        case OpData::RangeType:
+            return "Range";
+        case OpData::ReferenceType:
+        case OpData::NoOpType:
+            break;
+        }
+        throw Exception("Unexpected op type.");
     }
 
     Op::Op()
@@ -127,6 +164,31 @@ OCIO_NAMESPACE_ENTER
         throw Exception("Op does not implement dynamic property.");
     }
 
+    OpRcPtr Op::getIdentityReplacement() const
+    {
+        auto opData = m_data->getIdentityReplacement();
+        OpRcPtrVec ops;
+        if (opData->getType() == OpData::MatrixType)
+        {
+            // No-op that will be optimized.
+            auto mat = std::dynamic_pointer_cast<MatrixOpData>(opData);
+            CreateMatrixOp(ops, mat, TRANSFORM_DIR_FORWARD);
+        }
+        else if (opData->getType() == OpData::RangeType)
+        {
+            // Clamping op.
+            auto range = std::dynamic_pointer_cast<RangeOpData>(opData);
+            CreateRangeOp(ops, range, TRANSFORM_DIR_FORWARD);
+        }
+        else
+        {
+            std::ostringstream oss;
+            oss << "Unexpected type in getIdentityReplacement. Expecting Matrix or Range, got :"
+                << std::string(GetTypeName(opData->getType())) << ".";
+            throw Exception(oss.str().c_str());
+        }
+        return ops[0];
+    }
 
     OpRcPtrVec::OpRcPtrVec()
         : m_metadata()
@@ -254,11 +316,11 @@ OCIO_NAMESPACE_ENTER
         return true;
     }
     
-    void FinalizeOpVec(OpRcPtrVec & ops, FinalizationFlags fFlags)
+    void FinalizeOpVec(OpRcPtrVec & ops, OptimizationFlags oFlags)
     {
         for(auto & op : ops)
         {
-            op->finalize(fFlags);
+            op->finalize(oFlags);
         }
     }
 
@@ -484,7 +546,7 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         OCIO_CHECK_EQUAL(ops.size(), 2);
      
         // No optimize: keep both matrix ops
-        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
         OCIO_CHECK_EQUAL(ops.size(), 2);
 
         // apply ops
@@ -521,7 +583,7 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
         // No optimize: keep both all ops
-        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
         // apply ops
@@ -560,7 +622,7 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
         // No optimize: keep both all ops
-        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
         // apply ops
@@ -599,7 +661,7 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
         // No optimize: keep both all ops
-        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
         // apply ops
@@ -643,7 +705,7 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         OCIO_CHECK_EQUAL(ops.size(), 9);
 
         // No optimize: keep both all ops
-        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
         OCIO_CHECK_EQUAL(ops.size(), 9);
 
         // apply ops

@@ -164,10 +164,10 @@ bool GammaOpData::isInverse(const GammaOpData & B) const
     const Style styleA = getStyle();
     const Style styleB = B.getStyle();
 
-    // Note: It's possible that someone could create something where they
-    // don't respect our convention of keeping gamma > 1, in which case,
-    // there could be two BASIC_FWD that would be an identity.
-    // This code does not to try and handle that case yet.
+    // Note: It's possible that someone could create something where they don't respect our
+    // convention of keeping gamma > 1, in which case, there could be two BASIC_FWD that would
+    // be an identity. This code does not to try and handle that case yet, however the pair of
+    // ops would get combined and removed as an identity in the optimizer.
 
     if ( (styleA == BASIC_FWD && styleB == BASIC_REV) ||
          (styleA == BASIC_REV && styleB == BASIC_FWD) ||
@@ -417,10 +417,11 @@ bool GammaOpData::mayCompose(const GammaOpData & B) const
 OpDataRcPtr GammaOpData::getIdentityReplacement() const
 {
     OpDataRcPtr op;
-
     switch(getStyle())
     {
         // These clamp values below 0 -- replace with range.
+        // TODO: Gamma processes alpha whereas Range does not.  So the replacement potentially
+        // gives somewhat different results since negative alpha values would not be clamped.
         case BASIC_FWD:
         case BASIC_REV:
         {
@@ -440,7 +441,6 @@ OpDataRcPtr GammaOpData::getIdentityReplacement() const
             break;
         }
     }
-    op->getFormatMetadata() = getFormatMetadata();
     return op;
 }
 
@@ -503,8 +503,6 @@ GammaOpDataRcPtr GammaOpData::compose(const GammaOpData & B) const
 
 bool GammaOpData::operator==(const OpData & other) const
 {
-    if(this==&other) return true;
-
     if(!OpData::operator==(other)) return false;
 
     const GammaOpData* gop = static_cast<const GammaOpData*>(&other);

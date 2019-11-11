@@ -200,6 +200,9 @@ bool LogOpData::isIdentity() const
     return false;
 }
 
+// Although a LogOp is never an identity, we still want to be able to replace a pair of logs that
+// is effectively an identity (FWD/INV pairs) with an op that will emulate any clamping imposed
+// by the original pair.
 OpDataRcPtr LogOpData::getIdentityReplacement() const
 {
     OpDataRcPtr resOp;
@@ -243,7 +246,6 @@ OpDataRcPtr LogOpData::getIdentityReplacement() const
             resOp = std::make_shared<MatrixOpData>();
         }
     }
-    resOp->getFormatMetadata() = getFormatMetadata();
     return resOp;
 }
 
@@ -274,8 +276,6 @@ void LogOpData::finalize()
 
 bool LogOpData::operator==(const OpData& other) const
 {
-    if (this == &other) return true;
-
     if (!OpData::operator==(other)) return false;
 
     const LogOpData* log = static_cast<const LogOpData*>(&other);

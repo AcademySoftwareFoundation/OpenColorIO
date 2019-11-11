@@ -508,7 +508,7 @@ OCIO_ADD_TEST(FileFormatICC, test_file)
         OCIO::ContextRcPtr context = OCIO::Context::Create();
         OCIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context,
                                          OCIO::TRANSFORM_DIR_INVERSE));
-        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
         OCIO_CHECK_EQUAL(4, ops.size());
         OCIO_CHECK_EQUAL("<FileNoOp>", ops[0]->getInfo());
         OCIO_CHECK_EQUAL("<MatrixOffsetOp>", ops[1]->getInfo());

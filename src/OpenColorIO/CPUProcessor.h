@@ -48,7 +48,7 @@ public:
         
     void finalize(const OpRcPtrVec & rawOps,
                   BitDepth in, BitDepth out,
-                  OptimizationFlags oFlags, FinalizationFlags fFlags);
+                  OptimizationFlags oFlags);
 
 private:
     ConstOpCPURcPtr    m_inBitDepthOp; // Converts from in to F32. It could be done by the first op.

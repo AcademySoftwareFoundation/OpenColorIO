@@ -11,6 +11,8 @@
 #include "OpenEXR/half.h"
 #include "HashUtils.h"
 #include "MathUtils.h"
+#include "ops/Lut1D/Lut1DOpData.h"
+#include "ops/Lut3D/Lut3DOpData.h"
 #include "ops/Range/RangeOpCPU.h"
 #include "ops/Range/RangeOpGPU.h"
 #include "ops/Range/RangeOps.h"
@@ -36,7 +38,7 @@ public:
 
     virtual ~RangeOp();
 
-    TransformDirection getDirection() const noexcept override { return m_direction; }
+    TransformDirection getDirection() const noexcept { return m_direction; }
 
     OpRcPtr clone() const override;
 
@@ -47,7 +49,7 @@ public:
     bool canCombineWith(ConstOpRcPtr & op) const override;
     void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
 
-    void finalize(FinalizationFlags fFlags) override;
+    void finalize(OptimizationFlags oFlags) override;
 
     ConstOpCPURcPtr getCPUOp() const override;
 
@@ -100,35 +102,95 @@ bool RangeOp::isSameType(ConstOpRcPtr & op) const
 
 bool RangeOp::isInverse(ConstOpRcPtr & op) const
 {
-    ConstRangeOpRcPtr typedRcPtr = DynamicPtrCast<const RangeOp>(op);
-    if(!typedRcPtr) return false;
-
-    if(GetInverseTransformDirection(m_direction)==typedRcPtr->m_direction)
-    {
-        return *rangeData()==*(typedRcPtr->rangeData());
-    }
-
-    ConstRangeOpDataRcPtr rangeOpData = typedRcPtr->rangeData();
-    return rangeData()->isInverse(rangeOpData);
-}
-
-bool RangeOp::canCombineWith(ConstOpRcPtr & /*op*/) const
-{
-    // TODO: Implement RangeOp::canCombineWith()
+    // It is simpler to handle a pair of inverses by combining them and then removing
+    // the identity.  So we just return false here.
+    // NB: A clamp cannot be undone, so the exact same Range with opposite direction
+    // flags cannot simply be removed like some other ops.
     return false;
 }
 
-void RangeOp::combineWith(OpRcPtrVec & /*ops*/, ConstOpRcPtr & secondOp) const
+bool RangeOp::canCombineWith(ConstOpRcPtr & op2) const
+{
+    auto opData2 = op2->data();
+    auto type2 = opData2->getType();
+    auto range1 = rangeData();
+
+    // Need to validate prior to calling isIdentity.
+    if (m_direction == TRANSFORM_DIR_INVERSE)
+    {
+        // Inverse is validating.
+        range1 = range1->inverse();
+    }
+    else
+    {
+        // Make sure scale and offset are updated.
+        range1->validate();
+    }
+
+    if (range1->isIdentity())
+    {
+        // If op is LUT range op can be removed.
+        if (type2 == OpData::Lut1DType)
+        {
+            auto lut = OCIO_DYNAMIC_POINTER_CAST<const Lut1DOpData>(opData2);
+            // Keep range for half domain LUT.
+            if (lut && !lut->isInputHalfDomain() && lut->getDirection() == TRANSFORM_DIR_FORWARD)
+            {
+                return true;
+            }
+        }
+        else if (type2 == OpData::Lut3DType)
+        {
+            auto lut = OCIO_DYNAMIC_POINTER_CAST<const Lut3DOpData>(opData2);
+            if (lut && lut->getDirection() == TRANSFORM_DIR_FORWARD)
+            {
+                return true;
+            }
+        }
+    }
+
+    if (type2 == OpData::RangeType)
+    {
+        return true;
+    }
+    return false;
+}
+
+void RangeOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
 {
     if(!canCombineWith(secondOp))
     {
-        throw Exception("TODO: Range can't be combined.");
+        throw Exception("RangeOp: canCombineWith must be checked before calling combineWith.");
     }
 
-    // TODO: Implement RangeOp::combineWith()
+    auto opData = secondOp->data();
+    auto type = opData->getType();
+    if (type == OpData::Lut1DType || type == OpData::Lut3DType)
+    {
+        // Avoid clone (we actually want to use the second op).
+        auto lut = std::const_pointer_cast<Op>(secondOp);
+        ops.push_back(lut);
+    }
+    else
+    {
+        // Range + Range.
+        auto range1 = rangeData();
+        if (m_direction == TRANSFORM_DIR_INVERSE)
+        {
+            range1 = range1->inverse();
+        }
+        auto typedRcPtr = DynamicPtrCast<const RangeOp>(secondOp);
+        auto range2 = typedRcPtr->rangeData();
+        if (typedRcPtr->getDirection() == TRANSFORM_DIR_INVERSE)
+        {
+            range2 = range2->inverse();
+        }
+        auto resRange = range1->compose(range2);
+        CreateRangeOp(ops, resRange, TRANSFORM_DIR_FORWARD);
+    }
 }
 
-void RangeOp::finalize(FinalizationFlags /*fFlags*/)
+void RangeOp::finalize(OptimizationFlags /*oFlags*/)
 {
     const RangeOp & constThis = *this;
     if(m_direction == TRANSFORM_DIR_INVERSE)
@@ -268,7 +330,7 @@ OCIO_ADD_TEST(RangeOps, apply_arbitrary)
     OCIO::RangeOpDataRcPtr range = std::make_shared<OCIO::RangeOpData>(-0.101, 0.95, 0.194, 1.001);
 
     OCIO::RangeOp r(range, OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO_CHECK_NO_THROW(r.finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(r.finalize(OCIO::OPTIMIZATION_NONE));
 
     float image[4*3] = { -0.50f,  0.25f, 0.50f, 0.0f,
                           0.75f,  1.00f, 1.25f, 1.0f,
@@ -296,17 +358,15 @@ OCIO_ADD_TEST(RangeOps, combining)
 
     OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1.0, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
-    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
     OCIO::CreateRangeOp(ops, 0., 1., 0.5, 1.5, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::OPTIMIZATION_NONE));
 
     OCIO::ConstOpRcPtr op1 = ops[1];
 
-    // TODO: implement Range combine
-    OCIO_CHECK_THROW_WHAT(ops[0]->combineWith(ops, op1),
-                          OCIO::Exception, "TODO: Range can't be combined");
-    OCIO_CHECK_EQUAL(ops.size(), 2);
+    OCIO_CHECK_NO_THROW(ops[0]->combineWith(ops, op1));
+    OCIO_CHECK_EQUAL(ops.size(), 3);
 
 }
 
@@ -316,70 +376,15 @@ OCIO_ADD_TEST(RangeOps, combining_with_inverse)
 
     OCIO::CreateRangeOp(ops, 0., 1., 0.5, 1.5, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
-    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
     OCIO::CreateRangeOp(ops, 0., 1., 0.5, 1.5, OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::OPTIMIZATION_NONE));
 
     OCIO::ConstOpRcPtr op1 = ops[1];
 
-    // TODO: implement Range combine
-    OCIO_CHECK_THROW_WHAT(ops[0]->combineWith(ops, op1),
-                          OCIO::Exception, "TODO: Range can't be combined");
-    OCIO_CHECK_EQUAL(ops.size(), 2);
-
-}
-
-OCIO_ADD_TEST(RangeOps, is_inverse)
-{
-    OCIO::OpRcPtrVec ops;
-
-    OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1., OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO_CHECK_EQUAL(ops.size(), 1);
-    // Skip finalize so that inverse direction is kept
-    OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1., OCIO::TRANSFORM_DIR_INVERSE);
-    OCIO_CHECK_EQUAL(ops.size(), 2);
-
-    const double offset[] = { 1.1, -1.3, 0.3, 0.0 };
-    OCIO_CHECK_NO_THROW(CreateOffsetOp(ops, offset, OCIO::TRANSFORM_DIR_FORWARD));
-    OCIO_REQUIRE_EQUAL(ops.size(), 3);
-    OCIO::ConstOpRcPtr op0 = ops[0];
-    OCIO::ConstOpRcPtr op1 = ops[1];
-    OCIO::ConstOpRcPtr op2 = ops[2];
-
-    OCIO_CHECK_ASSERT(ops[0]->isSameType(op1));
-    OCIO_CHECK_ASSERT(!ops[0]->isSameType(op2));
-
-    OCIO_CHECK_ASSERT(!ops[0]->isInverse(op2));
-    OCIO_CHECK_ASSERT(!ops[0]->isInverse(op0));
-
-    // Inverse based on Op direction
-
-    OCIO_CHECK_ASSERT(ops[0]->isInverse(op1));
-
-    OCIO::CreateRangeOp(ops, 0.000002, 0.5, 0.5, 1., OCIO::TRANSFORM_DIR_INVERSE);
-    OCIO_REQUIRE_EQUAL(ops.size(), 4);
-    OCIO::ConstOpRcPtr op3 = ops[3];
-
-    OCIO_CHECK_ASSERT(!ops[0]->isInverse(op3));
-    OCIO_CHECK_ASSERT(!ops[2]->isInverse(op3));
-
-    OCIO::CreateRangeOp(ops, 0.000002, 0.5, 0.5, 1., OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO_REQUIRE_EQUAL(ops.size(), 5);
-    OCIO::ConstOpRcPtr op4 = ops[4];
-
-    OCIO_CHECK_ASSERT(!ops[0]->isInverse(op4));
-    OCIO_CHECK_ASSERT(!ops[2]->isInverse(op4));
-    OCIO_CHECK_ASSERT(ops[3]->isInverse(op4));
-
-    OCIO::CreateRangeOp(ops, 0.5, 1., 0.000002, 0.5, OCIO::TRANSFORM_DIR_INVERSE);
-    OCIO_REQUIRE_EQUAL(ops.size(), 6);
-    OCIO::ConstOpRcPtr op5 = ops[5];
-
-    OCIO_CHECK_ASSERT(!ops[0]->isInverse(op5));
-    OCIO_CHECK_ASSERT(!ops[2]->isInverse(op5));
-    OCIO_CHECK_ASSERT(ops[3]->isInverse(op5));
-    OCIO_CHECK_ASSERT(!ops[4]->isInverse(op5));
+    OCIO_CHECK_NO_THROW(ops[0]->combineWith(ops, op1));
+    OCIO_CHECK_EQUAL(ops.size(), 3);
 }
 
 OCIO_ADD_TEST(RangeOps, computed_identifier)
@@ -390,7 +395,7 @@ OCIO_ADD_TEST(RangeOps, computed_identifier)
     OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1.0, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateRangeOp(ops, 0.1, 1., 0.3, 1.9, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateRangeOp(ops, 0.1, 1., 0.3, 1.9, OCIO::TRANSFORM_DIR_INVERSE);
-    for(OCIO::OpRcPtrVec::reference op : ops) { op->finalize(OCIO::FINALIZATION_EXACT); }
+    for(OCIO::OpRcPtrVec::reference op : ops) { op->finalize(OCIO::OPTIMIZATION_NONE); }
 
     OCIO_REQUIRE_EQUAL(ops.size(), 4);
 
@@ -400,7 +405,7 @@ OCIO_ADD_TEST(RangeOps, computed_identifier)
     OCIO_CHECK_ASSERT(ops[2]->getCacheID() != ops[3]->getCacheID());
 
     OCIO::CreateRangeOp(ops, 0.1, 1., 0.3, 1.90001, OCIO::TRANSFORM_DIR_FORWARD);
-    for(OCIO::OpRcPtrVec::reference op : ops) { op->finalize(OCIO::FINALIZATION_EXACT); }
+    for(OCIO::OpRcPtrVec::reference op : ops) { op->finalize(OCIO::OPTIMIZATION_NONE); }
 
     OCIO_REQUIRE_EQUAL(ops.size(), 5);
     OCIO_CHECK_ASSERT(ops[2]->getCacheID() != ops[4]->getCacheID());
@@ -462,6 +467,14 @@ OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
     OCIO_CHECK_ASSERT(!range->hasMinOutValue());
     OCIO_CHECK_ASSERT(!range->hasMaxOutValue());
 
+    OCIO_CHECK_NO_THROW(
+        OCIO::BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OCIO_REQUIRE_EQUAL(op0->data()->getType(), OCIO::OpData::RangeType);
+    OCIO_CHECK_ASSERT(op0->isNoOp());
+    ops.clear();
+
     range->setMinInValue(0.0);
     range->setMaxInValue(0.5);
     range->setMinOutValue(0.5);
@@ -473,7 +486,7 @@ OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
         OCIO::BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD));
 
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
-    OCIO::ConstOpRcPtr op0 = ops[0];
+    op0 = ops[0];
     OCIO_REQUIRE_EQUAL(op0->data()->getType(), OCIO::OpData::RangeType);
 
     OCIO::ConstRangeOpDataRcPtr rangeData

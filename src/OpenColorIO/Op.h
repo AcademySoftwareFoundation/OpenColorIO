@@ -138,11 +138,11 @@ OCIO_NAMESPACE_ENTER
         // A "no-op" is an op that will not change the output pixels.
         virtual bool isNoOp() const = 0;
 
-        // An identity is an op that only does clamping.
-        // Each op will overload this with the appropriate calculation.
-        // An op where isIdentity() is true will typically be removed
-        // or replaced during the optimization process.
+        // An Identity does not modify pixels in its intended domain but may clamp outside that.
+        // For example, a Lut1D may be an Identity without being a NoOp.
         virtual bool isIdentity() const = 0;
+
+        virtual OpDataRcPtr getIdentityReplacement() const;
 
         // Determine whether the output of the op mixes R, G, B channels.
         // For example, Rout = 5*Rin is channel independent, but Rout = Rin + Gin
@@ -171,7 +171,9 @@ OCIO_NAMESPACE_ENTER
     private:
         FormatMetadataImpl m_metadata;
     };
-    
+
+    const char * GetTypeName(OpData::Type type);
+
     class Op;
     typedef OCIO_SHARED_PTR<Op> OpRcPtr;
     typedef OCIO_SHARED_PTR<const Op> ConstOpRcPtr;
@@ -180,11 +182,11 @@ OCIO_NAMESPACE_ENTER
     std::string SerializeOpVec(const OpRcPtrVec & ops, int indent=0);
     bool IsOpVecNoOp(const OpRcPtrVec & ops);
     
-    // Sets all ops to F32 and finalize them.
-    void FinalizeOpVec(OpRcPtrVec & opVec, FinalizationFlags fFlags);
+    void FinalizeOpVec(OpRcPtrVec & opVec, OptimizationFlags oFlags);
 
     void OptimizeOpVec(OpRcPtrVec & result,
                        const BitDepth & inBitDepth,
+                       const BitDepth & outBitDepth,
                        OptimizationFlags oFlags);
 
     void UnifyDynamicProperties(OpRcPtrVec & ops);
@@ -202,8 +204,6 @@ OCIO_NAMESPACE_ENTER
         public:
             virtual ~Op();
             
-            virtual TransformDirection getDirection() const noexcept = 0;
-
             virtual OpRcPtr clone() const = 0;
             
             // Something short, and printable.
@@ -223,7 +223,9 @@ OCIO_NAMESPACE_ENTER
             virtual bool isNoOp() const { return m_data->isNoOp(); }
 
             virtual bool isIdentity() const { return m_data->isIdentity(); }
-            
+
+            OpRcPtr getIdentityReplacement() const;
+
             virtual bool isSameType(ConstOpRcPtr & op) const = 0;
             
             virtual bool isInverse(ConstOpRcPtr & op) const = 0;
@@ -247,7 +249,7 @@ OCIO_NAMESPACE_ENTER
             // Final pre-processing and safety checks should happen here,
             // rather than in the constructor.
 
-            virtual void finalize(FinalizationFlags fFlags) = 0;
+            virtual void finalize(OptimizationFlags oFlags) = 0;
 
             // Render the specified pixels.
             //
@@ -273,6 +275,8 @@ OCIO_NAMESPACE_ENTER
             virtual DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
             virtual void replaceDynamicProperty(DynamicPropertyType type,
                                                 DynamicPropertyImplRcPtr prop);
+            // Make dynamic properties non-dynamic.
+            virtual void removeDynamicProperties() {}
 
             // On-demand creation of the OpCPU instance.
             virtual ConstOpCPURcPtr getCPUOp() const = 0;
@@ -330,6 +334,7 @@ OCIO_NAMESPACE_ENTER
         const_iterator end() const noexcept { return m_ops.end(); }
 
         const OpRcPtr & operator[](size_type idx) const { return m_ops[idx]; }
+        OpRcPtr & operator[](size_type idx) { return m_ops[idx]; }
 
         iterator erase(const_iterator position);       
         iterator erase(const_iterator first, const_iterator last);

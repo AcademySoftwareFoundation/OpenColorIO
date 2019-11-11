@@ -398,57 +398,70 @@ OCIO_NAMESPACE_ENTER
 
     //!cpp:type:: Provides control over how the ops in a Processor are combined 
     //            in order to improve performance.
-    enum OptimizationFlags
+    enum OptimizationFlags : unsigned long
     {
         // Below are listed all the optimization types.
 
-        // TODO: Partially supported for now.
+        // Do not optimize.
+        OPTIMIZATION_NONE                            = 0x00000000,
 
-        // No optimization type to apply.
-        OPTIMIZATION_NONE                  = 0x0000,
+        // Replace identity ops (other than gamma).
+        OPTIMIZATION_IDENTITY                        = 0x00000001,
+        // Replace identity gamma ops.
+        OPTIMIZATION_IDENTITY_GAMMA                  = 0x00000002,
+        // Replace a pair of ops where one is the inverse of the other.
+        OPTIMIZATION_PAIR_IDENTITY_CDL               = 0x00000004,
+        OPTIMIZATION_PAIR_IDENTITY_EXPOSURE_CONTRAST = 0x00000008,
+        OPTIMIZATION_PAIR_IDENTITY_FIXED_FUNCTION    = 0x00000010,
+        OPTIMIZATION_PAIR_IDENTITY_GAMMA             = 0x00000020,
+        OPTIMIZATION_PAIR_IDENTITY_LUT1D             = 0x00000040,
+        OPTIMIZATION_PAIR_IDENTITY_LUT3D             = 0x00000080,
+        OPTIMIZATION_PAIR_IDENTITY_LOG               = 0x00000100,
 
-        // Can replace any op producing an identity by its type-based identity replacement op.
-        OPTIMIZATION_IDENTITY              = 0x0001,
-        // Can remove a clamping identity op if the following op also clamps 
-        // to the same domain.
-        OPTIMIZATION_PAIR_IDENTITY_CLAMP   = 0x0002, 
-        // Can replace two 1D LUT ops producing an identity by the type-based identity replacement op.
-        OPTIMIZATION_PAIR_IDENTITY_LUT1D   = 0x0004,
-        // Can replace two 3D LUT ops producing an identity by the type-based identity replacement op.
-        OPTIMIZATION_PAIR_IDENTITY_LUT3D   = 0x0008,
-        // Can replace two gamma ops producing an identity by the type-based identity replacement op.
-        OPTIMIZATION_PAIR_IDENTITY_GAMMA   = 0x0010,
-        // Can replace two log ops producing an identity by the type-based identity replacement op.
-        OPTIMIZATION_PAIR_IDENTITY_LOG     = 0x0020,
-        // Can combine Matrix ops.
-        OPTIMIZATION_COMP_MATRIX           = 0x0040,
-        // Can combine 1D LUT ops.
-        OPTIMIZATION_COMP_LUT1D            = 0x0080,
-        // Can combine 3D LUT ops.
-        OPTIMIZATION_COMP_LUT3D            = 0x0100,
-        // Can combine gamma ops.
-        OPTIMIZATION_COMP_GAMMA            = 0x0200,
-        // For integer input bit-depth only, replace separable ops 
-        // (i.e. no channel crosstalk ops) by a single 1D LUT of input bit-depth domain.
-        OPTIMIZATION_COMP_SEPARABLE_PREFIX = 0x0400,
+        // Compose a pair of ops into a single op.
+        OPTIMIZATION_COMP_EXPONENT                   = 0x00000200,
+        OPTIMIZATION_COMP_GAMMA                      = 0x00000400,
+        OPTIMIZATION_COMP_MATRIX                     = 0x00000800,
+        OPTIMIZATION_COMP_LUT1D                      = 0x00001000,
+        OPTIMIZATION_COMP_LUT3D                      = 0x00002000,
+        OPTIMIZATION_COMP_RANGE                      = 0x00004000,
 
-        // Can apply all the optimization types.
-        OPTIMIZATION_ALL                   = 0xFFFF,
+        // For integer and half bit-depths only, replace separable ops (i.e. no channel crosstalk
+        // ops) by a single 1D LUT of input bit-depth domain.
+        OPTIMIZATION_COMP_SEPARABLE_PREFIX           = 0x00008000,
 
-        // Below are listed all the optimization grades from the highest to lowest quality.
+        // Implement inverse Lut1D and Lut3D evaluations using a a forward LUT (faster but less
+        // accurate).  Note that GPU evals always do FAST.
+        OPTIMIZATION_LUT_INV_FAST                    = 0x00010000,
 
-        OPTIMIZATION_LOSSLESS   = (OPTIMIZATION_IDENTITY
-                                    | OPTIMIZATION_PAIR_IDENTITY_CLAMP
-                                    | OPTIMIZATION_PAIR_IDENTITY_LUT1D
-                                    | OPTIMIZATION_PAIR_IDENTITY_LUT3D
-                                    | OPTIMIZATION_PAIR_IDENTITY_GAMMA
-                                    | OPTIMIZATION_PAIR_IDENTITY_LOG
-                                    | OPTIMIZATION_COMP_MATRIX
-                                    | OPTIMIZATION_COMP_GAMMA),
+        // Turn off dynamic control of any ops that offer adjustment of parameter values after
+        // finalization (e.g. ExposureContrast).
+        OPTIMIZATION_NO_DYNAMIC_PROPERTIES           = 0x00020000,
 
-        OPTIMIZATION_VERY_GOOD  = (OPTIMIZATION_LOSSLESS
-                                    | OPTIMIZATION_COMP_LUT1D
-                                    | OPTIMIZATION_COMP_SEPARABLE_PREFIX),
+        // Apply all possible optimizations.
+        OPTIMIZATION_ALL                             = 0xFFFFFFFF,
+
+        // The following groupings of flags are provided as a convenient way to select an overall
+        // optimization level.
+
+        OPTIMIZATION_LOSSLESS   = (OPTIMIZATION_IDENTITY |
+                                   OPTIMIZATION_IDENTITY_GAMMA |
+                                   OPTIMIZATION_PAIR_IDENTITY_CDL |
+                                   OPTIMIZATION_PAIR_IDENTITY_EXPOSURE_CONTRAST |
+                                   OPTIMIZATION_PAIR_IDENTITY_FIXED_FUNCTION |
+                                   OPTIMIZATION_PAIR_IDENTITY_GAMMA |
+                                   OPTIMIZATION_PAIR_IDENTITY_LOG |
+                                   OPTIMIZATION_PAIR_IDENTITY_LUT1D |
+                                   OPTIMIZATION_PAIR_IDENTITY_LUT3D |
+                                   OPTIMIZATION_COMP_EXPONENT |
+                                   OPTIMIZATION_COMP_GAMMA |
+                                   OPTIMIZATION_COMP_MATRIX |
+                                   OPTIMIZATION_COMP_RANGE),
+
+        OPTIMIZATION_VERY_GOOD  = (OPTIMIZATION_LOSSLESS |
+                                   OPTIMIZATION_COMP_LUT1D |
+                                   OPTIMIZATION_LUT_INV_FAST |
+                                   OPTIMIZATION_COMP_SEPARABLE_PREFIX),
 
         OPTIMIZATION_GOOD       = OPTIMIZATION_VERY_GOOD | OPTIMIZATION_COMP_LUT3D,
 
@@ -459,15 +472,6 @@ OCIO_NAMESPACE_ENTER
         OPTIMIZATION_DEFAULT    = OPTIMIZATION_VERY_GOOD
     };
 
-    //!cpp:type::
-    enum FinalizationFlags
-    {
-        FINALIZATION_EXACT = 0,
-        FINALIZATION_FAST,
-
-        FINALIZATION_DEFAULT = FINALIZATION_FAST
-    };
-   
 
     //!rst::
     // Conversion

@@ -62,8 +62,9 @@ public:
     // Control behavior of 1D LUT composition.
     enum ComposeMethod
     {
-        COMPOSE_RESAMPLE_NO = 0,      // Preserve original domain.
-        COMPOSE_RESAMPLE_BIG = 1      // Min size is 65536.
+        COMPOSE_RESAMPLE_NO  = 0,     // Preserve original domain.
+        COMPOSE_RESAMPLE_BIG = 1,     // Min size is 65536.
+        COMPOSE_RESAMPLE_HD  = 2      // Half-domain.
     };
 
     // Calculate a new LUT by evaluating a new domain (A) through a set of ops (B).
@@ -104,9 +105,6 @@ public:
     TransformDirection getDirection() const { return m_direction; }
 
     inline LutInversionQuality getInversionQuality() const { return m_invQuality; }
-
-    // LUT_INVERSION_BEST and LUT_INVERSION_DEFAULT are translated to what should be used.
-    LutInversionQuality getConcreteInversionQuality() const;
 
     void setInversionQuality(LutInversionQuality style);
 
@@ -182,7 +180,7 @@ public:
 
     bool operator==(const OpData & other) const override;
 
-    OpDataRcPtr getIdentityReplacement() const;
+    OpDataRcPtr getIdentityReplacement() const override;
 
     // Make a forward Lut1DOpData that approximates the exact inverse
     // Lut1DOpData to be used for the fast rendering style.
@@ -203,6 +201,10 @@ public:
     {
         return m_componentProperties[2];
     }
+
+    // Determine if the inverse LUT needs to handle values outside the normal domain [0.,1.].
+    // (This is true if the forward LUT had an extended range.)
+    bool hasExtendedRange() const;
 
     inline BitDepth getFileOutputBitDepth() const { return m_fileOutBitDepth; }
     // The file readers should call this to record the original scaling of the LUT values.
@@ -240,9 +242,6 @@ protected:
     };
 
 private:
-    static bool IsInverse(const Lut1DOpData * lutfwd,
-                          const Lut1DOpData * lutinv);
-
     Lut1DOpData() = delete;
 
     // Test core parts of LUTs for equality.
@@ -250,10 +249,6 @@ private:
 
     // For inverse LUT.
 
-    // Determine if the inverse LUT needs to handle values outside
-    // the normal domain: e.g. [0,1023] for 10i or [0.,1.] for 16f.
-    // (This is true if the forward LUT had an extended range.)
-    bool hasExtendedDomain() const;
     void initializeFromForward();
     // Make the array monotonic and prepare params for the renderer.
     void prepareArray();

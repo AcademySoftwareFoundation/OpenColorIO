@@ -128,8 +128,6 @@ OCIO_NAMESPACE_ENTER
 
             virtual ~ExponentOp();
 
-            TransformDirection getDirection() const noexcept override { return TRANSFORM_DIR_FORWARD; }
-
             OpRcPtr clone() const override;
 
             std::string getInfo() const override;
@@ -140,7 +138,7 @@ OCIO_NAMESPACE_ENTER
             bool canCombineWith(ConstOpRcPtr & op) const override;
             void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
 
-            void finalize(FinalizationFlags fFlags) override;
+            void finalize(OptimizationFlags oFlags) override;
 
             ConstOpCPURcPtr getCPUOp() const override;
 
@@ -187,18 +185,12 @@ OCIO_NAMESPACE_ENTER
             return true;
         }
 
-        bool ExponentOp::isInverse(ConstOpRcPtr & op) const
+        bool ExponentOp::isInverse(ConstOpRcPtr & /*op*/) const
         {
-            ConstExponentOpRcPtr typedRcPtr = DynamicPtrCast<const ExponentOp>(op);
-            if(!typedRcPtr) return false;
+            // It is simpler to handle a pair of inverses by combining them and then removing
+            // the identity.  So we just return false here.
 
-            double combined[4]
-                = { expData()->m_exp4[0]*typedRcPtr->expData()->m_exp4[0],
-                    expData()->m_exp4[1]*typedRcPtr->expData()->m_exp4[1],
-                    expData()->m_exp4[2]*typedRcPtr->expData()->m_exp4[2],
-                    expData()->m_exp4[3]*typedRcPtr->expData()->m_exp4[3] };
-
-            return IsVecEqualToOne(combined, 4);
+            return false;
         }
 
         bool ExponentOp::canCombineWith(ConstOpRcPtr & op) const
@@ -208,14 +200,12 @@ OCIO_NAMESPACE_ENTER
 
         void ExponentOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
         {
-            ConstExponentOpRcPtr typedRcPtr = DynamicPtrCast<const ExponentOp>(secondOp);
-            if(!typedRcPtr)
+            if (!canCombineWith(secondOp))
             {
-                std::ostringstream os;
-                os << "ExponentOp can only be combined with other ";
-                os << "ExponentOps.  secondOp:" << secondOp->getInfo();
-                throw Exception(os.str().c_str());
+                throw Exception("ExponentOp: canCombineWith must be checked "
+                                "before calling combineWith.");
             }
+            ConstExponentOpRcPtr typedRcPtr = DynamicPtrCast<const ExponentOp>(secondOp);
 
             const double combined[4]
                 = { expData()->m_exp4[0]*typedRcPtr->expData()->m_exp4[0],
@@ -237,7 +227,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
 
-        void ExponentOp::finalize(FinalizationFlags /*fFlags*/)
+        void ExponentOp::finalize(OptimizationFlags /*oFlags*/)
         {
             expData()->finalize();
 
@@ -359,7 +349,7 @@ OCIO_ADD_TEST(ExponentOps, Value)
     OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_INVERSE));
     OCIO_CHECK_EQUAL(ops.size(), 2);
 
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
 
     float error = 1e-6f;
 
@@ -403,7 +393,7 @@ OCIO_ADD_TEST(ExponentOps, ValueLimits)
     OCIO::OpRcPtrVec ops;
     OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_FORWARD));
 
-    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
 
     float error = 1e-6f;
 
@@ -422,40 +412,6 @@ OCIO_ADD_TEST(ExponentOps, ValueLimits)
     const float source4[] = { 0.0f, 0.0f, 1.0f, 0.0f, };
     const float result4[] = { 1.0f, 0.0f, 1.0f, 0.0f };
     ValidateOp(source4, ops[0], result4, error);
-}
-
-OCIO_ADD_TEST(ExponentOps, Inverse)
-{
-    const double exp1[4] = { 2.0, 1.02345, 5.651321, 0.12345678910 };
-    const double exp2[4] = { 2.0, 2.0,     2.0,      2.0 };
-
-    OCIO::OpRcPtrVec ops;
-
-    OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_FORWARD));
-    OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_INVERSE));
-    OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, exp2, OCIO::TRANSFORM_DIR_FORWARD));
-    OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, exp2, OCIO::TRANSFORM_DIR_INVERSE));
-
-    OCIO_REQUIRE_EQUAL(ops.size(), 4);
-    OCIO::ConstOpRcPtr op0 = ops[0];
-    OCIO::ConstOpRcPtr op1 = ops[1];
-    OCIO::ConstOpRcPtr op2 = ops[2];
-    OCIO::ConstOpRcPtr op3 = ops[3];
-
-    OCIO_CHECK_ASSERT(ops[0]->isSameType(op1));
-    OCIO_CHECK_ASSERT(ops[0]->isSameType(op2));
-    OCIO::ConstOpRcPtr op3Cloned = ops[3]->clone();
-    OCIO_CHECK_ASSERT(ops[0]->isSameType(op3Cloned));
-
-    OCIO_CHECK_EQUAL(ops[0]->isInverse(op0), false);
-    OCIO_CHECK_EQUAL(ops[0]->isInverse(op1), true);
-    OCIO_CHECK_EQUAL(ops[1]->isInverse(op0), true);
-    OCIO_CHECK_EQUAL(ops[0]->isInverse(op2), false);
-    OCIO_CHECK_EQUAL(ops[0]->isInverse(op3), false);
-    OCIO_CHECK_EQUAL(ops[3]->isInverse(op0), false);
-    OCIO_CHECK_EQUAL(ops[2]->isInverse(op3), true);
-    OCIO_CHECK_EQUAL(ops[3]->isInverse(op2), true);
-    OCIO_CHECK_EQUAL(ops[3]->isInverse(op3), false);
 }
 
 OCIO_ADD_TEST(ExponentOps, Combining)
@@ -480,7 +436,7 @@ OCIO_ADD_TEST(ExponentOps, Combining)
     OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, expData2, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
 
     OCIO::ConstOpRcPtr op1 = ops[1];
 
@@ -520,7 +476,7 @@ OCIO_ADD_TEST(ExponentOps, Combining)
     OCIO_CHECK_EQUAL(attribs[2].first, "Attrib");
     OCIO_CHECK_EQUAL(attribs[2].second, "value");
 
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(combined, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(combined, OCIO::OPTIMIZATION_NONE));
 
     float tmp2[4];
     memcpy(tmp2, source, 4*sizeof(float));
@@ -541,13 +497,10 @@ OCIO_ADD_TEST(ExponentOps, Combining)
     OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_INVERSE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
     OCIO::ConstOpRcPtr op1 = ops[1];
-
-    const bool isInverse = ops[0]->isInverse(op1);
-    OCIO_CHECK_EQUAL(isInverse, true);
 
     OCIO::OpRcPtrVec combined;
     OCIO_CHECK_NO_THROW(ops[0]->combineWith(combined, op1));
@@ -564,7 +517,7 @@ OCIO_ADD_TEST(ExponentOps, Combining)
     OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_CHECK_EQUAL(ops.size(), 3);
 
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops,OCIO:: FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
     OCIO_CHECK_EQUAL(ops.size(), 3);
 
     const float source[] = { 0.1f, 0.5f, 0.9f, 0.5f, };
@@ -609,7 +562,7 @@ OCIO_ADD_TEST(ExponentOps, ThrowCreate)
         OCIO::Exception, "Cannot apply 0.0 exponent in the inverse");
 }
 
-OCIO_ADD_TEST(ExponentOps, ThrowCombine)
+OCIO_ADD_TEST(ExponentOps, can_combine_with)
 {
     const double exp1[4] = { 0.0, 1.3, 1.4, 1.5 };
 
@@ -619,10 +572,9 @@ OCIO_ADD_TEST(ExponentOps, ThrowCombine)
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
     OCIO::ConstOpRcPtr op1 = ops[1];
 
-    OCIO::OpRcPtrVec combinedOps;
-    OCIO_CHECK_THROW_WHAT(
-        ops[0]->combineWith(combinedOps, op1),
-        OCIO::Exception, "can only be combined with other ExponentOps");
+    OCIO_CHECK_ASSERT(!ops[0]->canCombineWith(op1));
+    OCIO_CHECK_THROW_WHAT(ops[0]->combineWith(ops, op1), OCIO::Exception,
+                          "ExponentOp: canCombineWith must be checked")
 }
 
 OCIO_ADD_TEST(ExponentOps, NoOp)
@@ -655,7 +607,7 @@ OCIO_ADD_TEST(ExponentOps, CacheID)
 
     OCIO_CHECK_EQUAL(ops.size(), 3);
 
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
 
     const std::string opCacheID0 = ops[0]->getCacheID();
     const std::string opCacheID1 = ops[1]->getCacheID();

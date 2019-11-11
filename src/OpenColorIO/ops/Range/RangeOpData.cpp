@@ -30,7 +30,7 @@ RangeOpData::RangeOpData()
     ,   m_minOutValue(RangeOpData::EmptyValue())
     ,   m_maxOutValue(RangeOpData::EmptyValue())
 
-    ,   m_scale(0.)
+    ,   m_scale(1.)
     ,   m_offset(0.)
 {
 }
@@ -231,18 +231,15 @@ void RangeOpData::validate() const
     fillScaleOffset();  // This also validates that maxIn - minIn != 0.
 }
 
+// A NoOp Range does not modify or clamp pixel values.
 bool RangeOpData::isNoOp() const
-{
-    return isIdentity();
-}
-
-bool RangeOpData::isIdentity() const
 {
     if ( ! minIsEmpty() || ! maxIsEmpty() )
     {
         return false;
     }
 
+    // No scale or offset allowed.
     if (scales())
     {
         return false;
@@ -252,15 +249,9 @@ bool RangeOpData::isIdentity() const
     return true;
 }
 
-OpDataRcPtr RangeOpData::getIdentityReplacement() const
-{
-    auto mat = std::make_shared<MatrixOpData>();
-    mat->setFileInputBitDepth(m_fileInBitDepth);
-    mat->setFileOutputBitDepth(m_fileOutBitDepth);
-    return std::static_pointer_cast<OpData>(mat);
-}
-
-bool RangeOpData::isClampIdentity() const
+// An identity Range does not modify pixel values between [0,1] but may
+// clamp values outside that domain.
+bool RangeOpData::isIdentity() const
 {
     // No scale or offset allowed.
     if (scales())
@@ -278,10 +269,6 @@ bool RangeOpData::isClampIdentity() const
         return false;
     }
 
-    // TODO: We could use this in the optimizer code to avoid the performance penalty associated
-    // with removing the clipOverride stuff below. If the inputBD is integer, we could remove a
-    // clampIdentity at the start of a chain.If the outputBD is integer, we could remove it at
-    // the end of a chain.
     return true;
 }
 
@@ -342,6 +329,89 @@ bool RangeOpData::scales() const
     }
 
     return false;
+}
+
+RangeOpDataRcPtr RangeOpData::compose(ConstRangeOpDataRcPtr & r) const
+{
+    double minInNew = m_minInValue;
+    double maxInNew = m_maxInValue;
+    double minOutNew = r->m_minOutValue;
+    double maxOutNew = r->m_maxOutValue;
+    if (!minIsEmpty())
+    {
+        if (!r->maxIsEmpty() && m_minOutValue >= r->m_maxInValue)
+        {
+            minOutNew = r->m_maxOutValue;
+            maxOutNew = r->m_maxOutValue;
+            // Range outputing a constant value.
+            return std::make_shared<RangeOpData>(m_minInValue, m_maxInValue, minOutNew, maxOutNew);
+        }
+        else
+        {
+            if (!r->minIsEmpty())
+            {
+                if (m_minOutValue >= r->m_minInValue)
+                {
+                    // Transform m_minOutValue with r.
+                    minOutNew = m_minOutValue * r->m_scale + r->m_offset;
+                }
+                else
+                {
+                    // Transform r->m_minInValue with inverse of this.
+                    minInNew = (r->m_minInValue - m_offset) / m_scale;
+                }
+            }
+            else
+            {
+                // Transform m_minOutValue with r (just an offset).
+                minOutNew = m_minOutValue + r->m_offset;
+            }
+        }
+    }
+    else if (!r->minIsEmpty())
+    {
+        // Transform r->m_minOutValue with inverse of this (just an offset).
+        minInNew = r->m_minInValue - m_offset;
+    }
+
+    if (!maxIsEmpty())
+    {
+        if (!r->minIsEmpty() && m_maxOutValue <= r->m_minInValue)
+        {
+            minOutNew = r->m_minOutValue;
+            maxOutNew = r->m_minOutValue;
+            // Range outputing a constant value.
+            return std::make_shared<RangeOpData>(m_minInValue, m_maxInValue, minOutNew, maxOutNew);
+        }
+        else
+        {
+            if (!r->maxIsEmpty())
+            {
+                if (m_maxOutValue <= r->m_maxInValue)
+                {
+                    // Transform m_maxOutValue with r.
+                    maxOutNew = m_maxOutValue * r->m_scale + r->m_offset;
+                }
+                else
+                {
+                    // Transform r->m_maxOutValue with inverse of this.
+                    maxInNew = (r->m_maxInValue - m_offset) / m_scale;
+                }
+            }
+            else
+            {
+                // Transform m_maxOutValue with r (just an offset).
+                maxOutNew = m_maxOutValue + r->m_offset;
+            }
+        }
+    }
+    else if (!r->maxIsEmpty())
+    {
+        // Transform r->m_maxOutValue with inverse of this (just an offset).
+        maxInNew = r->m_maxInValue - m_offset;
+    }
+
+    return std::make_shared<RangeOpData>(minInNew, maxInNew, minOutNew, maxOutNew);
 }
 
 bool RangeOpData::minIsEmpty() const
@@ -426,9 +496,6 @@ MatrixOpDataRcPtr RangeOpData::convertToMatrix() const
 bool RangeOpData::operator==(const OpData & other) const
 {
     // NB: FormatMetadata and fileIn/OutDepths are ignored.
-
-    if (this == &other) return true;
-
     if (!OpData::operator==(other)) return false;
 
     const RangeOpData* rop = static_cast<const RangeOpData*>(&other);
@@ -456,17 +523,8 @@ bool RangeOpData::operator==(const OpData & other) const
     return true;
 }
 
-bool RangeOpData::isInverse(ConstRangeOpDataRcPtr & r) const
-{
-    return *r == *inverse();
-}
-
 RangeOpDataRcPtr RangeOpData::inverse() const
 {
-    // Inverse swaps min/max values.
-    // The min/max "include" the scale factor, but since in/out scale are also
-    // swapped, no need to rescale the min/max.
-
     RangeOpDataRcPtr invOp = std::make_shared<RangeOpData>(getMinOutValue(),
                                                            getMaxOutValue(),
                                                            getMinInValue(),
@@ -502,8 +560,10 @@ void RangeOpData::finalize()
     m_cacheID = cacheIDStream.str();
 }
 
-void RangeOpData::scale(double inScale, double outScale)
+void RangeOpData::normalize()
 {
+    const double inScale = 1.0 / GetBitDepthMaxValue(getFileInputBitDepth());
+    const double outScale = 1.0 / GetBitDepthMaxValue(getFileOutputBitDepth());
     if (!minIsEmpty())
     {
         m_minInValue *= inScale;
@@ -544,6 +604,9 @@ OCIO_ADD_TEST(RangeOpData, accessors)
     OCIO_CHECK_ASSERT(OCIO::IsNan((float)r.getMaxInValue()));
     OCIO_CHECK_ASSERT(OCIO::IsNan((float)r.getMinOutValue()));
     OCIO_CHECK_ASSERT(OCIO::IsNan((float)r.getMaxOutValue()));
+
+    OCIO_CHECK_ASSERT(r.isNoOp());
+    OCIO_CHECK_ASSERT(r.isIdentity());
 
     double minVal = 1.0;
     double maxVal = 10.0;
@@ -605,48 +668,48 @@ OCIO_ADD_TEST(RangeOpData, validation)
                           "must be both set or both missing");
 }
 
-OCIO_ADD_TEST(RangeOpData, clamp_identity)
+OCIO_ADD_TEST(RangeOpData, range_identity)
 {
     OCIO::RangeOpData r1(0., 1., 0., 1. );
     OCIO_CHECK_ASSERT( r1.clampsToLutDomain() );
-    OCIO_CHECK_ASSERT( r1.isClampIdentity() );
+    OCIO_CHECK_ASSERT( r1.isIdentity() );
     OCIO_CHECK_ASSERT( ! r1.isClampNegs() );
 
     OCIO::RangeOpData r2(0.1, 1.2, -0.5, 2. );
     OCIO_CHECK_ASSERT( ! r2.clampsToLutDomain() );
-    OCIO_CHECK_ASSERT( ! r2.isClampIdentity() );
+    OCIO_CHECK_ASSERT( ! r2.isIdentity() );
     OCIO_CHECK_ASSERT( ! r2.isClampNegs() );
 
     OCIO::RangeOpData r3(-0.1, 1.0, -0.5, 2. );
     OCIO_CHECK_ASSERT( ! r3.clampsToLutDomain() );
-    OCIO_CHECK_ASSERT( ! r3.isClampIdentity() );
+    OCIO_CHECK_ASSERT( ! r3.isIdentity() );
     OCIO_CHECK_ASSERT( ! r3.isClampNegs() );
 
     OCIO::RangeOpData r4(0., 1., 0.01, 1. );
     OCIO_CHECK_ASSERT( r4.clampsToLutDomain() );
-    OCIO_CHECK_ASSERT( ! r4.isClampIdentity() );
+    OCIO_CHECK_ASSERT( ! r4.isIdentity() );
     OCIO_CHECK_ASSERT( ! r4.isClampNegs() );
 
     OCIO::RangeOpData r5( 0.1, 1., -0.01, 1. );
     OCIO_CHECK_ASSERT( r5.clampsToLutDomain() );
-    OCIO_CHECK_ASSERT( ! r5.isClampIdentity() );
+    OCIO_CHECK_ASSERT( ! r5.isIdentity() );
     OCIO_CHECK_ASSERT( ! r5.isClampNegs() );
 
     OCIO::RangeOpData r6(-0.1, 1.1, -0.1, 1.1 );
     OCIO_CHECK_ASSERT( ! r6.clampsToLutDomain() );
-    OCIO_CHECK_ASSERT( r6.isClampIdentity() );
+    OCIO_CHECK_ASSERT( r6.isIdentity() );
     OCIO_CHECK_ASSERT( ! r6.isClampNegs() );
 
     OCIO::RangeOpData r7(0., OCIO::RangeOpData::EmptyValue(), 
                          0., OCIO::RangeOpData::EmptyValue());
     OCIO_CHECK_ASSERT( ! r7.clampsToLutDomain() );
-    OCIO_CHECK_ASSERT( r7.isClampIdentity() );
+    OCIO_CHECK_ASSERT( r7.isIdentity() );
     OCIO_CHECK_ASSERT( r7.isClampNegs() );
 
     OCIO::RangeOpData r8(OCIO::RangeOpData::EmptyValue(), 1., 
                          OCIO::RangeOpData::EmptyValue(), 1. );
     OCIO_CHECK_ASSERT( ! r8.clampsToLutDomain() );
-    OCIO_CHECK_ASSERT( r8.isClampIdentity() );
+    OCIO_CHECK_ASSERT( r8.isIdentity() );
     OCIO_CHECK_ASSERT( ! r8.isClampNegs() );
 }
 
@@ -665,7 +728,7 @@ OCIO_ADD_TEST(RangeOpData, identity)
 
     OCIO::RangeOpData r5(0., 1., 0., 1. );
     OCIO_CHECK_ASSERT(!r5.scales());
-    OCIO_CHECK_ASSERT(!r5.isIdentity());
+    OCIO_CHECK_ASSERT(r5.isIdentity());
     OCIO_CHECK_ASSERT(!r5.hasChannelCrosstalk());
     OCIO_CHECK_ASSERT(!r5.isNoOp());
     OCIO_CHECK_ASSERT(!r5.minIsEmpty());
@@ -843,6 +906,85 @@ OCIO_ADD_TEST(RangeOpData, inverse)
 
     checkInverse(0.064, 0.940, 0.032, 0.235,
                  0.032, 0.235, 0.064, 0.940);
+}
+
+OCIO_ADD_TEST(RangeOpData, compose)
+{
+    OCIO::RangeOpData r1(0., 1., 0., 1.);
+    OCIO::ConstRangeOpDataRcPtr r2 = std::make_shared<OCIO::RangeOpData>(0.1, 0.9, 0.1, 0.9);
+
+    auto res = r1.compose(r2);
+    OCIO_CHECK_EQUAL(res->getMinInValue(),  0.1);
+    OCIO_CHECK_EQUAL(res->getMaxInValue(),  0.9);
+    OCIO_CHECK_EQUAL(res->getMinOutValue(), 0.1);
+    OCIO_CHECK_EQUAL(res->getMaxOutValue(), 0.9);
+
+    OCIO::ConstRangeOpDataRcPtr r3 = std::make_shared<OCIO::RangeOpData>(0.1, 1.9, 0.1, 1.9);
+    res = r1.compose(r3);
+    OCIO_CHECK_EQUAL(res->getMinInValue(),  0.1);
+    OCIO_CHECK_EQUAL(res->getMaxInValue(),  1.0);
+    OCIO_CHECK_EQUAL(res->getMinOutValue(), 0.1);
+    OCIO_CHECK_EQUAL(res->getMaxOutValue(), 1.0);
+
+    OCIO::ConstRangeOpDataRcPtr r4 = std::make_shared<OCIO::RangeOpData>(0.1, 1.9, 0.2, 1.8);
+    res = r1.compose(r4);
+    OCIO_CHECK_EQUAL(res->getMinInValue(), 0.1);
+    OCIO_CHECK_EQUAL(res->getMaxInValue(), 1.0);
+    OCIO_CHECK_EQUAL(res->getMinOutValue(), 0.2);
+    OCIO_CHECK_CLOSE(res->getMaxOutValue(), 1.0, 1e-15);
+
+    OCIO::ConstRangeOpDataRcPtr r6 = std::make_shared<OCIO::RangeOpData>(-1.0, 1.0, 0, 1.2);
+    res = r1.compose(r6);
+    OCIO_CHECK_EQUAL(res->getMinInValue(),  0.);
+    OCIO_CHECK_EQUAL(res->getMaxInValue(),  1.);
+    OCIO_CHECK_EQUAL(res->getMinOutValue(), 0.6);
+    OCIO_CHECK_EQUAL(res->getMaxOutValue(), 1.2);
+
+    OCIO::ConstRangeOpDataRcPtr r7 = std::make_shared<OCIO::RangeOpData>(
+        OCIO::RangeOpData::EmptyValue(), 0.5,
+        OCIO::RangeOpData::EmptyValue(), 1.0);
+
+    res = r7->compose(r4);
+    OCIO_CHECK_EQUAL(res->getMinInValue(), -0.4);
+    OCIO_CHECK_EQUAL(res->getMaxInValue(),  0.5);
+    OCIO_CHECK_EQUAL(res->getMinOutValue(), 0.2);
+    OCIO_CHECK_CLOSE(res->getMaxOutValue(), 1.0, 1e-15);
+
+    res = r4->compose(r7);
+    OCIO_CHECK_EQUAL(res->getMinInValue(),  0.1);
+    OCIO_CHECK_CLOSE(res->getMaxInValue(),  0.4375, 1e-15);
+    OCIO_CHECK_EQUAL(res->getMinOutValue(), 0.7);
+    OCIO_CHECK_EQUAL(res->getMaxOutValue(), 1.0);
+
+    OCIO::ConstRangeOpDataRcPtr r8 = std::make_shared<OCIO::RangeOpData>(
+        0.5, OCIO::RangeOpData::EmptyValue(),
+        1.0, OCIO::RangeOpData::EmptyValue());
+
+    res = r8->compose(r3);
+    OCIO_CHECK_EQUAL(res->getMinInValue(),  0.5);
+    OCIO_CHECK_EQUAL(res->getMaxInValue(),  1.4);
+    OCIO_CHECK_EQUAL(res->getMinOutValue(), 1.0);
+    OCIO_CHECK_EQUAL(res->getMaxOutValue(), 1.9);
+
+    res = r4->compose(r8);
+    OCIO_CHECK_CLOSE(res->getMinInValue(),  0.4375, 1e-15);
+    OCIO_CHECK_EQUAL(res->getMaxInValue(),  1.9);
+    OCIO_CHECK_EQUAL(res->getMinOutValue(), 1.0);
+    OCIO_CHECK_EQUAL(res->getMaxOutValue(), 2.3);
+
+    OCIO::ConstRangeOpDataRcPtr r9 = std::make_shared<OCIO::RangeOpData>(1.1, 1.9, 1.2, 1.5);
+    res = r1.compose(r9);
+    OCIO_CHECK_EQUAL(res->getMinInValue(),  0.0);
+    OCIO_CHECK_EQUAL(res->getMaxInValue(),  1.0);
+    OCIO_CHECK_EQUAL(res->getMinOutValue(), 1.2);
+    OCIO_CHECK_EQUAL(res->getMaxOutValue(), 1.2);
+
+    OCIO::ConstRangeOpDataRcPtr r10 = std::make_shared<OCIO::RangeOpData>(-1.1, -0.1, 1.1, 1.9);
+    res = r1.compose(r10);
+    OCIO_CHECK_EQUAL(res->getMinInValue(), 0.);
+    OCIO_CHECK_EQUAL(res->getMaxInValue(), 1.);
+    OCIO_CHECK_EQUAL(res->getMinOutValue(), 1.9);
+    OCIO_CHECK_EQUAL(res->getMaxOutValue(), 1.9);
 }
 
 OCIO_ADD_TEST(RangeOpData, computed_identifier)

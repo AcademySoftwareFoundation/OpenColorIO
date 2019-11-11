@@ -171,10 +171,7 @@ public:
     bool isNoOp() const override;
     bool isIdentity() const override;
 
-    // Note: Return a boolean status based on the enum stored in the "style" variable.
-    virtual bool isClamping() const;
-
-    OpDataRcPtr getIdentityReplacement() const;
+    OpDataRcPtr getIdentityReplacement() const override;
 
     bool hasChannelCrosstalk() const override;
 
@@ -193,6 +190,9 @@ public:
 
 protected:
     static std::string GetChannelParametersString(ChannelParams params);
+
+    // Note: Return a boolean status based on the enum stored in the "style" variable.
+    bool isClamping() const;
 
 private:
     Style         m_style;         // CDL style

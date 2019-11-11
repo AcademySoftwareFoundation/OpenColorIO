@@ -60,9 +60,6 @@ public:
     // of the 3D LUT.
     inline LutInversionQuality getInversionQuality() const { return m_invQuality; }
 
-    // LUT_INVERSION_BEST and LUT_INVERSION_DEFAULT are translated to what should be used.
-    LutInversionQuality getConcreteInversionQuality() const;
-
     void setInversionQuality(LutInversionQuality style);
 
     // Note: The Lut3DOpData Array stores the values in blue-fastest order.
@@ -85,7 +82,7 @@ public:
 
     bool hasChannelCrosstalk() const override { return true; }
 
-    OpDataRcPtr getIdentityReplacement() const;
+    OpDataRcPtr getIdentityReplacement() const override;
 
     Lut3DOpDataRcPtr clone() const;
 
@@ -119,8 +116,6 @@ public:
         ~Lut3DArray();
 
         Lut3DArray& operator=(const Array& a);
-
-        bool isIdentity() const;
 
         void resize(unsigned long length, unsigned long numColorComponents) override;
 

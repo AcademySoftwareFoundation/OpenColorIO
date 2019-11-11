@@ -504,6 +504,111 @@ OCIO_ADD_TEST(FileFormatCTF, matrix_1_3_alpha_offsets)
     OCIO_CHECK_EQUAL(offsets[3], 0.4);
 }
 
+namespace
+{
+void CheckIdentity(std::istringstream & ctfStream, unsigned line)
+{
+    // Load file
+    std::string emptyString;
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr file;
+    OCIO_CHECK_NO_THROW_FROM(file = tester.read(ctfStream, emptyString), line);
+    OCIO::LocalCachedFileRcPtr cachedFile = OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
+    const auto & fileOps = cachedFile->m_transform->getOps();
+
+    OCIO_REQUIRE_EQUAL_FROM(fileOps.size(), 1, line);
+    const auto op = fileOps[0];
+    auto mat = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(op);
+    OCIO_REQUIRE_ASSERT_FROM(mat, line);
+    OCIO_CHECK_ASSERT_FROM(mat->isIdentity(), line);
+}
+}
+
+OCIO_ADD_TEST(FileFormatCTF, matrix_identity)
+{
+    std::istringstream ctf;
+
+    // Pre version 1.3 matrix parsing.
+
+    ctf.str(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="none">
+    <Description>RGB matrix Identity, 10i to 12i</Description>
+    <Matrix inBitDepth="10i" outBitDepth="12i">
+        <Array dim="3 3 3">
+4.0029325513196481 0 0
+0 4.0029325513196481 0
+0 0 4.0029325513196481
+        </Array>
+    </Matrix>
+</ProcessList>
+)");
+    CheckIdentity(ctf, __LINE__);
+
+    ctf.clear();
+    ctf.str(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="none" verson="1.2">
+    <Description>RGB matrix + offset Identity, 10i to 12i</Description>
+    <Matrix inBitDepth="10i" outBitDepth="12i">
+        <Array dim="4 4 3">
+4.0029325513196481 0 0 0
+0 4.0029325513196481 0 0
+0 0 4.0029325513196481 0
+0 0                  0 0
+        </Array>
+    </Matrix>
+</ProcessList>
+)");
+    CheckIdentity(ctf, __LINE__);
+
+    // Version 1.3 and onward matrix parsing.
+
+    ctf.clear();
+    ctf.str(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="none" version="1.3">
+    <Description>RGB matrix Identity, 10i to 12i</Description>
+    <Matrix inBitDepth="10i" outBitDepth="12i">
+        <Array dim="3 3 3">
+4.0029325513196481 0 0
+0 4.0029325513196481 0
+0 0 4.0029325513196481
+        </Array>
+    </Matrix>
+</ProcessList>
+)");
+    CheckIdentity(ctf, __LINE__);
+    ctf.clear();
+
+    ctf.str(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="none" version="1.3">
+    <Description>RGBA matrix Identity, 10i to 12i</Description>
+    <Matrix inBitDepth="10i" outBitDepth="12i">
+        <Array dim="4 4 4">
+4.0029325513196481 0 0 0
+0 4.0029325513196481 0 0
+0 0 4.0029325513196481 0
+0 0 0 4.0029325513196481
+        </Array>
+    </Matrix>
+</ProcessList>
+)");
+    CheckIdentity(ctf, __LINE__);
+
+    ctf.clear();
+    ctf.str(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="none" version="1.3">
+    <Description>RGB matrix + offset Identity, 10i to 12i</Description>
+    <Matrix inBitDepth="10i" outBitDepth="12i">
+        <Array dim="3 4 3">
+4.0029325513196481 0 0 0
+0 4.0029325513196481 0 0
+0 0 4.0029325513196481 0
+        </Array>
+    </Matrix>
+</ProcessList>
+)");
+    CheckIdentity(ctf, __LINE__);
+}
+
 OCIO_ADD_TEST(FileFormatCTF, 3by1d_lut)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;

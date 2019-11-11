@@ -147,7 +147,7 @@ bool Lut1DOpData::Lut3by1DArray::isIdentity(HalfFlags halfFlags) const
         // bit-depth rather than a fully relative error that will be both
         // too sensitive near zero and too loose at the high end.
         //
-        const float abs_tol = 1e-5f;
+        constexpr float abs_tol = 1e-5f;
         const float stepValue = 1.0f / ((float)dim - 1.0f);
 
         for (unsigned long idx = 0; idx<dim; ++idx)
@@ -225,21 +225,6 @@ void Lut1DOpData::setInterpolation(Interpolation algo)
     m_interpolation = algo;
 }
 
-LutInversionQuality Lut1DOpData::getConcreteInversionQuality() const
-{
-    switch (m_invQuality)
-    {
-    case LUT_INVERSION_EXACT:
-    case LUT_INVERSION_BEST:
-        return LUT_INVERSION_EXACT;
-
-    case LUT_INVERSION_FAST:
-    case LUT_INVERSION_DEFAULT:
-    default:
-        return LUT_INVERSION_FAST;
-    }
-}
-
 void Lut1DOpData::setInversionQuality(LutInversionQuality style)
 {
     m_invQuality = style;
@@ -286,7 +271,6 @@ OpDataRcPtr Lut1DOpData::getIdentityReplacement() const
     {
         res = std::make_shared<RangeOpData>(0., 1., 0., 1.);
     }
-    res->getFormatMetadata() = getFormatMetadata();
     return res;
 }
 
@@ -466,15 +450,13 @@ bool Lut1DOpData::haveEqualBasics(const Lut1DOpData & B) const
 
 bool Lut1DOpData::operator==(const OpData & other) const
 {
-    if (this == &other) return true;
-
     if (!OpData::operator==(other)) return false;
 
     const Lut1DOpData* lop = static_cast<const Lut1DOpData*>(&other);
 
     // NB: The m_invQuality is not currently included.
-    if (m_direction != lop->m_direction
-        || m_interpolation != lop->m_interpolation)
+    if (m_direction != lop->m_direction ||
+        getConcreteInterpolation() != lop->getConcreteInterpolation())
     {
         return false;
     }
@@ -495,36 +477,28 @@ Lut1DOpDataRcPtr Lut1DOpData::clone() const
     return std::make_shared<Lut1DOpData>(*this);
 }
 
-bool Lut1DOpData::IsInverse(const Lut1DOpData * lutfwd,
-                            const Lut1DOpData * lutinv)
-{
-    // Note: The inverse LUT 1D finalize modifies the array to make it
-    // monotonic, hence, this could return false in unexpected cases.
-    // However, one could argue that those LUTs should not be optimized
-    // out as an identity anyway.
-    return lutfwd->haveEqualBasics(*lutinv);
-}
-
 bool Lut1DOpData::isInverse(ConstLut1DOpDataRcPtr & B) const
 {
-    if (m_direction == TRANSFORM_DIR_FORWARD
-        && B->m_direction == TRANSFORM_DIR_INVERSE)
+    if ((m_direction == TRANSFORM_DIR_FORWARD &&
+         B->m_direction == TRANSFORM_DIR_INVERSE) ||
+        (m_direction == TRANSFORM_DIR_INVERSE &&
+         B->m_direction == TRANSFORM_DIR_FORWARD))
     {
-        return IsInverse(this, B.get());
-    }
-    else if (m_direction == TRANSFORM_DIR_INVERSE
-        && B->m_direction == TRANSFORM_DIR_FORWARD)
-    {
-        return IsInverse(B.get(), this);
+        // Note: The inverse LUT 1D finalize modifies the array to make it
+        // monotonic, hence, this could return false in unexpected cases.
+        // However, one could argue that those LUTs should not be optimized
+        // out as an identity anyway.
+        return haveEqualBasics(*B);
     }
     return false;
 }
 
 bool Lut1DOpData::mayCompose(ConstLut1DOpDataRcPtr & B) const
 {
-    // NB: This does not check bypass or dynamic.
-    return   getHueAdjust() == HUE_NONE  &&
-             B->getHueAdjust() == HUE_NONE;
+    return getDirection()    == TRANSFORM_DIR_FORWARD &&
+           B->getDirection() == TRANSFORM_DIR_FORWARD &&
+           getHueAdjust()    == HUE_NONE              &&
+           B->getHueAdjust() == HUE_NONE;
 }
 
 Lut1DOpDataRcPtr Lut1DOpData::inverse() const
@@ -664,9 +638,18 @@ void Lut1DOpData::Compose(Lut1DOpDataRcPtr & A,
                           ConstLut1DOpDataRcPtr & B,
                           ComposeMethod compFlag)
 {
+    // We assume the caller has validated that A and B are forward LUTs 1D.
+
+    // TODO: Add support for inverse LUTs.  Note that makeFastLut is currently called after
+    // optimization so there is no opportunity to combine a forward LUT it produces.
+    // However supporting inverse LUTs in compose would mean that situation would not arise
+    // since the inverse would have been combined with another forward.
+
     OpRcPtrVec ops;
 
     unsigned long min_size = 0;
+    bool needHalfDomain = false;
+
     switch (compFlag)
     {
     case COMPOSE_RESAMPLE_NO:
@@ -676,7 +659,13 @@ void Lut1DOpData::Compose(Lut1DOpDataRcPtr & A,
     }
     case COMPOSE_RESAMPLE_BIG:
     {
-        min_size = (unsigned long)GetBitDepthMaxValue(BIT_DEPTH_UINT16) + 1;
+        min_size = 65536;
+        break;
+    }
+    case COMPOSE_RESAMPLE_HD:
+    {
+        min_size = 65536;
+        needHalfDomain = true;
         break;
     }
 
@@ -685,7 +674,7 @@ void Lut1DOpData::Compose(Lut1DOpDataRcPtr & A,
     }
 
     const unsigned long Asz = A->getArray().getLength();
-    const bool goodDomain = A->isInputHalfDomain() || (Asz >= min_size);
+    const bool goodDomain = A->isInputHalfDomain() || ((Asz >= min_size) && !needHalfDomain);
     const bool useOrigDomain = compFlag == COMPOSE_RESAMPLE_NO;
 
     if (!goodDomain && !useOrigDomain)
@@ -696,15 +685,14 @@ void Lut1DOpData::Compose(Lut1DOpDataRcPtr & A,
         // Create identity with finer domain.
 
         auto metadata = A->getFormatMetadata();
-        A = std::make_shared<Lut1DOpData>(// half case handled above
-                                          Lut1DOpData::LUT_STANDARD,
+        A = std::make_shared<Lut1DOpData>(needHalfDomain ? Lut1DOpData::LUT_INPUT_HALF_CODE :
+                                                           Lut1DOpData::LUT_STANDARD,
                                           min_size);
         A->setInterpolation(A->getInterpolation());
         A->getFormatMetadata() = metadata;
     }
 
     Lut1DOpDataRcPtr bCloned = B->clone();
-    bCloned->finalize();
     CreateLut1DOp(ops, bCloned, TRANSFORM_DIR_FORWARD);
 
     // Create the result LUT by composing the domain through the desired ops.
@@ -759,7 +747,7 @@ Lut1DOpDataRcPtr Lut1DOpData::MakeFastLut1DFromInverse(ConstLut1DOpDataRcPtr & l
 
     // But if the LUT has values outside [0,1], use a half-domain fastLUT.
     // NB: This requires the lut to have been finalized.
-    if (lut->hasExtendedDomain())
+    if (lut->hasExtendedRange())
     {
         depth = BIT_DEPTH_F16;
     }
@@ -793,7 +781,7 @@ void Lut1DOpData::initializeFromForward()
     prepareArray();
 }
 
-bool Lut1DOpData::hasExtendedDomain() const
+bool Lut1DOpData::hasExtendedRange() const
 {
     // The forward LUT is allowed to have entries outside the outDepth (e.g. a
     // 10i LUT is allowed to have values on [-20,1050] if it wants).  This is
@@ -810,42 +798,21 @@ bool Lut1DOpData::hasExtendedDomain() const
     // LUT has a half domain but outputs integers within [0,65535] so the
     // inverse actually wants a normal 16i domain.
 
-    const unsigned long length = getArray().getLength();
-    const unsigned long maxChannels = getArray().getMaxColorComponents();
-    const unsigned long activeChannels = getArray().getNumColorComponents();
     const Array::Values& values = getArray().getValues();
 
-    // As noted elsewhere, the InBitDepth describes the scaling of the LUT entries.
-    const float normalMin = 0.0f;
-    const float normalMax = 1.0f;
+    constexpr float normalMin = 0.0f - 1e-5f;
+    constexpr float normalMax = 1.0f + 1e-5f;
 
-    unsigned long minInd = 0;
-    unsigned long maxInd = length - 1;
-    if (isInputHalfDomain())
+    for (auto & val : values)
     {
-        minInd = 64511u;  // last value before -inf
-        maxInd = 31743u;  // last value before +inf
-    }
-
-    // prepareArray has made the LUT either non-increasing or non-decreasing,
-    // so the min and max values will be either the first or last LUT entries.
-    for (unsigned long c = 0; c < activeChannels; ++c)
-    {
-        if (m_componentProperties[c].isIncreasing)
+        if (IsNan(val)) continue;
+        if (val < normalMin)
         {
-            if (values[minInd * maxChannels + c] < normalMin ||
-                values[maxInd * maxChannels + c] > normalMax)
-            {
-                return true;
-            }
+            return true;
         }
-        else
+        if (val > normalMax)
         {
-            if (values[minInd * maxChannels + c] > normalMax ||
-                values[maxInd * maxChannels + c] < normalMin)
-            {
-                return true;
-            }
+            return true;
         }
     }
 
@@ -1192,7 +1159,8 @@ OCIO_ADD_TEST(Lut1DOpData, equality_test)
     OCIO::Lut1DOpData l2(OCIO::Lut1DOpData::LUT_STANDARD, 1024);
     l2.setInterpolation(OCIO::INTERP_NEAREST);
 
-    OCIO_CHECK_ASSERT(!(l1 == l2));
+    // LUT 1D only implements 1 style of interpolation.
+    OCIO_CHECK_ASSERT(l1 == l2);
 
     OCIO::Lut1DOpData l3(OCIO::Lut1DOpData::LUT_STANDARD, 65536);
 
@@ -1208,7 +1176,7 @@ OCIO_ADD_TEST(Lut1DOpData, equality_test)
 
     // Inversion quality does not affect forward ops equality.
     l4.setHueAdjust(OCIO::HUE_DW3);
-    l1.setInversionQuality(OCIO::LUT_INVERSION_BEST);
+    l1.setInversionQuality(OCIO::LUT_INVERSION_EXACT);
 
     OCIO_CHECK_ASSERT(l1 == l4);
 
@@ -1302,22 +1270,10 @@ OCIO_ADD_TEST(Lut1DOpData, inversion_quality)
 
     l.setInversionQuality(OCIO::LUT_INVERSION_EXACT);
     OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_EXACT);
-    OCIO_CHECK_EQUAL(l.getConcreteInversionQuality(), OCIO::LUT_INVERSION_EXACT);
     OCIO_CHECK_NO_THROW(l.validate());
 
     l.setInversionQuality(OCIO::LUT_INVERSION_FAST);
     OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_FAST);
-    OCIO_CHECK_EQUAL(l.getConcreteInversionQuality(), OCIO::LUT_INVERSION_FAST);
-    OCIO_CHECK_NO_THROW(l.validate());
-
-    l.setInversionQuality(OCIO::LUT_INVERSION_DEFAULT);
-    OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_DEFAULT);
-    OCIO_CHECK_EQUAL(l.getConcreteInversionQuality(), OCIO::LUT_INVERSION_FAST);
-    OCIO_CHECK_NO_THROW(l.validate());
-
-    l.setInversionQuality(OCIO::LUT_INVERSION_BEST);
-    OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_BEST);
-    OCIO_CHECK_EQUAL(l.getConcreteInversionQuality(), OCIO::LUT_INVERSION_EXACT);
     OCIO_CHECK_NO_THROW(l.validate());
 }
 
@@ -1933,8 +1889,7 @@ OCIO_ADD_TEST(Lut1DOpData, make_fast_from_inverse_gpu_extented_domain)
                                            OCIO::TRANSFORM_DIR_FORWARD));
 
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    // MakeFastLut1DFromInverse assumes the op has been finalized (for hasExtendedDomain).
-    ops[1]->finalize(OCIO::FINALIZATION_DEFAULT);
+
     auto op = std::const_pointer_cast<const OCIO::Op>(ops[1]);
     auto opData = op->data();
     OCIO_CHECK_EQUAL(opData->getType(), OCIO::OpData::Lut1DType);
@@ -1966,7 +1921,7 @@ OCIO_ADD_TEST(Lut1DOpData, make_fast_from_inverse_gpu_opt)
                                            OCIO::TRANSFORM_DIR_FORWARD));
 
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
-    ops[2]->finalize(OCIO::FINALIZATION_DEFAULT);
+
     auto op = std::const_pointer_cast<const OCIO::Op>(ops[2]);
     auto opData = op->data();
     OCIO_CHECK_EQUAL(opData->getType(), OCIO::OpData::Lut1DType);
@@ -1992,7 +1947,7 @@ OCIO_ADD_TEST(Lut1DOpData, make_fast_from_inverse_gpu_half_domain)
                                            OCIO::TRANSFORM_DIR_FORWARD));
 
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    ops[1]->finalize(OCIO::FINALIZATION_DEFAULT);
+
     auto op = std::const_pointer_cast<const OCIO::Op>(ops[1]);
     auto opData = op->data();
     OCIO_CHECK_EQUAL(opData->getType(), OCIO::OpData::Lut1DType);

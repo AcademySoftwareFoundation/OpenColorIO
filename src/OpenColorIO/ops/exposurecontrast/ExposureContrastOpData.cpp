@@ -251,8 +251,6 @@ void ExposureContrastOpData::finalize()
 
 bool ExposureContrastOpData::operator==(const OpData & other) const
 {
-    if (this == &other) return true;
-
     if (!OpData::operator==(other)) return false;
 
     const ExposureContrastOpData * ec = static_cast<const ExposureContrastOpData *>(&other);
@@ -348,6 +346,13 @@ void ExposureContrastOpData::replaceDynamicProperty(DynamicPropertyType type,
         throw Exception("Dynamic property type not supported by ExposureContrast.");
     }
     throw Exception("ExposureContrast property is not dynamic.");
+}
+
+void ExposureContrastOpData::removeDynamicProperties()
+{
+    m_exposure->makeNonDynamic();
+    m_contrast->makeNonDynamic();
+    m_gamma->makeNonDynamic();
 }
 
 ExposureContrastOpData &

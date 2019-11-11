@@ -93,9 +93,9 @@ OpRcPtrVec Create3DLut(const OpRcPtrVec & ops, unsigned edgelen)
 
 DynamicPropertyRcPtr GPUProcessor::Impl::getDynamicProperty(DynamicPropertyType type) const
 {
-    for(const auto & op : m_ops)
+    for (const auto & op : m_ops)
     {
-        if(op->hasDynamicProperty(type))
+        if (op->hasDynamicProperty(type))
         {
             return op->getDynamicProperty(type);
         }
@@ -105,8 +105,7 @@ DynamicPropertyRcPtr GPUProcessor::Impl::getDynamicProperty(DynamicPropertyType 
 }
 
 void GPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
-                                  OptimizationFlags oFlags,
-                                  FinalizationFlags fFlags)
+                                  OptimizationFlags oFlags)
 {
     AutoMutex lock(m_mutex);
 
@@ -114,8 +113,8 @@ void GPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
 
     m_ops = rawOps;
 
-    OptimizeOpVec(m_ops, BIT_DEPTH_F32, oFlags);
-    FinalizeOpVec(m_ops, fFlags);
+    OptimizeOpVec(m_ops, BIT_DEPTH_F32, BIT_DEPTH_F32, oFlags);
+    FinalizeOpVec(m_ops, oFlags);
     UnifyDynamicProperties(m_ops);
 
     // Does the color processing introduce crosstalk between the pixel channels?
@@ -134,7 +133,6 @@ void GPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
 
     std::stringstream ss;
     ss << "GPU Processor: oFlags " << oFlags
-       << " fFlags " << fFlags
        << " ops :";
     for(const auto & op : m_ops)
     {
@@ -178,7 +176,7 @@ void GPUProcessor::Impl::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) c
                         gpuOps);
 
         LogDebug("GPU Ops: 3DLUT");
-        FinalizeOpVec(gpuOpsCpuLatticeProcess, FINALIZATION_DEFAULT);
+        FinalizeOpVec(gpuOpsCpuLatticeProcess, OPTIMIZATION_LUT_INV_FAST);
         OpRcPtrVec gpuLut = Create3DLut(gpuOpsCpuLatticeProcess, legacy->getEdgelen());
 
         gpuOps.clear();
@@ -186,8 +184,8 @@ void GPUProcessor::Impl::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) c
         gpuOps += gpuLut;
         gpuOps += gpuOpsHwPostProcess;
 
-        OptimizeOpVec(gpuOps, BIT_DEPTH_F32, OPTIMIZATION_DEFAULT);
-        FinalizeOpVec(gpuOps, FINALIZATION_DEFAULT);
+        OptimizeOpVec(gpuOps, BIT_DEPTH_F32, BIT_DEPTH_F32, OPTIMIZATION_DEFAULT);
+        FinalizeOpVec(gpuOps, OPTIMIZATION_LUT_INV_FAST);
     }
     else
     {

@@ -105,9 +105,8 @@ public:
 
     virtual bool isNoOp() const override;
     virtual bool isIdentity() const override;
-    bool isClamping() const;
 
-    virtual OpDataRcPtr getIdentityReplacement() const;
+    virtual OpDataRcPtr getIdentityReplacement() const override;
 
     virtual bool isChannelIndependent() const { return true; }
 
@@ -139,6 +138,9 @@ public:
 
     static bool isIdentityParameters(const Params & parameters, Style style);
     static Params getIdentityParameters(Style style);
+
+protected:
+    bool isClamping() const;
 
 private:
     Style m_style;

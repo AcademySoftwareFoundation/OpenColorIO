@@ -1638,7 +1638,7 @@ ConstOpCPURcPtr GetLut1DRenderer_OutBitDepth(ConstLut1DOpDataRcPtr & lut)
     }
     else
     {
-        if (lut->getConcreteInversionQuality() == LUT_INVERSION_FAST)
+        if (lut->getInversionQuality() == LUT_INVERSION_FAST)
         {
             ConstLut1DOpDataRcPtr newLut = Lut1DOpData::MakeFastLut1DFromInverse(lut, false);
 
@@ -2952,6 +2952,12 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_special_values)
     OCIO_CHECK_EQUAL(outImage[7], 1.0f);
 }
 
+namespace
+{
+constexpr OCIO::OptimizationFlags DefaultNoLutInvFast =
+    (OCIO::OptimizationFlags)(OCIO::OPTIMIZATION_DEFAULT & ~OCIO::OPTIMIZATION_LUT_INV_FAST);
+}
+
 OCIO_ADD_TEST(Lut1DRenderer, lut_1d_hue_adjust)
 {
     // Create empty Config to use.
@@ -2969,8 +2975,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_hue_adjust)
     OCIO::ConstCPUProcessorRcPtr cpuFwd;
     OCIO_CHECK_NO_THROW(cpuFwd = proc->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_UINT16,
                                                                 OCIO::BIT_DEPTH_UINT16,
-                                                                OCIO::OPTIMIZATION_DEFAULT,
-                                                                OCIO::FINALIZATION_EXACT));
+                                                                DefaultNoLutInvFast));
 
     constexpr long NB_PIXELS = 2;
     // TODO: use UINT10 when implemented by ImageDesc.
@@ -3017,8 +3022,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_hue_adjust)
     OCIO::ConstCPUProcessorRcPtr cpuFwdFast;
     OCIO_CHECK_NO_THROW(cpuFwdFast = proc->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F32,
                                                                     OCIO::BIT_DEPTH_UINT16,
-                                                                    OCIO::OPTIMIZATION_DEFAULT,
-                                                                    OCIO::FINALIZATION_DEFAULT));
+                                                                    OCIO::OPTIMIZATION_DEFAULT));
     
     cpuFwdFast->apply(srcImgFDesc, dstImgDesc);
     OCIO_CHECK_EQUAL(outImage[0], 1523);
@@ -3084,8 +3088,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_half_domain_hue_adjust)
     // This test should use the "lookup" renderer path.
     OCIO_CHECK_NO_THROW(cpuFwd = proc->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_UINT16,
                                                                 OCIO::BIT_DEPTH_F32,
-                                                                OCIO::OPTIMIZATION_DEFAULT,
-                                                                OCIO::FINALIZATION_EXACT));
+                                                                DefaultNoLutInvFast));
 
     // TODO: Use 10i when ImageDesc handles 10i.
     const uint16_t inImageInt[] = {
@@ -4155,8 +4158,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_ctf)
     // Repeat with LUT_INVERSION_EXACT.
     OCIO::ConstCPUProcessorRcPtr cpuInvFast;
     std::fill(backImage.begin(), backImage.end(), -1.f);
-    OCIO_CHECK_NO_THROW(cpuInvFast = proc->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_DEFAULT,
-                                                                    OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(cpuInvFast = proc->getOptimizedCPUProcessor(DefaultNoLutInvFast));
     cpuInvFast->apply(dstImgDesc, backImgDesc);
 
     for (unsigned i = 0; i < 12; ++i)
@@ -4185,8 +4187,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_fclut)
     OCIO::ConstCPUProcessorRcPtr cpuOp;
     OCIO_CHECK_NO_THROW(cpuOp = proc->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F16,
                                                                OCIO::BIT_DEPTH_F32,
-                                                               OCIO::OPTIMIZATION_DEFAULT,
-                                                               OCIO::FINALIZATION_EXACT));
+                                                               DefaultNoLutInvFast));
 
     // Test all positive halfs (less than inf) round-trip losslessly.
     const int nbPixels = 31744;
@@ -4214,8 +4215,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_fclut)
     OCIO::ConstCPUProcessorRcPtr cpuOpInv;
     OCIO_CHECK_NO_THROW(cpuOpInv = proc->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F32,
                                                                   OCIO::BIT_DEPTH_F16,
-                                                                  OCIO::OPTIMIZATION_DEFAULT,
-                                                                  OCIO::FINALIZATION_EXACT));
+                                                                  DefaultNoLutInvFast));
 
     std::vector<half> backImage(nbPixels * 4, -1.f);
     OCIO::PackedImageDesc backImgDesc((void*)&backImage[0], nbPixels, 1, 4,
@@ -4237,8 +4237,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_fclut)
     // Repeat with LUT_INVERSION_FAST.
     OCIO_CHECK_NO_THROW(cpuOpInv = proc->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F32,
                                                                   OCIO::BIT_DEPTH_F16,
-                                                                  OCIO::OPTIMIZATION_DEFAULT,
-                                                                  OCIO::FINALIZATION_FAST));
+                                                                  DefaultNoLutInvFast));
 
     std::fill(backImage.begin(), backImage.end(), -1.f);
     cpuOpInv->apply(dstImgDesc, backImgDesc);
@@ -4298,8 +4297,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_domain_hue_adjust)
 
     // Repeat with LUT_INVERSION_EXACT.
     OCIO::ConstCPUProcessorRcPtr cpuInvFast;
-    OCIO_CHECK_NO_THROW(cpuInvFast = proc->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_DEFAULT,
-                                                                    OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(cpuInvFast = proc->getOptimizedCPUProcessor(DefaultNoLutInvFast));
     std::fill(backImage.begin(), backImage.end(), -1.f);
     cpuInvFast->apply(dstImgDesc, backImgDesc);
 

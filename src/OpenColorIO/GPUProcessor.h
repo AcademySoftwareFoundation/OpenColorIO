@@ -34,8 +34,7 @@ public:
     //
     // Builder functions, Not exposed
         
-    void finalize(const OpRcPtrVec & rawOps,
-                  OptimizationFlags oFlags, FinalizationFlags fFlags);
+    void finalize(const OpRcPtrVec & rawOps, OptimizationFlags oFlags);
 
 private:
     OpRcPtrVec    m_ops;

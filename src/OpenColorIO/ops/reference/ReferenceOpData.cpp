@@ -41,8 +41,6 @@ bool ReferenceOpData::hasChannelCrosstalk() const
 
 bool ReferenceOpData::operator==(const OpData& other) const
 {
-    if (this == &other) return true;
-
     if (!OpData::operator==(other)) return false;
 
     const ReferenceOpData* rop = static_cast<const ReferenceOpData*>(&other);

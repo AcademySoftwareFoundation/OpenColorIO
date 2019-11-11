@@ -239,20 +239,20 @@ case in:                                              \
 
 DynamicPropertyRcPtr CPUProcessor::Impl::getDynamicProperty(DynamicPropertyType type) const
 {
-    if(m_inBitDepthOp->hasDynamicProperty(type))
+    if (m_inBitDepthOp->hasDynamicProperty(type))
     {
         return m_inBitDepthOp->getDynamicProperty(type);
     }
 
-    for(const auto & op : m_cpuOps)
+    for (const auto & op : m_cpuOps)
     {
-        if(op->hasDynamicProperty(type))
+        if (op->hasDynamicProperty(type))
         {
             return op->getDynamicProperty(type);
         }
     }
 
-    if(m_outBitDepthOp->hasDynamicProperty(type))
+    if (m_outBitDepthOp->hasDynamicProperty(type))
     {
         return m_outBitDepthOp->getDynamicProperty(type);
     }
@@ -260,18 +260,16 @@ DynamicPropertyRcPtr CPUProcessor::Impl::getDynamicProperty(DynamicPropertyType 
     throw Exception("Cannot find dynamic property; not used by CPU processor.");
 }
 
-void CPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
-                                  BitDepth in, BitDepth out,
-                                  OptimizationFlags oFlags, FinalizationFlags fFlags)
+void FinalizeOpsForCPU(OpRcPtrVec & ops, const OpRcPtrVec & rawOps,
+                       BitDepth in, BitDepth out,
+                       OptimizationFlags oFlags)
 {
-    AutoMutex lock(m_mutex);
-
-    OpRcPtrVec ops = rawOps;
+    ops = rawOps;
 
     if(!ops.empty())
     {
         // Optimize the ops.
-        OptimizeOpVec(ops, in, oFlags);
+        OptimizeOpVec(ops, in, out, oFlags);
     }
 
     if(ops.empty())
@@ -296,8 +294,21 @@ void CPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
 
     // Finalize the ops.
 
-    FinalizeOpVec(ops, fFlags);
-    UnifyDynamicProperties(ops);
+    FinalizeOpVec(ops, oFlags);
+    if (!((oFlags & OPTIMIZATION_NO_DYNAMIC_PROPERTIES) == OPTIMIZATION_NO_DYNAMIC_PROPERTIES))
+    {
+        UnifyDynamicProperties(ops);
+    }
+}
+
+void CPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
+                                  BitDepth in, BitDepth out,
+                                  OptimizationFlags oFlags)
+{
+    AutoMutex lock(m_mutex);
+
+    OpRcPtrVec ops;
+    FinalizeOpsForCPU(ops, rawOps, in, out, oFlags);
 
     m_inBitDepth  = in;
     m_outBitDepth = out;
@@ -327,8 +338,7 @@ void CPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
     ss << "CPU Processor: from " << BitDepthToString(in)
        << " to "  << BitDepthToString(out)
        << " oFlags " << oFlags
-       << " fFlags " << fFlags
-       << " ops :";
+       << " ops:";
     for(const auto & op : ops)
     {
         ss << " " << op->getCacheID();
@@ -556,8 +566,7 @@ OCIO::ConstCPUProcessorRcPtr ComputeValues(OCIO::ConstProcessorRcPtr processor,
 
     OCIO_CHECK_NO_THROW_FROM(cpuProcessor
         = processor->getOptimizedCPUProcessor(inBD, outBD,
-                                              OCIO::OPTIMIZATION_DEFAULT,
-                                              OCIO::FINALIZATION_DEFAULT), line);
+                                              OCIO::OPTIMIZATION_DEFAULT), line);
 
     size_t numChannels = 4;
     if(outChans==OCIO::CHANNEL_ORDERING_RGB || outChans==OCIO::CHANNEL_ORDERING_BGR)
@@ -1319,8 +1328,8 @@ OCIO_ADD_TEST(CPUProcessor, with_several_ops)
 
             const std::string cacheID{ cpuProcessor->getCacheID() };
 
-            const std::string expectedID("CPU Processor: from 16ui to 32f oFlags 1791 fFlags 1 ops"
-                " : <Lut1D $a57d7444e629d796d2234c18a0539c74 forward default standard domain none >");
+            const std::string expectedID("CPU Processor: from 16ui to 32f oFlags 122879 ops"
+                ": <Lut1D $a57d7444e629d796d2234c18a0539c74 forward default standard domain none >");
 
             // Test integer optimization. The ops should be optimized into a single LUT
             // when finalizing with an integer input bit-depth.
@@ -2534,8 +2543,7 @@ void ComputeImage(unsigned width, unsigned height, unsigned nChannels,
     OCIO::ConstCPUProcessorRcPtr cpuProcessor;
     OCIO_CHECK_NO_THROW(cpuProcessor
         = processor->getOptimizedCPUProcessor(inBD, outBD,
-                                              OCIO::OPTIMIZATION_DEFAULT,
-                                              OCIO::FINALIZATION_DEFAULT));
+                                              OCIO::OPTIMIZATION_DEFAULT));
 
     const OCIO::PackedImageDesc srcImgDesc((void *)inBuf,
                                            width, height, nChannels,

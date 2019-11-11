@@ -385,8 +385,7 @@ int main(int argc, const char **argv)
         // Get the CPU processor.
         OCIO::ConstCPUProcessorRcPtr cpuProcessor
             = processor->getOptimizedCPUProcessor(inBitDepth, outBitDepth,
-                                                  OCIO::OPTIMIZATION_DEFAULT,
-                                                  OCIO::FINALIZATION_DEFAULT);
+                                                  OCIO::OPTIMIZATION_DEFAULT);
 
         if(testType==0 || testType==-1)
         {
