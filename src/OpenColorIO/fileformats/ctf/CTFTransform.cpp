@@ -361,8 +361,8 @@ void CTFReaderTransform::fromMetadata(const FormatMetadataImpl & metadata)
     m_inverseOfId = metadata.getAttributeValue(ATTR_INVERSE_OF);
 
     // Preserve first InputDescriptor, last OutputDescriptor, and all Descriptions.
-    m_inDescriptor = GetFirstElementValue(metadata.getChildrenElements(), TAG_INPUT_DESCRIPTOR);
-    m_outDescriptor = GetLastElementValue(metadata.getChildrenElements(), TAG_OUTPUT_DESCRIPTOR);
+    m_inDescriptor = GetFirstElementValue(metadata.getChildrenElements(), METADATA_INPUT_DESCRIPTOR);
+    m_outDescriptor = GetLastElementValue(metadata.getChildrenElements(), METADATA_OUTPUT_DESCRIPTOR);
     GetElementsValues(metadata.getChildrenElements(), METADATA_DESCRIPTION, m_descriptions);
 
     // Combine all Info elements.
@@ -401,8 +401,8 @@ void CTFReaderTransform::toMetadata(FormatMetadataImpl & metadata) const
     AddNonEmptyAttribute(metadata, METADATA_ID, getID());
     AddNonEmptyAttribute(metadata, ATTR_INVERSE_OF, getInverseOfId());
 
-    AddNonEmptyElement(metadata, TAG_INPUT_DESCRIPTOR, getInputDescriptor());
-    AddNonEmptyElement(metadata, TAG_OUTPUT_DESCRIPTOR, getOutputDescriptor());
+    AddNonEmptyElement(metadata, METADATA_INPUT_DESCRIPTOR, getInputDescriptor());
+    AddNonEmptyElement(metadata, METADATA_OUTPUT_DESCRIPTOR, getOutputDescriptor());
     for (auto & desc : m_descriptions)
     {
         metadata.addChildElement(METADATA_DESCRIPTION, desc.c_str());
@@ -1807,13 +1807,13 @@ void TransformWriter::write() const
         const std::string & inputDesc = m_transform->getInputDescriptor();
         if (!inputDesc.empty())
         {
-            m_formatter.writeContentTag(TAG_INPUT_DESCRIPTOR, inputDesc);
+            m_formatter.writeContentTag(METADATA_INPUT_DESCRIPTOR, inputDesc);
         }
 
         const std::string & outputDesc = m_transform->getOutputDescriptor();
         if (!outputDesc.empty())
         {
-            m_formatter.writeContentTag(TAG_OUTPUT_DESCRIPTOR, outputDesc);
+            m_formatter.writeContentTag(METADATA_OUTPUT_DESCRIPTOR, outputDesc);
         }
 
         const FormatMetadataImpl & info = m_transform->getInfoMetadata();

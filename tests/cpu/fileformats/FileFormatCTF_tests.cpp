@@ -4087,8 +4087,8 @@ OCIO_ADD_TEST(CTFTransform, range_ctf)
     // Need to specify an id so that it does not get generated.
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "mat0");
     
-    group->getFormatMetadata().addChildElement(OCIO::TAG_INPUT_DESCRIPTOR, "Input descriptor");
-    group->getFormatMetadata().addChildElement(OCIO::TAG_OUTPUT_DESCRIPTOR, "Output descriptor");
+    group->getFormatMetadata().addChildElement(OCIO::METADATA_INPUT_DESCRIPTOR, "Input descriptor");
+    group->getFormatMetadata().addChildElement(OCIO::METADATA_OUTPUT_DESCRIPTOR, "Output descriptor");
 
     group->appendTransform(range);
 
@@ -4133,8 +4133,8 @@ OCIO_ADD_TEST(CTFTransform, range1_clf)
 
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
-    group->getFormatMetadata().addChildElement(OCIO::TAG_INPUT_DESCRIPTOR, "Input descriptor");
-    group->getFormatMetadata().addChildElement(OCIO::TAG_OUTPUT_DESCRIPTOR, "Output descriptor");
+    group->getFormatMetadata().addChildElement(OCIO::METADATA_INPUT_DESCRIPTOR, "Input descriptor");
+    group->getFormatMetadata().addChildElement(OCIO::METADATA_OUTPUT_DESCRIPTOR, "Output descriptor");
     group->appendTransform(range);
 
     OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
@@ -5490,6 +5490,291 @@ OCIO_ADD_TEST(CTFTransform, no_ops_ctf)
     OCIO_CHECK_EQUAL(expected, outputTransform.str());
 }
 
+///////////////////////////////////////////////////////////////////////////////
+//
+// BAKER TESTS
+//
+///////////////////////////////////////////////////////////////////////////////
+
+OCIO_ADD_TEST(FileFormatCTF, bake_1d)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("input");
+        cs->setFamily("input");
+        config->addColorSpace(cs);
+        config->setRole(OCIO::ROLE_REFERENCE, cs->getName());
+    }
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("target");
+        cs->setFamily("target");
+        config->addColorSpace(cs);
+    }
+
+    OCIO::BakerRcPtr baker = OCIO::Baker::Create();
+    baker->setConfig(config);
+    baker->setFormat(OCIO::FILEFORMAT_CLF);
+    baker->setInputSpace("input");
+    baker->setTargetSpace("target");
+    baker->setCubeSize(2);
+    std::ostringstream outputCLF;
+    baker->bake(outputCLF);
+
+    const std::string expectedCLF{
+R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="2" id="$4dd1c89df8002b409e089089ce8f24e7">
+    <LUT1D inBitDepth="32f" outBitDepth="32f">
+        <Array dim="2 3">
+          0           0           0
+          1           1           1
+        </Array>
+    </LUT1D>
+</ProcessList>
+)" };
+    OCIO_CHECK_EQUAL(expectedCLF.size(), outputCLF.str().size());
+    OCIO_CHECK_EQUAL(expectedCLF, outputCLF.str());
+
+    std::ostringstream outputCTF;
+    baker->setFormat(OCIO::FILEFORMAT_CTF);
+    baker->bake(outputCTF);
+    const std::string expectedCTF{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="1.3" id="$4dd1c89df8002b409e089089ce8f24e7">
+    <LUT1D inBitDepth="32f" outBitDepth="32f">
+        <Array dim="2 3">
+          0           0           0
+          1           1           1
+        </Array>
+    </LUT1D>
+</ProcessList>
+)" };
+    OCIO_CHECK_EQUAL(expectedCTF.size(), outputCTF.str().size());
+    OCIO_CHECK_EQUAL(expectedCTF, outputCTF.str());
+}
+
+OCIO_ADD_TEST(FileFormatCTF, bake_3d)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("input");
+        cs->setFamily("input");
+        config->addColorSpace(cs);
+        config->setRole(OCIO::ROLE_REFERENCE, cs->getName());
+    }
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("target");
+        cs->setFamily("target");
+
+        // Set saturation to cause channel crosstalk, making a 3D LUT
+        OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
+        transform1->setSat(0.5f);
+        cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+
+        config->addColorSpace(cs);
+    }
+
+    OCIO::BakerRcPtr baker = OCIO::Baker::Create();
+    baker->setConfig(config);
+    auto & data = baker->getFormatMetadata();
+    data.addAttribute(OCIO::METADATA_ID, "TestID");
+    data.addChildElement(OCIO::METADATA_DESCRIPTION,
+                         "OpenColorIO Test Line 1");
+    data.addChildElement(OCIO::METADATA_DESCRIPTION,
+                         "OpenColorIO Test Line 2");
+    data.addChildElement("Anything", "Not Saved");
+    data.addChildElement(OCIO::METADATA_INPUT_DESCRIPTOR, "Input descriptor");
+    data.addChildElement(OCIO::METADATA_INPUT_DESCRIPTOR, "Only first is saved");
+    data.addChildElement(OCIO::METADATA_OUTPUT_DESCRIPTOR, "Output descriptor");
+    auto & info = data.addChildElement(OCIO::METADATA_INFO, "");
+    info.addAttribute("attrib1", "val1");
+    info.addAttribute("attrib2", "val2");
+    info.addChildElement("anything", "is saved");
+    info.addChildElement("anything", "is also saved");
+
+    baker->setFormat(OCIO::FILEFORMAT_CLF);
+    baker->setInputSpace("input");
+    baker->setTargetSpace("target");
+    baker->setCubeSize(2);
+    std::ostringstream output;
+    baker->bake(output);
+
+    const std::string expectedCLF{
+R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="2" id="TestID">
+    <Description>OpenColorIO Test Line 1</Description>
+    <Description>OpenColorIO Test Line 2</Description>
+    <InputDescriptor>Input descriptor</InputDescriptor>
+    <OutputDescriptor>Output descriptor</OutputDescriptor>
+    <Info attrib1="val1" attrib2="val2">
+        <anything>is saved</anything>
+        <anything>is also saved</anything>
+    </Info>
+    <LUT3D inBitDepth="32f" outBitDepth="32f">
+        <Array dim="2 2 2 3">
+          0           0           0
+     0.0361      0.0361  0.53609997
+     0.3576  0.85759997      0.3576
+     0.3937      0.8937      0.8937
+     0.6063      0.1063      0.1063
+ 0.64240003      0.1424  0.64239997
+ 0.96389997  0.96389997      0.4639
+          1           1           1
+        </Array>
+    </LUT3D>
+</ProcessList>
+)" };
+    OCIO_CHECK_EQUAL(expectedCLF.size(), output.str().size());
+    OCIO_CHECK_EQUAL(expectedCLF, output.str());
+}
+
+#ifdef USE_SSE
+// Using ops that do produce slightly different results in SSE and non-SSE mode.
+OCIO_ADD_TEST(FileFormatCTF, bake_1d_3d)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("input");
+        cs->setFamily("input");
+        config->addColorSpace(cs);
+        config->setRole(OCIO::ROLE_REFERENCE, cs->getName());
+    }
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("shaper");
+        cs->setFamily("shaper");
+        OCIO::MatrixTransformRcPtr transform1 = OCIO::MatrixTransform::Create();
+        double mat[16]{ 0.8,   0,   0, 0,
+                          0, 0.8,   0, 0,
+                          0,   0, 0.8, 0,
+                          0,   0,   0, 1 };
+        transform1->setMatrix(mat);
+        double offset[4]{ 0.1, 0.1, 0.1, 0 };
+        transform1->setOffset(offset);
+        cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+        config->addColorSpace(cs);
+    }
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("target");
+        cs->setFamily("target");
+
+        // Set saturation to cause channel crosstalk, making a 3D LUT
+        OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
+        transform1->setSat(0.5f);
+        cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+
+        config->addColorSpace(cs);
+    }
+
+    OCIO::BakerRcPtr baker = OCIO::Baker::Create();
+    baker->setConfig(config);
+    baker->setFormat(OCIO::FILEFORMAT_CLF);
+    baker->setInputSpace("input");
+    baker->setShaperSpace("shaper");
+    baker->setTargetSpace("target");
+    baker->setCubeSize(2);
+    std::stringstream output;
+    baker->bake(output);
+
+    std::string emptyString;
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr file = tester.read(output, emptyString);
+    auto cachedFile = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(file);
+
+    const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
+    OCIO_REQUIRE_EQUAL(opList.size(), 2);
+    auto shaperLut = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[0]);
+    OCIO_REQUIRE_ASSERT(shaperLut);
+    OCIO_CHECK_ASSERT(shaperLut->isInputHalfDomain());
+    const auto & shaperArray = shaperLut->getArray();
+    // Calculate the index for 0.5 in a half-domain LUT1D. We'll test the value there.
+    const half h05(0.5f);
+    const auto h05bits = h05.bits();
+    const auto index = h05bits * 3;
+    const auto res = 0.5f * 0.8f + 0.1f;
+
+    OCIO_CHECK_CLOSE(shaperArray[index + 0], res, 1e-5f);
+    OCIO_CHECK_EQUAL(shaperArray[index + 0], shaperArray[index + 1]);
+    OCIO_CHECK_EQUAL(shaperArray[index + 0], shaperArray[index + 2]);
+
+    auto lut = std::dynamic_pointer_cast<const OCIO::Lut3DOpData>(opList[1]);
+    OCIO_REQUIRE_ASSERT(lut);
+    OCIO_REQUIRE_EQUAL(lut->getArray().getLength(), 2);
+    OCIO_CHECK_EQUAL(lut->getArray()[0], 0.0f);
+    OCIO_CHECK_EQUAL(lut->getArray()[1], 0.0f);
+    OCIO_CHECK_EQUAL(lut->getArray()[2], 0.0f);
+    OCIO_CHECK_CLOSE(lut->getArray()[3], 0.0361f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[4], 0.0361f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[5], 0.5361f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[6], 0.3576f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[7], 0.85761f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[8], 0.3576f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[9], 0.3937f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[10], 0.89371f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[11], 0.89371f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[12], 0.6063f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[13], 0.1063f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[14], 0.1063f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[15], 0.6424f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[16], 0.1424f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[17], 0.6424f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[18], 0.96391f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[19], 0.96391f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[20], 0.463905f, 1.e-5f);
+    OCIO_CHECK_EQUAL(lut->getArray()[21], 1.0f);
+    OCIO_CHECK_EQUAL(lut->getArray()[22], 1.0f);
+    OCIO_CHECK_EQUAL(lut->getArray()[23], 1.0f);
+
+    std::ostringstream output1;
+    baker->setShaperSize(10);
+    baker->bake(output1);
+
+    const std::string expectedCLF{
+R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="2" id="$4dd1c89df8002b409e089089ce8f24e7">
+    <Range inBitDepth="32f" outBitDepth="32f">
+        <minInValue> -0.125 </minInValue>
+        <maxInValue> 1.125 </maxInValue>
+        <minOutValue> 0 </minOutValue>
+        <maxOutValue> 1 </maxOutValue>
+    </Range>
+    <LUT1D inBitDepth="32f" outBitDepth="32f">
+        <Array dim="10 3">
+          0           0           0
+ 0.11111112  0.11111112  0.11111112
+ 0.22222224  0.22222224  0.22222224
+ 0.33333334  0.33333334  0.33333334
+ 0.44444448  0.44444448  0.44444448
+ 0.55555558  0.55555558  0.55555558
+ 0.66666675  0.66666675  0.66666675
+ 0.77777779  0.77777779  0.77777779
+ 0.88888896  0.88888896  0.88888896
+          1           1           1
+        </Array>
+    </LUT1D>
+    <LUT3D inBitDepth="32f" outBitDepth="32f">
+        <Array dim="2 2 2 3">
+          0           0           0
+0.036100417 0.036100417  0.53610623
+ 0.35760415  0.85760993  0.35760415
+ 0.39370456  0.89371037  0.89371037
+ 0.60630703  0.10630123  0.10630123
+ 0.64240742  0.14240164  0.64240742
+ 0.96391118  0.96391118  0.46390536
+          1           1           1
+        </Array>
+    </LUT3D>
+</ProcessList>
+)" };
+    OCIO_CHECK_EQUAL(expectedCLF.size(), output1.str().size());
+    OCIO_CHECK_EQUAL(expectedCLF, output1.str());
+}
+#endif
 
 // TODO: Bring over tests when adding CTF support.
 

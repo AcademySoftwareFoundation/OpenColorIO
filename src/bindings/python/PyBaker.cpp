@@ -33,7 +33,7 @@ OCIO_NAMESPACE_ENTER
         
         ///////////////////////////////////////////////////////////////////////
         ///
-        
+		// TODO: Expose new getMetadata methods once pybind11 is available.
         int PyOCIO_Baker_init(PyOCIO_Baker * self, PyObject * args, PyObject * kwds);
         void PyOCIO_Baker_delete(PyOCIO_Baker * self);
         PyObject * PyOCIO_Baker_isEditable(PyObject * self, PyObject *);
@@ -42,10 +42,6 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Baker_getConfig(PyObject * self, PyObject *);
         PyObject * PyOCIO_Baker_setFormat(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Baker_getFormat(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Baker_setType(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Baker_getType(PyObject * self, PyObject *);
-        PyObject * PyOCIO_Baker_setMetadata(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Baker_getMetadata(PyObject * self, PyObject *);
         PyObject * PyOCIO_Baker_setInputSpace(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Baker_getInputSpace(PyObject * self, PyObject *);
         PyObject * PyOCIO_Baker_setShaperSpace(PyObject * self, PyObject * args);
@@ -79,14 +75,6 @@ OCIO_NAMESPACE_ENTER
             PyOCIO_Baker_setFormat, METH_VARARGS, BAKER_SETFORMAT__DOC__ },
             { "getFormat",
             (PyCFunction) PyOCIO_Baker_getFormat, METH_NOARGS, BAKER_GETFORMAT__DOC__ },
-            { "setType",
-            PyOCIO_Baker_setType, METH_VARARGS, BAKER_SETTYPE__DOC__ },
-            { "getType",
-            (PyCFunction) PyOCIO_Baker_getType, METH_NOARGS, BAKER_GETTYPE__DOC__ },
-            { "setMetadata",
-            PyOCIO_Baker_setMetadata, METH_VARARGS, BAKER_SETMETADATA__DOC__ },
-            { "getMetadata",
-            (PyCFunction) PyOCIO_Baker_getMetadata, METH_NOARGS, BAKER_GETMETADATA__DOC__ },
             { "setInputSpace",
             PyOCIO_Baker_setInputSpace, METH_VARARGS, BAKER_SETINPUTSPACE__DOC__ },
             { "getInputSpace",
@@ -240,46 +228,6 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_ENTER()
             ConstBakerRcPtr baker = GetConstBaker(self);
             return PyString_FromString(baker->getFormat());
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_Baker_setType(PyObject * self, PyObject * args)
-        {
-            OCIO_PYTRY_ENTER()
-            char* str = 0;
-            if (!PyArg_ParseTuple(args, "s:setType",
-                &str)) return NULL;
-            BakerRcPtr baker = GetEditableBaker(self);
-            baker->setType(str);
-            Py_RETURN_NONE;
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_Baker_getType(PyObject * self, PyObject *)
-        {
-            OCIO_PYTRY_ENTER()
-            ConstBakerRcPtr baker = GetConstBaker(self);
-            return PyString_FromString(baker->getType());
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_Baker_setMetadata(PyObject * self, PyObject * args)
-        {
-            OCIO_PYTRY_ENTER()
-            char* str = 0;
-            if (!PyArg_ParseTuple(args, "s:setMetadata",
-                &str)) return NULL;
-            BakerRcPtr baker = GetEditableBaker(self);
-            baker->setMetadata(str);
-            Py_RETURN_NONE;
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_Baker_getMetadata(PyObject * self, PyObject *)
-        {
-            OCIO_PYTRY_ENTER()
-            ConstBakerRcPtr baker = GetConstBaker(self);
-            return PyString_FromString(baker->getMetadata());
             OCIO_PYTRY_EXIT(NULL)
         }
         
