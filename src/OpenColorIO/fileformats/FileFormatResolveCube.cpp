@@ -719,19 +719,16 @@ OCIO_NAMESPACE_ENTER
             ostream.precision(6);
 
             // Comments
-            if(baker.getMetadata() != NULL)
+            const auto & metadata = baker.getFormatMetadata();
+            const auto nb = metadata.getNumChildrenElements();
+            for (int i = 0; i < nb; ++i)
             {
-                std::string metadata = baker.getMetadata();
-                StringVec metadatavec;
-                pystring::split(pystring::strip(metadata), metadatavec, "\n");
-                if(metadatavec.size() > 0)
-                {
-                    for(size_t i = 0; i < metadatavec.size(); ++i)
-                    {
-                        ostream << "# " << metadatavec[i] << "\n";
-                    }
-                    ostream << "\n";
-                }
+                const auto & child = metadata.getChildElement(i);
+                ostream << "# " << child.getValue() << "\n";
+            }
+            if (nb > 0)
+            {
+                ostream << "\n";
             }
 
             // Header
@@ -1136,8 +1133,6 @@ OCIO_ADD_TEST(FileFormatResolveCube, bake_1d)
     }
     
     std::ostringstream bout;
-    bout << "# "                                                    << "\n";
-    bout << ""                                                      << "\n";
     bout << "LUT_1D_SIZE 2"                                         << "\n";
     bout << "0.000000 0.000000 0.000000"                            << "\n";
     bout << "1.000000 1.000000 1.000000"                            << "\n";
@@ -1202,10 +1197,10 @@ OCIO_ADD_TEST(FileFormatResolveCube, bake_3d)
     
     OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     baker->setConfig(config);
-    std::ostringstream metadata;
-    metadata << "OpenColorIO Test Line 1\n";
-    metadata << "OpenColorIO Test Line 2\n";
-    baker->setMetadata(metadata.str().c_str());
+    baker->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION,
+                                               "OpenColorIO Test Line 1");
+    baker->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION,
+                                               "OpenColorIO Test Line 2");
     baker->setFormat("resolve_cube");
     baker->setInputSpace("input");
     baker->setTargetSpace("target");
@@ -1259,8 +1254,6 @@ OCIO_ADD_TEST(FileFormatResolveCube, bake_1d_3d)
     }
     
     std::ostringstream bout;
-    bout << "# "                                                    << "\n";
-    bout << ""                                                      << "\n";
     bout << "LUT_1D_SIZE 10"                                        << "\n";
     bout << "LUT_1D_INPUT_RANGE 0.000000 1.000000"                  << "\n";
     bout << "LUT_3D_SIZE 2"                                         << "\n";

@@ -387,20 +387,18 @@ OCIO_NAMESPACE_ENTER
             ConstCPUProcessorRcPtr cpu = inputToTarget->getDefaultCPUProcessor();
             cpu->apply(cubeImg);
 
-            if(baker.getMetadata() != NULL)
+            const auto & metadata = baker.getFormatMetadata();
+            const auto nb = metadata.getNumChildrenElements();
+            for (int i = 0; i < nb; ++i)
             {
-                std::string metadata = baker.getMetadata();
-                StringVec metadatavec;
-                pystring::split(pystring::strip(metadata), metadatavec, "\n");
-                if(metadatavec.size() > 0)
-                {
-                    for(size_t i = 0; i < metadatavec.size(); ++i)
-                    {
-                        ostream << "# " << metadatavec[i] << "\n";
-                    }
-                    ostream << "\n";
-                }
+                const auto & child = metadata.getChildElement(i);
+                ostream << "# " << child.getValue() << "\n";
             }
+            if (nb > 0)
+            {
+                ostream << "\n";
+            }
+
             ostream << "LUT_3D_SIZE " << cubeSize << "\n";
             if(cubeSize < 2)
             {
@@ -686,10 +684,12 @@ OCIO_ADD_TEST(FileFormatIridasCube, no_shaper)
 
     OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     baker->setConfig(config);
-    std::ostringstream metadata;
-    metadata << "Alexa conversion LUT, logc2video. Full in/full out." << "\n";
-    metadata << "created by alexalutconv (2.11)" << "\n";
-    baker->setMetadata(metadata.str().c_str());
+
+    baker->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION,
+                                               "Alexa conversion LUT, "
+                                               "logc2video. Full in/full out.");
+    baker->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION,
+                                               "created by alexalutconv (2.11)");
     baker->setFormat("iridas_cube");
     baker->setInputSpace("lnf");
     baker->setTargetSpace("target");

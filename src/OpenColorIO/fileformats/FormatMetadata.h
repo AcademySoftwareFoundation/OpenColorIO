@@ -15,13 +15,6 @@
 OCIO_NAMESPACE_ENTER
 {
 
-// INFO and DESCRIPTION are CLF XML elements described in S-2014-006.
-static constexpr const char * METADATA_INFO = "Info";
-static constexpr const char * METADATA_DESCRIPTION = "Description";
-
-// NAME and ID are CLF XML attributes described in S-2014-006.
-static constexpr const char * METADATA_NAME = "name";
-static constexpr const char * METADATA_ID = "id";
 
 // ROOT is simply a placeholder name  for the top-level element, since each
 // instance needs a name string.  (At the file level in CLF/CTF, the actual
@@ -97,8 +90,9 @@ public:
     const FormatMetadata & getChildElement(int i) const override;
     FormatMetadata & addChildElement(const char * name, const char * value) override;
 
-    // Reset the contents of a metadata element. The name, value,
+    // Reset the contents of a metadata element. The value,
     // list of attributes and sub-elements are cleared.
+    // The name is preserved.
     void clear() override;
 
     FormatMetadata & operator=(const FormatMetadata & rhs) override;

@@ -1141,7 +1141,6 @@ OCIO_ADD_TEST(Lut1DOpData, is_identity)
     l1.getArray()[lastId] = last + 1.1e-5f;
     OCIO_CHECK_ASSERT(!l1.isIdentity());
 
-
     OCIO::Lut1DOpData l2(OCIO::Lut1DOpData::LUT_INPUT_HALF_CODE, 65536);
 
     unsigned long id2 = 31700 * 3;

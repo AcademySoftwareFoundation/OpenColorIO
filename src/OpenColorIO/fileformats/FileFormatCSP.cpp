@@ -844,10 +844,12 @@ OCIO_NAMESPACE_ENTER
             ostream << "3D\n";
             ostream << "\n";
             ostream << "BEGIN METADATA\n";
-            std::string metadata = baker.getMetadata();
-            if(!metadata.empty())
+            const auto & metadata = baker.getFormatMetadata();
+            const auto nb = metadata.getNumChildrenElements();
+            for (int i = 0; i < nb; ++i)
             {
-                ostream << metadata << "\n";
+                const auto & child = metadata.getChildElement(i);
+                ostream << child.getValue() << "\n";
             }
             ostream << "END METADATA\n";
             ostream << "\n";
@@ -1236,6 +1238,7 @@ OCIO_ADD_TEST(FileFormatCSP, complete3D)
     bout << ""                           << "\n";
     bout << "BEGIN METADATA"             << "\n";
     bout << "date: 2011:02:21 15:22:55"  << "\n";
+    bout << "Baked by OCIO"              << "\n";
     bout << "END METADATA"               << "\n";
     bout << ""                           << "\n";
     bout << "10"                         << "\n";
@@ -1261,7 +1264,10 @@ OCIO_ADD_TEST(FileFormatCSP, complete3D)
     
     OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     baker->setConfig(config);
-    baker->setMetadata("date: 2011:02:21 15:22:55");
+    baker->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION,
+                                               "date: 2011:02:21 15:22:55");
+    baker->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, 
+                                               "Baked by OCIO");
     baker->setFormat("cinespace");
     baker->setInputSpace("lnf");
     baker->setShaperSpace("shaper");
@@ -1355,7 +1361,8 @@ OCIO_ADD_TEST(FileFormatCSP, shaper_hdr)
 
     OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     baker->setConfig(config);
-    baker->setMetadata("date: 2011:02:21 15:22:55");
+    baker->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION,
+                                               "date: 2011:02:21 15:22:55");
     baker->setFormat("cinespace");
     baker->setInputSpace("lnf_tweak");
     baker->setShaperSpace("lnf");
@@ -1439,7 +1446,8 @@ OCIO_ADD_TEST(FileFormatCSP, no_shaper)
     
     OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     baker->setConfig(config);
-    baker->setMetadata("date: 2011:02:21 15:22:55");
+    baker->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION,
+                                               "date: 2011:02:21 15:22:55");
     baker->setFormat("cinespace");
     baker->setInputSpace("lnf");
     baker->setTargetSpace("target");

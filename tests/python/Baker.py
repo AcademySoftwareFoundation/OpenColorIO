@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+# TODO: Add getFormatMetadata tests.
+
 import unittest, os, sys
 import PyOpenColorIO as OCIO
 
@@ -33,7 +35,6 @@ colorspaces:
 3D
 
 BEGIN METADATA
-this is some metadata!
 END METADATA
 
 4
@@ -62,7 +63,6 @@ END METADATA
 3D
 
 BEGIN METADATA
-this is some metadata!
 END METADATA
 
 4
@@ -97,10 +97,6 @@ END METADATA
         self.assertEqual(2, cfg2.getNumColorSpaces())
         bakee.setFormat("cinespace")
         self.assertEqual("cinespace", bakee.getFormat())
-        bakee.setType("3D")
-        self.assertEqual("3D", bakee.getType())
-        bakee.setMetadata("this is some metadata!")
-        self.assertEqual("this is some metadata!", bakee.getMetadata())
         bakee.setInputSpace("lnh")
         self.assertEqual("lnh", bakee.getInputSpace())
         bakee.setLooks("foo, +bar")
@@ -117,7 +113,7 @@ END METADATA
             self.assertEqual(self.EXPECTED_LUT_SSE, output)
         else:
             self.assertEqual(self.EXPECTED_LUT_NONSSE, output)
-        self.assertEqual(8, bakee.getNumFormats())
-        self.assertEqual("cinespace", bakee.getFormatNameByIndex(2))
+        self.assertEqual(10, bakee.getNumFormats())
+        self.assertEqual("cinespace", bakee.getFormatNameByIndex(4))
         self.assertEqual("3dl", bakee.getFormatExtensionByIndex(1))
 

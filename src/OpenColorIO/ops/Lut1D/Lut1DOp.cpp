@@ -478,7 +478,6 @@ OCIO_ADD_TEST(Lut1DRenderer, finite_value_hue_adjust)
     // Make a LUT that squares the input.
     OCIO::Lut1DOpDataRcPtr lutData = CreateSquareLut();
     lutData->setHueAdjust(OCIO::HUE_DW3);
-
     OCIO::Lut1DOp lut(lutData);
 
     OCIO_CHECK_NO_THROW(lut.finalize(OCIO::FINALIZATION_EXACT));
