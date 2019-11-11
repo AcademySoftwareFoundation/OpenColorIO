@@ -2542,7 +2542,7 @@ OCIO_NAMESPACE_ENTER
     void OCIOYaml::write(std::ostream& ostream, const Config* c) const
     {
         YAML::Emitter out;
-        out.SetDoublePrecision(15);
+        out.SetDoublePrecision(std::numeric_limits<double>::digits10);
         save(out, c);
         ostream << out.c_str();
     }
