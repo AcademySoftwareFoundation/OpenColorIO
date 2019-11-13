@@ -51,11 +51,6 @@ namespace YAML {
 #pragma warning( disable: 4146 )
 #endif
 
-// The Clang 7 (and higher) optimizations conflict with Yaml 0.6.x.
-#ifdef __clang__
-#pragma clang optimize off
-#endif
-
 #include <yaml-cpp/yaml.h>
 
 #ifdef _MSC_VER
@@ -2145,13 +2140,11 @@ OCIO_NAMESPACE_ENTER
                         os << "The value type of key 'environment' needs to be a map.";
                         throwValueError(node.Tag(), first, os.str());
                     }
-                    for (Iterator it = second.begin();
-                         it != second.end();
-                         ++it)
+                    for (const auto & it : second)
                     {
                         std::string k, v;
-                        load(it->first, k);
-                        load(it->second, v);
+                        load(it.first, k);
+                        load(it.second, v);
                         c->addEnvironmentVar(k.c_str(), v.c_str());
                     }
                 }
@@ -2203,13 +2196,11 @@ OCIO_NAMESPACE_ENTER
                         os << "The value type of the key 'roles' needs to be a map.";
                         throwValueError(node.Tag(), first, os.str());
                     }
-                    for (Iterator it = second.begin();
-                         it != second.end();
-                         ++it)
+                    for (const auto & it : second)
                     {
                         std::string k, v;
-                        load(it->first, k);
-                        load(it->second, v);
+                        load(it.first, k);
+                        load(it.second, v);
                         c->setRole(k.c_str(), v.c_str());
                     }
                 }
@@ -2221,14 +2212,12 @@ OCIO_NAMESPACE_ENTER
                         os << "The value type of the key 'displays' needs to be a map.";
                         throwValueError(node.Tag(), first, os.str());
                     }
-                    for (Iterator it = second.begin();
-                         it != second.end();
-                         ++it)
+                    for (const auto & it : second)
                     {
                         std::string display;
-                        load(it->first, display);
+                        load(it.first, display);
 
-                        const YAML::Node& dsecond = it->second;
+                        const YAML::Node& dsecond = it.second;
                         if(dsecond.Type() != YAML::NodeType::Sequence)
                         {
                             throwValueError(node.Tag(), first, "The view list is a sequence.");
@@ -2549,7 +2538,3 @@ OCIO_NAMESPACE_ENTER
     
 }
 OCIO_NAMESPACE_EXIT
-
-#ifdef __clang__
-#pragma clang optimize on
-#endif
