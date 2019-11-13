@@ -635,12 +635,10 @@ OCIO_NAMESPACE_ENTER
             
             std::string key;
             
-            for (Iterator iter = node.begin();
-                 iter != node.end();
-                 ++iter)
+            for (const auto & iter : node)
             {
-                const YAML::Node& first = iter->first;
-                const YAML::Node& second = iter->second;
+                const YAML::Node& first = iter.first;
+                const YAML::Node& second = iter.second;
 
                 load(first, key);
                 
@@ -708,12 +706,10 @@ OCIO_NAMESPACE_ENTER
             
             std::string key;
             
-            for (Iterator iter = node.begin();
-                 iter != node.end();
-                 ++iter)
+            for (const auto & iter : node)
             {
-                const YAML::Node& first = iter->first;
-                const YAML::Node& second = iter->second;
+                const YAML::Node& first = iter.first;
+                const YAML::Node& second = iter.second;
 
                 load(first, key);
                 
@@ -824,21 +820,19 @@ OCIO_NAMESPACE_ENTER
         {
             if (node.Type() == YAML::NodeType::Map)
             {
-                for (Iterator it = node.begin();
-                    it != node.end();
-                    ++it)
+                for (const auto & it : node)
                 {
                     std::string k;
-                    const YAML::Node& first = it->first;
+                    const YAML::Node& first = it.first;
                     load(first, k);
                     if (k == "value")
                     {
-                        load(it->second, dp.m_value);
+                        load(it.second, dp.m_value);
                         dp.m_valueRead = true;
                     }
                     else if (k == "dynamic")
                     {
-                        load(it->second, dp.m_dynamic);
+                        load(it.second, dp.m_dynamic);
                         dp.m_dynamicRead = true;
                     }
                     else
@@ -864,12 +858,10 @@ OCIO_NAMESPACE_ENTER
 
             std::string key;
 
-            for (Iterator iter = node.begin();
-                iter != node.end();
-                ++iter)
+            for (const auto & iter : node)
             {
-                const YAML::Node& first = iter->first;
-                const YAML::Node& second = iter->second;
+                const YAML::Node& first = iter.first;
+                const YAML::Node& second = iter.second;
 
                 load(first, key);
 
@@ -994,12 +986,10 @@ OCIO_NAMESPACE_ENTER
             
             std::string key, stringval;
             
-            for (Iterator iter = node.begin();
-                 iter != node.end();
-                 ++iter)
+            for (const auto & iter : node)
             {
-                const YAML::Node& first = iter->first;
-                const YAML::Node& second = iter->second;
+                const YAML::Node& first = iter.first;
+                const YAML::Node& second = iter.second;
 
                 load(first, key);
                 
@@ -1060,12 +1050,10 @@ OCIO_NAMESPACE_ENTER
             
             std::string key;
             
-            for (Iterator iter = node.begin();
-                 iter != node.end();
-                 ++iter)
+            for (const auto & iter : node)
             {
-                const YAML::Node& first = iter->first;
-                const YAML::Node& second = iter->second;
+                const YAML::Node& first = iter.first;
+                const YAML::Node& second = iter.second;
 
                 load(first, key);
                 
@@ -1128,12 +1116,10 @@ OCIO_NAMESPACE_ENTER
             
             std::string key;
             
-            for (Iterator iter = node.begin();
-                 iter != node.end();
-                 ++iter)
+            for (const auto & iter : node)
             {
-                const YAML::Node& first = iter->first;
-                const YAML::Node& second = iter->second;
+                const YAML::Node& first = iter.first;
+                const YAML::Node& second = iter.second;
 
                 load(first, key);
                 
@@ -1231,12 +1217,10 @@ OCIO_NAMESPACE_ENTER
             double linOffset[3] = { 0.0, 0.0, 0.0 };
             double logOffset[3] = { 0.0, 0.0, 0.0 };
 
-            for (Iterator iter = node.begin();
-                 iter != node.end();
-                 ++iter)
+            for (const auto & iter : node)
             {
-                const YAML::Node& first = iter->first;
-                const YAML::Node& second = iter->second;
+                const YAML::Node& first = iter.first;
+                const YAML::Node& second = iter.second;
 
                 load(first, key);
                 
@@ -1346,12 +1330,10 @@ OCIO_NAMESPACE_ENTER
 
             std::string key;
 
-            for (Iterator iter = node.begin();
-                iter != node.end();
-                ++iter)
+            for (const auto & iter : node)
             {
-                const YAML::Node& first = iter->first;
-                const YAML::Node& second = iter->second;
+                const YAML::Node& first = iter.first;
+                const YAML::Node& second = iter.second;
 
                 load(first, key);
 
@@ -1408,12 +1390,10 @@ OCIO_NAMESPACE_ENTER
             
             std::string key, stringval;
             
-            for (Iterator iter = node.begin();
-                 iter != node.end();
-                 ++iter)
+            for (const auto & iter : node)
             {
-                const YAML::Node& first = iter->first;
-                const YAML::Node& second = iter->second;
+                const YAML::Node& first = iter.first;
+                const YAML::Node& second = iter.second;
 
                 load(first, key);
                 
@@ -1466,12 +1446,10 @@ OCIO_NAMESPACE_ENTER
             
             std::string key;
             
-            for (Iterator iter = node.begin();
-                 iter != node.end();
-                 ++iter)
+            for (const auto & iter : node)
             {
-                const YAML::Node& first = iter->first;
-                const YAML::Node& second = iter->second;
+                const YAML::Node& first = iter.first;
+                const YAML::Node& second = iter.second;
 
                 load(first, key);
                 
@@ -1549,12 +1527,10 @@ OCIO_NAMESPACE_ENTER
             
             std::string key;
             
-            for (Iterator iter = node.begin();
-                 iter != node.end();
-                 ++iter)
+            for (const auto & iter : node)
             {
-                const YAML::Node& first = iter->first;
-                const YAML::Node& second = iter->second;
+                const YAML::Node& first = iter.first;
+                const YAML::Node& second = iter.second;
 
                 load(first, key);
                 
@@ -1812,12 +1788,10 @@ OCIO_NAMESPACE_ENTER
             std::string key, stringval;
             bool boolval;
             
-            for (Iterator iter = node.begin();
-                 iter != node.end();
-                 ++iter)
+            for (const auto & iter : node)
             {
-                const YAML::Node& first = iter->first;
-                const YAML::Node& second = iter->second;
+                const YAML::Node& first = iter.first;
+                const YAML::Node& second = iter.second;
 
                 load(first, key);
                 
@@ -1962,12 +1936,10 @@ OCIO_NAMESPACE_ENTER
             
             std::string key, stringval;
             
-            for (Iterator iter = node.begin();
-                 iter != node.end();
-                 ++iter)
+            for (const auto & iter : node)
             {
-                const YAML::Node& first = iter->first;
-                const YAML::Node& second = iter->second;
+                const YAML::Node& first = iter.first;
+                const YAML::Node& second = iter.second;
 
                 load(first, key);
                 
@@ -2119,12 +2091,10 @@ OCIO_NAMESPACE_ENTER
             bool boolval = false;
             EnvironmentMode mode = ENV_ENVIRONMENT_LOAD_ALL;
             
-            for (Iterator iter = node.begin();
-                 iter != node.end();
-                 ++iter)
+            for (const auto & iter : node)
             {
-                const YAML::Node& first = iter->first;
-                const YAML::Node& second = iter->second;
+                const YAML::Node& first = iter.first;
+                const YAML::Node& second = iter.second;
 
                 load(first, key);
                 
