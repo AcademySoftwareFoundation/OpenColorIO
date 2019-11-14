@@ -114,6 +114,37 @@ OCIO_NAMESPACE_ENTER
         g_loggingFunction = DefaultLoggingFunction;
     }
 
+    void LogMessage(LoggingLevel level, const char * message)
+    {
+        switch(level)
+        {
+            case LOGGING_LEVEL_WARNING:
+            {
+                LogWarning(message);
+                break;
+            }
+            case LOGGING_LEVEL_INFO:
+            {
+                LogInfo(message);
+                break;
+            }
+            case LOGGING_LEVEL_DEBUG:
+            {
+                LogDebug(message);
+                break;
+            }
+            case LOGGING_LEVEL_NONE:
+            {
+                // No logging.
+                break;
+            }
+            case LOGGING_LEVEL_UNKNOWN:
+            {
+                throw Exception("Unsupported logging level.");
+            }
+        }
+    }
+
     void LogWarning(const std::string & text)
     {
         AutoMutex lock(g_logmutex);

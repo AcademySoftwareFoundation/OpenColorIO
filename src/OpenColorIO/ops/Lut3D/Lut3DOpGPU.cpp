@@ -8,6 +8,8 @@
 #include "GpuShaderUtils.h"
 #include "MathUtils.h"
 #include "ops/Lut3D/Lut3DOpGPU.h"
+#include "pystring/pystring.h"
+
 
 OCIO_NAMESPACE_ENTER
 {
@@ -21,7 +23,8 @@ void GetLut3DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
             << std::string("lut3d_")
             << shaderDesc->getNum3DTextures();
 
-    const std::string name(resName.str());
+    // Note: Remove potentially problematic double underscores from GLSL resource names.
+    const std::string name(pystring::replace(resName.str(), "__", "_"));
 
     shaderDesc->add3DTexture(GpuShaderText::getSamplerName(name).c_str(),
         lutData->getCacheID().c_str(), lutData->getGridSize(),

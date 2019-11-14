@@ -526,7 +526,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        ///// DISPLAYS
+        ///// DISPLAYS / VIEWS
         
         int numviews = 0;
         
@@ -1602,6 +1602,7 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 #include "UnitTest.h"
+#include "UnitTestLogUtils.h"
 #include "UnitTestUtils.h"
 
 #include <sys/stat.h>
@@ -4199,6 +4200,16 @@ OCIO_ADD_TEST(Config, add_color_space)
 
     OCIO_CHECK_NO_THROW(config->clearColorSpaces());
     OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 0);
+}
+
+OCIO_ADD_TEST(Config, faulty_config_file)
+{
+    std::istringstream is("/usr/tmp/not_existing.ocio");
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is),
+                          OCIO::Exception,
+                          "Error: Loading the OCIO profile failed. yaml-cpp: error at line 0");
 }
 
 #endif // OCIO_UNIT_TEST

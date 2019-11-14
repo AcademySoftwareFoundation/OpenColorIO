@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#ifdef OCIO_UNIT_TEST
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -10,8 +9,6 @@
 #include "UnitTestUtils.h"
 
 
-OCIO_NAMESPACE_ENTER
-{
 #ifndef OCIO_UNIT_TEST_FILES_DIR
 #error Expecting OCIO_UNIT_TEST_FILES_DIR to be defined for tests. Check relevant CMakeLists.txt
 #endif
@@ -19,6 +16,10 @@ OCIO_NAMESPACE_ENTER
 // For explanation, refer to https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html 
 #define _STR(x) #x
 #define STR(x) _STR(x)
+
+
+OCIO_NAMESPACE_ENTER
+{
 
 static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
 
@@ -74,30 +75,5 @@ ConstProcessorRcPtr GetFileTransformProcessor(const std::string & fileName)
     return config->getProcessor(fileTransform);
 }
 
-namespace
-{
-
-void MuteLoggingFunction(const char * message)
-{
-    // Does nothing on purpose.
-}
-
-}
-
-
-MuteLogging::MuteLogging()
-{
-    SetLoggingFunction(MuteLoggingFunction);
-}
-
-MuteLogging::~MuteLogging()
-{
-    ResetToDefaultLoggingFunction();
-}
-
-
 }
 OCIO_NAMESPACE_EXIT
-
-
-#endif // OCIO_UNIT_TEST

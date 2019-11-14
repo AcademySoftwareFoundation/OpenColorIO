@@ -32,44 +32,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #include "UnitTest.h"
+#include "UnitTestLogUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
-
-
-namespace
-{
-
-std::string output;
-
-// The custom logging function for testing.
-void CustomLoggingFunction(const char * message)
-{
-    output += message;
-}
-
-// Preserve the default default log settings.
-class LogGuard
-{
-public:
-    LogGuard()
-    {
-        OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_DEFAULT);
-        OCIO::SetLoggingFunction(CustomLoggingFunction);
-        output.clear();
-    }
-
-    ~LogGuard()
-    {
-        OCIO::ResetToDefaultLoggingFunction();
-        OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_DEFAULT);
-    }
-
-    LogGuard(const LogGuard &) = delete;
-    LogGuard & operator=(const LogGuard &) = delete;
-};
-
-
-}
 
 
 OCIO_ADD_TEST(Logging, message_function)
@@ -78,19 +43,19 @@ OCIO_ADD_TEST(Logging, message_function)
 
     constexpr const char dummyStr[]{"Dummy message"};
 
-    LogGuard guard;
+    OCIO::LogGuard guard;
 
     {
         OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_NONE);
 
         OCIO::LogDebug(dummyStr);
-        OCIO_CHECK_ASSERT(output.empty());
+        OCIO_CHECK_ASSERT(guard.empty());
 
         OCIO::LogInfo(dummyStr);
-        OCIO_CHECK_ASSERT(output.empty());
+        OCIO_CHECK_ASSERT(guard.empty());
 
         OCIO::LogWarning(dummyStr);
-        OCIO_CHECK_ASSERT(output.empty());
+        OCIO_CHECK_ASSERT(guard.empty());
 
         OCIO_CHECK_ASSERT(!OCIO::IsDebugLoggingEnabled());
     }
@@ -99,18 +64,18 @@ OCIO_ADD_TEST(Logging, message_function)
         OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_WARNING);
 
         OCIO::LogDebug(dummyStr);
-        OCIO_CHECK_ASSERT(output.empty());
+        OCIO_CHECK_ASSERT(guard.empty());
 
         OCIO::LogInfo(dummyStr);
-        OCIO_CHECK_ASSERT(output.empty());
+        OCIO_CHECK_ASSERT(guard.empty());
 
         OCIO::LogWarning(dummyStr);
-        OCIO_CHECK_EQUAL(output, "[OpenColorIO Warning]: Dummy message\n");
-        output.clear();
+        OCIO_CHECK_EQUAL(guard.output(), "[OpenColorIO Warning]: Dummy message\n");
+        guard.clear();
 
         OCIO::LogWarning("");
-        OCIO_CHECK_EQUAL(output, "[OpenColorIO Warning]: \n");
-        output.clear();
+        OCIO_CHECK_EQUAL(guard.output(), "[OpenColorIO Warning]: \n");
+        guard.clear();
 
         OCIO_CHECK_ASSERT(!OCIO::IsDebugLoggingEnabled());
     }
@@ -119,15 +84,15 @@ OCIO_ADD_TEST(Logging, message_function)
         OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_INFO);
 
         OCIO::LogDebug(dummyStr);
-        OCIO_CHECK_ASSERT(output.empty());
+        OCIO_CHECK_ASSERT(guard.empty());
 
         OCIO::LogInfo(dummyStr);
-        OCIO_CHECK_EQUAL(output, "[OpenColorIO Info]: Dummy message\n");
-        output.clear();
+        OCIO_CHECK_EQUAL(guard.output(), "[OpenColorIO Info]: Dummy message\n");
+        guard.clear();
 
         OCIO::LogWarning(dummyStr);
-        OCIO_CHECK_EQUAL(output, "[OpenColorIO Warning]: Dummy message\n");
-        output.clear();
+        OCIO_CHECK_EQUAL(guard.output(), "[OpenColorIO Warning]: Dummy message\n");
+        guard.clear();
 
         OCIO_CHECK_ASSERT(!OCIO::IsDebugLoggingEnabled());
     }
@@ -136,16 +101,16 @@ OCIO_ADD_TEST(Logging, message_function)
         OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_DEBUG);
 
         OCIO::LogDebug(dummyStr);
-        OCIO_CHECK_EQUAL(output, "[OpenColorIO Debug]: Dummy message\n");
-        output.clear();
+        OCIO_CHECK_EQUAL(guard.output(), "[OpenColorIO Debug]: Dummy message\n");
+        guard.clear();
 
         OCIO::LogInfo(dummyStr);
-        OCIO_CHECK_EQUAL(output, "[OpenColorIO Info]: Dummy message\n");
-        output.clear();
+        OCIO_CHECK_EQUAL(guard.output(), "[OpenColorIO Info]: Dummy message\n");
+        guard.clear();
 
         OCIO::LogWarning(dummyStr);
-        OCIO_CHECK_EQUAL(output, "[OpenColorIO Warning]: Dummy message\n");
-        output.clear();
+        OCIO_CHECK_EQUAL(guard.output(), "[OpenColorIO Warning]: Dummy message\n");
+        guard.clear();
 
         OCIO_CHECK_ASSERT(OCIO::IsDebugLoggingEnabled());
     }
@@ -154,16 +119,16 @@ OCIO_ADD_TEST(Logging, message_function)
         OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_UNKNOWN);
 
         OCIO::LogDebug(dummyStr);
-        OCIO_CHECK_EQUAL(output, "[OpenColorIO Debug]: Dummy message\n");
-        output.clear();
+        OCIO_CHECK_EQUAL(guard.output(), "[OpenColorIO Debug]: Dummy message\n");
+        guard.clear();
 
         OCIO::LogInfo(dummyStr);
-        OCIO_CHECK_EQUAL(output, "[OpenColorIO Info]: Dummy message\n");
-        output.clear();
+        OCIO_CHECK_EQUAL(guard.output(), "[OpenColorIO Info]: Dummy message\n");
+        guard.clear();
 
         OCIO::LogWarning(dummyStr);
-        OCIO_CHECK_EQUAL(output, "[OpenColorIO Warning]: Dummy message\n");
-        output.clear();
+        OCIO_CHECK_EQUAL(guard.output(), "[OpenColorIO Warning]: Dummy message\n");
+        guard.clear();
 
         OCIO_CHECK_ASSERT(OCIO::IsDebugLoggingEnabled());
     }
@@ -174,8 +139,8 @@ OCIO_ADD_TEST(Logging, message_function)
         OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_DEBUG);
 
         OCIO::LogDebug(std::string("My first msg\nMy second msg\nMy third msg"));
-        OCIO_CHECK_EQUAL(output, "[OpenColorIO Debug]: My first msg\n"\
-                                 "[OpenColorIO Debug]: My second msg\n"\
-                                 "[OpenColorIO Debug]: My third msg\n");
+        OCIO_CHECK_EQUAL(guard.output(), "[OpenColorIO Debug]: My first msg\n"\
+                                         "[OpenColorIO Debug]: My second msg\n"\
+                                         "[OpenColorIO Debug]: My third msg\n");
     }
 }

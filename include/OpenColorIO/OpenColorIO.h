@@ -138,10 +138,13 @@ OCIO_NAMESPACE_ENTER
     //!cpp:function:: Set the global logging level.
     extern OCIOEXPORT void SetLoggingLevel(LoggingLevel level);
 
-    //!cpp:function::
-    // Set the logging function to use; otherwise, use the default (i.e. std::cerr).
+    //!cpp:function:: Set the logging function to use; otherwise, use the default (i.e. std::cerr).
+    // Note that the logging mechanism is thread-safe.
     extern OCIOEXPORT void SetLoggingFunction(LoggingFunction logFunction);
+    //!cpp:function::
     extern OCIOEXPORT void ResetToDefaultLoggingFunction();
+    //!cpp:function:: Log a message using the library logging function.
+    extern OCIOEXPORT void LogMessage(LoggingLevel level, const char * message);
 
     //
     // Note that the following env. variable access methods are not thread safe.
@@ -629,12 +632,14 @@ OCIO_NAMESPACE_ENTER
         ColorSpaceRcPtr createEditableCopy() const;
         
         //!cpp:function::
-        const char * getName() const;
+        const char * getName() const noexcept;
         //!cpp:function::
         void setName(const char * name);
         
         //!cpp:function::Get the family, for use in user interfaces (optional)
-        const char * getFamily() const;
+        // The family string could use a '/' separator to indicate levels to be used
+        // by hierarchical menus.
+        const char * getFamily() const noexcept;
         //!cpp:function::Set the family, for use in user interfaces (optional)
         void setFamily(const char * family);
         
@@ -644,17 +649,17 @@ OCIO_NAMESPACE_ENTER
         // unique (i.e., it will not compare as equal to other ColorSpaces with an
         // empty equality group).  This is often, though not always, set to the
         // same value as 'family'.
-        const char * getEqualityGroup() const;
+        const char * getEqualityGroup() const noexcept;
         //!cpp:function::
         void setEqualityGroup(const char * equalityGroup);
         
         //!cpp:function::
-        const char * getDescription() const;
+        const char * getDescription() const noexcept;
         //!cpp:function::
         void setDescription(const char * description);
         
         //!cpp:function::
-        BitDepth getBitDepth() const;
+        BitDepth getBitDepth() const noexcept;
         //!cpp:function::
         void setBitDepth(BitDepth bitDepth);
 
