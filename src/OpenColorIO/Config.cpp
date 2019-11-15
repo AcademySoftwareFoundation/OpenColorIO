@@ -4394,7 +4394,7 @@ OCIO_ADD_TEST(Config, faulty_config_file)
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is),
                           OCIO::Exception,
-                          "Error: Loading the OCIO profile failed. yaml-cpp: error at line 0");
+                          "Error: Loading the OCIO profile failed.");
 }
 
 #endif // OCIO_UNIT_TEST
