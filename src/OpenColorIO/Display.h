@@ -9,9 +9,9 @@
 
 #include <string>
 #include <vector>
-#include <map>
 
 #include "PrivateTypes.h"
+
 
 OCIO_NAMESPACE_ENTER
 {
@@ -35,7 +35,11 @@ OCIO_NAMESPACE_ENTER
     };
     
     typedef std::vector<View> ViewVec;
-    typedef std::map<std::string, ViewVec> DisplayMap;  // (display name : ViewVec)
+
+    // In 0.6, the Yaml lib changed their implementation of a Yaml::Map from a C++ map 
+    // to a std::vector< std::pair<> >.   We made the same change here so that the Display list 
+    // can remain in config order but we left the "Map" in the name since it refers to a Yaml::Map.
+    typedef std::vector<std::pair<std::string, ViewVec>> DisplayMap;  // Pair is (display name : ViewVec)
     
     DisplayMap::iterator find_display(DisplayMap & displays, const std::string & display);
     

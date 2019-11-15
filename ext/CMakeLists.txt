@@ -11,7 +11,7 @@ find_package(Expat ${EXPAT_MIN_VERSION} REQUIRED)
 
 # yaml-cpp
 # https://github.com/jbeder/yaml-cpp
-set(YAMLCPP_MIN_VERSION 0.3.0)
+set(YAMLCPP_MIN_VERSION 0.6.3)
 find_package(YamlCpp ${YAMLCPP_MIN_VERSION} REQUIRED)
 
 # IlmBase (Half part only)
