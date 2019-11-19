@@ -227,8 +227,6 @@ OCIO_NAMESPACE_ENTER
         mutable StringMap cacheids_;
         mutable std::string cacheidnocontext_;
         
-        OCIOYaml io_;
-        
         Impl() : 
             majorVersion_(FirstSupportedMajorVersion_),
             minorVersion_(0),
@@ -335,10 +333,8 @@ OCIO_NAMESPACE_ENTER
     {
         std::istringstream istream;
         istream.str(INTERNAL_RAW_PROFILE);
-        
-        ConfigRcPtr config = Config::Create();
-        config->getImpl()->io_.open(istream, config);
-        return config;
+
+        return CreateFromStream(istream);
     }
 
     ConstConfigRcPtr Config::CreateFromEnv()
@@ -364,16 +360,16 @@ OCIO_NAMESPACE_ENTER
             os << "' OCIO profile.";
             throw Exception (os.str().c_str());
         }
-        
+
         ConfigRcPtr config = Config::Create();
-        config->getImpl()->io_.open(istream, config, filename);
+        OCIOYaml::read(istream, config, filename);
         return config;
     }
     
     ConstConfigRcPtr Config::CreateFromStream(std::istream & istream)
     {
         ConfigRcPtr config = Config::Create();
-        config->getImpl()->io_.open(istream, config);
+        OCIOYaml::read(istream, config, nullptr);
         return config;
     }
     
@@ -1624,7 +1620,7 @@ OCIO_NAMESPACE_ENTER
     {
         try
         {
-            getImpl()->io_.write(os, this);
+            OCIOYaml::write(os, this);
         }
         catch( const std::exception & e)
         {
