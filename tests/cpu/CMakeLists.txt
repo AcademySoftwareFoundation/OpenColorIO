@@ -181,6 +181,7 @@ set(TESTS
 	transforms/FileTransform_tests.cpp
 	transforms/RangeTransform_tests.cpp
 	UnitTest.cpp
+	UnitTestLogUtils.cpp
 	UnitTestUtils.cpp
 )
 

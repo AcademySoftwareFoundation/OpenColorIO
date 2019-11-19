@@ -2,8 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#ifndef INCLUDED_OCIO_GLSL_H_
-#define INCLUDED_OCIO_GLSL_H_
+#ifndef INCLUDED_OCIO_GLSL_H
+#define INCLUDED_OCIO_GLSL_H
 
 #include <vector>
 
@@ -101,8 +101,8 @@ protected:
 
 private:
     OpenGLBuilder();
-    OpenGLBuilder(const OpenGLBuilder&);
-    OpenGLBuilder& operator=(const OpenGLBuilder&);
+    OpenGLBuilder(const OpenGLBuilder &) = delete;
+    OpenGLBuilder& operator=(const OpenGLBuilder &) = delete;
 
     const GpuShaderDescRcPtr m_shaderDesc; // Description of the fragment shader to create
     unsigned m_startIndex;                 // Starting index for texture allocations
@@ -117,5 +117,5 @@ private:
 }
 OCIO_NAMESPACE_EXIT
 
-#endif // INCLUDED_OCIO_GLSL_H_
+#endif // INCLUDED_OCIO_GLSL_H
 

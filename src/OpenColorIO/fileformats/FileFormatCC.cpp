@@ -133,8 +133,8 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 #include "UnitTest.h"
+#include "UnitTestLogUtils.h"
 #include "UnitTestUtils.h"
-namespace OCIO = OCIO_NAMESPACE;
 
 namespace OCIO = OCIO_NAMESPACE;
 
