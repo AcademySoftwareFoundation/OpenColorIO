@@ -150,7 +150,7 @@ OCIO_NAMESPACE_ENTER
         return cs;
     }
     
-    const char * ColorSpace::getName() const
+    const char * ColorSpace::getName() const noexcept
     {
         return getImpl()->name_.c_str();
     }
@@ -159,7 +159,7 @@ OCIO_NAMESPACE_ENTER
     {
         getImpl()->name_ = name;
     }
-    const char * ColorSpace::getFamily() const
+    const char * ColorSpace::getFamily() const noexcept
     {
         return getImpl()->family_.c_str();
     }
@@ -169,7 +169,7 @@ OCIO_NAMESPACE_ENTER
         getImpl()->family_ = family;
     }
     
-    const char * ColorSpace::getEqualityGroup() const
+    const char * ColorSpace::getEqualityGroup() const noexcept
     {
         return getImpl()->equalityGroup_.c_str();
     }
@@ -179,7 +179,7 @@ OCIO_NAMESPACE_ENTER
         getImpl()->equalityGroup_ = equalityGroup;
     }
     
-    const char * ColorSpace::getDescription() const
+    const char * ColorSpace::getDescription() const noexcept
     {
         return getImpl()->description_.c_str();
     }
@@ -189,7 +189,7 @@ OCIO_NAMESPACE_ENTER
         getImpl()->description_ = description;
     }
     
-    BitDepth ColorSpace::getBitDepth() const
+    BitDepth ColorSpace::getBitDepth() const noexcept
     {
         return getImpl()->bitDepth_;
     }

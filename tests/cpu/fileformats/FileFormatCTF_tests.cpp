@@ -4,8 +4,13 @@
 #include "BitDepthUtils.h"
 #include "fileformats/FileFormatCTF.cpp"
 #include "UnitTest.h"
+#include "UnitTestLogUtils.h"
 #include "UnitTestUtils.h"
+
+
 namespace OCIO = OCIO_NAMESPACE;
+
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -737,42 +742,6 @@ OCIO_ADD_TEST(FileFormatCTF, check_utf8)
 
 }
 
-namespace
-{
-
-std::string output;
-
-// The custom logging function for testing.
-void CustomLoggingFunction(const char * message)
-{
-    output += message;
-}
-
-// Preserve the default log settings.
-class LogGuard
-{
-public:
-    LogGuard()
-    {
-        OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_DEBUG);
-        OCIO::SetLoggingFunction(CustomLoggingFunction);
-        output.clear();
-    }
-
-    ~LogGuard()
-    {
-        OCIO::ResetToDefaultLoggingFunction();
-        OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_DEFAULT);
-    }
-
-    LogGuard(const LogGuard &) = delete;
-    LogGuard & operator=(const LogGuard &) = delete;
-};
-
-
-}
-
-
 OCIO_ADD_TEST(FileFormatCTF, error_checker)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
@@ -785,7 +754,7 @@ OCIO_ADD_TEST(FileFormatCTF, error_checker)
             "[OpenColorIO Warning]: Ignore element 'A' (line 36) where its parent is 'Description' (line 36)"
         };
 
-        LogGuard guard;
+        OCIO::LogGuard guard;
 
         // NB: This file has some added unknown elements A, B, and C as a test.
         const std::string ctfFile("unknown_elements.clf");
@@ -793,7 +762,7 @@ OCIO_ADD_TEST(FileFormatCTF, error_checker)
         OCIO_REQUIRE_ASSERT((bool)cachedFile);
 
         OCIO::StringVec parts;
-        pystring::split(pystring::rstrip(output), parts, "\n");
+        pystring::split(pystring::rstrip(guard.output()), parts, "\n");
 
         OCIO_REQUIRE_EQUAL(parts.size(), 3);
 
@@ -937,14 +906,14 @@ OCIO_ADD_TEST(FileFormatCTF, error_checker_for_difficult_xml)
             "[OpenColorIO Warning]: Ignore element 'Array' (line 77) where its parent is 'Matrix' (line 75)"
         };
 
-        LogGuard guard;
+        OCIO::LogGuard guard;
 
         const std::string ctfFile("difficult_test1_v1.ctf");
         OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
         OCIO_REQUIRE_ASSERT((bool)cachedFile);
 
         OCIO::StringVec parts;
-        pystring::split(pystring::rstrip(output), parts, "\n");
+        pystring::split(pystring::rstrip(guard.output()), parts, "\n");
 
         OCIO_REQUIRE_EQUAL(parts.size(), 9);
 

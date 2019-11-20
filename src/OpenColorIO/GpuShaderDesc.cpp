@@ -7,6 +7,8 @@
 
 #include "GpuShader.h"
 #include "Mutex.h"
+#include "pystring/pystring.h"
+
 
 OCIO_NAMESPACE_ENTER
 {
@@ -84,8 +86,9 @@ OCIO_NAMESPACE_ENTER
     void GpuShaderDesc::setFunctionName(const char * name)
     {
         AutoMutex lock(getImpl()->cacheIDMutex_);
-        getImpl()->functionName_ = name;
-        getImpl()->cacheID_ = "";
+        // Note: Remove potentially problematic double underscores from GLSL resource names.
+        getImpl()->functionName_ = pystring::replace(name, "__", "_");
+        getImpl()->cacheID_      = "";
     }
     
     const char * GpuShaderDesc::getFunctionName() const
@@ -96,8 +99,9 @@ OCIO_NAMESPACE_ENTER
     void GpuShaderDesc::setResourcePrefix(const char * prefix)
     {
         AutoMutex lock(getImpl()->cacheIDMutex_);
-        getImpl()->resourcePrefix_ = prefix;
-        getImpl()->cacheID_    = "";
+        // Note: Remove potentially problematic double underscores from GLSL resource names.
+        getImpl()->resourcePrefix_ = pystring::replace(prefix, "__", "_");
+        getImpl()->cacheID_        = "";
     }
 
     const char * GpuShaderDesc::getResourcePrefix() const
@@ -108,7 +112,8 @@ OCIO_NAMESPACE_ENTER
     void GpuShaderDesc::setPixelName(const char * name)
     {
         AutoMutex lock(getImpl()->cacheIDMutex_);
-        getImpl()->pixelName_ = name;
+        // Note: Remove potentially problematic double underscores from GLSL resource names.
+        getImpl()->pixelName_ = pystring::replace(name, "__", "_");
         getImpl()->cacheID_   = "";
     }
 
