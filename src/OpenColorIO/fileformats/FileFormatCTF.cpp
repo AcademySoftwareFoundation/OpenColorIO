@@ -15,6 +15,9 @@
 #include "fileformats/xmlutils/XMLReaderHelper.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "fileformats/xmlutils/XMLWriterUtils.h"
+#include "ops/Lut1D/Lut1DOp.h"
+#include "ops/Lut3D/Lut3DOp.h"
+#include "ops/Range/RangeOps.h"
 #include "OpBuilders.h"
 #include "ops/NoOp/NoOps.h"
 #include "Platform.h"
@@ -124,6 +127,10 @@ public:
                       const FileTransform & fileTransform,
                       TransformDirection dir) const override;
 
+    void bake(const Baker & baker,
+              const std::string & formatName,
+              std::ostream & ostream) const override;
+
     void write(const OpRcPtrVec & ops,
                const FormatMetadataImpl & metadata,
                const std::string & formatName,
@@ -136,6 +143,7 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
     info.name = FILEFORMAT_CLF;
     info.extension = "clf";
     info.capabilities = FORMAT_CAPABILITY_READ |
+                        FORMAT_CAPABILITY_BAKE |
                         FORMAT_CAPABILITY_WRITE;
     formatInfoVec.push_back(info);
 
@@ -143,6 +151,7 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
     info2.name = FILEFORMAT_CTF;
     info2.extension = "ctf";
     info2.capabilities = FORMAT_CAPABILITY_READ |
+                         FORMAT_CAPABILITY_BAKE |
                          FORMAT_CAPABILITY_WRITE;
     formatInfoVec.push_back(info2);
 }
@@ -690,7 +699,7 @@ private:
                             pImpl->getXmLineNumber(),
                             pImpl->getXmlFilename()));
                 }
-                else if (SupportedElement(name, pElt, TAG_INPUT_DESCRIPTOR,
+                else if (SupportedElement(name, pElt, METADATA_INPUT_DESCRIPTOR,
                                           TAG_PROCESS_LIST, recognizedName))
                 {
                     pImpl->m_elms.push_back(
@@ -725,7 +734,7 @@ private:
                                 pImpl->getXmlFilename()));
                     }
                 }
-                else if (SupportedElement(name, pElt, TAG_OUTPUT_DESCRIPTOR,
+                else if (SupportedElement(name, pElt, METADATA_OUTPUT_DESCRIPTOR,
                     TAG_PROCESS_LIST, recognizedName))
                 {
                     pImpl->m_elms.push_back(
@@ -1133,6 +1142,271 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
             BuildOp(ops, config, context, opDataVec[idx], newDir);
         }
     }
+}
+
+// This baker is based on what was done for ResolveCube and HDL.  We enhanced
+// it to use a half-domain Lut1D for the shaper to better represent transforms
+// expecting linear inputs.
+// TODO: The CLF format is more powerful than those older formats and there is
+// no need to be limited to a Lut1D + Lut3D structure -- more ops could be used
+// when necessary for a more accurate bake.
+void LocalFileFormat::bake(const Baker & baker,
+                           const std::string & formatName,
+                           std::ostream & ostream) const
+{
+    constexpr int DEFAULT_1D_SIZE = 4096;
+    constexpr int DEFAULT_3D_SIZE = 64;
+
+    // NB: By default, the shaper uses a half-domain LUT1D, which is always 65536 entries.
+    // If the user requests some other size, a typical (non-half-domain) LUT1D will be used.
+    if (formatName != FILEFORMAT_CTF && formatName != FILEFORMAT_CLF)
+    {
+        std::ostringstream os;
+        os << "Unknown CLF/CTF file format name, '";
+        os << formatName << "'.";
+        throw Exception(os.str().c_str());
+    }
+
+    //
+    // Initialize config and data.
+    //
+
+    ConstConfigRcPtr config = baker.getConfig();
+
+    int onedSize = baker.getCubeSize();
+    if (onedSize == -1)
+    {
+        onedSize = DEFAULT_1D_SIZE;
+    }
+    else if (onedSize < 2)
+    {
+        std::ostringstream os;
+        os << "1D LUT size must be higher than 2 (was " << onedSize << ")";
+        throw Exception(os.str().c_str());
+    }
+
+    int cubeSize = baker.getCubeSize();
+    if (cubeSize == -1)
+    {
+        cubeSize = DEFAULT_3D_SIZE;
+    }
+    cubeSize = std::max(2, cubeSize); // smallest cube is 2x2x2
+
+    // Get spaces from baker.
+    const std::string shaperSpace = baker.getShaperSpace();
+    const std::string inputSpace = baker.getInputSpace();
+    const std::string targetSpace = baker.getTargetSpace();
+    const std::string looks = baker.getLooks();
+
+    //
+    // Determine required LUT type.
+    //
+
+    constexpr int CTF_1D = 1;    // 1D LUT version number
+    constexpr int CTF_3D = 2;    // 3D LUT version number
+    constexpr int CTF_1D_3D = 3; // 3D LUT with 1D prelut
+
+    ConstProcessorRcPtr inputToTargetProc;
+    if (!looks.empty())
+    {
+        LookTransformRcPtr transform = LookTransform::Create();
+        transform->setLooks(looks.c_str());
+        transform->setSrc(inputSpace.c_str());
+        transform->setDst(targetSpace.c_str());
+        inputToTargetProc = config->getProcessor(transform,
+                                                 TRANSFORM_DIR_FORWARD);
+    }
+    else
+    {
+        inputToTargetProc = config->getProcessor(inputSpace.c_str(),
+                                                 targetSpace.c_str());
+    }
+
+    int required_lut = -1;
+
+    if (inputToTargetProc->hasChannelCrosstalk())
+    {
+        if (shaperSpace.empty())
+        {
+            // Has crosstalk, but no shaper, so need 3D LUT.
+            required_lut = CTF_3D;
+        }
+        else
+        {
+            // Crosstalk with shaper-space.
+            required_lut = CTF_1D_3D;
+        }
+    }
+    else
+    {
+        // No crosstalk
+        required_lut = CTF_1D;
+    }
+
+    if (required_lut == -1)
+    {
+        // Unnecessary paranoia.
+        throw Exception("Internal logic error, LUT type was not determined");
+    }
+
+    //
+    // Generate Shaper.
+    //
+
+    Lut1DOpDataRcPtr shaperLut;
+    float fromInStart = 0.0f;
+    float fromInEnd = 1.0f;
+
+    if (required_lut == CTF_1D_3D)
+    {
+        auto inputToShaperProc = config->getProcessor(inputSpace.c_str(),
+                                                      shaperSpace.c_str());
+
+        if (inputToShaperProc->hasChannelCrosstalk())
+        {
+            // TODO: Automatically turn shaper into
+            // non-crosstalked version?
+            std::ostringstream os;
+            os << "The specified shaperSpace, '" << baker.getShaperSpace();
+            os << "' has channel crosstalk, which is not appropriate for";
+            os << " shapers. Please select an alternate shaper space or";
+            os << " omit this option.";
+            throw Exception(os.str().c_str());
+        }
+
+        const auto shaperSizeRequest = baker.getShaperSize();
+        if (shaperSizeRequest == -1)
+        {
+            // Generate the identity shaper values, then apply the transform.
+            // Using a half-domain to accurately handle floating-point, linear-space inputs.
+            shaperLut = std::make_shared<Lut1DOpData>(Lut1DOpData::LUT_INPUT_HALF_CODE, 65536);
+        }
+        else
+        {
+            // Calculate min/max value.
+            // Get input value of 1.0 in shaper space, as this is the higest value that is
+            // transformed by the cube (e.g for a generic lin-to-log transform, what the
+            // log value 1.0 is in linear).
+            ConstProcessorRcPtr proc = config->getProcessor(shaperSpace.c_str(),
+                                                            inputSpace.c_str());
+            ConstCPUProcessorRcPtr shaperToInputProc = proc->getDefaultCPUProcessor();
+
+            float minval[3] = { 0.0f, 0.0f, 0.0f };
+            float maxval[3] = { 1.0f, 1.0f, 1.0f };
+
+            shaperToInputProc->applyRGB(minval);
+            shaperToInputProc->applyRGB(maxval);
+
+            fromInStart = std::min(std::min(minval[0], minval[1]), minval[2]);
+            fromInEnd = std::max(std::max(maxval[0], maxval[1]), maxval[2]);
+
+            shaperLut = std::make_shared<Lut1DOpData>(shaperSizeRequest);
+
+            if (fromInStart != 0.f || fromInEnd != 1.0f)
+            {
+                for (int i = 0; i < shaperSizeRequest; ++i)
+                {
+                    const float x = (float)(double(i) / double(shaperSizeRequest - 1));
+                    float cur_value = lerpf(fromInStart, fromInEnd, x);
+
+                    shaperLut->getArray()[3 * i + 0] = cur_value;
+                    shaperLut->getArray()[3 * i + 1] = cur_value;
+                    shaperLut->getArray()[3 * i + 2] = cur_value;
+                }
+            }
+        }
+        const auto shaperSize = shaperLut->getArray().getLength();
+        PackedImageDesc shaperImg(shaperLut->getArray().getValues().data(),
+                                  shaperSize, 1, 3);
+        ConstCPUProcessorRcPtr cpu = inputToShaperProc->getDefaultCPUProcessor();
+        cpu->apply(shaperImg);
+    }
+
+    //
+    // Generate 3DLUT.
+    //
+
+    std::vector<float> cubeData;
+    if (required_lut == CTF_3D || required_lut == CTF_1D_3D)
+    {
+        cubeData.resize(cubeSize*cubeSize*cubeSize * 3);
+        GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_BLUE);
+        PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
+
+        ConstProcessorRcPtr cubeProc;
+        if (required_lut == CTF_1D_3D)
+        {
+            if (!looks.empty())
+            {
+                LookTransformRcPtr transform = LookTransform::Create();
+                transform->setLooks(looks.c_str());
+                transform->setSrc(shaperSpace.c_str());
+                transform->setDst(targetSpace.c_str());
+                cubeProc = config->getProcessor(transform,
+                                                TRANSFORM_DIR_FORWARD);
+            }
+            else
+            {
+                cubeProc = config->getProcessor(shaperSpace.c_str(),
+                    targetSpace.c_str());
+            }
+        }
+        else
+        {
+            // No shaper, so cube goes from input-to-target.
+            cubeProc = inputToTargetProc;
+        }
+
+        ConstCPUProcessorRcPtr cpu = cubeProc->getDefaultCPUProcessor();
+        cpu->apply(cubeImg);
+    }
+
+    //
+    // Generate 1DLUT
+    //
+
+    std::vector<float> onedData;
+    if (required_lut == CTF_1D)
+    {
+        onedData.resize(onedSize * 3);
+        GenerateIdentityLut1D(&onedData[0], onedSize, 3);
+        PackedImageDesc onedImg(&onedData[0], onedSize, 1, 3);
+
+        ConstCPUProcessorRcPtr cpu = inputToTargetProc->getDefaultCPUProcessor();
+        cpu->apply(onedImg);
+    }
+
+    //
+    // Write.
+    //
+
+    OpRcPtrVec ops;
+
+    // 1D data.
+    if (required_lut == CTF_1D)
+    {
+        Lut1DOpDataRcPtr lut1D = std::make_shared<Lut1DOpData>((unsigned long)onedSize);
+        lut1D->getArray().getValues() = onedData;
+        CreateLut1DOp(ops, lut1D, TRANSFORM_DIR_FORWARD);
+    }
+    else if (required_lut == CTF_1D_3D)
+    {
+        if (fromInStart != 0.f || fromInEnd != 1.0f)
+        {
+            CreateRangeOp(ops, fromInStart, fromInEnd, 0, 1, TRANSFORM_DIR_FORWARD);
+        }
+        CreateLut1DOp(ops, shaperLut, TRANSFORM_DIR_FORWARD);
+    }
+
+    // 3D data.
+    if (required_lut == CTF_3D || required_lut == CTF_1D_3D)
+    {
+        Lut3DOpDataRcPtr lut3D = std::make_shared<Lut3DOpData>((unsigned long)cubeSize);
+        lut3D->getArray().getValues() = cubeData;
+        CreateLut3DOp(ops, lut3D, TRANSFORM_DIR_FORWARD);
+    }
+
+    write(ops, baker.getFormatMetadata(), formatName, ostream);
 }
 
 void LocalFileFormat::write(const OpRcPtrVec & ops,

@@ -228,6 +228,7 @@ OCIO_NAMESPACE_ENTER
         return OCIO_DYNAMIC_POINTER_CAST<T,U>(ptr);
     }
 
+    //! cpp:type:: Define the logging function signature.
     using LoggingFunction = std::function<void(const char*)>;
 
     //!rst::
@@ -616,7 +617,65 @@ OCIO_NAMESPACE_ENTER
     //    this is a 1D HDR to LDR allocation. It is normally combined with
     //    another display transform in the host app for preview.
     extern OCIOEXPORT const char * ROLE_MATTE_PAINT;
-    
+
+    /*!rst::
+    FormatMetadata
+    **************
+
+    These constants describe various types of rich metadata. They are used with FormatMetadata
+    objects as the "name" part of a (name, value) pair. All of these types of metadata are
+    supported in the CLF/CTF file formats whereas other formats support some or none of them.
+
+    Although the string constants used here match those used in the CLF/CTF formats, the concepts
+    are generic, so the goal is for other file formats to reuse the same constants within a
+    FormatMetadata object (even if the syntax used in a given format is somewhat different).
+
+    */
+
+    //!rst::
+    // .. c:var:: const char * METADATA_DESCRIPTION
+    //    
+    //    A description string -- used as the "Description" element in CLF/CTF and CDL, and to
+    //    hold comments for other LUT formats when baking.
+    extern OCIOEXPORT const char * METADATA_DESCRIPTION;
+
+    //!rst::
+    // .. c:var:: const char * METADATA_INFO
+    //    
+    //    A block of informative metadata such as the "Info" element in CLF/CTF.
+    //    Usually contains child elements.
+    extern OCIOEXPORT const char * METADATA_INFO;
+
+    //!rst::
+    // .. c:var:: const char * METADATA_INPUT_DESCRIPTOR
+    //    
+    //    A string describing the expected input color space -- used as the "InputDescriptor"
+    //    element in CLF/CTF and the "InputDescription" in CDL.
+    extern OCIOEXPORT const char * METADATA_INPUT_DESCRIPTOR;
+
+    //!rst::
+    // .. c:var:: const char * METADATA_OUTPUT_DESCRIPTOR
+    //    
+    //    A string describing the output color space -- used as the "OutputDescriptor" element
+    //    in CLF/CTF and the "OutputDescription" in CDL.
+    extern OCIOEXPORT const char * METADATA_OUTPUT_DESCRIPTOR;
+
+    //!rst::
+    // .. c:var:: const char * METADATA_NAME
+    //    
+    //    A name string -- used as a "name" attribute in CLF/CTF elements.  Use on a GroupTransform
+    //    to get/set the name for the CLF/CTF ProcessList.  Use on an individual Transform
+    //    (i.e. MatrixTransform, etc.) to get/set the name of the corresponding process node.
+    extern OCIOEXPORT const char * METADATA_NAME;
+
+    //!rst::
+    // .. c:var:: const char * METADATA_ID
+    //    
+    //    An ID string -- used as an "id" attribute in CLF/CTF elements.  Use on a GroupTransform
+    //    to get/set the id for the CLF/CTF ProcessList.  Use on an individual Transform 
+    //    (i.e. MatrixTransform, etc.) to get/set the id of the corresponding process node.
+    extern OCIOEXPORT const char * METADATA_ID;
+
 }
 OCIO_NAMESPACE_EXIT
 

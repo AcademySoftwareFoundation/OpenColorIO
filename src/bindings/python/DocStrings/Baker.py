@@ -111,50 +111,6 @@ class Baker:
         """
         pass
 
-    def setType(self, type):
-        """
-        setType(type)
-
-        Set the LUT output type (1D or 3D).
-
-        :param type: type name (e.g. '3D')
-        :type type: string
-        """
-        pass
-
-    def getType(self):
-        """
-        getType()
-
-        Get the LUT output type.
-
-        :return: type name
-        :rtype: string
-        """
-        pass
-
-    def setMetadata(self, metadata):
-        """
-        setMetadata(metadata)
-
-        Set *optional* meta data for LUTs that support it.
-
-        :param metadata: meta data text
-        :type metadata: string
-        """
-        pass
-
-    def getMetadata(self):
-        """
-        getMetadata()
-
-        Get the meta data that has been set.
-
-        :return: meta data text
-        :rtype: string
-        """
-        pass
-
     def setInputSpace(self, inputSpace):
         """
         setInputSpace(inputSpace)

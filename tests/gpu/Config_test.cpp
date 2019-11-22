@@ -97,9 +97,6 @@ OCIO_ADD_GPU_TEST(Config, several_1D_luts_legacy_shader)
 
 OCIO_ADD_GPU_TEST(Config, several_1D_luts_generic_shader)
 {
-    // TODO: Would like to be able to remove the setTestNaN(false) and
-    // setTestInfinity(false) from all of these tests.
-    test.setTestNaN(false);
     std::string configStr = createConfig();
     configStr +=
         "        - !<FileTransform> {src: lut1d_1.spi1d, interpolation: linear}\n"
@@ -115,12 +112,14 @@ OCIO_ADD_GPU_TEST(Config, several_1D_luts_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
     test.setContextProcessor(processor, shaderDesc);
     test.setErrorThreshold(defaultErrorThreshold);
+
+    // TODO: Would like to be able to remove the setTestNaN(false) and
+    // setTestInfinity(false) from all of these tests.
+    test.setTestNaN(false);
 }
 
 OCIO_ADD_GPU_TEST(Config, arbitrary_generic_shader)
 {
-    test.setTestNaN(false);
-    test.setTestInfinity(false);
     std::string configStr = createConfig();
     configStr +=
         "        - !<FileTransform> {src: lut1d_1.spi1d, interpolation: linear}\n"
@@ -145,13 +144,16 @@ OCIO_ADD_GPU_TEST(Config, arbitrary_generic_shader)
     shaderDesc->setFunctionName("another_func_name");
 
     test.setContextProcessor(processor, shaderDesc);
+
     // TODO: To be investigated when the new LUT 1D OpData will be in
     test.setErrorThreshold(5e-3f);
+
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(Config, several_luts_generic_shader)
 {
-    test.setTestNaN(false);
     std::string configStr = createConfig();
     configStr +=
         "        - !<FileTransform> {src: lut1d_1.spi1d, interpolation: linear}\n"
@@ -170,9 +172,55 @@ OCIO_ADD_GPU_TEST(Config, several_luts_generic_shader)
 
     OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "lgh");
 
-    // Change some default values...
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContextProcessor(processor, shaderDesc);
     test.setErrorThreshold(defaultErrorThreshold);
+
+    test.setTestNaN(false);
+}
+
+OCIO_ADD_GPU_TEST(Config, with_underscores)
+{
+    // The unit tests validates that there will be no double underscores for
+    // GPU resource names as it's forbidden by GLSL.
+
+    std::string configStr = createConfig();
+    configStr +=
+        "        - !<LogTransform> {base: 10}\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: __lgh__\n"
+        "    family: \"\"\n"
+        "    equalitygroup: \"\"\n"
+        "    bitdepth: unknown\n"
+        "    isdata: false\n"
+        "    allocation: uniform\n"
+        "    allocationvars: [0, 1]\n"
+        "    from_reference: !<GroupTransform>\n"
+        "      children:\n"
+        "        - !<MatrixTransform> {matrix: [0.075573, 0.022197,  0.00223,  0, "\
+                                               "0.005901, 0.096928, -0.002829, 0, "\
+                                               "0.016134, 0.007406,  0.07646,  0, "\
+                                               "0,        0,         0,        1]}\n"
+        "        - !<FileTransform> {src: lut1d_3.spi1d, interpolation: linear}\n";
+
+    std::istringstream is;
+    is.str(configStr);
+
+    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromStream(is);
+    config->sanityCheck();
+
+    OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "__lgh__");
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+    shaderDesc->setResourcePrefix("ocio___");
+    shaderDesc->setPixelName("another_pixel_name__");
+    shaderDesc->setFunctionName("__another_func_name____");
+
+    test.setContextProcessor(processor, shaderDesc);
+    test.setErrorThreshold(defaultErrorThreshold);
+
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
 }

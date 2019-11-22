@@ -55,7 +55,9 @@ OCIO_ADD_TEST(FileFormat3DL, bake)
 
     OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     baker->setConfig(config);
-    baker->setMetadata("MetaData not written");
+    // TODO: Add support for comments in the writer.
+    baker->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION,
+                                               "MetaData not written");
     baker->setFormat("flame");
     baker->setInputSpace("lnf");
     baker->setTargetSpace("target");

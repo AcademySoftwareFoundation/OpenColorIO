@@ -2,8 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#ifndef INCLUDED_OCIO_OIIO_HELPERS_H_
-#define INCLUDED_OCIO_OIIO_HELPERS_H_
+#ifndef INCLUDED_OCIO_OIIO_HELPERS_H
+#define INCLUDED_OCIO_OIIO_HELPERS_H
 
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -53,5 +53,5 @@ ImageDescRcPtr CreateImageDesc(const OIIO::ImageSpec & spec, const ImgBuffer & i
 }
 OCIO_NAMESPACE_EXIT
 
-#endif // INCLUDED_OCIO_OIIO_HELPERS_H_
+#endif // INCLUDED_OCIO_OIIO_HELPERS_H
 

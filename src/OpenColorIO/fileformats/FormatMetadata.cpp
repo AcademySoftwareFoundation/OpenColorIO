@@ -12,6 +12,16 @@
 OCIO_NAMESPACE_ENTER
 {
 
+// CLF XML elements described in S-2014-006.
+const char * METADATA_DESCRIPTION = "Description";
+const char * METADATA_INFO = "Info";
+const char * METADATA_INPUT_DESCRIPTOR = "InputDescriptor";
+const char * METADATA_OUTPUT_DESCRIPTOR = "OutputDescriptor";
+
+// NAME and ID are CLF XML attributes described in S-2014-006.
+const char * METADATA_NAME = "name";
+const char * METADATA_ID = "id";
+
 FormatMetadata::FormatMetadata()
 {
 }
@@ -313,7 +323,6 @@ FormatMetadata & FormatMetadataImpl::addChildElement(const char * name, const ch
 void FormatMetadataImpl::clear()
 {
     m_attributes.clear();
-    m_name = "";
     m_value = "";
     m_elements.clear();
 }
@@ -460,7 +469,7 @@ OCIO_ADD_TEST(FormatMetadataImpl, test_accessors)
     // Do similar tests using only FormatMetadata public API interface.
     //
     info.clear();
-    OCIO_REQUIRE_EQUAL(std::string(info.getName()), "");
+    OCIO_REQUIRE_EQUAL(std::string(info.getName()), "Info");
     OCIO_REQUIRE_EQUAL(std::string(info.getValue()), "");
     OCIO_REQUIRE_EQUAL(info.getNumAttributes(), 0);
     OCIO_REQUIRE_EQUAL(info.getNumChildrenElements(), 0);
@@ -488,7 +497,7 @@ OCIO_ADD_TEST(FormatMetadataImpl, test_accessors)
     OCIO_CHECK_EQUAL(std::string(info1.getName()), "Release");
     OCIO_CHECK_EQUAL(std::string(info1.getValue()), "2015");
 
-    auto & icInfo = info.addChildElement("InputColorSpace", "" );
+    auto & icInfo = info.addChildElement("InputColorSpace", "");
     OCIO_REQUIRE_EQUAL(info.getNumChildrenElements(), 3);
     // 2 elements can have the same name.
     icInfo.addChildElement(OCIO::METADATA_DESCRIPTION, "Input color space description");

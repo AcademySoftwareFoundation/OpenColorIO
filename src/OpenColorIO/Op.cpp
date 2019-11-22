@@ -732,6 +732,7 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
     }
 }
 
+
 OCIO_ADD_TEST(CreateOpVecFromOpDataVec, basic)
 {
     OCIO::ConstOpDataVec opDataVec;

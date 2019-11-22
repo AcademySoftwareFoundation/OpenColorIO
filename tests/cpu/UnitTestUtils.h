@@ -4,13 +4,13 @@
 #ifndef INCLUDED_OCIO_UNITTESTUTILS_H
 #define INCLUDED_OCIO_UNITTESTUTILS_H
 
-#ifdef OCIO_UNIT_TEST
 
 #include <fstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 #include "Op.h"
 #include "pystring/pystring.h"
+
 
 OCIO_NAMESPACE_ENTER
 {
@@ -62,16 +62,6 @@ OCIO_SHARED_PTR<LocalCachedFile> LoadTestFile(
     return DynamicPtrCast<LocalCachedFile>(cachedFile);
 }
 
-// Utility to mute the logging mechanism so the unit test output is clean.
-class MuteLogging
-{
-public:
-    MuteLogging();
-    MuteLogging(const MuteLogging &) = delete;
-    MuteLogging & operator=(const MuteLogging &) = delete;
-    ~MuteLogging();
-};
-
 inline void OptimizeOpVec(OpRcPtrVec & ops)
 {
     OptimizeOpVec(ops, BIT_DEPTH_F32, BIT_DEPTH_F32, OPTIMIZATION_DEFAULT);
@@ -86,7 +76,5 @@ inline void OptimizeFinalizeOpVec(OpRcPtrVec & ops)
 }
 OCIO_NAMESPACE_EXIT
 
-
-#endif // OCIO_UNIT_TEST
 
 #endif // INCLUDED_OCIO_UNITTESTUTILS_H
