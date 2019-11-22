@@ -156,6 +156,10 @@ threads)::
 
     $ make -j8
 
+Starting with CMake 3.12, you can instead run a portable parallel build::
+
+    $ cmake --build . -j 8
+
 This should complete in a few minutes. Finally, install the files into
 the specified location::
 

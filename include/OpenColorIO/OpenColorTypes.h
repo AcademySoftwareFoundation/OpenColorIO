@@ -228,6 +228,7 @@ OCIO_NAMESPACE_ENTER
         return OCIO_DYNAMIC_POINTER_CAST<T,U>(ptr);
     }
 
+    //! cpp:type:: Define the logging function signature.
     using LoggingFunction = std::function<void(const char*)>;
 
     //!rst::
