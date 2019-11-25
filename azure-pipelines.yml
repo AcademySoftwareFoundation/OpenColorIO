@@ -96,7 +96,6 @@ jobs:
 # ----------------------------------
 # Latest dependency tags (cron only)
 # ----------------------------------
-# TODO: Set yaml-cpp to "latest" when 0.6.x is supported
 
 - job: Latest
   strategy:
@@ -119,7 +118,7 @@ jobs:
   - bash: |
       share/ci/scripts/linux/install_expat.sh latest
       share/ci/scripts/linux/install_lcms2.sh latest
-      share/ci/scripts/linux/install_yaml-cpp.sh 0.3.0
+      share/ci/scripts/linux/install_yaml-cpp.sh latest
       share/ci/scripts/linux/install_pystring.sh latest
       share/ci/scripts/linux/install_openexr.sh latest
       share/ci/scripts/linux/install_oiio.sh latest

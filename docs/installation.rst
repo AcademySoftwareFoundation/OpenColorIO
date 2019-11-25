@@ -57,7 +57,7 @@ The basic requirements for building OCIO are:
 
 - cmake >= 3.10
 - \*Expat >= 2.2.5 (XML parser for CDL/CLF/CTF)
-- \*yaml-cpp >= 0.3.0 (YAML parser for Configs)
+- \*yaml-cpp >= 0.6.3 (YAML parser for Configs)
 - \*IlmBase (Half only) >= 2.3.0 (for half domain LUTs)
 - \*pystring >= 1.1.3
 
