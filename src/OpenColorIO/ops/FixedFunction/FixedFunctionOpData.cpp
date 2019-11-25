@@ -345,8 +345,6 @@ FixedFunctionOpDataRcPtr FixedFunctionOpData::inverse() const
 
 bool FixedFunctionOpData::operator==(const OpData & other) const
 {
-    if (this == &other) return true;
-
     if (!OpData::operator==(other)) return false;
 
     const FixedFunctionOpData* fop = static_cast<const FixedFunctionOpData*>(&other);

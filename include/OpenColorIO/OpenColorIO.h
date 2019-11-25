@@ -1019,8 +1019,7 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::        
         ConstGPUProcessorRcPtr getDefaultGPUProcessor() const;
         //!cpp:function::        
-        ConstGPUProcessorRcPtr getOptimizedGPUProcessor(OptimizationFlags oFlags, 
-                                                        FinalizationFlags fFlags) const;
+        ConstGPUProcessorRcPtr getOptimizedGPUProcessor(OptimizationFlags oFlags) const;
         
         ///////////////////////////////////////////////////////////////////////////
         //!rst::
@@ -1056,13 +1055,11 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::        
         ConstCPUProcessorRcPtr getDefaultCPUProcessor() const;
         //!cpp:function::        
-        ConstCPUProcessorRcPtr getOptimizedCPUProcessor(OptimizationFlags oFlags, 
-                                                        FinalizationFlags fFlags) const;
+        ConstCPUProcessorRcPtr getOptimizedCPUProcessor(OptimizationFlags oFlags) const;
         //!cpp:function::        
         ConstCPUProcessorRcPtr getOptimizedCPUProcessor(BitDepth inBitDepth,
                                                         BitDepth outBitDepth,
-                                                        OptimizationFlags oFlags, 
-                                                        FinalizationFlags fFlags) const;
+                                                        OptimizationFlags oFlags) const;
 
     private:
         Processor();

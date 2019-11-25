@@ -94,11 +94,13 @@ struct AddTest
 /// error occurred, but does abort.  This is helpful for unit tests
 /// where we have to fail as following code would be not testable.
 /// 
-#define OCIO_CHECK_ASSERT(x)                                            \
+#define OCIO_CHECK_ASSERT_FROM(x, line)                                 \
     ((x) ? ((void)0)                                                    \
-         : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"          \
+         : ((std::cout << __FILE__ << ":" << line << ":\n"              \
                        << "FAILED: " << FIELD_STR(x) << "\n"),          \
             (void)++unit_test_failures))
+
+#define OCIO_CHECK_ASSERT(x) OCIO_CHECK_ASSERT_FROM(x, __LINE__)
 
 #define OCIO_REQUIRE_ASSERT_FROM(x, line)                               \
     if(!(x)) {                                                          \

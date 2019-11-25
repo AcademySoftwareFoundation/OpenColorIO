@@ -168,6 +168,7 @@ public:
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
     void replaceDynamicProperty(DynamicPropertyType type,
                                 DynamicPropertyImplRcPtr prop);
+    void removeDynamicProperties();
 
     ExposureContrastOpData & operator=(const ExposureContrastOpData & rhs);
 

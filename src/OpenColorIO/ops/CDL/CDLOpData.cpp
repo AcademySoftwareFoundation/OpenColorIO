@@ -115,8 +115,6 @@ CDLOpDataRcPtr CDLOpData::clone() const
 
 bool CDLOpData::operator==(const OpData& other) const
 {
-    if (this == &other) return true;
-
     if (!OpData::operator==(other)) return false;
 
     const CDLOpData* cdl = static_cast<const CDLOpData*>(&other);
@@ -257,7 +255,6 @@ OpDataRcPtr CDLOpData::getIdentityReplacement() const
             break;
         }
     }
-    op->getFormatMetadata() = getFormatMetadata();
     return op;
 }
 
@@ -332,6 +329,8 @@ std::string CDLOpData::GetChannelParametersString(ChannelParams params)
 
 bool CDLOpData::isInverse(ConstCDLOpDataRcPtr & r) const
 {
+    // TODO: We are not detecting the case where you have two transforms with the same direction
+    // but the parameters are inverses, e.g. offset of 0.1 and then -0.1
     return *r == *inverse();
 }
 

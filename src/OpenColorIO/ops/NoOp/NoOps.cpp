@@ -31,8 +31,6 @@ OCIO_NAMESPACE_ENTER
 
             virtual ~AllocationNoOp() {}
 
-            TransformDirection getDirection() const noexcept override { return TRANSFORM_DIR_FORWARD; }
-
             OpRcPtr clone() const override;
 
             std::string getInfo() const override { return "<AllocationNoOp>"; }
@@ -41,7 +39,7 @@ OCIO_NAMESPACE_ENTER
             bool isSameType(ConstOpRcPtr & op) const override;
             bool isInverse(ConstOpRcPtr & op) const override;
 
-            void finalize(FinalizationFlags /*fFlags*/) override { }
+            void finalize(OptimizationFlags /*oFlags*/) override { }
 
             ConstOpCPURcPtr getCPUOp() const override { return nullptr; }
 
@@ -313,8 +311,6 @@ OCIO_NAMESPACE_ENTER
 
             virtual ~FileNoOp() {}
 
-            TransformDirection getDirection() const noexcept override { return TRANSFORM_DIR_FORWARD; }
-
             OpRcPtr clone() const override;
 
             std::string getInfo() const override { return "<FileNoOp>"; }
@@ -324,7 +320,7 @@ OCIO_NAMESPACE_ENTER
             bool isInverse(ConstOpRcPtr & op) const override;
             void dumpMetadata(ProcessorMetadataRcPtr & metadata) const override;
 
-            void finalize(FinalizationFlags /*fFlags*/) override {}
+            void finalize(OptimizationFlags /*oFlags*/) override {}
 
             ConstOpCPURcPtr getCPUOp() const override { return nullptr; }
 
@@ -397,8 +393,6 @@ OCIO_NAMESPACE_ENTER
 
             virtual ~LookNoOp() {}
 
-            TransformDirection getDirection() const noexcept override { return TRANSFORM_DIR_FORWARD; }
-
             OpRcPtr clone() const override;
 
             std::string getInfo() const override { return "<LookNoOp>"; }
@@ -408,7 +402,7 @@ OCIO_NAMESPACE_ENTER
             bool isInverse(ConstOpRcPtr & op) const override;
             void dumpMetadata(ProcessorMetadataRcPtr & metadata) const override;
 
-            void finalize(FinalizationFlags /*fFlags*/) override {}
+            void finalize(OptimizationFlags /*oFlags*/) override {}
 
             ConstOpCPURcPtr getCPUOp() const override { return nullptr; }
 

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="none" version="1.3">
+
+    <Description>The inner antiLog/matrix/Log should become an identity</Description>
+    <Description>allowing the outer pair to compose into a range</Description>
+
+    <Log inBitDepth="16f" outBitDepth="12i" style="linToLog">
+        <LogParams gamma="0.600000" highlight="1.000000" refBlack=" 95.00" refWhite="685.00" shadow="0.000000" />
+    </Log>
+
+    <Log inBitDepth="12i" outBitDepth="16f" style="antiLog10">
+    </Log>
+
+    <Matrix inBitDepth="16f" outBitDepth="32f">
+        <Array dim="4 4 4">
+1 0 0 0
+0 1 0 0
+0 0 1 0
+0 0 0 1
+        </Array>
+    </Matrix>
+
+    <Log inBitDepth="32f" outBitDepth="10i" style="log10">
+    </Log>
+
+    <Log inBitDepth="10i" outBitDepth="32f" style="logToLin">
+        <LogParams gamma="0.600000" highlight="1.000000" refBlack=" 95.00" refWhite="685.00" shadow="0.000000" />
+    </Log>
+
+</ProcessList>

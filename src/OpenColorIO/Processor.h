@@ -54,21 +54,18 @@ OCIO_NAMESPACE_ENTER
         ConstGPUProcessorRcPtr getDefaultGPUProcessor() const;
 
         // Get an optimized GPU processor instance for F32 images.
-        ConstGPUProcessorRcPtr getOptimizedGPUProcessor(OptimizationFlags oFlags, 
-                                                        FinalizationFlags fFlags) const;
+        ConstGPUProcessorRcPtr getOptimizedGPUProcessor(OptimizationFlags oFlags) const;
 
         // Get an optimized CPU processor instance for F32 images with default optimizations.
         ConstCPUProcessorRcPtr getDefaultCPUProcessor() const;
 
         // Get an optimized CPU processor instance for F32 images.
-        ConstCPUProcessorRcPtr getOptimizedCPUProcessor(OptimizationFlags oFlags,
-                                                        FinalizationFlags fFlags) const;
+        ConstCPUProcessorRcPtr getOptimizedCPUProcessor(OptimizationFlags oFlags) const;
 
         // Get a optimized CPU processor instance for arbitrary input and output bit-depths.
         ConstCPUProcessorRcPtr getOptimizedCPUProcessor(BitDepth inBitDepth,
                                                         BitDepth outBitDepth,
-                                                        OptimizationFlags oFlags,
-                                                        FinalizationFlags fFlags) const;
+                                                        OptimizationFlags oFlags) const;
 
         ////////////////////////////////////////////
         //

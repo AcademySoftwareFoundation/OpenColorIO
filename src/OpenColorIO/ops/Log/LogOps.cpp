@@ -30,7 +30,7 @@ OCIO_NAMESPACE_ENTER
 
             virtual ~LogOp();
             
-            TransformDirection getDirection() const noexcept override { return logData()->getDirection(); }
+            TransformDirection getDirection() const noexcept { return logData()->getDirection(); }
 
             OpRcPtr clone() const override;
             
@@ -38,7 +38,7 @@ OCIO_NAMESPACE_ENTER
             
             bool isSameType(ConstOpRcPtr & op) const override;
             bool isInverse(ConstOpRcPtr & op) const override;
-            void finalize(FinalizationFlags fFlags) override;
+            void finalize(OptimizationFlags oFlags) override;
 
             ConstOpCPURcPtr getCPUOp() const override;
             
@@ -91,7 +91,7 @@ OCIO_NAMESPACE_ENTER
             return logData()->isInverse(logOpData);
         }
         
-        void LogOp::finalize(FinalizationFlags /*fFlags*/)
+        void LogOp::finalize(OptimizationFlags /*oFlags*/)
         {
             logData()->finalize();
 
@@ -398,7 +398,7 @@ OCIO_ADD_TEST(LogOps, inverse)
         data[i] = result[i];
     }
     
-    ops[0]->finalize(OCIO::FINALIZATION_EXACT);
+    ops[0]->finalize(OCIO::OPTIMIZATION_NONE);
     ops[0]->apply(data, 3);
     // Note: Skip testing alpha channels.
     OCIO_CHECK_NE( data[0], result[0] );
@@ -411,7 +411,7 @@ OCIO_ADD_TEST(LogOps, inverse)
     OCIO_CHECK_NE( data[9], result[9] );
     OCIO_CHECK_NE( data[10], result[10] );
 
-    ops[1]->finalize(OCIO::FINALIZATION_EXACT);
+    ops[1]->finalize(OCIO::OPTIMIZATION_NONE);
     ops[1]->apply(data, 3);
 
 #ifndef USE_SSE

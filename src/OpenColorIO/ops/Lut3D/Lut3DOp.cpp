@@ -164,16 +164,16 @@ namespace
         explicit Lut3DOp(Lut3DOpDataRcPtr & data);
         virtual ~Lut3DOp();
 
-        TransformDirection getDirection() const noexcept override { return lut3DData()->getDirection(); }
-
         OpRcPtr clone() const override;
 
         std::string getInfo() const override;
 
         bool isSameType(ConstOpRcPtr & op) const override;
         bool isInverse(ConstOpRcPtr & op) const override;
+        bool canCombineWith(ConstOpRcPtr & op) const override;
+        void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
         bool hasChannelCrosstalk() const override;
-        void finalize(FinalizationFlags fFlags) override;
+        void finalize(OptimizationFlags oFlags) override;
 
         ConstOpCPURcPtr getCPUOp() const override;
 
@@ -224,8 +224,7 @@ namespace
 
     bool Lut3DOp::isSameType(ConstOpRcPtr & op) const
     {
-        ConstLut3DOpRcPtr lutRcPtr = DynamicPtrCast<const Lut3DOp>(op);
-        return (bool)lutRcPtr;
+        return op->data()->getType() == OpData::Lut3DType;
     }
 
     bool Lut3DOp::isInverse(ConstOpRcPtr & op) const
@@ -240,17 +239,53 @@ namespace
         return false;
     }
 
+    bool Lut3DOp::canCombineWith(ConstOpRcPtr & op) const
+    {
+        if (isSameType(op))
+        {
+            if (lut3DData()->getDirection() == TRANSFORM_DIR_FORWARD)
+            {
+                ConstLut3DOpRcPtr typedRcPtr = DynamicPtrCast<const Lut3DOp>(op);
+                if (typedRcPtr->lut3DData()->getDirection() == TRANSFORM_DIR_FORWARD)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+
+        // TODO: Anything following the LUT 3D could be combined into it.  Just need to be careful
+        // about causing the interpolation to become worse.
+        // TODO: drop a clampIdentity Range after an Inverse LUT.
+    }
+
+    void Lut3DOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
+    {
+        if (!canCombineWith(secondOp))
+        {
+            throw Exception("Lut3DOp: canCombineWith must be checked before calling combineWith.");
+        }
+        ConstLut3DOpRcPtr typedRcPtr = DynamicPtrCast<const Lut3DOp>(secondOp);
+        auto thisLut = lut3DData()->clone();
+        auto secondLut = typedRcPtr->lut3DData();
+        Lut3DOpData::Compose(thisLut, secondLut);
+        auto composedOp = std::make_shared<Lut3DOp>(thisLut);
+        ops.push_back(composedOp);
+    }
+
     bool Lut3DOp::hasChannelCrosstalk() const
     {
         return lut3DData()->hasChannelCrosstalk();
     }
 
-    void Lut3DOp::finalize(FinalizationFlags fFlags)
+    void Lut3DOp::finalize(OptimizationFlags oFlags)
     {
         Lut3DOpDataRcPtr lutData = lut3DData();
 
+        const bool invLutFast = (oFlags & OPTIMIZATION_LUT_INV_FAST) ==
+                                OPTIMIZATION_LUT_INV_FAST;
         lutData->setInversionQuality(
-            fFlags==FINALIZATION_FAST ? LUT_INVERSION_FAST: LUT_INVERSION_EXACT);
+            invLutFast ? LUT_INVERSION_FAST: LUT_INVERSION_EXACT);
 
         lutData->finalize();
 
@@ -276,6 +311,10 @@ namespace
             // TODO: Add GPU renderer for EXACT mode.
 
             Lut3DOpDataRcPtr tmp = MakeFastLut3DFromInverse(lutData);
+            if (!tmp)
+            {
+                throw Exception("Cannot apply Lut3DOp, inversion failed.");
+            }
 
             tmp->finalize();
 
@@ -532,8 +571,8 @@ OCIO_ADD_TEST(Lut3DOpData, create_op)
                                       OCIO::TRANSFORM_DIR_INVERSE));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
 
-    // Inverse is fine
-    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
+    // Inverse is fine.
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
     ops.clear();
 
     // Only valid direction.
@@ -556,7 +595,7 @@ OCIO_ADD_TEST(Lut3DOp, cache_id)
 
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
 
     const std::string cacheID = ops[0]->getCacheID();
     OCIO_CHECK_ASSERT(!cacheID.empty());
@@ -658,8 +697,8 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_lut3d)
 
     OCIO::Lut3DOp lut(lutData);
 
-    OCIO_CHECK_NO_THROW(lut.finalize(OCIO::FINALIZATION_EXACT));
-    OCIO_CHECK_ASSERT(lutData->isIdentity());
+    OCIO_CHECK_NO_THROW(lut.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_ASSERT(!lutData->isIdentity());
     OCIO_CHECK_ASSERT(!lut.isNoOp());
 
     // Use an input value exactly at a grid point so the output value is 
@@ -687,7 +726,7 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_lut3d)
     const float arbitraryVal = 0.123456f;
     lutData->getArray()[5] = arbitraryVal;
 
-    OCIO_CHECK_NO_THROW(lut.finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(lut.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_CHECK_ASSERT(!lutData->isIdentity());
     OCIO_CHECK_ASSERT(!lut.isNoOp());
 
@@ -707,7 +746,7 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_lut3d)
 
     // Change interpolation.
     lutData->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
-    OCIO_CHECK_NO_THROW(lut.finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(lut.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_CHECK_ASSERT(!lutData->isIdentity());
     OCIO_CHECK_ASSERT(!lut.isNoOp());
     myImage[6] = step;
@@ -741,7 +780,7 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_cloned)
     OCIO_CHECK_EQUAL(lutData->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
 
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_FAST));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
 
     OCIO_REQUIRE_EQUAL(1, ops.size());
 
@@ -773,15 +812,15 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_cloned)
     memcpy(bufferImageClone2, inImage, 12 * sizeof(float));
 
     // Apply the forward LUT.
-    OCIO_CHECK_NO_THROW(fwdLut->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(fwdLut->finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_CHECK_NO_THROW(fwdLut->apply(bufferImage, 3));
 
     // Apply the cloned forward LUT.
-    OCIO_CHECK_NO_THROW(fwdLutCloned.finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(fwdLutCloned.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_CHECK_NO_THROW(fwdLutCloned.apply(bufferImageClone, 3));
 
     // Apply the cloned cloned forward LUT.
-    OCIO_CHECK_NO_THROW(fwdLutClonedCloned->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(fwdLutClonedCloned->finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_CHECK_NO_THROW(fwdLutClonedCloned->apply(bufferImageClone2, 3));
 
     // Validate that the cloned op produces the exact same results.
@@ -803,7 +842,8 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_inverse)
                                      OCIO::TRANSFORM_DIR_FORWARD));
 
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_FAST));
+    // Exact LUT inversion.
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
 
     auto op0 = OCIO::DynamicPtrCast<const OCIO::Lut3DOp>(ops[0]);
     OCIO_REQUIRE_ASSERT(op0);
@@ -815,13 +855,6 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_inverse)
 
     OCIO::Lut3DOp fwdLut(fwdLutDataCloned);
 
-    OCIO::Lut3DOpDataRcPtr invLutData = fwdLutDataCloned->inverse();
-    OCIO::Lut3DOp invLut(invLutData);
-
-    // Default Inversion quality should be 'FAST' but we test the 'EXACT' first.
-    OCIO_CHECK_EQUAL(invLutData->getInversionQuality(), OCIO::LUT_INVERSION_FAST);
-    invLutData->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
-
     const float inImage[] = {
         0.1f, 0.25f, 0.7f, 0.f,
         0.66f, 0.25f, 0.81f, 0.5f,
@@ -832,19 +865,23 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_inverse)
     memcpy(bufferImage, inImage, 12 * sizeof(float));
 
     // Apply forward LUT.
-    OCIO_CHECK_NO_THROW(fwdLut.finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(fwdLut.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_CHECK_NO_THROW(fwdLut.apply(bufferImage, 3));
 
     //
     // Step 1: Test that forward and inverse ops are producing
-    //         the right results in FAST mode.
+    //         the right results in EXACT mode.
     //
 
     float outImage1[12];
     memcpy(outImage1, bufferImage, 12 * sizeof(float));
 
+    OCIO::Lut3DOpDataRcPtr invLutData = fwdLutDataCloned->inverse();
+    OCIO::Lut3DOp invLut(invLutData);
+
     // Apply inverse LUT.
-    OCIO_CHECK_NO_THROW(invLut.finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(invLut.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_EQUAL(invLutData->getInversionQuality(), OCIO::LUT_INVERSION_EXACT);
     OCIO_CHECK_NO_THROW(invLut.apply(bufferImage, 3));
 
     // Need to do another foward apply.  This is due to precision issues.
@@ -862,13 +899,14 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_inverse)
         OCIO_CHECK_CLOSE(outImage1[i], bufferImage[i], errorThreshold);
     }
 
-    memcpy(bufferImage, outImage1, 12 * sizeof(float));
-
     //
     // Step 2: Repeat with inversion quality FAST, apply inverse LUT.
     //
 
-    OCIO_CHECK_NO_THROW(invLut.finalize(OCIO::FINALIZATION_FAST));
+    memcpy(bufferImage, outImage1, 12 * sizeof(float));
+
+    OCIO_CHECK_NO_THROW(invLut.finalize(OCIO::OPTIMIZATION_LUT_INV_FAST));
+    OCIO_CHECK_EQUAL(invLutData->getInversionQuality(), OCIO::LUT_INVERSION_FAST);
     OCIO_CHECK_NO_THROW(invLut.apply(bufferImage, 3));
 
     OCIO_CHECK_NO_THROW(fwdLut.apply(bufferImage, 3));
@@ -890,7 +928,7 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_inverse)
 
     bufferImage[0] = 100.f;
 
-    OCIO_CHECK_NO_THROW(invLut.finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(invLut.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_CHECK_NO_THROW(invLut.apply(bufferImage, 1));
 
     // This tests that extreme large values get inverted.
@@ -907,7 +945,9 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_lut3d_with_nan)
     OCIO_CHECK_NO_THROW(BuildOpsTest(ops, fileName, context,
                                      OCIO::TRANSFORM_DIR_FORWARD));
 
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
+    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
+                                            OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(1, ops.size());
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO_CHECK_EQUAL(op0->data()->getType(), OCIO::OpData::Lut3DType);
@@ -1031,6 +1071,5 @@ OCIO_ADD_TEST(LUT3DTransform, build_op)
 // TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT3D_Green
 // TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT3D_Red
 // TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT3D_Example
-// TODO: Port syncolor test: renderer\test\transformTools_test.cpp   - lut3d_composition
 
 #endif // OCIO_UNIT_TEST

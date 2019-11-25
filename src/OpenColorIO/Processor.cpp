@@ -204,10 +204,9 @@ OCIO_NAMESPACE_ENTER
         return getImpl()->getDefaultGPUProcessor();
     }
 
-    ConstGPUProcessorRcPtr Processor::getOptimizedGPUProcessor(OptimizationFlags oFlags, 
-                                                               FinalizationFlags fFlags) const
+    ConstGPUProcessorRcPtr Processor::getOptimizedGPUProcessor(OptimizationFlags oFlags) const
     {
-        return getImpl()->getOptimizedGPUProcessor(oFlags, fFlags);
+        return getImpl()->getOptimizedGPUProcessor(oFlags);
     }
 
     ConstCPUProcessorRcPtr Processor::getDefaultCPUProcessor() const
@@ -215,18 +214,16 @@ OCIO_NAMESPACE_ENTER
         return getImpl()->getDefaultCPUProcessor();
     }
 
-    ConstCPUProcessorRcPtr Processor::getOptimizedCPUProcessor(OptimizationFlags oFlags,
-                                                               FinalizationFlags fFlags) const
+    ConstCPUProcessorRcPtr Processor::getOptimizedCPUProcessor(OptimizationFlags oFlags) const
     {
-        return getImpl()->getOptimizedCPUProcessor(oFlags, fFlags);
+        return getImpl()->getOptimizedCPUProcessor(oFlags);
     }
 
     ConstCPUProcessorRcPtr Processor::getOptimizedCPUProcessor(BitDepth inBitDepth, 
                                                                BitDepth outBitDepth,
-                                                               OptimizationFlags oFlags,
-                                                               FinalizationFlags fFlags) const
+                                                               OptimizationFlags oFlags) const
     {
-        return getImpl()->getOptimizedCPUProcessor(inBitDepth, outBitDepth, oFlags, fFlags);
+        return getImpl()->getOptimizedCPUProcessor(inBitDepth, outBitDepth, oFlags);
     }
 
     
@@ -374,18 +371,16 @@ OCIO_NAMESPACE_ENTER
     {
         GPUProcessorRcPtr gpu = GPUProcessorRcPtr(new GPUProcessor(), &GPUProcessor::deleter);
 
-        gpu->getImpl()->finalize(m_ops, 
-                                 OPTIMIZATION_DEFAULT, FINALIZATION_DEFAULT);
+        gpu->getImpl()->finalize(m_ops, OPTIMIZATION_DEFAULT);
 
         return gpu;
     }
 
-    ConstGPUProcessorRcPtr Processor::Impl::getOptimizedGPUProcessor(OptimizationFlags oFlags,
-                                                                     FinalizationFlags fFlags) const
+    ConstGPUProcessorRcPtr Processor::Impl::getOptimizedGPUProcessor(OptimizationFlags oFlags) const
     {
         GPUProcessorRcPtr gpu = GPUProcessorRcPtr(new GPUProcessor(), &GPUProcessor::deleter);
 
-        gpu->getImpl()->finalize(m_ops, oFlags, fFlags);
+        gpu->getImpl()->finalize(m_ops, oFlags);
 
         return gpu;
     }
@@ -398,31 +393,29 @@ OCIO_NAMESPACE_ENTER
 
         cpu->getImpl()->finalize(m_ops, 
                                  BIT_DEPTH_F32, BIT_DEPTH_F32, 
-                                 OPTIMIZATION_DEFAULT, FINALIZATION_DEFAULT);
+                                 OPTIMIZATION_DEFAULT);
 
         return cpu;
     }
 
-    ConstCPUProcessorRcPtr Processor::Impl::getOptimizedCPUProcessor(OptimizationFlags oFlags,
-                                                                     FinalizationFlags fFlags) const
+    ConstCPUProcessorRcPtr Processor::Impl::getOptimizedCPUProcessor(OptimizationFlags oFlags) const
     {
         CPUProcessorRcPtr cpu = CPUProcessorRcPtr(new CPUProcessor(), &CPUProcessor::deleter);
 
         cpu->getImpl()->finalize(m_ops,
                                  BIT_DEPTH_F32, BIT_DEPTH_F32,
-                                 oFlags, fFlags);
+                                 oFlags);
 
         return cpu;
     }
 
     ConstCPUProcessorRcPtr Processor::Impl::getOptimizedCPUProcessor(BitDepth inBitDepth, 
                                                                      BitDepth outBitDepth,
-                                                                     OptimizationFlags oFlags,
-                                                                     FinalizationFlags fFlags) const
+                                                                     OptimizationFlags oFlags) const
     {
         CPUProcessorRcPtr cpu = CPUProcessorRcPtr(new CPUProcessor(), &CPUProcessor::deleter);
 
-        cpu->getImpl()->finalize(m_ops, inBitDepth, outBitDepth, oFlags, fFlags);
+        cpu->getImpl()->finalize(m_ops, inBitDepth, outBitDepth, oFlags);
 
         return cpu;
     }
@@ -441,7 +434,7 @@ OCIO_NAMESPACE_ENTER
             throw Exception("Internal error: Processor should be empty");
         }
         BuildColorSpaceOps(m_ops, config, context, srcColorSpace, dstColorSpace);
-        FinalizeOpVec(m_ops, FINALIZATION_EXACT);
+        FinalizeOpVec(m_ops, OPTIMIZATION_NONE);
         UnifyDynamicProperties(m_ops);
     }
     
@@ -456,7 +449,7 @@ OCIO_NAMESPACE_ENTER
         }
         transform->validate();
         BuildOps(m_ops, config, context, transform, direction);
-        FinalizeOpVec(m_ops, FINALIZATION_EXACT);
+        FinalizeOpVec(m_ops, OPTIMIZATION_NONE);
         UnifyDynamicProperties(m_ops);
     }
 

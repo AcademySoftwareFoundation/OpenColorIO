@@ -628,38 +628,6 @@ const char * BitDepthToCLFString(BitDepth bitDepth)
     throw Exception("Bitdepth has been validated before calling this.");
 }
 
-const char * GetTypeName(OpData::Type type)
-{
-    static_assert(OpData::NoOpType == 11, "Need to handle new type here");
-    switch (type)
-    {
-    case OpData::CDLType:
-        return "CDL";
-    case OpData::ExponentType:
-        return "Exponent";
-    case OpData::ExposureContrastType:
-        return "ExposureContrast";
-    case OpData::FixedFunctionType:
-        return "FixedFunction";
-    case OpData::GammaType:
-        return "Gamma";
-    case OpData::LogType:
-        return "Log";
-    case OpData::Lut1DType:
-        return "LUT1D";
-    case OpData::Lut3DType:
-        return "LUT3D";
-    case OpData::MatrixType:
-        return "Matrix";
-    case OpData::RangeType:
-        return "Range";
-    case OpData::ReferenceType:
-    case OpData::NoOpType:
-        break;
-    }
-    throw Exception("Unexpected op type.");
-}
-
 BitDepth GetValidatedFileBitDepth(BitDepth bd, OpData::Type type)
 {
     // If we get BIT_DEPTH_UNKNOWN here, it means the client has not

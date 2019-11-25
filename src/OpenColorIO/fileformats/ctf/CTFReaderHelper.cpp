@@ -3017,21 +3017,23 @@ const OpDataRcPtr CTFReaderMatrixElt::getOp() const
 
 ArrayBase * CTFReaderMatrixElt::updateDimension(const Dimensions & dims)
 {
+    // Only 3 3 3 and 4 4 3 are handled here (ctf version 1.2 or less).
+    // Other formats are covered by CTFReaderMatrixElt_1_3::updateDimension.
     if (dims.size() != 3)
     {
         return nullptr;
     }
 
-    const size_t max = (dims.empty() ? 0 : (dims.size() - 1));
-    const unsigned numColorComponents = dims[max];
+    const unsigned int numColorComponents = dims[2];
+    const unsigned int size = dims[0];
 
-    if (dims[0] != dims[1] || dims[2] != 3)
+    if (size != dims[1] || numColorComponents != 3)
     {
         return nullptr;
     }
 
     ArrayDouble * pArray = &m_matrix->getArray();
-    pArray->resize(dims[0], numColorComponents);
+    pArray->resize(size, numColorComponents);
 
     return pArray;
 }
@@ -3048,29 +3050,10 @@ void CTFReaderMatrixElt::endArray(unsigned int position)
         throw Exception(arg.str().c_str());
     }
 
-    // Extract offsets.
-
-    const ArrayDouble::Values & values = array.getValues();
-
-    if (array.getLength() == 4)
-    {
-        m_matrix->setOffsetValue(0, values[3]);
-        m_matrix->setOffsetValue(1, values[7]);
-        m_matrix->setOffsetValue(2, values[11]);
-
-        m_matrix->setArrayValue(3, 0.0f);
-        m_matrix->setArrayValue(7, 0.0f);
-        m_matrix->setArrayValue(11, 0.0f);
-        m_matrix->setArrayValue(15, 1.0f);
-    }
-
     // Array parsing is done.
-
     setCompleted(true);
 
     convert_1_2_to_Latest();
-
-    array.validate();
 }
 
 void CTFReaderMatrixElt::convert_1_2_to_Latest()
@@ -3081,15 +3064,19 @@ void CTFReaderMatrixElt::convert_1_2_to_Latest()
 
         if (array.getLength() == 3)
         {
-            const float offsets[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+            const double offsets[4] = { 0.0, 0.0, 0.0, 0.0 };
             m_matrix->setRGBAOffsets(offsets);
         }
         else if (array.getLength() == 4)
         {
-            m_matrix->setOffsetValue(3, 0.0f);
-
             array = m_matrix->getArray();
             ArrayDouble::Values oldV = array.getValues();
+
+            // Extract offsets.
+            m_matrix->setOffsetValue(0, oldV[3]);
+            m_matrix->setOffsetValue(1, oldV[7]);
+            m_matrix->setOffsetValue(2, oldV[11]);
+            m_matrix->setOffsetValue(3, 0.0);
 
             array.resize(3, 3);
 
@@ -3106,7 +3093,7 @@ void CTFReaderMatrixElt::convert_1_2_to_Latest()
             v[7] = oldV[9];
             v[8] = oldV[10];
         }
-        else if (array.getLength() != 4)
+        else
         {
             std::ostringstream arg;
             arg << "MatrixElt: Expecting array dimension to be 3 or 4. Got: ";
@@ -3202,7 +3189,7 @@ void CTFReaderMatrixElt_1_3::endArray(unsigned int position)
 
             MatrixOpDataRcPtr & pMatrix = getMatrix();
 
-            const float offsets[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+            const double offsets[4] = { 0., 0., 0., 0. };
             pMatrix->setRGBAOffsets(offsets);
         }
     }
@@ -3249,8 +3236,6 @@ void CTFReaderMatrixElt_1_3::endArray(unsigned int position)
     // Array parsing is done.
 
     setCompleted(true);
-
-    array.validate();
 }
 
 //////////////////////////////////////////////////////////
@@ -3269,10 +3254,10 @@ void CTFReaderRangeElt::end()
 {
     CTFReaderOpElt::end();
 
-    m_range->scale(1.0 / GetBitDepthMaxValue(m_inBitDepth), 1.0 / GetBitDepthMaxValue(m_outBitDepth));
-
     m_range->setFileInputBitDepth(m_inBitDepth);
     m_range->setFileOutputBitDepth(m_outBitDepth);
+
+    m_range->normalize();
 
     // Validate the end result.
     m_range->validate();

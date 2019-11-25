@@ -36,16 +36,16 @@ OCIO_NAMESPACE_ENTER
             explicit Lut1DOp(Lut1DOpDataRcPtr & lutData);
             virtual ~Lut1DOp();
 
-            TransformDirection getDirection() const noexcept override { return lut1DData()->getDirection(); }
-
             OpRcPtr clone() const override;
 
             std::string getInfo() const override;
 
             bool isSameType(ConstOpRcPtr & op) const override;
             bool isInverse(ConstOpRcPtr & op) const override;
+            bool canCombineWith(ConstOpRcPtr & op) const override;
+            void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
             bool hasChannelCrosstalk() const override;
-            void finalize(FinalizationFlags fFlags) override;
+            void finalize(OptimizationFlags oFlags) override;
 
             ConstOpCPURcPtr getCPUOp() const override;
 
@@ -94,17 +94,50 @@ OCIO_NAMESPACE_ENTER
             return false;
         }
 
+        bool Lut1DOp::canCombineWith(ConstOpRcPtr & op) const
+        {
+            ConstLut1DOpRcPtr typedRcPtr = DynamicPtrCast<const Lut1DOp>(op);
+            if (typedRcPtr)
+            {
+                ConstLut1DOpDataRcPtr lutData = typedRcPtr->lut1DData();
+                return lut1DData()->mayCompose(lutData);
+            }
+
+            // TODO: drop a clampIdentity Range after an Inverse LUT.
+            return false;
+        }
+
+        void Lut1DOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
+        {
+            if (!canCombineWith(secondOp))
+            {
+                throw Exception("Lut1DOp: canCombineWith must be checked "
+                                "before calling combineWith.");
+            }
+            ConstLut1DOpRcPtr typedRcPtr = DynamicPtrCast<const Lut1DOp>(secondOp);
+            auto thisLut = lut1DData()->clone();
+            auto secondLut = typedRcPtr->lut1DData();
+
+            // We want compose to upsample the LUTs to minimize precision loss.
+            const auto compFlag = Lut1DOpData::COMPOSE_RESAMPLE_BIG;
+            Lut1DOpData::Compose(thisLut, secondLut, compFlag);
+            auto composedOp = std::make_shared<Lut1DOp>(thisLut);
+            ops.push_back(composedOp);
+        }
+
         bool Lut1DOp::hasChannelCrosstalk() const
         {
             return lut1DData()->hasChannelCrosstalk();
         }
 
-        void Lut1DOp::finalize(FinalizationFlags fFlags)
+        void Lut1DOp::finalize(OptimizationFlags oFlags)
         {
             Lut1DOpDataRcPtr lutData = lut1DData();
 
+            const bool invLutFast = (oFlags & OPTIMIZATION_LUT_INV_FAST) ==
+                                    OPTIMIZATION_LUT_INV_FAST;
             lutData->setInversionQuality(
-                fFlags==FINALIZATION_FAST ? LUT_INVERSION_FAST: LUT_INVERSION_EXACT);
+                invLutFast ? LUT_INVERSION_FAST: LUT_INVERSION_EXACT);
 
             lutData->finalize();
 
@@ -130,20 +163,18 @@ OCIO_NAMESPACE_ENTER
             {
                 // TODO: Add GPU renderer for EXACT mode.
 
-                Lut1DOpDataRcPtr newLut = Lut1DOpData::MakeFastLut1DFromInverse(lutData, true);
-                if (!newLut)
+                Lut1DOpDataRcPtr tmp = Lut1DOpData::MakeFastLut1DFromInverse(lutData, true);
+                if (!tmp)
                 {
                     throw Exception("Cannot apply Lut1DOp, inversion failed.");
                 }
 
-                Lut1DOp invLut(newLut);
-                invLut.finalize(FINALIZATION_EXACT);
-                invLut.extractGpuShaderInfo(shaderDesc);
+                tmp->finalize();
+                
+                lutData = tmp;
             }
-            else
-            {
-                GetLut1DGPUShaderProgram(shaderDesc, lutData);
-            }
+
+            GetLut1DGPUShaderProgram(shaderDesc, lutData);
         }
     }
 
@@ -350,7 +381,7 @@ OCIO_ADD_TEST(Lut1DOp, inverse)
     OCIO_CHECK_NO_THROW(CreateLut1DOp(ops, lutc, OCIO::TRANSFORM_DIR_INVERSE));
 
     OCIO_REQUIRE_EQUAL(ops.size(), 6);
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
 
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO::ConstOpRcPtr op1 = ops[1];
@@ -381,10 +412,11 @@ OCIO_ADD_TEST(Lut1DOp, inverse)
     OCIO_CHECK_NE(ops[1]->getCacheID(), ops[4]->getCacheID());
     OCIO_CHECK_NE(ops[1]->getCacheID(), ops[5]->getCacheID());
 
-    // Optimize will remove LUT forward and inverse (0+1, 2+3 and 4+5).
-    // Clamping is lost.
+    // Optimize will remove LUT forward and inverse (0+1, 2+3 and 4+5)
+    // and replace them by a clamping range.
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
-    OCIO_CHECK_EQUAL(ops.size(), 0);
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<RangeOp>");
 }
 
 OCIO::Lut1DOpDataRcPtr CreateSquareLut()
@@ -416,8 +448,8 @@ OCIO_ADD_TEST(Lut1DOp, finite_value)
     OCIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut, OCIO::TRANSFORM_DIR_INVERSE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
-    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::OPTIMIZATION_NONE));
 
     float inputBuffer_linearforward[4] = { 0.5f, 0.6f, 0.7f, 0.5f };
     const float outputBuffer_linearforward[4] = { 0.25f, 0.36f, 0.49f, 0.5f };
@@ -480,7 +512,7 @@ OCIO_ADD_TEST(Lut1DRenderer, finite_value_hue_adjust)
     lutData->setHueAdjust(OCIO::HUE_DW3);
     OCIO::Lut1DOp lut(lutData);
 
-    OCIO_CHECK_NO_THROW(lut.finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(lut.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_CHECK_ASSERT(!lut.isIdentity());
 
     const float outputBuffer_linearforward[4] = { 0.25f,
@@ -489,7 +521,7 @@ OCIO_ADD_TEST(Lut1DRenderer, finite_value_hue_adjust)
                                                   0.5f };
     float lut1d_inputBuffer_linearforward[4] = { 0.5f, 0.6f, 0.7f, 0.5f };
 
-    OCIO_CHECK_NO_THROW(lut.finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(lut.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_CHECK_NO_THROW(lut.apply(lut1d_inputBuffer_linearforward, 1));
     for (int i = 0; i <4; ++i)
     {
@@ -499,7 +531,7 @@ OCIO_ADD_TEST(Lut1DRenderer, finite_value_hue_adjust)
 
     OCIO::Lut1DOpDataRcPtr invData = lutData->inverse();
     OCIO::Lut1DOpDataRcPtr invDataExact = invData->clone();
-    invDataExact->setInversionQuality(OCIO::LUT_INVERSION_BEST);
+    invDataExact->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
 
     OCIO::OpRcPtrVec ops;
     OCIO_CHECK_NO_THROW(
@@ -513,8 +545,8 @@ OCIO_ADD_TEST(Lut1DRenderer, finite_value_hue_adjust)
     float lut1d_outputBuffer_linearinverse[4] = { 0.25f, 0.37f, 0.49f, 0.5f };
     float lut1d_outputBuffer_linearinverseEx[4] = { 0.25f, 0.37f, 0.49f, 0.5f };
 
-    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
-    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_CHECK_NO_THROW(ops[0]->apply(lut1d_outputBuffer_linearinverse, 1)); // fast
     OCIO_CHECK_NO_THROW(ops[1]->apply(lut1d_outputBuffer_linearinverseEx, 1)); // exact
     for (int i = 0; i <4; ++i)
@@ -577,6 +609,49 @@ OCIO_ADD_TEST(Lut1D, lut_1d_compose_with_bit_depth)
     }
 }
 
+OCIO_ADD_TEST(Lut1DOpData, compose_only_forward)
+{
+    OCIO::Lut1DOpDataRcPtr l1 = CreateSquareLut();
+
+    OCIO::OpRcPtrVec ops;
+    OCIO_CHECK_NO_THROW(CreateLut1DOp(ops, l1, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(CreateLut1DOp(ops, l1, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(CreateLut1DOp(ops, l1, OCIO::TRANSFORM_DIR_INVERSE));
+    OCIO_CHECK_NO_THROW(CreateLut1DOp(ops, l1, OCIO::TRANSFORM_DIR_INVERSE));
+
+    OCIO_REQUIRE_EQUAL(ops.size(), 4);
+    OCIO::ConstOpRcPtr l1f = ops[1];
+    OCIO::ConstOpRcPtr l1b = ops[3];
+    OCIO_CHECK_ASSERT(ops[0]->canCombineWith(l1f));
+    OCIO_CHECK_ASSERT(!ops[2]->canCombineWith(l1b));
+    OCIO_CHECK_ASSERT(!ops[0]->canCombineWith(l1b));
+    OCIO_CHECK_ASSERT(!ops[2]->canCombineWith(l1f));
+}
+
+OCIO_ADD_TEST(Lut1D, compose_big_domain)
+{
+    auto lut1 = std::make_shared<OCIO::Lut1DOpData>(10);
+    auto lut2 = std::make_shared<OCIO::Lut1DOpData>(10);
+    lut1->getArray()[9 * 3] = 1.0001f;
+
+    OCIO::OpRcPtrVec ops;
+    OCIO::CreateLut1DOp(ops, lut1, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateLut1DOp(ops, lut2, OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OCIO::ConstOpRcPtr op1 = ops[1];
+    op0->combineWith(ops, op1);
+    OCIO_REQUIRE_EQUAL(ops.size(), 3);
+
+    OCIO::ConstOpRcPtr op2 = ops[2];
+    auto lut = OCIO::DynamicPtrCast<const OCIO::Lut1DOpData>(op2->data());
+    OCIO_REQUIRE_ASSERT(lut);
+    OCIO_CHECK_EQUAL(lut->getArray().getLength(), 65536);
+    OCIO_CHECK_ASSERT(!lut->isInputHalfDomain());
+}
+
 OCIO_ADD_TEST(Lut1D, inverse_twice)
 {
     // Make a LUT that squares the input.
@@ -592,7 +667,7 @@ OCIO_ADD_TEST(Lut1D, inverse_twice)
     const float lut1d_inputBuffer_reference[4] = { 0.25f, 0.36f, 0.49f, 0.5f };
     float lut1d_inputBuffer_linearinverse[4] = { 0.25f, 0.36f, 0.49f, 0.5f };
 
-    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_CHECK_NO_THROW(ops[0]->apply(lut1d_inputBuffer_linearinverse, 1));
     for (int i = 0; i < 4; ++i)
     {
@@ -609,7 +684,7 @@ OCIO_ADD_TEST(Lut1D, inverse_twice)
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
     // Apply the inverse.
-    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_CHECK_NO_THROW(ops[1]->apply(lut1d_inputBuffer_linearinverse, 1));
 
     // Verify we are back on the input.

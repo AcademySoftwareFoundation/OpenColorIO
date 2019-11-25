@@ -32,8 +32,6 @@ public:
 
     virtual ~FixedFunctionOp();
 
-    TransformDirection getDirection() const noexcept override { return TRANSFORM_DIR_FORWARD; }
-
     OpRcPtr clone() const override;
 
     std::string getInfo() const override;
@@ -44,7 +42,7 @@ public:
     bool canCombineWith(ConstOpRcPtr & op) const override;
     void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
 
-    void finalize(FinalizationFlags fFlags) override;
+    void finalize(OptimizationFlags oFlags) override;
 
     ConstOpCPURcPtr getCPUOp() const override;
 
@@ -106,11 +104,12 @@ void FixedFunctionOp::combineWith(OpRcPtrVec & /*ops*/, ConstOpRcPtr & secondOp)
 {
     if(!canCombineWith(secondOp))
     {
-        throw Exception("FixedFunction can't be combined.");
+        throw Exception("FixedFunctionOp: canCombineWith must be checked "
+                        "before calling combineWith.");
     }
 }
 
-void FixedFunctionOp::finalize(FinalizationFlags /*fFlags*/)
+void FixedFunctionOp::finalize(OptimizationFlags /*oFlags*/)
 {
     fnData()->finalize();
 
@@ -277,7 +276,7 @@ OCIO_ADD_TEST(FixedFunctionOps, glow03_cpu_engine)
         = std::make_shared<OCIO::FixedFunctionOpData>(data, style);
 
     OCIO::FixedFunctionOp func(funcData);
-    OCIO_CHECK_NO_THROW(func.finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(func.finalize(OCIO::OPTIMIZATION_NONE));
 
     OCIO::ConstOpCPURcPtr cpuOp = func.getCPUOp();
     const OCIO::OpCPU & c = *cpuOp;
@@ -296,7 +295,7 @@ OCIO_ADD_TEST(FixedFunctionOps, darktodim10_cpu_engine)
         = std::make_shared<OCIO::FixedFunctionOpData>(data, style);
 
     OCIO::FixedFunctionOp func(funcData);
-    OCIO_CHECK_NO_THROW(func.finalize(OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(func.finalize(OCIO::OPTIMIZATION_NONE));
 
     OCIO::ConstOpCPURcPtr cpuOp = func.getCPUOp();
     const OCIO::OpCPU & c = *cpuOp;
@@ -314,7 +313,7 @@ OCIO_ADD_TEST(FixedFunctionOps, aces_red_mod_inv)
     OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, 
                                                     OCIO::FixedFunctionOpData::ACES_RED_MOD_03_FWD));
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
     OCIO::ConstOpRcPtr op0 = ops[0];
@@ -338,7 +337,7 @@ OCIO_ADD_TEST(FixedFunctionOps, aces_glow_inv)
     OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, 
                                                     OCIO::FixedFunctionOpData::ACES_GLOW_03_FWD));
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
     OCIO::ConstOpRcPtr op0 = ops[0];
@@ -362,7 +361,7 @@ OCIO_ADD_TEST(FixedFunctionOps, aces_darktodim10_inv)
     OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, 
                                                     OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD));
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
     OCIO::ConstOpRcPtr op0 = ops[0];
@@ -386,7 +385,7 @@ OCIO_ADD_TEST(FixedFunctionOps, rec2100_surround_inv)
     OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, { 1. / 2. }, 
                                                     OCIO::FixedFunctionOpData::REC2100_SURROUND));
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
     {
         OCIO::ConstOpRcPtr op0 = ops[0];
@@ -402,7 +401,7 @@ OCIO_ADD_TEST(FixedFunctionOps, rec2100_surround_inv)
     OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, { 2.01 }, 
                                                     OCIO::FixedFunctionOpData::REC2100_SURROUND));
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
     {
         OCIO::ConstOpRcPtr op0 = ops[0];

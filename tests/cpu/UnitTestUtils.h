@@ -64,13 +64,13 @@ OCIO_SHARED_PTR<LocalCachedFile> LoadTestFile(
 
 inline void OptimizeOpVec(OpRcPtrVec & ops)
 {
-    OptimizeOpVec(ops, BIT_DEPTH_F32, OPTIMIZATION_DEFAULT);
+    OptimizeOpVec(ops, BIT_DEPTH_F32, BIT_DEPTH_F32, OPTIMIZATION_DEFAULT);
 }
 
 inline void OptimizeFinalizeOpVec(OpRcPtrVec & ops)
 {
-    OptimizeOpVec(ops, BIT_DEPTH_F32, OPTIMIZATION_DEFAULT);
-    FinalizeOpVec(ops, FINALIZATION_EXACT);
+    OptimizeOpVec(ops, BIT_DEPTH_F32, BIT_DEPTH_F32, OPTIMIZATION_DEFAULT);
+    FinalizeOpVec(ops, OPTIMIZATION_NONE);
 }
 
 }

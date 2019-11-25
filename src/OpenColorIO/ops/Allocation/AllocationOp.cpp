@@ -156,9 +156,7 @@ OCIO_ADD_TEST(AllocationOps, Create)
     ops.clear();
     OCIO_CHECK_NO_THROW(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_INVERSE));
-    OCIO_REQUIRE_EQUAL(ops.size(), 1);
-    OCIO::ConstOpRcPtr op0 = ops[0];
-    OCIO_CHECK_EQUAL(forwardFitOp->isInverse(op0), true);
+    OCIO_CHECK_EQUAL(ops.size(), 1);
     ops.clear();
 
     allocData.allocation = ALLOCATION_LG2;
@@ -221,9 +219,7 @@ OCIO_ADD_TEST(AllocationOps, Create)
     OCIO_CHECK_NO_THROW(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_INVERSE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    op0 = ops[0];
     op1 = ops[1];
-    OCIO_CHECK_EQUAL(defaultFitOp->isInverse(op0), true);
     OCIO_CHECK_EQUAL(defaultLogOp->isInverse(op1), true);
 
     ops.clear();
@@ -242,7 +238,7 @@ OCIO_ADD_TEST(AllocationOps, Create)
     // Identity is removed.
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
-    op0 = ops[0];
+    OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO_CHECK_EQUAL(defaultLogOp->isSameType(op0), true);
     ops.clear();
     OCIO_CHECK_NO_THROW(
@@ -266,7 +262,7 @@ OCIO_ADD_TEST(AllocationOps, Create)
     OCIO_CHECK_EQUAL(ops.size(), 2);
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
-    ops[0]->finalize(OCIO::FINALIZATION_EXACT);
+    ops[0]->finalize(OCIO::OPTIMIZATION_NONE);
 
     memcpy(tmp, &src[0], 4 * NB_PIXELS * sizeof(float));
 

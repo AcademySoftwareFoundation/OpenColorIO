@@ -207,7 +207,7 @@ OCIO_ADD_TEST(DynamicProperty, get_dynamic_via_processor)
     OCIO_CHECK_CLOSE(pixel[1], 0.43988f, error);
     OCIO_CHECK_CLOSE(pixel[2], 0.19147f, error);
 
-    OCIO::DynamicPropertyType dpt = OCIO::DYNAMIC_PROPERTY_EXPOSURE;
+    const OCIO::DynamicPropertyType dpt = OCIO::DYNAMIC_PROPERTY_EXPOSURE;
     OCIO::DynamicPropertyRcPtr dp;
     OCIO_CHECK_NO_THROW(dp = cpuProcessor->getDynamicProperty(dpt));
     const double fileValue = dp->getDoubleValue();
@@ -239,6 +239,29 @@ OCIO_ADD_TEST(DynamicProperty, get_dynamic_via_processor)
     OCIO_CHECK_THROW_WHAT(cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA),
                           OCIO::Exception,
                           "Cannot find dynamic property");
+
+    // Get optimized CPU processor without dynamic properties.
+    OCIO_CHECK_NO_THROW(cpuProcessor = processor->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_ALL));
+
+    // Now the dynamic property can't be found.
+    OCIO_CHECK_THROW_WHAT(cpuProcessor->getDynamicProperty(dpt),
+                          OCIO::Exception,
+                          "Cannot find dynamic property");
+
+    // Using GPUProcessor.
+    OCIO::ConstGPUProcessorRcPtr gpuProcessor;
+
+    // Default optimization keeps dynamic properties.
+    OCIO_CHECK_NO_THROW(gpuProcessor = processor->getDefaultGPUProcessor());
+    OCIO_CHECK_NO_THROW(dp = gpuProcessor->getDynamicProperty(dpt));
+    OCIO_CHECK_ASSERT(dp);
+
+    // Get optimized GPU processor without dynamic properties.
+    OCIO_CHECK_NO_THROW(gpuProcessor = processor->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_ALL));
+    OCIO_CHECK_THROW_WHAT(gpuProcessor->getDynamicProperty(dpt),
+                          OCIO::Exception,
+                          "Cannot find dynamic property");
+
 }
 
 

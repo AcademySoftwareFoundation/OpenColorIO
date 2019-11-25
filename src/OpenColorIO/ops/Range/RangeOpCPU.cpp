@@ -7,8 +7,8 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "MathUtils.h"
+#include "ops/Matrix/MatrixOpCPU.h"
 #include "ops/Range/RangeOpCPU.h"
-
 
 OCIO_NAMESPACE_ENTER
 {
@@ -326,10 +326,9 @@ ConstOpCPURcPtr GetRangeRenderer(ConstRangeOpDataRcPtr & range)
         // Else, no rendering/scaling is needed.
     }
 
-    // Note:
-    // In fact it should never happen as the optimization step removes the NoOps.
-
-    throw Exception("No processing as the Range is a NoOp");
+    // Add identity matrix renderer.
+    auto mat = std::make_shared<const MatrixOpData>();
+    return GetMatrixRenderer(mat);
 }
 
 }
@@ -361,9 +360,12 @@ OCIO_ADD_TEST(RangeOpCPU, identity)
     OCIO_CHECK_NO_THROW(range->isNoOp());
 
     OCIO::ConstRangeOpDataRcPtr r = range;
-    OCIO_CHECK_THROW_WHAT(OCIO::GetRangeRenderer(r), 
-                          OCIO::Exception, 
-                          "No processing as the Range is a NoOp");
+
+    OCIO::ConstOpCPURcPtr op = OCIO::GetRangeRenderer(r);
+
+    const OCIO::OpCPU & c = *op;
+    const std::string typeName(typeid(c).name());
+    OCIO_CHECK_NE(-1, pystring::find(typeName, "ScaleRenderer"));
 }
 
 OCIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings)

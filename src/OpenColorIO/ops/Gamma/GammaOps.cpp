@@ -134,8 +134,6 @@ public:
 
     virtual ~GammaOp();
     
-    TransformDirection getDirection() const noexcept override { return TRANSFORM_DIR_FORWARD; }
-
     std::string getInfo() const override;
     
     OpRcPtr clone() const override;
@@ -145,7 +143,7 @@ public:
     bool canCombineWith(ConstOpRcPtr & op) const override;
     void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
     
-    void finalize(FinalizationFlags fFlags) override;
+    void finalize(OptimizationFlags oFlags) override;
 
     ConstOpCPURcPtr getCPUOp() const override;
     
@@ -214,10 +212,7 @@ void GammaOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
 {
     if(!canCombineWith(secondOp))
     {
-        std::ostringstream os;
-        os << "GammaOp can only be combined with other ";
-        os << "GammaOps.  secondOp:" << secondOp->getInfo();
-        throw Exception(os.str().c_str());
+        throw Exception("GammaOp: canCombineWith must be checked before calling combineWith.");
     }
 
     ConstGammaOpRcPtr typedRcPtr = DynamicPtrCast<const GammaOp>(secondOp);
@@ -226,7 +221,7 @@ void GammaOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
     CreateGammaOp(ops, res, TRANSFORM_DIR_FORWARD);
 }
 
-void GammaOp::finalize(FinalizationFlags /*fFlags*/)
+void GammaOp::finalize(OptimizationFlags oFlags)
 {
     gammaData()->finalize();
 
@@ -432,22 +427,19 @@ void BuildExponentOps(OpRcPtrVec & ops,
     }
     else
     {
-        const auto style = combinedDir == TRANSFORM_DIR_FORWARD ? GammaOpData::BASIC_FWD
-                                                                : GammaOpData::BASIC_REV;
-
         GammaOpData::Params redParams   = { vec4[0] };
         GammaOpData::Params greenParams = { vec4[1] };
         GammaOpData::Params blueParams  = { vec4[2] };
         GammaOpData::Params alphaParams = { vec4[3] };
 
-        auto gammaData = std::make_shared<GammaOpData>(style, 
+        auto gammaData = std::make_shared<GammaOpData>(GammaOpData::BASIC_FWD,
                                                        redParams,
                                                        greenParams,
                                                        blueParams,
                                                        alphaParams);
 
         gammaData->getFormatMetadata() = transform.getFormatMetadata();
-        CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
+        CreateGammaOp(ops, gammaData, combinedDir);
     }
 }
 
@@ -863,7 +855,7 @@ OCIO_ADD_TEST(GammaOps, computed_identifier)
     OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(ops, gamma2, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_CHECK_EQUAL(ops.size(), 2);
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
 
     OCIO_CHECK_ASSERT(ops[0]->getCacheID() != ops[1]->getCacheID());
 
@@ -871,7 +863,7 @@ OCIO_ADD_TEST(GammaOps, computed_identifier)
 
     OCIO_CHECK_EQUAL(ops.size(), 3);
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
 
     OCIO_CHECK_ASSERT(ops[0]->getCacheID() != ops[2]->getCacheID());
     OCIO_CHECK_ASSERT(ops[1]->getCacheID() == ops[2]->getCacheID());
@@ -885,7 +877,7 @@ OCIO_ADD_TEST(GammaOps, computed_identifier)
 
     OCIO_CHECK_EQUAL(ops.size(), 4);
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::FINALIZATION_EXACT));
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
 
     OCIO_CHECK_ASSERT(ops[0]->getCacheID() != ops[3]->getCacheID());
     OCIO_CHECK_ASSERT(ops[1]->getCacheID() != ops[3]->getCacheID());

@@ -18,8 +18,6 @@ void EvalTransform(const float * in, float * out,
                    long numPixels,
                    OpRcPtrVec & ops);
 
-const char * GetInvQualityName(LutInversionQuality invStyle);
-
 // Allow us to temporarily manipulate the inversion quality without
 // cloning the object.
 template <class LutType>
@@ -35,12 +33,12 @@ public:
         : m_prevQuality(lut.getInversionQuality())
         , m_lut(const_cast<LutType &>(lut))
     {
-        m_lut.setInversionQuality(LUT_INVERSION_BEST);
+        m_lut.setInversionQuality(LUT_INVERSION_EXACT);
     }
 
     ~LutStyleGuard()
     {
-        if (m_prevQuality != LUT_INVERSION_BEST)
+        if (m_prevQuality != LUT_INVERSION_EXACT)
         {
             m_lut.setInversionQuality(m_prevQuality);
         }

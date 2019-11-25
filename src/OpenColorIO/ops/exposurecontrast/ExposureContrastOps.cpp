@@ -28,8 +28,6 @@ public:
 
     virtual ~ExposureContrastOp();
 
-    TransformDirection getDirection() const noexcept override { return TRANSFORM_DIR_FORWARD; }
-
     OpRcPtr clone() const override;
 
     std::string getInfo() const override;
@@ -40,13 +38,14 @@ public:
     bool canCombineWith(ConstOpRcPtr & op) const override;
     void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
 
-    void finalize(FinalizationFlags fFlags) override;
+    void finalize(OptimizationFlags oFlags) override;
 
     bool isDynamic() const override;
     bool hasDynamicProperty(DynamicPropertyType type) const override;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const override;
     void replaceDynamicProperty(DynamicPropertyType type,
                                 DynamicPropertyImplRcPtr prop) override;
+    void removeDynamicProperties() override;
 
     ConstOpCPURcPtr getCPUOp() const override;
 
@@ -114,11 +113,12 @@ void ExposureContrastOp::combineWith(OpRcPtrVec & /*ops*/, ConstOpRcPtr & second
 {
     if (!canCombineWith(secondOp))
     {
-        throw Exception("ExposureContrast can't be combined.");
+        throw Exception("ExposureContrastOp: canCombineWith must be checked "
+                        "before calling combineWith.");
     }
 }
 
-void ExposureContrastOp::finalize(FinalizationFlags /*fFlags*/)
+void ExposureContrastOp::finalize(OptimizationFlags /*oFlags*/)
 {
     ecData()->finalize();
 
@@ -162,6 +162,11 @@ void ExposureContrastOp::replaceDynamicProperty(DynamicPropertyType type,
                                                 DynamicPropertyImplRcPtr prop)
 {
     ecData()->replaceDynamicProperty(type, prop);
+}
+
+void ExposureContrastOp::removeDynamicProperties()
+{
+    ecData()->removeDynamicProperties();
 }
 
 }  // Anon namespace

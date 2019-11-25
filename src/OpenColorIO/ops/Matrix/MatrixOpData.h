@@ -159,8 +159,6 @@ public:
 
     void finalize() override;
 
-    OpDataRcPtr getIdentityReplacement() const;
-
     // Check if the matrix array is a no-op (ignoring the offsets).
     bool isUnityDiagonal() const;
 
@@ -189,8 +187,6 @@ public:
     void scale(double inScale, double outScale);
 
 private:
-
-    bool isMatrixIdentity() const;
 
     class MatrixArray;
     typedef OCIO_SHARED_PTR<MatrixArray> MatrixArrayPtr;

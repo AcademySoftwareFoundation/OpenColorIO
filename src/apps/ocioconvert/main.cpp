@@ -640,8 +640,7 @@ int main(int argc, const char **argv)
 
             OCIO::ConstCPUProcessorRcPtr cpuProcessor 
                 = processor->getOptimizedCPUProcessor(bitDepth, bitDepth,
-                                                      OCIO::OPTIMIZATION_DEFAULT,
-                                                      OCIO::FINALIZATION_DEFAULT);
+                                                      OCIO::OPTIMIZATION_DEFAULT);
 
             const std::chrono::high_resolution_clock::time_point start
                 = std::chrono::high_resolution_clock::now();

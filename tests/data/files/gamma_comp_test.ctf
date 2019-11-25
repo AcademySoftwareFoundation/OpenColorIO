@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="352553b2-27b6-4982-8be4-dff85d5d4998" version="1.3">
+
+    <Description>Transform should optimize into a range that clamps negs</Description>
+
+    <Gamma inBitDepth="16f" outBitDepth="10i" style="basicFwd">
+        <GammaParams gamma="2.4" />
+    </Gamma>
+
+    <Description>Identity Matrix for 10-to-12</Description>
+    <Matrix inBitDepth="10i" outBitDepth="12i">
+        <Array dim="4 4 4">
+4.0029325513196481 0 0 0
+0 4.0029325513196481 0 0
+0 0 4.0029325513196481 0
+0 0 0 4.0029325513196481
+        </Array>
+    </Matrix>
+
+    <Gamma inBitDepth="12i" outBitDepth="16f" style="basicRev">
+        <GammaParams gamma="2.0" />
+    </Gamma>
+
+    <Gamma inBitDepth="16f" outBitDepth="16i" style="basicRev">
+        <GammaParams gamma="1.2" />
+    </Gamma>
+
+</ProcessList>

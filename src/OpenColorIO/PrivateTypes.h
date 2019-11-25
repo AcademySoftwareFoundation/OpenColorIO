@@ -39,10 +39,7 @@ OCIO_NAMESPACE_ENTER
     enum LutInversionQuality
     {
         LUT_INVERSION_EXACT = 0,
-        LUT_INVERSION_FAST,
-
-        LUT_INVERSION_DEFAULT = 254,
-        LUT_INVERSION_BEST = 255
+        LUT_INVERSION_FAST
     };
 
 }

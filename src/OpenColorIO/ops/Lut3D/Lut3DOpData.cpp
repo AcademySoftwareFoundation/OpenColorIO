@@ -25,6 +25,9 @@ Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut)
         throw Exception("MakeFastLut3DFromInverse expects an inverse LUT");
     }
 
+    // TODO: The FastLut will limit inputs to [0,1].  If the forward LUT has an extended range
+    // output, perhaps add a Range op before the FastLut to bring values into [0,1].
+
     // The composition needs to use the EXACT renderer.
     // (Also avoids infinite loop.)
     // So temporarily set the style to EXACT.
@@ -72,6 +75,9 @@ void Lut3DOpData::Compose(Lut3DOpDataRcPtr & A,
     // currently composition is done pairs at a time and we would want to
     // determine the increase size once at the start rather than bumping it up
     // as each pair is done.
+
+    // We assume the caller has validated that A and B are forward LUTs.
+    // TODO: Support inverse Lut3D here and refactor MakeFastLUT to use it.
 
     const long min_sz = B->getArray().getLength();
     const long n = A->getArray().getLength();
@@ -131,8 +137,6 @@ void Lut3DOpData::Compose(Lut3DOpDataRcPtr & A,
                   (float*)(&outValues[0]),
                   numPixels,
                   ops);
-
-    // TODO: Code to handle dynamic properties should go here.
 }
 
 Lut3DOpData::Lut3DArray::Lut3DArray(unsigned long length)
@@ -174,45 +178,6 @@ void Lut3DOpData::Lut3DArray::fill()
     }
 }
 
-bool Lut3DOpData::Lut3DArray::isIdentity() const
-{
-    const long length = getLength();
-    const Array::Values & values = getValues();
-
-    // As an identity LUT shall not change color component values,
-    // aside from possibly a scaling for bit-depth conversion.
-
-    const float stepSize = 1.0f / ((float)length - 1.0f);
-
-    const long maxEntries = length*length*length;
-
-    for(long i=0; i<maxEntries; i++)
-    {
-        // TODO: Use EqualWithSafeRelError to account for outBitDepth.
-        if(!EqualWithAbsError(values[3*i+0],
-                              (float)((i/ length / length)% length) * stepSize,
-                              0.0001f))
-        {
-            return false;
-        }
-
-        if(!EqualWithAbsError(values[3*i+1],
-                              (float)((i/ length)% length) * stepSize,
-                              0.0001f))
-        {
-            return false;
-        }
-
-        if(!EqualWithAbsError(values[3*i+2],
-                              (float)(i%length) * stepSize,
-                              0.0001f))
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
 void Lut3DOpData::Lut3DArray::resize(unsigned long length, unsigned long numColorComponents)
 {
     if (length > maxSupportedLength)
@@ -223,7 +188,6 @@ void Lut3DOpData::Lut3DArray::resize(unsigned long length, unsigned long numColo
         throw Exception(oss.str().c_str());
     }
     Array::resize(length, numColorComponents);
-
 }
 
 unsigned long Lut3DOpData::Lut3DArray::getNumValues() const
@@ -329,21 +293,6 @@ Interpolation Lut3DOpData::getConcreteInterpolation() const
     }
 }
 
-LutInversionQuality Lut3DOpData::getConcreteInversionQuality() const
-{
-    switch (m_invQuality)
-    {
-    case LUT_INVERSION_EXACT:
-    case LUT_INVERSION_BEST:
-        return LUT_INVERSION_EXACT;
-
-    case LUT_INVERSION_FAST:
-    case LUT_INVERSION_DEFAULT:
-    default:
-        return LUT_INVERSION_FAST;
-    }
-}
-
 void Lut3DOpData::setInversionQuality(LutInversionQuality style)
 {
     m_invQuality = style;
@@ -445,7 +394,7 @@ bool Lut3DOpData::isNoOp() const
 
 bool Lut3DOpData::isIdentity() const
 {
-    return m_array.isIdentity();
+    return false;
 }
 
 OpDataRcPtr Lut3DOpData::getIdentityReplacement() const
@@ -456,15 +405,11 @@ OpDataRcPtr Lut3DOpData::getIdentityReplacement() const
 bool Lut3DOpData::haveEqualBasics(const Lut3DOpData & B) const
 {
     // TODO: Should interpolation style be considered?
-    // NB: The bit-depths must be harmonized by the caller before comparing
-    //     the array contents.
     return (m_array == B.m_array);
 }
 
 bool Lut3DOpData::operator==(const OpData & other) const
 {
-    if (this == &other) return true;
-
     if (!OpData::operator==(other)) return false;
 
     const Lut3DOpData* lop = static_cast<const Lut3DOpData*>(&other);
@@ -551,7 +496,7 @@ OCIO_ADD_TEST(Lut3DOpData, empty)
 {
     OCIO::Lut3DOpData l(2);
     OCIO_CHECK_NO_THROW(l.validate());
-    OCIO_CHECK_ASSERT(l.isIdentity());
+    OCIO_CHECK_ASSERT(!l.isIdentity());
     OCIO_CHECK_ASSERT(!l.isNoOp());
     OCIO_CHECK_EQUAL(l.getType(), OCIO::OpData::Lut3DType);
     OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_FAST);
@@ -567,9 +512,6 @@ OCIO_ADD_TEST(Lut3DOpData, accessors)
     l.getFormatMetadata().addAttribute(OCIO::METADATA_ID, "uid");
 
     OCIO_CHECK_EQUAL(l.getInterpolation(), interpol);
-    OCIO_CHECK_ASSERT(l.isIdentity());
-
-    OCIO_CHECK_NO_THROW(l.validate());
 
     l.getArray()[0] = 1.0f;
 
@@ -581,9 +523,8 @@ OCIO_ADD_TEST(Lut3DOpData, accessors)
     OCIO_CHECK_EQUAL(l.getInterpolation(), interpol);
 
     OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_FAST);
-    l.setInversionQuality(OCIO::LUT_INVERSION_BEST);
-    OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_BEST);
-    OCIO_CHECK_EQUAL(l.getConcreteInversionQuality(), OCIO::LUT_INVERSION_EXACT);
+    l.setInversionQuality(OCIO::LUT_INVERSION_EXACT);
+    OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_EXACT);
     l.setInversionQuality(OCIO::LUT_INVERSION_FAST);
 
     OCIO_CHECK_EQUAL(l.getArray().getLength(), (long)33);
@@ -632,7 +573,7 @@ OCIO_ADD_TEST(Lut3DOpData, equality)
     OCIO_CHECK_ASSERT(l1 == l3);
 
     // Inversion quality does not affect forward ops equality.
-    l1.setInversionQuality(OCIO::LUT_INVERSION_BEST);
+    l1.setInversionQuality(OCIO::LUT_INVERSION_EXACT);
 
     OCIO_CHECK_ASSERT(l1 == l3);
 
@@ -693,22 +634,10 @@ OCIO_ADD_TEST(Lut3DOpData, inversion_quality)
 
     l.setInversionQuality(OCIO::LUT_INVERSION_EXACT);
     OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_EXACT);
-    OCIO_CHECK_EQUAL(l.getConcreteInversionQuality(), OCIO::LUT_INVERSION_EXACT);
     OCIO_CHECK_NO_THROW(l.validate());
 
     l.setInversionQuality(OCIO::LUT_INVERSION_FAST);
     OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_FAST);
-    OCIO_CHECK_EQUAL(l.getConcreteInversionQuality(), OCIO::LUT_INVERSION_FAST);
-    OCIO_CHECK_NO_THROW(l.validate());
-
-    l.setInversionQuality(OCIO::LUT_INVERSION_DEFAULT);
-    OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_DEFAULT);
-    OCIO_CHECK_EQUAL(l.getConcreteInversionQuality(), OCIO::LUT_INVERSION_FAST);
-    OCIO_CHECK_NO_THROW(l.validate());
-
-    l.setInversionQuality(OCIO::LUT_INVERSION_BEST);
-    OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_BEST);
-    OCIO_CHECK_EQUAL(l.getConcreteInversionQuality(), OCIO::LUT_INVERSION_EXACT);
     OCIO_CHECK_NO_THROW(l.validate());
 }
 
@@ -884,6 +813,30 @@ OCIO_ADD_TEST(Lut3DOpData, inv_lut3d_lut_size)
     OCIO_CHECK_EQUAL(invFastLutData->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
 
     OCIO_CHECK_EQUAL(invFastLutData->getArray().getLength(), 48);
+}
+
+OCIO_ADD_TEST(Lut3DOpData, compose_only_forward)
+{
+    OCIO::Lut3DOpDataRcPtr lut = std::make_shared<OCIO::Lut3DOpData>(OCIO::INTERP_LINEAR, 5);
+
+    OCIO::OpRcPtrVec ops;
+    OCIO_CHECK_NO_THROW(CreateLut3DOp(ops, lut, OCIO::TRANSFORM_DIR_INVERSE));
+    OCIO_CHECK_NO_THROW(CreateLut3DOp(ops, lut, OCIO::TRANSFORM_DIR_INVERSE));
+    OCIO_CHECK_NO_THROW(CreateLut3DOp(ops, lut, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(CreateLut3DOp(ops, lut, OCIO::TRANSFORM_DIR_FORWARD));
+
+    OCIO_REQUIRE_EQUAL(ops.size(), 4);
+    OCIO::ConstOpRcPtr op1 = ops[1]; // Inverse.
+    OCIO::ConstOpRcPtr op3 = ops[3]; // Forward.
+    OCIO_CHECK_ASSERT(!ops[0]->canCombineWith(op1));
+    OCIO_CHECK_ASSERT(ops[2]->canCombineWith(op3));
+    OCIO_CHECK_ASSERT(!ops[0]->canCombineWith(op3));
+    OCIO_CHECK_ASSERT(!ops[2]->canCombineWith(op1));
+
+    // All identity LUT 3d are optimized as a range and combined.
+    OCIO::OptimizeFinalizeOpVec(ops);
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<RangeOp>");
 }
 
 #endif

@@ -27,9 +27,7 @@ OCIO_NAMESPACE_ENTER
             values += 3;
         }
 
-        // Sets the bit-depths at each op interface to 32f so there is never
-        // any quantization to integer.
-        FinalizeOpVec(ops, FINALIZATION_EXACT);
+        FinalizeOpVec(ops, OPTIMIZATION_NONE);
 
         for (OpRcPtrVec::size_type i = 0, size = ops.size(); i<size; ++i)
         {
@@ -45,31 +43,6 @@ OCIO_NAMESPACE_ENTER
 
             result += 3;
         }
-    }
-
-    const char * GetInvQualityName(LutInversionQuality invStyle)
-    {
-        switch (invStyle)
-        {
-        case LUT_INVERSION_EXACT:
-        {
-            return "exact";
-        }
-        case LUT_INVERSION_FAST:
-        {
-            return "fast";
-        }
-        case LUT_INVERSION_DEFAULT:
-        {
-            return "default";
-        }
-        case LUT_INVERSION_BEST:
-        {
-            return "best";
-        }
-        }
-
-        throw Exception("The LUT has an unrecognized inversion quality setting.");
     }
 }
 OCIO_NAMESPACE_EXIT
