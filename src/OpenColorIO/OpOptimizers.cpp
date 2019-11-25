@@ -233,7 +233,7 @@ OCIO_NAMESPACE_ENTER
                 op1->combineWith(tmpops, op2);
 
                 // tmpops may have any number of ops in it. (0, 1, 2, ...)
-                // (size 0 would occur potentially iff the combination results in a no-op).
+                // (size 0 would occur only if the combination results in a no-op).
                 //
                 // No matter the number, we need to swap them in for the original ops.
 
