@@ -41,19 +41,18 @@ one of several projects actvively sponsored by the ASWF
 OpenColorIO Project Mission
 ---------------------------
 
-The OpenColorIO project is committed to providing the premier solution for 
-consistent color mangement across the digital content creation ecosystem, 
-maintaining and advancing the trusted precision, performance, and robustness 
-depended on by the entertainment industry.
+The OpenColorIO project is committed to providing an industry standard solution 
+for highly precise, performant, and consistent color mangement across digital 
+content creation applications and pipelines.
 
 OpenColorIO aims to:
 
 * be stable, secure, and thouroughly tested on all platforms
-* be highly performant on modern CPUs and GPUs
+* be performant on modern CPUs and GPUs
 * be simple, scalable, and well documented
 * be compatible with critical color and imaging standards
 * provide lossless color processing wherever possible
-* maintain config backwards compatability
+* maintain config backwards compatability across major versions
 * have every new feature carefully reviewed by industry leaders
 * have a healthy and active community
 * receive wide industry adoption
@@ -62,7 +61,8 @@ OpenColorIO Project Governance
 ------------------------------
 
 OpenColorIO is governed by the Academy Software Foundation (ASWF). See 
-GOVERNANCE for detailed infomation about how the project operates.
+[GOVERNANCE.md](GOVERNANCE.md) for detailed infomation about how the project 
+operates.
 
 Web Resources
 -------------
