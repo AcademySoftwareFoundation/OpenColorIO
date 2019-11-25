@@ -9,11 +9,10 @@
 OCIO_NAMESPACE_ENTER
 {
     
-    class OCIOYaml
+    namespace OCIOYaml
     {
-    public:
-        void open(std::istream& istream, ConfigRcPtr& c, const char* filename = NULL) const;
-        void write(std::ostream& ostream, const Config* c) const;
+        void read(std::istream & istream, ConfigRcPtr & c, const char * filename);
+        void write(std::ostream & ostream, const Config * c);
     };
     
 }

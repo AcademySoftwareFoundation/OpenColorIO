@@ -5,57 +5,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#ifndef _WIN32
-
-// fwd declare yaml-cpp visibility
-#pragma GCC visibility push(hidden)
-namespace YAML {
-    class Exception;
-    class BadDereference;
-    class RepresentationException;
-    class EmitterException;
-    class ParserException;
-    class InvalidScalar;
-    class KeyNotFound;
-    template <typename T> class TypedKeyNotFound;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::ColorSpace>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::Config>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::Exception>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::GpuShaderDesc>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::ImageDesc>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::Look>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::Processor>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::Transform>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::AllocationTransform>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::CDLTransform>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::ColorSpaceTransform>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::DisplayTransform>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::ExponentTransform>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::ExponentWithLinearTransform>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::ExposureContrastTransform>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::FileTransform>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::FixedFunctionTransform>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::GroupTransform>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::LogAffineTransform>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::LogTransform>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::LookTransform>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::MatrixTransform>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::RangeTransform>;
-}
-#pragma GCC visibility pop
-
-#endif
-
-#ifdef _MSC_VER
-#pragma warning( push )
-#pragma warning( disable: 4146 )
-#endif
-
 #include <yaml-cpp/yaml.h>
-
-#ifdef _MSC_VER
-#pragma warning( pop )
-#endif
 
 #include "Display.h"
 #include "Logging.h"
@@ -2481,7 +2431,7 @@ OCIO_NAMESPACE_ENTER
     
     ///////////////////////////////////////////////////////////////////////////
     
-    void OCIOYaml::open(std::istream& istream, ConfigRcPtr& c, const char* filename) const
+    void OCIOYaml::read(std::istream & istream, ConfigRcPtr & c, const char * filename)
     {
         try
         {
@@ -2498,7 +2448,7 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    void OCIOYaml::write(std::ostream& ostream, const Config* c) const
+    void OCIOYaml::write(std::ostream & ostream, const Config * c)
     {
         YAML::Emitter out;
         out.SetDoublePrecision(std::numeric_limits<double>::digits10);
