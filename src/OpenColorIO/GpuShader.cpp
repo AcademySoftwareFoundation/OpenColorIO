@@ -35,6 +35,10 @@ static void  CreateArray(const float * buf,
     res.resize(size);
     memcpy(&res[0], buf, size * sizeof(float));
 }
+}
+
+namespace GPUShaderImpl
+{
 
 class PrivateImpl
 {
@@ -348,13 +352,13 @@ private:
     PrivateImpl& operator= (const PrivateImpl & rhs) = delete;
 };
 
-};
+} // namespace GPUShaderImpl
 
-class LegacyGpuShaderDesc::Impl : public PrivateImpl
+class LegacyGpuShaderDesc::Impl : public GPUShaderImpl::PrivateImpl
 {
 public:       
     explicit Impl(unsigned edgelen)
-        :   PrivateImpl()
+        :   GPUShaderImpl::PrivateImpl()
         ,   m_edgelen(edgelen)
     {
     }
@@ -538,10 +542,10 @@ void LegacyGpuShaderDesc::Deleter(LegacyGpuShaderDesc* c)
 }
 
 
-class GenericGpuShaderDesc::Impl : public PrivateImpl
+class GenericGpuShaderDesc::Impl : public GPUShaderImpl::PrivateImpl
 {
 public:       
-    Impl() : PrivateImpl() {}
+    Impl() : GPUShaderImpl::PrivateImpl() {}
     ~Impl() {}
 };
 
