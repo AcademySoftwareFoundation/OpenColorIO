@@ -59,15 +59,6 @@ const char * INTERNAL_RAW_PROFILE =
     "      description: 'A raw color space. Conversions to and from this space are no-ops.'\n";
 }
 
-namespace ConfigImpl
-{
-enum Sanity
-{
-    SANITY_UNKNOWN = 0,
-    SANITY_SANE,
-    SANITY_INSANE
-};
-}
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -196,6 +187,13 @@ static const unsigned LastSupportedMajorVersion  = 2;
 class Config::Impl
 {
 public:
+    enum Sanity
+    {
+        SANITY_UNKNOWN = 0,
+        SANITY_SANE,
+        SANITY_INSANE
+    };
+
     unsigned int m_majorVersion;
     unsigned int m_minorVersion;
     StringMap m_env;
@@ -220,7 +218,7 @@ public:
     std::vector<double> m_defaultLumaCoefs;
     bool m_strictParsing;
 
-    mutable ConfigImpl::Sanity m_sanity;
+    mutable Sanity m_sanity;
     mutable std::string m_sanitytext;
 
     mutable Mutex m_cacheidMutex;
@@ -233,7 +231,7 @@ public:
         m_context(Context::Create()),
         m_colorspaces(ColorSpaceSet::Create()),
         m_strictParsing(true),
-        m_sanity(ConfigImpl::SANITY_UNKNOWN)
+        m_sanity(SANITY_UNKNOWN)
     {
         std::string activeDisplays;
         Platform::Getenv(OCIO_ACTIVE_DISPLAYS_ENVVAR, activeDisplays);
@@ -426,13 +424,13 @@ ConfigRcPtr Config::createEditableCopy() const
 
 void Config::sanityCheck() const
 {
-    if(getImpl()->m_sanity == ConfigImpl::SANITY_SANE) return;
-    if(getImpl()->m_sanity == ConfigImpl::SANITY_INSANE)
+    if(getImpl()->m_sanity == Impl::SANITY_SANE) return;
+    if(getImpl()->m_sanity == Impl::SANITY_INSANE)
     {
         throw Exception(getImpl()->m_sanitytext.c_str());
     }
 
-    getImpl()->m_sanity = ConfigImpl::SANITY_INSANE;
+    getImpl()->m_sanity = Impl::SANITY_INSANE;
     getImpl()->m_sanitytext = "";
 
     ///// COLORSPACES
@@ -760,7 +758,7 @@ void Config::sanityCheck() const
     }
 
     // Everything is groovy.
-    getImpl()->m_sanity = ConfigImpl::SANITY_SANE;
+    getImpl()->m_sanity = Impl::SANITY_SANE;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1611,7 +1609,7 @@ void Config::Impl::resetCacheIDs()
 {
     m_cacheids.clear();
     m_cacheidnocontext = "";
-    m_sanity = ConfigImpl::SANITY_UNKNOWN;
+    m_sanity = Impl::SANITY_UNKNOWN;
     m_sanitytext = "";
 }
 

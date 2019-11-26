@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include "transforms/Lut3DTransform.cpp"
+#include "transforms/LUT3DTransform.cpp"
 
 #include "UnitTest.h"
 
