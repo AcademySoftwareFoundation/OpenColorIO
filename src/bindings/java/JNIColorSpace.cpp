@@ -8,7 +8,7 @@
 #include "OpenColorIO/OpenColorIO.h"
 #include "OpenColorIOJNI.h"
 #include "JNIUtil.h"
-OCIO_NAMESPACE_USING
+using namespace OCIO_NAMESPACE;
 
 JNIEXPORT void JNICALL
 Java_org_OpenColorIO_ColorSpace_dispose(JNIEnv * env, jobject self)

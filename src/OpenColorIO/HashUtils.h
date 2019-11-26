@@ -10,14 +10,14 @@
 #include "md5/md5.h"
 #include <string>
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
-    std::string CacheIDHash(const char * array, int size);
-    
-    // TODO: get rid of md5.h include, make this a generic byte array
-    std::string GetPrintableHash(const md5_byte_t * digest);
-}
-OCIO_NAMESPACE_EXIT
+std::string CacheIDHash(const char * array, int size);
+
+// TODO: get rid of md5.h include, make this a generic byte array
+std::string GetPrintableHash(const md5_byte_t * digest);
+
+} // namespace OCIO_NAMESPACE
 
 #endif
 

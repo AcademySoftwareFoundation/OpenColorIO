@@ -34,8 +34,8 @@
 /// \brief Simple parsing of program command-line arguments.
 
 
-#ifndef OPENCOLORIO_ARGPARSE_H
-#define OPENCOLORIO_ARGPARSE_H
+#ifndef INCLUDED_OCIO_ARGPARSE_H
+#define INCLUDED_OCIO_ARGPARSE_H
 
 #include <vector>
 
@@ -144,7 +144,7 @@ public:
     /// (and clear any error flags).  If no error has occurred since the
     /// last time geterror() was called, it will return an empty string.
     std::string geterror () const;
-    
+
     /// Deprecated
     ///
     std::string error_message () const { return geterror (); }
@@ -171,4 +171,4 @@ private:
     int found (const char *option);      // number of times option was parsed
 };
 
-#endif // OPENCOLORIO_ARGPARSE_H
+#endif // INCLUDED_OCIO_ARGPARSE_H

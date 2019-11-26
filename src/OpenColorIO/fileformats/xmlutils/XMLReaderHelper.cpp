@@ -9,7 +9,7 @@
 #include "ParseUtils.h"
 #include "Platform.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 XmlReaderElement::XmlReaderElement(const std::string & name,
                                    unsigned int xmlLineNumber,
@@ -270,5 +270,4 @@ void XmlReaderSaturationElt::setRawData(const char* str, size_t len, unsigned in
     m_contentData += std::string(str, len) + " ";
 }
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE

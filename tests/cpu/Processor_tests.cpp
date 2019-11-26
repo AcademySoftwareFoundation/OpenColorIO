@@ -3,7 +3,7 @@
 
 #include "Processor.cpp"
 
-#include "ops/exposurecontrast/ExposureContrastOps.h"
+#include "ops/exposurecontrast/ExposureContrastOp.h"
 #include "UnitTest.h"
 
 namespace OCIO = OCIO_NAMESPACE;

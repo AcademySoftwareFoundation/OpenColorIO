@@ -11,80 +11,79 @@
 #include "Op.h"
 #include "PrivateTypes.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
-    class Processor::Impl
-    {
-    private:
-        ProcessorMetadataRcPtr m_metadata;
+class Processor::Impl
+{
+private:
+    ProcessorMetadataRcPtr m_metadata;
 
-        // Vector of ops for the processor.
-        OpRcPtrVec m_ops;
+    // Vector of ops for the processor.
+    OpRcPtrVec m_ops;
 
-        mutable std::string m_cpuCacheID;
-        
-        mutable Mutex m_resultsCacheMutex;
+    mutable std::string m_cpuCacheID;
 
-    public:
-        Impl();
-        ~Impl();
-        
-        bool isNoOp() const;
-        bool hasChannelCrosstalk() const;
-        
-        ConstProcessorMetadataRcPtr getProcessorMetadata() const;
+    mutable Mutex m_resultsCacheMutex;
 
-        const FormatMetadata & getFormatMetadata() const;
+public:
+    Impl();
+    ~Impl();
 
-        int getNumTransforms() const;
-        const FormatMetadata & getTransformFormatMetadata(int index) const;
+    bool isNoOp() const;
+    bool hasChannelCrosstalk() const;
 
-        bool hasDynamicProperty(DynamicPropertyType type) const;
-        DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
+    ConstProcessorMetadataRcPtr getProcessorMetadata() const;
 
-        const char * getCacheID() const;
+    const FormatMetadata & getFormatMetadata() const;
 
-        GroupTransformRcPtr createGroupTransform() const;
+    int getNumTransforms() const;
+    const FormatMetadata & getTransformFormatMetadata(int index) const;
 
-        void write(const char * formatName, std::ostream & os) const;
+    bool hasDynamicProperty(DynamicPropertyType type) const;
+    DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
 
-        void apply(ImageDesc& img) const;
-        
-        // Get an optimized GPU processor instance for F32 images with default optimizations.
-        ConstGPUProcessorRcPtr getDefaultGPUProcessor() const;
+    const char * getCacheID() const;
 
-        // Get an optimized GPU processor instance for F32 images.
-        ConstGPUProcessorRcPtr getOptimizedGPUProcessor(OptimizationFlags oFlags) const;
+    GroupTransformRcPtr createGroupTransform() const;
 
-        // Get an optimized CPU processor instance for F32 images with default optimizations.
-        ConstCPUProcessorRcPtr getDefaultCPUProcessor() const;
+    void write(const char * formatName, std::ostream & os) const;
 
-        // Get an optimized CPU processor instance for F32 images.
-        ConstCPUProcessorRcPtr getOptimizedCPUProcessor(OptimizationFlags oFlags) const;
+    void apply(ImageDesc& img) const;
 
-        // Get a optimized CPU processor instance for arbitrary input and output bit-depths.
-        ConstCPUProcessorRcPtr getOptimizedCPUProcessor(BitDepth inBitDepth,
-                                                        BitDepth outBitDepth,
-                                                        OptimizationFlags oFlags) const;
+    // Get an optimized GPU processor instance for F32 images with default optimizations.
+    ConstGPUProcessorRcPtr getDefaultGPUProcessor() const;
 
-        ////////////////////////////////////////////
-        //
-        // Builder functions, Not exposed
-        
-        void setColorSpaceConversion(const Config & config,
-                                     const ConstContextRcPtr & context,
-                                     const ConstColorSpaceRcPtr & srcColorSpace,
-                                     const ConstColorSpaceRcPtr & dstColorSpace);
-        
-        void setTransform(const Config & config,
-                          const ConstContextRcPtr & context,
-                          const ConstTransformRcPtr& transform,
-                          TransformDirection direction);
+    // Get an optimized GPU processor instance for F32 images.
+    ConstGPUProcessorRcPtr getOptimizedGPUProcessor(OptimizationFlags oFlags) const;
 
-        void computeMetadata();
-    };
-    
-}
-OCIO_NAMESPACE_EXIT
+    // Get an optimized CPU processor instance for F32 images with default optimizations.
+    ConstCPUProcessorRcPtr getDefaultCPUProcessor() const;
+
+    // Get an optimized CPU processor instance for F32 images.
+    ConstCPUProcessorRcPtr getOptimizedCPUProcessor(OptimizationFlags oFlags) const;
+
+    // Get a optimized CPU processor instance for arbitrary input and output bit-depths.
+    ConstCPUProcessorRcPtr getOptimizedCPUProcessor(BitDepth inBitDepth,
+                                                    BitDepth outBitDepth,
+                                                    OptimizationFlags oFlags) const;
+
+    ////////////////////////////////////////////
+    //
+    // Builder functions, Not exposed
+
+    void setColorSpaceConversion(const Config & config,
+                                    const ConstContextRcPtr & context,
+                                    const ConstColorSpaceRcPtr & srcColorSpace,
+                                    const ConstColorSpaceRcPtr & dstColorSpace);
+
+    void setTransform(const Config & config,
+                        const ConstContextRcPtr & context,
+                        const ConstTransformRcPtr& transform,
+                        TransformDirection direction);
+
+    void computeMetadata();
+};
+
+} // namespace OCIO_NAMESPACE
 
 #endif

@@ -17,9 +17,9 @@
 #include "fileformats/xmlutils/XMLWriterUtils.h"
 #include "ops/Lut1D/Lut1DOp.h"
 #include "ops/Lut3D/Lut3DOp.h"
-#include "ops/Range/RangeOps.h"
+#include "ops/Range/RangeOp.h"
 #include "OpBuilders.h"
-#include "ops/NoOp/NoOps.h"
+#include "ops/noop/NoOps.h"
 #include "Platform.h"
 #include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
@@ -88,9 +88,9 @@ a CLF file.  These getters/setters are only provided for the transforms/ops
 parameters in an unnormalized form.
 */
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
-    
+
 namespace
 {
 
@@ -101,25 +101,25 @@ public:
     {
     };
     ~LocalCachedFile() {};
-            
+
     CTFReaderTransformPtr m_transform;
     std::string m_filePath;
 
 };
 
 typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
-        
+
 class LocalFileFormat : public FileFormat
 {
 public:
-            
+
     ~LocalFileFormat() {}
-            
+
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
-            
+
     CachedFileRcPtr read(std::istream & istream,
                          const std::string & fileName) const override;
-            
+
     void buildFileOps(OpRcPtrVec & ops,
                       const Config & config,
                       const ConstContextRcPtr & context,
@@ -136,7 +136,7 @@ public:
                const std::string & formatName,
                std::ostream & /*ostream*/) const override;
 };
-        
+
 void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 {
     FormatInfo info;
@@ -1103,13 +1103,13 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 {
     LocalCachedFileRcPtr cachedFile = 
         DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
-            
+
     // This should never happen.
     if(!cachedFile)
     {
         throw Exception("Cannot build clf ops. Invalid cache type.");
     }
-            
+
     const TransformDirection newDir 
         = CombineTransformDirections(dir, fileTransform.getDirection());
 
@@ -1122,7 +1122,7 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     }
 
     FormatMetadataImpl & processorData = ops.getFormatMetadata();
-    
+
     // Put CTF processList information into the FormatMetadata.
     cachedFile->m_transform->toMetadata(processorData);
 
@@ -1426,7 +1426,7 @@ void LocalFileFormat::write(const OpRcPtrVec & ops,
         os << "Error: CLF/CTF writer does not also write format " << formatName << ".";
         throw Exception(os.str().c_str());
     }
-    
+
     CTFReaderTransformPtr transform = std::make_shared<CTFReaderTransform>(ops, metadata);
 
     // Write XML Header.
@@ -1445,5 +1445,4 @@ FileFormat * CreateFileFormatCLF()
 }
 
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE

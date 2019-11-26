@@ -11,7 +11,7 @@
 #include "Op.h"
 
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 class ScanlineHelper;
@@ -45,7 +45,7 @@ public:
     ////////////////////////////////////////////
     //
     // Functions not exposed to the OCIO public API.
-        
+
     void finalize(const OpRcPtrVec & rawOps,
                   BitDepth in, BitDepth out,
                   OptimizationFlags oFlags);
@@ -63,9 +63,6 @@ private:
     Mutex              m_mutex;
 };
 
-
-}
-OCIO_NAMESPACE_EXIT
-
+} // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_CPUPROCESSOR_H

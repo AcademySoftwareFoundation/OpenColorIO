@@ -49,7 +49,7 @@ Strutil::vformat (const char *fmt, va_list ap)
     char stackbuf[1024];
     std::vector<char> dynamicbuf;
     char *buf = &stackbuf[0];
-    
+
     while (1) {
         // Try to vsnprintf into our buffer.
         va_list apsave;

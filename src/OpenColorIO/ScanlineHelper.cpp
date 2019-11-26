@@ -9,7 +9,7 @@
 #include "ScanlineHelper.h"
 
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 Optimizations GetOptimizationMode(const GenericImageDesc & imgDesc)
@@ -204,5 +204,4 @@ template class GenericScanlineHelper<float, half>;
 template class GenericScanlineHelper<float, float>;
 
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE

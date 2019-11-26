@@ -10,7 +10,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 static constexpr const char * METADATA_INPUT_DESCRIPTION = "InputDescription";
 static constexpr const char * METADATA_VIEWING_DESCRIPTION = "ViewingDescription";
@@ -24,7 +24,6 @@ void ClearCDLTransformFileCache();
 
 void LoadCDL(CDLTransform * cdl, const char * xml);
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif

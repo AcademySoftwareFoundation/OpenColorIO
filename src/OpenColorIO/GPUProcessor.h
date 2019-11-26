@@ -11,7 +11,7 @@
 #include "Op.h"
 
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 class GPUProcessor::Impl
@@ -33,7 +33,7 @@ public:
     ////////////////////////////////////////////
     //
     // Builder functions, Not exposed
-        
+
     void finalize(const OpRcPtrVec & rawOps, OptimizationFlags oFlags);
 
 private:
@@ -44,8 +44,7 @@ private:
 };
 
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 
 #endif

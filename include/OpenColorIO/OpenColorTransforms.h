@@ -7,7 +7,7 @@
 
 #include "OpenColorTypes.h"
 
-#ifndef OCIO_NAMESPACE_ENTER
+#ifndef OCIO_NAMESPACE
 #error This header cannot be used directly. Use <OpenColorIO/OpenColorIO.h> instead.
 #endif
 
@@ -18,25 +18,25 @@ C++ Transforms
 Typically only needed when creating and/or manipulating configurations
 */
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 
     //!rst:: //////////////////////////////////////////////////////////////////
-    
+
     //!cpp:class:: The FormatMetadata class is intended to be a generic
     // container to hold metadata from various file formats.
     //
     // This class provides a hierarchical metadata container.
     // A metadata object is similar to an element in XML.
     // It contains:
-	//
+    //
     // * A name string (e.g. "Description").
     // * A value string (e.g. "updated viewing LUT").
     // * A list of attributes (name, value) string pairs (e.g. "version", "1.5").
     // * And a list of child sub-elements, which are also objects implementing
     //   FormatMetadata.
-	//
+    //
     class FormatMetadata
     {
     public:
@@ -178,7 +178,7 @@ OCIO_NAMESPACE_ENTER
     public:
         //!cpp:function::
         static CDLTransformRcPtr Create();
-        
+
         //!cpp:function:: Load the CDL from the src .cc or .ccc file.
         // If a .ccc is used, the cccid must also be specified
         // src must be an absolute path reference, no relative directory
@@ -237,12 +237,12 @@ OCIO_NAMESPACE_ENTER
 
         //!rst:: **ASC_SAT**
         //
-        
+
         //!cpp:function::
         double getSat() const;
         //!cpp:function::
         void setSat(double sat);
-        
+
         //!cpp:function:: These are hard-coded, by spec, to r709.
         void getSatLumaCoefs(double * rgb) const;
 
@@ -251,12 +251,12 @@ OCIO_NAMESPACE_ENTER
         // These do not affect the image processing, but
         // are often useful for pipeline purposes and are
         // included in the serialization.
-        
+
         //!cpp:function:: Unique Identifier for this correction.
         const char * getID() const;
         //!cpp:function::
         void setID(const char * id);
-        
+
         //!cpp:function:: Deprecated. Use `getFormatMetadata`.
         // First textual description of color correction (stored
         // on the SOP). If there is already a description, the setter will
@@ -264,16 +264,16 @@ OCIO_NAMESPACE_ENTER
         const char * getDescription() const;
         //!cpp:function:: Deprecated. Use `getFormatMetadata`.
         void setDescription(const char * desc);
-    
+
     private:
         CDLTransform();
         CDLTransform(const CDLTransform &);
         virtual ~CDLTransform();
-        
+
         CDLTransform & operator=(const CDLTransform &);
-        
+
         static void deleter(CDLTransform * t);
-        
+
         class Impl;
         Impl * m_impl;
         Impl * getImpl() { return m_impl; }
@@ -282,8 +282,8 @@ OCIO_NAMESPACE_ENTER
 
     //!cpp:function::
     extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const CDLTransform &);
-    
-    
+
+
     //!rst:: //////////////////////////////////////////////////////////////////
 
     //!cpp:class::
@@ -318,11 +318,11 @@ OCIO_NAMESPACE_ENTER
         ColorSpaceTransform();
         ColorSpaceTransform(const ColorSpaceTransform &);
         virtual ~ColorSpaceTransform();
-        
+
         ColorSpaceTransform & operator=(const ColorSpaceTransform &);
-        
+
         static void deleter(ColorSpaceTransform * t);
-        
+
         class Impl;
         Impl * m_impl;
         Impl * getImpl() { return m_impl; }
@@ -331,8 +331,8 @@ OCIO_NAMESPACE_ENTER
 
     //!cpp:function::
     extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const ColorSpaceTransform &);
-    
-    
+
+
     //!rst:: //////////////////////////////////////////////////////////////////
 
     //!cpp:class::
@@ -352,7 +352,7 @@ OCIO_NAMESPACE_ENTER
 
         //!cpp:function:: Will throw if data is not valid.
         virtual void validate() const;
-       
+
         //!cpp:function::
         const char * getInputColorSpaceName() const;
         //!cpp:function:: Step 0. Specify the incoming color space.
@@ -388,9 +388,9 @@ OCIO_NAMESPACE_ENTER
         ConstTransformRcPtr getDisplayCC() const;
         //!cpp:function:: Step 5: Apply a post display transform color correction
         void setDisplayCC(const ConstTransformRcPtr & cc);
-        
-        
-        
+
+
+
         //!cpp:function::
         const char * getLooksOverride() const;
         //!cpp:function:: A user can optionally override the looks that are,
@@ -414,16 +414,16 @@ OCIO_NAMESPACE_ENTER
         // or not. This is a speparate flag, as it's often useful to override
         // "looks" to an empty string. 
         void setLooksOverrideEnabled(bool enabled);
-        
+
     private:
         DisplayTransform();
         DisplayTransform(const DisplayTransform &);
         virtual ~DisplayTransform();
-        
+
         DisplayTransform & operator=(const DisplayTransform &);
-        
+
         static void deleter(DisplayTransform * t);
-        
+
         class Impl;
         Impl * m_impl;
         Impl * getImpl() { return m_impl; }
@@ -432,8 +432,8 @@ OCIO_NAMESPACE_ENTER
 
     //!cpp:function::
     extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const DisplayTransform &);
-    
-    
+
+
     //!rst:: //////////////////////////////////////////////////////////////////
 
     //!cpp:class:: Allows transform parameter values to be set on-the-fly
@@ -503,11 +503,11 @@ OCIO_NAMESPACE_ENTER
         ExponentTransform();
         ExponentTransform(const ExponentTransform &);
         virtual ~ExponentTransform();
-        
+
         ExponentTransform & operator=(const ExponentTransform &);
-        
+
         static void deleter(ExponentTransform * t);
-        
+
         class Impl;
         Impl * m_impl;
         Impl * getImpl() { return m_impl; }
@@ -516,10 +516,10 @@ OCIO_NAMESPACE_ENTER
 
     //!cpp:function::
     extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const ExponentTransform &);
-    
-    
+
+
     //!rst:: //////////////////////////////////////////////////////////////////
-    
+
     //!cpp:class:: Represents power functions with a linear section in the shadows 
     // such as sRGB and L*.
     //
@@ -572,11 +572,11 @@ OCIO_NAMESPACE_ENTER
         ExponentWithLinearTransform();
         ExponentWithLinearTransform(const ExponentWithLinearTransform &);
         virtual ~ExponentWithLinearTransform();
-        
+
         ExponentWithLinearTransform & operator=(const ExponentWithLinearTransform &);
-        
+
         static void deleter(ExponentWithLinearTransform * t);
-        
+
         class Impl;
         Impl * m_impl;
         Impl * getImpl() { return m_impl; }
@@ -729,13 +729,13 @@ OCIO_NAMESPACE_ENTER
         Interpolation getInterpolation() const;
         //!cpp:function::
         void setInterpolation(Interpolation interp);
-        
+
         //!cpp:function:: Get the number of LUT readers.
         static int getNumFormats();
         //!cpp:function:: Get the LUT readers at index, return empty string if
         // an invalid index is specified.
         static const char * getFormatNameByIndex(int index);
-        
+
         //!cpp:function:: Get the LUT reader extension at index, return empty string if
         // an invalid index is specified.
         static const char * getFormatExtensionByIndex(int index);
@@ -744,11 +744,11 @@ OCIO_NAMESPACE_ENTER
         FileTransform();
         FileTransform(const FileTransform &);
         virtual ~FileTransform();
-        
+
         FileTransform & operator=(const FileTransform &);
-        
+
         static void deleter(FileTransform * t);
-        
+
         class Impl;
         Impl * m_impl;
         Impl * getImpl() { return m_impl; }
@@ -801,9 +801,9 @@ OCIO_NAMESPACE_ENTER
         FixedFunctionTransform();
         FixedFunctionTransform(const FixedFunctionTransform &);
         virtual ~FixedFunctionTransform();
-        
+
         FixedFunctionTransform & operator=(const FixedFunctionTransform &);
-        
+
         static void deleter(FixedFunctionTransform * t);
 
         class Impl;
@@ -856,11 +856,11 @@ OCIO_NAMESPACE_ENTER
         GroupTransform();
         GroupTransform(const GroupTransform &);
         virtual ~GroupTransform();
-        
+
         GroupTransform & operator=(const GroupTransform &);
-        
+
         static void deleter(GroupTransform * t);
-        
+
         class Impl;
         Impl * m_impl;
         Impl * getImpl() { return m_impl; }
@@ -869,7 +869,7 @@ OCIO_NAMESPACE_ENTER
 
     //!cpp:function::
     extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GroupTransform &);
-    
+
 
     //!rst:: //////////////////////////////////////////////////////////////////
 
@@ -984,11 +984,11 @@ OCIO_NAMESPACE_ENTER
         LogTransform();
         LogTransform(const LogTransform &);
         virtual ~LogTransform();
-        
+
         LogTransform & operator=(const LogTransform &);
-        
+
         static void deleter(LogTransform * t);
-        
+
         class Impl;
         Impl * m_impl;
         Impl * getImpl() { return m_impl; }
@@ -1028,7 +1028,7 @@ OCIO_NAMESPACE_ENTER
         const char * getDst() const;
         //!cpp:function::
         void setDst(const char * dst);
-        
+
         //!cpp:function::
         const char * getLooks() const;
         //!cpp:function:: Specify looks to apply.
@@ -1036,16 +1036,16 @@ OCIO_NAMESPACE_ENTER
         // Where +/- prefixes are optionally allowed to denote forward/inverse
         // look specification. (And forward is assumed in the absense of either)
         void setLooks(const char * looks);
-        
+
     private:
         LookTransform();
         LookTransform(const LookTransform &);
         virtual ~LookTransform();
-        
+
         LookTransform & operator=(const LookTransform &);
-        
+
         static void deleter(LookTransform * t);
-        
+
         class Impl;
         Impl * m_impl;
         Impl * getImpl() { return m_impl; }
@@ -1054,8 +1054,8 @@ OCIO_NAMESPACE_ENTER
 
     //!cpp:function::
     extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const LookTransform &);
-    
-    
+
+
     //!rst:: //////////////////////////////////////////////////////////////////
 
     //!cpp:class:: Represents a 1D-LUT transform.
@@ -1260,7 +1260,7 @@ OCIO_NAMESPACE_ENTER
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const LUT3DTransform&);
 
     //!rst:: //////////////////////////////////////////////////////////////////
-    
+
     //!cpp:class:: Represents an MX+B Matrix transform
     class OCIOEXPORT MatrixTransform : public Transform
     {
@@ -1350,18 +1350,18 @@ OCIO_NAMESPACE_ENTER
         static void Fit(double * m44, double* offset4,
                         const double * oldmin4, const double * oldmax4,
                         const double * newmin4, const double * newmax4);
-        
+
         //!cpp:function::
         static void Identity(double * m44, double * offset4);
 
         //!cpp:function::
         static void Sat(double * m44, double * offset4,
                         double sat, const double * lumaCoef3);
-        
+
         //!cpp:function::
         static void Scale(double * m44, double * offset4,
                           const double * scale4);
-        
+
         //!cpp:function::
         static void View(double * m44, double * offset4,
                          int * channelHot4,
@@ -1370,11 +1370,11 @@ OCIO_NAMESPACE_ENTER
         MatrixTransform();
         MatrixTransform(const MatrixTransform &);
         virtual ~MatrixTransform();
-        
+
         MatrixTransform & operator=(const MatrixTransform &);
-        
+
         static void deleter(MatrixTransform * t);
-        
+
         class Impl;
         Impl * m_impl;
         Impl * getImpl() { return m_impl; }
@@ -1406,7 +1406,7 @@ OCIO_NAMESPACE_ENTER
 
         //!cpp:function:: Creates a copy of this.
         virtual TransformRcPtr createEditableCopy() const = 0;
-        
+
         //!cpp:function::
         virtual TransformDirection getDirection() const = 0;
         //!cpp:function:: Set the direction the Range should be evaluated in.
@@ -1508,7 +1508,6 @@ OCIO_NAMESPACE_ENTER
     //!cpp:function::
     extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const RangeTransform &);
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif

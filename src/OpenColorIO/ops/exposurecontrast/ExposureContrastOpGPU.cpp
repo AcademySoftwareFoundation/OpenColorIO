@@ -9,7 +9,7 @@
 #include "ops/exposurecontrast/ExposureContrastOpGPU.h"
 
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 namespace
 {
@@ -288,7 +288,7 @@ void GetExposureContrastGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
         AddECLogarithmicRevShader(st, ec, exposureName, contrastName, gammaName);
         break;
     }
-    
+
     st.dedent();
     st.newLine() << "}";
 
@@ -296,5 +296,4 @@ void GetExposureContrastGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
     shaderDesc->addToFunctionShaderCode(st.string().c_str());
 }
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE

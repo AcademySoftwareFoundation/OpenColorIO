@@ -8,7 +8,7 @@
 #include <vector>
 #include "OpenColorIOJNI.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 template<typename C, typename E>
@@ -250,7 +250,6 @@ void JNI_Handle_Exception(JNIEnv * env);
 #define OCIO_JNITRY_ENTER() try {
 #define OCIO_JNITRY_EXIT(ret) } catch(...) { JNI_Handle_Exception(env); return ret; }
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_JNIUTIL_H

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_GLSL_H
 #define INCLUDED_OCIO_GLSL_H
 
@@ -10,7 +9,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 class OpenGLBuilder;
@@ -114,8 +113,7 @@ private:
     bool m_verbose;                        // Print shader code to std::cout for debugging purposes
 };
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_GLSL_H
 

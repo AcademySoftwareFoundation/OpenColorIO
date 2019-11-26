@@ -11,7 +11,7 @@
 #include "transforms/CDLTransform.h"
 #include "Platform.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 static constexpr const char * CDL_TAG_COLOR_DECISION_LIST = "ColorDecisionList";
@@ -246,7 +246,7 @@ void CDLParser::Impl::throwMessage(const std::string & error) const
 void CDLParser::Impl::parse(const std::string & buffer, bool lastLine)
 {
     const int done = lastLine?1:0;
-    
+
     if (XML_STATUS_ERROR == XML_Parse(m_parser,
                                       buffer.c_str(),
                                       (int)buffer.size(),
@@ -1019,6 +1019,4 @@ bool CDLParser::isCCC() const
     return m_impl->isCCC();
 }
 
-}
-OCIO_NAMESPACE_EXIT
-
+} // namespace OCIO_NAMESPACE

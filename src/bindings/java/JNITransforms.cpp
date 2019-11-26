@@ -4,7 +4,7 @@
 #include "OpenColorIO/OpenColorIO.h"
 #include "OpenColorIOJNI.h"
 #include "JNIUtil.h"
-OCIO_NAMESPACE_USING
+using namespace OCIO_NAMESPACE;
 
 // Transform
 

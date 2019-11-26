@@ -10,7 +10,7 @@
 
 #include "Op.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 enum ReferenceStyle
@@ -93,8 +93,7 @@ private:
 };
 
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 
 #endif

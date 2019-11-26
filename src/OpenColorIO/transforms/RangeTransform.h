@@ -7,10 +7,10 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ops/Range/RangeOpData.h"
+#include "ops/range/RangeOpData.h"
 
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 class RangeTransformImpl : public RangeTransform
@@ -76,7 +76,6 @@ private:
 };
 
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif  // INCLUDED_OCIO_RANGETRANSFORM_H

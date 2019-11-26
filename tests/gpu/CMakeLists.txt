@@ -22,18 +22,18 @@ if(NOT GLUT_FOUND)
 endif()
 
 set(SOURCES
-	CDLOps_test.cpp
+	CDLOp_test.cpp
 	Config_test.cpp
-	ECOps_test.cpp
-	ExpOps_test.cpp
-	FixedFunctionOps_test.cpp
+	ECOp_test.cpp
+	FixedFunctionOp_test.cpp
+	GammaOp_test.cpp
 	GPUHelpers.cpp
 	GPUUnitTest.cpp
-	LogOps_test.cpp
+	LogOp_test.cpp
 	Lut1DOp_test.cpp
 	Lut3DOp_test.cpp
-	MatrixOps_test.cpp
-	RangeOps_test.cpp
+	MatrixOp_test.cpp
+	RangeOp_test.cpp
 )
 
 add_executable(test_gpu_exec ${SOURCES})

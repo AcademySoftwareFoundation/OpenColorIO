@@ -8,7 +8,6 @@
 
 namespace OCIO = OCIO_NAMESPACE;
 
-
 OCIO_ADD_TEST(RangeTransform, basic)
 {
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();

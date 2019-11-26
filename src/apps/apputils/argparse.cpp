@@ -48,9 +48,9 @@ public:
 
     ArgOption (const char *str);
     ~ArgOption () { }
-    
+
     int initialize ();
-    
+
     int parameter_count () const { return m_count; }
     const std::string & name() const { return m_flag; }
 
@@ -59,7 +59,7 @@ public:
     bool is_flag () const { return m_type == Flag; }
     bool is_sublist () const { return m_type == Sublist; }
     bool is_regular () const { return m_type == Regular; }
-    
+
     void add_parameter (int i, void *p);
 
     void set_parameter (int i, const char *argv);
@@ -127,7 +127,7 @@ ArgOption::initialize()
         s = &m_format[0];
         assert(*s == '-');
         assert(isalpha(s[1]) || (s[1] == '-' && isalpha(s[2])));
-    
+
         s++;
         if (*s == '-')
             s++;
@@ -146,17 +146,17 @@ ArgOption::initialize()
             // Parse the scanf-like parameters
 
             m_type = Regular;
-    
+
             n = (m_format.length() - n) / 2;       // conservative estimate
             m_code.clear ();
-    
+
             while (*s != '\0') {
                 if (*s == '%') {
                     s++;
                     assert(*s != '\0');
-            
+
                     m_count++;                    // adding another parameter
-            
+
                     switch (*s) {
                     case 'd':                   // 32bit int
                     case 'g':                   // float
@@ -172,19 +172,19 @@ ArgOption::initialize()
                         assert(m_count == 1);
                         m_type = Sublist;
                         break;
-                        
+
                     default:
                         std::cerr << "Programmer error:  Unknown option ";
                         std::cerr << "type string \"" << *s << "\"" << "\n";
                         abort();
                     }
                 }
-        
+
                 s++;
             }
         }
     }
-    
+
     // Allocate space for the parameter pointers and initialize to NULL
     m_param.resize (m_count, NULL);
 
@@ -213,7 +213,7 @@ ArgOption::set_parameter (int i, const char *argv)
     assert(i < m_count);
 
     static const std::string nullStr;
-    
+
     switch (m_code[i]) {
     case 'd':
         *(int *)m_param[i] = argv ? atoi(argv) : 0;
@@ -243,7 +243,7 @@ ArgOption::set_parameter (int i, const char *argv)
     case 'b':
         *(bool *)m_param[i] = true;
         break;
-        
+
     case '*':
     default:
         abort();
@@ -329,7 +329,7 @@ ArgParse::parse (int xargc, const char **xargv)
             }
 
             option->found_on_command_line();
-            
+
             if (option->is_flag()) {
                 option->set_parameter(0, NULL);
             } else {
@@ -382,7 +382,7 @@ ArgParse::options (const char *intro, ...)
             error ("Option \"%s\" is multiply defined", cur);
             return -1;
         }
-        
+
         // Build a new option and then parse the values
         ArgOption *option = new ArgOption (cur);
         if (option->initialize() < 0) {
@@ -403,7 +403,7 @@ ArgParse::options (const char *intro, ...)
                               option->name().c_str());
                 return -1;
             }
-            
+
             option->add_parameter (i, p);
 
             if (option == m_global)
@@ -478,7 +478,7 @@ ArgParse::usage () const
     const size_t longline = 40;
     std::cout << m_intro << '\n';
     size_t maxlen = 0;
-    
+
     for (unsigned int i=0; i<m_option.size(); ++i) {
         ArgOption *opt = m_option[i];
         size_t fmtlen = opt->fmt().length();
@@ -486,7 +486,7 @@ ArgParse::usage () const
         if (fmtlen < longline)
             maxlen = std::max (maxlen, fmtlen);
     }
-    
+
     for (unsigned int i=0; i<m_option.size(); ++i) {
         ArgOption *opt = m_option[i];
         if (opt->description().length()) {

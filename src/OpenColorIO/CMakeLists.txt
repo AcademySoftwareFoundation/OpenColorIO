@@ -18,6 +18,7 @@ set(SOURCES
 	fileformats/ctf/CTFReaderHelper.cpp
 	fileformats/ctf/CTFReaderUtils.cpp
 	fileformats/ctf/CTFTransform.cpp
+	fileformats/ctf/IndexMapping.cpp
 	fileformats/FileFormat3DL.cpp
 	fileformats/FileFormatCCC.cpp
 	fileformats/FileFormatCC.cpp
@@ -56,47 +57,46 @@ set(SOURCES
 	OCIOYaml.cpp
 	Op.cpp
 	OpOptimizers.cpp
-	ops/Allocation/AllocationOp.cpp
-	ops/CDL/CDLOpCPU.cpp
-	ops/CDL/CDLOpData.cpp
-	ops/CDL/CDLOps.cpp
-	ops/Exponent/ExponentOps.cpp
+	ops/allocation/AllocationOp.cpp
+	ops/cdl/CDLOpCPU.cpp
+	ops/cdl/CDLOpData.cpp
+	ops/cdl/CDLOp.cpp
+	ops/exponent/ExponentOp.cpp
 	ops/exposurecontrast/ExposureContrastOpCPU.cpp
 	ops/exposurecontrast/ExposureContrastOpData.cpp
 	ops/exposurecontrast/ExposureContrastOpGPU.cpp
-	ops/exposurecontrast/ExposureContrastOps.cpp
-	ops/FixedFunction/FixedFunctionOpCPU.cpp
-	ops/FixedFunction/FixedFunctionOpData.cpp
-	ops/FixedFunction/FixedFunctionOpGPU.cpp
-	ops/FixedFunction/FixedFunctionOps.cpp
-	ops/Gamma/GammaOpCPU.cpp
-	ops/Gamma/GammaOpData.cpp
-	ops/Gamma/GammaOpUtils.cpp
-	ops/Gamma/GammaOps.cpp
-	ops/IndexMapping.cpp
-	ops/Log/LogOpCPU.cpp
-	ops/Log/LogOpData.cpp
-	ops/Log/LogOpGPU.cpp
-	ops/Log/LogOps.cpp
-	ops/Log/LogUtils.cpp
-	ops/Lut1D/Lut1DOp.cpp
-	ops/Lut1D/Lut1DOpCPU.cpp
-	ops/Lut1D/Lut1DOpData.cpp
-	ops/Lut1D/Lut1DOpGPU.cpp
-	ops/Lut3D/Lut3DOp.cpp
-	ops/Lut3D/Lut3DOpCPU.cpp
-	ops/Lut3D/Lut3DOpData.cpp
-	ops/Lut3D/Lut3DOpGPU.cpp
-	ops/Matrix/MatrixOpCPU.cpp
-	ops/Matrix/MatrixOpData.cpp
-	ops/Matrix/MatrixOps.cpp
-	ops/NoOp/NoOps.cpp
-	ops/Range/RangeOpCPU.cpp
-	ops/Range/RangeOpData.cpp
-	ops/Range/RangeOpGPU.cpp
-	ops/Range/RangeOps.cpp
+	ops/exposurecontrast/ExposureContrastOp.cpp
+	ops/fixedfunction/FixedFunctionOpCPU.cpp
+	ops/fixedfunction/FixedFunctionOpData.cpp
+	ops/fixedfunction/FixedFunctionOpGPU.cpp
+	ops/fixedfunction/FixedFunctionOp.cpp
+	ops/gamma/GammaOpCPU.cpp
+	ops/gamma/GammaOpData.cpp
+	ops/gamma/GammaOpUtils.cpp
+	ops/gamma/GammaOp.cpp
+	ops/log/LogOpCPU.cpp
+	ops/log/LogOpData.cpp
+	ops/log/LogOpGPU.cpp
+	ops/log/LogOp.cpp
+	ops/log/LogUtils.cpp
+	ops/lut1d/Lut1DOp.cpp
+	ops/lut1d/Lut1DOpCPU.cpp
+	ops/lut1d/Lut1DOpData.cpp
+	ops/lut1d/Lut1DOpGPU.cpp
+	ops/lut3d/Lut3DOp.cpp
+	ops/lut3d/Lut3DOpCPU.cpp
+	ops/lut3d/Lut3DOpData.cpp
+	ops/lut3d/Lut3DOpGPU.cpp
+	ops/matrix/MatrixOpCPU.cpp
+	ops/matrix/MatrixOpData.cpp
+	ops/matrix/MatrixOp.cpp
+	ops/noop/NoOps.cpp
+	ops/OpTools.cpp
+	ops/range/RangeOpCPU.cpp
+	ops/range/RangeOpData.cpp
+	ops/range/RangeOpGPU.cpp
+	ops/range/RangeOp.cpp
 	ops/reference/ReferenceOpData.cpp
-	OpTools.cpp
 	ParseUtils.cpp
 	PathUtils.cpp
 	Platform.cpp

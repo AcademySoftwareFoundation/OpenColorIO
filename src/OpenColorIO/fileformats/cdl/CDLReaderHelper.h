@@ -8,7 +8,7 @@
 #include "Op.h"
 #include "transforms/CDLTransform.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 class CDLParsingInfo
@@ -212,7 +212,6 @@ public:
     }
 };
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif

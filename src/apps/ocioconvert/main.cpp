@@ -52,7 +52,7 @@ parse_end_args(int argc, const char *argv[])
     argc--;
     argv++;
   }
-  
+
   return 0;
 }
 
@@ -91,7 +91,7 @@ public:
     void init(bool verbose)
     {
         if (m_initState != STATE_CREATED) return;
-            
+
         int argcgl = 2;
         const char* argvgl[] = { "main", "-glDebug" };
         glutInit(&argcgl, const_cast<char**>(&argvgl[0]));
@@ -347,7 +347,7 @@ bool StringToVector(std::vector<int> * ivector, const char * str);
 int main(int argc, const char **argv)
 {
     ArgParse ap;
-    
+
     std::vector<std::string> floatAttrs;
     std::vector<std::string> intAttrs;
     std::vector<std::string> stringAttrs;
@@ -409,7 +409,7 @@ int main(int argc, const char **argv)
             }
         }
     }
-    
+
     if (usegpuLegacy)
     {
         std::cout << std::endl;
@@ -425,13 +425,12 @@ int main(int argc, const char **argv)
     const char * inputcolorspace = args[1].c_str();
     const char * outputimage = args[2].c_str();
     const char * outputcolorspace = args[3].c_str();
-    
+
     OIIO::ImageSpec spec;
     OCIO::ImgBuffer img;
     int imgwidth = 0;
     int imgheight = 0;
     int components = 0;
-    
 
     // Load the image
     std::cout << std::endl;
@@ -448,9 +447,9 @@ int main(int argc, const char **argv)
             std::cerr << "Could not create image input." << std::endl;
             exit(1);
         }
-        
+
         f->open(inputimage, spec);
-        
+
         std::string error = f->geterror();
         if(!error.empty())
         {
@@ -459,11 +458,11 @@ int main(int argc, const char **argv)
         }
 
         OCIO::PrintImageSpec(spec, verbose);
-        
+
         imgwidth = spec.width;
         imgheight = spec.height;
         components = spec.nchannels;
-        
+
         if (usegpu || usegpuLegacy)
         {
             spec.format = OIIO::TypeDesc::FLOAT;
@@ -497,7 +496,7 @@ int main(int argc, const char **argv)
 #if OIIO_VERSION < 10903
         OIIO::ImageInput::destroy(f);
 #endif
-        
+
         std::vector<int> kchannels;
         //parse --ch argument
         if (keepChannels != "" && !StringToVector(&kchannels, keepChannels.c_str()))
@@ -505,7 +504,7 @@ int main(int argc, const char **argv)
             std::cerr << "Error: --ch: '" << keepChannels << "' should be comma-seperated integers\n";
             exit(1);
         }
-        
+
         //if kchannels not specified, then keep all channels
         if (kchannels.size() == 0)
         {
@@ -524,7 +523,7 @@ int main(int argc, const char **argv)
             std::cout << "cropping to " << imgwidth
                       << "x" << imgheight << std::endl;
         }
-        
+
         if (croptofull || (int)kchannels.size() < spec.nchannels)
         {
             // Redefine the spec so it matches the new bounding box.
@@ -553,7 +552,7 @@ int main(int argc, const char **argv)
                         int channel = kchannels[k];
                         int current_pixel_y = y + spec.y;
                         int current_pixel_x = x + spec.x;
-                        
+
                         if (current_pixel_y >= 0 &&
                             current_pixel_x >= 0 &&
                             current_pixel_y < imgheight &&
@@ -617,7 +616,7 @@ int main(int argc, const char **argv)
     {
         // Load the current config.
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-        
+
         // Get the processor
         OCIO::ConstProcessorRcPtr processor
             = config->getProcessor(inputcolorspace, outputcolorspace);
@@ -672,9 +671,7 @@ int main(int argc, const char **argv)
         std::cerr << "Unknown OCIO error encountered." << std::endl;
         exit(1);
     }
-    
-    
-        
+
     //
     // set the provided OpenImageIO attributes
     //
@@ -683,7 +680,7 @@ int main(int argc, const char **argv)
     {
         std::string name, value;
         float fval = 0.0f;
-        
+
         if(!ParseNameValuePair(name, value, floatAttrs[i]) ||
            !StringToFloat(&fval,value.c_str()))
         {
@@ -691,10 +688,10 @@ int main(int argc, const char **argv)
             parseerror = true;
             continue;
         }
-        
+
         spec.attribute(name, fval);
     }
-    
+
     for(unsigned int i=0; i<intAttrs.size(); ++i)
     {
         std::string name, value;
@@ -706,10 +703,10 @@ int main(int argc, const char **argv)
             parseerror = true;
             continue;
         }
-        
+
         spec.attribute(name, ival);
     }
-    
+
     for(unsigned int i=0; i<stringAttrs.size(); ++i)
     {
         std::string name, value;
@@ -719,18 +716,15 @@ int main(int argc, const char **argv)
             parseerror = true;
             continue;
         }
-        
+
         spec.attribute(name, value);
     }
-   
+
     if(parseerror)
     {
         exit(1);
     }
-    
-    
-    
-    
+
     // Write out the result
     try
     {
@@ -744,7 +738,7 @@ int main(int argc, const char **argv)
             std::cerr << "Could not create output input." << std::endl;
             exit(1);
         }
-        
+
         f->open(outputimage, spec);
 
         if(!f->write_image(spec.format, img.getBuffer()))
@@ -763,10 +757,10 @@ int main(int argc, const char **argv)
         std::cerr << "Error writing file.";
         exit(1);
     }
-    
+
     std::cout << std::endl;
     std::cout << "Wrote " << outputimage << std::endl;
-    
+
     return 0;
 }
 
@@ -781,7 +775,7 @@ bool ParseNameValuePair(std::string& name,
     // split string into name=value 
     size_t pos = input.find('=');
     if(pos==std::string::npos) return false;
-    
+
     name = input.substr(0,pos);
     value = input.substr(pos+1);
     return true;
@@ -791,14 +785,14 @@ bool ParseNameValuePair(std::string& name,
 bool StringToFloat(float * fval, const char * str)
 {
     if(!str) return false;
-    
+
     std::istringstream inputStringstream(str);
     float x;
     if(!(inputStringstream >> x))
     {
         return false;
     }
-    
+
     if(fval) *fval = x;
     return true;
 }
@@ -806,14 +800,14 @@ bool StringToFloat(float * fval, const char * str)
 bool StringToInt(int * ival, const char * str)
 {
     if(!str) return false;
-    
+
     std::istringstream inputStringstream(str);
     int x;
     if(!(inputStringstream >> x))
     {
         return false;
     }
-    
+
     if(ival) *ival = x;
     return true;
 }

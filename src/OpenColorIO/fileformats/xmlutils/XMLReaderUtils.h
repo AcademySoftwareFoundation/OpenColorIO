@@ -13,7 +13,7 @@
 #include "MathUtils.h"
 #include "Platform.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 // Used by both CDL parsers and CLF parsers.
@@ -230,7 +230,6 @@ std::vector<T> GetNumbers(const char * str, size_t len)
     return numbers;
 }
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif

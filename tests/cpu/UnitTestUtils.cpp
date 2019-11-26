@@ -9,6 +9,8 @@
 #include "UnitTestUtils.h"
 
 
+namespace OCIO_NAMESPACE
+{
 #ifndef OCIO_UNIT_TEST_FILES_DIR
 #error Expecting OCIO_UNIT_TEST_FILES_DIR to be defined for tests. Check relevant CMakeLists.txt
 #endif
@@ -17,9 +19,6 @@
 #define _STR(x) #x
 #define STR(x) _STR(x)
 
-
-OCIO_NAMESPACE_ENTER
-{
 
 static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
 
@@ -75,5 +74,6 @@ ConstProcessorRcPtr GetFileTransformProcessor(const std::string & fileName)
     return config->getProcessor(fileTransform);
 }
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
+
+

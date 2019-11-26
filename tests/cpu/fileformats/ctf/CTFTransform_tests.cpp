@@ -2,7 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include "fileformats/ctf/CTFTransform.cpp"
-#include "ops/Matrix/MatrixOpData.h"
+#include "ops/matrix/MatrixOpData.h"
 #include "transforms/FileTransform.h"
 #include "UnitTest.h"
 #include "UnitTestUtils.h"

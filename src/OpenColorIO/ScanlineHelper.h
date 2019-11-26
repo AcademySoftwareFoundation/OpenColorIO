@@ -9,7 +9,7 @@
 
 #include "ImagePacking.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 // All potential processing optimizations.
@@ -38,7 +38,7 @@ public:
     virtual void init(const ImageDesc & img) = 0;
 
     virtual void prepRGBAScanline(float** buffer, long & numPixels) = 0;
-    
+
     virtual void finishRGBAScanline() = 0;
 };
 
@@ -98,7 +98,6 @@ private:
 };
 
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif

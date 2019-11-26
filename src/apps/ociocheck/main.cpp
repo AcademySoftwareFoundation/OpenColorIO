@@ -27,7 +27,7 @@ int main(int argc, const char **argv)
     int errorcount = 0;
     std::string inputconfig;
     std::string outputconfig;
-    
+
     ArgParse ap;
     ap.options("ociocheck -- validate an OpenColorIO configuration\n\n"
                "usage:  ociocheck [options]\n",
@@ -35,7 +35,7 @@ int main(int argc, const char **argv)
                "--iconfig %s", &inputconfig, "Input .ocio configuration file (default: $OCIO)",
                "--oconfig %s", &outputconfig, "Output .ocio file",
                NULL);
-    
+
     if (ap.parse(argc, argv) < 0)
     {
         std::cout << ap.geterror() << std::endl;
@@ -43,22 +43,22 @@ int main(int argc, const char **argv)
         std::cout << DESC_STRING;
         return 1;
     }
-    
+
     if (help)
     {
         ap.usage();
         std::cout << DESC_STRING;
         return 1;
     }
-    
+
     try
     {
         OCIO::ConstConfigRcPtr config;
-        
+
         std::cout << std::endl;
         std::cout << "OpenColorIO Library Version: " << OCIO::GetVersion() << std::endl;
         std::cout << "OpenColorIO Library VersionHex: " << OCIO::GetVersionHex() << std::endl;
-        
+
         if(!inputconfig.empty())
         {
             std::cout << "Loading " << inputconfig << std::endl;
@@ -77,20 +77,20 @@ int main(int argc, const char **argv)
             std::cout << DESC_STRING;
             return 1;
         }
-        
+
         std::cout << std::endl;
         std::cout << "** General **" << std::endl;
         std::cout << "Search Path: " << config->getSearchPath() << std::endl;
         std::cout << "Working Dir: " << config->getWorkingDir() << std::endl;
-        
+
         std::cout << std::endl;
         std::cout << "Default Display: " << config->getDefaultDisplay() << std::endl;
         std::cout << "Default View: " << config->getDefaultView(config->getDefaultDisplay()) << std::endl;
-        
+
         {
             std::cout << std::endl;
             std::cout << "** Roles **" << std::endl;
-            
+
             std::set<std::string> usedroles;
             const char * allroles[] = { OCIO::ROLE_DEFAULT, OCIO::ROLE_SCENE_LINEAR,
                                         OCIO::ROLE_DATA, OCIO::ROLE_REFERENCE,
@@ -104,7 +104,7 @@ int main(int argc, const char **argv)
                 const char * role = allroles[i];
                 if(!role) break;
                 usedroles.insert(role);
-                
+
                 OCIO::ConstColorSpaceRcPtr cs = config->getColorSpace(role);
                 if(cs)
                 {
@@ -116,12 +116,12 @@ int main(int argc, const char **argv)
                     errorcount += 1;
                 }
             }
-            
+
             for(int i=0; i<config->getNumRoles(); ++i)
             {
                 const char * role = config->getRoleName(i);
                 if(usedroles.find(role) != usedroles.end()) continue;
-                
+
                 OCIO::ConstColorSpaceRcPtr cs = config->getColorSpace(role);
                 if(cs)
                 {
@@ -132,10 +132,10 @@ int main(int argc, const char **argv)
                     std::cout << "ERROR: NOT DEFINED" << " (" << role << ")" << std::endl;
                     errorcount += 1;
                 }
-                
+
             }
         }
-        
+
         std::cout << std::endl;
         std::cout << "** ColorSpaces **" << std::endl;
         OCIO::ConstColorSpaceRcPtr lin = config->getColorSpace(OCIO::ROLE_SCENE_LINEAR);
@@ -149,13 +149,13 @@ int main(int argc, const char **argv)
             for(int i=0; i<config->getNumColorSpaces(); ++i)
             {
                 OCIO::ConstColorSpaceRcPtr cs = config->getColorSpace(config->getColorSpaceNameByIndex(i));
-                
+
                 bool convertsToLinear = true;
                 std::string convertsToLinearErrorText;
-                
+
                 bool convertsFromLinear = true;
                 std::string convertsFromLinearErrorText;
-                
+
                 try
                 {
                     OCIO::ConstProcessorRcPtr p = config->getProcessor(cs, lin);
@@ -165,7 +165,7 @@ int main(int argc, const char **argv)
                     convertsToLinear = false;
                     convertsToLinearErrorText = exception.what();
                 }
-                
+
                 try
                 {
                     OCIO::ConstProcessorRcPtr p = config->getProcessor(lin, cs);
@@ -175,7 +175,7 @@ int main(int argc, const char **argv)
                     convertsFromLinear = false;
                     convertsFromLinearErrorText = exception.what();
                 }
-                
+
                 if(convertsToLinear && convertsFromLinear)
                 {
                     std::cout << cs->getName() << std::endl;
@@ -186,7 +186,7 @@ int main(int argc, const char **argv)
                     std::cout << " -- error" << std::endl;
                     std::cout << "\t" << convertsToLinearErrorText << std::endl;
                     std::cout << "\t" << convertsFromLinearErrorText << std::endl;
-                    
+
                     errorcount += 1;
                 }
                 else if(convertsToLinear)
@@ -201,7 +201,7 @@ int main(int argc, const char **argv)
                 }
             }
         }
-        
+
         std::cout << std::endl;
         std::cout << "** Looks **" << std::endl;
         if(config->getNumLooks()>0)
@@ -217,7 +217,7 @@ int main(int argc, const char **argv)
         }
         std::cout << std::endl;
         std::cout << "** Sanity Check **" << std::endl;
-        
+
         try
         {
             config->sanityCheck();
@@ -229,12 +229,12 @@ int main(int argc, const char **argv)
             errorcount += 1;
             std::cout << exception.what() << std::endl;
         }
-        
+
         if(!outputconfig.empty())
         {
             std::ofstream output;
             output.open(outputconfig.c_str());
-            
+
             if(!output.is_open())
             {
                 std::cout << "Error opening " << outputconfig << " for writing." << std::endl;
@@ -260,8 +260,7 @@ int main(int argc, const char **argv)
         std::cout << "Unknown error encountered." << std::endl;
         return 1;
     }
-    
-        
+
     std::cout << std::endl;
     if(errorcount == 0)
     {

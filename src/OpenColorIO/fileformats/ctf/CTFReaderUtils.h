@@ -6,9 +6,9 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
-    
+
 Interpolation GetInterpolation1D(const char * str);
 const char * GetInterpolation1DName(Interpolation interp);
 Interpolation GetInterpolation3D(const char * str);
@@ -87,7 +87,6 @@ static constexpr const char * LOG_ANTILOG10 = "antiLog10";
 static constexpr const char * LOG_LINTOLOG = "linToLog";
 static constexpr const char * LOG_LOGTOLIN = "logToLin";
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif

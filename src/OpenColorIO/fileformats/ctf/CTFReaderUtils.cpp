@@ -7,7 +7,7 @@
 #include "fileformats/ctf/CTFReaderUtils.h"
 #include "Platform.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 namespace
@@ -103,5 +103,4 @@ const char * GetInterpolation3DName(Interpolation interp)
     return INTERPOLATION_DEFAULT;
 }
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
