@@ -57,7 +57,7 @@
 #include <cstring>
 
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 
@@ -387,5 +387,4 @@ md5_finish(md5_state_t *pms, md5_byte_t digest[16])
 	digest[i] = (md5_byte_t)(pms->abcd[i >> 2] >> ((i & 3) << 3));
 }
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE

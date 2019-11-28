@@ -8,7 +8,7 @@
 #include "OpenColorIO/OpenColorIO.h"
 #include "OpenColorIOJNI.h"
 #include "JNIUtil.h"
-OCIO_NAMESPACE_USING
+using namespace OCIO_NAMESPACE;
 
 JNIEXPORT jobject JNICALL
 Java_org_OpenColorIO_Processor_Create(JNIEnv * env, jobject self) {

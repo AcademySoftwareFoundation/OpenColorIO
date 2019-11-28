@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_MATHUTILS_H
 #define INCLUDED_OCIO_MATHUTILS_H
-
 
 #include <algorithm>
 #include <cmath>
@@ -13,8 +11,7 @@
 
 #include "OpenEXR/half.h"
 
-
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 template<typename T>
@@ -40,7 +37,7 @@ bool IsNan(T val) { return std::isnan(val); }
 //  abs (x1 - x2) <= e * x1
 //
 //--------------------------------------------------------------------------
-    
+
 template<typename T>
 inline bool EqualWithAbsError (T x1, T x2, T e)
 {
@@ -53,36 +50,11 @@ inline bool EqualWithRelError (T x1, T x2, T e)
     return ((x1 > x2)? x1 - x2: x2 - x1) <= e * ((x1 > 0)? x1: -x1);
 }
 
-#ifdef OCIO_UNIT_TEST
-// Relative comparison: check if the difference between value and expected
-// relative to (divided by) expected does not exceed the eps.  A minimum
-// expected value is used to limit the scaling of the difference and
-// avoid large relative differences for small numbers.
-template<typename T>
-inline bool EqualWithSafeRelError(T value,
-                                  T expected,
-                                  T eps,
-                                  T minExpected)
-{
-    // If value and expected are infinity, return true.
-    if (value == expected) return true;
-    if (IsNan(value) && IsNan(expected)) return true;
-    const float div = (expected > 0) ?
-        ((expected < minExpected) ? minExpected : expected) :
-        ((-expected < minExpected) ? minExpected : -expected);
-
-    return (
-        ((value > expected) ? value - expected : expected - value)
-        / div) <= eps;
-}
-#endif
-
 inline float lerpf(float a, float b, float z)
 {
     return (b - a) * z + a;
 }
-    
-    
+
 // Clamp value a to[min, max]
 // First compare with max, then with min.
 // 
@@ -162,12 +134,6 @@ bool GetM44Inverse(float* mout, const float* m);
 // Is an identity matrix? (with fltmin tolerance)
 template<typename T>
 bool IsM44Identity(const T * m);
-
-// Is this a purely diagonal matrix?
-bool IsM44Diagonal(const float* m);
-
-// Extract the diagonal
-void GetM44Diagonal(float* vout, const float* m);
 
 // Combine two transforms in the mx+b form, into a single transform.
 // mout*x+vout == m2*(m1*x+v1)+v2
@@ -253,7 +219,6 @@ bool FloatsDiffer(const float expected, const float actual,
 // Inf is treated like any other value (diff from HALFMAX is 1).
 bool HalfsDiffer(const half expected, const half actual, const int tolerance);
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif

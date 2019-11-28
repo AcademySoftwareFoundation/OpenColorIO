@@ -58,9 +58,8 @@ inline double log2(double x)
 #else
 typedef off_t FilePos;
 #endif // _WIN32
-    
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 // TODO: Add proper endian detection using architecture / compiler mojo
@@ -93,7 +92,6 @@ void CreateTempFilename(std::string & filename, const std::string & filenameExt)
 
 }
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_PLATFORM_H

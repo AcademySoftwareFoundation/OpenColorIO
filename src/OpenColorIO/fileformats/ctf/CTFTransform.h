@@ -13,7 +13,7 @@
 #include "fileformats/xmlutils/XMLWriterUtils.h"
 #include "Op.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 class CTFVersion
@@ -230,10 +230,10 @@ private:
     std::string m_inDescriptor;
     std::string m_outDescriptor;
     FormatMetadataImpl m_infoMetadata;
-    
+
     ConstOpDataVec m_ops;
     StringVec m_descriptions;
-                
+
     // CTF version used even for CLF files.
     // CLF versions <= 2.0 are interpreted as CTF version 1.7.
     CTFVersion m_version;
@@ -279,7 +279,6 @@ private:
 void GetElementsValues(const FormatMetadataImpl::Elements & elements,
                        const std::string & name, StringVec & values);
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif

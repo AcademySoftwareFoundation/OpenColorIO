@@ -9,7 +9,7 @@
 #include "DynamicProperty.h"
 #include "Op.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 namespace EC
@@ -162,7 +162,7 @@ public:
     void finalize() override;
 
     bool operator==(const OpData & other) const override;
-    
+
     bool hasDynamicProperty(DynamicPropertyType type) const;
 
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
@@ -219,7 +219,6 @@ private:
     double m_logMidGray = LOGMIDGRAY_DEFAULT;
 };
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif

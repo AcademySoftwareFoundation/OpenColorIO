@@ -8,21 +8,21 @@
 #include "fileformats/ctf/CTFTransform.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "HashUtils.h"
-#include "ops/CDL/CDLOpData.h"
-#include "ops/Exponent/ExponentOps.h"
+#include "ops/cdl/CDLOpData.h"
+#include "ops/exponent/ExponentOp.h"
 #include "ops/exposurecontrast/ExposureContrastOpData.h"
-#include "ops/FixedFunction/FixedFunctionOpData.h"
-#include "ops/Gamma/GammaOpData.h"
-#include "ops/Log/LogOpData.h"
-#include "ops/Lut1D/Lut1DOpData.h"
-#include "ops/Lut3D/Lut3DOpData.h"
-#include "ops/Matrix/MatrixOpData.h"
-#include "ops/Range/RangeOpData.h"
+#include "ops/fixedfunction/FixedFunctionOpData.h"
+#include "ops/gamma/GammaOpData.h"
+#include "ops/log/LogOpData.h"
+#include "ops/lut1d/Lut1DOpData.h"
+#include "ops/lut3d/Lut3DOpData.h"
+#include "ops/matrix/MatrixOpData.h"
+#include "ops/range/RangeOpData.h"
 #include "ops/reference/ReferenceOpData.h"
 #include "Platform.h"
 #include "transforms/CDLTransform.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 void CTFVersion::ReadVersion(const std::string & versionString,
@@ -234,7 +234,7 @@ CTFVersion GetOpMinimumVersion(const ConstOpDataRcPtr & op)
 
         minVersion = (exp->m_exp4[3] == 1.) ? CTF_PROCESS_LIST_VERSION_1_3 :
                                               CTF_PROCESS_LIST_VERSION_1_5;
-       
+
         break;
     }
     case OpData::GammaType:
@@ -624,7 +624,7 @@ const char * BitDepthToCLFString(BitDepth bitDepth)
     else if (bitDepth == BIT_DEPTH_UINT16) return "16i";
     else if (bitDepth == BIT_DEPTH_F16) return "16f";
     else if (bitDepth == BIT_DEPTH_F32) return "32f";
-    
+
     throw Exception("Bitdepth has been validated before calling this.");
 }
 
@@ -728,7 +728,7 @@ const char * CDLWriter::getTagName() const
 {
     return TAG_CDL;
 }
-   
+
 void CDLWriter::getAttributes(XmlFormatter::Attributes & attributes) const
 {
     OpWriter::getAttributes(attributes);
@@ -1176,7 +1176,7 @@ void LogWriter::getAttributes(XmlFormatter::Attributes& attributes) const
     {
         style = dir == TRANSFORM_DIR_FORWARD ? LOG_LINTOLOG : LOG_LOGTOLIN;
     }
-    
+
     attributes.push_back(XmlFormatter::Attribute(ATTR_STYLE, style));
 }
 
@@ -1283,7 +1283,7 @@ ConstOpDataRcPtr Lut1DWriter::getOp() const
 {
     return m_lut;
 }
-   
+
 const char * Lut1DWriter::getTagName() const
 {
     if (m_lut->getDirection() == TRANSFORM_DIR_FORWARD)
@@ -1330,7 +1330,7 @@ void Lut1DWriter::getAttributes(XmlFormatter::Attributes & attributes) const
                                                      "dw3"));
     }
 }
-    
+
 void Lut1DWriter::writeContent() const
 {
     // Note: As of CTF v1.7 we support IndexMaps and that member of the LUT is
@@ -1735,10 +1735,10 @@ void TransformWriter::write() const
     else
     {
         fversion << GetMinimumVersion(m_transform);
-    
+
         attributes.push_back(XmlFormatter::Attribute(ATTR_VERSION,
                                                      fversion.str()));
-    
+
     }
 
     std::string id = m_transform->getID();
@@ -1749,7 +1749,7 @@ void TransformWriter::write() const
         {
             id += op->getCacheID();
         }
-        
+
         id = CacheIDHash(id.c_str(), (int)id.size());
     }
     attributes.push_back(XmlFormatter::Attribute(ATTR_ID, id));
@@ -2095,5 +2095,4 @@ void TransformWriter::writeOps() const
 
 }
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE

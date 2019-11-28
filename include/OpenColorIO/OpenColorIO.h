@@ -51,7 +51,7 @@ C++ API
 
 */
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
@@ -2021,7 +2021,7 @@ OCIO_NAMESPACE_ENTER
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Context&);
-}
-OCIO_NAMESPACE_EXIT
+
+} // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_OPENCOLORIO_H

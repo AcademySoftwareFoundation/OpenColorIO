@@ -9,12 +9,12 @@
 #include "GpuShader.h"
 #include "GpuShaderUtils.h"
 #include "Logging.h"
-#include "ops/Allocation/AllocationOp.h"
-#include "ops/Lut3D/Lut3DOp.h"
-#include "ops/NoOp/NoOps.h"
+#include "ops/allocation/AllocationOp.h"
+#include "ops/lut3d/Lut3DOp.h"
+#include "ops/noop/NoOps.h"
 
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 namespace
@@ -160,12 +160,12 @@ void GPUProcessor::Impl::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) c
         // Interior index range does not support the gpu shader.
         // This is used to bound our analytical shader text generation
         // start index and end index are inclusive.
-        
+
         // These 3 op vecs represent the 3 stages in our gpu pipe.
         // 1) preprocess shader text
         // 2) 3D LUT process lookup
         // 3) postprocess shader text
-        
+
         OpRcPtrVec gpuOpsHwPreProcess;
         OpRcPtrVec gpuOpsCpuLatticeProcess;
         OpRcPtrVec gpuOpsHwPostProcess;
@@ -256,6 +256,5 @@ void GPUProcessor::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
 }
 
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 

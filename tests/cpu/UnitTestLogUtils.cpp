@@ -6,8 +6,7 @@
 
 #include "UnitTestLogUtils.h"
 
-
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 namespace
@@ -61,5 +60,5 @@ MuteLogging::MuteLogging()
     SetLoggingFunction(MuteLoggingFunction);
 }
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
+

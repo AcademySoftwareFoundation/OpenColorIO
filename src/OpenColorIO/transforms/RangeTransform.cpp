@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <cstring>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "MathUtils.h"
-#include "RangeTransform.h"
+#include "transforms/RangeTransform.h"
 
-
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 RangeTransformRcPtr RangeTransform::Create()
@@ -197,5 +195,4 @@ std::ostream& operator<< (std::ostream & os, const RangeTransform & t)
 
 
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE

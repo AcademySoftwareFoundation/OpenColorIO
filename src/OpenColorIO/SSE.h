@@ -17,7 +17,7 @@
 
 
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 // Macros for alignment declarations
@@ -590,8 +590,7 @@ inline void sseSinCos(const float x, float& sin_x, float& cos_x)
     sin_x = buf[1];
 }
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 
 #endif

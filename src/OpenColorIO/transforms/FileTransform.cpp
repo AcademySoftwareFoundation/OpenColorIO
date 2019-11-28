@@ -11,801 +11,796 @@
 #include "FileTransform.h"
 #include "Logging.h"
 #include "Mutex.h"
-#include "ops/NoOp/NoOps.h"
+#include "ops/noop/NoOps.h"
 #include "PathUtils.h"
 #include "Platform.h"
 #include "pystring/pystring.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
-    FileTransformRcPtr FileTransform::Create()
-    {
-        return FileTransformRcPtr(new FileTransform(), &deleter);
-    }
-    
-    void FileTransform::deleter(FileTransform* t)
-    {
-        delete t;
-    }
-    
-    
-    class FileTransform::Impl
-    {
-    public:
-        TransformDirection dir_;
-        std::string src_;
-        std::string cccid_;
-        Interpolation interp_;
-        
-        Impl() :
-            dir_(TRANSFORM_DIR_FORWARD),
-            interp_(INTERP_UNKNOWN)
-        { }
+FileTransformRcPtr FileTransform::Create()
+{
+    return FileTransformRcPtr(new FileTransform(), &deleter);
+}
 
-        Impl(const Impl &) = delete;
+void FileTransform::deleter(FileTransform* t)
+{
+    delete t;
+}
 
-        ~Impl()
-        { }
-        
-        Impl& operator= (const Impl & rhs)
-        {
-            if (this != &rhs)
-            {
-                dir_ = rhs.dir_;
-                src_ = rhs.src_;
-                cccid_ = rhs.cccid_;
-                interp_ = rhs.interp_;
-            }
-            return *this;
-        }
-    };
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    FileTransform::FileTransform()
-        : m_impl(new FileTransform::Impl)
-    {
-    }
-    
-    TransformRcPtr FileTransform::createEditableCopy() const
-    {
-        FileTransformRcPtr transform = FileTransform::Create();
-        *(transform->m_impl) = *m_impl;
-        return transform;
-    }
-    
-    FileTransform::~FileTransform()
-    {
-        delete m_impl;
-        m_impl = NULL;
-    }
-    
-    FileTransform& FileTransform::operator= (const FileTransform & rhs)
+class FileTransform::Impl
+{
+public:
+    TransformDirection m_dir;
+    std::string m_src;
+    std::string m_cccid;
+    Interpolation m_interp;
+
+    Impl() :
+        m_dir(TRANSFORM_DIR_FORWARD),
+        m_interp(INTERP_UNKNOWN)
+    { }
+
+    Impl(const Impl &) = delete;
+
+    ~Impl()
+    { }
+
+    Impl& operator= (const Impl & rhs)
     {
         if (this != &rhs)
         {
-            *m_impl = *rhs.m_impl;
+            m_dir = rhs.m_dir;
+            m_src = rhs.m_src;
+            m_cccid = rhs.m_cccid;
+            m_interp = rhs.m_interp;
         }
         return *this;
     }
-    
-    TransformDirection FileTransform::getDirection() const
+};
+
+///////////////////////////////////////////////////////////////////////////
+
+FileTransform::FileTransform()
+    : m_impl(new FileTransform::Impl)
+{
+}
+
+TransformRcPtr FileTransform::createEditableCopy() const
+{
+    FileTransformRcPtr transform = FileTransform::Create();
+    *(transform->m_impl) = *m_impl;
+    return transform;
+}
+
+FileTransform::~FileTransform()
+{
+    delete m_impl;
+    m_impl = NULL;
+}
+
+FileTransform& FileTransform::operator= (const FileTransform & rhs)
+{
+    if (this != &rhs)
     {
-        return getImpl()->dir_;
+        *m_impl = *rhs.m_impl;
     }
-    
-    void FileTransform::setDirection(TransformDirection dir)
+    return *this;
+}
+
+TransformDirection FileTransform::getDirection() const
+{
+    return getImpl()->m_dir;
+}
+
+void FileTransform::setDirection(TransformDirection dir)
+{
+    getImpl()->m_dir = dir;
+}
+
+void FileTransform::validate() const
+{
+    Transform::validate();
+
+    if (getImpl()->m_src.empty())
     {
-        getImpl()->dir_ = dir;
+        throw Exception("FileTransform: empty file path");
+    }
+}
+
+const char * FileTransform::getSrc() const
+{
+    return getImpl()->m_src.c_str();
+}
+
+void FileTransform::setSrc(const char * src)
+{
+    getImpl()->m_src = src;
+}
+
+const char * FileTransform::getCCCId() const
+{
+    return getImpl()->m_cccid.c_str();
+}
+
+void FileTransform::setCCCId(const char * cccid)
+{
+    getImpl()->m_cccid = cccid;
+}
+
+Interpolation FileTransform::getInterpolation() const
+{
+    return getImpl()->m_interp;
+}
+
+void FileTransform::setInterpolation(Interpolation interp)
+{
+    getImpl()->m_interp = interp;
+}
+
+int FileTransform::getNumFormats()
+{
+    return FormatRegistry::GetInstance().getNumFormats(
+        FORMAT_CAPABILITY_READ);
+}
+
+const char * FileTransform::getFormatNameByIndex(int index)
+{
+    return FormatRegistry::GetInstance().getFormatNameByIndex(
+        FORMAT_CAPABILITY_READ, index);
+}
+
+const char * FileTransform::getFormatExtensionByIndex(int index)
+{
+    return FormatRegistry::GetInstance().getFormatExtensionByIndex(
+        FORMAT_CAPABILITY_READ, index);
+}
+
+std::ostream& operator<< (std::ostream& os, const FileTransform& t)
+{
+    os << "<FileTransform ";
+    os << "direction=";
+    os << TransformDirectionToString(t.getDirection()) << ", ";
+    os << "interpolation=" << InterpolationToString(t.getInterpolation());
+    os << ", src=" << t.getSrc() << ", ";
+    os << "cccid=" << t.getCCCId();
+    os << ">";
+
+    return os;
+}
+
+///////////////////////////////////////////////////////////////////////////
+
+// NOTE: You must be mindful when editing this function.
+//       to be resiliant to the static initialization order 'fiasco'
+//
+//       See
+//       http://www.parashift.com/c++-faq-lite/ctors.html#faq-10.14
+//       http://stackoverflow.com/questions/335369/finding-c-static-initialization-order-problems
+//       for more info.
+
+namespace
+{
+FormatRegistry* g_formatRegistry = NULL;
+Mutex g_formatRegistryLock;
+}
+
+FormatRegistry & FormatRegistry::GetInstance()
+{
+    AutoMutex lock(g_formatRegistryLock);
+
+    if(!g_formatRegistry)
+    {
+        g_formatRegistry = new FormatRegistry();
     }
 
-    void FileTransform::validate() const
-    {
-        Transform::validate();
+    return *g_formatRegistry;
+}
 
-        if (getImpl()->src_.empty())
-        {
-            throw Exception("FileTransform: empty file path");
-        }
+FormatRegistry::FormatRegistry()
+{
+    registerFileFormat(CreateFileFormat3DL());
+    registerFileFormat(CreateFileFormatCC());
+    registerFileFormat(CreateFileFormatCCC());
+    registerFileFormat(CreateFileFormatCDL());
+    registerFileFormat(CreateFileFormatCLF());
+    registerFileFormat(CreateFileFormatCSP());
+    registerFileFormat(CreateFileFormatDiscreet1DL());
+    registerFileFormat(CreateFileFormatHDL());
+    registerFileFormat(CreateFileFormatICC());
+    registerFileFormat(CreateFileFormatIridasCube());
+    registerFileFormat(CreateFileFormatIridasItx());
+    registerFileFormat(CreateFileFormatIridasLook());
+    registerFileFormat(CreateFileFormatPandora());
+    registerFileFormat(CreateFileFormatResolveCube());
+    registerFileFormat(CreateFileFormatSpi1D());
+    registerFileFormat(CreateFileFormatSpi3D());
+    registerFileFormat(CreateFileFormatSpiMtx());
+    registerFileFormat(CreateFileFormatTruelight());
+    registerFileFormat(CreateFileFormatVF());
+}
+
+FormatRegistry::~FormatRegistry()
+{
+}
+
+FileFormat* FormatRegistry::getFileFormatByName(
+    const std::string & name) const
+{
+    FileFormatMap::const_iterator iter = m_formatsByName.find(
+        pystring::lower(name));
+    if(iter != m_formatsByName.end())
+        return iter->second;
+    return NULL;
+}
+
+void FormatRegistry::getFileFormatForExtension(
+    const std::string & extension,
+    FileFormatVector & possibleFormats) const
+{
+    FileFormatVectorMap::const_iterator iter = m_formatsByExtension.find(
+        pystring::lower(extension));
+    if(iter != m_formatsByExtension.end())
+        possibleFormats = iter->second;
+}
+
+void FormatRegistry::registerFileFormat(FileFormat* format)
+{
+    FormatInfoVec formatInfoVec;
+    format->getFormatInfo(formatInfoVec);
+
+    if(formatInfoVec.empty())
+    {
+        std::ostringstream os;
+        os << "FileFormat Registry error. ";
+        os << "A file format did not provide the required format info.";
+        throw Exception(os.str().c_str());
     }
 
-    const char * FileTransform::getSrc() const
+    for(unsigned int i=0; i<formatInfoVec.size(); ++i)
     {
-        return getImpl()->src_.c_str();
-    }
-    
-    void FileTransform::setSrc(const char * src)
-    {
-        getImpl()->src_ = src;
-    }
-    
-    const char * FileTransform::getCCCId() const
-    {
-        return getImpl()->cccid_.c_str();
-    }
-    
-    void FileTransform::setCCCId(const char * cccid)
-    {
-        getImpl()->cccid_ = cccid;
-    }
-    
-    Interpolation FileTransform::getInterpolation() const
-    {
-        return getImpl()->interp_;
-    }
-    
-    void FileTransform::setInterpolation(Interpolation interp)
-    {
-        getImpl()->interp_ = interp;
-    }
-    
-    int FileTransform::getNumFormats()
-    {
-        return FormatRegistry::GetInstance().getNumFormats(
-            FORMAT_CAPABILITY_READ);
-    }
-    
-    const char * FileTransform::getFormatNameByIndex(int index)
-    {
-        return FormatRegistry::GetInstance().getFormatNameByIndex(
-            FORMAT_CAPABILITY_READ, index);
-    }
-    
-    const char * FileTransform::getFormatExtensionByIndex(int index)
-    {
-        return FormatRegistry::GetInstance().getFormatExtensionByIndex(
-            FORMAT_CAPABILITY_READ, index);
-    }
-    
-    std::ostream& operator<< (std::ostream& os, const FileTransform& t)
-    {
-        os << "<FileTransform ";
-        os << "direction=";
-        os << TransformDirectionToString(t.getDirection()) << ", ";
-        os << "interpolation=" << InterpolationToString(t.getInterpolation());
-        os << ", src=" << t.getSrc() << ", ";
-        os << "cccid=" << t.getCCCId();
-        os << ">";
-        
-        return os;
-    }
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    // NOTE: You must be mindful when editing this function.
-    //       to be resiliant to the static initialization order 'fiasco'
-    //
-    //       See
-    //       http://www.parashift.com/c++-faq-lite/ctors.html#faq-10.14
-    //       http://stackoverflow.com/questions/335369/finding-c-static-initialization-order-problems
-    //       for more info.
-    
-    namespace
-    {
-        FormatRegistry* g_formatRegistry = NULL;
-        Mutex g_formatRegistryLock;
-    }
-    
-    FormatRegistry & FormatRegistry::GetInstance()
-    {
-        AutoMutex lock(g_formatRegistryLock);
-        
-        if(!g_formatRegistry)
-        {
-            g_formatRegistry = new FormatRegistry();
-        }
-        
-        return *g_formatRegistry;
-    }
-    
-    FormatRegistry::FormatRegistry()
-    {
-        registerFileFormat(CreateFileFormat3DL());
-        registerFileFormat(CreateFileFormatCC());
-        registerFileFormat(CreateFileFormatCCC());
-        registerFileFormat(CreateFileFormatCDL());
-        registerFileFormat(CreateFileFormatCLF());
-        registerFileFormat(CreateFileFormatCSP());
-        registerFileFormat(CreateFileFormatDiscreet1DL());
-        registerFileFormat(CreateFileFormatHDL());
-        registerFileFormat(CreateFileFormatICC());
-        registerFileFormat(CreateFileFormatIridasCube());
-        registerFileFormat(CreateFileFormatIridasItx());
-        registerFileFormat(CreateFileFormatIridasLook());
-        registerFileFormat(CreateFileFormatPandora());
-        registerFileFormat(CreateFileFormatResolveCube());
-        registerFileFormat(CreateFileFormatSpi1D());
-        registerFileFormat(CreateFileFormatSpi3D());
-        registerFileFormat(CreateFileFormatSpiMtx());
-        registerFileFormat(CreateFileFormatTruelight());
-        registerFileFormat(CreateFileFormatVF());
-    }
-    
-    FormatRegistry::~FormatRegistry()
-    {
-    }
-    
-    FileFormat* FormatRegistry::getFileFormatByName(
-        const std::string & name) const
-    {
-        FileFormatMap::const_iterator iter = m_formatsByName.find(
-            pystring::lower(name));
-        if(iter != m_formatsByName.end())
-            return iter->second;
-        return NULL;
-    }
-    
-    void FormatRegistry::getFileFormatForExtension(
-        const std::string & extension,
-        FileFormatVector & possibleFormats) const
-    {
-        FileFormatVectorMap::const_iterator iter = m_formatsByExtension.find(
-            pystring::lower(extension));
-        if(iter != m_formatsByExtension.end())
-            possibleFormats = iter->second;
-    }
-    
-    void FormatRegistry::registerFileFormat(FileFormat* format)
-    {
-        FormatInfoVec formatInfoVec;
-        format->getFormatInfo(formatInfoVec);
-        
-        if(formatInfoVec.empty())
+        if(formatInfoVec[i].capabilities == FORMAT_CAPABILITY_NONE)
         {
             std::ostringstream os;
             os << "FileFormat Registry error. ";
-            os << "A file format did not provide the required format info.";
+            os << "A file format does not define either";
+            os << " reading or writing.";
             throw Exception(os.str().c_str());
         }
-        
-        for(unsigned int i=0; i<formatInfoVec.size(); ++i)
-        {
-            if(formatInfoVec[i].capabilities == FORMAT_CAPABILITY_NONE)
-            {
-                std::ostringstream os;
-                os << "FileFormat Registry error. ";
-                os << "A file format does not define either";
-                os << " reading or writing.";
-                throw Exception(os.str().c_str());
-            }
-            
-            if(getFileFormatByName(formatInfoVec[i].name))
-            {
-                std::ostringstream os;
-                os << "Cannot register multiple file formats named, '";
-                os << formatInfoVec[i].name << "'.";
-                throw Exception(os.str().c_str());
-            }
-            
-            m_formatsByName[pystring::lower(formatInfoVec[i].name)] = format;
-            
-            m_formatsByExtension[formatInfoVec[i].extension].push_back(format);
-            
-            if(formatInfoVec[i].capabilities & FORMAT_CAPABILITY_READ)
-            {
-                m_readFormatNames.push_back(formatInfoVec[i].name);
-                m_readFormatExtensions.push_back(formatInfoVec[i].extension);
-            }
 
-            if (formatInfoVec[i].capabilities & FORMAT_CAPABILITY_BAKE)
-            {
-                m_bakeFormatNames.push_back(formatInfoVec[i].name);
-                m_bakeFormatExtensions.push_back(formatInfoVec[i].extension);
-            }
+        if(getFileFormatByName(formatInfoVec[i].name))
+        {
+            std::ostringstream os;
+            os << "Cannot register multiple file formats named, '";
+            os << formatInfoVec[i].name << "'.";
+            throw Exception(os.str().c_str());
+        }
 
-            if(formatInfoVec[i].capabilities & FORMAT_CAPABILITY_WRITE)
-            {
-                m_writeFormatNames.push_back(formatInfoVec[i].name);
-                m_writeFormatExtensions.push_back(formatInfoVec[i].extension);
-            }
+        m_formatsByName[pystring::lower(formatInfoVec[i].name)] = format;
+
+        m_formatsByExtension[formatInfoVec[i].extension].push_back(format);
+
+        if(formatInfoVec[i].capabilities & FORMAT_CAPABILITY_READ)
+        {
+            m_readFormatNames.push_back(formatInfoVec[i].name);
+            m_readFormatExtensions.push_back(formatInfoVec[i].extension);
         }
-        
-        m_rawFormats.push_back(format);
+
+        if (formatInfoVec[i].capabilities & FORMAT_CAPABILITY_BAKE)
+        {
+            m_bakeFormatNames.push_back(formatInfoVec[i].name);
+            m_bakeFormatExtensions.push_back(formatInfoVec[i].extension);
+        }
+
+        if(formatInfoVec[i].capabilities & FORMAT_CAPABILITY_WRITE)
+        {
+            m_writeFormatNames.push_back(formatInfoVec[i].name);
+            m_writeFormatExtensions.push_back(formatInfoVec[i].extension);
+        }
     }
-    
-    int FormatRegistry::getNumRawFormats() const
+
+    m_rawFormats.push_back(format);
+}
+
+int FormatRegistry::getNumRawFormats() const
+{
+    return static_cast<int>(m_rawFormats.size());
+}
+
+FileFormat* FormatRegistry::getRawFormatByIndex(int index) const
+{
+    if(index<0 || index>=getNumRawFormats())
     {
-        return static_cast<int>(m_rawFormats.size());
+        return NULL;
     }
-    
-    FileFormat* FormatRegistry::getRawFormatByIndex(int index) const
+
+    return m_rawFormats[index];
+}
+
+int FormatRegistry::getNumFormats(int capability) const
+{
+    if(capability == FORMAT_CAPABILITY_READ)
     {
-        if(index<0 || index>=getNumRawFormats())
-        {
-            return NULL;
-        }
-        
-        return m_rawFormats[index];
+        return static_cast<int>(m_readFormatNames.size());
     }
-    
-    int FormatRegistry::getNumFormats(int capability) const
+    else if (capability == FORMAT_CAPABILITY_BAKE)
     {
-        if(capability == FORMAT_CAPABILITY_READ)
-        {
-            return static_cast<int>(m_readFormatNames.size());
-        }
-        else if (capability == FORMAT_CAPABILITY_BAKE)
-        {
-            return static_cast<int>(m_bakeFormatNames.size());
-        }
-        else if (capability == FORMAT_CAPABILITY_WRITE)
-        {
-            return static_cast<int>(m_writeFormatNames.size());
-        }
-        return 0;
+        return static_cast<int>(m_bakeFormatNames.size());
     }
-    
-    const char * FormatRegistry::getFormatNameByIndex(
-        int capability, int index) const
+    else if (capability == FORMAT_CAPABILITY_WRITE)
     {
-        if(capability == FORMAT_CAPABILITY_READ)
-        {
-            if(index<0 || index>=static_cast<int>(m_readFormatNames.size()))
-            {
-                return "";
-            }
-            return m_readFormatNames[index].c_str();
-        }
-        else if (capability == FORMAT_CAPABILITY_BAKE)
-        {
-            if (index<0 || index >= static_cast<int>(m_bakeFormatNames.size()))
-            {
-                return "";
-            }
-            return m_bakeFormatNames[index].c_str();
-        }
-        else if(capability == FORMAT_CAPABILITY_WRITE)
-        {
-            if(index<0 || index>=static_cast<int>(m_writeFormatNames.size()))
-            {
-                return "";
-            }
-            return m_writeFormatNames[index].c_str();
-        }
-        return "";
+        return static_cast<int>(m_writeFormatNames.size());
     }
-    
-    const char * FormatRegistry::getFormatExtensionByIndex(
-        int capability, int index) const
+    return 0;
+}
+
+const char * FormatRegistry::getFormatNameByIndex(
+    int capability, int index) const
+{
+    if(capability == FORMAT_CAPABILITY_READ)
     {
-        if(capability == FORMAT_CAPABILITY_READ)
+        if(index<0 || index>=static_cast<int>(m_readFormatNames.size()))
         {
-            if(index<0 
-                || index>=static_cast<int>(m_readFormatExtensions.size()))
-            {
-                return "";
-            }
-            return m_readFormatExtensions[index].c_str();
+            return "";
         }
-        else if (capability == FORMAT_CAPABILITY_BAKE)
-        {
-            if (index<0
-                || index >= static_cast<int>(m_bakeFormatExtensions.size()))
-            {
-                return "";
-            }
-            return m_bakeFormatExtensions[index].c_str();
-        }
-        else if(capability == FORMAT_CAPABILITY_WRITE)
-        {
-            if(index<0 
-                || index>=static_cast<int>(m_writeFormatExtensions.size()))
-            {
-                return "";
-            }
-            return m_writeFormatExtensions[index].c_str();
-        }
-        return "";
+        return m_readFormatNames[index].c_str();
     }
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    FileFormat::~FileFormat()
+    else if (capability == FORMAT_CAPABILITY_BAKE)
     {
-    
-    }
-    
-    std::string FileFormat::getName() const
-    {
-        FormatInfoVec infoVec;
-        getFormatInfo(infoVec);
-        if(infoVec.size()>0)
+        if (index<0 || index >= static_cast<int>(m_bakeFormatNames.size()))
         {
-            return infoVec[0].name;
+            return "";
         }
-        return "Unknown Format";
+        return m_bakeFormatNames[index].c_str();
     }
-        
-    
-    
-    void FileFormat::bake(const Baker & /*baker*/,
-                          const std::string & formatName,
-                          std::ostream & /*ostream*/) const
+    else if(capability == FORMAT_CAPABILITY_WRITE)
+    {
+        if(index<0 || index>=static_cast<int>(m_writeFormatNames.size()))
+        {
+            return "";
+        }
+        return m_writeFormatNames[index].c_str();
+    }
+    return "";
+}
+
+const char * FormatRegistry::getFormatExtensionByIndex(
+    int capability, int index) const
+{
+    if(capability == FORMAT_CAPABILITY_READ)
+    {
+        if(index<0 
+            || index>=static_cast<int>(m_readFormatExtensions.size()))
+        {
+            return "";
+        }
+        return m_readFormatExtensions[index].c_str();
+    }
+    else if (capability == FORMAT_CAPABILITY_BAKE)
+    {
+        if (index<0
+            || index >= static_cast<int>(m_bakeFormatExtensions.size()))
+        {
+            return "";
+        }
+        return m_bakeFormatExtensions[index].c_str();
+    }
+    else if(capability == FORMAT_CAPABILITY_WRITE)
+    {
+        if(index<0 
+            || index>=static_cast<int>(m_writeFormatExtensions.size()))
+        {
+            return "";
+        }
+        return m_writeFormatExtensions[index].c_str();
+    }
+    return "";
+}
+
+///////////////////////////////////////////////////////////////////////////
+
+FileFormat::~FileFormat()
+{
+
+}
+
+std::string FileFormat::getName() const
+{
+    FormatInfoVec infoVec;
+    getFormatInfo(infoVec);
+    if(infoVec.size()>0)
+    {
+        return infoVec[0].name;
+    }
+    return "Unknown Format";
+}
+
+void FileFormat::bake(const Baker & /*baker*/,
+                        const std::string & formatName,
+                        std::ostream & /*ostream*/) const
+{
+    std::ostringstream os;
+    os << "Format " << formatName << " does not support baking.";
+    throw Exception(os.str().c_str());
+}
+
+void FileFormat::write(const OpRcPtrVec & /*ops*/,
+                        const FormatMetadataImpl & /*metadata*/,
+                        const std::string & formatName,
+                        std::ostream & /*ostream*/) const
+{
+    std::ostringstream os;
+    os << "Format " << formatName << " does not support writing.";
+    throw Exception(os.str().c_str());
+}
+
+namespace
+{
+
+void LoadFileUncached(FileFormat * & returnFormat,
+                      CachedFileRcPtr & returnCachedFile,
+                      const std::string & filepath)
+{
+    returnFormat = NULL;
+
     {
         std::ostringstream os;
-        os << "Format " << formatName << " does not support baking.";
-        throw Exception(os.str().c_str());
-    }
-    
-    void FileFormat::write(const OpRcPtrVec & /*ops*/,
-                           const FormatMetadataImpl & /*metadata*/,
-                           const std::string & formatName,
-                           std::ostream & /*ostream*/) const
-    {
-        std::ostringstream os;
-        os << "Format " << formatName << " does not support writing.";
-        throw Exception(os.str().c_str());
+        os << "Opening " << filepath;
+        LogDebug(os.str());
     }
 
-    namespace
+    // Try the initial format.
+    std::string primaryErrorText;
+    std::string root, extension;
+    pystring::os::path::splitext(root, extension, filepath);
+    // remove the leading '.'
+    extension = pystring::replace(extension,".","",1);
+
+    FormatRegistry & formatRegistry = FormatRegistry::GetInstance();
+
+    FileFormatVector possibleFormats;
+    formatRegistry.getFileFormatForExtension(
+        extension, possibleFormats);
+    FileFormatVector::const_iterator endFormat = possibleFormats.end();
+    FileFormatVector::const_iterator itFormat =
+        possibleFormats.begin();
+    while(itFormat != endFormat)
     {
-    
-        void LoadFileUncached(FileFormat * & returnFormat,
-            CachedFileRcPtr & returnCachedFile,
-            const std::string & filepath)
+
+        FileFormat * tryFormat = *itFormat;
+        std::ifstream filestream;
+        try
         {
-            returnFormat = NULL;
-            
+            // Open the filePath
+            filestream.open(
+                filepath.c_str(),
+                tryFormat->isBinary()
+                    ? std::ios_base::binary : std::ios_base::in);
+            if (!filestream.good())
             {
                 std::ostringstream os;
-                os << "Opening " << filepath;
+                os << "The specified FileTransform srcfile, '";
+                os << filepath << "', could not be opened. ";
+                os << "Please confirm the file exists with ";
+                os << "appropriate read permissions.";
+                throw Exception(os.str().c_str());
+            }
+
+            CachedFileRcPtr cachedFile = tryFormat->read(
+                filestream,
+                filepath);
+
+            if(IsDebugLoggingEnabled())
+            {
+                std::ostringstream os;
+                os << "    Loaded primary format ";
+                os << tryFormat->getName();
                 LogDebug(os.str());
             }
-            
-            // Try the initial format.
-            std::string primaryErrorText;
-            std::string root, extension;
-            pystring::os::path::splitext(root, extension, filepath);
-            // remove the leading '.'
-            extension = pystring::replace(extension,".","",1);
 
-            FormatRegistry & formatRegistry = FormatRegistry::GetInstance();
-            
-            FileFormatVector possibleFormats;
-            formatRegistry.getFileFormatForExtension(
-                extension, possibleFormats);
-            FileFormatVector::const_iterator endFormat = possibleFormats.end();
-            FileFormatVector::const_iterator itFormat =
-                possibleFormats.begin();
-            while(itFormat != endFormat)
-            {
-
-                FileFormat * tryFormat = *itFormat;
-                std::ifstream filestream;
-                try
-                {
-                    // Open the filePath
-                    filestream.open(
-                        filepath.c_str(),
-                        tryFormat->isBinary()
-                            ? std::ios_base::binary : std::ios_base::in);
-                    if (!filestream.good())
-                    {
-                        std::ostringstream os;
-                        os << "The specified FileTransform srcfile, '";
-                        os << filepath << "', could not be opened. ";
-                        os << "Please confirm the file exists with ";
-                        os << "appropriate read permissions.";
-                        throw Exception(os.str().c_str());
-                    }
-
-                    CachedFileRcPtr cachedFile = tryFormat->read(
-                        filestream,
-                        filepath);
-                    
-                    if(IsDebugLoggingEnabled())
-                    {
-                        std::ostringstream os;
-                        os << "    Loaded primary format ";
-                        os << tryFormat->getName();
-                        LogDebug(os.str());
-                    }
-                    
-                    returnFormat = tryFormat;
-                    returnCachedFile = cachedFile;
-                    filestream.close();
-                    return;
-                }
-                catch(std::exception & e)
-                {
-                    if (filestream.is_open())
-                    {
-                        filestream.close();
-                    }
-
-                    primaryErrorText += tryFormat->getName();
-                    primaryErrorText += " failed with: '";
-                    primaryErrorText = e.what();
-                    primaryErrorText += "'.  ";
-
-                    if(IsDebugLoggingEnabled())
-                    {
-                        std::ostringstream os;
-                        os << "    Failed primary format ";
-                        os << tryFormat->getName();
-                        os << ":  " << e.what();
-                        LogDebug(os.str());
-                    }
-                }
-                ++itFormat;
-            }
-            
-            // If this fails, try all other formats
-            CachedFileRcPtr cachedFile;
-            FileFormat * altFormat = NULL;
-            
-            for(int findex = 0;
-                findex<formatRegistry.getNumRawFormats();
-                ++findex)
-            {
-                altFormat = formatRegistry.getRawFormatByIndex(findex);
-                
-                // Do not try primary formats twice.
-                FileFormatVector::const_iterator itAlt = std::find(
-                    possibleFormats.begin(), possibleFormats.end(), altFormat);
-                if(itAlt != endFormat)
-                    continue;
-                
-                std::ifstream filestream;
-                try
-                {
-                    filestream.open(filepath.c_str(), altFormat->isBinary()
-                        ? std::ios_base::binary : std::ios_base::in);
-                    if (!filestream.good())
-                    {
-                        std::ostringstream os;
-                        os << "The specified FileTransform srcfile, '";
-                        os << filepath << "', could not be opened. ";
-                        os << "Please confirm the file exists with ";
-                        os << "appropriate read";
-                        os << " permissions.";
-                        throw Exception(os.str().c_str());
-                    }
-
-                    cachedFile = altFormat->read(filestream, filepath);
-                    
-                    if(IsDebugLoggingEnabled())
-                    {
-                        std::ostringstream os;
-                        os << "    Loaded alt format ";
-                        os << altFormat->getName();
-                        LogDebug(os.str());
-                    }
-                    
-                    returnFormat = altFormat;
-                    returnCachedFile = cachedFile;
-                    filestream.close();
-                    return;
-                }
-                catch(std::exception & e)
-                {
-                    if (filestream.is_open())
-                    {
-                        filestream.close();
-                    }
-
-                    if(IsDebugLoggingEnabled())
-                    {
-                        std::ostringstream os;
-                        os << "    Failed alt format ";
-                        os << altFormat->getName();
-                        os << ":  " << e.what();
-                        LogDebug(os.str());
-                    }
-                }
-            }
-            
-            // No formats succeeded. Error out with a sensible message.
-            std::ostringstream os;
-            os << "The specified transform file '";
-            os << filepath << "' could not be loaded.  ";
-
-            if (IsDebugLoggingEnabled())
-            {
-                os << "(Refer to debug log for errors from all formats). ";
-            }
-            else
-            {
-                os << "(Enable debug log for errors from all formats). ";
-            }
-
-            if(!possibleFormats.empty())
-            {
-                os << "All formats have been tried including ";
-                os << "formats registered for the given extension. ";
-                os << "These formats gave the following errors: ";
-                os << primaryErrorText;
-            }
-
-            throw Exception(os.str().c_str());
+            returnFormat = tryFormat;
+            returnCachedFile = cachedFile;
+            filestream.close();
+            return;
         }
-        
-        // We mutex both the main map and each item individually, so that
-        // the potentially slow file access wont block other lookups to already
-        // existing items. (Loads of the *same* file will mutually block though)
-        
-        struct FileCacheResult
+        catch(std::exception & e)
         {
-            Mutex mutex;
-            FileFormat * format;
-            bool ready;
-            bool error;
-            CachedFileRcPtr cachedFile;
-            std::string exceptionText;
-            
-            FileCacheResult():
-                format(NULL),
-                ready(false),
-                error(false)
-            {}
-        };
-        
-        typedef OCIO_SHARED_PTR<FileCacheResult> FileCacheResultPtr;
-        typedef std::map<std::string, FileCacheResultPtr> FileCacheMap;
-        
-        FileCacheMap g_fileCache;
-        Mutex g_fileCacheLock;
-        
-    } // namespace
-
-    void GetCachedFileAndFormat(FileFormat * & format,
-                                CachedFileRcPtr & cachedFile,
-                                const std::string & filepath)
-    {
-        // Load the file cache ptr from the global map
-        FileCacheResultPtr result;
-        {
-            AutoMutex lock(g_fileCacheLock);
-            FileCacheMap::iterator iter = g_fileCache.find(filepath);
-            if (iter != g_fileCache.end())
+            if (filestream.is_open())
             {
-                result = iter->second;
+                filestream.close();
             }
-            else
-            {
-                result = FileCacheResultPtr(new FileCacheResult);
-                g_fileCache[filepath] = result;
-            }
-        }
 
-        // If this file has already been loaded, return
-        // the result immediately
+            primaryErrorText += tryFormat->getName();
+            primaryErrorText += " failed with: '";
+            primaryErrorText = e.what();
+            primaryErrorText += "'.  ";
 
-        AutoMutex lock(result->mutex);
-        if (!result->ready)
-        {
-            result->ready = true;
-            result->error = false;
-
-            try
+            if(IsDebugLoggingEnabled())
             {
-                LoadFileUncached(result->format,
-                    result->cachedFile,
-                    filepath);
-            }
-            catch (std::exception & e)
-            {
-                result->error = true;
-                result->exceptionText = e.what();
-            }
-            catch (...)
-            {
-                result->error = true;
                 std::ostringstream os;
-                os << "An unknown error occurred in LoadFileUncached, ";
-                os << filepath;
-                result->exceptionText = os.str();
+                os << "    Failed primary format ";
+                os << tryFormat->getName();
+                os << ":  " << e.what();
+                LogDebug(os.str());
             }
         }
+        ++itFormat;
+    }
 
-        if (result->error)
+    // If this fails, try all other formats
+    CachedFileRcPtr cachedFile;
+    FileFormat * altFormat = NULL;
+
+    for(int findex = 0;
+        findex<formatRegistry.getNumRawFormats();
+        ++findex)
+    {
+        altFormat = formatRegistry.getRawFormatByIndex(findex);
+
+        // Do not try primary formats twice.
+        FileFormatVector::const_iterator itAlt = std::find(
+            possibleFormats.begin(), possibleFormats.end(), altFormat);
+        if(itAlt != endFormat)
+            continue;
+
+        std::ifstream filestream;
+        try
         {
-            throw Exception(result->exceptionText.c_str());
+            filestream.open(filepath.c_str(), altFormat->isBinary()
+                ? std::ios_base::binary : std::ios_base::in);
+            if (!filestream.good())
+            {
+                std::ostringstream os;
+                os << "The specified FileTransform srcfile, '";
+                os << filepath << "', could not be opened. ";
+                os << "Please confirm the file exists with ";
+                os << "appropriate read";
+                os << " permissions.";
+                throw Exception(os.str().c_str());
+            }
+
+            cachedFile = altFormat->read(filestream, filepath);
+
+            if(IsDebugLoggingEnabled())
+            {
+                std::ostringstream os;
+                os << "    Loaded alt format ";
+                os << altFormat->getName();
+                LogDebug(os.str());
+            }
+
+            returnFormat = altFormat;
+            returnCachedFile = cachedFile;
+            filestream.close();
+            return;
+        }
+        catch(std::exception & e)
+        {
+            if (filestream.is_open())
+            {
+                filestream.close();
+            }
+
+            if(IsDebugLoggingEnabled())
+            {
+                std::ostringstream os;
+                os << "    Failed alt format ";
+                os << altFormat->getName();
+                os << ":  " << e.what();
+                LogDebug(os.str());
+            }
+        }
+    }
+
+    // No formats succeeded. Error out with a sensible message.
+    std::ostringstream os;
+    os << "The specified transform file '";
+    os << filepath << "' could not be loaded.  ";
+
+    if (IsDebugLoggingEnabled())
+    {
+        os << "(Refer to debug log for errors from all formats). ";
+    }
+    else
+    {
+        os << "(Enable debug log for errors from all formats). ";
+    }
+
+    if(!possibleFormats.empty())
+    {
+        os << "All formats have been tried including ";
+        os << "formats registered for the given extension. ";
+        os << "These formats gave the following errors: ";
+        os << primaryErrorText;
+    }
+
+    throw Exception(os.str().c_str());
+}
+
+// We mutex both the main map and each item individually, so that
+// the potentially slow file access wont block other lookups to already
+// existing items. (Loads of the *same* file will mutually block though)
+
+struct FileCacheResult
+{
+    Mutex mutex;
+    FileFormat * format;
+    bool ready;
+    bool error;
+    CachedFileRcPtr cachedFile;
+    std::string exceptionText;
+
+    FileCacheResult():
+        format(NULL),
+        ready(false),
+        error(false)
+    {}
+};
+
+typedef OCIO_SHARED_PTR<FileCacheResult> FileCacheResultPtr;
+typedef std::map<std::string, FileCacheResultPtr> FileCacheMap;
+
+FileCacheMap g_fileCache;
+Mutex g_fileCacheLock;
+
+} // namespace
+
+void GetCachedFileAndFormat(FileFormat * & format,
+                            CachedFileRcPtr & cachedFile,
+                            const std::string & filepath)
+{
+    // Load the file cache ptr from the global map
+    FileCacheResultPtr result;
+    {
+        AutoMutex lock(g_fileCacheLock);
+        FileCacheMap::iterator iter = g_fileCache.find(filepath);
+        if (iter != g_fileCache.end())
+        {
+            result = iter->second;
         }
         else
         {
-            format = result->format;
-            cachedFile = result->cachedFile;
-        }
-
-        if (!format)
-        {
-            std::ostringstream os;
-            os << "The specified file load ";
-            os << filepath << " appeared to succeed, but no format ";
-            os << "was returned.";
-            throw Exception(os.str().c_str());
-        }
-
-        if (!cachedFile.get())
-        {
-            std::ostringstream os;
-            os << "The specified file load ";
-            os << filepath << " appeared to succeed, but no cachedFile ";
-            os << "was returned.";
-            throw Exception(os.str().c_str());
+            result = FileCacheResultPtr(new FileCacheResult);
+            g_fileCache[filepath] = result;
         }
     }
 
-    void ClearFileTransformCaches()
+    // If this file has already been loaded, return
+    // the result immediately
+
+    AutoMutex lock(result->mutex);
+    if (!result->ready)
     {
-        AutoMutex lock(g_fileCacheLock);
-        g_fileCache.clear();
-    }
-    
-    void BuildFileTransformOps(OpRcPtrVec & ops,
-                               const Config& config,
-                               const ConstContextRcPtr & context,
-                               const FileTransform& fileTransform,
-                               TransformDirection dir)
-    {
-        std::string src = fileTransform.getSrc();
-        if(src.empty())
-        {
-            std::ostringstream os;
-            os << "The transform file has not been specified.";
-            throw Exception(os.str().c_str());
-        }
-        
-        std::string filepath = context->resolveFileLocation(src.c_str());
-
-        // Verify the recursion is valid, FileNoOp is added for each file.
-        for (ConstOpRcPtr&& op : ops)
-        {
-            ConstOpDataRcPtr data = op->data();
-            auto fileData = DynamicPtrCast<const FileNoOpData>(data);
-            if (fileData)
-            {
-                // Error if file is still being loaded and is the same as the
-                // one about to be loaded.
-                if (!fileData->getComplete() &&
-                    Platform::Strcasecmp(fileData->getPath().c_str(),
-                                         filepath.c_str()) == 0)
-                {
-                    std::ostringstream os;
-                    os << "Reference to: " << filepath;
-                    os << " is creating a recursion.";
-
-                    throw Exception(os.str().c_str());
-                }
-            }
-        }
-
-        FileFormat* format = NULL;
-        CachedFileRcPtr cachedFile;
+        result->ready = true;
+        result->error = false;
 
         try
         {
-            GetCachedFileAndFormat(format, cachedFile, filepath);
-            // Add FileNoOp and keep track of it.
-            CreateFileNoOp(ops, filepath);
-            ConstOpRcPtr fileNoOpConst = ops.back();
-            OpRcPtr fileNoOp = ops.back();
-
-            // CTF implementation of FileFormat::buildFileOps might call
-            // BuildFileTransformOps for References.
-            format->buildFileOps(ops,
-                                 config, context,
-                                 cachedFile, fileTransform,
-                                 dir);
-
-            // File has been loaded completely. It may now be referenced again.
-            ConstOpDataRcPtr data = fileNoOpConst->data();
-            auto fileData = DynamicPtrCast<const FileNoOpData>(data);
-            if (fileData)
-            {
-                fileData->setComplete();
-            }
+            LoadFileUncached(result->format,
+                result->cachedFile,
+                filepath);
         }
-        catch (Exception & e)
+        catch (std::exception & e)
         {
-            std::ostringstream err;
-            err << "The transform file: " << filepath;
-            err << " failed while loading ops with this error: ";
-            err << e.what();
-            throw Exception(err.str().c_str());
+            result->error = true;
+            result->exceptionText = e.what();
+        }
+        catch (...)
+        {
+            result->error = true;
+            std::ostringstream os;
+            os << "An unknown error occurred in LoadFileUncached, ";
+            os << filepath;
+            result->exceptionText = os.str();
         }
     }
+
+    if (result->error)
+    {
+        throw Exception(result->exceptionText.c_str());
+    }
+    else
+    {
+        format = result->format;
+        cachedFile = result->cachedFile;
+    }
+
+    if (!format)
+    {
+        std::ostringstream os;
+        os << "The specified file load ";
+        os << filepath << " appeared to succeed, but no format ";
+        os << "was returned.";
+        throw Exception(os.str().c_str());
+    }
+
+    if (!cachedFile.get())
+    {
+        std::ostringstream os;
+        os << "The specified file load ";
+        os << filepath << " appeared to succeed, but no cachedFile ";
+        os << "was returned.";
+        throw Exception(os.str().c_str());
+    }
 }
-OCIO_NAMESPACE_EXIT
+
+void ClearFileTransformCaches()
+{
+    AutoMutex lock(g_fileCacheLock);
+    g_fileCache.clear();
+}
+
+void BuildFileTransformOps(OpRcPtrVec & ops,
+                           const Config& config,
+                           const ConstContextRcPtr & context,
+                           const FileTransform& fileTransform,
+                           TransformDirection dir)
+{
+    std::string src = fileTransform.getSrc();
+    if(src.empty())
+    {
+        std::ostringstream os;
+        os << "The transform file has not been specified.";
+        throw Exception(os.str().c_str());
+    }
+
+    std::string filepath = context->resolveFileLocation(src.c_str());
+
+    // Verify the recursion is valid, FileNoOp is added for each file.
+    for (ConstOpRcPtr&& op : ops)
+    {
+        ConstOpDataRcPtr data = op->data();
+        auto fileData = DynamicPtrCast<const FileNoOpData>(data);
+        if (fileData)
+        {
+            // Error if file is still being loaded and is the same as the
+            // one about to be loaded.
+            if (!fileData->getComplete() &&
+                Platform::Strcasecmp(fileData->getPath().c_str(),
+                                        filepath.c_str()) == 0)
+            {
+                std::ostringstream os;
+                os << "Reference to: " << filepath;
+                os << " is creating a recursion.";
+
+                throw Exception(os.str().c_str());
+            }
+        }
+    }
+
+    FileFormat* format = NULL;
+    CachedFileRcPtr cachedFile;
+
+    try
+    {
+        GetCachedFileAndFormat(format, cachedFile, filepath);
+        // Add FileNoOp and keep track of it.
+        CreateFileNoOp(ops, filepath);
+        ConstOpRcPtr fileNoOpConst = ops.back();
+        OpRcPtr fileNoOp = ops.back();
+
+        // CTF implementation of FileFormat::buildFileOps might call
+        // BuildFileTransformOps for References.
+        format->buildFileOps(ops,
+                                config, context,
+                                cachedFile, fileTransform,
+                                dir);
+
+        // File has been loaded completely. It may now be referenced again.
+        ConstOpDataRcPtr data = fileNoOpConst->data();
+        auto fileData = DynamicPtrCast<const FileNoOpData>(data);
+        if (fileData)
+        {
+            fileData->setComplete();
+        }
+    }
+    catch (Exception & e)
+    {
+        std::ostringstream err;
+        err << "The transform file: " << filepath;
+        err << " failed while loading ops with this error: ";
+        err << e.what();
+        throw Exception(err.str().c_str());
+    }
+}
+} // namespace OCIO_NAMESPACE

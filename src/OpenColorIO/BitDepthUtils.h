@@ -10,7 +10,7 @@
 #include "OpenEXR/half.h"
 
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 // Returns a double since often times a ratio of calls to this function is used
@@ -160,7 +160,6 @@ struct Converter<BIT_DEPTH_F32>
 };
 
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_BIT_DEPTH_UTILS_H

@@ -4,11 +4,9 @@
 #ifndef INCLUDED_OCIO_UNITTEST_LOGUTILS_H
 #define INCLUDED_OCIO_UNITTEST_LOGUTILS_H
 
-
 #include <OpenColorIO/OpenColorIO.h>
 
-
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 // Trap any log message while preserving the original logging settings.
@@ -39,8 +37,6 @@ public:
     ~MuteLogging() = default;
 };
 
-}
-OCIO_NAMESPACE_EXIT
-
+} // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_UNITTEST_LOGUTILS_H

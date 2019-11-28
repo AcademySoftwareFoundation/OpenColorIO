@@ -9,7 +9,7 @@
 #include "Platform.h"
 #include "pystring/pystring.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 CTFReaderTransformElt::CTFReaderTransformElt(const std::string & name,
@@ -1134,7 +1134,7 @@ void CTFReaderACESParamsElt::start(const char **atts)
 {
     // Attributes we want to extract.
     double gamma = std::numeric_limits<double>::quiet_NaN();
-    
+
     CTFReaderACESElt * pFixedFunction
         = dynamic_cast<CTFReaderACESElt*>(getParent().get());
 
@@ -2156,7 +2156,7 @@ CTFReaderLogElt::~CTFReaderLogElt()
 void CTFReaderLogElt::start(const char ** atts)
 {
     CTFReaderOpElt::start(atts);
-    
+
     bool isStyleFound = false;
     for (unsigned i = 0; atts[i]; i += 2)
     {
@@ -2302,9 +2302,9 @@ void CTFReaderLogParamsElt::start(const char ** atts)
     }
 
     // Attributes we want to extract.
-    
+
     int chan = -1;
-    
+
     // There are 3 ways to have the parameters. No parameters (when op style
     // is LOG2, LOG10, ANTI_LOG2 or ANTI_LOG10), and legacy parameters or new
     // parameters (when op style is LIN_TO_LOG or LOG_TO_LIN).
@@ -2407,7 +2407,7 @@ void CTFReaderLogParamsElt::start(const char ** atts)
     // Legacy parameters are set on the CTFReaderLogElt and will be
     // transferred to the op on the end() call.
     LogUtil::CTFParams::Params ctfValues(5);
-    
+
     // Parameters using the new format were found in this LogParams or we
     // already read a LogParams using them.
     if (!IsNan(linSideSlope) || !IsNan(linSideOffset) ||
@@ -3478,6 +3478,5 @@ const OpDataRcPtr CTFReaderReferenceElt::getOp() const
     return m_reference;
 }
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 

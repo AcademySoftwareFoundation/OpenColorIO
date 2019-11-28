@@ -10,7 +10,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 // Provides all services to write xml to an output stream.
@@ -95,7 +95,6 @@ private:
     XmlFormatter & m_formatter;
 };
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif

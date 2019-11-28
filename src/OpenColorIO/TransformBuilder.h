@@ -8,12 +8,11 @@
 
 #include "Op.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 void CreateTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op);
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif

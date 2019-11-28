@@ -6,21 +6,21 @@
 
 #include "fileformats/xmlutils/XMLReaderHelper.h"
 #include "fileformats/ctf/CTFTransform.h"
+#include "fileformats/ctf/IndexMapping.h"
 #include "fileformats/FormatMetadata.h"
 #include "ops/OpArray.h"
-#include "ops/CDL/CDLOpData.h"
+#include "ops/cdl/CDLOpData.h"
 #include "ops/exposurecontrast/ExposureContrastOpData.h"
-#include "ops/FixedFunction/FixedFunctionOpData.h"
-#include "ops/Gamma/GammaOpData.h"
-#include "ops/IndexMapping.h"
-#include "ops/Log/LogOpData.h"
-#include "ops/Log/LogUtils.h"
-#include "ops/Lut1D/Lut1DOpData.h"
-#include "ops/Lut3D/Lut3DOpData.h"
-#include "ops/Range/RangeOpData.h"
+#include "ops/fixedfunction/FixedFunctionOpData.h"
+#include "ops/gamma/GammaOpData.h"
+#include "ops/log/LogOpData.h"
+#include "ops/log/LogUtils.h"
+#include "ops/lut1d/Lut1DOpData.h"
+#include "ops/lut3d/Lut3DOpData.h"
+#include "ops/range/RangeOpData.h"
 #include "ops/reference/ReferenceOpData.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 // Used by CLF/CTF parser.
@@ -916,7 +916,6 @@ public:
     void setRawData(const char * str, size_t len, unsigned int xmlLine) override;
 };
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif

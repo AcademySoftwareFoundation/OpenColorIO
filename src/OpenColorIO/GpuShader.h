@@ -8,7 +8,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 ///////////////////////////////////////////////////////////////////////////
@@ -92,12 +92,12 @@ private:
     LegacyGpuShaderDesc();
     explicit LegacyGpuShaderDesc(unsigned edgelen);
     virtual ~LegacyGpuShaderDesc();
-    
+
     LegacyGpuShaderDesc(const LegacyGpuShaderDesc &) = delete;
     LegacyGpuShaderDesc& operator= (const LegacyGpuShaderDesc &) = delete;
-    
+
     static void Deleter(LegacyGpuShaderDesc* c);
-    
+
     class Impl;
     friend class Impl;
     Impl * m_impl;
@@ -181,12 +181,12 @@ private:
 
     GenericGpuShaderDesc();
     virtual ~GenericGpuShaderDesc();
-    
+
     GenericGpuShaderDesc(const GenericGpuShaderDesc &) = delete;
     GenericGpuShaderDesc& operator= (const GenericGpuShaderDesc &) = delete;
-    
+
     static void Deleter(GenericGpuShaderDesc* c);
-    
+
     class Impl;
     friend class Impl;
     Impl * m_impl;
@@ -194,7 +194,6 @@ private:
     const Impl * getImpl() const { return m_impl; }
 };
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif

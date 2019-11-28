@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_OIIO_HELPERS_H
 #define INCLUDED_OCIO_OIIO_HELPERS_H
-
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -14,8 +12,7 @@
 namespace OIIO = OIIO_NAMESPACE;
 #endif
 
-
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 BitDepth GetBitDepth(const OIIO::ImageSpec & spec);
@@ -50,8 +47,7 @@ private:
 
 ImageDescRcPtr CreateImageDesc(const OIIO::ImageSpec & spec, const ImgBuffer & img);
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_OIIO_HELPERS_H
 

@@ -11,7 +11,7 @@
 
 #include "transforms/CDLTransform.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 class FormatMetadataImpl;
@@ -45,8 +45,6 @@ private:
     CDLParser& operator=(const CDLParser&) = delete;
 };
 
-
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif

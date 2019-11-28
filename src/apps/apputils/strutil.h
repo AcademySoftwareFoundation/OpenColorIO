@@ -37,8 +37,8 @@
 
 
 
-#ifndef OPENCOLORIO_STRUTIL_H
-#define OPENCOLORIO_STRUTIL_H
+#ifndef INCLUDED_OCIO_STRUTIL_H
+#define INCLUDED_OCIO_STRUTIL_H
 
 #include <cstdarg>
 #include <string>
@@ -70,14 +70,15 @@
 /// @namespace Strutil
 ///
 /// @brief     String-related utilities.
-namespace Strutil {
+namespace Strutil
+{
 
 /// Return a std::string formatted from printf-like arguments -- passed
 /// already as a va_list.
 std::string vformat (const char *fmt, va_list ap)
                                          OPENCOLORIO_PRINTF_ARGS(1,0);
 
-};  // namespace Strutil
+}  // namespace Strutil
 
 
-#endif // OPENCOLORIO_STRUTIL_H
+#endif // INCLUDED_OCIO_STRUTIL_H

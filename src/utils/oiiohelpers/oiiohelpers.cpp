@@ -10,7 +10,7 @@
 #include "pystring/pystring.h"
 
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 BitDepth GetBitDepth(const OIIO::ImageSpec & spec)
@@ -220,5 +220,4 @@ ImageDescRcPtr CreateImageDesc(const OIIO::ImageSpec & spec, const ImgBuffer & i
 }
 
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE

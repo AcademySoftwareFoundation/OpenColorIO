@@ -49,13 +49,13 @@
 
 //  This file was altered for OCIO compilation purposes
 
-#ifndef INCLUDED_OCIO_md5_INCLUDED
-#define INCLUDED_OCIO_md5_INCLUDED
+#ifndef INCLUDED_OCIO_MD5_H
+#define INCLUDED_OCIO_MD5_H
 
 
 #include <OpenColorIO/OpenColorIO.h>
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 // Note: the md5 functions should not be wrapped in extern "C', otherwise
@@ -91,7 +91,6 @@ void md5_append(md5_state_t *pms, const md5_byte_t *data, int nbytes);
 void md5_finish(md5_state_t *pms, md5_byte_t digest[16]);
 
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
-#endif /* md5_INCLUDED */
+#endif /* INCLUDED_OCIO_MD5_H */

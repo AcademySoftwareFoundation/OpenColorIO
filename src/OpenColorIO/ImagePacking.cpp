@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <sstream>
-#include <iostream>
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
+#include <sstream>
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -14,7 +14,7 @@
 #include "ImagePacking.h"
 
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 
@@ -308,5 +308,4 @@ template struct Generic<uint16_t>;
 template struct Generic<half>;
 
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE

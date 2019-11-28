@@ -65,12 +65,12 @@ void UpdateOCIOGLState();
 static void InitImageTexture(const char * filename)
 {
     glGenTextures(1, &g_imageTexID);
-    
+
     std::vector<float> img;
     int texWidth = 512;
     int texHeight = 512;
     int components = 4;
-    
+
     if(filename && *filename)
     {
         std::cout << "loading: " << filename << std::endl;
@@ -86,17 +86,17 @@ static void InitImageTexture(const char * filename)
                 std::cerr << "Could not create image input." << std::endl;
                 exit(1);
             }
-            
+
             OIIO::ImageSpec spec;
             f->open(filename, spec);
-            
+
             std::string error = f->geterror();
             if(!error.empty())
             {
                 std::cerr << "Error loading image " << error << std::endl;
                 exit(1);
             }
-            
+
             texWidth = spec.width;
             texHeight = spec.height;
             components = spec.nchannels;
@@ -125,10 +125,10 @@ static void InitImageTexture(const char * filename)
     else
     {
         std::cout << "No image specified, loading gradient." << std::endl;
-        
+
         img.resize(texWidth*texHeight*components);
         memset(&img[0], 0, texWidth*texHeight*components*sizeof(float));
-        
+
         for(int y=0; y<texHeight; ++y)
         {
             for(int x=0; x<texWidth; ++x)
@@ -141,8 +141,7 @@ static void InitImageTexture(const char * filename)
             }
         }
     }
-    
-    
+
     GLenum format = 0;
     if(components == 4) format = GL_RGBA;
     else if(components == 3) format = GL_RGB;
@@ -151,13 +150,13 @@ static void InitImageTexture(const char * filename)
         std::cerr << "Cannot load image with " << components << " components." << std::endl;
         exit(1);
     }
-    
+
     g_imageAspect = 1.0;
     if(texHeight!=0)
     {
         g_imageAspect = (float) texWidth / (float) texHeight;
     }
-    
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, g_imageTexID);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, texWidth, texHeight, 0,
@@ -174,7 +173,7 @@ void InitOCIO(const char * filename)
     g_display = config->getDefaultDisplay();
     g_transformName = config->getDefaultView(g_display.c_str());
     g_look = config->getDisplayLooks(g_display.c_str(), g_transformName.c_str());
-    
+
     g_inputColorSpace = OCIO::ROLE_SCENE_LINEAR;
     if(filename && *filename)
     {
@@ -208,7 +207,7 @@ void Redisplay(void)
     {
         windowAspect = (float)g_winWidth/(float)g_winHeight;
     }
-    
+
     float pts[4] = { 0.0f, 0.0f, 0.0f, 0.0f }; // x0,y0,x1,y1
     if(windowAspect>g_imageAspect)
     {
@@ -226,31 +225,31 @@ void Redisplay(void)
         pts[1] = (float)g_winHeight * 0.5f - imgHeightScreenSpace * 0.5f;
         pts[3] = (float)g_winHeight * 0.5f + imgHeightScreenSpace * 0.5f;
     }
-    
+
     glEnable(GL_TEXTURE_2D);
     glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glColor3f(1, 1, 1);
-    
+
     glPushMatrix();
     glBegin(GL_QUADS);
     glTexCoord2f(0.0f, 1.0f);
     glVertex2f(pts[0], pts[1]);
-    
+
     glTexCoord2f(0.0f, 0.0f);
     glVertex2f(pts[0], pts[3]);
-    
+
     glTexCoord2f(1.0f, 0.0f);
     glVertex2f(pts[2], pts[3]);
-    
+
     glTexCoord2f(1.0f, 1.0f);
     glVertex2f(pts[2], pts[1]);
-    
+
     glEnd();
     glPopMatrix();
-    
+
     glDisable(GL_TEXTURE_2D);
-    
+
     glutSwapBuffers();
 }
 
@@ -259,7 +258,7 @@ static void Reshape(int width, int height)
 {
     g_winWidth = width;
     g_winHeight = height;
-    
+
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -325,7 +324,7 @@ static void Key(unsigned char key, int /*x*/, int /*y*/)
         CleanUp();
         exit(0);
     }
-    
+
     UpdateOCIOGLState();
     glutPostRedisplay();
 }
@@ -335,9 +334,9 @@ static void SpecialKey(int key, int x, int y)
 {
     (void) x;
     (void) y;
-    
+
     int mod = glutGetModifiers();
-    
+
     if(key == GLUT_KEY_UP && (mod & GLUT_ACTIVE_CTRL))
     {
         g_exposure_fstop += 0.25f;
@@ -351,7 +350,7 @@ static void SpecialKey(int key, int x, int y)
         g_exposure_fstop = 0.0f;
         g_display_gamma = 1.0f;
     }
-    
+
     else if(key == GLUT_KEY_UP && (mod & GLUT_ACTIVE_ALT))
     {
         g_display_gamma *= 1.1f;
@@ -365,9 +364,9 @@ static void SpecialKey(int key, int x, int y)
         g_exposure_fstop = 0.0f;
         g_display_gamma = 1.0f;
     }
-    
+
     UpdateOCIOGLState();
-    
+
     glutPostRedisplay();
 }
 
@@ -386,7 +385,7 @@ void UpdateOCIOGLState()
 {
     // Step 0: Get the processor using any of the pipelines mentioned above.
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-    
+
     OCIO::DisplayTransformRcPtr transform = OCIO::DisplayTransform::Create();
     transform->setInputColorSpaceName( g_inputColorSpace.c_str() );
     transform->setDisplay( g_display.c_str() );
@@ -411,7 +410,7 @@ void UpdateOCIOGLState()
                   << (g_channelHot[3] ? "A" : "") << std::endl;
 
     }
-    
+
     // Add optional transforms to create a full-featured, "canonical" display pipeline
     // Fstop exposure control (in SCENE_LINEAR)
     {
@@ -425,7 +424,7 @@ void UpdateOCIOGLState()
         mtx->setOffset(offset4);
         transform->setLinearCC(mtx);
     }
-    
+
     // Channel swizzling
     {
         double lumacoef[3];
@@ -438,7 +437,7 @@ void UpdateOCIOGLState()
         swizzle->setOffset(offset);
         transform->setChannelView(swizzle);
     }
-    
+
     // Post-display transform gamma
     {
         double exponent = 1.0/std::max(1e-6, static_cast<double>(g_display_gamma));
@@ -447,7 +446,7 @@ void UpdateOCIOGLState()
         expTransform->setValue(exponent4f);
         transform->setDisplayCC(expTransform);
     }
-    
+
     OCIO::ConstProcessorRcPtr processor;
     try
     {
@@ -462,7 +461,7 @@ void UpdateOCIOGLState()
     {
         return;
     }
-    
+
     // Step 1: Create the appropriate GPU shader description
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = g_gpulegacy ? OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE)
@@ -486,7 +485,7 @@ void UpdateOCIOGLState()
     //     was already created for the input image.
     //     
     g_oglBuilder->allocateAllTextures(1);
-    
+
     // Step 5: Build the fragment shader program
     g_oglBuilder->buildProgram(g_fragShaderText);
 
@@ -510,9 +509,9 @@ void imageColorSpace_CB(int id)
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
     const char * name = config->getColorSpaceNameByIndex(id);
     if(!name) return;
-    
+
     g_inputColorSpace = name;
-    
+
     UpdateOCIOGLState();
     glutPostRedisplay();
 }
@@ -522,9 +521,9 @@ void displayDevice_CB(int id)
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
     const char * display = config->getDisplay(id);
     if(!display) return;
-    
+
     g_display = display;
-    
+
     const char * csname = config->getDisplayColorSpaceName(g_display.c_str(), g_transformName.c_str());
     if(!csname)
     {
@@ -540,14 +539,14 @@ void displayDevice_CB(int id)
 void transform_CB(int id)
 {
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-    
+
     const char * transform = config->getView(g_display.c_str(), id);
     if(!transform) return;
-    
+
     g_transformName = transform;
 
     g_look = config->getDisplayLooks(g_display.c_str(), g_transformName.c_str());
-    
+
     UpdateOCIOGLState();
     glutPostRedisplay();
 }
@@ -555,12 +554,12 @@ void transform_CB(int id)
 void look_CB(int id)
 {
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-    
+
     const char * look = config->getLookNameByIndex(id);
     if(!look || !*look) return;
-    
+
     g_look = look;
-    
+
     UpdateOCIOGLState();
     glutPostRedisplay();
 }
@@ -568,7 +567,7 @@ void look_CB(int id)
 static void PopulateOCIOMenus()
 {
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-    
+
     int csMenuID = glutCreateMenu(imageColorSpace_CB);
 
     std::map<std::string, int> families;
@@ -605,32 +604,32 @@ static void PopulateOCIOMenus()
             }
         }
     }
-    
+
     int deviceMenuID = glutCreateMenu(displayDevice_CB);
     for(int i=0; i<config->getNumDisplays(); ++i)
     {
         glutAddMenuEntry(config->getDisplay(i), i);
     }
-    
+
     int transformMenuID = glutCreateMenu(transform_CB);
     const char * defaultDisplay = config->getDefaultDisplay();
     for(int i=0; i<config->getNumViews(defaultDisplay); ++i)
     {
         glutAddMenuEntry(config->getView(defaultDisplay, i), i);
     }
-    
+
     int lookMenuID = glutCreateMenu(look_CB);
     for(int i=0; i<config->getNumLooks(); ++i)
     {
         glutAddMenuEntry(config->getLookNameByIndex(i), i);
     }
-    
+
     glutCreateMenu(menuCallback);
     glutAddSubMenu("Image ColorSpace", csMenuID);
     glutAddSubMenu("Transform", transformMenuID);
     glutAddSubMenu("Device", deviceMenuID);
     glutAddSubMenu("Looks Override", lookMenuID);
-    
+
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 
@@ -695,15 +694,15 @@ void parseArguments(int argc, char **argv)
 int main(int argc, char **argv)
 {
     glutInit(&argc, argv);
-    
+
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
     glutInitWindowSize(512, 512);
     glutInitWindowPosition (100, 100);
 
     parseArguments(argc, argv);
-    
+
     g_win = glutCreateWindow(argv[0]);
-    
+
 #ifndef __APPLE__
     glewInit();
     if (!glewIsSupported("GL_VERSION_2_0"))
@@ -712,7 +711,7 @@ int main(int argc, char **argv)
         exit(1);
     }
 #endif
-    
+
     glutReshapeFunc(Reshape);
     glutKeyboardFunc(Key);
     glutSpecialFunc(SpecialKey);
@@ -759,10 +758,10 @@ int main(int argc, char **argv)
             std::cout << "OCIO search_path:    " << config->getSearchPath() << std::endl;
         }
     }
-    
+
     std::cout << std::endl;
     std::cout << USAGE_TEXT << std::endl;
-    
+
     InitImageTexture(g_filename.c_str());
     try
     {
@@ -773,11 +772,11 @@ int main(int argc, char **argv)
         std::cerr << e.what() << std::endl;
         exit(1);
     }
-    
+
     PopulateOCIOMenus();
-    
+
     Reshape(1024, 512);
-    
+
     try
     {
         UpdateOCIOGLState();
@@ -787,9 +786,9 @@ int main(int argc, char **argv)
         std::cerr << e.what() << std::endl;
         exit(1);
     }
-    
+
     Redisplay();
-    
+
     /*
     if (Anim)
     {

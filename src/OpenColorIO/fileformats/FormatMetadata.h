@@ -12,7 +12,7 @@
 
 #include "PrivateTypes.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 
@@ -111,7 +111,6 @@ private:
     Elements         m_elements;   // The list of sub-elements
 };
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif

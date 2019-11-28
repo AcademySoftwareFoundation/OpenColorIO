@@ -6,7 +6,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 class DynamicPropertyImpl;
@@ -61,7 +61,7 @@ public:
 private:
     DynamicPropertyImpl() = delete;
     DynamicPropertyImpl & operator=(DynamicPropertyImpl &) = delete;
-    
+
     DynamicPropertyType m_type = DYNAMIC_PROPERTY_EXPOSURE;
 
     DynamicPropertyValueType m_valueType = DYNAMIC_PROPERTY_DOUBLE;
@@ -71,7 +71,6 @@ private:
 
 bool operator ==(const DynamicProperty &, const DynamicProperty &);
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif
