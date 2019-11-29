@@ -467,7 +467,7 @@ private:
             }
 
             // Safety check to try and ensure that all new elements will get handled here.
-            static_assert(CTFReaderOpElt::NoType == 13, "Need to handle new type here");
+            static_assert(CTFReaderOpElt::NoType == 14, "Need to handle new type here");
 
             // Will allow to give better error feedback to the user if the
             // element name is not handled. If any case recognizes the name,
@@ -496,6 +496,11 @@ private:
                                       TAG_PROCESS_LIST, recognizedName))
             {
                 pImpl->AddOpReader(CTFReaderOpElt::FixedFunctionType, name);
+            }
+            else if (SupportedElement(name, pElt, TAG_FUNCTION,
+                                      TAG_PROCESS_LIST, recognizedName))
+            {
+                pImpl->AddOpReader(CTFReaderOpElt::FunctionType, name);
             }
             else if (SupportedElement(name, pElt, TAG_GAMMA,
                                       TAG_PROCESS_LIST, recognizedName))

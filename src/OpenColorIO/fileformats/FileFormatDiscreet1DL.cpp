@@ -606,22 +606,25 @@ float Lut1dUtils::GetMax(IM_LutBitsPerChannel lutBitDepth)
 {
     switch (lutBitDepth)
     {
-    case (IM_LUT_8BITS_PERCHANNEL):
+    case IM_LUT_8BITS_PERCHANNEL:
         return 255.0f;
 
-    case (IM_LUT_10BITS_PERCHANNEL):
+    case IM_LUT_10BITS_PERCHANNEL:
         return 1023.0f;
 
-    case (IM_LUT_12BITS_PERCHANNEL):
+    case IM_LUT_12BITS_PERCHANNEL:
         return 4095.0f;
 
-    case (IM_LUT_16BITS_PERCHANNEL):
-    case (IM_LUT_HALFBITS_PERCHANNEL):
+    case IM_LUT_16BITS_PERCHANNEL:
+    case IM_LUT_HALFBITS_PERCHANNEL:
         return 65535.0f;
 
-    default:
+    case IM_LUT_FLOATBITS_PERCHANNEL:
+    case IM_LUT_UNKNOWN_BITS_PERCHANNEL:
         return 1.0f;
     }
+
+    return 1.0f;
 }
 
 class LocalCachedFile : public CachedFile

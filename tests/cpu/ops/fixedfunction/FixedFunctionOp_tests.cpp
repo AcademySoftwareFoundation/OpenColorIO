@@ -217,3 +217,106 @@ OCIO_ADD_TEST(FixedFunctionOp, create_transform)
     OCIO_CHECK_EQUAL(param[0], 2.01);
 }
 
+OCIO_ADD_TEST(FixedFunctionOps, RGB_TO_HSV)
+{
+    OCIO::OpRcPtrVec ops;
+
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, OCIO::FixedFunctionOpData::RGB_TO_HSV));
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, OCIO::FixedFunctionOpData::HSV_TO_RGB));
+
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OCIO::ConstOpRcPtr op1 = ops[1];
+
+    OCIO_CHECK_ASSERT(!op0->isIdentity());
+    OCIO_CHECK_ASSERT(!op1->isIdentity());
+
+    OCIO_CHECK_ASSERT(op0->isSameType(op1));
+    OCIO_CHECK_ASSERT(op0->isInverse(op1));
+    OCIO_CHECK_ASSERT(op1->isInverse(op0));
+
+    OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp();
+    const OCIO::OpCPU & c = *cpuOp;
+    const std::string typeName(typeid(c).name());
+    OCIO_CHECK_NE(-1, pystring::find(typeName, "Renderer_RGB_TO_HSV"));
+}
+
+OCIO_ADD_TEST(FixedFunctionOps, XYZ_TO_xyY)
+{
+    OCIO::OpRcPtrVec ops;
+
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, OCIO::FixedFunctionOpData::XYZ_TO_xyY));
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, OCIO::FixedFunctionOpData::xyY_TO_XYZ));
+
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OCIO::ConstOpRcPtr op1 = ops[1];
+
+    OCIO_CHECK_ASSERT(!op0->isIdentity());
+    OCIO_CHECK_ASSERT(!op1->isIdentity());
+
+    OCIO_CHECK_ASSERT(op0->isSameType(op1));
+    OCIO_CHECK_ASSERT(op0->isInverse(op1));
+    OCIO_CHECK_ASSERT(op1->isInverse(op0));
+
+    OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp();
+    const OCIO::OpCPU & c = *cpuOp;
+    const std::string typeName(typeid(c).name());
+    OCIO_CHECK_NE(-1, pystring::find(typeName, "Renderer_XYZ_TO_xyY"));
+}
+
+OCIO_ADD_TEST(FixedFunctionOps, XYZ_TO_uvY)
+{
+    OCIO::OpRcPtrVec ops;
+
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, OCIO::FixedFunctionOpData::XYZ_TO_uvY));
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, OCIO::FixedFunctionOpData::uvY_TO_XYZ));
+
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OCIO::ConstOpRcPtr op1 = ops[1];
+
+    OCIO_CHECK_ASSERT(!op0->isIdentity());
+    OCIO_CHECK_ASSERT(!op1->isIdentity());
+
+    OCIO_CHECK_ASSERT(op0->isSameType(op1));
+    OCIO_CHECK_ASSERT(op0->isInverse(op1));
+    OCIO_CHECK_ASSERT(op1->isInverse(op0));
+
+    OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp();
+    const OCIO::OpCPU & c = *cpuOp;
+    const std::string typeName(typeid(c).name());
+    OCIO_CHECK_NE(-1, pystring::find(typeName, "Renderer_XYZ_TO_uvY"));
+}
+
+OCIO_ADD_TEST(FixedFunctionOps, XYZ_TO_LUV)
+{
+    OCIO::OpRcPtrVec ops;
+
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, OCIO::FixedFunctionOpData::XYZ_TO_LUV));
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, OCIO::FixedFunctionOpData::LUV_TO_XYZ));
+
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OCIO::ConstOpRcPtr op1 = ops[1];
+
+    OCIO_CHECK_ASSERT(!op0->isIdentity());
+    OCIO_CHECK_ASSERT(!op1->isIdentity());
+
+    OCIO_CHECK_ASSERT(op0->isSameType(op1));
+    OCIO_CHECK_ASSERT(op0->isInverse(op1));
+    OCIO_CHECK_ASSERT(op1->isInverse(op0));
+
+    OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp();
+    const OCIO::OpCPU & c = *cpuOp;
+    const std::string typeName(typeid(c).name());
+    OCIO_CHECK_NE(-1, pystring::find(typeName, "Renderer_XYZ_TO_LUV"));
+}

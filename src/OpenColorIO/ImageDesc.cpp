@@ -240,7 +240,9 @@ struct PackedImageDesc::Impl
                 }
                 break;
             }
-            default:
+            case BIT_DEPTH_UINT14:
+            case BIT_DEPTH_UINT32:
+            case BIT_DEPTH_UNKNOWN:
             {
                 std::string err("PackedImageDesc Error: Unsupported bit-depth: ");
                 err += BitDepthToString(m_bitDepth);

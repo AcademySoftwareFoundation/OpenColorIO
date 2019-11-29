@@ -54,8 +54,12 @@ const char * GetInterpolation1DName(Interpolation interp)
         return INTERPOLATION_1D_LINEAR;
     case INTERP_CUBIC:
         return INTERPOLATION_1D_CUBIC;
+
     case INTERP_DEFAULT:
-    default:
+    case INTERP_NEAREST:
+    case INTERP_TETRAHEDRAL:
+    case INTERP_BEST:
+    case INTERP_UNKNOWN:
         return INTERPOLATION_DEFAULT;
     };
 
@@ -95,8 +99,12 @@ const char * GetInterpolation3DName(Interpolation interp)
         return INTERPOLATION_3D_LINEAR;
     case INTERP_TETRAHEDRAL:
         return INTERPOLATION_3D_TETRAHEDRAL;
+
     case INTERP_DEFAULT:
-    default:
+    case INTERP_NEAREST:
+    case INTERP_CUBIC:
+    case INTERP_BEST:
+    case INTERP_UNKNOWN:
         return INTERPOLATION_DEFAULT;
     };
 

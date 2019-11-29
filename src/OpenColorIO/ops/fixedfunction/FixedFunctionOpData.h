@@ -36,7 +36,15 @@ public:
         ACES_GLOW_10_INV,         // Glow function inverse (ACES 1.0)
         ACES_DARK_TO_DIM_10_FWD,  // Dark to dim surround correction (ACES 1.0)
         ACES_DARK_TO_DIM_10_INV,  // Dim to dark surround correction (ACES 1.0)
-        REC2100_SURROUND          // Rec.2100 surround correction (takes one double for the gamma param)
+        REC2100_SURROUND,         // Rec.2100 surround correction (takes one double for the gamma param)
+        RGB_TO_HSV,               // Classic RGB to HSV function
+        HSV_TO_RGB,               // Classic HSV to RGB function
+        XYZ_TO_xyY,               // CIE XYZ to 1931 xy chromaticity coordinates
+        xyY_TO_XYZ,               // Inverse of above
+        XYZ_TO_uvY,               // CIE XYZ to 1976 u'v' chromaticity coordinates
+        uvY_TO_XYZ,               // Inverse of above
+        XYZ_TO_LUV,               // CIE XYZ to 1976 CIELUV colour space (D65 white)
+        LUV_TO_XYZ                // Inverse of above
     };
 
     static const char * ConvertStyleToString(Style style, bool detailed);
@@ -48,9 +56,9 @@ public:
 
     FixedFunctionOpData();
 
-    FixedFunctionOpData(const Params & params,
-                        Style style);
-
+    explicit FixedFunctionOpData(Style style);
+    FixedFunctionOpData(const Params & params, Style style);
+    FixedFunctionOpData(const FixedFunctionOpData &) = default;
     virtual ~FixedFunctionOpData();
 
     FixedFunctionOpDataRcPtr clone() const;

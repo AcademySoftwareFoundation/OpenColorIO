@@ -287,6 +287,10 @@ const char * FixedFunctionStyleToString(FixedFunctionStyle style)
         case FIXED_FUNCTION_ACES_GLOW_10:        return "ACES_Glow10";
         case FIXED_FUNCTION_ACES_DARK_TO_DIM_10: return "ACES_DarkToDim10";
         case FIXED_FUNCTION_REC2100_SURROUND:    return "REC2100_Surround";
+        case FIXED_FUNCTION_RGB_TO_HSV:          return "RGB_TO_HSV";
+        case FIXED_FUNCTION_XYZ_TO_xyY:          return "XYZ_TO_xyY";
+        case FIXED_FUNCTION_XYZ_TO_uvY:          return "XYZ_TO_uvY";
+        case FIXED_FUNCTION_XYZ_TO_LUV:          return "XYZ_TO_LUV";
     }
 
     // Default style is meaningless.
@@ -303,6 +307,10 @@ FixedFunctionStyle FixedFunctionStyleFromString(const char * style)
     else if(str == "aces_glow10")        return FIXED_FUNCTION_ACES_GLOW_10;
     else if(str == "aces_darktodim10")   return FIXED_FUNCTION_ACES_DARK_TO_DIM_10;
     else if(str == "rec2100_surround")   return FIXED_FUNCTION_REC2100_SURROUND;
+    else if(str == "rgb_to_hsv")         return FIXED_FUNCTION_RGB_TO_HSV;
+    else if(str == "xyz_to_xyy")         return FIXED_FUNCTION_XYZ_TO_xyY;
+    else if(str == "xyz_to_uvy")         return FIXED_FUNCTION_XYZ_TO_uvY;
+    else if(str == "xyz_to_luv")         return FIXED_FUNCTION_XYZ_TO_LUV;
 
     // Default style is meaningless.
     std::stringstream ss;
