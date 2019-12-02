@@ -58,8 +58,6 @@ const char * GetInterpolation1DName(Interpolation interp)
     default:
         return INTERPOLATION_DEFAULT;
     };
-
-    return INTERPOLATION_DEFAULT;
 }
 
 Interpolation GetInterpolation3D(const char * str)
@@ -99,8 +97,6 @@ const char * GetInterpolation3DName(Interpolation interp)
     default:
         return INTERPOLATION_DEFAULT;
     };
-
-    return INTERPOLATION_DEFAULT;
 }
 
 } // namespace OCIO_NAMESPACE
