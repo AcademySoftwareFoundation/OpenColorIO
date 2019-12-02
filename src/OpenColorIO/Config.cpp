@@ -332,7 +332,7 @@ public:
     // to reset internal cache states.  You also should do this in a
     // thread safe manner by acquiring the cacheidMutex_
     void resetCacheIDs();
-    
+
     // Get all internal transforms (to generate cacheIDs, validation, etc).
     // This currently crawls colorspaces + looks
     void getAllInternalTransforms(ConstTransformVec & transformVec) const;
@@ -1796,7 +1796,7 @@ void Config::Impl::getAllInternalTransforms(ConstTransformVec & transformVec) co
                 m_allColorSpaces->getColorSpaceByIndex(i)->getTransform(COLORSPACE_DIR_FROM_REFERENCE));
         }
     }
-    
+
     // Grab all transforms from the Looks
     for(unsigned int i=0; i<m_looksList.size(); ++i)
     {
