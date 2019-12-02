@@ -255,6 +255,14 @@ namespace OCIO_NAMESPACE
     };
 
     //!cpp:type::
+    enum ColorSpaceVisibility
+    {
+        COLORSPACE_ACTIVE = 0,
+        COLORSPACE_INACTIVE,
+        COLORSPACE_ALL
+    };
+    
+    //!cpp:type::
     enum TransformDirection
     {
         TRANSFORM_DIR_UNKNOWN = 0,
