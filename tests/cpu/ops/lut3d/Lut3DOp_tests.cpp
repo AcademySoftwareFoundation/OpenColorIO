@@ -459,7 +459,7 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_inverse)
     OCIO_CHECK_EQUAL(invLutData->getInversionQuality(), OCIO::LUT_INVERSION_EXACT);
     OCIO_CHECK_NO_THROW(invLut.apply(bufferImage, 3));
 
-    // Need to do another foward apply.  This is due to precision issues.
+    // Need to do another forward apply.  This is due to precision issues.
     // Also, some LUTs have flat or virtually flat areas so the inverse is not unique.
     // The first inverse does not match the source, but the fact that it winds up
     // in the same place after another cycle verifies that it is as good an inverse

@@ -125,7 +125,7 @@ namespace Shader
         return false;
     }
 
-    // Return ture if diff has been updated.
+    // Return true if diff has been updated.
     inline bool ComputeDiff(float x1, float x2, bool rel, float min_x1, float & diff)
     {
         if (rel)
@@ -658,7 +658,7 @@ int main(int, char **)
     glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA32F_ARB, g_winWidth, g_winHeight);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-    // Attach a texture to FBO color attachement point.
+    // Attach a texture to FBO color attachment point.
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, g_imageTexID, 0);
 
     // Attach a renderbuffer to depth attachment point.

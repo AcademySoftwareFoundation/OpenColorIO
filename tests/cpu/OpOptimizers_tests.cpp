@@ -490,8 +490,8 @@ OCIO_ADD_TEST(OpOptimizers, optimization2)
     // 3 Range, bit depth conversion identity
     // 4 Matrix, almost identity
     // 5 Range, clamp identity
-    // 6 Lut1D, half domain, raw halfs, identity
-    // 7 Lut1D, raw halfs, identity
+    // 6 Lut1D, half domain, raw halves, identity
+    // 7 Lut1D, raw halves, identity
     // 8 Matrix, not identity
     // 9 Matrix, not identity
     // 10 Lut1D, almost identity

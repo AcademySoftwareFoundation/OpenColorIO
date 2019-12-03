@@ -2109,7 +2109,7 @@ OCIO_ADD_TEST(Config, log_serialization)
     }
 
     {
-        // LogAffine with specified values 3 commponents.
+        // LogAffine with specified values 3 components.
         const std::string strEnd =
             "    from_reference: !<LogAffineTransform> {"
             "base: 10, "

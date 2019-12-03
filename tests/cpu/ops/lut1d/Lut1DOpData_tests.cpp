@@ -189,7 +189,7 @@ OCIO_ADD_TEST(Lut1DOpData, channel)
     L1->setHueAdjust(OCIO::HUE_DW3);
 
     // True: hue restore is on, it's an identity LUT, but this is not
-    // tested for efficency.
+    // tested for efficiency.
     OCIO_CHECK_ASSERT(L1->hasChannelCrosstalk());
 
     OCIO_CHECK_ASSERT(!L1->mayCompose(L2));

@@ -2440,8 +2440,8 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_fclut)
 
     // TODO: Review the test to add LUT & inverse LUT together when optimization is reworked.
 
-    // Lustre log_default.fclut.  All positive halfs map to unique 16-bit ints
-    // so it's a good test to see that the inverse can restore the halfs losslessly.
+    // Lustre log_default.fclut.  All positive halves map to unique 16-bit ints
+    // so it's a good test to see that the inverse can restore the halves losslessly.
     const std::string ctfLUT("lut1d_hd_16f_16i_1chan.ctf");
     OCIO::FileTransformRcPtr fileTransform = OCIO::CreateFileTransform(ctfLUT);
 
@@ -2453,7 +2453,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_fclut)
                                                                OCIO::BIT_DEPTH_F32,
                                                                DefaultNoLutInvFast));
 
-    // Test all positive halfs (less than inf) round-trip losslessly.
+    // Test all positive halves (less than inf) round-trip losslessly.
     const int nbPixels = 31744;
     std::vector<half> inImage(nbPixels * 4);
     std::vector<float> outImage(nbPixels * 4, -1.f);
