@@ -286,7 +286,7 @@ static const __m128 E_PI_2      = _mm_set1_ps( (float) 1.57079632679489661923 );
 //   atan(x) = PI/2 - atan(1/x)
 //   atan(x) = -atan(-x)
 //
-// and then using a rational polynomial aproximation to evaluate the function 
+// and then using a rational polynomial approximation to evaluate the function 
 // over the reduced domain:
 //
 //                 a1*x + a2*x^3 + a3*x^5

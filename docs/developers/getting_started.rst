@@ -70,7 +70,7 @@ Reference Build Environment
 
 To aid new developers to the project and provide a baseline standard,
 OCIO provides a reference build environment through Docker. Docker essentially is a
-container that consits of both a Linux distro and the dependencies needed to run
+container that consists of both a Linux distro and the dependencies needed to run
 a client application. This is typically used for deploying apps and services to
 servers, but we are using it to provide an isolated development environment to build
 and test OCIO with. With this environment you are guaranteed to be able to compile OCIO

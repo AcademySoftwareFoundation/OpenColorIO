@@ -81,7 +81,7 @@ your build directory.
 
 Three ``OCIO_INSTALL_EXT_PACKAGES`` options are available::
 
-    cmake -DOCIO_INSTALL_EXT_PACKAGES=<NONE|MISING|ALL>
+    cmake -DOCIO_INSTALL_EXT_PACKAGES=<NONE|MISSING|ALL>
 
 - ``NONE`` (default): Use system installed packages. Fail if any are missing or 
   don't meet minimum version requireements.

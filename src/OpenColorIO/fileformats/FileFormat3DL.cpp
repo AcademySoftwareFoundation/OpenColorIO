@@ -125,7 +125,7 @@ public:
 // determine this.
 //
 // Note:  We allow for 2x overshoot in the LUTs.
-// As we dont allow for odd bit depths, this isnt a big deal.
+// As we dont allow for odd bit depths, this isn't a big deal.
 // So sizes from 1/2 max - 2x max are valid 
 //
 // FILE      EXPECTED MAX    CORRECTLY DECODED IF MAX IN THIS RANGE 
@@ -266,7 +266,7 @@ CachedFileRcPtr LocalFileFormat::read(
                 if (pystring::startswith(lineParts[0], "<"))
                 {
                     // Format error: reject files that could be
-                    // formated as xml.
+                    // formatted as xml.
                     std::ostringstream os;
                     os << "Error parsing .3dl file. ";
                     os << "Not expecting a line starting with \"<\".";
@@ -276,7 +276,7 @@ CachedFileRcPtr LocalFileFormat::read(
                 }
             }
 
-            // If we havent found a list of ints, continue.
+            // If we haven't found a list of ints, continue.
             if (!StringVecToIntVec(tmpData, lineParts))
             {
                 // Some keywords are valid (3DMESH, mesh, gamma, LUT*)
@@ -343,7 +343,7 @@ CachedFileRcPtr LocalFileFormat::read(
 
     // If all we're doing to parse the format is to read in sets of 3 numbers,
     // it's possible that other formats will accidentally be able to be read
-    // mistakenly as .3dl files.  We can exclude a huge segement of these mis-reads
+    // mistakenly as .3dl files.  We can exclude a huge segment of these mis-reads
     // by screening for files that use float represenations.  I.e., if the MAX
     // value of the LUT is a small number (such as <128.0) it's likely not an integer
     // format, and thus not a likely 3DL file.

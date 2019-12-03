@@ -405,12 +405,12 @@ namespace OCIO_NAMESPACE
         //
         // Looks is a potentially comma (or colon) delimited list of lookNames,
         // Where +/- prefixes are optionally allowed to denote forward/inverse
-        // look specification. (And forward is assumed in the absense of either) 
+        // look specification. (And forward is assumed in the absence of either) 
         void setLooksOverride(const char * looks);
 
         //!cpp:function::
         bool getLooksOverrideEnabled() const;
-        //!cpp:function:: Specifiy whether the lookOverride should be used,
+        //!cpp:function:: Specify whether the lookOverride should be used,
         // or not. This is a speparate flag, as it's often useful to override
         // "looks" to an empty string. 
         void setLooksOverrideEnabled(bool enabled);
@@ -1034,7 +1034,7 @@ namespace OCIO_NAMESPACE
         //!cpp:function:: Specify looks to apply.
         // Looks is a potentially comma (or colon) delimited list of look names,
         // Where +/- prefixes are optionally allowed to denote forward/inverse
-        // look specification. (And forward is assumed in the absense of either)
+        // look specification. (And forward is assumed in the absence of either)
         void setLooks(const char * looks);
 
     private:
