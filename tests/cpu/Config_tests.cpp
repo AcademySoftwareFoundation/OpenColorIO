@@ -378,7 +378,7 @@ OCIO_ADD_TEST(Config, serialize_searchpath)
         const std::string sp0{ "a path with a - in it/" };
         const std::string sp1{ "/absolute/linux/path" };
         const std::string sp2{ "C:\\absolute\\windows\\path" };
-        const std::string sp3{ "!<path> usiing /yaml/symbols" };
+        const std::string sp3{ "!<path> using /yaml/symbols" };
         config->addSearchPath(sp0.c_str());
         config->addSearchPath(sp1.c_str());
         config->addSearchPath(sp2.c_str());
@@ -392,7 +392,7 @@ OCIO_ADD_TEST(Config, serialize_searchpath)
                                           "  - a path with a - in it/",
                                           "  - /absolute/linux/path",
                                           "  - C:\\absolute\\windows\\path",
-                                          "  - \"!<path> usiing /yaml/symbols\"" };
+                                          "  - \"!<path> using /yaml/symbols\"" };
         OCIO_CHECK_EQUAL(osvec[2], expected3[0]);
         OCIO_CHECK_EQUAL(osvec[3], expected3[1]);
         OCIO_CHECK_EQUAL(osvec[4], expected3[2]);

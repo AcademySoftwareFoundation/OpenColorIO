@@ -224,7 +224,7 @@ inline __m128 sseExp2(__m128 x)
 
     __m128 exp2 = _mm_mul_ps(zf, mexp);
 
-    // Handle undeflow:
+    // Handle underflow:
     // If the (unbiased) exponent of zf is less than -126, the result is smaller than
     // the smallest representable floating-point number and an underflow computation is
     // potentially happening. When this happens, force the result to zero.

@@ -411,8 +411,8 @@ namespace OCIO_NAMESPACE
         //!cpp:function::
         bool getLooksOverrideEnabled() const;
         //!cpp:function:: Specify whether the lookOverride should be used,
-        // or not. This is a speparate flag, as it's often useful to override
-        // "looks" to an empty string. 
+        // or not. This is a separate flag, as it's often useful to override
+        // "looks" to an empty string.
         void setLooksOverrideEnabled(bool enabled);
 
     private:

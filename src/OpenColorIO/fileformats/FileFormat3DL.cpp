@@ -344,7 +344,7 @@ CachedFileRcPtr LocalFileFormat::read(
     // If all we're doing to parse the format is to read in sets of 3 numbers,
     // it's possible that other formats will accidentally be able to be read
     // mistakenly as .3dl files.  We can exclude a huge segment of these mis-reads
-    // by screening for files that use float represenations.  I.e., if the MAX
+    // by screening for files that use float representations.  I.e., if the MAX
     // value of the LUT is a small number (such as <128.0) it's likely not an integer
     // format, and thus not a likely 3DL file.
 

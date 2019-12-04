@@ -92,7 +92,7 @@ void ComputeDisplays(StringVec & displayCache,
         displayCache = IntersectStringVecsCaseIgnore(activeDisplaysEnvOverride, displayMasterList);
         if(!displayCache.empty()) return;
     }
-    // Otherwise, aApply the active displays if it's not empty.
+    // Otherwise, apply the active displays if it's not empty.
     else if(!activeDisplays.empty())
     {
         displayCache = IntersectStringVecsCaseIgnore(activeDisplays, displayMasterList);
