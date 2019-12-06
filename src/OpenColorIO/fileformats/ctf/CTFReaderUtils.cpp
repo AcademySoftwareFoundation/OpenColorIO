@@ -62,8 +62,6 @@ const char * GetInterpolation1DName(Interpolation interp)
     case INTERP_UNKNOWN:
         return INTERPOLATION_DEFAULT;
     };
-
-    return INTERPOLATION_DEFAULT;
 }
 
 Interpolation GetInterpolation3D(const char * str)
@@ -107,8 +105,6 @@ const char * GetInterpolation3DName(Interpolation interp)
     case INTERP_UNKNOWN:
         return INTERPOLATION_DEFAULT;
     };
-
-    return INTERPOLATION_DEFAULT;
 }
 
 } // namespace OCIO_NAMESPACE

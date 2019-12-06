@@ -29,6 +29,7 @@
 
 namespace OCIO_NAMESPACE
 {
+
 namespace
 {
 const char * OCIO_CONFIG_ENVVAR = "OCIO";
@@ -40,7 +41,7 @@ constexpr double DEFAULT_LUMA_COEFF_R = 0.2126;
 constexpr double DEFAULT_LUMA_COEFF_G = 0.7152;
 constexpr double DEFAULT_LUMA_COEFF_B = 0.0722;
 
-const char * INTERNAL_RAW_PROFILE = 
+const char * INTERNAL_RAW_PROFILE =
     "ocio_profile_version: 2\n"
     "strictparsing: false\n"
     "roles:\n"
@@ -225,7 +226,7 @@ public:
     mutable StringMap m_cacheids;
     mutable std::string m_cacheidnocontext;
 
-    Impl() : 
+    Impl() :
         m_majorVersion(FirstSupportedMajorVersion),
         m_minorVersion(0),
         m_context(Context::Create()),
@@ -252,6 +253,8 @@ public:
         m_defaultLumaCoefs[1] = DEFAULT_LUMA_COEFF_G;
         m_defaultLumaCoefs[2] = DEFAULT_LUMA_COEFF_B;
     }
+
+    Impl(const Impl&) = delete;
 
     ~Impl()
     {
@@ -306,7 +309,7 @@ public:
 
     // Any time you modify the state of the config, you must call this
     // to reset internal cache states.  You also should do this in a
-    // thread safe manner by acquiring the m_cacheidMutex;
+    // thread safe manner by acquiring the m_cacheidMutex.
     void resetCacheIDs();
 
     // Get all internal transforms (to generate cacheIDs, validation, etc).
@@ -394,8 +397,8 @@ void Config::setMajorVersion(unsigned int version)
         || version >  LastSupportedMajorVersion)
     {
         std::ostringstream os;
-            os << "The version is " << version 
-            << " where supported versions start at " 
+            os << "The version is " << version
+            << " where supported versions start at "
             << FirstSupportedMajorVersion
             << " and end at "
             << LastSupportedMajorVersion
@@ -470,14 +473,14 @@ void Config::sanityCheck() const
             throw Exception(getImpl()->m_sanitytext.c_str());
         }
 
-        ConstTransformRcPtr toTrans 
+        ConstTransformRcPtr toTrans
             = getImpl()->m_colorspaces->getColorSpaceByIndex(i)->getTransform(COLORSPACE_DIR_TO_REFERENCE);
         if (toTrans)
         {
             toTrans->validate();
         }
 
-        ConstTransformRcPtr fromTrans 
+        ConstTransformRcPtr fromTrans
             = getImpl()->m_colorspaces->getColorSpaceByIndex(i)->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
         if (fromTrans)
         {
@@ -623,7 +626,7 @@ void Config::sanityCheck() const
 
         if (!useAllDisplays)
         {
-            const StringVec orderedDisplays 
+            const StringVec orderedDisplays
                 = IntersectStringVecsCaseIgnore(getImpl()->m_activeDisplaysEnvOverride, displays);
             if (orderedDisplays.empty())
             {
@@ -676,8 +679,8 @@ void Config::sanityCheck() const
 
 
     ///// TRANSFORMS
-        
-        
+
+
     // Confirm for all Transforms that reference internal colorspaces,
     // the named space exists and that all Transforms are valid.
     {
@@ -689,7 +692,7 @@ void Config::sanityCheck() const
         {
             allTransforms[i]->validate();
 
-            ConstContextRcPtr context = getCurrentContext();       
+            ConstContextRcPtr context = getCurrentContext();
             GetColorSpaceReferences(colorSpaceNames, allTransforms[i], context);
         }
 
