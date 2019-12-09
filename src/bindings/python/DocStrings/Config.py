@@ -485,7 +485,7 @@ class Config:
         """
         pass
 
-    def setActiveDisplays(self, dislpays):
+    def setActiveDisplays(self, displays):
         """
         setActiveDisplays(displays)
         
