@@ -189,7 +189,7 @@ inline void ApplyPower<false>(__m128& pix, const __m128& power)
 // Apply the saturation component to the the pixel's values
 inline void ApplySaturation(__m128& pix, const __m128 saturation)
 {
-    // Compute luma: dot product of pixel values and the luma weigths
+    // Compute luma: dot product of pixel values and the luma weights
     __m128 luma = _mm_mul_ps(pix, LumaWeights);
 
     // luma = [ x+y , y+x , z+w , w+z ]
@@ -234,7 +234,7 @@ inline void ApplySaturation(float * pix, const float saturation)
 
     static const float LumaWeights[3] = { 0.2126f, 0.7152f, 0.0722f };
 
-    // Compute luma: dot product of pixel values and the luma weigths
+    // Compute luma: dot product of pixel values and the luma weights
     ApplySlope(pix, LumaWeights);
 
     // luma = x+y+z+w

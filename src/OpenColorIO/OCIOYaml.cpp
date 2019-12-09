@@ -1658,8 +1658,8 @@ void load(const YAML::Node& node, TransformRcPtr& t)
     else
     {
         // TODO: add a new empty (better name?) aka passthru Transform()
-        // which does nothing. This is so upsupported !<tag> types don't
-        // throw an exception. Alternativly this could be caught in the
+        // which does nothing. This is so unsupported !<tag> types don't
+        // throw an exception. Alternatively this could be caught in the
         // GroupTransformRcPtr >> operator with some type of
         // supported_tag() method
 

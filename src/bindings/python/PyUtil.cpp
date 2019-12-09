@@ -384,7 +384,7 @@ inline PyObject* PyListOrTuple_GET_ITEM(PyObject* pyobj, int index)
     As we want to guarantee that an exception *never* remains on
     the stack after an internal failure, the simplest way to
     guarantee this is to always call PyErr_Clear() before
-    returing the failure condition.
+    returning the failure condition.
 */
 
 bool FillIntVectorFromPySequence(PyObject* datalist, std::vector<int> &data)

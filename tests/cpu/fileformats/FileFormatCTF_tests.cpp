@@ -460,7 +460,7 @@ OCIO_ADD_TEST(FileFormatCTF, matrix_1_3_offsets)
 
 OCIO_ADD_TEST(FileFormatCTF, matrix_1_3_alpha_offsets)
 {
-    // Verion 1.3, array 4x5x4: matrix with alpha and offsets.
+    // Version 1.3, array 4x5x4: matrix with alpha and offsets.
     OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string ctfFile("matrix_example_1_3_alpha_offsets.ctf");
     OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
@@ -551,7 +551,7 @@ OCIO_ADD_TEST(FileFormatCTF, matrix_identity)
 
     ctf.clear();
     ctf.str(R"(<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList id="none" verson="1.2">
+<ProcessList id="none" version="1.2">
     <Description>RGB matrix + offset Identity, 10i to 12i</Description>
     <Matrix inBitDepth="10i" outBitDepth="12i">
         <Array dim="4 4 3">
@@ -1214,7 +1214,7 @@ OCIO_ADD_TEST(FileFormatCTF, transform_with_bitdepth_mismatch)
     const std::string ctfFile("transform_bitdepth_mismatch.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile),
                           OCIO::Exception,
-                          "Bit-depth missmatch");
+                          "Bit-depth mismatch");
 }
 
 OCIO_ADD_TEST(FileFormatCTF, check_index_map)

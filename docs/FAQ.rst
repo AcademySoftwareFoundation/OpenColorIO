@@ -27,7 +27,7 @@ Terminology
 - Display - a virtual or physical display device (e.g an sRGB display device)
 - View - a meaningful view of the reference space on a Display (e.g a film emulation view on an sRGB display device)
 - Role - abstract colorspace naming (e.g specify the "lnh" colorspace as the scene_linear role, or the color-picker UI uses color_picking role)
-- Look - a color transform which applies a creative look (for example a per-shot netural grade to remove color-casts from a sequence of film scans, or a DI look)
+- Look - a color transform which applies a creative look (for example a per-shot neutral grade to remove color-casts from a sequence of film scans, or a DI look)
 
 .. _faq-supportedlut:
 
@@ -127,14 +127,14 @@ mga/m3d    n/a
 spi1d      n/a
 spi3d      n/a
 spimtx     n/a
-vf         *Difference*                                     Gain error. Believe OCIO is correct, but need to verify.
+vf         *Difference*                                    Gain error. Believe OCIO is correct, but need to verify.
 =========  =============================================   ===============================
 
 All gain differences are due to a common 'gotcha' when interpolating 3d luts, related to
 internal index computation. If you have a 32x32x32 3dlut, when sampling values from (0,1)
 do you internally scale by 31.0 or 32.0?  This is typically well-defined for each format,
 (in this case the answer is usually 31.0) but when incorrectly handled in an application,
-you occationally see gain errors that differ by this amount. (In the case of a 32-sized
+you occasionally see gain errors that differ by this amount. (In the case of a 32-sized
 3dlut, 32/31 = ~3% error)
 
 

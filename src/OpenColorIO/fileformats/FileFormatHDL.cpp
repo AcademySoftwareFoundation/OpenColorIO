@@ -703,7 +703,7 @@ void LocalFileFormat::bake(const Baker & baker,
         // Calculate min/max value
         {
             // Get input value of 1.0 in shaper space, as this
-            // is the higest value that is transformed by the
+            // is the highest value that is transformed by the
             // cube (e.g for a generic lin-to-log transform,
             // what the log value 1.0 is in linear).
             ConstCPUProcessorRcPtr shaperToInputProc = config->getProcessor(

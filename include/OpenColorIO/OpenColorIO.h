@@ -264,7 +264,7 @@ namespace OCIO_NAMESPACE
         // This will produce a hash of the all colorspace definitions, etc.
         // All external references, such as files used in FileTransforms, etc.,
         // will be incorporated into the cacheID. While the contents of
-        // the files are not read, the file system is queried for relavent
+        // the files are not read, the file system is queried for relevant
         // information (mtime, inode) so that the config's cacheID will
         // change when the underlying luts are updated.
         // If a context is not provided, the current Context will be used.
@@ -1623,7 +1623,7 @@ namespace OCIO_NAMESPACE
     // The "legacy" mode implements the OCIO v1 approach of baking certain ops
     // in order to have at most one 3D-LUT.  The "generic" mode is the v2 default and 
     // allows all the ops to be processed as-is, without baking, like the CPU renderer.
-    // Custom implementations could be written to accomodate the GPU needs of a 
+    // Custom implementations could be written to accommodate the GPU needs of a 
     // specific client app.
     //
     //

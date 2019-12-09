@@ -788,7 +788,7 @@ MatrixOpDataRcPtr MatrixOpData::inverse() const
     invOp->getFormatMetadata() = getFormatMetadata();
 
     // No need to call validate(), the invOp will have proper dimension,
-    // bit-depths, matrix and offets values.
+    // bit-depths, matrix and offsets values.
 
     // Note that any existing metadata could become stale at this point but
     // trying to update it is also challenging since inverse() is sometimes
@@ -808,7 +808,7 @@ void MatrixOpData::finalize()
     md5_state_t state;
     md5_byte_t digest[16];
 
-    // TODO: array and offset do not require double precison in cache.
+    // TODO: array and offset do not require double precision in cache.
     md5_init(&state);
     md5_append(&state,
         (const md5_byte_t *)&(getArray().getValues()[0]),

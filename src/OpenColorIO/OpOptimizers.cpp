@@ -51,14 +51,14 @@ bool IsPairInverseEnabled(OpData::Type type, OptimizationFlags flags)
     case OpData::ReferenceType:
     case OpData::NoOpType:
     default:
-        // Other type are not controled by a flag.
+        // Other type are not controlled by a flag.
         return true;
     }
 }
 
 bool IsCombineEnabled(OpData::Type type, OptimizationFlags flags)
 {
-    // Some types are controled by a flag.
+    // Some types are controlled by a flag.
     return (type == OpData::ExponentType && HasFlag(flags, OPTIMIZATION_COMP_EXPONENT)) ||
             (type == OpData::GammaType    && HasFlag(flags, OPTIMIZATION_COMP_GAMMA))    ||
             (type == OpData::Lut1DType    && HasFlag(flags, OPTIMIZATION_COMP_LUT1D))    ||

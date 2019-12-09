@@ -870,7 +870,7 @@ void CTFReaderOpElt::start(const char ** atts)
             const std::string inBD(BitDepthToString(m_inBitDepth));
             const std::string prevBD(BitDepthToString(prevOutBD));
             std::ostringstream os;
-            os << "Bit-depth missmatch between ops. Previous op output ";
+            os << "Bit-depth mismatch between ops. Previous op output ";
             os << "bit-depth is: '" << prevBD;
             os << "' and this op input bit-depth is '" << inBD;
             os << "'. ";
@@ -905,7 +905,7 @@ const char * CTFReaderOpElt::getTypeName() const
 //
 // The two design decisions related to the versioning are that first,
 // the CTF Reader has to be fully backward compatible (it means to read
-// any existing versions) and second, only the lastest version will be written.
+// any existing versions) and second, only the latest version will be written.
 //
 // The macros below provides a mechanism to support versioning at the Op level.
 //
@@ -3473,7 +3473,7 @@ void CTFReaderReferenceElt::start(const char **atts)
         {
             // Ignore BasePath for now: BasePath could be used to point to
             // a specific folder, but for OCIO all folders have to be
-            // reacheable throught the Context.
+            // reacheable through the Context.
             // All paths might be absolute or relative.
             basePathFound = true;
         }
