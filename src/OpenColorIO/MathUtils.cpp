@@ -376,7 +376,7 @@ bool GetMxbInverse(float* mout, float* vout,
 // |  Negative infinity                         |  0xFF800000               |  0x00800000               |
 // |  Negative floats [-MAX_FLOAT, -MIN_FLOAT]  |  0x80800000 - 0xFF7FFFFF  |  0x00800001 - 0x7F800000  |
 // |  Negative denorms                          |  0x80000001 - 0x807FFFFF  |  0x7F800001 - 0x7FFFFFFF  |
-// |  Negatve zero                              |  0x80000000               |  0x80000000               |
+// |  Negative zero                             |  0x80000000               |  0x80000000               |
 // |  Zero                                      |  0x00000000               |  0x80000000               |
 // |  Positive denorms                          |  0x00000001 - 0x007FFFFF  |  0x80000001 - 0x807FFFFF  |
 // |  Positive floats [MIN_FLOAT, MAX_FLOAT]    |  0x00800000 - 0x7F7FFFFF  |  0x80800000 - 0xFF7FFFFF  |
@@ -412,7 +412,7 @@ inline int FloatForCompare(const unsigned floatBits)
 // |  Negative infinity                         |  0xFF800000               |  0x00FFFFFF               |
 // |  Negative floats [-MAX_FLOAT, -MIN_FLOAT]  |  0x80800000 - 0xFF7FFFFF  |  0x01000000 - 0x7FFFFFFF  |
 // |  Negative denorms                          |  0x80000001 - 0x807FFFFF  |  0x80000000               |
-// |  Negatve zero                              |  0x80000000               |  0x80000000               |
+// |  Negative zero                             |  0x80000000               |  0x80000000               |
 // |  Zero                                      |  0x00000000               |  0x80000000               |
 // |  Positive denorms                          |  0x00000001 - 0x007FFFFF  |  0x80000000               |
 // |  Positive floats [MIN_FLOAT, MAX_FLOAT]    |  0x00800000 - 0x7F7FFFFF  |  0x80000001 - 0xFF000000  |

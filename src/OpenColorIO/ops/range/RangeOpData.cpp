@@ -319,7 +319,7 @@ bool RangeOpData::scales() const
     }
 
     // Scale may vary from very small to vary large, however it's also allowed to be 0, so neither
-    // relative or absolute comparison is approprite for all cases.
+    // relative or absolute comparison is appropriate for all cases.
     if ( FloatsDiffer(m_scale, 1.0) )
     {
         return true;
@@ -340,7 +340,7 @@ RangeOpDataRcPtr RangeOpData::compose(ConstRangeOpDataRcPtr & r) const
         {
             minOutNew = r->m_maxOutValue;
             maxOutNew = r->m_maxOutValue;
-            // Range outputing a constant value.
+            // Range outputting a constant value.
             return std::make_shared<RangeOpData>(m_minInValue, m_maxInValue, minOutNew, maxOutNew);
         }
         else
@@ -377,7 +377,7 @@ RangeOpDataRcPtr RangeOpData::compose(ConstRangeOpDataRcPtr & r) const
         {
             minOutNew = r->m_minOutValue;
             maxOutNew = r->m_minOutValue;
-            // Range outputing a constant value.
+            // Range outputting a constant value.
             return std::make_shared<RangeOpData>(m_minInValue, m_maxInValue, minOutNew, maxOutNew);
         }
         else

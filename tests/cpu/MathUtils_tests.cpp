@@ -35,7 +35,7 @@ OCIO_ADD_TEST(MathUtils, is_scalar_equal_to_zero)
 
 OCIO_ADD_TEST(MathUtils, get_m44_inverse)
 {
-    // This is a degenerate matrix, and shouldnt be invertible.
+    // This is a degenerate matrix, and shouldn't be invertible.
     float m[] = { 0.3f, 0.3f, 0.3f, 0.0f,
                   0.3f, 0.3f, 0.3f, 0.0f,
                   0.3f, 0.3f, 0.3f, 0.0f,

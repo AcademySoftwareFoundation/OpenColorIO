@@ -45,7 +45,7 @@ LUT3DORDER_FAST_RED (red index incrementing fastest, then green, then
 blue)
 
 The LUT data is parsed by removing all whitespace and quotes. Taking 8
-characters at a time and intepreting as little-endian float, as follows:
+characters at a time and interpreting as little-endian float, as follows:
 
 Given the string "0000003F0000803FAD10753F":
 

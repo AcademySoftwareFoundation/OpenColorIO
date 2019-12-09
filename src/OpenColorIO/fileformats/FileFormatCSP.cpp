@@ -121,7 +121,7 @@ float rsr_Interpolator1D_interpolate( float x, rsr_Interpolator1D * data )
     if( x<data->stims[0] ) return data->minValue;
     if (x>data->stims[ data->nSamplePoints -1] ) return data->maxValue;
 
-    /* Ok so its between the begining and end .. lets find out where... */
+    /* Ok so its between the beginning and end .. lets find out where... */
     segId = rsr_internal_I1D_findSegmentContaining( x, data->stims, data->nSamplePoints );
 
     assert(data->parameters !=NULL );
@@ -175,7 +175,7 @@ rsr_Interpolator1D * rsr_Interpolator1D_createFromRaw( rsr_Interpolator1D_Raw * 
     retval->minValue = data->values[0];
     retval->maxValue = data->values[ data->length -1];
 
-    /* Now the fun part .. filling in the coeficients. */
+    /* Now the fun part .. filling in the coefficients. */
     if(data->length==2)
     {
         retval->parameters[0] = 1.0f/(data->stims[1]-data->stims[0]);

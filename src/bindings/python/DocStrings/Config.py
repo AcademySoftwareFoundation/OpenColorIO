@@ -117,7 +117,7 @@ class Config:
         
         All external references, such as files used in FileTransforms, etc.,
         will be incorporated into the cacheID. While the contents of the files
-        are not read, the file system is queried for relavent information
+        are not read, the file system is queried for relevant information
         (mtime, inode) so that the :py:class:`PyOpenColorIO.Config`'s cacheID
         will change when the underlying LUTs are updated.
         

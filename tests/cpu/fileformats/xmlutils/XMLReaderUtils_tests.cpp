@@ -54,7 +54,7 @@ OCIO_ADD_TEST(XMLReaderHelper, string_to_float_failure)
     const char str3[] = "123XX";
     const size_t len3 = strlen(str3);
     // Strtod will stop after parsing 123 and this happens to be the
-    // excact length that is required to be parsed.
+    // exact length that is required to be parsed.
     OCIO_CHECK_NO_THROW(OCIO::ParseNumber(str3, 0, len3 - 2, value));
 }
 

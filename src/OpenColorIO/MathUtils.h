@@ -67,7 +67,7 @@ inline T Clamp(T a, T min, T max)
 }
 
 // Remove/map special float values to values inside the floating-point domain.
-//        Especifically, maps:
+//        Specifically, maps:
 //          -Inf to -MAX_FLOAT
 //           Inf to  MAX_FLOAT
 //           NaN to  0

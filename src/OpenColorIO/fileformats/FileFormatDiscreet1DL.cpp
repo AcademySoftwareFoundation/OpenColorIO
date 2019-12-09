@@ -169,9 +169,9 @@ public:
         IMLutStruct **lut, int & line, std::string & errorLine);
 
     // Determines the bitdepth of a LUT given it's filename Searches for
-    // the first occurence of the "to" sequence of characters in the
+    // the first occurrence of the "to" sequence of characters in the
     // LutFileName string and then parses the numeric characters.
-    // This function is usefull for figuring out the target bitdepth
+    // This function is useful for figuring out the target bitdepth
     // of resizing LUT if the filename is an indicator of this
     static IM_LutBitsPerChannel IMLutGetBitDepthFromFileName(const std::string & fileName);
 

@@ -120,7 +120,7 @@ public:
                       << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
         }
 
-        // Initilize the OpenGL engine
+        // Initialize the OpenGL engine
         glPixelStorei(GL_UNPACK_ALIGNMENT, 4);           // 4-byte pixel alignment
 #ifndef __APPLE__
         glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE);     //
@@ -180,7 +180,7 @@ public:
         glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA32F_ARB, m_width, m_height);
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-        // attach a texture to FBO color attachement point
+        // attach a texture to FBO color attachment point
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_imageTexID, 0);
 
         // attach a renderbuffer to depth attachment point
