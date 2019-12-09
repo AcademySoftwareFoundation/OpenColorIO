@@ -45,7 +45,7 @@ Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut)
     Lut3DOpData::Compose(newDomain, lut);
 
     // The INV_EXACT inversion style computes an inverse to the tetrahedral
-    // style of forward evalutation.
+    // style of forward evaluation.
     // TODO: Although this seems like the "correct" thing to do, it does
     // not seem to help accuracy (and is slower).  To investigate ...
     //newLut->setInterpolation(INTERP_TETRAHEDRAL);

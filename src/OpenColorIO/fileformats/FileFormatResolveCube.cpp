@@ -618,7 +618,7 @@ void LocalFileFormat::bake(const Baker & baker,
         // Calculate min/max value
         {
             // Get input value of 1.0 in shaper space, as this
-            // is the higest value that is transformed by the
+            // is the highest value that is transformed by the
             // cube (e.g for a generic lin-to-log transform,
             // what the log value 1.0 is in linear).
             ConstCPUProcessorRcPtr shaperToInputProc = config->getProcessor(
@@ -734,7 +734,7 @@ void LocalFileFormat::bake(const Baker & baker,
     // Header
     // Note about LUT_ND_INPUT_RANGE tags :
     // These tags are optional and will default to the 0..1 range,
-    // not wrting them explicitly allow for wider compatibility
+    // not writing them explicitly allows for wider compatibility
     // with parser based on other cube specification (eg. Iridas_Itx)
     if(required_lut == CUBE_1D)
     {

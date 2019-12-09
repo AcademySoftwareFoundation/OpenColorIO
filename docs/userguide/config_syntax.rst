@@ -386,7 +386,7 @@ Here is a simple ``looks:`` section, which defines two looks:
 
 Here, the "beauty" look applies a simple, static ASC CDL grade, making
 the image very green (for some artistic reason!). The beauty look is
-appied in the scene-linear ``lnf`` colorspace (this colorspace is
+applied in the scene-linear ``lnf`` colorspace (this colorspace is
 defined elsewhere in the config.
 
 Next is a definition for a "neutral" look, which applies a
@@ -473,7 +473,7 @@ other colorspaces are defined as transforms either to or from this
 colorspace.**
 
 The ``lg16`` colorspace is a 16-bit log colorspace (see
-:ref:`config-spivfx` for an explaination of this colorspace). It has a
+:ref:`config-spivfx` for an explanation of this colorspace). It has a
 name, a bitdepth and a description.
 
 The ``lg16`` colorspace is defined as a transform from ``lg16`` to the

@@ -36,7 +36,7 @@ public:
     static Style GetStyle(const char * name);
     static const char * GetStyleName(Style style);
 
-    // Type definition to hold the values of a SOP paramater
+    // Type definition to hold the values of a SOP parameter
     // (scale, offset and power) for all channels
     struct ChannelParams
     {

@@ -74,7 +74,7 @@ OCIO::ConstProcessorRcPtr LoadTransformFile(const std::string & fileName)
     // Create a FileTransform.
     OCIO::FileTransformRcPtr pFileTransform
         = OCIO::FileTransform::Create();
-    // A tranform file does not define any interpolation (contrary to config
+    // A transform file does not define any interpolation (contrary to config
     // file), this is to avoid exception when creating the operation.
     pFileTransform->setInterpolation(OCIO::INTERP_LINEAR);
     pFileTransform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);

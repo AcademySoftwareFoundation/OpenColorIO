@@ -84,7 +84,7 @@ private:
 
     std::string m_format;                         // original format string
     std::string m_flag;                           // just the -flag_foo part
-    std::string m_code;                           // paramter types, eg "df"
+    std::string m_code;                           // parameter types, eg "df"
     std::string m_descript;
     OptionType m_type;                    
     int m_count;                                  // number of parameters

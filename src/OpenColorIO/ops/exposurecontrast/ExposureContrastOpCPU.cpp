@@ -130,7 +130,7 @@ void ECLinearRenderer::updateData(ConstExposureContrastOpDataRcPtr & ec)
 void ECLinearRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
     // TODO: allow negative contrast?
-    // TODO: is it worth adding a code path without dynamic paramaters?
+    // TODO: is it worth adding a code path without dynamic parameters?
     const float contrastVal = (float)std::max(EC::MIN_CONTRAST,
                                               m_contrast->getDoubleValue() *
                                               m_gamma->getDoubleValue());

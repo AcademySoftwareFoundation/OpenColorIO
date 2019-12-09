@@ -22,7 +22,7 @@ void CreateGpuAllocationNoOp(OpRcPtrVec & ops,
 // gpuLatticeOps need not support analytical gpu shader generation
 // the pre and post ops must support analytical generation.
 //
-// Additional ops will optinally be inserted to take into account
+// Additional ops will optionally be inserted to take into account
 // allocation transformations
 
 void PartitionGPUOps(OpRcPtrVec & gpuPreOps,

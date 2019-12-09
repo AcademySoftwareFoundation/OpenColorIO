@@ -5,11 +5,11 @@
 Documentation guidelines
 ========================
 
-OpenColorIO is documentated using reStructuredText, processed by
+OpenColorIO is documented using reStructuredText, processed by
 `Sphinx <http://sphinx-doc.org/>`__.
 
 The documentation primarily lives in the ``docs/`` folder, within the
-main OpenColorIO repoistory.
+main OpenColorIO repository.
 
 The rST source for the C++ API documentation is extracted from
 comments in the public header files in ``export/``
@@ -27,7 +27,7 @@ but specify the ``-D OCIO_BUILD_DOCS=yes`` argument to CMake.
 Then run the ``make doc`` target. The default HTML output will be
 created in ``build_dir/docs/build-html/``
 
-Note that CMake must be run before each invokation of ``make`` to copy
+Note that CMake must be run before each invocation of ``make`` to copy
 the edited rST files.
 
 Initial run:
@@ -68,7 +68,7 @@ Basics
   the ``toctree`` directive.
 
   The new file should contain a top-level heading (decorated with
-  `=====` underline), and an approriate label for referencing from
+  `=====` underline), and an appropriate label for referencing from
   other pages. For example, a new file
   ``docs/userguide/baking_luts.rst`` might start like this::
 

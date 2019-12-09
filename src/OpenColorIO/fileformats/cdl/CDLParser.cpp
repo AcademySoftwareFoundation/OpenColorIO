@@ -320,7 +320,7 @@ void CDLParser::Impl::initializeHandlers(const char* buffer)
                               EndElementHandler);
         m_isCC = true;
 
-        // If parsing a CC, initialize the TransformList explicitely.
+        // If parsing a CC, initialize the TransformList explicitly.
         m_parsingInfo = std::make_shared<CDLParsingInfo>();
     }
     else
@@ -675,7 +675,7 @@ bool CDLParser::Impl::HandleColorCorrectionCCStartElement(
             pElt = pImpl->createElement<CDLReaderColorCorrectionElt>(name);
 
             // Bind the ColorCorrection element's CDLTransformList to the
-            // one explicitely created by the reader.
+            // one explicitly created by the reader.
             CDLReaderColorCorrectionElt* pCCElt =
                 dynamic_cast<CDLReaderColorCorrectionElt*>(pElt.get());
 
