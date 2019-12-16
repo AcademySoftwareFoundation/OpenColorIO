@@ -2166,6 +2166,13 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
             std::string views = JoinStringEnvStyle(view);
             c->setActiveViews(views.c_str());
         }
+        else if(key == "inactive_colorspaces")
+        {
+            StringVec inactiveCSs;
+            load(second, inactiveCSs);
+            const std::string inactivecCSsStr = JoinStringEnvStyle(inactiveCSs);
+            c->setInactiveColorSpaces(inactivecCSsStr.c_str());
+        }
         else if(key == "colorspaces")
         {
             if(second.Type() != YAML::NodeType::Sequence)
@@ -2394,6 +2401,16 @@ inline void save(YAML::Emitter& out, const Config* c)
     if(c->getActiveViews() != NULL && strlen(c->getActiveViews()) > 0)
         SplitStringEnvStyle(active_views, c->getActiveViews());
     out << YAML::Value << YAML::Flow << active_views;
+
+    const std::string inactiveCSs = c->getInactiveColorSpaces();
+    if (!inactiveCSs.empty())
+    {
+        StringVec inactive_colorspaces;
+        SplitStringEnvStyle(inactive_colorspaces, inactiveCSs.c_str());
+        out << YAML::Key << "inactive_colorspaces";
+        out << YAML::Value << YAML::Flow << inactive_colorspaces;
+    }
+
     out << YAML::Newline;
 
     // Looks
@@ -2416,9 +2433,9 @@ inline void save(YAML::Emitter& out, const Config* c)
         out << YAML::Newline;
         out << YAML::Key << "colorspaces";
         out << YAML::Value << YAML::BeginSeq;
-        for(int i = 0; i < c->getNumColorSpaces(); ++i)
+        for(int i = 0; i < c->getNumColorSpaces(COLORSPACE_ALL); ++i)
         {
-            const char* name = c->getColorSpaceNameByIndex(i);
+            const char* name = c->getColorSpaceNameByIndex(COLORSPACE_ALL, i);
             save(out, c->getColorSpace(name));
         }
         out << YAML::EndSeq;
@@ -2431,7 +2448,7 @@ inline void save(YAML::Emitter& out, const Config* c)
 
 ///////////////////////////////////////////////////////////////////////////
 
-void OCIOYaml::read(std::istream & istream, ConfigRcPtr & c, const char * filename)
+void OCIOYaml::Read(std::istream & istream, ConfigRcPtr & c, const char * filename)
 {
     try
     {
@@ -2448,7 +2465,7 @@ void OCIOYaml::read(std::istream & istream, ConfigRcPtr & c, const char * filena
     }
 }
 
-void OCIOYaml::write(std::ostream & ostream, const Config * c)
+void OCIOYaml::Write(std::ostream & ostream, const Config * c)
 {
     YAML::Emitter out;
     out.SetDoublePrecision(std::numeric_limits<double>::digits10);

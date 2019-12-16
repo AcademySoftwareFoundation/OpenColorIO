@@ -145,7 +145,7 @@ return out_pixel;
         self.assertEqual("lnh", _cfge.getColorSpaceNameByIndex(1))
         lnh = _cfge.getColorSpace("lnh")
         self.assertEqual("ln", lnh.getFamily())
-        self.assertEqual(0, _cfge.getIndexForColorSpace("foobar"))
+        self.assertEqual(-1, _cfge.getIndexForColorSpace("foobar"))
         cs = OCIO.ColorSpace()
         cs.setName("blah")
         _cfge.addColorSpace(cs)
