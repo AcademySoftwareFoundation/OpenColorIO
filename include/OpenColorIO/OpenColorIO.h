@@ -337,12 +337,12 @@ namespace OCIO_NAMESPACE
         // ColorSpaces
         // ^^^^^^^^^^^
 
-        //!cpp:function:: Get all color spaces having a specific category 
+        //!cpp:function:: Get all active color spaces having a specific category 
         // in the order they appear in the config file.
         //
         // .. note::
         //    If the category is null or empty, the method returns 
-        //    all the color spaces like :cpp:func:`Config::getNumColorSpaces` 
+        //    all the active color spaces like :cpp:func:`Config::getNumColorSpaces` 
         //    and :cpp:func:`Config::getColorSpaceNameByIndex` do.
         //
         // .. note::
@@ -353,21 +353,36 @@ namespace OCIO_NAMESPACE
         //
         ColorSpaceSetRcPtr getColorSpaces(const char * category) const;
 
-        //!cpp:function::
-        int getNumColorSpaces() const;
-        //!cpp:function:: Will be null for invalid index.
-        const char * getColorSpaceNameByIndex(int index) const;
-        
-        //!rst::
+        //!cpp:function:: Work on the color spaces selected by the visibility.
+        int getNumColorSpaces(ColorSpaceVisibility visibility) const;
+        //!cpp:function:: Work on the color spaces selected by the visibility (active or inactive)
+        // and return null for invalid index.
+        const char * getColorSpaceNameByIndex(ColorSpaceVisibility visibility, int index) const;
+
+        //!cpp:function:: Get the color space from all the color spaces 
+        // (i.e. active and inactive) and return null if the name is not found.
+        //
         // .. note::
-        //    These fcns all accept either a color space OR role name.
+        //    The fcn accepts either a color space OR role name.
         //    (Color space names take precedence over roles.)
-        
-        //!cpp:function:: Will return null if the name is not found.
         ConstColorSpaceRcPtr getColorSpace(const char * name) const;
-        //!cpp:function:: Will return -1 if the name is not found.
+
+        // The following three methods only work from the list of active color spaces.
+
+        //!cpp:function:: Work on the active color spaces only.
+        int getNumColorSpaces() const;
+
+        //!cpp:function:: Work on the active color spaces only and return null for invalid index.
+        const char * getColorSpaceNameByIndex(int index) const;
+
+        //!cpp:function:: Get an index from the active color spaces only
+        // and return -1 if the name is not found.
+        //
+        // .. note::
+        //    The fcn accepts either a color space OR role name.
+        //    (Color space names take precedence over roles.)
         int getIndexForColorSpace(const char * name) const;
-        
+
         //!cpp:function:: Add a color space to the configuration.
         //
         // .. note::
@@ -382,7 +397,8 @@ namespace OCIO_NAMESPACE
         //!cpp:function:: Remove a color space from the configuration.
         //
         // .. note::
-        //    It does not throw an exception if the color space is not present.
+        //    It does not throw an exception if the color space is not present
+        //    or used by an existing role.  Role name arguments are ignored.
         // .. note::
         //    Removing a color space to a :cpp:class:`Config` does not affect any 
         //    :cpp:class:`ColorSpaceSet`s that have already been created.
@@ -409,6 +425,22 @@ namespace OCIO_NAMESPACE
         //!cpp:function::
         void setStrictParsingEnabled(bool enabled);
         
+        //!cpp:function:: Set/get a list of inactive color space names.
+        //
+        // * The inactive spaces are color spaces that should not appear in application menus.
+        // * These color spaces will still work in :cpp:function:`getProcessor` calls.
+        // * The argument is a comma-delimited string.  A null or empty string empties the list.
+        // * The environment variable OCIO_INACTIVE_COLORSPACES may also be used to set the 
+        //   inactive color space list.
+        // * The env. var. takes precedence over the inactive_colorspaces list in the config file.
+        // * Setting the list via the API takes precedence over either the env. var. or the 
+        //   config file list.
+        // * Roles may not be used.
+        void setInactiveColorSpaces(const char * inactiveColorSpaces);
+        //!cpp:function::
+        const char * getInactiveColorSpaces() const;
+
+
         ///////////////////////////////////////////////////////////////////////////
         //!rst:: .. _cfgroles_section:
         // 
@@ -477,6 +509,8 @@ namespace OCIO_NAMESPACE
         // left-most defined display will be the default.
         
         //!cpp:function:: Comma-delimited list of display names.
+        // .. note:: The setter does not override the envvar.  The getter does not take into 
+        // account the envvar value and thus may not represent what the user is seeing.
         void setActiveDisplays(const char * displays);
         //!cpp:function::
         const char * getActiveDisplays() const;
@@ -487,6 +521,8 @@ namespace OCIO_NAMESPACE
         // left-most defined view will be the default.
         
         //!cpp:function:: Comma-delimited list of view names.
+        // .. note:: The setter does not override the envvar.  The getter does not take into 
+        // account the envvar value and thus may not represent what the user is seeing.
         void setActiveViews(const char * views);
         //!cpp:function::
         const char * getActiveViews() const;

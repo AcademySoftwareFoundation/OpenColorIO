@@ -11,8 +11,10 @@ namespace OCIO_NAMESPACE
 
 namespace OCIOYaml
 {
-void read(std::istream & istream, ConfigRcPtr & c, const char * filename);
-void write(std::ostream & ostream, const Config * c);
+
+void Read(std::istream & istream, ConfigRcPtr & c, const char * filename);
+void Write(std::ostream & ostream, const Config * c);
+
 } // namespace OCIOYaml
 
 } // namespace OCIO_NAMESPACE
