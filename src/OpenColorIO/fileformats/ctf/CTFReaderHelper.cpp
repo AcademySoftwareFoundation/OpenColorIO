@@ -979,6 +979,11 @@ CTFReaderOpEltRcPtr CTFReaderOpElt::GetReader(CTFReaderOpElt::Type type, const C
         ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderFixedFunctionElt, 2_0);
         break;
     }
+    case CTFReaderOpElt::FunctionType:
+    {
+        ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderFunctionElt, 1_6);
+        break;
+    }
     case CTFReaderOpElt::GammaType:
     {
         // If the version is 1.4 or less, then use GammaElt.
@@ -1041,7 +1046,6 @@ CTFReaderOpEltRcPtr CTFReaderOpElt::GetReader(CTFReaderOpElt::Type type, const C
     }
     case CTFReaderOpElt::NoType:
     {
-        static_assert(CTFReaderOpElt::NoType == 13, "Need to handle new type here");
         break;
     }
     }
@@ -1336,6 +1340,61 @@ void CTFReaderFixedFunctionElt::end()
 }
 
 const OpDataRcPtr CTFReaderFixedFunctionElt::getOp() const
+{
+    return m_fixedFunction;
+}
+
+//////////////////////////////////////////////////////////
+
+CTFReaderFunctionElt::CTFReaderFunctionElt()
+    : CTFReaderOpElt()
+    , m_fixedFunction(std::make_shared<FixedFunctionOpData>())
+{
+}
+
+CTFReaderFunctionElt::~CTFReaderFunctionElt()
+{
+}
+
+void CTFReaderFunctionElt::start(const char **atts)
+{
+    CTFReaderOpElt::start(atts);
+
+    bool isStyleFound = false;
+
+    unsigned i = 0;
+    while (atts[i])
+    {
+        if (0 == Platform::Strcasecmp(ATTR_STYLE, atts[i]))
+        {
+            // This will throw on unrecognized styles.
+            try
+            {
+                m_fixedFunction->setStyle(FixedFunctionOpData::GetStyle(atts[i + 1]));
+                isStyleFound = true;
+            }
+            catch (Exception& ce)
+            {
+                throwMessage(ce.what());
+            }
+        }
+
+        i += 2;
+    }
+    if (!isStyleFound)
+    {
+        throwMessage("style parameter for FixedFunction is missing.");
+    }
+}
+
+void CTFReaderFunctionElt::end()
+{
+    CTFReaderOpElt::end();
+
+    m_fixedFunction->validate();
+}
+
+const OpDataRcPtr CTFReaderFunctionElt::getOp() const
 {
     return m_fixedFunction;
 }

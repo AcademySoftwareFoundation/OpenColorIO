@@ -216,6 +216,136 @@ void Add_Surround_Shader(GpuShaderText & ss, float gamma)
     ss.newLine() << "outColor.rgb = outColor.rgb * Ypow_over_Y;";
 }
 
+void Add_RGB_TO_HSV(GpuShaderText & ss)
+{
+    ss.newLine() << "float minRGB = min( outColor.x, min( outColor.y, outColor.z ) );";
+    ss.newLine() << "float maxRGB = max( outColor.x, max( outColor.y, outColor.z ) );";
+    ss.newLine() << "float val = maxRGB;";
+
+    ss.newLine() << "float sat = 0.0, hue = 0.0;";
+    ss.newLine() << "if (minRGB != maxRGB)";
+    ss.newLine() << "{";
+    ss.indent();
+
+    ss.newLine() << "if (val != 0.0) sat = (maxRGB - minRGB) / val;";
+    ss.newLine() << "float OneOverMaxMinusMin = 1.0 / (maxRGB - minRGB);";
+    ss.newLine() << "if ( maxRGB == outColor.r ) hue = (outColor.g - outColor.b) * OneOverMaxMinusMin;";
+    ss.newLine() << "else if ( maxRGB == outColor.g ) hue = 2.0 + (outColor.b - outColor.r) * OneOverMaxMinusMin;";
+    ss.newLine() << "else hue = 4.0 + (outColor.r - outColor.g) * OneOverMaxMinusMin;";
+    ss.newLine() << "if ( hue < 0.0 ) hue += 6.0;";
+
+    ss.dedent();
+    ss.newLine() << "}";
+
+    ss.newLine() << "if ( minRGB < 0.0 ) val += minRGB;";
+    ss.newLine() << "if ( -minRGB > maxRGB ) sat = (maxRGB - minRGB) / -minRGB;";
+
+    ss.newLine() << "outColor.r = hue * 1./6.; outColor.g = sat; outColor.b = val;";
+}
+
+void Add_HSV_TO_RGB(GpuShaderText & ss)
+{
+    ss.newLine() << "float Hue = ( outColor.x - floor( outColor.x ) ) * 6.0;";
+    ss.newLine() << "float Sat = clamp( outColor.y, 0., 1.999 );";
+    ss.newLine() << "float Val = outColor.z;";
+
+    ss.newLine() << "float R = abs(Hue - 3.0) - 1.0;";
+    ss.newLine() << "float G = 2.0 - abs(Hue - 2.0);";
+    ss.newLine() << "float B = 2.0 - abs(Hue - 4.0);";
+    ss.newLine() << ss.vec3fDecl("RGB") << " = " << ss.vec3fConst("R", "G", "B") << ";";
+    ss.newLine() << "RGB = clamp( RGB, 0., 1. );";
+
+    ss.newLine() << "float rgbMax = Val;";
+    ss.newLine() << "float rgbMin = Val * (1.0 - Sat);";
+
+    ss.newLine() << "if ( Sat > 1.0 )";
+    ss.newLine() << "{";
+    ss.indent();
+    ss.newLine() << "rgbMin = Val * (1.0 - Sat) / (2.0 - Sat);";
+    ss.newLine() << "rgbMax = Val - rgbMin;";
+    ss.dedent();
+    ss.newLine() << "}";
+    ss.newLine() << "if ( Val < 0.0 )";
+    ss.newLine() << "{";
+    ss.indent();
+    ss.newLine() << "rgbMin = Val / (2.0 - Sat);";
+    ss.newLine() << "rgbMax = Val - rgbMin;";
+    ss.dedent();
+    ss.newLine() << "}";
+
+    ss.newLine() << "RGB = RGB * (rgbMax - rgbMin) + rgbMin;";
+
+    ss.newLine() << "outColor.rgb = RGB;";
+}
+
+void Add_XYZ_TO_xyY(GpuShaderText & ss)
+{
+    ss.newLine() << "float d = outColor.r + outColor.g + outColor.b;";
+    ss.newLine() << "d = (d == 0.) ? 0. : 1. / d;";
+    ss.newLine() << "outColor.b = outColor.g;";
+    ss.newLine() << "outColor.r *= d;";
+    ss.newLine() << "outColor.g *= d;";
+}
+
+void Add_xyY_TO_XYZ(GpuShaderText & ss)
+{
+    ss.newLine() << "float d = (outColor.g == 0.) ? 0. : 1. / outColor.g;";
+    ss.newLine() << "float Y = outColor.b;";
+    ss.newLine() << "outColor.b = Y * (1. - outColor.r - outColor.g) * d;";
+    ss.newLine() << "outColor.r *= Y * d;";
+    ss.newLine() << "outColor.g = Y;";
+}
+
+void Add_XYZ_TO_uvY(GpuShaderText & ss)
+{
+    ss.newLine() << "float d = outColor.r + 15. * outColor.g + 3. * outColor.b;";
+    ss.newLine() << "d = (d == 0.) ? 0. : 1. / d;";
+    ss.newLine() << "outColor.b = outColor.g;";
+    ss.newLine() << "outColor.r *= 4. * d;";
+    ss.newLine() << "outColor.g *= 9. * d;";
+}
+
+void Add_uvY_TO_XYZ(GpuShaderText & ss)
+{
+    ss.newLine() << "float d = (outColor.g == 0.) ? 0. : 1. / outColor.g;";
+    ss.newLine() << "float Y = outColor.b;";
+    ss.newLine() << "outColor.b = (3./4.) * Y * (4. - outColor.r - 6.6666666666666667 * outColor.g) * d;";
+    ss.newLine() << "outColor.r *= (9./4.) * Y * d;";
+    ss.newLine() << "outColor.g = Y;";
+}
+
+void Add_XYZ_TO_LUV(GpuShaderText & ss)
+{
+    ss.newLine() << "float d = outColor.r + 15. * outColor.g + 3. * outColor.b;";
+    ss.newLine() << "d = (d == 0.) ? 0. : 1. / d;";
+    ss.newLine() << "float u = outColor.r * 4. * d;";
+    ss.newLine() << "float v = outColor.g * 9. * d;";
+    ss.newLine() << "float Y = outColor.g;";
+
+    ss.newLine() << "float Lstar = " << ss.lerp( "1.16 * pow( max(0., Y), 1./3. ) - 0.16", "9.0329629629629608 * Y", 
+                                                 "float(Y <= 0.008856451679)" ) << ";";
+    ss.newLine() << "float ustar = 13. * Lstar * (u - 0.19783001);";
+    ss.newLine() << "float vstar = 13. * Lstar * (v - 0.46831999);";
+
+    ss.newLine() << "outColor.r = Lstar; outColor.g = ustar; outColor.b = vstar;";
+}
+
+void Add_LUV_TO_XYZ(GpuShaderText & ss)
+{
+    ss.newLine() << "float Lstar = outColor.r;";
+    ss.newLine() << "float d = (Lstar == 0.) ? 0. : 0.076923076923076927 / Lstar;";
+    ss.newLine() << "float u = outColor.g * d + 0.19783001;";
+    ss.newLine() << "float v = outColor.b * d + 0.46831999;";
+
+    ss.newLine() << "float tmp = (Lstar + 0.16) * 0.86206896551724144;";
+    ss.newLine() << "float Y = " << ss.lerp( "tmp*tmp*tmp", "0.11070564598794539 * Lstar", "float(Lstar <= 0.08)" ) << ";";
+
+    ss.newLine() << "float dd = (v == 0.) ? 0. : 0.25 / v;";
+    ss.newLine() << "outColor.r = 9. * Y * u * dd;";
+    ss.newLine() << "outColor.b = Y * (12. - 3. * u - 20. * v) * dd;";
+    ss.newLine() << "outColor.g = Y;";
+}
+
 void GetFixedFunctionGPUShaderProgram(GpuShaderText & ss, 
                                       ConstFixedFunctionOpDataRcPtr & func)
 {
@@ -287,10 +417,50 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderText & ss,
             Add_Surround_Shader(ss, (float) func->getParams()[0]);
             break;
         }
+        case FixedFunctionOpData::RGB_TO_HSV:
+        {
+            Add_RGB_TO_HSV(ss);
+            break;
+        }
+        case FixedFunctionOpData::HSV_TO_RGB:
+        {
+            Add_HSV_TO_RGB(ss);
+            break;
+        }
+        case FixedFunctionOpData::XYZ_TO_xyY:
+        {
+            Add_XYZ_TO_xyY(ss);
+            break;
+        }
+        case FixedFunctionOpData::xyY_TO_XYZ:
+        {
+            Add_xyY_TO_XYZ(ss);
+            break;
+        }
+        case FixedFunctionOpData::XYZ_TO_uvY:
+        {
+            Add_XYZ_TO_uvY(ss);
+            break;
+        }
+        case FixedFunctionOpData::uvY_TO_XYZ:
+        {
+            Add_uvY_TO_XYZ(ss);
+            break;
+        }
+        case FixedFunctionOpData::XYZ_TO_LUV:
+        {
+            Add_XYZ_TO_LUV(ss);
+            break;
+        }
+        case FixedFunctionOpData::LUV_TO_XYZ:
+        {
+            Add_LUV_TO_XYZ(ss);
+            break;
+        }
     }
 
     ss.dedent();
     ss.newLine() << "}";
 }
 
-} // namespace OCIO_NAMESPACE
+} // OCIO_NAMESPACE

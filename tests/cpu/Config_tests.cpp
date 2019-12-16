@@ -2452,7 +2452,15 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
             "        - !<FixedFunctionTransform> {style: ACES_DarkToDim10}\n"
             "        - !<FixedFunctionTransform> {style: ACES_DarkToDim10, direction: inverse}\n"
             "        - !<FixedFunctionTransform> {style: REC2100_Surround, params: [0.75]}\n"
-            "        - !<FixedFunctionTransform> {style: REC2100_Surround, params: [0.75], direction: inverse}\n";
+            "        - !<FixedFunctionTransform> {style: REC2100_Surround, params: [0.75], direction: inverse}\n"
+            "        - !<FixedFunctionTransform> {style: RGB_TO_HSV}\n"
+            "        - !<FixedFunctionTransform> {style: RGB_TO_HSV, direction: inverse}\n"
+            "        - !<FixedFunctionTransform> {style: XYZ_TO_xyY}\n"
+            "        - !<FixedFunctionTransform> {style: XYZ_TO_xyY, direction: inverse}\n"
+            "        - !<FixedFunctionTransform> {style: XYZ_TO_uvY}\n"
+            "        - !<FixedFunctionTransform> {style: XYZ_TO_uvY, direction: inverse}\n"
+            "        - !<FixedFunctionTransform> {style: XYZ_TO_LUV}\n"
+            "        - !<FixedFunctionTransform> {style: XYZ_TO_LUV, direction: inverse}\n";
 
         const std::string str = SIMPLE_PROFILE + strEnd;
 

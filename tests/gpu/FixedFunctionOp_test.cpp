@@ -240,7 +240,155 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_rec2100_surround_inv)
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
     test.setContext(func->createEditableCopy(), shaderDesc);
 
-    test.setErrorThreshold(1e-6f);
+    test.setErrorThreshold(2e-6f);
 
     test.setTestInfinity(false);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSV_fwd)
+{
+    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
+    func->setStyle(OCIO::FIXED_FUNCTION_RGB_TO_HSV);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+    test.setContext(func->createEditableCopy(), shaderDesc);
+
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSV_fwd_custom)
+{
+    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
+    func->setStyle(OCIO::FIXED_FUNCTION_RGB_TO_HSV);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+    test.setContext(func->createEditableCopy(), shaderDesc);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues =
+        {
+            1.500f,   2.500f,   0.500f,   0.50f,
+            3.125f,  -0.625f,   1.250f,   1.00f,
+           -5.f/3.f, -4.f/3.f, -1.f/3.f,  0.25f,
+            0.100f,  -0.800f,   0.400f,   0.25f,
+        };
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSV_inv)
+{
+    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
+    func->setStyle(OCIO::FIXED_FUNCTION_RGB_TO_HSV);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+    test.setContext(func->createEditableCopy(), shaderDesc);
+
+    // Mostly passes at 1e-6 but there are some values where the result is large in one chan
+    // and very small in another and so doing relative comparison per channel is not fair.
+    test.setErrorThreshold(5e-4f);
+    test.setExpectedMinimalValue(5e-3f);
+    test.setRelativeComparison(true);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSV_inv_custom)
+{
+    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
+    func->setStyle(OCIO::FIXED_FUNCTION_RGB_TO_HSV);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+    test.setContext(func->createEditableCopy(), shaderDesc);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues =
+        {
+             3.f/12.f,  0.80f,  2.50f,  0.50f,      // val > 1
+            11.f/12.f,  1.20f,  2.50f,  1.00f,      // sat > 1
+            15.f/24.f,  0.80f, -2.00f,  0.25f,      // val < 0
+            19.f/24.f,  1.50f, -0.40f,  0.25f,      // sat > 1, val < 0
+           -89.f/24.f,  0.50f,  0.40f,  2.00f,      // under-range hue
+            81.f/24.f,  1.50f, -0.40f, -0.25f,      // over-range hue, sat > 1, val < 0
+            81.f/24.f, -0.50f,  0.40f,  0.00f,      // sat < 0
+              0.5000f,  2.50f,  0.04f,  0.00f,      // sat > 2
+        };
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_xyY_fwd)
+{
+    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
+    func->setStyle(OCIO::FIXED_FUNCTION_XYZ_TO_xyY);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+    test.setContext(func->createEditableCopy(), shaderDesc);
+
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_xyY_inv)
+{
+    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
+    func->setStyle(OCIO::FIXED_FUNCTION_XYZ_TO_xyY);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+    test.setContext(func->createEditableCopy(), shaderDesc);
+
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_uvY_fwd)
+{
+    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
+    func->setStyle(OCIO::FIXED_FUNCTION_XYZ_TO_uvY);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+    test.setContext(func->createEditableCopy(), shaderDesc);
+
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_uvY_inv)
+{
+    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
+    func->setStyle(OCIO::FIXED_FUNCTION_XYZ_TO_uvY);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+    test.setContext(func->createEditableCopy(), shaderDesc);
+
+    test.setErrorThreshold(1e-5f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_LUV_fwd)
+{
+    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
+    func->setStyle(OCIO::FIXED_FUNCTION_XYZ_TO_LUV);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+    test.setContext(func->createEditableCopy(), shaderDesc);
+
+    test.setErrorThreshold(1e-5f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_LUV_inv)
+{
+    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
+    func->setStyle(OCIO::FIXED_FUNCTION_XYZ_TO_LUV);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+    test.setContext(func->createEditableCopy(), shaderDesc);
+
+    test.setErrorThreshold(1e-5f);
 }

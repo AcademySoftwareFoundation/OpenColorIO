@@ -202,7 +202,6 @@ CTFVersion GetOpMinimumVersion(const ConstOpDataRcPtr & op)
 {
     CTFVersion minVersion{ CTF_PROCESS_LIST_VERSION };
 
-    static_assert(OpData::NoOpType == 11, "Need to handle new type here");
     switch (op->getType())
     {
     case OpData::CDLType:
@@ -527,11 +526,19 @@ void WriteValues(XmlFormatter & formatter,
             break;
         }
 
-        default:
+        case BIT_DEPTH_UINT14:
+        case BIT_DEPTH_UINT32:
+        {
+            throw Exception("Unsupported bitdepth.");
+            break;
+        }
+
+        case BIT_DEPTH_UNKNOWN:
         {
             throw Exception("Unknown bitdepth.");
             break;
         }
+
         }
 
         if (std::distance(valuesBegin, it) % valuesPerLine
@@ -1868,8 +1875,6 @@ void TransformWriter::writeOps() const
         inBD = GetInputFileBD(ops[0]);
         for (size_t i = 0; i < numOps; ++i)
         {
-            static_assert(OpData::NoOpType == 11, "Add new types");
-
             auto & op = ops[i];
 
             if (i + 1 < numOps)

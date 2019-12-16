@@ -48,6 +48,8 @@ bool IsPairInverseEnabled(OpData::Type type, OptimizationFlags flags)
     case OpData::RangeType:
         return false; // Use composition to optimize.
 
+    case OpData::ReferenceType:
+    case OpData::NoOpType:
     default:
         // Other type are not controlled by a flag.
         return true;
@@ -376,22 +378,15 @@ unsigned FindSeparablePrefix(const OpRcPtrVec & ops)
         }
 
         ConstOpRcPtr constOp = op;
-        switch (constOp->data()->getType())
+        if (constOp->data()->getType() == OpData::MatrixType
+            || constOp->data()->getType() == OpData::RangeType)
         {
             // Potentially separable, but inexpensive ops.
             // TODO: Perhaps a LUT is faster once the conversion to float is considered?
-            case OpData::MatrixType:
-            case OpData::RangeType:
-            {
-                break;
-            }
-
-            // Potentially separable, and more expensive.
-            default:
-            {
-                expensiveOps++;
-                break;
-            }
+        }
+        else
+        {
+            expensiveOps++;
         }
     }
 

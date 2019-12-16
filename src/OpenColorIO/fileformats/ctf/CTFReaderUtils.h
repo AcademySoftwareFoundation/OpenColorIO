@@ -25,6 +25,7 @@ static constexpr const char * TAG_DYNAMIC_PARAMETER = "DynamicParameter";
 static constexpr const char * TAG_EXPOSURE_CONTRAST = "ExposureContrast";
 static constexpr const char * TAG_EC_PARAMS = "ECParams";
 static constexpr const char * TAG_FIXED_FUNCTION = "FixedFunction";
+static constexpr const char * TAG_FUNCTION = "Function";
 static constexpr const char * TAG_GAMMA = "Gamma";
 static constexpr const char * TAG_GAMMA_PARAMS = "GammaParams";
 static constexpr const char * TAG_INDEX_MAP = "IndexMap";
