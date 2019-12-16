@@ -1123,7 +1123,7 @@ namespace OCIO_NAMESPACE
     // ************
     
     //!cpp:class::
-    class CPUProcessor
+    class OCIOEXPORT CPUProcessor
     {
     public:
         //!cpp:function::
@@ -1188,7 +1188,7 @@ namespace OCIO_NAMESPACE
     // ************
     
     //!cpp:class::
-    class GPUProcessor
+    class OCIOEXPORT GPUProcessor
     {
     public:
         //!cpp:function::

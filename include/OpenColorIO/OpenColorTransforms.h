@@ -37,7 +37,7 @@ namespace OCIO_NAMESPACE
     // * And a list of child sub-elements, which are also objects implementing
     //   FormatMetadata.
     //
-    class FormatMetadata
+    class OCIOEXPORT FormatMetadata
     {
     public:
         //!cpp:function::
