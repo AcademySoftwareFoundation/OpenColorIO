@@ -373,8 +373,6 @@ void CreateOpVecFromOpData(OpRcPtrVec & ops,
         throw Exception("Cannot create Op with unspecified transform direction.");
     }
 
-    static_assert(OpData::NoOpType == 11, "Need to handle new type here");
-
     switch (opData->getType())
     {
     case OpData::CDLType:
@@ -462,7 +460,7 @@ void CreateOpVecFromOpData(OpRcPtrVec & ops,
         throw Exception("ReferenceOpData should have been replaced by referenced ops");
     }
 
-    default:
+    case OpData::NoOpType:
     {
         throw Exception("OpData is not supported");
     }

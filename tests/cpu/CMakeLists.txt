@@ -167,6 +167,7 @@ set(TESTS
 	Processor_tests.cpp
 	SSE_tests.cpp
 	transforms/FileTransform_tests.cpp
+	transforms/FixedFunctionTransform_tests.cpp
 	transforms/RangeTransform_tests.cpp
 	transforms/AllocationTransform_tests.cpp
 	transforms/CDLTransform_tests.cpp

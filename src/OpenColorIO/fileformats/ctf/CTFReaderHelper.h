@@ -331,6 +331,7 @@ public:
         ACESType,
         ExposureContrastType,
         FixedFunctionType,
+        FunctionType,
         GammaType,
         InvLut1DType,
         InvLut3DType,
@@ -464,6 +465,26 @@ class CTFReaderFixedFunctionElt : public CTFReaderOpElt
 public:
     CTFReaderFixedFunctionElt();
     ~CTFReaderFixedFunctionElt();
+
+    void start(const char **atts) override;
+    void end() override;
+
+    const OpDataRcPtr getOp() const override;
+
+    const FixedFunctionOpDataRcPtr getFixedFunction() const
+    {
+        return m_fixedFunction;
+    }
+
+private:
+    FixedFunctionOpDataRcPtr m_fixedFunction;
+};
+
+class CTFReaderFunctionElt : public CTFReaderOpElt
+{
+public:
+    CTFReaderFunctionElt();
+    ~CTFReaderFunctionElt();
 
     void start(const char **atts) override;
     void end() override;

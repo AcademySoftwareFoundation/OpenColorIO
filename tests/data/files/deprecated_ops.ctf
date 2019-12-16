@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="none" version="1.6">
+    <Description>Backwards compatibility test for deprecated op names.</Description>
+<!-- 
+The following elements are now deprecated but must still be able to load
+and be translated into their modern equivalents.
+ -->
+    <ACES inBitDepth="16i" outBitDepth="16i" style="RedMod03Rev" />
+    <ACES inBitDepth="16i" outBitDepth="16i" style="Surround">
+        <ACESParams gamma="1.2" />
+    </ACES>
+	<Function inBitDepth="16i" outBitDepth="32f" style="HSV_to_RGB" />
+</ProcessList>

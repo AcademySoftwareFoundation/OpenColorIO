@@ -74,10 +74,12 @@ set(PLATFORM_COMPILE_FLAGS "")
 
 if(MSVC)
 	# Because our Exceptions derive from std::runtime_error we can safely disable warning 4275
-	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /EHsc /wd4275 /DWIN32")
+	# /we4062 Enables warning in switch when an enumeration value is not explicitly handled.
+	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /EHsc /wd4275 /DWIN32 /we4062")
 
 else()
-	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wall")
+	# -Wswitch-enum Enables warning in switch when an enumeration value is not explicitly handled.
+	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wall -Wswitch-enum")
 
 	# TODO: OCIO being under active development, unused functions are fine for now.
 	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wno-unused-function")

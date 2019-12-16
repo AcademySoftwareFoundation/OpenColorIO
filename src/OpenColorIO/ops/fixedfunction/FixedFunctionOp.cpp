@@ -184,14 +184,33 @@ void CreateFixedFunctionTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op
 
     const auto style = ffData->getStyle();
 
-    if (style == FixedFunctionOpData::ACES_RED_MOD_03_INV ||
-        style == FixedFunctionOpData::ACES_RED_MOD_10_INV ||
-        style == FixedFunctionOpData::ACES_GLOW_03_INV ||
-        style == FixedFunctionOpData::ACES_GLOW_10_INV ||
-        style == FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV)
+    switch(style)
     {
-        ffTransform->setDirection(TRANSFORM_DIR_INVERSE);
+        case FixedFunctionOpData::ACES_RED_MOD_03_INV:
+        case FixedFunctionOpData::ACES_RED_MOD_10_INV:
+        case FixedFunctionOpData::ACES_GLOW_03_INV:
+        case FixedFunctionOpData::ACES_GLOW_10_INV:
+        case FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV:
+        case FixedFunctionOpData::HSV_TO_RGB:
+        case FixedFunctionOpData::xyY_TO_XYZ:
+        case FixedFunctionOpData::uvY_TO_XYZ:
+        case FixedFunctionOpData::LUV_TO_XYZ:
+            ffTransform->setDirection(TRANSFORM_DIR_INVERSE);
+            break;
+        case FixedFunctionOpData::ACES_RED_MOD_03_FWD:
+        case FixedFunctionOpData::ACES_RED_MOD_10_FWD:
+        case FixedFunctionOpData::ACES_GLOW_03_FWD:
+        case FixedFunctionOpData::ACES_GLOW_10_FWD:
+        case FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD:
+        case FixedFunctionOpData::REC2100_SURROUND:
+        case FixedFunctionOpData::RGB_TO_HSV:
+        case FixedFunctionOpData::XYZ_TO_xyY:
+        case FixedFunctionOpData::XYZ_TO_uvY:
+        case FixedFunctionOpData::XYZ_TO_LUV:
+            // Forward is the default direction.
+            break;
     }
+
     const auto transformStyle = FixedFunctionOpData::ConvertStyle(style);
     ffTransform->setStyle(transformStyle);
 

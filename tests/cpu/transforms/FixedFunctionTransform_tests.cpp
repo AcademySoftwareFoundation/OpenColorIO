@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include "transforms/FixedFunctionTransform.cpp"
 
+#include "transforms/FixedFunctionTransform.cpp"
 #include "UnitTest.h"
 
 namespace OCIO = OCIO_NAMESPACE;
+
 
 OCIO_ADD_TEST(FixedFunctionTransform, basic)
 {
@@ -44,5 +45,9 @@ OCIO_ADD_TEST(FixedFunctionTransform, basic)
     OCIO_CHECK_THROW_WHAT(func->validate(), OCIO::Exception,
                           "The style 'ACES_DarkToDim10 (Forward)' must have "
                           "zero parameters but 1 found.");
-}
 
+    OCIO_CHECK_NO_THROW(func->setStyle(OCIO::FIXED_FUNCTION_RGB_TO_HSV));
+    OCIO_CHECK_THROW_WHAT(func->validate(), OCIO::Exception,
+                          "The style 'RGB_TO_HSV' must have "
+                          "zero parameters but 1 found.");
+}

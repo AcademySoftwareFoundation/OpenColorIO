@@ -111,11 +111,14 @@ struct AddTest
 
 #define OCIO_REQUIRE_ASSERT(x) OCIO_REQUIRE_ASSERT_FROM(x, __LINE__)
 
-#define OCIO_CHECK_ASSERT_MESSAGE(x, M)                                 \
+#define OCIO_CHECK_ASSERT_MESSAGE_FROM(x, M, line)                      \
     ((x) ? ((void)0)                                                    \
-         : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"          \
+         : ((std::cout << __FILE__ << ":" << line << ":\n"              \
                        << "FAILED: " << M << "\n"),                     \
             (void)++unit_test_failures))
+
+#define OCIO_CHECK_ASSERT_MESSAGE(x, M)                                 \
+    OCIO_CHECK_ASSERT_MESSAGE_FROM(x, M, __LINE__)
 
 #define OCIO_CHECK_EQUAL(x,y) OCIO_CHECK_EQUAL_FROM(x,y,__LINE__)
 
