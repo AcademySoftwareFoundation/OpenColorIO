@@ -67,7 +67,7 @@ OCIO_ADD_TEST(FileTransform, load_file_ok)
     OCIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(clfLut3Transform));
     OCIO_CHECK_ASSERT(!proc->isNoOp());
 
-    const std::string ctFFfTransform("ff_aces_redmod.ctf");
+    const std::string ctFFfTransform("fixed_function.ctf");
     OCIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(ctFFfTransform));
     OCIO_CHECK_ASSERT(!proc->isNoOp());
 

@@ -16,18 +16,27 @@ namespace DefaultValues
 const int FLOAT_DECIMALS = 7;
 }
 
-static constexpr const char * RED_MOD_03_FWD = "RedMod03Fwd";
-static constexpr const char * RED_MOD_03_REV = "RedMod03Rev";
-static constexpr const char * RED_MOD_10_FWD = "RedMod10Fwd";
-static constexpr const char * RED_MOD_10_REV = "RedMod10Rev";
-static constexpr const char * GLOW_03_FWD = "Glow03Fwd";
-static constexpr const char * GLOW_03_REV = "Glow03Rev";
-static constexpr const char * GLOW_10_FWD = "Glow10Fwd";
-static constexpr const char * GLOW_10_REV = "Glow10Rev";
-static constexpr const char * DARK_TO_DIM_10 = "DarkToDim10";
-static constexpr const char * DIM_TO_DARK_10 = "DimToDark10";
-static constexpr const char * SURROUND = "Surround"; // Is old name for Rec2100Surround
-static constexpr const char * REC_2100_SURROUND = "Rec2100Surround";
+static constexpr const char * ACES_RED_MOD_03_FWD_STR = "RedMod03Fwd";
+static constexpr const char * ACES_RED_MOD_03_REV_STR = "RedMod03Rev";
+static constexpr const char * ACES_RED_MOD_10_FWD_STR = "RedMod10Fwd";
+static constexpr const char * ACES_RED_MOD_10_REV_STR = "RedMod10Rev";
+static constexpr const char * ACES_GLOW_03_FWD_STR    = "Glow03Fwd";
+static constexpr const char * ACES_GLOW_03_REV_STR    = "Glow03Rev";
+static constexpr const char * ACES_GLOW_10_FWD_STR    = "Glow10Fwd";
+static constexpr const char * ACES_GLOW_10_REV_STR    = "Glow10Rev";
+static constexpr const char * ACES_DARK_TO_DIM_10_STR = "DarkToDim10";
+static constexpr const char * ACES_DIM_TO_DARK_10_STR = "DimToDark10";
+static constexpr const char * SURROUND_STR            = "Surround"; // Is old name for Rec2100Surround
+static constexpr const char * REC_2100_SURROUND_STR   = "Rec2100Surround";
+static constexpr const char * RGB_TO_HSV_STR          = "RGB_TO_HSV";
+static constexpr const char * HSV_TO_RGB_STR          = "HSV_TO_RGB";
+static constexpr const char * XYZ_TO_xyY_STR          = "XYZ_TO_xyY";
+static constexpr const char * xyY_TO_XYZ_STR          = "xyY_TO_XYZ";
+static constexpr const char * XYZ_TO_uvY_STR          = "XYZ_TO_uvY";
+static constexpr const char * uvY_TO_XYZ_STR          = "uvY_TO_XYZ";
+static constexpr const char * XYZ_TO_LUV_STR          = "XYZ_TO_LUV";
+static constexpr const char * LUV_TO_XYZ_STR          = "LUV_TO_XYZ";
+
 
 // NOTE: Converts the enumeration value to its string representation (i.e. CLF reader).
 //       It could add details for error reporting.
@@ -37,27 +46,43 @@ const char * FixedFunctionOpData::ConvertStyleToString(Style style, bool detaile
     switch(style)
     {
         case ACES_RED_MOD_03_FWD:
-            return detailed ? "ACES_RedMod03 (Forward)" : RED_MOD_03_FWD;
+            return detailed ? "ACES_RedMod03 (Forward)"    : ACES_RED_MOD_03_FWD_STR;
         case ACES_RED_MOD_03_INV:
-            return detailed ? "ACES_RedMod03 (Inverse)" : RED_MOD_03_REV;
+            return detailed ? "ACES_RedMod03 (Inverse)"    : ACES_RED_MOD_03_REV_STR;
         case ACES_RED_MOD_10_FWD:
-            return detailed ? "ACES_RedMod10 (Forward)" : RED_MOD_10_FWD;
+            return detailed ? "ACES_RedMod10 (Forward)"    : ACES_RED_MOD_10_FWD_STR;
         case ACES_RED_MOD_10_INV:
-            return detailed ? "ACES_RedMod10 (Inverse)" : RED_MOD_10_REV;
+            return detailed ? "ACES_RedMod10 (Inverse)"    : ACES_RED_MOD_10_REV_STR;
         case ACES_GLOW_03_FWD:
-            return detailed ? "ACES_Glow03 (Forward)" : GLOW_03_FWD;
+            return detailed ? "ACES_Glow03 (Forward)"      : ACES_GLOW_03_FWD_STR;
         case ACES_GLOW_03_INV:
-            return detailed ? "ACES_Glow03 (Inverse)" : GLOW_03_REV;
+            return detailed ? "ACES_Glow03 (Inverse)"      : ACES_GLOW_03_REV_STR;
         case ACES_GLOW_10_FWD:
-            return detailed ? "ACES_Glow10 (Forward)" : GLOW_10_FWD;
+            return detailed ? "ACES_Glow10 (Forward)"      : ACES_GLOW_10_FWD_STR;
         case ACES_GLOW_10_INV:
-            return detailed ? "ACES_Glow10 (Inverse)" : GLOW_10_REV;
+            return detailed ? "ACES_Glow10 (Inverse)"      : ACES_GLOW_10_REV_STR;
         case ACES_DARK_TO_DIM_10_FWD:
-            return detailed ? "ACES_DarkToDim10 (Forward)" : DARK_TO_DIM_10;
+            return detailed ? "ACES_DarkToDim10 (Forward)" : ACES_DARK_TO_DIM_10_STR;
         case ACES_DARK_TO_DIM_10_INV: 
-            return detailed ? "ACES_DarkToDim10 (Inverse)" : DIM_TO_DARK_10;
+            return detailed ? "ACES_DarkToDim10 (Inverse)" : ACES_DIM_TO_DARK_10_STR;
         case REC2100_SURROUND:
-            return detailed ? "REC2100_Surround" : REC_2100_SURROUND;
+            return detailed ? "REC2100_Surround"           : REC_2100_SURROUND_STR;
+        case RGB_TO_HSV:
+            return RGB_TO_HSV_STR;
+        case HSV_TO_RGB: 
+            return HSV_TO_RGB_STR;
+        case XYZ_TO_xyY:
+            return XYZ_TO_xyY_STR;
+        case xyY_TO_XYZ:
+            return xyY_TO_XYZ_STR;
+        case XYZ_TO_uvY:
+            return XYZ_TO_uvY_STR;
+        case uvY_TO_XYZ:
+            return uvY_TO_XYZ_STR;
+        case XYZ_TO_LUV:
+            return XYZ_TO_LUV_STR;
+        case LUV_TO_XYZ:
+            return LUV_TO_XYZ_STR;
     }
 
     std::stringstream ss("Unknown FixedFunction style: ");
@@ -70,54 +95,88 @@ FixedFunctionOpData::Style FixedFunctionOpData::GetStyle(const char * name)
 {
     if (name && *name)
     {
-        if (0 == Platform::Strcasecmp(name, RED_MOD_03_FWD))
+        if (0 == Platform::Strcasecmp(name, ACES_RED_MOD_03_FWD_STR))
         {
             return ACES_RED_MOD_03_FWD;
         }
-        else if (0 == Platform::Strcasecmp(name, RED_MOD_03_REV))
+        else if (0 == Platform::Strcasecmp(name, ACES_RED_MOD_03_REV_STR))
         {
             return ACES_RED_MOD_03_INV;
         }
-        else if (0 == Platform::Strcasecmp(name, RED_MOD_10_FWD))
+        else if (0 == Platform::Strcasecmp(name, ACES_RED_MOD_10_FWD_STR))
         {
             return ACES_RED_MOD_10_FWD;
         }
-        else if (0 == Platform::Strcasecmp(name, RED_MOD_10_REV))
+        else if (0 == Platform::Strcasecmp(name, ACES_RED_MOD_10_REV_STR))
         {
             return ACES_RED_MOD_10_INV;
         }
-        else if (0 == Platform::Strcasecmp(name, GLOW_03_FWD))
+        else if (0 == Platform::Strcasecmp(name, ACES_GLOW_03_FWD_STR))
         {
             return ACES_GLOW_03_FWD;
         }
-        else if (0 == Platform::Strcasecmp(name, GLOW_03_REV))
+        else if (0 == Platform::Strcasecmp(name, ACES_GLOW_03_REV_STR))
         {
             return ACES_GLOW_03_INV;
         }
-        else if (0 == Platform::Strcasecmp(name, GLOW_10_FWD))
+        else if (0 == Platform::Strcasecmp(name, ACES_GLOW_10_FWD_STR))
         {
             return ACES_GLOW_10_FWD;
         }
-        else if (0 == Platform::Strcasecmp(name, GLOW_10_REV))
+        else if (0 == Platform::Strcasecmp(name, ACES_GLOW_10_REV_STR))
         {
             return ACES_GLOW_10_INV;
         }
-        else if (0 == Platform::Strcasecmp(name, DARK_TO_DIM_10))
+        else if (0 == Platform::Strcasecmp(name, ACES_DARK_TO_DIM_10_STR))
         {
             return ACES_DARK_TO_DIM_10_FWD;
         }
-        else if (0 == Platform::Strcasecmp(name, DIM_TO_DARK_10))
+        else if (0 == Platform::Strcasecmp(name, ACES_DIM_TO_DARK_10_STR))
         {
             return ACES_DARK_TO_DIM_10_INV;
         }
-        else if (0 == Platform::Strcasecmp(name, SURROUND) ||
-                 0 == Platform::Strcasecmp(name, REC_2100_SURROUND) )
+        else if (0 == Platform::Strcasecmp(name, SURROUND_STR) ||
+                 0 == Platform::Strcasecmp(name, REC_2100_SURROUND_STR) )
         {
             return REC2100_SURROUND;
         }
+        else if (0 == Platform::Strcasecmp(name, RGB_TO_HSV_STR))
+        {
+            return RGB_TO_HSV;
+        }
+        else if (0 == Platform::Strcasecmp(name, HSV_TO_RGB_STR))
+        {
+            return HSV_TO_RGB;
+        }
+        else if (0 == Platform::Strcasecmp(name, XYZ_TO_xyY_STR))
+        {
+            return XYZ_TO_xyY;
+        }
+        else if (0 == Platform::Strcasecmp(name, xyY_TO_XYZ_STR))
+        {
+            return xyY_TO_XYZ;
+        }
+        else if (0 == Platform::Strcasecmp(name, XYZ_TO_uvY_STR))
+        {
+            return XYZ_TO_uvY;
+        }
+        else if (0 == Platform::Strcasecmp(name, uvY_TO_XYZ_STR))
+        {
+            return uvY_TO_XYZ;
+        }
+        else if (0 == Platform::Strcasecmp(name, XYZ_TO_LUV_STR))
+        {
+            return XYZ_TO_LUV;
+        }
+        else if (0 == Platform::Strcasecmp(name, LUV_TO_XYZ_STR))
+        {
+            return LUV_TO_XYZ;
+        }
     }
+
     std::string st("Unknown FixedFunction style: ");
     st += name;
+
     throw Exception(st.c_str());
 }
 
@@ -148,6 +207,22 @@ FixedFunctionOpData::Style FixedFunctionOpData::ConvertStyle(FixedFunctionStyle 
         case FIXED_FUNCTION_REC2100_SURROUND:
         {
             return FixedFunctionOpData::REC2100_SURROUND;
+        }
+        case FIXED_FUNCTION_RGB_TO_HSV:
+        {
+            return FixedFunctionOpData::RGB_TO_HSV;
+        }
+        case FIXED_FUNCTION_XYZ_TO_xyY:
+        {
+            return FixedFunctionOpData::XYZ_TO_xyY;
+        }
+        case FIXED_FUNCTION_XYZ_TO_uvY:
+        {
+            return FixedFunctionOpData::XYZ_TO_uvY;
+        }
+        case FIXED_FUNCTION_XYZ_TO_LUV:
+        {
+            return FixedFunctionOpData::XYZ_TO_LUV;
         }
     }
 
@@ -183,6 +258,22 @@ FixedFunctionStyle FixedFunctionOpData::ConvertStyle(FixedFunctionOpData::Style 
 
     case FixedFunctionOpData::REC2100_SURROUND:
         return FIXED_FUNCTION_REC2100_SURROUND;
+
+    case FixedFunctionOpData::RGB_TO_HSV:
+    case FixedFunctionOpData::HSV_TO_RGB:
+        return FIXED_FUNCTION_RGB_TO_HSV;
+
+    case FixedFunctionOpData::XYZ_TO_xyY:
+    case FixedFunctionOpData::xyY_TO_XYZ:
+        return FIXED_FUNCTION_XYZ_TO_xyY;
+
+    case FixedFunctionOpData::XYZ_TO_uvY:
+    case FixedFunctionOpData::uvY_TO_XYZ:
+        return FIXED_FUNCTION_XYZ_TO_uvY;
+
+    case FixedFunctionOpData::XYZ_TO_LUV:
+    case FixedFunctionOpData::LUV_TO_XYZ:
+        return FIXED_FUNCTION_XYZ_TO_LUV;
     }
 
     std::stringstream ss("Unknown FixedFunction style: ");
@@ -197,8 +288,14 @@ FixedFunctionOpData::FixedFunctionOpData()
 {
 }
 
-FixedFunctionOpData::FixedFunctionOpData(const Params & params,
-                                         Style style)
+FixedFunctionOpData::FixedFunctionOpData(Style style)
+    :   OpData()
+    ,   m_style(style)
+{
+    validate();
+}
+
+FixedFunctionOpData::FixedFunctionOpData(const Params & params, Style style)
     :   OpData()
     ,   m_style(style)
     ,   m_params(params)
@@ -212,8 +309,7 @@ FixedFunctionOpData::~FixedFunctionOpData()
 
 FixedFunctionOpDataRcPtr FixedFunctionOpData::clone() const
 {
-    return std::make_shared<FixedFunctionOpData>(getParams(),
-                                                 getStyle());
+    return std::make_shared<FixedFunctionOpData>(getParams(), getStyle());
 }
 
 void FixedFunctionOpData::validate() const
@@ -325,6 +421,50 @@ void FixedFunctionOpData::invert()
         case REC2100_SURROUND:
         {
             m_params[0] = 1. / m_params[0];
+            break;
+        }
+
+        case RGB_TO_HSV:
+        {
+            setStyle(HSV_TO_RGB);
+            break;
+        }
+        case HSV_TO_RGB:
+        {
+            setStyle(RGB_TO_HSV);
+            break;
+        }
+
+        case XYZ_TO_xyY:
+        {
+            setStyle(xyY_TO_XYZ);
+            break;
+        }
+        case xyY_TO_XYZ:
+        {
+            setStyle(XYZ_TO_xyY);
+            break;
+        }
+
+        case XYZ_TO_uvY:
+        {
+            setStyle(uvY_TO_XYZ);
+            break;
+        }
+        case uvY_TO_XYZ:
+        {
+            setStyle(XYZ_TO_uvY);
+            break;
+        }
+
+        case XYZ_TO_LUV:
+        {
+            setStyle(LUV_TO_XYZ);
+            break;
+        }
+        case LUV_TO_XYZ:
+        {
+            setStyle(XYZ_TO_LUV);
             break;
         }
     }

@@ -3,13 +3,13 @@
 
 #include "BitDepthUtils.h"
 #include "fileformats/FileFormatCTF.cpp"
+#include "ops/fixedfunction/FixedFunctionOp.h"
 #include "UnitTest.h"
 #include "UnitTestLogUtils.h"
 #include "UnitTestUtils.h"
 
 
 namespace OCIO = OCIO_NAMESPACE;
-
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2964,94 +2964,160 @@ OCIO_ADD_TEST(FileFormatCTF, attribute_float_parse_leading_spaces)
     OCIO_CHECK_EQUAL(ec->getExposure(), -1.5);
 }
 
-OCIO_ADD_TEST(FixedFunction, load_ff_aces_redmod)
+OCIO_ADD_TEST(FileFormatCTF, load_deprecated_ops_file)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
-    std::string fileName("ff_aces_redmod.ctf");
-    OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(fileName));
-    const OCIO::ConstOpDataVec & fileOps = cachedFile->m_transform->getOps();
-    OCIO_REQUIRE_EQUAL(fileOps.size(), 1);
-    auto op = fileOps[0];
-    auto func = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(op);
-    OCIO_REQUIRE_ASSERT(func);
-
-    OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::ACES_RED_MOD_03_INV);
-}
-
-OCIO_ADD_TEST(FixedFunction, load_ff_aces_surround)
-{
-    OCIO::LocalCachedFileRcPtr cachedFile;
-    std::string fileName("ff_aces_surround.ctf");
+    std::string fileName("deprecated_ops.ctf");
     OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(fileName));
     const OCIO::ConstOpDataVec & fileOps = cachedFile->m_transform->getOps();
 
-    OCIO_REQUIRE_EQUAL(fileOps.size(), 1);
-    auto op = fileOps[0];
-    auto func = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(op);
-    OCIO_REQUIRE_ASSERT(func);
+    OCIO_REQUIRE_EQUAL(fileOps.size(), 3);
 
-    OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::REC2100_SURROUND);
+    // Test ACES RedMod03 (deprecated) conversion to the modern representation.
+    {
+        auto op = fileOps[0];
+        auto func = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(op);
+        OCIO_REQUIRE_ASSERT(func);
+        OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::ACES_RED_MOD_03_INV);
+        OCIO_CHECK_NO_THROW(func->validate());
+        OCIO_CHECK_ASSERT(func->getParams().empty());
+    }
 
-    OCIO::FixedFunctionOpData::Params params;
-    params.push_back(1.2);
-    func->validate();
-    OCIO_CHECK_ASSERT(func->getParams() == params);
+    // Test ACES Surround (deprecated) conversion to the modern representation.
+    {
+        auto op = fileOps[1];
+        auto func = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(op);
+        OCIO_REQUIRE_ASSERT(func);
+        OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::REC2100_SURROUND);
+        OCIO_CHECK_NO_THROW(func->validate());
+
+        OCIO::FixedFunctionOpData::Params params;
+        params.push_back(1.2);
+        OCIO_CHECK_ASSERT(func->getParams() == params);
+    }
+
+    // Test Function (deprecated) conversion to the modern representation.
+    {
+        auto op = fileOps[2];
+        auto func = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(op);
+        OCIO_REQUIRE_ASSERT(func);
+        OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::HSV_TO_RGB);
+        OCIO_CHECK_NO_THROW(func->validate());
+        OCIO_CHECK_ASSERT(func->getParams().empty());
+    }
 }
 
-void ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::Style style)
+OCIO_ADD_TEST(FixedFunction, load_fixed_function_file)
 {
-    std::string styleName{ OCIO::FixedFunctionOpData::ConvertStyleToString(style, false) };
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    std::string fileName("fixed_function.ctf");
+    OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(fileName));
+    const OCIO::ConstOpDataVec & fileOps = cachedFile->m_transform->getOps();
+
+    OCIO_REQUIRE_EQUAL(fileOps.size(), 2);
+
+    // Test FixedFunction with the REC2100_SURROUND style.
+    {
+        auto op = fileOps[0];
+        auto func = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(op);
+        OCIO_REQUIRE_ASSERT(func);
+        OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::REC2100_SURROUND);
+        OCIO_CHECK_NO_THROW(func->validate());
+
+        OCIO::FixedFunctionOpData::Params params;
+        params.push_back(0.8);
+        OCIO_CHECK_ASSERT(func->getParams() == params);       
+    }
+
+    // Test FixedFunction with the HSV_to_RGB style.
+    {
+        auto op = fileOps[1];
+        auto func = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(op);
+        OCIO_REQUIRE_ASSERT(func);
+        OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::HSV_TO_RGB);
+        OCIO_CHECK_NO_THROW(func->validate());
+        OCIO_CHECK_ASSERT(func->getParams().empty());
+    }
+
+}
+
+void ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::Style style, int lineNo)
+{
+    // Validate the load & save for any FixedFunction style without parameters.
+
+    std::ostringstream ffStr;
+    ffStr << "<FixedFunction inBitDepth=\"32f\" outBitDepth=\"32f\" style=\""
+          << OCIO::FixedFunctionOpData::ConvertStyleToString(style, false) << "\">";
+
     std::ostringstream strebuf;
-    strebuf << "<?xml version='1.0' encoding='UTF-8'?>\n";
-    strebuf << "<ProcessList id='none' version='2'>\n";
-    strebuf << "    <FixedFunction inBitDepth='8i' outBitDepth='32f' style='";
-    strebuf << styleName;
-    strebuf << "' />\n";
-    strebuf << "</ProcessList>\n";
+    strebuf << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            << "<ProcessList version=\"2\" id=\"ABCD\">\n"
+            << "    " << ffStr.str() << "\n"
+            << "    </FixedFunction>\n"
+            << "</ProcessList>\n";
 
-    OCIO::LocalCachedFileRcPtr cachedFile = ParseString(strebuf.str());
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    OCIO_CHECK_NO_THROW_FROM(cachedFile = ParseString(strebuf.str()), lineNo);
     OCIO::ConstOpDataVec & fileOps = cachedFile->m_transform->getOps();
 
-    OCIO_REQUIRE_EQUAL(fileOps.size(), 1);
-    auto op = fileOps[0];
-    auto func = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(op);
-    OCIO_REQUIRE_ASSERT(func);
+    OCIO_REQUIRE_EQUAL_FROM(fileOps.size(), 1, lineNo);
+    auto opData = fileOps[0];
+    auto ffOpData = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(opData);
+    OCIO_REQUIRE_ASSERT_FROM(ffOpData, lineNo);
+    OCIO_CHECK_EQUAL_FROM(ffOpData->getStyle(), style, lineNo);
 
-    OCIO_CHECK_EQUAL(func->getStyle(), style);
+    auto clonedOpData = ffOpData->clone();
+    OCIO::OpRcPtrVec ops;
+    OCIO_CHECK_NO_THROW_FROM(
+        OCIO::CreateFixedFunctionOp(ops, clonedOpData, OCIO::TRANSFORM_DIR_FORWARD), lineNo);
+    OCIO_REQUIRE_EQUAL_FROM(ops.size(), 1, lineNo);
+
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+    group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "ABCD");
+    OCIO::ConstOpRcPtr constOp = ops[0];
+    OCIO_CHECK_NO_THROW_FROM(OCIO::CreateFixedFunctionTransform(group, constOp), lineNo);
+    OCIO_REQUIRE_EQUAL_FROM(group->getNumTransforms(), 1, lineNo);
+
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+    OCIO::ConstProcessorRcPtr processorGroup;
+    OCIO_CHECK_NO_THROW(processorGroup = config->getProcessor(group));
+
+    std::ostringstream outputTransform;
+    OCIO_CHECK_NO_THROW_FROM(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform), lineNo);
+
+    if (outputTransform.str() != strebuf.str())
+    {
+        std::ostringstream err;
+        err << "Expected is: \n"
+            << strebuf.str()
+            << "where output is: \n"
+            << outputTransform.str();
+
+        OCIO_CHECK_ASSERT_MESSAGE_FROM(0, err.str(), lineNo);
+    }
 }
 
-OCIO_ADD_TEST(FixedFunction, load_ff_style)
+OCIO_ADD_TEST(FixedFunction, load_save_ctf)
 {
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_03_FWD);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_03_INV);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_10_FWD);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_10_INV);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_03_FWD);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_03_INV);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_10_FWD);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_10_INV);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV);
-}
-
-OCIO_ADD_TEST(FixedFunction, load_ff_surround)
-{
-    OCIO::LocalCachedFileRcPtr cachedFile;
-    std::string fileName("ff_surround.ctf");
-    OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(fileName));
-    const OCIO::ConstOpDataVec & fileOps = cachedFile->m_transform->getOps();
-
-    OCIO_REQUIRE_EQUAL(fileOps.size(), 1);
-    auto op = fileOps[0];
-    auto func = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(op);
-    OCIO_REQUIRE_ASSERT(func);
-
-    OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::REC2100_SURROUND);
-
-    OCIO::FixedFunctionOpData::Params params;
-    params.push_back(0.8);
-    func->validate();
-    OCIO_CHECK_ASSERT(func->getParams() == params);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_03_FWD, __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_03_INV, __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_10_FWD, __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_10_INV, __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_03_FWD   , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_03_INV   , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_10_FWD   , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_10_INV   , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD, __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV, __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::RGB_TO_HSV         , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::HSV_TO_RGB         , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::XYZ_TO_xyY         , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::xyY_TO_XYZ         , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::XYZ_TO_uvY         , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::uvY_TO_XYZ         , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::XYZ_TO_LUV         , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::LUV_TO_XYZ         , __LINE__);
 }
 
 OCIO_ADD_TEST(FixedFunction, load_ff_fail_version)
@@ -3082,12 +3148,12 @@ OCIO_ADD_TEST(FixedFunction, load_ff_fail_params)
                           "must have one parameter but 2 found");
 }
 
-OCIO_ADD_TEST(FixedFunction, load_ff_aces_fail_style)
+OCIO_ADD_TEST(FixedFunction, load_ff_fail_style)
 {
     std::ostringstream strebuf;
     strebuf << "<?xml version='1.0' encoding='UTF-8'?>\n";
-    strebuf << "<ProcessList id='none' version='1.5'>\n";
-    strebuf << "    <ACES inBitDepth='16i' outBitDepth='32f' style='UnknownStyle' />\n";
+    strebuf << "<ProcessList id='none' version='2.0'>\n";
+    strebuf << "    <FixedFunction inBitDepth='16i' outBitDepth='32f' style='UnknownStyle' />\n";
     strebuf << "</ProcessList>\n";
 
     OCIO_CHECK_THROW_WHAT(ParseString(strebuf.str()), OCIO::Exception,
@@ -4590,40 +4656,6 @@ OCIO_ADD_TEST(CTFTransform, fixed_function_rec2100_inverse_ctf)
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="2" id="UIDFF42">
     <FixedFunction inBitDepth="32f" outBitDepth="32f" style="Rec2100Surround" params="2">
-    </FixedFunction>
-</ProcessList>
-)" };
-
-    OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
-    OCIO_CHECK_EQUAL(expected, outputTransform.str());
-}
-
-OCIO_ADD_TEST(CTFTransform, fixed_function_aces_ctf)
-{
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
-    OCIO::FixedFunctionTransformRcPtr ff = OCIO::FixedFunctionTransform::Create();
-    ff->setStyle(OCIO::FIXED_FUNCTION_ACES_RED_MOD_10);
-
-    OCIO::FixedFunctionTransformRcPtr ffrev = OCIO::FixedFunctionTransform::Create();
-    ffrev->setStyle(OCIO::FIXED_FUNCTION_ACES_RED_MOD_10);
-    ffrev->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-
-    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
-    group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDFF42");
-    group->appendTransform(ff);
-    group->appendTransform(ffrev);
-
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
-    std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
-
-    const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList version="2" id="UIDFF42">
-    <FixedFunction inBitDepth="32f" outBitDepth="32f" style="RedMod10Fwd">
-    </FixedFunction>
-    <FixedFunction inBitDepth="32f" outBitDepth="32f" style="RedMod10Rev">
     </FixedFunction>
 </ProcessList>
 )" };

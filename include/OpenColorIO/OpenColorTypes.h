@@ -381,7 +381,11 @@ namespace OCIO_NAMESPACE
         FIXED_FUNCTION_ACES_GLOW_03,        //! Glow function (ACES 0.3/0.7)
         FIXED_FUNCTION_ACES_GLOW_10,        //! Glow function (ACES 1.0)
         FIXED_FUNCTION_ACES_DARK_TO_DIM_10, //! Dark to dim surround correction (ACES 1.0)
-        FIXED_FUNCTION_REC2100_SURROUND     //! Rec.2100 surround correction (takes one double for the gamma param)
+        FIXED_FUNCTION_REC2100_SURROUND,    //! Rec.2100 surround correction (takes one double for the gamma param)
+        FIXED_FUNCTION_RGB_TO_HSV,          //! Classic RGB to HSV function
+        FIXED_FUNCTION_XYZ_TO_xyY,          //! CIE XYZ to 1931 xy chromaticity coordinates
+        FIXED_FUNCTION_XYZ_TO_uvY,          //! CIE XYZ to 1976 u'v' chromaticity coordinates
+        FIXED_FUNCTION_XYZ_TO_LUV           //! CIE XYZ to 1976 CIELUV colour space (D65 white)
     };
 
     //!cpp:type:: Enumeration of the :cpp:class:`ExposureContrastTransform` transform algorithms.
