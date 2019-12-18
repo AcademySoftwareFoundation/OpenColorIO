@@ -20,12 +20,12 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 		PUBLIC
 			public_api
 		PRIVATE
-			yamlcpp::yamlcpp
+			expat::expat
+			ilmbase::ilmbase
 			pystring::pystring
 			sampleicc::sampleicc
 			unittest_data
-			expat::expat
-			ilmbase::ilmbase
+			yamlcpp::yamlcpp
 	)
 	if(PRIVATE_INCLUDES)
 		target_include_directories(${TEST_BINARY}
@@ -122,6 +122,7 @@ set(TESTS
 	fileformats/FileFormatVF_tests.cpp
 	fileformats/FormatMetadata_tests.cpp
 	fileformats/xmlutils/XMLReaderUtils_tests.cpp
+	FileRules_tests.cpp
 	GpuShader_tests.cpp
 	GpuShaderUtils_tests.cpp
 	Logging_tests.cpp

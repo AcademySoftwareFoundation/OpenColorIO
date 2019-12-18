@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <cstring>
 #include <iostream>
 #include <set>
 #include <sstream>
@@ -48,6 +49,46 @@ std::string ConvertSpecialCharToXmlToken(const std::string& str)
         if (!found)
         {
             res += *it;
+        }
+    }
+    return res;
+}
+
+std::string ConvertXmlTokenToSpecialChar(const std::string & str)
+{
+    std::string res;
+    for (std::string::const_iterator it(str.begin()); it != str.end(); it++)
+    {
+        switch (*it)
+        {
+        case '&':
+        {
+            unsigned idx = 0;
+            for (; !elts[idx].str.empty(); ++idx)
+            {
+                const Element& elt = elts[idx];
+                const size_t length = elt.str.length();
+                if (0 == strncmp(&(*it), elt.str.c_str(), length))
+                {
+                    res += elt.c;
+                    it += (length - 1); // -1 because for loop will +1
+                    break;
+                }
+            }
+
+            if (elts[idx].str.empty())
+            {
+                std::ostringstream oss;
+                oss << "Unknown XML tag:" << std::string(&(*it));
+                throw Exception(oss.str().c_str());
+            }
+            break;
+        }
+        default:
+        {
+            res += *it;
+            break;
+        }
         }
     }
     return res;

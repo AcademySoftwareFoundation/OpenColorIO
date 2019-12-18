@@ -19,6 +19,8 @@ namespace OCIO_NAMESPACE
 // (Note: eXpat does the inverse conversion automatically.)
 std::string ConvertSpecialCharToXmlToken(const std::string& str);
 
+std::string ConvertXmlTokenToSpecialChar(const std::string & str);
+
 std::string FloatToString(float fval);
 std::string FloatVecToString(const float * fval, unsigned int size);
 

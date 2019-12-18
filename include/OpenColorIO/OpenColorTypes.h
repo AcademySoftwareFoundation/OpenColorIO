@@ -35,6 +35,12 @@ typedef OCIO_SHARED_PTR<const Config> ConstConfigRcPtr;
 //!cpp:type::
 typedef OCIO_SHARED_PTR<Config> ConfigRcPtr;
 
+class OCIOEXPORT FileRules;
+//!cpp:type::
+typedef OCIO_SHARED_PTR<const FileRules> ConstFileRulesRcPtr;
+//!cpp:type::
+typedef OCIO_SHARED_PTR<FileRules> FileRulesRcPtr;
+
 class OCIOEXPORT ColorSpace;
 //!cpp:type::
 typedef OCIO_SHARED_PTR<const ColorSpace> ConstColorSpaceRcPtr;

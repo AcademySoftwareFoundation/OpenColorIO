@@ -15,6 +15,10 @@ luma: [0.2126, 0.7152, 0.0722]
 roles:
   default: raw
 
+file_rules:
+  - !<Rule> {name: ColorSpaceNamePathSearch}
+  - !<Rule> {name: Default, colorspace: default}
+
 displays:
   sRGB:
     - !<View> {name: Raw, colorspace: raw}

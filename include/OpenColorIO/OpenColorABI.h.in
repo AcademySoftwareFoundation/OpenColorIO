@@ -17,6 +17,9 @@
                           (@OpenColorIO_VERSION_MINOR@ << 16) | \
                           (@OpenColorIO_VERSION_PATCH@ <<  8))
 
+#define OCIO_VERSION_MAJOR @OpenColorIO_VERSION_MAJOR@
+#define OCIO_VERSION_MINOR @OpenColorIO_VERSION_MINOR@
+
 // shared_ptr / dynamic_pointer_cast
 #include <memory>
 #define OCIO_SHARED_PTR std::shared_ptr
