@@ -18,8 +18,6 @@ namespace OCIO_NAMESPACE
 namespace
 {
 
-constexpr bool AllowDefault = true;
-
 std::string SanitizeRegularExpression(const std::string & regexPattern)
 {
     std::string r = regexPattern;

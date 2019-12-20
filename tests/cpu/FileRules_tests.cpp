@@ -87,7 +87,7 @@ OCIO_ADD_TEST(FileRules, config_insert_rule)
                           OCIO::Exception, "invalid regular expression");
 
     // Invalid regex.
-    OCIO_CHECK_THROW_WHAT(fileRules->insertAt(0, "rule", "raw", "]]"),
+    OCIO_CHECK_THROW_WHAT(fileRules->insertAt(0, "rule", "raw", "(.*)(\bwhat"),
                           OCIO::Exception, "invalid regular expression");
 }
 
@@ -689,8 +689,9 @@ OCIO_ADD_TEST(OCIOFileRules, ocio_rules_regex)
     rules->getColorSpaceFromFilepath(*config, R"(mine/media/image.jpg)", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
 
+    // The error details may be different on each platform.
     OCIO_CHECK_THROW_WHAT(rules->insertAt(1, "invalid", "cs1", R"((.*)(\bmine\b|\byours\b(.*))"),
-                          OCIO::Exception, "The expression contained mismatched ( and )");
+                          OCIO::Exception, "invalid regular expression");
 }
 
 OCIO_ADD_TEST(OCIOFileRules, ocio_rules_long_filepattern)
