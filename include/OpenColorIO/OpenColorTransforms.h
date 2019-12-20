@@ -127,7 +127,7 @@ public:
     static AllocationTransformRcPtr Create();
 
     //!cpp:function::
-    virtual TransformRcPtr createEditableCopy() const;
+    TransformRcPtr createEditableCopy() const override;
 
     //!cpp:function::
     TransformDirection getDirection() const noexcept override;
@@ -135,7 +135,7 @@ public:
     void setDirection(TransformDirection dir) noexcept override;
 
     //!cpp:function:: Will throw if data is not valid.
-    virtual void validate() const;
+    void validate() const override;
 
     //!cpp:function::
     Allocation getAllocation() const;
@@ -285,7 +285,7 @@ public:
     static ColorSpaceTransformRcPtr Create();
 
     //!cpp:function::
-    virtual TransformRcPtr createEditableCopy() const;
+    TransformRcPtr createEditableCopy() const override;
 
     //!cpp:function::
     TransformDirection getDirection() const noexcept override;
@@ -293,7 +293,7 @@ public:
     void setDirection(TransformDirection dir) noexcept override;
 
     //!cpp:function:: Will throw if data is not valid.
-    virtual void validate() const;
+    void validate() const override;
 
     //!cpp:function::
     const char * getSrc() const;
@@ -334,7 +334,7 @@ public:
     static DisplayTransformRcPtr Create();
 
     //!cpp:function::
-    virtual TransformRcPtr createEditableCopy() const;
+    TransformRcPtr createEditableCopy() const override;
 
     //!cpp:function::
     TransformDirection getDirection() const noexcept override;
@@ -342,7 +342,7 @@ public:
     void setDirection(TransformDirection dir) noexcept override;
 
     //!cpp:function:: Will throw if data is not valid.
-    virtual void validate() const;
+    void validate() const override;
 
     //!cpp:function::
     const char * getInputColorSpaceName() const;
@@ -654,7 +654,7 @@ public:
     static FileTransformRcPtr Create();
 
     //!cpp:function::
-    virtual TransformRcPtr createEditableCopy() const;
+    TransformRcPtr createEditableCopy() const override;
 
     //!cpp:function::
     TransformDirection getDirection() const noexcept override;
@@ -662,7 +662,7 @@ public:
     void setDirection(TransformDirection dir) noexcept override;
 
     //!cpp:function:: Will throw if data is not valid.
-    virtual void validate() const;
+    void validate() const override;
 
     //!cpp:function::
     const char * getSrc() const;
@@ -761,7 +761,7 @@ public:
     static GroupTransformRcPtr Create();
 
     //!cpp:function::
-    virtual TransformRcPtr createEditableCopy() const;
+    TransformRcPtr createEditableCopy() const override;
 
     //!cpp:function::
     TransformDirection getDirection() const noexcept override;
@@ -769,7 +769,7 @@ public:
     void setDirection(TransformDirection dir) noexcept override;
 
     //!cpp:function:: Will throw if data is not valid.
-    virtual void validate() const;
+    void validate() const override;
 
     //!cpp:function::
     virtual const FormatMetadata & getFormatMetadata() const noexcept;
@@ -916,7 +916,7 @@ public:
     static LookTransformRcPtr Create();
 
     //!cpp:function::
-    virtual TransformRcPtr createEditableCopy() const;
+    TransformRcPtr createEditableCopy() const override;
 
     //!cpp:function::
     TransformDirection getDirection() const noexcept override;
@@ -924,7 +924,7 @@ public:
     void setDirection(TransformDirection dir) noexcept override;
 
     //!cpp:function:: Will throw if data is not valid.
-    virtual void validate() const;
+    void validate() const override;
 
     //!cpp:function::
     const char * getSrc() const;
