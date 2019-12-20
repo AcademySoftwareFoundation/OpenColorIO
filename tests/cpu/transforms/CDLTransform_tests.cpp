@@ -5,6 +5,7 @@
 
 #include "UnitTest.h"
 #include "UnitTestUtils.h"
+
 #include "Platform.h"
 
 namespace OCIO = OCIO_NAMESPACE;
@@ -14,24 +15,22 @@ OCIO_ADD_TEST(CDLTransform, equality)
     const OCIO::CDLTransformRcPtr cdl1 = OCIO::CDLTransform::Create();
     const OCIO::CDLTransformRcPtr cdl2 = OCIO::CDLTransform::Create();
 
-    OCIO_CHECK_ASSERT(cdl1->equals(cdl1));
-    OCIO_CHECK_ASSERT(cdl1->equals(cdl2));
-    OCIO_CHECK_ASSERT(cdl2->equals(cdl1));
+    OCIO_CHECK_ASSERT(cdl1->equals(*cdl1));
+    OCIO_CHECK_ASSERT(cdl1->equals(*cdl2));
+    OCIO_CHECK_ASSERT(cdl2->equals(*cdl1));
 
     const OCIO::CDLTransformRcPtr cdl3 = OCIO::CDLTransform::Create();
     cdl3->setSat(cdl3->getSat()+0.002f);
 
-    OCIO_CHECK_ASSERT(!cdl1->equals(cdl3));
-    OCIO_CHECK_ASSERT(!cdl2->equals(cdl3));
-    OCIO_CHECK_ASSERT(cdl3->equals(cdl3));
+    OCIO_CHECK_ASSERT(!cdl1->equals(*cdl3));
+    OCIO_CHECK_ASSERT(!cdl2->equals(*cdl3));
+    OCIO_CHECK_ASSERT(cdl3->equals(*cdl3));
 }
 
 OCIO_ADD_TEST(CDLTransform, create_from_cc_file)
 {
-    const std::string filePath(std::string(OCIO::getTestFilesDir())
-                               + "/cdl_test1.cc");
-    OCIO::CDLTransformRcPtr transform =
-        OCIO::CDLTransform::CreateFromFile(filePath.c_str(), NULL);
+    const std::string filePath(std::string(OCIO::getTestFilesDir()) + "/cdl_test1.cc");
+    OCIO::CDLTransformRcPtr transform = OCIO::CDLTransform::CreateFromFile(filePath.c_str(), nullptr);
 
     {
         std::string idStr(transform->getID());
@@ -99,12 +98,10 @@ OCIO_ADD_TEST(CDLTransform, create_from_cc_file)
 
 OCIO_ADD_TEST(CDLTransform, create_from_ccc_file)
 {
-    const std::string filePath(std::string(OCIO::getTestFilesDir())
-                               + "/cdl_test1.ccc");
+    const std::string filePath(std::string(OCIO::getTestFilesDir()) + "/cdl_test1.ccc");
     {
         // Using ID
-        OCIO::CDLTransformRcPtr transform =
-            OCIO::CDLTransform::CreateFromFile(filePath.c_str(), "cc0003");
+        auto transform = OCIO::CDLTransform::CreateFromFile(filePath.c_str(), "cc0003");
         std::string idStr(transform->getID());
         OCIO_CHECK_EQUAL("cc0003", idStr);
 
@@ -132,8 +129,7 @@ OCIO_ADD_TEST(CDLTransform, create_from_ccc_file)
     }
     {
         // Using 0 based index
-        OCIO::CDLTransformRcPtr transform =
-            OCIO::CDLTransform::CreateFromFile(filePath.c_str(), "3");
+        auto transform = OCIO::CDLTransform::CreateFromFile(filePath.c_str(), "3");
         std::string idStr(transform->getID());
         OCIO_CHECK_EQUAL("", idStr);
 
@@ -158,8 +154,7 @@ OCIO_ADD_TEST(CDLTransform, create_from_ccc_file)
 
 OCIO_ADD_TEST(CDLTransform, create_from_ccc_file_failure)
 {
-    const std::string filePath(std::string(OCIO::getTestFilesDir())
-        + "/cdl_test1.ccc");
+    const std::string filePath(std::string(OCIO::getTestFilesDir()) + "/cdl_test1.ccc");
     {
         // Using ID
         OCIO_CHECK_THROW_WHAT(
@@ -333,8 +328,7 @@ OCIO_ADD_TEST(CDLTransform, buildops)
     config->setMajorVersion(1);
 
     OCIO::OpRcPtrVec ops;
-    OCIO::BuildCDLOp(ops, *config, *cdl,
-                     OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::BuildCDLOp(ops, *config, *cdl, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_CHECK_EQUAL(ops.size(), 3);
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
     OCIO_CHECK_EQUAL(ops.size(), 0);
@@ -342,16 +336,14 @@ OCIO_ADD_TEST(CDLTransform, buildops)
     ops.clear();
     const double power[]{1.1, 1.0, 1.0};
     cdl->setPower(power);
-    OCIO::BuildCDLOp(ops, *config, *cdl,
-                     OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::BuildCDLOp(ops, *config, *cdl, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
     OCIO_CHECK_EQUAL(ops.size(), 1);
 
     ops.clear();
     cdl->setSat(1.5);
-    OCIO::BuildCDLOp(ops, *config, *cdl,
-                     OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::BuildCDLOp(ops, *config, *cdl, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
@@ -359,8 +351,7 @@ OCIO_ADD_TEST(CDLTransform, buildops)
     ops.clear();
     const double offset[]{ 0.0, 0.1, 0.0 };
     cdl->setOffset(offset);
-    OCIO::BuildCDLOp(ops, *config, *cdl,
-                     OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::BuildCDLOp(ops, *config, *cdl, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
@@ -368,8 +359,7 @@ OCIO_ADD_TEST(CDLTransform, buildops)
     // Testing v2 onward behavior.
     config->setMajorVersion(2);
     ops.clear();
-    OCIO::BuildCDLOp(ops, *config, *cdl,
-                     OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::BuildCDLOp(ops, *config, *cdl, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO::ConstOpRcPtr op = OCIO::DynamicPtrCast<const OCIO::Op>(ops[0]);
     auto cdldata = OCIO::DynamicPtrCast<const OCIO::CDLOpData>(op->data());
@@ -404,7 +394,7 @@ OCIO_ADD_TEST(CDLTransform, description)
     // Not the ID.
     OCIO_CHECK_EQUAL(id, cdl->getID());
 
-    // NULL description is removing all children.
+    // Null description is removing all children.
     cdl->setDescription(nullptr);
     OCIO_CHECK_EQUAL(metadata.getNumChildrenElements(), 0);
 }

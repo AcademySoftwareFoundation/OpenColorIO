@@ -8,6 +8,7 @@
 #include "ops/exposurecontrast/ExposureContrastOpCPU.h"
 #include "ops/exposurecontrast/ExposureContrastOpGPU.h"
 #include "ops/exposurecontrast/ExposureContrastOp.h"
+#include "transforms/ExposureContrastTransform.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -182,7 +183,7 @@ void CreateExposureContrastOp(OpRcPtrVec & ops,
     {
         ops.push_back(std::make_shared<ExposureContrastOp>(data));
     }
-    else if(direction == TRANSFORM_DIR_INVERSE)
+    else if (direction == TRANSFORM_DIR_INVERSE)
     {
         ExposureContrastOpDataRcPtr dataInv = data->inverse();
         ops.push_back(std::make_shared<ExposureContrastOp>(dataInv));
@@ -205,48 +206,8 @@ void CreateExposureContrastTransform(GroupTransformRcPtr & group, ConstOpRcPtr &
     }
     auto ecData = DynamicPtrCast<const ExposureContrastOpData>(op->data());
     auto ecTransform = ExposureContrastTransform::Create();
-
-    const auto style = ecData->getStyle();
-
-    if (style == ExposureContrastOpData::STYLE_LINEAR_REV ||
-        style == ExposureContrastOpData::STYLE_VIDEO_REV ||
-        style == ExposureContrastOpData::STYLE_LOGARITHMIC_REV)
-    {
-        ecTransform->setDirection(TRANSFORM_DIR_INVERSE);
-    }
-    const auto transformStyle = ConvertStyle(style);
-    ecTransform->setStyle(transformStyle);
-
-    auto & formatMetadata = ecTransform->getFormatMetadata();
-    auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
-    metadata = ecData->getFormatMetadata();
-
-    const double exposure = ecData->getExposure();
-    const double contrast = ecData->getContrast();
-    const double gamma = ecData->getGamma();
-    const double logExposureStep = ecData->getLogExposureStep();
-    const double logMidGray = ecData->getLogMidGray();
-    const double pivot = ecData->getPivot();
-
-    ecTransform->setExposure(exposure);
-    ecTransform->setContrast(contrast);
-    ecTransform->setGamma(gamma);
-    ecTransform->setLogExposureStep(logExposureStep);
-    ecTransform->setLogMidGray(logMidGray);
-    ecTransform->setPivot(pivot);
-
-    if (ecData->hasDynamicProperty(DYNAMIC_PROPERTY_EXPOSURE))
-    {
-        ecTransform->makeExposureDynamic();
-    }
-    if (ecData->hasDynamicProperty(DYNAMIC_PROPERTY_CONTRAST))
-    {
-        ecTransform->makeContrastDynamic();
-    }
-    if (ecData->hasDynamicProperty(DYNAMIC_PROPERTY_GAMMA))
-    {
-        ecTransform->makeGammaDynamic();
-    }
+    auto & data = dynamic_cast<ExposureContrastTransformImpl *>(ecTransform.get())->data();
+    data = *ecData;
 
     group->appendTransform(ecTransform);
 }
@@ -256,26 +217,11 @@ void BuildExposureContrastOp(OpRcPtrVec & ops,
                              const ExposureContrastTransform & transform,
                              TransformDirection dir)
 {
-    const TransformDirection combinedDir
-        = CombineTransformDirections(dir, transform.getDirection());
+    const auto & data = dynamic_cast<const ExposureContrastTransformImpl &>(transform).data();
+    data.validate();
 
-    auto data = std::make_shared<ExposureContrastOpData>(
-        ExposureContrastOpData::ConvertStyle(transform.getStyle(), combinedDir));
-
-    data->setExposure(transform.getExposure());
-    bool dyn = transform.isExposureDynamic();
-    if (dyn) data->getExposureProperty()->makeDynamic();
-    data->setContrast(transform.getContrast());
-    dyn = transform.isContrastDynamic();
-    if (dyn) data->getContrastProperty()->makeDynamic();
-    data->setGamma(transform.getGamma());
-    dyn = transform.isGammaDynamic();
-    if (dyn) data->getGammaProperty()->makeDynamic();
-    data->setPivot(transform.getPivot());
-    data->setLogExposureStep(transform.getLogExposureStep());
-    data->setLogMidGray(transform.getLogMidGray());
-    // NB: Always use Forward here since direction is handled with the style above.
-    CreateExposureContrastOp(ops, data, TRANSFORM_DIR_FORWARD);
+    auto ecData = data.clone();
+    CreateExposureContrastOp(ops, ecData, dir);
 }
 
 } // namespace OCIO_NAMESPACE

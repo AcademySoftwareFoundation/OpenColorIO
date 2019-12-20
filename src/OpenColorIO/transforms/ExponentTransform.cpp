@@ -6,99 +6,57 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "OpBuilders.h"
-#include "ops/gamma/GammaOpData.h"
+#include "transforms/ExponentTransform.h"
 
 namespace OCIO_NAMESPACE
 {
 ExponentTransformRcPtr ExponentTransform::Create()
 {
-    return ExponentTransformRcPtr(new ExponentTransform(), &deleter);
+    return ExponentTransformRcPtr(new ExponentTransformImpl(), &ExponentTransformImpl::deleter);
 }
 
-void ExponentTransform::deleter(ExponentTransform* t)
+void ExponentTransformImpl::deleter(ExponentTransform * t)
 {
-    delete t;
+    delete static_cast<ExponentTransformImpl *>(t);
 }
 
-
-class ExponentTransform::Impl : public GammaOpData
+TransformRcPtr ExponentTransformImpl::createEditableCopy() const
 {
-public:
-    TransformDirection m_dir;
-
-    Impl()
-        :   GammaOpData()
-        ,   m_dir(TRANSFORM_DIR_FORWARD)
-    {
-        setRedParams  ( {1.} );
-        setGreenParams( {1.} );
-        setBlueParams ( {1.} );
-        setAlphaParams( {1.} );
-    }
-
-    Impl(const Impl &) = delete;
-
-    ~Impl()
-    { }
-
-    Impl& operator= (const Impl & rhs)
-    {
-        if (this != &rhs)
-        {
-            GammaOpData::operator=(rhs);
-            m_dir = rhs.m_dir;
-        }
-        return *this;
-    }
-};
-
-///////////////////////////////////////////////////////////////////////////
-
-
-
-ExponentTransform::ExponentTransform()
-    : m_impl(new ExponentTransform::Impl)
-{
-}
-
-TransformRcPtr ExponentTransform::createEditableCopy() const
-{
-    ExponentTransformRcPtr transform = ExponentTransform::Create();
-    *(transform->m_impl) = *m_impl;
+    TransformRcPtr transform = ExponentTransform::Create();
+    dynamic_cast<ExponentTransformImpl*>(transform.get())->data() = data();
     return transform;
 }
 
-ExponentTransform::~ExponentTransform()
+TransformDirection ExponentTransformImpl::getDirection() const noexcept
 {
-    delete m_impl;
-    m_impl = nullptr;
-}
-
-ExponentTransform& ExponentTransform::operator= (const ExponentTransform & rhs)
-{
-    if (this != &rhs)
+    if (GammaOpData::BASIC_FWD == data().getStyle())
     {
-        *m_impl = *rhs.m_impl;
+        return TRANSFORM_DIR_FORWARD;
     }
-    return *this;
+    else
+    {
+        return TRANSFORM_DIR_INVERSE;
+    }
 }
 
-TransformDirection ExponentTransform::getDirection() const
+void ExponentTransformImpl::setDirection(TransformDirection dir) noexcept
 {
-    return getImpl()->m_dir;
+    if (TRANSFORM_DIR_FORWARD == dir)
+    {
+        data().setStyle(GammaOpData::BASIC_FWD);
+    }
+    else
+    {
+        data().setStyle(GammaOpData::BASIC_REV);
+    }
 }
 
-void ExponentTransform::setDirection(TransformDirection dir)
-{
-    getImpl()->m_dir = dir;
-}
-
-void ExponentTransform::validate() const
+void ExponentTransformImpl::validate() const
 {
     try
     {
         Transform::validate();
-        getImpl()->validate();
+        data().validate();
     }
     catch(Exception & ex)
     {
@@ -108,33 +66,39 @@ void ExponentTransform::validate() const
     }
 }
 
-FormatMetadata & ExponentTransform::getFormatMetadata()
+FormatMetadata & ExponentTransformImpl::getFormatMetadata() noexcept
 {
-    return m_impl->getFormatMetadata();
+    return data().getFormatMetadata();
 }
 
-const FormatMetadata & ExponentTransform::getFormatMetadata() const
+const FormatMetadata & ExponentTransformImpl::getFormatMetadata() const noexcept
 {
-    return m_impl->getFormatMetadata();
+    return data().getFormatMetadata();
 }
 
-void ExponentTransform::setValue(const double(&vec4)[4])
+bool ExponentTransformImpl::equals(const ExponentTransform & other) const noexcept
 {
-    getImpl()->getRedParams()  [0] = vec4[0];
-    getImpl()->getGreenParams()[0] = vec4[1];
-    getImpl()->getBlueParams() [0] = vec4[2];
-    getImpl()->getAlphaParams()[0] = vec4[3];
+    if (this == &other) return true;
+    return data() == dynamic_cast<const ExponentTransformImpl*>(&other)->data();
 }
 
-void ExponentTransform::getValue(double(&vec4)[4]) const
+void ExponentTransformImpl::setValue(const double(&vec4)[4]) noexcept
 {
-    vec4[0] = getImpl()->getRedParams()  [0];
-    vec4[1] = getImpl()->getGreenParams()[0];
-    vec4[2] = getImpl()->getBlueParams() [0];
-    vec4[3] = getImpl()->getAlphaParams()[0];
+    data().getRedParams()  [0] = vec4[0];
+    data().getGreenParams()[0] = vec4[1];
+    data().getBlueParams() [0] = vec4[2];
+    data().getAlphaParams()[0] = vec4[3];
 }
 
-std::ostream& operator<< (std::ostream& os, const ExponentTransform & t)
+void ExponentTransformImpl::getValue(double(&vec4)[4]) const noexcept
+{
+    vec4[0] = data().getRedParams()  [0];
+    vec4[1] = data().getGreenParams()[0];
+    vec4[2] = data().getBlueParams() [0];
+    vec4[3] = data().getAlphaParams()[0];
+}
+
+std::ostream & operator<< (std::ostream & os, const ExponentTransform & t)
 {
     double value[4];
     t.getValue(value);

@@ -276,6 +276,9 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, rec2100_surround)
            -1.0f,  -0.001f, 1.2f,  0.0f
         };
 
+    float input2_32f[num_samples * 4];
+    memcpy(&input2_32f[0], &input_32f[0], sizeof(float)*num_samples * 4);
+
     const float expected_32f[num_samples*4] = {
             0.21779590f,  0.03959925f, 0.07919850f, 0.5f,
             0.80029451f,  0.57485944f, 0.91301214f, 1.0f,
@@ -286,13 +289,23 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, rec2100_surround)
     OCIO::FixedFunctionOpData::Params params = { 0.78 };
     OCIO::ConstFixedFunctionOpDataRcPtr funcData 
         = std::make_shared<OCIO::FixedFunctionOpData>(params, 
-                                                      OCIO::FixedFunctionOpData::REC2100_SURROUND);
+                                                      OCIO::FixedFunctionOpData::REC2100_SURROUND_FWD);
 
     ApplyFixedFunction(&input_32f[0], &expected_32f[0], num_samples, 
                        funcData,
                        1e-7f,
                        __LINE__);
-}   
+
+    OCIO::FixedFunctionOpData::Params params_inv = { 1 / 0.78 };
+    OCIO::ConstFixedFunctionOpDataRcPtr funcData2 
+        = std::make_shared<OCIO::FixedFunctionOpData>(params_inv, 
+                                                      OCIO::FixedFunctionOpData::REC2100_SURROUND_INV);
+
+    ApplyFixedFunction(&input2_32f[0], &expected_32f[0], num_samples, 
+                       funcData2,
+                       1e-7f,
+					   __LINE__);
+}
 
 OCIO_ADD_TEST(FixedFunctionOpCPU, RGB_TO_HSV)
 {

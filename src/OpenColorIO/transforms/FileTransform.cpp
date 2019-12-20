@@ -88,12 +88,12 @@ FileTransform& FileTransform::operator= (const FileTransform & rhs)
     return *this;
 }
 
-TransformDirection FileTransform::getDirection() const
+TransformDirection FileTransform::getDirection() const noexcept
 {
     return getImpl()->m_dir;
 }
 
-void FileTransform::setDirection(TransformDirection dir)
+void FileTransform::setDirection(TransformDirection dir) noexcept
 {
     getImpl()->m_dir = dir;
 }

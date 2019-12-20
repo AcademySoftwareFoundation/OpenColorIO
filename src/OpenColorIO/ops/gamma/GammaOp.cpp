@@ -8,6 +8,8 @@
 #include "ops/gamma/GammaOpCPU.h"
 #include "ops/gamma/GammaOp.h"
 #include "ops/gamma/GammaOpUtils.h"
+#include "transforms/ExponentTransform.h"
+#include "transforms/ExponentWithLinearTransform.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -315,50 +317,17 @@ void CreateGammaTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     if (style == GammaOpData::MONCURVE_FWD || style == GammaOpData::MONCURVE_REV)
     {
         auto expTransform = ExponentWithLinearTransform::Create();
-        if (style == GammaOpData::MONCURVE_REV)
-        {
-            expTransform->setDirection(TRANSFORM_DIR_INVERSE);
-        }
+        auto & data = dynamic_cast<ExponentWithLinearTransformImpl*>(expTransform.get())->data();
 
-        auto & formatMetadata = expTransform->getFormatMetadata();
-        auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
-        metadata = gammaData->getFormatMetadata();
-
-        const double gammaVal[] = { gammaData->getRedParams()[0],
-                                    gammaData->getGreenParams()[0],
-                                    gammaData->getBlueParams()[0],
-                                    gammaData->getAlphaParams()[0] };
-
-        const double offset[] = { gammaData->getRedParams()[1],
-                                  gammaData->getGreenParams()[1],
-                                  gammaData->getBlueParams()[1],
-                                  gammaData->getAlphaParams()[1] };
-
-        expTransform->setGamma(gammaVal);
-        expTransform->setOffset(offset);
-
+        data = *gammaData;
         group->appendTransform(expTransform);
     }
     else
     {
         auto expTransform = ExponentTransform::Create();
-        if (style == GammaOpData::BASIC_REV)
-        {
-            expTransform->setDirection(TRANSFORM_DIR_INVERSE);
-        }
+        auto & data = dynamic_cast<ExponentTransformImpl*>(expTransform.get())->data();
 
-        auto & formatMetadata = expTransform->getFormatMetadata();
-        auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
-        metadata = gammaData->getFormatMetadata();
-
-        const double expVal[] = { gammaData->getRedParams()[0],
-                                  gammaData->getGreenParams()[0],
-                                  gammaData->getBlueParams()[0],
-                                  gammaData->getAlphaParams()[0] };
-
-
-        expTransform->setValue(expVal);
-
+        data = *gammaData;
         group->appendTransform(expTransform);
     }
 }
@@ -368,44 +337,11 @@ void BuildExponentWithLinearOp(OpRcPtrVec & ops,
                                const ExponentWithLinearTransform & transform,
                                TransformDirection dir)
 {
-    TransformDirection combinedDir 
-        = CombineTransformDirections(dir, transform.getDirection());
+    const auto & data = dynamic_cast<const ExponentWithLinearTransformImpl &>(transform).data();
+    data.validate();
 
-    double gammaVals[4] = { 1., 1., 1., 1. };
-    transform.getGamma(gammaVals);
-
-    double offsetVals[4] = { 0., 0., 0., 0. };
-    transform.getOffset(offsetVals);
-
-    const bool noOffset = offsetVals[0] == 0. && offsetVals[1] == 0. &&
-                          offsetVals[2] == 0. && offsetVals[3] == 0.;
-
-    const auto style = noOffset? GammaOpData::BASIC_FWD : GammaOpData::MONCURVE_FWD;
-
-    GammaOpData::Params paramR;
-    GammaOpData::Params paramG;
-    GammaOpData::Params paramB;
-    GammaOpData::Params paramA;
-
-    if (style == GammaOpData::BASIC_FWD)
-    {
-        paramR = { gammaVals[0] };
-        paramG = { gammaVals[1] };
-        paramB = { gammaVals[2] };
-        paramA = { gammaVals[3] };
-    }
-    else
-    {
-        paramR = { gammaVals[0], offsetVals[0] };
-        paramG = { gammaVals[1], offsetVals[1] };
-        paramB = { gammaVals[2], offsetVals[2] };
-        paramA = { gammaVals[3], offsetVals[3] };
-    }
-
-    auto gammaData = std::make_shared<GammaOpData>(style, paramR, paramG, paramB, paramA);
-
-    gammaData->getFormatMetadata() = transform.getFormatMetadata();
-    CreateGammaOp(ops, gammaData, combinedDir);
+    auto gamma = data.clone();
+    CreateGammaOp(ops, gamma, dir);
 }
 
 void BuildExponentOp(OpRcPtrVec & ops,
@@ -413,32 +349,23 @@ void BuildExponentOp(OpRcPtrVec & ops,
                      const ExponentTransform & transform,
                      TransformDirection dir)
 {
-    TransformDirection combinedDir = CombineTransformDirections(dir, transform.getDirection());
-
-    double vec4[4] = { 1., 1., 1., 1. };
-    transform.getValue(vec4);
-
     if(config.getMajorVersion()==1)
     {
+        TransformDirection combinedDir = CombineTransformDirections(dir, transform.getDirection());
+
+        double vec4[4] = { 1., 1., 1., 1. };
+        transform.getValue(vec4);
         CreateExponentOp(ops,
                          vec4,
                          combinedDir);
     }
     else
     {
-        GammaOpData::Params redParams   = { vec4[0] };
-        GammaOpData::Params greenParams = { vec4[1] };
-        GammaOpData::Params blueParams  = { vec4[2] };
-        GammaOpData::Params alphaParams = { vec4[3] };
+        const auto & data = dynamic_cast<const ExponentTransformImpl &>(transform).data();
+        data.validate();
 
-        auto gammaData = std::make_shared<GammaOpData>(GammaOpData::BASIC_FWD,
-                                                       redParams,
-                                                       greenParams,
-                                                       blueParams,
-                                                       alphaParams);
-
-        gammaData->getFormatMetadata() = transform.getFormatMetadata();
-        CreateGammaOp(ops, gammaData, combinedDir);
+        auto gamma = data.clone();
+        CreateGammaOp(ops, gamma, dir);
     }
 }
 

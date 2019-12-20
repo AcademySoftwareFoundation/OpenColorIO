@@ -227,7 +227,7 @@ PyObject * PyOCIO_CDLTransform_equals(PyObject * self, PyObject * args)
     if(!IsPyOCIOType(pyother, PyOCIO_CDLTransformType))
         return PyBool_FromLong(false);
     ConstCDLTransformRcPtr other = GetConstCDLTransform(pyother);
-    return PyBool_FromLong(transform->equals(other));
+    return PyBool_FromLong(transform->equals(*other));
     OCIO_PYTRY_EXIT(NULL)
 }
 

@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include "ops/gamma/GammaOp.cpp"
-
 #include "MathUtils.h"
+#include "ops/gamma/GammaOp.cpp"
 #include "ParseUtils.h"
 #include "UnitTest.h"
 #include "UnitTestUtils.h"

@@ -656,7 +656,9 @@ void Renderer_ACES_DarkToDim10_Fwd::apply(const void * inImg, void * outImg, lon
 Renderer_REC2100_Surround::Renderer_REC2100_Surround(ConstFixedFunctionOpDataRcPtr & data)
     :   OpCPU()
 {
-    const float gamma = (float)data->getParams()[0];
+    const auto fwd = FixedFunctionOpData::REC2100_SURROUND_FWD == data->getStyle();
+    const float gamma = fwd ? (float)data->getParams()[0] : (float)(1. / data->getParams()[0]);
+
     m_gamma = gamma - 1.f;  // compute Y^gamma / Y
 }
 
@@ -1088,7 +1090,8 @@ ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func
         {
             return std::make_shared<Renderer_ACES_DarkToDim10_Fwd>(func, 1.0192640913260627f);
         }
-        case FixedFunctionOpData::REC2100_SURROUND:
+        case FixedFunctionOpData::REC2100_SURROUND_FWD:
+        case FixedFunctionOpData::REC2100_SURROUND_INV:
         {
             return std::make_shared<Renderer_REC2100_Surround>(func);
         }

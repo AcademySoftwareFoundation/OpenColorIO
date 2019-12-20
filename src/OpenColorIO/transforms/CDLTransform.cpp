@@ -8,10 +8,10 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "fileformats/cdl/CDLParser.h"
+#include "Logging.h"
 #include "MathUtils.h"
 #include "Mutex.h"
 #include "OpBuilders.h"
-#include "ops/cdl/CDLOpData.h"
 #include "ParseUtils.h"
 #include "Platform.h"
 #include "pystring/pystring.h"
@@ -121,7 +121,7 @@ std::string BuildXML(const CDLTransform & cdl)
 
 void LoadCDL(CDLTransform & cdl, const char * xml)
 {
-    if(!xml || (strlen(xml) == 0))
+    if (!xml || (strlen(xml) == 0))
     {
         std::ostringstream os;
         os << "Error loading CDL xml. ";
@@ -166,7 +166,7 @@ void LoadCDL(CDLTransform & cdl, const char * xml)
 
 CDLTransformRcPtr CDLTransform::Create()
 {
-    return CDLTransformRcPtr(new CDLTransform(), &deleter);
+    return CDLTransformRcPtr(new CDLTransformImpl(), &CDLTransformImpl::deleter);
 }
 
 namespace
@@ -202,7 +202,7 @@ void ClearCDLTransformFileCache()
 
 CDLTransformRcPtr CDLTransform::CreateFromFile(const char * src, const char * cccid_)
 {
-    if(!src || (strlen(src) == 0) )
+    if (!src || (strlen(src) == 0))
     {
         std::ostringstream os;
         os << "Error loading CDL xml. ";
@@ -220,7 +220,7 @@ CDLTransformRcPtr CDLTransform::CreateFromFile(const char * src, const char * cc
     // file already (in which case it must be in cache, or an error)
 
     StringBoolMap::iterator srcIsCCiter = g_cacheSrcIsCC.find(src);
-    if(srcIsCCiter != g_cacheSrcIsCC.end())
+    if (srcIsCCiter != g_cacheSrcIsCC.end())
     {
         // If the source file is known to be a pure ColorCorrection element,
         // null out the cccid so its ignored.
@@ -235,10 +235,10 @@ CDLTransformRcPtr CDLTransform::CreateFromFile(const char * src, const char * cc
 
         // Search for cccid by index
         int cccindex=0;
-        if(StringToInt(&cccindex, cccid.c_str(), true))
+        if (StringToInt(&cccindex, cccid.c_str(), true))
         {
             iter = g_cache.find(GetCDLLocalCacheKey(src, cccindex));
-            if(iter != g_cache.end())
+            if (iter != g_cache.end())
             {
                 return iter->second;
             }
@@ -254,7 +254,8 @@ CDLTransformRcPtr CDLTransform::CreateFromFile(const char * src, const char * cc
 
     // Try to read all ccs from the file, into cache
     std::ifstream istream(src);
-    if(istream.fail()) {
+    if (istream.fail())
+    {
         std::ostringstream os;
         os << "Error could not read CDL source file '" << src;
         os << "'. Please verify the file exists and appropriate ";
@@ -275,7 +276,7 @@ CDLTransformRcPtr CDLTransform::CreateFromFile(const char * src, const char * cc
         g_cacheSrcIsCC[src] = true;
         g_cache[GetCDLLocalCacheKey(src, cccid)] = cdl;
     }
-    else if(parser.isCCC())
+    else if (parser.isCCC())
     {
         // Load all CCs from the ColorCorrectionCollection
         // into the cache
@@ -285,7 +286,7 @@ CDLTransformRcPtr CDLTransform::CreateFromFile(const char * src, const char * cc
 
         parser.getCDLTransforms(transformMap, transformVec, metadata);
 
-        if(transformVec.empty())
+        if (transformVec.empty())
         {
             std::ostringstream os;
             os << "Error loading ccc xml. ";
@@ -298,14 +299,14 @@ CDLTransformRcPtr CDLTransform::CreateFromFile(const char * src, const char * cc
 
         // Add all by transforms to cache
         // First by index, then by id
-        for(unsigned int i=0; i<transformVec.size(); ++i)
+        for (unsigned int i = 0; i < transformVec.size(); ++i)
         {
             g_cache[GetCDLLocalCacheKey(src, i)] = transformVec[i];
         }
 
-        for(CDLTransformMap::iterator iter = transformMap.begin();
-            iter != transformMap.end();
-            ++iter)
+        for (CDLTransformMap::iterator iter = transformMap.begin();
+             iter != transformMap.end();
+             ++iter)
         {
             g_cache[GetCDLLocalCacheKey(src, iter->first)] = iter->second;
         }
@@ -315,8 +316,7 @@ CDLTransformRcPtr CDLTransform::CreateFromFile(const char * src, const char * cc
     // to return it.
     {
         // Search for the cccid by name
-        CDLTransformMap::iterator iter = 
-            g_cache.find(GetCDLLocalCacheKey(src, cccid));
+        CDLTransformMap::iterator iter = g_cache.find(GetCDLLocalCacheKey(src, cccid));
         if(iter != g_cache.end())
         {
             return iter->second;
@@ -324,10 +324,10 @@ CDLTransformRcPtr CDLTransform::CreateFromFile(const char * src, const char * cc
 
         // Search for cccid by index
         int cccindex=0;
-        if(StringToInt(&cccindex, cccid.c_str(), true))
+        if (StringToInt(&cccindex, cccid.c_str(), true))
         {
             iter = g_cache.find(GetCDLLocalCacheKey(src, cccindex));
-            if(iter != g_cache.end())
+            if (iter != g_cache.end())
             {
                 return iter->second;
             }
@@ -342,89 +342,36 @@ CDLTransformRcPtr CDLTransform::CreateFromFile(const char * src, const char * cc
     }
 }
 
-void CDLTransform::deleter(CDLTransform* t)
+void CDLTransformImpl::deleter(CDLTransform * t)
 {
-    delete t;
+    delete static_cast<CDLTransformImpl *>(t);
 }
 
-class CDLTransform::Impl : public CDLOpData
+TransformRcPtr CDLTransformImpl::createEditableCopy() const
 {
-public:       
-    Impl() 
-        :   CDLOpData()
-    {
-    }
-
-    Impl(const Impl &) = delete;
-
-    ~Impl() { }
-
-    Impl& operator= (const Impl & rhs)
-    {
-        if (this != &rhs)
-        {
-            m_direction = rhs.m_direction;
-            CDLOpData::operator=(rhs);
-        }
-
-        return *this;
-    }
-
-    TransformDirection m_direction = TRANSFORM_DIR_FORWARD;
-
-    mutable std::string m_xml;
-};
-
-
-///////////////////////////////////////////////////////////////////////////
-
-
-
-CDLTransform::CDLTransform()
-    : m_impl(new CDLTransform::Impl)
-{
-}
-
-TransformRcPtr CDLTransform::createEditableCopy() const
-{
-    CDLTransformRcPtr transform = CDLTransform::Create();
-    *(transform->m_impl) = *m_impl;
+    TransformRcPtr transform = CDLTransform::Create();
+    dynamic_cast<CDLTransformImpl*>(transform.get())->data() = data();
     return transform;
 }
 
-CDLTransform::~CDLTransform()
+TransformDirection CDLTransformImpl::getDirection() const  noexcept
 {
-    delete m_impl;
-    m_impl = NULL;
+    return data().getDirection();
 }
 
-CDLTransform& CDLTransform::operator= (const CDLTransform & rhs)
+void CDLTransformImpl::setDirection(TransformDirection dir) noexcept
 {
-    if (this != &rhs)
-    {
-        *m_impl = *rhs.m_impl;
-    }
-    return *this;
+    data().setDirection(dir);
 }
 
-TransformDirection CDLTransform::getDirection() const
-{
-    return getImpl()->m_direction;
-}
-
-void CDLTransform::setDirection(TransformDirection dir)
-{
-    getImpl()->m_direction = dir;
-}
-
-void CDLTransform::validate() const
+void CDLTransformImpl::validate() const
 {
     try
     {
         Transform::validate();
-        getImpl()->validate();
+        data().validate();
     }
-    catch(Exception & ex)
+    catch (Exception & ex)
     {
         std::string errMsg("CDLTransform validation failed: ");
         errMsg += ex.what();
@@ -432,13 +379,23 @@ void CDLTransform::validate() const
     }
 }
 
-const char * CDLTransform::getXML() const
+FormatMetadata & CDLTransformImpl::getFormatMetadata() noexcept
 {
-    getImpl()->m_xml = BuildXML(*this);
-    return getImpl()->m_xml.c_str();
+    return data().getFormatMetadata();
 }
 
-void CDLTransform::setXML(const char * xml)
+const FormatMetadata & CDLTransformImpl::getFormatMetadata() const noexcept
+{
+    return data().getFormatMetadata();
+}
+
+const char * CDLTransformImpl::getXML() const
+{
+    m_xml = BuildXML(*this);
+    return m_xml.c_str();
+}
+
+void CDLTransformImpl::setXML(const char * xml)
 {
     LoadCDL(*this, xml);
 }
@@ -446,134 +403,143 @@ void CDLTransform::setXML(const char * xml)
 // We use this approach, rather than comparing XML to get around the
 // case where setXML with extra data was provided.
 
-bool CDLTransform::equals(const ConstCDLTransformRcPtr & other) const
+bool CDLTransformImpl::equals(const CDLTransform & other) const noexcept
 {
-    if(!other) return false;
-
+    if (this == &other) return true;
     // NB: A tolerance of 1e-9 is used when comparing the parameters.
-    return *(getImpl()) == *(other->getImpl())
-        && getImpl()->m_direction == other->getImpl()->m_direction;
+    return data() == dynamic_cast<const CDLTransformImpl*>(&other)->data();
 }
 
-void CDLTransform::setSlope(const double * rgb)
+CDLStyle CDLTransformImpl::getStyle() const
+{
+    return CDLOpData::ConvertStyle(data().getStyle());
+}
+
+void CDLTransformImpl::setStyle(CDLStyle style)
+{
+    const auto curDir = getDirection();
+    data().setStyle(CDLOpData::ConvertStyle(style, curDir));
+}
+
+void CDLTransformImpl::setSlope(const double * rgb)
 {
     if (!rgb)
     {
-        throw Exception("CDLTransform: Invalid input pointer");
+        throw Exception("CDLTransform: Invalid 'slope' pointer");
     }
 
-    getImpl()->setSlopeParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
+    data().setSlopeParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
 }
 
-void CDLTransform::getSlope(double * rgb) const
+void CDLTransformImpl::getSlope(double * rgb) const
 {
     if (!rgb)
     {
-        throw Exception("CDLTransform: Invalid input pointer");
+        throw Exception("CDLTransform: Invalid 'slope' pointer");
     }
 
-    const CDLOpData::ChannelParams & params = getImpl()->getSlopeParams();
+    const CDLOpData::ChannelParams & params = data().getSlopeParams();
     rgb[0] = params[0];
     rgb[1] = params[1];
     rgb[2] = params[2];
 }
 
-void CDLTransform::setOffset(const double * rgb)
+void CDLTransformImpl::setOffset(const double * rgb)
 {
     if (!rgb)
     {
-        throw Exception("CDLTransform: Invalid input pointer");
+        throw Exception("CDLTransform: Invalid 'offset' pointer");
     }
 
-    getImpl()->setOffsetParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
+    data().setOffsetParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
 }
 
-void CDLTransform::getOffset(double * rgb) const
+void CDLTransformImpl::getOffset(double * rgb) const
 {
     if (!rgb)
     {
-        throw Exception("CDLTransform: Invalid input pointer");
+        throw Exception("CDLTransform: Invalid 'offset' pointer");
     }
 
-    const CDLOpData::ChannelParams & params = getImpl()->getOffsetParams();
+    const CDLOpData::ChannelParams & params = data().getOffsetParams();
     rgb[0] = params[0];
     rgb[1] = params[1];
     rgb[2] = params[2];
 }
 
-void CDLTransform::setPower(const double * rgb)
+void CDLTransformImpl::setPower(const double * rgb)
 {
     if (!rgb)
     {
-        throw Exception("CDLTransform: Invalid input pointer");
+        throw Exception("CDLTransform: Invalid 'power' pointer");
     }
 
-    getImpl()->setPowerParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
+    data().setPowerParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
 }
 
-void CDLTransform::getPower(double * rgb) const
+void CDLTransformImpl::getPower(double * rgb) const
 {
     if (!rgb)
     {
-        throw Exception("CDLTransform: Invalid input pointer");
+        throw Exception("CDLTransform: Invalid 'power' pointer");
     }
 
-    const CDLOpData::ChannelParams & params = getImpl()->getPowerParams();
+    const CDLOpData::ChannelParams & params = data().getPowerParams();
     rgb[0] = params[0];
     rgb[1] = params[1];
     rgb[2] = params[2];
 }
 
-void CDLTransform::setSOP(const double * vec9)
+void CDLTransformImpl::setSOP(const double * vec9)
 {
     if (!vec9)
     {
-        throw Exception("CDLTransform: Invalid input pointer");
+        throw Exception("CDLTransform: Invalid 'SOP' pointer");
     }
 
-    getImpl()->setSlopeParams(CDLOpData::ChannelParams(vec9[0], vec9[1], vec9[2]));
-    getImpl()->setOffsetParams(CDLOpData::ChannelParams(vec9[3], vec9[4], vec9[5]));
-    getImpl()->setPowerParams(CDLOpData::ChannelParams(vec9[6], vec9[7], vec9[8]));
+    data().setSlopeParams(CDLOpData::ChannelParams(vec9[0], vec9[1], vec9[2]));
+    data().setOffsetParams(CDLOpData::ChannelParams(vec9[3], vec9[4], vec9[5]));
+    data().setPowerParams(CDLOpData::ChannelParams(vec9[6], vec9[7], vec9[8]));
 }
 
-void CDLTransform::getSOP(double * vec9) const
+void CDLTransformImpl::getSOP(double * vec9) const
 {
     if (!vec9)
     {
-        throw Exception("CDLTransform: Invalid input pointer");
+        throw Exception("CDLTransform: Invalid 'SOP' pointer");
     }
 
-    const CDLOpData::ChannelParams & slopes = getImpl()->getSlopeParams();
+    const CDLOpData::ChannelParams & slopes = data().getSlopeParams();
     vec9[0] = slopes[0];
     vec9[1] = slopes[1];
     vec9[2] = slopes[2];
 
-    const CDLOpData::ChannelParams & offsets = getImpl()->getOffsetParams();
+    const CDLOpData::ChannelParams & offsets = data().getOffsetParams();
     vec9[3] = offsets[0];
     vec9[4] = offsets[1];
     vec9[5] = offsets[2];
 
-    const CDLOpData::ChannelParams & powers = getImpl()->getPowerParams();
+    const CDLOpData::ChannelParams & powers = data().getPowerParams();
     vec9[6] = powers[0];
     vec9[7] = powers[1];
     vec9[8] = powers[2];
 }
 
-void CDLTransform::setSat(double sat)
+void CDLTransformImpl::setSat(double sat)
 {
-    getImpl()->setSaturation(sat);
+    data().setSaturation(sat);
 }
 
-double CDLTransform::getSat() const
+double CDLTransformImpl::getSat() const
 {
-    return getImpl()->getSaturation();
+    return data().getSaturation();
 }
 
-void CDLTransform::getSatLumaCoefs(double * rgb) const
+void CDLTransformImpl::getSatLumaCoefs(double * rgb) const
 {
     if (!rgb)
     {
-        throw Exception("CDLTransform: Invalid input pointer");
+        throw Exception("CDLTransform: Invalid 'luma' pointer");
     }
 
     rgb[0] = 0.2126;
@@ -581,19 +547,19 @@ void CDLTransform::getSatLumaCoefs(double * rgb) const
     rgb[2] = 0.0722;
 }
 
-void CDLTransform::setID(const char * id)
+void CDLTransformImpl::setID(const char * id)
 {
-    getImpl()->setID(id ? id : "");
+    data().setID(id ? id : "");
 }
 
-const char * CDLTransform::getID() const
+const char * CDLTransformImpl::getID() const
 {
-    return getImpl()->getID().c_str();
+    return data().getID().c_str();
 }
 
-void CDLTransform::setDescription(const char * desc)
+void CDLTransformImpl::setDescription(const char * desc)
 {
-    auto & info = getImpl()->getFormatMetadata();
+    auto & info = data().getFormatMetadata();
     info.getChildrenElements().clear();
     if (desc)
     {
@@ -601,9 +567,9 @@ void CDLTransform::setDescription(const char * desc)
     }
 }
 
-const char * CDLTransform::getDescription() const
+const char * CDLTransformImpl::getDescription() const
 {
-    const auto & info = getImpl()->getFormatMetadata();
+    const auto & info = data().getFormatMetadata();
     int descIndex = info.getFirstChildIndex(METADATA_SOP_DESCRIPTION);
     if (descIndex == -1)
     {
@@ -615,16 +581,7 @@ const char * CDLTransform::getDescription() const
     }
 }
 
-FormatMetadata & CDLTransform::getFormatMetadata()
-{
-    return m_impl->getFormatMetadata();
-}
-const FormatMetadata & CDLTransform::getFormatMetadata() const
-{
-    return m_impl->getFormatMetadata();
-}
-
-std::ostream& operator<< (std::ostream& os, const CDLTransform& t)
+std::ostream & operator<< (std::ostream & os, const CDLTransform & t)
 {
     double sop[9];
     t.getSOP(sop);
@@ -632,9 +589,9 @@ std::ostream& operator<< (std::ostream& os, const CDLTransform& t)
     os << "<CDLTransform";
     os << " direction=" << TransformDirectionToString(t.getDirection());
     os << ", sop=";
-    for (unsigned int i=0; i<9; ++i)
+    for (unsigned int i = 0; i < 9; ++i)
     {
-        if(i!=0) os << " ";
+        if (i != 0) os << " ";
         os << sop[i];
     }
     os << ", sat=" << t.getSat();

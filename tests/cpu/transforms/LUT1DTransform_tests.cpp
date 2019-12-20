@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include "transforms/LUT1DTransform.cpp"
+#include "transforms/Lut1DTransform.cpp"
 
 #include "UnitTest.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
-OCIO_ADD_TEST(LUT1DTransform, basic)
+OCIO_ADD_TEST(Lut1DTransform, basic)
 {
-    const OCIO::LUT1DTransformRcPtr lut = OCIO::LUT1DTransform::Create();
+    const OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
 
     OCIO_CHECK_EQUAL(lut->getLength(), 2);
     OCIO_CHECK_EQUAL(lut->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
@@ -95,14 +95,14 @@ OCIO_ADD_TEST(LUT1DTransform, basic)
 
     std::ostringstream oss;
     oss << *lut;
-    OCIO_CHECK_EQUAL(oss.str(), "<LUT1DTransform direction=inverse, fileoutdepth=8ui,"
+    OCIO_CHECK_EQUAL(oss.str(), "<Lut1DTransform direction=inverse, fileoutdepth=8ui,"
         " interpolation=default, inputhalf=0, outputrawhalf=0, hueadjust=0,"
         " length=3, minrgb=[-0.2 0.1 -0.3], maxrgb=[1.2 1.3 0.8]>");
 }
 
-OCIO_ADD_TEST(LUT1DTransform, create_with_parameters)
+OCIO_ADD_TEST(Lut1DTransform, create_with_parameters)
 {
-    const auto lut0 = OCIO::LUT1DTransform::Create(65536, true);
+    const auto lut0 = OCIO::Lut1DTransform::Create(65536, true);
 
     OCIO_CHECK_EQUAL(lut0->getLength(), 65536);
     OCIO_CHECK_EQUAL(lut0->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
@@ -110,14 +110,14 @@ OCIO_ADD_TEST(LUT1DTransform, create_with_parameters)
     OCIO_CHECK_EQUAL(lut0->getInputHalfDomain(), true);
     OCIO_CHECK_NO_THROW(lut0->validate());
 
-    const auto lut1 = OCIO::LUT1DTransform::Create(10, true);
+    const auto lut1 = OCIO::Lut1DTransform::Create(10, true);
 
     OCIO_CHECK_EQUAL(lut1->getLength(), 10);
     OCIO_CHECK_EQUAL(lut1->getInputHalfDomain(), true);
     OCIO_CHECK_THROW_WHAT(lut1->validate(), OCIO::Exception,
                           "65536 required for halfDomain 1D LUT");
 
-    const auto lut2 = OCIO::LUT1DTransform::Create(8, false);
+    const auto lut2 = OCIO::Lut1DTransform::Create(8, false);
 
     OCIO_CHECK_EQUAL(lut2->getLength(), 8);
     OCIO_CHECK_EQUAL(lut2->getInputHalfDomain(), false);

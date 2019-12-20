@@ -103,6 +103,7 @@ public:
     void setInterpolation(Interpolation algo);
 
     TransformDirection getDirection() const { return m_direction; }
+    void setDirection(TransformDirection dir) { m_direction = dir; }
 
     inline LutInversionQuality getInversionQuality() const { return m_invQuality; }
 
@@ -120,42 +121,42 @@ public:
 
     // Check if the LUT is using half code indices as its domain.
     // Return returns true if this LUT requires half code indices as input.
-    static inline bool IsInputHalfDomain(HalfFlags halfFlags)
+    static inline bool IsInputHalfDomain(HalfFlags halfFlags) noexcept
     {
         return ((halfFlags & LUT_INPUT_HALF_CODE) ==
                 LUT_INPUT_HALF_CODE);
     }
-    inline bool isInputHalfDomain() const
+    inline bool isInputHalfDomain() const noexcept
     {
         return IsInputHalfDomain(m_halfFlags);
     }
 
     // Note: this function is used by the xml reader to build the op and is
     //       not intended for other use.
-    void setInputHalfDomain(bool isHalfDomain);
+    void setInputHalfDomain(bool isHalfDomain) noexcept;
 
     // Note: this function is used by the xml reader to build the op and is
     //       not intended for other use.
-    void setOutputRawHalfs(bool isRawHalfs);
+    void setOutputRawHalfs(bool isRawHalfs) noexcept;
 
-    inline bool isOutputRawHalfs() const {
+    inline bool isOutputRawHalfs() const noexcept {
         return ((m_halfFlags & LUT_OUTPUT_HALF_CODE) ==
                 LUT_OUTPUT_HALF_CODE);
     }
 
-    inline HalfFlags getHalfFlags() const { return m_halfFlags; }
+    inline HalfFlags getHalfFlags() const noexcept { return m_halfFlags; }
 
-    inline LUT1DHueAdjust getHueAdjust() const { return m_hueAdjust; }
+    inline Lut1DHueAdjust getHueAdjust() const noexcept { return m_hueAdjust; }
 
-    void setHueAdjust(LUT1DHueAdjust algo);
-
-    // Get an array containing the LUT elements.
-    // The elements are stored as a vector [r0,g0,b0, r1,g1,b1, r2,g2,b2, ...].
-    inline const Array & getArray() const { return m_array; }
+    void setHueAdjust(Lut1DHueAdjust algo) noexcept;
 
     // Get an array containing the LUT elements.
     // The elements are stored as a vector [r0,g0,b0, r1,g1,b1, r2,g2,b2, ...].
-    inline Array & getArray() { return m_array; }
+    inline const Array & getArray() const noexcept { return m_array; }
+
+    // Get an array containing the LUT elements.
+    // The elements are stored as a vector [r0,g0,b0, r1,g1,b1, r2,g2,b2, ...].
+    inline Array & getArray() noexcept { return m_array; }
 
     void validate() const override;
 
@@ -212,7 +213,6 @@ public:
 
     void scale(float scale);
 
-protected:
     class Lut3by1DArray : public Array
     {
     public:
@@ -261,7 +261,7 @@ private:
     Interpolation       m_interpolation;
     Lut3by1DArray       m_array;
     HalfFlags           m_halfFlags;
-    LUT1DHueAdjust      m_hueAdjust;
+    Lut1DHueAdjust      m_hueAdjust;
 
     TransformDirection  m_direction;
 

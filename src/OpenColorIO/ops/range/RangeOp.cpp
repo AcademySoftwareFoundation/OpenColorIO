@@ -69,8 +69,7 @@ RangeOp::RangeOp(RangeOpDataRcPtr & range, TransformDirection direction)
 {
     if(m_direction == TRANSFORM_DIR_UNKNOWN)
     {
-        throw Exception(
-            "Cannot create RangeOp with unspecified transform direction.");
+        throw Exception("Cannot create RangeOp with unspecified transform direction.");
     }
 
     range->validate();
@@ -191,7 +190,7 @@ void RangeOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
 void RangeOp::finalize(OptimizationFlags /*oFlags*/)
 {
     const RangeOp & constThis = *this;
-    if(m_direction == TRANSFORM_DIR_INVERSE)
+    if (m_direction == TRANSFORM_DIR_INVERSE)
     {
         data() = constThis.rangeData()->inverse();
         m_direction = TRANSFORM_DIR_FORWARD;
@@ -219,8 +218,7 @@ void RangeOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
 {
     if (m_direction != TRANSFORM_DIR_FORWARD)
     {
-        throw Exception(
-            "RangeOp direction should have been set to forward by finalize");
+        throw Exception("RangeOp direction should have been set to forward by finalize");
     }
 
     ConstRangeOpDataRcPtr data = rangeData();
@@ -241,10 +239,9 @@ void CreateRangeOp(OpRcPtrVec & ops,
                    double minOutValue, double maxOutValue,
                    TransformDirection direction)
 {
-    RangeOpDataRcPtr rangeData =
-        std::make_shared<RangeOpData>(minInValue, maxInValue, minOutValue, maxOutValue);
+    auto data = std::make_shared<RangeOpData>(minInValue, maxInValue, minOutValue, maxOutValue);
 
-    CreateRangeOp(ops, rangeData, direction);
+    CreateRangeOp(ops, data, direction);
 }
 
 void CreateRangeOp(OpRcPtrVec & ops, RangeOpDataRcPtr & rangeData, TransformDirection direction)
@@ -261,20 +258,13 @@ void CreateRangeTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     {
         throw Exception("CreateRangeTransform: op has to be a RangeOp");
     }
-
     RangeTransformRcPtr rangeTransform = RangeTransform::Create();
+    RangeOpData & data = dynamic_cast<RangeTransformImpl*>(rangeTransform.get())->data();
 
-    RangeOpData & data
-        = dynamic_cast<RangeTransformImpl*>(rangeTransform.get())->data();
-
-    ConstRangeOpDataRcPtr rangeDataSrc = DynamicPtrCast<const RangeOpData>(op->data());    
+    ConstRangeOpDataRcPtr rangeDataSrc = DynamicPtrCast<const RangeOpData>(op->data());
 
     data = *rangeDataSrc;
-    data.getFormatMetadata() = rangeDataSrc->getFormatMetadata();
-
     rangeTransform->setDirection(range->getDirection());
-    rangeTransform->setFileInputBitDepth(rangeDataSrc->getFileInputBitDepth());
-    rangeTransform->setFileOutputBitDepth(rangeDataSrc->getFileOutputBitDepth());
 
     group->appendTransform(rangeTransform);
 }
@@ -284,15 +274,13 @@ void BuildRangeOp(OpRcPtrVec & ops,
                   const RangeTransform & transform,
                   TransformDirection dir)
 {
-    const TransformDirection combinedDir
-        = CombineTransformDirections(dir, transform.getDirection());
+    const auto combinedDir = CombineTransformDirections(dir, transform.getDirection());
 
-    const RangeOpData & data
-        = dynamic_cast<const RangeTransformImpl*>(&transform)->data();
+    const auto & data = dynamic_cast<const RangeTransformImpl*>(&transform)->data();
 
     data.validate();
 
-    if(transform.getStyle()==RANGE_CLAMP)
+    if (transform.getStyle() == RANGE_CLAMP)
     {
         auto d = data.clone();
         CreateRangeOp(ops, d, combinedDir);

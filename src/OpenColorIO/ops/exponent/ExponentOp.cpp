@@ -23,7 +23,7 @@ const int FLOAT_DECIMALS = 7;
 ExponentOpData::ExponentOpData()
     :   OpData()
 {
-    for(unsigned i=0; i<4; ++i)
+    for (unsigned i = 0; i < 4; ++i)
     {
         m_exp4[i] = 1.0;
     }
@@ -32,7 +32,7 @@ ExponentOpData::ExponentOpData()
 ExponentOpData::ExponentOpData(const ExponentOpData & rhs)
     :   OpData()
 {
-    if(this!=&rhs)
+    if (this != &rhs)
     {
         *this = rhs;
     }
@@ -46,7 +46,7 @@ ExponentOpData::ExponentOpData(const double * exp4)
 
 ExponentOpData & ExponentOpData::operator = (const ExponentOpData & rhs)
 {
-    if(this!=&rhs)
+    if (this != &rhs)
     {
         OpData::operator=(rhs);
         memcpy(m_exp4, rhs.m_exp4, sizeof(double)*4);
@@ -73,7 +73,7 @@ void ExponentOpData::finalize()
     cacheIDStream << getID();
 
     cacheIDStream.precision(DefaultValues::FLOAT_DECIMALS);
-    for(int i=0; i<4; ++i)
+    for (int i = 0; i < 4; ++i)
     {
         cacheIDStream << m_exp4[i] << " ";
     }
@@ -105,7 +105,7 @@ void ExponentOpCPU::apply(const void * inImg, void * outImg, long numPixels) con
                             float(m_data->m_exp4[2]),
                             float(m_data->m_exp4[3]) };
 
-    for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
+    for (long pixelIndex = 0; pixelIndex < numPixels; ++pixelIndex)
     {
         out[0] = powf( std::max(0.0f, in[0]), exp[0]);
         out[1] = powf( std::max(0.0f, in[1]), exp[1]);
@@ -171,7 +171,8 @@ OpRcPtr ExponentOp::clone() const
 }
 
 ExponentOp::~ExponentOp()
-{ }
+{
+}
 
 std::string ExponentOp::getInfo() const
 {
@@ -181,7 +182,7 @@ std::string ExponentOp::getInfo() const
 bool ExponentOp::isSameType(ConstOpRcPtr & op) const
 {
     ConstExponentOpRcPtr typedRcPtr = DynamicPtrCast<const ExponentOp>(op);
-    if(!typedRcPtr) return false;
+    if (!typedRcPtr) return false;
     return true;
 }
 
@@ -213,7 +214,7 @@ void ExponentOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
             expData()->m_exp4[2]*typedRcPtr->expData()->m_exp4[2],
             expData()->m_exp4[3]*typedRcPtr->expData()->m_exp4[3] };
 
-    if(!IsVecEqualToOne(combined, 4))
+    if (!IsVecEqualToOne(combined, 4))
     {
         auto combinedOp = std::make_shared<ExponentOp>(combined);
 
@@ -267,16 +268,16 @@ void ExponentOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
 
 
 void CreateExponentOp(OpRcPtrVec & ops,
-                        const double(&vec4)[4],
-                        TransformDirection direction)
+                      const double(&vec4)[4],
+                      TransformDirection direction)
 {
     ExponentOpDataRcPtr expData = std::make_shared<ExponentOpData>(vec4);
     CreateExponentOp(ops, expData, direction);
 }
 
 void CreateExponentOp(OpRcPtrVec & ops,
-                        ExponentOpDataRcPtr & expData,
-                        TransformDirection direction)
+                      ExponentOpDataRcPtr & expData,
+                      TransformDirection direction)
 {
     if (direction == TRANSFORM_DIR_UNKNOWN)
     {
