@@ -675,6 +675,8 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
 // - OCIO v1 style Rule: This rule allows the use of the OCIO v1 style, where the string
 //   is searched for color space names from the config. This rule may occur 0 or 1 times
 //   in the list. The position in the list prioritizes it with respect to the other rules.
+//   StrictParsing is not used. If no color space is found in the path, the rule will not
+//   match and the next rule will be considered.
 //   It has the key:
 //   * name: Must be "ColorSpaceNamePathSearch".
 // 
@@ -683,7 +685,9 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
 //   * name: must be "Default".
 //   * colorspace : Color space name to be returned.
 //
-// Basic and Regex Rules can have custom string keys and associatated string values.
+// Custom string keys and associated string values may be used to convey app or
+// workflow-specific information, e.g. whether the color space should be left as is
+// or converted into a working space.
 //
 // Getters and setters are using the rule position, they will throw if the position is not
 // valid. If the rule at the specified position does not implement the requested property
@@ -740,25 +744,26 @@ public:
     // Name must be unique.
     // - "Default" is a reserved name for the default rule. The default rule is automatically
     //   added and can't be removed.
-    // - "ColorSpaceNamePathSearch" is reserve for a rule that will use
-    //   :cpp:func:`Config::parseColorSpaceFromString`. Pattern, extension, regex
-    //   and color space should be null or empty.
+    // - "ColorSpaceNamePathSearch" is also a reserved name (see insertPathSearchRule below).
     // Will throw if ruleIndex is not less than :cpp:func:`FileRules::getNumEntries`.
-    void insertAt(size_t ruleIndex, const char * name, const char * colorSpace,
-                  const char * pattern, const char * extension);
+    void insertRule(size_t ruleIndex, const char * name, const char * colorSpace,
+                    const char * pattern, const char * extension);
     //!cpp:function::
-    void insertAt(size_t ruleIndex, const char * name, const char * colorSpace,
-                  const char * regex);
+    void insertRule(size_t ruleIndex, const char * name, const char * colorSpace,
+                    const char * regex);
+    //!cpp:function:: Inserts a rule that uses cpp:func: 'Config:parseColorSpaceFromString'
+    // to search the path for any of the color spaces named in the config (as per OCIO v1).
+    void insertPathSearchRule(size_t ruleIndex);
 
     //!cpp:function:: Default rule can't be removed.
     // Will throw if ruleIndex + 1 is not less than :cpp:func:`FileRules::getNumEntries`.
-    void removeAt(size_t ruleIndex);
+    void removeRule(size_t ruleIndex);
 
     //!cpp:function:: Move a rule closer to the start of the list by one position.
-    void raisePriority(size_t ruleIndex);
+    void increaseRulePriority(size_t ruleIndex);
 
     //!cpp:function:: Move a rule closer to the end of the list by one position.
-    void lowerPriority(size_t ruleIndex);
+    void decreaseRulePriority(size_t ruleIndex);
 
     // !cpp:function:: Get the color space of the first rule that matched filePath.
     const char * getColorSpaceFromFilepath(const Config & config, const char * filePath) const;

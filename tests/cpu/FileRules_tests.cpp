@@ -38,56 +38,56 @@ OCIO_ADD_TEST(FileRules, config_insert_rule)
     auto fr = config->getFileRules();
     auto fileRules = fr->createEditableCopy();
     OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 2);
-    OCIO_CHECK_NO_THROW(fileRules->insertAt(0, "rule", "raw", "*", "a"));
+    OCIO_CHECK_NO_THROW(fileRules->insertRule(0, "rule", "raw", "*", "a"));
     OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 3);
-    OCIO_CHECK_NO_THROW(fileRules->insertAt(0, "TIFF rule", "raw", R"(.*\.TIF?F$)"));
+    OCIO_CHECK_NO_THROW(fileRules->insertRule(0, "TIFF rule", "raw", R"(.*\.TIF?F$)"));
     OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 4);
-    OCIO_CHECK_THROW_WHAT(fileRules->insertAt(0, "rule", "raw", "*", "b"),
+    OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, "rule", "raw", "*", "b"),
                           OCIO::Exception, "A rule named 'rule' already exists");
-    OCIO_CHECK_THROW_WHAT(fileRules->insertAt(4, "rule2", "raw", "*", "a"),
+    OCIO_CHECK_THROW_WHAT(fileRules->insertRule(4, "rule2", "raw", "*", "a"),
                           OCIO::Exception, "rule index '4' invalid");
-    OCIO_CHECK_THROW_WHAT(fileRules->removeAt(4), OCIO::Exception, "invalid");
-    OCIO_CHECK_THROW_WHAT(fileRules->removeAt(3), OCIO::Exception, "is the default rule");
-    OCIO_CHECK_NO_THROW(fileRules->removeAt(2));
-    OCIO_CHECK_NO_THROW(fileRules->removeAt(1));
-    OCIO_CHECK_NO_THROW(fileRules->removeAt(0));
+    OCIO_CHECK_THROW_WHAT(fileRules->removeRule(4), OCIO::Exception, "invalid");
+    OCIO_CHECK_THROW_WHAT(fileRules->removeRule(3), OCIO::Exception, "is the default rule");
+    OCIO_CHECK_NO_THROW(fileRules->removeRule(2));
+    OCIO_CHECK_NO_THROW(fileRules->removeRule(1));
+    OCIO_CHECK_NO_THROW(fileRules->removeRule(0));
     OCIO_CHECK_EQUAL(fileRules->getNumEntries(), 1);
 
-    OCIO_CHECK_THROW_WHAT(fileRules->insertAt(0, OCIO::FileRuleUtils::ParseName,
-                                              "colorspace", "", ""),
+    OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, OCIO::FileRuleUtils::ParseName,
+                                                "colorspace", "", ""),
                           OCIO::Exception, "does not accept any color space");
-    OCIO_CHECK_THROW_WHAT(fileRules->insertAt(0, OCIO::FileRuleUtils::ParseName,
-                                              "", "pattern", ""),
+    OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, OCIO::FileRuleUtils::ParseName,
+                                                "", "pattern", ""),
                           OCIO::Exception, "do not accept any pattern");
-    OCIO_CHECK_THROW_WHAT(fileRules->insertAt(0, OCIO::FileRuleUtils::ParseName,
-                                              "", "", "extension"),
+    OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, OCIO::FileRuleUtils::ParseName,
+                                                "", "", "extension"),
                           OCIO::Exception, "do not accept any extension");
 
-    OCIO_CHECK_NO_THROW(fileRules->insertAt(0, OCIO::FileRuleUtils::ParseName, "", "", ""));
-    OCIO_CHECK_THROW_WHAT(fileRules->insertAt(0, OCIO::FileRuleUtils::ParseName,
-                                              "", "", "extension"),
+    OCIO_CHECK_NO_THROW(fileRules->insertRule(0, OCIO::FileRuleUtils::ParseName, "", "", ""));
+    OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, OCIO::FileRuleUtils::ParseName,
+                                                "", "", "extension"),
                           OCIO::Exception, "already exists");
 
-    OCIO_CHECK_NO_THROW(fileRules->removeAt(0));
-    OCIO_CHECK_NO_THROW(fileRules->insertAt(0, OCIO::FileRuleUtils::ParseName,
-                                                  nullptr, nullptr, nullptr));
+    OCIO_CHECK_NO_THROW(fileRules->removeRule(0));
+    OCIO_CHECK_NO_THROW(fileRules->insertRule(0, OCIO::FileRuleUtils::ParseName,
+                                              nullptr, nullptr, nullptr));
 
     // Adds a rule with empty name.
-    OCIO_CHECK_THROW_WHAT(fileRules->insertAt(0, nullptr, "raw", "*", "a"),
+    OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, nullptr, "raw", "*", "a"),
                           OCIO::Exception, "rule should have a non empty name");
 
     // Pattern and extension can't be null.
-    OCIO_CHECK_THROW_WHAT(fileRules->insertAt(0, "rule", "raw", nullptr, "a"),
+    OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, "rule", "raw", nullptr, "a"),
                           OCIO::Exception, "file pattern is empty");
-    OCIO_CHECK_THROW_WHAT(fileRules->insertAt(0, "rule", "raw", "*", nullptr),
+    OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, "rule", "raw", "*", nullptr),
                           OCIO::Exception, "file extension is empty");
 
     // Invalid glob pattern.
-    OCIO_CHECK_THROW_WHAT(fileRules->insertAt(0, "rule", "raw", "[", "a"),
+    OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, "rule", "raw", "[", "a"),
                           OCIO::Exception, "invalid regular expression");
 
     // Invalid regex.
-    OCIO_CHECK_THROW_WHAT(fileRules->insertAt(0, "rule", "raw", "(.*)(\bwhat"),
+    OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, "rule", "raw", "(.*)(\bwhat"),
                           OCIO::Exception, "invalid regular expression");
 }
 
@@ -97,7 +97,7 @@ OCIO_ADD_TEST(FileRules, config_rule_customkeys)
     auto fr = configRaw->getFileRules();
     auto fileRules = fr->createEditableCopy();
     OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 2);
-    OCIO_CHECK_NO_THROW(fileRules->insertAt(0, "rule", "raw", "*", "a"));
+    OCIO_CHECK_NO_THROW(fileRules->insertRule(0, "rule", "raw", "*", "a"));
     OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 3);
     OCIO_CHECK_EQUAL(fileRules->getNumCustomKeys(0), 0);
     OCIO_CHECK_EQUAL(fileRules->getNumCustomKeys(1), 0);
@@ -228,7 +228,7 @@ OCIO_ADD_TEST(FileRules, config_rule_u8)
     auto fr = configRaw->getFileRules();
     auto fileRules = fr->createEditableCopy();
     OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 2);
-    OCIO_CHECK_NO_THROW(fileRules->insertAt(0, u8"éÀÂÇÉÈç$€", "raw", "*", "a"));
+    OCIO_CHECK_NO_THROW(fileRules->insertRule(0, u8"éÀÂÇÉÈç$€", "raw", "*", "a"));
     OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 3);
     OCIO_CHECK_NO_THROW(fileRules->setCustomKey(0, u8"key£", u8"val€"));
     OCIO_CHECK_EQUAL(std::string(fileRules->getCustomKeyName(0, 0)), u8"key£");
@@ -296,7 +296,7 @@ OCIO_ADD_TEST(FileRules, rule_invalid)
     auto rules = config->getFileRules()->createEditableCopy();
     OCIO_REQUIRE_EQUAL(rules->getNumEntries(), 1);
 
-    OCIO_CHECK_NO_THROW(rules->insertAt(0, g_name, "cs1", g_filePattern, g_fileExt));
+    OCIO_CHECK_NO_THROW(rules->insertRule(0, g_name, "cs1", g_filePattern, g_fileExt));
     config->setFileRules(rules);
     OCIO_CHECK_NO_THROW(config->sanityCheck());
 
@@ -315,7 +315,7 @@ OCIO_ADD_TEST(OCIOFileRules, pattern_error)
     auto fr = configRaw->getFileRules();
     auto rules = fr->createEditableCopy();
 
-    OCIO_CHECK_NO_THROW(rules->insertAt(0, "new rule", "raw", "*", "a"));
+    OCIO_CHECK_NO_THROW(rules->insertRule(0, "new rule", "raw", "*", "a"));
     OCIO_REQUIRE_EQUAL(rules->getNumEntries(), 3);
 
     OCIO_CHECK_THROW_WHAT(rules->setPattern(0, nullptr), OCIO::Exception, "file pattern is empty");
@@ -341,7 +341,7 @@ OCIO_ADD_TEST(OCIOFileRules, extension_error)
     auto fr = configRaw->getFileRules();
     auto rules = fr->createEditableCopy();
 
-    OCIO_CHECK_NO_THROW(rules->insertAt(0, "new rule", "raw", "*", "a"));
+    OCIO_CHECK_NO_THROW(rules->insertRule(0, "new rule", "raw", "*", "a"));
     OCIO_REQUIRE_EQUAL(rules->getNumEntries(), 3);
 
     OCIO_CHECK_THROW_WHAT(rules->setExtension(0, nullptr), OCIO::Exception,
@@ -366,8 +366,8 @@ OCIO_ADD_TEST(OCIOFileRules, ocio_multiple_rules)
     while (nbRulesCreated < nbRulesToCreate)
     {
         std::string ruleName = "rule" + std::to_string(nbRulesCreated);
-        OCIO_CHECK_NO_THROW(rules->insertAt(0, ruleName.c_str(), "cs1",
-                                                  g_filePattern, g_fileExt));
+        OCIO_CHECK_NO_THROW(rules->insertRule(0, ruleName.c_str(), "cs1",
+                                              g_filePattern, g_fileExt));
         nbRulesCreated++;
         OCIO_CHECK_EQUAL(rules->getNumEntries(), nbRulesCreated + nbDefaultRules);
     }
@@ -398,7 +398,7 @@ OCIO_ADD_TEST(OCIOFileRules, ocio_rules_filepattern)
     auto rules = config->getFileRules()->createEditableCopy();
 
     // Add pattern + extension rule.
-    OCIO_CHECK_NO_THROW(rules->insertAt(0, g_name, "cs1", "*", "[eE][xX][r]"));
+    OCIO_CHECK_NO_THROW(rules->insertRule(0, g_name, "cs1", "*", "[eE][xX][r]"));
 
     size_t rulePosition = 0;
     rules->getColorSpaceFromFilepath(*config, "/An/Arbitrary/Path/MyFile.exr", rulePosition);
@@ -600,7 +600,7 @@ OCIO_ADD_TEST(OCIOFileRules, ocio_rules_filepattern)
     OCIO_CHECK_EQUAL(rulePosition, 0);
 
     // Add pattern + extension rule.
-    OCIO_CHECK_NO_THROW(rules->insertAt(0, "rule0", "cs1", "*", "jpg"));
+    OCIO_CHECK_NO_THROW(rules->insertRule(0, "rule0", "cs1", "*", "jpg"));
     rules->getColorSpaceFromFilepath(*config, "test.jpg", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
     rules->getColorSpaceFromFilepath(*config, "test.Jpg", rulePosition);
@@ -671,7 +671,7 @@ OCIO_ADD_TEST(OCIOFileRules, ocio_rules_regex)
     auto rules = config->getFileRules()->createEditableCopy();
 
     // Add pattern + extension rule.
-    OCIO_CHECK_NO_THROW(rules->insertAt(0, g_name, "cs1", R"((.*)(\bmine\b|\byours\b)(.*))"));
+    OCIO_CHECK_NO_THROW(rules->insertRule(0, g_name, "cs1", R"((.*)(\bmine\b|\byours\b)(.*))"));
 
     size_t rulePosition = 0;
     rules->getColorSpaceFromFilepath(*config, R"(mnt/mine/media/image.jpg)", rulePosition);
@@ -690,7 +690,7 @@ OCIO_ADD_TEST(OCIOFileRules, ocio_rules_regex)
     OCIO_CHECK_EQUAL(rulePosition, 0);
 
     // The error details may be different on each platform.
-    OCIO_CHECK_THROW_WHAT(rules->insertAt(1, "invalid", "cs1", R"((.*)(\bmine\b|\byours\b(.*))"),
+    OCIO_CHECK_THROW_WHAT(rules->insertRule(1, "invalid", "cs1", R"((.*)(\bmine\b|\byours\b(.*))"),
                           OCIO::Exception, "invalid regular expression");
 }
 
@@ -703,7 +703,7 @@ OCIO_ADD_TEST(OCIOFileRules, ocio_rules_long_filepattern)
     auto rules = config->getFileRules()->createEditableCopy();
 
     // Add pattern + extension rule.
-    OCIO_CHECK_NO_THROW(rules->insertAt(0, g_name, "cs1", "*", "exr"));
+    OCIO_CHECK_NO_THROW(rules->insertRule(0, g_name, "cs1", "*", "exr"));
 
     // The file path existence is not tested
     constexpr char arbitraryPath[] = "/Users/hodoulp/Documents/work/Color Management/ocio-images"
@@ -754,8 +754,8 @@ OCIO_ADD_TEST(OCIOFileRules, ocio_rules_test)
     OCIO::ConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
     auto rules = config->getFileRules()->createEditableCopy();
-    rules->insertAt(0, OCIO::FileRuleUtils::ParseName, nullptr, nullptr);
-    rules->insertAt(1, "dpx file", "raw", "", "dpx");
+    rules->insertRule(0, OCIO::FileRuleUtils::ParseName, nullptr, nullptr);
+    rules->insertRule(1, "dpx file", "raw", "", "dpx");
 
     size_t rulePos = 0;
     const char * colorSpace;
@@ -793,9 +793,9 @@ OCIO_ADD_TEST(OCIOFileRules, ocio_rules_priority)
     OCIO::ConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
     auto rules = config->getFileRules()->createEditableCopy();
-    rules->insertAt(0, "pattern dpx file", "raw", "*cs2*", "dpx");
-    rules->insertAt(1, OCIO::FileRuleUtils::ParseName, nullptr, nullptr);
-    rules->insertAt(2, "regex rule", "cs5", ".*cs5.dpx");
+    rules->insertRule(0, "pattern dpx file", "raw", "*cs2*", "dpx");
+    rules->insertRule(1, OCIO::FileRuleUtils::ParseName, nullptr, nullptr);
+    rules->insertRule(2, "regex rule", "cs5", ".*cs5.dpx");
 
     size_t rulePos = 0;
     const char * colorSpace;
@@ -1146,40 +1146,40 @@ OCIO_ADD_TEST(OCIOFileRules, rule_move)
     OCIO_CHECK_NO_THROW(config->sanityCheck());
     auto rules = config->getFileRules()->createEditableCopy();
 
-    OCIO_CHECK_NO_THROW(rules->insertAt(0, "rule0", "cs1", g_filePattern, g_fileExt));
-    OCIO_CHECK_NO_THROW(rules->insertAt(1, "rule1", "cs1", g_filePattern, g_fileExt));
-    OCIO_CHECK_NO_THROW(rules->insertAt(2, "rule2", "cs1", g_filePattern, g_fileExt));
-    OCIO_CHECK_NO_THROW(rules->insertAt(3, "rule3", "cs1", g_filePattern, g_fileExt));
-    OCIO_CHECK_NO_THROW(rules->insertAt(4, "rule4", "cs1", g_filePattern, g_fileExt));
+    OCIO_CHECK_NO_THROW(rules->insertRule(0, "rule0", "cs1", g_filePattern, g_fileExt));
+    OCIO_CHECK_NO_THROW(rules->insertRule(1, "rule1", "cs1", g_filePattern, g_fileExt));
+    OCIO_CHECK_NO_THROW(rules->insertRule(2, "rule2", "cs1", g_filePattern, g_fileExt));
+    OCIO_CHECK_NO_THROW(rules->insertRule(3, "rule3", "cs1", g_filePattern, g_fileExt));
+    OCIO_CHECK_NO_THROW(rules->insertRule(4, "rule4", "cs1", g_filePattern, g_fileExt));
     OCIO_CHECK_EQUAL(rules->getNumEntries(), 6);
 
-    OCIO_CHECK_THROW_WHAT(rules->raisePriority(0), OCIO::Exception,
+    OCIO_CHECK_THROW_WHAT(rules->increaseRulePriority(0), OCIO::Exception,
                           "may not be moved to index '-1'");
-    OCIO_CHECK_THROW_WHAT(rules->lowerPriority(4), OCIO::Exception,
+    OCIO_CHECK_THROW_WHAT(rules->decreaseRulePriority(4), OCIO::Exception,
                           "may not be moved to index '5'");
 
-    OCIO_CHECK_THROW_WHAT(rules->raisePriority(5), OCIO::Exception, "is the default rule");
-    OCIO_CHECK_THROW_WHAT(rules->lowerPriority(5), OCIO::Exception, "is the default rule");
+    OCIO_CHECK_THROW_WHAT(rules->increaseRulePriority(5), OCIO::Exception, "is the default rule");
+    OCIO_CHECK_THROW_WHAT(rules->decreaseRulePriority(5), OCIO::Exception, "is the default rule");
 
-    OCIO_CHECK_NO_THROW(rules->lowerPriority(2));
+    OCIO_CHECK_NO_THROW(rules->decreaseRulePriority(2));
     OCIO_CHECK_EQUAL(rules->getNumEntries(), 6);
     OCIO_CHECK_EQUAL(std::string(rules->getName(2)), "rule3");
     OCIO_CHECK_EQUAL(std::string(rules->getName(3)), "rule2");
 
-    OCIO_CHECK_NO_THROW(rules->raisePriority(3));
+    OCIO_CHECK_NO_THROW(rules->increaseRulePriority(3));
     OCIO_CHECK_EQUAL(rules->getNumEntries(), 6);
     OCIO_CHECK_EQUAL(std::string(rules->getName(2)), "rule2");
     OCIO_CHECK_EQUAL(std::string(rules->getName(3)), "rule3");
 
-    OCIO_CHECK_NO_THROW(rules->lowerPriority(2));
-    OCIO_CHECK_NO_THROW(rules->lowerPriority(3));
+    OCIO_CHECK_NO_THROW(rules->decreaseRulePriority(2));
+    OCIO_CHECK_NO_THROW(rules->decreaseRulePriority(3));
     OCIO_CHECK_EQUAL(rules->getNumEntries(), 6);
     OCIO_CHECK_EQUAL(std::string(rules->getName(2)), "rule3");
     OCIO_CHECK_EQUAL(std::string(rules->getName(3)), "rule4");
     OCIO_CHECK_EQUAL(std::string(rules->getName(4)), "rule2");
 
-    OCIO_CHECK_NO_THROW(rules->raisePriority(4));
-    OCIO_CHECK_NO_THROW(rules->raisePriority(3));
+    OCIO_CHECK_NO_THROW(rules->increaseRulePriority(4));
+    OCIO_CHECK_NO_THROW(rules->increaseRulePriority(3));
     OCIO_CHECK_EQUAL(rules->getNumEntries(), 6);
     OCIO_CHECK_EQUAL(std::string(rules->getName(2)), "rule2");
     OCIO_CHECK_EQUAL(std::string(rules->getName(3)), "rule3");

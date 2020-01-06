@@ -2069,12 +2069,12 @@ inline void load(const YAML::Node & node, FileRulesRcPtr & fr, bool & defaultRul
 
             if (regex.empty())
             {
-                fr->insertAt(pos, name.c_str(), colorspace.c_str(),
-                             pattern.c_str(), extension.c_str());
+                fr->insertRule(pos, name.c_str(), colorspace.c_str(),
+                               pattern.c_str(), extension.c_str());
             }
             else
             {
-                fr->insertAt(pos, name.c_str(), colorspace.c_str(), regex.c_str());
+                fr->insertRule(pos, name.c_str(), colorspace.c_str(), regex.c_str());
             }
         }
         const auto numKeyVal = keyVals.size() / 2;

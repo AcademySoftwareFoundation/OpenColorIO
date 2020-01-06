@@ -748,8 +748,8 @@ void FileRules::setCustomKey(size_t ruleIndex, const char * key, const char * va
     m_impl->m_rules[ruleIndex]->setCustomKey(key, value);
 }
 
-void FileRules::insertAt(size_t ruleIndex, const char * name, const char * colorSpace,
-                         const char * pattern, const char * extension)
+void FileRules::insertRule(size_t ruleIndex, const char * name, const char * colorSpace,
+                           const char * pattern, const char * extension)
 {
     m_impl->validateNewRule(ruleIndex, name);
 
@@ -760,8 +760,8 @@ void FileRules::insertAt(size_t ruleIndex, const char * name, const char * color
     m_impl->m_rules.insert(m_impl->m_rules.begin() + ruleIndex, newRule);
 }
 
-void FileRules::insertAt(size_t ruleIndex, const char * name, const char * colorSpace,
-                         const char * regex)
+void FileRules::insertRule(size_t ruleIndex, const char * name, const char * colorSpace,
+                           const char * regex)
 {
     m_impl->validateNewRule(ruleIndex, name);
 
@@ -771,18 +771,23 @@ void FileRules::insertAt(size_t ruleIndex, const char * name, const char * color
     m_impl->m_rules.insert(m_impl->m_rules.begin() + ruleIndex, newRule);
 }
 
-void FileRules::removeAt(size_t ruleIndex)
+void FileRules::insertPathSearchRule(size_t ruleIndex)
+{
+    return insertRule(ruleIndex, FileRuleUtils::ParseName, nullptr, nullptr);
+}
+
+void FileRules::removeRule(size_t ruleIndex)
 {
     m_impl->validatePosition(ruleIndex, Impl::DEFAULT_NOT_ALLOWED);
     m_impl->m_rules.erase(m_impl->m_rules.begin() + ruleIndex);
 }
 
-void FileRules::raisePriority(size_t ruleIndex)
+void FileRules::increaseRulePriority(size_t ruleIndex)
 {
     m_impl->moveRule(ruleIndex, -1);
 }
 
-void FileRules::lowerPriority(size_t ruleIndex)
+void FileRules::decreaseRulePriority(size_t ruleIndex)
 {
     m_impl->moveRule(ruleIndex, 1);
 }
