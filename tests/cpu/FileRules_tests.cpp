@@ -969,6 +969,13 @@ colorspaces:
         config->setMajorVersion(2);
 
         OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+        auto rules = config->getFileRules()->createEditableCopy();
+        OCIO_CHECK_EQUAL(std::string(rules->getColorSpace(rules->getNumEntries() - 1)),
+                         "default");
+        rules->setDefaultRuleColorSpace("cs1");
+        OCIO_CHECK_EQUAL(std::string(rules->getColorSpace(rules->getNumEntries() - 1)),
+                         "cs1");
     }
 
     {

@@ -776,6 +776,11 @@ void FileRules::insertPathSearchRule(size_t ruleIndex)
     return insertRule(ruleIndex, FileRuleUtils::ParseName, nullptr, nullptr);
 }
 
+void FileRules::setDefaultRuleColorSpace(const char * colorSpace)
+{
+    m_impl->m_rules.back()->setColorSpace(colorSpace);
+}
+
 void FileRules::removeRule(size_t ruleIndex)
 {
     m_impl->validatePosition(ruleIndex, Impl::DEFAULT_NOT_ALLOWED);
