@@ -14,9 +14,9 @@ namespace OCIO_NAMESPACE
 
 namespace EC
 {
-static constexpr double MIN_PIVOT = 0.001;
-static constexpr double MIN_CONTRAST = 0.001;
-static constexpr double VIDEO_OETF_POWER = 0.54644808743169393;  // 1 / 1.83
+constexpr double MIN_PIVOT = 0.001;
+constexpr double MIN_CONTRAST = 0.001;
+constexpr double VIDEO_OETF_POWER = 0.54644808743169393;  // 1 / 1.83
 }
 
 class ExposureContrastOpData;
@@ -132,9 +132,9 @@ public:
     };
 
     static Style ConvertStringToStyle(const char * str);
-
     static const char * ConvertStyleToString(Style style);
 
+    static ExposureContrastStyle ConvertStyle(ExposureContrastOpData::Style style);
     static Style ConvertStyle(ExposureContrastStyle style, TransformDirection dir);
 
     ExposureContrastOpData();
@@ -175,6 +175,9 @@ public:
     Style getStyle() const { return m_style; }
     void setStyle(Style style) { m_style = style; }
 
+    TransformDirection getDirection() const;
+    void setDirection(TransformDirection dir);
+
     double getExposure() const { return m_exposure->getDoubleValue(); }
     void setExposure(double exposure) { m_exposure->setValue(exposure); }
 
@@ -210,6 +213,8 @@ public:
     static constexpr const double LOGMIDGRAY_DEFAULT = 0.435;
 
 private:
+    void invert();
+
     Style  m_style = STYLE_LINEAR;
     DynamicPropertyImplRcPtr m_exposure;
     DynamicPropertyImplRcPtr m_contrast;

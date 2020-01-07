@@ -76,12 +76,12 @@ ColorSpaceTransform& ColorSpaceTransform::operator= (const ColorSpaceTransform &
     return *this;
 }
 
-TransformDirection ColorSpaceTransform::getDirection() const
+TransformDirection ColorSpaceTransform::getDirection() const noexcept
 {
     return getImpl()->m_dir;
 }
 
-void ColorSpaceTransform::setDirection(TransformDirection dir)
+void ColorSpaceTransform::setDirection(TransformDirection dir) noexcept
 {
     getImpl()->m_dir = dir;
 }

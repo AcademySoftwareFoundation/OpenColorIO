@@ -48,10 +48,10 @@ std::string GetParametersString(const GammaOpData::Params & params)
     return oss.str();
 }
 
-static constexpr const char * GAMMA_STYLE_BASIC_FWD    = "basicFwd";
-static constexpr const char * GAMMA_STYLE_BASIC_REV    = "basicRev";
-static constexpr const char * GAMMA_STYLE_MONCURVE_FWD = "moncurveFwd";
-static constexpr const char * GAMMA_STYLE_MONCURVE_REV = "moncurveRev";
+constexpr const char * GAMMA_STYLE_BASIC_FWD    = "basicFwd";
+constexpr const char * GAMMA_STYLE_BASIC_REV    = "basicRev";
+constexpr const char * GAMMA_STYLE_MONCURVE_FWD = "moncurveFwd";
+constexpr const char * GAMMA_STYLE_MONCURVE_REV = "moncurveRev";
 
 }; // anon
 

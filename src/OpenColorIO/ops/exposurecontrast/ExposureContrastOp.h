@@ -17,8 +17,6 @@ void CreateExposureContrastOp(OpRcPtrVec & ops,
                               ExposureContrastOpDataRcPtr & data,
                               TransformDirection direction);
 
-ExposureContrastStyle ConvertStyle(ExposureContrastOpData::Style style);
-
 // Create a copy of the exposure contrast transform in the op and append it to
 // the GroupTransform.
 void CreateExposureContrastTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op);

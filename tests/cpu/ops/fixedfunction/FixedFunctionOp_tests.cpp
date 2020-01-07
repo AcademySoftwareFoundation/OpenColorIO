@@ -145,26 +145,13 @@ OCIO_ADD_TEST(FixedFunctionOp, rec2100_surround_inv)
     OCIO::OpRcPtrVec ops;
 
     OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, { 2. }, 
-                                                    OCIO::FixedFunctionOpData::REC2100_SURROUND));
+                                                    OCIO::FixedFunctionOpData::REC2100_SURROUND_FWD));
 
     OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, { 1. / 2. }, 
-                                                    OCIO::FixedFunctionOpData::REC2100_SURROUND));
+                                                    OCIO::FixedFunctionOpData::REC2100_SURROUND_FWD));
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
-    OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    {
-        OCIO::ConstOpRcPtr op0 = ops[0];
-        OCIO::ConstOpRcPtr op1 = ops[1];
-
-        OCIO_CHECK_ASSERT(!op0->isIdentity());
-        OCIO_CHECK_ASSERT(!op1->isIdentity());
-
-        OCIO_CHECK_ASSERT(op0->isSameType(op1));
-        OCIO_CHECK_ASSERT(op0->isInverse(op1));
-        OCIO_CHECK_ASSERT(op1->isInverse(op0));
-    }
-    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, { 2.01 }, 
-                                                    OCIO::FixedFunctionOpData::REC2100_SURROUND));
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, { 2. }, 
+                                                    OCIO::FixedFunctionOpData::REC2100_SURROUND_INV));
 
     OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
@@ -173,23 +160,53 @@ OCIO_ADD_TEST(FixedFunctionOp, rec2100_surround_inv)
         OCIO::ConstOpRcPtr op1 = ops[1];
         OCIO::ConstOpRcPtr op2 = ops[2];
 
-        OCIO_CHECK_ASSERT(!op0->isInverse(op2));
-        OCIO_CHECK_ASSERT(!op1->isInverse(op2));
+        OCIO_CHECK_ASSERT(!op0->isIdentity());
+        OCIO_CHECK_ASSERT(!op1->isIdentity());
+        OCIO_CHECK_ASSERT(!op2->isIdentity());
+
+        OCIO_CHECK_ASSERT(op0->isSameType(op1));
+        OCIO_CHECK_ASSERT(op0->isInverse(op1));
+        OCIO_CHECK_ASSERT(op1->isInverse(op0));
+        OCIO_CHECK_ASSERT(op0->isInverse(op2));
+        OCIO_CHECK_ASSERT(op2->isInverse(op0));
+    }
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, { 2.01 }, 
+                                                    OCIO::FixedFunctionOpData::REC2100_SURROUND_FWD));
+
+    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+    OCIO_REQUIRE_EQUAL(ops.size(), 4);
+    {
+        OCIO::ConstOpRcPtr op0 = ops[0];
+        OCIO::ConstOpRcPtr op1 = ops[1];
+        OCIO::ConstOpRcPtr op3 = ops[3];
+
+        OCIO_CHECK_ASSERT(!op0->isInverse(op3));
+        OCIO_CHECK_ASSERT(!op1->isInverse(op3));
     }
 }
 
 OCIO_ADD_TEST(FixedFunctionOp, create_transform)
 {
-    OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_FORWARD;
-    const OCIO::FixedFunctionOpData::Params data{ 2.01 };
-    const OCIO::FixedFunctionOpData::Style style = OCIO::FixedFunctionOpData::REC2100_SURROUND;
+    const OCIO::FixedFunctionOpData::Params data{ 0.5 };
+    const OCIO::FixedFunctionOpData::Style style = OCIO::FixedFunctionOpData::REC2100_SURROUND_INV;
 
     OCIO::FixedFunctionOpDataRcPtr funcData
         = std::make_shared<OCIO::FixedFunctionOpData>(data, style);
+
+    OCIO_CHECK_EQUAL(OCIO::FixedFunctionOpData::REC2100_SURROUND_INV, funcData->getStyle());
+    // Direction is already inverse, this does nothing.
+    funcData->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_EQUAL(OCIO::FixedFunctionOpData::REC2100_SURROUND_INV, funcData->getStyle());
+    // Changing the direction is changing the style.
+    funcData->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(OCIO::FixedFunctionOpData::REC2100_SURROUND_FWD, funcData->getStyle());
+    funcData->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_EQUAL(OCIO::FixedFunctionOpData::REC2100_SURROUND_INV, funcData->getStyle());
+
     funcData->getFormatMetadata().addAttribute("name", "test");
 
     OCIO::OpRcPtrVec ops;
-    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, funcData, direction));
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, funcData, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO_REQUIRE_ASSERT(ops[0]);
 
@@ -209,12 +226,12 @@ OCIO_ADD_TEST(FixedFunctionOp, create_transform)
     OCIO_CHECK_EQUAL(std::string(metadata.getAttributeName(0)), "name");
     OCIO_CHECK_EQUAL(std::string(metadata.getAttributeValue(0)), "test");
 
-    OCIO_CHECK_EQUAL(ffTransform->getDirection(), direction);
+    OCIO_CHECK_EQUAL(ffTransform->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_CHECK_EQUAL(ffTransform->getStyle(), OCIO::FIXED_FUNCTION_REC2100_SURROUND);
     OCIO_CHECK_EQUAL(ffTransform->getNumParams(), 1);
     double param[1];
     ffTransform->getParams(param);
-    OCIO_CHECK_EQUAL(param[0], 2.01);
+    OCIO_CHECK_EQUAL(param[0], 0.5);
 }
 
 OCIO_ADD_TEST(FixedFunctionOps, RGB_TO_HSV)

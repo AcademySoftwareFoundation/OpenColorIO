@@ -6,143 +6,100 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "OpBuilders.h"
-#include "ops/fixedfunction/FixedFunctionOpData.h"
+#include "transforms/FixedFunctionTransform.h"
 
 namespace OCIO_NAMESPACE
 {
 
 FixedFunctionTransformRcPtr FixedFunctionTransform::Create()
 {
-    return FixedFunctionTransformRcPtr(new FixedFunctionTransform(), &deleter);
+    return FixedFunctionTransformRcPtr(new FixedFunctionTransformImpl(), &FixedFunctionTransformImpl::deleter);
 }
 
-void FixedFunctionTransform::deleter(FixedFunctionTransform* t)
+void FixedFunctionTransformImpl::deleter(FixedFunctionTransform * t)
 {
-    delete t;
+    delete static_cast<FixedFunctionTransformImpl *>(t);
 }
 
-class FixedFunctionTransform::Impl : public FixedFunctionOpData
+TransformRcPtr FixedFunctionTransformImpl::createEditableCopy() const
 {
-public:
-    Impl()
-        :   FixedFunctionOpData()
-        ,   m_direction(TRANSFORM_DIR_FORWARD)
-    {
-    }
-
-    ~Impl() {}
-
-    Impl(const Impl &) = delete;
-
-    Impl& operator=(const Impl & rhs)
-    {
-        if(this!=&rhs)
-        {
-            FixedFunctionOpData::operator=(rhs);
-            m_direction  = rhs.m_direction;
-        }
-        return *this;
-    }
-
-    bool equals(const Impl & rhs) const
-    {
-        if(this==&rhs) return true;
-
-        return FixedFunctionOpData::operator==(rhs)
-               && m_direction == rhs.m_direction;
-    }
-
-    TransformDirection m_direction;
-};
-
-///////////////////////////////////////////////////////////////////////////
-
-
-
-FixedFunctionTransform::FixedFunctionTransform()
-    : m_impl(new FixedFunctionTransform::Impl)
-{
-}
-
-TransformRcPtr FixedFunctionTransform::createEditableCopy() const
-{
-    FixedFunctionTransformRcPtr transform = FixedFunctionTransform::Create();
-    *transform->m_impl = *m_impl;
+    TransformRcPtr transform = FixedFunctionTransform::Create();
+    dynamic_cast<FixedFunctionTransformImpl*>(transform.get())->data() = data();
     return transform;
 }
 
-FixedFunctionTransform::~FixedFunctionTransform()
+TransformDirection FixedFunctionTransformImpl::getDirection() const noexcept
 {
-    delete m_impl;
-    m_impl = nullptr;
+    return data().getDirection();
 }
 
-FixedFunctionTransform & FixedFunctionTransform::operator= (const FixedFunctionTransform & rhs)
+void FixedFunctionTransformImpl::setDirection(TransformDirection dir) noexcept
 {
-    if (this != &rhs)
+    // NB: The direction is set by modifying the OpData style.
+    data().setDirection(dir);
+}
+
+void FixedFunctionTransformImpl::validate() const
+{
+    try
     {
-        *m_impl = *rhs.m_impl;
+        Transform::validate();
+        data().validate();
     }
-    return *this;
+    catch (Exception & ex)
+    {
+        std::string errMsg("FixedFunctionTransform validation failed: ");
+        errMsg += ex.what();
+        throw Exception(errMsg.c_str());
+    }
 }
 
-TransformDirection FixedFunctionTransform::getDirection() const
+FormatMetadata & FixedFunctionTransformImpl::getFormatMetadata() noexcept
 {
-    return getImpl()->m_direction;
+    return data().getFormatMetadata();
 }
 
-void FixedFunctionTransform::setDirection(TransformDirection dir)
+const FormatMetadata & FixedFunctionTransformImpl::getFormatMetadata() const noexcept
 {
-    getImpl()->m_direction = dir;
+    return data().getFormatMetadata();
 }
 
-void FixedFunctionTransform::validate() const
+bool FixedFunctionTransformImpl::equals(const FixedFunctionTransform & other) const noexcept
 {
-    Transform::validate();
-    getImpl()->validate();
+    if (this == &other) return true;
+    return data() == dynamic_cast<const FixedFunctionTransformImpl*>(&other)->data();
 }
 
-FormatMetadata & FixedFunctionTransform::getFormatMetadata()
+FixedFunctionStyle FixedFunctionTransformImpl::getStyle() const
 {
-    return m_impl->getFormatMetadata();
+    return FixedFunctionOpData::ConvertStyle(data().getStyle());
 }
 
-const FormatMetadata & FixedFunctionTransform::getFormatMetadata() const
+void FixedFunctionTransformImpl::setStyle(FixedFunctionStyle style)
 {
-    return m_impl->getFormatMetadata();
+    const auto curDir = getDirection();
+    data().setStyle(FixedFunctionOpData::ConvertStyle(style, curDir));
 }
 
-FixedFunctionStyle FixedFunctionTransform::getStyle() const
+size_t FixedFunctionTransformImpl::getNumParams() const
 {
-    return FixedFunctionOpData::ConvertStyle(getImpl()->getStyle());
+    return data().getParams().size();
 }
 
-void FixedFunctionTransform::setStyle(FixedFunctionStyle style)
-{
-    getImpl()->setStyle(FixedFunctionOpData::ConvertStyle(style));
-}
-
-size_t FixedFunctionTransform::getNumParams() const
-{
-    return getImpl()->getParams().size();
-}
-
-void FixedFunctionTransform::setParams(const double * params, size_t num)
+void FixedFunctionTransformImpl::setParams(const double * params, size_t num)
 {
     FixedFunctionOpData::Params p(num);
     std::copy(params, params+num, p.begin());
-    getImpl()->setParams(p);
+    data().setParams(p);
 }
 
-void FixedFunctionTransform::getParams(double * params) const
+void FixedFunctionTransformImpl::getParams(double * params) const
 {
-    const FixedFunctionOpData::Params & p = getImpl()->getParams();
+    FixedFunctionOpData::Params p = data().getParams();
     std::copy(p.cbegin(), p.cend(), params);
 }
 
-
-
-std::ostream& operator<< (std::ostream & os, const FixedFunctionTransform & t)
+std::ostream & operator<< (std::ostream & os, const FixedFunctionTransform & t)
 {
     os << "<FixedFunction ";
     os << "direction=" << TransformDirectionToString(t.getDirection());

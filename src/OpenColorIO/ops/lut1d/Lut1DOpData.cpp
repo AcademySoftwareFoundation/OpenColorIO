@@ -274,14 +274,14 @@ OpDataRcPtr Lut1DOpData::getIdentityReplacement() const
     return res;
 }
 
-void Lut1DOpData::setInputHalfDomain(bool isHalfDomain)
+void Lut1DOpData::setInputHalfDomain(bool isHalfDomain) noexcept
 {
     m_halfFlags = (isHalfDomain) ?
         ((HalfFlags)(m_halfFlags | LUT_INPUT_HALF_CODE)) :
         ((HalfFlags)(m_halfFlags & ~LUT_INPUT_HALF_CODE));
 }
 
-void Lut1DOpData::setOutputRawHalfs(bool isRawHalfs)
+void Lut1DOpData::setOutputRawHalfs(bool isRawHalfs) noexcept
 {
     m_halfFlags = (isRawHalfs) ?
         ((HalfFlags)(m_halfFlags | LUT_OUTPUT_HALF_CODE)) :
@@ -464,7 +464,7 @@ bool Lut1DOpData::operator==(const OpData & other) const
     return haveEqualBasics(*lop);
 }
 
-void Lut1DOpData::setHueAdjust(LUT1DHueAdjust algo)
+void Lut1DOpData::setHueAdjust(Lut1DHueAdjust algo) noexcept
 {
     m_hueAdjust = algo;
 }
@@ -516,7 +516,7 @@ Lut1DOpDataRcPtr Lut1DOpData::inverse() const
 
 namespace
 {
-const char* GetHueAdjustName(LUT1DHueAdjust algo)
+const char* GetHueAdjustName(Lut1DHueAdjust algo)
 {
     switch (algo)
     {

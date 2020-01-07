@@ -218,7 +218,7 @@ inline void save(YAML::Emitter& out, Interpolation interp)
 //
 
 inline void LogUnknownKeyWarning(const YAML::Node & node,
-                                    const YAML::Node & key)
+                                 const YAML::Node & key)
 {
     std::string keyName;
     load(key, keyName);
@@ -231,7 +231,7 @@ inline void LogUnknownKeyWarning(const YAML::Node & node,
 }
 
 inline void LogUnknownKeyWarning(const std::string & name,
-                                    const YAML::Node & tag)
+                                 const YAML::Node & tag)
 {
     std::string key;
     load(tag, key);
@@ -242,7 +242,7 @@ inline void LogUnknownKeyWarning(const std::string & name,
 }
 
 inline void throwError(const YAML::Node & node,
-                        const std::string & msg)
+                       const std::string & msg)
 {
     std::ostringstream os;
     os << "At line " << (node.Mark().line + 1)

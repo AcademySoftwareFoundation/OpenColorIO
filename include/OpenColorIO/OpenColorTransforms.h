@@ -91,11 +91,14 @@ private:
 class OCIOEXPORT Transform
 {
 public:
+    //!cpp:function::
     virtual TransformRcPtr createEditableCopy() const = 0;
 
-    virtual TransformDirection getDirection() const = 0;
     //!cpp:function::
-    virtual void setDirection(TransformDirection dir) = 0;
+    virtual TransformDirection getDirection() const noexcept = 0;
+    //!cpp:function:: Note that this only affects the evaluation and not the values
+    // stored in the object.
+    virtual void setDirection(TransformDirection dir) noexcept = 0;
 
     //!cpp:function:: Will throw if data is not valid.
     virtual void validate() const;
@@ -124,15 +127,15 @@ public:
     static AllocationTransformRcPtr Create();
 
     //!cpp:function::
-    virtual TransformRcPtr createEditableCopy() const;
+    TransformRcPtr createEditableCopy() const override;
 
     //!cpp:function::
-    virtual TransformDirection getDirection() const;
+    TransformDirection getDirection() const noexcept override;
     //!cpp:function::
-    virtual void setDirection(TransformDirection dir);
+    void setDirection(TransformDirection dir) noexcept override;
 
     //!cpp:function:: Will throw if data is not valid.
-    virtual void validate() const;
+    void validate() const override;
 
     //!cpp:function::
     Allocation getAllocation() const;
@@ -186,28 +189,22 @@ public:
     static CDLTransformRcPtr CreateFromFile(const char * src, const char * cccid);
 
     //!cpp:function::
-    virtual TransformRcPtr createEditableCopy() const;
+    virtual FormatMetadata & getFormatMetadata() noexcept = 0;
+    //!cpp:function::
+    virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
 
     //!cpp:function::
-    virtual TransformDirection getDirection() const;
-    //!cpp:function::
-    virtual void setDirection(TransformDirection dir);
-
-    //!cpp:function:: Will throw if data is not valid.
-    virtual void validate() const;
+    virtual bool equals(const CDLTransform & other) const noexcept = 0;
 
     //!cpp:function::
-    FormatMetadata & getFormatMetadata();
+    virtual CDLStyle getStyle() const = 0;
     //!cpp:function::
-    const FormatMetadata & getFormatMetadata() const;
+    virtual void setStyle(CDLStyle style) = 0;
 
     //!cpp:function::
-    bool equals(const ConstCDLTransformRcPtr & other) const;
-
+    virtual const char * getXML() const = 0;
     //!cpp:function::
-    const char * getXML() const;
-    //!cpp:function::
-    void setXML(const char * xml);
+    virtual void setXML(const char * xml) = 0;
 
     //!rst:: **ASC_SOP**
     //
@@ -216,35 +213,35 @@ public:
     //    out = clamp( (in * slope) + offset ) ^ power
 
     //!cpp:function::
-    void getSlope(double * rgb) const;
+    virtual void getSlope(double * rgb) const = 0;
     //!cpp:function::
-    void setSlope(const double * rgb);
+    virtual void setSlope(const double * rgb) = 0;
 
     //!cpp:function::
-    void getOffset(double * rgb) const;
+    virtual void getOffset(double * rgb) const = 0;
     //!cpp:function::
-    void setOffset(const double * rgb);
+    virtual void setOffset(const double * rgb) = 0;
 
     //!cpp:function::
-    void getPower(double * rgb) const;
+    virtual void getPower(double * rgb) const = 0;
     //!cpp:function::
-    void setPower(const double * rgb);
+    virtual void setPower(const double * rgb) = 0;
 
     //!cpp:function::
-    void getSOP(double * vec9) const;
+    virtual void getSOP(double * vec9) const = 0;
     //!cpp:function::
-    void setSOP(const double * vec9);
+    virtual void setSOP(const double * vec9) = 0;
 
     //!rst:: **ASC_SAT**
     //
 
     //!cpp:function::
-    double getSat() const;
+    virtual double getSat() const = 0;
     //!cpp:function::
-    void setSat(double sat);
+    virtual void setSat(double sat) = 0;
 
     //!cpp:function:: These are hard-coded, by spec, to r709.
-    void getSatLumaCoefs(double * rgb) const;
+    virtual void getSatLumaCoefs(double * rgb) const = 0;
 
     //!rst:: **Metadata**
     //
@@ -253,31 +250,25 @@ public:
     // included in the serialization.
 
     //!cpp:function:: Unique Identifier for this correction.
-    const char * getID() const;
+    virtual const char * getID() const = 0;
     //!cpp:function::
-    void setID(const char * id);
+    virtual void setID(const char * id) = 0;
 
     //!cpp:function:: Deprecated. Use `getFormatMetadata`.
     // First textual description of color correction (stored
     // on the SOP). If there is already a description, the setter will
     // replace it with the supplied text.
-    const char * getDescription() const;
+    virtual const char * getDescription() const = 0;
     //!cpp:function:: Deprecated. Use `getFormatMetadata`.
-    void setDescription(const char * desc);
+    virtual void setDescription(const char * desc) = 0;
+
+protected:
+    CDLTransform() = default;
+    virtual ~CDLTransform() = default;
 
 private:
-    CDLTransform();
-    CDLTransform(const CDLTransform &);
-    virtual ~CDLTransform();
-
-    CDLTransform & operator=(const CDLTransform &);
-
-    static void deleter(CDLTransform * t);
-
-    class Impl;
-    Impl * m_impl;
-    Impl * getImpl() { return m_impl; }
-    const Impl * getImpl() const { return m_impl; }
+    CDLTransform(const CDLTransform &) = delete;
+    CDLTransform & operator= (const CDLTransform &) = delete;
 };
 
 //!cpp:function::
@@ -294,15 +285,15 @@ public:
     static ColorSpaceTransformRcPtr Create();
 
     //!cpp:function::
-    virtual TransformRcPtr createEditableCopy() const;
+    TransformRcPtr createEditableCopy() const override;
 
     //!cpp:function::
-    virtual TransformDirection getDirection() const;
+    TransformDirection getDirection() const noexcept override;
     //!cpp:function::
-    virtual void setDirection(TransformDirection dir);
+    void setDirection(TransformDirection dir) noexcept override;
 
     //!cpp:function:: Will throw if data is not valid.
-    virtual void validate() const;
+    void validate() const override;
 
     //!cpp:function::
     const char * getSrc() const;
@@ -343,15 +334,15 @@ public:
     static DisplayTransformRcPtr Create();
 
     //!cpp:function::
-    virtual TransformRcPtr createEditableCopy() const;
+    TransformRcPtr createEditableCopy() const override;
 
     //!cpp:function::
-    virtual TransformDirection getDirection() const;
+    TransformDirection getDirection() const noexcept override;
     //!cpp:function::
-    virtual void setDirection(TransformDirection dir);
+    void setDirection(TransformDirection dir) noexcept override;
 
     //!cpp:function:: Will throw if data is not valid.
-    virtual void validate() const;
+    void validate() const override;
 
     //!cpp:function::
     const char * getInputColorSpaceName() const;
@@ -479,39 +470,25 @@ public:
     static ExponentTransformRcPtr Create();
 
     //!cpp:function::
-    virtual TransformRcPtr createEditableCopy() const;
+    virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
+    //!cpp:function::
+    virtual FormatMetadata & getFormatMetadata() noexcept = 0;
+
+    //!cpp:function:: Checks if this exactly equals other.
+    virtual bool equals(const ExponentTransform & other) const noexcept = 0;
 
     //!cpp:function::
-    virtual TransformDirection getDirection() const;
+    virtual void getValue(double(&vec4)[4]) const noexcept = 0;
     //!cpp:function::
-    virtual void setDirection(TransformDirection dir);
+    virtual void setValue(const double(&vec4)[4]) noexcept = 0;
 
-    //!cpp:function:: Will throw if data is not valid.
-    virtual void validate() const;
-
-    //!cpp:function::
-    const FormatMetadata & getFormatMetadata() const;
-    //!cpp:function::
-    FormatMetadata & getFormatMetadata();
-
-    //!cpp:function::
-    void getValue(double(&vec4)[4]) const;
-    //!cpp:function::
-    void setValue(const double(&vec4)[4]);
+protected:
+    ExponentTransform() = default;
+    virtual ~ExponentTransform() = default;
 
 private:
-    ExponentTransform();
-    ExponentTransform(const ExponentTransform &);
-    virtual ~ExponentTransform();
-
-    ExponentTransform & operator=(const ExponentTransform &);
-
-    static void deleter(ExponentTransform * t);
-
-    class Impl;
-    Impl * m_impl;
-    Impl * getImpl() { return m_impl; }
-    const Impl * getImpl() const { return m_impl; }
+    ExponentTransform(const ExponentTransform &) = delete;
+    ExponentTransform & operator= (const ExponentTransform &) = delete;
 };
 
 //!cpp:function::
@@ -536,51 +513,37 @@ public:
     static ExponentWithLinearTransformRcPtr Create();
 
     //!cpp:function::
-    virtual TransformRcPtr createEditableCopy() const;
+    virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
+    //!cpp:function::
+    virtual FormatMetadata & getFormatMetadata() noexcept = 0;
+
+    //!cpp:function:: Checks if this exactly equals other.
+    virtual bool equals(const ExponentWithLinearTransform & other) const noexcept = 0;
 
     //!cpp:function::
-    virtual TransformDirection getDirection() const;
-    //!cpp:function::
-    virtual void setDirection(TransformDirection dir);
-
-    //!cpp:function:: Validate the transform and throw if invalid.
-    virtual void validate() const;
-
-    //!cpp:function::
-    const FormatMetadata & getFormatMetadata() const;
-    //!cpp:function::
-    FormatMetadata & getFormatMetadata();
-
-    //!cpp:function::
-    void getGamma(double(&values)[4]) const;
+    virtual void getGamma(double(&values)[4]) const noexcept = 0;
     //!cpp:function:: Set the exponent value for the power function for R, G, B, A.
     //
     // .. note::
     //    The gamma values must be in the range of [1, 10]. Set the transform direction
     //    to inverse to obtain the effect of values less than 1.
-    void setGamma(const double(&values)[4]);
+    virtual void setGamma(const double(&values)[4]) noexcept = 0;
 
     //!cpp:function::
-    void getOffset(double(&values)[4]) const;
+    virtual void getOffset(double(&values)[4]) const noexcept = 0;
     //!cpp:function:: Set the offset value for the power function for R, G, B, A.
     //
     // .. note::
     //    The offset values must be in the range [0, 0.9].
-    void setOffset(const double(&values)[4]);
+    virtual void setOffset(const double(&values)[4]) noexcept = 0;
+
+protected:
+    ExponentWithLinearTransform() = default;
+    virtual ~ExponentWithLinearTransform() = default;
 
 private:
-    ExponentWithLinearTransform();
-    ExponentWithLinearTransform(const ExponentWithLinearTransform &);
-    virtual ~ExponentWithLinearTransform();
-
-    ExponentWithLinearTransform & operator=(const ExponentWithLinearTransform &);
-
-    static void deleter(ExponentWithLinearTransform * t);
-
-    class Impl;
-    Impl * m_impl;
-    Impl * getImpl() { return m_impl; }
-    const Impl * getImpl() const { return m_impl; }
+    ExponentWithLinearTransform(const ExponentWithLinearTransform &) = delete;
+    ExponentWithLinearTransform & operator= (const ExponentWithLinearTransform &) = delete;
 };
 
 //!cpp:function::
@@ -598,97 +561,83 @@ public:
     static ExposureContrastTransformRcPtr Create();
 
     //!cpp:function::
-    virtual TransformRcPtr createEditableCopy() const;
+    virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
+    //!cpp:function::
+    virtual FormatMetadata & getFormatMetadata() noexcept = 0;
+
+    //!cpp:function:: Checks if this exactly equals other.
+    virtual bool equals(const ExposureContrastTransform & other) const noexcept = 0;
 
     //!cpp:function::
-    virtual TransformDirection getDirection() const;
-    //!cpp:function::
-    virtual void setDirection(TransformDirection dir);
-
-    //!cpp:function:: Will throw if data is not valid.
-    virtual void validate() const;
-
-    //!cpp:function::
-    const FormatMetadata & getFormatMetadata() const;
-    //!cpp:function::
-    FormatMetadata & getFormatMetadata();
-
-    //!cpp:function::
-    ExposureContrastStyle getStyle() const;
+    virtual ExposureContrastStyle getStyle() const = 0;
     //!cpp:function:: Select the algorithm for linear, video
     // or log color spaces.
-    void setStyle(ExposureContrastStyle style);
+    virtual void setStyle(ExposureContrastStyle style) = 0;
 
     //!cpp:function::
-    double getExposure() const;
+    virtual double getExposure() const = 0;
     //!cpp:function:: Applies an exposure adjustment.  The value is in
     // units of stops (regardless of style), for example, a value of -1
     // would be equivalent to reducing the lighting by one half.
-    void setExposure(double exposure);
+    virtual void setExposure(double exposure) = 0;
     //!cpp:function::
-    bool isExposureDynamic() const;
+    virtual bool isExposureDynamic() const = 0;
     //!cpp:function::
-    void makeExposureDynamic();
+    virtual void makeExposureDynamic() = 0;
 
     //!cpp:function::
-    double getContrast() const;
+    virtual double getContrast() const = 0;
     //!cpp:function:: Applies a contrast/gamma adjustment around a pivot
     // point.  The contrast and gamma are mathematically the same, but two
     // controls are provided to enable the use of separate dynamic
     // parameters.  Contrast is usually a scene-referred adjustment that
     // pivots around gray whereas gamma is usually a display-referred
     // adjustment that pivots around white.
-    void setContrast(double contrast);
+    virtual void setContrast(double contrast) = 0;
     //!cpp:function::
-    bool isContrastDynamic() const;
+    virtual bool isContrastDynamic() const = 0;
     //!cpp:function::
-    void makeContrastDynamic();
+    virtual void makeContrastDynamic() = 0;
     //!cpp:function::
-    double getGamma() const;
+    virtual double getGamma() const = 0;
     //!cpp:function::
-    void setGamma(double gamma);
+    virtual void setGamma(double gamma) = 0;
     //!cpp:function::
-    bool isGammaDynamic() const;
+    virtual bool isGammaDynamic() const = 0;
     //!cpp:function::
-    void makeGammaDynamic();
+    virtual void makeGammaDynamic() = 0;
 
     //!cpp:function::
-    double getPivot() const;
+    virtual double getPivot() const = 0;
     //!cpp:function:: Set the pivot point around which the contrast
     // and gamma controls will work. Regardless of whether
     // linear/video/log-style is being used, the pivot is always expressed
     // in linear. In other words, a pivot of 0.18 is always mid-gray.
-    void setPivot(double pivot);
+    virtual void setPivot(double pivot) = 0;
 
     //!cpp:function:: 
-    double getLogExposureStep() const;
+    virtual double getLogExposureStep() const = 0;
     //!cpp:function:: Set the increment needed to move one stop for
     // the log-style algorithm. For example, ACEScct is 0.057, LogC is
     // roughly 0.074, and Cineon is roughly 90/1023 = 0.088.
     // The default value is 0.088.
-    void setLogExposureStep(double logExposureStep);
+    virtual void setLogExposureStep(double logExposureStep) = 0;
 
     //!cpp:function:: 
-    double getLogMidGray() const;
+    virtual double getLogMidGray() const = 0;
     //!cpp:function:: Set the position of 18% gray for use by the
     // log-style algorithm. For example, ACEScct is about 0.41, LogC is
     // about 0.39, and ADX10 is 445/1023 = 0.435.
     // The default value is 0.435.
-    void setLogMidGray(double logMidGray);
+    virtual void setLogMidGray(double logMidGray) = 0;
+
+protected:
+    ExposureContrastTransform() = default;
+    virtual ~ExposureContrastTransform() = default;
 
 private:
-    ExposureContrastTransform();
-    ExposureContrastTransform(const ExposureContrastTransform &);
-    virtual ~ExposureContrastTransform();
-
-    ExposureContrastTransform & operator=(const ExposureContrastTransform &);
-
-    static void deleter(ExposureContrastTransform * t);
-
-    class Impl;
-    Impl * m_impl;
-    Impl * getImpl() { return m_impl; }
-    const Impl * getImpl() const { return m_impl; }
+    ExposureContrastTransform(const ExposureContrastTransform &) = delete;
+    ExposureContrastTransform & operator= (const ExposureContrastTransform &) = delete;
 };
 
 //!cpp:function::
@@ -705,15 +654,15 @@ public:
     static FileTransformRcPtr Create();
 
     //!cpp:function::
-    virtual TransformRcPtr createEditableCopy() const;
+    TransformRcPtr createEditableCopy() const override;
 
     //!cpp:function::
-    virtual TransformDirection getDirection() const;
+    TransformDirection getDirection() const noexcept override;
     //!cpp:function::
-    virtual void setDirection(TransformDirection dir);
+    void setDirection(TransformDirection dir) noexcept override;
 
     //!cpp:function:: Will throw if data is not valid.
-    virtual void validate() const;
+    void validate() const override;
 
     //!cpp:function::
     const char * getSrc() const;
@@ -770,46 +719,32 @@ public:
     static FixedFunctionTransformRcPtr Create();
 
     //!cpp:function::
-    virtual TransformRcPtr createEditableCopy() const;
+    virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
+    //!cpp:function::
+    virtual FormatMetadata & getFormatMetadata() noexcept = 0;
+
+    //!cpp:function:: Checks if this exactly equals other.
+    virtual bool equals(const FixedFunctionTransform & other) const noexcept = 0;
 
     //!cpp:function::
-    virtual TransformDirection getDirection() const;
-    //!cpp:function::
-    virtual void setDirection(TransformDirection dir);
-
-    //!cpp:function:: Will throw if data is not valid.
-    virtual void validate() const;
-
-    //!cpp:function::
-    const FormatMetadata & getFormatMetadata() const;
-    //!cpp:function::
-    FormatMetadata & getFormatMetadata();
-
-    //!cpp:function::
-    FixedFunctionStyle getStyle() const;
+    virtual FixedFunctionStyle getStyle() const = 0;
     //!cpp:function:: Select which algorithm to use.
-    void setStyle(FixedFunctionStyle style);
+    virtual void setStyle(FixedFunctionStyle style) = 0;
 
     //!cpp:function::
-    size_t getNumParams() const;
+    virtual size_t getNumParams() const = 0;
     //!cpp:function::
-    void getParams(double * params) const;
+    virtual void getParams(double * params) const = 0;
     //!cpp:function:: Set the parameters (for functions that require them).
-    void setParams(const double * params, size_t num);
+    virtual void setParams(const double * params, size_t num) = 0;
+
+protected:
+    FixedFunctionTransform() = default;
+    virtual ~FixedFunctionTransform() = default;
 
 private:
-    FixedFunctionTransform();
-    FixedFunctionTransform(const FixedFunctionTransform &);
-    virtual ~FixedFunctionTransform();
-
-    FixedFunctionTransform & operator=(const FixedFunctionTransform &);
-
-    static void deleter(FixedFunctionTransform * t);
-
-    class Impl;
-    Impl * m_impl;
-    Impl * getImpl() { return m_impl; }
-    const Impl * getImpl() const { return m_impl; }
+    FixedFunctionTransform(const FixedFunctionTransform &) = delete;
+    FixedFunctionTransform & operator= (const FixedFunctionTransform &) = delete;
 };
 
 //!cpp:function::
@@ -826,20 +761,20 @@ public:
     static GroupTransformRcPtr Create();
 
     //!cpp:function::
-    virtual TransformRcPtr createEditableCopy() const;
+    TransformRcPtr createEditableCopy() const override;
 
     //!cpp:function::
-    virtual TransformDirection getDirection() const;
+    TransformDirection getDirection() const noexcept override;
     //!cpp:function::
-    virtual void setDirection(TransformDirection dir);
+    void setDirection(TransformDirection dir) noexcept override;
 
     //!cpp:function:: Will throw if data is not valid.
-    virtual void validate() const;
+    void validate() const override;
 
     //!cpp:function::
-    virtual const FormatMetadata & getFormatMetadata() const;
+    virtual const FormatMetadata & getFormatMetadata() const noexcept;
     //!cpp:function::
-    virtual FormatMetadata & getFormatMetadata();
+    virtual FormatMetadata & getFormatMetadata() noexcept;
 
     //!cpp:function::
     ConstTransformRcPtr getTransform(int index) const;
@@ -887,59 +822,45 @@ public:
     static LogAffineTransformRcPtr Create();
 
     //!cpp:function::
-    virtual TransformRcPtr createEditableCopy() const;
+    virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
+    //!cpp:function::
+    virtual FormatMetadata & getFormatMetadata() noexcept = 0;
+
+    //!cpp:function:: Checks if this exactly equals other.
+    virtual bool equals(const LogAffineTransform & other) const noexcept = 0;
 
     //!cpp:function::
-    virtual TransformDirection getDirection() const;
+    virtual double getBase() const noexcept = 0;
     //!cpp:function::
-    virtual void setDirection(TransformDirection dir);
-
-    //!cpp:function:: Will throw if data is not valid.
-    virtual void validate() const;
-
-    //!cpp:function::
-    const FormatMetadata & getFormatMetadata() const;
-    //!cpp:function::
-    FormatMetadata & getFormatMetadata();
-
-    //!cpp:function::
-    double getBase() const;
-    //!cpp:function::
-    void setBase(double base);
+    virtual void setBase(double base) noexcept = 0;
 
     //!rst:: **Get/Set values for the R, G, B components**
     //
 
     //!cpp:function::
-    void getLogSideSlopeValue(double(&values)[3]) const;
+    virtual void getLogSideSlopeValue(double(&values)[3]) const noexcept = 0;
     //!cpp:function::
-    void setLogSideSlopeValue(const double(&values)[3]);
+    virtual void setLogSideSlopeValue(const double(&values)[3]) noexcept = 0;
     //!cpp:function::
-    void getLogSideOffsetValue(double(&values)[3]) const;
+    virtual void getLogSideOffsetValue(double(&values)[3]) const noexcept = 0;
     //!cpp:function::
-    void setLogSideOffsetValue(const double(&values)[3]);
+    virtual void setLogSideOffsetValue(const double(&values)[3]) noexcept = 0;
     //!cpp:function::
-    void getLinSideSlopeValue(double(&values)[3]) const;
+    virtual void getLinSideSlopeValue(double(&values)[3]) const noexcept = 0;
     //!cpp:function::
-    void setLinSideSlopeValue(const double(&values)[3]);
+    virtual void setLinSideSlopeValue(const double(&values)[3]) noexcept = 0;
     //!cpp:function::
-    void getLinSideOffsetValue(double(&values)[3]) const;
+    virtual void getLinSideOffsetValue(double(&values)[3]) const noexcept = 0;
     //!cpp:function::
-    void setLinSideOffsetValue(const double(&values)[3]);
+    virtual void setLinSideOffsetValue(const double(&values)[3]) noexcept = 0;
+
+protected:
+    LogAffineTransform() = default;
+    virtual ~LogAffineTransform() = default;
 
 private:
-    LogAffineTransform();
-    LogAffineTransform(const LogAffineTransform &);
-    virtual ~LogAffineTransform();
-
-    LogAffineTransform & operator=(const LogAffineTransform &);
-
-    static void deleter(LogAffineTransform * t);
-
-    class Impl;
-    Impl * m_impl;
-    Impl * getImpl() { return m_impl; }
-    const Impl * getImpl() const { return m_impl; }
+    LogAffineTransform(const LogAffineTransform &) = delete;
+    LogAffineTransform & operator= (const LogAffineTransform &) = delete;
 };
 
 //!cpp:function::
@@ -960,39 +881,25 @@ public:
     static LogTransformRcPtr Create();
 
     //!cpp:function::
-    virtual TransformRcPtr createEditableCopy() const;
+    virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
+    //!cpp:function::
+    virtual FormatMetadata & getFormatMetadata() noexcept = 0;
+
+    //!cpp:function:: Checks if this exactly equals other.
+    virtual bool equals(const LogTransform & other) const noexcept = 0;
 
     //!cpp:function::
-    virtual TransformDirection getDirection() const;
+    virtual double getBase() const noexcept = 0;
     //!cpp:function::
-    virtual void setDirection(TransformDirection dir);
+    virtual void setBase(double val) noexcept = 0;
 
-    //!cpp:function:: Will throw if data is not valid.
-    virtual void validate() const;
-
-    //!cpp:function::
-    const FormatMetadata & getFormatMetadata() const;
-    //!cpp:function::
-    FormatMetadata & getFormatMetadata();
-
-    //!cpp:function::
-    double getBase() const;
-    //!cpp:function::
-    void setBase(double val);
+protected:
+    LogTransform() = default;
+    virtual ~LogTransform() = default;
 
 private:
-    LogTransform();
-    LogTransform(const LogTransform &);
-    virtual ~LogTransform();
-
-    LogTransform & operator=(const LogTransform &);
-
-    static void deleter(LogTransform * t);
-
-    class Impl;
-    Impl * m_impl;
-    Impl * getImpl() { return m_impl; }
-    const Impl * getImpl() const { return m_impl; }
+    LogTransform(const LogTransform &) = delete;
+    LogTransform & operator= (const LogTransform &) = delete;
 };
 
 //!cpp:function::
@@ -1009,15 +916,15 @@ public:
     static LookTransformRcPtr Create();
 
     //!cpp:function::
-    virtual TransformRcPtr createEditableCopy() const;
+    TransformRcPtr createEditableCopy() const override;
 
     //!cpp:function::
-    virtual TransformDirection getDirection() const;
+    TransformDirection getDirection() const noexcept override;
     //!cpp:function::
-    virtual void setDirection(TransformDirection dir);
+    void setDirection(TransformDirection dir) noexcept override;
 
     //!cpp:function:: Will throw if data is not valid.
-    virtual void validate() const;
+    void validate() const override;
 
     //!cpp:function::
     const char * getSrc() const;
@@ -1059,54 +966,47 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const LookTransform 
 //!rst:: //////////////////////////////////////////////////////////////////
 
 //!cpp:class:: Represents a 1D-LUT transform.
-class OCIOEXPORT LUT1DTransform : public Transform
+class OCIOEXPORT Lut1DTransform : public Transform
 {
 public:
     //!cpp:function:: Create an identity 1D-LUT of length two.
-    static LUT1DTransformRcPtr Create();
+    static Lut1DTransformRcPtr Create();
 
     //!cpp:function:: Create an identity 1D-LUT with specific length and
     // half-domain setting. Will throw for lengths longer than 1024x1024.
-    static LUT1DTransformRcPtr Create(unsigned long length,
-                                        bool isHalfDomain);
+    static Lut1DTransformRcPtr Create(unsigned long length,
+                                      bool isHalfDomain);
 
     //!cpp:function::
-    virtual TransformRcPtr createEditableCopy() const;
-
-    //!cpp:function::
-    virtual TransformDirection getDirection() const;
-    //!cpp:function:: Set the direction the 1D-LUT should be evaluated in.
-    // Note that this only affects the evaluation and not the values
-    // stored in the object.
-    virtual void setDirection(TransformDirection dir);
-
-    //!cpp:function:: Will throw if data is not valid.
-    virtual void validate() const;
-
-    //!cpp:function::
-    BitDepth getFileOutputBitDepth() const;
+    virtual BitDepth getFileOutputBitDepth() const noexcept = 0;
     //!cpp:function:: Get the bit-depth associated with the LUT values read
     // from a file or set the bit-depth of values to be written to a file
     // (for file formats such as CLF that support multiple bit-depths).
     // However, note that the values stored in the object are always
     // normalized.
-    void setFileOutputBitDepth(BitDepth bitDepth);
+    virtual void setFileOutputBitDepth(BitDepth bitDepth) noexcept = 0;
 
     //!cpp:function::
-    const FormatMetadata & getFormatMetadata() const;
+    virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     //!cpp:function::
-    FormatMetadata & getFormatMetadata();
+    virtual FormatMetadata & getFormatMetadata() noexcept = 0;
+
+    //!cpp:function:: Checks if this exactly equals other.
+    virtual bool equals(const Lut1DTransform & other) const noexcept = 0;
 
     //!cpp:function::
-    unsigned long getLength() const;
+    virtual unsigned long getLength() const = 0;
     //!cpp:function:: Changing the length will reset the LUT to identity.
     // Will throw for lengths longer than 1024x1024.
-    void setLength(unsigned long length);
+    virtual void setLength(unsigned long length) = 0;
 
     //!cpp:function::
-    void getValue(unsigned long index, float & r, float & g, float & b) const;
+    virtual void getValue(unsigned long index, float & r, float & g, float & b) const = 0;
     //!cpp:function:: Set the values of a LUT1D.  Will throw if the index
     // is outside of the range from 0 to (length-1).
+    //
+    // The LUT values are always for the "forward" LUT, regardless of how
+    // the transform direction is set.
     //
     // These values are normalized relative to what may be stored in any
     // given LUT files. For example in a CLF file using a "10i" output
@@ -1116,18 +1016,18 @@ public:
     // LUTs in various file formats may only provide values for one
     // channel where R, G, B are the same. Even in that case, you should
     // provide three equal values to the setter.
-    void setValue(unsigned long index, float r, float g, float b);
+    virtual void setValue(unsigned long index, float r, float g, float b) = 0;
 
     //!cpp:function::
-    bool getInputHalfDomain() const;
+    virtual bool getInputHalfDomain() const noexcept = 0;
     //!cpp:function:: In a half-domain LUT, the contents of the LUT specify
     // the desired value of the function for each half-float value.
     // Therefore, the length of the LUT must be 65536 entries or else
     // validate() will throw.
-    void setInputHalfDomain(bool isHalfDomain);
+    virtual void setInputHalfDomain(bool isHalfDomain) noexcept = 0;
 
     //!cpp:function::
-    bool getOutputRawHalfs() const;
+    virtual bool getOutputRawHalfs() const noexcept = 0;
     //!cpp:function:: Set OutputRawHalfs to true if you want to output the
     // LUT contents as 16-bit floating point values expressed as unsigned
     // 16-bit integers representing the equivalent bit pattern.
@@ -1137,131 +1037,111 @@ public:
     // only controls the output formatting (where supported) and not the 
     // values for getValue/setValue.  The only file formats that currently
     // support this are CLF and CTF.
-    void setOutputRawHalfs(bool isRawHalfs);
+    virtual void setOutputRawHalfs(bool isRawHalfs) noexcept = 0;
 
     //!cpp:function::
-    LUT1DHueAdjust getHueAdjust() const;
+    virtual Lut1DHueAdjust getHueAdjust() const noexcept = 0;
     //!cpp:function:: The 1D-LUT transform optionally supports a hue adjustment
     // feature that was used in some versions of ACES.  This adjusts the hue
     // of the result to approximately match the input.
-    void setHueAdjust(LUT1DHueAdjust algo);
+    virtual void setHueAdjust(Lut1DHueAdjust algo) noexcept = 0;
 
     //!cpp:function::
-    Interpolation getInterpolation() const;
+    virtual Interpolation getInterpolation() const = 0;
     //!cpp:function::
-    void setInterpolation(Interpolation algo);
+    virtual void setInterpolation(Interpolation algo) = 0;
+
+protected:
+    Lut1DTransform() = default;
+    virtual ~Lut1DTransform() = default;
 
 private:
-    LUT1DTransform();
-    LUT1DTransform(unsigned long length,
-                    bool isHalfDomain);
-    LUT1DTransform(const LUT1DTransform &);
-    virtual ~LUT1DTransform();
-
-    LUT1DTransform& operator= (const LUT1DTransform &);
-
-    static void deleter(LUT1DTransform* t);
-
-    class Impl;
-    Impl * m_impl;
-    Impl * getImpl() { return m_impl; }
-    const Impl * getImpl() const { return m_impl; }
+    Lut1DTransform(const Lut1DTransform &) = delete;
+    Lut1DTransform & operator= (const Lut1DTransform &) = delete;
 };
 
 //!cpp:function::
-extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const LUT1DTransform&);
+extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Lut1DTransform&);
 
 //!rst:: //////////////////////////////////////////////////////////////////
 
 //!cpp:class:: Represents a 3D-LUT transform.
-class OCIOEXPORT LUT3DTransform : public Transform
+class OCIOEXPORT Lut3DTransform : public Transform
 {
 public:
     //!cpp:function:: Create an identity 3D-LUT of size 2x2x2.
-    static LUT3DTransformRcPtr Create();
+    static Lut3DTransformRcPtr Create();
 
     //!cpp:function:: Create an identity 3D-LUT with specific grid size.
     // Will throw for grid size larger than 129.
-    static LUT3DTransformRcPtr Create(unsigned long gridSize);
+    static Lut3DTransformRcPtr Create(unsigned long gridSize);
 
     //!cpp:function::
-    virtual TransformRcPtr createEditableCopy() const;
-
-    //!cpp:function::
-    virtual TransformDirection getDirection() const;
-    //!cpp:function:: Set the direction the 3D-LUT should be evaluated in.
-    // Note that this only affects the evaluation and not the values
-    // stored in the object.
-    virtual void setDirection(TransformDirection dir);
-
-    //!cpp:function:: Will throw if data is not valid.
-    virtual void validate() const;
-
-    //!cpp:function::
-    BitDepth getFileOutputBitDepth() const;
+    virtual BitDepth getFileOutputBitDepth() const noexcept = 0;
     //!cpp:function:: Get the bit-depth associated with the LUT values read
     // from a file or set the bit-depth of values to be written to a file
     // (for file formats such as CLF that support multiple bit-depths).
     // However, note that the values stored in the object are always
     // normalized.
-    void setFileOutputBitDepth(BitDepth bitDepth);
+    virtual void setFileOutputBitDepth(BitDepth bitDepth) noexcept = 0;
 
     //!cpp:function::
-    const FormatMetadata & getFormatMetadata() const;
+    virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     //!cpp:function::
-    FormatMetadata & getFormatMetadata();
+    virtual FormatMetadata & getFormatMetadata() noexcept = 0;
+
+    //!cpp:function:: Checks if this exactly equals other.
+    virtual bool equals(const Lut3DTransform & other) const noexcept = 0;
 
     //!cpp:function::
-    unsigned long getGridSize() const;
+    virtual unsigned long getGridSize() const = 0;
     //!cpp:function:: Changing the grid size will reset the LUT to identity.
     // Will throw for grid sizes larger than 129.
-    void setGridSize(unsigned long gridSize);
+    virtual void setGridSize(unsigned long gridSize) = 0;
 
     //!cpp:function::
-    void getValue(unsigned long indexR,
-                    unsigned long indexG,
-                    unsigned long indexB,
-                    float & r, float & g, float & b) const;
+    virtual void getValue(unsigned long indexR,
+                          unsigned long indexG,
+                          unsigned long indexB,
+                          float & r, float & g, float & b) const = 0;
     //!cpp:function:: Set the values of a 3D-LUT. Will throw if an index is
     // outside of the range from 0 to (gridSize-1).
+    //
+    // The LUT values are always for the "forward" LUT, regardless of how the
+    // transform direction is set.
     //
     // These values are normalized relative to what may be stored in any
     // given LUT files. For example in a CLF file using a "10i" output
     // depth, a value of 1023 in the file is normalized to 1.0. The values
     // here are unclamped and may extend outside [0,1].
-    void setValue(unsigned long indexR,
-                    unsigned long indexG,
-                    unsigned long indexB,
-                    float r, float g, float b);
+    virtual void setValue(unsigned long indexR,
+                          unsigned long indexG,
+                          unsigned long indexB,
+                          float r, float g, float b) = 0;
 
     //!cpp:function::
-    Interpolation getInterpolation() const;
+    virtual Interpolation getInterpolation() const = 0;
     //!cpp:function::
-    void setInterpolation(Interpolation algo);
+    virtual void setInterpolation(Interpolation algo) = 0;
+
+protected:
+    Lut3DTransform() = default;
+    virtual ~Lut3DTransform() = default;
 
 private:
-    LUT3DTransform();
-    explicit LUT3DTransform(unsigned long gridSize);
-
-    LUT3DTransform(const LUT3DTransform &);
-    virtual ~LUT3DTransform();
-
-    LUT3DTransform& operator= (const LUT3DTransform &);
-
-    static void deleter(LUT3DTransform* t);
-
-    class Impl;
-    Impl * m_impl;
-    Impl * getImpl() { return m_impl; }
-    const Impl * getImpl() const { return m_impl; }
+    Lut3DTransform(const Lut3DTransform &) = delete;
+    Lut3DTransform & operator= (const Lut3DTransform &) = delete;
 };
 
 //!cpp:function::
-extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const LUT3DTransform&);
+extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Lut3DTransform&);
 
 //!rst:: //////////////////////////////////////////////////////////////////
 
-//!cpp:class:: Represents an MX+B Matrix transform
+//!cpp:class:: Represents an MX+B Matrix transform.
+//
+// .. note::
+//    For singular matrices, an inverse direction will throw an exception during finalization.
 class OCIOEXPORT MatrixTransform : public Transform
 {
 public:
@@ -1269,44 +1149,31 @@ public:
     static MatrixTransformRcPtr Create();
 
     //!cpp:function::
-    virtual TransformRcPtr createEditableCopy() const;
-
+    virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     //!cpp:function::
-    virtual TransformDirection getDirection() const;
-    //!cpp:function:: Set the direction the matrix should be evaluated in.
-    // Note that this only affects the evaluation and not the values
-    // stored in the object.
-    //
-    // For singular matrices, an inverse direction will throw an
-    // exception during finalization
-    virtual void setDirection(TransformDirection dir);
-
-    //!cpp:function:: Will throw if data is not valid.
-    virtual void validate() const;
-
-    //!cpp:function::
-    const FormatMetadata & getFormatMetadata() const;
-    //!cpp:function::
-    FormatMetadata & getFormatMetadata();
+    virtual FormatMetadata & getFormatMetadata() noexcept = 0;
 
     //!cpp:function:: Checks if this exactly equals other.
-    bool equals(const MatrixTransform & other) const;
+    virtual bool equals(const MatrixTransform & other) const noexcept = 0;
 
     //!cpp:function::
-    void getMatrix(double * m44) const;
+    virtual void getMatrix(double * m44) const = 0;
     //!cpp:function:: Get or set the values of a Matrix. Expects 16 values,
     // where the first four are the coefficients to generate the R output
     // channel from R, G, B, A input channels.
+    //
+    // The Matrix values are always for the "forward" Matrix, regardless of
+    // how the transform direction is set.
     //
     // These values are normalized relative to what may be stored in
     // file formats such as CLF. For example in a CLF file using a "32f"
     // input depth and "10i" output depth, a value of 1023 in the file
     // is normalized to 1.0. The values here are unclamped and may
     // extend outside [0,1].
-    void setMatrix(const double * m44);
+    virtual void setMatrix(const double * m44) = 0;
 
     //!cpp:function::
-    void getOffset(double * offset4) const;
+    virtual void getOffset(double * offset4) const = 0;
     //!cpp:function:: Get or set the R, G, B, A offsets to be applied
     // after the matrix.
     //
@@ -1315,7 +1182,7 @@ public:
     // "10i" output depth, a value of 1023 in the file is normalized
     // to 1.0. The values here are unclamped and may extend
     // outside [0,1].
-    void setOffset(const double * offset4);
+    virtual void setOffset(const double * offset4) = 0;
 
     //!rst:: **File bit-depth**
     //
@@ -1330,13 +1197,13 @@ public:
     // scaling is done on the way from or to file formats such as CLF.
 
     //!cpp:function::
-    BitDepth getFileInputBitDepth() const;
+    virtual BitDepth getFileInputBitDepth() const noexcept = 0;
     //!cpp:function::
-    void setFileInputBitDepth(BitDepth bitDepth);
+    virtual void setFileInputBitDepth(BitDepth bitDepth) noexcept = 0;
     //!cpp:function::
-    BitDepth getFileOutputBitDepth() const;
+    virtual BitDepth getFileOutputBitDepth() const noexcept = 0;
     //!cpp:function::
-    void setFileOutputBitDepth(BitDepth bitDepth);
+    virtual void setFileOutputBitDepth(BitDepth bitDepth) noexcept = 0;
 
     //!rst:: **Convenience functions**
     //
@@ -1360,29 +1227,24 @@ public:
 
     //!cpp:function::
     static void Scale(double * m44, double * offset4,
-                        const double * scale4);
+                      const double * scale4);
 
     //!cpp:function::
     static void View(double * m44, double * offset4,
-                        int * channelHot4,
-                        const double * lumaCoef3);
+                     int * channelHot4,
+                     const double * lumaCoef3);
+
+protected:
+    MatrixTransform() = default;
+    virtual ~MatrixTransform() = default;
+
 private:
-    MatrixTransform();
-    MatrixTransform(const MatrixTransform &);
-    virtual ~MatrixTransform();
-
-    MatrixTransform & operator=(const MatrixTransform &);
-
-    static void deleter(MatrixTransform * t);
-
-    class Impl;
-    Impl * m_impl;
-    Impl * getImpl() { return m_impl; }
-    const Impl * getImpl() const { return m_impl; }
+    MatrixTransform(const MatrixTransform &) = delete;
+    MatrixTransform & operator= (const MatrixTransform &) = delete;
 };
 
 //!cpp:function::
-extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const MatrixTransform &);
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const MatrixTransform &) noexcept;
 
 //!rst:: //////////////////////////////////////////////////////////////////
 
@@ -1404,31 +1266,18 @@ public:
     //!cpp:function:: Creates an instance of RangeTransform.
     static RangeTransformRcPtr Create();
 
-    //!cpp:function:: Creates a copy of this.
-    virtual TransformRcPtr createEditableCopy() const = 0;
-
     //!cpp:function::
-    virtual TransformDirection getDirection() const = 0;
-    //!cpp:function:: Set the direction the Range should be evaluated in.
-    // Note that this only affects the evaluation and not the values stored
-    // in the object.
-    virtual void setDirection(TransformDirection dir) = 0;
-
-    //!cpp:function::
-    virtual RangeStyle getStyle() const = 0;
+    virtual RangeStyle getStyle() const noexcept = 0;
     //!cpp:function:: Set the Range style to clamp or not input values.
-    virtual void setStyle(RangeStyle style) = 0;
-
-    //!cpp:function:: Will throw if data is not valid.
-    virtual void validate() const = 0;
+    virtual void setStyle(RangeStyle style) noexcept = 0;
 
     //!cpp:function::
-    virtual const FormatMetadata & getFormatMetadata() const = 0;
+    virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     //!cpp:function::
-    virtual FormatMetadata & getFormatMetadata() = 0;
+    virtual FormatMetadata & getFormatMetadata() noexcept = 0;
 
     //!cpp:function:: Checks if this equals other.
-    virtual bool equals(const RangeTransform & other) const = 0;
+    virtual bool equals(const RangeTransform & other) const noexcept = 0;
 
     //!rst:: **File bit-depth**
     //
@@ -1443,15 +1292,18 @@ public:
     // scaling is done on the way from or to file formats such as CLF.
 
     //!cpp:function::
-    virtual BitDepth getFileInputBitDepth() const = 0;
+    virtual BitDepth getFileInputBitDepth() const noexcept = 0;
     //!cpp:function::
-    virtual void setFileInputBitDepth(BitDepth bitDepth) = 0;
+    virtual void setFileInputBitDepth(BitDepth bitDepth) noexcept = 0;
     //!cpp:function::
-    virtual BitDepth getFileOutputBitDepth() const = 0;
+    virtual BitDepth getFileOutputBitDepth() const noexcept = 0;
     //!cpp:function::
-    virtual void setFileOutputBitDepth(BitDepth bitDepth) = 0;
+    virtual void setFileOutputBitDepth(BitDepth bitDepth) noexcept = 0;
 
     //!rst:: **Range values**
+    //
+    // Note that changing the transform direction does not modify the
+    // in/out values, they are always for the "forward" direction.
     //
     // These values are normalized relative to what may be stored in file
     // formats such as CLF. For example in a CLF file using a "10i" input
@@ -1461,40 +1313,40 @@ public:
     // extend outside [0,1].
 
     //!cpp:function:: Get the minimum value for the input.
-    virtual double getMinInValue() const = 0;
+    virtual double getMinInValue() const noexcept = 0;
     //!cpp:function:: Set the minimum value for the input.
-    virtual void setMinInValue(double val) = 0;
+    virtual void setMinInValue(double val) noexcept = 0;
     //!cpp:function:: Is the minimum value for the input set?
-    virtual bool hasMinInValue() const = 0;
+    virtual bool hasMinInValue() const noexcept = 0;
     //!cpp:function:: Unset the minimum value for the input
-    virtual void unsetMinInValue() = 0;
+    virtual void unsetMinInValue() noexcept = 0;
 
     //!cpp:function:: Set the maximum value for the input.
-    virtual void setMaxInValue(double val) = 0;
+    virtual void setMaxInValue(double val) noexcept = 0;
     //!cpp:function:: Get the maximum value for the input.
-    virtual double getMaxInValue() const = 0;
+    virtual double getMaxInValue() const noexcept = 0;
     //!cpp:function:: Is the maximum value for the input set?
-    virtual bool hasMaxInValue() const = 0;
+    virtual bool hasMaxInValue() const noexcept = 0;
     //!cpp:function:: Unset the maximum value for the input.
-    virtual void unsetMaxInValue() = 0;
+    virtual void unsetMaxInValue() noexcept = 0;
 
     //!cpp:function:: Set the minimum value for the output.
-    virtual void setMinOutValue(double val) = 0;
+    virtual void setMinOutValue(double val) noexcept = 0;
     //!cpp:function:: Get the minimum value for the output.
-    virtual double getMinOutValue() const = 0;
+    virtual double getMinOutValue() const noexcept = 0;
     //!cpp:function:: Is the minimum value for the output set?
-    virtual bool hasMinOutValue() const = 0;
+    virtual bool hasMinOutValue() const noexcept = 0;
     //!cpp:function:: Unset the minimum value for the output.
-    virtual void unsetMinOutValue() = 0;
+    virtual void unsetMinOutValue() noexcept = 0;
 
     //!cpp:function:: Set the maximum value for the output.
-    virtual void setMaxOutValue(double val) = 0;
+    virtual void setMaxOutValue(double val) noexcept = 0;
     //!cpp:function:: Get the maximum value for the output.
-    virtual double getMaxOutValue() const = 0;
+    virtual double getMaxOutValue() const noexcept = 0;
     //!cpp:function:: Is the maximum value for the output set?
-    virtual bool hasMaxOutValue() const = 0;
+    virtual bool hasMaxOutValue() const noexcept = 0;
     //!cpp:function:: Unset the maximum value for the output.
-    virtual void unsetMaxOutValue() = 0;
+    virtual void unsetMaxOutValue() noexcept = 0;
 
 protected:
     RangeTransform() = default;
@@ -1506,7 +1358,7 @@ private:
 };
 
 //!cpp:function::
-extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const RangeTransform &);
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const RangeTransform &) noexcept;
 
 } // namespace OCIO_NAMESPACE
 

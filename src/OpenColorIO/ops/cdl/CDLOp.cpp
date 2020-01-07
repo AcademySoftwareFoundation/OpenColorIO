@@ -14,6 +14,7 @@
 #include "ops/cdl/CDLOp.h"
 #include "ops/exponent/ExponentOp.h"
 #include "ops/matrix/MatrixOp.h"
+#include "transforms/CDLTransform.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -55,7 +56,7 @@ public:
     ConstOpCPURcPtr getCPUOp() const override;
 
     void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
-	
+
 protected:
     ConstCDLOpDataRcPtr cdlData() const { return DynamicPtrCast<const CDLOpData>(data()); }
     CDLOpDataRcPtr cdlData() { return DynamicPtrCast<CDLOpData>(data()); }
@@ -323,34 +324,10 @@ void CreateCDLTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
         throw Exception("CreateCDLTransform: op has to be a CDLOp");
     }
     const auto cdlData = DynamicPtrCast<const CDLOpData>(cdl->data());
-
     auto cdlTransform = CDLTransform::Create();
-    const auto cdlStyle = cdlData->getStyle();
-    if (cdlStyle == CDLOpData::CDL_NO_CLAMP_FWD || cdlStyle == CDLOpData::CDL_NO_CLAMP_REV)
-    {
-        throw Exception("CreateCDLTransform: NO_CLAMP style not supported.");
-    }
+    auto & data = dynamic_cast<CDLTransformImpl *>(cdlTransform.get())->data();
 
-    auto cdlDirection = TRANSFORM_DIR_FORWARD;
-    if (cdlStyle == CDLOpData::CDL_V1_2_REV)
-    {
-        cdlDirection = TRANSFORM_DIR_INVERSE;
-    }
-    cdlTransform->setDirection(cdlDirection);
-
-    auto & formatMetadata = cdlTransform->getFormatMetadata();
-    auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
-    metadata = cdlData->getFormatMetadata();
-
-    const CDLOpData::ChannelParams & slopes = cdlData->getSlopeParams();
-    const CDLOpData::ChannelParams & offsets = cdlData->getOffsetParams();
-    const CDLOpData::ChannelParams & powers = cdlData->getPowerParams();
-    const double vec9[9]{ slopes[0], slopes[1], slopes[2],
-                          offsets[0], offsets[1], offsets[2],
-                          powers[0], powers[1], powers[2] };
-    cdlTransform->setSOP(vec9);
-    cdlTransform->setSat(cdlData->getSaturation());
-
+    data = *cdlData;
     group->appendTransform(cdlTransform);
 }
 
@@ -359,28 +336,27 @@ void BuildCDLOp(OpRcPtrVec & ops,
                 const CDLTransform & cdlTransform,
                 TransformDirection dir)
 {
-    TransformDirection combinedDir = CombineTransformDirections(dir,
-                                                                cdlTransform.getDirection());
-
-    double slope4[] = { 1.0, 1.0, 1.0, 1.0 };
-    cdlTransform.getSlope(slope4);
-
-    double offset4[] = { 0.0, 0.0, 0.0, 0.0 };
-    cdlTransform.getOffset(offset4);
-
-    double power4[] = { 1.0, 1.0, 1.0, 1.0 };
-    cdlTransform.getPower(power4);
-
-    double lumaCoef3[] = { 1.0, 1.0, 1.0 };
-    cdlTransform.getSatLumaCoefs(lumaCoef3);
-
-    double sat = cdlTransform.getSat();
-
-    if(config.getMajorVersion()==1)
+    if (config.getMajorVersion() == 1)
     {
+        const auto combinedDir = CombineTransformDirections(dir, cdlTransform.getDirection());
+
+        double slope4[] = { 1.0, 1.0, 1.0, 1.0 };
+        cdlTransform.getSlope(slope4);
+
+        double offset4[] = { 0.0, 0.0, 0.0, 0.0 };
+        cdlTransform.getOffset(offset4);
+
+        double power4[] = { 1.0, 1.0, 1.0, 1.0 };
+        cdlTransform.getPower(power4);
+
+        double lumaCoef3[] = { 1.0, 1.0, 1.0 };
+        cdlTransform.getSatLumaCoefs(lumaCoef3);
+
+        double sat = cdlTransform.getSat();
+
         const double p[4] = { power4[0], power4[1], power4[2], power4[3] };
 
-        if(combinedDir == TRANSFORM_DIR_FORWARD)
+        if (combinedDir == TRANSFORM_DIR_FORWARD)
         {
             // 1) Scale + Offset
             CreateScaleOffsetOp(ops, slope4, offset4, TRANSFORM_DIR_FORWARD);
@@ -393,7 +369,7 @@ void BuildCDLOp(OpRcPtrVec & ops,
             //    as per ASC v1.2 spec)
             CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_FORWARD);
         }
-        else if(combinedDir == TRANSFORM_DIR_INVERSE)
+        else if (combinedDir == TRANSFORM_DIR_INVERSE)
         {
             // 3) Saturation (NB: Does not clamp at 0 and 1
             //    as per ASC v1.2 spec)
@@ -411,17 +387,11 @@ void BuildCDLOp(OpRcPtrVec & ops,
     {
         // Starting with the version 2, OCIO is now using a CDL Op
         // complying with the Common LUT Format (i.e. CLF) specification.
-        CDLOpDataRcPtr cdlData = std::make_shared<CDLOpData>(
-            CDLOpData::CDL_V1_2_FWD,
-            CDLOpData::ChannelParams(slope4[0], slope4[1], slope4[2]),
-            CDLOpData::ChannelParams(offset4[0], offset4[1], offset4[2]),
-            CDLOpData::ChannelParams(power4[0], power4[1], power4[2]),
-            sat);
-        cdlData->getFormatMetadata() = cdlTransform.getFormatMetadata();
+        const auto & data = dynamic_cast<const CDLTransformImpl &>(cdlTransform).data();
+        data.validate();
 
-        CreateCDLOp(ops, 
-                    cdlData,
-                    combinedDir);
+        auto cdl = data.clone();
+        CreateCDLOp(ops, cdl, dir);
     }
 }
 

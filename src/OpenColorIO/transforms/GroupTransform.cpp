@@ -14,7 +14,7 @@ GroupTransformRcPtr GroupTransform::Create()
     return GroupTransformRcPtr(new GroupTransform(), &deleter);
 }
 
-void GroupTransform::deleter(GroupTransform* t)
+void GroupTransform::deleter(GroupTransform * t)
 {
     delete t;
 }
@@ -42,7 +42,7 @@ public:
         m_vec.clear();
     }
 
-    Impl& operator= (const Impl & rhs)
+    Impl & operator= (const Impl & rhs)
     {
         if (this != &rhs)
         {
@@ -58,12 +58,12 @@ public:
         return *this;
     }
 
-    FormatMetadata & getFormatMetadata()
+    FormatMetadata & getFormatMetadata() noexcept
     {
         return m_metadata;
     }
 
-    const FormatMetadata & getFormatMetadata() const
+    const FormatMetadata & getFormatMetadata() const noexcept
     {
         return m_metadata;
     }
@@ -92,21 +92,21 @@ GroupTransform::~GroupTransform()
     m_impl = NULL;
 }
 
-GroupTransform& GroupTransform::operator= (const GroupTransform & rhs)
+GroupTransform & GroupTransform::operator= (const GroupTransform & rhs)
 {
-    if(this!=&rhs)
+    if (this != &rhs)
     {
         *m_impl = *rhs.m_impl;
     }
     return *this;
 }
 
-TransformDirection GroupTransform::getDirection() const
+TransformDirection GroupTransform::getDirection() const noexcept
 {
     return getImpl()->m_dir;
 }
 
-void GroupTransform::setDirection(TransformDirection dir)
+void GroupTransform::setDirection(TransformDirection dir) noexcept
 {
     getImpl()->m_dir = dir;
 }
@@ -121,12 +121,12 @@ void GroupTransform::validate() const
     }
 }
 
-FormatMetadata & GroupTransform::getFormatMetadata()
+FormatMetadata & GroupTransform::getFormatMetadata() noexcept
 {
     return m_impl->getFormatMetadata();
 }
 
-const FormatMetadata & GroupTransform::getFormatMetadata() const
+const FormatMetadata & GroupTransform::getFormatMetadata() const noexcept
 {
     return m_impl->getFormatMetadata();
 }
@@ -138,7 +138,7 @@ int GroupTransform::getNumTransforms() const
 
 ConstTransformRcPtr GroupTransform::getTransform(int index) const
 {
-    if(index < 0 || index >= (int)getImpl()->m_vec.size())
+    if (index < 0 || index >= (int)getImpl()->m_vec.size())
     {
         std::ostringstream os;
         os << "Invalid transform index " << index << ".";
@@ -165,12 +165,12 @@ void GroupTransform::appendTransform(TransformRcPtr transform)
     getImpl()->m_vec.push_back(transform);
 }
 
-std::ostream& operator<< (std::ostream& os, const GroupTransform& groupTransform)
+std::ostream & operator<< (std::ostream & os, const GroupTransform & groupTransform)
 {
     os << "<GroupTransform ";
     os << "direction=" << TransformDirectionToString(groupTransform.getDirection()) << ", ";
     os << "transforms=";
-    for(int i=0; i<groupTransform.getNumTransforms(); ++i)
+    for (int i = 0; i < groupTransform.getNumTransforms(); ++i)
     {
         ConstTransformRcPtr transform = groupTransform.getTransform(i);
         os << "\n\t" << *transform;
@@ -194,20 +194,19 @@ void BuildGroupOps(OpRcPtrVec & ops,
         processorData = groupTransform.getFormatMetadata();
     }
 
-    TransformDirection combinedDir
-        = CombineTransformDirections(dir, groupTransform.getDirection());
+    auto combinedDir = CombineTransformDirections(dir, groupTransform.getDirection());
 
-    if(combinedDir == TRANSFORM_DIR_FORWARD)
+    if (combinedDir == TRANSFORM_DIR_FORWARD)
     {
-        for(int i=0; i<groupTransform.getNumTransforms(); ++i)
+        for (int i = 0; i < groupTransform.getNumTransforms(); ++i)
         {
             ConstTransformRcPtr childTransform = groupTransform.getTransform(i);
             BuildOps(ops, config, context, childTransform, TRANSFORM_DIR_FORWARD);
         }
     }
-    else if(combinedDir == TRANSFORM_DIR_INVERSE)
+    else if (combinedDir == TRANSFORM_DIR_INVERSE)
     {
-        for(int i=groupTransform.getNumTransforms()-1; i>=0; --i)
+        for (int i = groupTransform.getNumTransforms() - 1; i >= 0; --i)
         {
             ConstTransformRcPtr childTransform = groupTransform.getTransform(i);
             BuildOps(ops, config, context, childTransform, TRANSFORM_DIR_INVERSE);

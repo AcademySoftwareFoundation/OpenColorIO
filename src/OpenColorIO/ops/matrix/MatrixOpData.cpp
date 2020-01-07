@@ -401,6 +401,10 @@ void MatrixOpData::MatrixArray::setRGBA(const double * values)
 
 void MatrixOpData::MatrixArray::validate() const
 {
+    // Note: By design, only 4x4 matrices are instantiated.
+    // The CLF 3x3 (and 3x4) matrices are automatically converted
+    // to 4x4 matrices, and a Matrix Transform only expects 4x4 matrices.
+
     ArrayDouble::validate();
 
     // A 4x4 matrix is the canonical form, convert if it is only a 3x3.

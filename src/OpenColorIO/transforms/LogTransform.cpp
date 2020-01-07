@@ -7,88 +7,48 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ops/log/LogOpData.h"
+#include "transforms/LogTransform.h"
 
 namespace OCIO_NAMESPACE
 {
 LogTransformRcPtr LogTransform::Create()
 {
-    return LogTransformRcPtr(new LogTransform(), &deleter);
+    return LogTransformRcPtr(new LogTransformImpl(), &LogTransformImpl::deleter);
 }
 
-void LogTransform::deleter(LogTransform* t)
+void LogTransformImpl::deleter(LogTransform* t)
 {
-    delete t;
+    delete static_cast<LogTransformImpl *>(t);
 }
 
-class LogTransform::Impl : public LogOpData
-{
-public:
-
-    Impl()
-        : LogOpData(2.0f, TRANSFORM_DIR_FORWARD)
-    { }
-
-    Impl(const Impl &) = delete;
-
-    ~Impl()
-    { }
-
-    Impl& operator = (const Impl & rhs)
-    {
-        if (this != &rhs)
-        {
-            LogOpData::operator=(rhs);
-        }
-        return *this;
-    }
-};
-
-///////////////////////////////////////////////////////////////////////////
-
-LogTransform::LogTransform()
-    : m_impl(new LogTransform::Impl)
+LogTransformImpl::LogTransformImpl()
+    : m_data(2.0f, TRANSFORM_DIR_FORWARD)
 {
 }
 
-TransformRcPtr LogTransform::createEditableCopy() const
+TransformRcPtr LogTransformImpl::createEditableCopy() const
 {
     LogTransformRcPtr transform = LogTransform::Create();
-    *(transform->m_impl) = *m_impl;
+    dynamic_cast<LogTransformImpl*>(transform.get())->data() = data();
     return transform;
 }
 
-LogTransform::~LogTransform()
+TransformDirection LogTransformImpl::getDirection() const noexcept
 {
-    delete m_impl;
-    m_impl = NULL;
+    return data().getDirection();
 }
 
-LogTransform& LogTransform::operator= (const LogTransform & rhs)
+void LogTransformImpl::setDirection(TransformDirection dir) noexcept
 {
-    if (this != &rhs)
-    {
-        *m_impl = *rhs.m_impl;
-    }
-    return *this;
+    data().setDirection(dir);
 }
 
-TransformDirection LogTransform::getDirection() const
-{
-    return getImpl()->getDirection();
-}
-
-void LogTransform::setDirection(TransformDirection dir)
-{
-    getImpl()->setDirection(dir);
-}
-
-void LogTransform::validate() const
+void LogTransformImpl::validate() const
 {
     try
     {
         Transform::validate();
-        getImpl()->validate();
+        data().validate();
     }
     catch (Exception & ex)
     {
@@ -98,27 +58,33 @@ void LogTransform::validate() const
     }
 }
 
-FormatMetadata & LogTransform::getFormatMetadata()
+FormatMetadata & LogTransformImpl::getFormatMetadata() noexcept
 {
-    return m_impl->getFormatMetadata();
+    return data().getFormatMetadata();
 }
 
-const FormatMetadata & LogTransform::getFormatMetadata() const
+const FormatMetadata & LogTransformImpl::getFormatMetadata() const noexcept
 {
-    return m_impl->getFormatMetadata();
+    return data().getFormatMetadata();
 }
 
-double LogTransform::getBase() const
+bool LogTransformImpl::equals(const LogTransform & other) const noexcept
 {
-    return getImpl()->getBase();
+    if (this == &other) return true;
+    return data() == dynamic_cast<const LogTransformImpl*>(&other)->data();
 }
 
-void LogTransform::setBase(double val)
+double LogTransformImpl::getBase() const noexcept
 {
-    getImpl()->setBase(val);
+    return data().getBase();
 }
 
-std::ostream& operator<< (std::ostream& os, const LogTransform& t)
+void LogTransformImpl::setBase(double val) noexcept
+{
+    data().setBase(val);
+}
+
+std::ostream & operator<< (std::ostream & os, const LogTransform & t)
 {
     os << "<LogTransform ";
     os << "base=" << t.getBase() << ", ";

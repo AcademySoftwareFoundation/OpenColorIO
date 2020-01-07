@@ -2988,7 +2988,7 @@ OCIO_ADD_TEST(FileFormatCTF, load_deprecated_ops_file)
         auto op = fileOps[1];
         auto func = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(op);
         OCIO_REQUIRE_ASSERT(func);
-        OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::REC2100_SURROUND);
+        OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::REC2100_SURROUND_FWD);
         OCIO_CHECK_NO_THROW(func->validate());
 
         OCIO::FixedFunctionOpData::Params params;
@@ -3016,12 +3016,12 @@ OCIO_ADD_TEST(FixedFunction, load_fixed_function_file)
 
     OCIO_REQUIRE_EQUAL(fileOps.size(), 2);
 
-    // Test FixedFunction with the REC2100_SURROUND style.
+    // Test FixedFunction with the REC2100_SURROUND_FWD style.
     {
         auto op = fileOps[0];
         auto func = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(op);
         OCIO_REQUIRE_ASSERT(func);
-        OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::REC2100_SURROUND);
+        OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::REC2100_SURROUND_FWD);
         OCIO_CHECK_NO_THROW(func->validate());
 
         OCIO::FixedFunctionOpData::Params params;
@@ -3497,7 +3497,7 @@ OCIO_ADD_TEST(CTFTransform, save_invlut_1d_3components)
 
 OCIO_ADD_TEST(CTFTransform, save_lut1d_halfdomain)
 {
-    OCIO::LUT1DTransformRcPtr lutT = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lutT = OCIO::Lut1DTransform::Create();
     lutT->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
 
     const unsigned long size = OCIO::Lut1DOpData::GetLutIdealSize(OCIO::BIT_DEPTH_F16);
@@ -3546,7 +3546,7 @@ OCIO_ADD_TEST(CTFTransform, save_lut1d_halfdomain)
 
 OCIO_ADD_TEST(CTFTransform, save_lut1d_f16_raw)
 {
-    OCIO::LUT1DTransformRcPtr lutT = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lutT = OCIO::Lut1DTransform::Create();
     lutT->setFileOutputBitDepth(OCIO::BIT_DEPTH_F16);
 
     lutT->setLength(2);
@@ -3581,7 +3581,7 @@ OCIO_ADD_TEST(CTFTransform, save_lut1d_f16_raw)
 
 OCIO_ADD_TEST(CTFTransform, save_lut1d_f32)
 {
-    OCIO::LUT1DTransformRcPtr lutT = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lutT = OCIO::Lut1DTransform::Create();
     lutT->setFileOutputBitDepth(OCIO::BIT_DEPTH_F32);
 
     lutT->setLength(8);
@@ -3625,7 +3625,7 @@ OCIO_ADD_TEST(CTFTransform, save_lut1d_f32)
 
 OCIO_ADD_TEST(CTFTransform, save_invalid_lut_1d)
 {
-    OCIO::LUT1DTransformRcPtr lutT = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lutT = OCIO::Lut1DTransform::Create();
     lutT->setFileOutputBitDepth(OCIO::BIT_DEPTH_F32);
 
     lutT->setLength(8);
@@ -4400,11 +4400,11 @@ OCIO_ADD_TEST(CTFTransform, gamma1_ctf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::ExponentWithLinearTransformRcPtr exp = OCIO::ExponentWithLinearTransform::Create();
+    OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
     exp->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     const double gamma[] = { 2.6, 2.6, 2.6, 1.0 };
-    exp->setGamma(gamma);
+    exp->setValue(gamma);
 
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
@@ -4653,6 +4653,7 @@ OCIO_ADD_TEST(CTFTransform, fixed_function_rec2100_inverse_ctf)
     std::ostringstream outputTransform;
     OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
 
+    // Rec.2100 Inverse is always saved as a Forward with inverted parameter value.
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="2" id="UIDFF42">
     <FixedFunction inBitDepth="32f" outBitDepth="32f" style="Rec2100Surround" params="2">
@@ -4951,7 +4952,7 @@ OCIO_ADD_TEST(CTFTransform, lut1d_clf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::LUT1DTransformRcPtr lut = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_LINEAR);
 
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
@@ -4982,7 +4983,7 @@ OCIO_ADD_TEST(CTFTransform, lut1d_inverse_clf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::LUT1DTransformRcPtr lut = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
@@ -5000,7 +5001,7 @@ OCIO_ADD_TEST(CTFTransform, lut1d_ctf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::LUT1DTransformRcPtr lut = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_DEFAULT);
 
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
@@ -5031,7 +5032,7 @@ OCIO_ADD_TEST(CTFTransform, lut1d_attributes_ctf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::LUT1DTransformRcPtr lut = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut");
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "lut01");
     lut->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
@@ -5087,7 +5088,7 @@ OCIO_ADD_TEST(CTFTransform, lut1d_array_16x1_ctf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::LUT1DTransformRcPtr lut = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_DEFAULT);
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut");
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "lut01");
@@ -5143,7 +5144,7 @@ OCIO_ADD_TEST(CTFTransform, lut1d_array_16x3_ctf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::LUT1DTransformRcPtr lut = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_DEFAULT);
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut");
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "lut01");
@@ -5198,7 +5199,7 @@ OCIO_ADD_TEST(CTFTransform, lut1d_10i_ctf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::LUT1DTransformRcPtr lut = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_DEFAULT);
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut");
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "lut01");
@@ -5235,7 +5236,7 @@ OCIO_ADD_TEST(CTFTransform, lut1d_inverse_ctf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::LUT1DTransformRcPtr lut = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_DEFAULT);
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut");
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "lut01");
@@ -5293,7 +5294,7 @@ OCIO_ADD_TEST(CTFTransform, lut3d_array_ctf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::LUT3DTransformRcPtr lut = OCIO::LUT3DTransform::Create();
+    OCIO::Lut3DTransformRcPtr lut = OCIO::Lut3DTransform::Create();
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut3d");
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "lut01");
     lut->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
@@ -5368,7 +5369,7 @@ OCIO_ADD_TEST(CTFTransform, lut3d_inverse_clf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::LUT3DTransformRcPtr lut = OCIO::LUT3DTransform::Create();
+    OCIO::Lut3DTransformRcPtr lut = OCIO::Lut3DTransform::Create();
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut3d");
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "lut01");
     lut->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
@@ -5406,7 +5407,7 @@ OCIO_ADD_TEST(CTFTransform, lut3d_inverse_ctf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::LUT3DTransformRcPtr lut = OCIO::LUT3DTransform::Create();
+    OCIO::Lut3DTransformRcPtr lut = OCIO::Lut3DTransform::Create();
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut3d");
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "lut01");
     lut->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
@@ -5487,7 +5488,7 @@ OCIO_ADD_TEST(CTFTransform, bitdepth_ctf)
     mat->setFileInputBitDepth(OCIO::BIT_DEPTH_UINT8);
     mat->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
 
-    auto lut = OCIO::LUT1DTransform::Create();
+    auto lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_DEFAULT);
     lut->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
     lut->setLength(3);

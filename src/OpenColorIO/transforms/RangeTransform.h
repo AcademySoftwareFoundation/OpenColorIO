@@ -19,55 +19,52 @@ public:
     RangeTransformImpl() = default;
     RangeTransformImpl(const RangeTransformImpl &) = delete;
     RangeTransformImpl& operator=(const RangeTransformImpl &) = delete;
-    virtual ~RangeTransformImpl() = default;
+    ~RangeTransformImpl() override = default;
 
     TransformRcPtr createEditableCopy() const override;
 
-    TransformDirection getDirection() const override;
-    void setDirection(TransformDirection dir) override;
+    TransformDirection getDirection() const noexcept override;
+    void setDirection(TransformDirection dir) noexcept override;
 
-    FormatMetadata & getFormatMetadata() override;
-    const FormatMetadata & getFormatMetadata() const override;
+    FormatMetadata & getFormatMetadata() noexcept override;
+    const FormatMetadata & getFormatMetadata() const noexcept override;
 
-    BitDepth getFileInputBitDepth() const override;
-    BitDepth getFileOutputBitDepth() const override;
-    void setFileInputBitDepth(BitDepth bitDepth) override;
-    void setFileOutputBitDepth(BitDepth bitDepth) override;
+    BitDepth getFileInputBitDepth() const noexcept override;
+    BitDepth getFileOutputBitDepth() const noexcept override;
+    void setFileInputBitDepth(BitDepth bitDepth) noexcept override;
+    void setFileOutputBitDepth(BitDepth bitDepth) noexcept override;
 
-    RangeStyle getStyle() const override;
-    void setStyle(RangeStyle style) override;
+    RangeStyle getStyle() const noexcept override;
+    void setStyle(RangeStyle style) noexcept override;
 
     void validate() const override;
 
-    bool equals(const RangeTransform & other) const override;
+    bool equals(const RangeTransform & other) const noexcept override;
 
-    void setMinInValue(double val) override;
-    double getMinInValue() const override;
-    bool hasMinInValue() const override;
-    void unsetMinInValue() override;
+    void setMinInValue(double val) noexcept override;
+    double getMinInValue() const noexcept override;
+    bool hasMinInValue() const noexcept override;
+    void unsetMinInValue() noexcept override;
 
-    void setMaxInValue(double val) override;
-    double getMaxInValue() const override;
-    bool hasMaxInValue() const override;
-    void unsetMaxInValue() override;
+    void setMaxInValue(double val) noexcept override;
+    double getMaxInValue() const noexcept override;
+    bool hasMaxInValue() const noexcept override;
+    void unsetMaxInValue() noexcept override;
 
-    void setMinOutValue(double val) override;
-    double getMinOutValue() const override;
-    bool hasMinOutValue() const override;
-    void unsetMinOutValue() override;
+    void setMinOutValue(double val) noexcept override;
+    double getMinOutValue() const noexcept override;
+    bool hasMinOutValue() const noexcept override;
+    void unsetMinOutValue() noexcept override;
 
-    void setMaxOutValue(double val) override;
-    double getMaxOutValue() const override;
-    bool hasMaxOutValue() const override;
-    void unsetMaxOutValue() override;
+    void setMaxOutValue(double val) noexcept override;
+    double getMaxOutValue() const noexcept override;
+    bool hasMaxOutValue() const noexcept override;
+    void unsetMaxOutValue() noexcept override;
 
-    RangeOpData & data() { return m_data; }
-    const RangeOpData & data() const { return m_data; }
+    RangeOpData & data() noexcept { return m_data; }
+    const RangeOpData & data() const noexcept { return m_data; }
 
-    static void deleter(RangeTransformImpl * t)
-    {
-        delete t;
-    }
+    static void deleter(RangeTransform * t);
 
 private:
     TransformDirection m_direction = TRANSFORM_DIR_FORWARD;

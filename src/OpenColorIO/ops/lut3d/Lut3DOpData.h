@@ -49,6 +49,7 @@ public:
     void setInterpolation(Interpolation algo);
 
     TransformDirection getDirection() const { return m_direction; }
+    void setDirection(TransformDirection dir) { m_direction = dir; }
 
     // There are two inversion algorithms provided for 3D LUT, an exact
     // method (that assumes use of tetrahedral in the forward direction)

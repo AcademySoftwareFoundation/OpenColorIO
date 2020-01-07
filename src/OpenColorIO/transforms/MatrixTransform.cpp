@@ -6,91 +6,44 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "MathUtils.h"
-#include "ops/matrix/MatrixOpData.h"
+#include "transforms/MatrixTransform.h"
 
 namespace OCIO_NAMESPACE
 {
 MatrixTransformRcPtr MatrixTransform::Create()
 {
-    return MatrixTransformRcPtr(new MatrixTransform(), &deleter);
+    return MatrixTransformRcPtr(new MatrixTransformImpl(), &MatrixTransformImpl::deleter);
 }
 
-void MatrixTransform::deleter(MatrixTransform* t)
+void MatrixTransformImpl::deleter(MatrixTransform * t)
 {
-    delete t;
+    delete static_cast<MatrixTransformImpl *>(t);
 }
 
-class MatrixTransform::Impl : public MatrixOpData
-{
-public:
-    TransformDirection m_dir = TRANSFORM_DIR_FORWARD;
-
-    Impl()
-        : MatrixOpData()
-    {
-    }
-
-    Impl(const Impl &) = delete;
-
-    ~Impl()
-    { }
-
-    Impl& operator= (const Impl & rhs)
-    {
-        if (this != &rhs)
-        {
-            MatrixOpData::operator=(rhs);
-            m_dir = rhs.m_dir;
-        }
-        return *this;
-    }
-};
-
-///////////////////////////////////////////////////////////////////////////
-
-MatrixTransform::MatrixTransform()
-    : m_impl(new MatrixTransform::Impl)
-{
-}
-
-TransformRcPtr MatrixTransform::createEditableCopy() const
+TransformRcPtr MatrixTransformImpl::createEditableCopy() const
 {
     MatrixTransformRcPtr transform = MatrixTransform::Create();
-    *(transform->m_impl) = *m_impl;
+    dynamic_cast<MatrixTransformImpl*>(transform.get())->data() = data();
+    transform->setDirection(m_direction);
     return transform;
 }
 
-MatrixTransform::~MatrixTransform()
+TransformDirection MatrixTransformImpl::getDirection() const noexcept
 {
-    delete m_impl;
-    m_impl = NULL;
+    return m_direction;
 }
 
-MatrixTransform& MatrixTransform::operator= (const MatrixTransform & rhs)
+void MatrixTransformImpl::setDirection(TransformDirection dir) noexcept
 {
-    if (this != &rhs)
-    {
-        *m_impl = *rhs.m_impl;
-    }
-    return *this;
+    m_direction = dir;
 }
 
-TransformDirection MatrixTransform::getDirection() const
-{
-    return getImpl()->m_dir;
-}
-
-void MatrixTransform::setDirection(TransformDirection dir)
-{
-    getImpl()->m_dir = dir;
-}
-
-void MatrixTransform::validate() const
+void MatrixTransformImpl::validate() const
 {
     try
     {
         Transform::validate();
-        getImpl()->validate();
+        data().validate();
     }
     catch(Exception & ex)
     {
@@ -100,48 +53,46 @@ void MatrixTransform::validate() const
     }
 }
 
-BitDepth MatrixTransform::getFileInputBitDepth() const
+BitDepth MatrixTransformImpl::getFileInputBitDepth() const noexcept
 {
-    return getImpl()->getFileInputBitDepth();
+    return data().getFileInputBitDepth();
 }
-BitDepth MatrixTransform::getFileOutputBitDepth() const
+BitDepth MatrixTransformImpl::getFileOutputBitDepth() const noexcept
 {
-    return getImpl()->getFileOutputBitDepth();
+    return data().getFileOutputBitDepth();
 }
-void MatrixTransform::setFileInputBitDepth(BitDepth bitDepth)
+void MatrixTransformImpl::setFileInputBitDepth(BitDepth bitDepth) noexcept
 {
-    getImpl()->setFileInputBitDepth(bitDepth);
+    data().setFileInputBitDepth(bitDepth);
 }
-void MatrixTransform::setFileOutputBitDepth(BitDepth bitDepth)
+void MatrixTransformImpl::setFileOutputBitDepth(BitDepth bitDepth) noexcept
 {
-    getImpl()->setFileOutputBitDepth(bitDepth);
-}
-
-FormatMetadata & MatrixTransform::getFormatMetadata()
-{
-    return m_impl->getFormatMetadata();
+    data().setFileOutputBitDepth(bitDepth);
 }
 
-const FormatMetadata & MatrixTransform::getFormatMetadata() const
+FormatMetadata & MatrixTransformImpl::getFormatMetadata() noexcept
 {
-    return m_impl->getFormatMetadata();
+    return data().getFormatMetadata();
 }
 
-bool MatrixTransform::equals(const MatrixTransform & other) const
+const FormatMetadata & MatrixTransformImpl::getFormatMetadata() const noexcept
+{
+    return data().getFormatMetadata();
+}
+
+bool MatrixTransformImpl::equals(const MatrixTransform & other) const noexcept
 {
     if (this == &other) return true;
-
-    if (getImpl()->m_dir != other.getImpl()->m_dir)
+    if (m_direction != other.getDirection())
     {
         return false;
     }
-
-    return *getImpl() == *(other.getImpl());
+    return data() == dynamic_cast<const MatrixTransformImpl*>(&other)->data();
 }
 
-void MatrixTransform::setMatrix(const double * m44)
+void MatrixTransformImpl::setMatrix(const double * m44)
 {
-    if (m44) getImpl()->setRGBA(m44);
+    if (m44) data().setRGBA(m44);
 }
 
 template<typename T>
@@ -171,15 +122,15 @@ void GetMatrix(const ArrayDouble::Values & vals, T * m44)
     }
 }
 
-void MatrixTransform::getMatrix(double * m44) const
+void MatrixTransformImpl::getMatrix(double * m44) const
 {
-    const ArrayDouble::Values & vals = getImpl()->getArray().getValues();
+    const ArrayDouble::Values & vals = data().getArray().getValues();
     GetMatrix(vals, m44);
 }
 
-void MatrixTransform::setOffset(const double * offset4)
+void MatrixTransformImpl::setOffset(const double * offset4)
 {
-    if (offset4) getImpl()->setRGBAOffsets(offset4);
+    if (offset4) data().setRGBAOffsets(offset4);
 }
 
 template<typename T>
@@ -197,9 +148,9 @@ void GetOffset(const double * vals, T * offset4)
     }
 }
 
-void MatrixTransform::getOffset(double * offset4) const
+void MatrixTransformImpl::getOffset(double * offset4) const
 {
-    const double * vals = getImpl()->getOffsets().getValues();
+    const double * vals = data().getOffsets().getValues();
     GetOffset(vals, offset4);
 }
 
@@ -392,7 +343,7 @@ namespace
 const int DOUBLE_DECIMALS = 16;
 }
 
-std::ostream& operator<< (std::ostream& os, const MatrixTransform& t)
+std::ostream& operator<< (std::ostream& os, const MatrixTransform& t) noexcept
 {
     double matrix[16], offset[4];
 

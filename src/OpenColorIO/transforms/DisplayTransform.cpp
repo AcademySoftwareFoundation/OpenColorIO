@@ -105,12 +105,12 @@ DisplayTransform& DisplayTransform::operator= (const DisplayTransform & rhs)
     return *this;
 }
 
-TransformDirection DisplayTransform::getDirection() const
+TransformDirection DisplayTransform::getDirection() const noexcept
 {
     return getImpl()->m_dir;
 }
 
-void DisplayTransform::setDirection(TransformDirection dir)
+void DisplayTransform::setDirection(TransformDirection dir) noexcept
 {
     getImpl()->m_dir = dir;
 }

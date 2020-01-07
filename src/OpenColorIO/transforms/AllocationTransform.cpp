@@ -81,12 +81,12 @@ AllocationTransform& AllocationTransform::operator= (const AllocationTransform &
     return *this;
 }
 
-TransformDirection AllocationTransform::getDirection() const
+TransformDirection AllocationTransform::getDirection() const  noexcept
 {
     return getImpl()->m_dir;
 }
 
-void AllocationTransform::setDirection(TransformDirection dir)
+void AllocationTransform::setDirection(TransformDirection dir)  noexcept
 {
     getImpl()->m_dir = dir;
 }

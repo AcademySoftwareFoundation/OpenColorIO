@@ -110,13 +110,13 @@ void BuildOps(OpRcPtrVec & ops,
     {
         BuildLookOps(ops, config, context, *lookTransform, dir);
     }
-    else if (ConstLUT1DTransformRcPtr lut1dTransform = \
-        DynamicPtrCast<const LUT1DTransform>(transform))
+    else if (ConstLut1DTransformRcPtr lut1dTransform = \
+        DynamicPtrCast<const Lut1DTransform>(transform))
     {
         BuildLut1DOp(ops, config, *lut1dTransform, dir);
     }
-    else if (ConstLUT3DTransformRcPtr lut1dTransform = \
-        DynamicPtrCast<const LUT3DTransform>(transform))
+    else if (ConstLut3DTransformRcPtr lut1dTransform = \
+        DynamicPtrCast<const Lut3DTransform>(transform))
     {
         BuildLut3DOp(ops, config, *lut1dTransform, dir);
     }
@@ -199,13 +199,13 @@ std::ostream& operator<< (std::ostream & os, const Transform & transform)
     {
         os << *lookTransform;
     }
-    else if (const LUT1DTransform * lut1dTransform = \
-        dynamic_cast<const LUT1DTransform*>(t))
+    else if (const Lut1DTransform * lut1dTransform = \
+        dynamic_cast<const Lut1DTransform*>(t))
     {
         os << *lut1dTransform;
     }
-    else if (const LUT3DTransform * lut3dTransform = \
-        dynamic_cast<const LUT3DTransform*>(t))
+    else if (const Lut3DTransform * lut3dTransform = \
+        dynamic_cast<const Lut3DTransform*>(t))
     {
         os << *lut3dTransform;
     }

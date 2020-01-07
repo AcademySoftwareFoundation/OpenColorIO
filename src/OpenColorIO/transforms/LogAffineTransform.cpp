@@ -8,87 +8,48 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/log/LogOpData.h"
+#include "transforms/LogAffineTransform.h"
 
 namespace OCIO_NAMESPACE
 {
 LogAffineTransformRcPtr LogAffineTransform::Create()
 {
-    return LogAffineTransformRcPtr(new LogAffineTransform(), &deleter);
+    return LogAffineTransformRcPtr(new LogAffineTransformImpl(), &LogAffineTransformImpl::deleter);
 }
 
-void LogAffineTransform::deleter(LogAffineTransform* t)
+void LogAffineTransformImpl::deleter(LogAffineTransform* t)
 {
-    delete t;
+    delete static_cast<LogAffineTransformImpl *>(t);
 }
 
-class LogAffineTransform::Impl : public LogOpData
-{
-public:
-
-    Impl()
-        : LogOpData(2.0f, TRANSFORM_DIR_FORWARD)
-    { }
-
-    Impl(const Impl &) = delete;
-
-    ~Impl()
-    { }
-
-    Impl& operator = (const Impl & rhs)
-    {
-        if (this != &rhs)
-        {
-            LogOpData::operator=(rhs);
-        }
-        return *this;
-    }
-};
-
-///////////////////////////////////////////////////////////////////////////
-
-LogAffineTransform::LogAffineTransform()
-    : m_impl(new LogAffineTransform::Impl)
+LogAffineTransformImpl::LogAffineTransformImpl()
+    : m_data(2.0f, TRANSFORM_DIR_FORWARD)
 {
 }
 
-TransformRcPtr LogAffineTransform::createEditableCopy() const
+TransformRcPtr LogAffineTransformImpl::createEditableCopy() const
 {
     LogAffineTransformRcPtr transform = LogAffineTransform::Create();
-    *(transform->m_impl) = *m_impl;
+    dynamic_cast<LogAffineTransformImpl*>(transform.get())->data() = data();
     return transform;
 }
 
-LogAffineTransform::~LogAffineTransform()
+TransformDirection LogAffineTransformImpl::getDirection() const noexcept
 {
-    delete m_impl;
-    m_impl = NULL;
+    return data().getDirection();
 }
 
-LogAffineTransform& LogAffineTransform::operator= (const LogAffineTransform & rhs)
+void LogAffineTransformImpl::setDirection(TransformDirection dir) noexcept
 {
-    if (this != &rhs)
-    {
-        *m_impl = *rhs.m_impl;
-    }
-    return *this;
+    data().setDirection(dir);
 }
 
-TransformDirection LogAffineTransform::getDirection() const
-{
-    return getImpl()->getDirection();
-}
-
-void LogAffineTransform::setDirection(TransformDirection dir)
-{
-    getImpl()->setDirection(dir);
-}
-
-void LogAffineTransform::validate() const
+void LogAffineTransformImpl::validate() const
 {
     try
     {
         Transform::validate();
-        getImpl()->validate();
+        data().validate();
     }
     catch (Exception & ex)
     {
@@ -98,61 +59,67 @@ void LogAffineTransform::validate() const
     }
 }
 
-FormatMetadata & LogAffineTransform::getFormatMetadata()
+FormatMetadata & LogAffineTransformImpl::getFormatMetadata() noexcept
 {
-    return m_impl->getFormatMetadata();
+    return data().getFormatMetadata();
 }
 
-const FormatMetadata & LogAffineTransform::getFormatMetadata() const
+const FormatMetadata & LogAffineTransformImpl::getFormatMetadata() const noexcept
 {
-    return m_impl->getFormatMetadata();
+    return data().getFormatMetadata();
 }
 
-void LogAffineTransform::setBase(double base)
+bool LogAffineTransformImpl::equals(const LogAffineTransform & other) const noexcept
 {
-    getImpl()->setBase(base);
+    if (this == &other) return true;
+    return data() == dynamic_cast<const LogAffineTransformImpl*>(&other)->data();
 }
 
-double LogAffineTransform::getBase() const
+void LogAffineTransformImpl::setBase(double base) noexcept
 {
-    return getImpl()->getBase();
+    data().setBase(base);
 }
 
-void LogAffineTransform::setLogSideSlopeValue(const double(&values)[3])
+double LogAffineTransformImpl::getBase() const noexcept
 {
-    getImpl()->setValue(LOG_SIDE_SLOPE, values);
-}
-void LogAffineTransform::setLogSideOffsetValue(const double(&values)[3])
-{
-    getImpl()->setValue(LOG_SIDE_OFFSET, values);
-}
-void LogAffineTransform::setLinSideSlopeValue(const double(&values)[3])
-{
-    getImpl()->setValue(LIN_SIDE_SLOPE, values);
-}
-void LogAffineTransform::setLinSideOffsetValue(const double(&values)[3])
-{
-    getImpl()->setValue(LIN_SIDE_OFFSET, values);
+    return data().getBase();
 }
 
-void LogAffineTransform::getLogSideSlopeValue(double(&values)[3]) const
+void LogAffineTransformImpl::setLogSideSlopeValue(const double(&values)[3]) noexcept
 {
-    getImpl()->getValue(LOG_SIDE_SLOPE, values);
+    data().setValue(LOG_SIDE_SLOPE, values);
 }
-void LogAffineTransform::getLogSideOffsetValue(double(&values)[3]) const
+void LogAffineTransformImpl::setLogSideOffsetValue(const double(&values)[3]) noexcept
 {
-    getImpl()->getValue(LOG_SIDE_OFFSET, values);
+    data().setValue(LOG_SIDE_OFFSET, values);
 }
-void LogAffineTransform::getLinSideSlopeValue(double(&values)[3]) const
+void LogAffineTransformImpl::setLinSideSlopeValue(const double(&values)[3]) noexcept
 {
-    getImpl()->getValue(LIN_SIDE_SLOPE, values);
+    data().setValue(LIN_SIDE_SLOPE, values);
 }
-void LogAffineTransform::getLinSideOffsetValue(double(&values)[3]) const
+void LogAffineTransformImpl::setLinSideOffsetValue(const double(&values)[3]) noexcept
 {
-    getImpl()->getValue(LIN_SIDE_OFFSET, values);
+    data().setValue(LIN_SIDE_OFFSET, values);
 }
 
-std::ostream& operator<< (std::ostream& os, const LogAffineTransform& t)
+void LogAffineTransformImpl::getLogSideSlopeValue(double(&values)[3]) const noexcept
+{
+    data().getValue(LOG_SIDE_SLOPE, values);
+}
+void LogAffineTransformImpl::getLogSideOffsetValue(double(&values)[3]) const noexcept
+{
+    data().getValue(LOG_SIDE_OFFSET, values);
+}
+void LogAffineTransformImpl::getLinSideSlopeValue(double(&values)[3]) const noexcept
+{
+    data().getValue(LIN_SIDE_SLOPE, values);
+}
+void LogAffineTransformImpl::getLinSideOffsetValue(double(&values)[3]) const noexcept
+{
+    data().getValue(LIN_SIDE_OFFSET, values);
+}
+
+std::ostream & operator<< (std::ostream & os, const LogAffineTransform & t)
 {
     os << "<LogAffineTransform ";
     os << "base=" << t.getBase() << ", ";

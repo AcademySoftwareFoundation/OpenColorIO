@@ -10,11 +10,13 @@
 
 #include "HashUtils.h"
 #include "GpuShaderUtils.h"
+#include "MathUtils.h"
 #include "ops/log/LogOpCPU.h"
 #include "ops/log/LogOpData.h"
 #include "ops/log/LogOpGPU.h"
 #include "ops/log/LogOp.h"
-#include "MathUtils.h"
+#include "transforms/LogAffineTransform.h"
+#include "transforms/LogTransform.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -77,14 +79,14 @@ std::string LogOp::getInfo() const
 bool LogOp::isSameType(ConstOpRcPtr & op) const
 {
     ConstLogOpRcPtr typedRcPtr = DynamicPtrCast<const LogOp>(op);
-    if(!typedRcPtr) return false;
+    if (!typedRcPtr) return false;
     return true;
 }
 
 bool LogOp::isInverse(ConstOpRcPtr & op) const
 {
     ConstLogOpRcPtr typedRcPtr = DynamicPtrCast<const LogOp>(op);
-    if(!typedRcPtr) return false;
+    if (!typedRcPtr) return false;
 
     ConstLogOpDataRcPtr logOpData = typedRcPtr->logData();
     return logData()->isInverse(logOpData);
@@ -120,15 +122,15 @@ void LogOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
 ///////////////////////////////////////////////////////////////////////////
 
 void CreateLogOp(OpRcPtrVec & ops,
-                    double base,
-                    const double(&logSlope)[3],
-                    const double(&logOffset)[3],
-                    const double(&linSlope)[3],
-                    const double(&linOffset)[3],
-                    TransformDirection direction)
+                 double base,
+                 const double(&logSlope)[3],
+                 const double(&logOffset)[3],
+                 const double(&linSlope)[3],
+                 const double(&linOffset)[3],
+                 TransformDirection direction)
 {
     auto opData = std::make_shared<LogOpData>(base, logSlope, logOffset,
-                                                linSlope, linOffset, direction);
+                                              linSlope, linOffset, direction);
     ops.push_back(std::make_shared<LogOp>(opData));
 }
 
@@ -139,8 +141,8 @@ void CreateLogOp(OpRcPtrVec & ops, double base, TransformDirection direction)
 }
 
 void CreateLogOp(OpRcPtrVec & ops,
-                    LogOpDataRcPtr & logData,
-                    TransformDirection direction)
+                 LogOpDataRcPtr & logData,
+                 TransformDirection direction)
 {
     if (direction == TRANSFORM_DIR_UNKNOWN)
     {
@@ -166,26 +168,12 @@ void CreateLogTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     {
         throw Exception("CreateRangeTransform: op has to be a RangeOp");
     }
+    auto logData = DynamicPtrCast<const LogOpData>(op->data());
     auto logTransform = LogAffineTransform::Create();
 
-    auto logData = DynamicPtrCast<const LogOpData>(op->data());
-    logTransform->setDirection(logData->getDirection());
+    auto & data = dynamic_cast<LogAffineTransformImpl*>(logTransform.get())->data();
 
-    auto & formatMetadata = logTransform->getFormatMetadata();
-    auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
-    metadata = logData->getFormatMetadata();
-
-    logTransform->setBase(logData->getBase());
-    double logSlope[3]{ 0.0 };
-    double logOffset[3]{ 0.0 };
-    double linSlope[3]{ 0.0 };
-    double linOffset[3]{ 0.0 };
-    logData->getParameters(logSlope, logOffset, linSlope, linOffset);
-    logTransform->setLogSideSlopeValue(logSlope);
-    logTransform->setLogSideOffsetValue(logOffset);
-    logTransform->setLinSideSlopeValue(linSlope);
-    logTransform->setLinSideOffsetValue(linOffset);
-
+    data = *logData;
     group->appendTransform(logTransform);
 }
 
@@ -194,25 +182,11 @@ void BuildLogOp(OpRcPtrVec & ops,
                 const LogAffineTransform & transform,
                 TransformDirection dir)
 {
-    TransformDirection combinedDir =
-        CombineTransformDirections(dir,
-                                    transform.getDirection());
+    const auto & data = dynamic_cast<const LogAffineTransformImpl &>(transform).data();
+    data.validate();
+    auto log = data.clone();
 
-    double base = transform.getBase();
-    double logSlope[3] = { 1.0, 1.0, 1.0 };
-    double linSlope[3] = { 1.0, 1.0, 1.0 };
-    double linOffset[3] = { 0.0, 0.0, 0.0 };
-    double logOffset[3] = { 0.0, 0.0, 0.0 };
-
-    transform.getLogSideSlopeValue(logSlope);
-    transform.getLogSideOffsetValue(logOffset);
-    transform.getLinSideSlopeValue(linSlope);
-    transform.getLinSideOffsetValue(linOffset);
-
-    auto opData = std::make_shared<LogOpData>(base, logSlope, logOffset,
-                                                linSlope, linOffset, TRANSFORM_DIR_FORWARD);
-
-    CreateLogOp(ops, opData, combinedDir);
+    CreateLogOp(ops, log, dir);
 }
 
 void BuildLogOp(OpRcPtrVec & ops,
@@ -220,10 +194,11 @@ void BuildLogOp(OpRcPtrVec & ops,
                 const LogTransform & transform,
                 TransformDirection dir)
 {
-    TransformDirection combinedDir =
-        CombineTransformDirections(dir,
-                                    transform.getDirection());
-    CreateLogOp(ops, transform.getBase(), combinedDir);
+    const auto & data = dynamic_cast<const LogTransformImpl &>(transform).data();
+    data.validate();
+    auto log = data.clone();
+
+    CreateLogOp(ops, log, dir);
 }
 
 } // namespace OCIO_NAMESPACE

@@ -18,6 +18,7 @@
 #include "ops/matrix/MatrixOp.h"
 #include "ops/OpTools.h"
 #include "SSE.h"
+#include "transforms/Lut1DTransform.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -228,76 +229,23 @@ void CreateLut1DTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
         throw Exception("CreateLut1DTransform: op has to be a Lut1DOp");
     }
     auto lutData = DynamicPtrCast<const Lut1DOpData>(op->data());
-    auto lutTransform = LUT1DTransform::Create();
+    auto lutTransform = Lut1DTransform::Create();
+    auto & data = dynamic_cast<Lut1DTransformImpl *>(lutTransform.get())->data();
 
-    lutTransform->setFileOutputBitDepth(lutData->getFileOutputBitDepth());
-
-    const auto dir = lutData->getDirection();
-    lutTransform->setDirection(dir);
-
-    auto & formatMetadata = lutTransform->getFormatMetadata();
-    auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
-    metadata = lutData->getFormatMetadata();
-
-    const bool inputHalf = lutData->isInputHalfDomain();
-    const bool outputHalf = lutData->isOutputRawHalfs();
-    const LUT1DHueAdjust hue = lutData->getHueAdjust();
-    const Interpolation interp = lutData->getInterpolation();
-
-    lutTransform->setInputHalfDomain(inputHalf);
-    lutTransform->setOutputRawHalfs(outputHalf);
-    lutTransform->setHueAdjust(hue);
-    lutTransform->setInterpolation(interp);
-
-    auto & lutArray = lutData->getArray();
-    const unsigned long l = lutArray.getLength();
-    lutTransform->setLength(l);
-    for (unsigned int i = 0; i < l; ++i)
-    {
-        lutTransform->setValue(i, lutArray[3 * i],
-                                    lutArray[3 * i + 1],
-                                    lutArray[3 * i + 2]);
-    }
-
+    data = *lutData;
     group->appendTransform(lutTransform);
 }
 
 void BuildLut1DOp(OpRcPtrVec & ops,
                   const Config & config,
-                  const LUT1DTransform & transform,
+                  const Lut1DTransform & transform,
                   TransformDirection dir)
 {
-    TransformDirection combinedDir =
-        CombineTransformDirections(dir,
-                                    transform.getDirection());
+    const auto & data = dynamic_cast<const Lut1DTransformImpl &>(transform).data();
+    data.validate();
 
-    const unsigned long length = transform.getLength();
-    auto halfFlags = (Lut1DOpData::HalfFlags)(
-        (transform.getInputHalfDomain() ? Lut1DOpData::LUT_INPUT_HALF_CODE :
-                                            Lut1DOpData::LUT_STANDARD) |
-                                            (transform.getOutputRawHalfs() ? Lut1DOpData::LUT_OUTPUT_HALF_CODE :
-                                                                            Lut1DOpData::LUT_STANDARD));
-
-    auto data = std::make_shared<Lut1DOpData>(
-        halfFlags,
-        length);
-
-    data->setInterpolation(transform.getInterpolation());
-    data->getFormatMetadata() = transform.getFormatMetadata();
-    data->setFileOutputBitDepth(transform.getFileOutputBitDepth());
-
-    data->setHueAdjust(transform.getHueAdjust());
-    for (unsigned long i = 0; i < length; ++i)
-    {
-        float r = 0.f;
-        float g = 0.f;
-        float b = 0.f;
-        transform.getValue(i, r, g, b);
-        data->getArray()[3 * i] = r;
-        data->getArray()[3 * i + 1] = g;
-        data->getArray()[3 * i + 2] = b;
-    }
-    CreateLut1DOp(ops, data, combinedDir);
+    auto lut = data.clone();
+    CreateLut1DOp(ops, lut, dir);
 }
 
 } // namespace OCIO_NAMESPACE

@@ -116,8 +116,8 @@ set(SOURCES
 	transforms/LogAffineTransform.cpp
 	transforms/LogTransform.cpp
 	transforms/LookTransform.cpp
-	transforms/LUT1DTransform.cpp
-	transforms/LUT3DTransform.cpp
+	transforms/Lut1DTransform.cpp
+	transforms/Lut3DTransform.cpp
 	transforms/MatrixTransform.cpp
 	transforms/RangeTransform.cpp
 )

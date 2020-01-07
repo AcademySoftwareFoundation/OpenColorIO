@@ -3,234 +3,169 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ops/exposurecontrast/ExposureContrastOpData.h"
+#include "transforms/ExposureContrastTransform.h"
 
 namespace OCIO_NAMESPACE
 {
 
-ExposureContrastStyle ConvertStyle(ExposureContrastOpData::Style style)
-{
-    switch (style)
-    {
-    case ExposureContrastOpData::STYLE_VIDEO:
-    case ExposureContrastOpData::STYLE_VIDEO_REV:
-        return EXPOSURE_CONTRAST_VIDEO;
-
-    case ExposureContrastOpData::STYLE_LOGARITHMIC:
-    case ExposureContrastOpData::STYLE_LOGARITHMIC_REV:
-        return EXPOSURE_CONTRAST_LOGARITHMIC;
-
-    case ExposureContrastOpData::STYLE_LINEAR:
-    case ExposureContrastOpData::STYLE_LINEAR_REV:
-        return EXPOSURE_CONTRAST_LINEAR;
-    }
-
-    std::stringstream ss("Unknown ExposureContrast style: ");
-    ss << style;
-
-    throw Exception(ss.str().c_str());
-}
-
 ExposureContrastTransformRcPtr ExposureContrastTransform::Create()
 {
-    return ExposureContrastTransformRcPtr(new ExposureContrastTransform(), &deleter);
+    return ExposureContrastTransformRcPtr(new ExposureContrastTransformImpl(),
+                                          &ExposureContrastTransformImpl::deleter);
 }
 
-void ExposureContrastTransform::deleter(ExposureContrastTransform* t)
+void ExposureContrastTransformImpl::deleter(ExposureContrastTransform * t)
 {
-    delete t;
+    delete static_cast<ExposureContrastTransformImpl *>(t);
 }
 
-
-///////////////////////////////////////////////////////////////////////////
-
-class ExposureContrastTransform::Impl : public ExposureContrastOpData
+TransformRcPtr ExposureContrastTransformImpl::createEditableCopy() const
 {
-public:
-    Impl()
-        : ExposureContrastOpData()
-        , m_direction(TRANSFORM_DIR_FORWARD)
-    {
-    }
-
-    Impl(const Impl &) = delete;
-
-    ~Impl() {}
-
-    Impl& operator=(const Impl & rhs)
-    {
-        if (this != &rhs)
-        {
-            ExposureContrastOpData::operator=(rhs);
-            m_direction = rhs.m_direction;
-        }
-        return *this;
-    }
-
-    bool equals(const Impl & rhs) const
-    {
-        if (this == &rhs) return true;
-
-        return ExposureContrastOpData::operator==(rhs)
-               && m_direction == rhs.m_direction;
-    }
-
-    TransformDirection m_direction;
-};
-
-///////////////////////////////////////////////////////////////////////////
-
-ExposureContrastTransform::ExposureContrastTransform()
-    : m_impl(new ExposureContrastTransform::Impl)
-{
-}
-
-ExposureContrastTransform::~ExposureContrastTransform()
-{
-    delete m_impl;
-    m_impl = nullptr;
-}
-
-ExposureContrastTransform & ExposureContrastTransform::operator= (const ExposureContrastTransform & rhs)
-{
-    if (this != &rhs)
-    {
-        *m_impl = *rhs.m_impl;
-    }
-    return *this;
-}
-
-TransformRcPtr ExposureContrastTransform::createEditableCopy() const
-{
-    ExposureContrastTransformRcPtr transform = ExposureContrastTransform::Create();
-    *transform->m_impl = *m_impl;
+    TransformRcPtr transform = ExposureContrastTransform::Create();
+    dynamic_cast<ExposureContrastTransformImpl*>(transform.get())->data() = data();
     return transform;
 }
 
-TransformDirection ExposureContrastTransform::getDirection() const
+TransformDirection ExposureContrastTransformImpl::getDirection() const noexcept
 {
-    return getImpl()->m_direction;
+    return data().getDirection();
 }
 
-void ExposureContrastTransform::setDirection(TransformDirection dir)
+void ExposureContrastTransformImpl::setDirection(TransformDirection dir) noexcept
 {
-    getImpl()->m_direction = dir;
+    data().setDirection(dir);
 }
 
-void ExposureContrastTransform::validate() const
+void ExposureContrastTransformImpl::validate() const
 {
-    Transform::validate();
-    getImpl()->validate();
+    try
+    {
+        Transform::validate();
+        data().validate();
+    }
+    catch (Exception & ex)
+    {
+        std::string errMsg("ExposureContrastTransform validation failed: ");
+        errMsg += ex.what();
+        throw Exception(errMsg.c_str());
+    }
 }
 
-FormatMetadata & ExposureContrastTransform::getFormatMetadata()
+FormatMetadata & ExposureContrastTransformImpl::getFormatMetadata() noexcept
 {
-    return m_impl->getFormatMetadata();
+    return data().getFormatMetadata();
 }
 
-const FormatMetadata & ExposureContrastTransform::getFormatMetadata() const
+const FormatMetadata & ExposureContrastTransformImpl::getFormatMetadata() const noexcept
 {
-    return m_impl->getFormatMetadata();
+    return data().getFormatMetadata();
 }
 
-ExposureContrastStyle ExposureContrastTransform::getStyle() const
+bool ExposureContrastTransformImpl::equals(const ExposureContrastTransform & other) const noexcept
 {
-    return ConvertStyle(getImpl()->getStyle());
+    if (this == &other) return true;
+    return data() == dynamic_cast<const ExposureContrastTransformImpl*>(&other)->data();
 }
 
-void ExposureContrastTransform::setStyle(ExposureContrastStyle style)
+ExposureContrastStyle ExposureContrastTransformImpl::getStyle() const
 {
-    getImpl()->setStyle(ExposureContrastOpData::ConvertStyle(style, TRANSFORM_DIR_FORWARD));
+    return ExposureContrastOpData::ConvertStyle(data().getStyle());
 }
 
-double ExposureContrastTransform::getExposure() const
+void ExposureContrastTransformImpl::setStyle(ExposureContrastStyle style)
 {
-    return getImpl()->getExposure();
+    auto curDir = getDirection();
+    data().setStyle(ExposureContrastOpData::ConvertStyle(style, curDir));
 }
 
-void ExposureContrastTransform::setExposure(double exposure)
+double ExposureContrastTransformImpl::getExposure() const
 {
-    getImpl()->setExposure(exposure);
+    return data().getExposure();
 }
 
-void ExposureContrastTransform::makeExposureDynamic()
+void ExposureContrastTransformImpl::setExposure(double exposure)
 {
-    getImpl()->getExposureProperty()->makeDynamic();
+    data().setExposure(exposure);
 }
 
-bool ExposureContrastTransform::isExposureDynamic() const
+void ExposureContrastTransformImpl::makeExposureDynamic()
 {
-    return getImpl()->getExposureProperty()->isDynamic();
+    data().getExposureProperty()->makeDynamic();
 }
 
-double ExposureContrastTransform::getContrast() const
+bool ExposureContrastTransformImpl::isExposureDynamic() const
 {
-    return getImpl()->getContrast();
+    return data().getExposureProperty()->isDynamic();
 }
 
-void ExposureContrastTransform::setContrast(double contrast)
+double ExposureContrastTransformImpl::getContrast() const
 {
-    getImpl()->setContrast(contrast);
+    return data().getContrast();
 }
 
-void ExposureContrastTransform::makeContrastDynamic()
+void ExposureContrastTransformImpl::setContrast(double contrast)
 {
-    getImpl()->getContrastProperty()->makeDynamic();
+    data().setContrast(contrast);
 }
 
-bool ExposureContrastTransform::isContrastDynamic() const
+void ExposureContrastTransformImpl::makeContrastDynamic()
 {
-    return getImpl()->getContrastProperty()->isDynamic();
+    data().getContrastProperty()->makeDynamic();
 }
 
-double ExposureContrastTransform::getGamma() const
+bool ExposureContrastTransformImpl::isContrastDynamic() const
 {
-    return getImpl()->getGamma();
+    return data().getContrastProperty()->isDynamic();
 }
 
-void ExposureContrastTransform::setGamma(double gamma)
+double ExposureContrastTransformImpl::getGamma() const
 {
-    getImpl()->setGamma(gamma);
+    return data().getGamma();
 }
 
-void ExposureContrastTransform::makeGammaDynamic()
+void ExposureContrastTransformImpl::setGamma(double gamma)
 {
-    getImpl()->getGammaProperty()->makeDynamic();
+    data().setGamma(gamma);
 }
 
-bool ExposureContrastTransform::isGammaDynamic() const
+void ExposureContrastTransformImpl::makeGammaDynamic()
 {
-    return getImpl()->getGammaProperty()->isDynamic();
+    data().getGammaProperty()->makeDynamic();
 }
 
-double ExposureContrastTransform::getPivot() const
+bool ExposureContrastTransformImpl::isGammaDynamic() const
 {
-    return getImpl()->getPivot();
+    return data().getGammaProperty()->isDynamic();
 }
 
-void ExposureContrastTransform::setPivot(double pivot)
+double ExposureContrastTransformImpl::getPivot() const
 {
-    getImpl()->setPivot(pivot);
+    return data().getPivot();
 }
 
-double ExposureContrastTransform::getLogExposureStep() const
+void ExposureContrastTransformImpl::setPivot(double pivot)
 {
-    return getImpl()->getLogExposureStep();
+    data().setPivot(pivot);
 }
 
-void ExposureContrastTransform::setLogExposureStep(double logExposureStep)
+double ExposureContrastTransformImpl::getLogExposureStep() const
 {
-    getImpl()->setLogExposureStep(logExposureStep);
+    return data().getLogExposureStep();
 }
 
-double ExposureContrastTransform::getLogMidGray() const
+void ExposureContrastTransformImpl::setLogExposureStep(double logExposureStep)
 {
-    return getImpl()->getLogMidGray();
+    data().setLogExposureStep(logExposureStep);
 }
 
-void ExposureContrastTransform::setLogMidGray(double logMidGray)
+double ExposureContrastTransformImpl::getLogMidGray() const
 {
-    return getImpl()->setLogMidGray(logMidGray);
+    return data().getLogMidGray();
+}
+
+void ExposureContrastTransformImpl::setLogMidGray(double logMidGray)
+{
+    return data().setLogMidGray(logMidGray);
 }
 
 
