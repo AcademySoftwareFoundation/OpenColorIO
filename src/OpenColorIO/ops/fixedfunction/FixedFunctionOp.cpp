@@ -10,6 +10,7 @@
 #include "ops/fixedfunction/FixedFunctionOpCPU.h"
 #include "ops/fixedfunction/FixedFunctionOpGPU.h"
 #include "ops/fixedfunction/FixedFunctionOp.h"
+#include "transforms/FixedFunctionTransform.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -87,7 +88,7 @@ bool FixedFunctionOp::isSameType(ConstOpRcPtr & op) const
 bool FixedFunctionOp::isInverse(ConstOpRcPtr & op) const
 {
     ConstFixedFunctionOpRcPtr typedRcPtr = DynamicPtrCast<const FixedFunctionOp>(op);
-    if(!typedRcPtr) return false;
+    if (!typedRcPtr) return false;
 
     ConstFixedFunctionOpDataRcPtr fnOpData = typedRcPtr->fnData();
     return fnData()->isInverse(fnOpData);
@@ -100,7 +101,7 @@ bool FixedFunctionOp::canCombineWith(ConstOpRcPtr & /*op*/) const
 
 void FixedFunctionOp::combineWith(OpRcPtrVec & /*ops*/, ConstOpRcPtr & secondOp) const
 {
-    if(!canCombineWith(secondOp))
+    if (!canCombineWith(secondOp))
     {
         throw Exception("FixedFunctionOp: canCombineWith must be checked "
                         "before calling combineWith.");
@@ -152,8 +153,7 @@ void CreateFixedFunctionOp(OpRcPtrVec & ops,
                            const FixedFunctionOpData::Params & params,
                            FixedFunctionOpData::Style style)
 {
-    FixedFunctionOpDataRcPtr funcData 
-        = std::make_shared<FixedFunctionOpData>(params, style);
+    FixedFunctionOpDataRcPtr funcData = std::make_shared<FixedFunctionOpData>(params, style);
     CreateFixedFunctionOp(ops, funcData, TRANSFORM_DIR_FORWARD);
 }
 
@@ -181,45 +181,8 @@ void CreateFixedFunctionTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op
     }
     auto ffData = DynamicPtrCast<const FixedFunctionOpData>(op->data());
     auto ffTransform = FixedFunctionTransform::Create();
-
-    const auto style = ffData->getStyle();
-
-    switch(style)
-    {
-        case FixedFunctionOpData::ACES_RED_MOD_03_INV:
-        case FixedFunctionOpData::ACES_RED_MOD_10_INV:
-        case FixedFunctionOpData::ACES_GLOW_03_INV:
-        case FixedFunctionOpData::ACES_GLOW_10_INV:
-        case FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV:
-        case FixedFunctionOpData::HSV_TO_RGB:
-        case FixedFunctionOpData::xyY_TO_XYZ:
-        case FixedFunctionOpData::uvY_TO_XYZ:
-        case FixedFunctionOpData::LUV_TO_XYZ:
-            ffTransform->setDirection(TRANSFORM_DIR_INVERSE);
-            break;
-        case FixedFunctionOpData::ACES_RED_MOD_03_FWD:
-        case FixedFunctionOpData::ACES_RED_MOD_10_FWD:
-        case FixedFunctionOpData::ACES_GLOW_03_FWD:
-        case FixedFunctionOpData::ACES_GLOW_10_FWD:
-        case FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD:
-        case FixedFunctionOpData::REC2100_SURROUND:
-        case FixedFunctionOpData::RGB_TO_HSV:
-        case FixedFunctionOpData::XYZ_TO_xyY:
-        case FixedFunctionOpData::XYZ_TO_uvY:
-        case FixedFunctionOpData::XYZ_TO_LUV:
-            // Forward is the default direction.
-            break;
-    }
-
-    const auto transformStyle = FixedFunctionOpData::ConvertStyle(style);
-    ffTransform->setStyle(transformStyle);
-
-    auto & formatMetadata = ffTransform->getFormatMetadata();
-    auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
-    metadata = ffData->getFormatMetadata();
-
-    auto & params = ffData->getParams();
-    ffTransform->setParams(params.data(), params.size());
+    auto & data = dynamic_cast<FixedFunctionTransformImpl *>(ffTransform.get())->data();
+    data = *ffData;
 
     group->appendTransform(ffTransform);
 }
@@ -230,18 +193,11 @@ void BuildFixedFunctionOp(OpRcPtrVec & ops,
                           const FixedFunctionTransform & transform,
                           TransformDirection dir)
 {
-    const TransformDirection combinedDir 
-        = CombineTransformDirections(dir, transform.getDirection());
+    const auto & data = dynamic_cast<const FixedFunctionTransformImpl &>(transform).data();
+    data.validate();
 
-    const size_t numParams = transform.getNumParams();
-    FixedFunctionOpData::Params params(numParams, 0.);
-    if(numParams>0) transform.getParams(&params[0]);
-
-    const auto style = FixedFunctionOpData::ConvertStyle(transform.getStyle());
-
-    auto funcData = std::make_shared<FixedFunctionOpData>(params, style);
-
-    CreateFixedFunctionOp(ops, funcData, combinedDir);
+    auto funcData = data.clone();
+    CreateFixedFunctionOp(ops, funcData, dir);
 }
 
 

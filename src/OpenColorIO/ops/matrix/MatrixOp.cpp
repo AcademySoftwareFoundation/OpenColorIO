@@ -12,6 +12,7 @@
 #include "MathUtils.h"
 #include "ops/matrix/MatrixOpCPU.h"
 #include "ops/matrix/MatrixOp.h"
+#include "transforms/MatrixTransform.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -95,7 +96,7 @@ MatrixOffsetOp::MatrixOffsetOp(const double * m44,
 }
 
 MatrixOffsetOp::MatrixOffsetOp(MatrixOpDataRcPtr & matrix,
-                                TransformDirection direction)
+                               TransformDirection direction)
     : Op()
     , m_direction(direction)
 {
@@ -287,8 +288,8 @@ void MatrixOffsetOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
 
 
 void CreateScaleOp(OpRcPtrVec & ops,
-                    const double * scale4,
-                    TransformDirection direction)
+                   const double * scale4,
+                   TransformDirection direction)
 {
     const double offset4[4] = { 0, 0, 0, 0 };
     CreateScaleOffsetOp(ops, scale4, offset4, direction);
@@ -311,8 +312,8 @@ void CreateOffsetOp(OpRcPtrVec & ops,
 }
 
 void CreateScaleOffsetOp(OpRcPtrVec & ops,
-                            const double * scale4, const double * offset4,
-                            TransformDirection direction)
+                         const double * scale4, const double * offset4,
+                         TransformDirection direction)
 {
     double m44[16]{ 0.0 };
 
@@ -340,8 +341,8 @@ void CreateSaturationOp(OpRcPtrVec & ops,
 }
 
 void CreateMatrixOffsetOp(OpRcPtrVec & ops,
-                            const double * m44, const double * offset4,
-                            TransformDirection direction)
+                          const double * m44, const double * offset4,
+                          TransformDirection direction)
 {
     auto mat = std::make_shared<MatrixOpData>();
     mat->setRGBA(m44);
@@ -351,9 +352,9 @@ void CreateMatrixOffsetOp(OpRcPtrVec & ops,
 }
 
 void CreateFitOp(OpRcPtrVec & ops,
-                    const double * oldmin4, const double * oldmax4,
-                    const double * newmin4, const double * newmax4,
-                    TransformDirection direction)
+                 const double * oldmin4, const double * oldmax4,
+                 const double * newmin4, const double * newmax4,
+                 TransformDirection direction)
 {
     double matrix[16];
     double offset[4];
@@ -435,31 +436,11 @@ void CreateMatrixTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
         throw Exception("CreateMatrixTransform: op has to be a MatrixOffsetOp");
     }
     auto matTransform = MatrixTransform::Create();
-    matTransform->setDirection(mat->getDirection());
+    MatrixOpData & data = dynamic_cast<MatrixTransformImpl*>(matTransform.get())->data();
 
     auto matDataSrc = DynamicPtrCast<const MatrixOpData>(op->data());
-
-    matTransform->setFileInputBitDepth(matDataSrc->getFileInputBitDepth());
-    matTransform->setFileOutputBitDepth(matDataSrc->getFileOutputBitDepth());
-    auto & formatMetadata = matTransform->getFormatMetadata();
-    auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
-    metadata = matDataSrc->getFormatMetadata();
-
-    if (matDataSrc->getArray().getLength() != 4)
-    {
-        // Note: By design, only 4x4 matrices are instantiated.
-        // The CLF 3x3 (and 3x4) matrices are automatically converted
-        // to 4x4 matrices, and a Matrix Transform only expects 4x4 matrices.
-
-        std::ostringstream os;
-        os << "CreateMatrixTransform: The matrix dimension is always ";
-        os << "expected to be 4. Found: ";
-        os << matDataSrc->getArray().getLength() << ".";
-        throw Exception(os.str().c_str());
-    }
-
-    matTransform->setMatrix(matDataSrc->getArray().getValues().data());
-    matTransform->setOffset(matDataSrc->getOffsets().getValues());
+    data = *matDataSrc;
+    matTransform->setDirection(mat->getDirection());
 
     group->appendTransform(matTransform);
 }
@@ -469,22 +450,12 @@ void BuildMatrixOp(OpRcPtrVec & ops,
                    const MatrixTransform & transform,
                    TransformDirection dir)
 {
-    TransformDirection combinedDir =
-        CombineTransformDirections(dir,
-                                    transform.getDirection());
+    const auto combinedDir = CombineTransformDirections(dir, transform.getDirection());
 
-    double matrix[16];
-    double offset[4];
-    transform.getMatrix(matrix);
-    transform.getOffset(offset);
+    const MatrixOpData & data = dynamic_cast<const MatrixTransformImpl &>(transform).data();
+    data.validate();
 
-    MatrixOpDataRcPtr mat = std::make_shared<MatrixOpData>();
-    mat->getFormatMetadata() = transform.getFormatMetadata();
-    mat->setFileInputBitDepth(transform.getFileInputBitDepth());
-    mat->setFileOutputBitDepth(transform.getFileOutputBitDepth());
-    mat->setRGBA(matrix);
-    mat->setRGBAOffsets(offset);
-
+    MatrixOpDataRcPtr mat = data.clone();
     CreateMatrixOp(ops, mat, combinedDir);
 }
 

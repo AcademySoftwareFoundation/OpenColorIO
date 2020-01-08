@@ -17,6 +17,7 @@
 #include "ops/lut3d/Lut3DOpGPU.h"
 #include "ops/matrix/MatrixOp.h"
 #include "ops/OpTools.h"
+#include "transforms/Lut3DTransform.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -29,7 +30,7 @@ inline float lerp(float a, float b, float z)
     return (b - a) * z + a;
 }
 
-inline void lerp_rgb(float* out, float* a, float* b, float* z)
+inline void lerp_rgb(float * out, float * a, float * b, float * z)
 {
     out[0] = (b[0] - a[0]) * z[0] + a[0];
     out[1] = (b[1] - a[1]) * z[1] + a[1];
@@ -42,8 +43,8 @@ inline float lerp(float a, float b, float c, float d, float y, float z)
     return lerp(lerp(a, b, z), lerp(c, d, z), y);
 }
 
-inline void lerp_rgb(float* out, float* a, float* b, float* c,
-                        float* d, float* y, float* z)
+inline void lerp_rgb(float * out, float * a, float * b, float * c,
+                     float * d, float * y, float * z)
 {
     float v1[3];
     float v2[3];
@@ -55,15 +56,15 @@ inline void lerp_rgb(float* out, float* a, float* b, float* c,
 
 // Trilinear
 inline float lerp(float a, float b, float c, float d,
-                    float e, float f, float g, float h,
-                    float x, float y, float z)
+                  float e, float f, float g, float h,
+                  float x, float y, float z)
 {
     return lerp(lerp(a,b,c,d,y,z), lerp(e,f,g,h,y,z), x);
 }
 
-inline void lerp_rgb(float* out, float* a, float* b, float* c, float* d,
-                        float* e, float* f, float* g, float* h,
-                        float* x, float* y, float* z)
+inline void lerp_rgb(float * out, float * a, float * b, float * c, float * d,
+                     float * e, float * f, float * g, float * h,
+                     float * x, float * y, float * z)
 {
     float v1[3];
     float v2[3];
@@ -74,18 +75,18 @@ inline void lerp_rgb(float* out, float* a, float* b, float* c, float* d,
 }
 
 inline float lookupNearest_3D(int rIndex, int gIndex, int bIndex,
-                                int size_red, int size_green, int size_blue,
-                                const float* simple_rgb_lut, int channelIndex)
+                              int size_red, int size_green, int size_blue,
+                              const float * simple_rgb_lut, int channelIndex)
 {
     return simple_rgb_lut[GetLut3DIndex_RedFast(rIndex, gIndex, bIndex,
                                                 size_red, size_green, size_blue)
-                            + channelIndex];
+                          + channelIndex];
 }
 
-inline void lookupNearest_3D_rgb(float* rgb,
-                                    int rIndex, int gIndex, int bIndex,
-                                    int size_red, int size_green, int size_blue,
-                                    const float* simple_rgb_lut)
+inline void lookupNearest_3D_rgb(float * rgb,
+                                 int rIndex, int gIndex, int bIndex,
+                                 int size_red, int size_green, int size_blue,
+                                 const float * simple_rgb_lut)
 {
     int offset = GetLut3DIndex_RedFast(rIndex, gIndex, bIndex, size_red, size_green, size_blue);
     rgb[0] = simple_rgb_lut[offset];
@@ -101,7 +102,7 @@ inline int clamp(float k, float minVal, float maxVal)
 
 }
 
-void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels, Lut3DOrder lut3DOrder)
+void GenerateIdentityLut3D(float * img, int edgeLen, int numChannels, Lut3DOrder lut3DOrder)
 {
     if (!img) return;
     if (numChannels < 3)
@@ -113,7 +114,7 @@ void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels, Lut3DOrder 
 
     if (lut3DOrder == LUT3DORDER_FAST_RED)
     {
-        for (int i = 0; i<edgeLen*edgeLen*edgeLen; i++)
+        for (int i = 0; i < edgeLen*edgeLen*edgeLen; i++)
         {
             img[numChannels*i + 0] = (float)(i%edgeLen) * c;
             img[numChannels*i + 1] = (float)((i / edgeLen) % edgeLen) * c;
@@ -122,7 +123,7 @@ void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels, Lut3DOrder 
     }
     else if (lut3DOrder == LUT3DORDER_FAST_BLUE)
     {
-        for (int i = 0; i<edgeLen*edgeLen*edgeLen; i++)
+        for (int i = 0; i < edgeLen*edgeLen*edgeLen; i++)
         {
             img[numChannels*i + 0] = (float)((i / edgeLen / edgeLen) % edgeLen) * c;
             img[numChannels*i + 1] = (float)((i / edgeLen) % edgeLen) * c;
@@ -282,10 +283,8 @@ void Lut3DOp::finalize(OptimizationFlags oFlags)
 {
     Lut3DOpDataRcPtr lutData = lut3DData();
 
-    const bool invLutFast = (oFlags & OPTIMIZATION_LUT_INV_FAST) ==
-                            OPTIMIZATION_LUT_INV_FAST;
-    lutData->setInversionQuality(
-        invLutFast ? LUT_INVERSION_FAST: LUT_INVERSION_EXACT);
+    const bool invLutFast = (oFlags & OPTIMIZATION_LUT_INV_FAST) == OPTIMIZATION_LUT_INV_FAST;
+    lutData->setInversionQuality(invLutFast ? LUT_INVERSION_FAST: LUT_INVERSION_EXACT);
 
     lutData->finalize();
 
@@ -325,9 +324,7 @@ void Lut3DOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
 }
 }
 
-void CreateLut3DOp(OpRcPtrVec & ops,
-                   Lut3DOpDataRcPtr & lut,
-                   TransformDirection direction)
+void CreateLut3DOp(OpRcPtrVec & ops, Lut3DOpDataRcPtr & lut, TransformDirection direction)
 {
     if (direction == TRANSFORM_DIR_FORWARD)
     {
@@ -352,74 +349,24 @@ void CreateLut3DTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
         throw Exception("CreateLut3DTransform: op has to be a Lut3DOp");
     }
     auto lutData = DynamicPtrCast<const Lut3DOpData>(op->data());
-    auto lutTransform = LUT3DTransform::Create();
+    auto lutTransform = Lut3DTransform::Create();
+    Lut3DOpData & data = dynamic_cast<Lut3DTransformImpl*>(lutTransform.get())->data();
 
-    const auto dir = lutData->getDirection();
-    lutTransform->setDirection(dir);
-
-    lutTransform->setFileOutputBitDepth(lutData->getFileOutputBitDepth());
-
-    auto & formatMetadata = lutTransform->getFormatMetadata();
-    auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
-    metadata = lutData->getFormatMetadata();
-
-    const Interpolation interp = lutData->getInterpolation();
-    lutTransform->setInterpolation(interp);
-
-    auto & lutArray = lutData->getArray();
-    const unsigned long l = lutArray.getLength();
-    lutTransform->setGridSize(l);
-
-    for (unsigned long r = 0; r < l; ++r)
-    {
-        for (unsigned long g = 0; g < l; ++g)
-        {
-            for (unsigned long b = 0; b < l; ++b)
-            {
-                // Array is in blue-fastest order.
-                const unsigned long arrayIdx = 3 * ((r*l + g)*l + b);
-                lutTransform->setValue(r, g ,b, lutArray[arrayIdx],
-                                                lutArray[arrayIdx + 1],
-                                                lutArray[arrayIdx + 2]);
-            }
-        }
-    }
+    data = *lutData;
 
     group->appendTransform(lutTransform);
 }
 
 void BuildLut3DOp(OpRcPtrVec & ops,
                   const Config & config,
-                  const LUT3DTransform & transform,
+                  const Lut3DTransform & transform,
                   TransformDirection dir)
 {
-    TransformDirection combinedDir =
-        CombineTransformDirections(dir,
-                                   transform.getDirection());
-    const unsigned long gridSize = transform.getGridSize();
-    auto data = std::make_shared<Lut3DOpData>(gridSize, TRANSFORM_DIR_FORWARD);
-    data->getFormatMetadata() = transform.getFormatMetadata();
-    data->setFileOutputBitDepth(transform.getFileOutputBitDepth());
-    data->setInterpolation(transform.getInterpolation());
-    for (unsigned long r = 0; r < gridSize; ++r)
-    {
-        for (unsigned long g = 0; g < gridSize; ++g)
-        {
-            for (unsigned long b = 0; b < gridSize; ++b)
-            {
-                // Array is in blue-fastest order.
-                const unsigned long i = 3 * ((r*gridSize + g)*gridSize + b);
-                float rv = 0.f;
-                float gv = 0.f;
-                float bv = 0.f;
-                transform.getValue(r, g, b, rv, gv, bv);
-                data->getArray()[i] = rv;
-                data->getArray()[i + 1] = gv;
-                data->getArray()[i + 2] = bv;
-            }
-        }
-    }
-    CreateLut3DOp(ops, data, combinedDir);
+    const auto & data = dynamic_cast<const Lut3DTransformImpl &>(transform).data();
+    data.validate();
+
+    auto lut = data.clone();
+    CreateLut3DOp(ops, lut, dir);
 }
 
 } // namespace OCIO_NAMESPACE

@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include "transforms/LUT3DTransform.cpp"
+#include "transforms/Lut3DTransform.cpp"
 
 #include "UnitTest.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
-OCIO_ADD_TEST(LUT3DTransform, basic)
+OCIO_ADD_TEST(Lut3DTransform, basic)
 {
-    const OCIO::LUT3DTransformRcPtr lut = OCIO::LUT3DTransform::Create();
+    const OCIO::Lut3DTransformRcPtr lut = OCIO::Lut3DTransform::Create();
 
     OCIO_CHECK_EQUAL(lut->getGridSize(), 2);
     OCIO_CHECK_EQUAL(lut->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
@@ -96,13 +96,13 @@ OCIO_ADD_TEST(LUT3DTransform, basic)
 
     std::ostringstream oss;
     oss << *lut;
-    OCIO_CHECK_EQUAL(oss.str(), "<LUT3DTransform direction=inverse, fileoutdepth=8ui,"
+    OCIO_CHECK_EQUAL(oss.str(), "<Lut3DTransform direction=inverse, fileoutdepth=8ui,"
         " interpolation=default, gridSize=3, minrgb=[-0.2 -0.1 -0.3], maxrgb=[1.2 1.3 1.8]>");
 }
 
-OCIO_ADD_TEST(LUT3DTransform, create_with_parameters)
+OCIO_ADD_TEST(Lut3DTransform, create_with_parameters)
 {
-    const auto lut = OCIO::LUT3DTransform::Create(8);
+    const auto lut = OCIO::Lut3DTransform::Create(8);
 
     OCIO_CHECK_EQUAL(lut->getGridSize(), 8);
     OCIO_CHECK_EQUAL(lut->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);

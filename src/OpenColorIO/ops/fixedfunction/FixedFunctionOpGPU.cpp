@@ -412,9 +412,14 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderText & ss,
             Add_Surround_10_Fwd_Shader(ss, 1.0192640913260627f);
             break;
         }
-        case FixedFunctionOpData::REC2100_SURROUND:
+        case FixedFunctionOpData::REC2100_SURROUND_FWD:
         {
             Add_Surround_Shader(ss, (float) func->getParams()[0]);
+            break;
+        }
+		        case FixedFunctionOpData::REC2100_SURROUND_INV:
+        {
+            Add_Surround_Shader(ss, (float)(1. / func->getParams()[0]));
             break;
         }
         case FixedFunctionOpData::RGB_TO_HSV:
@@ -455,8 +460,7 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderText & ss,
         case FixedFunctionOpData::LUV_TO_XYZ:
         {
             Add_LUV_TO_XYZ(ss);
-            break;
-        }
+		}
     }
 
     ss.dedent();

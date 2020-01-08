@@ -13,12 +13,13 @@ namespace OCIO_NAMESPACE
 
 namespace
 {
-static constexpr const char * EC_STYLE_LINEAR          = "linear";
-static constexpr const char * EC_STYLE_LINEAR_REV      = "linearRev";
-static constexpr const char * EC_STYLE_VIDEO           = "video";
-static constexpr const char * EC_STYLE_VIDEO_REV       = "videoRev";
-static constexpr const char * EC_STYLE_LOGARITHMIC     = "log";
-static constexpr const char * EC_STYLE_LOGARITHMIC_REV = "logRev";
+// CTF style attribute strings.
+constexpr const char * EC_STYLE_LINEAR          = "linear";
+constexpr const char * EC_STYLE_LINEAR_REV      = "linearRev";
+constexpr const char * EC_STYLE_VIDEO           = "video";
+constexpr const char * EC_STYLE_VIDEO_REV       = "videoRev";
+constexpr const char * EC_STYLE_LOGARITHMIC     = "log";
+constexpr const char * EC_STYLE_LOGARITHMIC_REV = "logRev";
 }
 
 namespace DefaultValues
@@ -26,6 +27,7 @@ namespace DefaultValues
 const int FLOAT_DECIMALS = 7;
 }
 
+// Convert CTF attribute string to OpData style.
 ExposureContrastOpData::Style ExposureContrastOpData::ConvertStringToStyle(const char * str)
 {
     if (str && *str)
@@ -63,6 +65,7 @@ ExposureContrastOpData::Style ExposureContrastOpData::ConvertStringToStyle(const
     throw Exception("Missing exposure contrast style.");
 }
 
+// Convert internal OpData style enum to CTF attribute string.
 const char * ExposureContrastOpData::ConvertStyleToString(ExposureContrastOpData::Style style)
 {
     switch (style)
@@ -96,6 +99,7 @@ const char * ExposureContrastOpData::ConvertStyleToString(ExposureContrastOpData
     throw Exception("Unknown exposure contrast style.");
 }
 
+// Combine the Transform style and direction into the internal OpData style.
 ExposureContrastOpData::Style ExposureContrastOpData::ConvertStyle(ExposureContrastStyle style,
                                                                    TransformDirection dir)
 {
@@ -111,22 +115,46 @@ ExposureContrastOpData::Style ExposureContrastOpData::ConvertStyle(ExposureContr
     {
     case EXPOSURE_CONTRAST_VIDEO:
     {
-        return (isForward) ? ExposureContrastOpData::STYLE_VIDEO:
+        return (isForward) ? ExposureContrastOpData::STYLE_VIDEO :
                              ExposureContrastOpData::STYLE_VIDEO_REV;
     }
     case EXPOSURE_CONTRAST_LOGARITHMIC:
     {
-        return (isForward) ? ExposureContrastOpData::STYLE_LOGARITHMIC:
+        return (isForward) ? ExposureContrastOpData::STYLE_LOGARITHMIC :
                              ExposureContrastOpData::STYLE_LOGARITHMIC_REV;
     }
     case EXPOSURE_CONTRAST_LINEAR:
     {
-        return (isForward) ? ExposureContrastOpData::STYLE_LINEAR:
+        return (isForward) ? ExposureContrastOpData::STYLE_LINEAR :
                              ExposureContrastOpData::STYLE_LINEAR_REV;
     }
     }
 
     std::stringstream ss("Unknown ExposureContrast transform style: ");
+    ss << style;
+
+    throw Exception(ss.str().c_str());
+}
+
+// Convert internal OpData style to Transform style.
+ExposureContrastStyle ExposureContrastOpData::ConvertStyle(ExposureContrastOpData::Style style)
+{
+    switch (style)
+    {
+    case ExposureContrastOpData::STYLE_VIDEO:
+    case ExposureContrastOpData::STYLE_VIDEO_REV:
+        return EXPOSURE_CONTRAST_VIDEO;
+
+    case ExposureContrastOpData::STYLE_LOGARITHMIC:
+    case ExposureContrastOpData::STYLE_LOGARITHMIC_REV:
+        return EXPOSURE_CONTRAST_LOGARITHMIC;
+
+    case ExposureContrastOpData::STYLE_LINEAR:
+    case ExposureContrastOpData::STYLE_LINEAR_REV:
+        return EXPOSURE_CONTRAST_LINEAR;
+    }
+
+    std::stringstream ss("Unknown ExposureContrast style: ");
     ss << style;
 
     throw Exception(ss.str().c_str());
@@ -155,8 +183,7 @@ ExposureContrastOpData::~ExposureContrastOpData()
 
 ExposureContrastOpDataRcPtr ExposureContrastOpData::clone() const
 {
-    ExposureContrastOpDataRcPtr res =
-        std::make_shared<ExposureContrastOpData>(getStyle());
+    ExposureContrastOpDataRcPtr res = std::make_shared<ExposureContrastOpData>(getStyle());
     *res = *this;
 
     return res;
@@ -195,10 +222,8 @@ bool ExposureContrastOpData::isInverse(ConstExposureContrastOpDataRcPtr & r) con
     return *r == *inverse();
 }
 
-ExposureContrastOpDataRcPtr ExposureContrastOpData::inverse() const
+void ExposureContrastOpData::invert()
 {
-    ExposureContrastOpDataRcPtr ec = clone();
-
     Style invStyle = STYLE_LINEAR;
     switch (getStyle())
     {
@@ -209,8 +234,14 @@ ExposureContrastOpDataRcPtr ExposureContrastOpData::inverse() const
     case STYLE_LOGARITHMIC:     invStyle = STYLE_LOGARITHMIC_REV;     break;
     case STYLE_LOGARITHMIC_REV: invStyle = STYLE_LOGARITHMIC;         break;
     }
+    setStyle(invStyle);
+}
 
-    ec->setStyle(invStyle);
+ExposureContrastOpDataRcPtr ExposureContrastOpData::inverse() const
+{
+    ExposureContrastOpDataRcPtr ec = clone();
+
+    ec->invert();
 
     // Note that any existing metadata could become stale at this point but
     // trying to update it is also challenging since inverse() is sometimes
@@ -355,8 +386,7 @@ void ExposureContrastOpData::removeDynamicProperties()
     m_gamma->makeNonDynamic();
 }
 
-ExposureContrastOpData &
-ExposureContrastOpData::operator=(const ExposureContrastOpData & rhs)
+ExposureContrastOpData & ExposureContrastOpData::operator=(const ExposureContrastOpData & rhs)
 {
     if (this == &rhs) return *this;
 
@@ -384,6 +414,36 @@ ExposureContrastOpData::operator=(const ExposureContrastOpData & rhs)
     m_logMidGray = rhs.m_logMidGray;
 
     return *this;
+}
+
+// Convert internal OpData style into Transform direction.
+TransformDirection ExposureContrastOpData::getDirection() const
+{
+    switch (m_style)
+    {
+    case ExposureContrastOpData::STYLE_LINEAR:
+    case ExposureContrastOpData::STYLE_VIDEO:
+    case ExposureContrastOpData::STYLE_LOGARITHMIC:
+        return TRANSFORM_DIR_FORWARD;
+
+    case ExposureContrastOpData::STYLE_LINEAR_REV:
+    case ExposureContrastOpData::STYLE_VIDEO_REV:
+    case ExposureContrastOpData::STYLE_LOGARITHMIC_REV:
+        return TRANSFORM_DIR_INVERSE;
+    }
+    return TRANSFORM_DIR_FORWARD;
+}
+
+void ExposureContrastOpData::setDirection(TransformDirection dir)
+{
+    if (dir != TRANSFORM_DIR_UNKNOWN)
+    {
+        const auto curDir = getDirection();
+        if (curDir != dir)
+        {
+            invert();
+        }
+    }
 }
 
 } // namespace OCIO_NAMESPACE

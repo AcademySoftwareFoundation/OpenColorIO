@@ -6,104 +6,71 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "OpBuilders.h"
-#include "ops/gamma/GammaOpData.h"
+#include "transforms/ExponentWithLinearTransform.h"
 
 namespace OCIO_NAMESPACE
 {
 
 ExponentWithLinearTransformRcPtr ExponentWithLinearTransform::Create()
 {
-    return ExponentWithLinearTransformRcPtr(new ExponentWithLinearTransform(), &deleter);
+    return ExponentWithLinearTransformRcPtr(new ExponentWithLinearTransformImpl(),
+                                            &ExponentWithLinearTransformImpl::deleter);
 }
 
-void ExponentWithLinearTransform::deleter(ExponentWithLinearTransform* t)
+void ExponentWithLinearTransformImpl::deleter(ExponentWithLinearTransform * t)
 {
-    delete t;
+    delete static_cast<ExponentWithLinearTransformImpl *>(t);
 }
 
-
-class ExponentWithLinearTransform::Impl : public GammaOpData
+ExponentWithLinearTransformImpl::ExponentWithLinearTransformImpl()
 {
-public:
-    TransformDirection m_dir;
+    data().setRedParams({ 1., 0. });
+    data().setGreenParams({ 1., 0. });
+    data().setBlueParams({ 1., 0. });
+    data().setAlphaParams({ 1., 0. });
 
-    Impl()
-        :   GammaOpData()
-        ,   m_dir(TRANSFORM_DIR_FORWARD)
-    {
-        setRedParams  ( {1., 0.} );
-        setGreenParams( {1., 0.} );
-        setBlueParams ( {1., 0.} );
-        setAlphaParams( {1., 0.} );
-
-        setStyle(GammaOpData::MONCURVE_FWD);
-    }
-
-    Impl(const Impl &) = delete;
-
-    ~Impl()
-    { }
-
-    Impl& operator= (const Impl & rhs)
-    {
-        if (this != &rhs)
-        {
-            GammaOpData::operator=(rhs);
-            m_dir = rhs.m_dir;
-        }
-        return *this;
-    }
-};
-
-///////////////////////////////////////////////////////////////////////////
-
-
-
-ExponentWithLinearTransform::ExponentWithLinearTransform()
-    : m_impl(new ExponentWithLinearTransform::Impl)
-{
+    data().setStyle(GammaOpData::MONCURVE_FWD);
 }
 
-TransformRcPtr ExponentWithLinearTransform::createEditableCopy() const
+TransformRcPtr ExponentWithLinearTransformImpl::createEditableCopy() const
 {
-    ExponentWithLinearTransformRcPtr transform = ExponentWithLinearTransform::Create();
-    *(transform->m_impl) = *m_impl;
+    TransformRcPtr transform = ExponentWithLinearTransform::Create();
+    dynamic_cast<ExponentWithLinearTransformImpl*>(transform.get())->data() = data();
     return transform;
 }
 
-ExponentWithLinearTransform::~ExponentWithLinearTransform()
+TransformDirection ExponentWithLinearTransformImpl::getDirection() const noexcept
 {
-    delete m_impl;
-    m_impl = nullptr;
-}
-
-ExponentWithLinearTransform& ExponentWithLinearTransform::operator= (const ExponentWithLinearTransform & rhs)
-{
-    if (this != &rhs)
+    if (GammaOpData::MONCURVE_FWD == data().getStyle())
     {
-        *m_impl = *rhs.m_impl;
+        return TRANSFORM_DIR_FORWARD;
     }
-    return *this;
+    else
+    {
+        return TRANSFORM_DIR_INVERSE;
+    }
 }
 
-TransformDirection ExponentWithLinearTransform::getDirection() const
+void ExponentWithLinearTransformImpl::setDirection(TransformDirection dir) noexcept
 {
-    return getImpl()->m_dir;
+    if (TRANSFORM_DIR_FORWARD == dir)
+    {
+        data().setStyle(GammaOpData::MONCURVE_FWD);
+    }
+    else
+    {
+        data().setStyle(GammaOpData::MONCURVE_REV);
+    }
 }
 
-void ExponentWithLinearTransform::setDirection(TransformDirection dir)
-{
-    getImpl()->m_dir = dir;
-}
-
-void ExponentWithLinearTransform::validate() const
+void ExponentWithLinearTransformImpl::validate() const
 {
     try
     {
         Transform::validate();
-        getImpl()->validate();
+        data().validate();
     }
-    catch(Exception & ex)
+    catch (Exception & ex)
     {
         std::string errMsg("ExponentWithLinearTransform validation failed: ");
         errMsg += ex.what();
@@ -111,54 +78,60 @@ void ExponentWithLinearTransform::validate() const
     }
 }
 
-FormatMetadata & ExponentWithLinearTransform::getFormatMetadata()
+FormatMetadata & ExponentWithLinearTransformImpl::getFormatMetadata() noexcept
 {
-    return m_impl->getFormatMetadata();
+    return data().getFormatMetadata();
 }
 
-const FormatMetadata & ExponentWithLinearTransform::getFormatMetadata() const
+const FormatMetadata & ExponentWithLinearTransformImpl::getFormatMetadata() const noexcept
 {
-    return m_impl->getFormatMetadata();
+    return data().getFormatMetadata();
 }
 
-void ExponentWithLinearTransform::setGamma(const double(&values)[4])
+bool ExponentWithLinearTransformImpl::equals(const ExponentWithLinearTransform & other) const noexcept
 {
-    getImpl()->getRedParams()  [0] = values[0];
-    getImpl()->getGreenParams()[0] = values[1];
-    getImpl()->getBlueParams() [0] = values[2];
-    getImpl()->getAlphaParams()[0] = values[3];
+    if (this == &other) return true;
+    return data() == dynamic_cast<const ExponentWithLinearTransformImpl*>(&other)->data();
 }
 
-void ExponentWithLinearTransform::getGamma(double(&values)[4]) const
+void ExponentWithLinearTransformImpl::setGamma(const double(&values)[4]) noexcept
 {
-    values[0] = getImpl()->getRedParams()  [0];
-    values[1] = getImpl()->getGreenParams()[0];
-    values[2] = getImpl()->getBlueParams() [0];
-    values[3] = getImpl()->getAlphaParams()[0];
+    data().getRedParams()  [0] = values[0];
+    data().getGreenParams()[0] = values[1];
+    data().getBlueParams() [0] = values[2];
+    data().getAlphaParams()[0] = values[3];
 }
 
-void ExponentWithLinearTransform::setOffset(const double(&values)[4])
+void ExponentWithLinearTransformImpl::getGamma(double(&values)[4]) const noexcept
 {
-    const GammaOpData::Params red = { getImpl()->getRedParams()  [0], values[0] };
-    const GammaOpData::Params grn = { getImpl()->getGreenParams()[0], values[1] };
-    const GammaOpData::Params blu = { getImpl()->getBlueParams() [0], values[2] };
-    const GammaOpData::Params alp = { getImpl()->getAlphaParams()[0], values[3] };
-
-    getImpl()->setRedParams(red);
-    getImpl()->setGreenParams(grn);
-    getImpl()->setBlueParams(blu);
-    getImpl()->setAlphaParams(alp);
+    values[0] = data().getRedParams()  [0];
+    values[1] = data().getGreenParams()[0];
+    values[2] = data().getBlueParams() [0];
+    values[3] = data().getAlphaParams()[0];
 }
 
-void ExponentWithLinearTransform::getOffset(double(&values)[4]) const
+void ExponentWithLinearTransformImpl::setOffset(const double(&values)[4]) noexcept
 {
-    values[0] = getImpl()->getRedParams().size()  == 2 ? getImpl()->getRedParams()  [1] : 0.;
-    values[1] = getImpl()->getGreenParams().size()== 2 ? getImpl()->getGreenParams()[1] : 0.;
-    values[2] = getImpl()->getBlueParams().size() == 2 ? getImpl()->getBlueParams() [1] : 0.;
-    values[3] = getImpl()->getAlphaParams().size()== 2 ? getImpl()->getAlphaParams()[1] : 0.;
+    const GammaOpData::Params red = { data().getRedParams()  [0], values[0] };
+    const GammaOpData::Params grn = { data().getGreenParams()[0], values[1] };
+    const GammaOpData::Params blu = { data().getBlueParams() [0], values[2] };
+    const GammaOpData::Params alp = { data().getAlphaParams()[0], values[3] };
+
+    data().setRedParams(red);
+    data().setGreenParams(grn);
+    data().setBlueParams(blu);
+    data().setAlphaParams(alp);
 }
 
-std::ostream& operator<< (std::ostream& os, const ExponentWithLinearTransform & t)
+void ExponentWithLinearTransformImpl::getOffset(double(&values)[4]) const noexcept
+{
+    values[0] = data().getRedParams().size()  == 2 ? data().getRedParams()  [1] : 0.;
+    values[1] = data().getGreenParams().size()== 2 ? data().getGreenParams()[1] : 0.;
+    values[2] = data().getBlueParams().size() == 2 ? data().getBlueParams() [1] : 0.;
+    values[3] = data().getAlphaParams().size()== 2 ? data().getAlphaParams()[1] : 0.;
+}
+
+std::ostream & operator<< (std::ostream & os, const ExponentWithLinearTransform & t)
 {
     os << "<ExponentWithLinearTransform ";
     os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";

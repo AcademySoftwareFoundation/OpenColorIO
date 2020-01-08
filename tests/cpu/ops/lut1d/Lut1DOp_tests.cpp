@@ -416,7 +416,7 @@ OCIO_ADD_TEST(Lut1D, create_transform)
     OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
     auto transform = group->getTransform(0);
     OCIO_REQUIRE_ASSERT(transform);
-    auto lTransform = OCIO_DYNAMIC_POINTER_CAST<OCIO::LUT1DTransform>(transform);
+    auto lTransform = OCIO_DYNAMIC_POINTER_CAST<OCIO::Lut1DTransform>(transform);
     OCIO_REQUIRE_ASSERT(lTransform);
 
     const auto & metadata = lTransform->getFormatMetadata();
@@ -439,9 +439,9 @@ OCIO_ADD_TEST(Lut1D, create_transform)
     OCIO_CHECK_EQUAL(b , 0.53f);
 }
 
-OCIO_ADD_TEST(LUT1DTransform, build_op)
+OCIO_ADD_TEST(Lut1DTransform, build_op)
 {
-    const OCIO::LUT1DTransformRcPtr lut = OCIO::LUT1DTransform::Create();
+    const OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setLength(3);
 
     const float r = 0.51f;

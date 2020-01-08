@@ -84,12 +84,12 @@ LookTransform& LookTransform::operator= (const LookTransform & rhs)
     return *this;
 }
 
-TransformDirection LookTransform::getDirection() const
+TransformDirection LookTransform::getDirection() const noexcept
 {
     return getImpl()->m_dir;
 }
 
-void LookTransform::setDirection(TransformDirection dir)
+void LookTransform::setDirection(TransformDirection dir) noexcept
 {
     getImpl()->m_dir = dir;
 }

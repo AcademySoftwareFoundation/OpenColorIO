@@ -54,7 +54,7 @@ void CreateLut3DOp(OpRcPtrVec & ops,
                     Lut3DOpDataRcPtr & lut,
                     TransformDirection direction);
 
-// Create a LUT3DTransform decoupled from op and append it to the GroupTransform.
+// Create a Lut3DTransform decoupled from op and append it to the GroupTransform.
 void CreateLut3DTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op);
 
 } // namespace OCIO_NAMESPACE

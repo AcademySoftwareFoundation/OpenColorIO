@@ -16,6 +16,11 @@ RangeTransformRcPtr RangeTransform::Create()
     return RangeTransformRcPtr(new RangeTransformImpl(), &RangeTransformImpl::deleter);
 }
 
+void RangeTransformImpl::deleter(RangeTransform * t)
+{
+    delete static_cast<RangeTransformImpl *>(t);
+}
+
 TransformRcPtr RangeTransformImpl::createEditableCopy() const
 {
     RangeTransformRcPtr transform = RangeTransform::Create();
@@ -25,22 +30,22 @@ TransformRcPtr RangeTransformImpl::createEditableCopy() const
     return transform;
 }
 
-TransformDirection RangeTransformImpl::getDirection() const
+TransformDirection RangeTransformImpl::getDirection() const noexcept
 {
     return m_direction;
 }
 
-void RangeTransformImpl::setDirection(TransformDirection dir)
+void RangeTransformImpl::setDirection(TransformDirection dir) noexcept
 {
     m_direction = dir;
 }
 
-RangeStyle RangeTransformImpl::getStyle() const
+RangeStyle RangeTransformImpl::getStyle() const noexcept
 {
     return m_style;
 }
 
-void RangeTransformImpl::setStyle(RangeStyle style)
+void RangeTransformImpl::setStyle(RangeStyle style) noexcept
 {
     m_style = style;
 }
@@ -60,125 +65,126 @@ void RangeTransformImpl::validate() const
     }
 }
 
-FormatMetadata & RangeTransformImpl::getFormatMetadata()
+FormatMetadata & RangeTransformImpl::getFormatMetadata() noexcept
 {
-	return data().getFormatMetadata();
+    return data().getFormatMetadata();
 }
 
-const FormatMetadata & RangeTransformImpl::getFormatMetadata() const
+const FormatMetadata & RangeTransformImpl::getFormatMetadata() const noexcept
 {
-	return data().getFormatMetadata();
+    return data().getFormatMetadata();
 }
 
-BitDepth RangeTransformImpl::getFileInputBitDepth() const
+BitDepth RangeTransformImpl::getFileInputBitDepth() const noexcept
 {
     return data().getFileInputBitDepth();
 }
-BitDepth RangeTransformImpl::getFileOutputBitDepth() const
+BitDepth RangeTransformImpl::getFileOutputBitDepth() const noexcept
 {
     return data().getFileOutputBitDepth();
 }
-void RangeTransformImpl::setFileInputBitDepth(BitDepth bitDepth)
+void RangeTransformImpl::setFileInputBitDepth(BitDepth bitDepth) noexcept
 {
     data().setFileInputBitDepth(bitDepth);
 }
-void RangeTransformImpl::setFileOutputBitDepth(BitDepth bitDepth)
+void RangeTransformImpl::setFileOutputBitDepth(BitDepth bitDepth) noexcept
 {
     data().setFileOutputBitDepth(bitDepth);
 }
 
-bool RangeTransformImpl::equals(const RangeTransform & other) const
+bool RangeTransformImpl::equals(const RangeTransform & other) const noexcept
 {
+    if (this == &other) return true;
     return data() == dynamic_cast<const RangeTransformImpl*>(&other)->data()
         && m_style == other.getStyle()
         && m_direction == other.getDirection();
 }
 
-void RangeTransformImpl::setMinInValue(double val)
+void RangeTransformImpl::setMinInValue(double val) noexcept
 {
     data().setMinInValue(val);
 }
 
-double RangeTransformImpl::getMinInValue() const
+double RangeTransformImpl::getMinInValue() const noexcept
 {
     return data().getMinInValue();
 }
 
-bool RangeTransformImpl::hasMinInValue() const
+bool RangeTransformImpl::hasMinInValue() const noexcept
 {
     return data().hasMinInValue();
 }
 
-void RangeTransformImpl::unsetMinInValue()
+void RangeTransformImpl::unsetMinInValue() noexcept
 {
     data().unsetMinInValue();
 }
 
 
-void RangeTransformImpl::setMaxInValue(double val)
+void RangeTransformImpl::setMaxInValue(double val) noexcept
 {
     data().setMaxInValue(val);
 }
 
-double RangeTransformImpl::getMaxInValue() const
+double RangeTransformImpl::getMaxInValue() const noexcept
 {
     return data().getMaxInValue();
 }
 
-bool RangeTransformImpl::hasMaxInValue() const
+bool RangeTransformImpl::hasMaxInValue() const noexcept
 {
     return data().hasMaxInValue();
 }
 
-void RangeTransformImpl::unsetMaxInValue()
+void RangeTransformImpl::unsetMaxInValue() noexcept
 {
     data().unsetMaxInValue();
 }
 
 
-void RangeTransformImpl::setMinOutValue(double val)
+void RangeTransformImpl::setMinOutValue(double val) noexcept
 {
     data().setMinOutValue(val);
 }
 
-double RangeTransformImpl::getMinOutValue() const
+double RangeTransformImpl::getMinOutValue() const noexcept
 {
     return data().getMinOutValue();
 }
 
-bool RangeTransformImpl::hasMinOutValue() const
+bool RangeTransformImpl::hasMinOutValue() const noexcept
 {
     return data().hasMinOutValue();
 }
 
-void RangeTransformImpl::unsetMinOutValue()
+void RangeTransformImpl::unsetMinOutValue() noexcept
 {
     data().unsetMinOutValue();
 }
 
 
-void RangeTransformImpl::setMaxOutValue(double val)
+void RangeTransformImpl::setMaxOutValue(double val) noexcept
 {
     data().setMaxOutValue(val);
 }
 
-double RangeTransformImpl::getMaxOutValue() const
+double RangeTransformImpl::getMaxOutValue() const noexcept
 {
     return data().getMaxOutValue();
 }
 
-bool RangeTransformImpl::hasMaxOutValue() const
+bool RangeTransformImpl::hasMaxOutValue() const noexcept
 {
     return data().hasMaxOutValue();
 }
 
-void RangeTransformImpl::unsetMaxOutValue()
+void RangeTransformImpl::unsetMaxOutValue() noexcept
 {
     data().unsetMaxOutValue();
 }
 
 
-std::ostream& operator<< (std::ostream & os, const RangeTransform & t)
+std::ostream& operator<< (std::ostream & os, const RangeTransform & t) noexcept
 {
     os << "<RangeTransform ";
     os << "direction=" << TransformDirectionToString(t.getDirection());

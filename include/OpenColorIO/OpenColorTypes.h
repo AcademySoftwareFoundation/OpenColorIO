@@ -204,17 +204,17 @@ typedef OCIO_SHARED_PTR<const LookTransform> ConstLookTransformRcPtr;
 //!cpp:type::
 typedef OCIO_SHARED_PTR<LookTransform> LookTransformRcPtr;
 
-class OCIOEXPORT LUT1DTransform;
+class OCIOEXPORT Lut1DTransform;
 //!cpp:type::
-typedef OCIO_SHARED_PTR<const LUT1DTransform> ConstLUT1DTransformRcPtr;
+typedef OCIO_SHARED_PTR<const Lut1DTransform> ConstLut1DTransformRcPtr;
 //!cpp:type::
-typedef OCIO_SHARED_PTR<LUT1DTransform> LUT1DTransformRcPtr;
+typedef OCIO_SHARED_PTR<Lut1DTransform> Lut1DTransformRcPtr;
 
-class OCIOEXPORT LUT3DTransform;
+class OCIOEXPORT Lut3DTransform;
 //!cpp:type::
-typedef OCIO_SHARED_PTR<const LUT3DTransform> ConstLUT3DTransformRcPtr;
+typedef OCIO_SHARED_PTR<const Lut3DTransform> ConstLut3DTransformRcPtr;
 //!cpp:type::
-typedef OCIO_SHARED_PTR<LUT3DTransform> LUT3DTransformRcPtr;
+typedef OCIO_SHARED_PTR<Lut3DTransform> Lut3DTransformRcPtr;
 
 class OCIOEXPORT MatrixTransform;
 //!cpp:type::
@@ -328,8 +328,8 @@ enum BitDepth
     BIT_DEPTH_F32
 };
 
-//!cpp:type:: Used by :cpp:class`LUT1DTransform` to control optional hue restoration algorithm.
-enum LUT1DHueAdjust
+//!cpp:type:: Used by :cpp:class`Lut1DTransform` to control optional hue restoration algorithm.
+enum Lut1DHueAdjust
 {
     HUE_NONE = 0, // No adjustment.
     HUE_DW3       // Algorithm used in ACES Output Transforms through v0.7.
@@ -400,6 +400,13 @@ enum ExposureContrastStyle
     EXPOSURE_CONTRAST_LINEAR = 0,      //! E/C to be applied to a linear space image
     EXPOSURE_CONTRAST_VIDEO,           //! E/C to be applied to a video space image
     EXPOSURE_CONTRAST_LOGARITHMIC      //! E/C to be applied to a log space image
+};
+
+//!cpp:type:: Enumeration of the :cpp:class:`CDLTransform` transform algorithms.
+enum CDLStyle
+{
+    CDL_ASC = 0,    //! ASC CDL specification v1.2
+    CDL_NO_CLAMP    //! CDL that does not clamp
 };
 
 enum DynamicPropertyType

@@ -959,7 +959,13 @@ void FixedFunctionWriter::getAttributes(XmlFormatter::Attributes& attributes) co
     OpWriter::getAttributes(attributes);
     const std::string style = FixedFunctionOpData::ConvertStyleToString(m_ff->getStyle(), false);
     attributes.push_back(XmlFormatter::Attribute(ATTR_STYLE, style));
-    const FixedFunctionOpData::Params & params = m_ff->getParams();
+    FixedFunctionOpData::Params params = m_ff->getParams();
+
+    // Always save forward REC2100_SURROUND.
+    if (FixedFunctionOpData::REC2100_SURROUND_INV == m_ff->getStyle())
+    {
+        params[0] = 1. / params[0];
+    }
     const size_t numParams = params.size();
     if (numParams != 0)
     {
@@ -1330,7 +1336,7 @@ void Lut1DWriter::getAttributes(XmlFormatter::Attributes & attributes) const
                                                      "true"));
     }
 
-    LUT1DHueAdjust hueAdjust = m_lut->getHueAdjust();
+    Lut1DHueAdjust hueAdjust = m_lut->getHueAdjust();
     if (hueAdjust == HUE_DW3)
     {
         attributes.push_back(XmlFormatter::Attribute(ATTR_HUE_ADJUST,

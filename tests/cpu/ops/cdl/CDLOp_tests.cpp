@@ -90,15 +90,13 @@ OCIO_ADD_TEST(CDLOp, computed_identifier)
                                                CDL_DATA_1::power[1],
                                                CDL_DATA_1::power[2]);
 
-    auto cdlData
-        = std::make_shared<OCIO::CDLOpData>(OCIO::CDLOpData::CDL_V1_2_FWD,
-                                            slope, offset,
-                                            power, CDL_DATA_1::saturation);
+    auto cdlData = std::make_shared<OCIO::CDLOpData>(OCIO::CDLOpData::CDL_V1_2_FWD,
+                                                     slope, offset,
+                                                     power, CDL_DATA_1::saturation);
     cdlData->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "1");
     OCIO_CHECK_EQUAL(cdlData->getID(), "1");
 
-    OCIO::CreateCDLOp(ops, cdlData,
-                      OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateCDLOp(ops, cdlData, OCIO::TRANSFORM_DIR_FORWARD);
 
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
 
@@ -643,6 +641,7 @@ OCIO_ADD_TEST(CDLOp, create_transform)
         OCIO_CHECK_EQUAL(power[2], CDL_DATA_1::power[2]);
 
         OCIO_CHECK_EQUAL(cdlTransform->getSat(), CDL_DATA_1::saturation);
+        OCIO_CHECK_EQUAL(cdlTransform->getStyle(), OCIO::CDL_ASC);
 
         // Back to op.
         OCIO::OpRcPtrVec ops;
@@ -678,6 +677,7 @@ OCIO_ADD_TEST(CDLOp, create_transform)
         OCIO_REQUIRE_ASSERT(cdlTransform);
 
         OCIO_CHECK_EQUAL(cdlTransform->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+        OCIO_CHECK_EQUAL(cdlTransform->getStyle(), OCIO::CDL_ASC);
 
         double slope[3];
         cdlTransform->getSlope(slope);
@@ -717,15 +717,59 @@ OCIO_ADD_TEST(CDLOp, create_transform)
         OCIO_CHECK_EQUAL(cdl1->getStyle(), OCIO::CDLOpData::CDL_V1_2_FWD);
     }
     {
-        // TODO: non clamping style not handled yet.
         auto cdlData = std::make_shared<OCIO::CDLOpData>(OCIO::CDLOpData::CDL_NO_CLAMP_FWD,
                                                          sp, so, sw,
                                                          CDL_DATA_1::saturation);
         auto cdlOp = std::make_shared<OCIO::CDLOp>(cdlData);
         OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
         OCIO::ConstOpRcPtr op(cdlOp);
-        OCIO_CHECK_THROW_WHAT(OCIO::CreateCDLTransform(group, op), OCIO::Exception,
-                              "NO_CLAMP style not supported");
+        OCIO::CreateCDLTransform(group, op);
+        OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+        auto transform = group->getTransform(0);
+        OCIO_REQUIRE_ASSERT(transform);
+        auto cdlTransform = OCIO_DYNAMIC_POINTER_CAST<OCIO::CDLTransform>(transform);
+        OCIO_REQUIRE_ASSERT(cdlTransform);
+        OCIO_CHECK_EQUAL(cdlTransform->getStyle(), OCIO::CDL_NO_CLAMP);
+        OCIO_CHECK_EQUAL(cdlTransform->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+        cdlTransform->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+        OCIO_CHECK_EQUAL(cdlTransform->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+
+        double slope[3];
+        cdlTransform->getSlope(slope);
+        OCIO_CHECK_EQUAL(slope[0], CDL_DATA_1::slope[0]);
+        OCIO_CHECK_EQUAL(slope[1], CDL_DATA_1::slope[1]);
+        OCIO_CHECK_EQUAL(slope[2], CDL_DATA_1::slope[2]);
+
+        double offset[3];
+        cdlTransform->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], CDL_DATA_1::offset[0]);
+        OCIO_CHECK_EQUAL(offset[1], CDL_DATA_1::offset[1]);
+        OCIO_CHECK_EQUAL(offset[2], CDL_DATA_1::offset[2]);
+
+        double power[3];
+        cdlTransform->getPower(power);
+        OCIO_CHECK_EQUAL(power[0], CDL_DATA_1::power[0]);
+        OCIO_CHECK_EQUAL(power[1], CDL_DATA_1::power[1]);
+        OCIO_CHECK_EQUAL(power[2], CDL_DATA_1::power[2]);
+
+        OCIO_CHECK_EQUAL(cdlTransform->getSat(), CDL_DATA_1::saturation);
+
+        // Back to op.
+        OCIO::OpRcPtrVec ops;
+        OCIO::BuildCDLOp(ops, *config, *cdlTransform,
+                         OCIO::TRANSFORM_DIR_FORWARD);
+        OCIO_CHECK_EQUAL(ops.size(), 1);
+        OCIO::BuildCDLOp(ops, *config, *cdlTransform,
+                         OCIO::TRANSFORM_DIR_INVERSE);
+        OCIO_REQUIRE_EQUAL(ops.size(), 2);
+        OCIO::ConstOpRcPtr op0 = ops[0];
+        OCIO::ConstOpRcPtr op1 = ops[1];
+        OCIO_CHECK_EQUAL(op0->data()->getType(), OCIO::OpData::CDLType);
+        OCIO_CHECK_EQUAL(op1->data()->getType(), OCIO::OpData::CDLType);
+        auto cdl0 = OCIO_DYNAMIC_POINTER_CAST<const OCIO::CDLOpData>(op0->data());
+        auto cdl1 = OCIO_DYNAMIC_POINTER_CAST<const OCIO::CDLOpData>(op1->data());
+        OCIO_CHECK_EQUAL(cdl0->getStyle(), OCIO::CDLOpData::CDL_NO_CLAMP_REV);
+        OCIO_CHECK_EQUAL(cdl1->getStyle(), OCIO::CDLOpData::CDL_NO_CLAMP_FWD);
     }
 }
 

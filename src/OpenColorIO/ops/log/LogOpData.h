@@ -87,9 +87,9 @@ public:
     inline const Params & getBlueParams() const { return m_blueParams; }
     inline void setBlueParams(const Params & p) { m_blueParams = p; }
 
-    TransformDirection getDirection() const { return m_direction; }
+    TransformDirection getDirection() const noexcept { return m_direction; }
 
-    void setDirection(TransformDirection dir) { m_direction = dir; }
+    void setDirection(TransformDirection dir) noexcept { m_direction = dir; }
 
     bool allComponentsEqual() const;
 
@@ -106,9 +106,9 @@ public:
     bool isLog2() const;
     bool isLog10() const;
 
-    void setBase(double base);
+    void setBase(double base) noexcept;
 
-    double getBase() const;
+    double getBase() const noexcept;
 
     void setValue(LogAffineParameter val, const double(&values)[3]);
 

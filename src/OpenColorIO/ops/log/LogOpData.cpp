@@ -39,7 +39,6 @@ void ValidateParams(const LogOpData::Params & params, TransformDirection directi
 
     if (direction != TRANSFORM_DIR_UNKNOWN)
     {
-
         if (IsScalarEqualToZero(params[LIN_SIDE_SLOPE]))
         {
             std::ostringstream oss;
@@ -113,12 +112,12 @@ LogOpData::LogOpData(TransformDirection dir,
     }
 }
 
-void LogOpData::setBase(double base)
+void LogOpData::setBase(double base) noexcept
 {
     m_base = base;
 }
 
-double LogOpData::getBase() const
+double LogOpData::getBase() const noexcept
 {
     return m_base;
 }

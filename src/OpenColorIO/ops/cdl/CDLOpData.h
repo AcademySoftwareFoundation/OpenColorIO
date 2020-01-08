@@ -36,7 +36,10 @@ public:
     static Style GetStyle(const char * name);
     static const char * GetStyleName(Style style);
 
-    // Type definition to hold the values of a SOP parameter
+    static CDLOpData::Style ConvertStyle(CDLStyle style, TransformDirection dir);
+    static CDLStyle ConvertStyle(CDLOpData::Style style);
+
+    // Type definition to hold the values of a SOP paramater
     // (scale, offset and power) for all channels
     struct ChannelParams
     {
@@ -147,14 +150,16 @@ public:
 
     bool operator==(const OpData& other) const override;
 
-    inline Style getStyle() const { return m_style; }
-
     Type getType() const override { return CDLType; }
 
     // Note: Return a boolean status based on the enum stored in the "style" variable.
     bool isReverse() const;
 
-    void setStyle(const Style & cdlStyle);
+    inline Style getStyle() const { return m_style; }
+    void setStyle(Style cdlStyle);
+
+    TransformDirection getDirection() const;
+    void setDirection(TransformDirection dir);
 
     const ChannelParams & getSlopeParams() const { return m_slopeParams; }
     void setSlopeParams(const ChannelParams& slopeParams);
@@ -193,6 +198,8 @@ protected:
 
     // Note: Return a boolean status based on the enum stored in the "style" variable.
     bool isClamping() const;
+
+    void invert();
 
 private:
     Style         m_style;         // CDL style

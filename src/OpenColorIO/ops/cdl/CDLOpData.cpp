@@ -79,6 +79,51 @@ const char * CDLOpData::GetStyleName(CDLOpData::Style style)
     throw Exception("Unknown style for CDL.");
 }
 
+
+// Combine the Transform style and direction into the internal OpData style.
+CDLOpData::Style CDLOpData::ConvertStyle(CDLStyle style, TransformDirection dir)
+{
+    const bool isForward = dir == TRANSFORM_DIR_FORWARD;
+
+    switch (style)
+    {
+    case CDL_ASC:
+    {
+        return isForward ? CDLOpData::CDL_V1_2_FWD :
+                           CDLOpData::CDL_V1_2_REV;
+    }
+    case CDL_NO_CLAMP:
+    {
+        return isForward ? CDLOpData::CDL_NO_CLAMP_FWD :
+                           CDLOpData::CDL_NO_CLAMP_REV;
+    }
+    }
+
+    std::stringstream ss("Unknown CDL transform style: ");
+    ss << style;
+
+    throw Exception(ss.str().c_str());
+}
+
+// Convert internal OpData style to Transform style.
+CDLStyle CDLOpData::ConvertStyle(CDLOpData::Style style)
+{
+    switch (style)
+    {
+    case CDL_V1_2_FWD:
+    case CDL_V1_2_REV:
+        return CDL_ASC;
+    case CDL_NO_CLAMP_FWD:
+    case CDL_NO_CLAMP_REV:
+        return CDL_NO_CLAMP;
+    }
+
+    std::stringstream ss("Unknown CDL style: ");
+    ss << style;
+
+    throw Exception(ss.str().c_str());
+}
+
 CDLOpData::CDLOpData()
     :   OpData()
     ,   m_style(GetDefaultStyle())
@@ -126,9 +171,36 @@ bool CDLOpData::operator==(const OpData& other) const
         && m_saturation   == cdl->m_saturation;
 }
 
-void CDLOpData::setStyle(const CDLOpData::Style & style)
+void CDLOpData::setStyle(CDLOpData::Style style)
 {
     m_style = style;
+}
+
+TransformDirection CDLOpData::getDirection() const
+{
+    switch (m_style)
+    {
+    case CDL_V1_2_FWD:
+    case CDL_NO_CLAMP_FWD:
+        return TRANSFORM_DIR_FORWARD;
+    case CDL_V1_2_REV:
+    case CDL_NO_CLAMP_REV:
+        return TRANSFORM_DIR_INVERSE;
+    }
+    return TRANSFORM_DIR_FORWARD;
+}
+
+void CDLOpData::setDirection(TransformDirection dir)
+{
+    if (dir != TRANSFORM_DIR_UNKNOWN)
+    {
+        const auto curDir = getDirection();
+        if (curDir != dir)
+        {
+            invert();
+        }
+    }
+
 }
 
 void CDLOpData::setSlopeParams(const ChannelParams & slopeParams)
@@ -334,17 +406,21 @@ bool CDLOpData::isInverse(ConstCDLOpDataRcPtr & r) const
     return *r == *inverse();
 }
 
+void CDLOpData::invert()
+{
+    switch (m_style)
+    {
+    case CDL_V1_2_FWD: setStyle(CDL_V1_2_REV); break;
+    case CDL_V1_2_REV: setStyle(CDL_V1_2_FWD); break;
+    case CDL_NO_CLAMP_FWD: setStyle(CDL_NO_CLAMP_REV); break;
+    case CDL_NO_CLAMP_REV: setStyle(CDL_NO_CLAMP_FWD); break;
+    }
+}
+
 CDLOpDataRcPtr CDLOpData::inverse() const
 {
     CDLOpDataRcPtr cdl = clone();
-
-    switch(cdl->getStyle())
-    {
-        case CDL_V1_2_FWD: cdl->setStyle(CDL_V1_2_REV); break;
-        case CDL_V1_2_REV: cdl->setStyle(CDL_V1_2_FWD); break;
-        case CDL_NO_CLAMP_FWD: cdl->setStyle(CDL_NO_CLAMP_REV); break;
-        case CDL_NO_CLAMP_REV: cdl->setStyle(CDL_NO_CLAMP_FWD); break;
-    }
+    cdl->invert();
 
     // Note that any existing metadata could become stale at this point but
     // trying to update it is also challenging since inverse() is sometimes

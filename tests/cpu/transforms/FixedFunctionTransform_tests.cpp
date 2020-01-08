@@ -18,11 +18,13 @@ OCIO_ADD_TEST(FixedFunctionTransform, basic)
 
     OCIO_CHECK_NO_THROW(func->setDirection(OCIO::TRANSFORM_DIR_INVERSE));
     OCIO_CHECK_EQUAL(func->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FIXED_FUNCTION_ACES_RED_MOD_03);
     OCIO_CHECK_EQUAL(func->getNumParams(), 0);
     OCIO_CHECK_NO_THROW(func->validate());
 
     OCIO_CHECK_NO_THROW(func->setStyle(OCIO::FIXED_FUNCTION_ACES_RED_MOD_10));
     OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FIXED_FUNCTION_ACES_RED_MOD_10);
+    OCIO_CHECK_EQUAL(func->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_CHECK_EQUAL(func->getNumParams(), 0);
     OCIO_CHECK_NO_THROW(func->validate());
 
@@ -43,7 +45,7 @@ OCIO_ADD_TEST(FixedFunctionTransform, basic)
 
     OCIO_CHECK_NO_THROW(func->setStyle(OCIO::FIXED_FUNCTION_ACES_DARK_TO_DIM_10));
     OCIO_CHECK_THROW_WHAT(func->validate(), OCIO::Exception,
-                          "The style 'ACES_DarkToDim10 (Forward)' must have "
+                          "The style 'ACES_DarkToDim10 (Inverse)' must have "
                           "zero parameters but 1 found.");
 
     OCIO_CHECK_NO_THROW(func->setStyle(OCIO::FIXED_FUNCTION_RGB_TO_HSV));

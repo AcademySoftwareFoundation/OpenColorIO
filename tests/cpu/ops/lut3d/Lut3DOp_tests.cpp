@@ -581,7 +581,7 @@ OCIO_ADD_TEST(Lut3D, create_transform)
     OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
     auto transform = group->getTransform(0);
     OCIO_REQUIRE_ASSERT(transform);
-    auto lTransform = OCIO_DYNAMIC_POINTER_CAST<OCIO::LUT3DTransform>(transform);
+    auto lTransform = OCIO_DYNAMIC_POINTER_CAST<OCIO::Lut3DTransform>(transform);
     OCIO_REQUIRE_ASSERT(lTransform);
 
     const auto & metadata = lTransform->getFormatMetadata();
@@ -604,9 +604,9 @@ OCIO_ADD_TEST(Lut3D, create_transform)
     OCIO_CHECK_EQUAL(b, 0.74f);
 }
 
-OCIO_ADD_TEST(LUT3DTransform, build_op)
+OCIO_ADD_TEST(Lut3DTransform, build_op)
 {
-    const OCIO::LUT3DTransformRcPtr lut = OCIO::LUT3DTransform::Create();
+    const OCIO::Lut3DTransformRcPtr lut = OCIO::Lut3DTransform::Create();
     const unsigned long gs = 4;
     lut->setGridSize(gs);
 

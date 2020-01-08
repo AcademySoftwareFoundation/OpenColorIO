@@ -107,12 +107,12 @@ void BuildLookOps(OpRcPtrVec & ops,
 
 void BuildLut1DOp(OpRcPtrVec & ops,
                   const Config & config,
-                  const LUT1DTransform & transform,
+                  const Lut1DTransform & transform,
                   TransformDirection dir);
 
 void BuildLut3DOp(OpRcPtrVec & ops,
                   const Config & config,
-                  const LUT3DTransform & transform,
+                  const Lut3DTransform & transform,
                   TransformDirection dir);
 
 void BuildMatrixOp(OpRcPtrVec & ops,

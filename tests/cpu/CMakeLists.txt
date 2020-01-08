@@ -179,8 +179,8 @@ set(TESTS
 	transforms/GroupTransform_tests.cpp
 	transforms/LogAffineTransform_tests.cpp
 	transforms/LogTransform_tests.cpp
-	transforms/LUT1DTransform_tests.cpp
-	transforms/LUT3DTransform_tests.cpp
+	transforms/Lut1DTransform_tests.cpp
+	transforms/Lut3DTransform_tests.cpp
 	transforms/MatrixTransform_tests.cpp
 	UnitTest.cpp
 	UnitTestLogUtils.cpp
