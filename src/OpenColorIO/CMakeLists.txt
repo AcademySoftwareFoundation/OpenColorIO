@@ -42,6 +42,7 @@ set(SOURCES
 	fileformats/xmlutils/XMLReaderHelper.cpp
 	fileformats/xmlutils/XMLReaderUtils.cpp
 	fileformats/xmlutils/XMLWriterUtils.cpp
+	FileRules.cpp
 	GPUProcessor.cpp
 	GpuShader.cpp
 	GpuShaderDesc.cpp
@@ -144,11 +145,11 @@ target_link_libraries(OpenColorIO
 	PUBLIC 
 		public_api
 	PRIVATE
-		yamlcpp::yamlcpp
-		pystring::pystring
-		sampleicc::sampleicc
 		expat::expat
 		ilmbase::ilmbase
+		pystring::pystring
+		sampleicc::sampleicc
+		yamlcpp::yamlcpp
 )
 
 if(NOT BUILD_SHARED_LIBS)

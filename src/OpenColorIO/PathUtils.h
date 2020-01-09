@@ -56,6 +56,8 @@ std::string GetFastFileHash(const std::string & filename);
 
 void ClearPathCaches();
 
+int ParseColorSpaceFromString(const Config & config, const char * str);
+
 } // namespace OCIO_NAMESPACE
 
 #endif

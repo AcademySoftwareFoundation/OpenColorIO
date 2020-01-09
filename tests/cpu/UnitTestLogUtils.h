@@ -17,7 +17,7 @@ public:
     LogGuard();
     LogGuard(const LogGuard &) = delete;
     LogGuard & operator=(const LogGuard &) = delete;
-    ~LogGuard();
+    virtual ~LogGuard();
 
     // Return the output message or null.
     const std::string & output() const;

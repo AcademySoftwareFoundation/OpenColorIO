@@ -50,6 +50,9 @@ constexpr char INTERNAL_RAW_PROFILE[] =
     "strictparsing: false\n"
     "roles:\n"
     "  default: raw\n"
+    "file_rules:\n"
+    "  - !<Rule> {name: ColorSpaceNamePathSearch}\n"
+    "  - !<Rule> {name: Default, colorspace: default}\n"
     "displays:\n"
     "  sRGB:\n"
     "  - !<View> {name: Raw, colorspace: raw}\n"
@@ -107,8 +110,7 @@ namespace
 {
 
 // Environment
-const char* LookupEnvironment(const StringMap & env,
-                                    const std::string & name)
+const char* LookupEnvironment(const StringMap & env, const std::string & name)
 {
     StringMap::const_iterator iter = env.find(name);
     if(iter == env.end()) return "";
@@ -124,8 +126,7 @@ const char* LookupRole(const StringMap & roles, const std::string & rolename)
     return iter->second.c_str();
 }
 
-void GetFileReferences(std::set<std::string> & files,
-                        const ConstTransformRcPtr & transform)
+void GetFileReferences(std::set<std::string> & files, const ConstTransformRcPtr & transform)
 {
     if(!transform) return;
 
@@ -145,8 +146,8 @@ void GetFileReferences(std::set<std::string> & files,
 }
 
 void GetColorSpaceReferences(std::set<std::string> & colorSpaceNames,
-                                const ConstTransformRcPtr & transform,
-                                const ConstContextRcPtr & context)
+                             const ConstTransformRcPtr & transform,
+                             const ConstContextRcPtr & context)
 {
     if(!transform) return;
 
@@ -177,10 +178,37 @@ void GetColorSpaceReferences(std::set<std::string> & colorSpaceNames,
     }
 }
 
+bool FindColorSpaceIndex(int * index,
+                         const ColorSpaceSetRcPtr & colorspaces,
+                         const std::string & csname)
+{
+    *index = colorspaces->getIndexForColorSpace(csname.c_str());
+    return *index!=-1;
+}
+
+static constexpr char AddedRaw[]{ "added_default_rule_colorspace" };
+
+void FindAvailableName(const ColorSpaceSetRcPtr & colorspaces,
+                       std::string & csname)
+{
+    int i = 0;
+    csname = AddedRaw;
+    while (1)
+    {
+        if (-1 == colorspaces->getIndexForColorSpace(csname.c_str()))
+        {
+            break;
+        }
+        csname = "added_default_rule_colorspace" + std::to_string(i);
+    }
+}
+
 } // namespace
 
-constexpr unsigned FirstSupportedMajorVersion = 1;
-constexpr unsigned LastSupportedMajorVersion  = 2;
+
+static constexpr unsigned FirstSupportedMajorVersion = 1;
+static constexpr unsigned LastSupportedMajorVersion = OCIO_VERSION_MAJOR;
+static constexpr unsigned LastSupportedMinorVersion = OCIO_VERSION_MINOR;
 
 class Config::Impl
 {
@@ -235,6 +263,7 @@ public:
     mutable Mutex m_cacheidMutex;
     mutable StringMap m_cacheids;
     mutable std::string m_cacheidnocontext;
+    FileRulesRcPtr m_fileRules;
 
     Impl() :
         m_majorVersion(FirstSupportedMajorVersion),
@@ -242,19 +271,22 @@ public:
         m_context(Context::Create()),
         m_allColorSpaces(ColorSpaceSet::Create()),
         m_strictParsing(true),
-        m_sanity(SANITY_UNKNOWN)
+        m_sanity(SANITY_UNKNOWN),
+        m_fileRules(FileRules::Create())
     {
         std::string activeDisplays;
         Platform::Getenv(OCIO_ACTIVE_DISPLAYS_ENVVAR, activeDisplays);
         activeDisplays = pystring::strip(activeDisplays);
-        if (!activeDisplays.empty()) {
+        if (!activeDisplays.empty())
+        {
             SplitStringEnvStyle(m_activeDisplaysEnvOverride, activeDisplays.c_str());
         }
 
         std::string activeViews;
         Platform::Getenv(OCIO_ACTIVE_VIEWS_ENVVAR, activeViews);
         activeViews = pystring::strip(activeViews);
-        if (!activeViews.empty()) {
+        if (!activeViews.empty())
+        {
             SplitStringEnvStyle(m_activeViewsEnvOverride, activeViews.c_str());
         }
 
@@ -315,6 +347,8 @@ public:
 
             m_cacheids = rhs.m_cacheids;
             m_cacheidnocontext = rhs.m_cacheidnocontext;
+
+            m_fileRules = rhs.m_fileRules->createEditableCopy();
         }
         return *this;
     }
@@ -338,6 +372,71 @@ public:
     void getAllInternalTransforms(ConstTransformVec & transformVec) const;
 
     static ConstConfigRcPtr Read(std::istream & istream, const char * filename);
+
+    // Upgrade from v1 to v2.
+    void upgradeFromVersion1ToVersion2()
+    {
+        // V2 adds file_rules and these require a default rule. We try to initialize the default
+        // rule using the default role. If the default role doesn't exist, we look for a Raw
+        // ColorSpace with isdata true. If that is not found either, we add new ColorSpace
+        // named "added_default_rule_colorspace".
+
+        m_majorVersion = 2;
+        m_minorVersion = 0;
+
+        int csindex = -1;
+        const char * rname = LookupRole(m_roles, ROLE_DEFAULT);
+        if (!FindColorSpaceIndex(&csindex, m_allColorSpaces, rname))
+        {
+            std::string defaultCS{ "" };
+            bool addNewDefault = true;
+            // The default role doesn't exist so look for a color space named "raw"
+            // (not case-sensitive) with isdata true.
+            if (FindColorSpaceIndex(&csindex, m_allColorSpaces, "raw"))
+            {
+                auto cs = m_allColorSpaces->getColorSpaceByIndex(csindex);
+                if (cs->isData())
+                {
+                    // "Raw" color space can be used for default.
+                    addNewDefault = false;
+                    defaultCS = cs->getName();
+                }
+            }
+
+            if (addNewDefault)
+            {
+                FindAvailableName(m_allColorSpaces, defaultCS);
+                auto newCS = ColorSpace::Create();
+                newCS->setName(defaultCS.c_str());
+                newCS->setIsData(true);
+                m_allColorSpaces->addColorSpace(newCS);
+                // Put the added CS in the inactive list to avoid it showing up in user menus.
+                if (!m_inactiveColorSpaceNamesConf.empty())
+                {
+                    m_inactiveColorSpaceNamesConf += ",";
+                }
+                m_inactiveColorSpaceNamesConf += defaultCS;
+                setInactiveColorSpaces(m_inactiveColorSpaceNamesConf.c_str());
+            }
+
+            m_fileRules->setColorSpace(m_fileRules->getNumEntries() - 1, defaultCS.c_str());
+        }
+    }
+
+    void setInactiveColorSpaces(const char * inactiveColorSpaces)
+    {
+        m_inactiveColorSpaceNamesConf
+            = pystring::strip(std::string(inactiveColorSpaces ? inactiveColorSpaces : ""));
+
+        // An API request must always supersede the two other lists. Filling the
+        // inactiveColorSpaceNamesAPI_ list highlights the API request precedence.
+        m_inactiveColorSpaceNamesAPI = m_inactiveColorSpaceNamesConf;
+
+        AutoMutex lock(m_cacheidMutex);
+        resetCacheIDs();
+        refreshActiveColorSpaces();
+    }
+
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -377,7 +476,8 @@ ConstConfigRcPtr Config::CreateFromEnv()
 ConstConfigRcPtr Config::CreateFromFile(const char * filename)
 {
     std::ifstream istream(filename);
-    if(istream.fail()) {
+    if (istream.fail())
+    {
         std::ostringstream os;
         os << "Error could not read '" << filename;
         os << "' OCIO profile.";
@@ -395,7 +495,7 @@ ConstConfigRcPtr Config::CreateFromStream(std::istream & istream)
 ///////////////////////////////////////////////////////////////////////////
 
 Config::Config()
-: m_impl(new Config::Impl)
+: m_impl(new Config::Impl())
 {
 }
 
@@ -412,7 +512,7 @@ unsigned Config::getMajorVersion() const
 
 void Config::setMajorVersion(unsigned int version)
 {
-    if(version <  FirstSupportedMajorVersion
+    if (version <  FirstSupportedMajorVersion
         || version >  LastSupportedMajorVersion)
     {
         std::ostringstream os;
@@ -424,7 +524,10 @@ void Config::setMajorVersion(unsigned int version)
             << ".";
             throw Exception(os.str().c_str());
     }
-        m_impl->m_majorVersion = version;
+    m_impl->m_majorVersion = version;
+
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
 }
 
 unsigned Config::getMinorVersion() const
@@ -434,8 +537,24 @@ unsigned Config::getMinorVersion() const
 
 void Config::setMinorVersion(unsigned int version)
 {
-        m_impl->m_minorVersion = version;
+     m_impl->m_minorVersion = version;
 }
+
+void Config::upgradeToLatestVersion()
+{
+    const auto wasVersion = m_impl->m_majorVersion;
+    if (wasVersion != LastSupportedMajorVersion)
+    {
+        if (wasVersion == 1)
+        {
+            m_impl->upgradeFromVersion1ToVersion2();
+        }
+        static_assert(LastSupportedMajorVersion == 2, "Config: Handle newer versions");
+        setMajorVersion(LastSupportedMajorVersion);
+        setMinorVersion(LastSupportedMinorVersion);
+    }
+}
+
 
 ConfigRcPtr Config::createEditableCopy() const
 {
@@ -465,7 +584,7 @@ void Config::sanityCheck() const
         {
             std::ostringstream os;
             os << "Config failed sanitycheck. ";
-            os << "The colorspace at index " << i << " is null.";
+            os << "The color space at index " << i << " is null.";
             getImpl()->m_sanitytext = os.str();
             throw Exception(getImpl()->m_sanitytext.c_str());
         }
@@ -475,7 +594,7 @@ void Config::sanityCheck() const
         {
             std::ostringstream os;
             os << "Config failed sanitycheck. ";
-            os << "The colorspace at index " << i << " is not named.";
+            os << "The color space at index " << i << " is not named.";
             getImpl()->m_sanitytext = os.str();
             throw Exception(getImpl()->m_sanitytext.c_str());
         }
@@ -492,15 +611,14 @@ void Config::sanityCheck() const
             throw Exception(getImpl()->m_sanitytext.c_str());
         }
 
-        ConstTransformRcPtr toTrans 
-            = getImpl()->m_allColorSpaces->getColorSpaceByIndex(i)->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+        const auto cs = getImpl()->m_allColorSpaces->getColorSpaceByIndex(i);
+        ConstTransformRcPtr toTrans = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
         if (toTrans)
         {
             toTrans->validate();
         }
 
-        ConstTransformRcPtr fromTrans 
-            = getImpl()->m_allColorSpaces->getColorSpaceByIndex(i)->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+        ConstTransformRcPtr fromTrans = cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
         if (fromTrans)
         {
             fromTrans->validate();
@@ -520,7 +638,7 @@ void Config::sanityCheck() const
                 std::ostringstream os;
                 os << "Config failed sanitycheck. ";
                 os << "The role '" << iter->first << "' ";
-                os << "refers to a colorspace, '" << iter->second << "', ";
+                os << "refers to a color space, '" << iter->second << "', ";
                 os << "which is not defined.";
                 getImpl()->m_sanitytext = os.str();
                 throw Exception(getImpl()->m_sanitytext.c_str());
@@ -532,7 +650,7 @@ void Config::sanityCheck() const
                 std::ostringstream os;
                 os << "Config failed sanitycheck. ";
                 os << "The role '" << iter->first << "' ";
-                os << " is in conflict with a colorspace of the same name.";
+                os << " is in conflict with a color space of the same name.";
                 getImpl()->m_sanitytext = os.str();
                 throw Exception(getImpl()->m_sanitytext.c_str());
             }
@@ -584,7 +702,7 @@ void Config::sanityCheck() const
                 std::ostringstream os;
                 os << "Config failed sanitycheck. ";
                 os << "The display '" << display << "' ";
-                os << "defines a view with an empty name and/or colorspace.";
+                os << "defines a view with an empty name and/or color space.";
                 getImpl()->m_sanitytext = os.str();
                 throw Exception(getImpl()->m_sanitytext.c_str());
             }
@@ -595,7 +713,7 @@ void Config::sanityCheck() const
                 std::ostringstream os;
                 os << "Config failed sanitycheck. ";
                 os << "The display '" << display << "' ";
-                os << "refers to a colorspace, '" << views[i].colorspace << "', ";
+                os << "refers to a color space, '" << views[i].colorspace << "', ";
                 os << "which is not defined.";
                 getImpl()->m_sanitytext = os.str();
                 throw Exception(getImpl()->m_sanitytext.c_str());
@@ -740,7 +858,7 @@ void Config::sanityCheck() const
             {
                 std::ostringstream os;
                 os << "Config failed sanitycheck. ";
-                os << "This config references a ColorSpace, '" << *iter << "', ";
+                os << "This config references a color space, '" << *iter << "', ";
                 os << "which is not defined.";
                 getImpl()->m_sanitytext = os.str();
                 throw Exception(getImpl()->m_sanitytext.c_str());
@@ -788,12 +906,9 @@ void Config::sanityCheck() const
         }
     }
 
-    // Validate all transforms
-    ConstTransformVec allTransforms;
-    getImpl()->getAllInternalTransforms(allTransforms);
-        for (unsigned int i = 0; i<allTransforms.size(); ++i)
+    if (getMajorVersion() >= 2)
     {
-        allTransforms[i]->validate();
+        getImpl()->m_fileRules->validate(*this);
     }
 
     // Everything is groovy.
@@ -1054,16 +1169,7 @@ int Config::getIndexForColorSpace(const char * name) const
 
 void Config::setInactiveColorSpaces(const char * inactiveColorSpaces)
 {
-    getImpl()->m_inactiveColorSpaceNamesConf
-        = pystring::strip(std::string(inactiveColorSpaces ? inactiveColorSpaces : ""));
-
-    // An API request must always supersede the two other lists. Filling the
-    // inactiveColorSpaceNamesAPI_ list highlights the API request precedence.
-    getImpl()->m_inactiveColorSpaceNamesAPI = getImpl()->m_inactiveColorSpaceNamesConf;
-
-    AutoMutex lock(getImpl()->m_cacheidMutex);
-    getImpl()->resetCacheIDs();
-    getImpl()->refreshActiveColorSpaces();
+    getImpl()->setInactiveColorSpaces(inactiveColorSpaces);
 }
 
 const char * Config::getInactiveColorSpaces() const
@@ -1103,43 +1209,7 @@ void Config::clearColorSpaces()
 
 const char * Config::parseColorSpaceFromString(const char * str) const
 {
-    if(!str) return "";
-
-    // Search the entire filePath, including directory name (if provided)
-    // convert the filename to lowercase.
-    std::string fullstr = pystring::lower(std::string(str));
-
-    // See if it matches a LUT name.
-    // This is the position of the RIGHT end of the colorspace substring,
-    // not the left
-    int rightMostColorPos=-1;
-    std::string rightMostColorspace = "";
-    int rightMostColorSpaceIndex = -1;
-
-    // Find the right-most occcurance within the string for each colorspace.
-    for (int i=0; i<getImpl()->m_allColorSpaces->getNumColorSpaces(); ++i)
-    {
-        std::string csname = pystring::lower(getImpl()->m_allColorSpaces->getColorSpaceNameByIndex(i));
-
-        // find right-most extension matched in filename
-        int colorspacePos = pystring::rfind(fullstr, csname);
-        if(colorspacePos < 0)
-            continue;
-
-        // If we have found a match, move the pointer over to the right end
-        // of the substring.  This will allow us to find the longest name
-        // that matches the rightmost colorspace
-        colorspacePos += (int)csname.size();
-
-        if ( (colorspacePos > rightMostColorPos) ||
-                ((colorspacePos == rightMostColorPos) && (csname.size() > rightMostColorspace.size()))
-            )
-        {
-            rightMostColorPos = colorspacePos;
-            rightMostColorspace = csname;
-            rightMostColorSpaceIndex = i;
-        }
-    }
+    int rightMostColorSpaceIndex = ParseColorSpaceFromString(*this, str);
 
     if(rightMostColorSpaceIndex>=0)
     {
@@ -1538,6 +1608,24 @@ void Config::clearLooks()
 
 ///////////////////////////////////////////////////////////////////////////
 
+ConstFileRulesRcPtr Config::getFileRules() const noexcept
+{
+    return getImpl()->m_fileRules;
+}
+
+void Config::setFileRules(ConstFileRulesRcPtr fileRules)
+{
+    if (getMajorVersion() < 2)
+    {
+        throw Exception("Only config version 2 or higher can accept file rules.");
+    }
+    getImpl()->m_fileRules = fileRules->createEditableCopy();
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
+}
+
+///////////////////////////////////////////////////////////////////////////
+
 ConstProcessorRcPtr Config::getProcessor(const ConstColorSpaceRcPtr & src,
                                             const ConstColorSpaceRcPtr & dst) const
 {
@@ -1551,11 +1639,11 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
 {
     if(!src)
     {
-        throw Exception("Config::GetProcessor failed. Source colorspace is null.");
+        throw Exception("Config::GetProcessor failed. Source color space is null.");
     }
     if(!dst)
     {
-        throw Exception("Config::GetProcessor failed. Destination colorspace is null.");
+        throw Exception("Config::GetProcessor failed. Destination color space is null.");
     }
 
     ProcessorRcPtr processor = Processor::Create();
@@ -1571,7 +1659,7 @@ ConstProcessorRcPtr Config::getProcessor(const char * srcName,
     return getProcessor(context, srcName, dstName);
 }
 
-// Names can be colorspace name or role name
+// Names can be color space name or role name
 ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
                                             const char * srcName,
                                             const char * dstName) const
@@ -1580,7 +1668,7 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
     if(!src)
     {
         std::ostringstream os;
-        os << "Could not find colorspace '" << srcName << "'.";
+        os << "Could not find color space '" << srcName << "'.";
         throw Exception(os.str().c_str());
     }
 
@@ -1588,7 +1676,7 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
     if(!dst)
     {
         std::ostringstream os;
-        os << "Could not find colorspace '" << dstName << "'.";
+        os << "Could not find color space '" << dstName << "'.";
         throw Exception(os.str().c_str());
     }
 

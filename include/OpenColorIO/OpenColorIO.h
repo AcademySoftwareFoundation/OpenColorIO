@@ -5,10 +5,11 @@
 #ifndef INCLUDED_OCIO_OPENCOLORIO_H
 #define INCLUDED_OCIO_OPENCOLORIO_H
 
-#include <stdexcept>
-#include <iosfwd>
-#include <string>
 #include <cstddef>
+#include <iosfwd>
+#include <limits>
+#include <stdexcept>
+#include <string>
 
 #include "OpenColorABI.h"
 #include "OpenColorTypes.h"
@@ -239,6 +240,9 @@ public:
 
     //!cpp:function:: Set the configuration minor version
     void setMinorVersion(unsigned int minor);
+
+    //!cpp:function:: Allows an older config to be serialized as the current version.
+    void upgradeToLatestVersion();
 
     //!cpp:function::
     // This will throw an exception if the config is malformed. The most
@@ -574,6 +578,20 @@ public:
 
 
     ///////////////////////////////////////////////////////////////////////////
+    //!rst:: .. _cfgfilerules_section:
+    // 
+    // File Rules
+    // ^^^^^^^^^^
+    //
+    // See :cpp:class:`FileRules`.
+
+    //!cpp:function:: Get read-only version of the file rules.
+    ConstFileRulesRcPtr getFileRules() const noexcept;
+
+    //!cpp:function:: Set file rules.
+    void setFileRules(ConstFileRulesRcPtr fileRules);
+
+    ///////////////////////////////////////////////////////////////////////////
     //!rst:: .. _cfgprocessors_section:
     //
     // Processors
@@ -633,6 +651,160 @@ private:
 };
 
 extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
+
+//!cpp:class:: The File Rules are a set of filepath to color space mappings that are evaluated
+// from first to last. The first rule to match is what determines which color space is
+// returned. There are four types of rules available. Each rule type has a name key that may
+// be used by applications to refer to that rule. Name values must be unique. The other keys
+// depend on the rule type:
+//
+// - Basic Rule: This is the basic rule type that uses Unix glob style pattern matching and
+// is thus very easy to use. It contains the keys:
+//   * name: Name of the rule
+//   * colorspace: Color space name to be returned.
+//   * pattern: Glob pattern to be used for the main part of the name/path.
+//   * extension: Glob pattern to be used for the file extension. Note that if glob tokens
+//     are not used, the extension will be used in a non-case-sensitive way by default.
+// 
+// - Regex Rule: This is similar to the basic rule but allows additional capabilities for
+//   power-users. It contains the keys:
+//   * name: Name of the rule
+//   * colorspace: Color space name to be returned.
+//   * regex: Regular expression to be evaluated.
+// 
+// - OCIO v1 style Rule: This rule allows the use of the OCIO v1 style, where the string
+//   is searched for color space names from the config. This rule may occur 0 or 1 times
+//   in the list. The position in the list prioritizes it with respect to the other rules.
+//   StrictParsing is not used. If no color space is found in the path, the rule will not
+//   match and the next rule will be considered.
+//   See :cpp:func:`FileRules::insertPathSearchRule`.
+//   It has the key:
+//   * name: Must be "ColorSpaceNamePathSearch".
+// 
+// - Default Rule: The file_rules must always end with this rule. If no prior rules match,
+//   this rule specifies the color space applications will use.
+//   See :cpp:func:`FileRules::setDefaultRuleColorSpace`.
+//   It has the keys:
+//   * name: must be "Default".
+//   * colorspace : Color space name to be returned.
+//
+// Custom string keys and associated string values may be used to convey app or
+// workflow-specific information, e.g. whether the color space should be left as is
+// or converted into a working space.
+//
+// Getters and setters are using the rule position, they will throw if the position is not
+// valid. If the rule at the specified position does not implement the requested property
+// getter will return NULL and setter will throw.
+//
+class FileRules
+{
+public:
+    //!cpp:function:: Creates FileRules for a Config. File rules will contain the default rule
+    // using the default role. The default rule can not be removed.
+    static FileRulesRcPtr Create();
+
+    //!cpp:function::
+    FileRulesRcPtr createEditableCopy() const;
+
+    //!cpp:function:: Does include default rule. Result will be at least 1.
+    size_t getNumEntries() const noexcept;
+
+    //!cpp:function:: Get name of the rule.
+    const char * getName(size_t ruleIndex) const;
+
+    //!cpp:function:: Setting pattern will erase regex.
+    const char * getPattern(size_t ruleIndex) const;
+    //!cpp:function::
+    void setPattern(size_t ruleIndex, const char * pattern);
+
+    //!cpp:function:: Setting extension will erase regex.
+    const char * getExtension(size_t ruleIndex) const;
+    //!cpp:function::
+    void setExtension(size_t ruleIndex, const char * extension);
+
+    //!cpp:function:: Setting a regex will erase pattern & extension.
+    const char * getRegex(size_t ruleIndex) const;
+    //!cpp:function::
+    void setRegex(size_t ruleIndex, const char * regex);
+
+    //!cpp:function:: Set the rule's color space (may also be a role).
+    const char * getColorSpace(size_t ruleIndex) const;
+    //!cpp:function::
+    void setColorSpace(size_t ruleIndex, const char * colorSpace);
+
+    //!cpp:function:: Get number of key/value pairs.
+    size_t getNumCustomKeys(size_t ruleIndex) const;
+    //!cpp:function:: Get name of key.
+    const char * getCustomKeyName(size_t ruleIndex, size_t key) const;
+    //!cpp:function:: Get name of value.
+    const char * getCustomKeyValue(size_t ruleIndex, size_t key) const;
+    //!cpp:function:: Adds a key/value or replace value if key exists. Setting a NULL or an
+    // empty value will erase the key.
+    void setCustomKey(size_t ruleIndex, const char * key, const char * value);
+
+    //!cpp:function:: Insert a rule at a given ruleIndex. Rule currently at ruleIndex
+    // will be pushed to index: ruleIndex + 1.
+    // Name must be unique.
+    // - "Default" is a reserved name for the default rule. The default rule is automatically
+    //   added and can't be removed. (see :cpp:func:`FileRules::setDefaultRuleColorSpace`).
+    // - "ColorSpaceNamePathSearch" is also a reserved name
+    //   (see :cpp:func:`FileRules::insertPathSearchRule`).
+    // Will throw if ruleIndex is not less than :cpp:func:`FileRules::getNumEntries`.
+    void insertRule(size_t ruleIndex, const char * name, const char * colorSpace,
+                    const char * pattern, const char * extension);
+    //!cpp:function::
+    void insertRule(size_t ruleIndex, const char * name, const char * colorSpace,
+                    const char * regex);
+    //!cpp:function:: Helper function to insert a rule that uses
+    // cpp:func:'Config:parseColorSpaceFromString` to search the path for any of the color spaces
+    // named in the config (as per OCIO v1).
+    void insertPathSearchRule(size_t ruleIndex);
+    //!cpp:function:: Helper function tp set the color space for the default rule.
+    void setDefaultRuleColorSpace(const char * colorSpace);
+
+    //!cpp:function:: Default rule can't be removed.
+    // Will throw if ruleIndex + 1 is not less than :cpp:func:`FileRules::getNumEntries`.
+    void removeRule(size_t ruleIndex);
+
+    //!cpp:function:: Move a rule closer to the start of the list by one position.
+    void increaseRulePriority(size_t ruleIndex);
+
+    //!cpp:function:: Move a rule closer to the end of the list by one position.
+    void decreaseRulePriority(size_t ruleIndex);
+
+    // !cpp:function:: Get the color space of the first rule that matched filePath.
+    const char * getColorSpaceFromFilepath(const Config & config, const char * filePath) const;
+
+    //!cpp:function:: Most applications will use the preceding method, but this method may be
+    // used for applications that want to know which was the highest priority rule to match
+    // filePath.  The getNumCustomKeys(ruleIndex) and custom keys methods may then be used
+    // to get additional information about the matching rule.
+    const char * getColorSpaceFromFilepath(const Config & config, const char * filePath,
+                                           size_t & ruleIndex) const;
+
+    // !cpp:function:: Returns true if the only rule matched by filePath is the default rule.
+    // This is a convenience method for applications that want to require the user to manually
+    // choose a color space when strictParsing is true and no other rules match.
+    bool filepathOnlyMatchesDefaultRule(const Config & config, const char * filePath) const;
+
+    //!cpp:function:: Called by :cpp:func:`Config::sanityCheck`.
+    void validate(const Config & config) const;
+
+private:
+    FileRules();
+    virtual ~FileRules();
+
+    FileRules(const FileRules &);
+    FileRules & operator= (const FileRules &);
+
+    static void deleter(FileRules* c);
+
+    class Impl;
+    friend class Impl;
+    Impl * m_impl;
+    Impl * getImpl() { return m_impl; }
+    const Impl * getImpl() const { return m_impl; }
+};
 
 
 ///////////////////////////////////////////////////////////////////////////

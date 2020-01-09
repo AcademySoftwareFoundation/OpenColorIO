@@ -220,5 +220,48 @@ std::string EnvExpand(const std::string & str, const EnvMap & map)
 
     return orig;
 }
+
+int ParseColorSpaceFromString(const Config & config, const char * str)
+{
+    if (!str) return -1;
+
+    // Search the entire filePath, including directory name (if provided)
+    // convert the filename to lowercase.
+    std::string fullstr = pystring::lower(std::string(str));
+
+    // See if it matches a LUT name.
+    // This is the position of the RIGHT end of the colorspace substring,
+    // not the left
+    int rightMostColorPos = -1;
+    std::string rightMostColorspace = "";
+    int rightMostColorSpaceIndex = -1;
+
+    // Find the right-most occcurance within the string for each colorspace.
+    for (int i = 0; i < config.getNumColorSpaces(COLORSPACE_ALL); ++i)
+    {
+        std::string csname = pystring::lower(config.getColorSpaceNameByIndex(i));
+
+        // find right-most extension matched in filename
+        int colorspacePos = pystring::rfind(fullstr, csname);
+        if (colorspacePos < 0)
+            continue;
+
+        // If we have found a match, move the pointer over to the right end
+        // of the substring.  This will allow us to find the longest name
+        // that matches the rightmost colorspace
+        colorspacePos += (int)csname.size();
+
+        if ((colorspacePos > rightMostColorPos) ||
+            ((colorspacePos == rightMostColorPos) && (csname.size() > rightMostColorspace.size()))
+            )
+        {
+            rightMostColorPos = colorspacePos;
+            rightMostColorspace = csname;
+            rightMostColorSpaceIndex = i;
+        }
+    }
+    return rightMostColorSpaceIndex;
+}
+
 } // namespace OCIO_NAMESPACE
 
