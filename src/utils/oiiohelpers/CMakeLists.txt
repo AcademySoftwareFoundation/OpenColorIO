@@ -21,7 +21,7 @@ if(NOT BUILD_SHARED_LIBS)
     )
 endif()
 
-set_target_properties(oiiohelpers PROPERTIES 
+set_target_properties(oiiohelpers PROPERTIES
     COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
 
 target_include_directories(oiiohelpers
@@ -37,10 +37,10 @@ target_link_libraries(oiiohelpers
 
     PRIVATE
         ilmbase::ilmbase
-        pystring::pystring
+        utils::strings
 )
 
-install(TARGETS oiiohelpers 
+install(TARGETS oiiohelpers
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
 )

@@ -31,12 +31,13 @@
 #ifndef INCLUDED_OCIO_UNITTEST_H
 #define INCLUDED_OCIO_UNITTEST_H
 
-#include <iostream>
 #include <cmath>
 #include <functional>
-#include <vector>
-#include <string>
 #include <iomanip>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
 
 extern int unit_test_failures;
 
@@ -60,7 +61,7 @@ typedef std::vector<OCIOTestRcPtr> UnitTests;
 UnitTests & GetUnitTests();
 
 struct AddTest
-{ 
+{
     explicit AddTest(const OCIOTestRcPtr & test)
     {
         GetUnitTests().push_back(test);
@@ -88,12 +89,12 @@ struct AddTest
 /// prints an error message indicating the module and line where the
 /// error occurred, but does NOT abort.  This is helpful for unit tests
 /// where we do not want one failure.
-/// 
+///
 /// OCIO_REQUIRE_* macros checks if the conditions is met, and if not,
 /// prints an error message indicating the module and line where the
 /// error occurred, but does abort.  This is helpful for unit tests
 /// where we have to fail as following code would be not testable.
-/// 
+///
 #define OCIO_CHECK_ASSERT_FROM(x, line)                                 \
     ((x) ? ((void)0)                                                    \
          : ((std::cout << __FILE__ << ":" << line << ":\n"              \
@@ -125,10 +126,10 @@ struct AddTest
 // When using OCIO_CHECK_EQUAL in an helper method used by one or more
 // unit tests, the error message indicates the helper method line number
 // and not the unit test line number.
-// 
+//
 // Use OCIO_CHECK_EQUAL_FROM to propagate the right line number
 // to the error message.
-// 
+//
 #define OCIO_CHECK_EQUAL_FROM(x,y,line)                                 \
     (((x) == (y)) ? ((void)0)                                           \
          : ((std::cout << __FILE__ << ":" << line << ":\n"              \
@@ -186,10 +187,10 @@ struct AddTest
 // When using OCIO_CHECK_CLOSE in an helper method used by one or more
 // unit tests, the error message indicates the helper method line number
 // and not the unit test line number.
-// 
+//
 // Use OCIO_CHECK_CLOSE_FROM to propagate the right line number
 // to the error message.
-// 
+//
 #define OCIO_CHECK_CLOSE_FROM(x,y,tol,line)                             \
     ((std::abs((x) - (y)) < (tol)) ? ((void)0)                          \
          : ((std::cout << std::setprecision(10)                         \

@@ -16,7 +16,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <string>
 #include <sstream>
 
-#include "pystring/pystring.h"
+#include "StringUtils.h"
 
 enum Lut3DOrder
 {
@@ -81,8 +81,8 @@ void Generate(int cubesize, int maxwidth,
             throw OCIO::Exception(os.str().c_str());
         }
 
-        OCIO::ConstCPUProcessorRcPtr processor = 
-            config->getProcessor(incolorspace.c_str(), 
+        OCIO::ConstCPUProcessorRcPtr processor =
+            config->getProcessor(incolorspace.c_str(),
                                  outcolorspace.c_str())->getDefaultCPUProcessor();
 
         OCIO::PackedImageDesc imgdesc(&img[0], width, height, 3);
@@ -347,7 +347,7 @@ void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels,
 
 void WriteLut3D(const std::string & filename, const float* lutdata, int edgeLen)
 {
-    if(!pystring::endswith(filename,".spi3d"))
+    if(!StringUtils::EndsWith(filename, ".spi3d"))
     {
         std::ostringstream os;
         os << "Only .spi3d writing is currently supported. ";

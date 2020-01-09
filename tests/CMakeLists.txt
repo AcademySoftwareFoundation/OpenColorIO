@@ -3,6 +3,7 @@
 
 add_subdirectory(data)
 if(OCIO_BUILD_TESTS)
+    add_subdirectory(ext)
 	add_subdirectory(cpu)
 endif()
 if(OCIO_BUILD_GPU_TESTS)

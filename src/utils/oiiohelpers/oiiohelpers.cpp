@@ -7,7 +7,7 @@
 
 #include "OpenEXR/half.h"
 #include "oiiohelpers.h"
-#include "pystring/pystring.h"
+#include "StringUtils.h"
 
 
 namespace OCIO_NAMESPACE
@@ -37,7 +37,7 @@ ChannelOrdering GetChannelOrdering(const OIIO::ImageSpec & spec)
     std::string channels;
     for(auto chan : spec.channelnames)
     {
-        channels += pystring::capitalize(chan);
+        channels += StringUtils::Upper(chan);
     }
 
     if(channels=="RGBA")
