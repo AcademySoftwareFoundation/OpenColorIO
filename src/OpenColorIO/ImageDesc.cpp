@@ -326,8 +326,8 @@ struct PackedImageDesc::Impl
 };
 
 PackedImageDesc::PackedImageDesc(void * data,
-                                    long width, long height,
-                                    long numChannels)
+                                 long width, long height,
+                                 long numChannels)
     :   ImageDesc()
     ,   m_impl(new PackedImageDesc::Impl)
 {
@@ -350,7 +350,7 @@ PackedImageDesc::PackedImageDesc(void * data,
         throw Exception("PackedImageDesc Error: Invalid number of channels.");
     }
 
-    static constexpr unsigned oneChannelInBytes = sizeof(BitDepthInfo<BIT_DEPTH_F32>::Type);
+    constexpr unsigned oneChannelInBytes = sizeof(BitDepthInfo<BIT_DEPTH_F32>::Type);
 
     getImpl()->m_chanStrideBytes = oneChannelInBytes;
     getImpl()->m_xStrideBytes    = getImpl()->m_chanStrideBytes * getImpl()->m_numChannels;
@@ -365,8 +365,8 @@ PackedImageDesc::PackedImageDesc(void * data,
 }
 
 PackedImageDesc::PackedImageDesc(void * data,
-                                    long width, long height,
-                                    ChannelOrdering chanOrder)
+                                 long width, long height,
+                                 ChannelOrdering chanOrder)
     :   ImageDesc()
     ,   m_impl(new PackedImageDesc::Impl)
 {
@@ -392,7 +392,7 @@ PackedImageDesc::PackedImageDesc(void * data,
         throw Exception("PackedImageDesc Error: Unknown channel ordering.");
     }
 
-    static constexpr unsigned oneChannelInBytes = sizeof(BitDepthInfo<BIT_DEPTH_F32>::Type);
+    constexpr unsigned oneChannelInBytes = sizeof(BitDepthInfo<BIT_DEPTH_F32>::Type);
 
     getImpl()->m_chanStrideBytes = oneChannelInBytes;
     getImpl()->m_xStrideBytes    = getImpl()->m_chanStrideBytes * getImpl()->m_numChannels;
@@ -407,12 +407,12 @@ PackedImageDesc::PackedImageDesc(void * data,
 }
 
 PackedImageDesc::PackedImageDesc(void * data,
-                                    long width, long height,
-                                    ChannelOrdering chanOrder,
-                                    BitDepth bitDepth,
-                                    ptrdiff_t chanStrideBytes,
-                                    ptrdiff_t xStrideBytes,
-                                    ptrdiff_t yStrideBytes)
+                                 long width, long height,
+                                 ChannelOrdering chanOrder,
+                                 BitDepth bitDepth,
+                                 ptrdiff_t chanStrideBytes,
+                                 ptrdiff_t xStrideBytes,
+                                 ptrdiff_t yStrideBytes)
     :   ImageDesc()
     ,   m_impl(new PackedImageDesc::Impl)
 {
@@ -438,16 +438,10 @@ PackedImageDesc::PackedImageDesc(void * data,
         throw Exception("PackedImageDesc Error: Unknown channel ordering.");
     }
 
-    static constexpr unsigned oneChannelInBytes = sizeof(BitDepthInfo<BIT_DEPTH_F32>::Type);
+    const unsigned oneChannelInBytes = GetChannelSizeInBytes(bitDepth);
 
     getImpl()->m_chanStrideBytes = (chanStrideBytes == AutoStride)
         ? oneChannelInBytes : chanStrideBytes;
-
-    if(chanStrideBytes==AutoStride && bitDepth!=BIT_DEPTH_F32)
-    {
-        throw Exception("PackedImageDesc Error: Mimsmatch between the bit-depth and channel stride.");
-    }
-
     getImpl()->m_xStrideBytes = (xStrideBytes == AutoStride)
         ? getImpl()->m_chanStrideBytes * getImpl()->m_numChannels : xStrideBytes;
     getImpl()->m_yStrideBytes = (yStrideBytes == AutoStride)
@@ -462,12 +456,12 @@ PackedImageDesc::PackedImageDesc(void * data,
 }
 
 PackedImageDesc::PackedImageDesc(void * data,
-                                    long width, long height,
-                                    long numChannels,
-                                    BitDepth bitDepth,
-                                    ptrdiff_t chanStrideBytes,
-                                    ptrdiff_t xStrideBytes,
-                                    ptrdiff_t yStrideBytes)
+                                 long width, long height,
+                                 long numChannels,
+                                 BitDepth bitDepth,
+                                 ptrdiff_t chanStrideBytes,
+                                 ptrdiff_t xStrideBytes,
+                                 ptrdiff_t yStrideBytes)
     :   ImageDesc()
     ,   m_impl(new PackedImageDesc::Impl)
 {
@@ -478,11 +472,11 @@ PackedImageDesc::PackedImageDesc(void * data,
     getImpl()->m_bitDepth    = bitDepth;
 
 
-    if(numChannels==4)
+    if (numChannels==4)
     {
         getImpl()->m_chanOrder = CHANNEL_ORDERING_RGBA;
     }
-    else if(numChannels==3)
+    else if (numChannels==3)
     {
         getImpl()->m_chanOrder = CHANNEL_ORDERING_RGB;
     }
@@ -491,16 +485,10 @@ PackedImageDesc::PackedImageDesc(void * data,
         throw Exception("PackedImageDesc Error: Invalid number of channels.");
     }
 
-    static constexpr unsigned oneChannelInBytes = sizeof(BitDepthInfo<BIT_DEPTH_F32>::Type);
+    const unsigned oneChannelInBytes = GetChannelSizeInBytes(bitDepth);
 
     getImpl()->m_chanStrideBytes = (chanStrideBytes == AutoStride)
         ? oneChannelInBytes : chanStrideBytes;
-
-    if(chanStrideBytes==AutoStride && bitDepth!=BIT_DEPTH_F32)
-    {
-        throw Exception("PackedImageDesc Error: Mimsmatch between the bit-depth and channel stride.");
-    }
-
     getImpl()->m_xStrideBytes = (xStrideBytes == AutoStride)
         ? getImpl()->m_chanStrideBytes * getImpl()->m_numChannels : xStrideBytes;
     getImpl()->m_yStrideBytes = (yStrideBytes == AutoStride)
