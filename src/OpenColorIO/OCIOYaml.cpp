@@ -8,6 +8,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include "Display.h"
+#include "FileRules.h"
 #include "Logging.h"
 #include "MathUtils.h"
 #include "pystring/pystring.h"
@@ -1961,6 +1962,178 @@ inline void save(YAML::Emitter& out, ConstLookRcPtr look)
     out << YAML::Newline;
 }
 
+// File rules
+
+struct CustomKeysLoader
+{
+    StringVec m_keyVals;
+};
+
+inline void loadCustomKeys(const YAML::Node& node, CustomKeysLoader & ck)
+{
+    if (node.Type() == YAML::NodeType::Map)
+    {
+        for (const auto & it : node)
+        {
+            std::string k;
+            std::string v;
+            const YAML::Node& first = it.first;
+            load(first, k);
+            load(it.second, v);
+            ck.m_keyVals.push_back(k);
+            ck.m_keyVals.push_back(v);
+        }
+    }
+    else
+    {
+        throwError(node, "The 'file_rules' custom attributes need to be a YAML map.");
+    }
+}
+
+inline void load(const YAML::Node & node, FileRulesRcPtr & fr, bool & defaultRuleFound)
+{
+    if (node.Tag() != "Rule")
+        return;
+
+    std::string key, stringval;
+    std::string name, colorspace, pattern, extension, regex;
+    StringVec keyVals;
+
+    for (const auto & iter : node)
+    {
+        const YAML::Node & first = iter.first;
+        const YAML::Node & second = iter.second;
+
+        load(first, key);
+
+        if (second.IsNull() || !second.IsDefined()) continue;
+
+        if (key == FileRuleUtils::Name)
+        {
+            load(second, stringval);
+            name = stringval;
+        }
+        else if (key == FileRuleUtils::ColorSpace)
+        {
+            load(second, stringval);
+            colorspace = stringval;
+        }
+        else if (key == FileRuleUtils::Pattern)
+        {
+            load(second, stringval);
+            pattern = stringval;
+        }
+        else if (key == FileRuleUtils::Extension)
+        {
+            load(second, stringval);
+            extension = stringval;
+        }
+        else if (key == FileRuleUtils::Regex)
+        {
+            load(second, stringval);
+            regex = stringval;
+        }
+        else if (key == FileRuleUtils::CustomKey)
+        {
+            CustomKeysLoader kv;
+            loadCustomKeys(second, kv);
+            keyVals = kv.m_keyVals;
+        }
+        else
+        {
+            LogUnknownKeyWarning(node, first);
+        }
+    }
+
+    try
+    {
+        const auto pos = fr->getNumEntries() - 1;
+        if (name == FileRuleUtils::DefaultName)
+        {
+            if (!regex.empty() || !pattern.empty() || !extension.empty())
+            {
+                throw Exception("'Default' rule can't use pattern, extension or regex.");
+            }
+            defaultRuleFound = true;
+            fr->setColorSpace(pos, colorspace.c_str());
+        }
+        else
+        {
+            if (!regex.empty() && (!pattern.empty() || !extension.empty()))
+            {
+                std::ostringstream oss;
+                oss << "File rule '" << name << "' can't use regex '" << regex << "' and "
+                    << "pattern & extension '" << pattern << "' '" << extension << "'.";
+                throw Exception(oss.str().c_str());
+            }
+
+            if (regex.empty())
+            {
+                fr->insertRule(pos, name.c_str(), colorspace.c_str(),
+                               pattern.c_str(), extension.c_str());
+            }
+            else
+            {
+                fr->insertRule(pos, name.c_str(), colorspace.c_str(), regex.c_str());
+            }
+        }
+        const auto numKeyVal = keyVals.size() / 2;
+        for (size_t i = 0; i < numKeyVal; ++i)
+        {
+            fr->setCustomKey(pos, keyVals[i * 2].c_str(), keyVals[i * 2 + 1].c_str());
+        }
+    }
+    catch (Exception & ex)
+    {
+        std::ostringstream os;
+        os << "File rules: " << ex.what();
+        throwError(node, os.str().c_str());
+    }
+}
+
+inline void save(YAML::Emitter & out, ConstFileRulesRcPtr & fr, size_t position)
+{
+    out << YAML::VerbatimTag("Rule");
+    out << YAML::Flow;
+    out << YAML::BeginMap;
+    out << YAML::Key << FileRuleUtils::Name << YAML::Value << fr->getName(position);
+    const char * cs{ fr->getColorSpace(position) };
+    if (cs && *cs)
+    {
+        out << YAML::Key << FileRuleUtils::ColorSpace << YAML::Value << std::string(cs);
+    }
+    const char * regex{ fr->getRegex(position) };
+    if (regex && *regex)
+    {
+        out << YAML::Key << FileRuleUtils::Regex << YAML::Value << std::string(regex);
+    }
+    const char * pattern{ fr->getPattern(position) };
+    if (pattern && *pattern)
+    {
+        out << YAML::Key << FileRuleUtils::Pattern << YAML::Value << std::string(pattern);
+    }
+    const char * extension{ fr->getExtension(position) };
+    if (extension && *extension)
+    {
+        out << YAML::Key << FileRuleUtils::Extension << YAML::Value << std::string(extension);
+    }
+    const auto numKeys = fr->getNumCustomKeys(position);
+    if (numKeys)
+    {
+        out << YAML::Key << FileRuleUtils::CustomKey;
+        out << YAML::Value;
+        out << YAML::BeginMap;
+
+        for (size_t i = 0; i < numKeys; ++i)
+        {
+            out << YAML::Key << fr->getCustomKeyName(position, i)
+                << YAML::Value << fr->getCustomKeyValue(position, i);
+        }
+        out << YAML::EndMap;
+    }
+    out << YAML::EndMap;
+}
+
 // Config
 
 inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
@@ -2037,6 +2210,10 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
         LogWarning(os.str());
     }
 
+    bool rulesFound = false;
+    bool defaultRuleFound = false;
+    auto rules = c->getFileRules()->createEditableCopy();
+
     std::string key, stringval;
     bool boolval = false;
     EnvironmentMode mode = ENV_ENVIRONMENT_LOAD_ALL;
@@ -2056,9 +2233,8 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
             mode = ENV_ENVIRONMENT_LOAD_PREDEFINED;
             if(second.Type() != YAML::NodeType::Map)
             {
-                std::ostringstream os;
-                os << "The value type of key 'environment' needs to be a map.";
-                throwValueError(node.Tag(), first, os.str());
+                throwValueError(node.Tag(), first, "The value type of key 'environment' needs "
+                                                   "to be a map.");
             }
             for (const auto & it : second)
             {
@@ -2112,9 +2288,8 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
         {
             if(second.Type() != YAML::NodeType::Map)
             {
-                std::ostringstream os;
-                os << "The value type of the key 'roles' needs to be a map.";
-                throwValueError(node.Tag(), first, os.str());
+                throwValueError(node.Tag(), first, "The value type of the key 'roles' needs "
+                                                   "to be a map.");
             }
             for (const auto & it : second)
             {
@@ -2124,13 +2299,50 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
                 c->setRole(k.c_str(), v.c_str());
             }
         }
+        else if (key == "file_rules")
+        {
+            if (c->getMajorVersion() < 2)
+            {
+                throwError(first, "Config v1 can't use 'file_rules'");
+            }
+
+            if (second.Type() != YAML::NodeType::Sequence)
+            {
+                throwError(second, "The 'file_rules' field needs to be a (- !<Rule>) list.");
+            }
+
+            for (const auto & val : second)
+            {
+                if (val.Tag() == "Rule")
+                {
+                    if (defaultRuleFound)
+                    {
+                        throwError(second, "The 'file_rules' Default rule has to be "
+                                           "the last rule.");
+                    }
+                    load(val, rules, defaultRuleFound);
+                }
+                else
+                {
+                    std::ostringstream os;
+                    os << "Unknown element found in file_rules:";
+                    os << val.Tag() << ". Only Rule(s) are currently handled.";
+                    LogWarning(os.str());
+                }
+            }
+
+            if (!defaultRuleFound)
+            {
+                throwError(first, "The 'file_rules' does not contain a Default <Rule>.");
+            }
+            rulesFound = true;
+        }
         else if(key == "displays")
         {
             if(second.Type() != YAML::NodeType::Map)
             {
-                std::ostringstream os;
-                os << "The value type of the key 'displays' needs to be a map.";
-                throwValueError(node.Tag(), first, os.str());
+                throwValueError(node.Tag(), first, "The value type of the key 'displays' "
+                                                   "needs to be a map.");
             }
             for (const auto & it : second)
             {
@@ -2177,9 +2389,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
         {
             if(second.Type() != YAML::NodeType::Sequence)
             {
-                std::ostringstream os;
-                os << "'colorspaces' field needs to be a (- !<ColorSpace>) list.";
-                throwError(node, os.str());
+                throwError(second, "'colorspaces' field needs to be a (- !<ColorSpace>) list.");
             }
             for(const auto & val : second)
             {
@@ -2193,7 +2403,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
                         {
                             std::ostringstream os;
                             os << "Colorspace with name '" << cs->getName() << "' already defined.";
-                            throwError(node, os.str());
+                            throwError(second, os.str());
                         }
                     }
                     c->addColorSpace(cs);
@@ -2212,9 +2422,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
         {
             if(second.Type() != YAML::NodeType::Sequence)
             {
-                std::ostringstream os;
-                os << "'looks' field needs to be a (- !<Look>) list.";
-                throwError(node, os.str());
+                throwError(second, "'looks' field needs to be a (- !<Look>) list.");
             }
 
             for(const auto & val : second)
@@ -2246,6 +2454,37 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
         std::string realfilename = AbsPath(filename);
         std::string configrootdir = pystring::os::path::dirname(realfilename);
         c->setWorkingDir(configrootdir.c_str());
+    }
+
+    auto defaultCS = c->getColorSpace(ROLE_DEFAULT);
+    if (!rulesFound)
+    {
+        if (!defaultCS && c->getMajorVersion() >= 2)
+        {
+            throwError(node, "The config must contain either a Default file rule or "
+                             "the 'default' role.");
+        }
+    }
+    else
+    {
+        // If default role is also defined.
+        if (defaultCS)
+        {
+            const auto defaultRule = rules->getNumEntries() - 1;
+            const std::string defaultRuleCS{ rules->getColorSpace(defaultRule) };
+            if (defaultRuleCS != ROLE_DEFAULT)
+            {
+                if (defaultRuleCS != defaultCS->getName())
+                {
+                    std::ostringstream oss;
+                    oss << "file_rules: defines a default rule using color-space '"
+                        << defaultRuleCS << "' that does not match the default role '"
+                        << std::string(defaultCS->getName()) << "'.";
+                    LogWarning(oss.str());
+                }
+            }
+        }
+        c->setFileRules(rules);
     }
 
     c->setEnvironmentMode(mode);
@@ -2365,6 +2604,21 @@ inline void save(YAML::Emitter& out, const Config* c)
     }
     out << YAML::EndMap;
     out << YAML::Newline;
+
+    // File rules
+    if (configMajorVersion >= 2)
+    {
+        auto rules = c->getFileRules();
+        out << YAML::Newline;
+        out << YAML::Key << "file_rules";
+        out << YAML::Value << YAML::BeginSeq;
+        for (size_t i = 0; i < rules->getNumEntries(); ++i)
+        {
+            save(out, rules, i);
+        }
+        out << YAML::EndSeq;
+        out << YAML::Newline;
+    }
 
     // Displays
     out << YAML::Newline;

@@ -12,8 +12,11 @@ OCIO_ADD_TEST(ParseUtils, xml_text)
     const std::string in("abc \" def ' ghi < jkl > mnop & efg");
     const std::string ref("abc &quot; def &apos; ghi &lt; jkl &gt; mnop &amp; efg");
 
-    std::string out1 = OCIO::ConvertSpecialCharToXmlToken(in);
-    OCIO_CHECK_EQUAL(out1, ref);
+    std::string out = OCIO::ConvertSpecialCharToXmlToken(in);
+    OCIO_CHECK_EQUAL(out, ref);
+
+    std::string back = OCIO::ConvertXmlTokenToSpecialChar(ref);
+    OCIO_CHECK_EQUAL(back, in);
 }
 
 OCIO_ADD_TEST(ParseUtils, bool_string)
