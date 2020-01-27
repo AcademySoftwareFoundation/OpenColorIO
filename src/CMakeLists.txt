@@ -7,7 +7,21 @@
 # this lib
 find_package(OpenImageIO QUIET)
 
-add_subdirectory(apps)
-add_subdirectory(bindings)
-add_subdirectory(OpenColorIO)
-add_subdirectory(utils)
+
+# The order defines the architecture of the project i.e. layers and dependencies.
+
+add_subdirectory(apps)          # Layer for the apps i.e. can only use the public API and
+                                # 'libutils' & 'utils' libraries for implementation only.
+
+add_subdirectory(bindings)      # Layer for the various bindings i.e. can only use the public API
+                                # and 'libutils' & 'utils' libraries for implementation only.
+
+add_subdirectory(libutils)      # Layer for the libraries built on top of the OpenColorIO library
+                                # i.e. can only use the public API and 'utils' libraries
+                                # for implementation only.
+
+add_subdirectory(OpenColorIO)   # The OpenColorIO library i.e. can only use 'utils' libraries
+                                # for implementation only.
+
+add_subdirectory(utils)         # Various libraries used by any upper layers. But they cannot
+                                # be part of the public API.
