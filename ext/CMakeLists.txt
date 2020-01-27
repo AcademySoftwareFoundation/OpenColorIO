@@ -34,11 +34,7 @@ endif()
 
 
 ###############################################################################
-### Project code potentially used by the OCIO library, OCIO apps,           ###
-### and unit tests.                                                         ###
+### External (modified) third-party C/C++ dependencies.                     ###
 
 # Sample ICC (modified)
 add_subdirectory(sampleicc)
-
-# utils
-add_subdirectory(utils)

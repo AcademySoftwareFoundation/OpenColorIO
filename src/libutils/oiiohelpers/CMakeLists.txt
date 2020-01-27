@@ -32,10 +32,10 @@ target_include_directories(oiiohelpers
 target_link_libraries(oiiohelpers
     PUBLIC
         public_api
-        OpenColorIO
         OpenImageIO
 
     PRIVATE
+        OpenColorIO
         ilmbase::ilmbase
         utils::strings
 )

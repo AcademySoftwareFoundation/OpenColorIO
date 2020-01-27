@@ -13,13 +13,16 @@ function(add_ext_test NAME SOURCES PRIVATE_INCLUDES)
         PRIVATE
             OCIO_UNIT_TEST
             OpenColorIO_SKIP_IMPORTS
+    )
 
+    target_link_libraries(${TEST_BINARY}
+        PRIVATE
+            utils::strings
     )
 
     if(PRIVATE_INCLUDES)
         target_include_directories(${TEST_BINARY}
             PRIVATE
-                "${CMAKE_SOURCE_DIR}/ext/utils"
                 "${CMAKE_SOURCE_DIR}/tests/cpu"
         )
     endif(PRIVATE_INCLUDES)
