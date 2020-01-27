@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+
 ###############################################################################
-### External C/C++ dependencies ###
+### External third-party C/C++ dependencies.                                ###
 
 # Expat
 # https://github.com/libexpat/libexpat
@@ -31,9 +32,9 @@ if(OCIO_BUILD_APPS)
     find_package(LCMS2 ${LCMS2_MIN_VERSION} REQUIRED)
 endif()
 
+
+###############################################################################
+### External (modified) third-party C/C++ dependencies.                     ###
+
 # Sample ICC (modified)
-# http://sampleicc.sourceforge.net
-add_library(sampleicc::sampleicc INTERFACE IMPORTED GLOBAL)
-set_target_properties(sampleicc::sampleicc PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/sampleicc/src/include"
-)
+add_subdirectory(sampleicc)

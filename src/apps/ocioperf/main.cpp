@@ -14,7 +14,7 @@ namespace OIIO = OIIO_NAMESPACE;
 #include "argparse.h"
 #include "OpenEXR/half.h"
 #include "oiiohelpers.h"
-#include "pystring/pystring.h"
+#include "StringUtils.h"
 
 
 namespace OCIO = OCIO_NAMESPACE;
@@ -316,7 +316,7 @@ int main(int argc, const char **argv)
     OCIO::ImgBuffer img;
     LoadImage(filepath, verbose, spec, img);
 
-    outBitDepthStr = pystring::lower(outBitDepthStr);
+    outBitDepthStr = StringUtils::Lower(outBitDepthStr);
 
     // Process the image.
     try
