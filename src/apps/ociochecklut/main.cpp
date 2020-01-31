@@ -121,7 +121,7 @@ int main (int argc, const char* argv[])
 
     auto numInput = input.size();
     size_t comp = 3;
-    if (!numInput == 0)
+    if (numInput != 0)
     {
         if (numInput == 4)
         {

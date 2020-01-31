@@ -267,7 +267,8 @@ void GammaBasicMirrorOpCPU::apply(const void * inImg, void * outImg, long numPix
     {
         const float sign[4] = { std::copysign(1.0f, in[0]), std::copysign(1.0f, in[1]),
                                 std::copysign(1.0f, in[2]), std::copysign(1.0f, in[3]) };
-        const float pixel[4] = { fabs(in[0]), fabs(in[1]), fabs(in[2]), fabs(in[3]) };
+        const float pixel[4] = { (float)fabs(in[0]), (float)fabs(in[1]),
+                                 (float)fabs(in[2]), (float)fabs(in[3]) };
 
         out[0] = sign[0] * powf(pixel[0], m_redGamma);
         out[1] = sign[1] * powf(pixel[1], m_grnGamma);
@@ -583,7 +584,8 @@ void GammaMoncurveMirrorOpCPUFwd::apply(const void * inImg, void * outImg, long 
         const float sign[4] = { std::copysign(1.0f, in[0]), std::copysign(1.0f, in[1]),
                                 std::copysign(1.0f, in[0]), std::copysign(1.0f, in[3]) };
 
-        const float pixel[4] = { fabs(in[0]), fabs(in[1]), fabs(in[2]), fabs(in[3]) };
+        const float pixel[4] = { (float)fabs(in[0]), (float)fabs(in[1]),
+                                 (float)fabs(in[2]), (float)fabs(in[3]) };
 
         const float data[4] = { powf(pixel[0] * red[0] + red[1], red[2]),
                                 powf(pixel[1] * grn[0] + grn[1], grn[2]),
@@ -673,7 +675,8 @@ void GammaMoncurveMirrorOpCPURev::apply(const void * inImg, void * outImg, long 
         const float sign[4] = { std::copysign(1.0f, in[0]), std::copysign(1.0f, in[1]),
                                 std::copysign(1.0f, in[0]), std::copysign(1.0f, in[3]) };
 
-        const float pixel[4] = { fabs(in[0]), fabs(in[1]), fabs(in[2]), fabs(in[3]) };
+        const float pixel[4] = { (float)fabs(in[0]), (float)fabs(in[1]),
+                                 (float)fabs(in[2]), (float)fabs(in[3]) };
 
         const float data[4] = { powf(pixel[0], red[0]) * red[1] - red[2],
                                 powf(pixel[1], grn[0]) * grn[1] - grn[2],
