@@ -224,10 +224,10 @@ void GammaBasicOpCPU::apply(const void * inImg, void * outImg, long numPixels) c
                                  std::max(0.0f, in[2]),
                                  std::max(0.0f, in[3]) };
 
-        out[0] = powf(pixel[0], m_redGamma);
-        out[1] = powf(pixel[1], m_grnGamma);
-        out[2] = powf(pixel[2], m_bluGamma);
-        out[3] = powf(pixel[3], m_alpGamma);
+        out[0] = std::pow(pixel[0], m_redGamma);
+        out[1] = std::pow(pixel[1], m_grnGamma);
+        out[2] = std::pow(pixel[2], m_bluGamma);
+        out[3] = std::pow(pixel[3], m_alpGamma);
 
         in  += 4;
         out += 4;
@@ -267,13 +267,13 @@ void GammaBasicMirrorOpCPU::apply(const void * inImg, void * outImg, long numPix
     {
         const float sign[4] = { std::copysign(1.0f, in[0]), std::copysign(1.0f, in[1]),
                                 std::copysign(1.0f, in[2]), std::copysign(1.0f, in[3]) };
-        const float pixel[4] = { (float)fabs(in[0]), (float)fabs(in[1]),
-                                 (float)fabs(in[2]), (float)fabs(in[3]) };
+        const float pixel[4] = { std::fabs(in[0]), std::fabs(in[1]),
+                                 std::fabs(in[2]), std::fabs(in[3]) };
 
-        out[0] = sign[0] * powf(pixel[0], m_redGamma);
-        out[1] = sign[1] * powf(pixel[1], m_grnGamma);
-        out[2] = sign[2] * powf(pixel[2], m_bluGamma);
-        out[3] = sign[3] * powf(pixel[3], m_alpGamma);
+        out[0] = sign[0] * std::pow(pixel[0], m_redGamma);
+        out[1] = sign[1] * std::pow(pixel[1], m_grnGamma);
+        out[2] = sign[2] * std::pow(pixel[2], m_bluGamma);
+        out[3] = sign[3] * std::pow(pixel[3], m_alpGamma);
 
         in += 4;
         out += 4;
@@ -317,10 +317,10 @@ void GammaBasicPassThruOpCPU::apply(const void * inImg, void * outImg, long numP
     {
         const float pixel[4] = { in[0], in[1], in[2], in[3] };
 
-        out[0] = pixel[0] > 0.f ? powf(pixel[0], m_redGamma) : pixel[0];
-        out[1] = pixel[1] > 0.f ? powf(pixel[1], m_grnGamma) : pixel[1];
-        out[2] = pixel[2] > 0.f ? powf(pixel[2], m_bluGamma) : pixel[2];
-        out[3] = pixel[3] > 0.f ? powf(pixel[3], m_alpGamma) : pixel[3];
+        out[0] = pixel[0] > 0.f ? std::pow(pixel[0], m_redGamma) : pixel[0];
+        out[1] = pixel[1] > 0.f ? std::pow(pixel[1], m_grnGamma) : pixel[1];
+        out[2] = pixel[2] > 0.f ? std::pow(pixel[2], m_bluGamma) : pixel[2];
+        out[3] = pixel[3] > 0.f ? std::pow(pixel[3], m_alpGamma) : pixel[3];
 
         in += 4;
         out += 4;
@@ -404,10 +404,10 @@ void GammaMoncurveOpCPUFwd::apply(const void * inImg, void * outImg, long numPix
     {
         const float pixel[4] = { in[0], in[1], in[2], in[3] };
 
-        const float data[4] = { powf(pixel[0] * red[0] + red[1], red[2]),
-                                powf(pixel[1] * grn[0] + grn[1], grn[2]),
-                                powf(pixel[2] * blu[0] + blu[1], blu[2]),
-                                powf(pixel[3] * alp[0] + alp[1], alp[2]) };
+        const float data[4] = { std::pow(pixel[0] * red[0] + red[1], red[2]),
+                                std::pow(pixel[1] * grn[0] + grn[1], grn[2]),
+                                std::pow(pixel[2] * blu[0] + blu[1], blu[2]),
+                                std::pow(pixel[3] * alp[0] + alp[1], alp[2]) };
 
         out[0] = pixel[0]<=red[3] ? pixel[0] * red[4] : data[0];
         out[1] = pixel[1]<=grn[3] ? pixel[1] * grn[4] : data[1];
@@ -496,10 +496,10 @@ void GammaMoncurveOpCPURev::apply(const void * inImg, void * outImg, long numPix
     {
         const float pixel[4] = { in[0], in[1], in[2], in[3] };
 
-        const float data[4] = { powf(pixel[0], red[0]) * red[1] - red[2],
-                                powf(pixel[1], grn[0]) * grn[1] - grn[2],
-                                powf(pixel[2], blu[0]) * blu[1] - blu[2],
-                                powf(pixel[3], alp[0]) * alp[1] - alp[2] };
+        const float data[4] = { std::pow(pixel[0], red[0]) * red[1] - red[2],
+                                std::pow(pixel[1], grn[0]) * grn[1] - grn[2],
+                                std::pow(pixel[2], blu[0]) * blu[1] - blu[2],
+                                std::pow(pixel[3], alp[0]) * alp[1] - alp[2] };
 
         out[0] = pixel[0]<=red[3] ? pixel[0] * red[4] : data[0];
         out[1] = pixel[1]<=grn[3] ? pixel[1] * grn[4] : data[1];
@@ -584,13 +584,13 @@ void GammaMoncurveMirrorOpCPUFwd::apply(const void * inImg, void * outImg, long 
         const float sign[4] = { std::copysign(1.0f, in[0]), std::copysign(1.0f, in[1]),
                                 std::copysign(1.0f, in[0]), std::copysign(1.0f, in[3]) };
 
-        const float pixel[4] = { (float)fabs(in[0]), (float)fabs(in[1]),
-                                 (float)fabs(in[2]), (float)fabs(in[3]) };
+        const float pixel[4] = { std::fabs(in[0]), std::fabs(in[1]),
+                                 std::fabs(in[2]), std::fabs(in[3]) };
 
-        const float data[4] = { powf(pixel[0] * red[0] + red[1], red[2]),
-                                powf(pixel[1] * grn[0] + grn[1], grn[2]),
-                                powf(pixel[2] * blu[0] + blu[1], blu[2]),
-                                powf(pixel[3] * alp[0] + alp[1], alp[2]) };
+        const float data[4] = { std::pow(pixel[0] * red[0] + red[1], red[2]),
+                                std::pow(pixel[1] * grn[0] + grn[1], grn[2]),
+                                std::pow(pixel[2] * blu[0] + blu[1], blu[2]),
+                                std::pow(pixel[3] * alp[0] + alp[1], alp[2]) };
 
         out[0] = sign[0] * (pixel[0] <= red[3] ? pixel[0] * red[4] : data[0]);
         out[1] = sign[1] * (pixel[1] <= grn[3] ? pixel[1] * grn[4] : data[1]);
@@ -675,13 +675,13 @@ void GammaMoncurveMirrorOpCPURev::apply(const void * inImg, void * outImg, long 
         const float sign[4] = { std::copysign(1.0f, in[0]), std::copysign(1.0f, in[1]),
                                 std::copysign(1.0f, in[0]), std::copysign(1.0f, in[3]) };
 
-        const float pixel[4] = { (float)fabs(in[0]), (float)fabs(in[1]),
-                                 (float)fabs(in[2]), (float)fabs(in[3]) };
+        const float pixel[4] = { std::fabs(in[0]), std::fabs(in[1]),
+                                 std::fabs(in[2]), std::fabs(in[3]) };
 
-        const float data[4] = { powf(pixel[0], red[0]) * red[1] - red[2],
-                                powf(pixel[1], grn[0]) * grn[1] - grn[2],
-                                powf(pixel[2], blu[0]) * blu[1] - blu[2],
-                                powf(pixel[3], alp[0]) * alp[1] - alp[2] };
+        const float data[4] = { std::pow(pixel[0], red[0]) * red[1] - red[2],
+                                std::pow(pixel[1], grn[0]) * grn[1] - grn[2],
+                                std::pow(pixel[2], blu[0]) * blu[1] - blu[2],
+                                std::pow(pixel[3], alp[0]) * alp[1] - alp[2] };
 
         out[0] = sign[0] * (pixel[0] <= red[3] ? pixel[0] * red[4] : data[0]);
         out[1] = sign[1] * (pixel[1] <= grn[3] ? pixel[1] * grn[4] : data[1]);
