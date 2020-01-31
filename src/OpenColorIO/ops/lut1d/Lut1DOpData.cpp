@@ -768,19 +768,6 @@ void Lut1DOpData::scale(float scale)
     getArray().scale(scale);
 }
 
-void Lut1DOpData::initializeFromForward()
-{
-    // This routine is to be called (e.g. in XML reader) once the base forward
-    // Lut1D has been created and then sets up what is needed for the invLut1D.
-
-    // Note that if the original LUT had a half domain, the invLut needs to as
-    // well so that the appropriate evaluation algorithm is called.
-
-    // NB: The file reader must call setFileOutputBitDepth since some methods
-    // need to know the original scaling of the LUT.
-    prepareArray();
-}
-
 bool Lut1DOpData::hasExtendedRange() const
 {
     // The forward LUT is allowed to have entries outside the outDepth (e.g. a
@@ -819,16 +806,25 @@ bool Lut1DOpData::hasExtendedRange() const
     return false;
 }
 
-// NB: The half domain includes pos/neg infinity and NaNs.  
-// The prepareArray makes the LUT monotonic to ensure a unique inverse and
-// determines an effective domain to handle flat spots at the ends nicely.
-// It's not clear how the NaN part of the domain should be included in the
-// monotonicity constraints, furthermore there are 2048 NaNs that could each
-// potentially have different values.  For now, the inversion algorithm and
-// the pre-processing ignore the NaN part of the domain.
-
-void Lut1DOpData::prepareArray()
+void Lut1DOpData::initializeFromForward()
 {
+    // This routine is to be called (e.g. in XML reader) once the base forward
+    // Lut1D has been created and then sets up what is needed for the invLut1D.
+
+    // Note that if the original LUT had a half domain, the invLut needs to as
+    // well so that the appropriate evaluation algorithm is called.
+
+    // NB: The file reader must call setFileOutputBitDepth since some methods
+    // need to know the original scaling of the LUT.
+
+    // NB: The half domain includes pos/neg infinity and NaNs.  
+    // InitializeFromForward makes the LUT monotonic to ensure a unique inverse and
+    // determines an effective domain to handle flat spots at the ends nicely.
+    // It's not clear how the NaN part of the domain should be included in the
+    // monotonicity constraints, furthermore there are 2048 NaNs that could each
+    // potentially have different values.  For now, the inversion algorithm and
+    // the pre-processing ignore the NaN part of the domain.
+
     // Note: Data allocated for the array is length*getMaxColorComponents().
     const unsigned long length = getArray().getLength();
     const unsigned long maxChannels = getArray().getMaxColorComponents();
@@ -853,8 +849,7 @@ void Lut1DOpData::prepareArray()
         }
 
         {
-            m_componentProperties[c].isIncreasing
-                = (values[lowInd] < values[highInd]);
+            m_componentProperties[c].isIncreasing = (values[lowInd] < values[highInd]);
         }
 
         // Flatten reversals.
