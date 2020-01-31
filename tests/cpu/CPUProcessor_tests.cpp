@@ -1470,6 +1470,18 @@ OCIO_ADD_TEST(CPUProcessor, scanline_helper_packed)
         OCIO::PackedImageDesc dstImgDesc(&outImg[0], 2, 3,
                                          OCIO::CHANNEL_ORDERING_RGBA,
                                          OCIO::BIT_DEPTH_F32,
+                                         OCIO::AutoStride,
+                                         OCIO::AutoStride,
+                                         OCIO::AutoStride);
+
+        Process(cpuProcessor, srcImgDesc, dstImgDesc, __LINE__);
+    }
+
+    {
+        OCIO::PackedImageDesc srcImgDesc(&inImg[0], 2, 3, 4);
+        OCIO::PackedImageDesc dstImgDesc(&outImg[0], 2, 3,
+                                         OCIO::CHANNEL_ORDERING_RGBA,
+                                         OCIO::BIT_DEPTH_F32,
                                          sizeof(float),
                                          OCIO::AutoStride,
                                          OCIO::AutoStride);
@@ -2036,7 +2048,7 @@ void ComputeImage(unsigned width, unsigned height, unsigned nChannels,
     const OCIO::PackedImageDesc srcImgDesc((void *)inBuf,
                                            width, height, nChannels,
                                            inBD,
-                                           sizeof(InType),
+                                           OCIO::AutoStride,
                                            OCIO::AutoStride,
                                            OCIO::AutoStride);
 

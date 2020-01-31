@@ -21,6 +21,8 @@ double GetBitDepthMaxValue(BitDepth in);
 // True if the bit depth is a float.
 bool IsFloatBitDepth(BitDepth in);
 
+// Return the size in bytes of one channel.
+unsigned GetChannelSizeInBytes(BitDepth in);
 
 // Metaprogramming requires templated structures to access
 // some bit depth information at compile time.

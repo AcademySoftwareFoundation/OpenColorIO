@@ -38,3 +38,14 @@ OCIO_ADD_TEST(BitDepthUtils, is_float_bitdepth)
     OCIO_CHECK_THROW_WHAT(
         OCIO::IsFloatBitDepth((OCIO::BitDepth)42), OCIO::Exception, "not supported");
 }
+
+OCIO_ADD_TEST(BitDepthUtils, get_channel_size)
+{
+    OCIO_CHECK_EQUAL(OCIO::GetChannelSizeInBytes(OCIO::BIT_DEPTH_UINT8), sizeof(uint8_t));
+
+    OCIO_CHECK_EQUAL(OCIO::GetChannelSizeInBytes(OCIO::BIT_DEPTH_F16), sizeof(half));
+
+    OCIO_CHECK_THROW_WHAT(OCIO::GetChannelSizeInBytes(OCIO::BIT_DEPTH_UINT14), 
+                          OCIO::Exception, 
+                          "Bit depth is not supported: 14ui.");
+}
