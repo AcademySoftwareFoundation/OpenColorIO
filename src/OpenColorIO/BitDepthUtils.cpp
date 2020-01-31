@@ -9,7 +9,7 @@
 namespace
 {
 
-static const std::string errBDNotSupported("Bit depth is not supported: ");
+constexpr char errBDNotSupported[] = "Bit depth is not supported: ";
 
 };
 
@@ -39,6 +39,7 @@ double GetBitDepthMaxValue(BitDepth in)
         {
             std::string err(errBDNotSupported);
             err += BitDepthToString(in);
+            err += ".";
             throw Exception(err.c_str());
         }
     }
@@ -110,9 +111,41 @@ bool IsFloatBitDepth(BitDepth in)
         {
             std::string err(errBDNotSupported);
             err += BitDepthToString(in);
+            err += ".";
             throw Exception(err.c_str());
         }
     }
 }
+
+
+unsigned GetChannelSizeInBytes(BitDepth in)
+{
+    switch(in)
+    {
+        case BIT_DEPTH_UINT8:
+            return sizeof(BitDepthInfo<BIT_DEPTH_UINT8>::Type);
+        case BIT_DEPTH_UINT10:
+            return sizeof(BitDepthInfo<BIT_DEPTH_UINT10>::Type);
+        case BIT_DEPTH_UINT12:
+            return sizeof(BitDepthInfo<BIT_DEPTH_UINT12>::Type);
+        case BIT_DEPTH_UINT16:
+            return sizeof(BitDepthInfo<BIT_DEPTH_UINT16>::Type);
+        case BIT_DEPTH_F16:
+            return sizeof(BitDepthInfo<BIT_DEPTH_F16>::Type);
+        case BIT_DEPTH_F32:
+            return sizeof(BitDepthInfo<BIT_DEPTH_F32>::Type);
+        case BIT_DEPTH_UINT14:
+        case BIT_DEPTH_UINT32:
+        case BIT_DEPTH_UNKNOWN:
+        default:
+        {
+            std::string err(errBDNotSupported);
+            err += BitDepthToString(in);
+            err += ".";
+            throw Exception(err.c_str());
+        }
+    }
+}
+
 } // namespace OCIO_NAMESPACE
 
