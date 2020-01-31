@@ -181,7 +181,6 @@ int PyOCIO_RangeTransform_init(PyOCIO_Transform * self, PyObject * args, PyObjec
     ptr->setMinOutValue(minOutValue);
     ptr->setMaxOutValue(maxOutValue);
     if(direction) ptr->setDirection(TransformDirectionFromString(direction));
-    ptr->validate();
     return ret;
     OCIO_PYTRY_EXIT(-1)
 }

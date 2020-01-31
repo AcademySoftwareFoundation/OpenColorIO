@@ -100,6 +100,11 @@ void BuildOps(OpRcPtrVec & ops,
     {
         BuildLogOp(ops, config, *logAffineTransform, dir);
     }
+    else if(ConstLogCameraTransformRcPtr logCameraTransform = \
+        DynamicPtrCast<const LogCameraTransform>(transform))
+    {
+        BuildLogOp(ops, config, *logCameraTransform, dir);
+    }
     else if(ConstLogTransformRcPtr logTransform = \
         DynamicPtrCast<const LogTransform>(transform))
     {
@@ -134,7 +139,7 @@ void BuildOps(OpRcPtrVec & ops,
     {
         std::ostringstream error;
         error << "Unknown transform type for creation: "
-                << typeid(transform).name();
+              << typeid(transform).name();
 
         throw Exception(error.str().c_str());
     }

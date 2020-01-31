@@ -5,7 +5,9 @@
 #include "fileformats/ctf/CTFReaderHelper.h"
 #include "fileformats/ctf/CTFReaderUtils.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
+#include "Logging.h"
 #include "MathUtils.h"
+#include "ops/log/LogUtils.h"
 #include "Platform.h"
 #include "pystring/pystring.h"
 
@@ -147,18 +149,35 @@ void CTFReaderTransformElt::start(const char ** atts)
             }
 
             // Translate to CTF.
-            // We currently interpret CLF versions <= 2.0 as CTF version 1.7.
-            CTFVersion maxCLF(2, 0);
+
+            const CTFVersion maxCLF(3, 0);
             if (maxCLF < requestedCLFVersion)
             {
                 ThrowM(*this, "Unsupported transform file version '", pVer,
                        "' supplied. ");
             }
-
-            requestedVersion = CTF_PROCESS_LIST_VERSION_1_7;
+            // We currently interpret CLF versions <= 2.0 as CTF version 1.7.
+            if (requestedCLFVersion <= CTFVersion(2, 0))
+            {
+                requestedVersion = CTF_PROCESS_LIST_VERSION_1_7;
+            }
+            else
+            {
+                requestedVersion = CTF_PROCESS_LIST_VERSION_2_0;
+            }
 
             isVersionFound = true;
             isCLFVersionFound = true;
+            // Handle as CLF.
+            m_isCLF = true;
+        }
+        else if (0 == Platform::Strcasecmp("xmlns", atts[i]))
+        {
+            // Ignore.
+        }
+        else
+        {
+            logParameterWarning(atts[i]);
         }
 
         i += 2;
@@ -229,6 +248,16 @@ const CTFVersion & CTFReaderTransformElt::getVersion() const
     return getTransform()->getCTFVersion();
 }
 
+const CTFVersion & CTFReaderTransformElt::getCLFVersion() const
+{
+    return getTransform()->getCLFVersion();
+}
+
+bool CTFReaderTransformElt::isCLF() const
+{
+    return getTransform()->isCLF();
+}
+
 //////////////////////////////////////////////////////////
 
 CTFReaderArrayElt::CTFReaderArrayElt(const std::string & name,
@@ -279,8 +308,7 @@ void CTFReaderArrayElt::start(const char ** atts)
             }
             else
             {
-                const unsigned max =
-                    (const unsigned)(dims.empty() ? 0 : (dims.size() - 1));
+                const unsigned max = (const unsigned)(dims.empty() ? 0 : (dims.size() - 1));
                 if (max == 0)
                 {
                     ThrowM(*this, "Illegal '", getTypeName(), "' dimensions ",
@@ -294,6 +322,10 @@ void CTFReaderArrayElt::start(const char ** atts)
                            TruncateString(dimStr, len));
                 }
             }
+        }
+        else
+        {
+            logParameterWarning(atts[i]);
         }
 
         i += 2;
@@ -458,6 +490,10 @@ void CTFReaderIndexMapElt::start(const char ** atts)
                 }
             }
         }
+        else
+        {
+            logParameterWarning(atts[i]);
+        }
 
         i += 2;
     }
@@ -477,8 +513,22 @@ void CTFReaderIndexMapElt::end()
     // no need to validate it.
     if (getParent()->isDummy()) return;
 
-    CTFIndexMapMgt * pIMM = dynamic_cast<CTFIndexMapMgt*>(getParent().get());
-    pIMM->endIndexMap(m_position);
+    CTFReaderOpElt * pOpElt = dynamic_cast<CTFReaderOpElt*>(getParent().get());
+    if (pOpElt)
+    {
+        if (pOpElt->getTransform()->getCTFVersion() < CTF_PROCESS_LIST_VERSION_2_0)
+        {
+            CTFIndexMapMgt * pIMM = dynamic_cast<CTFIndexMapMgt*>(getParent().get());
+            pIMM->endIndexMap(m_position);
+        }
+        else
+        {
+            std::ostringstream dbg;
+            dbg << getXmlFile().c_str() << "(" << getXmlLineNumber() << "): ";
+            dbg << "Element '" << getName() << "' is not valid since CLF 3 (or CTF 2).";
+            LogWarning(dbg.str().c_str());
+        }
+    }
 }
 
 namespace
@@ -783,6 +833,11 @@ void CTFReaderOpElt::appendMetadata(const std::string & name, const std::string 
 
 void CTFReaderOpElt::start(const char ** atts)
 {
+    std::ostringstream dbg;
+    dbg << getXmlFile().c_str() << "(" << getXmlLineNumber() << "): ";
+    dbg << "Parsing '" << getName() << "'.";
+    LogDebug(dbg.str().c_str());
+
     // Add a pointer to an empty op of the appropriate child class to the
     // end of the opvec.  No data is copied since the parameters of the op
     // have not been filled in yet.
@@ -829,22 +884,6 @@ void CTFReaderOpElt::start(const char ** atts)
             m_outBitDepth = bitdepth;
             bitDepthFound |= OUTPUT_BIT_DEPTH;
         }
-        /* TODO: CTF
-        else if (0 == Platform::Strcasecmp(ATTR_BYPASS, atts[i]))
-        {
-        std::string s(atts[i + 1]);
-        boost::algorithm::Trim(s);
-        bool bypass = false;
-        if (0 == Platform::Strcasecmp(s.c_str(), "true"))
-        {
-        bypass = true;
-        }
-        else
-        {
-        XML_THROW1(ILLEGAL_BYPASS_VALUE, atts[i + 1]);
-        }
-        getOp()->getBypass()->setValue(bypass);
-        }*/
 
         i += 2;
     }
@@ -877,6 +916,8 @@ void CTFReaderOpElt::start(const char ** atts)
             throwMessage(os.str());
         }
     }
+
+    validateXmlParameters(atts);
 }
 
 void CTFReaderOpElt::end()
@@ -888,6 +929,30 @@ const char * CTFReaderOpElt::getTypeName() const
     OpDataRcPtr op = getOp();
     auto & r = *op;
     return typeid(r).name();
+}
+
+void CTFReaderOpElt::validateXmlParameters(const char ** atts) const noexcept
+{
+    unsigned i = 0;
+    while (atts[i])
+    {
+        if (!isOpParameterValid(atts[i]))
+        {
+            logParameterWarning(atts[i]);
+        }
+
+        i += 2;
+    }
+}
+
+bool CTFReaderOpElt::isOpParameterValid(const char * att) const noexcept
+{
+    return 0 == Platform::Strcasecmp(ATTR_ID, att) ||
+           0 == Platform::Strcasecmp(ATTR_NAME, att) ||
+           0 == Platform::Strcasecmp(ATTR_BITDEPTH_IN, att) ||
+           0 == Platform::Strcasecmp(ATTR_BITDEPTH_OUT, att) ||
+           // Allow bypass attribute in CTF.
+           (0 == Platform::Strcasecmp(ATTR_BYPASS, att) && !m_transform->isCLF());
 }
 
 //------------------------------------------------------------------------------
@@ -951,7 +1016,8 @@ const char * CTFReaderOpElt::getTypeName() const
      version <= CTF_PROCESS_LIST_VERSION_##VERS2)             \
   { pOp = std::make_shared<READER>(); break; }
 
-CTFReaderOpEltRcPtr CTFReaderOpElt::GetReader(CTFReaderOpElt::Type type, const CTFVersion & version)
+CTFReaderOpEltRcPtr CTFReaderOpElt::GetReader(CTFReaderOpElt::Type type,
+                                              const CTFVersion & version, bool isCLF)
 {
     CTFReaderOpEltRcPtr pOp;
 
@@ -971,41 +1037,71 @@ CTFReaderOpEltRcPtr CTFReaderOpElt::GetReader(CTFReaderOpElt::Type type, const C
     }
     case CTFReaderOpElt::ExposureContrastType:
     {
-        ADD_DEFAULT_READER(CTFReaderExposureContrastElt);
+        if (!isCLF)
+        {
+            ADD_DEFAULT_READER(CTFReaderExposureContrastElt);
+        }
         break;
     }
     case CTFReaderOpElt::FixedFunctionType:
     {
-        ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderFixedFunctionElt, 2_0);
+        if (!isCLF)
+        {
+            ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderFixedFunctionElt, 2_0);
+        }
         break;
     }
     case CTFReaderOpElt::FunctionType:
     {
-        ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderFunctionElt, 1_6);
+        if (!isCLF)
+        {
+            ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderFunctionElt, 1_6);
+        }
         break;
     }
     case CTFReaderOpElt::GammaType:
     {
-        // If the version is 1.4 or less, then use GammaElt.
-        // This reader forces the alpha transformation to be the identity.
-        ADD_READER_FOR_VERSIONS_UP_TO(CTFReaderGammaElt, 1_4);
-        // If the version is 1.5 or more, then use GammaElt_1_5.
-        ADD_DEFAULT_READER(CTFReaderGammaElt_1_5);
+        if (!isCLF)
+        {
+            // If the version is 1.4 or less, then use GammaElt.
+            // This reader forces the alpha transformation to be the identity.
+            ADD_READER_FOR_VERSIONS_UP_TO(CTFReaderGammaElt, 1_4);
+            // CTF 1.5 and onwards handles alpha component.
+            ADD_READER_FOR_VERSIONS_UP_TO(CTFReaderGammaElt_1_5, 1_8);
+            // CTF v2 and CLF v3 add styles and changes names.
+            ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderGammaElt_CTF_2_0, 2_0);
+        }
+        else
+        {
+            // Introduced with CLF v3. CLF does not handle alpha component.
+            ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderGammaElt_CLF_3_0, 2_0);
+        }
         break;
     }
     case CTFReaderOpElt::InvLut1DType:
     {
-        ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderInvLut1DElt, 1_3);
+        if (!isCLF)
+        {
+            ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderInvLut1DElt, 1_3);
+        }
         break;
     }
     case CTFReaderOpElt::InvLut3DType:
     {
-        ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderInvLut3DElt, 1_6);
+        if (!isCLF)
+        {
+            ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderInvLut3DElt, 1_6);
+        }
         break;
     }
     case CTFReaderOpElt::LogType:
     {
-        ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderLogElt, 1_3);
+        if (!isCLF)
+        {
+            ADD_READER_FOR_VERSIONS_BETWEEN(CTFReaderLogElt, 1_3, 1_8);
+        }
+        // CLF v3 (CTF v2) adds log support and adds new camera styles.
+        ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderLogElt_2_0, 2_0);
         break;
     }
     case CTFReaderOpElt::Lut1DType:
@@ -1109,6 +1205,12 @@ void CTFReaderACESElt::start(const char **atts)
     }
 }
 
+bool CTFReaderACESElt::isOpParameterValid(const char * att) const noexcept
+{
+    return CTFReaderOpElt::isOpParameterValid(att) || 
+           0 == Platform::Strcasecmp(ATTR_STYLE, att);
+}
+
 void CTFReaderACESElt::end()
 {
     CTFReaderOpElt::end();
@@ -1149,6 +1251,10 @@ void CTFReaderACESParamsElt::start(const char **atts)
         if (0 == Platform::Strcasecmp(ATTR_GAMMA, atts[i]))
         {
             parseScalarAttribute(atts[i], atts[i + 1], gamma);
+        }
+        else
+        {
+            logParameterWarning(atts[i]);
         }
 
         i += 2;
@@ -1222,6 +1328,12 @@ void CTFReaderCDLElt::start(const char ** atts)
     {
         throwMessage("CTF/CLF CDL parsing. Required attribute 'style' is missing. ");
     }
+}
+
+bool CTFReaderCDLElt::isOpParameterValid(const char * att) const noexcept
+{
+    return CTFReaderOpElt::isOpParameterValid(att) ||
+           0 == Platform::Strcasecmp(ATTR_STYLE, att);
 }
 
 void CTFReaderCDLElt::end()
@@ -1332,6 +1444,13 @@ void CTFReaderFixedFunctionElt::start(const char **atts)
     }
 }
 
+bool CTFReaderFixedFunctionElt::isOpParameterValid(const char * att) const noexcept
+{
+    return CTFReaderOpElt::isOpParameterValid(att) ||
+           0 == Platform::Strcasecmp(ATTR_STYLE, att) ||
+           0 == Platform::Strcasecmp(ATTR_PARAMS, att);
+}
+
 void CTFReaderFixedFunctionElt::end()
 {
     CTFReaderOpElt::end();
@@ -1385,6 +1504,12 @@ void CTFReaderFunctionElt::start(const char **atts)
     {
         throwMessage("style parameter for FixedFunction is missing.");
     }
+}
+
+bool CTFReaderFunctionElt::isOpParameterValid(const char * att) const noexcept
+{
+    return CTFReaderOpElt::isOpParameterValid(att) ||
+           0 == Platform::Strcasecmp(ATTR_STYLE, att);
 }
 
 void CTFReaderFunctionElt::end()
@@ -1465,6 +1590,17 @@ void CTFReaderDynamicParamElt::start(const char ** atts)
                 ExposureContrastOpDataRcPtr pECOp = pEC->getExposureContrast();
                 pECOp->getGammaProperty()->makeDynamic();
             }
+            else if (0 == Platform::Strcasecmp(TAG_DYN_PROP_LOOK, atts[i + 1]))
+            {
+                // The LOOK_SWITCH was used in CTF files from SynColor but is not supported yet
+                // in OCIO.  Ignoring it is similar to setting LOOK_SWITCH to 'on' but this is
+                // harmless since the defaultLook is also ignored.
+                std::ostringstream dbg;
+                dbg << getXmlFile().c_str() << "(" << getXmlLineNumber() << "): ";
+                dbg << "Dynamic parameter '" << atts[i + 1] << "' on '";
+                dbg << getParent()->getName() <<"' is ignored.";
+                LogWarning(dbg.str().c_str());
+            }
             else
             {
                 ThrowM(*this, "Dynamic parameter '", atts[i + 1],
@@ -1533,6 +1669,12 @@ void CTFReaderExposureContrastElt::start(const char ** atts)
 
 }
 
+bool CTFReaderExposureContrastElt::isOpParameterValid(const char * att) const noexcept
+{
+    return CTFReaderOpElt::isOpParameterValid(att) ||
+           0 == Platform::Strcasecmp(ATTR_STYLE, att);
+}
+
 void CTFReaderExposureContrastElt::end()
 {
     CTFReaderOpElt::end();
@@ -1596,7 +1738,10 @@ void CTFReaderECParamsElt::start(const char ** atts)
         {
             parseScalarAttribute(atts[i], atts[i + 1], logMidGray);
         }
-
+        else
+        {
+            logParameterWarning(atts[i]);
+        }
 
         i += 2;
     }
@@ -1671,8 +1816,25 @@ void CTFReaderGammaElt::start(const char ** atts)
         {
             // We need a valid style to parse the parameters.
             // This will throw on unrecognized styles.
-            GammaOpData::Style style
-                = GammaOpData::ConvertStringToStyle(atts[i + 1]);
+            const auto style = GammaOpData::ConvertStringToStyle(atts[i + 1]);
+            if (!isValid(style))
+            {
+
+                std::ostringstream oss;
+                oss << "Style not handled: '" << atts[i + 1] << "' for ";
+
+                if (m_transform->isCLF())
+                {
+                    oss << "CLF file version '" << m_transform->getCLFVersion();
+                }
+                else
+                {
+                    oss << "CTF file version '" << m_transform->getCTFVersion();
+                }
+                oss << "'.";
+
+                throwMessage(oss.str());
+            }
             m_gamma->setStyle(style);
             isStyleFound = true;
         }
@@ -1685,13 +1847,18 @@ void CTFReaderGammaElt::start(const char ** atts)
     }
 }
 
+bool CTFReaderGammaElt::isOpParameterValid(const char * att) const noexcept
+{
+    return CTFReaderOpElt::isOpParameterValid(att) ||
+           0 == Platform::Strcasecmp(ATTR_STYLE, att);
+}
+
 void CTFReaderGammaElt::end()
 {
     CTFReaderOpElt::end();
 
     // Set default alpha parameters.
-    const GammaOpData::Params paramsA
-        = GammaOpData::getIdentityParameters(m_gamma->getStyle());
+    const GammaOpData::Params paramsA = GammaOpData::getIdentityParameters(m_gamma->getStyle());
     m_gamma->setAlphaParams(paramsA);
 
     // Validate the end result.
@@ -1701,8 +1868,7 @@ void CTFReaderGammaElt::end()
     }
     catch (Exception & ce)
     {
-        ThrowM(*this, "Invalid parameters: ",
-               ce.what(), ". ");
+        ThrowM(*this, "Invalid parameters: ", ce.what(), ". ");
     }
 }
 
@@ -1720,6 +1886,25 @@ CTFReaderGammaParamsEltRcPtr CTFReaderGammaElt::createGammaParamsElt(
     return std::make_shared<CTFReaderGammaParamsElt>(name, pParent, xmlLineNumber, xmlFile);
 }
 
+bool CTFReaderGammaElt::isValid(const GammaOpData::Style style) const noexcept
+{
+    switch (style)
+    {
+    case GammaOpData::BASIC_FWD:
+    case GammaOpData::BASIC_REV:
+    case GammaOpData::MONCURVE_FWD:
+    case GammaOpData::MONCURVE_REV:
+        return true;
+    case GammaOpData::BASIC_MIRROR_FWD:
+    case GammaOpData::BASIC_MIRROR_REV:
+    case GammaOpData::BASIC_PASS_THRU_FWD:
+    case GammaOpData::BASIC_PASS_THRU_REV:
+    case GammaOpData::MONCURVE_MIRROR_FWD:
+    case GammaOpData::MONCURVE_MIRROR_REV:
+        return false;
+    }
+    return false;
+}
 
 void CTFReaderGammaElt_1_5::end()
 {
@@ -1732,8 +1917,7 @@ void CTFReaderGammaElt_1_5::end()
     }
     catch (Exception & ce)
     {
-        ThrowM(*this, "Invalid parameters: ",
-               ce.what(), ". ");
+        ThrowM(*this, "Invalid parameters: ", ce.what(), ". ");
     }
 }
 
@@ -1745,6 +1929,36 @@ CTFReaderGammaParamsEltRcPtr CTFReaderGammaElt_1_5::createGammaParamsElt(
 {
     CTFReaderGammaParamsEltRcPtr res =
         std::make_shared<CTFReaderGammaParamsElt_1_5>(name, pParent, xmlLineNumber, xmlFile);
+    return res;
+}
+
+bool CTFReaderGammaElt_CTF_2_0::isValid(const GammaOpData::Style style) const noexcept
+{
+    switch (style)
+    {
+    case GammaOpData::BASIC_FWD:
+    case GammaOpData::BASIC_REV:
+    case GammaOpData::MONCURVE_FWD:
+    case GammaOpData::MONCURVE_REV:
+    case GammaOpData::BASIC_MIRROR_FWD:
+    case GammaOpData::BASIC_MIRROR_REV:
+    case GammaOpData::BASIC_PASS_THRU_FWD:
+    case GammaOpData::BASIC_PASS_THRU_REV:
+    case GammaOpData::MONCURVE_MIRROR_FWD:
+    case GammaOpData::MONCURVE_MIRROR_REV:
+        return true;
+    }
+    return false;
+}
+
+CTFReaderGammaParamsEltRcPtr CTFReaderGammaElt_CLF_3_0::createGammaParamsElt(
+    const std::string & name,
+    ContainerEltRcPtr pParent,
+    unsigned int xmlLineNumber,
+    const std::string & xmlFile) const
+{
+    CTFReaderGammaParamsEltRcPtr res =
+        std::make_shared<CTFReaderGammaParamsElt>(name, pParent, xmlLineNumber, xmlFile);
     return res;
 }
 
@@ -1783,13 +1997,18 @@ void CTFReaderGammaParamsElt::start(const char ** atts)
                 ThrowM(*this, "Invalid channel: ", atts[i + 1], ". ");
             }
         }
-        else if (0 == Platform::Strcasecmp(ATTR_GAMMA, atts[i]))
+        else if (0 == Platform::Strcasecmp(ATTR_GAMMA, atts[i]) ||
+                 0 == Platform::Strcasecmp(ATTR_EXPONENT, atts[i]))
         {
             parseScalarAttribute(atts[i], atts[i + 1], gamma);
         }
         else if (0 == Platform::Strcasecmp(ATTR_OFFSET, atts[i]))
         {
             parseScalarAttribute(atts[i], atts[i + 1], offset);
+        }
+        else
+        {
+            logParameterWarning(atts[i]);
         }
 
         i += 2;
@@ -1808,6 +2027,10 @@ void CTFReaderGammaParamsElt::start(const char ** atts)
     {
     case GammaOpData::BASIC_FWD:
     case GammaOpData::BASIC_REV:
+    case GammaOpData::BASIC_MIRROR_FWD:
+    case GammaOpData::BASIC_MIRROR_REV:
+    case GammaOpData::BASIC_PASS_THRU_FWD:
+    case GammaOpData::BASIC_PASS_THRU_REV:
     {
         if (IsNan(gamma))
         {
@@ -1828,6 +2051,8 @@ void CTFReaderGammaParamsElt::start(const char ** atts)
 
     case GammaOpData::MONCURVE_FWD:
     case GammaOpData::MONCURVE_REV:
+    case GammaOpData::MONCURVE_MIRROR_FWD:
+    case GammaOpData::MONCURVE_MIRROR_REV:
     {
         if (IsNan(gamma))
         {
@@ -2004,6 +2229,15 @@ void CTFReaderInvLut1DElt::start(const char ** atts)
     }
 }
 
+bool CTFReaderInvLut1DElt::isOpParameterValid(const char * att) const noexcept
+{
+    return CTFReaderOpElt::isOpParameterValid(att) ||
+           0 == Platform::Strcasecmp(ATTR_INTERPOLATION, att) ||
+           0 == Platform::Strcasecmp(ATTR_HALF_DOMAIN, att) ||
+           0 == Platform::Strcasecmp(ATTR_RAW_HALFS, att) ||
+           0 == Platform::Strcasecmp(ATTR_HUE_ADJUST, att);
+}
+
 void CTFReaderInvLut1DElt::end()
 {
     CTFReaderOpElt::end();
@@ -2139,6 +2373,12 @@ void CTFReaderInvLut3DElt::start(const char ** atts)
     }
 }
 
+bool CTFReaderInvLut3DElt::isOpParameterValid(const char * att) const noexcept
+{
+    return CTFReaderOpElt::isOpParameterValid(att) ||
+           0 == Platform::Strcasecmp(ATTR_INTERPOLATION, att);
+}
+
 void CTFReaderInvLut3DElt::end()
 {
     CTFReaderOpElt::end();
@@ -2221,35 +2461,14 @@ void CTFReaderLogElt::start(const char ** atts)
     {
         if (0 == Platform::Strcasecmp(ATTR_STYLE, atts[i]))
         {
-            if (0 == Platform::Strcasecmp(atts[i + 1], LOG_LOG10))
+            try
             {
-                m_ctfParams.m_style = LogUtil::LOG10;
+                m_ctfParams.m_style = LogUtil::ConvertStringToStyle(atts[i + 1]);
             }
-            else if (0 == Platform::Strcasecmp(atts[i + 1], LOG_LOG2))
-            {
-                m_ctfParams.m_style = LogUtil::LOG2;
-            }
-            else if (0 == Platform::Strcasecmp(atts[i + 1], LOG_ANTILOG10))
-            {
-                m_ctfParams.m_style = LogUtil::ANTI_LOG10;
-            }
-            else if (0 == Platform::Strcasecmp(atts[i + 1], LOG_ANTILOG2))
-            {
-                m_ctfParams.m_style = LogUtil::ANTI_LOG2;
-            }
-            else if (0 == Platform::Strcasecmp(atts[i + 1], LOG_LOGTOLIN))
-            {
-                m_ctfParams.m_style = LogUtil::LOG_TO_LIN;
-            }
-            else if (0 == Platform::Strcasecmp(atts[i + 1], LOG_LINTOLOG))
-            {
-                m_ctfParams.m_style = LogUtil::LIN_TO_LOG;
-            }
-            else
+            catch (Exception &)
             {
                 ThrowM(*this, "Required attribute 'style' '", atts[i + 1], "' is invalid. ");
             }
-
             isStyleFound = true;
         }
     }
@@ -2260,43 +2479,36 @@ void CTFReaderLogElt::start(const char ** atts)
     }
 }
 
+bool CTFReaderLogElt::isOpParameterValid(const char * att) const noexcept
+{
+    return CTFReaderOpElt::isOpParameterValid(att) ||
+           0 == Platform::Strcasecmp(ATTR_STYLE, att);
+}
+
 void CTFReaderLogElt::end()
 {
     CTFReaderOpElt::end();
 
     // When style is log2, log10 (or anti), there are no params.
-    const auto type = getParamType();
-    if (type == NO_PARAMS || type == LEGACY_PARAMS)
-    {
-        double base = 2.0;
-        LogOpData::Params rParams, gParams, bParams;
-        TransformDirection dir = TRANSFORM_DIR_UNKNOWN;
+    double base = 2.0;
+    LogOpData::Params rParams, gParams, bParams;
+    const auto dir = LogUtil::GetLogDirection(m_ctfParams.m_style);
 
-        try
-        {
-            // This handles all log styles.
-            LogUtil::ConvertLogParameters(m_ctfParams, base,
-                                          rParams, gParams, bParams, dir);
-        }
-        catch (Exception& ce)
-        {
-            ThrowM(*this, "Parameters are not valid: '", ce.what(), "'. ");
-        }
-
-        m_log->setBase(base);
-        m_log->setDirection(dir);
-        m_log->setRedParams(rParams);
-        m_log->setGreenParams(gParams);
-        m_log->setBlueParams(bParams);
-    }
-    else
+    try
     {
-        // OCIO type parameters have been provided. Make sure base is set.
-        if (!m_baseSet)
-        {
-            ThrowM(*this, "Base has to be specified. ");
-        }
+        // This handles all log styles.
+        LogUtil::ConvertLogParameters(m_ctfParams, base, rParams, gParams, bParams);
     }
+    catch (Exception& ce)
+    {
+        ThrowM(*this, "Parameters are not valid: '", ce.what(), "'. ");
+    }
+
+    m_log->setBase(base);
+    m_log->setDirection(dir);
+    m_log->setRedParams(rParams);
+    m_log->setGreenParams(gParams);
+    m_log->setBlueParams(bParams);
 
     // Validate the end result.
     try
@@ -2332,6 +2544,86 @@ void CTFReaderLogElt::setBase(double base)
     }
 }
 
+// CLF v3 added support for a Log op that is based on the OCIO-type params (log/lin slope/offset,
+// etc.).  CTF had historically supported a LogOp with Cineon-type params (refWhite, gamma, etc.).
+// Here is what the various versions support:
+// CTF pre v2 -- Cineon-type only.
+// CTF v2 and later -- OCIO-type preferred but Cineon-type still supported.
+// CLF pre v3 -- No Log support.
+// CLF v3 and onward -- OCIO-type.
+
+CTFReaderLogParamsEltRcPtr CTFReaderLogElt::createLogParamsElt(
+    const std::string & name,
+    ContainerEltRcPtr pParent,
+    unsigned int xmlLineNumber,
+    const std::string & xmlFile) const
+{
+    return std::make_shared<CTFReaderLogParamsElt>(name, pParent, xmlLineNumber, xmlFile);
+}
+
+void CTFReaderLogElt_2_0::end()
+{
+    CTFReaderOpElt::end();
+
+    const auto dir = LogUtil::GetLogDirection(m_ctfParams.m_style);
+    m_log->setDirection(dir);
+
+    if (m_ctfParams.getType() == LogUtil::CTFParams::CINEON)
+    {
+        double base = 2.0;
+        LogOpData::Params rParams, gParams, bParams;
+
+        try
+        {
+            // This handles all log styles.
+            LogUtil::ConvertLogParameters(m_ctfParams, base, rParams, gParams, bParams);
+        }
+        catch (Exception& ce)
+        {
+            ThrowM(*this, "Parameters are not valid: '", ce.what(), "'. ");
+        }
+
+        m_log->setBase(base);
+        m_log->setRedParams(rParams);
+        m_log->setGreenParams(gParams);
+        m_log->setBlueParams(bParams);
+    }
+    else
+    {
+        if (!m_baseSet)
+        {
+            if (m_ctfParams.m_style == LogUtil::LOG2 || m_ctfParams.m_style == LogUtil::ANTI_LOG2)
+            {
+                setBase(2.0);
+            }
+            else if (m_ctfParams.m_style == LogUtil::LOG10 ||
+                     m_ctfParams.m_style == LogUtil::ANTI_LOG10)
+            {
+                setBase(10.0);
+            }
+        }
+    }
+
+    // Validate the end result.
+    try
+    {
+        m_log->validate();
+    }
+    catch (Exception& ce)
+    {
+        ThrowM(*this, "Log is not valid: '", ce.what(), "'. ");
+    }
+}
+
+CTFReaderLogParamsEltRcPtr CTFReaderLogElt_2_0::createLogParamsElt(
+    const std::string & name,
+    ContainerEltRcPtr pParent,
+    unsigned int xmlLineNumber,
+    const std::string & xmlFile) const
+{
+    return std::make_shared<CTFReaderLogParamsElt_2_0>(name, pParent, xmlLineNumber, xmlFile);
+}
+
 CTFReaderLogParamsElt::CTFReaderLogParamsElt(const std::string & name,
                                              ContainerEltRcPtr pParent,
                                              unsigned int xmlLineNumber,
@@ -2344,29 +2636,47 @@ CTFReaderLogParamsElt::~CTFReaderLogParamsElt()
 {
 }
 
+bool CTFReaderLogParamsElt::parseCineon(const char ** atts, unsigned i,
+                                        double & gamma, double & refWhite,
+                                        double & refBlack, double & highlight, double & shadow)
+{
+    if (0 == Platform::Strcasecmp(ATTR_GAMMA, atts[i]))
+    {
+        parseScalarAttribute(atts[i], atts[i + 1], gamma);
+        return true;
+    }
+    else if (0 == Platform::Strcasecmp(ATTR_REFWHITE, atts[i]))
+    {
+        parseScalarAttribute(atts[i], atts[i + 1], refWhite);
+        return true;
+    }
+    else if (0 == Platform::Strcasecmp(ATTR_REFBLACK, atts[i]))
+    {
+        parseScalarAttribute(atts[i], atts[i + 1], refBlack);
+        return true;
+    }
+    else if (0 == Platform::Strcasecmp(ATTR_HIGHLIGHT, atts[i]))
+    {
+        parseScalarAttribute(atts[i], atts[i + 1], highlight);
+        return true;
+    }
+    else if (0 == Platform::Strcasecmp(ATTR_SHADOW, atts[i]))
+    {
+        parseScalarAttribute(atts[i], atts[i + 1], shadow);
+        return true;
+    }
+    return false;
+}
+
 void CTFReaderLogParamsElt::start(const char ** atts)
 {
-    CTFReaderLogElt * pLogElt
-        = dynamic_cast<CTFReaderLogElt*>(getParent().get());
+    CTFReaderLogElt * pLogElt = dynamic_cast<CTFReaderLogElt*>(getParent().get());
 
     LogUtil::CTFParams & legacyParams = pLogElt->getCTFParams();
-    const LogUtil::LogStyle style = legacyParams.m_style;
-
-    // This will never be the case because Elt is not added if style does not match.
-    // A warning would be logged.
-    if (style != LogUtil::LIN_TO_LOG &&
-        style != LogUtil::LOG_TO_LIN)
-    {
-        ThrowM(*this, "Parameters are allowed only with linToLog or logToLin style.");
-    }
 
     // Attributes we want to extract.
 
     int chan = -1;
-
-    // There are 3 ways to have the parameters. No parameters (when op style
-    // is LOG2, LOG10, ANTI_LOG2 or ANTI_LOG10), and legacy parameters or new
-    // parameters (when op style is LIN_TO_LOG or LOG_TO_LIN).
 
     // Legacy Log/Lin parameters:
     double gamma = std::numeric_limits<double>::quiet_NaN();
@@ -2374,13 +2684,6 @@ void CTFReaderLogParamsElt::start(const char ** atts)
     double refBlack = std::numeric_limits<double>::quiet_NaN();
     double highlight = std::numeric_limits<double>::quiet_NaN();
     double shadow = std::numeric_limits<double>::quiet_NaN();
-
-    // New Log/Lin parameters (v2 onward):
-    double linSideSlope = std::numeric_limits<double>::quiet_NaN();
-    double linSideOffset = std::numeric_limits<double>::quiet_NaN();
-    double logSideSlope = std::numeric_limits<double>::quiet_NaN();
-    double logSideOffset = std::numeric_limits<double>::quiet_NaN();
-    double base = std::numeric_limits<double>::quiet_NaN();
 
     // Try extracting the attributes.
     unsigned i = 0;
@@ -2410,45 +2713,9 @@ void CTFReaderLogParamsElt::start(const char ** atts)
                 throwMessage(arg.str());
             }
         }
-        else if (0 == Platform::Strcasecmp(ATTR_GAMMA, atts[i]))
+        else if (!parseCineon(atts, i, gamma, refWhite, refBlack, highlight, shadow))
         {
-            parseScalarAttribute(atts[i], atts[i + 1], gamma);
-        }
-        else if (0 == Platform::Strcasecmp(ATTR_REFWHITE, atts[i]))
-        {
-            parseScalarAttribute(atts[i], atts[i + 1], refWhite);
-        }
-        else if (0 == Platform::Strcasecmp(ATTR_REFBLACK, atts[i]))
-        {
-            parseScalarAttribute(atts[i], atts[i + 1], refBlack);
-        }
-        else if (0 == Platform::Strcasecmp(ATTR_HIGHLIGHT, atts[i]))
-        {
-            parseScalarAttribute(atts[i], atts[i + 1], highlight);
-        }
-        else if (0 == Platform::Strcasecmp(ATTR_SHADOW, atts[i]))
-        {
-            parseScalarAttribute(atts[i], atts[i + 1], shadow);
-        }
-        else if (0 == Platform::Strcasecmp(ATTR_LINSIDESLOPE, atts[i]))
-        {
-            parseScalarAttribute(atts[i], atts[i + 1], linSideSlope);
-        }
-        else if (0 == Platform::Strcasecmp(ATTR_LINSIDEOFFSET, atts[i]))
-        {
-            parseScalarAttribute(atts[i], atts[i + 1], linSideOffset);
-        }
-        else if (0 == Platform::Strcasecmp(ATTR_LOGSIDESLOPE, atts[i]))
-        {
-            parseScalarAttribute(atts[i], atts[i + 1], logSideSlope);
-        }
-        else if (0 == Platform::Strcasecmp(ATTR_LOGSIDEOFFSET, atts[i]))
-        {
-            parseScalarAttribute(atts[i], atts[i + 1], logSideOffset);
-        }
-        else if (0 == Platform::Strcasecmp(ATTR_BASE, atts[i]))
-        {
-            parseScalarAttribute(atts[i], atts[i + 1], base);
+            logParameterWarning(atts[i]);
         }
 
         i += 2;
@@ -2457,137 +2724,59 @@ void CTFReaderLogParamsElt::start(const char ** atts)
     // Validate the attributes are appropriate for the log style and set
     // the parameters (numeric validation is done by LogOpData::validate).
 
-    // Params style could have been set by a previous CTFReaderLogParamsElt.
-    auto paramType = pLogElt->getParamType();
-
-    // New parameters are set directly on the op.
-    LogOpData::Params newParams(4);
-
     // Legacy parameters are set on the CTFReaderLogElt and will be
     // transferred to the op on the end() call.
     LogUtil::CTFParams::Params ctfValues(5);
 
-    // Parameters using the new format were found in this LogParams or we
-    // already read a LogParams using them.
-    if (!IsNan(linSideSlope) || !IsNan(linSideOffset) ||
-        !IsNan(logSideSlope) || !IsNan(logSideOffset) ||
-        !IsNan(base) || paramType == CTFReaderLogElt::NEW_PARAMS)
+    if (IsNan(gamma))
     {
-        // Parameters using the legacy format were found in this LogParams
-        // or we already read a LogParams using them.
-        if (!IsNan(gamma) || !IsNan(refWhite) || !IsNan(refBlack) ||
-            !IsNan(highlight) || !IsNan(shadow) ||
-            paramType == CTFReaderLogElt::LEGACY_PARAMS)
-        {
-            ThrowM(*this, "Parameters '",
-                    ATTR_GAMMA, "', ",
-                    ATTR_REFWHITE, "', ",
-                    ATTR_REFBLACK, "', ",
-                    ATTR_HIGHLIGHT, "', ",
-                    ATTR_SHADOW, "' should not be mixed with '",
-                    ATTR_LINSIDESLOPE, "', ",
-                    ATTR_LINSIDEOFFSET, "', ",
-                    ATTR_LOGSIDESLOPE, "', ",
-                    ATTR_LOGSIDEOFFSET, "', ",
-                    ATTR_BASE, "'. ");
-        }
-
-        pLogElt->setParamType(CTFReaderLogElt::NEW_PARAMS);
-        newParams[LIN_SIDE_SLOPE] = IsNan(linSideSlope) ? 1.0 : linSideSlope;
-        newParams[LIN_SIDE_OFFSET] = IsNan(linSideOffset) ? 0.0 : linSideOffset;
-        newParams[LOG_SIDE_SLOPE] = IsNan(logSideSlope) ? 1.0 : logSideSlope;
-        newParams[LOG_SIDE_OFFSET] = IsNan(logSideOffset) ? 0.0 : logSideOffset;
-
-        if (!IsNan(base))
-        {
-            pLogElt->setBase(base);
-        }
+        ThrowM(*this, "Required attribute '", ATTR_GAMMA, "' is missing. ");
     }
-    else
+    ctfValues[LogUtil::CTFParams::gamma] = gamma;
+
+    if (IsNan(refWhite))
     {
-        pLogElt->setParamType(CTFReaderLogElt::LEGACY_PARAMS);
-        if (IsNan(gamma))
-        {
-            ThrowM(*this, "Required attribute '", ATTR_GAMMA, "' is missing. ");
-        }
-        ctfValues[LogUtil::CTFParams::gamma] = gamma;
-
-        if (IsNan(refWhite))
-        {
-            ThrowM(*this, "Required attribute '", ATTR_REFWHITE, "' is missing. ");
-        }
-        ctfValues[LogUtil::CTFParams::refWhite] = refWhite;
-
-        if (IsNan(refBlack))
-        {
-            ThrowM(*this, "Required attribute '", ATTR_REFBLACK, "' is missing. ");
-        }
-        ctfValues[LogUtil::CTFParams::refBlack] = refBlack;
-
-        if (IsNan(highlight))
-        {
-            ThrowM(*this, "Required attribute '", ATTR_HIGHLIGHT, "' is missing. ");
-        }
-        ctfValues[LogUtil::CTFParams::highlight] = highlight;
-
-        if (IsNan(shadow))
-        {
-            ThrowM(*this, "Required attribute '", ATTR_SHADOW, "' is missing. ");
-        }
-        ctfValues[LogUtil::CTFParams::shadow] = shadow;
+        ThrowM(*this, "Required attribute '", ATTR_REFWHITE, "' is missing. ");
     }
+    ctfValues[LogUtil::CTFParams::refWhite] = refWhite;
+
+    if (IsNan(refBlack))
+    {
+        ThrowM(*this, "Required attribute '", ATTR_REFBLACK, "' is missing. ");
+    }
+    ctfValues[LogUtil::CTFParams::refBlack] = refBlack;
+
+    if (IsNan(highlight))
+    {
+        ThrowM(*this, "Required attribute '", ATTR_HIGHLIGHT, "' is missing. ");
+    }
+    ctfValues[LogUtil::CTFParams::highlight] = highlight;
+
+    if (IsNan(shadow))
+    {
+        ThrowM(*this, "Required attribute '", ATTR_SHADOW, "' is missing. ");
+    }
+    ctfValues[LogUtil::CTFParams::shadow] = shadow;
 
     // Assign the parameters to the object.
-
-    paramType = pLogElt->getParamType();
 
     auto logOp = OCIO_DYNAMIC_POINTER_CAST<LogOpData>(pLogElt->getOp());
 
     switch (chan)
     {
     case -1:
-        if (paramType == CTFReaderLogElt::LEGACY_PARAMS)
-        {
-            legacyParams.m_params[LogUtil::CTFParams::red] = ctfValues;
-            legacyParams.m_params[LogUtil::CTFParams::green] = ctfValues;
-            legacyParams.m_params[LogUtil::CTFParams::blue] = ctfValues;
-        }
-        else
-        {
-            logOp->setRedParams(newParams);
-            logOp->setGreenParams(newParams);
-            logOp->setBlueParams(newParams);
-        }
+        legacyParams.m_params[LogUtil::CTFParams::red  ] = ctfValues;
+        legacyParams.m_params[LogUtil::CTFParams::green] = ctfValues;
+        legacyParams.m_params[LogUtil::CTFParams::blue ] = ctfValues;
         break;
     case 0:
-        if (paramType == CTFReaderLogElt::LEGACY_PARAMS)
-        {
-            legacyParams.m_params[LogUtil::CTFParams::red] = ctfValues;
-        }
-        else
-        {
-            logOp->setRedParams(newParams);
-        }
+        legacyParams.m_params[LogUtil::CTFParams::red  ] = ctfValues;
         break;
     case 1:
-        if (paramType == CTFReaderLogElt::LEGACY_PARAMS)
-        {
-            legacyParams.m_params[LogUtil::CTFParams::green] = ctfValues;
-        }
-        else
-        {
-            logOp->setGreenParams(newParams);
-        }
+        legacyParams.m_params[LogUtil::CTFParams::green] = ctfValues;
         break;
     case 2:
-        if (paramType == CTFReaderLogElt::LEGACY_PARAMS)
-        {
-            legacyParams.m_params[LogUtil::CTFParams::blue] = ctfValues;
-        }
-        else
-        {
-            logOp->setBlueParams(newParams);
-        }
+        legacyParams.m_params[LogUtil::CTFParams::blue ] = ctfValues;
         break;
     }
 }
@@ -2598,6 +2787,174 @@ void CTFReaderLogParamsElt::end()
 
 void CTFReaderLogParamsElt::setRawData(const char *, size_t, unsigned int)
 {
+}
+
+void CTFReaderLogParamsElt_2_0::start(const char ** atts)
+{
+    CTFReaderLogElt * pLogElt = dynamic_cast<CTFReaderLogElt*>(getParent().get());
+    LogUtil::CTFParams & legacyParams = pLogElt->getCTFParams();
+    const LogUtil::LogStyle style = legacyParams.m_style;
+
+    const bool cameraStyle = style == LogUtil::CAMERA_LIN_TO_LOG ||
+                             style == LogUtil::CAMERA_LOG_TO_LIN;
+
+    bool allowCineon = !cameraStyle && !pLogElt->getTransform()->isCLF();
+
+    // Attributes we want to extract.
+
+    int chan = -1;
+
+    // Log/Lin parameters (CTF v2, CLF v3 and onward):
+    double linSideSlope  = std::numeric_limits<double>::quiet_NaN();
+    double linSideOffset = std::numeric_limits<double>::quiet_NaN();
+    double logSideSlope  = std::numeric_limits<double>::quiet_NaN();
+    double logSideOffset = std::numeric_limits<double>::quiet_NaN();
+    double base          = std::numeric_limits<double>::quiet_NaN();
+    double linSideBreak  = std::numeric_limits<double>::quiet_NaN();
+    double linearSlope   = std::numeric_limits<double>::quiet_NaN();
+
+    // Legacy Log/Lin parameters (if allowed for CTF v2 onward:
+    double gamma = std::numeric_limits<double>::quiet_NaN();
+    double refWhite = std::numeric_limits<double>::quiet_NaN();
+    double refBlack = std::numeric_limits<double>::quiet_NaN();
+    double highlight = std::numeric_limits<double>::quiet_NaN();
+    double shadow = std::numeric_limits<double>::quiet_NaN();
+
+    // Try extracting the attributes.
+    unsigned i = 0;
+    bool validType = true;
+    while (atts[i])
+    {
+        if (0 == Platform::Strcasecmp(ATTR_CHAN, atts[i]))
+        {
+            if (0 == Platform::Strcasecmp("R", atts[i + 1]))
+            {
+                chan = 0;
+            }
+            else if (0 == Platform::Strcasecmp("G", atts[i + 1]))
+            {
+                chan = 1;
+            }
+            else if (0 == Platform::Strcasecmp("B", atts[i + 1]))
+            {
+                chan = 2;
+            }
+            // Chan is optional but, if present, must be legal.
+            else
+            {
+                std::ostringstream arg;
+                arg << "Illegal channel attribute value '";
+                arg << atts[i + 1] << "'. ";
+
+                throwMessage(arg.str());
+            }
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_LINSIDESLOPE, atts[i]))
+        {
+            parseScalarAttribute(atts[i], atts[i + 1], linSideSlope);
+            validType = legacyParams.setType(LogUtil::CTFParams::CLF);
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_LINSIDEOFFSET, atts[i]))
+        {
+            parseScalarAttribute(atts[i], atts[i + 1], linSideOffset);
+            validType = legacyParams.setType(LogUtil::CTFParams::CLF);
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_LOGSIDESLOPE, atts[i]))
+        {
+            parseScalarAttribute(atts[i], atts[i + 1], logSideSlope);
+            validType = legacyParams.setType(LogUtil::CTFParams::CLF);
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_LOGSIDEOFFSET, atts[i]))
+        {
+            parseScalarAttribute(atts[i], atts[i + 1], logSideOffset);
+            validType = legacyParams.setType(LogUtil::CTFParams::CLF);
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_BASE, atts[i]))
+        {
+            parseScalarAttribute(atts[i], atts[i + 1], base);
+            validType = legacyParams.setType(LogUtil::CTFParams::CLF);
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_LINEARSLOPE, atts[i]))
+        {
+            parseScalarAttribute(atts[i], atts[i + 1], linearSlope);
+            validType = legacyParams.setType(LogUtil::CTFParams::CLF);
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_LINSIDEBREAK, atts[i]))
+        {
+            parseScalarAttribute(atts[i], atts[i + 1], linSideBreak);
+            validType = legacyParams.setType(LogUtil::CTFParams::CLF);
+        }
+        else if (allowCineon && parseCineon(atts, i, gamma, refWhite, refBlack, highlight, shadow))
+        {
+            validType = legacyParams.setType(LogUtil::CTFParams::CINEON);
+        }
+        else
+        {
+            logParameterWarning(atts[i]);
+        }
+
+        if (!validType)
+        {
+            ThrowM(*this, "CLF type and Cineon types parameters can not be mixed. ");
+        }
+
+        i += 2;
+    }
+
+    // Validate the attributes are appropriate for the log style and set
+    // the parameters (numeric validation is done by LogOpData::validate).
+
+    // New parameters are set directly on the op.
+    LogOpData::Params newParams(4);
+
+    newParams[LIN_SIDE_SLOPE ] = IsNan(linSideSlope)  ? 1.0 : linSideSlope;
+    newParams[LIN_SIDE_OFFSET] = IsNan(linSideOffset) ? 0.0 : linSideOffset;
+    newParams[LOG_SIDE_SLOPE ] = IsNan(logSideSlope)  ? 1.0 : logSideSlope;
+    newParams[LOG_SIDE_OFFSET] = IsNan(logSideOffset) ? 0.0 : logSideOffset;
+
+    if (!IsNan(base))
+    {
+        pLogElt->setBase(base);
+    }
+
+    if (cameraStyle)
+    {
+        if (!IsNan(linSideBreak))
+        {
+            newParams.push_back(linSideBreak);
+        }
+        else
+        {
+            ThrowM(*this, "Parameters '", ATTR_LINSIDEBREAK, "' should be defined for style '",
+                   LogUtil::ConvertStyleToString(LogUtil::CAMERA_LOG_TO_LIN), "' or '",
+                   LogUtil::ConvertStyleToString(LogUtil::CAMERA_LIN_TO_LOG), "'. ");
+        }
+
+        if (!IsNan(linearSlope))
+        {
+            newParams.push_back(linearSlope);
+        }
+    }
+
+    auto logOp = OCIO_DYNAMIC_POINTER_CAST<LogOpData>(pLogElt->getOp());
+
+    switch (chan)
+    {
+    case -1:
+        logOp->setRedParams(newParams);
+        logOp->setGreenParams(newParams);
+        logOp->setBlueParams(newParams);
+        break;
+    case 0:
+        logOp->setRedParams(newParams);
+        break;
+    case 1:
+        logOp->setGreenParams(newParams);
+        break;
+    case 2:
+        logOp->setBlueParams(newParams);
+        break;
+    }
 }
 
 //////////////////////////////////////////////////////////
@@ -2664,6 +3021,14 @@ void CTFReaderLut1DElt::start(const char ** atts)
 
         i += 2;
     }
+}
+
+bool CTFReaderLut1DElt::isOpParameterValid(const char * att) const noexcept
+{
+    return CTFReaderOpElt::isOpParameterValid(att) ||
+           0 == Platform::Strcasecmp(ATTR_INTERPOLATION, att) ||
+           0 == Platform::Strcasecmp(ATTR_HALF_DOMAIN, att) ||
+           0 == Platform::Strcasecmp(ATTR_RAW_HALFS, att);
 }
 
 void CTFReaderLut1DElt::end()
@@ -2848,6 +3213,15 @@ void CTFReaderLut1DElt_1_4::start(const char ** atts)
 
 }
 
+bool CTFReaderLut1DElt_1_4::isOpParameterValid(const char * att) const noexcept
+{
+    return CTFReaderOpElt::isOpParameterValid(att) ||
+           0 == Platform::Strcasecmp(ATTR_INTERPOLATION, att) ||
+           0 == Platform::Strcasecmp(ATTR_HALF_DOMAIN, att) ||
+           0 == Platform::Strcasecmp(ATTR_RAW_HALFS, att) ||
+           0 == Platform::Strcasecmp(ATTR_HUE_ADJUST, att);
+}
+
 //////////////////////////////////////////////////////////
 
 void CTFReaderLut1DElt_1_7::end()
@@ -2924,6 +3298,12 @@ void CTFReaderLut3DElt::start(const char ** atts)
 
         i += 2;
     }
+}
+
+bool CTFReaderLut3DElt::isOpParameterValid(const char * att) const noexcept
+{
+    return CTFReaderOpElt::isOpParameterValid(att) ||
+           0 == Platform::Strcasecmp(ATTR_INTERPOLATION, att);
 }
 
 void CTFReaderLut3DElt::end()
@@ -3165,24 +3545,61 @@ void CTFReaderMatrixElt::convert_1_2_to_Latest()
 
 ArrayBase * CTFReaderMatrixElt_1_3::updateDimension(const Dimensions & dims)
 {
-    if (dims.size() != 3)
+    // In CLF v3, the committee dropped the third dimension value since with all currently
+    // supported cases it is the same as the first value.  There will probably be a lot of
+    // files that use the old syntax with the new version number or vice versa, so we try
+    // to be forgiving and handle either two or three values (for both CLF and CTF).
+    // We decided to allow this even for old files back to CTF 1.3.
+    const size_t size = dims.size();
+    if (size != 3 && size != 2)
     {
         return nullptr;
     }
 
-    const size_t max = (dims.empty() ? 0 : (dims.size() - 1));
-    const unsigned numColorComponents = dims[max];
-
-    if (!((dims[0] == 3 && dims[1] == 3 && dims[2] == 3) ||
-          (dims[0] == 3 && dims[1] == 4 && dims[2] == 3) ||
-          (dims[0] == 4 && dims[1] == 4 && dims[2] == 4) ||
-          (dims[0] == 4 && dims[1] == 5 && dims[2] == 4)))
+    if (!((dims[0] == 3 && dims[1] == 3) ||
+          (dims[0] == 3 && dims[1] == 4) ||
+          (dims[0] == 4 && dims[1] == 4) ||
+          (dims[0] == 4 && dims[1] == 5)))
     {
         return nullptr;
+    }
+
+    if (size == 3)
+    {
+        if (dims[0] != dims[2])
+        {
+            return nullptr;
+        }
+    }
+
+    if (IsDebugLoggingEnabled())
+    {
+        if (m_transform->getCTFVersion() < CTF_PROCESS_LIST_VERSION_2_0)
+        {
+            if (size == 2)
+            {
+                std::ostringstream oss;
+                oss << getXmlFile().c_str() << "(" << getXmlLineNumber() << "): ";
+                oss << "Matrix array dimension should have 3 numbers "
+                       "for CTF before version 2.";
+                LogDebug(oss.str());
+            }
+        }
+        else
+        {
+            if (size == 3)
+            {
+                std::ostringstream oss;
+                oss << getXmlFile().c_str() << "(" << getXmlLineNumber() << "): ";
+                oss << "Matrix array dimension should have 2 numbers "
+                       "for CTF from version 2.";
+                LogDebug(oss.str());
+            }
+        }
     }
 
     ArrayDouble * pArray = &getMatrix()->getArray();
-    pArray->resize(dims[1], numColorComponents);
+    pArray->resize(dims[1], dims[0]);
 
     return pArray;
 }
@@ -3198,6 +3615,7 @@ void CTFReaderMatrixElt_1_3::endArray(unsigned int position)
     //       2) 4x4x4, matrix with alpha and no offsets
     //       3) 3x4x3, matrix only with offsets and no alpha
     //       4) 3x3x3, matrix with no alpha and no offsets
+    // Note: As of CLF v3 we drop the third digit, since it is redundant.
 
     if (array.getLength() == 3 && array.getNumColorComponents() == 3)
     {
@@ -3358,6 +3776,12 @@ void CTFReaderRangeElt_1_7::start(const char ** atts)
     }
 }
 
+bool CTFReaderRangeElt_1_7::isOpParameterValid(const char * att) const noexcept
+{
+    return CTFReaderOpElt::isOpParameterValid(att) ||
+           0 == Platform::Strcasecmp(ATTR_STYLE, att);
+}
+
 void CTFReaderRangeElt_1_7::end()
 {
     CTFReaderRangeElt::end();
@@ -3394,8 +3818,14 @@ CTFReaderRangeValueElt::~CTFReaderRangeValueElt()
 {
 }
 
-void CTFReaderRangeValueElt::start(const char **)
+void CTFReaderRangeValueElt::start(const char ** atts)
 {
+    unsigned i = 0;
+    while (atts[i])
+    {
+        logParameterWarning(atts[i]);
+        i += 2;
+    }
 }
 
 void CTFReaderRangeValueElt::end()
@@ -3404,8 +3834,7 @@ void CTFReaderRangeValueElt::end()
 
 void CTFReaderRangeValueElt::setRawData(const char * s, size_t len, unsigned int)
 {
-    CTFReaderRangeElt * pRange
-        = dynamic_cast<CTFReaderRangeElt*>(getParent().get());
+    CTFReaderRangeElt * pRange = dynamic_cast<CTFReaderRangeElt*>(getParent().get());
 
     std::vector<double> data;
 
@@ -3523,6 +3952,15 @@ void CTFReaderReferenceElt::start(const char **atts)
 
         m_reference->setPath(path);
     }
+}
+
+bool CTFReaderReferenceElt::isOpParameterValid(const char * att) const noexcept
+{
+    return CTFReaderOpElt::isOpParameterValid(att) ||
+           0 == Platform::Strcasecmp(ATTR_PATH, att) ||
+           0 == Platform::Strcasecmp(ATTR_BASE_PATH, att) ||
+           0 == Platform::Strcasecmp(ATTR_ALIAS, att) ||
+           0 == Platform::Strcasecmp(ATTR_IS_INVERTED, att);
 }
 
 void CTFReaderReferenceElt::end()

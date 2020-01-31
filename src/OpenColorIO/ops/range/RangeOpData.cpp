@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BSD-3-Clause
+﻿// SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <sstream>
@@ -179,16 +179,16 @@ void RangeOpData::validate() const
     {
         if (!IsNan((float)m_minOutValue))
         {
-            throw Exception(
-                "In and out minimum limits must be both set or both missing in Range.");
+            throw Exception("In and out minimum limits must be both set "
+                            "or both missing in Range.");
         }
     }
     else
     {
         if (IsNan((float)m_minOutValue))
         {
-            throw Exception(
-                "In and out minimum limits must be both set or both missing in Range.");
+            throw Exception("In and out minimum limits must be both set "
+                            "or both missing in Range.");
         }
     }
 
@@ -196,16 +196,20 @@ void RangeOpData::validate() const
     {
         if (!IsNan((float)m_maxOutValue))
         {
-            throw Exception(
-                "In and out maximum limits must be both set or both missing in Range.");
+            throw Exception("In and out maximum limits must be both set "
+                            "or both missing in Range.");
+        }
+        if (IsNan((float)m_minInValue))
+        {
+            throw Exception("At least minimum or maximum limits must be set in Range.");
         }
     }
     else
     {
         if (IsNan((float)m_maxOutValue))
         {
-            throw Exception(
-                "In and out maximum limits must be both set or both missing in Range.");
+            throw Exception("In and out maximum limits must be both set "
+                            "or both missing in Range.");
         }
     }
 
@@ -214,36 +218,38 @@ void RangeOpData::validate() const
     {
         if (m_minInValue > m_maxInValue)
         {
-            throw Exception(
-                "Range maximum input value is less than minimum input value");
+            throw Exception("Range maximum input value is less than minimum input value");
         }
         if (m_minOutValue > m_maxOutValue)
         {
-            throw Exception(
-                "Range maximum output value is less than minimum output value");
+            throw Exception("Range maximum output value is less than minimum output value");
         }
+    }
+
+    // A one-sided clamp must have matching in & out values.
+
+    if (IsNan((float)m_maxInValue) && !IsNan((float)m_minInValue) &&
+        FloatsDiffer(m_minOutValue, m_minInValue))
+    {
+        throw Exception("In and out minimum limits must be equal "
+                        "if maximum values are missing in Range.");
+    }
+
+    if (IsNan((float)m_minInValue) && !IsNan((float)m_maxInValue) &&
+        FloatsDiffer(m_maxOutValue, m_maxInValue))
+    {
+        throw Exception("In and out maximum limits must be equal "
+                        "if minimum values are missing in Range.");
     }
 
     // Complete the initialization of the object.
     fillScaleOffset();  // This also validates that maxIn - minIn != 0.
 }
 
-// A NoOp Range does not modify or clamp pixel values.
+// A RangeOp always clamps (the noClamp style is converted to a Matrix).
 bool RangeOpData::isNoOp() const
 {
-    if ( ! minIsEmpty() || ! maxIsEmpty() )
-    {
-        return false;
-    }
-
-    // No scale or offset allowed.
-    if (scales())
-    {
-        return false;
-    }
-
-    // TODO: May want to disallow both to be empty or convert to a matrix upon import.
-    return true;
+    return false;
 }
 
 // An identity Range does not modify pixel values between [0,1] but may
@@ -360,15 +366,14 @@ RangeOpDataRcPtr RangeOpData::compose(ConstRangeOpDataRcPtr & r) const
             }
             else
             {
-                // Transform m_minOutValue with r (just an offset).
-                minOutNew = m_minOutValue + r->m_offset;
+                minOutNew = m_minOutValue;
             }
         }
     }
     else if (!r->minIsEmpty())
     {
-        // Transform r->m_minOutValue with inverse of this (just an offset).
-        minInNew = r->m_minInValue - m_offset;
+        // minIsEmpty() is true.
+        minInNew = r->m_minInValue;
     }
 
     if (!maxIsEmpty())
@@ -397,15 +402,14 @@ RangeOpDataRcPtr RangeOpData::compose(ConstRangeOpDataRcPtr & r) const
             }
             else
             {
-                // Transform m_maxOutValue with r (just an offset).
-                maxOutNew = m_maxOutValue + r->m_offset;
+                maxOutNew = m_maxOutValue;
             }
         }
     }
     else if (!r->maxIsEmpty())
     {
-        // Transform r->m_maxOutValue with inverse of this (just an offset).
-        maxInNew = r->m_maxInValue - m_offset;
+        // maxIsEmpty() is true.
+        maxInNew = r->m_maxInValue;
     }
 
     return std::make_shared<RangeOpData>(minInNew, maxInNew, minOutNew, maxOutNew);
@@ -429,28 +433,20 @@ void RangeOpData::fillScaleOffset() const
     // Convert: out = ( in - minIn) * scale + minOut
     // to the model: out = in * scale + offset
 
-    // The case where only one bound clamps and the other is empty
-    // is potentially ambiguous regarding how to calculate scale & offset.
-    // We set scale to whatever is needed for the bit-depth conversion
-    // and set offset such that the requested bound is mapped as requested.
+    // The case where one bound clamps and the other is empty was potentially ambiguous in
+    // versions 1 and 2 of CLF but v3 requires that the in & out bounds must match in
+    // this case.  Hence offset must be zero and scale must be 1.
     m_scale = 1.0;
 
     if (minIsEmpty())
     {
-        if (maxIsEmpty())     // Op is identity
-        {
-            m_offset = 0.f;
-        }
-        else                  // Bottom unlimited but top clamps
-        {
-            m_offset = m_maxOutValue - m_maxInValue;
-        }
+        m_offset = 0.;        // Bottom unlimited but top clamps
     }
     else
     {
         if (maxIsEmpty())     // Top unlimited but bottom clamps
         {
-            m_offset = m_minOutValue - m_minInValue;
+            m_offset = 0.;
         }
         else                  // Both ends clamp
         {
@@ -468,6 +464,11 @@ void RangeOpData::fillScaleOffset() const
 
 MatrixOpDataRcPtr RangeOpData::convertToMatrix() const
 {
+    if (minIsEmpty() || maxIsEmpty())
+    {
+        throw Exception("Non-clamping Range min & max values have to be set.");
+    }
+
     // Create an identity matrix.
     MatrixOpDataRcPtr mtx = std::make_shared<MatrixOpData>();
     mtx->getFormatMetadata() = getFormatMetadata();
@@ -498,21 +499,21 @@ bool RangeOpData::operator==(const OpData & other) const
     const RangeOpData* rop = static_cast<const RangeOpData*>(&other);
 
     if ( (minIsEmpty() != rop->minIsEmpty()) || 
-            (maxIsEmpty() != rop->maxIsEmpty()) )
+         (maxIsEmpty() != rop->maxIsEmpty()) )
     {
         return false;
     }
 
     if (!minIsEmpty() && !rop->minIsEmpty() &&
         ( FloatsDiffer(m_minInValue, rop->m_minInValue) ||
-            FloatsDiffer(m_minOutValue, rop->m_minOutValue) ) )
+          FloatsDiffer(m_minOutValue, rop->m_minOutValue) ) )
     {
         return false;
     }
 
     if (!maxIsEmpty() && !rop->maxIsEmpty() &&
         ( FloatsDiffer(m_maxInValue, rop->m_maxInValue) ||
-            FloatsDiffer(m_maxOutValue, rop->m_maxOutValue) ) )
+          FloatsDiffer(m_maxOutValue, rop->m_maxOutValue) ) )
     {
         return false;
     }

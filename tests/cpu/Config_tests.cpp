@@ -283,7 +283,7 @@ OCIO_ADD_TEST(Config, serialize_group_transform)
     "    allocation: uniform\n"
     "    to_reference: !<GroupTransform>\n"
     "      children:\n"
-    "        - !<ExponentTransform> {value: [1, 1, 1, 1]}\n";
+    "        - !<ExponentTransform> {value: 1}\n";
 
     std::vector<std::string> osvec;
     pystring::splitlines(os.str(), osvec);
@@ -291,8 +291,10 @@ OCIO_ADD_TEST(Config, serialize_group_transform)
     pystring::splitlines(PROFILE_OUT, PROFILE_OUTvec);
 
     OCIO_CHECK_EQUAL(osvec.size(), PROFILE_OUTvec.size());
-    for(unsigned int i = 0; i < PROFILE_OUTvec.size(); ++i)
+    for (unsigned int i = 0; i < PROFILE_OUTvec.size(); ++i)
+    {
         OCIO_CHECK_EQUAL(osvec[i], PROFILE_OUTvec[i]);
+    }
 }
 
 OCIO_ADD_TEST(Config, serialize_searchpath)
@@ -812,7 +814,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 {
     {
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {}\n";
+            "    from_reference: !<RangeTransform> {minInValue: 0, minOutValue: 0}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -829,7 +831,8 @@ OCIO_ADD_TEST(Config, range_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {direction: inverse}\n";
+            "    from_reference: !<RangeTransform> {minInValue: 0, minOutValue: 0, "
+            "direction: inverse}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -846,7 +849,8 @@ OCIO_ADD_TEST(Config, range_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {style: noClamp}\n";
+            "    from_reference: !<RangeTransform> {minInValue: 0, minOutValue: 0, "
+            "style: noClamp}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -854,16 +858,14 @@ OCIO_ADD_TEST(Config, range_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
-
-        std::stringstream ss;
-        ss << *config.get();
-        OCIO_CHECK_EQUAL(ss.str(), str);
+        OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception,
+                              "non clamping range must have min and max values defined");
     }
 
     {
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {style: noClamp, direction: inverse}\n";
+            "    from_reference: !<RangeTransform> {minInValue: 0, maxInValue: 1, "
+            "minOutValue: 0, maxOutValue: 1, style: noClamp, direction: inverse}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -976,10 +978,10 @@ OCIO_ADD_TEST(Config, range_serialization)
         // maxInValue & maxOutValue have no value, they will not be defined.
         const std::string strEnd =
             "    from_reference: !<RangeTransform> {minInValue: -0.01, "
-            "maxInValue: , minOutValue: 0.0009, maxOutValue: }\n";
+            "maxInValue: , minOutValue: -0.01, maxOutValue: }\n";
         const std::string strEndSaved =
             "    from_reference: !<RangeTransform> {minInValue: -0.01, "
-            "minOutValue: 0.0009}\n";
+            "minOutValue: -0.01}\n";
         const std::string str = PROFILE_V2 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B + strEnd;
         const std::string strSaved = PROFILE_V2_START + strEndSaved;
 
@@ -1141,9 +1143,26 @@ OCIO_ADD_TEST(Config, exponent_serialization)
         std::stringstream ss;  
         ss << *config.get();    
         OCIO_CHECK_EQUAL(ss.str(), str);    
-    }   
+    }
 
-     {  
+    {
+        const std::string strEnd =
+            "    from_reference: !<ExponentTransform> "
+            "{value: 1.101}\n";
+        const std::string str = PROFILE_V1 + SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OCIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+     {
         const std::string strEnd =  
             "    from_reference: !<ExponentTransform> " 
             "{value: [1.101, 1.202, 1.303, 1.404], direction: inverse}\n";  
@@ -1158,7 +1177,41 @@ OCIO_ADD_TEST(Config, exponent_serialization)
         std::stringstream ss;  
         ss << *config.get();    
         OCIO_CHECK_EQUAL(ss.str(), str);    
-    }   
+    }
+
+     {
+         const std::string strEnd =
+             "    from_reference: !<ExponentTransform> "
+             "{value: [1.101, 1.202, 1.303, 1.404], style: mirror, direction: inverse}\n";
+         const std::string str = PROFILE_V1 + SIMPLE_PROFILE + strEnd;
+
+         std::istringstream is;
+         is.str(str);
+         OCIO::ConstConfigRcPtr config;
+         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+         OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+         std::stringstream ss;
+         ss << *config.get();
+         OCIO_CHECK_EQUAL(ss.str(), str);
+     }
+
+     {
+         const std::string strEnd =
+             "    from_reference: !<ExponentTransform> "
+             "{value: [1.101, 1.202, 1.303, 1.404], style: pass_thru, direction: inverse}\n";
+         const std::string str = PROFILE_V1 + SIMPLE_PROFILE + strEnd;
+
+         std::istringstream is;
+         is.str(str);
+         OCIO::ConstConfigRcPtr config;
+         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+         OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+         std::stringstream ss;
+         ss << *config.get();
+         OCIO_CHECK_EQUAL(ss.str(), str);
+     }
 
     // Errors
 
@@ -1171,10 +1224,23 @@ OCIO_ADD_TEST(Config, exponent_serialization)
 
         std::istringstream is;
         is.str(str);
-        OCIO::ConstConfigRcPtr config;
-        OCIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is),
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is),
                               OCIO::Exception,
                               "'value' values must be 4 floats. Found '3'");
+    }
+
+    {
+        // Wrong style.
+        const std::string strEnd =
+            "    from_reference: !<ExponentTransform> "
+            "{value: [1.101, 1.202, 1.303, 1.404], style: wrong,}\n";
+        const std::string str = PROFILE_V1 + SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is),
+                              OCIO::Exception,
+                              "Unknown exponent style");
     }
 }
 
@@ -1200,7 +1266,7 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
     {
         const std::string strEnd =
             "    from_reference: !<ExponentWithLinearTransform> "
-            "{gamma: [1.1, 1.2, 1.3, 1.4], offset: [0.101, 0.102, 0.103, 0.1], direction: inverse}\n";
+            "{gamma: [1.1, 1.2, 1.3, 1.4], offset: [0.101, 0.102, 0.103, 0.1], style: mirror}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -1211,6 +1277,62 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
 
         std::stringstream ss;
         ss << *config.get();
+        OCIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<ExponentWithLinearTransform> "
+            "{gamma: [1.1, 1.2, 1.3, 1.4], offset: [0.101, 0.102, 0.103, 0.1], "
+            "direction: inverse}\n";
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OCIO_CHECK_EQUAL(ss.str().size(), str.size());
+        OCIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<ExponentWithLinearTransform> "
+            "{gamma: [1.1, 1.2, 1.3, 1.4], offset: [0.101, 0.102, 0.103, 0.1], style: mirror, "
+            "direction: inverse}\n";
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OCIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<ExponentWithLinearTransform> "
+            "{gamma: 1.1, offset: 0.101, "
+            "direction: inverse}\n";
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OCIO_CHECK_EQUAL(ss.str().size(), str.size());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -1286,6 +1408,19 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
         OCIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is),
                               OCIO::Exception,
                               "ExponentWithLinear parse error, offset field must be 4 floats");
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<ExponentWithLinearTransform> "
+            "{gamma: [1.1, 1.2, 1.3, 1.4], offset: [0.101, 0.102, 0.103, 0.1], "
+            "direction: inverse, style: pass_thru}\n";
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "Pass thru negative extrapolation is not valid for MonCurve");
     }
 }
 
@@ -1968,7 +2103,7 @@ OCIO_ADD_TEST(Config, view)
 
 OCIO_ADD_TEST(Config, display_view_order)
 {
-    constexpr const char * SIMPLE_CONFIG { R"(
+    constexpr char SIMPLE_CONFIG[] { R"(
         ocio_profile_version: 2
 
         displays:
@@ -2299,10 +2434,89 @@ OCIO_ADD_TEST(Config, log_serialization)
         std::istringstream is;
         is.str(str);
 
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is),
+                              OCIO::Exception,
+                              "base must be a single double");
+    }
+
+    {
+        // LogCamera with default value for base.
+        const std::string strEnd =
+            "    from_reference: !<LogCameraTransform> {"
+            "logSideSlope: [1, 1, 1.1], "
+            "logSideOffset: [0.1234567890123, 0.5, 0.1], "
+            "linSideSlope: [1.3, 1.4, 1.5], "
+            "linSideOffset: [0, 0, 0.1], "
+            "linSideBreak: [0.1, 0.2, 0.3]}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
         OCIO::ConstConfigRcPtr config;
-        OCIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is),
-            OCIO::Exception,
-            "base must be a single double");
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OCIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // LogCamera with default values and identical linSideBreak.
+        const std::string strEnd =
+            "    from_reference: !<LogCameraTransform> {"
+            "linSideBreak: 0.2}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OCIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // LogCamera with linear slope.
+        const std::string strEnd =
+            "    from_reference: !<LogCameraTransform> {"
+            "linSideBreak: 0.2, "
+            "linearSlope: [1.1, 0.9, 1.2]}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OCIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // LogCamera with missing linSideBreak.
+        const std::string strEnd =
+            "    from_reference: !<LogCameraTransform> {"
+            "base: 5}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "linSideBreak values are missing");
     }
 }
 

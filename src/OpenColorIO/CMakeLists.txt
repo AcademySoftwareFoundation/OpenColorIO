@@ -73,6 +73,7 @@ set(SOURCES
 	ops/fixedfunction/FixedFunctionOp.cpp
 	ops/gamma/GammaOpCPU.cpp
 	ops/gamma/GammaOpData.cpp
+	ops/gamma/GammaOpGPU.cpp
 	ops/gamma/GammaOpUtils.cpp
 	ops/gamma/GammaOp.cpp
 	ops/log/LogOpCPU.cpp
@@ -115,6 +116,7 @@ set(SOURCES
 	transforms/FixedFunctionTransform.cpp
 	transforms/GroupTransform.cpp
 	transforms/LogAffineTransform.cpp
+	transforms/LogCameraTransform.cpp
 	transforms/LogTransform.cpp
 	transforms/LookTransform.cpp
 	transforms/Lut1DTransform.cpp

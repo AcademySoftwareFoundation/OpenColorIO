@@ -56,6 +56,14 @@ void RangeTransformImpl::validate() const
     {
         Transform::validate();
         data().validate();
+        if (m_style == RANGE_NO_CLAMP)
+        {
+            if (data().minIsEmpty() || data().maxIsEmpty())
+            {
+                throw Exception("RangeTransform validation failed: non clamping range must "
+                                "have min and max values defined.");
+            }
+        }
     }
     catch(Exception & ex)
     {

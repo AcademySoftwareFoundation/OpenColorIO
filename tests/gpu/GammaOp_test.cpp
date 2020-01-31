@@ -23,10 +23,12 @@ void AddExponent(OCIOGPUTest & test,
                  OCIO::GpuShaderDescRcPtr & shaderDesc,
                  OCIO::TransformDirection direction,
                  const double(&gamma)[4],
+                 OCIO::NegativeStyle style,
                  float epsilon,
                  Version ver)
 {
     OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
+    exp->setNegativeStyle(style);
     exp->setDirection(direction);
     exp->setValue(gamma);
 
@@ -43,13 +45,14 @@ void AddExponentWithLinear(OCIOGPUTest & test,
                            OCIO::TransformDirection direction,
                            const double(&gamma)[4],
                            const double(&offset)[4],
+                           OCIO::NegativeStyle style,
                            float epsilon)
 {
-    OCIO::ExponentWithLinearTransformRcPtr
-        exp = OCIO::ExponentWithLinearTransform::Create();
+    OCIO::ExponentWithLinearTransformRcPtr exp = OCIO::ExponentWithLinearTransform::Create();
     exp->setDirection(direction);
     exp->setGamma(gamma);
     exp->setOffset(offset);
+    exp->setNegativeStyle(style);
 
     OCIO_NAMESPACE::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
     config->setMajorVersion(2);
@@ -61,37 +64,51 @@ void AddExponentWithLinear(OCIOGPUTest & test,
 
 OCIO_ADD_GPU_TEST(ExponentOp, legacy_shader_v1)
 {
-    const double exp[4] = { 2.6, 2.4, 1.8, 1.1 };
+    const double exp[4] = { 2.6, 1.0, 1.8, 1.1 };
 
     OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
-    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, exp, 1e-5f, OCIO_VERSION_1);
+    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, exp, OCIO::NEGATIVE_CLAMP, 1e-5f,
+                OCIO_VERSION_1);
     // TODO: Would like to be able to remove the setTestNaN(false) and
     // setTestInfinity(false) from all of these tests.
     test.setTestNaN(false);
 }
 
-
 OCIO_ADD_GPU_TEST(ExponentOp, forward_v1)
 {
-    const double exp[4] = { 2.6, 2.4, 1.8, 1.1 };
+    const double exp[4] = { 2.6, 1.0, 1.8, 1.1 };
 
-    OCIO::GpuShaderDescRcPtr shaderDesc
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, exp, 1e-5f, OCIO_VERSION_1);
+    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, exp, OCIO::NEGATIVE_CLAMP, 1e-5f,
+                OCIO_VERSION_1);
     test.setTestNaN(false);
 }
 
 OCIO_ADD_GPU_TEST(ExponentOp, forward)
 {
-    const double exp[4] = { 2.6, 2.4, 1.8, 1.1 };
+    const double exp[4] = { 2.6, 1.0, 1.8, 1.1 };
 
-    OCIO::GpuShaderDescRcPtr shaderDesc
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, exp,
+    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, exp, OCIO::NEGATIVE_CLAMP,
+#ifdef USE_SSE
+        5e-4f
+#else
+        1e-5f
+#endif
+        , OCIO_VERSION_2);
+}
+
+OCIO_ADD_GPU_TEST(ExponentOp, forward_mirror)
+{
+    const double exp[4] = { 2.6, 1.0, 1.8, 1.1 };
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, exp, OCIO::NEGATIVE_MIRROR,
 #ifdef USE_SSE
         5e-4f // TODO: Only related to the ssePower optimization ?
 #else
@@ -100,39 +117,51 @@ OCIO_ADD_GPU_TEST(ExponentOp, forward)
         , OCIO_VERSION_2);
 }
 
+OCIO_ADD_GPU_TEST(ExponentOp, forward_pass_thru)
+{
+    const double exp[4] = { 2.6, 1.0, 1.8, 1.1 };
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, exp, OCIO::NEGATIVE_PASS_THRU,
+#ifdef USE_SSE
+        5e-4f // TODO: Only related to the ssePower optimization ?
+#else
+        1e-5f
+#endif
+        , OCIO_VERSION_2);
+}
 
 OCIO_ADD_GPU_TEST(ExponentOp, inverse_legacy_shader_v1)
 {
-    const double exp[4] = { 2.6, 2.4, 1.8, 1.1 };
+    const double exp[4] = { 2.6, 1.0, 1.8, 1.1 };
 
     OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
-    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, exp, g_epsilon, OCIO_VERSION_1);
+    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, exp, OCIO::NEGATIVE_CLAMP,
+                g_epsilon, OCIO_VERSION_1);
     test.setTestNaN(false);
 }
-
 
 OCIO_ADD_GPU_TEST(ExponentOp, inverse_v1)
 {
-    const double exp[4] = { 2.6, 2.4, 1.8, 1.1 };
+    const double exp[4] = { 2.6, 1.0, 1.8, 1.1 };
 
-    OCIO::GpuShaderDescRcPtr shaderDesc
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, exp, g_epsilon, OCIO_VERSION_1);
+    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, exp, OCIO::NEGATIVE_CLAMP,
+                g_epsilon, OCIO_VERSION_1);
     test.setTestNaN(false);
 }
 
-
 OCIO_ADD_GPU_TEST(ExponentOp, inverse)
 {
-    const double exp[4] = { 2.6, 2.4, 1.8, 1.1 };
+    const double exp[4] = { 2.6, 1.0, 1.8, 1.1 };
 
-    OCIO::GpuShaderDescRcPtr shaderDesc
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, exp,
+    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, exp, OCIO::NEGATIVE_CLAMP,
 #ifdef USE_SSE
         5e-4f // TODO: Only related to the ssePower optimization ?
 #else
@@ -142,49 +171,47 @@ OCIO_ADD_GPU_TEST(ExponentOp, inverse)
     test.setTestInfinity(false);
 }
 
-
-const double gamma[4]  = { 2.1,  2.2,  2.3,  1.5  };
-const double offset[4] = {  .01,  .02,  .03,  .05 };
-
-
-OCIO_ADD_GPU_TEST(ExponentWithLinearOp, legacy_shader)
+OCIO_ADD_GPU_TEST(ExponentOp, inverse_mirror)
 {
-    OCIO::GpuShaderDescRcPtr shaderDesc
-        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
+    const double exp[4] = { 2.6, 1.0, 1.8, 1.1 };
 
-    AddExponentWithLinear(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, gamma, offset,
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, exp, OCIO::NEGATIVE_MIRROR,
 #ifdef USE_SSE
-        1e-4f // Note: Related to the ssePower optimization !
+        5e-4f // TODO: Only related to the ssePower optimization ?
 #else
-        5e-6f
+        g_epsilon
 #endif
-        );
+        , OCIO_VERSION_2);
     test.setTestInfinity(false);
 }
 
-
-OCIO_ADD_GPU_TEST(ExponentWithLinearOp, inverse_legacy_shader)
+OCIO_ADD_GPU_TEST(ExponentOp, inverse_pass_thru)
 {
-    OCIO::GpuShaderDescRcPtr shaderDesc
-        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
+    const double exp[4] = { 2.6, 1.0, 1.8, 1.1 };
 
-    AddExponentWithLinear(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, gamma, offset,
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    AddExponent(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, exp, OCIO::NEGATIVE_PASS_THRU,
 #ifdef USE_SSE
-        5e-5f // Note: Related to the ssePower optimization !
+        5e-4f // TODO: Only related to the ssePower optimization ?
 #else
-        5e-7f
+        g_epsilon
 #endif
-        );
+        , OCIO_VERSION_2);
     test.setTestInfinity(false);
 }
 
+const double gamma[4]  = { 2.1,  1.0,  2.3,  1.5  };
+const double offset[4] = {  .01, 0.,    .03,  .05 };
 
 OCIO_ADD_GPU_TEST(ExponentWithLinearOp, forward)
 {
-    OCIO::GpuShaderDescRcPtr shaderDesc
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     AddExponentWithLinear(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, gamma, offset,
+        OCIO::NEGATIVE_LINEAR,
 #ifdef USE_SSE
         1e-4f // Note: Related to the ssePower optimization !
 #else
@@ -194,13 +221,27 @@ OCIO_ADD_GPU_TEST(ExponentWithLinearOp, forward)
     test.setTestInfinity(false);
 }
 
+OCIO_ADD_GPU_TEST(ExponentWithLinearOp, mirror_forward)
+{
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    AddExponentWithLinear(test, shaderDesc, OCIO::TRANSFORM_DIR_FORWARD, gamma, offset,
+        OCIO::NEGATIVE_MIRROR,
+#ifdef USE_SSE
+        1e-4f // Note: Related to the ssePower optimization !
+#else
+        5e-6f
+#endif
+    );
+    test.setTestInfinity(false);
+}
 
 OCIO_ADD_GPU_TEST(ExponentWithLinearOp, inverse)
 {
-    OCIO::GpuShaderDescRcPtr shaderDesc
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     AddExponentWithLinear(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, gamma, offset,
+        OCIO::NEGATIVE_LINEAR,
 #ifdef USE_SSE
         5e-5f // Note: Related to the ssePower optimization !
 #else
@@ -210,13 +251,18 @@ OCIO_ADD_GPU_TEST(ExponentWithLinearOp, inverse)
     test.setTestInfinity(false);
 }
 
+OCIO_ADD_GPU_TEST(ExponentWithLinearOp, mirror_inverse)
+{
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-// Still need bit-depth coverage from these tests:
-//      GPURendererGamma1_test
-//      GPURendererGamma2_test
-//      GPURendererGamma3_test
-//      GPURendererGamma4_test
-//      GPURendererGamma5_test
-//      GPURendererGamma6_test
-//      GPURendererGamma7_test
-//      GPURendererGamma8_test
+    AddExponentWithLinear(test, shaderDesc, OCIO::TRANSFORM_DIR_INVERSE, gamma, offset,
+        OCIO::NEGATIVE_MIRROR,
+#ifdef USE_SSE
+        5e-5f // Note: Related to the ssePower optimization !
+#else
+        5e-7f
+#endif
+    );
+    test.setTestInfinity(false);
+}
+

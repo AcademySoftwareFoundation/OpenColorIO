@@ -149,8 +149,8 @@ FileFormat * CreateFileFormatSpiMtx();
 FileFormat * CreateFileFormatTruelight();
 FileFormat * CreateFileFormatVF();
 
-static constexpr const char * FILEFORMAT_CLF = "Academy/ASC Common LUT Format";
-static constexpr const char * FILEFORMAT_CTF = "Color Transform Format";
+static constexpr char FILEFORMAT_CLF[] = "Academy/ASC Common LUT Format";
+static constexpr char FILEFORMAT_CTF[] = "Color Transform Format";
 
 } // namespace OCIO_NAMESPACE
 

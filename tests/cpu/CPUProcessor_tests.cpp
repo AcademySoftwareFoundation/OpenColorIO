@@ -2106,9 +2106,9 @@ OCIO_ADD_TEST(CPUProcessor, optimizations)
     // by the ScanlineHelper class. To fully validate these paths a 'normal' image
     // must be used (i.e. 'few pixels' image is not enough).
 
-    constexpr const unsigned width     = 640;
-    constexpr const unsigned height    = 480;
-    constexpr const unsigned nChannels = 4;
+    constexpr unsigned width     = 640;
+    constexpr unsigned height    = 480;
+    constexpr unsigned nChannels = 4;
 
     // Input and Output are not packed RGBA i.e no optimizations.
     {

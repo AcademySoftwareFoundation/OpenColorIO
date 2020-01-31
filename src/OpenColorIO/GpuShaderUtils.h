@@ -89,7 +89,7 @@ public:
     std::string vec3fConst(double x, double y, double z) const;
     // Get the string for creating constant vector with three elements
     std::string vec3fConst(const std::string& x, const std::string& y,
-                            const std::string& z) const;
+                           const std::string& z) const;
     // Get the string for creating constant vector with three elements
     std::string vec3fConst(float v) const;
     std::string vec3fConst(double v) const;
@@ -100,12 +100,12 @@ public:
 
     // Declare and initialize a vector with three elements
     void declareVec3f(const std::string& name,
-                        float x, float y, float z);
+                      float x, float y, float z);
     void declareVec3f(const std::string& name,
-                        double x, double y, double z);
+                      double x, double y, double z);
     // Declare and initialize a vector with three elements
     void declareVec3f(const std::string& name,
-                        const std::string& x, const std::string& y, const std::string& z);
+                      const std::string& x, const std::string& y, const std::string& z);
 
     //
     // Vec4f helper functions
@@ -172,8 +172,9 @@ public:
     std::string lerp(const std::string& x, const std::string& y, 
                         const std::string& a) const;
 
-    // Get the string for creating a four-element 'greater than' comparison.
+    // Get the string for creating a three or four-elements 'greater than' comparison
     //    Each element i in the resulting vector is 1 if a>b, or 0 otherwise.
+    std::string vec3fGreaterThan(const std::string& a, const std::string& b) const;
     std::string vec4fGreaterThan(const std::string& a, const std::string& b) const;
 
     // Get the string for taking the four-quadrant arctangent 

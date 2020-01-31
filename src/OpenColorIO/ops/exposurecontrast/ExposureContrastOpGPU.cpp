@@ -14,9 +14,9 @@ namespace OCIO_NAMESPACE
 namespace
 {
 
-static constexpr const char * EC_EXPOSURE = "exposureVal";
-static constexpr const char * EC_CONTRAST = "contrastVal";
-static constexpr const char * EC_GAMMA = "gammaVal";
+static constexpr char EC_EXPOSURE[] = "exposureVal";
+static constexpr char EC_CONTRAST[] = "contrastVal";
+static constexpr char EC_GAMMA[]    = "gammaVal";
 
 void AddUniform(GpuShaderDescRcPtr & shaderDesc,
                 GpuShaderText & st,
