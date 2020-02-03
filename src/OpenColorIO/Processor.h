@@ -72,14 +72,14 @@ public:
     // Builder functions, Not exposed
 
     void setColorSpaceConversion(const Config & config,
-                                    const ConstContextRcPtr & context,
-                                    const ConstColorSpaceRcPtr & srcColorSpace,
-                                    const ConstColorSpaceRcPtr & dstColorSpace);
+                                 const ConstContextRcPtr & context,
+                                 const ConstColorSpaceRcPtr & srcColorSpace,
+                                 const ConstColorSpaceRcPtr & dstColorSpace);
 
     void setTransform(const Config & config,
-                        const ConstContextRcPtr & context,
-                        const ConstTransformRcPtr& transform,
-                        TransformDirection direction);
+                      const ConstContextRcPtr & context,
+                      const ConstTransformRcPtr& transform,
+                      TransformDirection direction);
 
     void computeMetadata();
 };

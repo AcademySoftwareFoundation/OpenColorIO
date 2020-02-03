@@ -1368,12 +1368,10 @@ public:
     //!cpp:function::
     bool hasChannelCrosstalk() const;
 
-    //!cpp:function:: The returned pointer may be used to set the value of any
-    //                dynamic properties of the requested type.  Throws if the
-    //                requested property is not found.  Note that if the
-    //                processor contains several ops that support the
-    //                requested property, only ones for which dynamic has
-    //                been enabled will be controlled.
+    //!cpp:function:: The returned pointer may be used to set the value of any dynamic properties
+    // of the requested type.  Throws if the requested property is not found.  Note that if the
+    // processor contains several ops that support the requested property, only ones for which
+    // dynamic has been enabled will be controlled.
     //
     // .. note::
     //    The dynamic properties in this object are decoupled from the ones
@@ -1381,8 +1379,11 @@ public:
     //
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
 
-    //!cpp:function:: Extract the shader information to implement the color processing.
+    //!cpp:function:: Extract & Store the shader information to implement the color processing.
     void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
+
+    //!cpp:function:: Extract the shader information using a custom :cpp:class:`GpuShaderCreator` class.
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const;
 
 private:
     GPUProcessor();
@@ -1448,7 +1449,7 @@ private:
 //!rst::
 // Baker
 // *****
-// 
+//
 // In certain situations it is necessary to serialize transforms into a variety
 // of application specific LUT formats. Note that not all file formats that may
 // be read also support baking.
@@ -1818,6 +1819,185 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////
 //!rst::
+// GpuShaderCreator
+// *************
+// Inherit from the class to fully customize the implementation of a GPU shader program
+// from a color transformation.
+//
+// When no customizations are needed then the :cpp:class:`GpuShaderDesc` is a better choice.
+//
+//!cpp:class::
+class OCIOEXPORT GpuShaderCreator
+{
+public:
+
+    //!cpp:function::
+    virtual GpuShaderCreatorRcPtr clone() const = 0;
+
+    //!cpp:function::
+    const char * getUniqueID() const noexcept;
+    //!cpp:function::
+    void setUniqueID(const char * uid) noexcept;
+
+    //!cpp:function::
+    GpuLanguage getLanguage() const noexcept;
+    //!cpp:function:: Set the shader program language.
+    void setLanguage(GpuLanguage lang) noexcept;
+
+    //!cpp:function::
+    const char * getFunctionName() const noexcept;
+    //!cpp:function:: Set the function name of the shader program.
+    void setFunctionName(const char * name) noexcept;
+
+    //!cpp:function::
+    const char * getPixelName() const noexcept;
+    //!cpp:function:: Set the pixel name variable holding the color values.
+    void setPixelName(const char * name) noexcept;
+
+    //!cpp:function::
+    //
+    // .. note::
+    //   Some applications require that textures, uniforms,
+    //   and helper methods be uniquely named because several
+    //   processor instances could coexist.
+    //
+    const char * getResourcePrefix() const noexcept;
+    //!cpp:function::  Set a prefix to the resource name
+    void setResourcePrefix(const char * prefix) noexcept;
+
+    //!cpp:function::
+    virtual const char * getCacheID() const noexcept;
+
+    //!cpp:function:: Start to collect the shader data.
+    virtual void begin(const char * uid);
+    //!cpp:function:: End to collect the shader data.
+    virtual void end();
+
+    //!cpp:function:: Some graphic cards could have 1D & 2D textures with size limitations.
+    virtual void setTextureMaxWidth(unsigned maxWidth) = 0;
+    //!cpp:function::
+    virtual unsigned getTextureMaxWidth() const noexcept = 0;
+
+    //!cpp:function:: To avoid texture/unform name clashes always append
+    // an increasing number to the resource name.
+    unsigned getNextResourceIndex() noexcept;
+
+    //!cpp:function::
+    virtual bool addUniform(const char * name,
+                            const DynamicPropertyRcPtr & value) = 0;
+
+    enum TextureType
+    {
+        TEXTURE_RED_CHANNEL, // Only use the red channel of the texture
+        TEXTURE_RGB_CHANNEL
+    };
+
+    //!cpp:function::
+    virtual void addTexture(const char * textureName,
+                            const char * samplerName,
+                            const char * uid,
+                            unsigned width, unsigned height,
+                            TextureType channel,
+                            Interpolation interpolation,
+                            const float * values) = 0;
+
+    //!cpp:function::
+    virtual void add3DTexture(const char * textureName,
+                              const char * samplerName,
+                              const char * uid,
+                              unsigned edgelen,
+                              Interpolation interpolation,
+                              const float * values) = 0;
+
+    //!rst:: Methods to specialize parts of a OCIO shader program.
+    //
+    // **An OCIO shader program could contain:**
+    //
+    // 1. A declaration part  e.g., uniform sampled3D tex3;
+    //
+    // 2. Some helper methods
+    //
+    // 3. The OCIO shader function may be broken down as:
+    //
+    //    1. The function header  e.g., void OCIODisplay(in vec4 inColor) {
+    //    2. The function body    e.g.,   vec4 outColor.rgb = texture3D(tex3, inColor.rgb).rgb;
+    //    3. The function footer  e.g.,   return outColor; }
+    //
+    //
+    // **Usage Example:**
+    //
+    // Below is a code snippet to highlight the different parts of the OCIO shader program.
+    //
+    // .. code-block:: cpp
+    //
+    //    // All global declarations
+    //    uniform sampled3D tex3;
+    //
+    //    // All helper methods
+    //    vec3 computePosition(vec3 color)
+    //    {
+    //       vec3 coords = color;
+    //       // Some processing...
+    //       return coords;
+    //    }
+    //
+    //    // The shader function
+    //    vec4 OCIODisplay(in vec4 inColor)     //
+    //    {                                     // Function Header
+    //       vec4 outColor = inColor;           //
+    //
+    //       outColor.rgb = texture3D(tex3, computePosition(inColor.rgb)).rgb;
+    //
+    //       return outColor;                   // Function Footer
+    //    }                                     //
+    //
+    //!cpp:function::
+    virtual void addToDeclareShaderCode(const char * shaderCode);
+    //!cpp:function::
+    virtual void addToHelperShaderCode(const char * shaderCode);
+    //!cpp:function::
+    virtual void addToFunctionHeaderShaderCode(const char * shaderCode);
+    //!cpp:function::
+    virtual void addToFunctionShaderCode(const char * shaderCode);
+    //!cpp:function::
+    virtual void addToFunctionFooterShaderCode(const char * shaderCode);
+
+    //!cpp:function:: Create the OCIO shader program
+    //
+    // .. note::
+    //
+    //   The OCIO shader program is decomposed to allow a specific implementation
+    //   to change some parts. Some product integrations add the color processing
+    //   within a client shader program, imposing constraints requiring this flexibility.
+    //
+    virtual void createShaderText(const char * shaderDeclarations,
+                                  const char * shaderHelperMethods,
+                                  const char * shaderFunctionHeader,
+                                  const char * shaderFunctionBody,
+                                  const char * shaderFunctionFooter);
+
+    //!cpp:function::
+    virtual void finalize();
+
+protected:
+    //!cpp:function::
+    GpuShaderCreator();
+    //!cpp:function::
+    virtual ~GpuShaderCreator();
+    //!cpp:function::
+    GpuShaderCreator(const GpuShaderCreator &) = delete;
+    //!cpp:function::
+    GpuShaderCreator & operator= (const GpuShaderCreator &) = delete;
+
+    class Impl;
+    friend class Impl;
+    Impl * m_impl;
+    Impl * getImpl() { return m_impl; }
+    const Impl * getImpl() const { return m_impl; }
+};
+
+///////////////////////////////////////////////////////////////////////////
+//!rst::
 // GpuShaderDesc
 // *************
 // This class holds the GPU-related information needed to build a shader program
@@ -1974,164 +2154,58 @@ private:
 //
 
 //!cpp:class::
-class OCIOEXPORT GpuShaderDesc
+class OCIOEXPORT GpuShaderDesc : public GpuShaderCreator
 {
 public:
 
-    //!cpp:function:: Create the legacy shader description
+    //!cpp:function:: Create the legacy shader description.
     static GpuShaderDescRcPtr CreateLegacyShaderDesc(unsigned edgelen);
 
-    //!cpp:function:: Create the default shader description
+    //!cpp:function:: Create the default shader description.
     static GpuShaderDescRcPtr CreateShaderDesc();
 
-    //!cpp:function:: Set the shader program language
-    void setLanguage(GpuLanguage lang);
     //!cpp:function::
-    GpuLanguage getLanguage() const;
-
-    //!cpp:function:: Set the function name of the shader program
-    void setFunctionName(const char * name);
-    //!cpp:function::
-    const char * getFunctionName() const;
-
-    //!cpp:function:: Set the pixel name variable holding the color values
-    void setPixelName(const char * name);
-    //!cpp:function::
-    const char * getPixelName() const;
-
-    //!cpp:function::  Set a prefix to the resource name
-    //
-    // .. note::
-    //   Some applications require that textures, uniforms,
-    //   and helper methods be uniquely named because several
-    //   processor instances could coexist.
-    //
-    void setResourcePrefix(const char * prefix);
-    //!cpp:function::
-    const char * getResourcePrefix() const;
-
-    //!cpp:function::
-    virtual const char * getCacheID() const;
-
-public:
-
-    enum TextureType
-    {
-        TEXTURE_RED_CHANNEL, // Only use the red channel of the texture
-        TEXTURE_RGB_CHANNEL
-    };
+    GpuShaderCreatorRcPtr clone() const override;
 
     //!cpp:function:: Dynamic Property related methods.
-    virtual unsigned getNumUniforms() const = 0;
+    virtual unsigned getNumUniforms() const noexcept = 0;
     virtual void getUniform(unsigned index, const char *& name,
                             DynamicPropertyRcPtr & value) const = 0;
-    virtual bool addUniform(const char * name,
-                            const DynamicPropertyRcPtr & value) = 0;
 
     //!cpp:function:: 1D lut related methods
-    virtual unsigned getTextureMaxWidth() const = 0;
-    virtual void setTextureMaxWidth(unsigned maxWidth) = 0;
-    virtual unsigned getNumTextures() const = 0;
-    virtual void addTexture(const char * name, const char * id,
-                            unsigned width, unsigned height,
-                            TextureType channel, Interpolation interpolation,
-                            const float * values) = 0;
-    virtual void getTexture(unsigned index, const char *& name, const char *& id,
-                            unsigned & width, unsigned & height,
-                            TextureType & channel, Interpolation & interpolation) const = 0;
+    virtual unsigned getNumTextures() const noexcept = 0;
+    virtual void getTexture(unsigned index,
+                            const char *& textureName,
+                            const char *& samplerName,
+                            const char *& uid,
+                            unsigned & width,
+                            unsigned & height,
+                            TextureType & channel,
+                            Interpolation & interpolation) const = 0;
     virtual void getTextureValues(unsigned index, const float *& values) const = 0;
 
     //!cpp:function:: 3D lut related methods
-    virtual unsigned getNum3DTextures() const = 0;
-    virtual void add3DTexture(const char * name, const char * id, unsigned edgelen,
-                                Interpolation interpolation, const float * values) = 0;
-    virtual void get3DTexture(unsigned index, const char *& name, const char *& id,
-                                unsigned & edgelen, Interpolation & interpolation) const = 0;
+    virtual unsigned getNum3DTextures() const noexcept = 0;
+    virtual void get3DTexture(unsigned index,
+                              const char *& textureName,
+                              const char *& samplerName,
+                              const char *& uid,
+                              unsigned & edgelen,
+                              Interpolation & interpolation) const = 0;
     virtual void get3DTextureValues(unsigned index, const float *& values) const = 0;
 
-    //!cpp:function:: Methods to specialize parts of a OCIO shader program
-    //
-    // **An OCIO shader program could contain:**
-    //
-    // 1. A declaration part  e.g., uniform sampled3D tex3;
-    //
-    // 2. Some helper methods
-    //
-    // 3. The OCIO shader function may be broken down as:
-    //
-    //    1. The function header  e.g., void OCIODisplay(in vec4 inColor) {
-    //    2. The function body    e.g.,   vec4 outColor.rgb = texture3D(tex3, inColor.rgb).rgb;
-    //    3. The function footer  e.g.,   return outColor; }
-    //
-    //
-    // **Usage Example:**
-    //
-    // Below is a code snippet to highlight the different parts of the OCIO shader program.
-    //
-    // .. code-block:: cpp
-    //
-    //    // All global declarations
-    //    uniform sampled3D tex3;
-    //
-    //    // All helper methods
-    //    vec3 computePosition(vec3 color)
-    //    {
-    //       vec3 coords = color;
-    //       // Some processing...
-    //       return coords;
-    //    }
-    //
-    //    // The shader function
-    //    vec4 OCIODisplay(in vec4 inColor)     //
-    //    {                                     // Function Header
-    //       vec4 outColor = inColor;           //
-    //
-    //       outColor.rgb = texture3D(tex3, computePosition(inColor.rgb)).rgb;
-    //
-    //       return outColor;                   // Function Footer
-    //    }                                     //
-    //
-    virtual void addToDeclareShaderCode(const char * shaderCode) = 0;
-    virtual void addToHelperShaderCode(const char * shaderCode) = 0;
-    virtual void addToFunctionHeaderShaderCode(const char * shaderCode) = 0;
-    virtual void addToFunctionShaderCode(const char * shaderCode) = 0;
-    virtual void addToFunctionFooterShaderCode(const char * shaderCode) = 0;
-
-    //!cpp:function:: Create the OCIO shader program
-    //
-    // .. note::
-    //
-    //   The OCIO shader program is decomposed to allow a specific implementation
-    //   to change some parts. Some product integrations add the color processing
-    //   within a client shader program, imposing constraints requiring this flexibility.
-    //
-    virtual void createShaderText(
-        const char * shaderDeclarations, const char * shaderHelperMethods,
-        const char * shaderFunctionHeader, const char * shaderFunctionBody,
-        const char * shaderFunctionFooter) = 0;
-
-    //!cpp:function:: Get the complete OCIO shader program
-    virtual const char * getShaderText() const = 0;
-
-    //!cpp:function::
-    virtual void finalize() = 0;
+    //!cpp:function:: Get the complete OCIO shader program.
+    const char * getShaderText() const noexcept;
 
 protected:
     //!cpp:function::
     GpuShaderDesc();
     //!cpp:function::
     virtual ~GpuShaderDesc();
-
-private:
-
-    GpuShaderDesc(const GpuShaderDesc &);
-    GpuShaderDesc& operator= (const GpuShaderDesc &);
-
-    class Impl;
-    friend class Impl;
-    Impl * m_impl;
-    Impl * getImpl() { return m_impl; }
-    const Impl * getImpl() const { return m_impl; }
+    //!cpp:function::
+    GpuShaderDesc(const GpuShaderDesc &) = delete;
+    //!cpp:function::
+    GpuShaderDesc& operator= (const GpuShaderDesc &) = delete;
 };
 
 

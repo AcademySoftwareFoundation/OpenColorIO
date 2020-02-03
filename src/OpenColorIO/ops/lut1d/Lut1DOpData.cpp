@@ -140,7 +140,7 @@ bool Lut1DOpData::Lut3by1DArray::isIdentity(HalfFlags halfFlags) const
         //
         // Note: LUTs that are approximately identity transforms and
         // contain a wide range of float values should use the
-        // half-domain representation.  The contents of most LUTs using 
+        // half-domain representation.  The contents of most LUTs using
         // this branch will hence either not be close to an identity anyway
         // or will be in units that are roughly perceptually uniform and hence
         // it is more appropriate to use an absolute error based on the
@@ -351,7 +351,7 @@ void Lut1DOpData::validate() const
 
 unsigned long Lut1DOpData::GetLutIdealSize(BitDepth incomingBitDepth)
 {
-    // Return the number of entries needed in order to do a lookup 
+    // Return the number of entries needed in order to do a lookup
     // for the specified bit-depth.
 
     // For 32f, a look-up is impractical so in that case return 64k.
@@ -557,11 +557,16 @@ void Lut1DOpData::finalize()
     md5_finish(&state, digest);
 
     std::ostringstream cacheIDStream;
-    cacheIDStream << GetPrintableHash(digest) << " ";
-    cacheIDStream << TransformDirectionToString(m_direction) << " ";
-    cacheIDStream << InterpolationToString(m_interpolation) << " ";
-    cacheIDStream << (isInputHalfDomain()?"half domain ":"standard domain ");
+    if (!getID().empty())
+    {
+        cacheIDStream << getID() << " ";
+    }
+    cacheIDStream << GetPrintableHash(digest)                                  << " ";
+    cacheIDStream << TransformDirectionToString(m_direction)                   << " ";
+    cacheIDStream << InterpolationToString(m_interpolation)                    << " ";
+    cacheIDStream << (isInputHalfDomain() ? "half domain" : "standard domain") << " ";
     cacheIDStream << GetHueAdjustName(m_hueAdjust);
+
     // NB: The m_invQuality is not currently included.
 
     m_cacheID = cacheIDStream.str();
@@ -593,7 +598,7 @@ void Lut1DOpData::finalize()
 //
 // Note3:  We do not attempt to propagate hueAdjust or bypass states.
 //         These must be taken care of by the caller.
-// 
+//
 // A is used as in/out parameter. As input is it the first LUT in the composition,
 // as output it is the result of the composition.
 void Lut1DOpData::ComposeVec(Lut1DOpDataRcPtr & A, OpRcPtrVec & B)
@@ -702,7 +707,7 @@ void Lut1DOpData::Compose(Lut1DOpDataRcPtr & A,
     // TODO:  May want to revisit metadata propagation.
     A->getFormatMetadata().combine(B->getFormatMetadata());
 
-    // See note above: Taking these from B since the common use case is for B to be 
+    // See note above: Taking these from B since the common use case is for B to be
     // the original LUT and A to be a new domain (e.g. used in LUT1D renderers).
     // TODO: Adjust domain in Lut1D renderer to be one channel.
     A->setHueAdjust(B->getHueAdjust());
@@ -819,7 +824,7 @@ bool Lut1DOpData::hasExtendedRange() const
     return false;
 }
 
-// NB: The half domain includes pos/neg infinity and NaNs.  
+// NB: The half domain includes pos/neg infinity and NaNs.
 // The prepareArray makes the LUT monotonic to ensure a unique inverse and
 // determines an effective domain to handle flat spots at the ends nicely.
 // It's not clear how the NaN part of the domain should be included in the

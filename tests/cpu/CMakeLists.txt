@@ -48,7 +48,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 				XML_STATIC
 		)
 	endif(WIN32)
-	set_target_properties(${TEST_BINARY} PROPERTIES 
+	set_target_properties(${TEST_BINARY} PROPERTIES
 		COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
 
 	add_test(${TEST_NAME} ${TEST_BINARY})
@@ -75,11 +75,14 @@ set(SOURCES
 	md5/md5.cpp
 	OCIOYaml.cpp
 	ops/cdl/CDLOpCPU.cpp
+	ops/cdl/CDLOpGPU.cpp
 	ops/exposurecontrast/ExposureContrastOpGPU.cpp
 	ops/fixedfunction/FixedFunctionOpGPU.cpp
 	ops/gamma/GammaOpCPU.cpp
+	ops/gamma/GammaOpGPU.cpp
 	ops/log/LogOpGPU.cpp
 	ops/lut3d/Lut3DOpGPU.cpp
+	ops/matrix/MatrixOpGPU.cpp
 	ops/OpTools.cpp
 	ops/range/RangeOpGPU.cpp
 	ScanlineHelper.cpp

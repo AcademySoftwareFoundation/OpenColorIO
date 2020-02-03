@@ -272,18 +272,22 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
     {
         // 1. Get the information of the 3D LUT.
 
-        const char* name = 0x0;
-        const char* uid  = 0x0;
+        const char * textureName = nullptr;
+        const char * samplerName = nullptr;
+        const char * uid         = nullptr;
         unsigned edgelen = 0;
         Interpolation interpolation = INTERP_LINEAR;
-        m_shaderDesc->get3DTexture(idx, name, uid, edgelen, interpolation);
+        m_shaderDesc->get3DTexture(idx, textureName, samplerName, uid, edgelen, interpolation);
 
-        if(!name || !*name || !uid || !*uid || edgelen==0)
+        if(!textureName || !*textureName
+            || !samplerName || !*samplerName
+            || !uid || !*uid
+            || edgelen==0)
         {
             throw Exception("The texture data is corrupted");
         }
 
-        const float* values = 0x0;
+        const float * values = nullptr;
         m_shaderDesc->get3DTextureValues(idx, values);
         if(!values)
         {
@@ -297,7 +301,7 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
 
         // 3. Keep the texture id & name for the later enabling.
 
-        m_textureIds.push_back(TextureId(texId, name, GL_TEXTURE_3D));
+        m_textureIds.push_back(TextureId(texId, textureName, samplerName, GL_TEXTURE_3D));
 
         currIndex++;
     }
@@ -309,15 +313,19 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
     {
         // 1. Get the information of the 1D LUT.
 
-        const char* name = 0x0;
-        const char* uid  = 0x0;
+        const char * textureName = nullptr;
+        const char * samplerName = nullptr;
+        const char * uid         = nullptr;
         unsigned width = 0;
         unsigned height = 0;
         GpuShaderDesc::TextureType channel = GpuShaderDesc::TEXTURE_RGB_CHANNEL;
         Interpolation interpolation = INTERP_LINEAR;
-        m_shaderDesc->getTexture(idx, name, uid, width, height, channel, interpolation);
+        m_shaderDesc->getTexture(idx, textureName, samplerName, uid, width, height, channel, interpolation);
 
-        if(!name || !*name || !uid || !*uid || width==0)
+        if (!textureName || !*textureName
+            || !samplerName || !*samplerName
+            || !uid || !*uid
+            || width==0)
         {
             throw Exception("The texture data is corrupted");
         }
@@ -337,7 +345,7 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
         // 3. Keep the texture id & name for the later enabling.
 
         unsigned type = (height > 1) ? GL_TEXTURE_2D : GL_TEXTURE_1D;
-        m_textureIds.push_back(TextureId(texId, name, type));
+        m_textureIds.push_back(TextureId(texId, textureName, samplerName, type));
         currIndex++;
     }
 }
@@ -345,10 +353,10 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
 void OpenGLBuilder::deleteAllTextures()
 {
     const size_t max = m_textureIds.size();
-    for(size_t idx=0; idx<max; ++idx)
+    for (size_t idx=0; idx<max; ++idx)
     {
-        const TextureId& data = m_textureIds[idx];
-        glDeleteTextures(1, &data.m_id);
+        const TextureId & data = m_textureIds[idx];
+        glDeleteTextures(1, &data.m_uid);
     }
 
     m_textureIds.clear();
@@ -357,14 +365,14 @@ void OpenGLBuilder::deleteAllTextures()
 void OpenGLBuilder::useAllTextures()
 {
     const size_t max = m_textureIds.size();
-    for(size_t idx=0; idx<max; ++idx)
+    for (size_t idx=0; idx<max; ++idx)
     {
         const TextureId& data = m_textureIds[idx];
         glActiveTexture((GLenum)(GL_TEXTURE0 + m_startIndex + idx));
-        glBindTexture(data.m_type, data.m_id);
+        glBindTexture(data.m_type, data.m_uid);
         glUniform1i(
-            glGetUniformLocation(m_program, 
-                                 data.m_name.c_str()), 
+            glGetUniformLocation(m_program,
+                                 data.m_samplerName.c_str()),
                                  GLint(m_startIndex + idx) );
     }
 }
