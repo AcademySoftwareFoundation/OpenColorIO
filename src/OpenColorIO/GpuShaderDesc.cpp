@@ -61,11 +61,11 @@ public:
             m_numResources   = rhs.m_numResources;
             m_cacheID        = rhs.m_cacheID;
 
-            m_declarations   = m_declarations;
-            m_helperMethods  = m_helperMethods;
-            m_functionHeader = m_functionHeader;
-            m_functionBody   = m_functionBody;
-            m_functionFooter = m_functionFooter;
+            m_declarations   = rhs.m_declarations;
+            m_helperMethods  = rhs.m_helperMethods;
+            m_functionHeader = rhs.m_functionHeader;
+            m_functionBody   = rhs.m_functionBody;
+            m_functionFooter = rhs.m_functionFooter;
 
             m_shaderCode.clear();
             m_shaderCodeID.clear();
