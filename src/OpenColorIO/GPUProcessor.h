@@ -29,6 +29,7 @@ public:
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
 
     void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const;
 
     ////////////////////////////////////////////
     //

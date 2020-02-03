@@ -40,7 +40,7 @@ constexpr const char * LUV_TO_XYZ_STR          = "LUV_TO_XYZ";
 
 // NOTE: Converts the enumeration value to its string representation (i.e. CLF reader).
 //       It could add details for error reporting.
-//          
+//
 // Convert internal OpData style enum to CTF attribute string.  Set 'detailed' to true to get
 // a more verbose human readable string
 const char * FixedFunctionOpData::ConvertStyleToString(Style style, bool detailed)
@@ -65,14 +65,14 @@ const char * FixedFunctionOpData::ConvertStyleToString(Style style, bool detaile
             return detailed ? "ACES_Glow10 (Inverse)"      : ACES_GLOW_10_REV_STR;
         case ACES_DARK_TO_DIM_10_FWD:
             return detailed ? "ACES_DarkToDim10 (Forward)" : ACES_DARK_TO_DIM_10_STR;
-        case ACES_DARK_TO_DIM_10_INV: 
+        case ACES_DARK_TO_DIM_10_INV:
             return detailed ? "ACES_DarkToDim10 (Inverse)" : ACES_DIM_TO_DARK_10_STR;
         case REC2100_SURROUND_FWD:
         case REC2100_SURROUND_INV:
             return detailed ? "REC2100_Surround"           : REC_2100_SURROUND_STR;
         case RGB_TO_HSV:
             return RGB_TO_HSV_STR;
-        case HSV_TO_RGB: 
+        case HSV_TO_RGB:
             return HSV_TO_RGB_STR;
         case XYZ_TO_xyY:
             return XYZ_TO_xyY_STR;
@@ -337,8 +337,8 @@ void FixedFunctionOpData::validate() const
         if (m_params.size() != 1)
         {
             std::stringstream ss;
-            ss  << "The style '" << ConvertStyleToString(m_style, true) 
-                << "' must have one parameter but " 
+            ss  << "The style '" << ConvertStyleToString(m_style, true)
+                << "' must have one parameter but "
                 << m_params.size() << " found.";
             throw Exception(ss.str().c_str());
         }
@@ -365,8 +365,8 @@ void FixedFunctionOpData::validate() const
         if(m_params.size()!=0)
         {
             std::stringstream ss;
-            ss  << "The style '" << ConvertStyleToString(m_style, true) 
-                << "' must have zero parameters but " 
+            ss  << "The style '" << ConvertStyleToString(m_style, true)
+                << "' must have zero parameters but "
                 << m_params.size() << " found.";
             throw Exception(ss.str().c_str());
         }
@@ -571,13 +571,19 @@ void FixedFunctionOpData::finalize()
     validate();
 
     std::ostringstream cacheIDStream;
-    cacheIDStream << getID();
+    if (!getID().empty())
+    {
+        cacheIDStream << getID() << " ";
+    }
 
     cacheIDStream.precision(DefaultValues::FLOAT_DECIMALS);
 
-    cacheIDStream << ConvertStyleToString(m_style, true) << " ";
+    cacheIDStream << ConvertStyleToString(m_style, true);
 
-    for( auto param: m_params ) cacheIDStream << param << " ";
+    for (const auto & param : m_params)
+    {
+        cacheIDStream << " " << param;
+    }
 
     m_cacheID = cacheIDStream.str();
 }
