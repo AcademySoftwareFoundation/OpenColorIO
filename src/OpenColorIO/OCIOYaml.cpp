@@ -14,6 +14,7 @@
 #include "pystring/pystring.h"
 #include "PathUtils.h"
 #include "ParseUtils.h"
+#include "Platform.h"
 #include "OCIOYaml.h"
 #include "ops/log/LogUtils.h"
 
@@ -2048,7 +2049,7 @@ inline void load(const YAML::Node & node, FileRulesRcPtr & fr, bool & defaultRul
     try
     {
         const auto pos = fr->getNumEntries() - 1;
-        if (name == FileRuleUtils::DefaultName)
+        if (0==Platform::Strcasecmp(name.c_str(), FileRuleUtils::DefaultName))
         {
             if (!regex.empty() || !pattern.empty() || !extension.empty())
             {

@@ -589,6 +589,8 @@ public:
     ConstFileRulesRcPtr getFileRules() const noexcept;
 
     //!cpp:function:: Set file rules.
+    // .. note::
+    //    The argument is cloned.
     void setFileRules(ConstFileRulesRcPtr fileRules);
 
     ///////////////////////////////////////////////////////////////////////////
@@ -652,11 +654,12 @@ private:
 
 extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
 
+
 //!cpp:class:: The File Rules are a set of filepath to color space mappings that are evaluated
 // from first to last. The first rule to match is what determines which color space is
 // returned. There are four types of rules available. Each rule type has a name key that may
-// be used by applications to refer to that rule. Name values must be unique. The other keys
-// depend on the rule type:
+// be used by applications to refer to that rule. Name values must be unique i.e. using a
+// case insensitive comparison. The other keys depend on the rule type:
 //
 // - Basic Rule: This is the basic rule type that uses Unix glob style pattern matching and
 // is thus very easy to use. It contains the keys:
@@ -703,11 +706,14 @@ public:
     // using the default role. The default rule can not be removed.
     static FileRulesRcPtr Create();
 
-    //!cpp:function::
+    //!cpp:function:: The method clones the content decoupling the two instances.
     FileRulesRcPtr createEditableCopy() const;
 
     //!cpp:function:: Does include default rule. Result will be at least 1.
     size_t getNumEntries() const noexcept;
+
+    //!cpp:function:: Get the index from the rule name.
+    size_t getIndexForRule(const char * ruleName) const;
 
     //!cpp:function:: Get name of the rule.
     const char * getName(size_t ruleIndex) const;
@@ -794,8 +800,8 @@ private:
     FileRules();
     virtual ~FileRules();
 
-    FileRules(const FileRules &);
-    FileRules & operator= (const FileRules &);
+    FileRules(const FileRules &) = delete;
+    FileRules & operator= (const FileRules &) = delete;
 
     static void deleter(FileRules* c);
 

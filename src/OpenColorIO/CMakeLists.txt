@@ -149,6 +149,7 @@ target_link_libraries(OpenColorIO
 		ilmbase::ilmbase
 		pystring::pystring
 		sampleicc::sampleicc
+		utils::strings
 		yamlcpp::yamlcpp
 )
 

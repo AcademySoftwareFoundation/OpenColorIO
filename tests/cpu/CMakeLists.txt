@@ -25,6 +25,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 			pystring::pystring
 			sampleicc::sampleicc
 			unittest_data
+			utils::strings
 			yamlcpp::yamlcpp
 	)
 	if(PRIVATE_INCLUDES)
