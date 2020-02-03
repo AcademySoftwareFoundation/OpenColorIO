@@ -634,6 +634,25 @@ public:
                                         const ConstTransformRcPtr& transform,
                                         TransformDirection direction) const;
 
+    //!rst: Get a processor to convert between color spaces in two separate configs.
+    //
+    // This relies on both configs having the aces_interchange role defined.
+    // An exception is thrown if that is not the case.
+
+    //!cpp:function::
+    static ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & srcConfig,
+                                            const char * srcName,
+                                            const ConstConfigRcPtr & dstConfig,
+                                            const char * dstName);
+
+    //!cpp:function::
+    static ConstProcessorRcPtr GetProcessor(const ConstContextRcPtr & srcContext, 
+                                            const ConstConfigRcPtr & srcConfig,
+                                            const char * srcName,
+                                            const ConstContextRcPtr & dstContext,
+                                            const ConstConfigRcPtr & dstConfig,
+                                            const char * dstName);
+
 private:
     Config();
     ~Config();

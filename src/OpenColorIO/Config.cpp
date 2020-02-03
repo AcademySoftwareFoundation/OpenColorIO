@@ -1668,7 +1668,7 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
     if(!src)
     {
         std::ostringstream os;
-        os << "Could not find color space '" << srcName << "'.";
+        os << "Could not find source color space '" << srcName << "'.";
         throw Exception(os.str().c_str());
     }
 
@@ -1676,7 +1676,7 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
     if(!dst)
     {
         std::ostringstream os;
-        os << "Could not find color space '" << dstName << "'.";
+        os << "Could not find destination color space '" << dstName << "'.";
         throw Exception(os.str().c_str());
     }
 
@@ -1702,6 +1702,72 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
     ProcessorRcPtr processor = Processor::Create();
     processor->getImpl()->setTransform(*this, context, transform, direction);
     processor->getImpl()->computeMetadata();
+    return processor;
+}
+
+ConstProcessorRcPtr Config::GetProcessor(const ConstConfigRcPtr & srcConfig,
+                                         const char * srcName,
+                                         const ConstConfigRcPtr & dstConfig,
+                                         const char * dstName)
+{
+    return GetProcessor(srcConfig->getCurrentContext(), srcConfig, srcName,
+                        dstConfig->getCurrentContext(), dstConfig, dstName);
+}
+
+ConstProcessorRcPtr Config::GetProcessor(const ConstContextRcPtr & srcContext,
+                                         const ConstConfigRcPtr & srcConfig,
+                                         const char * srcName,
+                                         const ConstContextRcPtr & dstContext,
+                                         const ConstConfigRcPtr & dstConfig,
+                                         const char * dstName)
+{
+    ConstColorSpaceRcPtr srcColorSpace = srcConfig->getColorSpace(srcName);
+    if (!srcColorSpace)
+    {
+        std::ostringstream os;
+        os << "Could not find source color space '" << srcName << "'.";
+        throw Exception(os.str().c_str());
+    }
+
+    ConstColorSpaceRcPtr dstColorSpace = dstConfig->getColorSpace(dstName);
+    if (!dstColorSpace)
+    {
+        std::ostringstream os;
+        os << "Could not find destination color space '" << dstName << "'.";
+        throw Exception(os.str().c_str());
+    }
+
+    constexpr char name[]{ "aces_interchange" };
+    const char * srcExName = LookupRole(srcConfig->getImpl()->m_roles, name);
+    ConstColorSpaceRcPtr srcExCs = srcConfig->getImpl()->m_allColorSpaces->getColorSpace(srcExName);
+    if (!srcExCs)
+    {
+        throw Exception("The role 'aces_interchange' is missing in the source config.");
+    }
+
+    const char * dstExName = LookupRole(dstConfig->getImpl()->m_roles, name);
+    ConstColorSpaceRcPtr dstExCs = dstConfig->getImpl()->m_allColorSpaces->getColorSpace(dstExName);
+    if (!dstExCs)
+    {
+        throw Exception("The role 'aces_interchange' is missing in the destination config.");
+    }
+
+    auto p1 = srcConfig->getProcessor(srcContext, srcColorSpace, srcExCs);
+    if (!p1)
+    {
+        throw Exception("Can't create the processor for the source config and "
+                        "the source color space.");
+    }
+
+    auto p2 = dstConfig->getProcessor(dstContext, dstExCs, dstColorSpace);
+    if (!p1)
+    {
+        throw Exception("Can't create the processor for the destination config "
+                        "and the destination color space.");
+    }
+
+    ProcessorRcPtr processor = Processor::Create();
+    processor->getImpl()->concatenate(p1, p2);
     return processor;
 }
 

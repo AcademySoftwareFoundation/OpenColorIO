@@ -81,6 +81,8 @@ public:
                         const ConstTransformRcPtr& transform,
                         TransformDirection direction);
 
+    void concatenate(ConstProcessorRcPtr & p1, ConstProcessorRcPtr & p2);
+
     void computeMetadata();
 };
 
