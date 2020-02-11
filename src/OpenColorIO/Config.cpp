@@ -1721,11 +1721,72 @@ ConstProcessorRcPtr Config::GetProcessor(const ConstContextRcPtr & srcContext,
                                          const ConstConfigRcPtr & dstConfig,
                                          const char * dstName)
 {
+    constexpr char name[]{ "aces_interchange" };
+    const char * srcExName = LookupRole(srcConfig->getImpl()->m_roles, name);
+    if (!srcExName || !*srcExName)
+    {
+        throw Exception("The role 'aces_interchange' is missing in the source config.");
+    }
+    ConstColorSpaceRcPtr srcExCs = srcConfig->getImpl()->m_allColorSpaces->getColorSpace(srcExName);
+    if (!srcExCs)
+    {
+        std::ostringstream os;
+        os << "The role 'aces_interchange' refers to color space '" << srcExName;
+        os << "' that is missing in the source config.";
+        throw Exception(os.str().c_str());
+    }
+
+    const char * dstExName = LookupRole(dstConfig->getImpl()->m_roles, name);
+    if (!dstExName || !*dstExName)
+    {
+        throw Exception("The role 'aces_interchange' is missing in the destination config.");
+    }
+    ConstColorSpaceRcPtr dstExCs = dstConfig->getImpl()->m_allColorSpaces->getColorSpace(dstExName);
+    if (!dstExCs)
+    {
+        std::ostringstream os;
+        os << "The role 'aces_interchange' refers to color space '" << dstExName;
+        os << "' that is missing in the destination config.";
+        throw Exception(os.str().c_str());
+    }
+
+    return GetProcessor(srcContext, srcConfig, srcName, srcExName,
+                        dstContext, dstConfig, dstName, dstExName);
+}
+
+ConstProcessorRcPtr Config::GetProcessor(const ConstConfigRcPtr & srcConfig,
+                                         const char * srcName,
+                                         const char * srcInterchangeName,
+                                         const ConstConfigRcPtr & dstConfig,
+                                         const char * dstName,
+                                         const char * dstInterchangeName)
+{
+    return GetProcessor(srcConfig->getCurrentContext(), srcConfig, srcName, srcInterchangeName,
+                        dstConfig->getCurrentContext(), dstConfig, dstName, dstInterchangeName);
+}
+
+ConstProcessorRcPtr Config::GetProcessor(const ConstContextRcPtr & srcContext,
+                                         const ConstConfigRcPtr & srcConfig,
+                                         const char * srcName,
+                                         const char * srcInterchangeName,
+                                         const ConstContextRcPtr & dstContext,
+                                         const ConstConfigRcPtr & dstConfig,
+                                         const char * dstName,
+                                         const char * dstInterchangeName)
+{
     ConstColorSpaceRcPtr srcColorSpace = srcConfig->getColorSpace(srcName);
     if (!srcColorSpace)
     {
         std::ostringstream os;
         os << "Could not find source color space '" << srcName << "'.";
+        throw Exception(os.str().c_str());
+    }
+
+    ConstColorSpaceRcPtr srcExCs = srcConfig->getColorSpace(srcInterchangeName);
+    if (!srcExCs)
+    {
+        std::ostringstream os;
+        os << "Could not find source interchange color space '" << srcInterchangeName << "'.";
         throw Exception(os.str().c_str());
     }
 
@@ -1737,33 +1798,26 @@ ConstProcessorRcPtr Config::GetProcessor(const ConstContextRcPtr & srcContext,
         throw Exception(os.str().c_str());
     }
 
-    constexpr char name[]{ "aces_interchange" };
-    const char * srcExName = LookupRole(srcConfig->getImpl()->m_roles, name);
-    ConstColorSpaceRcPtr srcExCs = srcConfig->getImpl()->m_allColorSpaces->getColorSpace(srcExName);
-    if (!srcExCs)
-    {
-        throw Exception("The role 'aces_interchange' is missing in the source config.");
-    }
-
-    const char * dstExName = LookupRole(dstConfig->getImpl()->m_roles, name);
-    ConstColorSpaceRcPtr dstExCs = dstConfig->getImpl()->m_allColorSpaces->getColorSpace(dstExName);
+    ConstColorSpaceRcPtr dstExCs = dstConfig->getColorSpace(dstInterchangeName);
     if (!dstExCs)
     {
-        throw Exception("The role 'aces_interchange' is missing in the destination config.");
+        std::ostringstream os;
+        os << "Could not find destination interchange color space '" << dstInterchangeName << "'.";
+        throw Exception(os.str().c_str());
     }
 
     auto p1 = srcConfig->getProcessor(srcContext, srcColorSpace, srcExCs);
     if (!p1)
     {
         throw Exception("Can't create the processor for the source config and "
-                        "the source color space.");
+            "the source color space.");
     }
 
     auto p2 = dstConfig->getProcessor(dstContext, dstExCs, dstColorSpace);
     if (!p1)
     {
         throw Exception("Can't create the processor for the destination config "
-                        "and the destination color space.");
+            "and the destination color space.");
     }
 
     ProcessorRcPtr processor = Processor::Create();
