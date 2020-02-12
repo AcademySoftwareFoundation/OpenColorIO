@@ -634,6 +634,40 @@ public:
                                         const ConstTransformRcPtr& transform,
                                         TransformDirection direction) const;
 
+    //!rst: Get a processor to convert between color spaces in two separate configs.
+
+    //!cpp:function:: This relies on both configs having the aces_interchange role defined.
+    // An exception is thrown if that is not the case.
+    static ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & srcConfig,
+                                            const char * srcName,
+                                            const ConstConfigRcPtr & dstConfig,
+                                            const char * dstName);
+    //!cpp:function::
+    static ConstProcessorRcPtr GetProcessor(const ConstContextRcPtr & srcContext, 
+                                            const ConstConfigRcPtr & srcConfig,
+                                            const char * srcName,
+                                            const ConstContextRcPtr & dstContext,
+                                            const ConstConfigRcPtr & dstConfig,
+                                            const char * dstName);
+
+    //!cpp:function:: The srcInterchangeName and dstInterchangeName must refer to a pair of
+    // color spaces in the two configs that are the same.  A role name may also be used.
+    static ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & srcConfig,
+                                            const char * srcName,
+                                            const char * srcInterchangeName,
+                                            const ConstConfigRcPtr & dstConfig,
+                                            const char * dstName,
+                                            const char * dstInterchangeName);
+    //!cpp:function::
+    static ConstProcessorRcPtr GetProcessor(const ConstContextRcPtr & srcContext,
+                                            const ConstConfigRcPtr & srcConfig,
+                                            const char * srcName,
+                                            const char * srcInterchangeName,
+                                            const ConstContextRcPtr & dstContext,
+                                            const ConstConfigRcPtr & dstConfig,
+                                            const char * dstName,
+                                            const char * dstInterchangeName);
+
 private:
     Config();
     ~Config();
