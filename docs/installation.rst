@@ -413,7 +413,7 @@ Alternatively, if your workflow has different requirements, you can
 copy the function and modify it as required, or use it as reference to
 write your own, better viewer setup function!
 
-.. literalinclude:: viewer.py
+.. literalinclude:: /share/nuke/ocionuke/viewer.py
    :language: python
 
 

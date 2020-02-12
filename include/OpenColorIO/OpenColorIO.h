@@ -391,7 +391,7 @@ public:
     //    color space.
     // .. note::
     //    Adding a color space to a :cpp:class:`Config` does not affect any
-    //    :cpp:class:`ColorSpaceSet`s that have already been created.
+    //    :cpp:class:`ColorSpaceSet` sets that have already been created.
     void addColorSpace(const ConstColorSpaceRcPtr & cs);
 
     //!cpp:function:: Remove a color space from the configuration.
@@ -401,14 +401,14 @@ public:
     //    or used by an existing role.  Role name arguments are ignored.
     // .. note::
     //    Removing a color space to a :cpp:class:`Config` does not affect any
-    //    :cpp:class:`ColorSpaceSet`s that have already been created.
+    //    :cpp:class:`ColorSpaceSet` sets that have already been created.
     void removeColorSpace(const char * name);
 
     //!cpp:function:: Remove all the color spaces from the configuration.
     //
     // .. note::
     //    Removing color spaces from a :cpp:class:`Config` does not affect
-    //    any :cpp:class:`ColorSpaceSet`s that have already been created.
+    //    any :cpp:class:`ColorSpaceSet` sets that have already been created.
     void clearColorSpaces();
 
     //!cpp:function:: Given the specified string, get the longest,
@@ -428,7 +428,7 @@ public:
     //!cpp:function:: Set/get a list of inactive color space names.
     //
     // * The inactive spaces are color spaces that should not appear in application menus.
-    // * These color spaces will still work in :cpp:function:`getProcessor` calls.
+    // * These color spaces will still work in :cpp:func:`Config::getProcessor` calls.
     // * The argument is a comma-delimited string.  A null or empty string empties the list.
     // * The environment variable OCIO_INACTIVE_COLORSPACES may also be used to set the
     //   inactive color space list.
@@ -686,26 +686,38 @@ private:
 
 extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
 
-//!cpp:class:: The File Rules are a set of filepath to color space mappings that are evaluated
+///////////////////////////////////////////////////////////////////////////
+//!rst:: .. _filerules_section:
+//
+// FileRules
+// *********
+// The File Rules are a set of filepath to color space mappings that are evaluated
 // from first to last. The first rule to match is what determines which color space is
 // returned. There are four types of rules available. Each rule type has a name key that may
 // be used by applications to refer to that rule. Name values must be unique. The other keys
 // depend on the rule type:
 //
 // - Basic Rule: This is the basic rule type that uses Unix glob style pattern matching and
-// is thus very easy to use. It contains the keys:
+//   is thus very easy to use. It contains the keys:
+//
 //   * name: Name of the rule
+//
 //   * colorspace: Color space name to be returned.
+//
 //   * pattern: Glob pattern to be used for the main part of the name/path.
+//
 //   * extension: Glob pattern to be used for the file extension. Note that if glob tokens
 //     are not used, the extension will be used in a non-case-sensitive way by default.
-// 
+//
 // - Regex Rule: This is similar to the basic rule but allows additional capabilities for
 //   power-users. It contains the keys:
+//
 //   * name: Name of the rule
+//
 //   * colorspace: Color space name to be returned.
+//
 //   * regex: Regular expression to be evaluated.
-// 
+//
 // - OCIO v1 style Rule: This rule allows the use of the OCIO v1 style, where the string
 //   is searched for color space names from the config. This rule may occur 0 or 1 times
 //   in the list. The position in the list prioritizes it with respect to the other rules.
@@ -713,13 +725,16 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
 //   match and the next rule will be considered.
 //   See :cpp:func:`FileRules::insertPathSearchRule`.
 //   It has the key:
+//
 //   * name: Must be "ColorSpaceNamePathSearch".
-// 
+//
 // - Default Rule: The file_rules must always end with this rule. If no prior rules match,
 //   this rule specifies the color space applications will use.
 //   See :cpp:func:`FileRules::setDefaultRuleColorSpace`.
 //   It has the keys:
+//
 //   * name: must be "Default".
+//
 //   * colorspace : Color space name to be returned.
 //
 // Custom string keys and associated string values may be used to convey app or
@@ -730,6 +745,8 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
 // valid. If the rule at the specified position does not implement the requested property
 // getter will return NULL and setter will throw.
 //
+
+//!cpp:class::
 class FileRules
 {
 public:
@@ -780,9 +797,10 @@ public:
     // will be pushed to index: ruleIndex + 1.
     // Name must be unique.
     // - "Default" is a reserved name for the default rule. The default rule is automatically
-    //   added and can't be removed. (see :cpp:func:`FileRules::setDefaultRuleColorSpace`).
+    // added and can't be removed. (see :cpp:func:`FileRules::setDefaultRuleColorSpace`).
     // - "ColorSpaceNamePathSearch" is also a reserved name
-    //   (see :cpp:func:`FileRules::insertPathSearchRule`).
+    // (see :cpp:func:`FileRules::insertPathSearchRule`).
+    //
     // Will throw if ruleIndex is not less than :cpp:func:`FileRules::getNumEntries`.
     void insertRule(size_t ruleIndex, const char * name, const char * colorSpace,
                     const char * pattern, const char * extension);
@@ -1189,7 +1207,7 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Look&);
 //!rst::
 // Processor
 // *********
-// The *Processor* represents a specific color transformation which is 
+// The *Processor* represents a specific color transformation which is
 // the result of :cpp:func:`Config::getProcessor`.
 
 //!cpp:class::
@@ -1245,7 +1263,7 @@ public:
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
     bool hasDynamicProperty(DynamicPropertyType type) const;
 
-    //!cpp:function:: 
+    //!cpp:function::
     const char * getCacheID() const;
 
     //!cpp:function:: Create a :cpp:class:`Processor` that is an optimized version of this.
@@ -1410,11 +1428,9 @@ public:
     bool hasChannelCrosstalk() const;
 
     //!cpp:function:: The returned pointer may be used to set the value of any
-    //                dynamic properties of the requested type.  Throws if the
-    //                requested property is not found.  Note that if the
-    //                processor contains several ops that support the
-    //                requested property, only ones for which dynamic has
-    //                been enabled will be controlled.
+    // dynamic properties of the requested type.  Throws if the requested property is
+    // not found.  Note that if the processor contains several ops that support the
+    // requested property, only ones for which dynamic has been enabled will be controlled.
     //
     // .. note::
     //    The dynamic properties in this object are decoupled from the ones
@@ -1693,7 +1709,7 @@ public:
     // information.  Channels > 4 will be ignored.
     //
     // .. note::
-    // The methods assume the CPUProcessor bit-depth type for the data pointer.
+    //    The methods assume the CPUProcessor bit-depth type for the data pointer.
 
     //!cpp:function::
     //
@@ -1706,10 +1722,10 @@ public:
     //!cpp:function::
     //
     // .. note::
-    //    numChannels smust be 3 (RGB) or 4 (RGBA).
+    //    numChannels must be 3 (RGB) or 4 (RGBA).
     PackedImageDesc(void * data,
                     long width, long height,
-                    long numChannels,  // must be 3 (RGB) or 4 (RGBA)
+                    long numChannels,
                     BitDepth bitDepth,
                     ptrdiff_t chanStrideBytes,
                     ptrdiff_t xStrideBytes,
@@ -1798,7 +1814,7 @@ public:
     // Pass NULL for aData if no alpha exists (r/g/bData must not be NULL).
     //
     // .. note::
-    // The methods assume the CPUProcessor bit-depth type for the R/G/B/A data pointers.
+    //    The methods assume the CPUProcessor bit-depth type for the R/G/B/A data pointers.
 
     //!cpp:function::
     PlanarImageDesc(void * rData, void * gData, void * bData, void * aData,
