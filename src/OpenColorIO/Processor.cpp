@@ -190,6 +190,15 @@ const char * Processor::getCacheID() const
     return getImpl()->getCacheID();
 }
 
+ConstProcessorRcPtr Processor::getOptimizedProcessor(BitDepth inBD, BitDepth outBD,
+                                                     OptimizationFlags oFlags) const
+{
+    auto proc = Create();
+    *proc->getImpl() = *m_impl;
+    proc->getImpl()->optimize(inBD, outBD, oFlags);
+    return proc;
+}
+
 ConstGPUProcessorRcPtr Processor::getDefaultGPUProcessor() const
 {
     return getImpl()->getDefaultGPUProcessor();
@@ -224,7 +233,18 @@ Processor::Impl::Impl():
 }
 
 Processor::Impl::~Impl()
-{ }
+{
+}
+
+Processor::Impl & Processor::Impl::operator=(const Impl & rhs)
+{
+    if (this != &rhs)
+    {
+        m_metadata = rhs.m_metadata;
+        m_ops = rhs.m_ops;
+    }
+    return *this;
+}
 
 bool Processor::Impl::isNoOp() const
 {
@@ -353,6 +373,15 @@ const char * Processor::Impl::getCacheID() const
     }
 
     return m_cpuCacheID.c_str();
+}
+
+void Processor::Impl::optimize(BitDepth inBD, BitDepth outBD, OptimizationFlags oFlags)
+{
+    auto numOps = m_ops.size();
+    if (numOps)
+    {
+        OptimizeOpVec(m_ops, inBD, outBD, oFlags);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////
