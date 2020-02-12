@@ -99,6 +99,11 @@ OCIO_ADD_TEST(Config, create_raw_config)
     OCIO::ConstProcessorRcPtr proc;
     OCIO_CHECK_NO_THROW(proc = config->getProcessor("raw", "raw"));
     OCIO_CHECK_NO_THROW(proc->getDefaultCPUProcessor());
+
+    OCIO_CHECK_THROW_WHAT(config->getProcessor("not_found", "raw"), OCIO::Exception,
+                          "Could not find source color space");
+    OCIO_CHECK_THROW_WHAT(config->getProcessor("raw", "not_found"), OCIO::Exception,
+                          "Could not find destination color space");
 }
 
 OCIO_ADD_TEST(Config, simple_config)
@@ -431,8 +436,8 @@ OCIO_ADD_TEST(Config, sanity_check)
 
     std::istringstream is;
     is.str(SIMPLE_PROFILE);
-    OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_THROW(config = OCIO::Config::CreateFromStream(is), OCIO::Exception);
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                          "Colorspace with name 'raw' already defined");
     }
 
     {
@@ -551,7 +556,8 @@ OCIO_ADD_TEST(Config, role_without_colorspace)
     config->setRole("reference", "UnknownColorSpace");
 
     std::ostringstream os;
-    OCIO_CHECK_THROW(config->serialize(os), OCIO::Exception);
+    OCIO_CHECK_THROW_WHAT(config->serialize(os), OCIO::Exception,
+                          "Colorspace associated to the role 'reference', does not exist");
 }
 
 OCIO_ADD_TEST(Config, env_colorspace_name)
@@ -614,8 +620,11 @@ OCIO_ADD_TEST(Config, env_colorspace_name)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_THROW(config->sanityCheck(), OCIO::Exception);
-        OCIO_CHECK_THROW(config->getProcessor("raw", "lgh"), OCIO::Exception);
+        OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception,
+                              "This config references a color space, '$MISSING_ENV', "
+                              "which is not defined");
+        OCIO_CHECK_THROW_WHAT(config->getProcessor("raw", "lgh"), OCIO::Exception,
+                              "BuildColorSpaceOps failed, null dstColorSpace");
     }
 
     {
@@ -631,8 +640,10 @@ OCIO_ADD_TEST(Config, env_colorspace_name)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_THROW(config->sanityCheck(), OCIO::Exception);
-        OCIO_CHECK_THROW(config->getProcessor("raw", "lgh"), OCIO::Exception);
+        OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception,
+                              "color space, 'FaultyColorSpaceName', which is not defined");
+        OCIO_CHECK_THROW_WHAT(config->getProcessor("raw", "lgh"), OCIO::Exception,
+                              "BuildColorSpaceOps failed, null dstColorSpace");
     }
 
     {
@@ -696,7 +707,8 @@ OCIO_ADD_TEST(Config, version)
     OCIO_CHECK_NO_THROW(config->sanityCheck());
 
     OCIO_CHECK_NO_THROW(config->setMajorVersion(1));
-    OCIO_CHECK_THROW(config->setMajorVersion(20000), OCIO::Exception);
+    OCIO_CHECK_THROW_WHAT(config->setMajorVersion(20000), OCIO::Exception,
+                          "version is 20000 where supported versions start at 1 and end at 2");
 
     {
         OCIO_CHECK_NO_THROW(config->setMinorVersion(2));
@@ -745,7 +757,8 @@ OCIO_ADD_TEST(Config, version_faulty_1)
     std::istringstream is;
     is.str(SIMPLE_PROFILE);
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_THROW(config = OCIO::Config::CreateFromStream(is), OCIO::Exception);
+    OCIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                          "does not appear to have a valid version 2.0.1");
 }
 
 namespace
@@ -3159,4 +3172,131 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
         ss << *config.get();
         OCIO_CHECK_EQUAL(ss.str(), configStr);
     }
+}
+
+
+OCIO_ADD_TEST(Config, two_configs)
+{
+    constexpr const char * SIMPLE_CONFIG1{ R"(
+ocio_profile_version: 2
+
+roles:
+  default: raw1
+  aces_interchange: aces1
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw1
+    allocation: uniform
+
+  - !<ColorSpace>
+    name: test1
+    allocation: uniform
+    to_reference: !<MatrixTransform> {offset: [0.01, 0.02, 0.03, 0]}
+
+  - !<ColorSpace>
+    name: aces1
+    allocation: uniform
+    from_reference: !<ExponentTransform> {value: [1.101, 1.202, 1.303, 1.404]}
+
+)" };
+
+    constexpr const char * SIMPLE_CONFIG2{ R"(
+ocio_profile_version: 2
+
+roles:
+  default: raw2
+  aces_interchange: aces2
+  test_role: test2
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw2
+    allocation: uniform
+
+  - !<ColorSpace>
+    name: test2
+    allocation: uniform
+    from_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}
+
+  - !<ColorSpace>
+    name: aces2
+    allocation: uniform
+    to_reference: !<RangeTransform> {minInValue: -0.0109, maxInValue: 1.0505, minOutValue: 0.0009, maxOutValue: 2.5001}
+
+)" };
+
+    std::istringstream is;
+    is.str(SIMPLE_CONFIG1);
+    OCIO::ConstConfigRcPtr config1, config2;
+    OCIO_CHECK_NO_THROW(config1 = OCIO::Config::CreateFromStream(is));
+    is.clear();
+    is.str(SIMPLE_CONFIG2);
+    OCIO_CHECK_NO_THROW(config2 = OCIO::Config::CreateFromStream(is));
+
+    OCIO::ConstProcessorRcPtr p;
+    // NB: Although they have the same name, they are in different configs and are different ColorSpaces.
+    OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessor(config1, "test1", config2, "test2"));
+    OCIO_REQUIRE_ASSERT(p);
+    auto group = p->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 4);
+    auto t0 = group->getTransform(0);
+    auto m0 = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(t0);
+    OCIO_CHECK_ASSERT(m0);
+    auto t1 = group->getTransform(1);
+    auto e1 = OCIO_DYNAMIC_POINTER_CAST<OCIO::ExponentTransform>(t1);
+    OCIO_CHECK_ASSERT(e1);
+    auto t2 = group->getTransform(2);
+    auto r2 = OCIO_DYNAMIC_POINTER_CAST<OCIO::RangeTransform>(t2);
+    OCIO_CHECK_ASSERT(r2);
+    auto t3 = group->getTransform(3);
+    auto m3 = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(t3);
+    OCIO_CHECK_ASSERT(m3);
+
+    // Or interchange spaces can be specified.
+    OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessor(config1, "test1", "aces1", config2, "test2", "aces2"));
+    OCIO_REQUIRE_ASSERT(p);
+    OCIO_REQUIRE_ASSERT(p);
+    group = p->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 4);
+
+    // Or interchange space can be specified using role.
+    OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessor(config1, "test1", "aces_interchange", config2, "test2", "aces2"));
+    OCIO_REQUIRE_ASSERT(p);
+    OCIO_REQUIRE_ASSERT(p);
+    group = p->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 4);
+
+    // Or color space can be specified using role.
+    OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessor(config1, "test1", "aces_interchange", config2, "test_role", "aces2"));
+    OCIO_REQUIRE_ASSERT(p);
+    OCIO_REQUIRE_ASSERT(p);
+    group = p->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 4);
+
+    constexpr const char * SIMPLE_CONFIG3{ R"(
+ocio_profile_version: 2
+
+roles:
+  default: raw
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    allocation: uniform
+
+  - !<ColorSpace>
+    name: test
+    allocation: uniform
+    from_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}
+)" };
+
+    is.clear();
+    is.str(SIMPLE_CONFIG3);
+    OCIO::ConstConfigRcPtr config3;
+    OCIO_CHECK_NO_THROW(config3 = OCIO::Config::CreateFromStream(is));
+
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::GetProcessor(config1, "test", config3, "test"),
+                          OCIO::Exception,
+                          "The role 'aces_interchange' is missing in the destination config");
 }

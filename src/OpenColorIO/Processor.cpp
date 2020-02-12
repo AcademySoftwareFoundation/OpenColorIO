@@ -457,6 +457,16 @@ void Processor::Impl::setTransform(const Config & config,
     m_ops.unifyDynamicProperties();
 }
 
+void Processor::Impl::concatenate(ConstProcessorRcPtr & p1, ConstProcessorRcPtr & p2)
+{
+    m_ops = p1->getImpl()->m_ops;
+    m_ops += p2->getImpl()->m_ops;
+    computeMetadata();
+    FinalizeOpVec(m_ops, OPTIMIZATION_NONE);
+    UnifyDynamicProperties(m_ops);
+}
+
+
 void Processor::Impl::computeMetadata()
 {
     AutoMutex lock(m_resultsCacheMutex);
