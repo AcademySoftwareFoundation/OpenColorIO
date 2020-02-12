@@ -1248,6 +1248,13 @@ public:
     //!cpp:function:: 
     const char * getCacheID() const;
 
+    //!cpp:function:: Create a :cpp:class:`Processor` that is an optimized version of this.
+    // Note that one typically does not need to explicitly create an optimized Processor instance
+    // since optimization happens implicitly during the creation of a CPUProcessor or GPUProcessor.
+    // This method is provided primarily for diagnostic purposes.
+    ConstProcessorRcPtr getOptimizedProcessor(BitDepth inBD, BitDepth outBD,
+                                              OptimizationFlags oFlags) const;
+
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
     // GPU Renderer

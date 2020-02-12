@@ -249,9 +249,8 @@ private:
 
     // For inverse LUT.
 
-    void initializeFromForward();
     // Make the array monotonic and prepare params for the renderer.
-    void prepareArray();
+    void initializeFromForward();
 
     // Get the LUT length that would allow a look-up for inputBitDepth.
     // - halfFlags except if the LUT has a half domain, always return 65536

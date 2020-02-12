@@ -107,3 +107,37 @@ OCIO_ADD_TEST(Processor, write_formats)
     GetFormatName("XXX", noFileFormat);
     OCIO_CHECK_ASSERT(noFileFormat.empty());
 }
+
+OCIO_ADD_TEST(Processor, optimized_processor)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+
+    auto mat = OCIO::MatrixTransform::Create();
+    double offset[4]{ 0.1, 0.2, 0.3, 0.4 };
+    mat->setOffset(offset);
+
+    group->appendTransform(mat);
+    group->appendTransform(mat);
+    group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
+
+    auto processorGroup = config->getProcessor(group);
+    OCIO_CHECK_EQUAL(processorGroup->getNumTransforms(), 2);
+
+    auto processorOpt1 = processorGroup->getOptimizedProcessor(OCIO::BIT_DEPTH_F32,
+                                                               OCIO::BIT_DEPTH_F32,
+                                                               OCIO::OPTIMIZATION_DEFAULT);
+    OCIO_CHECK_EQUAL(processorOpt1->getNumTransforms(), 1);
+    OCIO_REQUIRE_EQUAL(processorOpt1->getFormatMetadata().getNumAttributes(), 1);
+    OCIO_CHECK_EQUAL(std::string(processorOpt1->getFormatMetadata().getAttributeName(0)), OCIO::METADATA_ID);
+    OCIO_CHECK_EQUAL(std::string(processorOpt1->getFormatMetadata().getAttributeValue(0)), "UID42");
+
+    auto processorOpt2 = processorGroup->getOptimizedProcessor(OCIO::BIT_DEPTH_F32,
+                                                               OCIO::BIT_DEPTH_F32,
+                                                               OCIO::OPTIMIZATION_NONE);
+    OCIO_CHECK_EQUAL(processorOpt2->getNumTransforms(), 2);
+    OCIO_REQUIRE_EQUAL(processorOpt2->getFormatMetadata().getNumAttributes(), 1);
+    OCIO_CHECK_EQUAL(std::string(processorOpt2->getFormatMetadata().getAttributeName(0)), OCIO::METADATA_ID);
+    OCIO_CHECK_EQUAL(std::string(processorOpt2->getFormatMetadata().getAttributeValue(0)), "UID42");
+}
