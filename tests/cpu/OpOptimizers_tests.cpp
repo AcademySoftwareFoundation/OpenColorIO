@@ -24,15 +24,6 @@ OCIO::OptimizationFlags AllBut(OCIO::OptimizationFlags notFlag)
     return static_cast<OCIO::OptimizationFlags>(OCIO::OPTIMIZATION_ALL & ~notFlag);
 }
 
-void Clone(OCIO::OpRcPtrVec & cloned, const OCIO::OpRcPtrVec toClone)
-{
-    cloned.clear();
-    for (auto op : toClone)
-    {
-        cloned.push_back(op->clone());
-    }
-}
-
 void CompareRender(OCIO::OpRcPtrVec & ops1, OCIO::OpRcPtrVec & ops2,
                    unsigned line, float errorThreshold,
                    bool forceAlphaInRange = false)
@@ -54,8 +45,8 @@ void CompareRender(OCIO::OpRcPtrVec & ops1, OCIO::OpRcPtrVec & ops2,
 
     const long nbPixels = (long)img1.size() / 4;
 
-    OCIO_CHECK_NO_THROW_FROM(FinalizeOpVec(ops1, OCIO::OPTIMIZATION_LUT_INV_FAST), line);
-    OCIO_CHECK_NO_THROW_FROM(FinalizeOpVec(ops2, OCIO::OPTIMIZATION_LUT_INV_FAST), line);
+    OCIO_CHECK_NO_THROW_FROM(ops1.finalize(OCIO::OPTIMIZATION_LUT_INV_FAST), line);
+    OCIO_CHECK_NO_THROW_FROM(ops2.finalize(OCIO::OPTIMIZATION_LUT_INV_FAST), line);
 
     for (const auto & op : ops1)
     {
@@ -469,8 +460,7 @@ OCIO_ADD_TEST(OpOptimizers, optimization)
 
     OCIO_CHECK_EQUAL(ops.size(), 4);
 
-    OCIO::OpRcPtrVec optOps;
-    Clone(optOps, ops);
+    OCIO::OpRcPtrVec optOps = ops.clone();
     OCIO_CHECK_EQUAL(optOps.size(), 4);
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(optOps, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
                                             OCIO::OPTIMIZATION_DEFAULT));
@@ -512,8 +502,7 @@ OCIO_ADD_TEST(OpOptimizers, optimization2)
 
     OCIO_CHECK_EQUAL(ops.size(), 13);
 
-    OCIO::OpRcPtrVec optOps;
-    Clone(optOps, ops);
+    OCIO::OpRcPtrVec optOps = ops.clone();
     OCIO_CHECK_EQUAL(optOps.size(), 13);
 
     // No need to remove OPTIMIZATION_COMP_SEPARABLE_PREFIX because optimization is for F32.
@@ -569,8 +558,7 @@ OCIO_ADD_TEST(OpOptimizers, lut1d_identities)
     OCIO_CHECK_ASSERT(false == ops[5]->isIdentity());
     OCIO_CHECK_ASSERT(ops[6]->isIdentity());
 
-    OCIO::OpRcPtrVec optOps;
-    Clone(optOps, ops);
+    OCIO::OpRcPtrVec optOps = ops.clone();
     OCIO_CHECK_EQUAL(optOps.size(), 7);
 
     // No need to remove OPTIMIZATION_COMP_SEPARABLE_PREFIX because optimization is for F32.
@@ -666,8 +654,7 @@ OCIO_ADD_TEST(OpOptimizers, lut1d_half_domain_keep_prior_range)
 
     OCIO_CHECK_EQUAL(ops.size(), 3);
 
-    OCIO::OpRcPtrVec optOps;
-    Clone(optOps, ops);
+    OCIO::OpRcPtrVec optOps = ops.clone();
     OCIO_CHECK_EQUAL(optOps.size(), 3);
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(optOps));
     OCIO_CHECK_EQUAL(optOps.size(), 2);
@@ -689,8 +676,7 @@ OCIO_ADD_TEST(OpOptimizers, range_composition)
         OCIO::CreateRangeOp(ops, 0., emptyValue, 0., emptyValue, OCIO::TRANSFORM_DIR_FORWARD);
 
         OCIO_CHECK_EQUAL(ops.size(), 2);
-        OCIO::OpRcPtrVec optOps;
-        Clone(optOps, ops);
+        OCIO::OpRcPtrVec optOps = ops.clone();
         OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(optOps));
         OCIO_REQUIRE_EQUAL(optOps.size(), 1);
         OCIO_CHECK_EQUAL(optOps[0]->getInfo(), "<RangeOp>");
@@ -703,8 +689,7 @@ OCIO_ADD_TEST(OpOptimizers, range_composition)
         OCIO::CreateRangeOp(ops, 0.1, emptyValue, 0., emptyValue, OCIO::TRANSFORM_DIR_FORWARD);
 
         OCIO_CHECK_EQUAL(ops.size(), 2);
-        OCIO::OpRcPtrVec optOps;
-        Clone(optOps, ops);
+        OCIO::OpRcPtrVec optOps = ops.clone();
         OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(optOps));
         OCIO_REQUIRE_EQUAL(optOps.size(), 1);
         OCIO_CHECK_EQUAL(optOps[0]->getInfo(), "<RangeOp>");
@@ -717,8 +702,7 @@ OCIO_ADD_TEST(OpOptimizers, range_composition)
         OCIO::CreateRangeOp(ops, 0.1, emptyValue, 0., emptyValue, OCIO::TRANSFORM_DIR_INVERSE);
         OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
-        OCIO::OpRcPtrVec optOps;
-        Clone(optOps, ops);
+        OCIO::OpRcPtrVec optOps = ops.clone();
         OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(optOps));
         OCIO_REQUIRE_EQUAL(optOps.size(), 1);
         OCIO_CHECK_EQUAL(optOps[0]->getInfo(), "<RangeOp>");
@@ -731,8 +715,7 @@ OCIO_ADD_TEST(OpOptimizers, range_composition)
         OCIO::CreateRangeOp(ops, -0.1, emptyValue, 0., emptyValue, OCIO::TRANSFORM_DIR_INVERSE);
         OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
-        OCIO::OpRcPtrVec optOps;
-        Clone(optOps, ops);
+        OCIO::OpRcPtrVec optOps = ops.clone();
         OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(optOps));
         OCIO_REQUIRE_EQUAL(optOps.size(), 1);
         OCIO_CHECK_EQUAL(optOps[0]->getInfo(), "<RangeOp>");
@@ -745,8 +728,7 @@ OCIO_ADD_TEST(OpOptimizers, range_composition)
         OCIO::CreateRangeOp(ops, 0.1, 2., 0., 2., OCIO::TRANSFORM_DIR_FORWARD);
 
         OCIO_CHECK_EQUAL(ops.size(), 2);
-        OCIO::OpRcPtrVec optOps;
-        Clone(optOps, ops);
+        OCIO::OpRcPtrVec optOps = ops.clone();
         OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(optOps));
         OCIO_REQUIRE_EQUAL(optOps.size(), 1);
         OCIO_CHECK_EQUAL(optOps[0]->getInfo(), "<RangeOp>");
@@ -758,8 +740,7 @@ OCIO_ADD_TEST(OpOptimizers, range_composition)
         OCIO::CreateRangeOp(ops, 0.1, 1., 0.1, 1., OCIO::TRANSFORM_DIR_FORWARD);
 
         OCIO_CHECK_EQUAL(ops.size(), 2);
-        OCIO::OpRcPtrVec optOps;
-        Clone(optOps, ops);
+        OCIO::OpRcPtrVec optOps = ops.clone();
         OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(optOps));
         OCIO_REQUIRE_EQUAL(optOps.size(), 1);
         OCIO_CHECK_EQUAL(optOps[0]->getInfo(), "<RangeOp>");
@@ -772,8 +753,7 @@ OCIO_ADD_TEST(OpOptimizers, range_composition)
         OCIO::CreateRangeOp(ops, 0., 1., 0., 2., OCIO::TRANSFORM_DIR_FORWARD);
 
         OCIO_CHECK_EQUAL(ops.size(), 3);
-        OCIO::OpRcPtrVec optOps;
-        Clone(optOps, ops);
+        OCIO::OpRcPtrVec optOps = ops.clone();
         OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(optOps));
         OCIO_REQUIRE_EQUAL(optOps.size(), 1);
         OCIO_CHECK_EQUAL(optOps[0]->getInfo(), "<RangeOp>");
@@ -785,8 +765,7 @@ OCIO_ADD_TEST(OpOptimizers, range_composition)
         OCIO::CreateRangeOp(ops, 0.6, 1., 0.6, 1., OCIO::TRANSFORM_DIR_FORWARD);
 
         OCIO_CHECK_EQUAL(ops.size(), 2);
-        OCIO::OpRcPtrVec optOps;
-        Clone(optOps, ops);
+        OCIO::OpRcPtrVec optOps = ops.clone();
         // Two Ranges with non-overlapping pass regions are replaced with a clamp to a constant.
         OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(optOps));
         OCIO_REQUIRE_EQUAL(optOps.size(), 1);
@@ -799,8 +778,7 @@ OCIO_ADD_TEST(OpOptimizers, range_composition)
         OCIO::CreateRangeOp(ops, 0., 0.5, 0., 0.5, OCIO::TRANSFORM_DIR_FORWARD);
 
         OCIO_CHECK_EQUAL(ops.size(), 2);
-        OCIO::OpRcPtrVec optOps;
-        Clone(optOps, ops);
+        OCIO::OpRcPtrVec optOps = ops.clone();
         // Ranges can not be combined out domain of the first does not intersect
         // with in domain of the second.
         OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(optOps));
@@ -818,8 +796,7 @@ OCIO_ADD_TEST(OpOptimizers, range_composition)
         OCIO::CreateRangeOp(ops, 0.2, 0.6, 0.1, 0.7, OCIO::TRANSFORM_DIR_INVERSE);
 
         OCIO_CHECK_EQUAL(ops.size(), 6);
-        OCIO::OpRcPtrVec optOps;
-        Clone(optOps, ops);
+        OCIO::OpRcPtrVec optOps = ops.clone();
         OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(optOps));
         OCIO_REQUIRE_EQUAL(optOps.size(), 1);
         OCIO_CHECK_EQUAL(optOps[0]->getInfo(), "<RangeOp>");
@@ -846,8 +823,7 @@ OCIO_ADD_TEST(OpOptimizers, invlut_pair_identities)
 
     OCIO_CHECK_EQUAL(ops.size(), 4);
 
-    OCIO::OpRcPtrVec optOps;
-    Clone(optOps, ops);
+    OCIO::OpRcPtrVec optOps = ops.clone();
     OCIO_CHECK_EQUAL(optOps.size(), 4);
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(optOps, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
                                             OCIO::OPTIMIZATION_DEFAULT));
@@ -905,12 +881,9 @@ OCIO_ADD_TEST(OpOptimizers, gamma_comp)
 
     OCIO_CHECK_EQUAL(ops.size(), 4);
 
-    OCIO::OpRcPtrVec optOps;
-    Clone(optOps, ops);
-    OCIO::OpRcPtrVec optOps_noComp;
-    Clone(optOps_noComp, ops);
-    OCIO::OpRcPtrVec optOps_noIdentity;
-    Clone(optOps_noIdentity, ops);
+    OCIO::OpRcPtrVec optOps            = ops.clone();
+    OCIO::OpRcPtrVec optOps_noComp     = ops.clone();
+    OCIO::OpRcPtrVec optOps_noIdentity = ops.clone();
 
     OCIO_CHECK_EQUAL(optOps_noComp.size(), 4);
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(optOps_noComp, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
@@ -962,8 +935,7 @@ OCIO_ADD_TEST(OpOptimizers, gamma_comp_identity)
     OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(ops, gamma2, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_CHECK_EQUAL(ops.size(), 2);
 
-    OCIO::OpRcPtrVec optOps;
-    Clone(optOps, ops);
+    OCIO::OpRcPtrVec optOps = ops.clone();
 
     // BASIC gamma are composed resulting into identity, that get optimized as a range.
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(optOps, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
@@ -984,7 +956,7 @@ OCIO_ADD_TEST(OpOptimizers, gamma_comp_identity)
     OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(ops, gamma2, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_CHECK_EQUAL(ops.size(), 2);
 
-    Clone(optOps, ops);
+    optOps = ops.clone();
 
     // MONCURVE composition is not supported yet.
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(optOps, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
@@ -1016,10 +988,8 @@ OCIO_ADD_TEST(OpOptimizers, log_identities)
 
     OCIO_CHECK_EQUAL(ops.size(), 5);
 
-    OCIO::OpRcPtrVec optOps;
-    Clone(optOps, ops);
-    OCIO::OpRcPtrVec optOpsOff;
-    Clone(optOpsOff, ops);
+    OCIO::OpRcPtrVec optOps    = ops.clone();
+    OCIO::OpRcPtrVec optOpsOff = ops.clone();
 
     OCIO_CHECK_EQUAL(optOpsOff.size(), 5);
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(optOpsOff, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
@@ -1058,8 +1028,7 @@ OCIO_ADD_TEST(OpOptimizers, range_lut)
 
     OCIO_CHECK_EQUAL(ops.size(), 2);
 
-    OCIO::OpRcPtrVec optOps;
-    Clone(optOps, ops);
+    OCIO::OpRcPtrVec optOps = ops.clone();
     OCIO_CHECK_EQUAL(optOps.size(), 2);
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(optOps));
     OCIO_REQUIRE_EQUAL(optOps.size(), 2);
@@ -1145,8 +1114,7 @@ OCIO_ADD_TEST(OpOptimizers, gamma_prefix)
     OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(originalOps, gamma1, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(originalOps.size(), 1);
 
-    OCIO::OpRcPtrVec optimizedOps;
-    Clone(optimizedOps, originalOps);
+    OCIO::OpRcPtrVec optimizedOps = originalOps.clone();
 
     // Optimize it.
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(optimizedOps,
@@ -1203,8 +1171,7 @@ OCIO_ADD_TEST(OpOptimizers, multi_op_prefix)
     OCIO_CHECK_NO_THROW(OCIO::CreateRangeOp(originalOps, range, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(originalOps.size(), 2);
 
-    OCIO::OpRcPtrVec optimizedOps;
-    Clone(optimizedOps, originalOps);
+    OCIO::OpRcPtrVec optimizedOps = originalOps.clone();
 
     // Nothing to optimize.
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(optimizedOps,
@@ -1216,8 +1183,8 @@ OCIO_ADD_TEST(OpOptimizers, multi_op_prefix)
 
     OCIO_REQUIRE_EQUAL(optimizedOps.size(), 2U);
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(originalOps, OCIO::OPTIMIZATION_LUT_INV_FAST));
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(optimizedOps, OCIO::OPTIMIZATION_LUT_INV_FAST));
+    OCIO_CHECK_NO_THROW(originalOps.finalize(OCIO::OPTIMIZATION_LUT_INV_FAST));
+    OCIO_CHECK_NO_THROW(optimizedOps.finalize(OCIO::OPTIMIZATION_LUT_INV_FAST));
 
     OCIO_CHECK_EQUAL(std::string(originalOps[0]->getCacheID()),
                      std::string(optimizedOps[0]->getCacheID()));
@@ -1238,7 +1205,7 @@ OCIO_ADD_TEST(OpOptimizers, multi_op_prefix)
     OCIO_CHECK_NO_THROW(OCIO::CreateCDLOp(originalOps, cdl, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(originalOps.size(), 3);
 
-    Clone(optimizedOps, originalOps);
+    optimizedOps = originalOps.clone();
 
     // Optimize it.
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(optimizedOps,
@@ -1288,8 +1255,7 @@ OCIO_ADD_TEST(OpOptimizers, dyn_properties_prefix)
         OCIO::CreateExposureContrastOp(originalOps, exposure, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(originalOps.size(), 3);
 
-    OCIO::OpRcPtrVec optimizedOps;
-    Clone(optimizedOps, originalOps);
+    OCIO::OpRcPtrVec optimizedOps = originalOps.clone();
 
     // Optimize it.
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(optimizedOps,
@@ -1334,8 +1300,7 @@ OCIO_ADD_TEST(OpOptimizers, opt_prefix_test1)
 
     OCIO_CHECK_EQUAL(ops.size(), 11);
 
-    OCIO::OpRcPtrVec optOps;
-    Clone(optOps, ops);
+    OCIO::OpRcPtrVec optOps = ops.clone();
     OCIO_CHECK_EQUAL(optOps.size(), 11);
     // Ignore dynamic properties.
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(optOps, OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_F32,

@@ -248,17 +248,12 @@ Processor::Impl & Processor::Impl::operator=(const Impl & rhs)
 
 bool Processor::Impl::isNoOp() const
 {
-    return IsOpVecNoOp(m_ops);
+    return m_ops.isNoOp();
 }
 
 bool Processor::Impl::hasChannelCrosstalk() const
 {
-    for(const auto & op : m_ops)
-    {
-        if(op->hasChannelCrosstalk()) return true;
-    }
-
-    return false;
+    return m_ops.hasChannelCrosstalk();
 }
 
 ConstProcessorMetadataRcPtr Processor::Impl::getProcessorMetadata() const
@@ -327,27 +322,12 @@ void Processor::Impl::write(const char * formatName, std::ostream & os) const
 
 bool Processor::Impl::hasDynamicProperty(DynamicPropertyType type) const
 {
-    for (const auto & op : m_ops)
-    {
-        if (op->hasDynamicProperty(type))
-        {
-            return true;
-        }
-    }
-    return false;
+    return m_ops.hasDynamicProperty(type);
 }
 
 DynamicPropertyRcPtr Processor::Impl::getDynamicProperty(DynamicPropertyType type) const
 {
-    for(const auto & op : m_ops)
-    {
-        if(op->hasDynamicProperty(type))
-        {
-            return op->getDynamicProperty(type);
-        }
-    }
-
-    throw Exception("Cannot find dynamic property; not used by processor.");
+    return m_ops.getDynamicProperty(type);
 }
 
 const char * Processor::Impl::getCacheID() const
@@ -452,9 +432,11 @@ void Processor::Impl::setColorSpaceConversion(const Config & config,
     {
         throw Exception("Internal error: Processor should be empty");
     }
+
     BuildColorSpaceOps(m_ops, config, context, srcColorSpace, dstColorSpace);
-    FinalizeOpVec(m_ops, OPTIMIZATION_NONE);
-    UnifyDynamicProperties(m_ops);
+
+    m_ops.finalize(OPTIMIZATION_NONE);
+    m_ops.unifyDynamicProperties();
 }
 
 void Processor::Impl::setTransform(const Config & config,
@@ -466,10 +448,13 @@ void Processor::Impl::setTransform(const Config & config,
     {
         throw Exception("Internal error: Processor should be empty");
     }
+
     transform->validate();
+
     BuildOps(m_ops, config, context, transform, direction);
-    FinalizeOpVec(m_ops, OPTIMIZATION_NONE);
-    UnifyDynamicProperties(m_ops);
+
+    m_ops.finalize(OPTIMIZATION_NONE);
+    m_ops.unifyDynamicProperties();
 }
 
 void Processor::Impl::computeMetadata()

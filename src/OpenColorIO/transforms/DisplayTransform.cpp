@@ -321,7 +321,7 @@ void BuildDisplayOps(OpRcPtrVec & ops,
         OpRcPtrVec tmpOps;
         BuildOps(tmpOps, config, context, linearCC, TRANSFORM_DIR_FORWARD);
 
-        if(!IsOpVecNoOp(tmpOps))
+        if (!tmpOps.isNoOp())
         {
             ConstColorSpaceRcPtr targetColorSpace = config.getColorSpace(ROLE_SCENE_LINEAR);
 
@@ -346,7 +346,7 @@ void BuildDisplayOps(OpRcPtrVec & ops,
         OpRcPtrVec tmpOps;
         BuildOps(tmpOps, config, context, colorTimingCC, TRANSFORM_DIR_FORWARD);
 
-        if(!IsOpVecNoOp(tmpOps))
+        if (!tmpOps.isNoOp())
         {
             ConstColorSpaceRcPtr targetColorSpace = config.getColorSpace(ROLE_COLOR_TIMING);
 

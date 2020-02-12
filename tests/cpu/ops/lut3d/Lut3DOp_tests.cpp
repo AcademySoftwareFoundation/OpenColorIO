@@ -170,7 +170,7 @@ OCIO_ADD_TEST(Lut3DOp, cache_id)
 
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
 
     const std::string cacheID = ops[0]->getCacheID();
     OCIO_CHECK_ASSERT(!cacheID.empty());
@@ -355,7 +355,7 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_cloned)
     OCIO_CHECK_EQUAL(lutData->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
 
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
 
     OCIO_REQUIRE_EQUAL(1, ops.size());
 
@@ -418,7 +418,7 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_inverse)
 
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
     // Exact LUT inversion.
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
 
     auto op0 = OCIO::DynamicPtrCast<const OCIO::Lut3DOp>(ops[0]);
     OCIO_REQUIRE_ASSERT(op0);
@@ -522,7 +522,7 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_lut3d_with_nan)
 
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops, OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
                                             OCIO::OPTIMIZATION_NONE));
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(1, ops.size());
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO_CHECK_EQUAL(op0->data()->getType(), OCIO::OpData::Lut3DType);

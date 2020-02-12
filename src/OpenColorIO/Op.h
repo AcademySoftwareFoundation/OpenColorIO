@@ -180,24 +180,15 @@ typedef OCIO_SHARED_PTR<const Op> ConstOpRcPtr;
 class OpRcPtrVec;
 
 std::string SerializeOpVec(const OpRcPtrVec & ops, int indent=0);
-bool IsOpVecNoOp(const OpRcPtrVec & ops);
-
-void FinalizeOpVec(OpRcPtrVec & opVec, OptimizationFlags oFlags);
 
 void OptimizeOpVec(OpRcPtrVec & result,
                     const BitDepth & inBitDepth,
                     const BitDepth & outBitDepth,
                     OptimizationFlags oFlags);
 
-void UnifyDynamicProperties(OpRcPtrVec & ops);
-
 void CreateOpVecFromOpData(OpRcPtrVec & ops,
                             const ConstOpDataRcPtr & opData,
                             TransformDirection dir);
-
-void CreateOpVecFromOpDataVec(OpRcPtrVec & ops,
-                                const ConstOpDataVec & opDataVec,
-                                TransformDirection dir);
 
 class Op
 {
@@ -301,6 +292,9 @@ std::ostream& operator<< (std::ostream&, const Op&);
 
 // The class handles a list of ops.
 //
+// Note: The class follows the std::vector API so it can be used
+// by any STL algorithms.
+//
 // Note: List only manages shared pointers i.e. it never clones ops.
 class OpRcPtrVec
 {
@@ -314,6 +308,9 @@ public:
 
     typedef Type::iterator iterator;
     typedef Type::const_iterator const_iterator;
+
+    typedef Type::reverse_iterator reverse_iterator;
+    typedef Type::const_reverse_iterator const_reverse_iterator;
 
     typedef Type::reference reference;
     typedef Type::const_reference const_reference;
@@ -332,6 +329,11 @@ public:
     const_iterator begin() const noexcept { return m_ops.begin(); }
     iterator end() noexcept { return m_ops.end(); }
     const_iterator end() const noexcept { return m_ops.end(); }
+
+    reverse_iterator rbegin() noexcept { return m_ops.rbegin(); }
+    const_reverse_iterator rbegin() const noexcept { return m_ops.rbegin(); }
+    reverse_iterator rend() noexcept { return m_ops.rend(); }
+    const_reverse_iterator rend() const noexcept { return m_ops.rend(); }
 
     const OpRcPtr & operator[](size_type idx) const { return m_ops[idx]; }
     OpRcPtr & operator[](size_type idx) { return m_ops[idx]; }
@@ -357,9 +359,24 @@ public:
     const_reference back() const;
     const_reference front() const;
 
+    // The following methods provide helpers for basic Op behaviors.
+
     FormatMetadataImpl & getFormatMetadata() { return m_metadata; }
     const FormatMetadataImpl & getFormatMetadata() const { return m_metadata; }
 
+    bool isNoOp() const noexcept;
+    bool hasChannelCrosstalk() const noexcept;
+
+    bool hasDynamicProperty(DynamicPropertyType type) const noexcept;
+    DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
+    void unifyDynamicProperties();
+
+    OpRcPtrVec clone() const;
+
+    // Note: The elements are cloned.
+    OpRcPtrVec invert() const;
+
+    void finalize(OptimizationFlags oFlags);
 };
 
 } // namespace OCIO_NAMESPACE
