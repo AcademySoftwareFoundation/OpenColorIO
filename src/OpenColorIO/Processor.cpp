@@ -461,9 +461,11 @@ void Processor::Impl::concatenate(ConstProcessorRcPtr & p1, ConstProcessorRcPtr 
 {
     m_ops = p1->getImpl()->m_ops;
     m_ops += p2->getImpl()->m_ops;
+
     computeMetadata();
-    FinalizeOpVec(m_ops, OPTIMIZATION_NONE);
-    UnifyDynamicProperties(m_ops);
+
+    m_ops.finalize(OPTIMIZATION_NONE);
+    m_ops.unifyDynamicProperties();
 }
 
 
