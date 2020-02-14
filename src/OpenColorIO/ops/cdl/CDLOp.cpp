@@ -10,8 +10,9 @@
 #include "GpuShaderUtils.h"
 #include "HashUtils.h"
 #include "MathUtils.h"
-#include "ops/cdl/CDLOpCPU.h"
 #include "ops/cdl/CDLOp.h"
+#include "ops/cdl/CDLOpCPU.h"
+#include "ops/cdl/CDLOpGPU.h"
 #include "ops/exponent/ExponentOp.h"
 #include "ops/matrix/MatrixOp.h"
 #include "transforms/CDLTransform.h"
@@ -55,7 +56,7 @@ public:
 
     ConstOpCPURcPtr getCPUOp() const override;
 
-    void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
 protected:
     ConstCDLOpDataRcPtr cdlData() const { return DynamicPtrCast<const CDLOpData>(data()); }
@@ -82,10 +83,10 @@ CDLOp::CDLOp(CDLOpData::Style style,
     }
 
     data().reset(
-        new CDLOpData(style, 
-                      CDLOpData::ChannelParams(slope3[0], slope3[1], slope3[2]), 
-                      CDLOpData::ChannelParams(offset3[0], offset3[1], offset3[2]), 
-                      CDLOpData::ChannelParams(power3[0], power3[1], power3[2]), 
+        new CDLOpData(style,
+                      CDLOpData::ChannelParams(slope3[0], slope3[1], slope3[2]),
+                      CDLOpData::ChannelParams(offset3[0], offset3[1], offset3[2]),
+                      CDLOpData::ChannelParams(power3[0], power3[1], power3[2]),
                       saturation));
 }
 
@@ -145,10 +146,10 @@ void CDLOp::finalize(OptimizationFlags /*oFlags*/)
 {
     cdlData()->finalize();
 
-    // Create the cacheID
+    // Create the cacheID.
     std::ostringstream cacheIDStream;
     cacheIDStream << "<CDLOp ";
-    cacheIDStream << cdlData()->getCacheID() << " ";
+    cacheIDStream << cdlData()->getCacheID();
     cacheIDStream << ">";
 
     m_cacheID = cacheIDStream.str();
@@ -160,117 +161,10 @@ ConstOpCPURcPtr CDLOp::getCPUOp() const
     return CDLOpCPU::GetRenderer(data);
 }
 
-void CDLOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
+void CDLOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
 {
-    RenderParams params;
-    ConstCDLOpDataRcPtr cdlOpData = cdlData();
-    params.update(cdlOpData);
-
-    const float * slope    = params.getSlope();
-    const float * offset   = params.getOffset();
-    const float * power    = params.getPower();
-    const float saturation = params.getSaturation();
-
-    GpuShaderText ss(shaderDesc->getLanguage());
-    ss.indent();
-
-    ss.newLine() << "";
-    ss.newLine() << "// Add CDL processing";
-    ss.newLine() << "";
-
-    ss.newLine() << "{";
-    ss.indent();
-
-    // Since alpha is not affected, only need to use the RGB components
-    ss.declareVec3f("lumaWeights", 0.2126f,   0.7152f,   0.0722f  );
-    ss.declareVec3f("slope",       slope [0], slope [1], slope [2]);
-    ss.declareVec3f("offset",      offset[0], offset[1], offset[2]);
-    ss.declareVec3f("power",       power [0], power [1], power [2]);
-
-    ss.declareVar("saturation" , saturation);
-
-    ss.newLine() << ss.vec3fDecl("pix") << " = "
-                 << shaderDesc->getPixelName() << ".xyz;";
-
-    if ( !params.isReverse() )
-    {
-        // Forward style
-
-        // Slope
-        ss.newLine() << "pix = pix * slope;";
-
-        // Offset
-        ss.newLine() << "pix = pix + offset;";
-
-        // Power
-        if ( !params.isNoClamp() )
-        {
-            ss.newLine() << "pix = clamp(pix, 0.0, 1.0);";
-            ss.newLine() << "pix = pow(pix, power);";
-        }
-        else
-        {
-            ss.newLine() << ss.vec3fDecl("posPix") << " = step(0.0, pix);";
-            ss.newLine() << ss.vec3fDecl("pixPower") << " = pow(abs(pix), power);";
-            ss.newLine() << "pix = " << ss.lerp("pix", "pixPower", "posPix") << ";";
-        }
-
-        // Saturation
-        ss.newLine() << "float luma = dot(pix, lumaWeights);";
-        ss.newLine() << "pix = luma + saturation * (pix - luma);";
-
-        // Post-saturation clamp
-        if ( !params.isNoClamp() )
-        {
-            ss.newLine() << "pix = clamp(pix, 0.0, 1.0);";
-        }
-    }
-    else
-    {
-        // Reverse style
-
-        // Pre-saturation clamp
-        if ( !params.isNoClamp() )
-        {
-            ss.newLine() << "pix = clamp(pix, 0.0, 1.0);";
-        }
-
-        // Saturation
-        ss.newLine() << "float luma = dot(pix, lumaWeights);";
-        ss.newLine() << "pix = luma + saturation * (pix - luma);";
-
-        // Power
-        if ( !params.isNoClamp() )
-        {
-            ss.newLine() << "pix = clamp(pix, 0.0, 1.0);";
-            ss.newLine() << "pix = pow(pix, power);";
-        }
-        else
-        {
-            ss.newLine() << ss.vec3fDecl("posPix") << " = step(0.0, pix);";
-            ss.newLine() << ss.vec3fDecl("pixPower") << " = pow(abs(pix), power);";
-            ss.newLine() << "pix = " << ss.lerp("pix", "pixPower", "posPix") << ";";
-        }
-
-        // Offset
-        ss.newLine() << "pix = pix + offset;";
-
-        // Slope
-        ss.newLine() << "pix = pix * slope;";
-
-        // Post-slope clamp
-        if ( !params.isNoClamp() )
-        {
-            ss.newLine() << "pix = clamp(pix, 0.0, 1.0);";
-        }
-    }
-
-    ss.newLine() << shaderDesc->getPixelName() << ".xyz = pix;";
-
-    ss.dedent();
-    ss.newLine() << "}";
-
-    shaderDesc->addToFunctionShaderCode(ss.string().c_str());
+    ConstCDLOpDataRcPtr data = cdlData();
+    GetCDLGPUShaderProgram(shaderCreator, data);
 }
 
 }  // Anon namespace
@@ -291,7 +185,7 @@ void CreateCDLOp(OpRcPtrVec & ops,
                  TransformDirection direction)
 {
 
-    CDLOpDataRcPtr cdlData( 
+    CDLOpDataRcPtr cdlData(
         new CDLOpData(style,
                       CDLOpData::ChannelParams(slope3[0], slope3[1], slope3[2]),
                       CDLOpData::ChannelParams(offset3[0], offset3[1], offset3[2]),
@@ -361,7 +255,7 @@ void BuildCDLOp(OpRcPtrVec & ops,
             // 1) Scale + Offset
             CreateScaleOffsetOp(ops, slope4, offset4, TRANSFORM_DIR_FORWARD);
 
-            // 2) Power + Clamp at 0 (NB: This is not in accord with the 
+            // 2) Power + Clamp at 0 (NB: This is not in accord with the
             //    ASC v1.2 spec since it also requires clamping at 1.)
             CreateExponentOp(ops, p, TRANSFORM_DIR_FORWARD);
 
@@ -375,7 +269,7 @@ void BuildCDLOp(OpRcPtrVec & ops,
             //    as per ASC v1.2 spec)
             CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_INVERSE);
 
-            // 2) Power + Clamp at 0 (NB: This is not in accord with the 
+            // 2) Power + Clamp at 0 (NB: This is not in accord with the
             //    ASC v1.2 spec since it also requires clamping at 1.)
             CreateExponentOp(ops, p, TRANSFORM_DIR_INVERSE);
 
