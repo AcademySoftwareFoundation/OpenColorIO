@@ -45,7 +45,7 @@ public:
 
     ConstOpCPURcPtr getCPUOp() const override;
 
-    void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
 protected:
     ConstFixedFunctionOpDataRcPtr fnData() const { return DynamicPtrCast<const FixedFunctionOpData>(data()); }
@@ -112,10 +112,10 @@ void FixedFunctionOp::finalize(OptimizationFlags /*oFlags*/)
 {
     fnData()->finalize();
 
-    // Create the cacheID
+    // Create the cacheID.
     std::ostringstream cacheIDStream;
     cacheIDStream << "<FixedFunctionOp ";
-    cacheIDStream << fnData()->getCacheID() << " ";
+    cacheIDStream << fnData()->getCacheID();
     cacheIDStream << ">";
 
     m_cacheID = cacheIDStream.str();
@@ -127,17 +127,10 @@ ConstOpCPURcPtr FixedFunctionOp::getCPUOp() const
     return GetFixedFunctionCPURenderer(data);
 }
 
-void FixedFunctionOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
+void FixedFunctionOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
 {
-    GpuShaderText ss(shaderDesc->getLanguage());
-    ss.indent();
-
     ConstFixedFunctionOpDataRcPtr fnOpData = fnData();
-    GetFixedFunctionGPUShaderProgram(ss, fnOpData);
-
-    ss.dedent();
-
-    shaderDesc->addToFunctionShaderCode(ss.string().c_str());
+    GetFixedFunctionGPUShaderProgram(shaderCreator, fnOpData);
 }
 
 
@@ -149,7 +142,7 @@ void FixedFunctionOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) cons
 ///////////////////////////////////////////////////////////////////////////
 
 
-void CreateFixedFunctionOp(OpRcPtrVec & ops, 
+void CreateFixedFunctionOp(OpRcPtrVec & ops,
                            const FixedFunctionOpData::Params & params,
                            FixedFunctionOpData::Style style)
 {
@@ -157,7 +150,7 @@ void CreateFixedFunctionOp(OpRcPtrVec & ops,
     CreateFixedFunctionOp(ops, funcData, TRANSFORM_DIR_FORWARD);
 }
 
-void CreateFixedFunctionOp(OpRcPtrVec & ops, 
+void CreateFixedFunctionOp(OpRcPtrVec & ops,
                            FixedFunctionOpDataRcPtr & funcData,
                            TransformDirection direction)
 {

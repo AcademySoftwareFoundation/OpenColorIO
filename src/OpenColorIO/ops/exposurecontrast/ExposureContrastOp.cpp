@@ -50,15 +50,15 @@ public:
 
     ConstOpCPURcPtr getCPUOp() const override;
 
-    void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
 protected:
     ConstExposureContrastOpDataRcPtr ecData() const
-    { 
+    {
         return DynamicPtrCast<const ExposureContrastOpData>(data());
     }
     ExposureContrastOpDataRcPtr ecData()
-    { 
+    {
         return DynamicPtrCast<ExposureContrastOpData>(data());
     }
 };
@@ -123,10 +123,10 @@ void ExposureContrastOp::finalize(OptimizationFlags /*oFlags*/)
 {
     ecData()->finalize();
 
-    // Create the cacheID
+    // Create the cacheID.
     std::ostringstream cacheIDStream;
     cacheIDStream << "<ExposureContrastOp ";
-    cacheIDStream << ecData()->getCacheID() << " ";
+    cacheIDStream << ecData()->getCacheID();
     cacheIDStream << ">";
 
     m_cacheID = cacheIDStream.str();
@@ -138,10 +138,10 @@ ConstOpCPURcPtr ExposureContrastOp::getCPUOp() const
     return GetExposureContrastCPURenderer(ecOpData);
 }
 
-void ExposureContrastOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
+void ExposureContrastOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
 {
     ConstExposureContrastOpDataRcPtr ecOpData = ecData();
-    GetExposureContrastGPUShaderProgram(shaderDesc, ecOpData);
+    GetExposureContrastGPUShaderProgram(shaderCreator, ecOpData);
 }
 
 bool ExposureContrastOp::isDynamic() const

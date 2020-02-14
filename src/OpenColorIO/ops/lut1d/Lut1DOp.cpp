@@ -51,7 +51,7 @@ public:
     ConstOpCPURcPtr getCPUOp() const override;
 
     bool supportedByLegacyShader() const override { return false; }
-    void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
     ConstLut1DOpDataRcPtr lut1DData() const { return DynamicPtrCast<const Lut1DOpData>(data()); }
     Lut1DOpDataRcPtr lut1DData() { return DynamicPtrCast<Lut1DOpData>(data()); }
@@ -135,17 +135,15 @@ void Lut1DOp::finalize(OptimizationFlags oFlags)
 {
     Lut1DOpDataRcPtr lutData = lut1DData();
 
-    const bool invLutFast = (oFlags & OPTIMIZATION_LUT_INV_FAST) ==
-                            OPTIMIZATION_LUT_INV_FAST;
-    lutData->setInversionQuality(
-        invLutFast ? LUT_INVERSION_FAST: LUT_INVERSION_EXACT);
+    const bool invLutFast = (oFlags & OPTIMIZATION_LUT_INV_FAST) == OPTIMIZATION_LUT_INV_FAST;
+    lutData->setInversionQuality(invLutFast ? LUT_INVERSION_FAST: LUT_INVERSION_EXACT);
 
     lutData->finalize();
 
-    // Rebuild the cache identifier
+    // Rebuild the cache identifier.
     std::ostringstream cacheIDStream;
     cacheIDStream << "<Lut1D ";
-    cacheIDStream << lutData->getCacheID() << " ";
+    cacheIDStream << lutData->getCacheID();
     cacheIDStream << ">";
 
     m_cacheID = cacheIDStream.str();
@@ -157,7 +155,7 @@ ConstOpCPURcPtr Lut1DOp::getCPUOp() const
     return GetLut1DRenderer(data, BIT_DEPTH_F32, BIT_DEPTH_F32);
 }
 
-void Lut1DOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
+void Lut1DOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
 {
     ConstLut1DOpDataRcPtr lutData = lut1DData();
     if (lutData->getDirection() == TRANSFORM_DIR_INVERSE)
@@ -175,7 +173,7 @@ void Lut1DOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
         lutData = tmp;
     }
 
-    GetLut1DGPUShaderProgram(shaderDesc, lutData);
+    GetLut1DGPUShaderProgram(shaderCreator, lutData);
 }
 }
 
