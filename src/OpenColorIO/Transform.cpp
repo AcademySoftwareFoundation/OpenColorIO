@@ -241,7 +241,7 @@ std::ostream& operator<< (std::ostream & os, const Transform & transform)
 void CreateTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
 {
     // AllocationNoOp, FileNoOp, LookNoOp won't create a Transform.
-    if (!op || op->isNoOp())
+    if (!op || op->isNoOpType())
         return;
 
     auto data = op->data();

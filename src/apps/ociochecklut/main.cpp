@@ -78,23 +78,25 @@ void ToString(std::vector<std::string> & str, const std::vector<float> & vec, si
     }
 }
 
-const char * DESC_STRING = "\n\n"
+const char * DESC_STRING = "\n"
 "OCIOCHECKLUT loads any LUT type supported by OCIO and prints any errors\n"
 "encountered.  Provide a normalized RGB or RGBA value to send that through\n"
 "the LUT.  Alternatively use the -t option to evaluate a set of test values.\n"
-"Use -v to print warnings while parsing the LUT.";
+"Use -v to print warnings while parsing the LUT.\n";
 
 int main (int argc, const char* argv[])
 {
     bool verbose = false;
+    bool printops = false;
     bool help = false;
     bool test = false;
 
     ArgParse ap;
     ap.options("ociochecklut -- check any LUT file and optionally convert a pixel\n\n"
-               "usage:  ociochecklut <INPUTFILE> [r g b] or [r g b a]\n\n",
+               "usage:  ociochecklut <INPUTFILE> <R G B> or <R G B A>\n\n",
                "%*", parse_end_args, "",
                "-t", &test, "Test a set a predefined RGB values\n",
+               "-p", &printops, "Print transform operators\n",
                "-v", &verbose, "Verbose\n",
                "-help", &help, "Print help message\n",
                NULL);
@@ -139,13 +141,9 @@ int main (int argc, const char* argv[])
     {
         std::cout << std::endl;
         std::cout << "OCIO Version: " << OCIO::GetVersion() << std::endl;
+    }
 
-        OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_DEBUG);
-    }
-    else
-    {
-        OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_WARNING);
-    }
+    OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_WARNING);
 
     // By default, the OCIO log goes to std::cerr, so we also print any log messages associated
     // with reading the transform.
@@ -153,12 +151,6 @@ int main (int argc, const char* argv[])
 
     if (!inputfile.empty())
     {
-        if (verbose)
-        {
-            std::cout << std::endl;
-            std::cout << "LUT file: " << inputfile << std::endl;
-        }
-
         OCIO::ConfigRcPtr config = OCIO::Config::Create();
 
         // Create the OCIO processor for the specified transform.
@@ -170,21 +162,31 @@ int main (int argc, const char* argv[])
         try
         {
             auto processor = config->getProcessor(t);
-            // After loading, logging level can be adjusted.
-            if (verbose)
+            if (printops)
             {
-                OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_WARNING);
+                auto transform = processor->createGroupTransform();
+                std::cout << std::endl << "Transform operators: " << std::endl;
+                const auto numTransforms = transform->getNumTransforms();
+                for (int i = 0; i < numTransforms; ++i)
+                {
+                    std::cout << "\t" << *(transform->getTransform(i)) << std::endl;
+                }
+                if (numTransforms == 0)
+                {
+                    std::cout << "No transform." << std::endl;
+                }
             }
+
             cpuProcessor = processor->getDefaultCPUProcessor();
         }
         catch (const OCIO::Exception & e)
         {
-            std::cout << "\nERROR creating processor: " << e.what() << std::endl;
+            std::cout << std::endl << "ERROR creating processor: " << e.what() << std::endl;
             return 1;
         }
         catch (...)
         {
-            std::cout << "\nUnknown ERROR creating processor" << std::endl;
+            std::cout << std::endl << "Unknown ERROR creating processor" << std::endl;
             return 1;
         }
 
