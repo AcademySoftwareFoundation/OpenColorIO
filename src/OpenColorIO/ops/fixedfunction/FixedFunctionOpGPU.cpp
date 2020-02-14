@@ -62,7 +62,7 @@ void Add_RedMod_03_Fwd_Shader(GpuShaderText & ss)
 
     ss.newLine() << "float f_S = ( max(1e-10, maxval.r) - max(1e-10, minval.r) ) / max(1e-2, maxval.r);";
 
-    ss.newLine() << "outColor.r = outColor.r + f_H * f_S * (" << _pivot 
+    ss.newLine() << "outColor.r = outColor.r + f_H * f_S * (" << _pivot
                  << " - outColor.r) * " << _1minusScale << ";";
 
     ss.newLine() << ss.vec3fDecl("maxval2") << " = max( outColor.rgb, max( outColor.gbr, outColor.brg));";
@@ -89,7 +89,7 @@ void Add_RedMod_03_Inv_Shader(GpuShaderText & ss)
     // Note: If f_H == 0, the following generally doesn't change the red value,
     //       but it does for R < 0, hence the need for the if-statement above.
     ss.newLine() << "float ka = f_H * " << _1minusScale << " - 1.;";
-    ss.newLine() << "float kb = outColor.r - f_H * (" << _pivot << " + minval.r) * " 
+    ss.newLine() << "float kb = outColor.r - f_H * (" << _pivot << " + minval.r) * "
                  << _1minusScale << ";";
     ss.newLine() << "float kc = f_H * " << _pivot << " * minval.r * " << _1minusScale << ";";
     ss.newLine() << "outColor.r = ( -kb - sqrt( kb * kb - 4. * ka * kc)) / ( 2. * ka);";
@@ -133,7 +133,7 @@ void Add_RedMod_10_Inv_Shader(GpuShaderText & ss)
     // Note: If f_H == 0, the following generally doesn't change the red value
     //       but it does for R < 0, hence the if.
     ss.newLine() << "float ka = f_H * " << _1minusScale << " - 1.;";
-    ss.newLine() << "float kb = outColor.r - f_H * (" << _pivot << " + minval.r) * " 
+    ss.newLine() << "float kb = outColor.r - f_H * (" << _pivot << " + minval.r) * "
                  << _1minusScale << ";";
     ss.newLine() << "float kc = f_H * " << _pivot << " * minval.r * " << _1minusScale << ";";
     ss.newLine() << "outColor.r = ( -kb - sqrt( kb * kb - 4. * ka * kc)) / ( 2. * ka);";
@@ -183,7 +183,7 @@ void Add_Glow_03_Inv_Shader(GpuShaderText & ss, float glowGain, float glowMid)
 
     ss.newLine() << "float GlowGain = " << glowGain << " * s;";
     ss.newLine() << "float GlowMid = " << glowMid << ";";
-    ss.newLine() << "float glowGainOut = " 
+    ss.newLine() << "float glowGainOut = "
                  << ss.lerp( "-GlowGain / (1. + GlowGain)",
                              "GlowGain * (GlowMid / YC - 0.5) / (GlowGain * 0.5 - 1.)",
                              "float( YC > (1. + GlowGain) * GlowMid * 2. / 3. )" ) << ";";
@@ -322,7 +322,7 @@ void Add_XYZ_TO_LUV(GpuShaderText & ss)
     ss.newLine() << "float v = outColor.g * 9. * d;";
     ss.newLine() << "float Y = outColor.g;";
 
-    ss.newLine() << "float Lstar = " << ss.lerp( "1.16 * pow( max(0., Y), 1./3. ) - 0.16", "9.0329629629629608 * Y", 
+    ss.newLine() << "float Lstar = " << ss.lerp( "1.16 * pow( max(0., Y), 1./3. ) - 0.16", "9.0329629629629608 * Y",
                                                  "float(Y <= 0.008856451679)" ) << ";";
     ss.newLine() << "float ustar = 13. * Lstar * (u - 0.19783001);";
     ss.newLine() << "float vstar = 13. * Lstar * (v - 0.46831999);";
@@ -346,13 +346,16 @@ void Add_LUV_TO_XYZ(GpuShaderText & ss)
     ss.newLine() << "outColor.g = Y;";
 }
 
-void GetFixedFunctionGPUShaderProgram(GpuShaderText & ss, 
+void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
                                       ConstFixedFunctionOpDataRcPtr & func)
 {
+    GpuShaderText ss(shaderCreator->getLanguage());
+    ss.indent();
+
     ss.newLine() << "";
-    ss.newLine() << "// Add FixedFunction "
+    ss.newLine() << "// Add FixedFunction '"
                  << FixedFunctionOpData::ConvertStyleToString(func->getStyle(), true)
-                 << " processing";
+                 << "' processing";
     ss.newLine() << "";
     ss.newLine() << "{";
     ss.indent();
@@ -465,6 +468,9 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderText & ss,
 
     ss.dedent();
     ss.newLine() << "}";
+
+    ss.dedent();
+    shaderCreator->addToFunctionShaderCode(ss.string().c_str());
 }
 
 } // OCIO_NAMESPACE

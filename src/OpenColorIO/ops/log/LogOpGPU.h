@@ -12,8 +12,7 @@
 namespace OCIO_NAMESPACE
 {
 
-void GetLogGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
-                            ConstLogOpDataRcPtr & logData);
+void GetLogGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & logData);
 
 } // namespace OCIO_NAMESPACE
 

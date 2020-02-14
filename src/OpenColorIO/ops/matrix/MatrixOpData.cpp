@@ -807,7 +807,10 @@ void MatrixOpData::finalize()
     validate();
 
     std::ostringstream cacheIDStream;
-    cacheIDStream << getID();
+    if (!getID().empty())
+    {
+        cacheIDStream << getID() << " ";
+    }
 
     md5_state_t state;
     md5_byte_t digest[16];
@@ -823,6 +826,7 @@ void MatrixOpData::finalize()
     md5_finish(&state, digest);
 
     cacheIDStream << GetPrintableHash(digest);
+
     m_cacheID = cacheIDStream.str();
 }
 

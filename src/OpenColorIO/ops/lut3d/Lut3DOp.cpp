@@ -179,7 +179,7 @@ public:
     ConstOpCPURcPtr getCPUOp() const override;
 
     bool supportedByLegacyShader() const override { return false; }
-    void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
 #ifdef OCIO_UNIT_TEST
     Array & getArray()
@@ -195,7 +195,7 @@ protected:
     }
 
     Lut3DOpDataRcPtr lut3DData()
-    { 
+    {
         return DynamicPtrCast<Lut3DOpData>(data());
     }
 };
@@ -290,7 +290,7 @@ void Lut3DOp::finalize(OptimizationFlags oFlags)
 
     std::ostringstream cacheIDStream;
     cacheIDStream << "<Lut3D ";
-    cacheIDStream << lutData->getCacheID() << " ";
+    cacheIDStream << lutData->getCacheID();
     cacheIDStream << ">";
 
     m_cacheID = cacheIDStream.str();
@@ -302,7 +302,7 @@ ConstOpCPURcPtr Lut3DOp::getCPUOp() const
     return GetLut3DRenderer(data);
 }
 
-void Lut3DOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
+void Lut3DOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
 {
     ConstLut3DOpDataRcPtr lutData = lut3DData();
     if (lutData->getDirection() == TRANSFORM_DIR_INVERSE)
@@ -320,7 +320,7 @@ void Lut3DOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
         lutData = tmp;
     }
 
-    GetLut3DGPUShaderProgram(shaderDesc, lutData);
+    GetLut3DGPUShaderProgram(shaderCreator, lutData);
 }
 }
 

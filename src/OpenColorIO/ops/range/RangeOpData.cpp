@@ -545,14 +545,18 @@ void RangeOpData::finalize()
     validate();
 
     std::ostringstream cacheIDStream;
-    cacheIDStream << getID();
+    if (!getID().empty())
+    {
+        cacheIDStream << getID() << " ";
+    }
 
     cacheIDStream.precision(DefaultValues::FLOAT_DECIMALS);
 
-    cacheIDStream << m_minInValue;
-    cacheIDStream << m_maxInValue;
-    cacheIDStream << m_minOutValue;
-    cacheIDStream << m_maxOutValue;
+    cacheIDStream << "[" << m_minInValue
+                  << ", " << m_maxInValue
+                  << ", " << m_minOutValue
+                  << ", " << m_maxOutValue
+                  << "]";
 
     m_cacheID = cacheIDStream.str();
 }

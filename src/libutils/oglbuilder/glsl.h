@@ -16,21 +16,26 @@ class OpenGLBuilder;
 typedef OCIO_SHARED_PTR<OpenGLBuilder> OpenGLBuilderRcPtr;
 
 
-// This is a reference implementation showing how to do the texture upload & allocation, 
+// This is a reference implementation showing how to do the texture upload & allocation,
 // and the program compilation for the GLSL shader language.
 
 class OpenGLBuilder
 {
     struct TextureId
     {
-        unsigned m_id = -1;
-        std::string m_name;
-        unsigned m_type = -1;
+        unsigned    m_uid = -1;
+        std::string m_textureName;
+        std::string m_samplerName;
+        unsigned    m_type = -1;
 
-        TextureId(unsigned id, const std::string& name, unsigned type)
-            : m_id(id)
-            , m_name(name)
-            , m_type(type)
+        TextureId(unsigned uid,
+                  const std::string & textureName,
+                  const std::string & samplerName,
+                  unsigned type)
+            :   m_uid(uid)
+            ,   m_textureName(textureName)
+            ,   m_samplerName(samplerName)
+            ,   m_type(type)
         {}
     };
 
