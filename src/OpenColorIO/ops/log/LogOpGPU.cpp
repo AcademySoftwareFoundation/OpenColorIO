@@ -15,19 +15,18 @@ namespace OCIO_NAMESPACE
 namespace
 {
 
-void AddLogShader(GpuShaderDescRcPtr & shaderDesc,
-                  ConstLogOpDataRcPtr & logData, float base)
+void AddLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & logData, float base)
 {
     const float minValue = std::numeric_limits<float>::min();
 
-    GpuShaderText st(shaderDesc->getLanguage());
+    GpuShaderText st(shaderCreator->getLanguage());
 
     st.indent();
     st.newLine() << "";
     st.newLine() << "// Add Log processing";
     st.newLine() << "";
 
-    const char * pix = shaderDesc->getPixelName();
+    const char * pix = shaderCreator->getPixelName();
 
     st.newLine() << pix << ".rgb = max( " << st.vec3fConst(minValue) << ", " << pix << ".rgb);";
 
@@ -41,34 +40,32 @@ void AddLogShader(GpuShaderDescRcPtr & shaderDesc,
         st.newLine() << pix << ".rgb = log(" << pix << ".rgb) * " << st.vec3fConst(oneOverLog10) << ";";
     }
 
-    shaderDesc->addToFunctionShaderCode(st.string().c_str());
+    shaderCreator->addToFunctionShaderCode(st.string().c_str());
 }
 
-void AddAntiLogShader(GpuShaderDescRcPtr & shaderDesc,
-                      ConstLogOpDataRcPtr & logData, float base)
+void AddAntiLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & logData, float base)
 {
-    GpuShaderText st(shaderDesc->getLanguage());
+    GpuShaderText st(shaderCreator->getLanguage());
 
     st.indent();
     st.newLine() << "";
     st.newLine() << "// Add Anti-Log processing";
     st.newLine() << "";
 
-    const char * pix = shaderDesc->getPixelName();
+    const char * pix = shaderCreator->getPixelName();
 
     st.newLine() << pix << ".rgb = pow( " << st.vec3fConst(base) << ", " << pix <<".rgb );";
 
-    shaderDesc->addToFunctionShaderCode(st.string().c_str());
+    shaderCreator->addToFunctionShaderCode(st.string().c_str());
 }
 
-void AddLogToLinShader(GpuShaderDescRcPtr & shaderDesc,
-                       ConstLogOpDataRcPtr & logData)
+void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & logData)
 {
     const auto & paramsR = logData->getRedParams();
     const auto & paramsG = logData->getGreenParams();
     const auto & paramsB = logData->getBlueParams();
     const double base = logData->getBase();
-    GpuShaderText st(shaderDesc->getLanguage());
+    GpuShaderText st(shaderCreator->getLanguage());
 
     st.indent();
     st.newLine() << "";
@@ -76,7 +73,7 @@ void AddLogToLinShader(GpuShaderDescRcPtr & shaderDesc,
     st.newLine() << "{";
     st.indent();
 
-    const char * pix = shaderDesc->getPixelName();
+    const char * pix = shaderCreator->getPixelName();
 
     const float logSlopeInv[3] = { 1.0f / (float)paramsR[LOG_SIDE_SLOPE],
                                    1.0f / (float)paramsG[LOG_SIDE_SLOPE],
@@ -102,11 +99,10 @@ void AddLogToLinShader(GpuShaderDescRcPtr & shaderDesc,
     st.dedent();
     st.newLine() << "}";
 
-    shaderDesc->addToFunctionShaderCode(st.string().c_str());
+    shaderCreator->addToFunctionShaderCode(st.string().c_str());
 }
 
-void AddLinToLogShader(GpuShaderDescRcPtr & shaderDesc,
-                       ConstLogOpDataRcPtr & logData)
+void AddLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & logData)
 {
     // logSlope * log(linSlope * x + linOffset, base) + logOffset
 
@@ -117,7 +113,7 @@ void AddLinToLogShader(GpuShaderDescRcPtr & shaderDesc,
 
     const float minValue = std::numeric_limits<float>::min();
 
-    GpuShaderText st(shaderDesc->getLanguage());
+    GpuShaderText st(shaderCreator->getLanguage());
 
     st.indent();
     st.newLine() << "";
@@ -125,7 +121,7 @@ void AddLinToLogShader(GpuShaderDescRcPtr & shaderDesc,
     st.newLine() << "{";
     st.indent();
 
-    const char * pix = shaderDesc->getPixelName();
+    const char * pix = shaderCreator->getPixelName();
 
     st.declareVec3f("minValue", minValue, minValue, minValue);
     st.declareVec3f("lin_slope", paramsR[LIN_SIDE_SLOPE], paramsG[LIN_SIDE_SLOPE], paramsB[LIN_SIDE_SLOPE]);
@@ -145,46 +141,45 @@ void AddLinToLogShader(GpuShaderDescRcPtr & shaderDesc,
     st.dedent();
     st.newLine() << "}";
 
-    shaderDesc->addToFunctionShaderCode(st.string().c_str());
+    shaderCreator->addToFunctionShaderCode(st.string().c_str());
 }
 
 }
 
-void GetLogGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
-                            ConstLogOpDataRcPtr & logData)
+void GetLogGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & logData)
 {
     const TransformDirection dir = logData->getDirection();
     if (logData->isLog2())
     {
         if (dir == TRANSFORM_DIR_FORWARD)
         {
-            AddLogShader(shaderDesc, logData, 2.0f);
+            AddLogShader(shaderCreator, logData, 2.0f);
         }
         else
         {
-            AddAntiLogShader(shaderDesc, logData, 2.0f);
+            AddAntiLogShader(shaderCreator, logData, 2.0f);
         }
     }
     else if (logData->isLog10())
     {
         if (dir == TRANSFORM_DIR_FORWARD)
         {
-            AddLogShader(shaderDesc, logData, 10.0f);
+            AddLogShader(shaderCreator, logData, 10.0f);
         }
         else
         {
-            AddAntiLogShader(shaderDesc, logData, 10.0f);
+            AddAntiLogShader(shaderCreator, logData, 10.0f);
         }
     }
     else
     {
         if (dir == TRANSFORM_DIR_FORWARD)
         {
-            AddLinToLogShader(shaderDesc, logData);
+            AddLinToLogShader(shaderCreator, logData);
         }
         else
         {
-            AddLogToLinShader(shaderDesc, logData);
+            AddLogToLinShader(shaderCreator, logData);
         }
     }
 

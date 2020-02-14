@@ -255,7 +255,10 @@ void ExposureContrastOpData::finalize()
     AutoMutex lock(m_mutex);
 
     std::ostringstream cacheIDStream;
-    cacheIDStream << getID();
+    if (!getID().empty())
+    {
+        cacheIDStream << getID() << " ";
+    }
 
     cacheIDStream.precision(DefaultValues::FLOAT_DECIMALS);
 

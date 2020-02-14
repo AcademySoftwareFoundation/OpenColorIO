@@ -16,7 +16,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <string>
 #include <sstream>
 
-#include "StringUtils.h"
+#include "utils/StringUtils.h"
 
 enum Lut3DOrder
 {

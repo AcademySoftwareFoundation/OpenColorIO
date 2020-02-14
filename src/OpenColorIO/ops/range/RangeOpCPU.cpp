@@ -181,7 +181,7 @@ void RangeScaleMaxRenderer::apply(const void * inImg, void * outImg, long numPix
 }
 
 // NOTE: Currently there is no way to create the Scale renderer.  If a Range Op
-// has a min or max defined (which is necessary to have an offset), then it clamps.  
+// has a min or max defined (which is necessary to have an offset), then it clamps.
 // If it doesn't, then it is just a bit depth conversion and is therefore an identity.
 // The optimizer currently replaces identities with a scale matrix.
 //

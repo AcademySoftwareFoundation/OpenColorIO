@@ -1619,7 +1619,9 @@ void Config::setFileRules(ConstFileRulesRcPtr fileRules)
     {
         throw Exception("Only config version 2 or higher can accept file rules.");
     }
+
     getImpl()->m_fileRules = fileRules->createEditableCopy();
+
     AutoMutex lock(getImpl()->m_cacheidMutex);
     getImpl()->resetCacheIDs();
 }

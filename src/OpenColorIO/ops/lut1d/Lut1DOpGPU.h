@@ -12,8 +12,7 @@
 namespace OCIO_NAMESPACE
 {
 
-void GetLut1DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
-                              ConstLut1DOpDataRcPtr & lutData);
+void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut1DOpDataRcPtr & lutData);
 
 } // namespace OCIO_NAMESPACE
 

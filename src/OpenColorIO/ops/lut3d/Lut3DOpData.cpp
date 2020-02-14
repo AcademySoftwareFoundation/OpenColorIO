@@ -34,8 +34,8 @@ Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut)
     LutStyleGuard<Lut3DOpData> guard(*lut);
 
     // Make a domain for the composed Lut3D.
-    // TODO: Using a large number like 48 here is better for accuracy, 
-    // but it causes a delay when creating the renderer. 
+    // TODO: Using a large number like 48 here is better for accuracy,
+    // but it causes a delay when creating the renderer.
     const long GridSize = 48u;
     Lut3DOpDataRcPtr newDomain = std::make_shared<Lut3DOpData>(GridSize);
 
@@ -470,9 +470,15 @@ void Lut3DOpData::finalize()
     md5_finish(&state, digest);
 
     std::ostringstream cacheIDStream;
-    cacheIDStream << GetPrintableHash(digest) << " ";
-    cacheIDStream << InterpolationToString(m_interpolation) << " ";
+    if (!getID().empty())
+    {
+        cacheIDStream << getID() << " ";
+    }
+
+    cacheIDStream << GetPrintableHash(digest)                << " ";
+    cacheIDStream << InterpolationToString(m_interpolation)  << " ";
     cacheIDStream << TransformDirectionToString(m_direction) << " ";
+
     // NB: The m_invQuality is not currently included.
 
     m_cacheID = cacheIDStream.str();
