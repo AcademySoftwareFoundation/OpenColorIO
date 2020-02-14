@@ -69,8 +69,12 @@ void ExponentOpData::finalize()
 {
     AutoMutex lock(m_mutex);
 
+    // Create the cacheID.
     std::ostringstream cacheIDStream;
-    cacheIDStream << getID();
+    if (!getID().empty())
+    {
+        cacheIDStream << getID() << " ";
+    }
 
     cacheIDStream.precision(DefaultValues::FLOAT_DECIMALS);
     for (int i = 0; i < 4; ++i)
@@ -142,7 +146,7 @@ public:
 
     ConstOpCPURcPtr getCPUOp() const override;
 
-    void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
 protected:
     ConstExponentOpDataRcPtr expData() const { return DynamicPtrCast<const ExponentOpData>(data()); }
@@ -235,7 +239,7 @@ void ExponentOp::finalize(OptimizationFlags /*oFlags*/)
     // Create the cacheID
     std::ostringstream cacheIDStream;
     cacheIDStream << "<ExponentOp ";
-    cacheIDStream << expData()->getCacheID() << " ";
+    cacheIDStream << expData()->getCacheID();
     cacheIDStream << ">";
     m_cacheID = cacheIDStream.str();
 }
@@ -245,22 +249,22 @@ ConstOpCPURcPtr ExponentOp::getCPUOp() const
     return std::make_shared<ExponentOpCPU>(expData());
 }
 
-void ExponentOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
+void ExponentOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
 {
-    GpuShaderText ss(shaderDesc->getLanguage());
+    GpuShaderText ss(shaderCreator->getLanguage());
     ss.indent();
 
     // outColor = pow(max(outColor, 0.), exp);
 
     ss.newLine()
-        << shaderDesc->getPixelName()
+        << shaderCreator->getPixelName()
         << " = pow( "
-        << "max( " << shaderDesc->getPixelName()
+        << "max( " << shaderCreator->getPixelName()
         << ", " << ss.vec4fConst(0.0f) << " )"
         << ", " << ss.vec4fConst(expData()->m_exp4[0], expData()->m_exp4[1],
                                     expData()->m_exp4[2], expData()->m_exp4[3]) << " );";
 
-    shaderDesc->addToFunctionShaderCode(ss.string().c_str());
+    shaderCreator->addToFunctionShaderCode(ss.string().c_str());
 }
 
 }  // Anon namespace

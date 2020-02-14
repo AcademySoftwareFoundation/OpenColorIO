@@ -10,8 +10,9 @@
 #include "GpuShaderUtils.h"
 #include "HashUtils.h"
 #include "MathUtils.h"
-#include "ops/matrix/MatrixOpCPU.h"
 #include "ops/matrix/MatrixOp.h"
+#include "ops/matrix/MatrixOpCPU.h"
+#include "ops/matrix/MatrixOpGPU.h"
 #include "transforms/MatrixTransform.h"
 
 namespace OCIO_NAMESPACE
@@ -63,7 +64,7 @@ public:
 
     ConstOpCPURcPtr getCPUOp() const override;
 
-    void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
 protected:
     ConstMatrixOpDataRcPtr matrixData() const { return DynamicPtrCast<const MatrixOpData>(data()); }
@@ -219,7 +220,7 @@ void MatrixOffsetOp::finalize(OptimizationFlags /*oFlags*/)
     std::ostringstream cacheIDStream;
     cacheIDStream << "<MatrixOffsetOp ";
     cacheIDStream << matrixData()->getCacheID() << " ";
-    cacheIDStream << TransformDirectionToString(m_direction) << " ";
+    cacheIDStream << TransformDirectionToString(m_direction);
     cacheIDStream << ">";
 
     m_cacheID = cacheIDStream.str();
@@ -231,54 +232,15 @@ ConstOpCPURcPtr MatrixOffsetOp::getCPUOp() const
     return GetMatrixRenderer(data);
 }
 
-void MatrixOffsetOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
+void MatrixOffsetOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
 {
     if (m_direction == TRANSFORM_DIR_INVERSE)
     {
-        throw Exception("MatrixOp direction should have been"
-                        " set to forward by finalize");
+        throw Exception("MatrixOp direction should have been set to forward by finalize.");
     }
 
-    // TODO: Review implementation to handle bitdepth
-
-    GpuShaderText ss(shaderDesc->getLanguage());
-    ss.indent();
-
-    ss.newLine() << "";
-    ss.newLine() << "// Add a Matrix processing";
-    ss.newLine() << "";
-
-    ConstMatrixOpDataRcPtr matData = matrixData();
-    ArrayDouble::Values values = matData->getArray().getValues();
-    MatrixOpData::Offsets offs(matData->getOffsets());
-
-    if (!matData->isUnityDiagonal())
-    {
-        if (matData->isDiagonal())
-        {
-            ss.newLine() << shaderDesc->getPixelName() << " = "
-                            << ss.vec4fConst((float)values[0],
-                                            (float)values[5],
-                                            (float)values[10],
-                                            (float)values[15])
-                            << " * " << shaderDesc->getPixelName() << ";";
-        }
-        else
-        {
-            ss.newLine() << shaderDesc->getPixelName() << " = "
-                            << ss.mat4fMul(&values[0], shaderDesc->getPixelName())
-                            << ";";
-        }
-    }
-
-    if (matData->hasOffsets())
-    {
-        ss.newLine() << shaderDesc->getPixelName() << " = "
-                        << ss.vec4fConst((float)offs[0], (float)offs[1], (float)offs[2], (float)offs[3])
-                        << " + " << shaderDesc->getPixelName() << ";";
-    }
-
-    shaderDesc->addToFunctionShaderCode(ss.string().c_str());
+    ConstMatrixOpDataRcPtr data = matrixData();
+    GetMatrixGPUShaderProgram(shaderCreator, data);
 }
 
 }  // Anon namespace

@@ -259,14 +259,17 @@ void LogOpData::finalize()
     validate();
 
     std::ostringstream cacheIDStream;
-    cacheIDStream << getID() << " ";
+    if (!getID().empty())
+    {
+        cacheIDStream << getID() << " ";
+    }
 
     cacheIDStream << TransformDirectionToString(m_direction) << " ";
 
-    cacheIDStream << "Base "         << getBaseString(DefaultValues::FLOAT_DECIMALS) << " ";
-    cacheIDStream << "LogSlope "     << getLogSlopeString(DefaultValues::FLOAT_DECIMALS) << " ";
+    cacheIDStream << "Base "         << getBaseString(DefaultValues::FLOAT_DECIMALS)      << " ";
+    cacheIDStream << "LogSlope "     << getLogSlopeString(DefaultValues::FLOAT_DECIMALS)  << " ";
     cacheIDStream << "LogOffset "    << getLogOffsetString(DefaultValues::FLOAT_DECIMALS) << " ";
-    cacheIDStream << "LinearSlope "  << getLinSlopeString(DefaultValues::FLOAT_DECIMALS) << " ";
+    cacheIDStream << "LinearSlope "  << getLinSlopeString(DefaultValues::FLOAT_DECIMALS)  << " ";
     cacheIDStream << "LinearOffset " << getLinOffsetString(DefaultValues::FLOAT_DECIMALS);
 
     m_cacheID = cacheIDStream.str();
@@ -318,7 +321,7 @@ bool LogOpData::isInverse(ConstLogOpDataRcPtr & r) const
     {
         return true;
     }
- 
+
     // Note:  Actually the R/G/B channels would not need to be equal for an
     // inverse, however, the identity replacement would get more complicated if
     // we allowed that case.  Since it is not a typical use-case, we don't
