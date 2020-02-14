@@ -7,7 +7,7 @@
 
 #include "OpenEXR/half.h"
 #include "oiiohelpers.h"
-#include "StringUtils.h"
+#include "utils/StringUtils.h"
 
 
 namespace OCIO_NAMESPACE
