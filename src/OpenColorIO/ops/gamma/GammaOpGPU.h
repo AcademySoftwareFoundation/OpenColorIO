@@ -14,11 +14,11 @@
 namespace OCIO_NAMESPACE
 {
 
-void GetLogGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
-                            ConstGammaOpDataRcPtr & gammaData);
+void GetGammaGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
+                              ConstGammaOpDataRcPtr & gammaData);
 
 
 } // namespace OCIO_NAMESPACE
 
 
-#endif
+#endif // INCLUDED_OCIO_GAMMAOP_GPU_H

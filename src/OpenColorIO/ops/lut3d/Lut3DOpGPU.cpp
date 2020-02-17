@@ -13,26 +13,27 @@
 namespace OCIO_NAMESPACE
 {
 
-void GetLut3DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
-                              ConstLut3DOpDataRcPtr & lutData)
+void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DOpDataRcPtr & lutData)
 {
 
     std::ostringstream resName;
-    resName << shaderDesc->getResourcePrefix()
+    resName << shaderCreator->getResourcePrefix()
+            << std::string("_")
             << std::string("lut3d_")
-            << shaderDesc->getNum3DTextures();
+            << shaderCreator->getNextResourceIndex();
 
     // Note: Remove potentially problematic double underscores from GLSL resource names.
     const std::string name(pystring::replace(resName.str(), "__", "_"));
 
-    shaderDesc->add3DTexture(GpuShaderText::getSamplerName(name).c_str(),
-        lutData->getCacheID().c_str(), lutData->getGridSize(),
-        lutData->getConcreteInterpolation(), &lutData->getArray()[0]);
+    shaderCreator->add3DTexture(name.c_str(),
+                             GpuShaderText::getSamplerName(name).c_str(),
+                             lutData->getCacheID().c_str(), lutData->getGridSize(),
+                             lutData->getConcreteInterpolation(), &lutData->getArray()[0]);
 
     {
-        GpuShaderText ss(shaderDesc->getLanguage());
+        GpuShaderText ss(shaderCreator->getLanguage());
         ss.declareTex3D(name);
-        shaderDesc->addToDeclareShaderCode(ss.string().c_str());
+        shaderCreator->addToDeclareShaderCode(ss.string().c_str());
     }
 
 
@@ -42,7 +43,7 @@ void GetLut3DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
     const float incr = 1.0f / dim;
 
     {
-        GpuShaderText ss(shaderDesc->getLanguage());
+        GpuShaderText ss(shaderCreator->getLanguage());
         ss.indent();
 
         ss.newLine() << "";
@@ -62,7 +63,7 @@ void GetLut3DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
             ss.indent();
 
             ss.newLine() << ss.vec3fDecl("coords") << " = "
-                         << shaderDesc->getPixelName() << ".rgb * "
+                         << shaderCreator->getPixelName() << ".rgb * "
                          << ss.vec3fConst(dim - 1) << "; ";
 
             // baseInd is on [0,dim-1]
@@ -102,7 +103,7 @@ void GetLut3DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
             ss.newLine() << ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.r - frac.g") << ";";
             ss.newLine() << ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.g - frac.b") << ";";
 
-            ss.newLine() << shaderDesc->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
+            ss.newLine() << shaderCreator->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
             ss.dedent();
             ss.newLine() << "}";
             ss.newLine() << "else if (frac.r >= frac.b)";  // R > B > G
@@ -119,7 +120,7 @@ void GetLut3DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
             ss.newLine() << ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.r - frac.b") << ";";
             ss.newLine() << ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.b - frac.g") << ";";
 
-            ss.newLine() << shaderDesc->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
+            ss.newLine() << shaderCreator->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
             ss.dedent();
             ss.newLine() << "}";
             ss.newLine() << "else";  // B > R > G
@@ -136,7 +137,7 @@ void GetLut3DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
             ss.newLine() << ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.b - frac.r") << ";";
             ss.newLine() << ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.r - frac.g") << ";";
 
-            ss.newLine() << shaderDesc->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
+            ss.newLine() << shaderCreator->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
             ss.dedent();
             ss.newLine() << "}";
             ss.dedent();
@@ -158,7 +159,7 @@ void GetLut3DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
             ss.newLine() << ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.b - frac.g") << ";";
             ss.newLine() << ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.g - frac.r") << ";";
 
-            ss.newLine() << shaderDesc->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
+            ss.newLine() << shaderCreator->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
             ss.dedent();
             ss.newLine() << "}";
             ss.newLine() << "else if (frac.r >= frac.b)";  // G > R > B
@@ -175,7 +176,7 @@ void GetLut3DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
             ss.newLine() << ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.g - frac.r") << ";";
             ss.newLine() << ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.r - frac.b") << ";";
 
-            ss.newLine() << shaderDesc->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
+            ss.newLine() << shaderCreator->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
             ss.dedent();
             ss.newLine() << "}";
             ss.newLine() << "else";  // G > B > R
@@ -192,15 +193,15 @@ void GetLut3DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
             ss.newLine() << ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.g - frac.b") << ";";
             ss.newLine() << ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.b - frac.r") << ";";
 
-            ss.newLine() << shaderDesc->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
+            ss.newLine() << shaderCreator->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
             ss.dedent();
             ss.newLine() << "}";
             ss.dedent();
             ss.newLine() << "}";
 
-            ss.newLine() << shaderDesc->getPixelName()
+            ss.newLine() << shaderCreator->getPixelName()
                          << ".rgb = "
-                         << shaderDesc->getPixelName()
+                         << shaderCreator->getPixelName()
                          << ".rgb + (f1 * v1) + (f4 * v4);";
 
             ss.dedent();
@@ -214,16 +215,16 @@ void GetLut3DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
             // hardware, which introduces significant error with small grid sizes.
 
             ss.newLine() << ss.vec3fDecl(name + "_coords")
-                         << " = (" << shaderDesc->getPixelName() << ".zyx * "
+                         << " = (" << shaderCreator->getPixelName() << ".zyx * "
                          << ss.vec3fConst(dim - 1) << " + "
                          << ss.vec3fConst(0.5f) + ") / "
                          << ss.vec3fConst(dim) << ";";
 
-            ss.newLine() << shaderDesc->getPixelName() << ".rgb = "
+            ss.newLine() << shaderCreator->getPixelName() << ".rgb = "
                          << ss.sampleTex3D(name, name + "_coords") << ".rgb;";
         }
 
-        shaderDesc->addToFunctionShaderCode(ss.string().c_str());
+        shaderCreator->addToFunctionShaderCode(ss.string().c_str());
     }
 }
 

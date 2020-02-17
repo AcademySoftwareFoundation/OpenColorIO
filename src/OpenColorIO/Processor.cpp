@@ -174,7 +174,7 @@ const char * Processor::getFormatExtensionByIndex(int index)
 {
     return FormatRegistry::GetInstance().getFormatExtensionByIndex(FORMAT_CAPABILITY_WRITE, index);
 }
-	
+
 bool Processor::hasDynamicProperty(DynamicPropertyType type) const
 {
     return getImpl()->hasDynamicProperty(type);
@@ -219,7 +219,7 @@ ConstCPUProcessorRcPtr Processor::getOptimizedCPUProcessor(OptimizationFlags oFl
     return getImpl()->getOptimizedCPUProcessor(oFlags);
 }
 
-ConstCPUProcessorRcPtr Processor::getOptimizedCPUProcessor(BitDepth inBitDepth, 
+ConstCPUProcessorRcPtr Processor::getOptimizedCPUProcessor(BitDepth inBitDepth,
                                                             BitDepth outBitDepth,
                                                             OptimizationFlags oFlags) const
 {
@@ -410,9 +410,7 @@ ConstCPUProcessorRcPtr Processor::Impl::getDefaultCPUProcessor() const
 {
     CPUProcessorRcPtr cpu = CPUProcessorRcPtr(new CPUProcessor(), &CPUProcessor::deleter);
 
-    cpu->getImpl()->finalize(m_ops, 
-                                BIT_DEPTH_F32, BIT_DEPTH_F32, 
-                                OPTIMIZATION_DEFAULT);
+    cpu->getImpl()->finalize(m_ops, BIT_DEPTH_F32, BIT_DEPTH_F32, OPTIMIZATION_DEFAULT);
 
     return cpu;
 }
@@ -421,16 +419,14 @@ ConstCPUProcessorRcPtr Processor::Impl::getOptimizedCPUProcessor(OptimizationFla
 {
     CPUProcessorRcPtr cpu = CPUProcessorRcPtr(new CPUProcessor(), &CPUProcessor::deleter);
 
-    cpu->getImpl()->finalize(m_ops,
-                                BIT_DEPTH_F32, BIT_DEPTH_F32,
-                                oFlags);
+    cpu->getImpl()->finalize(m_ops, BIT_DEPTH_F32, BIT_DEPTH_F32, oFlags);
 
     return cpu;
 }
 
-ConstCPUProcessorRcPtr Processor::Impl::getOptimizedCPUProcessor(BitDepth inBitDepth, 
-                                                                    BitDepth outBitDepth,
-                                                                    OptimizationFlags oFlags) const
+ConstCPUProcessorRcPtr Processor::Impl::getOptimizedCPUProcessor(BitDepth inBitDepth,
+                                                                 BitDepth outBitDepth,
+                                                                 OptimizationFlags oFlags) const
 {
     CPUProcessorRcPtr cpu = CPUProcessorRcPtr(new CPUProcessor(), &CPUProcessor::deleter);
 
@@ -444,9 +440,9 @@ ConstCPUProcessorRcPtr Processor::Impl::getOptimizedCPUProcessor(BitDepth inBitD
 
 
 void Processor::Impl::setColorSpaceConversion(const Config & config,
-                                                const ConstContextRcPtr & context,
-                                                const ConstColorSpaceRcPtr & srcColorSpace,
-                                                const ConstColorSpaceRcPtr & dstColorSpace)
+                                              const ConstContextRcPtr & context,
+                                              const ConstColorSpaceRcPtr & srcColorSpace,
+                                              const ConstColorSpaceRcPtr & dstColorSpace)
 {
     if (!m_ops.empty())
     {
@@ -458,9 +454,9 @@ void Processor::Impl::setColorSpaceConversion(const Config & config,
 }
 
 void Processor::Impl::setTransform(const Config & config,
-                                    const ConstContextRcPtr & context,
-                                    const ConstTransformRcPtr& transform,
-                                    TransformDirection direction)
+                                   const ConstContextRcPtr & context,
+                                   const ConstTransformRcPtr& transform,
+                                   TransformDirection direction)
 {
     if (!m_ops.empty())
     {

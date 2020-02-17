@@ -50,7 +50,7 @@ public:
 
     ConstOpCPURcPtr getCPUOp() const override;
 
-    void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
 protected:
     ConstGammaOpDataRcPtr gammaData() const { return DynamicPtrCast<const GammaOpData>(data()); }
@@ -143,15 +143,15 @@ ConstOpCPURcPtr GammaOp::getCPUOp() const
     return GetGammaRenderer(data);
 }
 
-void GammaOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
+void GammaOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
 {
     ConstGammaOpDataRcPtr data = gammaData();
-    GetLogGPUShaderProgram(shaderDesc, data);
+    GetGammaGPUShaderProgram(shaderCreator, data);
 }
 
 }  // Anon namespace
 
-void CreateGammaOp(OpRcPtrVec & ops, 
+void CreateGammaOp(OpRcPtrVec & ops,
                    GammaOpDataRcPtr & gammaData,
                    TransformDirection direction)
 {

@@ -103,6 +103,12 @@ typedef OCIO_SHARED_PTR<const ImageDesc> ConstImageDescRcPtr;
 
 class OCIOEXPORT Exception;
 
+class OCIOEXPORT GpuShaderCreator;
+//!cpp:type::
+typedef OCIO_SHARED_PTR<GpuShaderCreator> GpuShaderCreatorRcPtr;
+//!cpp:type::
+typedef OCIO_SHARED_PTR<const GpuShaderCreator> ConstGpuShaderCreatorRcPtr;
+
 class OCIOEXPORT GpuShaderDesc;
 //!cpp:type::
 typedef OCIO_SHARED_PTR<GpuShaderDesc> GpuShaderDescRcPtr;

@@ -7,6 +7,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/exposurecontrast/ExposureContrastOpGPU.h"
+#include "pystring/pystring.h"
 
 
 namespace OCIO_NAMESPACE
@@ -18,22 +19,22 @@ static constexpr char EC_EXPOSURE[] = "exposureVal";
 static constexpr char EC_CONTRAST[] = "contrastVal";
 static constexpr char EC_GAMMA[]    = "gammaVal";
 
-void AddUniform(GpuShaderDescRcPtr & shaderDesc,
+void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
                 GpuShaderText & st,
                 DynamicPropertyImplRcPtr prop,
                 const std::string & name)
 {
     // Add the uniform if it does not already exist.
-    if (shaderDesc->addUniform(name.c_str(), prop))
+    if (shaderCreator->addUniform(name.c_str(), prop))
     {
         // Declare uniform.
-        GpuShaderText stDecl(shaderDesc->getLanguage());
+        GpuShaderText stDecl(shaderCreator->getLanguage());
         stDecl.declareUniformFloat(name);
-        shaderDesc->addToDeclareShaderCode(stDecl.string().c_str());
+        shaderCreator->addToDeclareShaderCode(stDecl.string().c_str());
     }
 }
 
-std::string AddDynamicProperty(GpuShaderDescRcPtr & shaderDesc,
+std::string AddDynamicProperty(GpuShaderCreatorRcPtr & shaderCreator,
                                GpuShaderText & st,
                                DynamicPropertyImplRcPtr prop,
                                const std::string & name)
@@ -42,13 +43,17 @@ std::string AddDynamicProperty(GpuShaderDescRcPtr & shaderDesc,
 
     if(prop->isDynamic())
     {
-        finalName = shaderDesc->getResourcePrefix();
+        finalName = shaderCreator->getResourcePrefix();
+        finalName += "_";
         finalName += name;
+
+        // Note: Remove potentially problematic double underscores from GLSL resource names.
+        finalName = pystring::replace(finalName, "__", "_");
 
         // NB: No need to add an index to the name to avoid collisions
         //     as the dynamic properties are shared i.e. only one instance.
 
-        AddUniform(shaderDesc, st, prop, finalName);
+        AddUniform(shaderCreator, st, prop, finalName);
     }
     else
     {
@@ -60,16 +65,16 @@ std::string AddDynamicProperty(GpuShaderDescRcPtr & shaderDesc,
     return finalName;
 }
 
-void AddProperties(GpuShaderDescRcPtr & shaderDesc,
+void AddProperties(GpuShaderCreatorRcPtr & shaderCreator,
                    GpuShaderText & st,
                    ConstExposureContrastOpDataRcPtr & ec,
                    std::string & exposureName,
                    std::string & contrastName,
                    std::string & gammaName)
 {
-    exposureName = AddDynamicProperty(shaderDesc, st, ec->getExposureProperty(), EC_EXPOSURE);
-    contrastName = AddDynamicProperty(shaderDesc, st, ec->getContrastProperty(), EC_CONTRAST);
-    gammaName    = AddDynamicProperty(shaderDesc, st, ec->getGammaProperty(),    EC_GAMMA);
+    exposureName = AddDynamicProperty(shaderCreator, st, ec->getExposureProperty(), EC_EXPOSURE);
+    contrastName = AddDynamicProperty(shaderCreator, st, ec->getContrastProperty(), EC_CONTRAST);
+    gammaName    = AddDynamicProperty(shaderCreator, st, ec->getGammaProperty(),    EC_GAMMA);
 }
 
 void AddECLinearShader(GpuShaderText & st,
@@ -211,7 +216,7 @@ void AddECLogarithmicShader(GpuShaderText & st,
 {
     double pivot = std::max(EC::MIN_PIVOT, ec->getPivot());
     float logPivot = (float)std::max(0., std::log2(pivot / 0.18) *
-                                         ec->getLogExposureStep() + 
+                                         ec->getLogExposureStep() +
                                          ec->getLogMidGray());
 
     st.newLine() << "float exposure = " << exposureName << " * "
@@ -230,7 +235,7 @@ void AddECLogarithmicRevShader(GpuShaderText & st,
 {
     double pivot = std::max(EC::MIN_PIVOT, ec->getPivot());
     float logPivot = (float)std::max(0., std::log2(pivot / 0.18) *
-                                         ec->getLogExposureStep() + 
+                                         ec->getLogExposureStep() +
                                          ec->getLogMidGray());
 
     st.newLine() << "float exposure = " << exposureName << " * "
@@ -244,25 +249,25 @@ void AddECLogarithmicRevShader(GpuShaderText & st,
 
 }
 
-void GetExposureContrastGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
+void GetExposureContrastGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
                                          ConstExposureContrastOpDataRcPtr & ec)
 {
     std::string exposureName;
     std::string contrastName;
     std::string gammaName;
 
-    GpuShaderText st(shaderDesc->getLanguage());
+    GpuShaderText st(shaderCreator->getLanguage());
     st.indent();
 
     st.newLine() << "";
-    st.newLine() << "// Add ExposureContrast "
+    st.newLine() << "// Add ExposureContrast '"
                  << ExposureContrastOpData::ConvertStyleToString(ec->getStyle())
-                 << " processing";
+                 << "' processing";
     st.newLine() << "";
     st.newLine() << "{";
     st.indent();
 
-    AddProperties(shaderDesc, st, ec,
+    AddProperties(shaderCreator, st, ec,
                   exposureName,
                   contrastName,
                   gammaName);
@@ -293,7 +298,7 @@ void GetExposureContrastGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
     st.newLine() << "}";
 
     st.dedent();
-    shaderDesc->addToFunctionShaderCode(st.string().c_str());
+    shaderCreator->addToFunctionShaderCode(st.string().c_str());
 }
 
 } // namespace OCIO_NAMESPACE

@@ -11,6 +11,9 @@
 
 #include "FileRules.h"
 #include "PathUtils.h"
+#include "Platform.h"
+#include "utils/StringUtils.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -249,7 +252,7 @@ void ValidateRegularExpression(const char * exp)
     {
         std::ostringstream oss;
         oss << "File rules: invalid regular expression: '" << std::string(exp) << "'. Error is: '"
-            << std::string(ex.what()) << "'";
+            << std::string(ex.what()) << "'.";
         throw Exception(oss.str().c_str());
     }
 }
@@ -262,6 +265,9 @@ void ValidateRegularExpression(const char * filePathPattern, const char * fileNa
 
 }
 
+class FileRule;
+using FileRuleRcPtr = OCIO_SHARED_PTR<FileRule>;
+
 class FileRule
 {
 public:
@@ -273,6 +279,8 @@ public:
         FILE_RULE_GLOB
     };
 
+    using CustomKeys = std::map<std::string, std::string>;
+
     FileRule() = delete;
     FileRule(const FileRule &) = delete;
     FileRule & operator=(const FileRule &) = delete;
@@ -280,14 +288,30 @@ public:
     explicit FileRule(const char * name)
         : m_name(name)
     {
-        if (m_name == FileRuleUtils::DefaultName)
+        if (0==Platform::Strcasecmp(name, FileRuleUtils::DefaultName))
         {
+            m_name = FileRuleUtils::DefaultName; // Enforce case consistency.
             m_type = FILE_RULE_DEFAULT;
         }
-        else if (m_name == FileRuleUtils::ParseName)
+        else if (0==Platform::Strcasecmp(name, FileRuleUtils::ParseName))
         {
+            m_name = FileRuleUtils::ParseName; // Enforce case consistency.
             m_type = FILE_RULE_PARSE_FILEPATH;
         }
+    }
+
+    FileRuleRcPtr clone() const
+    {
+        FileRuleRcPtr rule = std::make_shared<FileRule>(m_name.c_str());
+    
+        rule->m_colorSpace = m_colorSpace;
+        rule->m_pattern    = m_pattern;
+        rule->m_extension  = m_extension;
+        rule->m_regex      = m_regex;
+        rule->m_customKeys = m_customKeys;
+        rule->m_type       = m_type;
+
+        return rule;
     }
 
     const char * getName() const noexcept
@@ -503,17 +527,15 @@ private:
         }
     }
 
-    std::string m_name{ "" };
-    mutable std::string m_colorSpace{ "" };
-    std::string m_pattern{ "" };
-    std::string m_extension{ "" };
-    std::string m_regex{ "" };
-    using CustomKeys = std::map<std::string, std::string>;
+    std::string m_name;
+    mutable std::string m_colorSpace;
+    std::string m_pattern;
+    std::string m_extension;
+    std::string m_regex;
     CustomKeys m_customKeys;
     RuleType m_type{ FILE_RULE_GLOB };
 };
 
-using FileRuleRcPtr = OCIO_SHARED_PTR<FileRule>;
 
 class FileRules::Impl
 {
@@ -524,11 +546,10 @@ public:
         DEFAULT_NOT_ALLOWED
     };
 
-    Impl(const Impl &) = delete;
-    Impl & operator=(const Impl &) = delete;
-
     Impl();
-    ~Impl();
+    Impl(const Impl &) = delete;
+    Impl & operator=(const Impl & rhs);
+    ~Impl() = default;
 
     const char * getRuleFromFilepath(const Config & config, const char * filePath,
                                      size_t & ruleIndex) const;
@@ -551,6 +572,8 @@ FileRules::FileRules()
 
 FileRules::~FileRules()
 {
+    delete m_impl;
+    m_impl = nullptr;
 }
 
 FileRulesRcPtr FileRules::Create()
@@ -566,7 +589,7 @@ void FileRules::deleter(FileRules * fr)
 FileRulesRcPtr FileRules::createEditableCopy() const
 {
     FileRulesRcPtr rules = Create();
-    rules->m_impl->m_rules = m_impl->m_rules;
+    *rules->m_impl = *m_impl; // Deep copy.
     return rules;
 }
 
@@ -577,6 +600,21 @@ FileRules::Impl::Impl()
     m_rules.push_back(defaultRule);
 }
 
+FileRules::Impl & FileRules::Impl::operator=(const FileRules::Impl & rhs)
+{
+    if (this!=&rhs)
+    {
+        m_rules.clear(); // Remove the 'Default' rule.
+
+        for (const auto & rule : rhs.m_rules)
+        {
+            m_rules.push_back(rule->clone());
+        }
+    }
+
+    return *this;
+}
+
 void FileRules::Impl::validatePosition(size_t ruleIndex, DefaultAllowed allowDefault) const
 {
     const auto numRules = m_rules.size();
@@ -584,7 +622,7 @@ void FileRules::Impl::validatePosition(size_t ruleIndex, DefaultAllowed allowDef
     {
         std::ostringstream oss;
         oss << "File rules: rule index '" << ruleIndex << "' invalid."
-            << " There are '" << numRules << "' rules.";
+            << " There are only '" << numRules << "' rules.";
         throw Exception(oss.str().c_str());
     }
     if (allowDefault == DEFAULT_NOT_ALLOWED && ruleIndex + 1 == numRules)
@@ -601,20 +639,19 @@ void FileRules::Impl::validateNewRule(size_t ruleIndex, const char * name) const
     {
         throw Exception("File rules: rule should have a non empty name.");
     }
-    std::string namestr(name);
     auto existingRule = std::find_if(m_rules.begin(), m_rules.end(),
-                                     [&namestr](const FileRuleRcPtr & rule)
+                                     [name](const FileRuleRcPtr & rule)
                                      {
-                                         return (namestr == rule->getName());
+                                         return 0==Platform::Strcasecmp(name, rule->getName());
                                      });
     if (existingRule != m_rules.end())
     {
         std::ostringstream oss;
-        oss << "File rules: A rule named '" << namestr << "' already exists";
+        oss << "File rules: A rule named '" << name << "' already exists.";
         throw Exception(oss.str().c_str());
     }
     validatePosition(ruleIndex, DEFAULT_ALLOWED);
-    if (namestr == FileRuleUtils::DefaultName)
+    if (0==Platform::Strcasecmp(name, FileRuleUtils::DefaultName))
     {
         std::ostringstream oss;
         oss << "File rules: Default rule already exists at index "
@@ -667,6 +704,22 @@ void FileRules::validate(const Config & config) const
 size_t FileRules::getNumEntries() const noexcept
 {
     return m_impl->m_rules.size();
+}
+
+size_t FileRules::getIndexForRule(const char * ruleName) const
+{
+    const size_t numRules = m_impl->m_rules.size();
+    for (size_t idx = 0; idx < numRules; ++idx)
+    {
+        if (0==Platform::Strcasecmp(ruleName, m_impl->m_rules[idx]->getName()))
+        {
+            return idx;
+        }
+    }
+
+    std::ostringstream oss;
+    oss << "File rules: rule name '" << ruleName << "' not found.";
+    throw Exception(oss.str().c_str());
 }
 
 const char * FileRules::getName(size_t ruleIndex) const
@@ -751,9 +804,11 @@ void FileRules::setCustomKey(size_t ruleIndex, const char * key, const char * va
 void FileRules::insertRule(size_t ruleIndex, const char * name, const char * colorSpace,
                            const char * pattern, const char * extension)
 {
-    m_impl->validateNewRule(ruleIndex, name);
+    const std::string ruleName(StringUtils::Trim(name ? name : ""));
 
-    auto newRule = std::make_shared<FileRule>(name);
+    m_impl->validateNewRule(ruleIndex, ruleName.c_str());
+
+    auto newRule = std::make_shared<FileRule>(ruleName.c_str());
     newRule->setColorSpace(colorSpace);
     newRule->setPattern(pattern);
     newRule->setExtension(extension);
@@ -763,9 +818,11 @@ void FileRules::insertRule(size_t ruleIndex, const char * name, const char * col
 void FileRules::insertRule(size_t ruleIndex, const char * name, const char * colorSpace,
                            const char * regex)
 {
-    m_impl->validateNewRule(ruleIndex, name);
+    const std::string ruleName(StringUtils::Trim(name ? name : ""));
 
-    auto newRule = std::make_shared<FileRule>(name);
+    m_impl->validateNewRule(ruleIndex, ruleName.c_str());
+
+    auto newRule = std::make_shared<FileRule>(ruleName.c_str());
     newRule->setColorSpace(colorSpace);
     newRule->setRegex(regex);
     m_impl->m_rules.insert(m_impl->m_rules.begin() + ruleIndex, newRule);
@@ -795,15 +852,6 @@ void FileRules::increaseRulePriority(size_t ruleIndex)
 void FileRules::decreaseRulePriority(size_t ruleIndex)
 {
     m_impl->moveRule(ruleIndex, 1);
-}
-
-FileRules & FileRules::operator=(const FileRules & rhs)
-{
-    if (this != &rhs)
-    {
-        m_impl->m_rules = rhs.m_impl->m_rules;
-    }
-    return *this;
 }
 
 const char * FileRules::getColorSpaceFromFilepath(const Config & config,

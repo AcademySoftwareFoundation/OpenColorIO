@@ -13,7 +13,7 @@
 namespace OCIO_NAMESPACE
 {
 
-void GetExposureContrastGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
+void GetExposureContrastGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
                                          ConstExposureContrastOpDataRcPtr & ec);
 
 } // namespace OCIO_NAMESPACE

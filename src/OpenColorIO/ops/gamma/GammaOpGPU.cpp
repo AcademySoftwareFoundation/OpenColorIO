@@ -23,8 +23,8 @@ void AddBasicFwdShader(ConstGammaOpDataRcPtr gamma, GpuShaderText & ss)
 
     ss.declareVec4f( "gamma", redGamma, grnGamma, bluGamma, alphaGamma);
 
-    ss.newLine() << "outColor = pow( max( " 
-                 << ss.vec4fConst(0.0f) 
+    ss.newLine() << "outColor = pow( max( "
+                 << ss.vec4fConst(0.0f)
                  << ", outColor ), gamma );";
 }
 
@@ -124,6 +124,7 @@ void AddMoncurveFwdShader(ConstGammaOpDataRcPtr gamma, GpuShaderText & ss)
 
     // Even if all components are the same, on OS X, a vec4 needs to be
     // declared.  This code will work in both cases.
+
     ss.declareVec4f( "breakPnt", red.breakPnt, green.breakPnt, blue.breakPnt, alpha.breakPnt);
     ss.declareVec4f( "slope" , red.slope, green.slope, blue.slope, alpha.slope);
     ss.declareVec4f( "scale" , red.scale, green.scale, blue.scale, alpha.scale);
@@ -154,6 +155,7 @@ void AddMoncurveRevShader(ConstGammaOpDataRcPtr gamma, GpuShaderText & ss)
 
     // Even if all components are the same, on OS X, a vec4 needs to be
     // declared.  This code will work in both cases.
+
     ss.declareVec4f( "breakPnt", red.breakPnt, green.breakPnt, blue.breakPnt, alpha.breakPnt);
     ss.declareVec4f( "slope" , red.slope, green.slope, blue.slope, alpha.slope);
     ss.declareVec4f( "scale" , red.scale, green.scale, blue.scale, alpha.scale);
@@ -243,10 +245,10 @@ void AddMoncurveMirrorRevShader(ConstGammaOpDataRcPtr gamma, GpuShaderText & ss)
 
 }  // Anon namespace
 
-void GetLogGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
-                            ConstGammaOpDataRcPtr & gammaData)
+void GetGammaGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
+                              ConstGammaOpDataRcPtr & gammaData)
 {
-    GpuShaderText ss(shaderDesc->getLanguage());
+    GpuShaderText ss(shaderCreator->getLanguage());
     ss.indent();
 
     ss.newLine() << "";
@@ -316,7 +318,7 @@ void GetLogGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
     ss.newLine() << "}";
     ss.dedent();
 
-    shaderDesc->addToFunctionShaderCode(ss.string().c_str());
+    shaderCreator->addToFunctionShaderCode(ss.string().c_str());
 }
 
 

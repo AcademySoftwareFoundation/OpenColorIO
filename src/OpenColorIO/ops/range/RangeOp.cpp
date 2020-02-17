@@ -51,7 +51,7 @@ public:
 
     ConstOpCPURcPtr getCPUOp() const override;
 
-    void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const override;
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
 protected:
     ConstRangeOpDataRcPtr rangeData() const { return DynamicPtrCast<const RangeOpData>(data()); }
@@ -202,7 +202,7 @@ void RangeOp::finalize(OptimizationFlags /*oFlags*/)
     std::ostringstream cacheIDStream;
     cacheIDStream << "<RangeOp ";
     cacheIDStream << constThis.rangeData()->getCacheID() << " ";
-    cacheIDStream << TransformDirectionToString(m_direction) << " ";
+    cacheIDStream << TransformDirectionToString(m_direction);
     cacheIDStream << ">";
 
     m_cacheID = cacheIDStream.str();
@@ -214,7 +214,7 @@ ConstOpCPURcPtr RangeOp::getCPUOp() const
     return GetRangeRenderer(data);
 }
 
-void RangeOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
+void RangeOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
 {
     if (m_direction != TRANSFORM_DIR_FORWARD)
     {
@@ -222,7 +222,7 @@ void RangeOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
     }
 
     ConstRangeOpDataRcPtr data = rangeData();
-    GetRangeGPUShaderProgram(shaderDesc, data);
+    GetRangeGPUShaderProgram(shaderCreator, data);
 }
 
 }  // Anon namespace
