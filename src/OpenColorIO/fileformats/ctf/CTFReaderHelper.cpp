@@ -296,14 +296,14 @@ void CTFReaderArrayElt::start(const char ** atts)
             }
             catch (Exception& /*ce*/)
             {
-                ThrowM(*this, "Illegal '", getTypeName(), "' dimensions ",
+                ThrowM(*this, "Illegal '", getTypeName(), "' array dimensions ",
                        TruncateString(dimStr, len));
             }
 
             CTFArrayMgt* pArr = dynamic_cast<CTFArrayMgt*>(getParent().get());
             if (!pArr)
             {
-                ThrowM(*this, "Parsing issue while parsing dimensions of '",
+                ThrowM(*this, "Parsing issue while parsing array dimensions of '",
                        getTypeName(), "' (", TruncateString(dimStr, len), ").");
             }
             else
@@ -311,14 +311,14 @@ void CTFReaderArrayElt::start(const char ** atts)
                 const unsigned max = (const unsigned)(dims.empty() ? 0 : (dims.size() - 1));
                 if (max == 0)
                 {
-                    ThrowM(*this, "Illegal '", getTypeName(), "' dimensions ",
+                    ThrowM(*this, "Illegal '", getTypeName(), "' array dimensions ",
                            TruncateString(dimStr, len));
                 }
 
                 m_array = pArr->updateDimension(dims);
                 if (!m_array)
                 {
-                    ThrowM(*this, "'", getTypeName(), "' Illegal dimensions ",
+                    ThrowM(*this, "'", getTypeName(), "' Illegal array dimensions ",
                            TruncateString(dimStr, len));
                 }
             }
@@ -375,7 +375,7 @@ void CTFReaderArrayElt::setRawData(const char * s,
         catch (Exception& /*ce*/)
         {
             ThrowM(*this, "Illegal values '", TruncateString(s, len),
-                   "' in ", getTypeName());
+                   "' in array of ", getTypeName());
         }
 
         if (m_position<maxValues)
@@ -405,7 +405,7 @@ void CTFReaderArrayElt::setRawData(const char * s,
             }
 
             ThrowM(*this, "Expected ", arg.str(),
-                   " Array, found too many values in '", getTypeName(), "'.");
+                   " Array, found too many values in array of '", getTypeName(), "'.");
         }
     }
 }
@@ -926,9 +926,7 @@ void CTFReaderOpElt::end()
 
 const char * CTFReaderOpElt::getTypeName() const
 {
-    OpDataRcPtr op = getOp();
-    auto & r = *op;
-    return typeid(r).name();
+    return getName().c_str();
 }
 
 void CTFReaderOpElt::validateXmlParameters(const char ** atts) const noexcept

@@ -42,8 +42,8 @@ void XmlReaderElement::setContext(const std::string & name,
 void XmlReaderElement::throwMessage(const std::string & error) const
 {
     std::ostringstream os;
-    os << getXmlFile().c_str() << "(" << getXmlLineNumber() << "): ";
-    os << "Error while parsing: " << error.c_str();
+    os << "At line " << getXmlLineNumber() << ": ";
+    os << error.c_str();
     throw Exception(os.str().c_str());
 }
 

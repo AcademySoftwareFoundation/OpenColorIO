@@ -1205,7 +1205,7 @@ OCIO_ADD_TEST(FileFormatCTF, array_corrupted_dimension)
     const std::string ctfFile("array_illegal_dimension.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile),
                           OCIO::Exception,
-                          "Illegal dimensions");
+                          "Illegal array dimensions");
 }
 
 OCIO_ADD_TEST(FileFormatCTF, array_too_many_values)
@@ -1330,7 +1330,7 @@ OCIO_ADD_TEST(FileFormatCTF, matrix_with_offset_1_3)
     const std::string ctfFile("matrix_offsets_example_1_3.ctf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile),
                           OCIO::Exception,
-                          "Illegal dimensions 4 4 3");
+                          "Illegal array dimensions 4 4 3");
 }
 
 OCIO_ADD_TEST(FileFormatCTF, lut_3by1d_with_nan_infinity)

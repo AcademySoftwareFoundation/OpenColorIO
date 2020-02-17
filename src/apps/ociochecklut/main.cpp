@@ -181,12 +181,12 @@ int main (int argc, const char* argv[])
         }
         catch (const OCIO::Exception & e)
         {
-            std::cout << std::endl << "ERROR creating processor: " << e.what() << std::endl;
+            std::cout << std::endl << e.what() << std::endl;
             return 1;
         }
         catch (...)
         {
-            std::cout << std::endl << "Unknown ERROR creating processor" << std::endl;
+            std::cout << std::endl << "Unknown ERROR creating processor." << std::endl;
             return 1;
         }
 
