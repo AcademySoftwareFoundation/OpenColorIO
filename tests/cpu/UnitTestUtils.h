@@ -71,7 +71,7 @@ inline void OptimizeOpVec(OpRcPtrVec & ops)
 inline void OptimizeFinalizeOpVec(OpRcPtrVec & ops)
 {
     OptimizeOpVec(ops, BIT_DEPTH_F32, BIT_DEPTH_F32, OPTIMIZATION_DEFAULT);
-    FinalizeOpVec(ops, OPTIMIZATION_NONE);
+    ops.finalize(OPTIMIZATION_NONE);
 }
 
 // Relative comparison: check if the difference between value and expected
