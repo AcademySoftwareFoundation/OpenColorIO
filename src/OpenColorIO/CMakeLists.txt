@@ -61,6 +61,7 @@ set(SOURCES
 	ops/allocation/AllocationOp.cpp
 	ops/cdl/CDLOpCPU.cpp
 	ops/cdl/CDLOpData.cpp
+	ops/cdl/CDLOpGPU.cpp
 	ops/cdl/CDLOp.cpp
 	ops/exponent/ExponentOp.cpp
 	ops/exposurecontrast/ExposureContrastOpCPU.cpp
@@ -73,6 +74,7 @@ set(SOURCES
 	ops/fixedfunction/FixedFunctionOp.cpp
 	ops/gamma/GammaOpCPU.cpp
 	ops/gamma/GammaOpData.cpp
+	ops/gamma/GammaOpGPU.cpp
 	ops/gamma/GammaOpUtils.cpp
 	ops/gamma/GammaOp.cpp
 	ops/log/LogOpCPU.cpp
@@ -90,6 +92,7 @@ set(SOURCES
 	ops/lut3d/Lut3DOpGPU.cpp
 	ops/matrix/MatrixOpCPU.cpp
 	ops/matrix/MatrixOpData.cpp
+	ops/matrix/MatrixOpGPU.cpp
 	ops/matrix/MatrixOp.cpp
 	ops/noop/NoOps.cpp
 	ops/OpTools.cpp
@@ -115,6 +118,7 @@ set(SOURCES
 	transforms/FixedFunctionTransform.cpp
 	transforms/GroupTransform.cpp
 	transforms/LogAffineTransform.cpp
+	transforms/LogCameraTransform.cpp
 	transforms/LogTransform.cpp
 	transforms/LookTransform.cpp
 	transforms/Lut1DTransform.cpp
@@ -126,7 +130,7 @@ set(SOURCES
 if(WIN32 AND BUILD_SHARED_LIBS)
 
     # To be appended to the binary file name.
-    set(LIBNAME_SUFFIX 
+    set(LIBNAME_SUFFIX
         ${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}
     )
 
@@ -141,14 +145,15 @@ target_include_directories(OpenColorIO
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_link_libraries(OpenColorIO 
-	PUBLIC 
+target_link_libraries(OpenColorIO
+	PUBLIC
 		public_api
 	PRIVATE
 		expat::expat
 		ilmbase::ilmbase
 		pystring::pystring
 		sampleicc::sampleicc
+		utils::strings
 		yamlcpp::yamlcpp
 )
 
@@ -166,10 +171,10 @@ else()
 endif()
 
 if(BUILD_SHARED_LIBS OR (OCIO_BUILD_PYTHON AND UNIX))
-	# The Python bindings is a 'module' which is a dynamic library on Linux 
+	# The Python bindings is a 'module' which is a dynamic library on Linux
 	# (i.e. '-fPIC' needed), but a static library on Windows.
 
-	# If supported for the target machine, emit position-independent code 
+	# If supported for the target machine, emit position-independent code
 	# suitable for dynamic linking.
 	set_property(TARGET OpenColorIO PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif()
@@ -190,7 +195,7 @@ endif()
 if(WIN32)
     # A windows application linking to eXpat static libraries must
     # have the global macro XML_STATIC defined
-    target_compile_definitions(OpenColorIO 
+    target_compile_definitions(OpenColorIO
         PRIVATE
             XML_STATIC
     )

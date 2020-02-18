@@ -58,12 +58,22 @@ public:
     {
         BASIC_FWD = 0,
         BASIC_REV,
+        BASIC_MIRROR_FWD,
+        BASIC_MIRROR_REV,
+        BASIC_PASS_THRU_FWD,
+        BASIC_PASS_THRU_REV,
         MONCURVE_FWD,
-        MONCURVE_REV
+        MONCURVE_REV,
+        MONCURVE_MIRROR_FWD,
+        MONCURVE_MIRROR_REV
     };
 
     static Style ConvertStringToStyle(const char * str);
     static const char * ConvertStyleToString(Style style);
+
+    static NegativeStyle ConvertStyle(Style style);
+    static Style ConvertStyleBasic(NegativeStyle style, TransformDirection dir);
+    static Style ConvertStyleMonCurve(NegativeStyle style, TransformDirection dir);
 
     typedef std::vector<double> Params;
 
@@ -135,6 +145,8 @@ public:
 
     virtual void finalize() override;
 
+    TransformDirection getDirection() const;
+    void setDirection(TransformDirection dir);
 
     static bool isIdentityParameters(const Params & parameters, Style style);
     static Params getIdentityParameters(Style style);
@@ -143,6 +155,8 @@ protected:
     bool isClamping() const;
 
 private:
+    void invert();
+
     Style m_style;
     Params m_redParams;
     Params m_greenParams;

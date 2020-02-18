@@ -49,5 +49,15 @@ OCIO_ADD_TEST(ExponentWithLinearTransform, basic)
     val4[1] = -1.;
     OCIO_CHECK_NO_THROW(exp->getOffset(val4));
     CheckValues(val4, { 0., 0.1234567, 0., 0. });
+
+    OCIO_CHECK_EQUAL(exp->getNegativeStyle(), OCIO::NEGATIVE_LINEAR);
+    OCIO_CHECK_NO_THROW(exp->setNegativeStyle(OCIO::NEGATIVE_MIRROR));
+    OCIO_CHECK_EQUAL(exp->getNegativeStyle(), OCIO::NEGATIVE_MIRROR);
+    OCIO_CHECK_THROW_WHAT(exp->setNegativeStyle(OCIO::NEGATIVE_PASS_THRU), OCIO::Exception,
+                          "Pass thru negative extrapolation is not valid for MonCurve");
+    OCIO_CHECK_THROW_WHAT(exp->setNegativeStyle(OCIO::NEGATIVE_CLAMP), OCIO::Exception,
+                          "Clamp negative extrapolation is not valid");
+    OCIO_CHECK_NO_THROW(exp->setNegativeStyle(OCIO::NEGATIVE_LINEAR));
+    OCIO_CHECK_EQUAL(exp->getNegativeStyle(), OCIO::NEGATIVE_LINEAR);
 }
 

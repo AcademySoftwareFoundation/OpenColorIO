@@ -35,8 +35,8 @@ OCIO_ADD_TEST(LogOpData, accessor_test)
 
     OCIO::LogOpData::Params paramsR, paramsG, paramsB;
     double base = 1.0;
-    OCIO::TransformDirection dir;
-    OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB, dir);
+    OCIO::TransformDirection dir = OCIO::LogUtil::GetLogDirection(ctfParams.m_style);
+    OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB);
 
     OCIO::LogOpData logOp(dir,
                           base, paramsR, paramsG, paramsB);
@@ -52,7 +52,8 @@ OCIO_ADD_TEST(LogOpData, accessor_test)
     // Update all channels with same parameters.
     greenP = redP;
     blueP = redP;
-    OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB, dir);
+    dir = OCIO::LogUtil::GetLogDirection(ctfParams.m_style);
+    OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB);
 
     OCIO::LogOpData logOp2(dir, base, paramsR, paramsG, paramsB);
 
@@ -68,7 +69,8 @@ OCIO_ADD_TEST(LogOpData, accessor_test)
     redP[OCIO::LogUtil::CTFParams::highlight] = 0.7; 
     redP[OCIO::LogUtil::CTFParams::shadow]    = 0.3; 
 
-    OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB, dir);
+    dir = OCIO::LogUtil::GetLogDirection(ctfParams.m_style);
+    OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB);
 
     OCIO::LogOpData logOp3(dir, base, paramsR, paramsG, paramsB);
 
@@ -85,7 +87,8 @@ OCIO_ADD_TEST(LogOpData, accessor_test)
     greenP[OCIO::LogUtil::CTFParams::highlight] = 0.85; 
     greenP[OCIO::LogUtil::CTFParams::shadow]    = 0.111;
 
-    OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB, dir);
+    dir = OCIO::LogUtil::GetLogDirection(ctfParams.m_style);
+    OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB);
 
     OCIO::LogOpData logOp4(dir, base, paramsR, paramsG, paramsB);
     OCIO_CHECK_ASSERT(!logOp4.allComponentsEqual());
@@ -101,7 +104,8 @@ OCIO_ADD_TEST(LogOpData, accessor_test)
     blueP[OCIO::LogUtil::CTFParams::highlight] = 0.27; 
     blueP[OCIO::LogUtil::CTFParams::shadow]    = 0.22; 
 
-    OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB, dir);
+    dir = OCIO::LogUtil::GetLogDirection(ctfParams.m_style);
+    OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB);
 
     OCIO::LogOpData logOp5(dir, base, paramsR, paramsG, paramsB);
     OCIO_CHECK_ASSERT(!logOp5.allComponentsEqual());

@@ -20,18 +20,18 @@ namespace OCIO_NAMESPACE
 // All input vectors are size 3 (excluding base).
 
 void CreateLogOp(OpRcPtrVec & ops,
-                    double base,
-                    const double(&logSlope)[3],
-                    const double(&logOffset)[3],
-                    const double(&linSlope)[3],
-                    const double(&linOffset)[3],
-                    TransformDirection direction);
+                 double base,
+                 const double(&logSlope)[3],
+                 const double(&logOffset)[3],
+                 const double(&linSlope)[3],
+                 const double(&linOffset)[3],
+                 TransformDirection direction);
 
 void CreateLogOp(OpRcPtrVec & ops, double base, TransformDirection direction);
 
 void CreateLogOp(OpRcPtrVec & ops,
-                    LogOpDataRcPtr & logData,
-                    TransformDirection direction);
+                 LogOpDataRcPtr & logData,
+                 TransformDirection direction);
 
 // Create a copy of the log transform in the op and append it to the GroupTransform.
 void CreateLogTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op);

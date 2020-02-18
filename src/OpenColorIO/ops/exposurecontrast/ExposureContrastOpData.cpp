@@ -14,12 +14,12 @@ namespace OCIO_NAMESPACE
 namespace
 {
 // CTF style attribute strings.
-constexpr const char * EC_STYLE_LINEAR          = "linear";
-constexpr const char * EC_STYLE_LINEAR_REV      = "linearRev";
-constexpr const char * EC_STYLE_VIDEO           = "video";
-constexpr const char * EC_STYLE_VIDEO_REV       = "videoRev";
-constexpr const char * EC_STYLE_LOGARITHMIC     = "log";
-constexpr const char * EC_STYLE_LOGARITHMIC_REV = "logRev";
+static constexpr char EC_STYLE_LINEAR[]          = "linear";
+static constexpr char EC_STYLE_LINEAR_REV[]      = "linearRev";
+static constexpr char EC_STYLE_VIDEO[]           = "video";
+static constexpr char EC_STYLE_VIDEO_REV[]       = "videoRev";
+static constexpr char EC_STYLE_LOGARITHMIC[]     = "log";
+static constexpr char EC_STYLE_LOGARITHMIC_REV[] = "logRev";
 }
 
 namespace DefaultValues
@@ -255,7 +255,10 @@ void ExposureContrastOpData::finalize()
     AutoMutex lock(m_mutex);
 
     std::ostringstream cacheIDStream;
-    cacheIDStream << getID();
+    if (!getID().empty())
+    {
+        cacheIDStream << getID() << " ";
+    }
 
     cacheIDStream.precision(DefaultValues::FLOAT_DECIMALS);
 

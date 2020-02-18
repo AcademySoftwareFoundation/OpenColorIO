@@ -487,7 +487,7 @@ OCIO_ADD_TEST(OpOptimizers, optimization2)
     // This transform has the following ops:
     // 1 Lut1D, half domain, effectively an identity
     // 2 Matrix, bit depth conversion identity
-    // 3 Range, bit depth conversion identity
+    // 3 Matrix, bit depth conversion identity
     // 4 Matrix, almost identity
     // 5 Range, clamp identity
     // 6 Lut1D, half domain, raw halfs, identity
@@ -699,8 +699,8 @@ OCIO_ADD_TEST(OpOptimizers, range_composition)
     {
         // Non identity ranges are combined.
         OCIO::OpRcPtrVec ops;
-        OCIO::CreateRangeOp(ops, 0.1, emptyValue, 0., emptyValue, OCIO::TRANSFORM_DIR_FORWARD);
-        OCIO::CreateRangeOp(ops, 0.1, emptyValue, 0., emptyValue, OCIO::TRANSFORM_DIR_FORWARD);
+        OCIO::CreateRangeOp(ops, 0.1, emptyValue, 0.1, emptyValue, OCIO::TRANSFORM_DIR_FORWARD);
+        OCIO::CreateRangeOp(ops, 0.2, emptyValue, 0.2, emptyValue, OCIO::TRANSFORM_DIR_FORWARD);
 
         OCIO_CHECK_EQUAL(ops.size(), 2);
         OCIO::OpRcPtrVec optOps;
@@ -713,8 +713,8 @@ OCIO_ADD_TEST(OpOptimizers, range_composition)
     {
         // Non identity ranges are combined.
         OCIO::OpRcPtrVec ops;
-        OCIO::CreateRangeOp(ops, 0.1, emptyValue, 0., emptyValue, OCIO::TRANSFORM_DIR_FORWARD);
-        OCIO::CreateRangeOp(ops, 0.1, emptyValue, 0., emptyValue, OCIO::TRANSFORM_DIR_INVERSE);
+        OCIO::CreateRangeOp(ops, 0.1, emptyValue, 0.1, emptyValue, OCIO::TRANSFORM_DIR_FORWARD);
+        OCIO::CreateRangeOp(ops, 0.1, emptyValue, 0.1, emptyValue, OCIO::TRANSFORM_DIR_INVERSE);
         OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
         OCIO::OpRcPtrVec optOps;
@@ -727,8 +727,8 @@ OCIO_ADD_TEST(OpOptimizers, range_composition)
     {
         // Non identity ranges are combined.
         OCIO::OpRcPtrVec ops;
-        OCIO::CreateRangeOp(ops, -0.1, emptyValue, 0., emptyValue, OCIO::TRANSFORM_DIR_FORWARD);
-        OCIO::CreateRangeOp(ops, -0.1, emptyValue, 0., emptyValue, OCIO::TRANSFORM_DIR_INVERSE);
+        OCIO::CreateRangeOp(ops, -0.1, emptyValue, -0.1, emptyValue, OCIO::TRANSFORM_DIR_FORWARD);
+        OCIO::CreateRangeOp(ops, -0.1, emptyValue, -0.1, emptyValue, OCIO::TRANSFORM_DIR_INVERSE);
         OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
         OCIO::OpRcPtrVec optOps;

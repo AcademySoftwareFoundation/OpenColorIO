@@ -27,9 +27,9 @@ void PadLutChannels(unsigned long width,
     {
         // Fill the texture values.
         //
-        // Make the last texel of a given row the same as the first texel 
-        // of its next row.  This will preserve the continuity along row breaks 
-        // as long as the lookup position used by the sampler is based on (width-1) 
+        // Make the last texel of a given row the same as the first texel
+        // of its next row.  This will preserve the continuity along row breaks
+        // as long as the lookup position used by the sampler is based on (width-1)
         // to account for the 1 texel padding at the end of each row.
         unsigned long leftover = currWidth;
 
@@ -81,10 +81,10 @@ void PadLutChannels(unsigned long width,
 }
 }
 
-void GetLut1DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
+void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
                               ConstLut1DOpDataRcPtr & lutData)
 {
-    const unsigned long defaultMaxWidth = shaderDesc->getTextureMaxWidth();
+    const unsigned long defaultMaxWidth = shaderCreator->getTextureMaxWidth();
 
     const unsigned long length = lutData->getArray().getLength();
     const unsigned long width = std::min(length, defaultMaxWidth);
@@ -100,19 +100,21 @@ void GetLut1DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
     // Register the RGB LUT.
 
     std::ostringstream resName;
-    resName << shaderDesc->getResourcePrefix()
+    resName << shaderCreator->getResourcePrefix()
+            << std::string("_")
             << std::string("lut1d_")
-            << shaderDesc->getNumTextures();
+            << shaderCreator->getNextResourceIndex();
 
     // Note: Remove potentially problematic double underscores from GLSL resource names.
     const std::string name(pystring::replace(resName.str(), "__", "_"));
 
-    shaderDesc->addTexture(GpuShaderText::getSamplerName(name).c_str(),
-                           lutData->getCacheID().c_str(),
-                           width, height,
-                           GpuShaderDesc::TEXTURE_RGB_CHANNEL,
-                           lutData->getConcreteInterpolation(),
-                           &values[0]);
+    shaderCreator->addTexture(name.c_str(),
+                              GpuShaderText::getSamplerName(name).c_str(),
+                              lutData->getCacheID().c_str(),
+                              width, height,
+                              GpuShaderCreator::TEXTURE_RGB_CHANNEL,
+                              lutData->getConcreteInterpolation(),
+                              &values[0]);
 
     // Add the LUT code to the OCIO shader program.
 
@@ -122,13 +124,13 @@ void GetLut1DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
         // a 2D texture is used.
 
         {
-            GpuShaderText ss(shaderDesc->getLanguage());
+            GpuShaderText ss(shaderCreator->getLanguage());
             ss.declareTex2D(name);
-            shaderDesc->addToDeclareShaderCode(ss.string().c_str());
+            shaderCreator->addToDeclareShaderCode(ss.string().c_str());
         }
 
         {
-            GpuShaderText ss(shaderDesc->getLanguage());
+            GpuShaderText ss(shaderCreator->getLanguage());
 
             ss.newLine() << ss.vec2fKeyword() << " " << name << "_computePos(float f)";
             ss.newLine() << "{";
@@ -202,17 +204,17 @@ void GetLut1DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
             ss.dedent();
             ss.newLine() << "}";
 
-            shaderDesc->addToHelperShaderCode(ss.string().c_str());
+            shaderCreator->addToHelperShaderCode(ss.string().c_str());
         }
     }
     else
     {
-        GpuShaderText ss(shaderDesc->getLanguage());
+        GpuShaderText ss(shaderCreator->getLanguage());
         ss.declareTex1D(name);
-        shaderDesc->addToDeclareShaderCode(ss.string().c_str());
+        shaderCreator->addToDeclareShaderCode(ss.string().c_str());
     }
 
-    GpuShaderText ss(shaderDesc->getLanguage());
+    GpuShaderText ss(shaderCreator->getLanguage());
     ss.indent();
 
     ss.newLine() << "";
@@ -226,39 +228,39 @@ void GetLut1DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
     {
         ss.newLine() << "// Add the pre hue adjustment";
         ss.newLine() << ss.vec3fDecl("maxval")
-                        << " = max(" << shaderDesc->getPixelName() << ".rgb, max("
-                        << shaderDesc->getPixelName() << ".gbr, " << shaderDesc->getPixelName() << ".brg));";
+                        << " = max(" << shaderCreator->getPixelName() << ".rgb, max("
+                        << shaderCreator->getPixelName() << ".gbr, " << shaderCreator->getPixelName() << ".brg));";
         ss.newLine() << ss.vec3fDecl("minval")
-                        << " = min(" << shaderDesc->getPixelName() << ".rgb, min("
-                        << shaderDesc->getPixelName() << ".gbr, " << shaderDesc->getPixelName() << ".brg));";
+                        << " = min(" << shaderCreator->getPixelName() << ".rgb, min("
+                        << shaderCreator->getPixelName() << ".gbr, " << shaderCreator->getPixelName() << ".brg));";
         ss.newLine() << "float oldChroma = max(1e-8, maxval.r - minval.r);";
-        ss.newLine() << ss.vec3fDecl("delta") << " = " << shaderDesc->getPixelName() << ".rgb - minval;";
+        ss.newLine() << ss.vec3fDecl("delta") << " = " << shaderCreator->getPixelName() << ".rgb - minval;";
         ss.newLine() << "";
     }
 
     if (height > 1 || lutData->isInputHalfDomain())
     {
-        const std::string str = name + "_computePos(" + shaderDesc->getPixelName();
+        const std::string str = name + "_computePos(" + shaderCreator->getPixelName();
 
-        ss.newLine() << shaderDesc->getPixelName() << ".r = " << ss.sampleTex2D(name, str + ".r)") << ".r;";
-        ss.newLine() << shaderDesc->getPixelName() << ".g = " << ss.sampleTex2D(name, str + ".g)") << ".g;";
-        ss.newLine() << shaderDesc->getPixelName() << ".b = " << ss.sampleTex2D(name, str + ".b)") << ".b;";
+        ss.newLine() << shaderCreator->getPixelName() << ".r = " << ss.sampleTex2D(name, str + ".r)") << ".r;";
+        ss.newLine() << shaderCreator->getPixelName() << ".g = " << ss.sampleTex2D(name, str + ".g)") << ".g;";
+        ss.newLine() << shaderCreator->getPixelName() << ".b = " << ss.sampleTex2D(name, str + ".b)") << ".b;";
     }
     else
     {
         const float dim = (float)lutData->getArray().getLength();
 
         ss.newLine() << ss.vec3fDecl(name + "_coords")
-                        << " = (" << shaderDesc->getPixelName() << ".rgb * "
+                        << " = (" << shaderCreator->getPixelName() << ".rgb * "
                         << ss.vec3fConst(dim - 1)
                         << " + " << ss.vec3fConst(0.5f) << " ) / "
                         << ss.vec3fConst(dim) << ";";
 
-        ss.newLine() << shaderDesc->getPixelName() << ".r = "
+        ss.newLine() << shaderCreator->getPixelName() << ".r = "
                         << ss.sampleTex1D(name, name + "_coords.r") << ".r;";
-        ss.newLine() << shaderDesc->getPixelName() << ".g = "
+        ss.newLine() << shaderCreator->getPixelName() << ".g = "
                         << ss.sampleTex1D(name, name + "_coords.g") << ".g;";
-        ss.newLine() << shaderDesc->getPixelName() << ".b = "
+        ss.newLine() << shaderCreator->getPixelName() << ".b = "
                         << ss.sampleTex1D(name, name + "_coords.b") << ".b;";
     }
 
@@ -266,21 +268,21 @@ void GetLut1DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
     {
         ss.newLine() << "";
         ss.newLine() << "// Add the post hue adjustment";
-        ss.newLine() << ss.vec3fDecl("maxval2") << " = max(" << shaderDesc->getPixelName()
-                        << ".rgb, max(" << shaderDesc->getPixelName() << ".gbr, "
-                        << shaderDesc->getPixelName() << ".brg));";
-        ss.newLine() << ss.vec3fDecl("minval2") << " = min(" << shaderDesc->getPixelName()
-                        << ".rgb, min(" << shaderDesc->getPixelName() << ".gbr, "
-                        << shaderDesc->getPixelName() << ".brg));";
+        ss.newLine() << ss.vec3fDecl("maxval2") << " = max(" << shaderCreator->getPixelName()
+                        << ".rgb, max(" << shaderCreator->getPixelName() << ".gbr, "
+                        << shaderCreator->getPixelName() << ".brg));";
+        ss.newLine() << ss.vec3fDecl("minval2") << " = min(" << shaderCreator->getPixelName()
+                        << ".rgb, min(" << shaderCreator->getPixelName() << ".gbr, "
+                        << shaderCreator->getPixelName() << ".brg));";
         ss.newLine() << "float newChroma = maxval2.r - minval2.r;";
-        ss.newLine() << shaderDesc->getPixelName()
+        ss.newLine() << shaderCreator->getPixelName()
                         << ".rgb = minval2.r + delta * newChroma / oldChroma;";
     }
 
     ss.dedent();
     ss.newLine() << "}";
 
-    shaderDesc->addToFunctionShaderCode(ss.string().c_str());
+    shaderCreator->addToFunctionShaderCode(ss.string().c_str());
 
 }
 
