@@ -30,6 +30,8 @@ elif sys.platform == 'darwin':
 sys.path.insert(0, pyopencolorio_dir)
 import PyOpenColorIO as OCIO
 
+from BakerTest import *
+
 def suite():
     """Load unittest.TestCase objects from *Test.py files within ./tests/Python
 
@@ -47,7 +49,12 @@ def suite():
     map(__import__, test_modules)
 
     for mod in [sys.modules[modname] for modname in test_modules]:
-        suite.addTest(loader.loadTestsFromModule(mod))
+        try:
+            suite.addTest(loader.loadTestsFromModule(mod))
+        except TypeError:
+            if mod.__name__ == 'BakerTest':
+                suite.addTest(BakerTest("test_interface", opencolorio_sse))
+
     return suite
 
 
