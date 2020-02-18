@@ -16,6 +16,7 @@
 #include "ops/log/LogOpGPU.h"
 #include "ops/log/LogOp.h"
 #include "transforms/LogAffineTransform.h"
+#include "transforms/LogCameraTransform.h"
 #include "transforms/LogTransform.h"
 
 namespace OCIO_NAMESPACE
@@ -166,15 +167,30 @@ void CreateLogTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     auto log = DynamicPtrCast<const LogOp>(op);
     if (!log)
     {
-        throw Exception("CreateRangeTransform: op has to be a RangeOp");
+        throw Exception("CreateLogTransform: op has to be a LogOp.");
     }
     auto logData = DynamicPtrCast<const LogOpData>(op->data());
-    auto logTransform = LogAffineTransform::Create();
-
-    auto & data = dynamic_cast<LogAffineTransformImpl*>(logTransform.get())->data();
-
-    data = *logData;
-    group->appendTransform(logTransform);
+    if (logData->isCamera())
+    {
+        auto logTransform = LogCameraTransform::Create();
+        auto & data = dynamic_cast<LogCameraTransformImpl*>(logTransform.get())->data();
+        data = *logData;
+        group->appendTransform(logTransform);
+    }
+    else if (logData->isSimpleLog())
+    {
+        auto logTransform = LogTransform::Create();
+        auto & data = dynamic_cast<LogTransformImpl*>(logTransform.get())->data();
+        data = *logData;
+        group->appendTransform(logTransform);
+    }
+    else
+    {
+        auto logTransform = LogAffineTransform::Create();
+        auto & data = dynamic_cast<LogAffineTransformImpl*>(logTransform.get())->data();
+        data = *logData;
+        group->appendTransform(logTransform);
+    }
 }
 
 void BuildLogOp(OpRcPtrVec & ops,
@@ -183,6 +199,18 @@ void BuildLogOp(OpRcPtrVec & ops,
                 TransformDirection dir)
 {
     const auto & data = dynamic_cast<const LogAffineTransformImpl &>(transform).data();
+    data.validate();
+    auto log = data.clone();
+
+    CreateLogOp(ops, log, dir);
+}
+
+void BuildLogOp(OpRcPtrVec & ops,
+                const Config & /*config*/,
+                const LogCameraTransform & transform,
+                TransformDirection dir)
+{
+    const auto & data = dynamic_cast<const LogCameraTransformImpl &>(transform).data();
     data.validate();
     auto log = data.clone();
 

@@ -262,8 +262,8 @@ void GpuShaderText::flushLine()
     static const unsigned tabSize = 2;
 
     m_ossText << std::string(tabSize * m_indent, ' ')
-                << m_ossLine.str()
-                << std::endl;
+              << m_ossLine.str()
+              << std::endl;
 
     m_ossLine.str("");
     m_ossLine.clear();
@@ -308,20 +308,20 @@ std::string GpuShaderText::vec3fKeyword() const
 std::string GpuShaderText::vec3fConst(float x, float y, float z) const
 {
     return vec3fConst(getFloatString(x, m_lang), 
-                        getFloatString(y, m_lang), 
-                        getFloatString(z, m_lang));
+                      getFloatString(y, m_lang), 
+                      getFloatString(z, m_lang));
 }
 
 std::string GpuShaderText::vec3fConst(double x, double y, double z) const
 {
     return vec3fConst(getFloatString(x, m_lang), 
-                        getFloatString(y, m_lang), 
-                        getFloatString(z, m_lang));
+                      getFloatString(y, m_lang), 
+                      getFloatString(z, m_lang));
 }
 
 std::string GpuShaderText::vec3fConst(const std::string& x, 
-                                        const std::string& y,
-                                        const std::string& z) const
+                                      const std::string& y,
+                                      const std::string& z) const
 {
     std::ostringstream kw;
     kw << vec3fKeyword() << "(" << x << ", " << y << ", " << z << ")";
@@ -354,25 +354,25 @@ std::string GpuShaderText::vec3fDecl(const std::string &  name) const
 }
 
 void GpuShaderText::declareVec3f(const std::string & name, 
-                                    float x, float y, float z)
+                                 float x, float y, float z)
 {
     declareVec3f(name, getFloatString(x, m_lang), 
-                        getFloatString(y, m_lang), 
-                        getFloatString(z, m_lang));
+                       getFloatString(y, m_lang), 
+                       getFloatString(z, m_lang));
 }
 
 void GpuShaderText::declareVec3f(const std::string & name, 
-                                    double x, double y, double z)
+                                 double x, double y, double z)
 {
     declareVec3f(name, getFloatString(x, m_lang), 
-                        getFloatString(y, m_lang), 
-                        getFloatString(z, m_lang));
+                       getFloatString(y, m_lang), 
+                       getFloatString(z, m_lang));
 }
 
 void GpuShaderText::declareVec3f(const std::string & name, 
-                                    const std::string & x,
-                                    const std::string & y,
-                                    const std::string & z)
+                                 const std::string & x,
+                                 const std::string & y,
+                                 const std::string & z)
 {
     newLine() << vec3fDecl(name) << " = " << vec3fConst(x, y, z) << ";";
 }
@@ -385,30 +385,30 @@ std::string GpuShaderText::vec4fKeyword() const
 std::string GpuShaderText::vec4fConst(const float x, const float y, const float z, const float w) const
 {
     return vec4fConst(getFloatString(x, m_lang), 
-                        getFloatString(y, m_lang), 
-                        getFloatString(z, m_lang),
-                        getFloatString(w, m_lang));
+                      getFloatString(y, m_lang), 
+                      getFloatString(z, m_lang),
+                      getFloatString(w, m_lang));
 }
 
 std::string GpuShaderText::vec4fConst(const double x, const double y, const double z, const double w) const
 {
     return vec4fConst(getFloatString(x, m_lang), 
-                        getFloatString(y, m_lang), 
-                        getFloatString(z, m_lang),
-                        getFloatString(w, m_lang));
+                      getFloatString(y, m_lang), 
+                      getFloatString(z, m_lang),
+                      getFloatString(w, m_lang));
 }
 
 std::string GpuShaderText::vec4fConst(const std::string& x, 
-                                        const std::string& y,
-                                        const std::string& z,
-                                        const std::string& w) const
+                                      const std::string& y,
+                                      const std::string& z,
+                                      const std::string& w) const
 {
     std::ostringstream kw;
     kw << vec4fKeyword() << "(" 
-        << x << ", "
-        << y << ", "
-        << z << ", "
-        << w << ")";
+       << x << ", "
+       << y << ", "
+       << z << ", "
+       << w << ")";
 
     return kw.str();
 }
@@ -434,34 +434,34 @@ std::string GpuShaderText::vec4fDecl(const std::string & name) const
 }
 
 void GpuShaderText::declareVec4f(const std::string & name,
-                                    const float x,
-                                    const float y, 
-                                    const float z,
-                                    const float w)
+                                 const float x,
+                                 const float y, 
+                                 const float z,
+                                 const float w)
 {
     declareVec4f(name, getFloatString(x, m_lang), 
-                        getFloatString(y, m_lang), 
-                        getFloatString(z, m_lang),
-                        getFloatString(w, m_lang));
+                       getFloatString(y, m_lang), 
+                       getFloatString(z, m_lang),
+                       getFloatString(w, m_lang));
 }
 
 void GpuShaderText::declareVec4f(const std::string & name,
-                                    const double x,
-                                    const double y, 
-                                    const double z,
-                                    const double w)
+                                 const double x,
+                                 const double y, 
+                                 const double z,
+                                 const double w)
 {
     declareVec4f(name, getFloatString(x, m_lang), 
-                        getFloatString(y, m_lang), 
-                        getFloatString(z, m_lang),
-                        getFloatString(w, m_lang));
+                       getFloatString(y, m_lang), 
+                       getFloatString(z, m_lang),
+                       getFloatString(w, m_lang));
 }
 
 void GpuShaderText::declareVec4f(const std::string & name,
-                                    const std::string & x, 
-                                    const std::string & y,
-                                    const std::string & z,
-                                    const std::string & w)
+                                 const std::string & x, 
+                                 const std::string & y,
+                                 const std::string & z,
+                                 const std::string & w)
 {
     newLine() << vec4fDecl(name) << " = " << vec4fConst(x, y, z, w) << ";";
 }
@@ -628,6 +628,36 @@ std::string GpuShaderText::lerp(const std::string & x,
     return kw.str();
 }
 
+std::string GpuShaderText::vec3fGreaterThan(const std::string & a,
+                                            const std::string & b) const
+{
+    std::ostringstream kw;
+    switch (m_lang)
+    {
+    case GPU_LANGUAGE_GLSL_1_0:
+    case GPU_LANGUAGE_GLSL_1_3:
+    case GPU_LANGUAGE_GLSL_4_0:
+    case GPU_LANGUAGE_CG:
+    {
+        kw << vec3fKeyword() << "(greaterThan( " << a << ", " << b << "))";
+        break;
+    }
+    case GPU_LANGUAGE_HLSL_DX11:
+    {
+        kw << vec3fKeyword() << "((" << a << " > " << b << ") ? "
+            << vec3fConst(1.0f) << " : " << vec3fConst(0.0f) << ")";
+        break;
+    }
+
+    case GPU_LANGUAGE_UNKNOWN:
+    default:
+    {
+        throw Exception("Unknown Gpu shader language");
+    }
+    }
+    return kw.str();
+}
+
 std::string GpuShaderText::vec4fGreaterThan(const std::string & a, 
                                             const std::string & b) const
 {
@@ -659,7 +689,7 @@ std::string GpuShaderText::vec4fGreaterThan(const std::string & a,
 }
 
 std::string GpuShaderText::atan2(const std::string & y,
-                                    const std::string & x) const
+                                 const std::string & x) const
 {
     std::ostringstream kw;
     switch(m_lang)

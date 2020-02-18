@@ -80,7 +80,7 @@ int main(int, char **)
             ++unit_test_failures; 
         }
 
-        constexpr const size_t maxCharToDisplay = 49;
+        constexpr size_t maxCharToDisplay = 49;
 
         const bool passing = (_tmp == unit_test_failures);
         if (!passing)

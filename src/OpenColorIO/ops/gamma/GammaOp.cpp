@@ -177,7 +177,8 @@ void CreateGammaTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
 
     const auto style = gammaData->getStyle();
 
-    if (style == GammaOpData::MONCURVE_FWD || style == GammaOpData::MONCURVE_REV)
+    if (style == GammaOpData::MONCURVE_FWD || style == GammaOpData::MONCURVE_MIRROR_FWD ||
+        style == GammaOpData::MONCURVE_REV || style == GammaOpData::MONCURVE_MIRROR_REV)
     {
         auto expTransform = ExponentWithLinearTransform::Create();
         auto & data = dynamic_cast<ExponentWithLinearTransformImpl*>(expTransform.get())->data();

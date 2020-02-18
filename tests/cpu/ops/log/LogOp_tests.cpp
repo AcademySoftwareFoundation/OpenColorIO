@@ -241,11 +241,10 @@ OCIO_ADD_TEST(LogOp, throw_direction)
     const double logOffset[3] = { 1.0, 1.0, 1.0 };
 
     OCIO::OpRcPtrVec ops;
-    OCIO_CHECK_THROW_WHAT(
-        OCIO::CreateLogOp(ops, base, logSlope, logOffset,
-                          linSlope, linOffset,
-                          OCIO::TRANSFORM_DIR_UNKNOWN),
-        OCIO::Exception, "unspecified transform direction");
+    OCIO_CHECK_THROW_WHAT(OCIO::CreateLogOp(ops, base, logSlope, logOffset,
+                                            linSlope, linOffset,
+                                            OCIO::TRANSFORM_DIR_UNKNOWN),
+                          OCIO::Exception, "unspecified transform direction");
 }
 
 OCIO_ADD_TEST(LogOp, create_transform)
@@ -258,8 +257,8 @@ OCIO_ADD_TEST(LogOp, create_transform)
     const double linOffset[] = { 1.0, 2.0, 3.0 };
     const double logOffset[] = { 10.0, 20.0, 30.0 };
 
-    OCIO::LogOpDataRcPtr log
-        = std::make_shared<OCIO::LogOpData>(base, logSlope, logOffset, linSlope, linOffset, direction);
+    OCIO::LogOpDataRcPtr log = std::make_shared<OCIO::LogOpData>(base, logSlope, logOffset,
+                                                                 linSlope, linOffset, direction);
 
     auto & metadataSource = log->getFormatMetadata();
     metadataSource.addAttribute("name", "test");
@@ -270,7 +269,6 @@ OCIO_ADD_TEST(LogOp, create_transform)
     OCIO_REQUIRE_ASSERT(ops[0]);
 
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
-
     OCIO::ConstOpRcPtr op(ops[0]);
 
     OCIO::CreateLogTransform(group, op);
@@ -304,5 +302,52 @@ OCIO_ADD_TEST(LogOp, create_transform)
     OCIO_CHECK_EQUAL(values[0], linOffset[0]);
     OCIO_CHECK_EQUAL(values[1], linOffset[1]);
     OCIO_CHECK_EQUAL(values[2], linOffset[2]);
+
+    const double linBreak[] = { 0.5, 0.4, 0.3 };
+    log->setValue(OCIO::LIN_SIDE_BREAK, linBreak);
+
+    OCIO_CHECK_NO_THROW(OCIO::CreateLogOp(ops, log, direction));
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_REQUIRE_ASSERT(ops[1]);
+
+    OCIO::GroupTransformRcPtr group1 = OCIO::GroupTransform::Create();
+    OCIO::ConstOpRcPtr op1(ops[1]);
+
+    OCIO::CreateLogTransform(group1, op);
+    OCIO_REQUIRE_EQUAL(group1->getNumTransforms(), 1);
+    auto transform1 = group1->getTransform(0);
+    OCIO_REQUIRE_ASSERT(transform1);
+    auto lTransform1 = OCIO_DYNAMIC_POINTER_CAST<OCIO::LogCameraTransform>(transform1);
+    OCIO_REQUIRE_ASSERT(lTransform1);
+    lTransform1->getLinSideBreakValue(values);
+    OCIO_CHECK_EQUAL(values[0], linBreak[0]);
+    OCIO_CHECK_EQUAL(values[1], linBreak[1]);
+    OCIO_CHECK_EQUAL(values[2], linBreak[2]);
+    OCIO_CHECK_ASSERT(!lTransform1->getLinearSlopeValue(values));
+
+    const double linearSlope[] = { 0.9, 1.0, 1.1 };
+    log->setValue(OCIO::LINEAR_SLOPE, linearSlope);
+
+    OCIO_CHECK_NO_THROW(OCIO::CreateLogOp(ops, log, direction));
+    OCIO_REQUIRE_EQUAL(ops.size(), 3);
+    OCIO_REQUIRE_ASSERT(ops[2]);
+
+    OCIO::GroupTransformRcPtr group2 = OCIO::GroupTransform::Create();
+    OCIO::ConstOpRcPtr op2(ops[2]);
+
+    OCIO::CreateLogTransform(group2, op);
+    OCIO_REQUIRE_EQUAL(group2->getNumTransforms(), 1);
+    auto transform2 = group2->getTransform(0);
+    OCIO_REQUIRE_ASSERT(transform2);
+    auto lTransform2 = OCIO_DYNAMIC_POINTER_CAST<OCIO::LogCameraTransform>(transform2);
+    OCIO_REQUIRE_ASSERT(lTransform2);
+    lTransform1->getLinSideBreakValue(values);
+    OCIO_CHECK_EQUAL(values[0], linBreak[0]);
+    OCIO_CHECK_EQUAL(values[1], linBreak[1]);
+    OCIO_CHECK_EQUAL(values[2], linBreak[2]);
+    OCIO_CHECK_ASSERT(lTransform2->getLinearSlopeValue(values));
+    OCIO_CHECK_EQUAL(values[0], linearSlope[0]);
+    OCIO_CHECK_EQUAL(values[1], linearSlope[1]);
+    OCIO_CHECK_EQUAL(values[2], linearSlope[2]);
 }
 

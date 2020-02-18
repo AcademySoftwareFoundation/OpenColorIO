@@ -14,6 +14,7 @@
 #include "ops/fixedfunction/FixedFunctionOpData.h"
 #include "ops/gamma/GammaOpData.h"
 #include "ops/log/LogOpData.h"
+#include "ops/log/LogUtils.h"
 #include "ops/lut1d/Lut1DOpData.h"
 #include "ops/lut3d/Lut3DOpData.h"
 #include "ops/matrix/MatrixOpData.h"
@@ -25,8 +26,7 @@
 namespace OCIO_NAMESPACE
 {
 
-void CTFVersion::ReadVersion(const std::string & versionString,
-                             CTFVersion & versionOut)
+void CTFVersion::ReadVersion(const std::string & versionString, CTFVersion & versionOut)
 {
     unsigned int numDot = 0;
     unsigned int numInt = 0;
@@ -184,6 +184,16 @@ const CTFVersion & CTFReaderTransform::getCTFVersion() const
     return m_version;
 }
 
+const CTFVersion & CTFReaderTransform::getCLFVersion() const
+{
+    return m_versionCLF;
+}
+
+bool CTFReaderTransform::isCLF() const
+{
+    return !(m_versionCLF == CTFVersion(0, 0));
+}
+
 void GetElementsValues(const FormatMetadataImpl::Elements & elements, const std::string & name, StringVec & values)
 {
     for (auto & element : elements)
@@ -239,9 +249,26 @@ CTFVersion GetOpMinimumVersion(const ConstOpDataRcPtr & op)
     case OpData::GammaType:
     {
         auto gamma = OCIO_DYNAMIC_POINTER_CAST<const GammaOpData>(op);
-        minVersion = gamma->isAlphaComponentIdentity() ?
-            CTF_PROCESS_LIST_VERSION_1_3 :
-            CTF_PROCESS_LIST_VERSION_1_5;
+        const auto style = gamma->getStyle();
+        switch (style)
+        {
+        case GammaOpData::BASIC_FWD:
+        case GammaOpData::BASIC_REV:
+        case GammaOpData::MONCURVE_FWD:
+        case GammaOpData::MONCURVE_REV:
+            minVersion = gamma->isAlphaComponentIdentity() ?
+                CTF_PROCESS_LIST_VERSION_1_3 :
+                CTF_PROCESS_LIST_VERSION_1_5;
+            break;
+        case GammaOpData::BASIC_MIRROR_FWD:
+        case GammaOpData::BASIC_MIRROR_REV:
+        case GammaOpData::BASIC_PASS_THRU_FWD:
+        case GammaOpData::BASIC_PASS_THRU_REV:
+        case GammaOpData::MONCURVE_MIRROR_FWD:
+        case GammaOpData::MONCURVE_MIRROR_REV:
+            minVersion = CTF_PROCESS_LIST_VERSION_2_0;
+            break;
+        }
         break;
     }
     case OpData::Lut1DType:
@@ -993,7 +1020,7 @@ public:
     GammaWriter() = delete;
     GammaWriter(const GammaWriter&) = delete;
     GammaWriter& operator=(const GammaWriter&) = delete;
-    GammaWriter(XmlFormatter & formatter,
+    GammaWriter(XmlFormatter & formatter, const CTFVersion & version,
                 ConstGammaOpDataRcPtr gamma);
     virtual ~GammaWriter();
 
@@ -1004,13 +1031,15 @@ protected:
     void writeContent() const override;
 
 private:
+    const CTFVersion m_version;
     ConstGammaOpDataRcPtr m_gamma;
 };
 
 
-GammaWriter::GammaWriter(XmlFormatter & formatter,
+GammaWriter::GammaWriter(XmlFormatter & formatter, const CTFVersion & version,
                          ConstGammaOpDataRcPtr gamma)
     : OpWriter(formatter)
+    , m_version(version)
     , m_gamma(gamma)
 {
 }
@@ -1026,15 +1055,18 @@ ConstOpDataRcPtr GammaWriter::getOp() const
 
 const char * GammaWriter::getTagName() const
 {
-    return TAG_GAMMA;
+    if (m_version < CTF_PROCESS_LIST_VERSION_2_0)
+    {
+        return TAG_GAMMA;
+    }
+    return TAG_EXPONENT;
 }
 
 void GammaWriter::getAttributes(XmlFormatter::Attributes& attributes) const
 {
     OpWriter::getAttributes(attributes);
     const std::string & style = GammaOpData::ConvertStyleToString(m_gamma->getStyle());
-    attributes.push_back(XmlFormatter::Attribute(ATTR_STYLE,
-                                                 style));
+    attributes.push_back(XmlFormatter::Attribute(ATTR_STYLE, style));
 }
 
 namespace
@@ -1042,18 +1074,21 @@ namespace
 // Add the attributes for the GammaParams element.
 void AddGammaParams(XmlFormatter::Attributes & attributes,
                     const GammaOpData::Params & params,
-                    const GammaOpData::Style style)
+                    const GammaOpData::Style style,
+                    bool useGamma)
 {
     std::stringstream gammaAttr;
     gammaAttr << params[0];
 
-    attributes.push_back(XmlFormatter::Attribute(ATTR_GAMMA,
+    attributes.push_back(XmlFormatter::Attribute(useGamma ? ATTR_GAMMA : ATTR_EXPONENT,
                                                  gammaAttr.str()));
 
     switch (style)
     {
     case GammaOpData::MONCURVE_FWD:
     case GammaOpData::MONCURVE_REV:
+    case GammaOpData::MONCURVE_MIRROR_FWD:
+    case GammaOpData::MONCURVE_MIRROR_REV:
     {
         std::stringstream offsetAttr;
         offsetAttr << params[1];
@@ -1063,6 +1098,10 @@ void AddGammaParams(XmlFormatter::Attributes & attributes,
     }
     case GammaOpData::BASIC_FWD:
     case GammaOpData::BASIC_REV:
+    case GammaOpData::BASIC_MIRROR_FWD:
+    case GammaOpData::BASIC_MIRROR_REV:
+    case GammaOpData::BASIC_PASS_THRU_FWD:
+    case GammaOpData::BASIC_PASS_THRU_REV:
         break;
     }
 }
@@ -1070,6 +1109,8 @@ void AddGammaParams(XmlFormatter::Attributes & attributes,
 
 void GammaWriter::writeContent() const
 {
+    const bool useGamma{ m_version < CTF_PROCESS_LIST_VERSION_2_0 };
+    const std::string paramsTag{ useGamma ? TAG_GAMMA_PARAMS : TAG_EXPONENT_PARAMS };
     if (m_gamma->isNonChannelDependent())
     {
         // RGB channels equal and A is identity, just write one element.
@@ -1077,9 +1118,9 @@ void GammaWriter::writeContent() const
 
         AddGammaParams(attributes,
                        m_gamma->getRedParams(),
-                       m_gamma->getStyle());
+                       m_gamma->getStyle(), useGamma);
 
-        m_formatter.writeEmptyTag(TAG_GAMMA_PARAMS, attributes);
+        m_formatter.writeEmptyTag(paramsTag, attributes);
     }
     else
     {
@@ -1089,9 +1130,9 @@ void GammaWriter::writeContent() const
                                                       "R"));
         AddGammaParams(attributesR,
                        m_gamma->getRedParams(),
-                       m_gamma->getStyle());
+                       m_gamma->getStyle(), useGamma);
 
-        m_formatter.writeEmptyTag(TAG_GAMMA_PARAMS, attributesR);
+        m_formatter.writeEmptyTag(paramsTag, attributesR);
 
         // Green.
         XmlFormatter::Attributes attributesG;
@@ -1099,9 +1140,9 @@ void GammaWriter::writeContent() const
                                                       "G"));
         AddGammaParams(attributesG,
                        m_gamma->getGreenParams(),
-                       m_gamma->getStyle());
+                       m_gamma->getStyle(), useGamma);
 
-        m_formatter.writeEmptyTag(TAG_GAMMA_PARAMS, attributesG);
+        m_formatter.writeEmptyTag(paramsTag, attributesG);
 
         // Blue.
         XmlFormatter::Attributes attributesB;
@@ -1109,11 +1150,11 @@ void GammaWriter::writeContent() const
                                                       "B"));
         AddGammaParams(attributesB,
                        m_gamma->getBlueParams(),
-                       m_gamma->getStyle());
+                       m_gamma->getStyle(), useGamma);
 
-        m_formatter.writeEmptyTag(TAG_GAMMA_PARAMS, attributesB);
+        m_formatter.writeEmptyTag(paramsTag, attributesB);
 
-        if (GetOpMinimumVersion(m_gamma) >= CTF_PROCESS_LIST_VERSION_1_5)
+        if (!m_gamma->isAlphaComponentIdentity())
         {
             // Alpha
             XmlFormatter::Attributes attributesA;
@@ -1121,9 +1162,9 @@ void GammaWriter::writeContent() const
                                                           "A"));
             AddGammaParams(attributesA,
                            m_gamma->getAlphaParams(),
-                           m_gamma->getStyle());
+                           m_gamma->getStyle(), useGamma);
 
-            m_formatter.writeEmptyTag(TAG_GAMMA_PARAMS, attributesA);
+            m_formatter.writeEmptyTag(paramsTag, attributesA);
         }
     }
 }
@@ -1179,15 +1220,20 @@ void LogWriter::getAttributes(XmlFormatter::Attributes& attributes) const
     std::string style;
     if (m_log->isLog2())
     {
-        style = dir == TRANSFORM_DIR_FORWARD ? LOG_LOG2 : LOG_ANTILOG2;
+        style = dir == TRANSFORM_DIR_FORWARD ? LogUtil::LOG2_STR : LogUtil::ANTI_LOG2_STR;
     }
     else if (m_log->isLog10())
     {
-        style = dir == TRANSFORM_DIR_FORWARD ? LOG_LOG10 : LOG_ANTILOG10;
+        style = dir == TRANSFORM_DIR_FORWARD ? LogUtil::LOG10_STR : LogUtil::ANTI_LOG10_STR;
+    }
+    else if (m_log->isCamera())
+    {
+        style = dir == TRANSFORM_DIR_FORWARD ? LogUtil::CAMERA_LIN_TO_LOG_STR :
+                                               LogUtil::CAMERA_LOG_TO_LIN_STR;
     }
     else
     {
-        style = dir == TRANSFORM_DIR_FORWARD ? LOG_LINTOLOG : LOG_LOGTOLIN;
+        style = dir == TRANSFORM_DIR_FORWARD ? LogUtil::LIN_TO_LOG_STR : LogUtil::LOG_TO_LIN_STR;
     }
 
     attributes.push_back(XmlFormatter::Attribute(ATTR_STYLE, style));
@@ -1208,11 +1254,20 @@ void AddLogParam(XmlFormatter::Attributes & attributes,
 void AddLogParams(XmlFormatter::Attributes & attributes,
                   const LogOpData::Params & params, const double base)
 {
+    // LogOpData::validate ensure that params size is between 4 & 6.
+    AddLogParam(attributes, ATTR_BASE, base);
     AddLogParam(attributes, ATTR_LINSIDESLOPE, params[LIN_SIDE_SLOPE]);
     AddLogParam(attributes, ATTR_LINSIDEOFFSET, params[LIN_SIDE_OFFSET]);
     AddLogParam(attributes, ATTR_LOGSIDESLOPE, params[LOG_SIDE_SLOPE]);
     AddLogParam(attributes, ATTR_LOGSIDEOFFSET, params[LOG_SIDE_OFFSET]);
-    AddLogParam(attributes, ATTR_BASE, base);
+    if (params.size() > 4)
+    {
+        AddLogParam(attributes, ATTR_LINSIDEBREAK, params[LIN_SIDE_BREAK]);
+    }
+    if (params.size() > 5)
+    {
+        AddLogParam(attributes, ATTR_LINEARSLOPE, params[LINEAR_SLOPE]);
+    }
 }
 }
 
@@ -1505,7 +1560,7 @@ public:
     MatrixWriter() = delete;
     MatrixWriter(const MatrixWriter&) = delete;
     MatrixWriter& operator=(const MatrixWriter&) = delete;
-    MatrixWriter(XmlFormatter & formatter,
+    MatrixWriter(XmlFormatter & formatter, const CTFVersion & version,
                  ConstMatrixOpDataRcPtr matrix);
     virtual ~MatrixWriter();
 
@@ -1515,12 +1570,14 @@ protected:
     void writeContent() const override;
 
 private:
+    const CTFVersion m_version;
     ConstMatrixOpDataRcPtr m_matrix;
 };
 
-MatrixWriter::MatrixWriter(XmlFormatter & formatter,
+MatrixWriter::MatrixWriter(XmlFormatter & formatter, const CTFVersion & version,
                            ConstMatrixOpDataRcPtr matrix)
     : OpWriter(formatter)
+    , m_version(version)
     , m_matrix(matrix)
 {
 }
@@ -1547,25 +1604,27 @@ void MatrixWriter::writeContent() const
     //   3) 3x4x3, matrix only with offsets and no alpha.
     //   4) 3x3x3, matrix with no alpha and no offsets.
 
+    const bool saveDim3{ m_version < CTF_PROCESS_LIST_VERSION_2_0 };
+
     std::stringstream dimensionAttr;
     if (m_matrix->hasAlpha())
     {
         if (m_matrix->hasOffsets())
         {
-            dimensionAttr << "4 5 4";
+            dimensionAttr << (saveDim3 ? "4 5 4" : "4 5");
         }
         else
         {
-            dimensionAttr << "4 4 4";
+            dimensionAttr << (saveDim3 ? "4 4 4" : "4 4");
         }
     }
     else if (m_matrix->hasOffsets())
     {
-        dimensionAttr << "3 4 3";
+        dimensionAttr << (saveDim3 ? "3 4 3" : "3 4");
     }
     else
     {
-        dimensionAttr << "3 3 3";
+        dimensionAttr << (saveDim3 ? "3 3 3" : "3 3");
     }
 
     XmlFormatter::Attributes attributes;
@@ -1736,18 +1795,21 @@ void TransformWriter::write() const
 
     XmlFormatter::Attributes attributes;
 
+    CTFVersion writeVersion{ CTF_PROCESS_LIST_VERSION_2_0 };
+    
     std::ostringstream fversion;
     if (m_isCLF)
     {
-        // Save with CLF version 2.
-        fversion << 2;
+        // Save with CLF version 3.
+        fversion << 3;
         attributes.push_back(XmlFormatter::Attribute(ATTR_COMP_CLF_VERSION,
                                                      fversion.str()));
 
     }
     else
     {
-        fversion << GetMinimumVersion(m_transform);
+        writeVersion = GetMinimumVersion(m_transform);
+        fversion << writeVersion;
 
         attributes.push_back(XmlFormatter::Attribute(ATTR_VERSION,
                                                      fversion.str()));
@@ -1802,7 +1864,7 @@ void TransformWriter::write() const
             writeProcessListMetadata(info);
         }
 
-        writeOps();
+        writeOps(writeVersion);
     }
 
     m_formatter.writeEndTag(processListTag);
@@ -1868,7 +1930,7 @@ BitDepth GetInputFileBD(ConstOpDataRcPtr op)
 
 }
 
-void TransformWriter::writeOps() const
+void TransformWriter::writeOps(const CTFVersion & version) const
 {
     BitDepth inBD = BIT_DEPTH_F32;
     BitDepth outBD = BIT_DEPTH_F32;
@@ -1911,10 +1973,6 @@ void TransformWriter::writeOps() const
             }
             case OpData::ExponentType:
             {
-                if (m_isCLF)
-                {
-                    ThrowWriteOp("Exponent");
-                }
                 auto exp = OCIO_DYNAMIC_POINTER_CAST<const ExponentOpData>(op);
 
                 GammaOpData::Params paramR{ exp->m_exp4[0] };
@@ -1922,12 +1980,17 @@ void TransformWriter::writeOps() const
                 GammaOpData::Params paramB{ exp->m_exp4[2] };
                 GammaOpData::Params paramA{ exp->m_exp4[3] };
 
-				GammaOpDataRcPtr gammaData
-					= std::make_shared<GammaOpData>(GammaOpData::BASIC_FWD,
-													paramR, paramG, paramB, paramA);
-				gammaData->getFormatMetadata() = exp->getFormatMetadata();
+                GammaOpDataRcPtr gammaData
+                    = std::make_shared<GammaOpData>(GammaOpData::BASIC_FWD,
+                                                    paramR, paramG, paramB, paramA);
+                gammaData->getFormatMetadata() = exp->getFormatMetadata();
+                
+                if (m_isCLF && !gammaData->isAlphaComponentIdentity())
+                {
+                    ThrowWriteOp("Exponent with alpha");
+                }
 
-                GammaWriter opWriter(m_formatter, gammaData);
+                GammaWriter opWriter(m_formatter, version, gammaData);
                 opWriter.setInputBitdepth(inBD);
                 opWriter.setOutputBitdepth(outBD);
                 opWriter.write();
@@ -1963,13 +2026,16 @@ void TransformWriter::writeOps() const
             }
             case OpData::GammaType:
             {
+                auto gamma = OCIO_DYNAMIC_POINTER_CAST<const GammaOpData>(op);
                 if (m_isCLF)
                 {
-                    ThrowWriteOp("Gamma");
+                    if (!gamma->isAlphaComponentIdentity())
+                    {
+                        ThrowWriteOp("Gamma with alpha component");
+                    }
                 }
 
-                auto gamma = OCIO_DYNAMIC_POINTER_CAST<const GammaOpData>(op);
-                GammaWriter opWriter(m_formatter, gamma);
+                GammaWriter opWriter(m_formatter, version, gamma);
                 opWriter.setInputBitdepth(inBD);
                 opWriter.setOutputBitdepth(outBD);
                 opWriter.write();
@@ -1977,11 +2043,6 @@ void TransformWriter::writeOps() const
             }
             case OpData::LogType:
             {
-                if (m_isCLF)
-                {
-                    ThrowWriteOp("Log");
-                }
-
                 auto log = OCIO_DYNAMIC_POINTER_CAST<const LogOpData>(op);
                 LogWriter opWriter(m_formatter, log);
                 opWriter.setInputBitdepth(inBD);
@@ -2037,11 +2098,7 @@ void TransformWriter::writeOps() const
                 {
                     if (matSrc->hasAlpha())
                     {
-                        std::ostringstream oss;
-                        oss << "Transform uses a Matrix op that has an alpha "
-                               "component, so it cannot be written as CLF.  "
-                               "Use CTF format for this transform.";
-                        throw Exception(oss.str().c_str());
+                        ThrowWriteOp("Matrix with alpha component");
                     }
                 }
 
@@ -2055,7 +2112,7 @@ void TransformWriter::writeOps() const
                 // - Previous op output file bit-depth if previous op
                 //   is a LUT, a Matrix or a Range.
 
-                MatrixWriter opWriter(m_formatter, mat);
+                MatrixWriter opWriter(m_formatter, version, mat);
                 opWriter.setInputBitdepth(inBD);
                 opWriter.setOutputBitdepth(outBD);
 
@@ -2097,7 +2154,7 @@ void TransformWriter::writeOps() const
         // When there are no ops, save an identity matrix.
         auto mat = std::make_shared<MatrixOpData>();
 
-        MatrixWriter opWriter(m_formatter, mat);
+        MatrixWriter opWriter(m_formatter, version, mat);
         opWriter.setInputBitdepth(BIT_DEPTH_F32);
         opWriter.setOutputBitdepth(BIT_DEPTH_F32);
 

@@ -192,23 +192,29 @@ typedef OCIO_SHARED_PTR<const GroupTransform> ConstGroupTransformRcPtr;
 //!cpp:type::
 typedef OCIO_SHARED_PTR<GroupTransform> GroupTransformRcPtr;
 
-class OCIOEXPORT LogTransform;
-//!cpp:type::
-typedef OCIO_SHARED_PTR<const LogTransform> ConstLogTransformRcPtr;
-//!cpp:type::
-typedef OCIO_SHARED_PTR<LogTransform> LogTransformRcPtr;
-
 class OCIOEXPORT LogAffineTransform;
 //!cpp:type::
 typedef OCIO_SHARED_PTR<const LogAffineTransform> ConstLogAffineTransformRcPtr;
 //!cpp:type::
 typedef OCIO_SHARED_PTR<LogAffineTransform> LogAffineTransformRcPtr;
 
+class OCIOEXPORT LogCameraTransform;
+//!cpp:type::
+typedef OCIO_SHARED_PTR<const LogCameraTransform> ConstLogCameraTransformRcPtr;
+//!cpp:type::
+typedef OCIO_SHARED_PTR<LogCameraTransform> LogCameraTransformRcPtr;
+
 class OCIOEXPORT LookTransform;
 //!cpp:type::
 typedef OCIO_SHARED_PTR<const LookTransform> ConstLookTransformRcPtr;
 //!cpp:type::
 typedef OCIO_SHARED_PTR<LookTransform> LookTransformRcPtr;
+
+class OCIOEXPORT LogTransform;
+//!cpp:type::
+typedef OCIO_SHARED_PTR<const LogTransform> ConstLogTransformRcPtr;
+//!cpp:type::
+typedef OCIO_SHARED_PTR<LogTransform> LogTransformRcPtr;
 
 class OCIOEXPORT Lut1DTransform;
 //!cpp:type::
@@ -415,6 +421,16 @@ enum CDLStyle
     CDL_NO_CLAMP    //! CDL that does not clamp
 };
 
+//!cpp:type:: Negative values handling style for :cpp:class:`ExponentTransform` and
+// :cpp:class:`ExponentWithLinearTransform` transform algorithms.
+enum NegativeStyle
+{
+    NEGATIVE_CLAMP = 0, //! Clamp negative values
+    NEGATIVE_MIRROR,    //! Positive curve is rotated 180 degrees around the origin to handle negatives.
+    NEGATIVE_PASS_THRU, //! Negative values are passed through unchanged.
+    NEGATIVE_LINEAR     //! Linearly extrapolate the curve for negative values.
+};
+
 enum DynamicPropertyType
 {
     DYNAMIC_PROPERTY_EXPOSURE = 0, //! Image exposure value (double floating point value)
@@ -577,6 +593,11 @@ extern OCIOEXPORT FixedFunctionStyle FixedFunctionStyleFromString(const char * s
 extern OCIOEXPORT const char * ExposureContrastStyleToString(ExposureContrastStyle style);
 //!cpp:function::
 extern OCIOEXPORT ExposureContrastStyle ExposureContrastStyleFromString(const char * style);
+
+//!cpp:function::
+extern OCIOEXPORT const char * NegativeStyleToString(NegativeStyle style);
+//!cpp:function::
+extern OCIOEXPORT NegativeStyle NegativeStyleFromString(const char * style);
 
 
 /*!rst::

@@ -14,10 +14,10 @@
 namespace OCIO_NAMESPACE
 {
 
-static constexpr const char * CDL_TAG_COLOR_DECISION_LIST = "ColorDecisionList";
-static constexpr const char * CDL_TAG_COLOR_CORRECTION_COLLECTION = "ColorCorrectionCollection";
-static constexpr const char * CDL_TAG_COLOR_DECISION = "ColorDecision";
-static constexpr const char * CDL_TAG_COLOR_CORRECTION = "ColorCorrection";
+static constexpr char CDL_TAG_COLOR_DECISION_LIST[] = "ColorDecisionList";
+static constexpr char CDL_TAG_COLOR_CORRECTION_COLLECTION[] = "ColorCorrectionCollection";
+static constexpr char CDL_TAG_COLOR_DECISION[] = "ColorDecision";
+static constexpr char CDL_TAG_COLOR_CORRECTION[] = "ColorCorrection";
 
 class CDLParser::Impl
 {

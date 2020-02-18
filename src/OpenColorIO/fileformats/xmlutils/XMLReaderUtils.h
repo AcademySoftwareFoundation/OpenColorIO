@@ -18,15 +18,15 @@ namespace OCIO_NAMESPACE
 
 // Used by both CDL parsers and CLF parsers.
 
-static constexpr const char * ATTR_ID = "id";
-static constexpr const char * TAG_DESCRIPTION = "Description";
-static constexpr const char * TAG_OFFSET = "Offset";
-static constexpr const char * TAG_POWER = "Power";
-static constexpr const char * TAG_SATNODE = "SatNode";
-static constexpr const char * TAG_SATNODEALT = "SATNode";
-static constexpr const char * TAG_SATURATION = "Saturation";
-static constexpr const char * TAG_SLOPE = "Slope";
-static constexpr const char * TAG_SOPNODE = "SOPNode";
+static constexpr char ATTR_ID[] = "id";
+static constexpr char TAG_DESCRIPTION[] = "Description";
+static constexpr char TAG_OFFSET[] = "Offset";
+static constexpr char TAG_POWER[] = "Power";
+static constexpr char TAG_SATNODE[] = "SatNode";
+static constexpr char TAG_SATNODEALT[] = "SATNode";
+static constexpr char TAG_SATURATION[] = "Saturation";
+static constexpr char TAG_SLOPE[] = "Slope";
+static constexpr char TAG_SOPNODE[] = "SOPNode";
 
 // This method truncates a string (mainly used for display purpose).
 inline std::string TruncateString(const char * pStr, size_t len)
