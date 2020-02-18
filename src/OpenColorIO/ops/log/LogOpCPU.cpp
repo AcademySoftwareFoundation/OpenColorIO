@@ -14,6 +14,10 @@
 #include "Platform.h"
 #include "SSE.h"
 
+#ifndef USE_SSE
+#include <cstring>
+#endif
+
 namespace OCIO_NAMESPACE
 {
 class LogOpCPU : public OpCPU
