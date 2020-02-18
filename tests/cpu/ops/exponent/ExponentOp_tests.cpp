@@ -18,7 +18,7 @@ OCIO_ADD_TEST(ExponentOp, value)
     OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_INVERSE));
     OCIO_CHECK_EQUAL(ops.size(), 2);
 
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
 
     float error = 1e-6f;
 
@@ -105,7 +105,7 @@ OCIO_ADD_TEST(ExponentOp, combining)
     OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, expData2, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
 
     OCIO::ConstOpRcPtr op1 = ops[1];
 
@@ -145,7 +145,7 @@ OCIO_ADD_TEST(ExponentOp, combining)
     OCIO_CHECK_EQUAL(attribs[2].first, "Attrib");
     OCIO_CHECK_EQUAL(attribs[2].second, "value");
 
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(combined, OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(combined.finalize(OCIO::OPTIMIZATION_NONE));
 
     float tmp2[4];
     memcpy(tmp2, source, 4*sizeof(float));
@@ -166,7 +166,7 @@ OCIO_ADD_TEST(ExponentOp, combining)
     OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_INVERSE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
     OCIO::ConstOpRcPtr op1 = ops[1];
@@ -186,7 +186,7 @@ OCIO_ADD_TEST(ExponentOp, combining)
     OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_CHECK_EQUAL(ops.size(), 3);
 
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_CHECK_EQUAL(ops.size(), 3);
 
     const float source[] = { 0.1f, 0.5f, 0.9f, 0.5f, };
@@ -276,7 +276,7 @@ OCIO_ADD_TEST(ExponentOp, cache_id)
 
     OCIO_CHECK_EQUAL(ops.size(), 3);
 
-    OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
 
     const std::string opCacheID0 = ops[0]->getCacheID();
     const std::string opCacheID1 = ops[1]->getCacheID();

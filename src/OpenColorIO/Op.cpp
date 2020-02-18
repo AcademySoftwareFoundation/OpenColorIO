@@ -134,8 +134,7 @@ bool Op::canCombineWith(ConstOpRcPtr & /*op*/) const
     return false;
 }
 
-void Op::combineWith(OpRcPtrVec & /*ops*/,
-                        ConstOpRcPtr & /*secondOp*/) const
+void Op::combineWith(OpRcPtrVec & /*ops*/, ConstOpRcPtr & /*secondOp*/) const
 {
     std::ostringstream os;
     os << "Op: " << getInfo() << " cannot be combined. ";
@@ -188,6 +187,7 @@ OpRcPtr Op::getIdentityReplacement() const
     }
     return ops[0];
 }
+
 
 OpRcPtrVec::OpRcPtrVec()
     : m_metadata()
@@ -259,6 +259,140 @@ OpRcPtrVec::const_reference OpRcPtrVec::front() const
     return m_ops.front();
 }
 
+bool OpRcPtrVec::isNoOp() const noexcept
+{
+    for (const auto & op : m_ops)
+    {
+        if(!op->isNoOp()) return false;
+    }
+
+    return true;
+}
+
+bool OpRcPtrVec::hasChannelCrosstalk() const noexcept
+{
+    for (const auto & op : m_ops)
+    {
+        if(op->hasChannelCrosstalk()) return true;
+    }
+
+    return false;
+}
+
+bool OpRcPtrVec::hasDynamicProperty(DynamicPropertyType type) const noexcept
+{
+    for (const auto & op : m_ops)
+    {
+        if (op->hasDynamicProperty(type))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+DynamicPropertyRcPtr OpRcPtrVec::getDynamicProperty(DynamicPropertyType type) const
+{
+    for (const auto & op : m_ops)
+    {
+        if (op->hasDynamicProperty(type))
+        {
+            return op->getDynamicProperty(type);
+        }
+    }
+
+    throw Exception("Cannot find dynamic property.");
+}
+
+OpRcPtrVec OpRcPtrVec::clone() const 
+{
+    OpRcPtrVec cloned;
+
+    for (const auto & op : m_ops)
+    {
+        cloned.push_back(op->clone());
+    }
+
+    return cloned;
+}
+
+OpRcPtrVec OpRcPtrVec::invert() const
+{
+    OpRcPtrVec inverted;
+
+    OpRcPtrVec::const_reverse_iterator iter = m_ops.rbegin();
+    OpRcPtrVec::const_reverse_iterator end  = m_ops.rend();
+    for (; iter!=end; ++iter)
+    {
+        ConstOpRcPtr op = *iter;
+        if (op->isNoOpType())
+        {
+            // Keep track of the information.
+            inverted.push_back(op->clone());
+        }
+        else
+        {
+            ConstOpDataRcPtr data = op->data();
+            CreateOpVecFromOpData(inverted, data, TRANSFORM_DIR_INVERSE);
+        }
+    }
+
+    return inverted;
+}
+
+void OpRcPtrVec::finalize(OptimizationFlags oFlags)
+{
+    for (auto & op : m_ops)
+    {
+        op->finalize(oFlags);
+    }
+}
+
+namespace
+{
+
+void UnifyDynamicProperty(OpRcPtr op,
+                          DynamicPropertyImplRcPtr & prop,
+                          DynamicPropertyType type)
+{
+    if (op->hasDynamicProperty(type))
+    {
+        if (!prop)
+        {
+            // Initialize property.
+            DynamicPropertyRcPtr dp = op->getDynamicProperty(type);
+            prop = OCIO_DYNAMIC_POINTER_CAST<DynamicPropertyImpl>(dp);
+        }
+        else
+        {
+            // Share the property.
+            op->replaceDynamicProperty(type, prop);
+        }
+    }
+}
+
+}
+
+// This ensures that when a dynamic property on a processor is
+// modified, all ops that respond to that property (and which
+// are enabled) are synchronized.
+void OpRcPtrVec::unifyDynamicProperties()
+{
+    DynamicPropertyImplRcPtr dpExposure;
+    DynamicPropertyImplRcPtr dpContrast;
+    DynamicPropertyImplRcPtr dpGamma;
+
+    for (auto op : m_ops)
+    {
+        UnifyDynamicProperty(op, dpExposure, DYNAMIC_PROPERTY_EXPOSURE);
+        UnifyDynamicProperty(op, dpContrast, DYNAMIC_PROPERTY_CONTRAST);
+        UnifyDynamicProperty(op, dpGamma, DYNAMIC_PROPERTY_GAMMA);
+    }
+}
+
+
+
 std::ostream& operator<< (std::ostream & os, const Op & op)
 {
     os << op.getInfo();
@@ -305,68 +439,9 @@ std::string SerializeOpVec(const OpRcPtrVec & ops, int indent)
     return os.str();
 }
 
-bool IsOpVecNoOp(const OpRcPtrVec & ops)
-{
-    for(const auto & op : ops)
-    {
-        if(!op->isNoOp()) return false;
-    }
-
-    return true;
-}
-
-void FinalizeOpVec(OpRcPtrVec & ops, OptimizationFlags oFlags)
-{
-    for(auto & op : ops)
-    {
-        op->finalize(oFlags);
-    }
-}
-
-namespace
-{
-
-void UnifyDynamicProperty(OpRcPtr op,
-                            DynamicPropertyImplRcPtr & prop,
-                            DynamicPropertyType type)
-{
-    if (op->hasDynamicProperty(type))
-    {
-        if (!prop)
-        {
-            // Initialize property.
-            DynamicPropertyRcPtr dp = op->getDynamicProperty(type);
-            prop = OCIO_DYNAMIC_POINTER_CAST<DynamicPropertyImpl>(dp);
-        }
-        else
-        {
-            // Share the property.
-            op->replaceDynamicProperty(type, prop);
-        }
-    }
-}
-
-}
-
-// This ensures that when a dynamic property on a processor is
-// modified, all ops that respond to that property (and which
-// are enabled) are synchronized.
-void UnifyDynamicProperties(OpRcPtrVec & ops)
-{
-    DynamicPropertyImplRcPtr dpExposure;
-    DynamicPropertyImplRcPtr dpContrast;
-    DynamicPropertyImplRcPtr dpGamma;
-    for (auto op : ops)
-    {
-        UnifyDynamicProperty(op, dpExposure, DYNAMIC_PROPERTY_EXPOSURE);
-        UnifyDynamicProperty(op, dpContrast, DYNAMIC_PROPERTY_CONTRAST);
-        UnifyDynamicProperty(op, dpGamma, DYNAMIC_PROPERTY_GAMMA);
-    }
-}
-
 void CreateOpVecFromOpData(OpRcPtrVec & ops,
-                            const ConstOpDataRcPtr & opData,
-                            TransformDirection dir)
+                           const ConstOpDataRcPtr & opData,
+                           TransformDirection dir)
 {
     if (dir == TRANSFORM_DIR_UNKNOWN)
     {
@@ -465,26 +540,6 @@ void CreateOpVecFromOpData(OpRcPtrVec & ops,
         throw Exception("OpData is not supported");
     }
 
-    }
-}
-
-void CreateOpVecFromOpDataVec(OpRcPtrVec & ops,
-                                const ConstOpDataVec & opDataVec,
-                                TransformDirection dir)
-{
-    if(dir == TRANSFORM_DIR_FORWARD)
-    {
-        for(const auto & opData : opDataVec)
-        {
-            CreateOpVecFromOpData(ops, opData, dir);
-        }
-    }
-    else
-    {
-        for(int idx = (int)opDataVec.size() - 1; idx >= 0; --idx)
-        {
-            CreateOpVecFromOpData(ops, opDataVec[idx], dir);
-        }
     }
 }
 

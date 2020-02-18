@@ -51,7 +51,7 @@ bool IsPairInverseEnabled(OpData::Type type, OptimizationFlags flags)
     case OpData::ReferenceType:
     case OpData::NoOpType:
     default:
-        // Other type are not controlled by a flag.
+        // Other types are not controlled by a flag.
         return true;
     }
 }
@@ -59,7 +59,7 @@ bool IsPairInverseEnabled(OpData::Type type, OptimizationFlags flags)
 bool IsCombineEnabled(OpData::Type type, OptimizationFlags flags)
 {
     // Some types are controlled by a flag.
-    return (type == OpData::ExponentType && HasFlag(flags, OPTIMIZATION_COMP_EXPONENT)) ||
+    return  (type == OpData::ExponentType && HasFlag(flags, OPTIMIZATION_COMP_EXPONENT)) ||
             (type == OpData::GammaType    && HasFlag(flags, OPTIMIZATION_COMP_GAMMA))    ||
             (type == OpData::Lut1DType    && HasFlag(flags, OPTIMIZATION_COMP_LUT1D))    ||
             (type == OpData::Lut3DType    && HasFlag(flags, OPTIMIZATION_COMP_LUT3D))    ||
@@ -67,7 +67,7 @@ bool IsCombineEnabled(OpData::Type type, OptimizationFlags flags)
             (type == OpData::RangeType    && HasFlag(flags, OPTIMIZATION_COMP_RANGE));
 }
 
-const int MAX_OPTIMIZATION_PASSES = 8;
+constexpr int MAX_OPTIMIZATION_PASSES = 8;
 
 void RemoveNoOpTypes(OpRcPtrVec & opVec)
 {
