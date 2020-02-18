@@ -97,15 +97,7 @@ OpRcPtrVec Create3DLut(const OpRcPtrVec & ops, unsigned edgelen)
 
 DynamicPropertyRcPtr GPUProcessor::Impl::getDynamicProperty(DynamicPropertyType type) const
 {
-    for (const auto & op : m_ops)
-    {
-        if (op->hasDynamicProperty(type))
-        {
-            return op->getDynamicProperty(type);
-        }
-    }
-
-    throw Exception("Cannot find dynamic property; not used by GPU processor.");
+    return m_ops.getDynamicProperty(type);
 }
 
 void GPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
@@ -118,20 +110,11 @@ void GPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
     m_ops = rawOps;
 
     OptimizeOpVec(m_ops, BIT_DEPTH_F32, BIT_DEPTH_F32, oFlags);
-    FinalizeOpVec(m_ops, oFlags);
-    UnifyDynamicProperties(m_ops);
+    m_ops.finalize(oFlags);
+    m_ops.unifyDynamicProperties();
 
     // Does the color processing introduce crosstalk between the pixel channels?
-
-    m_hasChannelCrosstalk = false;
-    for(const auto & op : m_ops)
-    {
-        if(op->hasChannelCrosstalk())
-        {
-            m_hasChannelCrosstalk = true;
-            break;
-        }
-    }
+    m_hasChannelCrosstalk = m_ops.hasChannelCrosstalk();
 
     // Compute the cache id.
 
@@ -180,7 +163,7 @@ void GPUProcessor::Impl::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCrea
                         gpuOps);
 
         LogDebug("GPU Ops: 3DLUT");
-        FinalizeOpVec(gpuOpsCpuLatticeProcess, OPTIMIZATION_LUT_INV_FAST);
+        gpuOpsCpuLatticeProcess.finalize(OPTIMIZATION_LUT_INV_FAST);
         OpRcPtrVec gpuLut = Create3DLut(gpuOpsCpuLatticeProcess, legacy->getEdgelen());
 
         gpuOps.clear();
@@ -189,7 +172,7 @@ void GPUProcessor::Impl::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCrea
         gpuOps += gpuOpsHwPostProcess;
 
         OptimizeOpVec(gpuOps, BIT_DEPTH_F32, BIT_DEPTH_F32, OPTIMIZATION_DEFAULT);
-        FinalizeOpVec(gpuOps, OPTIMIZATION_LUT_INV_FAST);
+        gpuOps.finalize(OPTIMIZATION_LUT_INV_FAST);
     }
     else
     {

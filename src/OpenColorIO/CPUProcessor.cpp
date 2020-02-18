@@ -294,10 +294,10 @@ void FinalizeOpsForCPU(OpRcPtrVec & ops, const OpRcPtrVec & rawOps,
 
     // Finalize the ops.
 
-    FinalizeOpVec(ops, oFlags);
+    ops.finalize(oFlags);
     if (!((oFlags & OPTIMIZATION_NO_DYNAMIC_PROPERTIES) == OPTIMIZATION_NO_DYNAMIC_PROPERTIES))
     {
-        UnifyDynamicProperties(ops);
+        ops.unifyDynamicProperties();
     }
 }
 
@@ -313,17 +313,11 @@ void CPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
     m_inBitDepth  = in;
     m_outBitDepth = out;
 
-    // Does the color processing introduce crosstalk between the pixel channels?
+    m_isIdentity = ops.isNoOp();
+    m_isNoOp     = m_isIdentity && m_inBitDepth==m_outBitDepth;
 
-    m_hasChannelCrosstalk = false;
-    for(const auto & op : ops)
-    {
-        if(op->hasChannelCrosstalk())
-        {
-            m_hasChannelCrosstalk = true;
-            break;
-        }
-    }
+    // Does the color processing introduce crosstalk between the pixel channels?
+    m_hasChannelCrosstalk = ops.hasChannelCrosstalk();
 
     // Get the CPU Ops while taking care of the input and output bit-depths.
 
@@ -457,6 +451,16 @@ CPUProcessor::~CPUProcessor()
 {
     delete m_impl;
     m_impl = nullptr;
+}
+
+bool CPUProcessor::isNoOp() const
+{
+    return getImpl()->isNoOp();
+}
+
+bool CPUProcessor::isIdentity() const
+{
+    return getImpl()->isIdentity();
 }
 
 bool CPUProcessor::hasChannelCrosstalk() const

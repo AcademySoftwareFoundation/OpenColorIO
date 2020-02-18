@@ -232,7 +232,7 @@ void RunLookTokens(OpRcPtrVec & ops,
             throw Exception(os.str().c_str());
         }
 
-        if(!IsOpVecNoOp(tmpOps))
+        if (!tmpOps.isNoOp())
         {
             if(!skipColorSpaceConversions)
             {
