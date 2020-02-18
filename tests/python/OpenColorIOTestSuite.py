@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-import PyOpenColorIO as OCIO
 import unittest
 import os
 import sys
@@ -28,7 +27,7 @@ elif sys.platform == 'darwin':
         opencolorio_dir, os.getenv('DYLD_LIBRARY_PATH', ''))
 
 sys.path.insert(0, pyopencolorio_dir)
-
+import PyOpenColorIO as OCIO
 
 def suite():
     """Load unittest.TestCase objects from *Test.py files within ./tests/Python
