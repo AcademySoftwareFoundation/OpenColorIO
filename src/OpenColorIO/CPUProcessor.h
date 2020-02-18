@@ -25,6 +25,13 @@ public:
 
     ~Impl() = default;
 
+    // Note: The in and out bit-depths must be equal for isNoOp to be true.
+    bool isNoOp() const noexcept { return m_isNoOp; }
+
+    // Note: Equivalent to isNoOp from the underlying Processor, 
+    // i.e., it ignores in/out bit-depth differences.
+    bool isIdentity() const noexcept { return m_isIdentity; }
+
     bool hasChannelCrosstalk() const noexcept { return m_hasChannelCrosstalk; }
 
     const char * getCacheID() const noexcept { return m_cacheID.c_str(); }
@@ -58,6 +65,8 @@ private:
 
     BitDepth           m_inBitDepth = BIT_DEPTH_F32;
     BitDepth           m_outBitDepth = BIT_DEPTH_F32;
+    bool               m_isNoOp = false;
+    bool               m_isIdentity = false;
     bool               m_hasChannelCrosstalk = true;
     std::string        m_cacheID;
     Mutex              m_mutex;
