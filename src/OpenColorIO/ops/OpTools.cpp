@@ -27,7 +27,7 @@ void EvalTransform(const float * in,
         values += 3;
     }
 
-    FinalizeOpVec(ops, OPTIMIZATION_NONE);
+    ops.finalize(OPTIMIZATION_NONE);
 
     for (OpRcPtrVec::size_type i = 0, size = ops.size(); i<size; ++i)
     {

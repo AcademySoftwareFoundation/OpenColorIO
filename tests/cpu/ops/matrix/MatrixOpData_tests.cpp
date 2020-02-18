@@ -371,16 +371,21 @@ OCIO_ADD_TEST(MatrixOpData, rgb)
 
 OCIO_ADD_TEST(MatrixOpData, rgba)
 {
-    OCIO::MatrixOpData m;
+    OCIO::MatrixOpData matrix;
 
-    const float rgba[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15 };
-    m.setRGBA(rgba);
+    constexpr float rgba[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15 };
+    matrix.setRGBA(rgba);
 
-    const OCIO::ArrayDouble::Values & v = m.getArray().getValues();
+    const OCIO::ArrayDouble::Values & v = matrix.getArray().getValues();
     for (unsigned long i = 0; i<16; ++i)
     {
         OCIO_CHECK_EQUAL(v[i], rgba[i]);
     }
+
+    OCIO_CHECK_ASSERT(!matrix.isNoOp());
+    OCIO_CHECK_ASSERT(matrix.hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(!matrix.isDiagonal());
+    OCIO_CHECK_ASSERT(!matrix.isIdentity());
 }
 
 OCIO_ADD_TEST(MatrixOpData, matrixInverse_identity)
@@ -390,6 +395,8 @@ OCIO_ADD_TEST(MatrixOpData, matrixInverse_identity)
     refMatrixOp.setFileInputBitDepth(OCIO::BIT_DEPTH_F32);
     refMatrixOp.setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT12);
 
+    OCIO_CHECK_ASSERT(refMatrixOp.isNoOp());
+    OCIO_CHECK_ASSERT(!refMatrixOp.hasChannelCrosstalk());
     OCIO_CHECK_ASSERT(refMatrixOp.isDiagonal());
     OCIO_CHECK_ASSERT(refMatrixOp.isIdentity());
     OCIO_CHECK_ASSERT(!refMatrixOp.hasOffsets());
@@ -417,7 +424,7 @@ OCIO_ADD_TEST(MatrixOpData, matrixInverse_singular)
     OCIO::MatrixOpData singularMatrixOp;
 
     // Set singular matrix values.
-    const float mat[16] 
+    constexpr float mat[16] 
         = { 1.0f, 0.f, 0.f, 0.2f,
             0.0f, 0.f, 0.f, 0.0f,
             0.0f, 0.f, 0.f, 0.0f,
@@ -426,6 +433,7 @@ OCIO_ADD_TEST(MatrixOpData, matrixInverse_singular)
     singularMatrixOp.setRGBA(mat);
 
     OCIO_CHECK_ASSERT(!singularMatrixOp.isNoOp());
+    OCIO_CHECK_ASSERT(singularMatrixOp.hasChannelCrosstalk());
     OCIO_CHECK_ASSERT(!singularMatrixOp.isUnityDiagonal());
     OCIO_CHECK_ASSERT(!singularMatrixOp.isDiagonal());
     OCIO_CHECK_ASSERT(!singularMatrixOp.isIdentity());
@@ -442,27 +450,33 @@ OCIO_ADD_TEST(MatrixOpData, inverse)
     OCIO::MatrixOpData refMatrixOp;
 
     // Set arbitrary matrix and offset values.
-    const float matrix[16] = { 0.9f,  0.8f, -0.7f, 0.6f,
-                              -0.4f,  0.5f,  0.3f, 0.2f,
-                               0.1f, -0.2f,  0.4f, 0.3f,
-                              -0.5f,  0.6f,  0.7f, 0.8f };
-    const float offsets[4] = { -0.1f, 0.2f, -0.3f, 0.4f };
+    constexpr float matrix[16] = {  0.9f,  0.8f, -0.7f, 0.6f,
+                                   -0.4f,  0.5f,  0.3f, 0.2f,
+                                    0.1f, -0.2f,  0.4f, 0.3f,
+                                   -0.5f,  0.6f,  0.7f, 0.8f };
+
+    constexpr float offsets[4] = { -0.1f,  0.2f, -0.3f, 0.4f };
 
     refMatrixOp.setRGBA(matrix);
     refMatrixOp.setRGBAOffsets(offsets);
+
+    OCIO_CHECK_ASSERT(!refMatrixOp.isNoOp());
+    OCIO_CHECK_ASSERT(refMatrixOp.hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(!refMatrixOp.isDiagonal());
+    OCIO_CHECK_ASSERT(!refMatrixOp.isIdentity());
 
     // Get inverse of reference matrix operation.
     OCIO::MatrixOpDataRcPtr invMatrixOp;
     OCIO_CHECK_NO_THROW(invMatrixOp = refMatrixOp.inverse());
     OCIO_REQUIRE_ASSERT(invMatrixOp);
 
-    const float expectedMatrix[16] = {
+    constexpr float expectedMatrix[16] = {
         0.75f,                3.5f,               3.5f,              -2.75f,
         0.546296296296297f,   3.90740740740741f,  1.31481481481482f, -1.87962962962963f,
         0.12037037037037f,    4.75925925925926f,  4.01851851851852f, -2.78703703703704f,
        -0.0462962962962963f, -4.90740740740741f, -2.31481481481482f,  3.37962962962963f };
 
-    const float expectedOffsets[4] = {
+    constexpr float expectedOffsets[4] = {
         1.525f, 0.419444444444445f, 1.38055555555556f, -1.06944444444444f };
 
     const OCIO::ArrayDouble::Values & invValues =
@@ -482,9 +496,13 @@ OCIO_ADD_TEST(MatrixOpData, inverse)
     }
 }
 
-OCIO_ADD_TEST(MatrixOpData, channel)
+OCIO_ADD_TEST(MatrixOpData, channel_crosstalk)
 {
     OCIO::MatrixOpData refMatrixOp;
+
+    OCIO_CHECK_ASSERT(refMatrixOp.isNoOp());
+    OCIO_CHECK_ASSERT(refMatrixOp.isDiagonal());
+    OCIO_CHECK_ASSERT(refMatrixOp.isIdentity());
 
     OCIO_CHECK_ASSERT(!refMatrixOp.hasChannelCrosstalk());
 

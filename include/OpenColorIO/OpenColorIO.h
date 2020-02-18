@@ -1209,6 +1209,9 @@ public:
     // For example, if a change in red may also cause a change in green or blue.
     bool hasChannelCrosstalk() const;
 
+    //!cpp:function:: 
+    const char * getCacheID() const;
+
     //!cpp:function:: The ProcessorMetadata contains technical information
     //                such as the number of files and looks used in the processor.
     ConstProcessorMetadataRcPtr getProcessorMetadata() const;
@@ -1251,15 +1254,13 @@ public:
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
     bool hasDynamicProperty(DynamicPropertyType type) const;
 
-    //!cpp:function:: 
-    const char * getCacheID() const;
-
     //!cpp:function:: Create a :cpp:class:`Processor` that is an optimized version of this.
     // Note that one typically does not need to explicitly create an optimized Processor instance
     // since optimization happens implicitly during the creation of a CPUProcessor or GPUProcessor.
     // This method is provided primarily for diagnostic purposes.
     ConstProcessorRcPtr getOptimizedProcessor(BitDepth inBD, BitDepth outBD,
                                               OptimizationFlags oFlags) const;
+
 
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
@@ -1341,11 +1342,18 @@ private:
 class OCIOEXPORT CPUProcessor
 {
 public:
-    //!cpp:function::
-    const char * getCacheID() const;
+    //!cpp:function:: The in and out bit-depths must be equal for isNoOp to be true.
+    bool isNoOp() const;
+
+    //!cpp:function:: Equivalent to isNoOp from the underlying Processor, i.e., it ignores 
+    // in/out bit-depth differences.
+    bool isIdentity() const;
 
     //!cpp:function::
     bool hasChannelCrosstalk() const;
+
+    //!cpp:function::
+    const char * getCacheID() const;
 
     //!cpp:function:: Bit-depth of the input pixel buffer.
     BitDepth getInputBitDepth() const;
@@ -1410,10 +1418,10 @@ public:
     bool isNoOp() const;
 
     //!cpp:function::
-    const char * getCacheID() const;
+    bool hasChannelCrosstalk() const;
 
     //!cpp:function::
-    bool hasChannelCrosstalk() const;
+    const char * getCacheID() const;
 
     //!cpp:function:: The returned pointer may be used to set the value of any dynamic properties
     // of the requested type.  Throws if the requested property is not found.  Note that if the

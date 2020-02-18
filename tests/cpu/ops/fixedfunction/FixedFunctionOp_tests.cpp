@@ -78,7 +78,7 @@ OCIO_ADD_TEST(FixedFunctionOp, aces_red_mod_inv)
     OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, 
                                                     OCIO::FixedFunctionOpData::ACES_RED_MOD_03_FWD));
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
     OCIO::ConstOpRcPtr op0 = ops[0];
@@ -102,7 +102,7 @@ OCIO_ADD_TEST(FixedFunctionOp, aces_glow_inv)
     OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, 
                                                     OCIO::FixedFunctionOpData::ACES_GLOW_03_FWD));
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
     OCIO::ConstOpRcPtr op0 = ops[0];
@@ -126,7 +126,7 @@ OCIO_ADD_TEST(FixedFunctionOp, aces_darktodim10_inv)
     OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, 
                                                     OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD));
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
     OCIO::ConstOpRcPtr op0 = ops[0];
@@ -153,7 +153,7 @@ OCIO_ADD_TEST(FixedFunctionOp, rec2100_surround_inv)
     OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, { 2. }, 
                                                     OCIO::FixedFunctionOpData::REC2100_SURROUND_INV));
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
     {
         OCIO::ConstOpRcPtr op0 = ops[0];
@@ -173,7 +173,7 @@ OCIO_ADD_TEST(FixedFunctionOp, rec2100_surround_inv)
     OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, { 2.01 }, 
                                                     OCIO::FixedFunctionOpData::REC2100_SURROUND_FWD));
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 4);
     {
         OCIO::ConstOpRcPtr op0 = ops[0];
@@ -241,7 +241,7 @@ OCIO_ADD_TEST(FixedFunctionOps, RGB_TO_HSV)
     OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, OCIO::FixedFunctionOpData::RGB_TO_HSV));
     OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, OCIO::FixedFunctionOpData::HSV_TO_RGB));
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
     OCIO::ConstOpRcPtr op0 = ops[0];
@@ -267,7 +267,7 @@ OCIO_ADD_TEST(FixedFunctionOps, XYZ_TO_xyY)
     OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, OCIO::FixedFunctionOpData::XYZ_TO_xyY));
     OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, OCIO::FixedFunctionOpData::xyY_TO_XYZ));
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
     OCIO::ConstOpRcPtr op0 = ops[0];
@@ -293,7 +293,7 @@ OCIO_ADD_TEST(FixedFunctionOps, XYZ_TO_uvY)
     OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, OCIO::FixedFunctionOpData::XYZ_TO_uvY));
     OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, OCIO::FixedFunctionOpData::uvY_TO_XYZ));
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
     OCIO::ConstOpRcPtr op0 = ops[0];
@@ -319,7 +319,7 @@ OCIO_ADD_TEST(FixedFunctionOps, XYZ_TO_LUV)
     OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, OCIO::FixedFunctionOpData::XYZ_TO_LUV));
     OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, {}, OCIO::FixedFunctionOpData::LUV_TO_XYZ));
 
-    OCIO_CHECK_NO_THROW(FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
     OCIO::ConstOpRcPtr op0 = ops[0];
