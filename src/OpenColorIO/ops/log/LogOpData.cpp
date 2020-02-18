@@ -31,10 +31,15 @@ namespace
 // Validate number of parameters and their respective range and value.
 void ValidateParams(const LogOpData::Params & params, TransformDirection direction)
 {
-    const size_t expectedSize = 4;
-    if (params.size() != expectedSize)
+    constexpr size_t minSize = 4;
+    if (params.size() < minSize)
     {
-        throw Exception("Log: expecting 4 parameters.");
+        throw Exception("Log: expecting at least 4 parameters.");
+    }
+    constexpr size_t maxSize = 6;
+    if (params.size() > maxSize)
+    {
+        throw Exception("Log: expecting at most 6 parameters.");
     }
 
     if (direction != TRANSFORM_DIR_UNKNOWN)
@@ -110,6 +115,16 @@ LogOpData::LogOpData(TransformDirection dir,
     {
         throw Exception("Cannot create Log op, unspecified transform direction.");
     }
+    const auto sr = redParams.size();
+    const auto sg = greenParams.size();
+    const auto sb = blueParams.size();
+    if (sr >= 4 || sg >= 4 || sb >= 4)
+    {
+        if (sr < 4 || sg < 4 || sb < 4)
+        {
+            throw Exception("Cannot create Log op, all channels need to have the same style.");
+        }
+    }
 }
 
 void LogOpData::setBase(double base) noexcept
@@ -124,17 +139,54 @@ double LogOpData::getBase() const noexcept
 
 void LogOpData::setValue(LogAffineParameter val, const double(&values)[3])
 {
+    if (val == LIN_SIDE_BREAK)
+    {
+        if (m_redParams.size() < 5)
+        {
+            m_redParams.resize(5);
+            m_greenParams.resize(5);
+            m_blueParams.resize(5);
+        }
+    }
+    else if (val == LINEAR_SLOPE)
+    {
+        const auto curSize = m_redParams.size();
+        if (curSize == 4)
+        {
+            throw Exception("Log: LinSideBreak has to be defined before linearSlope");
+        }
+        else if (curSize == 5)
+        {
+            m_redParams.resize(6);
+            m_greenParams.resize(6);
+            m_blueParams.resize(6);
+        }
+    }
     m_redParams[val]   = values[0];
     m_greenParams[val] = values[1];
     m_blueParams[val]  = values[2];
-
 }
 
-void LogOpData::getValue(LogAffineParameter val, double(&values)[3]) const
+void LogOpData::unsetLinearSlope()
 {
+    if (m_redParams.size() == 6)
+    {
+        m_redParams.resize(5);
+        m_greenParams.resize(5);
+        m_blueParams.resize(5);
+    }
+}
+
+bool LogOpData::getValue(LogAffineParameter val, double(&values)[3]) const noexcept
+{
+    if (val >= m_redParams.size())
+    {
+        return false;
+    }
     values[0] = m_redParams[val];
     values[1] = m_greenParams[val];
     values[2] = m_blueParams[val];
+    return true;
 }
 
 void LogOpData::setParameters(const double(&logSlope)[3],
@@ -175,6 +227,12 @@ void LogOpData::validate() const
     ValidateParams(m_greenParams, m_direction);
     ValidateParams(m_blueParams, m_direction);
 
+    if (m_redParams.size() != m_greenParams.size() ||
+        m_redParams.size() != m_blueParams.size())
+    {
+        throw Exception("Log: Red, green & blue parameters must have the same size.");
+    }
+
     if (m_base == 1.0)
     {
         std::ostringstream oss;
@@ -200,7 +258,7 @@ bool LogOpData::isIdentity() const
 
 // Although a LogOp is never an identity, we still want to be able to replace a pair of logs that
 // is effectively an identity (FWD/INV pairs) with an op that will emulate any clamping imposed
-// by the original pair.
+// by the original pair. NB: isInverse is not true if the channels are unequal.
 OpDataRcPtr LogOpData::getIdentityReplacement() const
 {
     OpDataRcPtr resOp;
@@ -226,9 +284,9 @@ OpDataRcPtr LogOpData::getIdentityReplacement() const
             resOp = std::make_shared<MatrixOpData>();
         }
     }
-    else
+    else if (!isCamera())
     {
-        if (m_direction == TRANSFORM_DIR_FORWARD)
+        if (m_direction == TRANSFORM_DIR_FORWARD)  // LinToLog -> LogToLin
         {
             // Minimum value allowed is -linOffset/linSlope so that linSlope*x+linOffset > 0.
             const double minValue = -m_redParams[LIN_SIDE_OFFSET] / m_redParams[LIN_SIDE_SLOPE];
@@ -239,10 +297,14 @@ OpDataRcPtr LogOpData::getIdentityReplacement() const
                                                   RangeOpData::EmptyValue());
 
         }
-        else
+        else  // LogToLin -> LinToLog
         {
             resOp = std::make_shared<MatrixOpData>();
         }
+    }
+    else
+    {
+        resOp = std::make_shared<MatrixOpData>();
     }
     return resOp;
 }
@@ -266,12 +328,19 @@ void LogOpData::finalize()
 
     cacheIDStream << TransformDirectionToString(m_direction) << " ";
 
-    cacheIDStream << "Base "         << getBaseString(DefaultValues::FLOAT_DECIMALS)      << " ";
-    cacheIDStream << "LogSlope "     << getLogSlopeString(DefaultValues::FLOAT_DECIMALS)  << " ";
-    cacheIDStream << "LogOffset "    << getLogOffsetString(DefaultValues::FLOAT_DECIMALS) << " ";
-    cacheIDStream << "LinearSlope "  << getLinSlopeString(DefaultValues::FLOAT_DECIMALS)  << " ";
-    cacheIDStream << "LinearOffset " << getLinOffsetString(DefaultValues::FLOAT_DECIMALS);
-
+    cacheIDStream << "Base "          << getBaseString(DefaultValues::FLOAT_DECIMALS)      << " ";
+    cacheIDStream << "LogSideSlope "  << getLogSlopeString(DefaultValues::FLOAT_DECIMALS)  << " ";
+    cacheIDStream << "LogSideOffset " << getLogOffsetString(DefaultValues::FLOAT_DECIMALS) << " ";
+    cacheIDStream << "LinSideSlope "  << getLinSlopeString(DefaultValues::FLOAT_DECIMALS)  << " ";
+    cacheIDStream << "LinSideOffset " << getLinOffsetString(DefaultValues::FLOAT_DECIMALS);
+    if (m_redParams.size() > 4)
+    {
+        cacheIDStream << " LinSideBreak " << getLinBreakString(DefaultValues::FLOAT_DECIMALS);
+        if (m_redParams.size() > 5)
+        {
+            cacheIDStream << " LinearSlope " << getLinearSlopeString(DefaultValues::FLOAT_DECIMALS);
+        }
+    }
     m_cacheID = cacheIDStream.str();
 }
 
@@ -312,12 +381,12 @@ LogOpDataRcPtr LogOpData::inverse() const
     return invOp;
 }
 
-bool LogOpData::isInverse(ConstLogOpDataRcPtr & r) const
+bool LogOpData::isInverse(ConstLogOpDataRcPtr & log) const
 {
-    if (GetInverseTransformDirection(m_direction) == r->m_direction
-        && allComponentsEqual() && r->allComponentsEqual()
-        && getRedParams() == r->getRedParams()
-        && getBase() == r->getBase())
+    if (GetInverseTransformDirection(m_direction) == log->m_direction
+        && allComponentsEqual() && log->allComponentsEqual()
+        && getRedParams() == log->getRedParams()
+        && getBase() == log->getBase())
     {
         return true;
     }
@@ -340,19 +409,26 @@ bool LogOpData::allComponentsEqual() const
 template <int index>
 std::string getParameterString(const LogOpData & log, std::streamsize precision)
 {
-    static_assert(index >= 0 && index < 4, "Index has to be in [0..3]");
+    static_assert(index >= 0 && index < 6, "Index has to be in [0..5]");
     std::ostringstream o;
     o.precision(precision);
 
-    if (log.allComponentsEqual())
+    if (index < log.getRedParams().size())
     {
-        o << log.getRedParams()[index];
+        if (log.allComponentsEqual())
+        {
+            o << log.getRedParams()[index];
+        }
+        else
+        {
+            o << log.getRedParams()[index] << ", ";
+            o << log.getGreenParams()[index] << ", ";
+            o << log.getBlueParams()[index];
+        }
     }
     else
     {
-        o << log.getRedParams()[index] << ", ";
-        o << log.getGreenParams()[index] << ", ";
-        o << log.getBlueParams()[index];
+        throw Exception("Log: accessing parameter that does not exist.");
     }
     return o.str();
 }
@@ -385,18 +461,36 @@ std::string LogOpData::getLogOffsetString(std::streamsize precision) const
     return getParameterString<LOG_SIDE_OFFSET>(*this, precision);
 }
 
-bool LogOpData::isLogBase(double base) const
+std::string LogOpData::getLinBreakString(std::streamsize precision) const
 {
-    if (allComponentsEqual())
+    return getParameterString<LIN_SIDE_BREAK>(*this, precision);
+}
+
+std::string LogOpData::getLinearSlopeString(std::streamsize precision) const
+{
+    return getParameterString<LINEAR_SLOPE>(*this, precision);
+}
+
+bool LogOpData::isSimpleLog() const
+{
+    if (allComponentsEqual() && m_redParams.size() == 4)
     {
         if (m_redParams[LOG_SIDE_SLOPE] == 1.0
             && m_redParams[LIN_SIDE_SLOPE] == 1.0
             && m_redParams[LIN_SIDE_OFFSET] == 0.0
-            && m_redParams[LOG_SIDE_OFFSET] == 0.0
-            && m_base == base)
+            && m_redParams[LOG_SIDE_OFFSET] == 0.0)
         {
             return true;
         }
+    }
+    return false;
+}
+
+bool LogOpData::isLogBase(double base) const
+{
+    if (isSimpleLog() && m_base == base)
+    {
+            return true;
     }
     return false;
 }
@@ -409,6 +503,11 @@ bool LogOpData::isLog2() const
 bool LogOpData::isLog10() const
 {
     return isLogBase(10.0);
+}
+
+bool LogOpData::isCamera() const
+{
+    return m_redParams.size() > 4;
 }
 
 } // namespace OCIO_NAMESPACE

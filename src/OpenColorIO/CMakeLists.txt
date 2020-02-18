@@ -118,6 +118,7 @@ set(SOURCES
 	transforms/FixedFunctionTransform.cpp
 	transforms/GroupTransform.cpp
 	transforms/LogAffineTransform.cpp
+	transforms/LogCameraTransform.cpp
 	transforms/LogTransform.cpp
 	transforms/LookTransform.cpp
 	transforms/Lut1DTransform.cpp

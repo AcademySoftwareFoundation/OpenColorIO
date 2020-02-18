@@ -255,6 +255,23 @@ OCIO_ADD_TEST(FileFormatSpi1D, read_failure)
                               "Not enough entries found");
     }
     {
+        // LUT too long.
+        const std::string SAMPLE_ERROR =
+            "Version 1\n"
+            "From 0.0 1.0\n"
+            "Length 2\n"
+            "Components 1\n"
+            "{\n"
+            "0.0\n"
+            "0.0\n"
+            "0.0\n"
+            "}\n";
+
+        OCIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Too many entries found");
+    }
+    {
         // Components==1 but two components specified in LUT.
         const std::string SAMPLE_ERROR =
             "Version 1\n"

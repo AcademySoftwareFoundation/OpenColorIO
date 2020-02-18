@@ -13,7 +13,7 @@ namespace
 void TestToolsStripBlank(const char * stringToStripChar,
                          const std::string & stringResult)
 {
-    constexpr const size_t stringToStripSize = 200;
+    constexpr size_t stringToStripSize = 200;
     char stringToStrip[stringToStripSize];
     snprintf(stringToStrip, stringToStripSize, "%s", stringToStripChar);
     OCIO::ReplaceTabsAndStripSpaces(stringToStrip);
@@ -25,7 +25,7 @@ void TestToolsStripEndNewLine(const char * stringToStripChar,
                               const std::string & stringResult)
 {
 
-    constexpr const size_t stringToStripSize = 200;
+    constexpr size_t stringToStripSize = 200;
     char stringToStrip[stringToStripSize];
     snprintf(stringToStrip, stringToStripSize, "%s", stringToStripChar);
     OCIO::StripEndNewLine(stringToStrip);

@@ -462,7 +462,7 @@ protected:
 //
 // For configs with version == 1: If the exponent is 1.0, this will not clamp.
 // Otherwise, the input color will be clamped between [0.0, inf].
-// For configs with version > 1: Negative values are always clamped.
+// For configs with version > 1: Negative value handling may be specified via setNegativeStyle.
 class OCIOEXPORT ExponentTransform : public Transform
 {
 public:
@@ -481,6 +481,16 @@ public:
     virtual void getValue(double(&vec4)[4]) const noexcept = 0;
     //!cpp:function::
     virtual void setValue(const double(&vec4)[4]) noexcept = 0;
+
+    //!cpp:function::  Specifies how negative values are handled. Legal values:
+    //
+    // * NEGATIVE_CLAMP -- Clamp negative values (default).
+    // * NEGATIVE_MIRROR -- Positive curve is rotated 180 degrees around the origin to
+    //                      handle negatives.
+    // * NEGATIVE_PASS_THRU -- Negative values are passed through unchanged.
+    virtual NegativeStyle getNegativeStyle() const = 0;
+    //!cpp:function::
+    virtual void setNegativeStyle(NegativeStyle style) = 0;
 
 protected:
     ExponentTransform() = default;
@@ -536,6 +546,15 @@ public:
     // .. note::
     //    The offset values must be in the range [0, 0.9].
     virtual void setOffset(const double(&values)[4]) noexcept = 0;
+
+    //!cpp:function::  Specifies how negative values are handled. Legal values:
+    //
+    // * NEGATIVE_LINEAR -- Linear segment continues into negatives (default).
+    // * NEGATIVE_MIRROR -- Positive curve is rotated 180 degrees around the origin to
+    //                      handle negatives.
+    virtual NegativeStyle getNegativeStyle() const = 0;
+    //!cpp:function::
+    virtual void setNegativeStyle(NegativeStyle style) = 0;
 
 protected:
     ExponentWithLinearTransform() = default;
@@ -815,6 +834,7 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GroupTransform
 //
 // * Default values are: 1. * log( 1. * color + 0., 2.) + 0.
 // * The alpha channel is not affected.
+//
 class OCIOEXPORT LogAffineTransform : public Transform
 {
 public:
@@ -865,6 +885,81 @@ private:
 
 //!cpp:function::
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const LogAffineTransform &);
+
+
+//!rst:: //////////////////////////////////////////////////////////////////
+
+//!cpp:class::  Same as :cpp:class:`LogAffineTransform` but with the addition of a linear segment
+// near black. This formula is used for many camera logs (e.g., LogC) as well as ACEScct.
+//
+// * The linSideBreak specifies the point on the linear axis where the log and linear
+//   segments meet.  It must be set (there is no default).  
+// * The linearSlope specifies the slope of the linear segment of the forward (linToLog)
+//   transform.  By default it is set equal to the slope of the log curve at the break point.
+//
+class OCIOEXPORT LogCameraTransform : public Transform
+{
+public:
+    //!cpp:function::
+    static LogCameraTransformRcPtr Create();
+
+    //!cpp:function::
+    virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
+    //!cpp:function::
+    virtual FormatMetadata & getFormatMetadata() noexcept = 0;
+
+    //!cpp:function:: Checks if this exactly equals other.
+    virtual bool equals(const LogCameraTransform & other) const noexcept = 0;
+
+    //!cpp:function::
+    virtual double getBase() const noexcept = 0;
+    //!cpp:function::
+    virtual void setBase(double base) noexcept = 0;
+
+    //!rst:: **Get/Set values for the R, G, B components**
+    //
+
+    //!cpp:function::
+    virtual void getLogSideSlopeValue(double(&values)[3]) const noexcept = 0;
+    //!cpp:function::
+    virtual void setLogSideSlopeValue(const double(&values)[3]) noexcept = 0;
+    //!cpp:function::
+    virtual void getLogSideOffsetValue(double(&values)[3]) const noexcept = 0;
+    //!cpp:function::
+    virtual void setLogSideOffsetValue(const double(&values)[3]) noexcept = 0;
+    //!cpp:function::
+    virtual void getLinSideSlopeValue(double(&values)[3]) const noexcept = 0;
+    //!cpp:function::
+    virtual void setLinSideSlopeValue(const double(&values)[3]) noexcept = 0;
+    //!cpp:function::
+    virtual void getLinSideOffsetValue(double(&values)[3]) const noexcept = 0;
+    //!cpp:function::
+    virtual void setLinSideOffsetValue(const double(&values)[3]) noexcept = 0;
+
+    //!cpp:function:: Return true if LinSideBreak values were set, false if they were not.
+    virtual bool getLinSideBreakValue(double(&values)[3]) const noexcept = 0;
+    //!cpp:function::
+    virtual void setLinSideBreakValue(const double(&values)[3]) noexcept = 0;
+
+    //!cpp:function:: Return true if LinearSlope values were set, false if they were not.
+    virtual bool getLinearSlopeValue(double(&values)[3]) const = 0;
+    //!cpp:function:: Set LinearSlope value.
+    // Note: You must call setLinSideBreakValue before calling this.
+    virtual void setLinearSlopeValue(const double(&values)[3]) = 0;
+    //!cpp:function:: Remove LinearSlope values so that default values are used.
+    virtual void unsetLinearSlopeValue() = 0;
+
+protected:
+    LogCameraTransform() = default;
+    virtual ~LogCameraTransform() = default;
+
+private:
+    LogCameraTransform(const LogCameraTransform &) = delete;
+    LogCameraTransform & operator= (const LogCameraTransform &) = delete;
+};
+
+//!cpp:function::
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const LogCameraTransform &);
 
 
 //!rst:: //////////////////////////////////////////////////////////////////

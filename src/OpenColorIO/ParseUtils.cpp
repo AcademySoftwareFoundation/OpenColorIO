@@ -362,9 +362,9 @@ FixedFunctionStyle FixedFunctionStyleFromString(const char * style)
 
 namespace
 {
-static constexpr const char * EC_STYLE_VIDEO = "video";
-static constexpr const char * EC_STYLE_LOGARITHMIC = "log";
-static constexpr const char * EC_STYLE_LINEAR = "linear";
+static constexpr char EC_STYLE_VIDEO[] = "video";
+static constexpr char EC_STYLE_LOGARITHMIC[] = "log";
+static constexpr char EC_STYLE_LINEAR[] = "linear";
 }
 
 const char * ExposureContrastStyleToString(ExposureContrastStyle style)
@@ -391,6 +391,42 @@ ExposureContrastStyle ExposureContrastStyleFromString(const char * style)
     // Default style is meaningless.
     std::stringstream ss;
     ss << "Unknown exposure contrast style: " << style;
+
+    throw Exception(ss.str().c_str());
+}
+
+namespace
+{
+static constexpr char NEGATIVE_STYLE_CLAMP[]     = "clamp";
+static constexpr char NEGATIVE_STYLE_LINEAR[]    = "linear";
+static constexpr char NEGATIVE_STYLE_MIRROR[]    = "mirror";
+static constexpr char NEGATIVE_STYLE_PASS_THRU[] = "pass_thru";
+}
+
+const char * NegativeStyleToString(NegativeStyle style)
+{
+    switch (style)
+    {
+    case NEGATIVE_CLAMP:     throw Exception("NEGATIVE_CLAMP style should not be saved");
+    case NEGATIVE_MIRROR:    return NEGATIVE_STYLE_MIRROR;
+    case NEGATIVE_PASS_THRU: return NEGATIVE_STYLE_PASS_THRU;
+    case NEGATIVE_LINEAR:    throw Exception("NEGATIVE_LINEAR style should not be saved");
+    }
+
+    throw Exception("Unknown exponent style");
+}
+
+NegativeStyle NegativeStyleFromString(const char * style)
+{
+    std::string str = pystring::lower(style);
+
+    if (str == NEGATIVE_STYLE_MIRROR)         return NEGATIVE_MIRROR;
+    else if (str == NEGATIVE_STYLE_PASS_THRU) return NEGATIVE_PASS_THRU;
+    else if (str == NEGATIVE_STYLE_CLAMP)     return NEGATIVE_CLAMP;
+    else if (str == NEGATIVE_STYLE_LINEAR)    return NEGATIVE_LINEAR;
+
+    std::stringstream ss;
+    ss << "Unknown exponent style: " << style;
 
     throw Exception(ss.str().c_str());
 }

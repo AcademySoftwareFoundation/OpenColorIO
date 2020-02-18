@@ -65548,7 +65548,13 @@
 0.0000000000000 0.0000000000000 0.0000152590219
         </Array>
     </Matrix>
-    <Range inBitDepth="32f" outBitDepth="16i" />
+    <Matrix inBitDepth="32f" outBitDepth="16i">
+        <Array dim="3 3 3">
+65535 0.0 0.0
+0.0 65535 0.0
+0.0 0.0 65535
+        </Array>
+    </Matrix>
     <Matrix inBitDepth="16i" outBitDepth="16i">
         <Array dim="4 4 3">
 1.000000000000000 0.000000000000000 0.000000000000000 0.000000000000000

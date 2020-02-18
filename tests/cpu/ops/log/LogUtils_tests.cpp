@@ -14,7 +14,6 @@ OCIO_ADD_TEST(LogUtil, ctf_to_ocio_fail)
 
     OCIO::LogOpData::Params paramsR, paramsG, paramsB;
     double base = 1.0;
-    OCIO::TransformDirection dir;
 
     auto & redP = ctfParams.get(OCIO::LogUtil::CTFParams::red);
     auto & greenP = ctfParams.get(OCIO::LogUtil::CTFParams::green);
@@ -29,7 +28,7 @@ OCIO_ADD_TEST(LogUtil, ctf_to_ocio_fail)
     blueP = redP;
 
     OCIO_CHECK_THROW_WHAT( 
-        OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB, dir),
+        OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB),
         OCIO::Exception, "gamma should be greater than 0.01");
 
     redP[OCIO::LogUtil::CTFParams::gamma]     = 0.9;
@@ -39,7 +38,7 @@ OCIO_ADD_TEST(LogUtil, ctf_to_ocio_fail)
     redP[OCIO::LogUtil::CTFParams::shadow]    = 0.5;
 
     OCIO_CHECK_THROW_WHAT(
-        OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB, dir),
+        OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB),
         OCIO::Exception, "refWhite should be greater than refBlack");
 
     redP[OCIO::LogUtil::CTFParams::gamma]     = 0.9;
@@ -49,7 +48,7 @@ OCIO_ADD_TEST(LogUtil, ctf_to_ocio_fail)
     redP[OCIO::LogUtil::CTFParams::shadow]    = 0.5; // invalid
 
     OCIO_CHECK_THROW_WHAT(
-        OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB, dir),
+        OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB),
         OCIO::Exception, "highlight should be greater than shadow");
 
 }
@@ -61,8 +60,8 @@ OCIO_ADD_TEST(LogUtil, ctf_to_ocio_ok)
 
     OCIO::LogOpData::Params paramsR, paramsG, paramsB;
     double base = 1.0;
-    OCIO::TransformDirection dir;
-    OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB, dir);
+    OCIO::TransformDirection dir = OCIO::LogUtil::GetLogDirection(ctfParams.m_style);
+    OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB);
 
     OCIO_CHECK_EQUAL(base, 10.);
     OCIO_CHECK_EQUAL(paramsR[OCIO::LOG_SIDE_SLOPE], 1.);
@@ -78,7 +77,8 @@ OCIO_ADD_TEST(LogUtil, ctf_to_ocio_ok)
     OCIO_CHECK_NO_THROW(logOp.validate());
 
     ctfParams.m_style = OCIO::LogUtil::LOG2;
-    OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB, dir);
+    dir = OCIO::LogUtil::GetLogDirection(ctfParams.m_style);
+    OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB);
 
     OCIO_CHECK_EQUAL(base, 2.);
     OCIO_CHECK_EQUAL(paramsR[OCIO::LOG_SIDE_SLOPE], 1.);
@@ -91,7 +91,8 @@ OCIO_ADD_TEST(LogUtil, ctf_to_ocio_ok)
     OCIO_CHECK_NO_THROW(logOp2.validate());
 
     ctfParams.m_style = OCIO::LogUtil::ANTI_LOG10;
-    OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB, dir);
+    dir = OCIO::LogUtil::GetLogDirection(ctfParams.m_style);
+    OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB);
 
     OCIO_CHECK_EQUAL(base, 10.);
     OCIO_CHECK_EQUAL(paramsR[OCIO::LOG_SIDE_SLOPE], 1.);
@@ -104,7 +105,8 @@ OCIO_ADD_TEST(LogUtil, ctf_to_ocio_ok)
     OCIO_CHECK_NO_THROW(logOp3.validate());
 
     ctfParams.m_style = OCIO::LogUtil::ANTI_LOG2;
-    OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB, dir);
+    dir = OCIO::LogUtil::GetLogDirection(ctfParams.m_style);
+    OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB);
 
     OCIO_CHECK_EQUAL(base, 2.);
     OCIO_CHECK_EQUAL(paramsR[OCIO::LOG_SIDE_SLOPE], 1.);
@@ -134,7 +136,8 @@ OCIO_ADD_TEST(LogUtil, ctf_to_ocio_ok)
     blueP = redP;
 
     ctfParams.m_style = OCIO::LogUtil::LIN_TO_LOG;
-    OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB, dir);
+    dir = OCIO::LogUtil::GetLogDirection(ctfParams.m_style);
+    OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB);
 
     const double tol = 1e-6;
     OCIO_CHECK_EQUAL(base, 10.);
@@ -154,7 +157,8 @@ OCIO_ADD_TEST(LogUtil, ctf_to_ocio_ok)
     OCIO_CHECK_NO_THROW(logOp5.validate());
 
     ctfParams.m_style = OCIO::LogUtil::LOG_TO_LIN;
-    OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB, dir);
+    dir = OCIO::LogUtil::GetLogDirection(ctfParams.m_style);
+    OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB);
     OCIO_CHECK_EQUAL(dir, OCIO::TRANSFORM_DIR_INVERSE);
 
     OCIO::LogOpData logOp6(dir, base, paramsR, paramsG, paramsB);
