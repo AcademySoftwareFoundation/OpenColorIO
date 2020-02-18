@@ -18,7 +18,9 @@ enum LogAffineParameter
     LOG_SIDE_SLOPE = 0,
     LOG_SIDE_OFFSET,
     LIN_SIDE_SLOPE,
-    LIN_SIDE_OFFSET
+    LIN_SIDE_OFFSET,
+    LIN_SIDE_BREAK,
+    LINEAR_SLOPE
 };
 
 class LogOpData;
@@ -35,6 +37,11 @@ public:
     // Order of LogParams follows LogAffineParameter:
     // LOG_SIDE_SLOPE, LOG_SIDE_OFFSET,
     // LIN_SIDE_SLOPE, LIN_SIDE_OFFSET.
+    // optional: LIN_SIDE_BREAK, LINEAR_SLOPE.
+    // By default, the first 4 parameters are there.
+    // If LIN_SIDE_BREAK is added, it can not be removed.
+    // LIN_SIDE_BREAK has to exist, before adding LINEAR_SLOPE.
+    // LINEAR_SLOPE can be removed.
     typedef std::vector<double> Params;
 
     LogOpData() = delete;
@@ -76,7 +83,7 @@ public:
 
     LogOpDataRcPtr inverse() const;
 
-    bool isInverse(ConstLogOpDataRcPtr & r) const;
+    bool isInverse(ConstLogOpDataRcPtr & log) const;
 
     inline const Params & getRedParams() const { return m_redParams; }
     inline void setRedParams(const Params & p) { m_redParams = p; }
@@ -103,8 +110,16 @@ public:
 
     std::string getBaseString(std::streamsize precision) const;
 
+    std::string getLinBreakString(std::streamsize precision) const;
+
+    std::string getLinearSlopeString(std::streamsize precision) const;
+
     bool isLog2() const;
     bool isLog10() const;
+
+    bool isSimpleLog() const;
+
+    bool isCamera() const;
 
     void setBase(double base) noexcept;
 
@@ -112,7 +127,11 @@ public:
 
     void setValue(LogAffineParameter val, const double(&values)[3]);
 
-    void getValue(LogAffineParameter val, double(&values)[3]) const;
+    // Can be used to remove LINEAR_SLOPE
+    void unsetLinearSlope();
+
+    // Return false if value is not defined.
+    bool getValue(LogAffineParameter val, double(&values)[3]) const noexcept;
 
     void setParameters(const double(&logSlope)[3],
                        const double(&logOffset)[3],

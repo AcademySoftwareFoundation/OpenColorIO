@@ -29,26 +29,12 @@ TransformRcPtr ExponentTransformImpl::createEditableCopy() const
 
 TransformDirection ExponentTransformImpl::getDirection() const noexcept
 {
-    if (GammaOpData::BASIC_FWD == data().getStyle())
-    {
-        return TRANSFORM_DIR_FORWARD;
-    }
-    else
-    {
-        return TRANSFORM_DIR_INVERSE;
-    }
+    return data().getDirection();
 }
 
 void ExponentTransformImpl::setDirection(TransformDirection dir) noexcept
 {
-    if (TRANSFORM_DIR_FORWARD == dir)
-    {
-        data().setStyle(GammaOpData::BASIC_FWD);
-    }
-    else
-    {
-        data().setStyle(GammaOpData::BASIC_REV);
-    }
+    data().setDirection(dir);
 }
 
 void ExponentTransformImpl::validate() const
@@ -98,6 +84,17 @@ void ExponentTransformImpl::getValue(double(&vec4)[4]) const noexcept
     vec4[3] = data().getAlphaParams()[0];
 }
 
+NegativeStyle ExponentTransformImpl::getNegativeStyle() const
+{
+    return GammaOpData::ConvertStyle(data().getStyle());
+}
+
+void ExponentTransformImpl::setNegativeStyle(NegativeStyle style)
+{
+    auto curDir = getDirection();
+    data().setStyle(GammaOpData::ConvertStyleBasic(style, curDir));
+}
+
 std::ostream & operator<< (std::ostream & os, const ExponentTransform & t)
 {
     double value[4];
@@ -109,7 +106,13 @@ std::ostream & operator<< (std::ostream & os, const ExponentTransform & t)
     os << "value=" << value[0];
     for (int i = 1; i < 4; ++i)
     {
-      os << " " << value[i];
+        os << " " << value[i];
+    }
+
+    auto style = t.getNegativeStyle();
+    if (style != NEGATIVE_CLAMP)
+    {
+        os << ", style=" << NegativeStyleToString(style);
     }
 
     os << ">";

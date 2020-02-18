@@ -79,7 +79,6 @@ set(SOURCES
 	ops/cdl/CDLOpGPU.cpp
 	ops/exposurecontrast/ExposureContrastOpGPU.cpp
 	ops/fixedfunction/FixedFunctionOpGPU.cpp
-	ops/gamma/GammaOpCPU.cpp
 	ops/gamma/GammaOpGPU.cpp
 	ops/log/LogOpGPU.cpp
 	ops/lut3d/Lut3DOpGPU.cpp
@@ -144,9 +143,10 @@ set(TESTS
 	ops/fixedfunction/FixedFunctionOpCPU_tests.cpp
 	ops/fixedfunction/FixedFunctionOpData_tests.cpp
 	ops/fixedfunction/FixedFunctionOp_tests.cpp
+	ops/gamma/GammaOp_tests.cpp
+	ops/gamma/GammaOpCPU_tests.cpp
 	ops/gamma/GammaOpData_tests.cpp
 	ops/gamma/GammaOpUtils_tests.cpp
-	ops/gamma/GammaOp_tests.cpp
 	ops/log/LogOpCPU_tests.cpp
 	ops/log/LogOpData_tests.cpp
 	ops/log/LogOp_tests.cpp
@@ -182,6 +182,7 @@ set(TESTS
 	transforms/FixedFunctionTransform_tests.cpp
 	transforms/GroupTransform_tests.cpp
 	transforms/LogAffineTransform_tests.cpp
+	transforms/LogCameraTransform_tests.cpp
 	transforms/LogTransform_tests.cpp
 	transforms/Lut1DTransform_tests.cpp
 	transforms/Lut3DTransform_tests.cpp

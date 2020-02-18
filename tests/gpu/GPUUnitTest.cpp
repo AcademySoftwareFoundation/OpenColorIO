@@ -685,7 +685,7 @@ int main(int, char **)
             test->setup();
             enabledTest = test->isEnabled();
 
-            constexpr const size_t maxCharToDisplay = 49;
+            constexpr size_t maxCharToDisplay = 49;
 
             std::string name(test->group());
             name += " / " + test->name();

@@ -64,6 +64,8 @@ public:
 
     void throwMessage(const std::string & error) const;
 
+    void logParameterWarning(const char * param) const;
+
 protected:
     template<typename T>
     void parseScalarAttribute(const char * name, const char * attrib, T & value)

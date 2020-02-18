@@ -37,30 +37,6 @@ public:
     virtual void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
-class RangeScaleMinRenderer : public RangeOpCPU
-{
-public:
-    RangeScaleMinRenderer(ConstRangeOpDataRcPtr & range);
-
-    virtual void apply(const void * inImg, void * outImg, long numPixels) const override;
-};
-
-class RangeScaleMaxRenderer : public RangeOpCPU
-{
-public:
-    RangeScaleMaxRenderer(ConstRangeOpDataRcPtr & range);
-
-    virtual void apply(const void * inImg, void * outImg, long numPixels) const override;
-};
-
-class RangeScaleRenderer : public RangeOpCPU
-{
-public:
-    RangeScaleRenderer(ConstRangeOpDataRcPtr & range);
-
-    virtual void apply(const void * inImg, void * outImg, long numPixels) const override;
-};
-
 class RangeMinMaxRenderer : public RangeOpCPU
 {
 public:
@@ -119,87 +95,6 @@ void RangeScaleMinMaxRenderer::apply(const void * inImg, void * outImg, long num
         out[0] = Clamp(t[0], m_lowerBound, m_upperBound);
         out[1] = Clamp(t[1], m_lowerBound, m_upperBound);
         out[2] = Clamp(t[2], m_lowerBound, m_upperBound);
-        out[3] = in[3];
-
-        in  += 4;
-        out += 4;
-    }
-}
-
-RangeScaleMinRenderer::RangeScaleMinRenderer(ConstRangeOpDataRcPtr & range)
-    :  RangeOpCPU(range)
-{
-}
-
-void RangeScaleMinRenderer::apply(const void * inImg, void * outImg, long numPixels) const
-{
-    const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
-
-    for(long idx=0; idx<numPixels; ++idx)
-    {
-        out[0] = in[0] * m_scale + m_offset;
-        out[1] = in[1] * m_scale + m_offset;
-        out[2] = in[2] * m_scale + m_offset;
-
-        // NaNs become m_lowerBound.
-        out[0] = std::max(m_lowerBound, out[0]);
-        out[1] = std::max(m_lowerBound, out[1]);
-        out[2] = std::max(m_lowerBound, out[2]);
-        out[3] = in[3];
-
-        in  += 4;
-        out += 4;
-    }
-}
-
-RangeScaleMaxRenderer::RangeScaleMaxRenderer(ConstRangeOpDataRcPtr & range)
-    :  RangeOpCPU(range)
-{
-}
-
-void RangeScaleMaxRenderer::apply(const void * inImg, void * outImg, long numPixels) const
-{
-    const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
-
-    for(long idx=0; idx<numPixels; ++idx)
-    {
-        out[0] = in[0] * m_scale + m_offset;
-        out[1] = in[1] * m_scale + m_offset;
-        out[2] = in[2] * m_scale + m_offset;
-
-        // NaNs become m_upperBound.
-        out[0] = std::min(m_upperBound, out[0]),
-        out[1] = std::min(m_upperBound, out[1]),
-        out[2] = std::min(m_upperBound, out[2]),
-        out[3] = in[3];
-
-        in  += 4;
-        out += 4;
-    }
-}
-
-// NOTE: Currently there is no way to create the Scale renderer.  If a Range Op
-// has a min or max defined (which is necessary to have an offset), then it clamps.
-// If it doesn't, then it is just a bit depth conversion and is therefore an identity.
-// The optimizer currently replaces identities with a scale matrix.
-//
-RangeScaleRenderer::RangeScaleRenderer(ConstRangeOpDataRcPtr & range)
-    :  RangeOpCPU(range)
-{
-}
-
-void RangeScaleRenderer::apply(const void * inImg, void * outImg, long numPixels) const
-{
-    const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
-
-    for(long idx=0; idx<numPixels; ++idx)
-    {
-        out[0] = in[0] * m_scale + m_offset;
-        out[1] = in[1] * m_scale + m_offset;
-        out[2] = in[2] * m_scale + m_offset;
         out[3] = in[3];
 
         in  += 4;
@@ -279,56 +174,22 @@ void RangeMaxRenderer::apply(const void * inImg, void * outImg, long numPixels) 
 
 ConstOpCPURcPtr GetRangeRenderer(ConstRangeOpDataRcPtr & range)
 {
-    if (range->scales())
+    // Both min & max can not be empty at the same time.
+    if (range->minIsEmpty())
     {
-        if (!range->minIsEmpty())
-        {
-            if (!range->maxIsEmpty())
-            {
-                return std::make_shared<RangeScaleMinMaxRenderer>(range);
-            }
-            else
-            {
-                return std::make_shared<RangeScaleMinRenderer>(range);
-            }
-        }
-        else
-        {
-            if (!range->maxIsEmpty())
-            {
-                return std::make_shared<RangeScaleMaxRenderer>(range);
-            }
-            else
-            {
-                // (Currently we will not get here, see comment above.)
-                return std::make_shared<RangeScaleRenderer>(range);
-            }
-        }
+        return std::make_shared<RangeMaxRenderer>(range);
     }
-    else  // implies m_scale = 1, m_offset = 0
+    else if (range->maxIsEmpty())
     {
-        if (!range->minIsEmpty())
-        {
-            if (!range->maxIsEmpty())
-            {
-                return std::make_shared<RangeMinMaxRenderer>(range);
-            }
-            else
-            {
-                return std::make_shared<RangeMinRenderer>(range);
-            }
-        }
-        else if (!range->maxIsEmpty())
-        {
-            return std::make_shared<RangeMaxRenderer>(range);
-        }
-
-        // Else, no rendering/scaling is needed.
+        return std::make_shared<RangeMinRenderer>(range);
     }
 
-    // Add identity matrix renderer.
-    auto mat = std::make_shared<const MatrixOpData>();
-    return GetMatrixRenderer(mat);
+    // Both min and max have values.
+    if (!range->scales())
+    {
+        return std::make_shared<RangeMinMaxRenderer>(range);
+    }
+    return std::make_shared<RangeScaleMinMaxRenderer>(range);
 }
 
 } // namespace OCIO_NAMESPACE

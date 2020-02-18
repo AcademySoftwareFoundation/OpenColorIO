@@ -108,9 +108,9 @@ void Lut3DTransformImpl::setGridSize(unsigned long gridSize)
 
 namespace
 {
-static constexpr const char * COMPONENT_R = "Red";
-static constexpr const char * COMPONENT_G = "Green";
-static constexpr const char * COMPONENT_B = "Blue";
+static constexpr char COMPONENT_R[] = "Red";
+static constexpr char COMPONENT_G[] = "Green";
+static constexpr char COMPONENT_B[] = "Blue";
 void CheckLUT3DIndex(const char * function, 
                      const char * component,
                      unsigned long index, unsigned long size)

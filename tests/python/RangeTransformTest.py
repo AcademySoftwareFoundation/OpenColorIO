@@ -95,7 +95,8 @@ class RangeTransformTest(unittest.TestCase):
     def test_validation(self):
 
         rt1 = OCIO.RangeTransform()
-        rt1.validate()
+        with self.assertRaises(Exception):
+            rt1.validate()
 
         # Test some valid ranges
 

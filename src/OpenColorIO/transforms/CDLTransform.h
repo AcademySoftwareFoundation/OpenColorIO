@@ -14,10 +14,10 @@
 
 namespace OCIO_NAMESPACE
 {
-static constexpr const char * METADATA_INPUT_DESCRIPTION = "InputDescription";
-static constexpr const char * METADATA_VIEWING_DESCRIPTION = "ViewingDescription";
-static constexpr const char * METADATA_SOP_DESCRIPTION = "SOPDescription";
-static constexpr const char * METADATA_SAT_DESCRIPTION = "SATDescription";
+static constexpr char METADATA_INPUT_DESCRIPTION[] = "InputDescription";
+static constexpr char METADATA_VIEWING_DESCRIPTION[] = "ViewingDescription";
+static constexpr char METADATA_SOP_DESCRIPTION[] = "SOPDescription";
+static constexpr char METADATA_SAT_DESCRIPTION[] = "SATDescription";
 
 typedef std::map<std::string,CDLTransformRcPtr> CDLTransformMap;
 typedef std::vector<CDLTransformRcPtr> CDLTransformVec;

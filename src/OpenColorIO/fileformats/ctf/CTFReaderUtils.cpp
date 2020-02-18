@@ -12,12 +12,12 @@ namespace OCIO_NAMESPACE
 
 namespace
 {
-static constexpr const char * INTERPOLATION_1D_LINEAR = "linear";
-static constexpr const char * INTERPOLATION_1D_CUBIC = "cubic";
-static constexpr const char * INTERPOLATION_DEFAULT = "default";
+static constexpr char INTERPOLATION_1D_LINEAR[] = "linear";
+static constexpr char INTERPOLATION_1D_CUBIC[] = "cubic";
+static constexpr char INTERPOLATION_DEFAULT[] = "default";
 
-static constexpr const char * INTERPOLATION_3D_LINEAR = "trilinear";
-static constexpr const char * INTERPOLATION_3D_TETRAHEDRAL = "tetrahedral";
+static constexpr char INTERPOLATION_3D_LINEAR[] = "trilinear";
+static constexpr char INTERPOLATION_3D_TETRAHEDRAL[] = "tetrahedral";
 
 }
 
