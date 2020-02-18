@@ -324,7 +324,7 @@ void LogRenderer::apply(const void * inImg, void * outImg, long numPixels) const
         const float alphares = in[3];
 
         // NB: 'in' and 'out' could be pointers to the same memory buffer.
-        memcpy(out, in, 4 * sizeof(float));
+        std::memcpy(out, in, 4 * sizeof(float));
 
         ApplyMax(out, minValue);
         ApplyLog2(out);
@@ -383,7 +383,7 @@ void AntiLogRenderer::apply(const void * inImg, void * outImg, long numPixels) c
         const float alphares = in[3];
 
         // NB: 'in' and 'out' could be pointers to the same memory buffer.
-        memcpy(out, in, 4 * sizeof(float));
+        std::memcpy(out, in, 4 * sizeof(float));
 
         ApplyScale(out, m_log2_base);
         ApplyExp2(out);
@@ -467,7 +467,7 @@ void Log2LinRenderer::apply(const void * inImg, void * outImg, long numPixels) c
         const float alphares = in[3];
 
         // NB: 'in' and 'out' could be pointers to the same memory buffer.
-        memcpy(out, in, 4 * sizeof(float));
+        std::memcpy(out, in, 4 * sizeof(float));
 
         ApplyAdd(out, m_minuskb);
         ApplyScale(out, m_kinv);
@@ -548,14 +548,12 @@ void Lin2LogRenderer::apply(const void * inImg, void * outImg, long numPixels) c
         in  += 4;
     }
 #else
-    if(in!=out)
-    {
-        memcpy(out, in, numPixels * 4 * sizeof(float));
-    }
-
     for (long idx = 0; idx<numPixels; ++idx)
     {
         const float alphares = in[3];
+
+        // NB: 'in' and 'out' could be pointers to the same memory buffer.
+        std::memcpy(out, in, 4 * sizeof(float));
 
         ApplyScale(out, m_m);
         ApplyAdd(out, m_b);
