@@ -4,6 +4,7 @@
 import unittest
 import os
 import sys
+from fnmatch import filter as fnfilter
 
 build_location = sys.argv[1]
 
@@ -37,11 +38,16 @@ def suite():
     """
 
     # top level directory cached on loader instance
-    this_dir = os.path.dirname(os.path.dirname(__file__))
     suite = unittest.TestSuite()
     loader = unittest.TestLoader()
-    package_tests = loader.discover(start_dir=this_dir, pattern='*Test.py', top_level_dir=None)
-    suite.addTests(package_tests)
+
+    this_dir = os.path.dirname(__file__)
+    test_modules = [filename.replace('.py', '') for filename in fnfilter(
+        os.listdir(this_dir), '*Test.py')]
+    map(__import__, test_modules)
+
+    for mod in [sys.modules[modname] for modname in test_modules]:
+        suite.addTest(loader.loadTestsFromModule(mod))
     return suite
 
 
