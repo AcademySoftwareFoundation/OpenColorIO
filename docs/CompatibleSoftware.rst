@@ -66,38 +66,6 @@ OCIO is natively integrated in
 Full support is provide for both image import/export, as well as image display.
 
 
-
-Nuke
-****
-
-`Compositor - The Foundry <http://www.thefoundry.co.uk/products/nuke>`__
-
-Nuke 6.3v7+ ships with native support for OpenColorIO. The OCIO configuration
-is selectable in the user preferences.
-
-OCIO Nodes: OCIOCDLTransform, OCIOColorSpace, OCIODisplay, OCIOFileTransform,
-OCIOLookConvert, OCIOLogConvert
-
-The OCIODisplay node is suitable for use in the Viewer as an input process (IP),
-and a register function is provides to add viewer options for each display upon
-launch.
-
-The OCIO config "nuke-default" is provided, which matches the built-in Nuke
-color processing. This profile is useful for those who want to mirror the native
-nuke color processing in other applications.  (The underlying equations are
-also provided as python code in the config as well).
-
-A `video demonstration <http://vimeo.com/38773736>`__ of the Nuke OCIO workflow.
-
-Mari
-****
-
-`3D Paint - The Foundry <http://www.thefoundry.co.uk/products/mari>`__
-
-Mari 1.4v1+ ships with native support for OpenColorIO in their display toolbar.
-
-A `video demonstration <http://vimeo.com/32909648>`__ of the Mari OCIO workflow.
-
 Katana
 ******
 
@@ -108,16 +76,111 @@ Color management in Katana (all versions) natively relies on OCIO.
 2D Nodes: OCIODisplay, OCIOColorSpace, OCIOCDLTransform
 Monitor Panel: Full OCIO Support
 
-Hiero
-*****
 
-`Conform & Review - The Foundry <http://www.thefoundry.co.uk/products/hiero>`__
+PhotoFlow
+*********
 
-Hiero 1.0 will ship with native support for OCIO in the display and the
-equivalent of Nuke's OCIOColorSpace in the Read nodes.
+`PhotoFlow <https://github.com/aferrero2707/PhotoFlow>`__
+ 
+It supports OCIO via a dedicated tool that can load a given configuration and apply the available color transforms. So far the tool has been tested it with the `Filmic <https://github.com/sobotka/filmic-blender>`__ and `ACES <https://opencolorio.org/configurations/aces_1.0.3.html>`__ configs.
 
-It comes with "nuke-default" OCIO config by default, so the Hiero viewer
-matches when sending files to Nuke for rendering.
+
+Unreal
+******
+
+Unreal Engine got OCIO support in version 4.22, released in April 2019:
+
+Click for more details :
+
+` Link 1 <https://docs.unrealengine.com/en-US/Support/Builds/ReleaseNotes/4_22/index.html>`__
+
+` Link 2 <https://docs.unrealengine.com/en-US/API/Plugins/OpenColorIO/index.html>`__
+
+
+Mocha Pro 2020
+**************
+
+Mocha Pro 2020 adds OCIO support:
+
+`Click for more details <https://borisfx.com/videos/opencolorio-mocha-pro-2020/>`__
+
+
+Autodesk Arnold
+***************
+
+Autodesk Arnold supports OCIO for color management:
+
+`Click for more details <https://docs.arnoldrenderer.com/display/A5AFMUG/Color+Management>`__
+
+
+SideFX Houdini
+**************
+
+SideFX Houdini got OCIO support in version 16, Feb 2017:
+
+CLick for more details :
+
+` Link 1 <https://www.sidefx.com/docs/houdini/io/ocio.html>`__
+
+` Link 2 <https://www.sidefx.com/filmtv/whats-new-h16/>`__
+
+
+Autodesk Maya
+*************
+
+Autodesk Maya got OCIO support in version 2016 (I believe Autodesk SynColor color management system can read OCIO configurations?), May 2016:
+
+`Click for more details <https://knowledge.autodesk.com/support/maya/learn-explore/caas/CloudHelp/cloudhelp/2016/ENU/Maya/files/GUID-C22F815A-8390-405B-BA50-74FEC42C75E0-htm.html>`__
+
+
+Chaos Group V-Ray
+*****************
+
+Chaos Group V-Ray has OCIO support, for instance:
+
+CLick for more details :
+
+`Link 1 <https://docs.chaosgroup.com/display/VRAY4MAX/OpenColorIO+Support>`__
+
+`Link 2 <https://docs.chaosgroup.com/display/VRAY4MAYA/VRayTexOCIO>`__
+
+
+Isotropix Clarisse
+******************
+
+Isotropix Clarisse has OCIO support:
+
+`Click for more details <https://www.isotropix.com/learn/tutorials/managing-looks-with-opencolorio-ocio>`__
+
+
+mrViewer
+********
+
+mrViewer is a professional flipbook player, hdri viewer and video/audio playback tool.  It supports OCIO input color spaces in images as well as display/view color spaces.
+
+
+Substance Designer
+******************
+
+Substance Designer supports OCIO :
+
+`Click for more details <https://magazine.substance3d.com/substance-designer-winter-2019-color-management-with-opencolorio/>`__
+
+
+Modo
+****
+
+Modo supports OCIO.
+
+`Click for more details <https://learn.foundry.com/modo/content/help/pages/rendering/color_management.html>`__
+
+
+DJV
+***
+
+DJV supports OCIO.
+
+`For more details <https://darbyjohnston.github.io/DJV/>`__
 
 
 Photoshop
@@ -285,3 +348,52 @@ motion-picture market. While we don't know many details about the CryEngine
 OpenColorIO integration, we're looking forward to learning more as information
 becomes available.
 
+
+
+Compatible Software (Deprecated)
+--------------------------------
+
+
+Nuke
+****
+
+`Compositor - The Foundry <http://www.thefoundry.co.uk/products/nuke>`__
+
+Nuke 6.3v7+ ships with native support for OpenColorIO. The OCIO configuration
+is selectable in the user preferences.
+
+OCIO Nodes: OCIOCDLTransform, OCIOColorSpace, OCIODisplay, OCIOFileTransform,
+OCIOLookConvert, OCIOLogConvert
+
+The OCIODisplay node is suitable for use in the Viewer as an input process (IP),
+and a register function is provides to add viewer options for each display upon
+launch.
+
+The OCIO config "nuke-default" is provided, which matches the built-in Nuke
+color processing. This profile is useful for those who want to mirror the native
+nuke color processing in other applications.  (The underlying equations are
+also provided as python code in the config as well).
+
+A `video demonstration <http://vimeo.com/38773736>`__ of the Nuke OCIO workflow.
+
+
+Mari
+****
+
+`3D Paint - The Foundry <http://www.thefoundry.co.uk/products/mari>`__
+
+Mari 1.4v1+ ships with native support for OpenColorIO in their display toolbar.
+
+A `video demonstration <http://vimeo.com/32909648>`__ of the Mari OCIO workflow.
+
+
+Hiero
+*****
+
+`Conform & Review - The Foundry <http://www.thefoundry.co.uk/products/hiero>`__
+
+Hiero 1.0 will ship with native support for OCIO in the display and the
+equivalent of Nuke's OCIOColorSpace in the Read nodes.
+
+It comes with "nuke-default" OCIO config by default, so the Hiero viewer
+matches when sending files to Nuke for rendering.
