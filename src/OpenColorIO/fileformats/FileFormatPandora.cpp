@@ -11,8 +11,9 @@
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ParseUtils.h"
-#include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
+#include "utils/StringUtils.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -113,7 +114,7 @@ CachedFileRcPtr LocalFileFormat::read(
     std::vector<int> raw3d;
 
     {
-        StringVec parts;
+        StringUtils::StringVec parts;
         std::vector<int> tmpints;
         bool inLut3d = false;
         int lineNumber = 0;
@@ -123,17 +124,16 @@ CachedFileRcPtr LocalFileFormat::read(
             ++lineNumber;
 
             // Strip, lowercase, and split the line
-            pystring::split(pystring::lower(pystring::strip(line)),
-                            parts);
+            parts = StringUtils::SplitByWhiteSpaces(StringUtils::Lower(StringUtils::Trim(line)));
             if(parts.empty()) continue;
 
             // Skip all lines starting with '#'
-            if(pystring::startswith(parts[0],"#")) continue;
+            if(StringUtils::StartsWith(parts[0],"#")) continue;
 
             if(parts[0] == "channel")
             {
                 if(parts.size() != 2 
-                    || pystring::lower(parts[1]) != "3d")
+                    || StringUtils::Lower(parts[1]) != "3d")
                 {
                     ThrowErrorMessage(
                         "Only 3D LUTs are currently supported "
@@ -174,7 +174,7 @@ CachedFileRcPtr LocalFileFormat::read(
             else if(parts[0] == "format")
             {
                 if(parts.size() != 2 
-                    || pystring::lower(parts[1]) != "lut")
+                    || StringUtils::Lower(parts[1]) != "lut")
                 {
                     ThrowErrorMessage(
                         "Only LUTs are currently supported "
@@ -187,9 +187,9 @@ CachedFileRcPtr LocalFileFormat::read(
             else if(parts[0] == "values")
             {
                 if(parts.size() != 4 || 
-                    pystring::lower(parts[1]) != "red" ||
-                    pystring::lower(parts[2]) != "green" ||
-                    pystring::lower(parts[3]) != "blue")
+                    StringUtils::Lower(parts[1]) != "red" ||
+                    StringUtils::Lower(parts[2]) != "green" ||
+                    StringUtils::Lower(parts[3]) != "blue")
                 {
                     ThrowErrorMessage(
                         "Only rgb LUTs are currently supported "

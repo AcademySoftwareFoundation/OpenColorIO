@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include "utils/StringUtils.h"
 
 #include "UnitTest.h"
 
+
 OCIO_ADD_TEST(StringUtils, cases)
 {
-    const std::string ref{"lOwEr 1*& ctfG"};
+    constexpr char ref[]{"lOwEr 1*& ctfG"};
 
     {
         const std::string str = StringUtils::Lower(ref);
@@ -22,7 +24,7 @@ OCIO_ADD_TEST(StringUtils, cases)
 
 OCIO_ADD_TEST(StringUtils, trim)
 {
-    const std::string ref{" \t\n lOwEr 1*& ctfG \n\n "};
+    constexpr char ref[]{" \t\n lOwEr 1*& ctfG \n\n "};
 
     {
         const std::string str = StringUtils::LeftTrim(ref);
@@ -42,30 +44,72 @@ OCIO_ADD_TEST(StringUtils, trim)
 
 OCIO_ADD_TEST(StringUtils, split)
 {
-    const std::string ref{" \t\n lOwEr 1*& ctfG \n\n "};
+    constexpr char ref[]{" \t\n lOwEr 1*& ctfG \n\n "};
 
     {
-        std::vector<std::string> results;
-        StringUtils::Split(ref, results, 'O');
-        OCIO_CHECK_EQUAL(results.size(), 2);
+        const StringUtils::StringVec results = StringUtils::Split(ref, 'O');
+        OCIO_REQUIRE_EQUAL(results.size(), 2);
         OCIO_CHECK_EQUAL(results[0], " \t\n l");
         OCIO_CHECK_EQUAL(results[1], "wEr 1*& ctfG \n\n ");
     }
 
+    // Test to validate the former pystring::split() behavior.
     {
-        std::vector<std::string> results;
-        StringUtils::SplitByLines(ref, results);
-        OCIO_CHECK_EQUAL(results.size(), 4);
+        const StringUtils::StringVec results = StringUtils::Split("", ',');
+        OCIO_REQUIRE_EQUAL(results.size(), 1);
+        OCIO_CHECK_EQUAL(results[0], "");
+    }
+
+    // Test to validate the former pystring::split() behavior.
+    {
+        const StringUtils::StringVec results = StringUtils::Split(",", ',');
+        OCIO_REQUIRE_EQUAL(results.size(), 2);
+        OCIO_CHECK_EQUAL(results[0], "");
+        OCIO_CHECK_EQUAL(results[1], "");
+    }
+
+    {
+        const StringUtils::StringVec results = StringUtils::SplitByLines(ref);
+        OCIO_REQUIRE_EQUAL(results.size(), 4);
         OCIO_CHECK_EQUAL(results[0], " \t");
         OCIO_CHECK_EQUAL(results[1], " lOwEr 1*& ctfG ");
         OCIO_CHECK_EQUAL(results[2], "");
         OCIO_CHECK_EQUAL(results[3], " ");
     }
+
+    {
+        const StringUtils::StringVec results = StringUtils::SplitByLines("\n");
+        OCIO_REQUIRE_EQUAL(results.size(), 1);
+        OCIO_CHECK_EQUAL(results[0], "");
+    }
+
+    // Test to validate the former pystring::splitlines() behavior.
+    {
+        const StringUtils::StringVec results = StringUtils::SplitByLines("");
+        OCIO_CHECK_EQUAL(results.size(), 1);
+        OCIO_CHECK_EQUAL(results[0], "");
+    }
+
+    // Something important to notice and preserve.
+    {
+        // Note: StringUtils::Split() is mainly used to parse some string content enumerating 
+        // a list of substrings (i.e. separator could be a space, comma, etc). In that use case,
+        // a string like ",," must return three entries. Refer to 'looks' parsing for example.
+        // However, StringUtils::SplitByLines() is mainly used to read some file content where
+        // "xx\n" only means one string equal to "xx".
+
+        constexpr char content[]{"\n"};
+        const StringUtils::StringVec res1 = StringUtils::Split(content, '\n');
+        const StringUtils::StringVec res2 = StringUtils::SplitByLines(content);
+
+        OCIO_CHECK_EQUAL(res1.size(), 2);
+        OCIO_CHECK_EQUAL(res2.size(), 1);
+    }
 }
 
 OCIO_ADD_TEST(StringUtils, searches)
 {
-    const std::string ref{"lOwEr 1*& ctfG"};
+    constexpr char ref[]{"lOwEr 1*& ctfG"};
 
     {
         OCIO_CHECK_ASSERT(StringUtils::StartsWith(ref, "lOwEr"));
@@ -80,4 +124,51 @@ OCIO_ADD_TEST(StringUtils, searches)
         OCIO_CHECK_ASSERT(!StringUtils::EndsWith(ref, "ctf"));
         OCIO_CHECK_ASSERT(!StringUtils::EndsWith(ref, "CtfG"));
     }
+}
+
+OCIO_ADD_TEST(StringUtils, replace)
+{
+    std::string ref{"lOwEr 1*& ctfG"};
+
+    ref = StringUtils::Replace(ref, "wEr", "12345");
+    OCIO_CHECK_EQUAL(ref, "lO12345 1*& ctfG");
+
+    ref = StringUtils::Replace(ref, "345 1*", "ABC");
+    OCIO_CHECK_EQUAL(ref, "lO12ABC& ctfG");
+
+    // Test a not existing subbstring.
+    ref = StringUtils::Replace(ref, "ZY", "TO");
+    OCIO_CHECK_EQUAL(ref, "lO12ABC& ctfG");
+
+    StringUtils::ReplaceInPlace(ref, "ct", "TO");
+    OCIO_CHECK_EQUAL(ref, "lO12ABC& TOfG");
+}
+
+OCIO_ADD_TEST(StringUtils, split_whitespaces)
+{
+    constexpr char ref[]{"10.0 9. 1 er\t1e-5f"};
+
+    const StringUtils::StringVec res1 = StringUtils::SplitByWhiteSpaces(ref);
+    OCIO_REQUIRE_EQUAL(res1.size(), 5);
+    OCIO_CHECK_EQUAL(res1[0], "10.0");
+    OCIO_CHECK_EQUAL(res1[1], "9.");
+    OCIO_CHECK_EQUAL(res1[2], "1");
+    OCIO_CHECK_EQUAL(res1[3], "er");
+    OCIO_CHECK_EQUAL(res1[4], "1e-5f");
+}
+
+OCIO_ADD_TEST(StringUtils, find)
+{
+    constexpr char ref[]{"10.0 9. 1 er\t1e-5f"};
+
+    OCIO_CHECK_EQUAL( 0, StringUtils::Find(ref, "1"));
+    OCIO_CHECK_EQUAL(12, StringUtils::Find(ref, "\t"));
+
+    OCIO_CHECK_EQUAL(std::string::npos, StringUtils::Find(ref, "TO"));
+    OCIO_CHECK_EQUAL(std::string::npos, StringUtils::Find(ref, "9.1"));
+
+    OCIO_CHECK_EQUAL(13, StringUtils::ReverseFind(ref, "1"));
+    OCIO_CHECK_EQUAL(17, StringUtils::ReverseFind(ref, "f"));
+
+    OCIO_CHECK_EQUAL(std::string::npos, StringUtils::ReverseFind(ref, "TO"));
 }

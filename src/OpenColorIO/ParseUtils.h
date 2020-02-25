@@ -4,6 +4,7 @@
 #ifndef INCLUDED_OCIO_PARSEUTILS_H
 #define INCLUDED_OCIO_PARSEUTILS_H
 
+
 #include <sstream>
 #include <string>
 #include <vector>
@@ -11,6 +12,8 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "PrivateTypes.h"
+#include "utils/StringUtils.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -31,10 +34,10 @@ bool StringToFloat(float * fval, const char * str);
 bool StringToInt(int * ival, const char * str, bool failIfLeftoverChars=false);
 
 bool StringVecToFloatVec(std::vector<float> & floatArray,
-                            const StringVec & lineParts);
+                         const StringUtils::StringVec & lineParts);
 
 bool StringVecToIntVec(std::vector<int> & intArray,
-                        const StringVec & lineParts);
+                       const StringUtils::StringVec & lineParts);
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -50,19 +53,19 @@ bool StrEqualsCaseIgnore(const std::string & a, const std::string & b);
 // Otherwise, assume a single string.
 // Also, strip whitespace from all parts.
 
-void SplitStringEnvStyle(StringVec & outputvec, const char * str);
+void SplitStringEnvStyle(StringUtils::StringVec & outputvec, const char * str);
 
 // Join on ','
-std::string JoinStringEnvStyle(const StringVec & outputvec);
+std::string JoinStringEnvStyle(const StringUtils::StringVec & outputvec);
 
 // Ordering and capitalization from vec1 is preserved
-StringVec IntersectStringVecsCaseIgnore(const StringVec & vec1,
-                                        const StringVec & vec2);
+StringUtils::StringVec IntersectStringVecsCaseIgnore(const StringUtils::StringVec & vec1,
+                                        const StringUtils::StringVec & vec2);
 
 // Find the index of the specified string, ignoring case.
 // return -1 if not found.
 
-int FindInStringVecCaseIgnore(const StringVec & vec, const std::string & str);
+int FindInStringVecCaseIgnore(const StringUtils::StringVec & vec, const std::string & str);
 
 } // namespace OCIO_NAMESPACE
 
