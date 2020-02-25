@@ -259,8 +259,8 @@ Natron
 'Open Source Compositing Software <http://natron.fr>'
 
 
-Nuke
-****
+Nuke (Foundry)
+**************
 
 `Compositor - The Foundry <http://www.thefoundry.co.uk/products/nuke>`__
 
@@ -287,12 +287,7 @@ OpenImageIO
 
 `Open Source Image Library / Renderer Texture Engine <http://openimageio.org>`__
 
-Available in the current code trunk. Integration is with makecolortx (allowing
-for color space conversion during mipmap generation), and also through the
-public header `src/include/color.h <http://github.com/OpenImageIO/oiio/blob/master/src/include/color.h>`__ .
-
-Remaining integration tasks include
-`color conversion at runtime <http://github.com/OpenImageIO/oiio/issues/193>`__ .
+OIIO's C++ and Python bindings include several methods for applying color transforms to whole images, notably functions in the ImageBufAlgo namespace including **colorconvert()**, **ociolook()**, **ociodisplay()**, **ociofiletransform()**. These are also available as part of the *oiiotool* command line utility (--colorconvert, --ociolook, --ociodisplay, --ociofiletransform) and the *maketx* utility for preparing textures also supports **--colorconvert**. From C++, there is additional low-level functionality in the header **OpenImageIO/color.h** that are wrappers for accessing underlying OCIO color configurations and doing color processing on individual pixel values.
 
 
 PhotoFlow
