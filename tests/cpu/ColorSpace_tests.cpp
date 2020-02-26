@@ -6,6 +6,52 @@
 #include "UnitTest.h"
 namespace OCIO = OCIO_NAMESPACE;
 
+OCIO_ADD_TEST(ColorSpace, basic)
+{
+    OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+    OCIO_REQUIRE_ASSERT(cs);
+    OCIO_REQUIRE_EQUAL(cs->getReferenceSpaceType(), OCIO::REFERENCE_SPACE_SCENE);
+
+    cs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_DISPLAY);
+    OCIO_REQUIRE_ASSERT(cs);
+    OCIO_REQUIRE_EQUAL(cs->getReferenceSpaceType(), OCIO::REFERENCE_SPACE_DISPLAY);
+
+    cs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
+    OCIO_REQUIRE_ASSERT(cs);
+    OCIO_REQUIRE_EQUAL(cs->getReferenceSpaceType(), OCIO::REFERENCE_SPACE_SCENE);
+
+    OCIO_CHECK_EQUAL(std::string(""), cs->getName());
+    OCIO_CHECK_EQUAL(std::string(""), cs->getFamily());
+    OCIO_CHECK_EQUAL(std::string(""), cs->getDescription());
+    OCIO_CHECK_EQUAL(std::string(""), cs->getEqualityGroup());
+    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UNKNOWN, cs->getBitDepth());
+    OCIO_CHECK_ASSERT(!cs->isData());
+    OCIO_CHECK_EQUAL(OCIO::ALLOCATION_UNIFORM, cs->getAllocation());
+    OCIO_CHECK_EQUAL(0, cs->getAllocationNumVars());
+
+    cs->setName("name");
+    OCIO_CHECK_EQUAL(std::string("name"), cs->getName());
+    cs->setFamily("family");
+    OCIO_CHECK_EQUAL(std::string("family"), cs->getFamily());
+    cs->setDescription("description");
+    OCIO_CHECK_EQUAL(std::string("description"), cs->getDescription());
+    cs->setEqualityGroup("equalitygroup");
+    OCIO_CHECK_EQUAL(std::string("equalitygroup"), cs->getEqualityGroup());
+    cs->setBitDepth(OCIO::BIT_DEPTH_F16);
+    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_F16, cs->getBitDepth());
+    cs->setIsData(true);
+    OCIO_CHECK_ASSERT(cs->isData());
+    cs->setAllocation(OCIO::ALLOCATION_UNKNOWN);
+    OCIO_CHECK_EQUAL(OCIO::ALLOCATION_UNKNOWN, cs->getAllocation());
+    const float vars[2]{ 1.f, 2.f };
+    cs->setAllocationVars(2, vars);
+    OCIO_CHECK_EQUAL(2, cs->getAllocationNumVars());
+    float readVars[2]{};
+    cs->getAllocationVars(readVars);
+    OCIO_CHECK_EQUAL(1.f, readVars[0]);
+    OCIO_CHECK_EQUAL(2.f, readVars[1]);
+}
+
 OCIO_ADD_TEST(ColorSpace, category)
 {
     OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();

@@ -37,7 +37,7 @@ int find_view(const ViewVec & vec, const std::string & name)
 {
     for(unsigned int i=0; i<vec.size(); ++i)
     {
-        if(StrEqualsCaseIgnore(name, vec[i].name)) return i;
+        if(StrEqualsCaseIgnore(name, vec[i].m_name)) return i;
     }
     return -1;
 }
@@ -45,14 +45,27 @@ int find_view(const ViewVec & vec, const std::string & name)
 void AddDisplay(DisplayMap & displays,
                 const std::string & display,
                 const std::string & view,
-                const std::string & colorspace,
+                const std::string & viewTransform,
+                const std::string & displayColorspace,
                 const std::string & looks)
 {
+    if (display.empty())
+    {
+        throw Exception("Can't add a display with empty name.");
+    }
+    if (view.empty())
+    {
+        throw Exception("Can't add a display with empty view name.");
+    }
+    if (displayColorspace.empty())
+    {
+        throw Exception("Can't add a display with empty color space name.");
+    }
     DisplayMap::iterator iter = find_display(displays, display);
     if(iter == displays.end())
     {
         ViewVec views;
-        views.push_back( View(view, colorspace, looks) );
+        views.push_back( View(view, viewTransform, displayColorspace, looks) );
         displays.push_back(std::make_pair(display, views));
     }
     else
@@ -61,20 +74,21 @@ void AddDisplay(DisplayMap & displays,
         int index = find_view(views, view);
         if (index < 0)
         {
-            views.push_back( View(view, colorspace, looks) );
+            views.push_back( View(view, viewTransform, displayColorspace, looks) );
         }
         else
         {
-            views[index].colorspace = colorspace;
-            views[index].looks = looks;
+            views[index].m_viewTransform = viewTransform;
+            views[index].m_colorspace = displayColorspace;
+            views[index].m_looks = looks;
         }
     }
 }
 
 void ComputeDisplays(StringVec & displayCache,
-                        const DisplayMap & displays,
-                        const StringVec & activeDisplays,
-                        const StringVec & activeDisplaysEnvOverride)
+                     const DisplayMap & displays,
+                     const StringVec & activeDisplays,
+                     const StringVec & activeDisplaysEnvOverride)
 {
     displayCache.clear();
 

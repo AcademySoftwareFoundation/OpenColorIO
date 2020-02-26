@@ -237,7 +237,7 @@ int ParseColorSpaceFromString(const Config & config, const char * str)
     int rightMostColorSpaceIndex = -1;
 
     // Find the right-most occcurance within the string for each colorspace.
-    for (int i = 0; i < config.getNumColorSpaces(COLORSPACE_ALL); ++i)
+    for (int i = 0; i < config.getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL); ++i)
     {
         std::string csname = pystring::lower(config.getColorSpaceNameByIndex(i));
 
