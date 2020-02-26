@@ -16,6 +16,7 @@
 #include "Logging.h"
 #include "LookParse.h"
 #include "Display.h"
+#include "FileRules.h"
 #include "MathUtils.h"
 #include "Mutex.h"
 #include "OpBuilders.h"
@@ -908,7 +909,8 @@ void Config::sanityCheck() const
 
     if (getMajorVersion() >= 2)
     {
-        getImpl()->m_fileRules->validate(*this);
+        auto colorSpaceAccessor = std::bind(&Config::getColorSpace, this, std::placeholders::_1);
+        getImpl()->m_fileRules->getImpl()->sanityCheck(colorSpaceAccessor);
     }
 
     // Everything is groovy.
@@ -1625,6 +1627,22 @@ void Config::setFileRules(ConstFileRulesRcPtr fileRules)
     AutoMutex lock(getImpl()->m_cacheidMutex);
     getImpl()->resetCacheIDs();
 }
+
+const char * Config::getColorSpaceFromFilepath(const char * filePath) const
+{
+    return getImpl()->m_fileRules->getImpl()->getColorSpaceFromFilepath(*this, filePath);
+}
+
+const char * Config::getColorSpaceFromFilepath(const char * filePath, size_t & ruleIndex) const
+{
+    return getImpl()->m_fileRules->getImpl()->getColorSpaceFromFilepath(*this, filePath, ruleIndex);
+}
+
+bool Config::filepathOnlyMatchesDefaultRule(const char * filePath) const
+{
+    return getImpl()->m_fileRules->getImpl()->filepathOnlyMatchesDefaultRule(*this, filePath);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 

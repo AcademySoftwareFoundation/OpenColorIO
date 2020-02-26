@@ -593,6 +593,20 @@ public:
     //    The argument is cloned.
     void setFileRules(ConstFileRulesRcPtr fileRules);
 
+    // !cpp:function:: Get the color space of the first rule that matched filePath.
+    const char * getColorSpaceFromFilepath(const char * filePath) const;
+
+    //!cpp:function:: Most applications will use the preceding method, but this method may be
+    // used for applications that want to know which was the highest priority rule to match
+    // filePath.  The getNumCustomKeys(ruleIndex) and custom keys methods may then be used
+    // to get additional information about the matching rule.
+    const char * getColorSpaceFromFilepath(const char * filePath, size_t & ruleIndex) const;
+
+    // !cpp:function:: Returns true if the only rule matched by filePath is the default rule.
+    // This is a convenience method for applications that want to require the user to manually
+    // choose a color space when strictParsing is true and no other rules match.
+    bool filepathOnlyMatchesDefaultRule(const char * filePath) const;
+
     ///////////////////////////////////////////////////////////////////////////
     //!rst:: .. _cfgprocessors_section:
     //
@@ -680,7 +694,6 @@ private:
     static void deleter(Config* c);
 
     class Impl;
-    friend class Impl;
     Impl * m_impl;
     Impl * getImpl() { return m_impl; }
     const Impl * getImpl() const { return m_impl; }
@@ -829,24 +842,6 @@ public:
     //!cpp:function:: Move a rule closer to the end of the list by one position.
     void decreaseRulePriority(size_t ruleIndex);
 
-    // !cpp:function:: Get the color space of the first rule that matched filePath.
-    const char * getColorSpaceFromFilepath(const Config & config, const char * filePath) const;
-
-    //!cpp:function:: Most applications will use the preceding method, but this method may be
-    // used for applications that want to know which was the highest priority rule to match
-    // filePath.  The getNumCustomKeys(ruleIndex) and custom keys methods may then be used
-    // to get additional information about the matching rule.
-    const char * getColorSpaceFromFilepath(const Config & config, const char * filePath,
-                                           size_t & ruleIndex) const;
-
-    // !cpp:function:: Returns true if the only rule matched by filePath is the default rule.
-    // This is a convenience method for applications that want to require the user to manually
-    // choose a color space when strictParsing is true and no other rules match.
-    bool filepathOnlyMatchesDefaultRule(const Config & config, const char * filePath) const;
-
-    //!cpp:function:: Called by :cpp:func:`Config::sanityCheck`.
-    void validate(const Config & config) const;
-
 private:
     FileRules();
     virtual ~FileRules();
@@ -856,8 +851,9 @@ private:
 
     static void deleter(FileRules* c);
 
+    friend class Config;
+
     class Impl;
-    friend class Impl;
     Impl * m_impl;
     Impl * getImpl() { return m_impl; }
     const Impl * getImpl() const { return m_impl; }
@@ -1032,7 +1028,6 @@ private:
     static void deleter(ColorSpace* c);
 
     class Impl;
-    friend class Impl;
     Impl * m_impl;
     Impl * getImpl() { return m_impl; }
     const Impl * getImpl() const { return m_impl; }
@@ -1121,7 +1116,6 @@ private:
     static void deleter(ColorSpaceSet * c);
 
     class Impl;
-    friend class Impl;
     Impl * m_impl;
     Impl * getImpl() { return m_impl; }
     const Impl * getImpl() const { return m_impl; }
@@ -1199,7 +1193,6 @@ private:
     static void deleter(Look* c);
 
     class Impl;
-    friend class Impl;
     Impl * m_impl;
     Impl * getImpl() { return m_impl; }
     const Impl * getImpl() const { return m_impl; }
@@ -1509,7 +1502,6 @@ private:
     static void deleter(ProcessorMetadata* c);
 
     class Impl;
-    friend class Impl;
     Impl * m_impl;
     Impl * getImpl() { return m_impl; }
     const Impl * getImpl() const { return m_impl; }
@@ -1636,7 +1628,6 @@ private:
     static void deleter(Baker* o);
 
     class Impl;
-    friend class Impl;
     Impl * m_impl;
     Impl * getImpl() { return m_impl; }
     const Impl * getImpl() const { return m_impl; }
@@ -2062,7 +2053,6 @@ protected:
     GpuShaderCreator & operator= (const GpuShaderCreator &) = delete;
 
     class Impl;
-    friend class Impl;
     Impl * m_impl;
     Impl * getImpl() { return m_impl; }
     const Impl * getImpl() const { return m_impl; }
@@ -2364,7 +2354,6 @@ private:
     static void deleter(Context* c);
 
     class Impl;
-    friend class Impl;
     Impl * m_impl;
     Impl * getImpl() { return m_impl; }
     const Impl * getImpl() const { return m_impl; }
