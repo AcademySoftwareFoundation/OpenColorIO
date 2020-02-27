@@ -19,6 +19,8 @@ application, please contact ocio-dev as well.
 After Effects
 *************
 
+An OpenColorIO plugin is available for use in After Effects.
+
 Website: `<http://www.adobe.com/products/aftereffects.html>`__
 
 Documentation :
@@ -28,13 +30,10 @@ Documentation :
 - Pre-built binaries are also available for `download <http://www.fnordware.com/OpenColorIO>`__, courtesy of `fnordware <http://www.fnordware.com>`__.
 
 
-- Profile has been properly measured using a spectrophotometer), then choose your display. If the transform was approved on a different monitor, then maybe you
-
-
 Arnold (Autodesk)
 *****************
 
-Website : `<https://docs.arnoldrenderer.com/display/A5AFMUG/Color+Management>`__
+Website : `<https://www.arnoldrenderer.com/>`__
 
 
 Blender
@@ -42,15 +41,18 @@ Blender
 
 Blender has integrated OCIO as part of it's redesigned color management system.
 
-Website: `Open Source 3D Application <http://www.blender.org/>`__
+Website: `<http://www.blender.org/>`__
 
 Supported Version: >= 2.64
 
 Documentation:
 
-- `<http://wiki.blender.org/index.php/Dev:Ref/Release_Notes/2.64>`__,
+- `<https://docs.arnoldrenderer.com/display/A5AFMUG/Color+Management>`__
 
-- `<http://wiki.blender.org/index.php/Dev:Ref/Release_Notes/2.64/Color_Management>`__.
+- `Blender 2.64 Release Notes <https://archive.blender.org/wiki/index.php/Dev:Ref/Release_Notes/2.64/>`__
+
+- `Color Management <https://archive.blender.org/wiki/index.php/Dev:Ref/Release_Notes/2.64/Color_Management/>`__
+
 
 
 C++
@@ -60,18 +62,27 @@ The core OpenColorIO API is available for use in C++. Minimal code examples are 
 
 Website: `<http://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/export/OpenColorIO>`__
 
-Documentation: 
+Examples:
 
-Of particular note are
+- `ocioconvert <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/src/apps/ocioconvert>`__
 
-- `<https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/src/apps/ocioconvert>`__
-- `<https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/src/apps/ociodisplay>`__
+- `ociodisplay <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/src/apps/ociodisplay>`__
+
+Documentation:
+
+- `Developer Guide <https://opencolorio.org/developers/index.html>`__
+
+- `Usage Examples <https://opencolorio.org/developers/usage_examples.html>`__
 
 
 Clarisse (Isotropix)
 ********************
 
-Website: `<https://www.isotropix.com/learn/tutorials/managing-looks-with-opencolorio-ocio>`__
+Website: `<https://www.isotropix.com/products>`__
+
+Documentation:
+
+- `Managing Looks with OpenColorIO <https://www.isotropix.com/learn/tutorials/managing-looks-with-opencolorio-ocio>`__
 
 
 CryEngine (CryTek)
@@ -96,6 +107,17 @@ Gaffer is a node based application for use in CG and VFX production, with a part
 Website: `<http://www.gafferhq.org/>`__
 
 
+Hiero (Foundry)
+***************
+
+Hiero ships with native support for OCIO in the display and the equivalent of Nuke's OCIOColorSpace in the Read nodes. It comes with the "nuke-default" OCIO config by default, so the Hiero viewer
+matches when sending files to Nuke for rendering.
+
+Website: `<https://www.foundry.com/products/hiero>`__
+
+Supported version: >= 1.0
+
+
 Houdini (SideFX)
 ****************
 
@@ -106,9 +128,9 @@ Supported Version: >= 16
 Documentation:
 
 
-- `<https://www.sidefx.com/docs/houdini/io/ocio.html>`__
+- `OpenColorIO Support <https://www.sidefx.com/docs/houdini/io/ocio.html>`__
 
-- `<https://www.sidefx.com/filmtv/whats-new-h16/>`__
+- `What's new in Houdini 16 <https://www.sidefx.com/filmtv/whats-new-h16/>`__
 
 
 Java (Beta)
@@ -126,9 +148,9 @@ Website: `<http://www.thefoundry.co.uk/products/katana>`__
 
 Documentation:
 
-- 2D Nodes: OCIODisplay, OCIOColorSpace, OCIOCDLTransform
+- `Managing Color <https://learn.foundry.com/katana/Content/ug/rendering_scene/managing_color.html>`__
 
-- Monitor Panel: Full OCIO Support
+- `Color Nodes <https://learn.foundry.com/katana/Content/rg/color_2d.html>`__
 
 
 Krita
@@ -140,19 +162,21 @@ Website: `<http://www.krita.org/>`__
 
 Documentation :
 
-- See `krita.org <http://www.krita.org/item/113-krita-starts-supporting-opencolorio>`__ for details.
+- `Krita Starts Supporting OpenColorIO <https://krita.org/en/item/krita-starts-supporting-opencolorio/>`__.
 
 
 Mari (Foundry)
 **************
 
-Mari 1.4v1+ ships with native support for OpenColorIO in their display toolbar.
+Website: `<https://www.foundry.com/products/mari>`__
 
-Website: `<http://www.thefoundry.co.uk/products/mari>`__
+Supported Version: >= 1.4v1
 
 Documentation:
 
-- A `video demonstration <http://vimeo.com/32909648>`__ of the Mari OCIO workflow.
+- `Managing Colors in Mari <https://learn.foundry.com/mari/4.0/Content/user_guide/managing_colors/anaging_colors_in_mari.html>`__
+
+- `Color Management <https://learn.foundry.com/mari/4.0/Content/user_guide/managing_colors/color_management.html>`__
 
 
 Maya (Autodesk)
@@ -166,13 +190,21 @@ Website: `<https://knowledge.autodesk.com/support/maya/learn-explore/caas/CloudH
 Mocha Pro 2020 (Boris FX)
 *************************
 
-Website: `<https://borisfx.com/videos/opencolorio-mocha-pro-2020/>`__
+Website: `<https://borisfx.com/products/mocha-pro>`__
+
+Documentation: 
+
+- `Color Management <https://borisfx.com/videos/opencolorio-mocha-pro-2020/>`__
 
 
 Modo (Foundry)
 **************
 
-Website: `<https://learn.foundry.com/modo/content/help/pages/rendering/color_management.html>`__
+Website: `<https://www.foundry.com/products/modo>`__
+
+Documentation:
+
+- `Color Management <https://learn.foundry.com/modo/content/help/pages/rendering/color_management.html>`__
 
 
 mrViewer
@@ -190,38 +222,27 @@ Documentation:
 Natron
 ******
 
-Website : `<http://natron.fr>`__
+Website : `<https://natrongithub.github.io/>`__
 
 Documentation :
 
-- `Open Source Compositing Software <https://natrongithub.github.io/>`__
+- `Color Nodes <https://natron.readthedocs.io/en/rb-2.3/_groupColor.html>`__
 
 
 Nuke (Foundry)
 **************
 
-Nuke 6.3v7+ ships with native support for OpenColorIO. The OCIO configuration
-is selectable in the user preferences.
+Nuke ships with native support for OpenColorIO. There is also an available `"nuke-default" OCIO config <https://github.com/imageworks/OpenColorIO-Configs/tree/master/nuke-default>`__, which matches the built-in Nuke color processing. This profile is useful for those who want to mirror the native Nuke color processing in other applications (the underlying equations are also provided as python code in the config as well).
 
-OCIO Nodes : OCIOCDLTransform, OCIOColorSpace, OCIODisplay, OCIOFileTransform,
-OCIOLookConvert, OCIOLogConvert
+Website : `<https://www.foundry.com/products/nuke>`__
 
-The OCIODisplay node is suitable for use in the Viewer as an input process (IP),
-and a register function is provides to add viewer options for each display upon
-launch.
+Supported Version: >= 6.3v7
 
-The OCIO config "nuke-default" is provided, which matches the built-in Nuke
-color processing. This profile is useful for those who want to mirror the native
-nuke color processing in other applications.  (The underlying equations are
-also provided as python code in the config as well).
+Documentation:
 
-Website : `<http://www.thefoundry.co.uk/products/nuke>`__
+- `OCIO Color Management <https://learn.foundry.com/nuke/content/comp_environment/configuring_nuke/using_ocio_config_files.html>`__
 
-Supported Version : >= 6.3
-
-Documentation :
-
-- A `video demonstration <http://vimeo.com/38773736>`__ of the Nuke OCIO workflow.
+- `Color Nodes <https://learn.foundry.com/nuke/content/reference_guide/color_nodes/color_nodes.html>`__
 
 
 OpenImageIO
@@ -235,13 +256,9 @@ Website : `Open Source Image Library / Renderer Texture Engine <http://openimage
 PhotoFlow
 *********
 
-It supports OCIO via a dedicated tool that can load a given configuration and apply the available color transforms.
+PhotoFlow supports OCIO via a dedicated tool that can load a given configuration and apply the available color transforms. So far the tool has been tested it with the `Filmic <https://github.com/sobotka/filmic-blender>`__ and `ACES <https://opencolorio.org/configurations/aces_1.0.3.html>`__ configs.
 
 Website : `<https://github.com/aferrero2707/PhotoFlow>`__
-
-Documentation : 
-
-- So far the tool has been tested it with the `Filmic <https://github.com/sobotka/filmic-blender>`__ and `ACES <https://opencolorio.org/configurations/aces_1.0.3.html>`__ configs.
 
 
 Photoshop
@@ -251,16 +268,18 @@ OpenColorIO display luts can be exported as ICC profiles for use in photoshop. T
 
 Website : `<https://www.adobe.com/products/photoshop.html?promoid=PC1PQQ5T&mv=other>`__
 
-
 Python
 ******
 
-The OpenColorIO API is available for use in python. See the "pyglue" directory
-in the codebase.
+The OpenColorIO API is available for use in Python.
 
-Documentation :
+Website: `<https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/src/bindings/python>`__
 
-- See the developer guide for `usage examples <_developers-usageexamples>`__ and API documentation on the Python bindings.
+Documentation:
+
+- `Developer Guide <https://opencolorio.org/developers/index.html>`__
+
+- `Usage Examples <https://opencolorio.org/developers/usage_examples.html>`__
 
 
 RV (Autodesk)
@@ -278,21 +297,25 @@ Documentation :
 Silhouette (Boris FX)
 *********************
 
-Website : `<http://www.silhouettefx.com/silhouette>`__
+OCIO is natively integrated in Silhouette. Full support is provided for both image import/export, as well as image display.
+
+Website : `<https://borisfx.com/products/silhouette/>`__
 
 Supported Version: >= 4.5
-
-Documentation : 
-
-- OCIO is natively integrated in `<http://www.silhouettefx.com/silhouette/silhouette-4.5-WhatsNew.pdf>`__. 
-
-- Full support is provided for both image import/export, as well as image display.
 
 
 Substance Designer (Adobe)
 **************************
 
-Website : `<https://magazine.substance3d.com/substance-designer-winter-2019-color-management-with-opencolorio/>`__
+Website: `<https://www.substance3d.com/products/substance-designer/>`__
+
+Supported version: >= 2019.3
+
+Documentation:
+
+- `Color Management with OpenColorIO <https://magazine.substance3d.com/substance-designer-winter-2019-color-management-with-opencolorio/>`__
+
+- `Color Management <https://docs.substance3d.com/sddoc/color-management-188973971.html>`__
 
 
 Unreal Engine (Epic Games)
@@ -389,15 +412,3 @@ are not LUTs per se. An ICC Profile describes a color space and then needs a
 destination profile to calculate the transformation. So if you have an operation
 working and looking good on the monitor you’re using (and maybe its
 should choose its profile instead.
-
-
-Compatible Software (Deprecated)
---------------------------------
-
-Hiero (Foundry)
-***************
-
-Hiero 1.0 will ship with native support for OCIO in the display and the equivalent of Nuke's OCIOColorSpace in the Read nodes. It comes with "nuke-default" OCIO config by default, so the Hiero viewer
-matches when sending files to Nuke for rendering.
-
-Website : `<http://www.thefoundry.co.uk/products/hiero>`__
