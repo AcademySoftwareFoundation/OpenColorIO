@@ -43,7 +43,7 @@ OCIO_ADD_TEST(DisplayTransform, basic)
     OCIO_CHECK_NO_THROW(dt->validate());
 
     dt->setDirection(OCIO::TRANSFORM_DIR_UNKNOWN);
-    OCIO_CHECK_THROW_WHAT(dt->validate(), OCIO::Exception, "DisplayTransform: invalid direction");
+    OCIO_CHECK_THROW_WHAT(dt->validate(), OCIO::Exception, "invalid direction");
     dt->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_CHECK_EQUAL(dt->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
 

@@ -43,8 +43,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, basic)
     cst->setDst(dst.c_str());
 
     cst->setDirection(OCIO::TRANSFORM_DIR_UNKNOWN);
-    OCIO_CHECK_THROW_WHAT(cst->validate(), OCIO::Exception,
-                          "ColorSpaceTransform: invalid direction");
+    OCIO_CHECK_THROW_WHAT(cst->validate(), OCIO::Exception, "invalid direction");
 }
 
 OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
