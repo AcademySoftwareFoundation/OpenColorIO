@@ -35,6 +35,10 @@ Arnold (Autodesk)
 
 Website : `<https://www.arnoldrenderer.com/>`__
 
+Documentation :
+
+- `Color Management <https://docs.arnoldrenderer.com/display/A5AFMUG/Color+Management>`__
+
 
 Blender
 *******
@@ -46,8 +50,6 @@ Website: `<http://www.blender.org/>`__
 Supported Version: >= 2.64
 
 Documentation:
-
-- `<https://docs.arnoldrenderer.com/display/A5AFMUG/Color+Management>`__
 
 - `Blender 2.64 Release Notes <https://archive.blender.org/wiki/index.php/Dev:Ref/Release_Notes/2.64/>`__
 
@@ -187,10 +189,12 @@ Autodesk Maya supports OCIO since version 2016 (I believe Autodesk SynColor colo
 Website: `<https://knowledge.autodesk.com/support/maya/learn-explore/caas/CloudHelp/cloudhelp/2016/ENU/Maya/files/GUID-C22F815A-8390-405B-BA50-74FEC42C75E0-htm.html>`__
 
 
-Mocha Pro 2020 (Boris FX)
-*************************
+Mocha Pro (Boris FX)
+********************
 
 Website: `<https://borisfx.com/products/mocha-pro>`__
+
+Supported Version: >= 2020
 
 Documentation: 
 
@@ -250,7 +254,7 @@ OpenImageIO
 
 OIIO's C++ and Python bindings include several methods for applying color transforms to whole images, notably functions in the ImageBufAlgo namespace including **colorconvert()**, **ociolook()**, **ociodisplay()**, **ociofiletransform()**. These are also available as part of the *oiiotool* command line utility (--colorconvert, --ociolook, --ociodisplay, --ociofiletransform) and the *maketx* utility for preparing textures also supports **--colorconvert**. From C++, there is additional low-level functionality in the header **OpenImageIO/color.h** that are wrappers for accessing underlying OCIO color configurations and doing color processing on individual pixel values.
 
-Website : `Open Source Image Library / Renderer Texture Engine <http://openimageio.org>`__
+Website : `<http://openimageio.org>`__
 
 
 PhotoFlow
@@ -266,7 +270,7 @@ Photoshop
 
 OpenColorIO display luts can be exported as ICC profiles for use in photoshop. The core idea is to create an .icc profile, with a valid description, and then to save it to the proper OS icc directory. (On OSX, ``~/Library/ColorSync/Profiles/``). Upon a Photoshop relaunch, Edit->Assign Profile, and then select your new OCIO lut.
 
-Website : `<https://www.adobe.com/products/photoshop.html?promoid=PC1PQQ5T&mv=other>`__
+Website : `<https://www.adobe.com/products/photoshop.html>`__
 
 Python
 ******
@@ -334,10 +338,11 @@ Documentation :
 Vegas Pro (Magix)
 *****************
 
-Vegas Pro 12 uses OpenColorIO, supporting workflows such as S-log footage via the ACES colorspace.
+Vegas Pro uses OpenColorIO, supporting workflows such as S-log footage via the ACES colorspace.
 
 Website : `<http://www.sonycreativesoftware.com/vegaspro>`__
 
+Supported Version: >= 12
 
 V-Ray (Chaos Group)
 *******************
