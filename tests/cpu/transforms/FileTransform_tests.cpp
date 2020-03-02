@@ -108,13 +108,13 @@ OCIO_ADD_TEST(FileTransform, load_file_fail)
     // Invalid ASCII file.
     const std::string unKnown("error_unknown_format.txt");
     OCIO_CHECK_THROW_WHAT(OCIO::GetFileTransformProcessor(unKnown),
-                          OCIO::Exception, "error_unknown_format.txt failed while loading ops");
+                          OCIO::Exception, "error_unknown_format.txt' could not be loaded");
 
     // Unsupported file extension.
     // It's in fact a binary jpg file i.e. all readers must fail.
     const std::string binaryFile("rgb-cmy.jpg");
     OCIO_CHECK_THROW_WHAT(OCIO::GetFileTransformProcessor(binaryFile),
-                          OCIO::Exception, "rgb-cmy.jpg failed while loading ops");
+                          OCIO::Exception, "rgb-cmy.jpg' could not be loaded");
 
     // Supported file extension with a wrong content.
     // It's in fact a binary png file i.e. all readers must fail.

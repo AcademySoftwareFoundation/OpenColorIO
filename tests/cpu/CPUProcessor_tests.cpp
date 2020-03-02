@@ -627,7 +627,7 @@ OCIO_ADD_TEST(CPUProcessor, with_one_1d_lut)
     }
 
     {
-        const std::vector<uint16_t> ui10_inImg 
+        const std::vector<uint16_t> ui10_inImg
             = {     0,     8,    32,
                    64,   128,   256,
                    96,   256,   512,
@@ -675,7 +675,7 @@ OCIO_ADD_TEST(CPUProcessor, with_one_1d_lut)
     }
 
     {
-        const std::vector<uint16_t> ui12_inImg 
+        const std::vector<uint16_t> ui12_inImg
             = {     0,     8,    32,
                    64,   128,   256,
                    96,   256,   512,
@@ -809,15 +809,15 @@ OCIO_ADD_TEST(CPUProcessor, with_several_ops)
 
             auto cpuProcessor = ComputeValues<OCIO::BIT_DEPTH_UINT16,
                                               OCIO::BIT_DEPTH_F32,
-                                              __LINE__>(processor, 
-                                                        &i_inImg[0], OCIO::CHANNEL_ORDERING_RGBA, 
-                                                        &resImg[0],  OCIO::CHANNEL_ORDERING_RGBA, 
+                                              __LINE__>(processor,
+                                                        &i_inImg[0], OCIO::CHANNEL_ORDERING_RGBA,
+                                                        &resImg[0],  OCIO::CHANNEL_ORDERING_RGBA,
                                                         NB_PIXELS, 1e-7f);
 
             const std::string cacheID{ cpuProcessor->getCacheID() };
 
             const std::string expectedID("CPU Processor: from 16ui to 32f oFlags 122879 ops"
-                ": <Lut1D $a57d7444e629d796d2234c18a0539c74 forward default standard domain none >");
+                ": <Lut1D $a57d7444e629d796d2234c18a0539c74 forward default standard domain none>");
 
             // Test integer optimization. The ops should be optimized into a single LUT
             // when finalizing with an integer input bit-depth.
@@ -2078,9 +2078,9 @@ void ComputeImage(unsigned width, unsigned height, unsigned nChannels,
         const float pxl[4]{ (float(inValues[idx+0]) * inScale + (float)offset4[0]) * outScale,
                             (float(inValues[idx+1]) * inScale + (float)offset4[1]) * outScale,
                             (float(inValues[idx+2]) * inScale + (float)offset4[2]) * outScale,
-                            nChannels==4 
-                                ? ((float(inValues[idx+3]) * inScale + (float)offset4[3]) * outScale) 
-                                : 0.0f 
+                            nChannels==4
+                                ? ((float(inValues[idx+3]) * inScale + (float)offset4[3]) * outScale)
+                                : 0.0f
                           };
 
         // Validate all the results.
@@ -2118,9 +2118,9 @@ OCIO_ADD_TEST(CPUProcessor, optimizations)
     // by the ScanlineHelper class. To fully validate these paths a 'normal' image
     // must be used (i.e. 'few pixels' image is not enough).
 
-    constexpr const unsigned width     = 640;
-    constexpr const unsigned height    = 480;
-    constexpr const unsigned nChannels = 4;
+    constexpr unsigned width     = 640;
+    constexpr unsigned height    = 480;
+    constexpr unsigned nChannels = 4;
 
     // Input and Output are not packed RGBA i.e no optimizations.
     {

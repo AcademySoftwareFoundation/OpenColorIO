@@ -16,31 +16,31 @@ namespace DefaultValues
 const int FLOAT_DECIMALS = 7;
 }
 
-constexpr const char * ACES_RED_MOD_03_FWD_STR = "RedMod03Fwd";
-constexpr const char * ACES_RED_MOD_03_REV_STR = "RedMod03Rev";
-constexpr const char * ACES_RED_MOD_10_FWD_STR = "RedMod10Fwd";
-constexpr const char * ACES_RED_MOD_10_REV_STR = "RedMod10Rev";
-constexpr const char * ACES_GLOW_03_FWD_STR    = "Glow03Fwd";
-constexpr const char * ACES_GLOW_03_REV_STR    = "Glow03Rev";
-constexpr const char * ACES_GLOW_10_FWD_STR    = "Glow10Fwd";
-constexpr const char * ACES_GLOW_10_REV_STR    = "Glow10Rev";
-constexpr const char * ACES_DARK_TO_DIM_10_STR = "DarkToDim10";
-constexpr const char * ACES_DIM_TO_DARK_10_STR = "DimToDark10";
-constexpr const char * SURROUND_STR            = "Surround"; // Is old name for Rec2100Surround
-constexpr const char * REC_2100_SURROUND_STR   = "Rec2100Surround";
-constexpr const char * RGB_TO_HSV_STR          = "RGB_TO_HSV";
-constexpr const char * HSV_TO_RGB_STR          = "HSV_TO_RGB";
-constexpr const char * XYZ_TO_xyY_STR          = "XYZ_TO_xyY";
-constexpr const char * xyY_TO_XYZ_STR          = "xyY_TO_XYZ";
-constexpr const char * XYZ_TO_uvY_STR          = "XYZ_TO_uvY";
-constexpr const char * uvY_TO_XYZ_STR          = "uvY_TO_XYZ";
-constexpr const char * XYZ_TO_LUV_STR          = "XYZ_TO_LUV";
-constexpr const char * LUV_TO_XYZ_STR          = "LUV_TO_XYZ";
+constexpr char ACES_RED_MOD_03_FWD_STR[] = "RedMod03Fwd";
+constexpr char ACES_RED_MOD_03_REV_STR[] = "RedMod03Rev";
+constexpr char ACES_RED_MOD_10_FWD_STR[] = "RedMod10Fwd";
+constexpr char ACES_RED_MOD_10_REV_STR[] = "RedMod10Rev";
+constexpr char ACES_GLOW_03_FWD_STR[]    = "Glow03Fwd";
+constexpr char ACES_GLOW_03_REV_STR[]    = "Glow03Rev";
+constexpr char ACES_GLOW_10_FWD_STR[]    = "Glow10Fwd";
+constexpr char ACES_GLOW_10_REV_STR[]    = "Glow10Rev";
+constexpr char ACES_DARK_TO_DIM_10_STR[] = "DarkToDim10";
+constexpr char ACES_DIM_TO_DARK_10_STR[] = "DimToDark10";
+constexpr char SURROUND_STR[]            = "Surround"; // Is old name for Rec2100Surround
+constexpr char REC_2100_SURROUND_STR[]   = "Rec2100Surround";
+constexpr char RGB_TO_HSV_STR[]          = "RGB_TO_HSV";
+constexpr char HSV_TO_RGB_STR[]          = "HSV_TO_RGB";
+constexpr char XYZ_TO_xyY_STR[]          = "XYZ_TO_xyY";
+constexpr char xyY_TO_XYZ_STR[]          = "xyY_TO_XYZ";
+constexpr char XYZ_TO_uvY_STR[]          = "XYZ_TO_uvY";
+constexpr char uvY_TO_XYZ_STR[]          = "uvY_TO_XYZ";
+constexpr char XYZ_TO_LUV_STR[]          = "XYZ_TO_LUV";
+constexpr char LUV_TO_XYZ_STR[]          = "LUV_TO_XYZ";
 
 
 // NOTE: Converts the enumeration value to its string representation (i.e. CLF reader).
 //       It could add details for error reporting.
-//          
+//
 // Convert internal OpData style enum to CTF attribute string.  Set 'detailed' to true to get
 // a more verbose human readable string
 const char * FixedFunctionOpData::ConvertStyleToString(Style style, bool detailed)
@@ -65,14 +65,14 @@ const char * FixedFunctionOpData::ConvertStyleToString(Style style, bool detaile
             return detailed ? "ACES_Glow10 (Inverse)"      : ACES_GLOW_10_REV_STR;
         case ACES_DARK_TO_DIM_10_FWD:
             return detailed ? "ACES_DarkToDim10 (Forward)" : ACES_DARK_TO_DIM_10_STR;
-        case ACES_DARK_TO_DIM_10_INV: 
+        case ACES_DARK_TO_DIM_10_INV:
             return detailed ? "ACES_DarkToDim10 (Inverse)" : ACES_DIM_TO_DARK_10_STR;
         case REC2100_SURROUND_FWD:
         case REC2100_SURROUND_INV:
             return detailed ? "REC2100_Surround"           : REC_2100_SURROUND_STR;
         case RGB_TO_HSV:
             return RGB_TO_HSV_STR;
-        case HSV_TO_RGB: 
+        case HSV_TO_RGB:
             return HSV_TO_RGB_STR;
         case XYZ_TO_xyY:
             return XYZ_TO_xyY_STR;
@@ -337,8 +337,8 @@ void FixedFunctionOpData::validate() const
         if (m_params.size() != 1)
         {
             std::stringstream ss;
-            ss  << "The style '" << ConvertStyleToString(m_style, true) 
-                << "' must have one parameter but " 
+            ss  << "The style '" << ConvertStyleToString(m_style, true)
+                << "' must have one parameter but "
                 << m_params.size() << " found.";
             throw Exception(ss.str().c_str());
         }
@@ -365,8 +365,8 @@ void FixedFunctionOpData::validate() const
         if(m_params.size()!=0)
         {
             std::stringstream ss;
-            ss  << "The style '" << ConvertStyleToString(m_style, true) 
-                << "' must have zero parameters but " 
+            ss  << "The style '" << ConvertStyleToString(m_style, true)
+                << "' must have zero parameters but "
                 << m_params.size() << " found.";
             throw Exception(ss.str().c_str());
         }
@@ -571,13 +571,19 @@ void FixedFunctionOpData::finalize()
     validate();
 
     std::ostringstream cacheIDStream;
-    cacheIDStream << getID();
+    if (!getID().empty())
+    {
+        cacheIDStream << getID() << " ";
+    }
 
     cacheIDStream.precision(DefaultValues::FLOAT_DECIMALS);
 
-    cacheIDStream << ConvertStyleToString(m_style, true) << " ";
+    cacheIDStream << ConvertStyleToString(m_style, true);
 
-    for( auto param: m_params ) cacheIDStream << param << " ";
+    for (const auto & param : m_params)
+    {
+        cacheIDStream << " " << param;
+    }
 
     m_cacheID = cacheIDStream.str();
 }

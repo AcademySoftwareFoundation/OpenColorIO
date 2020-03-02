@@ -209,8 +209,8 @@ public:
         return m_gamma;
     }
 
-    static constexpr const double LOGEXPOSURESTEP_DEFAULT = 0.088;
-    static constexpr const double LOGMIDGRAY_DEFAULT = 0.435;
+    static constexpr double LOGEXPOSURESTEP_DEFAULT = 0.088;
+    static constexpr double LOGMIDGRAY_DEFAULT = 0.435;
 
 private:
     void invert();

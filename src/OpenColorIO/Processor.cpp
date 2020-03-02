@@ -174,7 +174,7 @@ const char * Processor::getFormatExtensionByIndex(int index)
 {
     return FormatRegistry::GetInstance().getFormatExtensionByIndex(FORMAT_CAPABILITY_WRITE, index);
 }
-	
+
 bool Processor::hasDynamicProperty(DynamicPropertyType type) const
 {
     return getImpl()->hasDynamicProperty(type);
@@ -188,6 +188,15 @@ DynamicPropertyRcPtr Processor::getDynamicProperty(DynamicPropertyType type) con
 const char * Processor::getCacheID() const
 {
     return getImpl()->getCacheID();
+}
+
+ConstProcessorRcPtr Processor::getOptimizedProcessor(BitDepth inBD, BitDepth outBD,
+                                                     OptimizationFlags oFlags) const
+{
+    auto proc = Create();
+    *proc->getImpl() = *m_impl;
+    proc->getImpl()->optimize(inBD, outBD, oFlags);
+    return proc;
 }
 
 ConstGPUProcessorRcPtr Processor::getDefaultGPUProcessor() const
@@ -210,7 +219,7 @@ ConstCPUProcessorRcPtr Processor::getOptimizedCPUProcessor(OptimizationFlags oFl
     return getImpl()->getOptimizedCPUProcessor(oFlags);
 }
 
-ConstCPUProcessorRcPtr Processor::getOptimizedCPUProcessor(BitDepth inBitDepth, 
+ConstCPUProcessorRcPtr Processor::getOptimizedCPUProcessor(BitDepth inBitDepth,
                                                             BitDepth outBitDepth,
                                                             OptimizationFlags oFlags) const
 {
@@ -224,21 +233,27 @@ Processor::Impl::Impl():
 }
 
 Processor::Impl::~Impl()
-{ }
+{
+}
+
+Processor::Impl & Processor::Impl::operator=(const Impl & rhs)
+{
+    if (this != &rhs)
+    {
+        m_metadata = rhs.m_metadata;
+        m_ops = rhs.m_ops;
+    }
+    return *this;
+}
 
 bool Processor::Impl::isNoOp() const
 {
-    return IsOpVecNoOp(m_ops);
+    return m_ops.isNoOp();
 }
 
 bool Processor::Impl::hasChannelCrosstalk() const
 {
-    for(const auto & op : m_ops)
-    {
-        if(op->hasChannelCrosstalk()) return true;
-    }
-
-    return false;
+    return m_ops.hasChannelCrosstalk();
 }
 
 ConstProcessorMetadataRcPtr Processor::Impl::getProcessorMetadata() const
@@ -307,27 +322,12 @@ void Processor::Impl::write(const char * formatName, std::ostream & os) const
 
 bool Processor::Impl::hasDynamicProperty(DynamicPropertyType type) const
 {
-    for (const auto & op : m_ops)
-    {
-        if (op->hasDynamicProperty(type))
-        {
-            return true;
-        }
-    }
-    return false;
+    return m_ops.hasDynamicProperty(type);
 }
 
 DynamicPropertyRcPtr Processor::Impl::getDynamicProperty(DynamicPropertyType type) const
 {
-    for(const auto & op : m_ops)
-    {
-        if(op->hasDynamicProperty(type))
-        {
-            return op->getDynamicProperty(type);
-        }
-    }
-
-    throw Exception("Cannot find dynamic property; not used by processor.");
+    return m_ops.getDynamicProperty(type);
 }
 
 const char * Processor::Impl::getCacheID() const
@@ -353,6 +353,15 @@ const char * Processor::Impl::getCacheID() const
     }
 
     return m_cpuCacheID.c_str();
+}
+
+void Processor::Impl::optimize(BitDepth inBD, BitDepth outBD, OptimizationFlags oFlags)
+{
+    auto numOps = m_ops.size();
+    if (numOps)
+    {
+        OptimizeOpVec(m_ops, inBD, outBD, oFlags);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -381,9 +390,7 @@ ConstCPUProcessorRcPtr Processor::Impl::getDefaultCPUProcessor() const
 {
     CPUProcessorRcPtr cpu = CPUProcessorRcPtr(new CPUProcessor(), &CPUProcessor::deleter);
 
-    cpu->getImpl()->finalize(m_ops, 
-                                BIT_DEPTH_F32, BIT_DEPTH_F32, 
-                                OPTIMIZATION_DEFAULT);
+    cpu->getImpl()->finalize(m_ops, BIT_DEPTH_F32, BIT_DEPTH_F32, OPTIMIZATION_DEFAULT);
 
     return cpu;
 }
@@ -392,16 +399,14 @@ ConstCPUProcessorRcPtr Processor::Impl::getOptimizedCPUProcessor(OptimizationFla
 {
     CPUProcessorRcPtr cpu = CPUProcessorRcPtr(new CPUProcessor(), &CPUProcessor::deleter);
 
-    cpu->getImpl()->finalize(m_ops,
-                                BIT_DEPTH_F32, BIT_DEPTH_F32,
-                                oFlags);
+    cpu->getImpl()->finalize(m_ops, BIT_DEPTH_F32, BIT_DEPTH_F32, oFlags);
 
     return cpu;
 }
 
-ConstCPUProcessorRcPtr Processor::Impl::getOptimizedCPUProcessor(BitDepth inBitDepth, 
-                                                                    BitDepth outBitDepth,
-                                                                    OptimizationFlags oFlags) const
+ConstCPUProcessorRcPtr Processor::Impl::getOptimizedCPUProcessor(BitDepth inBitDepth,
+                                                                 BitDepth outBitDepth,
+                                                                 OptimizationFlags oFlags) const
 {
     CPUProcessorRcPtr cpu = CPUProcessorRcPtr(new CPUProcessor(), &CPUProcessor::deleter);
 
@@ -415,33 +420,50 @@ ConstCPUProcessorRcPtr Processor::Impl::getOptimizedCPUProcessor(BitDepth inBitD
 
 
 void Processor::Impl::setColorSpaceConversion(const Config & config,
-                                                const ConstContextRcPtr & context,
-                                                const ConstColorSpaceRcPtr & srcColorSpace,
-                                                const ConstColorSpaceRcPtr & dstColorSpace)
+                                              const ConstContextRcPtr & context,
+                                              const ConstColorSpaceRcPtr & srcColorSpace,
+                                              const ConstColorSpaceRcPtr & dstColorSpace)
 {
     if (!m_ops.empty())
     {
         throw Exception("Internal error: Processor should be empty");
     }
+
     BuildColorSpaceOps(m_ops, config, context, srcColorSpace, dstColorSpace);
-    FinalizeOpVec(m_ops, OPTIMIZATION_NONE);
-    UnifyDynamicProperties(m_ops);
+
+    m_ops.finalize(OPTIMIZATION_NONE);
+    m_ops.unifyDynamicProperties();
 }
 
 void Processor::Impl::setTransform(const Config & config,
-                                    const ConstContextRcPtr & context,
-                                    const ConstTransformRcPtr& transform,
-                                    TransformDirection direction)
+                                   const ConstContextRcPtr & context,
+                                   const ConstTransformRcPtr& transform,
+                                   TransformDirection direction)
 {
     if (!m_ops.empty())
     {
         throw Exception("Internal error: Processor should be empty");
     }
+
     transform->validate();
+
     BuildOps(m_ops, config, context, transform, direction);
-    FinalizeOpVec(m_ops, OPTIMIZATION_NONE);
-    UnifyDynamicProperties(m_ops);
+
+    m_ops.finalize(OPTIMIZATION_NONE);
+    m_ops.unifyDynamicProperties();
 }
+
+void Processor::Impl::concatenate(ConstProcessorRcPtr & p1, ConstProcessorRcPtr & p2)
+{
+    m_ops = p1->getImpl()->m_ops;
+    m_ops += p2->getImpl()->m_ops;
+
+    computeMetadata();
+
+    m_ops.finalize(OPTIMIZATION_NONE);
+    m_ops.unifyDynamicProperties();
+}
+
 
 void Processor::Impl::computeMetadata()
 {

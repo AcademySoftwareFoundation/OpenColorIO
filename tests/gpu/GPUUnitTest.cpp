@@ -400,8 +400,7 @@ namespace
         shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
 
         // Step 2: Collect the shader program information for a specific processor.
-        OCIO::ConstGPUProcessorRcPtr gpuProcessor
-            = processor->getDefaultGPUProcessor();
+        OCIO::ConstGPUProcessorRcPtr gpuProcessor = processor->getDefaultGPUProcessor();
         gpuProcessor->extractGpuShaderInfo(shaderDesc);
 
         // Step 3: Create the OpenGL builder to prepare the GPU shader program.
@@ -601,7 +600,7 @@ int main(int, char **)
     int argc = 2;
     const char* argv[] = { "main", "-glDebug" };
     glutInit(&argc, const_cast<char**>(&argv[0]));
-    
+
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
     glutInitWindowSize(g_winWidth, g_winHeight);
     glutInitWindowPosition(0, 0);
@@ -686,7 +685,7 @@ int main(int, char **)
             test->setup();
             enabledTest = test->isEnabled();
 
-            constexpr const size_t maxCharToDisplay = 49;
+            constexpr size_t maxCharToDisplay = 49;
 
             std::string name(test->group());
             name += " / " + test->name();

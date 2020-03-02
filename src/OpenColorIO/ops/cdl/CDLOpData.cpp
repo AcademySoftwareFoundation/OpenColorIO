@@ -164,7 +164,7 @@ bool CDLOpData::operator==(const OpData& other) const
 
     const CDLOpData* cdl = static_cast<const CDLOpData*>(&other);
 
-    return m_style        == cdl->m_style 
+    return m_style        == cdl->m_style
         && m_slopeParams  == cdl->m_slopeParams
         && m_offsetParams == cdl->m_offsetParams
         && m_powerParams  == cdl->m_powerParams
@@ -224,8 +224,8 @@ void CDLOpData::setSaturation(const double saturation)
 }
 
 // Validate if a parameter is greater than or equal to threshold value.
-void validateGreaterEqual(const char * name, 
-                          const double value, 
+void validateGreaterEqual(const char * name,
+                          const double value,
                           const double threshold)
 {
     if (!(value >= threshold))
@@ -241,10 +241,10 @@ void validateGreaterEqual(const char * name,
 }
 
 // Validate if a parameter is greater than a threshold value.
-void validateGreaterThan(const char * name, 
-                        const double value, 
+void validateGreaterThan(const char * name,
+                        const double value,
                          const double threshold)
-{ 
+{
     if (!(value > threshold))
     {
         std::ostringstream oss;
@@ -257,12 +257,12 @@ void validateGreaterThan(const char * name,
     }
 }
 
-typedef void(*parameter_validation_function)(const char *, 
-                                             const double, 
+typedef void(*parameter_validation_function)(const char *,
+                                             const double,
                                              const double);
 
 template<parameter_validation_function fnVal>
-void validateChannelParams(const char * name, 
+void validateChannelParams(const char * name,
                            const CDLOpData::ChannelParams& params,
                            double threshold)
 {
@@ -435,7 +435,10 @@ void CDLOpData::finalize()
     validate();
 
     std::ostringstream cacheIDStream;
-    cacheIDStream << getID() << " ";
+    if (!getID().empty())
+    {
+        cacheIDStream << getID() << " ";
+    }
 
     cacheIDStream.precision(DefaultValues::FLOAT_DECIMALS);
 

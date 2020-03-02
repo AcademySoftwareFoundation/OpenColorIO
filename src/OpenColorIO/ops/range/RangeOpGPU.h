@@ -15,8 +15,7 @@
 namespace OCIO_NAMESPACE
 {
 
-void GetRangeGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
-                              ConstRangeOpDataRcPtr & range);
+void GetRangeGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstRangeOpDataRcPtr & range);
 
 } // namespace OCIO_NAMESPACE
 
