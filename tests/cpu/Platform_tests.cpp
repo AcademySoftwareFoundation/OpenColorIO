@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <cstring>
+#include <set>
+
 #include "Platform.cpp"
 
 #include "UnitTest.h"
@@ -49,7 +52,7 @@ OCIO_ADD_TEST(Platform, setenv)
         OCIO::Platform::Getenv("MY_DUMMY_ENV", env);
         OCIO_CHECK_ASSERT(!env.empty());
 
-        OCIO_CHECK_ASSERT(0==strcmp("SomeValue", env.c_str()));
+        OCIO_CHECK_ASSERT(0==std::strcmp("SomeValue", env.c_str()));
         OCIO_CHECK_EQUAL(strlen("SomeValue"), env.size());
     }
     {
@@ -58,8 +61,8 @@ OCIO_ADD_TEST(Platform, setenv)
         OCIO::Platform::Getenv("MY_DUMMY_ENV", env);
         OCIO_CHECK_ASSERT(!env.empty());
 
-        OCIO_CHECK_ASSERT(0==strcmp(" ", env.c_str()));
-        OCIO_CHECK_EQUAL(strlen(" "), env.size());
+        OCIO_CHECK_ASSERT(0==std::strcmp(" ", env.c_str()));
+        OCIO_CHECK_EQUAL(std::strlen(" "), env.size());
     }
     {
         OCIO::Platform::Setenv("MY_DUMMY_ENV", "");
@@ -114,17 +117,16 @@ OCIO_ADD_TEST(Platform, aligned_memory_test)
     OCIO::Platform::AlignedFree(memBlock);
 }
 
-
 OCIO_ADD_TEST(Platform, create_temp_filename)
 {
-    std::string f1, f2;
+    constexpr size_t TestMax = 20;
 
-    OCIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(f1, ""));
-    OCIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(f2, ""));
-    OCIO_CHECK_ASSERT(f1!=f2);
+    std::set<std::string> uids;
+    for (size_t idx=0; idx<TestMax; ++idx)
+    {
+        uids.insert(OCIO::Platform::CreateTempFilename(""));
+    }
 
-    OCIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(f1, ".ctf"));
-    OCIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(f2, ".ctf"));
-    OCIO_CHECK_ASSERT(f1!=f2);
+    // Check that it only generates unique random strings.
+    OCIO_CHECK_EQUAL(uids.size(), TestMax);
 }
-

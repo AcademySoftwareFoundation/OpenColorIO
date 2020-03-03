@@ -2,6 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <algorithm>
+#include <cstring>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -32,7 +33,7 @@ static void  CreateArray(const float * buf,
     const size_t size
         = w * h * d * (type==GpuShaderDesc::TEXTURE_RGB_CHANNEL ? 3 : 1);
     res.resize(size);
-    memcpy(&res[0], buf, size * sizeof(float));
+    std::memcpy(&res[0], buf, size * sizeof(float));
 }
 }
 
