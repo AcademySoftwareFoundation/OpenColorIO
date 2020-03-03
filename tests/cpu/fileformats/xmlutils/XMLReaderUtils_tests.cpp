@@ -10,9 +10,6 @@
 namespace OCIO = OCIO_NAMESPACE;
 
 
-constexpr float EXPECTED_PRECISION{ 1e-11f };
-
-
 OCIO_ADD_TEST(XMLReaderHelper, string_to_float)
 {
     float value = 0.0f;
