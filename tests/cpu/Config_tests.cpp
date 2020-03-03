@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <pystring/pystring.h>
+
 #include <sys/stat.h>
 
 #include "Config.cpp"
 
-#include "UnitTest.h"
+#include <pystring/pystring.h>
+#include "testutils/UnitTest.h"
 #include "UnitTestLogUtils.h"
 #include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
+
 
 #if 0
 OCIO_ADD_TEST(Config, test_searchpath_filesystem)
@@ -466,7 +468,7 @@ OCIO_ADD_TEST(Config, sanity_check)
 }
 
 
-OCIO_ADD_TEST(config, env_check)
+OCIO_ADD_TEST(Config, env_check)
 {
     std::string SIMPLE_PROFILE =
     "ocio_profile_version: 1\n"

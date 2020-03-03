@@ -4,7 +4,7 @@
 
 #include "ops/lut1d/Lut1DOpCPU.cpp"
 
-#include "UnitTest.h"
+#include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;

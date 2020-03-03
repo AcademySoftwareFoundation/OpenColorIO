@@ -12,7 +12,6 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 	add_executable(${TEST_BINARY} ${SOURCES})
 	target_compile_definitions(${TEST_BINARY}
 		PRIVATE
-			OCIO_UNIT_TEST
 			OpenColorIO_SKIP_IMPORTS
 
 	)
@@ -27,6 +26,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 			unittest_data
 			utils::strings
 			yamlcpp::yamlcpp
+			testutils
 	)
 	if(PRIVATE_INCLUDES)
 		target_include_directories(${TEST_BINARY}
@@ -187,8 +187,8 @@ set(TESTS
 	transforms/Lut1DTransform_tests.cpp
 	transforms/Lut3DTransform_tests.cpp
 	transforms/MatrixTransform_tests.cpp
-	UnitTest.cpp
 	UnitTestLogUtils.cpp
+	UnitTestMain.cpp
 	UnitTestUtils.cpp
 )
 

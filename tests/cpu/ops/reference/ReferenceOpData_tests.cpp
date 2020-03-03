@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
+#include "ops/reference/ReferenceOpData.cpp"
+
 #include "ops/cdl/CDLOpData.h"
 #include "ops/lut1d/Lut1DOpData.h"
 #include "ops/matrix/MatrixOpData.h"
 #include "ops/noop/NoOps.h"
 #include "ops/range/RangeOpData.h"
-
-#include "ops/reference/ReferenceOpData.cpp"
-
-#include "UnitTest.h"
+#include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
+
 
 OCIO_ADD_TEST(Reference, accessors)
 {

@@ -36,7 +36,7 @@ namespace OIIO = OIIO_NAMESPACE;
 #include "oiiohelpers.h"
 
 
-#include "argparse.h"
+#include "apputils/argparse.h"
 
 // array of non openimageIO arguments
 static std::vector<std::string> args;

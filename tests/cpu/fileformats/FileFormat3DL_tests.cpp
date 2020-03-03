@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include "fileformats/FileFormat3DL.cpp"
 
-namespace OCIO = OCIO_NAMESPACE;
-#include "UnitTest.h"
+#include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
+
+namespace OCIO = OCIO_NAMESPACE;
 
 
 OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & fileName)

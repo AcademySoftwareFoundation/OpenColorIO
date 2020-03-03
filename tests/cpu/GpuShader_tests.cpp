@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include "GpuShader.cpp"
 
-#include "UnitTest.h"
+#include "testutils/UnitTest.h"
+
 namespace OCIO = OCIO_NAMESPACE;
+
 
 // This is unit-testing internal helper functions not exposed to the API,
 // not high-level GPU processing.

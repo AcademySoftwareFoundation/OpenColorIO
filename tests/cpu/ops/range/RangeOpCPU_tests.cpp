@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include <limits>
 
 #include "ops/range/RangeOpCPU.cpp"
 
 #include "pystring/pystring.h"
-
-#include "UnitTest.h"
+#include "testutils/UnitTest.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
+
 namespace
 {
-static const float g_error = 1e-7f;
+static constexpr float g_error = 1e-7f;
 }
 
 OCIO_ADD_TEST(RangeOpCPU, identity)
