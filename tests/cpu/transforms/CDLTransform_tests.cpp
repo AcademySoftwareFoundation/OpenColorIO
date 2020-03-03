@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include "ops/exponent/ExponentOp.h"
+#include "ops/matrix/MatrixOpData.h"
 #include "transforms/CDLTransform.cpp"
 
 #include "UnitTest.h"
@@ -25,6 +27,9 @@ OCIO_ADD_TEST(CDLTransform, equality)
     OCIO_CHECK_ASSERT(!cdl1->equals(*cdl3));
     OCIO_CHECK_ASSERT(!cdl2->equals(*cdl3));
     OCIO_CHECK_ASSERT(cdl3->equals(*cdl3));
+    
+    cdl2->setStyle(OCIO::CDL_ASC);
+    OCIO_CHECK_ASSERT(!cdl1->equals(*cdl2));
 }
 
 OCIO_ADD_TEST(CDLTransform, create_from_cc_file)
@@ -37,6 +42,7 @@ OCIO_ADD_TEST(CDLTransform, create_from_cc_file)
         OCIO_CHECK_EQUAL("foo", idStr);
         std::string descStr(transform->getDescription());
         OCIO_CHECK_EQUAL("this is a description", descStr);
+        OCIO_CHECK_EQUAL(transform->getStyle(), OCIO::CDL_NO_CLAMP);
         double slope[3] = {0., 0., 0.};
         OCIO_CHECK_NO_THROW(transform->getSlope(slope));
         OCIO_CHECK_EQUAL(1.1, slope[0]);
@@ -70,12 +76,13 @@ OCIO_ADD_TEST(CDLTransform, create_from_cc_file)
     std::string outXML(transform->getXML());
     OCIO_CHECK_EQUAL(expectedOutXML, outXML);
 
-    // parse again using setXML
+    // Parse again using setXML.
     OCIO::CDLTransformRcPtr transformCDL = OCIO::CDLTransform::Create();
     transformCDL->setXML(expectedOutXML.c_str());
     {
         std::string idStr(transformCDL->getID());
         OCIO_CHECK_EQUAL("foo", idStr);
+        OCIO_CHECK_EQUAL(transformCDL->getStyle(), OCIO::CDL_NO_CLAMP);
 
         double slope[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(transformCDL->getSlope(slope));
@@ -100,10 +107,11 @@ OCIO_ADD_TEST(CDLTransform, create_from_ccc_file)
 {
     const std::string filePath(std::string(OCIO::getTestFilesDir()) + "/cdl_test1.ccc");
     {
-        // Using ID
+        // Using ID.
         auto transform = OCIO::CDLTransform::CreateFromFile(filePath.c_str(), "cc0003");
         std::string idStr(transform->getID());
         OCIO_CHECK_EQUAL("cc0003", idStr);
+        OCIO_CHECK_EQUAL(transform->getStyle(), OCIO::CDL_NO_CLAMP);
 
         const auto & metadata = transform->getFormatMetadata();
         OCIO_REQUIRE_EQUAL(metadata.getNumChildrenElements(), 6);
@@ -128,10 +136,11 @@ OCIO_ADD_TEST(CDLTransform, create_from_ccc_file)
         OCIO_CHECK_EQUAL(1.0, transform->getSat());
     }
     {
-        // Using 0 based index
+        // Using 0 based index.
         auto transform = OCIO::CDLTransform::CreateFromFile(filePath.c_str(), "3");
         std::string idStr(transform->getID());
         OCIO_CHECK_EQUAL("", idStr);
+        OCIO_CHECK_EQUAL(transform->getStyle(), OCIO::CDL_NO_CLAMP);
 
         double slope[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(transform->getSlope(slope));
@@ -156,13 +165,13 @@ OCIO_ADD_TEST(CDLTransform, create_from_ccc_file_failure)
 {
     const std::string filePath(std::string(OCIO::getTestFilesDir()) + "/cdl_test1.ccc");
     {
-        // Using ID
+        // Using ID.
         OCIO_CHECK_THROW_WHAT(
             OCIO::CDLTransform::CreateFromFile(filePath.c_str(), "NotFound"),
             OCIO::Exception, "could not be loaded from the src file");
     }
     {
-        // Using index
+        // Using index.
         OCIO_CHECK_THROW_WHAT(
             OCIO::CDLTransform::CreateFromFile(filePath.c_str(), "42"),
             OCIO::Exception, "could not be loaded from the src file");
@@ -190,6 +199,7 @@ OCIO_ADD_TEST(CDLTransform, escape_xml)
     {
         std::string idStr(transformCDL->getID());
         OCIO_CHECK_EQUAL("Esc < & \" ' >", idStr);
+        OCIO_CHECK_EQUAL(transformCDL->getStyle(), OCIO::CDL_NO_CLAMP);
 
         const auto & metadata = transformCDL->getFormatMetadata();
         OCIO_REQUIRE_EQUAL(metadata.getNumChildrenElements(), 1);
@@ -324,7 +334,8 @@ OCIO_ADD_TEST(CDLTransform, buildops)
     auto cdl = OCIO::CDLTransform::Create();
 
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    // Testing v1 backwards compatibility.
+    // For a v1 config, a CDL uses an exponent and two matrix ops rather than the CDL op
+    // that was introduced in v2.
     config->setMajorVersion(1);
 
     OCIO::OpRcPtrVec ops;
@@ -337,9 +348,12 @@ OCIO_ADD_TEST(CDLTransform, buildops)
     const double power[]{1.1, 1.0, 1.0};
     cdl->setPower(power);
     OCIO::BuildCDLOp(ops, *config, *cdl, OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO_REQUIRE_EQUAL(ops.size(), 3);
+    OCIO_CHECK_EQUAL(ops.size(), 3);
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
-    OCIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO::ConstOpRcPtr op = OCIO::DynamicPtrCast<const OCIO::Op>(ops[0]);
+    auto expData = OCIO::DynamicPtrCast<const OCIO::ExponentOpData>(op->data());
+    OCIO_REQUIRE_ASSERT(expData);
 
     ops.clear();
     cdl->setSat(1.5);
@@ -347,6 +361,12 @@ OCIO_ADD_TEST(CDLTransform, buildops)
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
+    op = OCIO::DynamicPtrCast<const OCIO::Op>(ops[0]);
+    expData = OCIO::DynamicPtrCast<const OCIO::ExponentOpData>(op->data());
+    OCIO_REQUIRE_ASSERT(expData);
+    op = OCIO::DynamicPtrCast<const OCIO::Op>(ops[1]);
+    auto matData = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(op->data());
+    OCIO_REQUIRE_ASSERT(matData);
 
     ops.clear();
     const double offset[]{ 0.0, 0.1, 0.0 };
@@ -355,15 +375,24 @@ OCIO_ADD_TEST(CDLTransform, buildops)
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
     OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
+    op = OCIO::DynamicPtrCast<const OCIO::Op>(ops[0]);
+    matData = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(op->data());
+    OCIO_REQUIRE_ASSERT(matData);
+    op = OCIO::DynamicPtrCast<const OCIO::Op>(ops[1]);
+    expData = OCIO::DynamicPtrCast<const OCIO::ExponentOpData>(op->data());
+    OCIO_REQUIRE_ASSERT(expData);
+    op = OCIO::DynamicPtrCast<const OCIO::Op>(ops[2]);
+    matData = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(op->data());
+    OCIO_REQUIRE_ASSERT(matData);
 
     // Testing v2 onward behavior.
     config->setMajorVersion(2);
     ops.clear();
     OCIO::BuildCDLOp(ops, *config, *cdl, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
-    OCIO::ConstOpRcPtr op = OCIO::DynamicPtrCast<const OCIO::Op>(ops[0]);
-    auto cdldata = OCIO::DynamicPtrCast<const OCIO::CDLOpData>(op->data());
-    OCIO_REQUIRE_ASSERT(cdldata);
+    op = OCIO::DynamicPtrCast<const OCIO::Op>(ops[0]);
+    auto cdlData = OCIO::DynamicPtrCast<const OCIO::CDLOpData>(op->data());
+    OCIO_REQUIRE_ASSERT(cdlData);
 }
 
 OCIO_ADD_TEST(CDLTransform, description)
@@ -399,3 +428,68 @@ OCIO_ADD_TEST(CDLTransform, description)
     OCIO_CHECK_EQUAL(metadata.getNumChildrenElements(), 0);
 }
 
+OCIO_ADD_TEST(CDLTransform, style)
+{
+    auto cdl = OCIO::CDLTransform::Create();
+    OCIO_CHECK_EQUAL(cdl->getStyle(), OCIO::CDL_TRANSFORM_DEFAULT);
+    OCIO_CHECK_EQUAL(cdl->getStyle(), OCIO::CDL_NO_CLAMP);
+    const std::string id("TestCDL");
+    cdl->setID(id.c_str());
+
+    cdl->setStyle(OCIO::CDL_ASC);
+    OCIO_CHECK_EQUAL(cdl->getStyle(), OCIO::CDL_ASC);
+    cdl->setStyle(OCIO::CDL_NO_CLAMP);
+    OCIO_CHECK_EQUAL(cdl->getStyle(), OCIO::CDL_NO_CLAMP);
+    const std::string outXMLNoClamp(cdl->getXML());
+
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+    {
+        OCIO::OpRcPtrVec ops;
+        OCIO::BuildCDLOp(ops, *config, *cdl, OCIO::TRANSFORM_DIR_FORWARD);
+        OCIO_REQUIRE_EQUAL(ops.size(), 1);
+        OCIO::ConstOpRcPtr op = OCIO::DynamicPtrCast<const OCIO::Op>(ops[0]);
+        auto cdldata = OCIO::DynamicPtrCast<const OCIO::CDLOpData>(op->data());
+        OCIO_REQUIRE_ASSERT(cdldata);
+        OCIO_CHECK_EQUAL(cdldata->getStyle(), OCIO::CDLOpData::CDL_NO_CLAMP_FWD);
+    }
+    {
+        OCIO::OpRcPtrVec ops;
+        OCIO::BuildCDLOp(ops, *config, *cdl, OCIO::TRANSFORM_DIR_INVERSE);
+        OCIO_REQUIRE_EQUAL(ops.size(), 1);
+        OCIO::ConstOpRcPtr op = OCIO::DynamicPtrCast<const OCIO::Op>(ops[0]);
+        auto cdldata = OCIO::DynamicPtrCast<const OCIO::CDLOpData>(op->data());
+        OCIO_REQUIRE_ASSERT(cdldata);
+        OCIO_CHECK_EQUAL(cdldata->getStyle(), OCIO::CDLOpData::CDL_NO_CLAMP_REV);
+    }
+
+    cdl->setStyle(OCIO::CDL_ASC);
+    OCIO_CHECK_EQUAL(cdl->getStyle(), OCIO::CDL_ASC);
+
+    {
+        OCIO::OpRcPtrVec ops;
+        OCIO::BuildCDLOp(ops, *config, *cdl, OCIO::TRANSFORM_DIR_FORWARD);
+        OCIO_REQUIRE_EQUAL(ops.size(), 1);
+        OCIO::ConstOpRcPtr op = OCIO::DynamicPtrCast<const OCIO::Op>(ops[0]);
+        auto cdldata = OCIO::DynamicPtrCast<const OCIO::CDLOpData>(op->data());
+        OCIO_REQUIRE_ASSERT(cdldata);
+        OCIO_CHECK_EQUAL(cdldata->getStyle(), OCIO::CDLOpData::CDL_V1_2_FWD);
+    }
+    {
+        OCIO::OpRcPtrVec ops;
+        OCIO::BuildCDLOp(ops, *config, *cdl, OCIO::TRANSFORM_DIR_INVERSE);
+        OCIO_REQUIRE_EQUAL(ops.size(), 1);
+        OCIO::ConstOpRcPtr op = OCIO::DynamicPtrCast<const OCIO::Op>(ops[0]);
+        auto cdldata = OCIO::DynamicPtrCast<const OCIO::CDLOpData>(op->data());
+        OCIO_REQUIRE_ASSERT(cdldata);
+        OCIO_CHECK_EQUAL(cdldata->getStyle(), OCIO::CDLOpData::CDL_V1_2_REV);
+    }
+
+    // Style does not affect XML.
+    const std::string outXMLASC(cdl->getXML());
+    OCIO_CHECK_EQUAL(outXMLNoClamp, outXMLASC);
+
+    cdl = OCIO::CDLTransform::Create();
+    cdl->setXML(outXMLNoClamp.c_str());
+    OCIO_CHECK_EQUAL(cdl->getStyle(), OCIO::CDL_NO_CLAMP);
+}

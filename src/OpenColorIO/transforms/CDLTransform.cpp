@@ -595,6 +595,7 @@ std::ostream & operator<< (std::ostream & os, const CDLTransform & t)
         os << sop[i];
     }
     os << ", sat=" << t.getSat();
+    os << ", style=" << CDLStyleToString(t.getStyle());
     os << ">";
     return os;
 }

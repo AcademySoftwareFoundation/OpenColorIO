@@ -164,8 +164,8 @@ inline void ApplyClamp<false>(__m128&)
 {
 }
 
-// Apply the power component to the the pixel's values
-// When the template argument is true, the the values in pix
+// Apply the power component to the the pixel's values.
+// When the template argument is true, the values in pix
 // are clamped to the range [0,1] and the power operation is
 // applied. When the argument is false, the values in pix are
 // not clamped before the power operation is applied. When the
@@ -264,8 +264,8 @@ inline void ApplyClamp<false>(float *)
 {
 }
 
-// Apply the power component to the the pixel's values
-// When the template argument is true, the the values in pix
+// Apply the power component to the the pixel's values.
+// When the template argument is true, the values in pix
 // are clamped to the range [0,1] and the power operation is
 // applied. When the argument is false, the values in pix are
 // not clamped before the power operation is applied. When the

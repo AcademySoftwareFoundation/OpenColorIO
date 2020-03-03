@@ -418,7 +418,9 @@ enum ExposureContrastStyle
 enum CDLStyle
 {
     CDL_ASC = 0,    //! ASC CDL specification v1.2
-    CDL_NO_CLAMP    //! CDL that does not clamp
+    CDL_NO_CLAMP,   //! CDL that does not clamp
+
+    CDL_TRANSFORM_DEFAULT = CDL_NO_CLAMP
 };
 
 //!cpp:type:: Negative values handling style for :cpp:class:`ExponentTransform` and
@@ -578,6 +580,11 @@ extern OCIOEXPORT GpuLanguage GpuLanguageFromString(const char * s);
 extern OCIOEXPORT const char * EnvironmentModeToString(EnvironmentMode mode);
 //!cpp:function::
 extern OCIOEXPORT EnvironmentMode EnvironmentModeFromString(const char * s);
+
+//!cpp:function::
+extern OCIOEXPORT const char * CDLStyleToString(CDLStyle style);
+//!cpp:function::
+extern OCIOEXPORT CDLStyle CDLStyleFromString(const char * style);
 
 //!cpp:function::
 extern OCIOEXPORT const char * RangeStyleToString(RangeStyle style);

@@ -238,7 +238,8 @@ OCIO_ADD_TEST(FileFormatCCC, test_ccc)
     // Check that the Descriptive element children of <ColorCorrection> are preserved.
     // Note that Descriptive element children of <ColorCorrectionCollection> are only
     // available in the CachedFile, not in the OpData.
-    auto & metadata = op->data()->getFormatMetadata();
+    auto data = op->data();
+    auto & metadata = data->getFormatMetadata();
     OCIO_REQUIRE_EQUAL(metadata.getNumChildrenElements(), 7);
     OCIO_CHECK_EQUAL(std::string(metadata.getChildElement(0).getName()), "Description");
     OCIO_CHECK_EQUAL(std::string(metadata.getChildElement(0).getValue()), "CC-level description 2a");
@@ -255,4 +256,20 @@ OCIO_ADD_TEST(FileFormatCCC, test_ccc)
     OCIO_CHECK_EQUAL(std::string(metadata.getChildElement(5).getValue()), "another example");
     OCIO_CHECK_EQUAL(std::string(metadata.getChildElement(6).getName()), "SATDescription");
     OCIO_CHECK_EQUAL(std::string(metadata.getChildElement(6).getValue()), "dropping sat");
+
+    OCIO_REQUIRE_EQUAL(data->getType(), OCIO::OpData::CDLType);
+    auto cdlData = OCIO_DYNAMIC_POINTER_CAST<const OCIO::CDLOpData>(data);
+    OCIO_CHECK_EQUAL(cdlData->getStyle(), OCIO::CDLOpData::CDL_NO_CLAMP_FWD);
+
+    // Test with ASC style.
+    fileTransform->setCDLStyle(OCIO::CDL_ASC);
+
+    ops.clear();
+    tester.buildFileOps(ops, *config, context, cccFile, *fileTransform, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    op = ops[0];
+    data = op->data();
+    OCIO_REQUIRE_EQUAL(data->getType(), OCIO::OpData::CDLType);
+    cdlData = OCIO_DYNAMIC_POINTER_CAST<const OCIO::CDLOpData>(data);
+    OCIO_CHECK_EQUAL(cdlData->getStyle(), OCIO::CDLOpData::CDL_V1_2_FWD);
 }

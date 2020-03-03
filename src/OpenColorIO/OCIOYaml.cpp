@@ -434,7 +434,7 @@ inline void load(const YAML::Node& node, CDLTransformRcPtr& t)
 
         if (second.IsNull() || !second.IsDefined()) continue;
 
-        if(key == "slope")
+        if (key == "slope")
         {
             load(second, floatvecval);
             if(floatvecval.size() != 3)
@@ -446,7 +446,7 @@ inline void load(const YAML::Node& node, CDLTransformRcPtr& t)
             }
             t->setSlope(&floatvecval[0]);
         }
-        else if(key == "offset")
+        else if (key == "offset")
         {
             load(second, floatvecval);
             if(floatvecval.size() != 3)
@@ -458,7 +458,7 @@ inline void load(const YAML::Node& node, CDLTransformRcPtr& t)
             }
             t->setOffset(&floatvecval[0]);
         }
-        else if(key == "power")
+        else if (key == "power")
         {
             load(second, floatvecval);
             if(floatvecval.size() != 3)
@@ -470,13 +470,19 @@ inline void load(const YAML::Node& node, CDLTransformRcPtr& t)
             }
             t->setPower(&floatvecval[0]);
         }
-        else if(key == "saturation" || key == "sat")
+        else if (key == "saturation" || key == "sat")
         {
             double val = 0.0f;
             load(second, val);
             t->setSat(val);
         }
-        else if(key == "direction")
+        else if (key == "style")
+        {
+            std::string style;
+            load(second, style);
+            t->setStyle(CDLStyleFromString(style.c_str()));
+        }
+        else if (key == "direction")
         {
             TransformDirection val;
             load(second, val);
@@ -496,7 +502,7 @@ inline void save(YAML::Emitter& out, ConstCDLTransformRcPtr t)
 
     std::vector<double> slope(3);
     t->getSlope(&slope[0]);
-    if(!IsVecEqualToOne(&slope[0], 3))
+    if (!IsVecEqualToOne(&slope[0], 3))
     {
         out << YAML::Key << "slope";
         out << YAML::Value << YAML::Flow << slope;
@@ -504,7 +510,7 @@ inline void save(YAML::Emitter& out, ConstCDLTransformRcPtr t)
 
     std::vector<double> offset(3);
     t->getOffset(&offset[0]);
-    if(!IsVecEqualToZero(&offset[0], 3))
+    if (!IsVecEqualToZero(&offset[0], 3))
     {
         out << YAML::Key << "offset";
         out << YAML::Value << YAML::Flow << offset;
@@ -512,15 +518,20 @@ inline void save(YAML::Emitter& out, ConstCDLTransformRcPtr t)
 
     std::vector<double> power(3);
     t->getPower(&power[0]);
-    if(!IsVecEqualToOne(&power[0], 3))
+    if (!IsVecEqualToOne(&power[0], 3))
     {
         out << YAML::Key << "power";
         out << YAML::Value << YAML::Flow << power;
     }
 
-    if(!IsScalarEqualToOne(t->getSat()))
+    if (!IsScalarEqualToOne(t->getSat()))
     {
         out << YAML::Key << "sat" << YAML::Value << t->getSat();
+    }
+
+    if (t->getStyle() != CDL_TRANSFORM_DEFAULT)
+    {
+        out << YAML::Key << "style" << YAML::Value << CDLStyleToString(t->getStyle());
     }
 
     EmitBaseTransformKeyValues(out, t);
@@ -1030,23 +1041,28 @@ inline void load(const YAML::Node& node, FileTransformRcPtr& t)
 
         if (second.IsNull() || !second.IsDefined()) continue;
 
-        if(key == "src")
+        if (key == "src")
         {
             load(second, stringval);
             t->setSrc(stringval.c_str());
         }
-        else if(key == "cccid")
+        else if (key == "cccid")
         {
             load(second, stringval);
             t->setCCCId(stringval.c_str());
         }
-        else if(key == "interpolation")
+        else if (key == "cdl_style")
+        {
+            load(second, stringval);
+            t->setCDLStyle(CDLStyleFromString(stringval.c_str()));
+        }
+        else if (key == "interpolation")
         {
             Interpolation val;
             load(second, val);
             t->setInterpolation(val);
         }
-        else if(key == "direction")
+        else if (key == "direction")
         {
             TransformDirection val;
             load(second, val);
@@ -1065,13 +1081,20 @@ inline void save(YAML::Emitter& out, ConstFileTransformRcPtr t)
     out << YAML::Flow << YAML::BeginMap;
     out << YAML::Key << "src" << YAML::Value << t->getSrc();
     const char * cccid = t->getCCCId();
-    if(cccid && *cccid)
+    if (cccid && *cccid)
     {
         out << YAML::Key << "cccid" << YAML::Value << t->getCCCId();
     }
-    out << YAML::Key << "interpolation";
-    out << YAML::Value;
-    save(out, t->getInterpolation());
+    if (t->getCDLStyle() != CDL_TRANSFORM_DEFAULT)
+    {
+        out << YAML::Key << "cdl_style" << YAML::Value << CDLStyleToString(t->getCDLStyle());
+    }
+    if (t->getInterpolation() != INTERP_UNKNOWN)
+    {
+        out << YAML::Key << "interpolation";
+        out << YAML::Value;
+        save(out, t->getInterpolation());
+    }
 
     EmitBaseTransformKeyValues(out, t);
     out << YAML::EndMap;
@@ -1931,6 +1954,7 @@ void save(YAML::Emitter& out, ConstTransformRcPtr t)
         save(out, ExpLinear_tran);
     else if(ConstFileTransformRcPtr File_tran = \
         DynamicPtrCast<const FileTransform>(t))
+        // TODO: if (File_tran->getCDLStyle() != CDL_TRANSFORM_DEFAULT) should throw with config v1.
         save(out, File_tran);
     else if (ConstExposureContrastTransformRcPtr File_tran = \
         DynamicPtrCast<const ExposureContrastTransform>(t))
