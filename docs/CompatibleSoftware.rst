@@ -12,7 +12,7 @@ The following software all supports OpenColorIO (to varying degrees).
 If you are interested in getting OCIO support for an application not listed
 here, please contact the ocio-dev mailing list.
 
-If you are a developer and would like assistance integration OCIO into your
+If you are a developer and would like assistance integrating OCIO into your
 application, please contact ocio-dev as well.
 
 
