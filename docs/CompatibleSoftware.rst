@@ -184,9 +184,14 @@ Documentation:
 Maya (Autodesk)
 ***************
 
-Autodesk Maya supports OCIO since version 2016 (I believe Autodesk SynColor color management system can read OCIO configurations?), May 2016.
+Autodesk Maya is a 3D computer animation, modeling, simulation, and rendering software.
 
-Website: `<https://knowledge.autodesk.com/support/maya/learn-explore/caas/CloudHelp/cloudhelp/2016/ENU/Maya/files/GUID-C22F815A-8390-405B-BA50-74FEC42C75E0-htm.html>`__
+Supported Version: >= 2016
+
+Website: `https://www.autodesk.com/products/maya/overview`__
+
+
+Documentation: `https://knowledge.autodesk.com/support/maya-lt/learn-explore/caas/CloudHelp/cloudhelp/2016/ENU/MayaLT/files/GUID-4AE9AABC-A900-4276-AFE4-F9DCD96BA03D-htm.html`__
 
 
 Mocha Pro (Boris FX)
