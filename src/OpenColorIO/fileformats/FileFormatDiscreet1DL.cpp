@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 #include <sstream>
 #include <iostream>
 
@@ -68,7 +69,7 @@ void ReplaceTabsAndStripSpaces(char * stringToStrip)
 
 void StripEndNewLine(char * stringToStrip)
 {
-    size_t length = strlen(stringToStrip);
+    size_t length = std::strlen(stringToStrip);
     if (length)
     {
         length--;
@@ -525,7 +526,7 @@ Lut1dUtils::IM_LutBitsPerChannel Lut1dUtils::IMLutGetBitDepthFromFileName(const 
     // Get the export depth from the LUT name.  Look for a bit depth
     // after the "to" string. (ex: 12to10log).
     const char* tokenStr;
-    if ((tokenStr = strstr(lowerFileName.c_str(), "to")))
+    if ((tokenStr = std::strstr(lowerFileName.c_str(), "to")))
     {
         // Skip the "to";
         tokenStr += 2;

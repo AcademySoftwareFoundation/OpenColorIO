@@ -2,6 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <sstream>
+#include <cstring>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -31,14 +32,14 @@ MatrixOpData::Offsets& MatrixOpData::Offsets::operator=(const Offsets & o)
 {
     if (this != &o)
     {
-        memcpy(m_values, o.m_values, 4 * sizeof(double));
+        std::memcpy(m_values, o.m_values, 4 * sizeof(double));
     }
     return *this;
 }
 
 bool MatrixOpData::Offsets::operator==(const Offsets & o) const
 {
-    return (memcmp(m_values, o.m_values, 4 * sizeof(double)) == 0);
+    return (std::memcmp(m_values, o.m_values, 4 * sizeof(double)) == 0);
 }
 
 template<typename T>
@@ -345,7 +346,7 @@ void MatrixOpData::MatrixArray::fill()
     const unsigned long dim = getLength();
     ArrayDouble::Values & values = getValues();
 
-    memset(&values[0], 0, values.size() * sizeof(double));
+    std::memset(&values[0], 0, values.size() * sizeof(double));
 
     for (unsigned long i = 0; i<dim; ++i)
     {
@@ -396,7 +397,7 @@ void MatrixOpData::MatrixArray::setRGBA(const float * values)
 void MatrixOpData::MatrixArray::setRGBA(const double * values)
 {
     Values & v = getValues();
-    memcpy(&v[0], values, 16 * sizeof(double));
+    std::memcpy(&v[0], values, 16 * sizeof(double));
 }
 
 void MatrixOpData::MatrixArray::validate() const
