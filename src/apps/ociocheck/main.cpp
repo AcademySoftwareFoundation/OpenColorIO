@@ -209,6 +209,21 @@ int main(int argc, const char **argv)
             for(int i=0; i<config->getNumLooks(); ++i)
             {
                 std::cout << config->getLookNameByIndex(i) << std::endl;
+
+                OCIO::ConstLookRcPtr look = config->getLook(config->getLookNameByIndex(i)); 
+
+                OCIO::ConstTransformRcPtr transform = look->getTransform();         
+
+                try
+                {
+                    OCIO::ConstProcessorRcPtr process = config->getProcessor(transform);
+                }
+                catch(OCIO::Exception & exception)
+                {
+                    std::cout << "\nERROR : " << std::endl;
+                    errorcount += 1;
+                    std::cout << exception.what() << std::endl;
+                }
             }
         }
         else
