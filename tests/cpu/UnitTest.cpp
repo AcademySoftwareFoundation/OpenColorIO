@@ -19,8 +19,8 @@
 
 UnitTests & GetUnitTests()
 {
-    static UnitTests oiio_unit_tests;
-    return oiio_unit_tests; 
+    static UnitTests ocio_unit_tests;
+    return ocio_unit_tests; 
 }
 
 

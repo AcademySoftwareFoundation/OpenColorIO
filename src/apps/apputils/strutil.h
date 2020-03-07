@@ -55,7 +55,7 @@
     //
     // void foo (const char* fmt, ...) OPENCOLORIO_PRINTF_ARGS(1,2);
     //
-    // The arguments specify the positions of the format string and the the
+    // The arguments specify the positions of the format string and the
     // beginning of the varargs parameter list respectively.
     //
     // For member functions with arguments like the example above, you need

@@ -7,7 +7,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/exposurecontrast/ExposureContrastOpGPU.h"
-#include "pystring/pystring.h"
+#include "utils/StringUtils.h"
 
 
 namespace OCIO_NAMESPACE
@@ -48,7 +48,7 @@ std::string AddDynamicProperty(GpuShaderCreatorRcPtr & shaderCreator,
         finalName += name;
 
         // Note: Remove potentially problematic double underscores from GLSL resource names.
-        finalName = pystring::replace(finalName, "__", "_");
+        StringUtils::ReplaceInPlace(finalName, "__", "_");
 
         // NB: No need to add an index to the name to avoid collisions
         //     as the dynamic properties are shared i.e. only one instance.
