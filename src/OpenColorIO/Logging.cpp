@@ -11,7 +11,8 @@
 #include "Mutex.h"
 #include "Platform.h"
 #include "PrivateTypes.h"
-#include "pystring/pystring.h"
+#include "utils/StringUtils.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -67,18 +68,19 @@ LoggingFunction g_loggingFunction = DefaultLoggingFunction;
 // to output the content line by line.
 void LogMessage(const char * messagePrefix, const std::string & message)
 {
-    StringVec parts;
-    pystring::split( pystring::rstrip(message), parts, "\n");
+    const StringUtils::StringVec parts
+        = StringUtils::SplitByLines(StringUtils::RightTrim(message));
 
-    for(size_t i=0; i<parts.size(); ++i)
+    for (const auto & part : parts)
     {
         std::string msg(messagePrefix);
-        msg += parts[i];
+        msg += part;
         msg += "\n";
 
         g_loggingFunction(msg.c_str());
     }
 }
+
 }
 
 LoggingLevel GetLoggingLevel()

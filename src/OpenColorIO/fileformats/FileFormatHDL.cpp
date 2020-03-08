@@ -34,8 +34,9 @@
 #include "ops/lut3d/Lut3DOp.h"
 #include "ops/matrix/MatrixOp.h"
 #include "ParseUtils.h"
-#include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
+#include "utils/StringUtils.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -44,7 +45,7 @@ namespace
 // HDL parser helpers
 
 // HDL headers/LUT's are shoved into these datatypes
-typedef std::map<std::string, StringVec > StringToStringVecMap;
+typedef std::map<std::string, StringUtils::StringVec > StringToStringVecMap;
 typedef std::map<std::string, std::vector<float> > StringToFloatVecMap;
 
 void
@@ -54,11 +55,10 @@ readHeaders(StringToStringVecMap& headers,
     std::string line;
     while(nextline(istream, line))
     {
-        StringVec chunks;
-
         // Remove trailing/leading whitespace, lower-case and
         // split into words
-        pystring::split(pystring::lower(pystring::strip(line)), chunks);
+        StringUtils::StringVec chunks 
+            = StringUtils::SplitByWhiteSpaces(StringUtils::Lower(StringUtils::Trim(line)));
 
         // Skip empty lines
         if(chunks.empty()) continue;
@@ -67,7 +67,7 @@ readHeaders(StringToStringVecMap& headers,
         if(chunks[0] == "lut:") break;
 
         // Use first index as key, and remove it from the value
-        std::string key = chunks[0];
+        const std::string key = chunks[0];
         chunks.erase(chunks.begin());
 
         headers[key] = chunks;
@@ -78,7 +78,7 @@ readHeaders(StringToStringVecMap& headers,
 // exception if not found, or if number of chunks in value is
 // not between min_vals and max_vals (e.g the "length" key
 // must exist, and must have either 1 or 2 values)
-StringVec
+StringUtils::StringVec
 findHeaderItem(StringToStringVecMap& headers,
                 const std::string key,
                 const unsigned int min_vals,
@@ -120,7 +120,7 @@ findHeaderItem(StringToStringVecMap& headers,
 
 // Simple wrapper to call findHeaderItem with a fixed number
 // of values (e.g "version" should have a single value)
-StringVec
+StringUtils::StringVec
 findHeaderItem(StringToStringVecMap& chunks,
                 const std::string key,
                 const unsigned int numvals)
@@ -158,7 +158,7 @@ readLuts(std::istream& istream,
             {
                 // Named LUT, e.g "Pre {"
                 inlut = true;
-                lutname = pystring::lower(word);
+                lutname = StringUtils::Lower(word);
 
                 // Ensure next word is "{"
                 std::string nextword;
@@ -315,7 +315,7 @@ LocalFileFormat::read(
     readHeaders(header_chunks, istream);
 
     // Grab useful values from headers
-    StringVec value;
+    StringUtils::StringVec value;
 
     // "Version 3" - format version (currently one version
     // number per LUT type)

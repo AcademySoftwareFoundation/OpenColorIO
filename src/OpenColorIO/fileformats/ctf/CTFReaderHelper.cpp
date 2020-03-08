@@ -9,7 +9,8 @@
 #include "MathUtils.h"
 #include "ops/log/LogUtils.h"
 #include "Platform.h"
-#include "pystring/pystring.h"
+#include "utils/StringUtils.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -1149,7 +1150,7 @@ CTFReaderOpEltRcPtr CTFReaderOpElt::GetReader(CTFReaderOpElt::Type type,
 
 BitDepth CTFReaderOpElt::GetBitDepth(const std::string & strBD)
 {
-    const std::string str = pystring::lower(strBD);
+    const std::string str = StringUtils::Lower(strBD);
     if (str == "8i") return BIT_DEPTH_UINT8;
     else if (str == "10i") return BIT_DEPTH_UINT10;
     else if (str == "12i") return BIT_DEPTH_UINT12;
