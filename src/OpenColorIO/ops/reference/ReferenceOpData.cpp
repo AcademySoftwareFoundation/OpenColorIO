@@ -5,8 +5,8 @@
 
 #include "ops/reference/ReferenceOpData.h"
 #include "Platform.h"
-#include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -64,7 +64,10 @@ void ReferenceOpData::finalize()
     AutoMutex lock(m_mutex);
 
     std::ostringstream cacheIDStream;
-    cacheIDStream << getID() << " ";
+    if (!getID().empty())
+    {
+        cacheIDStream << getID() << " ";
+    }
 
     cacheIDStream << m_referenceStyle << " ";
     cacheIDStream << TransformDirectionToString(m_direction) << " ";

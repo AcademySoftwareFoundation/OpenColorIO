@@ -151,18 +151,20 @@ OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
 
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
     OCIO_CHECK_EQUAL(range->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    range->setMaxInValue(1.);
+    range->setMaxOutValue(1.);
     OCIO_CHECK_EQUAL(range->getStyle(), OCIO::RANGE_CLAMP);
     OCIO_CHECK_ASSERT(!range->hasMinInValue());
-    OCIO_CHECK_ASSERT(!range->hasMaxInValue());
+    OCIO_CHECK_ASSERT(range->hasMaxInValue());
     OCIO_CHECK_ASSERT(!range->hasMinOutValue());
-    OCIO_CHECK_ASSERT(!range->hasMaxOutValue());
+    OCIO_CHECK_ASSERT(range->hasMaxOutValue());
 
     OCIO_CHECK_NO_THROW(
         OCIO::BuildRangeOp(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO_REQUIRE_EQUAL(op0->data()->getType(), OCIO::OpData::RangeType);
-    OCIO_CHECK_ASSERT(op0->isNoOp());
+    OCIO_CHECK_ASSERT(!op0->isNoOp());
     ops.clear();
 
     range->setMinInValue(0.0);

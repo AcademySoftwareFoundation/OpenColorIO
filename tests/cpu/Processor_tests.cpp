@@ -25,7 +25,7 @@ OCIO_ADD_TEST(Processor, basic)
     auto processorMat = config->getProcessor(mat);
     OCIO_CHECK_EQUAL(processorMat->getNumTransforms(), 1);
 
-    OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "$c15dfc9b251ee075f33c4ccb3eb1e4b8");
+    OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "$dff619808a13760b73a99db2e19a4dd2");
 }
 
 OCIO_ADD_TEST(Processor, shared_dynamic_properties)
@@ -61,7 +61,7 @@ OCIO_ADD_TEST(Processor, shared_dynamic_properties)
 
     OCIO_CHECK_NE(dp0->getDoubleValue(), dp1->getDoubleValue());
 
-    OCIO::UnifyDynamicProperties(ops);
+    OCIO_CHECK_NO_THROW(ops.unifyDynamicProperties());
 
     OCIO::DynamicPropertyImplRcPtr dp0_post = data0->getExposureProperty();
     OCIO::DynamicPropertyImplRcPtr dp1_post = data1->getExposureProperty();
@@ -106,4 +106,142 @@ OCIO_ADD_TEST(Processor, write_formats)
     std::string noFileFormat;
     GetFormatName("XXX", noFileFormat);
     OCIO_CHECK_ASSERT(noFileFormat.empty());
+}
+
+OCIO_ADD_TEST(Processor, optimized_processor)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+
+    auto mat = OCIO::MatrixTransform::Create();
+    double offset[4]{ 0.1, 0.2, 0.3, 0.4 };
+    mat->setOffset(offset);
+
+    group->appendTransform(mat);
+    group->appendTransform(mat);
+    group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
+
+    auto processorGroup = config->getProcessor(group);
+    OCIO_CHECK_EQUAL(processorGroup->getNumTransforms(), 2);
+
+    auto processorOpt1 = processorGroup->getOptimizedProcessor(OCIO::BIT_DEPTH_F32,
+                                                               OCIO::BIT_DEPTH_F32,
+                                                               OCIO::OPTIMIZATION_DEFAULT);
+    OCIO_CHECK_EQUAL(processorOpt1->getNumTransforms(), 1);
+    OCIO_REQUIRE_EQUAL(processorOpt1->getFormatMetadata().getNumAttributes(), 1);
+    OCIO_CHECK_EQUAL(std::string(processorOpt1->getFormatMetadata().getAttributeName(0)), OCIO::METADATA_ID);
+    OCIO_CHECK_EQUAL(std::string(processorOpt1->getFormatMetadata().getAttributeValue(0)), "UID42");
+
+    auto processorOpt2 = processorGroup->getOptimizedProcessor(OCIO::BIT_DEPTH_F32,
+                                                               OCIO::BIT_DEPTH_F32,
+                                                               OCIO::OPTIMIZATION_NONE);
+    OCIO_CHECK_EQUAL(processorOpt2->getNumTransforms(), 2);
+    OCIO_REQUIRE_EQUAL(processorOpt2->getFormatMetadata().getNumAttributes(), 1);
+    OCIO_CHECK_EQUAL(std::string(processorOpt2->getFormatMetadata().getAttributeName(0)), OCIO::METADATA_ID);
+    OCIO_CHECK_EQUAL(std::string(processorOpt2->getFormatMetadata().getAttributeValue(0)), "UID42");
+}
+
+OCIO_ADD_TEST(Processor, is_noop)
+{
+    // Basic validation of the isNoOp() behavior.
+
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+
+    auto matrix = OCIO::MatrixTransform::Create();
+
+    auto processor = config->getProcessor(matrix);
+
+    OCIO_CHECK_ASSERT(processor->isNoOp());
+    OCIO_CHECK_ASSERT(processor->getDefaultCPUProcessor()->isNoOp());
+    OCIO_CHECK_ASSERT(processor->getDefaultGPUProcessor()->isNoOp());
+
+    double offset[4]{ 0.1, 0.2, 0.3, 0.4 };
+    matrix->setOffset(offset);
+
+    processor = config->getProcessor(matrix);
+
+    OCIO_CHECK_ASSERT(!processor->isNoOp());
+    OCIO_CHECK_ASSERT(!processor->getDefaultCPUProcessor()->isNoOp());
+    OCIO_CHECK_ASSERT(!processor->getDefaultGPUProcessor()->isNoOp());
+
+    // Check with at least one dynamic property.
+
+    auto ec = OCIO::ExposureContrastTransform::Create();
+
+    processor = config->getProcessor(ec);
+
+    OCIO_CHECK_ASSERT(processor->isNoOp());
+    OCIO_CHECK_ASSERT(processor->getDefaultCPUProcessor()->isNoOp());
+    OCIO_CHECK_ASSERT(processor->getDefaultGPUProcessor()->isNoOp());
+
+    OCIO_CHECK_ASSERT(processor->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_DEFAULT)->isNoOp());
+    OCIO_CHECK_ASSERT(processor->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_DRAFT)->isNoOp());
+
+    // Check with a bit-depth change.
+    OCIO_CHECK_ASSERT(!processor->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F16,
+                                                           OCIO::BIT_DEPTH_F32,
+                                                           OCIO::OPTIMIZATION_DEFAULT)->isNoOp());
+
+    ec->makeExposureDynamic();
+
+    processor = config->getProcessor(ec);
+
+    OCIO_CHECK_ASSERT(!processor->isNoOp());
+    OCIO_CHECK_ASSERT(!processor->getDefaultCPUProcessor()->isNoOp());
+    OCIO_CHECK_ASSERT(!processor->getDefaultGPUProcessor()->isNoOp());
+}
+
+OCIO_ADD_TEST(Processor, channel_crosstalk)
+{
+    // Basic validation of the hasChannelCrosstalk() behavior.
+
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+
+    auto matrix = OCIO::MatrixTransform::Create();
+
+    double mat[16]{ 1., 0., 0., 0.,
+                    0., 1., 0., 0.,
+                    0., 0., 2., 0.,
+                    0., 0., 0., 1.  };
+
+    matrix->setMatrix(mat);
+
+    auto processor = config->getProcessor(matrix);
+
+    OCIO_CHECK_ASSERT(!processor->hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(!processor->getDefaultCPUProcessor()->hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(!processor->getDefaultGPUProcessor()->hasChannelCrosstalk());
+  
+    mat[4] = 1.; // That's not anymore a diagonal matrix.
+    matrix->setMatrix(mat);
+
+    processor = config->getProcessor(matrix);
+
+    OCIO_CHECK_ASSERT(processor->hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(processor->getDefaultCPUProcessor()->hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(processor->getDefaultGPUProcessor()->hasChannelCrosstalk());
+
+    // Check with a bit-depth change i.e. no impact.
+    OCIO_CHECK_ASSERT(
+        processor->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F16,
+                                            OCIO::BIT_DEPTH_F32,
+                                            OCIO::OPTIMIZATION_DEFAULT)->hasChannelCrosstalk());
+
+    mat[4] = 0.; // It's now back to a diagonal matrix.
+    matrix->setMatrix(mat);
+
+    processor = config->getProcessor(matrix);
+
+    OCIO_CHECK_ASSERT(!processor->hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(!processor->getDefaultCPUProcessor()->hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(!processor->getDefaultGPUProcessor()->hasChannelCrosstalk());
+
+    // Check with a bit-depth change i.e. no impact.
+    OCIO_CHECK_ASSERT(
+        !processor->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F16,
+                                             OCIO::BIT_DEPTH_F32,
+                                             OCIO::OPTIMIZATION_DEFAULT)->hasChannelCrosstalk());
 }

@@ -9,8 +9,8 @@
 
 #include "ops/matrix/MatrixOp.h"
 #include "ParseUtils.h"
-#include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
+#include "utils/StringUtils.h"
 
 
 namespace OCIO_NAMESPACE
@@ -83,8 +83,9 @@ CachedFileRcPtr LocalFileFormat::read(
     }
 
     // Turn it into parts
-    StringVec lineParts;
-    pystring::split(pystring::strip(fileStream.str()), lineParts);
+    const StringUtils::StringVec lineParts 
+        = StringUtils::SplitByWhiteSpaces(StringUtils::Trim(fileStream.str()));
+
     if(lineParts.size() != 12)
     {
         std::ostringstream os;

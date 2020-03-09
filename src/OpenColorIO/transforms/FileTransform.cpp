@@ -15,6 +15,8 @@
 #include "PathUtils.h"
 #include "Platform.h"
 #include "pystring/pystring.h"
+#include "utils/StringUtils.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -224,22 +226,21 @@ FormatRegistry::~FormatRegistry()
 {
 }
 
-FileFormat* FormatRegistry::getFileFormatByName(
-    const std::string & name) const
+FileFormat* FormatRegistry::getFileFormatByName(const std::string & name) const
 {
-    FileFormatMap::const_iterator iter = m_formatsByName.find(
-        pystring::lower(name));
+    FileFormatMap::const_iterator iter = m_formatsByName.find(StringUtils::Lower(name));
     if(iter != m_formatsByName.end())
         return iter->second;
-    return NULL;
+
+    return nullptr;
 }
 
-void FormatRegistry::getFileFormatForExtension(
-    const std::string & extension,
-    FileFormatVector & possibleFormats) const
+void FormatRegistry::getFileFormatForExtension(const std::string & extension,
+                                               FileFormatVector & possibleFormats) const
 {
-    FileFormatVectorMap::const_iterator iter = m_formatsByExtension.find(
-        pystring::lower(extension));
+    FileFormatVectorMap::const_iterator iter
+        = m_formatsByExtension.find(StringUtils::Lower(extension));
+
     if(iter != m_formatsByExtension.end())
         possibleFormats = iter->second;
 }
@@ -276,7 +277,7 @@ void FormatRegistry::registerFileFormat(FileFormat* format)
             throw Exception(os.str().c_str());
         }
 
-        m_formatsByName[pystring::lower(formatInfoVec[i].name)] = format;
+        m_formatsByName[StringUtils::Lower(formatInfoVec[i].name)] = format;
 
         m_formatsByExtension[formatInfoVec[i].extension].push_back(format);
 
@@ -459,11 +460,9 @@ void LoadFileUncached(FileFormat * & returnFormat,
     FormatRegistry & formatRegistry = FormatRegistry::GetInstance();
 
     FileFormatVector possibleFormats;
-    formatRegistry.getFileFormatForExtension(
-        extension, possibleFormats);
+    formatRegistry.getFileFormatForExtension(extension, possibleFormats);
     FileFormatVector::const_iterator endFormat = possibleFormats.end();
-    FileFormatVector::const_iterator itFormat =
-        possibleFormats.begin();
+    FileFormatVector::const_iterator itFormat = possibleFormats.begin();
     while(itFormat != endFormat)
     {
 
@@ -510,10 +509,11 @@ void LoadFileUncached(FileFormat * & returnFormat,
                 filestream.close();
             }
 
+            primaryErrorText += "\t";
             primaryErrorText += tryFormat->getName();
             primaryErrorText += " failed with: '";
-            primaryErrorText = e.what();
-            primaryErrorText += "'.  ";
+            primaryErrorText += e.what();
+            primaryErrorText += "'.\n";
 
             if(IsDebugLoggingEnabled())
             {
@@ -595,22 +595,27 @@ void LoadFileUncached(FileFormat * & returnFormat,
     // No formats succeeded. Error out with a sensible message.
     std::ostringstream os;
     os << "The specified transform file '";
-    os << filepath << "' could not be loaded.  ";
+    os << filepath << "' could not be loaded. All formats have been tried. ";
 
     if (IsDebugLoggingEnabled())
     {
-        os << "(Refer to debug log for errors from all formats). ";
+        os << "(Refer to debug log for errors from all formats.) ";
     }
     else
     {
-        os << "(Enable debug log for errors from all formats). ";
+        os << "(Enable debug log for errors from all formats.) ";
     }
 
     if(!possibleFormats.empty())
     {
-        os << "All formats have been tried including ";
-        os << "formats registered for the given extension. ";
-        os << "These formats gave the following errors: ";
+        if (possibleFormats.size() == 1)
+        {
+            os << "The format for the file's extension gave the error:\n";
+        }
+        else
+        {
+            os << "The formats for the file's extension gave the errors:\n";
+        }
         os << primaryErrorText;
     }
 
@@ -771,9 +776,10 @@ void BuildFileTransformOps(OpRcPtrVec & ops,
     FileFormat* format = NULL;
     CachedFileRcPtr cachedFile;
 
+    GetCachedFileAndFormat(format, cachedFile, filepath);
+
     try
     {
-        GetCachedFileAndFormat(format, cachedFile, filepath);
         // Add FileNoOp and keep track of it.
         CreateFileNoOp(ops, filepath);
         ConstOpRcPtr fileNoOpConst = ops.back();
@@ -798,7 +804,7 @@ void BuildFileTransformOps(OpRcPtrVec & ops,
     {
         std::ostringstream err;
         err << "The transform file: " << filepath;
-        err << " failed while loading ops with this error: ";
+        err << " failed while building ops with this error: ";
         err << e.what();
         throw Exception(err.str().c_str());
     }

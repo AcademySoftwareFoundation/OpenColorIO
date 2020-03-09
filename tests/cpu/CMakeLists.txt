@@ -25,6 +25,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 			pystring::pystring
 			sampleicc::sampleicc
 			unittest_data
+			utils::strings
 			yamlcpp::yamlcpp
 	)
 	if(PRIVATE_INCLUDES)
@@ -48,7 +49,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 				XML_STATIC
 		)
 	endif(WIN32)
-	set_target_properties(${TEST_BINARY} PROPERTIES 
+	set_target_properties(${TEST_BINARY} PROPERTIES
 		COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
 
 	add_test(${TEST_NAME} ${TEST_BINARY})
@@ -75,11 +76,13 @@ set(SOURCES
 	md5/md5.cpp
 	OCIOYaml.cpp
 	ops/cdl/CDLOpCPU.cpp
+	ops/cdl/CDLOpGPU.cpp
 	ops/exposurecontrast/ExposureContrastOpGPU.cpp
 	ops/fixedfunction/FixedFunctionOpGPU.cpp
-	ops/gamma/GammaOpCPU.cpp
+	ops/gamma/GammaOpGPU.cpp
 	ops/log/LogOpGPU.cpp
 	ops/lut3d/Lut3DOpGPU.cpp
+	ops/matrix/MatrixOpGPU.cpp
 	ops/OpTools.cpp
 	ops/range/RangeOpGPU.cpp
 	ScanlineHelper.cpp
@@ -140,9 +143,10 @@ set(TESTS
 	ops/fixedfunction/FixedFunctionOpCPU_tests.cpp
 	ops/fixedfunction/FixedFunctionOpData_tests.cpp
 	ops/fixedfunction/FixedFunctionOp_tests.cpp
+	ops/gamma/GammaOp_tests.cpp
+	ops/gamma/GammaOpCPU_tests.cpp
 	ops/gamma/GammaOpData_tests.cpp
 	ops/gamma/GammaOpUtils_tests.cpp
-	ops/gamma/GammaOp_tests.cpp
 	ops/log/LogOpCPU_tests.cpp
 	ops/log/LogOpData_tests.cpp
 	ops/log/LogOp_tests.cpp
@@ -178,6 +182,7 @@ set(TESTS
 	transforms/FixedFunctionTransform_tests.cpp
 	transforms/GroupTransform_tests.cpp
 	transforms/LogAffineTransform_tests.cpp
+	transforms/LogCameraTransform_tests.cpp
 	transforms/LogTransform_tests.cpp
 	transforms/Lut1DTransform_tests.cpp
 	transforms/Lut3DTransform_tests.cpp

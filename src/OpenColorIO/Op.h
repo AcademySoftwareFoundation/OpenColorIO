@@ -180,126 +180,120 @@ typedef OCIO_SHARED_PTR<const Op> ConstOpRcPtr;
 class OpRcPtrVec;
 
 std::string SerializeOpVec(const OpRcPtrVec & ops, int indent=0);
-bool IsOpVecNoOp(const OpRcPtrVec & ops);
-
-void FinalizeOpVec(OpRcPtrVec & opVec, OptimizationFlags oFlags);
 
 void OptimizeOpVec(OpRcPtrVec & result,
                     const BitDepth & inBitDepth,
                     const BitDepth & outBitDepth,
                     OptimizationFlags oFlags);
 
-void UnifyDynamicProperties(OpRcPtrVec & ops);
-
 void CreateOpVecFromOpData(OpRcPtrVec & ops,
                             const ConstOpDataRcPtr & opData,
                             TransformDirection dir);
 
-void CreateOpVecFromOpDataVec(OpRcPtrVec & ops,
-                                const ConstOpDataVec & opDataVec,
-                                TransformDirection dir);
-
 class Op
 {
-    public:
-        virtual ~Op();
+public:
+    virtual ~Op();
 
-        virtual OpRcPtr clone() const = 0;
+    virtual OpRcPtr clone() const = 0;
 
-        // Something short, and printable.
-        // The type of stuff you'd want to see in debugging.
-        virtual std::string getInfo() const = 0;
+    // Something short, and printable.
+    // The type of stuff you'd want to see in debugging.
+    virtual std::string getInfo() const = 0;
 
-        // This should yield a string of not unreasonable length.
-        // It can only be called after finalize()
-        virtual std::string getCacheID() const { return m_cacheID; }
+    // This should yield a string of not unreasonable length.
+    // It can only be called after finalize()
+    virtual std::string getCacheID() const { return m_cacheID; }
 
-        virtual bool isNoOpType() const { return m_data->getType() == OpData::NoOpType; }
+    virtual bool isNoOpType() const { return m_data->getType() == OpData::NoOpType; }
 
-        // Is the processing a noop? I.e, does apply do nothing.
-        // (Even no-ops may define Allocation though.)
-        // This must be implemented in a manner where its valid to
-        // call *prior* to finalize. (Optimizers may make use of it)
-        virtual bool isNoOp() const { return m_data->isNoOp(); }
+    // Is the processing a noop? I.e, does apply do nothing.
+    // (Even no-ops may define Allocation though.)
+    // This must be implemented in a manner where its valid to
+    // call *prior* to finalize. (Optimizers may make use of it)
+    virtual bool isNoOp() const { return m_data->isNoOp(); }
 
-        virtual bool isIdentity() const { return m_data->isIdentity(); }
+    virtual bool isIdentity() const { return m_data->isIdentity(); }
 
-        OpRcPtr getIdentityReplacement() const;
+    OpRcPtr getIdentityReplacement() const;
 
-        virtual bool isSameType(ConstOpRcPtr & op) const = 0;
+    virtual bool isSameType(ConstOpRcPtr & op) const = 0;
 
-        virtual bool isInverse(ConstOpRcPtr & op) const = 0;
+    virtual bool isInverse(ConstOpRcPtr & op) const = 0;
 
-        virtual bool canCombineWith(ConstOpRcPtr & op) const;
+    virtual bool canCombineWith(ConstOpRcPtr & op) const;
 
-        // Return a vector of result ops, which correspond to
-        // THIS combinedWith secondOp.
-        //
-        // If the result is a noOp, it is valid for the resulting opsVec
-        // to be empty.
+    // Return a vector of result ops, which correspond to
+    // THIS combinedWith secondOp.
+    //
+    // If the result is a noOp, it is valid for the resulting opsVec
+    // to be empty.
 
-        virtual void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const;
+    virtual void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const;
 
-        virtual bool hasChannelCrosstalk() const { return m_data->hasChannelCrosstalk(); }
+    virtual bool hasChannelCrosstalk() const { return m_data->hasChannelCrosstalk(); }
 
-        virtual void dumpMetadata(ProcessorMetadataRcPtr & /*metadata*/) const
-        { }
+    virtual void dumpMetadata(ProcessorMetadataRcPtr & /*metadata*/) const
+    { }
 
-        // This is called a single time after construction.
-        // Final pre-processing and safety checks should happen here,
-        // rather than in the constructor.
+    // This is called a single time after construction.
+    // Final pre-processing and safety checks should happen here,
+    // rather than in the constructor.
 
-        virtual void finalize(OptimizationFlags oFlags) = 0;
+    virtual void finalize(OptimizationFlags oFlags) = 0;
 
-        // Render the specified pixels.
-        //
-        // This must be safe to call in a multi-threaded context.
-        // Ops that have mutable data internally, or rely on external
-        // caching, must thus be appropriately mutexed.
+    // Render the specified pixels.
+    //
+    // This must be safe to call in a multi-threaded context.
+    // Ops that have mutable data internally, or rely on external
+    // caching, must thus be appropriately mutexed.
 
-        virtual void apply(void * img, long numPixels) const
-        { getCPUOp()->apply(img, img, numPixels); }
+    virtual void apply(void * img, long numPixels) const
+    { getCPUOp()->apply(img, img, numPixels); }
 
-        virtual void apply(const void * inImg, void * outImg, long numPixels) const
-        { getCPUOp()->apply(inImg, outImg, numPixels); }
+    virtual void apply(const void * inImg, void * outImg, long numPixels) const
+    { getCPUOp()->apply(inImg, outImg, numPixels); }
 
 
-        // Is this op supported by the legacy shader text generator?
-        virtual bool supportedByLegacyShader() const { return true; }
+    // Is this op supported by the legacy shader text generator?
+    virtual bool supportedByLegacyShader() const { return true; }
 
-        // Create & add the gpu shader information needed by the op
-        virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const = 0;
+    // Create & add the gpu shader information needed by the op.
+    virtual void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const = 0;
 
-        virtual bool isDynamic() const;
-        virtual bool hasDynamicProperty(DynamicPropertyType type) const;
-        virtual DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
-        virtual void replaceDynamicProperty(DynamicPropertyType type,
-                                            DynamicPropertyImplRcPtr prop);
-        // Make dynamic properties non-dynamic.
-        virtual void removeDynamicProperties() {}
+    virtual bool isDynamic() const;
+    virtual bool hasDynamicProperty(DynamicPropertyType type) const;
+    virtual DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
+    virtual void replaceDynamicProperty(DynamicPropertyType type,
+                                        DynamicPropertyImplRcPtr prop);
+    // Make dynamic properties non-dynamic.
+    virtual void removeDynamicProperties() {}
 
-        // On-demand creation of the OpCPU instance.
-        virtual ConstOpCPURcPtr getCPUOp() const = 0;
+    // On-demand creation of the OpCPU instance.
+    virtual ConstOpCPURcPtr getCPUOp() const = 0;
 
-        ConstOpDataRcPtr data() const { return std::const_pointer_cast<const OpData>(m_data); }
+    ConstOpDataRcPtr data() const { return std::const_pointer_cast<const OpData>(m_data); }
 
-    protected:
-        Op();
-        OpDataRcPtr & data() { return m_data; }
+protected:
+    Op();
+    OpDataRcPtr & data() { return m_data; }
 
-        std::string m_cacheID;
+    std::string m_cacheID;
 
-    private:
-        Op(const Op &) = delete;
-        Op& operator= (const Op &) = delete;
+private:
+    Op(const Op &) = delete;
+    Op& operator= (const Op &) = delete;
 
-        // The OpData instance holds the parameters (LUT values, matrix coefs, etc.) being used.
-        OpDataRcPtr m_data;
+    // The OpData instance holds the parameters (LUT values, matrix coefs, etc.) being used.
+    OpDataRcPtr m_data;
 };
 
 std::ostream& operator<< (std::ostream&, const Op&);
 
 // The class handles a list of ops.
+//
+// Note: The class follows the std::vector API so it can be used
+// by any STL algorithms.
 //
 // Note: List only manages shared pointers i.e. it never clones ops.
 class OpRcPtrVec
@@ -314,6 +308,9 @@ public:
 
     typedef Type::iterator iterator;
     typedef Type::const_iterator const_iterator;
+
+    typedef Type::reverse_iterator reverse_iterator;
+    typedef Type::const_reverse_iterator const_reverse_iterator;
 
     typedef Type::reference reference;
     typedef Type::const_reference const_reference;
@@ -332,6 +329,11 @@ public:
     const_iterator begin() const noexcept { return m_ops.begin(); }
     iterator end() noexcept { return m_ops.end(); }
     const_iterator end() const noexcept { return m_ops.end(); }
+
+    reverse_iterator rbegin() noexcept { return m_ops.rbegin(); }
+    const_reverse_iterator rbegin() const noexcept { return m_ops.rbegin(); }
+    reverse_iterator rend() noexcept { return m_ops.rend(); }
+    const_reverse_iterator rend() const noexcept { return m_ops.rend(); }
 
     const OpRcPtr & operator[](size_type idx) const { return m_ops[idx]; }
     OpRcPtr & operator[](size_type idx) { return m_ops[idx]; }
@@ -357,9 +359,24 @@ public:
     const_reference back() const;
     const_reference front() const;
 
+    // The following methods provide helpers for basic Op behaviors.
+
     FormatMetadataImpl & getFormatMetadata() { return m_metadata; }
     const FormatMetadataImpl & getFormatMetadata() const { return m_metadata; }
 
+    bool isNoOp() const noexcept;
+    bool hasChannelCrosstalk() const noexcept;
+
+    bool hasDynamicProperty(DynamicPropertyType type) const noexcept;
+    DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
+    void unifyDynamicProperties();
+
+    OpRcPtrVec clone() const;
+
+    // Note: The elements are cloned.
+    OpRcPtrVec invert() const;
+
+    void finalize(OptimizationFlags oFlags);
 };
 
 } // namespace OCIO_NAMESPACE

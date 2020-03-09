@@ -104,7 +104,7 @@ int main (int argc, const char* argv[])
                "--whitepoint %d", &whitepointtemp, "whitepoint for the profile (default: 6505)",
                "--displayicc %s", &displayicc , "an ICC profile which matches the OCIO profiles target display",
                "--description %s", &description , "a meaningful description, this will show up in UI like photoshop (defaults to \"filename.icc\")",
-               "--copyright %s", &copyright , "a copyright field (default: \"No copyright. Use freely.\"\n",
+               "--copyright %s", &copyright , "a copyright field added in the file (default: \"No copyright. Use freely.\")\n",
                // TODO: add --metadata option
                NULL);
 

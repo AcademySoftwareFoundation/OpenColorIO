@@ -12,10 +12,9 @@
 namespace OCIO_NAMESPACE
 {
 
-void GetRangeGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
-                              ConstRangeOpDataRcPtr & range)
+void GetRangeGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstRangeOpDataRcPtr & range)
 {
-    GpuShaderText ss(shaderDesc->getLanguage());
+    GpuShaderText ss(shaderCreator->getLanguage());
     ss.indent();
 
     ss.newLine() << "";
@@ -29,13 +28,13 @@ void GetRangeGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
                 range->getScale(),
                 range->getScale() };
 
-        const double offset[3] 
-            = { range->getOffset(), 
-                range->getOffset(), 
+        const double offset[3]
+            = { range->getOffset(),
+                range->getOffset(),
                 range->getOffset() };
 
-        ss.newLine() << shaderDesc->getPixelName() << ".rgb = "
-                     << shaderDesc->getPixelName() << ".rgb * "
+        ss.newLine() << shaderCreator->getPixelName() << ".rgb = "
+                     << shaderCreator->getPixelName() << ".rgb * "
                      << ss.vec3fConst(scale[0], scale[1], scale[2])
                      << " + "
                      << ss.vec3fConst(offset[0], offset[1], offset[2])
@@ -44,16 +43,16 @@ void GetRangeGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
 
     if(!range->minIsEmpty())
     {
-        const double lowerBound[3] 
-            = { range->getMinOutValue(), 
-                range->getMinOutValue(), 
+        const double lowerBound[3]
+            = { range->getMinOutValue(),
+                range->getMinOutValue(),
                 range->getMinOutValue() };
 
-        ss.newLine() << shaderDesc->getPixelName() << ".rgb = "
+        ss.newLine() << shaderCreator->getPixelName() << ".rgb = "
                      << "max(" << ss.vec3fConst(lowerBound[0],
                                                 lowerBound[1],
                                                 lowerBound[2]) << ", "
-                     << shaderDesc->getPixelName()
+                     << shaderCreator->getPixelName()
                      << ".rgb);";
     }
 
@@ -64,15 +63,15 @@ void GetRangeGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
                 range->getMaxOutValue(),
                 range->getMaxOutValue() };
 
-        ss.newLine() << shaderDesc->getPixelName() << ".rgb = "
+        ss.newLine() << shaderCreator->getPixelName() << ".rgb = "
             << "min(" << ss.vec3fConst(upperBound[0],
                                        upperBound[1],
                                        upperBound[2]) << ", "
-            << shaderDesc->getPixelName()
+            << shaderCreator->getPixelName()
             << ".rgb);";
     }
 
-    shaderDesc->addToFunctionShaderCode(ss.string().c_str());
+    shaderCreator->addToFunctionShaderCode(ss.string().c_str());
 }
 
 

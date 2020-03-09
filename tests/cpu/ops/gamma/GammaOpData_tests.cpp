@@ -486,46 +486,75 @@ OCIO_ADD_TEST(GammaOpData, is_inverse)
     OCIO_CHECK_ASSERT(!GammaOp1m.isInverse(GammaOp3m));
 }
 
+namespace
+{
+void TestMayComposeStyle(OCIO::GammaOpData::Style s1, OCIO::GammaOpData::Style s2,
+                         bool expected, unsigned line)
+{
+    OCIO::GammaOpData::Params params = { 2. };
+    OCIO::GammaOpData g1(s1, params, params, params, params);
+    OCIO::GammaOpData g2(s2, params, params, params, params);
+    OCIO_CHECK_EQUAL_FROM(g1.mayCompose(g2), expected, line);
+    OCIO_CHECK_EQUAL_FROM(g2.mayCompose(g1), expected, line);
+}
+}
+
 OCIO_ADD_TEST(GammaOpData, mayCompose)
 {
+    TestMayComposeStyle(OCIO::GammaOpData::BASIC_FWD,
+                        OCIO::GammaOpData::BASIC_FWD, true, __LINE__);
+    TestMayComposeStyle(OCIO::GammaOpData::BASIC_FWD,
+                        OCIO::GammaOpData::BASIC_REV, true, __LINE__);
+    TestMayComposeStyle(OCIO::GammaOpData::BASIC_REV,
+                        OCIO::GammaOpData::BASIC_REV, true, __LINE__);
+    TestMayComposeStyle(OCIO::GammaOpData::BASIC_FWD,
+                        OCIO::GammaOpData::BASIC_MIRROR_FWD, true, __LINE__);
+    TestMayComposeStyle(OCIO::GammaOpData::BASIC_FWD,
+                        OCIO::GammaOpData::BASIC_MIRROR_REV, true, __LINE__);
+    TestMayComposeStyle(OCIO::GammaOpData::BASIC_REV,
+                        OCIO::GammaOpData::BASIC_MIRROR_FWD, true, __LINE__);
+    TestMayComposeStyle(OCIO::GammaOpData::BASIC_REV,
+                        OCIO::GammaOpData::BASIC_MIRROR_REV, true, __LINE__);
+    TestMayComposeStyle(OCIO::GammaOpData::BASIC_FWD,
+                        OCIO::GammaOpData::BASIC_PASS_THRU_FWD, true, __LINE__);
+    TestMayComposeStyle(OCIO::GammaOpData::BASIC_FWD,
+                        OCIO::GammaOpData::BASIC_PASS_THRU_REV, true, __LINE__);
+    TestMayComposeStyle(OCIO::GammaOpData::BASIC_REV,
+                        OCIO::GammaOpData::BASIC_PASS_THRU_FWD, true, __LINE__);
+    TestMayComposeStyle(OCIO::GammaOpData::BASIC_REV,
+                        OCIO::GammaOpData::BASIC_PASS_THRU_REV, true, __LINE__);
+    TestMayComposeStyle(OCIO::GammaOpData::BASIC_MIRROR_FWD,
+                        OCIO::GammaOpData::BASIC_MIRROR_FWD, true, __LINE__);
+    TestMayComposeStyle(OCIO::GammaOpData::BASIC_MIRROR_REV,
+                        OCIO::GammaOpData::BASIC_MIRROR_REV, true, __LINE__);
+    TestMayComposeStyle(OCIO::GammaOpData::BASIC_MIRROR_REV,
+                        OCIO::GammaOpData::BASIC_MIRROR_FWD, true, __LINE__);
+    TestMayComposeStyle(OCIO::GammaOpData::BASIC_PASS_THRU_FWD,
+                        OCIO::GammaOpData::BASIC_PASS_THRU_FWD, true, __LINE__);
+    TestMayComposeStyle(OCIO::GammaOpData::BASIC_PASS_THRU_REV,
+                        OCIO::GammaOpData::BASIC_PASS_THRU_REV, true, __LINE__);
+    TestMayComposeStyle(OCIO::GammaOpData::BASIC_PASS_THRU_FWD,
+                        OCIO::GammaOpData::BASIC_PASS_THRU_REV, true, __LINE__);
+    TestMayComposeStyle(OCIO::GammaOpData::BASIC_MIRROR_FWD,
+                        OCIO::GammaOpData::BASIC_PASS_THRU_FWD, false, __LINE__);
+    TestMayComposeStyle(OCIO::GammaOpData::BASIC_MIRROR_FWD,
+                        OCIO::GammaOpData::BASIC_PASS_THRU_REV, false, __LINE__);
+    TestMayComposeStyle(OCIO::GammaOpData::BASIC_MIRROR_REV,
+                        OCIO::GammaOpData::BASIC_PASS_THRU_FWD, false, __LINE__);
+    TestMayComposeStyle(OCIO::GammaOpData::BASIC_MIRROR_REV,
+                        OCIO::GammaOpData::BASIC_PASS_THRU_REV, false, __LINE__);
+
     OCIO::GammaOpData::Params params1 = { 1.  };
     OCIO::GammaOpData::Params params2 = { 2.2 };
     OCIO::GammaOpData::Params params3 = { 2.6 };
 
     {
-        OCIO::GammaOpData g1(OCIO::GammaOpData::BASIC_FWD,
-                             params2, params2, params2, params1);
-        OCIO::GammaOpData g2(OCIO::GammaOpData::BASIC_FWD,
-                             params2, params2, params2, params1);
-        // Note: Bit-depths don't need to match.
-        OCIO_CHECK_ASSERT(g1.mayCompose(g2));
-    }
-
-    {
-        OCIO::GammaOpData g1(OCIO::GammaOpData::BASIC_FWD,
-                             params2, params2, params2, params2);
-        OCIO::GammaOpData g2(OCIO::GammaOpData::BASIC_FWD,
-                             params2, params2, params2, params2);
-        // Non-identity alpha.
-        OCIO_CHECK_ASSERT(!g1.mayCompose(g2));
-    }
-
-    {
-        OCIO::GammaOpData g1(OCIO::GammaOpData::BASIC_FWD,
-                             params2, params2, params2, params1);
-        OCIO::GammaOpData g2(OCIO::GammaOpData::BASIC_REV,
-                             params3, params3, params3, params1);
-        // Basic may be fwd or rev.
-        OCIO_CHECK_ASSERT(g1.mayCompose(g2));
-    }
-
-    {
+        // R == G != B params.
         OCIO::GammaOpData g1(OCIO::GammaOpData::BASIC_FWD,
                              params2, params2, params1, params1);
         OCIO::GammaOpData g2(OCIO::GammaOpData::BASIC_FWD,
                              params2, params2, params2, params1);
-        // R == G != B params.
-        OCIO_CHECK_ASSERT(!g1.mayCompose(g2));
+        OCIO_CHECK_ASSERT(g1.mayCompose(g2));
     }
 
     {

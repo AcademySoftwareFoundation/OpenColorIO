@@ -51,7 +51,7 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         OCIO_CHECK_EQUAL(ops.size(), 2);
 
         // No optimize: keep both matrix ops
-        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
         OCIO_CHECK_EQUAL(ops.size(), 2);
 
         // apply ops
@@ -88,7 +88,7 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
         // No optimize: keep both all ops
-        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
         // apply ops
@@ -127,7 +127,7 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
         // No optimize: keep both all ops
-        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
         // apply ops
@@ -166,7 +166,7 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
         // No optimize: keep both all ops
-        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
         // apply ops
@@ -210,7 +210,7 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         OCIO_CHECK_EQUAL(ops.size(), 9);
 
         // No optimize: keep both all ops
-        OCIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
         OCIO_CHECK_EQUAL(ops.size(), 9);
 
         // apply ops
@@ -237,37 +237,6 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
     }
 }
 
-OCIO_ADD_TEST(CreateOpVecFromOpDataVec, basic)
-{
-    OCIO::ConstOpDataVec opDataVec;
-    auto mat = OCIO::MatrixOpData::CreateDiagonalMatrix(2.0);
-    opDataVec.push_back(mat);
-
-    auto range = std::make_shared<OCIO::RangeOpData>(0.0, 1.0, 0.5, 1.5);
-
-    opDataVec.push_back(range);
-
-    OCIO_REQUIRE_EQUAL(opDataVec.size(), 2);
-	
-    {
-        OCIO::OpRcPtrVec ops;
-        OCIO_CHECK_NO_THROW(OCIO::CreateOpVecFromOpDataVec(ops, opDataVec, OCIO::TRANSFORM_DIR_FORWARD));
-        OCIO_REQUIRE_EQUAL(ops.size(), 2);
-
-        OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
-        OCIO_CHECK_EQUAL(ops[1]->getInfo(), "<RangeOp>");
-    }
-
-    {
-        OCIO::OpRcPtrVec ops;
-        OCIO_CHECK_NO_THROW(OCIO::CreateOpVecFromOpDataVec(ops, opDataVec, OCIO::TRANSFORM_DIR_INVERSE));
-        OCIO_REQUIRE_EQUAL(ops.size(), 2);
-
-        OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<RangeOp>");
-        OCIO_CHECK_EQUAL(ops[1]->getInfo(), "<MatrixOffsetOp>");
-    }
-}
-
 OCIO_ADD_TEST(Op, non_dynamic_ops)
 {
     double scale[4] = { 2.0, 2.0, 2.0, 1.0 };
@@ -286,6 +255,47 @@ OCIO_ADD_TEST(Op, non_dynamic_ops)
 
     OCIO_CHECK_THROW_WHAT(ops[0]->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA),
                           OCIO::Exception, "does not implement dynamic property");
+}
+
+OCIO_ADD_TEST(OpData, equality)
+{
+    auto mat1 = OCIO::MatrixOpData::CreateDiagonalMatrix(1.1);
+    auto mat2 = mat1->clone();
+
+    // Use the MatrixOpData::operator==().
+    OCIO_CHECK_ASSERT(*mat2==*mat1);
+
+    auto range = std::make_shared<OCIO::RangeOpData>(0.0, 1.0, 0.5, 1.5);
+
+    // Use the MatrixOpData::operator==().
+    OCIO_CHECK_ASSERT( !(*mat2==*range) );
+
+    // Use the RangeOpData::operator==().
+    OCIO_CHECK_ASSERT( !(*range==*mat1) );
+
+    // Use the OpData::operator==().
+    auto op1 = OCIO::DynamicPtrCast<OCIO::OpData>(range);
+    OCIO_CHECK_ASSERT( !(*op1==*mat1) );    
+
+    // Use the OpData::operator==().
+    auto op2 = OCIO::DynamicPtrCast<OCIO::OpData>(mat2);
+    OCIO_CHECK_ASSERT( !(*op2==*op1) );
+
+    // Change something.
+
+    // Use the MatrixOpData::operator==().
+    OCIO_CHECK_ASSERT( *mat2==*mat1 );
+
+    // Use the OpData::operator==().
+    OCIO_CHECK_ASSERT( *op2==*mat1 );
+
+    mat2->setOffsetValue(1, mat2->getOffsetValue(1) + 1.0);
+
+    // Use the MatrixOpData::operator==().
+    OCIO_CHECK_ASSERT( !(*mat2==*mat1) );
+
+    // Use the OpData::operator==().
+    OCIO_CHECK_ASSERT( !(*op2==*mat1) );
 }
 
 OCIO_ADD_TEST(OpRcPtrVec, erase_insert)
@@ -353,44 +363,128 @@ OCIO_ADD_TEST(OpRcPtrVec, erase_insert)
     OCIO_CHECK_EQUAL(ops2[3]->getInfo(), "<RangeOp>");
 }
 
-OCIO_ADD_TEST(OpData, equality)
+OCIO_ADD_TEST(OpRcPtrVec, is_noop)
 {
-    auto mat1 = OCIO::MatrixOpData::CreateDiagonalMatrix(1.1);
-    auto mat2 = mat1->clone();
+    OCIO::OpRcPtrVec ops;
 
-    // Use the MatrixOpData::operator==().
-    OCIO_CHECK_ASSERT(*mat2==*mat1);
+    auto mat = OCIO::MatrixOpData::CreateDiagonalMatrix(1);
+    OCIO::CreateMatrixOp(ops, mat, OCIO::TRANSFORM_DIR_FORWARD);
 
-    auto range = std::make_shared<OCIO::RangeOpData>(0.0, 1.0, 0.5, 1.5);
+    OCIO_CHECK_ASSERT(ops.isNoOp());
 
-    // Use the MatrixOpData::operator==().
-    OCIO_CHECK_ASSERT( !(*mat2==*range) );
+    mat->setArrayValue(4, 0.1);
+    OCIO::CreateMatrixOp(ops, mat, OCIO::TRANSFORM_DIR_FORWARD);
 
-    // Use the RangeOpData::operator==().
-    OCIO_CHECK_ASSERT( !(*range==*mat1) );
+    OCIO_CHECK_ASSERT(!ops.isNoOp());
 
-    // Use the OpData::operator==().
-    auto op1 = OCIO::DynamicPtrCast<OCIO::OpData>(range);
-    OCIO_CHECK_ASSERT( !(*op1==*mat1) );    
+    // An active dynamic property is never a no-op.
 
-    // Use the OpData::operator==().
-    auto op2 = OCIO::DynamicPtrCast<OCIO::OpData>(mat2);
-    OCIO_CHECK_ASSERT( !(*op2==*op1) );
+    ops.clear();
 
-    // Change something.
+    auto ec 
+        = std::make_shared<OCIO::ExposureContrastOpData>(OCIO::ExposureContrastOpData::STYLE_LINEAR);
+    OCIO::CreateExposureContrastOp(ops, ec, OCIO::TRANSFORM_DIR_FORWARD);
 
-    // Use the MatrixOpData::operator==().
-    OCIO_CHECK_ASSERT( *mat2==*mat1 );
+    OCIO_CHECK_ASSERT(ops.isNoOp());
 
-    // Use the OpData::operator==().
-    OCIO_CHECK_ASSERT( *op2==*mat1 );
+    ec->getExposureProperty()->makeDynamic();
+    OCIO::CreateExposureContrastOp(ops, ec, OCIO::TRANSFORM_DIR_FORWARD);
 
-    mat2->setOffsetValue(1, mat2->getOffsetValue(1) + 1.0);
-
-    // Use the MatrixOpData::operator==().
-    OCIO_CHECK_ASSERT( !(*mat2==*mat1) );
-
-    // Use the OpData::operator==().
-    OCIO_CHECK_ASSERT( !(*op2==*mat1) );
+    OCIO_CHECK_ASSERT(!ops.isNoOp());
 }
 
+OCIO_ADD_TEST(OpRcPtrVec, channel_crosstalk)
+{
+    OCIO::OpRcPtrVec ops;
+
+    auto mat = OCIO::MatrixOpData::CreateDiagonalMatrix(1.2);
+    OCIO::CreateMatrixOp(ops, mat, OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO_CHECK_ASSERT(!ops.hasChannelCrosstalk());
+
+    mat->setArrayValue(4, 0.1);
+    OCIO::CreateMatrixOp(ops, mat, OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO_CHECK_ASSERT(ops.hasChannelCrosstalk());
+}
+
+OCIO_ADD_TEST(OpRcPtrVec, dynamic_property)
+{
+    OCIO::OpRcPtrVec ops;
+
+    auto ec 
+        = std::make_shared<OCIO::ExposureContrastOpData>(OCIO::ExposureContrastOpData::STYLE_LINEAR);
+    OCIO::CreateExposureContrastOp(ops, ec, OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO_CHECK_ASSERT(!ops.hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
+    OCIO_CHECK_THROW_WHAT(ops.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE),
+                          OCIO::Exception,
+                          "Cannot find dynamic property.");
+
+    ec->getExposureProperty()->makeDynamic();
+    OCIO::CreateExposureContrastOp(ops, ec, OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO_CHECK_ASSERT(ops.hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
+
+    OCIO::DynamicPropertyRcPtr dyn;
+    OCIO_CHECK_NO_THROW(dyn = ops.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
+    OCIO_CHECK_ASSERT(dyn);
+    OCIO_CHECK_EQUAL(dyn->getType(), OCIO::DYNAMIC_PROPERTY_EXPOSURE);
+}
+
+OCIO_ADD_TEST(OpRcPtrVec, clone_invert)
+{
+    OCIO::OpRcPtrVec ops;
+
+    CreateLookNoOp(ops, "look");
+
+    const OCIO::GammaOpData::Params params   = { 1.001 };
+    auto gamma = std::make_shared<OCIO::GammaOpData>(OCIO::GammaOpData::BASIC_FWD,
+                                                     params,
+                                                     params,
+                                                     params,
+                                                     params);
+    OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(ops, gamma, OCIO::TRANSFORM_DIR_FORWARD));
+
+    OCIO_CHECK_NO_THROW(OCIO::CreateLogOp(ops, 2., OCIO::TRANSFORM_DIR_FORWARD));
+
+    OCIO_CHECK_EQUAL(ops.size(), 3);
+
+    // Test the clone() method.
+
+    OCIO::OpRcPtrVec cloned = ops.clone();    
+    OCIO_CHECK_EQUAL(cloned.size(), 3);
+
+    OCIO_CHECK_NE(ops[0].get(), cloned[0].get());
+    OCIO_CHECK_NE(ops[1].get(), cloned[1].get());
+    OCIO_CHECK_NE(ops[2].get(), cloned[2].get());
+
+    OCIO_CHECK_EQUAL(ops[0]->getInfo(), cloned[0]->getInfo());
+    OCIO_CHECK_EQUAL(ops[1]->getInfo(), cloned[1]->getInfo());
+    OCIO_CHECK_EQUAL(ops[2]->getInfo(), cloned[2]->getInfo());
+
+    // Test the invert() method.
+
+    OCIO::OpRcPtrVec inverted = ops.invert();    
+    OCIO_CHECK_EQUAL(inverted.size(), 3);
+
+    for (const auto & op1 : ops)
+    {
+        for (const auto & op2 : cloned)
+        {
+            OCIO_CHECK_NE(op1.get(), op2.get());
+        }
+    }
+
+    // Test the Log.
+    OCIO::ConstOpRcPtr inv = inverted[0];
+    OCIO_CHECK_ASSERT(ops[2]->isInverse(inv));
+
+    // Test the Gamma.
+    inv = inverted[1];
+    OCIO_CHECK_ASSERT(ops[1]->isInverse(inv));
+
+    OCIO_CHECK_EQUAL(ops[0]->getInfo(), inverted[2]->getInfo());
+    OCIO_CHECK_EQUAL(ops[1]->getInfo(), inverted[1]->getInfo());
+    OCIO_CHECK_EQUAL(ops[2]->getInfo(), inverted[0]->getInfo());
+}

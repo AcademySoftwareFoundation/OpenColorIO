@@ -632,7 +632,7 @@ void Renderer_ACES_DarkToDim10_Fwd::apply(const void * inImg, void * outImg, lon
 
         // With the modest 2% ACES surround, this minLum allows the min/max gain
         // applied to dark colors to be about 0.6 to 1.6.
-        constexpr const float minLum = 1e-10f;
+        constexpr float minLum = 1e-10f;
 
         // Calculate luminance assuming input is AP1 RGB.
         const float Y = std::max( minLum, ( 0.27222871678091454f  * red + 
@@ -679,7 +679,7 @@ void Renderer_REC2100_Surround::apply(const void * inImg, void * outImg, long nu
         // 
         // TODO: Should have forward & reverse versions of this so the threshold can be
         //       adjusted correctly for the reverse direction.
-        constexpr const float minLum = 1e-4f;
+        constexpr float minLum = 1e-4f;
 
         // Calculate luminance assuming input is Rec.2100 RGB.
         // TODO: Add another parameter to allow using other primaries.
@@ -800,7 +800,7 @@ void Renderer_HSV_TO_RGB::apply(const void * inImg, void * outImg, long numPixel
 
     for (long idx=0; idx<numPixels; ++idx)
     {
-        constexpr const float MAX_SAT = 1.999f;
+        constexpr float MAX_SAT = 1.999f;
 
         const float hue = ( in[0] - std::floor( in[0] ) ) * 6.f;
         const float sat = Clamp( in[1], 0.f, MAX_SAT );

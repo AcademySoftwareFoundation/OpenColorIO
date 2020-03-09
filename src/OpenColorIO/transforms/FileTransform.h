@@ -5,6 +5,7 @@
 #ifndef INCLUDED_OCIO_FILETRANSFORM_H
 #define INCLUDED_OCIO_FILETRANSFORM_H
 
+
 #include <map>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -13,6 +14,8 @@
 #include "ops/noop/NoOps.h"
 #include "PrivateTypes.h"
 #include "Processor.h"
+#include "utils/StringUtils.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -120,12 +123,12 @@ private:
     FileFormatVectorMap m_formatsByExtension;
     FileFormatVector m_rawFormats;
 
-    StringVec m_readFormatNames;
-    StringVec m_readFormatExtensions;
-    StringVec m_bakeFormatNames;
-    StringVec m_bakeFormatExtensions;
-    StringVec m_writeFormatNames;
-    StringVec m_writeFormatExtensions;
+    StringUtils::StringVec m_readFormatNames;
+    StringUtils::StringVec m_readFormatExtensions;
+    StringUtils::StringVec m_bakeFormatNames;
+    StringUtils::StringVec m_bakeFormatExtensions;
+    StringUtils::StringVec m_writeFormatNames;
+    StringUtils::StringVec m_writeFormatExtensions;
 };
 
 // Registry Builders.
@@ -149,8 +152,8 @@ FileFormat * CreateFileFormatSpiMtx();
 FileFormat * CreateFileFormatTruelight();
 FileFormat * CreateFileFormatVF();
 
-static constexpr const char * FILEFORMAT_CLF = "Academy/ASC Common LUT Format";
-static constexpr const char * FILEFORMAT_CTF = "Color Transform Format";
+static constexpr char FILEFORMAT_CLF[] = "Academy/ASC Common LUT Format";
+static constexpr char FILEFORMAT_CTF[] = "Color Transform Format";
 
 } // namespace OCIO_NAMESPACE
 

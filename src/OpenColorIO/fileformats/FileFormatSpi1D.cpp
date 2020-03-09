@@ -10,8 +10,9 @@
 #include "ops/matrix/MatrixOp.h"
 #include "ParseUtils.h"
 #include "Platform.h"
-#include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
+#include "utils/StringUtils.h"
+
 
 /*
 Version 1
@@ -66,9 +67,8 @@ public:
 
 private:
     static void ThrowErrorMessage(const std::string & error,
-                                    const std::string & fileName,
-                                    int line,
-                                    const std::string & lineContent);
+                                  int line,
+                                  const std::string & lineContent);
 };
 
 void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
@@ -85,7 +85,7 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 
 CachedFileRcPtr LocalFileFormat::read(
     std::istream & istream,
-    const std::string & fileName ) const
+    const std::string & /*fileName*/ ) const
 {
     // Parse Header Info.
     int lut_size = -1;
@@ -107,69 +107,60 @@ CachedFileRcPtr LocalFileFormat::read(
             ++currentLine;
             headerLine = std::string(lineBuffer);
 
-            if(pystring::startswith(headerLine, "Version"))
+            if(StringUtils::StartsWith(headerLine, "Version"))
             {
                 // " " in format means any number of spaces (white space,
                 // new line, tab) including 0 of them.
                 // "Version1" is valid.
                 if (sscanf(lineBuffer, "Version %d", &version) != 1)
                 {
-                    ThrowErrorMessage("Invalid 'Version' Tag.",
-                                        fileName, currentLine, headerLine);
+                    ThrowErrorMessage("Invalid 'Version' Tag", currentLine, headerLine);
                 }
                 else if (version != 1)
                 {
-                    ThrowErrorMessage("Only format version 1 supported.",
-                                        fileName, currentLine, headerLine);
+                    ThrowErrorMessage("Only format version 1 supported", currentLine, headerLine);
                 }
             }
-            else if(pystring::startswith(headerLine, "From"))
+            else if(StringUtils::StartsWith(headerLine, "From"))
             {
                 if (sscanf(lineBuffer, "From %f %f", &from_min, &from_max) != 2)
                 {
-                    ThrowErrorMessage("Invalid 'From' Tag.",
-                                        fileName, currentLine, headerLine);
+                    ThrowErrorMessage("Invalid 'From' Tag", currentLine, headerLine);
                 }
             }
-            else if(pystring::startswith(headerLine, "Components"))
+            else if(StringUtils::StartsWith(headerLine, "Components"))
             {
                 if (sscanf(lineBuffer, "Components %d", &components) != 1)
                 {
-                    ThrowErrorMessage("Invalid 'Components' Tag.",
-                                        fileName, currentLine, headerLine);
+                    ThrowErrorMessage("Invalid 'Components' Tag", currentLine, headerLine);
                 }
             }
-            else if(pystring::startswith(headerLine, "Length"))
+            else if(StringUtils::StartsWith(headerLine, "Length"))
             {
                 if (sscanf(lineBuffer, "Length %d", &lut_size) != 1)
                 {
-                    ThrowErrorMessage("Invalid 'Length' Tag.",
-                                        fileName, currentLine, headerLine);
+                    ThrowErrorMessage("Invalid 'Length' Tag", currentLine, headerLine);
                 }
             }
         }
-        while (istream.good() && !pystring::startswith(headerLine,"{"));
+        while (istream.good() && !StringUtils::StartsWith(headerLine,"{"));
     }
 
     if (version == -1)
     {
-        ThrowErrorMessage("Could not find 'Version' Tag.",
-                            fileName, -1, "");
+        ThrowErrorMessage("Could not find 'Version' Tag", -1, "");
     }
     if (lut_size == -1)
     {
-        ThrowErrorMessage("Could not find 'Length' Tag.",
-                            fileName, -1, "");
+        ThrowErrorMessage("Could not find 'Length' Tag", -1, "");
     }
     if (components == -1)
     {
-        ThrowErrorMessage("Could not find 'Components' Tag.",
-                            fileName, -1, "");
+        ThrowErrorMessage("Could not find 'Components' Tag", -1, "");
     }
     if (components < 0 || components>3)
     {
-        ThrowErrorMessage("Components must be [1,2,3].",
-                            fileName, -1, "");
+        ThrowErrorMessage("Components must be [1,2,3]", -1, "");
     }
 
     Lut1DOpDataRcPtr lut1d = std::make_shared<Lut1DOpData>(lut_size);
@@ -182,12 +173,12 @@ CachedFileRcPtr LocalFileFormat::read(
 
         int lineCount=0;
 
-        std::vector<std::string> inputLUT;
+        StringUtils::StringVec inputLUT;
         std::vector<float> values;
 
         while (istream.good())
         {
-            const std::string line = pystring::strip(std::string(lineBuffer));
+            const std::string line = StringUtils::Trim(std::string(lineBuffer));
             if (Platform::Strcasecmp(line.c_str(), "}") == 0)
             {
                 break;
@@ -195,7 +186,7 @@ CachedFileRcPtr LocalFileFormat::read(
 
             if (line.length() != 0)
             {
-                pystring::split(pystring::strip(lineBuffer), inputLUT);
+                inputLUT = StringUtils::SplitByWhiteSpaces(StringUtils::Trim(lineBuffer));
                 values.clear();
                 if (!StringVecToFloatVec(values, inputLUT)
                     || components != (int)values.size())
@@ -204,8 +195,12 @@ CachedFileRcPtr LocalFileFormat::read(
                     os << "Malformed LUT line. Expecting a ";
                     os << components << " components entry.";
 
-                    ThrowErrorMessage("Malformed LUT line.",
-                                        fileName, currentLine, line);
+                    ThrowErrorMessage("Malformed LUT line", currentLine, line);
+                }
+
+                if (lineCount >= lut_size)
+                {
+                    ThrowErrorMessage("Too many entries found", currentLine, "");
                 }
 
                 // If 1 component is specified, use x1 x1 x1.
@@ -235,6 +230,7 @@ CachedFileRcPtr LocalFileFormat::read(
                     i += 3;
                     ++lineCount;
                 }
+
                 // No other case, components is in [1..3].
             }
 
@@ -244,8 +240,7 @@ CachedFileRcPtr LocalFileFormat::read(
 
         if (lineCount != lut_size)
         {
-            ThrowErrorMessage("Not enough entries found.",
-                                fileName, -1, "");
+            ThrowErrorMessage("Not enough entries found", currentLine, "");
         }
     }
 
@@ -299,20 +294,19 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 }
 
 void LocalFileFormat::ThrowErrorMessage(const std::string & error,
-                                        const std::string & fileName,
                                         int line,
                                         const std::string & lineContent)
 {
     std::ostringstream os;
-    os << "Error parsing .spi1d file (";
-    os << fileName;
-    os << ").  ";
     if (-1 != line)
     {
-        os << "At line (" << line << "): '";
-        os << lineContent << "'.  ";
+        os << "At line " << line << ": ";
     }
     os << error;
+    if (-1 != line && !lineContent.empty())
+    {
+        os << " (" << lineContent << ")";
+    }
 
     throw Exception(os.str().c_str());
 }

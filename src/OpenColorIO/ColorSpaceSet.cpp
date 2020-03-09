@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <sstream>
+#include <string>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "PrivateTypes.h"
-#include "pystring/pystring.h"
+#include "utils/StringUtils.h"
 
 
 namespace OCIO_NAMESPACE
@@ -84,10 +84,10 @@ public:
     {
         if(csName && *csName)
         {
-            const std::string str = pystring::lower(csName);
+            const std::string str = StringUtils::Lower(csName);
             for(auto & cs: m_colorSpaces)
             {
-                if(pystring::lower(cs->getName())==str)
+                if(StringUtils::Lower(cs->getName())==str)
                 {
                     return cs;
                 }
@@ -100,10 +100,10 @@ public:
     {
         if(csName && *csName)
         {
-            const std::string str = pystring::lower(csName);
+            const std::string str = StringUtils::Lower(csName);
             for(size_t idx = 0; idx<m_colorSpaces.size(); ++idx)
             {
-                if(pystring::lower(m_colorSpaces[idx]->getName())==str)
+                if(StringUtils::Lower(m_colorSpaces[idx]->getName())==str)
                 {
                     return static_cast<int>(idx);
                 }
@@ -115,7 +115,7 @@ public:
 
     void add(const ConstColorSpaceRcPtr & cs)
     {
-        const std::string csName = pystring::lower(cs->getName());
+        const std::string csName = StringUtils::Lower(cs->getName());
         if(csName.empty())
         {
             throw Exception("Cannot add a color space with an empty name.");
@@ -123,7 +123,7 @@ public:
 
         for(auto & entry: m_colorSpaces)
         {
-            if(pystring::lower(entry->getName())==csName)
+            if(StringUtils::Lower(entry->getName())==csName)
             {
                 // The color space replaces the existing one.
                 entry = cs->createEditableCopy();
@@ -144,12 +144,12 @@ public:
 
     void remove(const char * csName)
     {
-        const std::string name = pystring::lower(csName);
+        const std::string name = StringUtils::Lower(csName);
         if(name.empty()) return;
 
         for(auto itr = m_colorSpaces.begin(); itr != m_colorSpaces.end(); ++itr)
         {
-            if(pystring::lower((*itr)->getName())==name)
+            if(StringUtils::Lower((*itr)->getName())==name)
             {
                 m_colorSpaces.erase(itr);
                 return;

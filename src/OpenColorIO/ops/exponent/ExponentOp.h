@@ -20,7 +20,7 @@ class ExponentOpData : public OpData
 public:
     ExponentOpData();
     ExponentOpData(const ExponentOpData & rhs);
-    ExponentOpData(const double * exp4);
+    explicit ExponentOpData(const double * exp4);
     virtual ~ExponentOpData() {}
 
     ExponentOpData & operator = (const ExponentOpData & rhs);

@@ -11,8 +11,9 @@
 #include "ops/lut3d/Lut3DOp.h"
 #include "ops/matrix/MatrixOp.h"
 #include "ParseUtils.h"
-#include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
+#include "utils/StringUtils.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -101,7 +102,7 @@ CachedFileRcPtr LocalFileFormat::read(
     std::string line;
     int lineNumber = 1;
     if(!nextline(istream, line) ||
-        !pystring::startswith(pystring::lower(line), "#inventor"))
+        !StringUtils::StartsWith(StringUtils::Lower(line), "#inventor"))
     {
         ThrowErrorMessage("Expecting '#Inventor V2.1 ascii'.",
             fileName, lineNumber, line);
@@ -113,7 +114,7 @@ CachedFileRcPtr LocalFileFormat::read(
     std::vector<float> global_transform;
 
     {
-        StringVec parts;
+        StringUtils::StringVec parts;
         std::vector<float> tmpfloats;
 
         bool in3d = false;
@@ -123,11 +124,11 @@ CachedFileRcPtr LocalFileFormat::read(
             ++lineNumber;
 
             // Strip, lowercase, and split the line
-            pystring::split(pystring::lower(pystring::strip(line)), parts);
+            parts = StringUtils::SplitByWhiteSpaces(StringUtils::Lower(StringUtils::Trim(line)));
 
             if(parts.empty()) continue;
 
-            if(pystring::startswith(parts[0],"#")) continue;
+            if(StringUtils::StartsWith(parts[0],"#")) continue;
 
             if(!in3d)
             {

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <cmath>
 #include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -48,10 +49,17 @@ std::string GetParametersString(const GammaOpData::Params & params)
     return oss.str();
 }
 
-constexpr const char * GAMMA_STYLE_BASIC_FWD    = "basicFwd";
-constexpr const char * GAMMA_STYLE_BASIC_REV    = "basicRev";
-constexpr const char * GAMMA_STYLE_MONCURVE_FWD = "moncurveFwd";
-constexpr const char * GAMMA_STYLE_MONCURVE_REV = "moncurveRev";
+constexpr char GAMMA_STYLE_BASIC_FWD[]           = "basicFwd";
+constexpr char GAMMA_STYLE_BASIC_REV[]           = "basicRev";
+constexpr char GAMMA_STYLE_BASIC_MIRROR_FWD[]    = "basicMirrorFwd";
+constexpr char GAMMA_STYLE_BASIC_MIRROR_REV[]    = "basicMirrorRev";
+constexpr char GAMMA_STYLE_BASIC_PASS_THRU_FWD[] = "basicPassThruFwd";
+constexpr char GAMMA_STYLE_BASIC_PASS_THRU_REV[] = "basicPassThruRev";
+// Note that CTF before version 2 was using "moncurveFwd". Parsing is case insensitive.
+constexpr char GAMMA_STYLE_MONCURVE_FWD[]        = "monCurveFwd";
+constexpr char GAMMA_STYLE_MONCURVE_REV[]        = "monCurveRev";
+constexpr char GAMMA_STYLE_MONCURVE_MIRROR_FWD[] = "monCurveMirrorFwd";
+constexpr char GAMMA_STYLE_MONCURVE_MIRROR_REV[] = "monCurveMirrorRev";
 
 }; // anon
 
@@ -67,6 +75,22 @@ GammaOpData::Style GammaOpData::ConvertStringToStyle(const char * str)
         {
             return BASIC_REV;
         }
+        else if (0 == Platform::Strcasecmp(str, GAMMA_STYLE_BASIC_MIRROR_FWD))
+        {
+            return BASIC_MIRROR_FWD;
+        }
+        else if (0 == Platform::Strcasecmp(str, GAMMA_STYLE_BASIC_MIRROR_REV))
+        {
+            return BASIC_MIRROR_REV;
+        }
+        else if (0 == Platform::Strcasecmp(str, GAMMA_STYLE_BASIC_PASS_THRU_FWD))
+        {
+            return BASIC_PASS_THRU_FWD;
+        }
+        else if (0 == Platform::Strcasecmp(str, GAMMA_STYLE_BASIC_PASS_THRU_REV))
+        {
+            return BASIC_PASS_THRU_REV;
+        }
         else if (0 == Platform::Strcasecmp(str, GAMMA_STYLE_MONCURVE_FWD))
         {
             return MONCURVE_FWD;
@@ -74,6 +98,14 @@ GammaOpData::Style GammaOpData::ConvertStringToStyle(const char * str)
         else if (0 == Platform::Strcasecmp(str, GAMMA_STYLE_MONCURVE_REV))
         {
             return MONCURVE_REV;
+        }
+        else if (0 == Platform::Strcasecmp(str, GAMMA_STYLE_MONCURVE_MIRROR_FWD))
+        {
+            return MONCURVE_MIRROR_FWD;
+        }
+        else if (0 == Platform::Strcasecmp(str, GAMMA_STYLE_MONCURVE_MIRROR_REV))
+        {
+            return MONCURVE_MIRROR_REV;
         }
 
         std::ostringstream os;
@@ -89,18 +121,133 @@ const char * GammaOpData::ConvertStyleToString(Style style)
 {
     switch(style)
     {
-        case BASIC_FWD:
-            return GAMMA_STYLE_BASIC_FWD;
-        case BASIC_REV:
-            return GAMMA_STYLE_BASIC_REV;
-        case MONCURVE_FWD:
-            return GAMMA_STYLE_MONCURVE_FWD;
-        case MONCURVE_REV:
-            return GAMMA_STYLE_MONCURVE_REV;
+    case BASIC_FWD:
+        return GAMMA_STYLE_BASIC_FWD;
+    case BASIC_REV:
+        return GAMMA_STYLE_BASIC_REV;
+    case BASIC_MIRROR_FWD:
+        return GAMMA_STYLE_BASIC_MIRROR_FWD;
+    case BASIC_MIRROR_REV:
+        return GAMMA_STYLE_BASIC_MIRROR_REV;
+    case BASIC_PASS_THRU_FWD:
+        return GAMMA_STYLE_BASIC_PASS_THRU_FWD;
+    case BASIC_PASS_THRU_REV:
+        return GAMMA_STYLE_BASIC_PASS_THRU_REV;
+    case MONCURVE_FWD:
+        return GAMMA_STYLE_MONCURVE_FWD;
+    case MONCURVE_REV:
+        return GAMMA_STYLE_MONCURVE_REV;
+    case MONCURVE_MIRROR_FWD:
+        return GAMMA_STYLE_MONCURVE_MIRROR_FWD;
+    case MONCURVE_MIRROR_REV:
+        return GAMMA_STYLE_MONCURVE_MIRROR_REV;
     }
 
     std::stringstream ss("Unknown Gamma style: ");
     ss << style;
+
+    throw Exception(ss.str().c_str());
+}
+
+NegativeStyle GammaOpData::ConvertStyle(Style style)
+{
+    switch (style)
+    {
+    case BASIC_FWD:
+    case BASIC_REV:
+        return NEGATIVE_CLAMP;
+    case MONCURVE_FWD:
+    case MONCURVE_REV:
+        return NEGATIVE_LINEAR;
+    case BASIC_MIRROR_FWD:
+    case BASIC_MIRROR_REV:
+    case MONCURVE_MIRROR_FWD:
+    case MONCURVE_MIRROR_REV:
+        return NEGATIVE_MIRROR;
+    case BASIC_PASS_THRU_FWD:
+    case BASIC_PASS_THRU_REV:
+        return NEGATIVE_PASS_THRU;
+        break;
+    }
+
+    std::stringstream ss("Unknown Gamma style: ");
+    ss << style;
+
+    throw Exception(ss.str().c_str());
+}
+
+GammaOpData::Style GammaOpData::ConvertStyleBasic(NegativeStyle negStyle, TransformDirection dir)
+{
+    if (dir == TRANSFORM_DIR_UNKNOWN)
+    {
+        throw Exception("Cannot create GammaOp with unspecified transform direction.");
+    }
+
+    const bool isForward = dir == TRANSFORM_DIR_FORWARD;
+
+    switch (negStyle)
+    {
+    case NEGATIVE_CLAMP:
+    {
+        return (isForward) ? GammaOpData::BASIC_FWD :
+                             GammaOpData::BASIC_REV;
+    }
+    case NEGATIVE_MIRROR:
+    {
+        return (isForward) ? GammaOpData::BASIC_MIRROR_FWD :
+                             GammaOpData::BASIC_MIRROR_REV;
+    }
+    case NEGATIVE_PASS_THRU:
+    {
+        return (isForward) ? GammaOpData::BASIC_PASS_THRU_FWD :
+                             GammaOpData::BASIC_PASS_THRU_REV;
+    }
+    case NEGATIVE_LINEAR:
+    {
+        throw Exception("Linear negative extrapolation is not valid for basic exponent style.");
+    }
+    }
+
+    std::stringstream ss("Unknown negative extrapolation style: ");
+    ss << negStyle;
+
+    throw Exception(ss.str().c_str());
+}
+
+GammaOpData::Style GammaOpData::ConvertStyleMonCurve(NegativeStyle negStyle, TransformDirection dir)
+{
+    if (dir == TRANSFORM_DIR_UNKNOWN)
+    {
+        throw Exception("Cannot create GammaOp with unspecified transform direction.");
+    }
+
+    const bool isForward = dir == TRANSFORM_DIR_FORWARD;
+
+    switch (negStyle)
+    {
+    case NEGATIVE_LINEAR:
+    {
+        return (isForward) ? GammaOpData::MONCURVE_FWD :
+                             GammaOpData::MONCURVE_REV;
+    }
+    case NEGATIVE_MIRROR:
+    {
+        return (isForward) ? GammaOpData::MONCURVE_MIRROR_FWD :
+                             GammaOpData::MONCURVE_MIRROR_REV;
+    }
+    case NEGATIVE_PASS_THRU:
+    {
+        throw Exception("Pass thru negative extrapolation is not valid "
+                        "for MonCurve exponent style.");
+    }
+    case NEGATIVE_CLAMP:
+    {
+        throw Exception("Clamp negative extrapolation is not valid for MonCurve exponent style.");
+    }
+    }
+
+    std::stringstream ss("Unknown negative extrapolation style: ");
+    ss << negStyle;
 
     throw Exception(ss.str().c_str());
 }
@@ -142,15 +289,7 @@ GammaOpDataRcPtr GammaOpData::inverse() const
 {
     GammaOpDataRcPtr gamma = clone();
 
-    Style invStyle = BASIC_FWD;
-    switch(getStyle())
-    {
-      case BASIC_FWD:     invStyle = BASIC_REV;     break;
-      case BASIC_REV:     invStyle = BASIC_FWD;     break;
-      case MONCURVE_FWD:  invStyle = MONCURVE_REV;  break;
-      case MONCURVE_REV:  invStyle = MONCURVE_FWD;  break;
-    }
-    gamma->setStyle(invStyle);
+    gamma->invert();
 
     // Note that any existing metadata could become stale at this point but
     // trying to update it is also challenging since inverse() is sometimes
@@ -168,10 +307,21 @@ bool GammaOpData::isInverse(const GammaOpData & B) const
     // be an identity. This code does not to try and handle that case yet, however the pair of
     // ops would get combined and removed as an identity in the optimizer.
 
+    // It's possible that some combinations such as BASIC_PASS_THRU_FWD and BASIC_REV will become
+    // an identity after being combined and removed later.  We need to do it that way (rather than
+    // here) since if isInverse is true, the optimizer calls getIdentityReplacement on only the
+    // first of the pair of ops.
+
     if ( (styleA == BASIC_FWD && styleB == BASIC_REV) ||
          (styleA == BASIC_REV && styleB == BASIC_FWD) ||
          (styleA == MONCURVE_FWD && styleB == MONCURVE_REV) ||
-         (styleA == MONCURVE_REV && styleB == MONCURVE_FWD) )
+         (styleA == MONCURVE_REV && styleB == MONCURVE_FWD) ||
+         (styleA == MONCURVE_MIRROR_FWD && styleB == MONCURVE_MIRROR_REV) ||
+         (styleA == MONCURVE_MIRROR_REV && styleB == MONCURVE_MIRROR_FWD) ||
+         (styleA == BASIC_MIRROR_FWD && styleB == BASIC_MIRROR_REV) ||
+         (styleA == BASIC_MIRROR_REV && styleB == BASIC_MIRROR_FWD) ||
+         (styleA == BASIC_PASS_THRU_FWD && styleB == BASIC_PASS_THRU_REV) ||
+         (styleA == BASIC_PASS_THRU_REV && styleB == BASIC_PASS_THRU_FWD) )
     {
         if ( (getRedParams() == B.getRedParams()) &&
              (getGreenParams() == B.getGreenParams()) &&
@@ -224,9 +374,9 @@ void GammaOpData::setParams(const Params & p)
     m_alphaParams = GammaOpData::getIdentityParameters(getStyle());
 }
 
-void validateParams(const GammaOpData::Params & p, 
+void validateParams(const GammaOpData::Params & p,
                     unsigned int reqdSize,
-                    const double * lowBounds, 
+                    const double * lowBounds,
                     const double * highBounds)
 {
     if (p.size() != reqdSize)
@@ -258,13 +408,17 @@ void GammaOpData::validate() const
 
 void GammaOpData::validateParameters() const
 {
-    // Note: When loading from a CTF we want to enforce 
-    //       the canonical bounds on the parameters. 
+    // Note: When loading from a CTF we want to enforce
+    //       the canonical bounds on the parameters.
 
     switch(getStyle())
     {
         case BASIC_FWD:
         case BASIC_REV:
+        case BASIC_MIRROR_FWD:
+        case BASIC_MIRROR_REV:
+        case BASIC_PASS_THRU_FWD:
+        case BASIC_PASS_THRU_REV:
         {
             static const unsigned int reqdSize = 1;
             static const double lowBounds[] = {0.01};
@@ -278,6 +432,8 @@ void GammaOpData::validateParameters() const
 
         case MONCURVE_FWD:
         case MONCURVE_REV:
+        case MONCURVE_MIRROR_FWD:
+        case MONCURVE_MIRROR_REV:
         {
             static const unsigned int reqdSize = 2;
             static const double lowBounds[] = {1., 0.};
@@ -298,12 +454,18 @@ GammaOpData::Params GammaOpData::getIdentityParameters(Style style)
     {
         case BASIC_FWD:
         case BASIC_REV:
+        case BASIC_MIRROR_FWD:
+        case BASIC_MIRROR_REV:
+        case BASIC_PASS_THRU_FWD:
+        case BASIC_PASS_THRU_REV:
         {
             params.push_back(IdentityScale);
             break;
         }
         case MONCURVE_FWD:
         case MONCURVE_REV:
+        case MONCURVE_MIRROR_FWD:
+        case MONCURVE_MIRROR_REV:
         {
             params.push_back(IdentityScale);
             params.push_back(IdentityOffset);
@@ -320,11 +482,17 @@ bool GammaOpData::isIdentityParameters(const Params & parameters, Style style)
     {
         case BASIC_FWD:
         case BASIC_REV:
+        case BASIC_MIRROR_FWD:
+        case BASIC_MIRROR_REV:
+        case BASIC_PASS_THRU_FWD:
+        case BASIC_PASS_THRU_REV:
         {
             return (parameters.size() == 1 && IsBasicIdentity(parameters));
         }
         case MONCURVE_FWD:
         case MONCURVE_REV:
+        case MONCURVE_MIRROR_FWD:
+        case MONCURVE_MIRROR_REV:
         {
             return (parameters.size() == 2 && IsMonCurveIdentity(parameters));
         }
@@ -343,7 +511,7 @@ bool GammaOpData::areAllComponentsEqual() const
     // Comparing floats is generally not a good idea, but in this case
     // it is ok to be strict.  Since the same operations are applied to
     // all components, if they started equal, they should remain equal.
-    return m_redParams == m_greenParams  &&  m_redParams == m_blueParams 
+    return m_redParams == m_greenParams  &&  m_redParams == m_blueParams
         && m_redParams == m_alphaParams;
 }
 
@@ -364,6 +532,10 @@ bool GammaOpData::isIdentity() const
     {
         case BASIC_FWD:
         case BASIC_REV:
+        case BASIC_MIRROR_FWD:
+        case BASIC_MIRROR_REV:
+        case BASIC_PASS_THRU_FWD:
+        case BASIC_PASS_THRU_REV:
         {
             if (areAllComponentsEqual() && IsBasicIdentity(m_redParams) )
             {
@@ -374,6 +546,8 @@ bool GammaOpData::isIdentity() const
 
         case MONCURVE_FWD:
         case MONCURVE_REV:
+        case MONCURVE_MIRROR_FWD:
+        case MONCURVE_MIRROR_REV:
         {
             if (areAllComponentsEqual() && IsMonCurveIdentity(m_redParams) )
             {
@@ -381,6 +555,7 @@ bool GammaOpData::isIdentity() const
             }
             break;
         }
+
     }
     return false;
 }
@@ -392,25 +567,67 @@ bool GammaOpData::isClamping() const
 
 bool GammaOpData::mayCompose(const GammaOpData & B) const
 {
-    // TODO: This hits the most likely scenario, but there are other cases
-    //       which technically could be combined (e.g. R & G params unequal).
-
-    // Note: Decided not to make this dependent upon bit depth.
-
     // NB: This also does not check bypass or dynamic.
 
-    if ( ! isNonChannelDependent() )
-        return false;
+    const auto styleA = getStyle();
+    const auto styleB = B.getStyle();
 
-    // At this point, we have R == G == B, and A == identity.
+    if (styleA == BASIC_FWD || styleA == BASIC_REV)
+    {
+        switch (styleB)
+        {
+        case BASIC_FWD:
+        case BASIC_REV:
+        case BASIC_MIRROR_FWD:
+        case BASIC_MIRROR_REV:
+        case BASIC_PASS_THRU_FWD:
+        case BASIC_PASS_THRU_REV:
+            return true;
+        case MONCURVE_FWD:
+        case MONCURVE_REV:
+        case MONCURVE_MIRROR_FWD:
+        case MONCURVE_MIRROR_REV:
+            return false;
+        }
+    }
+    else if (styleA == BASIC_MIRROR_FWD || styleA == BASIC_MIRROR_REV)
+    {
+        switch (styleB)
+        {
+        case BASIC_FWD:
+        case BASIC_REV:
+        case BASIC_MIRROR_FWD:
+        case BASIC_MIRROR_REV:
+            return true;
+        case BASIC_PASS_THRU_FWD:
+        case BASIC_PASS_THRU_REV:
+        case MONCURVE_FWD:
+        case MONCURVE_REV:
+        case MONCURVE_MIRROR_FWD:
+        case MONCURVE_MIRROR_REV:
+            return false;
+        }
+    }
+    else if (styleA == BASIC_PASS_THRU_FWD || styleA == BASIC_PASS_THRU_REV)
+    {
+        switch (styleB)
+        {
+        case BASIC_FWD:
+        case BASIC_REV:
+        case BASIC_PASS_THRU_FWD:
+        case BASIC_PASS_THRU_REV:
+            return true;
+        case BASIC_MIRROR_FWD:
+        case BASIC_MIRROR_REV:
+        case MONCURVE_FWD:
+        case MONCURVE_REV:
+        case MONCURVE_MIRROR_FWD:
+        case MONCURVE_MIRROR_REV:
+            return false;
+        }
+    }
 
-    if (getStyle() != BASIC_FWD && getStyle() != BASIC_REV)
-        return false;
-
-    if (B.getStyle() != BASIC_FWD && B.getStyle() != BASIC_REV)
-        return false;
-
-    return true;
+    return false;
 }
 
 OpDataRcPtr GammaOpData::getIdentityReplacement() const
@@ -433,14 +650,66 @@ OpDataRcPtr GammaOpData::getIdentityReplacement() const
         }
 
         // These pass through the full range of values -- replace with matrix.
+        case BASIC_MIRROR_FWD:
+        case BASIC_MIRROR_REV:
+        case BASIC_PASS_THRU_FWD:
+        case BASIC_PASS_THRU_REV:
         case MONCURVE_FWD:
         case MONCURVE_REV:
+        case MONCURVE_MIRROR_FWD:
+        case MONCURVE_MIRROR_REV:
         {
             op = std::make_shared<MatrixOpData>();
             break;
         }
     }
     return op;
+}
+
+namespace
+{
+GammaOpData::Style CombineBasicStyles(GammaOpData::Style a, GammaOpData::Style b)
+{
+    // This function assumes that mayCompose was called on the inputs and returned true.
+    // The logic here is only valid for that situation.
+    if (a == GammaOpData::BASIC_FWD || a == GammaOpData::BASIC_REV ||
+        b == GammaOpData::BASIC_FWD || b == GammaOpData::BASIC_REV)
+    {
+        return GammaOpData::BASIC_FWD;
+    }
+    else if (a == GammaOpData::BASIC_MIRROR_FWD || a == GammaOpData::BASIC_MIRROR_REV)
+    {
+        // b BASIC_MIRROR.
+        return GammaOpData::BASIC_MIRROR_FWD;
+    }
+    else // a is BASIC_PASS_THRU (ensured by mayCompose).
+    {
+        // b BASIC_PASS_THRU.
+        return GammaOpData::BASIC_PASS_THRU_FWD;
+    }
+}
+
+GammaOpData::Style InverseBasicStyle(GammaOpData::Style style)
+{
+    if (style == GammaOpData::BASIC_PASS_THRU_FWD)
+    {
+        return GammaOpData::BASIC_PASS_THRU_REV;
+    }
+    else if (style == GammaOpData::BASIC_MIRROR_FWD)
+    {
+        return GammaOpData::BASIC_MIRROR_REV;
+    }
+    return GammaOpData::BASIC_REV;
+}
+
+void RoundAround1(double & val)
+{
+    const double diff = fabs(val - 1.);
+    if (diff < 1e-6)
+    {
+        val = 1.;
+    }
+}
 }
 
 GammaOpDataRcPtr GammaOpData::compose(const GammaOpData & B) const
@@ -450,47 +719,67 @@ GammaOpDataRcPtr GammaOpData::compose(const GammaOpData & B) const
         throw Exception("GammaOp can only be combined with some GammaOps");
     }
 
-    // At this point, we have R == G == B, and A == identity
-    // and the style is either BASIC FWD or REV.
+    const auto styleA = getStyle();
+    const auto styleB = B.getStyle();
 
-    double g1 = getRedParams()[0];
-    if (getStyle() == BASIC_REV)
+    double r1 = getRedParams()[0];
+    double g1 = getGreenParams()[0];
+    double b1 = getBlueParams()[0];
+    double a1 = getAlphaParams()[0];
+
+    if (styleA == BASIC_REV || styleA == BASIC_MIRROR_REV || styleA == BASIC_PASS_THRU_FWD)
     {
+        r1 = 1. / r1;
         g1 = 1. / g1;
+        b1 = 1. / b1;
+        a1 = 1. / a1;
     }
 
-    double g2 = B.getRedParams()[0];
-    if (B.getStyle() == BASIC_REV)
+    double r2 = B.getRedParams()[0];
+    double g2 = B.getGreenParams()[0];
+    double b2 = B.getBlueParams()[0];
+    double a2 = B.getAlphaParams()[0];
+    if (styleB == BASIC_REV || styleB == BASIC_MIRROR_REV || styleB == BASIC_PASS_THRU_FWD)
     {
+        r2 = 1. / r2;
         g2 = 1. / g2;
+        b2 = 1. / b2;
+        a2 = 1. / a2;
     }
 
+    double rOut = r1 * r2;
     double gOut = g1 * g2;
-    Style style = BASIC_FWD;
-    // By convention, we try to keep the gamma parameter > 1.
-    if (gOut < 1.0)
-    {
-        gOut = 1. / gOut;
-        style = BASIC_REV;
-    }
+    double bOut = b1 * b2;
+    double aOut = a1 * a2;
 
     // Prevent small rounding errors from not making an identity.
     // E.g., 1/0.45 * 0.45 should have a value exactly 1.
-    const double diff = fabs( gOut - 1. );
-    if ( diff < 1e-6 )
+    RoundAround1(rOut);
+    RoundAround1(gOut);
+    RoundAround1(bOut);
+    RoundAround1(aOut);
+
+    Style style = CombineBasicStyles(styleA, styleB);
+
+    // By convention, we try to keep the gamma parameter > 1.
+    if (rOut < 1.0 && gOut < 1.0 && bOut < 1.0)
     {
-        gOut = 1.;
+        rOut = 1. / rOut;
+        gOut = 1. / gOut;
+        bOut = 1. / bOut;
+        aOut = 1. / aOut;
+        style = InverseBasicStyle(style);
     }
 
-    GammaOpData::Params params;
-    params.push_back(gOut);
-    GammaOpData::Params paramsA;
-    paramsA.push_back(1.);
+    GammaOpData::Params paramsR(1, rOut);
+    GammaOpData::Params paramsG(1, gOut);
+    GammaOpData::Params paramsB(1, bOut);
+    GammaOpData::Params paramsA(1, aOut);
 
     GammaOpDataRcPtr outOp = std::make_shared<GammaOpData>(style,
-                                                           params,
-                                                           params,
-                                                           params,
+                                                           paramsR,
+                                                           paramsG,
+                                                           paramsB,
                                                            paramsA);
 
     // TODO: May want to revisit how the metadata is set.
@@ -532,6 +821,58 @@ void GammaOpData::finalize()
     m_cacheID = cacheIDStream.str();
 }
 
+TransformDirection GammaOpData::getDirection() const
+{
+    switch (m_style)
+    {
+    case BASIC_FWD:
+    case BASIC_MIRROR_FWD:
+    case BASIC_PASS_THRU_FWD:
+    case MONCURVE_FWD:
+    case MONCURVE_MIRROR_FWD:
+        return TRANSFORM_DIR_FORWARD;
+
+    case BASIC_REV:
+    case BASIC_MIRROR_REV:
+    case BASIC_PASS_THRU_REV:
+    case MONCURVE_REV:
+    case MONCURVE_MIRROR_REV:
+        return TRANSFORM_DIR_INVERSE;
+    }
+
+    return TRANSFORM_DIR_FORWARD;
+}
+
+void GammaOpData::setDirection(TransformDirection dir)
+{
+    if (dir != TRANSFORM_DIR_UNKNOWN)
+    {
+        const auto curDir = getDirection();
+        if (curDir != dir)
+        {
+            invert();
+        }
+    }
+}
+
+void GammaOpData::invert()
+{
+    Style invStyle = BASIC_FWD;
+    switch (getStyle())
+    {
+    case BASIC_FWD:           invStyle = BASIC_REV;           break;
+    case BASIC_REV:           invStyle = BASIC_FWD;           break;
+    case BASIC_MIRROR_FWD:    invStyle = BASIC_MIRROR_REV;    break;
+    case BASIC_MIRROR_REV:    invStyle = BASIC_MIRROR_FWD;    break;
+    case BASIC_PASS_THRU_FWD: invStyle = BASIC_PASS_THRU_REV; break;
+    case BASIC_PASS_THRU_REV: invStyle = BASIC_PASS_THRU_FWD; break;
+    case MONCURVE_FWD:        invStyle = MONCURVE_REV;        break;
+    case MONCURVE_REV:        invStyle = MONCURVE_FWD;        break;
+    case MONCURVE_MIRROR_FWD: invStyle = MONCURVE_MIRROR_REV; break;
+    case MONCURVE_MIRROR_REV: invStyle = MONCURVE_MIRROR_FWD; break;
+    }
+    setStyle(invStyle);
+}
 
 } // namespace OCIO_NAMESPACE
 

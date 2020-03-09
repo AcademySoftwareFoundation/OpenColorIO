@@ -17,8 +17,11 @@ OCIO_ADD_TEST(RangeOpData, accessors)
     OCIO_CHECK_ASSERT(OCIO::IsNan((float)r.getMinOutValue()));
     OCIO_CHECK_ASSERT(OCIO::IsNan((float)r.getMaxOutValue()));
 
-    OCIO_CHECK_ASSERT(r.isNoOp());
+    // Empty range is not valid.
+    OCIO_CHECK_ASSERT(!r.isNoOp());
     OCIO_CHECK_ASSERT(r.isIdentity());
+    OCIO_CHECK_THROW_WHAT(r.validate(), OCIO::Exception,
+                          "At least minimum or maximum limits");
 
     double minVal = 1.0;
     double maxVal = 10.0;
@@ -64,20 +67,6 @@ OCIO_ADD_TEST(RangeOpData, accessors)
     OCIO_CHECK_CLOSE(range.getScale(), 1.804012123, g_error);
     OCIO_CHECK_CLOSE(range.getOffset(), 0.1523139385, g_error);
     }
-}
-
-OCIO_ADD_TEST(RangeOpData, validation)
-{
-    OCIO::RangeOpData r;
-
-    r.setMinInValue(16.);
-    r.setMaxInValue(235.);
-    // leave min output empty
-    r.setMaxOutValue(2.);
-
-    OCIO_CHECK_THROW_WHAT(r.validate(), 
-                          OCIO::Exception, 
-                          "must be both set or both missing");
 }
 
 OCIO_ADD_TEST(RangeOpData, range_identity)
@@ -127,15 +116,15 @@ OCIO_ADD_TEST(RangeOpData, range_identity)
 
 OCIO_ADD_TEST(RangeOpData, identity)
 {
-    OCIO::RangeOpData r4(OCIO::RangeOpData::EmptyValue(), 
-                         OCIO::RangeOpData::EmptyValue(), 
-                         OCIO::RangeOpData::EmptyValue(), 
+    OCIO::RangeOpData r4(0.,
+                         OCIO::RangeOpData::EmptyValue(),
+                         0.,
                          OCIO::RangeOpData::EmptyValue() );
     OCIO_CHECK_ASSERT(r4.isIdentity());
-    OCIO_CHECK_ASSERT(r4.isNoOp());
+    OCIO_CHECK_ASSERT(!r4.isNoOp());
     OCIO_CHECK_ASSERT(!r4.hasChannelCrosstalk());
     OCIO_CHECK_ASSERT(!r4.scales());
-    OCIO_CHECK_ASSERT(r4.minIsEmpty());
+    OCIO_CHECK_ASSERT(!r4.minIsEmpty());
     OCIO_CHECK_ASSERT(r4.maxIsEmpty());
 
     OCIO::RangeOpData r5(0., 1., 0., 1. );
@@ -176,22 +165,34 @@ OCIO_ADD_TEST(RangeOpData, equality)
     OCIO::RangeOpData r5(0., 1., -1., 1. );
 
     OCIO_CHECK_ASSERT(r5 == r1);
-
-    OCIO::RangeOpData r6(OCIO::RangeOpData::EmptyValue(),
-                         OCIO::RangeOpData::EmptyValue(),
-                         OCIO::RangeOpData::EmptyValue(),
-                         OCIO::RangeOpData::EmptyValue() );
-
-    OCIO::RangeOpData r7(OCIO::RangeOpData::EmptyValue(),
-                         OCIO::RangeOpData::EmptyValue(), 
-                         OCIO::RangeOpData::EmptyValue(),
-                         OCIO::RangeOpData::EmptyValue() );
-
-    OCIO_CHECK_ASSERT(r6 == r7);
 }
 
-OCIO_ADD_TEST(RangeOpData, faulty)
+OCIO_ADD_TEST(RangeOpData, validation)
 {
+    {
+        OCIO::RangeOpData r;
+
+        r.setMinInValue(16.);
+        r.setMaxInValue(235.);
+        // Leave min output empty.
+        r.setMaxOutValue(2.);
+
+        OCIO_CHECK_THROW_WHAT(r.validate(),
+                              OCIO::Exception,
+                              "must be both set or both missing");
+    }
+
+    {
+        OCIO::RangeOpData r;
+
+        r.setMinInValue(0.0);
+        r.setMinOutValue(0.00001);
+
+        OCIO_CHECK_THROW_WHAT(r.validate(),
+                              OCIO::Exception,
+                              "In and out minimum limits must be equal");
+    }
+
     {
         OCIO::RangeOpData range(0.0f, 1.0f, 0.5f, 1.5f);
         OCIO_CHECK_NO_THROW(range.validate());
@@ -208,6 +209,9 @@ OCIO_ADD_TEST(RangeOpData, faulty)
 
         OCIO_CHECK_NO_THROW(range.unsetMinInValue()); 
         OCIO_CHECK_NO_THROW(range.unsetMinOutValue()); 
+        OCIO_CHECK_THROW_WHAT(range.validate(), OCIO::Exception,
+                              "In and out maximum limits must be equal");
+        OCIO_CHECK_NO_THROW(range.setMaxInValue(range.getMaxOutValue()));
         OCIO_CHECK_NO_THROW(range.validate());
     }
 
@@ -227,6 +231,9 @@ OCIO_ADD_TEST(RangeOpData, faulty)
 
         OCIO_CHECK_NO_THROW(range.unsetMaxInValue()); 
         OCIO_CHECK_NO_THROW(range.unsetMaxOutValue()); 
+        OCIO_CHECK_THROW_WHAT(range.validate(), OCIO::Exception,
+                              "In and out minimum limits must be equal");
+        OCIO_CHECK_NO_THROW(range.setMinInValue(range.getMinOutValue()));
         OCIO_CHECK_NO_THROW(range.validate());
     }
 
@@ -303,21 +310,17 @@ void checkInverse(double fwdMinIn, double fwdMaxIn,
 
 OCIO_ADD_TEST(RangeOpData, inverse)
 {
-    checkInverse(OCIO::RangeOpData::EmptyValue(), OCIO::RangeOpData::EmptyValue(), 
-                 OCIO::RangeOpData::EmptyValue(), OCIO::RangeOpData::EmptyValue(),
-                 OCIO::RangeOpData::EmptyValue(), OCIO::RangeOpData::EmptyValue(),
-                 OCIO::RangeOpData::EmptyValue(), OCIO::RangeOpData::EmptyValue());
-
-    // Note: All the following result in scale != 1 and offset != 0.
-
-    checkInverse(OCIO::RangeOpData::EmptyValue(), 0.940, OCIO::RangeOpData::EmptyValue(), 0.235,
-                 OCIO::RangeOpData::EmptyValue(), 0.235, OCIO::RangeOpData::EmptyValue(), 0.940);
-
-    checkInverse(0.64, OCIO::RangeOpData::EmptyValue(), 0.16, OCIO::RangeOpData::EmptyValue(),
-                 0.16, OCIO::RangeOpData::EmptyValue(), 0.64, OCIO::RangeOpData::EmptyValue());
-
+    // Results in scale != 1 and offset != 0.
     checkInverse(0.064, 0.940, 0.032, 0.235,
                  0.032, 0.235, 0.064, 0.940);
+
+    // Note: All the following result in clipping only.
+
+    checkInverse(OCIO::RangeOpData::EmptyValue(), 0.235, OCIO::RangeOpData::EmptyValue(), 0.235,
+                 OCIO::RangeOpData::EmptyValue(), 0.235, OCIO::RangeOpData::EmptyValue(), 0.235);
+
+    checkInverse(0.64, OCIO::RangeOpData::EmptyValue(), 0.64, OCIO::RangeOpData::EmptyValue(),
+                 0.64, OCIO::RangeOpData::EmptyValue(), 0.64, OCIO::RangeOpData::EmptyValue());
 }
 
 OCIO_ADD_TEST(RangeOpData, compose)
@@ -354,35 +357,35 @@ OCIO_ADD_TEST(RangeOpData, compose)
 
     OCIO::ConstRangeOpDataRcPtr r7 = std::make_shared<OCIO::RangeOpData>(
         OCIO::RangeOpData::EmptyValue(), 0.5,
-        OCIO::RangeOpData::EmptyValue(), 1.0);
+        OCIO::RangeOpData::EmptyValue(), 0.5);
 
     res = r7->compose(r4);
-    OCIO_CHECK_EQUAL(res->getMinInValue(), -0.4);
+    OCIO_CHECK_EQUAL(res->getMinInValue(),  0.1);
     OCIO_CHECK_EQUAL(res->getMaxInValue(),  0.5);
     OCIO_CHECK_EQUAL(res->getMinOutValue(), 0.2);
-    OCIO_CHECK_CLOSE(res->getMaxOutValue(), 1.0, 1e-15);
+    OCIO_CHECK_CLOSE(res->getMaxOutValue(), (0.5 * 1.6 + 0.2 * 1.8 - 0.1 * 1.6) / 1.8, 1e-15);
 
     res = r4->compose(r7);
     OCIO_CHECK_EQUAL(res->getMinInValue(),  0.1);
     OCIO_CHECK_CLOSE(res->getMaxInValue(),  0.4375, 1e-15);
-    OCIO_CHECK_EQUAL(res->getMinOutValue(), 0.7);
-    OCIO_CHECK_EQUAL(res->getMaxOutValue(), 1.0);
+    OCIO_CHECK_EQUAL(res->getMinOutValue(), 0.2);
+    OCIO_CHECK_EQUAL(res->getMaxOutValue(), 0.5);
 
     OCIO::ConstRangeOpDataRcPtr r8 = std::make_shared<OCIO::RangeOpData>(
         0.5, OCIO::RangeOpData::EmptyValue(),
-        1.0, OCIO::RangeOpData::EmptyValue());
+        0.5, OCIO::RangeOpData::EmptyValue());
 
     res = r8->compose(r3);
     OCIO_CHECK_EQUAL(res->getMinInValue(),  0.5);
-    OCIO_CHECK_EQUAL(res->getMaxInValue(),  1.4);
-    OCIO_CHECK_EQUAL(res->getMinOutValue(), 1.0);
+    OCIO_CHECK_EQUAL(res->getMaxInValue(),  1.9);
+    OCIO_CHECK_EQUAL(res->getMinOutValue(), 0.5);
     OCIO_CHECK_EQUAL(res->getMaxOutValue(), 1.9);
 
     res = r4->compose(r8);
     OCIO_CHECK_CLOSE(res->getMinInValue(),  0.4375, 1e-15);
     OCIO_CHECK_EQUAL(res->getMaxInValue(),  1.9);
-    OCIO_CHECK_EQUAL(res->getMinOutValue(), 1.0);
-    OCIO_CHECK_EQUAL(res->getMaxOutValue(), 2.3);
+    OCIO_CHECK_EQUAL(res->getMinOutValue(), 0.5);
+    OCIO_CHECK_EQUAL(res->getMaxOutValue(), 1.8);
 
     OCIO::ConstRangeOpDataRcPtr r9 = std::make_shared<OCIO::RangeOpData>(1.1, 1.9, 1.2, 1.5);
     res = r1.compose(r9);
@@ -409,19 +412,12 @@ OCIO_ADD_TEST(RangeOpData, computed_identifier)
 
     OCIO_CHECK_NO_THROW( range.unsetMaxInValue() ); 
     OCIO_CHECK_NO_THROW( range.unsetMaxOutValue() ); 
+    OCIO_CHECK_NO_THROW( range.setMinOutValue(range.getMinInValue()) );
     OCIO_CHECK_NO_THROW( range.finalize() );
     OCIO_CHECK_NO_THROW( id2 = range.getCacheID() );
 
     OCIO_CHECK_ASSERT( id1 != id2 );
-
-    OCIO_CHECK_NO_THROW( range.unsetMinInValue() ); 
-    OCIO_CHECK_NO_THROW( range.unsetMinOutValue() ); 
-    OCIO_CHECK_NO_THROW( range.finalize() );
     OCIO_CHECK_NO_THROW( id1 = range.getCacheID() );
-
-    OCIO_CHECK_ASSERT( id1 != id2 );
-
-    OCIO_CHECK_NO_THROW( id2 = range.getCacheID() );
     OCIO_CHECK_ASSERT( id1 == id2 );
 }
 

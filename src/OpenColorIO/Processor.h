@@ -29,6 +29,8 @@ public:
     Impl();
     ~Impl();
 
+    Impl & operator=(const Impl & rhs);
+
     bool isNoOp() const;
     bool hasChannelCrosstalk() const;
 
@@ -43,6 +45,8 @@ public:
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
 
     const char * getCacheID() const;
+
+    void optimize(BitDepth inBD, BitDepth outBD, OptimizationFlags oFlags);
 
     GroupTransformRcPtr createGroupTransform() const;
 
@@ -72,14 +76,16 @@ public:
     // Builder functions, Not exposed
 
     void setColorSpaceConversion(const Config & config,
-                                    const ConstContextRcPtr & context,
-                                    const ConstColorSpaceRcPtr & srcColorSpace,
-                                    const ConstColorSpaceRcPtr & dstColorSpace);
+                                 const ConstContextRcPtr & context,
+                                 const ConstColorSpaceRcPtr & srcColorSpace,
+                                 const ConstColorSpaceRcPtr & dstColorSpace);
 
     void setTransform(const Config & config,
-                        const ConstContextRcPtr & context,
-                        const ConstTransformRcPtr& transform,
-                        TransformDirection direction);
+                      const ConstContextRcPtr & context,
+                      const ConstTransformRcPtr& transform,
+                      TransformDirection direction);
+
+    void concatenate(ConstProcessorRcPtr & p1, ConstProcessorRcPtr & p2);
 
     void computeMetadata();
 };

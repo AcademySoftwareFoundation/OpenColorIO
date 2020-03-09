@@ -41,7 +41,8 @@ TransformRcPtr ExponentWithLinearTransformImpl::createEditableCopy() const
 
 TransformDirection ExponentWithLinearTransformImpl::getDirection() const noexcept
 {
-    if (GammaOpData::MONCURVE_FWD == data().getStyle())
+    const auto style = data().getStyle();
+    if (GammaOpData::MONCURVE_FWD == style || GammaOpData::MONCURVE_MIRROR_FWD == style)
     {
         return TRANSFORM_DIR_FORWARD;
     }
@@ -53,14 +54,7 @@ TransformDirection ExponentWithLinearTransformImpl::getDirection() const noexcep
 
 void ExponentWithLinearTransformImpl::setDirection(TransformDirection dir) noexcept
 {
-    if (TRANSFORM_DIR_FORWARD == dir)
-    {
-        data().setStyle(GammaOpData::MONCURVE_FWD);
-    }
-    else
-    {
-        data().setStyle(GammaOpData::MONCURVE_REV);
-    }
+    data().setDirection(dir);
 }
 
 void ExponentWithLinearTransformImpl::validate() const
@@ -131,6 +125,18 @@ void ExponentWithLinearTransformImpl::getOffset(double(&values)[4]) const noexce
     values[3] = data().getAlphaParams().size()== 2 ? data().getAlphaParams()[1] : 0.;
 }
 
+NegativeStyle ExponentWithLinearTransformImpl::getNegativeStyle() const
+{
+    return GammaOpData::ConvertStyle(data().getStyle());
+}
+
+void ExponentWithLinearTransformImpl::setNegativeStyle(NegativeStyle style)
+{
+    const auto dir = getDirection();
+    auto styleOp = GammaOpData::ConvertStyleMonCurve(style, dir);
+    data().setStyle(styleOp);
+}
+
 std::ostream & operator<< (std::ostream & os, const ExponentWithLinearTransform & t)
 {
     os << "<ExponentWithLinearTransform ";
@@ -152,8 +158,13 @@ std::ostream & operator<< (std::ostream & os, const ExponentWithLinearTransform 
     for (int i = 1; i < 4; ++i)
     {
       os << " " << offset[i];
-    }   
+    }
 
+    auto style = t.getNegativeStyle();
+    if (style == NEGATIVE_MIRROR)
+    {
+        os << ", style=" << NegativeStyleToString(style);
+    }
     os << ">";
     return os;
 }

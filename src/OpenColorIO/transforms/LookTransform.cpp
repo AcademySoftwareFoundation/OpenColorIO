@@ -10,7 +10,6 @@
 #include "ops/noop/NoOps.h"
 #include "OpBuilders.h"
 #include "ParseUtils.h"
-#include "pystring/pystring.h"
 
 
 namespace OCIO_NAMESPACE
@@ -232,7 +231,7 @@ void RunLookTokens(OpRcPtrVec & ops,
             throw Exception(os.str().c_str());
         }
 
-        if(!IsOpVecNoOp(tmpOps))
+        if (!tmpOps.isNoOp())
         {
             if(!skipColorSpaceConversions)
             {

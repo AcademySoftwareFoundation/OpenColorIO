@@ -39,6 +39,9 @@ public:
     void getOffset(double(&values)[4]) const noexcept override;
     void setOffset(const double(&values)[4]) noexcept override;
 
+    NegativeStyle getNegativeStyle() const override;
+    void setNegativeStyle(NegativeStyle style) override;
+
     GammaOpData & data() noexcept { return m_data; }
     const GammaOpData & data() const noexcept { return m_data; }
 

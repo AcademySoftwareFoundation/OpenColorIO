@@ -80,15 +80,15 @@ void BuildOps(OpRcPtrVec & ops,
     {
         BuildExposureContrastOp(ops, config, *ecTransform, dir);
     }
-    else if(ConstFixedFunctionTransformRcPtr fixedFunctionTransform = \
-        DynamicPtrCast<const FixedFunctionTransform>(transform))
-    {
-        BuildFixedFunctionOp(ops, config, context, *fixedFunctionTransform, dir);
-    }
     else if(ConstFileTransformRcPtr fileTransform = \
         DynamicPtrCast<const FileTransform>(transform))
     {
         BuildFileTransformOps(ops, config, context, *fileTransform, dir);
+    }
+    else if (ConstFixedFunctionTransformRcPtr fixedFunctionTransform = \
+        DynamicPtrCast<const FixedFunctionTransform>(transform))
+    {
+        BuildFixedFunctionOp(ops, config, context, *fixedFunctionTransform, dir);
     }
     else if(ConstGroupTransformRcPtr groupTransform = \
         DynamicPtrCast<const GroupTransform>(transform))
@@ -99,6 +99,11 @@ void BuildOps(OpRcPtrVec & ops,
         DynamicPtrCast<const LogAffineTransform>(transform))
     {
         BuildLogOp(ops, config, *logAffineTransform, dir);
+    }
+    else if(ConstLogCameraTransformRcPtr logCameraTransform = \
+        DynamicPtrCast<const LogCameraTransform>(transform))
+    {
+        BuildLogOp(ops, config, *logCameraTransform, dir);
     }
     else if(ConstLogTransformRcPtr logTransform = \
         DynamicPtrCast<const LogTransform>(transform))
@@ -134,7 +139,7 @@ void BuildOps(OpRcPtrVec & ops,
     {
         std::ostringstream error;
         error << "Unknown transform type for creation: "
-                << typeid(transform).name();
+              << typeid(transform).name();
 
         throw Exception(error.str().c_str());
     }
@@ -169,6 +174,11 @@ std::ostream& operator<< (std::ostream & os, const Transform & transform)
     {
         os << *exponentTransform;
     }
+    else if (const ExponentWithLinearTransform * exponentLinearTransform = \
+        dynamic_cast<const ExponentWithLinearTransform*>(t))
+    {
+        os << *exponentLinearTransform;
+    }
     else if (const ExposureContrastTransform * ecTransform = \
         dynamic_cast<const ExposureContrastTransform*>(t))
     {
@@ -189,7 +199,17 @@ std::ostream& operator<< (std::ostream & os, const Transform & transform)
     {
         os << *groupTransform;
     }
-    else if(const LogTransform * logTransform = \
+    else if (const LogAffineTransform * logAffineTransform = \
+        dynamic_cast<const LogAffineTransform*>(t))
+    {
+        os << *logAffineTransform;
+    }
+    else if (const LogCameraTransform * logCamTransform = \
+        dynamic_cast<const LogCameraTransform*>(t))
+    {
+        os << *logCamTransform;
+    }
+    else if (const LogTransform * logTransform = \
         dynamic_cast<const LogTransform*>(t))
     {
         os << *logTransform;
@@ -236,7 +256,7 @@ std::ostream& operator<< (std::ostream & os, const Transform & transform)
 void CreateTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
 {
     // AllocationNoOp, FileNoOp, LookNoOp won't create a Transform.
-    if (!op || op->isNoOp())
+    if (!op || op->isNoOpType())
         return;
 
     auto data = op->data();

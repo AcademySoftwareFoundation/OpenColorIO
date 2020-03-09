@@ -5,17 +5,19 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include <yaml-cpp/yaml.h>
-
 #include "Display.h"
 #include "FileRules.h"
 #include "Logging.h"
 #include "MathUtils.h"
-#include "pystring/pystring.h"
-#include "PathUtils.h"
-#include "ParseUtils.h"
 #include "OCIOYaml.h"
 #include "ops/log/LogUtils.h"
+#include "ParseUtils.h"
+#include "PathUtils.h"
+#include "Platform.h"
+#include "pystring/pystring.h"
+#include "utils/StringUtils.h"
+#include "yaml-cpp/yaml.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -106,11 +108,11 @@ inline void load(const YAML::Node& node, std::string& x)
     }
 }
 
-inline void load(const YAML::Node & node, StringVec & x)
+inline void load(const YAML::Node & node, StringUtils::StringVec & x)
 {
     try
     {
-        x = node.as<StringVec>();
+        x = node.as<StringUtils::StringVec>();
     }
     catch (const std::exception & e)
     {
@@ -595,11 +597,22 @@ inline void load(const YAML::Node& node, ExponentTransformRcPtr& t)
 
         if (second.IsNull() || !second.IsDefined()) continue;
 
-        if(key == "value")
+        if (key == "value")
         {
             std::vector<double> val;
-            load(second, val);
-            if(val.size() != 4)
+            if (second.Type() == YAML::NodeType::Sequence)
+            {
+                load(second, val);
+            }
+            else
+            {
+                // If a single value is supplied...
+                double singleVal;
+                load(second, singleVal);
+                val.resize(4, singleVal);
+                val[3] = 1.0;
+            }
+            if (val.size() != 4)
             {
                 std::ostringstream os;
                 os << "'value' values must be 4 ";
@@ -608,6 +621,12 @@ inline void load(const YAML::Node& node, ExponentTransformRcPtr& t)
             }
             const double v[4] = { val[0], val[1], val[2], val[3] };
             t->setValue(v);
+        }
+        else if (key == "style")
+        {
+            std::string style;
+            load(second, style);
+            t->setNegativeStyle(NegativeStyleFromString(style.c_str()));
         }
         else if(key == "direction")
         {
@@ -629,12 +648,27 @@ inline void save(YAML::Emitter& out, ConstExponentTransformRcPtr t)
 
     double value[4];
     t->getValue(value);
-    std::vector<double> v;
-    v.assign(value, value + 4);
+    if (value[0] == value[1] && value[0] == value[2] && value[3] == 1.)
+    {
+        out << YAML::Key << "value" << YAML::Value << value[0];
+    }
+    else
+    {
+        std::vector<double> v;
+        v.assign(value, value + 4);
 
-    out << YAML::Key << "value";
-    out << YAML::Value << YAML::Flow << v;
+        out << YAML::Key << "value";
+        out << YAML::Value << YAML::Flow << v;
+    }
+
+    auto style = t->getNegativeStyle();
+    if (style != NEGATIVE_CLAMP)
+    {
+        out << YAML::Key << "style";
+        out << YAML::Value << YAML::Flow << NegativeStyleToString(style);
+    }
     EmitBaseTransformKeyValues(out, t);
+
     out << YAML::EndMap;
 }
 
@@ -666,11 +700,22 @@ inline void load(const YAML::Node& node, ExponentWithLinearTransformRcPtr& t)
 
         if (second.IsNull() || !second.IsDefined()) continue;
 
-        if(key == "gamma")
+        if (key == "gamma")
         {
             std::vector<double> val;
-            load(second, val);
-            if(val.size() != 4)
+            if (second.Type() == YAML::NodeType::Sequence)
+            {
+                load(second, val);
+            }
+            else
+            {
+                // If a single value is supplied...
+                double singleVal;
+                load(second, singleVal);
+                val.resize(4, singleVal);
+                val[3] = 1.0;
+            }
+            if (val.size() != 4)
             {
                 std::ostringstream os;
                 os << err 
@@ -686,8 +731,19 @@ inline void load(const YAML::Node& node, ExponentWithLinearTransformRcPtr& t)
         else if(key == "offset")
         {
             std::vector<double> val;
-            load(second, val);
-            if(val.size() != 4)
+            if (second.Type() == YAML::NodeType::Sequence)
+            {
+                load(second, val);
+            }
+            else
+            {
+                // If a single value is supplied...
+                double singleVal;
+                load(second, singleVal);
+                val.resize(4, singleVal);
+                val[3] = 0.0;
+            }
+            if (val.size() != 4)
             {
                 std::ostringstream os;
                 os << err 
@@ -699,6 +755,12 @@ inline void load(const YAML::Node& node, ExponentWithLinearTransformRcPtr& t)
             const double v[4] = { val[0], val[1], val[2], val[3] };
             t->setOffset(v);
             fields = FieldFound(fields|OFFSET_FOUND);
+        }
+        else if (key == "style")
+        {
+            std::string style;
+            load(second, style);
+            t->setNegativeStyle(NegativeStyleFromString(style.c_str()));
         }
         else if(key == "direction")
         {
@@ -741,17 +803,40 @@ inline void save(YAML::Emitter& out, ConstExponentWithLinearTransformRcPtr t)
 
     double gamma[4];
     t->getGamma(gamma);
-    v.assign(gamma, gamma + 4);
+    if (gamma[0] == gamma[1] && gamma[0] == gamma[2] && gamma[3] == 1.)
+    {
+        out << YAML::Key << "gamma" << YAML::Value << gamma[0];
+    }
+    else
+    {
+        v.assign(gamma, gamma + 4);
 
-    out << YAML::Key << "gamma";
-    out << YAML::Value << YAML::Flow << v;
+        out << YAML::Key << "gamma";
+        out << YAML::Value << YAML::Flow << v;
+    }
 
     double offset[4];
     t->getOffset(offset);
-    v.assign(offset, offset + 4);
+    
+    if (offset[0] == offset[1] && offset[0] == offset[2] && offset[3] == 0.)
+    {
+        out << YAML::Key << "offset" << YAML::Value << offset[0];
+    }
+    else
+    {
+        v.assign(offset, offset + 4);
 
-    out << YAML::Key << "offset";
-    out << YAML::Value << YAML::Flow << v;
+        out << YAML::Key << "offset";
+        out << YAML::Value << YAML::Flow << v;
+    }
+
+    // Only save style if not default
+    auto style = t->getNegativeStyle();
+    if (style != NEGATIVE_LINEAR)
+    {
+        out << YAML::Key << "style";
+        out << YAML::Value << YAML::Flow << NegativeStyleToString(style);
+    }
 
     EmitBaseTransformKeyValues(out, t);
     out << YAML::EndMap;
@@ -1128,12 +1213,13 @@ inline void save(YAML::Emitter& out, ConstGroupTransformRcPtr t)
 
 // LogAffineTransform
 
-inline void loadLogParam(const YAML::Node& node,
-                            double(&param)[3],
-                            const std::string & paramName)
+inline void loadLogParam(const YAML::Node & node,
+                         double(&param)[3],
+                         const std::string & paramName)
 {
     if (node.size() == 0)
     {
+        // If a single value is provided.
         double val = 0.0;
         load(node, val);
         param[0] = val;
@@ -1147,7 +1233,7 @@ inline void loadLogParam(const YAML::Node& node,
         if (val.size() != 3)
         {
             std::ostringstream os;
-            os << "LogAffineTransform parse error, " << paramName;
+            os << "LogAffine/CameraTransform parse error, " << paramName;
             os << " value field must have 3 components. Found '" << val.size() << "'.";
             throw Exception(os.str().c_str());
         }
@@ -1227,11 +1313,13 @@ inline void load(const YAML::Node& node, LogAffineTransformRcPtr& t)
 }
 
 inline void saveLogParam(YAML::Emitter& out, const double(&param)[3],
-                            double defaultVal, const char * paramName)
+                         double defaultVal, const char * paramName)
 {
-    // (See test in Config.cpp that verifies double precision is preserved.)
+    // (See test in Config_test.cpp that verifies double precision is preserved.)
     if (param[0] == param[1] && param[0] == param[2])
     {
+        // Set defaultVal to NaN if there is no default value. It will always write param,
+        // otherwise default params are not saved.
         if (param[0] != defaultVal)
         {
             out << YAML::Key << paramName << YAML::Value << param[0];
@@ -1268,6 +1356,137 @@ inline void save(YAML::Emitter& out, ConstLogAffineTransformRcPtr t)
     saveLogParam(out, logOffset, 0.0, "logSideOffset");
     saveLogParam(out, linSlope, 1.0, "linSideSlope");
     saveLogParam(out, linOffset, 0.0, "linSideOffset");
+
+    EmitBaseTransformKeyValues(out, t);
+    out << YAML::EndMap;
+}
+
+// LogCameraTransform
+
+inline void load(const YAML::Node & node, LogCameraTransformRcPtr & t)
+{
+    t = LogCameraTransform::Create();
+
+    std::string key;
+    double base = 2.0;
+    double logSlope[3] = { 1.0, 1.0, 1.0 };
+    double linSlope[3] = { 1.0, 1.0, 1.0 };
+    double linOffset[3] = { 0.0, 0.0, 0.0 };
+    double logOffset[3] = { 0.0, 0.0, 0.0 };
+    double linBreak[3] = { 0.0, 0.0, 0.0 };
+    double linearSlope[3] = { 1.0, 1.0, 1.0 };
+    bool linBreakFound = false;
+    bool linearSlopeFound = false;
+
+    for (const auto & iter : node)
+    {
+        const YAML::Node & first = iter.first;
+        const YAML::Node & second = iter.second;
+
+        load(first, key);
+
+        if (second.IsNull() || !second.IsDefined()) continue;
+
+        if (key == "base")
+        {
+            size_t nb = second.size();
+            if (nb == 0)
+            {
+                load(second, base);
+            }
+            else
+            {
+                std::ostringstream os;
+                os << "LogCameraTransform parse error, base must be a ";
+                os << "single double. Found " << nb << ".";
+                throw Exception(os.str().c_str());
+            }
+        }
+        else if (key == "linSideOffset")
+        {
+            loadLogParam(second, linOffset, key);
+        }
+        else if (key == "linSideSlope")
+        {
+            loadLogParam(second, linSlope, key);
+        }
+        else if (key == "logSideOffset")
+        {
+            loadLogParam(second, logOffset, key);
+        }
+        else if (key == "logSideSlope")
+        {
+            loadLogParam(second, logSlope, key);
+        }
+        else if (key == "linSideBreak")
+        {
+            linBreakFound = true;
+            loadLogParam(second, linBreak, key);
+        }
+        else if (key == "linearSlope")
+        {
+            linearSlopeFound = true;
+            loadLogParam(second, linearSlope, key);
+        }
+        else if (key == "direction")
+        {
+            TransformDirection val;
+            load(second, val);
+            t->setDirection(val);
+        }
+        else
+        {
+            LogUnknownKeyWarning(node, first);
+        }
+    }
+    if (!linBreakFound)
+    {
+        throw Exception("LogCameraTransform parse error: linSideBreak values are missing.");
+    }
+    t->setBase(base);
+    t->setLogSideSlopeValue(logSlope);
+    t->setLinSideSlopeValue(linSlope);
+    t->setLinSideOffsetValue(linOffset);
+    t->setLogSideOffsetValue(logOffset);
+    t->setLinSideBreakValue(linBreak);
+    if (linearSlopeFound)
+    {
+        t->setLinearSlopeValue(linearSlope);
+    }
+}
+
+inline void save(YAML::Emitter& out, ConstLogCameraTransformRcPtr t)
+{
+    out << YAML::VerbatimTag("LogCameraTransform");
+    out << YAML::Flow << YAML::BeginMap;
+
+    double logSlope[3] = { 1.0, 1.0, 1.0 };
+    double linSlope[3] = { 1.0, 1.0, 1.0 };
+    double linOffset[3] = { 0.0, 0.0, 0.0 };
+    double logOffset[3] = { 0.0, 0.0, 0.0 };
+    double linBreak[3] = { 0.0, 0.0, 0.0 };
+    double linearSlope[3] = { 1.0, 1.0, 1.0 };
+    t->getLogSideSlopeValue(logSlope);
+    t->getLogSideOffsetValue(logOffset);
+    t->getLinSideSlopeValue(linSlope);
+    t->getLinSideOffsetValue(linOffset);
+    t->getLinSideBreakValue(linBreak);
+    const bool hasLinearSlope = t->getLinearSlopeValue(linearSlope);
+
+    const double baseVal = t->getBase();
+    if (baseVal != 2.0)
+    {
+        out << YAML::Key << "base" << YAML::Value << baseVal;
+    }
+    saveLogParam(out, logSlope, 1.0, "logSideSlope");
+    saveLogParam(out, logOffset, 0.0, "logSideOffset");
+    saveLogParam(out, linSlope, 1.0, "linSideSlope");
+    saveLogParam(out, linOffset, 0.0, "linSideOffset");
+    saveLogParam(out, linBreak, std::numeric_limits<double>::quiet_NaN(), "linSideBreak");
+    if (hasLinearSlope)
+    {
+        saveLogParam(out, linearSlope, std::numeric_limits<double>::quiet_NaN(), "linearSlope");
+    }
 
     EmitBaseTransformKeyValues(out, t);
     out << YAML::EndMap;
@@ -1585,73 +1804,93 @@ void load(const YAML::Node& node, TransformRcPtr& t)
 
     std::string type = node.Tag();
 
-    if(type == "AllocationTransform") {
+    if(type == "AllocationTransform")
+    {
         AllocationTransformRcPtr temp;
         load(node, temp);
         t = temp;
     }
-    else if(type == "CDLTransform") {
+    else if(type == "CDLTransform")
+    {
         CDLTransformRcPtr temp;
         load(node, temp);
         t = temp;
     }
-    else if(type == "ColorSpaceTransform")  {
+    else if(type == "ColorSpaceTransform")
+    {
         ColorSpaceTransformRcPtr temp;
         load(node, temp);
         t = temp;
     }
     // TODO: DisplayTransform
-    else if(type == "ExponentTransform")  {
+    else if(type == "ExponentTransform")
+    {
         ExponentTransformRcPtr temp;
         load(node, temp);
         t = temp;
     }
-    else if (type == "ExponentWithLinearTransform") {
+    else if (type == "ExponentWithLinearTransform")
+    {
         ExponentWithLinearTransformRcPtr temp;
         load(node, temp);
         t = temp;
     }
-    else if (type == "ExposureContrastTransform") {
+    else if (type == "ExposureContrastTransform")
+    {
         ExposureContrastTransformRcPtr temp;
         load(node, temp);
         t = temp;
     }
-    else if(type == "FileTransform")  {
+    else if(type == "FileTransform")
+    {
         FileTransformRcPtr temp;
         load(node, temp);
         t = temp;
     }
-    else if(type == "FixedFunctionTransform")  {
+    else if(type == "FixedFunctionTransform")
+    {
         FixedFunctionTransformRcPtr temp;
         load(node, temp);
         t = temp;
     }
-    else if(type == "GroupTransform") {
+    else if(type == "GroupTransform")
+    {
         GroupTransformRcPtr temp;
         load(node, temp);
         t = temp;
     }
-    else if(type == "LogAffineTransform") {
+    else if(type == "LogAffineTransform")
+    {
         LogAffineTransformRcPtr temp;
         load(node, temp);
         t = temp;
     }
-    else if(type == "LogTransform") {
+    else if (type == "LogCameraTransform")
+    {
+        LogCameraTransformRcPtr temp;
+        load(node, temp);
+        t = temp;
+    }
+    else if(type == "LogTransform")
+    {
         LogTransformRcPtr temp;
         load(node, temp);
         t = temp;
     }
-    else if(type == "LookTransform") {
+    else if(type == "LookTransform")
+    {
         LookTransformRcPtr temp;
         load(node, temp);
         t = temp;
     }
-    else if(type == "MatrixTransform")  {
+    else if(type == "MatrixTransform")
+    {
         MatrixTransformRcPtr temp;
         load(node, temp);
         t = temp;
     }
-    else if(type == "RangeTransform")  {
+    else if(type == "RangeTransform")
+    {
         RangeTransformRcPtr temp;
         load(node, temp);
         t = temp;
@@ -1705,6 +1944,9 @@ void save(YAML::Emitter& out, ConstTransformRcPtr t)
         save(out, Group_tran);
     else if(ConstLogAffineTransformRcPtr Log_tran = \
         DynamicPtrCast<const LogAffineTransform>(t))
+        save(out, Log_tran);
+    else if (ConstLogCameraTransformRcPtr Log_tran = \
+        DynamicPtrCast<const LogCameraTransform>(t))
         save(out, Log_tran);
     else if(ConstLogTransformRcPtr Log_tran = \
         DynamicPtrCast<const LogTransform>(t))
@@ -1781,7 +2023,7 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs)
         }
         else if(key == "categories")
         {
-            StringVec categories;
+            StringUtils::StringVec categories;
             load(second, categories);
             for(auto name : categories)
             {
@@ -1839,7 +2081,7 @@ inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs)
 
     if(cs->getNumCategories() > 0)
     {
-        StringVec categories;
+        StringUtils::StringVec categories;
         for(int idx=0; idx<cs->getNumCategories(); ++idx)
         {
             categories.push_back(cs->getCategory(idx));
@@ -1966,7 +2208,7 @@ inline void save(YAML::Emitter& out, ConstLookRcPtr look)
 
 struct CustomKeysLoader
 {
-    StringVec m_keyVals;
+    StringUtils::StringVec m_keyVals;
 };
 
 inline void loadCustomKeys(const YAML::Node& node, CustomKeysLoader & ck)
@@ -1997,7 +2239,7 @@ inline void load(const YAML::Node & node, FileRulesRcPtr & fr, bool & defaultRul
 
     std::string key, stringval;
     std::string name, colorspace, pattern, extension, regex;
-    StringVec keyVals;
+    StringUtils::StringVec keyVals;
 
     for (const auto & iter : node)
     {
@@ -2048,7 +2290,7 @@ inline void load(const YAML::Node & node, FileRulesRcPtr & fr, bool & defaultRul
     try
     {
         const auto pos = fr->getNumEntries() - 1;
-        if (name == FileRuleUtils::DefaultName)
+        if (0==Platform::Strcasecmp(name.c_str(), FileRuleUtils::DefaultName))
         {
             if (!regex.empty() || !pattern.empty() || !extension.empty())
             {
@@ -2152,7 +2394,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
     {
         load(node["ocio_profile_version"], version);
 
-        pystring::split(version, results, ".");
+        results = StringUtils::Split(version, '.');
 
         if(results.size()==1)
         {
@@ -2253,7 +2495,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
             }
             else
             {
-                StringVec paths;
+                StringUtils::StringVec paths;
                 load(second, paths);
                 for (const auto & path : paths)
                 {
@@ -2350,7 +2592,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
                 load(it.first, display);
 
                 const YAML::Node& dsecond = it.second;
-                if(dsecond.Type() != YAML::NodeType::Sequence)
+                if (dsecond.Type() != YAML::NodeType::Sequence)
                 {
                     throwValueError(node.Tag(), first, "The view list is a sequence.");
                 }
@@ -2366,28 +2608,28 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
         }
         else if(key == "active_displays")
         {
-            StringVec display;
+            StringUtils::StringVec display;
             load(second, display);
             std::string displays = JoinStringEnvStyle(display);
             c->setActiveDisplays(displays.c_str());
         }
         else if(key == "active_views")
         {
-            StringVec view;
+            StringUtils::StringVec view;
             load(second, view);
             std::string views = JoinStringEnvStyle(view);
             c->setActiveViews(views.c_str());
         }
         else if(key == "inactive_colorspaces")
         {
-            StringVec inactiveCSs;
+            StringUtils::StringVec inactiveCSs;
             load(second, inactiveCSs);
             const std::string inactivecCSsStr = JoinStringEnvStyle(inactiveCSs);
             c->setInactiveColorSpaces(inactivecCSsStr.c_str());
         }
         else if(key == "colorspaces")
         {
-            if(second.Type() != YAML::NodeType::Sequence)
+            if (second.Type() != YAML::NodeType::Sequence)
             {
                 throwError(second, "'colorspaces' field needs to be a (- !<ColorSpace>) list.");
             }
@@ -2418,9 +2660,9 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
                 }
             }
         }
-        else if(key == "looks")
+        else if (key == "looks")
         {
-            if(second.Type() != YAML::NodeType::Sequence)
+            if (second.Type() != YAML::NodeType::Sequence)
             {
                 throwError(second, "'looks' field needs to be a (- !<Look>) list.");
             }
@@ -2544,7 +2786,7 @@ inline void save(YAML::Emitter& out, const Config* c)
     }
     else
     {
-        StringVec searchPaths;
+        StringUtils::StringVec searchPaths;
         const int numSP = c->getNumSearchPaths();
         for (int i = 0; i < c->getNumSearchPaths(); ++i)
         {
@@ -2646,12 +2888,12 @@ inline void save(YAML::Emitter& out, const Config* c)
     out << YAML::Newline;
     out << YAML::Newline;
     out << YAML::Key << "active_displays";
-    StringVec active_displays;
+    StringUtils::StringVec active_displays;
     if(c->getActiveDisplays() != NULL && strlen(c->getActiveDisplays()) > 0)
         SplitStringEnvStyle(active_displays, c->getActiveDisplays());
     out << YAML::Value << YAML::Flow << active_displays;
     out << YAML::Key << "active_views";
-    StringVec active_views;
+    StringUtils::StringVec active_views;
     if(c->getActiveViews() != NULL && strlen(c->getActiveViews()) > 0)
         SplitStringEnvStyle(active_views, c->getActiveViews());
     out << YAML::Value << YAML::Flow << active_views;
@@ -2659,7 +2901,7 @@ inline void save(YAML::Emitter& out, const Config* c)
     const std::string inactiveCSs = c->getInactiveColorSpaces();
     if (!inactiveCSs.empty())
     {
-        StringVec inactive_colorspaces;
+        StringUtils::StringVec inactive_colorspaces;
         SplitStringEnvStyle(inactive_colorspaces, inactiveCSs.c_str());
         out << YAML::Key << "inactive_colorspaces";
         out << YAML::Value << YAML::Flow << inactive_colorspaces;
