@@ -8,7 +8,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "PrivateTypes.h"
-#include "pystring/pystring.h"
+#include "utils/StringUtils.h"
 
 
 namespace OCIO_NAMESPACE
@@ -43,7 +43,7 @@ public:
     bool m_toRefSpecified;
     bool m_fromRefSpecified;
 
-    typedef StringVec Categories;
+    typedef StringUtils::StringVec Categories;
     Categories m_categories;
 
     Impl() :
@@ -93,11 +93,11 @@ public:
         if(!category || !*category) return m_categories.end();
 
         // NB: Categories are not case-sensitive and whitespace is stripped.
-        const std::string ref(pystring::strip(pystring::lower(category)));
+        const std::string ref(StringUtils::Trim(StringUtils::Lower(category)));
 
         for(auto itr = m_categories.begin(); itr!=m_categories.end(); ++itr)
         {
-            if(pystring::strip(pystring::lower(*itr))==ref)
+            if(StringUtils::Trim(StringUtils::Lower(*itr))==ref)
             {
                 return itr;
             }
@@ -111,11 +111,11 @@ public:
         if(!category || !*category) return;
 
         // NB: Categories are not case-sensitive and whitespace is stripped.
-        const std::string ref(pystring::strip(pystring::lower(category)));
+        const std::string ref(StringUtils::Trim(StringUtils::Lower(category)));
 
         for(auto itr = m_categories.begin(); itr!=m_categories.end(); ++itr)
         {
-            if(pystring::strip(pystring::lower(*itr))==ref)
+            if(StringUtils::Trim(StringUtils::Lower(*itr))==ref)
             {
                 m_categories.erase(itr);
                 return;
@@ -206,10 +206,9 @@ bool ColorSpace::hasCategory(const char * category) const
 
 void ColorSpace::addCategory(const char * category)
 {
-    if(getImpl()->findCategory(category) 
-        == getImpl()->m_categories.end())
+    if (getImpl()->findCategory(category) == getImpl()->m_categories.end())
     {
-        getImpl()->m_categories.push_back(pystring::strip(category));
+        getImpl()->m_categories.push_back(StringUtils::Trim(category));
     }
 }
 

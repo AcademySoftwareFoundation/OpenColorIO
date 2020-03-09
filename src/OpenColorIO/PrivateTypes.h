@@ -11,12 +11,12 @@
 #include <set>
 #include <vector>
 
+
 namespace OCIO_NAMESPACE
 {
 // Stl types of OCIO classes
 typedef std::map<std::string, std::string> StringMap;
 typedef std::map<std::string, bool> StringBoolMap;
-typedef std::vector<std::string> StringVec;
 typedef std::set<std::string> StringSet;
 
 typedef std::vector<ConstTransformRcPtr> ConstTransformVec;

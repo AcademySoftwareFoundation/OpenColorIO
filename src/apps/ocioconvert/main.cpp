@@ -38,11 +38,11 @@ namespace OIIO = OIIO_NAMESPACE;
 
 #include "argparse.h"
 
-// array of non openimageIO arguments
+// Array of non OpenColorIO arguments.
 static std::vector<std::string> args;
 
 
-// fill 'args' array with openimageIO arguments
+// Fill 'args' array with OpenColorIO arguments.
 static int
 parse_end_args(int argc, const char *argv[])
 {
