@@ -13,8 +13,9 @@
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ParseUtils.h"
-#include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
+#include "utils/StringUtils.h"
+
 
 // Discreet's Flame LUT Format
 // Use a loose interpretation of the format to allow other 3D LUTs that look
@@ -243,7 +244,7 @@ CachedFileRcPtr LocalFileFormat::read(
         const int MAX_LINE_SIZE = 4096;
         char lineBuffer[MAX_LINE_SIZE];
 
-        StringVec lineParts;
+        StringUtils::StringVec lineParts;
         std::vector<int> tmpData;
 
         int lineNumber = 0;
@@ -254,16 +255,16 @@ CachedFileRcPtr LocalFileFormat::read(
             ++lineNumber;
 
             // Strip and split the line.
-            pystring::split(pystring::strip(lineBuffer), lineParts);
+            lineParts = StringUtils::SplitByWhiteSpaces(StringUtils::Trim(lineBuffer));
 
             if(lineParts.empty()) continue;
             if (lineParts.size() > 0)
             {
-                if (pystring::startswith(lineParts[0], "#"))
+                if (StringUtils::StartsWith(lineParts[0], "#"))
                 {
                     continue;
                 }
-                if (pystring::startswith(lineParts[0], "<"))
+                if (StringUtils::StartsWith(lineParts[0], "<"))
                 {
                     // Format error: reject files that could be
                     // formatted as xml.

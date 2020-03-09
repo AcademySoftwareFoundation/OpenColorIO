@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include "ops/log/LogOpCPU.cpp"
 
 #include "UnitTest.h"
@@ -120,7 +121,7 @@ void TestAntiLog(float logBase)
         float expected = rgbaImage[i];
         if (!isAlpha)
         {
-            expected = powf(logBase, expected); 
+            expected = powf(logBase, expected);
         }
 
         // LogOpCPU implementation uses optimized logarithm approximation
@@ -207,17 +208,17 @@ OCIO_ADD_TEST(LogOpCPU, log2lin_test)
     redP[OCIO::LogUtil::CTFParams::shadow]    = 0.0004;
 
     auto & greenP = params.get(OCIO::LogUtil::CTFParams::green);
-    greenP[OCIO::LogUtil::CTFParams::gamma]     = 0.6;   
-    greenP[OCIO::LogUtil::CTFParams::refWhite]  = 684.;  
-    greenP[OCIO::LogUtil::CTFParams::refBlack]  = 94.;   
-    greenP[OCIO::LogUtil::CTFParams::highlight] = 0.9;   
+    greenP[OCIO::LogUtil::CTFParams::gamma]     = 0.6;
+    greenP[OCIO::LogUtil::CTFParams::refWhite]  = 684.;
+    greenP[OCIO::LogUtil::CTFParams::refBlack]  = 94.;
+    greenP[OCIO::LogUtil::CTFParams::highlight] = 0.9;
     greenP[OCIO::LogUtil::CTFParams::shadow]    = 0.0005;
 
     auto & blueP = params.get(OCIO::LogUtil::CTFParams::blue);
     blueP[OCIO::LogUtil::CTFParams::gamma]     = 0.65;
     blueP[OCIO::LogUtil::CTFParams::refWhite]  = 683.;
     blueP[OCIO::LogUtil::CTFParams::refBlack]  = 95.;
-    blueP[OCIO::LogUtil::CTFParams::highlight] = 1.0; 
+    blueP[OCIO::LogUtil::CTFParams::highlight] = 1.0;
     blueP[OCIO::LogUtil::CTFParams::shadow]    = 0.0003;
 
     params.m_style = OCIO::LogUtil::LOG_TO_LIN;
@@ -271,7 +272,7 @@ OCIO_ADD_TEST(LogOpCPU, log2lin_test)
 #else
     OCIO_CHECK_ASSERT(OCIO::IsNan(rgba[8]));
 #endif
-    
+
     OCIO_CHECK_EQUAL(rgba[11], 0.0f);
 
     OCIO_CHECK_CLOSE(rgba[12], res0, rtol);
@@ -338,24 +339,24 @@ OCIO_ADD_TEST(LogOpCPU, lin2log_test)
 
     OCIO::LogUtil::CTFParams params;
     auto & redP = params.get(OCIO::LogUtil::CTFParams::red);
-    redP[OCIO::LogUtil::CTFParams::gamma]     = 0.5;   
-    redP[OCIO::LogUtil::CTFParams::refWhite]  = 685.;  
-    redP[OCIO::LogUtil::CTFParams::refBlack]  = 93.;   
-    redP[OCIO::LogUtil::CTFParams::highlight] = 0.8;   
+    redP[OCIO::LogUtil::CTFParams::gamma]     = 0.5;
+    redP[OCIO::LogUtil::CTFParams::refWhite]  = 685.;
+    redP[OCIO::LogUtil::CTFParams::refBlack]  = 93.;
+    redP[OCIO::LogUtil::CTFParams::highlight] = 0.8;
     redP[OCIO::LogUtil::CTFParams::shadow]    = 0.0004;
 
     auto & greenP = params.get(OCIO::LogUtil::CTFParams::green);
-    greenP[OCIO::LogUtil::CTFParams::gamma]     = 0.6;   
-    greenP[OCIO::LogUtil::CTFParams::refWhite]  = 684.;  
-    greenP[OCIO::LogUtil::CTFParams::refBlack]  = 94.;   
-    greenP[OCIO::LogUtil::CTFParams::highlight] = 0.9;   
+    greenP[OCIO::LogUtil::CTFParams::gamma]     = 0.6;
+    greenP[OCIO::LogUtil::CTFParams::refWhite]  = 684.;
+    greenP[OCIO::LogUtil::CTFParams::refBlack]  = 94.;
+    greenP[OCIO::LogUtil::CTFParams::highlight] = 0.9;
     greenP[OCIO::LogUtil::CTFParams::shadow]    = 0.0005;
 
     auto & blueP = params.get(OCIO::LogUtil::CTFParams::blue);
     blueP[OCIO::LogUtil::CTFParams::gamma]     = 0.65;
     blueP[OCIO::LogUtil::CTFParams::refWhite]  = 683.;
     blueP[OCIO::LogUtil::CTFParams::refBlack]  = 95.;
-    blueP[OCIO::LogUtil::CTFParams::highlight] = 1.0; 
+    blueP[OCIO::LogUtil::CTFParams::highlight] = 1.0;
     blueP[OCIO::LogUtil::CTFParams::shadow]    = 0.0003;
 
     params.m_style = OCIO::LogUtil::LIN_TO_LOG;

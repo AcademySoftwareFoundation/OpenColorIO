@@ -11,7 +11,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "PrivateTypes.h"
-#include "pystring/pystring.h"
+#include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -24,18 +24,18 @@ public:
     virtual ~CategoriesManager() = default;
     CategoriesManager & operator=(const CategoriesManager &) = default;
 
-    typedef StringVec Categories;
+    typedef StringUtils::StringVec Categories;
 
     Categories::const_iterator findCategory(const char * category) const
     {
         if (!category || !*category) return m_categories.end();
 
         // NB: Categories are not case-sensitive and whitespace is stripped.
-        const std::string ref(pystring::strip(pystring::lower(category)));
+        const std::string ref(StringUtils::Trim(StringUtils::Lower(category)));
 
         for (auto itr = m_categories.begin(); itr != m_categories.end(); ++itr)
         {
-            if (pystring::strip(pystring::lower(*itr)) == ref)
+            if (StringUtils::Trim(StringUtils::Lower(*itr)) == ref)
             {
                 return itr;
             }
@@ -53,7 +53,7 @@ public:
     {
         if (findCategory(category) == m_categories.end())
         {
-            m_categories.push_back(pystring::strip(category));
+            m_categories.push_back(StringUtils::Trim(category));
         }
     }
 
@@ -62,11 +62,11 @@ public:
         if (!category || !*category) return;
 
         // NB: Categories are not case-sensitive and whitespace is stripped.
-        const std::string ref(pystring::strip(pystring::lower(category)));
+        const std::string ref(StringUtils::Trim(StringUtils::Lower(category)));
 
         for (auto itr = m_categories.begin(); itr != m_categories.end(); ++itr)
         {
-            if (pystring::strip(pystring::lower(*itr)) == ref)
+            if (StringUtils::Trim(StringUtils::Lower(*itr)) == ref)
             {
                 m_categories.erase(itr);
                 return;

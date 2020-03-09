@@ -8,8 +8,9 @@
 
 #include "ops/lut3d/Lut3DOp.h"
 #include "Platform.h"
-#include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
+#include "utils/StringUtils.h"
+
 
 /*
 SPILUT 1.0
@@ -78,7 +79,7 @@ CachedFileRcPtr LocalFileFormat::read(
 
     // Read header information
     istream.getline(lineBuffer, MAX_LINE_SIZE);
-    if(!pystring::startswith(pystring::lower(lineBuffer), "spilut"))
+    if(!StringUtils::StartsWith(StringUtils::Lower(lineBuffer), "spilut"))
     {
         std::ostringstream os;
         os << "Error parsing .spi3d file (";

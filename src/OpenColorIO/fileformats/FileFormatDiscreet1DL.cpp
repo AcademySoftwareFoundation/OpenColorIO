@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 #include <sstream>
 #include <iostream>
 
@@ -17,6 +18,7 @@
 #include "pystring/pystring.h"
 #include "Platform.h"
 #include "transforms/FileTransform.h"
+#include "utils/StringUtils.h"
 
 
 // This format is a 1D LUT format that was used by the Discreet (now Autodesk)
@@ -68,7 +70,7 @@ void ReplaceTabsAndStripSpaces(char * stringToStrip)
 
 void StripEndNewLine(char * stringToStrip)
 {
-    size_t length = strlen(stringToStrip);
+    size_t length = std::strlen(stringToStrip);
     if (length)
     {
         length--;
@@ -413,7 +415,7 @@ int Lut1dUtils::IMLutGet(
 #endif
         std::string subStr(InString, 5);
         if (nummatched < 2 ||
-            pystring::lower(subStr) != "lut: " ||
+            StringUtils::Lower(subStr) != "lut: " ||
             (numtables != 1 && numtables != 3 && numtables != 4) ||
             length <= 0)
         {
@@ -520,12 +522,12 @@ Lut1dUtils::IM_LutBitsPerChannel Lut1dUtils::IMLutGetBitDepthFromFileName(const 
         return IM_LUT_UNKNOWN_BITS_PERCHANNEL;
     }
 
-    std::string lowerFileName(pystring::lower(fileName));
+    std::string lowerFileName(StringUtils::Lower(fileName));
 
     // Get the export depth from the LUT name.  Look for a bit depth
     // after the "to" string. (ex: 12to10log).
     const char* tokenStr;
-    if ((tokenStr = strstr(lowerFileName.c_str(), "to")))
+    if ((tokenStr = std::strstr(lowerFileName.c_str(), "to")))
     {
         // Skip the "to";
         tokenStr += 2;

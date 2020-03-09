@@ -23,7 +23,7 @@ class ProcessorMetadata::Impl
 {
 public:
     StringSet files;
-    StringVec looks;
+    StringUtils::StringVec looks;
 
     Impl()
     { }

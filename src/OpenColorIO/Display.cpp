@@ -85,14 +85,14 @@ void AddDisplay(DisplayMap & displays,
     }
 }
 
-void ComputeDisplays(StringVec & displayCache,
+void ComputeDisplays(StringUtils::StringVec & displayCache,
                      const DisplayMap & displays,
-                     const StringVec & activeDisplays,
-                     const StringVec & activeDisplaysEnvOverride)
+                     const StringUtils::StringVec & activeDisplays,
+                     const StringUtils::StringVec & activeDisplaysEnvOverride)
 {
     displayCache.clear();
 
-    StringVec displayMasterList;
+    StringUtils::StringVec displayMasterList;
     for(DisplayMap::const_iterator iter = displays.begin();
         iter != displays.end();
         ++iter)

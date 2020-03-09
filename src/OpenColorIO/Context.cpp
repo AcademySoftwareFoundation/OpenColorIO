@@ -14,14 +14,16 @@
 #include "PathUtils.h"
 #include "PrivateTypes.h"
 #include "pystring/pystring.h"
+#include "utils/StringUtils.h"
+
 
 namespace OCIO_NAMESPACE
 {
 
 namespace
 {
-void GetAbsoluteSearchPaths(StringVec & searchpaths,
-                            const StringVec & pathStrings,
+void GetAbsoluteSearchPaths(StringUtils::StringVec & searchpaths,
+                            const StringUtils::StringVec & pathStrings,
                             const std::string & configRootDir,
                             const EnvMap & map);
 }
@@ -30,7 +32,7 @@ class Context::Impl
 {
 public:
     // New platform-agnostic search paths vector.
-    StringVec m_searchPaths;
+    StringUtils::StringVec m_searchPaths;
     // Original concatenated string search paths (keeping it for now to
     // avoid changes to the original API).
     std::string m_searchPath;
@@ -139,9 +141,8 @@ void Context::setSearchPath(const char * path)
 {
     AutoMutex lock(getImpl()->m_resultsCacheMutex);
 
-    pystring::split(path, getImpl()->m_searchPaths, ":");
-
-    getImpl()->m_searchPath = path;
+    getImpl()->m_searchPaths = StringUtils::Split(path, ':');
+    getImpl()->m_searchPath  = path;
     getImpl()->m_resultsCache.clear();
     getImpl()->m_cacheID = "";
 }
@@ -344,7 +345,7 @@ const char * Context::resolveFileLocation(const char * filename) const
     // Load a relative file reference
     // Prep the search path vector
     // TODO: Cache this prepped vector?
-    StringVec searchpaths;
+    StringUtils::StringVec searchpaths;
     GetAbsoluteSearchPaths(searchpaths,
                            getImpl()->m_searchPaths,
                            getImpl()->m_workingDir,
@@ -400,8 +401,8 @@ std::ostream& operator<< (std::ostream& os, const Context& context)
 
 namespace
 {
-void GetAbsoluteSearchPaths(StringVec & searchpaths,
-                            const StringVec & pathStrings,
+void GetAbsoluteSearchPaths(StringUtils::StringVec & searchpaths,
+                            const StringUtils::StringVec & pathStrings,
                             const std::string & workingDir,
                             const EnvMap & map)
 {
@@ -417,7 +418,7 @@ void GetAbsoluteSearchPaths(StringVec & searchpaths,
         std::string expanded = EnvExpand(pathStrings[i], map);
 
         // Remove trailing "/", and spaces
-        std::string dirname = pystring::rstrip(pystring::strip(expanded), "/");
+        std::string dirname = StringUtils::RightTrim(StringUtils::Trim(expanded), '/');
 
         if (!pystring::os::path::isabs(dirname))
         {

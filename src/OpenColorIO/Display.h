@@ -5,12 +5,15 @@
 #ifndef INCLUDED_OCIO_DISPLAY_H
 #define INCLUDED_OCIO_DISPLAY_H
 
+
 #include <string>
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "PrivateTypes.h"
+#include "utils/StringUtils.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -55,10 +58,10 @@ void AddDisplay(DisplayMap & displays,
                 const std::string & displayColorspace,
                 const std::string & looks);
 
-void ComputeDisplays(StringVec & displayCache,
+void ComputeDisplays(StringUtils::StringVec & displayCache,
                      const DisplayMap & displays,
-                     const StringVec & activeDisplays,
-                     const StringVec & activeDisplaysEnvOverride);
+                     const StringUtils::StringVec & activeDisplays,
+                     const StringUtils::StringVec & activeDisplaysEnvOverride);
 
 } // namespace OCIO_NAMESPACE
 

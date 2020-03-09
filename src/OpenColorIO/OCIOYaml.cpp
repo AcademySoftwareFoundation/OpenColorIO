@@ -5,18 +5,19 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include <yaml-cpp/yaml.h>
-
 #include "Display.h"
 #include "FileRules.h"
 #include "Logging.h"
 #include "MathUtils.h"
-#include "pystring/pystring.h"
-#include "PathUtils.h"
-#include "ParseUtils.h"
-#include "Platform.h"
 #include "OCIOYaml.h"
 #include "ops/log/LogUtils.h"
+#include "ParseUtils.h"
+#include "PathUtils.h"
+#include "Platform.h"
+#include "pystring/pystring.h"
+#include "utils/StringUtils.h"
+#include "yaml-cpp/yaml.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -107,11 +108,11 @@ inline void load(const YAML::Node& node, std::string& x)
     }
 }
 
-inline void load(const YAML::Node & node, StringVec & x)
+inline void load(const YAML::Node & node, StringUtils::StringVec & x)
 {
     try
     {
-        x = node.as<StringVec>();
+        x = node.as<StringUtils::StringVec>();
     }
     catch (const std::exception & e)
     {
@@ -2053,7 +2054,7 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs)
         }
         else if(key == "categories")
         {
-            StringVec categories;
+            StringUtils::StringVec categories;
             load(second, categories);
             for(auto name : categories)
             {
@@ -2141,7 +2142,7 @@ inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs)
 
     if(cs->getNumCategories() > 0)
     {
-        StringVec categories;
+        StringUtils::StringVec categories;
         for(int idx=0; idx<cs->getNumCategories(); ++idx)
         {
             categories.push_back(cs->getCategory(idx));
@@ -2358,7 +2359,7 @@ inline void load(const YAML::Node & node, ViewTransformRcPtr & vt)
         }
         else if (key == "categories")
         {
-            StringVec categories;
+            StringUtils::StringVec categories;
             load(second, categories);
             for (auto name : categories)
             {
@@ -2414,7 +2415,7 @@ inline void save(YAML::Emitter & out, ConstViewTransformRcPtr & vt)
 
     if (vt->getNumCategories() > 0)
     {
-        StringVec categories;
+        StringUtils::StringVec categories;
         for (int idx = 0; idx < vt->getNumCategories(); ++idx)
         {
             categories.push_back(vt->getCategory(idx));
@@ -2446,7 +2447,7 @@ inline void save(YAML::Emitter & out, ConstViewTransformRcPtr & vt)
 
 struct CustomKeysLoader
 {
-    StringVec m_keyVals;
+    StringUtils::StringVec m_keyVals;
 };
 
 inline void loadCustomKeys(const YAML::Node& node, CustomKeysLoader & ck)
@@ -2477,7 +2478,7 @@ inline void load(const YAML::Node & node, FileRulesRcPtr & fr, bool & defaultRul
 
     std::string key, stringval;
     std::string name, colorspace, pattern, extension, regex;
-    StringVec keyVals;
+    StringUtils::StringVec keyVals;
 
     for (const auto & iter : node)
     {
@@ -2632,7 +2633,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
     {
         load(node["ocio_profile_version"], version);
 
-        pystring::split(version, results, ".");
+        results = StringUtils::Split(version, '.');
 
         if(results.size()==1)
         {
@@ -2733,7 +2734,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
             }
             else
             {
-                StringVec paths;
+                StringUtils::StringVec paths;
                 load(second, paths);
                 for (const auto & path : paths)
                 {
@@ -2846,21 +2847,21 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
         }
         else if(key == "active_displays")
         {
-            StringVec display;
+            StringUtils::StringVec display;
             load(second, display);
             std::string displays = JoinStringEnvStyle(display);
             c->setActiveDisplays(displays.c_str());
         }
         else if(key == "active_views")
         {
-            StringVec view;
+            StringUtils::StringVec view;
             load(second, view);
             std::string views = JoinStringEnvStyle(view);
             c->setActiveViews(views.c_str());
         }
         else if(key == "inactive_colorspaces")
         {
-            StringVec inactiveCSs;
+            StringUtils::StringVec inactiveCSs;
             load(second, inactiveCSs);
             const std::string inactivecCSsStr = JoinStringEnvStyle(inactiveCSs);
             c->setInactiveColorSpaces(inactivecCSsStr.c_str());
@@ -3084,7 +3085,7 @@ inline void save(YAML::Emitter& out, const Config* c)
     }
     else
     {
-        StringVec searchPaths;
+        StringUtils::StringVec searchPaths;
         const int numSP = c->getNumSearchPaths();
         for (int i = 0; i < c->getNumSearchPaths(); ++i)
         {
@@ -3187,12 +3188,12 @@ inline void save(YAML::Emitter& out, const Config* c)
     out << YAML::Newline;
     out << YAML::Newline;
     out << YAML::Key << "active_displays";
-    StringVec active_displays;
+    StringUtils::StringVec active_displays;
     if(c->getActiveDisplays() != NULL && strlen(c->getActiveDisplays()) > 0)
         SplitStringEnvStyle(active_displays, c->getActiveDisplays());
     out << YAML::Value << YAML::Flow << active_displays;
     out << YAML::Key << "active_views";
-    StringVec active_views;
+    StringUtils::StringVec active_views;
     if(c->getActiveViews() != NULL && strlen(c->getActiveViews()) > 0)
         SplitStringEnvStyle(active_views, c->getActiveViews());
     out << YAML::Value << YAML::Flow << active_views;
@@ -3200,7 +3201,7 @@ inline void save(YAML::Emitter& out, const Config* c)
     const std::string inactiveCSs = c->getInactiveColorSpaces();
     if (!inactiveCSs.empty())
     {
-        StringVec inactive_colorspaces;
+        StringUtils::StringVec inactive_colorspaces;
         SplitStringEnvStyle(inactive_colorspaces, inactiveCSs.c_str());
         out << YAML::Key << "inactive_colorspaces";
         out << YAML::Value << YAML::Flow << inactive_colorspaces;

@@ -9,7 +9,9 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ParseUtils.h"
-#include "pystring/pystring.h"
+#include "Platform.h"
+#include "utils/StringUtils.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -102,7 +104,7 @@ const char * BoolToString(bool val)
 
 bool BoolFromString(const char * s)
 {
-    std::string str = pystring::lower(s);
+    const std::string str = StringUtils::Lower(s);
     if((str == "true") || (str=="yes")) return true;
     return false;
 }
@@ -118,7 +120,7 @@ const char * LoggingLevelToString(LoggingLevel level)
 
 LoggingLevel LoggingLevelFromString(const char * s)
 {
-    std::string str = pystring::lower(s);
+    const std::string str = StringUtils::Lower(s);
     if(str == "0" || str == "none") return LOGGING_LEVEL_NONE;
     else if(str == "1" || str == "warning") return LOGGING_LEVEL_WARNING;
     else if(str == "2" || str == "info") return LOGGING_LEVEL_INFO;
@@ -135,7 +137,7 @@ const char * TransformDirectionToString(TransformDirection dir)
 
 TransformDirection TransformDirectionFromString(const char * s)
 {
-    std::string str = pystring::lower(s);
+    const std::string str = StringUtils::Lower(s);
     if(str == "forward") return TRANSFORM_DIR_FORWARD;
     else if(str == "inverse") return TRANSFORM_DIR_INVERSE;
     return TRANSFORM_DIR_UNKNOWN;
@@ -173,7 +175,7 @@ const char * ColorSpaceDirectionToString(ColorSpaceDirection dir)
 
 ColorSpaceDirection ColorSpaceDirectionFromString(const char * s)
 {
-    std::string str = pystring::lower(s);
+    const std::string str = StringUtils::Lower(s);
     if(str == "to_reference") return COLORSPACE_DIR_TO_REFERENCE;
     else if(str == "from_reference") return COLORSPACE_DIR_FROM_REFERENCE;
     return COLORSPACE_DIR_UNKNOWN;
@@ -194,7 +196,7 @@ const char * BitDepthToString(BitDepth bitDepth)
 
 BitDepth BitDepthFromString(const char * s)
 {
-    std::string str = pystring::lower(s);
+    const std::string str = StringUtils::Lower(s);
     if(str == "8ui") return BIT_DEPTH_UINT8;
     else if(str == "10ui") return BIT_DEPTH_UINT10;
     else if(str == "12ui") return BIT_DEPTH_UINT12;
@@ -234,7 +236,7 @@ const char * AllocationToString(Allocation alloc)
 
 Allocation AllocationFromString(const char * s)
 {
-    std::string str = pystring::lower(s);
+    const std::string str = StringUtils::Lower(s);
     if(str == "uniform") return ALLOCATION_UNIFORM;
     else if(str == "lg2") return ALLOCATION_LG2;
     return ALLOCATION_UNKNOWN;
@@ -252,7 +254,7 @@ const char * InterpolationToString(Interpolation interp)
 
 Interpolation InterpolationFromString(const char * s)
 {
-    std::string str = pystring::lower(s);
+    const std::string str = StringUtils::Lower(s);
     if(str == "nearest") return INTERP_NEAREST;
     else if(str == "linear") return INTERP_LINEAR;
     else if(str == "tetrahedral") return INTERP_TETRAHEDRAL;
@@ -272,7 +274,7 @@ const char * GpuLanguageToString(GpuLanguage language)
 
 GpuLanguage GpuLanguageFromString(const char * s)
 {
-    std::string str = pystring::lower(s);
+    const std::string str = StringUtils::Lower(s);
     if(str == "cg") return GPU_LANGUAGE_CG;
     else if(str == "glsl_1.0") return GPU_LANGUAGE_GLSL_1_0;
     else if(str == "glsl_1.3") return GPU_LANGUAGE_GLSL_1_3;
@@ -290,7 +292,7 @@ const char * EnvironmentModeToString(EnvironmentMode mode)
 
 EnvironmentMode EnvironmentModeFromString(const char * s)
 {
-    std::string str = pystring::lower(s);
+    const std::string str = StringUtils::Lower(s);
     if(str == "loadpredefined") return ENV_ENVIRONMENT_LOAD_PREDEFINED;
     else if(str == "loadall") return ENV_ENVIRONMENT_LOAD_ALL;
     return ENV_ENVIRONMENT_UNKNOWN;
@@ -307,7 +309,7 @@ RangeStyle RangeStyleFromString(const char * style)
 {
     if(style && *style)
     {
-        const std::string str = pystring::lower(style);
+        const std::string str = StringUtils::Lower(style);
         if(str == "noclamp") return RANGE_NO_CLAMP;
         else if(str == "clamp") return RANGE_CLAMP;
     }
@@ -340,7 +342,7 @@ const char * FixedFunctionStyleToString(FixedFunctionStyle style)
 
 FixedFunctionStyle FixedFunctionStyleFromString(const char * style)
 {
-    std::string str = pystring::lower(style);
+    const std::string str = StringUtils::Lower(style);
 
     if(str == "aces_redmod03")           return FIXED_FUNCTION_ACES_RED_MOD_03;
     else if(str == "aces_redmod10")      return FIXED_FUNCTION_ACES_RED_MOD_10;
@@ -382,7 +384,7 @@ const char * ExposureContrastStyleToString(ExposureContrastStyle style)
 
 ExposureContrastStyle ExposureContrastStyleFromString(const char * style)
 {
-    std::string str = pystring::lower(style);
+    const std::string str = StringUtils::Lower(style);
 
     if      (str == EC_STYLE_LINEAR)      return EXPOSURE_CONTRAST_LINEAR;
     else if (str == EC_STYLE_VIDEO)       return EXPOSURE_CONTRAST_VIDEO;
@@ -418,7 +420,7 @@ const char * NegativeStyleToString(NegativeStyle style)
 
 NegativeStyle NegativeStyleFromString(const char * style)
 {
-    std::string str = pystring::lower(style);
+    const std::string str = StringUtils::Lower(style);
 
     if (str == NEGATIVE_STYLE_MIRROR)         return NEGATIVE_MIRROR;
     else if (str == NEGATIVE_STYLE_PASS_THRU) return NEGATIVE_PASS_THRU;
@@ -520,7 +522,7 @@ std::string DoubleVecToString(const double * val, unsigned int size)
 }
 
 bool StringVecToFloatVec(std::vector<float> &floatArray,
-                            const StringVec &lineParts)
+                         const StringUtils::StringVec &lineParts)
 {
     floatArray.resize(lineParts.size());
 
@@ -542,7 +544,7 @@ bool StringVecToFloatVec(std::vector<float> &floatArray,
 // Returns true if all lineParts have been recognized as int.
 // Content of intArray will be unknown if function returns false.
 bool StringVecToIntVec(std::vector<int> &intArray,
-                        const StringVec &lineParts)
+                       const StringUtils::StringVec &lineParts)
 {
     intArray.resize(lineParts.size());
 
@@ -576,7 +578,7 @@ bool nextline(std::istream &istream, std::string &line)
         {
             line.resize(line.size() - 1);
         }
-        if(!pystring::strip(line).empty())
+        if(!StringUtils::Trim(line).empty())
         {
             return true;
         }
@@ -588,7 +590,7 @@ bool nextline(std::istream &istream, std::string &line)
 
 bool StrEqualsCaseIgnore(const std::string & a, const std::string & b)
 {
-    return (pystring::lower(a) == pystring::lower(b));
+    return 0 == Platform::Strcasecmp(a.c_str(), b.c_str());
 }
 
 // If a ',' is in the string, split on it
@@ -596,68 +598,68 @@ bool StrEqualsCaseIgnore(const std::string & a, const std::string & b)
 // Otherwise, assume a single string.
 // Also, strip whitespace from all parts.
 
-void SplitStringEnvStyle(StringVec & outputvec, const char * str)
+void SplitStringEnvStyle(StringUtils::StringVec & outputvec, const char * str)
 {
-    if(!str) return;
+    if (!str) return;
 
-    std::string s = pystring::strip(str);
-    if(pystring::find(s, ",") > -1)
+    const std::string s = StringUtils::Trim(str);
+    if (StringUtils::Find(s, ",") != std::string::npos)
     {
-        pystring::split(s, outputvec, ",");
+        outputvec = StringUtils::Split(s, ',');
     }
-    else if(pystring::find(s, ":") > -1)
+    else if (StringUtils::Find(s, ":") != std::string::npos)
     {
-        pystring::split(s, outputvec, ":");
+        outputvec = StringUtils::Split(s, ':');
     }
     else
     {
         outputvec.push_back(s);
     }
 
-    for(unsigned int i=0; i<outputvec.size(); ++i)
+    for (auto & val : outputvec)
     {
-        outputvec[i] = pystring::strip(outputvec[i]);
+        val = StringUtils::Trim(val);
     }
 }
 
-std::string JoinStringEnvStyle(const StringVec & outputvec)
+std::string JoinStringEnvStyle(const StringUtils::StringVec & outputvec)
 {
-    return pystring::join(", ", outputvec);
+    return StringUtils::Join(", ", outputvec);
 }
 
 // Return a vector of strings that are both in vec1 and vec2.
 // Case is ignored to find strings.
 // Ordering and capitalization from vec1 are preserved.
-StringVec IntersectStringVecsCaseIgnore(const StringVec & vec1,
-                                        const StringVec & vec2)
+StringUtils::StringVec IntersectStringVecsCaseIgnore(const StringUtils::StringVec & vec1,
+                                                     const StringUtils::StringVec & vec2)
 {
-    StringVec newvec;
+    StringUtils::StringVec newvec;
     std::set<std::string> allvalues;
 
     // Seed the set with all values from vec2
-    for(unsigned int i=0; i<vec2.size(); ++i)
+    for (const auto & val : vec2)
     {
-        allvalues.insert(pystring::lower(vec2[i]));
+        allvalues.insert(StringUtils::Lower(val));
     }
 
-    for(unsigned int i=0; i<vec1.size(); ++i)
+    for (const auto & val : vec1)
     {
-        std::string key = pystring::lower(vec1[i]);
+        const std::string key = StringUtils::Lower(val);
         if(allvalues.find(key) != allvalues.end())
         {
-            newvec.push_back(vec1[i]);
+            newvec.push_back(val);
         }
     }
 
     return newvec;
 }
 
-int FindInStringVecCaseIgnore(const StringVec & vec, const std::string & str)
+int FindInStringVecCaseIgnore(const StringUtils::StringVec & vec, const std::string & str)
 {
-    std::string teststr = pystring::lower(str);
+    const std::string teststr = StringUtils::Lower(str);
     for(unsigned int i=0; i<vec.size(); ++i)
     {
-        if(pystring::lower(vec[i]) == teststr) return static_cast<int>(i);
+        if(StringUtils::Lower(vec[i]) == teststr) return static_cast<int>(i);
     }
 
     return -1;

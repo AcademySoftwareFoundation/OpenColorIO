@@ -23,6 +23,7 @@
 #include "Platform.h"
 #include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
+#include "utils/StringUtils.h"
 
 
 /*
@@ -172,7 +173,7 @@ public:
 
         std::string root, extension;
         pystring::os::path::splitext(root, extension, m_fileName);
-        m_isCLF = pystring::lower(extension) == ".clf";
+        m_isCLF = StringUtils::Lower(extension) == ".clf";
     }
 
     ~XMLParserHelper()
