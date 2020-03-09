@@ -598,8 +598,8 @@ public:
 
     //!cpp:function:: Most applications will use the preceding method, but this method may be
     // used for applications that want to know which was the highest priority rule to match
-    // filePath.  The getNumCustomKeys(ruleIndex) and custom keys methods may then be used
-    // to get additional information about the matching rule.
+    // filePath.  The :cpp:func:`FileRules::getNumCustomKeys(ruleIndex)` and custom keys methods
+    // may then be used to get additional information about the matching rule.
     const char * getColorSpaceFromFilepath(const char * filePath, size_t & ruleIndex) const;
 
     // !cpp:function:: Returns true if the only rule matched by filePath is the default rule.
