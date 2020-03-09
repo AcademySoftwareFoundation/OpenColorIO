@@ -4,10 +4,13 @@
 #include "ops/fixedfunction/FixedFunctionOp.cpp"
 
 #include "MathUtils.h"
-#include "pystring/pystring.h"
+#include "utils/StringUtils.h"
+
 #include "UnitTest.h"
 
+
 namespace OCIO = OCIO_NAMESPACE;
+
 
 OCIO_ADD_TEST(FixedFunctionOp, basic)
 {
@@ -46,7 +49,7 @@ OCIO_ADD_TEST(FixedFunctionOp, glow03_cpu_engine)
     OCIO::ConstOpCPURcPtr cpuOp = func.getCPUOp();
     const OCIO::OpCPU & c = *cpuOp;
     const std::string typeName(typeid(c).name());
-    OCIO_CHECK_NE(-1, pystring::find(typeName, "Renderer_ACES_Glow03_Fwd"));
+    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_ACES_Glow03_Fwd"));
 }
 
 OCIO_ADD_TEST(FixedFunctionOp, darktodim10_cpu_engine)
@@ -65,7 +68,7 @@ OCIO_ADD_TEST(FixedFunctionOp, darktodim10_cpu_engine)
     OCIO::ConstOpCPURcPtr cpuOp = func.getCPUOp();
     const OCIO::OpCPU & c = *cpuOp;
     const std::string typeName(typeid(c).name());
-    OCIO_CHECK_NE(-1, pystring::find(typeName, "Renderer_ACES_DarkToDim10_Fwd"));
+    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_ACES_DarkToDim10_Fwd"));
 }
 
 OCIO_ADD_TEST(FixedFunctionOp, aces_red_mod_inv)
@@ -257,7 +260,7 @@ OCIO_ADD_TEST(FixedFunctionOps, RGB_TO_HSV)
     OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp();
     const OCIO::OpCPU & c = *cpuOp;
     const std::string typeName(typeid(c).name());
-    OCIO_CHECK_NE(-1, pystring::find(typeName, "Renderer_RGB_TO_HSV"));
+    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_RGB_TO_HSV"));
 }
 
 OCIO_ADD_TEST(FixedFunctionOps, XYZ_TO_xyY)
@@ -283,7 +286,7 @@ OCIO_ADD_TEST(FixedFunctionOps, XYZ_TO_xyY)
     OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp();
     const OCIO::OpCPU & c = *cpuOp;
     const std::string typeName(typeid(c).name());
-    OCIO_CHECK_NE(-1, pystring::find(typeName, "Renderer_XYZ_TO_xyY"));
+    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_XYZ_TO_xyY"));
 }
 
 OCIO_ADD_TEST(FixedFunctionOps, XYZ_TO_uvY)
@@ -309,7 +312,7 @@ OCIO_ADD_TEST(FixedFunctionOps, XYZ_TO_uvY)
     OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp();
     const OCIO::OpCPU & c = *cpuOp;
     const std::string typeName(typeid(c).name());
-    OCIO_CHECK_NE(-1, pystring::find(typeName, "Renderer_XYZ_TO_uvY"));
+    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_XYZ_TO_uvY"));
 }
 
 OCIO_ADD_TEST(FixedFunctionOps, XYZ_TO_LUV)
@@ -335,5 +338,5 @@ OCIO_ADD_TEST(FixedFunctionOps, XYZ_TO_LUV)
     OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp();
     const OCIO::OpCPU & c = *cpuOp;
     const std::string typeName(typeid(c).name());
-    OCIO_CHECK_NE(-1, pystring::find(typeName, "Renderer_XYZ_TO_LUV"));
+    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_XYZ_TO_LUV"));
 }

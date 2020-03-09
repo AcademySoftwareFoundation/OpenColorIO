@@ -15,6 +15,8 @@
 #include "PathUtils.h"
 #include "Platform.h"
 #include "pystring/pystring.h"
+#include "utils/StringUtils.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -224,22 +226,21 @@ FormatRegistry::~FormatRegistry()
 {
 }
 
-FileFormat* FormatRegistry::getFileFormatByName(
-    const std::string & name) const
+FileFormat* FormatRegistry::getFileFormatByName(const std::string & name) const
 {
-    FileFormatMap::const_iterator iter = m_formatsByName.find(
-        pystring::lower(name));
+    FileFormatMap::const_iterator iter = m_formatsByName.find(StringUtils::Lower(name));
     if(iter != m_formatsByName.end())
         return iter->second;
-    return NULL;
+
+    return nullptr;
 }
 
-void FormatRegistry::getFileFormatForExtension(
-    const std::string & extension,
-    FileFormatVector & possibleFormats) const
+void FormatRegistry::getFileFormatForExtension(const std::string & extension,
+                                               FileFormatVector & possibleFormats) const
 {
-    FileFormatVectorMap::const_iterator iter = m_formatsByExtension.find(
-        pystring::lower(extension));
+    FileFormatVectorMap::const_iterator iter
+        = m_formatsByExtension.find(StringUtils::Lower(extension));
+
     if(iter != m_formatsByExtension.end())
         possibleFormats = iter->second;
 }
@@ -276,7 +277,7 @@ void FormatRegistry::registerFileFormat(FileFormat* format)
             throw Exception(os.str().c_str());
         }
 
-        m_formatsByName[pystring::lower(formatInfoVec[i].name)] = format;
+        m_formatsByName[StringUtils::Lower(formatInfoVec[i].name)] = format;
 
         m_formatsByExtension[formatInfoVec[i].extension].push_back(format);
 
