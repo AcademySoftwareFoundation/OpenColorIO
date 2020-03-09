@@ -9,7 +9,7 @@
 #include "GpuShaderUtils.h"
 #include "MathUtils.h"
 #include "ops/lut1d/Lut1DOpGPU.h"
-#include "pystring/pystring.h"
+#include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -106,7 +106,8 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
             << shaderCreator->getNextResourceIndex();
 
     // Note: Remove potentially problematic double underscores from GLSL resource names.
-    const std::string name(pystring::replace(resName.str(), "__", "_"));
+    std::string name(resName.str());
+    StringUtils::ReplaceInPlace(name, "__", "_");
 
     shaderCreator->addTexture(name.c_str(),
                               GpuShaderText::getSamplerName(name).c_str(),

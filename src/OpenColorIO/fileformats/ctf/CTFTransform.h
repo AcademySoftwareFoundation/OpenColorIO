@@ -5,6 +5,7 @@
 #ifndef INCLUDED_OCIO_FILEFORMATS_CTF_CTFTRANSFORM_H
 #define INCLUDED_OCIO_FILEFORMATS_CTF_CTFTRANSFORM_H
 
+
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -12,6 +13,8 @@
 #include "fileformats/FormatMetadata.h"
 #include "fileformats/xmlutils/XMLWriterUtils.h"
 #include "Op.h"
+#include "utils/StringUtils.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -176,11 +179,11 @@ public:
     {
         return m_ops;
     }
-    const StringVec & getDescriptions() const
+    const StringUtils::StringVec & getDescriptions() const
     {
         return m_descriptions;
     }
-    StringVec & getDescriptions()
+    StringUtils::StringVec & getDescriptions()
     {
         return m_descriptions;
     }
@@ -234,7 +237,7 @@ private:
     FormatMetadataImpl m_infoMetadata;
 
     ConstOpDataVec m_ops;
-    StringVec m_descriptions;
+    StringUtils::StringVec m_descriptions;
 
     // CTF version used even for CLF files.
     // CLF versions <= 2.0 are interpreted as CTF version 1.7.
@@ -279,7 +282,8 @@ private:
 // Helper function to extract the values of FormatMetadata elements with a
 // given name. Used to get Description values.
 void GetElementsValues(const FormatMetadataImpl::Elements & elements,
-                       const std::string & name, StringVec & values);
+                       const std::string & name, 
+                       StringUtils::StringVec & values);
 
 } // namespace OCIO_NAMESPACE
 

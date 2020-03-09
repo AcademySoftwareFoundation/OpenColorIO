@@ -194,7 +194,9 @@ bool CTFReaderTransform::isCLF() const
     return !(m_versionCLF == CTFVersion(0, 0));
 }
 
-void GetElementsValues(const FormatMetadataImpl::Elements & elements, const std::string & name, StringVec & values)
+void GetElementsValues(const FormatMetadataImpl::Elements & elements, 
+                       const std::string & name,
+                       StringUtils::StringVec & values)
 {
     for (auto & element : elements)
     {
@@ -446,7 +448,7 @@ void CTFReaderTransform::toMetadata(FormatMetadataImpl & metadata) const
 
 namespace
 {
-void WriteDescriptions(XmlFormatter & fmt, const char * tag, const StringVec & descriptions)
+void WriteDescriptions(XmlFormatter & fmt, const char * tag, const StringUtils::StringVec & descriptions)
 {
     for (auto & it : descriptions)
     {
@@ -644,7 +646,7 @@ void OpWriter::write() const
 void OpWriter::writeFormatMetadata() const
 {
     auto op = getOp();
-    StringVec desc;
+    StringUtils::StringVec desc;
     GetElementsValues(op->getFormatMetadata().getChildrenElements(),
                       TAG_DESCRIPTION, desc);
     WriteDescriptions(m_formatter, TAG_DESCRIPTION, desc);
@@ -779,7 +781,7 @@ void CDLWriter::writeContent() const
     {
         XmlScopeIndent scopeIndent(m_formatter);
 
-        StringVec desc;
+        StringUtils::StringVec desc;
         GetElementsValues(op->getFormatMetadata().getChildrenElements(),
                           METADATA_SOP_DESCRIPTION, desc);
         WriteDescriptions(m_formatter, TAG_DESCRIPTION, desc);
@@ -795,7 +797,7 @@ void CDLWriter::writeContent() const
     {
         XmlScopeIndent scopeIndent(m_formatter);
 
-        StringVec desc;
+        StringUtils::StringVec desc;
         GetElementsValues(op->getFormatMetadata().getChildrenElements(),
                           METADATA_SAT_DESCRIPTION, desc);
         WriteDescriptions(m_formatter, TAG_DESCRIPTION, desc);
@@ -808,7 +810,7 @@ void CDLWriter::writeContent() const
 void CDLWriter::writeFormatMetadata() const
 {
     auto op = getOp();
-    StringVec desc;
+    StringUtils::StringVec desc;
     GetElementsValues(op->getFormatMetadata().getChildrenElements(),
                       METADATA_DESCRIPTION, desc);
     WriteDescriptions(m_formatter, TAG_DESCRIPTION, desc);

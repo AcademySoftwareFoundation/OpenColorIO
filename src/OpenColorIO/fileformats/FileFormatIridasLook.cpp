@@ -14,6 +14,8 @@
 #include "Platform.h"
 #include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
+#include "utils/StringUtils.h"
+
 
 /*
 
@@ -433,10 +435,10 @@ private:
             //       could be avoided.
             // Remove spaces, quotes and newlines
             std::string what(s, len);
-            what = pystring::replace(what, " ", "");
-            what = pystring::replace(what, "\"", "");
-            what = pystring::replace(what, "'", "");
-            what = pystring::replace(what, "\n", "");
+            StringUtils::ReplaceInPlace(what, " ", "");
+            StringUtils::ReplaceInPlace(what, "\"", "");
+            StringUtils::ReplaceInPlace(what, "'", "");
+            StringUtils::ReplaceInPlace(what, "\n", "");
             // Append to lut string
             pImpl->m_lutString += what;
         }
