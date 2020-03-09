@@ -208,12 +208,16 @@ jobs:
 - job: Windows
   strategy:
     matrix:
-      2019 MSVC 16.4:
-        agentImage: 'windows-2019'
-        buildType: Release
-        buildSharedLibs: ON
-        buildPython: ON
-        buildDocs: ON
+      # TODO: Investigate AZP CMake template changes required to support 
+      #       'windows-2019' agent. The current configuration fails due to an 
+      #       apparent generator issue. It tries to build with 
+      #       'Visual Studio 15 2017', which is not installed.
+      #2019 MSVC 16.4:
+      #  agentImage: 'windows-2019'
+      #  buildType: Release
+      #  buildSharedLibs: ON
+      #  buildPython: ON
+      #  buildDocs: ON
       2016 MSVC 14.16:
         agentImage: 'vs2017-win2016'
         buildType: Release
