@@ -12,21 +12,22 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "Display.h"
+#include "FileRules.h"
 #include "HashUtils.h"
 #include "Logging.h"
 #include "LookParse.h"
-#include "Display.h"
-#include "FileRules.h"
 #include "MathUtils.h"
 #include "Mutex.h"
+#include "OCIOYaml.h"
 #include "OpBuilders.h"
-#include "PathUtils.h"
 #include "ParseUtils.h"
+#include "PathUtils.h"
+#include "Platform.h"
 #include "PrivateTypes.h"
 #include "Processor.h"
-#include "pystring/pystring.h"
-#include "OCIOYaml.h"
-#include "Platform.h"
+#include "utils/StringUtils.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -122,7 +123,7 @@ const char* LookupEnvironment(const StringMap & env, const std::string & name)
 // (lower case role name: colorspace name)
 const char* LookupRole(const StringMap & roles, const std::string & rolename)
 {
-    StringMap::const_iterator iter = roles.find(pystring::lower(rolename));
+    StringMap::const_iterator iter = roles.find(StringUtils::Lower(rolename));
     if(iter == roles.end()) return "";
     return iter->second.c_str();
 }
@@ -235,7 +236,7 @@ public:
     // Refer to Config::Impl::refreshActiveColorSpaces() to have the implementation details.
 
     ColorSpaceSetRcPtr m_allColorSpaces; // All the color spaces (i.e. no filtering).
-    StringVec m_activeColorSpaceNames;   // A built list of active color space names.
+    StringUtils::StringVec m_activeColorSpaceNames; // A built list of active color space names.
 
     std::string m_inactiveColorSpaceNamesAPI;  // Inactive color space filter from API request. 
     std::string m_inactiveColorSpaceNamesEnv;  // Inactive color space filter from env. variable.
@@ -245,14 +246,14 @@ public:
     LookVec m_looksList;
 
     DisplayMap m_displays;
-    StringVec m_activeDisplays;
-    StringVec m_activeDisplaysEnvOverride;
-    StringVec m_activeViews;
-    StringVec m_activeViewsEnvOverride;
+    StringUtils::StringVec m_activeDisplays;
+    StringUtils::StringVec m_activeDisplaysEnvOverride;
+    StringUtils::StringVec m_activeViews;
+    StringUtils::StringVec m_activeViewsEnvOverride;
 
     mutable std::string m_activeDisplaysStr;
     mutable std::string m_activeViewsStr;
-    mutable StringVec m_displayCache;
+    mutable StringUtils::StringVec m_displayCache;
 
     // Misc
     std::vector<double> m_defaultLumaCoefs;
@@ -277,7 +278,7 @@ public:
     {
         std::string activeDisplays;
         Platform::Getenv(OCIO_ACTIVE_DISPLAYS_ENVVAR, activeDisplays);
-        activeDisplays = pystring::strip(activeDisplays);
+        activeDisplays = StringUtils::Trim(activeDisplays);
         if (!activeDisplays.empty())
         {
             SplitStringEnvStyle(m_activeDisplaysEnvOverride, activeDisplays.c_str());
@@ -285,7 +286,7 @@ public:
 
         std::string activeViews;
         Platform::Getenv(OCIO_ACTIVE_VIEWS_ENVVAR, activeViews);
-        activeViews = pystring::strip(activeViews);
+        activeViews = StringUtils::Trim(activeViews);
         if (!activeViews.empty())
         {
             SplitStringEnvStyle(m_activeViewsEnvOverride, activeViews.c_str());
@@ -297,7 +298,7 @@ public:
         m_defaultLumaCoefs[2] = DEFAULT_LUMA_COEFF_B;
 
         Platform::Getenv(OCIO_INACTIVE_COLORSPACES_ENVVAR, m_inactiveColorSpaceNamesEnv);
-        m_inactiveColorSpaceNamesEnv = pystring::strip(m_inactiveColorSpaceNamesEnv);
+        m_inactiveColorSpaceNamesEnv = StringUtils::Trim(m_inactiveColorSpaceNamesEnv);
     }
 
     ~Impl() = default;
@@ -360,7 +361,7 @@ public:
         return *index!=-1;
     }
 
-    std::vector<std::string> buildInactiveColorSpaceList() const;
+    StringUtils::StringVec buildInactiveColorSpaceList() const;
     void refreshActiveColorSpaces();
 
     // Any time you modify the state of the config, you must call this
@@ -427,7 +428,7 @@ public:
     void setInactiveColorSpaces(const char * inactiveColorSpaces)
     {
         m_inactiveColorSpaceNamesConf
-            = pystring::strip(std::string(inactiveColorSpaces ? inactiveColorSpaces : ""));
+            = StringUtils::Trim(std::string(inactiveColorSpaces ? inactiveColorSpaces : ""));
 
         // An API request must always supersede the two other lists. Filling the
         // inactiveColorSpaceNamesAPI_ list highlights the API request precedence.
@@ -600,7 +601,7 @@ void Config::sanityCheck() const
             throw Exception(getImpl()->m_sanitytext.c_str());
         }
 
-        std::string namelower = pystring::lower(name);
+        std::string namelower = StringUtils::Lower(name);
         StringSet::const_iterator it = existingColorSpaces.find(namelower);
         if(it != existingColorSpaces.end())
         {
@@ -659,7 +660,7 @@ void Config::sanityCheck() const
     }
 
     // Confirm all inactive color spaces exist.
-    const std::vector<std::string> inactiveColorSpaceNames
+    const StringUtils::StringVec inactiveColorSpaceNames
         = getImpl()->buildInactiveColorSpaceList();
 
     for (const auto & name : inactiveColorSpaceNames)
@@ -764,7 +765,7 @@ void Config::sanityCheck() const
 
     ///// ACTIVE DISPLAYS & VIEWS
 
-    StringVec displays;
+    StringUtils::StringVec displays;
     for (DisplayMap::const_iterator iter = getImpl()->m_displays.begin();
          iter != getImpl()->m_displays.end();
          ++iter)
@@ -781,7 +782,7 @@ void Config::sanityCheck() const
 
         if (!useAllDisplays)
         {
-            const StringVec orderedDisplays
+            const StringUtils::StringVec orderedDisplays
                 = IntersectStringVecsCaseIgnore(getImpl()->m_activeDisplaysEnvOverride, displays);
             if (orderedDisplays.empty())
             {
@@ -809,7 +810,7 @@ void Config::sanityCheck() const
 
         if (!useAllDisplays)
         {
-            const StringVec orderedDisplays
+            const StringUtils::StringVec orderedDisplays
                 = IntersectStringVecsCaseIgnore(getImpl()->m_activeDisplays, displays);
             if (orderedDisplays.empty())
             {
@@ -1088,7 +1089,7 @@ int Config::getNumColorSpaces(ColorSpaceVisibility visibility) const
             return (int)getImpl()->m_activeColorSpaceNames.size();
         case COLORSPACE_INACTIVE:
         {
-            const std::vector<std::string> inactiveColorSpaceNames
+            const StringUtils::StringVec inactiveColorSpaceNames
                 = getImpl()->buildInactiveColorSpaceList();
             return (int)inactiveColorSpaceNames.size();
         }
@@ -1112,7 +1113,7 @@ const char * Config::getColorSpaceNameByIndex(ColorSpaceVisibility visibility, i
             return getImpl()->m_activeColorSpaceNames[index].c_str();
         case COLORSPACE_INACTIVE:
         {
-            const std::vector<std::string> inactiveColorSpaceNames
+            const StringUtils::StringVec inactiveColorSpaceNames
                 = getImpl()->buildInactiveColorSpaceList();
             return inactiveColorSpaceNames[index].c_str();
         }
@@ -1256,12 +1257,12 @@ void Config::setRole(const char * role, const char * colorSpaceName)
     // Set the role
     if(colorSpaceName)
     {
-        getImpl()->m_roles[pystring::lower(role)] = std::string(colorSpaceName);
+        getImpl()->m_roles[StringUtils::Lower(role)] = std::string(colorSpaceName);
     }
     // Unset the role
     else
     {
-        StringMap::iterator iter = getImpl()->m_roles.find(pystring::lower(role));
+        StringMap::iterator iter = getImpl()->m_roles.find(StringUtils::Lower(role));
         if(iter != getImpl()->m_roles.end())
         {
             getImpl()->m_roles.erase(iter);
@@ -1354,7 +1355,7 @@ int Config::getNumViews(const char * display) const
 
     const ViewVec & views = iter->second;
 
-    StringVec masterViews;
+    StringUtils::StringVec masterViews;
     for(unsigned int i=0; i<views.size(); ++i)
     {
         masterViews.push_back(views[i].name);
@@ -1362,7 +1363,7 @@ int Config::getNumViews(const char * display) const
 
     if(!getImpl()->m_activeViewsEnvOverride.empty())
     {
-        const StringVec orderedViews
+        const StringUtils::StringVec orderedViews
             = IntersectStringVecsCaseIgnore(getImpl()->m_activeViewsEnvOverride, masterViews);
 
         if(!orderedViews.empty())
@@ -1372,7 +1373,7 @@ int Config::getNumViews(const char * display) const
     }
     else if(!getImpl()->m_activeViews.empty())
     {
-        const StringVec orderedViews
+        const StringUtils::StringVec orderedViews
             = IntersectStringVecsCaseIgnore(getImpl()->m_activeViews, masterViews);
 
         if(!orderedViews.empty())
@@ -1401,7 +1402,7 @@ const char * Config::getView(const char * display, int index) const
 
     const ViewVec & views = iter->second;
 
-    StringVec masterViews;
+    StringUtils::StringVec masterViews;
     for(unsigned int i = 0; i < views.size(); ++i)
     {
         masterViews.push_back(views[i].name);
@@ -1411,7 +1412,7 @@ const char * Config::getView(const char * display, int index) const
 
     if(!getImpl()->m_activeViewsEnvOverride.empty())
     {
-        const StringVec orderedViews
+        const StringUtils::StringVec orderedViews
             = IntersectStringVecsCaseIgnore(getImpl()->m_activeViewsEnvOverride, masterViews);
 
         if(!orderedViews.empty())
@@ -1421,7 +1422,7 @@ const char * Config::getView(const char * display, int index) const
     }
     else if(!getImpl()->m_activeViews.empty())
     {
-        const StringVec orderedViews
+        const StringUtils::StringVec orderedViews
             = IntersectStringVecsCaseIgnore(getImpl()->m_activeViews, masterViews);
 
         if(!orderedViews.empty())
@@ -1547,11 +1548,11 @@ void Config::setDefaultLumaCoefs(const double * c3)
 
 ConstLookRcPtr Config::getLook(const char * name) const
 {
-    std::string namelower = pystring::lower(name);
+    std::string namelower = StringUtils::Lower(name);
 
     for(unsigned int i=0; i<getImpl()->m_looksList.size(); ++i)
     {
-        if(pystring::lower(getImpl()->m_looksList[i]->getName()) == namelower)
+        if(StringUtils::Lower(getImpl()->m_looksList[i]->getName()) == namelower)
         {
             return getImpl()->m_looksList[i];
         }
@@ -1581,12 +1582,12 @@ void Config::addLook(const ConstLookRcPtr & look)
     if(name.empty())
         throw Exception("Cannot addLook with an empty name.");
 
-    std::string namelower = pystring::lower(name);
+    std::string namelower = StringUtils::Lower(name);
 
     // If the look exists, replace it
     for(unsigned int i=0; i<getImpl()->m_looksList.size(); ++i)
     {
-        if(pystring::lower(getImpl()->m_looksList[i]->getName()) == namelower)
+        if(StringUtils::Lower(getImpl()->m_looksList[i]->getName()) == namelower)
         {
             getImpl()->m_looksList[i] = look->createEditableCopy();
             return;
@@ -1944,28 +1945,28 @@ void Config::serialize(std::ostream& os) const
 ///////////////////////////////////////////////////////////////////////////
 //  Config::Impl
 
-std::vector<std::string> Config::Impl::buildInactiveColorSpaceList() const
+StringUtils::StringVec Config::Impl::buildInactiveColorSpaceList() const
 {
-    std::vector<std::string> inactiveColorSpaces;
+    StringUtils::StringVec inactiveColorSpaces;
 
     // An API request always supersedes the other lists.
     if (!m_inactiveColorSpaceNamesAPI.empty())
     {
-        pystring::split(m_inactiveColorSpaceNamesAPI, inactiveColorSpaces, ",");
+        inactiveColorSpaces = StringUtils::Split(m_inactiveColorSpaceNamesAPI, ',');
     }
     // The env. variable only supersedes the config list.
     else if (!m_inactiveColorSpaceNamesEnv.empty())
     {
-        pystring::split(m_inactiveColorSpaceNamesEnv, inactiveColorSpaces, ",");
+        inactiveColorSpaces = StringUtils::Split(m_inactiveColorSpaceNamesEnv, ',');
     }
     else if (!m_inactiveColorSpaceNamesConf.empty())
     {
-        pystring::split(m_inactiveColorSpaceNamesConf, inactiveColorSpaces, ",");
+        inactiveColorSpaces = StringUtils::Split(m_inactiveColorSpaceNamesConf, ',');
     }
 
     for (auto & v : inactiveColorSpaces)
     {
-        v = pystring::strip(v);
+        v = StringUtils::Trim(v);
     }
 
     return inactiveColorSpaces;
@@ -1975,7 +1976,7 @@ void Config::Impl::refreshActiveColorSpaces()
 {
     m_activeColorSpaceNames.clear();
 
-    const std::vector<std::string> inactiveColorSpaces = buildInactiveColorSpaceList();
+    const StringUtils::StringVec inactiveColorSpaces = buildInactiveColorSpaceList();
 
     for (int i = 0; i < m_allColorSpaces->getNumColorSpaces(); ++i)
     {

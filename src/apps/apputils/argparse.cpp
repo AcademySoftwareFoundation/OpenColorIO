@@ -46,8 +46,11 @@ class ArgOption {
 public:
     typedef int (*callback_t) (int, const char**);
 
-    ArgOption (const char *str);
-    ~ArgOption () { }
+    ArgOption() = delete;
+    explicit ArgOption (const char *str);
+    ArgOption(const ArgOption &) = delete;
+    ArgOption & operator=(const ArgOption &) = delete;
+    ~ArgOption () = default;
 
     int initialize ();
 

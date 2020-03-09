@@ -5,10 +5,10 @@
 
 #include "FileRules.cpp"
 
-#include "pystring/pystring.h"
 #include "UnitTest.h"
 #include "UnitTestLogUtils.h"
 #include "UnitTestUtils.h"
+
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -813,7 +813,7 @@ OCIO_ADD_TEST(FileRules, rules_test)
     config->setFileRules(rules);
 
     size_t rulePos = 0;
-    const char * colorSpace;
+    const char * colorSpace = nullptr;
     colorSpace = config->getColorSpaceFromFilepath("/mnt/user/show/img_cs1.dpx", rulePos);
     OCIO_CHECK_EQUAL(rulePos, 0);
     OCIO_CHECK_ASSERT(colorSpace != nullptr && 0 == strcmp(colorSpace, "cs1"));
