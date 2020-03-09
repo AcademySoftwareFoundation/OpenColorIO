@@ -18,9 +18,9 @@
 #include "ops/lut3d/Lut3DOp.h"
 #include "ops/matrix/MatrixOp.h"
 #include "ParseUtils.h"
-#include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
 #include "Platform.h"
+#include "utils/StringUtils.h"
 
 
 namespace OCIO_NAMESPACE
@@ -308,7 +308,7 @@ typedef OCIO_SHARED_PTR<CachedFileCSP> CachedFileCSPRcPtr;
 inline bool
 startswithU(const std::string & str, const std::string & prefix)
 {
-    return pystring::startswith(pystring::upper(pystring::strip(str)), prefix);
+    return StringUtils::StartsWith(StringUtils::Upper(StringUtils::Trim(str)), prefix);
 }
 
 class LocalFileFormat : public FileFormat
@@ -433,13 +433,13 @@ CachedFileRcPtr LocalFileFormat::read(
 
         if(cpoints>=2)
         {
-            StringVec inputparts, outputparts;
+            StringUtils::StringVec inputparts, outputparts;
 
             nextline (istream, line);
-            pystring::split(pystring::strip(line), inputparts);
+            inputparts = StringUtils::SplitByWhiteSpaces(StringUtils::Trim(line));
 
             nextline (istream, line);
-            pystring::split(pystring::strip(line), outputparts);
+            outputparts = StringUtils::SplitByWhiteSpaces(StringUtils::Trim(line));
 
             if(static_cast<int>(inputparts.size()) != cpoints ||
                 static_cast<int>(outputparts.size()) != cpoints)
@@ -504,9 +504,7 @@ CachedFileRcPtr LocalFileFormat::read(
             // Scan for the three floats.
             nextline (istream, line);
 
-            std::vector<std::string> lineParts;
-            pystring::split(line, lineParts);
-
+            const StringUtils::StringVec lineParts = StringUtils::SplitByWhiteSpaces(line);
             std::vector<float> floatArray;
 
             if (!StringVecToFloatVec(floatArray, lineParts)
@@ -533,8 +531,7 @@ CachedFileRcPtr LocalFileFormat::read(
         // Read the cube size.
         nextline (istream, line);
 
-        std::vector<std::string> lineParts;
-        pystring::split(line, lineParts);
+        const StringUtils::StringVec lineParts = StringUtils::SplitByWhiteSpaces(line);
 
         std::vector<int> cubeSize;
 
@@ -587,9 +584,7 @@ CachedFileRcPtr LocalFileFormat::read(
                 GetLut3DIndex_BlueFast(r, g, b,
                                         lutSize, lutSize, lutSize);
 
-            std::vector<std::string> lineParts;
-            pystring::split(line, lineParts);
-
+            const StringUtils::StringVec lineParts = StringUtils::SplitByWhiteSpaces(line);
             std::vector<float> floatArray;
 
             if (!StringVecToFloatVec(floatArray, lineParts)

@@ -11,8 +11,9 @@
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ParseUtils.h"
-#include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
+#include "utils/StringUtils.h"
+
 
 /*
 
@@ -135,7 +136,7 @@ LocalFileFormat::read(
 
     {
         std::string line;
-        StringVec parts;
+        StringUtils::StringVec parts;
         std::vector<float> tmpfloats;
         int lineNumber = 0;
 
@@ -143,13 +144,13 @@ LocalFileFormat::read(
         {
             ++lineNumber;
             // All lines starting with '#' are comments
-            if(pystring::startswith(line,"#")) continue;
+            if(StringUtils::StartsWith(line,"#")) continue;
 
             // Strip, lowercase, and split the line
-            pystring::split(pystring::lower(pystring::strip(line)), parts);
+            parts = StringUtils::SplitByWhiteSpaces(StringUtils::Lower(StringUtils::Trim(line)));
             if(parts.empty()) continue;
 
-            if(pystring::lower(parts[0]) == "lut_3d_size")
+            if(StringUtils::Lower(parts[0]) == "lut_3d_size")
             {
                 int size = 0;
 

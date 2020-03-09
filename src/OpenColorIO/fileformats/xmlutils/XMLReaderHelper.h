@@ -4,6 +4,7 @@
 #ifndef INCLUDED_OCIO_FILEFORMATS_XMLUTILS_XMLREADERHELPER_H
 #define INCLUDED_OCIO_FILEFORMATS_XMLUTILS_XMLREADERHELPER_H
 
+
 #include <string.h>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -12,6 +13,8 @@
 #include "ops/cdl/CDLOpData.h"
 #include "PrivateTypes.h"
 #include "transforms/CDLTransform.h"
+#include "utils/StringUtils.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -260,7 +263,7 @@ public:
     }
 
 private:
-    StringVec m_rawData;
+    StringUtils::StringVec m_rawData;
 };
 
 typedef OCIO_SHARED_PTR<XmlReaderDummyElt> DummyEltRcPtr;
