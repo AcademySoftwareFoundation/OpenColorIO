@@ -213,17 +213,36 @@ int main(int argc, const char **argv)
                 OCIO::ConstLookRcPtr look = config->getLook(config->getLookNameByIndex(i)); 
 
                 OCIO::ConstTransformRcPtr transform = look->getTransform();         
+                OCIO::ConstTransformRcPtr invTransform = look->getInverseTransform();         
 
-                try
+                if(transform!=NULL)
                 {
-                    OCIO::ConstProcessorRcPtr process = config->getProcessor(transform);
+                    try
+                    {
+                        OCIO::ConstProcessorRcPtr process = config->getProcessor(transform);
+                        std::cout << "src file found" << std::endl;
+                    }
+                    catch(OCIO::Exception & exception)
+                    {
+                        std::cerr << "ERROR: " << exception.what() << std::endl;
+                        errorcount += 1;
+                    }
                 }
-                catch(OCIO::Exception & exception)
+
+                if(invTransform!=NULL)
                 {
-                    std::cout << "\nERROR : " << std::endl;
-                    errorcount += 1;
-                    std::cout << exception.what() << std::endl;
+                    try
+                    {
+                        OCIO::ConstProcessorRcPtr process = config->getProcessor(invTransform);
+                        std::cout << "src file found" << std::endl;
+                    }
+                    catch(OCIO::Exception & exception)
+                    {
+                        std::cerr << "ERROR: " << exception.what() << std::endl;
+                        errorcount += 1;
+                    }
                 }
+
             }
         }
         else
