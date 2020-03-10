@@ -6,10 +6,9 @@
 
 #include "FileRules.cpp"
 
-#include "UnitTest.h"
+#include "testutils/UnitTest.h"
 #include "UnitTestLogUtils.h"
 #include "UnitTestUtils.h"
-
 
 namespace OCIO = OCIO_NAMESPACE;
 

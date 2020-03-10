@@ -5,8 +5,9 @@
 #include <limits>
 
 #include "ops/range/RangeOpCPU.cpp"
+
 #include "utils/StringUtils.h"
-#include "UnitTest.h"
+#include "testutils/UnitTest.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 

@@ -61,9 +61,7 @@ int UnitTestMain(int argc, const char ** argv)
 
     if (!filter.empty())
     {
-        std::vector<std::string> results;
-        StringUtils::Split(filter, results, '/');
-
+        const std::vector<std::string> results = StringUtils::Split(filter, '/');
         if (results.size() >= 1)
         {
             utestGroupAllowed = StringUtils::Lower(StringUtils::Trim(results[0]));
