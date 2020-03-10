@@ -1076,8 +1076,10 @@ colorspaces:
         // 'Default' does not exist, 'Raw' is not a data color-space, so a new color-space has
         // been created with a unique name.
         OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
-        OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_ALL), 4);
-        OCIO_CHECK_EQUAL(std::string(config->getColorSpaceNameByIndex(OCIO::COLORSPACE_ALL, 3)),
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                   OCIO::COLORSPACE_ALL), 4);
+        OCIO_CHECK_EQUAL(std::string(config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                                      OCIO::COLORSPACE_ALL, 3)),
                          "added_default_rule_colorspace");
     }
 

@@ -43,6 +43,22 @@ void BuildColorSpaceOps(OpRcPtrVec & ops,
                         const ConstColorSpaceRcPtr & srcColorSpace,
                         const ConstColorSpaceRcPtr & dstColorSpace);
 
+void BuildColorSpaceToReferenceOps(OpRcPtrVec & ops,
+                                   const Config & config,
+                                   const ConstContextRcPtr & context,
+                                   const ConstColorSpaceRcPtr & srcColorSpace);
+
+void BuildColorSpaceFromReferenceOps(OpRcPtrVec & ops,
+                                     const Config & config,
+                                     const ConstContextRcPtr & context,
+                                     const ConstColorSpaceRcPtr & dstColorSpace);
+
+void BuildReferenceConversionOps(OpRcPtrVec & ops,
+                                 const Config & config,
+                                 const ConstContextRcPtr & context,
+                                 ReferenceSpaceType srcReferenceSpace,
+                                 ReferenceSpaceType dstReferenceSpace);
+
 void BuildDisplayOps(OpRcPtrVec & ops,
                      const Config & config,
                      const ConstContextRcPtr & context,
