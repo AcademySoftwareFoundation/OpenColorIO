@@ -167,15 +167,15 @@ jobs:
 - job: macOS
   strategy:
     matrix:
+      10.15 AppleClang 11.0:
+        agentImage: 'macOS-10.15'
+        buildType: Release
       10.14 AppleClang 10.0:
         agentImage: 'macOS-10.14'
         buildType: Release
       10.14 AppleClang 10.0 (Debug):
         agentImage: 'macOS-10.14'
         buildType: Debug
-      10.13 AppleClang 10.0:
-        agentImage: 'macOS-10.13'
-        buildType: Release
   pool:
     vmImage: $(agentImage)
 
@@ -208,34 +208,34 @@ jobs:
 - job: Windows
   strategy:
     matrix:
+      # TODO: Investigate AZP CMake template changes required to support 
+      #       'windows-2019' agent. The current configuration fails due to an 
+      #       apparent generator issue. It tries to build with 
+      #       'Visual Studio 15 2017', which is not installed.
+      #2019 MSVC 16.4:
+      #  agentImage: 'windows-2019'
+      #  buildType: Release
+      #  buildSharedLibs: ON
+      #  buildPython: ON
+      #  buildDocs: ON
       2016 MSVC 14.16:
         agentImage: 'vs2017-win2016'
         buildType: Release
         buildSharedLibs: ON
         buildPython: ON
         buildDocs: ON
-        installPython: false
       2016 MSVC 14.16 (static):
         agentImage: 'vs2017-win2016'
         buildType: Release
         buildSharedLibs: OFF
         buildPython: ON
         buildDocs: OFF
-        installPython: false
       2016 MSVC 14.16 (Debug):
         agentImage: 'vs2017-win2016'
         buildType: Debug
         buildSharedLibs: ON
         buildPython: OFF
         buildDocs: OFF
-        installPython: false
-      2012 MSVC 14.0:
-        agentImage: 'vs2015-win2012r2'
-        buildType: Release
-        buildSharedLibs: ON
-        buildPython: ON
-        buildDocs: ON
-        installPython: true
   pool:
     vmImage: $(agentImage)
 
@@ -245,18 +245,12 @@ jobs:
       share/ci/scripts/windows/install_cmake.ps1 3.11.0
     displayName: Install CMake
 
-  - powershell: |
-      share/ci/scripts/windows/install_python.ps1 2.7.16
-    displayName: Install Python
-    condition: and(succeeded(), eq(variables['installPython'], 'true'))
-
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '2.7'
       addToPath: true
       architecture: 'x64'
     displayName: Configure Python
-    condition: and(succeeded(), eq(variables['installPython'], 'false'))
 
   - template: share/ci/templates/configure.yml
     parameters:
