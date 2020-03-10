@@ -29,7 +29,7 @@ void Transform::validate() const
         && getDirection() != TRANSFORM_DIR_INVERSE)
     {
         std::string err(typeid(*this).name());
-        err += ": invalid direction";
+        err += ": invalid direction.";
 
         throw Exception(err.c_str());
     }

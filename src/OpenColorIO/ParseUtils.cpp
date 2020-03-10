@@ -364,9 +364,9 @@ FixedFunctionStyle FixedFunctionStyleFromString(const char * style)
 
 namespace
 {
-static constexpr char EC_STYLE_VIDEO[] = "video";
+static constexpr char EC_STYLE_VIDEO[]       = "video";
 static constexpr char EC_STYLE_LOGARITHMIC[] = "log";
-static constexpr char EC_STYLE_LINEAR[] = "linear";
+static constexpr char EC_STYLE_LINEAR[]      = "linear";
 }
 
 const char * ExposureContrastStyleToString(ExposureContrastStyle style)

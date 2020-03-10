@@ -59,6 +59,12 @@ typedef OCIO_SHARED_PTR<const Look> ConstLookRcPtr;
 //!cpp:type::
 typedef OCIO_SHARED_PTR<Look> LookRcPtr;
 
+class OCIOEXPORT ViewTransform;
+//!cpp:type::
+typedef OCIO_SHARED_PTR<const ViewTransform> ConstViewTransformRcPtr;
+//!cpp:type::
+typedef OCIO_SHARED_PTR<ViewTransform> ViewTransformRcPtr;
+
 class OCIOEXPORT Context;
 //!cpp:type::
 typedef OCIO_SHARED_PTR<const Context> ConstContextRcPtr;
@@ -264,6 +270,34 @@ enum LoggingLevel
     LOGGING_LEVEL_DEFAULT = LOGGING_LEVEL_INFO
 };
 
+//!cpp:type:: OCIO does not mandate the image state of the main reference space and it is not
+// required to be scene-referred.  This enum is used in connection with the display color space
+// and view transform features which do assume that the main reference space is scene-referred
+// and the display reference space is display-referred.  If a config used a non-scene-referred
+// reference space, presumably it would not use either display color spaces or view transforms,
+// so this enum becomes irrelevant.
+enum ReferenceSpaceType
+{
+    REFERENCE_SPACE_SCENE = 0,  // the main scene reference space
+    REFERENCE_SPACE_DISPLAY     // the reference space for display color spaces
+};
+
+//!cpp:type::
+enum SearchReferenceSpaceType
+{
+    SEARCH_REFERENCE_SPACE_SCENE = 0,
+    SEARCH_REFERENCE_SPACE_DISPLAY,
+    SEARCH_REFERENCE_SPACE_ALL
+};
+
+//!cpp:type::
+enum ColorSpaceVisibility
+{
+    COLORSPACE_ACTIVE = 0,
+    COLORSPACE_INACTIVE,
+    COLORSPACE_ALL
+};
+
 //!cpp:type::
 enum ColorSpaceDirection
 {
@@ -273,11 +307,11 @@ enum ColorSpaceDirection
 };
 
 //!cpp:type::
-enum ColorSpaceVisibility
+enum ViewTransformDirection
 {
-    COLORSPACE_ACTIVE = 0,
-    COLORSPACE_INACTIVE,
-    COLORSPACE_ALL
+    VIEWTRANSFORM_DIR_UNKNOWN = 0,
+    VIEWTRANSFORM_DIR_TO_REFERENCE,
+    VIEWTRANSFORM_DIR_FROM_REFERENCE
 };
 
 //!cpp:type::
