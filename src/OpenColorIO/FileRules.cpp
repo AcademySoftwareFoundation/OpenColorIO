@@ -265,9 +265,6 @@ void ValidateRegularExpression(const char * filePathPattern, const char * fileNa
 
 }
 
-class FileRule;
-using FileRuleRcPtr = OCIO_SHARED_PTR<FileRule>;
-
 class FileRule
 {
 public:
@@ -498,12 +495,12 @@ public:
         return false;
     }
 
-    void validate(const Config & config)
+    void sanityCheck(std::function<ConstColorSpaceRcPtr(const char *)> colorSpaceAccesssor) const
     {
         if (m_type != FILE_RULE_PARSE_FILEPATH)
         {
             // Can be a color space or a role (all color spaces).
-            auto cs = config.getColorSpace(m_colorSpace.c_str());
+            ConstColorSpaceRcPtr cs = colorSpaceAccesssor(m_colorSpace.c_str());
             if (!cs)
             {
                 std::ostringstream oss;
@@ -534,35 +531,6 @@ private:
     std::string m_regex;
     CustomKeys m_customKeys;
     RuleType m_type{ FILE_RULE_GLOB };
-};
-
-
-class FileRules::Impl
-{
-public:
-    enum DefaultAllowed
-    {
-        DEFAULT_ALLOWED,
-        DEFAULT_NOT_ALLOWED
-    };
-
-    Impl();
-    Impl(const Impl &) = delete;
-    Impl & operator=(const Impl & rhs);
-    ~Impl() = default;
-
-    const char * getRuleFromFilepath(const Config & config, const char * filePath,
-                                     size_t & ruleIndex) const;
-
-    void validatePosition(size_t ruleIndex, DefaultAllowed allowDefault) const;
-
-    // Throws if ruleIndex or name are invalid.
-    void validateNewRule(size_t ruleIndex, const char * name) const;
-
-    void moveRule(size_t ruleIndex, int offset);
-
-    // All rules, default rule always at the end.
-    std::vector<FileRuleRcPtr> m_rules;
 };
 
 FileRules::FileRules()
@@ -693,11 +661,11 @@ void FileRules::Impl::moveRule(size_t ruleIndex, int offset)
 }
 
 
-void FileRules::validate(const Config & config) const
+void FileRules::Impl::sanityCheck(std::function<ConstColorSpaceRcPtr(const char *)> colorSpaceAccesssor) const
 {
-    for (auto & rule : m_impl->m_rules)
+    for (auto & rule : m_rules)
     {
-        rule->validate(config);
+        rule->sanityCheck(colorSpaceAccesssor);
     }
 }
 
@@ -854,24 +822,24 @@ void FileRules::decreaseRulePriority(size_t ruleIndex)
     m_impl->moveRule(ruleIndex, 1);
 }
 
-const char * FileRules::getColorSpaceFromFilepath(const Config & config,
-                                                  const char * filePath) const
+const char * FileRules::Impl::getColorSpaceFromFilepath(const Config & config,
+                                                        const char * filePath) const
 {
     size_t ruleIndex = 0;
     return getColorSpaceFromFilepath(config, filePath, ruleIndex);
 }
 
-const char * FileRules::getColorSpaceFromFilepath(const Config & config, const char * filePath,
-                                                  size_t & ruleIndex) const
+const char * FileRules::Impl::getColorSpaceFromFilepath(const Config & config, const char * filePath,
+                                                        size_t & ruleIndex) const
 {
-    return m_impl->getRuleFromFilepath(config, filePath, ruleIndex);
+    return getRuleFromFilepath(config, filePath, ruleIndex);
 }
 
-bool FileRules::filepathOnlyMatchesDefaultRule(const Config & config, const char * filePath) const
+bool FileRules::Impl::filepathOnlyMatchesDefaultRule(const Config & config, const char * filePath) const
 {
     size_t rulePos = 0;
     getColorSpaceFromFilepath(config, filePath, rulePos);
-    return (rulePos + 1) == getNumEntries();
+    return (rulePos + 1) == m_rules.size();
 }
 
 } // namespace OCIO_NAMESPACE
