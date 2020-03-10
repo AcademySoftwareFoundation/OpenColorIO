@@ -353,11 +353,15 @@ public:
     //
     ColorSpaceSetRcPtr getColorSpaces(const char * category) const;
 
-    //!cpp:function:: Work on the color spaces selected by the visibility.
-    int getNumColorSpaces(ColorSpaceVisibility visibility) const;
-    //!cpp:function:: Work on the color spaces selected by the visibility (active or inactive)
-    // and return null for invalid index.
-    const char * getColorSpaceNameByIndex(ColorSpaceVisibility visibility, int index) const;
+    //!cpp:function:: Work on the color spaces selected by the reference color space type
+    // and visibility.
+    int getNumColorSpaces(SearchReferenceSpaceType searchReferenceType,
+                          ColorSpaceVisibility visibility) const;
+
+    //!cpp:function:: Work on the color spaces selected by the reference color space type
+    // and visibility (active or inactive). Return empty for invalid index.
+    const char * getColorSpaceNameByIndex(SearchReferenceSpaceType searchReferenceType,
+                                          ColorSpaceVisibility visibility, int index) const;
 
     //!cpp:function:: Get the color space from all the color spaces
     // (i.e. active and inactive) and return null if the name is not found.
@@ -440,7 +444,6 @@ public:
     //!cpp:function::
     const char * getInactiveColorSpaces() const;
 
-
     ///////////////////////////////////////////////////////////////////////////
     //!rst:: .. _cfgroles_section:
     //
@@ -488,17 +491,23 @@ public:
     //!cpp:function::
     const char * getView(const char * display, int index) const;
 
-    //!cpp:function::
+    //!cpp:function:: Returns the view_transform attribute of the (display, view) pair.
+    const char * getDisplayViewTransformName(const char * display, const char * view) const;
+    //!cpp:function:: Returns the colorspace attribute of the (display, view) pair.
+    // (Note that this may be either a color space or a display color space.)
     const char * getDisplayColorSpaceName(const char * display, const char * view) const;
-    //!cpp:function::
+    //!cpp:function:: Returns the looks attribute of a (display, view) pair.
     const char * getDisplayLooks(const char * display, const char * view) const;
 
-    //!cpp:function:: For the (display,view) combination,
-    // specify which colorSpace and look to use.
+    //!cpp:function:: For the (display, view) pair, specify which color space and look to use.
     // If a look is not desired, then just pass an empty string
-
     void addDisplay(const char * display, const char * view,
                     const char * colorSpaceName, const char * looks);
+
+    //!cpp:function:: For the (display, view) pair, specify a viewTransform + displayColorSpace
+    // to use.  (Looks work the same as above.)
+    void addDisplay(const char * display, const char * view, const char * viewTransform,
+                    const char * displayColorSpaceName, const char * looks);
 
     //!cpp:function::
     void clearDisplays();
@@ -526,7 +535,6 @@ public:
     void setActiveViews(const char * views);
     //!cpp:function::
     const char * getActiveViews() const;
-
 
     ///////////////////////////////////////////////////////////////////////////
     //!rst:: .. _cfgluma_section:
@@ -578,6 +586,35 @@ public:
 
 
     ///////////////////////////////////////////////////////////////////////////
+    //!rst:: .. _cfgview_transforms_section:
+    //
+    // View Transforms
+    // ^^^^^^^^^^^^^^^
+    //
+    // :cpp:class:`ViewTransform` objects are used with the display reference space.
+
+    //!cpp:function::
+    int getNumViewTransforms() const noexcept;
+
+    //!cpp:function::
+    ConstViewTransformRcPtr getViewTransform(const char * name) const noexcept;
+
+    //!cpp:function::
+    const char * getViewTransformNameByIndex(int i) const noexcept;
+
+    //!cpp:function::
+    void addViewTransform(const ConstViewTransformRcPtr & viewTransform);
+
+    //!cpp:function:: The default transform to use for scene-referred to display-referred
+    // reference space conversions is the first scene-referred view transform listed in
+    // that section of the config (the one with the lowest index).  Returns a null
+    // ConstTransformRcPtr if there isn't one.
+    ConstViewTransformRcPtr getDefaultSceneToDisplayViewTransform() const;
+
+    //!cpp:function::
+    void clearViewTransforms();
+
+    ///////////////////////////////////////////////////////////////////////////
     //!rst:: .. _cfgfilerules_section:
     // 
     // File Rules
@@ -617,6 +654,9 @@ public:
     // color spaces.  It may then be used to create a :cpp:class:`CPUProcessor`
     // or :cpp:class:`GPUProcessor` to process/convert pixels.
 
+    //!rst:: Get the processor to apply a ColorSpaceTransform from a source to a destination
+    // color space.
+
     //!cpp:function::
     ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
                                         const ConstColorSpaceRcPtr & srcColorSpace,
@@ -634,6 +674,17 @@ public:
     ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
                                         const char * srcName,
                                         const char * dstName) const;
+
+    //!rst:: Get the processor to apply a DisplayTransform for a display and view.  Refer to the
+    // Display/View Registration section above for more info on the display and view arguments.
+
+    //!cpp:function::
+    ConstProcessorRcPtr getProcessor(const char * inputColorSpaceName,
+                                     const char * display, const char * view) const;
+    //!cpp:function::
+    ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
+                                     const char * inputColorSpaceName,
+                                     const char * display, const char * view) const;
 
     //!rst:: Get the processor for the specified transform.
     //
@@ -766,7 +817,7 @@ class FileRules
 {
 public:
     //!cpp:function:: Creates FileRules for a Config. File rules will contain the default rule
-    // using the default role. The default rule can not be removed.
+    // using the default role. The default rule cannot be removed.
     static FileRulesRcPtr Create();
 
     //!cpp:function:: The method clones the content decoupling the two instances.
@@ -886,6 +937,9 @@ public:
     static ColorSpaceRcPtr Create();
 
     //!cpp:function::
+    static ColorSpaceRcPtr Create(ReferenceSpaceType referenceSpace);
+
+    //!cpp:function::
     ColorSpaceRcPtr createEditableCopy() const;
 
     //!cpp:function::
@@ -949,7 +1003,7 @@ public:
     //!cpp:function:: Return the category name using its index
     // .. note:: Will be null if the index is invalid.
     const char * getCategory(int index) const;
-    // Clear all the categories.
+    //!cpp:function:: Clear all the categories.
     void clearCategories();
 
     ///////////////////////////////////////////////////////////////////////////
@@ -969,6 +1023,9 @@ public:
     bool isData() const;
     //!cpp:function::
     void setIsData(bool isData);
+
+    //!cpp:function:: A display color space will use the display-referred reference space.
+    ReferenceSpaceType getReferenceSpaceType() const;
 
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
@@ -1019,6 +1076,7 @@ public:
                         ColorSpaceDirection dir);
 
 private:
+    ColorSpace(ReferenceSpaceType referenceSpace);
     ColorSpace();
     ~ColorSpace();
 
@@ -1200,6 +1258,91 @@ private:
 
 extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Look&);
 
+///////////////////////////////////////////////////////////////////////////
+//!rst:: .. _view_transform_section:
+//
+// ViewTransform
+// *************
+// A *ViewTransform* provides a conversion from the main (usually scene-referred) reference space
+// to the display-referred reference space.  This allows splitting the conversion from the main
+// reference space to a display into two parts: the ViewTransform plus a display color space.
+//
+// It is also possible to provide a ViewTransform that converts from the display-referred
+// reference space back to that space.  This is useful in cases when a ViewTransform is needed
+// when converting between displays (such as HDR to SDR).
+//
+// The ReferenceSpaceType indicates whether the ViewTransform converts from scene-to-display
+// reference or display-to-display reference.
+//
+// The from_reference transform direction is the one that is used when going out towards a display.
+
+//!cpp:class::
+class OCIOEXPORT ViewTransform
+{
+public:
+    //!cpp:function::
+    static ViewTransformRcPtr Create(ReferenceSpaceType referenceSpace);
+
+    //!cpp:function::
+    ViewTransformRcPtr createEditableCopy() const;
+
+    //!cpp:function::
+    const char * getName() const noexcept;
+    //!cpp:function::
+    void setName(const char * name) noexcept;
+
+    //!cpp:function:: See :cpp:func:`ColorSpace::getFamily`.
+    const char * getFamily() const noexcept;
+    //!cpp:function:: See :cpp:func:`ColorSpace::setFamily`.
+    void setFamily(const char * family);
+
+    //!cpp:function::
+    const char * getDescription() const noexcept;
+    //!cpp:function::
+    void setDescription(const char * description);
+
+    //!cpp:function:: See :cpp:func:`ColorSpace::hasCategory`.
+    bool hasCategory(const char * category) const;
+    //!cpp:function:: See :cpp:func:`ColorSpace::addCategory`.
+    void addCategory(const char * category);
+    //!cpp:function:: See :cpp:func:`ColorSpace::removeCategory`.
+    void removeCategory(const char * category);
+    //!cpp:function:: See :cpp:func:`ColorSpace::getNumCategories`.
+    int getNumCategories() const;
+    //!cpp:function:: See :cpp:func:`ColorSpace::getCategory`.
+    const char * getCategory(int index) const;
+    //!cpp:function:: See :cpp:func:`ColorSpace::clearCategories`.
+    void clearCategories();
+
+    //!cpp:function::
+    ReferenceSpaceType getReferenceSpaceType() const noexcept;
+
+    //!cpp:function:: If a transform in the specified direction has been specified, return it.
+    // Otherwise return a null ConstTransformRcPtr
+    ConstTransformRcPtr getTransform(ViewTransformDirection dir) const;
+
+    //!cpp:function:: Specify the transform for the appropriate direction. Setting the transform
+    // to null will clear it.
+    void setTransform(const ConstTransformRcPtr & transform, ViewTransformDirection dir);
+
+private:
+    ViewTransform();
+    ViewTransform(ReferenceSpaceType referenceSpace);
+    ~ViewTransform();
+
+    ViewTransform(const ViewTransform &) = delete;
+    ViewTransform & operator= (const ViewTransform &) = delete;
+
+    static void deleter(ViewTransform * c);
+
+    class Impl;
+    friend class Impl;
+    Impl * m_impl;
+    Impl * getImpl() { return m_impl; }
+    const Impl * getImpl() const { return m_impl; }
+};
+
+extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ViewTransform&);
 
 ///////////////////////////////////////////////////////////////////////////
 //!rst::
