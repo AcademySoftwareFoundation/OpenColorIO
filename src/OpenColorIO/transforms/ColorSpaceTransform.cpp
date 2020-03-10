@@ -92,12 +92,12 @@ void ColorSpaceTransform::validate() const
 
     if (getImpl()->m_src.empty())
     {
-        throw Exception("ColorSpaceTransform: empty source color space name");
+        throw Exception("ColorSpaceTransform: empty source color space name.");
     }
 
     if (getImpl()->m_dst.empty())
     {
-        throw Exception("ColorSpaceTransform: empty destination color space name");
+        throw Exception("ColorSpaceTransform: empty destination color space name.");
     }
 }
 
@@ -133,26 +133,55 @@ std::ostream& operator<< (std::ostream& os, const ColorSpaceTransform& t)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
+namespace
+{
+void ThrowMissingCS(const char * srcdst, const char * cs)
+{
+    std::ostringstream os;
+    os << "BuildColorSpaceOps failed: " << srcdst << " color space '" << cs;
+    os << "' could not be found.";
+    throw Exception(os.str().c_str());
+}
+
+constexpr char SRC_CS[] = "source";
+constexpr char DST_CS[] = "destination";
+}
+
 void BuildColorSpaceOps(OpRcPtrVec & ops,
                         const Config& config,
                         const ConstContextRcPtr & context,
                         const ColorSpaceTransform & colorSpaceTransform,
                         TransformDirection dir)
 {
-    TransformDirection combinedDir = CombineTransformDirections(dir,
-                                                colorSpaceTransform.getDirection());
+    auto combinedDir = CombineTransformDirections(dir, colorSpaceTransform.getDirection());
 
     ConstColorSpaceRcPtr src, dst;
 
     if(combinedDir == TRANSFORM_DIR_FORWARD)
     {
         src = config.getColorSpace( context->resolveStringVar( colorSpaceTransform.getSrc() ) );
+        if (!src)
+        {
+            ThrowMissingCS(SRC_CS, colorSpaceTransform.getSrc());
+        }
         dst = config.getColorSpace( context->resolveStringVar( colorSpaceTransform.getDst() ) );
+        if (!dst)
+        {
+            ThrowMissingCS(DST_CS, colorSpaceTransform.getDst());
+        }
     }
     else if(combinedDir == TRANSFORM_DIR_INVERSE)
     {
         dst = config.getColorSpace( context->resolveStringVar( colorSpaceTransform.getSrc() ) );
+        if (!dst)
+        {
+            ThrowMissingCS(SRC_CS, colorSpaceTransform.getSrc());
+        }
         src = config.getColorSpace( context->resolveStringVar( colorSpaceTransform.getDst() ) );
+        if (!src)
+        {
+            ThrowMissingCS(DST_CS, colorSpaceTransform.getDst());
+        }
     }
 
     BuildColorSpaceOps(ops, config, context, src, dst);
@@ -169,6 +198,7 @@ bool AreColorSpacesInSameEqualityGroup(const ConstColorSpaceRcPtr & csa,
     if(!a.empty()) return (a==b);
     return false;
 }
+
 }
 
 void BuildColorSpaceOps(OpRcPtrVec & ops,
@@ -192,50 +222,140 @@ void BuildColorSpaceOps(OpRcPtrVec & ops,
     // result, and walk through it step by step.  If the dstColorspace family were
     // ever encountered in transit, we'd want to short circuit the result.
 
+    // Go from the srcColorSpace to the reference space.
+    BuildColorSpaceToReferenceOps(ops, config, context, srcColorSpace);
+
+    // There are two possible reference spaces, the main (scene-referred) one and the
+    // display-referred one.  If the src and dst use different reference spaces, use the
+    // default ViewTransform to convert between them.
+    BuildReferenceConversionOps(ops, config, context,
+                                srcColorSpace->getReferenceSpaceType(),
+                                dstColorSpace->getReferenceSpaceType());
+
+    // Go from the reference space to dstColorSpace.
+    BuildColorSpaceFromReferenceOps(ops, config, context, dstColorSpace);
+}
+
+void BuildColorSpaceToReferenceOps(OpRcPtrVec & ops,
+                                   const Config & config,
+                                   const ConstContextRcPtr & context,
+                                   const ConstColorSpaceRcPtr & srcColorSpace)
+{
+    if (!srcColorSpace)
+        throw Exception("BuildColorSpaceOps failed, null colorSpace.");
+
+    if (srcColorSpace->isData())
+        return;
+
     AllocationData srcAllocation;
     srcAllocation.allocation = srcColorSpace->getAllocation();
-    srcAllocation.vars.resize( srcColorSpace->getAllocationNumVars());
-    if(srcAllocation.vars.size() > 0)
+    srcAllocation.vars.resize(srcColorSpace->getAllocationNumVars());
+    if (srcAllocation.vars.size() > 0)
     {
         srcColorSpace->getAllocationVars(&srcAllocation.vars[0]);
     }
 
     CreateGpuAllocationNoOp(ops, srcAllocation);
 
-    // Go to the reference space, either by using
-    // * cs->ref in the forward direction
-    // * ref->cs in the inverse direction
-    if(srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE))
+    // Go to the reference space, either by using:
+    // * cs->ref in the forward direction.
+    // * ref->cs in the inverse direction.
+    if (srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE))
     {
-        BuildOps(ops, config, context, srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE), TRANSFORM_DIR_FORWARD);
+        BuildOps(ops, config, context, srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE),
+                 TRANSFORM_DIR_FORWARD);
     }
-    else if(srcColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE))
+    else if (srcColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE))
     {
-        BuildOps(ops, config, context, srcColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE), TRANSFORM_DIR_INVERSE);
+        BuildOps(ops, config, context, srcColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE),
+                 TRANSFORM_DIR_INVERSE);
     }
     // Otherwise, both are not defined so its a no-op. This is not an error condition.
+}
 
-    // Go from the reference space, either by using
-    // * ref->cs in the forward direction
-    // * cs->ref in the inverse direction
-    if(dstColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE))
+void BuildColorSpaceFromReferenceOps(OpRcPtrVec & ops,
+                                     const Config & config,
+                                     const ConstContextRcPtr & context,
+                                     const ConstColorSpaceRcPtr & dstColorSpace)
+{
+    if (!dstColorSpace)
+        throw Exception("BuildColorSpaceOps failed, null colorSpace.");
+
+    if (dstColorSpace->isData())
+        return;
+
+    // Go from the reference space, either by using:
+    // * ref->cs in the forward direction.
+    // * cs->ref in the inverse direction.
+    if (dstColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE))
     {
-        BuildOps(ops, config, context, dstColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE), TRANSFORM_DIR_FORWARD);
+        BuildOps(ops, config, context, dstColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE),
+                    TRANSFORM_DIR_FORWARD);
     }
-    else if(dstColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE))
+    else if (dstColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE))
     {
-        BuildOps(ops, config, context, dstColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE), TRANSFORM_DIR_INVERSE);
+        BuildOps(ops, config, context, dstColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE),
+                    TRANSFORM_DIR_INVERSE);
     }
     // Otherwise, both are not defined so its a no-op. This is not an error condition.
 
     AllocationData dstAllocation;
     dstAllocation.allocation = dstColorSpace->getAllocation();
-    dstAllocation.vars.resize( dstColorSpace->getAllocationNumVars());
-    if(dstAllocation.vars.size() > 0)
+    dstAllocation.vars.resize(dstColorSpace->getAllocationNumVars());
+    if (dstAllocation.vars.size() > 0)
     {
         dstColorSpace->getAllocationVars(&dstAllocation.vars[0]);
     }
 
     CreateGpuAllocationNoOp(ops, dstAllocation);
 }
+
+void BuildReferenceConversionOps(OpRcPtrVec & ops,
+                                 const Config & config,
+                                 const ConstContextRcPtr & context,
+                                 ReferenceSpaceType srcReferenceSpace,
+                                 ReferenceSpaceType dstReferenceSpace)
+{
+    if (srcReferenceSpace != dstReferenceSpace)
+    {
+        auto view = config.getDefaultSceneToDisplayViewTransform();
+        if (!view)
+        {
+            // Can not be the case for a sane config.
+            throw Exception("There is no view transform between the main scene-referred space "
+                            "and the display-referred space.");
+        }
+        if (srcReferenceSpace == REFERENCE_SPACE_SCENE) // convert scene-referred to display-referred
+        {
+            if (view->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE))
+            {
+                BuildOps(ops, config, context,
+                         view->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE),
+                         TRANSFORM_DIR_FORWARD);
+            }
+            else if (view->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE))
+            {
+                BuildOps(ops, config, context,
+                         view->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE),
+                         TRANSFORM_DIR_INVERSE);
+            }
+        }
+        else // convert display-referred to scene-referred
+        {
+            if (view->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE))
+            {
+                BuildOps(ops, config, context,
+                         view->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE),
+                         TRANSFORM_DIR_FORWARD);
+            }
+            else if (view->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE))
+            {
+                BuildOps(ops, config, context,
+                         view->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE),
+                         TRANSFORM_DIR_INVERSE);
+            }
+        }
+    }
+}
+
 } // namespace OCIO_NAMESPACE

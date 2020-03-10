@@ -119,7 +119,20 @@ void DisplayTransform::validate() const
 {
     Transform::validate();
 
-    // TODO: Improve DisplayTransform::validate()
+    if (getImpl()->m_inputColorSpaceName.empty())
+    {
+        throw Exception("DisplayTransform: empty input color space name.");
+    }
+
+    if (getImpl()->m_display.empty())
+    {
+        throw Exception("DisplayTransform: empty display name.");
+    }
+
+    if (getImpl()->m_view.empty())
+    {
+        throw Exception("DisplayTransform: empty view name.");
+    }
 }
 
 void DisplayTransform::setInputColorSpaceName(const char * name)
@@ -250,15 +263,17 @@ std::ostream& operator<< (std::ostream& os, const DisplayTransform& t)
 ///////////////////////////////////////////////////////////////////////////
 
 void BuildDisplayOps(OpRcPtrVec & ops,
-                        const Config & config,
-                        const ConstContextRcPtr & context,
-                        const DisplayTransform & displayTransform,
-                        TransformDirection dir)
+                     const Config & config,
+                     const ConstContextRcPtr & context,
+                     const DisplayTransform & displayTransform,
+                     TransformDirection dir)
 {
-    TransformDirection combinedDir = CombineTransformDirections(dir,
-                                                displayTransform.getDirection());
-    if(combinedDir != TRANSFORM_DIR_FORWARD)
+    auto combinedDir = CombineTransformDirections(dir, displayTransform.getDirection());
+    if (combinedDir != TRANSFORM_DIR_FORWARD)
     {
+        // TODO: Implement inverse direction. It is not simply inverting the result, because the
+        // from_reference or to_reference transform should be chosen from the direction (when they
+        // both exist).
         std::ostringstream os;
         os << "DisplayTransform can only be applied in the forward direction.";
         throw Exception(os.str().c_str());
@@ -266,7 +281,7 @@ void BuildDisplayOps(OpRcPtrVec & ops,
 
     std::string inputColorSpaceName = displayTransform.getInputColorSpaceName();
     ConstColorSpaceRcPtr inputColorSpace = config.getColorSpace(inputColorSpaceName.c_str());
-    if(!inputColorSpace)
+    if (!inputColorSpace)
     {
         std::ostringstream os;
         os << "DisplayTransform error.";
@@ -278,9 +293,18 @@ void BuildDisplayOps(OpRcPtrVec & ops,
     std::string display = displayTransform.getDisplay();
     std::string view = displayTransform.getView();
 
+    std::string viewTransformName = config.getDisplayViewTransformName(display.c_str(), view.c_str());
+    ConstViewTransformRcPtr viewTransform;
+    if (!viewTransformName.empty())
+    {
+        viewTransform = config.getViewTransform(viewTransformName.c_str());
+    }
+
+    // NB: If the viewTranform is present, then displayColorSpace is a true display color space
+    // rather than a traditional color space.
     std::string displayColorSpaceName = config.getDisplayColorSpaceName(display.c_str(), view.c_str());
-    ConstColorSpaceRcPtr displayColorspace = config.getColorSpace(displayColorSpaceName.c_str());
-    if(!displayColorspace)
+    ConstColorSpaceRcPtr displayColorSpace = config.getColorSpace(displayColorSpaceName.c_str());
+    if (!displayColorSpace)
     {
         std::ostringstream os;
         os << "DisplayTransform error.";
@@ -288,7 +312,7 @@ void BuildDisplayOps(OpRcPtrVec & ops,
         throw Exception(os.str().c_str());
     }
 
-    bool skipColorSpaceConversions = (inputColorSpace->isData() || displayColorspace->isData());
+    bool skipColorSpaceConversions = (inputColorSpace->isData() || displayColorSpace->isData());
 
     // If we're viewing alpha, also skip all color space conversions.
     // If the user does uses a different transform for the channel view,
@@ -299,12 +323,12 @@ void BuildDisplayOps(OpRcPtrVec & ops,
 
     ConstMatrixTransformRcPtr typedChannelView = DynamicPtrCast<const MatrixTransform>(
         displayTransform.getChannelView());
-    if(typedChannelView)
+    if (typedChannelView)
     {
         double matrix44[16];
         typedChannelView->getMatrix(matrix44);
 
-        if((matrix44[3]>0.0) || (matrix44[7]>0.0) || (matrix44[11]>0.0))
+        if ((matrix44[3]>0.0) || (matrix44[7]>0.0) || (matrix44[11]>0.0))
         {
             skipColorSpaceConversions = true;
         }
@@ -312,9 +336,9 @@ void BuildDisplayOps(OpRcPtrVec & ops,
 
     ConstColorSpaceRcPtr currentColorSpace = inputColorSpace;
 
-    // Apply a transform in ROLE_SCENE_LINEAR
+    // Apply a transform in ROLE_SCENE_LINEAR.
     ConstTransformRcPtr linearCC = displayTransform.getLinearCC();
-    if(linearCC)
+    if (linearCC)
     {
         // Put the new ops into a temp array, to see if it's a no-op
         // If it is a no-op, dont bother doing the colorspace conversion.
@@ -325,11 +349,18 @@ void BuildDisplayOps(OpRcPtrVec & ops,
         {
             ConstColorSpaceRcPtr targetColorSpace = config.getColorSpace(ROLE_SCENE_LINEAR);
 
-            if(!skipColorSpaceConversions)
+            if (!targetColorSpace)
             {
-                BuildColorSpaceOps(ops, config, context,
-                                    currentColorSpace,
-                                    targetColorSpace);
+                std::ostringstream os;
+                os << "DisplayTransform error.";
+                os << " LinearCC requires '" << std::string(ROLE_SCENE_LINEAR);
+                os << "' role to be defined.";
+                throw Exception(os.str().c_str());
+            }
+
+            if (!skipColorSpaceConversions)
+            {
+                BuildColorSpaceOps(ops, config, context, currentColorSpace, targetColorSpace);
                 currentColorSpace = targetColorSpace;
             }
 
@@ -337,9 +368,9 @@ void BuildDisplayOps(OpRcPtrVec & ops,
         }
     }
 
-    // Apply a color correction, in ROLE_COLOR_TIMING
+    // Apply a color correction, in ROLE_COLOR_TIMING.
     ConstTransformRcPtr colorTimingCC = displayTransform.getColorTimingCC();
-    if(colorTimingCC)
+    if (colorTimingCC)
     {
         // Put the new ops into a temp array, to see if it's a no-op
         // If it is a no-op, dont bother doing the colorspace conversion.
@@ -350,11 +381,18 @@ void BuildDisplayOps(OpRcPtrVec & ops,
         {
             ConstColorSpaceRcPtr targetColorSpace = config.getColorSpace(ROLE_COLOR_TIMING);
 
+            if (!targetColorSpace)
+            {
+                std::ostringstream os;
+                os << "DisplayTransform error.";
+                os << " ColorTimingCC requires '" << std::string(ROLE_COLOR_TIMING);
+                os << "' role to be defined.";
+                throw Exception(os.str().c_str());
+            }
+
             if(!skipColorSpaceConversions)
             {
-                BuildColorSpaceOps(ops, config, context,
-                                    currentColorSpace,
-                                    targetColorSpace);
+                BuildColorSpaceOps(ops, config, context, currentColorSpace, targetColorSpace);
                 currentColorSpace = targetColorSpace;
             }
 
@@ -362,18 +400,18 @@ void BuildDisplayOps(OpRcPtrVec & ops,
         }
     }
 
-    // Apply a look, if specified
+    // Apply a look, if specified.
     LookParseResult looks;
-    if(displayTransform.getLooksOverrideEnabled())
+    if (displayTransform.getLooksOverrideEnabled())
     {
         looks.parse(displayTransform.getLooksOverride());
     }
-    else if(!skipColorSpaceConversions)
+    else if (!skipColorSpaceConversions)
     {
         looks.parse(config.getDisplayLooks(display.c_str(), view.c_str()));
     }
 
-    if(!looks.empty())
+    if (!looks.empty())
     {
         BuildLookOps(ops,
                         currentColorSpace,
@@ -383,28 +421,57 @@ void BuildDisplayOps(OpRcPtrVec & ops,
                         looks);
     }
 
-    // Apply a channel view
+    // Apply a channel view.
     ConstTransformRcPtr channelView = displayTransform.getChannelView();
-    if(channelView)
+    if (channelView)
     {
         BuildOps(ops, config, context, channelView, TRANSFORM_DIR_FORWARD);
     }
 
-    // Apply the conversion to the display color space
-    if(!skipColorSpaceConversions)
+    // Apply the conversion to the display color space.
+    if (!skipColorSpaceConversions)
     {
-        BuildColorSpaceOps(ops, config, context,
-                            currentColorSpace,
-                            displayColorspace);
-        currentColorSpace = displayColorspace;
+        if (viewTransform)
+        {
+            // DisplayColorSpace is display-referred.
+
+            // Convert the currentColorSpace to its reference space.
+            BuildColorSpaceToReferenceOps(ops, config, context, currentColorSpace);
+
+            // If necessary, convert to the type of reference space used by the view transform.
+            const auto vtRef = viewTransform->getReferenceSpaceType();
+            const auto curCSRef = currentColorSpace->getReferenceSpaceType();
+            BuildReferenceConversionOps(ops, config, context, curCSRef, vtRef);
+
+            // Apply view transform.
+            if (viewTransform->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE))
+            {
+                BuildOps(ops, config, context,
+                         viewTransform->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE),
+                         TRANSFORM_DIR_FORWARD);
+            }
+            else if (viewTransform->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE))
+            {
+                BuildOps(ops, config, context,
+                         viewTransform->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE),
+                         TRANSFORM_DIR_INVERSE);
+            }
+
+            // Convert from the display-referred reference space to the displayColorSpace.
+            BuildColorSpaceFromReferenceOps(ops, config, context, displayColorSpace);
+        }
+        else
+        {
+            BuildColorSpaceOps(ops, config, context, currentColorSpace, displayColorSpace);
+        }
+        currentColorSpace = displayColorSpace;
     }
 
-    // Apply a display cc
+    // Apply a display cc.
     ConstTransformRcPtr displayCC = displayTransform.getDisplayCC();
-    if(displayCC)
+    if (displayCC)
     {
         BuildOps(ops, config, context, displayCC, TRANSFORM_DIR_FORWARD);
     }
-
 }
 } // namespace OCIO_NAMESPACE
