@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <cstring>
+
 #include "fileformats/xmlutils/XMLReaderUtils.cpp"
 
 #include "MathUtils.h"
@@ -14,7 +16,7 @@ OCIO_ADD_TEST(XMLReaderHelper, string_to_float)
 {
     float value = 0.0f;
     const char str[] = "12345";
-    const size_t len = strlen(str);
+    const size_t len = std::strlen(str);
 
     OCIO_CHECK_NO_THROW(OCIO::ParseNumber(str, 0, len, value));
     OCIO_CHECK_EQUAL(value, 12345.0f);
@@ -24,7 +26,7 @@ OCIO_ADD_TEST(XMLReaderHelper, string_to_float_failure)
 {
     float value = 0.0f;
     const char str[] = "ABDSCSGFDS";
-    const size_t len = strlen(str);
+    const size_t len = std::strlen(str);
 
     OCIO_CHECK_THROW_WHAT(OCIO::ParseNumber(str, 0, len, value),
                           OCIO::Exception,
@@ -32,7 +34,7 @@ OCIO_ADD_TEST(XMLReaderHelper, string_to_float_failure)
 
 
     const char str1[] = "10 ";
-    const size_t len1 = strlen(str1);
+    const size_t len1 = std::strlen(str1);
 
     OCIO_CHECK_THROW_WHAT(OCIO::ParseNumber(str1, 0, len1, value),
                           OCIO::Exception,
@@ -42,7 +44,7 @@ OCIO_ADD_TEST(XMLReaderHelper, string_to_float_failure)
     OCIO_CHECK_NO_THROW(OCIO::ParseNumber(str1, 0, 2, value));
 
     const char str2[] = "12345";
-    const size_t len2 = strlen(str2);
+    const size_t len2 = std::strlen(str2);
     // All characters are parsed and this is more than the required length.
     // The string to double function strtod does not stop at a given length,
     // but we detect that strtod did read too many characters.
@@ -52,7 +54,7 @@ OCIO_ADD_TEST(XMLReaderHelper, string_to_float_failure)
 
 
     const char str3[] = "123XX";
-    const size_t len3 = strlen(str3);
+    const size_t len3 = std::strlen(str3);
     // Strtod will stop after parsing 123 and this happens to be the
     // exact length that is required to be parsed.
     OCIO_CHECK_NO_THROW(OCIO::ParseNumber(str3, 0, len3 - 2, value));
@@ -61,7 +63,7 @@ OCIO_ADD_TEST(XMLReaderHelper, string_to_float_failure)
 OCIO_ADD_TEST(XMLReaderHelper, get_numbers)
 {
     const char str[] = "  1.0 , 2.0     3.0,4";
-    const size_t len = strlen(str);
+    const size_t len = std::strlen(str);
 
     std::vector<float> values;
     OCIO_CHECK_NO_THROW(values = OCIO::GetNumbers<float>(str, len));
@@ -75,7 +77,7 @@ OCIO_ADD_TEST(XMLReaderHelper, get_numbers)
     // Copy the string into a buffer that will not be null terminated.
     // Add a delimiter at the end of the buffer.
     char * buffer = new char[len+1];
-    memcpy(buffer, str, len * sizeof(char));
+    std::memcpy(buffer, str, len * sizeof(char));
     buffer[len] = '\n';
     OCIO_CHECK_NO_THROW(values = OCIO::GetNumbers<float>(buffer, len));
     OCIO_REQUIRE_EQUAL(values.size(), 4);

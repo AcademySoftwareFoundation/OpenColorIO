@@ -5,8 +5,8 @@
 
 #include "ops/reference/ReferenceOpData.h"
 #include "Platform.h"
-#include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
+
 
 namespace OCIO_NAMESPACE
 {

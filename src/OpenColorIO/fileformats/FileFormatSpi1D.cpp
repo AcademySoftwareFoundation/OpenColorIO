@@ -10,8 +10,9 @@
 #include "ops/matrix/MatrixOp.h"
 #include "ParseUtils.h"
 #include "Platform.h"
-#include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
+#include "utils/StringUtils.h"
+
 
 /*
 Version 1
@@ -106,7 +107,7 @@ CachedFileRcPtr LocalFileFormat::read(
             ++currentLine;
             headerLine = std::string(lineBuffer);
 
-            if(pystring::startswith(headerLine, "Version"))
+            if(StringUtils::StartsWith(headerLine, "Version"))
             {
                 // " " in format means any number of spaces (white space,
                 // new line, tab) including 0 of them.
@@ -120,21 +121,21 @@ CachedFileRcPtr LocalFileFormat::read(
                     ThrowErrorMessage("Only format version 1 supported", currentLine, headerLine);
                 }
             }
-            else if(pystring::startswith(headerLine, "From"))
+            else if(StringUtils::StartsWith(headerLine, "From"))
             {
                 if (sscanf(lineBuffer, "From %f %f", &from_min, &from_max) != 2)
                 {
                     ThrowErrorMessage("Invalid 'From' Tag", currentLine, headerLine);
                 }
             }
-            else if(pystring::startswith(headerLine, "Components"))
+            else if(StringUtils::StartsWith(headerLine, "Components"))
             {
                 if (sscanf(lineBuffer, "Components %d", &components) != 1)
                 {
                     ThrowErrorMessage("Invalid 'Components' Tag", currentLine, headerLine);
                 }
             }
-            else if(pystring::startswith(headerLine, "Length"))
+            else if(StringUtils::StartsWith(headerLine, "Length"))
             {
                 if (sscanf(lineBuffer, "Length %d", &lut_size) != 1)
                 {
@@ -142,7 +143,7 @@ CachedFileRcPtr LocalFileFormat::read(
                 }
             }
         }
-        while (istream.good() && !pystring::startswith(headerLine,"{"));
+        while (istream.good() && !StringUtils::StartsWith(headerLine,"{"));
     }
 
     if (version == -1)
@@ -172,12 +173,12 @@ CachedFileRcPtr LocalFileFormat::read(
 
         int lineCount=0;
 
-        std::vector<std::string> inputLUT;
+        StringUtils::StringVec inputLUT;
         std::vector<float> values;
 
         while (istream.good())
         {
-            const std::string line = pystring::strip(std::string(lineBuffer));
+            const std::string line = StringUtils::Trim(std::string(lineBuffer));
             if (Platform::Strcasecmp(line.c_str(), "}") == 0)
             {
                 break;
@@ -185,7 +186,7 @@ CachedFileRcPtr LocalFileFormat::read(
 
             if (line.length() != 0)
             {
-                pystring::split(pystring::strip(lineBuffer), inputLUT);
+                inputLUT = StringUtils::SplitByWhiteSpaces(StringUtils::Trim(lineBuffer));
                 values.clear();
                 if (!StringVecToFloatVec(values, inputLUT)
                     || components != (int)values.size())

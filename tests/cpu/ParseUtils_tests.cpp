@@ -360,7 +360,7 @@ OCIO_ADD_TEST(ParseUtils, float_double)
 OCIO_ADD_TEST(ParseUtils, string_vec_to_int_vec)
 {
     std::vector<int> intArray;
-    OCIO::StringVec lineParts;
+    StringUtils::StringVec lineParts;
     bool success = OCIO::StringVecToIntVec(intArray, lineParts);
     OCIO_CHECK_EQUAL(true, success);
     OCIO_CHECK_EQUAL(0, intArray.size());
@@ -419,7 +419,7 @@ OCIO_ADD_TEST(ParseUtils, string_vec_to_int_vec)
 
 OCIO_ADD_TEST(ParseUtils, split_string_env_style)
 {
-    OCIO::StringVec outputvec;
+    StringUtils::StringVec outputvec;
     OCIO::SplitStringEnvStyle(outputvec, "This:is:a:test");
     OCIO_CHECK_EQUAL(4, outputvec.size());
     OCIO_CHECK_EQUAL("This", outputvec[0]);
@@ -455,8 +455,7 @@ OCIO_ADD_TEST(ParseUtils, split_string_env_style)
 
 OCIO_ADD_TEST(ParseUtils, intersect_string_vecs_case_ignore)
 {
-    OCIO::StringVec source1;
-    OCIO::StringVec source2;
+    StringUtils::StringVec source1, source2;
     source1.push_back("111");
     source1.push_back("This");
     source1.push_back("is");
@@ -471,7 +470,7 @@ OCIO_ADD_TEST(ParseUtils, intersect_string_vecs_case_ignore)
     source2.push_back("a");
     source2.push_back("IS");
 
-    OCIO::StringVec resInter = OCIO::IntersectStringVecsCaseIgnore(source1, source2);
+    StringUtils::StringVec resInter = OCIO::IntersectStringVecsCaseIgnore(source1, source2);
     OCIO_CHECK_EQUAL(4, resInter.size());
     OCIO_CHECK_EQUAL("This", resInter[0]);
     OCIO_CHECK_EQUAL("is", resInter[1]);

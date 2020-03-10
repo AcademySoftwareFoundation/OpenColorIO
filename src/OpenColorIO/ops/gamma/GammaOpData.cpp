@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <cmath>
 #include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -373,9 +374,9 @@ void GammaOpData::setParams(const Params & p)
     m_alphaParams = GammaOpData::getIdentityParameters(getStyle());
 }
 
-void validateParams(const GammaOpData::Params & p, 
+void validateParams(const GammaOpData::Params & p,
                     unsigned int reqdSize,
-                    const double * lowBounds, 
+                    const double * lowBounds,
                     const double * highBounds)
 {
     if (p.size() != reqdSize)
@@ -407,8 +408,8 @@ void GammaOpData::validate() const
 
 void GammaOpData::validateParameters() const
 {
-    // Note: When loading from a CTF we want to enforce 
-    //       the canonical bounds on the parameters. 
+    // Note: When loading from a CTF we want to enforce
+    //       the canonical bounds on the parameters.
 
     switch(getStyle())
     {
@@ -510,7 +511,7 @@ bool GammaOpData::areAllComponentsEqual() const
     // Comparing floats is generally not a good idea, but in this case
     // it is ok to be strict.  Since the same operations are applied to
     // all components, if they started equal, they should remain equal.
-    return m_redParams == m_greenParams  &&  m_redParams == m_blueParams 
+    return m_redParams == m_greenParams  &&  m_redParams == m_blueParams
         && m_redParams == m_alphaParams;
 }
 

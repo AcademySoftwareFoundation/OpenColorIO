@@ -14,13 +14,11 @@ namespace
 void compareFloats(const std::string& floats1, const std::string& floats2)
 {
     // Number comparison.
-    OCIO::StringVec strings1;
-    pystring::split(pystring::strip(floats1), strings1);
+    const StringUtils::StringVec strings1 = StringUtils::SplitByWhiteSpaces(StringUtils::Trim(floats1));
     std::vector<float> numbers1;
     OCIO::StringVecToFloatVec(numbers1, strings1);
 
-    OCIO::StringVec strings2;
-    pystring::split(pystring::strip(floats2), strings2);
+    const StringUtils::StringVec strings2 = StringUtils::SplitByWhiteSpaces(StringUtils::Trim(floats2));
     std::vector<float> numbers2;
     OCIO::StringVecToFloatVec(numbers2, strings2);
 
@@ -304,10 +302,8 @@ OCIO_ADD_TEST(FileFormatCSP, complete_3d)
     baker->bake(output);
 
     //
-    std::vector<std::string> osvec;
-    pystring::splitlines(output.str(), osvec);
-    std::vector<std::string> resvec;
-    pystring::splitlines(bout.str(), resvec);
+    const StringUtils::StringVec osvec  = StringUtils::SplitByLines(output.str());
+    const StringUtils::StringVec resvec = StringUtils::SplitByLines(bout.str());
     OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
     {
@@ -399,10 +395,8 @@ OCIO_ADD_TEST(FileFormatCSP, shaper_hdr)
     baker->bake(output);
 
     //
-    std::vector<std::string> osvec;
-    pystring::splitlines(output.str(), osvec);
-    std::vector<std::string> resvec;
-    pystring::splitlines(bout.str(), resvec);
+    const StringUtils::StringVec osvec  = StringUtils::SplitByLines(output.str());
+    const StringUtils::StringVec resvec = StringUtils::SplitByLines(bout.str());
     OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
     {
@@ -483,10 +477,9 @@ OCIO_ADD_TEST(FileFormatCSP, no_shaper)
     baker->bake(output);
 
     //
-    std::vector<std::string> osvec;
-    pystring::splitlines(output.str(), osvec);
-    std::vector<std::string> resvec;
-    pystring::splitlines(bout.str(), resvec);
+    const StringUtils::StringVec osvec  = StringUtils::SplitByLines(output.str());
+    const StringUtils::StringVec resvec = StringUtils::SplitByLines(bout.str());
+
     OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
     {

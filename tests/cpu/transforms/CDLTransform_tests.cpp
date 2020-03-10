@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <cstdio>
+
 #include "transforms/CDLTransform.cpp"
 
 #include "testutils/UnitTest.h"
@@ -255,32 +257,55 @@ static const std::string kContentsB = {
 
 }
 
+namespace
+{
+
+struct FileGuard
+{
+    explicit FileGuard(unsigned lineNo)
+    {
+        OCIO_CHECK_NO_THROW_FROM(m_filename = OCIO::Platform::CreateTempFilename(""), lineNo);
+    }
+    ~FileGuard()
+    {
+        // Even if not strictly required on most OSes, perform the cleanup.
+        std::remove(m_filename.c_str());
+    }
+
+    std::string m_filename;
+};
+
+} //anon.
+
 OCIO_ADD_TEST(CDLTransform, clear_caches)
 {
-    std::string filename;
-    OCIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(filename, ""));
+    FileGuard guard(__LINE__);
 
-    std::fstream stream(filename, std::ios_base::out|std::ios_base::trunc);
+    std::fstream stream(guard.m_filename, std::ios_base::out|std::ios_base::trunc);
+    OCIO_REQUIRE_ASSERT(stream.is_open());
     stream << kContentsA;
     stream.close();
 
-    OCIO::CDLTransformRcPtr transform; 
-    OCIO_CHECK_NO_THROW(transform = OCIO::CDLTransform::CreateFromFile(filename.c_str(), "cc03343"));
+    OCIO::CDLTransformRcPtr transform;
+    OCIO_CHECK_NO_THROW(transform
+        = OCIO::CDLTransform::CreateFromFile(guard.m_filename.c_str(), "cc03343"));
 
-    double slope[3];
+    double slope[3]{};
 
     OCIO_CHECK_NO_THROW(transform->getSlope(slope));
     OCIO_CHECK_EQUAL(slope[0], 0.1);
     OCIO_CHECK_EQUAL(slope[1], 0.2);
     OCIO_CHECK_EQUAL(slope[2], 0.3);
 
-    stream.open(filename, std::ios_base::out|std::ios_base::trunc);
+    stream.open(guard.m_filename, std::ios_base::out|std::ios_base::trunc);
+    OCIO_REQUIRE_ASSERT(stream.is_open());
     stream << kContentsB;
     stream.close();
 
     OCIO_CHECK_NO_THROW(OCIO::ClearAllCaches());
 
-    OCIO_CHECK_NO_THROW(transform = OCIO::CDLTransform::CreateFromFile(filename.c_str(), "cc03343"));
+    OCIO_CHECK_NO_THROW(transform
+        = OCIO::CDLTransform::CreateFromFile(guard.m_filename.c_str(), "cc03343"));
     OCIO_CHECK_NO_THROW(transform->getSlope(slope));
 
     OCIO_CHECK_EQUAL(slope[0], 1.1);
@@ -290,18 +315,19 @@ OCIO_ADD_TEST(CDLTransform, clear_caches)
 
 OCIO_ADD_TEST(CDLTransform, faulty_file_content)
 {
-    std::string filename;
-    OCIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(filename, ""));
+    FileGuard guard(__LINE__);
 
     {
-        std::fstream stream(filename, std::ios_base::out|std::ios_base::trunc);
+        std::fstream stream(guard.m_filename, std::ios_base::out|std::ios_base::trunc);
+        OCIO_REQUIRE_ASSERT(stream.is_open());
         stream << kContentsA << "Some Extra faulty information";
         stream.close();
 
-        OCIO_CHECK_THROW_WHAT(OCIO::CDLTransform::CreateFromFile(filename.c_str(), "cc03343"),
+        OCIO_CHECK_THROW_WHAT(OCIO::CDLTransform::CreateFromFile(guard.m_filename.c_str(), "cc03343"),
                               OCIO::Exception,
                               "Error parsing ColorCorrectionCollection (). Error is: XML parsing error");
     }
+
     {
         // Duplicated identifier.
 
@@ -311,11 +337,12 @@ OCIO_ADD_TEST(CDLTransform, faulty_file_content)
         faultyContent.replace(found, strlen("cc03344"), "cc03343");
 
 
-        std::fstream stream(filename, std::ios_base::out|std::ios_base::trunc);
+        std::fstream stream(guard.m_filename, std::ios_base::out|std::ios_base::trunc);
+        OCIO_REQUIRE_ASSERT(stream.is_open());
         stream << faultyContent;
         stream.close();
 
-        OCIO_CHECK_THROW_WHAT(OCIO::CDLTransform::CreateFromFile(filename.c_str(), "cc03343"),
+        OCIO_CHECK_THROW_WHAT(OCIO::CDLTransform::CreateFromFile(guard.m_filename.c_str(), "cc03343"),
                               OCIO::Exception,
                               "Error loading ccc xml. Duplicate elements with 'cc03343'");
     }

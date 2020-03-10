@@ -9,7 +9,7 @@
 #include "HashUtils.h"
 #include "Logging.h"
 #include "Mutex.h"
-#include "pystring/pystring.h"
+#include "utils/StringUtils.h"
 
 
 namespace OCIO_NAMESPACE
@@ -113,7 +113,7 @@ void GpuShaderCreator::setFunctionName(const char * name) noexcept
 {
     AutoMutex lock(getImpl()->m_cacheIDMutex);
     // Note: Remove potentially problematic double underscores from GLSL resource names.
-    getImpl()->m_functionName = pystring::replace(name, "__", "_");
+    getImpl()->m_functionName = StringUtils::Replace(name, "__", "_");
     getImpl()->m_cacheID.clear();
 }
 
@@ -126,7 +126,7 @@ void GpuShaderCreator::setResourcePrefix(const char * prefix) noexcept
 {
     AutoMutex lock(getImpl()->m_cacheIDMutex);
     // Note: Remove potentially problematic double underscores from GLSL resource names.
-    getImpl()->m_resourcePrefix = pystring::replace(prefix, "__", "_");
+    getImpl()->m_resourcePrefix = StringUtils::Replace(prefix, "__", "_");
     getImpl()->m_cacheID.clear();
 }
 
@@ -139,7 +139,7 @@ void GpuShaderCreator::setPixelName(const char * name) noexcept
 {
     AutoMutex lock(getImpl()->m_cacheIDMutex);
     // Note: Remove potentially problematic double underscores from GLSL resource names.
-    getImpl()->m_pixelName = pystring::replace(name, "__", "_");
+    getImpl()->m_pixelName = StringUtils::Replace(name, "__", "_");
     getImpl()->m_cacheID.clear();
 }
 

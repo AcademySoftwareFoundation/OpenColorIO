@@ -114,7 +114,7 @@ int UnitTestMain(int argc, const char ** argv);
         std::stringstream ss;                                           \
         ss <<  __FILE__ << ":" << line << ":\n"                         \
            << "FAILED: " << FIELD_STR(x) << "\n";                       \
-        throw OCIO_NAMESPACE::Exception(ss.str().c_str()); }
+        throw std::runtime_error(ss.str()); }
 
 #define OCIO_REQUIRE_ASSERT(x) OCIO_REQUIRE_ASSERT_FROM(x, __LINE__)
 
@@ -149,7 +149,7 @@ int UnitTestMain(int argc, const char ** argv);
         ss <<  __FILE__ << ":" << line << ":\n"                         \
            << "FAILED: " << FIELD_STR(x) << " == " << FIELD_STR(y) << "\n" \
            << "\tvalues were '" << (x) << "' and '" << (y) << "'\n";    \
-        throw OCIO_NAMESPACE::Exception(ss.str().c_str()); }
+        throw std::runtime_error(ss.str()); }
 
 #define OCIO_REQUIRE_EQUAL(x,y) OCIO_REQUIRE_EQUAL_FROM(x,y, __LINE__)
 
@@ -253,7 +253,7 @@ int UnitTestMain(int argc, const char ** argv);
 // Note: Add a SonarCloud tag to suppress all warnings for the following method.
 #define OCIO_ADD_TEST(group, name)                                      \
     static void ociotest_##group##_##name();                            \
-    AddTest oiioaddtest_##group##_##name(                               \
+    AddTest ocioaddtest_##group##_##name(                               \
         std::make_shared<OCIOTest>(FIELD_STR(group), FIELD_STR(name),   \
                                    ociotest_##group##_##name));         \
     /* @SuppressWarnings('all') */                                      \
