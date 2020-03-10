@@ -281,15 +281,16 @@ std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
     std::vector<float> vars(numVars);
     cs.getAllocationVars(&vars[0]);
 
-    const auto refType = cs.getReferenceSpaceType();
+    os << "<ColorSpace referenceSpaceType=";
 
+    const auto refType = cs.getReferenceSpaceType();
     switch (refType)
     {
     case REFERENCE_SPACE_SCENE:
-        os << "<ColorSpace ";
+        os << "scene, ";
         break;
     case REFERENCE_SPACE_DISPLAY:
-        os << "<DisplayColorSpace ";
+        os << "display, ";
         break;
     }
     os << "name=" << cs.getName() << ", ";

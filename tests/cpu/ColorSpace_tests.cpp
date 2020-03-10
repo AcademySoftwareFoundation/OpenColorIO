@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <sstream>
+
 #include "ColorSpace.cpp"
 
 #include "UnitTest.h"
@@ -50,6 +52,10 @@ OCIO_ADD_TEST(ColorSpace, basic)
     cs->getAllocationVars(readVars);
     OCIO_CHECK_EQUAL(1.f, readVars[0]);
     OCIO_CHECK_EQUAL(2.f, readVars[1]);
+
+    std::ostringstream oss;
+    oss << *cs;
+    OCIO_CHECK_EQUAL(oss.str().size(), 149);
 }
 
 OCIO_ADD_TEST(ColorSpace, category)
