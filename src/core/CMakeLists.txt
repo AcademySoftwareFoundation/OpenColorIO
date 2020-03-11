@@ -56,7 +56,7 @@ if(OCIO_BUILD_SHARED)
     endif()
 
     set_target_properties(OpenColorIO PROPERTIES
-        OUTPUT_NAME OpenColorIO
+        OUTPUT_NAME      OpenColorIO${OCIO_LIBNAME_SUFFIX}
         COMPILE_FLAGS   "${EXTERNAL_COMPILE_FLAGS}"
         LINK_FLAGS      "${EXTERNAL_LINK_FLAGS}")
     
@@ -84,7 +84,7 @@ if(OCIO_BUILD_STATIC)
     
 	set_target_properties(OpenColorIO_STATIC PROPERTIES COMPILE_DEFINITIONS "OpenColorIO_STATIC")
     set_target_properties(OpenColorIO_STATIC PROPERTIES
-        OUTPUT_NAME                 OpenColorIO
+        OUTPUT_NAME                 OpenColorIO${OCIO_LIBNAME_SUFFIX}
         ARCHIVE_OUTPUT_DIRECTORY    "${CMAKE_CURRENT_BINARY_DIR}/static"
         COMPILE_FLAGS               "${EXTERNAL_COMPILE_FLAGS}"
         LINK_FLAGS                  "${EXTERNAL_LINK_FLAGS}")
