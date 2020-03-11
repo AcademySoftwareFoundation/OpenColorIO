@@ -213,9 +213,8 @@ int main(int argc, const char **argv)
                 OCIO::ConstLookRcPtr look = config->getLook(config->getLookNameByIndex(i)); 
 
                 OCIO::ConstTransformRcPtr transform = look->getTransform();         
-                OCIO::ConstTransformRcPtr invTransform = look->getInverseTransform();         
 
-                if(transform!=NULL)
+                if(transform)
                 {
                     try
                     {
@@ -229,7 +228,9 @@ int main(int argc, const char **argv)
                     }
                 }
 
-                if(invTransform!=NULL)
+                OCIO::ConstTransformRcPtr invTransform = look->getInverseTransform();         
+
+                if(invTransform)
                 {
                     try
                     {
