@@ -125,6 +125,7 @@ set(SOURCES
 	transforms/Lut3DTransform.cpp
 	transforms/MatrixTransform.cpp
 	transforms/RangeTransform.cpp
+	ViewTransform.cpp
 )
 
 if(WIN32 AND BUILD_SHARED_LIBS)
