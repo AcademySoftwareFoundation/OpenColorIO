@@ -232,7 +232,7 @@ OCIO_ADD_TEST(Config, serialize_group_transform)
             OCIO::FileTransform::Create();
         OCIO::GroupTransformRcPtr groupTransform = OCIO::GroupTransform::Create();
         groupTransform->appendTransform(transform1);
-        cs->setTransform(groupTransform, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+        OCIO_CHECK_NO_THROW(cs->setTransform(groupTransform, OCIO::COLORSPACE_DIR_FROM_REFERENCE));
         config->addColorSpace(cs);
         config->setRole( OCIO::ROLE_COMPOSITING_LOG, cs->getName() );
     }
@@ -244,7 +244,7 @@ OCIO_ADD_TEST(Config, serialize_group_transform)
             OCIO::ExponentTransform::Create();
         OCIO::GroupTransformRcPtr groupTransform = OCIO::GroupTransform::Create();
         groupTransform->appendTransform(transform1);
-        cs->setTransform(groupTransform, OCIO::COLORSPACE_DIR_TO_REFERENCE);
+        OCIO_CHECK_NO_THROW(cs->setTransform(groupTransform, OCIO::COLORSPACE_DIR_TO_REFERENCE));
         config->addColorSpace(cs);
         config->setRole( OCIO::ROLE_COMPOSITING_LOG, cs->getName() );
     }
@@ -620,7 +620,8 @@ OCIO_ADD_TEST(Config, env_colorspace_name)
                               "This config references a color space, '$MISSING_ENV', "
                               "which is not defined");
         OCIO_CHECK_THROW_WHAT(config->getProcessor("raw", "lgh"), OCIO::Exception,
-                              "BuildColorSpaceOps failed, null dstColorSpace");
+                              "BuildColorSpaceOps failed: destination color space '$MISSING_ENV' "
+                              "could not be found");
     }
 
     {
@@ -639,7 +640,8 @@ OCIO_ADD_TEST(Config, env_colorspace_name)
         OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception,
                               "color space, 'FaultyColorSpaceName', which is not defined");
         OCIO_CHECK_THROW_WHAT(config->getProcessor("raw", "lgh"), OCIO::Exception,
-                              "BuildColorSpaceOps failed, null dstColorSpace");
+                              "BuildColorSpaceOps failed: destination color space '$OCIO_TEST' "
+                              "could not be found");
     }
 
     {
@@ -772,7 +774,7 @@ const std::string SIMPLE_PROFILE_A =
     "  scene_linear: lnh\n"
     "\n";
 
-const std::string SIMPLE_PROFILE_B =
+const std::string SIMPLE_PROFILE_DISPLAYS_LOOKS =
     "displays:\n"
     "  sRGB:\n"
     "    - !<View> {name: Raw, colorspace: raw}\n"
@@ -786,7 +788,9 @@ const std::string SIMPLE_PROFILE_B =
     "    name: beauty\n"
     "    process_space: lnh\n"
     "    transform: !<CDLTransform> {slope: [1, 2, 1]}\n"
-    "\n"
+    "\n";
+
+const std::string SIMPLE_PROFILE_CS =
     "\n"
     "colorspaces:\n"
     "  - !<ColorSpace>\n"
@@ -804,6 +808,8 @@ const std::string SIMPLE_PROFILE_B =
     "    bitdepth: unknown\n"
     "    isdata: false\n"
     "    allocation: uniform\n";
+
+const std::string SIMPLE_PROFILE_B = SIMPLE_PROFILE_DISPLAYS_LOOKS + SIMPLE_PROFILE_CS;
 
 const std::string DEFAULT_RULES =
     "file_rules:\n"
@@ -3046,32 +3052,41 @@ OCIO_ADD_TEST(Config, inactive_color_space)
 
     // Step 1 - No inactive color spaces.
 
-    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_INACTIVE), 0);
-    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_ACTIVE), 5);
-    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_ALL), 5);
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_INACTIVE), 0);
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_ACTIVE), 5);
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_ALL), 5);
 
-    OCIO_CHECK_EQUAL(
-        config->getColorSpaceNameByIndex(OCIO::COLORSPACE_ALL, 0), std::string("raw"));
-    OCIO_CHECK_EQUAL(
-        config->getColorSpaceNameByIndex(OCIO::COLORSPACE_ALL, 1), std::string("lnh"));
-    OCIO_CHECK_EQUAL(
-        config->getColorSpaceNameByIndex(OCIO::COLORSPACE_ALL, 2), std::string("cs1"));
-    OCIO_CHECK_EQUAL(
-        config->getColorSpaceNameByIndex(OCIO::COLORSPACE_ALL, 3), std::string("cs2"));
-    OCIO_CHECK_EQUAL(
-        config->getColorSpaceNameByIndex(OCIO::COLORSPACE_ALL, 4), std::string("cs3"));
+    OCIO_CHECK_EQUAL(std::string("raw"),
+                     config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                      OCIO::COLORSPACE_ALL, 0));
+    OCIO_CHECK_EQUAL(std::string("lnh"),
+                     config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                      OCIO::COLORSPACE_ALL, 1));
+    OCIO_CHECK_EQUAL(std::string("cs1"),
+                     config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                      OCIO::COLORSPACE_ALL, 2));
+    OCIO_CHECK_EQUAL(std::string("cs2"),
+                     config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                      OCIO::COLORSPACE_ALL, 3));
+    OCIO_CHECK_EQUAL(std::string("cs3"),
+                     config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                      OCIO::COLORSPACE_ALL, 4));
     // Check a faulty call.
-    OCIO_CHECK_EQUAL(
-        config->getColorSpaceNameByIndex(OCIO::COLORSPACE_ALL, 5), std::string(""));
+    OCIO_CHECK_EQUAL(std::string(""),
+                     config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                      OCIO::COLORSPACE_ALL, 5));
 
     OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(), 5);
-    OCIO_CHECK_EQUAL(config->getColorSpaceNameByIndex(0), std::string("raw"));
-    OCIO_CHECK_EQUAL(config->getColorSpaceNameByIndex(1), std::string("lnh"));
-    OCIO_CHECK_EQUAL(config->getColorSpaceNameByIndex(2), std::string("cs1"));
-    OCIO_CHECK_EQUAL(config->getColorSpaceNameByIndex(3), std::string("cs2"));
-    OCIO_CHECK_EQUAL(config->getColorSpaceNameByIndex(4), std::string("cs3"));
+    OCIO_CHECK_EQUAL(std::string("raw"), config->getColorSpaceNameByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("lnh"), config->getColorSpaceNameByIndex(1));
+    OCIO_CHECK_EQUAL(std::string("cs1"), config->getColorSpaceNameByIndex(2));
+    OCIO_CHECK_EQUAL(std::string("cs2"), config->getColorSpaceNameByIndex(3));
+    OCIO_CHECK_EQUAL(std::string("cs3"), config->getColorSpaceNameByIndex(4));
     // Check a faulty call.
-    OCIO_CHECK_EQUAL(config->getColorSpaceNameByIndex(5), std::string(""));
+    OCIO_CHECK_EQUAL(std::string(""), config->getColorSpaceNameByIndex(5));
 
     OCIO::ColorSpaceSetRcPtr css;
     OCIO_CHECK_NO_THROW(css = config->getColorSpaces(nullptr));
@@ -3080,7 +3095,7 @@ OCIO_ADD_TEST(Config, inactive_color_space)
     OCIO::ConstColorSpaceRcPtr cs;
     OCIO_CHECK_NO_THROW(cs = config->getColorSpace("scene_linear"));
     OCIO_REQUIRE_ASSERT(cs);
-    OCIO_CHECK_EQUAL(cs->getName(), std::string("lnh"));
+    OCIO_CHECK_EQUAL(std::string("lnh"), cs->getName());
 
     OCIO_CHECK_EQUAL(config->getIndexForColorSpace("scene_linear"), 1);
     OCIO_CHECK_EQUAL(config->getIndexForColorSpace("lnh"), 1);
@@ -3091,28 +3106,51 @@ OCIO_ADD_TEST(Config, inactive_color_space)
     OCIO_CHECK_NO_THROW(config->setInactiveColorSpaces("lnh, cs1"));
     OCIO_CHECK_EQUAL(config->getInactiveColorSpaces(), std::string("lnh, cs1"));
 
-    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_INACTIVE), 2);
-    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_ACTIVE), 3);
-    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_ALL), 5);
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_INACTIVE), 2);
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_ACTIVE), 3);
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_ALL), 5);
+
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_SCENE,
+                                               OCIO::COLORSPACE_INACTIVE), 2);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_SCENE,
+                                               OCIO::COLORSPACE_ACTIVE), 3);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_SCENE,
+                                               OCIO::COLORSPACE_ALL), 5);
+
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY,
+                                               OCIO::COLORSPACE_INACTIVE), 0);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY,
+                                               OCIO::COLORSPACE_ACTIVE), 0);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY,
+                                               OCIO::COLORSPACE_ALL), 0);
 
     // Check methods working on all color spaces.
-    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_ALL), 5);
-    OCIO_CHECK_EQUAL(
-        config->getColorSpaceNameByIndex(OCIO::COLORSPACE_ALL, 0), std::string("raw"));
-    OCIO_CHECK_EQUAL(
-        config->getColorSpaceNameByIndex(OCIO::COLORSPACE_ALL, 1), std::string("lnh"));
-    OCIO_CHECK_EQUAL(
-        config->getColorSpaceNameByIndex(OCIO::COLORSPACE_ALL, 2), std::string("cs1"));
-    OCIO_CHECK_EQUAL(
-        config->getColorSpaceNameByIndex(OCIO::COLORSPACE_ALL, 3), std::string("cs2"));
-    OCIO_CHECK_EQUAL(
-        config->getColorSpaceNameByIndex(OCIO::COLORSPACE_ALL, 4), std::string("cs3"));
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL, 
+                                                 OCIO::COLORSPACE_ALL), 5);
+    OCIO_CHECK_EQUAL(std::string("raw"),
+                     config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                      OCIO::COLORSPACE_ALL, 0));
+    OCIO_CHECK_EQUAL(std::string("lnh"),
+                     config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                      OCIO::COLORSPACE_ALL, 1));
+    OCIO_CHECK_EQUAL(std::string("cs1"),
+                     config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                      OCIO::COLORSPACE_ALL, 2));
+    OCIO_CHECK_EQUAL(std::string("cs2"),
+                     config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                      OCIO::COLORSPACE_ALL, 3));
+    OCIO_CHECK_EQUAL(std::string("cs3"),
+                     config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                      OCIO::COLORSPACE_ALL, 4));
 
     // Check methods working on only active color spaces.
     OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(), 3);
-    OCIO_CHECK_EQUAL(config->getColorSpaceNameByIndex(0), std::string("raw"));
-    OCIO_CHECK_EQUAL(config->getColorSpaceNameByIndex(1), std::string("cs2"));
-    OCIO_CHECK_EQUAL(config->getColorSpaceNameByIndex(2), std::string("cs3"));
+    OCIO_CHECK_EQUAL(std::string("raw"), config->getColorSpaceNameByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("cs2"), config->getColorSpaceNameByIndex(1));
+    OCIO_CHECK_EQUAL(std::string("cs3"), config->getColorSpaceNameByIndex(2));
 
     // Asking for a color space set with no categories returns active color spaces only.
     OCIO_CHECK_NO_THROW(css = config->getColorSpaces(nullptr));
@@ -3129,22 +3167,22 @@ OCIO_ADD_TEST(Config, inactive_color_space)
     // Request an active color space.
     OCIO_CHECK_NO_THROW(cs = config->getColorSpace("cs2"));
     OCIO_CHECK_ASSERT(cs);
-    OCIO_CHECK_EQUAL(cs->getName(), std::string("cs2"));
+    OCIO_CHECK_EQUAL(std::string("cs2"), cs->getName());
 
     // Request an inactive color space.
     OCIO_CHECK_NO_THROW(cs = config->getColorSpace("cs1"));
     OCIO_CHECK_ASSERT(cs);
-    OCIO_CHECK_EQUAL(cs->getName(), std::string("cs1"));
+    OCIO_CHECK_EQUAL(std::string("cs1"), cs->getName());
 
     // Request a role with an active color space.
     OCIO_CHECK_NO_THROW(cs = config->getColorSpace("default"));
     OCIO_REQUIRE_ASSERT(cs);
-    OCIO_CHECK_EQUAL(cs->getName(), std::string("raw"));
+    OCIO_CHECK_EQUAL(std::string("raw"), cs->getName());
 
     // Request a role with an inactive color space.
     OCIO_CHECK_NO_THROW(cs = config->getColorSpace("scene_linear"));
     OCIO_CHECK_ASSERT(cs);
-    OCIO_CHECK_EQUAL(cs->getName(), std::string("lnh"));
+    OCIO_CHECK_EQUAL(std::string("lnh"), cs->getName());
     // ... the color is not an active color space.
     OCIO_CHECK_EQUAL(config->getIndexForColorSpace("scene_linear"), -1);
     OCIO_CHECK_EQUAL(config->getIndexForColorSpace("lnh"), -1);
@@ -3179,7 +3217,8 @@ OCIO_ADD_TEST(Config, inactive_color_space)
     OCIO_CHECK_NO_THROW(config->setInactiveColorSpaces(""));
     OCIO_CHECK_EQUAL(config->getInactiveColorSpaces(), std::string(""));
 
-    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_ALL), 5);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                               OCIO::COLORSPACE_ALL), 5);
     OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 5);
 
     // Step 4 - No inactive color spaces.
@@ -3187,8 +3226,88 @@ OCIO_ADD_TEST(Config, inactive_color_space)
     OCIO_CHECK_NO_THROW(config->setInactiveColorSpaces(nullptr));
     OCIO_CHECK_EQUAL(config->getInactiveColorSpaces(), std::string(""));
 
-    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_ALL), 5);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                               OCIO::COLORSPACE_ALL), 5);
     OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 5);
+
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_SCENE,
+                                               OCIO::COLORSPACE_ALL), 5);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY,
+                                               OCIO::COLORSPACE_ALL), 0);
+
+    // Step 5 - Add display color spaces.
+    auto dcs0 = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_DISPLAY);
+    dcs0->setName("display0");
+    config->addColorSpace(dcs0);
+    auto dcs1 = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_DISPLAY);
+    dcs1->setName("display1");
+    config->addColorSpace(dcs1);
+    auto dcs2 = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_DISPLAY);
+    dcs2->setName("display2");
+    config->addColorSpace(dcs2);
+
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                               OCIO::COLORSPACE_ALL), 8);
+
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_SCENE,
+                                               OCIO::COLORSPACE_ALL), 5);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY,
+                                               OCIO::COLORSPACE_ALL), 3);
+
+    // Step 6 - Some inactive color spaces.
+    OCIO_CHECK_NO_THROW(config->setInactiveColorSpaces("cs1, display1"));
+    OCIO_CHECK_EQUAL(config->getInactiveColorSpaces(), std::string("cs1, display1"));
+
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_SCENE,
+                                               OCIO::COLORSPACE_INACTIVE), 1);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY,
+                                               OCIO::COLORSPACE_INACTIVE), 1);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                               OCIO::COLORSPACE_INACTIVE), 2);
+    OCIO_CHECK_EQUAL(std::string("cs1"),
+                     config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_SCENE,
+                                                      OCIO::COLORSPACE_INACTIVE, 0));
+    OCIO_CHECK_EQUAL(std::string("display1"),
+                     config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY,
+                                                      OCIO::COLORSPACE_INACTIVE, 0));
+    OCIO_CHECK_EQUAL(std::string(""),
+                     config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_SCENE,
+                                                      OCIO::COLORSPACE_INACTIVE, 1));
+    OCIO_CHECK_EQUAL(std::string(""),
+                     config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY,
+                                                      OCIO::COLORSPACE_INACTIVE, 1));
+
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_SCENE,
+                                               OCIO::COLORSPACE_ACTIVE), 4);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY,
+                                               OCIO::COLORSPACE_ACTIVE), 2);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                               OCIO::COLORSPACE_ACTIVE), 6);
+    OCIO_CHECK_EQUAL(std::string("cs2"),
+                     config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_SCENE,
+                                                      OCIO::COLORSPACE_ACTIVE, 2));
+    OCIO_CHECK_EQUAL(std::string("display2"),
+                     config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY,
+                                                      OCIO::COLORSPACE_ACTIVE, 1));
+
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_SCENE,
+                                               OCIO::COLORSPACE_ALL), 5);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY,
+                                               OCIO::COLORSPACE_ALL), 3);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                               OCIO::COLORSPACE_ALL), 8);
+    OCIO_CHECK_EQUAL(std::string("raw"),
+                     config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_SCENE,
+                                                      OCIO::COLORSPACE_ALL, 0));
+    OCIO_CHECK_EQUAL(std::string("cs2"),
+                     config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_SCENE,
+                                                      OCIO::COLORSPACE_ALL, 3));
+    OCIO_CHECK_EQUAL(std::string(""),
+                     config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_SCENE,
+                                                      OCIO::COLORSPACE_ALL, 10));
+    OCIO_CHECK_EQUAL(std::string("display1"),
+                     config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY,
+                                                      OCIO::COLORSPACE_ALL, 1));
 }
 
 OCIO_ADD_TEST(Config, inactive_color_space_precedence)
@@ -3208,9 +3327,12 @@ OCIO_ADD_TEST(Config, inactive_color_space_precedence)
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
     OCIO_CHECK_NO_THROW(config->sanityCheck());
 
-    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_INACTIVE), 1);
-    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_ACTIVE), 4);
-    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_ALL), 5);
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_INACTIVE), 1);
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_ACTIVE), 4);
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_ALL), 5);
 
     OCIO_CHECK_EQUAL(config->getColorSpaceNameByIndex(0), std::string("raw"));
     OCIO_CHECK_EQUAL(config->getColorSpaceNameByIndex(1), std::string("lnh"));
@@ -3225,9 +3347,12 @@ OCIO_ADD_TEST(Config, inactive_color_space_precedence)
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
     OCIO_CHECK_NO_THROW(config->sanityCheck());
 
-    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_INACTIVE), 3);
-    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_ACTIVE), 2);
-    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_ALL), 5);
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_INACTIVE), 3);
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_ACTIVE), 2);
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_ALL), 5);
 
     OCIO_CHECK_EQUAL(config->getColorSpaceNameByIndex(0), std::string("raw"));
     OCIO_CHECK_EQUAL(config->getColorSpaceNameByIndex(1), std::string("cs2"));
@@ -3236,9 +3361,12 @@ OCIO_ADD_TEST(Config, inactive_color_space_precedence)
 
     OCIO_CHECK_NO_THROW(config->setInactiveColorSpaces("cs1, lnh"));
 
-    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_INACTIVE), 2);
-    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_ACTIVE), 3);
-    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_ALL), 5);
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_INACTIVE), 2);
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_ACTIVE), 3);
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_ALL), 5);
 
     OCIO_CHECK_EQUAL(config->getColorSpaceNameByIndex(0), std::string("raw"));
     OCIO_CHECK_EQUAL(config->getColorSpaceNameByIndex(1), std::string("cs2"));
@@ -3262,7 +3390,8 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
-        OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_ALL), 5);
+        OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                     OCIO::COLORSPACE_ALL), 5);
         OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(), 4);
 
         std::stringstream ss;
@@ -3288,7 +3417,8 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
             OCIO_CHECK_NO_THROW(config->sanityCheck());
         }
 
-        OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_ALL), 5);
+        OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                     OCIO::COLORSPACE_ALL), 5);
         OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(), 2);
 
         std::stringstream ss;
@@ -3310,7 +3440,8 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
-        OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_ALL), 5);
+        OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                     OCIO::COLORSPACE_ALL), 5);
         OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(), 3);
 
         std::string resultStr;
@@ -3337,7 +3468,8 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
-        OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_ALL), 5);
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                   OCIO::COLORSPACE_ALL), 5);
         OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 5);
 
         std::string resultStr;
@@ -3370,7 +3502,8 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
                              "[OpenColorIO Warning]: Inactive color space 'unknown' does not exist.\n");
         }
 
-        OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_ALL), 5);
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                   OCIO::COLORSPACE_ALL), 5);
         OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 5);
 
         std::stringstream ss;
@@ -3378,7 +3511,6 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
         OCIO_CHECK_EQUAL(ss.str(), configStr);
     }
 }
-
 
 OCIO_ADD_TEST(Config, two_configs)
 {
@@ -3504,4 +3636,245 @@ colorspaces:
     OCIO_CHECK_THROW_WHAT(OCIO::Config::GetProcessor(config1, "test", config3, "test"),
                           OCIO::Exception,
                           "The role 'aces_interchange' is missing in the destination config");
+}
+
+const std::string PROFILE_V2_DCS_START = PROFILE_V2 + SIMPLE_PROFILE_A + DEFAULT_RULES +
+                                         SIMPLE_PROFILE_DISPLAYS_LOOKS;
+
+OCIO_ADD_TEST(Config, display_color_spaces_serialization)
+{
+    {
+        const std::string strDCS =
+            "\n"
+            "view_transforms:\n"
+            "  - !<ViewTransform>\n"
+            "    name: display\n"
+            "    from_display_reference: !<MatrixTransform> {}\n"
+            "\n"
+            "  - !<ViewTransform>\n"
+            "    name: scene\n"
+            "    from_reference: !<MatrixTransform> {}\n"
+            "\n"
+            "display_colorspaces:\n"
+            "  - !<ColorSpace>\n"
+            "    name: dcs1\n"
+            "    family: \"\"\n"
+            "    equalitygroup: \"\"\n"
+            "    bitdepth: unknown\n"
+            "    isdata: false\n"
+            "    allocation: uniform\n"
+            "    from_display_reference: !<ExponentTransform> {value: 2.4, direction: inverse}\n"
+            "\n"
+            "  - !<ColorSpace>\n"
+            "    name: dcs2\n"
+            "    family: \"\"\n"
+            "    equalitygroup: \"\"\n"
+            "    bitdepth: unknown\n"
+            "    isdata: false\n"
+            "    allocation: uniform\n"
+            "    to_display_reference: !<ExponentTransform> {value: 2.4}\n";
+			
+        const std::string str = PROFILE_V2_DCS_START + strDCS + SIMPLE_PROFILE_CS;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OCIO_CHECK_EQUAL(ss.str().size(), str.size());
+        OCIO_CHECK_EQUAL(ss.str(), str);
+    }
+}
+
+OCIO_ADD_TEST(Config, display_color_spaces_errors)
+{
+    {
+        const std::string strDCS =
+            "\n"
+            "display_colorspaces:\n"
+            "  - !<ColorSpace>\n"
+            "    name: dcs1\n"
+            "    family: \"\"\n"
+            "    equalitygroup: \"\"\n"
+            "    bitdepth: unknown\n"
+            "    isdata: false\n"
+            "    allocation: uniform\n"
+            "    from_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1], direction: inverse}\n"
+            "\n"
+            "  - !<ColorSpace>\n"
+            "    name: dcs2\n"
+            "    family: \"\"\n"
+            "    equalitygroup: \"\"\n"
+            "    bitdepth: unknown\n"
+            "    isdata: false\n"
+            "    allocation: uniform\n"
+            "    to_display_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1]}\n";
+        const std::string str = PROFILE_V2_DCS_START + strDCS + SIMPLE_PROFILE_CS;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "'from_reference' cannot be used for a display color space");
+    }
+    {
+        const std::string strDCS =
+            "\n"
+            "display_colorspaces:\n"
+            "  - !<ColorSpace>\n"
+            "    name: dcs1\n"
+            "    family: \"\"\n"
+            "    equalitygroup: \"\"\n"
+            "    bitdepth: unknown\n"
+            "    isdata: false\n"
+            "    allocation: uniform\n"
+            "    from_display_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1], direction: inverse}\n"
+            "\n"
+            "  - !<ColorSpace>\n"
+            "    name: dcs2\n"
+            "    family: \"\"\n"
+            "    equalitygroup: \"\"\n"
+            "    bitdepth: unknown\n"
+            "    isdata: false\n"
+            "    allocation: uniform\n"
+            "    to_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1]}\n";
+        const std::string str = PROFILE_V2_DCS_START + strDCS + SIMPLE_PROFILE_CS;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "'to_reference' cannot be used for a display color space");
+    }
+}
+
+OCIO_ADD_TEST(Config, view_transforms)
+{
+    const std::string str = PROFILE_V2_DCS_START + SIMPLE_PROFILE_CS;
+
+    std::istringstream is;
+    is.str(str);
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+    auto configEdit = config->createEditableCopy();
+    // Create display-referred view transform and add it to the config.
+    auto vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_DISPLAY);
+    OCIO_CHECK_THROW_WHAT(configEdit->addViewTransform(vt), OCIO::Exception,
+                          "Cannot add view transform with an empty name");
+    const std::string vtDisplay{ "display" };
+    vt->setName(vtDisplay.c_str());
+    OCIO_CHECK_THROW_WHAT(configEdit->addViewTransform(vt), OCIO::Exception,
+                          "Cannot add view transform with no transform");
+    OCIO_CHECK_NO_THROW(vt->setTransform(OCIO::MatrixTransform::Create(),
+                                         OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
+    OCIO_CHECK_NO_THROW(configEdit->addViewTransform(vt));
+    OCIO_CHECK_EQUAL(configEdit->getNumViewTransforms(), 1);
+    // Need at least one scene-referred view transform.
+    OCIO_CHECK_THROW_WHAT(configEdit->sanityCheck(), OCIO::Exception,
+                          "at least one must use the scene reference space");
+    OCIO_CHECK_ASSERT(!configEdit->getDefaultSceneToDisplayViewTransform());
+
+    // Create scene-referred view transform and add it to the config.
+    vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_SCENE);
+    const std::string vtScene{ "scene" };
+    vt->setName(vtScene.c_str());
+    OCIO_CHECK_NO_THROW(vt->setTransform(OCIO::MatrixTransform::Create(),
+                                         OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
+    OCIO_CHECK_NO_THROW(configEdit->addViewTransform(vt));
+    OCIO_REQUIRE_EQUAL(configEdit->getNumViewTransforms(), 2);
+    OCIO_CHECK_NO_THROW(configEdit->sanityCheck());
+
+    auto sceneVT = configEdit->getDefaultSceneToDisplayViewTransform();
+    OCIO_CHECK_ASSERT(sceneVT);
+
+    OCIO_CHECK_EQUAL(vtDisplay, configEdit->getViewTransformNameByIndex(0));
+    OCIO_CHECK_EQUAL(vtScene, configEdit->getViewTransformNameByIndex(1));
+    OCIO_CHECK_EQUAL(std::string(""), configEdit->getViewTransformNameByIndex(42));
+    OCIO_CHECK_ASSERT(configEdit->getViewTransform(vtScene.c_str()));
+    OCIO_CHECK_ASSERT(!configEdit->getViewTransform("not a view transform"));
+
+    // Save and reload to test file io for viewTransform.
+    std::stringstream os;
+    os << *configEdit.get();
+
+    is.clear();
+    is.str(os.str());
+
+    OCIO::ConstConfigRcPtr configReloaded;
+    OCIO_CHECK_NO_THROW(configReloaded = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(configReloaded->sanityCheck());
+
+    // Setting a view transform with the same name replaces the earlier one.
+    OCIO_CHECK_NO_THROW(vt->setTransform(OCIO::LogTransform::Create(),
+                                         OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
+    OCIO_CHECK_NO_THROW(configEdit->addViewTransform(vt));
+    OCIO_REQUIRE_EQUAL(configEdit->getNumViewTransforms(), 2);
+    sceneVT = configEdit->getViewTransform(vtScene.c_str());
+    auto trans = sceneVT->getTransform(OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE);
+    OCIO_REQUIRE_ASSERT(trans);
+    OCIO_CHECK_ASSERT(OCIO_DYNAMIC_POINTER_CAST<const OCIO::LogTransform>(trans));
+
+    OCIO_CHECK_EQUAL(configReloaded->getNumViewTransforms(), 2);
+
+    configEdit->clearViewTransforms();
+    OCIO_CHECK_EQUAL(configEdit->getNumViewTransforms(), 0);
+}
+
+OCIO_ADD_TEST(Config, display_view)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    auto cs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
+    cs->setName("scs");
+    config->addColorSpace(cs);
+    cs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_DISPLAY);
+    cs->setName("dcs");
+    config->addColorSpace(cs);
+
+    auto vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_DISPLAY);
+    vt->setName("display");
+    OCIO_CHECK_NO_THROW(vt->setTransform(OCIO::MatrixTransform::Create(),
+                                         OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
+    OCIO_CHECK_NO_THROW(config->addViewTransform(vt));
+
+    vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_SCENE);
+    vt->setName("view_transform");
+    OCIO_CHECK_NO_THROW(vt->setTransform(OCIO::MatrixTransform::Create(),
+                                         OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
+    OCIO_CHECK_NO_THROW(config->addViewTransform(vt));
+
+    const std::string display{ "display" };
+    OCIO_CHECK_NO_THROW(config->addDisplay(display.c_str(), "view1", "scs", ""));
+
+    OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+    OCIO_CHECK_NO_THROW(config->addDisplay(display.c_str(), "view2", "view_transform", "scs", ""));
+    OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception,
+                          "color space, 'scs', that is not a display-referred");
+
+    OCIO_CHECK_NO_THROW(config->addDisplay(display.c_str(), "view2", "view_transform", "dcs", ""));
+    OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+    OCIO_CHECK_EQUAL(config->getNumDisplays(), 1);
+    OCIO_CHECK_EQUAL(config->getNumViews(display.c_str()), 2);
+    // Using nullptr for any parameter does nothing.
+    OCIO_CHECK_NO_THROW(config->addDisplay(nullptr, "view1", "scs", ""));
+    OCIO_CHECK_NO_THROW(config->addDisplay(display.c_str(), "view3", nullptr, ""));
+    OCIO_CHECK_NO_THROW(config->addDisplay(display.c_str(), "view4", "", nullptr));
+    OCIO_CHECK_NO_THROW(config->addDisplay(display.c_str(), "view4", "view_transform", "dcs", nullptr));
+    OCIO_CHECK_EQUAL(config->getNumDisplays(), 1);
+    OCIO_CHECK_EQUAL(config->getNumViews(display.c_str()), 2);
+
+    OCIO_CHECK_THROW_WHAT(config->addDisplay("", "view1", "scs", ""), OCIO::Exception,
+                          "Can't add a display with empty name");
+    OCIO_CHECK_THROW_WHAT(config->addDisplay(display.c_str(), "", "scs", ""), OCIO::Exception,
+                          "Can't add a display with empty view name");
+    OCIO_CHECK_THROW_WHAT(config->addDisplay(display.c_str(), "view1", "", ""), OCIO::Exception,
+                          "Can't add a display with empty color space name");
 }
