@@ -87,8 +87,6 @@ set(SOURCES
 	ops/range/RangeOpGPU.cpp
 	ScanlineHelper.cpp
 	Transform.cpp
-	transforms/ColorSpaceTransform.cpp
-	transforms/DisplayTransform.cpp
 	transforms/LookTransform.cpp
 )
 
@@ -176,6 +174,8 @@ set(TESTS
 	transforms/RangeTransform_tests.cpp
 	transforms/AllocationTransform_tests.cpp
 	transforms/CDLTransform_tests.cpp
+	transforms/ColorSpaceTransform_tests.cpp
+	transforms/DisplayTransform_tests.cpp
 	transforms/ExponentTransform_tests.cpp
 	transforms/ExponentWithLinearTransform_tests.cpp
 	transforms/ExposureContrastTransform_tests.cpp
@@ -190,6 +190,7 @@ set(TESTS
 	UnitTestLogUtils.cpp
 	UnitTestMain.cpp
 	UnitTestUtils.cpp
+	ViewTransform_tests.cpp
 )
 
 function(prepend var prefix)
