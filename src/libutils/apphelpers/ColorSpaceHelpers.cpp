@@ -236,7 +236,7 @@ public:
                    const char * role,          // Role name to override categories.
                    const char * categories);   // Comma-separated list of categories.
 
-    MenuHelperImpl(const MenuHelperImpl &) = default;
+    MenuHelperImpl(const MenuHelperImpl &) = delete;
     ~MenuHelperImpl() override = default;
 
     size_t getNumColorSpaces() const noexcept override;
