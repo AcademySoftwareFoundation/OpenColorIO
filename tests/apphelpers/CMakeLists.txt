@@ -15,7 +15,6 @@ add_executable(test_apphelpers_exec ${SOURCES})
 target_include_directories(test_apphelpers_exec
     PRIVATE
         "${CMAKE_SOURCE_DIR}/tests/cpu"
-        "${CMAKE_SOURCE_DIR}/src/utils/apphelpers"
         "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
@@ -37,9 +36,6 @@ set_target_properties(test_apphelpers_exec
 )
 
 target_link_libraries(test_apphelpers_exec
-    PUBLIC
-        public_api
-
     PRIVATE
         apphelpers
         OpenColorIO

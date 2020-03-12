@@ -40,9 +40,6 @@ target_include_directories(apphelpers
 )
 
 target_link_libraries(apphelpers
-    PUBLIC
-        public_api
-
     PRIVATE
         OpenColorIO
         utils::strings

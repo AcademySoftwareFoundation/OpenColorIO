@@ -47,7 +47,7 @@ target_include_directories(test_gpu_exec
 if(NOT BUILD_SHARED_LIBS)
 	target_compile_definitions(test_gpu_exec
 		PRIVATE
-		OpenColorIO_SKIP_IMPORTS
+			OpenColorIO_SKIP_IMPORTS
 	)
 endif()
 
