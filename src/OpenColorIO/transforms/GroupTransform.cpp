@@ -165,6 +165,11 @@ void GroupTransform::appendTransform(TransformRcPtr transform)
     getImpl()->m_vec.push_back(transform);
 }
 
+void GroupTransform::prependTransform(TransformRcPtr transform)
+{
+    getImpl()->m_vec.insert(getImpl()->m_vec.begin(), transform);
+}
+
 std::ostream & operator<< (std::ostream & os, const GroupTransform & groupTransform)
 {
     os << "<GroupTransform ";

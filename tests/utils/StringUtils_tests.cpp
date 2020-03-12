@@ -172,3 +172,31 @@ OCIO_ADD_TEST(StringUtils, find)
 
     OCIO_CHECK_EQUAL(std::string::npos, StringUtils::ReverseFind(ref, "TO"));
 }
+
+OCIO_ADD_TEST(StringUtils, remove_contain)
+{
+    static constexpr char ref[]{"1,\t2, 3, 4,5,      6"};
+
+    StringUtils::StringVec res = StringUtils::Split(ref, ',');
+
+    {
+        OCIO_CHECK_EQUAL(res.size(), 6);
+        OCIO_CHECK_NO_THROW(StringUtils::Trim(res));
+        static const StringUtils::StringVec values{"1", "2", "3", "4", "5", "6"};
+        OCIO_CHECK_ASSERT(res==values);
+
+        const std::string str = StringUtils::Join(res, ',');
+        OCIO_CHECK_EQUAL(str, std::string("1, 2, 3, 4, 5, 6"));
+    }
+
+    {
+        OCIO_CHECK_ASSERT(StringUtils::Contain(res, "3"));
+        OCIO_CHECK_ASSERT(StringUtils::Contain(res, "6"));
+
+        OCIO_CHECK_ASSERT(!StringUtils::Contain(res, "9"));
+
+        OCIO_CHECK_ASSERT(StringUtils::Remove(res, "3"));
+        OCIO_CHECK_EQUAL(res.size(), 5);
+        OCIO_CHECK_ASSERT(!StringUtils::Contain(res, "3"));
+    }
+}

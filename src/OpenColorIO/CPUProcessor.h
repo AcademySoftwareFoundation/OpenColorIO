@@ -53,9 +53,7 @@ public:
     //
     // Functions not exposed to the OCIO public API.
 
-    void finalize(const OpRcPtrVec & rawOps,
-                  BitDepth in, BitDepth out,
-                  OptimizationFlags oFlags);
+    void finalize(const OpRcPtrVec & rawOps, BitDepth in, BitDepth out, OptimizationFlags oFlags);
 
 private:
     ConstOpCPURcPtr    m_inBitDepthOp; // Converts from in to F32. It could be done by the first op.
