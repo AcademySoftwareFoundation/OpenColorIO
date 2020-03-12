@@ -105,6 +105,10 @@ if(NOT OCIO_NAMESPACE)
 endif(NOT OCIO_NAMESPACE)
 messageonce("Setting Namespace to: ${OCIO_NAMESPACE}")
 
+set(OCIO_LIBNAME_SUFFIX "" CACHE STRING
+    "Specify a suffix to all libraries that are built")
+messageonce("Setting Libname suffix to: ${OCIO_LIBNAME_SUFFIX}")
+
 # If CMAKE_INSTALL_EXEC_PREFIX is not specified, install binaries
 # directly into the regular install prefix
 if(NOT CMAKE_INSTALL_EXEC_PREFIX)
