@@ -55,7 +55,7 @@ class MixingSliderImpl : public MixingSlider
 public:
     MixingSliderImpl() = delete;
     MixingSliderImpl & operator=(const MixingSliderImpl &) = delete;
-    MixingSliderImpl(MixingColorSpaceManager & mixing);
+    explicit MixingSliderImpl(MixingColorSpaceManager & mixing);
     ~MixingSliderImpl() override = default;
 
     float getSliderMinEdge() const noexcept override;
@@ -139,8 +139,8 @@ class MixingColorSpaceManagerImpl : public MixingColorSpaceManager
 public:
     MixingColorSpaceManagerImpl() = delete;
     MixingColorSpaceManagerImpl & operator=(const MixingColorSpaceManagerImpl &) = delete;
-    MixingColorSpaceManagerImpl(ConstConfigRcPtr & config);
-    MixingColorSpaceManagerImpl(const MixingColorSpaceManagerImpl &) = default;
+    explicit MixingColorSpaceManagerImpl(ConstConfigRcPtr & config);
+    MixingColorSpaceManagerImpl(const MixingColorSpaceManagerImpl &) = delete;
     ~MixingColorSpaceManagerImpl() override = default;
 
     size_t getNumMixingSpaces() const noexcept override;
