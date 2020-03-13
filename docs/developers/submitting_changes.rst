@@ -42,7 +42,7 @@ assistance.
 
     git remote -v
     origin https://github.com/$USER/OpenColorIO (fetch)
-    origin https://github.com/$USER/OpenColorIO (fetch)
+    origin https://github.com/$USER/OpenColorIO (push)
     upstream https://github.com/AcademySoftwareFoundation/OpenColorIO (fetch)
     upstream https://github.com/AcademySoftwareFoundation/OpenColorIO (push)
 
