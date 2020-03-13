@@ -218,11 +218,10 @@ if(WIN32)
 endif()
 
 set_target_properties(OpenColorIO PROPERTIES
-	COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
-
-set_target_properties(OpenColorIO PROPERTIES
-    VERSION ${OpenColorIO_VERSION}
-    SOVERSION ${SOVERSION})
+    OUTPUT_NAME   OpenColorIO${OCIO_LIBNAME_SUFFIX}
+    COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}"
+    VERSION       ${OpenColorIO_VERSION}
+    SOVERSION     ${SOVERSION})
 
 if(MSVC AND BUILD_SHARED_LIBS)
 	# Install the pdb file if any.
