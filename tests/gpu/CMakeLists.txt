@@ -77,3 +77,19 @@ target_link_libraries(test_gpu_exec
 )
 
 add_test(test_gpu test_gpu_exec)
+
+# Note: To avoid changing PATH from outside the cmake files.
+if(MSVC AND BUILD_SHARED_LIBS)
+
+    if (MSVC_IDE)
+        # Note: By default Microsoft Visual Studio editor happens the build type to the build directory.
+        set(BUILD_TYPE ${CMAKE_BUILD_TYPE})
+    endif()
+
+    set(NEW_PATH "${CMAKE_BINARY_DIR}/src/OpenColorIO/${BUILD_TYPE}")
+    set(NEW_PATH "${NEW_PATH}\\\;${GLUT_INCLUDE_DIR}/../bin")
+    set(NEW_PATH "${NEW_PATH}\\\;${GLEW_INCLUDE_DIRS}/../bin")
+
+    set_tests_properties(test_gpu PROPERTIES ENVIRONMENT PATH=${NEW_PATH})
+
+endif()
