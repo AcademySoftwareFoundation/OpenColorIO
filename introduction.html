@@ -1,44 +1,35 @@
 
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>OpenColorIO</title>
 
-    
     <link rel="stylesheet" href="_static/ocio.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/print.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '1.1.1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
+    <link rel="stylesheet" type="text/css" href="_static/print.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <script type="text/javascript" src="_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO 1.1.1 documentation" href="index.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Configurations" href="configurations/index.html" />
     <link rel="prev" title="Home" href="index.html" /> 
-  </head>
-  <body>
+  </head><body>
     <div class="header"><h1 class="heading"><a href="index.html">
           <span>OpenColorIO</span></a></h1>
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO 1.1.1 documentation
+      OpenColorIO  documentation
       </div>
       <div class="content">
         
@@ -48,7 +39,7 @@
             <div class="sidebar2">
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Introduction</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#sony-pictures-imageworks-color-pipeline">Sony Pictures Imageworks Color Pipeline</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#further-information">Further Information</a></li>
 </ul>
@@ -63,6 +54,8 @@
 <li class="toctree-l1"><a class="reference internal" href="ChangeLog.html">ChangeLog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="License.html">License</a></li>
 </ul>
+<!-- SPDX-License-Identifier: BSD-3-Clause -->
+<!-- Copyright Contributors to the OpenColorIO Project. -->
 
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
@@ -86,21 +79,21 @@ picture production with an emphasis on visual effects and computer animation. As
 such, OCIO helps enforce a color management methodology that is required for the
 high fidelity color imaging in modern computer graphics. This section introduces
 those concepts and general workflow practices. Additional information can be
-found in Jeremy Selan&#8217;s Cinematic Color <a class="reference external" href="http://cinematiccolor.org/">document</a>.</p>
-<p>While OCIO is a color management library, it&#8217;s only knowledge of color science
-comes from it&#8217;s execution of the transforms defined in the OCIO configuration
+found in Jeremy Selan’s Cinematic Color <a class="reference external" href="http://cinematiccolor.org/">document</a>.</p>
+<p>While OCIO is a color management library, it’s only knowledge of color science
+comes from it’s execution of the transforms defined in the OCIO configuration
 file. These transforms are either defined by the end user in a custom OCIO
 config or inherited from the publicly available configs.</p>
-<p>By specifying your desired <tt class="docutils literal"><span class="pre">config.ocio</span></tt> Config file in the local environment
+<p>By specifying your desired <code class="docutils literal notranslate"><span class="pre">config.ocio</span></code> Config file in the local environment
 all OCIO compatible applications and software libraries will be able to see your
-defined color transform &#8220;universe&#8221;, and direct the transformation of image data
-from one defined <tt class="docutils literal"><span class="pre">OCIO.ColorSpace</span></tt> to another, in addition to the other
+defined color transform “universe”, and direct the transformation of image data
+from one defined <code class="docutils literal notranslate"><span class="pre">OCIO.ColorSpace</span></code> to another, in addition to the other
 transforms documented elsewhere.</p>
 <div class="section" id="sony-pictures-imageworks-color-pipeline">
 <h2>Sony Pictures Imageworks Color Pipeline<a class="headerlink" href="#sony-pictures-imageworks-color-pipeline" title="Permalink to this headline">¶</a></h2>
 <p>This document describes a high-level overview on how to emulate the current
 color management practice at Sony Imageworks. It applies equally to all profiles
-used at Imageworks, including both the VFX and Animation profiles.  It&#8217;s by no
+used at Imageworks, including both the VFX and Animation profiles.  It’s by no
 means a requirement to follow this workflow at your own facility, this is merely
 a guideline on how we choose to work.</p>
 <div class="section" id="general-pipeline-observations">
@@ -112,10 +105,11 @@ or view images.  File extensions and metadata are ignored with regards to
 color processing.</li>
 </ul>
 <p>Example:</p>
-<div class="highlight-python"><pre>colorimage_lnf.exr  : lnf
-dataimage_ncf.exr : ncf
-plate_lg10.dpx : lg10
-texture_dt8.tif : dt8</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">colorimage_lnf</span><span class="o">.</span><span class="n">exr</span>  <span class="p">:</span> <span class="n">lnf</span>
+<span class="n">dataimage_ncf</span><span class="o">.</span><span class="n">exr</span> <span class="p">:</span> <span class="n">ncf</span>
+<span class="n">plate_lg10</span><span class="o">.</span><span class="n">dpx</span> <span class="p">:</span> <span class="n">lg10</span>
+<span class="n">texture_dt8</span><span class="o">.</span><span class="n">tif</span> <span class="p">:</span> <span class="n">dt8</span>
+</pre></div>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -138,9 +132,9 @@ files are lg10. Not all .tif images are dt8.</p>
 </div></blockquote>
 <ul class="simple">
 <li>All pipelines that need to be colorspace aware rely
-on <tt class="docutils literal"><span class="pre">Config.parseColorSpaceFromString</span></tt>.</li>
-<li>Color configurations are show specific. The <tt class="docutils literal"><span class="pre">$OCIO</span></tt> environment variable is
-set as part of a &#8216;setshot&#8217; process, before other applications are launched.
+on <code class="docutils literal notranslate"><span class="pre">Config.parseColorSpaceFromString</span></code>.</li>
+<li>Color configurations are show specific. The <code class="docutils literal notranslate"><span class="pre">$OCIO</span></code> environment variable is
+set as part of a ‘setshot’ process, before other applications are launched.
 Artists are not allowed to work across different shows without using a fresh
 shell + setshot.</li>
 <li>While the list of colorspaces can be show specific, care is taken to maintain
@@ -168,13 +162,13 @@ to be similarly defined across show profiles.</li>
 <h3>Rendering<a class="headerlink" href="#rendering" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>Rendering and shading occurs in a scene-linear floating point space, typically
-named &#8220;ln&#8221;.  Half-float (16-bit) images are labeled lnh, full float images
+named “ln”.  Half-float (16-bit) images are labeled lnh, full float images
 (32-bit) are labeled lnf.</li>
 <li>All image inputs should be converted to ln prior to render-time. Typically,
 this is done when textures are published. (See below)</li>
 <li>Renderer outputs are always floating-point. Color outputs are typically stored
 as lnh (16-bit half float).</li>
-<li>Data outputs (normals, depth data, etc) are stored as ncf (&#8220;not color&#8221; data,
+<li>Data outputs (normals, depth data, etc) are stored as ncf (“not color” data,
 32-bit full float). Lossy compression is never utilized.</li>
 <li>Render outputs are always viewed with an OCIO compatible image viewer.
 Thus, for typical color imagery the lnf display transform will be applied.
@@ -188,7 +182,7 @@ viewer, ociodisplay, is also included with OpenColorIO src/example.</li>
 <li>Textures are painted either in a non-OCIO color-managed environment (Photoshop,
 etc), or a color managed one like Mari.</li>
 <li>At texture publish time, before mipmaps are generated, all color processing is
-applied. Internally at SPI we use OpenImageIO&#8217;s maketx that also links to
+applied. Internally at SPI we use OpenImageIO’s maketx that also links to
 OpenColorIO. This code is available on the public OIIO repository. Color
 processing (linearization) is applied before mipmap generation in order to
 assure energy preservation in the render. If the opposite processing order
@@ -207,16 +201,16 @@ labeled with the nc colorspaces according to their bitdepth.</li>
 </div></blockquote>
 <ul class="simple">
 <li>Painted textures that are intended to modulate diffuse color components are
-labelled dt (standing for &#8220;diffuse texture&#8221;).  The dt8 colorspace is designed
+labeled dt (standing for “diffuse texture”).  The dt8 colorspace is designed
 such that, when linearized, values will not extend above 1.0.  At texture
 publishing time these are converted to lnh mipmapped tiffs/exr. Note that as
 linear textures have greater allocation requirements, a bit depth promotion
 is required in this case.  I.e., even if the original texture as painted was
 only 8-bits, the mipmapped texture will be stored as a 16-bit float image.</li>
 <li>Painted environment maps, which may be emissive as labeled vd (standing for
-&#8216;video&#8217;). These values, when linearized, have the potential to generate
+‘video’). These values, when linearized, have the potential to generate
 specular information well above 1.0. Note that in the current vd linearization
-curves, the top code values may be very &#8220;sensitive&#8221;. I.e., very small changes
+curves, the top code values may be very “sensitive”. I.e., very small changes
 in the initial code value (such as 254-&gt;255) may actually result in very large
 differences in the estimated scene-linear intensity. All environment maps are
 store as lnh mipmapped tiffs/exr. The same bit-depth promotion as in the dt8
@@ -239,14 +233,14 @@ customized output node makes this convenient.</li>
 specified as appropriate for this operation.  The artist does not have to keep
 track of which colorspace is appropriate to use; the OCIOLogConvert node is
 always intended for this purpose.  (Within the OCIO profile, this is specified
-using the &#8216;compositing_log&#8217; role).</li>
+using the ‘compositing_log’ role).</li>
 </ul>
 </div>
 </div>
 <div class="section" id="further-information">
 <h2>Further Information<a class="headerlink" href="#further-information" title="Permalink to this headline">¶</a></h2>
 <p>Specific information with regard to the public OCIO configs can be found in the
-<a class="reference internal" href="configurations/index.html#configurations"><em>Configurations</em></a> section.</p>
+<a class="reference internal" href="configurations/index.html#configurations"><span class="std std-ref">Configurations</span></a> section.</p>
 </div>
 </div>
 
@@ -263,9 +257,9 @@ using the &#8216;compositing_log&#8217; role).</li>
 
       </div>
 
-    <div class="footer">
-        &copy; Copyright 2010, Sony Pictures Imageworks.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Academy Software Foundation.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
     </div>
   </body>
 </html>

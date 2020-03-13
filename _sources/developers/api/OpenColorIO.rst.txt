@@ -1,0 +1,2318 @@
+
+
+C++ API
+=======
+
+**Usage Example:** *Compositing plugin that converts from "log" to "lin"*
+
+.. code-block:: cpp
+
+   #include <OpenColorIO/OpenColorIO.h>
+   namespace OCIO = OCIO_NAMESPACE;
+
+   try
+   {
+       // Get the global OpenColorIO config
+       // This will auto-initialize (using $OCIO) on first use
+       OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+
+       // Get the processor corresponding to this transform.
+       OCIO::ConstProcessorRcPtr processor = config->getProcessor(OCIO::ROLE_COMPOSITING_LOG,
+                                                                  OCIO::ROLE_SCENE_LINEAR);
+
+       // Get the corresponding CPU processor for 32-bit float image processing.
+       OCIO::ConstCPUProcessorRcPtr cpuProcessor = processor->getDefaultCPUProcessor();
+
+       // Wrap the image in a light-weight ImageDescription
+       OCIO::PackedImageDesc img(imageData, w, h, 4);
+
+       // Apply the color transformation (in place)
+       cpuProcessor->apply(img);
+   }
+   catch(OCIO::Exception & exception)
+   {
+       std::cerr << "OpenColorIO Error: " << exception.what() << std::endl;
+   }
+
+
+
+Exceptions
+**********
+
+.. cpp:class:: Exception
+   
+   An exception class to throw for errors detected at
+   runtime.
+   
+   .. warning::
+      All functions in the Config class can potentially throw this exception.
+
+.. cpp:function:: explicit Exception::Exception(const char *)
+   
+   Constructor that takes a string as the exception message.
+
+.. cpp:function:: Exception::Exception(const Exception &)
+   
+   Constructor that takes an existing exception.
+
+.. cpp:class:: ExceptionMissingFile
+   
+   An exception class for errors detected at
+   runtime, thrown when OCIO cannot find a file that is expected to
+   exist. This is provided as a custom type to
+   distinguish cases where one wants to continue looking for
+   missing files, but wants to properly fail
+   for other error conditions.
+
+.. cpp:function:: explicit ExceptionMissingFile::ExceptionMissingFile(const char *)
+   
+   Constructor that takes a string as the exception message.
+
+.. cpp:function:: ExceptionMissingFile::ExceptionMissingFile(const ExceptionMissingFile &)
+   
+   Constructor that takes an existing exception.
+
+
+Global
+******
+
+.. cpp:function:: extern void ClearAllCaches()
+   
+   OpenColorIO, during normal usage, tends to cache certain information
+   (such as the contents of LUTs on disk, intermediate results, etc.).
+   Calling this function will flush all such information.
+   Under normal usage, this is not necessary, but it can be helpful in particular instances,
+   such as designing OCIO profiles, and wanting to re-read luts without
+   restarting.
+
+.. cpp:function:: extern const char * GetVersion()
+   
+   Get the version number for the library, as a
+   dot-delimited string (e.g., "1.0.0"). This is also available
+   at compile time as OCIO_VERSION.
+
+.. cpp:function:: extern int GetVersionHex()
+   
+   Get the version number for the library, as a
+   single 4-byte hex number (e.g., 0x01050200 for "1.5.2"), to be used
+   for numeric comparisons. This is also available
+   at compile time as OCIO_VERSION_HEX.
+
+.. cpp:function:: extern LoggingLevel GetLoggingLevel()
+   
+   Get the global logging level.
+   You can override this at runtime using the :envvar:`OCIO_LOGGING_LEVEL`
+   environment variable. The client application that sets this should use
+   :cpp:func:`SetLoggingLevel`, and not the environment variable. The default value is INFO.
+
+.. cpp:function:: extern void SetLoggingLevel(LoggingLevel level)
+   
+   Set the global logging level.
+
+.. cpp:function:: extern void SetLoggingFunction(LoggingFunction logFunction)
+   
+   Set the logging function to use; otherwise, use the default (i.e. std::cerr).
+   Note that the logging mechanism is thread-safe.
+
+.. cpp:function:: extern void ResetToDefaultLoggingFunction()
+   
+
+.. cpp:function:: extern void LogMessage(LoggingLevel level, const char * message)
+   
+   Log a message using the library logging function.
+
+.. cpp:function:: extern const char * GetEnvVariable(const char * name)
+   
+   Another call modifies the string obtained from a previous call
+   as the method always uses the same memory buffer.
+
+.. cpp:function:: extern void SetEnvVariable(const char * name, const char * value)
+   
+
+
+Config
+******
+
+A config defines all the color spaces to be available at runtime.
+
+The color configuration (:cpp:class:`Config`) is the main object for
+interacting with this library. It encapsulates all of the information
+necessary to use customized :cpp:class:`ColorSpaceTransform` and
+:cpp:class:`DisplayTransform` operations.
+
+See the :ref:`user-guide` for more information on
+selecting, creating, and working with custom color configurations.
+
+For applications interested in using only one color config at
+a time (this is the vast majority of apps), their API would
+traditionally get the global configuration and use that, as opposed to
+creating a new one. This simplifies the use case for
+plugins and bindings, as it alleviates the need to pass around configuration
+handles.
+
+An example of an application where this would not be sufficient would be
+a multi-threaded image proxy server (daemon), which wished to handle
+multiple show configurations in a single process concurrently. This
+app would need to keep multiple configurations alive, and to manage them
+appropriately.
+
+Roughly speaking, a novice user should select a
+default configuration that most closely approximates the use case
+(animation, visual effects, etc.), and set the :envvar:`OCIO` environment
+variable to point at the root of that configuration.
+
+.. note::
+   Initialization using environment variables is typically preferable in
+   a multi-app ecosystem, as it allows all applications to be
+   consistently configured.
+
+See :ref:`developers-usageexamples`
+
+.. cpp:function:: extern ConstConfigRcPtr GetCurrentConfig()
+   
+   Get the current configuration.
+
+.. cpp:function:: extern void SetCurrentConfig(const ConstConfigRcPtr & config)
+   
+   Set the current configuration. This will then store a copy of the specified config.
+
+.. cpp:class:: Config
+   
+
+.. _cfginit_section:
+
+Initialization
+^^^^^^^^^^^^^^
+
+.. cpp:function:: static ConfigRcPtr Config::Create()
+   
+   Create a default empty configuration.
+
+.. cpp:function:: static ConstConfigRcPtr Config::CreateRaw()
+   
+   Create a fall-back config.  This may be useful to allow client apps
+   to launch in cases when the supplied config path is not loadable.
+
+.. cpp:function:: static ConstConfigRcPtr Config::CreateFromEnv()
+   
+   Create a configuration using the OCIO environment variable.  If the
+   variable is missing or empty, returns the same result as :cpp:func:`Config::CreateRaw`.
+
+.. cpp:function:: static ConstConfigRcPtr Config::CreateFromFile(const char * filename)
+   
+   Create a configuration using a specific config file.
+
+.. cpp:function:: static ConstConfigRcPtr Config::CreateFromStream(std::istream & istream)
+   
+   Create a configuration using a stream.
+
+.. cpp:function:: ConfigRcPtr Config::createEditableCopy() const
+   
+
+.. cpp:function:: unsigned int Config::getMajorVersion() const
+   
+   Get the configuration major version
+
+.. cpp:function:: void Config::setMajorVersion(unsigned int major)
+   
+   Set the configuration major version
+
+.. cpp:function:: unsigned int Config::getMinorVersion() const
+   
+   Get the configuration minor version
+
+.. cpp:function:: void Config::setMinorVersion(unsigned int minor)
+   
+   Set the configuration minor version
+
+.. cpp:function:: void Config::upgradeToLatestVersion()
+   
+   Allows an older config to be serialized as the current version.
+
+.. cpp:function:: void Config::sanityCheck() const
+   
+   This will throw an exception if the config is malformed. The most
+   common error occurs when references are made to colorspaces that do not
+   exist.
+
+.. cpp:function:: const char * Config::getDescription() const
+   
+
+.. cpp:function:: void Config::setDescription(const char * description)
+   
+
+.. cpp:function:: void Config::serialize(std::ostream & os) const
+   
+   Returns the string representation of the Config in YAML text form.
+   This is typically stored on disk in a file with the extension .ocio.
+
+.. cpp:function:: const char * Config::getCacheID() const
+   
+   This will produce a hash of the all colorspace definitions, etc.
+   All external references, such as files used in FileTransforms, etc.,
+   will be incorporated into the cacheID. While the contents of
+   the files are not read, the file system is queried for relevant
+   information (mtime, inode) so that the config's cacheID will
+   change when the underlying luts are updated.
+   If a context is not provided, the current Context will be used.
+   If a null context is provided, file references will not be taken into
+   account (this is essentially a hash of Config::serialize).
+
+.. cpp:function:: const char * Config::getCacheID(const ConstContextRcPtr & context) const
+   
+
+.. _cfgresource_section:
+
+Resources
+^^^^^^^^^
+Given a lut src name, where should we find it?
+
+.. cpp:function:: ConstContextRcPtr Config::getCurrentContext() const
+   
+
+.. cpp:function:: void Config::addEnvironmentVar(const char * name, const char * defaultValue)
+   
+
+.. cpp:function:: int Config::getNumEnvironmentVars() const
+   
+
+.. cpp:function:: const char * Config::getEnvironmentVarNameByIndex(int index) const
+   
+
+.. cpp:function:: const char * Config::getEnvironmentVarDefault(const char * name) const
+   
+
+.. cpp:function:: void Config::clearEnvironmentVars()
+   
+
+.. cpp:function:: void Config::setEnvironmentMode(EnvironmentMode mode)
+   
+
+.. cpp:function:: EnvironmentMode Config::getEnvironmentMode() const
+   
+
+.. cpp:function:: void Config::loadEnvironment()
+   
+
+.. cpp:function:: const char * Config::getSearchPath() const
+   
+
+.. cpp:function:: void Config::setSearchPath(const char * path)
+   
+   Set all search paths as a concatenated string, using
+   ':' to separate the paths.  See addSearchPath for a more robust and
+   platform-agnostic method of setting the search paths.
+
+.. cpp:function:: int Config::getNumSearchPaths() const
+   
+
+.. cpp:function:: const char * Config::getSearchPath(int index) const
+   
+   Get a search path from the list. The paths are in the
+   order they will be searched (that is, highest to lowest priority).
+
+.. cpp:function:: void Config::clearSearchPaths()
+   
+
+.. cpp:function:: void Config::addSearchPath(const char * path)
+   
+   Add a single search path to the end of the list.
+   Paths may be either absolute or relative. Relative paths are
+   relative to the working directory. Forward slashes will be
+   normalized to reverse for Windows. Environment (context) variables
+   may be used in paths.
+
+.. cpp:function:: const char * Config::getWorkingDir() const
+   
+
+.. cpp:function:: void Config::setWorkingDir(const char * dirname)
+   
+   The working directory defaults to the location of the
+   config file. It is used to convert any relative paths to absolute.
+   If no search paths have been set, the working directory will be used
+   as the fallback search path. No environment (context) variables may
+   be used in the working directory.
+
+.. _cfgcolorspaces_section:
+
+ColorSpaces
+^^^^^^^^^^^
+
+.. cpp:function:: ColorSpaceSetRcPtr Config::getColorSpaces(const char * category) const
+   
+   Get all active color spaces having a specific category
+   in the order they appear in the config file.
+   
+   .. note::
+      If the category is null or empty, the method returns
+      all the active color spaces like :cpp:func:`Config::getNumColorSpaces`
+      and :cpp:func:`Config::getColorSpaceNameByIndex` do.
+   
+   .. note::
+      It's worth noticing that the method returns a copy of the
+      selected color spaces decoupling the result from the config.
+      Hence, any changes on the config do not affect the existing
+      color space sets, and vice-versa.
+   
+
+.. cpp:function:: int Config::getNumColorSpaces(SearchReferenceSpaceType searchReferenceType, ColorSpaceVisibility visibility) const
+   
+   Work on the color spaces selected by the reference color space type
+   and visibility.
+
+.. cpp:function:: const char * Config::getColorSpaceNameByIndex(SearchReferenceSpaceType searchReferenceType, ColorSpaceVisibility visibility, int index) const
+   
+   Work on the color spaces selected by the reference color space type
+   and visibility (active or inactive). Return empty for invalid index.
+
+.. cpp:function:: ConstColorSpaceRcPtr Config::getColorSpace(const char * name) const
+   
+   Get the color space from all the color spaces
+   (i.e. active and inactive) and return null if the name is not found.
+   
+   .. note::
+      The fcn accepts either a color space OR role name.
+      (Color space names take precedence over roles.)
+
+.. cpp:function:: int Config::getNumColorSpaces() const
+   
+   Work on the active color spaces only.
+
+.. cpp:function:: const char * Config::getColorSpaceNameByIndex(int index) const
+   
+   Work on the active color spaces only and return null for invalid index.
+
+.. cpp:function:: int Config::getIndexForColorSpace(const char * name) const
+   
+   Get an index from the active color spaces only
+   and return -1 if the name is not found.
+   
+   .. note::
+      The fcn accepts either a color space OR role name.
+      (Color space names take precedence over roles.)
+
+.. cpp:function:: void Config::addColorSpace(const ConstColorSpaceRcPtr & cs)
+   
+   Add a color space to the configuration.
+   
+   .. note::
+      If another color space is already present with the same name,
+      this will overwrite it. This stores a copy of the specified
+      color space.
+   .. note::
+      Adding a color space to a :cpp:class:`Config` does not affect any
+      :cpp:class:`ColorSpaceSet` sets that have already been created.
+
+.. cpp:function:: void Config::removeColorSpace(const char * name)
+   
+   Remove a color space from the configuration.
+   
+   .. note::
+      It does not throw an exception if the color space is not present
+      or used by an existing role.  Role name arguments are ignored.
+   .. note::
+      Removing a color space to a :cpp:class:`Config` does not affect any
+      :cpp:class:`ColorSpaceSet` sets that have already been created.
+
+.. cpp:function:: void Config::clearColorSpaces()
+   
+   Remove all the color spaces from the configuration.
+   
+   .. note::
+      Removing color spaces from a :cpp:class:`Config` does not affect
+      any :cpp:class:`ColorSpaceSet` sets that have already been created.
+
+.. cpp:function:: const char * Config::parseColorSpaceFromString(const char * str) const
+   
+   Given the specified string, get the longest,
+   right-most, colorspace substring that appears.
+   
+   * If strict parsing is enabled, and no color space is found, return
+     an empty string.
+   * If strict parsing is disabled, return ROLE_DEFAULT (if defined).
+   * If the default role is not defined, return an empty string.
+
+.. cpp:function:: bool Config::isStrictParsingEnabled() const
+   
+
+.. cpp:function:: void Config::setStrictParsingEnabled(bool enabled)
+   
+
+.. cpp:function:: void Config::setInactiveColorSpaces(const char * inactiveColorSpaces)
+   
+   Set/get a list of inactive color space names.
+   
+   * The inactive spaces are color spaces that should not appear in application menus.
+   * These color spaces will still work in :cpp:func:`Config::getProcessor` calls.
+   * The argument is a comma-delimited string.  A null or empty string empties the list.
+   * The environment variable OCIO_INACTIVE_COLORSPACES may also be used to set the
+     inactive color space list.
+   * The env. var. takes precedence over the inactive_colorspaces list in the config file.
+   * Setting the list via the API takes precedence over either the env. var. or the
+     config file list.
+   * Roles may not be used.
+
+.. cpp:function:: const char * Config::getInactiveColorSpaces() const
+   
+
+.. _cfgroles_section:
+
+Roles
+^^^^^
+A role is like an alias for a colorspace. You can query the colorspace
+corresponding to a role using the normal getColorSpace fcn.
+
+.. cpp:function:: void Config::setRole(const char * role, const char * colorSpaceName)
+   
+   .. note::
+      Setting the ``colorSpaceName`` name to a null string unsets it.
+
+.. cpp:function:: int Config::getNumRoles() const
+   
+
+.. cpp:function:: bool Config::hasRole(const char * role) const
+   
+   Return true if the role has been defined.
+
+.. cpp:function:: const char * Config::getRoleName(int index) const
+   
+   Get the role name at index, this will return values
+   like 'scene_linear', 'compositing_log'.
+   Return empty string if index is out of range.
+
+.. _cfgdisplayview_section:
+
+Display/View Registration
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Looks is a potentially comma (or colon) delimited list of lookNames,
+Where +/- prefixes are optionally allowed to denote forward/inverse
+look specification. (And forward is assumed in the absence of either)
+
+.. cpp:function:: const char * Config::getDefaultDisplay() const
+   
+
+.. cpp:function:: int Config::getNumDisplays() const
+   
+
+.. cpp:function:: const char * Config::getDisplay(int index) const
+   
+
+.. cpp:function:: const char * Config::getDefaultView(const char * display) const
+   
+
+.. cpp:function:: int Config::getNumViews(const char * display) const
+   
+
+.. cpp:function:: const char * Config::getView(const char * display, int index) const
+   
+
+.. cpp:function:: const char * Config::getDisplayViewTransformName(const char * display, const char * view) const
+   
+   Returns the view_transform attribute of the (display, view) pair.
+
+.. cpp:function:: const char * Config::getDisplayColorSpaceName(const char * display, const char * view) const
+   
+   Returns the colorspace attribute of the (display, view) pair.
+   (Note that this may be either a color space or a display color space.)
+
+.. cpp:function:: const char * Config::getDisplayLooks(const char * display, const char * view) const
+   
+   Returns the looks attribute of a (display, view) pair.
+
+.. cpp:function:: void Config::addDisplay(const char * display, const char * view, const char * colorSpaceName, const char * looks)
+   
+   For the (display, view) pair, specify which color space and look to use.
+   If a look is not desired, then just pass an empty string
+
+.. cpp:function:: void Config::addDisplay(const char * display, const char * view, const char * viewTransform, const char * displayColorSpaceName, const char * looks)
+   
+   For the (display, view) pair, specify a viewTransform + displayColorSpace
+   to use.  (Looks work the same as above.)
+
+.. cpp:function:: void Config::clearDisplays()
+   
+
+.. cpp:function:: void Config::setActiveDisplays(const char * displays)
+   
+   Comma-delimited list of display names.
+   .. note:: The setter does not override the envvar.  The getter does not take into
+   account the envvar value and thus may not represent what the user is seeing.
+
+.. cpp:function:: const char * Config::getActiveDisplays() const
+   
+
+.. cpp:function:: void Config::setActiveViews(const char * views)
+   
+   Comma-delimited list of view names.
+   .. note:: The setter does not override the envvar.  The getter does not take into
+   account the envvar value and thus may not represent what the user is seeing.
+
+.. cpp:function:: const char * Config::getActiveViews() const
+   
+
+.. _cfgluma_section:
+
+Luma
+^^^^
+
+Get the default coefficients for computing luma.
+
+.. note::
+   There is no "1 size fits all" set of luma coefficients. (The
+   values are typically different for each colorspace, and the
+   application of them may be nonsensical depending on the
+   intensity coding anyways). Thus, the 'right' answer is to make
+   these functions on the :cpp:class:`Config` class. However, it's
+   often useful to have a config-wide default so here it is. We will
+   add the colorspace specific luma call if/when another client is
+   interesting in using it.
+
+.. cpp:function:: void Config::getDefaultLumaCoefs(double * rgb) const
+   
+
+.. cpp:function:: void Config::setDefaultLumaCoefs(const double * rgb)
+   
+   These should be normalized (sum to 1.0 exactly).
+
+.. _cflooka_section:
+
+Look
+^^^^
+
+Manager per-shot look settings.
+
+
+.. cpp:function:: ConstLookRcPtr Config::getLook(const char * name) const
+   
+
+.. cpp:function:: int Config::getNumLooks() const
+   
+
+.. cpp:function:: const char * Config::getLookNameByIndex(int index) const
+   
+
+.. cpp:function:: void Config::addLook(const ConstLookRcPtr & look)
+   
+
+.. cpp:function:: void Config::clearLooks()
+   
+
+.. _cfgview_transforms_section:
+
+View Transforms
+^^^^^^^^^^^^^^^
+
+:cpp:class:`ViewTransform` objects are used with the display reference space.
+
+.. cpp:function:: int Config::getNumViewTransforms() const noexcept
+   
+
+.. cpp:function:: ConstViewTransformRcPtr Config::getViewTransform(const char * name) const noexcept
+   
+
+.. cpp:function:: const char * Config::getViewTransformNameByIndex(int i) const noexcept
+   
+
+.. cpp:function:: void Config::addViewTransform(const ConstViewTransformRcPtr & viewTransform)
+   
+
+.. cpp:function:: ConstViewTransformRcPtr Config::getDefaultSceneToDisplayViewTransform() const
+   
+   The default transform to use for scene-referred to display-referred
+   reference space conversions is the first scene-referred view transform listed in
+   that section of the config (the one with the lowest index).  Returns a null
+   ConstTransformRcPtr if there isn't one.
+
+.. cpp:function:: void Config::clearViewTransforms()
+   
+
+.. _cfgfilerules_section:
+
+File Rules
+^^^^^^^^^^
+
+See :cpp:class:`FileRules`.
+
+.. cpp:function:: ConstFileRulesRcPtr Config::getFileRules() const noexcept
+   
+   Get read-only version of the file rules.
+
+.. cpp:function:: void Config::setFileRules(ConstFileRulesRcPtr fileRules)
+   
+   Set file rules.
+   .. note::
+      The argument is cloned.
+
+.. cpp:function:: const char * Config::getColorSpaceFromFilepath(const char * filePath, size_t & ruleIndex) const
+   
+   Most applications will use the preceding method, but this method may be
+   used for applications that want to know which was the highest priority rule to match
+   filePath.  The :cpp:func:`FileRules::getNumCustomKeys(ruleIndex)` and custom keys methods
+   may then be used to get additional information about the matching rule.
+
+.. _cfgprocessors_section:
+
+Processors
+^^^^^^^^^^
+
+Create a :cpp:class:`Processor` to assemble a transformation between two
+color spaces.  It may then be used to create a :cpp:class:`CPUProcessor`
+or :cpp:class:`GPUProcessor` to process/convert pixels.
+
+Get the processor to apply a ColorSpaceTransform from a source to a destination
+color space.
+
+.. cpp:function:: ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context, const ConstColorSpaceRcPtr & srcColorSpace, const ConstColorSpaceRcPtr & dstColorSpace) const
+   
+
+.. cpp:function:: ConstProcessorRcPtr Config::getProcessor(const ConstColorSpaceRcPtr & srcColorSpace, const ConstColorSpaceRcPtr & dstColorSpace) const
+   
+
+.. cpp:function:: ConstProcessorRcPtr Config::getProcessor(const char * srcName, const char * dstName) const
+   
+   .. note::
+      Names can be colorspace name, role name, or a combination of both.
+
+.. cpp:function:: ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context, const char * srcName, const char * dstName) const
+   
+
+Get the processor to apply a DisplayTransform for a display and view.  Refer to the
+Display/View Registration section above for more info on the display and view arguments.
+
+.. cpp:function:: ConstProcessorRcPtr Config::getProcessor(const char * inputColorSpaceName, const char * display, const char * view) const
+   
+
+.. cpp:function:: ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context, const char * inputColorSpaceName, const char * display, const char * view) const
+   
+
+Get the processor for the specified transform.
+
+Not often needed, but will allow for the re-use of atomic OCIO
+functionality (such as to apply an individual LUT file).
+
+.. cpp:function:: ConstProcessorRcPtr Config::getProcessor(const ConstTransformRcPtr& transform) const
+   
+
+.. cpp:function:: ConstProcessorRcPtr Config::getProcessor(const ConstTransformRcPtr& transform, TransformDirection direction) const
+   
+
+.. cpp:function:: ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context, const ConstTransformRcPtr& transform, TransformDirection direction) const
+   
+
+.. cpp:function:: static ConstProcessorRcPtr Config::GetProcessor(const ConstConfigRcPtr & srcConfig, const char * srcName, const ConstConfigRcPtr & dstConfig, const char * dstName)
+   
+   This relies on both configs having the aces_interchange role defined.
+   An exception is thrown if that is not the case.
+
+.. cpp:function:: static ConstProcessorRcPtr Config::GetProcessor(const ConstContextRcPtr & srcContext,  const ConstConfigRcPtr & srcConfig, const char * srcName, const ConstContextRcPtr & dstContext, const ConstConfigRcPtr & dstConfig, const char * dstName)
+   
+
+.. cpp:function:: static ConstProcessorRcPtr Config::GetProcessor(const ConstConfigRcPtr & srcConfig, const char * srcName, const char * srcInterchangeName, const ConstConfigRcPtr & dstConfig, const char * dstName, const char * dstInterchangeName)
+   
+   The srcInterchangeName and dstInterchangeName must refer to a pair of
+   color spaces in the two configs that are the same.  A role name may also be used.
+
+.. cpp:function:: static ConstProcessorRcPtr Config::GetProcessor(const ConstContextRcPtr & srcContext, const ConstConfigRcPtr & srcConfig, const char * srcName, const char * srcInterchangeName, const ConstContextRcPtr & dstContext, const ConstConfigRcPtr & dstConfig, const char * dstName, const char * dstInterchangeName)
+   
+
+.. _filerules_section:
+
+FileRules
+*********
+The File Rules are a set of filepath to color space mappings that are evaluated
+from first to last. The first rule to match is what determines which color space is
+returned. There are four types of rules available. Each rule type has a name key that may
+be used by applications to refer to that rule. Name values must be unique i.e. using a
+case insensitive comparison. The other keys depend on the rule type:
+
+- Basic Rule: This is the basic rule type that uses Unix glob style pattern matching and
+  is thus very easy to use. It contains the keys:
+
+  * name: Name of the rule
+
+  * colorspace: Color space name to be returned.
+
+  * pattern: Glob pattern to be used for the main part of the name/path.
+
+  * extension: Glob pattern to be used for the file extension. Note that if glob tokens
+    are not used, the extension will be used in a non-case-sensitive way by default.
+
+- Regex Rule: This is similar to the basic rule but allows additional capabilities for
+  power-users. It contains the keys:
+
+  * name: Name of the rule
+
+  * colorspace: Color space name to be returned.
+
+  * regex: Regular expression to be evaluated.
+
+- OCIO v1 style Rule: This rule allows the use of the OCIO v1 style, where the string
+  is searched for color space names from the config. This rule may occur 0 or 1 times
+  in the list. The position in the list prioritizes it with respect to the other rules.
+  StrictParsing is not used. If no color space is found in the path, the rule will not
+  match and the next rule will be considered.
+  See :cpp:func:`FileRules::insertPathSearchRule`.
+  It has the key:
+
+  * name: Must be "ColorSpaceNamePathSearch".
+
+- Default Rule: The file_rules must always end with this rule. If no prior rules match,
+  this rule specifies the color space applications will use.
+  See :cpp:func:`FileRules::setDefaultRuleColorSpace`.
+  It has the keys:
+
+  * name: must be "Default".
+
+  * colorspace : Color space name to be returned.
+
+Custom string keys and associated string values may be used to convey app or
+workflow-specific information, e.g. whether the color space should be left as is
+or converted into a working space.
+
+Getters and setters are using the rule position, they will throw if the position is not
+valid. If the rule at the specified position does not implement the requested property
+getter will return NULL and setter will throw.
+
+
+.. cpp:class:: FileRules
+   
+
+.. cpp:function:: static FileRulesRcPtr FileRules::Create()
+   
+   Creates FileRules for a Config. File rules will contain the default rule
+   using the default role. The default rule cannot be removed.
+
+.. cpp:function:: FileRulesRcPtr FileRules::createEditableCopy() const
+   
+   The method clones the content decoupling the two instances.
+
+.. cpp:function:: size_t FileRules::getNumEntries() const noexcept
+   
+   Does include default rule. Result will be at least 1.
+
+.. cpp:function:: size_t FileRules::getIndexForRule(const char * ruleName) const
+   
+   Get the index from the rule name.
+
+.. cpp:function:: const char * FileRules::getName(size_t ruleIndex) const
+   
+   Get name of the rule.
+
+.. cpp:function:: const char * FileRules::getPattern(size_t ruleIndex) const
+   
+   Setting pattern will erase regex.
+
+.. cpp:function:: void FileRules::setPattern(size_t ruleIndex, const char * pattern)
+   
+
+.. cpp:function:: const char * FileRules::getExtension(size_t ruleIndex) const
+   
+   Setting extension will erase regex.
+
+.. cpp:function:: void FileRules::setExtension(size_t ruleIndex, const char * extension)
+   
+
+.. cpp:function:: const char * FileRules::getRegex(size_t ruleIndex) const
+   
+   Setting a regex will erase pattern & extension.
+
+.. cpp:function:: void FileRules::setRegex(size_t ruleIndex, const char * regex)
+   
+
+.. cpp:function:: const char * FileRules::getColorSpace(size_t ruleIndex) const
+   
+   Set the rule's color space (may also be a role).
+
+.. cpp:function:: void FileRules::setColorSpace(size_t ruleIndex, const char * colorSpace)
+   
+
+.. cpp:function:: size_t FileRules::getNumCustomKeys(size_t ruleIndex) const
+   
+   Get number of key/value pairs.
+
+.. cpp:function:: const char * FileRules::getCustomKeyName(size_t ruleIndex, size_t key) const
+   
+   Get name of key.
+
+.. cpp:function:: const char * FileRules::getCustomKeyValue(size_t ruleIndex, size_t key) const
+   
+   Get name of value.
+
+.. cpp:function:: void FileRules::setCustomKey(size_t ruleIndex, const char * key, const char * value)
+   
+   Adds a key/value or replace value if key exists. Setting a NULL or an
+   empty value will erase the key.
+
+.. cpp:function:: void FileRules::insertRule(size_t ruleIndex, const char * name, const char * colorSpace, const char * pattern, const char * extension)
+   
+   Insert a rule at a given ruleIndex. Rule currently at ruleIndex
+   will be pushed to index: ruleIndex + 1.
+   Name must be unique.
+   - "Default" is a reserved name for the default rule. The default rule is automatically
+   added and can't be removed. (see :cpp:func:`FileRules::setDefaultRuleColorSpace`).
+   - "ColorSpaceNamePathSearch" is also a reserved name
+   (see :cpp:func:`FileRules::insertPathSearchRule`).
+   
+   Will throw if ruleIndex is not less than :cpp:func:`FileRules::getNumEntries`.
+
+.. cpp:function:: void FileRules::insertRule(size_t ruleIndex, const char * name, const char * colorSpace, const char * regex)
+   
+
+.. cpp:function:: void FileRules::insertPathSearchRule(size_t ruleIndex)
+   
+   Helper function to insert a rule that uses
+   cpp:func:'Config:parseColorSpaceFromString` to search the path for any of the color spaces
+   named in the config (as per OCIO v1).
+
+.. cpp:function:: void FileRules::setDefaultRuleColorSpace(const char * colorSpace)
+   
+   Helper function tp set the color space for the default rule.
+
+.. cpp:function:: void FileRules::removeRule(size_t ruleIndex)
+   
+   Default rule can't be removed.
+   Will throw if ruleIndex + 1 is not less than :cpp:func:`FileRules::getNumEntries`.
+
+.. cpp:function:: void FileRules::increaseRulePriority(size_t ruleIndex)
+   
+   Move a rule closer to the start of the list by one position.
+
+.. cpp:function:: void FileRules::decreaseRulePriority(size_t ruleIndex)
+   
+   Move a rule closer to the end of the list by one position.
+
+.. _colorspace_section:
+
+ColorSpace
+**********
+The *ColorSpace* is the state of an image with respect to colorimetry
+and color encoding. Transforming images between different
+*ColorSpaces* is the primary motivation for this library.
+
+While a complete discussion of color spaces is beyond the scope of
+header documentation, traditional uses would be to have *ColorSpaces*
+corresponding to: physical capture devices (known cameras, scanners),
+and internal 'convenience' spaces (such as scene linear, logarithmic).
+
+*ColorSpaces* are specific to a particular image precision (float32,
+uint8, etc.), and the set of ColorSpaces that provide equivalent mappings
+(at different precisions) are referred to as a 'family'.
+
+.. cpp:class:: ColorSpace
+   
+
+.. cpp:function:: static ColorSpaceRcPtr ColorSpace::Create()
+   
+
+.. cpp:function:: static ColorSpaceRcPtr ColorSpace::Create(ReferenceSpaceType referenceSpace)
+   
+
+.. cpp:function:: ColorSpaceRcPtr ColorSpace::createEditableCopy() const
+   
+
+.. cpp:function:: const char * ColorSpace::getName() const noexcept
+   
+
+.. cpp:function:: void ColorSpace::setName(const char * name)
+   
+
+.. cpp:function:: const char * ColorSpace::getFamily() const noexcept
+   
+   Get the family, for use in user interfaces (optional)
+   The family string could use a '/' separator to indicate levels to be used
+   by hierarchical menus.
+
+.. cpp:function:: void ColorSpace::setFamily(const char * family)
+   
+   Set the family, for use in user interfaces (optional)
+
+.. cpp:function:: const char * ColorSpace::getEqualityGroup() const noexcept
+   
+   Get the ColorSpace group name (used for equality comparisons)
+   This allows no-op transforms between different colorspaces.
+   If an equalityGroup is not defined (an empty string), it will be considered
+   unique (i.e., it will not compare as equal to other ColorSpaces with an
+   empty equality group).  This is often, though not always, set to the
+   same value as 'family'.
+
+.. cpp:function:: void ColorSpace::setEqualityGroup(const char * equalityGroup)
+   
+
+.. cpp:function:: const char * ColorSpace::getDescription() const noexcept
+   
+
+.. cpp:function:: void ColorSpace::setDescription(const char * description)
+   
+
+.. cpp:function:: BitDepth ColorSpace::getBitDepth() const noexcept
+   
+
+.. cpp:function:: void ColorSpace::setBitDepth(BitDepth bitDepth)
+   
+
+
+Categories
+^^^^^^^^^^
+A category is used to allow applications to filter the list of color spaces
+they display in menus based on what that color space is used for.
+
+Here is an example config entry that could appear under a ColorSpace:
+categories: [input, rendering]
+
+The example contains two categories: 'input' and 'rendering'.
+Category strings are not case-sensitive and the order is not significant.
+There is no limit imposed on length or number. Although users may add
+their own categories, the strings will typically come from a fixed set
+listed in the documentation (similar to roles).
+
+.. cpp:function:: bool ColorSpace::hasCategory(const char * category) const
+   
+   Return true if the category is present.
+
+.. cpp:function:: void ColorSpace::addCategory(const char * category)
+   
+   Add a single category.
+   .. note:: Will do nothing if the category already exists.
+
+.. cpp:function:: void ColorSpace::removeCategory(const char * category)
+   
+   Remove a category.
+   .. note:: Will do nothing if the category is missing.
+
+.. cpp:function:: int ColorSpace::getNumCategories() const
+   
+   Get the number of categories.
+
+.. cpp:function:: const char * ColorSpace::getCategory(int index) const
+   
+   Return the category name using its index
+   .. note:: Will be null if the index is invalid.
+
+.. cpp:function:: void ColorSpace::clearCategories()
+   
+   Clear all the categories.
+
+
+Data
+^^^^
+ColorSpaces that are data are treated a bit special. Basically, any
+colorspace transforms you try to apply to them are ignored. (Think
+of applying a gamut mapping transform to an ID pass). Also, the
+:cpp:class:`DisplayTransform` process obeys special 'data min' and
+'data max' args.
+
+This is traditionally used for pixel data that represents non-color
+pixel data, such as normals, point positions, ID information, etc.
+
+.. cpp:function:: bool ColorSpace::isData() const
+   
+
+.. cpp:function:: void ColorSpace::setIsData(bool isData)
+   
+
+.. cpp:function:: ReferenceSpaceType ColorSpace::getReferenceSpaceType() const
+   
+   A display color space will use the display-referred reference space.
+
+
+Allocation
+^^^^^^^^^^
+If this colorspace needs to be transferred to a limited dynamic
+range coding space (such as during display with a GPU path), use this
+allocation to maximize bit efficiency.
+
+.. cpp:function:: Allocation ColorSpace::getAllocation() const
+   
+
+.. cpp:function:: void ColorSpace::setAllocation(Allocation allocation)
+   
+
+
+Specify the optional variable values to configure the allocation.
+If no variables are specified, the defaults are used.
+
+ALLOCATION_UNIFORM::
+
+   2 vars: [min, max]
+
+ALLOCATION_LG2::
+
+   2 vars: [lg2min, lg2max]
+   3 vars: [lg2min, lg2max, linear_offset]
+
+.. cpp:function:: int ColorSpace::getAllocationNumVars() const
+   
+
+.. cpp:function:: void ColorSpace::getAllocationVars(float * vars) const
+   
+
+.. cpp:function:: void ColorSpace::setAllocationVars(int numvars, const float * vars)
+   
+
+
+Transform
+^^^^^^^^^
+
+.. cpp:function:: ConstTransformRcPtr ColorSpace::getTransform(ColorSpaceDirection dir) const
+   
+   If a transform in the specified direction has been specified,
+   return it. Otherwise return a null ConstTransformRcPtr
+
+.. cpp:function:: void ColorSpace::setTransform(const ConstTransformRcPtr & transform, ColorSpaceDirection dir)
+   
+   Specify the transform for the appropriate direction.
+   Setting the transform to null will clear it.
+
+.. _colorspaceset_section:
+
+ColorSpaceSet
+*************
+The *ColorSpaceSet* is a set of color spaces (i.e. no color space duplication)
+which could be the result of :cpp:func:`Config::getColorSpaces`
+or built from scratch.
+
+.. note::
+   The color spaces are decoupled from the config ones, i.e., any
+   changes to the set itself or to its color spaces do not affect the
+   original color spaces from the configuration.  If needed,
+   use :cpp:func:`Config::addColorSpace` to update the configuration.
+
+.. cpp:class:: ColorSpaceSet
+   
+
+.. cpp:function:: static ColorSpaceSetRcPtr ColorSpaceSet::Create()
+   
+   Create an empty set of color spaces.
+
+.. cpp:function:: ColorSpaceSetRcPtr ColorSpaceSet::createEditableCopy() const
+   
+   Create a set containing a copy of all the color spaces.
+
+.. cpp:function:: bool ColorSpaceSet::operator==(const ColorSpaceSet & css) const
+   
+   Return true if the two sets are equal.
+   .. note:: The comparison is done on the color space names (not a deep comparison).
+
+.. cpp:function:: bool ColorSpaceSet::operator!=(const ColorSpaceSet & css) const
+   
+   Return true if the two sets are different.
+
+.. cpp:function:: int ColorSpaceSet::getNumColorSpaces() const
+   
+   Return the number of color spaces.
+
+.. cpp:function:: const char * ColorSpaceSet::getColorSpaceNameByIndex(int index) const
+   
+   Return the color space name using its index.
+   This will be null if an invalid index is specified.
+
+.. cpp:function:: ConstColorSpaceRcPtr ColorSpaceSet::getColorSpaceByIndex(int index) const
+   
+   Return the color space using its index.
+   This will be empty if an invalid index is specified.
+
+
+.. note::
+   These fcns only accept color space names (i.e. no role name).
+
+.. cpp:function:: ConstColorSpaceRcPtr ColorSpaceSet::getColorSpace(const char * name) const
+   
+   Will return null if the name is not found.
+
+.. cpp:function:: int ColorSpaceSet::getIndexForColorSpace(const char * name) const
+   
+   Will return -1 if the name is not found.
+
+.. cpp:function:: void ColorSpaceSet::addColorSpace(const ConstColorSpaceRcPtr & cs)
+   
+   Add color space(s).
+   
+   .. note::
+      If another color space is already registered with the same name,
+      this will overwrite it. This stores a copy of the specified
+      color space(s).
+
+.. cpp:function:: void ColorSpaceSet::removeColorSpace(const char * name)
+   
+   Remove color space(s) using color space names (i.e. no role name).
+   
+   .. note::
+      The removal of a missing color space does nothing.
+
+.. cpp:function:: void ColorSpaceSet::clearColorSpaces()
+   
+   Clear all color spaces.
+
+.. cpp:function:: extern ConstColorSpaceSetRcPtr operator||(const ConstColorSpaceSetRcPtr & lcss, const ConstColorSpaceSetRcPtr & rcss)
+   
+   Perform the union of two sets.
+
+.. cpp:function:: extern ConstColorSpaceSetRcPtr operator&&(const ConstColorSpaceSetRcPtr & lcss, const ConstColorSpaceSetRcPtr & rcss)
+   
+   Perform the intersection of two sets.
+
+.. cpp:function:: extern ConstColorSpaceSetRcPtr operator-(const ConstColorSpaceSetRcPtr & lcss, const ConstColorSpaceSetRcPtr & rcss)
+   
+   Perform the difference of two sets.
+
+.. _look_section:
+
+Look
+****
+The *Look* is an 'artistic' image modification, in a specified image
+state.
+The processSpace defines the ColorSpace the image is required to be
+in, for the math to apply correctly.
+
+.. cpp:class:: Look
+   
+
+.. cpp:function:: static LookRcPtr Look::Create()
+   
+
+.. cpp:function:: LookRcPtr Look::createEditableCopy() const
+   
+
+.. cpp:function:: const char * Look::getName() const
+   
+
+.. cpp:function:: void Look::setName(const char * name)
+   
+
+.. cpp:function:: const char * Look::getProcessSpace() const
+   
+
+.. cpp:function:: void Look::setProcessSpace(const char * processSpace)
+   
+
+.. cpp:function:: ConstTransformRcPtr Look::getTransform() const
+   
+
+.. cpp:function:: void Look::setTransform(const ConstTransformRcPtr & transform)
+   
+   Setting a transform to a non-null call makes it allowed.
+
+.. cpp:function:: ConstTransformRcPtr Look::getInverseTransform() const
+   
+
+.. cpp:function:: void Look::setInverseTransform(const ConstTransformRcPtr & transform)
+   
+   Setting a transform to a non-null call makes it allowed.
+
+.. cpp:function:: const char * Look::getDescription() const
+   
+
+.. cpp:function:: void Look::setDescription(const char * description)
+   
+
+.. _view_transform_section:
+
+ViewTransform
+*************
+A *ViewTransform* provides a conversion from the main (usually scene-referred) reference space
+to the display-referred reference space.  This allows splitting the conversion from the main
+reference space to a display into two parts: the ViewTransform plus a display color space.
+
+It is also possible to provide a ViewTransform that converts from the display-referred
+reference space back to that space.  This is useful in cases when a ViewTransform is needed
+when converting between displays (such as HDR to SDR).
+
+The ReferenceSpaceType indicates whether the ViewTransform converts from scene-to-display
+reference or display-to-display reference.
+
+The from_reference transform direction is the one that is used when going out towards a display.
+
+.. cpp:class:: ViewTransform
+   
+
+.. cpp:function:: static ViewTransformRcPtr ViewTransform::Create(ReferenceSpaceType referenceSpace)
+   
+
+.. cpp:function:: ViewTransformRcPtr ViewTransform::createEditableCopy() const
+   
+
+.. cpp:function:: const char * ViewTransform::getName() const noexcept
+   
+
+.. cpp:function:: void ViewTransform::setName(const char * name) noexcept
+   
+
+.. cpp:function:: const char * ViewTransform::getFamily() const noexcept
+   
+   See :cpp:func:`ColorSpace::getFamily`.
+
+.. cpp:function:: void ViewTransform::setFamily(const char * family)
+   
+   See :cpp:func:`ColorSpace::setFamily`.
+
+.. cpp:function:: const char * ViewTransform::getDescription() const noexcept
+   
+
+.. cpp:function:: void ViewTransform::setDescription(const char * description)
+   
+
+.. cpp:function:: bool ViewTransform::hasCategory(const char * category) const
+   
+   See :cpp:func:`ColorSpace::hasCategory`.
+
+.. cpp:function:: void ViewTransform::addCategory(const char * category)
+   
+   See :cpp:func:`ColorSpace::addCategory`.
+
+.. cpp:function:: void ViewTransform::removeCategory(const char * category)
+   
+   See :cpp:func:`ColorSpace::removeCategory`.
+
+.. cpp:function:: int ViewTransform::getNumCategories() const
+   
+   See :cpp:func:`ColorSpace::getNumCategories`.
+
+.. cpp:function:: const char * ViewTransform::getCategory(int index) const
+   
+   See :cpp:func:`ColorSpace::getCategory`.
+
+.. cpp:function:: void ViewTransform::clearCategories()
+   
+   See :cpp:func:`ColorSpace::clearCategories`.
+
+.. cpp:function:: ReferenceSpaceType ViewTransform::getReferenceSpaceType() const noexcept
+   
+
+.. cpp:function:: ConstTransformRcPtr ViewTransform::getTransform(ViewTransformDirection dir) const
+   
+   If a transform in the specified direction has been specified, return it.
+   Otherwise return a null ConstTransformRcPtr
+
+.. cpp:function:: void ViewTransform::setTransform(const ConstTransformRcPtr & transform, ViewTransformDirection dir)
+   
+   Specify the transform for the appropriate direction. Setting the transform
+   to null will clear it.
+
+
+Processor
+*********
+The *Processor* represents a specific color transformation which is
+the result of :cpp:func:`Config::getProcessor`.
+
+.. cpp:class:: Processor
+   
+
+.. cpp:function:: bool Processor::isNoOp() const
+   
+
+.. cpp:function:: bool Processor::hasChannelCrosstalk() const
+   
+   True if the image transformation is non-separable.
+   For example, if a change in red may also cause a change in green or blue.
+
+.. cpp:function:: const char * Processor::getCacheID() const
+   
+
+.. cpp:function:: ConstProcessorMetadataRcPtr Processor::getProcessorMetadata() const
+   
+   The ProcessorMetadata contains technical information
+                  such as the number of files and looks used in the processor.
+
+.. cpp:function:: const FormatMetadata & Processor::getFormatMetadata() const
+   
+   Get a FormatMetadata containing the top level metadata
+                  for the processor.  For a processor from a CLF file,
+                  this corresponds to the ProcessList metadata.
+
+.. cpp:function:: int Processor::getNumTransforms() const
+   
+   Get the number of transforms that comprise the processor.
+                  Each transform has a (potentially empty) FormatMetadata.
+
+.. cpp:function:: const FormatMetadata & Processor::getTransformFormatMetadata(int index) const
+   
+   Get a FormatMetadata containing the metadata for a
+                  transform within the processor. For a processor from
+                  a CLF file, this corresponds to the metadata associated
+                  with an individual process node.
+
+.. cpp:function:: GroupTransformRcPtr Processor::createGroupTransform() const
+   
+   Return a cpp:class:`GroupTransform` that contains a
+                  copy of the transforms that comprise the processor.
+                  (Changes to it will not modify the original processor.)
+
+.. cpp:function:: void Processor::write(const char * formatName, std::ostream & os) const
+   
+   Write the transforms comprising the processor to the stream.
+                  Writing (as opposed to Baking) is a lossless process.
+                  An exception is thrown if the processor cannot be
+                  losslessly written to the specified file format.
+
+.. cpp:function:: static int Processor::getNumWriteFormats()
+   
+   Get the number of writers.
+
+.. cpp:function:: static const char * Processor::getFormatNameByIndex(int index)
+   
+   Get the writer at index, return empty string if
+                  an invalid index is specified.
+
+.. cpp:function:: DynamicPropertyRcPtr Processor::getDynamicProperty(DynamicPropertyType type) const
+   
+
+.. cpp:function:: ConstProcessorRcPtr Processor::getOptimizedProcessor(BitDepth inBD, BitDepth outBD, OptimizationFlags oFlags) const
+   
+   Create a :cpp:class:`Processor` that is an optimized version of this.
+   Note that one typically does not need to explicitly create an optimized Processor instance
+   since optimization happens implicitly during the creation of a CPUProcessor or GPUProcessor.
+   This method is provided primarily for diagnostic purposes.
+
+
+GPU Renderer
+^^^^^^^^^^^^
+Get an optimized :cpp:class:`GPUProcessor` instance.
+
+.. cpp:function:: ConstGPUProcessorRcPtr Processor::getDefaultGPUProcessor() const
+   
+
+.. cpp:function:: ConstGPUProcessorRcPtr Processor::getOptimizedGPUProcessor(OptimizationFlags oFlags) const
+   
+
+
+CPU Renderer
+^^^^^^^^^^^^
+Get an optimized :cpp:class:`CPUProcessor` instance.
+
+.. note::
+   This may provide higher fidelity than anticipated due to internal
+   optimizations. For example, if the inputColorSpace and the
+   outputColorSpace are members of the same family, no conversion
+   will be applied, even though strictly speaking quantization
+   should be added.
+
+.. cpp:function:: ConstCPUProcessorRcPtr Processor::getDefaultCPUProcessor() const
+   
+
+.. cpp:function:: ConstCPUProcessorRcPtr Processor::getOptimizedCPUProcessor(OptimizationFlags oFlags) const
+   
+
+.. cpp:function:: ConstCPUProcessorRcPtr Processor::getOptimizedCPUProcessor(BitDepth inBitDepth, BitDepth outBitDepth, OptimizationFlags oFlags) const
+   
+
+
+CPUProcessor
+************
+
+.. cpp:class:: CPUProcessor
+   
+
+.. cpp:function:: bool CPUProcessor::isNoOp() const
+   
+   The in and out bit-depths must be equal for isNoOp to be true.
+
+.. cpp:function:: bool CPUProcessor::isIdentity() const
+   
+   Equivalent to isNoOp from the underlying Processor, i.e., it ignores
+   in/out bit-depth differences.
+
+.. cpp:function:: bool CPUProcessor::hasChannelCrosstalk() const
+   
+
+.. cpp:function:: const char * CPUProcessor::getCacheID() const
+   
+
+.. cpp:function:: BitDepth CPUProcessor::getInputBitDepth() const
+   
+   Bit-depth of the input pixel buffer.
+
+.. cpp:function:: BitDepth CPUProcessor::getOutputBitDepth() const
+   
+   Bit-depth of the output pixel buffer.
+
+.. cpp:function:: DynamicPropertyRcPtr CPUProcessor::getDynamicProperty(DynamicPropertyType type) const
+   
+   Refer to :cpp:func:`GPUProcessor::getDynamicProperty`.
+
+
+Apply to an image with any kind of channel ordering while respecting
+the input and output bit-depths.
+
+.. cpp:function:: void CPUProcessor::apply(ImageDesc & imgDesc) const
+   
+
+.. cpp:function:: void CPUProcessor::apply(const ImageDesc & srcImgDesc, ImageDesc & dstImgDesc) const
+   
+
+
+Apply to a single pixel respecting that the input and output bit-depths
+be 32-bit float and the image buffer be packed RGB/RGBA.
+
+.. note::
+   This is not as efficient as applying to an entire image at once.
+   If you are processing multiple pixels, and have the flexibility,
+   use the above function instead.
+
+.. cpp:function:: void CPUProcessor::applyRGB(float * pixel) const
+   
+
+.. cpp:function:: void CPUProcessor::applyRGBA(float * pixel) const
+   
+
+
+GPUProcessor
+************
+
+.. cpp:class:: GPUProcessor
+   
+
+.. cpp:function:: bool GPUProcessor::isNoOp() const
+   
+
+.. cpp:function:: bool GPUProcessor::hasChannelCrosstalk() const
+   
+
+.. cpp:function:: const char * GPUProcessor::getCacheID() const
+   
+
+.. cpp:function:: DynamicPropertyRcPtr GPUProcessor::getDynamicProperty(DynamicPropertyType type) const
+   
+   The returned pointer may be used to set the value of any dynamic properties
+   of the requested type.  Throws if the requested property is not found.  Note that if the
+   processor contains several ops that support the requested property, only ones for which
+   dynamic has been enabled will be controlled.
+   
+   .. note::
+      The dynamic properties in this object are decoupled from the ones
+      in the :cpp:class:`Processor` it was generated from.
+   
+
+.. cpp:function:: void GPUProcessor::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
+   
+   Extract & Store the shader information to implement the color processing.
+
+.. cpp:function:: void GPUProcessor::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
+   
+   Extract the shader information using a custom :cpp:class:`GpuShaderCreator` class.
+
+.. cpp:class:: ProcessorMetadata
+   
+   This class contains meta information about the process that generated
+   this processor.  The results of these functions do not
+   impact the pixel processing.
+
+.. cpp:function:: static ProcessorMetadataRcPtr ProcessorMetadata::Create()
+   
+
+.. cpp:function:: int ProcessorMetadata::getNumFiles() const
+   
+
+.. cpp:function:: const char * ProcessorMetadata::getFile(int index) const
+   
+
+.. cpp:function:: int ProcessorMetadata::getNumLooks() const
+   
+
+.. cpp:function:: const char * ProcessorMetadata::getLook(int index) const
+   
+
+.. cpp:function:: void ProcessorMetadata::addFile(const char * fname)
+   
+
+.. cpp:function:: void ProcessorMetadata::addLook(const char * look)
+   
+
+
+Baker
+*****
+
+In certain situations it is necessary to serialize transforms into a variety
+of application specific LUT formats. Note that not all file formats that may
+be read also support baking.
+
+**Usage Example:** *Bake a CSP sRGB viewer LUT*
+
+.. code-block:: cpp
+
+   OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromEnv();
+   OCIO::BakerRcPtr baker = OCIO::Baker::Create();
+   baker->setConfig(config);
+   baker->setFormat("csp");
+   baker->setInputSpace("lnf");
+   baker->setShaperSpace("log");
+   baker->setTargetSpace("sRGB");
+   auto & metadata = baker->getFormatMetadata();
+   metadata.addChildElement(OCIO::METADATA_DESCRIPTION, "A first comment");
+   metadata.addChildElement(OCIO::METADATA_DESCRIPTION, "A second comment");
+   std::ostringstream out;
+   baker->bake(out); // fresh bread anyone!
+   std::cout << out.str();
+
+.. cpp:function:: static BakerRcPtr Create()
+   
+   Create a new Baker.
+
+.. cpp:function:: BakerRcPtr createEditableCopy() const
+   
+   Create a copy of this Baker.
+
+.. cpp:function:: ConstConfigRcPtr getConfig() const
+   
+
+.. cpp:function:: void setConfig(const ConstConfigRcPtr & config)
+   
+   Set the config to use.
+
+.. cpp:function:: const char * getFormat() const
+   
+
+.. cpp:function:: void setFormat(const char * formatName)
+   
+   Set the LUT output format.
+
+.. cpp:function:: const FormatMetadata & getFormatMetadata() const
+   
+
+.. cpp:function:: FormatMetadata & getFormatMetadata()
+   
+   Get editable *optional* format metadata. The metadata that will be used
+   varies based on the capability of the given file format.  Formats such as CSP,
+   IridasCube, and ResolveCube will create comments in the file header using the value of
+   any first-level children elements of the formatMetadata.  The CLF/CTF formats will make
+   use of the top-level "id" and "name" attributes and children elements "Description",
+   "InputDescriptor", "OutputDescriptor", and "Info".
+
+.. cpp:function:: const char * getInputSpace() const
+   
+
+.. cpp:function:: void setInputSpace(const char * inputSpace)
+   
+   Set the input ColorSpace that the LUT will be applied to.
+
+.. cpp:function:: const char * getShaperSpace() const
+   
+
+.. cpp:function:: void setShaperSpace(const char * shaperSpace)
+   
+   Set an *optional* ColorSpace to be used to shape / transfer the input
+   colorspace. This is mostly used to allocate an HDR luminance range into an LDR one.
+   If a shaper space is not explicitly specified, and the file format supports one, the
+   ColorSpace Allocation will be used (not implemented for all formats).
+
+.. cpp:function:: const char * getLooks() const
+   
+
+.. cpp:function:: void setLooks(const char * looks)
+   
+   Set the looks to be applied during baking. Looks is a potentially comma
+   (or colon) delimited list of lookNames, where +/- prefixes are optionally allowed to
+   denote forward/inverse look specification. (And forward is assumed in the absence of
+   either).
+
+.. cpp:function:: const char * getTargetSpace() const
+   
+
+.. cpp:function:: void setTargetSpace(const char * targetSpace)
+   
+   Set the target device colorspace for the LUT.
+
+.. cpp:function:: int getShaperSize() const
+   
+
+.. cpp:function:: void setShaperSize(int shapersize)
+   
+   Override the default shaper LUT size. Default value is -1, which allows
+   each format to use its own most appropriate size. For the CLF format, the default uses
+   a half-domain LUT1D (which is ideal for scene-linear inputs).
+
+.. cpp:function:: int getCubeSize() const
+   
+
+.. cpp:function:: void setCubeSize(int cubesize)
+   
+   Override the default cube sample size.
+   default: <format specific>
+
+.. cpp:function:: void bake(std::ostream & os) const
+   
+   Bake the LUT into the output stream.
+
+.. cpp:function:: static int getNumFormats()
+   
+   Get the number of LUT bakers.
+
+.. cpp:function:: static const char * getFormatNameByIndex(int index)
+   
+   Get the LUT baker format name at index, return empty string if an invalid
+   index is specified.
+
+.. cpp:function:: static const char * getFormatExtensionByIndex(int index)
+   
+   Get the LUT baker format extension at index, return empty string if an
+   invalid index is specified.
+
+
+ImageDesc
+*********
+
+
+.. c:var:: const ptrdiff_t AutoStride
+
+   AutoStride
+
+.. cpp:class:: ImageDesc
+   
+   This is a light-weight wrapper around an image, that provides a context
+   for pixel access. This does NOT claim ownership of the pixels or copy
+   image data.
+
+.. cpp:function:: ImageDesc::ImageDesc()
+   
+
+.. cpp:function:: virtual ImageDesc::~ImageDesc()
+   
+
+.. cpp:function:: virtual void * ImageDesc::getRData() const = 0
+   
+   Get a pointer to the red channel of the first pixel.
+
+.. cpp:function:: virtual void * ImageDesc::getGData() const = 0
+   
+   Get a pointer to the green channel of the first pixel.
+
+.. cpp:function:: virtual void * ImageDesc::getBData() const = 0
+   
+   Get a pointer to the blue channel of the first pixel.
+
+.. cpp:function:: virtual void * ImageDesc::getAData() const = 0
+   
+   Get a pointer to the alpha channel of the first pixel
+   or null as alpha channel is optional.
+
+.. cpp:function:: virtual BitDepth ImageDesc::getBitDepth() const = 0
+   
+   Get the bit-depth.
+
+.. cpp:function:: virtual long ImageDesc::getWidth() const = 0
+   
+   Get the width to process (where x position starts at 0 and ends at width-1).
+
+.. cpp:function:: virtual long ImageDesc::getHeight() const = 0
+   
+   Get the height to process (where y position starts at 0 and ends at height-1).
+
+.. cpp:function:: virtual ptrdiff_t ImageDesc::getXStrideBytes() const = 0
+   
+   Get the step in bytes to find the same color channel of the next pixel.
+
+.. cpp:function:: virtual ptrdiff_t ImageDesc::getYStrideBytes() const = 0
+   
+   Get the step in bytes to find the same color channel
+   of the pixel at the same position in the next line.
+
+.. cpp:function:: virtual bool ImageDesc::isRGBAPacked() const = 0
+   
+   Is the image buffer in packed mode with the 4 color channels?
+   ("Packed" here means that XStrideBytes is 4x the bytes per channel, so it is more specific
+   than simply any PackedImageDesc.)
+
+.. cpp:function:: virtual bool ImageDesc::isFloat() const = 0
+   
+   Is the image buffer 32-bit float?
+
+
+PackedImageDesc
+^^^^^^^^^^^^^^^
+
+.. cpp:class:: PackedImageDesc
+   
+
+
+All the constructors expect a pointer to packed image data (such as
+rgbrgbrgb or rgbargbargba) starting at the first color channel of
+the first pixel to process (which does not need to be the first pixel
+of the image). The number of channels must be greater than or equal to 3.
+If a 4th channel is specified, it is assumed to be alpha
+information.  Channels > 4 will be ignored.
+
+.. note::
+   The methods assume the CPUProcessor bit-depth type for the data pointer.
+
+.. cpp:function:: PackedImageDesc::PackedImageDesc(void * data, long width, long height, long numChannels)
+   
+   
+   .. note::
+      numChannels must be 3 (RGB) or 4 (RGBA).
+
+.. cpp:function:: PackedImageDesc::PackedImageDesc(void * data, long width, long height, long numChannels, BitDepth bitDepth, ptrdiff_t chanStrideBytes, ptrdiff_t xStrideBytes, ptrdiff_t yStrideBytes)
+   
+   
+   .. note::
+      numChannels must be 3 (RGB) or 4 (RGBA).
+
+.. cpp:function:: PackedImageDesc::PackedImageDesc(void * data, long width, long height, ChannelOrdering chanOrder)
+   
+
+.. cpp:function:: PackedImageDesc::PackedImageDesc(void * data, long width, long height, ChannelOrdering chanOrder, BitDepth bitDepth, ptrdiff_t chanStrideBytes, ptrdiff_t xStrideBytes, ptrdiff_t yStrideBytes)
+   
+
+.. cpp:function:: virtual PackedImageDesc::~PackedImageDesc()
+   
+
+.. cpp:function:: ChannelOrdering PackedImageDesc::getChannelOrder() const
+   
+   Get the channel ordering of all the pixels.
+
+.. cpp:function:: BitDepth PackedImageDesc::getBitDepth() const override
+   
+   Get the bit-depth.
+
+.. cpp:function:: void * PackedImageDesc::getData() const
+   
+   Get a pointer to the first color channel of the first pixel.
+
+.. cpp:function:: void * PackedImageDesc::getRData() const override
+   
+
+.. cpp:function:: void * PackedImageDesc::getGData() const override
+   
+
+.. cpp:function:: void * PackedImageDesc::getBData() const override
+   
+
+.. cpp:function:: void * PackedImageDesc::getAData() const override
+   
+
+.. cpp:function:: long PackedImageDesc::getWidth() const override
+   
+
+.. cpp:function:: long PackedImageDesc::getHeight() const override
+   
+
+.. cpp:function:: long PackedImageDesc::getNumChannels() const
+   
+
+.. cpp:function:: ptrdiff_t PackedImageDesc::getChanStrideBytes() const
+   
+
+.. cpp:function:: ptrdiff_t PackedImageDesc::getXStrideBytes() const override
+   
+
+.. cpp:function:: ptrdiff_t PackedImageDesc::getYStrideBytes() const override
+   
+
+.. cpp:function:: bool PackedImageDesc::isRGBAPacked() const override
+   
+
+.. cpp:function:: bool PackedImageDesc::isFloat() const override
+   
+
+
+PlanarImageDesc
+^^^^^^^^^^^^^^^
+
+.. cpp:class:: PlanarImageDesc
+   
+
+
+All the constructors expect pointers to the specified image planes
+(i.e. rrrr gggg bbbb) starting at the first color channel of the
+first pixel to process (which need not be the first pixel of the image).
+Pass NULL for aData if no alpha exists (r/g/bData must not be NULL).
+
+.. note::
+   The methods assume the CPUProcessor bit-depth type for the R/G/B/A data pointers.
+
+.. cpp:function:: PlanarImageDesc::PlanarImageDesc(void * rData, void * gData, void * bData, void * aData, long width, long height)
+   
+
+.. cpp:function:: PlanarImageDesc::PlanarImageDesc(void * rData, void * gData, void * bData, void * aData, long width, long height, BitDepth bitDepth, ptrdiff_t xStrideBytes, ptrdiff_t yStrideBytes)
+   
+   Note that although PlanarImageDesc is powerful enough to also describe
+   all :cpp:class:`PackedImageDesc` scenarios, it is recommended to use
+   a PackedImageDesc where possible since that allows for additional
+   optimizations.
+
+.. cpp:function:: virtual PlanarImageDesc::~PlanarImageDesc()
+   
+
+.. cpp:function:: void * PlanarImageDesc::getRData() const override
+   
+
+.. cpp:function:: void * PlanarImageDesc::getGData() const override
+   
+
+.. cpp:function:: void * PlanarImageDesc::getBData() const override
+   
+
+.. cpp:function:: void * PlanarImageDesc::getAData() const override
+   
+
+.. cpp:function:: BitDepth PlanarImageDesc::getBitDepth() const override
+   
+   Get the bit-depth.
+
+.. cpp:function:: long PlanarImageDesc::getWidth() const override
+   
+
+.. cpp:function:: long PlanarImageDesc::getHeight() const override
+   
+
+.. cpp:function:: ptrdiff_t PlanarImageDesc::getXStrideBytes() const override
+   
+
+.. cpp:function:: ptrdiff_t PlanarImageDesc::getYStrideBytes() const override
+   
+
+.. cpp:function:: bool PlanarImageDesc::isRGBAPacked() const override
+   
+
+.. cpp:function:: bool PlanarImageDesc::isFloat() const override
+   
+
+
+GpuShaderCreator
+*************
+Inherit from the class to fully customize the implementation of a GPU shader program
+from a color transformation.
+
+When no customizations are needed then the :cpp:class:`GpuShaderDesc` is a better choice.
+
+!cpp:class::
+
+.. cpp:class:: GpuShaderCreator
+   
+
+.. cpp:function:: virtual GpuShaderCreatorRcPtr GpuShaderCreator::clone() const = 0
+   
+
+.. cpp:function:: const char * GpuShaderCreator::getUniqueID() const noexcept
+   
+
+.. cpp:function:: void GpuShaderCreator::setUniqueID(const char * uid) noexcept
+   
+
+.. cpp:function:: GpuLanguage GpuShaderCreator::getLanguage() const noexcept
+   
+
+.. cpp:function:: void GpuShaderCreator::setLanguage(GpuLanguage lang) noexcept
+   
+   Set the shader program language.
+
+.. cpp:function:: const char * GpuShaderCreator::getFunctionName() const noexcept
+   
+
+.. cpp:function:: void GpuShaderCreator::setFunctionName(const char * name) noexcept
+   
+   Set the function name of the shader program.
+
+.. cpp:function:: const char * GpuShaderCreator::getPixelName() const noexcept
+   
+
+.. cpp:function:: void GpuShaderCreator::setPixelName(const char * name) noexcept
+   
+   Set the pixel name variable holding the color values.
+
+.. cpp:function:: const char * GpuShaderCreator::getResourcePrefix() const noexcept
+   
+   
+   .. note::
+     Some applications require that textures, uniforms,
+     and helper methods be uniquely named because several
+     processor instances could coexist.
+   
+
+.. cpp:function:: void GpuShaderCreator::setResourcePrefix(const char * prefix) noexcept
+   
+   Set a prefix to the resource name
+
+.. cpp:function:: virtual const char * GpuShaderCreator::getCacheID() const noexcept
+   
+
+.. cpp:function:: virtual void GpuShaderCreator::begin(const char * uid)
+   
+   Start to collect the shader data.
+
+.. cpp:function:: virtual void GpuShaderCreator::end()
+   
+   End to collect the shader data.
+
+.. cpp:function:: virtual void GpuShaderCreator::setTextureMaxWidth(unsigned maxWidth) = 0
+   
+   Some graphic cards could have 1D & 2D textures with size limitations.
+
+.. cpp:function:: virtual unsigned GpuShaderCreator::getTextureMaxWidth() const noexcept = 0
+   
+
+.. cpp:function:: unsigned GpuShaderCreator::getNextResourceIndex() noexcept
+   
+   To avoid texture/unform name clashes always append
+   an increasing number to the resource name.
+
+.. cpp:function:: virtual bool GpuShaderCreator::addUniform(const char * name, const DynamicPropertyRcPtr & value) = 0
+   
+
+.. cpp:function:: virtual void GpuShaderCreator::addTexture(const char * textureName, const char * samplerName, const char * uid, unsigned width, unsigned height, TextureType channel, Interpolation interpolation, const float * values) = 0
+   
+
+.. cpp:function:: virtual void GpuShaderCreator::add3DTexture(const char * textureName, const char * samplerName, const char * uid, unsigned edgelen, Interpolation interpolation, const float * values) = 0
+   
+
+Methods to specialize parts of a OCIO shader program.
+
+**An OCIO shader program could contain:**
+
+1. A declaration part  e.g., uniform sampled3D tex3;
+
+2. Some helper methods
+
+3. The OCIO shader function may be broken down as:
+
+   1. The function header  e.g., void OCIODisplay(in vec4 inColor) {
+   2. The function body    e.g.,   vec4 outColor.rgb = texture3D(tex3, inColor.rgb).rgb;
+   3. The function footer  e.g.,   return outColor; }
+
+
+**Usage Example:**
+
+Below is a code snippet to highlight the different parts of the OCIO shader program.
+
+.. code-block:: cpp
+
+   // All global declarations
+   uniform sampled3D tex3;
+
+   // All helper methods
+   vec3 computePosition(vec3 color)
+   {
+      vec3 coords = color;
+      // Some processing...
+      return coords;
+   }
+
+   // The shader function
+   vec4 OCIODisplay(in vec4 inColor)     //
+   {                                     // Function Header
+      vec4 outColor = inColor;           //
+
+      outColor.rgb = texture3D(tex3, computePosition(inColor.rgb)).rgb;
+
+      return outColor;                   // Function Footer
+   }                                     //
+
+!cpp:function::
+
+.. cpp:function:: virtual void GpuShaderCreator::addToDeclareShaderCode(const char * shaderCode)
+   
+
+.. cpp:function:: virtual void GpuShaderCreator::addToHelperShaderCode(const char * shaderCode)
+   
+
+.. cpp:function:: virtual void GpuShaderCreator::addToFunctionHeaderShaderCode(const char * shaderCode)
+   
+
+.. cpp:function:: virtual void GpuShaderCreator::addToFunctionShaderCode(const char * shaderCode)
+   
+
+.. cpp:function:: virtual void GpuShaderCreator::addToFunctionFooterShaderCode(const char * shaderCode)
+   
+
+.. cpp:function:: virtual void GpuShaderCreator::createShaderText(const char * shaderDeclarations, const char * shaderHelperMethods, const char * shaderFunctionHeader, const char * shaderFunctionBody, const char * shaderFunctionFooter)
+   
+   Create the OCIO shader program
+   
+   .. note::
+   
+     The OCIO shader program is decomposed to allow a specific implementation
+     to change some parts. Some product integrations add the color processing
+     within a client shader program, imposing constraints requiring this flexibility.
+   
+
+.. cpp:function:: virtual void GpuShaderCreator::finalize()
+   
+
+.. cpp:function:: GpuShaderCreator::GpuShaderCreator()
+   
+
+.. cpp:function:: virtual GpuShaderCreator::~GpuShaderCreator()
+   
+
+.. cpp:function:: GpuShaderCreator::GpuShaderCreator(const GpuShaderCreator &) = delete
+   
+
+.. cpp:function:: GpuShaderCreator & operator= GpuShaderCreator::(const GpuShaderCreator &) = delete
+   
+
+
+GpuShaderDesc
+*************
+This class holds the GPU-related information needed to build a shader program
+from a specific processor.
+
+This class defines the interface and there are two implementations provided.
+The "legacy" mode implements the OCIO v1 approach of baking certain ops
+in order to have at most one 3D-LUT.  The "generic" mode is the v2 default and
+allows all the ops to be processed as-is, without baking, like the CPU renderer.
+Custom implementations could be written to accommodate the GPU needs of a
+specific client app.
+
+
+The complete fragment shader program is decomposed in two main parts:
+the OCIO shader program for the color processing and the client shader
+program which consumes the pixel color processing.
+
+The OCIO shader program is fully described by the GpuShaderDesc
+independently from the client shader program. The only critical
+point is the agreement on the OCIO function shader name.
+
+To summarize, the complete shader program is:
+
+.. code-block:: cpp
+
+ ////////////////////////////////////////////////////////////////////////
+ //                                                                    //
+ //               The complete fragment shader program                 //
+ //                                                                    //
+ ////////////////////////////////////////////////////////////////////////
+ //                                                                    //
+ //   //////////////////////////////////////////////////////////////   //
+ //   //                                                          //   //
+ //   //               The OCIO shader program                    //   //
+ //   //                                                          //   //
+ //   //////////////////////////////////////////////////////////////   //
+ //   //                                                          //   //
+ //   //   // All global declarations                             //   //
+ //   //   uniform sampled3D tex3;                                //   //
+ //   //                                                          //   //
+ //   //   // All helper methods                                  //   //
+ //   //   vec3 computePos(vec3 color)                            //   //
+ //   //   {                                                      //   //
+ //   //      vec3 coords = color;                                //   //
+ //   //      ...                                                 //   //
+ //   //      return coords;                                      //   //
+ //   //   }                                                      //   //
+ //   //                                                          //   //
+ //   //   // The OCIO shader function                            //   //
+ //   //   vec4 OCIODisplay(in vec4 inColor)                      //   //
+ //   //   {                                                      //   //
+ //   //      vec4 outColor = inColor;                            //   //
+ //   //      ...                                                 //   //
+ //   //      outColor.rbg                                        //   //
+ //   //         = texture3D(tex3, computePos(inColor.rgb)).rgb;  //   //
+ //   //      ...                                                 //   //
+ //   //      return outColor;                                    //   //
+ //   //   }                                                      //   //
+ //   //                                                          //   //
+ //   //////////////////////////////////////////////////////////////   //
+ //                                                                    //
+ //   //////////////////////////////////////////////////////////////   //
+ //   //                                                          //   //
+ //   //             The client shader program                    //   //
+ //   //                                                          //   //
+ //   //////////////////////////////////////////////////////////////   //
+ //   //                                                          //   //
+ //   //   uniform sampler2D image;                               //   //
+ //   //                                                          //   //
+ //   //   void main()                                            //   //
+ //   //   {                                                      //   //
+ //   //      vec4 inColor = texture2D(image, gl_TexCoord[0].st); //   //
+ //   //      ...                                                 //   //
+ //   //      vec4 outColor = OCIODisplay(inColor);               //   //
+ //   //      ...                                                 //   //
+ //   //      gl_FragColor = outColor;                            //   //
+ //   //   }                                                      //   //
+ //   //                                                          //   //
+ //   //////////////////////////////////////////////////////////////   //
+ //                                                                    //
+ ////////////////////////////////////////////////////////////////////////
+
+
+**Usage Example:** *Building a GPU shader*
+
+  This example is based on the code in: src/apps/ociodisplay/main.cpp
+
+.. code-block:: cpp
+
+   // Get the processor
+   //
+   OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromEnv();
+   OCIO::ConstProcessorRcPtr processor
+      = config->getProcessor("ACES - ACEScg", "Output - sRGB");
+
+   // Step 1: Create a GPU shader description
+   //
+   // The three potential scenarios are:
+   //
+   //   1. Instantiate the legacy shader description.  The color processor
+   //      is baked down to contain at most one 3D LUT and no 1D LUTs.
+   //
+   //      This is the v1 behavior and will remain part of OCIO v2
+   //      for backward compatibility.
+   //
+   OCIO::GpuShaderDescRcPtr shaderDesc
+         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
+   //
+   //   2. Instantiate the generic shader description.  The color processor
+   //      is used as-is (i.e. without any baking step) and could contain
+   //      any number of 1D & 3D luts.
+   //
+   //      This is the default OCIO v2 behavior and allows a much better
+   //      match between the CPU and GPU renderers.
+   //
+   OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::Create();
+   //
+   //   3. Instantiate a custom shader description.
+   //
+   //      Writing a custom shader description is a way to tailor the shaders
+   //      to the needs of a given client program.  This involves writing a
+   //      new class inheriting from the pure virtual class GpuShaderDesc.
+   //
+   //      Please refer to the GenericGpuShaderDesc class for an example.
+   //
+   OCIO::GpuShaderDescRcPtr shaderDesc = MyCustomGpuShader::Create();
+
+   shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
+   shaderDesc->setFunctionName("OCIODisplay");
+
+   // Step 2: Collect the shader program information for a specific processor
+   //
+   processor->extractGpuShaderInfo(shaderDesc);
+
+   // Step 3: Create a helper to build the shader. Here we use a helper for
+   //         OpenGL but there will also be helpers for other languages.
+   //
+   OpenGLBuilderRcPtr oglBuilder = OpenGLBuilder::Create(shaderDesc);
+
+   // Step 4: Allocate & upload all the LUTs
+   //
+   oglBuilder->allocateAllTextures();
+
+   // Step 5: Build the complete fragment shader program using
+   //         g_fragShaderText which is the client shader program.
+   //
+   g_programId = oglBuilder->buildProgram(g_fragShaderText);
+
+   // Step 6: Enable the fragment shader program, and all needed textures
+   //
+   glUseProgram(g_programId);
+   glUniform1i(glGetUniformLocation(g_programId, "tex1"), 1);  // image texture
+   oglBuilder->useAllTextures(g_programId);                    // LUT textures
+
+
+.. cpp:class:: GpuShaderDesc
+   
+
+.. cpp:function:: static GpuShaderDescRcPtr GpuShaderDesc::CreateLegacyShaderDesc(unsigned edgelen)
+   
+   Create the legacy shader description.
+
+.. cpp:function:: static GpuShaderDescRcPtr GpuShaderDesc::CreateShaderDesc()
+   
+   Create the default shader description.
+
+.. cpp:function:: GpuShaderCreatorRcPtr GpuShaderDesc::clone() const override
+   
+
+.. cpp:function:: virtual unsigned GpuShaderDesc::getNumUniforms() const noexcept = 0
+   
+   Dynamic Property related methods.
+
+.. cpp:function:: virtual unsigned GpuShaderDesc::getNumTextures() const noexcept = 0
+   
+   1D lut related methods
+
+.. cpp:function:: virtual unsigned GpuShaderDesc::getNum3DTextures() const noexcept = 0
+   
+   3D lut related methods
+
+.. cpp:function:: const char * GpuShaderDesc::getShaderText() const noexcept
+   
+   Get the complete OCIO shader program.
+
+.. cpp:function:: GpuShaderDesc::GpuShaderDesc()
+   
+
+.. cpp:function:: virtual GpuShaderDesc::~GpuShaderDesc()
+   
+
+.. cpp:function:: GpuShaderDesc::GpuShaderDesc(const GpuShaderDesc &) = delete
+   
+
+.. cpp:function:: GpuShaderDesc& operator= GpuShaderDesc::(const GpuShaderDesc &) = delete
+   
+
+
+Context
+*******
+
+.. cpp:class:: Context
+   
+
+.. cpp:function:: static ContextRcPtr Context::Create()
+   
+
+.. cpp:function:: ContextRcPtr Context::createEditableCopy() const
+   
+
+.. cpp:function:: const char * Context::getCacheID() const
+   
+
+.. cpp:function:: void Context::setSearchPath(const char * path)
+   
+
+.. cpp:function:: const char * Context::getSearchPath() const
+   
+
+.. cpp:function:: int Context::getNumSearchPaths() const
+   
+
+.. cpp:function:: const char * Context::getSearchPath(int index) const
+   
+
+.. cpp:function:: void Context::clearSearchPaths()
+   
+
+.. cpp:function:: void Context::addSearchPath(const char * path)
+   
+
+.. cpp:function:: void Context::setWorkingDir(const char * dirname)
+   
+
+.. cpp:function:: const char * Context::getWorkingDir() const
+   
+
+.. cpp:function:: void Context::setStringVar(const char * name, const char * value)
+   
+
+.. cpp:function:: const char * Context::getStringVar(const char * name) const
+   
+
+.. cpp:function:: int Context::getNumStringVars() const
+   
+
+.. cpp:function:: const char * Context::getStringVarNameByIndex(int index) const
+   
+
+.. cpp:function:: void Context::clearStringVars()
+   
+
+.. cpp:function:: void Context::setEnvironmentMode(EnvironmentMode mode)
+   
+
+.. cpp:function:: EnvironmentMode Context::getEnvironmentMode() const
+   
+
+.. cpp:function:: void Context::loadEnvironment()
+   
+   Seed all string vars with the current environment.
+
+.. cpp:function:: const char * Context::resolveStringVar(const char * val) const
+   
+   Do a file lookup.
+   
+   Evaluate the specified variable (as needed). Will not throw exceptions.
+
+.. cpp:function:: const char * Context::resolveFileLocation(const char * filename) const
+   
+   Do a file lookup.
+   
+   Evaluate all variables (as needed).
+   Also, walk the full search path until the file is found.
+   If the filename cannot be found, an exception will be thrown.
+

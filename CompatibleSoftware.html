@@ -1,44 +1,35 @@
 
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>OpenColorIO</title>
 
-    
     <link rel="stylesheet" href="_static/ocio.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/print.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '1.1.1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
+    <link rel="stylesheet" type="text/css" href="_static/print.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <script type="text/javascript" src="_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO 1.1.1 documentation" href="index.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="FAQ" href="FAQ.html" />
     <link rel="prev" title="Internal Architecture Overview" href="developers/internal_architecture.html" /> 
-  </head>
-  <body>
+  </head><body>
     <div class="header"><h1 class="heading"><a href="index.html">
           <span>OpenColorIO</span></a></h1>
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO 1.1.1 documentation
+      OpenColorIO  documentation
       </div>
       <div class="content">
         
@@ -53,26 +44,38 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="userguide/index.html">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developers/index.html">Developer Guide</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Compatible Software</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Compatible Software</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#after-effects">After Effects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#arnold-autodesk">Arnold (Autodesk)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#blender">Blender</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#krita">Krita</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#silhouette">Silhouette</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#nuke">Nuke</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#mari">Mari</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#katana">Katana</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hiero">Hiero</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#photoshop">Photoshop</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#openimageio">OpenImageIO</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#c">C++</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#python">Python</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#vegas-pro">Vegas Pro</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#apps-w-icc-or-luts">Apps w/icc or luts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#rv">RV</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#java-beta">Java (Beta)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clarisse-isotropix">Clarisse (Isotropix)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cryengine-crytek">CryEngine (CryTek)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#djv">DJV</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#gaffer">Gaffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hiero-foundry">Hiero (Foundry)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#houdini-sidefx">Houdini (SideFX)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#java-beta">Java (Beta)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#katana-foundry">Katana (Foundry)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#krita">Krita</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mari-foundry">Mari (Foundry)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#maya-autodesk">Maya (Autodesk)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mocha-pro-boris-fx">Mocha Pro (Boris FX)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#modo-foundry">Modo (Foundry)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mrviewer">mrViewer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#natron">Natron</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#cryengine3-beta">CryEngine3 (Beta)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#nuke-foundry">Nuke (Foundry)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#openimageio">OpenImageIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#photoflow">PhotoFlow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#photoshop">Photoshop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#python">Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rv-autodesk">RV (Autodesk)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#silhouette-boris-fx">Silhouette (Boris FX)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#substance-designer-adobe">Substance Designer (Adobe)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#unreal-engine-epic-games">Unreal Engine (Epic Games)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#vegas-pro-magix">Vegas Pro (Magix)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#v-ray-chaos-group">V-Ray (Chaos Group)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#apps-w-icc-or-luts">Apps w/icc or luts</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
@@ -80,6 +83,8 @@
 <li class="toctree-l1"><a class="reference internal" href="ChangeLog.html">ChangeLog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="License.html">License</a></li>
 </ul>
+<!-- SPDX-License-Identifier: BSD-3-Clause -->
+<!-- Copyright Contributors to the OpenColorIO Project. -->
 
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
@@ -98,126 +103,264 @@
         
 <div class="section" id="compatible-software">
 <span id="compatiblesoftware"></span><h1>Compatible Software<a class="headerlink" href="#compatible-software" title="Permalink to this headline">¶</a></h1>
-<p>The following sofware all supports OpenColorIO (to varying degrees).</p>
+<p>The following software all supports OpenColorIO (to varying degrees).</p>
 <p>If you are interested in getting OCIO support for an application not listed
 here, please contact the ocio-dev mailing list.</p>
-<p>If you are a developer and would like assistance integration OCIO into your
-application, please contant ocio-dev as well.</p>
+<p>If you are a developer and would like assistance integrating OCIO into your
+application, please contact ocio-dev as well.</p>
 <div class="section" id="after-effects">
 <h2>After Effects<a class="headerlink" href="#after-effects" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference external" href="http://www.adobe.com/products/aftereffects.html">Compositor - Adobe</a></p>
 <p>An OpenColorIO plugin is available for use in After Effects.</p>
-<p>See <a class="reference external" href="http://github.com/AcademySoftwareFoundation/OpenColorIO/tree/RB-1.1/src/aftereffects">src/aftereffects</a>
-if you are interested in building your own OCIO plugins.</p>
-<p>Pre-built binaries are also available for <a class="reference external" href="http://www.fnordware.com/OpenColorIO">download</a>, courtesy of
-<a class="reference external" href="http://www.fnordware.com">fnordware</a>.</p>
+<p>Website: <a class="reference external" href="http://www.adobe.com/products/aftereffects.html">http://www.adobe.com/products/aftereffects.html</a></p>
+<p>Documentation :</p>
+<ul class="simple">
+<li>See <a class="reference external" href="http://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/src/aftereffects">src/aftereffects</a> if you are interested in building your own OCIO plugins.</li>
+<li>Pre-built binaries are also available for <a class="reference external" href="http://www.fnordware.com/OpenColorIO">download</a>, courtesy of <a class="reference external" href="http://www.fnordware.com">fnordware</a>.</li>
+</ul>
+</div>
+<div class="section" id="arnold-autodesk">
+<h2>Arnold (Autodesk)<a class="headerlink" href="#arnold-autodesk" title="Permalink to this headline">¶</a></h2>
+<p>Website : <a class="reference external" href="https://www.arnoldrenderer.com/">https://www.arnoldrenderer.com/</a></p>
+<p>Documentation :</p>
+<ul class="simple">
+<li><a class="reference external" href="https://docs.arnoldrenderer.com/display/A5AFMUG/Color+Management">Color Management</a></li>
+</ul>
 </div>
 <div class="section" id="blender">
 <h2>Blender<a class="headerlink" href="#blender" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference external" href="http://www.blender.org/">Open Source 3D Application</a></p>
-<p>In <a class="reference external" href="http://wiki.blender.org/index.php/Dev:Ref/Release_Notes/2.64">version 2.64</a>,
-Blender has integrated OCIO as part it&#8217;s redesigned <a class="reference external" href="http://wiki.blender.org/index.php/Dev:Ref/Release_Notes/2.64/Color_Management">color management
-system</a>.</p>
-</div>
-<div class="section" id="krita">
-<h2>Krita<a class="headerlink" href="#krita" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference external" href="http://www.krita.org/">2D Paint - Open Source</a></p>
-<p>Krita now support OpenColorIO for image viewing, allowing for the accurate
-painting of float32/OpenEXR imagery.</p>
-<p>See <a class="reference external" href="http://www.krita.org/item/113-krita-starts-supporting-opencolorio">krita.org</a>
-for details.</p>
-</div>
-<div class="section" id="silhouette">
-<h2>Silhouette<a class="headerlink" href="#silhouette" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference external" href="http://www.silhouettefx.com/silhouette">Roto, Paint, Keying - SilhouetteFX</a></p>
-<p>OCIO is natively integrated in
-<a class="reference external" href="http://www.silhouettefx.com/silhouette/silhouette-4.5-WhatsNew.pdf">4.5+</a>
-Full support is provide for both image import/export, as well as image display.</p>
-</div>
-<div class="section" id="nuke">
-<h2>Nuke<a class="headerlink" href="#nuke" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference external" href="http://www.thefoundry.co.uk/products/nuke">Compositor - The Foundry</a></p>
-<p>Nuke 6.3v7+ ships with native support for OpenColorIO. The OCIO configuration
-is selectable in the user preferences.</p>
-<p>OCIO Nodes: OCIOCDLTransform, OCIOColorSpace, OCIODisplay, OCIOFileTransform,
-OCIOLookConvert, OCIOLogConvert</p>
-<p>The OCIODisplay node is suitable for use in the Viewer as an input process (IP),
-and a register function is provides to add viewer options for each display upon
-launch.</p>
-<p>The OCIO config &#8220;nuke-default&#8221; is provided, which matches the built-in Nuke
-color processing. This profile is useful for those who want to mirror the native
-nuke color processing in other applications.  (The underlying equations are
-also provided as python code in the config as well).</p>
-<p>A <a class="reference external" href="http://vimeo.com/38773736">video demonstration</a> of the Nuke OCIO workflow.</p>
-</div>
-<div class="section" id="mari">
-<h2>Mari<a class="headerlink" href="#mari" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference external" href="http://www.thefoundry.co.uk/products/mari">3D Paint - The Foundry</a></p>
-<p>Mari 1.4v1+ ships with native support for OpenColorIO in their display toolbar.</p>
-<p>A <a class="reference external" href="http://vimeo.com/32909648">video demonstration</a> of the Mari OCIO workflow.</p>
-</div>
-<div class="section" id="katana">
-<h2>Katana<a class="headerlink" href="#katana" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference external" href="http://www.thefoundry.co.uk/products/katana">CG Pipeline / Lighting Tool - The Foundry</a></p>
-<p>Color management in Katana (all versions) natively relies on OCIO.</p>
-<p>2D Nodes: OCIODisplay, OCIOColorSpace, OCIOCDLTransform
-Monitor Panel: Full OCIO Support</p>
-</div>
-<div class="section" id="hiero">
-<h2>Hiero<a class="headerlink" href="#hiero" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference external" href="http://www.thefoundry.co.uk/products/hiero">Conform &amp; Review - The Foundry</a></p>
-<p>Hiero 1.0 will ship with native support for OCIO in the display and the
-equivalent of Nuke&#8217;s OCIOColorSpace in the Read nodes.</p>
-<p>It comes with &#8220;nuke-default&#8221; OCIO config by default, so the Hiero viewer
-matches when sending files to Nuke for rendering.</p>
-</div>
-<div class="section" id="photoshop">
-<h2>Photoshop<a class="headerlink" href="#photoshop" title="Permalink to this headline">¶</a></h2>
-<p>OpenColorIO display luts can be exported as ICC profiles for use in
-photoshop.  The core idea is to create an .icc profile, with a valid
-description, and then to save it to the proper OS icc directory. (On
-OSX, <tt class="docutils literal"><span class="pre">~/Library/ColorSync/Profiles/</span></tt>). Upon a Photoshop relaunch,
-Edit-&gt;Assign Profile, and then select your new OCIO lut.</p>
-<p>See the the OCIO user guide <a class="reference external" href="userguide-bakelut-photoshop">for details on baking ICC profiles for Photoshop</a></p>
-</div>
-<div class="section" id="openimageio">
-<h2>OpenImageIO<a class="headerlink" href="#openimageio" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference external" href="http://openimageio.org">Open Source Image Library / Renderer Texture Engine</a></p>
-<p>Available in the current code trunk. Integration is with makecolortx (allowing
-for color space conversion during mipmap generation), and also through the
-public header <a class="reference external" href="http://github.com/OpenImageIO/oiio/blob/master/src/include/color.h">src/include/color.h</a> .</p>
-<p>Remaining integration tasks include
-<a class="reference external" href="http://github.com/OpenImageIO/oiio/issues/193">color conversion at runtime</a> .</p>
+<p>Blender has integrated OCIO as part of it’s redesigned color management system.</p>
+<p>Website: <a class="reference external" href="http://www.blender.org/">http://www.blender.org/</a></p>
+<p>Supported Version: &gt;= 2.64</p>
+<p>Documentation:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://archive.blender.org/wiki/index.php/Dev:Ref/Release_Notes/2.64/">Blender 2.64 Release Notes</a></li>
+<li><a class="reference external" href="https://archive.blender.org/wiki/index.php/Dev:Ref/Release_Notes/2.64/Color_Management/">Color Management</a></li>
+</ul>
 </div>
 <div class="section" id="c">
 <h2>C++<a class="headerlink" href="#c" title="Permalink to this headline">¶</a></h2>
-<p>The core OpenColorIO API is avaiable for use in C++. See the <a class="reference external" href="http://github.com/AcademySoftwareFoundation/OpenColorIO/tree/RB-1.1/export/OpenColorIO">export
-directory</a>
-for the C++ API headers.  Minimal code examples are also available in
-the source code distribution. Of particular note are
-<a class="reference external" href="https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/RB-1.1/src/apps/ocioconvert">src/apps/ocioconvert/</a>
-and <a class="reference external" href="https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/RB-1.1/src/apps/ociodisplay">src/apps/ociodisplay/</a></p>
-<p>Also see the <a class="reference internal" href="developers/index.html#developer-guide"><em>Developer Guide</em></a></p>
+<p>The core OpenColorIO API is available for use in C++. Minimal code examples are also available in the source code distribution.</p>
+<p>Website: <a class="reference external" href="http://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/export/OpenColorIO">http://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/export/OpenColorIO</a></p>
+<p>Examples:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/src/apps/ocioconvert">ocioconvert</a></li>
+<li><a class="reference external" href="https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/src/apps/ociodisplay">ociodisplay</a></li>
+</ul>
+<p>Documentation:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://opencolorio.org/developers/index.html">Developer Guide</a></li>
+<li><a class="reference external" href="https://opencolorio.org/developers/usage_examples.html">Usage Examples</a></li>
+</ul>
+</div>
+<div class="section" id="clarisse-isotropix">
+<h2>Clarisse (Isotropix)<a class="headerlink" href="#clarisse-isotropix" title="Permalink to this headline">¶</a></h2>
+<p>Website: <a class="reference external" href="https://www.isotropix.com/products">https://www.isotropix.com/products</a></p>
+<p>Documentation:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://www.isotropix.com/learn/tutorials/managing-looks-with-opencolorio-ocio">Managing Looks with OpenColorIO</a></li>
+</ul>
+</div>
+<div class="section" id="cryengine-crytek">
+<h2>CryEngine (CryTek)<a class="headerlink" href="#cryengine-crytek" title="Permalink to this headline">¶</a></h2>
+<p>CryEngine is a real-time game engine, targeting applications in the motion-picture market. While we don’t know many details about the CryEngine OpenColorIO integration, we’re looking forward to learning more as information becomes available.</p>
+<p>Website: <a class="reference external" href="https://www.cryengine.com/">https://www.cryengine.com/</a></p>
+</div>
+<div class="section" id="djv">
+<h2>DJV<a class="headerlink" href="#djv" title="Permalink to this headline">¶</a></h2>
+<p>Website: <a class="reference external" href="https://darbyjohnston.github.io/DJV/">https://darbyjohnston.github.io/DJV/</a></p>
+</div>
+<div class="section" id="gaffer">
+<h2>Gaffer<a class="headerlink" href="#gaffer" title="Permalink to this headline">¶</a></h2>
+<p>Gaffer is a node based application for use in CG and VFX production, with a particular focus on lighting and look development.</p>
+<p>Website: <a class="reference external" href="http://www.gafferhq.org/">http://www.gafferhq.org/</a></p>
+</div>
+<div class="section" id="hiero-foundry">
+<h2>Hiero (Foundry)<a class="headerlink" href="#hiero-foundry" title="Permalink to this headline">¶</a></h2>
+<p>Hiero ships with native support for OCIO in the display and the equivalent of Nuke’s OCIOColorSpace in the Read nodes. It comes with the “nuke-default” OCIO config by default, so the Hiero viewer
+matches when sending files to Nuke for rendering.</p>
+<p>Website: <a class="reference external" href="https://www.foundry.com/products/hiero">https://www.foundry.com/products/hiero</a></p>
+<p>Supported version: &gt;= 1.0</p>
+</div>
+<div class="section" id="houdini-sidefx">
+<h2>Houdini (SideFX)<a class="headerlink" href="#houdini-sidefx" title="Permalink to this headline">¶</a></h2>
+<p>Website: <a class="reference external" href="https://www.sidefx.com">https://www.sidefx.com</a></p>
+<p>Supported Version: &gt;= 16</p>
+<p>Documentation:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://www.sidefx.com/docs/houdini/io/ocio.html">OpenColorIO Support</a></li>
+<li><a class="reference external" href="https://www.sidefx.com/filmtv/whats-new-h16/">What’s new in Houdini 16</a></li>
+</ul>
+</div>
+<div class="section" id="java-beta">
+<h2>Java (Beta)<a class="headerlink" href="#java-beta" title="Permalink to this headline">¶</a></h2>
+<p>The OpenColorIO API is available for use in Java. This integration is currently considered a work in progress, and should not be relied upon for critical production work.</p>
+<p>Website: <a class="reference external" href="https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/src/bindings/java">https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/src/bindings/java</a></p>
+</div>
+<div class="section" id="katana-foundry">
+<h2>Katana (Foundry)<a class="headerlink" href="#katana-foundry" title="Permalink to this headline">¶</a></h2>
+<p>Website: <a class="reference external" href="http://www.thefoundry.co.uk/products/katana">http://www.thefoundry.co.uk/products/katana</a></p>
+<p>Documentation:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://learn.foundry.com/katana/Content/ug/rendering_scene/managing_color.html">Managing Color</a></li>
+<li><a class="reference external" href="https://learn.foundry.com/katana/Content/rg/color_2d.html">Color Nodes</a></li>
+</ul>
+</div>
+<div class="section" id="krita">
+<h2>Krita<a class="headerlink" href="#krita" title="Permalink to this headline">¶</a></h2>
+<p>Krita now support OpenColorIO for image viewing, allowing for the accurate painting of float32/OpenEXR imagery.</p>
+<p>Website: <a class="reference external" href="http://www.krita.org/">http://www.krita.org/</a></p>
+<p>Documentation :</p>
+<ul class="simple">
+<li><a class="reference external" href="https://krita.org/en/item/krita-starts-supporting-opencolorio/">Krita Starts Supporting OpenColorIO</a>.</li>
+</ul>
+</div>
+<div class="section" id="mari-foundry">
+<h2>Mari (Foundry)<a class="headerlink" href="#mari-foundry" title="Permalink to this headline">¶</a></h2>
+<p>Website: <a class="reference external" href="https://www.foundry.com/products/mari">https://www.foundry.com/products/mari</a></p>
+<p>Supported Version: &gt;= 1.4v1</p>
+<p>Documentation:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://learn.foundry.com/mari/4.0/Content/user_guide/managing_colors/anaging_colors_in_mari.html">Managing Colors in Mari</a></li>
+<li><a class="reference external" href="https://learn.foundry.com/mari/4.0/Content/user_guide/managing_colors/color_management.html">Color Management</a></li>
+</ul>
+</div>
+<div class="section" id="maya-autodesk">
+<h2>Maya (Autodesk)<a class="headerlink" href="#maya-autodesk" title="Permalink to this headline">¶</a></h2>
+<p>Autodesk Maya is a 3D computer animation, modeling, simulation, and rendering software.</p>
+<p>Website: <a class="reference external" href="https://www.autodesk.com/products/maya/overview">https://www.autodesk.com/products/maya/overview</a></p>
+<p>Supported Version: &gt;= 2016</p>
+<p>Documentation:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://knowledge.autodesk.com/support/maya-lt/learn-explore/caas/CloudHelp/cloudhelp/2016/ENU/MayaLT/files/GUID-4AE9AABC-A900-4276-AFE4-F9DCD96BA03D-htm.html">Use an OCIO configuration file for color management</a></li>
+<li><a class="reference external" href="https://knowledge.autodesk.com/support/maya/learn-explore/caas/CloudHelp/cloudhelp/2016/ENU/Maya/files/GUID-C22F815A-8390-405B-BA50-74FEC42C75E0-htm.html">What’s New in Rendering</a></li>
+</ul>
+</div>
+<div class="section" id="mocha-pro-boris-fx">
+<h2>Mocha Pro (Boris FX)<a class="headerlink" href="#mocha-pro-boris-fx" title="Permalink to this headline">¶</a></h2>
+<p>Website: <a class="reference external" href="https://borisfx.com/products/mocha-pro">https://borisfx.com/products/mocha-pro</a></p>
+<p>Supported Version: &gt;= 2020</p>
+<p>Documentation:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://borisfx.com/videos/opencolorio-mocha-pro-2020/">Color Management</a></li>
+</ul>
+</div>
+<div class="section" id="modo-foundry">
+<h2>Modo (Foundry)<a class="headerlink" href="#modo-foundry" title="Permalink to this headline">¶</a></h2>
+<p>Website: <a class="reference external" href="https://www.foundry.com/products/modo">https://www.foundry.com/products/modo</a></p>
+<p>Documentation:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://learn.foundry.com/modo/content/help/pages/rendering/color_management.html">Color Management</a></li>
+</ul>
+</div>
+<div class="section" id="mrviewer">
+<h2>mrViewer<a class="headerlink" href="#mrviewer" title="Permalink to this headline">¶</a></h2>
+<p>mrViewer is a professional flipbook player, hdri viewer and video/audio playback tool. It supports OCIO input color spaces in images as well as display/view color spaces.</p>
+<p>Website: <a class="reference external" href="https://mrviewer.sourceforge.io">https://mrviewer.sourceforge.io</a></p>
+<p>Documentation:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://mrviewer.sourceforge.io/features.html">mrViewer Features</a></li>
+</ul>
+</div>
+<div class="section" id="natron">
+<h2>Natron<a class="headerlink" href="#natron" title="Permalink to this headline">¶</a></h2>
+<p>Website : <a class="reference external" href="https://natrongithub.github.io/">https://natrongithub.github.io/</a></p>
+<p>Documentation :</p>
+<ul class="simple">
+<li><a class="reference external" href="https://natron.readthedocs.io/en/rb-2.3/_groupColor.html">Color Nodes</a></li>
+</ul>
+</div>
+<div class="section" id="nuke-foundry">
+<h2>Nuke (Foundry)<a class="headerlink" href="#nuke-foundry" title="Permalink to this headline">¶</a></h2>
+<p>Nuke ships with native support for OpenColorIO. There is also an available <a class="reference external" href="https://github.com/imageworks/OpenColorIO-Configs/tree/master/nuke-default">“nuke-default” OCIO config</a>, which matches the built-in Nuke color processing. This profile is useful for those who want to mirror the native Nuke color processing in other applications (the underlying equations are also provided as python code in the config as well).</p>
+<p>Website : <a class="reference external" href="https://www.foundry.com/products/nuke">https://www.foundry.com/products/nuke</a></p>
+<p>Supported Version: &gt;= 6.3v7</p>
+<p>Documentation:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://learn.foundry.com/nuke/content/comp_environment/configuring_nuke/using_ocio_config_files.html">OCIO Color Management</a></li>
+<li><a class="reference external" href="https://learn.foundry.com/nuke/content/reference_guide/color_nodes/color_nodes.html">Color Nodes</a></li>
+</ul>
+</div>
+<div class="section" id="openimageio">
+<h2>OpenImageIO<a class="headerlink" href="#openimageio" title="Permalink to this headline">¶</a></h2>
+<p>OIIO’s C++ and Python bindings include several methods for applying color transforms to whole images, notably functions in the ImageBufAlgo namespace including <strong>colorconvert()</strong>, <strong>ociolook()</strong>, <strong>ociodisplay()</strong>, <strong>ociofiletransform()</strong>. These are also available as part of the <em>oiiotool</em> command line utility (–colorconvert, –ociolook, –ociodisplay, –ociofiletransform) and the <em>maketx</em> utility for preparing textures also supports <strong>–colorconvert</strong>. From C++, there is additional low-level functionality in the header <strong>OpenImageIO/color.h</strong> that are wrappers for accessing underlying OCIO color configurations and doing color processing on individual pixel values.</p>
+<p>Website : <a class="reference external" href="http://openimageio.org">http://openimageio.org</a></p>
+</div>
+<div class="section" id="photoflow">
+<h2>PhotoFlow<a class="headerlink" href="#photoflow" title="Permalink to this headline">¶</a></h2>
+<p>PhotoFlow supports OCIO via a dedicated tool that can load a given configuration and apply the available color transforms. So far the tool has been tested it with the <a class="reference external" href="https://github.com/sobotka/filmic-blender">Filmic</a> and <a class="reference external" href="https://opencolorio.org/configurations/aces_1.0.3.html">ACES</a> configs.</p>
+<p>Website : <a class="reference external" href="https://github.com/aferrero2707/PhotoFlow">https://github.com/aferrero2707/PhotoFlow</a></p>
+</div>
+<div class="section" id="photoshop">
+<h2>Photoshop<a class="headerlink" href="#photoshop" title="Permalink to this headline">¶</a></h2>
+<p>OpenColorIO display luts can be exported as ICC profiles for use in photoshop. The core idea is to create an .icc profile, with a valid description, and then to save it to the proper OS icc directory. (On OSX, <code class="docutils literal notranslate"><span class="pre">~/Library/ColorSync/Profiles/</span></code>). Upon a Photoshop relaunch, Edit-&gt;Assign Profile, and then select your new OCIO lut.</p>
+<p>Website : <a class="reference external" href="https://www.adobe.com/products/photoshop.html">https://www.adobe.com/products/photoshop.html</a></p>
 </div>
 <div class="section" id="python">
 <h2>Python<a class="headerlink" href="#python" title="Permalink to this headline">¶</a></h2>
-<p>The OpenColorIO API is available for use in python. See the &#8220;pyglue&#8221; directory
-in the codebase.</p>
-<p>See the devleoper guide for <a class="reference external" href="developers-usageexamples">usage examples</a> and API documentation on the PYthon
-bindings</p>
+<p>The OpenColorIO API is available for use in Python.</p>
+<p>Website: <a class="reference external" href="https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/src/bindings/python">https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/src/bindings/python</a></p>
+<p>Documentation:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://opencolorio.org/developers/index.html">Developer Guide</a></li>
+<li><a class="reference external" href="https://opencolorio.org/developers/usage_examples.html">Usage Examples</a></li>
+</ul>
 </div>
-<div class="section" id="vegas-pro">
-<h2>Vegas Pro<a class="headerlink" href="#vegas-pro" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference external" href="http://www.sonycreativesoftware.com/vegaspro">Video editing - Sony</a></p>
-<p>Vegas Pro 12 uses OpenColorIO, supporting workflows such as S-log
-footage via the ACES colorspace.</p>
+<div class="section" id="rv-autodesk">
+<h2>RV (Autodesk)<a class="headerlink" href="#rv-autodesk" title="Permalink to this headline">¶</a></h2>
+<p>Website : <a class="reference external" href="http://www.tweaksoftware.com">http://www.tweaksoftware.com</a></p>
+<p>Supported Version:  &gt;= 4</p>
+<p>Documentation :</p>
+<ul class="simple">
+<li>For more details, see the OpenColorIO section of the <a class="reference external" href="http://www.tweaksoftware.com/static/documentation/rv/current/html/rv_manual.html#OpenColorIO">RV User Manual</a>.</li>
+</ul>
+</div>
+<div class="section" id="silhouette-boris-fx">
+<h2>Silhouette (Boris FX)<a class="headerlink" href="#silhouette-boris-fx" title="Permalink to this headline">¶</a></h2>
+<p>OCIO is natively integrated in Silhouette. Full support is provided for both image import/export, as well as image display.</p>
+<p>Website : <a class="reference external" href="https://borisfx.com/products/silhouette/">https://borisfx.com/products/silhouette/</a></p>
+<p>Supported Version: &gt;= 4.5</p>
+</div>
+<div class="section" id="substance-designer-adobe">
+<h2>Substance Designer (Adobe)<a class="headerlink" href="#substance-designer-adobe" title="Permalink to this headline">¶</a></h2>
+<p>Website: <a class="reference external" href="https://www.substance3d.com/products/substance-designer/">https://www.substance3d.com/products/substance-designer/</a></p>
+<p>Supported version: &gt;= 2019.3</p>
+<p>Documentation:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://magazine.substance3d.com/substance-designer-winter-2019-color-management-with-opencolorio/">Color Management with OpenColorIO</a></li>
+<li><a class="reference external" href="https://docs.substance3d.com/sddoc/color-management-188973971.html">Color Management</a></li>
+</ul>
+</div>
+<div class="section" id="unreal-engine-epic-games">
+<h2>Unreal Engine (Epic Games)<a class="headerlink" href="#unreal-engine-epic-games" title="Permalink to this headline">¶</a></h2>
+<p>Website : <a class="reference external" href="https://unrealengine.com">https://unrealengine.com</a></p>
+<p>Supported Version : &gt;= 4.22</p>
+<p>Documentation :</p>
+<ul class="simple">
+<li><a class="reference external" href="https://docs.unrealengine.com/en-US/API/Plugins/OpenColorIO/index.html">OCIO Plugin API</a></li>
+<li><a class="reference external" href="https://docs.unrealengine.com/en-US/Support/Builds/ReleaseNotes/4_22/index.html">Unreal Engine 4.22 Release Notes</a></li>
+</ul>
+</div>
+<div class="section" id="vegas-pro-magix">
+<h2>Vegas Pro (Magix)<a class="headerlink" href="#vegas-pro-magix" title="Permalink to this headline">¶</a></h2>
+<p>Vegas Pro uses OpenColorIO, supporting workflows such as S-log footage via the ACES colorspace.</p>
+<p>Website : <a class="reference external" href="http://www.sonycreativesoftware.com/vegaspro">http://www.sonycreativesoftware.com/vegaspro</a></p>
+<p>Supported Version: &gt;= 12</p>
+</div>
+<div class="section" id="v-ray-chaos-group">
+<h2>V-Ray (Chaos Group)<a class="headerlink" href="#v-ray-chaos-group" title="Permalink to this headline">¶</a></h2>
+<p>Website : <a class="reference external" href="https://chaosgroup.com">https://chaosgroup.com</a></p>
+<p>Documentation :</p>
+<ul class="simple">
+<li><a class="reference external" href="https://docs.chaosgroup.com/display/VRAY4MAX/OpenColorIO+Support">OpenColorIO support</a></li>
+<li><a class="reference external" href="https://docs.chaosgroup.com/display/VRAY4MAYA/VRayTexOCIO">VRayTexOCIO</a></li>
+</ul>
 </div>
 <div class="section" id="apps-w-icc-or-luts">
 <h2>Apps w/icc or luts<a class="headerlink" href="#apps-w-icc-or-luts" title="Permalink to this headline">¶</a></h2>
 <p>flame (.3dl), lustre (.3dl), cinespace (.csp), houdini (.lut), iridas_itx (.itx)
 photoshop (.icc)</p>
 <p>Export capabilities through ociobakelut:</p>
-<div class="highlight-python"><pre>$ ociobakelut -- create a new LUT or icc profile from an OCIO config or lut file(s)
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ociobakelut -- create a new LUT or icc profile from an OCIO config or lut file(s)
 $
 $ usage:  ociobakelut [options] &lt;OUTPUTFILE.LUT&gt;
 $
@@ -257,7 +400,8 @@ $ ICC Options
 $     --whitepoint %d      whitepoint for the profile (default: 6505)
 $     --displayicc %s      an icc profile which matches the OCIO profiles target display
 $     --description %s     a meaningful description, this will show up in UI like photoshop
-$     --copyright %s       a copyright field</pre>
+$     --copyright %s       a copyright field
+</pre></div>
 </div>
 <p>See this <a class="reference external" href="https://lists.aswf.io/g/ocio-dev/topic/30498585">ocio-dev thread</a>
 for additional usage discussions.</p>
@@ -266,40 +410,7 @@ profile (it will be selected for you by default). This is because ICC Profile
 are not LUTs per se. An ICC Profile describes a color space and then needs a
 destination profile to calculate the transformation. So if you have an operation
 working and looking good on the monitor you’re using (and maybe its
-profile has been properly measured using a spectrophotometer), then choose your
-display. If the transform was approved on a different monitor, then maybe you
 should choose its profile instead.</p>
-</div>
-<div class="section" id="rv">
-<h2>RV<a class="headerlink" href="#rv" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference external" href="http://www.tweaksoftware.com">Playback Tool - Tweak Software</a></p>
-<p>RV has native OCIO support in version 4 onwards. For more details, see
-the OpenColorIO section of the <a class="reference external" href="http://www.tweaksoftware.com/static/documentation/rv/current/html/rv_manual.html#OpenColorIO">RV User Manual</a>.</p>
-</div>
-<div class="section" id="java-beta">
-<h2>Java (Beta)<a class="headerlink" href="#java-beta" title="Permalink to this headline">¶</a></h2>
-<p>The OpenColorIO API is available for use in Java. See the <a class="reference external" href="http://github.com/AcademySoftwareFoundation/OpenColorIO/tree/RB-1.1/src/jniglue">jniglue directory</a>
-in the codebase.</p>
-<p>This integration is currently considered a work in progress, and should not be
-relied upon for critical production work.</p>
-</div>
-<div class="section" id="gaffer">
-<h2>Gaffer<a class="headerlink" href="#gaffer" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference external" href="http://gafferhw.org">Open Source VFX Platform</a></p>
-<p>Gaffer is a node based application for use in CG and VFX production, with a
-particular focus on lighting and look development.</p>
-</div>
-<div class="section" id="natron">
-<h2>Natron<a class="headerlink" href="#natron" title="Permalink to this headline">¶</a></h2>
-<p>&#8216;Open Source Compositing Softare &lt;<a class="reference external" href="http://natron.fr">http://natron.fr</a>&gt;&#8217;</p>
-</div>
-<div class="section" id="cryengine3-beta">
-<h2>CryEngine3 (Beta)<a class="headerlink" href="#cryengine3-beta" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference external" href="http://mycryengine.com/index.php?conid=59">Game Engine - Crytek (Cinema Sandbox)</a></p>
-<p>CryENGINE is a real-time game engine, targeting applications in the
-motion-picture market. While we don&#8217;t know many details about the CryEngine
-OpenColorIO integration, we&#8217;re looking forward to learning more as information
-becomes available.</p>
 </div>
 </div>
 
@@ -316,9 +427,9 @@ becomes available.</p>
 
       </div>
 
-    <div class="footer">
-        &copy; Copyright 2010, Sony Pictures Imageworks.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Academy Software Foundation.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
     </div>
   </body>
 </html>

@@ -1,0 +1,540 @@
+
+
+C++ Types
+=========
+
+
+Core
+****
+
+.. cpp:type:: ConstConfigRcPtr
+   
+
+.. cpp:type:: ConfigRcPtr
+   
+
+.. cpp:type:: ConstFileRulesRcPtr
+   
+
+.. cpp:type:: FileRulesRcPtr
+   
+
+.. cpp:type:: ConstColorSpaceRcPtr
+   
+
+.. cpp:type:: ColorSpaceRcPtr
+   
+
+.. cpp:type:: ConstColorSpaceSetRcPtr
+   
+
+.. cpp:type:: ColorSpaceSetRcPtr
+   
+
+.. cpp:type:: ConstLookRcPtr
+   
+
+.. cpp:type:: LookRcPtr
+   
+
+.. cpp:type:: ConstViewTransformRcPtr
+   
+
+.. cpp:type:: ViewTransformRcPtr
+   
+
+.. cpp:type:: ConstContextRcPtr
+   
+
+.. cpp:type:: ContextRcPtr
+   
+
+.. cpp:type:: ConstProcessorRcPtr
+   
+
+.. cpp:type:: ProcessorRcPtr
+   
+
+.. cpp:type:: ConstCPUProcessorRcPtr
+   
+
+.. cpp:type:: CPUProcessorRcPtr
+   
+
+.. cpp:type:: ConstGPUProcessorRcPtr
+   
+
+.. cpp:type:: GPUProcessorRcPtr
+   
+
+.. cpp:type:: ConstProcessorMetadataRcPtr
+   
+
+.. cpp:type:: ProcessorMetadataRcPtr
+   
+
+.. cpp:type:: ConstBakerRcPtr
+   
+
+.. cpp:type:: BakerRcPtr
+   
+
+.. cpp:type:: ImageDescRcPtr
+   
+
+.. cpp:type:: ConstImageDescRcPtr
+   
+
+.. cpp:type:: GpuShaderCreatorRcPtr
+   
+
+.. cpp:type:: ConstGpuShaderCreatorRcPtr
+   
+
+.. cpp:type:: GpuShaderDescRcPtr
+   
+
+.. cpp:type:: ConstGpuShaderDescRcPtr
+   
+
+
+Transforms
+**********
+
+.. cpp:type:: ConstTransformRcPtr
+   
+
+.. cpp:type:: TransformRcPtr
+   
+
+.. cpp:type:: ConstAllocationTransformRcPtr
+   
+
+.. cpp:type:: AllocationTransformRcPtr
+   
+
+.. cpp:type:: ConstCDLTransformRcPtr
+   
+
+.. cpp:type:: CDLTransformRcPtr
+   
+
+.. cpp:type:: ConstColorSpaceTransformRcPtr
+   
+
+.. cpp:type:: ColorSpaceTransformRcPtr
+   
+
+.. cpp:type:: ConstDisplayTransformRcPtr
+   
+
+.. cpp:type:: DisplayTransformRcPtr
+   
+
+.. cpp:type:: ConstDynamicPropertyRcPtr
+   
+
+.. cpp:type:: DynamicPropertyRcPtr
+   
+
+.. cpp:type:: ConstExponentTransformRcPtr
+   
+
+.. cpp:type:: ExponentTransformRcPtr
+   
+
+.. cpp:type:: ConstExponentWithLinearTransformRcPtr
+   
+
+.. cpp:type:: ExponentWithLinearTransformRcPtr
+   
+
+.. cpp:type:: ConstExposureContrastTransformRcPtr
+   
+
+.. cpp:type:: ExposureContrastTransformRcPtr
+   
+
+.. cpp:type:: ConstFileTransformRcPtr
+   
+
+.. cpp:type:: FileTransformRcPtr
+   
+
+.. cpp:type:: ConstFixedFunctionTransformRcPtr
+   
+
+.. cpp:type:: FixedFunctionTransformRcPtr
+   
+
+.. cpp:type:: ConstGroupTransformRcPtr
+   
+
+.. cpp:type:: GroupTransformRcPtr
+   
+
+.. cpp:type:: ConstLogAffineTransformRcPtr
+   
+
+.. cpp:type:: LogAffineTransformRcPtr
+   
+
+.. cpp:type:: ConstLogCameraTransformRcPtr
+   
+
+.. cpp:type:: LogCameraTransformRcPtr
+   
+
+.. cpp:type:: ConstLookTransformRcPtr
+   
+
+.. cpp:type:: LookTransformRcPtr
+   
+
+.. cpp:type:: ConstLogTransformRcPtr
+   
+
+.. cpp:type:: LogTransformRcPtr
+   
+
+.. cpp:type:: ConstLut1DTransformRcPtr
+   
+
+.. cpp:type:: Lut1DTransformRcPtr
+   
+
+.. cpp:type:: ConstLut3DTransformRcPtr
+   
+
+.. cpp:type:: Lut3DTransformRcPtr
+   
+
+.. cpp:type:: ConstMatrixTransformRcPtr
+   
+
+.. cpp:type:: MatrixTransformRcPtr
+   
+
+.. cpp:type:: ConstRangeTransformRcPtr
+   
+
+.. cpp:type:: RangeTransformRcPtr
+   
+
+
+Enums
+*****
+
+.. cpp:type:: ReferenceSpaceType
+   
+   OCIO does not mandate the image state of the main reference space and it is not
+   required to be scene-referred.  This enum is used in connection with the display color space
+   and view transform features which do assume that the main reference space is scene-referred
+   and the display reference space is display-referred.  If a config used a non-scene-referred
+   reference space, presumably it would not use either display color spaces or view transforms,
+   so this enum becomes irrelevant.
+
+.. cpp:type:: SearchReferenceSpaceType
+   
+
+.. cpp:type:: ColorSpaceVisibility
+   
+
+.. cpp:type:: ColorSpaceDirection
+   
+
+.. cpp:type:: ViewTransformDirection
+   
+
+.. cpp:type:: TransformDirection
+   
+
+.. cpp:type:: Interpolation
+   
+   
+   Specify the interpolation type to use
+   If the specified interpolation type is not supported in the requested
+   context (for example, using tetrahedral interpolationon 1D LUTs)
+   an exception will be thrown.
+   
+   INTERP_DEFAULT will choose the default interpolation type for the requested
+   context:
+   
+   1D LUT INTERP_DEFAULT: LINEAR
+   3D LUT INTERP_DEFAULT: LINEAR
+   
+   INTERP_BEST will choose the best interpolation type for the requested
+   context:
+   
+   1D LUT INTERP_BEST: LINEAR
+   3D LUT INTERP_BEST: TETRAHEDRAL
+   
+   Note: INTERP_BEST and INTERP_DEFAULT are subject to change in minor
+   releases, so if you care about locking off on a specific interpolation
+   type, we'd recommend directly specifying it.
+   
+
+.. cpp:type:: BitDepth
+   
+   Used in a configuration file to indicate the bit-depth of a color space,
+   and by the :cpp:class`Processor` to specify the input and output bit-depths of 
+   images to process.
+   Note that :cpp:class`Processor` only supports: UINT8, UINT10, UINT12, UINT16, F16 and F32.
+
+.. cpp:type:: Lut1DHueAdjust
+   
+   Used by :cpp:class`Lut1DTransform` to control optional hue restoration algorithm.
+
+.. cpp:type:: ChannelOrdering
+   
+   Used by :cpp:class`PackedImageDesc` to indicate the channel ordering
+              of the image to process.
+
+.. cpp:type:: Allocation
+   
+
+.. cpp:type:: GpuLanguage
+   
+   Used when there is a choice of hardware shader language.
+
+.. cpp:type:: EnvironmentMode
+   
+
+.. cpp:type:: RangeStyle
+   
+   A RangeTransform may be set to clamp the values, or not.
+
+.. cpp:type:: FixedFunctionStyle
+   
+   Enumeration of the :cpp:class:`FixedFunctionTransform` transform algorithms.
+
+.. cpp:type:: ExposureContrastStyle
+   
+   Enumeration of the :cpp:class:`ExposureContrastTransform` transform algorithms.
+
+.. cpp:type:: CDLStyle
+   
+   Enumeration of the :cpp:class:`CDLTransform` transform algorithms.
+
+.. cpp:type:: NegativeStyle
+   
+   Negative values handling style for :cpp:class:`ExponentTransform` and
+   :cpp:class:`ExponentWithLinearTransform` transform algorithms.
+
+.. cpp:type:: OptimizationFlags
+   
+   Provides control over how the ops in a Processor are combined
+              in order to improve performance.
+
+
+Conversion
+**********
+
+.. cpp:function:: extern const char * BoolToString(bool val)
+   
+
+.. cpp:function:: extern bool BoolFromString(const char * s)
+   
+
+.. cpp:function:: extern const char * LoggingLevelToString(LoggingLevel level)
+   
+
+.. cpp:function:: extern LoggingLevel LoggingLevelFromString(const char * s)
+   
+
+.. cpp:function:: extern const char * TransformDirectionToString(TransformDirection dir)
+   
+
+.. cpp:function:: extern TransformDirection TransformDirectionFromString(const char * s)
+   
+
+.. cpp:function:: extern TransformDirection GetInverseTransformDirection(TransformDirection dir)
+   
+
+.. cpp:function:: extern TransformDirection CombineTransformDirections(TransformDirection d1, TransformDirection d2)
+   
+
+.. cpp:function:: extern const char * ColorSpaceDirectionToString(ColorSpaceDirection dir)
+   
+
+.. cpp:function:: extern ColorSpaceDirection ColorSpaceDirectionFromString(const char * s)
+   
+
+.. cpp:function:: extern const char * BitDepthToString(BitDepth bitDepth)
+   
+
+.. cpp:function:: extern BitDepth BitDepthFromString(const char * s)
+   
+
+.. cpp:function:: extern bool BitDepthIsFloat(BitDepth bitDepth)
+   
+
+.. cpp:function:: extern int BitDepthToInt(BitDepth bitDepth)
+   
+
+.. cpp:function:: extern const char * AllocationToString(Allocation allocation)
+   
+
+.. cpp:function:: extern Allocation AllocationFromString(const char * s)
+   
+
+.. cpp:function:: extern const char * InterpolationToString(Interpolation interp)
+   
+
+.. cpp:function:: extern Interpolation InterpolationFromString(const char * s)
+   
+
+.. cpp:function:: extern const char * GpuLanguageToString(GpuLanguage language)
+   
+
+.. cpp:function:: extern GpuLanguage GpuLanguageFromString(const char * s)
+   
+
+.. cpp:function:: extern const char * EnvironmentModeToString(EnvironmentMode mode)
+   
+
+.. cpp:function:: extern EnvironmentMode EnvironmentModeFromString(const char * s)
+   
+
+.. cpp:function:: extern const char * RangeStyleToString(RangeStyle style)
+   
+
+.. cpp:function:: extern RangeStyle RangeStyleFromString(const char * style)
+   
+
+.. cpp:function:: extern const char * FixedFunctionStyleToString(FixedFunctionStyle style)
+   
+
+.. cpp:function:: extern FixedFunctionStyle FixedFunctionStyleFromString(const char * style)
+   
+
+.. cpp:function:: extern const char * ExposureContrastStyleToString(ExposureContrastStyle style)
+   
+
+.. cpp:function:: extern ExposureContrastStyle ExposureContrastStyleFromString(const char * style)
+   
+
+.. cpp:function:: extern const char * NegativeStyleToString(NegativeStyle style)
+   
+
+.. cpp:function:: extern NegativeStyle NegativeStyleFromString(const char * style)
+   
+
+
+Roles
+*****
+
+ColorSpace Roles are used so that plugins, in addition to this API can have
+abstract ways of asking for common colorspaces, without referring to them
+by hardcoded names.
+
+Internal::
+
+    GetGPUDisplayTransform - (ROLE_SCENE_LINEAR (fstop exposure))
+                            (ROLE_COLOR_TIMING (ASCColorCorrection))
+
+External Plugins (currently known)::
+
+    Colorpicker UIs       - (ROLE_COLOR_PICKING)
+    Compositor LogConvert - (ROLE_SCENE_LINEAR, ROLE_COMPOSITING_LOG)
+
+
+
+.. c:var:: const char* ROLE_DEFAULT
+
+   "default"
+
+
+.. c:var:: const char* ROLE_REFERENCE
+
+   "reference"
+
+
+.. c:var:: const char* ROLE_DATA
+
+   "data"
+
+
+.. c:var:: const char* ROLE_COLOR_PICKING
+
+   "color_picking"
+
+
+.. c:var:: const char* ROLE_SCENE_LINEAR
+
+   "scene_linear"
+
+
+.. c:var:: const char* ROLE_COMPOSITING_LOG
+
+   "compositing_log"
+
+
+.. c:var:: const char* ROLE_COLOR_TIMING
+
+   "color_timing"
+
+
+.. c:var:: const char* ROLE_TEXTURE_PAINT
+
+   This role defines the transform for painting textures. In some
+   workflows this is just a inverse display gamma with some limits
+
+
+.. c:var:: const char* ROLE_MATTE_PAINT
+
+   This role defines the transform for matte painting. In some workflows
+   this is a 1D HDR to LDR allocation. It is normally combined with
+   another display transform in the host app for preview.
+
+
+FormatMetadata
+**************
+
+These constants describe various types of rich metadata. They are used with FormatMetadata
+objects as the "name" part of a (name, value) pair. All of these types of metadata are
+supported in the CLF/CTF file formats whereas other formats support some or none of them.
+
+Although the string constants used here match those used in the CLF/CTF formats, the concepts
+are generic, so the goal is for other file formats to reuse the same constants within a
+FormatMetadata object (even if the syntax used in a given format is somewhat different).
+
+
+
+.. c:var:: const char * METADATA_DESCRIPTION
+
+   A description string -- used as the "Description" element in CLF/CTF and CDL, and to
+   hold comments for other LUT formats when baking.
+
+
+.. c:var:: const char * METADATA_INFO
+
+   A block of informative metadata such as the "Info" element in CLF/CTF.
+   Usually contains child elements.
+
+
+.. c:var:: const char * METADATA_INPUT_DESCRIPTOR
+
+   A string describing the expected input color space -- used as the "InputDescriptor"
+   element in CLF/CTF and the "InputDescription" in CDL.
+
+
+.. c:var:: const char * METADATA_OUTPUT_DESCRIPTOR
+
+   A string describing the output color space -- used as the "OutputDescriptor" element
+   in CLF/CTF and the "OutputDescription" in CDL.
+
+
+.. c:var:: const char * METADATA_NAME
+
+   A name string -- used as a "name" attribute in CLF/CTF elements.  Use on a GroupTransform
+   to get/set the name for the CLF/CTF ProcessList.  Use on an individual Transform
+   (i.e. MatrixTransform, etc.) to get/set the name of the corresponding process node.
+
+
+.. c:var:: const char * METADATA_ID
+
+   An ID string -- used as an "id" attribute in CLF/CTF elements.  Use on a GroupTransform
+   to get/set the id for the CLF/CTF ProcessList.  Use on an individual Transform
+   (i.e. MatrixTransform, etc.) to get/set the id of the corresponding process node.
+

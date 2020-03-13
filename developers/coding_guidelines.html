@@ -1,45 +1,35 @@
 
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>OpenColorIO</title>
 
-    
     <link rel="stylesheet" href="../_static/ocio.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/print.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.1.1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
+    <link rel="stylesheet" type="text/css" href="../_static/print.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO 1.1.1 documentation" href="../index.html" />
-    <link rel="up" title="Developer Guide" href="index.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Documentation guidelines" href="documentation_guidelines.html" />
     <link rel="prev" title="Getting started" href="getting_started.html" /> 
-  </head>
-  <body>
+  </head><body>
     <div class="header"><h1 class="heading"><a href="../index.html">
           <span>OpenColorIO</span></a></h1>
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO 1.1.1 documentation
+      OpenColorIO  documentation
       </div>
       <div class="content">
         
@@ -55,7 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../userguide/index.html">User Guide</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer Guide</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting started</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Coding guidelines</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Coding guidelines</a></li>
 <li class="toctree-l2"><a class="reference internal" href="documentation_guidelines.html">Documentation guidelines</a></li>
 <li class="toctree-l2"><a class="reference internal" href="submitting_changes.html">Submitting Changes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="issues.html">Issues</a></li>
@@ -75,6 +65,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../ChangeLog.html">ChangeLog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../License.html">License</a></li>
 </ul>
+<!-- SPDX-License-Identifier: BSD-3-Clause -->
+<!-- Copyright Contributors to the OpenColorIO Project. -->
 
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
@@ -100,15 +92,15 @@
 </ol>
 <div class="section" id="file-conventions">
 <h2>File Conventions<a class="headerlink" href="#file-conventions" title="Permalink to this headline">¶</a></h2>
-<p>C++ implementation should be named <tt class="docutils literal"><span class="pre">*.cpp</span></tt>. Headers should be named <tt class="docutils literal"><span class="pre">*.h</span></tt>.
+<p>C++ implementation should be named <code class="docutils literal notranslate"><span class="pre">*.cpp</span></code>. Headers should be named <code class="docutils literal notranslate"><span class="pre">*.h</span></code>.
 All source files should begin with the copyright and license, which can be cut and pasted from other source files). For NEW source files, please do change the copyright year to the present. However DO NOT edit existing files just to update the copyright year, it just creates pointless deltas and offers no increased protection</p>
 </div>
 <div class="section" id="line-length">
 <h2>Line Length<a class="headerlink" href="#line-length" title="Permalink to this headline">¶</a></h2>
-<p>Each line of text in your code should be at most 80 characters long.</p>
+<p>Each line of text in your code should be at most 100 characters long.</p>
 <p>Generally the only exceptions are for comments with example commands or URLs - to make cut and paste easier.</p>
-<p>The other exception is for those rare cases where letting a line be longer (and wrapping on an 80-character window) is actually a better and clearer alternative than trying to split it into two lines. Sometimes this happens, but it&#8217;s rare.</p>
-<p>DO NOT alter somebody else&#8217;s code to re-wrap lines (or change whitespace) just because you found something that violates the rules. Let the group/author/leader know, and resist the temptation to change it yourself.</p>
+<p>The other exception is for those rare cases where letting a line be longer (and wrapping on an 100-character window) is actually a better and clearer alternative than trying to split it into two lines. Sometimes this happens, but it’s rare.</p>
+<p>DO NOT alter somebody else’s code to re-wrap lines (or change whitespace) just because you found something that violates the rules. Let the group/author/leader know, and resist the temptation to change it yourself.</p>
 </div>
 <div class="section" id="formatting">
 <h2>Formatting<a class="headerlink" href="#formatting" title="Permalink to this headline">¶</a></h2>
@@ -119,8 +111,8 @@ All source files should begin with the copyright and license, which can be cut a
 <li>Function names should be on the same line as their return values.</li>
 <li>Function calls should NOT have a space between the function name and the opening parenthesis. A single space should be added after each required comma.</li>
 </ul>
-<p>Here is a short code fragement that shows these concepts in action:</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="k">namespace</span>
+<p>Here is a short code fragment that shows these concepts in action:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">namespace</span> <span class="n">OCIO_NAMESPACE</span>
 <span class="p">{</span>
 
 
@@ -145,7 +137,7 @@ All source files should begin with the copyright and license, which can be cut a
 <span class="p">}</span>
 
 
-<span class="p">}</span> <span class="c1">// namespace</span>
+<span class="p">}</span> <span class="c1">// namespace OCIO_NAMESPACE</span>
 </pre></div>
 </div>
 </div>
@@ -156,15 +148,16 @@ All source files should begin with the copyright and license, which can be cut a
 <li>Anonymous namespaces are preferred when sensible.</li>
 <li>Variable names should be camelCase, as well as longAndExplicit.</li>
 <li>Avoid long function implementations. Break up work into small, manageable chunks.</li>
-<li>Use &#8220;TODO:&#8221; comments for code that is temporary, a short-term solution, or good-enough but not perfect. This is vastly preferred to leaving subtle corner cases undocumented.</li>
+<li>Use “TODO:” comments for code that is temporary, a short-term solution, or good-enough but not perfect. This is vastly preferred to leaving subtle corner cases undocumented.</li>
 <li>Always initialize variables on construction.</li>
 <li>Do not leave dead code paths around. (This is what revision history is for)</li>
-<li>Includes should always be ordered as follows: C library, C++ library, other libraries&#8217; .h, OCIO public headers, OCIO private headers. Includes within a category should be alphabetized.</li>
-<li>The C++ &#8220;using&#8221; directive is not allowed.</li>
+<li>Includes should always be ordered as follows: C library, C++ library, other libraries’ .h, OCIO public headers, OCIO private headers. Includes within a category should be alphabetized.</li>
+<li>The C++ “using” directive is not allowed.</li>
 <li>Static / global variables should be avoided at all costs.</li>
 <li>Use const whenever it makes sense to do so.</li>
 <li>The use of Boost is not allowed, except for unit_test_framework and shared_ptr.</li>
 <li>Default function arguments are not allowed.</li>
+<li>Class members should start by <a href="#id1"><span class="problematic" id="id2">m_</span></a> and use camelCase.</li>
 </ul>
 </div>
 <div class="section" id="bottom-line">
@@ -188,9 +181,9 @@ and <a class="reference external" href="http://google-styleguide.googlecode.com/
 
       </div>
 
-    <div class="footer">
-        &copy; Copyright 2010, Sony Pictures Imageworks.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Academy Software Foundation.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
     </div>
   </body>
 </html>

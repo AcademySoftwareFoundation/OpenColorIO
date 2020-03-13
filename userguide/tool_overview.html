@@ -1,45 +1,35 @@
 
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>OpenColorIO</title>
 
-    
     <link rel="stylesheet" href="../_static/ocio.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/print.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.1.1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
+    <link rel="stylesheet" type="text/css" href="../_static/print.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO 1.1.1 documentation" href="../index.html" />
-    <link rel="up" title="User Guide" href="index.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Baking LUT’s" href="baking_luts.html" />
     <link rel="prev" title="User Guide" href="index.html" /> 
-  </head>
-  <body>
+  </head><body>
     <div class="header"><h1 class="heading"><a href="../index.html">
           <span>OpenColorIO</span></a></h1>
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO 1.1.1 documentation
+      OpenColorIO  documentation
       </div>
       <div class="content">
         
@@ -53,8 +43,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../configurations/index.html">Configurations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="">Tool overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="baking_luts.html">Baking LUT&#8217;s</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Tool overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="baking_luts.html">Baking LUT’s</a></li>
 <li class="toctree-l2"><a class="reference internal" href="contexts.html">Contexts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="looks.html">Looks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config_syntax.html">Config syntax</a></li>
@@ -67,6 +57,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../ChangeLog.html">ChangeLog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../License.html">License</a></li>
 </ul>
+<!-- SPDX-License-Identifier: BSD-3-Clause -->
+<!-- Copyright Contributors to the OpenColorIO Project. -->
 
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
@@ -89,21 +81,21 @@
 This API can be used in applications and plugins</p>
 <p>Note that all these plugins use the same config file to define color spaces,
 roles and so on. For information on setting up configurations, see
-<a class="reference internal" href="../configurations/index.html#configurations"><em>Configurations</em></a></p>
+<a class="reference internal" href="../configurations/index.html#configurations"><span class="std std-ref">Configurations</span></a></p>
 <div class="section" id="the-api">
 <h2>The API<a class="headerlink" href="#the-api" title="Permalink to this headline">¶</a></h2>
 <p>Most users will never directly interact with the C++ API. However the API is
-used by all the supplied applications (e.g <a class="reference internal" href="#overview-ocio2icc"><em>ocio2icc</em></a>) and plugins
-(e.g the <a class="reference internal" href="#overview-nukeplugins"><em>Nuke plugins</em></a>)</p>
-<p>To get started with the API, see the <a class="reference internal" href="../developers/index.html#developer-guide"><em>Developer Guide</em></a></p>
+used by all the supplied applications (e.g <a class="reference internal" href="#overview-ocio2icc"><span class="std std-ref">ocio2icc</span></a>) and plugins
+(e.g the <a class="reference internal" href="#overview-nukeplugins"><span class="std std-ref">Nuke plugins</span></a>)</p>
+<p>To get started with the API, see the <a class="reference internal" href="../developers/index.html#developer-guide"><span class="std std-ref">Developer Guide</span></a></p>
 </div>
 <div class="section" id="ociocheck">
 <span id="overview-ociocheck"></span><h2>ociocheck<a class="headerlink" href="#ociocheck" title="Permalink to this headline">¶</a></h2>
 <p>This is a command line tool which shows an overview of an OCIO config
 file, and check for obvious errors</p>
 <p>For example, the following shows the output of a config with a typo -
-the colorspace used for <tt class="docutils literal"><span class="pre">compositing_log</span></tt> is not incorrect:</p>
-<div class="highlight-python"><pre>$ ociocheck --iconfig example.ocio
+the colorspace used for <code class="docutils literal notranslate"><span class="pre">compositing_log</span></code> is not incorrect:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ociocheck --iconfig example.ocio
 
 OpenColorIO Library Version: 0.8.3
 OpenColorIO Library VersionHex: 525056
@@ -127,11 +119,12 @@ lgf
 ncf
 srgb8 -- output only
 
-ERROR: Config failed sanitycheck. The role 'compositing_log' refers to a colorspace, 'lgff', which is not defined.
+ERROR: Config failed sanitycheck. The role &#39;compositing_log&#39; refers to a colorspace, &#39;lgff&#39;, which is not defined.
 
-Tests complete.</pre>
+Tests complete.
+</pre></div>
 </div>
-<p>It cannot verify the defined color transforms are &#8220;correct&#8221;, only that
+<p>It cannot verify the defined color transforms are “correct”, only that
 the config file can be loaded by OCIO without error. Some of the
 problems it will detect are:</p>
 <ul class="simple">
@@ -140,46 +133,49 @@ problems it will detect are:</p>
 <li>Required roles being undefined</li>
 <li>At least one display device is defined</li>
 </ul>
-<p>As with all the OCIO command line tools, you can use the <cite>&#8211;help</cite> argument to
+<p>As with all the OCIO command line tools, you can use the <cite>–help</cite> argument to
 read a description and see the other arguments accepted:</p>
-<div class="highlight-python"><pre>$ ociocheck --help
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ociocheck --help
 ociocheck -- validate an OpenColorIO configuration
 
 usage:  ociocheck [options]
 
     --help        Print help message
     --iconfig %s  Input .ocio configuration file (default: $OCIO)
-    --oconfig %s  Output .ocio file</pre>
+    --oconfig %s  Output .ocio file
+</pre></div>
 </div>
 </div>
 <div class="section" id="ociobakelut">
 <span id="overview-ociobakelut"></span><h2>ociobakelut<a class="headerlink" href="#ociobakelut" title="Permalink to this headline">¶</a></h2>
 <p>A command line tool which bakes a color transform into various color
-lookup file formats (&#8220;a LUT&#8221;)</p>
+lookup file formats (“a LUT”)</p>
 <p>This is intended for applications that have not directly integrated
 OCIO, but can load LUT files</p>
-<p>If we want to create a <tt class="docutils literal"><span class="pre">lnf</span></tt> to <tt class="docutils literal"><span class="pre">srgb8</span></tt> viewer LUT for Houdini&#8217;s
+<p>If we want to create a <code class="docutils literal notranslate"><span class="pre">lnf</span></code> to <code class="docutils literal notranslate"><span class="pre">srgb8</span></code> viewer LUT for Houdini’s
 MPlay:</p>
-<div class="highlight-python"><pre>$ ociobakelut --inputspace scene_linear --shaperspace lg10 --outputspace srgb8 --format houdini houdini__lnf_to_lg10_to_srgb8.lut</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ociobakelut --inputspace scene_linear --shaperspace lg10 --outputspace srgb8 --format houdini houdini__lnf_to_lg10_to_srgb8.lut
+</pre></div>
 </div>
-<p>The <tt class="docutils literal"><span class="pre">--inputspace</span></tt> and <tt class="docutils literal"><span class="pre">-outputspace</span></tt> options specify the
+<p>The <code class="docutils literal notranslate"><span class="pre">--inputspace</span></code> and <code class="docutils literal notranslate"><span class="pre">-outputspace</span></code> options specify the
 colorspace of the input image, and the displayed image.</p>
 <p>Since a 3D LUT can only practically operate on 0-1 (e.g a Log image),
-the <tt class="docutils literal"><span class="pre">--shaperspace</span></tt> option is specified. This uses the Houdini LUT&#8217;s
-1D &#8220;pretransform&#8221; LUT to do &#8220;lnf&#8221; to &#8220;lg10&#8221;, then the 3D LUT part to
-go from &#8220;lg10&#8221; to &#8220;srgb8&#8221; (basically creating a single file containing
+the <code class="docutils literal notranslate"><span class="pre">--shaperspace</span></code> option is specified. This uses the Houdini LUT’s
+1D “pretransform” LUT to do “lnf” to “lg10”, then the 3D LUT part to
+go from “lg10” to “srgb8” (basically creating a single file containing
 a 1D linear-to-log LUT, and a 3D log-to-sRGB LUT)</p>
 <p>To make a log to sRGB LUT for Flame, the usage is similar, except the
 shaperspace option is omitted, as the input colorspace does not have
 values outside 0.0-1.0 (being a Log space):</p>
-<div class="highlight-python"><pre>$ ociobakelut --inputspace lg10 --outputspace srgb8 --format flame flame__lg10_to_srgb.3dl</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ociobakelut --inputspace lg10 --outputspace srgb8 --format flame flame__lg10_to_srgb.3dl
+</pre></div>
 </div>
-<p>See the <a class="reference internal" href="../FAQ.html#faq-supportedlut"><em>What LUT Formats are supported?</em></a> section for a list of formats that
+<p>See the <a class="reference internal" href="../FAQ.html#faq-supportedlut"><span class="std std-ref">What LUT Formats are supported?</span></a> section for a list of formats that
 support baking</p>
 </div>
 <div class="section" id="ocio2icc">
 <span id="overview-ocio2icc"></span><h2>ocio2icc<a class="headerlink" href="#ocio2icc" title="Permalink to this headline">¶</a></h2>
-<p>A command line tool to generate an ICC &#8220;proofing&#8221; profile from a color space
+<p>A command line tool to generate an ICC “proofing” profile from a color space
 transform, which can be used in applications such as Photoshop.</p>
 <p>A common workflow is for matte-painters to work on sRGB files in Photoshop. An
 ICC profile is used to view the work with the same film emulation transform as
@@ -201,10 +197,10 @@ primarily a demonstration of the OCIO API</p>
 </div>
 <div class="section" id="nuke-plugins">
 <span id="overview-nukeplugins"></span><h2>Nuke plugins<a class="headerlink" href="#nuke-plugins" title="Permalink to this headline">¶</a></h2>
-<p>A set of OCIO nodes for The Foundry&#8217;s Nuke, including:</p>
+<p>A set of OCIO nodes for The Foundry’s Nuke, including:</p>
 <ul class="simple">
 <li>OCIOColorSpace, transforms between two color spaces (similar to the built-in
-&#8220;ColorSpace&#8221; node, but the colorspaces are described in the OCIO config file)</li>
+“ColorSpace” node, but the colorspaces are described in the OCIO config file)</li>
 <li>OCIODisplay to be used as viewer processes</li>
 <li>OCIOFileTransform loads a transform from a file (e.g a 1D or 3D LUT), and
 applies it</li>
@@ -227,9 +223,9 @@ create/load ASC CDL files</li>
 
       </div>
 
-    <div class="footer">
-        &copy; Copyright 2010, Sony Pictures Imageworks.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Academy Software Foundation.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
     </div>
   </body>
 </html>

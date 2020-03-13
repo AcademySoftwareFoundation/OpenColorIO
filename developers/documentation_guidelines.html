@@ -1,45 +1,35 @@
 
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>OpenColorIO</title>
 
-    
     <link rel="stylesheet" href="../_static/ocio.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/print.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.1.1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
+    <link rel="stylesheet" type="text/css" href="../_static/print.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO 1.1.1 documentation" href="../index.html" />
-    <link rel="up" title="Developer Guide" href="index.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Submitting Changes" href="submitting_changes.html" />
     <link rel="prev" title="Coding guidelines" href="coding_guidelines.html" /> 
-  </head>
-  <body>
+  </head><body>
     <div class="header"><h1 class="heading"><a href="../index.html">
           <span>OpenColorIO</span></a></h1>
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO 1.1.1 documentation
+      OpenColorIO  documentation
       </div>
       <div class="content">
         
@@ -56,7 +46,7 @@
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer Guide</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting started</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coding_guidelines.html">Coding guidelines</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Documentation guidelines</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Documentation guidelines</a></li>
 <li class="toctree-l2"><a class="reference internal" href="submitting_changes.html">Submitting Changes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="issues.html">Issues</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage_examples.html">Usage Examples</a></li>
@@ -75,6 +65,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../ChangeLog.html">ChangeLog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../License.html">License</a></li>
 </ul>
+<!-- SPDX-License-Identifier: BSD-3-Clause -->
+<!-- Copyright Contributors to the OpenColorIO Project. -->
 
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
@@ -93,21 +85,21 @@
         
 <div class="section" id="documentation-guidelines">
 <h1>Documentation guidelines<a class="headerlink" href="#documentation-guidelines" title="Permalink to this headline">¶</a></h1>
-<p>OpenColorIO is documentated using reStructuredText, processed by
+<p>OpenColorIO is documented using reStructuredText, processed by
 <a class="reference external" href="http://sphinx-doc.org/">Sphinx</a>.</p>
-<p>The documentation primarily lives in the <tt class="docutils literal"><span class="pre">docs/</span></tt> folder, within the
-main OpenColorIO repoistory.</p>
+<p>The documentation primarily lives in the <code class="docutils literal notranslate"><span class="pre">docs/</span></code> folder, within the
+main OpenColorIO repository.</p>
 <p>The rST source for the C++ API documentation is extracted from
-comments in the public header files in <tt class="docutils literal"><span class="pre">export/</span></tt></p>
+comments in the public header files in <code class="docutils literal notranslate"><span class="pre">export/</span></code></p>
 <p>The Python API documentation is extracted from dummy .py files within
-the <tt class="docutils literal"><span class="pre">src/pyglue/DocStrings/</span></tt> folder</p>
+the <code class="docutils literal notranslate"><span class="pre">src/pyglue/DocStrings/</span></code> folder</p>
 <div class="section" id="building-the-docs">
 <h2>Building the docs<a class="headerlink" href="#building-the-docs" title="Permalink to this headline">¶</a></h2>
-<p>Just like a <a class="reference internal" href="../installation.html#building-from-source"><em>regular build from source</em></a>,
-but specify the <tt class="docutils literal"><span class="pre">-D</span> <span class="pre">OCIO_BUILD_DOCS=yes</span></tt> argument to CMake.</p>
-<p>Then run the <tt class="docutils literal"><span class="pre">make</span> <span class="pre">doc</span></tt> target. The default HTML output will be
-created in <tt class="docutils literal"><span class="pre">build_dir/docs/build-html/</span></tt></p>
-<p>Note that CMake must be run before each invokation of <tt class="docutils literal"><span class="pre">make</span></tt> to copy
+<p>Just like a <a class="reference internal" href="../installation.html#building-from-source"><span class="std std-ref">regular build from source</span></a>,
+but specify the <code class="docutils literal notranslate"><span class="pre">-D</span> <span class="pre">OCIO_BUILD_DOCS=yes</span></code> argument to CMake.</p>
+<p>Then run the <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">doc</span></code> target. The default HTML output will be
+created in <code class="docutils literal notranslate"><span class="pre">build_dir/docs/build-html/</span></code></p>
+<p>Note that CMake must be run before each invocation of <code class="docutils literal notranslate"><span class="pre">make</span></code> to copy
 the edited rST files.</p>
 <p>Initial run:</p>
 <blockquote>
@@ -123,48 +115,51 @@ the edited rST files.</p>
 </li>
 <li><p class="first">Fix all warnings output by the Sphinx build process. An example of
 such an warning is:</p>
-<div class="highlight-python"><pre>checking consistency... [...]/build/docs/userguide/writing_configs.rst:: WARNING: document isn't included in any toctree</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">checking</span> <span class="n">consistency</span><span class="o">...</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span><span class="o">/</span><span class="n">build</span><span class="o">/</span><span class="n">docs</span><span class="o">/</span><span class="n">userguide</span><span class="o">/</span><span class="n">writing_configs</span><span class="o">.</span><span class="n">rst</span><span class="p">::</span> <span class="n">WARNING</span><span class="p">:</span> <span class="n">document</span> <span class="n">isn</span><span class="s1">&#39;t included in any toctree</span>
+</pre></div>
 </div>
 </li>
 <li><p class="first">Use the following hierarchy of header decorations:</p>
-<div class="highlight-python"><pre>Level 1 heading
-===============
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Level</span> <span class="mi">1</span> <span class="n">heading</span>
+<span class="o">===============</span>
 
-Level 2 heading
-***************
+<span class="n">Level</span> <span class="mi">2</span> <span class="n">heading</span>
+<span class="o">***************</span>
 
-Level 3 heading
-+++++++++++++++
+<span class="n">Level</span> <span class="mi">3</span> <span class="n">heading</span>
+<span class="o">+++++++++++++++</span>
 
-Level 4 heading
----------------</pre>
+<span class="n">Level</span> <span class="mi">4</span> <span class="n">heading</span>
+<span class="o">---------------</span>
+</pre></div>
 </div>
 </li>
-<li><p class="first">To add a new page, create a new <tt class="docutils literal"><span class="pre">.rst</span></tt> file in the appropriate
-location. In that directory&#8217;s <tt class="docutils literal"><span class="pre">index.rst</span></tt>, add the new file to
-the <tt class="docutils literal"><span class="pre">toctree</span></tt> directive.</p>
+<li><p class="first">To add a new page, create a new <code class="docutils literal notranslate"><span class="pre">.rst</span></code> file in the appropriate
+location. In that directory’s <code class="docutils literal notranslate"><span class="pre">index.rst</span></code>, add the new file to
+the <code class="docutils literal notranslate"><span class="pre">toctree</span></code> directive.</p>
 <p>The new file should contain a top-level heading (decorated with
-<cite>=====</cite> underline), and an approriate label for referencing from
+<cite>=====</cite> underline), and an appropriate label for referencing from
 other pages. For example, a new file
-<tt class="docutils literal"><span class="pre">docs/userguide/baking_luts.rst</span></tt> might start like this:</p>
-<div class="highlight-python"><pre>.. _userguide-bakingluts:
+<code class="docutils literal notranslate"><span class="pre">docs/userguide/baking_luts.rst</span></code> might start like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">_userguide</span><span class="o">-</span><span class="n">bakingluts</span><span class="p">:</span>
 
-Baking LUT's
-============
+<span class="n">Baking</span> <span class="n">LUT</span><span class="s1">&#39;s</span>
+<span class="o">============</span>
 
-In order to bake a LUT, ...</pre>
+<span class="n">In</span> <span class="n">order</span> <span class="n">to</span> <span class="n">bake</span> <span class="n">a</span> <span class="n">LUT</span><span class="p">,</span> <span class="o">...</span>
+</pre></div>
 </div>
 </li>
 </ul>
 </div>
 <div class="section" id="emacs-rst-mode">
 <h2>Emacs rST mode<a class="headerlink" href="#emacs-rst-mode" title="Permalink to this headline">¶</a></h2>
-<p>Emacs&#8217; includes a mode for editing rST files. It is documented on <a class="reference external" href="http://docutils.sourceforge.net/docs/user/emacs.html">the
+<p>Emacs’ includes a mode for editing rST files. It is documented on <a class="reference external" href="http://docutils.sourceforge.net/docs/user/emacs.html">the
 docutils site</a></p>
 <p>One of the features it includes is readjusting the hierarchy of
 heading decorations (the underlines for different heading levels). To
-configure this to use OCIO&#8217;s convention, put the following in your <tt class="docutils literal"><span class="pre">.emacs.d/init.el</span></tt>:</p>
-<div class="highlight-common-lisp"><div class="highlight"><pre><span class="p">(</span><span class="k">setq</span> <span class="nv">rst-preferred-decorations</span>
+configure this to use OCIO’s convention, put the following in your <code class="docutils literal notranslate"><span class="pre">.emacs.d/init.el</span></code>:</p>
+<div class="highlight-common-lisp notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">rst-preferred-decorations</span>
       <span class="o">&#39;</span><span class="p">((</span><span class="nv">?=</span> <span class="nv">simple</span> <span class="mi">0</span><span class="p">)</span>
         <span class="p">(</span><span class="nv">?*</span> <span class="nv">simple</span> <span class="mi">0</span><span class="p">)</span>
         <span class="p">(</span><span class="nv">?+</span> <span class="nv">simple</span> <span class="mi">0</span><span class="p">)</span>
@@ -187,9 +182,9 @@ configure this to use OCIO&#8217;s convention, put the following in your <tt cla
 
       </div>
 
-    <div class="footer">
-        &copy; Copyright 2010, Sony Pictures Imageworks.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Academy Software Foundation.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
     </div>
   </body>
 </html>

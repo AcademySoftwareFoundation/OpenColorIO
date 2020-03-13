@@ -1,44 +1,35 @@
 
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>OpenColorIO</title>
 
-    
     <link rel="stylesheet" href="_static/ocio.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/print.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '1.1.1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
+    <link rel="stylesheet" type="text/css" href="_static/print.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <script type="text/javascript" src="_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO 1.1.1 documentation" href="index.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="License" href="License.html" />
     <link rel="prev" title="Downloads" href="downloads.html" /> 
-  </head>
-  <body>
+  </head><body>
     <div class="header"><h1 class="heading"><a href="index.html">
           <span>OpenColorIO</span></a></h1>
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO 1.1.1 documentation
+      OpenColorIO  documentation
       </div>
       <div class="content">
         
@@ -56,9 +47,11 @@
 <li class="toctree-l1"><a class="reference internal" href="CompatibleSoftware.html">Compatible Software</a></li>
 <li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
 <li class="toctree-l1"><a class="reference internal" href="downloads.html">Downloads</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">ChangeLog</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">ChangeLog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="License.html">License</a></li>
 </ul>
+<!-- SPDX-License-Identifier: BSD-3-Clause -->
+<!-- Copyright Contributors to the OpenColorIO Project. -->
 
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
@@ -77,8 +70,10 @@
         
 <div class="section" id="changelog">
 <span id="changelog-main"></span><h1>ChangeLog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
+<p>&lt;!– SPDX-License-Identifier: CC-BY-4.0 –&gt;
+&lt;!– Copyright Contributors to the OpenColorIO Project. –&gt;</p>
 <dl class="docutils">
-<dt><strong>Version 1.1.1 (March 25 2019):</strong></dt>
+<dt><strong>Version 1.1.1 (April 2 2019):</strong></dt>
 <dd><ul class="first last simple">
 <li>Added optional compatibility for building apps with OpenImageIO 1.9+</li>
 <li>Added USE_SSE checks to fix Linux build failure</li>
@@ -88,7 +83,6 @@ definition or OCIO_ACTIVE_DISPLAYS env var override.</li>
 OCIO_ACTIVE_DISPLAYS or OCIO_ACTIVE_VIEWS env vars are unset.</li>
 <li>Fixed Windows-specific GetEnv() bug</li>
 <li>Fixed Windows and MacOS CI failure cases</li>
-<li>Updated mail list URLs to aswf.io domain</li>
 </ul>
 </dd>
 <dt><strong>Version 1.1.0 (Jan 5 2018):</strong></dt>
@@ -137,7 +131,7 @@ OCIO_ACTIVE_DISPLAYS or OCIO_ACTIVE_VIEWS env vars are unset.</li>
 <li>Core md5 symbols no longer leaked</li>
 <li>CMake compatibility with OIIO 1.0 namespacing</li>
 <li>Cmake option to control python soname</li>
-<li>Nuke register_viewers defaults OCIODisplay to &#8220;all&#8221;</li>
+<li>Nuke register_viewers defaults OCIODisplay to “all”</li>
 <li>Nuke ColorLookup &lt;-&gt; spi1d lut examples</li>
 <li>Windows uses boost shared_ptr by default</li>
 <li>Windows fixed csp writing</li>
@@ -204,8 +198,8 @@ OCIO_ACTIVE_DISPLAYS or OCIO_ACTIVE_VIEWS env vars are unset.</li>
 <dt><strong>Version 1.0.1 (Oct 31 2011):</strong></dt>
 <dd><ul class="first last simple">
 <li>Luts with incorrect extension are properly loaded</li>
-<li>ocio2icc / ociobakelut get &#8211;lut option (no longer requires ocio config)</li>
-<li>DisplayTransform looks do not apply to &#8216;data&#8217; passes.</li>
+<li>ocio2icc / ociobakelut get –lut option (no longer requires ocio config)</li>
+<li>DisplayTransform looks do not apply to ‘data’ passes.</li>
 </ul>
 </dd>
 <dt><strong>Version 1.0.0 (Oct 3 2011):</strong></dt>
@@ -340,7 +334,7 @@ New features can be added, but the ABI will only be extended in a binary compati
 </dd>
 <dt><strong>Version 0.7.4 (Jan 4 2011):</strong></dt>
 <dd><ul class="first last simple">
-<li>Added &#8216;Context&#8217;, allowing for &#8216;per-shot&#8217; Transforms</li>
+<li>Added ‘Context’, allowing for ‘per-shot’ Transforms</li>
 <li>Misc API Cleanup: removed old functions + fixed const-ness</li>
 <li>Added config.sanityCheck() for validation</li>
 <li>Additional Makefile configuration options, SONAME, etc.</li>
@@ -384,7 +378,7 @@ New features can be added, but the ABI will only be extended in a binary compati
 <dt><strong>Version 0.6.1 (Oct 5 2010):</strong></dt>
 <dd><ul class="first last simple">
 <li>Exposed ExponentTransform</li>
-<li>Added CineonLogToLinTransform - a simple &#8216;straight-line&#8217; negative
+<li>Added CineonLogToLinTransform - a simple ‘straight-line’ negative
 linearization. Not strictly needed (could be done previously
 with LUTs) but often convenient to have.</li>
 <li>Added DisplayTransform.displayCC for post display lut CC.</li>
@@ -395,11 +389,11 @@ with LUTs) but often convenient to have.</li>
 </dd>
 <dt><strong>Version 0.6.0 (Sept 21 2010):</strong></dt>
 <dd><ul class="first last">
-<li><p class="first">Start of 0.6, &#8220;stable&#8221; branch</p>
+<li><p class="first">Start of 0.6, “stable” branch</p>
 <p>All 0.6.x builds will be ABI compatible (forward only).
 New features (even experimental ones) will be added to the 0.6 branch,
 as long as binary and source compatibility is maintained.
-Once this no longer is possible, a 0.7 &#8220;dev&#8221; branch will be forked.</p>
+Once this no longer is possible, a 0.7 “dev” branch will be forked.</p>
 </li>
 <li><p class="first">Split public header into 3 parts for improved readability
 (you still only import &lt;OpenColorIO/OpenColorIO.h&gt; though)</p>
@@ -514,7 +508,7 @@ Once this no longer is possible, a 0.7 &#8220;dev&#8221; branch will be forked.<
 <li>Initial Release</li>
 <li>CMake linux support</li>
 <li>XML OCIO format parsing / saving</li>
-<li>Example colorspace configuration with a few &#8216;trivial&#8217; colorspaces</li>
+<li>Example colorspace configuration with a few ‘trivial’ colorspaces</li>
 <li>Mutable colorspace configuration API</li>
 <li>Support for 1D lut processing</li>
 <li>Support for SPI 1D fileformats.</li>
@@ -537,9 +531,9 @@ Once this no longer is possible, a 0.7 &#8220;dev&#8221; branch will be forked.<
 
       </div>
 
-    <div class="footer">
-        &copy; Copyright 2010, Sony Pictures Imageworks.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Academy Software Foundation.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
     </div>
   </body>
 </html>

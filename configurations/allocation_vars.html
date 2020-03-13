@@ -1,45 +1,35 @@
 
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>OpenColorIO</title>
 
-    
     <link rel="stylesheet" href="../_static/ocio.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/print.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.1.1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
+    <link rel="stylesheet" type="text/css" href="../_static/print.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO 1.1.1 documentation" href="../index.html" />
-    <link rel="up" title="Configurations" href="index.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Installation" href="../installation.html" />
     <link rel="prev" title="aces_1.0.3" href="aces_1.0.3.html" /> 
-  </head>
-  <body>
+  </head><body>
     <div class="header"><h1 class="heading"><a href="../index.html">
           <span>OpenColorIO</span></a></h1>
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO 1.1.1 documentation
+      OpenColorIO  documentation
       </div>
       <div class="content">
         
@@ -64,6 +54,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../ChangeLog.html">ChangeLog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../License.html">License</a></li>
 </ul>
+<!-- SPDX-License-Identifier: BSD-3-Clause -->
+<!-- Copyright Contributors to the OpenColorIO Project. -->
 
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
@@ -84,8 +76,8 @@
 <span id="allocationvars"></span><h1>How to Configure ColorSpace Allocation<a class="headerlink" href="#how-to-configure-colorspace-allocation" title="Permalink to this headline">¶</a></h1>
 <p>The allocation / allocation vars are utilized using during GPU 3dlut / shader
 text generation. (Processor::getGpuShaderText, Processor::getGpuLut3D).</p>
-<p>If, in the course of GPU processing, a 3D lut is required, the &#8220;allocation /
-allocation vars&#8221; direct how OCIO should sample the colorspace, with the intent
+<p>If, in the course of GPU processing, a 3D lut is required, the “allocation /
+allocation vars” direct how OCIO should sample the colorspace, with the intent
 being to maintain maximum fidelity and minimize clamping.</p>
 <p>Currently support allocations / variables:</p>
 <dl class="docutils">
@@ -97,10 +89,10 @@ being to maintain maximum fidelity and minimize clamping.</p>
 </dl>
 <p>So say you have an srgb image (such as an 8-bit tif), where you know the data
 ranges between 0.0 - 1.0 (after converting to float).  If you wanted to apply
-a 3d lut to this data, there is no danger in samplingthat space uniformly and
+a 3d lut to this data, there is no danger in sampling that space uniformly and
 clamping data outside (0,1).   So for this colorspace we would tag it:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">allocation</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">uniform</span>
-<span class="l-Scalar-Plain">allocationvars</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">0.0</span><span class="p-Indicator">,</span> <span class="nv">1.0</span><span class="p-Indicator">]</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">allocation</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">uniform</span>
+<span class="nt">allocationvars</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">0.0</span><span class="p p-Indicator">,</span> <span class="nv">1.0</span><span class="p p-Indicator">]</span>
 </pre></div>
 </div>
 <p>These are the defaults, so the tagging could also be skipped.</p>
@@ -108,17 +100,17 @@ clamping data outside (0,1).   So for this colorspace we would tag it:</p>
 small undershoot and overshoot values were encountered? If you wanted OCIO to
 preserve this overshoot / undershoot pixel information, you would do so by
 modifying the allocation vars.</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">allocation</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">uniform</span>
-<span class="l-Scalar-Plain">allocationvars</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">-0.125</span><span class="p-Indicator">,</span> <span class="nv">1.125</span><span class="p-Indicator">]</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">allocation</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">uniform</span>
+<span class="nt">allocationvars</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">-0.125</span><span class="p p-Indicator">,</span> <span class="nv">1.125</span><span class="p p-Indicator">]</span>
 </pre></div>
 </div>
 <p>This would mean that any image data originally within [-0.125, 1.125] will be
 preserved during GPU processing.  (Protip: Data outside this range <em>may</em>
 actually be preserved in some circumstances - such as if a 3d lut is not needed
-- but it&#8217;s not required to be preserved).</p>
+- but it’s not required to be preserved).</p>
 <p>So why not leave this at huge values (such as [-1000.0, 1000.0]) all the time?
-Well, there&#8217;s a cost to supporting this larger dynamic range, and that cost is
-reduced precision within the 3D luts sample space.   So in general you&#8217;re best
+Well, there’s a cost to supporting this larger dynamic range, and that cost is
+reduced precision within the 3D luts sample space.   So in general you’re best
 served by using sensible allocations (the smallest you can get away with, but
 no smaller).</p>
 <p>Now in the case of high-dynamic range color spaces (such as float linear), a
@@ -128,43 +120,43 @@ so high.</p>
 at 0.18, and specular values are very much above that.  Say the max value we
 wanted to preserve in our coding space is 256.0, each 3d lut lattice coordinates
 would represent 8.0 units of linear light! That means the vast majority of the
-perceptually significant portions of the space wouldnt be sampled at all!</p>
+perceptually significant portions of the space wouldn’t be sampled at all!</p>
 <p>unform allocation from 0-256:
 0
 8.0
 16.0
-...
+…
 240.0
 256.0</p>
 <p>So another allocation is defined, lg2</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">linear</span>
-  <span class="l-Scalar-Plain">description</span><span class="p-Indicator">:</span> <span class="p-Indicator">|</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">linear</span>
+  <span class="nt">description</span><span class="p">:</span> <span class="p p-Indicator">|</span>
       <span class="no">Scene-linear, high dynamic range. Used for rendering and compositing.</span>
-  <span class="l-Scalar-Plain">allocation</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lg2</span>
-  <span class="l-Scalar-Plain">allocationvars</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">-8</span><span class="p-Indicator">,</span> <span class="nv">8</span><span class="p-Indicator">]</span>
+  <span class="nt">allocation</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">lg2</span>
+  <span class="nt">allocationvars</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">-8</span><span class="p p-Indicator">,</span> <span class="nv">8</span><span class="p p-Indicator">]</span>
 </pre></div>
 </div>
-<p>In this case, we&#8217;re saying that the appropriate ways to sample the 3d lut are
+<p>In this case, we’re saying that the appropriate ways to sample the 3d lut are
 logarithmically, from 2^-8 stops to 2^8 stops.</p>
 <p>Sample locations:
 2^-8: 0.0039
 2^-7: 0.0078
 2^-6: 0.0156
-...
+…
 2^0:  1.0
-...
+…
 2^6:  64.0
 2^7:  128.0
 2^8:  256.0</p>
 <p>Which gives us a much better perceptual sampling of the space.</p>
-<p>The one downside of this approach is that it can&#8217;t represent 0.0,
+<p>The one downside of this approach is that it can’t represent 0.0,
 which is why we optionally allow a 3d allocation var, a black point
 offset.  If you need to preserve 0.0 values, and you have a high
 dynamic range space, you can specify a small offset.</p>
 <p>Example:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">allocation</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lg2</span>
-<span class="l-Scalar-Plain">allocationvars</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">-8</span><span class="p-Indicator">,</span> <span class="nv">8</span><span class="p-Indicator">,</span> <span class="nv">0.00390625</span><span class="p-Indicator">]</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">allocation</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">lg2</span>
+<span class="nt">allocationvars</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">-8</span><span class="p p-Indicator">,</span> <span class="nv">8</span><span class="p p-Indicator">,</span> <span class="nv">0.00390625</span><span class="p p-Indicator">]</span>
 </pre></div>
 </div>
 <p>The [-15.0, 6.0] values in spi-vfx come from the fact that all of the
@@ -173,7 +165,7 @@ stops, to 2^6 stops.   One could probably change that black point to a
 higher number (such as -8), but if you raised it too much you would
 start seeing black values be clipped.   Conversely, on the high end
 one could raise it a bit but if you raised it too far the precision
-would suffer around gray, and if you lowered it further you&#8217;d start to
+would suffer around gray, and if you lowered it further you’d start to
 see highlight clipping.</p>
 </div>
 
@@ -190,9 +182,9 @@ see highlight clipping.</p>
 
       </div>
 
-    <div class="footer">
-        &copy; Copyright 2010, Sony Pictures Imageworks.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Academy Software Foundation.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
     </div>
   </body>
 </html>

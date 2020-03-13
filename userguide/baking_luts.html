@@ -1,45 +1,35 @@
 
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>OpenColorIO</title>
 
-    
     <link rel="stylesheet" href="../_static/ocio.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/print.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '1.1.1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
+    <link rel="stylesheet" type="text/css" href="../_static/print.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO 1.1.1 documentation" href="../index.html" />
-    <link rel="up" title="User Guide" href="index.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Contexts" href="contexts.html" />
     <link rel="prev" title="Tool overview" href="tool_overview.html" /> 
-  </head>
-  <body>
+  </head><body>
     <div class="header"><h1 class="heading"><a href="../index.html">
           <span>OpenColorIO</span></a></h1>
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO 1.1.1 documentation
+      OpenColorIO  documentation
       </div>
       <div class="content">
         
@@ -54,7 +44,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="tool_overview.html">Tool overview</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Baking LUT&#8217;s</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Baking LUT’s</a></li>
 <li class="toctree-l2"><a class="reference internal" href="contexts.html">Contexts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="looks.html">Looks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config_syntax.html">Config syntax</a></li>
@@ -67,6 +57,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../ChangeLog.html">ChangeLog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../License.html">License</a></li>
 </ul>
+<!-- SPDX-License-Identifier: BSD-3-Clause -->
+<!-- Copyright Contributors to the OpenColorIO Project. -->
 
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
@@ -84,16 +76,16 @@
         <td width="100%" id="bodycontent">
         
 <div class="section" id="baking-lut-s">
-<span id="userguide-bakelut"></span><h1>Baking LUT&#8217;s<a class="headerlink" href="#baking-lut-s" title="Permalink to this headline">¶</a></h1>
+<span id="userguide-bakelut"></span><h1>Baking LUT’s<a class="headerlink" href="#baking-lut-s" title="Permalink to this headline">¶</a></h1>
 <p>Sometimes it is necessary to write a color transform as a
 lookup-table file</p>
 <p>This is usually because an application does not natively support OCIO
 (unlike, say, Nuke which various OCIO nodes), but can load a LUT of
 some kind. This would currently include applications like Autodesk
-Flame, Adobe Photoshop, SideFX&#8217;s MPlay (Houdini&#8217;s &#8220;Image Viewer&#8221;)</p>
+Flame, Adobe Photoshop, SideFX’s MPlay (Houdini’s “Image Viewer”)</p>
 <p>Remember that baking a LUT is not a perfect solution. Different LUT
 formats have various limitations. Certain applications might apply
-LUT&#8217;s differently (often incorrectly), and some formats simply cannot
+LUT’s differently (often incorrectly), and some formats simply cannot
 accurately represent certain transforms. Others might require
 carefully selecting shaper spaces and so on.</p>
 <p>Be sure to carefully test the generated LUT in the target
@@ -104,118 +96,126 @@ LUT is correct.</p>
 <h2>Config-based baking<a class="headerlink" href="#config-based-baking" title="Permalink to this headline">¶</a></h2>
 <p>This section assumes you have a working OCIO config.</p>
 <p>The config can either be specified by setting the OCIO environment variable:</p>
-<div class="highlight-python"><pre>bash$ export OCIO=~/path/to/spi-vfx/config.ocio</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>bash$ export OCIO=~/path/to/spi-vfx/config.ocio
+</pre></div>
 </div>
 <p>Alternatively the config can be specified as a command-line argument
-to the ociobakelut command, <tt class="docutils literal"><span class="pre">--iconfig</span> <span class="pre">~/path/to/spi-vfx/config.ocio</span></tt></p>
-<p>These examples will use the <a class="reference internal" href="../configurations/spi_vfx.html#config-spivfx"><em>spi-vfx</em></a> config, specifically the
+to the ociobakelut command, <code class="docutils literal notranslate"><span class="pre">--iconfig</span> <span class="pre">~/path/to/spi-vfx/config.ocio</span></code></p>
+<p>These examples will use the <a class="reference internal" href="../configurations/spi_vfx.html#config-spivfx"><span class="std std-ref">spi-vfx</span></a> config, specifically the
 following colorspaces</p>
 <ul class="simple">
-<li><tt class="docutils literal"><span class="pre">lnf</span></tt> - scene-referred linear light colorspace (reference colorspace)</li>
-<li><tt class="docutils literal"><span class="pre">lg10</span></tt> - film log colorspace (0-1 colorspace)</li>
-<li><tt class="docutils literal"><span class="pre">srgb8</span></tt> - sRGB display colorspace</li>
+<li><code class="docutils literal notranslate"><span class="pre">lnf</span></code> - scene-referred linear light colorspace (reference colorspace)</li>
+<li><code class="docutils literal notranslate"><span class="pre">lg10</span></code> - film log colorspace (0-1 colorspace)</li>
+<li><code class="docutils literal notranslate"><span class="pre">srgb8</span></code> - sRGB display colorspace</li>
 </ul>
 <p>Remember these are just for the examples - you can of course use any
 config and any colorspaces</p>
 <div class="section" id="log-input-display-lut">
 <h3>Log-input display LUT<a class="headerlink" href="#log-input-display-lut" title="Permalink to this headline">¶</a></h3>
-<p>Say we have a <tt class="docutils literal"><span class="pre">lg10</span></tt> image in MPlay (maybe a &#8221;.cin&#8221; film scan), and
-wish to view it in our main display colorspace, <tt class="docutils literal"><span class="pre">srgb8</span></tt></p>
-<p>The available formats are listed in the <tt class="docutils literal"><span class="pre">ociobakelut</span> <span class="pre">--help</span></tt> - for
-MPlay, we use the &#8220;houdini&#8221; format (see <a class="reference internal" href="../FAQ.html#faq-supportedlut"><em>the FAQ</em></a>
+<p>Say we have a <code class="docutils literal notranslate"><span class="pre">lg10</span></code> image in MPlay (maybe a “.cin” film scan), and
+wish to view it in our main display colorspace, <code class="docutils literal notranslate"><span class="pre">srgb8</span></code></p>
+<p>The available formats are listed in the <code class="docutils literal notranslate"><span class="pre">ociobakelut</span> <span class="pre">--help</span></code> - for
+MPlay, we use the “houdini” format (see <a class="reference internal" href="../FAQ.html#faq-supportedlut"><span class="std std-ref">the FAQ</span></a>
 for a more detailed list)</p>
-<p>So, to create a LUT that transforms from <tt class="docutils literal"><span class="pre">lg10</span></tt> to <tt class="docutils literal"><span class="pre">srgb8</span></tt>:</p>
-<div class="highlight-python"><pre>bash$ ociobakelut --format houdini --inputspace lg10 --outputspace srgb8 log_to_display.lut</pre>
+<p>So, to create a LUT that transforms from <code class="docutils literal notranslate"><span class="pre">lg10</span></code> to <code class="docutils literal notranslate"><span class="pre">srgb8</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>bash$ ociobakelut --format houdini --inputspace lg10 --outputspace srgb8 log_to_display.lut
+</pre></div>
 </div>
 <p>We could then load this LUT into MPlay and view a lg10 image
-correctly! (note that by MPlay tries to linearise &#8221;.cin&#8221; files by
-default, which can be disabled in the preferences, &#8220;Convert form 10bit
-Log&#8221;)</p>
-<p>For most other applications, we could simply change the <tt class="docutils literal"><span class="pre">--format</span></tt></p>
+correctly! (note that by MPlay tries to linearize “.cin” files by
+default, which can be disabled in the preferences, “Convert form 10bit
+Log”)</p>
+<p>For most other applications, we could simply change the <code class="docutils literal notranslate"><span class="pre">--format</span></code></p>
 </div>
 <div class="section" id="shaper-spaces">
 <h3>Shaper spaces<a class="headerlink" href="#shaper-spaces" title="Permalink to this headline">¶</a></h3>
-<p>Before we create a LUT to view linear-light images, it&#8217;s important to
+<p>Before we create a LUT to view linear-light images, it’s important to
 understand shaper-spaces and preluts.</p>
-<p>The two main types of LUT&#8217;s are 1D and 3D. Such LUT formats typically
+<p>The two main types of LUT’s are 1D and 3D. Such LUT formats typically
 require input values in the 0.0-1.0 range. Such a LUT would be
 unsuitable for linear-light values input images (where values are
 often over 1)</p>
-<p>To address this, various LUT formats contain a smaller &#8220;prelut&#8221; (or
-&#8220;shaper LUT&#8221;) which is applied before the main LUT. This is used to
+<p>To address this, various LUT formats contain a smaller “prelut” (or
+“shaper LUT”) which is applied before the main LUT. This is used to
 transform the input values into a 0-1 range (typically a linear-to-log
 type transform)</p>
 <p>In terms of color-transforms, the prelut transforms from
-&#8220;input-space&#8221; to &#8220;shaper-space&#8221;, then the main LUT transforms from
-&#8220;shaper-space&#8221; to &#8220;output-space&#8221;</p>
+“input-space” to “shaper-space”, then the main LUT transforms from
+“shaper-space” to “output-space”</p>
 <p>Some formats do not support such a shaper LUT - these are typically
 used in applications which do not work with floating-point images (e.g
-Lustre often works with 10-bit integer DPX&#8217;s, so it&#8217;s natively
-supported &#8220;&#8211;format lustre&#8221; (3DL) format has no need for a prelut)</p>
+Lustre often works with 10-bit integer DPX’s, so it’s natively
+supported “–format lustre” (3DL) format has no need for a prelut)</p>
 </div>
 <div class="section" id="linear-light-input-display-lut">
 <h3>Linear-light input display LUT<a class="headerlink" href="#linear-light-input-display-lut" title="Permalink to this headline">¶</a></h3>
-<p>With shaper-spaces explained, lets say we have a <tt class="docutils literal"><span class="pre">lnf</span></tt> linear light
-image in MPlay, and wish to view it in the <tt class="docutils literal"><span class="pre">srgb8</span></tt> colorspace.</p>
-<p>To create this LUT accurately, without clipping, we will use the LUT&#8217;s
-prelut to transform from <tt class="docutils literal"><span class="pre">lnf</span></tt> to <tt class="docutils literal"><span class="pre">lg10</span></tt>, then the 3D LUT will
-transform from <tt class="docutils literal"><span class="pre">lg10</span></tt> to <tt class="docutils literal"><span class="pre">srgb8</span></tt></p>
+<p>With shaper-spaces explained, lets say we have a <code class="docutils literal notranslate"><span class="pre">lnf</span></code> linear light
+image in MPlay, and wish to view it in the <code class="docutils literal notranslate"><span class="pre">srgb8</span></code> colorspace.</p>
+<p>To create this LUT accurately, without clipping, we will use the LUT’s
+prelut to transform from <code class="docutils literal notranslate"><span class="pre">lnf</span></code> to <code class="docutils literal notranslate"><span class="pre">lg10</span></code>, then the 3D LUT will
+transform from <code class="docutils literal notranslate"><span class="pre">lg10</span></code> to <code class="docutils literal notranslate"><span class="pre">srgb8</span></code></p>
 <p>Sounds complicated, but the command is almost the same as before, just
-with the <tt class="docutils literal"><span class="pre">--shaperspace</span></tt> argument (and <tt class="docutils literal"><span class="pre">--inputspace</span></tt> changed, of
+with the <code class="docutils literal notranslate"><span class="pre">--shaperspace</span></code> argument (and <code class="docutils literal notranslate"><span class="pre">--inputspace</span></code> changed, of
 course):</p>
-<div class="highlight-python"><pre>bash$ ociobakelut --format houdini --inputspace lnf --shaperspace lg10 --outputspace srgb8 lin_to_display.lut</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>bash$ ociobakelut --format houdini --inputspace lnf --shaperspace lg10 --outputspace srgb8 lin_to_display.lut
+</pre></div>
 </div>
 </div>
 <div class="section" id="allocation-based-prelut">
 <h3>Allocation-based prelut<a class="headerlink" href="#allocation-based-prelut" title="Permalink to this headline">¶</a></h3>
-<p>If your <a class="reference internal" href="../configurations/allocation_vars.html#allocationvars"><em>allocation variables</em></a> are setup
-correctly, you can omit the <tt class="docutils literal"><span class="pre">--shaperspace</span></tt> argument, and a prelut
+<p>If your <a class="reference internal" href="../configurations/allocation_vars.html#allocationvars"><span class="std std-ref">allocation variables</span></a> are setup
+correctly, you can omit the <code class="docutils literal notranslate"><span class="pre">--shaperspace</span></code> argument, and a prelut
 will be automatically created based on the allocation vars (see the
 linked page for more information)</p>
-<p>Since the colorspaces in the config we are using (<a class="reference internal" href="../configurations/spi_vfx.html#config-spivfx"><em>spi-vfx</em></a>) have
+<p>Since the colorspaces in the config we are using (<a class="reference internal" href="../configurations/spi_vfx.html#config-spivfx"><span class="std std-ref">spi-vfx</span></a>) have
 their allocation variables set correctly, we could simplify the
-<tt class="docutils literal"><span class="pre">lnf</span></tt> to <tt class="docutils literal"><span class="pre">srgb8</span></tt> bake command:</p>
-<div class="highlight-python"><pre>bash$ ociobakelut --format houdini --inputspace lnf --outputspace srgb8 lin_to_display_allocbased.lut</pre>
+<code class="docutils literal notranslate"><span class="pre">lnf</span></code> to <code class="docutils literal notranslate"><span class="pre">srgb8</span></code> bake command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>bash$ ociobakelut --format houdini --inputspace lnf --outputspace srgb8 lin_to_display_allocbased.lut
+</pre></div>
 </div>
 <p>This command creates a very different prelut to the explicitly
-specified <tt class="docutils literal"><span class="pre">--shaperspace</span> <span class="pre">lg10</span></tt> in the previous example. Explicitly
+specified <code class="docutils literal notranslate"><span class="pre">--shaperspace</span> <span class="pre">lg10</span></code> in the previous example. Explicitly
 specifying a shaper can produce better results, however the
-allocation-based prelut usually works nicely, and is convinient</p>
-<p>Note that allocation-var based preluts is baker-format dependant, and
+allocation-based prelut usually works nicely, and is convenient</p>
+<p>Note that allocation-var based preluts is baker-format dependent, and
 not all formats currently implement them</p>
 </div>
 </div>
 <div class="section" id="config-free-baking">
 <h2>Config-free baking<a class="headerlink" href="#config-free-baking" title="Permalink to this headline">¶</a></h2>
 <p>You can perform baking without using a OCIO config. This means you
-don&#8217;t have to create a temporary config just to, say, convert from one
+don’t have to create a temporary config just to, say, convert from one
 LUT format to another.</p>
 <div class="section" id="converting-between-formats">
 <h3>Converting between formats<a class="headerlink" href="#converting-between-formats" title="Permalink to this headline">¶</a></h3>
-<p>Say we have a houdini LUT named <tt class="docutils literal"><span class="pre">log_to_display.lut</span></tt>. To convert
+<p>Say we have a houdini LUT named <code class="docutils literal notranslate"><span class="pre">log_to_display.lut</span></code>. To convert
 this to a Flame compatible 3dl file, simply run:</p>
-<div class="highlight-python"><pre>ociobakelut --format flame --lut log_to_display.lut for_flame.3dl</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ociobakelut</span> <span class="o">--</span><span class="nb">format</span> <span class="n">flame</span> <span class="o">--</span><span class="n">lut</span> <span class="n">log_to_display</span><span class="o">.</span><span class="n">lut</span> <span class="n">for_flame</span><span class="o">.</span><span class="mi">3</span><span class="n">dl</span>
+</pre></div>
 </div>
 </div>
 <div class="section" id="reversing-a-1d-lut">
 <h3>Reversing a 1D LUT<a class="headerlink" href="#reversing-a-1d-lut" title="Permalink to this headline">¶</a></h3>
 <p>You can apply a LUT in reverse, and write this to a new LUT (this does
-not work for 3D LUT&#8217;s, but will for 1D LUT&#8217;s):</p>
-<div class="highlight-python"><pre>bash$ ociobakelut --format flame --invlut logtosrgb.3dl srgbtolog.3dl</pre>
+not work for 3D LUT’s, but will for 1D LUT’s):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>bash$ ociobakelut --format flame --invlut logtosrgb.3dl srgbtolog.3dl
+</pre></div>
 </div>
 </div>
 <div class="section" id="creating-a-grade-lut">
 <h3>Creating a grade LUT<a class="headerlink" href="#creating-a-grade-lut" title="Permalink to this headline">¶</a></h3>
 <p>You can create a LUT which applies CDL-compliant grades:</p>
-<div class="highlight-python"><pre>ociobakelut --format cinespace --slope 1.2 1.0 0.9 mygrade.csp</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ociobakelut</span> <span class="o">--</span><span class="nb">format</span> <span class="n">cinespace</span> <span class="o">--</span><span class="n">slope</span> <span class="mf">1.2</span> <span class="mf">1.0</span> <span class="mf">0.9</span> <span class="n">mygrade</span><span class="o">.</span><span class="n">csp</span>
+</pre></div>
 </div>
 </div>
 <div class="section" id="combining-options">
 <h3>Combining options<a class="headerlink" href="#combining-options" title="Permalink to this headline">¶</a></h3>
 <p>These options can be used together, or used multiple times.</p>
-<p>For example, to perform a slope offset, then apply &#8220;mylut.csp&#8221;, saving
+<p>For example, to perform a slope offset, then apply “mylut.csp”, saving
 it out for Lustre:</p>
-<div class="highlight-python"><pre>bash$ ociobakelut --format lustre --slope 2.0 1.5 0.4 --lut mylut.csp output.3dl</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>bash$ ociobakelut --format lustre --slope 2.0 1.5 0.4 --lut mylut.csp output.3dl
+</pre></div>
 </div>
 </div>
 </div>
@@ -235,44 +235,44 @@ LUT into Photoshop (and its API does not make this easy either!)</p>
 Photoshop. This is the colorspace in which matte-paintings will be
 performed (likely a different colorspace that used for
 texture-painting, as these have different requirements)</p>
-<p>The working space should be a &#8220;0-1 colorspace&#8221;, reversable, and for
-matte-paintings ideally allow painting values over &#8220;diffuse white&#8221; (in
+<p>The working space should be a “0-1 colorspace”, reversible, and for
+matte-paintings ideally allow painting values over “diffuse white” (in
 other words, to paint values over 1.0 when converted to linear-light
 in comp)</p>
-<p>This is a facility-dependant workflow choice.</p>
-<p>For this example we will use the <tt class="docutils literal"><span class="pre">vd16</span></tt> colorspace, as described by
-the <a class="reference internal" href="../configurations/spi_vfx.html#config-spivfx"><em>spi-vfx</em></a></p>
+<p>This is a facility-dependent workflow choice.</p>
+<p>For this example we will use the <code class="docutils literal notranslate"><span class="pre">vd16</span></code> colorspace, as described by
+the <a class="reference internal" href="../configurations/spi_vfx.html#config-spivfx"><span class="std std-ref">spi-vfx</span></a></p>
 </div>
 <div class="section" id="creating-display-lut">
 <h3>Creating display LUT<a class="headerlink" href="#creating-display-lut" title="Permalink to this headline">¶</a></h3>
-<p>&#8220;Proofing profiles&#8221; in Photoshop can be used in a very similar way to
+<p>“Proofing profiles” in Photoshop can be used in a very similar way to
 a display LUT in applications like Nuke. This proof-profile can be
 used to apply a 3D color transform from the working-space to a
-display space (e.g transform from <tt class="docutils literal"><span class="pre">vd16</span></tt> to <tt class="docutils literal"><span class="pre">srgb8</span></tt> in the spi-vfx
+display space (e.g transform from <code class="docutils literal notranslate"><span class="pre">vd16</span></code> to <code class="docutils literal notranslate"><span class="pre">srgb8</span></code> in the spi-vfx
 config)</p>
 <p>These proofing-profiles are ICC profiles - a rather print-specific
 technology and relatively complex format</p>
-<p>Luckily, <tt class="docutils literal"><span class="pre">ociobakelut</span></tt> can be used to create these... but, first,
+<p>Luckily, <code class="docutils literal notranslate"><span class="pre">ociobakelut</span></code> can be used to create these… but, first,
 there are some important considerations:</p>
-<p>It is important to match the <tt class="docutils literal"><span class="pre">--displayicc</span></tt> option to the profile
+<p>It is important to match the <code class="docutils literal notranslate"><span class="pre">--displayicc</span></code> option to the profile
 used for the display.</p>
 <p>Secondly, Photoshop has a lot of print-focused color-management
 options, some of which can cause problems.</p>
 </div>
 <div class="section" id="determine-display-icc">
 <h3>Determine display ICC<a class="headerlink" href="#determine-display-icc" title="Permalink to this headline">¶</a></h3>
-<p>On OS X, launch &#8220;System Preferences&#8221;, open &#8220;Displays&#8221; and click
-&#8220;Color&#8221; tab. The currently active ICC profile is selected.</p>
-<p>If you just want something simple that &#8220;probably matches&#8221; a Linux
-machine, say, it is easiest to uncheck &#8220;Show profiles for this display
-only&#8221; and select the &#8220;sRGB IEC61966-2.1&#8221; profile. You can skip the
+<p>On OS X, launch “System Preferences”, open “Displays” and click
+“Color” tab. The currently active ICC profile is selected.</p>
+<p>If you just want something simple that “probably matches” a Linux
+machine, say, it is easiest to uncheck “Show profiles for this display
+only” and select the “sRGB IEC61966-2.1” profile. You can skip the
 rest of this section in this case.</p>
 <div class="figure align-center">
 <img alt="../_images/psicc_open_current_profile.png" src="../_images/psicc_open_current_profile.png" />
 </div>
 <p>However, if you have a specific display-profile selected (maybe
 created by monitor-calibration software), you should do the following:</p>
-<p>Click &#8220;Open Profile&#8221;, and right-click the icon in the top of the window, and click the folder:</p>
+<p>Click “Open Profile”, and right-click the icon in the top of the window, and click the folder:</p>
 <div class="figure align-center">
 <img alt="../_images/psicc_reveal_profile.png" src="../_images/psicc_reveal_profile.png" />
 </div>
@@ -282,53 +282,58 @@ a Terminal.app window to get the full path (or, type it manually)</p>
 <div class="section" id="create-the-icc-profile">
 <h3>Create the ICC profile<a class="headerlink" href="#create-the-icc-profile" title="Permalink to this headline">¶</a></h3>
 <p>Almost done now. We can write the ICC profile!</p>
-<p>The full command is, using our example colorspaces of <tt class="docutils literal"><span class="pre">vd16</span></tt> and <tt class="docutils literal"><span class="pre">srgb8</span></tt>:</p>
-<div class="highlight-python"><pre>bash$ ociobakelut --format icc --inputspace vd16 --outputspace srgb8 --displayicc /path/to/my/monitorprofile.icc --description "vd16 to srgb8"</pre>
+<p>The full command is, using our example colorspaces of <code class="docutils literal notranslate"><span class="pre">vd16</span></code> and <code class="docutils literal notranslate"><span class="pre">srgb8</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>bash$ ociobakelut --format icc --inputspace vd16 --outputspace srgb8 --displayicc /path/to/my/monitorprofile.icc --description &quot;vd16 to srgb8&quot;
+</pre></div>
 </div>
 <p>The first three options are the same as any other LUT:</p>
-<div class="highlight-python"><pre>bash$ ociobakelut --format icc --inputspace vd16 --outputspace srgb8 [...]</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>bash$ ociobakelut --format icc --inputspace vd16 --outputspace srgb8 [...]
+</pre></div>
 </div>
 <p>Then we specify the display ICC profile:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">--</span><span class="n">displayicc</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">my</span><span class="o">/</span><span class="n">monitorprofile</span><span class="o">.</span><span class="n">icc</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">--</span><span class="n">displayicc</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">my</span><span class="o">/</span><span class="n">monitorprofile</span><span class="o">.</span><span class="n">icc</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>We can set the description (shown in Photoshop), and as the last argument, specify:</p>
-<div class="highlight-python"><pre>[...] --description "vd16 to srgb8"  [...]</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">--</span><span class="n">description</span> <span class="s2">&quot;vd16 to srgb8&quot;</span>  <span class="p">[</span><span class="o">...</span><span class="p">]</span>
+</pre></div>
 </div>
 <p>Finally an argument for the output file:</p>
 <blockquote>
-<div>[...] vd16_to_srgb.icc</div></blockquote>
-<p>If you selected the &#8220;sRGB IEC61966-2.1&#8221; display profile, you can omit
-the <tt class="docutils literal"><span class="pre">--displayicc</span></tt> argument (it defaults to an standard sRGB
+<div>[…] vd16_to_srgb.icc</div></blockquote>
+<p>If you selected the “sRGB IEC61966-2.1” display profile, you can omit
+the <code class="docutils literal notranslate"><span class="pre">--displayicc</span></code> argument (it defaults to an standard sRGB
 profile):</p>
-<div class="highlight-python"><pre>bash$ ociobakelut --format icc --inputspace vd16 --outputspace srgb8 --description "vd16 to srgb8"</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>bash$ ociobakelut --format icc --inputspace vd16 --outputspace srgb8 --description &quot;vd16 to srgb8&quot;
+</pre></div>
 </div>
 </div>
 <div class="section" id="loading-the-display-lut">
-<h3>Loading the &#8220;display LUT&#8221;<a class="headerlink" href="#loading-the-display-lut" title="Permalink to this headline">¶</a></h3>
+<h3>Loading the “display LUT”<a class="headerlink" href="#loading-the-display-lut" title="Permalink to this headline">¶</a></h3>
 <p>Last step is to load the ICC profile into Photoshop, and enable it.</p>
 <p>On OS X, these can be put into:</p>
-<div class="highlight-python"><pre>/Library/ColorSync/Profiles/</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">Library</span><span class="o">/</span><span class="n">ColorSync</span><span class="o">/</span><span class="n">Profiles</span><span class="o">/</span>
+</pre></div>
 </div>
-<p>(or the equivelant directory in your home-directory)</p>
-<p>On Windows, right-click the profile and select &#8220;Install profile&#8221;</p>
-<p>Then on either platform, click &#8220;View &gt; Proof Setup &gt; Custom...&#8221;</p>
+<p>(or the equivalent directory in your home-directory)</p>
+<p>On Windows, right-click the profile and select “Install profile”</p>
+<p>Then on either platform, click “View &gt; Proof Setup &gt; Custom…”</p>
 <div class="figure align-center">
 <img alt="../_images/psicc_proof_setup.png" src="../_images/psicc_proof_setup.png" />
 </div>
-<p>Select your profile from the &#8220;Device to simulate&#8221; dropdown (the name
-is what you supplied with <tt class="docutils literal"><span class="pre">--description</span></tt>):</p>
+<p>Select your profile from the “Device to simulate” dropdown (the name
+is what you supplied with <code class="docutils literal notranslate"><span class="pre">--description</span></code>):</p>
 <div class="figure align-center">
 <img alt="../_images/psicc_select_profile.png" src="../_images/psicc_select_profile.png" />
 </div>
-<p>As pictured, selecting &#8220;Preserve RGB numbers&#8221;, and deselecting
-&#8220;Simulate Black Ink&#8221; is a good starting point (see the next section on
-&#8220;Other color settings&#8221;)</p>
-<p>Finally, you can load an image in your working space, and click &#8220;View
-&gt; Proof Colors&#8221;, or hit cmd+y (or ctrl+y)</p>
+<p>As pictured, selecting “Preserve RGB numbers”, and deselecting
+“Simulate Black Ink” is a good starting point (see the next section on
+“Other color settings”)</p>
+<p>Finally, you can load an image in your working space, and click “View
+&gt; Proof Colors”, or hit cmd+y (or ctrl+y)</p>
 <p>When active, the profile name is shown in the window title (e.g
-&#8221;.... (RGB/16#/vd16 to srgb8&#8221;, where the part after the &#8220;#/&#8221; is the
-profile name, &#8220;RGB/16&#8221; indicates the current image mode)</p>
+“…. (RGB/16#/vd16 to srgb8”, where the part after the “#/” is the
+profile name, “RGB/16” indicates the current image mode)</p>
 </div>
 <div class="section" id="other-color-settings">
 <h3>Other color settings<a class="headerlink" href="#other-color-settings" title="Permalink to this headline">¶</a></h3>
@@ -347,15 +352,15 @@ LUT-reference-image (ideally toggling between Photoshop and Nuke):</p>
 <div class="figure align-center">
 <img alt="../_images/psicc_itworks.png" src="../_images/psicc_itworks.png" />
 </div>
-<p>The most improtant settings are in the &#8220;View &gt; Proof Setup &gt; Custom
-...&#8221; menu.</p>
-<p>The recommended &#8220;Preserve RGB&#8221; setting works sometimes. Other times
-disabling &#8220;Preserve RGB Numbers&#8221; and selecting &#8220;Rendering Intent:
-Relative Colorimetric&#8221; can be closer.</p>
+<p>The most important settings are in the “View &gt; Proof Setup &gt; Custom
+…” menu.</p>
+<p>The recommended “Preserve RGB” setting works sometimes. Other times
+disabling “Preserve RGB Numbers” and selecting “Rendering Intent:
+Relative Colorimetric” can be closer.</p>
 <p>It is safest to not assign a profile to the images you are working
-on - this is done by clicking &#8220;Edit &gt; Assign Profile&#8221;, and selecting
-&#8220;Don&#8217;t Color Manage This Document&#8221;.</p>
-<p>In closing, of course none of this matters if you don&#8217;t have a
+on - this is done by clicking “Edit &gt; Assign Profile”, and selecting
+“Don’t Color Manage This Document”.</p>
+<p>In closing, of course none of this matters if you don’t have a
 calibrated monitor!</p>
 </div>
 </div>
@@ -374,9 +379,9 @@ calibrated monitor!</p>
 
       </div>
 
-    <div class="footer">
-        &copy; Copyright 2010, Sony Pictures Imageworks.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Academy Software Foundation.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
     </div>
   </body>
 </html>
