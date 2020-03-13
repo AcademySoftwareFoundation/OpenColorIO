@@ -71,6 +71,7 @@ target_link_libraries(test_gpu_exec
 		OpenColorIO
 		oglbuilder
 		unittest_data
+		${OPENGL_LIBRAIRIES}
 		${GLEW_LIBRARIES}
 		${GLUT_LIBRARIES}
 )

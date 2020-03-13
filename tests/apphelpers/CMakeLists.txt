@@ -43,3 +43,18 @@ target_link_libraries(test_apphelpers_exec
 )
 
 add_test(test_apphelpers test_apphelpers_exec)
+
+# Note: To avoid changing PATH from outside the cmake files.
+if(MSVC AND BUILD_SHARED_LIBS)
+
+    set(BUILD_TYPE "")
+    if (MSVC_IDE)
+        # Note: By default Microsoft Visual Studio editor happens the build type to the build directory.
+        set(BUILD_TYPE ${CMAKE_BUILD_TYPE})
+    endif()
+
+    set_tests_properties(test_apphelpers 
+            PROPERTIES ENVIRONMENT 
+                PATH=${CMAKE_BINARY_DIR}/src/OpenColorIO/${BUILD_TYPE} )
+
+endif()
