@@ -27,7 +27,7 @@ successfully contribute to the project. If any of the terms used are unfamiliar
 to you please do a quick search and then ask any of the contributors for
 assistance.
 
-* Fork the ASWF OpenColorIO repository
+* Fork the `AcademySoftwareFoundation/OpenColorIO <https://github.com/AcademySoftwareFoundation/OpenColorIO>`_ repository
 * Activate Travis-CI and Appveyor for your fork
 * Clone your fork to your local workspace::
 
