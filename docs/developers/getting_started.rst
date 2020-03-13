@@ -47,7 +47,7 @@ To check out a read-write version of the repository (GitHub acct required)::
     Receiving objects: 100% (2220/2220), 2.89 MiB | 2.29 MiB/s, done.
     Resolving deltas: 100% (1434/1434), done.
 
-Both read + read/write users should then add the Imageworks (SPI) master branch
+Both read + read/write users should then add the ASWF OpenImageIO master branch
 as a remote. This will allow you to more easily fetch updates as they become
 available::
 

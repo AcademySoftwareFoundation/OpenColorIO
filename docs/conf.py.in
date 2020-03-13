@@ -16,7 +16,7 @@ templates_path = ['templates']
 source_suffix = '.rst'
 master_doc = 'index'
 project = u'OpenColorIO'
-copyright = u'2010, Sony Pictures Imageworks'
+copyright = u'2020, Academy Software Foundation'
 # The short X.Y version.
 version = '@OCIO_VERSION_MAJOR@.@OCIO_VERSION_MINOR@'
 # The full version, including alpha/beta/rc tags.
@@ -31,8 +31,8 @@ pygments_style = 'sphinx'
 rst_prolog = """
 .. |OCIO| replace:: *OCIO*
 .. |OpenColorIO| replace:: **OpenColorIO**
-.. _Sony Imageworks: http://www.imageworks.com/
-.. |Sony Imageworks| replace:: `Sony Imageworks`_
+.. _Academy Software Foundation: http://www.aswf.io/
+.. |Academy Software Foundation| replace:: `Academy Software Foundation`_
 .. _Jeremy Selan: mailto:jeremy.selan@gmail.com
 .. |Jeremy Selan| replace:: `Jeremy Selan`_
 .. _ocio-user: https://lists.aswf.io/g/ocio-user
@@ -67,7 +67,7 @@ htmlhelp_basename = 'OpenColorIOdoc'
 #latex_font_size = '10pt'
 latex_documents = [
   ('index', 'OpenColorIO.tex', u'OpenColorIO Documentation',
-   u'Sony Pictures Imageworks', 'manual', False),
+   u'Academy Software Foundation', 'manual', False),
 ]
 latex_elements = {
   'preamble': '\setcounter{tocdepth}{2}',
@@ -85,21 +85,21 @@ latex_domain_indices = ['cpp-modindex', 'py-modindex']
 # -- Options for manual page output --------------------------------------------
 man_pages = [
     ('index', 'opencolorio', u'OpenColorIO Documentation',
-    [u'Sony Pictures Imageworks'], 1)
+    [u'Academy Software Foundation'], 1)
 ]
 
 # -- Options for Texinfo output ------------------------------------------------
 texinfo_documents = [
-  ('index', 'OpenColorIO', u'OpenColorIO Documentation', u'Sony Pictures Imageworks',
+  ('index', 'OpenColorIO', u'OpenColorIO Documentation', u'Academy Software Foundation',
    'OpenColorIO', 'One line description of project.', 'Miscellaneous'),
 ]
 texinfo_appendices = []
 
 # -- Options for Epub output ---------------------------------------------------
 epub_title = u'OpenColorIO'
-epub_author = u'Sony Pictures Imageworks'
-epub_publisher = u'Sony Pictures Imageworks'
-epub_copyright = u'2010, Sony Pictures Imageworks'
+epub_author = u'Academy Software Foundation'
+epub_publisher = u'Academy Software Foundation'
+epub_copyright = u'2010, Academy Software Foundation'
 #epub_language = ''
 #epub_scheme = ''
 #epub_identifier = ''

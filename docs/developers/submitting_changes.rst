@@ -27,7 +27,7 @@ successfully contribute to the project. If any of the terms used are unfamiliar
 to you please do a quick search and then ask any of the contributors for
 assistance.
 
-* Fork the Imageworks OpenColorIO repository
+* Fork the ASWF OpenColorIO repository
 * Activate Travis-CI and Appveyor for your fork
 * Clone your fork to your local workspace::
 
