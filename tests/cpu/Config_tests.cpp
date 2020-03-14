@@ -181,6 +181,36 @@ OCIO_ADD_TEST(Config, simple_config)
     OCIO_CHECK_NO_THROW(config->sanityCheck());
 }
 
+OCIO_ADD_TEST(Config, simple_config_with_duplicates)
+{
+
+    constexpr char SIMPLE_PROFILE[] =
+        "ocio_profile_version: 2\n"
+        "search_path: \n"
+        "roles:\n"
+        "  default: raw\n"
+        "file_rules:\n"
+        "  - !<Rule> {name: Default, colorspace: default}\n"
+        "displays:\n"
+        "  Disp1:\n"
+        "    - !<View> {name: View1, colorspace: raw}\n"
+        "active_displays: []\n"
+        "active_views: []\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw_duplicated\n"
+        "    name: raw\n"
+        "\n";
+
+    std::istringstream is;
+    is.str(SIMPLE_PROFILE);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is),
+                              OCIO::Exception,
+                              "Key-value pair with key 'name' "
+                              "specified more than once. ");
+}
+
 OCIO_ADD_TEST(Config, roles)
 {
 
