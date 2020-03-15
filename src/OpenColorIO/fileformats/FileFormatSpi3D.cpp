@@ -128,6 +128,10 @@ CachedFileRcPtr LocalFileFormat::read(
     float redValue, greenValue, blueValue;
 
     int entriesRemaining = rSize * gSize * bSize;
+    int checkDuplication[entriesRemaining];
+    for(int i = 0; i < entriesRemaining - 1; i++){
+        checkDuplication[i] = false;
+    }
     Array & lutArray = lut3d->getArray();
     unsigned long numVal = lutArray.getNumValues();
     while (istream.good() && entriesRemaining > 0)
@@ -168,12 +172,15 @@ CachedFileRcPtr LocalFileFormat::read(
                 os << ") that falls outside of the cube.";
                 throw Exception(os.str().c_str());
             }
-
+            
             lutArray[index+0] = redValue;
             lutArray[index+1] = greenValue;
             lutArray[index+2] = blueValue;
-
-            entriesRemaining--;
+            if (checkDuplication[index] == false){
+                entriesRemaining--;
+                checkDuplication[index] = ture;
+            }
+            
         }
     }
 
