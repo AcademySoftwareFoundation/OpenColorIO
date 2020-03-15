@@ -8,8 +8,7 @@ Introduction
 ============
 
 OpenColorIO (OCIO) is a complete color management solution geared towards motion
-picture production with an emphasis on visual effects and computer animation. As
-such, OCIO helps enforce a color management methodology that is required for the
+picture production with an emphasis on visual effects and computer animation. OCIO provides a straightforward and consistent user experience across all supporting applications while allowing for sophisticated back-end configuration options suitable for high-end production usage . Assuch, OCIO helps enforce a color management methodology that is required for the
 high fidelity color imaging in modern computer graphics. This section introduces
 those concepts and general workflow practices. Additional information can be
 found in Jeremy Selan's Cinematic Color `document <http://cinematiccolor.org/>`_.
@@ -18,6 +17,8 @@ While OCIO is a color management library, it's only knowledge of color science
 comes from it's execution of the transforms defined in the OCIO configuration
 file. These transforms are either defined by the end user in a custom OCIO
 config or inherited from the publicly available configs.
+
+OCIO represents the culmination of years of production experience earned on such films as SpiderMan 2 (2004), Surf’s Up (2007), Cloudy with a Chance of Meatballs (2009), Alice in Wonderland (2010), and many more. OpenColorIO is natively supported in commercial applications like Katana, Mari, Nuke, Silhouette FX, and others.
 
 By specifying your desired ``config.ocio`` Config file in the local environment
 all OCIO compatible applications and software libraries will be able to see your
