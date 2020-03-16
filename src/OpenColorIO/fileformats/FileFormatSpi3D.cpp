@@ -229,4 +229,3 @@ FileFormat * CreateFileFormatSpi3D()
 }
 
 } // namespace OCIO_NAMESPACE
-
