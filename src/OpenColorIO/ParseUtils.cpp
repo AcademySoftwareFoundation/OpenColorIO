@@ -309,7 +309,7 @@ CDLStyle CDLStyleFromString(const char * style)
 {
     if (style && *style)
     {
-        const std::string str = pystring::lower(style);
+        const std::string str = StringUtils::Lower(style);
         if      (str == "asc")     return CDL_ASC;
         else if (str == "noclamp") return CDL_NO_CLAMP;
     }
