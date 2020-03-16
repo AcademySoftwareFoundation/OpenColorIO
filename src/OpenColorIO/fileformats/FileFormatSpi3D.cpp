@@ -178,7 +178,7 @@ CachedFileRcPtr LocalFileFormat::read(
             lutArray[index+1] = greenValue;
             lutArray[index+2] = blueValue;
             
-            if(ifDuplicated[index] = false){
+            if(ifDuplicated[index] == false){
                 entriesRemaining--;
                 ifDuplicated[index] = true;
             }
