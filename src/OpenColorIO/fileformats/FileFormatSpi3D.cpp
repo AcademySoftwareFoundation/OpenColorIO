@@ -3,6 +3,7 @@
 
 #include <cstdio>
 #include <sstream>
+#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -130,10 +131,7 @@ CachedFileRcPtr LocalFileFormat::read(
     int entriesRemaining = rSize * gSize * bSize;
     Array & lutArray = lut3d->getArray(); 
     unsigned long numVal = lutArray.getNumValues();
-    bool ifDuplicated[(int)numVal];
-    for(int i = 0; i < (int)numVal - 1; i++){
-        ifDuplicated[i] = false;
-    }
+    std::vector<boolean> ifDuplicated(numVal, false);
     while (istream.good() && entriesRemaining > 0)
     {
         istream.getline(lineBuffer, MAX_LINE_SIZE);
