@@ -181,7 +181,7 @@ OCIO_ADD_TEST(Config, simple_config)
     OCIO_CHECK_NO_THROW(config->sanityCheck());
 }
 
-OCIO_ADD_TEST(Config, simple_config_with_duplicates)
+OCIO_ADD_TEST(Config, simple_config_with_duplicate)
 {
 
     constexpr char SIMPLE_PROFILE[] =
