@@ -186,7 +186,7 @@ OCIO_ADD_TEST(Config, simple_config_with_duplicates)
 
     constexpr char SIMPLE_PROFILE[] =
         "ocio_profile_version: 2\n"
-        "search_path: \n"
+        "search_path: luts\n"
         "roles:\n"
         "  default: raw\n"
         "file_rules:\n"
@@ -205,10 +205,8 @@ OCIO_ADD_TEST(Config, simple_config_with_duplicates)
     std::istringstream is;
     is.str(SIMPLE_PROFILE);
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is),
-                              OCIO::Exception,
-                              "Key-value pair with key 'name' "
-                              "specified more than once. ");
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                          "Key-value pair with key 'name' specified more than once. ");
 }
 
 OCIO_ADD_TEST(Config, roles)

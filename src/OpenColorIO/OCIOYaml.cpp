@@ -2,7 +2,6 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <cstring>
-
 #include <OpenColorIO/OpenColorIO.h>
 #include <unordered_set>
 
@@ -273,14 +272,14 @@ inline void throwValueError(const std::string & nodeName,
 
 // Duplicate Checker
 
-inline void checkDuplicates(const YAML::Node& node)
+inline void CheckDuplicates(const YAML::Node & node)
 {
     std::string key;
     std::unordered_set<std::string> keyset;
 
     for (const auto & iter : node)
     {
-        const YAML::Node& first = iter.first;
+        const YAML::Node & first = iter.first;
         load(first, key);
         if (keyset.find(key) == keyset.end())
             keyset.insert(key);
@@ -2033,7 +2032,7 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs)
         throwError(node, os.str());
     }
 
-    checkDuplicates(node);
+    CheckDuplicates(node);
 
     std::string key, stringval;
     bool boolval;
