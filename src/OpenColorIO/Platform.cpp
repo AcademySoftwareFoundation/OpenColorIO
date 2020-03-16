@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <random>
 #include <sstream>
 #include <vector>
 
@@ -9,9 +10,9 @@
 #include "Platform.h"
 
 #ifndef _WIN32
-#include <chrono>
-#include <random>
+#include <strings.h>
 #endif
+
 
 namespace OCIO_NAMESPACE
 {
@@ -31,6 +32,7 @@ void SetEnvVariable(const char * name, const char * value)
 
 namespace Platform
 {
+
 void Getenv (const char * name, std::string & value)
 {
 #ifdef _WIN32
@@ -47,7 +49,7 @@ void Getenv (const char * name, std::string & value)
 #else
     const char* val = ::getenv(name);
     value = (val && *val) ? val : "";
-#endif 
+#endif
 }
 
 void Setenv (const char * name, const std::string & value)
@@ -56,7 +58,7 @@ void Setenv (const char * name, const std::string & value)
     _putenv_s(name, value.c_str());
 #else
     ::setenv(name, value.c_str(), 1);
-#endif 
+#endif
 }
 
 int Strcasecmp(const char * str1, const char * str2)
@@ -77,11 +79,10 @@ int Strncasecmp(const char * str1, const char * str2, size_t n)
 #endif
 }
 
-void* AlignedMalloc(size_t size, size_t alignment)
+void * AlignedMalloc(size_t size, size_t alignment)
 {
 #ifdef _WIN32
-    void* memBlock = _aligned_malloc(size, alignment);
-    return memBlock;
+    return _aligned_malloc(size, alignment);
 #else
     void* memBlock = 0x0;
     if (!posix_memalign(&memBlock, alignment, size)) return memBlock;
@@ -98,13 +99,30 @@ void AlignedFree(void* memBlock)
 #endif
 }
 
-void CreateTempFilename(std::string & filename, const std::string & filenameExt)
+namespace
 {
-    // Note: Because of security issue, tmpnam could not be used.
+
+int GenerateRandomNumber()
+{
+    // Note: Read https://isocpp.org/files/papers/n3551.pdf for details.
+
+    static std::mt19937 engine{};
+    static std::uniform_int_distribution<> dist{};
+
+    return dist(engine);
+}
+
+}
+
+std::string CreateTempFilename(const std::string & filenameExt)
+{
+    std::string filename;
 
 #ifdef _WIN32
 
-    char tmpFilename[L_tmpnam];
+    // Note: Because of security issue, tmpnam could not be used.
+
+    char tmpFilename[L_tmpnam_s];
     if(tmpnam_s(tmpFilename))
     {
         throw Exception("Could not create a temporary file.");
@@ -114,22 +132,19 @@ void CreateTempFilename(std::string & filename, const std::string & filenameExt)
 
 #else
 
+    // Linux flavors must have a /tmp directory.
     std::stringstream ss;
-    ss << "/tmp/ocio";
-
-    // Obtain a seed from the system clock.
-    const unsigned seed 
-        = (unsigned)std::chrono::system_clock::now().time_since_epoch().count();
-    // Use the standard mersenne_twister_engine.
-    std::mt19937 generator(seed);
-    ss << generator();
+    ss << "/tmp/ocio_" << GenerateRandomNumber();
 
     filename = ss.str();
 
 #endif
 
     filename += filenameExt;
+
+    return filename;
 }
+
 
 
 } // Platform

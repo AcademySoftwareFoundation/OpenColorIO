@@ -5,10 +5,10 @@
 
 #include "FileRules.cpp"
 
-#include "pystring/pystring.h"
 #include "UnitTest.h"
 #include "UnitTestLogUtils.h"
 #include "UnitTestUtils.h"
+
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -421,266 +421,288 @@ OCIO_ADD_TEST(FileRules, rules_filepattern)
 
     // Add pattern + extension rule.
     OCIO_CHECK_NO_THROW(rules->insertRule(0, g_name, "cs1", "*", "[eE][xX][r]"));
+    config->setFileRules(rules);
 
     size_t rulePosition = 0;
-    rules->getColorSpaceFromFilepath(*config, "/An/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/Arbitrary/Path/MyFile.eXr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/Arbitrary/Path/MyFile.eXr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/Arbitrary/Path/MyFile.EXR", rulePosition);
+    config->getColorSpaceFromFilepath("/An/Arbitrary/Path/MyFile.EXR", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule. R must be lower case.
-    rules->getColorSpaceFromFilepath(*config, "/An/Arbitrary/Path/MyFileexr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/Arbitrary/Path/MyFileexr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/Arbitrary/Path/MyFile.jpeg", rulePosition);
+    config->getColorSpaceFromFilepath("/An/Arbitrary/Path/MyFile.jpeg", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/Arbitrary.exr/Path/MyFileexr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/Arbitrary.exr/Path/MyFileexr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "gamma"));
-    rules->getColorSpaceFromFilepath(*config, "/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "*gamma"));
-    rules->getColorSpaceFromFilepath(*config, "/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "gamma*"));
-    rules->getColorSpaceFromFilepath(*config, "/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "*gamma*"));
-    rules->getColorSpaceFromFilepath(*config, "/An/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/An/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/GaMma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/GaMma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gammaArbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gammaArbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "*ga?ma*"));
-    rules->getColorSpaceFromFilepath(*config, "/An/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/An/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/GaMma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/GaMma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gammaArbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gammaArbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gatmaArbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gatmaArbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gatmaArbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gatmaArbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gatttttttmaArbitrary/Path/MyFile.exr",
-                                     rulePosition);
+    config->getColorSpaceFromFilepath("/An/gatttttttmaArbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/gamaArbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gamaArbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "*ga*ma*"));
-    rules->getColorSpaceFromFilepath(*config, "/An/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/An/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/GaMma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/GaMma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gammaArbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gammaArbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gatmaArbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gatmaArbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gatmaArbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gatmaArbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gatttttttmaArbitrary/Path/MyFile.exr",
-                                     rulePosition);
+    config->getColorSpaceFromFilepath("/An/gatttttttmaArbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gamaArbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gamaArbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "*g?mm*"));
-    rules->getColorSpaceFromFilepath(*config, "/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gImma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gImma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gImmaaa/Arbitrary/Path/MyFile.exr",
-                                     rulePosition);
+    config->getColorSpaceFromFilepath("/An/gImmaaa/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "*g*mm*"));
-    rules->getColorSpaceFromFilepath(*config, "/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gImma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gImma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gIIImmaaa/Arbitrary/Path/MyFile.exr",
-                                     rulePosition);
+    config->getColorSpaceFromFilepath("/An/gIIImmaaa/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gmm/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gmm/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "*g?m?a*"));
-    rules->getColorSpaceFromFilepath(*config, "/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gImma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gImma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gImIa/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gImIa/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/gIIImmaaa/Arbitrary/Path/MyFile.exr",
-                                     rulePosition);
+    config->getColorSpaceFromFilepath("/An/gIIImmaaa/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "*g[a]mma*"));
-    rules->getColorSpaceFromFilepath(*config, "/An/gmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/An/gmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gbmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gbmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "*g[!a]mma*"));
-    rules->getColorSpaceFromFilepath(*config, "/An/gmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/An/gmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/gbmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gbmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "*g[abcd]mma*"));
-    rules->getColorSpaceFromFilepath(*config, "/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gbmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gbmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gcmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gcmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gdmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gdmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/gemma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gemma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/gabmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gabmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "*g[!abcd]mma*"));
-    rules->getColorSpaceFromFilepath(*config, "/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/gbmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gbmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/gcmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gcmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/gdmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gdmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/gmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/gemma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gemma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gabmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gabmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/gefmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gefmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "*g[a-d]mma*"));
-    rules->getColorSpaceFromFilepath(*config, "/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/An/gamma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gbmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gbmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gcmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gcmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gdmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gdmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "/An/gmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/gemma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("/An/gemma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/gabmma/Arbitrary/Path/MyFile.exr",
-                                     rulePosition);
+    config->getColorSpaceFromFilepath("/An/gabmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "/An/gefmma/Arbitrary/Path/MyFile.exr",
-                                     rulePosition);
+    config->getColorSpaceFromFilepath("/An/gefmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "g[!a-d]mma*"));
-    rules->getColorSpaceFromFilepath(*config, "gamma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("gamma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "gbmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("gbmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "gcmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("gcmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "gdmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("gdmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "gmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("gmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "gemma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("gemma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "gabmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("gabmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
-    rules->getColorSpaceFromFilepath(*config, "gefmma/Arbitrary/Path/MyFile.exr", rulePosition);
+    config->getColorSpaceFromFilepath("gefmma/Arbitrary/Path/MyFile.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "g[!a-d][\\*][e-g]mma"));
-    rules->getColorSpaceFromFilepath(*config, "ge*fmma.exr", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("ge*fmma.exr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
 
     // Add pattern + extension rule.
     OCIO_CHECK_NO_THROW(rules->insertRule(0, "rule0", "cs1", "*", "jpg"));
-    rules->getColorSpaceFromFilepath(*config, "test.jpg", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("test.jpg", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "test.Jpg", rulePosition);
+    config->getColorSpaceFromFilepath("test.Jpg", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "test.jpG", rulePosition);
+    config->getColorSpaceFromFilepath("test.jpG", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "test.Jpeg", rulePosition);
+    config->getColorSpaceFromFilepath("test.Jpeg", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 2); // Default rule.
 
     OCIO_CHECK_NO_THROW(rules->setExtension(0, "jp[gG]"));
-    rules->getColorSpaceFromFilepath(*config, "test.jpg", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("test.jpg", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "test.jpG", rulePosition);
+    config->getColorSpaceFromFilepath("test.jpG", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
-    rules->getColorSpaceFromFilepath(*config, "test.Jpg", rulePosition);
+    config->getColorSpaceFromFilepath("test.Jpg", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 2); // Default rule.
 
     OCIO_CHECK_NO_THROW(rules->setExtension(0, "[Jj]pg"));
-    rules->getColorSpaceFromFilepath(*config, "/mnt/media/image.Jpg", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/mnt/media/image.Jpg", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
 
     OCIO_CHECK_NO_THROW(rules->setExtension(0, "?pg"));
-    rules->getColorSpaceFromFilepath(*config, "/mnt/media/image.Jpg", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/mnt/media/image.Jpg", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
 
     OCIO_CHECK_NO_THROW(rules->setExtension(0, "jpg"));
-    rules->getColorSpaceFromFilepath(*config, "/mnt/media/image.Jpg", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/mnt/media/image.Jpg", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
 
     OCIO_CHECK_NO_THROW(rules->setExtension(0, "JPG"));
-    rules->getColorSpaceFromFilepath(*config, "/mnt/media/image.Jpg", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/mnt/media/image.Jpg", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
 
     OCIO_CHECK_NO_THROW(rules->setExtension(0, "jp[gG]"));
-    rules->getColorSpaceFromFilepath(*config, "/mnt/media/image.Jpg", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/mnt/media/image.Jpg", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 2);
 
     OCIO_CHECK_NO_THROW(rules->setExtension(0, "?PG"));
-    rules->getColorSpaceFromFilepath(*config, "/mnt/media/image.Jpg", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/mnt/media/image.Jpg", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 2);
 
     OCIO_CHECK_NO_THROW(rules->setExtension(0, "jP*"));
-    rules->getColorSpaceFromFilepath(*config, "/mnt/media/image.Jpg", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/mnt/media/image.Jpg", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 2);
 
     OCIO_CHECK_NO_THROW(rules->setExtension(0, "*g"));
-    rules->getColorSpaceFromFilepath(*config, "/mnt/media/image.Jpg", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/mnt/media/image.Jpg", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "*[^]*"));
-    rules->getColorSpaceFromFilepath(*config, "/mnt/me^ia/image.Jpg", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/mnt/me^ia/image.Jpg", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
 
-    rules->getColorSpaceFromFilepath(*config, "/mnt/media/image.Jpg", rulePosition);
+    config->getColorSpaceFromFilepath("/mnt/media/image.Jpg", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 2);
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "*(name)*"));
-    rules->getColorSpaceFromFilepath(*config, "/mnt/(name)/image.Jpg", rulePosition);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath("/mnt/(name)/image.Jpg", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
 }
 
@@ -694,21 +716,22 @@ OCIO_ADD_TEST(FileRules, rules_regex)
 
     // Add pattern + extension rule.
     OCIO_CHECK_NO_THROW(rules->insertRule(0, g_name, "cs1", R"((.*)(\bmine\b|\byours\b)(.*))"));
+    config->setFileRules(rules);
 
     size_t rulePosition = 0;
-    rules->getColorSpaceFromFilepath(*config, R"(mnt/mine/media/image.jpg)", rulePosition);
+    config->getColorSpaceFromFilepath(R"(mnt/mine/media/image.jpg)", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
 
-    rules->getColorSpaceFromFilepath(*config, R"(mnt/miner/media/image.jpg)", rulePosition);
+    config->getColorSpaceFromFilepath(R"(mnt/miner/media/image.jpg)", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1);
 
-    rules->getColorSpaceFromFilepath(*config, R"(yours/mnt/media/image.jpg)", rulePosition);
+    config->getColorSpaceFromFilepath(R"(yours/mnt/media/image.jpg)", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
 
-    rules->getColorSpaceFromFilepath(*config, R"(mnt\media\yours\image.jpg)", rulePosition);
+    config->getColorSpaceFromFilepath(R"(mnt\media\yours\image.jpg)", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
 
-    rules->getColorSpaceFromFilepath(*config, R"(mine/media/image.jpg)", rulePosition);
+    config->getColorSpaceFromFilepath(R"(mine/media/image.jpg)", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 0);
 
     // The error details may be different on each platform.
@@ -726,46 +749,55 @@ OCIO_ADD_TEST(FileRules, rules_long_filepattern)
 
     // Add pattern + extension rule.
     OCIO_CHECK_NO_THROW(rules->insertRule(0, g_name, "cs1", "*", "exr"));
+    config->setFileRules(rules);
 
     // The file path existence is not tested
     constexpr char arbitraryPath[] = "/Users/hodoulp/Documents/work/Color Management/ocio-images"
                                      ".1.0v4/spi-vfx/marci_512_srgb.exr";
 
     size_t rulePos = rules->getNumEntries();
-    rules->getColorSpaceFromFilepath(*config, arbitraryPath, rulePos);
+    config->getColorSpaceFromFilepath(arbitraryPath, rulePos);
     OCIO_CHECK_EQUAL(rulePos, 0);
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "*Col?r*"));
-    rules->getColorSpaceFromFilepath(*config, arbitraryPath, rulePos);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath(arbitraryPath, rulePos);
     OCIO_CHECK_EQUAL(rulePos, 0);
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "*****************************************************"
                                               "*******"));
-    rules->getColorSpaceFromFilepath(*config, arbitraryPath, rulePos);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath(arbitraryPath, rulePos);
     OCIO_CHECK_EQUAL(rulePos, 0);
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "*?"));
-    rules->getColorSpaceFromFilepath(*config, arbitraryPath, rulePos);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath(arbitraryPath, rulePos);
     OCIO_CHECK_EQUAL(rulePos, 0);
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "?*"));
-    rules->getColorSpaceFromFilepath(*config, arbitraryPath, rulePos);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath(arbitraryPath, rulePos);
     OCIO_CHECK_EQUAL(rulePos, 0);
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "?*"));
-    rules->getColorSpaceFromFilepath(*config, arbitraryPath, rulePos);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath(arbitraryPath, rulePos);
     OCIO_CHECK_EQUAL(rulePos, 0);
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "*?*"));
-    rules->getColorSpaceFromFilepath(*config, arbitraryPath, rulePos);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath(arbitraryPath, rulePos);
     OCIO_CHECK_EQUAL(rulePos, 0);
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "*.1.0v4*"));
-    rules->getColorSpaceFromFilepath(*config, arbitraryPath, rulePos);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath(arbitraryPath, rulePos);
     OCIO_CHECK_EQUAL(rulePos, 0);
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "*.1.*"));
-    rules->getColorSpaceFromFilepath(*config, arbitraryPath, rulePos);
+    config->setFileRules(rules);
+    config->getColorSpaceFromFilepath(arbitraryPath, rulePos);
     OCIO_CHECK_EQUAL(rulePos, 0);
 }
 
@@ -778,32 +810,33 @@ OCIO_ADD_TEST(FileRules, rules_test)
     auto rules = config->getFileRules()->createEditableCopy();
     rules->insertRule(0, OCIO::FileRuleUtils::ParseName, nullptr, nullptr);
     rules->insertRule(1, "dpx file", "raw", "", "dpx");
+    config->setFileRules(rules);
 
     size_t rulePos = 0;
-    const char * colorSpace;
-    colorSpace = rules->getColorSpaceFromFilepath(*config, "/mnt/user/show/img_cs1.dpx", rulePos);
+    const char * colorSpace = nullptr;
+    colorSpace = config->getColorSpaceFromFilepath("/mnt/user/show/img_cs1.dpx", rulePos);
     OCIO_CHECK_EQUAL(rulePos, 0);
     OCIO_CHECK_ASSERT(colorSpace != nullptr && 0 == strcmp(colorSpace, "cs1"));
 
-    colorSpace = rules->getColorSpaceFromFilepath(*config, "show/cs2/img_cs1.exr", rulePos);
+    colorSpace = config->getColorSpaceFromFilepath("show/cs2/img_cs1.exr", rulePos);
     OCIO_CHECK_EQUAL(rulePos, 0);
     // The first color space name from the right.
     OCIO_CHECK_ASSERT(colorSpace != nullptr && 0 == strcmp(colorSpace, "cs1"));
 
-    colorSpace = rules->getColorSpaceFromFilepath(*config, "show/cs1/img_other_cs1.exr", rulePos);
+    colorSpace = config->getColorSpaceFromFilepath("show/cs1/img_other_cs1.exr", rulePos);
     OCIO_CHECK_EQUAL(rulePos, 0);
     // If there are 2 cs names ending the same position, the longest is used.
     OCIO_CHECK_ASSERT(colorSpace != nullptr && 0 == strcmp(colorSpace, "other_cs1"));
 
-    colorSpace = rules->getColorSpaceFromFilepath(*config, "show/other_cs1/img_cs1.exr", rulePos);
+    colorSpace = config->getColorSpaceFromFilepath("show/other_cs1/img_cs1.exr", rulePos);
     OCIO_CHECK_EQUAL(rulePos, 0);
     OCIO_CHECK_ASSERT(colorSpace != nullptr && 0 == strcmp(colorSpace, "cs1"));
 
-    colorSpace = rules->getColorSpaceFromFilepath(*config, "/mnt/user/unknown.dpx", rulePos);
+    colorSpace = config->getColorSpaceFromFilepath("/mnt/user/unknown.dpx", rulePos);
     OCIO_CHECK_EQUAL(rulePos, 1);
     OCIO_CHECK_ASSERT(colorSpace != nullptr && 0 == strcmp(colorSpace, "raw"));
 
-    colorSpace = rules->getColorSpaceFromFilepath(*config, "/mnt/user/unknown.jpg", rulePos);
+    colorSpace = config->getColorSpaceFromFilepath("/mnt/user/unknown.jpg", rulePos);
     OCIO_CHECK_EQUAL(rulePos, 2); // The default rule. 
     OCIO_CHECK_ASSERT(colorSpace != nullptr && 0 == strcmp(colorSpace, OCIO::ROLE_DEFAULT));
 }
@@ -818,22 +851,23 @@ OCIO_ADD_TEST(FileRules, rules_priority)
     rules->insertRule(0, "pattern dpx file", "raw", "*cs2*", "dpx");
     rules->insertRule(1, OCIO::FileRuleUtils::ParseName, nullptr, nullptr);
     rules->insertRule(2, "regex rule", "cs5", ".*cs5.dpx");
+    config->setFileRules(rules);
 
     size_t rulePos = 0;
     const char * colorSpace;
-    colorSpace = rules->getColorSpaceFromFilepath(*config, "/mnt/media/cs2.dpx", rulePos);
+    colorSpace = config->getColorSpaceFromFilepath("/mnt/media/cs2.dpx", rulePos);
     OCIO_CHECK_EQUAL(rulePos, 0);
     OCIO_CHECK_ASSERT(colorSpace != nullptr && 0 == strcmp(colorSpace, "raw"));
 
-    colorSpace = rules->getColorSpaceFromFilepath(*config, "/mnt/media/cs2.exr", rulePos);
+    colorSpace = config->getColorSpaceFromFilepath("/mnt/media/cs2.exr", rulePos);
     OCIO_CHECK_EQUAL(rulePos, 1);
     OCIO_CHECK_ASSERT(colorSpace != nullptr && 0 == strcmp(colorSpace, "cs2"));
 
-    colorSpace = rules->getColorSpaceFromFilepath(*config, "/mnt/media/cs5.dpx", rulePos);
+    colorSpace = config->getColorSpaceFromFilepath("/mnt/media/cs5.dpx", rulePos);
     OCIO_CHECK_EQUAL(rulePos, 2);
     OCIO_CHECK_ASSERT(colorSpace != nullptr && 0 == strcmp(colorSpace, "cs5"));
 
-    colorSpace = rules->getColorSpaceFromFilepath(*config, "/mnt/media/cs5.DPX", rulePos);
+    colorSpace = config->getColorSpaceFromFilepath("/mnt/media/cs5.DPX", rulePos);
     OCIO_CHECK_EQUAL(rulePos, 3);
     OCIO_CHECK_ASSERT(colorSpace != nullptr && 0 == strcmp(colorSpace, OCIO::ROLE_DEFAULT));
 }
@@ -1042,8 +1076,10 @@ colorspaces:
         // 'Default' does not exist, 'Raw' is not a data color-space, so a new color-space has
         // been created with a unique name.
         OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
-        OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::COLORSPACE_ALL), 4);
-        OCIO_CHECK_EQUAL(std::string(config->getColorSpaceNameByIndex(OCIO::COLORSPACE_ALL, 3)),
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                   OCIO::COLORSPACE_ALL), 4);
+        OCIO_CHECK_EQUAL(std::string(config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                                      OCIO::COLORSPACE_ALL, 3)),
                          "added_default_rule_colorspace");
     }
 

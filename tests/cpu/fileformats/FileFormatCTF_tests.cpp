@@ -71,7 +71,7 @@ OCIO_ADD_TEST(FileFormatCTF, clf_spec)
         auto lut = OCIO::DynamicPtrCast<const OCIO::Lut1DOpData>(opList[0]);
         OCIO_REQUIRE_ASSERT(lut);
         OCIO_CHECK_EQUAL(lut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
-        OCIO::StringVec desc;
+        StringUtils::StringVec desc;
         GetElementsValues(opList[0]->getFormatMetadata().getChildrenElements(),
                           OCIO::TAG_DESCRIPTION, desc);
         OCIO_REQUIRE_EQUAL(desc.size(), 1);
@@ -95,7 +95,7 @@ OCIO_ADD_TEST(FileFormatCTF, clf_spec)
         auto lut = OCIO::DynamicPtrCast<const OCIO::Lut3DOpData>(opList[0]);
         OCIO_REQUIRE_ASSERT(lut);
         OCIO_CHECK_EQUAL(lut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F16);
-        OCIO::StringVec desc;
+        StringUtils::StringVec desc;
         GetElementsValues(opList[0]->getFormatMetadata().getChildrenElements(),
                           OCIO::TAG_DESCRIPTION, desc);
         OCIO_REQUIRE_EQUAL(desc.size(), 1);
@@ -122,7 +122,7 @@ OCIO_ADD_TEST(FileFormatCTF, clf_spec)
         OCIO_REQUIRE_ASSERT(mat);
         OCIO_CHECK_EQUAL(mat->getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
         OCIO_CHECK_EQUAL(mat->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
-        OCIO::StringVec desc;
+        StringUtils::StringVec desc;
         GetElementsValues(opList[0]->getFormatMetadata().getChildrenElements(),
                           OCIO::TAG_DESCRIPTION, desc);
         OCIO_REQUIRE_EQUAL(desc.size(), 1);
@@ -156,7 +156,7 @@ OCIO_ADD_TEST(FileFormatCTF, clf_spec)
         auto lut = OCIO::DynamicPtrCast<const OCIO::Lut1DOpData>(opList[1]);
         OCIO_REQUIRE_ASSERT(lut);
         OCIO_CHECK_EQUAL(lut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F16);
-        OCIO::StringVec desc;
+        StringUtils::StringVec desc;
         GetElementsValues(opList[1]->getFormatMetadata().getChildrenElements(),
                           OCIO::TAG_DESCRIPTION, desc);
         OCIO_REQUIRE_EQUAL(desc.size(), 1);
@@ -185,7 +185,7 @@ OCIO_ADD_TEST(FileFormatCTF, lut_1d)
         auto pLut = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[0]);
         OCIO_REQUIRE_ASSERT(pLut);
 
-        OCIO::StringVec desc;
+        StringUtils::StringVec desc;
         GetElementsValues(pLut->getFormatMetadata().getChildrenElements(),
                           OCIO::TAG_DESCRIPTION, desc);
         OCIO_REQUIRE_EQUAL(desc.size(), 1);
@@ -880,7 +880,7 @@ OCIO_ADD_TEST(FileFormatCTF, check_utf8)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO::StringVec descList;
+    StringUtils::StringVec descList;
     GetElementsValues(opList[0]->getFormatMetadata().getChildrenElements(),
                       OCIO::TAG_DESCRIPTION, descList);
     OCIO_REQUIRE_EQUAL(descList.size(), 1);
@@ -914,14 +914,12 @@ OCIO_ADD_TEST(FileFormatCTF, error_checker)
         OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
         OCIO_REQUIRE_ASSERT((bool)cachedFile);
 
-        OCIO::StringVec parts;
-        pystring::split(pystring::rstrip(guard.output()), parts, "\n");
-
+        const StringUtils::StringVec parts = StringUtils::SplitByLines(StringUtils::RightTrim(guard.output()));
         OCIO_REQUIRE_EQUAL(parts.size(), 3);
 
         for (size_t i = 0; i < parts.size(); ++i)
         {
-            OCIO_CHECK_ASSERT(-1 != pystring::find(parts[i], ErrorOutputs[i]));
+            OCIO_CHECK_NE(std::string::npos, StringUtils::Find(parts[i], ErrorOutputs[i]));
         }
     }
 
@@ -1046,7 +1044,7 @@ OCIO_ADD_TEST(FileFormatCTF, error_checker_for_difficult_xml)
     OCIO::LocalCachedFileRcPtr cachedFile;
 
     {
-        constexpr static const char ErrorOutputs[11][1024] = 
+        constexpr char ErrorOutputs[11][1024] = 
         {
             "(10): Unrecognized element 'Ignore' where its parent is 'ProcessList' (8): Unknown element",
             "(22): Unrecognized attribute 'id' of 'Array'",
@@ -1068,14 +1066,12 @@ OCIO_ADD_TEST(FileFormatCTF, error_checker_for_difficult_xml)
         OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
         OCIO_REQUIRE_ASSERT((bool)cachedFile);
 
-        OCIO::StringVec parts;
-        pystring::split(pystring::rstrip(guard.output()), parts, "\n");
-
+        const StringUtils::StringVec parts = StringUtils::SplitByLines(StringUtils::RightTrim(guard.output()));
         OCIO_REQUIRE_EQUAL(parts.size(), 11);
 
         for (size_t i = 0; i < parts.size(); ++i)
         {
-            OCIO_CHECK_ASSERT(-1 != pystring::find(parts[i], ErrorOutputs[i]));
+            OCIO_CHECK_NE(std::string::npos, StringUtils::Find(parts[i], ErrorOutputs[i]));
         }
     }
 
@@ -1945,7 +1941,7 @@ OCIO_ADD_TEST(FileFormatCTF, cdl)
     OCIO_CHECK_EQUAL(pCDL->getID(), std::string("look 1"));
     OCIO_CHECK_EQUAL(pCDL->getName(), std::string("cdl"));
 
-    OCIO::StringVec descriptions;
+    StringUtils::StringVec descriptions;
     GetElementsValues(pCDL->getFormatMetadata().getChildrenElements(),
                       OCIO::TAG_DESCRIPTION, descriptions);
 
@@ -2257,7 +2253,7 @@ OCIO_ADD_TEST(FileFormatCTF, clf_1)
     // First one is a CDL
     auto cdlOpData = std::dynamic_pointer_cast<const OCIO::CDLOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(cdlOpData);
-    OCIO::StringVec desc;
+    StringUtils::StringVec desc;
     GetElementsValues(cdlOpData->getFormatMetadata().getChildrenElements(),
                       OCIO::TAG_DESCRIPTION, desc);
 
@@ -2488,7 +2484,7 @@ OCIO_ADD_TEST(Log, load_log10)
     OCIO::ConstOpDataRcPtr op = fileOps[0];
     OCIO::ConstLogOpDataRcPtr log = std::dynamic_pointer_cast<const OCIO::LogOpData>(op);
     OCIO_REQUIRE_ASSERT(log);
-    OCIO::StringVec desc;
+    StringUtils::StringVec desc;
     GetElementsValues(log->getFormatMetadata().getChildrenElements(),
                       OCIO::TAG_DESCRIPTION, desc);
     OCIO_REQUIRE_EQUAL(desc.size(), 1);
@@ -5361,20 +5357,20 @@ OCIO_ADD_TEST(CTFTransform, lut1d_attributes_ctf)
     OCIO_CHECK_EQUAL(line, R"(<ProcessList version="1.4" id="UIDLUT42">)");
 
     OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(pystring::strip(line),
+    OCIO_CHECK_EQUAL(StringUtils::Trim(line),
                      "<LUT1D id=\"lut01\" name=\"test-lut\" inBitDepth=\"32f\""
                      " outBitDepth=\"10i\""
                      " halfDomain=\"true\" rawHalfs=\"true\" hueAdjust=\"dw3\">");
 
     OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(pystring::strip(line),
+    OCIO_CHECK_EQUAL(StringUtils::Trim(line),
                      R"(<Array dim="65536 3">)");
 
     for (unsigned int i = 0; i <= 1000; ++i)
     {
         OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
     }
-    OCIO_CHECK_EQUAL(pystring::strip(line),
+    OCIO_CHECK_EQUAL(StringUtils::Trim(line),
                      R"(11216 11218 11220)");
 }
 

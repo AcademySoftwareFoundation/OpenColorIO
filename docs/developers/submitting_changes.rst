@@ -27,7 +27,7 @@ successfully contribute to the project. If any of the terms used are unfamiliar
 to you please do a quick search and then ask any of the contributors for
 assistance.
 
-* Fork the Imageworks OpenColorIO repository
+* Fork the `AcademySoftwareFoundation/OpenColorIO <https://github.com/AcademySoftwareFoundation/OpenColorIO>`_ repository
 * Activate Travis-CI and Appveyor for your fork
 * Clone your fork to your local workspace::
 
@@ -42,7 +42,7 @@ assistance.
 
     git remote -v
     origin https://github.com/$USER/OpenColorIO (fetch)
-    origin https://github.com/$USER/OpenColorIO (fetch)
+    origin https://github.com/$USER/OpenColorIO (push)
     upstream https://github.com/AcademySoftwareFoundation/OpenColorIO (fetch)
     upstream https://github.com/AcademySoftwareFoundation/OpenColorIO (push)
 

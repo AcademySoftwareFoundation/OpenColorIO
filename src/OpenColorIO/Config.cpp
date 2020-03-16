@@ -12,20 +12,22 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "Display.h"
+#include "FileRules.h"
 #include "HashUtils.h"
 #include "Logging.h"
 #include "LookParse.h"
-#include "Display.h"
 #include "MathUtils.h"
 #include "Mutex.h"
+#include "OCIOYaml.h"
 #include "OpBuilders.h"
-#include "PathUtils.h"
 #include "ParseUtils.h"
+#include "PathUtils.h"
+#include "Platform.h"
 #include "PrivateTypes.h"
 #include "Processor.h"
-#include "pystring/pystring.h"
-#include "OCIOYaml.h"
-#include "Platform.h"
+#include "utils/StringUtils.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -121,7 +123,7 @@ const char* LookupEnvironment(const StringMap & env, const std::string & name)
 // (lower case role name: colorspace name)
 const char* LookupRole(const StringMap & roles, const std::string & rolename)
 {
-    StringMap::const_iterator iter = roles.find(pystring::lower(rolename));
+    StringMap::const_iterator iter = roles.find(StringUtils::Lower(rolename));
     if(iter == roles.end()) return "";
     return iter->second.c_str();
 }
@@ -234,7 +236,7 @@ public:
     // Refer to Config::Impl::refreshActiveColorSpaces() to have the implementation details.
 
     ColorSpaceSetRcPtr m_allColorSpaces; // All the color spaces (i.e. no filtering).
-    StringVec m_activeColorSpaceNames;   // A built list of active color space names.
+    StringUtils::StringVec m_activeColorSpaceNames; // A built list of active color space names.
 
     std::string m_inactiveColorSpaceNamesAPI;  // Inactive color space filter from API request. 
     std::string m_inactiveColorSpaceNamesEnv;  // Inactive color space filter from env. variable.
@@ -244,14 +246,16 @@ public:
     LookVec m_looksList;
 
     DisplayMap m_displays;
-    StringVec m_activeDisplays;
-    StringVec m_activeDisplaysEnvOverride;
-    StringVec m_activeViews;
-    StringVec m_activeViewsEnvOverride;
+    StringUtils::StringVec m_activeDisplays;
+    StringUtils::StringVec m_activeDisplaysEnvOverride;
+    StringUtils::StringVec m_activeViews;
+    StringUtils::StringVec m_activeViewsEnvOverride;
+
+    std::vector<ViewTransformRcPtr> m_viewTransforms;
 
     mutable std::string m_activeDisplaysStr;
     mutable std::string m_activeViewsStr;
-    mutable StringVec m_displayCache;
+    mutable StringUtils::StringVec m_displayCache;
 
     // Misc
     std::vector<double> m_defaultLumaCoefs;
@@ -276,7 +280,7 @@ public:
     {
         std::string activeDisplays;
         Platform::Getenv(OCIO_ACTIVE_DISPLAYS_ENVVAR, activeDisplays);
-        activeDisplays = pystring::strip(activeDisplays);
+        activeDisplays = StringUtils::Trim(activeDisplays);
         if (!activeDisplays.empty())
         {
             SplitStringEnvStyle(m_activeDisplaysEnvOverride, activeDisplays.c_str());
@@ -284,7 +288,7 @@ public:
 
         std::string activeViews;
         Platform::Getenv(OCIO_ACTIVE_VIEWS_ENVVAR, activeViews);
-        activeViews = pystring::strip(activeViews);
+        activeViews = StringUtils::Trim(activeViews);
         if (!activeViews.empty())
         {
             SplitStringEnvStyle(m_activeViewsEnvOverride, activeViews.c_str());
@@ -296,7 +300,7 @@ public:
         m_defaultLumaCoefs[2] = DEFAULT_LUMA_COEFF_B;
 
         Platform::Getenv(OCIO_INACTIVE_COLORSPACES_ENVVAR, m_inactiveColorSpaceNamesEnv);
-        m_inactiveColorSpaceNamesEnv = pystring::strip(m_inactiveColorSpaceNamesEnv);
+        m_inactiveColorSpaceNamesEnv = StringUtils::Trim(m_inactiveColorSpaceNamesEnv);
     }
 
     ~Impl() = default;
@@ -319,16 +323,15 @@ public:
             m_inactiveColorSpaceNamesEnv  = rhs.m_inactiveColorSpaceNamesEnv;
             m_inactiveColorSpaceNamesAPI  = rhs.m_inactiveColorSpaceNamesAPI;
 
-            // Deep copy the looks
+            // Deep copy the looks.
             m_looksList.clear();
             m_looksList.reserve(rhs.m_looksList.size());
             for(unsigned int i=0; i<rhs.m_looksList.size(); ++i)
             {
-                m_looksList.push_back(
-                    rhs.m_looksList[i]->createEditableCopy());
+                m_looksList.push_back(rhs.m_looksList[i]->createEditableCopy());
             }
 
-            // Assignment operator will suffice for these
+            // Assignment operator will suffice for these.
             m_roles = rhs.m_roles;
 
             m_displays = rhs.m_displays;
@@ -338,6 +341,14 @@ public:
             m_activeDisplaysEnvOverride = rhs.m_activeDisplaysEnvOverride;
             m_activeDisplaysStr = rhs.m_activeDisplaysStr;
             m_displayCache = rhs.m_displayCache;
+
+            // Deep copy view transforms.
+            m_viewTransforms.clear();
+            m_viewTransforms.reserve(rhs.m_viewTransforms.size());
+            for (const auto & vt : rhs.m_viewTransforms)
+            {
+                m_viewTransforms.push_back(vt->createEditableCopy());
+            }
 
             m_defaultLumaCoefs = rhs.m_defaultLumaCoefs;
             m_strictParsing = rhs.m_strictParsing;
@@ -359,7 +370,7 @@ public:
         return *index!=-1;
     }
 
-    std::vector<std::string> buildInactiveColorSpaceList() const;
+    StringUtils::StringVec buildInactiveColorSpaceList() const;
     void refreshActiveColorSpaces();
 
     // Any time you modify the state of the config, you must call this
@@ -388,7 +399,7 @@ public:
         const char * rname = LookupRole(m_roles, ROLE_DEFAULT);
         if (!FindColorSpaceIndex(&csindex, m_allColorSpaces, rname))
         {
-            std::string defaultCS{ "" };
+            std::string defaultCS;
             bool addNewDefault = true;
             // The default role doesn't exist so look for a color space named "raw"
             // (not case-sensitive) with isdata true.
@@ -426,7 +437,7 @@ public:
     void setInactiveColorSpaces(const char * inactiveColorSpaces)
     {
         m_inactiveColorSpaceNamesConf
-            = pystring::strip(std::string(inactiveColorSpaces ? inactiveColorSpaces : ""));
+            = StringUtils::Trim(std::string(inactiveColorSpaces ? inactiveColorSpaces : ""));
 
         // An API request must always supersede the two other lists. Filling the
         // inactiveColorSpaceNamesAPI_ list highlights the API request precedence.
@@ -575,12 +586,16 @@ void Config::sanityCheck() const
     getImpl()->m_sanitytext = "";
 
     ///// COLORSPACES
+
     StringSet existingColorSpaces;
 
-    // Confirm all ColorSpaces are valid
+    bool hasDisplayReferredColorspace = false;
+
+    // Confirm all ColorSpaces are valid.
     for(int i=0; i<getImpl()->m_allColorSpaces->getNumColorSpaces(); ++i)
     {
-        if(!getImpl()->m_allColorSpaces->getColorSpaceByIndex(i))
+        const auto cs = getImpl()->m_allColorSpaces->getColorSpaceByIndex(i);
+        if (!cs)
         {
             std::ostringstream os;
             os << "Config failed sanitycheck. ";
@@ -589,8 +604,8 @@ void Config::sanityCheck() const
             throw Exception(getImpl()->m_sanitytext.c_str());
         }
 
-        const char * name = getImpl()->m_allColorSpaces->getColorSpaceByIndex(i)->getName();
-        if(!name || strlen(name) == 0)
+        const char * name = cs->getName();
+        if (!name || !*name)
         {
             std::ostringstream os;
             os << "Config failed sanitycheck. ";
@@ -599,9 +614,9 @@ void Config::sanityCheck() const
             throw Exception(getImpl()->m_sanitytext.c_str());
         }
 
-        std::string namelower = pystring::lower(name);
+        const std::string namelower = StringUtils::Lower(name);
         StringSet::const_iterator it = existingColorSpaces.find(namelower);
-        if(it != existingColorSpaces.end())
+        if (it != existingColorSpaces.end())
         {
             std::ostringstream os;
             os << "Config failed sanitycheck. ";
@@ -611,7 +626,6 @@ void Config::sanityCheck() const
             throw Exception(getImpl()->m_sanitytext.c_str());
         }
 
-        const auto cs = getImpl()->m_allColorSpaces->getColorSpaceByIndex(i);
         ConstTransformRcPtr toTrans = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
         if (toTrans)
         {
@@ -625,9 +639,13 @@ void Config::sanityCheck() const
         }
 
         existingColorSpaces.insert(namelower);
+        if (cs->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
+        {
+            hasDisplayReferredColorspace = true;
+        }
     }
 
-    // Confirm all roles are valid
+    // Confirm all roles are valid.
     {
         for(StringMap::const_iterator iter = getImpl()->m_roles.begin(),
             end = getImpl()->m_roles.end(); iter!=end; ++iter)
@@ -658,7 +676,7 @@ void Config::sanityCheck() const
     }
 
     // Confirm all inactive color spaces exist.
-    const std::vector<std::string> inactiveColorSpaceNames
+    const StringUtils::StringVec inactiveColorSpaceNames
         = getImpl()->buildInactiveColorSpaceList();
 
     for (const auto & name : inactiveColorSpaceNames)
@@ -666,9 +684,9 @@ void Config::sanityCheck() const
         ConstColorSpaceRcPtr cs = getImpl()->m_allColorSpaces->getColorSpace(name.c_str());
         if (!cs)
         {
-            std::stringstream ss;
-            ss << "Inactive color space '" << name << "' does not exist.";
-            LogWarning(ss.str());
+            std::ostringstream os;
+            os << "Inactive color space '" << name << "' does not exist.";
+            LogWarning(os.str());
         }
     }
 
@@ -682,7 +700,7 @@ void Config::sanityCheck() const
         iter != getImpl()->m_displays.end();
         ++iter)
     {
-        std::string display = iter->first;
+        const std::string display = iter->first;
         const ViewVec & views = iter->second;
         if(views.empty())
         {
@@ -697,7 +715,7 @@ void Config::sanityCheck() const
         // Confirm view references exist.
         for(unsigned int i=0; i<views.size(); ++i)
         {
-            if(views[i].name.empty() || views[i].colorspace.empty())
+            if(views[i].m_name.empty() || views[i].m_colorspace.empty())
             {
                 std::ostringstream os;
                 os << "Config failed sanitycheck. ";
@@ -708,27 +726,57 @@ void Config::sanityCheck() const
             }
 
             int csindex = -1;
-            if(!getImpl()->findColorSpaceIndex(&csindex, views[i].colorspace))
+            if(!getImpl()->findColorSpaceIndex(&csindex, views[i].m_colorspace))
             {
                 std::ostringstream os;
                 os << "Config failed sanitycheck. ";
                 os << "The display '" << display << "' ";
-                os << "refers to a color space, '" << views[i].colorspace << "', ";
+                os << " view '" << views[i].m_name << "' ";
+                os << "refers to a color space, '" << views[i].m_colorspace << "', ";
                 os << "which is not defined.";
                 getImpl()->m_sanitytext = os.str();
                 throw Exception(getImpl()->m_sanitytext.c_str());
             }
 
+            // If there is a view transform, it must exist and its color space must be a
+            // display-referred color space.
+            if (!views[i].m_viewTransform.empty())
+            {
+                if (!getViewTransform(views[i].m_viewTransform.c_str()))
+                {
+                    std::ostringstream os;
+                    os << "Config failed sanitycheck. ";
+                    os << "The display '" << display << "' ";
+                    os << " view '" << views[i].m_name << "' ";
+                    os << "refers to a view transform, '" << views[i].m_viewTransform << "', ";
+                    os << "which is not defined.";
+                    getImpl()->m_sanitytext = os.str();
+                    throw Exception(getImpl()->m_sanitytext.c_str());
+                }
+                auto cs = getImpl()->m_allColorSpaces->getColorSpaceByIndex(csindex);
+                if (cs->getReferenceSpaceType() != REFERENCE_SPACE_DISPLAY)
+                {
+                    std::ostringstream os;
+                    os << "Config failed sanitycheck. ";
+                    os << "The display '" << display << "' ";
+                    os << " view '" << views[i].m_name << "' ";
+                    os << "refers to a color space, '" << views[i].m_colorspace << "', ";
+                    os << "that is not a display-referred color space.";
+                    getImpl()->m_sanitytext = os.str();
+                    throw Exception(getImpl()->m_sanitytext.c_str());
+                }
+            }
+
             // Confirm looks references exist.
             LookParseResult looks;
-            const LookParseResult::Options & options = looks.parse(views[i].looks);
+            const LookParseResult::Options & options = looks.parse(views[i].m_looks);
 
             for(unsigned int optionindex=0;
-                optionindex<options.size();
+                optionindex < options.size();
                 ++optionindex)
             {
                 for(unsigned int tokenindex=0;
-                    tokenindex<options[optionindex].size();
+                    tokenindex < options[optionindex].size();
                     ++tokenindex)
                 {
                     std::string look = options[optionindex][tokenindex].name;
@@ -751,7 +799,7 @@ void Config::sanityCheck() const
     }
 
     // Confirm at least one display entry exists.
-    if(numviews == 0)
+    if (numviews == 0)
     {
         std::ostringstream os;
         os << "Config failed sanitycheck. ";
@@ -763,7 +811,7 @@ void Config::sanityCheck() const
 
     ///// ACTIVE DISPLAYS & VIEWS
 
-    StringVec displays;
+    StringUtils::StringVec displays;
     for (DisplayMap::const_iterator iter = getImpl()->m_displays.begin();
          iter != getImpl()->m_displays.end();
          ++iter)
@@ -780,51 +828,54 @@ void Config::sanityCheck() const
 
         if (!useAllDisplays)
         {
-            const StringVec orderedDisplays
+            const StringUtils::StringVec orderedDisplays
                 = IntersectStringVecsCaseIgnore(getImpl()->m_activeDisplaysEnvOverride, displays);
             if (orderedDisplays.empty())
             {
-                std::stringstream ss;
-                ss << "The content of the env. variable for the list of active displays ["
+                std::ostringstream os;
+                os << "The content of the env. variable for the list of active displays ["
                    << JoinStringEnvStyle(getImpl()->m_activeDisplaysEnvOverride)
                    << "] is invalid.";
-                throw Exception(ss.str().c_str());
+                getImpl()->m_sanitytext = os.str();
+                throw Exception(getImpl()->m_sanitytext.c_str());
             }
             if (orderedDisplays.size()!=getImpl()->m_activeDisplaysEnvOverride.size())
             {
-                std::stringstream ss;
-                ss << "The content of the env. variable for the list of active displays ["
+                std::ostringstream os;
+                os << "The content of the env. variable for the list of active displays ["
                    << JoinStringEnvStyle(getImpl()->m_activeDisplaysEnvOverride)
                    << "] contains invalid display name(s).";
-                throw Exception(ss.str().c_str());
+                getImpl()->m_sanitytext = os.str();
+                throw Exception(getImpl()->m_sanitytext.c_str());
             }
         }
     }
-    else if(!getImpl()->m_activeDisplays.empty())
+    else if (!getImpl()->m_activeDisplays.empty())
     {
-        const bool useAllDisplays
-            = getImpl()->m_activeDisplays.size()==1
-                && getImpl()->m_activeDisplays[0] == "";
+        const bool useAllDisplays = getImpl()->m_activeDisplays.size() == 1 &&
+                                    getImpl()->m_activeDisplays[0] == "";
 
         if (!useAllDisplays)
         {
-            const StringVec orderedDisplays
+            const StringUtils::StringVec orderedDisplays
                 = IntersectStringVecsCaseIgnore(getImpl()->m_activeDisplays, displays);
             if (orderedDisplays.empty())
             {
-                std::stringstream ss;
-                ss << "The list of active displays ["
+                std::ostringstream os;
+                os << "The list of active displays ["
                    << JoinStringEnvStyle(getImpl()->m_activeDisplays)
                    << "] from the config file is invalid.";
-                throw Exception(ss.str().c_str());
+                getImpl()->m_sanitytext = os.str();
+                throw Exception(getImpl()->m_sanitytext.c_str());
             }
             if (orderedDisplays.size()!=getImpl()->m_activeDisplays.size())
             {
-                std::stringstream ss;
-                ss << "The list of active displays ["
+                std::ostringstream os;
+                os << "The list of active displays ["
                    << JoinStringEnvStyle(getImpl()->m_activeDisplays)
                    << "] from the config file contains invalid display name(s).";
-                throw Exception(ss.str().c_str());
+                getImpl()->m_sanitytext = os.str();
+                throw Exception(getImpl()->m_sanitytext.c_str());
             }
         }
     }
@@ -871,24 +922,17 @@ void Config::sanityCheck() const
     // For all looks, confirm the process space exists and the look is named
     for(unsigned int i=0; i<getImpl()->m_looksList.size(); ++i)
     {
-        std::string name = getImpl()->m_looksList[i]->getName();
-        if(name.empty())
-        {
-            std::ostringstream os;
-            os << "Config failed sanitycheck. ";
-            os << "The look at index '" << i << "' ";
-            os << "does not specify a name.";
-            getImpl()->m_sanitytext = os.str();
-            throw Exception(getImpl()->m_sanitytext.c_str());
-        }
+        // Note: Config::addLook validates that looks have a unique, non-empty name.
 
-        std::string processSpace = getImpl()->m_looksList[i]->getProcessSpace();
+        const std::string name = getImpl()->m_looksList[i]->getName();
+
+        const std::string processSpace = getImpl()->m_looksList[i]->getProcessSpace();
         if(processSpace.empty())
         {
             std::ostringstream os;
             os << "Config failed sanitycheck. ";
             os << "The look '" << name << "' ";
-            os << "does not specify a process space.";
+            os << "does not specify a process color space.";
             getImpl()->m_sanitytext = os.str();
             throw Exception(getImpl()->m_sanitytext.c_str());
         }
@@ -906,9 +950,35 @@ void Config::sanityCheck() const
         }
     }
 
+    ///// ViewTransforms
+
+    if (!getImpl()->m_viewTransforms.empty())
+    {
+        // Note: Config::addViewTransform validates that view_transforms have a unique, non-empty
+        // name and define a transform.
+
+        auto fromScene = getDefaultSceneToDisplayViewTransform();
+        // If there are view transforms, there must be one from the scene reference space.
+        if (!fromScene)
+        {
+            getImpl()->m_sanitytext = "Config failed sanitycheck. If there are view_transforms, "
+                                      "at least one must use the scene reference space.";
+            throw Exception(getImpl()->m_sanitytext.c_str());
+        }
+    }
+    else if (hasDisplayReferredColorspace)
+    {
+        getImpl()->m_sanitytext = "Config failed sanitycheck. If there are display-referred "
+                                  "color spaces, there must be view_transforms.";
+        throw Exception(getImpl()->m_sanitytext.c_str());
+    }
+
+    ///// FileRules
+
     if (getMajorVersion() >= 2)
     {
-        getImpl()->m_fileRules->validate(*this);
+        auto colorSpaceAccessor = std::bind(&Config::getColorSpace, this, std::placeholders::_1);
+        getImpl()->m_fileRules->getImpl()->sanityCheck(colorSpaceAccessor);
     }
 
     // Everything is groovy.
@@ -1076,44 +1146,187 @@ ColorSpaceSetRcPtr Config::getColorSpaces(const char * category) const
     return res;
 }
 
-int Config::getNumColorSpaces(ColorSpaceVisibility visibility) const
+namespace
 {
-    switch(visibility)
+bool MatchReferenceType(SearchReferenceSpaceType st, ReferenceSpaceType t)
+{
+    switch (st)
     {
-        case COLORSPACE_ALL:
-            return getImpl()->m_allColorSpaces->getNumColorSpaces();
-        case COLORSPACE_ACTIVE:
-            return (int)getImpl()->m_activeColorSpaceNames.size();
-        case COLORSPACE_INACTIVE:
-        {
-            const std::vector<std::string> inactiveColorSpaceNames
-                = getImpl()->buildInactiveColorSpaceList();
-            return (int)inactiveColorSpaceNames.size();
-        }
+    case SEARCH_REFERENCE_SPACE_SCENE:
+        return t == REFERENCE_SPACE_SCENE;
+    case SEARCH_REFERENCE_SPACE_DISPLAY:
+        return t == REFERENCE_SPACE_DISPLAY;
+    case SEARCH_REFERENCE_SPACE_ALL:
+        return true;
     }
-
-    return 0;
+    return false;
+}
 }
 
-const char * Config::getColorSpaceNameByIndex(ColorSpaceVisibility visibility, int index) const
+int Config::getNumColorSpaces(SearchReferenceSpaceType searchReferenceType,
+                              ColorSpaceVisibility visibility) const
 {
-    if (index < 0 || index >= getNumColorSpaces(visibility))
+    int res = 0;
+    switch (visibility)
+    {
+    case COLORSPACE_ALL:
+    {
+        const int nbCS = getImpl()->m_allColorSpaces->getNumColorSpaces();
+        if (searchReferenceType == SEARCH_REFERENCE_SPACE_ALL)
+        {
+            return nbCS;
+        }
+        for (int i = 0; i < nbCS; ++i)
+        {
+            auto cs = getImpl()->m_allColorSpaces->getColorSpaceByIndex(i);
+            if (MatchReferenceType(searchReferenceType, cs->getReferenceSpaceType()))
+            {
+                ++res;
+            }
+        }
+        break;
+    }
+    case COLORSPACE_ACTIVE:
+    {
+        const size_t nbCS = getImpl()->m_activeColorSpaceNames.size();
+        if (searchReferenceType == SEARCH_REFERENCE_SPACE_ALL)
+        {
+            return (int)nbCS;
+        }
+        for (auto csname : getImpl()->m_activeColorSpaceNames)
+        {
+            auto cs = getColorSpace(csname.c_str());
+            if (MatchReferenceType(searchReferenceType, cs->getReferenceSpaceType()))
+            {
+                ++res;
+            }
+        }
+        break;
+    }
+    case COLORSPACE_INACTIVE:
+    {
+        const StringUtils::StringVec inactiveColorSpaceNames
+            = getImpl()->buildInactiveColorSpaceList();
+        const auto ics = inactiveColorSpaceNames.size();
+        if (searchReferenceType == SEARCH_REFERENCE_SPACE_ALL)
+        {
+            return (int)ics;
+        }
+        for (auto csname : inactiveColorSpaceNames)
+        {
+            auto cs = getColorSpace(csname.c_str());
+            if (MatchReferenceType(searchReferenceType, cs->getReferenceSpaceType()))
+            {
+                ++res;
+            }
+        }
+        break;
+    }
+    }
+
+    return res;
+}
+
+const char * Config::getColorSpaceNameByIndex(SearchReferenceSpaceType searchReferenceType,
+                                              ColorSpaceVisibility visibility, int index) const
+{
+    if (index < 0)
     {
         return "";
     }
 
-    switch(visibility)
+    int current = 0;
+    switch (visibility)
     {
-        case COLORSPACE_ALL:
-            return getImpl()->m_allColorSpaces->getColorSpaceNameByIndex(index);
-        case COLORSPACE_ACTIVE:
-            return getImpl()->m_activeColorSpaceNames[index].c_str();
-        case COLORSPACE_INACTIVE:
+    case COLORSPACE_ALL:
+    {
+        if (searchReferenceType == SEARCH_REFERENCE_SPACE_ALL)
         {
-            const std::vector<std::string> inactiveColorSpaceNames
-                = getImpl()->buildInactiveColorSpaceList();
-            return inactiveColorSpaceNames[index].c_str();
+            if (index < getImpl()->m_allColorSpaces->getNumColorSpaces())
+            {
+                return getImpl()->m_allColorSpaces->getColorSpaceNameByIndex(index);
+            }
+            else
+            {
+                return "";
+            }
         }
+        const int nbCS = getImpl()->m_allColorSpaces->getNumColorSpaces();
+        for (int i = 0; i < nbCS; ++i)
+        {
+            auto cs = getImpl()->m_allColorSpaces->getColorSpaceByIndex(i);
+            if (MatchReferenceType(searchReferenceType, cs->getReferenceSpaceType()))
+            {
+                if (current == index)
+                {
+                    return cs->getName();
+                }
+                ++current;
+            }
+        }
+        break;
+    }
+    case COLORSPACE_ACTIVE:
+    {
+        if (searchReferenceType == SEARCH_REFERENCE_SPACE_ALL)
+        {
+            if (index < (int)getImpl()->m_activeColorSpaceNames.size())
+            {
+                return getImpl()->m_activeColorSpaceNames[index].c_str();
+            }
+            else
+            {
+                return "";
+            }
+        }
+        const int nbCS = (int)getImpl()->m_activeColorSpaceNames.size();
+        for (int i = 0; i < nbCS; ++i)
+        {
+            auto csname = getImpl()->m_activeColorSpaceNames[i];
+            auto cs = getColorSpace(csname.c_str());
+            if (MatchReferenceType(searchReferenceType, cs->getReferenceSpaceType()))
+            {
+                if (current == index)
+                {
+                    return cs->getName();
+                }
+                ++current;
+            }
+        }
+        break;
+    }
+    case COLORSPACE_INACTIVE:
+    {
+        // TODO: Building the list at each call could be an issue when called in loops.
+        const StringUtils::StringVec inactiveColorSpaceNames =
+            getImpl()->buildInactiveColorSpaceList();
+        if (searchReferenceType == SEARCH_REFERENCE_SPACE_ALL)
+        {
+            if (index < (int)inactiveColorSpaceNames.size())
+            {
+                return inactiveColorSpaceNames[index].c_str();
+            }
+            else
+            {
+                return "";
+            }
+        }
+        const int nbCS = (int)inactiveColorSpaceNames.size();
+        for (int i = 0; i < nbCS; ++i)
+        {
+            auto csname = inactiveColorSpaceNames[i];
+            auto cs = getColorSpace(csname.c_str());
+            if (MatchReferenceType(searchReferenceType, cs->getReferenceSpaceType()))
+            {
+                if (current == index)
+                {
+                    return cs->getName();
+                }
+                ++current;
+            }
+        }
+        break;
+    }
     }
 
     return "";
@@ -1136,12 +1349,12 @@ ConstColorSpaceRcPtr Config::getColorSpace(const char * name) const
 
 int Config::getNumColorSpaces() const
 {
-    return getNumColorSpaces(COLORSPACE_ACTIVE);
+    return getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ACTIVE);
 }
 
 const char * Config::getColorSpaceNameByIndex(int index) const
 {
-    return getColorSpaceNameByIndex(COLORSPACE_ACTIVE, index);
+    return getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ACTIVE, index);
 }
 
 int Config::getIndexForColorSpace(const char * name) const
@@ -1153,9 +1366,11 @@ int Config::getIndexForColorSpace(const char * name) const
     }
 
     // Check to see if the name is an active color space.
-    for (int idx = 0; idx < getNumColorSpaces(COLORSPACE_ACTIVE); ++idx)
+    for (int idx = 0; idx < getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL,
+                                              COLORSPACE_ACTIVE); ++idx)
     {
-        if (std::string(getColorSpaceNameByIndex(COLORSPACE_ACTIVE, idx))
+        if (std::string(getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL,
+                                                 COLORSPACE_ACTIVE, idx))
                 == std::string(cs->getName()))
         {
             return idx;
@@ -1254,12 +1469,12 @@ void Config::setRole(const char * role, const char * colorSpaceName)
     // Set the role
     if(colorSpaceName)
     {
-        getImpl()->m_roles[pystring::lower(role)] = std::string(colorSpaceName);
+        getImpl()->m_roles[StringUtils::Lower(role)] = std::string(colorSpaceName);
     }
     // Unset the role
     else
     {
-        StringMap::iterator iter = getImpl()->m_roles.find(pystring::lower(role));
+        StringMap::iterator iter = getImpl()->m_roles.find(StringUtils::Lower(role));
         if(iter != getImpl()->m_roles.end())
         {
             getImpl()->m_roles.erase(iter);
@@ -1352,15 +1567,15 @@ int Config::getNumViews(const char * display) const
 
     const ViewVec & views = iter->second;
 
-    StringVec masterViews;
+    StringUtils::StringVec masterViews;
     for(unsigned int i=0; i<views.size(); ++i)
     {
-        masterViews.push_back(views[i].name);
+        masterViews.push_back(views[i].m_name);
     }
 
     if(!getImpl()->m_activeViewsEnvOverride.empty())
     {
-        const StringVec orderedViews
+        const StringUtils::StringVec orderedViews
             = IntersectStringVecsCaseIgnore(getImpl()->m_activeViewsEnvOverride, masterViews);
 
         if(!orderedViews.empty())
@@ -1370,7 +1585,7 @@ int Config::getNumViews(const char * display) const
     }
     else if(!getImpl()->m_activeViews.empty())
     {
-        const StringVec orderedViews
+        const StringUtils::StringVec orderedViews
             = IntersectStringVecsCaseIgnore(getImpl()->m_activeViews, masterViews);
 
         if(!orderedViews.empty())
@@ -1399,17 +1614,17 @@ const char * Config::getView(const char * display, int index) const
 
     const ViewVec & views = iter->second;
 
-    StringVec masterViews;
+    StringUtils::StringVec masterViews;
     for(unsigned int i = 0; i < views.size(); ++i)
     {
-        masterViews.push_back(views[i].name);
+        masterViews.push_back(views[i].m_name);
     }
 
     int idx = index;
 
     if(!getImpl()->m_activeViewsEnvOverride.empty())
     {
-        const StringVec orderedViews
+        const StringUtils::StringVec orderedViews
             = IntersectStringVecsCaseIgnore(getImpl()->m_activeViewsEnvOverride, masterViews);
 
         if(!orderedViews.empty())
@@ -1419,7 +1634,7 @@ const char * Config::getView(const char * display, int index) const
     }
     else if(!getImpl()->m_activeViews.empty())
     {
-        const StringVec orderedViews
+        const StringUtils::StringVec orderedViews
             = IntersectStringVecsCaseIgnore(getImpl()->m_activeViews, masterViews);
 
         if(!orderedViews.empty())
@@ -1430,15 +1645,29 @@ const char * Config::getView(const char * display, int index) const
 
     if(idx >= 0)
     {
-        return views[idx].name.c_str();
+        return views[idx].m_name.c_str();
     }
 
     if(!views.empty())
     {
-        return views[0].name.c_str();
+        return views[0].m_name.c_str();
     }
 
     return "";
+}
+
+const char * Config::getDisplayViewTransformName(const char * display, const char * view) const
+{
+    if (!display || !view) return "";
+
+    DisplayMap::const_iterator iter = find_display_const(getImpl()->m_displays, display);
+    if (iter == getImpl()->m_displays.end()) return "";
+
+    const ViewVec & views = iter->second;
+    const int index = find_view(views, view);
+    if (index<0) return "";
+
+    return views[index].m_viewTransform.c_str();
 }
 
 const char * Config::getDisplayColorSpaceName(const char * display, const char * view) const
@@ -1449,10 +1678,10 @@ const char * Config::getDisplayColorSpaceName(const char * display, const char *
     if(iter == getImpl()->m_displays.end()) return "";
 
     const ViewVec & views = iter->second;
-    int index = find_view(views, view);
+    const int index = find_view(views, view);
     if(index<0) return "";
 
-    return views[index].colorspace.c_str();
+    return views[index].m_colorspace.c_str();
 }
 
 const char * Config::getDisplayLooks(const char * display, const char * view) const
@@ -1463,20 +1692,24 @@ const char * Config::getDisplayLooks(const char * display, const char * view) co
     if(iter == getImpl()->m_displays.end()) return "";
 
     const ViewVec & views = iter->second;
-    int index = find_view(views, view);
+    const int index = find_view(views, view);
     if(index<0) return "";
 
-    return views[index].looks.c_str();
+    return views[index].m_looks.c_str();
 }
 
 void Config::addDisplay(const char * display, const char * view,
-                        const char * colorSpaceName, const char * lookName)
+                        const char * colorSpaceName, const char * looks)
 {
+    addDisplay(display, view, "", colorSpaceName, looks);
+}
 
-    if(!display || !view || !colorSpaceName || !lookName) return;
+void Config::addDisplay(const char * display, const char * view, const char * viewTransform,
+                        const char * displayColorSpaceName, const char * looks)
+{
+    if (!display || !view || !viewTransform || !displayColorSpaceName || !looks) return;
 
-    AddDisplay(getImpl()->m_displays,
-                display, view, colorSpaceName, lookName);
+    AddDisplay(getImpl()->m_displays, display, view, viewTransform, displayColorSpaceName, looks);
     getImpl()->m_displayCache.clear();
 
     AutoMutex lock(getImpl()->m_cacheidMutex);
@@ -1545,11 +1778,11 @@ void Config::setDefaultLumaCoefs(const double * c3)
 
 ConstLookRcPtr Config::getLook(const char * name) const
 {
-    std::string namelower = pystring::lower(name);
+    const std::string namelower = StringUtils::Lower(name);
 
     for(unsigned int i=0; i<getImpl()->m_looksList.size(); ++i)
     {
-        if(pystring::lower(getImpl()->m_looksList[i]->getName()) == namelower)
+        if(StringUtils::Lower(getImpl()->m_looksList[i]->getName()) == namelower)
         {
             return getImpl()->m_looksList[i];
         }
@@ -1575,16 +1808,16 @@ const char * Config::getLookNameByIndex(int index) const
 
 void Config::addLook(const ConstLookRcPtr & look)
 {
-    std::string name = look->getName();
+    const std::string name = look->getName();
     if(name.empty())
         throw Exception("Cannot addLook with an empty name.");
 
-    std::string namelower = pystring::lower(name);
+    const std::string namelower = StringUtils::Lower(name);
 
     // If the look exists, replace it
     for(unsigned int i=0; i<getImpl()->m_looksList.size(); ++i)
     {
-        if(pystring::lower(getImpl()->m_looksList[i]->getName()) == namelower)
+        if(StringUtils::Lower(getImpl()->m_looksList[i]->getName()) == namelower)
         {
             getImpl()->m_looksList[i] = look->createEditableCopy();
             return;
@@ -1601,6 +1834,100 @@ void Config::addLook(const ConstLookRcPtr & look)
 void Config::clearLooks()
 {
     getImpl()->m_looksList.clear();
+
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
+}
+
+///////////////////////////////////////////////////////////////////////////
+
+int Config::getNumViewTransforms() const noexcept
+{
+    return static_cast<int>(getImpl()->m_viewTransforms.size());
+}
+
+ConstViewTransformRcPtr Config::getViewTransform(const char * name) const noexcept
+{
+    const std::string namelower = StringUtils::Lower(name);
+
+    for (auto vt : getImpl()->m_viewTransforms)
+    {
+        if (StringUtils::Lower(vt->getName()) == namelower)
+        {
+            return vt;
+        }
+    }
+
+    return ConstViewTransformRcPtr();
+}
+
+const char * Config::getViewTransformNameByIndex(int index) const noexcept
+{
+    if (index<0 || index >= static_cast<int>(getImpl()->m_viewTransforms.size()))
+    {
+        return "";
+    }
+
+    return getImpl()->m_viewTransforms[index]->getName();
+}
+
+ConstViewTransformRcPtr Config::getDefaultSceneToDisplayViewTransform() const
+{
+    // The default view transform between the main reference space (scene-referred) and the
+    // display-referred space is the first one in the list that uses a scene-referred
+    // reference space.
+    for (const auto & viewTransform : getImpl()->m_viewTransforms)
+    {
+        if (viewTransform->getReferenceSpaceType() == REFERENCE_SPACE_SCENE)
+        {
+            return viewTransform;
+        }
+    }
+    return ConstViewTransformRcPtr();
+}
+
+void Config::addViewTransform(const ConstViewTransformRcPtr & viewTransform)
+{
+    const std::string name = viewTransform->getName();
+    if (name.empty())
+    {
+        throw Exception("Cannot add view transform with an empty name.");
+    }
+
+    if (!viewTransform->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE) &&
+        !viewTransform->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE))
+    {
+        throw Exception("Cannot add view transform with no transform.");
+    }
+
+    const std::string namelower = StringUtils::Lower(name);
+
+    bool addIt = true;
+
+    // If the view transform exists, replace it.
+    for (auto && vt : getImpl()->m_viewTransforms)
+    {
+        if (StringUtils::Lower(vt->getName()) == namelower)
+        {
+            vt = viewTransform->createEditableCopy();
+            addIt = false;
+            break;
+        }
+    }
+
+    // Otherwise, add it.
+    if (addIt)
+    {
+        getImpl()->m_viewTransforms.push_back(viewTransform->createEditableCopy());
+    }
+
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
+}
+
+void Config::clearViewTransforms()
+{
+    getImpl()->m_viewTransforms.clear();
 
     AutoMutex lock(getImpl()->m_cacheidMutex);
     getImpl()->resetCacheIDs();
@@ -1625,6 +1952,22 @@ void Config::setFileRules(ConstFileRulesRcPtr fileRules)
     AutoMutex lock(getImpl()->m_cacheidMutex);
     getImpl()->resetCacheIDs();
 }
+
+const char * Config::getColorSpaceFromFilepath(const char * filePath) const
+{
+    return getImpl()->m_fileRules->getImpl()->getColorSpaceFromFilepath(*this, filePath);
+}
+
+const char * Config::getColorSpaceFromFilepath(const char * filePath, size_t & ruleIndex) const
+{
+    return getImpl()->m_fileRules->getImpl()->getColorSpaceFromFilepath(*this, filePath, ruleIndex);
+}
+
+bool Config::filepathOnlyMatchesDefaultRule(const char * filePath) const
+{
+    return getImpl()->m_fileRules->getImpl()->filepathOnlyMatchesDefaultRule(*this, filePath);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -1683,6 +2026,26 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
     }
 
     return getProcessor(context, src, dst);
+}
+
+
+ConstProcessorRcPtr Config::getProcessor(const char * inputColorSpaceName,
+                                         const char * display, const char * view) const
+{
+    ConstContextRcPtr context = getCurrentContext();
+    return getProcessor(context, inputColorSpaceName, display, view);
+}
+
+ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
+                                         const char * inputColorSpaceName,
+                                         const char * display, const char * view) const
+{
+    auto dt = DisplayTransform::Create();
+    dt->setInputColorSpaceName(inputColorSpaceName);
+    dt->setDisplay(display);
+    dt->setView(view);
+    dt->validate();
+    return getProcessor(context, dt, TRANSFORM_DIR_FORWARD);
 }
 
 ConstProcessorRcPtr Config::getProcessor(const ConstTransformRcPtr& transform) const
@@ -1846,7 +2209,7 @@ const char * Config::getCacheID(const ConstContextRcPtr & context) const
     AutoMutex lock(getImpl()->m_cacheidMutex);
 
     // A null context will use the empty cacheid
-    std::string contextcacheid = "";
+    std::string contextcacheid;
     if(context) contextcacheid = context->getCacheID();
 
     StringMap::const_iterator cacheiditer = getImpl()->m_cacheids.find(contextcacheid);
@@ -1858,14 +2221,14 @@ const char * Config::getCacheID(const ConstContextRcPtr & context) const
     // Include the hash of the yaml config serialization
     if(getImpl()->m_cacheidnocontext.empty())
     {
-        std::stringstream cacheid;
+        std::ostringstream cacheid;
         serialize(cacheid);
-        std::string fullstr = cacheid.str();
+        const std::string fullstr = cacheid.str();
         getImpl()->m_cacheidnocontext = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
     }
 
     // Also include all file references, using the context (if specified)
-    std::string fileReferencesFashHash = "";
+    std::string fileReferencesFashHash;
     if(context)
     {
         std::ostringstream filehash;
@@ -1887,7 +2250,7 @@ const char * Config::getCacheID(const ConstContextRcPtr & context) const
 
             try
             {
-                std::string resolvedLocation = context->resolveFileLocation(iter->c_str());
+                const std::string resolvedLocation = context->resolveFileLocation(iter->c_str());
                 filehash << GetFastFileHash(resolvedLocation) << " ";
             }
             catch(...)
@@ -1897,7 +2260,7 @@ const char * Config::getCacheID(const ConstContextRcPtr & context) const
             }
         }
 
-        std::string fullstr = filehash.str();
+        const std::string fullstr = filehash.str();
         fileReferencesFashHash = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
     }
 
@@ -1926,28 +2289,28 @@ void Config::serialize(std::ostream& os) const
 ///////////////////////////////////////////////////////////////////////////
 //  Config::Impl
 
-std::vector<std::string> Config::Impl::buildInactiveColorSpaceList() const
+StringUtils::StringVec Config::Impl::buildInactiveColorSpaceList() const
 {
-    std::vector<std::string> inactiveColorSpaces;
+    StringUtils::StringVec inactiveColorSpaces;
 
     // An API request always supersedes the other lists.
     if (!m_inactiveColorSpaceNamesAPI.empty())
     {
-        pystring::split(m_inactiveColorSpaceNamesAPI, inactiveColorSpaces, ",");
+        inactiveColorSpaces = StringUtils::Split(m_inactiveColorSpaceNamesAPI, ',');
     }
     // The env. variable only supersedes the config list.
     else if (!m_inactiveColorSpaceNamesEnv.empty())
     {
-        pystring::split(m_inactiveColorSpaceNamesEnv, inactiveColorSpaces, ",");
+        inactiveColorSpaces = StringUtils::Split(m_inactiveColorSpaceNamesEnv, ',');
     }
     else if (!m_inactiveColorSpaceNamesConf.empty())
     {
-        pystring::split(m_inactiveColorSpaceNamesConf, inactiveColorSpaces, ",");
+        inactiveColorSpaces = StringUtils::Split(m_inactiveColorSpaceNamesConf, ',');
     }
 
     for (auto & v : inactiveColorSpaces)
     {
-        v = pystring::strip(v);
+        v = StringUtils::Trim(v);
     }
 
     return inactiveColorSpaces;
@@ -1957,7 +2320,7 @@ void Config::Impl::refreshActiveColorSpaces()
 {
     m_activeColorSpaceNames.clear();
 
-    const std::vector<std::string> inactiveColorSpaces = buildInactiveColorSpaceList();
+    const StringUtils::StringVec inactiveColorSpaces = buildInactiveColorSpaceList();
 
     for (int i = 0; i < m_allColorSpaces->getNumColorSpaces(); ++i)
     {

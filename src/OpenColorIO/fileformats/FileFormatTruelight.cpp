@@ -12,8 +12,9 @@
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ParseUtils.h"
-#include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
+#include "utils/StringUtils.h"
+
 
 // This implements the spec for:
 // Per http://www.filmlight.ltd.uk/resources/documents/truelight/white-papers_tl.php
@@ -96,7 +97,7 @@ LocalFileFormat::read(
     // Validate the file type
     std::string line;
     if(!nextline(istream, line) || 
-        !pystring::startswith(pystring::lower(line), "# truelight cube"))
+        !StringUtils::StartsWith(StringUtils::Lower(line), "# truelight cube"))
     {
         throw Exception("LUT doesn't seem to be a Truelight .cub LUT.");
     }
@@ -107,7 +108,7 @@ LocalFileFormat::read(
     int size3d[] = { 0, 0, 0 };
     int size1d = 0;
     {
-        StringVec parts;
+        StringUtils::StringVec parts;
         std::vector<float> tmpfloats;
 
         bool in1d = false;
@@ -116,12 +117,12 @@ LocalFileFormat::read(
         while(nextline(istream, line))
         {
             // Strip, lowercase, and split the line
-            pystring::split(pystring::lower(pystring::strip(line)), parts);
+            parts = StringUtils::SplitByWhiteSpaces(StringUtils::Lower(StringUtils::Trim(line)));
 
             if(parts.empty()) continue;
 
             // Parse header metadata (which starts with #)
-            if(pystring::startswith(parts[0],"#"))
+            if(StringUtils::StartsWith(parts[0],"#"))
             {
                 if(parts.size() < 2) continue;
 

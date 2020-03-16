@@ -14,8 +14,9 @@
 #include "ParseUtils.h"
 #include "MathUtils.h"
 #include "Logging.h"
-#include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
+#include "utils/StringUtils.h"
+
 
 /*
 
@@ -279,7 +280,7 @@ CachedFileRcPtr LocalFileFormat::read(
 
     {
         std::string line;
-        StringVec parts;
+        StringUtils::StringVec parts;
         std::vector<float> tmpfloats;
         int lineNumber = 0;
         bool headerComplete = false;
@@ -290,7 +291,7 @@ CachedFileRcPtr LocalFileFormat::read(
             ++lineNumber;
 
             // All lines starting with '#' are comments
-            if(pystring::startswith(line,"#"))
+            if(StringUtils::StartsWith(line,"#"))
             {
                 if(headerComplete)
                 {
@@ -307,10 +308,10 @@ CachedFileRcPtr LocalFileFormat::read(
             }
 
             // Strip, lowercase, and split the line
-            pystring::split(pystring::lower(pystring::strip(line)), parts);
+            parts = StringUtils::SplitByWhiteSpaces(StringUtils::Lower(StringUtils::Trim(line)));
             if(parts.empty()) continue;
 
-            if(pystring::lower(parts[0]) == "title")
+            if(StringUtils::Lower(parts[0]) == "title")
             {
                 ThrowErrorMessage(
                     "Unsupported tag: 'TITLE'.",
@@ -318,7 +319,7 @@ CachedFileRcPtr LocalFileFormat::read(
                     lineNumber,
                     line);
             }
-            else if(pystring::lower(parts[0]) == "lut_1d_size")
+            else if(StringUtils::Lower(parts[0]) == "lut_1d_size")
             {
                 if(parts.size() != 2
                     || !StringToInt( &size1d, parts[1].c_str()))
@@ -333,7 +334,7 @@ CachedFileRcPtr LocalFileFormat::read(
                 raw1d.reserve(3*size1d);
                 has1d = true;
             }
-            else if(pystring::lower(parts[0]) == "lut_2d_size")
+            else if(StringUtils::Lower(parts[0]) == "lut_2d_size")
             {
                 ThrowErrorMessage(
                     "Unsupported tag: 'LUT_2D_SIZE'.",
@@ -341,7 +342,7 @@ CachedFileRcPtr LocalFileFormat::read(
                     lineNumber,
                     line);
             }
-            else if(pystring::lower(parts[0]) == "lut_3d_size")
+            else if(StringUtils::Lower(parts[0]) == "lut_3d_size")
             {
                 if(parts.size() != 2
                     || !StringToInt( &size3d, parts[1].c_str()))
@@ -356,7 +357,7 @@ CachedFileRcPtr LocalFileFormat::read(
                 raw3d.reserve(3*size3d*size3d*size3d);
                 has3d = true;
             }
-            else if(pystring::lower(parts[0]) == "lut_1d_input_range")
+            else if(StringUtils::Lower(parts[0]) == "lut_1d_input_range")
             {
                 if(parts.size() != 3 || 
                     !StringToFloat( &range1d_min, parts[1].c_str()) ||
@@ -369,7 +370,7 @@ CachedFileRcPtr LocalFileFormat::read(
                         line);
                 }
             }
-            else if(pystring::lower(parts[0]) == "lut_3d_input_range")
+            else if(StringUtils::Lower(parts[0]) == "lut_3d_input_range")
             {
                 if(parts.size() != 3 || 
                     !StringToFloat( &range3d_min, parts[1].c_str()) ||

@@ -11,7 +11,7 @@
 #include "transforms/FileTransform.h"
 #include "OpBuilders.h"
 #include "ParseUtils.h"
-#include "pystring/pystring.h"
+
 
 namespace OCIO_NAMESPACE
 {

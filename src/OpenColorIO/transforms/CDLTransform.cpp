@@ -14,8 +14,8 @@
 #include "OpBuilders.h"
 #include "ParseUtils.h"
 #include "Platform.h"
-#include "pystring/pystring.h"
 #include "transforms/CDLTransform.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -45,11 +45,11 @@ namespace
 std::string BuildXML(const CDLTransform & cdl)
 {
     const auto & metadata = cdl.getFormatMetadata();
-    StringVec mainDesc;
-    StringVec inputDesc;
-    StringVec viewingDesc;
-    StringVec sopDesc;
-    StringVec satDesc;
+    StringUtils::StringVec mainDesc;
+    StringUtils::StringVec inputDesc;
+    StringUtils::StringVec viewingDesc;
+    StringUtils::StringVec sopDesc;
+    StringUtils::StringVec satDesc;
     const int nbElt = metadata.getNumChildrenElements();
     for (int i = 0; i < nbElt; ++i)
     {

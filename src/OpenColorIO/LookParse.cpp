@@ -8,7 +8,8 @@
 
 #include "LookParse.h"
 #include "ParseUtils.h"
-#include "pystring/pystring.h"
+#include "utils/StringUtils.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -16,15 +17,15 @@ void LookParseResult::Token::parse(const std::string & str)
 {
     // Assert no commas, colons, or | in str.
 
-    if(pystring::startswith(str, "+"))
+    if(StringUtils::StartsWith(str, "+"))
     {
-        name = pystring::lstrip(str, "+");
+        name = StringUtils::LeftTrim(str, '+');
         dir = TRANSFORM_DIR_FORWARD;
     }
     // TODO: Handle --
-    else if(pystring::startswith(str, "-"))
+    else if(StringUtils::StartsWith(str, "-"))
     {
-        name = pystring::lstrip(str, "-");
+        name = StringUtils::LeftTrim(str, '-');
         dir = TRANSFORM_DIR_INVERSE;
     }
     else
@@ -63,16 +64,15 @@ const LookParseResult::Options & LookParseResult::parse(const std::string & look
 {
     m_options.clear();
 
-    std::string strippedlooks = pystring::strip(looksstr);
+    std::string strippedlooks = StringUtils::Trim(looksstr);
     if(strippedlooks.empty())
     {
         return m_options;
     }
 
-    StringVec options;
-    pystring::split(strippedlooks, options, "|");
+    const StringUtils::StringVec options = StringUtils::Split(strippedlooks, '|');
 
-    StringVec vec;
+    StringUtils::StringVec vec;
 
     for(unsigned int optionsindex=0; optionsindex<options.size(); ++optionsindex)
     {

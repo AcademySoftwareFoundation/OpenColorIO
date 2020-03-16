@@ -5,18 +5,19 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include <yaml-cpp/yaml.h>
-
 #include "Display.h"
 #include "FileRules.h"
 #include "Logging.h"
 #include "MathUtils.h"
-#include "pystring/pystring.h"
-#include "PathUtils.h"
-#include "ParseUtils.h"
-#include "Platform.h"
 #include "OCIOYaml.h"
 #include "ops/log/LogUtils.h"
+#include "ParseUtils.h"
+#include "PathUtils.h"
+#include "Platform.h"
+#include "pystring/pystring.h"
+#include "utils/StringUtils.h"
+#include "yaml-cpp/yaml.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -107,11 +108,11 @@ inline void load(const YAML::Node& node, std::string& x)
     }
 }
 
-inline void load(const YAML::Node & node, StringVec & x)
+inline void load(const YAML::Node & node, StringUtils::StringVec & x)
 {
     try
     {
-        x = node.as<StringVec>();
+        x = node.as<StringUtils::StringVec>();
     }
     catch (const std::exception & e)
     {
@@ -277,7 +278,8 @@ inline void load(const YAML::Node& node, View& v)
         return;
 
     std::string key, stringval;
-
+    bool expectingSceneCS = false;
+    bool expectingDisplayCS = false;
     for (Iterator iter = node.begin();
             iter != node.end();
             ++iter)
@@ -292,44 +294,74 @@ inline void load(const YAML::Node& node, View& v)
         if(key == "name")
         {
             load(second, stringval);
-            v.name = stringval;
+            v.m_name = stringval;
+        }
+        else if (key == "view_transform")
+        {
+            expectingDisplayCS = true;
+            load(second, stringval);
+            v.m_viewTransform = stringval;
         }
         else if(key == "colorspace")
         {
+            expectingSceneCS = true;
             load(second, stringval);
-            v.colorspace = stringval;
+            v.m_colorspace = stringval;
+        }
+        else if (key == "display_colorspace")
+        {
+            expectingDisplayCS = true;
+            load(second, stringval);
+            v.m_colorspace = stringval;
         }
         else if(key == "looks" || key == "look")
         {
             load(second, stringval);
-            v.looks = stringval;
+            v.m_looks = stringval;
         }
         else
         {
             LogUnknownKeyWarning(node, first);
         }
     }
-    if(v.name.empty())
+    if(v.m_name.empty())
     {
         throwError(node, "View does not specify 'name'.");
     }
-    if(v.colorspace.empty())
+    if (expectingDisplayCS == expectingSceneCS)
     {
         std::ostringstream os;
-        os << "View '" << v.name << "' "
-            << "does not specify colorspace.";
+        os << "View '" << v.m_name <<
+              "' must specify colorspace or view_transform and display_colorspace.";
+        throwError(node, os.str().c_str());
+    }
+    if(v.m_colorspace.empty())
+    {
+        std::ostringstream os;
+        os << "View '" << v.m_name << "' does not specify colorspace.";
         throwError(node, os.str().c_str());
     }
 }
 
-inline void save(YAML::Emitter& out, View view)
+inline void save(YAML::Emitter& out, const View & view)
 {
     out << YAML::VerbatimTag("View");
     out << YAML::Flow;
     out << YAML::BeginMap;
-    out << YAML::Key << "name" << YAML::Value << view.name;
-    out << YAML::Key << "colorspace" << YAML::Value << view.colorspace;
-    if(!view.looks.empty()) out << YAML::Key << "looks" << YAML::Value << view.looks;
+    out << YAML::Key << "name" << YAML::Value << view.m_name;
+    if (view.m_viewTransform.empty())
+    {
+        out << YAML::Key << "colorspace" << YAML::Value << view.m_colorspace;
+    }
+    else
+    {
+        out << YAML::Key << "view_transform" << YAML::Value << view.m_viewTransform;
+        out << YAML::Key << "display_colorspace" << YAML::Value << view.m_colorspace;
+    }
+    if (!view.m_looks.empty())
+    {
+        out << YAML::Key << "looks" << YAML::Value << view.m_looks;
+    }
     out << YAML::EndMap;
 }
 
@@ -2046,7 +2078,7 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs)
         }
         else if(key == "categories")
         {
-            StringVec categories;
+            StringUtils::StringVec categories;
             load(second, categories);
             for(auto name : categories)
             {
@@ -2068,12 +2100,42 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs)
         }
         else if(key == "to_reference")
         {
+            if (cs->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
+            {
+                throwError(node, "'to_reference' cannot be used for a display color space.");
+            }
+            TransformRcPtr val;
+            load(second, val);
+            cs->setTransform(val, COLORSPACE_DIR_TO_REFERENCE);
+        }
+        else if (key == "to_display_reference")
+        {
+            if (cs->getReferenceSpaceType() == REFERENCE_SPACE_SCENE)
+            {
+                throwError(node, "'to_display_reference' cannot be used for a "
+                                 "non-display color space.");
+            }
             TransformRcPtr val;
             load(second, val);
             cs->setTransform(val, COLORSPACE_DIR_TO_REFERENCE);
         }
         else if(key == "from_reference")
         {
+            if (cs->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
+            {
+                throwError(node, "'from_reference' cannot be used for a display color space.");
+            }
+            TransformRcPtr val;
+            load(second, val);
+            cs->setTransform(val, COLORSPACE_DIR_FROM_REFERENCE);
+        }
+        else if (key == "from_display_reference")
+        {
+            if (cs->getReferenceSpaceType() == REFERENCE_SPACE_SCENE)
+            {
+                throwError(node, "'from_display_reference' cannot be used for a "
+                                 "non-display color space.");
+            }
             TransformRcPtr val;
             load(second, val);
             cs->setTransform(val, COLORSPACE_DIR_FROM_REFERENCE);
@@ -2104,7 +2166,7 @@ inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs)
 
     if(cs->getNumCategories() > 0)
     {
-        StringVec categories;
+        StringUtils::StringVec categories;
         for(int idx=0; idx<cs->getNumCategories(); ++idx)
         {
             categories.push_back(cs->getCategory(idx));
@@ -2123,19 +2185,18 @@ inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs)
         out << YAML::Flow << YAML::Value << allocationvars;
     }
 
-    ConstTransformRcPtr toref = \
-        cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+    const auto isDisplay = (cs->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY);
+    ConstTransformRcPtr toref = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
     if(toref)
     {
-        out << YAML::Key << "to_reference" << YAML::Value;
+        out << YAML::Key << (isDisplay ? "to_display_reference" : "to_reference") << YAML::Value;
         save(out, toref);
     }
 
-    ConstTransformRcPtr fromref = \
-        cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+    ConstTransformRcPtr fromref = cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
     if(fromref)
     {
-        out << YAML::Key << "from_reference" << YAML::Value;
+        out << YAML::Key << (isDisplay ? "from_display_reference" : "from_reference") << YAML::Value;
         save(out, fromref);
     }
 
@@ -2227,11 +2288,190 @@ inline void save(YAML::Emitter& out, ConstLookRcPtr look)
     out << YAML::Newline;
 }
 
+// View transform
+
+inline ReferenceSpaceType peekViewTransformReferenceSpace(const YAML::Node & node)
+{
+    if (node.Type() != YAML::NodeType::Map)
+    {
+        throwError(node, "The '!<ViewTransform>' content needs to be a map.");
+    }
+
+    std::string key;
+    bool isScene = false;
+    bool isDisplay = false;
+
+    for (const auto & iter : node)
+    {
+        const YAML::Node& first = iter.first;
+        const YAML::Node& second = iter.second;
+
+        load(first, key);
+
+        if (second.IsNull() || !second.IsDefined()) continue;
+
+        if (key == "to_reference")
+        {
+            isScene = true;
+        }
+        else if (key == "to_display_reference")
+        {
+            isDisplay = true;
+        }
+        else if (key == "from_reference")
+        {
+            isScene = true;
+        }
+        else if (key == "from_display_reference")
+        {
+            isDisplay = true;
+        }
+    }
+
+    if (!isScene && !isDisplay)
+    {
+        throwError(node, "The '!<ViewTransform>' needs to refer to a transform.");
+    }
+    else if (isScene && isDisplay)
+    {
+        throwError(node, "The '!<ViewTransform>' cannot have both to/from_reference and "
+                         "to/from_display_reference transforms.");
+    }
+
+    return isDisplay ? REFERENCE_SPACE_DISPLAY : REFERENCE_SPACE_SCENE;
+}
+
+inline void load(const YAML::Node & node, ViewTransformRcPtr & vt)
+{
+    if (node.Tag() != "ViewTransform")
+    {
+        return; // not a !<ViewTransform> tag
+    }
+
+    if (node.Type() != YAML::NodeType::Map)
+    {
+        std::ostringstream os;
+        os << "The '!<ViewTransform>' content needs to be a map.";
+        throwError(node, os.str());
+    }
+
+    std::string key, stringval;
+
+    for (const auto & iter : node)
+    {
+        const YAML::Node& first = iter.first;
+        const YAML::Node& second = iter.second;
+
+        load(first, key);
+
+        if (second.IsNull() || !second.IsDefined()) continue;
+
+        if (key == "name")
+        {
+            load(second, stringval);
+            vt->setName(stringval.c_str());
+        }
+        else if (key == "description")
+        {
+            load(second, stringval);
+            vt->setDescription(stringval.c_str());
+        }
+        else if (key == "family")
+        {
+            load(second, stringval);
+            vt->setFamily(stringval.c_str());
+        }
+        else if (key == "categories")
+        {
+            StringUtils::StringVec categories;
+            load(second, categories);
+            for (auto name : categories)
+            {
+                vt->addCategory(name.c_str());
+            }
+        }
+        else if (key == "to_reference")
+        {
+            TransformRcPtr val;
+            load(second, val);
+            vt->setTransform(val, VIEWTRANSFORM_DIR_TO_REFERENCE);
+        }
+        else if (key == "to_display_reference")
+        {
+            TransformRcPtr val;
+            load(second, val);
+            vt->setTransform(val, VIEWTRANSFORM_DIR_TO_REFERENCE);
+        }
+        else if (key == "from_reference")
+        {
+            TransformRcPtr val;
+            load(second, val);
+            vt->setTransform(val, VIEWTRANSFORM_DIR_FROM_REFERENCE);
+        }
+        else if (key == "from_display_reference")
+        {
+            TransformRcPtr val;
+            load(second, val);
+            vt->setTransform(val, VIEWTRANSFORM_DIR_FROM_REFERENCE);
+        }
+        else
+        {
+            LogUnknownKeyWarning(node, first);
+        }
+    }
+}
+
+inline void save(YAML::Emitter & out, ConstViewTransformRcPtr & vt)
+{
+    out << YAML::VerbatimTag("ViewTransform");
+    out << YAML::BeginMap;
+
+    out << YAML::Key << "name" << YAML::Value << vt->getName();
+    if (vt->getFamily() != NULL && strlen(vt->getFamily()) > 0)
+    {
+        out << YAML::Key << "family" << YAML::Value << vt->getFamily();
+    }
+    if (vt->getDescription() != NULL && strlen(vt->getDescription()) > 0)
+    {
+        out << YAML::Key << "description";
+        out << YAML::Value << YAML::Literal << vt->getDescription();
+    }
+
+    if (vt->getNumCategories() > 0)
+    {
+        StringUtils::StringVec categories;
+        for (int idx = 0; idx < vt->getNumCategories(); ++idx)
+        {
+            categories.push_back(vt->getCategory(idx));
+        }
+        out << YAML::Key << "categories";
+        out << YAML::Flow << YAML::Value << categories;
+    }
+
+    const auto isDisplay = (vt->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY);
+    ConstTransformRcPtr toref = vt->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE);
+    if (toref)
+    {
+        out << YAML::Key << (isDisplay ? "to_display_reference" : "to_reference") << YAML::Value;
+        save(out, toref);
+    }
+
+    ConstTransformRcPtr fromref = vt->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE);
+    if (fromref)
+    {
+        out << YAML::Key << (isDisplay ? "from_display_reference" : "from_reference") << YAML::Value;
+        save(out, fromref);
+    }
+
+    out << YAML::EndMap;
+    out << YAML::Newline;
+}
+
 // File rules
 
 struct CustomKeysLoader
 {
-    StringVec m_keyVals;
+    StringUtils::StringVec m_keyVals;
 };
 
 inline void loadCustomKeys(const YAML::Node& node, CustomKeysLoader & ck)
@@ -2262,7 +2502,7 @@ inline void load(const YAML::Node & node, FileRulesRcPtr & fr, bool & defaultRul
 
     std::string key, stringval;
     std::string name, colorspace, pattern, extension, regex;
-    StringVec keyVals;
+    StringUtils::StringVec keyVals;
 
     for (const auto & iter : node)
     {
@@ -2417,7 +2657,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
     {
         load(node["ocio_profile_version"], version);
 
-        pystring::split(version, results, ".");
+        results = StringUtils::Split(version, '.');
 
         if(results.size()==1)
         {
@@ -2518,7 +2758,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
             }
             else
             {
-                StringVec paths;
+                StringUtils::StringVec paths;
                 load(second, paths);
                 for (const auto & path : paths)
                 {
@@ -2624,28 +2864,28 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
                 {
                     View view;
                     load(val, view);
-                    c->addDisplay(display.c_str(), view.name.c_str(),
-                                  view.colorspace.c_str(), view.looks.c_str());
+                    c->addDisplay(display.c_str(), view.m_name.c_str(), view.m_viewTransform.c_str(),
+                                  view.m_colorspace.c_str(), view.m_looks.c_str());
                 }
             }
         }
         else if(key == "active_displays")
         {
-            StringVec display;
+            StringUtils::StringVec display;
             load(second, display);
             std::string displays = JoinStringEnvStyle(display);
             c->setActiveDisplays(displays.c_str());
         }
         else if(key == "active_views")
         {
-            StringVec view;
+            StringUtils::StringVec view;
             load(second, view);
             std::string views = JoinStringEnvStyle(view);
             c->setActiveViews(views.c_str());
         }
         else if(key == "inactive_colorspaces")
         {
-            StringVec inactiveCSs;
+            StringUtils::StringVec inactiveCSs;
             load(second, inactiveCSs);
             const std::string inactivecCSsStr = JoinStringEnvStyle(inactiveCSs);
             c->setInactiveColorSpaces(inactivecCSsStr.c_str());
@@ -2660,11 +2900,44 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
             {
                 if(val.Tag() == "ColorSpace")
                 {
-                    ColorSpaceRcPtr cs = ColorSpace::Create();
+                    ColorSpaceRcPtr cs = ColorSpace::Create(REFERENCE_SPACE_SCENE);
                     load(val, cs);
                     for(int ii = 0; ii < c->getNumColorSpaces(); ++ii)
                     {
                         if(strcmp(c->getColorSpaceNameByIndex(ii), cs->getName()) == 0)
+                        {
+                            std::ostringstream os;
+                            os << "Colorspace with name '" << cs->getName() << "' already defined.";
+                            throwError(second, os.str());
+                        }
+                    }
+                    c->addColorSpace(cs);
+                }
+                else
+                {
+                    std::ostringstream os;
+                    os << "Unknown element found in colorspaces:";
+                    os << val.Tag() << ". Only ColorSpace(s)";
+                    os << " currently handled.";
+                    LogWarning(os.str());
+                }
+            }
+        }
+        else if (key == "display_colorspaces")
+        {
+            if (second.Type() != YAML::NodeType::Sequence)
+            {
+                throwError(second, "'display_colorspaces' field needs to be a (- !<ColorSpace>) list.");
+            }
+            for (const auto & val : second)
+            {
+                if (val.Tag() == "ColorSpace")
+                {
+                    ColorSpaceRcPtr cs = ColorSpace::Create(REFERENCE_SPACE_DISPLAY);
+                    load(val, cs);
+                    for (int ii = 0; ii < c->getNumColorSpaces(); ++ii)
+                    {
+                        if (strcmp(c->getColorSpaceNameByIndex(ii), cs->getName()) == 0)
                         {
                             std::ostringstream os;
                             os << "Colorspace with name '" << cs->getName() << "' already defined.";
@@ -2708,13 +2981,40 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
                 }
             }
         }
+        else if (key == "view_transforms")
+        {
+            if (second.Type() != YAML::NodeType::Sequence)
+            {
+                throwError(second, "'view_transforms' field needs to be a (- !<ViewTransform>) list.");
+            }
+
+            for (const auto & val : second)
+            {
+                if (val.Tag() == "ViewTransform")
+                {
+                    ReferenceSpaceType rst = peekViewTransformReferenceSpace(val);
+                    ViewTransformRcPtr vt = ViewTransform::Create(rst);
+                    load(val, vt);
+                    c->addViewTransform(vt);
+                }
+                else
+                {
+                    std::ostringstream os;
+                    os << "Unknown element found in view_transforms:";
+                    os << val.Tag() << ". Only ViewTransform(s)";
+                    os << " currently handled.";
+                    LogWarning(os.str());
+                }
+            }
+
+        }
         else
         {
             LogUnknownKeyWarning("profile", first);
         }
     }
 
-    if(filename)
+    if (filename)
     {
         std::string realfilename = AbsPath(filename);
         std::string configrootdir = pystring::os::path::dirname(realfilename);
@@ -2809,7 +3109,7 @@ inline void save(YAML::Emitter& out, const Config* c)
     }
     else
     {
-        StringVec searchPaths;
+        StringUtils::StringVec searchPaths;
         const int numSP = c->getNumSearchPaths();
         for (int i = 0; i < c->getNumSearchPaths(); ++i)
         {
@@ -2897,10 +3197,11 @@ inline void save(YAML::Emitter& out, const Config* c)
         for(int v = 0; v < c->getNumViews(display); ++v)
         {
             View dview;
-            dview.name = c->getView(display, v);
-            dview.colorspace = c->getDisplayColorSpaceName(display, dview.name.c_str());
-            if(c->getDisplayLooks(display, dview.name.c_str()) != NULL)
-                dview.looks = c->getDisplayLooks(display, dview.name.c_str());
+            dview.m_name = c->getView(display, v);
+            dview.m_colorspace = c->getDisplayViewTransformName(display, dview.m_name.c_str());
+            dview.m_colorspace = c->getDisplayColorSpaceName(display, dview.m_name.c_str());
+            if(c->getDisplayLooks(display, dview.m_name.c_str()) != NULL)
+                dview.m_looks = c->getDisplayLooks(display, dview.m_name.c_str());
             save(out, dview);
 
         }
@@ -2911,12 +3212,12 @@ inline void save(YAML::Emitter& out, const Config* c)
     out << YAML::Newline;
     out << YAML::Newline;
     out << YAML::Key << "active_displays";
-    StringVec active_displays;
+    StringUtils::StringVec active_displays;
     if(c->getActiveDisplays() != NULL && strlen(c->getActiveDisplays()) > 0)
         SplitStringEnvStyle(active_displays, c->getActiveDisplays());
     out << YAML::Value << YAML::Flow << active_displays;
     out << YAML::Key << "active_views";
-    StringVec active_views;
+    StringUtils::StringVec active_views;
     if(c->getActiveViews() != NULL && strlen(c->getActiveViews()) > 0)
         SplitStringEnvStyle(active_views, c->getActiveViews());
     out << YAML::Value << YAML::Flow << active_views;
@@ -2924,7 +3225,7 @@ inline void save(YAML::Emitter& out, const Config* c)
     const std::string inactiveCSs = c->getInactiveColorSpaces();
     if (!inactiveCSs.empty())
     {
-        StringVec inactive_colorspaces;
+        StringUtils::StringVec inactive_colorspaces;
         SplitStringEnvStyle(inactive_colorspaces, inactiveCSs.c_str());
         out << YAML::Key << "inactive_colorspaces";
         out << YAML::Value << YAML::Flow << inactive_colorspaces;
@@ -2947,15 +3248,60 @@ inline void save(YAML::Emitter& out, const Config* c)
         out << YAML::Newline;
     }
 
+    // View transform
+    const int numVT = c->getNumViewTransforms();
+    if (numVT > 0)
+    {
+        out << YAML::Newline;
+        out << YAML::Key << "view_transforms";
+        out << YAML::Value << YAML::BeginSeq;
+        for (int i = 0; i < numVT; ++i)
+        {
+            auto name = c->getViewTransformNameByIndex(i);
+            auto vt = c->getViewTransform(name);
+            save(out, vt);
+        }
+        out << YAML::EndSeq;
+    }
+
+    std::vector<ConstColorSpaceRcPtr> sceneCS;
+    std::vector<ConstColorSpaceRcPtr> displayCS;
+    for (int i = 0; i < c->getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL); ++i)
+    {
+        const char* name = c->getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL,
+                                                       COLORSPACE_ALL, i);
+        auto cs = c->getColorSpace(name);
+        if (cs->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
+        {
+            displayCS.push_back(cs);
+        }
+        else
+        {
+            sceneCS.push_back(cs);
+        }
+    }
+
+    // Display ColorSpaces
+    if (!displayCS.empty())
+    {
+        out << YAML::Newline;
+        out << YAML::Key << "display_colorspaces";
+        out << YAML::Value << YAML::BeginSeq;
+        for (auto cs : displayCS)
+        {
+            save(out, cs);
+        }
+        out << YAML::EndSeq;
+    }
+
     // ColorSpaces
     {
         out << YAML::Newline;
         out << YAML::Key << "colorspaces";
         out << YAML::Value << YAML::BeginSeq;
-        for(int i = 0; i < c->getNumColorSpaces(COLORSPACE_ALL); ++i)
+        for (auto cs : sceneCS)
         {
-            const char* name = c->getColorSpaceNameByIndex(COLORSPACE_ALL, i);
-            save(out, c->getColorSpace(name));
+            save(out, cs);
         }
         out << YAML::EndSeq;
     }

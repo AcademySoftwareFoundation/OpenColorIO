@@ -7,23 +7,15 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "Categories.h"
 #include "PrivateTypes.h"
-#include "pystring/pystring.h"
+#include "utils/StringUtils.h"
 
 
 namespace OCIO_NAMESPACE
 {
-ColorSpaceRcPtr ColorSpace::Create()
-{
-    return ColorSpaceRcPtr(new ColorSpace(), &deleter);
-}
 
-void ColorSpace::deleter(ColorSpace* c)
-{
-    delete c;
-}
-
-class ColorSpace::Impl
+class ColorSpace::Impl : public CategoriesManager
 {
 public:
     std::string m_name;
@@ -31,33 +23,32 @@ public:
     std::string m_equalityGroup;
     std::string m_description;
 
-    BitDepth m_bitDepth;
-    bool m_isData;
+    BitDepth m_bitDepth{ BIT_DEPTH_UNKNOWN };
+    bool m_isData{ false };
 
-    Allocation m_allocation;
+    ReferenceSpaceType m_referenceSpaceType{ REFERENCE_SPACE_SCENE };
+
+    Allocation m_allocation{ ALLOCATION_UNIFORM };
     std::vector<float> m_allocationVars;
 
     TransformRcPtr m_toRefTransform;
     TransformRcPtr m_fromRefTransform;
 
-    bool m_toRefSpecified;
-    bool m_fromRefSpecified;
+    bool m_toRefSpecified{ false };
+    bool m_fromRefSpecified{ false };
 
-    typedef StringVec Categories;
-    Categories m_categories;
-
-    Impl() :
-        m_bitDepth(BIT_DEPTH_UNKNOWN),
-        m_isData(false),
-        m_allocation(ALLOCATION_UNIFORM),
-        m_toRefSpecified(false),
-        m_fromRefSpecified(false)
-    { }
+    Impl() = delete;
+    Impl(ReferenceSpaceType referenceSpace)
+        : CategoriesManager()
+        , m_referenceSpaceType(referenceSpace)
+    {
+    }
 
     Impl(const Impl &) = delete;
 
     ~Impl()
-    { }
+    {
+    }
 
     Impl& operator= (const Impl & rhs)
     {
@@ -69,6 +60,7 @@ public:
             m_description = rhs.m_description;
             m_bitDepth = rhs.m_bitDepth;
             m_isData = rhs.m_isData;
+            m_referenceSpaceType = rhs.m_referenceSpaceType;
             m_allocation = rhs.m_allocation;
             m_allocationVars = rhs.m_allocationVars;
 
@@ -88,58 +80,36 @@ public:
         return *this;
     }
 
-    Categories::const_iterator findCategory(const char * category) const
-    {
-        if(!category || !*category) return m_categories.end();
-
-        // NB: Categories are not case-sensitive and whitespace is stripped.
-        const std::string ref(pystring::strip(pystring::lower(category)));
-
-        for(auto itr = m_categories.begin(); itr!=m_categories.end(); ++itr)
-        {
-            if(pystring::strip(pystring::lower(*itr))==ref)
-            {
-                return itr;
-            }
-        }
-
-        return m_categories.end();
-    }
-
-    void removeCategory(const char * category)
-    {
-        if(!category || !*category) return;
-
-        // NB: Categories are not case-sensitive and whitespace is stripped.
-        const std::string ref(pystring::strip(pystring::lower(category)));
-
-        for(auto itr = m_categories.begin(); itr!=m_categories.end(); ++itr)
-        {
-            if(pystring::strip(pystring::lower(*itr))==ref)
-            {
-                m_categories.erase(itr);
-                return;
-            }
-        }
-
-        return;
-    }
 };
 
 
 ///////////////////////////////////////////////////////////////////////////
 
+ColorSpaceRcPtr ColorSpace::Create()
+{
+    return ColorSpaceRcPtr(new ColorSpace(REFERENCE_SPACE_SCENE), &deleter);
+}
 
+void ColorSpace::deleter(ColorSpace* c)
+{
+    delete c;
+}
 
-ColorSpace::ColorSpace()
-: m_impl(new ColorSpace::Impl)
+ColorSpaceRcPtr ColorSpace::Create(ReferenceSpaceType referenceSpace)
+{
+    auto cs = ColorSpaceRcPtr(new ColorSpace(referenceSpace), &deleter);
+    return cs;
+}
+
+ColorSpace::ColorSpace(ReferenceSpaceType referenceSpace)
+: m_impl(new ColorSpace::Impl(referenceSpace))
 {
 }
 
 ColorSpace::~ColorSpace()
 {
     delete m_impl;
-    m_impl = NULL;
+    m_impl = nullptr;
 }
 
 ColorSpaceRcPtr ColorSpace::createEditableCopy() const
@@ -158,6 +128,7 @@ void ColorSpace::setName(const char * name)
 {
     getImpl()->m_name = name;
 }
+
 const char * ColorSpace::getFamily() const noexcept
 {
     return getImpl()->m_family.c_str();
@@ -200,17 +171,12 @@ void ColorSpace::setBitDepth(BitDepth bitDepth)
 
 bool ColorSpace::hasCategory(const char * category) const
 {
-    return getImpl()->findCategory(category)
-        != getImpl()->m_categories.end();
+    return getImpl()->hasCategory(category);
 }
 
 void ColorSpace::addCategory(const char * category)
 {
-    if(getImpl()->findCategory(category) 
-        == getImpl()->m_categories.end())
-    {
-        getImpl()->m_categories.push_back(pystring::strip(category));
-    }
+    getImpl()->addCategory(category);
 }
 
 void ColorSpace::removeCategory(const char * category)
@@ -220,19 +186,17 @@ void ColorSpace::removeCategory(const char * category)
 
 int ColorSpace::getNumCategories() const
 {
-    return static_cast<int>(getImpl()->m_categories.size());
+    return getImpl()->getNumCategories();
 }
 
 const char * ColorSpace::getCategory(int index) const
 {
-    if(index<0 || index>=(int)getImpl()->m_categories.size()) return nullptr;
-
-    return getImpl()->m_categories[index].c_str();
+    return getImpl()->getCategory(index);
 }
 
 void ColorSpace::clearCategories()
 {
-    getImpl()->m_categories.clear();
+    getImpl()->clearCategories();
 }
 
 bool ColorSpace::isData() const
@@ -243,6 +207,11 @@ bool ColorSpace::isData() const
 void ColorSpace::setIsData(bool val)
 {
     getImpl()->m_isData = val;
+}
+
+ReferenceSpaceType ColorSpace::getReferenceSpaceType() const
+{
+    return getImpl()->m_referenceSpaceType;
 }
 
 Allocation ColorSpace::getAllocation() const
@@ -306,13 +275,24 @@ void ColorSpace::setTransform(const ConstTransformRcPtr & transform,
         throw Exception("Unspecified ColorSpaceDirection");
 }
 
-std::ostream& operator<< (std::ostream& os, const ColorSpace& cs)
+std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
 {
     int numVars(cs.getAllocationNumVars());
     std::vector<float> vars(numVars);
     cs.getAllocationVars(&vars[0]);
 
-    os << "<ColorSpace ";
+    os << "<ColorSpace referenceSpaceType=";
+
+    const auto refType = cs.getReferenceSpaceType();
+    switch (refType)
+    {
+    case REFERENCE_SPACE_SCENE:
+        os << "scene, ";
+        break;
+    case REFERENCE_SPACE_DISPLAY:
+        os << "display, ";
+        break;
+    }
     os << "name=" << cs.getName() << ", ";
     os << "family=" << cs.getFamily() << ", ";
     os << "equalityGroup=" << cs.getEqualityGroup() << ", ";

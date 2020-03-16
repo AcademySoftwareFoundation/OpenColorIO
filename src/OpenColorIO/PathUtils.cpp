@@ -15,6 +15,7 @@
 #include "PathUtils.h"
 #include "Platform.h"
 #include "pystring/pystring.h"
+#include "utils/StringUtils.h"
 
 #if !defined(_WIN32)
 #include <sys/param.h>
@@ -190,8 +191,11 @@ void LoadEnvironment(EnvMap & map, bool update)
 std::string EnvExpand(const std::string & str, const EnvMap & map)
 {
     // Early exit if no magic characters are found.
-    if(pystring::find(str, "$") == -1 && 
-        pystring::find(str, "%") == -1) return str;
+    if(StringUtils::Find(str, "$") == std::string::npos 
+        && StringUtils::Find(str, "%") == std::string::npos)
+    {
+        return str;
+    }
 
     std::string orig = str;
     std::string newstr = str;
@@ -204,12 +208,9 @@ std::string EnvExpand(const std::string & str, const EnvMap & map)
     for (EnvMap::const_iterator iter = map.begin();
             iter != map.end(); ++iter)
     {
-        newstr = pystring::replace(newstr,
-            ("${"+iter->first+"}"), iter->second);
-        newstr = pystring::replace(newstr,
-            ("$"+iter->first), iter->second);
-        newstr = pystring::replace(newstr,
-            ("%"+iter->first+"%"), iter->second);
+        StringUtils::ReplaceInPlace(newstr, ("${"+iter->first+"}"), iter->second);
+        StringUtils::ReplaceInPlace(newstr, ("$"+iter->first),      iter->second);
+        StringUtils::ReplaceInPlace(newstr, ("%"+iter->first+"%"),  iter->second);
     }
 
     // recursively call till string doesn't expand anymore
@@ -227,7 +228,7 @@ int ParseColorSpaceFromString(const Config & config, const char * str)
 
     // Search the entire filePath, including directory name (if provided)
     // convert the filename to lowercase.
-    std::string fullstr = pystring::lower(std::string(str));
+    const std::string fullstr = StringUtils::Lower(std::string(str));
 
     // See if it matches a LUT name.
     // This is the position of the RIGHT end of the colorspace substring,
@@ -237,12 +238,12 @@ int ParseColorSpaceFromString(const Config & config, const char * str)
     int rightMostColorSpaceIndex = -1;
 
     // Find the right-most occcurance within the string for each colorspace.
-    for (int i = 0; i < config.getNumColorSpaces(COLORSPACE_ALL); ++i)
+    for (int i = 0; i < config.getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL); ++i)
     {
-        std::string csname = pystring::lower(config.getColorSpaceNameByIndex(i));
+        const std::string csname = StringUtils::Lower(config.getColorSpaceNameByIndex(i));
 
         // find right-most extension matched in filename
-        int colorspacePos = pystring::rfind(fullstr, csname);
+        int colorspacePos = (int)StringUtils::ReverseFind(fullstr, csname);
         if (colorspacePos < 0)
             continue;
 

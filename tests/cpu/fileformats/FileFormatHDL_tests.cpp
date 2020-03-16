@@ -163,14 +163,13 @@ OCIO_ADD_TEST(FileFormatHDL, bake_1d)
     //std::cerr << "Expected:" << std::endl << bout << std::endl;
 
     //
-    OCIO::StringVec osvec;
-    pystring::splitlines(output.str(), osvec);
-    OCIO::StringVec resvec;
-    pystring::splitlines(bout, resvec);
-    OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    const StringUtils::StringVec osvec  = StringUtils::SplitByLines(output.str());
+    const StringUtils::StringVec resvec = StringUtils::SplitByLines(bout);
+    OCIO_REQUIRE_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
-        OCIO_CHECK_EQUAL(pystring::strip(osvec[i]), pystring::strip(resvec[i]));
-
+    {
+        OCIO_CHECK_EQUAL(StringUtils::Trim(osvec[i]), StringUtils::Trim(resvec[i]));
+    }
 }
 
 OCIO_ADD_TEST(FileFormatHDL, read_3d)
@@ -320,14 +319,12 @@ OCIO_ADD_TEST(FileFormatHDL, bake_3d)
     //std::cerr << "Expected:" << std::endl << bout << std::endl;
 
     //
-    std::vector<std::string> osvec;
-    pystring::splitlines(output.str(), osvec);
-    std::vector<std::string> resvec;
-    pystring::splitlines(bout, resvec);
-    OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    const StringUtils::StringVec osvec  = StringUtils::SplitByLines(output.str());
+    const StringUtils::StringVec resvec = StringUtils::SplitByLines(bout);
+    OCIO_REQUIRE_EQUAL(osvec.size(), resvec.size());
     for (unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
     {
-        OCIO_CHECK_EQUAL(pystring::strip(osvec[i]), pystring::strip(resvec[i]));
+        OCIO_CHECK_EQUAL(StringUtils::Trim(osvec[i]), StringUtils::Trim(resvec[i]));
     }
 }
 
@@ -538,16 +535,14 @@ OCIO_ADD_TEST(FileFormatHDL, bake_3d_1d)
     //std::cerr << "Expected:" << std::endl << bout << std::endl;
 
     //
-    std::vector<std::string> osvec;
-    pystring::splitlines(output.str(), osvec);
-    std::vector<std::string> resvec;
-    pystring::splitlines(bout, resvec);
-    OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    const StringUtils::StringVec osvec  = StringUtils::SplitByLines(output.str());
+    const StringUtils::StringVec resvec = StringUtils::SplitByLines(bout);
+    OCIO_REQUIRE_EQUAL(osvec.size(), resvec.size());
 
     // TODO: Get this working on osx
     /*
     for(unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
-        OCIO_CHECK_EQUAL(pystring::strip(osvec[i]), pystring::strip(resvec[i]));
+        OCIO_CHECK_EQUAL(StringUtils::Trim(osvec[i]), StringUtils::Trim(resvec[i]));
     */
 }
 
@@ -679,15 +674,13 @@ OCIO_ADD_TEST(FileFormatHDL, look_test)
     //std::cerr << "Expected:" << std::endl << bout << std::endl;
 
     //
-    std::vector<std::string> osvec;
-    pystring::splitlines(output.str(), osvec);
-    std::vector<std::string> resvec;
-    pystring::splitlines(bout, resvec);
-    OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    const StringUtils::StringVec osvec  = StringUtils::SplitByLines(output.str());
+    const StringUtils::StringVec resvec = StringUtils::SplitByLines(bout);
+    OCIO_REQUIRE_EQUAL(osvec.size(), resvec.size());
 
     for (unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
     {
-        OCIO_CHECK_EQUAL(pystring::strip(osvec[i]), pystring::strip(resvec[i]));
+        OCIO_CHECK_EQUAL(StringUtils::Trim(osvec[i]), StringUtils::Trim(resvec[i]));
     }
 }
 
