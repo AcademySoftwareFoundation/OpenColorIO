@@ -128,13 +128,13 @@ CachedFileRcPtr LocalFileFormat::read(
     float redValue, greenValue, blueValue;
 
     int entriesRemaining = rSize * gSize * bSize;
-    Array & lutArray = lut3d->getArray();
-    int checkSize = sizeof(lutArray)/4;
-    bool ifDuplicated[checkSize];
-    for(int i = 0; i < checkSize - 1; i++){
+    Array & lutArray = lut3d->getArray(); 
+    unsigned long numVal = lutArray.getNumValues();
+    int checkSize = sizeof(numVal)/4;
+    bool ifDuplicated[numVal];
+    for(int i = 0; i < numVal - 1; i++){
         ifDuplicated[i] = false;
     }
-    unsigned long numVal = lutArray.getNumValues();
     while (istream.good() && entriesRemaining > 0)
     {
         istream.getline(lineBuffer, MAX_LINE_SIZE);
