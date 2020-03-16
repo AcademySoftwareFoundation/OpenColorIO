@@ -131,7 +131,7 @@ CachedFileRcPtr LocalFileFormat::read(
     int entriesRemaining = rSize * gSize * bSize;
     Array & lutArray = lut3d->getArray(); 
     unsigned long numVal = lutArray.getNumValues();
-    std::vector<boolean> ifDuplicated(numVal, false);
+    std::vector<bool> ifDuplicated(numVal, false);
     while (istream.good() && entriesRemaining > 0)
     {
         istream.getline(lineBuffer, MAX_LINE_SIZE);
