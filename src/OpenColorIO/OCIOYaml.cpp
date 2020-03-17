@@ -1060,7 +1060,7 @@ inline void load(const YAML::Node& node, FileTransformRcPtr& t)
 
         load(first, key);
 
-        if (key.find(":") != std::string::npos && second.IsNull() || !second.IsDefined()) continue;
+        if (key.find(":") != std::string::npos && (second.IsNull() || !second.IsDefined())) continue;
 
         if(key == "src")
         {
