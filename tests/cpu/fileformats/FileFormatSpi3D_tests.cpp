@@ -141,6 +141,24 @@ OCIO_ADD_TEST(FileFormatSpi3D, read_failure)
                               "that falls outside of the cube");
     }
     {
+        // Duplicated indices
+        const std::string SAMPLE_ERROR =
+            "SPILUT 1.0\n"
+            "3 3\n"
+            "2 2 2\n"
+            "0 0 0 0.0 0.0 0.0\n"
+            "0 0 1 0.0 0.0 0.9\n"
+            "0 0 1 0.0 0.0 0.9\n"
+            "0 1 1 0.0 0.8 0.8\n"
+            "1 0 1 0.7 0.6 0.1\n"
+            "1 1 0 0.6 0.7 0.1\n"
+            "1 1 1 0.6 0.7 0.7\n";
+
+        OCIO_CHECK_THROW_WHAT(ReadSpi3d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "duplicates a previous index");
+    }
+    {
         // Not enough entries
         const std::string SAMPLE_ERROR =
             "SPILUT 1.0\n"
