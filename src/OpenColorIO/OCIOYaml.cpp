@@ -2,6 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <cstring>
+#include <unordered_set>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -268,6 +269,31 @@ inline void throwValueError(const std::string & nodeName,
         << "' from '" << nodeName << "' failed: " << msg;
 
     throw Exception(os.str().c_str());
+}
+
+// Duplicate Checker
+
+inline void CheckDuplicates(const YAML::Node & node)
+{
+    std::string key;
+    std::unordered_set<std::string> keyset;
+
+    for (const auto & iter : node)
+    {
+        const YAML::Node & first = iter.first;
+        load(first, key);
+        if (keyset.find(key) == keyset.end())
+        {
+            keyset.insert(key);
+        }
+        else
+        {
+            std::ostringstream os;
+            os << "Key-value pair with key '" << key;
+            os << "' specified more than once. ";
+            throwValueError(node.Tag(), first, os.str());
+        }
+    }
 }
 
 // View
@@ -2032,6 +2058,8 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs)
         os << "The '!<ColorSpace>' content needs to be a map.";
         throwError(node, os.str());
     }
+
+    CheckDuplicates(node);
 
     std::string key, stringval;
     bool boolval;
