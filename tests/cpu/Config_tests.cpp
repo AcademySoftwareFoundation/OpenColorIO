@@ -181,6 +181,39 @@ OCIO_ADD_TEST(Config, simple_config)
     OCIO_CHECK_NO_THROW(config->sanityCheck());
 }
 
+OCIO_ADD_TEST(Config, missing_space_key_value_pair)
+{
+
+    constexpr char SIMPLE_PROFILE[] =
+        "ocio_profile_version: 2\n"
+        "search_path: luts\n"
+        "roles:\n"
+        "  default: raw\n"
+        "file_rules:\n"
+        "  - !<Rule> {name: Default, colorspace: default}\n"
+        "displays:\n"
+        "  Disp1:\n"
+        "    - !<View> {name: View1, colorspace: raw}\n"
+        "active_displays: []\n"
+        "active_views: []\n"
+        "colorspaces:\n"
+        "  - to_reference: !<FileTransform> {direction:inverse}\n"
+        "\n";
+
+    std::istringstream is;
+    is.str(SIMPLE_PROFILE);
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+
+    {
+        OCIO::LogGuard log;
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_EQUAL(log.output(), 
+                         "[OpenColorIO Warning]: Unknown key in FileTransform: 'direction:inverse'.\n");
+    }
+}
+
 OCIO_ADD_TEST(Config, simple_config_with_duplicate)
 {
 
