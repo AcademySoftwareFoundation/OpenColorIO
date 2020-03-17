@@ -2,8 +2,9 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <cstring>
-#include <OpenColorIO/OpenColorIO.h>
 #include <unordered_set>
+
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "Display.h"
 #include "FileRules.h"
@@ -282,7 +283,9 @@ inline void CheckDuplicates(const YAML::Node & node)
         const YAML::Node & first = iter.first;
         load(first, key);
         if (keyset.find(key) == keyset.end())
+        {
             keyset.insert(key);
+        }
         else
         {
             std::ostringstream os;
