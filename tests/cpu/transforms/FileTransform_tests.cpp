@@ -10,6 +10,32 @@
 
 namespace OCIO = OCIO_NAMESPACE;
 
+OCIO_ADD_TEST(FileTransform, basic)
+{
+    auto ft = OCIO::FileTransform::Create();
+    OCIO_CHECK_EQUAL(ft->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    ft->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_EQUAL(ft->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO_CHECK_EQUAL(std::string(ft->getSrc()), "");
+    const std::string src{ "source" };
+    ft->setSrc(src.c_str());
+    OCIO_CHECK_EQUAL(src, ft->getSrc());
+
+    OCIO_CHECK_EQUAL(std::string(ft->getCCCId()), "");
+    const std::string cccid{ "cccid" };
+    ft->setCCCId(cccid.c_str());
+    OCIO_CHECK_EQUAL(cccid, ft->getCCCId());
+
+    OCIO_CHECK_EQUAL(ft->getCDLStyle(), OCIO::CDL_NO_CLAMP);
+    ft->setCDLStyle(OCIO::CDL_ASC);
+    OCIO_CHECK_EQUAL(ft->getCDLStyle(), OCIO::CDL_ASC);
+
+    OCIO_CHECK_EQUAL(ft->getInterpolation(), OCIO::INTERP_UNKNOWN);
+    ft->setInterpolation(OCIO::INTERP_LINEAR);
+    OCIO_CHECK_EQUAL(ft->getInterpolation(), OCIO::INTERP_LINEAR);
+}
+
 OCIO_ADD_TEST(FileTransform, load_file_ok)
 {
     OCIO::ConstProcessorRcPtr proc;
