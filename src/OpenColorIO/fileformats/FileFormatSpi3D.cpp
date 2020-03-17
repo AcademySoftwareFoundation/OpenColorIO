@@ -178,6 +178,16 @@ CachedFileRcPtr LocalFileFormat::read(
                 entriesRemaining--;
                 ifDuplicated[index] = true;
             }
+            else{
+                std::ostringstream os;
+                os << "Error parsing .spi3d file (";
+                os << fileName;
+                os << "). ";
+                os << "Detect duplicated indices:";
+                os << index;
+                os<< " duplicates a previous index.";
+                throw Exception(os.str().c_str());
+            }
         }
     }
 
