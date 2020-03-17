@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BSD-3-Clause
+﻿// SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
 
@@ -170,12 +170,12 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const AllocationTrans
 
 //!rst:: //////////////////////////////////////////////////////////////////
 
-//!cpp:class:: An implementation of the ASC CDL Transfer Functions and
-// Interchange - Syntax (Based on the version 1.2 document)
+//!cpp:class:: An implementation of the ASC Color Decision List (CDL), based on the ASC v1.2
+// specification.
 //
-// .. note::
-//    the clamping portion of the CDL is only applied if a non-identity
-//    power is specified.
+// ​.. note::
+//    If the config version is 1, negative values are clamped if the power is not 1.0.
+//    For config version 2 and higher, the negative handling is controlled by the CDL style.
 class OCIOEXPORT CDLTransform : public Transform
 {
 public:
@@ -198,12 +198,15 @@ public:
 
     //!cpp:function::
     virtual CDLStyle getStyle() const = 0;
-    //!cpp:function::
+    //!cpp:function:: Use CDL_ASC to clamp values to [0,1] per the ASC spec.  Use NO_CLAMP to
+    // never clamp values (regardless of whether power is 1.0).  The NO_CLAMP option passes
+    // negatives through unchanged (like the NEGATIVE_PASS_THRU style of ExponentTransform).
+    // The default style is CDL_NO_CLAMP.
     virtual void setStyle(CDLStyle style) = 0;
 
     //!cpp:function::
     virtual const char * getXML() const = 0;
-    //!cpp:function::
+    //!cpp:function:: The default style is CDL_NO_CLAMP.
     virtual void setXML(const char * xml) = 0;
 
     //!rst:: **ASC_SOP**
@@ -458,11 +461,12 @@ protected:
 
 //!rst:: //////////////////////////////////////////////////////////////////
 
-//!cpp:class:: Represents exponent transform: pow( clamp(color), value)
+//!cpp:class:: Represents exponent transform: pow( clamp(color), value ).
 //
-// For configs with version == 1: If the exponent is 1.0, this will not clamp.
-// Otherwise, the input color will be clamped between [0.0, inf].
-// For configs with version > 1: Negative value handling may be specified via setNegativeStyle.
+// ​.. note::
+//    For configs with version == 1: Negative style is ignored and if the exponent is 1.0,
+//    this will not clamp. Otherwise, the input color will be clamped between [0.0, inf].
+//    For configs with version > 1: Negative value handling may be specified via setNegativeStyle.
 class OCIOEXPORT ExponentTransform : public Transform
 {
 public:
@@ -692,6 +696,12 @@ public:
     const char * getCCCId() const;
     //!cpp:function::
     void setCCCId(const char * id);
+
+    //!cpp:function::
+    CDLStyle getCDLStyle() const;
+    //!cpp:function:: Can be used with CDL, CC & CCC formats to specify the clamping behavior of
+    // the CDLTransform. Default is CDL_NO_CLAMP.
+    void setCDLStyle(CDLStyle);
 
     //!cpp:function::
     Interpolation getInterpolation() const;

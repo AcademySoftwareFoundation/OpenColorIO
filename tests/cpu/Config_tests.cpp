@@ -181,7 +181,7 @@ OCIO_ADD_TEST(Config, simple_config)
     OCIO_CHECK_NO_THROW(config->sanityCheck());
 }
 
-OCIO_ADD_TEST(Config, missing_space_key_value_pair)
+OCIO_ADD_TEST(Config, simple_config_with_duplicate)
 {
 
     constexpr char SIMPLE_PROFILE[] =
@@ -197,23 +197,17 @@ OCIO_ADD_TEST(Config, missing_space_key_value_pair)
         "active_displays: []\n"
         "active_views: []\n"
         "colorspaces:\n"
-        "  - to_reference: !<FileTransform> {direction:inverse}\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw_duplicated\n"
+        "    name: raw\n"
         "\n";
 
     std::istringstream is;
     is.str(SIMPLE_PROFILE);
-
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-
-    {
-        OCIO::LogGuard log;
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
-        OCIO_CHECK_EQUAL(log.output(), 
-                         "[OpenColorIO Warning]: Unknown key in FileTransform: 'direction:inverse'.\n");
-    }
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                          "Key-value pair with key 'name' specified more than once. ");
 }
-
 
 OCIO_ADD_TEST(Config, roles)
 {
@@ -312,7 +306,7 @@ OCIO_ADD_TEST(Config, serialize_group_transform)
     "    allocation: uniform\n"
     "    from_reference: !<GroupTransform>\n"
     "      children:\n"
-    "        - !<FileTransform> {src: \"\", interpolation: unknown}\n"
+    "        - !<FileTransform> {src: \"\"}\n"
     "\n"
     "  - !<ColorSpace>\n"
     "    name: testing2\n"
@@ -2853,6 +2847,83 @@ OCIO_ADD_TEST(Config, matrix_serialization)
     std::stringstream ss;
     ss << *config.get();
     OCIO_CHECK_EQUAL(ss.str(), str);
+}
+
+OCIO_ADD_TEST(Config, cdl_serialization)
+{
+    // Config v2.
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<CDLTransform> {slope: [1, 2, 1]}\n"
+            "        - !<CDLTransform> {offset: [0.1, 0.2, 0.1]}\n"
+            "        - !<CDLTransform> {power: [1.1, 1.2, 1.1]}\n"
+            "        - !<CDLTransform> {sat: 0.1, direction: inverse}\n"
+            "        - !<CDLTransform> {slope: [2, 2, 3], offset: [0.2, 0.3, 0.1], power: [1.2, 1.1, 1], sat: 0.2, style: asc}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::ostringstream oss;
+        OCIO_CHECK_NO_THROW(oss << *config.get());
+        OCIO_CHECK_EQUAL(oss.str(), str);
+    }
+
+    // Config v1.
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<CDLTransform> {slope: [1, 2, 1]}\n"
+            "        - !<CDLTransform> {offset: [0.1, 0.2, 0.1]}\n"
+            "        - !<CDLTransform> {power: [1.1, 1.2, 1.1]}\n"
+            "        - !<CDLTransform> {sat: 0.1}\n";
+
+        const std::string str = PROFILE_V1 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::ostringstream oss;
+        OCIO_CHECK_NO_THROW(oss << *config.get());
+        OCIO_CHECK_EQUAL(oss.str(), str);
+    }
+}
+
+OCIO_ADD_TEST(Config, file_transform_serialization)
+{
+    // Config v2.
+    const std::string strEnd =
+        "    from_reference: !<GroupTransform>\n"
+        "      children:\n"
+        "        - !<FileTransform> {src: a.clf}\n"
+        "        - !<FileTransform> {src: b.ccc, cccid: cdl1, interpolation: best}\n"
+        "        - !<FileTransform> {src: b.ccc, cccid: cdl2, cdl_style: asc, interpolation: linear}\n"
+        "        - !<FileTransform> {src: a.clf, direction: inverse}\n";
+
+    const std::string str = PROFILE_V2_START + strEnd;
+
+    std::istringstream is;
+    is.str(str);
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+    std::ostringstream oss;
+    OCIO_CHECK_NO_THROW(oss << *config.get());
+    OCIO_CHECK_EQUAL(oss.str(), str);
 }
 
 OCIO_ADD_TEST(Config, add_color_space)

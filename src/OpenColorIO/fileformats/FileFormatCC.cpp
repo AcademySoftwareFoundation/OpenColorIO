@@ -19,9 +19,9 @@ public:
     {
         transform = CDLTransform::Create();
     };
-    
+
     ~LocalCachedFile() = default;
-    
+
     CDLTransformRcPtr transform;
 };
 
@@ -34,13 +34,12 @@ class LocalFileFormat : public FileFormat
 public:
     LocalFileFormat() = default;
     ~LocalFileFormat() = default;
-    
+
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
-    
-    CachedFileRcPtr read(
-        std::istream & istream,
-        const std::string & fileName) const override;
-    
+
+    CachedFileRcPtr read(std::istream & istream,
+                         const std::string & fileName) const override;
+
     void buildFileOps(OpRcPtrVec & ops,
                       const Config & config,
                       const ConstContextRcPtr & context,
@@ -81,7 +80,7 @@ CachedFileRcPtr LocalFileFormat::read(
         os << e.what();
         throw Exception(os.str().c_str());
     }
-    
+
     return cachedFile;
 }
 
@@ -94,29 +93,33 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                               TransformDirection dir) const
 {
     LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
-    
+
     // This should never happen.
-    if(!cachedFile)
+    if (!cachedFile)
     {
         std::ostringstream os;
         os << "Cannot build .cc Op. Invalid cache type.";
         throw Exception(os.str().c_str());
     }
-    
-    TransformDirection newDir = CombineTransformDirections(dir,
-        fileTransform.getDirection());
-    if(newDir == TRANSFORM_DIR_UNKNOWN)
+
+    TransformDirection newDir = CombineTransformDirections(dir, fileTransform.getDirection());
+    if (newDir == TRANSFORM_DIR_UNKNOWN)
     {
         std::ostringstream os;
         os << "Cannot build file format transform,";
         os << " unspecified transform direction.";
         throw Exception(os.str().c_str());
     }
-    
-    BuildCDLOp(ops,
-               config,
-               *cachedFile->transform,
-               newDir);
+
+    auto cdl = cachedFile->transform;
+    const auto fileCDLStyle = fileTransform.getCDLStyle();
+    if (fileCDLStyle != CDL_TRANSFORM_DEFAULT)
+    {
+        cdl = OCIO_DYNAMIC_POINTER_CAST<CDLTransform>(cdl->createEditableCopy());
+        cdl->setStyle(fileCDLStyle);
+    }
+
+    BuildCDLOp(ops, config, *cdl, newDir);
 }
 }
 
