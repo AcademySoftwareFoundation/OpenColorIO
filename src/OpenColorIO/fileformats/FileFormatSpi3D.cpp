@@ -174,11 +174,13 @@ CachedFileRcPtr LocalFileFormat::read(
             lutArray[index+0] = redValue;
             lutArray[index+1] = greenValue;
             lutArray[index+2] = blueValue;
-            if(ifDuplicated[index] == false){
+            if (ifDuplicated[index] == false)
+            {
                 entriesRemaining--;
                 ifDuplicated[index] = true;
             }
-            else{
+            else
+            {
                 std::ostringstream os;
                 os << "Error parsing .spi3d file (";
                 os << fileName;
