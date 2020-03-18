@@ -213,14 +213,17 @@ void BuildExponentOp(OpRcPtrVec & ops,
                      const ExponentTransform & transform,
                      TransformDirection dir)
 {
-    if(config.getMajorVersion()==1)
+    if (config.getMajorVersion() == 1)
     {
+        // Ignore style, use a simple exponent.
         TransformDirection combinedDir = CombineTransformDirections(dir, transform.getDirection());
 
         double vec4[4] = { 1., 1., 1., 1. };
         transform.getValue(vec4);
+        ExponentOpDataRcPtr expData = std::make_shared<ExponentOpData>(vec4);
+        expData->getFormatMetadata() = transform.getFormatMetadata();
         CreateExponentOp(ops,
-                         vec4,
+                         expData,
                          combinedDir);
     }
     else

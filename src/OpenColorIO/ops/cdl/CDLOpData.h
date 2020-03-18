@@ -31,7 +31,8 @@ public:
         CDL_NO_CLAMP_REV   // Reverse no clamping style
     };
 
-    static inline Style GetDefaultStyle() { return CDL_V1_2_FWD; }
+    static inline Style GetDefaultStyle() { return ConvertStyle(CDL_TRANSFORM_DEFAULT,
+                                                                TRANSFORM_DIR_FORWARD); }
 
     static Style GetStyle(const char * name);
     static const char * GetStyleName(Style style);

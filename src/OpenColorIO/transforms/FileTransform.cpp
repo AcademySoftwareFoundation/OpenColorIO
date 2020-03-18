@@ -33,14 +33,14 @@ void FileTransform::deleter(FileTransform* t)
 class FileTransform::Impl
 {
 public:
-    TransformDirection m_dir;
+    TransformDirection m_dir{ TRANSFORM_DIR_FORWARD };
+    Interpolation m_interp{ INTERP_UNKNOWN };
     std::string m_src;
-    std::string m_cccid;
-    Interpolation m_interp;
 
-    Impl() :
-        m_dir(TRANSFORM_DIR_FORWARD),
-        m_interp(INTERP_UNKNOWN)
+    std::string m_cccid;
+    CDLStyle m_cdlStyle{ CDL_TRANSFORM_DEFAULT };
+
+    Impl()
     { }
 
     Impl(const Impl &) = delete;
@@ -53,9 +53,10 @@ public:
         if (this != &rhs)
         {
             m_dir = rhs.m_dir;
+            m_interp = rhs.m_interp;
             m_src = rhs.m_src;
             m_cccid = rhs.m_cccid;
-            m_interp = rhs.m_interp;
+            m_cdlStyle = rhs.m_cdlStyle;
         }
         return *this;
     }
@@ -130,6 +131,16 @@ void FileTransform::setCCCId(const char * cccid)
     getImpl()->m_cccid = cccid;
 }
 
+CDLStyle FileTransform::getCDLStyle() const
+{
+    return getImpl()->m_cdlStyle;
+}
+
+void FileTransform::setCDLStyle(CDLStyle style)
+{
+    getImpl()->m_cdlStyle = style;
+}
+
 Interpolation FileTransform::getInterpolation() const
 {
     return getImpl()->m_interp;
@@ -166,6 +177,7 @@ std::ostream& operator<< (std::ostream& os, const FileTransform& t)
     os << "interpolation=" << InterpolationToString(t.getInterpolation());
     os << ", src=" << t.getSrc() << ", ";
     os << "cccid=" << t.getCCCId();
+    os << "cdl_style=" << CDLStyleToString(t.getCDLStyle());
     os << ">";
 
     return os;
