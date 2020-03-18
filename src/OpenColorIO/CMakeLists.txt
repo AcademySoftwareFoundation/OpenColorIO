@@ -130,9 +130,13 @@ set(SOURCES
 
 if(WIN32 AND BUILD_SHARED_LIBS)
 
-    # To be appended to the binary file name.
+    # Impose a versioned name on Windows to avoid binary name clashes
+    # between different versions of the same library.
+
+    # Note: Do not append the PATCH to allow Apps to use the
+    #       latest binary compatible library.
     set(LIBNAME_SUFFIX
-        ${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}
+        _${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}
     )
 
     # Create the version.rc file for the Windows DLL.
@@ -200,25 +204,10 @@ if(WIN32)
         PRIVATE
             XML_STATIC
     )
-
-    if(BUILD_SHARED_LIBS)
-
-        # Impose a versioned name on Windows to avoid binary name clashes
-        # between different versions of the same library.
-
-        # Note: Do not append the PATCH to allow Apps to use the
-        #       latest binary compatible library.
-
-        set_target_properties(OpenColorIO
-            PROPERTIES PREFIX ""
-                       SUFFIX "_${LIBNAME_SUFFIX}.dll"
-        )
-
-    endif()
 endif()
 
 set_target_properties(OpenColorIO PROPERTIES
-    OUTPUT_NAME   OpenColorIO${OCIO_LIBNAME_SUFFIX}
+    OUTPUT_NAME   OpenColorIO${OCIO_LIBNAME_SUFFIX}${LIBNAME_SUFFIX}
     COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}"
     VERSION       ${OpenColorIO_VERSION}
     SOVERSION     ${SOVERSION})
