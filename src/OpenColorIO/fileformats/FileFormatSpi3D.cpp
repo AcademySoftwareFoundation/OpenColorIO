@@ -129,9 +129,9 @@ CachedFileRcPtr LocalFileFormat::read(
     float redValue, greenValue, blueValue;
 
     int entriesRemaining = rSize * gSize * bSize;
-    Array & lutArray = lut3d->getArray(); 
+    Array & lutArray = lut3d->getArray();
     unsigned long numVal = lutArray.getNumValues();
-    std::vector<bool> ifDuplicated(numVal, false);
+    std::vector<bool> indexDefined(numVal, false);
     while (istream.good() && entriesRemaining > 0)
     {
         istream.getline(lineBuffer, MAX_LINE_SIZE);
@@ -174,10 +174,10 @@ CachedFileRcPtr LocalFileFormat::read(
             lutArray[index+0] = redValue;
             lutArray[index+1] = greenValue;
             lutArray[index+2] = blueValue;
-            if (ifDuplicated[index] == false)
+            if (！indexDefined[index])
             {
                 entriesRemaining--;
-                ifDuplicated[index] = true;
+                indexDefined[index] = true;
             }
             else
             {
@@ -185,9 +185,10 @@ CachedFileRcPtr LocalFileFormat::read(
                 os << "Error parsing .spi3d file (";
                 os << fileName;
                 os << "). ";
-                os << "Detect duplicated indices:";
-                os << index;
-                os<< " duplicates a previous index.";
+                os << "Data is invalid. ";
+                os << "A LUT entry is specified multiple times (";
+                os << rIndex << " " << gIndex << " " << bIndex;
+                os <<  ").";  
                 throw Exception(os.str().c_str());
             }
         }
