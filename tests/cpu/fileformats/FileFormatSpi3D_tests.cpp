@@ -149,6 +149,7 @@ OCIO_ADD_TEST(FileFormatSpi3D, read_failure)
             "0 0 0 0.0 0.0 0.0\n"
             "0 0 1 0.0 0.0 0.9\n"
             "0 0 1 0.0 0.0 0.9\n"
+            "0 1 0 0.0 0.7 0.0\n"
             "0 1 1 0.0 0.8 0.8\n"
             "1 0 1 0.7 0.6 0.1\n"
             "1 1 0 0.6 0.7 0.1\n"
@@ -156,7 +157,7 @@ OCIO_ADD_TEST(FileFormatSpi3D, read_failure)
 
         OCIO_CHECK_THROW_WHAT(ReadSpi3d(SAMPLE_ERROR),
                               OCIO::Exception,
-                              "duplicates a previous index");
+                              "A LUT entry is specified multiple times");
     }
     {
         // Not enough entries
