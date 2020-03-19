@@ -174,7 +174,7 @@ CachedFileRcPtr LocalFileFormat::read(
             lutArray[index+0] = redValue;
             lutArray[index+1] = greenValue;
             lutArray[index+2] = blueValue;
-            if (！indexDefined[index])
+            if (! indexDefined[index])
             {
                 entriesRemaining--;
                 indexDefined[index] = true;
