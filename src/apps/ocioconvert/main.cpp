@@ -357,33 +357,96 @@ int main(int argc, const char **argv)
     bool usegpuLegacy = false;
     bool outputgpuInfo = false;
     bool verbose = false;
+    bool useLut = false;
+    bool useDisplayView = false;
 
     ap.options("ocioconvert -- apply colorspace transform to an image \n\n"
-               "usage: ocioconvert [options]  inputimage inputcolorspace outputimage outputcolorspace\n\n",
+               "usage: ocioconvert [options]  inputimage inputcolorspace outputimage outputcolorspace\n"
+               "   or: ocioconvert [options] --lut lutfile inputimage outputimage\n"
+               "   or: ocioconvert [options] --view inputimage inputcolorspace outputimage displayname viewname\n\n",
                "%*", parse_end_args, "",
-               "<SEPARATOR>", "OpenImageIO options",
-               "--float-attribute %L", &floatAttrs, "name=float pair defining OIIO float attribute",
-               "--int-attribute %L", &intAttrs, "name=int pair defining OIIO int attribute",
-               "--string-attribute %L", &stringAttrs, "name=string pair defining OIIO string attribute",
-               "--croptofull", &croptofull, "name=Crop or pad to make pixel data region match the \"full\" region",
-               "--ch %s", &keepChannels, "name=Select channels (e.g., \"2,3,4\")",
-               "--gpu", &usegpu, "Use GPU color processing instead of CPU (CPU is the default)",
-               "--gpulegacy", &usegpuLegacy, "Use the legacy (i.e. baked) GPU color processing "
-                                             "instead of the CPU one (--gpu is ignored)",
-               "--gpuinfo", &outputgpuInfo, "Output the OCIO shader program",
-               "--v", &verbose, "Display general information",
+               "<SEPARATOR>", "Options:",
+               "--lut",       &useLut,         "Convert using a LUT rather than a config file",
+               "--view",      &useDisplayView, "Convert to a (display,view) pair rather than to "
+                                               "an output color space",
+               "--gpu",       &usegpu,         "Use GPU color processing instead of CPU (CPU is the default)",
+               "--gpulegacy", &usegpuLegacy,   "Use the legacy (i.e. baked) GPU color processing "
+                                               "instead of the CPU one (--gpu is ignored)",
+               "--gpuinfo",  &outputgpuInfo,   "Output the OCIO shader program",
+               "--v",        &verbose,         "Display general information",
+               "<SEPARATOR>", "\nOpenImageIO options:",
+               "--float-attribute %L",  &floatAttrs,   "\"name=float\" pair defining OIIO float attribute "
+                                                       "for outputimage",
+               "--int-attribute %L",    &intAttrs,     "\"name=int\" pair defining OIIO int attribute "
+                                                       "for outputimage",
+               "--string-attribute %L", &stringAttrs,  "\"name=string\" pair defining OIIO string attribute "
+                                                       "for outputimage",
+               "--croptofull",          &croptofull,   "Crop or pad to make pixel data region match the "
+                                                       "\"full\" region",
+               "--ch %s",               &keepChannels, "Select channels (e.g., \"2,3,4\")",
                NULL
                );
-    if (ap.parse (argc, argv) < 0) {
+    if (ap.parse (argc, argv) < 0)
+    {
         std::cerr << ap.geterror() << std::endl;
         ap.usage ();
         exit(1);
     }
 
-    if(args.size()!=4)
+    const char * inputimage       = nullptr;
+    const char * inputcolorspace  = nullptr;
+    const char * outputimage      = nullptr;
+    const char * outputcolorspace = nullptr;
+    const char * lutFile          = nullptr;
+    const char * display          = nullptr;
+    const char * view             = nullptr;
+
+    if (!useLut && !useDisplayView)
     {
-      ap.usage();
-      exit(1);
+        if (args.size() != 4)
+        {
+            std::cerr << "ERROR: Expecting 4 arguments, found " << args.size() << std::endl;
+            ap.usage();
+            exit(1);
+        }
+        inputimage       = args[0].c_str();
+        inputcolorspace  = args[1].c_str();
+        outputimage      = args[2].c_str();
+        outputcolorspace = args[3].c_str();
+    }
+    else if (useLut && useDisplayView)
+    {
+        std::cerr << "ERROR: Options lut & view can't be used at the same time." << std::endl;
+        ap.usage();
+        exit(1);
+    }
+    else if (useLut)
+    {
+        if (args.size() != 3)
+        {
+            std::cerr << "ERROR: Expecting 3 arguments for --lut option, found "
+                      << args.size() << std::endl;
+            ap.usage();
+            exit(1);
+        }
+        lutFile     = args[0].c_str();
+        inputimage  = args[1].c_str();
+        outputimage = args[2].c_str();
+    }
+    else if (useDisplayView)
+    {
+        if (args.size() != 5)
+        {
+            std::cerr << "ERROR: Expecting 5 arguments for --view option, found "
+                      << args.size() << std::endl;
+            ap.usage();
+            exit(1);
+        }
+        inputimage      = args[0].c_str();
+        inputcolorspace = args[1].c_str();
+        outputimage     = args[2].c_str();
+        display         = args[3].c_str();
+        view            = args[4].c_str();
     }
 
     if(verbose)
@@ -401,10 +464,15 @@ int main(int argc, const char **argv)
                 OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
                 std::cout << "OCIO search_path:    " << config->getSearchPath() << std::endl;
             }
+            catch (const OCIO::Exception & e)
+            {
+                std::cout << "ERROR loading config file: " << e.what() << std::endl;
+                exit(1);
+            }
             catch(...)
             {
 
-                std::cerr << "Error loading the config file: '" << env << "'";
+                std::cerr << "ERROR loading the config file: '" << env << "'";
                 exit(1);
             }
         }
@@ -420,11 +488,6 @@ int main(int argc, const char **argv)
         std::cout << std::endl;
         std::cout << "Using GPU color processing." << std::endl;
     }
-
-    const char * inputimage = args[0].c_str();
-    const char * inputcolorspace = args[1].c_str();
-    const char * outputimage = args[2].c_str();
-    const char * outputcolorspace = args[3].c_str();
 
     OIIO::ImageSpec spec;
     OCIO::ImgBuffer img;
@@ -444,7 +507,7 @@ int main(int argc, const char **argv)
 #endif
         if(!f)
         {
-            std::cerr << "Could not create image input." << std::endl;
+            std::cerr << "ERROR: Could not create image input." << std::endl;
             exit(1);
         }
 
@@ -453,7 +516,7 @@ int main(int argc, const char **argv)
         std::string error = f->geterror();
         if(!error.empty())
         {
-            std::cerr << "Error loading image " << error << std::endl;
+            std::cerr << "ERROR: Could not load image: " << error << std::endl;
             exit(1);
         }
 
@@ -471,13 +534,14 @@ int main(int argc, const char **argv)
             const bool ok = f->read_image(spec.format, img.getBuffer());
             if(!ok)
             {
-                std::cerr << "Error reading \"" << inputimage << "\" : " << f->geterror() << "\n";
+                std::cerr << "ERROR: Reading \"" << inputimage << "\" failed with: "
+                          << f->geterror() << std::endl;
                 exit(1);
             }
 
             if(croptofull)
             {
-                std::cerr << "Error: Crop disabled in GPU mode" << std::endl;
+                std::cerr << "ERROR: Crop disabled in GPU mode" << std::endl;
                 exit(1);
             }
         }
@@ -488,7 +552,8 @@ int main(int argc, const char **argv)
             const bool ok = f->read_image(spec.format, img.getBuffer());
             if(!ok)
             {
-                std::cerr << "Error reading \"" << inputimage << "\" : " << f->geterror() << "\n";
+                std::cerr << "ERROR: Reading \"" << inputimage << "\" failed with: "
+                          << f->geterror() << std::endl;
                 exit(1);
             }
         }
@@ -501,7 +566,8 @@ int main(int argc, const char **argv)
         //parse --ch argument
         if (keepChannels != "" && !StringToVector(&kchannels, keepChannels.c_str()))
         {
-            std::cerr << "Error: --ch: '" << keepChannels << "' should be comma-seperated integers\n";
+            std::cerr << "ERROR: --ch: '" << keepChannels
+                      << "' should be comma-seperated integers" << std::endl;
             exit(1);
         }
 
@@ -583,7 +649,7 @@ int main(int argc, const char **argv)
                             }
                             else
                             {
-                                std::cerr << "Error: Unsupported image type: " 
+                                std::cerr << "ERROR: Unsupported image type: " 
                                           << spec.format << std::endl;
                                 exit(1);
                             }
@@ -599,7 +665,7 @@ int main(int argc, const char **argv)
     }
     catch(...)
     {
-        std::cerr << "Error loading file.";
+        std::cerr << "ERROR: Loading file failed" << std::endl;
         exit(1);
     }
 
@@ -618,8 +684,42 @@ int main(int argc, const char **argv)
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
 
         // Get the processor
-        OCIO::ConstProcessorRcPtr processor
-            = config->getProcessor(inputcolorspace, outputcolorspace);
+        OCIO::ConstProcessorRcPtr processor;
+
+        try
+        {
+            if (useLut)
+            {
+                // Create the OCIO processor for the specified transform.
+                OCIO::FileTransformRcPtr t = OCIO::FileTransform::Create();
+                t->setSrc(lutFile);
+                t->setInterpolation(OCIO::INTERP_BEST);
+    
+                processor = config->getProcessor(t);
+            }
+            else if (useDisplayView)
+            {
+                OCIO::DisplayTransformRcPtr t = OCIO::DisplayTransform::Create();
+                t->setInputColorSpaceName(inputcolorspace);
+                t->setDisplay(display);
+                t->setView(view);
+                processor = config->getProcessor(t);
+            }
+            else
+            {
+                processor = config->getProcessor(inputcolorspace, outputcolorspace);
+            }
+        }
+        catch (const OCIO::Exception & e)
+        {
+            std::cout << "ERROR: OCIO failed with: " << e.what() << std::endl;
+            exit(1);
+        }
+        catch (...)
+        {
+            std::cout << "ERROR: Creating processor unknown failure" << std::endl;
+            exit(1);
+        }
 
         if (usegpu || usegpuLegacy)
         {
@@ -663,12 +763,12 @@ int main(int argc, const char **argv)
     }
     catch(OCIO::Exception & exception)
     {
-        std::cerr << "OCIO Error: " << exception.what() << std::endl;
+        std::cerr << "ERROR: OCIO failed with: " << exception.what() << std::endl;
         exit(1);
     }
     catch(...)
     {
-        std::cerr << "Unknown OCIO error encountered." << std::endl;
+        std::cerr << "ERROR: Unknown error processing the image" << std::endl;
         exit(1);
     }
 
@@ -684,7 +784,8 @@ int main(int argc, const char **argv)
         if(!ParseNameValuePair(name, value, floatAttrs[i]) ||
            !StringToFloat(&fval,value.c_str()))
         {
-            std::cerr << "Error: attribute string '" << floatAttrs[i] << "' should be in the form name=floatvalue\n";
+            std::cerr << "ERROR: Attribute string '" << floatAttrs[i]
+                      << "' should be in the form name=floatvalue" << std::endl;
             parseerror = true;
             continue;
         }
@@ -699,7 +800,8 @@ int main(int argc, const char **argv)
         if(!ParseNameValuePair(name, value, intAttrs[i]) ||
            !StringToInt(&ival,value.c_str()))
         {
-            std::cerr << "Error: attribute string '" << intAttrs[i] << "' should be in the form name=intvalue\n";
+            std::cerr << "ERROR: Attribute string '" << intAttrs[i]
+                      << "' should be in the form name=intvalue" << std::endl;
             parseerror = true;
             continue;
         }
@@ -712,7 +814,8 @@ int main(int argc, const char **argv)
         std::string name, value;
         if(!ParseNameValuePair(name, value, stringAttrs[i]))
         {
-            std::cerr << "Error: attribute string '" << stringAttrs[i] << "' should be in the form name=value\n";
+            std::cerr << "ERROR: Attribute string '" << stringAttrs[i]
+                      << "' should be in the form name=value" << std::endl;
             parseerror = true;
             continue;
         }
@@ -735,7 +838,7 @@ int main(int argc, const char **argv)
 #endif
         if(!f)
         {
-            std::cerr << "Could not create output input." << std::endl;
+            std::cerr << "ERROR: Could not create output input" << std::endl;
             exit(1);
         }
 
@@ -743,7 +846,8 @@ int main(int argc, const char **argv)
 
         if(!f->write_image(spec.format, img.getBuffer()))
         {
-            std::cerr << "Error writing \"" << outputimage << "\" : " << f->geterror() << "\n";
+            std::cerr << "ERROR: Writing \"" << outputimage << "\" failed with: "
+                      << f->geterror() << std::endl;
             exit(1);
         }
 
@@ -754,7 +858,7 @@ int main(int argc, const char **argv)
     }
     catch(...)
     {
-        std::cerr << "Error writing file.";
+        std::cerr << "ERROR: Writing file \"" << outputimage << "\"" << std::endl;
         exit(1);
     }
 

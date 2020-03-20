@@ -298,6 +298,28 @@ EnvironmentMode EnvironmentModeFromString(const char * s)
     return ENV_ENVIRONMENT_UNKNOWN;
 }
 
+const char * CDLStyleToString(CDLStyle style)
+{
+    if      (style == CDL_ASC)      return "asc";
+    else if (style == CDL_NO_CLAMP) return "noClamp";
+    return "asc";
+}
+
+CDLStyle CDLStyleFromString(const char * style)
+{
+    if (style && *style)
+    {
+        const std::string str = StringUtils::Lower(style);
+        if      (str == "asc")     return CDL_ASC;
+        else if (str == "noclamp") return CDL_NO_CLAMP;
+    }
+
+    std::string msg("Wrong CDL style: ");
+    msg += (style && *style) ? style : "<null>";
+
+    throw Exception(msg.c_str());
+}
+
 const char * RangeStyleToString(RangeStyle style)
 {
     if(style == RANGE_NO_CLAMP) return "noClamp";
