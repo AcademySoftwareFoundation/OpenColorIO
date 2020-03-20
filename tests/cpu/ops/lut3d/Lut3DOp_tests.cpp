@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include <cstring>
 #include <cstdlib>
 #ifndef _WIN32
@@ -9,13 +10,12 @@
 
 #include "BitDepthUtils.h"
 #include "OpBuilders.h"
-
 #include "ops/lut3d/Lut3DOp.cpp"
-
-#include "UnitTest.h"
+#include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
+
 
 OCIO_ADD_TEST(Lut3DOp, inverse_comparison_check)
 {

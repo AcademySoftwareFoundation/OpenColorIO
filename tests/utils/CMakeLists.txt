@@ -3,44 +3,25 @@
 
 include(ExternalProject)
 
-function(add_ext_test NAME SOURCES PRIVATE_INCLUDES)
-    set(TEST_BINARY "test_${NAME}_exec")
-    set(TEST_NAME "test_${NAME}")
-
-    add_executable(${TEST_BINARY} ${SOURCES})
-
-    target_compile_definitions(${TEST_BINARY}
-        PRIVATE
-            OCIO_UNIT_TEST
-            OpenColorIO_SKIP_IMPORTS
-    )
-
-    target_link_libraries(${TEST_BINARY}
-        PRIVATE
-            utils::strings
-    )
-
-    if(PRIVATE_INCLUDES)
-        target_include_directories(${TEST_BINARY}
-            PRIVATE
-                "${CMAKE_SOURCE_DIR}/tests/cpu"
-        )
-    endif(PRIVATE_INCLUDES)
-
-    set_target_properties(${TEST_BINARY} PROPERTIES
-        COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
-
-    add_test(${TEST_NAME} ${TEST_BINARY})
-endfunction(add_ext_test)
-
 set(SOURCES
-    ${CMAKE_SOURCE_DIR}/tests/cpu/UnitTest.cpp
-)
-
-set(TESTS
+    UnitTestMain.cpp
     StringUtils_tests.cpp
 )
 
-list(APPEND SOURCES ${TESTS})
+add_executable(test_utils_exec ${SOURCES})
 
-add_ext_test(ext "${SOURCES}" TRUE)
+target_compile_definitions(test_utils_exec
+    PRIVATE
+        OpenColorIO_SKIP_IMPORTS
+)
+
+target_link_libraries(test_utils_exec
+    PRIVATE
+        utils::strings
+        testutils
+)
+
+set_target_properties(test_utils_exec PROPERTIES
+    COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
+
+add_test(test_utils_exec test_utils_exec)

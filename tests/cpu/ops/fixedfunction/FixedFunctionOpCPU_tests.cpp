@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include <cstring>
 
 #include "ops/fixedfunction/FixedFunctionOpCPU.cpp"
 
-#include "UnitTest.h"
+#include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
+
 
 namespace
 {
@@ -304,7 +306,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, rec2100_surround)
     ApplyFixedFunction(&input2_32f[0], &expected_32f[0], num_samples, 
                        funcData2,
                        1e-7f,
-					   __LINE__);
+                       __LINE__);
 }
 
 OCIO_ADD_TEST(FixedFunctionOpCPU, RGB_TO_HSV)

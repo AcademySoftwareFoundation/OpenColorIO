@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include <cstring>
 
 #include "fileformats/xmlutils/XMLReaderUtils.cpp"
 
 #include "MathUtils.h"
-#include "UnitTest.h"
+#include "testutils/UnitTest.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
-#define EXPECTED_PRECISION 1e-11f
 
 OCIO_ADD_TEST(XMLReaderHelper, string_to_float)
 {
