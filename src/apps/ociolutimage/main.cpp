@@ -8,7 +8,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <OpenImageIO/imageio.h>
 #include <OpenImageIO/typedesc.h>
 
-#include "argparse.h"
+#include "apputils/argparse.h"
 
 #include <algorithm>
 #include <cmath>

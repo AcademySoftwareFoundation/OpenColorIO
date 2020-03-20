@@ -8,12 +8,13 @@
 #include "ops/matrix/MatrixOpData.h"
 #include "transforms/CDLTransform.cpp"
 
-#include "UnitTest.h"
+#include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
 
 #include "Platform.h"
 
 namespace OCIO = OCIO_NAMESPACE;
+
 
 OCIO_ADD_TEST(CDLTransform, equality)
 {

@@ -24,9 +24,9 @@ set_target_properties(ociobakelut PROPERTIES
 
 target_link_libraries(ociobakelut 
     PRIVATE 
-        OpenColorIO
-        lcms2::lcms2
         apputils
+        lcms2::lcms2
+        OpenColorIO
 )
 
 install(TARGETS ociobakelut

@@ -3,7 +3,8 @@
 
 
 #include "transforms/FixedFunctionTransform.cpp"
-#include "UnitTest.h"
+
+#include "testutils/UnitTest.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
