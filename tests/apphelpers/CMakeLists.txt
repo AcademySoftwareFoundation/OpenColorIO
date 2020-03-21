@@ -2,12 +2,12 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 set(SOURCES
-    ${CMAKE_SOURCE_DIR}/tests/cpu/UnitTest.cpp
     ${CMAKE_SOURCE_DIR}/tests/cpu/UnitTestLogUtils.cpp
     CategoryHelpers_tests.cpp
     ColorSpaceHelpers_tests.cpp
     DisplayViewHelpers_tests.cpp
     MixingHelpers_tests.cpp
+    UnitTestMain.cpp
 )
 
 add_executable(test_apphelpers_exec ${SOURCES})
@@ -39,6 +39,7 @@ target_link_libraries(test_apphelpers_exec
     PRIVATE
         apphelpers
         OpenColorIO
+        testutils
         unittest_data
 )
 

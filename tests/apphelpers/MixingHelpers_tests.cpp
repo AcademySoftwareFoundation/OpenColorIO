@@ -7,7 +7,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "MixingHelpers.h"
-#include "UnitTest.h"
+#include "testutils/UnitTest.h"
 #include "UnitTestLogUtils.h"
 
 

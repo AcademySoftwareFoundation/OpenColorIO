@@ -8,7 +8,7 @@
 
 #include "CategoryNames.h"
 #include "ColorSpaceHelpers.h"
-#include "UnitTest.h"
+#include "testutils/UnitTest.h"
 #include "UnitTestLogUtils.h"
 
 

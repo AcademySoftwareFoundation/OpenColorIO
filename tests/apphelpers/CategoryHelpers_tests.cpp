@@ -8,7 +8,7 @@
 
 #include "CategoryHelpers.h"
 #include "CategoryNames.h"
-#include "UnitTest.h"
+#include "testutils/UnitTest.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
