@@ -23,8 +23,8 @@ set_target_properties(ociocheck PROPERTIES
 
 target_link_libraries(ociocheck 
     PRIVATE 
-        OpenColorIO
         apputils
+        OpenColorIO
 )
 
 install(TARGETS ociocheck

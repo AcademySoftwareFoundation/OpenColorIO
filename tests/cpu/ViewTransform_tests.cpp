@@ -2,10 +2,12 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include "UnitTest.h"
+#include "testutils/UnitTest.h"
+#include "UnitTestUtils.h"
 #include "ViewTransform.cpp"
 
 namespace OCIO = OCIO_NAMESPACE;
+
 
 OCIO_ADD_TEST(ViewTransform, basic)
 {

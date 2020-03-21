@@ -10,7 +10,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
-#include "argparse.h"
+#include "apputils/argparse.h"
 
 void CustomLoggingFunction(const char * message)
 {

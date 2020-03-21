@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include "ops/gamma/GammaOpUtils.cpp"
 
 #include "MathUtils.h"
-#include "UnitTest.h"
+#include "testutils/UnitTest.h"
 
 namespace OCIO = OCIO_NAMESPACE;
+
 
 OCIO_ADD_TEST(GammaOpUtils, compute_params_forward)
 {

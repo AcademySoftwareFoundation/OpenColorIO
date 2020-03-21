@@ -2,9 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include "testutils/UnitTest.h"
 #include "utils/StringUtils.h"
-
-#include "UnitTest.h"
 
 
 OCIO_ADD_TEST(StringUtils, cases)

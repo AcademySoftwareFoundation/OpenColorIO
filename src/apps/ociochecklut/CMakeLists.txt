@@ -23,8 +23,8 @@ set_target_properties(ociochecklut PROPERTIES
 
 target_link_libraries(ociochecklut 
     PRIVATE 
-        OpenColorIO
         apputils
+        OpenColorIO
 )
 
 install(TARGETS ociochecklut
