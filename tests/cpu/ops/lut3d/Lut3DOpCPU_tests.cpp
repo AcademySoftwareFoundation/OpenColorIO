@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include "ops/lut3d/Lut3DOpCPU.cpp"
 
 #include <limits>
-#include "UnitTest.h"
+
+#include "ops/lut3d/Lut3DOpCPU.cpp"
+
+#include "testutils/UnitTest.h"
+
 namespace OCIO = OCIO_NAMESPACE;
+
 
 void Lut3DRendererNaNTest(OCIO::Interpolation interpol)
 {

@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include "fileformats/FileFormatSpi1D.cpp"
 
-#include "UnitTest.h"
+#include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
+
 
 OCIO_ADD_TEST(FileFormatSpi1D, format_info)
 {

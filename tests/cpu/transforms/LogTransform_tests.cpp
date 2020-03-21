@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include "OpBuilders.h"
-#include "ops/log/LogOp.h"
+
 #include "transforms/LogTransform.cpp"
 
-#include "UnitTest.h"
+#include "OpBuilders.h"
+#include "ops/log/LogOp.h"
+#include "testutils/UnitTest.h"
 
 namespace OCIO = OCIO_NAMESPACE;
+
 
 OCIO_ADD_TEST(LogTransform, basic)
 {

@@ -36,7 +36,7 @@ namespace OIIO = OIIO_NAMESPACE;
 #include "oiiohelpers.h"
 
 
-#include "argparse.h"
+#include "apputils/argparse.h"
 
 // Array of non OpenColorIO arguments.
 static std::vector<std::string> args;
