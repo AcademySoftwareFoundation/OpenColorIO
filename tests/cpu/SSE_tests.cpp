@@ -3,15 +3,17 @@
 
 #ifdef USE_SSE
 
+
 #include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "MathUtils.h"
 #include "SSE.h"
-#include "UnitTest.h"
+#include "testutils/UnitTest.h"
 
 namespace OCIO = OCIO_NAMESPACE;
+
 
 OCIO_ADD_TEST(SSE, sse2_log2_test)
 {

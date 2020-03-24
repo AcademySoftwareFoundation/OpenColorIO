@@ -61,6 +61,8 @@ typedef std::vector<OCIOTestRcPtr> UnitTests;
 
 UnitTests & GetUnitTests();
 
+extern int unit_test_failures;
+
 struct AddTest
 {
     explicit AddTest(const OCIOTestRcPtr & test)
@@ -68,6 +70,10 @@ struct AddTest
         GetUnitTests().push_back(test);
     }
 };
+
+
+// Method running through all the unit tests.
+int UnitTestMain(int argc, const char ** argv);
 
 
 // Helper macro.

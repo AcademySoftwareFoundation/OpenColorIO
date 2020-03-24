@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include "transforms/DisplayTransform.cpp"
 
 #include "ops/fixedfunction/FixedFunctionOpData.h"
@@ -8,9 +9,11 @@
 #include "ops/log/LogOpData.h"
 #include "ops/matrix/MatrixOpData.h"
 #include "ops/range/RangeOpData.h"
+#include "testutils/UnitTest.h"
+#include "UnitTestUtils.h"
 
-#include "UnitTest.h"
 namespace OCIO = OCIO_NAMESPACE;
+
 
 OCIO_ADD_TEST(DisplayTransform, basic)
 {

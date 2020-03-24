@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include "ops/cdl/CDLOpData.cpp"
 
-#include "UnitTest.h"
+#include "testutils/UnitTest.h"
 
 namespace OCIO = OCIO_NAMESPACE;
+
 
 OCIO_ADD_TEST(CDLOpData, accessors)
 {
@@ -64,7 +66,7 @@ OCIO_ADD_TEST(CDLOpData, constructors)
     OCIO_CHECK_ASSERT(cdlOpDefault.getFormatMetadata().getChildrenElements().empty());
 
     OCIO_CHECK_EQUAL(cdlOpDefault.getStyle(),
-                     OCIO::CDLOpData::CDL_V1_2_FWD);
+                     OCIO::CDLOpData::CDL_NO_CLAMP_FWD);
 
     OCIO_CHECK_ASSERT(!cdlOpDefault.isReverse());
 

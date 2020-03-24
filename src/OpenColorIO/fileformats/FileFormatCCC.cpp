@@ -45,16 +45,15 @@ public:
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-    CachedFileRcPtr read(
-        std::istream & istream,
-        const std::string & fileName) const override;
+    CachedFileRcPtr read(std::istream & istream,
+                         const std::string & fileName) const override;
 
     void buildFileOps(OpRcPtrVec & ops,
-                        const Config & config,
-                        const ConstContextRcPtr & context,
-                        CachedFileRcPtr untypedCachedFile,
-                        const FileTransform & fileTransform,
-                        TransformDirection dir) const override;
+                      const Config & config,
+                      const ConstContextRcPtr & context,
+                      CachedFileRcPtr untypedCachedFile,
+                      const FileTransform & fileTransform,
+                      TransformDirection dir) const override;
 };
 
 void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
@@ -95,16 +94,15 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
 
     // This should never happen.
-    if(!cachedFile)
+    if (!cachedFile)
     {
         std::ostringstream os;
         os << "Cannot build .ccc Op. Invalid cache type.";
         throw Exception(os.str().c_str());
     }
 
-    TransformDirection newDir = CombineTransformDirections(dir,
-        fileTransform.getDirection());
-    if(newDir == TRANSFORM_DIR_UNKNOWN)
+    TransformDirection newDir = CombineTransformDirections(dir, fileTransform.getDirection());
+    if (newDir == TRANSFORM_DIR_UNKNOWN)
     {
         std::ostringstream os;
         os << "Cannot build ASC FileTransform,";
@@ -131,7 +129,7 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     std::string cccid = fileTransform.getCCCId();
     cccid = context->resolveStringVar(cccid.c_str());
 
-    if(cccid.empty())
+    if (cccid.empty())
     {
         std::ostringstream os;
         os << "You must specify which cccid to load from the ccc file";
@@ -141,26 +139,31 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 
     bool success=false;
 
+    const auto fileCDLStyle = fileTransform.getCDLStyle();
+
     // Try to parse the cccid as a string id
     CDLTransformMap::const_iterator iter = cachedFile->transformMap.find(cccid);
-    if(iter != cachedFile->transformMap.end())
+    if (iter != cachedFile->transformMap.end())
     {
+        auto cdl = iter->second;
+        if (fileCDLStyle != CDL_TRANSFORM_DEFAULT)
+        {
+            cdl = OCIO_DYNAMIC_POINTER_CAST<CDLTransform>(cdl->createEditableCopy());
+            cdl->setStyle(fileCDLStyle);
+        }
         success = true;
-        BuildCDLOp(ops,
-                   config,
-                   *(iter->second),
-                   newDir);
+        BuildCDLOp(ops, config, *cdl, newDir);
     }
 
     // Try to parse the cccid as an integer index
     // We want to be strict, so fail if leftover chars in the parse.
-    if(!success)
+    if (!success)
     {
         int cccindex=0;
-        if(StringToInt(&cccindex, cccid.c_str(), true))
+        if (StringToInt(&cccindex, cccid.c_str(), true))
         {
             int maxindex = ((int)cachedFile->transformVec.size())-1;
-            if(cccindex<0 || cccindex>maxindex)
+            if (cccindex<0 || cccindex>maxindex)
             {
                 std::ostringstream os;
                 os << "The specified cccindex " << cccindex;
@@ -169,15 +172,18 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                 throw ExceptionMissingFile(os.str().c_str());
             }
 
+            auto cdl = cachedFile->transformVec[cccindex];
+            if (fileCDLStyle != CDL_TRANSFORM_DEFAULT)
+            {
+                cdl = OCIO_DYNAMIC_POINTER_CAST<CDLTransform>(cdl->createEditableCopy());
+                cdl->setStyle(fileCDLStyle);
+            }
             success = true;
-            BuildCDLOp(ops,
-                       config,
-                       *cachedFile->transformVec[cccindex],
-                       newDir);
+            BuildCDLOp(ops, config, *cdl, newDir);
         }
     }
 
-    if(!success)
+    if (!success)
     {
         std::ostringstream os;
         os << "You must specify a valid cccid to load from the ccc file";

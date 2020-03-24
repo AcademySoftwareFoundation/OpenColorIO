@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include "BitDepthUtils.h"
 #include "fileformats/FileFormatCTF.cpp"
 #include "ops/fixedfunction/FixedFunctionOp.h"
-#include "UnitTest.h"
+#include "testutils/UnitTest.h"
 #include "UnitTestLogUtils.h"
 #include "UnitTestUtils.h"
-
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -4293,7 +4293,7 @@ OCIO_ADD_TEST(CTFTransform, cdl_clf)
             <Director FirstName="David" LastName="Lean"></Director>
         </Directors>
     </Info>
-    <ASC_CDL id="CDL42" name="TestCDL" inBitDepth="32f" outBitDepth="32f" style="Fwd">
+    <ASC_CDL id="CDL42" name="TestCDL" inBitDepth="32f" outBitDepth="32f" style="FwdNoClamp">
         <Description>CDL node for unit test</Description>
         <Description>Adding another description</Description>
         <InputDescription>Input</InputDescription>
@@ -4324,6 +4324,8 @@ OCIO_ADD_TEST(CTFTransform, cdl_ctf)
     config->setMajorVersion(2);
 
     OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
+    cdl->setStyle(OCIO::CDL_ASC);
+
     const double sop[] = { 1.0, 1.1, 1.2,
                            0.2, 0.3, 0.4,
                            3.1, 3.2, 3.3 };
@@ -6065,6 +6067,7 @@ OCIO_ADD_TEST(FileFormatCTF, bake_1d_3d)
 
         // Set saturation to cause channel crosstalk, making a 3D LUT
         OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
+        transform1->setStyle(OCIO::CDL_ASC);
         transform1->setSat(0.5f);
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
 

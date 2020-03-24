@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include "CPUProcessor.cpp"
 
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut1d/Lut1DOpData.h"
 #include "ScanlineHelper.h"
-#include "UnitTest.h"
+#include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
