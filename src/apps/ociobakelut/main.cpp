@@ -11,7 +11,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
-#include "argparse.h"
+#include "apputils/argparse.h"
 #include "ocioicc.h"
 
 static std::string outputfile;

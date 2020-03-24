@@ -37,6 +37,7 @@
 #ifndef INCLUDED_OCIO_ARGPARSE_H
 #define INCLUDED_OCIO_ARGPARSE_H
 
+#include <string>
 #include <vector>
 
 #ifndef OPENCOLORIO_PRINTF_ARGS  /* See comments in strutil.h */
