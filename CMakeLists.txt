@@ -125,6 +125,15 @@ if(NOT OCIO_NAMESPACE)
 endif()
 
 ###############################################################################
+# Library name custom suffix
+# This helps an application that needs to ship a dynamic library OCIO ensure
+# that it has a unique name that won't conflict with one elsewhere on the
+# system.
+
+set (OCIO_LIBNAME_SUFFIX "" CACHE STRING
+     "Specify a suffix to all libraries that are built")
+
+###############################################################################
 # Error checking
 
 if(OCIO_BUILD_SHARED AND OCIO_BUILD_STATIC)

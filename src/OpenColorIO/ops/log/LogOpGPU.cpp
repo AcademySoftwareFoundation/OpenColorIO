@@ -213,7 +213,7 @@ void AddCameraLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << "logSeg = lin_slopeinv * (logSeg - lin_offset);";
 
     // Combine linear and log segments.
-    st.newLine() << pixrgb << " = isAboveBreak * logSeg + ( " << st.vec4fConst(1.0f) << " - isAboveBreak ) * linSeg;";
+    st.newLine() << pixrgb << " = isAboveBreak * logSeg + ( " << st.vec3fConst(1.0f) << " - isAboveBreak ) * linSeg;";
 
     st.dedent();
     st.newLine() << "}";
