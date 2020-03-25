@@ -6,9 +6,9 @@ include(CheckCXXSourceCompiles)
 if (NOT CMAKE_SIZE_OF_VOID_P EQUAL 8)
     if (MSVC)
         set(CMAKE_REQUIRED_FLAGS "/arch:SSE2")
-    else (MSVC)
+    else ()
         set(CMAKE_REQUIRED_FLAGS "-msse2")
-    endif (MSVC)
+    endif ()
 endif (NOT CMAKE_SIZE_OF_VOID_P EQUAL 8)
 
 check_cxx_source_compiles ("
