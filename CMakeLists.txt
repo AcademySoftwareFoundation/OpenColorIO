@@ -98,6 +98,12 @@ if(OCIO_WARNING_AS_ERROR)
 	endif()
 endif()
 
+include(CheckSSEFeatures)
+if(NOT HAVE_SSE2)
+	message(STATUS "Disabling SSE optimizations, as the target doesn't support them")
+	set(OCIO_USE_SSE OFF)
+endif(NOT HAVE_SSE2)
+
 ###############################################################################
 # External linking options
 
