@@ -722,8 +722,9 @@ public:
 
     //!rst: Get a processor to convert between color spaces in two separate configs.
 
-    //!cpp:function:: This relies on both configs having the aces_interchange role defined.
-    // An exception is thrown if that is not the case.
+    //!cpp:function:: This relies on both configs having the aces_interchange role (when srcName
+    // is scene-referred) or the role cie_xyz_d65_interchange (when srcName is display-referred)
+    // defined.  An exception is thrown if that is not the case.
     static ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & srcConfig,
                                             const char * srcName,
                                             const ConstConfigRcPtr & dstConfig,

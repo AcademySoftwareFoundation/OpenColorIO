@@ -3635,6 +3635,7 @@ ocio_profile_version: 2
 roles:
   default: raw1
   aces_interchange: aces1
+  cie_xyz_d65_interchange: display1
 
 colorspaces:
   - !<ColorSpace>
@@ -3651,6 +3652,17 @@ colorspaces:
     allocation: uniform
     from_reference: !<ExponentTransform> {value: [1.101, 1.202, 1.303, 1.404]}
 
+display_colorspaces:
+  - !<ColorSpace>
+    name: display1
+    allocation: uniform
+    from_display_reference: !<CDLTransform> {slope: [1, 2, 1]}
+
+  - !<ColorSpace>
+    name: display2
+    allocation: uniform
+    from_display_reference: !<FixedFunctionTransform> {style: ACES_RedMod03}
+
 )" };
 
     constexpr const char * SIMPLE_CONFIG2{ R"(
@@ -3659,6 +3671,7 @@ ocio_profile_version: 2
 roles:
   default: raw2
   aces_interchange: aces2
+  cie_xyz_d65_interchange: display3
   test_role: test2
 
 colorspaces:
@@ -3676,6 +3689,16 @@ colorspaces:
     allocation: uniform
     to_reference: !<RangeTransform> {minInValue: -0.0109, maxInValue: 1.0505, minOutValue: 0.0009, maxOutValue: 2.5001}
 
+display_colorspaces:
+  - !<ColorSpace>
+    name: display3
+    allocation: uniform
+    from_display_reference: !<ExponentTransform> {value: 2.4}
+
+  - !<ColorSpace>
+    name: display4
+    allocation: uniform
+    from_display_reference: !<LogTransform> {base: 5}
 )" };
 
     std::istringstream is;
@@ -3726,6 +3749,29 @@ colorspaces:
     group = p->createGroupTransform();
     OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 4);
 
+    // Display-referred interchange space.
+    OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessor(config1, "display2", config2, "display4"));
+    OCIO_REQUIRE_ASSERT(p);
+    group = p->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 4);
+    t0 = group->getTransform(0);
+    auto f0 = OCIO_DYNAMIC_POINTER_CAST<OCIO::FixedFunctionTransform>(t0);
+    OCIO_CHECK_ASSERT(f0);
+    t1 = group->getTransform(1);
+    auto c1 = OCIO_DYNAMIC_POINTER_CAST<OCIO::CDLTransform>(t1);
+    OCIO_CHECK_ASSERT(c1);
+    t2 = group->getTransform(2);
+    auto e2 = OCIO_DYNAMIC_POINTER_CAST<OCIO::ExponentTransform>(t2);
+    OCIO_CHECK_ASSERT(e2);
+    t3 = group->getTransform(3);
+    auto l3 = OCIO_DYNAMIC_POINTER_CAST<OCIO::LogTransform>(t3);
+    OCIO_CHECK_ASSERT(l3);
+
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::GetProcessor(config1, "display2", config2, "test2"),
+                          OCIO::Exception,
+                          "There is no view transform between the main scene-referred space "
+                          "and the display-referred space");
+
     constexpr const char * SIMPLE_CONFIG3{ R"(
 ocio_profile_version: 2
 
@@ -3748,9 +3794,13 @@ colorspaces:
     OCIO::ConstConfigRcPtr config3;
     OCIO_CHECK_NO_THROW(config3 = OCIO::Config::CreateFromStream(is));
 
-    OCIO_CHECK_THROW_WHAT(OCIO::Config::GetProcessor(config1, "test", config3, "test"),
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::GetProcessor(config1, "test1", config3, "test"),
                           OCIO::Exception,
                           "The role 'aces_interchange' is missing in the destination config");
+
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::GetProcessor(config1, "display1", config3, "test"),
+                          OCIO::Exception,
+                          "The role 'cie_xyz_d65_interchange' is missing in the destination config");
 }
 
 const std::string PROFILE_V2_DCS_START = PROFILE_V2 + SIMPLE_PROFILE_A + DEFAULT_RULES +
@@ -3788,7 +3838,7 @@ OCIO_ADD_TEST(Config, display_color_spaces_serialization)
             "    isdata: false\n"
             "    allocation: uniform\n"
             "    to_display_reference: !<ExponentTransform> {value: 2.4}\n";
-			
+
         const std::string str = PROFILE_V2_DCS_START + strDCS + SIMPLE_PROFILE_CS;
 
         std::istringstream is;

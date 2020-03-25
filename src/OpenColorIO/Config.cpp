@@ -2259,31 +2259,46 @@ ConstProcessorRcPtr Config::GetProcessor(const ConstContextRcPtr & srcContext,
                                          const ConstConfigRcPtr & dstConfig,
                                          const char * dstName)
 {
-    constexpr char name[]{ "aces_interchange" };
-    const char * srcExName = LookupRole(srcConfig->getImpl()->m_roles, name);
+    ConstColorSpaceRcPtr srcColorSpace = srcConfig->getColorSpace(srcName);
+    if (!srcColorSpace)
+    {
+        std::ostringstream os;
+        os << "Could not find source color space '" << srcName << "'.";
+        throw Exception(os.str().c_str());
+    }
+
+    constexpr char exchangeSceneName[]{ "aces_interchange" };
+    constexpr char exchangeDisplayName[]{ "cie_xyz_d65_interchange" };
+    const bool sceneReferred = (srcColorSpace->getReferenceSpaceType() == REFERENCE_SPACE_SCENE);
+    const char * exchangeRoleName = sceneReferred ? exchangeSceneName : exchangeDisplayName;
+    const char * srcExName = LookupRole(srcConfig->getImpl()->m_roles, exchangeRoleName);
     if (!srcExName || !*srcExName)
     {
-        throw Exception("The role 'aces_interchange' is missing in the source config.");
+        std::ostringstream os;
+        os << "The role '" << exchangeRoleName << "' is missing in the source config.";
+        throw Exception(os.str().c_str());
     }
     ConstColorSpaceRcPtr srcExCs = srcConfig->getImpl()->m_allColorSpaces->getColorSpace(srcExName);
     if (!srcExCs)
     {
         std::ostringstream os;
-        os << "The role 'aces_interchange' refers to color space '" << srcExName;
+        os << "The role '" << exchangeRoleName << "' refers to color space '" << srcExName;
         os << "' that is missing in the source config.";
         throw Exception(os.str().c_str());
     }
 
-    const char * dstExName = LookupRole(dstConfig->getImpl()->m_roles, name);
+    const char * dstExName = LookupRole(dstConfig->getImpl()->m_roles, exchangeRoleName);
     if (!dstExName || !*dstExName)
     {
-        throw Exception("The role 'aces_interchange' is missing in the destination config.");
+        std::ostringstream os;
+        os << "The role '" << exchangeRoleName << "' is missing in the destination config.";
+        throw Exception(os.str().c_str());
     }
     ConstColorSpaceRcPtr dstExCs = dstConfig->getImpl()->m_allColorSpaces->getColorSpace(dstExName);
     if (!dstExCs)
     {
         std::ostringstream os;
-        os << "The role 'aces_interchange' refers to color space '" << dstExName;
+        os << "The role '" << exchangeRoleName << "' refers to color space '" << dstExName;
         os << "' that is missing in the destination config.";
         throw Exception(os.str().c_str());
     }
