@@ -2799,6 +2799,21 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
             load(second, boolval);
             c->setStrictParsingEnabled(boolval);
         }
+        else if (key=="family_separator")
+        {
+            load(second, stringval);
+            if (!stringval.empty())
+            {
+                if(stringval.size()!=1)
+                {
+                    std::ostringstream os;
+                    os << "'family_separator' value must be a single character.";
+                    os << " Found '" << stringval << "'.";
+                    throwValueError(node.Tag(), first, os.str());
+                }
+                c->setFamilySeparator(stringval[0]);
+            }
+        }
         else if(key == "description")
         {
             load(second, stringval);
@@ -2888,7 +2903,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
                     throwValueError(node.Tag(), first, "The view list is a sequence.");
                 }
 
-                for(const auto & val : dsecond)
+                for (const auto & val : dsecond)
                 {
                     View view;
                     load(val, view);
@@ -3158,6 +3173,12 @@ inline void save(YAML::Emitter& out, const Config* c)
         }
     }
     out << YAML::Key << "strictparsing" << YAML::Value << c->isStrictParsingEnabled();
+
+    const char familySeparator = c->getFamilySeparator();
+    if (familySeparator)
+    {
+        out << YAML::Key << "family_separator" << YAML::Value << familySeparator;
+    }
 
     std::vector<double> luma(3, 0.f);
     c->getDefaultLumaCoefs(&luma[0]);

@@ -34,8 +34,8 @@ std::ostream& operator<< (std::ostream& os, const ImageDesc& img)
         os << "gData=" << planarImg->getGData() << ", ";
         os << "bData=" << planarImg->getBData() << ", ";
         os << "aData=" << planarImg->getAData() << ", ";
-        os << "width=" << packedImg->getWidth() << ", ";
-        os << "height=" << packedImg->getHeight() << ", ";
+        os << "width=" << planarImg->getWidth() << ", ";
+        os << "height=" << planarImg->getHeight() << ", ";
         os << "xStrideBytes=" << planarImg->getXStrideBytes() << ", ";
         os << "yStrideBytes=" << planarImg->getYStrideBytes() << "";
         os << ">";

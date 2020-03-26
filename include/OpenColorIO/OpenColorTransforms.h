@@ -813,8 +813,10 @@ public:
 
     //!cpp:function::
     int getNumTransforms() const;
-    //!cpp:function:: Adds a pointer to the transform to the end of the group.
+    //!cpp:function:: Adds a transform to the end of the group.
     void appendTransform(TransformRcPtr transform);
+    //!cpp:function:: Add a transform at the beginning of the group.
+    void prependTransform(TransformRcPtr transform);
 
 private:
     GroupTransform();

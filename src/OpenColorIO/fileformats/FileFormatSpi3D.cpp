@@ -3,6 +3,7 @@
 
 #include <cstdio>
 #include <sstream>
+#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -130,6 +131,7 @@ CachedFileRcPtr LocalFileFormat::read(
     int entriesRemaining = rSize * gSize * bSize;
     Array & lutArray = lut3d->getArray();
     unsigned long numVal = lutArray.getNumValues();
+    std::vector<bool> indexDefined(numVal, false);
     while (istream.good() && entriesRemaining > 0)
     {
         istream.getline(lineBuffer, MAX_LINE_SIZE);
@@ -172,8 +174,23 @@ CachedFileRcPtr LocalFileFormat::read(
             lutArray[index+0] = redValue;
             lutArray[index+1] = greenValue;
             lutArray[index+2] = blueValue;
-
-            entriesRemaining--;
+            if (! indexDefined[index])
+            {
+                entriesRemaining--;
+                indexDefined[index] = true;
+            }
+            else
+            {
+                std::ostringstream os;
+                os << "Error parsing .spi3d file (";
+                os << fileName;
+                os << "). ";
+                os << "Data is invalid. ";
+                os << "A LUT entry is specified multiple times (";
+                os << rIndex << " " << gIndex << " " << bIndex;
+                os <<  ").";  
+                throw Exception(os.str().c_str());
+            }
         }
     }
 
@@ -225,4 +242,3 @@ FileFormat * CreateFileFormatSpi3D()
 }
 
 } // namespace OCIO_NAMESPACE
-
