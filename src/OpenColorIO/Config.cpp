@@ -32,14 +32,13 @@
 namespace OCIO_NAMESPACE
 {
 
+const char * OCIO_CONFIG_ENVVAR               = "OCIO";
+const char * OCIO_ACTIVE_DISPLAYS_ENVVAR      = "OCIO_ACTIVE_DISPLAYS";
+const char * OCIO_ACTIVE_VIEWS_ENVVAR         = "OCIO_ACTIVE_VIEWS";
+const char * OCIO_INACTIVE_COLORSPACES_ENVVAR = "OCIO_INACTIVE_COLORSPACES";
+
 namespace
 {
-
-constexpr char OCIO_CONFIG_ENVVAR[]               = "OCIO";
-constexpr char OCIO_ACTIVE_DISPLAYS_ENVVAR[]      = "OCIO_ACTIVE_DISPLAYS";
-constexpr char OCIO_ACTIVE_VIEWS_ENVVAR[]         = "OCIO_ACTIVE_VIEWS";
-constexpr char OCIO_INACTIVE_COLORSPACES_ENVVAR[] = "OCIO_INACTIVE_COLORSPACES";
-
 
 // These are the 709 primaries specified by the ASC.
 constexpr double DEFAULT_LUMA_COEFF_R = 0.2126;
@@ -175,8 +174,8 @@ void GetColorSpaceReferences(std::set<std::string> & colorSpaceNames,
     else if(ConstLookTransformRcPtr lookTransform = \
         DynamicPtrCast<const LookTransform>(transform))
     {
-        colorSpaceNames.insert(context->resolveStringVar(colorSpaceTransform->getSrc()));
-        colorSpaceNames.insert(context->resolveStringVar(colorSpaceTransform->getDst()));
+        colorSpaceNames.insert(context->resolveStringVar(lookTransform->getSrc()));
+        colorSpaceNames.insert(context->resolveStringVar(lookTransform->getDst()));
     }
 }
 
@@ -226,6 +225,7 @@ public:
     unsigned int m_minorVersion;
     StringMap m_env;
     ContextRcPtr m_context;
+    char m_familySeparator = 0;
     std::string m_description;
 
     // The final list of inactive color spaces is built from several inputs.
@@ -315,6 +315,7 @@ public:
 
             m_env = rhs.m_env;
             m_context = rhs.m_context->createEditableCopy();
+            m_familySeparator = rhs.m_familySeparator;
             m_description = rhs.m_description;
 
             m_allColorSpaces = rhs.m_allColorSpaces; // Deep copy the colorspaces
@@ -379,7 +380,7 @@ public:
     void resetCacheIDs();
 
     // Get all internal transforms (to generate cacheIDs, validation, etc).
-    // This currently crawls colorspaces + looks
+    // This currently crawls colorspaces + looks + view transforms.
     void getAllInternalTransforms(ConstTransformVec & transformVec) const;
 
     static ConstConfigRcPtr Read(std::istream & istream, const char * filename);
@@ -987,6 +988,31 @@ void Config::sanityCheck() const
 
 ///////////////////////////////////////////////////////////////////////////
 
+char Config::getFamilySeparator() const
+{
+    return getImpl()->m_familySeparator;
+}
+
+void Config::setFamilySeparator(char separator)
+{
+    const int val = (int)separator;
+    if (val!=0 && (val<32 || val>126))
+    {
+        std::string err("Invalid family separator '");
+        err += separator;
+        err += "'.";
+
+        throw Exception(err.c_str());
+    }
+
+    getImpl()->m_familySeparator = separator;
+    
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
+}
+
+///////////////////////////////////////////////////////////////////////////
+
 const char * Config::getDescription() const
 {
     return getImpl()->m_description.c_str();
@@ -1410,6 +1436,94 @@ void Config::removeColorSpace(const char * name)
     getImpl()->refreshActiveColorSpaces();
 }
 
+bool Config::isColorSpaceUsed(const char * name) const noexcept
+{
+    // Check if a color space is used somewhere in the config other than where it is defined,
+    // for example, in a display/view, look, or ColorSpaceTransform.  If the color space is
+    // defined in the config, but not used elsewhere, this function returns false.
+
+    if (!name || !*name) return false;
+
+    // Check for all color spaces, looks and view transforms.
+
+    ConstTransformVec allTransforms;
+    getImpl()->getAllInternalTransforms(allTransforms);
+
+    std::set<std::string> colorSpaceNames;
+    for (const auto & transform : allTransforms)
+    {
+        ConstContextRcPtr context = getCurrentContext();
+        GetColorSpaceReferences(colorSpaceNames, transform, context);
+    }
+
+    for (const auto & csName : colorSpaceNames)
+    {
+        if (0 == Platform::Strcasecmp(name, csName.c_str()))
+        {
+            return true;
+        }
+    }
+
+    // Check for roles.
+
+    const int numRoles = getNumRoles();
+    for (int idx = 0; idx < numRoles; ++idx)
+    {
+        const char * roleName = getRoleName(idx);
+        const char * csName = LookupRole(getImpl()->m_roles, roleName);
+        if (0 == Platform::Strcasecmp(csName, name))
+        {
+            return true;
+        }
+    }
+
+    // Check for all (display, view) pairs (i.e. active and inactive ones).
+
+    for (const auto & display : getImpl()->m_displays)
+    {
+        const char * dispName = display.first.c_str();
+        for (const auto & view : display.second)
+        {
+            const char * viewName = view.m_name.c_str();
+            const char * csName = getDisplayColorSpaceName(dispName, viewName);
+            if (0 == Platform::Strcasecmp(csName, name))
+            {
+                return true;
+            }
+        }
+    }
+
+    // Check for 'process_space' from look.
+
+    const int numLooks = getNumLooks();
+    for (int idx = 0; idx < numLooks; ++idx)
+    {
+        const char * lookName = getLookNameByIndex(idx);
+
+        ConstLookRcPtr l = getLook(lookName);
+        if (0 == Platform::Strcasecmp(l->getProcessSpace(), name))
+        {
+            return true;
+        }
+    }      
+
+    // Check the file rules.
+
+    ConstFileRulesRcPtr rules = getFileRules();
+
+    const size_t numRules = rules->getNumEntries();
+    for (size_t idx = 0; idx < numRules; ++idx)
+    {
+        const char * csName = rules->getColorSpace(idx);
+        if (0 == Platform::Strcasecmp(csName, name))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void Config::clearColorSpaces()
 {
     getImpl()->m_allColorSpaces->clearColorSpaces();
@@ -1502,6 +1616,11 @@ const char * Config::getRoleName(int index) const
     StringMap::const_iterator iter = getImpl()->m_roles.begin();
     for(int i = 0; i < index; ++i) ++iter;
     return iter->first.c_str();
+}
+
+const char * Config::getRoleColorSpace(int index) const
+{
+    return LookupRole(getImpl()->m_roles, getRoleName(index));
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1698,18 +1817,71 @@ const char * Config::getDisplayLooks(const char * display, const char * view) co
     return views[index].m_looks.c_str();
 }
 
+
 void Config::addDisplay(const char * display, const char * view,
                         const char * colorSpaceName, const char * looks)
 {
-    addDisplay(display, view, "", colorSpaceName, looks);
+    addDisplay(display, view, nullptr, colorSpaceName, looks);
 }
 
 void Config::addDisplay(const char * display, const char * view, const char * viewTransform,
                         const char * displayColorSpaceName, const char * looks)
 {
-    if (!display || !view || !viewTransform || !displayColorSpaceName || !looks) return;
+    if (!display || !view || !displayColorSpaceName) return;
 
     AddDisplay(getImpl()->m_displays, display, view, viewTransform, displayColorSpaceName, looks);
+    getImpl()->m_displayCache.clear();
+
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
+}
+
+void Config::removeDisplay(const char * display, const char * view)
+{
+    if(!display || !view) return;
+
+    const std::string displayNameRef(display);
+    const std::string viewNameRef(view);
+
+    // Check if the display exists.
+
+    DisplayMap::iterator iter = find_display(getImpl()->m_displays, display);
+    if (iter==getImpl()->m_displays.end())
+    {
+        return;
+    }
+
+    // Check if the display needs to be removed also.
+
+    const bool removeDisplay = iter->second.size()<=1;
+    if (removeDisplay)
+    {
+        if (iter->second.size()==1 && !StrEqualsCaseIgnore(viewNameRef, iter->second[0].m_name))
+        {
+            // The display does not have the view.
+            return;
+        }
+    }
+
+    // Remove the display/view pair.
+
+    if (removeDisplay)
+    {
+        getImpl()->m_displays.erase(iter);
+    }
+    else
+    {
+        ViewVec & views = iter->second;
+
+        views.erase(std::remove_if(views.begin(),
+                                   views.end(),
+                                   [viewNameRef](const View & view)
+                                   {
+                                        return StrEqualsCaseIgnore(view.m_name, viewNameRef);
+                                   } ),
+                    views.end());
+    }
+
     getImpl()->m_displayCache.clear();
 
     AutoMutex lock(getImpl()->m_cacheidMutex);
@@ -1758,6 +1930,7 @@ const char * Config::getActiveViews() const
     getImpl()->m_activeViewsStr = JoinStringEnvStyle(getImpl()->m_activeViews);
     return getImpl()->m_activeViewsStr.c_str();
 }
+
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -2370,30 +2543,57 @@ void Config::Impl::resetCacheIDs()
 
 void Config::Impl::getAllInternalTransforms(ConstTransformVec & transformVec) const
 {
-    // Grab all transforms from the ColorSpaces
-    for(int i=0; i<m_allColorSpaces->getNumColorSpaces(); ++i)
+    // Grab all transforms from the ColorSpaces.
+
+    for (int i=0; i<m_allColorSpaces->getNumColorSpaces(); ++i)
     {
-        if(m_allColorSpaces->getColorSpaceByIndex(i)->getTransform(COLORSPACE_DIR_TO_REFERENCE))
+        ConstTransformRcPtr tr
+            = m_allColorSpaces->getColorSpaceByIndex(i)->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+        if (tr)
         {
-            transformVec.push_back(
-                m_allColorSpaces->getColorSpaceByIndex(i)->getTransform(COLORSPACE_DIR_TO_REFERENCE));
+            transformVec.push_back(tr);
         }
-        if(m_allColorSpaces->getColorSpaceByIndex(i)->getTransform(COLORSPACE_DIR_FROM_REFERENCE))
+
+        tr = m_allColorSpaces->getColorSpaceByIndex(i)->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+        if (tr)
         {
-            transformVec.push_back(
-                m_allColorSpaces->getColorSpaceByIndex(i)->getTransform(COLORSPACE_DIR_FROM_REFERENCE));
+            transformVec.push_back(tr);
         }
     }
 
-    // Grab all transforms from the Looks
-    for(unsigned int i=0; i<m_looksList.size(); ++i)
+    // Grab all transforms from the Looks.
+
+    for (const auto & look : m_looksList)
     {
-        if(m_looksList[i]->getTransform())
-            transformVec.push_back(m_looksList[i]->getTransform());
-        if(m_looksList[i]->getInverseTransform())
-            transformVec.push_back(m_looksList[i]->getInverseTransform());
+        ConstTransformRcPtr tr = look->getTransform();
+        if (tr)
+        {
+            transformVec.push_back(tr);
+        }
+
+        tr = look->getInverseTransform();
+        if (tr)
+        {
+            transformVec.push_back(tr);
+        }
     }
 
+    // Grab all transforms from the view transforms.
+
+    for (const auto & vt : m_viewTransforms)
+    {
+        ConstTransformRcPtr tr = vt->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE);
+        if (tr)
+        {
+            transformVec.push_back(tr);
+        }
+
+        tr = vt->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE);
+        if (tr)
+        {
+            transformVec.push_back(tr);
+        }
+    }
 }
 
 ConstConfigRcPtr Config::Impl::Read(std::istream & istream, const char * filename)

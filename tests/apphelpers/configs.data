@@ -1,0 +1,103 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
+
+
+constexpr const char * category_test_config {
+R"(ocio_profile_version: 2
+
+search_path: luts
+strictparsing: true
+family_separator: /
+luma: [0.2126, 0.7152, 0.0722]
+
+roles:
+  reference: lin_1
+  scene_linear: lin_1
+  rendering: lin_1
+  default: lin_1
+ 
+displays:
+  DISP_1:
+    - !<View> {name: VIEW_1, colorspace: view_1}
+    - !<View> {name: VIEW_2, colorspace: view_2}
+    - !<View> {name: VIEW_3, colorspace: view_3}
+  DISP_2:
+    - !<View> {name: VIEW_4, colorspace: view_3, looks: look_4}
+    - !<View> {name: VIEW_3, colorspace: view_3, looks: look_3}
+    - !<View> {name: VIEW_2, colorspace: view_2, looks: "look_3, -look_4"}
+    - !<View> {name: VIEW_1, colorspace: view_1}
+
+active_displays: []
+active_views: []
+
+looks:
+  - !<Look>
+    name: look_3
+    process_space: log_1
+    transform: !<CDLTransform> {slope: [1, 2, 1]}
+
+  - !<Look>
+    name: look_4
+    process_space: log_1
+    transform: !<CDLTransform> {slope: [1.2, 2.2, 1.2]}
+
+colorspaces:
+  - !<ColorSpace>
+    name: lin_1
+    categories: [ scene_linear_working_space ]
+
+  - !<ColorSpace>
+    name: lin_2
+    categories: [ scene_linear_working_space ]
+
+  - !<ColorSpace>
+    name: log_1
+    categories: [ log_working_space ]
+    to_reference: !<LogTransform> {base: 2, direction: inverse}
+
+  - !<ColorSpace>
+    name: in_1
+    family: Input / Camera/Acme
+    description: |
+      An input color space.
+      For the Acme camera.
+    categories: [ input ]
+    to_reference: !<ExponentTransform> {value: [2.6, 2.6, 2.6, 1]}
+
+  - !<ColorSpace>
+    name: in_2
+    categories: [ input ]
+    to_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1]}
+
+  - !<ColorSpace>
+    name: in_3
+    categories: [ input, log_working_space ]
+    to_reference: !<ExponentTransform> {value: [2.2, 2.2, 2.2, 1]}
+
+  - !<ColorSpace>
+    name: view_1
+    from_reference: !<ExponentTransform> {value: [2.6, 2.6, 2.6, 1], direction: inverse}
+
+  - !<ColorSpace>
+    name: view_2
+    from_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1], direction: inverse}
+
+  - !<ColorSpace>
+    name: view_3
+    from_reference: !<ExponentTransform> {value: [2.2, 2.2, 2.2, 1], direction: inverse}
+
+  - !<ColorSpace>
+    name: lut_input_1
+    categories: [ lut_input_space ]
+    from_reference: !<ExponentTransform> {value: [2.6, 2.6, 2.6, 1], direction: inverse}
+
+  - !<ColorSpace>
+    name: lut_input_2
+    categories: [ lut_input_space ]
+    from_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1], direction: inverse}
+
+  - !<ColorSpace>
+    name: lut_input_3
+    categories: [ input, lut_input_space ]
+    from_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1], direction: inverse}
+)"};

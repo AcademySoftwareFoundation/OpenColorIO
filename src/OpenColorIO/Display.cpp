@@ -43,29 +43,30 @@ int find_view(const ViewVec & vec, const std::string & name)
 }
 
 void AddDisplay(DisplayMap & displays,
-                const std::string & display,
-                const std::string & view,
-                const std::string & viewTransform,
-                const std::string & displayColorspace,
-                const std::string & looks)
+                const char * display,
+                const char * view,
+                const char * viewTransform,
+                const char * displayColorSpace,
+                const char * looks)
 {
-    if (display.empty())
+    if (!display || !*display)
     {
-        throw Exception("Can't add a display with empty name.");
+        throw Exception("Can't add a (display, view) pair with empty display name.");
     }
-    if (view.empty())
+    if (!view || !*view)
     {
-        throw Exception("Can't add a display with empty view name.");
+        throw Exception("Can't add a (display, view) pair with empty view name.");
     }
-    if (displayColorspace.empty())
+    if (!displayColorSpace || !*displayColorSpace)
     {
-        throw Exception("Can't add a display with empty color space name.");
+        throw Exception("Can't add a (display, view) pair with empty color space name.");
     }
+
     DisplayMap::iterator iter = find_display(displays, display);
     if(iter == displays.end())
     {
         ViewVec views;
-        views.push_back( View(view, viewTransform, displayColorspace, looks) );
+        views.push_back( View(view, viewTransform, displayColorSpace, looks) );
         displays.push_back(std::make_pair(display, views));
     }
     else
@@ -74,13 +75,13 @@ void AddDisplay(DisplayMap & displays,
         int index = find_view(views, view);
         if (index < 0)
         {
-            views.push_back( View(view, viewTransform, displayColorspace, looks) );
+            views.push_back( View(view, viewTransform, displayColorSpace, looks) );
         }
         else
         {
-            views[index].m_viewTransform = viewTransform;
-            views[index].m_colorspace = displayColorspace;
-            views[index].m_looks = looks;
+            views[index].m_viewTransform = viewTransform ? viewTransform : "";
+            views[index].m_colorspace    = displayColorSpace;
+            views[index].m_looks         = looks ? looks : "";
         }
     }
 }

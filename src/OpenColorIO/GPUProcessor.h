@@ -20,7 +20,7 @@ public:
     Impl() = default;
     ~Impl() = default;
 
-    bool isNoOp() const noexcept { return m_ops.empty(); }
+    bool isNoOp() const noexcept { return m_isNoOp; }
 
     bool hasChannelCrosstalk() const noexcept { return m_hasChannelCrosstalk; }
 
@@ -39,6 +39,7 @@ public:
 
 private:
     OpRcPtrVec    m_ops;
+    bool          m_isNoOp = false;
     bool          m_hasChannelCrosstalk = true;
     std::string   m_cacheID;
     mutable Mutex m_mutex;

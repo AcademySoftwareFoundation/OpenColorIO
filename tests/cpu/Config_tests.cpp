@@ -238,16 +238,23 @@ OCIO_ADD_TEST(Config, roles)
 
     OCIO_CHECK_EQUAL(config->getNumRoles(), 3);
 
-    OCIO_CHECK_ASSERT(config->hasRole("compositing_log") == true);
-    OCIO_CHECK_ASSERT(config->hasRole("cheese") == false);
-    OCIO_CHECK_ASSERT(config->hasRole("") == false);
+    OCIO_CHECK_ASSERT(config->hasRole("compositing_log"));
+    OCIO_CHECK_ASSERT(!config->hasRole("cheese"));
+    OCIO_CHECK_ASSERT(!config->hasRole(""));
 
-    OCIO_CHECK_ASSERT(strcmp(config->getRoleName(2), "scene_linear") == 0);
-    OCIO_CHECK_ASSERT(strcmp(config->getRoleName(0), "compositing_log") == 0);
-    OCIO_CHECK_ASSERT(strcmp(config->getRoleName(1), "default") == 0);
-    OCIO_CHECK_ASSERT(strcmp(config->getRoleName(10), "") == 0);
-    OCIO_CHECK_ASSERT(strcmp(config->getRoleName(-4), "") == 0);
+    OCIO_CHECK_EQUAL(std::string(config->getRoleName(2)), "scene_linear");
+    OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace(2)), "lnh");
 
+    OCIO_CHECK_EQUAL(std::string(config->getRoleName(0)), "compositing_log");
+    OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace(0)), "lgh");
+
+    OCIO_CHECK_EQUAL(std::string(config->getRoleName(1)), "default");
+
+    OCIO_CHECK_EQUAL(std::string(config->getRoleName(10)), "");
+    OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace(10)), "");
+
+    OCIO_CHECK_EQUAL(std::string(config->getRoleName(-4)), "");
+    OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace(-4)), "");
 }
 
 OCIO_ADD_TEST(Config, serialize_group_transform)
@@ -3295,7 +3302,7 @@ OCIO_ADD_TEST(Config, inactive_color_space)
     OCIO_CHECK_EQUAL(config->getIndexForColorSpace("scene_linear"), -1);
     OCIO_CHECK_EQUAL(config->getIndexForColorSpace("lnh"), -1);
 
-    // Request a display/view processor with an inactive color space and
+    // Request a (display, view) processor with an inactive color space and
     // a look with an inactive process space.
     {
         OCIO::LookTransformRcPtr lookTransform = OCIO::LookTransform::Create();
@@ -4023,16 +4030,173 @@ OCIO_ADD_TEST(Config, display_view)
     OCIO_CHECK_EQUAL(config->getNumViews(display.c_str()), 2);
     // Using nullptr for any parameter does nothing.
     OCIO_CHECK_NO_THROW(config->addDisplay(nullptr, "view1", "scs", ""));
+    OCIO_CHECK_NO_THROW(config->addDisplay(display.c_str(), nullptr, "scs", ""));
     OCIO_CHECK_NO_THROW(config->addDisplay(display.c_str(), "view3", nullptr, ""));
-    OCIO_CHECK_NO_THROW(config->addDisplay(display.c_str(), "view4", "", nullptr));
-    OCIO_CHECK_NO_THROW(config->addDisplay(display.c_str(), "view4", "view_transform", "dcs", nullptr));
+    OCIO_CHECK_NO_THROW(config->addDisplay(display.c_str(), "view4", "view_transform", nullptr, ""));
     OCIO_CHECK_EQUAL(config->getNumDisplays(), 1);
     OCIO_CHECK_EQUAL(config->getNumViews(display.c_str()), 2);
 
     OCIO_CHECK_THROW_WHAT(config->addDisplay("", "view1", "scs", ""), OCIO::Exception,
-                          "Can't add a display with empty name");
+                          "Can't add a (display, view) pair with empty display name");
     OCIO_CHECK_THROW_WHAT(config->addDisplay(display.c_str(), "", "scs", ""), OCIO::Exception,
-                          "Can't add a display with empty view name");
+                          "Can't add a (display, view) pair with empty view name");
     OCIO_CHECK_THROW_WHAT(config->addDisplay(display.c_str(), "view1", "", ""), OCIO::Exception,
-                          "Can't add a display with empty color space name");
+                          "Can't add a (display, view) pair with empty color space name");
+}
+
+OCIO_ADD_TEST(Config, family_separator)
+{
+    OCIO::ConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateRaw()->createEditableCopy());
+    OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+    OCIO_CHECK_EQUAL(config->getFamilySeparator(), 0x0); // Default value i.e. no separator.
+
+    OCIO_CHECK_NO_THROW(config->setFamilySeparator('/'));
+    OCIO_CHECK_EQUAL(config->getFamilySeparator(), '/');
+
+    OCIO_CHECK_THROW(config->setFamilySeparator((char)127), OCIO::Exception);
+    OCIO_CHECK_THROW(config->setFamilySeparator((char)31) , OCIO::Exception);
+}
+
+OCIO_ADD_TEST(Config, add_remove_display)
+{
+    OCIO::ConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateRaw()->createEditableCopy());
+    OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+    OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 1);
+    OCIO_REQUIRE_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB"));
+    OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB"), 1);
+    OCIO_REQUIRE_EQUAL(std::string(config->getView("sRGB", 0)), std::string("Raw"));
+
+    // Add a (display, view) pair.
+
+    OCIO_CHECK_NO_THROW(config->addDisplay("disp1", "view1", "raw", nullptr));
+    OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 2);
+    OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB"));
+    OCIO_CHECK_EQUAL(std::string(config->getDisplay(1)), std::string("disp1"));
+    OCIO_REQUIRE_EQUAL(config->getNumViews("disp1"), 1);
+
+    // Remove a (display, view) pair.
+
+    OCIO_CHECK_NO_THROW(config->removeDisplay("disp1", "view1"));
+    OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 1);
+    OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB"));
+}
+
+OCIO_ADD_TEST(Config, is_colorspace_used)
+{
+    // Test Config::isColorSpaceUsed() i.e. a color space could be defined but not used.
+
+    constexpr char CONFIG[] = 
+        "ocio_profile_version: 2\n"
+        "\n"
+        "search_path: luts\n"
+        "strictparsing: true\n"
+        "luma: [0.2126, 0.7152, 0.0722]\n"
+        "\n"
+        "roles:\n"
+        "  default: cs1\n"
+        "\n"
+        "view_transforms:\n"
+        "  - !<ViewTransform>\n"
+        "    name: vt1\n"
+        "    from_reference: !<ColorSpaceTransform> {src: cs11, dst: cs11}\n"
+        "\n"
+        "displays:\n"
+        "  disp1:\n"
+        "    - !<View> {name: view1, colorspace: cs2}\n"
+        "    - !<View> {name: view2, colorspace: cs9}\n"
+        "\n"
+        "active_displays: [disp1]\n"
+        "active_views: [view1]\n"
+        "\n"
+        "file_rules:\n"
+        "  - !<Rule> {name: rule1, colorspace: cs10, pattern: \"*\", extension: \"*\"}\n"
+        "  - !<Rule> {name: Default, colorspace: default}\n"
+        "\n"
+        "looks:\n"
+        "  - !<Look>\n"
+        "    name: beauty\n"
+        "    process_space: cs5\n"
+        "    transform: !<ColorSpaceTransform> {src: cs6, dst: cs6}\n"
+        "\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs1\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs2\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs3\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs4\n"
+        "    from_reference: !<ColorSpaceTransform> {src: cs3, dst: cs3}\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs5\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs6\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs7\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs8\n"
+        "    from_reference: !<GroupTransform>\n"
+        "      children:\n"
+        "        - !<ColorSpaceTransform> {src: cs7, dst: cs7}\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs9\n"
+        "    from_reference: !<GroupTransform>\n"
+        "      children:\n"
+        "        - !<GroupTransform>\n"
+        "             children:\n"
+        "               - !<LookTransform> {src: cs8, dst: cs8}\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs10\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs11\n";
+
+    std::istringstream iss;
+    iss.str(CONFIG);
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+    OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+    OCIO_CHECK_ASSERT(config->isColorSpaceUsed("cs1" )); // Used by a role.
+    OCIO_CHECK_ASSERT(config->isColorSpaceUsed("cs2" )); // Used by a (display, view) pair.
+    OCIO_CHECK_ASSERT(config->isColorSpaceUsed("cs3" )); // Used by another color space.
+    OCIO_CHECK_ASSERT(config->isColorSpaceUsed("cs5" )); // Used by a look i.e. process_space.
+    OCIO_CHECK_ASSERT(config->isColorSpaceUsed("cs6" )); // Used by a look i.e. ColorSpaceTransform.
+    OCIO_CHECK_ASSERT(config->isColorSpaceUsed("cs7" )); // Indirectly used by a ColorSpaceTransform.
+    OCIO_CHECK_ASSERT(config->isColorSpaceUsed("cs8" )); // Indirectly used by a LookTransform.
+    OCIO_CHECK_ASSERT(config->isColorSpaceUsed("cs9" )); // Used by a inactive (display, view) pair.
+    OCIO_CHECK_ASSERT(config->isColorSpaceUsed("cs10")); // Used by a file rule.
+    OCIO_CHECK_ASSERT(config->isColorSpaceUsed("cs11")); // Used by a view transform.
+
+    OCIO_CHECK_ASSERT(!config->isColorSpaceUsed("cs4")); // Present but not used.
+
+    OCIO_CHECK_ASSERT(!config->isColorSpaceUsed(nullptr));
+    OCIO_CHECK_ASSERT(!config->isColorSpaceUsed(""));
+    OCIO_CHECK_ASSERT(!config->isColorSpaceUsed("cs65")); // Unknown color spaces are not used.
 }

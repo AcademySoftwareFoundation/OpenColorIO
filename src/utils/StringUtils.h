@@ -18,6 +18,10 @@
 namespace StringUtils
 {
 
+
+using StringVec = std::vector<std::string>;
+
+
 // Return the lower case string.
 inline std::string Lower(std::string str)
 {
@@ -32,6 +36,12 @@ inline std::string Upper(std::string str)
     std::transform(str.begin(), str.end(), str.begin(),
                    [](unsigned char c) { return std::toupper(c); });
     return str;
+}
+
+// Case insensitive comparison of strings.
+inline bool Compare(const std::string & left, const std::string & right)
+{
+    return Lower(left) == Lower(right);
 }
 
 // Return true if the string ends with the suffix.
@@ -68,8 +78,7 @@ inline std::string LeftTrim(std::string str)
 // Starting from the right, trim the character.
 inline std::string RightTrim(std::string str, char c)
 {
-    const auto it =
-        std::find_if(str.rbegin(), str.rend(), [&c](char ch) { return c!=ch; });
+    const auto it = std::find_if(str.rbegin(), str.rend(), [&c](char ch) { return c!=ch; });
     str.erase(it.base(), str.end());
     return str;
 }
@@ -95,9 +104,13 @@ inline std::string Trim(std::string str)
     return LeftTrim(RightTrim(str));
 }
 
-
-using StringVec = std::vector<std::string>;
-
+inline void Trim(StringVec & list)
+{
+    for (auto & entry : list)
+    {
+        entry = Trim(entry);
+    }
+}
 
 // Split a string content using an arbitrary separator.
 inline StringVec Split(const std::string & str, char separator)
@@ -121,7 +134,8 @@ inline StringVec Split(const std::string & str, char separator)
     return results;
 }
 
-inline std::string Join(const std::string & separator, const StringVec & strings)
+// Join a list of strings using an arbitrary separator.
+inline std::string Join(const StringVec & strings, char separator)
 {
     if (strings.empty()) return "";
 
@@ -129,11 +143,12 @@ inline std::string Join(const std::string & separator, const StringVec & strings
 
     if (len==1) return strings[0];
 
-    std::string result{strings[0]};
+    const std::string sep(1, separator);
 
+    std::string result{strings[0]};
     for (StringVec::size_type i=1; i<len; ++i)
     {
-        result += separator + strings[i];
+        result += sep + " " + strings[i];
     }
 
     return result;
@@ -197,6 +212,34 @@ inline std::string Replace(const std::string & subject, const std::string & sear
     return str;
 }
 
+// Check if the 'entry' is in the 'list' using a case insensitive comparison.
+inline bool Contain(const StringVec & list, const std::string & entry)
+{
+    const auto it = std::find_if(list.begin(), list.end(), 
+                                 [entry](const std::string & ent) 
+                                 { 
+                                    return Compare(ent.c_str(), entry.c_str()); 
+                                 });
+    return it!=list.end();
+}
+
+// Remove the 'entry' from the 'list' using a case insensitive comparison.
+// It returns true if found.
+inline bool Remove(StringVec & list, const std::string & entry)
+{
+    const auto it = std::find_if(list.begin(), list.end(), 
+                                 [entry](const std::string & ent) 
+                                 { 
+                                    return Compare(ent.c_str(), entry.c_str()); 
+                                 });
+    if (it!=list.end())
+    {
+        list.erase(it);
+        return true;
+    }
+
+    return false;
+}
 
 } // namespace StringUtils
 

@@ -646,7 +646,7 @@ void SplitStringEnvStyle(StringUtils::StringVec & outputvec, const char * str)
 
 std::string JoinStringEnvStyle(const StringUtils::StringVec & outputvec)
 {
-    return StringUtils::Join(", ", outputvec);
+    return StringUtils::Join(outputvec, ',');
 }
 
 // Return a vector of strings that are both in vec1 and vec2.

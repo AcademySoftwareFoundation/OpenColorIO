@@ -250,6 +250,14 @@ public:
     // exist.
     void sanityCheck() const;
 
+    //!cpp:function:: If not empty or null a single character to separate
+    // the family string in levels.
+    char getFamilySeparator() const;
+    //!cpp:function:: Succeeds if the characters is null or a valid character
+    // from the ASCII table i.e. from value 32 (i.e. space) to 126 (i.e. '~');
+    // otherwise, it throws an exception.
+    void setFamilySeparator(char separator);
+
     //!cpp:function::
     const char * getDescription() const;
     //!cpp:function::
@@ -408,6 +416,9 @@ public:
     //    :cpp:class:`ColorSpaceSet` sets that have already been created.
     void removeColorSpace(const char * name);
 
+    //!cpp:function:: Return true if the color space is used by a transform, a role, or a look.
+    bool isColorSpaceUsed(const char * name) const noexcept;
+
     //!cpp:function:: Remove all the color spaces from the configuration.
     //
     // .. note::
@@ -464,14 +475,18 @@ public:
     // like 'scene_linear', 'compositing_log'.
     // Return empty string if index is out of range.
     const char * getRoleName(int index) const;
-
-
+    //!cpp:function:: Get the role color space at index.
+    // Return empty string if index is out of range.
+    const char * getRoleColorSpace(int index) const;
 
     ///////////////////////////////////////////////////////////////////////////
     //!rst:: .. _cfgdisplayview_section:
     //
     // Display/View Registration
     // ^^^^^^^^^^^^^^^^^^^^^^^^^
+    //
+    // The following methods only manipulate active displays and views. Active
+    // displays and views are defined from an envvar or from the config file.
     //
     // Looks is a potentially comma (or colon) delimited list of lookNames,
     // Where +/- prefixes are optionally allowed to denote forward/inverse
@@ -500,7 +515,7 @@ public:
     const char * getDisplayLooks(const char * display, const char * view) const;
 
     //!cpp:function:: For the (display, view) pair, specify which color space and look to use.
-    // If a look is not desired, then just pass an empty string
+    // If a look is not desired, then just pass a null or empty string.
     void addDisplay(const char * display, const char * view,
                     const char * colorSpaceName, const char * looks);
 
@@ -508,6 +523,10 @@ public:
     // to use.  (Looks work the same as above.)
     void addDisplay(const char * display, const char * view, const char * viewTransform,
                     const char * displayColorSpaceName, const char * looks);
+
+    //!cpp:function:: Remove the view and the display if no more views. It does not remove
+    // the associated color space.
+    void removeDisplay(const char * display, const char * view);
 
     //!cpp:function::
     void clearDisplays();
@@ -517,7 +536,7 @@ public:
     // Active displays that are not in the specified profile will be ignored, and the
     // left-most defined display will be the default.
 
-    //!cpp:function:: Comma-delimited list of display names.
+    //!cpp:function:: Comma-delimited list of names to filter and order the active displays.
     // .. note:: The setter does not override the envvar.  The getter does not take into
     // account the envvar value and thus may not represent what the user is seeing.
     void setActiveDisplays(const char * displays);
@@ -529,7 +548,7 @@ public:
     // Active views that are not in the specified profile will be ignored, and the
     // left-most defined view will be the default.
 
-    //!cpp:function:: Comma-delimited list of view names.
+    //!cpp:function:: Comma-delimited list of names to filter and order the active views.
     // .. note:: The setter does not override the envvar.  The getter does not take into
     // account the envvar value and thus may not represent what the user is seeing.
     void setActiveViews(const char * views);

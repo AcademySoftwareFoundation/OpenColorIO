@@ -33,9 +33,8 @@ target_include_directories(oglbuilder
 )
 
 target_link_libraries(oglbuilder
-    PUBLIC
-        public_api
     PRIVATE
+        OpenColorIO
         ${OPENGL_LIBRARIES}
         ${GLEW_LIBRARIES}
 )

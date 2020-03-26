@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "OpBuilders.h"
 
-#include <cmath>
-#include <cstring>
-#include <iterator>
+#include <algorithm>
+
 
 namespace OCIO_NAMESPACE
 {
+
 DisplayTransformRcPtr DisplayTransform::Create()
 {
     return DisplayTransformRcPtr(new DisplayTransform(), &deleter);
@@ -24,7 +25,7 @@ void DisplayTransform::deleter(DisplayTransform* t)
 class DisplayTransform::Impl
 {
 public:
-    TransformDirection m_dir;
+    TransformDirection m_dir = TRANSFORM_DIR_FORWARD;
     std::string m_inputColorSpaceName;
     TransformRcPtr m_linearCC;
     TransformRcPtr m_colorTimingCC;
@@ -34,17 +35,11 @@ public:
     TransformRcPtr m_displayCC;
 
     std::string m_looksOverride;
-    bool m_looksOverrideEnabled;
+    bool m_looksOverrideEnabled = false;
 
-    Impl() :
-        m_dir(TRANSFORM_DIR_FORWARD),
-        m_looksOverrideEnabled(false)
-    { }
-
+    Impl() = default;
     Impl(const Impl &) = delete;
-
-    ~Impl()
-    { }
+    ~Impl() = default;
 
     Impl& operator= (const Impl & rhs)
     {
@@ -86,23 +81,14 @@ DisplayTransform::DisplayTransform()
 TransformRcPtr DisplayTransform::createEditableCopy() const
 {
     DisplayTransformRcPtr transform = DisplayTransform::Create();
-    *(transform->m_impl) = *m_impl;
+    *(transform->m_impl) = *m_impl; // Perform a deep copy.
     return transform;
 }
 
 DisplayTransform::~DisplayTransform()
 {
     delete m_impl;
-    m_impl = NULL;
-}
-
-DisplayTransform& DisplayTransform::operator= (const DisplayTransform & rhs)
-{
-    if (this != &rhs)
-    {
-        *m_impl = *rhs.m_impl;
-    }
-    return *this;
+    m_impl = nullptr;
 }
 
 TransformDirection DisplayTransform::getDirection() const noexcept
@@ -137,7 +123,7 @@ void DisplayTransform::validate() const
 
 void DisplayTransform::setInputColorSpaceName(const char * name)
 {
-    getImpl()->m_inputColorSpaceName = name;
+    getImpl()->m_inputColorSpaceName = name ? name : "";
 }
 
 const char * DisplayTransform::getInputColorSpaceName() const
@@ -177,7 +163,7 @@ ConstTransformRcPtr DisplayTransform::getChannelView() const
 
 void DisplayTransform::setDisplay(const char * display)
 {
-    getImpl()->m_display = display;
+    getImpl()->m_display = display ? display : "";
 }
 
 const char * DisplayTransform::getDisplay() const
@@ -187,7 +173,7 @@ const char * DisplayTransform::getDisplay() const
 
 void DisplayTransform::setView(const char * view)
 {
-    getImpl()->m_view = view;
+    getImpl()->m_view = view ? view : "";
 }
 
 const char * DisplayTransform::getView() const
@@ -269,31 +255,34 @@ void BuildDisplayOps(OpRcPtrVec & ops,
                      TransformDirection dir)
 {
     auto combinedDir = CombineTransformDirections(dir, displayTransform.getDirection());
-    if (combinedDir != TRANSFORM_DIR_FORWARD)
+    if (combinedDir == TRANSFORM_DIR_UNKNOWN)
     {
-        // TODO: Implement inverse direction. It is not simply inverting the result, because the
-        // from_reference or to_reference transform should be chosen from the direction (when they
-        // both exist).
         std::ostringstream os;
-        os << "DisplayTransform can only be applied in the forward direction.";
+        os << "Cannot build display transform: unspecified transform direction.";
         throw Exception(os.str().c_str());
     }
 
-    std::string inputColorSpaceName = displayTransform.getInputColorSpaceName();
+    const std::string inputColorSpaceName = displayTransform.getInputColorSpaceName();
     ConstColorSpaceRcPtr inputColorSpace = config.getColorSpace(inputColorSpaceName.c_str());
     if (!inputColorSpace)
     {
         std::ostringstream os;
         os << "DisplayTransform error.";
-        if(inputColorSpaceName.empty()) os << " InputColorSpaceName is unspecified.";
-        else os <<  " Cannot find inputColorSpace, named '" << inputColorSpaceName << "'.";
+        if (inputColorSpaceName.empty())
+        {
+            os << " InputColorSpaceName is unspecified.";
+        }
+        else
+        {
+            os <<  " Cannot find inputColorSpace, named '" << inputColorSpaceName << "'.";
+        }
         throw Exception(os.str().c_str());
     }
 
-    std::string display = displayTransform.getDisplay();
-    std::string view = displayTransform.getView();
+    const std::string display = displayTransform.getDisplay();
+    const std::string view = displayTransform.getView();
 
-    std::string viewTransformName = config.getDisplayViewTransformName(display.c_str(), view.c_str());
+    const std::string viewTransformName = config.getDisplayViewTransformName(display.c_str(), view.c_str());
     ConstViewTransformRcPtr viewTransform;
     if (!viewTransformName.empty())
     {
@@ -302,13 +291,20 @@ void BuildDisplayOps(OpRcPtrVec & ops,
 
     // NB: If the viewTranform is present, then displayColorSpace is a true display color space
     // rather than a traditional color space.
-    std::string displayColorSpaceName = config.getDisplayColorSpaceName(display.c_str(), view.c_str());
+    const std::string displayColorSpaceName = config.getDisplayColorSpaceName(display.c_str(), view.c_str());
     ConstColorSpaceRcPtr displayColorSpace = config.getColorSpace(displayColorSpaceName.c_str());
     if (!displayColorSpace)
     {
         std::ostringstream os;
         os << "DisplayTransform error.";
-        os <<  " Cannot find display colorspace,  '" << displayColorSpaceName << "'.";
+        if (displayColorSpaceName.empty())
+        {
+            os << " displayColorSpaceName is unspecified.";
+        }
+        else
+        {
+            os <<  " Cannot find display colorspace,  '" << displayColorSpaceName << "'.";
+        }
         throw Exception(os.str().c_str());
     }
 
@@ -414,11 +410,11 @@ void BuildDisplayOps(OpRcPtrVec & ops,
     if (!looks.empty())
     {
         BuildLookOps(ops,
-                        currentColorSpace,
-                        skipColorSpaceConversions,
-                        config,
-                        context,
-                        looks);
+                     currentColorSpace,
+                     skipColorSpaceConversions,
+                     config,
+                     context,
+                     looks);
     }
 
     // Apply a channel view.
@@ -473,5 +469,20 @@ void BuildDisplayOps(OpRcPtrVec & ops,
     {
         BuildOps(ops, config, context, displayCC, TRANSFORM_DIR_FORWARD);
     }
+
+    // TODO: Implement inverse direction. It is not simply inverting the result, because the
+    // from_reference or to_reference transform should be chosen from the direction (when they
+    // both exist).
+
+    // TODO: The view transform & display color space pipeline for (display, view) pair requires
+    // some adjustements to the inverse computation as it's more accurate to use the
+    // ViewTransform inverse if available.
+
+    // Invert the display transform, if requested.
+    if (combinedDir == TRANSFORM_DIR_INVERSE)
+    {
+        ops = ops.invert();
+    }
 }
+
 } // namespace OCIO_NAMESPACE
