@@ -449,6 +449,9 @@ public:
         refreshActiveColorSpaces();
     }
 
+    void checkVersionConsistency(ConstTransformRcPtr & transform) const;
+    void checkVersionConsistency() const;
+
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -2463,9 +2466,11 @@ void Config::serialize(std::ostream& os) const
 {
     try
     {
-        OCIOYaml::Write(os, this);
+        getImpl()->checkVersionConsistency();
+
+        OCIOYaml::Write(os, *this);
     }
-    catch( const std::exception & e)
+    catch (const std::exception & e)
     {
         std::ostringstream error;
         error << "Error building YAML: " << e.what();
@@ -2601,6 +2606,8 @@ ConstConfigRcPtr Config::Impl::Read(std::istream & istream, const char * filenam
     ConfigRcPtr config = Config::Create();
     OCIOYaml::Read(istream, config, filename);
 
+    config->getImpl()->checkVersionConsistency();
+
     // An API request always supersedes the env. variable. As the OCIOYaml helper methods
     // use the Config public API, the variable reset highlights that only the
     // env. variable and the config contents are valid after a config file read.
@@ -2608,6 +2615,114 @@ ConstConfigRcPtr Config::Impl::Read(std::istream & istream, const char * filenam
     config->getImpl()->refreshActiveColorSpaces();
 
     return config;
+}
+
+void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) const
+{
+    if (transform)
+    {
+        if (ConstExponentTransformRcPtr ex = DynamicPtrCast<const ExponentTransform>(transform))
+        {
+            if (m_majorVersion < 2 && ex->getNegativeStyle() != NEGATIVE_CLAMP)
+            {
+                throw Exception("Config version 1 only supports ExponentTransform clamping negative values.");
+            }
+        }
+        else if (DynamicPtrCast<const ExponentWithLinearTransform>(transform))
+        {
+            if (m_majorVersion < 2)
+            {
+                throw Exception("Only config version 2 (or higher) can have ExponentWithLinearTransform.");
+            }
+        }
+        else if (DynamicPtrCast<const ExposureContrastTransform>(transform))
+        {
+            if (m_majorVersion < 2)
+            {
+                throw Exception("Only config version 2 (or higher) can have ExposureContrastTransform.");
+            }
+        }
+        else if (DynamicPtrCast<const FixedFunctionTransform>(transform))
+        {
+            if (m_majorVersion < 2)
+            {
+                throw Exception("Only config version 2 (or higher) can have FixedFunctionTransform.");
+            }
+        }
+        else if (DynamicPtrCast<const LogAffineTransform>(transform))
+        {
+            if (m_majorVersion < 2)
+            {
+                throw Exception("Only config version 2 (or higher) can have LogAffineTransform.");
+            }
+        }
+        else if (DynamicPtrCast<const LogCameraTransform>(transform))
+        {
+            if (m_majorVersion < 2)
+            {
+                throw Exception("Only config version 2 (or higher) can have LogCameraTransform.");
+            }
+        }
+        else if (DynamicPtrCast<const RangeTransform>(transform))
+        {
+            if (m_majorVersion < 2)
+            {
+                throw Exception("Only config version 2 (or higher) can have RangeTransform.");
+            }
+        }
+        else if (ConstGroupTransformRcPtr grp = DynamicPtrCast<const GroupTransform>(transform))
+        {
+            const int numTransforms = grp->getNumTransforms();
+            for (int idx = 0; idx < numTransforms; ++idx)
+            {
+                ConstTransformRcPtr tr = grp->getTransform(idx);
+                checkVersionConsistency(tr);
+            }
+        }
+    }
+}
+
+void Config::Impl::checkVersionConsistency() const
+{
+    // Check for the Transforms.
+
+    ConstTransformVec transforms;
+    getAllInternalTransforms(transforms);
+
+    for (auto & transform : transforms)
+    {
+        checkVersionConsistency(transform);
+    }
+
+    // Check for the FileRules.
+
+    if (m_majorVersion < 2 && m_fileRules->getNumEntries() > 1)
+    {
+        throw Exception("Only version 2 (or higher) can have FileRules.");
+    }
+
+    // Check for the DisplayColorSpaces.
+
+    if (m_majorVersion < 2)
+    {
+        const int nbCS = m_allColorSpaces->getNumColorSpaces();
+        for (int i = 0; i < nbCS; ++i)
+        {
+            const auto & cs = m_allColorSpaces->getColorSpaceByIndex(i);
+            if (MatchReferenceType(SEARCH_REFERENCE_SPACE_DISPLAY, cs->getReferenceSpaceType()))
+            {
+                throw Exception("Only version 2 (or higher) can have DisplayColorSpaces.");
+            }
+        }
+    }
+
+    // Check for the ViewTransforms.
+
+    if (m_majorVersion < 2 && m_viewTransforms.size() != 0)
+    {
+        throw Exception("Only version 2 (or higher) can have ViewTransforms.");
+    }
+
 }
 
 } // namespace OCIO_NAMESPACE
