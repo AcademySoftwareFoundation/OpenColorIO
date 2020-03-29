@@ -115,16 +115,25 @@ target_include_directories(PyOpenColorIO
 	SYSTEM
 		${PYTHON_INCLUDE_DIRS}
 )
+
+# pybind11 recommends intentionally NOT linking against libpython on Linux and 
+# macOS, to prevent segfaults when potentially working with multiple Python 
+# installations. See note in:
+#   https://pybind11.readthedocs.io/en/stable/compiling.html#building-manually
+set(PYOCIO_LINK_PUBLIC public_api)
+if(WIN32)
+	list(INSERT PYOCIO_LINK_PUBLIC 0 ${PYTHON_LIBRARIES})
+endif()
+
 target_link_libraries(PyOpenColorIO
 	PUBLIC
-		${PYTHON_LIBRARIES}
-		public_api
-
+		${PYOCIO_LINK_PUBLIC}
 	PRIVATE
 		OpenColorIO
 	PRIVATE
 		pybind11::pybind11
 )
+
 target_compile_definitions(PyOpenColorIO
 	PRIVATE
 		PYOCIO_NAME=PyOpenColorIO

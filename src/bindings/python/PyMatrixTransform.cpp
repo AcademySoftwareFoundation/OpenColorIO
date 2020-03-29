@@ -10,11 +10,11 @@ void bindPyMatrixTransform(py::module & m)
 {
     MatrixTransformRcPtr DEFAULT = MatrixTransform::Create();
 
-    std::array<double, 3> DEFAULT_M44;
+    std::array<double, 16> DEFAULT_M44;
     DEFAULT->getMatrix(DEFAULT_M44.data());
 
-    std::array<double, 3> DEFAULT_OFFSET4;
-    DEFAULT->getMatrix(DEFAULT_OFFSET4.data());
+    std::array<double, 4> DEFAULT_OFFSET4;
+    DEFAULT->getOffset(DEFAULT_OFFSET4.data());
 
     py::class_<MatrixTransform, 
                MatrixTransformRcPtr /* holder */, 
