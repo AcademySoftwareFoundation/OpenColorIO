@@ -33,6 +33,7 @@ using PlanarImageDescRcPtr = OCIO_SHARED_PTR<PlanarImageDesc>;
 struct OCIOHIDDEN PyImageDesc
 {
     PyImageDesc() {}
+    virtual ~PyImageDesc() {}
 
     virtual BitDepth getBitDepth() const { return m_img->getBitDepth(); }
     long getWidth() const { return m_img->getWidth(); }
