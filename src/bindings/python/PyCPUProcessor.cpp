@@ -71,7 +71,7 @@ void bindPyCPUProcessor(py::module & m)
         .def("applyRGBA", [](CPUProcessorRcPtr & self, std::vector<float> & pixel) 
             {
                 checkVectorDivisible(pixel, 4);
-                self->applyRGB(pixel.data());
+                self->applyRGBA(pixel.data());
                 return pixel;
             },
              "pixel"_a,

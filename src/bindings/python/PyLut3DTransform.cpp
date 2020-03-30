@@ -59,7 +59,7 @@ void bindPyLut3DTransform(py::module & m)
                 return py::make_tuple(r, g, b);
             }, 
             "indexR"_a, "indexG"_a, "indexB"_a)
-        .def("setValue", &Lut3DTransform::getValue, 
+        .def("setValue", &Lut3DTransform::setValue, 
              "indexR"_a, "indexG"_a, "indexB"_a, "r"_a, "g"_a, "b"_a)
         .def("setData", [](Lut3DTransformRcPtr & self, py::buffer & data) 
             {

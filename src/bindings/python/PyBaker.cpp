@@ -18,7 +18,7 @@ enum BakerIterator
     IT_FORMAT = 0
 };
 
-using FormatIterator = PyIterator<ConstBakerRcPtr, IT_FORMAT>;
+using FormatIterator = PyIterator<BakerRcPtr, IT_FORMAT>;
 
 } // namespace
 

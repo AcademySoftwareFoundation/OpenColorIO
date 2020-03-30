@@ -27,7 +27,7 @@ void bindPyExponentWithLinearTransform(py::module & m)
             {
                 ExponentWithLinearTransformRcPtr p = ExponentWithLinearTransform::Create();
                 p->setGamma(*reinterpret_cast<const double(*)[4]>(gamma.data()));
-                p->setGamma(*reinterpret_cast<const double(*)[4]>(offset.data()));
+                p->setOffset(*reinterpret_cast<const double(*)[4]>(offset.data()));
                 p->setNegativeStyle(negativeStyle);
                 p->setDirection(dir);
                 return p;

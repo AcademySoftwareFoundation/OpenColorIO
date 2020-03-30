@@ -62,7 +62,7 @@ void bindPyLut1DTransform(py::module & m)
                 return py::make_tuple(r, g, b);
             }, 
             "index"_a)
-        .def("setValue", &Lut1DTransform::getValue, "index"_a, "r"_a, "g"_a, "b"_a)
+        .def("setValue", &Lut1DTransform::setValue, "index"_a, "r"_a, "g"_a, "b"_a)
         .def("setData", [](Lut1DTransformRcPtr & self, py::buffer & data) 
             {
                 py::buffer_info info = data.request();

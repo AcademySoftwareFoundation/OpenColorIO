@@ -218,19 +218,19 @@ void bindPyTypes(py::module & m)
     m.def("EnvironmentModeFromString", &EnvironmentModeFromString, "s"_a);
 
     m.def("CDLStyleToString", &CDLStyleToString, "style"_a);
-    m.def("CDLStyleFromString", &CDLStyleFromString, "style"_a);
+    m.def("CDLStyleFromString", &CDLStyleFromString, "s"_a);
 
     m.def("RangeStyleToString", &RangeStyleToString, "style"_a);
-    m.def("RangeStyleFromString", &RangeStyleFromString, "style"_a);
+    m.def("RangeStyleFromString", &RangeStyleFromString, "s"_a);
 
     m.def("FixedFunctionStyleToString", &FixedFunctionStyleToString, "style"_a);
-    m.def("FixedFunctionStyleFromString", &FixedFunctionStyleFromString, "style"_a);
+    m.def("FixedFunctionStyleFromString", &FixedFunctionStyleFromString, "s"_a);
 
     m.def("ExposureContrastStyleToString", &ExposureContrastStyleToString, "style"_a);
-    m.def("ExposureContrastStyleFromString", &ExposureContrastStyleFromString, "style"_a);
+    m.def("ExposureContrastStyleFromString", &ExposureContrastStyleFromString, "s"_a);
 
     m.def("NegativeStyleToString", &NegativeStyleToString, "style"_a);
-    m.def("NegativeStyleFromString", &NegativeStyleFromString, "style"_a);
+    m.def("NegativeStyleFromString", &NegativeStyleFromString, "s"_a);
 
     // Envar
     m.attr("OCIO_CONFIG_ENVVAR") = OCIO_CONFIG_ENVVAR;
