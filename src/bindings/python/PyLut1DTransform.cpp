@@ -92,7 +92,7 @@ void bindPyLut1DTransform(py::module & m)
                 for (unsigned long i = 0; i < self->getLength(); i++)
                 {
                     float r, g, b;
-                    self->getValue(i / 3, r, g, b);
+                    self->getValue(i, r, g, b);
                     values.push_back(r);
                     values.push_back(g);
                     values.push_back(b);
