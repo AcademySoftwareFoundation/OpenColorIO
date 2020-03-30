@@ -113,6 +113,9 @@ void GPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
     m_ops.finalize(oFlags);
     m_ops.unifyDynamicProperties();
 
+    // Is NoOp ?
+    m_isNoOp  = m_ops.isNoOp();
+
     // Does the color processing introduce crosstalk between the pixel channels?
     m_hasChannelCrosstalk = m_ops.hasChannelCrosstalk();
 

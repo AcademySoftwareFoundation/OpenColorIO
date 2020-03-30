@@ -20,12 +20,12 @@ namespace OCIO = OCIO_NAMESPACE;
 
 namespace CDL_Data_1
 {
-const double slope[3]  = { 1.35,  1.10, 0.71 };
-const double offset[3] = { 0.05, -0.23, 0.11 };
-const double power[3]  = { 0.93,  0.81, 1.27 };
+constexpr double slope[3]  = { 1.35,  1.10, 0.71 };
+constexpr double offset[3] = { 0.05, -0.23, 0.11 };
+constexpr double power[3]  = { 0.93,  0.81, 1.27 };
 };
 
-// Use the legacy shader description with the CDL from OCIO v1 implementation
+// Use the legacy shader description with the CDL from OCIO v1 implementation.
 OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1_legacy_shader)
 {
     OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
@@ -34,10 +34,11 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1_legacy_shader)
     cdl->setOffset(CDL_Data_1::offset);
     cdl->setPower(CDL_Data_1::power);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc
-        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(32);
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(32);
 
-    test.setContext(cdl, shaderDesc);
+    OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
+    config->setMajorVersion(1);
+    test.setContext(config, cdl, shaderDesc);
 
     test.setTestWideRange(true);
     test.setRelativeComparison(false);
@@ -47,7 +48,7 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1_legacy_shader)
     test.setTestNaN(false);
 }
 
-// Use the generic shader description with the CDL from OCIO v1 implementation
+// Use the generic shader description with the CDL from OCIO v1 implementation.
 OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1)
 {
     OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
@@ -58,7 +59,9 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1)
 
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    test.setContext(cdl, shaderDesc);
+    OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
+    config->setMajorVersion(1);
+    test.setContext(config, cdl, shaderDesc);
 
     test.setTestWideRange(true);
     test.setRelativeComparison(false);
@@ -67,10 +70,11 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1)
 }
 
 // Use the generic shader description with the CDL from OCIO v2 implementation
-// (i.e. use the CDL Op (with the fwd clamp style) and a forward direction)
+// (i.e. use the CDL Op with the ASC/clamping style and a forward direction).
 OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v2)
 {
     OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
+    cdl->setStyle(OCIO::CDL_ASC);
     cdl->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
     cdl->setSlope(CDL_Data_1::slope);
     cdl->setOffset(CDL_Data_1::offset);
@@ -88,11 +92,56 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v2)
     test.setErrorThreshold(1e-5f);
 }
 
+OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_no_clamp_v2)
+{
+    OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
+    cdl->setStyle(OCIO::CDL_NO_CLAMP);
+    cdl->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    cdl->setSlope(CDL_Data_1::slope);
+    cdl->setOffset(CDL_Data_1::offset);
+    cdl->setPower(CDL_Data_1::power);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
+    config->setMajorVersion(2);
+
+    test.setContext(config, cdl, shaderDesc);
+
+    test.setTestWideRange(true);
+    test.setRelativeComparison(false);
+    test.setErrorThreshold(5e-5f);
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
+}
+
 // Use the generic shader description with the CDL from OCIO v2 implementation
-// (i.e. use the CDL Op (with the fwd clamp style) and an inverse direction)
+// (i.e. use the CDL Op with the ASC/clamping style and a inverse direction).
 OCIO_ADD_GPU_TEST(CDLOp, clamp_inv_v2)
 {
     OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
+    cdl->setStyle(OCIO::CDL_ASC);
+    cdl->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    cdl->setSlope(CDL_Data_1::slope);
+    cdl->setOffset(CDL_Data_1::offset);
+    cdl->setPower(CDL_Data_1::power);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
+    config->setMajorVersion(2);
+
+    test.setContext(config, cdl, shaderDesc);
+
+    test.setTestWideRange(true);
+    test.setRelativeComparison(false);
+    test.setErrorThreshold(1e-4f);
+}
+
+OCIO_ADD_GPU_TEST(CDLOp, clamp_inv_no_clamp_v2)
+{
+    OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
+    cdl->setStyle(OCIO::CDL_NO_CLAMP);
     cdl->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
     cdl->setSlope(CDL_Data_1::slope);
     cdl->setOffset(CDL_Data_1::offset);
@@ -112,21 +161,67 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_inv_v2)
 
 namespace CDL_Data_2
 {
-const double slope[3]  = { 1.15, 1.10, 0.90 };
-const double offset[3] = { 0.05, 0.02, 0.07 };
-const double power[3]  = { 1.20, 0.95, 1.13 };
+constexpr double slope[3]  = { 1.15, 1.10, 0.90 };
+constexpr double offset[3] = { 0.05, -0.02, 0.07 };
+constexpr double power[3]  = { 1.20, 0.95, 1.13 };
+constexpr double saturation = 0.9;
 };
 
-
-// Use the generic shader description with the CDL from OCIO v2 implementation
-// (i.e. use the CDL Op (with the fwd clamp style) and a forward direction)
-OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v2_Data_2)
+// Use the legacy shader description with the CDL from OCIO v1 implementation.
+OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1_legacy_shader_Data_2)
 {
     OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
     cdl->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
     cdl->setSlope(CDL_Data_2::slope);
     cdl->setOffset(CDL_Data_2::offset);
     cdl->setPower(CDL_Data_2::power);
+    cdl->setSat(CDL_Data_2::saturation);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(32);
+
+    OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
+    config->setMajorVersion(1);
+    test.setContext(config, cdl, shaderDesc);
+
+    test.setTestWideRange(true);
+    test.setRelativeComparison(false);
+    test.setErrorThreshold(1e-6f);
+    test.setTestNaN(false);
+}
+
+// Use the generic shader description with the CDL from OCIO v1 implementation.
+OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1_Data_2)
+{
+    OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
+    cdl->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    cdl->setSlope(CDL_Data_2::slope);
+    cdl->setOffset(CDL_Data_2::offset);
+    cdl->setPower(CDL_Data_2::power);
+    cdl->setSat(CDL_Data_2::saturation);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
+    config->setMajorVersion(1);
+    test.setContext(config, cdl, shaderDesc);
+
+    test.setTestWideRange(true);
+    test.setRelativeComparison(false);
+    test.setErrorThreshold(1e-6f);
+    test.setTestNaN(false);
+}
+
+// Use the generic shader description with the CDL from OCIO v2 implementation
+// (i.e. use the CDL Op with the ASC/clamping style and a forward direction).
+OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v2_Data_2)
+{
+    OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
+    cdl->setStyle(OCIO::CDL_ASC);
+    cdl->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    cdl->setSlope(CDL_Data_2::slope);
+    cdl->setOffset(CDL_Data_2::offset);
+    cdl->setPower(CDL_Data_2::power);
+    cdl->setSat(CDL_Data_2::saturation);
 
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
@@ -140,24 +235,15 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v2_Data_2)
     test.setErrorThreshold(2e-5f);
 }
 
-
-namespace CDL_Data_3
-{
-const double slope[3]  = {  3.405,  1.0,    1.0   };
-const double offset[3] = { -0.178, -0.178, -0.178 };
-const double power[3]  = {  1.095,  1.095,  1.095 };
-};
-
-
-// Use the generic shader description with the CDL from OCIO v2 implementation
-// (i.e. use the CDL Op (with the fwd clamp style) and a forward direction)
-OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v2_Data_3)
+OCIO_ADD_GPU_TEST(CDLOp, clamp_inv_v2_Data_2)
 {
     OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
-    cdl->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
-    cdl->setSlope(CDL_Data_3::slope);
-    cdl->setOffset(CDL_Data_3::offset);
-    cdl->setPower(CDL_Data_3::power);
+    cdl->setStyle(OCIO::CDL_ASC);
+    cdl->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    cdl->setSlope(CDL_Data_2::slope);
+    cdl->setOffset(CDL_Data_2::offset);
+    cdl->setPower(CDL_Data_2::power);
+    cdl->setSat(CDL_Data_2::saturation);
 
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
@@ -168,5 +254,134 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v2_Data_3)
 
     test.setTestWideRange(true);
     test.setRelativeComparison(false);
-    test.setErrorThreshold(1e-5f);
+    test.setErrorThreshold(2e-5f);
+}
+
+OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_no_clamp_v2_Data_2)
+{
+    OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
+    cdl->setStyle(OCIO::CDL_NO_CLAMP);
+    cdl->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    cdl->setSlope(CDL_Data_2::slope);
+    cdl->setOffset(CDL_Data_2::offset);
+    cdl->setPower(CDL_Data_2::power);
+    cdl->setSat(CDL_Data_2::saturation);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
+    config->setMajorVersion(2);
+
+    test.setContext(config, cdl, shaderDesc);
+
+    test.setTestWideRange(true);
+    test.setRelativeComparison(false);
+    test.setErrorThreshold(5e-5f);
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
+}
+
+OCIO_ADD_GPU_TEST(CDLOp, clamp_inv_no_clamp_v2_Data_2)
+{
+    OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
+    cdl->setStyle(OCIO::CDL_NO_CLAMP);
+    cdl->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    cdl->setSlope(CDL_Data_2::slope);
+    cdl->setOffset(CDL_Data_2::offset);
+    cdl->setPower(CDL_Data_2::power);
+    cdl->setSat(CDL_Data_2::saturation);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
+    config->setMajorVersion(2);
+
+    test.setContext(config, cdl, shaderDesc);
+
+    test.setTestWideRange(true);
+    test.setRelativeComparison(false);
+    test.setErrorThreshold(5e-5f);
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
+}
+
+namespace CDL_Data_3
+{
+constexpr double slope[3]  = {  3.405,  1.0,    1.0   };
+constexpr double offset[3] = { -0.178, -0.178, -0.178 };
+constexpr double power[3]  = {  1.095,  1.095,  1.0 };
+constexpr double saturation = 1.2;
+};
+
+
+// Use the generic shader description with the CDL from OCIO v2 implementation
+// (i.e. use the CDL Op with the ASC/clamping style and a forward direction).
+OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v2_Data_3)
+{
+    OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
+    cdl->setStyle(OCIO::CDL_ASC);
+    cdl->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    cdl->setSlope(CDL_Data_3::slope);
+    cdl->setOffset(CDL_Data_3::offset);
+    cdl->setPower(CDL_Data_3::power);
+    cdl->setSat(CDL_Data_3::saturation);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
+    config->setMajorVersion(2);
+
+    test.setContext(config, cdl, shaderDesc);
+
+    test.setTestWideRange(true);
+    test.setRelativeComparison(false);
+    test.setErrorThreshold(5e-5f);
+}
+
+OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_no_clamp_v2_Data_3)
+{
+    OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
+    cdl->setStyle(OCIO::CDL_NO_CLAMP);
+    cdl->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    cdl->setSlope(CDL_Data_3::slope);
+    cdl->setOffset(CDL_Data_3::offset);
+    cdl->setPower(CDL_Data_3::power);
+    cdl->setSat(CDL_Data_3::saturation);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
+    config->setMajorVersion(2);
+
+    test.setContext(config, cdl, shaderDesc);
+
+    test.setTestWideRange(false);
+    test.setRelativeComparison(false);
+    test.setErrorThreshold(5e-5f);
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
+}
+
+OCIO_ADD_GPU_TEST(CDLOp, clamp_inv_no_clamp_v2_Data_3)
+{
+    OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
+    cdl->setStyle(OCIO::CDL_NO_CLAMP);
+    cdl->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    cdl->setSlope(CDL_Data_3::slope);
+    cdl->setOffset(CDL_Data_3::offset);
+    cdl->setPower(CDL_Data_3::power);
+    cdl->setSat(CDL_Data_3::saturation);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
+    config->setMajorVersion(2);
+
+    test.setContext(config, cdl, shaderDesc);
+
+    test.setTestWideRange(false);
+    test.setRelativeComparison(false);
+    test.setErrorThreshold(5e-5f);
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
 }

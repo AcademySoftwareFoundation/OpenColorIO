@@ -28,14 +28,14 @@ struct View
 
     View() = default;
 
-    View(const std::string & name,
-         const std::string & viewTransform,
-         const std::string & colorspace,
-         const std::string & looksList)
+    View(const char * name,
+         const char * viewTransform,
+         const char * colorspace,
+         const char * looks)
         : m_name(name)
-        , m_viewTransform(viewTransform)
+        , m_viewTransform(viewTransform ? viewTransform : "")
         , m_colorspace(colorspace)
-        , m_looks(looksList)
+        , m_looks(looks ? looks : "")
     { }
 };
 
@@ -46,17 +46,18 @@ typedef std::vector<View> ViewVec;
 // can remain in config order but we left the "Map" in the name since it refers to a Yaml::Map.
 typedef std::vector<std::pair<std::string, ViewVec>> DisplayMap;  // Pair is (display name : ViewVec)
 
+DisplayMap::iterator find_display(DisplayMap & displays, const std::string & display);
 DisplayMap::const_iterator find_display_const(const DisplayMap & displays, const std::string & display);
 
 int find_view(const ViewVec & vec, const std::string & name);
 
 // Note: displayColorSpace has to be a display-referred color space if viewTransform is not empty.
 void AddDisplay(DisplayMap & displays,
-                const std::string & display,
-                const std::string & view,
-                const std::string & viewTransform,
-                const std::string & displayColorspace,
-                const std::string & looks);
+                const char * display,
+                const char * view,
+                const char * viewTransform,
+                const char * displayColorSpace,
+                const char * looks);
 
 void ComputeDisplays(StringUtils::StringVec & displayCache,
                      const DisplayMap & displays,

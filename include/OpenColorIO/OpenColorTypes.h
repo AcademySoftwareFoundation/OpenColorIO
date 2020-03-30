@@ -640,6 +640,44 @@ extern OCIOEXPORT const char * NegativeStyleToString(NegativeStyle style);
 //!cpp:function::
 extern OCIOEXPORT NegativeStyle NegativeStyleFromString(const char * style);
 
+/*!rst::
+Envvar
+******
+
+These environmental variables are used by the OpenColorIO library
+(i.e. these variables are defined in src/OpenColorIO/Config.cpp).
+*/
+
+//!rst::
+// .. c:var:: const char * OCIO_CONFIG_ENVVAR
+//
+//    The envvar 'OCIO' provides a path to the config file used by :cpp:func:`Config::CreateFromEnv`.
+//    
+extern OCIOEXPORT const char * OCIO_CONFIG_ENVVAR;
+
+//!rst::
+// .. c:var:: const char * OCIO_ACTIVE_DISPLAYS_ENVVAR
+//
+//    The envvar 'OCIO_ACTIVE_DISPLAYS' provides a list of displays overriding the 'active_displays'
+//    list from the config file.
+//    
+extern OCIOEXPORT const char * OCIO_ACTIVE_DISPLAYS_ENVVAR;
+
+//!rst::
+// .. c:var:: const char * OCIO_ACTIVE_VIEWS_ENVVAR
+//
+//    The envvar 'OCIO_ACTIVE_VIEWS' provides a list of views overriding the 'active_views'
+//    list from the config file.
+//    
+extern OCIOEXPORT const char * OCIO_ACTIVE_VIEWS_ENVVAR;
+
+//!rst::
+// .. c:var:: const char * OCIO_INACTIVE_COLORSPACES_ENVVAR
+//
+//    The envvar 'OCIO_INACTIVE_COLORSPACES' provides a list of inactive color spaces
+//    overriding the 'inactive_color_spaces' list from the config file.
+//    
+extern OCIOEXPORT const char * OCIO_INACTIVE_COLORSPACES_ENVVAR;
 
 /*!rst::
 Roles
