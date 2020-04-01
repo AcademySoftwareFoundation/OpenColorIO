@@ -8,11 +8,21 @@ namespace OCIO_NAMESPACE
 namespace 
 {
 
-std::vector<float> getVarsStdVec(const ConstAllocationTransformRcPtr & p) {
+std::vector<float> getVarsStdVec(const AllocationTransformRcPtr & p) 
+{
     std::vector<float> vars;
     vars.resize(p->getNumVars());
     p->getVars(vars.data());
     return vars;
+}
+
+void setVars(const AllocationTransformRcPtr & p, const std::vector<float> & vars)
+{
+    if (vars.size() < 2 || vars.size() > 3)
+    {
+        throw Exception("vars must be a float array, size 2 or 3");
+    }
+    p->setVars(vars.size(), vars.data());
 }
 
 } // namespace
@@ -31,11 +41,7 @@ void bindPyAllocationTransform(py::module & m)
             {
                 AllocationTransformRcPtr p = AllocationTransform::Create();
                 p->setAllocation(allocation);
-                if (vars.size() < 2 || vars.size() > 3)
-                {
-                    throw Exception("vars must be a float array, size 2 or 3");
-                }
-                p->setVars(vars.size(), vars.data());
+                setVars(p, vars);
                 p->setDirection(dir);
                 return p;
             }), 
@@ -51,11 +57,7 @@ void bindPyAllocationTransform(py::module & m)
             })
         .def("setVars", [](AllocationTransformRcPtr self, const std::vector<float> & vars)
             { 
-                if (vars.size() < 2 || vars.size() > 3)
-                {
-                    throw Exception("vars must be a float array, size 2 or 3");
-                }
-                self->setVars(vars.size(), vars.data());
+                setVars(self, vars);
             }, 
              "vars"_a);
 }

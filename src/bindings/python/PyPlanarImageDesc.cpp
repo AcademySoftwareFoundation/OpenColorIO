@@ -39,10 +39,10 @@ void bindPyPlanarImageDesc(py::module & m)
                 checkBufferSize(aInfo, width*height);
 
                 d.m_img = std::make_shared<PlanarImageDesc>(rInfo.ptr, 
-                                                          gInfo.ptr, 
-                                                          bInfo.ptr, 
-                                                          aInfo.ptr, 
-                                                          width, height);
+                                                            gInfo.ptr, 
+                                                            bInfo.ptr, 
+                                                            aInfo.ptr, 
+                                                            width, height);
                 return d;
             }), 
              "rData"_a, "gData"_a, "bData"_a, "aData"_a, "width"_a, "height"_a)
@@ -79,13 +79,13 @@ void bindPyPlanarImageDesc(py::module & m)
                 checkBufferSize(aInfo, width*height);
 
                 d.m_img = std::make_shared<PlanarImageDesc>(rInfo.ptr, 
-                                                          gInfo.ptr, 
-                                                          bInfo.ptr, 
-                                                          aInfo.ptr, 
-                                                          width, height,
-                                                          bitDepth,
-                                                          xStrideBytes,
-                                                          yStrideBytes);
+                                                            gInfo.ptr, 
+                                                            bInfo.ptr, 
+                                                            aInfo.ptr, 
+                                                            width, height,
+                                                            bitDepth,
+                                                            xStrideBytes,
+                                                            yStrideBytes);
                 return d;
             }),
              "rData"_a, "gData"_a, "bData"_a, "aData"_a, "width"_a, "height"_a, "bitDepth"_a,

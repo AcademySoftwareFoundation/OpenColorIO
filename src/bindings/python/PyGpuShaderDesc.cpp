@@ -22,9 +22,9 @@ using Texture3DIterator = PyIterator<GpuShaderDescRcPtr, IT_TEXTURE_3D>;
 
 struct Texture
 {
-    const char * textureName;
-    const char * samplerName;
-    const char * uid;
+    std::string textureName;
+    std::string samplerName;
+    std::string uid;
     unsigned width;
     unsigned height;
     GpuShaderDesc::TextureType channel;
@@ -33,9 +33,9 @@ struct Texture
 
 struct Texture3D
 {
-    const char * textureName;
-    const char * samplerName;
-    const char * uid;
+    std::string textureName;
+    std::string samplerName;
+    std::string uid;
     unsigned edgelen;
     Interpolation interpolation;
 };
@@ -146,9 +146,9 @@ void bindPyGpuShaderDesc(py::module & m)
             {
                 py::gil_scoped_release release;
 
-                const char * textureName;
-                const char * samplerName;
-                const char * uid;
+                const char * textureName = nullptr;
+                const char * samplerName = nullptr;
+                const char * uid         = nullptr;
                 unsigned width, height;
                 GpuShaderDesc::TextureType channel;
                 Interpolation interpolation;
@@ -213,9 +213,9 @@ void bindPyGpuShaderDesc(py::module & m)
             {
                 py::gil_scoped_release release;
 
-                const char * textureName;
-                const char * samplerName;
-                const char * uid;
+                const char * textureName = nullptr;
+                const char * samplerName = nullptr;
+                const char * uid         = nullptr;
                 unsigned edgelen;
                 Interpolation interpolation;
                 self->get3DTexture(index, textureName, samplerName, uid, edgelen, interpolation);
@@ -237,7 +237,7 @@ void bindPyGpuShaderDesc(py::module & m)
         .def("__getitem__", [](UniformIterator & it, int i) 
             { 
                 // GpuShaderDesc provides index check with exception
-                const char * name;
+                const char * name = nullptr;
                 DynamicPropertyRcPtr value;
                 it.m_obj->getUniform(i, name, value);
 
@@ -248,7 +248,7 @@ void bindPyGpuShaderDesc(py::module & m)
             {
                 int i = it.nextIndex(it.m_obj->getNumUniforms());
 
-                const char * name;
+                const char * name = nullptr;
                 DynamicPropertyRcPtr value;
                 it.m_obj->getUniform(i, name, value);
 
@@ -269,9 +269,9 @@ void bindPyGpuShaderDesc(py::module & m)
         .def("__getitem__", [](TextureIterator & it, int i) -> Texture
             { 
                 // GpuShaderDesc provides index check with exception
-                const char * textureName;
-                const char * samplerName;
-                const char * uid;
+                const char * textureName = nullptr;
+                const char * samplerName = nullptr;
+                const char * uid         = nullptr;
                 unsigned width, height;
                 GpuShaderDesc::TextureType channel;
                 Interpolation interpolation;
@@ -285,9 +285,9 @@ void bindPyGpuShaderDesc(py::module & m)
             {
                 int i = it.nextIndex(it.m_obj->getNumTextures());
 
-                const char * textureName;
-                const char * samplerName;
-                const char * uid;
+                const char * textureName = nullptr;
+                const char * samplerName = nullptr;
+                const char * uid         = nullptr;
                 unsigned width, height;
                 GpuShaderDesc::TextureType channel;
                 Interpolation interpolation;
@@ -309,9 +309,9 @@ void bindPyGpuShaderDesc(py::module & m)
         .def("__getitem__", [](Texture3DIterator & it, int i) -> Texture3D
             { 
                 // GpuShaderDesc provides index check with exception
-                const char * textureName;
-                const char * samplerName;
-                const char * uid;
+                const char * textureName = nullptr;
+                const char * samplerName = nullptr;
+                const char * uid         = nullptr;
                 unsigned edgelen;
                 Interpolation interpolation;
                 it.m_obj->get3DTexture(i, textureName, samplerName, uid, edgelen, interpolation);
@@ -323,9 +323,9 @@ void bindPyGpuShaderDesc(py::module & m)
             {
                 int i = it.nextIndex(it.m_obj->getNum3DTextures());
 
-                const char * textureName;
-                const char * samplerName;
-                const char * uid;
+                const char * textureName = nullptr;
+                const char * samplerName = nullptr;
+                const char * uid         = nullptr;
                 unsigned edgelen;
                 Interpolation interpolation;
                 it.m_obj->get3DTexture(i, textureName, samplerName, uid, edgelen, interpolation);

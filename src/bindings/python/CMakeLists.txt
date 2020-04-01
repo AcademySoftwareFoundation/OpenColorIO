@@ -130,7 +130,6 @@ target_link_libraries(PyOpenColorIO
 		${PYOCIO_LINK_PUBLIC}
 	PRIVATE
 		OpenColorIO
-	PRIVATE
 		pybind11::pybind11
 )
 
