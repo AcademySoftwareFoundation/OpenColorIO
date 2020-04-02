@@ -11,6 +11,8 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "utils/StringUtils.h"
+
 namespace py = pybind11;
 using namespace pybind11::literals;
 

@@ -6,46 +6,108 @@
 namespace OCIO_NAMESPACE
 {
 
+namespace 
+{
+
+void * getBufferData(py::buffer & data, py::dtype dtype, long size)
+{
+    py::buffer_info info = data.request();
+    checkBufferType(info, dtype);
+    checkBufferSize(info, size);
+    return info.ptr;
+}
+
+} // namespace
+
 void bindPyPlanarImageDesc(py::module & m)
 {
     py::class_<PyPlanarImageDesc, PyImageDesc /* base */>(m, "PlanarImageDesc")
+        .def(py::init([](py::buffer & rData, 
+                         py::buffer & gData, 
+                         py::buffer & bData,
+                         long width, long height) 
+            { 
+                PyPlanarImageDesc * p = new PyPlanarImageDesc();
+
+                py::gil_scoped_release release;
+                p->m_data[0] = rData;
+                p->m_data[1] = gData;
+                p->m_data[2] = bData;
+                long size = width * height;
+                py::gil_scoped_acquire acquire;
+
+                py::dtype type("float32");
+
+                p->m_img = std::make_shared<PlanarImageDesc>(
+                    getBufferData(p->m_data[0], type, size), 
+                    getBufferData(p->m_data[1], type, size), 
+                    getBufferData(p->m_data[2], type, size), 
+                    nullptr, 
+                    width, height);
+
+                return p;
+            }), 
+             "rData"_a, "gData"_a, "bData"_a, "width"_a, "height"_a)
         .def(py::init([](py::buffer & rData, 
                          py::buffer & gData, 
                          py::buffer & bData, 
                          py::buffer & aData, 
                          long width, long height) 
             { 
-                PyPlanarImageDesc d;
+                PyPlanarImageDesc * p = new PyPlanarImageDesc();
 
                 py::gil_scoped_release release;
-                d.m_data[0] = rData;
-                d.m_data[1] = gData;
-                d.m_data[2] = bData;
-                d.m_data[3] = aData;
+                p->m_data[0] = rData;
+                p->m_data[1] = gData;
+                p->m_data[2] = bData;
+                p->m_data[3] = aData;
+                long size = width * height;
                 py::gil_scoped_acquire acquire;
 
-                py::buffer_info rInfo = d.m_data[0].request();
-                py::buffer_info gInfo = d.m_data[1].request();
-                py::buffer_info bInfo = d.m_data[2].request();
-                py::buffer_info aInfo = d.m_data[3].request();
+                py::dtype type("float32");
 
-                checkBufferType(rInfo, py::dtype("float32"));
-                checkBufferSize(rInfo, width*height);
-                checkBufferType(gInfo, py::dtype("float32"));
-                checkBufferSize(gInfo, width*height);
-                checkBufferType(bInfo, py::dtype("float32"));
-                checkBufferSize(bInfo, width*height);
-                checkBufferType(aInfo, py::dtype("float32"));
-                checkBufferSize(aInfo, width*height);
-
-                d.m_img = std::make_shared<PlanarImageDesc>(rInfo.ptr, 
-                                                            gInfo.ptr, 
-                                                            bInfo.ptr, 
-                                                            aInfo.ptr, 
-                                                            width, height);
-                return d;
+                p->m_img = std::make_shared<PlanarImageDesc>(
+                    getBufferData(p->m_data[0], type, size), 
+                    getBufferData(p->m_data[1], type, size), 
+                    getBufferData(p->m_data[2], type, size), 
+                    getBufferData(p->m_data[3], type, size), 
+                    width, height);
+                return p;
             }), 
              "rData"_a, "gData"_a, "bData"_a, "aData"_a, "width"_a, "height"_a)
+        .def(py::init([](py::buffer & rData, 
+                         py::buffer & gData, 
+                         py::buffer & bData,
+                         long width, long height,
+                         BitDepth bitDepth,
+                         ptrdiff_t xStrideBytes,
+                         ptrdiff_t yStrideBytes) 
+            { 
+                PyPlanarImageDesc * p = new PyPlanarImageDesc();
+
+                py::gil_scoped_release release;
+                p->m_data[0] = rData;
+                p->m_data[1] = gData;
+                p->m_data[2] = bData;
+                long size = width * height;
+                py::gil_scoped_acquire acquire;
+
+                py::dtype type = bitDepthToDtype(bitDepth);
+
+                p->m_img = std::make_shared<PlanarImageDesc>(
+                    getBufferData(p->m_data[0], type, size), 
+                    getBufferData(p->m_data[1], type, size), 
+                    getBufferData(p->m_data[2], type, size), 
+                    nullptr, 
+                    width, height,
+                    bitDepth,
+                    xStrideBytes,
+                    yStrideBytes);
+
+                return p;
+            }),
+             "rData"_a, "gData"_a, "bData"_a, "width"_a, "height"_a, "bitDepth"_a,
+             "xStrideBytes"_a, "yStrideBytes"_a)
         .def(py::init([](py::buffer & rData, 
                          py::buffer & gData, 
                          py::buffer & bData, 
@@ -55,38 +117,29 @@ void bindPyPlanarImageDesc(py::module & m)
                          ptrdiff_t xStrideBytes,
                          ptrdiff_t yStrideBytes) 
             { 
-                PyPlanarImageDesc d;
+                PyPlanarImageDesc * p = new PyPlanarImageDesc();
 
                 py::gil_scoped_release release;
-                d.m_data[0] = rData;
-                d.m_data[1] = gData;
-                d.m_data[2] = bData;
-                d.m_data[3] = aData;
+                p->m_data[0] = rData;
+                p->m_data[1] = gData;
+                p->m_data[2] = bData;
+                p->m_data[3] = aData;
+                long size = width * height;
                 py::gil_scoped_acquire acquire;
 
-                py::buffer_info rInfo = d.m_data[0].request();
-                py::buffer_info gInfo = d.m_data[1].request();
-                py::buffer_info bInfo = d.m_data[2].request();
-                py::buffer_info aInfo = d.m_data[3].request();
+                py::dtype type = bitDepthToDtype(bitDepth);
 
-                checkBufferType(rInfo, bitDepth);
-                checkBufferSize(rInfo, width*height);
-                checkBufferType(gInfo, bitDepth);
-                checkBufferSize(gInfo, width*height);
-                checkBufferType(bInfo, bitDepth);
-                checkBufferSize(bInfo, width*height);
-                checkBufferType(aInfo, bitDepth);
-                checkBufferSize(aInfo, width*height);
-
-                d.m_img = std::make_shared<PlanarImageDesc>(rInfo.ptr, 
-                                                            gInfo.ptr, 
-                                                            bInfo.ptr, 
-                                                            aInfo.ptr, 
-                                                            width, height,
-                                                            bitDepth,
-                                                            xStrideBytes,
-                                                            yStrideBytes);
-                return d;
+                p->m_img = std::make_shared<PlanarImageDesc>(
+                    getBufferData(p->m_data[0], type, size), 
+                    getBufferData(p->m_data[1], type, size), 
+                    getBufferData(p->m_data[2], type, size), 
+                    getBufferData(p->m_data[3], type, size), 
+                    width, height,
+                    bitDepth,
+                    xStrideBytes,
+                    yStrideBytes);
+                    
+                return p;
             }),
              "rData"_a, "gData"_a, "bData"_a, "aData"_a, "width"_a, "height"_a, "bitDepth"_a,
              "xStrideBytes"_a, "yStrideBytes"_a)

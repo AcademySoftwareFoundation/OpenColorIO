@@ -32,18 +32,22 @@ using PlanarImageDescRcPtr = OCIO_SHARED_PTR<PlanarImageDesc>;
 
 struct OCIOHIDDEN PyImageDesc
 {
-    PyImageDesc() {}
-    virtual ~PyImageDesc() {}
+    PyImageDesc() = default;
+    virtual ~PyImageDesc() = default;
 
-    virtual BitDepth getBitDepth() const { return m_img->getBitDepth(); }
-    long getWidth() const { return m_img->getWidth(); }
-    long getHeight() const { return m_img->getHeight(); }
-    ptrdiff_t getXStrideBytes() const { return m_img->getXStrideBytes(); }
-    ptrdiff_t getYStrideBytes() const { return m_img->getYStrideBytes(); }
-    bool isRGBAPacked() const { return m_img->isRGBAPacked(); }
-    bool isFloat() const { return m_img->isFloat(); }
+    virtual BitDepth getBitDepth() const noexcept { return m_img->getBitDepth(); }
+    long getWidth() const noexcept { return m_img->getWidth(); }
+    long getHeight() const noexcept { return m_img->getHeight(); }
+    ptrdiff_t getXStrideBytes() const noexcept { return m_img->getXStrideBytes(); }
+    ptrdiff_t getYStrideBytes() const noexcept { return m_img->getYStrideBytes(); }
+    bool isRGBAPacked() const noexcept { return m_img->isRGBAPacked(); }
+    bool isFloat() const noexcept { return m_img->isFloat(); }
 
     ImageDescRcPtr m_img;
+
+private:
+    PyImageDesc(const PyImageDesc &) = delete;
+    PyImageDesc & operator= (const PyImageDesc &) = delete;
 };
 
 template<typename T, int N>
@@ -54,6 +58,10 @@ struct OCIOHIDDEN PyImageDescImpl : public PyImageDesc
     OCIO_SHARED_PTR<T> getImg() const { return OCIO_DYNAMIC_POINTER_CAST<T>(m_img); }
 
     py::buffer m_data[N];
+
+private:
+    PyImageDescImpl(const PyImageDescImpl &) = delete;
+    PyImageDescImpl & operator= (const PyImageDescImpl &) = delete;
 };
 
 using PyPackedImageDesc = PyImageDescImpl<PackedImageDesc, 1>;

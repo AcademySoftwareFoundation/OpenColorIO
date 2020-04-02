@@ -11,19 +11,19 @@ void bindPyPackedImageDesc(py::module & m)
     py::class_<PyPackedImageDesc, PyImageDesc /* base */>(m, "PackedImageDesc")
         .def(py::init([](py::buffer & data, long width, long height, long numChannels) 
             { 
-                PyPackedImageDesc d;
+                PyPackedImageDesc * p = new PyPackedImageDesc();
 
                 py::gil_scoped_release release;
-                d.m_data[0] = data;
+                p->m_data[0] = data;
                 py::gil_scoped_acquire acquire;
 
-                py::buffer_info info = d.m_data[0].request();
+                py::buffer_info info = p->m_data[0].request();
                 checkBufferType(info, py::dtype("float32"));
                 checkBufferSize(info, width*height*numChannels);
                 
-                d.m_img = std::make_shared<PackedImageDesc>(info.ptr, width, height, numChannels);
+                p->m_img = std::make_shared<PackedImageDesc>(info.ptr, width, height, numChannels);
 
-                return d;
+                return p;
             }),
              "data"_a, "width"_a, "height"_a, "numChannels"_a)
         .def(py::init([](py::buffer & data,
@@ -34,24 +34,24 @@ void bindPyPackedImageDesc(py::module & m)
                          ptrdiff_t xStrideBytes,
                          ptrdiff_t yStrideBytes) 
             { 
-                PyPackedImageDesc d;
+                PyPackedImageDesc * p = new PyPackedImageDesc();
 
                 py::gil_scoped_release release;
-                d.m_data[0] = data;
+                p->m_data[0] = data;
                 py::gil_scoped_acquire acquire;
 
-                py::buffer_info info = d.m_data[0].request();
+                py::buffer_info info = p->m_data[0].request();
                 checkBufferType(info, bitDepth);
                 checkBufferSize(info, width*height*numChannels);
 
-                d.m_img = std::make_shared<PackedImageDesc>(info.ptr, 
-                                                            width, height, 
-                                                            numChannels, 
-                                                            bitDepth, 
-                                                            chanStrideBytes, 
-                                                            xStrideBytes, 
-                                                            yStrideBytes);
-                return d;
+                p->m_img = std::make_shared<PackedImageDesc>(info.ptr, 
+                                                             width, height, 
+                                                             numChannels, 
+                                                             bitDepth, 
+                                                             chanStrideBytes, 
+                                                             xStrideBytes, 
+                                                             yStrideBytes);
+                return p;
             }),
              "data"_a, "width"_a, "height"_a, "numChannels"_a, "bitDepth"_a, "chanStrideBytes"_a, 
              "xStrideBytes"_a, "yStrideBytes"_a)
@@ -59,19 +59,19 @@ void bindPyPackedImageDesc(py::module & m)
                          long width, long height, 
                          ChannelOrdering chanOrder) 
             { 
-                PyPackedImageDesc d;
+                PyPackedImageDesc * p = new PyPackedImageDesc();
 
                 py::gil_scoped_release release;
-                d.m_data[0] = data;
+                p->m_data[0] = data;
                 py::gil_scoped_acquire acquire;
 
-                py::buffer_info info = d.m_data[0].request();
+                py::buffer_info info = p->m_data[0].request();
                 checkBufferType(info, py::dtype("float32"));
                 checkBufferSize(info, width*height*chanOrderToNumChannels(chanOrder));
 
-                d.m_img = std::make_shared<PackedImageDesc>(info.ptr, width, height, chanOrder);
+                p->m_img = std::make_shared<PackedImageDesc>(info.ptr, width, height, chanOrder);
 
-                return d;
+                return p;
             }),
              "data"_a, "width"_a, "height"_a, "chanOrder"_a)
         .def(py::init([](py::buffer & data,
@@ -82,24 +82,24 @@ void bindPyPackedImageDesc(py::module & m)
                          ptrdiff_t xStrideBytes,
                          ptrdiff_t yStrideBytes) 
             { 
-                PyPackedImageDesc d;
+                PyPackedImageDesc * p = new PyPackedImageDesc();
 
                 py::gil_scoped_release release;
-                d.m_data[0] = data;
+                p->m_data[0] = data;
                 py::gil_scoped_acquire acquire;
                 
-                py::buffer_info info = d.m_data[0].request();
+                py::buffer_info info = p->m_data[0].request();
                 checkBufferType(info, bitDepth);
                 checkBufferSize(info, width*height*chanOrderToNumChannels(chanOrder));
 
-                d.m_img = std::make_shared<PackedImageDesc>(info.ptr, 
-                                                            width, height, 
-                                                            chanOrder, 
-                                                            bitDepth, 
-                                                            chanStrideBytes, 
-                                                            xStrideBytes, 
-                                                            yStrideBytes);
-                return d;
+                p->m_img = std::make_shared<PackedImageDesc>(info.ptr, 
+                                                             width, height, 
+                                                             chanOrder, 
+                                                             bitDepth, 
+                                                             chanStrideBytes, 
+                                                             xStrideBytes, 
+                                                             yStrideBytes);
+                return p;
             }),
              "data"_a, "width"_a, "height"_a, "chanOrder"_a, "bitDepth"_a, "chanStrideBytes"_a, 
              "xStrideBytes"_a, "yStrideBytes"_a)

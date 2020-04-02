@@ -90,7 +90,7 @@ void bindPyContext(py::module & m)
                 for (int i = 0; i < self->getNumStringVars(); i++)
                 {
                     const char * varName = self->getStringVarNameByIndex(i);
-                    if (std::string(varName) == name)
+                    if (StringUtils::Compare(std::string(varName), name))
                     {
                         return self->getStringVar(name.c_str());
                     }
@@ -107,7 +107,7 @@ void bindPyContext(py::module & m)
                 for (int i = 0; i < self->getNumStringVars(); i++)
                 {
                     const char * varName = self->getStringVarNameByIndex(i);
-                    if (std::string(varName) == name)
+                    if (StringUtils::Compare(std::string(varName), name))
                     {
                         return true;
                     }

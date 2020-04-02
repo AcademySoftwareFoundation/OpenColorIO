@@ -163,7 +163,7 @@ void checkBufferDivisible(const py::buffer_info & info, ssize_t numChannels)
     {
         std::ostringstream os;
         os << "Incompatible buffer dimensions: expected size to be divisible by " << numChannels;
-        os << ", but received " << info.size << "entries";
+        os << ", but received " << info.size << " entries";
         throw std::runtime_error(os.str().c_str());
     }
 }
@@ -174,7 +174,7 @@ void checkBufferSize(const py::buffer_info & info, ssize_t numEntries)
     {
         std::ostringstream os;
         os << "Incompatible buffer dimensions: expected " << numEntries;
-        os << "entries, but received " << info.size << "entries";
+        os << " entries, but received " << info.size << " entries";
         throw std::runtime_error(os.str().c_str());
     }
 }

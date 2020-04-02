@@ -37,7 +37,7 @@ void bindPyFormatMetadata(py::module & m)
                 for (int i = 0; i < self.getNumAttributes(); i++)
                 {
                     const char * attrName = self.getAttributeName(i);
-                    if (std::string(attrName) == name)
+                    if (StringUtils::Compare(std::string(attrName), name))
                     {
                         return self.getAttributeValue(i);
                     }
@@ -54,7 +54,7 @@ void bindPyFormatMetadata(py::module & m)
                 for (int i = 0; i < self.getNumAttributes(); i++)
                 {
                     const char * attrName = self.getAttributeName(i);
-                    if (std::string(attrName) == name)
+                    if (StringUtils::Compare(std::string(attrName), name))
                     {
                         return true;
                     }
