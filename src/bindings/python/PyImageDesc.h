@@ -53,7 +53,8 @@ private:
 template<typename T, int N>
 struct OCIOHIDDEN PyImageDescImpl : public PyImageDesc
 {
-    using PyImageDesc::PyImageDesc;
+    PyImageDescImpl() = default;
+    virtual ~PyImageDescImpl() = default;
 
     OCIO_SHARED_PTR<T> getImg() const { return OCIO_DYNAMIC_POINTER_CAST<T>(m_img); }
 
