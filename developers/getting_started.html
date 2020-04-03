@@ -126,7 +126,7 @@ remote: Total 2220 (delta 1434), reused 1851 (delta 1168)
 Receiving objects: 100% (2220/2220), 2.89 MiB | 2.29 MiB/s, done.
 Resolving deltas: 100% (1434/1434), done.</pre>
 </div>
-<p>Both read + read/write users should then add the Imageworks (SPI) master branch
+<p>Both read + read/write users should then add the <a class="reference external" href="https://github.com/AcademySoftwareFoundation/OpenColorIO">AcademySoftwareFoundation/OpenColorIO</a> master branch
 as a remote. This will allow you to more easily fetch updates as they become
 available:</p>
 <div class="highlight-python"><pre>cd ocio
@@ -162,7 +162,7 @@ provided in the repo directory:</p>
 <div class="highlight-python"><pre>docker build . -t ocio:centos7_gcc48 -f dockerfile_centos7_gcc48</pre>
 </div>
 <p>You can then mount the current OCIO directory and compile using the Docker image with:</p>
-<div class="highlight-python"><pre>docker run --volume $PWD/../../:/src/ociosrc -t ocio:centos7_gcc48 bash -c 'mkdir /build &amp;&amp; cd /build &amp;&amp; cmake /src/ociosrc &amp;&amp; make -j2`</pre>
+<div class="highlight-python"><pre>docker run --volume $PWD/../../:/src/ociosrc -t ocio:centos7_gcc48 bash -c &#x27;mkdir /build &amp;&amp; cd /build &amp;&amp; cmake /src/ociosrc &amp;&amp; make -j2`</pre>
 </div>
 </div>
 <div class="section" id="merging-changes">
@@ -185,7 +185,7 @@ provided in the repo directory:</p>
       </div>
 
     <div class="footer">
-        &copy; Copyright 2010, Sony Pictures Imageworks.
+        &copy; Copyright Copyright Contributors to the OpenColorIO Project.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>

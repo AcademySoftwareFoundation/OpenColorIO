@@ -193,14 +193,14 @@ set BOOST_ROOT=D:\SolidAngle\boost_1_55_0
 
 set PATH=D:\Tools\cygwin64\bin;%CMAKE_PATH%\bin;%PYTHON_PATH%;%PATH%
 
-call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
+call &quot;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat&quot; amd64
 
 
 set OCIO_PATH=D:\OpenSource\%repo_name%
 
 
-@doskey ne="D:\Tools\Notepad++\notepad++.exe" -nosession -multiInst $*
-@doskey sub="D:\Tools\Sublime Text 3\subl.exe" --project %OCIO_PATH%_project.sublime-project
+@doskey ne=&quot;D:\Tools\Notepad++\notepad++.exe&quot; -nosession -multiInst $*
+@doskey sub=&quot;D:\Tools\Sublime Text 3\subl.exe&quot; --project %OCIO_PATH%_project.sublime-project
 
 
 REM Decompose the directory change to avoid problems...
@@ -235,7 +235,7 @@ cd %BUILD_PATH%
 echo **
 echo **
 
-cmake -G "NMake Makefiles" ^
+cmake -G &quot;NMake Makefiles&quot; ^
     -DCMAKE_BUILD_TYPE=%CMAKE_BUILD_TYPE% ^
     -DCMAKE_INSTALL_PREFIX=%OCIO_PATH%\_install ^
     -DOCIO_BUILD_TESTS=ON ^
@@ -246,9 +246,9 @@ set PATH=%OCIO_PATH%\%BUILD_PATH%\src\core;%PATH%
 
 REM Find the current branch
 set GITBRANCH=
-for /f %%I in ('git.exe rev-parse --abbrev-ref HEAD 2^&gt; NUL') do set GITBRANCH=%%I
+for /f %%I in (&#x27;git.exe rev-parse --abbrev-ref HEAD 2^&gt; NUL&#x27;) do set GITBRANCH=%%I
 
-if not "%GITBRANCH%" == ""  prompt $C%GITBRANCH%$F $P$G
+if not &quot;%GITBRANCH%&quot; == &quot;&quot;  prompt $C%GITBRANCH%$F $P$G
 
 
 echo *******
@@ -256,7 +256,7 @@ echo *********************************************
 echo boost    = %BOOST_ROOT%
 echo cmake    = %CMAKE_PATH%
 echo *******
-if not "%GITBRANCH%" == "" echo branch  = %GITBRANCH%
+if not &quot;%GITBRANCH%&quot; == &quot;&quot; echo branch  = %GITBRANCH%
 echo *******
 echo Mode    = %CMAKE_BUILD_TYPE%
 echo path    = %OCIO_PATH%\%BUILD_PATH%
@@ -325,7 +325,7 @@ use. For prebuilt config files, see the
 <a class="reference internal" href="downloads.html#downloads"><em>Downloads</em></a> section</p>
 <p>To do this, you would add a line to <tt class="docutils literal"><span class="pre">~/.bashrc</span></tt> (or a per-project
 configuration script etc), for example:</p>
-<div class="highlight-python"><pre>export OCIO="/path/to/my/config.ocio"</pre>
+<div class="highlight-python"><pre>export OCIO=&quot;/path/to/my/config.ocio&quot;</pre>
 </div>
 </div>
 <div class="section" id="nuke-configuration">
@@ -497,7 +497,7 @@ the plugins are built against), and <tt class="docutils literal"><span class="pr
       </div>
 
     <div class="footer">
-        &copy; Copyright 2010, Sony Pictures Imageworks.
+        &copy; Copyright Copyright Contributors to the OpenColorIO Project.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
