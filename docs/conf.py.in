@@ -14,7 +14,7 @@ templates_path = ['templates']
 source_suffix = '.rst'
 master_doc = 'index'
 project = u'OpenColorIO'
-copyright = u'Copyright Contributors to the OpenColorIO Project'
+copyright = u'Contributors to the OpenColorIO Project'
 # The short X.Y version.
 version = '@OCIO_VERSION_MAJOR@.@OCIO_VERSION_MINOR@'
 # The full version, including alpha/beta/rc tags.
@@ -97,7 +97,7 @@ texinfo_appendices = []
 epub_title = u'OpenColorIO'
 epub_author = u'Contributors to the OpenColorIO Project'
 epub_publisher = u'Contributors to the OpenColorIO Project'
-epub_copyright = u'Copyright Contributors to the OpenColorIO Project'
+epub_copyright = u'Contributors to the OpenColorIO Project'
 #epub_language = ''
 #epub_scheme = ''
 #epub_identifier = ''
