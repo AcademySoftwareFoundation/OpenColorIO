@@ -321,10 +321,10 @@ like so:</p>
 <p>Then on a review machine with a DCI P3 projector, set the following
 environment variable, making <tt class="docutils literal"><span class="pre">DCIP3</span></tt> the only visible display
 device:</p>
-<div class="highlight-python"><pre>export OCIO_ACTIVE_DISPLAYS="DCIP3"</pre>
+<div class="highlight-python"><pre>export OCIO_ACTIVE_DISPLAYS=&quot;DCIP3&quot;</pre>
 </div>
 <p>Or specify multiple active displays, by separating each with a colon:</p>
-<div class="highlight-python"><pre>export OCIO_ACTIVE_DISPLAYS="DCIP3:sRGB"</pre>
+<div class="highlight-python"><pre>export OCIO_ACTIVE_DISPLAYS=&quot;DCIP3:sRGB&quot;</pre>
 </div>
 </div>
 <div class="section" id="active-views">
@@ -334,7 +334,7 @@ of the views under the display.</p>
 <p>Works identically to <tt class="docutils literal"><span class="pre">active_displays</span></tt>, but controls which <em>views</em> are
 visible.</p>
 <p>Overridden by the <tt class="docutils literal"><span class="pre">OCIO_ACTIVE_VIEWS</span></tt> env-var:</p>
-<div class="highlight-python"><pre>export OCIO_ACTIVE_VIEWS="Film:Log:Raw"</pre>
+<div class="highlight-python"><pre>export OCIO_ACTIVE_VIEWS=&quot;Film:Log:Raw&quot;</pre>
 </div>
 </div>
 <div class="section" id="looks">
@@ -860,7 +860,7 @@ SDK present.</p>
       </div>
 
     <div class="footer">
-        &copy; Copyright 2010, Sony Pictures Imageworks.
+        &copy; Copyright Contributors to the OpenColorIO Project.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>

@@ -283,7 +283,7 @@ a Terminal.app window to get the full path (or, type it manually)</p>
 <h3>Create the ICC profile<a class="headerlink" href="#create-the-icc-profile" title="Permalink to this headline">¶</a></h3>
 <p>Almost done now. We can write the ICC profile!</p>
 <p>The full command is, using our example colorspaces of <tt class="docutils literal"><span class="pre">vd16</span></tt> and <tt class="docutils literal"><span class="pre">srgb8</span></tt>:</p>
-<div class="highlight-python"><pre>bash$ ociobakelut --format icc --inputspace vd16 --outputspace srgb8 --displayicc /path/to/my/monitorprofile.icc --description "vd16 to srgb8"</pre>
+<div class="highlight-python"><pre>bash$ ociobakelut --format icc --inputspace vd16 --outputspace srgb8 --displayicc /path/to/my/monitorprofile.icc --description &quot;vd16 to srgb8&quot;</pre>
 </div>
 <p>The first three options are the same as any other LUT:</p>
 <div class="highlight-python"><pre>bash$ ociobakelut --format icc --inputspace vd16 --outputspace srgb8 [...]</pre>
@@ -293,7 +293,7 @@ a Terminal.app window to get the full path (or, type it manually)</p>
 </pre></div>
 </div>
 <p>We can set the description (shown in Photoshop), and as the last argument, specify:</p>
-<div class="highlight-python"><pre>[...] --description "vd16 to srgb8"  [...]</pre>
+<div class="highlight-python"><pre>[...] --description &quot;vd16 to srgb8&quot;  [...]</pre>
 </div>
 <p>Finally an argument for the output file:</p>
 <blockquote>
@@ -301,7 +301,7 @@ a Terminal.app window to get the full path (or, type it manually)</p>
 <p>If you selected the &#8220;sRGB IEC61966-2.1&#8221; display profile, you can omit
 the <tt class="docutils literal"><span class="pre">--displayicc</span></tt> argument (it defaults to an standard sRGB
 profile):</p>
-<div class="highlight-python"><pre>bash$ ociobakelut --format icc --inputspace vd16 --outputspace srgb8 --description "vd16 to srgb8"</pre>
+<div class="highlight-python"><pre>bash$ ociobakelut --format icc --inputspace vd16 --outputspace srgb8 --description &quot;vd16 to srgb8&quot;</pre>
 </div>
 </div>
 <div class="section" id="loading-the-display-lut">
@@ -375,7 +375,7 @@ calibrated monitor!</p>
       </div>
 
     <div class="footer">
-        &copy; Copyright 2010, Sony Pictures Imageworks.
+        &copy; Copyright Contributors to the OpenColorIO Project.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
