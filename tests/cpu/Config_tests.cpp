@@ -4074,6 +4074,158 @@ OCIO_ADD_TEST(Config, display_view)
                           "Can't add a (display, view) pair with empty color space name");
 }
 
+OCIO_ADD_TEST(Config, not_case_sensitive)
+{
+    // Validate that the color spaces and roles are case insensitive.
+
+    std::istringstream is;
+    is.str(PROFILE_V2_START);
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+    OCIO::ConstColorSpaceRcPtr cs;
+    OCIO_CHECK_NO_THROW(cs = config->getColorSpace("lnh"));
+    OCIO_CHECK_ASSERT(cs);
+
+    OCIO_CHECK_NO_THROW(cs = config->getColorSpace("LNH"));
+    OCIO_CHECK_ASSERT(cs);
+
+    OCIO_CHECK_NO_THROW(cs = config->getColorSpace("RaW"));
+    OCIO_CHECK_ASSERT(cs);
+
+    OCIO_CHECK_ASSERT(config->hasRole("default"));
+    OCIO_CHECK_ASSERT(config->hasRole("Default"));
+    OCIO_CHECK_ASSERT(config->hasRole("DEFAULT"));
+
+    OCIO_CHECK_ASSERT(config->hasRole("scene_linear"));
+    OCIO_CHECK_ASSERT(config->hasRole("Scene_Linear"));
+
+    OCIO_CHECK_ASSERT(!config->hasRole("reference"));
+    OCIO_CHECK_ASSERT(!config->hasRole("REFERENCE"));
+}
+
+OCIO_ADD_TEST(Config, transform_with_roles)
+{
+    // Validate that Config::sanityCheck() on config file containing transforms 
+    // with color space names (such as ColorSpaceTransform), correctly checks for role names
+    // for those transforms.
+
+    constexpr const char * OCIO_CONFIG{ R"(
+ocio_profile_version: 1
+
+roles:
+  DEFAULT: raw
+  scene_linear: cs1
+
+displays:
+  Disp1:
+  - !<View> {name: View1, colorspace: RaW, looks: beauty}
+
+looks:
+  - !<Look>
+    name: beauty
+    process_space: SCENE_LINEAR
+    transform: !<ColorSpaceTransform> {src: SCENE_LINEAR, dst: raw}
+
+colorspaces:
+  - !<ColorSpace>
+    name: RAW
+    allocation: uniform
+
+  - !<ColorSpace>
+    name: CS1
+    allocation: uniform
+    from_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}
+
+  - !<ColorSpace>
+    name: cs2
+    allocation: uniform
+    to_reference: !<ColorSpaceTransform> {src: SCENE_LINEAR, dst: raw}
+)" };
+
+    std::istringstream is;
+    is.str(OCIO_CONFIG);
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+    // Validate the color spaces.
+
+    OCIO::ConstProcessorRcPtr processor;
+    OCIO_CHECK_NO_THROW(processor = config->getProcessor("raw", "cs1"));
+    OCIO_CHECK_ASSERT(processor);
+
+    OCIO_CHECK_NO_THROW(processor = config->getProcessor("raw", "cs2"));
+    OCIO_CHECK_ASSERT(processor);
+
+    OCIO_CHECK_NO_THROW(processor = config->getProcessor("cs1", "cs2"));
+    OCIO_CHECK_ASSERT(processor);
+
+    // Validate the (display, view) pair with looks.
+
+    OCIO::DisplayTransformRcPtr display = OCIO::DisplayTransform::Create();
+    display->setInputColorSpaceName("raw");
+    display->setDisplay("Disp1");
+    display->setView("View1");
+
+    OCIO_CHECK_NO_THROW(processor = config->getProcessor(display));
+    OCIO_CHECK_ASSERT(processor);
+
+    display->setInputColorSpaceName("cs1");
+
+    OCIO_CHECK_NO_THROW(processor = config->getProcessor(display));
+    OCIO_CHECK_ASSERT(processor);
+
+    display->setInputColorSpaceName("cs2");
+
+    OCIO_CHECK_NO_THROW(processor = config->getProcessor(display));
+    OCIO_CHECK_ASSERT(processor);
+}    
+
+OCIO_ADD_TEST(Config, look_transform)
+{
+    // Validate Config::sanityCheck() on config file containing look transforms.
+
+    constexpr const char * OCIO_CONFIG{ R"(
+ocio_profile_version: 2
+
+roles:
+  default: raw
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  Disp1:
+  - !<View> {name: View1, colorspace: raw, looks: look1}
+
+looks:
+  - !<Look>
+    name: look1
+    process_space: default
+    transform: !<ColorSpaceTransform> {src: default, dst: raw}
+  - !<Look>
+    name: look2
+    process_space: default
+    transform: !<LookTransform> {src: default, dst: raw, looks:+look1}
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    allocation: uniform
+)" };
+
+    std::istringstream is;
+    is.str(OCIO_CONFIG);
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(config->sanityCheck());
+}
+
 OCIO_ADD_TEST(Config, family_separator)
 {
     OCIO::ConfigRcPtr config;
