@@ -9,8 +9,8 @@ find_package(PythonLibs 2.7 REQUIRED)
 
 # pybind11
 # https://github.com/pybind/pybind11
-set(PYBIND11_MIN_VERSION 2.4.3)
-find_package(Pybind11 ${PYBIND11_MIN_VERSION} REQUIRED)
+set(pybind11_MIN_VERSION 2.4.3)
+find_package(pybind11 ${pybind11_MIN_VERSION} REQUIRED)
 
 ###############################################################################
 # PyDoc generation
@@ -111,7 +111,7 @@ target_include_directories(PyOpenColorIO
 		PyOpenColorIO
 		${CMAKE_CURRENT_BINARY_DIR}/include
 		${CMAKE_CURRENT_SOURCE_DIR}
-		${PYBIND11_INCLUDE_DIR}
+		${pybind11_INCLUDE_DIR}
 	SYSTEM
 		${PYTHON_INCLUDE_DIRS}
 )
@@ -131,7 +131,7 @@ target_link_libraries(PyOpenColorIO
 	PRIVATE
 		OpenColorIO
 		utils::strings
-		pybind11::pybind11
+		pybind11::module
 )
 
 target_compile_definitions(PyOpenColorIO

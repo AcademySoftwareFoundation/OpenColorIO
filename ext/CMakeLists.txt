@@ -32,14 +32,6 @@ if(OCIO_BUILD_APPS)
     find_package(LCMS2 ${LCMS2_MIN_VERSION} REQUIRED)
 endif()
 
-if(OCIO_BUILD_PYTHON)
-    # pybind11
-    # https://github.com/pybind/pybind11
-    set(PYBIND11_MIN_VERSION 2.4.3)
-    find_package(Pybind11 ${PYBIND11_MIN_VERSION} REQUIRED)
-endif()
-
-
 ###############################################################################
 ### External (modified) third-party C/C++ dependencies.                     ###
 
