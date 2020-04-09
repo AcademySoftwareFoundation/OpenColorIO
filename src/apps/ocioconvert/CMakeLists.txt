@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-find_package(OpenGL REQUIRED)
-if(NOT APPLE)
-    find_package(GLEW REQUIRED)
+if(NOT OCIO_GL_ENABLED)
+    message(WARNING "GL component missing. GPU disabled for ocioconvert.")
+else()
+    add_compile_definitions(OCIO_GPU_ENABLED)
+    set(OCIO_GL_LIB oglapphelpers)
 endif()
-find_package(GLUT REQUIRED)
 
 set(SOURCES
     main.cpp
@@ -23,25 +24,16 @@ endif()
 set_target_properties(ocioconvert PROPERTIES 
     COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
 
-target_include_directories(ocioconvert 
-    SYSTEM
-    PRIVATE
-        ${GLEW_INCLUDE_DIRS}
-        ${GLUT_INCLUDE_DIR}
-        ${OPENGL_INCLUDE_DIR}
-)
 target_link_libraries(ocioconvert
     PRIVATE
         apputils
-        ${GLEW_LIBRARIES}
-        ${GLUT_LIBRARIES}
         ilmbase::ilmbase
-        oglbuilder
+        ${OCIO_GL_LIB}
         oiiohelpers
         OpenColorIO
         OpenImageIO
-        ${OPENGL_LIBRARIES}
 )
+
 install(TARGETS ocioconvert
     RUNTIME DESTINATION bin
 )

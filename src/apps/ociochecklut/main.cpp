@@ -12,6 +12,98 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #include "apputils/argparse.h"
 
+#ifdef OCIO_GPU_ENABLED
+#include "oglapp.h"
+#endif // OCIO_GPU_ENABLED
+
+namespace
+{
+
+class ProcessorWrapper
+{
+public:
+    ProcessorWrapper() = delete;
+    ProcessorWrapper(bool verbose)
+        : m_verbose(verbose)
+    {
+    }
+    ~ProcessorWrapper()
+    {
+#ifdef OCIO_GPU_ENABLED
+        if (m_oglApp)
+        {
+            m_oglApp.reset();
+        }
+#endif // OCIO_GPU_ENABLED
+    }
+
+    void setCPU(OCIO::ConstCPUProcessorRcPtr cpu)
+    {
+        m_cpu = cpu;
+    }
+
+    void setGPU(OCIO::ConstGPUProcessorRcPtr gpu, bool legacyGpu)
+    {
+#ifdef OCIO_GPU_ENABLED
+        m_gpu = gpu;
+        m_oglApp = std::make_shared<OCIO::OglApp>("ociochecklut", 256, 20);
+        if (m_verbose)
+        {
+            m_oglApp->printGLInfo();
+        }
+        m_oglApp->setPrintShader(m_verbose);
+        float image[4]{ 0.f, 0.f, 0.f, 0.f };
+        m_oglApp->initImage(1, 1, OCIO::OglApp::COMPONENTS_RGBA, image);
+        m_oglApp->createGLBuffers();
+        OCIO::GpuShaderDescRcPtr shaderDesc;
+        if (legacyGpu)
+        {
+            shaderDesc = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(32);
+        }
+        else
+        {
+            shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+        }
+        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
+        m_gpu->extractGpuShaderInfo(shaderDesc);
+        m_oglApp->setShader(shaderDesc);
+#endif // OCIO_GPU_ENABLED
+    }
+
+    void apply(std::vector<float> & pixel)
+    {
+        if (m_cpu)
+        {
+            m_cpu->applyRGBA(pixel.data());
+        }
+        else
+        {
+            applyGPU(pixel);
+        }
+    }
+
+private:
+
+    void applyGPU(std::vector<float> & pixel)
+    {
+#ifdef OCIO_GPU_ENABLED
+        m_oglApp->updateImage(pixel.data());
+        m_oglApp->reshape(1, 1);
+        m_oglApp->redisplay();
+        m_oglApp->readImage(pixel.data());
+#endif // OCIO_GPU_ENABLED
+    }
+
+#ifdef OCIO_GPU_ENABLED
+    OCIO::OglAppRcPtr m_oglApp;
+#endif // OCIO_GPU_ENABLED
+
+    OCIO::ConstCPUProcessorRcPtr m_cpu;
+    OCIO::ConstGPUProcessorRcPtr m_gpu;
+
+    bool m_verbose;
+};
+
 void CustomLoggingFunction(const char * message)
 {
     std::cout << message;
@@ -84,12 +176,17 @@ const char * DESC_STRING = "\n"
 "the LUT.  Alternatively use the -t option to evaluate a set of test values.\n"
 "Use -v to print warnings while parsing the LUT.\n";
 
+}
+
 int main (int argc, const char* argv[])
 {
-    bool verbose = false;
-    bool printops = false;
-    bool help = false;
-    bool test = false;
+    bool verbose       = false;
+    bool printops      = false;
+    bool help          = false;
+    bool test          = false;
+    bool usegpu        = false;
+    bool usegpuLegacy  = false;
+    bool outputgpuInfo = false;
 
     ArgParse ap;
     ap.options("ociochecklut -- check any LUT file and optionally convert a pixel\n\n"
@@ -97,6 +194,10 @@ int main (int argc, const char* argv[])
                "%*", parse_end_args, "",
                "-t", &test, "Test a set a predefined RGB values\n",
                "-p", &printops, "Print transform operators\n",
+               "-gpu", &usegpu, "Use GPU instead of CPU\n",
+               "-gpulegacy", &usegpuLegacy, "Use the legacy (i.e. baked) GPU color processing "
+                                            "instead of the CPU one (--gpu is ignored)",
+               "-gpuinfo", &outputgpuInfo, "Output the OCIO shader program",
                "-v", &verbose, "Verbose\n",
                "-help", &help, "Print help message\n",
                NULL);
@@ -121,6 +222,14 @@ int main (int argc, const char* argv[])
         return 1;
     }
 
+#ifndef OCIO_GPU_ENABLED
+    if (usegpu || outputgpuInfo || usegpuLegacy)
+    {
+        std::cerr << "Compiled without OpenGL support, GPU options are not available.";
+        std::cerr << std::endl;
+        exit(1);
+    }
+#endif // OCIO_GPU_ENABLED
     auto numInput = input.size();
     size_t comp = 3;
     if (numInput != 0)
@@ -131,9 +240,8 @@ int main (int argc, const char* argv[])
         }
         else if (numInput != 3)
         {
-            std::cout << "Expecting either RGB or RGBA pixel (or use --rgb or --rgba options)."
-                      << std::endl;
-            return 1;
+            std::cerr << "Expecting either RGB or RGBA pixel." << std::endl;
+            exit(1);
         }
     }
 
@@ -158,7 +266,7 @@ int main (int argc, const char* argv[])
         t->setSrc(inputfile.c_str());
         t->setInterpolation(OCIO::INTERP_BEST);
 
-        OCIO::ConstCPUProcessorRcPtr cpuProcessor;
+        ProcessorWrapper proc(outputgpuInfo);
         try
         {
             auto processor = config->getProcessor(t);
@@ -176,18 +284,24 @@ int main (int argc, const char* argv[])
                     std::cout << "No transform." << std::endl;
                 }
             }
-
-            cpuProcessor = processor->getDefaultCPUProcessor();
+            if (usegpu || usegpuLegacy)
+            {
+                proc.setGPU(processor->getDefaultGPUProcessor(), usegpuLegacy);
+            }
+            else
+            {
+                proc.setCPU(processor->getDefaultCPUProcessor());
+            }
         }
         catch (const OCIO::Exception & e)
         {
-            std::cout << std::endl << e.what() << std::endl;
-            return 1;
+            std::cerr << std::endl << e.what() << std::endl;
+            exit(1);
         }
         catch (...)
         {
-            std::cout << std::endl << "Unknown ERROR creating processor." << std::endl;
-            return 1;
+            std::cerr << std::endl << "Unknown ERROR creating processor." << std::endl;
+            exit(1);
         }
 
         bool validInput = true;
@@ -217,17 +331,17 @@ int main (int argc, const char* argv[])
                                              comp == 3 ? 0.0f : input[curPix + 3] };
                 try
                 {
-                    cpuProcessor->applyRGBA(pixel.data());
+                    proc.apply(pixel);
                 }
                 catch (const OCIO::Exception & e)
                 {
-                    std::cout << "\nERROR processing pixel: " << e.what() << std::endl;
-                    return 1;
+                    std::cerr << "\nERROR processing pixel: " << e.what() << std::endl;
+                    exit(1);
                 }
                 catch (...)
                 {
-                    std::cout << "\nUnknown processing pixel" << std::endl;
-                    return 1;
+                    std::cerr << "\nUnknown processing pixel" << std::endl;
+                    exit(1);
                 }
 
                 // Print to string so that in & out values can be aligned if needed.
