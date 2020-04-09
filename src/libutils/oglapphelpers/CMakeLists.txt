@@ -58,6 +58,6 @@ install(TARGETS oglapphelpers
     ARCHIVE DESTINATION lib
 )
 
-install(FILES $(INCLUDES)
+install(FILES ${INCLUDES}
     DESTINATION include/OpenColorIO/oglapphelpers
 )
