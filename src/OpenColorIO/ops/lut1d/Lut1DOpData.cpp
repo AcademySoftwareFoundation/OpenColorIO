@@ -177,7 +177,6 @@ Lut1DOpData::Lut1DOpData(unsigned long dimension)
     , m_halfFlags(LUT_STANDARD)
     , m_hueAdjust(HUE_NONE)
     , m_direction(TRANSFORM_DIR_FORWARD)
-    , m_invQuality(LUT_INVERSION_FAST)
 {
 }
 
@@ -188,7 +187,6 @@ Lut1DOpData::Lut1DOpData(unsigned long dimension, TransformDirection dir)
     , m_halfFlags(LUT_STANDARD)
     , m_hueAdjust(HUE_NONE)
     , m_direction(dir)
-    , m_invQuality(LUT_INVERSION_FAST)
 {
 }
 
@@ -200,7 +198,6 @@ Lut1DOpData::Lut1DOpData(HalfFlags halfFlags,
     , m_halfFlags(halfFlags)
     , m_hueAdjust(HUE_NONE)
     , m_direction(TRANSFORM_DIR_FORWARD)
-    , m_invQuality(LUT_INVERSION_FAST)
 {
 }
 
@@ -223,11 +220,6 @@ Interpolation Lut1DOpData::getConcreteInterpolation() const
 void Lut1DOpData::setInterpolation(Interpolation algo)
 {
     m_interpolation = algo;
-}
-
-void Lut1DOpData::setInversionQuality(LutInversionQuality style)
-{
-    m_invQuality = style;
 }
 
 bool Lut1DOpData::isIdentity() const
@@ -310,8 +302,6 @@ bool IsValid(const Interpolation & interpolation)
 
 void Lut1DOpData::validate() const
 {
-    OpData::validate();
-
     if (!IsValid(m_interpolation))
     {
         std::ostringstream oss;
@@ -440,12 +430,12 @@ Lut1DOpDataRcPtr Lut1DOpData::MakeLookupDomain(BitDepth incomingDepth)
     return std::make_shared<Lut1DOpData>(domainType, idealSize);
 }
 
-bool Lut1DOpData::haveEqualBasics(const Lut1DOpData & B) const
+bool Lut1DOpData::haveEqualBasics(const Lut1DOpData & other) const
 {
     // Question:  Should interpolation style be considered?
-    return m_halfFlags == B.m_halfFlags &&
-           m_hueAdjust == B.m_hueAdjust &&
-           m_array == B.m_array;
+    return m_halfFlags == other.m_halfFlags &&
+           m_hueAdjust == other.m_hueAdjust &&
+           m_array     == other.m_array;
 }
 
 bool Lut1DOpData::operator==(const OpData & other) const
@@ -477,28 +467,25 @@ Lut1DOpDataRcPtr Lut1DOpData::clone() const
     return std::make_shared<Lut1DOpData>(*this);
 }
 
-bool Lut1DOpData::isInverse(ConstLut1DOpDataRcPtr & B) const
+bool Lut1DOpData::isInverse(ConstLut1DOpDataRcPtr & other) const
 {
     if ((m_direction == TRANSFORM_DIR_FORWARD &&
-         B->m_direction == TRANSFORM_DIR_INVERSE) ||
+         other->m_direction == TRANSFORM_DIR_INVERSE) ||
         (m_direction == TRANSFORM_DIR_INVERSE &&
-         B->m_direction == TRANSFORM_DIR_FORWARD))
+         other->m_direction == TRANSFORM_DIR_FORWARD))
     {
         // Note: The inverse LUT 1D finalize modifies the array to make it
         // monotonic, hence, this could return false in unexpected cases.
         // However, one could argue that those LUTs should not be optimized
         // out as an identity anyway.
-        return haveEqualBasics(*B);
+        return haveEqualBasics(*other);
     }
     return false;
 }
 
-bool Lut1DOpData::mayCompose(ConstLut1DOpDataRcPtr & B) const
+bool Lut1DOpData::mayCompose(ConstLut1DOpDataRcPtr & other) const
 {
-    return getDirection()    == TRANSFORM_DIR_FORWARD &&
-           B->getDirection() == TRANSFORM_DIR_FORWARD &&
-           getHueAdjust()    == HUE_NONE              &&
-           B->getHueAdjust() == HUE_NONE;
+    return getHueAdjust() == HUE_NONE && other->getHueAdjust() == HUE_NONE;
 }
 
 Lut1DOpDataRcPtr Lut1DOpData::inverse() const
@@ -534,18 +521,9 @@ const char* GetHueAdjustName(Lut1DHueAdjust algo)
 
 }
 
-void Lut1DOpData::finalize()
+std::string Lut1DOpData::getCacheID() const
 {
-    if (m_direction == TRANSFORM_DIR_INVERSE)
-    {
-        initializeFromForward();
-    }
-
-    m_array.adjustColorComponentNumber();
-
     AutoMutex lock(m_mutex);
-
-    validate();
 
     md5_state_t state;
     md5_byte_t digest[16];
@@ -569,7 +547,7 @@ void Lut1DOpData::finalize()
 
     // NB: The m_invQuality is not currently included.
 
-    m_cacheID = cacheIDStream.str();
+    return cacheIDStream.str();
 }
 
 //-----------------------------------------------------------------------------
@@ -587,34 +565,34 @@ void Lut1DOpData::finalize()
 
 
 //-----------------------------------------------------------------------------
-// Calculate a new LUT by evaluating a new domain (A) through a set of ops (B).
+// Calculate a new LUT by evaluating a new domain (lut) through a set of ops.
 //
-// Note1: The caller must ensure that B is separable (i.e., it has no channel
+// Note1: The caller must ensure that ops is separable (i.e., it has no channel
 //        crosstalk).
 //
 // Note2: Unlike Compose(Lut1DOpDataRcPtr,Lut1DOpDataRcPtr, ), this function
-//        does not try to resize the first LUT (A), so the caller needs to
+//        does not try to resize the first LUT (lut), so the caller needs to
 //        create a suitable domain.
 //
 // Note3:  We do not attempt to propagate hueAdjust or bypass states.
 //         These must be taken care of by the caller.
 //
-// A is used as in/out parameter. As input is it the first LUT in the composition,
-// as output it is the result of the composition.
-void Lut1DOpData::ComposeVec(Lut1DOpDataRcPtr & A, OpRcPtrVec & B)
+// The lut is used as in/out parameter. As input it is the first LUT in the
+// composition, as output it is the result of the composition.
+void Lut1DOpData::ComposeVec(Lut1DOpDataRcPtr & lut, OpRcPtrVec & ops)
 {
-    if (B.size() == 0)
+    if (ops.empty())
     {
         throw Exception("There is nothing to compose the 1D LUT with");
     }
 
     // Set up so that the eval directly fills in the array of the result LUT.
 
-    const long numPixels = (long)A->getArray().getLength();
+    const long numPixels = (long)lut->getArray().getLength();
 
     // TODO: Could keep it one channel in some cases.
-    A->getArray().resize(numPixels, 3);
-    Array::Values & inValues = A->getArray().getValues();
+    lut->getArray().resize(numPixels, 3);
+    Array::Values & inValues = lut->getArray().getValues();
 
     // Evaluate the transforms at 32f.
     // Note: If any ops are bypassed, that will be respected here.
@@ -622,95 +600,131 @@ void Lut1DOpData::ComposeVec(Lut1DOpDataRcPtr & A, OpRcPtrVec & B)
     EvalTransform((const float*)(&inValues[0]),
                   (float*)(&inValues[0]),
                   numPixels,
-                  B);
+                  ops);
 }
 
 // Compose two Lut1DOpData.
 //
-// Note1: If either LUT uses hue adjust, composition will not give the same
+// Note: If either LUT uses hue adjust, composition will not give the same
 // result as if they were applied sequentially.  However, we need to allow
 // composition because the LUT 1D CPU renderer needs it to build the lookup
 // table for the hue adjust renderer.  We could potentially do a lock object in
 // that renderer to over-ride the hue adjust temporarily like in invLut1d.
 // But for now, put the burdon on the caller to use Lut1DOpData::mayCompose first.
-//
-// Note2: Likewise ideally we would prohibit composition if hasMatchingBypass
-// is false.  However, since the renderers may need to resample the LUTs,
-// do not want to raise an exception or require the new domain to be dynamic.
-// So again, it is up to the caller verify dynamic and bypass compatibility
-// when calling this function in a more general context.
-void Lut1DOpData::Compose(Lut1DOpDataRcPtr & A,
-                          ConstLut1DOpDataRcPtr & B,
-                          ComposeMethod compFlag)
+Lut1DOpDataRcPtr Lut1DOpData::Compose(ConstLut1DOpDataRcPtr & lutc1,
+                                      ConstLut1DOpDataRcPtr & lutc2,
+                                      ComposeMethod compFlag)
 {
-    // We assume the caller has validated that A and B are forward LUTs 1D.
+    // We need a non-const version of luts to create the op and temporaly change the direction if needed.
+    // Op will not be modified (except by finalize, but that should have been done already).
 
-    // TODO: Add support for inverse LUTs.  Note that makeFastLut is currently called after
-    // optimization so there is no opportunity to combine a forward LUT it produces.
-    // However supporting inverse LUTs in compose would mean that situation would not arise
-    // since the inverse would have been combined with another forward.
+    Lut1DOpDataRcPtr lut1 = std::const_pointer_cast<Lut1DOpData>(lutc1);
+    Lut1DOpDataRcPtr lut2 = std::const_pointer_cast<Lut1DOpData>(lutc2);
+    bool restoreInverse = false;
+    if (lut1->getDirection() == TRANSFORM_DIR_INVERSE && lut2->getDirection() == TRANSFORM_DIR_INVERSE)
+    {
+        // Using the fact that: inv(l2 x l1) = inv(l1) x inv(l2).
+        // Compute l2 x l1 and invert the result.
+        lut1.swap(lut2);
+
+        lut1->setDirection(TRANSFORM_DIR_FORWARD);
+        lut2->setDirection(TRANSFORM_DIR_FORWARD);
+        restoreInverse = true;
+    }
 
     OpRcPtrVec ops;
 
-    unsigned long min_size = 0;
+    unsigned long minSize = 0;
     bool needHalfDomain = false;
 
     switch (compFlag)
     {
     case COMPOSE_RESAMPLE_NO:
     {
-        min_size = 0;
+        minSize = 0;
         break;
     }
     case COMPOSE_RESAMPLE_BIG:
     {
-        min_size = 65536;
+        minSize = 65536;
         break;
     }
     case COMPOSE_RESAMPLE_HD:
     {
-        min_size = 65536;
+        minSize = 65536;
         needHalfDomain = true;
         break;
     }
 
-    // TODO: May want to add another style which is the maximum of
-    //       B size (careful of half domain), and in-depth ideal size.
+    // TODO: May want to add another style which is the maximum of lut2
+    //       size (careful of half domain), and in-depth ideal size.
     }
 
-    const unsigned long Asz = A->getArray().getLength();
-    const bool goodDomain = A->isInputHalfDomain() || ((Asz >= min_size) && !needHalfDomain);
+    const unsigned long lut1Size = lutc1->getArray().getLength();
+    const bool goodDomain = lut1->isInputHalfDomain() || ((lut1Size >= minSize) && !needHalfDomain);
     const bool useOrigDomain = compFlag == COMPOSE_RESAMPLE_NO;
+    Lut1DOpDataRcPtr result;
 
-    if (!goodDomain && !useOrigDomain)
+    // When lut1 is an inverse LUT (and lut2 is not), interpolate through both LUTs.
+    if ((!goodDomain && !useOrigDomain) || lut1->getDirection() == TRANSFORM_DIR_INVERSE)
     {
         // Interpolate through both LUTs in this case (resample).
-        CreateLut1DOp(ops, A, TRANSFORM_DIR_FORWARD);
+        CreateLut1DOp(ops, lut1, TRANSFORM_DIR_FORWARD);
 
         // Create identity with finer domain.
 
-        auto metadata = A->getFormatMetadata();
-        A = std::make_shared<Lut1DOpData>(needHalfDomain ? Lut1DOpData::LUT_INPUT_HALF_CODE :
-                                                           Lut1DOpData::LUT_STANDARD,
-                                          min_size);
-        A->setInterpolation(A->getInterpolation());
-        A->getFormatMetadata() = metadata;
+        if (minSize == 0 || lut1->getDirection() == TRANSFORM_DIR_INVERSE)
+        {
+            // TODO: In this case, the composition is taking an inverse LUT and forward LUT and
+            // making a forward LUT, so it is essentially doing what makeFastLUT (below) does.
+            // Ideally we would also apply some heuristics here to try and minimize the size of
+            // the new domain.  But for now we took the brute force approach and always use a
+            // half-domain.
+            result = MakeLookupDomain(BIT_DEPTH_F16);
+        }
+        else
+        {
+            result = std::make_shared<Lut1DOpData>(needHalfDomain ? Lut1DOpData::LUT_INPUT_HALF_CODE :
+                                                                    Lut1DOpData::LUT_STANDARD,
+                                                   minSize);
+        }
+
+
+        result->setInterpolation(lut1->getInterpolation());
+
+        auto metadata = lut1->getFormatMetadata();
+        result->getFormatMetadata() = metadata;
+    }
+    else
+    {
+        result = lut1->clone();
     }
 
-    Lut1DOpDataRcPtr bCloned = B->clone();
-    CreateLut1DOp(ops, bCloned, TRANSFORM_DIR_FORWARD);
+    CreateLut1DOp(ops, lut2, TRANSFORM_DIR_FORWARD);
 
     // Create the result LUT by composing the domain through the desired ops.
-    ComposeVec(A, ops);
+    // This is always using exact inversion style.
+    ComposeVec(result, ops);
 
     // Configure the metadata of the result LUT.
     // TODO:  May want to revisit metadata propagation.
-    A->getFormatMetadata().combine(B->getFormatMetadata());
+    result->getFormatMetadata().combine(lut2->getFormatMetadata());
 
-    // See note above: Taking these from B since the common use case is for B to be
-    // the original LUT and A to be a new domain (e.g. used in LUT1D renderers).
+    // See note above: Taking these from lut2 since the common use case is for lut2 to be
+    // the original LUT and lut1 to be a new domain (e.g. used in LUT1D renderers).
     // TODO: Adjust domain in Lut1D renderer to be one channel.
-    A->setHueAdjust(B->getHueAdjust());
+    result->setHueAdjust(lut2->getHueAdjust());
+
+    if (restoreInverse)
+    {
+        lut1->setDirection(TRANSFORM_DIR_INVERSE);
+        lut2->setDirection(TRANSFORM_DIR_INVERSE);
+        result->setDirection(TRANSFORM_DIR_INVERSE);
+    }
+
+    // Result of the composition needs to be ready for further composition or CPU/GPU.
+    result->finalize();
+    return result;
 }
 
 // The domain to use for the FastLut is a challenging problem since we don't
@@ -723,7 +737,7 @@ void Lut1DOpData::Compose(Lut1DOpDataRcPtr & A,
 // is not reliable (e.g. a user creates a transform in Custom mode and exports it).
 // Ultimately, the goal is to replace this with an automated algorithm that
 // computes the best domain based on analysis of the curvature of the LUT.
-Lut1DOpDataRcPtr Lut1DOpData::MakeFastLut1DFromInverse(ConstLut1DOpDataRcPtr & lut, bool forGPU)
+Lut1DOpDataRcPtr MakeFastLut1DFromInverse(ConstLut1DOpDataRcPtr & lut)
 {
     if (lut->getDirection() != TRANSFORM_DIR_INVERSE)
     {
@@ -736,36 +750,19 @@ Lut1DOpDataRcPtr Lut1DOpData::MakeFastLut1DFromInverse(ConstLut1DOpDataRcPtr & l
         depth = BIT_DEPTH_UINT12;
     }
 
-    // For typical LUTs (e.g. gamma tables from ICC monitor profiles)
-    // we can use a smaller FastLUT on the GPU.
-    // Currently allowing 16f to be subsampled for GPU but using 16i as a way
-    // to indicate not to subsample certain LUTs (e.g. float-conversion LUTs).
-    if (forGPU && depth != BIT_DEPTH_UINT16)
-    {
-        // GPU will always interpolate rather than look-up.
-        // Use a smaller table for better efficiency.
+    // TODO: There may be cases where the FileDepth is 16f even though the use of a slower
+    // half-domain LUT is not needed.  This could be a performance hit, particularly on the GPU.
 
-        // TODO: Investigate performance/quality trade-off.
-
-        depth = BIT_DEPTH_UINT12;
-    }
-
-    // But if the LUT has values outside [0,1], use a half-domain fastLUT.
-    // NB: This requires the lut to have been finalized.
+    // If the LUT has values outside [0,1], use a half-domain fastLUT.
     if (lut->hasExtendedRange())
     {
         depth = BIT_DEPTH_F16;
     }
 
     // Make a domain for the composed 1D LUT.
-    Lut1DOpDataRcPtr newDomainLut = MakeLookupDomain(depth);
+    ConstLut1DOpDataRcPtr newDomainLut = Lut1DOpData::MakeLookupDomain(depth);
 
-    // Change inv style to INV_EXACT to avoid recursion.
-    LutStyleGuard<Lut1DOpData> guard(*lut);
-
-    Compose(newDomainLut, lut, COMPOSE_RESAMPLE_NO);
-
-    return newDomainLut;
+    return Lut1DOpData::Compose(newDomainLut, lut, Lut1DOpData::COMPOSE_RESAMPLE_NO);
 }
 
 void Lut1DOpData::scale(float scale)
@@ -809,6 +806,15 @@ bool Lut1DOpData::hasExtendedRange() const
     }
 
     return false;
+}
+
+void Lut1DOpData::finalize()
+{
+    if (m_direction == TRANSFORM_DIR_INVERSE)
+    {
+        initializeFromForward();
+    }
+    m_array.adjustColorComponentNumber();
 }
 
 void Lut1DOpData::initializeFromForward()

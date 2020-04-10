@@ -192,7 +192,7 @@ public:
 
     CDLOpDataRcPtr inverse() const;
 
-    virtual void finalize() override;
+    std::string getCacheID() const override;
 
 protected:
     static std::string GetChannelParametersString(ChannelParams params);

@@ -44,12 +44,9 @@ public:
                     const double * offset4,
                     TransformDirection direction);
 
-    MatrixOffsetOp(MatrixOpDataRcPtr & matrix,
-                    TransformDirection direction);
+    MatrixOffsetOp(MatrixOpDataRcPtr & matrix);
 
     virtual ~MatrixOffsetOp();
-
-    TransformDirection getDirection() const noexcept { return m_direction; }
 
     OpRcPtr clone() const override;
 
@@ -60,7 +57,8 @@ public:
     bool canCombineWith(ConstOpRcPtr & op) const override;
     void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
 
-    void finalize(OptimizationFlags oFlags) override;
+    void finalize() override;
+    std::string getCacheID() const override;
 
     ConstOpCPURcPtr getCPUOp() const override;
 
@@ -69,9 +67,6 @@ public:
 protected:
     ConstMatrixOpDataRcPtr matrixData() const { return DynamicPtrCast<const MatrixOpData>(data()); }
     MatrixOpDataRcPtr matrixData() { return DynamicPtrCast<MatrixOpData>(data()); }
-
-private:
-    TransformDirection m_direction;
 };
 
 
@@ -83,36 +78,23 @@ MatrixOffsetOp::MatrixOffsetOp(const double * m44,
                                 const double * offset4,
                                 TransformDirection direction)
     : Op()
-    , m_direction(direction)
 {
-    if(m_direction == TRANSFORM_DIR_UNKNOWN)
-    {
-        throw Exception("Cannot apply MatrixOffsetOp op, unspecified transform direction.");
-    }
-
-    MatrixOpDataRcPtr mat = std::make_shared<MatrixOpData>();
+    MatrixOpDataRcPtr mat = std::make_shared<MatrixOpData>(direction);
     mat->setRGBA(m44);
     mat->setRGBAOffsets(offset4);
     data() = mat;
 }
 
-MatrixOffsetOp::MatrixOffsetOp(MatrixOpDataRcPtr & matrix,
-                               TransformDirection direction)
+MatrixOffsetOp::MatrixOffsetOp(MatrixOpDataRcPtr & matrix)
     : Op()
-    , m_direction(direction)
 {
-    if (m_direction == TRANSFORM_DIR_UNKNOWN)
-    {
-        throw Exception(
-            "Cannot create MatrixOffsetOp with unspecified transform direction.");
-    }
     data() = matrix;
 }
 
 OpRcPtr MatrixOffsetOp::clone() const
 {
     MatrixOpDataRcPtr clonedData = matrixData()->clone();
-    return std::make_shared<MatrixOffsetOp>(clonedData, m_direction);
+    return std::make_shared<MatrixOffsetOp>(clonedData);
 }
 
 MatrixOffsetOp::~MatrixOffsetOp()
@@ -137,37 +119,24 @@ bool MatrixOffsetOp::isInverse(ConstOpRcPtr & op) const
     return false;
 }
 
+// Ops must have been validated and finalized.
 bool MatrixOffsetOp::canCombineWith(ConstOpRcPtr & op) const
 {
     // TODO: Could combine with certain ASC_CDL ops.
     if (isSameType(op))
     {
-        if (m_direction == TRANSFORM_DIR_INVERSE)
+        if (matrixData()->getDirection() == TRANSFORM_DIR_INVERSE)
         {
-            try
-            {
-                matrixData()->inverse();
-            }
-            catch(...)
-            {
-                return false;
-            }
+            throw Exception("Op::finalize has to be called.");
         }
         ConstMatrixOffsetOpRcPtr typedRcPtr = DynamicPtrCast<const MatrixOffsetOp>(op);
 
-        if (typedRcPtr->getDirection() == TRANSFORM_DIR_INVERSE)
+        auto otherMat = typedRcPtr->matrixData();
+        if (otherMat)
         {
-            auto otherMat = OCIO_DYNAMIC_POINTER_CAST<const MatrixOpData>(op->data());
-            if (otherMat)
+            if (otherMat->getDirection() == TRANSFORM_DIR_INVERSE)
             {
-                try
-                {
-                    otherMat->inverse();
-                }
-                catch(...)
-                {
-                    return false;
-                }
+                throw Exception("Op::finalize has to be called.");
             }
         }
         return true;
@@ -184,46 +153,32 @@ void MatrixOffsetOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) cons
     }
     ConstMatrixOffsetOpRcPtr typedRcPtr = DynamicPtrCast<const MatrixOffsetOp>(secondOp);
 
-    ConstMatrixOpDataRcPtr firstMat = matrixData();
-    if (m_direction == TRANSFORM_DIR_INVERSE)
-    {
-        firstMat = firstMat->inverse();
-    }
-
-    ConstMatrixOpDataRcPtr secondMat = typedRcPtr->matrixData();
-    if (typedRcPtr->m_direction == TRANSFORM_DIR_INVERSE)
-    {
-        secondMat = secondMat->inverse();
-    }
-
-    MatrixOpDataRcPtr composedMat = firstMat->compose(secondMat);
-
+    auto thisData = typedRcPtr->matrixData();
+    MatrixOpDataRcPtr composedMat = matrixData()->compose(thisData);
     if (!composedMat->isNoOp())
     {
         CreateMatrixOp(ops, composedMat, TRANSFORM_DIR_FORWARD);
     }
 }
 
-void MatrixOffsetOp::finalize(OptimizationFlags /*oFlags*/)
+void MatrixOffsetOp::finalize()
 {
-    if(m_direction == TRANSFORM_DIR_INVERSE)
+    ConstMatrixOpDataRcPtr mat = matrixData();
+    if (mat->getDirection() == TRANSFORM_DIR_INVERSE)
     {
-        MatrixOpDataRcPtr thisMat = matrixData();
-        thisMat = thisMat->inverse();
-        data() = thisMat;
-        m_direction = TRANSFORM_DIR_FORWARD;
+        data() = mat->getAsForward();
     }
+}
 
-    matrixData()->finalize();
-
+std::string MatrixOffsetOp::getCacheID() const
+{
     // Create the cacheID
     std::ostringstream cacheIDStream;
     cacheIDStream << "<MatrixOffsetOp ";
     cacheIDStream << matrixData()->getCacheID() << " ";
-    cacheIDStream << TransformDirectionToString(m_direction);
     cacheIDStream << ">";
 
-    m_cacheID = cacheIDStream.str();
+    return cacheIDStream.str();
 }
 
 ConstOpCPURcPtr MatrixOffsetOp::getCPUOp() const
@@ -234,12 +189,11 @@ ConstOpCPURcPtr MatrixOffsetOp::getCPUOp() const
 
 void MatrixOffsetOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
 {
-    if (m_direction == TRANSFORM_DIR_INVERSE)
-    {
-        throw Exception("MatrixOp direction should have been set to forward by finalize.");
-    }
-
     ConstMatrixOpDataRcPtr data = matrixData();
+    if (data->getDirection() == TRANSFORM_DIR_INVERSE)
+    {
+        throw Exception("Op::finalize has to be called.");
+    }
     GetMatrixGPUShaderProgram(shaderCreator, data);
 }
 
@@ -309,8 +263,9 @@ void CreateMatrixOffsetOp(OpRcPtrVec & ops,
     auto mat = std::make_shared<MatrixOpData>();
     mat->setRGBA(m44);
     mat->setRGBAOffsets(offset4);
+    mat->setDirection(direction);
 
-    CreateMatrixOp(ops, mat, direction);
+    CreateMatrixOp(ops, mat, TRANSFORM_DIR_FORWARD);
 }
 
 void CreateFitOp(OpRcPtrVec & ops,
@@ -321,8 +276,8 @@ void CreateFitOp(OpRcPtrVec & ops,
     double matrix[16];
     double offset[4];
     MatrixTransform::Fit(matrix, offset,
-                            oldmin4, oldmax4,
-                            newmin4, newmax4);
+                         oldmin4, oldmax4,
+                         newmin4, newmax4);
 
     CreateMatrixOffsetOp(ops, matrix, offset, direction);
 }
@@ -338,8 +293,8 @@ void CreateIdentityMatrixOp(OpRcPtrVec & ops,
     const double offset[4] = { 0.0, 0.0, 0.0, 0.0 };
 
     ops.push_back(std::make_shared<MatrixOffsetOp>(matrix,
-                                                    offset,
-                                                    direction));
+                                                   offset,
+                                                   direction));
 }
 
 void CreateMinMaxOp(OpRcPtrVec & ops,
@@ -374,18 +329,24 @@ void CreateMinMaxOp(OpRcPtrVec & ops,
     CreateMinMaxOp(ops, min, max, direction);
 }
 
-void CreateMatrixOp(OpRcPtrVec & ops,
-                    MatrixOpDataRcPtr & matrix,
-                    TransformDirection direction)
+void CreateMatrixOp(OpRcPtrVec & ops, MatrixOpDataRcPtr & matrix, TransformDirection direction)
 {
-    ops.push_back(std::make_shared<MatrixOffsetOp>(matrix, direction));
+    auto mat = matrix;
+    if (direction == TRANSFORM_DIR_INVERSE)
+    {
+        mat = matrix->clone();
+        auto newDir = CombineTransformDirections(mat->getDirection(), direction);
+        mat->setDirection(newDir);
+    }
+
+    ops.push_back(std::make_shared<MatrixOffsetOp>(mat));
 }
 
 void CreateIdentityMatrixOp(OpRcPtrVec & ops)
 {
     MatrixOpDataRcPtr mat = MatrixOpData::CreateDiagonalMatrix(1.0);
 
-    ops.push_back(std::make_shared<MatrixOffsetOp>(mat, TRANSFORM_DIR_FORWARD));
+    ops.push_back(std::make_shared<MatrixOffsetOp>(mat));
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -402,7 +363,6 @@ void CreateMatrixTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
 
     auto matDataSrc = DynamicPtrCast<const MatrixOpData>(op->data());
     data = *matDataSrc;
-    matTransform->setDirection(mat->getDirection());
 
     group->appendTransform(matTransform);
 }
@@ -412,13 +372,11 @@ void BuildMatrixOp(OpRcPtrVec & ops,
                    const MatrixTransform & transform,
                    TransformDirection dir)
 {
-    const auto combinedDir = CombineTransformDirections(dir, transform.getDirection());
-
     const MatrixOpData & data = dynamic_cast<const MatrixTransformImpl &>(transform).data();
     data.validate();
 
     MatrixOpDataRcPtr mat = data.clone();
-    CreateMatrixOp(ops, mat, combinedDir);
+    CreateMatrixOp(ops, mat, dir);
 }
 
 } // namespace OCIO_NAMESPACE

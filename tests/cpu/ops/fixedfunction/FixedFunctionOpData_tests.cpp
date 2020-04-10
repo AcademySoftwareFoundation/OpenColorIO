@@ -15,20 +15,22 @@ OCIO_ADD_TEST(FixedFunctionOpData, aces_red_mod_style)
     OCIO_CHECK_EQUAL(func.getStyle(), OCIO::FixedFunctionOpData::ACES_RED_MOD_03_FWD);
     OCIO_CHECK_EQUAL(func.getParams().size(), 0);
     OCIO_CHECK_NO_THROW(func.validate());
-    OCIO_CHECK_NO_THROW(func.finalize());
-    const std::string cacheID(func.getCacheID());
+    std::string cacheID;
+    OCIO_CHECK_NO_THROW(cacheID = func.getCacheID());
 
     OCIO_CHECK_NO_THROW(func.setStyle(OCIO::FixedFunctionOpData::ACES_RED_MOD_10_FWD));
     OCIO_CHECK_EQUAL(func.getStyle(), OCIO::FixedFunctionOpData::ACES_RED_MOD_10_FWD);
     OCIO_CHECK_NO_THROW(func.validate());
-    OCIO_CHECK_NO_THROW(func.finalize());
 
-    OCIO_CHECK_ASSERT(cacheID!=std::string(func.getCacheID()));
+    std::string cacheIDUpdated;
+    OCIO_CHECK_NO_THROW(cacheIDUpdated = func.getCacheID());
+    OCIO_CHECK_ASSERT(cacheID != cacheIDUpdated);
 
     OCIO::FixedFunctionOpDataRcPtr inv = func.inverse();
     OCIO_CHECK_EQUAL(inv->getStyle(), OCIO::FixedFunctionOpData::ACES_RED_MOD_10_INV);
     OCIO_CHECK_EQUAL(inv->getParams().size(), 0);
-    OCIO_CHECK_ASSERT(cacheID!=std::string(inv->getCacheID()));
+    OCIO_CHECK_NO_THROW(cacheIDUpdated = inv->getCacheID());
+    OCIO_CHECK_ASSERT(cacheID != cacheIDUpdated);
 
     OCIO::FixedFunctionOpData::Params p = func.getParams();
     p.push_back(1.);
@@ -46,13 +48,15 @@ OCIO_ADD_TEST(FixedFunctionOpData, aces_dark_to_dim10_style)
     OCIO_CHECK_EQUAL(func.getStyle(), OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD);
     OCIO_CHECK_EQUAL(func.getParams().size(), 0);
     OCIO_CHECK_NO_THROW(func.validate());
-    OCIO_CHECK_NO_THROW(func.finalize());
-    const std::string cacheID(func.getCacheID());
+    std::string cacheID;
+    OCIO_CHECK_NO_THROW(cacheID = func.getCacheID());
 
     OCIO::FixedFunctionOpDataRcPtr inv = func.inverse();
     OCIO_CHECK_EQUAL(inv->getStyle(), OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV);
     OCIO_CHECK_EQUAL(inv->getParams().size(), 0);
-    OCIO_CHECK_ASSERT(cacheID!=std::string(inv->getCacheID()));
+    std::string cacheIDUpdated;
+    OCIO_CHECK_NO_THROW(cacheIDUpdated = inv->getCacheID());
+    OCIO_CHECK_ASSERT(cacheID != cacheIDUpdated);
 
     OCIO::FixedFunctionOpData::Params p = func.getParams();
     p.push_back(1.);
@@ -67,14 +71,16 @@ OCIO_ADD_TEST(FixedFunctionOpData, rec2100_surround_style)
     OCIO::FixedFunctionOpData::Params params = { 2.0 };
     OCIO::FixedFunctionOpData func(params, OCIO::FixedFunctionOpData::REC2100_SURROUND_FWD);
     OCIO_CHECK_NO_THROW(func.validate());
-    OCIO_CHECK_NO_THROW(func.finalize());
-    const std::string cacheID(func.getCacheID());
+    std::string cacheID;
+    OCIO_CHECK_NO_THROW(cacheID = func.getCacheID());
     OCIO_CHECK_ASSERT(func.getParams() == params);
 
     OCIO::FixedFunctionOpDataRcPtr inv = func.inverse();
     OCIO_CHECK_EQUAL(inv->getParams()[0], func.getParams()[0]);
     OCIO_CHECK_EQUAL(inv->getStyle(), OCIO::FixedFunctionOpData::REC2100_SURROUND_INV);
-    OCIO_CHECK_ASSERT(cacheID!=std::string(inv->getCacheID()));
+    std::string cacheIDUpdated;
+    OCIO_CHECK_NO_THROW(cacheIDUpdated = inv->getCacheID());
+    OCIO_CHECK_ASSERT(cacheID != cacheIDUpdated);
 
     OCIO_CHECK_ASSERT(func == func);
     OCIO_CHECK_ASSERT(!(func == *inv));
@@ -98,7 +104,7 @@ OCIO_ADD_TEST(FixedFunctionOpData, rec2100_surround_style)
     OCIO_CHECK_NO_THROW(func.setParams(params));
     OCIO_CHECK_THROW_WHAT(func.validate(),
                           OCIO::Exception,
-                          "The style 'REC2100_Surround' must have "
+                          "The style 'REC2100_Surround (Forward)' must have "
                           "one parameter but 2 found.");
 
     params = func.getParams();
@@ -106,7 +112,7 @@ OCIO_ADD_TEST(FixedFunctionOpData, rec2100_surround_style)
     OCIO_CHECK_NO_THROW(func.setParams(params));
     OCIO_CHECK_THROW_WHAT(func.validate(),
                           OCIO::Exception,
-                          "The style 'REC2100_Surround' must have "
+                          "The style 'REC2100_Surround (Forward)' must have "
                           "one parameter but 0 found.");
 }
 

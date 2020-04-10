@@ -337,8 +337,6 @@ bool CDLOpData::hasChannelCrosstalk() const
 
 void CDLOpData::validate() const
 {
-    OpData::validate();
-
     validateParams(m_slopeParams, m_powerParams, m_saturation);
 }
 
@@ -428,11 +426,9 @@ CDLOpDataRcPtr CDLOpData::inverse() const
     return cdl;
 }
 
-void CDLOpData::finalize()
+std::string CDLOpData::getCacheID() const
 {
     AutoMutex lock(m_mutex);
-
-    validate();
 
     std::ostringstream cacheIDStream;
     if (!getID().empty())
@@ -448,7 +444,7 @@ void CDLOpData::finalize()
     cacheIDStream << getPowerString() << " ";
     cacheIDStream << getSaturationString() << " ";
 
-    m_cacheID = cacheIDStream.str();
+    return cacheIDStream.str();
 }
 
 } // namespace OCIO_NAMESPACE

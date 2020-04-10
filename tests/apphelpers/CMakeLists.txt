@@ -25,11 +25,6 @@ if(NOT BUILD_SHARED_LIBS)
     )
 endif()
 
-target_compile_definitions(test_apphelpers_exec
-    PRIVATE
-        OCIO_UNIT_TEST
-)
-
 set_target_properties(test_apphelpers_exec
     PROPERTIES
         COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}"

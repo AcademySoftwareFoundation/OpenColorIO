@@ -109,6 +109,7 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     std::string name(resName.str());
     StringUtils::ReplaceInPlace(name, "__", "_");
 
+    // (Using CacheID here to potentially allow reuse of existing textures.)
     shaderCreator->addTexture(name.c_str(),
                               GpuShaderText::getSamplerName(name).c_str(),
                               lutData->getCacheID().c_str(),

@@ -87,8 +87,8 @@ public:
     };
 
 public:
-
     MatrixOpData();
+    explicit MatrixOpData(TransformDirection direction);
     MatrixOpData(const MatrixOpData &) = default;
 
     virtual ~MatrixOpData();
@@ -157,7 +157,7 @@ public:
     // Returns true if the op's output combines input channels.
     bool hasChannelCrosstalk() const override { return !isDiagonal(); }
 
-    void finalize() override;
+    std::string getCacheID() const override;
 
     // Check if the matrix array is a no-op (ignoring the offsets).
     bool isUnityDiagonal() const;
@@ -176,13 +176,16 @@ public:
 
     bool operator==(const OpData & other) const override;
 
-    MatrixOpDataRcPtr inverse() const;
+    TransformDirection getDirection() const { return m_direction; }
+    void setDirection(TransformDirection dir);
 
-    inline BitDepth getFileInputBitDepth() const { return m_fileInBitDepth; }
-    inline void setFileInputBitDepth(BitDepth in) { m_fileInBitDepth = in; }
+    MatrixOpDataRcPtr getAsForward() const;
 
-    inline BitDepth getFileOutputBitDepth() const { return m_fileOutBitDepth; }
-    inline void setFileOutputBitDepth(BitDepth out) { m_fileOutBitDepth = out; }
+    BitDepth getFileInputBitDepth() const { return m_fileInBitDepth; }
+    void setFileInputBitDepth(BitDepth in) { m_fileInBitDepth = in; }
+
+    BitDepth getFileOutputBitDepth() const { return m_fileOutBitDepth; }
+    void setFileOutputBitDepth(BitDepth out) { m_fileOutBitDepth = out; }
 
     void scale(double inScale, double outScale);
 
@@ -236,6 +239,7 @@ private:
     // Out bit-depth to be used for file I/O.
     BitDepth m_fileOutBitDepth = BIT_DEPTH_UNKNOWN;
 
+    TransformDirection m_direction{ TRANSFORM_DIR_FORWARD };
 };
 } // namespace OCIO_NAMESPACE
 

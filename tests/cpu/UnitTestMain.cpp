@@ -3,6 +3,7 @@
 
 
 #include "testutils/UnitTest.h"
+#include "UnitTestOptimFlags.h"
 
 
 #if !defined(NDEBUG) && defined(_WIN32)
@@ -30,6 +31,10 @@ OCIO_ADD_TEST(UnitTest, windows_debug)
 int main(int argc, const char ** argv)
 {
     std::cerr << "\n OpenColorIO_Core_Unit_Tests \n\n";
+
+    // Make sure OptimizationFlags env variable is turned off during tests and
+    // restored at the end.
+    OCIOOptimizationFlagsEnvGuard flagsGuard("");
 
     return UnitTestMain(argc, argv);
 }
