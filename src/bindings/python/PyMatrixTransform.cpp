@@ -28,12 +28,14 @@ void bindPyMatrixTransform(py::module & m)
                 p->setMatrix(m44.data());
                 p->setOffset(offset4.data());
                 p->setDirection(dir);
+                p->validate();
                 return p;
             }), 
              "m44"_a = DEFAULT_M44,
              "offset4"_a = DEFAULT_OFFSET4,
              "dir"_a = DEFAULT->getDirection())
 
+        // TODO: Update these functions to construct a MatrixTransform on the C++ side
         .def_static("Fit", [](const std::array<double, 4> & oldmin4,
                               const std::array<double, 4> & oldmax4,
                               const std::array<double, 4> & newmin4,
@@ -47,6 +49,7 @@ void bindPyMatrixTransform(py::module & m)
                 MatrixTransformRcPtr p = MatrixTransform::Create();
                 p->setMatrix(m44);
                 p->setOffset(offset4);
+                p->validate();
                 return p;
             },
              "oldmin4"_a = std::array<double, 4>{ 0.0, 0.0, 0.0, 0.0 }, 
@@ -61,6 +64,7 @@ void bindPyMatrixTransform(py::module & m)
                 MatrixTransformRcPtr p = MatrixTransform::Create();
                 p->setMatrix(m44);
                 p->setOffset(offset4);
+                p->validate();
                 return p;
             })
         .def_static("Sat", [](double sat, const std::array<double, 3> & lumaCoef3)
@@ -71,6 +75,7 @@ void bindPyMatrixTransform(py::module & m)
                 MatrixTransformRcPtr p = MatrixTransform::Create();
                 p->setMatrix(m44);
                 p->setOffset(offset4);
+                p->validate();
                 return p;
             },
              "sat"_a, "lumaCoef3"_a)
@@ -82,6 +87,7 @@ void bindPyMatrixTransform(py::module & m)
                 MatrixTransformRcPtr p = MatrixTransform::Create();
                 p->setMatrix(m44);
                 p->setOffset(offset4);
+                p->validate();
                 return p;
             },
              "scale4"_a)
@@ -94,6 +100,7 @@ void bindPyMatrixTransform(py::module & m)
                 MatrixTransformRcPtr p = MatrixTransform::Create();
                 p->setMatrix(m44);
                 p->setOffset(offset4);
+                p->validate();
                 return p;
             },
              "channelHot4"_a, "scale4"_a)

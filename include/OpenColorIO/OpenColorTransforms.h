@@ -973,10 +973,11 @@ public:
     virtual void setLinearSlopeValue(const double(&values)[3]) = 0;
     //!cpp:function:: Remove LinearSlope values so that default values are used.
     virtual void unsetLinearSlopeValue() = 0;
+    
+    virtual ~LogCameraTransform() = default;
 
 protected:
     LogCameraTransform() = default;
-    virtual ~LogCameraTransform() = default;
 
 private:
     LogCameraTransform(const LogCameraTransform &) = delete;

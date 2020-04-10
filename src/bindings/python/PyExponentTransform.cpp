@@ -25,6 +25,7 @@ void bindPyExponentTransform(py::module & m)
                 p->setValue(*reinterpret_cast<const double(*)[4]>(vec4.data()));
                 p->setNegativeStyle(negativeStyle);
                 p->setDirection(dir);
+                p->validate();
                 return p;
             }),
              "vec4"_a = DEFAULT_VEC4,

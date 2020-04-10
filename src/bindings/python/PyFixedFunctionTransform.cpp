@@ -31,6 +31,7 @@ void bindPyFixedFunctionTransform(py::module & m)
                 p->setStyle(style);
                 p->setParams(params.data(), params.size());
                 p->setDirection(dir);
+                p->validate();
                 return p;
             }), 
              "style"_a = DEFAULT->getStyle(), 

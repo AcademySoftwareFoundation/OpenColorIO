@@ -27,6 +27,7 @@ void bindPyFileTransform(py::module & m);
 void bindPyFixedFunctionTransform(py::module & m);
 void bindPyGroupTransform(py::module & m);
 void bindPyLogAffineTransform(py::module & m);
+void bindPyLogCameraTransform(py::module & m);
 void bindPyLogTransform(py::module & m);
 void bindPyLookTransform(py::module & m);
 void bindPyLut1DTransform(py::module & m);

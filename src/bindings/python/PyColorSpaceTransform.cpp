@@ -22,6 +22,7 @@ void bindPyColorSpaceTransform(py::module & m)
                 if (!src.empty()) { p->setSrc(src.c_str()); }
                 if (!dst.empty()) { p->setDst(dst.c_str()); }
                 p->setDirection(dir);
+                p->validate();
                 return p;
             }), 
              "src"_a = DEFAULT->getSrc(), 

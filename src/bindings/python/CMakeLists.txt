@@ -42,6 +42,7 @@ set(SOURCES
 	PyFixedFunctionTransform.cpp
 	PyGroupTransform.cpp
 	PyLogAffineTransform.cpp
+	PyLogCameraTransform.cpp
 	PyLogTransform.cpp
 	PyLookTransform.cpp
 	PyLut1DTransform.cpp

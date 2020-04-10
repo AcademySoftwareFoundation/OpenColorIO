@@ -33,6 +33,7 @@ void bindPyLut1DTransform(py::module & m)
                 p->setHueAdjust(hueAdjust);
                 p->setInterpolation(interpolation);
                 p->setDirection(dir);
+                p->validate();
                 return p;
             }),
              "length"_a = DEFAULT->getLength(),

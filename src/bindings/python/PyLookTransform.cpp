@@ -24,6 +24,7 @@ void bindPyLookTransform(py::module & m)
                 if (!dst.empty())   { p->setDst(dst.c_str()); }
                 if (!looks.empty()) { p->setLooks(looks.c_str()); }
                 p->setDirection(dir);
+                p->validate();
                 return p;
             }),
              "src"_a = DEFAULT->getSrc(),

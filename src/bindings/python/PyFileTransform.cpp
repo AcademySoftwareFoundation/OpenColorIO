@@ -36,6 +36,7 @@ void bindPyFileTransform(py::module & m)
                 if (!id.empty())  { p->setCCCId(id.c_str()); }
                 p->setInterpolation(interp);
                 p->setDirection(dir);
+                p->validate();
                 return p;
             }), 
              "src"_a = DEFAULT->getSrc(), 
@@ -49,6 +50,8 @@ void bindPyFileTransform(py::module & m)
         .def("setSrc", &FileTransform::setSrc, "src"_a)
         .def("getCCCId", &FileTransform::getCCCId)
         .def("setCCCId", &FileTransform::setCCCId, "id"_a)
+        .def("getCDLStyle", &FileTransform::getCDLStyle)
+        .def("setCDLStyle", &FileTransform::setCDLStyle, "style"_a)
         .def("getInterpolation", &FileTransform::getInterpolation)
         .def("setInterpolation", &FileTransform::setInterpolation, "interp"_a);
 

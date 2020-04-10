@@ -43,6 +43,7 @@ void bindPyAllocationTransform(py::module & m)
                 p->setAllocation(allocation);
                 setVars(p, vars);
                 p->setDirection(dir);
+                p->validate();
                 return p;
             }), 
              "allocation"_a = DEFAULT->getAllocation(), 

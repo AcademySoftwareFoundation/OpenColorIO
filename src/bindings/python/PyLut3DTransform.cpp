@@ -30,6 +30,7 @@ void bindPyLut3DTransform(py::module & m)
                 p->setFileOutputBitDepth(fileOutputBitDepth);
                 p->setInterpolation(interpolation);
                 p->setDirection(dir);
+                p->validate();
                 return p;
             }),
              "gridSize"_a = DEFAULT->getGridSize(),

@@ -20,6 +20,7 @@ void bindPyLogTransform(py::module & m)
                 LogTransformRcPtr p = LogTransform::Create();
                 p->setBase(base);
                 p->setDirection(dir);
+                p->validate();
                 return p;
             }),
              "base"_a = DEFAULT->getBase(),

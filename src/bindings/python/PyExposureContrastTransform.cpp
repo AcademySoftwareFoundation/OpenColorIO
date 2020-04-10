@@ -37,6 +37,7 @@ void bindPyExposureContrastTransform(py::module & m)
                 if (dynamicContrast) { p->makeContrastDynamic(); }
                 if (dynamicGamma)    { p->makeGammaDynamic(); }
                 p->setDirection(dir);
+                p->validate();
                 return p;
             }), 
              "style"_a = DEFAULT->getStyle(),

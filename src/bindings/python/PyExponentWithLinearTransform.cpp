@@ -30,6 +30,7 @@ void bindPyExponentWithLinearTransform(py::module & m)
                 p->setOffset(*reinterpret_cast<const double(*)[4]>(offset.data()));
                 p->setNegativeStyle(negativeStyle);
                 p->setDirection(dir);
+                p->validate();
                 return p;
             }),
              "gamma"_a = DEFAULT_GAMMA,

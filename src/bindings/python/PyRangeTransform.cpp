@@ -26,6 +26,7 @@ void bindPyRangeTransform(py::module & m)
                 p->setMinOutValue(minOutValue);
                 p->setMaxOutValue(maxOutValue);
                 p->setDirection(dir);
+                p->validate();
                 return p;
             }),
              "minInValue"_a = DEFAULT->getMinInValue(),

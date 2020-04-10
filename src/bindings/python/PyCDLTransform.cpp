@@ -28,6 +28,7 @@ void bindPyCDLTransform(py::module & m)
                 CDLTransformRcPtr p = CDLTransform::Create();
                 if (!xml.empty()) { p->setXML(xml.c_str()); }
                 p->setDirection(dir);
+                p->validate();
                 return p;
             }), 
              "xml"_a,
@@ -48,6 +49,7 @@ void bindPyCDLTransform(py::module & m)
                 if (!id.empty())   { p->setID(id.c_str()); }
                 if (!desc.empty()) { p->setDescription(desc.c_str()); }
                 p->setDirection(dir);
+                p->validate();
                 return p;
             }), 
              "slope"_a = DEFAULT_SLOPE,

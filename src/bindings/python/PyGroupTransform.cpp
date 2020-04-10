@@ -34,6 +34,7 @@ void bindPyGroupTransform(py::module & m)
                     p->appendTransform(t);
                 }
                 p->setDirection(dir);
+                p->validate();
                 return p;
             }), 
              "transforms"_a = std::vector<ConstTransformRcPtr>{},

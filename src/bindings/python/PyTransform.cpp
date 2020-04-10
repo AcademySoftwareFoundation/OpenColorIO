@@ -30,6 +30,7 @@ void bindPyTransform(py::module & m)
     bindPyFixedFunctionTransform(m);
     bindPyGroupTransform(m);
     bindPyLogAffineTransform(m);
+    bindPyLogCameraTransform(m);
     bindPyLogTransform(m);
     bindPyLookTransform(m);
     bindPyLut1DTransform(m);

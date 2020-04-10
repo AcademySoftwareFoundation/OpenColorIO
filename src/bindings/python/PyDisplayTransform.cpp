@@ -39,6 +39,7 @@ void bindPyDisplayTransform(py::module & m)
                 if (!looksOverride.empty()) { p->setLooksOverride(looksOverride.c_str()); }
                 p->setLooksOverrideEnabled(looksOverrideEnabled);
                 p->setDirection(dir);
+                p->validate();
                 return p;
             }), 
              "inputColorSpaceName"_a = DEFAULT->getInputColorSpaceName(),
