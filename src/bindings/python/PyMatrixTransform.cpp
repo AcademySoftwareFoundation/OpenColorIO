@@ -35,7 +35,7 @@ void bindPyMatrixTransform(py::module & m)
              "offset4"_a = DEFAULT_OFFSET4,
              "dir"_a = DEFAULT->getDirection())
 
-        // TODO: Update these functions to construct a MatrixTransform on the C++ side
+        // TODO: Update static convenience functions to construct a MatrixTransform in C++
         .def_static("Fit", [](const std::array<double, 4> & oldmin4,
                               const std::array<double, 4> & oldmax4,
                               const std::array<double, 4> & newmin4,

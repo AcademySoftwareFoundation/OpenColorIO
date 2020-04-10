@@ -88,7 +88,7 @@ void bindPyLogCameraTransform(py::module & m)
                 return values;
             })
         .def("setLogSideOffsetValue", [](LogCameraTransformRcPtr self, 
-                                        const std::array<double, 3> & values)
+                                         const std::array<double, 3> & values)
             { 
                 self->setLogSideOffsetValue(*reinterpret_cast<const double(*)[3]>(values.data()));
             }, 
@@ -112,7 +112,7 @@ void bindPyLogCameraTransform(py::module & m)
                 return values;
             })
         .def("setLinSideOffsetValue", [](LogCameraTransformRcPtr self, 
-                                        const std::array<double, 3> & values)
+                                         const std::array<double, 3> & values)
             { 
                 self->setLinSideOffsetValue(*reinterpret_cast<const double(*)[3]>(values.data()));
             }, 
@@ -136,7 +136,7 @@ void bindPyLogCameraTransform(py::module & m)
                 return values;
             })
         .def("setLinearSlopeValue", [](LogCameraTransformRcPtr self, 
-                                        const std::array<double, 3> & values)
+                                       const std::array<double, 3> & values)
             { 
                 self->setLinearSlopeValue(*reinterpret_cast<const double(*)[3]>(values.data()));
             }, 
