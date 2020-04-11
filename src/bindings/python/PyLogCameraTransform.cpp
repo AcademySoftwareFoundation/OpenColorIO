@@ -22,41 +22,32 @@ void bindPyLogCameraTransform(py::module & m)
     std::array<double, 3> DEFAULT_LIN_SIDE_OFFSET;
     DEFAULT->getLinSideOffsetValue(*reinterpret_cast<double(*)[3]>(DEFAULT_LIN_SIDE_OFFSET.data()));
 
-    std::array<double, 3> DEFAULT_LIN_SIDE_BREAK;
-    DEFAULT->getLinSideBreakValue(*reinterpret_cast<double(*)[3]>(DEFAULT_LIN_SIDE_BREAK.data()));
-
-    std::array<double, 3> DEFAULT_LINEAR_SLOPE;
-    DEFAULT->getLinearSlopeValue(*reinterpret_cast<double(*)[3]>(DEFAULT_LINEAR_SLOPE.data()));
-
     py::class_<LogCameraTransform, 
                LogCameraTransformRcPtr /* holder */, 
                Transform /* base */>(m, "LogCameraTransform")
         .def(py::init(&LogCameraTransform::Create))
-        .def(py::init([](const std::array<double, 3> & logSideSlope,
+        .def(py::init([](const std::array<double, 3> & linSideBreak,
+                         const std::array<double, 3> & logSideSlope,
                          const std::array<double, 3> & logSideOffset,
                          const std::array<double, 3> & linSideSlope,
                          const std::array<double, 3> & linSideOffset,
-                         const std::array<double, 3> & linSideBreak,
-                         const std::array<double, 3> & linearSlope,
                          TransformDirection dir) 
             {
                 LogCameraTransformRcPtr p = LogCameraTransform::Create();
+                p->setLinSideBreakValue(*reinterpret_cast<const double(*)[3]>(linSideBreak.data()));
                 p->setLogSideSlopeValue(*reinterpret_cast<const double(*)[3]>(logSideSlope.data()));
                 p->setLogSideOffsetValue(*reinterpret_cast<const double(*)[3]>(logSideOffset.data()));
                 p->setLinSideSlopeValue(*reinterpret_cast<const double(*)[3]>(linSideSlope.data()));
                 p->setLinSideOffsetValue(*reinterpret_cast<const double(*)[3]>(linSideOffset.data()));
-                p->setLinSideBreakValue(*reinterpret_cast<const double(*)[3]>(linSideBreak.data()));
-                p->setLinearSlopeValue(*reinterpret_cast<const double(*)[3]>(linearSlope.data()));
                 p->setDirection(dir);
                 p->validate();
                 return p;
             }),
+             "linSideBreak"_a,
              "logSideSlope"_a = DEFAULT_LOG_SIDE_SLOPE,
              "logSideOffset"_a = DEFAULT_LOG_SIDE_OFFSET,
              "linSideSlope"_a = DEFAULT_LIN_SIDE_SLOPE,
              "linSideOffset"_a = DEFAULT_LIN_SIDE_OFFSET,
-             "linSideBreak"_a = DEFAULT_LIN_SIDE_BREAK,
-             "linearSlope"_a = DEFAULT_LINEAR_SLOPE,
              "dir"_a = DEFAULT->getDirection())
 
         .def("getFormatMetadata", 
