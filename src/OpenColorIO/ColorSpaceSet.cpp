@@ -22,11 +22,11 @@ public:
 
     Impl & operator= (const Impl & rhs)
     {
-        if(this!=&rhs)
+        if (this != &rhs)
         {
             clear();
 
-            for(auto & cs: rhs.m_colorSpaces)
+            for (auto & cs: rhs.m_colorSpaces)
             {
                 m_colorSpaces.push_back(cs->createEditableCopy());
             }
@@ -36,17 +36,17 @@ public:
 
     bool operator== (const Impl & rhs)
     {
-        if(this==&rhs) return true;
+        if (this == &rhs) return true;
 
-        if(m_colorSpaces.size()!=rhs.m_colorSpaces.size())
+        if (m_colorSpaces.size() != rhs.m_colorSpaces.size())
         {
             return false;
         }
 
-        for(auto & cs : m_colorSpaces)
+        for (auto & cs : m_colorSpaces)
         {
             // NB: Only the names are compared.
-            if(-1==rhs.getIndex(cs->getName()))
+            if (!rhs.isPresent(cs->getName()))
             {
                 return false;
             }
@@ -62,7 +62,7 @@ public:
 
     ConstColorSpaceRcPtr get(int index) const 
     {
-        if(index<0 || index>=size())
+        if (index < 0 || index >= size())
         {
             return ColorSpaceRcPtr();
         }
@@ -72,7 +72,7 @@ public:
 
     const char * getName(int index) const 
     {
-        if(index<0 || index>=size())
+        if (index < 0 || index >= size())
         {
             return nullptr;
         }
@@ -82,28 +82,17 @@ public:
 
     ConstColorSpaceRcPtr getByName(const char * csName) const 
     {
-        if(csName && *csName)
-        {
-            const std::string str = StringUtils::Lower(csName);
-            for(auto & cs: m_colorSpaces)
-            {
-                if(StringUtils::Lower(cs->getName())==str)
-                {
-                    return cs;
-                }
-            }
-        }
-        return ColorSpaceRcPtr();
+        return get(getIndex(csName));
     }
 
     int getIndex(const char * csName) const 
     {
-        if(csName && *csName)
+        if (csName && *csName)
         {
             const std::string str = StringUtils::Lower(csName);
-            for(size_t idx = 0; idx<m_colorSpaces.size(); ++idx)
+            for (size_t idx = 0; idx < m_colorSpaces.size(); ++idx)
             {
-                if(StringUtils::Lower(m_colorSpaces[idx]->getName())==str)
+                if (StringUtils::Lower(m_colorSpaces[idx]->getName()) == str)
                 {
                     return static_cast<int>(idx);
                 }
@@ -113,17 +102,22 @@ public:
         return -1;
     }
 
+    bool isPresent(const char * csName) const
+    {
+        return -1 != getIndex(csName);
+    }
+
     void add(const ConstColorSpaceRcPtr & cs)
     {
         const std::string csName = StringUtils::Lower(cs->getName());
-        if(csName.empty())
+        if (csName.empty())
         {
             throw Exception("Cannot add a color space with an empty name.");
         }
 
-        for(auto & entry: m_colorSpaces)
+        for (auto & entry : m_colorSpaces)
         {
-            if(StringUtils::Lower(entry->getName())==csName)
+            if (StringUtils::Lower(entry->getName()) == csName)
             {
                 // The color space replaces the existing one.
                 entry = cs->createEditableCopy();
@@ -136,7 +130,7 @@ public:
 
     void add(const Impl & rhs)
     {
-        for(auto & cs : rhs.m_colorSpaces)
+        for (auto & cs : rhs.m_colorSpaces)
         {
             add(cs);
         }
@@ -145,11 +139,11 @@ public:
     void remove(const char * csName)
     {
         const std::string name = StringUtils::Lower(csName);
-        if(name.empty()) return;
+        if (name.empty()) return;
 
-        for(auto itr = m_colorSpaces.begin(); itr != m_colorSpaces.end(); ++itr)
+        for (auto itr = m_colorSpaces.begin(); itr != m_colorSpaces.end(); ++itr)
         {
-            if(StringUtils::Lower((*itr)->getName())==name)
+            if (StringUtils::Lower((*itr)->getName())==name)
             {
                 m_colorSpaces.erase(itr);
                 return;
@@ -159,7 +153,7 @@ public:
 
     void remove(const Impl & rhs)
     {
-        for(auto & cs : rhs.m_colorSpaces)
+        for (auto & cs : rhs.m_colorSpaces)
         {
             remove(cs->getName());
         }
@@ -241,9 +235,14 @@ ConstColorSpaceRcPtr ColorSpaceSet::getColorSpace(const char * name) const
     return m_impl->getByName(name);
 }
 
-int ColorSpaceSet::getIndexForColorSpace(const char * name) const
+int ColorSpaceSet::getColorSpaceIndex(const char * name) const
 {
     return m_impl->getIndex(name);
+}
+
+bool ColorSpaceSet::hasColorSpace(const char * name) const
+{
+    return m_impl->isPresent(name);
 }
 
 void ColorSpaceSet::addColorSpace(const ConstColorSpaceRcPtr & cs)
@@ -284,10 +283,10 @@ ConstColorSpaceSetRcPtr operator&&(const ConstColorSpaceSetRcPtr & lcss,
 {
     ColorSpaceSetRcPtr css = ColorSpaceSet::Create();
 
-    for(int idx=0; idx<rcss->getNumColorSpaces(); ++idx)
+    for (int idx = 0; idx < rcss->getNumColorSpaces(); ++idx)
     {
         ConstColorSpaceRcPtr tmp = rcss->getColorSpaceByIndex(idx);
-        if(-1!=lcss->getIndexForColorSpace(tmp->getName()))
+        if (lcss->hasColorSpace(tmp->getName()))
         {
             css->addColorSpace(tmp);
         }
@@ -301,11 +300,11 @@ ConstColorSpaceSetRcPtr operator-(const ConstColorSpaceSetRcPtr & lcss,
 {
     ColorSpaceSetRcPtr css = ColorSpaceSet::Create();
 
-    for(int idx=0; idx<lcss->getNumColorSpaces(); ++idx)
+    for (int idx = 0; idx < lcss->getNumColorSpaces(); ++idx)
     {
         ConstColorSpaceRcPtr tmp = lcss->getColorSpaceByIndex(idx);
 
-        if(-1==rcss->getIndexForColorSpace(tmp->getName()))
+        if (!rcss->hasColorSpace(tmp->getName()))
         {
             css->addColorSpace(tmp);
         }

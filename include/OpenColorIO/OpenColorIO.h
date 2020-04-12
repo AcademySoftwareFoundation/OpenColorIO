@@ -1166,7 +1166,9 @@ public:
     //!cpp:function:: Will return null if the name is not found.
     ConstColorSpaceRcPtr getColorSpace(const char * name) const;
     //!cpp:function:: Will return -1 if the name is not found.
-    int getIndexForColorSpace(const char * name) const;
+    int getColorSpaceIndex(const char * name) const;
+    //!cpp:function::
+    bool hasColorSpace(const char * name) const;
 
     //!cpp:function:: Add color space(s).
     //
