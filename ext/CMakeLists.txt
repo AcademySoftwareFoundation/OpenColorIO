@@ -32,7 +32,6 @@ if(OCIO_BUILD_APPS)
     find_package(LCMS2 ${LCMS2_MIN_VERSION} REQUIRED)
 endif()
 
-
 ###############################################################################
 ### External (modified) third-party C/C++ dependencies.                     ###
 
