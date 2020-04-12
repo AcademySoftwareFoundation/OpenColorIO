@@ -9,7 +9,7 @@ if [[ "$(python -c 'import sys; print(sys.version_info[0])')" == "2" ]]; then
     NUMPY_VERSION="$1"
 else
     # Python 3
-    NUMPY_VERSION="{$2:-$1}"
+    NUMPY_VERSION="${2:-${1}}"
 fi
 
 if [ "$NUMPY_VERSION" == "latest" ]; then
