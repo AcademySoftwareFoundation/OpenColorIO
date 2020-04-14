@@ -53,8 +53,8 @@ Reference Configs
 -----------------
 
 Reference OCIO configuration files and associated LUTs can be found at the
-Imageworks [OpenColorIO-Configs](https://github.com/imageworks/OpenColorIO-Configs)
-repository.
+Colour-Science [OpenColorIO-Configs](https://github.com/colour-science/OpenColorIO-Configs)
+repository, maintained by Thomas Mansencal.
 
 The following reference implementations are provided:
 
@@ -62,6 +62,8 @@ The following reference implementations are provided:
   * spi-anim
   * spi-vfx
 * ACES: Academy Color Encoding System
+  * aces_1.2
+  * aces_1.1
   * aces_1.0.3
   * aces_1.0.2
   * aces_1.0.1
