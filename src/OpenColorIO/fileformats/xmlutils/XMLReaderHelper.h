@@ -4,16 +4,19 @@
 #ifndef INCLUDED_OCIO_FILEFORMATS_XMLUTILS_XMLREADERHELPER_H
 #define INCLUDED_OCIO_FILEFORMATS_XMLUTILS_XMLREADERHELPER_H
 
+
 #include <string.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "fileformats/xmlutils/XMLReaderUtils.h"
-#include "ops/CDL/CDLOpData.h"
+#include "ops/cdl/CDLOpData.h"
 #include "PrivateTypes.h"
 #include "transforms/CDLTransform.h"
+#include "utils/StringUtils.h"
 
-OCIO_NAMESPACE_ENTER
+
+namespace OCIO_NAMESPACE
 {
 // Base class for all elements possible for parsing XML.
 class XmlReaderElement
@@ -63,6 +66,8 @@ public:
     }
 
     void throwMessage(const std::string & error) const;
+
+    void logParameterWarning(const char * param) const;
 
 protected:
     template<typename T>
@@ -258,7 +263,7 @@ public:
     }
 
 private:
-    StringVec m_rawData;
+    StringUtils::StringVec m_rawData;
 };
 
 typedef OCIO_SHARED_PTR<XmlReaderDummyElt> DummyEltRcPtr;
@@ -513,7 +518,6 @@ private:
     Stack m_elms;
 };
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif

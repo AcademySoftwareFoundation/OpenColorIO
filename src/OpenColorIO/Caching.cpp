@@ -7,16 +7,15 @@
 #include "PathUtils.h"
 #include "transforms/FileTransform.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
-    // TODO: Processors which the user hangs onto have local caches.
-    // Should these be cleared?
-    
-    void ClearAllCaches()
-    {
-        ClearPathCaches();
-        ClearFileTransformCaches();
-        ClearCDLTransformFileCache();
-    }
+// TODO: Processors which the user hangs onto have local caches.
+// Should these be cleared?
+
+void ClearAllCaches()
+{
+    ClearPathCaches();
+    ClearFileTransformCaches();
+    ClearCDLTransformFileCache();
 }
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE

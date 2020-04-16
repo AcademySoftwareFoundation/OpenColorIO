@@ -14,18 +14,18 @@ if(NOT BUILD_SHARED_LIBS)
     )
 endif()
 
-set_target_properties(ocioperf PROPERTIES 
+set_target_properties(ocioperf PROPERTIES
     COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
 
 target_link_libraries(ocioperf
-    PRIVATE 
+    PRIVATE
         apputils
+        ilmbase::ilmbase
         oglbuilder
         oiiohelpers
         OpenColorIO
         OpenImageIO
-        ilmbase::ilmbase
-        pystring::pystring
+        utils::strings
 )
 
 install(TARGETS ocioperf

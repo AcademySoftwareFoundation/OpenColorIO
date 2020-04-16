@@ -179,6 +179,6 @@ struct AddTest { explicit AddTest(OCIOGPUTestRcPtr test); };
 // The remaining of the function implementation will be skipped.
 #define OCIO_DISABLE_GPU_TEST() \
     test.disable();             \
-    if (!test.isEnabled()) return; // Test to avoid unreacheable code warning.
+    if (!test.isEnabled()) return; // Test to avoid unreachable code warning.
 
 #endif /* OPENCOLORIO_GPU_UNITTEST_H */

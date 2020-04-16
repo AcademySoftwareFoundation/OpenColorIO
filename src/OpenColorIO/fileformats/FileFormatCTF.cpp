@@ -15,14 +15,15 @@
 #include "fileformats/xmlutils/XMLReaderHelper.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "fileformats/xmlutils/XMLWriterUtils.h"
-#include "ops/Lut1D/Lut1DOp.h"
-#include "ops/Lut3D/Lut3DOp.h"
-#include "ops/Range/RangeOps.h"
+#include "ops/lut1d/Lut1DOp.h"
+#include "ops/lut3d/Lut3DOp.h"
+#include "ops/range/RangeOp.h"
 #include "OpBuilders.h"
-#include "ops/NoOp/NoOps.h"
+#include "ops/noop/NoOps.h"
 #include "Platform.h"
 #include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
+#include "utils/StringUtils.h"
 
 
 /*
@@ -88,9 +89,9 @@ a CLF file.  These getters/setters are only provided for the transforms/ops
 parameters in an unnormalized form.
 */
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
-    
+
 namespace
 {
 
@@ -101,25 +102,25 @@ public:
     {
     };
     ~LocalCachedFile() {};
-            
+
     CTFReaderTransformPtr m_transform;
     std::string m_filePath;
 
 };
 
 typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
-        
+
 class LocalFileFormat : public FileFormat
 {
 public:
-            
+
     ~LocalFileFormat() {}
-            
+
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
-            
+
     CachedFileRcPtr read(std::istream & istream,
                          const std::string & fileName) const override;
-            
+
     void buildFileOps(OpRcPtrVec & ops,
                       const Config & config,
                       const ConstContextRcPtr & context,
@@ -136,7 +137,7 @@ public:
                const std::string & formatName,
                std::ostream & /*ostream*/) const override;
 };
-        
+
 void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 {
     FormatInfo info;
@@ -172,7 +173,7 @@ public:
 
         std::string root, extension;
         pystring::os::path::splitext(root, extension, m_fileName);
-        m_isCLF = pystring::lower(extension) == ".clf";
+        m_isCLF = StringUtils::Lower(extension) == ".clf";
     }
 
     ~XMLParserHelper()
@@ -236,8 +237,7 @@ public:
                 if (!m_elms.empty())
                 {
                     // It could be an Op or an Attribute.
-                    std::string error(
-                        "CTF/CLF parsing error (no closing tag for '");
+                    std::string error("CTF/CLF parsing error (no closing tag for '");
                     error += m_elms.back()->getName().c_str();
                     error += "'). ";
                     throwMessage(error);
@@ -273,8 +273,7 @@ private:
         if (m_elms.size() != 1)
         {
             std::stringstream ss;
-            ss << ": The " << xmlTag;
-            ss << "'s parent can only be a Transform";
+            ss << "The " << xmlTag << "'s parent can only be a Transform";
 
             m_elms.push_back(std::make_shared<XmlReaderDummyElt>(
                 xmlTag,
@@ -288,19 +287,24 @@ private:
             ElementRcPtr pElt = m_elms.back();
 
             auto pT = std::dynamic_pointer_cast<CTFReaderTransformElt>(pElt);
-            CTFReaderOpEltRcPtr pOp =
-                CTFReaderOpElt::GetReader(type, pT->getVersion());
+            CTFReaderOpEltRcPtr pOp = CTFReaderOpElt::GetReader(type, pT->getVersion(), pT->isCLF());
 
             if (!pOp)
             {
                 std::stringstream ss;
-                ss << "Unsupported transform file version '";
-                ss << pT->getVersion() << "' for operator '" << xmlTag;
+                if (pT->isCLF())
+                {
+                    ss << "CLF file version '" << pT->getCLFVersion();
+                }
+                else
+                {
+                    ss << "CTF file version '" << pT->getVersion();
+                }
+                ss << "' does not support operator '" << xmlTag << "'";
                 throwMessage(ss.str());
             }
 
-            pOp->setContext(xmlTag, m_transform,
-                            getXmLineNumber(), getXmlFilename());
+            pOp->setContext(xmlTag, m_transform, getXmLineNumber(), getXmlFilename());
 
             m_elms.push_back(pOp);
         }
@@ -441,7 +445,7 @@ private:
                         name, pT,
                         pImpl->getXmLineNumber(),
                         pImpl->getXmlFilename(),
-                        ": The Transform already exists"));
+                        "The Transform already exists"));
             }
             else
             {
@@ -450,7 +454,7 @@ private:
                         name,
                         pImpl->getXmLineNumber(),
                         pImpl->getXmlFilename(),
-                        pImpl->IsCLF());
+                        pImpl->isCLF());
 
                 pImpl->m_elms.push_back(pT);
                 pImpl->m_transform = pT->getTransform();
@@ -467,7 +471,7 @@ private:
             }
 
             // Safety check to try and ensure that all new elements will get handled here.
-            static_assert(CTFReaderOpElt::NoType == 13, "Need to handle new type here");
+            static_assert(CTFReaderOpElt::NoType == 14, "Need to handle new type here");
 
             // Will allow to give better error feedback to the user if the
             // element name is not handled. If any case recognizes the name,
@@ -477,13 +481,11 @@ private:
 
             // For each possible element name, test against a tag name and a
             // current parent name to determine if the element should be handled.
-            if (SupportedElement(name, pElt, TAG_ACES,
-                                      TAG_PROCESS_LIST, recognizedName))
+            if (SupportedElement(name, pElt, TAG_ACES, TAG_PROCESS_LIST, recognizedName))
             {
                 pImpl->AddOpReader(CTFReaderOpElt::ACESType, name);
             }
-            else if (SupportedElement(name, pElt, TAG_CDL,
-                                      TAG_PROCESS_LIST, recognizedName))
+            else if (SupportedElement(name, pElt, TAG_CDL, TAG_PROCESS_LIST, recognizedName))
             {
                 pImpl->AddOpReader(CTFReaderOpElt::CDLType, name);
             }
@@ -497,43 +499,41 @@ private:
             {
                 pImpl->AddOpReader(CTFReaderOpElt::FixedFunctionType, name);
             }
-            else if (SupportedElement(name, pElt, TAG_GAMMA,
+            else if (SupportedElement(name, pElt, TAG_FUNCTION,
                                       TAG_PROCESS_LIST, recognizedName))
+            {
+                pImpl->AddOpReader(CTFReaderOpElt::FunctionType, name);
+            }
+            else if (SupportedElement(name, pElt, TAG_GAMMA, TAG_PROCESS_LIST, recognizedName) ||
+                     SupportedElement(name, pElt, TAG_EXPONENT, TAG_PROCESS_LIST, recognizedName))
             {
                 pImpl->AddOpReader(CTFReaderOpElt::GammaType, name);
             }
-            else if (SupportedElement(name, pElt, TAG_INVLUT1D,
-                                      TAG_PROCESS_LIST, recognizedName))
+            else if (SupportedElement(name, pElt, TAG_INVLUT1D, TAG_PROCESS_LIST, recognizedName))
             {
                 pImpl->AddOpReader(CTFReaderOpElt::InvLut1DType, name);
             }
-            else if (SupportedElement(name, pElt, TAG_INVLUT3D,
-                                      TAG_PROCESS_LIST, recognizedName))
+            else if (SupportedElement(name, pElt, TAG_INVLUT3D, TAG_PROCESS_LIST, recognizedName))
             {
                 pImpl->AddOpReader(CTFReaderOpElt::InvLut3DType, name);
             }
-            else if (SupportedElement(name, pElt, TAG_LOG,
-                                      TAG_PROCESS_LIST, recognizedName))
+            else if (SupportedElement(name, pElt, TAG_LOG, TAG_PROCESS_LIST, recognizedName))
             {
                 pImpl->AddOpReader(CTFReaderOpElt::LogType, name);
             }
-            else if (SupportedElement(name, pElt, TAG_LUT1D,
-                                      TAG_PROCESS_LIST, recognizedName))
+            else if (SupportedElement(name, pElt, TAG_LUT1D, TAG_PROCESS_LIST, recognizedName))
             {
                 pImpl->AddOpReader(CTFReaderOpElt::Lut1DType, name);
             }
-            else if (SupportedElement(name, pElt, TAG_LUT3D,
-                                      TAG_PROCESS_LIST, recognizedName))
+            else if (SupportedElement(name, pElt, TAG_LUT3D, TAG_PROCESS_LIST, recognizedName))
             {
                 pImpl->AddOpReader(CTFReaderOpElt::Lut3DType, name);
             }
-            else if (SupportedElement(name, pElt, TAG_MATRIX,
-                                      TAG_PROCESS_LIST, recognizedName))
+            else if (SupportedElement(name, pElt, TAG_MATRIX, TAG_PROCESS_LIST, recognizedName))
             {
                 pImpl->AddOpReader(CTFReaderOpElt::MatrixType, name);
             }
-            else if (SupportedElement(name, pElt, TAG_RANGE,
-                                      TAG_PROCESS_LIST, recognizedName))
+            else if (SupportedElement(name, pElt, TAG_RANGE, TAG_PROCESS_LIST, recognizedName))
             {
                 pImpl->AddOpReader(CTFReaderOpElt::RangeType, name);
             }
@@ -549,8 +549,7 @@ private:
             {
                 auto pT = std::dynamic_pointer_cast<CTFReaderTransformElt>(pElt);
 
-                auto pContainer =
-                    std::dynamic_pointer_cast<XmlReaderContainerElt>(pElt);
+                auto pContainer = std::dynamic_pointer_cast<XmlReaderContainerElt>(pElt);
                 if (!pContainer)
                 {
                     pImpl->m_elms.push_back(
@@ -588,7 +587,7 @@ private:
                                     (pImpl->m_elms.empty() ? 0 : pImpl->m_elms.back()),
                                     pImpl->getXmLineNumber(),
                                     pImpl->getXmlFilename(),
-                                    ": Array not allowed in this element"));
+                                    "Array not allowed in this element"));
                         }
                         else
                         {
@@ -598,7 +597,7 @@ private:
                                     (pImpl->m_elms.empty() ? 0 : pImpl->m_elms.back()),
                                     pImpl->getXmLineNumber(),
                                     pImpl->getXmlFilename(),
-                                    ": Only one Array allowed per op"));
+                                    "Only one Array allowed per op"));
                         }
                     }
                     else
@@ -646,8 +645,10 @@ private:
                             pImpl->getXmLineNumber(),
                             pImpl->getXmlFilename()));
                 }
-                else if (SupportedElement(name, pElt, TAG_GAMMA_PARAMS,
-                                          TAG_GAMMA, recognizedName))
+                else if (SupportedElement(name, pElt, TAG_GAMMA_PARAMS, TAG_GAMMA,
+                                          recognizedName) ||
+                         SupportedElement(name, pElt, TAG_EXPONENT_PARAMS, TAG_EXPONENT,
+                                          recognizedName))
                 {
                     CTFReaderGammaElt * pGamma = dynamic_cast<CTFReaderGammaElt*>(pContainer.get());
                     pImpl->m_elms.push_back(
@@ -671,7 +672,7 @@ private:
                                     (pImpl->m_elms.empty() ? 0 : pImpl->m_elms.back()),
                                     pImpl->getXmLineNumber(),
                                     pImpl->getXmlFilename(),
-                                    ": IndexMap not allowed in this element"));
+                                    "IndexMap not allowed in this element"));
                         }
                         else
                         {
@@ -714,8 +715,9 @@ private:
                 {
                     auto pLog = std::dynamic_pointer_cast<CTFReaderLogElt>(pContainer);
                     const auto style = pLog->getCTFParams().m_style;
-                    if (!(style == LogUtil::LOG_TO_LIN ||
-                          style == LogUtil::LIN_TO_LOG))
+                    if (!(style == LogUtil::LOG_TO_LIN || style == LogUtil::LIN_TO_LOG ||
+                          style == LogUtil::CAMERA_LOG_TO_LIN ||
+                          style == LogUtil::CAMERA_LIN_TO_LOG))
                     {
                         pImpl->m_elms.push_back(
                             std::make_shared<XmlReaderDummyElt>(
@@ -723,12 +725,13 @@ private:
                                 (pImpl->m_elms.empty() ? 0 : pImpl->m_elms.back()),
                                 pImpl->getXmLineNumber(),
                                 pImpl->getXmlFilename(),
-                                ": Log Params not allowed in this element"));
+                                "Log Params not allowed in this element"));
                     }
                     else
                     {
                         pImpl->m_elms.push_back(
-                            std::make_shared<CTFReaderLogParamsElt>(name,
+                            pLog->createLogParamsElt(
+                                name,
                                 pContainer,
                                 pImpl->getXmLineNumber(),
                                 pImpl->getXmlFilename()));
@@ -807,7 +810,7 @@ private:
                     if (recognizedName)
                     {
                         std::ostringstream oss;
-                        oss << ": '" << name << "' not allowed in this element";
+                        oss << "'" << name << "' not allowed in this element";
 
                         pImpl->m_elms.push_back(
                             std::make_shared<XmlReaderDummyElt>(
@@ -825,7 +828,7 @@ private:
                                 (pImpl->m_elms.empty() ? 0 : pImpl->m_elms.back()),
                                 pImpl->getXmLineNumber(),
                                 pImpl->getXmlFilename(),
-                                ": Unknown element"));
+                                "Unknown element"));
                     }
                 }
             }
@@ -993,7 +996,7 @@ private:
         return m_fileName;
     }
 
-    bool IsCLF() const
+    bool isCLF() const
     {
         return m_isCLF;
     }
@@ -1103,13 +1106,13 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 {
     LocalCachedFileRcPtr cachedFile = 
         DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
-            
+
     // This should never happen.
     if(!cachedFile)
     {
         throw Exception("Cannot build clf ops. Invalid cache type.");
     }
-            
+
     const TransformDirection newDir 
         = CombineTransformDirections(dir, fileTransform.getDirection());
 
@@ -1122,7 +1125,7 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     }
 
     FormatMetadataImpl & processorData = ops.getFormatMetadata();
-    
+
     // Put CTF processList information into the FormatMetadata.
     cachedFile->m_transform->toMetadata(processorData);
 
@@ -1284,7 +1287,7 @@ void LocalFileFormat::bake(const Baker & baker,
         else
         {
             // Calculate min/max value.
-            // Get input value of 1.0 in shaper space, as this is the higest value that is
+            // Get input value of 1.0 in shaper space, as this is the highest value that is
             // transformed by the cube (e.g for a generic lin-to-log transform, what the
             // log value 1.0 is in linear).
             ConstProcessorRcPtr proc = config->getProcessor(shaperSpace.c_str(),
@@ -1426,7 +1429,7 @@ void LocalFileFormat::write(const OpRcPtrVec & ops,
         os << "Error: CLF/CTF writer does not also write format " << formatName << ".";
         throw Exception(os.str().c_str());
     }
-    
+
     CTFReaderTransformPtr transform = std::make_shared<CTFReaderTransform>(ops, metadata);
 
     // Write XML Header.
@@ -1445,5 +1448,4 @@ FileFormat * CreateFileFormatCLF()
 }
 
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE

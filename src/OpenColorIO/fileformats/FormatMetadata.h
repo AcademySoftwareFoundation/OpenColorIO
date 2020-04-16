@@ -12,7 +12,7 @@
 
 #include "PrivateTypes.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 
@@ -20,7 +20,7 @@ OCIO_NAMESPACE_ENTER
 // instance needs a name string.  (At the file level in CLF/CTF, the actual
 // name would be ProcessList.  At the op level it would be the process node
 // name such as Matrix.)  Doesn't get written to the XML.
-static constexpr const char * METADATA_ROOT = "ROOT";
+static constexpr char METADATA_ROOT[] = "ROOT";
 
 // This class provides a hierarchical metadata container, similar to an XML Element.
 // It contains:
@@ -111,7 +111,6 @@ private:
     Elements         m_elements;   // The list of sub-elements
 };
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif

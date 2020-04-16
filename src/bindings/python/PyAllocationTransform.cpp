@@ -1,196 +1,66 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <Python.h>
-#include <OpenColorIO/OpenColorIO.h>
+#include "PyTransform.h"
 
-#include "PyUtil.h"
-#include "PyDoc.h"
-
-// Rarely used. could use a log transform instead. This can sample by log when
-// doing the offset to make best use of the data.
-
-#define GetConstAllocationTransform(pyobject) GetConstPyOCIO<PyOCIO_Transform, \
-    ConstAllocationTransformRcPtr, AllocationTransform>(pyobject, \
-    PyOCIO_AllocationTransformType)
-
-#define GetEditableAllocationTransform(pyobject) GetEditablePyOCIO<PyOCIO_Transform, \
-    AllocationTransformRcPtr, AllocationTransform>(pyobject, \
-    PyOCIO_AllocationTransformType)
-
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
-    
-    namespace
-    {
-        
-        ///////////////////////////////////////////////////////////////////////
-        ///
-        
-        int PyOCIO_AllocationTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds);
-        PyObject * PyOCIO_AllocationTransform_getAllocation(PyObject * self,  PyObject *);
-        PyObject * PyOCIO_AllocationTransform_setAllocation(PyObject * self,  PyObject * args);
-        PyObject * PyOCIO_AllocationTransform_getNumVars(PyObject * self,  PyObject *);
-        PyObject * PyOCIO_AllocationTransform_getVars(PyObject * self,  PyObject *);
-        PyObject * PyOCIO_AllocationTransform_setVars(PyObject * self,  PyObject * args);
-        
-        ///////////////////////////////////////////////////////////////////////
-        ///
-        
-        PyMethodDef PyOCIO_AllocationTransform_methods[] = {
-            { "getAllocation",
-            (PyCFunction) PyOCIO_AllocationTransform_getAllocation, METH_NOARGS, ALLOCATIONTRANSFORM_GETALLOCATION__DOC__ },
-            { "setAllocation",
-            PyOCIO_AllocationTransform_setAllocation, METH_VARARGS, ALLOCATIONTRANSFORM_SETALLOCATION__DOC__ },
-            { "getNumVars",
-            (PyCFunction) PyOCIO_AllocationTransform_getNumVars, METH_NOARGS, ALLOCATIONTRANSFORM_GETNUMVARS__DOC__ },
-            { "getVars",
-            (PyCFunction) PyOCIO_AllocationTransform_getVars, METH_NOARGS, ALLOCATIONTRANSFORM_GETVARS__DOC__ },
-            { "setVars",
-            PyOCIO_AllocationTransform_setVars, METH_VARARGS, ALLOCATIONTRANSFORM_SETVARS__DOC__ },
-            { NULL, NULL, 0, NULL }
-        };
-        
-    }
-    
-    ///////////////////////////////////////////////////////////////////////////
-    ///
-    
-    PyTypeObject PyOCIO_AllocationTransformType = {
-        PyVarObject_HEAD_INIT(NULL, 0)              //ob_size
-        OCIO_PYTHON_NAMESPACE(AllocationTransform), //tp_name
-        sizeof(PyOCIO_Transform),                   //tp_basicsize
-        0,                                          //tp_itemsize
-        0,                                          //tp_dealloc
-        0,                                          //tp_print
-        0,                                          //tp_getattr
-        0,                                          //tp_setattr
-        0,                                          //tp_compare
-        0,                                          //tp_repr
-        0,                                          //tp_as_number
-        0,                                          //tp_as_sequence
-        0,                                          //tp_as_mapping
-        0,                                          //tp_hash 
-        0,                                          //tp_call
-        0,                                          //tp_str
-        0,                                          //tp_getattro
-        0,                                          //tp_setattro
-        0,                                          //tp_as_buffer
-        Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        ALLOCATIONTRANSFORM__DOC__,                 //tp_doc 
-        0,                                          //tp_traverse 
-        0,                                          //tp_clear 
-        0,                                          //tp_richcompare 
-        0,                                          //tp_weaklistoffset 
-        0,                                          //tp_iter 
-        0,                                          //tp_iternext 
-        PyOCIO_AllocationTransform_methods,         //tp_methods 
-        0,                                          //tp_members 
-        0,                                          //tp_getset 
-        &PyOCIO_TransformType,                      //tp_base 
-        0,                                          //tp_dict 
-        0,                                          //tp_descr_get 
-        0,                                          //tp_descr_set 
-        0,                                          //tp_dictoffset 
-        (initproc) PyOCIO_AllocationTransform_init, //tp_init 
-        0,                                          //tp_alloc 
-        0,                                          //tp_new 
-        0,                                          //tp_free
-        0,                                          //tp_is_gc
-    };
-    
-    namespace
-    {
-        
-        ///////////////////////////////////////////////////////////////////////
-        ///
-        
-        int PyOCIO_AllocationTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds)
-        {
-            OCIO_PYTRY_ENTER()
-            AllocationTransformRcPtr ptr = AllocationTransform::Create();
-            int ret = BuildPyTransformObject<AllocationTransformRcPtr>(self, ptr);
-            char* allocation = NULL;
-            PyObject* pyvars = 0;
-            char* direction = NULL;
-            static const char *kwlist[] = { "allocation", "vars", "direction", NULL };
-            if(!PyArg_ParseTupleAndKeywords(args, kwds, "|sOs",
-                const_cast<char **>(kwlist),
-                &allocation, &pyvars, &direction)) return -1;
-            if(allocation) ptr->setAllocation(AllocationFromString(allocation));
-            if (pyvars)
-            {
-                std::vector<float> vars;
-                if(!FillFloatVectorFromPySequence(pyvars, vars) ||
-                    (vars.size() < 2 || vars.size() > 3))
-                {
-                    PyErr_SetString(PyExc_TypeError,
-                        "vars must be a float array, size 2 or 3");
-                    return 0;
-                }
-                ptr->setVars(static_cast<int>(vars.size()), &vars[0]);
-            }
-            if(direction) ptr->setDirection(TransformDirectionFromString(direction));
-            return ret;
-            OCIO_PYTRY_EXIT(-1)
-        }
-        
-        PyObject * PyOCIO_AllocationTransform_getAllocation(PyObject * self, PyObject *)
-        {
-            OCIO_PYTRY_ENTER()
-            ConstAllocationTransformRcPtr transform = GetConstAllocationTransform(self);
-            return PyString_FromString( AllocationToString( transform->getAllocation()) );
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_AllocationTransform_setAllocation(PyObject * self, PyObject * args)
-        {
-            OCIO_PYTRY_ENTER()
-            Allocation hwalloc;
-            if (!PyArg_ParseTuple(args,"O&:setAllocation",
-                ConvertPyObjectToAllocation, &hwalloc)) return NULL;
-            AllocationTransformRcPtr transform = GetEditableAllocationTransform(self);
-            transform->setAllocation(hwalloc);
-            Py_RETURN_NONE;
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_AllocationTransform_getNumVars(PyObject * self, PyObject *)
-        {
-            OCIO_PYTRY_ENTER()
-            ConstAllocationTransformRcPtr transform = GetConstAllocationTransform(self);
-            return PyInt_FromLong(transform->getNumVars());
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_AllocationTransform_getVars(PyObject * self, PyObject *)
-        {
-            OCIO_PYTRY_ENTER()
-            ConstAllocationTransformRcPtr transform = GetConstAllocationTransform(self);
-            std::vector<float> vars(transform->getNumVars());
-            if(!vars.empty()) transform->getVars(&vars[0]);
-            return CreatePyListFromFloatVector(vars);
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_AllocationTransform_setVars(PyObject * self, PyObject * args)
-        {
-            OCIO_PYTRY_ENTER()
-            PyObject * pyvars = 0;
-            if (!PyArg_ParseTuple(args,"O:setVars", &pyvars)) return NULL;
-            std::vector<float> vars;
-            if(!FillFloatVectorFromPySequence(pyvars, vars))
-            {
-                PyErr_SetString(PyExc_TypeError, "First argument must be a float array.");
-                return 0;
-            }
-            AllocationTransformRcPtr transform = GetEditableAllocationTransform(self);
-            if(!vars.empty()) transform->setVars(static_cast<int>(vars.size()), &vars[0]);
-            Py_RETURN_NONE;
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-    }
+namespace 
+{
 
+std::vector<float> getVarsStdVec(const AllocationTransformRcPtr & p) 
+{
+    std::vector<float> vars;
+    vars.resize(p->getNumVars());
+    p->getVars(vars.data());
+    return vars;
 }
-OCIO_NAMESPACE_EXIT
+
+void setVars(const AllocationTransformRcPtr & p, const std::vector<float> & vars)
+{
+    if (vars.size() < 2 || vars.size() > 3)
+    {
+        throw Exception("vars must be a float array, size 2 or 3");
+    }
+    p->setVars(vars.size(), vars.data());
+}
+
+} // namespace
+
+void bindPyAllocationTransform(py::module & m)
+{
+    AllocationTransformRcPtr DEFAULT = AllocationTransform::Create();
+
+    py::class_<AllocationTransform, 
+               AllocationTransformRcPtr /* holder */, 
+               Transform /* base */>(m, "AllocationTransform")
+        .def(py::init(&AllocationTransform::Create))
+        .def(py::init([](Allocation allocation, 
+                         const std::vector<float> & vars, 
+                         TransformDirection dir) 
+            {
+                AllocationTransformRcPtr p = AllocationTransform::Create();
+                p->setAllocation(allocation);
+                setVars(p, vars);
+                p->setDirection(dir);
+                p->validate();
+                return p;
+            }), 
+             "allocation"_a = DEFAULT->getAllocation(), 
+             "vars"_a = getVarsStdVec(DEFAULT),
+             "dir"_a = DEFAULT->getDirection())
+
+        .def("getAllocation", &AllocationTransform::getAllocation)
+        .def("setAllocation", &AllocationTransform::setAllocation, "allocation"_a)
+        .def("getVars", [](AllocationTransformRcPtr & self)
+            {
+                return getVarsStdVec(self);
+            })
+        .def("setVars", [](AllocationTransformRcPtr self, const std::vector<float> & vars)
+            { 
+                setVars(self, vars);
+            }, 
+             "vars"_a);
+}
+
+} // namespace OCIO_NAMESPACE

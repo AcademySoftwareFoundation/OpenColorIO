@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include <algorithm>
 
 #include "Context.cpp"
@@ -8,9 +9,10 @@
 #include "PathUtils.h"
 #include "Platform.h"
 #include "pystring/pystring.h"
-#include "UnitTest.h"
+#include "testutils/UnitTest.h"
 
 namespace OCIO = OCIO_NAMESPACE;
+
 
 #define STR(x) FIELD_STR(x)
 
@@ -22,8 +24,7 @@ static const std::string ociodir(STR(OCIO_SOURCE_DIR));
 // Method to compare paths.
 std::string SanitizePath(const char* path)
 {
-    std::string s{ pystring::os::path::normpath(path) };
-    return s;
+    return { pystring::os::path::normpath(path) };
 }
 
 OCIO_ADD_TEST(Context, search_paths)

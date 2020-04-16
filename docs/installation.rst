@@ -57,7 +57,7 @@ The basic requirements for building OCIO are:
 
 - cmake >= 3.10
 - \*Expat >= 2.2.5 (XML parser for CDL/CLF/CTF)
-- \*yaml-cpp >= 0.3.0 (YAML parser for Configs)
+- \*yaml-cpp >= 0.6.3 (YAML parser for Configs)
 - \*IlmBase (Half only) >= 2.3.0 (for half domain LUTs)
 - \*pystring >= 1.1.3
 
@@ -81,7 +81,7 @@ your build directory.
 
 Three ``OCIO_INSTALL_EXT_PACKAGES`` options are available::
 
-    cmake -DOCIO_INSTALL_EXT_PACKAGES=<NONE|MISING|ALL>
+    cmake -DOCIO_INSTALL_EXT_PACKAGES=<NONE|MISSING|ALL>
 
 - ``NONE`` (default): Use system installed packages. Fail if any are missing or 
   don't meet minimum version requireements.
@@ -155,6 +155,10 @@ Next, build everything (with the ``-j`` flag to build using 8
 threads)::
 
     $ make -j8
+
+Starting with CMake 3.12, you can instead run a portable parallel build::
+
+    $ cmake --build . -j 8
 
 This should complete in a few minutes. Finally, install the files into
 the specified location::
@@ -409,7 +413,7 @@ Alternatively, if your workflow has different requirements, you can
 copy the function and modify it as required, or use it as reference to
 write your own, better viewer setup function!
 
-.. literalinclude:: viewer.py
+.. literalinclude:: /share/nuke/ocionuke/viewer.py
    :language: python
 
 

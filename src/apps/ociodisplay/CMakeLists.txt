@@ -26,19 +26,18 @@ set_target_properties(ociodisplay PROPERTIES
 target_include_directories(ociodisplay 
 	SYSTEM
 	PRIVATE
-		${OPENGL_INCLUDE_DIR}
 		${GLEW_INCLUDE_DIRS}
 		${GLUT_INCLUDE_DIR}
+		${OPENGL_INCLUDE_DIR}
 )
 target_link_libraries(ociodisplay
 	PRIVATE 
-		apputils
-		oglbuilder
-		OpenColorIO
-		OpenImageIO
-		${OPENGL_LIBRARIES}
 		${GLEW_LIBRARIES}
 		${GLUT_LIBRARIES}
+		oglbuilder
+		OpenColorIO
+		${OPENGL_LIBRARIES}
+		OpenImageIO
 )
 install(TARGETS ociodisplay
 	RUNTIME DESTINATION bin

@@ -11,7 +11,7 @@ Small Script to extract reStructuredText from OCIO headers
 # TODO: extract void foo() { blah = 0 }; signatures correctly
 # TODO: handle typedef and enums better
 # TODO: handle OCIOEXPORT macro better
-# TODO: handle thow() funcs better
+# TODO: handle throw() funcs better
 
 RUNTEST = False
 
@@ -201,7 +201,7 @@ def ExtractRst(string, fileh):
         
         signature, end = getNextCodeLine(string, rst_type, thing.end)
         
-        # if we are a class work out the begining and end so we can
+        # if we are a class work out the beginning and end so we can
         # give function signatures the correct namespace
         if rst_type == "cpp:class::":
             tmp = { 'name': signature, 'start': thing.end, 'end': end }

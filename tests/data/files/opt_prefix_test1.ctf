@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="352553b2-27b6-4982-8be4-dff85d5d4998" version="1.5">
+
+    <Description>Test for "optimize separable prefix" functionality.</Description>
+
+    <LUT1D inBitDepth="16f" outBitDepth="10i">
+        <Description>linear to 1/2.2 gamma corrected code values</Description>
+        <Array dim="32 1">
+   0
+ 215
+ 294
+ 354
+ 403
+ 446
+ 485
+ 520
+ 553
+ 583
+ 612
+ 639
+ 665
+ 689
+ 713
+ 735
+ 757
+ 779
+ 799
+ 819
+ 838
+ 857
+ 875
+ 893
+ 911
+ 928
+ 944
+ 961
+ 977
+ 992
+1008
+1023
+        </Array>
+    </LUT1D>
+
+   <ExposureContrast inBitDepth="10i" outBitDepth="16f" style="linear">
+      <ECParams exposure="-1" contrast="1.5" pivot="0.18" />
+      <DynamicParameter param="EXPOSURE" />
+      <DynamicParameter param="CONTRAST" />
+   </ExposureContrast>
+
+    <Matrix inBitDepth="16f" outBitDepth="16f">
+    <Array dim="3 4 3">
+1.2 0 0 0.05
+0 1.1 0 0.15
+0 0 1.2 0.1
+    </Array>
+    </Matrix>
+
+    <InverseLUT1D inBitDepth="16f" outBitDepth="10i">
+        <Description>linear to 1/2.2 gamma corrected code values</Description>
+        <Array dim="17 3">
+ 0.00000  0.00000  0.00000
+ 0.28358  0.28358  0.28358
+ 0.38860  0.38860  0.38860
+ 0.46725  0.46725  0.46725
+ 0.53252  0.53252  0.53252
+ 0.58937  0.58937  0.58937
+ 0.64029  0.64029  0.64029
+ 0.68677  0.68677  0.68677
+ 0.72974  0.72974  0.72974
+ 0.76987  0.76987  0.76987
+ 0.80764  0.80764  0.80764
+ 0.84340  0.84340  0.84340
+ 0.87742  0.87742  0.87742
+ 0.90994  0.90994  0.90994
+ 0.94111  0.94111  0.94111
+ 0.97109  0.97109  0.97109
+ 1.00000  1.00000  1.00000
+        </Array>
+    </InverseLUT1D>
+
+   <ASC_CDL id="look 1" name="cdl" inBitDepth="10i" outBitDepth="16f" style="v1.2_Fwd">
+      <SOPNode>
+          <Slope> 1.35 1.1 0.71 </Slope>
+          <Offset>0.05 -0.08 0.11</Offset>
+          <Power>0.93 0.81 1.27</Power>
+      </SOPNode>
+      <SatNode>
+          <Saturation>
+              1.
+          </Saturation>
+      </SatNode>
+   </ASC_CDL>
+
+   <Log inBitDepth="16f" outBitDepth="32f" style="linToLog">
+      <LogParams channel="R" gamma="0.9" refWhite="781" refBlack="95" highlight="1.2" shadow="0.0045" />
+      <LogParams channel="G" gamma="0.8" refWhite="882" refBlack="94" highlight="1" shadow="0.0025" />
+      <LogParams channel="B" gamma="0.75" refWhite="783" refBlack="93" highlight="0.8" shadow="0.0035" />
+   </Log>
+
+    <Gamma inBitDepth="32f" outBitDepth="8i" style="moncurveFwd">
+        <GammaParams gamma="2.400000000000000" offset="0.055000" />
+    </Gamma>
+
+    <Range inBitDepth="8i" outBitDepth="32f">
+        <minInValue>16</minInValue>
+        <maxInValue>235</maxInValue>
+        <minOutValue>-0.1</minOutValue>
+        <maxOutValue>1.2</maxOutValue>
+    </Range>
+
+    <Gamma inBitDepth="32f" outBitDepth="12i" style="basicRev">
+        <GammaParams gamma="1.2" />
+    </Gamma>
+
+    <Matrix inBitDepth="12i" outBitDepth="12i">
+        <Array dim="3 3 3">
+1.8 -.1 -.2
+-.2 1.4 -.1
+-.1 -.2 1.5
+        </Array>
+    </Matrix>
+
+    <Gamma inBitDepth="12i" outBitDepth="10i" style="basicRev">
+        <GammaParams gamma="1.2" />
+    </Gamma>
+
+
+</ProcessList>

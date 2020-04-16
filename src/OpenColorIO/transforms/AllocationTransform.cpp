@@ -7,230 +7,195 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ops/Allocation/AllocationOp.h"
+#include "ops/allocation/AllocationOp.h"
 #include "OpBuilders.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
-    AllocationTransformRcPtr AllocationTransform::Create()
-    {
-        return AllocationTransformRcPtr(new AllocationTransform(), &deleter);
-    }
-    
-    void AllocationTransform::deleter(AllocationTransform* t)
-    {
-        delete t;
-    }
-    
-    
-    class AllocationTransform::Impl
-    {
-    public:
-        TransformDirection dir_;
-        Allocation allocation_;
-        std::vector<float> vars_;
-        
-        Impl() :
-            dir_(TRANSFORM_DIR_FORWARD),
-            allocation_(ALLOCATION_UNIFORM)
-        { }
+AllocationTransformRcPtr AllocationTransform::Create()
+{
+    return AllocationTransformRcPtr(new AllocationTransform(), &deleter);
+}
 
-        Impl(const Impl &) = delete;
+void AllocationTransform::deleter(AllocationTransform* t)
+{
+    delete t;
+}
 
-        ~Impl()
-        { }
-        
-        Impl& operator= (const Impl & rhs)
-        {
-            if (this != &rhs)
-            {
-                dir_ = rhs.dir_;
-                allocation_ = rhs.allocation_;
-                vars_ = rhs.vars_;
-            }
-            return *this;
-        }
-    };
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    AllocationTransform::AllocationTransform()
-        : m_impl(new AllocationTransform::Impl)
-    {
-    }
-    
-    TransformRcPtr AllocationTransform::createEditableCopy() const
-    {
-        AllocationTransformRcPtr transform = AllocationTransform::Create();
-        *(transform->m_impl) = *m_impl;
-        return transform;
-    }
-    
-    AllocationTransform::~AllocationTransform()
-    {
-        delete m_impl;
-        m_impl = NULL;
-    }
-    
-    AllocationTransform& AllocationTransform::operator= (const AllocationTransform & rhs)
+class AllocationTransform::Impl
+{
+public:
+    TransformDirection m_dir;
+    Allocation m_allocation;
+    std::vector<float> m_vars;
+
+    Impl() :
+        m_dir(TRANSFORM_DIR_FORWARD),
+        m_allocation(ALLOCATION_UNIFORM)
+    { }
+
+    Impl(const Impl &) = delete;
+
+    ~Impl()
+    { }
+
+    Impl& operator= (const Impl & rhs)
     {
         if (this != &rhs)
         {
-            *m_impl = *rhs.m_impl;
+            m_dir = rhs.m_dir;
+            m_allocation = rhs.m_allocation;
+            m_vars = rhs.m_vars;
         }
         return *this;
     }
-    
-    TransformDirection AllocationTransform::getDirection() const
-    {
-        return getImpl()->dir_;
-    }
-    
-    void AllocationTransform::setDirection(TransformDirection dir)
-    {
-        getImpl()->dir_ = dir;
-    }
+};
 
-    void AllocationTransform::validate() const
-    {
-        Transform::validate();
-
-        if (getImpl()->allocation_ == ALLOCATION_UNIFORM)
-        {
-            if(getImpl()->vars_.size()!=2 && getImpl()->vars_.size()!=0)
-            {
-                throw Exception("AllocationTransform: wrong number of values for the uniform allocation");
-            }
-        }
-        else if (getImpl()->allocation_ == ALLOCATION_LG2)
-        {
-            if(getImpl()->vars_.size()!=3 && getImpl()->vars_.size()!=2 && getImpl()->vars_.size()!=0)
-            {
-                throw Exception("AllocationTransform: wrong number of values for the logarithmic allocation");
-            }
-        }
-        else
-        {
-            throw Exception("AllocationTransform: invalid allocation type");
-        }
-    }
-
-    Allocation AllocationTransform::getAllocation() const
-    {
-        return getImpl()->allocation_;
-    }
-    
-    void AllocationTransform::setAllocation(Allocation allocation)
-    {
-        getImpl()->allocation_ = allocation;
-    }
-    
-    int AllocationTransform::getNumVars() const
-    {
-        return static_cast<int>(getImpl()->vars_.size());
-    }
-    
-    void AllocationTransform::getVars(float * vars) const
-    {
-        if(!getImpl()->vars_.empty())
-        {
-            memcpy(vars,
-                &getImpl()->vars_[0],
-                getImpl()->vars_.size()*sizeof(float));
-        }
-    }
-    
-    void AllocationTransform::setVars(int numvars, const float * vars)
-    {
-        getImpl()->vars_.resize(numvars);
-        
-        if(!getImpl()->vars_.empty())
-        {
-            memcpy(&getImpl()->vars_[0],
-                vars,
-                numvars*sizeof(float));
-        }
-    }
-    
-    std::ostream& operator<< (std::ostream& os, const AllocationTransform& t)
-    {
-        Allocation allocation(t.getAllocation());
-        int numVars(t.getNumVars());
-        std::vector<float> vars(numVars);
-        t.getVars(&vars[0]);
-
-        os << "<AllocationTransform ";
-        os << "direction=" << TransformDirectionToString(t.getDirection());
-        if (numVars)
-        {
-            os << ", allocation=" << AllocationToString(allocation) << ", ";
-            os << "vars=" << vars[0];
-            for (int i = 1; i < numVars; ++i)
-            {
-                os << " " << vars[i];
-            }
-        }
-        os << ">";
-        
-        return os;
-    }
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    void BuildAllocationOps(OpRcPtrVec & ops,
-                      const Config& /*config*/,
-                      const AllocationTransform& allocationTransform,
-                      TransformDirection dir)
-    {
-        TransformDirection combinedDir = CombineTransformDirections(dir,
-                                                  allocationTransform.getDirection());
-        
-        AllocationData data;
-        data.allocation = allocationTransform.getAllocation();
-        data.vars.resize(allocationTransform.getNumVars());
-        if(!data.vars.empty())
-        {
-            allocationTransform.getVars(&data.vars[0]);
-        }
-        
-        CreateAllocationOps(ops, data, combinedDir);
-    }
-}
-OCIO_NAMESPACE_EXIT
+///////////////////////////////////////////////////////////////////////////
 
 
-#ifdef OCIO_UNIT_TEST
-
-namespace OCIO = OCIO_NAMESPACE;
-#include "UnitTest.h"
-
-OCIO_ADD_TEST(AllocationTransform, allocation)
+AllocationTransform::AllocationTransform()
+    : m_impl(new AllocationTransform::Impl)
 {
-    OCIO::AllocationTransformRcPtr al = OCIO::AllocationTransform::Create();
-
-    al->setAllocation(OCIO::ALLOCATION_UNIFORM);
-    OCIO_CHECK_NO_THROW(al->validate());
-
-    std::vector<float> envs(2, 0.0f);
-    al->setVars(static_cast<int>(envs.size()), &envs[0]);
-    OCIO_CHECK_NO_THROW(al->validate());
-
-    envs.push_back(0.01f);
-    al->setVars(static_cast<int>(envs.size()), &envs[0]);
-    OCIO_CHECK_THROW(al->validate(), OCIO::Exception);
-
-    al->setAllocation(OCIO::ALLOCATION_LG2);
-    OCIO_CHECK_NO_THROW(al->validate());
-
-    envs.push_back(0.1f);
-    al->setVars(static_cast<int>(envs.size()), &envs[0]);
-    OCIO_CHECK_THROW(al->validate(), OCIO::Exception);
-
-    al->setVars(0, 0x0);
-    OCIO_CHECK_NO_THROW(al->validate());
 }
 
-#endif
+TransformRcPtr AllocationTransform::createEditableCopy() const
+{
+    AllocationTransformRcPtr transform = AllocationTransform::Create();
+    *(transform->m_impl) = *m_impl;
+    return transform;
+}
+
+AllocationTransform::~AllocationTransform()
+{
+    delete m_impl;
+    m_impl = NULL;
+}
+
+AllocationTransform& AllocationTransform::operator= (const AllocationTransform & rhs)
+{
+    if (this != &rhs)
+    {
+        *m_impl = *rhs.m_impl;
+    }
+    return *this;
+}
+
+TransformDirection AllocationTransform::getDirection() const  noexcept
+{
+    return getImpl()->m_dir;
+}
+
+void AllocationTransform::setDirection(TransformDirection dir)  noexcept
+{
+    getImpl()->m_dir = dir;
+}
+
+void AllocationTransform::validate() const
+{
+    Transform::validate();
+
+    if (getImpl()->m_allocation == ALLOCATION_UNIFORM)
+    {
+        if(getImpl()->m_vars.size()!=2 && getImpl()->m_vars.size()!=0)
+        {
+            throw Exception("AllocationTransform: wrong number of values for the uniform allocation");
+        }
+    }
+    else if (getImpl()->m_allocation == ALLOCATION_LG2)
+    {
+        if(getImpl()->m_vars.size()!=3 && getImpl()->m_vars.size()!=2 && getImpl()->m_vars.size()!=0)
+        {
+            throw Exception("AllocationTransform: wrong number of values for the logarithmic allocation");
+        }
+    }
+    else
+    {
+        throw Exception("AllocationTransform: invalid allocation type");
+    }
+}
+
+Allocation AllocationTransform::getAllocation() const
+{
+    return getImpl()->m_allocation;
+}
+
+void AllocationTransform::setAllocation(Allocation allocation)
+{
+    getImpl()->m_allocation = allocation;
+}
+
+int AllocationTransform::getNumVars() const
+{
+    return static_cast<int>(getImpl()->m_vars.size());
+}
+
+void AllocationTransform::getVars(float * vars) const
+{
+    if(!getImpl()->m_vars.empty())
+    {
+        memcpy(vars,
+            &getImpl()->m_vars[0],
+            getImpl()->m_vars.size()*sizeof(float));
+    }
+}
+
+void AllocationTransform::setVars(int numvars, const float * vars)
+{
+    getImpl()->m_vars.resize(numvars);
+
+    if(!getImpl()->m_vars.empty())
+    {
+        memcpy(&getImpl()->m_vars[0],
+            vars,
+            numvars*sizeof(float));
+    }
+}
+
+std::ostream& operator<< (std::ostream& os, const AllocationTransform& t)
+{
+    Allocation allocation(t.getAllocation());
+    int numVars(t.getNumVars());
+    std::vector<float> vars(numVars);
+    t.getVars(&vars[0]);
+
+    os << "<AllocationTransform ";
+    os << "direction=" << TransformDirectionToString(t.getDirection());
+    if (numVars)
+    {
+        os << ", allocation=" << AllocationToString(allocation) << ", ";
+        os << "vars=" << vars[0];
+        for (int i = 1; i < numVars; ++i)
+        {
+            os << " " << vars[i];
+        }
+    }
+    os << ">";
+
+    return os;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+
+
+void BuildAllocationOp(OpRcPtrVec & ops,
+                       const Config & /*config*/,
+                       const AllocationTransform & allocationTransform,
+                       TransformDirection dir)
+{
+    TransformDirection combinedDir = CombineTransformDirections(dir,
+                                                allocationTransform.getDirection());
+
+    AllocationData data;
+    data.allocation = allocationTransform.getAllocation();
+    data.vars.resize(allocationTransform.getNumVars());
+    if(!data.vars.empty())
+    {
+        allocationTransform.getVars(&data.vars[0]);
+    }
+
+    CreateAllocationOps(ops, data, combinedDir);
+}
+} // namespace OCIO_NAMESPACE
+

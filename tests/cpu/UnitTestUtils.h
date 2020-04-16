@@ -4,15 +4,16 @@
 #ifndef INCLUDED_OCIO_UNITTESTUTILS_H
 #define INCLUDED_OCIO_UNITTESTUTILS_H
 
-#ifdef OCIO_UNIT_TEST
 
 #include <fstream>
 
 #include <OpenColorIO/OpenColorIO.h>
+
+#include "MathUtils.h"
 #include "Op.h"
 #include "pystring/pystring.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 const char * getTestFilesDir();
@@ -62,31 +63,42 @@ OCIO_SHARED_PTR<LocalCachedFile> LoadTestFile(
     return DynamicPtrCast<LocalCachedFile>(cachedFile);
 }
 
-// Utility to mute the logging mechanism so the unit test output is clean.
-class MuteLogging
-{
-public:
-    MuteLogging();
-    MuteLogging(const MuteLogging &) = delete;
-    MuteLogging & operator=(const MuteLogging &) = delete;
-    ~MuteLogging();
-};
-
 inline void OptimizeOpVec(OpRcPtrVec & ops)
 {
-    OptimizeOpVec(ops, BIT_DEPTH_F32, OPTIMIZATION_DEFAULT);
+    OptimizeOpVec(ops, BIT_DEPTH_F32, BIT_DEPTH_F32, OPTIMIZATION_DEFAULT);
 }
 
 inline void OptimizeFinalizeOpVec(OpRcPtrVec & ops)
 {
-    OptimizeOpVec(ops, BIT_DEPTH_F32, OPTIMIZATION_DEFAULT);
-    FinalizeOpVec(ops, FINALIZATION_EXACT);
+    OptimizeOpVec(ops, BIT_DEPTH_F32, BIT_DEPTH_F32, OPTIMIZATION_DEFAULT);
+    ops.finalize(OPTIMIZATION_NONE);
 }
 
+// Relative comparison: check if the difference between value and expected
+// relative to (divided by) expected does not exceed the eps.  A minimum
+// expected value is used to limit the scaling of the difference and
+// avoid large relative differences for small numbers.
+template<typename T>
+inline bool EqualWithSafeRelError(T value,
+                                  T expected,
+                                  T eps,
+                                  T minExpected)
+{
+    // If value and expected are infinity, return true.
+    if (value == expected) return true;
+    if (IsNan(value) && IsNan(expected)) return true;
+    const float div = (expected > 0) ?
+        ((expected < minExpected) ? minExpected : expected) :
+        ((-expected < minExpected) ? minExpected : -expected);
+
+    return (
+        ((value > expected) ? value - expected : expected - value)
+        / div) <= eps;
 }
-OCIO_NAMESPACE_EXIT
 
 
-#endif // OCIO_UNIT_TEST
+}
+// namespace OCIO_NAMESPACE
+
 
 #endif // INCLUDED_OCIO_UNITTESTUTILS_H

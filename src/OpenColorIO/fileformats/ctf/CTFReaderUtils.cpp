@@ -7,17 +7,17 @@
 #include "fileformats/ctf/CTFReaderUtils.h"
 #include "Platform.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 namespace
 {
-static constexpr const char * INTERPOLATION_1D_LINEAR = "linear";
-static constexpr const char * INTERPOLATION_1D_CUBIC = "cubic";
-static constexpr const char * INTERPOLATION_DEFAULT = "default";
+static constexpr char INTERPOLATION_1D_LINEAR[] = "linear";
+static constexpr char INTERPOLATION_1D_CUBIC[] = "cubic";
+static constexpr char INTERPOLATION_DEFAULT[] = "default";
 
-static constexpr const char * INTERPOLATION_3D_LINEAR = "trilinear";
-static constexpr const char * INTERPOLATION_3D_TETRAHEDRAL = "tetrahedral";
+static constexpr char INTERPOLATION_3D_LINEAR[] = "trilinear";
+static constexpr char INTERPOLATION_3D_TETRAHEDRAL[] = "tetrahedral";
 
 }
 
@@ -54,8 +54,12 @@ const char * GetInterpolation1DName(Interpolation interp)
         return INTERPOLATION_1D_LINEAR;
     case INTERP_CUBIC:
         return INTERPOLATION_1D_CUBIC;
+
     case INTERP_DEFAULT:
-    default:
+    case INTERP_NEAREST:
+    case INTERP_TETRAHEDRAL:
+    case INTERP_BEST:
+    case INTERP_UNKNOWN:
         return INTERPOLATION_DEFAULT;
     };
 
@@ -95,13 +99,16 @@ const char * GetInterpolation3DName(Interpolation interp)
         return INTERPOLATION_3D_LINEAR;
     case INTERP_TETRAHEDRAL:
         return INTERPOLATION_3D_TETRAHEDRAL;
+
     case INTERP_DEFAULT:
-    default:
+    case INTERP_NEAREST:
+    case INTERP_CUBIC:
+    case INTERP_BEST:
+    case INTERP_UNKNOWN:
         return INTERPOLATION_DEFAULT;
     };
 
     return INTERPOLATION_DEFAULT;
 }
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE

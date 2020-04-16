@@ -6,7 +6,7 @@
 #include "fileformats/xmlutils/XMLWriterUtils.h"
 #include "ParseUtils.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 XmlFormatter::XmlFormatter(std::ostream& stream)
@@ -147,5 +147,4 @@ XmlElementWriter::~XmlElementWriter()
 {
 }
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE

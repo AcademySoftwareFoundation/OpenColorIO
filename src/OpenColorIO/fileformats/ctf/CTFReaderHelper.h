@@ -6,21 +6,21 @@
 
 #include "fileformats/xmlutils/XMLReaderHelper.h"
 #include "fileformats/ctf/CTFTransform.h"
+#include "fileformats/ctf/IndexMapping.h"
 #include "fileformats/FormatMetadata.h"
 #include "ops/OpArray.h"
-#include "ops/CDL/CDLOpData.h"
+#include "ops/cdl/CDLOpData.h"
 #include "ops/exposurecontrast/ExposureContrastOpData.h"
-#include "ops/FixedFunction/FixedFunctionOpData.h"
-#include "ops/Gamma/GammaOpData.h"
-#include "ops/IndexMapping.h"
-#include "ops/Log/LogOpData.h"
-#include "ops/Log/LogUtils.h"
-#include "ops/Lut1D/Lut1DOpData.h"
-#include "ops/Lut3D/Lut3DOpData.h"
-#include "ops/Range/RangeOpData.h"
+#include "ops/fixedfunction/FixedFunctionOpData.h"
+#include "ops/gamma/GammaOpData.h"
+#include "ops/log/LogOpData.h"
+#include "ops/log/LogUtils.h"
+#include "ops/lut1d/Lut1DOpData.h"
+#include "ops/lut3d/Lut3DOpData.h"
+#include "ops/range/RangeOpData.h"
 #include "ops/reference/ReferenceOpData.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 // Used by CLF/CTF parser.
@@ -57,13 +57,16 @@ public:
 
     // Get current xml transform version
     const CTFVersion & getVersion() const;
+    const CTFVersion & getCLFVersion() const;
+
+    bool isCLF() const;
 
 private:
     CTFReaderTransformElt() = delete;
 
     // The associated Transform.
     CTFReaderTransformPtr m_transform;
-    // Is it a clf file?
+    // Is it a clf file? Or is a clf parser requested.
     bool m_isCLF;
 };
 
@@ -331,6 +334,7 @@ public:
         ACESType,
         ExposureContrastType,
         FixedFunctionType,
+        FunctionType,
         GammaType,
         InvLut1DType,
         InvLut3DType,
@@ -362,12 +366,22 @@ public:
 
     const char * getTypeName() const override;
 
+    CTFReaderTransformPtr getTransform()
+    {
+        return m_transform;
+    }
+
     // Get the right reader using its type and
     // the xml transform version.
-    static CTFReaderOpEltRcPtr GetReader(Type type,
-                                         const CTFVersion & version);
+    static CTFReaderOpEltRcPtr GetReader(Type type, const CTFVersion & version, bool isCLF);
 
 protected:
+    void validateXmlParameters(const char ** atts) const noexcept;
+
+    // Op that implement a start function using the parent class start function
+    // need to implement this function.
+    virtual bool isOpParameterValid(const char * att) const noexcept;
+
     static BitDepth GetBitDepth(const std::string & str);
 
 protected:
@@ -391,6 +405,9 @@ public:
     {
         return m_fixedFunction;
     }
+
+protected:
+    bool isOpParameterValid(const char * att) const noexcept override;
 
 private:
     FixedFunctionOpDataRcPtr m_fixedFunction;
@@ -429,6 +446,8 @@ public:
     const CDLOpDataRcPtr & getCDL() const;
 
 protected:
+    bool isOpParameterValid(const char * att) const noexcept override;
+
     CDLOpDataRcPtr m_cdl;
 };
 
@@ -475,6 +494,32 @@ public:
         return m_fixedFunction;
     }
 
+protected:
+    bool isOpParameterValid(const char * att) const noexcept override;
+
+private:
+    FixedFunctionOpDataRcPtr m_fixedFunction;
+};
+
+class CTFReaderFunctionElt : public CTFReaderOpElt
+{
+public:
+    CTFReaderFunctionElt();
+    ~CTFReaderFunctionElt();
+
+    void start(const char **atts) override;
+    void end() override;
+
+    const OpDataRcPtr getOp() const override;
+
+    const FixedFunctionOpDataRcPtr getFixedFunction() const
+    {
+        return m_fixedFunction;
+    }
+
+protected:
+    bool isOpParameterValid(const char * att) const noexcept override;
+
 private:
     FixedFunctionOpDataRcPtr m_fixedFunction;
 };
@@ -502,6 +547,10 @@ public:
         unsigned int xmlLineNumber,
         const std::string & xmlFile) const;
 
+protected:
+    virtual bool isValid(const GammaOpData::Style style) const noexcept;
+    bool isOpParameterValid(const char * att) const noexcept override;
+
 private:
     GammaOpDataRcPtr m_gamma;
 };
@@ -513,6 +562,30 @@ public:
     ~CTFReaderGammaElt_1_5() {}
 
     void end() override;
+
+    CTFReaderGammaParamsEltRcPtr createGammaParamsElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile) const override;
+};
+
+class CTFReaderGammaElt_CTF_2_0 : public CTFReaderGammaElt_1_5
+{
+public:
+    CTFReaderGammaElt_CTF_2_0() : CTFReaderGammaElt_1_5() {}
+    ~CTFReaderGammaElt_CTF_2_0() {}
+
+protected:
+    bool isValid(const GammaOpData::Style style) const noexcept override;
+};
+
+// Same as CTF, except that alpha channel is not allowed
+class CTFReaderGammaElt_CLF_3_0 : public CTFReaderGammaElt_CTF_2_0
+{
+public:
+    CTFReaderGammaElt_CLF_3_0() : CTFReaderGammaElt_CTF_2_0() {}
+    ~CTFReaderGammaElt_CLF_3_0() {}
 
     CTFReaderGammaParamsEltRcPtr createGammaParamsElt(
         const std::string & name,
@@ -571,6 +644,9 @@ public:
 
     void endArray(unsigned int position) override;
 
+protected:
+    bool isOpParameterValid(const char * att) const noexcept override;
+
 private:
     Lut1DOpDataRcPtr m_invLut;
 };
@@ -593,9 +669,16 @@ public:
 
     void endArray(unsigned int position) override;
 
+protected:
+    bool isOpParameterValid(const char * att) const noexcept override;
+
 private:
     Lut3DOpDataRcPtr m_invLut;
 };
+
+
+class CTFReaderLogParamsElt;
+typedef OCIO_SHARED_PTR<CTFReaderLogParamsElt> CTFReaderLogParamsEltRcPtr;
 
 class CTFReaderLogElt : public CTFReaderOpElt
 {
@@ -620,22 +703,33 @@ public:
         return m_ctfParams;
     }
 
-    enum ParamType
-    {
-        NO_PARAMS = 0,
-        LEGACY_PARAMS,
-        NEW_PARAMS
-    };
-    ParamType getParamType() const { return m_paramType; }
-    void setParamType(ParamType paramType) { m_paramType = paramType; }
-
     void setBase(double base);
 
+    virtual CTFReaderLogParamsEltRcPtr createLogParamsElt(const std::string & name,
+                                                          ContainerEltRcPtr pParent,
+                                                          unsigned int xmlLineNumber,
+                                                          const std::string & xmlFile) const;
+
 protected:
+    bool isOpParameterValid(const char * att) const noexcept override;
+
     LogUtil::CTFParams m_ctfParams;
-    ParamType m_paramType = NO_PARAMS;
     bool m_baseSet = false;
     LogOpDataRcPtr m_log;
+};
+
+class CTFReaderLogElt_2_0 : public CTFReaderLogElt
+{
+public:
+    CTFReaderLogElt_2_0() : CTFReaderLogElt() {}
+    ~CTFReaderLogElt_2_0() {}
+
+    void end() override;
+
+    CTFReaderLogParamsEltRcPtr createLogParamsElt(const std::string & name,
+                                                  ContainerEltRcPtr pParent,
+                                                  unsigned int xmlLineNumber,
+                                                  const std::string & xmlFile) const override;
 };
 
 class CTFReaderLogParamsElt : public XmlReaderPlainElt
@@ -653,6 +747,23 @@ public:
     void end() override;
 
     void setRawData(const char * str, size_t len, unsigned int xmlLine) override;
+
+    bool parseCineon(const char ** atts, unsigned i, double & gamma, double & refWhite,
+                     double & refBlack, double & highlight, double & shadow);
+
+};
+
+class CTFReaderLogParamsElt_2_0 : public CTFReaderLogParamsElt
+{
+public:
+    CTFReaderLogParamsElt_2_0(const std::string & name,
+                              ContainerEltRcPtr pParent,
+                              unsigned int xmlLineNumber,
+                              const std::string & xmlFile)
+        : CTFReaderLogParamsElt(name, pParent, xmlLineNumber, xmlFile) {}
+    ~CTFReaderLogParamsElt_2_0() {}
+
+    void start(const char ** atts) override;
 };
 
 class CTFReaderLut1DElt : public CTFReaderOpElt, public CTFArrayMgt, public CTFIndexMapMgt
@@ -681,6 +792,8 @@ public:
     void endIndexMap(unsigned int position) override;
 
 protected:
+    bool isOpParameterValid(const char * att) const noexcept override;
+
     Lut1DOpDataRcPtr m_lut;
     IndexMapping     m_indexMapping;
 };
@@ -693,6 +806,9 @@ public:
     ~CTFReaderLut1DElt_1_4() {}
 
     void start(const char **atts) override;
+
+protected:
+    bool isOpParameterValid(const char * att) const noexcept override;
 };
 
 class CTFReaderLut1DElt_1_7 : public CTFReaderLut1DElt_1_4
@@ -732,6 +848,8 @@ public:
     void endIndexMap(unsigned int position) override;
 
 protected:
+    bool isOpParameterValid(const char * att) const noexcept override;
+
     Lut3DOpDataRcPtr m_lut;
     IndexMapping     m_indexMapping;
 };
@@ -823,6 +941,9 @@ public:
 
     void end() override;
 
+protected:
+    bool isOpParameterValid(const char * att) const noexcept override;
+
 private:
     bool m_isNoClamp;
 };
@@ -861,6 +982,9 @@ public:
         return m_reference;
     }
 
+protected:
+    bool isOpParameterValid(const char * att) const noexcept override;
+
 private:
     ReferenceOpDataRcPtr m_reference;
 };
@@ -880,6 +1004,9 @@ public:
     {
         return m_ec;
     }
+
+protected:
+    bool isOpParameterValid(const char * att) const noexcept override;
 
 private:
     ExposureContrastOpDataRcPtr m_ec;
@@ -916,7 +1043,6 @@ public:
     void setRawData(const char * str, size_t len, unsigned int xmlLine) override;
 };
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif

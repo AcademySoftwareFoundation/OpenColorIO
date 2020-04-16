@@ -31,7 +31,7 @@ endif()
 ### Try to find package ###
 
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
-    # Try to use pkg-config to get the verison
+    # Try to use pkg-config to get the version
     find_package(PkgConfig QUIET)
     pkg_check_modules(PC_YAMLCPP QUIET yaml-cpp)
 
@@ -93,15 +93,17 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     )
 
     # Get version from config if it was found.
-    # Important: The yaml-cpp interface changed between 0.3.0 and 0.5.0. 
-    # OCIO supports both, but relies on YAMLCPP_VERSION to set the OLDYAML
-    # property below, which tells the compiler which to use.
     if(PC_YAMLCPP_VERSION)
         set(YAMLCPP_VERSION "${PC_YAMLCPP_VERSION}")
     elseif(EXISTS "${YAMLCPP_INCLUDE_DIR}/yaml-cpp/iterator.h")
         set(YAMLCPP_VERSION "0.3.0")
+    elseif(EXISTS "${YAMLCPP_INCLUDE_DIR}/yaml-cpp/noncopyable.h")
+        # The version is higher than 0.3.0 but lower than 0.6.3
+        # i.e. the version 0.6.3 removes the file 'yaml-cpp/noncopyable.h.
+        set(YAMLCPP_VERSION "0.5.3")
     else()
-        set(YAMLCPP_VERSION "0.5.0")
+        # The only supported version.
+        set(YAMLCPP_VERSION "0.6.3")
     endif()
 
     # Override REQUIRED if package can be installed
@@ -145,13 +147,8 @@ if(NOT YAMLCPP_FOUND)
         "${_EXT_DIST_ROOT}/lib/libyaml-cpp${_YAMLCPP_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
     if(_YAMLCPP_TARGET_CREATE)
-        if("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU"
-                OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-            # C++11 deprecates std::auto_ptr
-            set(YAMLCPP_CXX_FLAGS "${YAMLCPP_CXX_FLAGS} -Wno-deprecated-declarations")
-            set(YAMLCPP_CXX_FLAGS "${YAMLCPP_CXX_FLAGS} -Wno-uninitialized")
-        elseif(MSVC)
-            set(YAMLCPP_CXX_FLAGS "${YAMLCPP_CXX_FLAGS} /EHsc /wd4267")
+        if(MSVC)
+            set(YAMLCPP_CXX_FLAGS "${YAMLCPP_CXX_FLAGS} /EHsc")
         endif()
 
         if(UNIX)
@@ -168,6 +165,8 @@ if(NOT YAMLCPP_FOUND)
             -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DBUILD_SHARED_LIBS:BOOL=OFF
+            -DYAML_BUILD_SHARED_LIBS:BOOL=OFF
+            -DYAML_CPP_BUILD_TESTS:BOOL=OFF
             -DYAML_CPP_BUILD_TOOLS:BOOL=OFF
             -DYAML_CPP_BUILD_CONTRIB:BOOL=OFF
             -DCMAKE_CXX_FLAGS=${YAMLCPP_CXX_FLAGS}
@@ -186,12 +185,7 @@ if(NOT YAMLCPP_FOUND)
             )
         endif()
 
-        if(YamlCpp_FIND_VERSION_MINOR LESS 6 AND YamlCpp_FIND_VERSION_PATCH LESS 3)
-            set(YAMLCPP_GIT_TAG "release-${YAMLCPP_VERSION}")
-        else()
-            set(YAMLCPP_GIT_TAG "yaml-cpp-${YAMLCPP_VERSION}")
-            set(YAMLCPP_CMAKE_ARGS ${YAMLCPP_CMAKE_ARGS} -DYAML_CPP_BUILD_TESTS:BOOL=OFF)
-        endif()
+        set(YAMLCPP_GIT_TAG "yaml-cpp-${YAMLCPP_VERSION}")
 
         # Hack to let imported target be built from ExternalProject_Add
         file(MAKE_DIRECTORY ${YAMLCPP_INCLUDE_DIR})
@@ -218,11 +212,6 @@ endif()
 ### Configure target ###
 
 if(_YAMLCPP_TARGET_CREATE)
-    if(YAMLCPP_VERSION VERSION_LESS "0.5.0")
-        set_target_properties(yamlcpp::yamlcpp PROPERTIES
-            INTERFACE_COMPILE_DEFINITIONS "OLDYAML")
-    endif()
-
     set_target_properties(yamlcpp::yamlcpp PROPERTIES
         IMPORTED_LOCATION ${YAMLCPP_LIBRARY}
         INTERFACE_INCLUDE_DIRECTORIES ${YAMLCPP_INCLUDE_DIR}

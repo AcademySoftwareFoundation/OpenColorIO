@@ -1,22 +1,20 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
+#include <random>
+#include <sstream>
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include <sstream>
-
 #include "Platform.h"
 
 #ifndef _WIN32
-#include <chrono>
-#include <random>
+#include <strings.h>
 #endif
 
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 const char * GetEnvVariable(const char * name)
@@ -34,6 +32,7 @@ void SetEnvVariable(const char * name, const char * value)
 
 namespace Platform
 {
+
 void Getenv (const char * name, std::string & value)
 {
 #ifdef _WIN32
@@ -50,7 +49,7 @@ void Getenv (const char * name, std::string & value)
 #else
     const char* val = ::getenv(name);
     value = (val && *val) ? val : "";
-#endif 
+#endif
 }
 
 void Setenv (const char * name, const std::string & value)
@@ -59,7 +58,7 @@ void Setenv (const char * name, const std::string & value)
     _putenv_s(name, value.c_str());
 #else
     ::setenv(name, value.c_str(), 1);
-#endif 
+#endif
 }
 
 int Strcasecmp(const char * str1, const char * str2)
@@ -80,11 +79,10 @@ int Strncasecmp(const char * str1, const char * str2, size_t n)
 #endif
 }
 
-void* AlignedMalloc(size_t size, size_t alignment)
+void * AlignedMalloc(size_t size, size_t alignment)
 {
 #ifdef _WIN32
-    void* memBlock = _aligned_malloc(size, alignment);
-    return memBlock;
+    return _aligned_malloc(size, alignment);
 #else
     void* memBlock = 0x0;
     if (!posix_memalign(&memBlock, alignment, size)) return memBlock;
@@ -101,13 +99,30 @@ void AlignedFree(void* memBlock)
 #endif
 }
 
-void CreateTempFilename(std::string & filename, const std::string & filenameExt)
+namespace
 {
-    // Note: Because of security issue, tmpnam could not be used.
+
+int GenerateRandomNumber()
+{
+    // Note: Read https://isocpp.org/files/papers/n3551.pdf for details.
+
+    static std::mt19937 engine{};
+    static std::uniform_int_distribution<> dist{};
+
+    return dist(engine);
+}
+
+}
+
+std::string CreateTempFilename(const std::string & filenameExt)
+{
+    std::string filename;
 
 #ifdef _WIN32
 
-    char tmpFilename[L_tmpnam];
+    // Note: Because of security issue, tmpnam could not be used.
+
+    char tmpFilename[L_tmpnam_s];
     if(tmpnam_s(tmpFilename))
     {
         throw Exception("Could not create a temporary file.");
@@ -117,158 +132,22 @@ void CreateTempFilename(std::string & filename, const std::string & filenameExt)
 
 #else
 
+    // Linux flavors must have a /tmp directory.
     std::stringstream ss;
-    ss << "/tmp/ocio";
-
-    // Obtain a seed from the system clock.
-    const unsigned seed 
-        = (unsigned)std::chrono::system_clock::now().time_since_epoch().count();
-    // Use the standard mersenne_twister_engine.
-    std::mt19937 generator(seed);
-    ss << generator();
+    ss << "/tmp/ocio_" << GenerateRandomNumber();
 
     filename = ss.str();
 
 #endif
 
     filename += filenameExt;
+
+    return filename;
 }
+
 
 
 } // Platform
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
-
-
-///////////////////////////////////////////////////////////////////////////////
-
-#ifdef OCIO_UNIT_TEST
-
-namespace OCIO = OCIO_NAMESPACE;
-#include "UnitTest.h"
-
-
-OCIO_ADD_TEST(Platform, envVariable)
-{
-    // Only validates the public API.
-    // Complete validations are done below using the private methods.
-
-    const char * path = OCIO::GetEnvVariable("PATH");
-    OCIO_CHECK_ASSERT(path && *path);
-
-    OCIO::SetEnvVariable("MY_DUMMY_ENV", "SomeValue");
-    const char * value = OCIO::GetEnvVariable("MY_DUMMY_ENV");
-    OCIO_CHECK_ASSERT(value && *value);
-    OCIO_CHECK_EQUAL(std::string(value), "SomeValue");
-
-    OCIO::SetEnvVariable("MY_DUMMY_ENV", "");
-    value = OCIO::GetEnvVariable("MY_DUMMY_ENV");
-    OCIO_CHECK_ASSERT(!value || !*value);
-}
-
-OCIO_ADD_TEST(Platform, getenv)
-{
-    std::string env;
-    OCIO::Platform::Getenv("NotExistingEnvVariable", env);
-    OCIO_CHECK_ASSERT(env.empty());
-
-    OCIO::Platform::Getenv("PATH", env);
-    OCIO_CHECK_ASSERT(!env.empty());
-
-    OCIO::Platform::Getenv("NotExistingEnvVariable", env);
-    OCIO_CHECK_ASSERT(env.empty());
-
-    OCIO::Platform::Getenv("PATH", env);
-    OCIO_CHECK_ASSERT(!env.empty());
-}
-
-OCIO_ADD_TEST(Platform, setenv)
-{
-    {
-        OCIO::Platform::Setenv("MY_DUMMY_ENV", "SomeValue");
-        std::string env;
-        OCIO::Platform::Getenv("MY_DUMMY_ENV", env);
-        OCIO_CHECK_ASSERT(!env.empty());
-
-        OCIO_CHECK_ASSERT(0==strcmp("SomeValue", env.c_str()));
-        OCIO_CHECK_EQUAL(strlen("SomeValue"), env.size());
-    }
-    {
-        OCIO::Platform::Setenv("MY_DUMMY_ENV", " ");
-        std::string env;
-        OCIO::Platform::Getenv("MY_DUMMY_ENV", env);
-        OCIO_CHECK_ASSERT(!env.empty());
-
-        OCIO_CHECK_ASSERT(0==strcmp(" ", env.c_str()));
-        OCIO_CHECK_EQUAL(strlen(" "), env.size());
-    }
-    {
-        OCIO::Platform::Setenv("MY_DUMMY_ENV", "");
-        std::string env;
-        OCIO::Platform::Getenv("MY_DUMMY_ENV", env);
-        OCIO_CHECK_ASSERT(env.empty());
-    }
-#ifdef _WIN32
-    {
-        SetEnvironmentVariable("MY_WINDOWS_DUMMY_ENV", "1");
-        std::string env;
-        OCIO::Platform::Getenv("MY_WINDOWS_DUMMY_ENV", env);
-        OCIO_CHECK_EQUAL(env, std::string("1"));
-    }
-    {
-        SetEnvironmentVariable("MY_WINDOWS_DUMMY_ENV", " ");
-        std::string env;
-        OCIO::Platform::Getenv("MY_WINDOWS_DUMMY_ENV", env);
-        OCIO_CHECK_EQUAL(env, std::string(" "));
-    }
-    {
-        SetEnvironmentVariable("MY_WINDOWS_DUMMY_ENV", "");
-        std::string env;
-        OCIO::Platform::Getenv("MY_WINDOWS_DUMMY_ENV", env);
-        OCIO_CHECK_ASSERT(env.empty());
-    }
-#endif
-}
-
-OCIO_ADD_TEST(Platform, string_compare)
-{
-    OCIO_CHECK_EQUAL(0, OCIO::Platform::Strcasecmp("TtOoPp", "TtOoPp"));
-    OCIO_CHECK_EQUAL(0, OCIO::Platform::Strcasecmp("TtOoPp", "ttOoPp"));
-    OCIO_CHECK_NE(0, OCIO::Platform::Strcasecmp("TtOoPp", "tOoPp"));
-    OCIO_CHECK_NE(0, OCIO::Platform::Strcasecmp("TtOoPp", "TtOoPp1"));
-
-    OCIO_CHECK_EQUAL(0, OCIO::Platform::Strncasecmp("TtOoPp", "TtOoPp", 2));
-    OCIO_CHECK_EQUAL(0, OCIO::Platform::Strncasecmp("TtOoPp", "ttOoPp", 2));
-    OCIO_CHECK_EQUAL(0, OCIO::Platform::Strncasecmp("TtOoPp", "ttOOOO", 2));
-    OCIO_CHECK_NE(0, OCIO::Platform::Strcasecmp("TtOoPp", "tOoPp"));
-    OCIO_CHECK_NE(0, OCIO::Platform::Strcasecmp("TtOoPp", "TOoPp"));
-}
-
-OCIO_ADD_TEST(Platform, aligned_memory_test)
-{
-    size_t alignement = 16u;
-    void* memBlock = OCIO::Platform::AlignedMalloc(1001, alignement);
-
-    OCIO_CHECK_ASSERT(memBlock);
-    OCIO_CHECK_EQUAL(((uintptr_t)memBlock) % alignement, 0);
-
-    OCIO::Platform::AlignedFree(memBlock);
-}
-
-
-OCIO_ADD_TEST(Platform, CreateTempFilename)
-{
-    std::string f1, f2;
-
-    OCIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(f1, ""));
-    OCIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(f2, ""));
-    OCIO_CHECK_ASSERT(f1!=f2);
-
-    OCIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(f1, ".ctf"));
-    OCIO_CHECK_NO_THROW(OCIO::Platform::CreateTempFilename(f2, ".ctf"));
-    OCIO_CHECK_ASSERT(f1!=f2);
-}
-
-#endif // OCIO_UNIT_TEST

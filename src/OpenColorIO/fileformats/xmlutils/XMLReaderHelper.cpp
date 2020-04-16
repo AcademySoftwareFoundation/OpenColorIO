@@ -9,7 +9,7 @@
 #include "ParseUtils.h"
 #include "Platform.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 XmlReaderElement::XmlReaderElement(const std::string & name,
                                    unsigned int xmlLineNumber,
@@ -42,10 +42,17 @@ void XmlReaderElement::setContext(const std::string & name,
 void XmlReaderElement::throwMessage(const std::string & error) const
 {
     std::ostringstream os;
-    os << "Error parsing file (" << getXmlFile().c_str() << "). ";
-    os << "Error is: " << error.c_str();
-    os << " At line (" << getXmlLineNumber() << ")";
+    os << "At line " << getXmlLineNumber() << ": ";
+    os << error.c_str();
     throw Exception(os.str().c_str());
+}
+
+void XmlReaderElement::logParameterWarning(const char * param) const
+{
+    std::ostringstream oss;
+    oss << getXmlFile().c_str() << "(" << getXmlLineNumber() << "): ";
+    oss << "Unrecognized attribute '" << param << "' of '" << getName() << "'.";
+    LogWarning(oss.str().c_str());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -67,11 +74,15 @@ XmlReaderDummyElt::XmlReaderDummyElt(const std::string & name,
                         xmlFile)
 {
     std::ostringstream oss;
-    oss << "Ignore element '" << getName().c_str();
-    oss << "' (line " << getXmlLineNumber() << ") ";
-    oss << "where its parent is '" << getParent()->getName().c_str();
-    oss << "' (line " << getParent()->getXmlLineNumber() << ") ";
-    oss << (msg ? msg : "") << ": " << getXmlFile().c_str();
+    oss << getXmlFile().c_str() << "(" << getXmlLineNumber() << "): ";
+    oss << "Unrecognized element '" << getName();
+    oss << "' where its parent is '" << getParent()->getName().c_str();
+    oss << "' (" << getParent()->getXmlLineNumber() << ")";
+    if (msg)
+    {
+        oss << ": " << msg;
+    }
+    oss << ".";
 
     LogWarning(oss.str());
 }
@@ -270,5 +281,4 @@ void XmlReaderSaturationElt::setRawData(const char* str, size_t len, unsigned in
     m_contentData += std::string(str, len) + " ";
 }
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE

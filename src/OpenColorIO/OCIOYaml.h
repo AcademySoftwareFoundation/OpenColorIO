@@ -6,17 +6,17 @@
 #ifndef INCLUDED_OCIO_YAML_H
 #define INCLUDED_OCIO_YAML_H
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
-    
-    class OCIOYaml
-    {
-    public:
-        void open(std::istream& istream, ConfigRcPtr& c, const char* filename = NULL) const;
-        void write(std::ostream& ostream, const Config* c) const;
-    };
-    
-}
-OCIO_NAMESPACE_EXIT
+
+namespace OCIOYaml
+{
+
+void Read(std::istream & istream, ConfigRcPtr & c, const char * filename);
+void Write(std::ostream & ostream, const Config & c);
+
+} // namespace OCIOYaml
+
+} // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_YAML_H

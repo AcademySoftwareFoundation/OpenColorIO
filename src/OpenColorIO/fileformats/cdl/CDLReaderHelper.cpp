@@ -4,7 +4,7 @@
 #include "fileformats/cdl/CDLReaderHelper.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 CDLReaderColorCorrectionElt::CDLReaderColorCorrectionElt(
@@ -86,7 +86,4 @@ void CDLReaderColorCorrectionElt::appendMetadata(const std::string & name, const
     m_transformData->getFormatMetadata().getChildrenElements().push_back(item);
 }
 
-
-}
-OCIO_NAMESPACE_EXIT
-
+} // namespace OCIO_NAMESPACE

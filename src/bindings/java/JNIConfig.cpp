@@ -8,7 +8,7 @@
 #include "OpenColorIO/OpenColorIO.h"
 #include "OpenColorIOJNI.h"
 #include "JNIUtil.h"
-OCIO_NAMESPACE_USING
+using namespace OCIO_NAMESPACE;
 
 JNIEXPORT void JNICALL
 Java_org_OpenColorIO_Config_dispose(JNIEnv * env, jobject self)
@@ -420,7 +420,7 @@ Java_org_OpenColorIO_Config_addDisplay(JNIEnv * env, jobject self, jstring displ
                     GetJStringValue(env, view)(),
                     GetJStringValue(env, colorSpaceName)(),
                     GetJStringValue(env, looks)());
-    
+
     OCIO_JNITRY_EXIT()
 }
 */

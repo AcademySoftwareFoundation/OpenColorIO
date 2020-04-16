@@ -1,11 +1,42 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include <algorithm>
+
 #include "transforms/FileTransform.cpp"
-#include "UnitTest.h"
+
+#include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
+
 namespace OCIO = OCIO_NAMESPACE;
+
+
+OCIO_ADD_TEST(FileTransform, basic)
+{
+    auto ft = OCIO::FileTransform::Create();
+    OCIO_CHECK_EQUAL(ft->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    ft->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_EQUAL(ft->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO_CHECK_EQUAL(std::string(ft->getSrc()), "");
+    const std::string src{ "source" };
+    ft->setSrc(src.c_str());
+    OCIO_CHECK_EQUAL(src, ft->getSrc());
+
+    OCIO_CHECK_EQUAL(std::string(ft->getCCCId()), "");
+    const std::string cccid{ "cccid" };
+    ft->setCCCId(cccid.c_str());
+    OCIO_CHECK_EQUAL(cccid, ft->getCCCId());
+
+    OCIO_CHECK_EQUAL(ft->getCDLStyle(), OCIO::CDL_NO_CLAMP);
+    ft->setCDLStyle(OCIO::CDL_ASC);
+    OCIO_CHECK_EQUAL(ft->getCDLStyle(), OCIO::CDL_ASC);
+
+    OCIO_CHECK_EQUAL(ft->getInterpolation(), OCIO::INTERP_UNKNOWN);
+    ft->setInterpolation(OCIO::INTERP_LINEAR);
+    OCIO_CHECK_EQUAL(ft->getInterpolation(), OCIO::INTERP_LINEAR);
+}
 
 OCIO_ADD_TEST(FileTransform, load_file_ok)
 {
@@ -64,7 +95,7 @@ OCIO_ADD_TEST(FileTransform, load_file_ok)
     OCIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(clfLut3Transform));
     OCIO_CHECK_ASSERT(!proc->isNoOp());
 
-    const std::string ctFFfTransform("ff_aces_redmod.ctf");
+    const std::string ctFFfTransform("fixed_function.ctf");
     OCIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(ctFFfTransform));
     OCIO_CHECK_ASSERT(!proc->isNoOp());
 
@@ -105,13 +136,13 @@ OCIO_ADD_TEST(FileTransform, load_file_fail)
     // Invalid ASCII file.
     const std::string unKnown("error_unknown_format.txt");
     OCIO_CHECK_THROW_WHAT(OCIO::GetFileTransformProcessor(unKnown),
-                          OCIO::Exception, "error_unknown_format.txt failed while loading ops");
+                          OCIO::Exception, "error_unknown_format.txt' could not be loaded");
 
     // Unsupported file extension.
     // It's in fact a binary jpg file i.e. all readers must fail.
     const std::string binaryFile("rgb-cmy.jpg");
     OCIO_CHECK_THROW_WHAT(OCIO::GetFileTransformProcessor(binaryFile),
-                          OCIO::Exception, "rgb-cmy.jpg failed while loading ops");
+                          OCIO::Exception, "rgb-cmy.jpg' could not be loaded");
 
     // Supported file extension with a wrong content.
     // It's in fact a binary png file i.e. all readers must fail.

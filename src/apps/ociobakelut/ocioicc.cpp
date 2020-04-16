@@ -16,7 +16,7 @@
 #include "lcms2.h"
 #include "lcms2_plugin.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 
@@ -150,7 +150,7 @@ void SaveICCProfileToFile(const std::string & outputfile,
     //   `- cmsSigMatrixElemType
     //    `- cmsSigCurveSetElemType
     //
-    
+
     if(verbose)
         std::cout << "[OpenColorIO INFO]: Adding AToB0Tag\n";
     cmsPipeline* AToB0Tag = cmsPipelineAlloc(NULL, 3, 3);
@@ -159,7 +159,7 @@ void SaveICCProfileToFile(const std::string & outputfile,
 
     // cmsSigCLutElemType
     cmsStage* AToB0Clut = cmsStageAllocCLut16bit(NULL, cubesize, 3, 3, NULL);
-    
+
     if(verbose)
         std::cout << "[OpenColorIO INFO]: Sampling AToB0 CLUT from Display to Lab\n";
     cmsStageSampleCLut16bit(AToB0Clut, Display2PCS_Sampler16, &data, 0);
@@ -218,10 +218,9 @@ void SaveICCProfileToFile(const std::string & outputfile,
         std::cout << "[OpenColorIO INFO]: Writing " << outputfile << std::endl;
     cmsSaveProfileToFile(hProfile, outputfile.c_str());
     cmsCloseProfile(hProfile);
-    
+
     if(verbose)
         std::cout << "[OpenColorIO INFO]: Finished\n";
 }
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE

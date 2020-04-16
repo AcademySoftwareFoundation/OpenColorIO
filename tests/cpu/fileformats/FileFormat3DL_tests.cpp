@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include "fileformats/FileFormat3DL.cpp"
 
-namespace OCIO = OCIO_NAMESPACE;
-#include "UnitTest.h"
+#include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
+
+namespace OCIO = OCIO_NAMESPACE;
 
 
 OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & fileName)
@@ -66,14 +68,12 @@ OCIO_ADD_TEST(FileFormat3DL, bake)
     std::ostringstream outputFlame;
     baker->bake(outputFlame);
 
-    std::vector<std::string> osvecFlame;
-    pystring::splitlines(outputFlame.str(), osvecFlame);
+    const StringUtils::StringVec osvecFlame = StringUtils::SplitByLines(outputFlame.str());
 
     std::ostringstream outputLustre;
     baker->setFormat("lustre");
     baker->bake(outputLustre);
-    std::vector<std::string> osvecLustre;
-    pystring::splitlines(outputLustre.str(), osvecLustre);
+    const StringUtils::StringVec osvecLustre = StringUtils::SplitByLines(outputLustre.str());
 
     std::ostringstream bout;
     bout << "3DMESH" << "\n";
@@ -91,8 +91,7 @@ OCIO_ADD_TEST(FileFormat3DL, bake)
     bout << "LUT8" << "\n";
     bout << "gamma 1.0" << "\n";
 
-    std::vector<std::string> resvec;
-    pystring::splitlines(bout.str(), resvec);
+    const StringUtils::StringVec resvec = StringUtils::SplitByLines(bout.str());
     OCIO_CHECK_EQUAL(resvec.size(), osvecLustre.size());
     OCIO_CHECK_EQUAL(resvec.size() - 4, osvecFlame.size());
 

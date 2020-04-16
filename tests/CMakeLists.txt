@@ -2,15 +2,22 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 add_subdirectory(data)
+
 if(OCIO_BUILD_TESTS)
+    add_subdirectory(testutils)
+    add_subdirectory(utils)
 	add_subdirectory(cpu)
+	add_subdirectory(apphelpers)
 endif()
+
 if(OCIO_BUILD_GPU_TESTS)
 	add_subdirectory(gpu)
 endif()
+
 if(OCIO_BUILD_JAVA)
 	add_subdirectory(java)
 endif()
-if(OCIO_BUILD_PYTHON)
-	add_subdirectory(python)
-endif()
+
+#if(OCIO_BUILD_PYTHON)
+#	add_subdirectory(python)
+#endif()

@@ -10,7 +10,7 @@
 #include "OpenEXR/half.h"
 
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 // Returns a double since often times a ratio of calls to this function is used
@@ -21,6 +21,8 @@ double GetBitDepthMaxValue(BitDepth in);
 // True if the bit depth is a float.
 bool IsFloatBitDepth(BitDepth in);
 
+// Return the size in bytes of one channel.
+unsigned GetChannelSizeInBytes(BitDepth in);
 
 // Metaprogramming requires templated structures to access
 // some bit depth information at compile time.
@@ -160,7 +162,6 @@ struct Converter<BIT_DEPTH_F32>
 };
 
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_BIT_DEPTH_UTILS_H

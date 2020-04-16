@@ -10,7 +10,7 @@
 #include "Op.h"
 
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 struct GenericImageDesc
@@ -20,7 +20,7 @@ struct GenericImageDesc
 
     ptrdiff_t m_xStrideBytes = 0;
     ptrdiff_t m_yStrideBytes = 0;
-    
+
     char * m_rData = nullptr;
     char * m_gData = nullptr;
     char * m_bData = nullptr;
@@ -34,10 +34,10 @@ struct GenericImageDesc
     // Is the image buffer a 32-bit float image buffer?
     bool m_isFloat      = false;
 
-    
+
     // Resolves all AutoStride.
     void init(const ImageDesc & img, BitDepth bitDepth, const ConstOpCPURcPtr & bitDepthOp);
-    
+
     // Is the image buffer a packed RGBA 32-bit float buffer?
     bool isPackedFloatRGBA() const;
     // Is the image buffer a RGBA packed buffer?
@@ -62,7 +62,6 @@ struct Generic
                                       long imagePixelStartIndex);
 };
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif

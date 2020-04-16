@@ -9,7 +9,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 class ArrayBase
@@ -194,7 +194,6 @@ protected:
 typedef ArrayT<double> ArrayDouble;
 typedef ArrayT<float> Array;
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif

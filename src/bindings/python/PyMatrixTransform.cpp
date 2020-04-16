@@ -1,417 +1,144 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <Python.h>
-#include <OpenColorIO/OpenColorIO.h>
+#include "PyTransform.h"
 
-#include "PyUtil.h"
-#include "PyDoc.h"
-
-#define GetConstMatrixTransform(pyobject) GetConstPyOCIO<PyOCIO_Transform, \
-    ConstMatrixTransformRcPtr, MatrixTransform>(pyobject, \
-    PyOCIO_MatrixTransformType)
-
-#define GetEditableMatrixTransform(pyobject) GetEditablePyOCIO<PyOCIO_Transform, \
-    MatrixTransformRcPtr, MatrixTransform>(pyobject, \
-    PyOCIO_MatrixTransformType)
-
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
-    
-    namespace
-    {
-        
-        ///////////////////////////////////////////////////////////////////////
-        ///
-        
-        int PyOCIO_MatrixTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds);
-        PyObject * PyOCIO_MatrixTransform_equals(PyObject * self,  PyObject * args);
-        PyObject * PyOCIO_MatrixTransform_getMatrix(PyObject * self, PyObject *);
-        PyObject * PyOCIO_MatrixTransform_setMatrix(PyObject * self,  PyObject * args);
-        PyObject * PyOCIO_MatrixTransform_getOffset(PyObject * self, PyObject *);
-        PyObject * PyOCIO_MatrixTransform_setOffset(PyObject * self,  PyObject * args);
-        PyObject * PyOCIO_MatrixTransform_Identity(PyObject * cls, PyObject *);
-        PyObject * PyOCIO_MatrixTransform_Fit(PyObject * cls, PyObject * args);
-        PyObject * PyOCIO_MatrixTransform_Sat(PyObject * cls, PyObject * args);
-        PyObject * PyOCIO_MatrixTransform_Scale(PyObject * cls, PyObject * args);
-        PyObject * PyOCIO_MatrixTransform_View(PyObject * cls, PyObject * args);
-        
-        ///////////////////////////////////////////////////////////////////////
-        ///
-        
-        PyMethodDef PyOCIO_MatrixTransform_methods[] = {
-            { "equals",
-            PyOCIO_MatrixTransform_equals, METH_VARARGS, MATRIXTRANSFORM_EQUALS__DOC__ },
-            { "getMatrix",
-            (PyCFunction) PyOCIO_MatrixTransform_getMatrix, METH_NOARGS, MATRIXTRANSFORM_GETMATRIX__DOC__ },
-            { "setMatrix",
-            PyOCIO_MatrixTransform_setMatrix, METH_VARARGS, MATRIXTRANSFORM_SETMATRIX__DOC__ },
-            { "getOffset",
-            (PyCFunction) PyOCIO_MatrixTransform_getOffset, METH_NOARGS, MATRIXTRANSFORM_GETOFFSET__DOC__ },
-            { "setOffset",
-            PyOCIO_MatrixTransform_setOffset, METH_VARARGS, MATRIXTRANSFORM_SETOFFSET__DOC__ },
-            { "Identity",
-            (PyCFunction) PyOCIO_MatrixTransform_Identity, METH_NOARGS | METH_CLASS, MATRIXTRANSFORM_IDENTITY__DOC__ },
-            { "Fit",
-            PyOCIO_MatrixTransform_Fit, METH_VARARGS | METH_CLASS, MATRIXTRANSFORM_FIT__DOC__ },
-            { "Sat",
-            PyOCIO_MatrixTransform_Sat, METH_VARARGS | METH_CLASS, MATRIXTRANSFORM_SAT__DOC__ },
-            { "Scale",
-            PyOCIO_MatrixTransform_Scale, METH_VARARGS | METH_CLASS, MATRIXTRANSFORM_SCALE__DOC__ },
-            { "View",
-            PyOCIO_MatrixTransform_View, METH_VARARGS | METH_CLASS, MATRIXTRANSFORM_VIEW__DOC__ },
-            { NULL, NULL, 0, NULL }
-        };
-    }
-    
-    ///////////////////////////////////////////////////////////////////////////
-    ///
-    
-    PyTypeObject PyOCIO_MatrixTransformType = {
-        PyVarObject_HEAD_INIT(NULL, 0)
-        OCIO_PYTHON_NAMESPACE(MatrixTransform),     //tp_name
-        sizeof(PyOCIO_Transform),                   //tp_basicsize
-        0,                                          //tp_itemsize
-        0,                                          //tp_dealloc
-        0,                                          //tp_print
-        0,                                          //tp_getattr
-        0,                                          //tp_setattr
-        0,                                          //tp_compare
-        0,                                          //tp_repr
-        0,                                          //tp_as_number
-        0,                                          //tp_as_sequence
-        0,                                          //tp_as_mapping
-        0,                                          //tp_hash 
-        0,                                          //tp_call
-        0,                                          //tp_str
-        0,                                          //tp_getattro
-        0,                                          //tp_setattro
-        0,                                          //tp_as_buffer
-        Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        MATRIXTRANSFORM__DOC__,                     //tp_doc 
-        0,                                          //tp_traverse 
-        0,                                          //tp_clear 
-        0,                                          //tp_richcompare 
-        0,                                          //tp_weaklistoffset 
-        0,                                          //tp_iter 
-        0,                                          //tp_iternext 
-        PyOCIO_MatrixTransform_methods,             //tp_methods 
-        0,                                          //tp_members 
-        0,                                          //tp_getset 
-        &PyOCIO_TransformType,                      //tp_base 
-        0,                                          //tp_dict 
-        0,                                          //tp_descr_get 
-        0,                                          //tp_descr_set 
-        0,                                          //tp_dictoffset 
-        (initproc) PyOCIO_MatrixTransform_init,     //tp_init 
-        0,                                          //tp_alloc 
-        0,                                          //tp_new 
-        0,                                          //tp_free
-        0,                                          //tp_is_gc
-    };
-    
-    namespace
-    {
-        
-        ///////////////////////////////////////////////////////////////////////
-        ///
-        
-        int PyOCIO_MatrixTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds)
-        {
-            OCIO_PYTRY_ENTER()
-            MatrixTransformRcPtr ptr = MatrixTransform::Create();
-            int ret = BuildPyTransformObject<MatrixTransformRcPtr>(self, ptr);
-            PyObject* pymatrix = 0;
-            PyObject* pyoffset = 0;
-            char* direction = NULL;
-            static const char *kwlist[] = { "matrix", "offset", "direction", NULL };
-            if(!PyArg_ParseTupleAndKeywords(args, kwds, "|OOs",
-                const_cast<char **>(kwlist),
-                &pymatrix, &pyoffset, &direction)) return -1;
-            if (pymatrix)
-            {
-                std::vector<double> matrix;
-                if(!FillDoubleVectorFromPySequence(pymatrix, matrix) ||
-                    (matrix.size() != 16))
-                {
-                    PyErr_SetString(PyExc_TypeError,
-                        "matrix must be a double array, size 16");
-                    return 0;
-                }
-                ptr->setMatrix(&matrix[0]);
-            }
-            if (pyoffset)
-            {
-                std::vector<double> offset;
-                if(!FillDoubleVectorFromPySequence(pyoffset, offset) ||
-                    (offset.size() != 4))
-                {
-                    PyErr_SetString(PyExc_TypeError,
-                        "offset must be a double array, size 4");
-                    return 0;
-                }
-                ptr->setOffset(&offset[0]);
-            }
-            if(direction) ptr->setDirection(TransformDirectionFromString(direction));
-            return ret;
-            OCIO_PYTRY_EXIT(-1)
-        }
-        
-        PyObject * PyOCIO_MatrixTransform_equals(PyObject * self,  PyObject * args)
-        {
-            OCIO_PYTRY_ENTER()
-            PyObject* pyobject = 0;
-            if (!PyArg_ParseTuple(args,"O:equals",
-                &pyobject)) return NULL;
-            if(!IsPyOCIOType(pyobject, PyOCIO_MatrixTransformType))
-                throw Exception("MatrixTransform.equals requires a MatrixTransform argument");
-            ConstMatrixTransformRcPtr transform = GetConstMatrixTransform(self);
-            ConstMatrixTransformRcPtr in = GetConstMatrixTransform(pyobject);
-            return PyBool_FromLong(transform->equals(*in.get()));
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_MatrixTransform_getMatrix(PyObject * self, PyObject *)
-        {
-            OCIO_PYTRY_ENTER()
-            ConstMatrixTransformRcPtr transform = GetConstMatrixTransform(self);
-            std::vector<double> matrix(16);
-            transform->getMatrix(&matrix[0]);
-            return CreatePyListFromDoubleVector(matrix);
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_MatrixTransform_setMatrix(PyObject * self, PyObject * args)
-        {
-            OCIO_PYTRY_ENTER()
-            PyObject* pymatrix = 0;
-            if (!PyArg_ParseTuple(args,"O:setValue",
-                &pymatrix)) return NULL;
-            std::vector<double> matrix;
-            if(!FillDoubleVectorFromPySequence(pymatrix, matrix) ||
-                (matrix.size() != 16))
-            {
-                PyErr_SetString(PyExc_TypeError,
-                    "First argument must be a double array, size 16");
-                return 0;
-            }
-            MatrixTransformRcPtr transform = GetEditableMatrixTransform(self);
-            transform->setMatrix(&matrix[0]);
-            Py_RETURN_NONE;
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_MatrixTransform_getOffset(PyObject * self, PyObject *)
-        {
-            OCIO_PYTRY_ENTER()
-            ConstMatrixTransformRcPtr transform = GetConstMatrixTransform(self);
-            std::vector<double> offset(4);
-            transform->getOffset(&offset[0]);
-            return CreatePyListFromDoubleVector(offset);
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_MatrixTransform_setOffset(PyObject * self, PyObject * args)
-        {
-            OCIO_PYTRY_ENTER()
-            PyObject* pyoffset = 0;
-            if (!PyArg_ParseTuple(args, "O:setValue",
-                &pyoffset)) return NULL;
-            std::vector<double> offset;
-            if(!FillDoubleVectorFromPySequence(pyoffset, offset) ||
-                (offset.size() != 4))
-            {
-                PyErr_SetString(PyExc_TypeError,
-                    "First argument must be a double array, size 4");
-                return 0;
-            }
-            MatrixTransformRcPtr transform = GetEditableMatrixTransform(self);
-            transform->setOffset(&offset[0]);
-            Py_RETURN_NONE;
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_MatrixTransform_Identity(PyObject *, PyObject * /*self*, *args*/)
-        {
-            OCIO_PYTRY_ENTER()
-            std::vector<double> matrix(16);
-            std::vector<double> offset(4);
-            MatrixTransform::Identity(&matrix[0], &offset[0]);
-            PyObject* pymatrix = CreatePyListFromDoubleVector(matrix);
-            PyObject* pyoffset = CreatePyListFromDoubleVector(offset);
-            PyObject* pyreturnval = Py_BuildValue("(OO)", pymatrix, pyoffset);
-            Py_DECREF(pymatrix);
-            Py_DECREF(pyoffset);
-            return pyreturnval;
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_MatrixTransform_Fit(PyObject * /*self*/, PyObject * args)
-        {
-            OCIO_PYTRY_ENTER()
-            
-            PyObject* pyoldmin = 0;
-            PyObject* pyoldmax = 0;
-            PyObject* pynewmin = 0;
-            PyObject* pynewmax = 0;
-            if (!PyArg_ParseTuple(args,"OOOO:Fit",
-                &pyoldmin, &pyoldmax, &pynewmin, &pynewmax)) return NULL;
-            
-            std::vector<double> oldmin;
-            if(!FillDoubleVectorFromPySequence(pyoldmin, oldmin) ||
-                (oldmin.size() != 4))
-            {
-                PyErr_SetString(PyExc_TypeError,
-                    "First argument must be a double array, size 4");
-                return 0;
-            }
-            
-            std::vector<double> oldmax;
-            if(!FillDoubleVectorFromPySequence(pyoldmax, oldmax) ||
-                (oldmax.size() != 4))
-            {
-                PyErr_SetString(PyExc_TypeError,
-                    "Second argument must be a double array, size 4");
-                return 0;
-            }
-            
-            std::vector<double> newmin;
-            if(!FillDoubleVectorFromPySequence(pynewmin, newmin) ||
-                (newmin.size() != 4))
-            {
-                PyErr_SetString(PyExc_TypeError,
-                    "Third argument must be a double array, size 4");
-                return 0;
-            }
-            
-            std::vector<double> newmax;
-            if(!FillDoubleVectorFromPySequence(pynewmax, newmax) ||
-                (newmax.size() != 4))
-            {
-                PyErr_SetString(PyExc_TypeError,
-                    "Fourth argument must be a double array, size 4");
-                return 0;
-            }
-            
-            std::vector<double> matrix(16);
-            std::vector<double> offset(4);
-            MatrixTransform::Fit(&matrix[0], &offset[0],
-                                 &oldmin[0], &oldmax[0],
-                                 &newmin[0], &newmax[0]);
-            PyObject* pymatrix = CreatePyListFromDoubleVector(matrix);
-            PyObject* pyoffset = CreatePyListFromDoubleVector(offset);
-            PyObject* pyreturnval = Py_BuildValue("(OO)", pymatrix, pyoffset);
-            Py_DECREF(pymatrix);
-            Py_DECREF(pyoffset);
-            return pyreturnval;
-            
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_MatrixTransform_Sat(PyObject * /*self*/, PyObject * args)
-        {
-            OCIO_PYTRY_ENTER()
-            
-            double sat = 0.0;
-            PyObject* pyluma = 0;
-            if (!PyArg_ParseTuple(args,"dO:Sat",
-                &sat, &pyluma)) return NULL;
-                
-            std::vector<double> luma;
-            if(!FillDoubleVectorFromPySequence(pyluma, luma) ||
-                (luma.size() != 3))
-            {
-                PyErr_SetString(PyExc_TypeError,
-                    "Second argument must be a double array, size 3");
-                return 0;
-            }
-            
-            std::vector<double> matrix(16);
-            std::vector<double> offset(4);
-            MatrixTransform::Sat(&matrix[0], &offset[0],
-                                 sat, &luma[0]);
-            PyObject* pymatrix = CreatePyListFromDoubleVector(matrix);
-            PyObject* pyoffset = CreatePyListFromDoubleVector(offset);
-            PyObject* pyreturnval = Py_BuildValue("(OO)", pymatrix, pyoffset);
-            Py_DECREF(pymatrix);
-            Py_DECREF(pyoffset);
-            return pyreturnval;
-            
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_MatrixTransform_Scale(PyObject * /*self*/, PyObject * args)
-        {
-            OCIO_PYTRY_ENTER()
-            
-            PyObject* pyscale = 0;
-            if (!PyArg_ParseTuple(args,"O:Scale",
-                &pyscale)) return NULL;
-            
-            std::vector<double> scale;
-            if(!FillDoubleVectorFromPySequence(pyscale, scale) ||
-                (scale.size() != 4))
-            {
-                PyErr_SetString(PyExc_TypeError,
-                    "Second argument must be a double array, size 4");
-                return 0;
-            }
-            
-            std::vector<double> matrix(16);
-            std::vector<double> offset(4);
-            MatrixTransform::Scale(&matrix[0], &offset[0], &scale[0]);
-            PyObject* pymatrix = CreatePyListFromDoubleVector(matrix);
-            PyObject* pyoffset = CreatePyListFromDoubleVector(offset);
-            PyObject* pyreturnval = Py_BuildValue("(OO)", pymatrix, pyoffset);
-            Py_DECREF(pymatrix);
-            Py_DECREF(pyoffset);
-            return pyreturnval;
-            
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_MatrixTransform_View(PyObject * /*self*/, PyObject * args)
-        {
-            OCIO_PYTRY_ENTER()
-            
-            PyObject* pychannelhot = 0;
-            PyObject* pyluma = 0;
-            if (!PyArg_ParseTuple(args,"OO:View",
-                &pychannelhot, &pyluma)) return NULL;
-            
-            std::vector<int> channelhot;
-            if(!FillIntVectorFromPySequence(pychannelhot, channelhot) ||
-                (channelhot.size() != 4))
-            {
-                PyErr_SetString(PyExc_TypeError,
-                    "First argument must be a bool/int array, size 4");
-                return 0;
-            }
-            
-            std::vector<double> luma;
-            if(!FillDoubleVectorFromPySequence(pyluma, luma) ||
-                (luma.size() != 3))
-            {
-                PyErr_SetString(PyExc_TypeError,
-                    "Second argument must be a double array, size 3");
-                return 0;
-            }
-            
-            std::vector<double> matrix(16);
-            std::vector<double> offset(4);
-            MatrixTransform::View(&matrix[0], &offset[0],
-                                  &channelhot[0], &luma[0]);
-            PyObject* pymatrix = CreatePyListFromDoubleVector(matrix);
-            PyObject* pyoffset = CreatePyListFromDoubleVector(offset);
-            PyObject* pyreturnval = Py_BuildValue("(OO)", pymatrix, pyoffset);
-            Py_DECREF(pymatrix);
-            Py_DECREF(pyoffset);
-            return pyreturnval;
-            
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-    }
 
+void bindPyMatrixTransform(py::module & m)
+{
+    MatrixTransformRcPtr DEFAULT = MatrixTransform::Create();
+
+    std::array<double, 16> DEFAULT_M44;
+    DEFAULT->getMatrix(DEFAULT_M44.data());
+
+    std::array<double, 4> DEFAULT_OFFSET4;
+    DEFAULT->getOffset(DEFAULT_OFFSET4.data());
+
+    py::class_<MatrixTransform, 
+               MatrixTransformRcPtr /* holder */, 
+               Transform /* base */>(m, "MatrixTransform")
+        .def(py::init(&MatrixTransform::Create))
+        .def(py::init([](const std::array<double, 16> & m44,
+                         const std::array<double, 4> & offset4, 
+                         TransformDirection dir) 
+            {
+                MatrixTransformRcPtr p = MatrixTransform::Create();
+                p->setMatrix(m44.data());
+                p->setOffset(offset4.data());
+                p->setDirection(dir);
+                p->validate();
+                return p;
+            }), 
+             "m44"_a = DEFAULT_M44,
+             "offset4"_a = DEFAULT_OFFSET4,
+             "dir"_a = DEFAULT->getDirection())
+
+        // TODO: Update static convenience functions to construct a MatrixTransform in C++
+        .def_static("Fit", [](const std::array<double, 4> & oldmin4,
+                              const std::array<double, 4> & oldmax4,
+                              const std::array<double, 4> & newmin4,
+                              const std::array<double, 4> & newmax4)
+            {
+                double m44[16];
+                double offset4[4];
+                MatrixTransform::Fit(m44, offset4,
+                                     oldmin4.data(), oldmax4.data(),
+                                     newmin4.data(), newmax4.data());
+                MatrixTransformRcPtr p = MatrixTransform::Create();
+                p->setMatrix(m44);
+                p->setOffset(offset4);
+                p->validate();
+                return p;
+            },
+             "oldmin4"_a = std::array<double, 4>{ 0.0, 0.0, 0.0, 0.0 }, 
+             "oldmax4"_a = std::array<double, 4>{ 1.0, 1.0, 1.0, 1.0 },
+             "newmin4"_a = std::array<double, 4>{ 0.0, 0.0, 0.0, 0.0 }, 
+             "newmax4"_a = std::array<double, 4>{ 1.0, 1.0, 1.0, 1.0 })
+        .def_static("Identity", []()
+            {
+                double m44[16];
+                double offset4[4];
+                MatrixTransform::Identity(m44, offset4);
+                MatrixTransformRcPtr p = MatrixTransform::Create();
+                p->setMatrix(m44);
+                p->setOffset(offset4);
+                p->validate();
+                return p;
+            })
+        .def_static("Sat", [](double sat, const std::array<double, 3> & lumaCoef3)
+            {
+                double m44[16];
+                double offset4[4];
+                MatrixTransform::Sat(m44, offset4, sat, lumaCoef3.data());
+                MatrixTransformRcPtr p = MatrixTransform::Create();
+                p->setMatrix(m44);
+                p->setOffset(offset4);
+                p->validate();
+                return p;
+            },
+             "sat"_a, "lumaCoef3"_a)
+        .def_static("Scale", [](const std::array<double, 4> & scale4)
+            {
+                double m44[16];
+                double offset4[4];
+                MatrixTransform::Scale(m44, offset4, scale4.data());
+                MatrixTransformRcPtr p = MatrixTransform::Create();
+                p->setMatrix(m44);
+                p->setOffset(offset4);
+                p->validate();
+                return p;
+            },
+             "scale4"_a)
+        .def_static("View", [](std::array<int, 4> & channelHot4,
+                               const std::array<double, 3> & lumaCoef3)
+            {
+                double m44[16];
+                double offset4[4];
+                MatrixTransform::View(m44, offset4, channelHot4.data(), lumaCoef3.data());
+                MatrixTransformRcPtr p = MatrixTransform::Create();
+                p->setMatrix(m44);
+                p->setOffset(offset4);
+                p->validate();
+                return p;
+            },
+             "channelHot4"_a, "scale4"_a)
+
+        .def("getFormatMetadata", 
+             (FormatMetadata & (MatrixTransform::*)()) &MatrixTransform::getFormatMetadata,
+             py::return_value_policy::reference_internal)
+        .def("getFormatMetadata", 
+             (const FormatMetadata & (MatrixTransform::*)() const) 
+             &MatrixTransform::getFormatMetadata,
+             py::return_value_policy::reference_internal)
+        .def("equals", &MatrixTransform::equals, "other"_a)
+        .def("getMatrix", [](MatrixTransformRcPtr self)
+            {
+                std::array<double, 16> m44;
+                self->getMatrix(m44.data());
+                return m44;
+            })
+        .def("setMatrix", [](MatrixTransformRcPtr self, const std::array<double, 16> & m44)
+            { 
+                self->setMatrix(m44.data());
+            }, 
+             "m44"_a)
+        .def("getOffset", [](MatrixTransformRcPtr self)
+            {
+                std::array<double, 4> offset4;
+                self->getOffset(offset4.data());
+                return offset4;
+            })
+        .def("setOffset", [](MatrixTransformRcPtr self, const std::array<double, 4> & offset4)
+            { 
+                self->setOffset(offset4.data());
+            }, 
+             "offset4"_a)
+        .def("getFileInputBitDepth", &MatrixTransform::getFileInputBitDepth)
+        .def("setFileInputBitDepth", &MatrixTransform::setFileInputBitDepth, "bitDepth"_a)
+        .def("getFileOutputBitDepth", &MatrixTransform::getFileOutputBitDepth)
+        .def("setFileOutputBitDepth", &MatrixTransform::setFileOutputBitDepth, "bitDepth"_a);
 }
-OCIO_NAMESPACE_EXIT
+
+} // namespace OCIO_NAMESPACE

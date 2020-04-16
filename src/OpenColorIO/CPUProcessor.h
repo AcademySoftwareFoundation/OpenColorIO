@@ -11,7 +11,7 @@
 #include "Op.h"
 
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 class ScanlineHelper;
@@ -24,6 +24,13 @@ public:
     Impl& operator=(const Impl &) = delete;
 
     ~Impl() = default;
+
+    // Note: The in and out bit-depths must be equal for isNoOp to be true.
+    bool isNoOp() const noexcept { return m_isNoOp; }
+
+    // Note: Equivalent to isNoOp from the underlying Processor, 
+    // i.e., it ignores in/out bit-depth differences.
+    bool isIdentity() const noexcept { return m_isIdentity; }
 
     bool hasChannelCrosstalk() const noexcept { return m_hasChannelCrosstalk; }
 
@@ -45,10 +52,8 @@ public:
     ////////////////////////////////////////////
     //
     // Functions not exposed to the OCIO public API.
-        
-    void finalize(const OpRcPtrVec & rawOps,
-                  BitDepth in, BitDepth out,
-                  OptimizationFlags oFlags, FinalizationFlags fFlags);
+
+    void finalize(const OpRcPtrVec & rawOps, BitDepth in, BitDepth out, OptimizationFlags oFlags);
 
 private:
     ConstOpCPURcPtr    m_inBitDepthOp; // Converts from in to F32. It could be done by the first op.
@@ -58,14 +63,13 @@ private:
 
     BitDepth           m_inBitDepth = BIT_DEPTH_F32;
     BitDepth           m_outBitDepth = BIT_DEPTH_F32;
+    bool               m_isNoOp = false;
+    bool               m_isIdentity = false;
     bool               m_hasChannelCrosstalk = true;
     std::string        m_cacheID;
     Mutex              m_mutex;
 };
 
-
-}
-OCIO_NAMESPACE_EXIT
-
+} // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_CPUPROCESSOR_H

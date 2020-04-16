@@ -13,7 +13,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
-#include "argparse.h"
+#include "apputils/argparse.h"
 
 
 int main(int argc, const char **argv)
@@ -44,7 +44,7 @@ int main(int argc, const char **argv)
                "--v", &verbose, "Display some general information",
                "--colorspaces %s %s", &inputColorSpace, &outputColorSpace, 
                                       "Provide the input and output color spaces",
-			   "--file %s", &filepath, pathDesc.c_str(),
+               "--file %s", &filepath, pathDesc.c_str(),
                NULL);
 
     if (argc <= 1 || ap.parse(argc, argv) < 0)

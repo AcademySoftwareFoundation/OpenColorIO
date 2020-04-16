@@ -74,10 +74,12 @@ set(PLATFORM_COMPILE_FLAGS "")
 
 if(MSVC)
 	# Because our Exceptions derive from std::runtime_error we can safely disable warning 4275
-	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /EHsc /wd4275 /DWIN32")
+	# /we4062 Enables warning in switch when an enumeration value is not explicitly handled.
+	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /EHsc /wd4275 /DWIN32 /we4062")
 
 else()
-	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wall")
+	# -Wswitch-enum Enables warning in switch when an enumeration value is not explicitly handled.
+	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wall -Wswitch-enum")
 
 	# TODO: OCIO being under active development, unused functions are fine for now.
 	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wno-unused-function")
@@ -95,6 +97,12 @@ if(OCIO_WARNING_AS_ERROR)
 		set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Werror")
 	endif()
 endif()
+
+include(CheckSSEFeatures)
+if(NOT HAVE_SSE2)
+	message(STATUS "Disabling SSE optimizations, as the target doesn't support them")
+	set(OCIO_USE_SSE OFF)
+endif(NOT HAVE_SSE2)
 
 ###############################################################################
 # External linking options
@@ -115,6 +123,15 @@ endif()
 if(NOT OCIO_NAMESPACE)
 	set(OCIO_NAMESPACE OpenColorIO CACHE STRING "Specify the master OCIO C++ namespace: Options include OpenColorIO OpenColorIO_<YOURFACILITY> etc.")
 endif()
+
+###############################################################################
+# Library name custom suffix
+# This helps an application that needs to ship a dynamic library OCIO ensure
+# that it has a unique name that won't conflict with one elsewhere on the
+# system.
+
+set (OCIO_LIBNAME_SUFFIX "" CACHE STRING
+     "Specify a suffix to all libraries that are built")
 
 ###############################################################################
 # Error checking

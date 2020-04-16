@@ -11,10 +11,10 @@
 namespace OIIO = OIIO_NAMESPACE;
 #endif
 
-#include "argparse.h"
+#include "apputils/argparse.h"
 #include "OpenEXR/half.h"
 #include "oiiohelpers.h"
-#include "pystring/pystring.h"
+#include "utils/StringUtils.h"
 
 
 namespace OCIO = OCIO_NAMESPACE;
@@ -316,7 +316,7 @@ int main(int argc, const char **argv)
     OCIO::ImgBuffer img;
     LoadImage(filepath, verbose, spec, img);
 
-    outBitDepthStr = pystring::lower(outBitDepthStr);
+    outBitDepthStr = StringUtils::Lower(outBitDepthStr);
 
     // Process the image.
     try
@@ -385,8 +385,7 @@ int main(int argc, const char **argv)
         // Get the CPU processor.
         OCIO::ConstCPUProcessorRcPtr cpuProcessor
             = processor->getOptimizedCPUProcessor(inBitDepth, outBitDepth,
-                                                  OCIO::OPTIMIZATION_DEFAULT,
-                                                  OCIO::FINALIZATION_DEFAULT);
+                                                  OCIO::OPTIMIZATION_DEFAULT);
 
         if(testType==0 || testType==-1)
         {

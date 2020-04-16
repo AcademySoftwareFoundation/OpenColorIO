@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#ifndef INCLUDED_OCIO_EXPOSURECONTRAST_GPU
-#define INCLUDED_OCIO_EXPOSURECONTRAST_GPU
-
+#ifndef INCLUDED_OCIO_EXPOSURECONTRAST_GPU_H
+#define INCLUDED_OCIO_EXPOSURECONTRAST_GPU_H
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -11,13 +10,12 @@
 #include "ops/exposurecontrast/ExposureContrastOpData.h"
 
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
-void GetExposureContrastGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
+void GetExposureContrastGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
                                          ConstExposureContrastOpDataRcPtr & ec);
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif

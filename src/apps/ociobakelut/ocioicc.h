@@ -10,7 +10,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 //
@@ -39,8 +39,7 @@ void SaveICCProfileToFile(const std::string & outputfile,
                           const std::string & copyright,
                           bool verbose);
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif
 

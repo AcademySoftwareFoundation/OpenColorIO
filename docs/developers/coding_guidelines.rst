@@ -20,11 +20,11 @@ All source files should begin with the copyright and license, which can be cut a
 Line Length
 ***********
 
-Each line of text in your code should be at most 80 characters long.
+Each line of text in your code should be at most 100 characters long.
 
 Generally the only exceptions are for comments with example commands or URLs - to make cut and paste easier.
 
-The other exception is for those rare cases where letting a line be longer (and wrapping on an 80-character window) is actually a better and clearer alternative than trying to split it into two lines. Sometimes this happens, but it's rare.
+The other exception is for those rare cases where letting a line be longer (and wrapping on an 100-character window) is actually a better and clearer alternative than trying to split it into two lines. Sometimes this happens, but it's rare.
 
 DO NOT alter somebody else's code to re-wrap lines (or change whitespace) just because you found something that violates the rules. Let the group/author/leader know, and resist the temptation to change it yourself.
 
@@ -45,7 +45,7 @@ Here is a short code fragment that shows these concepts in action:
 
 .. code-block:: c++
 
-    namespace
+    namespace OCIO_NAMESPACE
     {
 
 
@@ -70,7 +70,7 @@ Here is a short code fragment that shows these concepts in action:
     }
 
 
-    } // namespace
+    } // namespace OCIO_NAMESPACE
 
 Misc. Rules
 ***********
@@ -100,6 +100,8 @@ Misc. Rules
 * The use of Boost is not allowed, except for unit_test_framework and shared_ptr.
 
 * Default function arguments are not allowed.
+
+* Class members should start by m_ and use camelCase.
 
 Bottom Line
 ***********

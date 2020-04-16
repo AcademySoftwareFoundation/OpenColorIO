@@ -47,7 +47,7 @@ To check out a read-write version of the repository (GitHub acct required)::
     Receiving objects: 100% (2220/2220), 2.89 MiB | 2.29 MiB/s, done.
     Resolving deltas: 100% (1434/1434), done.
 
-Both read + read/write users should then add the Imageworks (SPI) master branch
+Both read + read/write users should then add the `AcademySoftwareFoundation/OpenColorIO <https://github.com/AcademySoftwareFoundation/OpenColorIO>`_ master branch
 as a remote. This will allow you to more easily fetch updates as they become
 available::
 
@@ -70,7 +70,7 @@ Reference Build Environment
 
 To aid new developers to the project and provide a baseline standard,
 OCIO provides a reference build environment through Docker. Docker essentially is a
-container that consits of both a Linux distro and the dependencies needed to run
+container that consists of both a Linux distro and the dependencies needed to run
 a client application. This is typically used for deploying apps and services to
 servers, but we are using it to provide an isolated development environment to build
 and test OCIO with. With this environment you are guaranteed to be able to compile OCIO

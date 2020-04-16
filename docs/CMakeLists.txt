@@ -30,15 +30,27 @@ endif()
 if(WIN32)
     # Use Windows path separators since this is being passed through to cmd
     file(TO_NATIVE_PATH ${CMAKE_BINARY_DIR} WIN_BINARY_DIR)
+
+    set(DLL_PATH "${WIN_BINARY_DIR}\\src\\OpenColorIO")
+    if(MSVC_IDE)
+        set(DLL_PATH "${DLL_PATH}\\${CMAKE_BUILD_TYPE}")
+    endif()
+
     string(CONCAT PATH_SET
         "PATH="
-        "${WIN_BINARY_DIR}\\src\\OpenColorIO\\${CMAKE_BUILD_TYPE}"
+        "${DLL_PATH}"
         "\\\\;"
         "%PATH%"
     )
+
+    set(PYD_PATH "${WIN_BINARY_DIR}\\src\\bindings\\python")
+    if(MSVC_IDE)
+        set(PYD_PATH "${PYD_PATH}\\${CMAKE_BUILD_TYPE}")
+    endif()
+
     string(CONCAT PYTHONPATH_SET
         "PYTHONPATH="
-        "${WIN_BINARY_DIR}\\src\\bindings\\python\\${CMAKE_BUILD_TYPE}"
+        "${PYD_PATH}"
         "\\\\;"
         "${WIN_BINARY_DIR}\\ext\\dist\\lib\\site-packages"
         "\\\\;"
@@ -50,6 +62,7 @@ if(WIN32)
     #   '> set PYTHONPATH=XXX \n call CMD'
     # '\n' is here because '\\&' does not work.
     set(PYT_PRE_CMD set ${PATH_SET} "\n" set ${PYTHONPATH_SET} "\n" call)
+
 else()
     set(PYTHON_VARIANT "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
     string(CONCAT PYT_PRE_CMD
@@ -69,7 +82,7 @@ message(STATUS "Create sphinx conf.py from conf.py.in")
 configure_file(conf.py.in ${CMAKE_BINARY_DIR}/docs/conf.py @ONLY)
 
 file(GLOB_RECURSE DOC_SOURCES "${CMAKE_SOURCE_DIR}/docs/*")
-list(APPEND DOC_SOURCES 
+list(APPEND DOC_SOURCES
     ${CMAKE_SOURCE_DIR}/README.md
     ${CMAKE_SOURCE_DIR}/INSTALL.md
     ${CMAKE_SOURCE_DIR}/CHANGELOG.md
@@ -121,7 +134,7 @@ add_custom_target(rst_extraction
 ### HTML doc target ###
 
 add_custom_target(docs ALL
-    COMMAND 
+    COMMAND
         ${PYT_PRE_CMD} "${SPHINX_EXECUTABLE}" -b html . "${CMAKE_CURRENT_BINARY_DIR}/build-html"
     DEPENDS
         OpenColorIO
@@ -146,9 +159,9 @@ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/build-html/
 
 find_package(LATEX)
 if(PDFLATEX_COMPILER)
-    
+
     add_custom_target(latex
-        COMMAND 
+        COMMAND
             ${PYT_PRE_CMD} "${SPHINX_EXECUTABLE}" -b latex . "${CMAKE_CURRENT_BINARY_DIR}/build-latex"
         DEPENDS
             OpenColorIO
@@ -166,8 +179,8 @@ if(PDFLATEX_COMPILER)
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/build-latex
         COMMENT "Building pdf doc"
     )
-    
+
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/build-latex/OpenColorIO.pdf
             DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/OpenColorIO/)
-    
+
 endif()

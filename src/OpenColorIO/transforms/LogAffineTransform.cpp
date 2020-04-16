@@ -7,236 +7,136 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ops/Log/LogOpData.h"
+#include "ops/log/LogOpData.h"
+#include "transforms/LogAffineTransform.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
-    LogAffineTransformRcPtr LogAffineTransform::Create()
-    {
-        return LogAffineTransformRcPtr(new LogAffineTransform(), &deleter);
-    }
-    
-    void LogAffineTransform::deleter(LogAffineTransform* t)
-    {
-        delete t;
-    }
-    
-    
-    class LogAffineTransform::Impl : public LogOpData
-    {
-    public:
-        
-        Impl()
-            : LogOpData(2.0f, TRANSFORM_DIR_FORWARD)
-        { }
-
-        Impl(const Impl &) = delete;
-
-        ~Impl()
-        { }
-
-        Impl& operator = (const Impl & rhs)
-        {
-            if (this != &rhs)
-            {
-                LogOpData::operator=(rhs);
-            }
-            return *this;
-        }
-    };
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    LogAffineTransform::LogAffineTransform()
-        : m_impl(new LogAffineTransform::Impl)
-    {
-    }
-    
-    TransformRcPtr LogAffineTransform::createEditableCopy() const
-    {
-        LogAffineTransformRcPtr transform = LogAffineTransform::Create();
-        *(transform->m_impl) = *m_impl;
-        return transform;
-    }
-    
-    LogAffineTransform::~LogAffineTransform()
-    {
-        delete m_impl;
-        m_impl = NULL;
-    }
-    
-    LogAffineTransform& LogAffineTransform::operator= (const LogAffineTransform & rhs)
-    {
-        if (this != &rhs)
-        {
-            *m_impl = *rhs.m_impl;
-        }
-        return *this;
-    }
-    
-    TransformDirection LogAffineTransform::getDirection() const
-    {
-        return getImpl()->getDirection();
-    }
-    
-    void LogAffineTransform::setDirection(TransformDirection dir)
-    {
-        getImpl()->setDirection(dir);
-    }
-    
-    void LogAffineTransform::validate() const
-    {
-        try
-        {
-            Transform::validate();
-            getImpl()->validate();
-        }
-        catch (Exception & ex)
-        {
-            std::string errMsg("LogAffineTransform validation failed: ");
-            errMsg += ex.what();
-            throw Exception(errMsg.c_str());
-        }
-    }
-
-    FormatMetadata & LogAffineTransform::getFormatMetadata()
-    {
-        return m_impl->getFormatMetadata();
-    }
-
-    const FormatMetadata & LogAffineTransform::getFormatMetadata() const
-    {
-        return m_impl->getFormatMetadata();
-    }
-
-    void LogAffineTransform::setBase(double base)
-    {
-        getImpl()->setBase(base);
-    }
-
-    double LogAffineTransform::getBase() const
-    {
-        return getImpl()->getBase();
-    }
-
-    void LogAffineTransform::setLogSideSlopeValue(const double(&values)[3])
-    {
-        getImpl()->setValue(LOG_SIDE_SLOPE, values);
-    }
-    void LogAffineTransform::setLogSideOffsetValue(const double(&values)[3])
-    {
-        getImpl()->setValue(LOG_SIDE_OFFSET, values);
-    }
-    void LogAffineTransform::setLinSideSlopeValue(const double(&values)[3])
-    {
-        getImpl()->setValue(LIN_SIDE_SLOPE, values);
-    }
-    void LogAffineTransform::setLinSideOffsetValue(const double(&values)[3])
-    {
-        getImpl()->setValue(LIN_SIDE_OFFSET, values);
-    }
-
-    void LogAffineTransform::getLogSideSlopeValue(double(&values)[3]) const
-    {
-        getImpl()->getValue(LOG_SIDE_SLOPE, values);
-    }
-    void LogAffineTransform::getLogSideOffsetValue(double(&values)[3]) const
-    {
-        getImpl()->getValue(LOG_SIDE_OFFSET, values);
-    }
-    void LogAffineTransform::getLinSideSlopeValue(double(&values)[3]) const
-    {
-        getImpl()->getValue(LIN_SIDE_SLOPE, values);
-    }
-    void LogAffineTransform::getLinSideOffsetValue(double(&values)[3]) const
-    {
-        getImpl()->getValue(LIN_SIDE_OFFSET, values);
-    }
-
-    std::ostream& operator<< (std::ostream& os, const LogAffineTransform& t)
-    {
-        os << "<LogAffineTransform ";
-        os << "base=" << t.getBase() << ", ";
-        double values[3];
-        t.getLogSideSlopeValue(values);
-        os << "logSideSlope=" << values[0] << " " << values[1] << " " << values[2] << ", ";
-        t.getLogSideOffsetValue(values);
-        os << "logSideOffset=" << values[0] << " " << values[1] << " " << values[2] << ", ";
-        t.getLinSideSlopeValue(values);
-        os << "linSideSlope=" << values[0] << " " << values[1] << " " << values[2] << ", ";
-        t.getLinSideOffsetValue(values);
-        os << "linSideOffset=" << values[0] << " " << values[1] << " " << values[2] << ", ";
-        os << "direction=" << TransformDirectionToString(t.getDirection());
-        os << ">";
-
-        return os;
-    }
-    
-}
-OCIO_NAMESPACE_EXIT
-
-#ifdef OCIO_UNIT_TEST
-
-namespace OCIO = OCIO_NAMESPACE;
-#include "UnitTest.h"
-
-bool AllEqual(double (&values)[3])
+LogAffineTransformRcPtr LogAffineTransform::Create()
 {
-    return values[0] == values[1] && values[0] == values[2];
+    return LogAffineTransformRcPtr(new LogAffineTransformImpl(), &LogAffineTransformImpl::deleter);
 }
 
-OCIO_ADD_TEST(LogAffineTransform, basic)
+void LogAffineTransformImpl::deleter(LogAffineTransform* t)
 {
-    const OCIO::LogAffineTransformRcPtr log = OCIO::LogAffineTransform::Create();
+    delete static_cast<LogAffineTransformImpl *>(t);
+}
 
-    const double base = log->getBase();
-    OCIO_CHECK_EQUAL(base, 2.0);
+LogAffineTransformImpl::LogAffineTransformImpl()
+    : m_data(2.0f, TRANSFORM_DIR_FORWARD)
+{
+}
+
+TransformRcPtr LogAffineTransformImpl::createEditableCopy() const
+{
+    LogAffineTransformRcPtr transform = LogAffineTransform::Create();
+    dynamic_cast<LogAffineTransformImpl*>(transform.get())->data() = data();
+    return transform;
+}
+
+TransformDirection LogAffineTransformImpl::getDirection() const noexcept
+{
+    return data().getDirection();
+}
+
+void LogAffineTransformImpl::setDirection(TransformDirection dir) noexcept
+{
+    data().setDirection(dir);
+}
+
+void LogAffineTransformImpl::validate() const
+{
+    try
+    {
+        Transform::validate();
+        data().validate();
+    }
+    catch (Exception & ex)
+    {
+        std::string errMsg("LogAffineTransform validation failed: ");
+        errMsg += ex.what();
+        throw Exception(errMsg.c_str());
+    }
+}
+
+FormatMetadata & LogAffineTransformImpl::getFormatMetadata() noexcept
+{
+    return data().getFormatMetadata();
+}
+
+const FormatMetadata & LogAffineTransformImpl::getFormatMetadata() const noexcept
+{
+    return data().getFormatMetadata();
+}
+
+bool LogAffineTransformImpl::equals(const LogAffineTransform & other) const noexcept
+{
+    if (this == &other) return true;
+    return data() == dynamic_cast<const LogAffineTransformImpl*>(&other)->data();
+}
+
+void LogAffineTransformImpl::setBase(double base) noexcept
+{
+    data().setBase(base);
+}
+
+double LogAffineTransformImpl::getBase() const noexcept
+{
+    return data().getBase();
+}
+
+void LogAffineTransformImpl::setLogSideSlopeValue(const double(&values)[3]) noexcept
+{
+    data().setValue(LOG_SIDE_SLOPE, values);
+}
+void LogAffineTransformImpl::setLogSideOffsetValue(const double(&values)[3]) noexcept
+{
+    data().setValue(LOG_SIDE_OFFSET, values);
+}
+void LogAffineTransformImpl::setLinSideSlopeValue(const double(&values)[3]) noexcept
+{
+    data().setValue(LIN_SIDE_SLOPE, values);
+}
+void LogAffineTransformImpl::setLinSideOffsetValue(const double(&values)[3]) noexcept
+{
+    data().setValue(LIN_SIDE_OFFSET, values);
+}
+
+void LogAffineTransformImpl::getLogSideSlopeValue(double(&values)[3]) const noexcept
+{
+    data().getValue(LOG_SIDE_SLOPE, values);
+}
+void LogAffineTransformImpl::getLogSideOffsetValue(double(&values)[3]) const noexcept
+{
+    data().getValue(LOG_SIDE_OFFSET, values);
+}
+void LogAffineTransformImpl::getLinSideSlopeValue(double(&values)[3]) const noexcept
+{
+    data().getValue(LIN_SIDE_SLOPE, values);
+}
+void LogAffineTransformImpl::getLinSideOffsetValue(double(&values)[3]) const noexcept
+{
+    data().getValue(LIN_SIDE_OFFSET, values);
+}
+
+std::ostream & operator<< (std::ostream & os, const LogAffineTransform & t)
+{
+    os << "<LogAffineTransform ";
+    os << "base=" << t.getBase() << ", ";
     double values[3];
-    log->getLinSideOffsetValue(values);
-    OCIO_CHECK_ASSERT(AllEqual(values));
-    OCIO_CHECK_EQUAL(values[0], 0.0);
-    log->getLinSideSlopeValue(values);
-    OCIO_CHECK_ASSERT(AllEqual(values));
-    OCIO_CHECK_EQUAL(values[0], 1.0);
-    log->getLogSideOffsetValue(values);
-    OCIO_CHECK_ASSERT(AllEqual(values));
-    OCIO_CHECK_EQUAL(values[0], 0.0);
-    log->getLogSideSlopeValue(values);
-    OCIO_CHECK_ASSERT(AllEqual(values));
-    OCIO_CHECK_EQUAL(values[0], 1.0);
-    OCIO_CHECK_EQUAL(log->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    t.getLogSideSlopeValue(values);
+    os << "logSideSlope=" << values[0] << " " << values[1] << " " << values[2] << ", ";
+    t.getLogSideOffsetValue(values);
+    os << "logSideOffset=" << values[0] << " " << values[1] << " " << values[2] << ", ";
+    t.getLinSideSlopeValue(values);
+    os << "linSideSlope=" << values[0] << " " << values[1] << " " << values[2] << ", ";
+    t.getLinSideOffsetValue(values);
+    os << "linSideOffset=" << values[0] << " " << values[1] << " " << values[2] << ", ";
+    os << "direction=" << TransformDirectionToString(t.getDirection());
+    os << ">";
 
-    log->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-    OCIO_CHECK_EQUAL(log->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
-
-    log->setBase(3.0);
-    log->getBase();
-    OCIO_CHECK_EQUAL(log->getBase(), 3.0);
-
-    log->setLinSideOffsetValue({ 0.1, 0.2, 0.3 });
-    log->getLinSideOffsetValue(values);
-    OCIO_CHECK_EQUAL(values[0], 0.1);
-    OCIO_CHECK_EQUAL(values[1], 0.2);
-    OCIO_CHECK_EQUAL(values[2], 0.3);
-
-    log->setLinSideSlopeValue({ 1.1, 1.2, 1.3 });
-    log->getLinSideSlopeValue(values);
-    OCIO_CHECK_EQUAL(values[0], 1.1);
-    OCIO_CHECK_EQUAL(values[1], 1.2);
-    OCIO_CHECK_EQUAL(values[2], 1.3);
-
-    log->setLogSideOffsetValue({ 0.1, 0.2, 0.3 });
-    log->getLogSideOffsetValue(values);
-    OCIO_CHECK_EQUAL(values[0], 0.1);
-    OCIO_CHECK_EQUAL(values[1], 0.2);
-    OCIO_CHECK_EQUAL(values[2], 0.3);
-
-    log->setLogSideSlopeValue({ 1.1, 1.2, 1.3 });
-    log->getLogSideSlopeValue(values);
-    OCIO_CHECK_EQUAL(values[0], 1.1);
-    OCIO_CHECK_EQUAL(values[1], 1.2);
-    OCIO_CHECK_EQUAL(values[2], 1.3);
+    return os;
 }
 
-#endif
+} // namespace OCIO_NAMESPACE
+

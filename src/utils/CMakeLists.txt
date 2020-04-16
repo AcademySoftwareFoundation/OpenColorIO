@@ -1,15 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-if(TARGET test_gpu_exec OR 
-   TARGET ociodisplay OR
-   TARGET ocioconvert
-)
-    add_subdirectory(oglbuilder)
-endif()
+# Note: Header only to avoid explicit dependencies.
 
-if(TARGET ocioconvert OR 
-   TARGET ocioperf
+add_library(utils::strings INTERFACE IMPORTED GLOBAL)
+
+set_target_properties(utils::strings PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/.."
 )
-    add_subdirectory(oiiohelpers)
-endif()

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="9843a859-e41e-40a8-a51c-840889c3774e" >
+    <InputDescriptor>RGB</InputDescriptor>
+    <OutputDescriptor>RGB</OutputDescriptor>
+    <Range inBitDepth="16i" outBitDepth="16i">
+        <minInValue>16384</minInValue>
+        <maxInValue>32767</maxInValue>
+        <minOutValue>16384</minOutValue>
+        <maxOutValue>32767</maxOutValue>
+    </Range>
+    <LUT1D id="6ce886ce-73a3-4979-a520-0d47f68031cd" inBitDepth="16i" outBitDepth="10i">
+        <Description>linear to 1/2.2 gamma corrected code values</Description>
+        <Array dim="32 1">
+   0
+ 215
+ 294
+ 354
+ 403
+ 446
+ 485
+ 520
+ 553
+ 583
+ 612
+ 639
+ 665
+ 689
+ 713
+ 735
+ 757
+ 779
+ 799
+ 819
+ 838
+ 857
+ 875
+ 893
+ 911
+ 928
+ 944
+ 961
+ 977
+ 992
+1008
+1023
+        </Array>
+    </LUT1D>
+</ProcessList>

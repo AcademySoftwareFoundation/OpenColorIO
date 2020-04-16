@@ -5,7 +5,7 @@
 
 #include "JNIUtil.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 jobject NewJFloatBuffer(JNIEnv * env, float* ptr, int32_t len) {
@@ -91,5 +91,4 @@ void JNI_Handle_Exception(JNIEnv * env)
     }
 }
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE

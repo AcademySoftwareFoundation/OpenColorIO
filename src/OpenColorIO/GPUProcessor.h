@@ -11,7 +11,7 @@
 #include "Op.h"
 
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 class GPUProcessor::Impl
@@ -20,7 +20,7 @@ public:
     Impl() = default;
     ~Impl() = default;
 
-    bool isNoOp() const noexcept { return m_ops.empty(); }
+    bool isNoOp() const noexcept { return m_isNoOp; }
 
     bool hasChannelCrosstalk() const noexcept { return m_hasChannelCrosstalk; }
 
@@ -29,24 +29,24 @@ public:
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
 
     void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const;
 
     ////////////////////////////////////////////
     //
     // Builder functions, Not exposed
-        
-    void finalize(const OpRcPtrVec & rawOps,
-                  OptimizationFlags oFlags, FinalizationFlags fFlags);
+
+    void finalize(const OpRcPtrVec & rawOps, OptimizationFlags oFlags);
 
 private:
     OpRcPtrVec    m_ops;
+    bool          m_isNoOp = false;
     bool          m_hasChannelCrosstalk = true;
     std::string   m_cacheID;
     mutable Mutex m_mutex;
 };
 
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 
 #endif

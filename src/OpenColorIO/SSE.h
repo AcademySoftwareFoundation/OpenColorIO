@@ -17,7 +17,7 @@
 
 
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 // Macros for alignment declarations
@@ -224,7 +224,7 @@ inline __m128 sseExp2(__m128 x)
 
     __m128 exp2 = _mm_mul_ps(zf, mexp);
 
-    // Handle undeflow:
+    // Handle underflow:
     // If the (unbiased) exponent of zf is less than -126, the result is smaller than
     // the smallest representable floating-point number and an underflow computation is
     // potentially happening. When this happens, force the result to zero.
@@ -286,7 +286,7 @@ static const __m128 E_PI_2      = _mm_set1_ps( (float) 1.57079632679489661923 );
 //   atan(x) = PI/2 - atan(1/x)
 //   atan(x) = -atan(-x)
 //
-// and then using a rational polynomial aproximation to evaluate the function 
+// and then using a rational polynomial approximation to evaluate the function 
 // over the reduced domain:
 //
 //                 a1*x + a2*x^3 + a3*x^5
@@ -590,8 +590,7 @@ inline void sseSinCos(const float x, float& sin_x, float& cos_x)
     sin_x = buf[1];
 }
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 
 #endif

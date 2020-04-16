@@ -12,7 +12,6 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 	add_executable(${TEST_BINARY} ${SOURCES})
 	target_compile_definitions(${TEST_BINARY}
 		PRIVATE
-			OCIO_UNIT_TEST
 			OpenColorIO_SKIP_IMPORTS
 
 	)
@@ -20,12 +19,14 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 		PUBLIC
 			public_api
 		PRIVATE
-			yamlcpp::yamlcpp
+			expat::expat
+			ilmbase::ilmbase
 			pystring::pystring
 			sampleicc::sampleicc
 			unittest_data
-			expat::expat
-			ilmbase::ilmbase
+			utils::strings
+			yamlcpp::yamlcpp
+			testutils
 	)
 	if(PRIVATE_INCLUDES)
 		target_include_directories(${TEST_BINARY}
@@ -48,7 +49,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 				XML_STATIC
 		)
 	endif(WIN32)
-	set_target_properties(${TEST_BINARY} PROPERTIES 
+	set_target_properties(${TEST_BINARY} PROPERTIES
 		COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
 
 	add_test(${TEST_NAME} ${TEST_BINARY})
@@ -58,130 +59,138 @@ endfunction(add_ocio_test)
 # but for now, we will maintain the status quo and copy all from the
 # OpenColorIO target
 set(SOURCES
-	Baker.cpp
-	BitDepthUtils.cpp
 	Caching.cpp
-	ColorSpace.cpp
-	ColorSpaceSet.cpp
-	Config.cpp
-	CPUProcessor.cpp
 	Display.cpp
-	DynamicProperty.cpp
-	Exception.cpp
 	fileformats/cdl/CDLParser.cpp
 	fileformats/cdl/CDLReaderHelper.cpp
 	fileformats/ctf/CTFReaderHelper.cpp
 	fileformats/ctf/CTFReaderUtils.cpp
-	fileformats/FileFormatCCC.cpp
-	fileformats/FileFormatCC.cpp
-	fileformats/FileFormatCDL.cpp
-	fileformats/FileFormatCSP.cpp
-	fileformats/FileFormatDiscreet1DL.cpp
-	fileformats/FileFormatHDL.cpp
-	fileformats/FileFormatICC.cpp
-	fileformats/FileFormatIridasCube.cpp
-	fileformats/FileFormatIridasItx.cpp
-	fileformats/FileFormatIridasLook.cpp
-	fileformats/FileFormatPandora.cpp
-	fileformats/FileFormatResolveCube.cpp
-	fileformats/FileFormatSpi1D.cpp
-	fileformats/FileFormatSpi3D.cpp
-	fileformats/FileFormatSpiMtx.cpp
-	fileformats/FileFormatTruelight.cpp
-	fileformats/FileFormatVF.cpp
-	fileformats/FormatMetadata.cpp
 	fileformats/xmlutils/XMLReaderHelper.cpp
-	fileformats/xmlutils/XMLReaderUtils.cpp
 	fileformats/xmlutils/XMLWriterUtils.cpp
 	GPUProcessor.cpp
-	GpuShader.cpp
 	GpuShaderDesc.cpp
-	GpuShaderUtils.cpp
 	HashUtils.cpp
 	ImageDesc.cpp
 	ImagePacking.cpp
 	Look.cpp
-	LookParse.cpp
-	MathUtils.cpp
 	md5/md5.cpp
 	OCIOYaml.cpp
-	Op.cpp
-	OpOptimizers.cpp
-	ops/Allocation/AllocationOp.cpp
-	ops/CDL/CDLOpCPU.cpp
-	ops/CDL/CDLOpData.cpp
-	ops/CDL/CDLOps.cpp
-	ops/Exponent/ExponentOps.cpp
-	ops/exposurecontrast/ExposureContrastOpCPU.cpp
-	ops/exposurecontrast/ExposureContrastOpData.cpp
+	ops/cdl/CDLOpCPU.cpp
+	ops/cdl/CDLOpGPU.cpp
 	ops/exposurecontrast/ExposureContrastOpGPU.cpp
-	ops/exposurecontrast/ExposureContrastOps.cpp
-	ops/FixedFunction/FixedFunctionOpCPU.cpp
-	ops/FixedFunction/FixedFunctionOpData.cpp
-	ops/FixedFunction/FixedFunctionOpGPU.cpp
-	ops/FixedFunction/FixedFunctionOps.cpp
-	ops/Gamma/GammaOpCPU.cpp
-	ops/Gamma/GammaOpData.cpp
-	ops/Gamma/GammaOpUtils.cpp
-	ops/Gamma/GammaOps.cpp
-	ops/IndexMapping.cpp
-	ops/Log/LogOpCPU.cpp
-	ops/Log/LogOpData.cpp
-	ops/Log/LogOpGPU.cpp
-	ops/Log/LogOps.cpp
-	ops/Log/LogUtils.cpp
-	ops/Lut1D/Lut1DOp.cpp
-	ops/Lut1D/Lut1DOpCPU.cpp
-	ops/Lut1D/Lut1DOpData.cpp
-	ops/Lut1D/Lut1DOpGPU.cpp
-	ops/Lut3D/Lut3DOp.cpp
-	ops/Lut3D/Lut3DOpCPU.cpp
-	ops/Lut3D/Lut3DOpData.cpp
-	ops/Lut3D/Lut3DOpGPU.cpp
-	ops/Matrix/MatrixOpCPU.cpp
-	ops/Matrix/MatrixOpData.cpp
-	ops/Matrix/MatrixOps.cpp
-	ops/NoOp/NoOps.cpp
-	ops/Range/RangeOpCPU.cpp
-	ops/Range/RangeOpData.cpp
-	ops/Range/RangeOpGPU.cpp
-	ops/Range/RangeOps.cpp
-	ops/reference/ReferenceOpData.cpp
-	OpTools.cpp
-	ParseUtils.cpp
-	PathUtils.cpp
-	Platform.cpp
+	ops/fixedfunction/FixedFunctionOpGPU.cpp
+	ops/gamma/GammaOpGPU.cpp
+	ops/log/LogOpGPU.cpp
+	ops/lut3d/Lut3DOpGPU.cpp
+	ops/matrix/MatrixOpGPU.cpp
+	ops/OpTools.cpp
+	ops/range/RangeOpGPU.cpp
 	ScanlineHelper.cpp
-	SSE.cpp
 	Transform.cpp
-	transforms/AllocationTransform.cpp
-	transforms/CDLTransform.cpp
-	transforms/ColorSpaceTransform.cpp
-	transforms/DisplayTransform.cpp
-	transforms/ExponentTransform.cpp
-	transforms/ExponentWithLinearTransform.cpp
-	transforms/ExposureContrastTransform.cpp
-	transforms/FixedFunctionTransform.cpp
-	transforms/GroupTransform.cpp
-	transforms/LogAffineTransform.cpp
-	transforms/LogTransform.cpp
 	transforms/LookTransform.cpp
-	transforms/LUT1DTransform.cpp
-	transforms/LUT3DTransform.cpp
-	transforms/MatrixTransform.cpp
 )
 
 set(TESTS
+	Baker_tests.cpp
+	BitDepthUtils_tests.cpp
+	ColorSpace_tests.cpp
+	ColorSpaceSet_tests.cpp
+	Config_tests.cpp
 	Context_tests.cpp
+	CPUProcessor_tests.cpp
+	DynamicProperty_tests.cpp
+	Exception_tests.cpp
 	fileformats/ctf/CTFTransform_tests.cpp
+	fileformats/ctf/IndexMapping_tests.cpp
 	fileformats/FileFormat3DL_tests.cpp
+	fileformats/FileFormatCC_tests.cpp
+	fileformats/FileFormatCCC_tests.cpp
+	fileformats/FileFormatCDL_tests.cpp
+	fileformats/FileFormatCSP_tests.cpp
 	fileformats/FileFormatCTF_tests.cpp
+	fileformats/FileFormatDiscreet1DL_tests.cpp
+	fileformats/FileFormatHDL_tests.cpp
+	fileformats/FileFormatICC_tests.cpp
+	fileformats/FileFormatIridasCube_tests.cpp
+	fileformats/FileFormatIridasItx_tests.cpp
+	fileformats/FileFormatIridasLook_tests.cpp
+	fileformats/FileFormatPandora_tests.cpp
+	fileformats/FileFormatResolveCube_tests.cpp
+	fileformats/FileFormatSpi1D_tests.cpp
+	fileformats/FileFormatSpi3D_tests.cpp
+	fileformats/FileFormatSpiMtx_tests.cpp
+	fileformats/FileFormatTruelight_tests.cpp
+	fileformats/FileFormatVF_tests.cpp
+	fileformats/FormatMetadata_tests.cpp
+	fileformats/xmlutils/XMLReaderUtils_tests.cpp
+	FileRules_tests.cpp
+	GpuShader_tests.cpp
+	GpuShaderUtils_tests.cpp
 	Logging_tests.cpp
+	LookParse_tests.cpp
+	MathUtils_tests.cpp
+	Op_tests.cpp
+	OpOptimizers_tests.cpp
+	ops/allocation/AllocationOp_tests.cpp
+	ops/cdl/CDLOpData_tests.cpp
+	ops/cdl/CDLOp_tests.cpp
+	ops/exponent/ExponentOp_tests.cpp
+	ops/exposurecontrast/ExposureContrastOpCPU_tests.cpp
+	ops/exposurecontrast/ExposureContrastOpData_tests.cpp
+	ops/exposurecontrast/ExposureContrastOp_tests.cpp
+	ops/fixedfunction/FixedFunctionOpCPU_tests.cpp
+	ops/fixedfunction/FixedFunctionOpData_tests.cpp
+	ops/fixedfunction/FixedFunctionOp_tests.cpp
+	ops/gamma/GammaOp_tests.cpp
+	ops/gamma/GammaOpCPU_tests.cpp
+	ops/gamma/GammaOpData_tests.cpp
+	ops/gamma/GammaOpUtils_tests.cpp
+	ops/log/LogOpCPU_tests.cpp
+	ops/log/LogOpData_tests.cpp
+	ops/log/LogOp_tests.cpp
+	ops/log/LogUtils_tests.cpp
+	ops/lut1d/Lut1DOp_tests.cpp
+	ops/lut1d/Lut1DOpCPU_tests.cpp
+	ops/lut1d/Lut1DOpData_tests.cpp
+	ops/lut1d/Lut1DOpGPU_tests.cpp
+	ops/lut3d/Lut3DOp_tests.cpp
+	ops/lut3d/Lut3DOpCPU_tests.cpp
+	ops/lut3d/Lut3DOpData_tests.cpp
+	ops/matrix/MatrixOpCPU_tests.cpp
+	ops/matrix/MatrixOpData_tests.cpp
+	ops/matrix/MatrixOp_tests.cpp
+	ops/noop/NoOps_tests.cpp
+	ops/range/RangeOpCPU_tests.cpp
+	ops/range/RangeOpData_tests.cpp
+	ops/range/RangeOp_tests.cpp
+	ops/reference/ReferenceOpData_tests.cpp
+	ParseUtils_tests.cpp
+	PathUtils_tests.cpp
+	Platform_tests.cpp
 	Processor_tests.cpp
+	SSE_tests.cpp
 	transforms/FileTransform_tests.cpp
+	transforms/FixedFunctionTransform_tests.cpp
 	transforms/RangeTransform_tests.cpp
-	UnitTest.cpp
+	transforms/AllocationTransform_tests.cpp
+	transforms/CDLTransform_tests.cpp
+	transforms/ColorSpaceTransform_tests.cpp
+	transforms/DisplayTransform_tests.cpp
+	transforms/ExponentTransform_tests.cpp
+	transforms/ExponentWithLinearTransform_tests.cpp
+	transforms/ExposureContrastTransform_tests.cpp
+	transforms/FixedFunctionTransform_tests.cpp
+	transforms/GroupTransform_tests.cpp
+	transforms/LogAffineTransform_tests.cpp
+	transforms/LogCameraTransform_tests.cpp
+	transforms/LogTransform_tests.cpp
+	transforms/Lut1DTransform_tests.cpp
+	transforms/Lut3DTransform_tests.cpp
+	transforms/MatrixTransform_tests.cpp
+	UnitTestLogUtils.cpp
+	UnitTestMain.cpp
 	UnitTestUtils.cpp
+	ViewTransform_tests.cpp
 )
 
 function(prepend var prefix)

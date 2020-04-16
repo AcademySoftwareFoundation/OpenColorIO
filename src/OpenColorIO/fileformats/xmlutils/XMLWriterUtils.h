@@ -4,13 +4,12 @@
 #ifndef INCLUDED_OCIO_FILEFORMATS_XML_XMLWRITERUTILS_H
 #define INCLUDED_OCIO_FILEFORMATS_XML_XMLWRITERUTILS_H
 
-#include <list>
 #include <string>
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
 // Provides all services to write xml to an output stream.
@@ -18,11 +17,14 @@ class XmlFormatter final
 {
 public:
 
-    typedef std::pair<std::string, std::string> Attribute;
-    typedef std::vector<Attribute> Attributes;
+    using Attribute  = std::pair<std::string, std::string>;
+    using Attributes = std::vector<Attribute>;
 
 public:
     XmlFormatter() = delete;
+    XmlFormatter(const XmlFormatter &) = delete;
+    XmlFormatter& operator=(const XmlFormatter &) = delete;
+
     XmlFormatter(std::ostream& stream);
     ~XmlFormatter();
 
@@ -71,7 +73,11 @@ private:
 class XmlElementWriter
 {
 public:
-    XmlElementWriter(XmlFormatter & formatter);
+    XmlElementWriter() = delete;
+    XmlElementWriter(XmlElementWriter &) = delete;
+    XmlElementWriter& operator=(XmlElementWriter &) = delete;
+
+    explicit XmlElementWriter(XmlFormatter & formatter);
     virtual ~XmlElementWriter();
 
     virtual void write() const = 0;
@@ -86,16 +92,16 @@ class XmlScopeIndent
 {
 public:
     XmlScopeIndent() = delete;
-    XmlScopeIndent(XmlFormatter & formatter);
-    XmlScopeIndent& operator=(XmlFormatter & formatter) = delete;
+    XmlScopeIndent(XmlScopeIndent &) = delete;
+    XmlScopeIndent & operator=(XmlScopeIndent &) = delete;
 
+    explicit XmlScopeIndent(XmlFormatter & formatter);
     ~XmlScopeIndent();
 
 private:
     XmlFormatter & m_formatter;
 };
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif

@@ -11,13 +11,13 @@
 #include "transforms/CDLTransform.h"
 #include "Platform.h"
 
-OCIO_NAMESPACE_ENTER
+namespace OCIO_NAMESPACE
 {
 
-static constexpr const char * CDL_TAG_COLOR_DECISION_LIST = "ColorDecisionList";
-static constexpr const char * CDL_TAG_COLOR_CORRECTION_COLLECTION = "ColorCorrectionCollection";
-static constexpr const char * CDL_TAG_COLOR_DECISION = "ColorDecision";
-static constexpr const char * CDL_TAG_COLOR_CORRECTION = "ColorCorrection";
+static constexpr char CDL_TAG_COLOR_DECISION_LIST[] = "ColorDecisionList";
+static constexpr char CDL_TAG_COLOR_CORRECTION_COLLECTION[] = "ColorCorrectionCollection";
+static constexpr char CDL_TAG_COLOR_DECISION[] = "ColorDecision";
+static constexpr char CDL_TAG_COLOR_CORRECTION[] = "ColorCorrection";
 
 class CDLParser::Impl
 {
@@ -246,7 +246,7 @@ void CDLParser::Impl::throwMessage(const std::string & error) const
 void CDLParser::Impl::parse(const std::string & buffer, bool lastLine)
 {
     const int done = lastLine?1:0;
-    
+
     if (XML_STATUS_ERROR == XML_Parse(m_parser,
                                       buffer.c_str(),
                                       (int)buffer.size(),
@@ -320,7 +320,7 @@ void CDLParser::Impl::initializeHandlers(const char* buffer)
                               EndElementHandler);
         m_isCC = true;
 
-        // If parsing a CC, initialize the TransformList explicitely.
+        // If parsing a CC, initialize the TransformList explicitly.
         m_parsingInfo = std::make_shared<CDLParsingInfo>();
     }
     else
@@ -675,7 +675,7 @@ bool CDLParser::Impl::HandleColorCorrectionCCStartElement(
             pElt = pImpl->createElement<CDLReaderColorCorrectionElt>(name);
 
             // Bind the ColorCorrection element's CDLTransformList to the
-            // one explicitely created by the reader.
+            // one explicitly created by the reader.
             CDLReaderColorCorrectionElt* pCCElt =
                 dynamic_cast<CDLReaderColorCorrectionElt*>(pElt.get());
 
@@ -1019,6 +1019,4 @@ bool CDLParser::isCCC() const
     return m_impl->isCCC();
 }
 
-}
-OCIO_NAMESPACE_EXIT
-
+} // namespace OCIO_NAMESPACE

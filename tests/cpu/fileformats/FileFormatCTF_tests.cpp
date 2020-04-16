@@ -1,11 +1,16 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include "BitDepthUtils.h"
 #include "fileformats/FileFormatCTF.cpp"
-#include "UnitTest.h"
+#include "ops/fixedfunction/FixedFunctionOp.h"
+#include "testutils/UnitTest.h"
+#include "UnitTestLogUtils.h"
 #include "UnitTestUtils.h"
+
 namespace OCIO = OCIO_NAMESPACE;
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -66,7 +71,7 @@ OCIO_ADD_TEST(FileFormatCTF, clf_spec)
         auto lut = OCIO::DynamicPtrCast<const OCIO::Lut1DOpData>(opList[0]);
         OCIO_REQUIRE_ASSERT(lut);
         OCIO_CHECK_EQUAL(lut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
-        OCIO::StringVec desc;
+        StringUtils::StringVec desc;
         GetElementsValues(opList[0]->getFormatMetadata().getChildrenElements(),
                           OCIO::TAG_DESCRIPTION, desc);
         OCIO_REQUIRE_EQUAL(desc.size(), 1);
@@ -90,7 +95,7 @@ OCIO_ADD_TEST(FileFormatCTF, clf_spec)
         auto lut = OCIO::DynamicPtrCast<const OCIO::Lut3DOpData>(opList[0]);
         OCIO_REQUIRE_ASSERT(lut);
         OCIO_CHECK_EQUAL(lut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F16);
-        OCIO::StringVec desc;
+        StringUtils::StringVec desc;
         GetElementsValues(opList[0]->getFormatMetadata().getChildrenElements(),
                           OCIO::TAG_DESCRIPTION, desc);
         OCIO_REQUIRE_EQUAL(desc.size(), 1);
@@ -117,7 +122,7 @@ OCIO_ADD_TEST(FileFormatCTF, clf_spec)
         OCIO_REQUIRE_ASSERT(mat);
         OCIO_CHECK_EQUAL(mat->getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
         OCIO_CHECK_EQUAL(mat->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
-        OCIO::StringVec desc;
+        StringUtils::StringVec desc;
         GetElementsValues(opList[0]->getFormatMetadata().getChildrenElements(),
                           OCIO::TAG_DESCRIPTION, desc);
         OCIO_REQUIRE_EQUAL(desc.size(), 1);
@@ -151,7 +156,7 @@ OCIO_ADD_TEST(FileFormatCTF, clf_spec)
         auto lut = OCIO::DynamicPtrCast<const OCIO::Lut1DOpData>(opList[1]);
         OCIO_REQUIRE_ASSERT(lut);
         OCIO_CHECK_EQUAL(lut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F16);
-        OCIO::StringVec desc;
+        StringUtils::StringVec desc;
         GetElementsValues(opList[1]->getFormatMetadata().getChildrenElements(),
                           OCIO::TAG_DESCRIPTION, desc);
         OCIO_REQUIRE_EQUAL(desc.size(), 1);
@@ -180,7 +185,7 @@ OCIO_ADD_TEST(FileFormatCTF, lut_1d)
         auto pLut = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[0]);
         OCIO_REQUIRE_ASSERT(pLut);
 
-        OCIO::StringVec desc;
+        StringUtils::StringVec desc;
         GetElementsValues(pLut->getFormatMetadata().getChildrenElements(),
                           OCIO::TAG_DESCRIPTION, desc);
         OCIO_REQUIRE_EQUAL(desc.size(), 1);
@@ -455,7 +460,7 @@ OCIO_ADD_TEST(FileFormatCTF, matrix_1_3_offsets)
 
 OCIO_ADD_TEST(FileFormatCTF, matrix_1_3_alpha_offsets)
 {
-    // Verion 1.3, array 4x5x4: matrix with alpha and offsets.
+    // Version 1.3, array 4x5x4: matrix with alpha and offsets.
     OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string ctfFile("matrix_example_1_3_alpha_offsets.ctf");
     OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
@@ -502,6 +507,111 @@ OCIO_ADD_TEST(FileFormatCTF, matrix_1_3_alpha_offsets)
     OCIO_CHECK_EQUAL(offsets[1], 0.2);
     OCIO_CHECK_EQUAL(offsets[2], 0.3);
     OCIO_CHECK_EQUAL(offsets[3], 0.4);
+}
+
+namespace
+{
+void CheckIdentity(std::istringstream & ctfStream, unsigned line)
+{
+    // Load file
+    std::string emptyString;
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr file;
+    OCIO_CHECK_NO_THROW_FROM(file = tester.read(ctfStream, emptyString), line);
+    OCIO::LocalCachedFileRcPtr cachedFile = OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
+    const auto & fileOps = cachedFile->m_transform->getOps();
+
+    OCIO_REQUIRE_EQUAL_FROM(fileOps.size(), 1, line);
+    const auto op = fileOps[0];
+    auto mat = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(op);
+    OCIO_REQUIRE_ASSERT_FROM(mat, line);
+    OCIO_CHECK_ASSERT_FROM(mat->isIdentity(), line);
+}
+}
+
+OCIO_ADD_TEST(FileFormatCTF, matrix_identity)
+{
+    std::istringstream ctf;
+
+    // Pre version 1.3 matrix parsing.
+
+    ctf.str(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="none">
+    <Description>RGB matrix Identity, 10i to 12i</Description>
+    <Matrix inBitDepth="10i" outBitDepth="12i">
+        <Array dim="3 3 3">
+4.0029325513196481 0 0
+0 4.0029325513196481 0
+0 0 4.0029325513196481
+        </Array>
+    </Matrix>
+</ProcessList>
+)");
+    CheckIdentity(ctf, __LINE__);
+
+    ctf.clear();
+    ctf.str(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="none" version="1.2">
+    <Description>RGB matrix + offset Identity, 10i to 12i</Description>
+    <Matrix inBitDepth="10i" outBitDepth="12i">
+        <Array dim="4 4 3">
+4.0029325513196481 0 0 0
+0 4.0029325513196481 0 0
+0 0 4.0029325513196481 0
+0 0                  0 0
+        </Array>
+    </Matrix>
+</ProcessList>
+)");
+    CheckIdentity(ctf, __LINE__);
+
+    // Version 1.3 and onward matrix parsing.
+
+    ctf.clear();
+    ctf.str(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="none" version="1.3">
+    <Description>RGB matrix Identity, 10i to 12i</Description>
+    <Matrix inBitDepth="10i" outBitDepth="12i">
+        <Array dim="3 3 3">
+4.0029325513196481 0 0
+0 4.0029325513196481 0
+0 0 4.0029325513196481
+        </Array>
+    </Matrix>
+</ProcessList>
+)");
+    CheckIdentity(ctf, __LINE__);
+    ctf.clear();
+
+    ctf.str(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="none" version="1.3">
+    <Description>RGBA matrix Identity, 10i to 12i</Description>
+    <Matrix inBitDepth="10i" outBitDepth="12i">
+        <Array dim="4 4 4">
+4.0029325513196481 0 0 0
+0 4.0029325513196481 0 0
+0 0 4.0029325513196481 0
+0 0 0 4.0029325513196481
+        </Array>
+    </Matrix>
+</ProcessList>
+)");
+    CheckIdentity(ctf, __LINE__);
+
+    ctf.clear();
+    ctf.str(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="none" version="1.3">
+    <Description>RGB matrix + offset Identity, 10i to 12i</Description>
+    <Matrix inBitDepth="10i" outBitDepth="12i">
+        <Array dim="3 4 3">
+4.0029325513196481 0 0 0
+0 4.0029325513196481 0 0
+0 0 4.0029325513196481 0
+        </Array>
+    </Matrix>
+</ProcessList>
+)");
+    CheckIdentity(ctf, __LINE__);
 }
 
 OCIO_ADD_TEST(FileFormatCTF, 3by1d_lut)
@@ -637,6 +747,53 @@ OCIO_ADD_TEST(FileFormatCTF, lut1d_inv)
     OCIO_CHECK_CLOSE(a2.getValues()[50], 1.0f, error);
 }
 
+namespace
+{
+OCIO::LocalCachedFileRcPtr ParseString(const std::string & str)
+{
+    std::istringstream ctf;
+    ctf.str(str);
+
+    // Parse stream.
+    std::string emptyString;
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr file = tester.read(ctf, emptyString);
+
+    return OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
+}
+}
+
+OCIO_ADD_TEST(FileFormatCTF, invlut1d_clf)
+{
+    const std::string clf{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="2" id="UIDLUT42">
+    <InverseLUT1D id="lut01" name="test-lut" inBitDepth="32f" outBitDepth="10i">
+        <Array dim="16 3">
+   0    1    2
+   3    4    5
+   6    7    8
+   9   10   11
+  12   13   14
+  15   16   17
+  18   19   20
+  21   22   23
+  24   25   26
+  27   28   29
+  30   31   32
+  33   34   35
+  36   37   38
+  39   40   41
+  42   43   44
+  45   46   47
+        </Array>
+    </InverseLUT1D>
+</ProcessList>
+)" };
+
+    OCIO_CHECK_THROW_WHAT(ParseString(clf), OCIO::Exception,
+                          "CLF file version '2' does not support operator 'InverseLUT1D'");
+}
+
 OCIO_ADD_TEST(FileFormatCTF, lut3d)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
@@ -723,7 +880,7 @@ OCIO_ADD_TEST(FileFormatCTF, check_utf8)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    OCIO::StringVec descList;
+    StringUtils::StringVec descList;
     GetElementsValues(opList[0]->getFormatMetadata().getChildrenElements(),
                       OCIO::TAG_DESCRIPTION, descList);
     OCIO_REQUIRE_EQUAL(descList.size(), 1);
@@ -737,42 +894,6 @@ OCIO_ADD_TEST(FileFormatCTF, check_utf8)
 
 }
 
-namespace
-{
-
-std::string output;
-
-// The custom logging function for testing.
-void CustomLoggingFunction(const char * message)
-{
-    output += message;
-}
-
-// Preserve the default log settings.
-class LogGuard
-{
-public:
-    LogGuard()
-    {
-        OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_DEBUG);
-        OCIO::SetLoggingFunction(CustomLoggingFunction);
-        output.clear();
-    }
-
-    ~LogGuard()
-    {
-        OCIO::ResetToDefaultLoggingFunction();
-        OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_DEFAULT);
-    }
-
-    LogGuard(const LogGuard &) = delete;
-    LogGuard & operator=(const LogGuard &) = delete;
-};
-
-
-}
-
-
 OCIO_ADD_TEST(FileFormatCTF, error_checker)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
@@ -780,26 +901,25 @@ OCIO_ADD_TEST(FileFormatCTF, error_checker)
     {
         constexpr static const char ErrorOutputs[3][1024] = 
         {
-            "[OpenColorIO Warning]: Ignore element 'B' (line 34) where its parent is 'ProcessList' (line 2) : Unknown element",
-            "[OpenColorIO Warning]: Ignore element 'C' (line 34) where its parent is 'B' (line 34)",
-            "[OpenColorIO Warning]: Ignore element 'A' (line 36) where its parent is 'Description' (line 36)"
+            "(34): Unrecognized element 'B' where its parent is 'ProcessList' (2): Unknown element",
+            "(34): Unrecognized element 'C' where its parent is 'B' (34)",
+            "(36): Unrecognized element 'A' where its parent is 'Description' (36)"
         };
 
-        LogGuard guard;
+        OCIO::LogGuard guard;
+        OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_WARNING);
 
         // NB: This file has some added unknown elements A, B, and C as a test.
         const std::string ctfFile("unknown_elements.clf");
         OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
         OCIO_REQUIRE_ASSERT((bool)cachedFile);
 
-        OCIO::StringVec parts;
-        pystring::split(pystring::rstrip(output), parts, "\n");
-
+        const StringUtils::StringVec parts = StringUtils::SplitByLines(StringUtils::RightTrim(guard.output()));
         OCIO_REQUIRE_EQUAL(parts.size(), 3);
 
         for (size_t i = 0; i < parts.size(); ++i)
         {
-            OCIO_CHECK_ASSERT(pystring::startswith(parts[i], ErrorOutputs[i]));
+            OCIO_CHECK_NE(std::string::npos, StringUtils::Find(parts[i], ErrorOutputs[i]));
         }
     }
 
@@ -924,39 +1044,39 @@ OCIO_ADD_TEST(FileFormatCTF, error_checker_for_difficult_xml)
     OCIO::LocalCachedFileRcPtr cachedFile;
 
     {
-        constexpr static const char ErrorOutputs[9][1024] = 
+        constexpr char ErrorOutputs[11][1024] = 
         {
-            "[OpenColorIO Warning]: Ignore element 'Ignore' (line 10) where its parent is 'ProcessList' (line 8) : Unknown element",
-            "[OpenColorIO Warning]: Ignore element 'ProcessList' (line 27) where its parent is 'ProcessList' (line 8) : The Transform already exists",
-            "[OpenColorIO Warning]: Ignore element 'Array' (line 30) where its parent is 'Matrix' (line 16) : Only one Array allowed per op",
-            "[OpenColorIO Warning]: Ignore element 'just_ignore' (line 37) where its parent is 'ProcessList' (line 8) : Unknown element",
-            "[OpenColorIO Warning]: Ignore element 'just_ignore' (line 69) where its parent is 'Description' (line 66)",
-            "[OpenColorIO Warning]: Ignore element 'just_ignore' (line 70) where its parent is 'just_ignore' (line 69)",
-            "[OpenColorIO Warning]: Ignore element 'Matrix' (line 75) where its parent is 'LUT1D' (line 43) : 'Matrix' not allowed in this element",
-            "[OpenColorIO Warning]: Ignore element 'Description' (line 76) where its parent is 'Matrix' (line 75)",
-            "[OpenColorIO Warning]: Ignore element 'Array' (line 77) where its parent is 'Matrix' (line 75)"
+            "(10): Unrecognized element 'Ignore' where its parent is 'ProcessList' (8): Unknown element",
+            "(22): Unrecognized attribute 'id' of 'Array'",
+            "(22): Unrecognized attribute 'foo' of 'Array'",
+            "(27): Unrecognized element 'ProcessList' where its parent is 'ProcessList' (8): The Transform already exists",
+            "(30): Unrecognized element 'Array' where its parent is 'Matrix' (16): Only one Array allowed per op",
+            "(37): Unrecognized element 'just_ignore' where its parent is 'ProcessList' (8): Unknown element",
+            "(69): Unrecognized element 'just_ignore' where its parent is 'Description' (66)",
+            "(70): Unrecognized element 'just_ignore' where its parent is 'just_ignore' (69)",
+            "(75): Unrecognized element 'Matrix' where its parent is 'LUT1D' (43): 'Matrix' not allowed in this element",
+            "(76): Unrecognized element 'Description' where its parent is 'Matrix' (75)",
+            "(77): Unrecognized element 'Array' where its parent is 'Matrix' (75)"
         };
 
-        LogGuard guard;
+        OCIO::LogGuard guard;
+        OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_WARNING);
 
         const std::string ctfFile("difficult_test1_v1.ctf");
         OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
         OCIO_REQUIRE_ASSERT((bool)cachedFile);
 
-        OCIO::StringVec parts;
-        pystring::split(pystring::rstrip(output), parts, "\n");
-
-        OCIO_REQUIRE_EQUAL(parts.size(), 9);
+        const StringUtils::StringVec parts = StringUtils::SplitByLines(StringUtils::RightTrim(guard.output()));
+        OCIO_REQUIRE_EQUAL(parts.size(), 11);
 
         for (size_t i = 0; i < parts.size(); ++i)
         {
-            OCIO_CHECK_ASSERT(pystring::startswith(parts[i], ErrorOutputs[i]));
+            OCIO_CHECK_NE(std::string::npos, StringUtils::Find(parts[i], ErrorOutputs[i]));
         }
     }
 
     // Defaults to 1.2
-    const OCIO::CTFVersion ctfVersion =
-        cachedFile->m_transform->getCTFVersion();
+    const OCIO::CTFVersion ctfVersion = cachedFile->m_transform->getCTFVersion();
     OCIO_CHECK_ASSERT(OCIO::CTF_PROCESS_LIST_VERSION_1_2 == ctfVersion);
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
@@ -968,8 +1088,7 @@ OCIO_ADD_TEST(FileFormatCTF, error_checker_for_difficult_xml)
     const OCIO::ArrayDouble & array = pMatrix->getArray();
     OCIO_CHECK_EQUAL(array.getLength(), 4u);
     OCIO_CHECK_EQUAL(array.getNumColorComponents(), 4u);
-    OCIO_CHECK_EQUAL(array.getNumValues(),
-                     array.getLength()*array.getLength());
+    OCIO_CHECK_EQUAL(array.getNumValues(), array.getLength()*array.getLength());
 
     OCIO_REQUIRE_EQUAL(array.getValues().size(), array.getNumValues());
     OCIO_CHECK_EQUAL(array.getValues()[0],  3.24);
@@ -1082,7 +1201,7 @@ OCIO_ADD_TEST(FileFormatCTF, array_corrupted_dimension)
     const std::string ctfFile("array_illegal_dimension.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile),
                           OCIO::Exception,
-                          "Illegal dimensions");
+                          "Illegal array dimensions");
 }
 
 OCIO_ADD_TEST(FileFormatCTF, array_too_many_values)
@@ -1140,7 +1259,7 @@ OCIO_ADD_TEST(FileFormatCTF, transform_with_bitdepth_mismatch)
     const std::string ctfFile("transform_bitdepth_mismatch.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile),
                           OCIO::Exception,
-                          "Bit-depth missmatch");
+                          "Bit-depth mismatch");
 }
 
 OCIO_ADD_TEST(FileFormatCTF, check_index_map)
@@ -1207,7 +1326,7 @@ OCIO_ADD_TEST(FileFormatCTF, matrix_with_offset_1_3)
     const std::string ctfFile("matrix_offsets_example_1_3.ctf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile),
                           OCIO::Exception,
-                          "Illegal dimensions 4 4 3");
+                          "Illegal array dimensions 4 4 3");
 }
 
 OCIO_ADD_TEST(FileFormatCTF, lut_3by1d_with_nan_infinity)
@@ -1336,41 +1455,31 @@ OCIO_ADD_TEST(FileFormatCTF, range1)
 
 OCIO_ADD_TEST(FileFormatCTF, range2)
 {
-    OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string ctfFile("range_test2.clf");
-    OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
-    OCIO_REQUIRE_ASSERT((bool)cachedFile);
-
-    const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
-    OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    auto pR = std::dynamic_pointer_cast<const OCIO::RangeOpData>(opList[0]);
-    OCIO_REQUIRE_ASSERT(pR);
-    OCIO_CHECK_EQUAL(pR->getFileInputBitDepth(), OCIO::BIT_DEPTH_F32);
-    OCIO_CHECK_EQUAL(pR->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F16);
-
-    OCIO_CHECK_EQUAL((float)pR->getMinInValue(), 0.1f);
-    OCIO_CHECK_EQUAL((float)pR->getMinOutValue(), -0.1f);
-
-    OCIO_CHECK_ASSERT(!pR->minIsEmpty());
-    OCIO_CHECK_ASSERT(pR->maxIsEmpty());
+    OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception,
+                          "In and out minimum limits must be equal");
 }
 
 OCIO_ADD_TEST(FileFormatCTF, range3)
 {
-    OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string ctfFile("range_test3.clf");
-    OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
-    OCIO_REQUIRE_ASSERT((bool)cachedFile);
+    OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception,
+                          "At least minimum or maximum limits must be set");
+}
 
-    const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
-    OCIO_REQUIRE_EQUAL(opList.size(), 1);
-    auto pR = std::dynamic_pointer_cast<const OCIO::RangeOpData>(opList[0]);
-    OCIO_REQUIRE_ASSERT(pR);
-    OCIO_CHECK_EQUAL(pR->getFileInputBitDepth(), OCIO::BIT_DEPTH_F16);
-    OCIO_CHECK_EQUAL(pR->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+OCIO_ADD_TEST(FileFormatCTF, range4)
+{
+    const std::string clf{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="2" id="UIDLUT42">
+    <Range inBitDepth="32f" outBitDepth="32f" style="noClamp">
+        <minInValue>0.1</minInValue>
+        <minOutValue>0.1</minOutValue>
+    </Range>
+</ProcessList>
+)" };
 
-    OCIO_CHECK_ASSERT(pR->minIsEmpty());
-    OCIO_CHECK_ASSERT(pR->maxIsEmpty());
+    OCIO_CHECK_THROW_WHAT(ParseString(clf), OCIO::Exception,
+                          "Non-clamping Range min & max values have to be set");
 }
 
 OCIO_ADD_TEST(FileFormatCTF, gamma1)
@@ -1724,6 +1833,43 @@ OCIO_ADD_TEST(FileFormatCTF, gamma_alpha6)
                           "Missing required offset parameter");
 }
 
+OCIO_ADD_TEST(FileFormatCTF, gamma_parse)
+{
+    const std::string gammaCLF2{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="2" id="UID42">
+    <Exponent inBitDepth="32f" outBitDepth="32f" style="basicRev">
+        <ExponentParams gamma="2.6" />
+    </Exponent>
+</ProcessList>
+)" };
+
+    OCIO_CHECK_THROW_WHAT(ParseString(gammaCLF2), OCIO::Exception,
+                          "CLF file version '2' does not support operator 'Exponent'");
+
+    const std::string gammaCLFAlpha{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="3" id="UID42">
+    <Exponent inBitDepth="32f" outBitDepth="32f" style="basicRev">
+        <ExponentParams gamma="2.6" />
+        <ExponentParams channel="A" gamma="1.7" offset="0.33" />
+    </Exponent>
+</ProcessList>
+)" };
+
+    OCIO_CHECK_THROW_WHAT(ParseString(gammaCLFAlpha), OCIO::Exception,
+                          "Invalid channel: A");
+
+    const std::string gammaCTFMirror1_7{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="1.7" id="UID42">
+    <Exponent inBitDepth="32f" outBitDepth="32f" style="basicMirrorRev">
+        <ExponentParams gamma="2.6" />
+    </Exponent>
+</ProcessList>
+)" };
+
+    OCIO_CHECK_THROW_WHAT(ParseString(gammaCTFMirror1_7), OCIO::Exception,
+                                      "Style not handled: 'basicMirrorRev'");
+}
+
 OCIO_ADD_TEST(FileFormatCTF, invalid_version)
 {
     const std::string ctfFile("process_list_invalid_version.ctf");
@@ -1795,7 +1941,7 @@ OCIO_ADD_TEST(FileFormatCTF, cdl)
     OCIO_CHECK_EQUAL(pCDL->getID(), std::string("look 1"));
     OCIO_CHECK_EQUAL(pCDL->getName(), std::string("cdl"));
 
-    OCIO::StringVec descriptions;
+    StringUtils::StringVec descriptions;
     GetElementsValues(pCDL->getFormatMetadata().getChildrenElements(),
                       OCIO::TAG_DESCRIPTION, descriptions);
 
@@ -2107,7 +2253,7 @@ OCIO_ADD_TEST(FileFormatCTF, clf_1)
     // First one is a CDL
     auto cdlOpData = std::dynamic_pointer_cast<const OCIO::CDLOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(cdlOpData);
-    OCIO::StringVec desc;
+    StringUtils::StringVec desc;
     GetElementsValues(cdlOpData->getFormatMetadata().getChildrenElements(),
                       OCIO::TAG_DESCRIPTION, desc);
 
@@ -2338,7 +2484,7 @@ OCIO_ADD_TEST(Log, load_log10)
     OCIO::ConstOpDataRcPtr op = fileOps[0];
     OCIO::ConstLogOpDataRcPtr log = std::dynamic_pointer_cast<const OCIO::LogOpData>(op);
     OCIO_REQUIRE_ASSERT(log);
-    OCIO::StringVec desc;
+    StringUtils::StringVec desc;
     GetElementsValues(log->getFormatMetadata().getChildrenElements(),
                       OCIO::TAG_DESCRIPTION, desc);
     OCIO_REQUIRE_EQUAL(desc.size(), 1);
@@ -2465,30 +2611,14 @@ OCIO_ADD_TEST(Log, load_faulty_version)
 {
     std::string fileName("log_log10_faulty_version.ctf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(fileName), OCIO::Exception,
-                          "Unsupported transform file version");
-}
-
-namespace
-{
-OCIO::LocalCachedFileRcPtr ParseString(const std::string & str)
-{
-    std::istringstream ctf;
-    ctf.str(str);
-
-    // Parse stream.
-    std::string emptyString;
-    OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr file = tester.read(ctf, emptyString);
-
-    return OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
-}
+                          "CTF file version '1.2' does not support operator 'Log'");
 }
 
 OCIO_ADD_TEST(Log, load_ocio_params_equals)
 {
     std::ostringstream strebuf;
     strebuf << "<?xml version='1.0' encoding='UTF-8'?>\n";
-    strebuf << "<ProcessList id='none' version='1.5'>\n";
+    strebuf << "<ProcessList id='none' version='2'>\n";
     strebuf << "<Log inBitDepth='32f' outBitDepth='32f' style='linToLog'>\n";
     strebuf << "<LogParams linSideSlope='1.1' linSideOffset='0.1' logSideSlope='0.9' logSideOffset='0.2' base='9.0' />\n";
     strebuf << "</Log>\n";
@@ -2513,13 +2643,13 @@ OCIO_ADD_TEST(Log, load_ocio_params_equals)
 OCIO_ADD_TEST(Log, load_ocio_params_channels)
 {
     // NB: The blue channel is missing and will use default values.
-    // Base can be specified in any channel but hase to be specified.
+    // Base can be specified in any channel but has to be specified.
     std::ostringstream strebuf;
     strebuf << "<?xml version='1.0' encoding='UTF-8'?>\n";
     strebuf << "<ProcessList id='none' version='2'>\n";
     strebuf << "<Log inBitDepth='10i' outBitDepth='16f' style='linToLog'>\n";
-    strebuf << "<LogParams channel='R' linSideSlope='1.1' linSideOffset='0.1' logSideSlope='0.9' logSideOffset='0.2' base='9.0' />\n";
-    strebuf << "<LogParams channel='G' logSideSlope='0.9' logSideOffset='0.2' />\n";
+    strebuf << "<LogParams channel='R' linSideSlope='1.1' linSideOffset='0.1' logSideSlope='0.9' logSideOffset='0.2' base='10.0' />\n";
+    strebuf << "<LogParams channel='G' logSideSlope='0.9' logSideOffset='0.23456' />\n";
     strebuf << "</Log>\n";
     strebuf << "</ProcessList>\n";
 
@@ -2530,7 +2660,7 @@ OCIO_ADD_TEST(Log, load_ocio_params_channels)
     auto op = fileOps[0];
     auto log = std::dynamic_pointer_cast<const OCIO::LogOpData>(op);
     OCIO_REQUIRE_ASSERT(log);
-    OCIO_CHECK_EQUAL(log->getBase(), 9.0);
+    OCIO_CHECK_EQUAL(log->getBase(), 10.0);
     OCIO_CHECK_ASSERT(!log->allComponentsEqual());
     const auto & rParams = log->getRedParams();
     OCIO_CHECK_EQUAL(rParams[OCIO::LIN_SIDE_SLOPE], 1.1);
@@ -2541,7 +2671,7 @@ OCIO_ADD_TEST(Log, load_ocio_params_channels)
     OCIO_CHECK_EQUAL(gParams[OCIO::LIN_SIDE_SLOPE], 1.0);
     OCIO_CHECK_EQUAL(gParams[OCIO::LIN_SIDE_OFFSET], 0.0);
     OCIO_CHECK_EQUAL(gParams[OCIO::LOG_SIDE_SLOPE], 0.9);
-    OCIO_CHECK_EQUAL(gParams[OCIO::LOG_SIDE_OFFSET], 0.2);
+    OCIO_CHECK_EQUAL(gParams[OCIO::LOG_SIDE_OFFSET], 0.23456);
     const auto & bParams = log->getBlueParams();
     OCIO_CHECK_EQUAL(bParams[OCIO::LIN_SIDE_SLOPE], 1.0);
     OCIO_CHECK_EQUAL(bParams[OCIO::LIN_SIDE_OFFSET], 0.0);
@@ -2549,23 +2679,7 @@ OCIO_ADD_TEST(Log, load_ocio_params_channels)
     OCIO_CHECK_EQUAL(bParams[OCIO::LOG_SIDE_OFFSET], 0.0);
 }
 
-
-OCIO_ADD_TEST(Log, load_ocio_ctf_params)
-{
-    std::ostringstream strebuf;
-    strebuf << "<?xml version='1.0' encoding='UTF-8'?>\n";
-    strebuf << "<ProcessList id='none' version='2'>\n";
-    strebuf << "<Log inBitDepth='32f' outBitDepth='32f' style='linToLog'>\n";
-    strebuf << "<LogParams channel='R' linSideSlope='1.1' linSideOffset='0.1' logSideSlope='0.9' logSideOffset='0.2' base='9.0' />\n";
-    strebuf << "<LogParams channel='G' gamma='0.6' refWhite='682' refBlack='94' highlight='1' shadow='0.0025' />\n";
-    strebuf << "</Log>\n";
-    strebuf << "</ProcessList>\n";
-
-    OCIO_CHECK_THROW_WHAT(ParseString(strebuf.str()), OCIO::Exception,
-                          "should not be mixed");
-}
-
-OCIO_ADD_TEST(Log, load_ocio_params_base_missing)
+OCIO_ADD_TEST(Log, load_ocio_params_base_missing_2)
 {
     std::ostringstream strebuf;
     strebuf << "<?xml version='1.0' encoding='UTF-8'?>\n";
@@ -2575,8 +2689,16 @@ OCIO_ADD_TEST(Log, load_ocio_params_base_missing)
     strebuf << "</Log>\n";
     strebuf << "</ProcessList>\n";
 
-    OCIO_CHECK_THROW_WHAT(ParseString(strebuf.str()), OCIO::Exception,
-                          "Base has to be specified");
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    OCIO_CHECK_NO_THROW(cachedFile = ParseString(strebuf.str()));
+    OCIO::ConstOpDataVec & fileOps = cachedFile->m_transform->getOps();
+
+    OCIO_REQUIRE_EQUAL(fileOps.size(), 1);
+    auto op = fileOps[0];
+    auto log = std::dynamic_pointer_cast<const OCIO::LogOpData>(op);
+    OCIO_REQUIRE_ASSERT(log);
+    // Default value is 2.
+    OCIO_CHECK_EQUAL(log->getBase(), 2.0);
 }
 
 OCIO_ADD_TEST(Log, load_ocio_params_base_missmatch)
@@ -2592,6 +2714,83 @@ OCIO_ADD_TEST(Log, load_ocio_params_base_missmatch)
 
     OCIO_CHECK_THROW_WHAT(ParseString(strebuf.str()), OCIO::Exception,
                           "base has to be the same");
+}
+
+OCIO_ADD_TEST(Log, load_lin_side_break)
+{
+    std::ostringstream strebuf;
+    strebuf << "<?xml version='1.0' encoding='UTF-8'?>\n";
+    strebuf << "<ProcessList id='none' compCLFversion='3'>\n";
+    strebuf << "<Log inBitDepth='32f' outBitDepth='32f' style='cameraLinToLog'>\n";
+    strebuf << "<LogParams linSideSlope='1.1' linSideOffset='0.1' logSideSlope='0.9' logSideOffset='0.2' base='9.0' linSideBreak='0.3'/>\n";
+    strebuf << "</Log>\n";
+    strebuf << "</ProcessList>\n";
+
+    OCIO::LocalCachedFileRcPtr cachedFile = ParseString(strebuf.str());
+    OCIO::ConstOpDataVec & fileOps = cachedFile->m_transform->getOps();
+
+    OCIO_REQUIRE_EQUAL(fileOps.size(), 1);
+    auto op = fileOps[0];
+    auto log = std::dynamic_pointer_cast<const OCIO::LogOpData>(op);
+    OCIO_REQUIRE_ASSERT(log);
+    OCIO_CHECK_EQUAL(log->getBase(), 9.0);
+    OCIO_CHECK_ASSERT(log->allComponentsEqual());
+    const auto & redParams = log->getRedParams();
+    OCIO_CHECK_EQUAL(redParams[OCIO::LIN_SIDE_SLOPE], 1.1);
+    OCIO_CHECK_EQUAL(redParams[OCIO::LIN_SIDE_OFFSET], 0.1);
+    OCIO_CHECK_EQUAL(redParams[OCIO::LOG_SIDE_SLOPE], 0.9);
+    OCIO_CHECK_EQUAL(redParams[OCIO::LOG_SIDE_OFFSET], 0.2);
+    OCIO_REQUIRE_EQUAL(redParams.size(), 5);
+    OCIO_CHECK_EQUAL(redParams[OCIO::LIN_SIDE_BREAK], 0.3);
+
+    // Change version to clf 2.
+    auto strFail = strebuf.str();
+    auto v = strFail.find_first_of('3');
+    strFail[v] = '2';
+    OCIO_CHECK_THROW_WHAT(ParseString(strFail), OCIO::Exception,
+                          "CLF file version '2' does not support operator 'Log'");
+}
+
+OCIO_ADD_TEST(Log, load_default_params)
+{
+    std::ostringstream strebuf;
+    strebuf << "<?xml version='1.0' encoding='UTF-8'?>\n";
+    strebuf << "<ProcessList id='none' version='2'>\n";
+    strebuf << "<Log inBitDepth='32f' outBitDepth='32f' style='linToLog' />\n";
+    strebuf << "<Log inBitDepth='32f' outBitDepth='32f' style='cameraLinToLog'>\n";
+    strebuf << "<LogParams linSideBreak='0.1'/>\n";
+    strebuf << "</Log>\n";
+    strebuf << "</ProcessList>\n";
+
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    OCIO_CHECK_NO_THROW(cachedFile = ParseString(strebuf.str()));
+    OCIO::ConstOpDataVec & fileOps = cachedFile->m_transform->getOps();
+
+    OCIO_REQUIRE_EQUAL(fileOps.size(), 2);
+    auto op = fileOps[0];
+    auto log = std::dynamic_pointer_cast<const OCIO::LogOpData>(op);
+    OCIO_REQUIRE_ASSERT(log);
+    // Default value is 2.
+    OCIO_CHECK_EQUAL(log->getBase(), 2.0);
+    const auto & redParams = log->getRedParams();
+    OCIO_CHECK_EQUAL(redParams.size(), 4);
+    OCIO_CHECK_EQUAL(redParams[OCIO::LIN_SIDE_SLOPE], 1.);
+    OCIO_CHECK_EQUAL(redParams[OCIO::LIN_SIDE_OFFSET], 0.);
+    OCIO_CHECK_EQUAL(redParams[OCIO::LOG_SIDE_SLOPE], 1.);
+    OCIO_CHECK_EQUAL(redParams[OCIO::LOG_SIDE_OFFSET], 0.);
+
+    op = fileOps[1];
+    log = std::dynamic_pointer_cast<const OCIO::LogOpData>(op);
+    OCIO_REQUIRE_ASSERT(log);
+    // Default value is 2.
+    OCIO_CHECK_EQUAL(log->getBase(), 2.0);
+    const auto & greenParams = log->getGreenParams();
+    OCIO_CHECK_EQUAL(greenParams.size(), 5);
+    OCIO_CHECK_EQUAL(greenParams[OCIO::LIN_SIDE_SLOPE], 1.);
+    OCIO_CHECK_EQUAL(greenParams[OCIO::LIN_SIDE_OFFSET], 0.);
+    OCIO_CHECK_EQUAL(greenParams[OCIO::LOG_SIDE_SLOPE], 1.);
+    OCIO_CHECK_EQUAL(greenParams[OCIO::LOG_SIDE_OFFSET], 0.);
+    OCIO_CHECK_EQUAL(greenParams[OCIO::LIN_SIDE_BREAK], 0.1);
 }
 
 //
@@ -2890,94 +3089,160 @@ OCIO_ADD_TEST(FileFormatCTF, attribute_float_parse_leading_spaces)
     OCIO_CHECK_EQUAL(ec->getExposure(), -1.5);
 }
 
-OCIO_ADD_TEST(FixedFunction, load_ff_aces_redmod)
+OCIO_ADD_TEST(FileFormatCTF, load_deprecated_ops_file)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
-    std::string fileName("ff_aces_redmod.ctf");
-    OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(fileName));
-    const OCIO::ConstOpDataVec & fileOps = cachedFile->m_transform->getOps();
-    OCIO_REQUIRE_EQUAL(fileOps.size(), 1);
-    auto op = fileOps[0];
-    auto func = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(op);
-    OCIO_REQUIRE_ASSERT(func);
-
-    OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::ACES_RED_MOD_03_INV);
-}
-
-OCIO_ADD_TEST(FixedFunction, load_ff_aces_surround)
-{
-    OCIO::LocalCachedFileRcPtr cachedFile;
-    std::string fileName("ff_aces_surround.ctf");
+    std::string fileName("deprecated_ops.ctf");
     OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(fileName));
     const OCIO::ConstOpDataVec & fileOps = cachedFile->m_transform->getOps();
 
-    OCIO_REQUIRE_EQUAL(fileOps.size(), 1);
-    auto op = fileOps[0];
-    auto func = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(op);
-    OCIO_REQUIRE_ASSERT(func);
+    OCIO_REQUIRE_EQUAL(fileOps.size(), 3);
 
-    OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::REC2100_SURROUND);
+    // Test ACES RedMod03 (deprecated) conversion to the modern representation.
+    {
+        auto op = fileOps[0];
+        auto func = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(op);
+        OCIO_REQUIRE_ASSERT(func);
+        OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::ACES_RED_MOD_03_INV);
+        OCIO_CHECK_NO_THROW(func->validate());
+        OCIO_CHECK_ASSERT(func->getParams().empty());
+    }
 
-    OCIO::FixedFunctionOpData::Params params;
-    params.push_back(1.2);
-    func->validate();
-    OCIO_CHECK_ASSERT(func->getParams() == params);
+    // Test ACES Surround (deprecated) conversion to the modern representation.
+    {
+        auto op = fileOps[1];
+        auto func = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(op);
+        OCIO_REQUIRE_ASSERT(func);
+        OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::REC2100_SURROUND_FWD);
+        OCIO_CHECK_NO_THROW(func->validate());
+
+        OCIO::FixedFunctionOpData::Params params;
+        params.push_back(1.2);
+        OCIO_CHECK_ASSERT(func->getParams() == params);
+    }
+
+    // Test Function (deprecated) conversion to the modern representation.
+    {
+        auto op = fileOps[2];
+        auto func = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(op);
+        OCIO_REQUIRE_ASSERT(func);
+        OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::HSV_TO_RGB);
+        OCIO_CHECK_NO_THROW(func->validate());
+        OCIO_CHECK_ASSERT(func->getParams().empty());
+    }
 }
 
-void ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::Style style)
+OCIO_ADD_TEST(FixedFunction, load_fixed_function_file)
 {
-    std::string styleName{ OCIO::FixedFunctionOpData::ConvertStyleToString(style, false) };
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    std::string fileName("fixed_function.ctf");
+    OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(fileName));
+    const OCIO::ConstOpDataVec & fileOps = cachedFile->m_transform->getOps();
+
+    OCIO_REQUIRE_EQUAL(fileOps.size(), 2);
+
+    // Test FixedFunction with the REC2100_SURROUND_FWD style.
+    {
+        auto op = fileOps[0];
+        auto func = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(op);
+        OCIO_REQUIRE_ASSERT(func);
+        OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::REC2100_SURROUND_FWD);
+        OCIO_CHECK_NO_THROW(func->validate());
+
+        OCIO::FixedFunctionOpData::Params params;
+        params.push_back(0.8);
+        OCIO_CHECK_ASSERT(func->getParams() == params);       
+    }
+
+    // Test FixedFunction with the HSV_to_RGB style.
+    {
+        auto op = fileOps[1];
+        auto func = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(op);
+        OCIO_REQUIRE_ASSERT(func);
+        OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::HSV_TO_RGB);
+        OCIO_CHECK_NO_THROW(func->validate());
+        OCIO_CHECK_ASSERT(func->getParams().empty());
+    }
+
+}
+
+void ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::Style style, int lineNo)
+{
+    // Validate the load & save for any FixedFunction style without parameters.
+
+    std::ostringstream ffStr;
+    ffStr << "<FixedFunction inBitDepth=\"32f\" outBitDepth=\"32f\" style=\""
+          << OCIO::FixedFunctionOpData::ConvertStyleToString(style, false) << "\">";
+
     std::ostringstream strebuf;
-    strebuf << "<?xml version='1.0' encoding='UTF-8'?>\n";
-    strebuf << "<ProcessList id='none' version='2'>\n";
-    strebuf << "    <FixedFunction inBitDepth='8i' outBitDepth='32f' style='";
-    strebuf << styleName;
-    strebuf << "' />\n";
-    strebuf << "</ProcessList>\n";
+    strebuf << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            << "<ProcessList version=\"2\" id=\"ABCD\">\n"
+            << "    " << ffStr.str() << "\n"
+            << "    </FixedFunction>\n"
+            << "</ProcessList>\n";
 
-    OCIO::LocalCachedFileRcPtr cachedFile = ParseString(strebuf.str());
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    OCIO_CHECK_NO_THROW_FROM(cachedFile = ParseString(strebuf.str()), lineNo);
     OCIO::ConstOpDataVec & fileOps = cachedFile->m_transform->getOps();
 
-    OCIO_REQUIRE_EQUAL(fileOps.size(), 1);
-    auto op = fileOps[0];
-    auto func = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(op);
-    OCIO_REQUIRE_ASSERT(func);
+    OCIO_REQUIRE_EQUAL_FROM(fileOps.size(), 1, lineNo);
+    auto opData = fileOps[0];
+    auto ffOpData = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(opData);
+    OCIO_REQUIRE_ASSERT_FROM(ffOpData, lineNo);
+    OCIO_CHECK_EQUAL_FROM(ffOpData->getStyle(), style, lineNo);
 
-    OCIO_CHECK_EQUAL(func->getStyle(), style);
+    auto clonedOpData = ffOpData->clone();
+    OCIO::OpRcPtrVec ops;
+    OCIO_CHECK_NO_THROW_FROM(
+        OCIO::CreateFixedFunctionOp(ops, clonedOpData, OCIO::TRANSFORM_DIR_FORWARD), lineNo);
+    OCIO_REQUIRE_EQUAL_FROM(ops.size(), 1, lineNo);
+
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+    group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "ABCD");
+    OCIO::ConstOpRcPtr constOp = ops[0];
+    OCIO_CHECK_NO_THROW_FROM(OCIO::CreateFixedFunctionTransform(group, constOp), lineNo);
+    OCIO_REQUIRE_EQUAL_FROM(group->getNumTransforms(), 1, lineNo);
+
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+    OCIO::ConstProcessorRcPtr processorGroup;
+    OCIO_CHECK_NO_THROW(processorGroup = config->getProcessor(group));
+
+    std::ostringstream outputTransform;
+    OCIO_CHECK_NO_THROW_FROM(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform), lineNo);
+
+    if (outputTransform.str() != strebuf.str())
+    {
+        std::ostringstream err;
+        err << "Expected is: \n"
+            << strebuf.str()
+            << "where output is: \n"
+            << outputTransform.str();
+
+        OCIO_CHECK_ASSERT_MESSAGE_FROM(0, err.str(), lineNo);
+    }
 }
 
-OCIO_ADD_TEST(FixedFunction, load_ff_style)
+OCIO_ADD_TEST(FixedFunction, load_save_ctf)
 {
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_03_FWD);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_03_INV);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_10_FWD);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_10_INV);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_03_FWD);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_03_INV);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_10_FWD);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_10_INV);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV);
-}
-
-OCIO_ADD_TEST(FixedFunction, load_ff_surround)
-{
-    OCIO::LocalCachedFileRcPtr cachedFile;
-    std::string fileName("ff_surround.ctf");
-    OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(fileName));
-    const OCIO::ConstOpDataVec & fileOps = cachedFile->m_transform->getOps();
-
-    OCIO_REQUIRE_EQUAL(fileOps.size(), 1);
-    auto op = fileOps[0];
-    auto func = std::dynamic_pointer_cast<const OCIO::FixedFunctionOpData>(op);
-    OCIO_REQUIRE_ASSERT(func);
-
-    OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FixedFunctionOpData::REC2100_SURROUND);
-
-    OCIO::FixedFunctionOpData::Params params;
-    params.push_back(0.8);
-    func->validate();
-    OCIO_CHECK_ASSERT(func->getParams() == params);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_03_FWD, __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_03_INV, __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_10_FWD, __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_10_INV, __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_03_FWD   , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_03_INV   , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_10_FWD   , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_10_INV   , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD, __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV, __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::RGB_TO_HSV         , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::HSV_TO_RGB         , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::XYZ_TO_xyY         , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::xyY_TO_XYZ         , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::XYZ_TO_uvY         , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::uvY_TO_XYZ         , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::XYZ_TO_LUV         , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::LUV_TO_XYZ         , __LINE__);
 }
 
 OCIO_ADD_TEST(FixedFunction, load_ff_fail_version)
@@ -2991,7 +3256,7 @@ OCIO_ADD_TEST(FixedFunction, load_ff_fail_version)
     strebuf << "</ProcessList>\n";
 
     OCIO_CHECK_THROW_WHAT(ParseString(strebuf.str()), OCIO::Exception,
-                          "Unsupported transform file version");
+                          "CTF file version '1.5' does not support operator 'FixedFunction'");
 }
 
 OCIO_ADD_TEST(FixedFunction, load_ff_fail_params)
@@ -3008,12 +3273,12 @@ OCIO_ADD_TEST(FixedFunction, load_ff_fail_params)
                           "must have one parameter but 2 found");
 }
 
-OCIO_ADD_TEST(FixedFunction, load_ff_aces_fail_style)
+OCIO_ADD_TEST(FixedFunction, load_ff_fail_style)
 {
     std::ostringstream strebuf;
     strebuf << "<?xml version='1.0' encoding='UTF-8'?>\n";
-    strebuf << "<ProcessList id='none' version='1.5'>\n";
-    strebuf << "    <ACES inBitDepth='16i' outBitDepth='32f' style='UnknownStyle' />\n";
+    strebuf << "<ProcessList id='none' version='2.0'>\n";
+    strebuf << "    <FixedFunction inBitDepth='16i' outBitDepth='32f' style='UnknownStyle' />\n";
     strebuf << "</ProcessList>\n";
 
     OCIO_CHECK_THROW_WHAT(ParseString(strebuf.str()), OCIO::Exception,
@@ -3030,6 +3295,7 @@ OCIO_ADD_TEST(FixedFunction, load_ff_aces_fail_gamma_param)
     strebuf << "    </ACES>\n";
     strebuf << "</ProcessList>\n";
 
+    OCIO::LogGuard guard;
     OCIO_CHECK_THROW_WHAT(ParseString(strebuf.str()), OCIO::Exception,
                           "Missing required parameter");
 }
@@ -3196,8 +3462,7 @@ OCIO::LocalCachedFileRcPtr WriteRead(OCIO::TransformRcPtr transform)
 
 OCIO_ADD_TEST(CTFTransform, save_matrix)
 {
-    OCIO::MatrixTransformRcPtr matTransform
-        = OCIO::MatrixTransform::Create();
+    OCIO::MatrixTransformRcPtr matTransform = OCIO::MatrixTransform::Create();
     double offset4[]{ 0.123456789123, 0.11, 0.111, 0.2 };
     matTransform->setOffset(offset4);
     matTransform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
@@ -3313,6 +3578,36 @@ OCIO_ADD_TEST(CTFTransform, save_log_affine)
     OCIO_CHECK_EQUAL(log->getBlueParams()[OCIO::LIN_SIDE_SLOPE], vals[2]);
 }
 
+OCIO_ADD_TEST(CTFTransform, save_log_camera)
+{
+    OCIO::LogCameraTransformRcPtr logT = OCIO::LogCameraTransform::Create();
+    const double base = 8.0;
+    logT->setBase(base);
+    const double vals[] = { 0.9, 1.1, 1.2 };
+    logT->setLinSideSlopeValue(vals);
+    const double vals_break[] = { 0.4, 0.5, 0.6 };
+    logT->setLinSideBreakValue(vals_break);
+    const double vals_ls[] = { 1.2, 1.3, 1.4 };
+    logT->setLinearSlopeValue(vals_ls);
+
+    OCIO::LocalCachedFileRcPtr cachedFile = WriteRead(logT);
+    const OCIO::ConstOpDataVec & fileOps = cachedFile->m_transform->getOps();
+    OCIO_REQUIRE_EQUAL(fileOps.size(), 1);
+    OCIO::ConstOpDataRcPtr op = fileOps[0];
+    OCIO::ConstLogOpDataRcPtr log = OCIO::DynamicPtrCast<const OCIO::LogOpData>(op);
+    OCIO_REQUIRE_ASSERT(log);
+    OCIO_CHECK_EQUAL(log->getBase(), base);
+    OCIO_CHECK_EQUAL(log->getRedParams()[OCIO::LIN_SIDE_SLOPE], vals[0]);
+    OCIO_CHECK_EQUAL(log->getGreenParams()[OCIO::LIN_SIDE_SLOPE], vals[1]);
+    OCIO_CHECK_EQUAL(log->getBlueParams()[OCIO::LIN_SIDE_SLOPE], vals[2]);
+    OCIO_CHECK_EQUAL(log->getRedParams()[OCIO::LIN_SIDE_BREAK], vals_break[0]);
+    OCIO_CHECK_EQUAL(log->getGreenParams()[OCIO::LIN_SIDE_BREAK], vals_break[1]);
+    OCIO_CHECK_EQUAL(log->getBlueParams()[OCIO::LIN_SIDE_BREAK], vals_break[2]);
+    OCIO_CHECK_EQUAL(log->getRedParams()[OCIO::LINEAR_SLOPE], vals_ls[0]);
+    OCIO_CHECK_EQUAL(log->getGreenParams()[OCIO::LINEAR_SLOPE], vals_ls[1]);
+    OCIO_CHECK_EQUAL(log->getBlueParams()[OCIO::LINEAR_SLOPE], vals_ls[2]);
+}
+
 OCIO_ADD_TEST(CTFTransform, save_lut_1d_1component)
 {
     const std::string ctfFile("lut1d_32f_example.clf");
@@ -3357,7 +3652,7 @@ OCIO_ADD_TEST(CTFTransform, save_invlut_1d_3components)
 
 OCIO_ADD_TEST(CTFTransform, save_lut1d_halfdomain)
 {
-    OCIO::LUT1DTransformRcPtr lutT = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lutT = OCIO::Lut1DTransform::Create();
     lutT->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
 
     const unsigned long size = OCIO::Lut1DOpData::GetLutIdealSize(OCIO::BIT_DEPTH_F16);
@@ -3406,7 +3701,7 @@ OCIO_ADD_TEST(CTFTransform, save_lut1d_halfdomain)
 
 OCIO_ADD_TEST(CTFTransform, save_lut1d_f16_raw)
 {
-    OCIO::LUT1DTransformRcPtr lutT = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lutT = OCIO::Lut1DTransform::Create();
     lutT->setFileOutputBitDepth(OCIO::BIT_DEPTH_F16);
 
     lutT->setLength(2);
@@ -3441,7 +3736,7 @@ OCIO_ADD_TEST(CTFTransform, save_lut1d_f16_raw)
 
 OCIO_ADD_TEST(CTFTransform, save_lut1d_f32)
 {
-    OCIO::LUT1DTransformRcPtr lutT = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lutT = OCIO::Lut1DTransform::Create();
     lutT->setFileOutputBitDepth(OCIO::BIT_DEPTH_F32);
 
     lutT->setLength(8);
@@ -3485,7 +3780,7 @@ OCIO_ADD_TEST(CTFTransform, save_lut1d_f32)
 
 OCIO_ADD_TEST(CTFTransform, save_invalid_lut_1d)
 {
-    OCIO::LUT1DTransformRcPtr lutT = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lutT = OCIO::Lut1DTransform::Create();
     lutT->setFileOutputBitDepth(OCIO::BIT_DEPTH_F32);
 
     lutT->setLength(8);
@@ -3648,14 +3943,14 @@ OCIO_ADD_TEST(CTFTransform, load_edit_save_matrix_clf)
 
     const std::string expectedCLF{
 R"(<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList compCLFversion="2" id="b5cc7aed-d405-4d8b-b64b-382b2341a378" name="matrix example">
+<ProcessList compCLFversion="3" id="b5cc7aed-d405-4d8b-b64b-382b2341a378" name="matrix example">
     <Description>Convert output-referred XYZ values to linear RGB.</Description>
     <InputDescriptor>XYZ</InputDescriptor>
     <OutputDescriptor>RGB</OutputDescriptor>
     <Matrix id="c61daf06-539f-4254-81fc-9800e6d02a37" inBitDepth="32f" outBitDepth="32f">
         <Description>XYZ to sRGB matrix</Description>
         <Description>Added description</Description>
-        <Array dim="3 4 3">
+        <Array dim="3 4">
                3.24              -1.537             -0.4985                 0.1
             -0.9693               1.876             0.04156                 1.2
              0.0556              -0.204              1.0573                 2.3
@@ -3723,9 +4018,9 @@ OCIO_ADD_TEST(CTFTransform, matrix3x3_clf)
 
     // In/out bit-depth equal, matrix not scaled.
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList compCLFversion="2" id="UID42">
+<ProcessList compCLFversion="3" id="UID42">
     <Matrix inBitDepth="10i" outBitDepth="10i">
-        <Array dim="3 3 3">
+        <Array dim="3 3">
   0.333333333333333    3.33333333333333    33.3333333333333
                   3                   4                   5
                   6                   7                   8
@@ -3780,7 +4075,8 @@ OCIO_ADD_TEST(CTFTransform, matrix_offset_alpha_ctf)
 
     // Alpha not handled by CLF.
     OCIO_CHECK_THROW_WHAT(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform),
-                          OCIO::Exception, "alpha component, so it cannot be written as CLF");
+                          OCIO::Exception, 
+                          "Matrix with alpha component op which cannot be written as CLF");
 }
 
 OCIO_ADD_TEST(CTFTransform, matrix_offset_alpha_bitdepth_ctf)
@@ -3985,7 +4281,7 @@ OCIO_ADD_TEST(CTFTransform, cdl_clf)
     OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList compCLFversion="2" id="cdl1">
+<ProcessList compCLFversion="3" id="cdl1">
     <Description>ProcessList description</Description>
     <Description>=======================</Description>
     <Info>
@@ -3997,7 +4293,7 @@ OCIO_ADD_TEST(CTFTransform, cdl_clf)
             <Director FirstName="David" LastName="Lean"></Director>
         </Directors>
     </Info>
-    <ASC_CDL id="CDL42" name="TestCDL" inBitDepth="32f" outBitDepth="32f" style="Fwd">
+    <ASC_CDL id="CDL42" name="TestCDL" inBitDepth="32f" outBitDepth="32f" style="FwdNoClamp">
         <Description>CDL node for unit test</Description>
         <Description>Adding another description</Description>
         <InputDescription>Input</InputDescription>
@@ -4028,6 +4324,8 @@ OCIO_ADD_TEST(CTFTransform, cdl_ctf)
     config->setMajorVersion(2);
 
     OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
+    cdl->setStyle(OCIO::CDL_ASC);
+
     const double sop[] = { 1.0, 1.1, 1.2,
                            0.2, 0.3, 0.4,
                            3.1, 3.2, 3.3 };
@@ -4143,7 +4441,7 @@ OCIO_ADD_TEST(CTFTransform, range1_clf)
 
     const std::string expected{
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-        "<ProcessList compCLFversion=\"2\" id=\"UID42\">\n"
+        "<ProcessList compCLFversion=\"3\" id=\"UID42\">\n"
         "    <InputDescriptor>Input descriptor</InputDescriptor>\n"
         "    <OutputDescriptor>Output descriptor</OutputDescriptor>\n"
         "    <Range id=\"Range42\" name=\"TestRange\" inBitDepth=\"8i\" outBitDepth=\"32f\">\n"
@@ -4167,8 +4465,8 @@ OCIO_ADD_TEST(CTFTransform, range2_clf)
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
     range->setFileInputBitDepth(OCIO::BIT_DEPTH_UINT10);
     range->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT8);
-    range->setMinInValue(64.0/1023.0);
-    range->setMinOutValue(16.0/255.0);
+    range->setMinInValue(0.1);
+    range->setMinOutValue(0.1);
     range->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "Range42");
 
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
@@ -4181,10 +4479,10 @@ OCIO_ADD_TEST(CTFTransform, range2_clf)
 
     const std::string expected{
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-        "<ProcessList compCLFversion=\"2\" id=\"UID42\">\n"
+        "<ProcessList compCLFversion=\"3\" id=\"UID42\">\n"
         "    <Range id=\"Range42\" inBitDepth=\"10i\" outBitDepth=\"8i\">\n"
-        "        <minInValue> 64 </minInValue>\n"
-        "        <minOutValue> 16 </minOutValue>\n"
+        "        <minInValue> 102.3 </minInValue>\n"
+        "        <minOutValue> 25.5 </minOutValue>\n"
         "    </Range>\n"
         "</ProcessList>\n" };
 
@@ -4201,6 +4499,8 @@ OCIO_ADD_TEST(CTFTransform, range3_clf)
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
     range->setFileInputBitDepth(OCIO::BIT_DEPTH_F16);
     range->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT12);
+    range->setMinInValue(0.);
+    range->setMinOutValue(0.);
     range->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "Range42");
 
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
@@ -4211,12 +4511,14 @@ OCIO_ADD_TEST(CTFTransform, range3_clf)
     std::ostringstream outputTransform;
     OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform));
 
-    const std::string expected{
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-        "<ProcessList compCLFversion=\"2\" id=\"UID42\">\n"
-        "    <Range id=\"Range42\" inBitDepth=\"16f\" outBitDepth=\"12i\">\n"
-        "    </Range>\n"
-        "</ProcessList>\n" };
+    const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="3" id="UID42">
+    <Range id="Range42" inBitDepth="16f" outBitDepth="12i">
+        <minInValue> 0 </minInValue>
+        <minOutValue> 0 </minOutValue>
+    </Range>
+</ProcessList>
+)" };
 
     OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
     OCIO_CHECK_EQUAL(expected, outputTransform.str());
@@ -4244,7 +4546,7 @@ OCIO_ADD_TEST(CTFTransform, exponent_ctf)
     const std::string expected{
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
         "<ProcessList version=\"1.3\" id=\"UID42\">\n"
-        "    <Gamma inBitDepth=\"32f\" outBitDepth=\"32f\" style=\"moncurveFwd\">\n"
+        "    <Gamma inBitDepth=\"32f\" outBitDepth=\"32f\" style=\"monCurveFwd\">\n"
         "        <GammaParams channel=\"R\" gamma=\"1.1\" offset=\"0.1\" />\n"
         "        <GammaParams channel=\"G\" gamma=\"1.2\" offset=\"0.2\" />\n"
         "        <GammaParams channel=\"B\" gamma=\"1.3\" offset=\"0.1\" />\n"
@@ -4260,11 +4562,11 @@ OCIO_ADD_TEST(CTFTransform, gamma1_ctf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::ExponentWithLinearTransformRcPtr exp = OCIO::ExponentWithLinearTransform::Create();
+    OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
     exp->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     const double gamma[] = { 2.6, 2.6, 2.6, 1.0 };
-    exp->setGamma(gamma);
+    exp->setValue(gamma);
 
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
@@ -4285,6 +4587,114 @@ OCIO_ADD_TEST(CTFTransform, gamma1_ctf)
 
     OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
     OCIO_CHECK_EQUAL(expected, outputTransform.str());
+
+    std::ostringstream outputTransformCLF;
+    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransformCLF));
+
+    const std::string expectedCLF{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="3" id="UID42">
+    <Exponent inBitDepth="32f" outBitDepth="32f" style="basicRev">
+        <ExponentParams exponent="2.6" />
+    </Exponent>
+</ProcessList>
+)" };
+
+    OCIO_CHECK_EQUAL(expectedCLF.size(), outputTransformCLF.str().size());
+    OCIO_CHECK_EQUAL(expectedCLF, outputTransformCLF.str());
+}
+
+OCIO_ADD_TEST(CTFTransform, gamma1_mirror_ctf)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+
+    OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
+    exp->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    exp->setNegativeStyle(OCIO::NEGATIVE_MIRROR);
+
+    const double gamma[] = { 2.6, 2.6, 2.6, 1.0 };
+    exp->setValue(gamma);
+
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+    group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
+    group->appendTransform(exp);
+
+    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
+    std::ostringstream outputTransform;
+    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+
+    // Identity alpha. Transform written as version 2 because of new style.
+    const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UID42">
+    <Exponent inBitDepth="32f" outBitDepth="32f" style="basicMirrorRev">
+        <ExponentParams exponent="2.6" />
+    </Exponent>
+</ProcessList>
+)" };
+
+    OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
+    OCIO_CHECK_EQUAL(expected, outputTransform.str());
+
+    std::ostringstream outputTransformCLF;
+    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransformCLF));
+
+    const std::string expectedCLF{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="3" id="UID42">
+    <Exponent inBitDepth="32f" outBitDepth="32f" style="basicMirrorRev">
+        <ExponentParams exponent="2.6" />
+    </Exponent>
+</ProcessList>
+)" };
+
+    OCIO_CHECK_EQUAL(expectedCLF.size(), outputTransformCLF.str().size());
+    OCIO_CHECK_EQUAL(expectedCLF, outputTransformCLF.str());
+}
+
+OCIO_ADD_TEST(CTFTransform, gamma1_pass_thru_ctf)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+
+    OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
+    exp->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    exp->setNegativeStyle(OCIO::NEGATIVE_PASS_THRU);
+
+    const double gamma[] = { 2.6, 2.6, 2.6, 1.0 };
+    exp->setValue(gamma);
+
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+    group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
+    group->appendTransform(exp);
+
+    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
+    std::ostringstream outputTransform;
+    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+
+    // Identity alpha. Transform written as version 2.0 because of new style.
+    const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UID42">
+    <Exponent inBitDepth="32f" outBitDepth="32f" style="basicPassThruRev">
+        <ExponentParams exponent="2.6" />
+    </Exponent>
+</ProcessList>
+)" };
+
+    OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
+    OCIO_CHECK_EQUAL(expected, outputTransform.str());
+
+    std::ostringstream outputTransformCLF;
+    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransformCLF));
+
+    const std::string expectedCLF{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="3" id="UID42">
+    <Exponent inBitDepth="32f" outBitDepth="32f" style="basicPassThruRev">
+        <ExponentParams exponent="2.6" />
+    </Exponent>
+</ProcessList>
+)" };
+
+    OCIO_CHECK_EQUAL(expectedCLF.size(), outputTransformCLF.str().size());
+    OCIO_CHECK_EQUAL(expectedCLF, outputTransformCLF.str());
 }
 
 OCIO_ADD_TEST(CTFTransform, gamma2_ctf)
@@ -4312,7 +4722,7 @@ OCIO_ADD_TEST(CTFTransform, gamma2_ctf)
     // Non-identity alpha. Transform written as version 1.5.
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="1.5" id="UID42">
-    <Gamma inBitDepth="32f" outBitDepth="32f" style="moncurveRev">
+    <Gamma inBitDepth="32f" outBitDepth="32f" style="monCurveRev">
         <GammaParams channel="R" gamma="2.4" offset="0.1" />
         <GammaParams channel="G" gamma="2.2" offset="0.2" />
         <GammaParams channel="B" gamma="2" offset="0.4" />
@@ -4323,6 +4733,12 @@ OCIO_ADD_TEST(CTFTransform, gamma2_ctf)
 
     OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
     OCIO_CHECK_EQUAL(expected, outputTransform.str());
+
+    // CLF does not allow alpha channel.
+    std::ostringstream outputTransformCLF;
+    OCIO_CHECK_THROW_WHAT(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransformCLF),
+                          OCIO::Exception,
+                          "Gamma with alpha component op which cannot be written as CLF");
 }
 
 OCIO_ADD_TEST(CTFTransform, gamma3_ctf)
@@ -4349,7 +4765,7 @@ OCIO_ADD_TEST(CTFTransform, gamma3_ctf)
     // Identity alpha.  Transform written as version 1.3.
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="1.3" id="UID42">
-    <Gamma inBitDepth="32f" outBitDepth="32f" style="moncurveFwd">
+    <Gamma inBitDepth="32f" outBitDepth="32f" style="monCurveFwd">
         <GammaParams gamma="2.42" offset="0.099" />
     </Gamma>
 </ProcessList>
@@ -4357,6 +4773,21 @@ OCIO_ADD_TEST(CTFTransform, gamma3_ctf)
 
     OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
     OCIO_CHECK_EQUAL(expected, outputTransform.str());
+
+    // CLF does not allow alpha channel.
+    std::ostringstream outputTransformCLF;
+    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransformCLF));
+
+    const std::string expectedCLF{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="3" id="UID42">
+    <Exponent inBitDepth="32f" outBitDepth="32f" style="monCurveFwd">
+        <ExponentParams exponent="2.42" offset="0.099" />
+    </Exponent>
+</ProcessList>
+)" };
+
+    OCIO_CHECK_EQUAL(expectedCLF.size(), outputTransformCLF.str().size());
+    OCIO_CHECK_EQUAL(expectedCLF, outputTransformCLF.str());
 }
 
 OCIO_ADD_TEST(CTFTransform, gamma4_ctf)
@@ -4418,7 +4849,7 @@ OCIO_ADD_TEST(CTFTransform, gamma5_ctf)
     // Non-identity alpha.  Transform written as version 1.5.
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="1.5" id="UID42">
-    <Gamma inBitDepth="32f" outBitDepth="32f" style="moncurveFwd">
+    <Gamma inBitDepth="32f" outBitDepth="32f" style="monCurveFwd">
         <GammaParams channel="R" gamma="2.22222" offset="0.099" />
         <GammaParams channel="G" gamma="2.22222" offset="0.099" />
         <GammaParams channel="B" gamma="2.22222" offset="0.099" />
@@ -4513,43 +4944,10 @@ OCIO_ADD_TEST(CTFTransform, fixed_function_rec2100_inverse_ctf)
     std::ostringstream outputTransform;
     OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
 
+    // Rec.2100 Inverse is always saved as a Forward with inverted parameter value.
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="2" id="UIDFF42">
     <FixedFunction inBitDepth="32f" outBitDepth="32f" style="Rec2100Surround" params="2">
-    </FixedFunction>
-</ProcessList>
-)" };
-
-    OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
-    OCIO_CHECK_EQUAL(expected, outputTransform.str());
-}
-
-OCIO_ADD_TEST(CTFTransform, fixed_function_aces_ctf)
-{
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
-    OCIO::FixedFunctionTransformRcPtr ff = OCIO::FixedFunctionTransform::Create();
-    ff->setStyle(OCIO::FIXED_FUNCTION_ACES_RED_MOD_10);
-
-    OCIO::FixedFunctionTransformRcPtr ffrev = OCIO::FixedFunctionTransform::Create();
-    ffrev->setStyle(OCIO::FIXED_FUNCTION_ACES_RED_MOD_10);
-    ffrev->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-
-    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
-    group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDFF42");
-    group->appendTransform(ff);
-    group->appendTransform(ffrev);
-
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
-    std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
-
-    const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList version="2" id="UIDFF42">
-    <FixedFunction inBitDepth="32f" outBitDepth="32f" style="RedMod10Fwd">
-    </FixedFunction>
-    <FixedFunction inBitDepth="32f" outBitDepth="32f" style="RedMod10Rev">
     </FixedFunction>
 </ProcessList>
 )" };
@@ -4766,9 +5164,9 @@ OCIO_ADD_TEST(CTFTransform, log_lin_to_log_ctf)
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="2" id="UIDLOG42">
     <Log inBitDepth="32f" outBitDepth="32f" style="linToLog">
-        <LogParams channel="R" linSideSlope="0.9" linSideOffset="0.1" logSideSlope="1.3" logSideOffset="0.4" base="2" />
-        <LogParams channel="G" linSideSlope="1.1" linSideOffset="0.2" logSideSlope="1.4" logSideOffset="0.5" base="2" />
-        <LogParams channel="B" linSideSlope="1.2" linSideOffset="0.3" logSideSlope="1.5" logSideOffset="0.6" base="2" />
+        <LogParams channel="R" base="2" linSideSlope="0.9" linSideOffset="0.1" logSideSlope="1.3" logSideOffset="0.4" />
+        <LogParams channel="G" base="2" linSideSlope="1.1" linSideOffset="0.2" logSideSlope="1.4" logSideOffset="0.5" />
+        <LogParams channel="B" base="2" linSideSlope="1.2" linSideOffset="0.3" logSideSlope="1.5" logSideOffset="0.6" />
     </Log>
 </ProcessList>
 )" };
@@ -4801,7 +5199,7 @@ OCIO_ADD_TEST(CTFTransform, log_log_to_lin_ctf)
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="2" id="UIDLOG42">
     <Log inBitDepth="32f" outBitDepth="32f" style="logToLin">
-        <LogParams linSideSlope="0.9" linSideOffset="0" logSideSlope="1" logSideOffset="0" base="2" />
+        <LogParams base="2" linSideSlope="0.9" linSideOffset="0" logSideSlope="1" logSideOffset="0" />
     </Log>
 </ProcessList>
 )" };
@@ -4845,7 +5243,7 @@ OCIO_ADD_TEST(CTFTransform, lut1d_clf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::LUT1DTransformRcPtr lut = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_LINEAR);
 
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
@@ -4857,7 +5255,7 @@ OCIO_ADD_TEST(CTFTransform, lut1d_clf)
     OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList compCLFversion="2" id="UIDLUT42">
+<ProcessList compCLFversion="3" id="UIDLUT42">
     <LUT1D inBitDepth="32f" outBitDepth="32f" interpolation="linear">
         <Array dim="2 1">
           0
@@ -4876,7 +5274,7 @@ OCIO_ADD_TEST(CTFTransform, lut1d_inverse_clf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::LUT1DTransformRcPtr lut = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
@@ -4894,7 +5292,7 @@ OCIO_ADD_TEST(CTFTransform, lut1d_ctf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::LUT1DTransformRcPtr lut = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_DEFAULT);
 
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
@@ -4925,7 +5323,7 @@ OCIO_ADD_TEST(CTFTransform, lut1d_attributes_ctf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::LUT1DTransformRcPtr lut = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut");
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "lut01");
     lut->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
@@ -4959,20 +5357,20 @@ OCIO_ADD_TEST(CTFTransform, lut1d_attributes_ctf)
     OCIO_CHECK_EQUAL(line, R"(<ProcessList version="1.4" id="UIDLUT42">)");
 
     OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(pystring::strip(line),
+    OCIO_CHECK_EQUAL(StringUtils::Trim(line),
                      "<LUT1D id=\"lut01\" name=\"test-lut\" inBitDepth=\"32f\""
                      " outBitDepth=\"10i\""
                      " halfDomain=\"true\" rawHalfs=\"true\" hueAdjust=\"dw3\">");
 
     OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
-    OCIO_CHECK_EQUAL(pystring::strip(line),
+    OCIO_CHECK_EQUAL(StringUtils::Trim(line),
                      R"(<Array dim="65536 3">)");
 
     for (unsigned int i = 0; i <= 1000; ++i)
     {
         OCIO_CHECK_NO_THROW(std::getline(inputTransform, line));
     }
-    OCIO_CHECK_EQUAL(pystring::strip(line),
+    OCIO_CHECK_EQUAL(StringUtils::Trim(line),
                      R"(11216 11218 11220)");
 }
 
@@ -4981,7 +5379,7 @@ OCIO_ADD_TEST(CTFTransform, lut1d_array_16x1_ctf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::LUT1DTransformRcPtr lut = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_DEFAULT);
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut");
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "lut01");
@@ -5037,7 +5435,7 @@ OCIO_ADD_TEST(CTFTransform, lut1d_array_16x3_ctf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::LUT1DTransformRcPtr lut = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_DEFAULT);
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut");
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "lut01");
@@ -5092,7 +5490,7 @@ OCIO_ADD_TEST(CTFTransform, lut1d_10i_ctf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::LUT1DTransformRcPtr lut = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_DEFAULT);
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut");
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "lut01");
@@ -5129,7 +5527,7 @@ OCIO_ADD_TEST(CTFTransform, lut1d_inverse_ctf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::LUT1DTransformRcPtr lut = OCIO::LUT1DTransform::Create();
+    OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_DEFAULT);
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut");
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "lut01");
@@ -5187,7 +5585,7 @@ OCIO_ADD_TEST(CTFTransform, lut3d_array_ctf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::LUT3DTransformRcPtr lut = OCIO::LUT3DTransform::Create();
+    OCIO::Lut3DTransformRcPtr lut = OCIO::Lut3DTransform::Create();
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut3d");
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "lut01");
     lut->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
@@ -5262,7 +5660,7 @@ OCIO_ADD_TEST(CTFTransform, lut3d_inverse_clf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::LUT3DTransformRcPtr lut = OCIO::LUT3DTransform::Create();
+    OCIO::Lut3DTransformRcPtr lut = OCIO::Lut3DTransform::Create();
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut3d");
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "lut01");
     lut->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
@@ -5300,7 +5698,7 @@ OCIO_ADD_TEST(CTFTransform, lut3d_inverse_ctf)
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    OCIO::LUT3DTransformRcPtr lut = OCIO::LUT3DTransform::Create();
+    OCIO::Lut3DTransformRcPtr lut = OCIO::Lut3DTransform::Create();
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut3d");
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "lut01");
     lut->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
@@ -5381,7 +5779,7 @@ OCIO_ADD_TEST(CTFTransform, bitdepth_ctf)
     mat->setFileInputBitDepth(OCIO::BIT_DEPTH_UINT8);
     mat->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
 
-    auto lut = OCIO::LUT1DTransform::Create();
+    auto lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_DEFAULT);
     lut->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
     lut->setLength(3);
@@ -5391,6 +5789,8 @@ OCIO_ADD_TEST(CTFTransform, bitdepth_ctf)
     auto range = OCIO::RangeTransform::Create();
     range->setFileInputBitDepth(OCIO::BIT_DEPTH_F16);
     range->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT12);
+    range->setMinInValue(0.);
+    range->setMinOutValue(0.);
 
     auto mat2 = OCIO::MatrixTransform::Create();
     mat2->setFileInputBitDepth(OCIO::BIT_DEPTH_UINT8);
@@ -5429,7 +5829,7 @@ OCIO_ADD_TEST(CTFTransform, bitdepth_ctf)
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="2" id="UID42">
     <Matrix inBitDepth="8i" outBitDepth="10i">
-        <Array dim="3 3 3">
+        <Array dim="3 3">
    4.01176470588235                   0                   0
                   0    4.01176470588235                   0
                   0                   0    4.01176470588235
@@ -5442,13 +5842,15 @@ OCIO_ADD_TEST(CTFTransform, bitdepth_ctf)
 1023
         </Array>
     </LUT1D>
-    <Gamma inBitDepth="10i" outBitDepth="16f" style="basicFwd">
-        <GammaParams gamma="1" />
-    </Gamma>
+    <Exponent inBitDepth="10i" outBitDepth="16f" style="basicFwd">
+        <ExponentParams exponent="1" />
+    </Exponent>
     <Range inBitDepth="16f" outBitDepth="12i">
+        <minInValue> 0 </minInValue>
+        <minOutValue> 0 </minOutValue>
     </Range>
     <Matrix inBitDepth="12i" outBitDepth="10i">
-        <Array dim="3 3 3">
+        <Array dim="3 3">
    0.24981684981685                   0                   0
                   0    0.24981684981685                   0
                   0                   0    0.24981684981685
@@ -5524,7 +5926,7 @@ OCIO_ADD_TEST(FileFormatCTF, bake_1d)
 
     const std::string expectedCLF{
 R"(<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList compCLFversion="2" id="$4dd1c89df8002b409e089089ce8f24e7">
+<ProcessList compCLFversion="3" id="$4dd1c89df8002b409e089089ce8f24e7">
     <LUT1D inBitDepth="32f" outBitDepth="32f">
         <Array dim="2 3">
           0           0           0
@@ -5603,7 +6005,7 @@ OCIO_ADD_TEST(FileFormatCTF, bake_3d)
 
     const std::string expectedCLF{
 R"(<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList compCLFversion="2" id="TestID">
+<ProcessList compCLFversion="3" id="TestID">
     <Description>OpenColorIO Test Line 1</Description>
     <Description>OpenColorIO Test Line 2</Description>
     <InputDescriptor>Input descriptor</InputDescriptor>
@@ -5665,6 +6067,7 @@ OCIO_ADD_TEST(FileFormatCTF, bake_1d_3d)
 
         // Set saturation to cause channel crosstalk, making a 3D LUT
         OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
+        transform1->setStyle(OCIO::CDL_ASC);
         transform1->setSat(0.5f);
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
 
@@ -5736,7 +6139,7 @@ OCIO_ADD_TEST(FileFormatCTF, bake_1d_3d)
 
     const std::string expectedCLF{
 R"(<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList compCLFversion="2" id="$4dd1c89df8002b409e089089ce8f24e7">
+<ProcessList compCLFversion="3" id="$4dd1c89df8002b409e089089ce8f24e7">
     <Range inBitDepth="32f" outBitDepth="32f">
         <minInValue> -0.125 </minInValue>
         <maxInValue> 1.125 </maxInValue>

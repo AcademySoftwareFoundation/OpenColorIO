@@ -5,6 +5,7 @@
 #ifndef INCLUDED_OCIO_FILEFORMATS_CTF_CTFTRANSFORM_H
 #define INCLUDED_OCIO_FILEFORMATS_CTF_CTFTRANSFORM_H
 
+
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -12,8 +13,10 @@
 #include "fileformats/FormatMetadata.h"
 #include "fileformats/xmlutils/XMLWriterUtils.h"
 #include "Op.h"
+#include "utils/StringUtils.h"
 
-OCIO_NAMESPACE_ENTER
+
+namespace OCIO_NAMESPACE
 {
 
 class CTFVersion
@@ -100,7 +103,7 @@ static const CTFVersion CTF_PROCESS_LIST_VERSION_1_5 = CTFVersion(1, 5);
 static const CTFVersion CTF_PROCESS_LIST_VERSION_1_6 = CTFVersion(1, 6);
 
 // Version 1.7 2015-01 adds 'invert' flag to referenceOp and to the transform,
-// adds 1.0 styles to ACES op, adds CLF support (IndexMap, alt. Range, CDL styles).
+// adds 1.0 styles to ACES op, adds CLF v2 support (IndexMap, alt. Range, CDL styles).
 static const CTFVersion CTF_PROCESS_LIST_VERSION_1_7 = CTFVersion(1, 7);
 
 // Version 1.8 2017-10 adds Function op as a valid element in CTF files.
@@ -176,11 +179,11 @@ public:
     {
         return m_ops;
     }
-    const StringVec & getDescriptions() const
+    const StringUtils::StringVec & getDescriptions() const
     {
         return m_descriptions;
     }
-    StringVec & getDescriptions()
+    StringUtils::StringVec & getDescriptions()
     {
         return m_descriptions;
     }
@@ -209,6 +212,8 @@ public:
     void setCLFVersion(const CTFVersion & ver);
 
     const CTFVersion & getCTFVersion() const;
+    const CTFVersion & getCLFVersion() const;
+    bool isCLF() const;
 
     void fromMetadata(const FormatMetadataImpl & metadata);
     void toMetadata(FormatMetadataImpl & metadata) const;
@@ -230,10 +235,10 @@ private:
     std::string m_inDescriptor;
     std::string m_outDescriptor;
     FormatMetadataImpl m_infoMetadata;
-    
+
     ConstOpDataVec m_ops;
-    StringVec m_descriptions;
-                
+    StringUtils::StringVec m_descriptions;
+
     // CTF version used even for CLF files.
     // CLF versions <= 2.0 are interpreted as CTF version 1.7.
     CTFVersion m_version;
@@ -266,7 +271,7 @@ public:
 private:
     void writeProcessListMetadata(const FormatMetadataImpl & m) const;
     void writeOpMetadata(const FormatMetadataImpl & m) const;
-    void writeOps() const;
+    void writeOps(const CTFVersion & version) const;
 
 private:
     ConstCTFReaderTransformPtr m_transform;
@@ -277,9 +282,9 @@ private:
 // Helper function to extract the values of FormatMetadata elements with a
 // given name. Used to get Description values.
 void GetElementsValues(const FormatMetadataImpl::Elements & elements,
-                       const std::string & name, StringVec & values);
+                       const std::string & name, 
+                       StringUtils::StringVec & values);
 
-}
-OCIO_NAMESPACE_EXIT
+} // namespace OCIO_NAMESPACE
 
 #endif

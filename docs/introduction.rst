@@ -137,7 +137,7 @@ Texture Painting / Matte Painting
  * Example: an 8-bit opacity map -> skin_opacity_nc8.tif
 
 * Painted textures that are intended to modulate diffuse color components are
-  labelled dt (standing for "diffuse texture").  The dt8 colorspace is designed
+  labeled dt (standing for "diffuse texture").  The dt8 colorspace is designed
   such that, when linearized, values will not extend above 1.0.  At texture
   publishing time these are converted to lnh mipmapped tiffs/exr. Note that as
   linear textures have greater allocation requirements, a bit depth promotion

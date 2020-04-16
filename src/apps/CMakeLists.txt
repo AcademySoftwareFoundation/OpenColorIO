@@ -2,9 +2,9 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 if(OCIO_BUILD_APPS)
-	add_subdirectory(apputils)
 	add_subdirectory(ociobakelut)
 	add_subdirectory(ociocheck)
+	add_subdirectory(ociochecklut)
 	add_subdirectory(ociowrite)
 
 	if(TARGET OpenImageIO)

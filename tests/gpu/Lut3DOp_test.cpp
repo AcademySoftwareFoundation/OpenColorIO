@@ -233,7 +233,7 @@ OCIO_ADD_GPU_TEST(Lut3DOp, arbitrary_using_CSP_file)
     test.setContext(file->createEditableCopy(), shaderDesc);
 
     // TODO: Small LUTs not being resampled for now, such error threshold is expected
-    //       The legacy shader has a better error threashold because
+    //       The legacy shader has a better error threshold because
     //       it converts all LUTs in one 3D LUT of dimension LUT3D_EDGE_SIZE
     //       which performs a resampling of small LUTs.
     test.setErrorThreshold(1e-2f);

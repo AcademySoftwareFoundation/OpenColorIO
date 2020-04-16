@@ -5,9 +5,8 @@
 #define INCLUDED_OCIO_OPENCOLORABI_H
 
 // Makefile configuration options
-#define OCIO_NAMESPACE @OCIO_NAMESPACE@
+#define OCIO_NAMESPACE @OCIO_NAMESPACE@_v@OpenColorIO_VERSION_MAJOR@_@OpenColorIO_VERSION_MINOR@@OpenColorIO_VERSION_RELEASE_TYPE@
 #define OCIO_VERSION "@OpenColorIO_VERSION@@OpenColorIO_VERSION_RELEASE_TYPE@"
-#define OCIO_VERSION_NS v@OpenColorIO_VERSION_MAJOR@_@OpenColorIO_VERSION_MINOR@@OpenColorIO_VERSION_RELEASE_TYPE@
 
 /* Version as a single 4-byte hex number, e.g. 0x01050200 == 1.5.2
    Use this for numeric comparisons, e.g. #if OCIO_VERSION_HEX >= ... 
@@ -18,11 +17,8 @@
                           (@OpenColorIO_VERSION_MINOR@ << 16) | \
                           (@OpenColorIO_VERSION_PATCH@ <<  8))
 
-
-// Namespace / version mojo
-#define OCIO_NAMESPACE_ENTER namespace OCIO_NAMESPACE { namespace OCIO_VERSION_NS
-#define OCIO_NAMESPACE_EXIT using namespace OCIO_VERSION_NS; }
-#define OCIO_NAMESPACE_USING using namespace OCIO_NAMESPACE;
+#define OCIO_VERSION_MAJOR @OpenColorIO_VERSION_MAJOR@
+#define OCIO_VERSION_MINOR @OpenColorIO_VERSION_MINOR@
 
 // shared_ptr / dynamic_pointer_cast
 #include <memory>
