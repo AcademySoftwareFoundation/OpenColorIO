@@ -42,18 +42,18 @@ OpenColorIO Project Mission
 ---------------------------
 
 The OpenColorIO project is committed to providing an industry standard solution 
-for highly precise, performant, and consistent color mangement across digital 
+for highly precise, performant, and consistent color management across digital 
 content creation applications and pipelines.
 
 OpenColorIO aims to:
 
-* be stable, secure, and thouroughly tested on all platforms
+* be stable, secure, and thouroughly tested on Linux, macOS, and Windows
 * be performant on modern CPUs and GPUs
 * be simple, scalable, and well documented
 * be compatible with critical color and imaging standards
 * provide lossless color processing wherever possible
 * maintain config backwards compatability across major versions
-* have every new feature carefully reviewed by industry leaders
+* have every new feature carefully reviewed by leaders from the motion picture, VFX, animation, and video game industries
 * have a healthy and active community
 * receive wide industry adoption
 
