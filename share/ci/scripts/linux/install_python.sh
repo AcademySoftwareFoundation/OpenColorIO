@@ -25,8 +25,6 @@ rm -rf Python-${PYTHON_VERSION}
 wget https://bootstrap.pypa.io/get-pip.py
 sudo python get-pip.py
 rm get-pip.py
-# This step is needed to make this pip install functional alongside a Python 
-# 2.7 pip install that may already be present.
 python -m pip install --upgrade pip
 
 if [[ "$PYTHON_MAJOR" == "3" ]]; then
