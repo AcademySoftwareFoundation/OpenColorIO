@@ -53,7 +53,8 @@ OpenColorIO aims to:
 * be compatible with critical color and imaging standards
 * provide lossless color processing wherever possible
 * maintain config backwards compatability across major versions
-* have every new feature carefully reviewed by leaders from the motion picture, VFX, animation, and video game industries
+* have every new feature carefully reviewed by leaders from the motion picture, 
+  VFX, animation, and video game industries
 * have a healthy and active community
 * receive wide industry adoption
 
