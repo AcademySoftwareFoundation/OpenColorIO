@@ -54,6 +54,12 @@ The following reference implementations are provided:
   * aces_1.0.2
   * aces_1.0.3
 
+The [Colour Science](https://github.com/colour-science/OpenColorIO-Configs) repository maintained by Thomas Mansencal contains the following additional configurations:
+
+* ACES: Academy Color Encoding System
+  * aces_1.1
+  * aces_1.2
+
 ---
 Images from "Cloudy With A Chance of Meatballs" Copyright 2011 Sony Pictures Inc. All Rights Reserved.
 
