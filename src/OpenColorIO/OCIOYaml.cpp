@@ -303,6 +303,8 @@ inline void load(const YAML::Node& node, View& v)
     if(node.Tag() != "View")
         return;
 
+    CheckDuplicates(node);
+
     std::string key, stringval;
     bool expectingSceneCS = false;
     bool expectingDisplayCS = false;
@@ -2239,6 +2241,8 @@ inline void load(const YAML::Node& node, LookRcPtr& look)
     if(node.Tag() != "Look")
         return;
 
+    CheckDuplicates(node);
+
     std::string key, stringval;
 
     for (const auto & iter : node)
@@ -2382,6 +2386,8 @@ inline void load(const YAML::Node & node, ViewTransformRcPtr & vt)
         os << "The '!<ViewTransform>' content needs to be a map.";
         throwError(node, os.str());
     }
+    
+    CheckDuplicates(node);
 
     std::string key, stringval;
 
@@ -2527,6 +2533,8 @@ inline void load(const YAML::Node & node, FileRulesRcPtr & fr, bool & defaultRul
 {
     if (node.Tag() != "Rule")
         return;
+
+    CheckDuplicates(node);
 
     std::string key, stringval;
     std::string name, colorspace, pattern, extension, regex;
