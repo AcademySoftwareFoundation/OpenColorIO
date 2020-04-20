@@ -22,7 +22,7 @@ public:
     TransformRcPtr m_fromRefTransform;
 
     Impl() = delete;
-    Impl(ReferenceSpaceType referenceSpace)
+    explicit Impl(ReferenceSpaceType referenceSpace)
         : CategoriesManager()
         , m_referenceSpaceType(referenceSpace)
     {
@@ -35,6 +35,9 @@ public:
     {
         if (this != &rhs)
         {
+            *dynamic_cast<CategoriesManager*>(this)
+                = *dynamic_cast<const CategoriesManager*>(&rhs);
+ 
             m_name        = rhs.m_name;
             m_family      = rhs.m_family;
             m_description = rhs.m_description;
@@ -47,8 +50,6 @@ public:
             m_fromRefTransform = rhs.m_fromRefTransform ?
                                  rhs.m_fromRefTransform->createEditableCopy() :
                                  rhs.m_fromRefTransform;
-
-            m_categories = rhs.m_categories;
         }
         return *this;
     }

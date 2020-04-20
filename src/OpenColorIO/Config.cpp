@@ -516,7 +516,7 @@ Config::Config()
 Config::~Config()
 {
     delete m_impl;
-    m_impl = NULL;
+    m_impl = nullptr;
 }
 
 unsigned Config::getMajorVersion() const

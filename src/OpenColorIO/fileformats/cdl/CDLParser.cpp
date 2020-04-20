@@ -23,7 +23,7 @@ class CDLParser::Impl
 {
 public:
     Impl() = delete;
-    Impl(const std::string & fileName);
+    explicit Impl(const std::string & fileName);
     Impl(const Impl &) = delete;
     Impl & operator=(const Impl &) = delete;
 

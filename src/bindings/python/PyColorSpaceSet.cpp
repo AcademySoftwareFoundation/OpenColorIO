@@ -26,9 +26,10 @@ void bindPyColorSpaceSet(py::module & m)
 
     auto cls = py::class_<ColorSpaceSet, ColorSpaceSetRcPtr /* holder */>(m, "ColorSpaceSet")
         .def(py::init(&ColorSpaceSet::Create))
-        .def(py::self == py::self)
-        .def(py::self != py::self)
-        
+
+        .def("__eq__", &ColorSpaceSet::operator==, py::is_operator())
+        .def("__ne__", &ColorSpaceSet::operator!=, py::is_operator())
+
         .def("__sub__", [](ConstColorSpaceSetRcPtr & self, ConstColorSpaceSetRcPtr & rcss)
             { 
                 return self - rcss; 

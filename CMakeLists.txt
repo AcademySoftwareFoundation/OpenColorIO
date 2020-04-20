@@ -92,8 +92,9 @@ else()
 endif()
 
 if(OCIO_WARNING_AS_ERROR)
-	# TODO: Vc++ compilation has still many tricky warnings difficult to fix.
-	if(NOT MSVC)
+	if(MSVC)
+		set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /WX")
+	else()
 		set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Werror")
 	endif()
 endif()
