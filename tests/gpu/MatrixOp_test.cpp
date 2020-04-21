@@ -9,7 +9,6 @@
 namespace OCIO = OCIO_NAMESPACE;
 
 
-const int LUT3D_EDGE_SIZE = 32;
 const float g_epsilon = 5e-7f;
 
 
@@ -28,13 +27,11 @@ void AddMatrixTest(OCIOGPUTest & test, OCIO::TransformDirection direction,
         matrix->setOffset(o);
     }
 
-    OCIO::GpuShaderDescRcPtr shaderDesc
-        = genericShaderDesc ? OCIO::GpuShaderDesc::CreateShaderDesc()
-          : OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
-
     test.setErrorThreshold(g_epsilon);
 
-    test.setContext(matrix->createEditableCopy(), shaderDesc);
+    test.setProcessor(matrix);
+
+    test.setLegacyShader(!genericShaderDesc);
 }
 
 

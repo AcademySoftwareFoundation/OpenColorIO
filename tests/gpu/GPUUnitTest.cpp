@@ -2,29 +2,6 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#ifdef __APPLE__
-
-/* Defined before OpenGL and GLUT includes to avoid deprecation messages */
-#define GL_SILENCE_DEPRECATION
-
-#include <OpenGL/gl.h>
-#include <OpenGL/glext.h>
-#include <GLUT/glut.h>
-
-#elif _WIN32
-
-#include <GL/glew.h>
-#include <GL/glut.h>
-
-#else
-
-#include <GL/glew.h>
-#include <GL/gl.h>
-#include <GL/glut.h>
-
-#endif
-
-
 #include <sstream>
 #include <map>
 #include <iomanip>
@@ -37,8 +14,8 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "glsl.h"
 #include "GPUUnitTest.h"
+#include "oglapp.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -156,30 +133,43 @@ OCIOGPUTest::~OCIOGPUTest()
 {
 }
 
-void OCIOGPUTest::setContext(OCIO_NAMESPACE::TransformRcPtr transform,
-                             OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc)
+void OCIOGPUTest::setProcessor(OCIO::TransformRcPtr transform)
 {
-    OCIO_NAMESPACE::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
-    setContext(config, transform, shaderDesc);
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    setProcessor(config, transform);
 }
 
-void OCIOGPUTest::setContext(OCIO_NAMESPACE::ConstConfigRcPtr config,
-                             OCIO_NAMESPACE::TransformRcPtr transform,
-                             OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc)
+void OCIOGPUTest::setProcessor(OCIO::ConstConfigRcPtr config,
+                               OCIO::TransformRcPtr transform)
 {
-    setContextProcessor(config->getProcessor(transform), shaderDesc);
+    setProcessor(config->getProcessor(transform));
 }
 
-void OCIOGPUTest::setContextProcessor(OCIO_NAMESPACE::ConstProcessorRcPtr processor,
-                                      OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc)
+void OCIOGPUTest::setProcessor(OCIO::ConstProcessorRcPtr processor)
 {
     if(m_processor.get()!=0x0)
     {
-        throw OCIO_NAMESPACE::Exception("GPU Unit test already exists");
+        throw OCIO::Exception("GPU Unit test already exists");
     }
 
-    m_shaderDesc     = shaderDesc;
-    m_processor      = processor;
+    m_processor = processor;
+}
+
+OCIO::GpuShaderDescRcPtr & OCIOGPUTest::getShaderDesc()
+{
+    if (!m_shaderDesc)
+    {
+        if (isLegacyShader())
+        {
+            m_shaderDesc = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(getLegacyShaderLutEdge());
+        }
+        else
+        {
+            m_shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+        }
+        m_shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
+    }
+    return m_shaderDesc;
 }
 
 void OCIOGPUTest::retestSetup(size_t idx)
@@ -204,70 +194,16 @@ AddTest::AddTest(OCIOGPUTestRcPtr test)
 
 namespace
 {
-    GLint g_win = 0;
     static constexpr unsigned g_winWidth   = 256;
     static constexpr unsigned g_winHeight  = 256;
     static constexpr unsigned g_components = 4;
 
-    OCIO::OpenGLBuilderRcPtr g_oglBuilder;
-
-    GLuint g_imageTexID;
-
-    void AllocateImageTexture()
+    void AllocateImageTexture(OCIO::OglApp & app)
     {
         const unsigned numEntries = g_winWidth * g_winHeight * g_components;
         OCIOGPUTest::CustomValues::Values image(numEntries, 0.0f);
 
-        glGenTextures(1, &g_imageTexID);
-
-        glActiveTexture(GL_TEXTURE0);
-
-        glBindTexture(GL_TEXTURE_2D, g_imageTexID);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, g_winWidth, g_winHeight, 0,
-                     GL_RGBA, GL_FLOAT, &image[0]);
-    }
-
-    void Reshape()
-    {
-        glViewport(0, 0, g_winWidth, g_winHeight);
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(0.0, g_winWidth, 0.0, g_winHeight, -100.0, 100.0);
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-    }
-
-    void Redisplay(void)
-    {
-        glEnable(GL_TEXTURE_2D);
-            glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glColor3f(1, 1, 1);
-            glPushMatrix();
-                glBegin(GL_QUADS);
-                    glTexCoord2f(0.0f, 1.0f);
-                    glVertex2f(0.0f, (float)g_winHeight);
-
-                    glTexCoord2f(0.0f, 0.0f);
-                    glVertex2f(0.0f, 0.0f);
-
-                    glTexCoord2f(1.0f, 0.0f);
-                    glVertex2f((float)g_winWidth, 0.0f);
-
-                    glTexCoord2f(1.0f, 1.0f);
-                    glVertex2f((float)g_winWidth, (float)g_winHeight);
-                glEnd();
-            glPopMatrix();
-        glDisable(GL_TEXTURE_2D);
-
-        glutSwapBuffers();
+        app.initImage(g_winWidth, g_winHeight, OCIO::OglApp::COMPONENTS_RGBA, &image[0]);
     }
 
     void SetTestValue(float * image, float val, unsigned numComponents)
@@ -282,7 +218,7 @@ namespace
         }
     }
 
-    void UpdateImageTexture(OCIOGPUTestRcPtr & test)
+    void UpdateImageTexture(OCIO::OglApp & app, OCIOGPUTestRcPtr & test)
     {
         // Note: User-specified custom values are padded out
         // to the preferred size (g_winWidth x g_winHeight).
@@ -384,50 +320,17 @@ namespace
             throw OCIO::Exception("Missing some expected input values");
         }
 
-        glBindTexture(GL_TEXTURE_2D, g_imageTexID);
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, g_winWidth, g_winHeight, 0,
-                     GL_RGBA, GL_FLOAT, &values.m_inputValues[0]);
+        app.updateImage(&values.m_inputValues[0]);
     }
 
-    void UpdateOCIOGLState(OCIOGPUTestRcPtr & test)
+    void UpdateOCIOGLState(OCIO::OglApp & app, OCIOGPUTestRcPtr & test)
     {
+        app.setPrintShader(test->isVerbose());
         OCIO::ConstProcessorRcPtr & processor = test->getProcessor();
-
         OCIO::GpuShaderDescRcPtr & shaderDesc = test->getShaderDesc();
-
-        // Step 1: Update the GPU shader description.
-        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
-
-        // Step 2: Collect the shader program information for a specific processor.
-        OCIO::ConstGPUProcessorRcPtr gpuProcessor = processor->getDefaultGPUProcessor();
-        gpuProcessor->extractGpuShaderInfo(shaderDesc);
-
-        // Step 3: Create the OpenGL builder to prepare the GPU shader program.
-        g_oglBuilder = OCIO::OpenGLBuilder::Create(shaderDesc);
-        g_oglBuilder->setVerbose(test->isVerbose());
-
-        // Step 4: Allocate & upload all the LUTs in a dedicated GPU texture.
-        g_oglBuilder->allocateAllTextures(1);
-
-        std::ostringstream main;
-        main << std::endl
-             << "uniform sampler2D img;" << std::endl
-             << std::endl
-             << "void main()" << std::endl
-             << "{" << std::endl
-             << "    vec4 col = texture2D(img, gl_TexCoord[0].st);" << std::endl
-             << "    gl_FragColor = " << shaderDesc->getFunctionName() << "(col);" << std::endl
-             << "}" << std::endl;
-
-        // Step 5: Build the fragment shader program.
-        g_oglBuilder->buildProgram(main.str().c_str());
-
-        // Step 6: Enable the fragment shader program, and all needed resources.
-        g_oglBuilder->useProgram();
-        glUniform1i(glGetUniformLocation(g_oglBuilder->getProgramHandle(), "img"), 0);
-        g_oglBuilder->useAllTextures();
-        g_oglBuilder->useAllUniforms();
+        // Collect the shader program information for a specific processor.
+        processor->getDefaultGPUProcessor()->extractGpuShaderInfo(shaderDesc);
+        app.setShader(shaderDesc);
     }
 
     void DiffComponent(const std::vector<float> & cpuImage,
@@ -463,7 +366,7 @@ namespace
     static constexpr size_t invalidIndex = std::numeric_limits<size_t>::max();
 
     // Validate the GPU processing against the CPU one.
-    void ValidateImageTexture(OCIOGPUTestRcPtr & test)
+    void ValidateImageTexture(OCIO::OglApp & app, OCIOGPUTestRcPtr & test)
     {
         OCIO::ConstCPUProcessorRcPtr processor
             = test->getProcessor()->getDefaultCPUProcessor();
@@ -497,16 +400,13 @@ namespace
         // Step 1: Compute the output using the CPU engine.
 
         OCIOGPUTest::CustomValues::Values cpuImage = test->getCustomValues().m_inputValues;
-        OCIO_NAMESPACE::PackedImageDesc desc(&cpuImage[0], (long)width, (long)height, g_components);
+        OCIO::PackedImageDesc desc(&cpuImage[0], (long)width, (long)height, g_components);
         processor->apply(desc);
 
         // Step 2: Grab the GPU output from the rendering buffer.
 
         OCIOGPUTest::CustomValues::Values gpuImage(g_winWidth*g_winHeight*g_components, 0.0f);
-        glReadBuffer( GL_COLOR_ATTACHMENT0 );
-        glReadPixels(0, 0, g_winWidth, g_winHeight, GL_RGBA, GL_FLOAT, (GLvoid*)&gpuImage[0]);
-
-        glutSwapBuffers();
+        app.readImage(&gpuImage[0]);
 
         // Step 3: Compare the two results.
 
@@ -597,73 +497,27 @@ namespace
 
 int main(int, char **)
 {
-    int argc = 2;
-    const char* argv[] = { "main", "-glDebug" };
-    glutInit(&argc, const_cast<char**>(&argv[0]));
-
-    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
-    glutInitWindowSize(g_winWidth, g_winHeight);
-    glutInitWindowPosition(0, 0);
-
-    g_win = glutCreateWindow(argv[0]);
-
-#ifndef __APPLE__
-    glewInit();
-    if (!glewIsSupported("GL_VERSION_2_0"))
-    {
-        std::cout << "OpenGL 2.0 not supported" << std::endl;
-        exit(1);
-    }
-#endif
-
-    std::cout << std::endl
-              << "GL Vendor:    " << glGetString(GL_VENDOR) << std::endl
-              << "GL Renderer:  " << glGetString(GL_RENDERER) << std::endl
-              << "GL Version:   " << glGetString(GL_VERSION) << std::endl
-              << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
-
     // Step 1: Initialize the OpenGL engine.
+    OCIO::OglAppRcPtr app;
+    try
+    {
+        app = std::make_shared<OCIO::OglApp>("GPU tests", 10, 10);
+    }
+    catch (const OCIO::Exception & e)
+    {
+        std::cout << std::endl << e.what() << std::endl;
+        return 1;
+    }
 
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);           // 4-byte pixel alignment
-
-#ifndef __APPLE__
-    glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE);     //
-    glClampColor(GL_CLAMP_VERTEX_COLOR, GL_FALSE);   // avoid any kind of clamping
-    glClampColor(GL_CLAMP_FRAGMENT_COLOR, GL_FALSE); //
-#endif
-
-    glEnable(GL_TEXTURE_2D);
-    glClearColor(0, 0, 0, 0);                        // background color
-    glClearStencil(0);                               // clear stencil buffer
+    app->printGLInfo();
 
     // Step 2: Allocate the texture that holds the image.
-
-    AllocateImageTexture();
+    AllocateImageTexture(*app);
 
     // Step 3: Create the frame buffer and render buffer.
+    app->createGLBuffers();
 
-    GLuint fboId;
-
-    // Create a framebuffer object, you need to delete them when program exits.
-    glGenFramebuffers(1, &fboId);
-    glBindFramebuffer(GL_FRAMEBUFFER, fboId);
-
-
-    GLuint rboId;
-
-    // Create a renderbuffer object to store depth info.
-    glGenRenderbuffers(1, &rboId);
-    glBindRenderbuffer(GL_RENDERBUFFER, rboId);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA32F_ARB, g_winWidth, g_winHeight);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-    // Attach a texture to FBO color attachment point.
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, g_imageTexID, 0);
-
-    // Attach a renderbuffer to depth attachment point.
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rboId);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    app->reshape(g_winWidth, g_winHeight);
 
     // Step 4: Execute all the unit tests.
 
@@ -703,14 +557,11 @@ int main(int, char **)
 
             if(test->isValid() && enabledTest)
             {
-                // Set the rendering destination to FBO.
-                glBindFramebuffer(GL_FRAMEBUFFER, fboId);
-
                 // Initialize the texture with the RGBA values to be processed.
-                UpdateImageTexture(test);
+                UpdateImageTexture(*app, test);
 
                 // Update the GPU shader program.
-                UpdateOCIOGLState(test);
+                UpdateOCIOGLState(*app, test);
 
                 const size_t numRetest = test->getNumRetests();
                 // Need to run once and for each retest.
@@ -721,20 +572,15 @@ int main(int, char **)
                         // Call the retest callback.
                         test->retestSetup(idx - 1);
                         // Update uniforms with dynamic properties.
-                        g_oglBuilder->useAllUniforms();
+                        app->updateUniforms();
                     }
 
-                    // Clear buffer.
-                    glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
-                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
                     // Process the image texture into the rendering buffer.
-                    Reshape();
-                    Redisplay();
+                    app->redisplay();
 
                     // Compute the expected values using the CPU and compare
                     // against the GPU values.
-                    ValidateImageTexture(test);
+                    ValidateImageTexture(*app, test);
                 }
             }
         }
@@ -772,12 +618,8 @@ int main(int, char **)
         // Get rid of the test.
         tests[idx] = nullptr;
 
-        glUseProgram(0);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
     std::cerr << std::endl << failures << " tests failed" << std::endl << std::endl;
-
     return failures;
 }

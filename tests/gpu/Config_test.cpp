@@ -89,9 +89,8 @@ OCIO_ADD_GPU_TEST(Config, several_1D_luts_legacy_shader)
     config->sanityCheck();
 
     OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "lgh");
-    OCIO::GpuShaderDescRcPtr shaderDesc
-        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(64);
-    test.setContextProcessor(processor, shaderDesc);
+    test.setProcessor(processor);
+    test.setLegacyShader(true);
     test.setErrorThreshold(defaultErrorThreshold);
 }
 
@@ -109,8 +108,7 @@ OCIO_ADD_GPU_TEST(Config, several_1D_luts_generic_shader)
     config->sanityCheck();
 
     OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "lgh");
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContextProcessor(processor, shaderDesc);
+    test.setProcessor(processor);
     test.setErrorThreshold(defaultErrorThreshold);
 
     // TODO: Would like to be able to remove the setTestNaN(false) and
@@ -138,12 +136,11 @@ OCIO_ADD_GPU_TEST(Config, arbitrary_generic_shader)
 
     OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "lgh");
 
-    // Change some default values...
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+    test.setProcessor(processor);
+
+    auto shaderDesc = test.getShaderDesc();
     shaderDesc->setPixelName("another_pixel_name");
     shaderDesc->setFunctionName("another_func_name");
-
-    test.setContextProcessor(processor, shaderDesc);
 
     // TODO: To be investigated when the new LUT 1D OpData will be in
     test.setErrorThreshold(5e-3f);
@@ -172,9 +169,7 @@ OCIO_ADD_GPU_TEST(Config, several_luts_generic_shader)
 
     OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "lgh");
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
-    test.setContextProcessor(processor, shaderDesc);
+    test.setProcessor(processor);
     test.setErrorThreshold(defaultErrorThreshold);
 
     test.setTestNaN(false);
@@ -212,13 +207,13 @@ OCIO_ADD_GPU_TEST(Config, with_underscores)
     config->sanityCheck();
 
     OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "__lgh__");
+    test.setProcessor(processor);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+    auto shaderDesc = test.getShaderDesc();
     shaderDesc->setResourcePrefix("ocio___");
     shaderDesc->setPixelName("another_pixel_name__");
     shaderDesc->setFunctionName("__another_func_name____");
 
-    test.setContextProcessor(processor, shaderDesc);
     test.setErrorThreshold(defaultErrorThreshold);
 
     test.setTestNaN(false);

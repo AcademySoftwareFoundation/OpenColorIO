@@ -21,7 +21,6 @@ target_link_libraries(ocioperf
     PRIVATE
         apputils
         ilmbase::ilmbase
-        oglbuilder
         oiiohelpers
         OpenColorIO
         OpenImageIO
