@@ -1686,7 +1686,7 @@ const char * Config::getDisplay(int index) const
                         getImpl()->m_activeDisplaysEnvOverride);
     }
 
-    if(index>=0 || index < static_cast<int>(getImpl()->m_displayCache.size()))
+    if(index>=0 && index < static_cast<int>(getImpl()->m_displayCache.size()))
     {
         return getImpl()->m_displayCache[index].c_str();
     }

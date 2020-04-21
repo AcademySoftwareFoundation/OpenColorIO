@@ -15,8 +15,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_redmod03_fwd)
     func->setStyle(OCIO::FIXED_FUNCTION_ACES_RED_MOD_03);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(func->createEditableCopy(), shaderDesc);
+    test.setProcessor(func);
 
     OCIOGPUTest::CustomValues values;
     values.m_inputValues =
@@ -37,8 +36,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_redmod03_inv)
     func->setStyle(OCIO::FIXED_FUNCTION_ACES_RED_MOD_03);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(func->createEditableCopy(), shaderDesc);
+    test.setProcessor(func);
 
     OCIOGPUTest::CustomValues values;
     values.m_inputValues =
@@ -59,8 +57,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_redmod10_fwd)
     func->setStyle(OCIO::FIXED_FUNCTION_ACES_RED_MOD_10);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(func->createEditableCopy(), shaderDesc);
+    test.setProcessor(func);
 
     OCIOGPUTest::CustomValues values;
     values.m_inputValues =
@@ -81,8 +78,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_redmod10_inv)
     func->setStyle(OCIO::FIXED_FUNCTION_ACES_RED_MOD_10);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(func->createEditableCopy(), shaderDesc);
+    test.setProcessor(func);
 
     OCIOGPUTest::CustomValues values;
     values.m_inputValues =
@@ -103,8 +99,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_glow03_fwd)
     func->setStyle(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(func->createEditableCopy(), shaderDesc);
+    test.setProcessor(func);
 
     OCIOGPUTest::CustomValues values;
     values.m_inputValues =
@@ -124,8 +119,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_glow03_inv)
     func->setStyle(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(func->createEditableCopy(), shaderDesc);
+    test.setProcessor(func);
 
     OCIOGPUTest::CustomValues values;
     values.m_inputValues =
@@ -145,8 +139,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_glow10_fwd)
     func->setStyle(OCIO::FIXED_FUNCTION_ACES_GLOW_10);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(func->createEditableCopy(), shaderDesc);
+    test.setProcessor(func);
 
     OCIOGPUTest::CustomValues values;
     values.m_inputValues =
@@ -166,8 +159,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_glow10_inv)
     func->setStyle(OCIO::FIXED_FUNCTION_ACES_GLOW_10);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(func->createEditableCopy(), shaderDesc);
+    test.setProcessor(func);
 
     OCIOGPUTest::CustomValues values;
     values.m_inputValues =
@@ -190,8 +182,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_darktodim10_fwd)
     func->setStyle(OCIO::FIXED_FUNCTION_ACES_DARK_TO_DIM_10);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(func->createEditableCopy(), shaderDesc);
+    test.setProcessor(func);
 
     test.setErrorThreshold(1e-6f);
 
@@ -204,8 +195,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_darktodim10_inv)
     func->setStyle(OCIO::FIXED_FUNCTION_ACES_DARK_TO_DIM_10);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(func->createEditableCopy(), shaderDesc);
+    test.setProcessor(func);
 
     test.setErrorThreshold(1e-6f);
 
@@ -217,11 +207,10 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_rec2100_surround_fwd)
     OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
     func->setStyle(OCIO::FIXED_FUNCTION_REC2100_SURROUND);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
-	const double data[1] = { 0.7 };
-	func->setParams(&data[0], 1);
+    const double data[1] = { 0.7 };
+    func->setParams(&data[0], 1);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(func->createEditableCopy(), shaderDesc);
+    test.setProcessor(func);
 
     test.setErrorThreshold(2e-6f);
 
@@ -237,8 +226,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_rec2100_surround_inv)
     const double data[1] = { 1./0.7 };
     func->setParams(&data[0], 1);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(func->createEditableCopy(), shaderDesc);
+    test.setProcessor(func);
 
     test.setErrorThreshold(2e-6f);
 
@@ -251,10 +239,14 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSV_fwd)
     func->setStyle(OCIO::FIXED_FUNCTION_RGB_TO_HSV);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(func->createEditableCopy(), shaderDesc);
+    test.setProcessor(func);
 
     test.setErrorThreshold(1e-6f);
+
+#ifdef __APPLE__
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
+#endif
 }
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSV_fwd_custom)
@@ -263,8 +255,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSV_fwd_custom)
     func->setStyle(OCIO::FIXED_FUNCTION_RGB_TO_HSV);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(func->createEditableCopy(), shaderDesc);
+    test.setProcessor(func);
 
     OCIOGPUTest::CustomValues values;
     values.m_inputValues =
@@ -285,8 +276,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSV_inv)
     func->setStyle(OCIO::FIXED_FUNCTION_RGB_TO_HSV);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(func->createEditableCopy(), shaderDesc);
+    test.setProcessor(func);
 
     // Mostly passes at 1e-6 but there are some values where the result is large in one chan
     // and very small in another and so doing relative comparison per channel is not fair.
@@ -301,8 +291,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSV_inv_custom)
     func->setStyle(OCIO::FIXED_FUNCTION_RGB_TO_HSV);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(func->createEditableCopy(), shaderDesc);
+    test.setProcessor(func);
 
     OCIOGPUTest::CustomValues values;
     values.m_inputValues =
@@ -327,8 +316,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_xyY_fwd)
     func->setStyle(OCIO::FIXED_FUNCTION_XYZ_TO_xyY);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(func->createEditableCopy(), shaderDesc);
+    test.setProcessor(func);
 
     test.setErrorThreshold(1e-6f);
 }
@@ -339,8 +327,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_xyY_inv)
     func->setStyle(OCIO::FIXED_FUNCTION_XYZ_TO_xyY);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(func->createEditableCopy(), shaderDesc);
+    test.setProcessor(func);
 
     test.setErrorThreshold(1e-6f);
 }
@@ -351,8 +338,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_uvY_fwd)
     func->setStyle(OCIO::FIXED_FUNCTION_XYZ_TO_uvY);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(func->createEditableCopy(), shaderDesc);
+    test.setProcessor(func);
 
     test.setErrorThreshold(1e-6f);
 }
@@ -363,8 +349,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_uvY_inv)
     func->setStyle(OCIO::FIXED_FUNCTION_XYZ_TO_uvY);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(func->createEditableCopy(), shaderDesc);
+    test.setProcessor(func);
 
     test.setErrorThreshold(1e-5f);
 }
@@ -375,8 +360,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_LUV_fwd)
     func->setStyle(OCIO::FIXED_FUNCTION_XYZ_TO_LUV);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(func->createEditableCopy(), shaderDesc);
+    test.setProcessor(func);
 
     test.setErrorThreshold(1e-5f);
 }
@@ -387,8 +371,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_LUV_inv)
     func->setStyle(OCIO::FIXED_FUNCTION_XYZ_TO_LUV);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(func->createEditableCopy(), shaderDesc);
+    test.setProcessor(func);
 
     test.setErrorThreshold(1e-5f);
 }
