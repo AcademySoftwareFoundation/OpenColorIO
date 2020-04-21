@@ -388,8 +388,7 @@ OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_biggest_supported)
     OCIO::Lut3DTransformRcPtr lut = OCIO::Lut3DTransform::Create();
     lut->setGridSize(129); // Lut3DOpData::maxSupportedLength.
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(lut, shaderDesc);
+    test.setProcessor(lut);
 
     test.setErrorThreshold(1e-4f);
 }
