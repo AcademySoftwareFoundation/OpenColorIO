@@ -34,12 +34,12 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1_legacy_shader)
     cdl->setOffset(CDL_Data_1::offset);
     cdl->setPower(CDL_Data_1::power);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(32);
-
     OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
     config->setMajorVersion(1);
-    test.setContext(config, cdl, shaderDesc);
 
+    test.setProcessor(config, cdl);
+
+    test.setLegacyShader(true);
     test.setTestWideRange(true);
     test.setRelativeComparison(false);
     test.setErrorThreshold(1e-6f);
@@ -57,11 +57,9 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1)
     cdl->setOffset(CDL_Data_1::offset);
     cdl->setPower(CDL_Data_1::power);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
     config->setMajorVersion(1);
-    test.setContext(config, cdl, shaderDesc);
+    test.setProcessor(config, cdl);
 
     test.setTestWideRange(true);
     test.setRelativeComparison(false);
@@ -80,12 +78,10 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v2)
     cdl->setOffset(CDL_Data_1::offset);
     cdl->setPower(CDL_Data_1::power);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
     config->setMajorVersion(2);
 
-    test.setContext(config, cdl, shaderDesc);
+    test.setProcessor(config, cdl);
 
     test.setTestWideRange(true);
     test.setRelativeComparison(false);
@@ -101,12 +97,10 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_no_clamp_v2)
     cdl->setOffset(CDL_Data_1::offset);
     cdl->setPower(CDL_Data_1::power);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
     config->setMajorVersion(2);
 
-    test.setContext(config, cdl, shaderDesc);
+    test.setProcessor(config, cdl);
 
     test.setTestWideRange(true);
     test.setRelativeComparison(false);
@@ -126,12 +120,10 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_inv_v2)
     cdl->setOffset(CDL_Data_1::offset);
     cdl->setPower(CDL_Data_1::power);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
     config->setMajorVersion(2);
 
-    test.setContext(config, cdl, shaderDesc);
+    test.setProcessor(config, cdl);
 
     test.setTestWideRange(true);
     test.setRelativeComparison(false);
@@ -147,12 +139,10 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_inv_no_clamp_v2)
     cdl->setOffset(CDL_Data_1::offset);
     cdl->setPower(CDL_Data_1::power);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
     config->setMajorVersion(2);
 
-    test.setContext(config, cdl, shaderDesc);
+    test.setProcessor(config, cdl);
 
     test.setTestWideRange(true);
     test.setRelativeComparison(false);
@@ -177,11 +167,9 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1_legacy_shader_Data_2)
     cdl->setPower(CDL_Data_2::power);
     cdl->setSat(CDL_Data_2::saturation);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(32);
-
     OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
     config->setMajorVersion(1);
-    test.setContext(config, cdl, shaderDesc);
+    test.setProcessor(config, cdl);
 
     test.setTestWideRange(true);
     test.setRelativeComparison(false);
@@ -199,11 +187,9 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1_Data_2)
     cdl->setPower(CDL_Data_2::power);
     cdl->setSat(CDL_Data_2::saturation);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
     config->setMajorVersion(1);
-    test.setContext(config, cdl, shaderDesc);
+    test.setProcessor(config, cdl);
 
     test.setTestWideRange(true);
     test.setRelativeComparison(false);
@@ -223,12 +209,10 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v2_Data_2)
     cdl->setPower(CDL_Data_2::power);
     cdl->setSat(CDL_Data_2::saturation);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
     config->setMajorVersion(2);
 
-    test.setContext(config, cdl, shaderDesc);
+    test.setProcessor(config, cdl);
 
     test.setTestWideRange(true);
     test.setRelativeComparison(false);
@@ -245,12 +229,10 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_inv_v2_Data_2)
     cdl->setPower(CDL_Data_2::power);
     cdl->setSat(CDL_Data_2::saturation);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
     config->setMajorVersion(2);
 
-    test.setContext(config, cdl, shaderDesc);
+    test.setProcessor(config, cdl);
 
     test.setTestWideRange(true);
     test.setRelativeComparison(false);
@@ -267,12 +249,10 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_no_clamp_v2_Data_2)
     cdl->setPower(CDL_Data_2::power);
     cdl->setSat(CDL_Data_2::saturation);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
     config->setMajorVersion(2);
 
-    test.setContext(config, cdl, shaderDesc);
+    test.setProcessor(config, cdl);
 
     test.setTestWideRange(true);
     test.setRelativeComparison(false);
@@ -291,12 +271,10 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_inv_no_clamp_v2_Data_2)
     cdl->setPower(CDL_Data_2::power);
     cdl->setSat(CDL_Data_2::saturation);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
     config->setMajorVersion(2);
 
-    test.setContext(config, cdl, shaderDesc);
+    test.setProcessor(config, cdl);
 
     test.setTestWideRange(true);
     test.setRelativeComparison(false);
@@ -326,12 +304,10 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v2_Data_3)
     cdl->setPower(CDL_Data_3::power);
     cdl->setSat(CDL_Data_3::saturation);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
     config->setMajorVersion(2);
 
-    test.setContext(config, cdl, shaderDesc);
+    test.setProcessor(config, cdl);
 
     test.setTestWideRange(true);
     test.setRelativeComparison(false);
@@ -348,12 +324,10 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_no_clamp_v2_Data_3)
     cdl->setPower(CDL_Data_3::power);
     cdl->setSat(CDL_Data_3::saturation);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
     config->setMajorVersion(2);
 
-    test.setContext(config, cdl, shaderDesc);
+    test.setProcessor(config, cdl);
 
     test.setTestWideRange(false);
     test.setRelativeComparison(false);
@@ -372,12 +346,10 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_inv_no_clamp_v2_Data_3)
     cdl->setPower(CDL_Data_3::power);
     cdl->setSat(CDL_Data_3::saturation);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
     OCIO::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
     config->setMajorVersion(2);
 
-    test.setContext(config, cdl, shaderDesc);
+    test.setProcessor(config, cdl);
 
     test.setTestWideRange(false);
     test.setRelativeComparison(false);

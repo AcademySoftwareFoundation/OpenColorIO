@@ -23,8 +23,7 @@ OCIO_ADD_GPU_TEST(RangeOp, scale_with_low_and_high_clippings)
     range->setMinOutValue(0.5f);
     range->setMaxOutValue(1.5f);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(range->createEditableCopy(), shaderDesc);
+    test.setProcessor(range);
 
     test.setTestWideRange(true);
     test.setErrorThreshold(g_epsilon);
@@ -36,8 +35,7 @@ OCIO_ADD_GPU_TEST(RangeOp, scale_with_low_clipping)
     range->setMinInValue(0.2f);
     range->setMinOutValue(0.2f);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(range->createEditableCopy(), shaderDesc);
+    test.setProcessor(range);
 
     test.setErrorThreshold(g_epsilon);
 }
@@ -48,9 +46,7 @@ OCIO_ADD_GPU_TEST(RangeOp, scale_with_high_clipping)
     range->setMaxInValue(0.9f);
     range->setMaxOutValue(0.9f);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
-    test.setContext(range->createEditableCopy(), shaderDesc);
+    test.setProcessor(range);
     test.setErrorThreshold(g_epsilon);
 }
 
@@ -63,8 +59,7 @@ OCIO_ADD_GPU_TEST(RangeOp, scale_with_low_and_high_clippings_2)
     range->setMinOutValue(-0.5f);
     range->setMaxOutValue(1.5f);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(range->createEditableCopy(), shaderDesc);
+    test.setProcessor(range);
 
     test.setTestWideRange(true);
     test.setErrorThreshold(g_epsilon);
@@ -78,9 +73,7 @@ OCIO_ADD_GPU_TEST(RangeOp, arbitrary_1)
     range->setMinOutValue(0.4000601f);
     range->setMaxOutValue(0.6000801f);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
-    test.setContext(range->createEditableCopy(), shaderDesc);
+    test.setProcessor(range);
     test.setErrorThreshold(g_epsilon);
 }
 
@@ -93,9 +86,7 @@ OCIO_ADD_GPU_TEST(RangeOp, arbitrary_1_no_clamp)
     range->setMinOutValue(0.4000601f);
     range->setMaxOutValue(0.6000801f);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
-    test.setContext(range->createEditableCopy(), shaderDesc);
+    test.setProcessor(range);
     test.setErrorThreshold(g_epsilon);
 }
 
@@ -107,8 +98,7 @@ OCIO_ADD_GPU_TEST(RangeOp, arbitrary_2)
     range->setMinOutValue(0.209803f);
     range->setMaxOutValue(1.600208f);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(range->createEditableCopy(), shaderDesc);
+    test.setProcessor(range);
 
     test.setTestWideRange(true);
     test.setErrorThreshold(g_epsilon);
@@ -123,8 +113,7 @@ OCIO_ADD_GPU_TEST(RangeOp, arbitrary_2_no_clamp)
     range->setMinOutValue(0.209803f);
     range->setMaxOutValue(1.600208f);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(range->createEditableCopy(), shaderDesc);
+    test.setProcessor(range);
 
     test.setTestWideRange(true);
     test.setErrorThreshold(g_epsilon);
