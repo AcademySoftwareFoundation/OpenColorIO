@@ -2669,7 +2669,7 @@ inline void save(YAML::Emitter & out, ConstFileRulesRcPtr & fr, size_t position)
 
 // Config
 
-inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
+inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filename)
 {
 
     // check profile version
@@ -2718,8 +2718,8 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
 
     try
     {
-        c->setMajorVersion((unsigned int)profile_major_version);
-        c->setMinorVersion((unsigned int)profile_minor_version);
+        config->setMajorVersion((unsigned int)profile_major_version);
+        config->setMinorVersion((unsigned int)profile_minor_version);
     }
     catch(Exception & ex)
     {
@@ -2745,7 +2745,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
 
     bool rulesFound = false;
     bool defaultRuleFound = false;
-    auto rules = c->getFileRules()->createEditableCopy();
+    auto rules = config->getFileRules()->createEditableCopy();
 
     std::string key, stringval;
     bool boolval = false;
@@ -2774,7 +2774,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
                 std::string k, v;
                 load(it.first, k);
                 load(it.second, v);
-                c->addEnvironmentVar(k.c_str(), v.c_str());
+                config->addEnvironmentVar(k.c_str(), v.c_str());
             }
         }
         else if(key == "search_path" || key == "resource_path")
@@ -2782,7 +2782,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
             if (second.size() == 0)
             {
                 load(second, stringval);
-                c->setSearchPath(stringval.c_str());
+                config->setSearchPath(stringval.c_str());
             }
             else
             {
@@ -2790,14 +2790,14 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
                 load(second, paths);
                 for (const auto & path : paths)
                 {
-                    c->addSearchPath(path.c_str());
+                    config->addSearchPath(path.c_str());
                 }
             }
         }
         else if(key == "strictparsing")
         {
             load(second, boolval);
-            c->setStrictParsingEnabled(boolval);
+            config->setStrictParsingEnabled(boolval);
         }
         else if (key=="family_separator")
         {
@@ -2811,13 +2811,13 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
                     os << " Found '" << stringval << "'.";
                     throwValueError(node.Tag(), first, os.str());
                 }
-                c->setFamilySeparator(stringval[0]);
+                config->setFamilySeparator(stringval[0]);
             }
         }
         else if(key == "description")
         {
             load(second, stringval);
-            c->setDescription(stringval.c_str());
+            config->setDescription(stringval.c_str());
         }
         else if(key == "luma")
         {
@@ -2830,7 +2830,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
                 os << "floats. Found '" << val.size() << "'.";
                 throwValueError(node.Tag(), first, os.str());
             }
-            c->setDefaultLumaCoefs(&val[0]);
+            config->setDefaultLumaCoefs(&val[0]);
         }
         else if(key == "roles")
         {
@@ -2844,12 +2844,12 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
                 std::string k, v;
                 load(it.first, k);
                 load(it.second, v);
-                c->setRole(k.c_str(), v.c_str());
+                config->setRole(k.c_str(), v.c_str());
             }
         }
         else if (key == "file_rules")
         {
-            if (c->getMajorVersion() < 2)
+            if (config->getMajorVersion() < 2)
             {
                 throwError(first, "Config v1 can't use 'file_rules'");
             }
@@ -2907,8 +2907,8 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
                 {
                     View view;
                     load(val, view);
-                    c->addDisplay(display.c_str(), view.m_name.c_str(), view.m_viewTransform.c_str(),
-                                  view.m_colorspace.c_str(), view.m_looks.c_str());
+                    config->addDisplay(display.c_str(), view.m_name.c_str(), view.m_viewTransform.c_str(),
+                                       view.m_colorspace.c_str(), view.m_looks.c_str());
                 }
             }
         }
@@ -2917,21 +2917,21 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
             StringUtils::StringVec display;
             load(second, display);
             std::string displays = JoinStringEnvStyle(display);
-            c->setActiveDisplays(displays.c_str());
+            config->setActiveDisplays(displays.c_str());
         }
         else if(key == "active_views")
         {
             StringUtils::StringVec view;
             load(second, view);
             std::string views = JoinStringEnvStyle(view);
-            c->setActiveViews(views.c_str());
+            config->setActiveViews(views.c_str());
         }
         else if(key == "inactive_colorspaces")
         {
             StringUtils::StringVec inactiveCSs;
             load(second, inactiveCSs);
             const std::string inactivecCSsStr = JoinStringEnvStyle(inactiveCSs);
-            c->setInactiveColorSpaces(inactivecCSsStr.c_str());
+            config->setInactiveColorSpaces(inactivecCSsStr.c_str());
         }
         else if(key == "colorspaces")
         {
@@ -2945,16 +2945,16 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
                 {
                     ColorSpaceRcPtr cs = ColorSpace::Create(REFERENCE_SPACE_SCENE);
                     load(val, cs);
-                    for(int ii = 0; ii < c->getNumColorSpaces(); ++ii)
+                    for(int ii = 0; ii < config->getNumColorSpaces(); ++ii)
                     {
-                        if(strcmp(c->getColorSpaceNameByIndex(ii), cs->getName()) == 0)
+                        if(strcmp(config->getColorSpaceNameByIndex(ii), cs->getName()) == 0)
                         {
                             std::ostringstream os;
                             os << "Colorspace with name '" << cs->getName() << "' already defined.";
                             throwError(second, os.str());
                         }
                     }
-                    c->addColorSpace(cs);
+                    config->addColorSpace(cs);
                 }
                 else
                 {
@@ -2978,16 +2978,16 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
                 {
                     ColorSpaceRcPtr cs = ColorSpace::Create(REFERENCE_SPACE_DISPLAY);
                     load(val, cs);
-                    for (int ii = 0; ii < c->getNumColorSpaces(); ++ii)
+                    for (int ii = 0; ii < config->getNumColorSpaces(); ++ii)
                     {
-                        if (strcmp(c->getColorSpaceNameByIndex(ii), cs->getName()) == 0)
+                        if (strcmp(config->getColorSpaceNameByIndex(ii), cs->getName()) == 0)
                         {
                             std::ostringstream os;
                             os << "Colorspace with name '" << cs->getName() << "' already defined.";
                             throwError(second, os.str());
                         }
                     }
-                    c->addColorSpace(cs);
+                    config->addColorSpace(cs);
                 }
                 else
                 {
@@ -3012,7 +3012,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
                 {
                     LookRcPtr look = Look::Create();
                     load(val, look);
-                    c->addLook(look);
+                    config->addLook(look);
                 }
                 else
                 {
@@ -3038,7 +3038,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
                     ReferenceSpaceType rst = peekViewTransformReferenceSpace(val);
                     ViewTransformRcPtr vt = ViewTransform::Create(rst);
                     load(val, vt);
-                    c->addViewTransform(vt);
+                    config->addViewTransform(vt);
                 }
                 else
                 {
@@ -3061,13 +3061,13 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
     {
         std::string realfilename = AbsPath(filename);
         std::string configrootdir = pystring::os::path::dirname(realfilename);
-        c->setWorkingDir(configrootdir.c_str());
+        config->setWorkingDir(configrootdir.c_str());
     }
 
-    auto defaultCS = c->getColorSpace(ROLE_DEFAULT);
+    auto defaultCS = config->getColorSpace(ROLE_DEFAULT);
     if (!rulesFound)
     {
-        if (!defaultCS && c->getMajorVersion() >= 2)
+        if (!defaultCS && config->getMajorVersion() >= 2)
         {
             throwError(node, "The config must contain either a Default file rule or "
                              "the 'default' role.");
@@ -3092,11 +3092,11 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
                 }
             }
         }
-        c->setFileRules(rules);
+        config->setFileRules(rules);
     }
 
-    c->setEnvironmentMode(mode);
-    c->loadEnvironment();
+    config->setEnvironmentMode(mode);
+    config->loadEnvironment();
 
     if(mode == ENV_ENVIRONMENT_LOAD_ALL)
     {
@@ -3107,7 +3107,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
             os << " '" << filename << "' ";
         }
         os << "has no environment section defined. The default behaviour is to ";
-        os << "load all environment variables (" << c->getNumEnvironmentVars() << ")";
+        os << "load all environment variables (" << config->getNumEnvironmentVars() << ")";
         os << ", which reduces the efficiency of OCIO's caching. Considering ";
         os << "predefining the environment variables used.";
         LogDebug(os.str());
@@ -3115,14 +3115,14 @@ inline void load(const YAML::Node& node, ConfigRcPtr& c, const char* filename)
 
 }
 
-inline void save(YAML::Emitter& out, const Config* c)
+inline void save(YAML::Emitter & out, const Config & config)
 {
     std::stringstream ss;
-    const unsigned configMajorVersion = c->getMajorVersion();
+    const unsigned configMajorVersion = config.getMajorVersion();
     ss << configMajorVersion;
-    if(c->getMinorVersion()!=0)
+    if(config.getMinorVersion()!=0)
     {
-        ss << "." << c->getMinorVersion();
+        ss << "." << config.getMinorVersion();
     }
 
     out << YAML::Block;
@@ -3131,15 +3131,15 @@ inline void save(YAML::Emitter& out, const Config* c)
     out << YAML::Newline;
     out << YAML::Newline;
 
-    if(c->getNumEnvironmentVars() > 0)
+    if(config.getNumEnvironmentVars() > 0)
     {
         out << YAML::Key << "environment";
         out << YAML::Value << YAML::BeginMap;
-        for(int i = 0; i < c->getNumEnvironmentVars(); ++i)
+        for(int i = 0; i < config.getNumEnvironmentVars(); ++i)
         {   
-            const char* name = c->getEnvironmentVarNameByIndex(i);
+            const char* name = config.getEnvironmentVarNameByIndex(i);
             out << YAML::Key << name;
-            out << YAML::Value << c->getEnvironmentVarDefault(name);
+            out << YAML::Value << config.getEnvironmentVarDefault(name);
         }
         out << YAML::EndMap;
         out << YAML::Newline;
@@ -3148,15 +3148,15 @@ inline void save(YAML::Emitter& out, const Config* c)
     if (configMajorVersion < 2)
     {
         // Save search paths as a single string.
-        out << YAML::Key << "search_path" << YAML::Value << c->getSearchPath();
+        out << YAML::Key << "search_path" << YAML::Value << config.getSearchPath();
     }
     else
     {
         StringUtils::StringVec searchPaths;
-        const int numSP = c->getNumSearchPaths();
-        for (int i = 0; i < c->getNumSearchPaths(); ++i)
+        const int numSP = config.getNumSearchPaths();
+        for (int i = 0; i < config.getNumSearchPaths(); ++i)
         {
-            searchPaths.emplace_back(c->getSearchPath(i));
+            searchPaths.emplace_back(config.getSearchPath(i));
         }
 
         if (numSP == 0)
@@ -3172,23 +3172,23 @@ inline void save(YAML::Emitter& out, const Config* c)
             out << YAML::Key << "search_path" << YAML::Value << searchPaths;
         }
     }
-    out << YAML::Key << "strictparsing" << YAML::Value << c->isStrictParsingEnabled();
+    out << YAML::Key << "strictparsing" << YAML::Value << config.isStrictParsingEnabled();
 
-    const char familySeparator = c->getFamilySeparator();
+    const char familySeparator = config.getFamilySeparator();
     if (familySeparator)
     {
         out << YAML::Key << "family_separator" << YAML::Value << familySeparator;
     }
 
     std::vector<double> luma(3, 0.f);
-    c->getDefaultLumaCoefs(&luma[0]);
+    config.getDefaultLumaCoefs(&luma[0]);
     out << YAML::Key << "luma" << YAML::Value << YAML::Flow << luma;
 
-    if(c->getDescription() != NULL && strlen(c->getDescription()) > 0)
+    if(config.getDescription() != NULL && strlen(config.getDescription()) > 0)
     {
         out << YAML::Newline;
         out << YAML::Key << "description";
-        out << YAML::Value << c->getDescription();
+        out << YAML::Value << config.getDescription();
         out << YAML::Newline;
     }
 
@@ -3197,16 +3197,16 @@ inline void save(YAML::Emitter& out, const Config* c)
     out << YAML::Newline;
     out << YAML::Key << "roles";
     out << YAML::Value << YAML::BeginMap;
-    for(int i = 0; i < c->getNumRoles(); ++i)
+    for(int i = 0; i < config.getNumRoles(); ++i)
     {
-        const char* role = c->getRoleName(i);
+        const char* role = config.getRoleName(i);
         if(role && *role)
         {
-            ConstColorSpaceRcPtr colorspace = c->getColorSpace(role);
+            ConstColorSpaceRcPtr colorspace = config.getColorSpace(role);
             if(colorspace)
             {
                 out << YAML::Key << role;
-                out << YAML::Value << c->getColorSpace(role)->getName();
+                out << YAML::Value << config.getColorSpace(role)->getName();
             }
             else
             {
@@ -3222,7 +3222,7 @@ inline void save(YAML::Emitter& out, const Config* c)
     // File rules
     if (configMajorVersion >= 2)
     {
-        auto rules = c->getFileRules();
+        auto rules = config.getFileRules();
         out << YAML::Newline;
         out << YAML::Key << "file_rules";
         out << YAML::Value << YAML::BeginSeq;
@@ -3238,19 +3238,21 @@ inline void save(YAML::Emitter& out, const Config* c)
     out << YAML::Newline;
     out << YAML::Key << "displays";
     out << YAML::Value << YAML::BeginMap;
-    for(int i = 0; i < c->getNumDisplays(); ++i)
+    for(int i = 0; i < config.getNumDisplays(); ++i)
     {
-        const char* display = c->getDisplay(i);
+        const char* display = config.getDisplay(i);
         out << YAML::Key << display;
         out << YAML::Value << YAML::BeginSeq;
-        for(int v = 0; v < c->getNumViews(display); ++v)
+        for(int v = 0; v < config.getNumViews(display); ++v)
         {
             View dview;
-            dview.m_name = c->getView(display, v);
-            dview.m_colorspace = c->getDisplayViewTransformName(display, dview.m_name.c_str());
-            dview.m_colorspace = c->getDisplayColorSpaceName(display, dview.m_name.c_str());
-            if(c->getDisplayLooks(display, dview.m_name.c_str()) != NULL)
-                dview.m_looks = c->getDisplayLooks(display, dview.m_name.c_str());
+            dview.m_name = config.getView(display, v);
+            dview.m_colorspace = config.getDisplayViewTransformName(display, dview.m_name.c_str());
+            dview.m_colorspace = config.getDisplayColorSpaceName(display, dview.m_name.c_str());
+            if(config.getDisplayLooks(display, dview.m_name.c_str()) != NULL)
+            {
+                dview.m_looks = config.getDisplayLooks(display, dview.m_name.c_str());
+            }
             save(out, dview);
 
         }
@@ -3262,16 +3264,16 @@ inline void save(YAML::Emitter& out, const Config* c)
     out << YAML::Newline;
     out << YAML::Key << "active_displays";
     StringUtils::StringVec active_displays;
-    if(c->getActiveDisplays() != NULL && strlen(c->getActiveDisplays()) > 0)
-        SplitStringEnvStyle(active_displays, c->getActiveDisplays());
+    if(config.getActiveDisplays() != NULL && strlen(config.getActiveDisplays()) > 0)
+        SplitStringEnvStyle(active_displays, config.getActiveDisplays());
     out << YAML::Value << YAML::Flow << active_displays;
     out << YAML::Key << "active_views";
     StringUtils::StringVec active_views;
-    if(c->getActiveViews() != NULL && strlen(c->getActiveViews()) > 0)
-        SplitStringEnvStyle(active_views, c->getActiveViews());
+    if(config.getActiveViews() != NULL && strlen(config.getActiveViews()) > 0)
+        SplitStringEnvStyle(active_views, config.getActiveViews());
     out << YAML::Value << YAML::Flow << active_views;
 
-    const std::string inactiveCSs = c->getInactiveColorSpaces();
+    const std::string inactiveCSs = config.getInactiveColorSpaces();
     if (!inactiveCSs.empty())
     {
         StringUtils::StringVec inactive_colorspaces;
@@ -3283,22 +3285,22 @@ inline void save(YAML::Emitter& out, const Config* c)
     out << YAML::Newline;
 
     // Looks
-    if(c->getNumLooks() > 0)
+    if(config.getNumLooks() > 0)
     {
         out << YAML::Newline;
         out << YAML::Key << "looks";
         out << YAML::Value << YAML::BeginSeq;
-        for(int i = 0; i < c->getNumLooks(); ++i)
+        for(int i = 0; i < config.getNumLooks(); ++i)
         {
-            const char* name = c->getLookNameByIndex(i);
-            save(out, c->getLook(name));
+            const char* name = config.getLookNameByIndex(i);
+            save(out, config.getLook(name));
         }
         out << YAML::EndSeq;
         out << YAML::Newline;
     }
 
     // View transform
-    const int numVT = c->getNumViewTransforms();
+    const int numVT = config.getNumViewTransforms();
     if (numVT > 0)
     {
         out << YAML::Newline;
@@ -3306,8 +3308,8 @@ inline void save(YAML::Emitter& out, const Config* c)
         out << YAML::Value << YAML::BeginSeq;
         for (int i = 0; i < numVT; ++i)
         {
-            auto name = c->getViewTransformNameByIndex(i);
-            auto vt = c->getViewTransform(name);
+            auto name = config.getViewTransformNameByIndex(i);
+            auto vt = config.getViewTransform(name);
             save(out, vt);
         }
         out << YAML::EndSeq;
@@ -3315,11 +3317,11 @@ inline void save(YAML::Emitter& out, const Config* c)
 
     std::vector<ConstColorSpaceRcPtr> sceneCS;
     std::vector<ConstColorSpaceRcPtr> displayCS;
-    for (int i = 0; i < c->getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL); ++i)
+    for (int i = 0; i < config.getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL); ++i)
     {
-        const char* name = c->getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL,
-                                                       COLORSPACE_ALL, i);
-        auto cs = c->getColorSpace(name);
+        const char* name = config.getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL,
+                                                           COLORSPACE_ALL, i);
+        auto cs = config.getColorSpace(name);
         if (cs->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
         {
             displayCS.push_back(cs);
@@ -3362,12 +3364,12 @@ inline void save(YAML::Emitter& out, const Config* c)
 
 ///////////////////////////////////////////////////////////////////////////
 
-void OCIOYaml::Read(std::istream & istream, ConfigRcPtr & c, const char * filename)
+void OCIOYaml::Read(std::istream & istream, ConfigRcPtr & config, const char * filename)
 {
     try
     {
         YAML::Node node = YAML::Load(istream);
-        load(node, c, filename);
+        load(node, config, filename);
     }
     catch(const std::exception & e)
     {
@@ -3379,11 +3381,11 @@ void OCIOYaml::Read(std::istream & istream, ConfigRcPtr & c, const char * filena
     }
 }
 
-void OCIOYaml::Write(std::ostream & ostream, const Config * c)
+void OCIOYaml::Write(std::ostream & ostream, const Config & config)
 {
     YAML::Emitter out;
     out.SetDoublePrecision(std::numeric_limits<double>::digits10);
-    save(out, c);
+    save(out, config);
     ostream << out.c_str();
 }
 
