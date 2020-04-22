@@ -54,10 +54,6 @@ OpData & OpData::operator=(const OpData & rhs)
 OpData::~OpData()
 { }
 
-void OpData::validate() const
-{
-}
-
 OpDataRcPtr OpData::getIdentityReplacement() const
 {
     return std::make_shared<MatrixOpData>();
@@ -140,6 +136,11 @@ void Op::combineWith(OpRcPtrVec & /*ops*/, ConstOpRcPtr & /*secondOp*/) const
     os << "Op: " << getInfo() << " cannot be combined. ";
     os << "A type-specific combining function is not defined.";
     throw Exception(os.str().c_str());
+}
+
+void Op::validate() const
+{
+    m_data->validate();
 }
 
 bool Op::isDynamic() const
@@ -341,11 +342,11 @@ OpRcPtrVec OpRcPtrVec::invert() const
     return inverted;
 }
 
-void OpRcPtrVec::finalize(OptimizationFlags oFlags)
+void OpRcPtrVec::validate() const
 {
     for (auto & op : m_ops)
     {
-        op->finalize(oFlags);
+        op->validate();
     }
 }
 

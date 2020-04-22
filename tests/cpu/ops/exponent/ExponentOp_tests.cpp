@@ -20,6 +20,7 @@ OCIO_ADD_TEST(ExponentOp, value)
     OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_INVERSE));
     OCIO_CHECK_EQUAL(ops.size(), 2);
 
+    OCIO_CHECK_NO_THROW(ops.validate());
     OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
 
     float error = 1e-6f;
@@ -27,7 +28,7 @@ OCIO_ADD_TEST(ExponentOp, value)
     const float source[] = {  0.1f, 0.3f, 0.9f, 0.5f, };
 
     const float result1[] = { 0.0630957261f, 0.209053621f,
-        0.862858355f, 0.353553385f };
+                              0.862858355f, 0.353553385f };
 
     float tmp[4];
     memcpy(tmp, source, 4*sizeof(float));
@@ -64,7 +65,7 @@ OCIO_ADD_TEST(ExponentOp, value_limits)
     OCIO::OpRcPtrVec ops;
     OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_FORWARD));
 
-    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
 
     float error = 1e-6f;
 
@@ -107,6 +108,7 @@ OCIO_ADD_TEST(ExponentOp, combining)
     OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, expData2, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
+    OCIO_CHECK_NO_THROW(ops.validate());
     OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
 
     OCIO::ConstOpRcPtr op1 = ops[1];
@@ -166,7 +168,6 @@ OCIO_ADD_TEST(ExponentOp, combining)
     OCIO::OpRcPtrVec ops;
     OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_INVERSE));
-    OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
     OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
@@ -186,7 +187,6 @@ OCIO_ADD_TEST(ExponentOp, combining)
     OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_CHECK_NO_THROW(OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_FORWARD));
-    OCIO_CHECK_EQUAL(ops.size(), 3);
 
     OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_CHECK_EQUAL(ops.size(), 3);
@@ -206,7 +206,7 @@ OCIO_ADD_TEST(ExponentOp, combining)
         OCIO_CHECK_CLOSE(tmp[i], result[i], error);
     }
 
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
     OCIO_CHECK_EQUAL(ops.size(), 1);
 
     memcpy(tmp, source, 4 * sizeof(float));
@@ -262,7 +262,7 @@ OCIO_ADD_TEST(ExponentOp, noop)
     OCIO_CHECK_ASSERT(ops[1]->isNoOp());
 
     // Optimize it.
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
     OCIO_CHECK_EQUAL(ops.size(), 0);
 }
 
@@ -278,11 +278,14 @@ OCIO_ADD_TEST(ExponentOp, cache_id)
 
     OCIO_CHECK_EQUAL(ops.size(), 3);
 
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.validate());
 
-    const std::string opCacheID0 = ops[0]->getCacheID();
-    const std::string opCacheID1 = ops[1]->getCacheID();
-    const std::string opCacheID2 = ops[2]->getCacheID();
+    std::string opCacheID0;
+    OCIO_CHECK_NO_THROW(opCacheID0 = ops[0]->getCacheID());
+    std::string opCacheID1;
+    OCIO_CHECK_NO_THROW(opCacheID1 = ops[1]->getCacheID());
+    std::string opCacheID2;
+    OCIO_CHECK_NO_THROW(opCacheID2 = ops[2]->getCacheID());
 
     OCIO_CHECK_EQUAL(opCacheID0, opCacheID2);
     OCIO_CHECK_NE(opCacheID0, opCacheID1);

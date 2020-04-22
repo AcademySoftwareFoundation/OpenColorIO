@@ -1260,7 +1260,8 @@ void CTFReaderACESParamsElt::start(const char **atts)
     }
 
     const auto style = pFixedFunction->getFixedFunction()->getStyle();
-    if (style == FixedFunctionOpData::REC2100_SURROUND_FWD)
+    if (style == FixedFunctionOpData::REC2100_SURROUND_FWD ||
+        style == FixedFunctionOpData::REC2100_SURROUND_INV)
     {
         if (pFixedFunction->getFixedFunction()->getParams().size())
         {

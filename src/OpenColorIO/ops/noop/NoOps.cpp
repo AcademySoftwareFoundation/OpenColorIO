@@ -34,12 +34,11 @@ public:
     OpRcPtr clone() const override;
 
     std::string getInfo() const override { return "<AllocationNoOp>"; }
-    std::string getCacheID() const override { return ""; }
 
     bool isSameType(ConstOpRcPtr & op) const override;
     bool isInverse(ConstOpRcPtr & op) const override;
 
-    void finalize(OptimizationFlags /*oFlags*/) override { }
+    std::string getCacheID() const override;
 
     ConstOpCPURcPtr getCPUOp() const override { return nullptr; }
 
@@ -76,6 +75,12 @@ bool AllocationNoOp::isInverse(ConstOpRcPtr & op) const
 {
     if(!isSameType(op)) return false;
     return true;
+}
+
+std::string AllocationNoOp::getCacheID() const
+{
+    throw Exception("AllocationNoOp::getCacheID should never be called. "
+                    "NoOp types should have been removed.");
 }
 
 void AllocationNoOp::getGpuAllocation(AllocationData & allocation) const
@@ -314,13 +319,12 @@ public:
     OpRcPtr clone() const override;
 
     std::string getInfo() const override { return "<FileNoOp>"; }
-    std::string getCacheID() const override { return ""; }
 
     bool isSameType(ConstOpRcPtr & op) const override;
     bool isInverse(ConstOpRcPtr & op) const override;
     void dumpMetadata(ProcessorMetadataRcPtr & metadata) const override;
 
-    void finalize(OptimizationFlags /*oFlags*/) override {}
+    std::string getCacheID() const override;
 
     ConstOpCPURcPtr getCPUOp() const override { return nullptr; }
 
@@ -362,6 +366,13 @@ void FileNoOp::dumpMetadata(ProcessorMetadataRcPtr & metadata) const
     auto fileData = DynamicPtrCast<const FileNoOpData>(data());
     metadata->addFile(fileData->getPath().c_str());
 }
+
+std::string FileNoOp::getCacheID() const
+{
+    throw Exception("FileNoOp::getCacheID should never be called. "
+                    "NoOp types should have been removed.");
+}
+
 }
 
 void CreateFileNoOp(OpRcPtrVec & ops,
@@ -396,13 +407,12 @@ public:
     OpRcPtr clone() const override;
 
     std::string getInfo() const override { return "<LookNoOp>"; }
-    std::string getCacheID() const override { return ""; }
 
     bool isSameType(ConstOpRcPtr & op) const override;
     bool isInverse(ConstOpRcPtr & op) const override;
     void dumpMetadata(ProcessorMetadataRcPtr & metadata) const override;
 
-    void finalize(OptimizationFlags /*oFlags*/) override {}
+    std::string getCacheID() const override;
 
     ConstOpCPURcPtr getCPUOp() const override { return nullptr; }
 
@@ -442,6 +452,13 @@ void LookNoOp::dumpMetadata(ProcessorMetadataRcPtr & metadata) const
 {
     metadata->addLook(m_look.c_str());
 }
+
+std::string LookNoOp::getCacheID() const
+{
+    throw Exception("LookNoOp::getCacheID should never be called. "
+                    "NoOp types should have been removed.");
+}
+
 }
 
 void CreateLookNoOp(OpRcPtrVec & ops,

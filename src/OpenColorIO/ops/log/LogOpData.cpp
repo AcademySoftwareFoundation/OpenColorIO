@@ -221,8 +221,6 @@ LogOpData::~LogOpData()
 
 void LogOpData::validate() const
 {
-    OpData::validate();
-
     ValidateParams(m_redParams, m_direction);
     ValidateParams(m_greenParams, m_direction);
     ValidateParams(m_blueParams, m_direction);
@@ -314,11 +312,9 @@ bool LogOpData::isNoOp() const
     return false;
 }
 
-void LogOpData::finalize()
+std::string LogOpData::getCacheID() const
 {
     AutoMutex lock(m_mutex);
-
-    validate();
 
     std::ostringstream cacheIDStream;
     if (!getID().empty())
@@ -341,7 +337,7 @@ void LogOpData::finalize()
             cacheIDStream << " LinearSlope " << getLinearSlopeString(DefaultValues::FLOAT_DECIMALS);
         }
     }
-    m_cacheID = cacheIDStream.str();
+    return cacheIDStream.str();
 }
 
 bool LogOpData::operator==(const OpData& other) const

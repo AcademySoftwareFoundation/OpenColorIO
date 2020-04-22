@@ -24,18 +24,17 @@ TransformRcPtr MatrixTransformImpl::createEditableCopy() const
 {
     MatrixTransformRcPtr transform = MatrixTransform::Create();
     dynamic_cast<MatrixTransformImpl*>(transform.get())->data() = data();
-    transform->setDirection(m_direction);
     return transform;
 }
 
 TransformDirection MatrixTransformImpl::getDirection() const noexcept
 {
-    return m_direction;
+    return data().getDirection();
 }
 
 void MatrixTransformImpl::setDirection(TransformDirection dir) noexcept
 {
-    m_direction = dir;
+    data().setDirection(dir);
 }
 
 void MatrixTransformImpl::validate() const
@@ -83,10 +82,6 @@ const FormatMetadata & MatrixTransformImpl::getFormatMetadata() const noexcept
 bool MatrixTransformImpl::equals(const MatrixTransform & other) const noexcept
 {
     if (this == &other) return true;
-    if (m_direction != other.getDirection())
-    {
-        return false;
-    }
     return data() == dynamic_cast<const MatrixTransformImpl*>(&other)->data();
 }
 

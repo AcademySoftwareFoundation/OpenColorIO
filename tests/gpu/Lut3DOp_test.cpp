@@ -382,8 +382,14 @@ OCIO_ADD_GPU_TEST(Lut3DOp, inv3dlut_file_spi3d_bizarre_tetra)
     test.setErrorThreshold(3e-4f);
 }
 
-// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc GPURendererLut3D_File2_test
-// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc GPURendererLut3D_File3_test
-// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc GPURendererLut3D_File4_test
-// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc GPURendererInvLut3D_File1_test
-// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc GPURendererBiggestSupportedLut3D_test
+OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_biggest_supported)
+{
+    // Linear interpolation
+    OCIO::Lut3DTransformRcPtr lut = OCIO::Lut3DTransform::Create();
+    lut->setGridSize(129); // Lut3DOpData::maxSupportedLength.
+
+    test.setProcessor(lut);
+
+    test.setErrorThreshold(1e-4f);
+}
+

@@ -420,7 +420,7 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
             Add_Surround_Shader(ss, (float) func->getParams()[0]);
             break;
         }
-		        case FixedFunctionOpData::REC2100_SURROUND_INV:
+        case FixedFunctionOpData::REC2100_SURROUND_INV:
         {
             Add_Surround_Shader(ss, (float)(1. / func->getParams()[0]));
             break;
@@ -463,7 +463,7 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         case FixedFunctionOpData::LUV_TO_XYZ:
         {
             Add_LUV_TO_XYZ(ss);
-		}
+        }
     }
 
     ss.dedent();

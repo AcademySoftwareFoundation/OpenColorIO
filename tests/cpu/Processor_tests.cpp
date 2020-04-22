@@ -6,6 +6,7 @@
 
 #include "ops/exposurecontrast/ExposureContrastOp.h"
 #include "testutils/UnitTest.h"
+#include "UnitTestOptimFlags.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -27,7 +28,7 @@ OCIO_ADD_TEST(Processor, basic)
     auto processorMat = config->getProcessor(mat);
     OCIO_CHECK_EQUAL(processorMat->getNumTransforms(), 1);
 
-    OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "$dff619808a13760b73a99db2e19a4dd2");
+    OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "$b8861d4acd905af0e84ddf10c860b220");
 }
 
 OCIO_ADD_TEST(Processor, shared_dynamic_properties)
@@ -127,21 +128,24 @@ OCIO_ADD_TEST(Processor, optimized_processor)
     auto processorGroup = config->getProcessor(group);
     OCIO_CHECK_EQUAL(processorGroup->getNumTransforms(), 2);
 
-    auto processorOpt1 = processorGroup->getOptimizedProcessor(OCIO::BIT_DEPTH_F32,
-                                                               OCIO::BIT_DEPTH_F32,
-                                                               OCIO::OPTIMIZATION_DEFAULT);
+    auto processorOpt1 = processorGroup->getOptimizedProcessor(OCIO::OPTIMIZATION_DEFAULT);
     OCIO_CHECK_EQUAL(processorOpt1->getNumTransforms(), 1);
     OCIO_REQUIRE_EQUAL(processorOpt1->getFormatMetadata().getNumAttributes(), 1);
     OCIO_CHECK_EQUAL(std::string(processorOpt1->getFormatMetadata().getAttributeName(0)), OCIO::METADATA_ID);
     OCIO_CHECK_EQUAL(std::string(processorOpt1->getFormatMetadata().getAttributeValue(0)), "UID42");
 
-    auto processorOpt2 = processorGroup->getOptimizedProcessor(OCIO::BIT_DEPTH_F32,
-                                                               OCIO::BIT_DEPTH_F32,
-                                                               OCIO::OPTIMIZATION_NONE);
+    auto processorOpt2 = processorGroup->getOptimizedProcessor(OCIO::OPTIMIZATION_NONE);
     OCIO_CHECK_EQUAL(processorOpt2->getNumTransforms(), 2);
     OCIO_REQUIRE_EQUAL(processorOpt2->getFormatMetadata().getNumAttributes(), 1);
     OCIO_CHECK_EQUAL(std::string(processorOpt2->getFormatMetadata().getAttributeName(0)), OCIO::METADATA_ID);
     OCIO_CHECK_EQUAL(std::string(processorOpt2->getFormatMetadata().getAttributeValue(0)), "UID42");
+
+    // Use an optimization flags environment variable.
+    {
+        OCIOOptimizationFlagsEnvGuard flagsGuard("0"); // OPTIMIZATION_NONE.
+        auto processorOpt3 = processorGroup->getOptimizedProcessor(OCIO::OPTIMIZATION_DEFAULT);
+        OCIO_CHECK_EQUAL(processorOpt3->getNumTransforms(), 2);
+    }
 }
 
 OCIO_ADD_TEST(Processor, is_noop)
@@ -247,3 +251,24 @@ OCIO_ADD_TEST(Processor, channel_crosstalk)
                                              OCIO::BIT_DEPTH_F32,
                                              OCIO::OPTIMIZATION_DEFAULT)->hasChannelCrosstalk());
 }
+
+OCIO_ADD_TEST(Processor, optimization_env_override_basic)
+{
+    OCIOOptimizationFlagsEnvGuard flagsGuard("");
+
+    OCIO::OptimizationFlags testFlag{ OCIO::OPTIMIZATION_DEFAULT };
+    OCIO_CHECK_EQUAL(testFlag, OCIO::EnvironmentOverride(testFlag));
+
+    OCIO::SetEnvVariable(OCIO::OCIO_OPTIMIZATION_FLAGS_ENVVAR, "0");
+    OCIO_CHECK_EQUAL(OCIO::OPTIMIZATION_NONE, OCIO::EnvironmentOverride(testFlag));
+
+    OCIO::SetEnvVariable(OCIO::OCIO_OPTIMIZATION_FLAGS_ENVVAR, "0xFFFFFFFF");
+    OCIO_CHECK_EQUAL(OCIO::OPTIMIZATION_ALL, OCIO::EnvironmentOverride(testFlag));
+
+    OCIO::SetEnvVariable(OCIO::OCIO_OPTIMIZATION_FLAGS_ENVVAR, "20479");
+    OCIO_CHECK_EQUAL(OCIO::OPTIMIZATION_LOSSLESS, OCIO::EnvironmentOverride(testFlag));
+
+    OCIO::SetEnvVariable(OCIO::OCIO_OPTIMIZATION_FLAGS_ENVVAR, "0x1FFFF");
+    OCIO_CHECK_EQUAL(OCIO::OPTIMIZATION_GOOD, OCIO::EnvironmentOverride(testFlag));
+}
+
