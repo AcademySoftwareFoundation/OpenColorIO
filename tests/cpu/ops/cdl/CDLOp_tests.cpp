@@ -22,7 +22,7 @@ void ApplyCDL(float * in, const float * ref, unsigned numPixels,
 {
     OCIO::CDLOp cdlOp(style, slope, offset, power, saturation);
 
-    OCIO_CHECK_NO_THROW(cdlOp.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(cdlOp.validate());
 
     cdlOp.apply(in, in, numPixels);
 
@@ -75,12 +75,14 @@ OCIO_ADD_TEST(CDLOp, computed_identifier)
                       CDL_DATA_1::slope, CDL_DATA_1::offset,
                       CDL_DATA_1::power, CDL_DATA_1::saturation, 
                       OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
-    OCIO_CHECK_NO_THROW( ops[0]->finalize(OCIO::OPTIMIZATION_NONE) );
-    OCIO_CHECK_NO_THROW( ops[1]->finalize(OCIO::OPTIMIZATION_NONE) );
-
-    OCIO_CHECK_EQUAL( ops[0]->getCacheID(), ops[1]->getCacheID() );
+    std::string id0, id1;
+    OCIO_CHECK_NO_THROW(id0 = ops[0]->getCacheID());
+    OCIO_CHECK_NO_THROW(id1 = ops[1]->getCacheID());
+    OCIO_CHECK_EQUAL(id0, id1);
 
     const OCIO::CDLOpData::ChannelParams slope(CDL_DATA_1::slope[0],
                                                CDL_DATA_1::slope[1],
@@ -100,12 +102,14 @@ OCIO_ADD_TEST(CDLOp, computed_identifier)
 
     OCIO::CreateCDLOp(ops, cdlData, OCIO::TRANSFORM_DIR_FORWARD);
 
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
 
-    OCIO_CHECK_NO_THROW( ops[2]->finalize(OCIO::OPTIMIZATION_NONE) );
+    std::string id2;
+    OCIO_CHECK_NO_THROW(id2 = ops[2]->getCacheID());
 
-    OCIO_CHECK_ASSERT( ops[0]->getCacheID() != ops[2]->getCacheID() );
-    OCIO_CHECK_ASSERT( ops[1]->getCacheID() != ops[2]->getCacheID() );
+    OCIO_CHECK_ASSERT( id0 != id2 );
+    OCIO_CHECK_ASSERT( id1 != id2 );
 
     OCIO::CreateCDLOp(ops, 
                       OCIO::CDLOpData::CDL_V1_2_FWD, 
@@ -113,13 +117,15 @@ OCIO_ADD_TEST(CDLOp, computed_identifier)
                       CDL_DATA_1::power, CDL_DATA_1::saturation + 0.002f, 
                       OCIO::TRANSFORM_DIR_FORWARD);
 
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 4);
 
-    OCIO_CHECK_NO_THROW( ops[3]->finalize(OCIO::OPTIMIZATION_NONE) );
+    std::string id3;
+    OCIO_CHECK_NO_THROW(id3 = ops[3]->getCacheID());
 
-    OCIO_CHECK_ASSERT( ops[0]->getCacheID() != ops[3]->getCacheID() );
-    OCIO_CHECK_ASSERT( ops[1]->getCacheID() != ops[3]->getCacheID() );
-    OCIO_CHECK_ASSERT( ops[2]->getCacheID() != ops[3]->getCacheID() );
+    OCIO_CHECK_ASSERT( id0 != id3 );
+    OCIO_CHECK_ASSERT( id1 != id3 );
+    OCIO_CHECK_ASSERT( id2 != id3 );
 
     OCIO::CreateCDLOp(ops, 
                       OCIO::CDLOpData::CDL_V1_2_FWD, 
@@ -127,14 +133,16 @@ OCIO_ADD_TEST(CDLOp, computed_identifier)
                       CDL_DATA_1::power, CDL_DATA_1::saturation + 0.002f, 
                       OCIO::TRANSFORM_DIR_FORWARD);
 
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 5);
 
-    OCIO_CHECK_NO_THROW( ops[4]->finalize(OCIO::OPTIMIZATION_NONE) );
+    std::string id4;
+    OCIO_CHECK_NO_THROW(id4 = ops[4]->getCacheID());
 
-    OCIO_CHECK_ASSERT( ops[0]->getCacheID() != ops[4]->getCacheID() );
-    OCIO_CHECK_ASSERT( ops[1]->getCacheID() != ops[4]->getCacheID() );
-    OCIO_CHECK_ASSERT( ops[2]->getCacheID() != ops[4]->getCacheID() );
-    OCIO_CHECK_ASSERT( ops[3]->getCacheID() == ops[4]->getCacheID() );
+    OCIO_CHECK_ASSERT( id0 != id4 );
+    OCIO_CHECK_ASSERT( id1 != id4 );
+    OCIO_CHECK_ASSERT( id2 != id4 );
+    OCIO_CHECK_ASSERT( id3 == id4 );
 
     OCIO::CreateCDLOp(ops, 
                       OCIO::CDLOpData::CDL_NO_CLAMP_FWD, 
@@ -142,12 +150,14 @@ OCIO_ADD_TEST(CDLOp, computed_identifier)
                       CDL_DATA_1::power, CDL_DATA_1::saturation + 0.002f, 
                       OCIO::TRANSFORM_DIR_FORWARD);
 
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 6);
 
-    OCIO_CHECK_NO_THROW( ops[5]->finalize(OCIO::OPTIMIZATION_NONE) );
+    std::string id5;
+    OCIO_CHECK_NO_THROW(id5 = ops[5]->getCacheID());
 
-    OCIO_CHECK_ASSERT( ops[3]->getCacheID() != ops[5]->getCacheID() );
-    OCIO_CHECK_ASSERT( ops[4]->getCacheID() != ops[5]->getCacheID() );
+    OCIO_CHECK_ASSERT( id3 != id5 );
+    OCIO_CHECK_ASSERT( id4 != id5 );
 }
 
 OCIO_ADD_TEST(CDLOp, is_inverse)
@@ -167,6 +177,7 @@ OCIO_ADD_TEST(CDLOp, is_inverse)
                       CDL_DATA_1::power, CDL_DATA_1::saturation, 
                       OCIO::TRANSFORM_DIR_INVERSE);
 
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
     OCIO::ConstOpRcPtr op0 = ops[0];
@@ -181,6 +192,7 @@ OCIO_ADD_TEST(CDLOp, is_inverse)
                       CDL_DATA_1::power, 1.30, 
                       OCIO::TRANSFORM_DIR_INVERSE);
 
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
     OCIO::ConstOpRcPtr op2 = ops[2];
 
@@ -195,6 +207,7 @@ OCIO_ADD_TEST(CDLOp, is_inverse)
                       CDL_DATA_1::power, 1.30, 
                       OCIO::TRANSFORM_DIR_INVERSE);
 
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 4);
     OCIO::ConstOpRcPtr op3 = ops[3];
 
@@ -206,6 +219,7 @@ OCIO_ADD_TEST(CDLOp, is_inverse)
                       CDL_DATA_1::power, 1.30, 
                       OCIO::TRANSFORM_DIR_FORWARD);
 
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 5);
     OCIO::ConstOpRcPtr op4 = ops[4];
 
@@ -218,6 +232,7 @@ OCIO_ADD_TEST(CDLOp, is_inverse)
                       CDL_DATA_1::power, 1.30, 
                       OCIO::TRANSFORM_DIR_FORWARD);
 
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 6);
     OCIO::ConstOpRcPtr op5 = ops[5];
 
@@ -231,6 +246,7 @@ OCIO_ADD_TEST(CDLOp, is_inverse)
                       CDL_DATA_1::power, 1.30, 
                       OCIO::TRANSFORM_DIR_INVERSE);
 
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(ops.size(), 7);
     OCIO::ConstOpRcPtr op6 = ops[6];
 

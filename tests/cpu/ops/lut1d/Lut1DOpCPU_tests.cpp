@@ -208,6 +208,20 @@ OCIO_ADD_TEST(Lut1DRenderer, nan_half_test)
     OCIO_CHECK_ASSERT(OCIO::IsNan(pixels[15]));
 }
 
+namespace
+{
+OCIO::ConstLut1DOpDataRcPtr FastFromInverse(OCIO::Lut1DOpDataRcPtr & invLutData, unsigned line)
+{
+    OCIO_CHECK_NO_THROW_FROM(invLutData->validate(), line);
+    OCIO_CHECK_NO_THROW_FROM(invLutData->finalize(), line);
+    OCIO::ConstLut1DOpDataRcPtr constInvLutData = invLutData;
+    OCIO::ConstLut1DOpDataRcPtr fastInvLutData;
+    OCIO_CHECK_NO_THROW_FROM(fastInvLutData = OCIO::MakeFastLut1DFromInverse(constInvLutData),
+                             line);
+    return fastInvLutData;
+}
+}
+
 OCIO_ADD_TEST(Lut1DRenderer, bit_depth_support)
 {
     // Unit test to validate the pixel bit depth processing with the 1D LUT.
@@ -536,7 +550,7 @@ OCIO_ADD_TEST(Lut1DRenderer, bit_depth_support)
     // Processing from UINT8 to UINT8, using the inverse LUT.
     {
         OCIO::Lut1DOpDataRcPtr lutInvData = lutData->inverse();
-        OCIO::ConstLut1DOpDataRcPtr constInvLut = lutInvData;
+        OCIO::ConstLut1DOpDataRcPtr constInvLut = FastFromInverse(lutInvData, __LINE__);
 
         OCIO::ConstOpCPURcPtr cpuOp;
         OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constInvLut,
@@ -781,6 +795,7 @@ OCIO_ADD_TEST(Lut1DRenderer, basic)
 
     lutData->setFileOutputBitDepth(OCIO::BIT_DEPTH_F32);
 
+    OCIO_CHECK_NO_THROW(lutData->validate());
     OCIO_CHECK_NO_THROW(lutData->finalize());
 
     const float step = 1.f / ((float)lutData->getArray().getLength() - 1.0f);
@@ -814,6 +829,7 @@ OCIO_ADD_TEST(Lut1DRenderer, basic)
 
     lutData->getArray()[5] = arbitraryVal;
 
+    OCIO_CHECK_NO_THROW(lutData->validate());
     OCIO_CHECK_NO_THROW(lutData->finalize());
     OCIO_CHECK_ASSERT(!lutData->isIdentity());
     {
@@ -852,6 +868,7 @@ OCIO_ADD_TEST(Lut1DRenderer, half)
         0.1f, 0.3f, 0.4f, 1.0f,
         0.0f, 0.9f, step, 0.0f };
 
+    OCIO_CHECK_NO_THROW(lutData->validate());
     OCIO_CHECK_NO_THROW(lutData->finalize());
 
     OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
@@ -878,6 +895,7 @@ OCIO_ADD_TEST(Lut1DRenderer, nan)
     OCIO::Lut1DOpDataRcPtr lutData =
         std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 65536);
 
+    OCIO_CHECK_NO_THROW(lutData->validate());
     OCIO_CHECK_NO_THROW(lutData->finalize());
 
     OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
@@ -946,6 +964,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_red)
     };
     vals = lutValues;
 
+    OCIO_CHECK_NO_THROW(lutData->validate());
     OCIO_CHECK_NO_THROW(lutData->finalize());
 
     OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
@@ -1033,6 +1052,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_green)
     };
     vals = lutValues;
 
+    OCIO_CHECK_NO_THROW(lutData->validate());
     OCIO_CHECK_NO_THROW(lutData->finalize());
 
     OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
@@ -1122,6 +1142,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_blue)
     };
     vals = lutValues;
 
+    OCIO_CHECK_NO_THROW(lutData->validate());
     OCIO_CHECK_NO_THROW(lutData->finalize());
 
     OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
@@ -1419,10 +1440,10 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_hue_adjust)
     auto lutData = lut->clone();
 
     // Currently need to set this to 16i in order for style == FAST to pass.
-    // See comment in Lut1DOpData::MakeFastLut1DFromInverse.
+    // See comment in MakeFastLut1DFromInverse.
     lutData->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT16);
+    lutData->finalize();
 
-    OCIO_CHECK_NO_THROW(lutData->finalize());
     OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
     OCIO::ConstOpCPURcPtr cpuOp;
     OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constLut,
@@ -1439,12 +1460,9 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_hue_adjust)
     std::vector<float> outImage(NB_PIXELS * 4);
     cpuOp->apply(inImage, &outImage[0], NB_PIXELS);
 
-    // Inverse using LUT_INVERSION_FAST.
-    lutData->setInversionQuality(OCIO::LUT_INVERSION_FAST);
+    // Inverse using FAST.
     auto lutDataInv = lutData->inverse();
-
-    OCIO::ConstLut1DOpDataRcPtr constLutInv = lutDataInv;
-    OCIO_CHECK_NO_THROW(lutDataInv->finalize());
+    OCIO::ConstLut1DOpDataRcPtr constLutInv = FastFromInverse(lutDataInv, __LINE__);
     OCIO::ConstOpCPURcPtr cpuOpInv;
     OCIO_CHECK_NO_THROW(cpuOpInv = OCIO::GetLut1DRenderer(constLutInv,
                                                           OCIO::BIT_DEPTH_F32,
@@ -1459,13 +1477,13 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_hue_adjust)
                                   GetErrorMessage(inImage[i], backImage[i]));
     }
 
-    // Repeat with LUT_INVERSION_EXACT.
-    lutData->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
+    // Repeat with EXACT.
     auto lutDataInv2 = lutData->inverse();
 
-    OCIO::ConstLut1DOpDataRcPtr constLutInv2 = lutDataInv2;
+    OCIO_CHECK_NO_THROW(lutDataInv2->validate());
     OCIO_CHECK_NO_THROW(lutDataInv2->finalize());
     OCIO::ConstOpCPURcPtr cpuOpInv2;
+    OCIO::ConstLut1DOpDataRcPtr constLutInv2 = lutDataInv2;
     OCIO_CHECK_NO_THROW(cpuOpInv2 = OCIO::GetLut1DRenderer(constLutInv2,
                                                            OCIO::BIT_DEPTH_F32,
                                                            OCIO::BIT_DEPTH_F32));
@@ -1489,6 +1507,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_identity_half)
         = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_INPUT_OUTPUT_HALF_CODE,
                                               65536);
 
+    OCIO_CHECK_NO_THROW(lutData->validate());
     OCIO_CHECK_NO_THROW(lutData->finalize());
 
     OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
@@ -1554,6 +1573,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_identity_half_to_int)
     OCIO::Lut1DOpDataRcPtr lutData
         = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_INPUT_OUTPUT_HALF_CODE, 65536);
 
+    OCIO_CHECK_NO_THROW(lutData->validate());
     OCIO_CHECK_NO_THROW(lutData->finalize());
 
     OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
@@ -1607,6 +1627,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_identity_int_to_half)
     OCIO::Lut1DOpDataRcPtr lutData
         = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_INPUT_OUTPUT_HALF_CODE, 65536);
 
+    OCIO_CHECK_NO_THROW(lutData->validate());
     OCIO_CHECK_NO_THROW(lutData->finalize());
 
     OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
@@ -1654,6 +1675,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_identity_half_code)
     OCIO::Lut1DOpDataRcPtr lutData
         = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_INPUT_OUTPUT_HALF_CODE, 65536);
 
+    OCIO_CHECK_NO_THROW(lutData->validate());
     OCIO_CHECK_NO_THROW(lutData->finalize());
 
     OCIO::ConstLut1DOpDataRcPtr constLut = lutData;
@@ -1707,11 +1729,9 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_identity)
 
     lutData->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
 
-    OCIO_CHECK_EQUAL(lutData->getInversionQuality(), OCIO::LUT_INVERSION_FAST);
     auto invLut = lutData->inverse();
-    OCIO_CHECK_NO_THROW(invLut->finalize());
+    OCIO::ConstLut1DOpDataRcPtr constLut = FastFromInverse(invLut, __LINE__);
 
-    OCIO::ConstLut1DOpDataRcPtr constLut = invLut;
     OCIO::ConstOpCPURcPtr cpuOp;
     OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constLut,
                                                        OCIO::BIT_DEPTH_UINT10,
@@ -1749,8 +1769,8 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_identity)
         OCIO_CHECK_CLOSE(outImage[i], expected[i], 1e-6f);
     }
 
-    // Repeat with LUT_INVERSION_EXACT.
-    invLut->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
+    // Repeat with EXACT.
+    constLut = invLut;
     OCIO::ConstOpCPURcPtr cpuOpExact;
     OCIO_CHECK_NO_THROW(cpuOpExact = OCIO::GetLut1DRenderer(constLut,
                                                             OCIO::BIT_DEPTH_UINT10,
@@ -1838,9 +1858,10 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_increasing)
     vals[i] = vals[i+1] = vals[i+2] = 1023.f / 1023.f;
 
     auto invLut = lutData->inverse();
+
+    OCIO_CHECK_NO_THROW(invLut->validate());
     OCIO_CHECK_NO_THROW(invLut->finalize());
 
-    invLut->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
     OCIO::ConstLut1DOpDataRcPtr constInvLut = invLut;
     OCIO::ConstOpCPURcPtr cpuOp;
     OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constInvLut,
@@ -1876,8 +1897,8 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_increasing)
         OCIO_CHECK_EQUAL(outImage[i], expected[i]);
     }
 
-    // Repeat with LUT_INVERSION_FAST.
-    invLut->setInversionQuality(OCIO::LUT_INVERSION_FAST);
+    // Repeat with FAST.
+    constInvLut = FastFromInverse(invLut, __LINE__);
     OCIO::ConstOpCPURcPtr cpuOpFast;
     OCIO_CHECK_NO_THROW(cpuOpFast = OCIO::GetLut1DRenderer(constInvLut,
                                                            OCIO::BIT_DEPTH_UINT10,
@@ -1901,36 +1922,36 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_decreasing_reversals)
     OCIO::Array::Values & vals = lutData->getArray().getValues();
     int i = 0;
     vals[i] = vals[i+1] = vals[i+2] =  90.f / 255.f;
-	i += 3;
+    i += 3;
     vals[i] = vals[i+1] = vals[i+2] =  90.f / 255.f;
-	i += 3;
+    i += 3;
     vals[i] = vals[i+1] = vals[i+2] = 100.f / 255.f;
-	i += 3;
+    i += 3;
     vals[i] = vals[i+1] = vals[i+2] =  80.f / 255.f;
-	i += 3;
+    i += 3;
     vals[i] = vals[i+1] = vals[i+2] =  70.f / 255.f;
-	i += 3;
+    i += 3;
     vals[i] = vals[i+1] = vals[i+2] =  50.f / 255.f;
-	i += 3;
+    i += 3;
     vals[i] = vals[i+1] = vals[i+2] =  60.f / 255.f;
-	i += 3;
+    i += 3;
     vals[i] = vals[i+1] = vals[i+2] =  70.f / 255.f;
-	i += 3;
+    i += 3;
     vals[i] = vals[i+1] = vals[i+2] =  40.f / 255.f;
-	i += 3;
+    i += 3;
     vals[i] = vals[i+1] = vals[i+2] =  20.f / 255.f;
-	i += 3;
+    i += 3;
     vals[i] = vals[i+1] = vals[i+2] = -10.f / 255.f; // note: LUT vals may exceed [0,255]
-	i += 3;
+    i += 3;
     vals[i] = vals[i+1] = vals[i+2] = -10.f / 255.f;
 
     auto invLut = lutData->inverse();
 
     // Render as 32f in depth so we can test negative input vals.
+    OCIO_CHECK_NO_THROW(invLut->validate());
     OCIO_CHECK_NO_THROW(invLut->finalize());
 
     // Default InvStyle should be 'FAST' but we test the 'EXACT' InvStyle first.
-    invLut->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
     OCIO::ConstLut1DOpDataRcPtr constInvLut = invLut;
     OCIO::ConstOpCPURcPtr cpuOp;
     OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constInvLut,
@@ -1965,8 +1986,8 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_decreasing_reversals)
         OCIO_CHECK_EQUAL(outImage[i], expected[i]);
     }
 
-    // Repeat with LUT_INVERSION_FAST.
-    invLut->setInversionQuality(OCIO::LUT_INVERSION_FAST);
+    // Repeat with FAST.
+    constInvLut = FastFromInverse(invLut, __LINE__);
     OCIO::ConstOpCPURcPtr cpuOpFast;
     OCIO_CHECK_NO_THROW(cpuOpFast = OCIO::GetLut1DRenderer(constInvLut,
                                                            OCIO::BIT_DEPTH_F32,
@@ -2002,34 +2023,35 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_clamp_to_range)
     OCIO::Array::Values & vals = lutData->getArray().getValues();
     int i = 0;
     vals[i] = vals[i+1] = vals[i+2] =  30.f / 255.f;
-	i += 3;
+    i += 3;
     vals[i] = vals[i+1] = vals[i+2] =  40.f / 255.f;
-	i += 3;
+    i += 3;
     vals[i] = vals[i+1] = vals[i+2] =  60.f / 255.f;
-	i += 3;
+    i += 3;
     vals[i] = vals[i+1] = vals[i+2] =  65.f / 255.f;
-	i += 3;
+    i += 3;
     vals[i] = vals[i+1] = vals[i+2] =  70.f / 255.f;
-	i += 3;
+    i += 3;
     vals[i] = vals[i+1] = vals[i+2] =  50.f / 255.f;
-	i += 3;
+    i += 3;
     vals[i] = vals[i+1] = vals[i+2] =  60.f / 255.f;
-	i += 3;
+    i += 3;
     vals[i] = vals[i+1] = vals[i+2] =  70.f / 255.f;
-	i += 3;
+    i += 3;
     vals[i] = vals[i+1] = vals[i+2] = 100.f / 255.f;
-	i += 3;
+    i += 3;
     vals[i] = vals[i+1] = vals[i+2] = 190.f / 255.f;
-	i += 3;
+    i += 3;
     vals[i] = vals[i+1] = vals[i+2] = 200.f / 255.f;
-	i += 3;
+    i += 3;
     vals[i] = vals[i+1] = vals[i+2] = 210.f / 255.f;
 
     auto invLut = lutData->inverse();
+
     // Render as 32f in depth so we can test negative input vals.
+    OCIO_CHECK_NO_THROW(invLut->validate());
     OCIO_CHECK_NO_THROW(invLut->finalize());
 
-    invLut->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
     OCIO::ConstLut1DOpDataRcPtr constInvLut = invLut;
     OCIO::ConstOpCPURcPtr cpuOp;
     OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constInvLut,
@@ -2060,8 +2082,8 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_clamp_to_range)
         OCIO_CHECK_EQUAL(outImage[i], expected[i]);
     }
 
-    // Repeat with LUT_INVERSION_FAST.
-    invLut->setInversionQuality(OCIO::LUT_INVERSION_FAST);
+    // Repeat with FAST.
+    constInvLut = FastFromInverse(invLut, __LINE__);
     OCIO::ConstOpCPURcPtr cpuOpFast;
     OCIO_CHECK_NO_THROW(cpuOpFast = OCIO::GetLut1DRenderer(constInvLut,
                                                            OCIO::BIT_DEPTH_F32,
@@ -2098,9 +2120,10 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_flat_start_or_end)
     vals = lutValues;
 
     auto invLut = lutData->inverse();
+
+    OCIO_CHECK_NO_THROW(invLut->validate());
     OCIO_CHECK_NO_THROW(invLut->finalize());
 
-    invLut->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
     OCIO::ConstLut1DOpDataRcPtr constInvLut = invLut;
     OCIO::ConstOpCPURcPtr cpuOp;
     OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constInvLut,
@@ -2156,8 +2179,8 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_flat_start_or_end)
         OCIO_CHECK_EQUAL(outImage[i], expected[i]);
     }
 
-    // Repeat with LUT_INVERSION_FAST.
-    invLut->setInversionQuality(OCIO::LUT_INVERSION_FAST);
+    // Repeat with FAST.
+    constInvLut = FastFromInverse(invLut, __LINE__);
     OCIO::ConstOpCPURcPtr cpuOpFast;
     OCIO_CHECK_NO_THROW(cpuOpFast = OCIO::GetLut1DRenderer(constInvLut,
                                                            OCIO::BIT_DEPTH_UINT10,
@@ -2193,9 +2216,10 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_input)
     }
 
     auto invLut = lutData->inverse();
+    
+    OCIO_CHECK_NO_THROW(invLut->validate());
     OCIO_CHECK_NO_THROW(invLut->finalize());
 
-    invLut->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
     OCIO::ConstLut1DOpDataRcPtr constInvLut = invLut;
     OCIO::ConstOpCPURcPtr cpuOp;
     OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constInvLut,
@@ -2228,8 +2252,8 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_input)
         OCIO_CHECK_CLOSE(outImage[i].bits(), expected[i].bits(), 1.1f);
     }
 
-    // Repeat with LUT_INVERSION_FAST.
-    invLut->setInversionQuality(OCIO::LUT_INVERSION_FAST);
+    // Repeat with FAST.
+    constInvLut = FastFromInverse(invLut, __LINE__);
     OCIO::ConstOpCPURcPtr cpuOpFast;
     OCIO_CHECK_NO_THROW(cpuOpFast = OCIO::GetLut1DRenderer(constInvLut,
                                                            OCIO::BIT_DEPTH_F16,
@@ -2259,9 +2283,10 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_identity)
         lutData->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
 
         auto invLut = lutData->inverse();
+
+        OCIO_CHECK_NO_THROW(invLut->validate());
         OCIO_CHECK_NO_THROW(invLut->finalize());
 
-        invLut->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
         OCIO::ConstLut1DOpDataRcPtr constInvLut = invLut;
         OCIO::ConstOpCPURcPtr cpuOp;
         OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constInvLut,
@@ -2297,8 +2322,8 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_identity)
             OCIO_CHECK_CLOSE(outImage[i], expected[i], 1e-6f);
         }
 
-        // Repeat with LUT_INVERSION_FAST.
-        invLut->setInversionQuality(OCIO::LUT_INVERSION_FAST);
+        // Repeat with FAST.
+        constInvLut = FastFromInverse(invLut, __LINE__);
         OCIO::ConstOpCPURcPtr cpuOpFast;
         OCIO_CHECK_NO_THROW(cpuOpFast = OCIO::GetLut1DRenderer(constInvLut,
                                                                OCIO::BIT_DEPTH_UINT10,
@@ -2320,9 +2345,10 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_identity)
         lutData->setFileOutputBitDepth(OCIO::BIT_DEPTH_F32);
 
         auto invLut = lutData->inverse();
+
+        OCIO_CHECK_NO_THROW(invLut->validate());
         OCIO_CHECK_NO_THROW(invLut->finalize());
 
-        invLut->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
         OCIO::ConstLut1DOpDataRcPtr constInvLut = invLut;
         OCIO::ConstOpCPURcPtr cpuOp;
         OCIO_CHECK_NO_THROW(cpuOp = OCIO::GetLut1DRenderer(constInvLut,
@@ -2357,8 +2383,8 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_identity)
             OCIO_CHECK_EQUAL(outImage[i], expected[i]);
         }
 
-        // Repeat with LUT_INVERSION_FAST.
-        invLut->setInversionQuality(OCIO::LUT_INVERSION_FAST);
+        // Repeat with FAST.
+        constInvLut = FastFromInverse(invLut, __LINE__);
         OCIO::ConstOpCPURcPtr cpuOpFast;
         OCIO_CHECK_NO_THROW(cpuOpFast = OCIO::GetLut1DRenderer(constInvLut,
                                                                OCIO::BIT_DEPTH_F32,
@@ -2404,7 +2430,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_ctf)
     cpuFwd->apply(srcImgDesc, dstImgDesc);
 
     // Apply inverse LUT.
-    // Inverse using LUT_INVERSION_FAST.
+    // Inverse using FAST.
     fileTransform->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
@@ -2421,7 +2447,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_ctf)
                                   GetErrorMessage(inImage[i], backImage[i]));
     }
 
-    // Repeat with LUT_INVERSION_EXACT.
+    // Repeat with EXACT.
     OCIO::ConstCPUProcessorRcPtr cpuInvFast;
     std::fill(backImage.begin(), backImage.end(), -1.f);
     OCIO_CHECK_NO_THROW(cpuInvFast = proc->getOptimizedCPUProcessor(DefaultNoLutInvFast));
@@ -2500,7 +2526,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_fclut)
         OCIO_CHECK_EQUAL(inImage[i * 4 + 3].bits(), backImage[i * 4 + 3].bits());
     }
 
-    // Repeat with LUT_INVERSION_FAST.
+    // Repeat with FAST.
     OCIO_CHECK_NO_THROW(cpuOpInv = proc->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F32,
                                                                   OCIO::BIT_DEPTH_F16,
                                                                   DefaultNoLutInvFast));
@@ -2544,7 +2570,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_domain_hue_adjust)
     OCIO::PackedImageDesc dstImgDesc((void*)&outImage[0], NB_PIXELS, 1, 4);
     cpuFwd->apply(srcImgDesc, dstImgDesc);
 
-    // Inverse using LUT_INVERSION_FAST.
+    // Inverse using FAST (which is part of the default optimization level).
     fileTransform->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
@@ -2561,7 +2587,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_domain_hue_adjust)
                                   GetErrorMessage(inImage[i], backImage[i]));
     }
 
-    // Repeat with LUT_INVERSION_EXACT.
+    // Repeat with EXACT.
     OCIO::ConstCPUProcessorRcPtr cpuInvFast;
     OCIO_CHECK_NO_THROW(cpuInvFast = proc->getOptimizedCPUProcessor(DefaultNoLutInvFast));
     std::fill(backImage.begin(), backImage.end(), -1.f);

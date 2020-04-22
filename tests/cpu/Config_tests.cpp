@@ -2735,7 +2735,7 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception, 
-                              "The style 'REC2100_Surround' must "
+            "The style 'REC2100_Surround (Inverse)' must "
                               "have one parameter but 0 found.");
     }
 }

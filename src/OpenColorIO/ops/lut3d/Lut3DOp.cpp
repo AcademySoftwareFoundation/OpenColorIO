@@ -174,19 +174,12 @@ public:
     bool canCombineWith(ConstOpRcPtr & op) const override;
     void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
     bool hasChannelCrosstalk() const override;
-    void finalize(OptimizationFlags oFlags) override;
+    std::string getCacheID() const override;
 
     ConstOpCPURcPtr getCPUOp() const override;
 
     bool supportedByLegacyShader() const override { return false; }
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
-
-#ifdef OCIO_UNIT_TEST
-    Array & getArray()
-    {
-        return lut3DData()->getArray();
-    }
-#endif
 
 protected:
     ConstLut3DOpDataRcPtr lut3DData() const
@@ -244,14 +237,7 @@ bool Lut3DOp::canCombineWith(ConstOpRcPtr & op) const
 {
     if (isSameType(op))
     {
-        if (lut3DData()->getDirection() == TRANSFORM_DIR_FORWARD)
-        {
-            ConstLut3DOpRcPtr typedRcPtr = DynamicPtrCast<const Lut3DOp>(op);
-            if (typedRcPtr->lut3DData()->getDirection() == TRANSFORM_DIR_FORWARD)
-            {
-                return true;
-            }
-        }
+        return true;
     }
     return false;
 
@@ -267,10 +253,10 @@ void Lut3DOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
         throw Exception("Lut3DOp: canCombineWith must be checked before calling combineWith.");
     }
     ConstLut3DOpRcPtr typedRcPtr = DynamicPtrCast<const Lut3DOp>(secondOp);
-    auto thisLut = lut3DData()->clone();
     auto secondLut = typedRcPtr->lut3DData();
-    Lut3DOpData::Compose(thisLut, secondLut);
-    auto composedOp = std::make_shared<Lut3DOp>(thisLut);
+    auto thisLut = lut3DData();
+    auto composed = Lut3DOpData::Compose(thisLut, secondLut);
+    auto composedOp = std::make_shared<Lut3DOp>(composed);
     ops.push_back(composedOp);
 }
 
@@ -279,21 +265,14 @@ bool Lut3DOp::hasChannelCrosstalk() const
     return lut3DData()->hasChannelCrosstalk();
 }
 
-void Lut3DOp::finalize(OptimizationFlags oFlags)
+std::string Lut3DOp::getCacheID() const
 {
-    Lut3DOpDataRcPtr lutData = lut3DData();
-
-    const bool invLutFast = (oFlags & OPTIMIZATION_LUT_INV_FAST) == OPTIMIZATION_LUT_INV_FAST;
-    lutData->setInversionQuality(invLutFast ? LUT_INVERSION_FAST: LUT_INVERSION_EXACT);
-
-    lutData->finalize();
-
     std::ostringstream cacheIDStream;
     cacheIDStream << "<Lut3D ";
-    cacheIDStream << lutData->getCacheID();
+    cacheIDStream << lut3DData()->getCacheID();
     cacheIDStream << ">";
 
-    m_cacheID = cacheIDStream.str();
+    return cacheIDStream.str();
 }
 
 ConstOpCPURcPtr Lut3DOp::getCPUOp() const
@@ -315,8 +294,6 @@ void Lut3DOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
             throw Exception("Cannot apply Lut3DOp, inversion failed.");
         }
 
-        tmp->finalize();
-
         lutData = tmp;
     }
 
@@ -326,19 +303,18 @@ void Lut3DOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
 
 void CreateLut3DOp(OpRcPtrVec & ops, Lut3DOpDataRcPtr & lut, TransformDirection direction)
 {
-    if (direction == TRANSFORM_DIR_FORWARD)
-    {
-        ops.push_back(std::make_shared<Lut3DOp>(lut));
-    }
-    else if (direction == TRANSFORM_DIR_INVERSE)
-    {
-        Lut3DOpDataRcPtr data = lut->inverse();
-        ops.push_back(std::make_shared<Lut3DOp>(data));
-    }
-    else
+    Lut3DOpDataRcPtr lutData = lut;
+
+    if (direction == TRANSFORM_DIR_UNKNOWN)
     {
         throw Exception("Cannot apply Lut3DOp op, unspecified transform direction.");
     }
+    else if (direction == TRANSFORM_DIR_INVERSE)
+    {
+        lutData = lut->inverse();
+    }
+
+    ops.push_back(std::make_shared<Lut3DOp>(lutData));
 }
 
 void CreateLut3DTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)

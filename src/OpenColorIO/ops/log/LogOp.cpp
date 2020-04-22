@@ -40,7 +40,7 @@ public:
 
     bool isSameType(ConstOpRcPtr & op) const override;
     bool isInverse(ConstOpRcPtr & op) const override;
-    void finalize(OptimizationFlags oFlags) override;
+    std::string getCacheID() const override;
 
     ConstOpCPURcPtr getCPUOp() const override;
 
@@ -93,17 +93,15 @@ bool LogOp::isInverse(ConstOpRcPtr & op) const
     return logData()->isInverse(logOpData);
 }
 
-void LogOp::finalize(OptimizationFlags /*oFlags*/)
+std::string LogOp::getCacheID() const
 {
-    logData()->finalize();
-
     // Create the cacheID.
     std::ostringstream cacheIDStream;
     cacheIDStream << "<LogOp ";
     cacheIDStream << logData()->getCacheID();
     cacheIDStream << ">";
 
-    m_cacheID = cacheIDStream.str();
+    return cacheIDStream.str();
 }
 
 ConstOpCPURcPtr LogOp::getCPUOp() const

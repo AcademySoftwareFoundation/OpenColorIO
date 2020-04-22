@@ -16,26 +16,27 @@ namespace DefaultValues
 const int FLOAT_DECIMALS = 7;
 }
 
-constexpr char ACES_RED_MOD_03_FWD_STR[] = "RedMod03Fwd";
-constexpr char ACES_RED_MOD_03_REV_STR[] = "RedMod03Rev";
-constexpr char ACES_RED_MOD_10_FWD_STR[] = "RedMod10Fwd";
-constexpr char ACES_RED_MOD_10_REV_STR[] = "RedMod10Rev";
-constexpr char ACES_GLOW_03_FWD_STR[]    = "Glow03Fwd";
-constexpr char ACES_GLOW_03_REV_STR[]    = "Glow03Rev";
-constexpr char ACES_GLOW_10_FWD_STR[]    = "Glow10Fwd";
-constexpr char ACES_GLOW_10_REV_STR[]    = "Glow10Rev";
-constexpr char ACES_DARK_TO_DIM_10_STR[] = "DarkToDim10";
-constexpr char ACES_DIM_TO_DARK_10_STR[] = "DimToDark10";
-constexpr char SURROUND_STR[]            = "Surround"; // Is old name for Rec2100Surround
-constexpr char REC_2100_SURROUND_STR[]   = "Rec2100Surround";
-constexpr char RGB_TO_HSV_STR[]          = "RGB_TO_HSV";
-constexpr char HSV_TO_RGB_STR[]          = "HSV_TO_RGB";
-constexpr char XYZ_TO_xyY_STR[]          = "XYZ_TO_xyY";
-constexpr char xyY_TO_XYZ_STR[]          = "xyY_TO_XYZ";
-constexpr char XYZ_TO_uvY_STR[]          = "XYZ_TO_uvY";
-constexpr char uvY_TO_XYZ_STR[]          = "uvY_TO_XYZ";
-constexpr char XYZ_TO_LUV_STR[]          = "XYZ_TO_LUV";
-constexpr char LUV_TO_XYZ_STR[]          = "LUV_TO_XYZ";
+constexpr char ACES_RED_MOD_03_FWD_STR[]   = "RedMod03Fwd";
+constexpr char ACES_RED_MOD_03_REV_STR[]   = "RedMod03Rev";
+constexpr char ACES_RED_MOD_10_FWD_STR[]   = "RedMod10Fwd";
+constexpr char ACES_RED_MOD_10_REV_STR[]   = "RedMod10Rev";
+constexpr char ACES_GLOW_03_FWD_STR[]      = "Glow03Fwd";
+constexpr char ACES_GLOW_03_REV_STR[]      = "Glow03Rev";
+constexpr char ACES_GLOW_10_FWD_STR[]      = "Glow10Fwd";
+constexpr char ACES_GLOW_10_REV_STR[]      = "Glow10Rev";
+constexpr char ACES_DARK_TO_DIM_10_STR[]   = "DarkToDim10";
+constexpr char ACES_DIM_TO_DARK_10_STR[]   = "DimToDark10";
+constexpr char SURROUND_STR[]              = "Surround"; // Old name for Rec2100SurroundFwd
+constexpr char REC_2100_SURROUND_FWD_STR[] = "Rec2100SurroundFwd";
+constexpr char REC_2100_SURROUND_REV_STR[] = "Rec2100SurroundRev";
+constexpr char RGB_TO_HSV_STR[]            = "RGB_TO_HSV";
+constexpr char HSV_TO_RGB_STR[]            = "HSV_TO_RGB";
+constexpr char XYZ_TO_xyY_STR[]            = "XYZ_TO_xyY";
+constexpr char xyY_TO_XYZ_STR[]            = "xyY_TO_XYZ";
+constexpr char XYZ_TO_uvY_STR[]            = "XYZ_TO_uvY";
+constexpr char uvY_TO_XYZ_STR[]            = "uvY_TO_XYZ";
+constexpr char XYZ_TO_LUV_STR[]            = "XYZ_TO_LUV";
+constexpr char LUV_TO_XYZ_STR[]            = "LUV_TO_XYZ";
 
 
 // NOTE: Converts the enumeration value to its string representation (i.e. CLF reader).
@@ -68,8 +69,9 @@ const char * FixedFunctionOpData::ConvertStyleToString(Style style, bool detaile
         case ACES_DARK_TO_DIM_10_INV:
             return detailed ? "ACES_DarkToDim10 (Inverse)" : ACES_DIM_TO_DARK_10_STR;
         case REC2100_SURROUND_FWD:
+            return detailed ? "REC2100_Surround (Forward)" : REC_2100_SURROUND_FWD_STR;
         case REC2100_SURROUND_INV:
-            return detailed ? "REC2100_Surround"           : REC_2100_SURROUND_STR;
+            return detailed ? "REC2100_Surround (Inverse)" : REC_2100_SURROUND_REV_STR;
         case RGB_TO_HSV:
             return RGB_TO_HSV_STR;
         case HSV_TO_RGB:
@@ -140,9 +142,13 @@ FixedFunctionOpData::Style FixedFunctionOpData::GetStyle(const char * name)
             return ACES_DARK_TO_DIM_10_INV;
         }
         else if (0 == Platform::Strcasecmp(name, SURROUND_STR) ||
-                 0 == Platform::Strcasecmp(name, REC_2100_SURROUND_STR) )
+                 0 == Platform::Strcasecmp(name, REC_2100_SURROUND_FWD_STR))
         {
             return REC2100_SURROUND_FWD;
+        }
+        else if (0 == Platform::Strcasecmp(name, REC_2100_SURROUND_REV_STR))
+        {
+            return REC2100_SURROUND_INV;
         }
         else if (0 == Platform::Strcasecmp(name, RGB_TO_HSV_STR))
         {
@@ -330,8 +336,6 @@ FixedFunctionOpDataRcPtr FixedFunctionOpData::clone() const
 
 void FixedFunctionOpData::validate() const
 {
-    OpData::validate();
-
     if(m_style==REC2100_SURROUND_FWD || m_style == REC2100_SURROUND_INV)
     {
         if (m_params.size() != 1)
@@ -564,11 +568,9 @@ bool FixedFunctionOpData::operator==(const OpData & other) const
     return getStyle() == fop->getStyle() && getParams()==fop->getParams();
 }
 
-void FixedFunctionOpData::finalize()
+std::string FixedFunctionOpData::getCacheID() const
 {
     AutoMutex lock(m_mutex);
-
-    validate();
 
     std::ostringstream cacheIDStream;
     if (!getID().empty())
@@ -585,7 +587,7 @@ void FixedFunctionOpData::finalize()
         cacheIDStream << " " << param;
     }
 
-    m_cacheID = cacheIDStream.str();
+    return cacheIDStream.str();
 }
 
 } // namespace OCIO_NAMESPACE
