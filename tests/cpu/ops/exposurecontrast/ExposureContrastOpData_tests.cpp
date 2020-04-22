@@ -88,8 +88,9 @@ OCIO_ADD_TEST(ExposureContrastOpData, accessors)
     OCIO_CHECK_ASSERT(ec0.isNoOp());
     OCIO_CHECK_ASSERT(!ec0.hasChannelCrosstalk());
     OCIO_CHECK_NO_THROW(ec0.validate());
-    ec0.finalize();
-    const std::string cacheID(ec0.getCacheID());
+
+    std::string cacheID;
+    OCIO_CHECK_NO_THROW(cacheID = ec0.getCacheID());
     const std::string expected("linear E: 0 C: 1 G: 1 P: 0.18 LES: 0.088 LMG: 0.435");
     OCIO_CHECK_ASSERT(OCIO::Platform::Strcasecmp(cacheID.c_str(),
                                                  expected.c_str()) == 0);
@@ -98,8 +99,9 @@ OCIO_ADD_TEST(ExposureContrastOpData, accessors)
     OCIO_CHECK_ASSERT(!ec0.isIdentity());
     OCIO_CHECK_ASSERT(!ec0.isNoOp());
     OCIO_CHECK_ASSERT(!ec0.hasChannelCrosstalk());
-    ec0.finalize();
-    OCIO_CHECK_ASSERT(cacheID != std::string(ec0.getCacheID()));
+    std::string cacheIDUpdated;
+    OCIO_CHECK_NO_THROW(cacheIDUpdated = ec0.getCacheID());
+    OCIO_CHECK_ASSERT(cacheID != cacheIDUpdated);
 
     OCIO::ExposureContrastOpData ec(OCIO::ExposureContrastOpData::STYLE_VIDEO);
     OCIO_CHECK_EQUAL(ec.getType(), OCIO::OpData::ExposureContrastType);

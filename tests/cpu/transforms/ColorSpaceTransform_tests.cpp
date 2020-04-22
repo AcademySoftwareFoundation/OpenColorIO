@@ -91,7 +91,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         OCIO::OpRcPtrVec ops;
         OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
                                                      *cst, OCIO::TRANSFORM_DIR_FORWARD));
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops.validate());
         OCIO_REQUIRE_EQUAL(ops.size(), 4);
 
         // Allocation no-op.
@@ -129,8 +129,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         OCIO::OpRcPtrVec ops;
         OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
                                                      *cst, OCIO::TRANSFORM_DIR_INVERSE));
-        // Note: Need to finalize to have the inverted offset values below.
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops.validate());
         OCIO_REQUIRE_EQUAL(ops.size(), 4);
 
         auto op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[0]);
@@ -149,14 +148,32 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         data = op->data();
         OCIO_REQUIRE_EQUAL(data->getType(), OCIO::OpData::MatrixType);
         auto matData = OCIO_DYNAMIC_POINTER_CAST<const OCIO::MatrixOpData>(data);
-        OCIO_CHECK_EQUAL(-offset[0], matData->getOffsetValue(0));
-        OCIO_CHECK_EQUAL(-offset[1], matData->getOffsetValue(1));
-        OCIO_CHECK_EQUAL(-offset[2], matData->getOffsetValue(2));
-        OCIO_CHECK_EQUAL(-offset[3], matData->getOffsetValue(3));
+        // Not finalized, opData is still inverse.
+        OCIO_CHECK_EQUAL(matData->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+        OCIO_CHECK_EQUAL(offset[0], matData->getOffsetValue(0));
+        OCIO_CHECK_EQUAL(offset[1], matData->getOffsetValue(1));
+        OCIO_CHECK_EQUAL(offset[2], matData->getOffsetValue(2));
+        OCIO_CHECK_EQUAL(offset[3], matData->getOffsetValue(3));
 
         op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[3]);
         data = op->data();
         OCIO_CHECK_EQUAL(data->getType(), OCIO::OpData::NoOpType);
+
+        // Finalize converts invert matrix into forward matrix.
+        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+        // No-ops are gone.
+        OCIO_REQUIRE_EQUAL(ops.size(), 2);
+        op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[1]);
+        data = op->data();
+        OCIO_REQUIRE_EQUAL(data->getType(), OCIO::OpData::MatrixType);
+        matData = OCIO_DYNAMIC_POINTER_CAST<const OCIO::MatrixOpData>(data);
+        // Matrix is now forward.
+        OCIO_CHECK_EQUAL(matData->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+        // Offset is inverted.
+        OCIO_CHECK_EQUAL(-offset[0], matData->getOffsetValue(0));
+        OCIO_CHECK_EQUAL(-offset[1], matData->getOffsetValue(1));
+        OCIO_CHECK_EQUAL(-offset[2], matData->getOffsetValue(2));
+        OCIO_CHECK_EQUAL(-offset[3], matData->getOffsetValue(3));
     }
 
     {
@@ -167,7 +184,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceToReferenceOps(ops, *config,
                                                                 config->getCurrentContext(),
                                                                 csSceneFromRef));
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops.validate());
         OCIO_REQUIRE_EQUAL(ops.size(), 2);
         auto op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[1]);
         auto data = op->data();
@@ -184,7 +201,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceFromReferenceOps(ops, *config,
                                                                   config->getCurrentContext(),
                                                                   csSceneFromRef));
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops.validate());
         OCIO_REQUIRE_EQUAL(ops.size(), 2);
         auto op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[0]);
         auto data = op->data();
@@ -204,7 +221,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceFromReferenceOps(ops, *config,
                                                                   config->getCurrentContext(),
                                                                   csSceneBoth));
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops.validate());
         OCIO_REQUIRE_EQUAL(ops.size(), 2);
         auto op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[0]);
         auto data = op->data();
@@ -215,7 +232,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceToReferenceOps(ops, *config,
                                                                 config->getCurrentContext(),
                                                                 csSceneBoth));
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops.validate());
         OCIO_REQUIRE_EQUAL(ops.size(), 2);
         op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[1]);
         data = op->data();
@@ -251,7 +268,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         OCIO::OpRcPtrVec ops;
         OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
                                                      *cst, OCIO::TRANSFORM_DIR_FORWARD));
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops.validate());
         OCIO_REQUIRE_EQUAL(ops.size(), 4);
 
         auto op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[0]);
@@ -365,7 +382,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_reference_conversion_ops)
                                                               config->getCurrentContext(),
                                                               OCIO::REFERENCE_SPACE_SCENE,
                                                               OCIO::REFERENCE_SPACE_DISPLAY));
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops.validate());
         OCIO_REQUIRE_EQUAL(ops.size(), 1);
 
         // Scene reference to display reference.
@@ -385,8 +402,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_reference_conversion_ops)
                                                               config->getCurrentContext(),
                                                               OCIO::REFERENCE_SPACE_DISPLAY,
                                                               OCIO::REFERENCE_SPACE_SCENE));
-        // Note: Need to finalize to have the inverted offset values below.
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops.validate());
         OCIO_REQUIRE_EQUAL(ops.size(), 1);
     
         // Dispaly reference to scene reference.
@@ -394,10 +410,11 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_reference_conversion_ops)
         auto data = op->data();
         OCIO_REQUIRE_EQUAL(data->getType(), OCIO::OpData::MatrixType);
         auto matData = OCIO_DYNAMIC_POINTER_CAST<const OCIO::MatrixOpData>(data);
-        OCIO_CHECK_EQUAL(-offset[0], matData->getOffsetValue(0));
-        OCIO_CHECK_EQUAL(-offset[1], matData->getOffsetValue(1));
-        OCIO_CHECK_EQUAL(-offset[2], matData->getOffsetValue(2));
-        OCIO_CHECK_EQUAL(-offset[3], matData->getOffsetValue(3));
+        OCIO_CHECK_EQUAL(matData->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+        OCIO_CHECK_EQUAL(offset[0], matData->getOffsetValue(0));
+        OCIO_CHECK_EQUAL(offset[1], matData->getOffsetValue(1));
+        OCIO_CHECK_EQUAL(offset[2], matData->getOffsetValue(2));
+        OCIO_CHECK_EQUAL(offset[3], matData->getOffsetValue(3));
     }
 }
 
@@ -501,7 +518,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops_with_reference_conversio
                                                      config->getCurrentContext(),
                                                      *cst,
                                                      OCIO::TRANSFORM_DIR_INVERSE));
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops.validate());
 
         // Expecting 5 transforms (including 2 no-ops).
         OCIO_REQUIRE_EQUAL(ops.size(), 5);
@@ -523,10 +540,11 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops_with_reference_conversio
         data = op->data();
         OCIO_REQUIRE_EQUAL(data->getType(), OCIO::OpData::MatrixType);
         auto matData = OCIO_DYNAMIC_POINTER_CAST<const OCIO::MatrixOpData>(data);
-        OCIO_CHECK_EQUAL(-offset[0], matData->getOffsetValue(0));
-        OCIO_CHECK_EQUAL(-offset[1], matData->getOffsetValue(1));
-        OCIO_CHECK_EQUAL(-offset[2], matData->getOffsetValue(2));
-        OCIO_CHECK_EQUAL(-offset[3], matData->getOffsetValue(3));
+        OCIO_CHECK_EQUAL(matData->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+        OCIO_CHECK_EQUAL(offset[0], matData->getOffsetValue(0));
+        OCIO_CHECK_EQUAL(offset[1], matData->getOffsetValue(1));
+        OCIO_CHECK_EQUAL(offset[2], matData->getOffsetValue(2));
+        OCIO_CHECK_EQUAL(offset[3], matData->getOffsetValue(3));
 
         op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[3]);
         data = op->data();
@@ -553,7 +571,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops_with_reference_conversio
                                                      config->getCurrentContext(),
                                                      *cst,
                                                      OCIO::TRANSFORM_DIR_INVERSE));
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops.validate());
 
         // Expecting 5 transforms (including 2 no-ops).
         OCIO_REQUIRE_EQUAL(ops.size(), 5);

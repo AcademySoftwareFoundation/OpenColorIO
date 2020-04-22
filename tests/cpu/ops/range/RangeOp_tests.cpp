@@ -21,8 +21,9 @@ OCIO_ADD_TEST(RangeOp, apply_arbitrary)
 {
     OCIO::RangeOpDataRcPtr range = std::make_shared<OCIO::RangeOpData>(-0.101, 0.95, 0.194, 1.001);
 
-    OCIO::RangeOp r(range, OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO_CHECK_NO_THROW(r.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO::RangeOp r(range);
+    OCIO_CHECK_NO_THROW(r.validate());
+    OCIO_CHECK_NO_THROW(r.finalize());
 
     float image[4*3] = { -0.50f,  0.25f, 0.50f, 0.0f,
                           0.75f,  1.00f, 1.25f, 1.0f,
@@ -50,10 +51,10 @@ OCIO_ADD_TEST(RangeOp, combining)
 
     OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1.0, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
-    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops[0]->validate());
     OCIO::CreateRangeOp(ops, 0., 1., 0.5, 1.5, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops[1]->validate());
 
     OCIO::ConstOpRcPtr op1 = ops[1];
 
@@ -68,14 +69,23 @@ OCIO_ADD_TEST(RangeOp, combining_with_inverse)
 
     OCIO::CreateRangeOp(ops, 0., 1., 0.5, 1.5, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
-    OCIO_CHECK_NO_THROW(ops[0]->finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops[0]->validate());
     OCIO::CreateRangeOp(ops, 0., 1., 0.5, 1.5, OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
-    OCIO_CHECK_NO_THROW(ops[1]->finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops[1]->validate());
 
     OCIO::ConstOpRcPtr op1 = ops[1];
 
+    OCIO_CHECK_THROW_WHAT(ops[0]->combineWith(ops, op1), OCIO::Exception,
+                          "Op::finalize has to be called");
+
+    OCIO_CHECK_THROW_WHAT(ops[0]->canCombineWith(op1), OCIO::Exception,
+                          "Op::finalize has to be called");
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO_CHECK_NO_THROW(ops[0]->canCombineWith(op1));
     OCIO_CHECK_NO_THROW(ops[0]->combineWith(ops, op1));
+
     OCIO_CHECK_EQUAL(ops.size(), 3);
 }
 
@@ -87,28 +97,32 @@ OCIO_ADD_TEST(RangeOp, computed_identifier)
     OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1.0, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateRangeOp(ops, 0.1, 1., 0.3, 1.9, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::CreateRangeOp(ops, 0.1, 1., 0.3, 1.9, OCIO::TRANSFORM_DIR_INVERSE);
-    for(OCIO::OpRcPtrVec::reference op : ops) { op->finalize(OCIO::OPTIMIZATION_NONE); }
 
     OCIO_REQUIRE_EQUAL(ops.size(), 4);
 
-    OCIO_CHECK_ASSERT(ops[0]->getCacheID() == ops[1]->getCacheID());
-    OCIO_CHECK_ASSERT(ops[0]->getCacheID() != ops[2]->getCacheID());
-    OCIO_CHECK_ASSERT(ops[1]->getCacheID() != ops[2]->getCacheID());
-    OCIO_CHECK_ASSERT(ops[2]->getCacheID() != ops[3]->getCacheID());
+    std::string cacheID0, cacheID1, cacheID2, cacheID3, cacheID4;
+    OCIO_CHECK_NO_THROW(cacheID0 = ops[0]->getCacheID());
+    OCIO_CHECK_NO_THROW(cacheID1 = ops[1]->getCacheID());
+    OCIO_CHECK_NO_THROW(cacheID2 = ops[2]->getCacheID());
+    OCIO_CHECK_NO_THROW(cacheID3 = ops[3]->getCacheID());
+    OCIO_CHECK_ASSERT(cacheID0 == cacheID1);
+    OCIO_CHECK_ASSERT(cacheID0 != cacheID2);
+    OCIO_CHECK_ASSERT(cacheID1 != cacheID2);
+    OCIO_CHECK_ASSERT(cacheID2 != cacheID3);
 
     OCIO::CreateRangeOp(ops, 0.1, 1., 0.3, 1.90001, OCIO::TRANSFORM_DIR_FORWARD);
-    for(OCIO::OpRcPtrVec::reference op : ops) { op->finalize(OCIO::OPTIMIZATION_NONE); }
 
     OCIO_REQUIRE_EQUAL(ops.size(), 5);
-    OCIO_CHECK_ASSERT(ops[2]->getCacheID() != ops[4]->getCacheID());
-    OCIO_CHECK_ASSERT(ops[3]->getCacheID() != ops[4]->getCacheID());
+    OCIO_CHECK_NO_THROW(cacheID4 = ops[4]->getCacheID());
+    OCIO_CHECK_ASSERT(cacheID2 != cacheID4);
+    OCIO_CHECK_ASSERT(cacheID3 != cacheID4);
 }
 
 OCIO_ADD_TEST(RangeOp, create_transform)
 {
     OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_INVERSE;
 
-    OCIO::RangeOpDataRcPtr range = std::make_shared<OCIO::RangeOpData>(0.1, 0.9, 0.2, 0.7);
+    OCIO::RangeOpDataRcPtr range = std::make_shared<OCIO::RangeOpData>(0.1, 0.9, 0.2, 0.7, direction);
 
     range->getFormatMetadata().addAttribute("name", "test");
 
@@ -116,7 +130,7 @@ OCIO_ADD_TEST(RangeOp, create_transform)
     range->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT8);
 
     OCIO::OpRcPtrVec ops;
-    OCIO_CHECK_NO_THROW(OCIO::CreateRangeOp(ops, range, direction));
+    OCIO_CHECK_NO_THROW(OCIO::CreateRangeOp(ops, range, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO_REQUIRE_ASSERT(ops[0]);
 
@@ -206,6 +220,7 @@ OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
         = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(op1->data());
 
     OCIO_CHECK_EQUAL(matrixData->getOffsetValue(0), rangeData->getOffset());
+    OCIO_CHECK_EQUAL(matrixData->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
 
     OCIO_CHECK_EQUAL(matrixData->getOffsetValue(0), 0.5);
     OCIO_CHECK_EQUAL(matrixData->getOffsetValue(1), 0.5);
@@ -219,6 +234,53 @@ OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
     OCIO_CHECK_EQUAL(matrixData->getArray()[0], 2.0);
     OCIO_CHECK_EQUAL(matrixData->getArray()[5], 2.0);
     OCIO_CHECK_EQUAL(matrixData->getArray()[10], 2.0);
+    OCIO_CHECK_EQUAL(matrixData->getArray()[15], 1.0);
+
+    // Range is forward, build an inverse.
+    OCIO_CHECK_NO_THROW(
+        OCIO::BuildRangeOp(ops, *config, *range, OCIO::TRANSFORM_DIR_INVERSE));
+
+    OCIO_REQUIRE_EQUAL(ops.size(), 3);
+    OCIO::ConstOpRcPtr op2 = ops[2];
+    OCIO_REQUIRE_EQUAL(op2->data()->getType(), OCIO::OpData::MatrixType);
+
+    matrixData = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(op2->data());
+    OCIO_CHECK_EQUAL(matrixData->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(0), 0.5);
+    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(1), 0.5);
+    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(2), 0.5);
+    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(3), 0.0);
+
+    OCIO_CHECK_ASSERT(matrixData->isDiagonal());
+
+    OCIO_CHECK_EQUAL(matrixData->getArray()[0], 2.0);
+    OCIO_CHECK_EQUAL(matrixData->getArray()[5], 2.0);
+    OCIO_CHECK_EQUAL(matrixData->getArray()[10], 2.0);
+    OCIO_CHECK_EQUAL(matrixData->getArray()[15], 1.0);
+
+    // Range is inverse, build a forward.
+    range->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_NO_THROW(
+        OCIO::BuildRangeOp(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD));
+
+    OCIO_REQUIRE_EQUAL(ops.size(), 4);
+    OCIO::ConstOpRcPtr op3 = ops[3];
+    OCIO_REQUIRE_EQUAL(op3->data()->getType(), OCIO::OpData::MatrixType);
+
+    matrixData = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(op3->data());
+    OCIO_CHECK_EQUAL(matrixData->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(0), -0.25);
+    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(1), -0.25);
+    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(2), -0.25);
+    OCIO_CHECK_EQUAL(matrixData->getOffsetValue(3),  0.0);
+
+    OCIO_CHECK_ASSERT(matrixData->isDiagonal());
+
+    OCIO_CHECK_EQUAL(matrixData->getArray()[0], 1.0 / 2.0);
+    OCIO_CHECK_EQUAL(matrixData->getArray()[5], 1.0 / 2.0);
+    OCIO_CHECK_EQUAL(matrixData->getArray()[10], 1.0 / 2.0);
     OCIO_CHECK_EQUAL(matrixData->getArray()[15], 1.0);
 }
 

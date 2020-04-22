@@ -269,7 +269,8 @@ void FinalizeOpsForCPU(OpRcPtrVec & ops, const OpRcPtrVec & rawOps,
     if(!ops.empty())
     {
         // Optimize the ops.
-        OptimizeOpVec(ops, in, out, oFlags);
+        ops.finalize(oFlags);
+        ops.optimizeForBitdepth(in, out, oFlags);
     }
 
     if(ops.empty())
@@ -292,9 +293,6 @@ void FinalizeOpsForCPU(OpRcPtrVec & ops, const OpRcPtrVec & rawOps,
         }
     }
 
-    // Finalize the ops.
-
-    ops.finalize(oFlags);
     if (!((oFlags & OPTIMIZATION_NO_DYNAMIC_PROPERTIES) == OPTIMIZATION_NO_DYNAMIC_PROPERTIES))
     {
         ops.unifyDynamicProperties();

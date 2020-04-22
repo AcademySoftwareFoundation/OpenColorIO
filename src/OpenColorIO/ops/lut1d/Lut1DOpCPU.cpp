@@ -344,14 +344,12 @@ void BaseLut1DRenderer<inBD, outBD>::updateData(ConstLut1DOpDataRcPtr & lut)
         // If we are able to lookup, need to resample the LUT based on inBitDepth.
         if(mustResample)
         {
-            Lut1DOpDataRcPtr newLutTmp = Lut1DOpData::MakeLookupDomain(inBD);
+            ConstLut1DOpDataRcPtr newLutTmp = Lut1DOpData::MakeLookupDomain(inBD);
 
             // Note: Compose should render at 32f, to avoid infinite recursion.
-            Lut1DOpData::Compose(newLutTmp,
-                                 lut,
-                                 // Prevent compose from modifying newLut domain.
-                                 Lut1DOpData::COMPOSE_RESAMPLE_NO);
-            newLut = newLutTmp;
+            newLut = Lut1DOpData::Compose(newLutTmp, lut,
+                                          // Prevent compose from modifying newLut domain.
+                                          Lut1DOpData::COMPOSE_RESAMPLE_NO);
         }
 
         m_dim = newLut->getArray().getLength();
@@ -1638,36 +1636,26 @@ ConstOpCPURcPtr GetLut1DRenderer_OutBitDepth(ConstLut1DOpDataRcPtr & lut)
     }
     else
     {
-        if (lut->getInversionQuality() == LUT_INVERSION_FAST)
+        if (lut->isInputHalfDomain())
         {
-            ConstLut1DOpDataRcPtr newLut = Lut1DOpData::MakeFastLut1DFromInverse(lut, false);
-
-            // Render with a Lut1D renderer.
-            return GetForwardLut1DRenderer<inBD, outBD>(newLut);
-        }
-        else  // INV_EXACT
-        {
-            if (lut->isInputHalfDomain())
+            if (lut->getHueAdjust() == HUE_NONE)
             {
-                if (lut->getHueAdjust() == HUE_NONE)
-                {
-                    return std::make_shared< InvLut1DRendererHalfCode<inBD, outBD> >(lut);
-                }
-                else
-                {
-                    return std::make_shared< InvLut1DRendererHalfCodeHueAdjust<inBD, outBD> >(lut);
-                }
+                return std::make_shared< InvLut1DRendererHalfCode<inBD, outBD> >(lut);
             }
             else
             {
-                if (lut->getHueAdjust() == HUE_NONE)
-                {
-                    return std::make_shared< InvLut1DRenderer<inBD, outBD> >(lut);
-                }
-                else
-                {
-                    return std::make_shared< InvLut1DRendererHueAdjust<inBD, outBD> >(lut);
-                }
+                return std::make_shared< InvLut1DRendererHalfCodeHueAdjust<inBD, outBD> >(lut);
+            }
+        }
+        else
+        {
+            if (lut->getHueAdjust() == HUE_NONE)
+            {
+                return std::make_shared< InvLut1DRenderer<inBD, outBD> >(lut);
+            }
+            else
+            {
+                return std::make_shared< InvLut1DRendererHueAdjust<inBD, outBD> >(lut);
             }
         }
     }

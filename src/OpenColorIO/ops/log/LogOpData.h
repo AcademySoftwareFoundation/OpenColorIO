@@ -75,7 +75,7 @@ public:
 
     bool hasChannelCrosstalk() const override { return false; }
 
-    void finalize() override;
+    std::string getCacheID() const override;
 
     bool operator==(const OpData& other) const override;
 

@@ -25,19 +25,18 @@ TransformRcPtr RangeTransformImpl::createEditableCopy() const
 {
     RangeTransformRcPtr transform = RangeTransform::Create();
     dynamic_cast<RangeTransformImpl*>(transform.get())->data() = data();
-    transform->setDirection(m_direction);
     transform->setStyle(m_style);
     return transform;
 }
 
 TransformDirection RangeTransformImpl::getDirection() const noexcept
 {
-    return m_direction;
+    return data().getDirection();
 }
 
 void RangeTransformImpl::setDirection(TransformDirection dir) noexcept
 {
-    m_direction = dir;
+    data().setDirection(dir);
 }
 
 RangeStyle RangeTransformImpl::getStyle() const noexcept
@@ -104,8 +103,7 @@ bool RangeTransformImpl::equals(const RangeTransform & other) const noexcept
 {
     if (this == &other) return true;
     return data() == dynamic_cast<const RangeTransformImpl*>(&other)->data()
-        && m_style == other.getStyle()
-        && m_direction == other.getDirection();
+        && m_style == other.getStyle();
 }
 
 void RangeTransformImpl::setMinInValue(double val) noexcept

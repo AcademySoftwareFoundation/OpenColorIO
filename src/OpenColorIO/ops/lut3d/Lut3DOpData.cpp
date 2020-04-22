@@ -17,6 +17,16 @@
 
 namespace OCIO_NAMESPACE
 {
+// Note: The Lut3DOpData Array stores the values in blue-fastest order.
+
+// There are two inversion algorithms provided for 3D LUT, an exact
+// method (that assumes use of tetrahedral in the forward direction)
+// and a fast method that bakes the inverse out as another forward
+// 3D LUT. The exact method is currently unavailable on the GPU.
+// Both methods assume that the input and output to the 3D LUT are
+// roughly perceptually uniform. Values outside the range of the
+// forward 3D LUT are clamped to someplace on the exterior surface
+// of the 3D LUT.
 
 Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut)
 {
@@ -28,11 +38,6 @@ Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut)
     // TODO: The FastLut will limit inputs to [0,1].  If the forward LUT has an extended range
     // output, perhaps add a Range op before the FastLut to bring values into [0,1].
 
-    // The composition needs to use the EXACT renderer.
-    // (Also avoids infinite loop.)
-    // So temporarily set the style to EXACT.
-    LutStyleGuard<Lut3DOpData> guard(*lut);
-
     // Make a domain for the composed Lut3D.
     // TODO: Using a large number like 48 here is better for accuracy,
     // but it causes a delay when creating the renderer.
@@ -41,16 +46,17 @@ Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut)
 
     newDomain->setFileOutputBitDepth(lut->getFileOutputBitDepth());
 
+    ConstLut3DOpDataRcPtr constNewDomain = newDomain;
+
     // Compose the LUT newDomain with our inverse LUT (using INV_EXACT style).
-    Lut3DOpData::Compose(newDomain, lut);
+    Lut3DOpDataRcPtr result = Lut3DOpData::Compose(constNewDomain, lut);
 
     // The INV_EXACT inversion style computes an inverse to the tetrahedral
     // style of forward evaluation.
     // TODO: Although this seems like the "correct" thing to do, it does
     // not seem to help accuracy (and is slower).  To investigate ...
-    //newLut->setInterpolation(INTERP_TETRAHEDRAL);
-
-    return newDomain;
+    //result->setInterpolation(INTERP_TETRAHEDRAL);
+    return result;
 }
 
 // 129 allows for a MESH dimension of 7 in the 3dl file format.
@@ -66,30 +72,42 @@ const unsigned long Lut3DOpData::maxSupportedLength = 129;
 // needs to render values through the ops.  In some cases the domain of
 // the first op is sufficient, in other cases we need to create a new more
 // finely sampled domain to try and make the result less lossy.
-void Lut3DOpData::Compose(Lut3DOpDataRcPtr & A,
-                          ConstLut3DOpDataRcPtr & B)
+Lut3DOpDataRcPtr Lut3DOpData::Compose(ConstLut3DOpDataRcPtr & lutc1,
+                                      ConstLut3DOpDataRcPtr & lutc2)
 {
     // TODO: Composition of LUTs is a potentially lossy operation.
-    // We try to be safe by making the result at least as big as either A or B
-    // but we may want to even increase the resolution further.  However,
+    // We try to be safe by making the result at least as big as either lut1 or
+    // lut2 but we may want to even increase the resolution further.  However,
     // currently composition is done pairs at a time and we would want to
     // determine the increase size once at the start rather than bumping it up
     // as each pair is done.
 
-    // We assume the caller has validated that A and B are forward LUTs.
-    // TODO: Support inverse Lut3D here and refactor MakeFastLUT to use it.
+    Lut3DOpDataRcPtr lut1 = std::const_pointer_cast<Lut3DOpData>(lutc1);
+    Lut3DOpDataRcPtr lut2 = std::const_pointer_cast<Lut3DOpData>(lutc2);
+    bool restoreInverse = false;
+    if (lut1->getDirection() == TRANSFORM_DIR_INVERSE && lut2->getDirection() == TRANSFORM_DIR_INVERSE)
+    {
+        // Using the fact that: iInv(l2 x l1) = inv(l1) x inv(l2).
+        // Compute l2 x l1 and inverse the result.
+        lut1.swap(lut2);
 
-    const long min_sz = B->getArray().getLength();
-    const long n = A->getArray().getLength();
+        lut1->setDirection(TRANSFORM_DIR_FORWARD);
+        lut2->setDirection(TRANSFORM_DIR_FORWARD);
+        restoreInverse = true;
+    }
+
+    const long min_sz = lut2->getArray().getLength();
+    const long n = lut1->getArray().getLength();
+    const long domain_size = std::max(min_sz, n);
     OpRcPtrVec ops;
 
-    Lut3DOpDataRcPtr domain;
+    Lut3DOpDataRcPtr result;
 
-    if (n >= min_sz)
+    if (n >= min_sz && !(lut1->getDirection() == TRANSFORM_DIR_INVERSE))
     {
         // The range of the first LUT becomes the domain to interp in the second.
         // Use the original domain.
-        domain = A;
+        result = lut1->clone();
     }
     else
     {
@@ -97,46 +115,45 @@ void Lut3DOpData::Compose(Lut3DOpDataRcPtr & A,
 
         // Create identity with finer domain.
 
-        // TODO: Should not need to create a new LUT object for this.
-        //       Perhaps add a utility function to be shared with the constructor.
+        result = std::make_shared<Lut3DOpData>(lut1->getInterpolation(), domain_size);
 
-        auto metadata = A->getFormatMetadata();
-        domain = std::make_shared<Lut3DOpData>(A->getInterpolation(), min_sz);
+        auto metadata = lut1->getFormatMetadata();
+        result->getFormatMetadata() = metadata;
 
-        domain->getFormatMetadata() = metadata;
         // Interpolate through both LUTs in this case (resample).
-        CreateLut3DOp(ops, A, TRANSFORM_DIR_FORWARD);
+        Lut3DOpDataRcPtr nonConstLut1 = std::const_pointer_cast<Lut3DOpData>(lut1);
+        CreateLut3DOp(ops, nonConstLut1, TRANSFORM_DIR_FORWARD);
     }
 
-    // TODO: Would like to not require a clone simply to prevent the delete
-    //       from being called on the op when the opList goes out of scope.
-    Lut3DOpDataRcPtr clonedB = B->clone();
-    CreateLut3DOp(ops, clonedB, TRANSFORM_DIR_FORWARD);
+    // We need a non-const version of lut2 to create the op.
+    // Op will not be modified (except by finalize, but that should have been done already).
+    Lut3DOpDataRcPtr nonConstLut2 = std::const_pointer_cast<Lut3DOpData>(lut2);
+    CreateLut3DOp(ops, nonConstLut2, TRANSFORM_DIR_FORWARD);
 
-
-    const BitDepth fileOutBD = A->getFileOutputBitDepth();
-    auto metadata = A->getFormatMetadata();
-
-    // Min size, we replace it anyway.
-    A = std::make_shared<Lut3DOpData>(A->getInterpolation(), 2);
+    const BitDepth fileOutBD = lut1->getFileOutputBitDepth();
 
     // TODO: May want to revisit metadata propagation.
-    A->getFormatMetadata() = metadata;
-    A->getFormatMetadata().combine(B->getFormatMetadata());
+    result->getFormatMetadata().combine(lut2->getFormatMetadata());
 
-    A->setFileOutputBitDepth(fileOutBD);
+    result->setFileOutputBitDepth(fileOutBD);
 
-    const Array::Values& inValues = domain->getArray().getValues();
-    const long gridSize = domain->getArray().getLength();
+    const Array::Values & domain = result->getArray().getValues();
+    const long gridSize = result->getArray().getLength();
     const long numPixels = gridSize * gridSize * gridSize;
 
-    A->getArray().resize(gridSize, 3);
-    Array::Values& outValues = A->getArray().getValues();
-
-    EvalTransform((const float*)(&inValues[0]),
-                  (float*)(&outValues[0]),
+    EvalTransform((const float*)(&domain[0]),
+                  (float*)(&domain[0]),
                   numPixels,
                   ops);
+
+    if (restoreInverse)
+    {
+        lut1->setDirection(TRANSFORM_DIR_INVERSE);
+        lut2->setDirection(TRANSFORM_DIR_INVERSE);
+        result->setDirection(TRANSFORM_DIR_INVERSE);
+    }
+
+    return result;
 }
 
 Lut3DOpData::Lut3DArray::Lut3DArray(unsigned long length)
@@ -240,7 +257,6 @@ Lut3DOpData::Lut3DOpData(unsigned long gridSize)
     , m_interpolation(INTERP_DEFAULT)
     , m_array(gridSize)
     , m_direction(TRANSFORM_DIR_FORWARD)
-    , m_invQuality(LUT_INVERSION_FAST)
 {
 }
 
@@ -249,7 +265,6 @@ Lut3DOpData::Lut3DOpData(long gridSize, TransformDirection dir)
     , m_interpolation(INTERP_DEFAULT)
     , m_array(gridSize)
     , m_direction(dir)
-    , m_invQuality(LUT_INVERSION_FAST)
 {
 }
 
@@ -259,7 +274,6 @@ Lut3DOpData::Lut3DOpData(Interpolation interpolation,
     , m_interpolation(interpolation)
     , m_array(gridSize)
     , m_direction(TRANSFORM_DIR_FORWARD)
-    , m_invQuality(LUT_INVERSION_FAST)
 {
 }
 
@@ -291,11 +305,6 @@ Interpolation Lut3DOpData::getConcreteInterpolation() const
     default:
         return INTERP_LINEAR;
     }
-}
-
-void Lut3DOpData::setInversionQuality(LutInversionQuality style)
-{
-    m_invQuality = style;
 }
 
 void Lut3DOpData::setArrayFromRedFastestOrder(const std::vector<float> & lut)
@@ -350,8 +359,6 @@ bool IsValid(const Interpolation & interpolation)
 
 void Lut3DOpData::validate() const
 {
-    OpData::validate();
-
     if (!IsValid(m_interpolation))
     {
         throw Exception("Lut3D has an invalid interpolation type. ");
@@ -402,10 +409,10 @@ OpDataRcPtr Lut3DOpData::getIdentityReplacement() const
     return std::make_shared<RangeOpData>(0., 1., 0., 1.);
 }
 
-bool Lut3DOpData::haveEqualBasics(const Lut3DOpData & B) const
+bool Lut3DOpData::haveEqualBasics(const Lut3DOpData & other) const
 {
     // TODO: Should interpolation style be considered?
-    return (m_array == B.m_array);
+    return (m_array == other.m_array);
 }
 
 bool Lut3DOpData::operator==(const OpData & other) const
@@ -414,7 +421,6 @@ bool Lut3DOpData::operator==(const OpData & other) const
 
     const Lut3DOpData* lop = static_cast<const Lut3DOpData*>(&other);
 
-    // NB: The m_invQuality is not currently included.
     if (m_direction != lop->m_direction
         || m_interpolation != lop->m_interpolation)
     {
@@ -429,14 +435,14 @@ Lut3DOpDataRcPtr Lut3DOpData::clone() const
     return std::make_shared<Lut3DOpData>(*this);
 }
 
-bool Lut3DOpData::isInverse(ConstLut3DOpDataRcPtr & B) const
+bool Lut3DOpData::isInverse(ConstLut3DOpDataRcPtr & other) const
 {
     if ((m_direction == TRANSFORM_DIR_FORWARD
-         && B->m_direction == TRANSFORM_DIR_INVERSE) ||
+         && other->m_direction == TRANSFORM_DIR_INVERSE) ||
         (m_direction == TRANSFORM_DIR_INVERSE
-         && B->m_direction == TRANSFORM_DIR_FORWARD))
+         && other->m_direction == TRANSFORM_DIR_FORWARD))
     {
-        return haveEqualBasics(*B);
+        return haveEqualBasics(*other);
     }
     return false;
 }
@@ -454,11 +460,9 @@ Lut3DOpDataRcPtr Lut3DOpData::inverse() const
     return invLut;
 }
 
-void Lut3DOpData::finalize()
+std::string Lut3DOpData::getCacheID() const
 {
     AutoMutex lock(m_mutex);
-
-    validate();
 
     md5_state_t state;
     md5_byte_t digest[16];
@@ -479,9 +483,7 @@ void Lut3DOpData::finalize()
     cacheIDStream << InterpolationToString(m_interpolation)  << " ";
     cacheIDStream << TransformDirectionToString(m_direction) << " ";
 
-    // NB: The m_invQuality is not currently included.
-
-    m_cacheID = cacheIDStream.str();
+    return cacheIDStream.str();
 }
 
 void Lut3DOpData::scale(float scale)

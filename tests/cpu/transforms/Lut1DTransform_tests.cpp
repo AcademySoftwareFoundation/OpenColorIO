@@ -126,3 +126,48 @@ OCIO_ADD_TEST(Lut1DTransform, create_with_parameters)
     OCIO_CHECK_NO_THROW(lut2->validate());
 }
 
+OCIO_ADD_TEST(Lut1DTransform, non_monotonic)
+{
+    auto lut = OCIO::Lut1DTransform::Create();
+
+    // Make a non-monotonic LUT.
+    lut->setLength(5);
+    float r = 0.1f;
+    float g = 0.1f;
+    float b = 0.1f;
+    lut->setValue(2, r, g, b);
+
+    OCIO_CHECK_NO_THROW(lut->validate());
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateRaw());
+
+    // Processor from forward LUT.
+    auto proc = config->getProcessor(lut);
+
+    // Make a transform from the processor.
+    auto transformFromProc = proc->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(transformFromProc->getNumTransforms(), 1);
+    auto lutFromTransform = OCIO_DYNAMIC_POINTER_CAST<OCIO::Lut1DTransform>(transformFromProc->getTransform(0));
+    OCIO_REQUIRE_ASSERT(lutFromTransform);
+
+    // Transform is still a non-montonic LUT.
+    lutFromTransform->getValue(2, r, g, b);
+    OCIO_CHECK_EQUAL(r, 0.1f);
+    OCIO_CHECK_EQUAL(g, 0.1f);
+    OCIO_CHECK_EQUAL(b, 0.1f);
+
+    // Now with inverse LUT.
+    lut->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    proc = config->getProcessor(lut);
+
+    transformFromProc = proc->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(transformFromProc->getNumTransforms(), 1);
+    lutFromTransform = OCIO_DYNAMIC_POINTER_CAST<OCIO::Lut1DTransform>(transformFromProc->getTransform(0));
+    OCIO_REQUIRE_ASSERT(lutFromTransform);
+
+    // LUT has been made monotonic.
+    lutFromTransform->getValue(2, r, g, b);
+    OCIO_CHECK_EQUAL(r, 0.25f);
+    OCIO_CHECK_EQUAL(g, 0.25f);
+    OCIO_CHECK_EQUAL(b, 0.25f);
+}
