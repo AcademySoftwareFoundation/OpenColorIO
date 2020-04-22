@@ -13,7 +13,7 @@ namespace OCIOYaml
 {
 
 void Read(std::istream & istream, ConfigRcPtr & c, const char * filename);
-void Write(std::ostream & ostream, const Config * c);
+void Write(std::ostream & ostream, const Config & c);
 
 } // namespace OCIOYaml
 

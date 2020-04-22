@@ -123,6 +123,7 @@ jobs:
       share/ci/scripts/linux/install_openexr.sh latest
       share/ci/scripts/linux/install_oiio.sh latest
       share/ci/scripts/linux/install_sphinx.sh latest
+      share/ci/scripts/linux/install_pybind11.sh latest
     displayName: Install dependencies
 
   - template: share/ci/templates/configure.yml

@@ -46,18 +46,15 @@ class OCIOGPUTest
         inline const std::string& group() const  { return m_group; }
         inline const std::string& name() const  { return m_name; }
 
-        void setContext(OCIO_NAMESPACE::ConstConfigRcPtr config,
-                        OCIO_NAMESPACE::TransformRcPtr transform, 
-                        OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc);
+        void setProcessor(OCIO_NAMESPACE::ConstConfigRcPtr config,
+                          OCIO_NAMESPACE::TransformRcPtr transform);
 
-        void setContext(OCIO_NAMESPACE::TransformRcPtr transform, 
-                        OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc);
+        void setProcessor(OCIO_NAMESPACE::TransformRcPtr transform);
 
-        void setContextProcessor(OCIO_NAMESPACE::ConstProcessorRcPtr processor, 
-                                 OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc);
+        void setProcessor(OCIO_NAMESPACE::ConstProcessorRcPtr processor);
 
         inline OCIO_NAMESPACE::ConstProcessorRcPtr & getProcessor() { return m_processor; }
-        inline OCIO_NAMESPACE::GpuShaderDescRcPtr & getShaderDesc() { return m_shaderDesc; }
+        OCIO_NAMESPACE::GpuShaderDescRcPtr & getShaderDesc();
 
         // Set TestWideRange to true to use test values on [-1,2] rather than [0,1].
         inline bool getTestWideRange() const { return m_testWideRange; }
@@ -92,9 +89,15 @@ class OCIOGPUTest
         inline void setVerbose(bool verbose) { m_verbose = verbose; }
         inline bool isVerbose() const { return m_verbose; }
 
+        inline void setLegacyShader(bool legacy) { m_legacyShader = legacy; }
+        inline bool isLegacyShader() const { return m_legacyShader; }
+
+        inline void setLegacyShaderLutEdge(unsigned lutEdge) { m_legacyShaderLutEdge = lutEdge; }
+        inline unsigned getLegacyShaderLutEdge() const { return m_legacyShaderLutEdge; }
+
         inline void setup() { m_function(*this); }
 
-        inline bool isValid() { return m_processor && m_shaderDesc; }
+        inline bool isValid() { return (bool)m_processor; }
 
         inline void disable() { m_enabled = false; }
         inline bool isEnabled() const { return m_enabled; }
@@ -137,19 +140,21 @@ class OCIOGPUTest
 
     private:
         const std::string m_group, m_name;
-        OCIOTestFuncCallback m_function;          
+        OCIOTestFuncCallback m_function;
         OCIO_NAMESPACE::ConstProcessorRcPtr m_processor;
         OCIO_NAMESPACE::GpuShaderDescRcPtr m_shaderDesc;
         float m_errorThreshold;
-        float m_expectedMinimalValue = 1e-6f;
-        float m_maxDiff = 0.f;
-        size_t m_idxDiff = 0;
-        bool m_testWideRange = true;
-        bool m_testNaN = true;
-        bool m_testInfinity = true;
-        bool m_performRelativeComparison = false;
-        bool m_verbose = false;
-        bool m_enabled = true;
+        float m_expectedMinimalValue{ 1e-6f };
+        float m_maxDiff{ 0.f };
+        size_t m_idxDiff{ 0 };
+        bool m_testWideRange{ true };
+        bool m_testNaN{ true };
+        bool m_testInfinity{ true };
+        bool m_performRelativeComparison{ false };
+        bool m_verbose{ false };
+        bool m_enabled{ true };
+        bool m_legacyShader{ false };
+        unsigned m_legacyShaderLutEdge{ 32 };
         CustomValues m_values;
 
         std::vector<RetestSetupCallback> m_retests;
