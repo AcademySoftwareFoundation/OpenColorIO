@@ -105,15 +105,16 @@ project at all ASWF TAC meetings.
 
 * Chair: Michael Dolan
 * Chief Architect: Doug Walker
+* ACES TAC Rep: Sean Cooper
 
 ### TSC Members
 
-* Mark Boorer - ILM
+* Mark Boorer - Industrial Light & Magic
+* Mei Chu - Sony Pictures Imageworks
 * Sean Cooper - DNEG
-* Michael Dolan - SPI
-* Larry Gritz - SPI
+* Michael Dolan - Epic Games
 * Patrick Hodoul - Autodesk
-* Carl Rand - Foundry
+* Carl Rand - Weta Digital
 * Doug Walker - Autodesk
 * Kevin Wheatley - Framestore
 
