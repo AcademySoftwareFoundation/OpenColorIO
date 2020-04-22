@@ -184,7 +184,7 @@ OCIO_ADD_TEST(Config, simple_config)
     OCIO_CHECK_NO_THROW(config->sanityCheck());
 }
 
-OCIO_ADD_TEST(Config, simple_config_with_colorspace_duplicate)
+OCIO_ADD_TEST(Config, colorspace_duplicate)
 {
 
     constexpr char SIMPLE_PROFILE[] =
@@ -212,7 +212,7 @@ OCIO_ADD_TEST(Config, simple_config_with_colorspace_duplicate)
                           "Key-value pair with key 'name' specified more than once. ");
 }
 
-OCIO_ADD_TEST(Config, simple_config_with_cdltransform_duplicate)
+OCIO_ADD_TEST(Config, cdltransform_duplicate)
 {
 
     constexpr char SIMPLE_PROFILE[] =
@@ -230,12 +230,7 @@ OCIO_ADD_TEST(Config, simple_config_with_cdltransform_duplicate)
         "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: raw\n"
-        "    to_reference: !<GroupTransform>\n"
-        "      direction: forward\n"
-        "      children:\n"
-        "        - !<CDLTransform>\n"
-        "          slope: [1, 1, 1]\n"
-        "          slope: [0, 0, 0]\n"
+        "    to_reference: !<CDLTransform> {slope: [1, 2, 1], slope: [1, 2, 1]}\n"
         "\n";
 
     std::istringstream is;
@@ -244,6 +239,34 @@ OCIO_ADD_TEST(Config, simple_config_with_cdltransform_duplicate)
     OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
                           "Key-value pair with key 'slope' specified more than once. ");
 }
+
+/*OCIO_ADD_TEST(Config, search-path_duplicate)  // Uncomment after putting DuplicateCheck in Config
+{
+
+    constexpr char SIMPLE_PROFILE[] =
+        "ocio_profile_version: 2\n"
+        "search_path: luts\n"
+        "search_path: luts-dir\n"
+        "roles:\n"
+        "  default: raw\n"
+        "file_rules:\n"
+        "  - !<Rule> {name: Default, colorspace: default}\n"
+        "displays:\n"
+        "  Disp1:\n"
+        "    - !<View> {name: View1, colorspace: raw}\n"
+        "active_displays: []\n"
+        "active_views: []\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw\n"
+        "\n";
+
+    std::istringstream is;
+    is.str(SIMPLE_PROFILE);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                          "Key-value pair with key 'search_path' specified more than once. ");
+}*/
 
 OCIO_ADD_TEST(Config, roles)
 {
