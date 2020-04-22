@@ -45,71 +45,72 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
     const double linOffset[3] = { 0.1, 0.1, 0.1 };
     const double logOffset[3] = { 1.0, 1.0, 1.0 };
 
-    // Combining ops
+    // Combining ops.
     {
         OCIO::OpRcPtrVec ops;
-        OCIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, OCIO::TRANSFORM_DIR_FORWARD));
-        OCIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m2, v2, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_NO_THROW(OCIO::CreateMatrixOffsetOp(ops, m1, v1, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_NO_THROW(OCIO::CreateMatrixOffsetOp(ops, m2, v2, OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_CHECK_EQUAL(ops.size(), 2);
 
-        // No optimize: keep both matrix ops
+        // No optimize: keep both matrix ops.
         OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
         OCIO_CHECK_EQUAL(ops.size(), 2);
 
-        // apply ops
+        // Apply ops.
         float tmp[12];
         memcpy(tmp, source, 12 * sizeof(float));
         Apply(ops, tmp, 3);
 
-        // Optimize: Combine 2 matrix ops
-        OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
+        // Optimize: Combine 2 matrix ops.
+        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
         OCIO_CHECK_EQUAL(ops.size(), 1);
 
-        // apply op
+        // Apply ops.
         float tmp2[12];
         memcpy(tmp2, source, 12 * sizeof(float));
         Apply(ops, tmp2, 3);
 
-        // compare results
+        // Compare results.
         for (unsigned int i = 0; i<12; ++i)
         {
             OCIO_CHECK_CLOSE(tmp2[i], tmp[i], error);
         }
     }
 
-    // remove NoOp at the beginning
+    // Remove NoOp at the beginning.
     {
         OCIO::OpRcPtrVec ops;
-        // NoOp
-        OCIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
-        OCIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, OCIO::TRANSFORM_DIR_FORWARD));
-        OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
-                                        linSlope, linOffset,
-                                        OCIO::TRANSFORM_DIR_FORWARD));
+        // NoOp.
+        OCIO_CHECK_NO_THROW(OCIO::CreateFileNoOp(ops, "NoOp"));
+        OCIO_CHECK_NO_THROW(OCIO::CreateIdentityMatrixOp(ops));
+        OCIO_CHECK_NO_THROW(OCIO::CreateMatrixOffsetOp(ops, m1, v1, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_NO_THROW(OCIO::CreateLogOp(ops, base, logSlope, logOffset,
+                                              linSlope, linOffset,
+                                              OCIO::TRANSFORM_DIR_FORWARD));
 
-        OCIO_CHECK_EQUAL(ops.size(), 3);
+        OCIO_CHECK_EQUAL(ops.size(), 4);
 
-        // No optimize: keep both all ops
+        // No optimize: only no-ops types are removed. Keep 3 other ops.
         OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
-        // apply ops
+        // Apply ops.
         float tmp[12];
         memcpy(tmp, source, 12 * sizeof(float));
         Apply(ops, tmp, 3);
 
-        // Optimize: remove the no op
-        OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
+        // Optimize: remove all no-ops.
+        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
         OCIO_CHECK_EQUAL(ops.size(), 2);
         OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
         OCIO_CHECK_EQUAL(ops[1]->getInfo(), "<LogOp>");
 
-        // apply ops
+        // Apply ops.
         float tmp2[12];
         memcpy(tmp2, source, 12 * sizeof(float));
         Apply(ops, tmp2, 3);
 
-        // compare results
+        // Compare results.
         for (unsigned int i = 0; i<12; ++i)
         {
             OCIO_CHECK_CLOSE(tmp2[i], tmp[i], error);
@@ -119,75 +120,77 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
     // remove NoOp in the middle
     {
         OCIO::OpRcPtrVec ops;
-        OCIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_NO_THROW(OCIO::CreateMatrixOffsetOp(ops, m1, v1, OCIO::TRANSFORM_DIR_FORWARD));
         // NoOp
-        OCIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
-        OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
-                                        linSlope, linOffset,
-                                        OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_NO_THROW(OCIO::CreateIdentityMatrixOp(ops));
+        OCIO_CHECK_NO_THROW(OCIO::CreateFileNoOp(ops, "NoOp"));
+        OCIO_CHECK_NO_THROW(OCIO::CreateLogOp(ops, base, logSlope, logOffset,
+                                              linSlope, linOffset,
+                                              OCIO::TRANSFORM_DIR_FORWARD));
 
-        OCIO_CHECK_EQUAL(ops.size(), 3);
+        OCIO_CHECK_EQUAL(ops.size(), 4);
 
-        // No optimize: keep both all ops
+        // No optimize: only no-ops types are removed.
         OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
-        // apply ops
+        // Apply ops.
         float tmp[12];
         memcpy(tmp, source, 12 * sizeof(float));
         Apply(ops, tmp, 3);
 
-        // Optimize: remove the no op
-        OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
+        // Optimize: remove all no ops.
+        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
         OCIO_CHECK_EQUAL(ops.size(), 2);
         OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
         OCIO_CHECK_EQUAL(ops[1]->getInfo(), "<LogOp>");
 
-        // apply ops
+        // Apply ops.
         float tmp2[12];
         memcpy(tmp2, source, 12 * sizeof(float));
         Apply(ops, tmp2, 3);
 
-        // compare results
+        // Compare results.
         for (unsigned int i = 0; i<12; ++i)
         {
             OCIO_CHECK_CLOSE(tmp2[i], tmp[i], error);
         }
     }
 
-    // remove NoOp in the end
+    // Remove NoOp in the end.
     {
         OCIO::OpRcPtrVec ops;
-        OCIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, OCIO::TRANSFORM_DIR_FORWARD));
-        OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
-                                        linSlope, linOffset,
-                                        OCIO::TRANSFORM_DIR_FORWARD));
-        // NoOp
-        OCIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
+        OCIO_CHECK_NO_THROW(OCIO::CreateMatrixOffsetOp(ops, m1, v1, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_NO_THROW(OCIO::CreateLogOp(ops, base, logSlope, logOffset,
+                                              linSlope, linOffset,
+                                              OCIO::TRANSFORM_DIR_FORWARD));
+        // NoOp.
+        OCIO_CHECK_NO_THROW(OCIO::CreateIdentityMatrixOp(ops));
+        OCIO_CHECK_NO_THROW(OCIO::CreateFileNoOp(ops, "NoOp"));
 
-        OCIO_CHECK_EQUAL(ops.size(), 3);
+        OCIO_CHECK_EQUAL(ops.size(), 4);
 
-        // No optimize: keep both all ops
+        // No optimize: only no-op types are removed.
         OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
-        // apply ops
+        // Apply ops.
         float tmp[12];
         memcpy(tmp, source, 12 * sizeof(float));
         Apply(ops, tmp, 3);
 
         // Optimize: remove the no op
-        OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
+        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
         OCIO_CHECK_EQUAL(ops.size(), 2);
         OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
         OCIO_CHECK_EQUAL(ops[1]->getInfo(), "<LogOp>");
 
-        // apply ops
+        // Apply ops.
         float tmp2[12];
         memcpy(tmp2, source, 12 * sizeof(float));
         Apply(ops, tmp2, 3);
 
-        // compare results
+        // Compare results.
         for (unsigned int i = 0; i<12; ++i)
         {
             OCIO_CHECK_CLOSE(tmp2[i], tmp[i], error);
@@ -197,41 +200,41 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
     // remove several NoOp
     {
         OCIO::OpRcPtrVec ops;
-        OCIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
-        OCIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
-        OCIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
-        OCIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, OCIO::TRANSFORM_DIR_FORWARD));
-        OCIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
-        OCIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
-        OCIO_CHECK_NO_THROW(CreateLogOp(ops, base, logSlope, logOffset,
-                                        linSlope, linOffset,
-                                        OCIO::TRANSFORM_DIR_FORWARD));
-        OCIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
-        OCIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
+        OCIO_CHECK_NO_THROW(OCIO::CreateFileNoOp(ops, "NoOp"));
+        OCIO_CHECK_NO_THROW(OCIO::CreateIdentityMatrixOp(ops));
+        OCIO_CHECK_NO_THROW(OCIO::CreateFileNoOp(ops, "NoOp"));
+        OCIO_CHECK_NO_THROW(OCIO::CreateMatrixOffsetOp(ops, m1, v1, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_NO_THROW(OCIO::CreateFileNoOp(ops, "NoOp"));
+        OCIO_CHECK_NO_THROW(OCIO::CreateIdentityMatrixOp(ops));
+        OCIO_CHECK_NO_THROW(OCIO::CreateLogOp(ops, base, logSlope, logOffset,
+                                              linSlope, linOffset,
+                                              OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_NO_THROW(OCIO::CreateFileNoOp(ops, "NoOp"));
+        OCIO_CHECK_NO_THROW(OCIO::CreateIdentityMatrixOp(ops));
 
         OCIO_CHECK_EQUAL(ops.size(), 9);
 
-        // No optimize: keep both all ops
+        // No optimize: only no-op types are removed.
         OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
-        OCIO_CHECK_EQUAL(ops.size(), 9);
+        OCIO_CHECK_EQUAL(ops.size(), 5);
 
-        // apply ops
+        // Apply ops.
         float tmp[12];
         memcpy(tmp, source, 12 * sizeof(float));
         Apply(ops, tmp, 3);
 
-        // Optimize: remove the no op
-        OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
+        // Optimize: remove all no ops.
+        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
         OCIO_CHECK_EQUAL(ops.size(), 2);
         OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
         OCIO_CHECK_EQUAL(ops[1]->getInfo(), "<LogOp>");
 
-        // apply ops
+        // Apply ops.
         float tmp2[12];
         memcpy(tmp2, source, 12 * sizeof(float));
         Apply(ops, tmp2, 3);
 
-        // compare results
+        // Compare results.
         for (unsigned int i = 0; i < 12; ++i)
         {
             OCIO_CHECK_CLOSE(tmp2[i], tmp[i], error);

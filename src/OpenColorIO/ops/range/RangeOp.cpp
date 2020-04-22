@@ -32,11 +32,9 @@ class RangeOp : public Op
 public:
     RangeOp() = delete;
 
-    RangeOp(RangeOpDataRcPtr & range, TransformDirection direction);
+    RangeOp(RangeOpDataRcPtr & range);
 
     virtual ~RangeOp();
-
-    TransformDirection getDirection() const noexcept { return m_direction; }
 
     OpRcPtr clone() const override;
 
@@ -47,7 +45,8 @@ public:
     bool canCombineWith(ConstOpRcPtr & op) const override;
     void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
 
-    void finalize(OptimizationFlags oFlags) override;
+    void finalize() override;
+    std::string getCacheID() const override;
 
     ConstOpCPURcPtr getCPUOp() const override;
 
@@ -57,21 +56,12 @@ protected:
     ConstRangeOpDataRcPtr rangeData() const { return DynamicPtrCast<const RangeOpData>(data()); }
     RangeOpDataRcPtr rangeData() { return DynamicPtrCast<RangeOpData>(data()); }
 
-private:
-    // The range direction
-    TransformDirection m_direction;
 };
 
 
-RangeOp::RangeOp(RangeOpDataRcPtr & range, TransformDirection direction)
+RangeOp::RangeOp(RangeOpDataRcPtr & range)
     :   Op()
-    ,   m_direction(direction)
 {
-    if(m_direction == TRANSFORM_DIR_UNKNOWN)
-    {
-        throw Exception("Cannot create RangeOp with unspecified transform direction.");
-    }
-
     range->validate();
     data() = range;
 }
@@ -79,7 +69,7 @@ RangeOp::RangeOp(RangeOpDataRcPtr & range, TransformDirection direction)
 OpRcPtr RangeOp::clone() const
 {
     RangeOpDataRcPtr clonedData = rangeData()->clone();
-    return std::make_shared<RangeOp>(clonedData, m_direction);
+    return std::make_shared<RangeOp>(clonedData);
 }
 
 RangeOp::~RangeOp()
@@ -106,22 +96,18 @@ bool RangeOp::isInverse(ConstOpRcPtr & op) const
     return false;
 }
 
+// Ops must have been validated and finalized.
 bool RangeOp::canCombineWith(ConstOpRcPtr & op2) const
 {
     auto opData2 = op2->data();
     auto type2 = opData2->getType();
     auto range1 = rangeData();
 
-    // Need to validate prior to calling isIdentity.
-    if (m_direction == TRANSFORM_DIR_INVERSE)
+    // Need to validate prior to calling isIdentity to make sure scale and offset are updated.
+    range1->validate();
+    if (range1->getDirection() == TRANSFORM_DIR_INVERSE)
     {
-        // Inverse is validating.
-        range1 = range1->inverse();
-    }
-    else
-    {
-        // Make sure scale and offset are updated.
-        range1->validate();
+        throw Exception("Op::finalize has to be called.");
     }
 
     if (range1->isIdentity())
@@ -148,6 +134,13 @@ bool RangeOp::canCombineWith(ConstOpRcPtr & op2) const
 
     if (type2 == OpData::RangeType)
     {
+        auto range2 = DynamicPtrCast<const RangeOpData>(opData2);
+
+        if (range2->getDirection() == TRANSFORM_DIR_INVERSE)
+        {
+            throw Exception("Op::finalize has to be called.");
+        }
+
         return true;
     }
     return false;
@@ -172,40 +165,31 @@ void RangeOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
     {
         // Range + Range.
         auto range1 = rangeData();
-        if (m_direction == TRANSFORM_DIR_INVERSE)
-        {
-            range1 = range1->inverse();
-        }
         auto typedRcPtr = DynamicPtrCast<const RangeOp>(secondOp);
         auto range2 = typedRcPtr->rangeData();
-        if (typedRcPtr->getDirection() == TRANSFORM_DIR_INVERSE)
-        {
-            range2 = range2->inverse();
-        }
         auto resRange = range1->compose(range2);
         CreateRangeOp(ops, resRange, TRANSFORM_DIR_FORWARD);
     }
 }
 
-void RangeOp::finalize(OptimizationFlags /*oFlags*/)
+void RangeOp::finalize()
 {
-    const RangeOp & constThis = *this;
-    if (m_direction == TRANSFORM_DIR_INVERSE)
+    ConstRangeOpDataRcPtr range = rangeData();
+    if (range->getDirection() == TRANSFORM_DIR_INVERSE)
     {
-        data() = constThis.rangeData()->inverse();
-        m_direction = TRANSFORM_DIR_FORWARD;
+        data() = range->getAsForward();
     }
+}
 
-    rangeData()->finalize();
-
+std::string RangeOp::getCacheID() const
+{
     // Create the cacheID
     std::ostringstream cacheIDStream;
     cacheIDStream << "<RangeOp ";
-    cacheIDStream << constThis.rangeData()->getCacheID() << " ";
-    cacheIDStream << TransformDirectionToString(m_direction);
+    cacheIDStream << rangeData()->getCacheID() << " ";
     cacheIDStream << ">";
 
-    m_cacheID = cacheIDStream.str();
+    return cacheIDStream.str();
 }
 
 ConstOpCPURcPtr RangeOp::getCPUOp() const
@@ -216,12 +200,11 @@ ConstOpCPURcPtr RangeOp::getCPUOp() const
 
 void RangeOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
 {
-    if (m_direction != TRANSFORM_DIR_FORWARD)
-    {
-        throw Exception("RangeOp direction should have been set to forward by finalize");
-    }
-
     ConstRangeOpDataRcPtr data = rangeData();
+    if (data->getDirection() == TRANSFORM_DIR_INVERSE)
+    {
+        throw Exception("Op::finalize has to be called.");
+    }
     GetRangeGPUShaderProgram(shaderCreator, data);
 }
 
@@ -246,7 +229,15 @@ void CreateRangeOp(OpRcPtrVec & ops,
 
 void CreateRangeOp(OpRcPtrVec & ops, RangeOpDataRcPtr & rangeData, TransformDirection direction)
 {
-    ops.push_back(std::make_shared<RangeOp>(rangeData, direction));
+    auto range = rangeData;
+    if (direction == TRANSFORM_DIR_INVERSE)
+    {
+        range = rangeData->clone();
+        auto newDir = CombineTransformDirections(range->getDirection(), direction);
+        range->setDirection(newDir);
+    }
+
+    ops.push_back(std::make_shared<RangeOp>(range));
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -264,7 +255,6 @@ void CreateRangeTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     ConstRangeOpDataRcPtr rangeDataSrc = DynamicPtrCast<const RangeOpData>(op->data());
 
     data = *rangeDataSrc;
-    rangeTransform->setDirection(range->getDirection());
 
     group->appendTransform(rangeTransform);
 }
@@ -274,8 +264,6 @@ void BuildRangeOp(OpRcPtrVec & ops,
                   const RangeTransform & transform,
                   TransformDirection dir)
 {
-    const auto combinedDir = CombineTransformDirections(dir, transform.getDirection());
-
     const auto & data = dynamic_cast<const RangeTransformImpl*>(&transform)->data();
 
     data.validate();
@@ -283,12 +271,12 @@ void BuildRangeOp(OpRcPtrVec & ops,
     if (transform.getStyle() == RANGE_CLAMP)
     {
         auto d = data.clone();
-        CreateRangeOp(ops, d, combinedDir);
+        CreateRangeOp(ops, d, dir);
     }
     else
     {
         MatrixOpDataRcPtr m = data.convertToMatrix();
-        CreateMatrixOp(ops, m, combinedDir);
+        CreateMatrixOp(ops, m, dir);
     }
 }
 

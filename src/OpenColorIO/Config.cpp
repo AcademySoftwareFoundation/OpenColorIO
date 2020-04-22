@@ -36,6 +36,7 @@ const char * OCIO_CONFIG_ENVVAR               = "OCIO";
 const char * OCIO_ACTIVE_DISPLAYS_ENVVAR      = "OCIO_ACTIVE_DISPLAYS";
 const char * OCIO_ACTIVE_VIEWS_ENVVAR         = "OCIO_ACTIVE_VIEWS";
 const char * OCIO_INACTIVE_COLORSPACES_ENVVAR = "OCIO_INACTIVE_COLORSPACES";
+const char * OCIO_OPTIMIZATION_FLAGS_ENVVAR   = "OCIO_OPTIMIZATION_FLAGS";
 
 namespace
 {
@@ -1686,7 +1687,7 @@ const char * Config::getDisplay(int index) const
                         getImpl()->m_activeDisplaysEnvOverride);
     }
 
-    if(index>=0 || index < static_cast<int>(getImpl()->m_displayCache.size()))
+    if(index>=0 && index < static_cast<int>(getImpl()->m_displayCache.size()))
     {
         return getImpl()->m_displayCache[index].c_str();
     }

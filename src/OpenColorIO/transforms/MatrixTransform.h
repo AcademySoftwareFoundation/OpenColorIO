@@ -50,7 +50,6 @@ public:
     static void deleter(MatrixTransform * t);
 
 private:
-    TransformDirection m_direction = TRANSFORM_DIR_FORWARD;
     MatrixOpData m_data;
 };
 

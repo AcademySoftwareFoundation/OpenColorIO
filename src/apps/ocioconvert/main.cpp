@@ -17,26 +17,15 @@ namespace OCIO = OCIO_NAMESPACE;
 namespace OIIO = OIIO_NAMESPACE;
 #endif
 
-
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
-#include <OpenGL/glext.h>
-#include <GLUT/glut.h>
-#elif _WIN32
-#include <GL/glew.h>
-#include <GL/glut.h>
-#else
-#include <GL/glew.h>
-#include <GL/gl.h>
-#include <GL/glut.h>
-#endif
-
-#include "glsl.h"
-#include "OpenEXR/half.h"
-#include "oiiohelpers.h"
-
-
 #include "apputils/argparse.h"
+
+#ifdef OCIO_GPU_ENABLED
+#include "oglapp.h"
+#endif // OCIO_GPU_ENABLED
+
+#include "oiiohelpers.h"
+#include "OpenEXR/half.h"
+
 
 // Array of non OpenColorIO arguments.
 static std::vector<std::string> args;
@@ -55,285 +44,6 @@ parse_end_args(int argc, const char *argv[])
 
   return 0;
 }
-
-class GPUManagement
-{
-private:
-    GPUManagement()
-        : m_glwin(0)
-        , m_initState(STATE_CREATED)
-        , m_imageTexID(0)
-        , m_format(0)
-        , m_width(0)
-        , m_height(0)
-    {
-    }
-
-    GPUManagement(const GPUManagement &) = delete;
-    GPUManagement & operator=(const GPUManagement &) = delete;
-
-    ~GPUManagement()
-    {
-        if (m_initState != STATE_CREATED)
-        {
-            cleanUp();
-        }
-    }
-
-public:
-
-    static GPUManagement & Instance()
-    {
-        static GPUManagement inst;
-        return inst;
-    }
-
-    void init(bool verbose)
-    {
-        if (m_initState != STATE_CREATED) return;
-
-        int argcgl = 2;
-        const char* argvgl[] = { "main", "-glDebug" };
-        glutInit(&argcgl, const_cast<char**>(&argvgl[0]));
-
-        glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-        glutInitWindowSize(10, 10);
-        glutInitWindowPosition(0, 0);
-
-        m_glwin = glutCreateWindow(argvgl[0]);
-
-#ifndef __APPLE__
-        glewInit();
-        if (!glewIsSupported("GL_VERSION_2_0"))
-        {
-            std::cerr << "OpenGL 2.0 not supported" << std::endl;
-            exit(1);
-        }
-#endif
-
-        if(verbose)
-        {
-            std::cout << std::endl
-                      << "GL Vendor:    " << glGetString(GL_VENDOR) << std::endl
-                      << "GL Renderer:  " << glGetString(GL_RENDERER) << std::endl
-                      << "GL Version:   " << glGetString(GL_VERSION) << std::endl
-                      << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
-        }
-
-        // Initialize the OpenGL engine
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);           // 4-byte pixel alignment
-#ifndef __APPLE__
-        glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE);     //
-        glClampColor(GL_CLAMP_VERTEX_COLOR, GL_FALSE);   // avoid any kind of clamping
-        glClampColor(GL_CLAMP_FRAGMENT_COLOR, GL_FALSE); //
-#endif
-
-        glEnable(GL_TEXTURE_2D);
-        glClearColor(0, 0, 0, 0);                        // background color
-        glClearStencil(0);                               // clear stencil buffer
-
-        m_initState = STATE_INITIALIZED;
-    }
-
-    void prepareImage(float * data, long width, long height, long numChannels)
-    {
-        if (m_initState != STATE_INITIALIZED)
-        {
-            std::cerr << "The GPU engine is not initialized." << std::endl;
-            exit(1);
-        }
-
-        m_width = width;
-        m_height = height;
-
-        if (numChannels == 4) m_format = GL_RGBA;
-        else if (numChannels == 3) m_format = GL_RGB;
-        else
-        {
-            std::cerr << "Cannot process with GPU image with "
-                << numChannels << " components." << std::endl;
-            exit(1);
-        }
-
-        glGenTextures(1, &m_imageTexID);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, m_imageTexID);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, width, height, 0,
-            m_format, GL_FLOAT, &data[0]);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-
-        // Create the frame buffer and render buffer
-        GLuint fboId;
-
-        // create a framebuffer object, you need to delete them when program exits.
-        glGenFramebuffers(1, &fboId);
-        glBindFramebuffer(GL_FRAMEBUFFER, fboId);
-
-        GLuint rboId;
-        // create a renderbuffer object to store depth info
-        glGenRenderbuffers(1, &rboId);
-        glBindRenderbuffer(GL_RENDERBUFFER, rboId);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA32F_ARB, m_width, m_height);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-        // attach a texture to FBO color attachment point
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_imageTexID, 0);
-
-        // attach a renderbuffer to depth attachment point
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rboId);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        // Set the rendering destination to FBO
-        glBindFramebuffer(GL_FRAMEBUFFER, fboId);
-
-        // Clear buffer
-        glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        m_initState = STATE_IMAGE_PREPARED;
-    }
-
-    void updateGPUShader(
-        const OCIO::ConstProcessorRcPtr & processor, bool legacyShader, bool gpuinfo)
-    {
-        if (m_initState != STATE_IMAGE_PREPARED)
-        {
-            std::cerr << "GPU image not prepared." << std::endl;
-            exit(1);
-        }
-
-        OCIO::GpuShaderDescRcPtr shaderDesc
-            = legacyShader ? OCIO::GpuShaderDesc::CreateLegacyShaderDesc(32)
-                           : OCIO::GpuShaderDesc::CreateShaderDesc();
-
-        // Create the GPU shader description
-        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
-
-        // Collect the shader program information for a specific processor    
-        OCIO::ConstGPUProcessorRcPtr gpuProcessor
-            = processor->getDefaultGPUProcessor();
-        gpuProcessor->extractGpuShaderInfo(shaderDesc);
-
-        // Use the helper OpenGL builder
-        m_oglBuilder = OCIO::OpenGLBuilder::Create(shaderDesc);
-        m_oglBuilder->setVerbose(gpuinfo);
-
-        // Allocate & upload all the LUTs
-        m_oglBuilder->allocateAllTextures(1);
-
-        std::ostringstream main;
-        main << std::endl
-            << "uniform sampler2D img;" << std::endl
-            << std::endl
-            << "void main()" << std::endl
-            << "{" << std::endl
-            << "    vec4 col = texture2D(img, gl_TexCoord[0].st);" << std::endl
-            << "    gl_FragColor = " << shaderDesc->getFunctionName() << "(col);" << std::endl
-            << "}" << std::endl;
-
-        // Build the fragment shader program
-        m_oglBuilder->buildProgram(main.str().c_str());
-
-        // Enable the fragment shader program, and all needed textures
-        m_oglBuilder->useProgram();
-        // The image texture
-        glUniform1i(glGetUniformLocation(m_oglBuilder->getProgramHandle(), "img"), 0);
-        // The LUT textures
-        m_oglBuilder->useAllTextures();
-        // Enable uniforms for dynamic properties
-        m_oglBuilder->useAllUniforms();
-
-        m_initState = STATE_SHADER_UPDATED;
-    }
-
-    void processImage()
-    {
-        if (m_initState != STATE_SHADER_UPDATED)
-        {
-            std::cerr << "GPU shader has not been updated." << std::endl;
-            exit(1);
-        }
-
-        glViewport(0, 0, m_width, m_height);
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(0.0, m_width, 0.0, m_height, -100.0, 100.0);
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-
-        glEnable(GL_TEXTURE_2D);
-        glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glColor3f(1, 1, 1);
-        glPushMatrix();
-            glBegin(GL_QUADS);
-                glTexCoord2f(0.0f, 1.0f);
-                glVertex2f(0.0f, (float)m_height);
-
-                glTexCoord2f(0.0f, 0.0f);
-                glVertex2f(0.0f, 0.0f);
-
-                glTexCoord2f(1.0f, 0.0f);
-                glVertex2f((float)m_width, 0.0f);
-
-                glTexCoord2f(1.0f, 1.0f);
-                glVertex2f((float)m_width, (float)m_height);
-            glEnd();
-        glPopMatrix();
-        glDisable(GL_TEXTURE_2D);
-
-        glutSwapBuffers();
-
-        m_initState = STATE_IMAGE_PROCESSED;
-    }
-
-    void readImage(const float * image)
-    {
-        if (m_initState != STATE_IMAGE_PROCESSED)
-        {
-            std::cerr << "Image has not been processed by GPU shader." << std::endl;
-            exit(1);
-        }
-
-        glReadBuffer(GL_COLOR_ATTACHMENT0);
-        glReadPixels(0, 0, m_width, m_height, m_format, GL_FLOAT, (GLvoid*)image);
-
-        // Current implementation only has to process 1 image.
-        // To handle more images we could go back to STATE_INITIALIZED
-        m_initState = STATE_IMAGE_READ;
-    }
-
-private:
-    void cleanUp()
-    {
-        m_oglBuilder.reset();
-        glutDestroyWindow(m_glwin);
-        m_initState = STATE_CREATED;
-    }
-
-    enum State
-    {
-        STATE_CREATED,
-        STATE_INITIALIZED,
-        STATE_IMAGE_PREPARED,
-        STATE_SHADER_UPDATED,
-        STATE_IMAGE_PROCESSED,
-        STATE_IMAGE_READ
-    };
-
-    GLint m_glwin;
-    State m_initState;
-    OCIO::OpenGLBuilderRcPtr m_oglBuilder;
-    GLuint m_imageTexID;
-    GLenum m_format;
-    long m_width;
-    long m_height;
-};
 
 bool ParseNameValuePair(std::string& name, std::string& value,
                         const std::string& input);
@@ -392,6 +102,15 @@ int main(int argc, const char **argv)
         ap.usage ();
         exit(1);
     }
+
+#ifndef OCIO_GPU_ENABLED
+    if (usegpu || outputgpuInfo || usegpuLegacy)
+    {
+        std::cerr << "Compiled without OpenGL support, GPU options are not available.";
+        std::cerr << std::endl;
+        exit(1);
+    }
+#endif // OCIO_GPU_ENABLED
 
     const char * inputimage       = nullptr;
     const char * inputcolorspace  = nullptr;
@@ -495,7 +214,7 @@ int main(int argc, const char **argv)
     int imgheight = 0;
     int components = 0;
 
-    // Load the image
+    // Load the image.
     std::cout << std::endl;
     std::cout << "Loading " << inputimage << std::endl;
     try
@@ -563,7 +282,7 @@ int main(int argc, const char **argv)
 #endif
 
         std::vector<int> kchannels;
-        //parse --ch argument
+        //parse --ch argument.
         if (keepChannels != "" && !StringToVector(&kchannels, keepChannels.c_str()))
         {
             std::cerr << "ERROR: --ch: '" << keepChannels
@@ -571,7 +290,7 @@ int main(int argc, const char **argv)
             exit(1);
         }
 
-        //if kchannels not specified, then keep all channels
+        //if kchannels not specified, then keep all channels.
         if (kchannels.size() == 0)
         {
             kchannels.resize(components);
@@ -606,9 +325,9 @@ int main(int argc, const char **argv)
             void * croppedBuf = croppedImg.getBuffer();
             void * imgBuf     = img.getBuffer();
 
-            // crop down bounding box and ditch all but n channels
-            // img is a flattened 3 dimensional matrix heightxwidthxchannels
-            // fill croppedimg with only the needed pixels
+            // crop down bounding box and ditch all but n channels.
+            // img is a flattened 3 dimensional matrix heightxwidthxchannels.
+            // fill croppedimg with only the needed pixels.
             for (int y=0 ; y < spec.height ; y++)
             {
                 for (int x=0 ; x < spec.width; x++)
@@ -669,21 +388,55 @@ int main(int argc, const char **argv)
         exit(1);
     }
 
-    // Initialize GPU
+#ifdef OCIO_GPU_ENABLED
+    // Initialize GPU.
+
+    OCIO::OglAppRcPtr oglApp;
     if (usegpu || usegpuLegacy)
     {
-        GPUManagement & gpuMgmt = GPUManagement::Instance();
-        gpuMgmt.init(verbose);
-        gpuMgmt.prepareImage((float *)img.getBuffer(), imgwidth, imgheight, components);
-    }
+        OCIO::OglApp::Components comp = OCIO::OglApp::COMPONENTS_RGBA;
+        if (components == 4)
+        {
+            comp = OCIO::OglApp::COMPONENTS_RGBA;
+        }
+        else if (components == 3)
+        {
+            comp = OCIO::OglApp::COMPONENTS_RGB;
+        }
+        else
+        {
+            std::cerr << "Cannot convert image with " << components << " components." << std::endl;
+            exit(1);
+        }
 
-    // Process the image
+        try
+        {
+            oglApp = std::make_shared<OCIO::OglApp>("ocioconvert", 256, 20);
+        }
+        catch (const OCIO::Exception & e)
+        {
+            std::cerr << std::endl << e.what() << std::endl;
+            exit(1);
+        }
+
+        if (outputgpuInfo)
+        {
+            oglApp->printGLInfo();
+        }
+
+        oglApp->initImage(imgwidth, imgheight, comp, (float *)img.getBuffer());
+        
+        oglApp->createGLBuffers();
+    }
+#endif // OCIO_GPU_ENABLED
+
+    // Process the image.
     try
     {
         // Load the current config.
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
 
-        // Get the processor
+        // Get the processor.
         OCIO::ConstProcessorRcPtr processor;
 
         try
@@ -721,19 +474,29 @@ int main(int argc, const char **argv)
             exit(1);
         }
 
+#ifdef OCIO_GPU_ENABLED
         if (usegpu || usegpuLegacy)
         {
-            GPUManagement & gpuMgmt = GPUManagement::Instance();
-            // Get the GPU shader program from the processor and set GPU to use it
-            gpuMgmt.updateGPUShader(processor, usegpuLegacy, outputgpuInfo);
+            // Get the GPU shader program from the processor and set oglApp to use it.
+            OCIO::GpuShaderDescRcPtr shaderDesc;
+            if (usegpuLegacy)
+            {
+                shaderDesc = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(32);
+            }
+            else
+            {
+                shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+            }
+            shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
+            processor->getDefaultGPUProcessor()->extractGpuShaderInfo(shaderDesc);
+            oglApp->setShader(shaderDesc);
 
-            // Run the GPU shader on the image
-            gpuMgmt.processImage();
-
-            // Read the result
-            gpuMgmt.readImage((float *)img.getBuffer());
+            oglApp->reshape(imgwidth, imgheight);
+            oglApp->redisplay();
+            oglApp->readImage((float *)img.getBuffer());
         }
         else
+#endif // OCIO_GPU_ENABLED
         {
             const OCIO::BitDepth bitDepth = OCIO::GetBitDepth(spec);
 
@@ -773,7 +536,7 @@ int main(int argc, const char **argv)
     }
 
     //
-    // set the provided OpenImageIO attributes
+    // set the provided OpenImageIO attributes.
     //
     bool parseerror = false;
     for(unsigned int i=0; i<floatAttrs.size(); ++i)
@@ -828,7 +591,7 @@ int main(int argc, const char **argv)
         exit(1);
     }
 
-    // Write out the result
+    // Write out the result.
     try
     {
 #if OIIO_VERSION < 10903
@@ -869,14 +632,14 @@ int main(int argc, const char **argv)
 }
 
 
-// Parse name=value parts
-// return true on success
+// Parse name=value parts.
+// return true on success.
 
 bool ParseNameValuePair(std::string& name,
                         std::string& value,
                         const std::string& input)
 {
-    // split string into name=value 
+    // split string into name=value.
     size_t pos = input.find('=');
     if(pos==std::string::npos) return false;
 
@@ -885,7 +648,7 @@ bool ParseNameValuePair(std::string& name,
     return true;
 }
 
-// return true on success
+// return true on success.
 bool StringToFloat(float * fval, const char * str)
 {
     if(!str) return false;

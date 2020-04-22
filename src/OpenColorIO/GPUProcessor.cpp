@@ -109,7 +109,6 @@ void GPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
 
     m_ops = rawOps;
 
-    OptimizeOpVec(m_ops, BIT_DEPTH_F32, BIT_DEPTH_F32, oFlags);
     m_ops.finalize(oFlags);
     m_ops.unifyDynamicProperties();
 
@@ -119,7 +118,7 @@ void GPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
     // Does the color processing introduce crosstalk between the pixel channels?
     m_hasChannelCrosstalk = m_ops.hasChannelCrosstalk();
 
-    // Compute the cache id.
+    // Calculate and assemble the GPU cache ID from the ops.
 
     std::stringstream ss;
     ss << "GPU Processor: oFlags " << oFlags
@@ -166,7 +165,6 @@ void GPUProcessor::Impl::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCrea
                         gpuOps);
 
         LogDebug("GPU Ops: 3DLUT");
-        gpuOpsCpuLatticeProcess.finalize(OPTIMIZATION_LUT_INV_FAST);
         OpRcPtrVec gpuLut = Create3DLut(gpuOpsCpuLatticeProcess, legacy->getEdgelen());
 
         gpuOps.clear();
@@ -174,8 +172,7 @@ void GPUProcessor::Impl::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCrea
         gpuOps += gpuLut;
         gpuOps += gpuOpsHwPostProcess;
 
-        OptimizeOpVec(gpuOps, BIT_DEPTH_F32, BIT_DEPTH_F32, OPTIMIZATION_DEFAULT);
-        gpuOps.finalize(OPTIMIZATION_LUT_INV_FAST);
+        gpuOps.finalize(OPTIMIZATION_DEFAULT);
     }
     else
     {

@@ -63,17 +63,6 @@ OCIO_SHARED_PTR<LocalCachedFile> LoadTestFile(
     return DynamicPtrCast<LocalCachedFile>(cachedFile);
 }
 
-inline void OptimizeOpVec(OpRcPtrVec & ops)
-{
-    OptimizeOpVec(ops, BIT_DEPTH_F32, BIT_DEPTH_F32, OPTIMIZATION_DEFAULT);
-}
-
-inline void OptimizeFinalizeOpVec(OpRcPtrVec & ops)
-{
-    OptimizeOpVec(ops, BIT_DEPTH_F32, BIT_DEPTH_F32, OPTIMIZATION_DEFAULT);
-    ops.finalize(OPTIMIZATION_NONE);
-}
-
 // Relative comparison: check if the difference between value and expected
 // relative to (divided by) expected does not exceed the eps.  A minimum
 // expected value is used to limit the scaling of the difference and
