@@ -184,7 +184,7 @@ OCIO_ADD_TEST(Config, simple_config)
     OCIO_CHECK_NO_THROW(config->sanityCheck());
 }
 
-OCIO_ADD_TEST(Config, simple_config_with_duplicate)
+OCIO_ADD_TEST(Config, simple_config_with_colorspace_duplicate)
 {
 
     constexpr char SIMPLE_PROFILE[] =
@@ -210,6 +210,39 @@ OCIO_ADD_TEST(Config, simple_config_with_duplicate)
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
                           "Key-value pair with key 'name' specified more than once. ");
+}
+
+OCIO_ADD_TEST(Config, simple_config_with_cdltransform_duplicate)
+{
+
+    constexpr char SIMPLE_PROFILE[] =
+        "ocio_profile_version: 2\n"
+        "search_path: luts\n"
+        "roles:\n"
+        "  default: raw\n"
+        "file_rules:\n"
+        "  - !<Rule> {name: Default, colorspace: default}\n"
+        "displays:\n"
+        "  Disp1:\n"
+        "    - !<View> {name: View1, colorspace: raw}\n"
+        "active_displays: []\n"
+        "active_views: []\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw\n"
+        "    to_reference: !<GroupTransform>\n"
+        "      direction: forward\n"
+        "      children:\n"
+        "        - !<CDLTransform>\n"
+        "          slope: [1, 1, 1]\n"
+        "          slope: [0, 0, 0]\n"
+        "\n";
+
+    std::istringstream is;
+    is.str(SIMPLE_PROFILE);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                          "Key-value pair with key 'slope' specified more than once. ");
 }
 
 OCIO_ADD_TEST(Config, roles)

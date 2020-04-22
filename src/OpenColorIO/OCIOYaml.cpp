@@ -1722,6 +1722,8 @@ inline void load(const YAML::Node& node, MatrixTransformRcPtr& t)
 {
     t = MatrixTransform::Create();
 
+    CheckDuplicates(node);
+
     std::string key;
 
     for (const auto & iter : node)
