@@ -47,14 +47,12 @@ jobs:
   linux:
     name: >
       Linux CentOS 7 VFX CY2019 
-      (
-      cxx=${{ matrix.cxx-compiler }}, 
-      config=${{ matrix.build-type }}, 
-      shared=${{ matrix.build-shared }}, 
-      sse=${{ matrix.use-sse }}, 
-      python=${{ matrix.python-version }}, 
-      docs=${{ matrix.build-docs }}
-      )
+      <cxx=${{ matrix.cxx-compiler }}, 
+       config=${{ matrix.build-type }}, 
+       shared=${{ matrix.build-shared }}, 
+       sse=${{ matrix.use-sse }}, 
+       python=${{ matrix.python-version }}, 
+       docs=${{ matrix.build-docs }}>
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -158,13 +156,11 @@ jobs:
   linux_latest:
     name: >
       Linux CentOS 7 VFX CY2020 
-      (
-      latest ext packages,
-      cxx=${{ matrix.cxx-compiler }},
-      docs=${{ matrix.build-docs }}
-      )
+      <latest ext packages,
+       cxx=${{ matrix.cxx-compiler }},
+       docs=${{ matrix.build-docs }}>
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule'
+    #if: github.event_name == 'schedule'
     strategy:
       matrix:
         build: [1, 2]
@@ -235,9 +231,9 @@ jobs:
   # ------------------------------------------
 
   linux_sonarcloud:
-    name: Linux CentOS 7 VFX CY2019 (SonarCloud)
+    name: Linux CentOS 7 VFX CY2019 <SonarCloud>
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule'
+    #if: github.event_name == 'schedule'
     container:
       # TODO: Switch to 'aswf/ci-ocio:2020' when available
       image: aswf/ci-ocio:2019
@@ -288,13 +284,11 @@ jobs:
   macos:
     name: >
       macOS 10.15 AppleClang 11.0 
-      (
-      config=${{ matrix.build-type }}, 
-      shared=${{ matrix.build-shared }}, 
-      sse=${{ matrix.use-sse }}, 
-      python=${{ matrix.python-version }}, 
-      docs=${{ matrix.build-docs }}
-      )
+      <config=${{ matrix.build-type }}, 
+       shared=${{ matrix.build-shared }}, 
+       sse=${{ matrix.use-sse }}, 
+       python=${{ matrix.python-version }}, 
+       docs=${{ matrix.build-docs }}>
     runs-on: macos-10.15
     strategy:
       matrix:
@@ -365,13 +359,11 @@ jobs:
   windows:
     name: >
       Windows 2019 MSVC 16.4
-      (
-      config=${{ matrix.build-type }}, 
-      shared=${{ matrix.build-shared }}, 
-      sse=${{ matrix.use-sse }}, 
-      python=${{ matrix.python-version }}, 
-      docs=${{ matrix.build-docs }}
-      )
+      <config=${{ matrix.build-type }}, 
+       shared=${{ matrix.build-shared }}, 
+       sse=${{ matrix.use-sse }}, 
+       python=${{ matrix.python-version }}, 
+       docs=${{ matrix.build-docs }}>
     runs-on: windows-2019
     strategy:
       matrix:
