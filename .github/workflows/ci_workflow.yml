@@ -158,7 +158,7 @@ jobs:
        cxx=${{ matrix.cxx-compiler }},
        docs=${{ matrix.build-docs }}>'
     runs-on: ubuntu-latest
-    #if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule'
     strategy:
       matrix:
         build: [1, 2]
@@ -231,7 +231,7 @@ jobs:
   linux_sonarcloud:
     name: 'Linux CentOS 7 VFX CY2019 <SonarCloud>'
     runs-on: ubuntu-latest
-    #if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule'
     container:
       # TODO: Switch to 'aswf/ci-ocio:2020' when available
       image: aswf/ci-ocio:2019
