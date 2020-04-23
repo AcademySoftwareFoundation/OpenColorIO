@@ -46,7 +46,8 @@ public:
     bool canCombineWith(ConstOpRcPtr & op) const override;
     void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
     bool hasChannelCrosstalk() const override;
-    void finalize(OptimizationFlags oFlags) override;
+    void finalize() override;
+    std::string getCacheID() const override;
 
     ConstOpCPURcPtr getCPUOp() const override;
 
@@ -116,13 +117,13 @@ void Lut1DOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
                         "before calling combineWith.");
     }
     ConstLut1DOpRcPtr typedRcPtr = DynamicPtrCast<const Lut1DOp>(secondOp);
-    auto thisLut = lut1DData()->clone();
     auto secondLut = typedRcPtr->lut1DData();
 
     // We want compose to upsample the LUTs to minimize precision loss.
     const auto compFlag = Lut1DOpData::COMPOSE_RESAMPLE_BIG;
-    Lut1DOpData::Compose(thisLut, secondLut, compFlag);
-    auto composedOp = std::make_shared<Lut1DOp>(thisLut);
+    auto thisLut = lut1DData();
+    Lut1DOpDataRcPtr result =  Lut1DOpData::Compose(thisLut, secondLut, compFlag);
+    auto composedOp = std::make_shared<Lut1DOp>(result);
     ops.push_back(composedOp);
 }
 
@@ -131,22 +132,20 @@ bool Lut1DOp::hasChannelCrosstalk() const
     return lut1DData()->hasChannelCrosstalk();
 }
 
-void Lut1DOp::finalize(OptimizationFlags oFlags)
+void Lut1DOp::finalize()
 {
-    Lut1DOpDataRcPtr lutData = lut1DData();
+    lut1DData()->finalize();
+}
 
-    const bool invLutFast = (oFlags & OPTIMIZATION_LUT_INV_FAST) == OPTIMIZATION_LUT_INV_FAST;
-    lutData->setInversionQuality(invLutFast ? LUT_INVERSION_FAST: LUT_INVERSION_EXACT);
-
-    lutData->finalize();
-
+std::string Lut1DOp::getCacheID() const
+{
     // Rebuild the cache identifier.
     std::ostringstream cacheIDStream;
     cacheIDStream << "<Lut1D ";
-    cacheIDStream << lutData->getCacheID();
+    cacheIDStream << lut1DData()->getCacheID();
     cacheIDStream << ">";
 
-    m_cacheID = cacheIDStream.str();
+    return cacheIDStream.str();
 }
 
 ConstOpCPURcPtr Lut1DOp::getCPUOp() const
@@ -160,15 +159,14 @@ void Lut1DOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
     ConstLut1DOpDataRcPtr lutData = lut1DData();
     if (lutData->getDirection() == TRANSFORM_DIR_INVERSE)
     {
-        // TODO: Add GPU renderer for EXACT mode.
+        // TODO: Even if the optim flags specify exact inversion, only fast inversion is supported
+        // on the GPU. Add GPU renderer for EXACT mode.
 
-        Lut1DOpDataRcPtr tmp = Lut1DOpData::MakeFastLut1DFromInverse(lutData, true);
+        Lut1DOpDataRcPtr tmp = MakeFastLut1DFromInverse(lutData);
         if (!tmp)
         {
             throw Exception("Cannot apply Lut1DOp, inversion failed.");
         }
-
-        tmp->finalize();
 
         lutData = tmp;
     }
@@ -184,22 +182,17 @@ void CreateLut1DOp(OpRcPtrVec & ops,
     // TODO: Detect if 1D LUT can be exactly approximated as y = mx + b
     // If so, return a mtx instead.
 
-    if (direction != TRANSFORM_DIR_FORWARD
-        && direction != TRANSFORM_DIR_INVERSE)
+    Lut1DOpDataRcPtr lutData = lut;
+    if (direction == TRANSFORM_DIR_UNKNOWN)
     {
-        throw Exception("Cannot apply Lut1DOp op, "
-                        "unspecified transform direction.");
+        throw Exception("Cannot apply Lut1DOp op, unspecified transform direction.");
+    }
+    else if (direction == TRANSFORM_DIR_INVERSE)
+    {
+        lutData = lut->inverse();
     }
 
-    if (direction == TRANSFORM_DIR_FORWARD)
-    {
-        ops.push_back(std::make_shared<Lut1DOp>(lut));
-    }
-    else
-    {
-        Lut1DOpDataRcPtr data = lut->inverse();
-        ops.push_back(std::make_shared<Lut1DOp>(data));
-    }
+    ops.push_back(std::make_shared<Lut1DOp>(lutData));
 }
 
 void GenerateIdentityLut1D(float* img, int numElements, int numChannels)

@@ -990,11 +990,6 @@ void FixedFunctionWriter::getAttributes(XmlFormatter::Attributes& attributes) co
     attributes.push_back(XmlFormatter::Attribute(ATTR_STYLE, style));
     FixedFunctionOpData::Params params = m_ff->getParams();
 
-    // Always save forward REC2100_SURROUND.
-    if (FixedFunctionOpData::REC2100_SURROUND_INV == m_ff->getStyle())
-    {
-        params[0] = 1. / params[0];
-    }
     const size_t numParams = params.size();
     if (numParams != 0)
     {
@@ -1608,10 +1603,16 @@ void MatrixWriter::writeContent() const
 
     const bool saveDim3{ m_version < CTF_PROCESS_LIST_VERSION_2_0 };
 
-    std::stringstream dimensionAttr;
-    if (m_matrix->hasAlpha())
+    auto matrix = m_matrix;
+    if (matrix->getDirection() == TRANSFORM_DIR_INVERSE)
     {
-        if (m_matrix->hasOffsets())
+        matrix = matrix->getAsForward();
+    }
+
+    std::stringstream dimensionAttr;
+    if (matrix->hasAlpha())
+    {
+        if (matrix->hasOffsets())
         {
             dimensionAttr << (saveDim3 ? "4 5 4" : "4 5");
         }
@@ -1620,7 +1621,7 @@ void MatrixWriter::writeContent() const
             dimensionAttr << (saveDim3 ? "4 4 4" : "4 4");
         }
     }
-    else if (m_matrix->hasOffsets())
+    else if (matrix->hasOffsets())
     {
         dimensionAttr << (saveDim3 ? "3 4 3" : "3 4");
     }
@@ -1635,15 +1636,15 @@ void MatrixWriter::writeContent() const
 
     m_formatter.writeStartTag(TAG_ARRAY, attributes);
 
-    const ArrayDouble::Values & values = m_matrix->getArray().getValues();
-    const MatrixOpData::Offsets & offsets = m_matrix->getOffsets();
+    const ArrayDouble::Values & values = matrix->getArray().getValues();
+    const MatrixOpData::Offsets & offsets = matrix->getOffsets();
 
     const double outScale = GetBitDepthMaxValue(m_outBitDepth);
     const double inOutScale = outScale / GetBitDepthMaxValue(m_inBitDepth);
 
-    if (m_matrix->hasAlpha())
+    if (matrix->hasAlpha())
     {
-        if (m_matrix->hasOffsets())
+        if (matrix->hasOffsets())
         {
             // Write in 4x5x4 mode.
             const double v[20]
@@ -1670,7 +1671,7 @@ void MatrixWriter::writeContent() const
             WriteValues(m_formatter, v, v + 16, 4, BIT_DEPTH_F32, 1, 1.0);
         }
     }
-    else if (m_matrix->hasOffsets())
+    else if (matrix->hasOffsets())
     {
         // Write in 3x4x3 compact mode.
         const double v[12]
@@ -1750,27 +1751,33 @@ void WriteTag(XmlFormatter & fmt, const char * tag, double value)
 
 void RangeWriter::writeContent() const
 {
+    auto range = m_range;
+    if (range->getDirection() == TRANSFORM_DIR_INVERSE)
+    {
+        range = range->getAsForward();
+    }
+
     const double outScale = GetBitDepthMaxValue(m_outBitDepth);
     const double inScale = GetBitDepthMaxValue(m_inBitDepth);
 
-    if (!m_range->minIsEmpty())
+    if (!range->minIsEmpty())
     {
-        WriteTag(m_formatter, TAG_MIN_IN_VALUE, m_range->getMinInValue() * inScale);
+        WriteTag(m_formatter, TAG_MIN_IN_VALUE, range->getMinInValue() * inScale);
     }
 
-    if (!m_range->maxIsEmpty())
+    if (!range->maxIsEmpty())
     {
-        WriteTag(m_formatter, TAG_MAX_IN_VALUE, m_range->getMaxInValue() * inScale);
+        WriteTag(m_formatter, TAG_MAX_IN_VALUE, range->getMaxInValue() * inScale);
     }
 
-    if (!m_range->minIsEmpty())
+    if (!range->minIsEmpty())
     {
-        WriteTag(m_formatter, TAG_MIN_OUT_VALUE, m_range->getMinOutValue() * outScale);
+        WriteTag(m_formatter, TAG_MIN_OUT_VALUE, range->getMinOutValue() * outScale);
     }
 
-    if (!m_range->maxIsEmpty())
+    if (!range->maxIsEmpty())
     {
-        WriteTag(m_formatter, TAG_MAX_OUT_VALUE, m_range->getMaxOutValue() * outScale);
+        WriteTag(m_formatter, TAG_MAX_OUT_VALUE, range->getMaxOutValue() * outScale);
     }
 }
 
@@ -2105,7 +2112,6 @@ void TransformWriter::writeOps(const CTFVersion & version) const
                 }
 
                 auto mat = matSrc->clone();
-
                 outBD = GetValidatedFileBitDepth(mat->getFileOutputBitDepth(), type);
                 // inBD has already been set at previous iteration.
                 // inBD can be:

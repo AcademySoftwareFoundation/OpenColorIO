@@ -39,7 +39,7 @@ OCIO_ADD_TEST(FileFormatCC, test_ccc1)
     OCIO_CHECK_EQUAL("foo", idStr);
     std::string descStr(ccFile->transform->getDescription());
     OCIO_CHECK_EQUAL("this is a description", descStr);
-    double slope[3] = { 0., 0., 0.f};
+    double slope[3] = { 0., 0., 0. };
     OCIO_CHECK_NO_THROW(ccFile->transform->getSlope(slope));
     OCIO_CHECK_EQUAL(1.1, slope[0]);
     OCIO_CHECK_EQUAL(1.2, slope[1]);

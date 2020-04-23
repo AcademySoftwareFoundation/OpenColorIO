@@ -21,7 +21,7 @@ private:
     // Vector of ops for the processor.
     OpRcPtrVec m_ops;
 
-    mutable std::string m_cpuCacheID;
+    mutable std::string m_cacheID;
 
     mutable Mutex m_resultsCacheMutex;
 
@@ -46,13 +46,16 @@ public:
 
     const char * getCacheID() const;
 
-    void optimize(BitDepth inBD, BitDepth outBD, OptimizationFlags oFlags);
-
     GroupTransformRcPtr createGroupTransform() const;
 
     void write(const char * formatName, std::ostream & os) const;
 
     void apply(ImageDesc& img) const;
+
+    ConstProcessorRcPtr getOptimizedProcessor(OptimizationFlags oFlags) const;
+
+    ConstProcessorRcPtr getOptimizedProcessor(BitDepth inBD, BitDepth outBD,
+        OptimizationFlags oFlags) const;
 
     // Get an optimized GPU processor instance for F32 images with default optimizations.
     ConstGPUProcessorRcPtr getDefaultGPUProcessor() const;

@@ -59,7 +59,12 @@ void bindPyProcessor(py::module & m)
              "formatName"_a)
         .def("getDynamicProperty", &Processor::getDynamicProperty, "type"_a)
         .def("hasDynamicProperty", &Processor::hasDynamicProperty, "type"_a)
-        .def("getOptimizedProcessor", &Processor::getOptimizedProcessor, 
+        .def("getOptimizedProcessor",
+             (ConstProcessorRcPtr(Processor::*)(OptimizationFlags) const)
+             &Processor::getOptimizedProcessor, "oFlags"_a)
+        .def("getOptimizedProcessor",
+             (ConstProcessorRcPtr(Processor::*)(BitDepth, BitDepth, OptimizationFlags) const)
+             &Processor::getOptimizedProcessor,
              "inBitDepth"_a, "outBitDepth"_a, "oFlags"_a)
 
         // GPU Renderer

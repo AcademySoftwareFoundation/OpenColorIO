@@ -52,7 +52,7 @@ public:
     bool canCombineWith(ConstOpRcPtr & op) const override;
     void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
 
-    void finalize(OptimizationFlags oFlags) override;
+    std::string getCacheID() const override;
 
     ConstOpCPURcPtr getCPUOp() const override;
 
@@ -142,17 +142,15 @@ void CDLOp::combineWith(OpRcPtrVec & /*ops*/, ConstOpRcPtr & secondOp) const
     // TODO: Implement CDLOp::combineWith()
 }
 
-void CDLOp::finalize(OptimizationFlags /*oFlags*/)
+std::string CDLOp::getCacheID() const
 {
-    cdlData()->finalize();
-
     // Create the cacheID.
     std::ostringstream cacheIDStream;
     cacheIDStream << "<CDLOp ";
     cacheIDStream << cdlData()->getCacheID();
     cacheIDStream << ">";
 
-    m_cacheID = cacheIDStream.str();
+    return cacheIDStream.str();
 }
 
 ConstOpCPURcPtr CDLOp::getCPUOp() const
