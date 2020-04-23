@@ -45,14 +45,13 @@ jobs:
   # Note: 'container' images are hosted on DockerHub
 
   linux:
-    name: >
-      Linux CentOS 7 VFX CY2019 
+    name: 'Linux CentOS 7 VFX CY2019 
       <cxx=${{ matrix.cxx-compiler }}, 
        config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
        sse=${{ matrix.use-sse }}, 
        python=${{ matrix.python-version }}, 
-       docs=${{ matrix.build-docs }}>
+       docs=${{ matrix.build-docs }}>'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -154,11 +153,10 @@ jobs:
   # -----------------------------------
 
   linux_latest:
-    name: >
-      Linux CentOS 7 VFX CY2020 
+    name: 'Linux CentOS 7 VFX CY2020 
       <latest ext packages,
        cxx=${{ matrix.cxx-compiler }},
-       docs=${{ matrix.build-docs }}>
+       docs=${{ matrix.build-docs }}>'
     runs-on: ubuntu-latest
     #if: github.event_name == 'schedule'
     strategy:
@@ -231,7 +229,7 @@ jobs:
   # ------------------------------------------
 
   linux_sonarcloud:
-    name: Linux CentOS 7 VFX CY2019 <SonarCloud>
+    name: 'Linux CentOS 7 VFX CY2019 <SonarCloud>'
     runs-on: ubuntu-latest
     #if: github.event_name == 'schedule'
     container:
@@ -282,13 +280,12 @@ jobs:
   # ---------------------------------------------------------------------------
 
   macos:
-    name: >
-      macOS 10.15 AppleClang 11.0 
+    name: 'macOS 10.15 AppleClang 11.0 
       <config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
        sse=${{ matrix.use-sse }}, 
        python=${{ matrix.python-version }}, 
-       docs=${{ matrix.build-docs }}>
+       docs=${{ matrix.build-docs }}>'
     runs-on: macos-10.15
     strategy:
       matrix:
@@ -357,13 +354,12 @@ jobs:
   #       Debug build testing with Python bindings and docs enabled.
 
   windows:
-    name: >
-      Windows 2019 MSVC 16.4
+    name: 'Windows 2019 MSVC 16.4
       <config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
        sse=${{ matrix.use-sse }}, 
        python=${{ matrix.python-version }}, 
-       docs=${{ matrix.build-docs }}>
+       docs=${{ matrix.build-docs }}>'
     runs-on: windows-2019
     strategy:
       matrix:
