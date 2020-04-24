@@ -51,7 +51,7 @@ jobs:
        config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
        sse=${{ matrix.use-sse }}, 
-       cxx=${{ matrix.cxx-version }}, 
+       cxx=${{ matrix.cxx-standard }}, 
        python=${{ matrix.python-version }}, 
        docs=${{ matrix.build-docs }}>'
     runs-on: ubuntu-latest
@@ -162,7 +162,7 @@ jobs:
           cmake ../. \
                 -DCMAKE_INSTALL_PREFIX=../_install \
                 -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
-                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-version }} \
+                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
@@ -189,14 +189,10 @@ jobs:
   linux_latest:
     name: 'Linux CentOS 7 latest ext packages
       <${{ matrix.compiler-desc }},
-       config=Release, 
-       shared=ON, 
-       sse=ON, 
-       cxx=${{ matrix.cxx-version }}, 
-       python=3.7, 
+       cxx=${{ matrix.cxx-standard }}, 
        docs=${{ matrix.build-docs }}>'
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule'
+    #if: github.event_name == 'schedule'
     strategy:
       matrix:
         build: [1, 2, 3, 4]
@@ -260,7 +256,7 @@ jobs:
           cmake ../. \
                 -DCMAKE_INSTALL_PREFIX=../_install \
                 -DCMAKE_BUILD_TYPE=Release \
-                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-version }} \
+                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_INSTALL_EXT_PACKAGES=NONE \
@@ -283,16 +279,9 @@ jobs:
   # ------------------------------------------
 
   linux_sonarcloud:
-    name: 'Linux CentOS 7 SonarCloud 
-      <GCC 6.3.1,
-       config=Release, 
-       shared=ON, 
-       sse=ON, 
-       cxx=11, 
-       python=3.7, 
-       docs=ON>'
+    name: 'Linux CentOS 7 SonarCloud <GCC 6.3.1>'
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule'
+    #if: github.event_name == 'schedule'
     container:
       # TODO: Switch to 'aswf/ci-ocio:2020' when available
       image: aswf/ci-ocio:2019
@@ -349,7 +338,7 @@ jobs:
        config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
        sse=${{ matrix.use-sse }}, 
-       cxx=${{ matrix.cxx-version }}, 
+       cxx=${{ matrix.cxx-standard }}, 
        python=${{ matrix.python-version }}, 
        docs=${{ matrix.build-docs }}>'
     runs-on: macos-10.15
@@ -362,28 +351,28 @@ jobs:
             build-shared: 'ON'
             build-docs: 'ON'
             use-sse: 'ON'
-            cxx-version: 11
+            cxx-standard: 11
             python-version: 3.7
           - build: 2
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
             use-sse: 'ON'
-            cxx-version: 11
+            cxx-standard: 11
             python-version: 3.7
           - build: 3
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'ON'
             use-sse: 'OFF'
-            cxx-version: 11
+            cxx-standard: 11
             python-version: 2.7
           - build: 4
             build-type: Release
             build-shared: 'ON'
-            build-docs: 'ON'
+            build-docs: 'OFF'
             use-sse: 'ON'
-            cxx-version: 14
+            cxx-standard: 14
             python-version: 3.7
     steps:
       - name: Setup Python
@@ -403,7 +392,7 @@ jobs:
           cmake ../. \
                 -DCMAKE_INSTALL_PREFIX=../_install \
                 -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
-                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-version }} \
+                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
@@ -435,7 +424,7 @@ jobs:
        config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
        sse=${{ matrix.use-sse }}, 
-       cxx=${{ matrix.cxx-version }}, 
+       cxx=${{ matrix.cxx-standard }}, 
        python=${{ matrix.python-version }}, 
        docs=${{ matrix.build-docs }}>'
     runs-on: windows-2019
@@ -448,28 +437,28 @@ jobs:
             build-shared: 'ON'
             build-docs: 'ON'
             use-sse: 'ON'
-            cxx-version: 11
+            cxx-standard: 11
             python-version: 3.7
           - build: 2
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
             use-sse: 'ON'
-            cxx-version: 11
+            cxx-standard: 11
             python-version: 3.7
           - build: 3
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'ON'
             use-sse: 'OFF'
-            cxx-version: 11
+            cxx-standard: 11
             python-version: 2.7
           - build: 4
             build-type: Release
             build-shared: 'ON'
-            build-docs: 'ON'
+            build-docs: 'OFF'
             use-sse: 'ON'
-            cxx-version: 14
+            cxx-standard: 14
             python-version: 3.7
     steps:
       - name: Setup Python
@@ -490,7 +479,7 @@ jobs:
           cmake ../. \
                 -DCMAKE_INSTALL_PREFIX=../_install \
                 -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
-                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-version }} \
+                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
                 -DCMAKE_GENERATOR_PLATFORM=x64 \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
