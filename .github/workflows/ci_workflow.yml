@@ -281,7 +281,7 @@ jobs:
   linux_sonarcloud:
     name: 'Linux CentOS 7 SonarCloud <GCC 6.3.1>'
     runs-on: ubuntu-latest
-    #if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule'
     container:
       # TODO: Switch to 'aswf/ci-ocio:2020' when available
       image: aswf/ci-ocio:2019
