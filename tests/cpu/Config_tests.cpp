@@ -240,7 +240,7 @@ OCIO_ADD_TEST(Config, cdltransform_duplicate)
                           "Key-value pair with key 'slope' specified more than once. ");
 }
 
-/*OCIO_ADD_TEST(Config, search-path_duplicate)  // Uncomment after putting DuplicateCheck in Config
+OCIO_ADD_TEST(Config, searchpath_duplicate)
 {
 
     constexpr char SIMPLE_PROFILE[] =
@@ -266,7 +266,7 @@ OCIO_ADD_TEST(Config, cdltransform_duplicate)
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
                           "Key-value pair with key 'search_path' specified more than once. ");
-}*/
+}
 
 OCIO_ADD_TEST(Config, roles)
 {
@@ -4365,39 +4365,31 @@ OCIO_ADD_TEST(Config, is_colorspace_used)
         "  - !<ColorSpace>\n"
         "    name: cs1\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs2\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs3\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs4\n"
         "    from_reference: !<ColorSpaceTransform> {src: cs3, dst: cs3}\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs5\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs6\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs7\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs8\n"
         "    from_reference: !<GroupTransform>\n"
         "      children:\n"
         "        - !<ColorSpaceTransform> {src: cs7, dst: cs7}\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs9\n"
         "    from_reference: !<GroupTransform>\n"
@@ -4406,11 +4398,9 @@ OCIO_ADD_TEST(Config, is_colorspace_used)
         "             children:\n"
         "               - !<LookTransform> {src: cs8, dst: cs8}\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs10\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs11\n";
 

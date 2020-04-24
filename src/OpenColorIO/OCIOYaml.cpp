@@ -2785,6 +2785,8 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
     bool defaultRuleFound = false;
     auto rules = config->getFileRules()->createEditableCopy();
 
+    CheckDuplicates(node);
+
     std::string key, stringval;
     bool boolval = false;
     EnvironmentMode mode = ENV_ENVIRONMENT_LOAD_ALL;
