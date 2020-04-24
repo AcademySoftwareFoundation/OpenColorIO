@@ -656,7 +656,7 @@ public:
 
     //!cpp:function:: Most applications will use the preceding method, but this method may be
     // used for applications that want to know which was the highest priority rule to match
-    // filePath.  The :cpp:func:`FileRules::getNumCustomKeys(ruleIndex)` and custom keys methods
+    // filePath.  The :cpp:func:`FileRules::getNumCustomKeys` and custom keys methods
     // may then be used to get additional information about the matching rule.
     const char * getColorSpaceFromFilepath(const char * filePath, size_t & ruleIndex) const;
 
@@ -2070,7 +2070,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////
 //!rst::
 // GpuShaderCreator
-// *************
+// ****************
 // Inherit from the class to fully customize the implementation of a GPU shader program
 // from a color transformation.
 //
