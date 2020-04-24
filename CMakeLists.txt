@@ -102,6 +102,11 @@ if(MSVC)
 	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /EHsc /wd4275 /DWIN32 /we4062")
 
 else()
+    if(APPLE AND OCIO_GL_ENABLED)
+        # Mute the deprecated warning for some GLUT methods.
+        set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wno-deprecated-declarations")
+    endif()
+
 	# -Wswitch-enum Enables warning in switch when an enumeration value is not explicitly handled.
 	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wall -Wswitch-enum")
 
