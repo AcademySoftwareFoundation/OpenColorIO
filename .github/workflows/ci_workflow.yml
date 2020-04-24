@@ -192,7 +192,7 @@ jobs:
        cxx=${{ matrix.cxx-standard }}, 
        docs=${{ matrix.build-docs }}>'
     runs-on: ubuntu-latest
-    #if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule'
     strategy:
       matrix:
         build: [1, 2, 3, 4]
