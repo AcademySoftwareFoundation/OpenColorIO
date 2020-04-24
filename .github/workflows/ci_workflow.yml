@@ -42,20 +42,22 @@ jobs:
   # ---------------------------------------------------------------------------
   # Note: 'runs-on' defines the GH-hosted VM. 'container' is the Docker 
   #       container where the build occurs.
-  # Note: 'container' images are hosted on DockerHub
+  # Note: 'container' images are hosted on DockerHub and sourced from the 
+  #       aswf-docker GH repo. Compiler versions are defined by those images.
 
   linux:
     name: 'Linux CentOS 7 VFX CY2019 
-      <cxx=${{ matrix.cxx-compiler }}, 
+      <${{ matrix.compiler-desc }}, 
        config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
        sse=${{ matrix.use-sse }}, 
+       cxx=${{ matrix.cxx-version }}, 
        python=${{ matrix.python-version }}, 
        docs=${{ matrix.build-docs }}>'
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        build: [1, 2, 3, 4, 5, 6]
+        build: [1, 2, 3, 4, 5, 6, 7, 8]
         include:
           - build: 1
             build-type: Release
@@ -63,48 +65,80 @@ jobs:
             build-docs: 'ON'
             use-sse: 'ON'
             python-version: 3.7
+            cxx-standard: 11
             cxx-compiler: g++
             cc-compiler: gcc
+            compiler-desc: GCC 6.3.1
           - build: 2
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
             use-sse: 'ON'
             python-version: 3.7
+            cxx-standard: 11
             cxx-compiler: g++
             cc-compiler: gcc
+            compiler-desc: GCC 6.3.1
           - build: 3
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'ON'
             use-sse: 'OFF'
             python-version: 2.7
+            cxx-standard: 11
             cxx-compiler: g++
             cc-compiler: gcc
+            compiler-desc: GCC 6.3.1
           - build: 4
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
             use-sse: 'ON'
             python-version: 3.7
+            cxx-standard: 14
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC 6.3.1
+          - build: 5
+            build-type: Release
+            build-shared: 'ON'
+            build-docs: 'OFF'
+            use-sse: 'ON'
+            python-version: 3.7
+            cxx-standard: 11
             cxx-compiler: clang++
             cc-compiler: clang
-          - build: 5
+            compiler-desc: Clang 7
+          - build: 6
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
             use-sse: 'ON'
             python-version: 3.7
+            cxx-standard: 11
             cxx-compiler: clang++
             cc-compiler: clang
-          - build: 6
+            compiler-desc: Clang 7
+          - build: 7
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
             use-sse: 'OFF'
             python-version: 2.7
+            cxx-standard: 11
             cxx-compiler: clang++
             cc-compiler: clang
+            compiler-desc: Clang 7
+          - build: 8
+            build-type: Release
+            build-shared: 'ON'
+            build-docs: 'OFF'
+            use-sse: 'ON'
+            python-version: 3.7
+            cxx-standard: 14
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang 7
     container:
       # TODO: Add to matrix with 'aswf/ci-ocio:2020' when available. In the 
       #       meantime the 'Setup Python' step will install Python 3 for use
@@ -128,7 +162,7 @@ jobs:
           cmake ../. \
                 -DCMAKE_INSTALL_PREFIX=../_install \
                 -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
-                -DCMAKE_CXX_STANDARD=11 \
+                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-version }} \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
@@ -153,24 +187,44 @@ jobs:
   # -----------------------------------
 
   linux_latest:
-    name: 'Linux CentOS 7 VFX CY2020 
-      <latest ext packages,
-       cxx=${{ matrix.cxx-compiler }},
+    name: 'Linux CentOS 7 latest ext packages
+      <${{ matrix.compiler-desc }},
+       config=Release, 
+       shared=ON, 
+       sse=ON, 
+       cxx=${{ matrix.cxx-version }}, 
+       python=3.7, 
        docs=${{ matrix.build-docs }}>'
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule'
+    #if: github.event_name == 'schedule'
     strategy:
       matrix:
-        build: [1, 2]
+        build: [1, 2, 3, 4]
         include:
           - build: 1
             build-docs: 'ON'
+            cxx-standard: 11
             cxx-compiler: g++
             cc-compiler: gcc
+            compiler-desc: GCC 6.3.1
           - build: 2
             build-docs: 'OFF'
+            cxx-standard: 14
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC 6.3.1
+          - build: 3
+            build-docs: 'OFF'
+            cxx-standard: 11
             cxx-compiler: clang++
             cc-compiler: clang
+            compiler-desc: Clang 7
+          - build: 4
+            build-docs: 'OFF'
+            cxx-standard: 14
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang 7
     container:
       image: aswf/ci-base:2020
     env:
@@ -206,11 +260,11 @@ jobs:
           cmake ../. \
                 -DCMAKE_INSTALL_PREFIX=../_install \
                 -DCMAKE_BUILD_TYPE=Release \
-                -DCMAKE_CXX_STANDARD=11 \
+                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-version }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_INSTALL_EXT_PACKAGES=NONE \
-                -DOCIO_WARNING_AS_ERROR=ON \
+                -DOCIO_WARNING_AS_ERROR=OFF \
                 -DPYTHON_EXECUTABLE=$(which python)
         working-directory: _build
       - name: Build
@@ -229,9 +283,16 @@ jobs:
   # ------------------------------------------
 
   linux_sonarcloud:
-    name: 'Linux CentOS 7 VFX CY2019 <SonarCloud>'
+    name: 'Linux CentOS 7 SonarCloud 
+      <GCC 6.3.1,
+       config=Release, 
+       shared=ON, 
+       sse=ON, 
+       cxx=11, 
+       python=3.7, 
+       docs=ON>'
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule'
+    #if: github.event_name == 'schedule'
     container:
       # TODO: Switch to 'aswf/ci-ocio:2020' when available
       image: aswf/ci-ocio:2019
@@ -243,6 +304,8 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 50
+      - name: Setup Python
+        run: share/ci/scripts/linux/install_python.sh 3.7.7
       - name: Create build directories
         run: |
           mkdir _install
@@ -259,7 +322,8 @@ jobs:
                 -DOCIO_BUILD_DOCS=ON \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
-                -DOCIO_WARNING_AS_ERROR=ON
+                -DOCIO_WARNING_AS_ERROR=ON \
+                -DPYTHON_EXECUTABLE=$(which python)
         working-directory: _build
       - name: Build OCIO with build-wrapperr
         run: build-wrapper-linux-x86-64 --out-dir bw_output make clean all
@@ -280,35 +344,47 @@ jobs:
   # ---------------------------------------------------------------------------
 
   macos:
-    name: 'macOS 10.15 AppleClang 11.0 
-      <config=${{ matrix.build-type }}, 
+    name: 'macOS 10.15 
+      <AppleClang 11.0, 
+       config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
        sse=${{ matrix.use-sse }}, 
+       cxx=${{ matrix.cxx-version }}, 
        python=${{ matrix.python-version }}, 
        docs=${{ matrix.build-docs }}>'
     runs-on: macos-10.15
     strategy:
       matrix:
-        build: [1, 2, 3]
+        build: [1, 2, 3, 4]
         include:
           - build: 1
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
             use-sse: 'ON'
+            cxx-version: 11
             python-version: 3.7
           - build: 2
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
             use-sse: 'ON'
+            cxx-version: 11
             python-version: 3.7
           - build: 3
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'ON'
             use-sse: 'OFF'
+            cxx-version: 11
             python-version: 2.7
+          - build: 4
+            build-type: Release
+            build-shared: 'ON'
+            build-docs: 'ON'
+            use-sse: 'ON'
+            cxx-version: 14
+            python-version: 3.7
     steps:
       - name: Setup Python
         uses: actions/setup-python@v1
@@ -327,7 +403,7 @@ jobs:
           cmake ../. \
                 -DCMAKE_INSTALL_PREFIX=../_install \
                 -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
-                -DCMAKE_CXX_STANDARD=11 \
+                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-version }} \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
@@ -354,35 +430,47 @@ jobs:
   #       Debug build testing with Python bindings and docs enabled.
 
   windows:
-    name: 'Windows 2019 MSVC 16.4
-      <config=${{ matrix.build-type }}, 
+    name: 'Windows 2019 
+      <MSVC 16.4,
+       config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
        sse=${{ matrix.use-sse }}, 
+       cxx=${{ matrix.cxx-version }}, 
        python=${{ matrix.python-version }}, 
        docs=${{ matrix.build-docs }}>'
     runs-on: windows-2019
     strategy:
       matrix:
-        build: [1, 2, 3]
+        build: [1, 2, 3, 4]
         include:
           - build: 1
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
             use-sse: 'ON'
+            cxx-version: 11
             python-version: 3.7
           - build: 2
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
             use-sse: 'ON'
+            cxx-version: 11
             python-version: 3.7
           - build: 3
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'ON'
             use-sse: 'OFF'
+            cxx-version: 11
             python-version: 2.7
+          - build: 4
+            build-type: Release
+            build-shared: 'ON'
+            build-docs: 'ON'
+            use-sse: 'ON'
+            cxx-version: 14
+            python-version: 3.7
     steps:
       - name: Setup Python
         uses: actions/setup-python@v1
@@ -402,7 +490,7 @@ jobs:
           cmake ../. \
                 -DCMAKE_INSTALL_PREFIX=../_install \
                 -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
-                -DCMAKE_CXX_STANDARD=11 \
+                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-version }} \
                 -DCMAKE_GENERATOR_PLATFORM=x64 \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
