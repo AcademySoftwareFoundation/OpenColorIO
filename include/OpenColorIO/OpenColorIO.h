@@ -1002,6 +1002,9 @@ public:
     //!cpp:function::
     void setBitDepth(BitDepth bitDepth);
 
+    //!cpp:function:: A display color space will use the display-referred reference space.
+    ReferenceSpaceType getReferenceSpaceType() const;
+
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
     // Categories
@@ -1051,9 +1054,6 @@ public:
     bool isData() const;
     //!cpp:function::
     void setIsData(bool isData);
-
-    //!cpp:function:: A display color space will use the display-referred reference space.
-    ReferenceSpaceType getReferenceSpaceType() const;
 
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
@@ -1445,13 +1445,17 @@ public:
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
     bool hasDynamicProperty(DynamicPropertyType type) const;
 
-    //!cpp:function:: Create a :cpp:class:`Processor` that is an optimized version of this.
-    // Note that one typically does not need to explicitly create an optimized Processor instance
-    // since optimization happens implicitly during the creation of a CPUProcessor or GPUProcessor.
-    // This method is provided primarily for diagnostic purposes.
+    //!cpp:function:: Run the optimizer on a Processor to create a new :cpp:class:`Processor`.
+    // It is usually not necessary to call this since getting a CPUProcessor or GPUProcessor
+    // will also optimize.  However if you need both, calling this method first makes getting
+    // a CPU and GPU Processor faster since the optimization is effectively only done once.
+    ConstProcessorRcPtr getOptimizedProcessor(OptimizationFlags oFlags) const;
+
+    //!cpp:function:: Create a :cpp:class:`Processor` that is optimized for a specific in and out
+    // bit-depth (as CPUProcessor would do).  This method is provided primarily for diagnostic
+    // purposes.
     ConstProcessorRcPtr getOptimizedProcessor(BitDepth inBD, BitDepth outBD,
                                               OptimizationFlags oFlags) const;
-
 
     ///////////////////////////////////////////////////////////////////////////
     //!rst::

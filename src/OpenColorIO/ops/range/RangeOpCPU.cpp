@@ -174,22 +174,27 @@ void RangeMaxRenderer::apply(const void * inImg, void * outImg, long numPixels) 
 
 ConstOpCPURcPtr GetRangeRenderer(ConstRangeOpDataRcPtr & range)
 {
-    // Both min & max can not be empty at the same time.
-    if (range->minIsEmpty())
+    ConstRangeOpDataRcPtr rangeFwd = range;
+    if (range->getDirection() == TRANSFORM_DIR_INVERSE)
     {
-        return std::make_shared<RangeMaxRenderer>(range);
+        throw Exception("Op::finalize has to be called.");
     }
-    else if (range->maxIsEmpty())
+    // Both min & max can not be empty at the same time.
+    if (rangeFwd->minIsEmpty())
     {
-        return std::make_shared<RangeMinRenderer>(range);
+        return std::make_shared<RangeMaxRenderer>(rangeFwd);
+    }
+    else if (rangeFwd->maxIsEmpty())
+    {
+        return std::make_shared<RangeMinRenderer>(rangeFwd);
     }
 
     // Both min and max have values.
-    if (!range->scales())
+    if (!rangeFwd->scales())
     {
-        return std::make_shared<RangeMinMaxRenderer>(range);
+        return std::make_shared<RangeMinMaxRenderer>(rangeFwd);
     }
-    return std::make_shared<RangeScaleMinMaxRenderer>(range);
+    return std::make_shared<RangeScaleMinMaxRenderer>(rangeFwd);
 }
 
 } // namespace OCIO_NAMESPACE

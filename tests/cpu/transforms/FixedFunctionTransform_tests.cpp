@@ -31,7 +31,7 @@ OCIO_ADD_TEST(FixedFunctionTransform, basic)
 
     OCIO_CHECK_NO_THROW(func->setStyle(OCIO::FIXED_FUNCTION_REC2100_SURROUND));
     OCIO_CHECK_THROW_WHAT(func->validate(), OCIO::Exception,
-                          "The style 'REC2100_Surround' must have "
+                          "The style 'REC2100_Surround (Inverse)' must have "
                           "one parameter but 0 found.");
 
     OCIO_CHECK_EQUAL(func->getNumParams(), 0);

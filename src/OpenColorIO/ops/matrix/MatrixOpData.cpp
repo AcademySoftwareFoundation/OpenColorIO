@@ -432,6 +432,13 @@ MatrixOpData::MatrixOpData()
 {
 }
 
+MatrixOpData::MatrixOpData(TransformDirection direction)
+    : OpData()
+    , m_array(4, 4)
+{
+    setDirection(direction);
+}
+
 MatrixOpData::~MatrixOpData()
 {
 }
@@ -462,8 +469,6 @@ template void MatrixOpData::setRGBA(const double * values);
 
 void MatrixOpData::validate() const
 {
-    OpData::validate();
-
     try
     {
         m_array.validate();
@@ -475,6 +480,11 @@ void MatrixOpData::validate() const
         oss << e.what();
 
         throw Exception(oss.str().c_str());
+    }
+    if (m_direction == TRANSFORM_DIR_INVERSE)
+    {
+        // Make sure matrix can be inverted.
+        getAsForward();
     }
 }
 
@@ -645,6 +655,10 @@ MatrixOpDataRcPtr MatrixOpData::compose(ConstMatrixOpDataRcPtr & B) const
         // to 4x4 matrices, and a Matrix Transform only expects 4x4 matrices.
         throw Exception("MatrixOpData: array content issue.");
     }
+    if (getDirection() == TRANSFORM_DIR_INVERSE || B->getDirection() == TRANSFORM_DIR_INVERSE)
+    {
+        throw Exception("Op::finalize has to be called.");
+    }
 
     // TODO: May want to revisit how the metadata is set.
     FormatMetadataImpl newDesc = getFormatMetadata();
@@ -663,7 +677,7 @@ MatrixOpDataRcPtr MatrixOpData::compose(ConstMatrixOpDataRcPtr & B) const
     // So the composite operation in matrix form is vec2 = B x A x vec1.
     // Hence we compute B x A rather than A x B.
 
-    MatrixArrayPtr outPtr = B->m_array.inner(this->m_array);
+    MatrixArrayPtr outPtr = B->m_array.inner(m_array);
 
     out->getArray() = *outPtr.get();
 
@@ -673,12 +687,12 @@ MatrixOpDataRcPtr MatrixOpData::compose(ConstMatrixOpDataRcPtr & B) const
 
     B->m_array.inner(getOffsets(), offs);
 
-    const unsigned long dim = this->m_array.getLength();
+    const unsigned long dim = B->m_array.getLength();
 
     // Determine overall scaling of the offsets prior to any catastrophic
     // cancellation that may occur during the add.
     double val, max_val = 0.;
-    for (unsigned long i = 0; i<dim; ++i)
+    for (unsigned long i = 0; i < dim; ++i)
     {
         val = fabs(offs[i]);
         max_val = max_val > val ? max_val : val;
@@ -687,7 +701,7 @@ MatrixOpDataRcPtr MatrixOpData::compose(ConstMatrixOpDataRcPtr & B) const
     }
 
     // Add offsets from B.
-    for (unsigned long i = 0; i<dim; ++i)
+    for (unsigned long i = 0; i < dim; ++i)
     {
         offs[i] += B->getOffsets()[i];
     }
@@ -764,12 +778,26 @@ bool MatrixOpData::operator==(const OpData & other) const
 
     const MatrixOpData* mop = static_cast<const MatrixOpData*>(&other);
 
-    return (m_array == mop->m_array &&
-            m_offsets == mop->m_offsets);
+    return (m_direction == mop->m_direction &&
+            m_offsets   == mop->m_offsets   &&
+            m_array     == mop->m_array);
 }
 
-MatrixOpDataRcPtr MatrixOpData::inverse() const
+void MatrixOpData::setDirection(TransformDirection dir)
 {
+    m_direction = dir;
+    if (m_direction == TRANSFORM_DIR_UNKNOWN)
+    {
+        throw Exception("MatrixOpData: unspecified transform direction.");
+    }
+}
+
+MatrixOpDataRcPtr MatrixOpData::getAsForward() const
+{
+    if (getDirection() == TRANSFORM_DIR_FORWARD)
+    {
+        return clone();
+    }
     // Get the inverse matrix.
     MatrixArrayPtr invMatrixArray = m_array.inverse();
     // MatrixArray::inverse() will throw for singular matrices.
@@ -785,8 +813,8 @@ MatrixOpDataRcPtr MatrixOpData::inverse() const
     }
 
     MatrixOpDataRcPtr invOp = std::make_shared<MatrixOpData>();
-    invOp->setFileInputBitDepth(getFileOutputBitDepth());
-    invOp->setFileOutputBitDepth(getFileInputBitDepth());
+    invOp->m_fileInBitDepth = m_fileOutBitDepth;
+    invOp->m_fileOutBitDepth = m_fileInBitDepth;
 
     invOp->setRGBA(&(invMatrixArray->getValues()[0]));
     invOp->setOffsets(invOffsets);
@@ -795,23 +823,22 @@ MatrixOpDataRcPtr MatrixOpData::inverse() const
     // No need to call validate(), the invOp will have proper dimension,
     // bit-depths, matrix and offsets values.
 
-    // Note that any existing metadata could become stale at this point but
-    // trying to update it is also challenging since inverse() is sometimes
-    // called even during the creation of new ops.
+    // Note that the metadata may become stale at this point but trying to update it is
+    // challenging.
     return invOp;
 }
 
-void MatrixOpData::finalize()
+std::string MatrixOpData::getCacheID() const
 {
     AutoMutex lock(m_mutex);
-
-    validate();
 
     std::ostringstream cacheIDStream;
     if (!getID().empty())
     {
         cacheIDStream << getID() << " ";
     }
+
+    cacheIDStream << TransformDirectionToString(m_direction) << " ";
 
     md5_state_t state;
     md5_byte_t digest[16];
@@ -828,7 +855,7 @@ void MatrixOpData::finalize()
 
     cacheIDStream << GetPrintableHash(digest);
 
-    m_cacheID = cacheIDStream.str();
+    return cacheIDStream.str();
 }
 
 void MatrixOpData::scale(double inScale, double outScale)

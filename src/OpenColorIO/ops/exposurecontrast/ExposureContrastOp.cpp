@@ -39,7 +39,7 @@ public:
     bool canCombineWith(ConstOpRcPtr & op) const override;
     void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
 
-    void finalize(OptimizationFlags oFlags) override;
+    std::string getCacheID() const override;
 
     bool isDynamic() const override;
     bool hasDynamicProperty(DynamicPropertyType type) const override;
@@ -119,17 +119,15 @@ void ExposureContrastOp::combineWith(OpRcPtrVec & /*ops*/, ConstOpRcPtr & second
     }
 }
 
-void ExposureContrastOp::finalize(OptimizationFlags /*oFlags*/)
+std::string ExposureContrastOp::getCacheID() const
 {
-    ecData()->finalize();
-
     // Create the cacheID.
     std::ostringstream cacheIDStream;
     cacheIDStream << "<ExposureContrastOp ";
     cacheIDStream << ecData()->getCacheID();
     cacheIDStream << ">";
 
-    m_cacheID = cacheIDStream.str();
+    return cacheIDStream.str();
 }
 
 ConstOpCPURcPtr ExposureContrastOp::getCPUOp() const

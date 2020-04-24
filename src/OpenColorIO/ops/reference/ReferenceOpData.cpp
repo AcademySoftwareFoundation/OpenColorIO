@@ -59,28 +59,10 @@ bool ReferenceOpData::operator==(const OpData& other) const
     return true;
 }
 
-void ReferenceOpData::finalize()
+std::string ReferenceOpData::getCacheID() const
 {
-    AutoMutex lock(m_mutex);
-
-    std::ostringstream cacheIDStream;
-    if (!getID().empty())
-    {
-        cacheIDStream << getID() << " ";
-    }
-
-    cacheIDStream << m_referenceStyle << " ";
-    cacheIDStream << TransformDirectionToString(m_direction) << " ";
-    if (m_referenceStyle == REF_PATH)
-    {
-        cacheIDStream << m_path << " ";
-    }
-    else
-    {
-        cacheIDStream << m_alias << " ";
-    }
-
-    m_cacheID = cacheIDStream.str();
+    throw Exception("ReferenceOpData::getCacheID should never be called. ReferenceOpData does "
+                    "not have a corresponding Op");
 }
 
 } // namespace OCIO_NAMESPACE

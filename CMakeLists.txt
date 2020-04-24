@@ -62,6 +62,30 @@ option(OCIO_BUILD_JAVA "Specify whether to build java bindings" OFF)
 option(OCIO_WARNING_AS_ERROR "Set build error level for CI testing" OFF)
 
 ###############################################################################
+# GPU configuration
+
+if(OCIO_BUILD_GPU_TESTS OR OCIO_BUILD_APPS)
+    set(OCIO_GL_ENABLED ON)
+    find_package(OpenGL QUIET)
+    if(NOT OpenGL_FOUND)
+        message(WARNING "OpenGL not found.")
+        set(OCIO_GL_ENABLED OFF)
+    endif()
+    if(NOT APPLE)
+        find_package(GLEW QUIET)
+        if(NOT GLEW_FOUND)
+            message(WARNING "GLEW not found.")
+            set(OCIO_GL_ENABLED OFF)
+        endif()
+    endif()
+    find_package(GLUT QUIET)
+    if(NOT GLUT_FOUND)
+        message(WARNING "GLUT not found.")
+        set(OCIO_GL_ENABLED OFF)
+    endif()
+endif()
+
+###############################################################################
 # Optimization / internal linking preferences
 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)

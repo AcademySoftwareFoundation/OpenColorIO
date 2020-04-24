@@ -65,7 +65,7 @@ bool ExponentOpData::isIdentity() const
     return IsVecEqualToOne(m_exp4, 4);
 }
 
-void ExponentOpData::finalize()
+std::string ExponentOpData::getCacheID() const
 {
     AutoMutex lock(m_mutex);
 
@@ -82,7 +82,11 @@ void ExponentOpData::finalize()
         cacheIDStream << m_exp4[i] << " ";
     }
 
-    m_cacheID = cacheIDStream.str();
+    return cacheIDStream.str();
+}
+
+void ExponentOpData::validate() const
+{
 }
 
 namespace
@@ -142,7 +146,7 @@ public:
     bool canCombineWith(ConstOpRcPtr & op) const override;
     void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
 
-    void finalize(OptimizationFlags oFlags) override;
+    std::string getCacheID() const override;
 
     ConstOpCPURcPtr getCPUOp() const override;
 
@@ -232,16 +236,14 @@ void ExponentOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
     }
 }
 
-void ExponentOp::finalize(OptimizationFlags /*oFlags*/)
+std::string ExponentOp::getCacheID() const
 {
-    expData()->finalize();
-
     // Create the cacheID
     std::ostringstream cacheIDStream;
     cacheIDStream << "<ExponentOp ";
     cacheIDStream << expData()->getCacheID();
     cacheIDStream << ">";
-    m_cacheID = cacheIDStream.str();
+    return cacheIDStream.str();
 }
 
 ConstOpCPURcPtr ExponentOp::getCPUOp() const

@@ -21,12 +21,34 @@ namespace StringUtils
 
 using StringVec = std::vector<std::string>;
 
+// Return the lower case character without taking into account locale like
+// std::tolower, to avoid the "Turkish I" problem in file parsing.
+inline unsigned char Lower(unsigned char c)
+{
+    if(c >= 'A' && c <= 'Z') {
+        return c + ('a' - 'A');
+    }
+    else {
+        return c;
+    }
+}
+
+// Return the upper case character, without taking into account locale.
+inline unsigned char Upper(unsigned char c)
+{
+    if(c >= 'a' && c <= 'z') {
+        return c - ('a' - 'A');
+    }
+    else {
+        return c;
+    }
+}
 
 // Return the lower case string.
 inline std::string Lower(std::string str)
 {
     std::transform(str.begin(), str.end(), str.begin(),
-                   [](unsigned char c) { return std::tolower(c); });
+                   [](unsigned char c) { return Lower(c); });
     return str;
 }
 
@@ -34,7 +56,7 @@ inline std::string Lower(std::string str)
 inline std::string Upper(std::string str)
 {
     std::transform(str.begin(), str.end(), str.begin(),
-                   [](unsigned char c) { return std::toupper(c); });
+                   [](unsigned char c) { return Upper(c); });
     return str;
 }
 

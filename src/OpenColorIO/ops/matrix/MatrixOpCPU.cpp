@@ -399,6 +399,10 @@ void MatrixRenderer::apply(const void * inImg, void * outImg, long numPixels) co
 
 ConstOpCPURcPtr GetMatrixRenderer(ConstMatrixOpDataRcPtr & mat)
 {
+    if (mat->getDirection() == TRANSFORM_DIR_INVERSE)
+    {
+        throw Exception("Op::finalize has to be called.");
+    }
     if (mat->isDiagonal())
     {
         if (mat->hasOffsets())

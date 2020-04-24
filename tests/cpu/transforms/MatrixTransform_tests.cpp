@@ -44,9 +44,6 @@ OCIO_ADD_TEST(MatrixTransform, basic)
     OCIO_CHECK_EQUAL(offset4[2], 0.0);
     OCIO_CHECK_EQUAL(offset4[3], 0.0);
 
-    matrix->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-    OCIO_CHECK_EQUAL(matrix->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
-
     m44[0]  = 1.0;
     m44[1]  = 1.01;
     m44[2]  = 1.02;
@@ -113,6 +110,13 @@ OCIO_ADD_TEST(MatrixTransform, basic)
     OCIO_CHECK_EQUAL(offset4r[1], 1.1);
     OCIO_CHECK_EQUAL(offset4r[2], 1.2);
     OCIO_CHECK_EQUAL(offset4r[3], 1.3);
+
+    OCIO_CHECK_EQUAL(matrix->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    matrix->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_EQUAL(matrix->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO_CHECK_EQUAL(matrix->getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OCIO_CHECK_EQUAL(matrix->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
 }
 
 OCIO_ADD_TEST(MatrixTransform, equals)
