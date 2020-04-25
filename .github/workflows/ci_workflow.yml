@@ -1,0 +1,503 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+
+name: ci
+
+on:
+  # Note: Jobs are skipped when ONLY Markdown (*.md) files are changed
+  # Note: Versioned branches and tags are ignored for OCIO <= 1.x.x
+  push:
+    branches-ignore:
+      - RB-0.*
+      - RB-1.*
+      - gh-pages
+    tags-ignore:
+      - v0.*
+      - v1.*
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    branches-ignore:
+      - RB-0.*
+      - RB-1.*
+      - gh-pages
+    tags-ignore:
+      - v0.*
+      - v1.*
+    paths-ignore:
+      - '**.md'
+
+  schedule:
+    # Full nightly build
+    - cron: "0 0 * * *"
+
+jobs:
+  # Linux jobs run in Docker containers, so the latest OS version is OK. macOS 
+  # and Windows jobs need to be locked to specific virtual environment 
+  # versions to mitigate issues from OS updates, and will require maintenance 
+  # as OS versions are retired.
+
+  # ---------------------------------------------------------------------------
+  # Linux
+  # ---------------------------------------------------------------------------
+  # Note: 'runs-on' defines the GH-hosted VM. 'container' is the Docker 
+  #       container where the build occurs.
+  # Note: 'container' images are hosted on DockerHub and sourced from the 
+  #       aswf-docker GH repo. Compiler versions are defined by those images.
+
+  linux:
+    name: 'Linux CentOS 7 VFX CY2019 
+      <${{ matrix.compiler-desc }}, 
+       config=${{ matrix.build-type }}, 
+       shared=${{ matrix.build-shared }}, 
+       sse=${{ matrix.use-sse }}, 
+       cxx=${{ matrix.cxx-standard }}, 
+       python=${{ matrix.python-version }}, 
+       docs=${{ matrix.build-docs }}>'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build: [1, 2, 3, 4, 5, 6, 7, 8]
+        include:
+          - build: 1
+            build-type: Release
+            build-shared: 'ON'
+            build-docs: 'ON'
+            use-sse: 'ON'
+            python-version: 3.7
+            cxx-standard: 11
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC 6.3.1
+          - build: 2
+            build-type: Debug
+            build-shared: 'ON'
+            build-docs: 'OFF'
+            use-sse: 'ON'
+            python-version: 3.7
+            cxx-standard: 11
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC 6.3.1
+          - build: 3
+            build-type: Release
+            build-shared: 'OFF'
+            build-docs: 'ON'
+            use-sse: 'OFF'
+            python-version: 2.7
+            cxx-standard: 11
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC 6.3.1
+          - build: 4
+            build-type: Release
+            build-shared: 'ON'
+            build-docs: 'OFF'
+            use-sse: 'ON'
+            python-version: 3.7
+            cxx-standard: 14
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC 6.3.1
+          - build: 5
+            build-type: Release
+            build-shared: 'ON'
+            build-docs: 'OFF'
+            use-sse: 'ON'
+            python-version: 3.7
+            cxx-standard: 11
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang 7
+          - build: 6
+            build-type: Debug
+            build-shared: 'ON'
+            build-docs: 'OFF'
+            use-sse: 'ON'
+            python-version: 3.7
+            cxx-standard: 11
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang 7
+          - build: 7
+            build-type: Release
+            build-shared: 'OFF'
+            build-docs: 'OFF'
+            use-sse: 'OFF'
+            python-version: 2.7
+            cxx-standard: 11
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang 7
+          - build: 8
+            build-type: Release
+            build-shared: 'ON'
+            build-docs: 'OFF'
+            use-sse: 'ON'
+            python-version: 3.7
+            cxx-standard: 14
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang 7
+    container:
+      # TODO: Add to matrix with 'aswf/ci-ocio:2020' when available. In the 
+      #       meantime the 'Setup Python' step will install Python 3 for use
+      #       in the CY2019 container.
+      image: aswf/ci-ocio:2019
+    env:
+      CXX: ${{ matrix.cxx-compiler }}
+      CC: ${{ matrix.cc-compiler }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Python
+        run: share/ci/scripts/linux/install_python.sh 3.7.7
+        if: matrix.python-version == '3.7'
+      - name: Create build directories
+        run: |
+          mkdir _install
+          mkdir _build
+      - name: Configure
+        run: |
+          cmake ../. \
+                -DCMAKE_INSTALL_PREFIX=../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
+                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
+                -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
+                -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
+                -DOCIO_BUILD_GPU_TESTS=OFF \
+                -DOCIO_USE_SSE=${{ matrix.use-sse }} \
+                -DOCIO_INSTALL_EXT_PACKAGES=ALL \
+                -DOCIO_WARNING_AS_ERROR=ON \
+                -DPYTHON_EXECUTABLE=$(which python)
+        working-directory: _build
+      - name: Build
+        run: |
+          cmake --build . \
+                --target install \
+                --config ${{ matrix.build-type }} \
+                -- -j2
+        working-directory: _build
+      - name: Test
+        run: ctest -V
+        working-directory: _build
+
+  # -----------------------------------
+  # Latest ext packages (schedule only)
+  # -----------------------------------
+
+  linux_latest:
+    name: 'Linux CentOS 7 latest ext packages
+      <${{ matrix.compiler-desc }},
+       cxx=${{ matrix.cxx-standard }}, 
+       docs=${{ matrix.build-docs }}>'
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    strategy:
+      matrix:
+        build: [1, 2, 3, 4]
+        include:
+          - build: 1
+            build-docs: 'ON'
+            cxx-standard: 11
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC 6.3.1
+          - build: 2
+            build-docs: 'OFF'
+            cxx-standard: 14
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC 6.3.1
+          - build: 3
+            build-docs: 'OFF'
+            cxx-standard: 11
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang 7
+          - build: 4
+            build-docs: 'OFF'
+            cxx-standard: 14
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang 7
+    container:
+      image: aswf/ci-base:2020
+    env:
+      CXX: ${{ matrix.cxx-compiler }}
+      CC: ${{ matrix.cc-compiler }}
+    steps:
+      # The glew cmake modules installed in 'aswf/ci-base:2020' cause a link 
+      # failure while building OpenGLBuilder. Deleting the cmake directory 
+      # results in find_package(GLEW) finding the glew include dir instead, 
+      # resolving the failure.
+      # TODO: Investigate an aswf-docker fix and phase out this workaround
+      - name: Setup container
+        run: |
+          sudo rm -rf /usr/local/lib64/cmake/glew
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install latest ext package versions
+        run: |
+          share/ci/scripts/linux/install_expat.sh latest
+          share/ci/scripts/linux/install_lcms2.sh latest
+          share/ci/scripts/linux/install_yaml-cpp.sh latest
+          share/ci/scripts/linux/install_pystring.sh latest
+          share/ci/scripts/linux/install_pybind11.sh latest
+          share/ci/scripts/linux/install_openexr.sh latest
+          share/ci/scripts/linux/install_oiio.sh latest
+          share/ci/scripts/linux/install_sphinx.sh latest
+      - name: Create build directories
+        run: |
+          mkdir _install
+          mkdir _build
+      - name: Configure
+        run: |
+          cmake ../. \
+                -DCMAKE_INSTALL_PREFIX=../_install \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
+                -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
+                -DOCIO_BUILD_GPU_TESTS=OFF \
+                -DOCIO_INSTALL_EXT_PACKAGES=NONE \
+                -DOCIO_WARNING_AS_ERROR=OFF \
+                -DPYTHON_EXECUTABLE=$(which python)
+        working-directory: _build
+      - name: Build
+        run: |
+          cmake --build . \
+                --target install \
+                --config Release \
+                -- -j2
+        working-directory: _build
+      - name: Test
+        run: ctest -V
+        working-directory: _build
+
+  # ------------------------------------------
+  # SonarCloud static analysis (schedule only)
+  # ------------------------------------------
+
+  linux_sonarcloud:
+    name: 'Linux CentOS 7 SonarCloud <GCC 6.3.1>'
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    container:
+      # TODO: Switch to 'aswf/ci-ocio:2020' when available
+      image: aswf/ci-ocio:2019
+    env:
+      CXX: g++
+      CC: gcc
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 50
+      - name: Setup Python
+        run: share/ci/scripts/linux/install_python.sh 3.7.7
+      - name: Create build directories
+        run: |
+          mkdir _install
+          mkdir _build
+      - name: Configure
+        run: |
+          cmake ../. \
+                -DCMAKE_INSTALL_PREFIX=../_install \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_CXX_STANDARD=11 \
+                -DCMAKE_CXX_FLAGS="-g -O0 -fprofile-arcs -ftest-coverage" \
+                -DCMAKE_CXX_OUTPUT_EXTENSION_REPLACE=ON \
+                -DCMAKE_EXE_LINKER_FLAGS="-lgcov" \
+                -DOCIO_BUILD_DOCS=ON \
+                -DOCIO_BUILD_GPU_TESTS=OFF \
+                -DOCIO_INSTALL_EXT_PACKAGES=ALL \
+                -DOCIO_WARNING_AS_ERROR=ON \
+                -DPYTHON_EXECUTABLE=$(which python)
+        working-directory: _build
+      - name: Build OCIO with build-wrapperr
+        run: build-wrapper-linux-x86-64 --out-dir bw_output make clean all
+        working-directory: _build
+      - name: Test
+        run: ctest -V
+        working-directory: _build
+      - name: Generate code coverage report
+        run: share/ci/scripts/linux/run_gcov.sh
+      - name: Run sonar-scanner
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: sonar-scanner -X -Dsonar.login=$SONAR_TOKEN
+    
+  # ---------------------------------------------------------------------------
+  # macOS
+  # ---------------------------------------------------------------------------
+
+  macos:
+    name: 'macOS 10.15 
+      <AppleClang 11.0, 
+       config=${{ matrix.build-type }}, 
+       shared=${{ matrix.build-shared }}, 
+       sse=${{ matrix.use-sse }}, 
+       cxx=${{ matrix.cxx-standard }}, 
+       python=${{ matrix.python-version }}, 
+       docs=${{ matrix.build-docs }}>'
+    runs-on: macos-10.15
+    strategy:
+      matrix:
+        build: [1, 2, 3, 4]
+        include:
+          - build: 1
+            build-type: Release
+            build-shared: 'ON'
+            build-docs: 'ON'
+            use-sse: 'ON'
+            cxx-standard: 11
+            python-version: 3.7
+          - build: 2
+            build-type: Debug
+            build-shared: 'ON'
+            build-docs: 'OFF'
+            use-sse: 'ON'
+            cxx-standard: 11
+            python-version: 3.7
+          - build: 3
+            build-type: Release
+            build-shared: 'OFF'
+            build-docs: 'ON'
+            use-sse: 'OFF'
+            cxx-standard: 11
+            python-version: 2.7
+          - build: 4
+            build-type: Release
+            build-shared: 'ON'
+            build-docs: 'OFF'
+            use-sse: 'ON'
+            cxx-standard: 14
+            python-version: 3.7
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: share/ci/scripts/macos/install.sh
+      - name: Create build directories
+        run: |
+          mkdir _install
+          mkdir _build
+      - name: Configure
+        run: |
+          cmake ../. \
+                -DCMAKE_INSTALL_PREFIX=../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
+                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
+                -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
+                -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
+                -DOCIO_BUILD_GPU_TESTS=OFF \
+                -DOCIO_USE_SSE=${{ matrix.use-sse }} \
+                -DOCIO_INSTALL_EXT_PACKAGES=ALL \
+                -DOCIO_WARNING_AS_ERROR=ON \
+                -DPYTHON_EXECUTABLE=$(which python)
+        working-directory: _build
+      - name: Build
+        run: |
+          cmake --build . \
+                --target install \
+                --config ${{ matrix.build-type }} \
+                -- -j2
+        working-directory: _build
+      - name: Test
+        run: ctest -V
+        working-directory: _build
+
+  # ---------------------------------------------------------------------------
+  # Windows
+  # ---------------------------------------------------------------------------
+  # TODO: Install pythonXX_d.lib (or work around it being needed) to support 
+  #       Debug build testing with Python bindings and docs enabled.
+
+  windows:
+    name: 'Windows 2019 
+      <MSVC 16.4,
+       config=${{ matrix.build-type }}, 
+       shared=${{ matrix.build-shared }}, 
+       sse=${{ matrix.use-sse }}, 
+       cxx=${{ matrix.cxx-standard }}, 
+       python=${{ matrix.python-version }}, 
+       docs=${{ matrix.build-docs }}>'
+    runs-on: windows-2019
+    strategy:
+      matrix:
+        build: [1, 2, 3, 4]
+        include:
+          - build: 1
+            build-type: Release
+            build-shared: 'ON'
+            build-docs: 'ON'
+            use-sse: 'ON'
+            cxx-standard: 11
+            python-version: 3.7
+          - build: 2
+            build-type: Debug
+            build-shared: 'ON'
+            build-docs: 'OFF'
+            use-sse: 'ON'
+            cxx-standard: 11
+            python-version: 3.7
+          - build: 3
+            build-type: Release
+            build-shared: 'OFF'
+            build-docs: 'ON'
+            use-sse: 'OFF'
+            cxx-standard: 11
+            python-version: 2.7
+          - build: 4
+            build-type: Release
+            build-shared: 'ON'
+            build-docs: 'OFF'
+            use-sse: 'ON'
+            cxx-standard: 14
+            python-version: 3.7
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: share/ci/scripts/windows/install_cmake.ps1 3.11.0
+      - name: Create build directories
+        run: |
+          mkdir _install
+          mkdir _build
+        shell: bash
+      - name: Configure
+        run: |
+          cmake ../. \
+                -DCMAKE_INSTALL_PREFIX=../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
+                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
+                -DCMAKE_GENERATOR_PLATFORM=x64 \
+                -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
+                -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
+                -DOCIO_BUILD_GPU_TESTS=OFF \
+                -DOCIO_USE_SSE=${{ matrix.use-sse }} \
+                -DOCIO_INSTALL_EXT_PACKAGES=ALL \
+                -DOCIO_WARNING_AS_ERROR=ON \
+                -DPYTHON_EXECUTABLE=$(which python)
+        shell: bash
+        working-directory: _build
+      - name: Build
+        run: |
+          cmake --build . \
+                --target install \
+                --config ${{ matrix.build-type }}
+        shell: bash
+        working-directory: _build
+      - name: Test
+        run: ctest -V
+        shell: bash
+        working-directory: _build

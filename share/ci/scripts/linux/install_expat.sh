@@ -25,9 +25,11 @@ mkdir build
 cd build
 
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
-      -DBUILD_examples=OFF \
-      -DBUILD_tests=OFF \
-      -DBUILD_shared=ON \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DEXPAT_BUILD_TOOLS=OFF \
+      -DEXPAT_BUILD_EXAMPLES=OFF \
+      -DEXPAT_BUILD_TESTS=OFF \
+      -DEXPAT_SHARED_LIBS=ON \
       -DCMAKE_C_FLAGS="-fPIC" \
       -DCMAKE_CXX_FLAGS="-fPIC" \
       ../expat/.
