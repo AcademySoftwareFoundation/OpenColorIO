@@ -81,7 +81,7 @@ communities
 matters relating to the code base that affect multiple projects
 * Coordinating any marketing, events, or communications regarding the project
 
-Within the TSC are two elected leadership roles to be held by its members and
+Within the TSC are three elected leadership roles to be held by its members and
 voted on annually. Any TSC member can express interest in serving in a role, or
 nominate another member to serve. There are no term limits, and one person may
 hold multiple roles simultaneously. Should a TSC member resign from a leadership
@@ -96,6 +96,10 @@ providing oversight to project administration.
 technical decisions, and is responsible for avoiding "design by committee"
 pitfalls.
 
+* ACES TAC Rep: This position maintains oversight of the critical relationship
+between OCIO and ACES, representing OCIO on the ACES TAC and facilitating 
+coordination of shared initiatives between both project's leadership.
+
 At the time of election, the TSC will also agree upon which of these two leaders
 will serve as the OpenColorIO ASWF (Academy Software Foundation) TAC (Technical
 Advisory Council) representative for the term. This member represents the
@@ -105,15 +109,16 @@ project at all ASWF TAC meetings.
 
 * Chair: Michael Dolan
 * Chief Architect: Doug Walker
+* ACES TAC Rep: Sean Cooper
 
 ### TSC Members
 
-* Mark Boorer - ILM
+* Mark Boorer - Industrial Light & Magic
+* Mei Chu - Sony Pictures Imageworks
 * Sean Cooper - DNEG
-* Michael Dolan - SPI
-* Larry Gritz - SPI
+* Michael Dolan - Epic Games
 * Patrick Hodoul - Autodesk
-* Carl Rand - Foundry
+* Carl Rand - Weta Digital
 * Doug Walker - Autodesk
 * Kevin Wheatley - Framestore
 

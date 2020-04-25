@@ -190,13 +190,15 @@ const char * Processor::getCacheID() const
     return getImpl()->getCacheID();
 }
 
-ConstProcessorRcPtr Processor::getOptimizedProcessor(BitDepth inBD, BitDepth outBD,
+ConstProcessorRcPtr Processor::getOptimizedProcessor(OptimizationFlags oFlags) const
+{
+    return getImpl()->getOptimizedProcessor(oFlags);
+}
+
+ConstProcessorRcPtr Processor::getOptimizedProcessor(BitDepth inBD, BitDepth outBD, 
                                                      OptimizationFlags oFlags) const
 {
-    auto proc = Create();
-    *proc->getImpl() = *m_impl;
-    proc->getImpl()->optimize(inBD, outBD, oFlags);
-    return proc;
+    return getImpl()->getOptimizedProcessor(inBD, outBD, oFlags);
 }
 
 ConstGPUProcessorRcPtr Processor::getDefaultGPUProcessor() const
@@ -334,51 +336,78 @@ const char * Processor::Impl::getCacheID() const
 {
     AutoMutex lock(m_resultsCacheMutex);
 
-    if(!m_cpuCacheID.empty()) return m_cpuCacheID.c_str();
+    if(!m_cacheID.empty()) return m_cacheID.c_str();
 
     if(m_ops.empty())
     {
-        m_cpuCacheID = "<NOOP>";
+        m_cacheID = "<NOOP>";
     }
     else
     {
-        std::ostringstream cacheid;
+        std::ostringstream cacheidStream;
         for(const auto & op : m_ops)
         {
-            cacheid << op->getCacheID() << " ";
+            cacheidStream << op->getCacheID() << " ";
         }
-        std::string fullstr = cacheid.str();
+        std::string fullstr = cacheidStream.str();
 
-        m_cpuCacheID = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
+        m_cacheID = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
     }
 
-    return m_cpuCacheID.c_str();
+    return m_cacheID.c_str();
 }
 
-void Processor::Impl::optimize(BitDepth inBD, BitDepth outBD, OptimizationFlags oFlags)
+///////////////////////////////////////////////////////////////////////////
+
+namespace
 {
-    auto numOps = m_ops.size();
-    if (numOps)
+OptimizationFlags EnvironmentOverride(OptimizationFlags oFlags)
+{
+    std::string envFlag = GetEnvVariable(OCIO_OPTIMIZATION_FLAGS_ENVVAR);
+    if (!envFlag.empty())
     {
-        OptimizeOpVec(m_ops, inBD, outBD, oFlags);
+        // Use 0 to allow base to be determined by the format.
+        oFlags = static_cast<OptimizationFlags>(std::stoul(envFlag, nullptr, 0));
     }
+    return oFlags;
+}
+}
+
+ConstProcessorRcPtr Processor::Impl::getOptimizedProcessor(OptimizationFlags oFlags) const
+{
+    oFlags = EnvironmentOverride(oFlags);
+    auto proc = Create();
+    *proc->getImpl() = *this;
+    proc->getImpl()->m_ops.finalize(oFlags);
+    proc->getImpl()->m_ops.unifyDynamicProperties();
+
+    return proc;
+}
+
+ConstProcessorRcPtr Processor::Impl::getOptimizedProcessor(BitDepth inBD, BitDepth outBD,
+    OptimizationFlags oFlags) const
+{
+    oFlags = EnvironmentOverride(oFlags);
+    auto proc = Create();
+    *proc->getImpl() = *this;
+    proc->getImpl()->m_ops.finalize(oFlags);
+    proc->getImpl()->m_ops.optimizeForBitdepth(inBD, outBD, oFlags);
+    proc->getImpl()->m_ops.unifyDynamicProperties();
+    return proc;
 }
 
 ///////////////////////////////////////////////////////////////////////////
 
 ConstGPUProcessorRcPtr Processor::Impl::getDefaultGPUProcessor() const
 {
-    GPUProcessorRcPtr gpu = GPUProcessorRcPtr(new GPUProcessor(), &GPUProcessor::deleter);
-
-    gpu->getImpl()->finalize(m_ops, OPTIMIZATION_DEFAULT);
-
-    return gpu;
+    return getOptimizedGPUProcessor(OPTIMIZATION_DEFAULT);
 }
 
 ConstGPUProcessorRcPtr Processor::Impl::getOptimizedGPUProcessor(OptimizationFlags oFlags) const
 {
     GPUProcessorRcPtr gpu = GPUProcessorRcPtr(new GPUProcessor(), &GPUProcessor::deleter);
 
+    oFlags = EnvironmentOverride(oFlags);
     gpu->getImpl()->finalize(m_ops, oFlags);
 
     return gpu;
@@ -388,20 +417,12 @@ ConstGPUProcessorRcPtr Processor::Impl::getOptimizedGPUProcessor(OptimizationFla
 
 ConstCPUProcessorRcPtr Processor::Impl::getDefaultCPUProcessor() const
 {
-    CPUProcessorRcPtr cpu = CPUProcessorRcPtr(new CPUProcessor(), &CPUProcessor::deleter);
-
-    cpu->getImpl()->finalize(m_ops, BIT_DEPTH_F32, BIT_DEPTH_F32, OPTIMIZATION_DEFAULT);
-
-    return cpu;
+    return getOptimizedCPUProcessor(OPTIMIZATION_DEFAULT);
 }
 
 ConstCPUProcessorRcPtr Processor::Impl::getOptimizedCPUProcessor(OptimizationFlags oFlags) const
 {
-    CPUProcessorRcPtr cpu = CPUProcessorRcPtr(new CPUProcessor(), &CPUProcessor::deleter);
-
-    cpu->getImpl()->finalize(m_ops, BIT_DEPTH_F32, BIT_DEPTH_F32, oFlags);
-
-    return cpu;
+    return getOptimizedCPUProcessor(BIT_DEPTH_F32, BIT_DEPTH_F32, oFlags);
 }
 
 ConstCPUProcessorRcPtr Processor::Impl::getOptimizedCPUProcessor(BitDepth inBitDepth,
@@ -410,6 +431,7 @@ ConstCPUProcessorRcPtr Processor::Impl::getOptimizedCPUProcessor(BitDepth inBitD
 {
     CPUProcessorRcPtr cpu = CPUProcessorRcPtr(new CPUProcessor(), &CPUProcessor::deleter);
 
+    oFlags = EnvironmentOverride(oFlags);
     cpu->getImpl()->finalize(m_ops, inBitDepth, outBitDepth, oFlags);
 
     return cpu;
@@ -460,7 +482,7 @@ void Processor::Impl::concatenate(ConstProcessorRcPtr & p1, ConstProcessorRcPtr 
 
     computeMetadata();
 
-    m_ops.finalize(OPTIMIZATION_NONE);
+    // Ops have been validated by p1 & p2.
     m_ops.unifyDynamicProperties();
 }
 

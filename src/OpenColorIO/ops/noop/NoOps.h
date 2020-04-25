@@ -46,7 +46,11 @@ public:
     bool isNoOp() const override { return true; }
     bool isIdentity() const override { return true; }
     bool hasChannelCrosstalk() const override { return false; }
-    void finalize() override { m_cacheID = ""; }
+    std::string getCacheID() const override
+    {
+        return "";
+    }
+    void validate() const override {}
 };
 
 // Need to declare this here in order to allow FileTransform to be able to

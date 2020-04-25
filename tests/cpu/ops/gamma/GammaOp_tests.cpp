@@ -150,18 +150,23 @@ OCIO_ADD_TEST(GammaOp, computed_identifier)
     OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(ops, gamma2, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_CHECK_EQUAL(ops.size(), 2);
 
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.validate());
 
-    OCIO_CHECK_ASSERT(ops[0]->getCacheID() != ops[1]->getCacheID());
+    std::string id0, id1;
+    OCIO_CHECK_NO_THROW(id0 = ops[0]->getCacheID());
+    OCIO_CHECK_NO_THROW(id1 = ops[1]->getCacheID());
+    OCIO_CHECK_ASSERT(id0 != id1);
 
     OCIO_CHECK_NO_THROW(OCIO::CreateGammaOp(ops, gamma2, OCIO::TRANSFORM_DIR_FORWARD));
 
     OCIO_CHECK_EQUAL(ops.size(), 3);
 
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.validate());
 
-    OCIO_CHECK_ASSERT(ops[0]->getCacheID() != ops[2]->getCacheID());
-    OCIO_CHECK_ASSERT(ops[1]->getCacheID() == ops[2]->getCacheID());
+    std::string id2;
+    OCIO_CHECK_NO_THROW(id2 = ops[2]->getCacheID());
+    OCIO_CHECK_ASSERT(id0 != id2);
+    OCIO_CHECK_ASSERT(id1 == id2);
 
     auto gamma3 = std::make_shared<OCIO::GammaOpData>(OCIO::GammaOpData::BASIC_REV,
                                                       redParams,
@@ -172,11 +177,13 @@ OCIO_ADD_TEST(GammaOp, computed_identifier)
 
     OCIO_CHECK_EQUAL(ops.size(), 4);
 
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.validate());
 
-    OCIO_CHECK_ASSERT(ops[0]->getCacheID() != ops[3]->getCacheID());
-    OCIO_CHECK_ASSERT(ops[1]->getCacheID() != ops[3]->getCacheID());
-    OCIO_CHECK_ASSERT(ops[2]->getCacheID() != ops[3]->getCacheID());
+    std::string id3;
+    OCIO_CHECK_NO_THROW(id3 = ops[3]->getCacheID());
+    OCIO_CHECK_ASSERT(id0 != id3);
+    OCIO_CHECK_ASSERT(id1 != id3);
+    OCIO_CHECK_ASSERT(id2 != id3);
 }
 
 OCIO_ADD_TEST(GammaOp, create_transform)

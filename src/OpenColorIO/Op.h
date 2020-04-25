@@ -131,7 +131,7 @@ public:
     const std::string & getName() const;
     void setName(const std::string & name);
 
-    virtual void validate() const;
+    virtual void validate() const = 0;
 
     virtual Type getType() const = 0;
 
@@ -154,11 +154,8 @@ public:
     virtual bool operator==(const OpData & other) const;
     bool operator!=(const OpData & other) const = delete;
 
-    virtual void finalize() = 0;
-
-    // OpData::finalize() updates the cache identitifer,
-    // and Op::finalize() consumes it to compute the Op cache identifier.
-    virtual std::string getCacheID() const { return m_cacheID; }
+    // This should yield a string of not unreasonable length.
+    virtual std::string getCacheID() const = 0;
 
     // FormatMetadata.
     FormatMetadataImpl & getFormatMetadata() { return m_metadata;  }
@@ -166,7 +163,6 @@ public:
 
 protected:
     mutable Mutex m_mutex;
-    mutable std::string m_cacheID;
 
 private:
     FormatMetadataImpl m_metadata;
@@ -179,17 +175,6 @@ typedef OCIO_SHARED_PTR<Op> OpRcPtr;
 typedef OCIO_SHARED_PTR<const Op> ConstOpRcPtr;
 class OpRcPtrVec;
 
-std::string SerializeOpVec(const OpRcPtrVec & ops, int indent=0);
-
-void OptimizeOpVec(OpRcPtrVec & result,
-                    const BitDepth & inBitDepth,
-                    const BitDepth & outBitDepth,
-                    OptimizationFlags oFlags);
-
-void CreateOpVecFromOpData(OpRcPtrVec & ops,
-                            const ConstOpDataRcPtr & opData,
-                            TransformDirection dir);
-
 class Op
 {
 public:
@@ -201,16 +186,12 @@ public:
     // The type of stuff you'd want to see in debugging.
     virtual std::string getInfo() const = 0;
 
-    // This should yield a string of not unreasonable length.
-    // It can only be called after finalize()
-    virtual std::string getCacheID() const { return m_cacheID; }
-
     virtual bool isNoOpType() const { return m_data->getType() == OpData::NoOpType; }
 
     // Is the processing a noop? I.e, does apply do nothing.
     // (Even no-ops may define Allocation though.)
     // This must be implemented in a manner where its valid to
-    // call *prior* to finalize. (Optimizers may make use of it)
+    // call *prior* to optimization.
     virtual bool isNoOp() const { return m_data->isNoOp(); }
 
     virtual bool isIdentity() const { return m_data->isIdentity(); }
@@ -236,11 +217,13 @@ public:
     virtual void dumpMetadata(ProcessorMetadataRcPtr & /*metadata*/) const
     { }
 
-    // This is called a single time after construction.
-    // Final pre-processing and safety checks should happen here,
-    // rather than in the constructor.
+    void validate() const;
 
-    virtual void finalize(OptimizationFlags oFlags) = 0;
+    // Prepare op for optimization and apply.
+    virtual void finalize() { }
+
+    // This should yield a string of not unreasonable length.
+    virtual std::string getCacheID() const = 0;
 
     // Render the specified pixels.
     //
@@ -258,7 +241,7 @@ public:
     // Is this op supported by the legacy shader text generator?
     virtual bool supportedByLegacyShader() const { return true; }
 
-    // Create & add the gpu shader information needed by the op.
+    // Create & add the gpu shader information needed by the op. Op has to be finalized.
     virtual void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const = 0;
 
     virtual bool isDynamic() const;
@@ -269,7 +252,7 @@ public:
     // Make dynamic properties non-dynamic.
     virtual void removeDynamicProperties() {}
 
-    // On-demand creation of the OpCPU instance.
+    // On-demand creation of the OpCPU instance. Op has to be finalized.
     virtual ConstOpCPURcPtr getCPUOp() const = 0;
 
     ConstOpDataRcPtr data() const { return std::const_pointer_cast<const OpData>(m_data); }
@@ -277,8 +260,6 @@ public:
 protected:
     Op();
     OpDataRcPtr & data() { return m_data; }
-
-    std::string m_cacheID;
 
 private:
     Op(const Op &) = delete;
@@ -376,8 +357,29 @@ public:
     // Note: The elements are cloned.
     OpRcPtrVec invert() const;
 
+    void validate() const;
+
+    // This calls validate and finalize for each op, then performs optimization. Ops resulting
+    // from the optimization are finalized. The optimization step in the finalization could create
+    // new Ops but they are finalized by default. For instance combining two matrices will only create
+    // a fwd matrix as the inv matrices were already inverted (i.e. no inv matrices are present in the
+    // OpVec when reaching the optimization step).
     void finalize(OptimizationFlags oFlags);
+
+    // Only OptimizationFlags related to bitdepth optimization are used.
+    void optimizeForBitdepth(const BitDepth & inBitDepth,
+                             const BitDepth & outBitDepth,
+                             OptimizationFlags oFlags);
+
 };
+
+std::string SerializeOpVec(const OpRcPtrVec & ops, int indent=0);
+
+void CreateOpVecFromOpData(OpRcPtrVec & ops,
+                            const ConstOpDataRcPtr & opData,
+                            TransformDirection dir);
+
+
 
 } // namespace OCIO_NAMESPACE
 

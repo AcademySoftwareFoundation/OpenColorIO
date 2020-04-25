@@ -75,7 +75,7 @@ public:
     bool isInverse(ConstFixedFunctionOpDataRcPtr & r) const;
     FixedFunctionOpDataRcPtr inverse() const;
 
-    void finalize() override;
+    std::string getCacheID() const override;
 
     Style getStyle() const { return m_style; }
     void setStyle(Style style) { m_style = style; }

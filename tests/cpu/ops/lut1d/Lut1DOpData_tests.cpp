@@ -72,6 +72,16 @@ OCIO_ADD_TEST(Lut1DOpData, accessors)
     OCIO_CHECK_EQUAL(l.getArray().getNumValues(), 65 * 3);
     OCIO_CHECK_EQUAL(l.getArray().getNumColorComponents(), 3);
     OCIO_CHECK_NO_THROW(l.validate());
+
+    OCIO_CHECK_NO_THROW(l.finalize());
+    OCIO_CHECK_EQUAL(l.getArray().getNumColorComponents(), 3);
+
+    // Restore value.
+    l.getArray()[1] = 0.0f;
+
+    OCIO_CHECK_NO_THROW(l.finalize());
+    // Finalize sets numColorComponents to 1 if the three channels are equal.
+    OCIO_CHECK_EQUAL(l.getArray().getNumColorComponents(), 1);
 }
 
 OCIO_ADD_TEST(Lut1DOpData, is_identity)
@@ -164,7 +174,6 @@ OCIO_ADD_TEST(Lut1DOpData, equality_test)
 
     // Inversion quality does not affect forward ops equality.
     l4.setHueAdjust(OCIO::HUE_DW3);
-    l1.setInversionQuality(OCIO::LUT_INVERSION_EXACT);
 
     OCIO_CHECK_ASSERT(l1 == l4);
 
@@ -252,19 +261,6 @@ OCIO_ADD_TEST(Lut1DOpData, interpolation)
     OCIO_CHECK_THROW_WHAT(l.validate(), OCIO::Exception, " does not support interpolation algorithm");
 }
 
-OCIO_ADD_TEST(Lut1DOpData, inversion_quality)
-{
-    OCIO::Lut1DOpData l(17);
-
-    l.setInversionQuality(OCIO::LUT_INVERSION_EXACT);
-    OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_EXACT);
-    OCIO_CHECK_NO_THROW(l.validate());
-
-    l.setInversionQuality(OCIO::LUT_INVERSION_FAST);
-    OCIO_CHECK_EQUAL(l.getInversionQuality(), OCIO::LUT_INVERSION_FAST);
-    OCIO_CHECK_NO_THROW(l.validate());
-}
-
 OCIO_ADD_TEST(Lut1DOpData, lut_1d_compose)
 {
     OCIO::Lut1DOpDataRcPtr lut1 = std::make_shared<OCIO::Lut1DOpData>(10);
@@ -283,8 +279,6 @@ OCIO_ADD_TEST(Lut1DOpData, lut_1d_compose)
     values[18] = 0.926671f; values[19] = 0.846431f; values[20] = 1.0f;
     values[21] = 1.0f;      values[22] = 1.0f;      values[23] = 1.0f;
 
-    OCIO::Lut1DOpDataRcPtr lut1Cloned = lut1->clone();
-
     OCIO::Lut1DOpDataRcPtr lut2 = std::make_shared<OCIO::Lut1DOpData>(10);
 
     lut2->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "lut2");
@@ -301,25 +295,28 @@ OCIO_ADD_TEST(Lut1DOpData, lut_1d_compose)
     values[18] = 0.69154f;    values[19] = 0.9213f;    values[20] = 1.0f;
     values[21] = 0.76038f;    values[22] = 1.0f;       values[23] = 1.0f;
 
+    OCIO::ConstLut1DOpDataRcPtr lut1C = lut1;
     OCIO::ConstLut1DOpDataRcPtr lut2C = lut2;
 
     {
-        OCIO::Lut1DOpData::Compose(lut1, lut2C, OCIO::Lut1DOpData::COMPOSE_RESAMPLE_NO);
+        OCIO::Lut1DOpDataRcPtr result;
+        OCIO_CHECK_NO_THROW(result =
+            OCIO::Lut1DOpData::Compose(lut1C, lut2C, OCIO::Lut1DOpData::COMPOSE_RESAMPLE_NO));
 
-        OCIO_REQUIRE_EQUAL(lut1->getFormatMetadata().getNumAttributes(), 1);
-        OCIO_CHECK_EQUAL(std::string(lut1->getFormatMetadata().getAttributeName(0)), OCIO::METADATA_ID);
-        OCIO_CHECK_EQUAL(std::string(lut1->getFormatMetadata().getAttributeValue(0)), "lut1 + lut2");
-        OCIO_REQUIRE_EQUAL(lut1->getFormatMetadata().getNumChildrenElements(), 2);
-        const auto & desc1 = lut1->getFormatMetadata().getChildElement(0);
+        OCIO_REQUIRE_EQUAL(result->getFormatMetadata().getNumAttributes(), 1);
+        OCIO_CHECK_EQUAL(std::string(result->getFormatMetadata().getAttributeName(0)), OCIO::METADATA_ID);
+        OCIO_CHECK_EQUAL(std::string(result->getFormatMetadata().getAttributeValue(0)), "lut1 + lut2");
+        OCIO_REQUIRE_EQUAL(result->getFormatMetadata().getNumChildrenElements(), 2);
+        const auto & desc1 = result->getFormatMetadata().getChildElement(0);
         OCIO_CHECK_EQUAL(std::string(desc1.getName()), OCIO::METADATA_DESCRIPTION);
         OCIO_CHECK_EQUAL(std::string(desc1.getValue()), "description of 'lut1'");
-        const auto & desc2 = lut1->getFormatMetadata().getChildElement(1);
+        const auto & desc2 = result->getFormatMetadata().getChildElement(1);
         OCIO_CHECK_EQUAL(std::string(desc2.getName()), OCIO::METADATA_DESCRIPTION);
         OCIO_CHECK_EQUAL(std::string(desc2.getValue()), "description of 'lut2'");
 
-        values = &lut1->getArray().getValues()[0];
+        values = &result->getArray().getValues()[0];
 
-        OCIO_CHECK_EQUAL(lut1->getArray().getLength(), 8);
+        OCIO_CHECK_EQUAL(result->getArray().getLength(), 8);
 
         OCIO_CHECK_CLOSE(values[0], 0.0f, 1e-6f);
         OCIO_CHECK_CLOSE(values[1], 0.0f, 1e-6f);
@@ -351,13 +348,13 @@ OCIO_ADD_TEST(Lut1DOpData, lut_1d_compose)
     }
 
     {
-        OCIO::Lut1DOpData::Compose(lut1Cloned,
-                                   lut2C,
-                                   OCIO::Lut1DOpData::COMPOSE_RESAMPLE_BIG);
+        OCIO::Lut1DOpDataRcPtr result;
+        OCIO_CHECK_NO_THROW(result =
+            OCIO::Lut1DOpData::Compose(lut1C, lut2C, OCIO::Lut1DOpData::COMPOSE_RESAMPLE_BIG));
 
-        values = &lut1Cloned->getArray().getValues()[0];
+        values = &result->getArray().getValues()[0];
 
-        OCIO_CHECK_EQUAL(lut1Cloned->getArray().getLength(), 65536);
+        OCIO_CHECK_EQUAL(result->getArray().getLength(), 65536);
 
         OCIO_CHECK_CLOSE(values[0], 0.0f, 1e-6f);
         OCIO_CHECK_CLOSE(values[1], 0.0f, 1e-6f);
@@ -445,12 +442,13 @@ OCIO_ADD_TEST(Lut1DOpData, lut_1d_compose_sc)
     values[90] = 0.6915400f; values[91] = 0.9213000f; values[92] = 1.0000000f;
     values[93] = 0.7603800f; values[94] = 1.0000000f; values[95] = 1.0000000f;
 
+    OCIO::ConstLut1DOpDataRcPtr lut1C = lut1;
     OCIO::ConstLut1DOpDataRcPtr lut2C = lut2;
 
     {
-        OCIO::Lut1DOpDataRcPtr lComp = lut1->clone();
-        OCIO_CHECK_NO_THROW(
-            OCIO::Lut1DOpData::Compose(lComp, lut2C, OCIO::Lut1DOpData::COMPOSE_RESAMPLE_NO));
+        OCIO::Lut1DOpDataRcPtr lComp;
+        OCIO_CHECK_NO_THROW(lComp = OCIO::Lut1DOpData::Compose(lut1C, lut2C,
+                                                               OCIO::Lut1DOpData::COMPOSE_RESAMPLE_NO));
 
         OCIO_CHECK_EQUAL(lComp->getArray().getLength(), 2);
         OCIO_CHECK_CLOSE(lComp->getArray().getValues()[0], 0.00744791f, 1e-6f);
@@ -462,9 +460,9 @@ OCIO_ADD_TEST(Lut1DOpData, lut_1d_compose_sc)
     }
 
     {
-        OCIO::Lut1DOpDataRcPtr lComp = lut1->clone();
-        OCIO_CHECK_NO_THROW(
-            OCIO::Lut1DOpData::Compose(lComp, lut2C, OCIO::Lut1DOpData::COMPOSE_RESAMPLE_BIG));
+        OCIO::Lut1DOpDataRcPtr lComp;
+        OCIO_CHECK_NO_THROW(lComp = OCIO::Lut1DOpData::Compose(lut1C, lut2C,
+                                                               OCIO::Lut1DOpData::COMPOSE_RESAMPLE_BIG));
 
         OCIO_CHECK_EQUAL(lComp->getArray().getLength(), 65536);
         OCIO_CHECK_CLOSE(lComp->getArray().getValues()[0], 0.00744791f, 1e-6f);
@@ -492,12 +490,9 @@ OCIO_ADD_TEST(Lut1DOpData, inverse_hueadjust)
     refLut1d.setHueAdjust(OCIO::HUE_DW3);
 
     // Get inverse of reference lut1d operation.
-    OCIO::Lut1DOpDataRcPtr invLut1d;
-    OCIO_CHECK_NO_THROW(invLut1d = refLut1d.inverse());
-    OCIO_REQUIRE_ASSERT(invLut1d);
+    OCIO::Lut1DOpDataRcPtr invLut1d = refLut1d.inverse();
 
-    OCIO_CHECK_EQUAL(invLut1d->getHueAdjust(),
-                     OCIO::HUE_DW3);
+    OCIO_CHECK_EQUAL(invLut1d->getHueAdjust(), OCIO::HUE_DW3);
 }
 
 OCIO_ADD_TEST(Lut1DOpData, is_inverse)
@@ -566,18 +561,18 @@ void CheckInverse_IncreasingEffectiveDomain(
 
     SetLutArray(refLut1dOp, dimension, channels, fwdArrayData);
 
-    OCIO::Lut1DOpDataRcPtr invLut1dOp = refLut1dOp.inverse();
-    OCIO_REQUIRE_ASSERT(invLut1dOp);
-    OCIO_CHECK_NO_THROW(invLut1dOp->finalize());
+    refLut1dOp.setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_NO_THROW(refLut1dOp.validate());
+    OCIO_CHECK_NO_THROW(refLut1dOp.finalize());
 
     const OCIO::Lut1DOpData::ComponentProperties &
-        redProperties = invLut1dOp->getRedProperties();
+        redProperties = refLut1dOp.getRedProperties();
 
     const OCIO::Lut1DOpData::ComponentProperties &
-        greenProperties = invLut1dOp->getGreenProperties();
+        greenProperties = refLut1dOp.getGreenProperties();
 
     const OCIO::Lut1DOpData::ComponentProperties &
-        blueProperties = invLut1dOp->getBlueProperties();
+        blueProperties = refLut1dOp.getBlueProperties();
 
     OCIO_CHECK_EQUAL(redProperties.isIncreasing, expIncreasingR);
     OCIO_CHECK_EQUAL(redProperties.startDomain, expStartDomainR);
@@ -682,12 +677,11 @@ void CheckInverse_Flatten(unsigned long dimension,
 
     SetLutArray(refLut1dOp, dimension, channels, fwdArrayData);
 
-    OCIO::Lut1DOpDataRcPtr invLut1dOp = refLut1dOp.inverse();
-    OCIO_REQUIRE_ASSERT(invLut1dOp);
-    invLut1dOp->finalize();
+    refLut1dOp.setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_NO_THROW(refLut1dOp.validate());
+    OCIO_CHECK_NO_THROW(refLut1dOp.finalize());
 
-    const OCIO::Array::Values &
-        invValues = invLut1dOp->getArray().getValues();
+    const OCIO::Array::Values & invValues = refLut1dOp.getArray().getValues();
 
     for (unsigned long i = 0; i < dimension * channels; ++i)
     {
@@ -794,21 +788,21 @@ OCIO_ADD_TEST(Lut1DOpData, inverse_half_domain)
 
     SetLutArrayHalf(refLut1dOp, 3u);
 
-    OCIO::Lut1DOpDataRcPtr invLut1dOp = refLut1dOp->inverse();
-    OCIO_REQUIRE_ASSERT(invLut1dOp);
-    invLut1dOp->finalize();
+    refLut1dOp->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_NO_THROW(refLut1dOp->validate());
+    OCIO_CHECK_NO_THROW(refLut1dOp->finalize());
 
     const OCIO::Lut1DOpData::ComponentProperties &
-        redProperties = invLut1dOp->getRedProperties();
+        redProperties = refLut1dOp->getRedProperties();
 
     const OCIO::Lut1DOpData::ComponentProperties &
-        greenProperties = invLut1dOp->getGreenProperties();
+        greenProperties = refLut1dOp->getGreenProperties();
 
     const OCIO::Lut1DOpData::ComponentProperties &
-        blueProperties = invLut1dOp->getBlueProperties();
+        blueProperties = refLut1dOp->getBlueProperties();
 
     const OCIO::Array::Values &
-        invValues = invLut1dOp->getArray().getValues();
+        invValues = refLut1dOp->getArray().getValues();
 
     // Check increasing/decreasing and start/end domain.
     OCIO_CHECK_EQUAL(redProperties.isIncreasing, true);
@@ -825,7 +819,7 @@ OCIO_ADD_TEST(Lut1DOpData, inverse_half_domain)
 
     OCIO_CHECK_EQUAL(blueProperties.isIncreasing, true);
     OCIO_CHECK_EQUAL(blueProperties.startDomain, 11878u);
-    OCIO_CHECK_EQUAL(blueProperties.endDomain, 31743u);      // see note in invLut1DOp.cpp
+    OCIO_CHECK_EQUAL(blueProperties.endDomain, 31743u);      // see note in Lut1DOpData.cpp
     OCIO_CHECK_EQUAL(blueProperties.negStartDomain, 44646u);
     OCIO_CHECK_EQUAL(blueProperties.negEndDomain, 64511u);
 
@@ -891,7 +885,7 @@ OCIO_ADD_TEST(Lut1DOpData, make_fast_from_inverse_gpu_extented_domain)
     lut = lutEdit;
 
     OCIO::Lut1DOpDataRcPtr newLut;
-    OCIO_CHECK_NO_THROW(newLut = OCIO::Lut1DOpData::MakeFastLut1DFromInverse(lut, true));
+    OCIO_CHECK_NO_THROW(newLut = OCIO::MakeFastLut1DFromInverse(lut));
 
     // This LUT has values outside [0,1], so the fastLut needs to have a half domain
     // even on GPU.
@@ -899,7 +893,7 @@ OCIO_ADD_TEST(Lut1DOpData, make_fast_from_inverse_gpu_extented_domain)
     OCIO_CHECK_ASSERT(newLut->isInputHalfDomain());
 }
 
-OCIO_ADD_TEST(Lut1DOpData, make_fast_from_inverse_gpu_opt)
+OCIO_ADD_TEST(Lut1DOpData, make_fast_from_inverse_f32_opt)
 {
     const std::string ctfFile("lut1d_inv.ctf");
 
@@ -917,15 +911,15 @@ OCIO_ADD_TEST(Lut1DOpData, make_fast_from_inverse_gpu_opt)
     OCIO_REQUIRE_ASSERT(lut);
 
     OCIO::Lut1DOpDataRcPtr newLut;
-    OCIO_CHECK_NO_THROW(newLut = OCIO::Lut1DOpData::MakeFastLut1DFromInverse(lut, true));
+    OCIO_CHECK_NO_THROW(newLut = OCIO::MakeFastLut1DFromInverse(lut));
 
-    // This LUT has all values in [0,1], so the fastLut should be compact for more efficient
+    // TODO: This LUT has all values in [0,1], so the fastLut should be compact for more efficient
     // evaluation and less texture usage on GPU.
-    OCIO_CHECK_EQUAL(newLut->getArray().getLength(), 4096u);
-    OCIO_CHECK_ASSERT(!newLut->isInputHalfDomain());
+    OCIO_CHECK_EQUAL(newLut->getArray().getLength(), 65536U);
+    OCIO_CHECK_ASSERT(newLut->isInputHalfDomain());
 }
 
-OCIO_ADD_TEST(Lut1DOpData, make_fast_from_inverse_gpu_half_domain)
+OCIO_ADD_TEST(Lut1DOpData, make_fast_from_inverse_half_domain)
 {
     const std::string ctfFile("lut1d_halfdom.ctf");
 
@@ -941,13 +935,64 @@ OCIO_ADD_TEST(Lut1DOpData, make_fast_from_inverse_gpu_half_domain)
     OCIO_CHECK_EQUAL(opData->getType(), OCIO::OpData::Lut1DType);
     auto lut = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opData);
     OCIO_REQUIRE_ASSERT(lut);
-    OCIO::ConstLut1DOpDataRcPtr lutInv = lut->inverse();
+    OCIO::Lut1DOpDataRcPtr lutInv = lut->inverse();
 
+    OCIO::ConstLut1DOpDataRcPtr lutInvConst = lutInv;
     OCIO::Lut1DOpDataRcPtr newLut;
-    OCIO_CHECK_NO_THROW(newLut = OCIO::Lut1DOpData::MakeFastLut1DFromInverse(lutInv, true));
+    OCIO_CHECK_NO_THROW(newLut = OCIO::MakeFastLut1DFromInverse(lutInvConst));
 
     // Source LUT has an extended domain, so fastLut should have a half domain.
     OCIO_CHECK_EQUAL(newLut->getArray().getLength(), 65536u);
     OCIO_CHECK_ASSERT(newLut->isInputHalfDomain());
+}
+
+OCIO_ADD_TEST(Lut1DOpData, compose_inverse_luts)
+{
+    OCIO::ConstLut1DOpDataRcPtr lutRef = std::make_shared<OCIO::Lut1DOpData>(17);
+    OCIO::Lut1DOpDataRcPtr lut = std::make_shared<OCIO::Lut1DOpData>(17);
+
+    auto & lutValues = lut->getArray().getValues();
+    for (auto & val : lutValues)
+    {
+        val *= val;
+    }
+
+    OCIO::ConstLut1DOpDataRcPtr lutFwd1 = lut->clone();
+    OCIO::ConstLut1DOpDataRcPtr lutFwd2 = lutFwd1->clone();
+
+    // Forward + forward.
+    auto compLutFwdFwd = OCIO::Lut1DOpData::Compose(lutFwd1, lutFwd2,
+                                                    OCIO::Lut1DOpData::COMPOSE_RESAMPLE_NO);
+    OCIO_CHECK_EQUAL(compLutFwdFwd->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+
+    // Inverse + inverse.
+    OCIO::Lut1DOpDataRcPtr lutInv1NonConst = lut->inverse();
+    lutInv1NonConst->finalize();
+    OCIO::ConstLut1DOpDataRcPtr lutInv1 = lutInv1NonConst;
+    OCIO::Lut1DOpDataRcPtr lutInv2NonConst = lut->inverse();
+    lutInv2NonConst->finalize();
+    OCIO::ConstLut1DOpDataRcPtr lutInv2 = lutInv2NonConst;
+    auto compLutInvInv = OCIO::Lut1DOpData::Compose(lutInv1, lutInv2,
+                                                    OCIO::Lut1DOpData::COMPOSE_RESAMPLE_NO);
+    OCIO_CHECK_EQUAL(compLutInvInv->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO_CHECK_ASSERT(compLutFwdFwd->getArray().getValues() ==
+                      compLutInvInv->getArray().getValues());
+
+    // Forward + inverse.
+    auto compLutFwdInv = OCIO::Lut1DOpData::Compose(lutFwd1, lutInv1,
+                                                    OCIO::Lut1DOpData::COMPOSE_RESAMPLE_NO);
+    OCIO_CHECK_EQUAL(compLutFwdInv->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO_CHECK_ASSERT(compLutFwdInv->getArray().getValues() == lutRef->getArray().getValues());
+
+    // Inverse + forward.
+    auto compLutInvFwd = OCIO::Lut1DOpData::Compose(lutInv1, lutFwd1,
+                                                    OCIO::Lut1DOpData::COMPOSE_RESAMPLE_NO);
+    OCIO_CHECK_EQUAL(compLutInvFwd->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO_CHECK_ASSERT(compLutInvFwd->isInputHalfDomain());
+    OCIO_REQUIRE_EQUAL(compLutInvFwd->getArray().getLength(), 65536);
+    OCIO_CHECK_EQUAL(compLutInvFwd->getArray()[14336 * 3], 0.5f);
 }
 

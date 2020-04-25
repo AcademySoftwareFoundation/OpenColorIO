@@ -44,7 +44,7 @@ public:
 
     bool operator==(const OpData& other) const override;
 
-    virtual void finalize() override;
+    std::string getCacheID() const override;
 
     ReferenceStyle getReferenceStyle() const
     {

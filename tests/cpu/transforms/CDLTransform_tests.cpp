@@ -132,7 +132,7 @@ OCIO_ADD_TEST(CDLTransform, create_from_ccc_file)
         OCIO_CHECK_EQUAL(0.0, offset[0]);
         OCIO_CHECK_EQUAL(0.0, offset[1]);
         OCIO_CHECK_EQUAL(0.0, offset[2]);
-        double power[3] = { 0.f, 0.f, 0.f };
+        double power[3] = { 0., 0., 0. };
         OCIO_CHECK_NO_THROW(transform->getPower(power));
         OCIO_CHECK_EQUAL(0.9, power[0]);
         OCIO_CHECK_EQUAL(1.0, power[1]);
@@ -370,7 +370,7 @@ OCIO_ADD_TEST(CDLTransform, buildops)
     OCIO::OpRcPtrVec ops;
     OCIO::BuildCDLOp(ops, *config, *cdl, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_CHECK_EQUAL(ops.size(), 3);
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
     OCIO_CHECK_EQUAL(ops.size(), 0);
 
     ops.clear();
@@ -378,7 +378,7 @@ OCIO_ADD_TEST(CDLTransform, buildops)
     cdl->setPower(power);
     OCIO::BuildCDLOp(ops, *config, *cdl, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_CHECK_EQUAL(ops.size(), 3);
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO::ConstOpRcPtr op = OCIO::DynamicPtrCast<const OCIO::Op>(ops[0]);
     auto expData = OCIO::DynamicPtrCast<const OCIO::ExponentOpData>(op->data());
@@ -388,7 +388,7 @@ OCIO_ADD_TEST(CDLTransform, buildops)
     cdl->setSat(1.5);
     OCIO::BuildCDLOp(ops, *config, *cdl, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
     op = OCIO::DynamicPtrCast<const OCIO::Op>(ops[0]);
     expData = OCIO::DynamicPtrCast<const OCIO::ExponentOpData>(op->data());
@@ -402,7 +402,7 @@ OCIO_ADD_TEST(CDLTransform, buildops)
     cdl->setOffset(offset);
     OCIO::BuildCDLOp(ops, *config, *cdl, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeOpVec(ops));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
     op = OCIO::DynamicPtrCast<const OCIO::Op>(ops[0]);
     matData = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(op->data());

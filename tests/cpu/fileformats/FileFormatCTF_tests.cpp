@@ -2208,6 +2208,7 @@ OCIO_ADD_TEST(FileFormatCTF, index_map_2)
     OCIO_REQUIRE_EQUAL(opList.size(), 2);
     auto pR = std::dynamic_pointer_cast<const OCIO::RangeOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pR);
+    // Range is from an IndexMap that manages floats.
     OCIO_CHECK_EQUAL(pR->getMinInValue(), -0.1f);
     OCIO_CHECK_EQUAL(pR->getMaxInValue(), 19.f);
     OCIO_CHECK_EQUAL(pR->getMinOutValue(), 0.f);
@@ -2335,7 +2336,7 @@ OCIO_ADD_TEST(FileFormatCTF, clf_1)
     OCIO_CHECK_EQUAL((int)(prec * offsets[0] * outScale), offset);
     OCIO_CHECK_EQUAL((int)(prec * offsets[1] * outScale), offset);
     OCIO_CHECK_EQUAL((int)(prec * offsets[2] * outScale), offset);
-    OCIO_CHECK_EQUAL(offsets[3], 0.f);
+    OCIO_CHECK_EQUAL(offsets[3], 0.);
 
     // A range with Clamp.
     rangeOpData = std::dynamic_pointer_cast<const OCIO::RangeOpData>(opList[4]);
@@ -3252,7 +3253,7 @@ OCIO_ADD_TEST(FixedFunction, load_ff_fail_version)
     strebuf << "<ProcessList id='none' version='1.5'>\n";
     strebuf << "    <FixedFunction inBitDepth='8i' outBitDepth='32f' ";
     strebuf << "params = '0.8' ";
-    strebuf << "style = 'Rec2100Surround' />\n";
+    strebuf << "style = 'Rec2100SurroundFwd' />\n";
     strebuf << "</ProcessList>\n";
 
     OCIO_CHECK_THROW_WHAT(ParseString(strebuf.str()), OCIO::Exception,
@@ -3266,7 +3267,7 @@ OCIO_ADD_TEST(FixedFunction, load_ff_fail_params)
     strebuf << "<ProcessList id='none' version='2'>\n";
     strebuf << "    <FixedFunction inBitDepth='8i' outBitDepth='32f' ";
     strebuf << "params = '0.8 2.0' ";
-    strebuf << "style = 'Rec2100Surround' />\n";
+    strebuf << "style = 'Rec2100SurroundFwd' />\n";
     strebuf << "</ProcessList>\n";
 
     OCIO_CHECK_THROW_WHAT(ParseString(strebuf.str()), OCIO::Exception,
@@ -4415,6 +4416,7 @@ OCIO_ADD_TEST(CTFTransform, range_ctf)
 
 OCIO_ADD_TEST(CTFTransform, range1_clf)
 {
+    // Forward clamping range with all 4 values set and with metadata.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
@@ -4459,6 +4461,7 @@ OCIO_ADD_TEST(CTFTransform, range1_clf)
 
 OCIO_ADD_TEST(CTFTransform, range2_clf)
 {
+    // Forward clamping range with just minValues set.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
@@ -4492,10 +4495,11 @@ OCIO_ADD_TEST(CTFTransform, range2_clf)
 
 OCIO_ADD_TEST(CTFTransform, range3_clf)
 {
+    // Forward clamping range with just minValues set.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
-    // This will only do bit-depth conversion.
+    // This will only do bit-depth conversion (with a clamp at 0).
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
     range->setFileInputBitDepth(OCIO::BIT_DEPTH_F16);
     range->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT12);
@@ -4516,6 +4520,47 @@ OCIO_ADD_TEST(CTFTransform, range3_clf)
     <Range id="Range42" inBitDepth="16f" outBitDepth="12i">
         <minInValue> 0 </minInValue>
         <minOutValue> 0 </minOutValue>
+    </Range>
+</ProcessList>
+)" };
+
+    OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
+    OCIO_CHECK_EQUAL(expected, outputTransform.str());
+}
+
+OCIO_ADD_TEST(CTFTransform, range4_clf)
+{
+    // Inverse clamping range with all 4 values set.
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+
+    OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
+    range->setFileInputBitDepth(OCIO::BIT_DEPTH_F16);
+    range->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT12);
+    // Set inverse direction.
+    range->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    range->setMinInValue(0.);
+    range->setMinOutValue(0.5);
+    range->setMaxInValue(1.0);
+    range->setMaxOutValue(1.0);
+    range->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "Range42");
+
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+    group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
+    group->appendTransform(range);
+
+    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
+    std::ostringstream outputTransform;
+    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform));
+
+    // Range is saved in the forward direction.
+    const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="3" id="UID42">
+    <Range id="Range42" inBitDepth="12i" outBitDepth="16f">
+        <minInValue> 2047.5 </minInValue>
+        <maxInValue> 4095 </maxInValue>
+        <minOutValue> 0 </minOutValue>
+        <maxOutValue> 1 </maxOutValue>
     </Range>
 </ProcessList>
 )" };
@@ -4916,7 +4961,7 @@ OCIO_ADD_TEST(CTFTransform, fixed_function_rec2100_ctf)
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="2" id="UIDFF42">
-    <FixedFunction inBitDepth="32f" outBitDepth="32f" style="Rec2100Surround" params="0.5">
+    <FixedFunction inBitDepth="32f" outBitDepth="32f" style="Rec2100SurroundFwd" params="0.5">
     </FixedFunction>
 </ProcessList>
 )" };
@@ -4944,10 +4989,9 @@ OCIO_ADD_TEST(CTFTransform, fixed_function_rec2100_inverse_ctf)
     std::ostringstream outputTransform;
     OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
 
-    // Rec.2100 Inverse is always saved as a Forward with inverted parameter value.
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="2" id="UIDFF42">
-    <FixedFunction inBitDepth="32f" outBitDepth="32f" style="Rec2100Surround" params="2">
+    <FixedFunction inBitDepth="32f" outBitDepth="32f" style="Rec2100SurroundRev" params="0.5">
     </FixedFunction>
 </ProcessList>
 )" };
@@ -5920,13 +5964,14 @@ OCIO_ADD_TEST(FileFormatCTF, bake_1d)
     baker->setFormat(OCIO::FILEFORMAT_CLF);
     baker->setInputSpace("input");
     baker->setTargetSpace("target");
+    baker->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
     baker->setCubeSize(2);
     std::ostringstream outputCLF;
     baker->bake(outputCLF);
 
     const std::string expectedCLF{
 R"(<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList compCLFversion="3" id="$4dd1c89df8002b409e089089ce8f24e7">
+<ProcessList compCLFversion="3" id="UID42">
     <LUT1D inBitDepth="32f" outBitDepth="32f">
         <Array dim="2 3">
           0           0           0
@@ -5942,7 +5987,7 @@ R"(<?xml version="1.0" encoding="UTF-8"?>
     baker->setFormat(OCIO::FILEFORMAT_CTF);
     baker->bake(outputCTF);
     const std::string expectedCTF{ R"(<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList version="1.3" id="$4dd1c89df8002b409e089089ce8f24e7">
+<ProcessList version="1.3" id="UID42">
     <LUT1D inBitDepth="32f" outBitDepth="32f">
         <Array dim="2 3">
           0           0           0
@@ -6077,6 +6122,7 @@ OCIO_ADD_TEST(FileFormatCTF, bake_1d_3d)
     OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     baker->setConfig(config);
     baker->setFormat(OCIO::FILEFORMAT_CLF);
+    baker->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
     baker->setInputSpace("input");
     baker->setShaperSpace("shaper");
     baker->setTargetSpace("target");
@@ -6139,7 +6185,7 @@ OCIO_ADD_TEST(FileFormatCTF, bake_1d_3d)
 
     const std::string expectedCLF{
 R"(<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList compCLFversion="3" id="$4dd1c89df8002b409e089089ce8f24e7">
+<ProcessList compCLFversion="3" id="UID42">
     <Range inBitDepth="32f" outBitDepth="32f">
         <minInValue> -0.125 </minInValue>
         <maxInValue> 1.125 </maxInValue>
