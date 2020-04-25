@@ -9,7 +9,7 @@ if [[ "$(python -c 'import sys; print(sys.version_info[0])')" == "2" ]]; then
     SPHINX_VERSION="$1"
 else
     # Python 3
-    SPHINX_VERSION="{$2:-$1}"
+    SPHINX_VERSION="${2:-${1}}"
 fi
 
 if [ "$SPHINX_VERSION" == "latest" ]; then
