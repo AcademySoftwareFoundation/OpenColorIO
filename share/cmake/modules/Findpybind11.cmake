@@ -68,8 +68,10 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
                     _pybind11_VER_OUTPUT
                 ERROR_QUIET
             )
-            # Strip \n from python output
-            string(STRIP ${_pybind11_VER_OUTPUT} _pybind11_VER_OUTPUT)
+            if(_pybind11_VER_OUTPUT)
+                # Strip \n from python output
+                string(STRIP ${_pybind11_VER_OUTPUT} _pybind11_VER_OUTPUT)
+            endif()
 
             if(_pybind11_VER_RESULTS EQUAL 0 AND "${_pybind11_VER_OUTPUT}" MATCHES "[.0-9]+")
                 execute_process(
@@ -84,8 +86,10 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
                         _pybind11_DIR_OUTPUT
                     ERROR_QUIET
                 )
-                # Strip \n from python output
-                string(STRIP ${_pybind11_DIR_OUTPUT} _pybind11_DIR_OUTPUT)
+                if(_pybind11_DIR_OUTPUT)
+                    # Strip \n from python output
+                    string(STRIP ${_pybind11_DIR_OUTPUT} _pybind11_DIR_OUTPUT)
+                endif()
 
                 if(_pybind11_DIR_RESULTS EQUAL 0 AND EXISTS "${_pybind11_DIR_OUTPUT}")
                     set(pybind11_VERSION ${_pybind11_VER_OUTPUT})
