@@ -3,6 +3,7 @@
 # Variables defined by this module:
 #   pybind11_FOUND - If FALSE, do not try to link to pybind11
 #   pybind11_INCLUDE_DIR - Where to find pybind11.h
+#   pybind11_VERSION - The version of the library
 #
 # Targets defined by this module:
 #   pybind11::module - IMPORTED target, if found
@@ -22,39 +23,99 @@ endif()
 ### Try to find package ###
 
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
-    set(_pybind11_SEARCH_DIRS
-        ${pybind11_DIRS}
-        ~/Library/Frameworks
-        /Library/Frameworks
-        /usr/local
-        /usr
-        /sw        # Fink
-        /opt/local # DarwinPorts
-        /opt/csw   # Blastwave
-        /opt
-    )
+    # Try to use the pybind11 CMake config, which provides version information
+    find_package(pybind11 ${pybind11_FIND_VERSION} CONFIG)
 
-    # Find include directory
-    find_path(pybind11_INCLUDE_DIR
-        NAMES
-            pybind11/pybind11.h
-        HINTS
-            ${_pybind11_SEARCH_DIRS}
-        PATH_SUFFIXES
-            include
-            pybind11/include
-    )
+    if(NOT pybind11_FOUND)
+        # No CMake config found. Check if pybind11 was installed from PyPI with
+        # "pip install pybind11".
+        find_package(PythonInterp 2.7 QUIET)
 
-    # Override REQUIRED if package can be installed
-    if(OCIO_INSTALL_EXT_PACKAGES STREQUAL MISSING)
-        set(pybind11_FIND_REQUIRED FALSE)
+        execute_process(
+            COMMAND
+                "${PYTHON_EXECUTABLE}" -c 
+                "print(__import__('pybind11').__version__)"
+            RESULTS_VARIABLE
+                _pybind11_VER_RESULTS
+            OUTPUT_VARIABLE
+                _pybind11_VER_OUTPUT
+            ERROR_QUIET
+        )
+        # Strip \n from python output
+        string(STRIP ${_pybind11_VER_OUTPUT} _pybind11_VER_OUTPUT)
+
+        if(_pybind11_VER_RESULTS EQUAL 0 
+           AND "${_pybind11_VER_OUTPUT}" MATCHES "[.0-9]+"
+        )
+            execute_process(
+                COMMAND
+                    "${PYTHON_EXECUTABLE}" -c 
+                    "import os;\
+                     import pybind11;\
+                     print(os.path.join(os.path.dirname(pybind11.__file__), 'include'))"
+                RESULTS_VARIABLE
+                    _pybind11_DIR_RESULTS
+                OUTPUT_VARIABLE
+                    _pybind11_DIR_OUTPUT
+                ERROR_QUIET
+            )
+            # Strip \n from python output
+            string(STRIP ${_pybind11_DIR_OUTPUT} _pybind11_DIR_OUTPUT)
+
+            if(_pybind11_DIR_RESULTS EQUAL 0
+               AND EXISTS "${_pybind11_DIR_OUTPUT}"
+               AND IS_DIRECTORY "${_pybind11_DIR_OUTPUT}"
+            )
+                set(pybind11_VERSION ${_pybind11_VER_OUTPUT})
+                set(pybind11_INCLUDE_DIR ${_pybind11_DIR_OUTPUT})
+                message(STATUS "Found pybind11 package (version \"${pybind11_VERSION}\") in python \"${PYTHON_VERSION_STRING}\"")
+            endif()
+        endif()
+
+        if(NOT DEFINED pybind11_VERSION)
+            # A version could not be determined, but the headers may still be 
+            # installed. Assume the minimum version and do a standard search.
+            # TODO: Can the pybind11 version be inspected from a header as a 
+            #       last resort?
+            set(pybind11_VERSION ${pybind11_FIND_VERSION})
+
+            set(_pybind11_SEARCH_DIRS
+                ${pybind11_DIRS}
+                ~/Library/Frameworks
+                /Library/Frameworks
+                /usr/local
+                /usr
+                /sw        # Fink
+                /opt/local # DarwinPorts
+                /opt/csw   # Blastwave
+                /opt
+            )
+
+            # Find include directory
+            find_path(pybind11_INCLUDE_DIR
+                NAMES
+                    pybind11/pybind11.h
+                HINTS
+                    ${_pybind11_SEARCH_DIRS}
+                PATH_SUFFIXES
+                    include
+                    pybind11/include
+            )
+        endif()
+
+        # Override REQUIRED if package can be installed
+        if(OCIO_INSTALL_EXT_PACKAGES STREQUAL MISSING)
+            set(pybind11_FIND_REQUIRED FALSE)
+        endif()
+
+        include(FindPackageHandleStandardArgs)
+        find_package_handle_standard_args(pybind11
+            REQUIRED_VARS 
+                pybind11_INCLUDE_DIR
+            VERSION_VAR
+                pybind11_VERSION
+        )
     endif()
-
-    include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args(pybind11
-        REQUIRED_VARS 
-            pybind11_INCLUDE_DIR
-    )
 endif()
 
 ###############################################################################
