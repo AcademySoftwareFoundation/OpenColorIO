@@ -24,9 +24,8 @@ endif()
 
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     if(DEFINED pybind11_DIRS)
-        # If an explicit search location was provided, only search there.
-        # Ignore all default cmake and system search paths in favor of the 
-        # provided path, and fall back on a CMake config.
+        # Try user defined search path. Ignore all default cmake and system 
+        # paths, and fall back on a system CMake config.
         find_path(pybind11_INCLUDE_DIR
             NAMES
                 pybind11/pybind11.h
@@ -39,24 +38,26 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         )
 
         if(EXISTS "${pybind11_INCLUDE_DIR}")
-            # If user specified a pybind11 location, assume version is OK.
+            # Assume user-provided version is OK.
             # TODO: Can the pybind11 version be inspected from a header?
             set(pybind11_VERSION ${pybind11_FIND_VERSION})
             message(STATUS 
-                "Using pybind11 location override \"pybind11_DIRS\" "
+                "Using user defined search path for pybind11 "
                 "(version \">=${pybind11_FIND_VERSION}\" assumed)"
             )
         endif()
     endif()
 
     if(NOT DEFINED pybind11_VERSION)
-        # Try to use the pybind11 CMake config, which provides version information
+        # Search for a CMake config, which should have been installed with 
+        # pybind11, and will provide version information.
         find_package(pybind11 ${pybind11_FIND_VERSION} CONFIG)
 
         if(NOT pybind11_FOUND)
-            # No CMake config found. Check if pybind11 was installed from PyPI with
-            # "pip install pybind11".
-            find_package(PythonInterp 2.7 QUIET)
+            # No CMake config found. Check if pybind11 was installed as a 
+            # Python package (i.e. with "pip install pybind11"). This requires
+            # a Python interpreter.
+            find_package(PythonInterp 2.7 QUIET REQUIRED)
 
             execute_process(
                 COMMAND
@@ -95,8 +96,8 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
                     set(pybind11_VERSION ${_pybind11_VER_OUTPUT})
                     set(pybind11_INCLUDE_DIR ${_pybind11_DIR_OUTPUT})
                     message(STATUS 
-                        "Found pybind11 package (version \"${pybind11_VERSION}\") "
-                        "in python \"${PYTHON_VERSION_STRING}\""
+                        "Using pybind11 python package (version \"${pybind11_VERSION}\", "
+                        "found in python \"${PYTHON_VERSION_STRING}\")"
                     )
                 endif()
             endif()
