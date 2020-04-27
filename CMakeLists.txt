@@ -24,16 +24,36 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 ###############################################################################
-# C++ configuration
+# C++ version configuration
 
 set(SUPPORTED_CXX_STANDARDS 11 14)
 string(REPLACE ";" ", " SUPPORTED_CXX_STANDARDS_STR "${SUPPORTED_CXX_STANDARDS}")
 
 if(CMAKE_CXX_STANDARD AND NOT CMAKE_CXX_STANDARD IN_LIST SUPPORTED_CXX_STANDARDS)
-    message(FATAL_ERROR " CMAKE_CXX_STANDARD ${CMAKE_CXX_STANDARD} is unsupported. Supported standards are: ${SUPPORTED_CXX_STANDARDS_STR}")
+    message(FATAL_ERROR " CMAKE_CXX_STANDARD ${CMAKE_CXX_STANDARD} is unsupported. Supported standards are: ${SUPPORTED_CXX_STANDARDS_STR}.")
 elseif(NOT CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 11)
 endif()
+
+include(CheckCXXCompilerFlag)
+
+if(MSVC)
+	CHECK_CXX_COMPILER_FLAG("-std:c++11" COMPILER_SUPPORTS_CXX11)
+	CHECK_CXX_COMPILER_FLAG("-std:c++14" COMPILER_SUPPORTS_CXX14)
+else()
+	CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+	CHECK_CXX_COMPILER_FLAG("-std=c++14" COMPILER_SUPPORTS_CXX14)
+endif()
+
+if(NOT COMPILER_SUPPORTS_CXX11 AND ${CMAKE_CXX_STANDARD} EQUAL 11)
+	message(STATUS "The compiler ${CMAKE_CXX_COMPILER_ID} has no C++11 only support. Use C++14.")
+	set(CMAKE_CXX_STANDARD 14)
+endif()
+
+if(NOT COMPILER_SUPPORTS_CXX14 AND ${CMAKE_CXX_STANDARD} EQUAL 14)
+	message(ERROR "The compiler ${CMAKE_CXX_COMPILER_ID} has no C++14 only support.")
+endif()
+
 
 # Disable fallback to other C++ version if standard is not supported.
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -102,6 +122,11 @@ if(MSVC)
 	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /EHsc /wd4275 /DWIN32 /we4062")
 
 else()
+    if(APPLE AND OCIO_GL_ENABLED)
+        # Mute the deprecated warning for some GLUT methods.
+        set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wno-deprecated-declarations")
+    endif()
+
 	# -Wswitch-enum Enables warning in switch when an enumeration value is not explicitly handled.
 	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wall -Wswitch-enum")
 
@@ -116,8 +141,9 @@ else()
 endif()
 
 if(OCIO_WARNING_AS_ERROR)
-	# TODO: Vc++ compilation has still many tricky warnings difficult to fix.
-	if(NOT MSVC)
+	if(MSVC)
+		set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /WX")
+	else()
 		set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Werror")
 	endif()
 endif()

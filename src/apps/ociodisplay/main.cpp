@@ -2,6 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <array>
 #include <cstdlib>
 #include <cmath>
 #include <cstdio>
@@ -9,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <utility>
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -18,8 +20,6 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <OpenImageIO/typedesc.h>
 
 #ifdef __APPLE__
-/* Defined before OpenGL and GLUT includes to avoid deprecation messages */
-#define GL_SILENCE_DEPRECATION
 #include <OpenGL/gl.h>
 #include <OpenGL/glext.h>
 #include <GLUT/glut.h>
@@ -50,7 +50,7 @@ std::string g_transformName;
 std::string g_look;
 OCIO::OptimizationFlags g_optimization{ OCIO::OPTIMIZATION_DEFAULT };
 
-constexpr std::array<std::pair<const char*, OCIO::OptimizationFlags>, 5> OptmizationMenu = { {
+static const std::array<std::pair<const char*, OCIO::OptimizationFlags>, 5> OptmizationMenu = { {
     { "None",      OCIO::OPTIMIZATION_NONE },
     { "Lossless",  OCIO::OPTIMIZATION_LOSSLESS },
     { "Very good", OCIO::OPTIMIZATION_VERY_GOOD },
