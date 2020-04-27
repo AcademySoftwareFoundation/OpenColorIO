@@ -89,16 +89,7 @@ TransformRcPtr GroupTransform::createEditableCopy() const
 GroupTransform::~GroupTransform()
 {
     delete m_impl;
-    m_impl = NULL;
-}
-
-GroupTransform & GroupTransform::operator= (const GroupTransform & rhs)
-{
-    if (this != &rhs)
-    {
-        *m_impl = *rhs.m_impl;
-    }
-    return *this;
+    m_impl = nullptr;
 }
 
 TransformDirection GroupTransform::getDirection() const noexcept

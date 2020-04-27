@@ -38,7 +38,8 @@ public:
     bool m_fromRefSpecified{ false };
 
     Impl() = delete;
-    Impl(ReferenceSpaceType referenceSpace)
+
+    explicit Impl(ReferenceSpaceType referenceSpace)
         : CategoriesManager()
         , m_referenceSpaceType(referenceSpace)
     {
@@ -46,14 +47,15 @@ public:
 
     Impl(const Impl &) = delete;
 
-    ~Impl()
-    {
-    }
+    ~Impl() = default;
 
     Impl& operator= (const Impl & rhs)
     {
         if (this != &rhs)
         {
+            *dynamic_cast<CategoriesManager*>(this)
+                = *dynamic_cast<const CategoriesManager*>(&rhs);
+ 
             m_name = rhs.m_name;
             m_family = rhs.m_family;
             m_equalityGroup = rhs.m_equalityGroup;
@@ -74,8 +76,6 @@ public:
 
             m_toRefSpecified = rhs.m_toRefSpecified;
             m_fromRefSpecified = rhs.m_fromRefSpecified;
-
-            m_categories = rhs.m_categories;
         }
         return *this;
     }

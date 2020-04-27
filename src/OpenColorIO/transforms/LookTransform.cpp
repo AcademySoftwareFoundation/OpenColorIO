@@ -71,16 +71,7 @@ TransformRcPtr LookTransform::createEditableCopy() const
 LookTransform::~LookTransform()
 {
     delete m_impl;
-    m_impl = NULL;
-}
-
-LookTransform& LookTransform::operator= (const LookTransform & rhs)
-{
-    if (this != &rhs)
-    {
-        *m_impl = *rhs.m_impl;
-    }
-    return *this;
+    m_impl = nullptr;
 }
 
 TransformDirection LookTransform::getDirection() const noexcept

@@ -31,7 +31,7 @@ public:
     ImgBuffer(ImgBuffer &&) = delete;
 
     ImgBuffer & operator = (const ImgBuffer &) = delete;
-    ImgBuffer & operator = (ImgBuffer &&);
+    ImgBuffer & operator = (ImgBuffer &&) noexcept;
 
     ~ImgBuffer();
 

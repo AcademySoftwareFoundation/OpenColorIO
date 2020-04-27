@@ -77,7 +77,7 @@ void bindPyLut1DTransform(py::module & m)
 
                 self->setLength(size / 3);
 
-                for (size_t i = 0; i < size; i += 3)
+                for (unsigned long i = 0; i < size; i += 3)
                 {
                     self->setValue(i / 3, values[i], values[i+1], values[i+2]);
                 }

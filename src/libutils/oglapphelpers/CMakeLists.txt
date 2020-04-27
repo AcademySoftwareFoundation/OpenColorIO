@@ -27,12 +27,6 @@ if(NOT BUILD_SHARED_LIBS)
     )
 endif()
 
-if(APPLE)
-
-    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wno-deprecated-declarations")
-
-endif()
-
 set_target_properties(oglapphelpers PROPERTIES 
     COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
 

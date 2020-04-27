@@ -199,7 +199,7 @@ void ImgBuffer::allocate(const OIIO::ImageSpec & spec)
     m_buffer = AllocateImageBuffer(spec);
 }
 
-ImgBuffer & ImgBuffer::operator= (ImgBuffer && img)
+ImgBuffer & ImgBuffer::operator= (ImgBuffer && img) noexcept
 {
     if(this!=&img)
     {
