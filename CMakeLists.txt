@@ -35,6 +35,17 @@ elseif(NOT CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 11)
 endif()
 
+if(MSVC)
+	include(CheckCXXCompilerFlag)
+	CHECK_CXX_COMPILER_FLAG("-std:c++11" COMPILER_SUPPORTS_CXX11)
+
+	if(NOT COMPILER_SUPPORTS_CXX11 AND ${CMAKE_CXX_STANDARD} EQUAL 11)
+		message(STATUS "The compiler ${CMAKE_CXX_COMPILER_ID} has no C++11 only support. Use C++14.")
+		set(CMAKE_CXX_STANDARD 14)
+	endif()
+endif()
+
+
 # Disable fallback to other C++ version if standard is not supported.
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Disable any compiler specific C++ extensions.
@@ -121,8 +132,9 @@ else()
 endif()
 
 if(OCIO_WARNING_AS_ERROR)
-	# TODO: Vc++ compilation has still many tricky warnings.
-	if(NOT MSVC)
+	if(MSVC)
+		set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /WX")
+	else()
 		set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Werror")
 	endif()
 endif()
