@@ -22,6 +22,8 @@ public:
     class GpuShaderLine
     {
     public:
+        GpuShaderLine() = delete;
+        GpuShaderLine(const GpuShaderLine &) = default;
         ~GpuShaderLine();
 
         GpuShaderLine& operator<<(const char * str);
@@ -34,19 +36,17 @@ public:
         friend class GpuShaderText;
 
     private:
-
         explicit GpuShaderLine(GpuShaderText * text);
 
-        GpuShaderLine();
-        GpuShaderLine(const GpuShaderLine &);
-
         // The ShaderText instance associated with this line.
-        GpuShaderText * m_text;
+        // Note: Not owned.
+        GpuShaderText * m_text = nullptr;
     };
 
 public:
 
-    GpuShaderText(GpuLanguage lang);
+    GpuShaderText() = delete;
+    explicit GpuShaderText(GpuLanguage lang);
 
     // Create a new GpuShaderLine instance and associate it with the GpuShaderText object.
     GpuShaderLine newLine();

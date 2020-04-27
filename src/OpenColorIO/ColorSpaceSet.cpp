@@ -15,8 +15,8 @@ namespace OCIO_NAMESPACE
 class ColorSpaceSet::Impl
 {
 public:
-    Impl() { }
-    ~Impl() { }
+    Impl() = default;
+    ~Impl() = default;
 
     Impl(const Impl &) = delete;
 

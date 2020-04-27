@@ -133,7 +133,7 @@ public:
     XMLParserHelper(const XMLParserHelper &) = delete;
     XMLParserHelper & operator=(const XMLParserHelper &) = delete;
 
-    XMLParserHelper(const std::string & fileName)
+    explicit XMLParserHelper(const std::string & fileName)
         : m_parser(XML_ParserCreate(NULL))
         , m_fileName(fileName)
         , m_ignoring(0)

@@ -231,6 +231,7 @@ struct PackedImageDesc::Impl
                 {
                     return false;
                 }
+                break;
             }
             case BIT_DEPTH_F32:
             {

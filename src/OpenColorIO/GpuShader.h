@@ -88,8 +88,8 @@ private:
     static void Deleter(LegacyGpuShaderDesc* c);
 
     class Impl;
-    friend class Impl;
     Impl * m_impl;
+
     Impl * getImpl() { return m_impl; }
     const Impl * getImpl() const { return m_impl; }
 };
@@ -168,8 +168,8 @@ private:
     static void Deleter(GenericGpuShaderDesc* c);
 
     class Impl;
-    friend class Impl;
     Impl * m_impl;
+
     Impl * getImpl() { return m_impl; }
     const Impl * getImpl() const { return m_impl; }
 };

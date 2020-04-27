@@ -75,11 +75,11 @@ void bindPyLut3DTransform(py::module & m)
 
                 float * values = static_cast<float *>(info.ptr);
 
-                for (size_t indexR = 0; indexR < gs; indexR++)
+                for (unsigned long indexR = 0; indexR < gs; indexR++)
                 {
-                    for (size_t indexG = 0; indexG < gs; indexG++)
+                    for (unsigned long indexG = 0; indexG < gs; indexG++)
                     {
-                        for (size_t indexB = 0; indexB < gs; indexB++)
+                        for (unsigned long indexB = 0; indexB < gs; indexB++)
                         {
                             const unsigned long i = 3 * ((indexR*gs + indexG)*gs + indexB);
                             self->setValue(indexR, indexG, indexB, 
@@ -99,11 +99,11 @@ void bindPyLut3DTransform(py::module & m)
                 std::vector<float> values;
                 values.reserve(static_cast<size_t>(gs*gs*gs * 3));
 
-                for (size_t indexR = 0; indexR < gs; indexR++)
+                for (unsigned long indexR = 0; indexR < gs; indexR++)
                 {
-                    for (size_t indexG = 0; indexG < gs; indexG++)
+                    for (unsigned long indexG = 0; indexG < gs; indexG++)
                     {
-                        for (size_t indexB = 0; indexB < gs; indexB++)
+                        for (unsigned long indexB = 0; indexB < gs; indexB++)
                         {
                             float r, g, b;
                             self->getValue(indexR, indexG, indexB, r, g, b);

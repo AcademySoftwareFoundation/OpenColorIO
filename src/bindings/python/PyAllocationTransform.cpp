@@ -22,7 +22,7 @@ void setVars(const AllocationTransformRcPtr & p, const std::vector<float> & vars
     {
         throw Exception("vars must be a float array, size 2 or 3");
     }
-    p->setVars(vars.size(), vars.data());
+    p->setVars((int)vars.size(), vars.data());
 }
 
 } // namespace

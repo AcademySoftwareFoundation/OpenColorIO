@@ -93,7 +93,7 @@ public:
         m_categories.clear();
     }
 
-protected:
+private:
     Categories m_categories;
 };
 
