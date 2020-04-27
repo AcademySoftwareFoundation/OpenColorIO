@@ -240,15 +240,15 @@ void ValidateRegularExpression(const char * exp)
 {
     try
     {
-        std::regex reg(exp);
+        const std::regex reg(exp);
 
         // At least one evaluation in order to validate the computed regular expression
         // because some exceptions are only at evaluation time.
-        constexpr char arbitraryPath[]
+        static constexpr char arbitraryPath[]
             = "/Users/hodoulp/Documents/Duuuuuuuuuuuuuuuuuuuummy/File/Path/marci_512_srgb.png";
-        regex_match(arbitraryPath, reg);
+        std::regex_match(arbitraryPath, reg);
     }
-    catch (std::runtime_error & ex)
+    catch (std::regex_error & ex)
     {
         std::ostringstream oss;
         oss << "File rules: invalid regular expression: '" << std::string(exp) << "'. Error is: '"

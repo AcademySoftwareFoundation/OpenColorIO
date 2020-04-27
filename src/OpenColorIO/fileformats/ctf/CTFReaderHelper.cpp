@@ -2593,12 +2593,12 @@ void CTFReaderLogElt_2_0::end()
         if (!isBaseSet())
         {
             if (getCTFParams().m_style == LogUtil::LOG2 
-                    || getCTFParams().m_style == LogUtil::ANTI_LOG2)
+                || getCTFParams().m_style == LogUtil::ANTI_LOG2)
             {
                 setBase(2.0);
             }
             else if (getCTFParams().m_style == LogUtil::LOG10
-                        || getCTFParams().m_style == LogUtil::ANTI_LOG10)
+                     || getCTFParams().m_style == LogUtil::ANTI_LOG10)
             {
                 setBase(10.0);
             }
