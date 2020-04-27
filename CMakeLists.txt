@@ -52,7 +52,6 @@ endif()
 
 if(NOT COMPILER_SUPPORTS_CXX14 AND ${CMAKE_CXX_STANDARD} EQUAL 14)
 	message(ERROR "The compiler ${CMAKE_CXX_COMPILER_ID} has no C++14 only support.")
-	set(CMAKE_CXX_STANDARD 14)
 endif()
 
 
