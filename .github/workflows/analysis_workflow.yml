@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright Contributors to the OpenColorIO Project.#
+# Copyright Contributors to the OpenColorIO Project.
 #
 # GitHub Actions workflow file
 # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions
@@ -182,7 +182,7 @@ jobs:
                 -DOCIO_WARNING_AS_ERROR=ON \
                 -DPYTHON_EXECUTABLE=$(which python)
         working-directory: _build
-      - name: Build OCIO with build-wrapperr
+      - name: Build OCIO with build-wrapper
         run: build-wrapper-linux-x86-64 --out-dir bw_output make clean all
         working-directory: _build
       - name: Test
