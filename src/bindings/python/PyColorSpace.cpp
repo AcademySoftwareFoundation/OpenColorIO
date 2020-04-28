@@ -73,7 +73,7 @@ void bindPyColorSpace(py::module & m)
                     {
                         throw Exception("vars must be a float array, size 2 or 3");
                     }
-                    p->setAllocationVars(allocationVars.size(), allocationVars.data());
+                    p->setAllocationVars((int)allocationVars.size(), allocationVars.data());
                 }
                 if (toReference)
                 { 
@@ -145,7 +145,7 @@ void bindPyColorSpace(py::module & m)
                 {
                     throw Exception("vars must be a float array, size 2 or 3");
                 }
-                self->setAllocationVars(vars.size(), vars.data());
+                self->setAllocationVars((int)vars.size(), vars.data());
             }, 
              "vars"_a)
 

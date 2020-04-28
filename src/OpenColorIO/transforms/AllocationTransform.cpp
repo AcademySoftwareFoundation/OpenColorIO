@@ -69,16 +69,7 @@ TransformRcPtr AllocationTransform::createEditableCopy() const
 AllocationTransform::~AllocationTransform()
 {
     delete m_impl;
-    m_impl = NULL;
-}
-
-AllocationTransform& AllocationTransform::operator= (const AllocationTransform & rhs)
-{
-    if (this != &rhs)
-    {
-        *m_impl = *rhs.m_impl;
-    }
-    return *this;
+    m_impl = nullptr;
 }
 
 TransformDirection AllocationTransform::getDirection() const  noexcept

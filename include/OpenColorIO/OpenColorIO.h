@@ -67,16 +67,17 @@ namespace OCIO_NAMESPACE
 class OCIOEXPORT Exception : public std::runtime_error
 {
 public:
+    //!cpp:function::
+    Exception() = delete;
     //!cpp:function:: Constructor that takes a string as the exception message.
     explicit Exception(const char *);
     //!cpp:function:: Constructor that takes an existing exception.
     Exception(const Exception &);
+    //!cpp:function::
+    Exception & operator= (const Exception &) = delete;
 
+    //!cpp:function::
     ~Exception();
-
-private:
-    Exception();
-    Exception & operator= (const Exception &);
 };
 
 //!cpp:class:: An exception class for errors detected at
@@ -89,16 +90,17 @@ private:
 class OCIOEXPORT ExceptionMissingFile : public Exception
 {
 public:
+    //!cpp:function::
+    ExceptionMissingFile() = delete;
     //!cpp:function:: Constructor that takes a string as the exception message.
     explicit ExceptionMissingFile(const char *);
     //!cpp:function:: Constructor that takes an existing exception.
     ExceptionMissingFile(const ExceptionMissingFile &);
+    //!cpp:function::
+    ExceptionMissingFile & operator= (const ExceptionMissingFile &) = delete;
 
+    //!cpp:function::
     ~ExceptionMissingFile();
-
-private:
-    ExceptionMissingFile();
-    ExceptionMissingFile & operator= (const ExceptionMissingFile &);
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -654,7 +656,7 @@ public:
 
     //!cpp:function:: Most applications will use the preceding method, but this method may be
     // used for applications that want to know which was the highest priority rule to match
-    // filePath.  The :cpp:func:`FileRules::getNumCustomKeys(ruleIndex)` and custom keys methods
+    // filePath.  The :cpp:func:`FileRules::getNumCustomKeys` and custom keys methods
     // may then be used to get additional information about the matching rule.
     const char * getColorSpaceFromFilepath(const char * filePath, size_t & ruleIndex) const;
 
@@ -755,13 +757,15 @@ public:
                                             const char * dstName,
                                             const char * dstInterchangeName);
 
+    //!cpp:function::
+    Config(const Config &) = delete;
+    //!cpp:function::
+    Config& operator= (const Config &) = delete;
+    //!cpp:function::
     ~Config();
 
 private:
     Config();
-
-    Config(const Config &);
-    Config& operator= (const Config &);
 
     static void deleter(Config* c);
 
@@ -914,13 +918,15 @@ public:
     //!cpp:function:: Move a rule closer to the end of the list by one position.
     void decreaseRulePriority(size_t ruleIndex);
 
+    //!cpp:function::
+    FileRules(const FileRules &) = delete;
+    //!cpp:function::
+    FileRules & operator= (const FileRules &) = delete;
+    //!cpp:function::
     virtual ~FileRules();
 
 private:
     FileRules();
-
-    FileRules(const FileRules &) = delete;
-    FileRules & operator= (const FileRules &) = delete;
 
     static void deleter(FileRules* c);
 
@@ -1097,14 +1103,16 @@ public:
     void setTransform(const ConstTransformRcPtr & transform,
                         ColorSpaceDirection dir);
 
+    //!cpp:function::
+    ColorSpace(const ColorSpace &) = delete;
+    //!cpp:function::
+    ColorSpace& operator= (const ColorSpace &) = delete;
+    //!cpp:function::
     ~ColorSpace();
 
 private:
-    ColorSpace(ReferenceSpaceType referenceSpace);
+    explicit ColorSpace(ReferenceSpaceType referenceSpace);
     ColorSpace();
-
-    ColorSpace(const ColorSpace &);
-    ColorSpace& operator= (const ColorSpace &);
 
     static void deleter(ColorSpace* c);
 
@@ -1353,19 +1361,20 @@ public:
     // to null will clear it.
     void setTransform(const ConstTransformRcPtr & transform, ViewTransformDirection dir);
 
+    //!cpp:function::
+    ViewTransform(const ViewTransform &) = delete;
+    //!cpp:function::
+    ViewTransform & operator= (const ViewTransform &) = delete;
+    //!cpp:function::
     ~ViewTransform();
     
 private:
     ViewTransform();
-    ViewTransform(ReferenceSpaceType referenceSpace);
-
-    ViewTransform(const ViewTransform &) = delete;
-    ViewTransform & operator= (const ViewTransform &) = delete;
+    explicit ViewTransform(ReferenceSpaceType referenceSpace);
 
     static void deleter(ViewTransform * c);
 
     class Impl;
-    friend class Impl;
     Impl * m_impl;
     Impl * getImpl() { return m_impl; }
     const Impl * getImpl() const { return m_impl; }
@@ -2065,7 +2074,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////
 //!rst::
 // GpuShaderCreator
-// *************
+// ****************
 // Inherit from the class to fully customize the implementation of a GPU shader program
 // from a color transformation.
 //

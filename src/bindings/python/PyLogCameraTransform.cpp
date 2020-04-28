@@ -6,6 +6,11 @@
 namespace OCIO_NAMESPACE
 {
 
+// TODO: The 'reinterpret_cast' is a short-term solution waiting for the new C++
+// syntax to pass RGBA values as argument. While waiting for the final solution,
+// disable the SonarCloud warnings.
+/* @SuppressWarnings('all') */
+
 void bindPyLogCameraTransform(py::module & m)
 {
     LogCameraTransformRcPtr DEFAULT = LogCameraTransform::Create();
