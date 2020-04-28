@@ -24,8 +24,8 @@ endif()
 
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     if(DEFINED pybind11_DIRS)
-        # Try user defined search path. Ignore all default cmake and system 
-        # paths, and fall back on a system CMake config.
+        # Try user defined search path first. Ignore all default cmake and 
+        # system paths, and fall back on a system CMake config.
         find_path(pybind11_INCLUDE_DIR
             NAMES
                 pybind11/pybind11.h
@@ -37,14 +37,27 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
             NO_DEFAULT_PATH
         )
 
-        if(EXISTS "${pybind11_INCLUDE_DIR}")
-            # Assume user-provided version is OK.
-            # TODO: Can the pybind11 version be inspected from a header?
-            set(pybind11_VERSION ${pybind11_FIND_VERSION})
-            message(STATUS 
-                "Using user defined search path for pybind11 "
-                "(version \">=${pybind11_FIND_VERSION}\" assumed)"
-            )
+        # Version information can be extracted from this header
+        set(_pybind11_COMMON_H "${pybind11_INCLUDE_DIR}/pybind11/detail/common.h")
+
+        if(EXISTS "${_pybind11_COMMON_H}")
+            file(STRINGS "${_pybind11_COMMON_H}" _pybind11_VER_SEARCH 
+                REGEX "^[ \t]*#define[ \t]+PYBIND11_VERSION_(MAJOR|MINOR|PATCH)[ \t]+([0-9]+).*$")
+
+            if(_pybind11_VER_SEARCH)
+                string(REGEX REPLACE ".*MAJOR[ \t]+([0-9]+).*" 
+                    "\\1" _pybind11_MAJOR "${_pybind11_VER_SEARCH}")
+                string(REGEX REPLACE ".*MINOR[ \t]+([0-9]+).*" 
+                    "\\1" _pybind11_MINOR "${_pybind11_VER_SEARCH}")
+                string(REGEX REPLACE ".*PATCH[ \t]+([0-9]+).*" 
+                    "\\1" _pybind11_PATCH "${_pybind11_VER_SEARCH}")
+
+                set(pybind11_VERSION "${_pybind11_MAJOR}.${_pybind11_MINOR}.${_pybind11_PATCH}")
+                message(STATUS 
+                    "Using user defined search path for pybind11 "
+                    "(found version \"${pybind11_VERSION}\")"
+                )
+            endif()
         endif()
     endif()
 
