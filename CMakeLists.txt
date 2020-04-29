@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.12)
 
 project(OpenColorIO 
 	VERSION 2.0.0
@@ -88,19 +88,19 @@ if(OCIO_BUILD_GPU_TESTS OR OCIO_BUILD_APPS)
     set(OCIO_GL_ENABLED ON)
     find_package(OpenGL QUIET)
     if(NOT OpenGL_FOUND)
-        message(WARNING "OpenGL not found.")
+        message(WARNING "Could NOT find OpenGL.")
         set(OCIO_GL_ENABLED OFF)
     endif()
     if(NOT APPLE)
         find_package(GLEW QUIET)
         if(NOT GLEW_FOUND)
-            message(WARNING "GLEW not found.")
+            message(WARNING "Coule NOT find GLEW.")
             set(OCIO_GL_ENABLED OFF)
         endif()
     endif()
     find_package(GLUT QUIET)
     if(NOT GLUT_FOUND)
-        message(WARNING "GLUT not found.")
+        message(WARNING "Could NOT find GLUT.")
         set(OCIO_GL_ENABLED OFF)
     endif()
 endif()
@@ -211,11 +211,19 @@ if(OCIO_BUILD_STATIC)
 endif()
 
 ###############################################################################
+# Find or install external dependencies
+# Some required targets may be created by third-party CMake configs, which 
+# don't generally produce global targets. To guarantee all imported targets are 
+# global, this module is included at the project root level.
+
+include(share/cmake/modules/FindExtPackages.cmake)
+
+###############################################################################
 # Progress to other sources
 
+add_subdirectory(ext)
 add_subdirectory(tests)
 add_subdirectory(include)
-add_subdirectory(ext)
 add_subdirectory(src)
 if(OCIO_BUILD_DOCS)
 	add_subdirectory(docs)

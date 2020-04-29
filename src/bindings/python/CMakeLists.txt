@@ -7,11 +7,6 @@
 find_package(PythonInterp 2.7 REQUIRED)
 find_package(PythonLibs 2.7 REQUIRED)
 
-# pybind11
-# https://github.com/pybind/pybind11
-set(pybind11_MIN_VERSION 2.4.3)
-find_package(pybind11 ${pybind11_MIN_VERSION} REQUIRED)
-
 ###############################################################################
 # PyDoc generation
 # file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include")

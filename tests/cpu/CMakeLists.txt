@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-include(ExternalProject)
-
 # Define used for tests in tests/cpu/Context_tests.cpp
 add_definitions("-DOCIO_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
 
@@ -20,12 +18,12 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 			public_api
 		PRIVATE
 			expat::expat
-			ilmbase::ilmbase
+			IlmBase::Half
 			pystring::pystring
 			sampleicc::sampleicc
 			unittest_data
 			utils::strings
-			yamlcpp::yamlcpp
+			yaml-cpp
 			testutils
 	)
 	if(PRIVATE_INCLUDES)

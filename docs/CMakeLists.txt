@@ -9,19 +9,6 @@ if(NOT OCIO_BUILD_PYTHON)
 endif()
 
 ###############################################################################
-### External Python dependencies ###
-
-include(FindPythonPackage)
-
-# Sphinx
-# https://pypi.python.org/pypi/Sphinx
-set(SPHINX_MIN_VERSION 1.8.5)
-find_package(Sphinx ${SPHINX_MIN_VERSION} REQUIRED)
-if(NOT SPHINX_FOUND)
-    message(FATAL_ERROR "Doc generation requires Sphinx")
-endif()
-
-###############################################################################
 ### Setup PYTHONPATH ###
 
 # Override PYTHONPATH prior to running Sphinx. This makes the PyOpenColorIO
@@ -135,7 +122,7 @@ add_custom_target(rst_extraction
 
 add_custom_target(docs ALL
     COMMAND
-        ${PYT_PRE_CMD} "${SPHINX_EXECUTABLE}" -b html . "${CMAKE_CURRENT_BINARY_DIR}/build-html"
+        ${PYT_PRE_CMD} "${Sphinx_EXECUTABLE}" -b html . "${CMAKE_CURRENT_BINARY_DIR}/build-html"
     DEPENDS
         OpenColorIO
         PyOpenColorIO
@@ -162,7 +149,7 @@ if(PDFLATEX_COMPILER)
 
     add_custom_target(latex
         COMMAND
-            ${PYT_PRE_CMD} "${SPHINX_EXECUTABLE}" -b latex . "${CMAKE_CURRENT_BINARY_DIR}/build-latex"
+            ${PYT_PRE_CMD} "${Sphinx_EXECUTABLE}" -b latex . "${CMAKE_CURRENT_BINARY_DIR}/build-latex"
         DEPENDS
             OpenColorIO
             PyOpenColorIO

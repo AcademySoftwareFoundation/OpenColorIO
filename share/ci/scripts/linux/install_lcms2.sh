@@ -16,12 +16,11 @@ else
     git checkout tags/lcms${LCMS2_VERSION} -b lcms${LCMS2_VERSION}
 fi
 
-cp ../share/cmake/projects/BuildLCMS2.cmake CMakeLists.txt
+cp ../share/cmake/projects/Buildlcms2.cmake CMakeLists.txt
 
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
-      -DBUILD_SHARED_LIBS:BOOL=ON \
+cmake -DBUILD_SHARED_LIBS=ON \
       -DCMAKE_C_FLAGS="-fPIC" \
       ../.
 make -j4

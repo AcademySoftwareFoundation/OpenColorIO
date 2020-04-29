@@ -31,11 +31,11 @@ target_include_directories(oiiohelpers
 
 target_link_libraries(oiiohelpers
     PUBLIC
-        OpenImageIO
+        OpenImageIO::OpenImageIO
 
     PRIVATE
         OpenColorIO
-        ilmbase::ilmbase
+        IlmBase::Half
         utils::strings
 )
 

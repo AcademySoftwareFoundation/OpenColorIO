@@ -5,7 +5,10 @@
 # These apps may also require the building of openglbuilder from utils
 # but because the builder also needs GLEW, we only conditionally build
 # this lib
-find_package(OpenImageIO QUIET)
+
+# OpenImageIO
+# https://github.com/OpenImageIO/oiio
+find_package(OpenImageIO 2.1.9 CONFIG)
 
 
 # The order defines the architecture of the project i.e. layers and dependencies.
