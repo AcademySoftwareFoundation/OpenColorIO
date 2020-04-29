@@ -75,8 +75,8 @@ typedef OCIO_SHARED_PTR<const MatrixOffsetOp> ConstMatrixOffsetOpRcPtr;
 
 
 MatrixOffsetOp::MatrixOffsetOp(const double * m44,
-                                const double * offset4,
-                                TransformDirection direction)
+                               const double * offset4,
+                               TransformDirection direction)
     : Op()
 {
     MatrixOpDataRcPtr mat = std::make_shared<MatrixOpData>(direction);
@@ -207,7 +207,7 @@ void CreateScaleOp(OpRcPtrVec & ops,
                    const double * scale4,
                    TransformDirection direction)
 {
-    const double offset4[4] = { 0, 0, 0, 0 };
+    static constexpr double offset4[4] { 0, 0, 0, 0 };
     CreateScaleOffsetOp(ops, scale4, offset4, direction);
 }
 
@@ -215,7 +215,7 @@ void CreateMatrixOp(OpRcPtrVec & ops,
                     const double * m44,
                     TransformDirection direction)
 {
-    const double offset4[4] = { 0.0, 0.0, 0.0, 0.0 };
+    static constexpr double offset4[4] { 0.0, 0.0, 0.0, 0.0 };
     CreateMatrixOffsetOp(ops, m44, offset4, direction);
 }
 
@@ -223,7 +223,7 @@ void CreateOffsetOp(OpRcPtrVec & ops,
                     const double * offset4,
                     TransformDirection direction)
 {
-    const double scale4[4] = { 1.0, 1.0, 1.0, 1.0 };
+    static constexpr double scale4[4] { 1.0, 1.0, 1.0, 1.0 };
     CreateScaleOffsetOp(ops, scale4, offset4, direction);
 }
 
@@ -238,9 +238,7 @@ void CreateScaleOffsetOp(OpRcPtrVec & ops,
     m44[10] = scale4[2];
     m44[15] = scale4[3];
 
-    CreateMatrixOffsetOp(ops,
-                            m44, offset4,
-                            direction);
+    CreateMatrixOffsetOp(ops, m44, offset4, direction);
 }
 
 void CreateSaturationOp(OpRcPtrVec & ops,
@@ -250,8 +248,7 @@ void CreateSaturationOp(OpRcPtrVec & ops,
 {
     double matrix[16];
     double offset[4];
-    MatrixTransform::Sat(matrix, offset,
-                            sat, lumaCoef3);
+    MatrixTransform::Sat(matrix, offset, sat, lumaCoef3);
 
     CreateMatrixOffsetOp(ops, matrix, offset, direction);
 }
@@ -282,8 +279,7 @@ void CreateFitOp(OpRcPtrVec & ops,
     CreateMatrixOffsetOp(ops, matrix, offset, direction);
 }
 
-void CreateIdentityMatrixOp(OpRcPtrVec & ops,
-                            TransformDirection direction)
+void CreateIdentityMatrixOp(OpRcPtrVec & ops, TransformDirection direction)
 {
     double matrix[16]{ 0.0 };
     matrix[0] = 1.0;
@@ -327,6 +323,14 @@ void CreateMinMaxOp(OpRcPtrVec & ops,
     const double min[3] = { from_min, from_min, from_min };
     const double max[3] = { from_max, from_max, from_max };
     CreateMinMaxOp(ops, min, max, direction);
+}
+
+void CreateMatrixOp(OpRcPtrVec & ops,
+                    MatrixOpData::MatrixArrayPtr & matrix,
+                    TransformDirection direction)
+{
+    MatrixOpDataRcPtr mat = std::make_shared<MatrixOpData>(*matrix.get());
+    CreateMatrixOp(ops, mat, direction);
 }
 
 void CreateMatrixOp(OpRcPtrVec & ops, MatrixOpDataRcPtr & matrix, TransformDirection direction)

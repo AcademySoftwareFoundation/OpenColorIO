@@ -354,7 +354,7 @@ const char * Context::resolveFileLocation(const char * filename) const
     // Loop over each path, and try to find the file
     std::ostringstream errortext;
     errortext << "The specified file reference ";
-    errortext << " '" << filename << "' could not be located. ";
+    errortext << "'" << filename << "' could not be located. ";
     errortext << "The following attempts were made: ";
 
     for (unsigned int i = 0; i < searchpaths.size(); ++i)
@@ -368,8 +368,9 @@ const char * Context::resolveFileLocation(const char * filename) const
             return getImpl()->m_resultsCache[filename].c_str();
         }
         if(i!=0) errortext << " : ";
-        errortext << expandedfullpath;
+        errortext << "'" << expandedfullpath << "'";
     }
+    errortext << ".";
 
     throw ExceptionMissingFile(errortext.str().c_str());
 }

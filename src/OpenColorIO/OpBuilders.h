@@ -26,6 +26,11 @@ void BuildAllocationOp(OpRcPtrVec & ops,
                        const AllocationTransform & transform,
                        TransformDirection dir);
 
+void BuildBuiltinOps(OpRcPtrVec & ops,
+                     const Config & config,
+                     const BuiltinTransform & transform,
+                     TransformDirection dir);
+
 void BuildCDLOp(OpRcPtrVec & ops,
                 const Config & config,
                 const CDLTransform & transform,

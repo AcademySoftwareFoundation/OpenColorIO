@@ -175,6 +175,40 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const AllocationTrans
 
 //!rst:: //////////////////////////////////////////////////////////////////
 
+//!cpp:class:: A built-in transform is similar to a FileTransform, but without the file.
+// OCIO knows how to build a set of commonly used transforms on-demand, thus avoiding the need
+// for external files and simplifying config authoring.
+class OCIOEXPORT BuiltinTransform : public Transform
+{
+public:
+    //!cpp:function::
+    static BuiltinTransformRcPtr Create();
+
+    //!cpp:function::
+    virtual const char * getStyle() const noexcept = 0;
+    //!cpp:function:: Select an existing built-in transform style from the list accessible
+    // through :cpp:class:`BuiltinTransformRegistry`. The style is the ID string that identifies
+    // which transform to apply.
+    virtual void setStyle(const char * style) = 0;
+
+    //!cpp:function::
+    virtual const char * getDescription() const noexcept = 0;
+
+protected:
+    BuiltinTransform() = default;
+    virtual ~BuiltinTransform() = default;
+
+private:
+    BuiltinTransform(const BuiltinTransform &) = delete;
+    BuiltinTransform & operator= (const BuiltinTransform &) = delete;
+};
+
+//!cpp:function::
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const BuiltinTransform &) noexcept;
+
+
+//!rst:: //////////////////////////////////////////////////////////////////
+
 //!cpp:class:: An implementation of the ASC Color Decision List (CDL), based on the ASC v1.2
 // specification.
 //

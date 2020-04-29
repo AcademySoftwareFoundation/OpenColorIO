@@ -68,6 +68,10 @@ void CreateMinMaxOp(OpRcPtrVec & ops,
                     TransformDirection direction);
 
 void CreateMatrixOp(OpRcPtrVec & ops,
+                    MatrixOpData::MatrixArrayPtr & matrix,
+                    TransformDirection direction);
+
+void CreateMatrixOp(OpRcPtrVec & ops,
                     MatrixOpDataRcPtr & matrix,
                     TransformDirection direction);
 

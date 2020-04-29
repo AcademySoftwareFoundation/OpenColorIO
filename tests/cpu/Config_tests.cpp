@@ -11,6 +11,7 @@
 #include "testutils/UnitTest.h"
 #include "UnitTestLogUtils.h"
 #include "UnitTestUtils.h"
+#include "utils/StringUtils.h"
 
 
 namespace OCIO = OCIO_NAMESPACE;
@@ -703,7 +704,7 @@ OCIO_ADD_TEST(Config, env_colorspace_name)
         // Check that the serialization preserves the env. variable
         OCIO::Platform::Setenv("OCIO_TEST", "lnh");
 
-        const std::string 
+        const std::string
             myConfigStr = MY_OCIO_CONFIG
                 + "    from_reference: !<ColorSpaceTransform> {src: raw, dst: $OCIO_TEST}\n";
 
@@ -1173,20 +1174,20 @@ OCIO_ADD_TEST(Config, range_serialization)
     }
 }
 
-OCIO_ADD_TEST(Config, exponent_serialization)   
+OCIO_ADD_TEST(Config, exponent_serialization)  
 {
     const std::string SIMPLE_PROFILE = SIMPLE_PROFILE_A + SIMPLE_PROFILE_B;
-    {   
-        const std::string strEnd =  
+    {
+        const std::string strEnd = 
             "    from_reference: !<ExponentTransform> " 
             "{value: [1.101, 1.202, 1.303, 1.404]}\n";  
         const std::string str = PROFILE_V1 + SIMPLE_PROFILE + strEnd;
 
-        std::istringstream is; 
-        is.str(str);    
-        OCIO::ConstConfigRcPtr config;  
-        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));   
-        OCIO_CHECK_NO_THROW(config->sanityCheck()); 
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;  
         OCIO_CHECK_NO_THROW(ss << *config.get());    
@@ -1216,11 +1217,11 @@ OCIO_ADD_TEST(Config, exponent_serialization)
             "{value: [1.101, 1.202, 1.303, 1.404], direction: inverse}\n";  
         const std::string str = PROFILE_V1 + SIMPLE_PROFILE + strEnd;
 
-        std::istringstream is; 
-        is.str(str);    
-        OCIO::ConstConfigRcPtr config;  
-        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));   
-        OCIO_CHECK_NO_THROW(config->sanityCheck()); 
+        std::istringstream is;
+        is.str(str); 
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;  
         OCIO_CHECK_NO_THROW(ss << *config.get());    
@@ -2000,7 +2001,7 @@ OCIO_ADD_TEST(Config, view)
         "    allocation: uniform\n";
 
     {
-        std::string myProfile = 
+        std::string myProfile =
             SIMPLE_PROFILE_HEADER
             +
             "active_displays: []\n"
@@ -2025,7 +2026,7 @@ OCIO_ADD_TEST(Config, view)
     }
 
     {
-        std::string myProfile = 
+        std::string myProfile =
             SIMPLE_PROFILE_HEADER
             +
             "active_displays: []\n"
@@ -2604,63 +2605,19 @@ OCIO_ADD_TEST(Config, key_value_error)
                           "'matrix' values must be 16 numbers. Found '6'.");
 }
 
-namespace
-{
-
-// Redirect the std::cerr to catch the warning.
-class CerrGuard
-{
-public:      
-    CerrGuard()      
-        :   m_oldBuf(std::cerr.rdbuf())      
-    {        
-        std::cerr.rdbuf(m_ss.rdbuf());       
-    }        
-
-    ~CerrGuard()         
-    {        
-        std::cerr.rdbuf(m_oldBuf);       
-        m_oldBuf = nullptr;      
-    }        
-
-    std::string output() { return m_ss.str(); }      
-
-private:         
-    std::stringstream m_ss;      
-    std::streambuf *  m_oldBuf;      
-
-    CerrGuard(const CerrGuard &) = delete;        
-    CerrGuard operator=(const CerrGuard &) = delete;      
-};
-
-};
-
 OCIO_ADD_TEST(Config, unknown_key_error)
 {
-    const std::string SHORT_PROFILE =
-        "ocio_profile_version: 2\n"
-        "strictparsing: false\n"
-        "roles:\n"
-        "  default: raw\n"
-        "displays:\n"
-        "  sRGB:\n"
-        "  - !<View> {name: Raw, colorspace: raw}\n"
-        "\n"
-        "colorspaces:\n"
-        "  - !<ColorSpace>\n"
-        "    name: raw\n"
-        "    dummyKey: dummyValue\n"
-        "    to_reference: !<MatrixTransform> {offset: [1, 0, 0, 0]}\n"
-        "    allocation: uniform\n"
-        "\n";
+    std::ostringstream oss;
+    oss << PROFILE_V2_START
+        << "    dummyKey: dummyValue\n";
 
     std::istringstream is;
-    is.str(SHORT_PROFILE);
+    is.str(oss.str());
 
-    CerrGuard g;
+    OCIO::LogGuard g;
     OCIO_CHECK_NO_THROW(OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_EQUAL(g.output(), 
-                     "[OpenColorIO Warning]: At line 12, unknown key 'dummyKey' in 'ColorSpace'.\n");
+    OCIO_CHECK_ASSERT(StringUtils::StartsWith(g.output(), 
+                     "[OpenColorIO Warning]: At line 45, unknown key 'dummyKey' in 'ColorSpace'."));
 }
 
 OCIO_ADD_TEST(Config, fixed_function_serialization)
@@ -2698,6 +2655,8 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+        // Write the config.
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -4415,10 +4374,6 @@ colorspaces:
   - !<ColorSpace>
     name: raw
     allocation: uniform
-
-  - !<ColorSpace>
-    name: test
-    allocation: uniform
     from_reference: !<GroupTransform>
        children:
          - !<RangeTransform> {minInValue: 0, minOutValue: 0}
@@ -4430,4 +4385,75 @@ colorspaces:
     OCIO_CHECK_THROW_WHAT(cfg = OCIO::Config::CreateFromStream(is),
                           OCIO::Exception,
                           "Only config version 2 (or higher) can have RangeTransform.");
+}
+
+OCIO_ADD_TEST(Config, builtin_transforms)
+{
+    // Test some default built-in transforms.
+
+    constexpr const char * CONFIG_BUILTIN_TRANSFORMS{
+R"(ocio_profile_version: 2
+
+search_path: ""
+strictparsing: true
+luma: [0.2126, 0.7152, 0.0722]
+
+roles:
+  default: ref
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  Disp1:
+    - !<View> {name: View1, colorspace: test}
+
+active_displays: []
+active_views: []
+
+colorspaces:
+  - !<ColorSpace>
+    name: ref
+    family: ""
+    equalitygroup: ""
+    bitdepth: unknown
+    isdata: false
+    allocation: uniform
+
+  - !<ColorSpace>
+    name: test
+    family: ""
+    equalitygroup: ""
+    bitdepth: unknown
+    isdata: false
+    allocation: uniform
+    from_reference: !<GroupTransform>
+      children:
+        - !<BuiltinTransform> {style: ACEScct_to_ACES2065-1}
+        - !<BuiltinTransform> {style: ACEScct_to_ACES2065-1, direction: inverse}
+)"};
+
+    std::istringstream iss;
+    iss.str(CONFIG_BUILTIN_TRANSFORMS);
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+
+    {
+        // Test loading the config.
+
+        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 2);
+
+        OCIO::ConstProcessorRcPtr processor;
+        OCIO_CHECK_NO_THROW(processor = config->getProcessor("ref", "test"));
+    }
+
+    {
+        // Test saving the config.
+
+        std::ostringstream oss;
+        oss << *config.get();
+        OCIO_CHECK_EQUAL(oss.str(), CONFIG_BUILTIN_TRANSFORMS);
+    }
 }

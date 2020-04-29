@@ -69,7 +69,7 @@ void CTFReaderTransformElt::start(const char ** atts)
         {
             if (!atts[i + 1] || !*atts[i + 1])
             {
-                throwMessage("Required attribute 'id' does not have a value. ");
+                throwMessage("Required attribute 'id' does not have a value.");
             }
 
             m_transform->setID(atts[i + 1]);
@@ -79,7 +79,7 @@ void CTFReaderTransformElt::start(const char ** atts)
         {
             if (!atts[i + 1] || !*atts[i + 1])
             {
-                throwMessage("If the attribute 'name' is present, it must have a value. ");
+                throwMessage("If the attribute 'name' is present, it must have a value.");
             }
 
             m_transform->setName(atts[i + 1]);
@@ -88,7 +88,7 @@ void CTFReaderTransformElt::start(const char ** atts)
         {
             if (!atts[i + 1] || !*atts[i + 1])
             {
-                throwMessage("If the attribute 'inverseOf' is present, it must have a value. ");
+                throwMessage("If the attribute 'inverseOf' is present, it must have a value.");
             }
 
             m_transform->setInverseOfId(atts[i + 1]);
@@ -97,17 +97,17 @@ void CTFReaderTransformElt::start(const char ** atts)
         {
             if (isCLFVersionFound)
             {
-                throwMessage("'compCLFversion' and 'Version' cannot both be present. ");
+                throwMessage("'compCLFversion' and 'Version' cannot both be present.");
             }
             if (isVersionFound)
             {
-                throwMessage("'Version' can only be there once. ");
+                throwMessage("'Version' can only be there once.");
             }
 
             const char* pVer = atts[i + 1];
             if (!pVer || !*pVer)
             {
-                throwMessage("If the attribute 'version' is present, it must have a value. ");
+                throwMessage("If the attribute 'version' is present, it must have a value.");
             }
 
             try
@@ -126,17 +126,17 @@ void CTFReaderTransformElt::start(const char ** atts)
         {
             if (isCLFVersionFound)
             {
-                throwMessage("'compCLFversion' can only be there once. ");
+                throwMessage("'compCLFversion' can only be there once.");
             }
             if (isVersionFound)
             {
-                throwMessage("'compCLFversion' and 'Version' cannot be both present. ");
+                throwMessage("'compCLFversion' and 'Version' cannot be both present.");
             }
 
             const char* pVer = atts[i + 1];
             if (!pVer || !*pVer)
             {
-                throwMessage("Required attribute 'compCLFversion' does not have a value. ");
+                throwMessage("Required attribute 'compCLFversion' does not have a value.");
             }
 
             try
@@ -155,7 +155,7 @@ void CTFReaderTransformElt::start(const char ** atts)
             if (maxCLF < requestedCLFVersion)
             {
                 ThrowM(*this, "Unsupported transform file version '", pVer,
-                       "' supplied. ");
+                       "' supplied.");
             }
             // We currently interpret CLF versions <= 2.0 as CTF version 1.7.
             if (requestedCLFVersion <= CTFVersion(2, 0))
@@ -187,7 +187,7 @@ void CTFReaderTransformElt::start(const char ** atts)
     // Check mandatory elements.
     if (!isIdFound)
     {
-        throwMessage("Required attribute 'id' is missing. ");
+        throwMessage("Required attribute 'id' is missing.");
     }
 
     // Transform file format with no version means that
@@ -196,7 +196,7 @@ void CTFReaderTransformElt::start(const char ** atts)
     {
         if (m_isCLF && !isCLFVersionFound)
         {
-            throwMessage("Required attribute 'compCLFversion' is missing. ");
+            throwMessage("Required attribute 'compCLFversion' is missing.");
         }
         setVersion(CTF_PROCESS_LIST_VERSION_1_2);
     }
@@ -234,7 +234,7 @@ void CTFReaderTransformElt::setVersion(const CTFVersion & ver)
 {
     if (CTF_PROCESS_LIST_VERSION < ver)
     {
-        ThrowM(*this, "Unsupported transform file version '", ver, "' supplied. ");
+        ThrowM(*this, "Unsupported transform file version '", ver, "' supplied.");
     }
     getTransform()->setCTFVersion(ver);
 }
@@ -298,7 +298,7 @@ void CTFReaderArrayElt::start(const char ** atts)
             catch (Exception& /*ce*/)
             {
                 ThrowM(*this, "Illegal '", getTypeName(), "' array dimensions ",
-                       TruncateString(dimStr, len));
+                       TruncateString(dimStr, len), ".");
             }
 
             CTFArrayMgt* pArr = dynamic_cast<CTFArrayMgt*>(getParent().get());
@@ -313,14 +313,14 @@ void CTFReaderArrayElt::start(const char ** atts)
                 if (max == 0)
                 {
                     ThrowM(*this, "Illegal '", getTypeName(), "' array dimensions ",
-                           TruncateString(dimStr, len));
+                           TruncateString(dimStr, len), ".");
                 }
 
                 m_array = pArr->updateDimension(dims);
                 if (!m_array)
                 {
                     ThrowM(*this, "'", getTypeName(), "' Illegal array dimensions ",
-                           TruncateString(dimStr, len));
+                           TruncateString(dimStr, len), ".");
                 }
             }
         }
@@ -376,7 +376,7 @@ void CTFReaderArrayElt::setRawData(const char * s,
         catch (Exception& /*ce*/)
         {
             ThrowM(*this, "Illegal values '", TruncateString(s, len),
-                   "' in array of ", getTypeName());
+                   "' in array of ", getTypeName(), ".");
         }
 
         if (m_position<maxValues)
@@ -466,28 +466,28 @@ void CTFReaderIndexMapElt::start(const char ** atts)
             catch (Exception& /*ce*/)
             {
                 ThrowM(*this, "Illegal '", getTypeName(),
-                       "' IndexMap dimensions ", TruncateString(dimStr, len));
+                       "' IndexMap dimensions ", TruncateString(dimStr, len), ".");
             }
 
             CTFIndexMapMgt * pArr = dynamic_cast<CTFIndexMapMgt*>(getParent().get());
             if (!pArr)
             {
                 ThrowM(*this, "Illegal '", getTypeName(),
-                       "' IndexMap dimensions ", TruncateString(dimStr, len));
+                       "' IndexMap dimensions ", TruncateString(dimStr, len), ".");
             }
             else
             {
                 if (dims.empty() || dims.size() != 1)
                 {
                     ThrowM(*this, "Illegal '", getTypeName(),
-                           "' IndexMap dimensions ", TruncateString(dimStr, len));
+                           "' IndexMap dimensions ", TruncateString(dimStr, len), ".");
                 }
 
                 m_indexMap = pArr->updateDimensionIM(dims);
                 if (!m_indexMap)
                 {
                     ThrowM(*this, "Illegal '", getTypeName(),
-                           "' IndexMap dimensions ", TruncateString(dimStr, len));
+                           "' IndexMap dimensions ", TruncateString(dimStr, len), ".");
                 }
             }
         }
@@ -502,7 +502,7 @@ void CTFReaderIndexMapElt::start(const char ** atts)
     // Check mandatory elements
     if (!isDimFound)
     {
-        throwMessage("Required attribute 'dim' is missing. ");
+        throwMessage("Required attribute 'dim' is missing.");
     }
 
     m_position = 0;
@@ -648,7 +648,7 @@ void CTFReaderIndexMapElt::setRawData(const char * s,
         catch (Exception& /*ce*/)
         {
             ThrowM(*this, "Illegal values '", TruncateString(s, len),
-                   "' in '", getTypeName(), "' IndexMap");
+                   "' in '", getTypeName(), "' IndexMap.");
         }
 
         if (m_position<maxValues)
@@ -870,7 +870,7 @@ void CTFReaderOpElt::start(const char ** atts)
             BitDepth bitdepth = GetBitDepth(atts[i + 1]);
             if (bitdepth == BIT_DEPTH_UNKNOWN)
             {
-                ThrowM(*this, "inBitDepth unknown value (", atts[i + 1], ")");
+                ThrowM(*this, "inBitDepth unknown value (", atts[i + 1], ").");
             }
             m_inBitDepth = bitdepth;
             bitDepthFound |= INPUT_BIT_DEPTH;
@@ -880,7 +880,7 @@ void CTFReaderOpElt::start(const char ** atts)
             BitDepth bitdepth = GetBitDepth(atts[i + 1]);
             if (bitdepth == BIT_DEPTH_UNKNOWN)
             {
-                ThrowM(*this, "outBitDepth unknown value (", atts[i + 1], ")");
+                ThrowM(*this, "outBitDepth unknown value (", atts[i + 1], ").");
             }
             m_outBitDepth = bitdepth;
             bitDepthFound |= OUTPUT_BIT_DEPTH;
@@ -1274,7 +1274,7 @@ void CTFReaderACESParamsElt::start(const char **atts)
         {
             ThrowM(*this, "Missing required parameter ", ATTR_GAMMA,
                    "for ACES FixedFunction element with style ",
-                   FixedFunctionOpData::ConvertStyleToString(style, false));
+                   FixedFunctionOpData::ConvertStyleToString(style, false), ".");
         }
         params.push_back(gamma);
         // Assign the parameters to the object.
@@ -1326,7 +1326,7 @@ void CTFReaderCDLElt::start(const char ** atts)
 
     if (!isStyleFound)
     {
-        throwMessage("CTF/CLF CDL parsing. Required attribute 'style' is missing. ");
+        throwMessage("CTF/CLF CDL parsing. Required attribute 'style' is missing.");
     }
 }
 
@@ -1431,7 +1431,7 @@ void CTFReaderFixedFunctionElt::start(const char **atts)
             catch (Exception& /*ce*/)
             {
                 ThrowM(*this, "Illegal '", getTypeName(), "' params ",
-                       TruncateString(paramsStr, len));
+                       TruncateString(paramsStr, len), ".");
             }
             m_fixedFunction->setParams(data);
         }
@@ -1440,7 +1440,7 @@ void CTFReaderFixedFunctionElt::start(const char **atts)
     }
     if (!isStyleFound)
     {
-        throwMessage("style parameter for FixedFunction is missing.");
+        throwMessage("Style parameter for FixedFunction is missing.");
     }
 }
 
@@ -1502,7 +1502,7 @@ void CTFReaderFunctionElt::start(const char **atts)
     }
     if (!isStyleFound)
     {
-        throwMessage("style parameter for FixedFunction is missing.");
+        throwMessage("Style parameter for FixedFunction is missing.");
     }
 }
 
@@ -1556,7 +1556,7 @@ void CTFReaderDynamicParamElt::start(const char ** atts)
                 {
                     ThrowM(*this, "Dynamic parameter '", atts[i + 1],
                            "' is not supported in '",
-                           container->getName().c_str(), "'");
+                           container->getName().c_str(), "'.");
                 }
 
                 ExposureContrastOpDataRcPtr pECOp = pEC->getExposureContrast();
@@ -1570,7 +1570,7 @@ void CTFReaderDynamicParamElt::start(const char ** atts)
                 {
                     ThrowM(*this, "Dynamic parameter '", atts[i + 1],
                            "' is not supported in '",
-                           container->getName().c_str(), "'");
+                           container->getName().c_str(), "'.");
                 }
 
                 ExposureContrastOpDataRcPtr pECOp = pEC->getExposureContrast();
@@ -1584,7 +1584,7 @@ void CTFReaderDynamicParamElt::start(const char ** atts)
                 {
                     ThrowM(*this, "Dynamic parameter '", atts[i + 1],
                            "' is not supported in '",
-                           container->getName().c_str(), "'");
+                           container->getName().c_str(), "'.");
                 }
 
                 ExposureContrastOpDataRcPtr pECOp = pEC->getExposureContrast();
@@ -1605,7 +1605,7 @@ void CTFReaderDynamicParamElt::start(const char ** atts)
             {
                 ThrowM(*this, "Dynamic parameter '", atts[i + 1],
                        "' is not valid in '",
-                       container->getName().c_str(), "'");
+                       container->getName().c_str(), "'.");
             }
         }
 
@@ -1843,7 +1843,7 @@ void CTFReaderGammaElt::start(const char ** atts)
     }
     if (!isStyleFound)
     {
-        throwMessage("Missing parameter 'style'. ");
+        throwMessage("Missing parameter 'style'.");
     }
 }
 
@@ -1868,7 +1868,7 @@ void CTFReaderGammaElt::end()
     }
     catch (Exception & ce)
     {
-        ThrowM(*this, "Invalid parameters: ", ce.what(), ". ");
+        ThrowM(*this, "Invalid parameters: ", ce.what(), ".");
     }
 }
 
@@ -1917,7 +1917,7 @@ void CTFReaderGammaElt_1_5::end()
     }
     catch (Exception & ce)
     {
-        ThrowM(*this, "Invalid parameters: ", ce.what(), ". ");
+        ThrowM(*this, "Invalid parameters: ", ce.what(), ".");
     }
 }
 
@@ -1994,7 +1994,7 @@ void CTFReaderGammaParamsElt::start(const char ** atts)
             // Chan is optional but, if present, must be legal.
             if (chan == -1)
             {
-                ThrowM(*this, "Invalid channel: ", atts[i + 1], ". ");
+                ThrowM(*this, "Invalid channel: ", atts[i + 1], ".");
             }
         }
         else if (0 == Platform::Strcasecmp(ATTR_GAMMA, atts[i]) ||
@@ -2036,7 +2036,7 @@ void CTFReaderGammaParamsElt::start(const char ** atts)
         {
             ThrowM(*this, "Missing required gamma parameter for style: ",
                    GammaOpData::ConvertStyleToString(style),
-                   ". ");
+                   ".");
         }
         params.push_back(gamma);
 
@@ -2044,7 +2044,7 @@ void CTFReaderGammaParamsElt::start(const char ** atts)
         {
             ThrowM(*this, "Illegal offset parameter for style: ",
                    GammaOpData::ConvertStyleToString(style),
-                   ". ");
+                   ".");
         }
         break;
     }
@@ -2058,7 +2058,7 @@ void CTFReaderGammaParamsElt::start(const char ** atts)
         {
             ThrowM(*this, "Missing required gamma parameter for style: ",
                    GammaOpData::ConvertStyleToString(style),
-                   ". ");
+                   ".");
         }
         params.push_back(gamma);
 
@@ -2066,7 +2066,7 @@ void CTFReaderGammaParamsElt::start(const char ** atts)
         {
             ThrowM(*this, "Missing required offset parameter for style: ",
                    GammaOpData::ConvertStyleToString(style),
-                   ". ");
+                   ".");
         }
         params.push_back(offset);
         break;
@@ -2192,7 +2192,7 @@ void CTFReaderInvLut1DElt::start(const char ** atts)
             {
                 std::ostringstream oss;
                 oss << "Unknown halfDomain value: '" << atts[i + 1];
-                oss << "' while parsing InvLut1D. ";
+                oss << "' while parsing InvLut1D.";
                 throwMessage(oss.str());
             }
 
@@ -2205,7 +2205,7 @@ void CTFReaderInvLut1DElt::start(const char ** atts)
             {
                 std::ostringstream oss;
                 oss << "Unknown rawHalfs value: '" << atts[i + 1];
-                oss << "' while parsing InvLut1D. ";
+                oss << "' while parsing InvLut1D.";
                 throwMessage(oss.str());
             }
 
@@ -2218,7 +2218,7 @@ void CTFReaderInvLut1DElt::start(const char ** atts)
             {
                 std::ostringstream oss;
                 oss << "Unknown hueAdjust value: '" << atts[i + 1];
-                oss << "' while parsing InvLut1D. ";
+                oss << "' while parsing InvLut1D.";
                 throwMessage(oss.str());
             }
 
@@ -2306,7 +2306,7 @@ void CTFReaderInvLut1DElt::endArray(unsigned int position)
         {
             std::ostringstream arg;
             arg << "Expected " << dimensions << "x" << numColorComponents;
-            arg << " Array values, found " << position << ". ";
+            arg << " Array values, found " << position << ".";
             throwMessage(arg.str());
         }
 
@@ -2428,7 +2428,7 @@ void CTFReaderInvLut3DElt::endArray(unsigned int position)
         std::ostringstream arg;
         arg << "Expected " << len << "x" << len << "x" << len << "x";
         arg << pArray->getNumColorComponents();
-        arg << " Array values, found " << position << ". ";
+        arg << " Array values, found " << position << ".";
         throwMessage(arg.str());
     }
 
@@ -2467,7 +2467,7 @@ void CTFReaderLogElt::start(const char ** atts)
             }
             catch (Exception &)
             {
-                ThrowM(*this, "Required attribute 'style' '", atts[i + 1], "' is invalid. ");
+                ThrowM(*this, "Required attribute 'style' '", atts[i + 1], "' is invalid.");
             }
             isStyleFound = true;
         }
@@ -2475,7 +2475,7 @@ void CTFReaderLogElt::start(const char ** atts)
 
     if (!isStyleFound)
     {
-        throwMessage("CTF/CLF Log parsing. Required attribute 'style' is missing. ");
+        throwMessage("CTF/CLF Log parsing. Required attribute 'style' is missing.");
     }
 }
 
@@ -2501,7 +2501,7 @@ void CTFReaderLogElt::end()
     }
     catch (Exception& ce)
     {
-        ThrowM(*this, "Parameters are not valid: '", ce.what(), "'. ");
+        ThrowM(*this, "Parameters are not valid: '", ce.what(), "'.");
     }
 
     m_log->setBase(base);
@@ -2517,7 +2517,7 @@ void CTFReaderLogElt::end()
     }
     catch (Exception& ce)
     {
-        ThrowM(*this, "Log is not valid: '", ce.what(), "'. ");
+        ThrowM(*this, "Log is not valid: '", ce.what(), "'.");
     }
 }
 
@@ -2534,7 +2534,7 @@ void CTFReaderLogElt::setBase(double base)
         if (curBase != base)
         {
             ThrowM(*this, "Log base has to be the same on all components: ",
-                   "Current base: ", curBase, ", new base: ", base, ". ");
+                   "Current base: ", curBase, ", new base: ", base, ".");
         }
     }
     else
@@ -2580,7 +2580,7 @@ void CTFReaderLogElt_2_0::end()
         }
         catch (Exception& ce)
         {
-            ThrowM(*this, "Parameters are not valid: '", ce.what(), "'. ");
+            ThrowM(*this, "Parameters are not valid: '", ce.what(), "'.");
         }
 
         getLog()->setBase(base);
@@ -2612,7 +2612,7 @@ void CTFReaderLogElt_2_0::end()
     }
     catch (Exception& ce)
     {
-        ThrowM(*this, "Log is not valid: '", ce.what(), "'. ");
+        ThrowM(*this, "Log is not valid: '", ce.what(), "'.");
     }
 }
 
@@ -2709,7 +2709,7 @@ void CTFReaderLogParamsElt::start(const char ** atts)
             {
                 std::ostringstream arg;
                 arg << "Illegal channel attribute value '";
-                arg << atts[i + 1] << "'. ";
+                arg << atts[i + 1] << "'.";
 
                 throwMessage(arg.str());
             }
@@ -2731,31 +2731,31 @@ void CTFReaderLogParamsElt::start(const char ** atts)
 
     if (IsNan(gamma))
     {
-        ThrowM(*this, "Required attribute '", ATTR_GAMMA, "' is missing. ");
+        ThrowM(*this, "Required attribute '", ATTR_GAMMA, "' is missing.");
     }
     ctfValues[LogUtil::CTFParams::gamma] = gamma;
 
     if (IsNan(refWhite))
     {
-        ThrowM(*this, "Required attribute '", ATTR_REFWHITE, "' is missing. ");
+        ThrowM(*this, "Required attribute '", ATTR_REFWHITE, "' is missing.");
     }
     ctfValues[LogUtil::CTFParams::refWhite] = refWhite;
 
     if (IsNan(refBlack))
     {
-        ThrowM(*this, "Required attribute '", ATTR_REFBLACK, "' is missing. ");
+        ThrowM(*this, "Required attribute '", ATTR_REFBLACK, "' is missing.");
     }
     ctfValues[LogUtil::CTFParams::refBlack] = refBlack;
 
     if (IsNan(highlight))
     {
-        ThrowM(*this, "Required attribute '", ATTR_HIGHLIGHT, "' is missing. ");
+        ThrowM(*this, "Required attribute '", ATTR_HIGHLIGHT, "' is missing.");
     }
     ctfValues[LogUtil::CTFParams::highlight] = highlight;
 
     if (IsNan(shadow))
     {
-        ThrowM(*this, "Required attribute '", ATTR_SHADOW, "' is missing. ");
+        ThrowM(*this, "Required attribute '", ATTR_SHADOW, "' is missing.");
     }
     ctfValues[LogUtil::CTFParams::shadow] = shadow;
 
@@ -2845,7 +2845,7 @@ void CTFReaderLogParamsElt_2_0::start(const char ** atts)
             {
                 std::ostringstream arg;
                 arg << "Illegal channel attribute value '";
-                arg << atts[i + 1] << "'. ";
+                arg << atts[i + 1] << "'.";
 
                 throwMessage(arg.str());
             }
@@ -2896,7 +2896,7 @@ void CTFReaderLogParamsElt_2_0::start(const char ** atts)
 
         if (!validType)
         {
-            ThrowM(*this, "CLF type and Cineon types parameters can not be mixed. ");
+            ThrowM(*this, "CLF type and Cineon types parameters can not be mixed.");
         }
 
         i += 2;
@@ -2928,7 +2928,7 @@ void CTFReaderLogParamsElt_2_0::start(const char ** atts)
         {
             ThrowM(*this, "Parameters '", ATTR_LINSIDEBREAK, "' should be defined for style '",
                    LogUtil::ConvertStyleToString(LogUtil::CAMERA_LOG_TO_LIN), "' or '",
-                   LogUtil::ConvertStyleToString(LogUtil::CAMERA_LIN_TO_LOG), "'. ");
+                   LogUtil::ConvertStyleToString(LogUtil::CAMERA_LIN_TO_LOG), "'.");
         }
 
         if (!IsNan(linearSlope))
@@ -3003,7 +3003,7 @@ void CTFReaderLut1DElt::start(const char ** atts)
             if (0 != Platform::Strcasecmp("true", atts[i + 1]))
             {
                 ThrowM(*this, "Illegal 'halfDomain' attribute '", atts[i + 1],
-                       "' while parsing Lut1D. ");
+                       "' while parsing Lut1D.");
             }
 
             m_lut->setInputHalfDomain(true);
@@ -3014,7 +3014,7 @@ void CTFReaderLut1DElt::start(const char ** atts)
             if (0 != Platform::Strcasecmp("true", atts[i + 1]))
             {
                 ThrowM(*this, "Illegal 'rawHalfs' attribute '", atts[i + 1],
-                       "' while parsing Lut1D. ");
+                       "' while parsing Lut1D.");
             }
 
             m_lut->setOutputRawHalfs(true);
@@ -3096,7 +3096,7 @@ void CTFReaderLut1DElt::endArray(unsigned int position)
         if (numColorComponents != 1 || position != dimensions)
         {
             ThrowM(*this, "Expected ", dimensions, "x", numColorComponents,
-                   " Array values, found ", position, ". ");
+                   " Array values, found ", position, ".");
         }
 
         // Convert a 1D LUT to a 3by1D LUT
@@ -3141,7 +3141,7 @@ void CTFReaderLut1DElt::endIndexMap(unsigned int position)
     if (m_indexMapping.getDimension() != position)
     {
         ThrowM(*this, "Expected ", m_indexMapping.getDimension(),
-               " IndexMap values, found ", position, ". ");
+               " IndexMap values, found ", position, ".");
     }
 
     m_indexMapping.validate();
@@ -3180,7 +3180,7 @@ void CTFReaderLut1DElt_1_4::start(const char ** atts)
             if (0 != Platform::Strcasecmp("true", atts[i + 1]))
             {
                 ThrowM(*this, "Illegal 'halfDomain' attribute '", atts[i + 1],
-                       "' while parsing Lut1D. ");
+                       "' while parsing Lut1D.");
             }
 
             m_lut->setInputHalfDomain(true);
@@ -3191,7 +3191,7 @@ void CTFReaderLut1DElt_1_4::start(const char ** atts)
             if (0 != Platform::Strcasecmp("true", atts[i + 1]))
             {
                 ThrowM(*this, "Illegal 'rawHalfs' attribute '", atts[i + 1],
-                       "' while parsing Lut1D. ");
+                       "' while parsing Lut1D.");
             }
 
             m_lut->setOutputRawHalfs(true);
@@ -3203,7 +3203,7 @@ void CTFReaderLut1DElt_1_4::start(const char ** atts)
             if (0 != Platform::Strcasecmp("dw3", atts[i + 1]))
             {
                 ThrowM(*this, "Illegal 'hueAdjust' attribute '", atts[i + 1],
-                       "' while parsing Lut1D. ");
+                       "' while parsing Lut1D.");
             }
 
             m_lut->setHueAdjust(HUE_DW3);
@@ -3352,7 +3352,7 @@ void CTFReaderLut3DElt::endArray(unsigned int position)
     {
         ThrowM(*this, "Expected ", pArray->getLength(), "x", pArray->getLength(),
                "x", pArray->getLength(), "x", pArray->getNumColorComponents(),
-               " Array values, found ", position);
+               " Array values, found ", position, ".");
     }
 
     pArray->validate();
@@ -3382,7 +3382,7 @@ void CTFReaderLut3DElt::endIndexMap(unsigned int position)
     if (m_indexMapping.getDimension() != position)
     {
         ThrowM(*this, "Expected ", m_indexMapping.getDimension(),
-               " IndexMap values, found ", position, ". ");
+               " IndexMap values, found ", position, ".");
     }
 
     m_indexMapping.validate();

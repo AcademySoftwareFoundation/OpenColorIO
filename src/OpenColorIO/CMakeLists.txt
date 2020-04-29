@@ -108,6 +108,11 @@ set(SOURCES
 	ScanlineHelper.cpp
 	Transform.cpp
 	transforms/AllocationTransform.cpp
+	transforms/builtins/ACES.cpp
+	transforms/builtins/BuiltinTransformRegistry.cpp
+	transforms/builtins/ColorMatrixHelpers.cpp
+	transforms/builtins/OpHelpers.cpp
+	transforms/BuiltinTransform.cpp
 	transforms/CDLTransform.cpp
 	transforms/ColorSpaceTransform.cpp
 	transforms/DisplayTransform.cpp
@@ -127,6 +132,18 @@ set(SOURCES
 	transforms/RangeTransform.cpp
 	ViewTransform.cpp
 )
+
+if(OCIO_ADD_EXTRA_BUILTINS)
+	set(SOURCES_BUILTINS
+		transforms/builtins/ArriCameras.cpp
+		transforms/builtins/CanonCameras.cpp
+		transforms/builtins/PanasonicCameras.cpp
+		transforms/builtins/RedCameras.cpp
+		transforms/builtins/SonyCameras.cpp
+	)
+
+	list(INSERT SOURCES 0 ${SOURCES_BUILTINS})
+endif()
 
 if(WIN32 AND BUILD_SHARED_LIBS)
 
@@ -188,6 +205,13 @@ if(OCIO_USE_SSE)
 	target_compile_definitions(OpenColorIO
 		PRIVATE
 			USE_SSE
+	)
+endif()
+
+if(OCIO_ADD_EXTRA_BUILTINS)
+	target_compile_definitions(OpenColorIO
+		PRIVATE
+			ADD_EXTRA_BUILTINS
 	)
 endif()
 

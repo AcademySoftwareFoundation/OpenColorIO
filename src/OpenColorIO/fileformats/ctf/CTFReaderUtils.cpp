@@ -13,12 +13,9 @@ namespace OCIO_NAMESPACE
 namespace
 {
 static constexpr char INTERPOLATION_1D_LINEAR[] = "linear";
-static constexpr char INTERPOLATION_1D_CUBIC[] = "cubic";
-static constexpr char INTERPOLATION_DEFAULT[] = "default";
 
 static constexpr char INTERPOLATION_3D_LINEAR[] = "trilinear";
 static constexpr char INTERPOLATION_3D_TETRAHEDRAL[] = "tetrahedral";
-
 }
 
 Interpolation GetInterpolation1D(const char * str)
@@ -28,14 +25,6 @@ Interpolation GetInterpolation1D(const char * str)
         if (0 == Platform::Strcasecmp(str, INTERPOLATION_1D_LINEAR))
         {
             return INTERP_LINEAR;
-        }
-        else if (0 == Platform::Strcasecmp(str, INTERPOLATION_1D_CUBIC))
-        {
-            return INTERP_CUBIC;
-        }
-        else if (0 == Platform::Strcasecmp(str, INTERPOLATION_DEFAULT))
-        {
-            return INTERP_DEFAULT;
         }
 
         std::ostringstream oss;
@@ -52,18 +41,19 @@ const char * GetInterpolation1DName(Interpolation interp)
     {
     case INTERP_LINEAR:
         return INTERPOLATION_1D_LINEAR;
-    case INTERP_CUBIC:
-        return INTERPOLATION_1D_CUBIC;
 
+    // Note: In CLF v3, some options were removed and the only legal Lut1D value is now "linear".
+
+    case INTERP_CUBIC:
     case INTERP_DEFAULT:
     case INTERP_NEAREST:
     case INTERP_TETRAHEDRAL:
     case INTERP_BEST:
     case INTERP_UNKNOWN:
-        return INTERPOLATION_DEFAULT;
+        return nullptr;
     };
 
-    return INTERPOLATION_DEFAULT;
+    return nullptr;
 }
 
 Interpolation GetInterpolation3D(const char * str)
@@ -77,10 +67,6 @@ Interpolation GetInterpolation3D(const char * str)
         else if (0 == Platform::Strcasecmp(str, INTERPOLATION_3D_TETRAHEDRAL))
         {
             return INTERP_TETRAHEDRAL;
-        }
-        else if (0 == Platform::Strcasecmp(str, INTERPOLATION_DEFAULT))
-        {
-            return INTERP_DEFAULT;
         }
 
         std::ostringstream oss;
@@ -105,10 +91,10 @@ const char * GetInterpolation3DName(Interpolation interp)
     case INTERP_CUBIC:
     case INTERP_BEST:
     case INTERP_UNKNOWN:
-        return INTERPOLATION_DEFAULT;
+        return nullptr;
     };
 
-    return INTERPOLATION_DEFAULT;
+    return nullptr;
 }
 
 } // namespace OCIO_NAMESPACE

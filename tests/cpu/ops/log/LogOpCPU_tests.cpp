@@ -229,8 +229,8 @@ OCIO_ADD_TEST(LogOpCPU, log2lin_test)
     OCIO::TransformDirection dir = OCIO::LogUtil::GetLogDirection(params.m_style);
     OCIO::LogUtil::ConvertLogParameters(params, base, paramsR, paramsG, paramsB);
 
-    OCIO::ConstLogOpDataRcPtr logOp = std::make_shared<OCIO::LogOpData>(
-        dir, base, paramsR, paramsG, paramsB);
+    OCIO::ConstLogOpDataRcPtr logOp
+        = std::make_shared<OCIO::LogOpData>(base, paramsR, paramsG, paramsB, dir);
 
     OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
     pRenderer->apply(rgbaImage, rgba, 8);
@@ -367,8 +367,8 @@ OCIO_ADD_TEST(LogOpCPU, lin2log_test)
     OCIO::TransformDirection dir = OCIO::LogUtil::GetLogDirection(params.m_style);
     OCIO::LogUtil::ConvertLogParameters(params, base, paramsR, paramsG, paramsB);
 
-    OCIO::ConstLogOpDataRcPtr logOp = std::make_shared<OCIO::LogOpData>(
-        dir, base, paramsR, paramsG, paramsB);
+    OCIO::ConstLogOpDataRcPtr logOp 
+        = std::make_shared<OCIO::LogOpData>(base, paramsR, paramsG, paramsB, dir);
 
     OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
     pRenderer->apply(rgbaImage, rgba, 8);
@@ -448,8 +448,8 @@ OCIO_ADD_TEST(LogOpCPU, cameralog2lin_test)
     OCIO::LogOpData::Params params{ 0.2, 0.6, 1.1, 0.05, 0.1, 1.2 };
     const double base = 2.0;
     OCIO::TransformDirection dir{ OCIO::TRANSFORM_DIR_FORWARD };
-    OCIO::ConstLogOpDataRcPtr logOp = std::make_shared<OCIO::LogOpData>(
-        dir, base, params, params, params);
+    OCIO::ConstLogOpDataRcPtr logOp
+        = std::make_shared<OCIO::LogOpData>(base, params, params, params, dir);
 
     OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
     pRenderer->apply(rgbaImage, rgba, numPixels);
@@ -486,8 +486,8 @@ OCIO_ADD_TEST(LogOpCPU, cameralog2lin_test)
 
     // Set linearSlope to default.
     params.pop_back();
-    OCIO::ConstLogOpDataRcPtr lognols = std::make_shared<OCIO::LogOpData>(
-        dir, base, params, params, params);
+    OCIO::ConstLogOpDataRcPtr lognols
+        = std::make_shared<OCIO::LogOpData>(base, params, params, params, dir);
 
     OCIO::ConstOpCPURcPtr pRendererNoLS = OCIO::GetLogRenderer(lognols);
     pRendererNoLS->apply(rgbaImage, rgba_nols, numPixels);
@@ -516,8 +516,8 @@ OCIO_ADD_TEST(LogOpCPU, cameralog2lin_test)
 
     // Don't use break.
     params.pop_back();
-    OCIO::ConstLogOpDataRcPtr lognobreak = std::make_shared<OCIO::LogOpData>(
-        dir, base, params, params, params);
+    OCIO::ConstLogOpDataRcPtr lognobreak
+        = std::make_shared<OCIO::LogOpData>(base, params, params, params, dir);
 
     OCIO::ConstOpCPURcPtr pRendererNoBreak = OCIO::GetLogRenderer(lognobreak);
     pRendererNoBreak->apply(rgbaImage, rgba_nobreak, numPixels);
@@ -560,8 +560,8 @@ OCIO_ADD_TEST(LogOpCPU, cameralin2log_test)
     OCIO::LogOpData::Params params{ 0.2, 0.6, 1.1, 0.05, 0.1, 1.2 };
     const double base = 2.0;
     OCIO::TransformDirection dir{ OCIO::TRANSFORM_DIR_INVERSE };
-    OCIO::ConstLogOpDataRcPtr logOp = std::make_shared<OCIO::LogOpData>(
-        dir, base, params, params, params);
+    OCIO::ConstLogOpDataRcPtr logOp
+        = std::make_shared<OCIO::LogOpData>(base, params, params, params, dir);
 
     OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
     pRenderer->apply(rgbaImage, rgba, 3);

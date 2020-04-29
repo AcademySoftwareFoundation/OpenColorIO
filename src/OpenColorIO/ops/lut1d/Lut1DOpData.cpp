@@ -21,14 +21,18 @@ namespace OCIO_NAMESPACE
 // Number of possible values for the Half domain.
 static const unsigned long HALF_DOMAIN_REQUIRED_ENTRIES = 65536;
 
-Lut1DOpData::Lut3by1DArray::Lut3by1DArray(HalfFlags halfFlags,
-                                          unsigned long length)
+Lut1DOpData::Lut3by1DArray::Lut3by1DArray(HalfFlags halfFlags, unsigned long numChannels, unsigned long length)
 {
     if (length < 2)
     {
         throw Exception("LUT 1D length needs to be at least 2.");
     }
-    resize(length, getMaxColorComponents());
+    if (numChannels != 1 && numChannels != 3)
+    {
+        throw Exception("LUT 1D channels needs to be 1 or 3.");
+    }
+
+    resize(length, numChannels);
     fill(halfFlags);
 }
 
@@ -38,8 +42,8 @@ Lut1DOpData::Lut3by1DArray::~Lut3by1DArray()
 
 void Lut1DOpData::Lut3by1DArray::fill(HalfFlags halfFlags)
 {
-    const unsigned long dim = getLength();
-    const unsigned long maxChannels = getMaxColorComponents();
+    const unsigned long dim         = getLength();
+    const unsigned long maxChannels = getNumColorComponents();
 
     Array::Values& values = getValues();
     if (Lut1DOpData::IsInputHalfDomain(halfFlags))
@@ -173,7 +177,7 @@ bool Lut1DOpData::Lut3by1DArray::isIdentity(HalfFlags halfFlags) const
 Lut1DOpData::Lut1DOpData(unsigned long dimension)
     : OpData()
     , m_interpolation(INTERP_DEFAULT)
-    , m_array(LUT_STANDARD, dimension)
+    , m_array(LUT_STANDARD, 3, dimension)
     , m_halfFlags(LUT_STANDARD)
     , m_hueAdjust(HUE_NONE)
     , m_direction(TRANSFORM_DIR_FORWARD)
@@ -183,18 +187,17 @@ Lut1DOpData::Lut1DOpData(unsigned long dimension)
 Lut1DOpData::Lut1DOpData(unsigned long dimension, TransformDirection dir)
     : OpData()
     , m_interpolation(INTERP_DEFAULT)
-    , m_array(LUT_STANDARD, dimension)
+    , m_array(LUT_STANDARD, 3, dimension)
     , m_halfFlags(LUT_STANDARD)
     , m_hueAdjust(HUE_NONE)
     , m_direction(dir)
 {
 }
 
-Lut1DOpData::Lut1DOpData(HalfFlags halfFlags,
-                         unsigned long dimension)
+Lut1DOpData::Lut1DOpData(HalfFlags halfFlags, unsigned long dimension)
     : OpData()
     , m_interpolation(INTERP_DEFAULT)
-    , m_array(halfFlags, dimension)
+    , m_array(halfFlags, 3, dimension)
     , m_halfFlags(halfFlags)
     , m_hueAdjust(HUE_NONE)
     , m_direction(TRANSFORM_DIR_FORWARD)
