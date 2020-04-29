@@ -3,6 +3,7 @@
 # Variables defined by this module:
 #   pybind11_FOUND - If FALSE, do not try to link to pybind11
 #   pybind11_INCLUDE_DIR - Where to find pybind11.h
+#   pybind11_VERSION - The version of the library
 #
 # Targets defined by this module:
 #   pybind11::module - IMPORTED target, if found
@@ -22,28 +23,101 @@ endif()
 ### Try to find package ###
 
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
-    set(_pybind11_SEARCH_DIRS
-        ${pybind11_DIRS}
-        ~/Library/Frameworks
-        /Library/Frameworks
-        /usr/local
-        /usr
-        /sw        # Fink
-        /opt/local # DarwinPorts
-        /opt/csw   # Blastwave
-        /opt
-    )
+    if(DEFINED pybind11_DIRS)
+        # Try user defined search path first. Ignore all default cmake and 
+        # system paths, and fall back on a system CMake config.
+        find_path(pybind11_INCLUDE_DIR
+            NAMES
+                pybind11/pybind11.h
+            HINTS
+                ${pybind11_DIRS}
+            PATH_SUFFIXES
+                include
+                pybind11/include
+            NO_DEFAULT_PATH
+        )
 
-    # Find include directory
-    find_path(pybind11_INCLUDE_DIR
-        NAMES
-            pybind11/pybind11.h
-        HINTS
-            ${_pybind11_SEARCH_DIRS}
-        PATH_SUFFIXES
-            include
-            pybind11/include
-    )
+        # Version information can be extracted from this header
+        set(_pybind11_COMMON_H "${pybind11_INCLUDE_DIR}/pybind11/detail/common.h")
+
+        if(EXISTS "${_pybind11_COMMON_H}")
+            file(STRINGS "${_pybind11_COMMON_H}" _pybind11_VER_SEARCH 
+                REGEX "^[ \t]*#define[ \t]+PYBIND11_VERSION_(MAJOR|MINOR|PATCH)[ \t]+([0-9]+).*$")
+
+            if(_pybind11_VER_SEARCH)
+                string(REGEX REPLACE ".*MAJOR[ \t]+([0-9]+).*" 
+                    "\\1" _pybind11_MAJOR "${_pybind11_VER_SEARCH}")
+                string(REGEX REPLACE ".*MINOR[ \t]+([0-9]+).*" 
+                    "\\1" _pybind11_MINOR "${_pybind11_VER_SEARCH}")
+                string(REGEX REPLACE ".*PATCH[ \t]+([0-9]+).*" 
+                    "\\1" _pybind11_PATCH "${_pybind11_VER_SEARCH}")
+
+                set(pybind11_VERSION "${_pybind11_MAJOR}.${_pybind11_MINOR}.${_pybind11_PATCH}")
+                message(STATUS 
+                    "Using user defined search path for pybind11 "
+                    "(found version \"${pybind11_VERSION}\")"
+                )
+            endif()
+        endif()
+    endif()
+
+    if(NOT DEFINED pybind11_VERSION)
+        # Search for a CMake config, which should have been installed with 
+        # pybind11, and will provide version information.
+        find_package(pybind11 ${pybind11_FIND_VERSION} CONFIG)
+
+        if(NOT pybind11_FOUND)
+            # No CMake config found. Check if pybind11 was installed as a 
+            # Python package (i.e. with "pip install pybind11"). This requires
+            # a Python interpreter.
+            find_package(PythonInterp 2.7 QUIET)
+
+            if(PYTHONINTERP_FOUND)
+                execute_process(
+                    COMMAND
+                        "${PYTHON_EXECUTABLE}" -c 
+                        "print(__import__('pybind11').__version__)"
+                    RESULTS_VARIABLE
+                        _pybind11_VER_RESULTS
+                    OUTPUT_VARIABLE
+                        _pybind11_VER_OUTPUT
+                    ERROR_QUIET
+                )
+                if(_pybind11_VER_OUTPUT)
+                    # Strip \n from python output
+                    string(STRIP ${_pybind11_VER_OUTPUT} _pybind11_VER_OUTPUT)
+                endif()
+
+                if(_pybind11_VER_RESULTS EQUAL 0 AND "${_pybind11_VER_OUTPUT}" MATCHES "[.0-9]+")
+                    execute_process(
+                        COMMAND
+                            "${PYTHON_EXECUTABLE}" -c 
+                            "import os;\
+                             import pybind11;\
+                             print(os.path.join(os.path.dirname(pybind11.__file__), 'include'))"
+                        RESULTS_VARIABLE
+                            _pybind11_DIR_RESULTS
+                        OUTPUT_VARIABLE
+                            _pybind11_DIR_OUTPUT
+                        ERROR_QUIET
+                    )
+                    if(_pybind11_DIR_OUTPUT)
+                        # Strip \n from python output
+                        string(STRIP ${_pybind11_DIR_OUTPUT} _pybind11_DIR_OUTPUT)
+                    endif()
+
+                    if(_pybind11_DIR_RESULTS EQUAL 0 AND EXISTS "${_pybind11_DIR_OUTPUT}")
+                        set(pybind11_VERSION ${_pybind11_VER_OUTPUT})
+                        set(pybind11_INCLUDE_DIR ${_pybind11_DIR_OUTPUT})
+                        message(STATUS 
+                            "Using pybind11 python package (version \"${pybind11_VERSION}\", "
+                            "found in python \"${PYTHON_VERSION_STRING}\")"
+                        )
+                    endif()
+                endif()
+            endif()
+        endif()
+    endif()
 
     # Override REQUIRED if package can be installed
     if(OCIO_INSTALL_EXT_PACKAGES STREQUAL MISSING)
@@ -54,6 +128,8 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     find_package_handle_standard_args(pybind11
         REQUIRED_VARS 
             pybind11_INCLUDE_DIR
+        VERSION_VAR
+            pybind11_VERSION
     )
 endif()
 
