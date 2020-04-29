@@ -175,11 +175,11 @@ target_link_libraries(OpenColorIO
 		public_api
 	PRIVATE
 		expat::expat
-		ilmbase::ilmbase
+		IlmBase::Half
 		pystring::pystring
 		sampleicc::sampleicc
 		utils::strings
-		yamlcpp::yamlcpp
+		yaml-cpp
 )
 
 if(NOT BUILD_SHARED_LIBS)
