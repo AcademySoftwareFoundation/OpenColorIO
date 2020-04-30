@@ -499,7 +499,7 @@ bool FloatsDiffer(const float expected, const float actual,
     }
 
     // Comparing regular floats
-    long expectedBitsComp, actualBitsComp;
+    int expectedBitsComp, actualBitsComp;
     if (compressDenorms)
     {
         expectedBitsComp = FloatForCompareCompressDenorms(expectedBits);
@@ -511,7 +511,9 @@ bool FloatsDiffer(const float expected, const float actual,
         actualBitsComp = FloatForCompare(actualBits);
     }
 
-    return labs(expectedBitsComp - actualBitsComp) > tolerance;
+    // Impose to process 'int' type to have the overflow. 
+    const int diff = expectedBitsComp - actualBitsComp;
+    return abs(diff) > tolerance;
 }
 
 inline int HalfForCompare(const half h)
