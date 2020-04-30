@@ -2566,7 +2566,7 @@ class OCIOEXPORT BuiltinTransformRegistry
 {
 public:
     //!cpp:function:: Get the current built-in transform registry.
-    static ConstBuiltinTransformRegistryRcPtr Get() noexcept;
+    static BuiltinTransformRegistryRcPtr Get() noexcept;
 
     //!cpp:function:: Get the number of built-in transforms available.
     virtual size_t getNumBuiltins() const noexcept = 0;
@@ -2576,9 +2576,11 @@ public:
     //!cpp:function:: Get the description string for the i-th built-in transform.
     virtual const char * getBuiltinDescription(size_t index) const = 0;
 
+    //!cpp:function:: To never use i.e. only needed for the Python bindings with pybind11. 
+    virtual ~BuiltinTransformRegistry() = default;
+
 protected:
     BuiltinTransformRegistry() = default;
-    virtual ~BuiltinTransformRegistry() = default;
 
 private:
     BuiltinTransformRegistry(const BuiltinTransformRegistry &) = delete;

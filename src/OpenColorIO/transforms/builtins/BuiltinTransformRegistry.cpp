@@ -50,7 +50,7 @@ void AddCameraBuiltins(BuiltinTransformRegistryImpl & registry)
 
 } // anon.
 
-ConstBuiltinTransformRegistryRcPtr BuiltinTransformRegistry::Get() noexcept
+BuiltinTransformRegistryRcPtr BuiltinTransformRegistry::Get() noexcept
 {
     AutoMutex guard(globalRegistryMutex);
 

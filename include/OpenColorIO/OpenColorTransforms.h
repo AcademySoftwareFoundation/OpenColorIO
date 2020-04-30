@@ -194,9 +194,11 @@ public:
     //!cpp:function::
     virtual const char * getDescription() const noexcept = 0;
 
+    //!cpp:function:: To never use i.e. only needed for the Python bindings with pybind11. 
+    virtual ~BuiltinTransform() = default;
+
 protected:
     BuiltinTransform() = default;
-    virtual ~BuiltinTransform() = default;
 
 private:
     BuiltinTransform(const BuiltinTransform &) = delete;
