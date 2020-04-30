@@ -499,7 +499,7 @@ bool FloatsDiffer(const float expected, const float actual,
     }
 
     // Comparing regular floats
-    int expectedBitsComp, actualBitsComp;
+    long expectedBitsComp, actualBitsComp;
     if (compressDenorms)
     {
         expectedBitsComp = FloatForCompareCompressDenorms(expectedBits);
