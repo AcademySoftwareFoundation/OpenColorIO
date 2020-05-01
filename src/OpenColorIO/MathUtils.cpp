@@ -517,13 +517,25 @@ bool FloatsDiffer(const float expected, const float actual,
     // Note: AppleClang 11.0.3.11030032 has trouble when merging the next three lines.
     //       But AppleClang 11.0.0.11000033 works fine.
 
-    // Impose to process 'int' types to have the overflow. 
+#if defined(__clang__) && defined(__APPLE__)
+
+#pragma clang optimize off
+
+#endif
+
     const int diff = expectedBitsComp - actualBitsComp;
 
-    // Impose to process 'int' type. 
     const int diff_abs = abs(diff);
 
-    return diff_abs > tolerance;
+    const bool ret = diff_abs > tolerance;
+
+#if defined(__clang__) && defined(__APPLE__)
+
+#pragma clang optimize on
+
+#endif
+
+    return ret;
 }
 
 inline int HalfForCompare(const half h)
