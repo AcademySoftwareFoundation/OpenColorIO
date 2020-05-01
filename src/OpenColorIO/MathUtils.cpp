@@ -527,7 +527,7 @@ bool FloatsDiffer(const float expected, const float actual,
     const int diff_abs = (expectedBitsComp > actualBitsComp)
                        ? (expectedBitsComp - actualBitsComp)
                        : (actualBitsComp - expectedBitsComp);
-    return std::fabs(diff_abs) > tolerance;
+    return std::abs(diff_abs) > tolerance;
 }
 
 
