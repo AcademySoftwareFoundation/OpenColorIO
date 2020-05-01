@@ -21,8 +21,6 @@ bool IsScalarEqualToZero(T v)
     static_assert(std::is_floating_point<T>::value,
                   "Only single and double precision floats are supported");
 
-    if (PrintValues) std::cout << __FUNCTION__ << "(" << __LINE__ << ") -> v = " << v << "\n";
-
     return !FloatsDiffer(0.0f, (float)v, 2, false);
 }
 
@@ -458,9 +456,6 @@ inline void ExtractFloatComponents(const unsigned floatBits, unsigned& sign,
 bool FloatsDiffer(const float expected, const float actual,
                   const int tolerance, const bool compressDenorms)
 {
-    if (PrintValues) std::cout << __FUNCTION__ << "(" << __LINE__ << ") -> expected = " << expected << "\n";
-    if (PrintValues) std::cout << __FUNCTION__ << "(" << __LINE__ << ") -> actual = " << actual << "\n";
-
     const unsigned expectedBits = FloatAsInt(expected);
     const unsigned actualBits = FloatAsInt(actual);
 
