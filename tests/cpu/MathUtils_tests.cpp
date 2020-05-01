@@ -25,26 +25,13 @@ OCIO_ADD_TEST(MathUtils, is_scalar_equal_to_zero)
     OCIO_CHECK_EQUAL(OCIO::IsScalarEqualToZero(0.0f), true);
     OCIO_CHECK_EQUAL(OCIO::IsScalarEqualToZero(-0.0f), true);
 
-
-    struct Guard
-    {
-        Guard()  { OCIO::PrintValues = false; }
-        ~Guard() { OCIO::PrintValues = false; }
-    } guard;
-
-    if (OCIO::PrintValues) std::cout << "\n" << __FUNCTION__ << "(" << __LINE__ << ")\n";
     OCIO_CHECK_EQUAL(OCIO::IsScalarEqualToZero(-1.072883670794056e-09f), false);
-    if (OCIO::PrintValues) std::cout << "\n" << __FUNCTION__ << "(" << __LINE__ << ")\n";
     OCIO_CHECK_EQUAL(OCIO::IsScalarEqualToZero(1.072883670794056e-09f), false);
 
-    if (OCIO::PrintValues) std::cout << "\n" << __FUNCTION__ << "(" << __LINE__ << ")\n";
     OCIO_CHECK_EQUAL(OCIO::IsScalarEqualToZero(-1.072883670794056e-03f), false);
-    if (OCIO::PrintValues) std::cout << "\n" << __FUNCTION__ << "(" << __LINE__ << ")\n";
     OCIO_CHECK_EQUAL(OCIO::IsScalarEqualToZero(1.072883670794056e-03f), false);
 
-    if (OCIO::PrintValues) std::cout << "\n" << __FUNCTION__ << "(" << __LINE__ << ")\n";
     OCIO_CHECK_EQUAL(OCIO::IsScalarEqualToZero(-1.072883670794056e-01f), false);
-    if (OCIO::PrintValues) std::cout << "\n" << __FUNCTION__ << "(" << __LINE__ << ")\n";
     OCIO_CHECK_EQUAL(OCIO::IsScalarEqualToZero(1.072883670794056e-01f), false);
 }
 
