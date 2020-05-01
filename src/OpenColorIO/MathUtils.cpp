@@ -12,11 +12,16 @@
 namespace OCIO_NAMESPACE
 {
 
+bool PrintValues = false;
+
+
 template<typename T>
 bool IsScalarEqualToZero(T v)
 {
     static_assert(std::is_floating_point<T>::value,
                   "Only single and double precision floats are supported");
+
+    if (PrintValues) std::cout << __FUNCTION__ << "(" << __LINE__ << ") -> v = " << v << "\n";
 
     return !FloatsDiffer(0.0f, (float)v, 2, false);
 }
@@ -453,8 +458,14 @@ inline void ExtractFloatComponents(const unsigned floatBits, unsigned& sign,
 bool FloatsDiffer(const float expected, const float actual,
                   const int tolerance, const bool compressDenorms)
 {
+    if (PrintValues) std::cout << __FUNCTION__ << "(" << __LINE__ << ") -> expected = " << expected << "\n";
+    if (PrintValues) std::cout << __FUNCTION__ << "(" << __LINE__ << ") -> actual = " << actual << "\n";
+
     const unsigned expectedBits = FloatAsInt(expected);
     const unsigned actualBits = FloatAsInt(actual);
+
+    if (PrintValues) std::cout << __FUNCTION__ << "(" << __LINE__ << ") -> expectedBits = " << expectedBits << ", 0x" << std::hex << expectedBits << std::dec << "\n";
+    if (PrintValues) std::cout << __FUNCTION__ << "(" << __LINE__ << ") -> actualBits = " << actualBits << ", 0x" << std::hex << actualBits << std::dec << "\n";
 
     unsigned es, ee, em, as, ae, am;
     ExtractFloatComponents(expectedBits, es, ee, em);
@@ -511,9 +522,17 @@ bool FloatsDiffer(const float expected, const float actual,
         actualBitsComp = FloatForCompare(actualBits);
     }
 
+    if (PrintValues) std::cout << __FUNCTION__ << "(" << __LINE__ << ") -> expectedBitsComp = " << expectedBitsComp << ", 0x" << std::hex << expectedBitsComp << std::dec << "\n";
+    if (PrintValues) std::cout << __FUNCTION__ << "(" << __LINE__ << ") -> actualBitsComp = " << actualBitsComp << ", 0x" << std::hex << actualBitsComp << std::dec << "\n";
+
     // Impose to process 'int' type to have the overflow. 
     const int diff = expectedBitsComp - actualBitsComp;
-    return abs(diff) > tolerance;
+    if (PrintValues) std::cout << __FUNCTION__ << "(" << __LINE__ << ") -> diff = " << diff << ", 0x" << std::hex << diff << std::dec << "\n";
+
+    const int diff_abs = abs(diff);
+    if (PrintValues) std::cout << __FUNCTION__ << "(" << __LINE__ << ") -> abs(diff) = " << diff_abs << ", 0x" << std::hex << diff_abs << std::dec << "\n";
+
+    return diff_abs > tolerance;
 }
 
 inline int HalfForCompare(const half h)
