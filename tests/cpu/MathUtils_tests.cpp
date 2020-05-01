@@ -28,7 +28,7 @@ OCIO_ADD_TEST(MathUtils, is_scalar_equal_to_zero)
 
     struct Guard
     {
-        Guard()  { OCIO::PrintValues = true; }
+        Guard()  { OCIO::PrintValues = false; }
         ~Guard() { OCIO::PrintValues = false; }
     } guard;
 
