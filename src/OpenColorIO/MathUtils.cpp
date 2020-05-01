@@ -514,13 +514,10 @@ bool FloatsDiffer(const float expected, const float actual,
         actualBitsComp = FloatForCompare(actualBits);
     }
 
-    if (PrintValues) std::cout << __FUNCTION__ << "(" << __LINE__ << ") -> expectedBitsComp = " << expectedBitsComp << ", 0x" << std::hex << expectedBitsComp << std::dec << "\n";
-    if (PrintValues) std::cout << __FUNCTION__ << "(" << __LINE__ << ") -> actualBitsComp = " << actualBitsComp << ", 0x" << std::hex << actualBitsComp << std::dec << "\n";
-
-    // Impose to process 'int' type to have the overflow. 
+    // Impose to process 'int' types to have the overflow. 
     const int diff = expectedBitsComp - actualBitsComp;
-    if (PrintValues) std::cout << __FUNCTION__ << "(" << __LINE__ << ") -> diff = " << diff << ", 0x" << std::hex << diff << std::dec << "\n";
 
+    // Impose to process 'int' type. 
     const int diff_abs = abs(diff);
     if (PrintValues) std::cout << __FUNCTION__ << "(" << __LINE__ << ") -> abs(diff) = " << diff_abs << ", 0x" << std::hex << diff_abs << std::dec << "\n";
 
