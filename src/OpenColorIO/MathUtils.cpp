@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
+#include <cmath>
 #include <sstream>
 #include <string.h>
 #include <type_traits>
@@ -11,9 +13,6 @@
 
 namespace OCIO_NAMESPACE
 {
-
-bool PrintValues = false;
-
 
 template<typename T>
 bool IsScalarEqualToZero(T v)
@@ -456,6 +455,9 @@ inline void ExtractFloatComponents(const unsigned floatBits, unsigned& sign,
 bool FloatsDiffer(const float expected, const float actual,
                   const int tolerance, const bool compressDenorms)
 {
+    static_assert(sizeof(int)==4,
+                  "Mathematical operations based on 32-bits integers.");
+
     const unsigned expectedBits = FloatAsInt(expected);
     const unsigned actualBits = FloatAsInt(actual);
 
@@ -517,25 +519,10 @@ bool FloatsDiffer(const float expected, const float actual,
     // Note: AppleClang 11.0.3.11030032 has trouble when merging the next three lines.
     //       But AppleClang 11.0.0.11000033 works fine.
 
-#if defined(__clang__) && defined(__APPLE__)
-
-#pragma clang optimize off
-
-#endif
-
     const int diff = expectedBitsComp - actualBitsComp;
-
     const int diff_abs = std::abs(diff);
-
     const bool ret = diff_abs > tolerance;
-
     return ret;
-
-#if defined(__clang__) && defined(__APPLE__)
-
-#pragma clang optimize on
-
-#endif
 }
 
 
