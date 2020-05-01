@@ -9,12 +9,37 @@ namespace OCIO_NAMESPACE
 
 void bindPyBuiltinTransformRegistry(py::module & m)
 {
-    py::class_<BuiltinTransformRegistry, BuiltinTransformRegistryRcPtr>(m, "BuiltinTransformRegistry")
-        .def(py::init([]() { return BuiltinTransformRegistry::Get(); }))
+    // Wrapper to preserve the BuiltinTransformRegistry singleton.
+    class Wrapper
+    {
+    public:
+        Wrapper() = default;
+        Wrapper(const Wrapper &) = delete;
+        Wrapper & operator=(const Wrapper &) = delete;
+        ~Wrapper() = default;
 
-        .def("getNumBuiltins", &BuiltinTransformRegistry::getNumBuiltins)
-        .def("getBuiltinStyle", &BuiltinTransformRegistry::getBuiltinStyle)
-        .def("getBuiltinDescription", &BuiltinTransformRegistry::getBuiltinDescription);
+        size_t getNumBuiltins() const noexcept
+        {
+        	return BuiltinTransformRegistry::Get()->getNumBuiltins();
+        }
+
+        const char * getBuiltinStyle(size_t idx) const
+        {
+        	return BuiltinTransformRegistry::Get()->getBuiltinStyle(idx);
+        }
+
+        const char * getBuiltinDescription(size_t idx) const
+        {
+        	return BuiltinTransformRegistry::Get()->getBuiltinDescription(idx);
+        }
+    };
+
+    py::class_<Wrapper>(m, "BuiltinTransformRegistry")
+        .def(py::init<>())
+
+        .def("getNumBuiltins",        &Wrapper::getNumBuiltins)
+        .def("getBuiltinStyle",       &Wrapper::getBuiltinStyle)
+        .def("getBuiltinDescription", &Wrapper::getBuiltinDescription);
 }
 
 } // namespace OCIO_NAMESPACE
