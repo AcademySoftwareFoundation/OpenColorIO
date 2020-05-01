@@ -514,12 +514,14 @@ bool FloatsDiffer(const float expected, const float actual,
         actualBitsComp = FloatForCompare(actualBits);
     }
 
+    // Note: AppleClang 11.0.3.11030032 has trouble when merging the next three lines.
+    //       But AppleClang 11.0.0.11000033 works fine.
+
     // Impose to process 'int' types to have the overflow. 
     const int diff = expectedBitsComp - actualBitsComp;
 
     // Impose to process 'int' type. 
     const int diff_abs = abs(diff);
-    if (PrintValues) std::cout << __FUNCTION__ << "(" << __LINE__ << ") -> abs(diff) = " << diff_abs << ", 0x" << std::hex << diff_abs << std::dec << "\n";
 
     return diff_abs > tolerance;
 }
