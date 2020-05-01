@@ -529,14 +529,15 @@ bool FloatsDiffer(const float expected, const float actual,
 
     const bool ret = diff_abs > tolerance;
 
+    return ret;
+
 #if defined(__clang__) && defined(__APPLE__)
 
 #pragma clang optimize on
 
 #endif
-
-    return ret;
 }
+
 
 inline int HalfForCompare(const half h)
 {
