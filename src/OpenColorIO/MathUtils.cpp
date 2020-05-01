@@ -504,7 +504,7 @@ bool FloatsDiffer(const float expected, const float actual,
     }
 
     // Comparing regular floats
-    int expectedBitsComp, actualBitsComp;
+    unsigned expectedBitsComp, actualBitsComp;
     if (compressDenorms)
     {
         expectedBitsComp = FloatForCompareCompressDenorms(expectedBits);
@@ -516,13 +516,18 @@ bool FloatsDiffer(const float expected, const float actual,
         actualBitsComp = FloatForCompare(actualBits);
     }
 
-    // Note: AppleClang 11.0.3.11030032 has trouble when merging the next three lines.
-    //       But AppleClang 11.0.0.11000033 works fine.
+    // Note: AppleClang 11.0.3.11030032 has trouble with abs() & std::abs() versus
+    // integer arithmetic overflow even if previous AppleClang (i.e. 11.0.0.11000033)
+    // works fine. And the cppreference documentation mentions that std::abs() & abs()
+    // have undefined behaviors for INT_MIN & INT_MAX.
+    // For all compilers (in case newer version of gcc / msvc also fail in the future)
+    // re-implement the integer difference to have the arithmetic overflow outside
+    // the abs() call.
 
-    const int diff = expectedBitsComp - actualBitsComp;
-    const int diff_abs = std::abs(diff);
-    const bool ret = diff_abs > tolerance;
-    return ret;
+    const int diff_abs = (expectedBitsComp > actualBitsComp)
+                       ? (expectedBitsComp - actualBitsComp)
+                       : (actualBitsComp - expectedBitsComp);
+    return std::fabs(diff_abs) > tolerance;
 }
 
 
