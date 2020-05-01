@@ -459,9 +459,6 @@ bool FloatsDiffer(const float expected, const float actual,
     const unsigned expectedBits = FloatAsInt(expected);
     const unsigned actualBits = FloatAsInt(actual);
 
-    if (PrintValues) std::cout << __FUNCTION__ << "(" << __LINE__ << ") -> expectedBits = " << expectedBits << ", 0x" << std::hex << expectedBits << std::dec << "\n";
-    if (PrintValues) std::cout << __FUNCTION__ << "(" << __LINE__ << ") -> actualBits = " << actualBits << ", 0x" << std::hex << actualBits << std::dec << "\n";
-
     unsigned es, ee, em, as, ae, am;
     ExtractFloatComponents(expectedBits, es, ee, em);
     ExtractFloatComponents(actualBits, as, ae, am);
