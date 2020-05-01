@@ -504,7 +504,7 @@ bool FloatsDiffer(const float expected, const float actual,
     }
 
     // Comparing regular floats
-    unsigned expectedBitsComp, actualBitsComp;
+    int expectedBitsComp, actualBitsComp;
     if (compressDenorms)
     {
         expectedBitsComp = FloatForCompareCompressDenorms(expectedBits);
@@ -524,10 +524,10 @@ bool FloatsDiffer(const float expected, const float actual,
     // re-implement the integer difference to have the arithmetic overflow outside
     // the abs() call.
 
-    const int diff_abs = (expectedBitsComp > actualBitsComp)
-                       ? (expectedBitsComp - actualBitsComp)
-                       : (actualBitsComp - expectedBitsComp);
-    return std::abs(diff_abs) > tolerance;
+    const int diff = (expectedBitsComp > actualBitsComp)
+                   ? (expectedBitsComp - actualBitsComp)
+                   : (actualBitsComp - expectedBitsComp);
+    return std::abs(diff) > tolerance;
 }
 
 
