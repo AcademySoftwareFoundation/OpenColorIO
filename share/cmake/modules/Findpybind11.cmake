@@ -14,11 +14,6 @@
 # downloaded at build time.
 #
 
-if(NOT TARGET pybind11::module)
-    add_library(pybind11::module INTERFACE IMPORTED GLOBAL)
-    set(_pybind11_TARGET_CREATE TRUE)
-endif()
-
 ###############################################################################
 ### Try to find package ###
 
@@ -131,6 +126,14 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         VERSION_VAR
             pybind11_VERSION
     )
+endif()
+
+###############################################################################
+### Create target ###
+
+if(NOT TARGET pybind11::module)
+    add_library(pybind11::module INTERFACE IMPORTED GLOBAL)
+    set(_pybind11_TARGET_CREATE TRUE)
 endif()
 
 ###############################################################################
