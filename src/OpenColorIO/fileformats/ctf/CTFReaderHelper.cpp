@@ -2727,11 +2727,11 @@ void CTFReaderLogParamsElt::start(const char ** atts)
     int chan = -1;
 
     // Legacy Log/Lin parameters:
-    double gamma = std::numeric_limits<double>::quiet_NaN();
-    double refWhite = std::numeric_limits<double>::quiet_NaN();
-    double refBlack = std::numeric_limits<double>::quiet_NaN();
+    double gamma     = std::numeric_limits<double>::quiet_NaN();
+    double refWhite  = std::numeric_limits<double>::quiet_NaN();
+    double refBlack  = std::numeric_limits<double>::quiet_NaN();
     double highlight = std::numeric_limits<double>::quiet_NaN();
-    double shadow = std::numeric_limits<double>::quiet_NaN();
+    double shadow    = std::numeric_limits<double>::quiet_NaN();
 
     // Try extracting the attributes.
     unsigned i = 0;

@@ -261,7 +261,7 @@ OCIO_ADD_TEST(FileFormatCTF, matrix_with_offset)
     // The "4x4x3" Array syntax is only allowed in versions 1.2 or earlier.
     const OCIO::CTFVersion ctfVersion =
         cachedFile->m_transform->getCTFVersion();
-    OCIO_CHECK_ASSERT(OCIO::CTF_PROCESS_LIST_VERSION_1_2 == ctfVersion);
+    OCIO_CHECK_EQUAL(OCIO::CTF_PROCESS_LIST_VERSION_1_2, ctfVersion);
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
@@ -1234,6 +1234,9 @@ OCIO_ADD_TEST(FileFormatCTF, metadata)
 
 OCIO_ADD_TEST(FileFormatCTF, difficult_syntax)
 {
+    // This file contains a lot of unusual (but still legal) ways of writing the XML.
+    // It is intended to stress test that the XML parsing is working robustly.
+
     OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string ctfFile("clf/difficult_syntax.clf");
 
@@ -1830,7 +1833,7 @@ OCIO_ADD_TEST(FileFormatCTF, range_default)
 
     OCIO_CHECK_EQUAL(pR->getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT16);
     OCIO_CHECK_EQUAL(pR->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT16);
-    // NB: All exactly representable as flt
+    // NB: All exactly representable as float.
     OCIO_CHECK_EQUAL(pR->getMinInValue(), 16320. / 65535.);
     OCIO_CHECK_EQUAL(pR->getMaxInValue(), 32640. / 65535.);
     OCIO_CHECK_EQUAL(pR->getMinOutValue(), 16320. / 65535.);
@@ -1840,7 +1843,7 @@ OCIO_ADD_TEST(FileFormatCTF, range_default)
     OCIO_CHECK_ASSERT(!pR->maxIsEmpty());
 }
 
-OCIO_ADD_TEST(FileFormatCTF, range1_clamp)
+OCIO_ADD_TEST(FileFormatCTF, range_test1_clamp)
 {
     // Style == clamp.
     OCIO::LocalCachedFileRcPtr cachedFile;
@@ -1855,7 +1858,7 @@ OCIO_ADD_TEST(FileFormatCTF, range1_clamp)
 
     OCIO_CHECK_EQUAL(pR->getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
     OCIO_CHECK_EQUAL(pR->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
-    // NB: All exactly representable as flt
+    // NB: All exactly representable as float.
     OCIO_CHECK_EQUAL(pR->getMinInValue(), 16. / 255.);
     OCIO_CHECK_EQUAL(pR->getMaxInValue(), 240. / 255.);
     OCIO_CHECK_EQUAL(pR->getMinOutValue(), -0.5);
@@ -1865,7 +1868,7 @@ OCIO_ADD_TEST(FileFormatCTF, range1_clamp)
     OCIO_CHECK_ASSERT(!pR->maxIsEmpty());
 }
 
-OCIO_ADD_TEST(FileFormatCTF, range1_noclamp)
+OCIO_ADD_TEST(FileFormatCTF, range_test1_noclamp)
 {
     // Style == noClamp.
     OCIO::LocalCachedFileRcPtr cachedFile;
@@ -1913,7 +1916,7 @@ OCIO_ADD_TEST(FileFormatCTF, range1_noclamp)
     OCIO_CHECK_EQUAL(offsets[3], 0.f);
 }
 
-OCIO_ADD_TEST(FileFormatCTF, range2_clamp)
+OCIO_ADD_TEST(FileFormatCTF, range_test2)
 {
     // Style == clamp.
     OCIO::LocalCachedFileRcPtr cachedFile;
@@ -1933,7 +1936,7 @@ OCIO_ADD_TEST(FileFormatCTF, range2_clamp)
     OCIO_CHECK_ASSERT(pR->maxIsEmpty());
 }
 
-OCIO_ADD_TEST(FileFormatCTF, range_nonmatching)
+OCIO_ADD_TEST(FileFormatCTF, range_nonmatching_clamp)
 {
     const std::string ctfFile("clf/illegal/range_nonmatching_clamp.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception,
@@ -1947,7 +1950,7 @@ OCIO_ADD_TEST(FileFormatCTF, range_empty)
                           "At least minimum or maximum limits must be set");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, range4)
+OCIO_ADD_TEST(FileFormatCTF, range_bad_noclamp)
 {
     const std::string ctfFile("clf/illegal/range_bad_noclamp.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception,
@@ -2019,7 +2022,7 @@ OCIO_ADD_TEST(FileFormatCTF, clf3_index_map_2)
 {
     // Same as previous, but setting compCLFversion=3.0.
     const std::string ctfFile("clf/illegal/indexMap_test2.clf");
-    constexpr static const char Warning[1024] = 
+    static constexpr char Warning[1024] = 
         "Element 'IndexMap' is not valid since CLF 3 (or CTF 2)";
 
     OCIO::LogGuard guard;
