@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="b5cc7aed-d405-4d8b-b64b-382b2341a378" name="matrix example" xmlns="urn:AMPAS:CLF:v3.0" compCLFversion="3.0">
+    <Description>Basic matrix example using CLF v2 dim syntax</Description>
+    <InputDescriptor>XYZ</InputDescriptor>
+    <OutputDescriptor>RGB</OutputDescriptor>
+    <Matrix id="c61daf06-539f-4254-81fc-9800e6d02a37" inBitDepth="32f" outBitDepth="32f">
+        <Description>Legacy matrix</Description>
+        <Description>Note that dim="3 3 3" should be supported for CLF v2 compatibility</Description>
+        <Array dim="3 3 3">
+ 3.24000 -1.53700 -0.49850
+-0.96930  1.87600  0.04156
+ 0.05560 -0.20400  1.05730
+        </Array>
+    </Matrix>
+</ProcessList>

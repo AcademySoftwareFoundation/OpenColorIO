@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="1"  compCLFversion="3.0">
+   <Description>Missing SOP defaults to identity params</Description>
+   <InputDescriptor>inputDesc</InputDescriptor>
+   <OutputDescriptor>outputDesc</OutputDescriptor>
+   <ASC_CDL inBitDepth="32f" outBitDepth="16f" style="Fwd">
+      <Description>ASC CDL operation</Description>
+      <SatNode>
+          <Saturation>1.239</Saturation>
+      </SatNode>
+   </ASC_CDL>
+</ProcessList>

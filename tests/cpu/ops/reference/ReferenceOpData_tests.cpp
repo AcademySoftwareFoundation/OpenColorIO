@@ -169,7 +169,7 @@ OCIO_ADD_TEST(Reference, load_multiple_resolve_internal)
     OCIO_REQUIRE_ASSERT(ops[1]);
     op = ops[1];
     OCIO_REQUIRE_ASSERT(GetFilePath(path, op));
-    OCIO_CHECK_NE(path.find("matrix_example.clf"), std::string::npos);
+    OCIO_CHECK_NE(path.find("matrix_example_1_3_offsets.ctf"), std::string::npos);
 
     OCIO_REQUIRE_ASSERT(ops[2]);
     op = ops[2];
@@ -179,7 +179,7 @@ OCIO_ADD_TEST(Reference, load_multiple_resolve_internal)
     OCIO_REQUIRE_ASSERT(ops[3]);
     op = ops[3];
     OCIO_REQUIRE_ASSERT(GetFilePath(path, op));
-    OCIO_CHECK_NE(path.find("xyz_to_rgb.clf"), std::string::npos);
+    OCIO_CHECK_NE(path.find("clf/xyz_to_rgb.clf"), std::string::npos);
 
     OCIO_REQUIRE_ASSERT(ops[4]);
     op = ops[4];
@@ -200,7 +200,7 @@ OCIO_ADD_TEST(Reference, load_multiple_resolve_internal)
     OCIO_REQUIRE_ASSERT(ops[7]);
     op = ops[7];
     OCIO_REQUIRE_ASSERT(GetFilePath(path, op));
-    OCIO_CHECK_NE(path.find("cdl_clamp_fwd.clf"), std::string::npos);
+    OCIO_CHECK_NE(path.find("clf/cdl_clamp_fwd.clf"), std::string::npos);
 
     OCIO_REQUIRE_ASSERT(ops[8]);
     op = ops[8];

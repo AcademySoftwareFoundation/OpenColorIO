@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList xmlns="urn:NATAS:ASC:LUT:v1.2" id="lut1_32f" name="transform example lut1d 32f" compCLFversion="2.0">
-<Description> For a test </Description>
-<LUT1D id="lut-32" name="4valueLut" inBitDepth="32f" outBitDepth="32f">
-<Description> 1D LUT </Description>
-<Array dim="4 1">1.0 0.8 0.6 0</Array>
-</LUT1D>
-</ProcessList>
