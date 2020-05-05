@@ -786,7 +786,7 @@ OCIO_ADD_TEST(FileFormatCTF, lut1d_half_domain_raw_half_set)
                      OCIO::ConvertHalfBitsToFloat(403));
 }
 
-OCIO_ADD_TEST(FileFormatCTF, lut1d_half_domain_invalid_entries)
+OCIO_ADD_TEST(FileFormatCTF, lut1d_half_domain_missing_values)
 {
     const std::string ctfFile("clf/illegal/lut1d_half_domain_missing_values.clf");
     // This should fail with invalid entries exception because the number
@@ -1146,7 +1146,7 @@ OCIO_ADD_TEST(FileFormatCTF, check_utf8)
 
 }
 
-OCIO_ADD_TEST(FileFormatCTF, metadata)
+OCIO_ADD_TEST(FileFormatCTF, info_example)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string ctfFile("clf/info_example.clf");
@@ -1561,7 +1561,7 @@ OCIO_ADD_TEST(FileFormatCTF, binary_file)
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception, "is not a CTF/CLF file.");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, invalid_version)
+OCIO_ADD_TEST(FileFormatCTF, process_list_invalid_version)
 {
     const std::string ctfFile("process_list_invalid_version.ctf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile),
@@ -1569,7 +1569,7 @@ OCIO_ADD_TEST(FileFormatCTF, invalid_version)
                           "is not a valid version");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, clf_invalid_version)
+OCIO_ADD_TEST(FileFormatCTF, clf_process_list_bad_version)
 {
     std::string fileName("clf/illegal/process_list_bad_version.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(fileName), 
@@ -1577,7 +1577,7 @@ OCIO_ADD_TEST(FileFormatCTF, clf_invalid_version)
                           "is not a valid version");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, valid_version)
+OCIO_ADD_TEST(FileFormatCTF, process_list_valid_version)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string ctfFile("process_list_valid_version.ctf");
@@ -1588,7 +1588,7 @@ OCIO_ADD_TEST(FileFormatCTF, valid_version)
     OCIO_CHECK_EQUAL(ctfVersion, OCIO::CTF_PROCESS_LIST_VERSION_1_4);
 }
 
-OCIO_ADD_TEST(FileFormatCTF, higher_version)
+OCIO_ADD_TEST(FileFormatCTF, process_list_higher_version)
 {
     const std::string ctfFile("process_list_higher_version.ctf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile),
@@ -1596,7 +1596,7 @@ OCIO_ADD_TEST(FileFormatCTF, higher_version)
                           "Unsupported transform file version");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, clf_higher_version)
+OCIO_ADD_TEST(FileFormatCTF, clf_process_list_higher_version)
 {
     const std::string ctfFile("clf/illegal/process_list_higher_version.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile),
@@ -1604,7 +1604,7 @@ OCIO_ADD_TEST(FileFormatCTF, clf_higher_version)
                           "Unsupported transform file version");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, version_revision)
+OCIO_ADD_TEST(FileFormatCTF, process_list_version_revision)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string ctfFile("process_list_version_revision.ctf");
@@ -1618,7 +1618,7 @@ OCIO_ADD_TEST(FileFormatCTF, version_revision)
     OCIO_CHECK_ASSERT(ctfVersion < OCIO::CTF_PROCESS_LIST_VERSION_1_4);
 }
 
-OCIO_ADD_TEST(FileFormatCTF, no_version)
+OCIO_ADD_TEST(FileFormatCTF, process_list_no_version)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string ctfFile("process_list_no_version.ctf");
@@ -1664,27 +1664,27 @@ OCIO_ADD_TEST(FileFormatCTF, info_element_version_test)
     }
 }
 
-OCIO_ADD_TEST(FileFormatCTF, not_a_clf)
+OCIO_ADD_TEST(FileFormatCTF, process_list_missing)
 {
     const std::string ctfFile("clf/illegal/process_list_missing.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception,
                           "is not a CTF/CLF file.");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, invalid_transform)
+OCIO_ADD_TEST(FileFormatCTF, transform_missing)
 {
     const std::string ctfFile("clf/illegal/transform_missing.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception,
                           "is not a CTF/CLF file.");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, missing_element_end)
+OCIO_ADD_TEST(FileFormatCTF, transform_element_end_missing)
 {
     const std::string ctfFile("clf/illegal/transform_element_end_missing.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception, "no element found");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, missing_transform_id)
+OCIO_ADD_TEST(FileFormatCTF, transform_missing_id)
 {
     const std::string ctfFile("clf/illegal/transform_missing_id.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile),
@@ -1692,7 +1692,7 @@ OCIO_ADD_TEST(FileFormatCTF, missing_transform_id)
                           "Required attribute 'id'");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, missing_in_bitdepth)
+OCIO_ADD_TEST(FileFormatCTF, transform_missing_inbitdepth)
 {
     const std::string ctfFile("clf/illegal/transform_missing_inbitdepth.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile),
@@ -1700,7 +1700,7 @@ OCIO_ADD_TEST(FileFormatCTF, missing_in_bitdepth)
                           "inBitDepth is missing");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, missing_out_bitdepth)
+OCIO_ADD_TEST(FileFormatCTF, transform_missing_outbitdepth)
 {
     const std::string ctfFile("clf/illegal/transform_missing_outbitdepth.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile),
@@ -1716,7 +1716,7 @@ OCIO_ADD_TEST(FileFormatCTF, array_missing_values)
                           "Expected 3x3 Array values");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, array_illegal_values)
+OCIO_ADD_TEST(FileFormatCTF, array_bad_value)
 {
     const std::string ctfFile("clf/illegal/array_bad_value.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), 
@@ -1724,7 +1724,7 @@ OCIO_ADD_TEST(FileFormatCTF, array_illegal_values)
                           "Illegal values");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, array_corrupted_dimension)
+OCIO_ADD_TEST(FileFormatCTF, array_bad_dimension)
 {
     const std::string ctfFile("clf/illegal/array_bad_dimension.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile),
@@ -1748,7 +1748,7 @@ OCIO_ADD_TEST(FileFormatCTF, matrix_end_missing)
                           "no closing tag for 'Matrix'");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, unknown_bitdepth)
+OCIO_ADD_TEST(FileFormatCTF, transform_bad_outdepth)
 {
     const std::string ctfFile("clf/illegal/transform_bad_outdepth.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile),
@@ -1957,7 +1957,7 @@ OCIO_ADD_TEST(FileFormatCTF, range_bad_noclamp)
                           "Non-clamping Range min & max values have to be set");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, check_index_map)
+OCIO_ADD_TEST(FileFormatCTF, indexMap_test)
 {
     const std::string ctfFile("indexMap_test.ctf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile),
@@ -1965,7 +1965,7 @@ OCIO_ADD_TEST(FileFormatCTF, check_index_map)
                           "Only two entry IndexMaps are supported");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, index_map_1)
+OCIO_ADD_TEST(FileFormatCTF, indexMap_test1_clfv2)
 {
     // IndexMaps were allowed in CLF v2 (were removed in v3).
     OCIO::LocalCachedFileRcPtr cachedFile;
@@ -1993,7 +1993,7 @@ OCIO_ADD_TEST(FileFormatCTF, index_map_1)
     OCIO_CHECK_EQUAL(pL->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
 }
 
-OCIO_ADD_TEST(FileFormatCTF, index_map_2)
+OCIO_ADD_TEST(FileFormatCTF, indexMap_test2_clfv2)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string ctfFile("indexMap_test2_clfv2.clf");
@@ -2018,7 +2018,7 @@ OCIO_ADD_TEST(FileFormatCTF, index_map_2)
     OCIO_CHECK_EQUAL(pL->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
 }
 
-OCIO_ADD_TEST(FileFormatCTF, clf3_index_map_2)
+OCIO_ADD_TEST(FileFormatCTF, clf3_index_map)
 {
     // Same as previous, but setting compCLFversion=3.0.
     const std::string ctfFile("clf/illegal/indexMap_test2.clf");
@@ -2035,21 +2035,21 @@ OCIO_ADD_TEST(FileFormatCTF, clf3_index_map_2)
                   StringUtils::Find( StringUtils::RightTrim(guard.output()), Warning ));
 }
 
-OCIO_ADD_TEST(FileFormatCTF, index_map_3)
+OCIO_ADD_TEST(FileFormatCTF, indexMap_test3)
 {
     const std::string ctfFile("indexMap_test3.ctf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception, 
                           "Only one IndexMap allowed per LUT");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, index_map_4)
+OCIO_ADD_TEST(FileFormatCTF, indexMap_test4_clfv2)
 {
     const std::string ctfFile("indexMap_test4_clfv2.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception, 
                           "Only two entry IndexMaps are supported");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, gamma1)
+OCIO_ADD_TEST(FileFormatCTF, gamma_test1)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string ctfFile("gamma_test1.ctf");
@@ -2083,7 +2083,7 @@ OCIO_ADD_TEST(FileFormatCTF, gamma1)
     OCIO_CHECK_ASSERT(pG->isNonChannelDependent()); // RGB are equal, A is an identity
 }
 
-OCIO_ADD_TEST(FileFormatCTF, gamma2)
+OCIO_ADD_TEST(FileFormatCTF, gamma_test2)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string ctfFile("gamma_test2.ctf");
@@ -2114,7 +2114,7 @@ OCIO_ADD_TEST(FileFormatCTF, gamma2)
     OCIO_CHECK_ASSERT(!pG->isNonChannelDependent());
 }
 
-OCIO_ADD_TEST(FileFormatCTF, gamma3)
+OCIO_ADD_TEST(FileFormatCTF, gamma_test3)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string ctfFile("gamma_test3.ctf");
@@ -2144,7 +2144,7 @@ OCIO_ADD_TEST(FileFormatCTF, gamma3)
     OCIO_CHECK_ASSERT(pG->isNonChannelDependent());
 }
 
-OCIO_ADD_TEST(FileFormatCTF, gamma4)
+OCIO_ADD_TEST(FileFormatCTF, gamma_test4)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string ctfFile("gamma_test4.ctf");
@@ -2178,7 +2178,7 @@ OCIO_ADD_TEST(FileFormatCTF, gamma4)
     OCIO_CHECK_ASSERT(!pG->isNonChannelDependent());
 }
 
-OCIO_ADD_TEST(FileFormatCTF, gamma5)
+OCIO_ADD_TEST(FileFormatCTF, gamma_test5)
 {
     // This test is for an old (< 1.5) transform file that contains
     // an invalid GammaParams for the A channel.
@@ -2187,7 +2187,7 @@ OCIO_ADD_TEST(FileFormatCTF, gamma5)
                           "Invalid channel");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, gamma6)
+OCIO_ADD_TEST(FileFormatCTF, gamma_test6)
 {
     // This test is for an old (< 1.5) transform file that contains
     // a single GammaParams with identity values:
@@ -2209,7 +2209,7 @@ OCIO_ADD_TEST(FileFormatCTF, gamma6)
     OCIO_CHECK_ASSERT(pG->isIdentity());
 }
 
-OCIO_ADD_TEST(FileFormatCTF, gamma_alpha1)
+OCIO_ADD_TEST(FileFormatCTF, gamma_alpha_test1)
 {
     // This test is for a new (>= 1.5) transform file that contains
     // a single GammaParams:
@@ -2241,7 +2241,7 @@ OCIO_ADD_TEST(FileFormatCTF, gamma_alpha1)
     OCIO_CHECK_ASSERT(pG->isNonChannelDependent());
 }
 
-OCIO_ADD_TEST(FileFormatCTF, gamma_alpha2)
+OCIO_ADD_TEST(FileFormatCTF, gamma_alpha_test2)
 {
     // This test is for a new (>= 1.5) transform file that contains
     // a different GammaParams for every channel:
@@ -2276,7 +2276,7 @@ OCIO_ADD_TEST(FileFormatCTF, gamma_alpha2)
     OCIO_CHECK_ASSERT(!pG->isNonChannelDependent());
 }
 
-OCIO_ADD_TEST(FileFormatCTF, gamma_alpha3)
+OCIO_ADD_TEST(FileFormatCTF, gamma_alpha_test3)
 {
     // This test is for a new (>= 1.5) transform file that contains
     // a single GammaParams:
@@ -2309,7 +2309,7 @@ OCIO_ADD_TEST(FileFormatCTF, gamma_alpha3)
     OCIO_CHECK_ASSERT(pG->isNonChannelDependent());
 }
 
-OCIO_ADD_TEST(FileFormatCTF, gamma_alpha4)
+OCIO_ADD_TEST(FileFormatCTF, gamma_alpha_test4)
 {
     // This test is for a new (>= 1.5) transform file that contains
     // a different GammaParams for every channel:
@@ -2348,7 +2348,7 @@ OCIO_ADD_TEST(FileFormatCTF, gamma_alpha4)
     OCIO_CHECK_ASSERT(!pG->isNonChannelDependent());
 }
 
-OCIO_ADD_TEST(FileFormatCTF, gamma_alpha5)
+OCIO_ADD_TEST(FileFormatCTF, gamma_alpha_test5)
 {
     // This test is for a new (>= 1.5) transform file that contains
     // a GammaParams with no channel specified:
@@ -2383,7 +2383,7 @@ OCIO_ADD_TEST(FileFormatCTF, gamma_alpha5)
     OCIO_CHECK_ASSERT(!pG->isNonChannelDependent());
 }
 
-OCIO_ADD_TEST(FileFormatCTF, gamma_alpha6)
+OCIO_ADD_TEST(FileFormatCTF, gamma_alpha_test6)
 {
     // This test is for an new (>= 1.5) transform file that contains
     // an invalid GammaParams for the A channel (missing offset attribute).
@@ -2392,7 +2392,7 @@ OCIO_ADD_TEST(FileFormatCTF, gamma_alpha6)
                           "Missing required offset parameter");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, exponent_wrong_power)
+OCIO_ADD_TEST(FileFormatCTF, exponent_bad_value)
 {
     // The moncurve style requires a gamma value >= 1.
     const std::string ctfFile("clf/illegal/exponent_bad_value.clf");
@@ -2400,7 +2400,7 @@ OCIO_ADD_TEST(FileFormatCTF, exponent_wrong_power)
                           "is less than lower bound");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, exponent_wrong_param)
+OCIO_ADD_TEST(FileFormatCTF, exponent_bad_param)
 {
     // The basic style cannot use offset.
     const std::string ctfFile("clf/illegal/exponent_bad_param.clf");
@@ -2591,7 +2591,7 @@ OCIO_ADD_TEST(FileFormatCTF, clf2_exponent_parse)
                                       "Style not handled: 'basicMirrorRev'");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, cdl)
+OCIO_ADD_TEST(FileFormatCTF, cdl_clamp_fwd)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string ctfFile("clf/cdl_clamp_fwd.clf");
@@ -2681,21 +2681,21 @@ OCIO_ADD_TEST(FileFormatCTF, cdl_all_styles)
     OCIO_CHECK_EQUAL(pCDL->getStyle(), OCIO::CDLOpData::CDL_NO_CLAMP_REV);
 }
 
-OCIO_ADD_TEST(FileFormatCTF, cdl_invalid_sop_node)
+OCIO_ADD_TEST(FileFormatCTF, cdl_bad_slope)
 {
     const std::string ctfFile("clf/illegal/cdl_bad_slope.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception, 
                           "SOPNode: 3 values required");
 }
         
-OCIO_ADD_TEST(FileFormatCTF, cdl_invalid_sat_node)
+OCIO_ADD_TEST(FileFormatCTF, cdl_bad_sat)
 {
     const std::string ctfFile("clf/illegal/cdl_bad_sat.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception, 
                           "SatNode: non-single value");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, cdl_invalid_power)
+OCIO_ADD_TEST(FileFormatCTF, cdl_bad_power)
 {
     const std::string ctfFile("clf/illegal/cdl_bad_power.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception, 
@@ -2723,14 +2723,14 @@ OCIO_ADD_TEST(FileFormatCTF, cdl_missing_power)
                           "Required node 'Power' is missing");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, cdl_invalid_style)
+OCIO_ADD_TEST(FileFormatCTF, cdl_bad_style)
 {
     const std::string ctfFile("clf/illegal/cdl_bad_style.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception, 
                           "Unknown style for CDL");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, cdl_no_sop_node)
+OCIO_ADD_TEST(FileFormatCTF, cdl_missing_sop)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string ctfFile("clf/cdl_missing_sop.clf");
@@ -2751,7 +2751,7 @@ OCIO_ADD_TEST(FileFormatCTF, cdl_no_sop_node)
     OCIO_CHECK_EQUAL(pCDL->getSaturation(), 1.239);
 }
 
-OCIO_ADD_TEST(FileFormatCTF, cdl_no_sat_node)
+OCIO_ADD_TEST(FileFormatCTF, cdl_missing_sat)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string ctfFile("clf/cdl_missing_sat.clf");
@@ -2817,7 +2817,7 @@ OCIO_ADD_TEST(FileFormatCTF, cdl_various_in_ctf)
     OCIO_CHECK_EQUAL(pCDL->getStyle(), OCIO::CDLOpData::CDL_NO_CLAMP_REV);
 }
 
-OCIO_ADD_TEST(FileFormatCTF, load_all_clf_logs)
+OCIO_ADD_TEST(FileFormatCTF, log_all_styles)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
     const std::string fileName("clf/log_all_styles.clf");
@@ -2984,7 +2984,7 @@ OCIO_ADD_TEST(FileFormatCTF, load_all_clf_logs)
     }
 }
 
-OCIO_ADD_TEST(FileFormatCTF, load_log_to_lin)
+OCIO_ADD_TEST(FileFormatCTF, log_logtolin)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
     std::string fileName("log_logtolin.ctf");
@@ -3010,7 +3010,7 @@ OCIO_ADD_TEST(FileFormatCTF, load_log_to_lin)
     OCIO_CHECK_CLOSE(param[OCIO::LIN_SIDE_OFFSET], 0.01030290307, error);
 }
 
-OCIO_ADD_TEST(FileFormatCTF, load_log_to_lin_v2)
+OCIO_ADD_TEST(FileFormatCTF, log_logtolinv2)
 {
     // Same as previous test, but CTF version set to 2.
     OCIO::LocalCachedFileRcPtr cachedFile;
@@ -3037,7 +3037,7 @@ OCIO_ADD_TEST(FileFormatCTF, load_log_to_lin_v2)
     OCIO_CHECK_CLOSE(param[OCIO::LIN_SIDE_OFFSET], 0.01030290307, error);
 }
 
-OCIO_ADD_TEST(FileFormatCTF, load_lin_to_log)
+OCIO_ADD_TEST(FileFormatCTF, log_lintolog_3chan)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
     std::string fileName("log_lintolog_3chan.ctf");
@@ -3076,35 +3076,35 @@ OCIO_ADD_TEST(FileFormatCTF, load_lin_to_log)
     OCIO_CHECK_CLOSE(bParam[OCIO::LIN_SIDE_OFFSET], 0.010970316295, error);
 }
 
-OCIO_ADD_TEST(FileFormatCTF, log_load_invalid_style)
+OCIO_ADD_TEST(FileFormatCTF, log_bad_style)
 {
     std::string fileName("clf/illegal/log_bad_style.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(fileName), OCIO::Exception,
                           "is invalid");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, log_load_faulty_version)
+OCIO_ADD_TEST(FileFormatCTF, log_bad_version)
 {
     std::string fileName("clf/illegal/log_bad_version.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(fileName), OCIO::Exception,
                           "CLF file version '2' does not support operator 'Log'");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, log_load_bad_param)
+OCIO_ADD_TEST(FileFormatCTF, log_bad_param)
 {
     std::string fileName("clf/illegal/log_bad_param.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(fileName), OCIO::Exception,
                           "Parameter 'linSideBreak' is only allowed for style");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, log_load_missing_breakpnt)
+OCIO_ADD_TEST(FileFormatCTF, log_missing_breakpnt)
 {
     std::string fileName("clf/illegal/log_missing_breakpnt.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(fileName), OCIO::Exception,
                           "Parameter 'linSideBreak' should be defined for style");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, log_load_ocio_params_channels)
+OCIO_ADD_TEST(FileFormatCTF, log_ocio_params_channels)
 {
     // NB: The blue channel is missing and will use default values.
     // Base can be specified in any channel but has to be specified.
@@ -3143,7 +3143,7 @@ OCIO_ADD_TEST(FileFormatCTF, log_load_ocio_params_channels)
     OCIO_CHECK_EQUAL(bParams[OCIO::LOG_SIDE_OFFSET], 0.0);
 }
 
-OCIO_ADD_TEST(FileFormatCTF, log_load_ocio_params_base_missmatch)
+OCIO_ADD_TEST(FileFormatCTF, log_ocio_params_base_missmatch)
 {
     std::ostringstream strebuf;
     strebuf << "<?xml version='1.0' encoding='UTF-8'?>\n";
@@ -3158,7 +3158,7 @@ OCIO_ADD_TEST(FileFormatCTF, log_load_ocio_params_base_missmatch)
                           "base has to be the same");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, log_load_default_params)
+OCIO_ADD_TEST(FileFormatCTF, log_default_params)
 {
     std::ostringstream strebuf;
     strebuf << "<?xml version='1.0' encoding='UTF-8'?>\n";
