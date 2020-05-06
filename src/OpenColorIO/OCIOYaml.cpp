@@ -303,6 +303,8 @@ inline void load(const YAML::Node& node, View& v)
     if(node.Tag() != "View")
         return;
 
+    CheckDuplicates(node);
+
     std::string key, stringval;
     bool expectingSceneCS = false;
     bool expectingDisplayCS = false;
@@ -409,6 +411,8 @@ inline void EmitBaseTransformKeyValues(YAML::Emitter & out,
 inline void load(const YAML::Node& node, AllocationTransformRcPtr& t)
 {
     t = AllocationTransform::Create();
+
+    CheckDuplicates(node);
 
     std::string key;
 
@@ -526,6 +530,8 @@ inline void save(YAML::Emitter & out, const ConstBuiltinTransformRcPtr & t)
 inline void load(const YAML::Node& node, CDLTransformRcPtr& t)
 {
     t = CDLTransform::Create();
+
+    CheckDuplicates(node);
 
     std::string key;
     std::vector<double> floatvecval;
@@ -651,6 +657,8 @@ inline void load(const YAML::Node& node, ColorSpaceTransformRcPtr& t)
 {
     t = ColorSpaceTransform::Create();
 
+    CheckDuplicates(node);
+
     std::string key, stringval;
 
     for (Iterator iter = node.begin();
@@ -702,6 +710,8 @@ inline void save(YAML::Emitter& out, ConstColorSpaceTransformRcPtr t)
 inline void load(const YAML::Node& node, ExponentTransformRcPtr& t)
 {
     t = ExponentTransform::Create();
+
+    CheckDuplicates(node);
 
     std::string key;
 
@@ -805,6 +815,8 @@ inline void load(const YAML::Node& node, ExponentWithLinearTransformRcPtr& t)
 
     FieldFound fields = NOTHING_FOUND;
     static const std::string err("ExponentWithLinear parse error, ");
+
+    CheckDuplicates(node);
 
     std::string key;
 
@@ -1011,6 +1023,8 @@ inline void load(const YAML::Node& node, ExposureContrastTransformRcPtr& t)
 
     std::string key;
 
+    CheckDuplicates(node);
+
     for (const auto & iter : node)
     {
         const YAML::Node& first = iter.first;
@@ -1137,6 +1151,8 @@ inline void load(const YAML::Node& node, FileTransformRcPtr& t)
 {
     t = FileTransform::Create();
 
+    CheckDuplicates(node);
+
     std::string key, stringval;
 
     for (const auto & iter : node)
@@ -1213,6 +1229,8 @@ inline void load(const YAML::Node& node, FixedFunctionTransformRcPtr& t)
 {
     t = FixedFunctionTransform::Create();
 
+    CheckDuplicates(node);
+
     std::string key;
 
     for (const auto & iter : node)
@@ -1278,6 +1296,8 @@ void save(YAML::Emitter& out, ConstTransformRcPtr t);
 inline void load(const YAML::Node& node, GroupTransformRcPtr& t)
 {
     t = GroupTransform::Create();
+
+    CheckDuplicates(node);
 
     std::string key;
 
@@ -1375,6 +1395,8 @@ inline void loadLogParam(const YAML::Node & node,
 inline void load(const YAML::Node& node, LogAffineTransformRcPtr& t)
 {
     t = LogAffineTransform::Create();
+
+    CheckDuplicates(node);
 
     std::string key;
     double base = 2.0;
@@ -1495,6 +1517,8 @@ inline void save(YAML::Emitter& out, ConstLogAffineTransformRcPtr t)
 inline void load(const YAML::Node & node, LogCameraTransformRcPtr & t)
 {
     t = LogCameraTransform::Create();
+
+    CheckDuplicates(node);
 
     std::string key;
     double base = 2.0;
@@ -1627,6 +1651,8 @@ inline void load(const YAML::Node& node, LogTransformRcPtr& t)
 {
     t = LogTransform::Create();
 
+    CheckDuplicates(node);
+
     std::string key;
 
     for (const auto & iter : node)
@@ -1687,6 +1713,8 @@ inline void load(const YAML::Node& node, LookTransformRcPtr& t)
 {
     t = LookTransform::Create();
 
+    CheckDuplicates(node);
+
     std::string key, stringval;
 
     for (const auto & iter : node)
@@ -1742,6 +1770,8 @@ inline void save(YAML::Emitter& out, ConstLookTransformRcPtr t)
 inline void load(const YAML::Node& node, MatrixTransformRcPtr& t)
 {
     t = MatrixTransform::Create();
+
+    CheckDuplicates(node);
 
     std::string key;
 
@@ -1823,6 +1853,8 @@ inline void save(YAML::Emitter& out, ConstMatrixTransformRcPtr t)
 inline void load(const YAML::Node& node, RangeTransformRcPtr& t)
 {
     t = RangeTransform::Create();
+
+    CheckDuplicates(node);
 
     std::string key;
 
@@ -2297,6 +2329,8 @@ inline void load(const YAML::Node& node, LookRcPtr& look)
     if(node.Tag() != "Look")
         return;
 
+    CheckDuplicates(node);
+
     std::string key, stringval;
 
     for (const auto & iter : node)
@@ -2440,6 +2474,8 @@ inline void load(const YAML::Node & node, ViewTransformRcPtr & vt)
         os << "The '!<ViewTransform>' content needs to be a map.";
         throwError(node, os.str());
     }
+    
+    CheckDuplicates(node);
 
     std::string key, stringval;
 
@@ -2585,6 +2621,8 @@ inline void load(const YAML::Node & node, FileRulesRcPtr & fr, bool & defaultRul
 {
     if (node.Tag() != "Rule")
         return;
+
+    CheckDuplicates(node);
 
     std::string key, stringval;
     std::string name, colorspace, pattern, extension, regex;
@@ -2804,6 +2842,8 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
     bool rulesFound = false;
     bool defaultRuleFound = false;
     auto rules = config->getFileRules()->createEditableCopy();
+
+    CheckDuplicates(node);
 
     std::string key, stringval;
     bool boolval = false;

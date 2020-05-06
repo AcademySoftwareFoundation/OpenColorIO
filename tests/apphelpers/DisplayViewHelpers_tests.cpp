@@ -576,11 +576,9 @@ OCIO_ADD_TEST(DisplayViewHelpers, remove_display_view)
         "  - !<ColorSpace>\n"
         "    name: cs1\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs2\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs3\n"
         "    from_reference: !<ColorSpaceTransform> {src: cs2, dst: cs2}\n";

@@ -456,10 +456,13 @@ bool FloatsDiffer(const float expected, const float actual,
                   const int tolerance, const bool compressDenorms)
 {
     static_assert(sizeof(int)==4,
-                  "Mathematical operations based on 32-bits integers.");
+                  "Mathematical operations based on 32-bits in-memory integer representation.");
+
+    static_assert(sizeof(float)==4,
+                  "Mathematical operations based on 32-bits in-memory float representation.");
 
     const unsigned expectedBits = FloatAsInt(expected);
-    const unsigned actualBits = FloatAsInt(actual);
+    const unsigned actualBits   = FloatAsInt(actual);
 
     unsigned es, ee, em, as, ae, am;
     ExtractFloatComponents(expectedBits, es, ee, em);
@@ -503,38 +506,33 @@ bool FloatsDiffer(const float expected, const float actual,
         }
     }
 
-    // Comparing regular floats
+    // TODO: Revisit the ULP comparison to only use unsigned integers. 
+
+    // Comparing regular floats.
     unsigned expectedBitsComp, actualBitsComp;
     if (compressDenorms)
     {
         expectedBitsComp = FloatForCompareCompressDenorms(expectedBits);
-        actualBitsComp = FloatForCompareCompressDenorms(actualBits);
+        actualBitsComp   = FloatForCompareCompressDenorms(actualBits);
     }
     else
     {
         expectedBitsComp = FloatForCompare(expectedBits);
-        actualBitsComp = FloatForCompare(actualBits);
+        actualBitsComp   = FloatForCompare(actualBits);
     }
 
-    // Note: AppleClang 11.0.3.11030032 has trouble with abs() & std::abs() versus
-    // integer arithmetic overflow even if previous AppleClang (i.e. 11.0.0.11000033)
-    // works fine. And the cppreference documentation mentions that std::abs() & abs()
-    // have undefined behaviors for INT_MIN & INT_MAX.
-    // For all compilers (in case newer version of gcc / msvc also fail in the future)
-    // re-implement the integer difference to have the arithmetic overflow outside
-    // the abs() call.
+    const unsigned diff = (expectedBitsComp > actualBitsComp)
+                        ? (expectedBitsComp - actualBitsComp)
+                        : (actualBitsComp - expectedBitsComp);
 
-    const int diff = (expectedBitsComp > actualBitsComp)
-                   ? (expectedBitsComp - actualBitsComp)
-                   : (actualBitsComp - expectedBitsComp);
-    return std::abs(diff) > tolerance;
+    return diff > (unsigned)tolerance;
 }
 
 inline int HalfForCompare(const half h)
 {
     // Map neg 0 and pos 0 to 32768, allowing tolerance-based comparison
     // of small numbers of mixed sign.
-    int rawHalf = h.bits();
+    const int rawHalf = h.bits();
     return rawHalf < 32767 ? rawHalf + 32768 : 2 * 32768 - rawHalf;
 }
 
