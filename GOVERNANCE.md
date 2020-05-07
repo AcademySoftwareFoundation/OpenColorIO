@@ -118,6 +118,7 @@ project at all ASWF TAC meetings.
 * Sean Cooper - DNEG
 * Michael Dolan - Epic Games
 * Patrick Hodoul - Autodesk
+* Carol Payne - Netflix
 * Carl Rand - Weta Digital
 * Doug Walker - Autodesk
 * Kevin Wheatley - Framestore
