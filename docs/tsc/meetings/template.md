@@ -14,6 +14,7 @@ Attendees:
   * [ ] Michael Dolan (_TSC Chair_) - Epic Games
   * [ ] Patrick Hodoul (_TSC_) - Autodesk
   * [ ] John Mertic - Academy Software Foundation / Linux Foundation
+  * [ ] Carol Payne (_TSC_) - Netflix
   * [ ] Carl Rand (_TSC_) - Weta Digital
   * [ ] Doug Walker (_TSC Chief Architect_) - Autodesk
   * [ ] Kevin Wheatley (_TSC_) - Framestore

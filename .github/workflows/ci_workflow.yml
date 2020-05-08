@@ -16,9 +16,6 @@ on:
     tags-ignore:
       - v0.*
       - v1.*
-    # Jobs are skipped when ONLY Markdown (*.md) files are changed
-    paths-ignore:
-      - '**.md'
   pull_request:
     branches-ignore:
       - RB-0.*
@@ -27,8 +24,6 @@ on:
     tags-ignore:
       - v0.*
       - v1.*
-    paths-ignore:
-      - '**.md'
 
 jobs:
   # Linux jobs run in Docker containers, so the latest OS version is OK. macOS 
