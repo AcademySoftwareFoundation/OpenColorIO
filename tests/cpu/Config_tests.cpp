@@ -184,7 +184,7 @@ OCIO_ADD_TEST(Config, simple_config)
     OCIO_CHECK_NO_THROW(config->sanityCheck());
 }
 
-OCIO_ADD_TEST(Config, simple_config_with_duplicate)
+OCIO_ADD_TEST(Config, colorspace_duplicate)
 {
 
     constexpr char SIMPLE_PROFILE[] =
@@ -210,6 +210,62 @@ OCIO_ADD_TEST(Config, simple_config_with_duplicate)
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
                           "Key-value pair with key 'name' specified more than once. ");
+}
+
+OCIO_ADD_TEST(Config, cdltransform_duplicate)
+{
+
+    constexpr char SIMPLE_PROFILE[] =
+        "ocio_profile_version: 2\n"
+        "search_path: luts\n"
+        "roles:\n"
+        "  default: raw\n"
+        "file_rules:\n"
+        "  - !<Rule> {name: Default, colorspace: default}\n"
+        "displays:\n"
+        "  Disp1:\n"
+        "    - !<View> {name: View1, colorspace: raw}\n"
+        "active_displays: []\n"
+        "active_views: []\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw\n"
+        "    to_reference: !<CDLTransform> {slope: [1, 2, 1], slope: [1, 2, 1]}\n"
+        "\n";
+
+    std::istringstream is;
+    is.str(SIMPLE_PROFILE);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                          "Key-value pair with key 'slope' specified more than once. ");
+}
+
+OCIO_ADD_TEST(Config, searchpath_duplicate)
+{
+
+    constexpr char SIMPLE_PROFILE[] =
+        "ocio_profile_version: 2\n"
+        "search_path: luts\n"
+        "search_path: luts-dir\n"
+        "roles:\n"
+        "  default: raw\n"
+        "file_rules:\n"
+        "  - !<Rule> {name: Default, colorspace: default}\n"
+        "displays:\n"
+        "  Disp1:\n"
+        "    - !<View> {name: View1, colorspace: raw}\n"
+        "active_displays: []\n"
+        "active_views: []\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw\n"
+        "\n";
+
+    std::istringstream is;
+    is.str(SIMPLE_PROFILE);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                          "Key-value pair with key 'search_path' specified more than once. ");
 }
 
 OCIO_ADD_TEST(Config, roles)
@@ -4309,39 +4365,31 @@ OCIO_ADD_TEST(Config, is_colorspace_used)
         "  - !<ColorSpace>\n"
         "    name: cs1\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs2\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs3\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs4\n"
         "    from_reference: !<ColorSpaceTransform> {src: cs3, dst: cs3}\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs5\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs6\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs7\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs8\n"
         "    from_reference: !<GroupTransform>\n"
         "      children:\n"
         "        - !<ColorSpaceTransform> {src: cs7, dst: cs7}\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs9\n"
         "    from_reference: !<GroupTransform>\n"
@@ -4350,11 +4398,9 @@ OCIO_ADD_TEST(Config, is_colorspace_used)
         "             children:\n"
         "               - !<LookTransform> {src: cs8, dst: cs8}\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs10\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs11\n";
 
