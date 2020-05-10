@@ -143,6 +143,8 @@ if(OCIO_ADD_EXTRA_BUILTINS)
 	)
 
 	list(INSERT SOURCES 0 ${SOURCES_BUILTINS})
+else()
+	message(WARNING "Disabling supplemental built-in transforms removes built-in camera transforms.")
 endif()
 
 if(WIN32 AND BUILD_SHARED_LIBS)
