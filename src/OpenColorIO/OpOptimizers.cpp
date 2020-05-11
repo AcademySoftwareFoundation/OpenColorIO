@@ -11,11 +11,12 @@
 #include "Logging.h"
 #include "Op.h"
 #include "ops/lut1d/Lut1DOp.h"
-#include "ops/lut1d/Lut1DOpData.h"
+#include "ops/lut3d/Lut3DOp.h"
 #include "ops/range/RangeOpData.h"
 
 namespace OCIO_NAMESPACE
 {
+
 namespace
 {
 
@@ -263,6 +264,62 @@ int CombineOps(OpRcPtrVec & opVec, OptimizationFlags oFlags)
     return count;
 }
 
+void FinalizeOps(OpRcPtrVec & opVec)
+{
+    for (auto op : opVec)
+    {
+        // Prepare LUT 1D for inversion and ensure Matrix & Range are forward.
+        op->finalize();
+    }
+}
+
+// Replace any Lut1D or Lut3D that specify inverse evaluation with a faster forward approximation.
+// There are two inversion modes: EXACT and FAST. The EXACT method is slower, and only available
+// on the CPU, but it calculates an exact inverse. The exact inverse is based on the use of LINEAR
+// forward interpolation for Lut1D and TETRAHEDRAL forward interpolation for Lut3D. The FAST method
+// bakes the inverse into another forward LUT (using the exact method). For Lut1D, a half-domain
+// LUT is used and so this is quite accurate even for scene-linear values, but for Lut3D the baked
+// version is more of an approximation. The default optimization level uses the FAST method since
+// it is the only one available on both CPU and GPU.
+int ReplaceInverseLuts(OpRcPtrVec & opVec)
+{
+    int count = 0;
+
+    const size_t nbOps = opVec.size();
+    for (size_t i = 0; i < nbOps; ++i)
+    {
+        ConstOpRcPtr op = opVec[i];
+        auto opData = op->data();
+        const auto type = opData->getType();
+        if (type == OpData::Lut1DType)
+        {
+            auto lutData = OCIO_DYNAMIC_POINTER_CAST<const Lut1DOpData>(opData);
+            if (lutData->getDirection() == TRANSFORM_DIR_INVERSE)
+            {
+                auto invLutData = MakeFastLut1DFromInverse(lutData);
+                OpRcPtrVec tmpops;
+                CreateLut1DOp(tmpops, invLutData, TRANSFORM_DIR_FORWARD);
+                opVec[i] = tmpops[0];
+                ++count;
+            }
+        }
+        else if (type == OpData::Lut3DType)
+        {
+            auto lutData = OCIO_DYNAMIC_POINTER_CAST<const Lut3DOpData>(opData);
+            if (lutData->getDirection() == TRANSFORM_DIR_INVERSE)
+            {
+                auto invLutData = MakeFastLut3DFromInverse(lutData);
+                OpRcPtrVec tmpops;
+                CreateLut3DOp(tmpops, invLutData, TRANSFORM_DIR_FORWARD);
+                opVec[i] = tmpops[0];
+                ++count;
+            }
+        }
+    }
+    return count;
+
+}
+
 int RemoveLeadingClampIdentity(OpRcPtrVec & opVec)
 {
     int count = 0;
@@ -450,22 +507,24 @@ void OptimizeSeparablePrefix(OpRcPtrVec & ops, BitDepth in)
 }
 } // namespace
 
-void OptimizeOpVec(OpRcPtrVec & ops,
-                    const BitDepth & inBitDepth,
-                    const BitDepth & outBitDepth,
-                    OptimizationFlags oFlags)
+void OpRcPtrVec::finalize(OptimizationFlags oFlags)
 {
-    if (ops.empty())
+    if (m_ops.empty())
         return;
 
     if (IsDebugLoggingEnabled())
     {
         LogDebug("Optimizing Op Vec...");
-        LogDebug(SerializeOpVec(ops, 4));
+        LogDebug(SerializeOpVec(*this, 4));
     }
 
-    // NoOpType can be removed.
-    RemoveNoOpTypes(ops);
+    // NoOpType can be removed (facilitates conversion to a CPU/GPUProcessor).
+    RemoveNoOpTypes(*this);
+
+    validate();
+
+    // Prepare LUT 1D for inversion and ensure Matrix & Range are forward.
+    FinalizeOps(*this);
 
     if (oFlags == OPTIMIZATION_NONE)
     {
@@ -477,14 +536,14 @@ void OptimizeOpVec(OpRcPtrVec & ops,
     const auto removeDynamic = HasFlag(oFlags, OPTIMIZATION_NO_DYNAMIC_PROPERTIES);
     if (removeDynamic)
     {
-        RemoveDynamicProperties(ops);
+        RemoveDynamicProperties(*this);
     }
 
     // As the input and output bit-depths represent the color processing
     // request and they may be altered by the following optimizations,
     // preserve their values.
 
-    const auto originalSize = ops.size();
+    const auto originalSize = size();
     int total_noops         = 0;
     int total_identityops   = 0;
     int total_inverseops    = 0;
@@ -493,17 +552,31 @@ void OptimizeOpVec(OpRcPtrVec & ops,
 
     const bool optimizeIdentity = HasFlag(oFlags, OPTIMIZATION_IDENTITY);
 
+    const bool fastLut = HasFlag(oFlags, OPTIMIZATION_LUT_INV_FAST);
+
     while (passes <= MAX_OPTIMIZATION_PASSES)
     {
-        int noops       = optimizeIdentity ? RemoveNoOps(ops) : 0;
-        int identityops = ReplaceIdentityOps(ops, oFlags);
-        int inverseops  = RemoveInverseOps(ops, oFlags);
-        int combines    = CombineOps(ops, oFlags);
+        int noops       = optimizeIdentity ? RemoveNoOps(*this) : 0;
+        int identityops = ReplaceIdentityOps(*this, oFlags);
+        int inverseops  = RemoveInverseOps(*this, oFlags);
+        int combines    = CombineOps(*this, oFlags);
 
         if (noops + identityops + inverseops + combines == 0)
         {
-            // No optimization progress was made, so stop trying.
-            break;
+            // No optimization progress was made, so stop trying.  If requested, replace any
+            // inverse LUTs with faster forward LUTs and do another pass to see if more
+            // optimization is possible.
+            if (fastLut)
+            {
+                if (ReplaceInverseLuts(*this) == 0)
+                {
+                    break;
+                }
+            }
+            else
+            {
+                break;
+            }
         }
 
         total_noops += noops;
@@ -513,25 +586,6 @@ void OptimizeOpVec(OpRcPtrVec & ops,
 
         ++passes;
     }
-
-    if (!ops.empty())
-    {
-        if (!IsFloatBitDepth(inBitDepth))
-        {
-            RemoveLeadingClampIdentity(ops);
-        }
-        if (!IsFloatBitDepth(outBitDepth))
-        {
-            RemoveTrailingClampIdentity(ops);
-        }
-
-        if(HasFlag(oFlags, OPTIMIZATION_COMP_SEPARABLE_PREFIX))
-        {
-            OptimizeSeparablePrefix(ops, inBitDepth);
-        }
-    }
-
-    OpRcPtrVec::size_type finalSize = ops.size();
 
     if (passes == MAX_OPTIMIZATION_PASSES)
     {
@@ -546,6 +600,8 @@ void OptimizeOpVec(OpRcPtrVec & ops,
 
     if (IsDebugLoggingEnabled())
     {
+        OpRcPtrVec::size_type finalSize = size();
+
         std::ostringstream os;
         os << "Optimized ";
         os << originalSize << "->" << finalSize << ", ";
@@ -554,8 +610,29 @@ void OptimizeOpVec(OpRcPtrVec & ops,
         os << total_identityops << " identity ops replaced, ";
         os << total_inverseops << " inverse ops removed\n";
         os << total_combines << " ops combines\n";
-        os << SerializeOpVec(ops, 4);
+        os << SerializeOpVec(*this, 4);
         LogDebug(os.str());
+    }
+}
+
+void OpRcPtrVec::optimizeForBitdepth(const BitDepth & inBitDepth,
+                                     const BitDepth & outBitDepth,
+                                     OptimizationFlags oFlags)
+{
+    if (!empty())
+    {
+        if (!IsFloatBitDepth(inBitDepth))
+        {
+            RemoveLeadingClampIdentity(*this);
+        }
+        if (!IsFloatBitDepth(outBitDepth))
+        {
+            RemoveTrailingClampIdentity(*this);
+        }
+        if (HasFlag(oFlags, OPTIMIZATION_COMP_SEPARABLE_PREFIX))
+        {
+            OptimizeSeparablePrefix(*this, inBitDepth);
+        }
     }
 }
 

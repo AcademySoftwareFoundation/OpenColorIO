@@ -23,7 +23,6 @@ OCIO_ADD_TEST(RangeOpCPU, identity)
     range->setMinInValue(0.);
     range->setMinOutValue(0.);
     OCIO_CHECK_NO_THROW(range->validate());
-    OCIO_CHECK_NO_THROW(range->finalize());
     OCIO_CHECK_ASSERT(range->isIdentity());
     OCIO_CHECK_ASSERT(!range->isNoOp());
 
@@ -41,7 +40,6 @@ OCIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings)
     OCIO::RangeOpDataRcPtr range = std::make_shared<OCIO::RangeOpData>(0., 1., 0.5, 1.5);
 
     OCIO_CHECK_NO_THROW(range->validate());
-    OCIO_CHECK_NO_THROW(range->finalize());
 
     OCIO::ConstRangeOpDataRcPtr r = range;
     OCIO::ConstOpCPURcPtr op = OCIO::GetRangeRenderer(r);
@@ -116,7 +114,6 @@ OCIO_ADD_TEST(RangeOpCPU, scale_with_low_and_high_clippings_2)
     OCIO::RangeOpDataRcPtr range = std::make_shared<OCIO::RangeOpData>(0., 1., 0., 1.5);
 
     OCIO_CHECK_NO_THROW(range->validate());
-    OCIO_CHECK_NO_THROW(range->finalize());
 
     OCIO::ConstRangeOpDataRcPtr r = range;
     OCIO::ConstOpCPURcPtr op = OCIO::GetRangeRenderer(r);
@@ -153,7 +150,6 @@ OCIO_ADD_TEST(RangeOpCPU, offset_with_low_and_high_clippings)
     OCIO::RangeOpDataRcPtr range = std::make_shared<OCIO::RangeOpData>(0., 1., 1., 2.);
 
     OCIO_CHECK_NO_THROW(range->validate());
-    OCIO_CHECK_NO_THROW(range->finalize());
 
     OCIO::ConstRangeOpDataRcPtr r = range;
     OCIO::ConstOpCPURcPtr op = OCIO::GetRangeRenderer(r);
@@ -190,7 +186,6 @@ OCIO_ADD_TEST(RangeOpCPU, low_and_high_clippings)
     OCIO::RangeOpDataRcPtr range = std::make_shared<OCIO::RangeOpData>(1., 2., 1., 2.);
 
     OCIO_CHECK_NO_THROW(range->validate());
-    OCIO_CHECK_NO_THROW(range->finalize());
 
     OCIO::ConstRangeOpDataRcPtr r = range;
     OCIO::ConstOpCPURcPtr op = OCIO::GetRangeRenderer(r);
@@ -235,7 +230,6 @@ OCIO_ADD_TEST(RangeOpCPU, low_clipping)
                                               -0.1, OCIO::RangeOpData::EmptyValue());
 
     OCIO_CHECK_NO_THROW(range->validate());
-    OCIO_CHECK_NO_THROW(range->finalize());
 
     OCIO::ConstRangeOpDataRcPtr r = range;
     OCIO::ConstOpCPURcPtr op = OCIO::GetRangeRenderer(r);
@@ -274,7 +268,6 @@ OCIO_ADD_TEST(RangeOpCPU, high_clipping)
                                               OCIO::RangeOpData::EmptyValue(), 1.1);
 
     OCIO_CHECK_NO_THROW(range->validate());
-    OCIO_CHECK_NO_THROW(range->finalize());
 
     OCIO::ConstRangeOpDataRcPtr r = range;
     OCIO::ConstOpCPURcPtr op = OCIO::GetRangeRenderer(r);
@@ -306,3 +299,45 @@ OCIO_ADD_TEST(RangeOpCPU, high_clipping)
     OCIO_CHECK_CLOSE(image[11],  0.00f, g_error);
 }
 
+OCIO_ADD_TEST(RangeOpCPU, inverse)
+{
+    // Based on scale_with_low_and_high_clippings_2. Setting the direction to inverse and swap the
+    // in/out values should give the same numeric result.
+    OCIO::RangeOpDataRcPtr range = std::make_shared<OCIO::RangeOpData>(0., 1.5, 0., 1.);
+    range->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO_CHECK_NO_THROW(range->validate());
+
+    OCIO::ConstRangeOpDataRcPtr r = range;
+    OCIO_CHECK_THROW_WHAT(OCIO::GetRangeRenderer(r), OCIO::Exception, "Op::finalize has to be called");
+
+    r = range->getAsForward();
+    OCIO::ConstOpCPURcPtr op;
+    OCIO_CHECK_NO_THROW(op = OCIO::GetRangeRenderer(r));
+
+    const OCIO::OpCPU & c = *op;
+    const std::string typeName(typeid(c).name());
+    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "RangeScaleMinMaxRenderer"));
+
+    const long numPixels = 3;
+    float image[4 * numPixels] = { -0.50f, -0.25f, 0.50f, 0.0f,
+                                    0.75f,  1.00f, 1.25f, 1.0f,
+                                    1.25f,  1.50f, 1.75f, 0.0f };
+
+    OCIO_CHECK_NO_THROW(op->apply(&image[0], &image[0], numPixels));
+
+    OCIO_CHECK_CLOSE(image[0], 0.000f, g_error);
+    OCIO_CHECK_CLOSE(image[1], 0.000f, g_error);
+    OCIO_CHECK_CLOSE(image[2], 0.750f, g_error);
+    OCIO_CHECK_CLOSE(image[3], 0.000f, g_error);
+
+    OCIO_CHECK_CLOSE(image[4], 1.125f, g_error);
+    OCIO_CHECK_CLOSE(image[5], 1.500f, g_error);
+    OCIO_CHECK_CLOSE(image[6], 1.500f, g_error);
+    OCIO_CHECK_CLOSE(image[7], 1.000f, g_error);
+
+    OCIO_CHECK_CLOSE(image[8], 1.500f, g_error);
+    OCIO_CHECK_CLOSE(image[9], 1.500f, g_error);
+    OCIO_CHECK_CLOSE(image[10], 1.500f, g_error);
+    OCIO_CHECK_CLOSE(image[11], 0.000f, g_error);
+}

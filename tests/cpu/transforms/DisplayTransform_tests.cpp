@@ -176,7 +176,7 @@ OCIO_ADD_TEST(DisplayTransform, build_ops)
                                                   config->getCurrentContext(), *dt,
                                                   OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_CHECK_EQUAL(ops.size(), 16);
-        ops.finalize(OCIO::OPTIMIZATION_NONE);
+        OCIO_CHECK_NO_THROW(ops.validate());
 
         // 0-3. InputCS -> scene linear role:
         //     0. GPU Allocation No-op.
@@ -339,7 +339,7 @@ OCIO_ADD_TEST(DisplayTransform, build_ops)
 
         // Getting an additional op for the reference space change.
         OCIO_CHECK_EQUAL(ops.size(), 17);
-        ops.finalize(OCIO::OPTIMIZATION_NONE);
+        OCIO_CHECK_NO_THROW(ops.validate());
 
         // Same as previous up to colorTiming to reference.
         //  0. GPU Allocation No-op.
@@ -405,7 +405,7 @@ OCIO_ADD_TEST(DisplayTransform, build_ops)
 
         // Getting an additional op for the display to display view transform.
         OCIO_CHECK_EQUAL(ops.size(), 18);
-        ops.finalize(OCIO::OPTIMIZATION_NONE);
+        OCIO_CHECK_NO_THROW(ops.validate());
 
         // Same as previous up to scene-referred to display referred.
         // 0. GPU Allocation No-op.
@@ -459,7 +459,7 @@ OCIO_ADD_TEST(DisplayTransform, build_ops)
 
         // Color space conversion is skipped.
         OCIO_CHECK_EQUAL(ops.size(), 4);
-        ops.finalize(OCIO::OPTIMIZATION_NONE);
+        OCIO_CHECK_NO_THROW(ops.validate());
 
         // With isData true, the view/display transform is not applied.  The CC and channelView
         // are applied, but without converting to their usual process spaces.
@@ -565,7 +565,7 @@ OCIO_ADD_TEST(DisplayTransform, build_ops_with_looks)
                                               config->getCurrentContext(), *dt,
                                               OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_CHECK_EQUAL(ops.size(), 11);
-    ops.finalize(OCIO::OPTIMIZATION_NONE);
+    OCIO_CHECK_NO_THROW(ops.validate());
 
     // 0-3. DisplayCSIn->displayCSProcess:
     //     0. GPU Allocation No-op.

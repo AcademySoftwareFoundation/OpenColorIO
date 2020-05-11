@@ -39,14 +39,11 @@ OCIO_ADD_TEST(LogOp, lin_to_log)
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO_REQUIRE_ASSERT((bool)ops[0]);
 
-    // No chacheID before operator has been finalized.
-    std::string opCache = ops[0]->getCacheID();
-    OCIO_CHECK_EQUAL(opCache.size(), 0);
-
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
 
     // Validate properties.
-    opCache = ops[0]->getCacheID();
+    std::string opCache;
+    OCIO_CHECK_NO_THROW(opCache = ops[0]->getCacheID());
     OCIO_CHECK_NE(opCache.size(), 0);
     OCIO_CHECK_EQUAL(ops[0]->isNoOp(), false);
     OCIO_CHECK_EQUAL(ops[0]->hasChannelCrosstalk(), false);
@@ -88,7 +85,7 @@ OCIO_ADD_TEST(LogOp, log_to_lin)
                                           linSlope, linOffset,
                                           OCIO::TRANSFORM_DIR_INVERSE));
 
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
 
     // Apply the result.
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
@@ -170,7 +167,8 @@ OCIO_ADD_TEST(LogOp, inverse)
         data[i] = result[i];
     }
 
-    ops[0]->finalize(OCIO::OPTIMIZATION_NONE);
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+
     ops[0]->apply(data, 3);
     // Note: Skip testing alpha channels.
     OCIO_CHECK_NE( data[0], result[0] );
@@ -183,7 +181,6 @@ OCIO_ADD_TEST(LogOp, inverse)
     OCIO_CHECK_NE( data[9], result[9] );
     OCIO_CHECK_NE( data[10], result[10] );
 
-    ops[1]->finalize(OCIO::OPTIMIZATION_NONE);
     ops[1]->apply(data, 3);
 
 #ifndef USE_SSE
@@ -225,11 +222,14 @@ OCIO_ADD_TEST(LogOp, cache_id)
     OCIO_REQUIRE_ASSERT((bool)ops[1]);
     OCIO_REQUIRE_ASSERT((bool)ops[2]);
 
-    OCIO_CHECK_NO_THROW(OCIO::OptimizeFinalizeOpVec(ops));
+    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
 
-    const std::string opCacheID0 = ops[0]->getCacheID();
-    const std::string opCacheID1 = ops[1]->getCacheID();
-    const std::string opCacheID2 = ops[2]->getCacheID();
+    std::string opCacheID0;
+    OCIO_CHECK_NO_THROW(opCacheID0 = ops[0]->getCacheID());
+    std::string opCacheID1;
+    OCIO_CHECK_NO_THROW(opCacheID1 = ops[1]->getCacheID());
+    std::string opCacheID2;
+    OCIO_CHECK_NO_THROW(opCacheID2 = ops[2]->getCacheID());
     OCIO_CHECK_EQUAL(opCacheID0, opCacheID2);
     OCIO_CHECK_NE(opCacheID0, opCacheID1);
 }

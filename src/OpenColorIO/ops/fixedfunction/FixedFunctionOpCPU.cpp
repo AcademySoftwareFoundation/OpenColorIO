@@ -1093,6 +1093,7 @@ ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func
         case FixedFunctionOpData::REC2100_SURROUND_FWD:
         case FixedFunctionOpData::REC2100_SURROUND_INV:
         {
+            // Sharing same renderer (param will be inverted to handle direction).
             return std::make_shared<Renderer_REC2100_Surround>(func);
         }
 

@@ -274,15 +274,17 @@ void RemoveActiveDisplayView(ConfigRcPtr & config, const char * displayName, con
                 struct EnableAllDisplays
                 {
                     EnableAllDisplays() = delete;
+                    EnableAllDisplays(const EnableAllDisplays &) = delete;
 
                     // Note that if the 'active_displays' list is controlled by the ennvar either
                     // the code throws before or the following guard is useless.
-                    EnableAllDisplays(ConfigRcPtr & config)
+                    explicit EnableAllDisplays(ConfigRcPtr & config)
                         :   m_config(config)
                         ,   m_activeDisplays(config->getActiveDisplays())
                     {
                         m_config->setActiveDisplays("");
                     }
+
                     ~EnableAllDisplays()
                     {
                         m_config->setActiveDisplays(m_activeDisplays.c_str());

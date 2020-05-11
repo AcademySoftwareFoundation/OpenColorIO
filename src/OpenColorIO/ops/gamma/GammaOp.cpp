@@ -46,7 +46,7 @@ public:
     bool canCombineWith(ConstOpRcPtr & op) const override;
     void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
 
-    void finalize(OptimizationFlags oFlags) override;
+    std::string getCacheID() const override;
 
     ConstOpCPURcPtr getCPUOp() const override;
 
@@ -124,17 +124,15 @@ void GammaOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
     CreateGammaOp(ops, res, TRANSFORM_DIR_FORWARD);
 }
 
-void GammaOp::finalize(OptimizationFlags oFlags)
+std::string GammaOp::getCacheID() const
 {
-    gammaData()->finalize();
-
     // Create the cacheID
     std::ostringstream cacheIDStream;
     cacheIDStream << "<GammaOp ";
     cacheIDStream << gammaData()->getCacheID() << " ";
     cacheIDStream << ">";
 
-    m_cacheID = cacheIDStream.str();
+    return cacheIDStream.str();
 }
 
 ConstOpCPURcPtr GammaOp::getCPUOp() const

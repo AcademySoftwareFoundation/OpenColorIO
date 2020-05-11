@@ -402,7 +402,6 @@ void validateParams(const GammaOpData::Params & p,
 
 void GammaOpData::validate() const
 {
-    OpData::validate();
     GammaOpData::validateParameters();
 }
 
@@ -802,14 +801,15 @@ bool GammaOpData::operator==(const OpData & other) const
             m_alphaParams == gop->m_alphaParams;
 }
 
-void GammaOpData::finalize()
+std::string GammaOpData::getCacheID() const
 {
     AutoMutex lock(m_mutex);
 
-    validate();
-
     std::ostringstream cacheIDStream;
-    cacheIDStream << getID() << " ";
+    if (!getID().empty())
+    {
+        cacheIDStream << getID() << " ";
+    }
 
     cacheIDStream << GammaOpData::ConvertStyleToString(getStyle()) << " ";
 
@@ -818,7 +818,7 @@ void GammaOpData::finalize()
     cacheIDStream << "b:" << GetParametersString(getBlueParams())  << " ";
     cacheIDStream << "a:" << GetParametersString(getAlphaParams()) << " ";
 
-    m_cacheID = cacheIDStream.str();
+    return cacheIDStream.str();
 }
 
 TransformDirection GammaOpData::getDirection() const

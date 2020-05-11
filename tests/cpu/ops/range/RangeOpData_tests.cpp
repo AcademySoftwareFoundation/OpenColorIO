@@ -43,7 +43,7 @@ OCIO_ADD_TEST(RangeOpData, accessors)
     {
     const float g_error = 1e-7f;
 
-    OCIO::RangeOpData range(0.0f, 1.0f, 0.5f, 1.5f);
+    OCIO::RangeOpData range(0.0, 1.0, 0.5, 1.5);
 
     OCIO_CHECK_EQUAL(range.getMinInValue(), 0.);
     OCIO_CHECK_EQUAL(range.getMaxInValue(), 1.);
@@ -68,6 +68,44 @@ OCIO_ADD_TEST(RangeOpData, accessors)
 
     OCIO_CHECK_CLOSE(range.getScale(), 1.804012123, g_error);
     OCIO_CHECK_CLOSE(range.getOffset(), 0.1523139385, g_error);
+    }
+
+    {
+    OCIO::RangeOpData range(0.0, 1.0, 0.5, 1.5);
+
+    OCIO_CHECK_EQUAL(range.getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(range.getFileInputBitDepth(), OCIO::BIT_DEPTH_UNKNOWN);
+    OCIO_CHECK_EQUAL(range.getFileOutputBitDepth(), OCIO::BIT_DEPTH_UNKNOWN);
+
+    // Set file bit-depth and verify.
+    OCIO_CHECK_NO_THROW(range.setFileInputBitDepth(OCIO::BIT_DEPTH_UINT8));
+    OCIO_CHECK_NO_THROW(range.setFileOutputBitDepth(OCIO::BIT_DEPTH_F32));
+
+    OCIO_CHECK_EQUAL(range.getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OCIO_CHECK_EQUAL(range.getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
+    // Changing direction does not change values.
+    OCIO_CHECK_NO_THROW(range.setDirection(OCIO::TRANSFORM_DIR_INVERSE));
+
+    OCIO_CHECK_EQUAL(range.getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_EQUAL(range.getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+    OCIO_CHECK_EQUAL(range.getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
+    OCIO_CHECK_EQUAL(range.getMinInValue(), 0.);
+    OCIO_CHECK_EQUAL(range.getMaxInValue(), 1.);
+    OCIO_CHECK_EQUAL(range.getMinOutValue(), 0.5);
+    OCIO_CHECK_EQUAL(range.getMaxOutValue(), 1.5);
+
+    // The getAsForward swaps the bit-depths and the values.
+    const auto r = range.getAsForward();
+    OCIO_CHECK_EQUAL(r->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_EQUAL(r->getFileInputBitDepth(), OCIO::BIT_DEPTH_F32);
+    OCIO_CHECK_EQUAL(r->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+
+    OCIO_CHECK_EQUAL(r->getMinInValue(), 0.5);
+    OCIO_CHECK_EQUAL(r->getMaxInValue(), 1.5);
+    OCIO_CHECK_EQUAL(r->getMinOutValue(), 0.);
+    OCIO_CHECK_EQUAL(r->getMaxOutValue(), 1.);
     }
 }
 
@@ -143,8 +181,8 @@ OCIO_ADD_TEST(RangeOpData, identity)
     OCIO_CHECK_ASSERT(!r6.hasChannelCrosstalk());
     OCIO_CHECK_ASSERT(!r6.minIsEmpty());
     OCIO_CHECK_ASSERT(!r6.maxIsEmpty());
-    OCIO_CHECK_EQUAL(r6.getMinOutValue(), -1.f);
-    OCIO_CHECK_EQUAL(r6.getMaxOutValue(), 1.f);
+    OCIO_CHECK_EQUAL(r6.getMinOutValue(), -1.);
+    OCIO_CHECK_EQUAL(r6.getMaxOutValue(), 1.);
     OCIO_CHECK_ASSERT(r6.scales());
 }
 
@@ -196,7 +234,7 @@ OCIO_ADD_TEST(RangeOpData, validation)
     }
 
     {
-        OCIO::RangeOpData range(0.0f, 1.0f, 0.5f, 1.5f);
+        OCIO::RangeOpData range(0.0, 1.0, 0.5, 1.5);
         OCIO_CHECK_NO_THROW(range.validate());
 
         OCIO_CHECK_NO_THROW(range.unsetMinInValue()); 
@@ -206,7 +244,7 @@ OCIO_ADD_TEST(RangeOpData, validation)
     }
 
     {
-        OCIO::RangeOpData range(0.0f, 1.0f, 0.5f, 1.5f);
+        OCIO::RangeOpData range(0.0, 1.0, 0.5, 1.5);
         OCIO_CHECK_NO_THROW(range.validate());
 
         OCIO_CHECK_NO_THROW(range.unsetMinInValue()); 
@@ -218,7 +256,7 @@ OCIO_ADD_TEST(RangeOpData, validation)
     }
 
     {
-        OCIO::RangeOpData range(0.0f, 1.0f, 0.5f, 1.5f);
+        OCIO::RangeOpData range(0.0, 1.0, 0.5, 1.5);
         OCIO_CHECK_NO_THROW(range.validate());
 
         OCIO_CHECK_NO_THROW(range.unsetMaxInValue()); 
@@ -228,7 +266,7 @@ OCIO_ADD_TEST(RangeOpData, validation)
     }
 
     {
-        OCIO::RangeOpData range(0.0f, 1.0f, 0.5f, 1.5f);
+        OCIO::RangeOpData range(0.0, 1.0, 0.5, 1.5);
         OCIO_CHECK_NO_THROW(range.validate());
 
         OCIO_CHECK_NO_THROW(range.unsetMaxInValue()); 
@@ -240,7 +278,7 @@ OCIO_ADD_TEST(RangeOpData, validation)
     }
 
     {
-        OCIO::RangeOpData range(0.0f, 1.0f, 0.5f, 1.5f);
+        OCIO::RangeOpData range(0.0, 1.0, 0.5, 1.5);
         OCIO_CHECK_NO_THROW(range.validate());
 
         OCIO_CHECK_NO_THROW(range.setMaxInValue(-125.)); 
@@ -250,7 +288,7 @@ OCIO_ADD_TEST(RangeOpData, validation)
     }
 
     {
-        OCIO::RangeOpData range(0.0f, 1.0f, 0.5f, 1.5f);
+        OCIO::RangeOpData range(0.0, 1.0, 0.5, 1.5);
         OCIO_CHECK_NO_THROW(range.validate());
 
         OCIO_CHECK_NO_THROW(range.setMaxOutValue(-125.)); 
@@ -262,14 +300,15 @@ OCIO_ADD_TEST(RangeOpData, validation)
 
 namespace
 {
-void checkInverse(double fwdMinIn, double fwdMaxIn,
-                    double fwdMinOut, double fwdMaxOut,
-                    double revMinIn, double revMaxIn,
-                    double revMinOut, double revMaxOut)
+void checkInverse(double fwdMinIn,  double fwdMaxIn,
+                  double fwdMinOut, double fwdMaxOut,
+                  double revMinIn,  double revMaxIn,
+                  double revMinOut, double revMaxOut)
 {
-    OCIO::RangeOpData refOp(fwdMinIn, fwdMaxIn, fwdMinOut, fwdMaxOut);
+    OCIO::RangeOpData refOp(fwdMinIn, fwdMaxIn, fwdMinOut, fwdMaxOut,
+                            OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO::RangeOpDataRcPtr invOp = refOp.inverse();
+    OCIO::RangeOpDataRcPtr invOp = refOp.getAsForward();
 
     // The min/max values should be swapped.
     if (OCIO::IsNan(revMinIn))
@@ -409,13 +448,11 @@ OCIO_ADD_TEST(RangeOpData, computed_identifier)
     std::string id1, id2;
 
     OCIO::RangeOpData range(0.0, 1.0, 0.5, 1.5);
-    OCIO_CHECK_NO_THROW( range.finalize() );
     OCIO_CHECK_NO_THROW( id1 = range.getCacheID() );
 
     OCIO_CHECK_NO_THROW( range.unsetMaxInValue() ); 
     OCIO_CHECK_NO_THROW( range.unsetMaxOutValue() ); 
     OCIO_CHECK_NO_THROW( range.setMinOutValue(range.getMinInValue()) );
-    OCIO_CHECK_NO_THROW( range.finalize() );
     OCIO_CHECK_NO_THROW( id2 = range.getCacheID() );
 
     OCIO_CHECK_ASSERT( id1 != id2 );

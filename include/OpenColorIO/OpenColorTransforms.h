@@ -77,12 +77,13 @@ public:
     //!cpp:function::
     virtual FormatMetadata & operator=(const FormatMetadata & rhs) = 0;
 
-protected:
-    FormatMetadata();
+    //!cpp:function::
+    FormatMetadata(const FormatMetadata & rhs) = delete;
+    //!cpp:function::
     virtual ~FormatMetadata();
 
-private:
-    FormatMetadata(const FormatMetadata & rhs) = delete;
+protected:
+    FormatMetadata();
 };
 
 //!rst:: //////////////////////////////////////////////////////////////////
@@ -103,13 +104,15 @@ public:
     //!cpp:function:: Will throw if data is not valid.
     virtual void validate() const;
 
-protected:
-    Transform() = default;
+    //!cpp:function::
+    Transform(const Transform &) = delete;
+    //!cpp:function::
+    Transform & operator= (const Transform &) = delete;
+    //!cpp:function::
     virtual ~Transform() = default;
 
-private:
-    Transform(const Transform &) = delete;
-    Transform & operator= (const Transform &) = delete;
+protected:
+    Transform() = default;
 };
 
 //!cpp:function::
@@ -149,12 +152,14 @@ public:
     //!cpp:function::
     void setVars(int numvars, const float * vars);
 
+    //!cpp:function::
+    AllocationTransform & operator= (const AllocationTransform &) = delete;
+    //!cpp:function::
+    virtual ~AllocationTransform();
+
 private:
     AllocationTransform();
     AllocationTransform(const AllocationTransform &);
-    virtual ~AllocationTransform();
-
-    AllocationTransform & operator= (const AllocationTransform &);
 
     static void deleter(AllocationTransform * t);
 
@@ -265,13 +270,15 @@ public:
     //!cpp:function:: Deprecated. Use `getFormatMetadata`.
     virtual void setDescription(const char * desc) = 0;
 
-protected:
-    CDLTransform() = default;
+    //!cpp:function::
+    CDLTransform(const CDLTransform &) = delete;
+    //!cpp:function::
+    CDLTransform & operator= (const CDLTransform &) = delete;
+    //!cpp:function::
     virtual ~CDLTransform() = default;
 
-private:
-    CDLTransform(const CDLTransform &) = delete;
-    CDLTransform & operator= (const CDLTransform &) = delete;
+protected:
+    CDLTransform() = default;
 };
 
 //!cpp:function::
@@ -308,12 +315,14 @@ public:
     //!cpp:function::
     void setDst(const char * dst);
 
+    //!cpp:function::
+    ColorSpaceTransform & operator=(const ColorSpaceTransform &) = delete;
+    //!cpp:function::
+    virtual ~ColorSpaceTransform();
+
 private:
     ColorSpaceTransform();
     ColorSpaceTransform(const ColorSpaceTransform &);
-    virtual ~ColorSpaceTransform();
-
-    ColorSpaceTransform & operator=(const ColorSpaceTransform &);
 
     static void deleter(ColorSpaceTransform * t);
 
@@ -409,12 +418,14 @@ public:
     // "looks" to an empty string.
     void setLooksOverrideEnabled(bool enabled);
 
+    //!cpp:function::
+    DisplayTransform & operator=(const DisplayTransform &);
+    //!cpp:function::
+    virtual ~DisplayTransform();
+
 private:
     DisplayTransform();
     DisplayTransform(const DisplayTransform &);
-    virtual ~DisplayTransform();
-
-    DisplayTransform & operator=(const DisplayTransform &);
 
     static void deleter(DisplayTransform * t);
 
@@ -435,7 +446,6 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const DisplayTransfo
 class OCIOEXPORT DynamicProperty
 {
 public:
-
     //!cpp:function::
     virtual DynamicPropertyType getType() const = 0;
 
@@ -450,13 +460,14 @@ public:
     //!cpp:function::
     virtual bool isDynamic() const = 0;
 
-protected:
-
-    DynamicProperty();
-    DynamicProperty(const DynamicProperty &);
+    //!cpp:function::
+    DynamicProperty & operator=(const DynamicProperty &) = delete;
+    //!cpp:function::
     virtual ~DynamicProperty();
 
-    DynamicProperty & operator=(const DynamicProperty &);
+protected:
+    DynamicProperty();
+    DynamicProperty(const DynamicProperty &);
 };
 
 //!rst:: //////////////////////////////////////////////////////////////////
@@ -495,14 +506,16 @@ public:
     virtual NegativeStyle getNegativeStyle() const = 0;
     //!cpp:function::
     virtual void setNegativeStyle(NegativeStyle style) = 0;
+    
+    //!cpp:function::
+    ExponentTransform(const ExponentTransform &) = delete;
+    //!cpp:function::
+    ExponentTransform & operator= (const ExponentTransform &) = delete;
+    //!cpp:function::
+    virtual ~ExponentTransform() = default;
 
 protected:
     ExponentTransform() = default;
-    virtual ~ExponentTransform() = default;
-
-private:
-    ExponentTransform(const ExponentTransform &) = delete;
-    ExponentTransform & operator= (const ExponentTransform &) = delete;
 };
 
 //!cpp:function::
@@ -559,14 +572,16 @@ public:
     virtual NegativeStyle getNegativeStyle() const = 0;
     //!cpp:function::
     virtual void setNegativeStyle(NegativeStyle style) = 0;
+    
+    //!cpp:function::
+    ExponentWithLinearTransform(const ExponentWithLinearTransform &) = delete;
+    //!cpp:function::
+    ExponentWithLinearTransform & operator= (const ExponentWithLinearTransform &) = delete;
+    //!cpp:function::
+    virtual ~ExponentWithLinearTransform() = default;
 
 protected:
     ExponentWithLinearTransform() = default;
-    virtual ~ExponentWithLinearTransform() = default;
-
-private:
-    ExponentWithLinearTransform(const ExponentWithLinearTransform &) = delete;
-    ExponentWithLinearTransform & operator= (const ExponentWithLinearTransform &) = delete;
 };
 
 //!cpp:function::
@@ -654,9 +669,10 @@ public:
     // The default value is 0.435.
     virtual void setLogMidGray(double logMidGray) = 0;
 
+    virtual ~ExposureContrastTransform() = default;
+
 protected:
     ExposureContrastTransform() = default;
-    virtual ~ExposureContrastTransform() = default;
 
 private:
     ExposureContrastTransform(const ExposureContrastTransform &) = delete;
@@ -718,12 +734,14 @@ public:
     // an invalid index is specified.
     static const char * getFormatExtensionByIndex(int index);
 
+    //!cpp:function::
+    FileTransform & operator=(const FileTransform &) = delete;
+    //!cpp:function::
+    virtual ~FileTransform();
+
 private:
     FileTransform();
     FileTransform(const FileTransform &);
-    virtual ~FileTransform();
-
-    FileTransform & operator=(const FileTransform &);
 
     static void deleter(FileTransform * t);
 
@@ -767,13 +785,15 @@ public:
     //!cpp:function:: Set the parameters (for functions that require them).
     virtual void setParams(const double * params, size_t num) = 0;
 
-protected:
-    FixedFunctionTransform() = default;
+    //!cpp:function::
+    FixedFunctionTransform(const FixedFunctionTransform &) = delete;
+    //!cpp:function::
+    FixedFunctionTransform & operator= (const FixedFunctionTransform &) = delete;
+    //!cpp:function::
     virtual ~FixedFunctionTransform() = default;
 
-private:
-    FixedFunctionTransform(const FixedFunctionTransform &) = delete;
-    FixedFunctionTransform & operator= (const FixedFunctionTransform &) = delete;
+protected:
+    FixedFunctionTransform() = default;
 };
 
 //!cpp:function::
@@ -818,12 +838,14 @@ public:
     //!cpp:function:: Add a transform at the beginning of the group.
     void prependTransform(TransformRcPtr transform);
 
+    //!cpp:function::
+    GroupTransform & operator=(const GroupTransform &) = delete;
+    //!cpp:function::
+    virtual ~GroupTransform();
+
 private:
     GroupTransform();
     GroupTransform(const GroupTransform &);
-    virtual ~GroupTransform();
-
-    GroupTransform & operator=(const GroupTransform &);
 
     static void deleter(GroupTransform * t);
 
@@ -886,13 +908,15 @@ public:
     //!cpp:function::
     virtual void setLinSideOffsetValue(const double(&values)[3]) noexcept = 0;
 
-protected:
-    LogAffineTransform() = default;
+    //!cpp:function::
+    LogAffineTransform(const LogAffineTransform &) = delete;
+    //!cpp:function::
+    LogAffineTransform & operator= (const LogAffineTransform &) = delete;
+    //!cpp:function::
     virtual ~LogAffineTransform() = default;
 
-private:
-    LogAffineTransform(const LogAffineTransform &) = delete;
-    LogAffineTransform & operator= (const LogAffineTransform &) = delete;
+protected:
+    LogAffineTransform() = default;
 };
 
 //!cpp:function::
@@ -960,14 +984,16 @@ public:
     virtual void setLinearSlopeValue(const double(&values)[3]) = 0;
     //!cpp:function:: Remove LinearSlope values so that default values are used.
     virtual void unsetLinearSlopeValue() = 0;
+    
+    //!cpp:function::
+    LogCameraTransform(const LogCameraTransform &) = delete;
+    //!cpp:function::
+    LogCameraTransform & operator= (const LogCameraTransform &) = delete;
+    //!cpp:function::
+    virtual ~LogCameraTransform() = default;
 
 protected:
     LogCameraTransform() = default;
-    virtual ~LogCameraTransform() = default;
-
-private:
-    LogCameraTransform(const LogCameraTransform &) = delete;
-    LogCameraTransform & operator= (const LogCameraTransform &) = delete;
 };
 
 //!cpp:function::
@@ -1000,13 +1026,15 @@ public:
     //!cpp:function::
     virtual void setBase(double val) noexcept = 0;
 
-protected:
-    LogTransform() = default;
+    //!cpp:function::
+    LogTransform(const LogTransform &) = delete;
+    //!cpp:function::
+    LogTransform & operator= (const LogTransform &) = delete;
+    //!cpp:function::
     virtual ~LogTransform() = default;
 
-private:
-    LogTransform(const LogTransform &) = delete;
-    LogTransform & operator= (const LogTransform &) = delete;
+protected:
+    LogTransform() = default;
 };
 
 //!cpp:function::
@@ -1051,12 +1079,14 @@ public:
     // look specification. (And forward is assumed in the absence of either)
     void setLooks(const char * looks);
 
+    //!cpp:function::
+    LookTransform & operator=(const LookTransform &) = delete;
+    //!cpp:function::
+    virtual ~LookTransform();
+
 private:
     LookTransform();
     LookTransform(const LookTransform &);
-    virtual ~LookTransform();
-
-    LookTransform & operator=(const LookTransform &);
 
     static void deleter(LookTransform * t);
 
@@ -1158,13 +1188,15 @@ public:
     //!cpp:function::
     virtual void setInterpolation(Interpolation algo) = 0;
 
-protected:
-    Lut1DTransform() = default;
+    //!cpp:function::
+    Lut1DTransform(const Lut1DTransform &) = delete;
+    //!cpp:function::
+    Lut1DTransform & operator= (const Lut1DTransform &) = delete;
+    //!cpp:function::
     virtual ~Lut1DTransform() = default;
 
-private:
-    Lut1DTransform(const Lut1DTransform &) = delete;
-    Lut1DTransform & operator= (const Lut1DTransform &) = delete;
+protected:
+    Lut1DTransform() = default;
 };
 
 //!cpp:function::
@@ -1231,13 +1263,15 @@ public:
     //!cpp:function::
     virtual void setInterpolation(Interpolation algo) = 0;
 
-protected:
-    Lut3DTransform() = default;
+    //!cpp:function::
+    Lut3DTransform(const Lut3DTransform &) = delete;
+    //!cpp:function::
+    Lut3DTransform & operator= (const Lut3DTransform &) = delete;
+    //!cpp:function::
     virtual ~Lut3DTransform() = default;
 
-private:
-    Lut3DTransform(const Lut3DTransform &) = delete;
-    Lut3DTransform & operator= (const Lut3DTransform &) = delete;
+protected:
+    Lut3DTransform() = default;
 };
 
 //!cpp:function::
@@ -1341,13 +1375,15 @@ public:
                      int * channelHot4,
                      const double * lumaCoef3);
 
-protected:
-    MatrixTransform() = default;
+    //!cpp:function::
+    MatrixTransform(const MatrixTransform &) = delete;
+    //!cpp:function::
+    MatrixTransform & operator= (const MatrixTransform &) = delete;
+    //!cpp:function::
     virtual ~MatrixTransform() = default;
 
-private:
-    MatrixTransform(const MatrixTransform &) = delete;
-    MatrixTransform & operator= (const MatrixTransform &) = delete;
+protected:
+    MatrixTransform() = default;
 };
 
 //!cpp:function::
@@ -1455,13 +1491,15 @@ public:
     //!cpp:function:: Unset the maximum value for the output.
     virtual void unsetMaxOutValue() noexcept = 0;
 
-protected:
-    RangeTransform() = default;
+    //!cpp:function::
+    RangeTransform(const RangeTransform &) = delete;
+    //!cpp:function::
+    RangeTransform & operator= (const RangeTransform &) = delete;
+    //!cpp:function::
     virtual ~RangeTransform() = default;
 
-private:
-    RangeTransform(const RangeTransform &) = delete;
-    RangeTransform & operator= (const RangeTransform &) = delete;
+protected:
+    RangeTransform() = default;
 };
 
 //!cpp:function::

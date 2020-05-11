@@ -19,7 +19,7 @@ class FormatMetadataImpl;
 class CDLParser
 {
 public:
-    CDLParser(const std::string& xmlFile);
+    explicit CDLParser(const std::string& xmlFile);
     virtual ~CDLParser();
 
     void parse(std::istream & istream) const;

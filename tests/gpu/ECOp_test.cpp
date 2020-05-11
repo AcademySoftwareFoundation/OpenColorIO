@@ -19,8 +19,7 @@ OCIO_ADD_GPU_TEST(ExposureContrast, style_linear_fwd)
     ec->setGamma(0.9);
     ec->setPivot(0.22);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(ec->createEditableCopy(), shaderDesc);
+    test.setProcessor(ec);
 
     test.setErrorThreshold(2e-5f);
     test.setExpectedMinimalValue(1.0f);
@@ -40,8 +39,7 @@ OCIO_ADD_GPU_TEST(ExposureContrast, style_linear_rev)
     ec->setGamma(0.9);
     ec->setPivot(0.22);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(ec->createEditableCopy(), shaderDesc);
+    test.setProcessor(ec);
 
     test.setErrorThreshold(2e-5f);
     test.setExpectedMinimalValue(1.0f);
@@ -59,8 +57,7 @@ OCIO_ADD_GPU_TEST(ExposureContrast, style_video_fwd)
     ec->setGamma(0.9);
     ec->setPivot(0.22);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(ec->createEditableCopy(), shaderDesc);
+    test.setProcessor(ec);
 
     test.setErrorThreshold(2e-5f);
     test.setExpectedMinimalValue(1.0f);
@@ -80,8 +77,7 @@ OCIO_ADD_GPU_TEST(ExposureContrast, style_video_rev)
     ec->setGamma(0.9);
     ec->setPivot(0.22);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(ec->createEditableCopy(), shaderDesc);
+    test.setProcessor(ec);
 
     test.setErrorThreshold(2e-5f);
     test.setExpectedMinimalValue(1.0f);
@@ -99,8 +95,7 @@ OCIO_ADD_GPU_TEST(ExposureContrast, style_log_fwd)
     ec->setGamma(0.9);
     ec->setPivot(0.22);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(ec->createEditableCopy(), shaderDesc);
+    test.setProcessor(ec);
 
     test.setErrorThreshold(1e-6f);
     test.setExpectedMinimalValue(1.0f);
@@ -118,8 +113,7 @@ OCIO_ADD_GPU_TEST(ExposureContrast, style_log_rev)
     ec->setGamma(0.9);
     ec->setPivot(0.22);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(ec->createEditableCopy(), shaderDesc);
+    test.setProcessor(ec);
 
     test.setErrorThreshold(1e-6f);
     test.setExpectedMinimalValue(1.0f);
@@ -136,6 +130,7 @@ public:
     ECRetest() = delete;
 
     ECRetest(OCIOGPUTest & test)
+        : m_test(test)
     {
         OCIO::ConstProcessorRcPtr & processor = test.getProcessor();
 
@@ -153,8 +148,6 @@ public:
         {
             m_gamma = processor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA);
         }
-
-        m_shaderDesc = test.getShaderDesc();
     }
 
 protected:
@@ -163,13 +156,14 @@ protected:
     void updateUniform(OCIO::DynamicPropertyType type, T value)
     {
         // Update all the GPU dynamic properties.
+        auto shaderDesc = m_test.getShaderDesc();
 
-        for(unsigned idx=0; idx<m_shaderDesc->getNumUniforms(); ++idx)
+        for(unsigned idx=0; idx<shaderDesc->getNumUniforms(); ++idx)
         {
             const char * name = nullptr;
             OCIO::DynamicPropertyRcPtr prop;
 
-            m_shaderDesc->getUniform(idx, name, prop);
+            shaderDesc->getUniform(idx, name, prop);
             if(prop->getType()==type && prop->isDynamic())
             {
                 prop->setValue(value);
@@ -178,9 +172,7 @@ protected:
         }
     }
 
-    // Holder of all GPU information including dynamic properties.
-    OCIO::GpuShaderDescRcPtr m_shaderDesc;
-
+    OCIOGPUTest & m_test;
     // Keep dynamic property values for tests modifying their current value.
     OCIO::DynamicPropertyRcPtr m_exposure;
     OCIO::DynamicPropertyRcPtr m_contrast;
@@ -202,8 +194,7 @@ OCIO_ADD_GPU_TEST(ExposureContrast, style_linear_dynamic_parameter)
     ec->makeContrastDynamic();
     ec->makeGammaDynamic();
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(ec->createEditableCopy(), shaderDesc);
+    test.setProcessor(ec);
 
     class MyECRetest : public ECRetest
     {
@@ -271,8 +262,7 @@ void Prepare2ECDynamic(OCIOGPUTest & test, bool firstDyn, bool secondDyn)
     grp->appendTransform(ec1);
     grp->appendTransform(ec2);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(grp->createEditableCopy(), shaderDesc);
+    test.setProcessor(grp);
 
     class MyECRetest : public ECRetest
     {

@@ -191,7 +191,6 @@ ExposureContrastOpDataRcPtr ExposureContrastOpData::clone() const
 
 void ExposureContrastOpData::validate() const
 {
-    OpData::validate();
 }
 
 bool ExposureContrastOpData::isNoOp() const
@@ -250,7 +249,7 @@ ExposureContrastOpDataRcPtr ExposureContrastOpData::inverse() const
     return ec;
 }
 
-void ExposureContrastOpData::finalize()
+std::string ExposureContrastOpData::getCacheID() const
 {
     AutoMutex lock(m_mutex);
 
@@ -280,7 +279,7 @@ void ExposureContrastOpData::finalize()
     cacheIDStream << "LES: " << m_logExposureStep << " ";
     cacheIDStream << "LMG: " << m_logMidGray;
 
-    m_cacheID = cacheIDStream.str();
+    return cacheIDStream.str();
 }
 
 bool ExposureContrastOpData::operator==(const OpData & other) const

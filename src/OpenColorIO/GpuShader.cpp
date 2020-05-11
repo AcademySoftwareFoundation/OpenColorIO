@@ -308,7 +308,7 @@ public:
     Textures m_textures3D;
     Uniforms m_uniforms;
 
-protected:
+private:
     unsigned m_max1DLUTWidth;
 };
 

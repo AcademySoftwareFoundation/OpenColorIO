@@ -79,16 +79,7 @@ TransformRcPtr FileTransform::createEditableCopy() const
 FileTransform::~FileTransform()
 {
     delete m_impl;
-    m_impl = NULL;
-}
-
-FileTransform& FileTransform::operator= (const FileTransform & rhs)
-{
-    if (this != &rhs)
-    {
-        *m_impl = *rhs.m_impl;
-    }
-    return *this;
+    m_impl = nullptr;
 }
 
 TransformDirection FileTransform::getDirection() const noexcept

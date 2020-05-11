@@ -64,16 +64,7 @@ TransformRcPtr ColorSpaceTransform::createEditableCopy() const
 ColorSpaceTransform::~ColorSpaceTransform()
 {
     delete m_impl;
-    m_impl = NULL;
-}
-
-ColorSpaceTransform& ColorSpaceTransform::operator= (const ColorSpaceTransform & rhs)
-{
-    if (this != &rhs)
-    {
-        *m_impl = *rhs.m_impl;
-    }
-    return *this;
+    m_impl = nullptr;
 }
 
 TransformDirection ColorSpaceTransform::getDirection() const noexcept

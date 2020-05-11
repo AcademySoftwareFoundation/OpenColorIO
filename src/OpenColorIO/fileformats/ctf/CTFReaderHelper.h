@@ -75,6 +75,7 @@ typedef OCIO_SHARED_PTR<CTFReaderTransformElt> CTFReaderTransformEltRcPtr;
 class CTFReaderMetadataElt : public XmlReaderComplexElt
 {
 public:
+    CTFReaderMetadataElt() = delete;
     CTFReaderMetadataElt(const std::string & name,
                          ContainerEltRcPtr pParent,
                          unsigned int xmlLineNumber,
@@ -92,16 +93,14 @@ public:
 
     FormatMetadataImpl & getMetadata() { return m_metadata; }
 
-protected:
-    FormatMetadataImpl m_metadata;
-
 private:
-    CTFReaderMetadataElt() = delete;
+    FormatMetadataImpl m_metadata;
 };
 
 class CTFReaderInfoElt : public CTFReaderMetadataElt
 {
 public:
+    CTFReaderInfoElt() = delete;
     CTFReaderInfoElt(const std::string & name,
                      ContainerEltRcPtr pParent,
                      unsigned int xmlLineNumber,
@@ -112,14 +111,12 @@ public:
     void start(const char ** atts) override;
 
     void end() override;
-
-private:
-    CTFReaderInfoElt() = delete;
 };
 
 class CTFReaderInputDescriptorElt : public XmlReaderPlainElt
 {
 public:
+    CTFReaderInputDescriptorElt() = delete;
     CTFReaderInputDescriptorElt(const std::string & name,
                                 ContainerEltRcPtr pParent,
                                 unsigned int xmlLineNumber,
@@ -150,15 +147,12 @@ public:
 
         pTransform->getTransform()->setInputDescriptor(s);
     }
-
-
-private:
-    CTFReaderInputDescriptorElt() = delete;
 };
 
 class CTFReaderOutputDescriptorElt : public XmlReaderPlainElt
 {
 public:
+    CTFReaderOutputDescriptorElt() = delete;
     CTFReaderOutputDescriptorElt(const std::string & name,
                                  ContainerEltRcPtr pParent,
                                  unsigned int xmlLineNumber,
@@ -166,7 +160,6 @@ public:
         : XmlReaderPlainElt(name, pParent, xmlLineNumber, xmlFile)
     {
     }
-
 
     ~CTFReaderOutputDescriptorElt()
     {
@@ -190,14 +183,12 @@ public:
 
         pTransform->getTransform()->setOutputDescriptor(s);
     }
-
-private:
-    CTFReaderOutputDescriptorElt() = delete;
 };
 
 class CTFReaderArrayElt : public XmlReaderPlainElt
 {
 public:
+    CTFReaderArrayElt() = delete;
     CTFReaderArrayElt(const std::string & name,
                       ContainerEltRcPtr pParent,
                       unsigned int xmlLineNumber,
@@ -213,8 +204,6 @@ public:
     const char * getTypeName() const override;
 
 private:
-    CTFReaderArrayElt() = delete;
-
     // The array to fill (pointer not owned).
     // Array is managed as a member object of an OpData.
     ArrayBase * m_array;
@@ -255,6 +244,7 @@ private:
 class CTFReaderIndexMapElt : public XmlReaderPlainElt
 {
 public:
+    CTFReaderIndexMapElt() = delete;
     CTFReaderIndexMapElt(const std::string & name,
                          ContainerEltRcPtr pParent,
                          unsigned xmlLineNumber,
@@ -271,8 +261,6 @@ public:
     const char * getTypeName() const override;
 
 private:
-    CTFReaderIndexMapElt() = delete;
-
     IndexMapping * m_indexMap;
 
     // The current position to fill.
@@ -287,14 +275,8 @@ public:
     typedef std::vector<unsigned int> DimensionsIM;
 
 public:
-    CTFIndexMapMgt()
-        : m_completed(false)
-    {
-    }
-
-    virtual ~CTFIndexMapMgt()
-    {
-    }
+    CTFIndexMapMgt() = default;
+    virtual ~CTFIndexMapMgt() = default;
 
     void setCompletedIM(bool status)
     {
@@ -313,7 +295,7 @@ public:
     virtual void endIndexMap(unsigned int position) = 0;
 
 private:
-    bool m_completed;
+    bool m_completed = false;
 };
 
 class CTFReaderOpElt;
@@ -691,17 +673,13 @@ public:
 
     const OpDataRcPtr getOp() const override;
 
-    const LogOpDataRcPtr & getLog() const
-    {
-        return m_log;
-    }
+    const LogOpDataRcPtr & getLog() const noexcept { return m_log; }
 
-    LogUtil::CTFParams & getCTFParams()
-    {
-        return m_ctfParams;
-    }
+    LogUtil::CTFParams & getCTFParams() noexcept { return m_ctfParams; }
+    const LogUtil::CTFParams & getCTFParams() const noexcept { return m_ctfParams; }
 
     void setBase(double base);
+    bool isBaseSet() const noexcept { return m_baseSet; }
 
     virtual CTFReaderLogParamsEltRcPtr createLogParamsElt(const std::string & name,
                                                           ContainerEltRcPtr pParent,
@@ -711,6 +689,7 @@ public:
 protected:
     bool isOpParameterValid(const char * att) const noexcept override;
 
+private:
     LogUtil::CTFParams m_ctfParams;
     bool m_baseSet = false;
     LogOpDataRcPtr m_log;

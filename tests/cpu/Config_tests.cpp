@@ -184,7 +184,7 @@ OCIO_ADD_TEST(Config, simple_config)
     OCIO_CHECK_NO_THROW(config->sanityCheck());
 }
 
-OCIO_ADD_TEST(Config, simple_config_with_duplicate)
+OCIO_ADD_TEST(Config, colorspace_duplicate)
 {
 
     constexpr char SIMPLE_PROFILE[] =
@@ -210,6 +210,62 @@ OCIO_ADD_TEST(Config, simple_config_with_duplicate)
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
                           "Key-value pair with key 'name' specified more than once. ");
+}
+
+OCIO_ADD_TEST(Config, cdltransform_duplicate)
+{
+
+    constexpr char SIMPLE_PROFILE[] =
+        "ocio_profile_version: 2\n"
+        "search_path: luts\n"
+        "roles:\n"
+        "  default: raw\n"
+        "file_rules:\n"
+        "  - !<Rule> {name: Default, colorspace: default}\n"
+        "displays:\n"
+        "  Disp1:\n"
+        "    - !<View> {name: View1, colorspace: raw}\n"
+        "active_displays: []\n"
+        "active_views: []\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw\n"
+        "    to_reference: !<CDLTransform> {slope: [1, 2, 1], slope: [1, 2, 1]}\n"
+        "\n";
+
+    std::istringstream is;
+    is.str(SIMPLE_PROFILE);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                          "Key-value pair with key 'slope' specified more than once. ");
+}
+
+OCIO_ADD_TEST(Config, searchpath_duplicate)
+{
+
+    constexpr char SIMPLE_PROFILE[] =
+        "ocio_profile_version: 2\n"
+        "search_path: luts\n"
+        "search_path: luts-dir\n"
+        "roles:\n"
+        "  default: raw\n"
+        "file_rules:\n"
+        "  - !<Rule> {name: Default, colorspace: default}\n"
+        "displays:\n"
+        "  Disp1:\n"
+        "    - !<View> {name: View1, colorspace: raw}\n"
+        "active_displays: []\n"
+        "active_views: []\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw\n"
+        "\n";
+
+    std::istringstream is;
+    is.str(SIMPLE_PROFILE);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                          "Key-value pair with key 'search_path' specified more than once. ");
 }
 
 OCIO_ADD_TEST(Config, roles)
@@ -715,7 +771,7 @@ OCIO_ADD_TEST(Config, env_colorspace_name)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), myConfigStr);
     }
 }
@@ -759,7 +815,7 @@ OCIO_ADD_TEST(Config, version)
         OCIO_CHECK_NO_THROW(config->setMinorVersion(0));
 
         std::stringstream ss;
-        ss << *config.get();   
+        OCIO_CHECK_NO_THROW(ss << *config.get());   
         StringUtils::StartsWith(StringUtils::Lower(ss.str()), "ocio_profile_version: 2");
     }
 
@@ -767,7 +823,7 @@ OCIO_ADD_TEST(Config, version)
         OCIO_CHECK_NO_THROW(config->setMinorVersion(1));
 
         std::stringstream ss;
-        ss << *config.get();   
+        OCIO_CHECK_NO_THROW(ss << *config.get());   
         StringUtils::StartsWith(StringUtils::Lower(ss.str()), "ocio_profile_version: 1");
     }
 }
@@ -873,7 +929,7 @@ OCIO_ADD_TEST(Config, range_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -891,7 +947,7 @@ OCIO_ADD_TEST(Config, range_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -924,7 +980,7 @@ OCIO_ADD_TEST(Config, range_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -944,7 +1000,7 @@ OCIO_ADD_TEST(Config, range_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -971,7 +1027,7 @@ OCIO_ADD_TEST(Config, range_serialization)
         const std::string out_str = PROFILE_V2_START + out_strEnd;
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), out_str);
     }
 
@@ -990,7 +1046,7 @@ OCIO_ADD_TEST(Config, range_serialization)
                               "must be both set or both missing");
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -1018,7 +1074,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
         // Re-serialize and test that it matches the expected text.
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), strSaved);
     }
 
@@ -1041,7 +1097,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
         // Re-serialize and test that it matches the expected text.
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), strSaved);
     }
 
@@ -1060,7 +1116,7 @@ OCIO_ADD_TEST(Config, range_serialization)
             "must be both set or both missing");
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -1078,7 +1134,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
         // Re-serialize and test that it matches the original text.
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -1097,7 +1153,7 @@ OCIO_ADD_TEST(Config, range_serialization)
                               "must be both set or both missing");
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -1121,7 +1177,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
         // Re-serialize and test that it matches the original text.
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -1189,7 +1245,7 @@ OCIO_ADD_TEST(Config, exponent_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck()); 
 
         std::stringstream ss;  
-        ss << *config.get();    
+        OCIO_CHECK_NO_THROW(ss << *config.get());    
         OCIO_CHECK_EQUAL(ss.str(), str);    
     }
 
@@ -1206,7 +1262,7 @@ OCIO_ADD_TEST(Config, exponent_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -1223,7 +1279,7 @@ OCIO_ADD_TEST(Config, exponent_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck()); 
 
         std::stringstream ss;  
-        ss << *config.get();    
+        OCIO_CHECK_NO_THROW(ss << *config.get());    
         OCIO_CHECK_EQUAL(ss.str(), str);    
     }
 
@@ -1231,7 +1287,7 @@ OCIO_ADD_TEST(Config, exponent_serialization)
          const std::string strEnd =
              "    from_reference: !<ExponentTransform> "
              "{value: [1.101, 1.202, 1.303, 1.404], style: mirror, direction: inverse}\n";
-         const std::string str = PROFILE_V1 + SIMPLE_PROFILE + strEnd;
+         const std::string str = PROFILE_V2_START + strEnd;
 
          std::istringstream is;
          is.str(str);
@@ -1240,7 +1296,7 @@ OCIO_ADD_TEST(Config, exponent_serialization)
          OCIO_CHECK_NO_THROW(config->sanityCheck());
 
          std::stringstream ss;
-         ss << *config.get();
+         OCIO_CHECK_NO_THROW(ss << *config.get());
          OCIO_CHECK_EQUAL(ss.str(), str);
      }
 
@@ -1248,7 +1304,7 @@ OCIO_ADD_TEST(Config, exponent_serialization)
          const std::string strEnd =
              "    from_reference: !<ExponentTransform> "
              "{value: [1.101, 1.202, 1.303, 1.404], style: pass_thru, direction: inverse}\n";
-         const std::string str = PROFILE_V1 + SIMPLE_PROFILE + strEnd;
+         const std::string str = PROFILE_V2_START + strEnd;
 
          std::istringstream is;
          is.str(str);
@@ -1257,7 +1313,7 @@ OCIO_ADD_TEST(Config, exponent_serialization)
          OCIO_CHECK_NO_THROW(config->sanityCheck());
 
          std::stringstream ss;
-         ss << *config.get();
+         OCIO_CHECK_NO_THROW(ss << *config.get());
          OCIO_CHECK_EQUAL(ss.str(), str);
      }
 
@@ -1307,7 +1363,7 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -1324,7 +1380,7 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -1342,7 +1398,7 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str().size(), str.size());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
@@ -1361,7 +1417,7 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -1379,7 +1435,7 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str().size(), str.size());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
@@ -1564,7 +1620,7 @@ OCIO_ADD_TEST(Config, exponent_vs_config_version)
 OCIO_ADD_TEST(Config, categories)
 {
     static const std::string MY_OCIO_CONFIG =
-        "ocio_profile_version: 1\n"
+        "ocio_profile_version: 2\n"
         "\n"
         "search_path: luts\n"
         "strictparsing: true\n"
@@ -1573,6 +1629,9 @@ OCIO_ADD_TEST(Config, categories)
         "roles:\n"
         "  default: raw1\n"
         "  scene_linear: raw1\n"
+        "\n"
+        "file_rules:\n"
+        "  - !<Rule> {name: Default, colorspace: default}\n"
         "\n"
         "displays:\n"
         "  sRGB:\n"
@@ -1612,7 +1671,7 @@ OCIO_ADD_TEST(Config, categories)
     // Test the serialization & deserialization.
 
     std::stringstream ss;
-    ss << *config.get();
+    OCIO_CHECK_NO_THROW(ss << *config.get());
     OCIO_CHECK_EQUAL(ss.str(), MY_OCIO_CONFIG);
 
     // Test the config content.
@@ -1731,7 +1790,7 @@ OCIO_ADD_TEST(Config, display)
         OCIO_CHECK_EQUAL(std::string(config->getDefaultDisplay()), "sRGB_2");
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), myProfile);
     }
 
@@ -2223,7 +2282,7 @@ OCIO_ADD_TEST(Config, log_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -2241,7 +2300,7 @@ OCIO_ADD_TEST(Config, log_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -2259,7 +2318,7 @@ OCIO_ADD_TEST(Config, log_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -2277,7 +2336,7 @@ OCIO_ADD_TEST(Config, log_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -2300,7 +2359,7 @@ OCIO_ADD_TEST(Config, log_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -2323,7 +2382,7 @@ OCIO_ADD_TEST(Config, log_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -2346,7 +2405,7 @@ OCIO_ADD_TEST(Config, log_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -2367,7 +2426,7 @@ OCIO_ADD_TEST(Config, log_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -2389,7 +2448,7 @@ OCIO_ADD_TEST(Config, log_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -2411,7 +2470,7 @@ OCIO_ADD_TEST(Config, log_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -2432,7 +2491,7 @@ OCIO_ADD_TEST(Config, log_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -2450,7 +2509,7 @@ OCIO_ADD_TEST(Config, log_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -2507,7 +2566,7 @@ OCIO_ADD_TEST(Config, log_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -2527,7 +2586,7 @@ OCIO_ADD_TEST(Config, log_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -2548,7 +2607,7 @@ OCIO_ADD_TEST(Config, log_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -2697,7 +2756,7 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -2732,7 +2791,7 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception, 
-                              "The style 'REC2100_Surround' must "
+            "The style 'REC2100_Surround (Inverse)' must "
                               "have one parameter but 0 found.");
     }
 }
@@ -2778,7 +2837,7 @@ OCIO_ADD_TEST(Config, exposure_contrast_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
 
@@ -2809,7 +2868,7 @@ OCIO_ADD_TEST(Config, exposure_contrast_serialization)
         const std::string strExpected = PROFILE_V2_START + strEnd + strEndECExpected;
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), strExpected);
 
     }
@@ -2855,7 +2914,7 @@ OCIO_ADD_TEST(Config, matrix_serialization)
     OCIO_CHECK_NO_THROW(config->sanityCheck());
 
     std::stringstream ss;
-    ss << *config.get();
+    OCIO_CHECK_NO_THROW(ss << *config.get());
     OCIO_CHECK_EQUAL(ss.str(), str);
 }
 
@@ -2986,7 +3045,7 @@ OCIO_ADD_TEST(Config, add_color_space)
         + u8"    to_reference: !<FixedFunctionTransform> {style: ACES_RedMod03}\n";
 
     std::stringstream ss;
-    ss << *config.get();
+    OCIO_CHECK_NO_THROW(ss << *config.get());
     OCIO_CHECK_EQUAL(ss.str(), res);
 
     OCIO_CHECK_NO_THROW(config->removeColorSpace(csName));
@@ -3510,7 +3569,7 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
         OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(), 4);
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), configStr);
     }
 
@@ -3537,7 +3596,7 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
         OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(), 2);
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), configStr);
     }
 
@@ -3565,7 +3624,7 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
         resultStr += InactiveCSConfigEnd;
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), resultStr);
     }
 
@@ -3592,7 +3651,7 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
         resultStr += InactiveCSConfigEnd;
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), resultStr);
     }
 
@@ -3622,7 +3681,7 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
         OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 5);
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), configStr);
     }
 }
@@ -3803,6 +3862,7 @@ colorspaces:
                           "The role 'cie_xyz_d65_interchange' is missing in the destination config");
 }
 
+
 const std::string PROFILE_V2_DCS_START = PROFILE_V2 + SIMPLE_PROFILE_A + DEFAULT_RULES +
                                          SIMPLE_PROFILE_DISPLAYS_LOOKS;
 
@@ -3849,7 +3909,7 @@ OCIO_ADD_TEST(Config, display_color_spaces_serialization)
         OCIO_CHECK_NO_THROW(config->sanityCheck());
 
         std::stringstream ss;
-        ss << *config.get();
+        OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str().size(), str.size());
         OCIO_CHECK_EQUAL(ss.str(), str);
     }
@@ -3915,6 +3975,32 @@ OCIO_ADD_TEST(Config, display_color_spaces_errors)
         OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
                               "'to_reference' cannot be used for a display color space");
     }
+}
+
+OCIO_ADD_TEST(Config, config_v1)
+{
+    static const char CONFIG[] = 
+        "ocio_profile_version: 1\n"
+        "strictparsing: false\n"
+        "roles:\n"
+        "  default: raw\n"
+        "displays:\n"
+        "  sRGB:\n"
+        "  - !<View> {name: Raw, colorspace: raw}\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "      name: raw\n";
+
+    std::istringstream is;
+    is.str(CONFIG);
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+    OCIO_CHECK_EQUAL(config->getNumViewTransforms(), 0);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY, OCIO::COLORSPACE_ALL), 
+                     0);
 }
 
 OCIO_ADD_TEST(Config, view_transforms)
@@ -4044,6 +4130,158 @@ OCIO_ADD_TEST(Config, display_view)
                           "Can't add a (display, view) pair with empty color space name");
 }
 
+OCIO_ADD_TEST(Config, not_case_sensitive)
+{
+    // Validate that the color spaces and roles are case insensitive.
+
+    std::istringstream is;
+    is.str(PROFILE_V2_START);
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+    OCIO::ConstColorSpaceRcPtr cs;
+    OCIO_CHECK_NO_THROW(cs = config->getColorSpace("lnh"));
+    OCIO_CHECK_ASSERT(cs);
+
+    OCIO_CHECK_NO_THROW(cs = config->getColorSpace("LNH"));
+    OCIO_CHECK_ASSERT(cs);
+
+    OCIO_CHECK_NO_THROW(cs = config->getColorSpace("RaW"));
+    OCIO_CHECK_ASSERT(cs);
+
+    OCIO_CHECK_ASSERT(config->hasRole("default"));
+    OCIO_CHECK_ASSERT(config->hasRole("Default"));
+    OCIO_CHECK_ASSERT(config->hasRole("DEFAULT"));
+
+    OCIO_CHECK_ASSERT(config->hasRole("scene_linear"));
+    OCIO_CHECK_ASSERT(config->hasRole("Scene_Linear"));
+
+    OCIO_CHECK_ASSERT(!config->hasRole("reference"));
+    OCIO_CHECK_ASSERT(!config->hasRole("REFERENCE"));
+}
+
+OCIO_ADD_TEST(Config, transform_with_roles)
+{
+    // Validate that Config::sanityCheck() on config file containing transforms 
+    // with color space names (such as ColorSpaceTransform), correctly checks for role names
+    // for those transforms.
+
+    constexpr const char * OCIO_CONFIG{ R"(
+ocio_profile_version: 1
+
+roles:
+  DEFAULT: raw
+  scene_linear: cs1
+
+displays:
+  Disp1:
+  - !<View> {name: View1, colorspace: RaW, looks: beauty}
+
+looks:
+  - !<Look>
+    name: beauty
+    process_space: SCENE_LINEAR
+    transform: !<ColorSpaceTransform> {src: SCENE_LINEAR, dst: raw}
+
+colorspaces:
+  - !<ColorSpace>
+    name: RAW
+    allocation: uniform
+
+  - !<ColorSpace>
+    name: CS1
+    allocation: uniform
+    from_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}
+
+  - !<ColorSpace>
+    name: cs2
+    allocation: uniform
+    to_reference: !<ColorSpaceTransform> {src: SCENE_LINEAR, dst: raw}
+)" };
+
+    std::istringstream is;
+    is.str(OCIO_CONFIG);
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+    // Validate the color spaces.
+
+    OCIO::ConstProcessorRcPtr processor;
+    OCIO_CHECK_NO_THROW(processor = config->getProcessor("raw", "cs1"));
+    OCIO_CHECK_ASSERT(processor);
+
+    OCIO_CHECK_NO_THROW(processor = config->getProcessor("raw", "cs2"));
+    OCIO_CHECK_ASSERT(processor);
+
+    OCIO_CHECK_NO_THROW(processor = config->getProcessor("cs1", "cs2"));
+    OCIO_CHECK_ASSERT(processor);
+
+    // Validate the (display, view) pair with looks.
+
+    OCIO::DisplayTransformRcPtr display = OCIO::DisplayTransform::Create();
+    display->setInputColorSpaceName("raw");
+    display->setDisplay("Disp1");
+    display->setView("View1");
+
+    OCIO_CHECK_NO_THROW(processor = config->getProcessor(display));
+    OCIO_CHECK_ASSERT(processor);
+
+    display->setInputColorSpaceName("cs1");
+
+    OCIO_CHECK_NO_THROW(processor = config->getProcessor(display));
+    OCIO_CHECK_ASSERT(processor);
+
+    display->setInputColorSpaceName("cs2");
+
+    OCIO_CHECK_NO_THROW(processor = config->getProcessor(display));
+    OCIO_CHECK_ASSERT(processor);
+}    
+
+OCIO_ADD_TEST(Config, look_transform)
+{
+    // Validate Config::sanityCheck() on config file containing look transforms.
+
+    constexpr const char * OCIO_CONFIG{ R"(
+ocio_profile_version: 2
+
+roles:
+  default: raw
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  Disp1:
+  - !<View> {name: View1, colorspace: raw, looks: look1}
+
+looks:
+  - !<Look>
+    name: look1
+    process_space: default
+    transform: !<ColorSpaceTransform> {src: default, dst: raw}
+  - !<Look>
+    name: look2
+    process_space: default
+    transform: !<LookTransform> {src: default, dst: raw, looks:+look1}
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    allocation: uniform
+)" };
+
+    std::istringstream is;
+    is.str(OCIO_CONFIG);
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(config->sanityCheck());
+}
+
 OCIO_ADD_TEST(Config, family_separator)
 {
     OCIO::ConfigRcPtr config;
@@ -4127,39 +4365,31 @@ OCIO_ADD_TEST(Config, is_colorspace_used)
         "  - !<ColorSpace>\n"
         "    name: cs1\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs2\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs3\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs4\n"
         "    from_reference: !<ColorSpaceTransform> {src: cs3, dst: cs3}\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs5\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs6\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs7\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs8\n"
         "    from_reference: !<GroupTransform>\n"
         "      children:\n"
         "        - !<ColorSpaceTransform> {src: cs7, dst: cs7}\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs9\n"
         "    from_reference: !<GroupTransform>\n"
@@ -4168,11 +4398,9 @@ OCIO_ADD_TEST(Config, is_colorspace_used)
         "             children:\n"
         "               - !<LookTransform> {src: cs8, dst: cs8}\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs10\n"
         "\n"
-        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: cs11\n";
 
@@ -4199,4 +4427,53 @@ OCIO_ADD_TEST(Config, is_colorspace_used)
     OCIO_CHECK_ASSERT(!config->isColorSpaceUsed(nullptr));
     OCIO_CHECK_ASSERT(!config->isColorSpaceUsed(""));
     OCIO_CHECK_ASSERT(!config->isColorSpaceUsed("cs65")); // Unknown color spaces are not used.
+}
+
+OCIO_ADD_TEST(Config, transform_versions)
+{
+    // Saving a v1 config containing v2 transforms must fail.
+
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    OCIO_CHECK_EQUAL(config->getMajorVersion(), 1);
+
+    OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
+
+    OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+    cs->setName("range");
+    cs->setTransform(range, OCIO::COLORSPACE_DIR_TO_REFERENCE);
+
+    OCIO_CHECK_NO_THROW(config->addColorSpace(cs));
+
+    std::ostringstream oss;
+    OCIO_CHECK_THROW_WHAT((oss << *config),
+                          OCIO::Exception,
+                          "Error building YAML: Only config version 2 (or higher) can have RangeTransform.");
+
+    // Loading a v1 config containing v2 transforms must fail.
+
+    constexpr const char * OCIO_CONFIG{ R"(
+ocio_profile_version: 1
+
+roles:
+  default: raw
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    allocation: uniform
+
+  - !<ColorSpace>
+    name: test
+    allocation: uniform
+    from_reference: !<GroupTransform>
+       children:
+         - !<RangeTransform> {minInValue: 0, minOutValue: 0}
+)" };
+
+    std::istringstream is;
+    is.str(OCIO_CONFIG);
+    OCIO::ConstConfigRcPtr cfg;
+    OCIO_CHECK_THROW_WHAT(cfg = OCIO::Config::CreateFromStream(is),
+                          OCIO::Exception,
+                          "Only config version 2 (or higher) can have RangeTransform.");
 }

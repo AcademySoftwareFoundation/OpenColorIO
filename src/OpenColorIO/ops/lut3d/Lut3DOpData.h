@@ -28,7 +28,7 @@ public:
 
     // Use functional composition to generate a single op that 
     // approximates the effect of the pair of ops.
-    static void Compose(Lut3DOpDataRcPtr & A, ConstLut3DOpDataRcPtr & B);
+    static Lut3DOpDataRcPtr Compose(ConstLut3DOpDataRcPtr & lut1, ConstLut3DOpDataRcPtr & lut2);
 
 public:
     // The gridSize parameter is the length of the cube axis.
@@ -50,18 +50,6 @@ public:
 
     TransformDirection getDirection() const { return m_direction; }
     void setDirection(TransformDirection dir) { m_direction = dir; }
-
-    // There are two inversion algorithms provided for 3D LUT, an exact
-    // method (that assumes use of tetrahedral in the forward direction)
-    // and a fast method that bakes the inverse out as another forward
-    // 3D LUT. The exact method is currently unavailable on the GPU.
-    // Both methods assume that the input and output to the 3D LUT are
-    // roughly perceptually uniform. Values outside the range of the
-    // forward 3D LUT are clamped to someplace on the exterior surface
-    // of the 3D LUT.
-    inline LutInversionQuality getInversionQuality() const { return m_invQuality; }
-
-    void setInversionQuality(LutInversionQuality style);
 
     // Note: The Lut3DOpData Array stores the values in blue-fastest order.
     inline const Array & getArray() const { return m_array; }
@@ -93,7 +81,7 @@ public:
 
     bool operator==(const OpData& other) const override;
 
-    void finalize() override;
+    std::string getCacheID() const override;
 
     inline BitDepth getFileOutputBitDepth() const { return m_fileOutBitDepth; }
     inline void setFileOutputBitDepth(BitDepth out) { m_fileOutBitDepth = out; }
@@ -102,7 +90,7 @@ public:
 
 protected:
     // Test core parts of LUTs for equality.
-    bool haveEqualBasics(const Lut3DOpData & B) const;
+    bool haveEqualBasics(const Lut3DOpData & other) const;
 
 public:
     // Class which encapsulates an array dedicated to a 3D LUT.
@@ -141,7 +129,6 @@ private:
     Lut3DArray          m_array;
 
     TransformDirection  m_direction;
-    LutInversionQuality m_invQuality;
 
     // Out bit-depth to be used for file I/O.
     BitDepth m_fileOutBitDepth = BIT_DEPTH_UNKNOWN;
