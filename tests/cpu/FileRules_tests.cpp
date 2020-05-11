@@ -12,6 +12,30 @@
 
 namespace OCIO = OCIO_NAMESPACE;
 
+OCIO_ADD_TEST(FileRules, config_v1)
+{
+    static const char CONFIG[] = 
+        "ocio_profile_version: 1\n"
+        "strictparsing: false\n"
+        "roles:\n"
+        "  default: raw\n"
+        "displays:\n"
+        "  sRGB:\n"
+        "  - !<View> {name: Raw, colorspace: raw}\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "      name: raw\n";
+
+    std::istringstream is;
+    is.str(CONFIG);
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+    OCIO_CHECK_EQUAL(config->getFileRules()->getNumEntries(), 1);
+    OCIO_CHECK_EQUAL(std::string(config->getFileRules()->getName(0)), "Default");
+}
 
 OCIO_ADD_TEST(FileRules, config_read_only)
 {
@@ -967,7 +991,7 @@ file_rules:
                           "'file_rules' does not contain a Default <Rule>");
 }
 
-OCIO_ADD_TEST(FileRules, config_v1)
+OCIO_ADD_TEST(FileRules, config_v1_faulty)
 {
     constexpr char config_v1[] = { R"(ocio_profile_version: 1
 strictparsing: true

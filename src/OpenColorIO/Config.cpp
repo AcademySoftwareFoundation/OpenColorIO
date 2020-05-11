@@ -36,6 +36,7 @@ const char * OCIO_CONFIG_ENVVAR               = "OCIO";
 const char * OCIO_ACTIVE_DISPLAYS_ENVVAR      = "OCIO_ACTIVE_DISPLAYS";
 const char * OCIO_ACTIVE_VIEWS_ENVVAR         = "OCIO_ACTIVE_VIEWS";
 const char * OCIO_INACTIVE_COLORSPACES_ENVVAR = "OCIO_INACTIVE_COLORSPACES";
+const char * OCIO_OPTIMIZATION_FLAGS_ENVVAR   = "OCIO_OPTIMIZATION_FLAGS";
 
 namespace
 {
@@ -179,28 +180,21 @@ void GetColorSpaceReferences(std::set<std::string> & colorSpaceNames,
     }
 }
 
-bool FindColorSpaceIndex(int * index,
-                         const ColorSpaceSetRcPtr & colorspaces,
-                         const std::string & csname)
-{
-    *index = colorspaces->getIndexForColorSpace(csname.c_str());
-    return *index!=-1;
-}
+static constexpr char AddedDefault[]{ "added_default_rule_colorspace" };
 
-static constexpr char AddedRaw[]{ "added_default_rule_colorspace" };
-
-void FindAvailableName(const ColorSpaceSetRcPtr & colorspaces,
-                       std::string & csname)
+void FindAvailableName(const ColorSpaceSetRcPtr & colorspaces, std::string & csname)
 {
     int i = 0;
-    csname = AddedRaw;
-    while (1)
+    csname = AddedDefault;
+    while (true)
     {
-        if (-1 == colorspaces->getIndexForColorSpace(csname.c_str()))
+        if (!colorspaces->hasColorSpace(csname.c_str()))
         {
             break;
         }
-        csname = "added_default_rule_colorspace" + std::to_string(i);
+
+        csname = AddedDefault + std::to_string(i);
+        ++i;
     }
 }
 
@@ -365,10 +359,16 @@ public:
         return *this;
     }
 
-    bool findColorSpaceIndex(int * index, const std::string & csname) const
+    // Only search for a color space name (i.e. not for a role name).
+    int getColorSpaceIndex(const char * csname) const
     {
-        *index = m_allColorSpaces->getIndexForColorSpace(csname.c_str());
-        return *index!=-1;
+        return m_allColorSpaces->getColorSpaceIndex(csname);
+    }
+
+    // Only search for a color space name (i.e. not for a role name).
+    bool hasColorSpace(const char * csname) const
+    {
+        return m_allColorSpaces->hasColorSpace(csname);
     }
 
     StringUtils::StringVec buildInactiveColorSpaceList() const;
@@ -396,15 +396,15 @@ public:
         m_majorVersion = 2;
         m_minorVersion = 0;
 
-        int csindex = -1;
         const char * rname = LookupRole(m_roles, ROLE_DEFAULT);
-        if (!FindColorSpaceIndex(&csindex, m_allColorSpaces, rname))
+        if (!hasColorSpace(rname))
         {
             std::string defaultCS;
             bool addNewDefault = true;
             // The default role doesn't exist so look for a color space named "raw"
             // (not case-sensitive) with isdata true.
-            if (FindColorSpaceIndex(&csindex, m_allColorSpaces, "raw"))
+            const int csindex = getColorSpaceIndex("raw");
+            if (-1 != csindex)
             {
                 auto cs = m_allColorSpaces->getColorSpaceByIndex(csindex);
                 if (cs->isData())
@@ -448,6 +448,9 @@ public:
         resetCacheIDs();
         refreshActiveColorSpaces();
     }
+
+    void checkVersionConsistency(ConstTransformRcPtr & transform) const;
+    void checkVersionConsistency() const;
 
 };
 
@@ -514,7 +517,7 @@ Config::Config()
 Config::~Config()
 {
     delete m_impl;
-    m_impl = NULL;
+    m_impl = nullptr;
 }
 
 unsigned Config::getMajorVersion() const
@@ -651,8 +654,7 @@ void Config::sanityCheck() const
         for(StringMap::const_iterator iter = getImpl()->m_roles.begin(),
             end = getImpl()->m_roles.end(); iter!=end; ++iter)
         {
-            int csindex = -1;
-            if(!getImpl()->findColorSpaceIndex(&csindex, iter->second))
+            if(!getImpl()->hasColorSpace(iter->second.c_str()))
             {
                 std::ostringstream os;
                 os << "Config failed sanitycheck. ";
@@ -664,7 +666,7 @@ void Config::sanityCheck() const
             }
 
             // Confirm no name conflicts between colorspaces and roles
-            if(getImpl()->findColorSpaceIndex(&csindex, iter->first))
+            if(getImpl()->hasColorSpace(iter->first.c_str()))
             {
                 std::ostringstream os;
                 os << "Config failed sanitycheck. ";
@@ -726,8 +728,7 @@ void Config::sanityCheck() const
                 throw Exception(getImpl()->m_sanitytext.c_str());
             }
 
-            int csindex = -1;
-            if(!getImpl()->findColorSpaceIndex(&csindex, views[i].m_colorspace))
+            if(!getImpl()->hasColorSpace(views[i].m_colorspace.c_str()))
             {
                 std::ostringstream os;
                 os << "Config failed sanitycheck. ";
@@ -754,7 +755,8 @@ void Config::sanityCheck() const
                     getImpl()->m_sanitytext = os.str();
                     throw Exception(getImpl()->m_sanitytext.c_str());
                 }
-                auto cs = getImpl()->m_allColorSpaces->getColorSpaceByIndex(csindex);
+
+                auto cs = getImpl()->m_allColorSpaces->getColorSpace(views[i].m_colorspace.c_str());
                 if (cs->getReferenceSpaceType() != REFERENCE_SPACE_DISPLAY)
                 {
                     std::ostringstream os;
@@ -894,7 +896,7 @@ void Config::sanityCheck() const
         getImpl()->getAllInternalTransforms(allTransforms);
 
         std::set<std::string> colorSpaceNames;
-        for(unsigned int i=0; i<allTransforms.size(); ++i)
+        for (unsigned int i = 0; i < allTransforms.size(); ++i)
         {
             allTransforms[i]->validate();
 
@@ -902,52 +904,82 @@ void Config::sanityCheck() const
             GetColorSpaceReferences(colorSpaceNames, allTransforms[i], context);
         }
 
-        for(std::set<std::string>::iterator iter = colorSpaceNames.begin();
-            iter != colorSpaceNames.end(); ++iter)
+        for (const auto & name : colorSpaceNames)
         {
-            int csindex = -1;
-            if(!getImpl()->findColorSpaceIndex(&csindex, *iter))
+            if (!getImpl()->hasColorSpace(name.c_str()))
             {
+                // Check to see if the name is a role.
+                const char * csname = LookupRole(getImpl()->m_roles, name);
+
                 std::ostringstream os;
                 os << "Config failed sanitycheck. ";
-                os << "This config references a color space, '" << *iter << "', ";
-                os << "which is not defined.";
-                getImpl()->m_sanitytext = os.str();
-                throw Exception(getImpl()->m_sanitytext.c_str());
+                os << "This config references a color space, '";
+
+                if (!csname || !*csname)
+                {
+                    os << name << "', which is not defined.";
+                    getImpl()->m_sanitytext = os.str();
+                    throw Exception(getImpl()->m_sanitytext.c_str());
+                }
+                else if(!getImpl()->hasColorSpace(csname))
+                {
+                    os << csname << "' (for role '" << name << "'), which is not defined.";
+                    getImpl()->m_sanitytext = os.str();
+                    throw Exception(getImpl()->m_sanitytext.c_str());
+                }
             }
         }
     }
 
     ///// LOOKS
 
-    // For all looks, confirm the process space exists and the look is named
+    // For all looks, confirm the process space exists and the look is named.
     for(unsigned int i=0; i<getImpl()->m_looksList.size(); ++i)
     {
-        // Note: Config::addLook validates that looks have a unique, non-empty name.
-
-        const std::string name = getImpl()->m_looksList[i]->getName();
-
-        const std::string processSpace = getImpl()->m_looksList[i]->getProcessSpace();
-        if(processSpace.empty())
+        const char * lookName = getImpl()->m_looksList[i]->getName();
+        if (!lookName || !*lookName)
         {
             std::ostringstream os;
             os << "Config failed sanitycheck. ";
-            os << "The look '" << name << "' ";
-            os << "does not specify a process color space.";
+            os << "The look at index '" << i << "' ";
+            os << "does not specify a name.";
             getImpl()->m_sanitytext = os.str();
             throw Exception(getImpl()->m_sanitytext.c_str());
         }
 
-        int csindex=0;
-        if(!getImpl()->findColorSpaceIndex(&csindex, processSpace))
+        const char * processSpace = getImpl()->m_looksList[i]->getProcessSpace();
+        if (!processSpace || !*processSpace)
         {
             std::ostringstream os;
             os << "Config failed sanitycheck. ";
-            os << "The look '" << name << "' ";
-            os << "specifies a process color space, '";
-            os << processSpace << "', which is not defined.";
+            os << "The look '" << lookName << "' ";
+            os << "does not specify a process space.";
             getImpl()->m_sanitytext = os.str();
             throw Exception(getImpl()->m_sanitytext.c_str());
+        }
+
+        if (!getImpl()->hasColorSpace(processSpace))
+        {
+            // Check to see if the processSpace is a role.
+            const char * csname = LookupRole(getImpl()->m_roles, processSpace);
+
+            std::ostringstream os;
+            os << "Config failed sanitycheck. ";
+            os << "The look '" << lookName << "' ";
+            os << "specifies a process color space, '";
+
+            if (!csname || !*csname)
+            {
+                os << processSpace << "', which is not defined.";
+                getImpl()->m_sanitytext = os.str();
+                throw Exception(getImpl()->m_sanitytext.c_str());
+            }
+            else if (!getImpl()->hasColorSpace(csname))
+            {
+                os << csname << "' (for role '" << processSpace << "'), which is not defined.";
+                getImpl()->m_sanitytext = os.str();
+                throw Exception(getImpl()->m_sanitytext.c_str());
+            }
         }
     }
 
@@ -1551,11 +1583,10 @@ const char * Config::parseColorSpaceFromString(const char * str) const
         const char* csname = LookupRole(getImpl()->m_roles, ROLE_DEFAULT);
         if(csname && *csname)
         {
-            int csindex = -1;
-            if (getImpl()->findColorSpaceIndex(&csindex, csname))
+            const int csindex = getImpl()->getColorSpaceIndex(csname);
+            if (-1 != csindex)
             {
-                // This is necessary to not return a reference to
-                // a local variable.
+                // This is necessary to not return a reference to a local variable.
                 return getImpl()->m_allColorSpaces->getColorSpaceNameByIndex(csindex);
             }
         }
@@ -1656,7 +1687,7 @@ const char * Config::getDisplay(int index) const
                         getImpl()->m_activeDisplaysEnvOverride);
     }
 
-    if(index>=0 || index < static_cast<int>(getImpl()->m_displayCache.size()))
+    if(index>=0 && index < static_cast<int>(getImpl()->m_displayCache.size()))
     {
         return getImpl()->m_displayCache[index].c_str();
     }
@@ -2463,9 +2494,11 @@ void Config::serialize(std::ostream& os) const
 {
     try
     {
-        OCIOYaml::Write(os, this);
+        getImpl()->checkVersionConsistency();
+
+        OCIOYaml::Write(os, *this);
     }
-    catch( const std::exception & e)
+    catch (const std::exception & e)
     {
         std::ostringstream error;
         error << "Error building YAML: " << e.what();
@@ -2601,6 +2634,8 @@ ConstConfigRcPtr Config::Impl::Read(std::istream & istream, const char * filenam
     ConfigRcPtr config = Config::Create();
     OCIOYaml::Read(istream, config, filename);
 
+    config->getImpl()->checkVersionConsistency();
+
     // An API request always supersedes the env. variable. As the OCIOYaml helper methods
     // use the Config public API, the variable reset highlights that only the
     // env. variable and the config contents are valid after a config file read.
@@ -2608,6 +2643,114 @@ ConstConfigRcPtr Config::Impl::Read(std::istream & istream, const char * filenam
     config->getImpl()->refreshActiveColorSpaces();
 
     return config;
+}
+
+void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) const
+{
+    if (transform)
+    {
+        if (ConstExponentTransformRcPtr ex = DynamicPtrCast<const ExponentTransform>(transform))
+        {
+            if (m_majorVersion < 2 && ex->getNegativeStyle() != NEGATIVE_CLAMP)
+            {
+                throw Exception("Config version 1 only supports ExponentTransform clamping negative values.");
+            }
+        }
+        else if (DynamicPtrCast<const ExponentWithLinearTransform>(transform))
+        {
+            if (m_majorVersion < 2)
+            {
+                throw Exception("Only config version 2 (or higher) can have ExponentWithLinearTransform.");
+            }
+        }
+        else if (DynamicPtrCast<const ExposureContrastTransform>(transform))
+        {
+            if (m_majorVersion < 2)
+            {
+                throw Exception("Only config version 2 (or higher) can have ExposureContrastTransform.");
+            }
+        }
+        else if (DynamicPtrCast<const FixedFunctionTransform>(transform))
+        {
+            if (m_majorVersion < 2)
+            {
+                throw Exception("Only config version 2 (or higher) can have FixedFunctionTransform.");
+            }
+        }
+        else if (DynamicPtrCast<const LogAffineTransform>(transform))
+        {
+            if (m_majorVersion < 2)
+            {
+                throw Exception("Only config version 2 (or higher) can have LogAffineTransform.");
+            }
+        }
+        else if (DynamicPtrCast<const LogCameraTransform>(transform))
+        {
+            if (m_majorVersion < 2)
+            {
+                throw Exception("Only config version 2 (or higher) can have LogCameraTransform.");
+            }
+        }
+        else if (DynamicPtrCast<const RangeTransform>(transform))
+        {
+            if (m_majorVersion < 2)
+            {
+                throw Exception("Only config version 2 (or higher) can have RangeTransform.");
+            }
+        }
+        else if (ConstGroupTransformRcPtr grp = DynamicPtrCast<const GroupTransform>(transform))
+        {
+            const int numTransforms = grp->getNumTransforms();
+            for (int idx = 0; idx < numTransforms; ++idx)
+            {
+                ConstTransformRcPtr tr = grp->getTransform(idx);
+                checkVersionConsistency(tr);
+            }
+        }
+    }
+}
+
+void Config::Impl::checkVersionConsistency() const
+{
+    // Check for the Transforms.
+
+    ConstTransformVec transforms;
+    getAllInternalTransforms(transforms);
+
+    for (auto & transform : transforms)
+    {
+        checkVersionConsistency(transform);
+    }
+
+    // Check for the FileRules.
+
+    if (m_majorVersion < 2 && m_fileRules->getNumEntries() > 1)
+    {
+        throw Exception("Only version 2 (or higher) can have FileRules.");
+    }
+
+    // Check for the DisplayColorSpaces.
+
+    if (m_majorVersion < 2)
+    {
+        const int nbCS = m_allColorSpaces->getNumColorSpaces();
+        for (int i = 0; i < nbCS; ++i)
+        {
+            const auto & cs = m_allColorSpaces->getColorSpaceByIndex(i);
+            if (MatchReferenceType(SEARCH_REFERENCE_SPACE_DISPLAY, cs->getReferenceSpaceType()))
+            {
+                throw Exception("Only version 2 (or higher) can have DisplayColorSpaces.");
+            }
+        }
+    }
+
+    // Check for the ViewTransforms.
+
+    if (m_majorVersion < 2 && m_viewTransforms.size() != 0)
+    {
+        throw Exception("Only version 2 (or higher) can have ViewTransforms.");
+    }
+
 }
 
 } // namespace OCIO_NAMESPACE

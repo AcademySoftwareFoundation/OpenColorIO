@@ -67,16 +67,17 @@ namespace OCIO_NAMESPACE
 class OCIOEXPORT Exception : public std::runtime_error
 {
 public:
+    //!cpp:function::
+    Exception() = delete;
     //!cpp:function:: Constructor that takes a string as the exception message.
     explicit Exception(const char *);
     //!cpp:function:: Constructor that takes an existing exception.
     Exception(const Exception &);
+    //!cpp:function::
+    Exception & operator= (const Exception &) = delete;
 
+    //!cpp:function::
     ~Exception();
-
-private:
-    Exception();
-    Exception & operator= (const Exception &);
 };
 
 //!cpp:class:: An exception class for errors detected at
@@ -89,16 +90,17 @@ private:
 class OCIOEXPORT ExceptionMissingFile : public Exception
 {
 public:
+    //!cpp:function::
+    ExceptionMissingFile() = delete;
     //!cpp:function:: Constructor that takes a string as the exception message.
     explicit ExceptionMissingFile(const char *);
     //!cpp:function:: Constructor that takes an existing exception.
     ExceptionMissingFile(const ExceptionMissingFile &);
+    //!cpp:function::
+    ExceptionMissingFile & operator= (const ExceptionMissingFile &) = delete;
 
+    //!cpp:function::
     ~ExceptionMissingFile();
-
-private:
-    ExceptionMissingFile();
-    ExceptionMissingFile & operator= (const ExceptionMissingFile &);
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -654,7 +656,7 @@ public:
 
     //!cpp:function:: Most applications will use the preceding method, but this method may be
     // used for applications that want to know which was the highest priority rule to match
-    // filePath.  The :cpp:func:`FileRules::getNumCustomKeys(ruleIndex)` and custom keys methods
+    // filePath.  The :cpp:func:`FileRules::getNumCustomKeys` and custom keys methods
     // may then be used to get additional information about the matching rule.
     const char * getColorSpaceFromFilepath(const char * filePath, size_t & ruleIndex) const;
 
@@ -755,12 +757,15 @@ public:
                                             const char * dstName,
                                             const char * dstInterchangeName);
 
-private:
-    Config();
+    //!cpp:function::
+    Config(const Config &) = delete;
+    //!cpp:function::
+    Config& operator= (const Config &) = delete;
+    //!cpp:function::
     ~Config();
 
-    Config(const Config &);
-    Config& operator= (const Config &);
+private:
+    Config();
 
     static void deleter(Config* c);
 
@@ -913,12 +918,15 @@ public:
     //!cpp:function:: Move a rule closer to the end of the list by one position.
     void decreaseRulePriority(size_t ruleIndex);
 
-private:
-    FileRules();
+    //!cpp:function::
+    FileRules(const FileRules &) = delete;
+    //!cpp:function::
+    FileRules & operator= (const FileRules &) = delete;
+    //!cpp:function::
     virtual ~FileRules();
 
-    FileRules(const FileRules &) = delete;
-    FileRules & operator= (const FileRules &) = delete;
+private:
+    FileRules();
 
     static void deleter(FileRules* c);
 
@@ -994,6 +1002,9 @@ public:
     //!cpp:function::
     void setBitDepth(BitDepth bitDepth);
 
+    //!cpp:function:: A display color space will use the display-referred reference space.
+    ReferenceSpaceType getReferenceSpaceType() const;
+
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
     // Categories
@@ -1044,9 +1055,6 @@ public:
     //!cpp:function::
     void setIsData(bool isData);
 
-    //!cpp:function:: A display color space will use the display-referred reference space.
-    ReferenceSpaceType getReferenceSpaceType() const;
-
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
     // Allocation
@@ -1095,13 +1103,16 @@ public:
     void setTransform(const ConstTransformRcPtr & transform,
                         ColorSpaceDirection dir);
 
-private:
-    ColorSpace(ReferenceSpaceType referenceSpace);
-    ColorSpace();
+    //!cpp:function::
+    ColorSpace(const ColorSpace &) = delete;
+    //!cpp:function::
+    ColorSpace& operator= (const ColorSpace &) = delete;
+    //!cpp:function::
     ~ColorSpace();
 
-    ColorSpace(const ColorSpace &);
-    ColorSpace& operator= (const ColorSpace &);
+private:
+    explicit ColorSpace(ReferenceSpaceType referenceSpace);
+    ColorSpace();
 
     static void deleter(ColorSpace* c);
 
@@ -1163,7 +1174,9 @@ public:
     //!cpp:function:: Will return null if the name is not found.
     ConstColorSpaceRcPtr getColorSpace(const char * name) const;
     //!cpp:function:: Will return -1 if the name is not found.
-    int getIndexForColorSpace(const char * name) const;
+    int getColorSpaceIndex(const char * name) const;
+    //!cpp:function::
+    bool hasColorSpace(const char * name) const;
 
     //!cpp:function:: Add color space(s).
     //
@@ -1184,9 +1197,10 @@ public:
     //!cpp:function:: Clear all color spaces.
     void clearColorSpaces();
 
+    ~ColorSpaceSet();
+
 private:
     ColorSpaceSet();
-    ~ColorSpaceSet();
 
     ColorSpaceSet(const ColorSpaceSet &);
     ColorSpaceSet & operator= (const ColorSpaceSet &);
@@ -1261,9 +1275,11 @@ public:
     const char * getDescription() const;
     //!cpp:function::
     void setDescription(const char * description);
+
+    ~Look();
+
 private:
     Look();
-    ~Look();
 
     Look(const Look &);
     Look& operator= (const Look &);
@@ -1345,18 +1361,20 @@ public:
     // to null will clear it.
     void setTransform(const ConstTransformRcPtr & transform, ViewTransformDirection dir);
 
+    //!cpp:function::
+    ViewTransform(const ViewTransform &) = delete;
+    //!cpp:function::
+    ViewTransform & operator= (const ViewTransform &) = delete;
+    //!cpp:function::
+    ~ViewTransform();
+    
 private:
     ViewTransform();
-    ViewTransform(ReferenceSpaceType referenceSpace);
-    ~ViewTransform();
-
-    ViewTransform(const ViewTransform &) = delete;
-    ViewTransform & operator= (const ViewTransform &) = delete;
+    explicit ViewTransform(ReferenceSpaceType referenceSpace);
 
     static void deleter(ViewTransform * c);
 
     class Impl;
-    friend class Impl;
     Impl * m_impl;
     Impl * getImpl() { return m_impl; }
     const Impl * getImpl() const { return m_impl; }
@@ -1427,13 +1445,17 @@ public:
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
     bool hasDynamicProperty(DynamicPropertyType type) const;
 
-    //!cpp:function:: Create a :cpp:class:`Processor` that is an optimized version of this.
-    // Note that one typically does not need to explicitly create an optimized Processor instance
-    // since optimization happens implicitly during the creation of a CPUProcessor or GPUProcessor.
-    // This method is provided primarily for diagnostic purposes.
+    //!cpp:function:: Run the optimizer on a Processor to create a new :cpp:class:`Processor`.
+    // It is usually not necessary to call this since getting a CPUProcessor or GPUProcessor
+    // will also optimize.  However if you need both, calling this method first makes getting
+    // a CPU and GPU Processor faster since the optimization is effectively only done once.
+    ConstProcessorRcPtr getOptimizedProcessor(OptimizationFlags oFlags) const;
+
+    //!cpp:function:: Create a :cpp:class:`Processor` that is optimized for a specific in and out
+    // bit-depth (as CPUProcessor would do).  This method is provided primarily for diagnostic
+    // purposes.
     ConstProcessorRcPtr getOptimizedProcessor(BitDepth inBD, BitDepth outBD,
                                               OptimizationFlags oFlags) const;
-
 
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
@@ -1486,9 +1508,10 @@ public:
                                                     BitDepth outBitDepth,
                                                     OptimizationFlags oFlags) const;
 
+    ~Processor();
+
 private:
     Processor();
-    ~Processor();
 
     Processor(const Processor &);
     Processor& operator= (const Processor &);
@@ -1560,9 +1583,10 @@ public:
     //!cpp:function::
     void applyRGBA(float * pixel) const;
 
+    ~CPUProcessor();
+
 private:
     CPUProcessor();
-    ~CPUProcessor();
 
     CPUProcessor(const CPUProcessor &);
     CPUProcessor& operator= (const CPUProcessor &);
@@ -1612,10 +1636,11 @@ public:
 
     //!cpp:function:: Extract the shader information using a custom :cpp:class:`GpuShaderCreator` class.
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const;
+    
+    ~GPUProcessor();
 
 private:
     GPUProcessor();
-    ~GPUProcessor();
 
     GPUProcessor(const GPUProcessor &);
     GPUProcessor& operator= (const GPUProcessor &);
@@ -1656,9 +1681,11 @@ public:
     void addFile(const char * fname);
     //!cpp:function::
     void addLook(const char * look);
+
+    ~ProcessorMetadata();
+
 private:
     ProcessorMetadata();
-    ~ProcessorMetadata();
     ProcessorMetadata(const ProcessorMetadata &);
     ProcessorMetadata& operator= (const ProcessorMetadata &);
 
@@ -1781,9 +1808,10 @@ public:
     // invalid index is specified.
     static const char * getFormatExtensionByIndex(int index);
 
+    ~Baker();
+
 private:
     Baker();
-    ~Baker();
 
     Baker(const Baker &);
     Baker& operator= (const Baker &);
@@ -2046,7 +2074,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////
 //!rst::
 // GpuShaderCreator
-// *************
+// ****************
 // Inherit from the class to fully customize the implementation of a GPU shader program
 // from a color transformation.
 //
@@ -2204,12 +2232,13 @@ public:
 
     //!cpp:function::
     virtual void finalize();
+    
+    //!cpp:function::
+    virtual ~GpuShaderCreator();
 
 protected:
     //!cpp:function::
     GpuShaderCreator();
-    //!cpp:function::
-    virtual ~GpuShaderCreator();
     //!cpp:function::
     GpuShaderCreator(const GpuShaderCreator &) = delete;
     //!cpp:function::
@@ -2422,11 +2451,12 @@ public:
     //!cpp:function:: Get the complete OCIO shader program.
     const char * getShaderText() const noexcept;
 
+    //!cpp:function::
+    virtual ~GpuShaderDesc();
+
 protected:
     //!cpp:function::
     GpuShaderDesc();
-    //!cpp:function::
-    virtual ~GpuShaderDesc();
     //!cpp:function::
     GpuShaderDesc(const GpuShaderDesc &) = delete;
     //!cpp:function::
@@ -2507,9 +2537,10 @@ public:
     // If the filename cannot be found, an exception will be thrown.
     const char * resolveFileLocation(const char * filename) const;
 
+    ~Context();
+    
 private:
     Context();
-    ~Context();
 
     Context(const Context &);
     Context& operator= (const Context &);

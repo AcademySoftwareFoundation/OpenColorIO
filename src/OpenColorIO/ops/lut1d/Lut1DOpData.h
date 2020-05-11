@@ -67,20 +67,17 @@ public:
         COMPOSE_RESAMPLE_HD  = 2      // Half-domain.
     };
 
-    // Calculate a new LUT by evaluating a new domain (A) through a set of ops (B).
-    // A is used as in/out parameter. As input it is the first LUT in the composition,
-    // as output it is the result of the composition.
-    // B is a set of ops to compose the LUT with. It will be finalized.
-    static void ComposeVec(Lut1DOpDataRcPtr & A, OpRcPtrVec & B);
+    // Calculate a new LUT by evaluating a new domain (lut) through a set of ops (ops).
+    // The lut is used as in/out parameter. As input it is the first LUT in the
+    // composition, as output it is the result of the composition.
+    // The ops are a set of ops to compose the LUT with. It will be finalized.
+    static void ComposeVec(Lut1DOpDataRcPtr & lut, OpRcPtrVec & ops);
 
     // Use functional composition to generate a single op that 
     // approximates the effect of the pair of ops.
-    // A is used as in/out parameter. As input is it the first LUT in the composition,
-    // as output it is the result of the composition.
-    // B is the second LUT to compose and will not be modified.
-    static void Compose(Lut1DOpDataRcPtr & A,
-                        ConstLut1DOpDataRcPtr & B,
-                        ComposeMethod compFlag);
+    static Lut1DOpDataRcPtr Compose(ConstLut1DOpDataRcPtr & lut1,
+                                    ConstLut1DOpDataRcPtr & lut2,
+                                    ComposeMethod compFlag);
 
     // Return the size to use for an identity LUT of the specified bit-depth.
     static unsigned long GetLutIdealSize(BitDepth incomingBitDepth);
@@ -105,10 +102,6 @@ public:
     TransformDirection getDirection() const { return m_direction; }
     void setDirection(TransformDirection dir) { m_direction = dir; }
 
-    inline LutInversionQuality getInversionQuality() const { return m_invQuality; }
-
-    void setInversionQuality(LutInversionQuality style);
-
     Type getType() const override { return Lut1DType; }
 
     bool isNoOp() const override;
@@ -117,7 +110,7 @@ public:
 
     bool hasChannelCrosstalk() const override;
 
-    void finalize() override;
+    std::string getCacheID() const override;
 
     // Check if the LUT is using half code indices as its domain.
     // Return returns true if this LUT requires half code indices as input.
@@ -162,11 +155,11 @@ public:
 
     virtual Lut1DOpDataRcPtr clone() const;
 
-    virtual Lut1DOpDataRcPtr inverse() const;
+    Lut1DOpDataRcPtr inverse() const;
 
     bool isInverse(ConstLut1DOpDataRcPtr & lut) const;
 
-    bool mayCompose(ConstLut1DOpDataRcPtr & B) const;
+    bool mayCompose(ConstLut1DOpDataRcPtr & other) const;
 
     // Return true if this Lut1DOp applies the same LUT 
     // to each of r, g, and b.
@@ -182,11 +175,6 @@ public:
     bool operator==(const OpData & other) const override;
 
     OpDataRcPtr getIdentityReplacement() const override;
-
-    // Make a forward Lut1DOpData that approximates the exact inverse
-    // Lut1DOpData to be used for the fast rendering style.
-    // LUT has to be inverse or the function will throw.
-    static Lut1DOpDataRcPtr MakeFastLut1DFromInverse(ConstLut1DOpDataRcPtr & lut, bool forGPU);
 
     inline const ComponentProperties & getRedProperties() const
     {
@@ -212,6 +200,8 @@ public:
     inline void setFileOutputBitDepth(BitDepth out) { m_fileOutBitDepth = out; }
 
     void scale(float scale);
+
+    void finalize();
 
     class Lut3by1DArray : public Array
     {
@@ -265,14 +255,17 @@ private:
     TransformDirection  m_direction;
 
     // Members for inverse LUT.
-    LutInversionQuality m_invQuality;
-
     ComponentProperties m_componentProperties[3];
 
     // The LUT scaling for/from the file.
     // Used by MakeFastLut1DFromInverse and for saving to CLF/CTF.
     BitDepth m_fileOutBitDepth = BIT_DEPTH_UNKNOWN;
 };
+
+// Make a forward Lut1DOpData that approximates the exact inverse
+// Lut1DOpData to be used for the fast rendering style.
+// LUT has to be inverse or the function will throw.
+Lut1DOpDataRcPtr MakeFastLut1DFromInverse(ConstLut1DOpDataRcPtr & lut);
 
 } // namespace OCIO_NAMESPACE
 

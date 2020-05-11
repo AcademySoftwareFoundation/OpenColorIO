@@ -250,64 +250,177 @@ OCIO_ADD_TEST(MatrixOpData, test_construct)
 // Validate matrix composition.
 OCIO_ADD_TEST(MatrixOpData, composition)
 {
-    // Create two test ops.
-    const float mtxA[] = {  1, 2, 3, 4,
-                            4, 5, 6, 7,
-                            7, 8, 9, 10,
-                            11, 12, 13, 14 };
-    const float offsA[] = { 10, 11, 12, 13 };
-
-    OCIO::MatrixOpData mA;
-    mA.setFileInputBitDepth(OCIO::BIT_DEPTH_UINT8);
-    mA.setFileOutputBitDepth(OCIO::BIT_DEPTH_F16);
-
-    mA.setRGBA(mtxA);
-    mA.setRGBAOffsets(offsA);
-
-    const float mtxB[] = { 21, 22, 23, 24,
-                           24, 25, 26, 27,
-                           27, 28, 29, 30,
-                           31, 32, 33, 34 };
-    const float offsB[] = { 30, 31, 32, 33 };
-
-    OCIO::MatrixOpDataRcPtr mB = std::make_shared<OCIO::MatrixOpData>();
-    mB->setFileInputBitDepth(OCIO::BIT_DEPTH_F16);
-    mB->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
-
-    mB->setRGBA(mtxB);
-    mB->setRGBAOffsets(offsB);
-
-    // Correct results.
-    const float aim[] = { 534, 624, 714, 804,
-                          603, 705, 807, 909,
-                          672, 786, 900, 1014,
-                          764, 894, 1024, 1154 };
-    const float aim_offs[] = { 1040 + 30, 1178 + 31, 1316 + 32, 1500 + 33 };
-
-    // Compose.
-    OCIO::ConstMatrixOpDataRcPtr mBConst = mB;
-    OCIO::MatrixOpDataRcPtr result(mA.compose(mBConst));
-
-    // Check bit-depths copied correctly.
-    OCIO_CHECK_EQUAL(result->getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
-    OCIO_CHECK_EQUAL(result->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
-
-    const OCIO::ArrayDouble::Values& newCoeff = result->getArray().getValues();
-
-    // Sanity check on size.
-    OCIO_CHECK_ASSERT(newCoeff.size() == 16);
-
-    // Coefficient check.
-    for (unsigned long i = 0; i < newCoeff.size(); i++)
+    // Compose 2 forward matrices.
     {
-        OCIO_CHECK_EQUAL(aim[i], newCoeff[i]);
+        // Create two test ops.
+        const double mtxA[] = {   1,  2,  3,  4,
+                                  4,  5,  6,  7,
+                                  7,  8,  9, 10,
+                                 11, 12, 13, 14 };
+        const double offsA[] = { 10, 11, 12, 13 };
+
+        OCIO::MatrixOpData mA;
+        mA.setFileInputBitDepth(OCIO::BIT_DEPTH_UINT8);
+        mA.setFileOutputBitDepth(OCIO::BIT_DEPTH_F16);
+
+        mA.setRGBA(mtxA);
+        mA.setRGBAOffsets(offsA);
+
+        const double mtxB[] = { 21, 22, 23, 24,
+                                24, 25, 26, 27,
+                                27, 28, 29, 30,
+                                31, 32, 33, 34 };
+        const float offsB[] = { 30, 31, 32, 33 };
+
+        OCIO::MatrixOpDataRcPtr mB = std::make_shared<OCIO::MatrixOpData>();
+        mB->setFileInputBitDepth(OCIO::BIT_DEPTH_F16);
+        mB->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
+
+        mB->setRGBA(mtxB);
+        mB->setRGBAOffsets(offsB);
+
+        // Correct results.
+        const double aim[] = { 534, 624,  714,  804,
+                               603, 705,  807,  909,
+                               672, 786,  900, 1014,
+                               764, 894, 1024, 1154 };
+        const double aim_offs[] = { 1040 + 30, 1178 + 31, 1316 + 32, 1500 + 33 };
+
+        // Compose.
+        OCIO::ConstMatrixOpDataRcPtr mBConst = mB;
+        OCIO::MatrixOpDataRcPtr result(mA.compose(mBConst));
+
+        // Check bit-depths copied correctly.
+        OCIO_CHECK_EQUAL(result->getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT8);
+        OCIO_CHECK_EQUAL(result->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+
+        const OCIO::ArrayDouble::Values& newCoeff = result->getArray().getValues();
+
+        // Sanity check on size.
+        OCIO_REQUIRE_EQUAL(newCoeff.size(), 16);
+
+        // Coefficient check.
+        for (unsigned long i = 0; i < newCoeff.size(); i++)
+        {
+            OCIO_CHECK_EQUAL(aim[i], newCoeff[i]);
+        }
+
+        // Offset check.
+        const unsigned long dim = result->getArray().getLength();
+        OCIO_REQUIRE_EQUAL(dim, 4);
+        for (unsigned long i = 0; i < dim; i++)
+        {
+            OCIO_CHECK_EQUAL(aim_offs[i], result->getOffsets()[i]);
+        }
     }
 
-    // Offset check.
-    const unsigned long dim = result->getArray().getLength();
-    for (unsigned long i = 0; i < dim; i++)
+    // Compose inverse with forward.
     {
-        OCIO_CHECK_EQUAL(aim_offs[i], result->getOffsets()[i]);
+        const double mtxA[] = { 2.0, 0.0, 0.0, 0.0,
+                                0.0, 4.0, 0.0, 0.0,
+                                0.0, 0.0, 0.5, 0.0,
+                                0.0, 0.0, 0.0, 1.0 };
+        const double offsA[] = { 1.0, 2.0, 0.0, 0.5 };
+
+        OCIO::MatrixOpData mA;
+        mA.setRGBA(mtxA);
+        mA.setRGBAOffsets(offsA);
+        mA.setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+        const double mtxB[] = { 2.0, 0.0, 0.0, 0.0,
+                                0.0, 1.5, 0.0, 0.0,
+                                0.0, 0.0, 3.0, 0.0,
+                                0.0, 0.0, 0.0, 1.0 };
+        const double offsB[] = { 2.0, 4.0, 0.0, 0.5 };
+
+        OCIO::MatrixOpDataRcPtr mB = std::make_shared<OCIO::MatrixOpData>();
+        mB->setRGBA(mtxB);
+        mB->setRGBAOffsets(offsB);
+
+        // Correct results.
+        const double aim[] = { 1.0, 0.0,   0.0, 0.0,
+                               0.0, 0.375, 0.0, 0.0,
+                               0.0, 0.0,   6.0, 0.0,
+                               0.0, 0.0,   0.0, 1.0 };
+        const double aim_offs[] = { 1.0, 3.25, 0.0, 0.0 };
+
+        // Compose.
+        OCIO::ConstMatrixOpDataRcPtr mAConst = mA.getAsForward();
+        OCIO::ConstMatrixOpDataRcPtr mBConst = mB;
+        OCIO::MatrixOpDataRcPtr result(mAConst->compose(mBConst));
+
+        const OCIO::ArrayDouble::Values & newCoeff = result->getArray().getValues();
+
+        // Sanity check on size.
+        OCIO_REQUIRE_EQUAL(newCoeff.size(), 16);
+
+        // Coefficient check.
+        for (unsigned long i = 0; i < newCoeff.size(); i++)
+        {
+            OCIO_CHECK_EQUAL(aim[i], newCoeff[i]);
+        }
+
+        // Offset check.
+        const unsigned long dim = result->getArray().getLength();
+        OCIO_REQUIRE_EQUAL(dim, 4);
+        for (unsigned long i = 0; i < dim; i++)
+        {
+            OCIO_CHECK_EQUAL(aim_offs[i], result->getOffsets()[i]);
+        }
+    }
+
+    // Compose forward with inverse.
+    {
+        const double mtxA[] = { 2.0, 0.0, 0.0, 0.0,
+                                0.0, 4.0, 0.0, 0.0,
+                                0.0, 0.0, 0.5, 0.0,
+                                0.0, 0.0, 0.0, 1.0 };
+        const double offsA[] = { 1.0, 2.0, 0.0, 0.5 };
+
+        OCIO::MatrixOpData mA;
+        mA.setRGBA(mtxA);
+        mA.setRGBAOffsets(offsA);
+
+        const double mtxB[] = { 2.0, 0.0,  0.0, 0.0,
+                                0.0, 0.25, 0.0, 0.0,
+                                0.0, 0.0,  4.0, 0.0,
+                                0.0, 0.0,  0.0, 1.0 };
+        const double offsB[] = { 2.0, 4.0, 0.0, 0.5 };
+
+        OCIO::MatrixOpDataRcPtr mB = std::make_shared<OCIO::MatrixOpData>();
+        mB->setRGBA(mtxB);
+        mB->setRGBAOffsets(offsB);
+        mB->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+        // Correct results.
+        const double aim[] = { 1.0,  0.0, 0.0,   0.0,
+                               0.0, 16.0, 0.0,   0.0,
+                               0.0,  0.0, 0.125, 0.0,
+                               0.0,  0.0, 0.0,   1.0 };
+        const double aim_offs[] = { -0.5, -8.0, 0.0, 0.0 };
+
+        // Compose.
+        OCIO::ConstMatrixOpDataRcPtr mBConst = mB->getAsForward();
+        OCIO::MatrixOpDataRcPtr result(mA.compose(mBConst));
+
+        const OCIO::ArrayDouble::Values & newCoeff = result->getArray().getValues();
+
+        // Sanity check on size.
+        OCIO_REQUIRE_EQUAL(newCoeff.size(), 16);
+
+        // Coefficient check.
+        for (unsigned long i = 0; i < newCoeff.size(); i++)
+        {
+            OCIO_CHECK_EQUAL(aim[i], newCoeff[i]);
+        }
+
+        // Offset check.
+        const unsigned long dim = result->getArray().getLength();
+        OCIO_REQUIRE_EQUAL(dim, 4);
+        for (unsigned long i = 0; i < dim; i++)
+        {
+            OCIO_CHECK_EQUAL(aim_offs[i], result->getOffsets()[i]);
+        }
     }
 }
 
@@ -396,6 +509,12 @@ OCIO_ADD_TEST(MatrixOpData, matrixInverse_identity)
 
     refMatrixOp.setFileInputBitDepth(OCIO::BIT_DEPTH_F32);
     refMatrixOp.setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT12);
+    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_F32, refMatrixOp.getFileInputBitDepth());
+    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT12, refMatrixOp.getFileOutputBitDepth());
+
+    refMatrixOp.setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_F32, refMatrixOp.getFileInputBitDepth());
+    OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UINT12, refMatrixOp.getFileOutputBitDepth());
 
     OCIO_CHECK_ASSERT(refMatrixOp.isNoOp());
     OCIO_CHECK_ASSERT(!refMatrixOp.hasChannelCrosstalk());
@@ -404,21 +523,22 @@ OCIO_ADD_TEST(MatrixOpData, matrixInverse_identity)
     OCIO_CHECK_ASSERT(!refMatrixOp.hasOffsets());
 
     // Get inverse of reference matrix operation.
-    OCIO::MatrixOpDataRcPtr invMatrixOp;
-    OCIO_CHECK_ASSERT(!invMatrixOp);
-    OCIO_CHECK_NO_THROW(invMatrixOp = refMatrixOp.inverse());
-    OCIO_REQUIRE_ASSERT(invMatrixOp);
+    OCIO::MatrixOpDataRcPtr fwdMatrixOp;
+    OCIO_CHECK_ASSERT(!fwdMatrixOp);
+    OCIO_CHECK_NO_THROW(fwdMatrixOp = refMatrixOp.getAsForward());
+    OCIO_REQUIRE_ASSERT(fwdMatrixOp);
+    OCIO_CHECK_EQUAL(fwdMatrixOp->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
 
-    // Inverse op should have its input/output bit-depth inverted.
-    OCIO_CHECK_EQUAL(invMatrixOp->getFileInputBitDepth(),
+    // The getAsForward swaps the bit-depths.
+    OCIO_CHECK_EQUAL(fwdMatrixOp->getFileInputBitDepth(),
                      refMatrixOp.getFileOutputBitDepth());
-    OCIO_CHECK_EQUAL(invMatrixOp->getFileOutputBitDepth(),
+    OCIO_CHECK_EQUAL(fwdMatrixOp->getFileOutputBitDepth(),
                      refMatrixOp.getFileInputBitDepth());
 
     // But still be an identity matrix.
-    OCIO_CHECK_ASSERT(invMatrixOp->isDiagonal());
-    OCIO_CHECK_ASSERT(invMatrixOp->isIdentity());
-    OCIO_CHECK_ASSERT(!invMatrixOp->hasOffsets());
+    OCIO_CHECK_ASSERT(fwdMatrixOp->isDiagonal());
+    OCIO_CHECK_ASSERT(fwdMatrixOp->isIdentity());
+    OCIO_CHECK_ASSERT(!fwdMatrixOp->hasOffsets());
 }
 
 OCIO_ADD_TEST(MatrixOpData, matrixInverse_singular)
@@ -433,6 +553,7 @@ OCIO_ADD_TEST(MatrixOpData, matrixInverse_singular)
             0.2f, 0.f, 0.f, 1.0f };
 
     singularMatrixOp.setRGBA(mat);
+    singularMatrixOp.setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     OCIO_CHECK_ASSERT(!singularMatrixOp.isNoOp());
     OCIO_CHECK_ASSERT(singularMatrixOp.hasChannelCrosstalk());
@@ -442,7 +563,7 @@ OCIO_ADD_TEST(MatrixOpData, matrixInverse_singular)
     OCIO_CHECK_ASSERT(!singularMatrixOp.hasOffsets());
 
     // Get inverse of singular matrix operation.
-    OCIO_CHECK_THROW_WHAT(singularMatrixOp.inverse(),
+    OCIO_CHECK_THROW_WHAT(singularMatrixOp.getAsForward(),
                           OCIO::Exception,
                           "Singular Matrix can't be inverted");
 }
@@ -467,9 +588,19 @@ OCIO_ADD_TEST(MatrixOpData, inverse)
     OCIO_CHECK_ASSERT(!refMatrixOp.isDiagonal());
     OCIO_CHECK_ASSERT(!refMatrixOp.isIdentity());
 
+    OCIO::MatrixOpDataRcPtr fwdMatrixOp = refMatrixOp.getAsForward();
+    OCIO_CHECK_ASSERT(refMatrixOp == *fwdMatrixOp);
+
+    refMatrixOp.setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO_CHECK_ASSERT(!refMatrixOp.isNoOp());
+    OCIO_CHECK_ASSERT(refMatrixOp.hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(!refMatrixOp.isDiagonal());
+    OCIO_CHECK_ASSERT(!refMatrixOp.isIdentity());
+
     // Get inverse of reference matrix operation.
     OCIO::MatrixOpDataRcPtr invMatrixOp;
-    OCIO_CHECK_NO_THROW(invMatrixOp = refMatrixOp.inverse());
+    OCIO_CHECK_NO_THROW(invMatrixOp = refMatrixOp.getAsForward());
     OCIO_REQUIRE_ASSERT(invMatrixOp);
 
     constexpr float expectedMatrix[16] = {

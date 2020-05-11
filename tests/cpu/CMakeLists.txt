@@ -189,6 +189,7 @@ set(TESTS
 	transforms/MatrixTransform_tests.cpp
 	UnitTestLogUtils.cpp
 	UnitTestMain.cpp
+	UnitTestOptimFlags.cpp
 	UnitTestUtils.cpp
 	ViewTransform_tests.cpp
 )

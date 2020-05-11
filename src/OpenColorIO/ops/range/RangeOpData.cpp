@@ -47,6 +47,23 @@ RangeOpData::RangeOpData(double minInValue,
     validate();
 }
 
+RangeOpData::RangeOpData(double minInValue,
+                         double maxInValue,
+                         double minOutValue,
+                         double maxOutValue,
+                         TransformDirection dir)
+    :   OpData()
+    ,   m_minInValue(minInValue)
+    ,   m_maxInValue(maxInValue)
+    ,   m_minOutValue(minOutValue)
+    ,   m_maxOutValue(maxOutValue)
+    ,   m_scale(0.)
+    ,   m_offset(0.)
+{
+    setDirection(dir);
+    validate();
+}
+
 RangeOpData::RangeOpData(const IndexMapping & pIM, unsigned int len, BitDepth bitdepth)
     : OpData()
     ,   m_minInValue(RangeOpData::EmptyValue())
@@ -169,8 +186,6 @@ double RangeOpData::EmptyValue()
 
 void RangeOpData::validate() const
 {
-    OpData::validate();
-
     // NB: Need to allow vals to exceed normal integer range
     // to allow lossless setting of bit-depth from float-->int-->float.
 
@@ -468,19 +483,25 @@ MatrixOpDataRcPtr RangeOpData::convertToMatrix() const
     {
         throw Exception("Non-clamping Range min & max values have to be set.");
     }
-
+    const RangeOpData * fwdThis = this;
+    ConstRangeOpDataRcPtr tempFwd;
+    if (getDirection() == TRANSFORM_DIR_INVERSE)
+    {
+        tempFwd = getAsForward();
+        fwdThis = tempFwd.get();
+    }
     // Create an identity matrix.
     MatrixOpDataRcPtr mtx = std::make_shared<MatrixOpData>();
-    mtx->getFormatMetadata() = getFormatMetadata();
-    mtx->setFileInputBitDepth(m_fileInBitDepth);
-    mtx->setFileOutputBitDepth(m_fileOutBitDepth);
+    mtx->getFormatMetadata() = fwdThis->getFormatMetadata();
+    mtx->setFileInputBitDepth(fwdThis->getFileInputBitDepth());
+    mtx->setFileOutputBitDepth(fwdThis->getFileOutputBitDepth());
 
-    const double scale = getScale();
+    const double scale = fwdThis->getScale();
     mtx->setArrayValue(0, scale);
     mtx->setArrayValue(5, scale);
     mtx->setArrayValue(10, scale);
 
-    const double offset = getOffset();
+    const double offset = fwdThis->getOffset();
     mtx->setOffsetValue(0, offset);
     mtx->setOffsetValue(1, offset);
     mtx->setOffsetValue(2, offset);
@@ -497,6 +518,11 @@ bool RangeOpData::operator==(const OpData & other) const
     if (!OpData::operator==(other)) return false;
 
     const RangeOpData* rop = static_cast<const RangeOpData*>(&other);
+
+    if (m_direction != rop->m_direction)
+    {
+        return false;
+    }
 
     if ( (minIsEmpty() != rop->minIsEmpty()) || 
          (maxIsEmpty() != rop->maxIsEmpty()) )
@@ -521,35 +547,48 @@ bool RangeOpData::operator==(const OpData & other) const
     return true;
 }
 
-RangeOpDataRcPtr RangeOpData::inverse() const
+void RangeOpData::setDirection(TransformDirection dir)
 {
+    m_direction = dir;
+    if (m_direction == TRANSFORM_DIR_UNKNOWN)
+    {
+        throw Exception("RangeOpData: unspecified transform direction.");
+    }
+}
+
+RangeOpDataRcPtr RangeOpData::getAsForward() const
+{
+    if (m_direction == TRANSFORM_DIR_FORWARD)
+    {
+        return clone();
+    }
     RangeOpDataRcPtr invOp = std::make_shared<RangeOpData>(getMinOutValue(),
                                                            getMaxOutValue(),
                                                            getMinInValue(),
                                                            getMaxInValue());
+
+    // Note any existing metadata may be stale at this point, but trying to update it is
+    // challenging.
     invOp->getFormatMetadata() = getFormatMetadata();
-    invOp->setFileInputBitDepth(getFileOutputBitDepth());
-    invOp->setFileOutputBitDepth(getFileInputBitDepth());
+    invOp->m_fileInBitDepth = m_fileOutBitDepth;
+    invOp->m_fileOutBitDepth = m_fileInBitDepth;
 
     invOp->validate();
 
-    // Note that any existing metadata could become stale at this point but
-    // trying to update it is also challenging since inverse() is sometimes
-    // called even during the creation of new ops.
     return invOp;
 }
 
-void RangeOpData::finalize()
+std::string RangeOpData::getCacheID() const
 {
     AutoMutex lock(m_mutex);
-
-    validate();
 
     std::ostringstream cacheIDStream;
     if (!getID().empty())
     {
         cacheIDStream << getID() << " ";
     }
+
+    cacheIDStream << TransformDirectionToString(m_direction) << " ";
 
     cacheIDStream.precision(DefaultValues::FLOAT_DECIMALS);
 
@@ -559,7 +598,7 @@ void RangeOpData::finalize()
                   << ", " << m_maxOutValue
                   << "]";
 
-    m_cacheID = cacheIDStream.str();
+    return cacheIDStream.str();
 }
 
 void RangeOpData::normalize()
@@ -583,7 +622,6 @@ void RangeOpData::normalize()
     {
         m_maxOutValue *= outScale;
     }
-
 }
 
 } // namespace OCIO_NAMESPACE

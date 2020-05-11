@@ -67,7 +67,6 @@ public:
     static void deleter(RangeTransform * t);
 
 private:
-    TransformDirection m_direction = TRANSFORM_DIR_FORWARD;
     RangeStyle  m_style = RANGE_CLAMP;
     RangeOpData m_data;
 };

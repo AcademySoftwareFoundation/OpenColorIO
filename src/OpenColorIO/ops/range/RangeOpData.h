@@ -56,6 +56,12 @@ public:
                 double maxOutValue    // Upper bound of the range
                 );
 
+    RangeOpData(double minInValue,    // Lower bound of the domain
+                double maxInValue,    // Upper bound of the domain
+                double minOutValue,   // Lower bound of the range
+                double maxOutValue,   // Upper bound of the range
+                TransformDirection dir);
+
     // Constructor from a 2-entry index map from a Lut1D or Lut3D.
     // Note: Throws if the index map is not appropriate.
     RangeOpData(const IndexMapping & pIM, unsigned int len, BitDepth bitdepth);
@@ -105,6 +111,7 @@ public:
 
     // Validate the state of the instance and initialize private members.
     void validate() const override;
+    std::string getCacheID() const override;
 
     Type getType() const override { return RangeType; }
 
@@ -135,15 +142,16 @@ public:
 
     bool operator==(const OpData& other) const override;
 
-    RangeOpDataRcPtr inverse() const;
+    RangeOpDataRcPtr getAsForward() const;
 
-    virtual void finalize() override;
+    TransformDirection getDirection() const { return m_direction; }
+    void setDirection(TransformDirection dir);
 
-    inline BitDepth getFileInputBitDepth() const { return m_fileInBitDepth; }
-    inline void setFileInputBitDepth(BitDepth in) { m_fileInBitDepth = in; }
+    BitDepth getFileInputBitDepth() const { return m_fileInBitDepth; }
+    void setFileInputBitDepth(BitDepth in) { m_fileInBitDepth = in; }
 
-    inline BitDepth getFileOutputBitDepth() const { return m_fileOutBitDepth; }
-    inline void setFileOutputBitDepth(BitDepth out) { m_fileOutBitDepth = out; }
+    BitDepth getFileOutputBitDepth() const { return m_fileOutBitDepth; }
+    void setFileOutputBitDepth(BitDepth out) { m_fileOutBitDepth = out; }
 
     void normalize();
 
@@ -166,6 +174,7 @@ private:
     BitDepth m_fileInBitDepth  = BIT_DEPTH_UNKNOWN; // In bit-depth to be used for file I/O
     BitDepth m_fileOutBitDepth = BIT_DEPTH_UNKNOWN; // Out bit-depth to be used for file I/O
 
+    TransformDirection m_direction{ TRANSFORM_DIR_FORWARD };
 };
 
 } // namespace OCIO_NAMESPACE

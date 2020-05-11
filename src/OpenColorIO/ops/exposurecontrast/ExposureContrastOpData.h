@@ -159,7 +159,7 @@ public:
     bool isInverse(ConstExposureContrastOpDataRcPtr & r) const;
     ExposureContrastOpDataRcPtr inverse() const;
 
-    void finalize() override;
+    std::string getCacheID() const override;
 
     bool operator==(const OpData & other) const override;
 

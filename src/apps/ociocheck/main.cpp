@@ -82,10 +82,18 @@ int main(int argc, const char **argv)
         std::cout << "** General **" << std::endl;
         std::cout << "Search Path: " << config->getSearchPath() << std::endl;
         std::cout << "Working Dir: " << config->getWorkingDir() << std::endl;
-
         std::cout << std::endl;
-        std::cout << "Default Display: " << config->getDefaultDisplay() << std::endl;
-        std::cout << "Default View: " << config->getDefaultView(config->getDefaultDisplay()) << std::endl;
+
+        if (config->getNumDisplays() == 0)
+        {
+            std::cout << "Error: At least one (display, view) pair must be defined." << std::endl;
+            errorcount += 1;
+        }
+        else
+        {
+            std::cout << "Default Display: " << config->getDefaultDisplay() << std::endl;
+            std::cout << "Default View: " << config->getDefaultView(config->getDefaultDisplay()) << std::endl;
+        }
 
         {
             std::cout << std::endl;

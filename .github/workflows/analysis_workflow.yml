@@ -1,0 +1,197 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+#
+# GitHub Actions workflow file
+# https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions
+
+name: Analysis
+
+on:
+  schedule:
+    # Nightly build
+    - cron: "0 0 * * *"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Latest ext packages
+  # ---------------------------------------------------------------------------
+
+  linux_latest:
+    name: 'Linux CentOS 7 VFX CY${{ matrix.vfx-cy }} latest 
+      <${{ matrix.compiler-desc }} 
+       cxx=${{ matrix.cxx-standard }}, 
+       docs=${{ matrix.build-docs }}>'
+    # GH-hosted VM. The build runs in CentOS 7 'container' defined below.
+    runs-on: ubuntu-latest
+    container:
+      # DockerHub: https://hub.docker.com/u/aswf
+      # Source: https://github.com/AcademySoftwareFoundation/aswf-docker
+      image: aswf/ci-base:${{ matrix.vfx-cy }}
+    strategy:
+      matrix:
+        build: [1, 2, 3, 4, 5, 6]
+        include:
+          # -------------------------------------------------------------------
+          # GCC, VFX CY2020
+          # -------------------------------------------------------------------
+          # C++11, Python 3.7
+          - build: 1
+            build-docs: 'ON'
+            cxx-standard: 11
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC 6.3.1
+            vfx-cy: 2020
+          # C++14
+          - build: 2
+            build-docs: 'OFF'
+            cxx-standard: 14
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC 6.3.1
+            vfx-cy: 2020
+          # -------------------------------------------------------------------
+          # GCC, VFX CY2019
+          # -------------------------------------------------------------------
+          # Python 2.7
+          - build: 3
+            build-docs: 'ON'
+            cxx-standard: 11
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC 6.3.1
+            vfx-cy: 2019
+          # -------------------------------------------------------------------
+          # Clang, VFX CY2020
+          # -------------------------------------------------------------------
+          # C++11, Python 3.7
+          - build: 4
+            build-docs: 'OFF'
+            cxx-standard: 11
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang 7
+            vfx-cy: 2020
+          # C++14
+          - build: 5
+            build-docs: 'OFF'
+            cxx-standard: 14
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang 7
+            vfx-cy: 2020
+          # -------------------------------------------------------------------
+          # Clang, VFX CY2019
+          # -------------------------------------------------------------------
+          # Python 2.7
+          - build: 6
+            build-docs: 'OFF'
+            cxx-standard: 11
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang 7
+            vfx-cy: 2019
+    env:
+      CXX: ${{ matrix.cxx-compiler }}
+      CC: ${{ matrix.cc-compiler }}
+    steps:
+      # TODO: Remove this workaround following resolution of:
+      #       https://github.com/AcademySoftwareFoundation/aswf-docker/issues/43
+      - name: Setup container
+        run: sudo rm -rf /usr/local/lib64/cmake/glew
+        if: matrix.vfx-cy == 2020
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install latest ext package versions
+        run: |
+          share/ci/scripts/linux/install_expat.sh latest
+          share/ci/scripts/linux/install_lcms2.sh latest
+          share/ci/scripts/linux/install_yaml-cpp.sh latest
+          share/ci/scripts/linux/install_pystring.sh latest
+          share/ci/scripts/linux/install_pybind11.sh latest
+          share/ci/scripts/linux/install_openexr.sh latest
+          share/ci/scripts/linux/install_oiio.sh latest
+          share/ci/scripts/linux/install_sphinx.sh latest
+      - name: Create build directories
+        run: |
+          mkdir _install
+          mkdir _build
+      - name: Configure
+        run: |
+          cmake ../. \
+                -DCMAKE_INSTALL_PREFIX=../_install \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
+                -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
+                -DOCIO_BUILD_GPU_TESTS=OFF \
+                -DOCIO_INSTALL_EXT_PACKAGES=NONE \
+                -DOCIO_WARNING_AS_ERROR=OFF \
+                -DPYTHON_EXECUTABLE=$(which python)
+        working-directory: _build
+      - name: Build
+        run: |
+          cmake --build . \
+                --target install \
+                --config Release \
+                -- -j2
+        working-directory: _build
+      - name: Test
+        run: ctest -V
+        working-directory: _build
+
+  # ---------------------------------------------------------------------------
+  # SonarCloud static analysis
+  # ---------------------------------------------------------------------------
+
+  linux_sonarcloud:
+    name: 'Linux CentOS 7 VFX CY2020 SonarCloud <GCC 6.3.1>'
+    # GH-hosted VM. The build runs in CentOS 7 'container' defined below.
+    runs-on: ubuntu-latest
+    container:
+      # DockerHub: https://hub.docker.com/u/aswf
+      # Source: https://github.com/AcademySoftwareFoundation/aswf-docker
+      image: aswf/ci-ocio:2020
+    env:
+      CXX: g++
+      CC: gcc
+    steps:
+      # TODO: Remove this workaround following resolution of:
+      #       https://github.com/AcademySoftwareFoundation/aswf-docker/issues/43
+      - name: Setup container
+        run: sudo rm -rf /usr/local/lib64/cmake/glew
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 50
+      - name: Create build directories
+        run: |
+          mkdir _install
+          mkdir _build
+      - name: Configure
+        run: |
+          cmake ../. \
+                -DCMAKE_INSTALL_PREFIX=../_install \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_CXX_STANDARD=11 \
+                -DCMAKE_CXX_FLAGS="-g -O0 -fprofile-arcs -ftest-coverage" \
+                -DCMAKE_CXX_OUTPUT_EXTENSION_REPLACE=ON \
+                -DCMAKE_EXE_LINKER_FLAGS="-lgcov" \
+                -DOCIO_BUILD_DOCS=ON \
+                -DOCIO_BUILD_GPU_TESTS=OFF \
+                -DOCIO_INSTALL_EXT_PACKAGES=ALL \
+                -DOCIO_WARNING_AS_ERROR=ON \
+                -DPYTHON_EXECUTABLE=$(which python)
+        working-directory: _build
+      - name: Build OCIO with build-wrapper
+        run: build-wrapper-linux-x86-64 --out-dir bw_output make clean all
+        working-directory: _build
+      - name: Test
+        run: ctest -V
+        working-directory: _build
+      - name: Generate code coverage report
+        run: share/ci/scripts/linux/run_gcov.sh
+      - name: Run sonar-scanner
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: sonar-scanner -X -Dsonar.login=$SONAR_TOKEN

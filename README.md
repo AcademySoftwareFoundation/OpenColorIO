@@ -5,7 +5,8 @@ OpenColorIO
 ===========
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
-[![Build Status](https://dev.azure.com/academysoftwarefoundation/Academy%20Software%20Foundation/_apis/build/status/academysoftwarefoundation.OpenColorIO)](https://dev.azure.com/academysoftwarefoundation/Academy%20Software%20Foundation/_build?definitionId=3&_a=summary)
+[![Build Status](https://github.com/AcademySoftwareFoundation/OpenColorIO/workflows/CI/badge.svg)](https://github.com/AcademySoftwareFoundation/OpenColorIO/actions?query=workflow%3ACI)
+[![Analysis Status](https://github.com/AcademySoftwareFoundation/OpenColorIO/workflows/Analysis/badge.svg)](https://github.com/AcademySoftwareFoundation/OpenColorIO/actions?query=workflow%3AAnalysis)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=AcademySoftwareFoundation_OpenColorIO&metric=alert_status)](https://sonarcloud.io/dashboard?id=AcademySoftwareFoundation_OpenColorIO)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2612/badge)](https://bestpractices.coreinfrastructure.org/projects/2612)
 
@@ -37,6 +38,33 @@ Houdini, Silhouette FX, and
 OpenColorIO is free and open source software ([LICENSE](LICENSE)), and
 one of several projects actvively sponsored by the ASWF
 ([Academy Software Foundation](https://www.aswf.io/)).
+
+OpenColorIO Project Mission
+---------------------------
+
+The OpenColorIO project is committed to providing an industry standard solution 
+for highly precise, performant, and consistent color management across digital 
+content creation applications and pipelines.
+
+OpenColorIO aims to:
+
+* be stable, secure, and thouroughly tested on Linux, macOS, and Windows
+* be performant on modern CPUs and GPUs
+* be simple, scalable, and well documented
+* be compatible with critical color and imaging standards
+* provide lossless color processing wherever possible
+* maintain config backwards compatability across major versions
+* have every new feature carefully reviewed by leaders from the motion picture, 
+  VFX, animation, and video game industries
+* have a healthy and active community
+* receive wide industry adoption
+
+OpenColorIO Project Governance
+------------------------------
+
+OpenColorIO is governed by the Academy Software Foundation (ASWF). See 
+[GOVERNANCE.md](GOVERNANCE.md) for detailed infomation about how the project 
+operates.
 
 Web Resources
 -------------

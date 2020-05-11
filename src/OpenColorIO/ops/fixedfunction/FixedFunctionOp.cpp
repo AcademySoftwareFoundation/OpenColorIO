@@ -41,7 +41,7 @@ public:
     bool canCombineWith(ConstOpRcPtr & op) const override;
     void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const override;
 
-    void finalize(OptimizationFlags oFlags) override;
+    std::string getCacheID() const override;
 
     ConstOpCPURcPtr getCPUOp() const override;
 
@@ -108,17 +108,15 @@ void FixedFunctionOp::combineWith(OpRcPtrVec & /*ops*/, ConstOpRcPtr & secondOp)
     }
 }
 
-void FixedFunctionOp::finalize(OptimizationFlags /*oFlags*/)
+std::string FixedFunctionOp::getCacheID() const
 {
-    fnData()->finalize();
-
     // Create the cacheID.
     std::ostringstream cacheIDStream;
     cacheIDStream << "<FixedFunctionOp ";
     cacheIDStream << fnData()->getCacheID();
     cacheIDStream << ">";
 
-    m_cacheID = cacheIDStream.str();
+    return cacheIDStream.str();
 }
 
 ConstOpCPURcPtr FixedFunctionOp::getCPUOp() const

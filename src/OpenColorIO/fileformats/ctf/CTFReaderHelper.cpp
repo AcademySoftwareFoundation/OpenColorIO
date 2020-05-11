@@ -791,7 +791,7 @@ void CTFReaderInfoElt::end()
     CTFReaderTransformElt* pTransformElt = dynamic_cast<CTFReaderTransformElt*>(getParent().get());
     if (pTransformElt)
     {
-        pTransformElt->getTransform()->getInfoMetadata() = m_metadata;
+        pTransformElt->getTransform()->getInfoMetadata() = getMetadata();
     }
 }
 
@@ -1260,7 +1260,8 @@ void CTFReaderACESParamsElt::start(const char **atts)
     }
 
     const auto style = pFixedFunction->getFixedFunction()->getStyle();
-    if (style == FixedFunctionOpData::REC2100_SURROUND_FWD)
+    if (style == FixedFunctionOpData::REC2100_SURROUND_FWD ||
+        style == FixedFunctionOpData::REC2100_SURROUND_INV)
     {
         if (pFixedFunction->getFixedFunction()->getParams().size())
         {
@@ -2551,10 +2552,10 @@ void CTFReaderLogElt_2_0::end()
 {
     CTFReaderOpElt::end();
 
-    const auto dir = LogUtil::GetLogDirection(m_ctfParams.m_style);
-    m_log->setDirection(dir);
+    const auto dir = LogUtil::GetLogDirection(getCTFParams().m_style);
+    getLog()->setDirection(dir);
 
-    if (m_ctfParams.getType() == LogUtil::CTFParams::CINEON)
+    if (getCTFParams().getType() == LogUtil::CTFParams::CINEON)
     {
         double base = 2.0;
         LogOpData::Params rParams, gParams, bParams;
@@ -2562,28 +2563,29 @@ void CTFReaderLogElt_2_0::end()
         try
         {
             // This handles all log styles.
-            LogUtil::ConvertLogParameters(m_ctfParams, base, rParams, gParams, bParams);
+            LogUtil::ConvertLogParameters(getCTFParams(), base, rParams, gParams, bParams);
         }
         catch (Exception& ce)
         {
             ThrowM(*this, "Parameters are not valid: '", ce.what(), "'. ");
         }
 
-        m_log->setBase(base);
-        m_log->setRedParams(rParams);
-        m_log->setGreenParams(gParams);
-        m_log->setBlueParams(bParams);
+        getLog()->setBase(base);
+        getLog()->setRedParams(rParams);
+        getLog()->setGreenParams(gParams);
+        getLog()->setBlueParams(bParams);
     }
     else
     {
-        if (!m_baseSet)
+        if (!isBaseSet())
         {
-            if (m_ctfParams.m_style == LogUtil::LOG2 || m_ctfParams.m_style == LogUtil::ANTI_LOG2)
+            if (getCTFParams().m_style == LogUtil::LOG2 
+                || getCTFParams().m_style == LogUtil::ANTI_LOG2)
             {
                 setBase(2.0);
             }
-            else if (m_ctfParams.m_style == LogUtil::LOG10 ||
-                     m_ctfParams.m_style == LogUtil::ANTI_LOG10)
+            else if (getCTFParams().m_style == LogUtil::LOG10
+                     || getCTFParams().m_style == LogUtil::ANTI_LOG10)
             {
                 setBase(10.0);
             }
@@ -2593,7 +2595,7 @@ void CTFReaderLogElt_2_0::end()
     // Validate the end result.
     try
     {
-        m_log->validate();
+        getLog()->validate();
     }
     catch (Exception& ce)
     {

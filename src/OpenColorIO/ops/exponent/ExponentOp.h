@@ -34,7 +34,8 @@ public:
 
     double m_exp4[4];
 
-    virtual void finalize() override;
+    std::string getCacheID() const override;
+    void validate() const override;
 };
 
 // If the exponent is 1.0, this will return without clamping
