@@ -1780,14 +1780,6 @@ OCIO_ADD_TEST(FileFormatCTF, transform_empty)
                           "No color operator");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, transform_missing)
-{
-    const std::string ctfFile("clf/illegal/transform_missing.clf");
-    OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile),
-                          OCIO::Exception,
-                          "is not a CTF/CLF file");
-}
-
 OCIO_ADD_TEST(FileFormatCTF, transform_id_empty)
 {
     const std::string ctfFile("clf/illegal/transform_id_empty.clf");
