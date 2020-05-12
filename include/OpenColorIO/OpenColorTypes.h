@@ -121,6 +121,12 @@ typedef OCIO_SHARED_PTR<GpuShaderDesc> GpuShaderDescRcPtr;
 //!cpp:type::
 typedef OCIO_SHARED_PTR<const GpuShaderDesc> ConstGpuShaderDescRcPtr;
 
+class OCIOEXPORT BuiltinTransformRegistry;
+//!cpp:type::
+typedef OCIO_SHARED_PTR<BuiltinTransformRegistry> BuiltinTransformRegistryRcPtr;
+//!cpp:type::
+typedef OCIO_SHARED_PTR<const BuiltinTransformRegistry> ConstBuiltinTransformRegistryRcPtr;
+
 
 //!rst::
 // Transforms
@@ -137,6 +143,12 @@ class OCIOEXPORT AllocationTransform;
 typedef OCIO_SHARED_PTR<const AllocationTransform> ConstAllocationTransformRcPtr;
 //!cpp:type::
 typedef OCIO_SHARED_PTR<AllocationTransform> AllocationTransformRcPtr;
+
+class OCIOEXPORT BuiltinTransform;
+//!cpp:type::
+typedef OCIO_SHARED_PTR<const BuiltinTransform> ConstBuiltinTransformRcPtr;
+//!cpp:type::
+typedef OCIO_SHARED_PTR<BuiltinTransform> BuiltinTransformRcPtr;
 
 class OCIOEXPORT CDLTransform;
 //!cpp:type::

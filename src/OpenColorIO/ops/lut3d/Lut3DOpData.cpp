@@ -361,7 +361,7 @@ void Lut3DOpData::validate() const
 {
     if (!IsValid(m_interpolation))
     {
-        throw Exception("Lut3D has an invalid interpolation type. ");
+        throw Exception("Lut3D has an invalid interpolation type.");
     }
 
     try

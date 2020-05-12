@@ -99,11 +99,11 @@ LogOpData::LogOpData(double base,
     setParameters(logSlope, logOffset, linSlope, linOffset);
 }
 
-LogOpData::LogOpData(TransformDirection dir,
-                     double base,
+LogOpData::LogOpData(double base,
                      const Params & redParams,
                      const Params & greenParams,
-                     const Params & blueParams)
+                     const Params & blueParams,
+                     TransformDirection dir)
     : OpData()
     , m_redParams(redParams)
     , m_greenParams(greenParams)
@@ -355,11 +355,11 @@ bool LogOpData::operator==(const OpData& other) const
 
 LogOpDataRcPtr LogOpData::clone() const
 {
-    auto clone = std::make_shared<LogOpData>(m_direction,
-                                             getBase(),
+    auto clone = std::make_shared<LogOpData>(getBase(),
                                              getRedParams(),
                                              getGreenParams(),
-                                             getBlueParams());
+                                             getBlueParams(),
+                                             m_direction);
     clone->getFormatMetadata() = getFormatMetadata();
     return clone;
 }

@@ -476,6 +476,55 @@ inline void save(YAML::Emitter& out, ConstAllocationTransformRcPtr t)
     out << YAML::EndMap;
 }
 
+// BuiltinTransform
+
+inline void load(const YAML::Node & node, BuiltinTransformRcPtr & t)
+{
+    t = BuiltinTransform::Create();
+
+    std::string key;
+
+    for (const auto & iter : node)
+    {
+        const YAML::Node & first  = iter.first;
+        const YAML::Node & second = iter.second;
+
+        load(first, key);
+
+        if (second.IsNull() || !second.IsDefined()) continue;
+
+        if (key == "style")
+        {
+            std::string transformStyle;
+            load(second, transformStyle);
+            t->setStyle(transformStyle.c_str());
+        }
+        else if (key == "direction")
+        {
+            TransformDirection dir = TRANSFORM_DIR_UNKNOWN;
+            load(second, dir);
+            t->setDirection(dir);
+        }
+        else
+        {
+            LogUnknownKeyWarning(node, first);
+        }
+    }
+}
+
+inline void save(YAML::Emitter & out, const ConstBuiltinTransformRcPtr & t)
+{
+    out << YAML::VerbatimTag("BuiltinTransform");
+    out << YAML::Flow << YAML::BeginMap;
+
+    out << YAML::Key << "style";
+    out << YAML::Value << YAML::Flow << t->getStyle();
+
+    EmitBaseTransformKeyValues(out, t);
+
+    out << YAML::EndMap;
+}
+
 // CDLTransform
 
 inline void load(const YAML::Node& node, CDLTransformRcPtr& t)
@@ -1922,6 +1971,12 @@ void load(const YAML::Node& node, TransformRcPtr& t)
         load(node, temp);
         t = temp;
     }
+    else if(type == "BuiltinTransform")
+    {
+        BuiltinTransformRcPtr temp;
+        load(node, temp);
+        t = temp;
+    }
     else if(type == "CDLTransform")
     {
         CDLTransformRcPtr temp;
@@ -2030,6 +2085,9 @@ void save(YAML::Emitter& out, ConstTransformRcPtr t)
     if(ConstAllocationTransformRcPtr Allocation_tran = \
         DynamicPtrCast<const AllocationTransform>(t))
         save(out, Allocation_tran);
+    else if (ConstBuiltinTransformRcPtr builtin_tran = \
+        DynamicPtrCast<const BuiltinTransform>(t))
+        save(out, builtin_tran);
     else if(ConstCDLTransformRcPtr CDL_tran = \
         DynamicPtrCast<const CDLTransform>(t))
         save(out, CDL_tran);
