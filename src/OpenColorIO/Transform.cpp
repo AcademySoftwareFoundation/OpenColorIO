@@ -21,6 +21,7 @@
 #include "Processor.h"
 #include "TransformBuilder.h"
 
+
 namespace OCIO_NAMESPACE
 {
 void Transform::validate() const
@@ -36,10 +37,10 @@ void Transform::validate() const
 }
 
 void BuildOps(OpRcPtrVec & ops,
-                const Config & config,
-                const ConstContextRcPtr & context,
-                const ConstTransformRcPtr & transform,
-                TransformDirection dir)
+              const Config & config,
+              const ConstContextRcPtr & context,
+              const ConstTransformRcPtr & transform,
+              TransformDirection dir)
 {
     // A null transform is valid, and corresponds to a no-op.
     if(!transform)
@@ -49,6 +50,11 @@ void BuildOps(OpRcPtrVec & ops,
         DynamicPtrCast<const AllocationTransform>(transform))
     {
         BuildAllocationOp(ops, config, *allocationTransform, dir);
+    }
+    else if(ConstBuiltinTransformRcPtr builtInTransform = \
+        DynamicPtrCast<const BuiltinTransform>(transform))
+    {
+        BuildBuiltinOps(ops, config, *builtInTransform, dir);
     }
     else if(ConstCDLTransformRcPtr cdlTransform = \
         DynamicPtrCast<const CDLTransform>(transform))
@@ -153,6 +159,11 @@ std::ostream& operator<< (std::ostream & os, const Transform & transform)
         dynamic_cast<const AllocationTransform*>(t))
     {
         os << *allocationTransform;
+    }
+    if(const BuiltinTransform * builtInTransform = \
+        dynamic_cast<const BuiltinTransform*>(t))
+    {
+        os << *builtInTransform;
     }
     else if(const CDLTransform * cdlTransform = \
         dynamic_cast<const CDLTransform*>(t))

@@ -55,11 +55,11 @@ public:
               const double(&linOffset)[3],
               TransformDirection direction);
 
-    LogOpData(TransformDirection dir,
-              double base,
+    LogOpData(double base,
               const Params & redParams,
               const Params & greenParams,
-              const Params & blueParams);
+              const Params & blueParams,
+              TransformDirection dir);
 
     virtual ~LogOpData();
 

@@ -76,7 +76,7 @@ inline bool EqualWithSafeRelError(T value,
     // If value and expected are infinity, return true.
     if (value == expected) return true;
     if (IsNan(value) && IsNan(expected)) return true;
-    const float div = (expected > 0) ?
+    const T div = (expected > 0) ?
         ((expected < minExpected) ? minExpected : expected) :
         ((-expected < minExpected) ? minExpected : -expected);
 
