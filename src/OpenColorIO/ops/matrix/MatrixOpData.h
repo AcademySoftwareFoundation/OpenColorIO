@@ -38,15 +38,13 @@ public:
 
     static MatrixOpDataRcPtr CreateDiagonalMatrix(double diagValue);
 
-public:
     class Offsets
     {
     public:
-        Offsets();
-
+        Offsets() = default;
+        Offsets(double redOff, double grnOff, double bluOff, double whtOff);
         Offsets(const Offsets & o);
-
-        ~Offsets();
+        ~Offsets() = default;
 
         Offsets& operator=(const Offsets & o);
 
@@ -63,7 +61,7 @@ public:
             return m_values[index];
         }
 
-        inline double& operator[](unsigned long index)
+        inline double & operator[](unsigned long index)
         {
             return m_values[index];
         }
@@ -83,12 +81,52 @@ public:
         void scale(double s);
 
     private:
-        double m_values[4];
+        double m_values[4] {0., 0., 0., 0.};
+    };
+
+    class MatrixArray;
+    typedef OCIO_SHARED_PTR<MatrixArray> MatrixArrayPtr;
+
+    class MatrixArray : public ArrayDouble
+    {
+    public:
+        MatrixArray();
+        virtual ~MatrixArray();
+
+        MatrixArray & operator=(const ArrayDouble & a);
+        MatrixArray & operator=(const MatrixArray & m);
+
+        bool isUnityDiagonal() const;
+
+        void validate() const override;
+
+        unsigned long getNumValues() const override;
+
+        // Inner product of this matrix times matrix B.
+        MatrixArrayPtr inner(const MatrixArray & B) const;
+        MatrixArrayPtr inner(const MatrixArrayPtr & B) const;
+
+        // Inner product (multiplication) of the matrix with the offsets b. 
+        Offsets inner(const Offsets & b) const;
+
+        MatrixArrayPtr inverse() const;
+
+        template<typename T>
+        void setRGB(const T * values);
+
+        void setRGBA(const float * values);
+        void setRGBA(const double * values);
+
+    protected:
+        void fill();
+
+        void expandFrom3x3To4x4();
     };
 
 public:
     MatrixOpData();
     explicit MatrixOpData(TransformDirection direction);
+    MatrixOpData(const MatrixArray & matrix);
     MatrixOpData(const MatrixOpData &) = default;
 
     virtual ~MatrixOpData();
@@ -100,6 +138,7 @@ public:
     inline ArrayDouble & getArray() { return m_array; }
 
     void setArrayValue(unsigned long index, double value);
+    double getArrayValue(unsigned long index) const;
 
     // Set the RGB values (alpha reset to 0).
     void setRGB(const float * values);
@@ -190,46 +229,6 @@ public:
     void scale(double inScale, double outScale);
 
 private:
-
-    class MatrixArray;
-    typedef OCIO_SHARED_PTR<MatrixArray> MatrixArrayPtr;
-
-    class MatrixArray : public ArrayDouble
-    {
-    public:
-        MatrixArray(unsigned long dimension,
-                    unsigned long numColorComponents);
-
-        ~MatrixArray();
-
-        MatrixArray & operator=(const ArrayDouble & a);
-
-        bool isUnityDiagonal() const;
-
-        void validate() const override;
-
-        unsigned long getNumValues() const override;
-
-        // Inner product of this matrix times matrix B.
-        MatrixArrayPtr inner(const MatrixArray & B) const;
-
-        // Inner product (multiplication) of the matrix with the offsets b. 
-        void inner(const Offsets & b, Offsets & out) const;
-
-        MatrixArrayPtr inverse() const;
-
-        template<typename T>
-        void setRGB(const T * values);
-
-        void setRGBA(const float * values);
-        void setRGBA(const double * values);
-
-    protected:
-        void fill();
-
-        void expandFrom3x3To4x4();
-
-    };
 
     MatrixArray m_array;
     Offsets     m_offsets;

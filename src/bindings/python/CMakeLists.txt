@@ -32,6 +32,8 @@ set(SOURCES
 	PyDynamicProperty.cpp
 	PyTransform.cpp
 	PyAllocationTransform.cpp
+	PyBuiltinTransform.cpp
+	PyBuiltinTransformRegistry.cpp
 	PyCDLTransform.cpp
 	PyColorSpaceTransform.cpp
 	PyDisplayTransform.cpp

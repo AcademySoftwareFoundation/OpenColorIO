@@ -86,8 +86,7 @@ public:
 
     Lut1DOpData(unsigned long dimension, TransformDirection dir);
 
-    Lut1DOpData(HalfFlags halfFlags,
-                unsigned long dimension);
+    Lut1DOpData(HalfFlags halfFlags, unsigned long dimension);
 
     virtual ~Lut1DOpData();
 
@@ -206,11 +205,8 @@ public:
     class Lut3by1DArray : public Array
     {
     public:
-        Lut3by1DArray(HalfFlags halfFlags);
-
-        Lut3by1DArray(HalfFlags halfFlags,
-                      unsigned long length);
-
+        explicit Lut3by1DArray(HalfFlags halfFlags);
+        Lut3by1DArray(HalfFlags halfFlags, unsigned long numChannels, unsigned long length);
         ~Lut3by1DArray();
 
         bool isIdentity(HalfFlags halfFlags) const;
