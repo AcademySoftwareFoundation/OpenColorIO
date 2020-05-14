@@ -4073,6 +4073,30 @@ OCIO_ADD_TEST(Config, display_view)
 
     OCIO_CHECK_EQUAL(config->getNumDisplays(), 1);
     OCIO_CHECK_EQUAL(config->getNumViews(display.c_str()), 2);
+
+    // Check that views are saved and loaded properly.
+    config->setMajorVersion(2);
+    std::ostringstream oss;
+    config->serialize(oss);
+
+    std::istringstream is;
+    is.str(oss.str());
+    OCIO::ConstConfigRcPtr configRead;
+    OCIO_CHECK_NO_THROW(configRead = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_EQUAL(configRead->getNumViews("display"), 2);
+    const std::string v1{ configRead->getView("display", 0) };
+    OCIO_CHECK_EQUAL(v1, "view1");
+    OCIO_CHECK_EQUAL(std::string("scs"),
+                     configRead->getDisplayColorSpaceName("display", v1.c_str()));
+    OCIO_CHECK_EQUAL(std::string(""),
+                     configRead->getDisplayViewTransformName("display", v1.c_str()));
+    const std::string v2{ configRead->getView("display", 1) };
+    OCIO_CHECK_EQUAL(v2, "view2");
+    OCIO_CHECK_EQUAL(std::string("dcs"),
+                     configRead->getDisplayColorSpaceName("display", v2.c_str()));
+    OCIO_CHECK_EQUAL(std::string("view_transform"),
+                     configRead->getDisplayViewTransformName("display", v2.c_str()));
+
     // Using nullptr for any parameter does nothing.
     OCIO_CHECK_NO_THROW(config->addDisplay(nullptr, "view1", "scs", ""));
     OCIO_CHECK_NO_THROW(config->addDisplay(display.c_str(), nullptr, "scs", ""));

@@ -3345,7 +3345,8 @@ inline void save(YAML::Emitter & out, const Config & config)
         {
             View dview;
             dview.m_name = config.getView(display, v);
-            dview.m_colorspace = config.getDisplayViewTransformName(display, dview.m_name.c_str());
+            dview.m_viewTransform = config.getDisplayViewTransformName(display,
+                                                                       dview.m_name.c_str());
             dview.m_colorspace = config.getDisplayColorSpaceName(display, dview.m_name.c_str());
             if(config.getDisplayLooks(display, dview.m_name.c_str()) != NULL)
             {
