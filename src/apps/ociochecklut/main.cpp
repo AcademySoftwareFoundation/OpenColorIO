@@ -174,6 +174,7 @@ const char * DESC_STRING = "\n"
 "OCIOCHECKLUT loads any LUT type supported by OCIO and prints any errors\n"
 "encountered.  Provide a normalized RGB or RGBA value to send that through\n"
 "the LUT.  Alternatively use the -t option to evaluate a set of test values.\n"
+"Otherwise, if no RGB value is provided, a list of the operators in the LUT is printed.\n"
 "Use -v to print warnings while parsing the LUT.\n";
 
 }
@@ -181,7 +182,6 @@ const char * DESC_STRING = "\n"
 int main (int argc, const char* argv[])
 {
     bool verbose       = false;
-    bool printops      = false;
     bool help          = false;
     bool test          = false;
     bool usegpu        = false;
@@ -190,27 +190,28 @@ int main (int argc, const char* argv[])
 
     ArgParse ap;
     ap.options("ociochecklut -- check any LUT file and optionally convert a pixel\n\n"
-               "usage:  ociochecklut <INPUTFILE> <R G B> or <R G B A>\n\n",
+               "usage:  ociochecklut <INPUTFILE> <R G B> or <R G B A>\n",
                "%*", parse_end_args, "",
+               "<SEPARATOR>", "Options:",
+               "-t", &test, "Test a set a predefined RGB values",
+               "-v", &verbose, "Verbose",
+               "--help", &help, "Print help message",
                "-t", &test, "Test a set a predefined RGB values\n",
-               "-p", &printops, "Print transform operators\n",
-               "-gpu", &usegpu, "Use GPU instead of CPU\n",
-               "-gpulegacy", &usegpuLegacy, "Use the legacy (i.e. baked) GPU color processing "
-                                            "instead of the CPU one (--gpu is ignored)",
-               "-gpuinfo", &outputgpuInfo, "Output the OCIO shader program",
-               "-v", &verbose, "Verbose\n",
-               "-help", &help, "Print help message\n",
-               NULL);
+               "--gpu", &usegpu, "Use GPU instead of CPU\n",
+               "--gpulegacy", &usegpuLegacy, "Use the legacy (i.e. baked) GPU color processing "
+                                             "instead of the CPU one (--gpu is ignored)",
+               "--gpuinfo", &outputgpuInfo, "Output the OCIO shader program",
+               nullptr);
 
     if (ap.parse(argc, argv) < 0 || help || inputfile.empty())
     {
         std::cout << ap.geterror() << std::endl;
         ap.usage();
-        std::cout << DESC_STRING;
+        std::cout << DESC_STRING << std::endl;
         if (help)
         {
             // What are the allowed formats?
-            std::cout << std::endl << "Formats supported:" << std::endl;
+            std::cout << "Formats supported:" << std::endl;
             const auto nbFromats = OCIO::FileTransform::getNumFormats();
             for (int i = 0; i < nbFromats; ++i)
             {
@@ -218,31 +219,10 @@ int main (int argc, const char* argv[])
                 std::cout << " (." << OCIO::FileTransform::getFormatExtensionByIndex(i) << ")";
                 std::cout << std::endl;
             }
+            return 0;
         }
-        return 1;
-    }
 
-#ifndef OCIO_GPU_ENABLED
-    if (usegpu || outputgpuInfo || usegpuLegacy)
-    {
-        std::cerr << "Compiled without OpenGL support, GPU options are not available.";
-        std::cerr << std::endl;
-        exit(1);
-    }
-#endif // OCIO_GPU_ENABLED
-    auto numInput = input.size();
-    size_t comp = 3;
-    if (numInput != 0)
-    {
-        if (numInput == 4)
-        {
-            comp = 4;
-        }
-        else if (numInput != 3)
-        {
-            std::cerr << "Expecting either RGB or RGBA pixel." << std::endl;
-            exit(1);
-        }
+        return 1;
     }
 
     if (verbose)
@@ -251,11 +231,22 @@ int main (int argc, const char* argv[])
         std::cout << "OCIO Version: " << OCIO::GetVersion() << std::endl;
     }
 
+#ifndef OCIO_GPU_ENABLED
+    if (usegpu || outputgpuInfo || usegpuLegacy)
+    {
+        std::cerr << "Compiled without OpenGL support, GPU options are not available.";
+        std::cerr << std::endl;
+        return 1;
+    }
+#endif // OCIO_GPU_ENABLED
+
     OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_WARNING);
 
     // By default, the OCIO log goes to std::cerr, so we also print any log messages associated
     // with reading the transform.
     OCIO::SetLoggingFunction(&CustomLoggingFunction);
+
+    const bool printops = input.empty() && !test;
 
     if (!inputfile.empty())
     {
@@ -273,7 +264,7 @@ int main (int argc, const char* argv[])
             if (printops)
             {
                 auto transform = processor->createGroupTransform();
-                std::cout << std::endl << "Transform operators: " << std::endl;
+                std::cout << "Transform operators: " << std::endl;
                 const auto numTransforms = transform->getNumTransforms();
                 for (int i = 0; i < numTransforms; ++i)
                 {
@@ -293,16 +284,47 @@ int main (int argc, const char* argv[])
                 proc.setCPU(processor->getDefaultCPUProcessor());
             }
         }
-        catch (const OCIO::Exception & e)
+        catch (const OCIO::Exception & exception)
         {
-            std::cerr << std::endl << e.what() << std::endl;
-            exit(1);
+            std::cerr << "ERROR: " << exception.what() << std::endl;
+            return 1;
         }
         catch (...)
         {
-            std::cerr << std::endl << "Unknown ERROR creating processor." << std::endl;
-            exit(1);
+            std::cerr << "ERROR: Unknown error encountered while creating processor." << std::endl;
+            return 1;
         }
+
+        if (printops)
+        {
+            // Only displays the LUT file content.
+            return 0;
+        }
+
+        // Validate the input values.
+
+        size_t numInput = input.size();
+
+        if (test && numInput > 0)
+        {
+            std::cerr << "ERROR: Expecting either RGB (or RGBA) pixel or predefined RGB values (i.e. -t)."
+                      << std::endl;
+            return 1;
+        }            
+
+        size_t comp = 3;
+        if (numInput == 4)
+        {
+            comp = 4;
+        }
+        else if (numInput != 3 && !test)
+        {
+            std::cerr << "ERROR: Expecting either RGB or RGBA pixel."
+                      << std::endl;
+            return 1;
+        }
+
+        // Process the input values.
 
         bool validInput = true;
         size_t curPix = 0;
@@ -335,16 +357,17 @@ int main (int argc, const char* argv[])
                 }
                 catch (const OCIO::Exception & e)
                 {
-                    std::cerr << "\nERROR processing pixel: " << e.what() << std::endl;
-                    exit(1);
+                    std::cerr << "ERROR: Processing pixel: " << e.what() << std::endl;
+                    return 1;
                 }
                 catch (...)
                 {
-                    std::cerr << "\nUnknown processing pixel" << std::endl;
-                    exit(1);
+                    std::cerr << "ERROR: Unknown error encountered while processing pixel." << std::endl;
+                    return 1;
                 }
 
                 // Print to string so that in & out values can be aligned if needed.
+
                 std::vector<std::string> out;
                 ToString(out, pixel, 0, comp);
 
@@ -386,7 +409,6 @@ int main (int argc, const char* argv[])
             {
                 if (verbose)
                 {
-                    std::cout << std::endl;
                     std::cout << "Testing with predefined set of RGB pixels." << std::endl;
                 }
                 input = input4test;

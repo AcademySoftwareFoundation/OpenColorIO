@@ -18,6 +18,7 @@ public:
     ArrayBase() {}
     virtual ~ArrayBase() {}
     virtual void setDoubleValue(unsigned long index, double value) = 0;
+    virtual double getDoubleValue(unsigned long index) = 0;
     virtual unsigned long getLength() const = 0;
     virtual unsigned long getNumColorComponents() const = 0;
 
@@ -70,6 +71,11 @@ public:
     void setDoubleValue(unsigned long index, double value) override
     {
         m_data[index] = (T)value;
+    }
+
+    double getDoubleValue(unsigned long index) override
+    {
+        return double(m_data[index]);
     }
 
     unsigned long getLength() const override

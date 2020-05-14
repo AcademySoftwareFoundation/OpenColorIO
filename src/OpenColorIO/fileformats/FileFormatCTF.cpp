@@ -203,7 +203,7 @@ public:
         {
             std::string error("CTF/CLF parsing error (no closing tag for '");
             error += m_elms.back()->getName().c_str();
-            error += "). ";
+            error += ") ";
             throwMessage(error);
         }
 
@@ -211,14 +211,14 @@ public:
         if (pT.use_count() == 0)
         {
             static const std::string error(
-                "CTF/CLF parsing error: Invalid transform. ");
+                "CTF/CLF parsing error: Invalid transform.");
             throwMessage(error);
         }
 
         if (pT->getOps().empty())
         {
             static const std::string error(
-                "CTF/CLF parsing error: No color operator in file. ");
+                "CTF/CLF parsing error: No color operator in file.");
             throwMessage(error);
         }
     }
@@ -239,7 +239,7 @@ public:
                     // It could be an Op or an Attribute.
                     std::string error("CTF/CLF parsing error (no closing tag for '");
                     error += m_elms.back()->getName().c_str();
-                    error += "'). ";
+                    error += "').";
                     throwMessage(error);
                 }
                 else
@@ -247,7 +247,7 @@ public:
                     // Completely lost, something went wrong,
                     // but nothing detected with the stack.
                     static const std::string error(
-                        "CTF/CLF parsing error (unbalanced element tags). ");
+                        "CTF/CLF parsing error (unbalanced element tags).");
                     throwMessage(error);
                 }
             }
@@ -851,7 +851,7 @@ private:
         auto pElt(pImpl->m_elms.back());
         if (!pElt.get())
         {
-            pImpl->throwMessage("CTF/CLF parsing error: Tag is missing. ");
+            pImpl->throwMessage("CTF/CLF parsing error: Tag is missing.");
         }
 
         // Is it the expected element?
@@ -860,7 +860,7 @@ private:
             std::stringstream ss;
             ss << "CTF/CLF parsing error: Tag '";
             ss << (name ? name : "");
-            ss << "' is missing";
+            ss << "' is missing.";
             pImpl->throwMessage(ss.str());
         }
 
@@ -881,7 +881,7 @@ private:
                 std::stringstream ss;
                 ss << "CTF/CLF parsing error: Attribute end '";
                 ss << (name ? name : "");
-                ss << "' is illegal. ";
+                ss << "' is illegal.";
                 pImpl->throwMessage(ss.str());
             }
 
@@ -1157,8 +1157,8 @@ void LocalFileFormat::bake(const Baker & baker,
                            const std::string & formatName,
                            std::ostream & ostream) const
 {
-    constexpr int DEFAULT_1D_SIZE = 4096;
-    constexpr int DEFAULT_3D_SIZE = 64;
+    static constexpr int DEFAULT_1D_SIZE = 4096;
+    static constexpr int DEFAULT_3D_SIZE = 64;
 
     // NB: By default, the shaper uses a half-domain LUT1D, which is always 65536 entries.
     // If the user requests some other size, a typical (non-half-domain) LUT1D will be used.

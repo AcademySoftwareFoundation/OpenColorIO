@@ -420,21 +420,21 @@ std::string FileFormat::getName() const
 }
 
 void FileFormat::bake(const Baker & /*baker*/,
-                        const std::string & formatName,
-                        std::ostream & /*ostream*/) const
+                      const std::string & formatName,
+                      std::ostream & /*ostream*/) const
 {
     std::ostringstream os;
-    os << "Format " << formatName << " does not support baking.";
+    os << "Format '" << formatName << "' does not support baking.";
     throw Exception(os.str().c_str());
 }
 
 void FileFormat::write(const OpRcPtrVec & /*ops*/,
-                        const FormatMetadataImpl & /*metadata*/,
-                        const std::string & formatName,
-                        std::ostream & /*ostream*/) const
+                       const FormatMetadataImpl & /*metadata*/,
+                       const std::string & formatName,
+                       std::ostream & /*ostream*/) const
 {
     std::ostringstream os;
-    os << "Format " << formatName << " does not support writing.";
+    os << "Format '" << formatName << "' does not support writing.";
     throw Exception(os.str().c_str());
 }
 
@@ -454,7 +454,8 @@ void LoadFileUncached(FileFormat * & returnFormat,
     }
 
     // Try the initial format.
-    std::string primaryErrorText;
+    std::string primaryErrorText("\n"); // Add a separator for the first reader error.
+
     std::string root, extension;
     pystring::os::path::splitext(root, extension, filepath);
     // remove the leading '.'
@@ -512,11 +513,10 @@ void LoadFileUncached(FileFormat * & returnFormat,
                 filestream.close();
             }
 
-            primaryErrorText += "\t";
+            primaryErrorText += "\t'";
             primaryErrorText += tryFormat->getName();
-            primaryErrorText += " failed with: '";
+            primaryErrorText += "' failed with: ";
             primaryErrorText += e.what();
-            primaryErrorText += "'.\n";
 
             if(IsDebugLoggingEnabled())
             {
@@ -598,7 +598,8 @@ void LoadFileUncached(FileFormat * & returnFormat,
     // No formats succeeded. Error out with a sensible message.
     std::ostringstream os;
     os << "The specified transform file '";
-    os << filepath << "' could not be loaded. All formats have been tried. ";
+    os << filepath << "' could not be loaded.\n";
+    os << "All formats have been tried. ";
 
     if (IsDebugLoggingEnabled())
     {

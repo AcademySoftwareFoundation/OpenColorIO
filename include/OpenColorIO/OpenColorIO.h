@@ -1404,39 +1404,37 @@ public:
     const char * getCacheID() const;
 
     //!cpp:function:: The ProcessorMetadata contains technical information
-    //                such as the number of files and looks used in the processor.
+    // such as the number of files and looks used in the processor.
     ConstProcessorMetadataRcPtr getProcessorMetadata() const;
 
     //!cpp:function:: Get a FormatMetadata containing the top level metadata
-    //                for the processor.  For a processor from a CLF file,
-    //                this corresponds to the ProcessList metadata.
+    // for the processor.  For a processor from a CLF file, this corresponds to
+    // the ProcessList metadata.
     const FormatMetadata & getFormatMetadata() const;
 
     //!cpp:function:: Get the number of transforms that comprise the processor.
-    //                Each transform has a (potentially empty) FormatMetadata.
+    // Each transform has a (potentially empty) FormatMetadata.
     int getNumTransforms() const;
     //!cpp:function:: Get a FormatMetadata containing the metadata for a
-    //                transform within the processor. For a processor from
-    //                a CLF file, this corresponds to the metadata associated
-    //                with an individual process node.
+    // transform within the processor. For a processor from a CLF file, this 
+    // corresponds to the metadata associated with an individual process node.
     const FormatMetadata & getTransformFormatMetadata(int index) const;
 
     //!cpp:function:: Return a cpp:class:`GroupTransform` that contains a
-    //                copy of the transforms that comprise the processor.
-    //                (Changes to it will not modify the original processor.)
+    // copy of the transforms that comprise the processor.
+    // (Changes to it will not modify the original processor.)
     GroupTransformRcPtr createGroupTransform() const;
 
     //!cpp:function:: Write the transforms comprising the processor to the stream.
-    //                Writing (as opposed to Baking) is a lossless process.
-    //                An exception is thrown if the processor cannot be
-    //                losslessly written to the specified file format.
+    // Writing (as opposed to Baking) is a lossless process. An exception is thrown
+    // if the processor cannot be losslessly written to the specified file format.
     void write(const char * formatName, std::ostream & os) const;
 
     //!cpp:function:: Get the number of writers.
     static int getNumWriteFormats();
 
     //!cpp:function:: Get the writer at index, return empty string if
-    //                an invalid index is specified.
+    // an invalid index is specified.
     static const char * getFormatNameByIndex(int index);
     static const char * getFormatExtensionByIndex(int index);
 
@@ -2554,6 +2552,39 @@ private:
 };
 
 extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Context&);
+
+
+///////////////////////////////////////////////////////////////////////////
+//!rst::
+// BuiltinTransformRegistry
+// ************************
+// The built-in transform registry contains all the existing built-in transforms which can
+// be used by a configuration (version 2 or higher only).
+
+//!cpp:class::
+class OCIOEXPORT BuiltinTransformRegistry
+{
+public:
+    //!cpp:function:: Get the current built-in transform registry.
+    static ConstBuiltinTransformRegistryRcPtr Get() noexcept;
+
+    //!cpp:function:: Get the number of built-in transforms available.
+    virtual size_t getNumBuiltins() const noexcept = 0;
+    //!cpp:function:: Get the style string for the i-th built-in transform.
+    // The style is the ID string that identifies a given transform.
+    virtual const char * getBuiltinStyle(size_t index) const = 0;
+    //!cpp:function:: Get the description string for the i-th built-in transform.
+    virtual const char * getBuiltinDescription(size_t index) const = 0;
+
+protected:
+    BuiltinTransformRegistry() = default;
+    virtual ~BuiltinTransformRegistry() = default;
+
+private:
+    BuiltinTransformRegistry(const BuiltinTransformRegistry &) = delete;
+    BuiltinTransformRegistry & operator= (const BuiltinTransformRegistry &) = delete;
+};
+
 
 } // namespace OCIO_NAMESPACE
 
