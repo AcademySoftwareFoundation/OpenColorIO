@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
+#include <cmath>
 #include <sstream>
 #include <string.h>
 #include <type_traits>
@@ -504,7 +506,7 @@ bool FloatsDiffer(const float expected, const float actual,
         }
     }
 
-    // TODO: Revisit the ULP comparison to use unsigned integers. 
+    // TODO: Revisit the ULP comparison to only use unsigned integers. 
 
     // Comparing regular floats.
     unsigned expectedBitsComp, actualBitsComp;

@@ -4,6 +4,8 @@
 add_subdirectory(data)
 
 if(OCIO_BUILD_TESTS)
+    # Test order is from low-level (i.e. no dependencies)
+    # to high-level layers.
     add_subdirectory(testutils)
     add_subdirectory(utils)
 	add_subdirectory(cpu)

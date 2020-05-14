@@ -15,11 +15,13 @@ void bindPyTransform(py::module & m)
 
     defStr(cls);
 
+    bindPyBuiltinTransformRegistry(m);
     bindPyFormatMetadata(m);
     bindPyDynamicProperty(m);
 
     // Subclasses
     bindPyAllocationTransform(m);
+    bindPyBuiltinTransform(m);
     bindPyCDLTransform(m);
     bindPyColorSpaceTransform(m);
     bindPyDisplayTransform(m);

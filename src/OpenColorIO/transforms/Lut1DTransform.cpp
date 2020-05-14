@@ -102,7 +102,7 @@ bool Lut1DTransformImpl::equals(const Lut1DTransform & other) const noexcept
 void Lut1DTransformImpl::setLength(unsigned long length)
 {
     auto & lutArray = m_data.getArray();
-    lutArray = Lut1DOpData::Lut3by1DArray(m_data.getHalfFlags(), length);
+    lutArray = Lut1DOpData::Lut3by1DArray(m_data.getHalfFlags(), 3, length);
 }
 
 namespace

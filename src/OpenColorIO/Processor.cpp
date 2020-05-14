@@ -316,7 +316,7 @@ void Processor::Impl::write(const char * formatName, std::ostream & os) const
     catch (std::exception & e)
     {
         std::ostringstream err;
-        err << "Error writing " << formatName << ":";
+        err << "Error writing format '" << formatName << "': ";
         err << e.what();
         throw Exception(err.str().c_str());
     }

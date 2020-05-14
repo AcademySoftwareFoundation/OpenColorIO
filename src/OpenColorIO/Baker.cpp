@@ -112,15 +112,18 @@ const char * Baker::getFormatExtensionByIndex(int index)
 
 void Baker::setFormat(const char * formatName)
 {
-    FileFormat* fmt = FormatRegistry::GetInstance().getFileFormatByName(formatName);
-    FormatInfoVec formatInfoVec;
-    fmt->getFormatInfo(formatInfoVec);
-    for(unsigned int i=0; i<formatInfoVec.size(); ++i)
+    FileFormat * fmt = FormatRegistry::GetInstance().getFileFormatByName(formatName);
+    if (fmt)
     {
-        if(formatInfoVec[i].capabilities & FORMAT_CAPABILITY_BAKE)
+        FormatInfoVec formatInfoVec;
+        fmt->getFormatInfo(formatInfoVec);
+        for (unsigned int i = 0; i < formatInfoVec.size(); ++i)
         {
-            getImpl()->m_formatName = formatName;
-            return;
+            if (formatInfoVec[i].capabilities & FORMAT_CAPABILITY_BAKE)
+            {
+                getImpl()->m_formatName = formatName;
+                return;
+            }
         }
     }
 
