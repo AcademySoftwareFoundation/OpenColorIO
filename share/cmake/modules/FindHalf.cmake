@@ -14,11 +14,11 @@
 #
 # By default, the dynamic libraries of ilmbase will be found. To find the 
 # static ones instead, you must set the Half_STATIC_LIBRARY variable to 
-# TRUE before calling find_package(IlmBase ...).
+# TRUE before calling find_package(Half ...).
 #
-# If ilmbase is not installed in a standard path, you can use the 
+# If IlmBase is not installed in a standard path, you can use the 
 # Half_ROOT variable to tell CMake where to find it. If it is not found 
-# and OCIO_INSTALL_EXT_PACKAGES is set to MISSING or ALL, ilmbase will be 
+# and OCIO_INSTALL_EXT_PACKAGES is set to MISSING or ALL, IlmBase will be 
 # downloaded, built, and statically-linked into libOpenColorIO at build time.
 #
 
