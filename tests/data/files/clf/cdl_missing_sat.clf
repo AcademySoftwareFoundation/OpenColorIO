@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="1" compCLFversion="3.0">
+   <Description>Missing Sat defaults to 1</Description>
+   <ASC_CDL inBitDepth="32f" outBitDepth="16f" style="Fwd">
+      <Description>ASC CDL operation</Description>
+      <SOPNode>
+          <Slope>1.35 1.1 0.71</Slope>
+          <Offset>0.05 -0.23 0.11</Offset>
+          <Power>0.93 0.81 1.27</Power>
+      </SOPNode>
+   </ASC_CDL>
+</ProcessList>

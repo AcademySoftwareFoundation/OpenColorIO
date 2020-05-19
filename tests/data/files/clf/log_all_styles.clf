@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="3.0" id="logs" xmlns="urn:AMPAS:CLF:v3.0">
+    <Description>Test all Logarithmic style values</Description>
+
+    <Log inBitDepth="16f" outBitDepth="8i" style="antiLog2">
+      <Description>AntiLog2 logarithm operation</Description>
+    </Log>
+    <Log inBitDepth="8i" outBitDepth="16f" style="log2" name="logarithm" id="a1">
+      <Description>Log base 2</Description>
+    </Log>
+
+    <Log inBitDepth="16f" outBitDepth="12i" style="linToLog">
+        <Description>Classic Cineon curve</Description>
+        <LogParams logSideSlope="0.29325513196" logSideOffset="0.66959921799" 
+                   linSideSlope="0.98920224838" linSideOffset="0.01079775162" base="10" />
+    </Log>
+
+    <Log inBitDepth="12i" outBitDepth="32f" style="antiLog10" />
+    <Log inBitDepth="32f" outBitDepth="10i" style="log10" />
+
+    <Log inBitDepth="10i" outBitDepth="32f" style="logToLin">
+        <LogParams logSideSlope="0.29325513196" logSideOffset="0.66959921799" 
+                   linSideSlope="0.98920224838" linSideOffset="0.01079775162" base="10" />
+    </Log>
+
+    <Log inBitDepth="32f" outBitDepth="16f" style="cameraLinToLog">
+        <Description>ACEScct curve</Description>
+        <Description>Note that the default base is 2</Description>
+        <LogParams logSideSlope="0.05707762557" logSideOffset="0.5547945205" linSideBreak="0.0078125" />
+    </Log>
+    <Log inBitDepth="16f" outBitDepth="16f" style="cameraLogToLin">
+        <Description>ACEScct curve</Description>
+        <LogParams logSideSlope="0.05707762557" logSideOffset="0.5547945205" linSideBreak="0.0078125" />
+    </Log>
+
+    <Log inBitDepth="16f" outBitDepth="10i" style="cameraLogToLin" name="sl3">
+        <LogParams logSideSlope="0.25562072336" logSideOffset="0.41055718475" linSideBreak="0.01125"
+                   linSideSlope="5.26315789474" linSideOffset="0.05263157895" linearSlope="6.62194371178" base="10" />
+    </Log>
+
+    <Log inBitDepth="10i" outBitDepth="32f" style="linToLog">
+        <LogParams channel="R" logSideSlope='0.9' logSideOffset='0.2' linSideSlope='1.1' linSideOffset='0.1' base="4"/>
+        <LogParams channel="G" linSideSlope='1.0' linSideOffset='-0.1' logSideSlope='1.1' logSideOffset='0.1' base="4"/>
+        <LogParams channel="B" linSideSlope='1.2' linSideOffset='0.2' logSideSlope='0.95' logSideOffset='-0.2' base="4"/>
+    </Log>
+
+</ProcessList>
