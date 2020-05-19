@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="3.0" id="bad value" xmlns="urn:AMPAS:CLF:v3.0">
+    <Description>The moncurve style requires an exponent >= 1.</Description>
+    <Exponent inBitDepth="16f" outBitDepth="8i" style="monCurveFwd">
+        <ExponentParams exponent="0.99" offset="0.0" />
+    </Exponent>
+</ProcessList>

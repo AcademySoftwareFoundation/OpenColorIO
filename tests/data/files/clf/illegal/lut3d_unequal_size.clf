@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="e0" compCLFversion="3.0">
+  <Description>Lut3d must have equal grid dimensions</Description>
+  <LUT3D id="a9" inBitDepth="32f" outBitDepth="32f">
+    <Array dim="2 2 3 3">
+0 0 0
+0 0 1
+0 1 0
+0 1 1
+0 0 0
+0 0 1
+0 1 0
+0 1 1
+1 0 0
+1 0 1
+1 1 0
+1 1 1
+    </Array>
+  </LUT3D>
+</ProcessList>

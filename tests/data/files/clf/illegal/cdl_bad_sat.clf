@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="3.0" id="1">
+   <Description>Sat may only have 1 value.</Description>
+   <ASC_CDL inBitDepth="32f" outBitDepth="16f" style="Fwd">
+      <SOPNode>
+          <Slope>1.35 1.1 0.71</Slope>
+          <Offset>0.05 -0.23 0.11</Offset>
+          <Power>0.93 0.81 1.27</Power>
+      </SOPNode>
+      <SatNode>
+          <Saturation>1.239 0.9</Saturation>
+      </SatNode>
+   </ASC_CDL>
+</ProcessList>
