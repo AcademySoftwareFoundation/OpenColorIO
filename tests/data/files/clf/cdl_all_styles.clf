@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="3.0" id="b5cc7aed-d405-4d8b-b64b" name="all styles" xmlns="urn:AMPAS:CLF:v3.0">
+    <Description>Test all CDL style values</Description>
+    <ASC_CDL id="clf/ctf asc1.2 fwd" inBitDepth="16f" outBitDepth="10i" style="Fwd">
+        <SOPNode>
+            <Slope>1.000000  1.000000  0.800000</Slope>
+            <Offset>-0.020000  0.00000  0.150000</Offset>
+            <Power>1.0500000  1.150000  1.40000</Power>
+        </SOPNode>
+        <SatNode>
+            <Saturation>0.750000</Saturation>
+        </SatNode>
+    </ASC_CDL>
+    <ASC_CDL id="clf/ctf asc1.2 rev" inBitDepth="10i" outBitDepth="10i" style="Rev">
+        <SOPNode>
+            <Slope>1.000000  1.000000  0.800000</Slope>
+            <Offset>-0.020000  0.00000  0.150000</Offset>
+            <Power>1.0500000  1.150000  1.40000</Power>
+        </SOPNode>
+        <SatNode>
+            <Saturation>0.750000</Saturation>
+        </SatNode>
+    </ASC_CDL>
+    <ASC_CDL id="clf/ctf no-clamp fwd" inBitDepth="10i" outBitDepth="8i" style="FwdNoClamp">
+        <SOPNode>
+            <Slope>1.000000  1.000000  0.800000</Slope>
+            <Offset>-0.020000  0.00000  0.150000</Offset>
+            <Power>1.0500000  1.150000  1.40000</Power>
+        </SOPNode>
+        <SatNode>
+            <Saturation>0.750000</Saturation>
+        </SatNode>
+    </ASC_CDL>
+     <ASC_CDL id="clf/ctf no-clamp rev" inBitDepth="8i" outBitDepth="32f" style="RevNoClamp">
+        <SOPNode>
+            <Slope>1.000000  1.000000  0.800000</Slope>
+            <Offset>-0.020000  0.00000  0.150000</Offset>
+            <Power>1.0500000  1.150000  1.40000</Power>
+        </SOPNode>
+        <SatNode>
+            <Saturation>1.750000</Saturation>
+        </SatNode>
+    </ASC_CDL>
+</ProcessList>

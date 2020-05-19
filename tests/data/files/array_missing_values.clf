@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList id="1" compCLFversion="2.0">
-  <Matrix inBitDepth="32f" outBitDepth="32f">
-    <Array dim="3 3 3">
-    1 2 3
-    </Array>
-  </Matrix>
-</ProcessList>

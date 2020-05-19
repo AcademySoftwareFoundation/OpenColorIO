@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="9843" name="1d-lut example" inverseOf="inverseOfIdTest" xmlns="urn:AMPAS:CLF:v3.0" compCLFversion="3.0">
+    <Description>The inverseOf attribute is used to identify inverse pairs</Description>
+    <InputDescriptor>RGB</InputDescriptor>
+    <OutputDescriptor>RGB</OutputDescriptor>
+    <LUT1D id="6ce886ce-73a3-4979-a520-0d47f68031cd" name="1d-lut example op" inBitDepth="10i" outBitDepth="10i">
+        <Description>linear to 1/2.2 approx. gamma corrected code values</Description>
+        <Array dim="32 1">
+   0
+ 215
+ 294
+ 354
+ 403
+ 446
+ 485
+ 520
+ 553
+ 583
+ 612
+ 639
+ 665
+ 689
+ 713
+ 735
+ 757
+ 779
+ 799
+ 819
+ 838
+ 857
+ 875
+ 893
+ 911
+ 928
+ 944
+ 961
+ 977
+ 992
+1008
+1023
+        </Array>
+    </LUT1D>
+</ProcessList>
