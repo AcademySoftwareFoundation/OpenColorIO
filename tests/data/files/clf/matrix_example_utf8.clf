@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="42" name="matrix example" xmlns="urn:AMPAS:CLF:v3.0" compCLFversion="3.0">
+    <Description>Test utf8 character encoding support.</Description>
+    <Matrix id="mat42" inBitDepth="32f" outBitDepth="32f">
+        <Description>標準萬國碼</Description>
+        <Array dim="3 3">
+ 3.24000 -1.53700 -0.49850
+-0.96930  1.87600  0.04156
+ 0.05560 -0.20400  1.05730
+        </Array>
+    </Matrix>
+</ProcessList>

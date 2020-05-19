@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList xmlns="urn:NATAS:ASC:LUT:v1.2" id="exlut1" name="transform example lut1d" compCLFversion="2.0">
-<Description> Turn 4 grey levels into 4 inverted codes using a 1D </Description>
-<LUT1D id="lut-23" name="4valueLut" inBitDepth="12i" outBitDepth="12i">
-<Description> 1D LUT </Description>
-<Array dim="4 1">3 2 1 0</Array>
-</LUT1D>
-</ProcessList>

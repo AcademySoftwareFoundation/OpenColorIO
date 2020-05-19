@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="3.0" id="info test" inverseOf="none" xmlns="urn:AMPAS:CLF:v3.0">
+    <Description>Example of using the Info element</Description>
+    <InputDescriptor>input desc</InputDescriptor>
+    <OutputDescriptor>output desc</OutputDescriptor>
+    <Description>A second description</Description>
+
+    <Info>
+        <!-- Elements from the spec -->
+        <Copyright>Copyright Contributors to the OpenColorIO Project.</Copyright>
+        <AppRelease>2020.0.63</AppRelease>
+        <Revision>1</Revision>
+        <!-- Random app specific elements -->
+        <Category>
+            <Tags>
+                <SceneLinearWorkingSpace />
+                <Input />
+            </Tags>
+        </Category>
+        <InputColorSpace>
+            <Description>Input color space description</Description>
+            <ImageState>video</ImageState>
+            <ShortName>no_version</ShortName>
+            <ID>387b23d1-f1ce-3f69-8544-e5601f45f78b</ID>
+        </InputColorSpace>
+        <OutputColorSpace att1="test1" att2="test2">
+            <ImageState>scene</ImageState>
+            <ShortName>ACES</ShortName>
+            <ID>1</ID>
+        </OutputColorSpace>
+    </Info>
+
+    <Matrix outBitDepth="12i" inBitDepth="32f" name="identity">
+        <Array dim="3 3">
+4095 0 0
+0 4095 0
+0 0 4095
+        </Array>
+    </Matrix>
+</ProcessList>
