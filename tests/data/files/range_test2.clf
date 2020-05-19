@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList id="e0a0ae4b-adc2-4c25-ad70-fa6f31ba219d" xmlns="urn:NATAS:ASC:LUT:v0.95" compCLFversion="2.0">
-    <Range inBitDepth="32f" outBitDepth="16f">
-        <!-- Make things a bit unsusual for the test -->
-        <minOutValue> -0.1 </minOutValue>
-        <minInValue>     1e-1
-        </minInValue>
-    </Range>
-</ProcessList>

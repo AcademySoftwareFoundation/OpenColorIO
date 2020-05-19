@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ProcessList id="empty" version="1.7">
-   <Reference id="uuid" name="name" inBitDepth="32f" outBitDepth="12i" path="matrix_example.clf" basePath="Shared"/>
-   <Reference id="uuid" name="name" inBitDepth="12i" outBitDepth="8i" inverted="true" path="xyz_to_rgb.clf" basePath="Shared"/>
+   <Reference id="uuid" name="name" inBitDepth="32f" outBitDepth="12i" path="matrix_example_1_3_offsets.ctf" basePath="Shared"/>
+   <Reference id="uuid" name="name" inBitDepth="12i" outBitDepth="8i" inverted="true" path="clf/xyz_to_rgb.clf" basePath="Shared"/>
    <Range inBitDepth="8i" outBitDepth="32f">
       <minInValue>0</minInValue>
       <maxInValue>255</maxInValue>
       <minOutValue>0.1</minOutValue>
       <maxOutValue>1.2</maxOutValue>
    </Range>
-   <Reference id="uuid" name="name" inBitDepth="32f" outBitDepth="32f" inverted="false" path="cdl_clamp_fwd.clf" basePath="Shared"/>
+   <Reference id="uuid" name="name" inBitDepth="32f" outBitDepth="32f" inverted="false" path="clf/cdl_clamp_fwd.clf" basePath="Shared"/>
 </ProcessList>
