@@ -62,12 +62,14 @@ int main(int argc, const char **argv)
     std::vector<std::string> intAttrs;
     std::vector<std::string> stringAttrs;
     std::string keepChannels;
-    bool croptofull = false;
-    bool usegpu = false;
-    bool usegpuLegacy = false;
-    bool outputgpuInfo = false;
-    bool verbose = false;
-    bool useLut = false;
+
+    bool croptofull     = false;
+    bool usegpu         = false;
+    bool usegpuLegacy   = false;
+    bool outputgpuInfo  = false;
+    bool verbose        = false;
+    bool help           = false;
+    bool useLut         = false;
     bool useDisplayView = false;
 
     ap.options("ocioconvert -- apply colorspace transform to an image \n\n"
@@ -83,7 +85,8 @@ int main(int argc, const char **argv)
                "--gpulegacy", &usegpuLegacy,   "Use the legacy (i.e. baked) GPU color processing "
                                                "instead of the CPU one (--gpu is ignored)",
                "--gpuinfo",  &outputgpuInfo,   "Output the OCIO shader program",
-               "--v",        &verbose,         "Display general information",
+               "--help",     &help,            "Print help message",
+               "-v" ,        &verbose,         "Display general information",
                "<SEPARATOR>", "\nOpenImageIO options:",
                "--float-attribute %L",  &floatAttrs,   "\"name=float\" pair defining OIIO float attribute "
                                                        "for outputimage",
@@ -96,11 +99,18 @@ int main(int argc, const char **argv)
                "--ch %s",               &keepChannels, "Select channels (e.g., \"2,3,4\")",
                NULL
                );
+
     if (ap.parse (argc, argv) < 0)
     {
         std::cerr << ap.geterror() << std::endl;
         ap.usage ();
         exit(1);
+    }
+
+    if (help)
+    {
+        ap.usage();
+        return 0;
     }
 
 #ifndef OCIO_GPU_ENABLED
@@ -124,7 +134,8 @@ int main(int argc, const char **argv)
     {
         if (args.size() != 4)
         {
-            std::cerr << "ERROR: Expecting 4 arguments, found " << args.size() << std::endl;
+            std::cerr << "ERROR: Expecting 4 arguments, found " 
+                      << args.size() << "." << std::endl;
             ap.usage();
             exit(1);
         }
@@ -144,7 +155,7 @@ int main(int argc, const char **argv)
         if (args.size() != 3)
         {
             std::cerr << "ERROR: Expecting 3 arguments for --lut option, found "
-                      << args.size() << std::endl;
+                      << args.size() << "." << std::endl;
             ap.usage();
             exit(1);
         }
@@ -157,7 +168,7 @@ int main(int argc, const char **argv)
         if (args.size() != 5)
         {
             std::cerr << "ERROR: Expecting 5 arguments for --view option, found "
-                      << args.size() << std::endl;
+                      << args.size() << "." << std::endl;
             ap.usage();
             exit(1);
         }
@@ -173,8 +184,8 @@ int main(int argc, const char **argv)
         std::cout << std::endl;
         std::cout << "OIIO Version: " << OIIO_VERSION_STRING << std::endl;
         std::cout << "OCIO Version: " << OCIO::GetVersion() << std::endl;
-        const char * env = getenv("OCIO");
-        if(env && *env)
+        const char * env = OCIO::GetEnvVariable("OCIO");
+        if(env && *env && !useLut)
         {
             try
             {
@@ -254,13 +265,13 @@ int main(int argc, const char **argv)
             if(!ok)
             {
                 std::cerr << "ERROR: Reading \"" << inputimage << "\" failed with: "
-                          << f->geterror() << std::endl;
+                          << f->geterror() << "." << std::endl;
                 exit(1);
             }
 
             if(croptofull)
             {
-                std::cerr << "ERROR: Crop disabled in GPU mode" << std::endl;
+                std::cerr << "ERROR: Crop disabled in GPU mode." << std::endl;
                 exit(1);
             }
         }
@@ -272,7 +283,7 @@ int main(int argc, const char **argv)
             if(!ok)
             {
                 std::cerr << "ERROR: Reading \"" << inputimage << "\" failed with: "
-                          << f->geterror() << std::endl;
+                          << f->geterror() << "." << std::endl;
                 exit(1);
             }
         }
@@ -286,7 +297,7 @@ int main(int argc, const char **argv)
         if (keepChannels != "" && !StringToVector(&kchannels, keepChannels.c_str()))
         {
             std::cerr << "ERROR: --ch: '" << keepChannels
-                      << "' should be comma-seperated integers" << std::endl;
+                      << "' should be comma-seperated integers." << std::endl;
             exit(1);
         }
 
@@ -369,7 +380,7 @@ int main(int argc, const char **argv)
                             else
                             {
                                 std::cerr << "ERROR: Unsupported image type: " 
-                                          << spec.format << std::endl;
+                                          << spec.format << "." << std::endl;
                                 exit(1);
                             }
                         }
@@ -384,7 +395,7 @@ int main(int argc, const char **argv)
     }
     catch(...)
     {
-        std::cerr << "ERROR: Loading file failed" << std::endl;
+        std::cerr << "ERROR: Loading file failed." << std::endl;
         exit(1);
     }
 
@@ -434,7 +445,8 @@ int main(int argc, const char **argv)
     try
     {
         // Load the current config.
-        OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+        OCIO::ConstConfigRcPtr config
+            = useLut ? OCIO::Config::CreateRaw() : OCIO::GetCurrentConfig();
 
         // Get the processor.
         OCIO::ConstProcessorRcPtr processor;
@@ -470,7 +482,7 @@ int main(int argc, const char **argv)
         }
         catch (...)
         {
-            std::cout << "ERROR: Creating processor unknown failure" << std::endl;
+            std::cout << "ERROR: Creating processor unknown failure." << std::endl;
             exit(1);
         }
 
@@ -531,7 +543,7 @@ int main(int argc, const char **argv)
     }
     catch(...)
     {
-        std::cerr << "ERROR: Unknown error processing the image" << std::endl;
+        std::cerr << "ERROR: Unknown error processing the image." << std::endl;
         exit(1);
     }
 
@@ -548,7 +560,7 @@ int main(int argc, const char **argv)
            !StringToFloat(&fval,value.c_str()))
         {
             std::cerr << "ERROR: Attribute string '" << floatAttrs[i]
-                      << "' should be in the form name=floatvalue" << std::endl;
+                      << "' should be in the form name=floatvalue." << std::endl;
             parseerror = true;
             continue;
         }
@@ -564,7 +576,7 @@ int main(int argc, const char **argv)
            !StringToInt(&ival,value.c_str()))
         {
             std::cerr << "ERROR: Attribute string '" << intAttrs[i]
-                      << "' should be in the form name=intvalue" << std::endl;
+                      << "' should be in the form name=intvalue." << std::endl;
             parseerror = true;
             continue;
         }
@@ -578,7 +590,7 @@ int main(int argc, const char **argv)
         if(!ParseNameValuePair(name, value, stringAttrs[i]))
         {
             std::cerr << "ERROR: Attribute string '" << stringAttrs[i]
-                      << "' should be in the form name=value" << std::endl;
+                      << "' should be in the form name=value." << std::endl;
             parseerror = true;
             continue;
         }
@@ -601,7 +613,7 @@ int main(int argc, const char **argv)
 #endif
         if(!f)
         {
-            std::cerr << "ERROR: Could not create output input" << std::endl;
+            std::cerr << "ERROR: Could not create output input." << std::endl;
             exit(1);
         }
 
@@ -610,7 +622,7 @@ int main(int argc, const char **argv)
         if(!f->write_image(spec.format, img.getBuffer()))
         {
             std::cerr << "ERROR: Writing \"" << outputimage << "\" failed with: "
-                      << f->geterror() << std::endl;
+                      << f->geterror() << "." << std::endl;
             exit(1);
         }
 
@@ -621,7 +633,7 @@ int main(int argc, const char **argv)
     }
     catch(...)
     {
-        std::cerr << "ERROR: Writing file \"" << outputimage << "\"" << std::endl;
+        std::cerr << "ERROR: Writing file \"" << outputimage << "\"." << std::endl;
         exit(1);
     }
 

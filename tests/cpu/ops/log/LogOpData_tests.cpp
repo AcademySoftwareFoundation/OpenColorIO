@@ -40,8 +40,7 @@ OCIO_ADD_TEST(LogOpData, accessor_test)
     OCIO::TransformDirection dir = OCIO::LogUtil::GetLogDirection(ctfParams.m_style);
     OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB);
 
-    OCIO::LogOpData logOp(dir,
-                          base, paramsR, paramsG, paramsB);
+    OCIO::LogOpData logOp(base, paramsR, paramsG, paramsB, dir);
 
     OCIO_CHECK_EQUAL(logOp.getType(), OCIO::OpData::LogType);
 
@@ -57,7 +56,7 @@ OCIO_ADD_TEST(LogOpData, accessor_test)
     dir = OCIO::LogUtil::GetLogDirection(ctfParams.m_style);
     OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB);
 
-    OCIO::LogOpData logOp2(dir, base, paramsR, paramsG, paramsB);
+    OCIO::LogOpData logOp2(base, paramsR, paramsG, paramsB, dir);
 
     OCIO_CHECK_ASSERT(logOp2.allComponentsEqual());
     OCIO_CHECK_ASSERT(logOp2.getRedParams() == paramsR);
@@ -74,7 +73,7 @@ OCIO_ADD_TEST(LogOpData, accessor_test)
     dir = OCIO::LogUtil::GetLogDirection(ctfParams.m_style);
     OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB);
 
-    OCIO::LogOpData logOp3(dir, base, paramsR, paramsG, paramsB);
+    OCIO::LogOpData logOp3(base, paramsR, paramsG, paramsB, dir);
 
     OCIO_CHECK_ASSERT(!logOp3.allComponentsEqual());
     OCIO_CHECK_ASSERT(logOp3.getRedParams() == paramsR);
@@ -92,7 +91,7 @@ OCIO_ADD_TEST(LogOpData, accessor_test)
     dir = OCIO::LogUtil::GetLogDirection(ctfParams.m_style);
     OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB);
 
-    OCIO::LogOpData logOp4(dir, base, paramsR, paramsG, paramsB);
+    OCIO::LogOpData logOp4(base, paramsR, paramsG, paramsB, dir);
     OCIO_CHECK_ASSERT(!logOp4.allComponentsEqual());
     OCIO_CHECK_ASSERT(logOp4.getRedParams() == paramsR);
     OCIO_CHECK_ASSERT(logOp4.getGreenParams() == paramsG);
@@ -109,7 +108,7 @@ OCIO_ADD_TEST(LogOpData, accessor_test)
     dir = OCIO::LogUtil::GetLogDirection(ctfParams.m_style);
     OCIO::LogUtil::ConvertLogParameters(ctfParams, base, paramsR, paramsG, paramsB);
 
-    OCIO::LogOpData logOp5(dir, base, paramsR, paramsG, paramsB);
+    OCIO::LogOpData logOp5(base, paramsR, paramsG, paramsB, dir);
     OCIO_CHECK_ASSERT(!logOp5.allComponentsEqual());
     OCIO_CHECK_ASSERT(logOp5.getRedParams() == paramsR);
     OCIO_CHECK_ASSERT(logOp5.getGreenParams() == paramsG);
@@ -200,8 +199,7 @@ OCIO_ADD_TEST(LogOpData, log_inverse)
     OCIO::LogOpData::Params paramB{ 1.7, 30.0, 1.3, 3.0 };
     const double base = 10.0;
 
-    OCIO::LogOpData logOp0(OCIO::TRANSFORM_DIR_FORWARD,
-                           base, paramR, paramG, paramB);
+    OCIO::LogOpData logOp0(base, paramR, paramG, paramB, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::ConstLogOpDataRcPtr invLogOp0 = logOp0.inverse();
 
     OCIO_CHECK_ASSERT(logOp0.getRedParams() == invLogOp0->getRedParams());
@@ -212,8 +210,7 @@ OCIO_ADD_TEST(LogOpData, log_inverse)
     OCIO_CHECK_ASSERT(!logOp0.isInverse(invLogOp0));
 
     // Using equal components.
-    OCIO::LogOpData logOp1(OCIO::TRANSFORM_DIR_FORWARD,
-                           base, paramR, paramR, paramR);
+    OCIO::LogOpData logOp1(base, paramR, paramR, paramR, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO::ConstLogOpDataRcPtr invLogOp1 = logOp1.inverse();
 
     OCIO_CHECK_ASSERT(logOp1.isInverse(invLogOp1));
@@ -225,14 +222,12 @@ OCIO_ADD_TEST(LogOpData, identity_replacement)
     OCIO::LogOpData::Params paramsR{ 1.5, 10.0, 2.0, 1.0 };
     const double base = 2.0;
     {
-        OCIO::LogOpData logOp(OCIO::TRANSFORM_DIR_INVERSE,
-                              base, paramsR, paramsR, paramsR);
+        OCIO::LogOpData logOp(base, paramsR, paramsR, paramsR, OCIO::TRANSFORM_DIR_INVERSE);
         OCIO_CHECK_EQUAL(logOp.getIdentityReplacement()->getType(),
                          OCIO::OpData::MatrixType);
     }
     {
-        OCIO::LogOpData logOp(OCIO::TRANSFORM_DIR_FORWARD,
-                              base, paramsR, paramsR, paramsR);
+        OCIO::LogOpData logOp(base, paramsR, paramsR, paramsR, OCIO::TRANSFORM_DIR_FORWARD);
         auto op = logOp.getIdentityReplacement();
         OCIO_CHECK_EQUAL(op->getType(),
                          OCIO::OpData::RangeType);

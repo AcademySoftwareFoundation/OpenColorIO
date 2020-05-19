@@ -4587,7 +4587,7 @@ OCIO_ADD_TEST(CTFTransform, matrix_offset_alpha_ctf)
     // Alpha not handled by CLF.
     OCIO_CHECK_THROW_WHAT(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform),
                           OCIO::Exception, 
-                          "Matrix with alpha component op which cannot be written as CLF");
+                          "Transform uses the 'Matrix with alpha component' op which cannot be written as CLF");
 }
 
 OCIO_ADD_TEST(CTFTransform, matrix_offset_alpha_bitdepth_ctf)
@@ -5293,7 +5293,7 @@ OCIO_ADD_TEST(CTFTransform, gamma2_ctf)
     std::ostringstream outputTransformCLF;
     OCIO_CHECK_THROW_WHAT(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransformCLF),
                           OCIO::Exception,
-                          "Gamma with alpha component op which cannot be written as CLF");
+                          "Transform uses the 'Gamma with alpha component' op which cannot be written as CLF");
 }
 
 OCIO_ADD_TEST(CTFTransform, gamma3_ctf)
@@ -5838,7 +5838,8 @@ OCIO_ADD_TEST(CTFTransform, lut1d_inverse_clf)
     OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
     OCIO_CHECK_THROW_WHAT(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform),
-                          OCIO::Exception, "InverseLUT1D op which cannot be written as CLF");
+                          OCIO::Exception,
+                          "Transform uses the 'InverseLUT1D' op which cannot be written as CLF");
 }
 
 OCIO_ADD_TEST(CTFTransform, lut1d_ctf)
@@ -6244,7 +6245,8 @@ OCIO_ADD_TEST(CTFTransform, lut3d_inverse_clf)
     OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
     OCIO_CHECK_THROW_WHAT(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform),
-                          OCIO::Exception, "InverseLUT3D op which cannot be written as CLF");
+                          OCIO::Exception,
+                          "Transform uses the 'InverseLUT3D' op which cannot be written as CLF");
 }
 
 OCIO_ADD_TEST(CTFTransform, lut3d_inverse_ctf)

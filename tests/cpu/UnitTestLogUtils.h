@@ -17,7 +17,7 @@ public:
     LogGuard();
     LogGuard(const LogGuard &) = delete;
     LogGuard & operator=(const LogGuard &) = delete;
-    virtual ~LogGuard();
+    ~LogGuard();
 
     // Return the output message or null.
     const std::string & output() const;
@@ -34,7 +34,7 @@ class MuteLogging : public LogGuard
 {
 public:
     MuteLogging();
-    ~MuteLogging() = default;
+    virtual ~MuteLogging() = default;
 };
 
 } // namespace OCIO_NAMESPACE

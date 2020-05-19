@@ -112,6 +112,12 @@ option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations
 option(OCIO_INLINES_HIDDEN "Specify whether to build with -fvisibility-inlines-hidden" ${UNIX})
 
 ###############################################################################
+# Supplemental builtins
+
+# Add supplemental built-in transformations such as camera related one.
+option(OCIO_ADD_EXTRA_BUILTINS "Specify whether to add supplemental built-in transforms" ON)
+
+###############################################################################
 # Platform & Compiler dependent compilation flags
 
 set(PLATFORM_COMPILE_FLAGS "")

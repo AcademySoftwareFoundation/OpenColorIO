@@ -14,18 +14,17 @@
 namespace OCIO_NAMESPACE
 {
 
-MatrixOpData::Offsets::Offsets()
+MatrixOpData::Offsets::Offsets(double redOff, double grnOff, double bluOff, double whtOff)
 {
-    memset(m_values, 0, 4 * sizeof(double));
+    m_values[0] = redOff;
+    m_values[1] = grnOff;
+    m_values[2] = bluOff;
+    m_values[3] = whtOff;
 }
 
 MatrixOpData::Offsets::Offsets(const Offsets & o)
 {
     memcpy(m_values, o.m_values, 4 * sizeof(double));
-}
-
-MatrixOpData::Offsets::~Offsets()
-{
 }
 
 MatrixOpData::Offsets& MatrixOpData::Offsets::operator=(const Offsets & o)
@@ -50,10 +49,10 @@ void MatrixOpData::Offsets::setRGB(const T * v3)
         throw Exception("Matrix: setRGB NULL pointer.");
     }
 
-    m_values[0] = v3[0];
-    m_values[1] = v3[1];
-    m_values[2] = v3[2];
-    m_values[3] = (T)0.;
+    m_values[0] = double(v3[0]);
+    m_values[1] = double(v3[1]);
+    m_values[2] = double(v3[2]);
+    m_values[3] = 0.;
 }
 
 template void MatrixOpData::Offsets::setRGB(const float * v3);
@@ -67,10 +66,10 @@ void MatrixOpData::Offsets::setRGBA(const T * v4)
         throw Exception("Matrix: setRGBA NULL pointer.");
     }
 
-    m_values[0] = v4[0];
-    m_values[1] = v4[1];
-    m_values[2] = v4[2];
-    m_values[3] = v4[3];
+    m_values[0] = double(v4[0]);
+    m_values[1] = double(v4[1]);
+    m_values[2] = double(v4[2]);
+    m_values[3] = double(v4[3]);
 }
 
 template void MatrixOpData::Offsets::setRGBA(const float * v4);
@@ -78,7 +77,7 @@ template void MatrixOpData::Offsets::setRGBA(const double * v4);
 
 bool MatrixOpData::Offsets::isNotNull() const
 {
-    static const double zero4[] = { 0., 0., 0., 0. };
+    static constexpr double zero4[] { 0., 0., 0., 0. };
     return (memcmp(m_values, zero4, 4 * sizeof(double)) != 0);
 }
 
@@ -90,10 +89,9 @@ void MatrixOpData::Offsets::scale(double s)
     }
 }
 
-MatrixOpData::MatrixArray::MatrixArray(unsigned long dimension,
-                                       unsigned long numColorComponents)
+MatrixOpData::MatrixArray::MatrixArray()
 {
-    resize(dimension, numColorComponents);
+    resize(4, 4);
     fill();
 }
 
@@ -105,15 +103,21 @@ MatrixOpData::MatrixArray & MatrixOpData::MatrixArray::operator=(const ArrayDoub
 {
     if (this == &a) return *this;
 
-    *(ArrayDouble*)this = a;
+    *dynamic_cast<ArrayDouble*>(this) = a;
 
     validate();
 
     return *this;
 }
 
-MatrixOpData::MatrixArrayPtr
-    MatrixOpData::MatrixArray::inner(const MatrixArray & B) const
+MatrixOpData::MatrixArray & MatrixOpData::MatrixArray::operator=(const MatrixArray & m)
+{
+    // Note: it works because MatrixArray does not (and must not) have any member variables.
+    *this = *dynamic_cast<const ArrayDouble*>(&m);
+    return *this;
+}
+
+MatrixOpData::MatrixArrayPtr MatrixOpData::MatrixArray::inner(const MatrixArray & B) const
 {
     // Use operator= to make sure we have a 4x4 copy
     // of the original matrices.
@@ -121,10 +125,11 @@ MatrixOpData::MatrixArrayPtr
     MatrixArray B_4x4 = B;
     const ArrayDouble::Values & Avals = A_4x4.getValues();
     const ArrayDouble::Values & Bvals = B_4x4.getValues();
-    const unsigned long dim = 4;
 
-    MatrixArrayPtr OutPtr = std::make_shared<MatrixArray>(dim, 4);
+    MatrixArrayPtr OutPtr = std::make_shared<MatrixArray>();
     ArrayDouble::Values& Ovals = OutPtr->getValues();
+
+    const unsigned long dim = OutPtr->getLength();
 
     // Note: The matrix elements are stored in the vector
     // in row-major order.
@@ -145,25 +150,32 @@ MatrixOpData::MatrixArrayPtr
     return OutPtr;
 }
 
-void MatrixOpData::MatrixArray::inner(const MatrixOpData::Offsets & b,
-                                      Offsets & out) const
+MatrixOpData::MatrixArrayPtr MatrixOpData::MatrixArray::inner(const MatrixArrayPtr & B) const
 {
+    return inner(*B.get());
+}
+
+MatrixOpData::Offsets MatrixOpData::MatrixArray::inner(const MatrixOpData::Offsets & b) const
+{
+    MatrixOpData::Offsets out;
+
     const unsigned long dim = getLength();
     const ArrayDouble::Values & Avals = getValues();
 
-    for (unsigned long i = 0; i<dim; ++i)
+    for (unsigned long i = 0; i < dim; ++i)
     {
         double accum = 0.;
-        for (unsigned long j = 0; j<dim; ++j)
+        for (unsigned long j = 0; j < dim; ++j)
         {
             accum += Avals[i * dim + j] * b[j];
         }
         out[i] = accum;
     }
+
+    return out;
 }
 
-MatrixOpData::MatrixArrayPtr
-    MatrixOpData::MatrixArray::inverse() const
+MatrixOpData::MatrixArrayPtr MatrixOpData::MatrixArray::inverse() const
 {
     // Call validate to ensure that the matrix is 4x4,
     // will be expanded if only 3x3.
@@ -171,11 +183,12 @@ MatrixOpData::MatrixArrayPtr
 
     MatrixArray t(*this);
 
-    const unsigned long dim = 4;
     // Create a new matrix array.
     // The new matrix is initialized as identity.
-    MatrixArrayPtr invPtr = std::make_shared<MatrixArray>(dim, 4);
+    MatrixArrayPtr invPtr = std::make_shared<MatrixArray>();
     MatrixArray & s = *invPtr;
+
+    const unsigned long dim = invPtr->getLength();
 
     // Inversion starts with identity (without bit-depth scaling).
     s[0] = 1.;
@@ -248,7 +261,7 @@ MatrixOpData::MatrixArrayPtr
 
     for (int i = 3; i >= 0; --i)
     {
-        double f;
+        double f = 0.;
 
         // TODO: Perhaps change to throw even if f is near
         //       zero (nearly singular).
@@ -283,25 +296,25 @@ void MatrixOpData::MatrixArray::setRGB(const T * values)
 {
     Values & v = getValues();
 
-    v[0] = values[0];
-    v[1] = values[1];
-    v[2] = values[2];
-    v[3] = (T)0.0;
+    v[ 0] = double(values[0]);
+    v[ 1] = double(values[1]);
+    v[ 2] = double(values[2]);
+    v[ 3] = 0.;
 
-    v[4] = values[3];
-    v[5] = values[4];
-    v[6] = values[5];
-    v[7] = (T)0.0;
+    v[ 4] = double(values[3]);
+    v[ 5] = double(values[4]);
+    v[ 6] = double(values[5]);
+    v[ 7] = 0.;
 
-    v[8] = values[6];
-    v[9] = values[7];
-    v[10] = values[8];
-    v[11] = (T)0.0;
+    v[ 8] = double(values[6]);
+    v[ 9] = double(values[7]);
+    v[10] = double(values[8]);
+    v[11] = 0.;
 
-    v[12] = (T)0.0;
-    v[13] = (T)0.0;
-    v[14] = (T)0.0;
-    v[15] = (T)1.0;
+    v[12] = 0.;
+    v[13] = 0.;
+    v[14] = 0.;
+    v[15] = 1.;
 }
 
 template void MatrixOpData::MatrixArray::setRGB(const float * values);
@@ -428,13 +441,19 @@ void MatrixOpData::MatrixArray::validate() const
 
 MatrixOpData::MatrixOpData()
     : OpData()
-    , m_array(4, 4)
+    , m_array()
+{
+}
+
+MatrixOpData::MatrixOpData(const MatrixArray & matrix)
+    : OpData()
+    , m_array(matrix)
 {
 }
 
 MatrixOpData::MatrixOpData(TransformDirection direction)
     : OpData()
-    , m_array(4, 4)
+    , m_array()
 {
     setDirection(direction);
 }
@@ -451,6 +470,11 @@ MatrixOpDataRcPtr MatrixOpData::clone() const
 void MatrixOpData::setArrayValue(unsigned long index, double value)
 {
     m_array.getValues()[index] = value;
+}
+
+double MatrixOpData::getArrayValue(unsigned long index) const
+{
+    return m_array.getValues()[index];
 }
 
 void  MatrixOpData::setRGB(const float* values)
@@ -570,7 +594,7 @@ bool MatrixOpData::hasAlpha() const
 
     // Now check the diagonal elements.
 
-    const double maxDiff = 1e-6;
+    static constexpr double maxDiff = 1e-6;
 
     return
 
@@ -683,9 +707,7 @@ MatrixOpDataRcPtr MatrixOpData::compose(ConstMatrixOpDataRcPtr & B) const
 
     // Compute matrix B times offsets from A.
 
-    Offsets offs;
-
-    B->m_array.inner(getOffsets(), offs);
+    Offsets offs(B->m_array.inner(getOffsets()));
 
     const unsigned long dim = B->m_array.getLength();
 
@@ -808,7 +830,7 @@ MatrixOpDataRcPtr MatrixOpData::getAsForward() const
     Offsets invOffsets;
     if (offsets.isNotNull())
     {
-        invMatrixArray->inner(offsets, invOffsets);
+        invOffsets = invMatrixArray->inner(offsets);
         invOffsets.scale(-1);
     }
 

@@ -1364,35 +1364,32 @@ const char * Lut1DWriter::getTagName() const
 void Lut1DWriter::getAttributes(XmlFormatter::Attributes & attributes) const
 {
     OpWriter::getAttributes(attributes);
-    Interpolation interpolation = m_lut->getInterpolation();
+
     // If the client requests INTERP_LINEAR, we want to write it to the
     // attribute (even though linear is what CLF specifies as its default,
     // some clients may want to lock down that behavior). INTERP_DEFAULT
     // means "do not write the attribute".
-    if (interpolation != INTERP_DEFAULT)
+    const Interpolation interpolation = m_lut->getInterpolation();
+    const char * interpolationName = GetInterpolation1DName(interpolation);
+    if (interpolationName && *interpolationName)
     {
-        const char * interpolationName = GetInterpolation1DName(interpolation);
-        attributes.push_back(XmlFormatter::Attribute(ATTR_INTERPOLATION,
-                                                     interpolationName));
+        attributes.push_back(XmlFormatter::Attribute(ATTR_INTERPOLATION, interpolationName));
     }
 
     if (m_lut->isInputHalfDomain())
     {
-        attributes.push_back(XmlFormatter::Attribute(ATTR_HALF_DOMAIN,
-                                                     "true"));
+        attributes.push_back(XmlFormatter::Attribute(ATTR_HALF_DOMAIN, "true"));
     }
 
     if (m_lut->isOutputRawHalfs())
     {
-        attributes.push_back(XmlFormatter::Attribute(ATTR_RAW_HALFS,
-                                                     "true"));
+        attributes.push_back(XmlFormatter::Attribute(ATTR_RAW_HALFS, "true"));
     }
 
-    Lut1DHueAdjust hueAdjust = m_lut->getHueAdjust();
+    const Lut1DHueAdjust hueAdjust = m_lut->getHueAdjust();
     if (hueAdjust == HUE_DW3)
     {
-        attributes.push_back(XmlFormatter::Attribute(ATTR_HUE_ADJUST,
-                                                     "dw3"));
+        attributes.push_back(XmlFormatter::Attribute(ATTR_HUE_ADJUST, "dw3"));
     }
 }
 
@@ -1506,13 +1503,15 @@ const char * Lut3DWriter::getTagName() const
 void Lut3DWriter::getAttributes(XmlFormatter::Attributes & attributes) const
 {
     OpWriter::getAttributes(attributes);
+
     Interpolation interpolation = m_lut->getInterpolation();
+    const char * interpolationName = GetInterpolation3DName(interpolation);
+
     // Please see comment in Lut1DWriter.
-    if (interpolation != INTERP_DEFAULT)
+    if (interpolationName && *interpolationName)
     {
-        const char* interpolationName = GetInterpolation3DName(interpolation);
-        attributes.push_back(XmlFormatter::Attribute(ATTR_INTERPOLATION,
-                                                     interpolationName));
+
+        attributes.push_back(XmlFormatter::Attribute(ATTR_INTERPOLATION, interpolationName));
     }
 }
 
@@ -1914,7 +1913,7 @@ namespace
 void ThrowWriteOp(const std::string & type)
 {
     std::ostringstream oss;
-    oss << "Transform uses the " << type << " op which cannot be written "
+    oss << "Transform uses the '" << type << "' op which cannot be written "
            "as CLF.  Use CTF format or Bake the transform.";
     throw Exception(oss.str().c_str());
 }
