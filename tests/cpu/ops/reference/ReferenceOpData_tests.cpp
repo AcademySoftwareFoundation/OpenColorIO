@@ -169,7 +169,7 @@ OCIO_ADD_TEST(Reference, load_multiple_resolve_internal)
     OCIO_REQUIRE_ASSERT(ops[1]);
     op = ops[1];
     OCIO_REQUIRE_ASSERT(GetFilePath(path, op));
-    OCIO_CHECK_NE(path.find("matrix_example.clf"), std::string::npos);
+    OCIO_CHECK_NE(path.find("matrix_example_1_3_offsets.ctf"), std::string::npos);
 
     OCIO_REQUIRE_ASSERT(ops[2]);
     op = ops[2];

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="1" compCLFversion="3.0">
+  <Matrix inBitDepth="32f" outBitDepth="32f">
+    <Description>Matrix has too few values.</Description>
+    <Array dim="3 3">
+    1 2 3
+    </Array>
+  </Matrix>
+</ProcessList>

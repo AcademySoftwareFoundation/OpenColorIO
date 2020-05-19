@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="exlut1" name="transform example lut1d" compCLFversion="3.0">
+    <Description>1D LUT with legal out of range values</Description>
+    <LUT1D id="lut-23" name="4valueLut" inBitDepth="12i" outBitDepth="12i">
+        <Description>Note that the bit-depth does not constrain the legal range of values.</Description>
+            <Array dim="4 1">
+-100 400 800 2500
+            </Array>
+    </LUT1D>
+</ProcessList>

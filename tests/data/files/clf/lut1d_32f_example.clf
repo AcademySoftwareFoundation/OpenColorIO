@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList xmlns="urn:AMPAS:CLF:v3.0" id="lut1_32f" name="transform example lut1d 32f" compCLFversion="3.0">
+<Description> Basic Lut1D example </Description>
+<LUT1D id="lut-32" interpolation="linear" inBitDepth="32f" outBitDepth="32f">
+<Description> 1D LUT </Description>
+<Array dim="4 1">1.0 0.8 0.6 0</Array>
+</LUT1D>
+</ProcessList>

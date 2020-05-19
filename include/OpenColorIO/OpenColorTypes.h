@@ -360,10 +360,10 @@ enum TransformDirection
 enum Interpolation
 {
     INTERP_UNKNOWN = 0,
-    INTERP_NEAREST = 1,     //! nearest neighbor in all dimensions
-    INTERP_LINEAR = 2,      //! linear interpolation in all dimensions
-    INTERP_TETRAHEDRAL = 3, //! tetrahedral interpolation in all directions
-    INTERP_CUBIC = 4,       //! cubic interpolation in all dimensions
+    INTERP_NEAREST = 1,     //! nearest neighbor
+    INTERP_LINEAR = 2,      //! linear interpolation (trilinear for Lut3D)
+    INTERP_TETRAHEDRAL = 3, //! tetrahedral interpolation (Lut3D only)
+    INTERP_CUBIC = 4,       //! cubic interpolation (not supported)
 
     INTERP_DEFAULT = 254,   //! the default interpolation type
     INTERP_BEST = 255       //! the 'best' suitable interpolation type
@@ -466,6 +466,8 @@ enum CDLStyle
     CDL_ASC = 0,    //! ASC CDL specification v1.2
     CDL_NO_CLAMP,   //! CDL that does not clamp
 
+    // Note: The default for reading .cc/.ccc/.cdl files, config file YAML, and CDLTransform is no-clamp,
+    // since that is what is primarily desired in VFX.  However, the CLF format default is ASC.
     CDL_TRANSFORM_DEFAULT = CDL_NO_CLAMP
 };
 

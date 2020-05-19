@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="none" compCLFversion="3.0">
+    <Description>Test with lots of different process nodes</Description>
+    <ASC_CDL id="cc01234" inBitDepth="16f" outBitDepth="10i" style="Rev">
+        <Description>scene 1 exterior look</Description>
+        <SOPNode>
+            <Slope>1.000000  1.000000  0.800000</Slope>
+            <Offset>-0.020000  0.00000  0.150000</Offset>
+            <Power>1.0500000  1.150000  1.40000</Power>
+        </SOPNode>
+        <SatNode>
+            <Saturation>0.750000</Saturation>
+        </SatNode>
+    </ASC_CDL>
+    <LUT1D inBitDepth="10i" outBitDepth="12i">
+        <Array dim="32 1">
+   0
+ 215
+ 294
+ 354
+ 403
+ 446
+ 485
+ 520
+ 553
+ 583
+ 612
+ 639
+ 665
+ 689
+ 713
+ 735
+ 757
+ 779
+ 799
+ 819
+ 838
+ 857
+ 875
+ 893
+ 911
+ 928
+ 944
+ 961
+ 977
+ 992
+1008
+1023
+        </Array>
+    </LUT1D>
+    <Range inBitDepth="12i" outBitDepth="10i" style="noClamp">
+        <minInValue> 256.0000</minInValue>
+        <maxInValue>3760.0000</maxInValue>
+        <minOutValue>  20.0000</minOutValue>
+        <maxOutValue> 900.0000</maxOutValue>
+    </Range>
+    <Range inBitDepth="10i" outBitDepth="10i" style="Clamp">
+        <minInValue> 256.0000</minInValue>
+        <maxInValue>3760.0000</maxInValue>
+        <minOutValue>  20.0000</minOutValue>
+        <maxOutValue> 900.0000</maxOutValue>
+    </Range>
+    <Range inBitDepth="10i" outBitDepth="10i">
+        <minInValue> 256.0000</minInValue>
+        <maxInValue>3760.0000</maxInValue>
+        <minOutValue>  20.0000</minOutValue>
+        <maxOutValue> 900.0000</maxOutValue>
+    </Range>
+    <Log inBitDepth="10i" outBitDepth="16f" style="linToLog" name="log">
+        <Description>Classic Cineon curve</Description>
+        <LogParams logSideSlope="0.29325513196" logSideOffset="0.66959921799" 
+                   linSideSlope="0.98920224838" linSideOffset="0.01079775162" base="10" />
+    </Log>
+    <Matrix id="mat-25" name="colorspace conversion" inBitDepth="16f" outBitDepth="32f" >
+        <Description> 3x4 Matrix , 4th column is offset </Description>
+        <Array dim="3 4">
+        1.2     0.0     0.2     0.002
+        0.0     1.03    0.001   -0.005
+        0.004   -0.007  1.004   0.0
+        </Array>
+    </Matrix>
+    <Exponent inBitDepth="32f" outBitDepth="8i" style="basicMirrorRev">
+        <ExponentParams exponent="1.4" />
+    </Exponent>
+    <LUT3D id="a9" inBitDepth="8i" outBitDepth="32f">
+      <Array dim="2 2 2 3">
+0 0 -0.1
+0 0 0.5
+0 1 0
+0 1 1
+1 0 0
+1 0 1
+1 1 0
+1.2 1 1
+      </Array>
+    </LUT3D>
+</ProcessList>
