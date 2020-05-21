@@ -73,25 +73,25 @@ OCIO_ADD_TEST(FileTransform, load_file_ok)
     OCIO_CHECK_ASSERT(!proc->isNoOp());
 
     // Academy/ASC common LUT format.
-    const std::string clfRangeTransform("range.clf");
+    const std::string clfRangeTransform("clf/range.clf");
     OCIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(clfRangeTransform));
     OCIO_CHECK_ASSERT(!proc->isNoOp());
 
     // Academy/ASC common LUT format.
-    const std::string clfMatTransform("matrix_example.clf");
+    const std::string clfMatTransform("clf/matrix_example.clf");
     OCIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(clfMatTransform));
     OCIO_CHECK_ASSERT(!proc->isNoOp());
 
     // Test other types of CLF/CTF elements.
-    const std::string clfCdlTransform("cdl_clamp_fwd.clf");
+    const std::string clfCdlTransform("clf/cdl_clamp_fwd.clf");
     OCIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(clfCdlTransform));
     OCIO_CHECK_ASSERT(!proc->isNoOp());
 
-    const std::string clfLut1Transform("lut1d_example.clf");
+    const std::string clfLut1Transform("clf/lut1d_example.clf");
     OCIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(clfLut1Transform));
     OCIO_CHECK_ASSERT(!proc->isNoOp());
 
-    const std::string clfLut3Transform("lut3d_2x2x2_32f_32f.clf");
+    const std::string clfLut3Transform("clf/lut3d_identity_12i_16f.clf");
     OCIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(clfLut3Transform));
     OCIO_CHECK_ASSERT(!proc->isNoOp());
 
@@ -146,7 +146,7 @@ OCIO_ADD_TEST(FileTransform, load_file_fail)
 
     // Supported file extension with a wrong content.
     // It's in fact a binary png file i.e. all readers must fail.
-    const std::string faultyCLFFile("image_png.clf");
+    const std::string faultyCLFFile("clf/illegal/image_png.clf");
     OCIO_CHECK_THROW_WHAT(OCIO::GetFileTransformProcessor(faultyCLFFile), 
                           OCIO::Exception, "image_png.clf' could not be loaded");
 

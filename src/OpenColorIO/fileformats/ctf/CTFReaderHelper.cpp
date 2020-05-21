@@ -1324,9 +1324,11 @@ void CTFReaderCDLElt::start(const char ** atts)
         }
     }
 
+    // Although the OCIO default for CDL style is no-clamp, the default specified in
+    // the CLF v3 spec is ASC.
     if (!isStyleFound)
     {
-        throwMessage("CTF/CLF CDL parsing. Required attribute 'style' is missing.");
+        m_cdl->setStyle(CDLOpData::CDL_V1_2_FWD);
     }
 }
 
@@ -1837,6 +1839,10 @@ void CTFReaderGammaElt::start(const char ** atts)
             }
             m_gamma->setStyle(style);
             isStyleFound = true;
+
+            // Set default parameters for all channels.
+            const GammaOpData::Params params = GammaOpData::getIdentityParameters(m_gamma->getStyle());
+            m_gamma->setParams(params);
         }
 
         i += 2;
@@ -1856,10 +1862,6 @@ bool CTFReaderGammaElt::isOpParameterValid(const char * att) const noexcept
 void CTFReaderGammaElt::end()
 {
     CTFReaderOpElt::end();
-
-    // Set default alpha parameters.
-    const GammaOpData::Params paramsA = GammaOpData::getIdentityParameters(m_gamma->getStyle());
-    m_gamma->setAlphaParams(paramsA);
 
     // Validate the end result.
     try
@@ -1904,21 +1906,6 @@ bool CTFReaderGammaElt::isValid(const GammaOpData::Style style) const noexcept
         return false;
     }
     return false;
-}
-
-void CTFReaderGammaElt_1_5::end()
-{
-    CTFReaderOpElt::end();
-
-    // Validate the end result.
-    try
-    {
-        getGamma()->validateParameters();
-    }
-    catch (Exception & ce)
-    {
-        ThrowM(*this, "Invalid parameters: ", ce.what(), ".");
-    }
 }
 
 CTFReaderGammaParamsEltRcPtr CTFReaderGammaElt_1_5::createGammaParamsElt(
@@ -2669,59 +2656,10 @@ bool CTFReaderLogParamsElt::parseCineon(const char ** atts, unsigned i,
     return false;
 }
 
-void CTFReaderLogParamsElt::start(const char ** atts)
+void CTFReaderLogParamsElt::setCineon(LogUtil::CTFParams & legacyParams, int chan,
+                                      double gamma, double refWhite,
+                                      double refBlack, double highlight, double shadow)
 {
-    CTFReaderLogElt * pLogElt = dynamic_cast<CTFReaderLogElt*>(getParent().get());
-
-    LogUtil::CTFParams & legacyParams = pLogElt->getCTFParams();
-
-    // Attributes we want to extract.
-
-    int chan = -1;
-
-    // Legacy Log/Lin parameters:
-    double gamma = std::numeric_limits<double>::quiet_NaN();
-    double refWhite = std::numeric_limits<double>::quiet_NaN();
-    double refBlack = std::numeric_limits<double>::quiet_NaN();
-    double highlight = std::numeric_limits<double>::quiet_NaN();
-    double shadow = std::numeric_limits<double>::quiet_NaN();
-
-    // Try extracting the attributes.
-    unsigned i = 0;
-    while (atts[i])
-    {
-        if (0 == Platform::Strcasecmp(ATTR_CHAN, atts[i]))
-        {
-            if (0 == Platform::Strcasecmp("R", atts[i + 1]))
-            {
-                chan = 0;
-            }
-            else if (0 == Platform::Strcasecmp("G", atts[i + 1]))
-            {
-                chan = 1;
-            }
-            else if (0 == Platform::Strcasecmp("B", atts[i + 1]))
-            {
-                chan = 2;
-            }
-            // Chan is optional but, if present, must be legal.
-            else
-            {
-                std::ostringstream arg;
-                arg << "Illegal channel attribute value '";
-                arg << atts[i + 1] << "'.";
-
-                throwMessage(arg.str());
-            }
-        }
-        else if (!parseCineon(atts, i, gamma, refWhite, refBlack, highlight, shadow))
-        {
-            logParameterWarning(atts[i]);
-        }
-
-        i += 2;
-    }
-
     // Validate the attributes are appropriate for the log style and set
     // the parameters (numeric validation is done by LogOpData::validate).
 
@@ -2761,8 +2699,6 @@ void CTFReaderLogParamsElt::start(const char ** atts)
 
     // Assign the parameters to the object.
 
-    auto logOp = OCIO_DYNAMIC_POINTER_CAST<LogOpData>(pLogElt->getOp());
-
     switch (chan)
     {
     case -1:
@@ -2780,6 +2716,62 @@ void CTFReaderLogParamsElt::start(const char ** atts)
         legacyParams.m_params[LogUtil::CTFParams::blue ] = ctfValues;
         break;
     }
+}
+
+void CTFReaderLogParamsElt::start(const char ** atts)
+{
+    CTFReaderLogElt * pLogElt = dynamic_cast<CTFReaderLogElt*>(getParent().get());
+
+    LogUtil::CTFParams & legacyParams = pLogElt->getCTFParams();
+
+    // Attributes we want to extract.
+
+    int chan = -1;
+
+    // Legacy Log/Lin parameters:
+    double gamma     = std::numeric_limits<double>::quiet_NaN();
+    double refWhite  = std::numeric_limits<double>::quiet_NaN();
+    double refBlack  = std::numeric_limits<double>::quiet_NaN();
+    double highlight = std::numeric_limits<double>::quiet_NaN();
+    double shadow    = std::numeric_limits<double>::quiet_NaN();
+
+    // Try extracting the attributes.
+    unsigned i = 0;
+    while (atts[i])
+    {
+        if (0 == Platform::Strcasecmp(ATTR_CHAN, atts[i]))
+        {
+            if (0 == Platform::Strcasecmp("R", atts[i + 1]))
+            {
+                chan = 0;
+            }
+            else if (0 == Platform::Strcasecmp("G", atts[i + 1]))
+            {
+                chan = 1;
+            }
+            else if (0 == Platform::Strcasecmp("B", atts[i + 1]))
+            {
+                chan = 2;
+            }
+            // Chan is optional but, if present, must be legal.
+            else
+            {
+                std::ostringstream arg;
+                arg << "Illegal channel attribute value '";
+                arg << atts[i + 1] << "'.";
+
+                throwMessage(arg.str());
+            }
+        }
+        else if (!parseCineon(atts, i, gamma, refWhite, refBlack, highlight, shadow))
+        {
+            logParameterWarning(atts[i]);
+        }
+
+        i += 2;
+    }
+
+    setCineon(legacyParams, chan, gamma, refWhite, refBlack, highlight, shadow);
 }
 
 void CTFReaderLogParamsElt::end()
@@ -2815,11 +2807,11 @@ void CTFReaderLogParamsElt_2_0::start(const char ** atts)
     double linearSlope   = std::numeric_limits<double>::quiet_NaN();
 
     // Legacy Log/Lin parameters (if allowed for CTF v2 onward:
-    double gamma = std::numeric_limits<double>::quiet_NaN();
-    double refWhite = std::numeric_limits<double>::quiet_NaN();
-    double refBlack = std::numeric_limits<double>::quiet_NaN();
+    double gamma     = std::numeric_limits<double>::quiet_NaN();
+    double refWhite  = std::numeric_limits<double>::quiet_NaN();
+    double refBlack  = std::numeric_limits<double>::quiet_NaN();
     double highlight = std::numeric_limits<double>::quiet_NaN();
-    double shadow = std::numeric_limits<double>::quiet_NaN();
+    double shadow    = std::numeric_limits<double>::quiet_NaN();
 
     // Try extracting the attributes.
     unsigned i = 0;
@@ -2902,6 +2894,12 @@ void CTFReaderLogParamsElt_2_0::start(const char ** atts)
         i += 2;
     }
 
+    if (legacyParams.getType() == LogUtil::CTFParams::CINEON)
+    {
+        setCineon(legacyParams, chan, gamma, refWhite, refBlack, highlight, shadow);
+        return;
+    }
+
     // Validate the attributes are appropriate for the log style and set
     // the parameters (numeric validation is done by LogOpData::validate).
 
@@ -2918,23 +2916,34 @@ void CTFReaderLogParamsElt_2_0::start(const char ** atts)
         pLogElt->setBase(base);
     }
 
-    if (cameraStyle)
+    // The LogOpData does not have a style member, so some validation needs to happen here.
+
+    if (!IsNan(linSideBreak))
     {
-        if (!IsNan(linSideBreak))
+        if (!cameraStyle)
         {
-            newParams.push_back(linSideBreak);
-        }
-        else
-        {
-            ThrowM(*this, "Parameters '", ATTR_LINSIDEBREAK, "' should be defined for style '",
+            ThrowM(*this, "Parameter '", ATTR_LINSIDEBREAK, "' is only allowed for style '",
                    LogUtil::ConvertStyleToString(LogUtil::CAMERA_LOG_TO_LIN), "' or '",
                    LogUtil::ConvertStyleToString(LogUtil::CAMERA_LIN_TO_LOG), "'.");
         }
+        newParams.push_back(linSideBreak);
+    }
+    else if (cameraStyle)
+    {
+        ThrowM(*this, "Parameter '", ATTR_LINSIDEBREAK, "' should be defined for style '",
+               LogUtil::ConvertStyleToString(LogUtil::CAMERA_LOG_TO_LIN), "' or '",
+               LogUtil::ConvertStyleToString(LogUtil::CAMERA_LIN_TO_LOG), "'. ");
+    }
 
-        if (!IsNan(linearSlope))
+    if (!IsNan(linearSlope))
+    {
+        if (!cameraStyle)
         {
-            newParams.push_back(linearSlope);
+            ThrowM(*this, "Parameter '", ATTR_LINEARSLOPE, "' is only allowed for style '",
+                   LogUtil::ConvertStyleToString(LogUtil::CAMERA_LOG_TO_LIN), "' or '",
+                   LogUtil::ConvertStyleToString(LogUtil::CAMERA_LIN_TO_LOG), "'. ");
         }
+        newParams.push_back(linearSlope);
     }
 
     auto logOp = OCIO_DYNAMIC_POINTER_CAST<LogOpData>(pLogElt->getOp());

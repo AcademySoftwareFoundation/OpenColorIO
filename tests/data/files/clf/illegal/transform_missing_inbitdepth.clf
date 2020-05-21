@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="1" compCLFversion="3.0">
+    <Description>The inBitDepth is missing</Description>
+    <LUT1D  outBitDepth="8i">
+        <Array dim="2 1">
+64
+196
+        </Array>
+    </LUT1D>
+</ProcessList>

@@ -96,25 +96,36 @@ void AllocateTexture3D(unsigned index, unsigned & texId,
                     edgelen, edgelen, edgelen, 0, GL_RGB, GL_FLOAT, values);
 }
 
-void AllocateTexture2D(unsigned index, unsigned & texId, unsigned width, unsigned height,
-                        Interpolation interpolation, const float * values)
+void AllocateTexture2D(unsigned index, unsigned & texId, 
+                       unsigned width, unsigned height,
+                       GpuShaderDesc::TextureType channel,
+                       Interpolation interpolation, const float * values)
 {
-    if(values==0x0)
+    if (values == nullptr)
     {
-        throw Exception("Missing texture data");
+        throw Exception("Missing texture data.");
+    }
+
+    GLint internalformat = GL_RGB32F_ARB;
+    GLenum format        = GL_RGB;
+
+    if (channel == GpuShaderCreator::TEXTURE_RED_CHANNEL)
+    {
+        internalformat = GL_R32F;
+        format         = GL_RED;
     }
 
     glGenTextures(1, &texId);
 
     glActiveTexture(GL_TEXTURE0 + index);
 
-    if(height>1)
+    if (height > 1)
     {
         glBindTexture(GL_TEXTURE_2D, texId);
 
         SetTextureParameters(GL_TEXTURE_2D, interpolation);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F_ARB, width, height, 0, GL_RGB, GL_FLOAT, values);
+        glTexImage2D(GL_TEXTURE_2D, 0, internalformat, width, height, 0, format, GL_FLOAT, values);
     }
     else
     {
@@ -122,7 +133,7 @@ void AllocateTexture2D(unsigned index, unsigned & texId, unsigned width, unsigne
 
         SetTextureParameters(GL_TEXTURE_1D, interpolation);
 
-        glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB32F_ARB, width, 0, GL_RGB, GL_FLOAT, values);
+        glTexImage1D(GL_TEXTURE_1D, 0, internalformat, width, 0, format, GL_FLOAT, values);
     }
 }
 
@@ -337,7 +348,7 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
         // 2. Allocate the 1D LUT (a 2D texture is needed to hold large LUTs).
 
         unsigned texId = 0;
-        AllocateTexture2D(currIndex, texId, width, height, interpolation, values);
+        AllocateTexture2D(currIndex, texId, width, height, channel, interpolation, values);
 
         // 3. Keep the texture id & name for the later enabling.
 
