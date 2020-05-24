@@ -2,8 +2,7 @@ import os
 from random import randint
 
 
-TEST_DIR = os.path.join(os.getenv('CMAKE_BINARY_DIR', None),
-                        'tests', 'data', 'files')
+TEST_DATAFILES_DIR = os.path.join(os.getenv('BUILD_LOCATION', None), 'testdata')
 
 TEST_NAMES = ['default_name', 'HelloWorld',
                  'Simple Colourspace', 'a1b2c3d4', 'RGBA.1&2*3#']

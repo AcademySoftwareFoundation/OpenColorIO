@@ -25,7 +25,6 @@ class ColorSpaceTest(unittest.TestCase):
 
         # Known constants tests
         for i, allocation in enumerate(OCIO.Allocation.__members__.values()):
-            self.assertEqual(allocation.name, OCIO.Allocation(i).name)
             self.colorspace.setAllocation(allocation)
             self.assertEqual(allocation, self.colorspace.getAllocation())
 
@@ -69,10 +68,8 @@ class ColorSpaceTest(unittest.TestCase):
 
         # Known constants tests
         for i, bit_depth in enumerate(OCIO.BitDepth.__members__.values()):
-            self.assertEqual(bit_depth.name, OCIO.BitDepth(i).name)
             self.colorspace.setBitDepth(bit_depth)
-            self.assertEqual(OCIO.BitDepth(bit_depth),
-                             self.colorspace.getBitDepth())
+            self.assertEqual(bit_depth, self.colorspace.getBitDepth())
 
         # Wrong type tests (using TransformDirection instead.)
         for direction in OCIO.TransformDirection.__members__.values():
@@ -134,8 +131,7 @@ class ColorSpaceTest(unittest.TestCase):
         # Test ColorSpace class object getters from config
         cs = cfg.getColorSpace('vd8')
         self.assertEqual(cs.getName(), 'vd8')
-        self.assertEqual(cs.getDescription(),
-                         'how many transforms can we use?\n')
+        self.assertEqual(cs.getDescription(), 'how many transforms can we use?\n')
         self.assertEqual(cs.getFamily(), 'vd8')
         self.assertEqual(cs.getAllocation(), OCIO.ALLOCATION_UNIFORM)
         self.assertEqual(cs.getAllocationVars(), [])
@@ -144,8 +140,8 @@ class ColorSpaceTest(unittest.TestCase):
         self.assertFalse(cs.isData())
 
         to_ref = cs.getTransform(OCIO.COLORSPACE_DIR_TO_REFERENCE)
-        transforms = to_ref.getTransforms()
-        self.assertEqual(len(transforms), 3)
+        self.assertIsInstance(to_ref, OCIO.GroupTransform)
+        self.assertEqual(len(to_ref), 3)
 
     def test_constructor_with_keyword(self):
         """
@@ -294,9 +290,7 @@ class ColorSpaceTest(unittest.TestCase):
         """
 
         # Known constants tests
-        for i, direction in enumerate(
-                OCIO.ColorSpaceDirection.__members__.values()):
-            self.assertEqual(direction.name, OCIO.ColorSpaceDirection(i).name)
+        for i, direction in enumerate(OCIO.ColorSpaceDirection.__members__.values()):
             if direction == OCIO.COLORSPACE_DIR_UNKNOWN:
                 with self.assertRaises(OCIO.Exception):
                     self.colorspace.setTransform(self.log_tr, direction)

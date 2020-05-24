@@ -107,12 +107,11 @@ return out_pixel;
         self.assertEqual(ctx.isEditable(), False)
         ctx = ctx.createEditableCopy()
         self.assertEqual(ctx.isEditable(), True)
-        ctx.setEnvironmentMode(OCIO.Constants.ENV_ENVIRONMENT_LOAD_ALL)
+        ctx.setEnvironmentMode(OCIO.ENV_ENVIRONMENT_LOAD_ALL)
     
     def test_interface(self):
         
-        _cfg = OCIO.Config().CreateFromStream(self.SIMPLE_PROFILE)
-        _cfge = _cfg.createEditableCopy()
+        _cfge = OCIO.Config().CreateFromStream(self.SIMPLE_PROFILE)
         _cfge.clearEnvironmentVars()
         self.assertEqual(0, _cfge.getNumEnvironmentVars())
         _cfge.addEnvironmentVar("FOO", "test1")
@@ -135,10 +134,8 @@ return out_pixel;
         self.assertEqual(self.SIMPLE_PROFILE, _cfg.serialize())
         #self.assertEqual("$07d1fb1509eeae1837825fd4242f8a69:$885ad1683add38a11f7bbe34e8bf9ac0",
         #                _cfg.getCacheID())
-        con = _cfg.getCurrentContext()
+        con = _cfge.getCurrentContext()
         self.assertNotEqual(0, con.getNumStringVars())
-        #self.assertEqual("", _cfg.getCacheID(con))
-        #self.assertEqual("", _cfge.getWorkingDir())
         _cfge.setWorkingDir("/foobar")
         self.assertEqual("/foobar", _cfge.getWorkingDir())
         self.assertEqual(3, _cfge.getNumColorSpaces())

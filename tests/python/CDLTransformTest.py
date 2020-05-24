@@ -6,11 +6,10 @@ import os
 import sys
 
 import PyOpenColorIO as OCIO
-from UnitTestUtils import TEST_DIR, TEST_NAMES, TEST_DESCS
+from UnitTestUtils import TEST_DATAFILES_DIR, TEST_NAMES, TEST_DESCS
 
 
-DEFAULT_CDL = """
-<ColorCorrection id="">
+DEFAULT_CDL = """<ColorCorrection id="">
     <SOPNode>
         <Slope>1 1 1</Slope>
         <Offset>0 0 0</Offset>
@@ -19,8 +18,7 @@ DEFAULT_CDL = """
     <SatNode>
         <Saturation>1</Saturation>
     </SatNode>
-</ColorCorrection>
-"""
+</ColorCorrection>"""
 
 
 class CDLTransformTest(unittest.TestCase):
@@ -37,8 +35,7 @@ class CDLTransformTest(unittest.TestCase):
     TEST_CDL_OFFSET = [3, 3.5, 4]
     TEST_CDL_POWER = [4.5, 5, 5.5]
     TEST_CDL_SAT = 6
-    TEST_CDL = """
-<ColorCorrection id="{0}">
+    TEST_CDL = """<ColorCorrection id="{0}">
     <SOPNode>
         <Description>{1}</Description>
         <Slope>{2}</Slope>
@@ -48,8 +45,7 @@ class CDLTransformTest(unittest.TestCase):
     <SatNode>
         <Saturation>{5}</Saturation>
     </SatNode>
-</ColorCorrection>
-""".format(TEST_CDL_ID,
+</ColorCorrection>""".format(TEST_CDL_ID,
            TEST_CDL_DESC,
            ' '.join([str(s) for s in TEST_CDL_SLOPE]),
            ' '.join([str(o) for o in TEST_CDL_OFFSET]),
@@ -155,12 +151,13 @@ class CDLTransformTest(unittest.TestCase):
         """
 
         # Default initialized direction is forward.
-        self.assertEqual(self.cdl_tr.getDirection(),
-                         OCIO.TRANSFORM_DIR_FORWARD)
+        self.assertEqual(self.cdl_tr.getDirection(), OCIO.TRANSFORM_DIR_FORWARD)
 
         for direction in OCIO.TransformDirection.__members__.values():
-            self.cdl_tr.setDirection(direction)
-            self.assertEqual(self.cdl_tr.getDirection(), direction)
+            # Setting the unknown direction preserves the current direction.
+            if direction != OCIO.TRANSFORM_DIR_UNKNOWN:
+                self.cdl_tr.setDirection(direction)
+                self.assertEqual(self.cdl_tr.getDirection(), direction)
 
     def test_style(self):
         """
@@ -179,8 +176,6 @@ class CDLTransformTest(unittest.TestCase):
         Test the setXML() and getXML() methods.
         """
 
-        print(self.TEST_CDL)
-
         self.cdl_tr.setXML(self.TEST_CDL)
         self.assertEqual(self.cdl_tr.getID(), self.TEST_CDL_ID)
         self.assertEqual(self.cdl_tr.getDescription(), self.TEST_CDL_DESC)
@@ -198,16 +193,16 @@ class CDLTransformTest(unittest.TestCase):
         """
 
         # Try env var first to get test file path.
-        test_file = '%s/cdl_test1.cc' % TEST_DIR
+        test_file = '%s/cdl_test1.cc' % TEST_DATAFILES_DIR
 
         # Test cc file.
-        cdl2 = OCIO.CDLTransform.CreateFromFile(test_file, 'foo')
-        self.assertEqual(cdl2.getID(), 'foo')
-        self.assertEqual(cdl2.getDescription(), 'this is a description')
-        self.assertListEqual(cdl2.getSlope(), [1.1, 1.2, 1.3])
-        self.assertListEqual(cdl2.getOffset(), [2.1, 2.2, 2.3])
-        self.assertListEqual(cdl2.getPower(), [3.1, 3.2, 3.3])
-        self.assertEqual(cdl2.getSat(), 0.7)
+        cdl = OCIO.CDLTransform.CreateFromFile(test_file, 'foo')
+        self.assertEqual(cdl.getID(), 'foo')
+        self.assertEqual(cdl.getDescription(), 'this is a description')
+        self.assertListEqual(cdl.getSlope(), [1.1, 1.2, 1.3])
+        self.assertListEqual(cdl.getOffset(), [2.1, 2.2, 2.3])
+        self.assertListEqual(cdl.getPower(), [3.1, 3.2, 3.3])
+        self.assertEqual(cdl.getSat(), 0.7)
 
     def test_createfromfile_ccc(self):
         """
@@ -215,7 +210,7 @@ class CDLTransformTest(unittest.TestCase):
         """
 
         # Try env var first to get test file path.
-        test_file = '%s/cdl_test1.ccc' % TEST_DIR
+        test_file = '%s/cdl_test1.ccc' % TEST_DATAFILES_DIR
 
         # Test 4th member of the ccc file.
         cdl1 = OCIO.CDLTransform.CreateFromFile(test_file, '3')
@@ -240,16 +235,17 @@ class CDLTransformTest(unittest.TestCase):
         """
 
         # Try env var first to get test file path.
-        test_file = '%s/cdl_test1.cdl' % TEST_DIR
+        test_file = '%s/cdl_test1.cdl' % TEST_DATAFILES_DIR
 
         # Test a specified id member of the cdl file.
-        cdl2 = OCIO.CDLTransform.CreateFromFile(test_file, 'cc0003')
-        self.assertEqual(cdl2.getID(), 'cc0003')
-        self.assertEqual(cdl2.getDescription(), 'golden')
-        self.assertListEqual(cdl2.getSlope(), [1.2, 1.1, 1.0])
-        self.assertListEqual(cdl2.getOffset(), [0.0, 0.0, 0.0])
-        self.assertListEqual(cdl2.getPower(), [0.9, 1.0, 1.2])
-        self.assertEqual(cdl2.getSat(), 1.0)
+        cdl = OCIO.CDLTransform.CreateFromFile(test_file, 'cc0003')
+        self.assertEqual(cdl.getID(), 'cc0003')
+        self.assertEqual(cdl.getDescription(), 'golden')
+        self.assertListEqual(cdl.getSlope(), [1.2, 1.1, 1.0])
+        self.assertListEqual(cdl.getOffset(), [0.0, 0.0, 0.0])
+        self.assertListEqual(cdl.getPower(), [0.9, 1.0, 1.2])
+        self.assertEqual(cdl.getSat(), 1.0)
+
 
     def test_validate_slope(self):
         """
@@ -299,10 +295,10 @@ class CDLTransformTest(unittest.TestCase):
         self.cdl_tr.setDirection(OCIO.TRANSFORM_DIR_FORWARD)
         self.assertIsNone(self.cdl_tr.validate())
 
-        # Exception validation test
+        # As the CDL Transform does not support the unknown direction,
+        # it preserves the original direction.
         self.cdl_tr.setDirection(OCIO.TRANSFORM_DIR_UNKNOWN)
-        with self.assertRaises(OCIO.Exception):
-            self.cdl_tr.validate()
+        self.assertIsNone(self.cdl_tr.validate())
 
     def test_equality(self):
         """
