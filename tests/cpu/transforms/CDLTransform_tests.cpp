@@ -9,6 +9,7 @@
 #include "transforms/CDLTransform.cpp"
 
 #include "testutils/UnitTest.h"
+#include "UnitTestLogUtils.h"
 #include "UnitTestUtils.h"
 
 #include "Platform.h"
@@ -163,6 +164,24 @@ OCIO_ADD_TEST(CDLTransform, create_from_ccc_file)
         OCIO_CHECK_EQUAL(1.2, power[2]);
         OCIO_CHECK_EQUAL(1.0f, transform->getSat());
     }
+}
+
+OCIO_ADD_TEST(CDLTransform, create_from_cdl_file)
+{
+    // As warning messages are expected, please mute them.
+    OCIO::MuteLogging mute;
+
+    // Note: Detailed test is already done, this unit test only validates that
+    // this CDL file (i.e. containing a ColorDecisionList) correctly loads
+    // using a CDLTransform.
+
+    const std::string filePath(std::string(OCIO::getTestFilesDir()) + "/cdl_test1.cdl");
+
+    OCIO::CDLTransformRcPtr transform;
+
+    OCIO_CHECK_NO_THROW(transform = OCIO::CDLTransform::CreateFromFile(filePath.c_str(), "cc0003"));
+    OCIO_CHECK_EQUAL(std::string("cc0003"), std::string(transform->getID()));
+    OCIO_CHECK_EQUAL(transform->getStyle(), OCIO::CDL_NO_CLAMP);
 }
 
 OCIO_ADD_TEST(CDLTransform, create_from_ccc_file_failure)
