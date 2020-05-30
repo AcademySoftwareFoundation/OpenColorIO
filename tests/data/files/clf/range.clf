@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="9843a859-e41e-40a8-a51c-840889c3774e" compCLFversion="3.0">
+    <Description>Basic range example with no style attribute</Description>
+    <InputDescriptor>RGB</InputDescriptor>
+    <OutputDescriptor>RGB</OutputDescriptor>
+    <Range inBitDepth="16i" outBitDepth="16i">
+        <Description>Note that when style is missing, the default is to clamp.</Description>
+        <minInValue>16320</minInValue>
+        <maxInValue>32640</maxInValue>
+        <minOutValue>16320</minOutValue>
+        <maxOutValue>32640</maxOutValue>
+    </Range>
+</ProcessList>

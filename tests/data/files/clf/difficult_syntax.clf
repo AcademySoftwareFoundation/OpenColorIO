@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+
+
+
+<!-- Comment -->
+    <ProcessList compCLFversion="3" id="id1">
+<Info>
+    <Stuff>
+This is a "difficult" but 'legal' color transform file.
+    </Stuff>
+<!-- Comment -->
+<!-- Comment -->
+</Info>
+
+    <Matrix id="'mat-25'" inBitDepth="32f" outBitDepth='32f' name='"quote"'><Description>
+third array dim value is ignored
+
+
+
+</Description>
+        <Array dim="3 3 3">
+ 3.24000 -1.53700 -0.49850
+-0.96930  1.87600  0.04156
+ 0.05560 -0.20400  0.105730e+1
+
+            </Array>
+
+    </Matrix>
+
+    <Description>This is the ProcessList description.</Description>
+
+    <LUT1D id="4ed2af07-9319-430a-b18a-43368163c808" inBitDepth="32f" outBitDepth="32f"
+           name='a multi-line
+ name'>
+        <Description>the n&#8211;dash description</Description>
+        <Array dim="17 3">
+ 0.00000  0.00000  0.00000
+ 0.28358  2.8358E-1  0.28358
+ 0.38860  0.38860  0.38860
+ 0.46725  0.46725  0.46725
+<!-- Comment
+1.5 -3.2
+ -->
+ 0.53252  0.53252  0.53252
+ 0.58937  0.58937  0.58937
+ 0.64029  0.64029  0.64029  <!-- Comment -->
+ 0.68677  0.68677  0.68677
+0.72974  0.72974  0.72974
+ 0.76987  0.76987  0.76987
+0.80764  0.80764  0.80764
+ 0.84340  0.84340  0.84340
+ 0.87742  0.87742  
+0.87742
+ 0.90994  0.90994  0.90994 0.94111  0.94111  0.94111 0.97109  0.97109  0.99999 1.00000  1.00000  1.00000
+        </Array>
+
+    <Description>another valid 
+description 
+<!-- Comment <this is legal> -->element
+    </Description>
+
+
+    <Description>&amp; another &lt;valid&gt; desc</Description>
+
+    </LUT1D>
+    <Description>yet &apos;another&apos; &quot;valid&quot; desc</Description>
+</ProcessList>
+
+<!-- Comment -->

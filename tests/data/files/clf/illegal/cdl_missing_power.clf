@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="1" compCLFversion="3.0">
+   <Description>The SOPNode is optional, but if present, must contain Slope, Offset, and Power</Description>
+   <ASC_CDL id="look 1" name="cdl" inBitDepth="32f" outBitDepth="16f" style="FwdNoClamp">
+      <SOPNode>
+          <Slope>1.35 1.1 0.71</Slope>
+          <Offset>0.05 -0.23 0.11</Offset>
+          <!-- Missing Power -->
+      </SOPNode>
+      <SatNode>
+          <Saturation>1.239</Saturation>
+      </SatNode>
+   </ASC_CDL>
+</ProcessList>

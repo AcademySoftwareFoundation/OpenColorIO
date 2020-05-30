@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="e0a0ae4b-adc2-4c25-ad70-fa6f31ba219d" compCLFversion="3.0">
+    <Description>Range that clamps on the low side</Description>
+    <Range inBitDepth="32f" outBitDepth="16f" style="Clamp">
+        <!-- This is legal, but the formatting is a bit unsusual for a challenging test -->
+        <minOutValue> 0.1 </minOutValue>
+        <minInValue>     1e-1
+        </minInValue>
+    </Range>
+</ProcessList>

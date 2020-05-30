@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="empty" xmlns="urn:AMPAS:CLF:v3.0" compCLFversion="3.0">
+    <Description>Test support for NaN and Inf in Array values</Description>
+   <LUT1D inBitDepth="32f" outBitDepth="32f">
+      <Array dim="4 3">
+ NAN -NAN -NAN  
+NaN nan  INF  
+inf  inFInity -inf 
+-infinity  0  0
+      </Array>
+   </LUT1D>
+</ProcessList>

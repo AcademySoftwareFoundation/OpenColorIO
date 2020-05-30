@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="e0a0ae4b-adc2-4c25-ad70-fa6f31ba219d" compCLFversion="3.0" xmlns="urn:AMPAS:CLF:v3.0">
+    <Description>Test that tabs work as separators</Description>
+    <LUT3D interpolation="trilinear" inBitDepth="10i" outBitDepth="10i">
+        <Array dim="3 3 3 3">
+			-60	5	75
+			-10	50	400
+			0	100	1200
+			-40	500	-30
+			-80	400	500
+			-20	300	900
+			-30	1500	-20
+			-50	1023	100
+			-10		800	300
+			100	-5	-75
+			200	-50	600
+			300	100	1200
+			40	600	30
+			380	400	400
+			20	200	1100
+			530	1500	-50
+			450	1230	500
+			610	1800	300
+			1660	-50	-100
+			1510	150	200
+			900	-40	900
+			1240	300	-50
+			980	500	600
+			820	400	800
+			1030	-100	-50
+			1050		823	200
+			1110		900	1200
+        </Array>
+    </LUT3D>
+</ProcessList>

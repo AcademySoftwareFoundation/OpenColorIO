@@ -284,7 +284,7 @@ OCIO_ADD_TEST(Lut1DRenderer, finite_value_hue_adjust)
 
 OCIO_ADD_TEST(Lut1D, lut_1d_compose_with_bit_depth)
 {
-    const std::string ctfFile("lut1d_comp.clf");
+    const std::string ctfFile("clf/lut1d_comp.clf");
 
     OCIO::OpRcPtrVec ops;
     OCIO::ContextRcPtr context = OCIO::Context::Create();
