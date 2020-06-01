@@ -5405,10 +5405,10 @@ OCIO_ADD_TEST(CTFTransform, gamma5_ctf)
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="1.5" id="UID42">
     <Gamma inBitDepth="32f" outBitDepth="32f" style="monCurveFwd">
-        <GammaParams channel="R" gamma="2.22222" offset="0.099" />
-        <GammaParams channel="G" gamma="2.22222" offset="0.099" />
-        <GammaParams channel="B" gamma="2.22222" offset="0.099" />
-        <GammaParams channel="A" gamma="2.22222" offset="0.099" />
+        <GammaParams channel="R" gamma="2.22222222222222" offset="0.099" />
+        <GammaParams channel="G" gamma="2.22222222222222" offset="0.099" />
+        <GammaParams channel="B" gamma="2.22222222222222" offset="0.099" />
+        <GammaParams channel="A" gamma="2.22222222222222" offset="0.099" />
     </Gamma>
 </ProcessList>
 )" };
@@ -6067,7 +6067,7 @@ OCIO_ADD_TEST(CTFTransform, lut1d_10i_ctf)
         <Array dim="3 3">
    0    0    0
  511 4011.12 -24.103
-1023 1023 1023
+   1023    1023    1023
         </Array>
     </LUT1D>
 </ProcessList>
@@ -6395,7 +6395,7 @@ OCIO_ADD_TEST(CTFTransform, bitdepth_ctf)
         <Array dim="3 1">
    0
 511.5
-1023
+ 1023
         </Array>
     </LUT1D>
     <Exponent inBitDepth="10i" outBitDepth="16f" style="basicFwd">
