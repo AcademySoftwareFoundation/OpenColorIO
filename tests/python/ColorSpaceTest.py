@@ -46,7 +46,7 @@ class ColorSpaceTest(unittest.TestCase):
         alloc_vars = []
         for i in range(1, 5):
             # This will create [0.1] up to [0.1, 0.2, 0.3, 0.4]
-            alloc_vars.append(float('0.%i' % i))
+            alloc_vars.append(0.1 * i)
             if i < 2 or i > 3:
                 with self.assertRaises(OCIO.Exception):
                     self.colorspace.setAllocationVars(alloc_vars)
@@ -249,7 +249,6 @@ class ColorSpaceTest(unittest.TestCase):
         Test the setDescription() and getDescription() methods.
         """
 
-        # Test with TEST_DESCS
         for desc in TEST_DESCS:
             self.colorspace.setDescription(desc)
             self.assertEqual(desc, self.colorspace.getDescription())
@@ -259,7 +258,6 @@ class ColorSpaceTest(unittest.TestCase):
         Test the setEqualityGroup() and getEqualityGroup() methods.
         """
 
-        # Test with TEST_NAMES
         for name in TEST_NAMES:
             self.colorspace.setEqualityGroup(name)
             self.assertEqual(name, self.colorspace.getEqualityGroup())
@@ -269,7 +267,6 @@ class ColorSpaceTest(unittest.TestCase):
         Test the setFamily() and getFamily() methods.
         """
 
-        # Test with TEST_NAMES
         for name in TEST_NAMES:
             self.colorspace.setFamily(name)
             self.assertEqual(name, self.colorspace.getFamily())
@@ -279,7 +276,6 @@ class ColorSpaceTest(unittest.TestCase):
         Test the setName() and getName() methods.
         """
 
-        # Test with TEST_NAMES
         for name in TEST_NAMES:
             self.colorspace.setName(name)
             self.assertEqual(name, self.colorspace.getName())

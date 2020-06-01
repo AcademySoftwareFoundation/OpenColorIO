@@ -47,9 +47,9 @@ class CDLTransformTest(unittest.TestCase):
     </SatNode>
 </ColorCorrection>""".format(TEST_CDL_ID,
            TEST_CDL_DESC,
-           ' '.join([str(s) for s in TEST_CDL_SLOPE]),
-           ' '.join([str(o) for o in TEST_CDL_OFFSET]),
-           ' '.join([str(p) for p in TEST_CDL_POWER]),
+           ' '.join(map(str, TEST_CDL_SLOPE)),
+           ' '.join(map(str, TEST_CDL_OFFSET)),
+           ' '.join(map(str, TEST_CDL_POWER)),
            str(TEST_CDL_SAT))
 
     def setUp(self):
