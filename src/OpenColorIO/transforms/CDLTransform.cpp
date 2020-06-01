@@ -202,7 +202,7 @@ void ClearCDLTransformFileCache()
 
 CDLTransformRcPtr CDLTransform::CreateFromFile(const char * src, const char * cccid_)
 {
-    if (!src || (strlen(src) == 0))
+    if (!src || !*src)
     {
         std::ostringstream os;
         os << "Error loading CDL xml. ";
@@ -217,7 +217,7 @@ CDLTransformRcPtr CDLTransform::CreateFromFile(const char * src, const char * cc
     AutoMutex lock(g_cacheMutex);
 
     // Use g_cacheSrcIsCC as a proxy for if we have loaded this source
-    // file already (in which case it must be in cache, or an error)
+    // file already (in which case it must be in cache, or an error).
 
     StringBoolMap::iterator srcIsCCiter = g_cacheSrcIsCC.find(src);
     if (srcIsCCiter != g_cacheSrcIsCC.end())
@@ -252,7 +252,7 @@ CDLTransformRcPtr CDLTransform::CreateFromFile(const char * src, const char * cc
         throw Exception (os.str().c_str());
     }
 
-    // Try to read all ccs from the file, into cache
+    // Try to read all ccs from the file, into cache.
     std::ifstream istream(src);
     if (istream.fail())
     {
@@ -268,7 +268,7 @@ CDLTransformRcPtr CDLTransform::CreateFromFile(const char * src, const char * cc
 
     if (parser.isCC())
     {
-        // Load a single ColorCorrection into the cache
+        // Load a single ColorCorrection into the cache.
         CDLTransformRcPtr cdl = CDLTransform::Create();
         parser.getCDLTransform(cdl);
 
@@ -276,10 +276,10 @@ CDLTransformRcPtr CDLTransform::CreateFromFile(const char * src, const char * cc
         g_cacheSrcIsCC[src] = true;
         g_cache[GetCDLLocalCacheKey(src, cccid)] = cdl;
     }
-    else if (parser.isCCC())
+    else
     {
-        // Load all CCs from the ColorCorrectionCollection
-        // into the cache
+        // Load all CCs from the ColorCorrectionCollection or from the ColorDecisionList
+        // into the cache.
         CDLTransformMap transformMap;
         CDLTransformVec transformVec;
         FormatMetadataImpl metadata;
