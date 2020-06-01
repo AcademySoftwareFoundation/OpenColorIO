@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <chrono>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -12,6 +11,7 @@ namespace OIIO = OIIO_NAMESPACE;
 #endif
 
 #include "apputils/argparse.h"
+#include "apputils/measure.h"
 #include "OpenEXR/half.h"
 #include "oiiohelpers.h"
 #include "utils/StringUtils.h"
@@ -20,75 +20,6 @@ namespace OIIO = OIIO_NAMESPACE;
 namespace OCIO = OCIO_NAMESPACE;
 
 
-
-// Utility to measure time in ms.
-class Measure
-{
-public:
-    Measure() = delete;
-    Measure(const Measure &) = delete;
-
-    explicit Measure(const char * explanation, unsigned iterations)
-        :   m_explanations(explanation)
-        ,   m_iterations(iterations)
-        ,   m_started(false)
-        ,   m_duration(0)
-    {
-    }
-
-    ~Measure()
-    {
-        if(m_started)
-        {
-            pause();
-        }
-
-        std::cout << std::endl;
-        std::cout << m_explanations << std::endl;
-        std::cout << "  CPU processing took: "
-                  << (m_duration.count()/float(m_iterations))
-                  <<  " ms" << std::endl;
-    }
-
-    void resume()
-    {
-        if(m_started)
-        {
-            throw OCIO::Exception("Measure already started.");
-        }
-
-        m_started = true;
-        m_start = std::chrono::high_resolution_clock::now();
-    }
-
-    void pause()
-    {
-        std::chrono::high_resolution_clock::time_point end
-           = std::chrono::high_resolution_clock::now();
-
-        if(m_started)
-        {
-            std::chrono::duration<float, std::milli> duration = end - m_start;
-
-            m_duration += duration;
-        }
-        else
-        {
-            throw OCIO::Exception("Measure already stopped.");
-        }
-
-        m_started = false;
-    }
-
-private:
-    const std::string m_explanations;
-    const unsigned m_iterations;
-
-    bool m_started;
-    std::chrono::high_resolution_clock::time_point m_start;
-
-    std::chrono::duration<float, std::milli> m_duration;
-};
 
 // Load in memory an image from disk.
 void LoadImage(const std::string & filepath,
