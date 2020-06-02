@@ -15,6 +15,7 @@ Attendees:
   * [ ] Patrick Hodoul (_TSC_) - Autodesk
   * [ ] John Mertic - Academy Software Foundation / Linux Foundation
   * [ ] Carol Payne (_TSC_) - Netflix
+  * [ ] Mark Titchener (_TSC_) - Foundry
   * [ ] Carl Rand (_TSC_) - Weta Digital
   * [ ] Doug Walker (_TSC Chief Architect_) - Autodesk
   * [ ] Kevin Wheatley (_TSC_) - Framestore
