@@ -10,39 +10,39 @@ class TransformsTest(unittest.TestCase):
 
         ### AllocationTransform ###
         at = OCIO.AllocationTransform()
-        self.assertEqual(OCIO.Constants.ALLOCATION_UNIFORM, at.getAllocation())
-        at.setAllocation(OCIO.Constants.ALLOCATION_LG2)
-        self.assertEqual(OCIO.Constants.ALLOCATION_LG2, at.getAllocation())
+        self.assertEqual(OCIO.ALLOCATION_UNIFORM, at.getAllocation())
+        at.setAllocation(OCIO.ALLOCATION_LG2)
+        self.assertEqual(OCIO.ALLOCATION_LG2, at.getAllocation())
         self.assertEqual(0, at.getNumVars())
         at.setVars([0.1, 0.2, 0.3])
         self.assertEqual(3, at.getNumVars())
         newvars = at.getVars()
         self.assertAlmostEqual(0.2, newvars[1], delta=1e-8)
 
-        at2 = OCIO.AllocationTransform(OCIO.Constants.ALLOCATION_LG2,
+        at2 = OCIO.AllocationTransform(OCIO.ALLOCATION_LG2,
                                        [0.1, 0.2, 0.3],
-                                       OCIO.Constants.TRANSFORM_DIR_INVERSE)
-        self.assertEqual(OCIO.Constants.ALLOCATION_LG2, at2.getAllocation())
+                                       OCIO.TRANSFORM_DIR_INVERSE)
+        self.assertEqual(OCIO.ALLOCATION_LG2, at2.getAllocation())
         self.assertEqual(3, at2.getNumVars())
         newvars2 = at2.getVars()
         for i in range(0, 3):
             self.assertAlmostEqual(float(i+1)/10.0, newvars2[i], delta=1e-7)
-        self.assertEqual(OCIO.Constants.TRANSFORM_DIR_INVERSE, at2.getDirection())
+        self.assertEqual(OCIO.TRANSFORM_DIR_INVERSE, at2.getDirection())
 
-        at3 = OCIO.AllocationTransform(allocation=OCIO.Constants.ALLOCATION_LG2,
+        at3 = OCIO.AllocationTransform(allocation=OCIO.ALLOCATION_LG2,
                                        vars=[0.1, 0.2, 0.3],
-                                       direction=OCIO.Constants.TRANSFORM_DIR_INVERSE)
-        self.assertEqual(OCIO.Constants.ALLOCATION_LG2, at3.getAllocation())
+                                       direction=OCIO.TRANSFORM_DIR_INVERSE)
+        self.assertEqual(OCIO.ALLOCATION_LG2, at3.getAllocation())
         self.assertEqual(3, at3.getNumVars())
         newvars3 = at3.getVars()
         for i in range(0, 3):
             self.assertAlmostEqual(float(i+1)/10.0, newvars3[i], delta=1e-7)
-        self.assertEqual(OCIO.Constants.TRANSFORM_DIR_INVERSE, at3.getDirection())
+        self.assertEqual(OCIO.TRANSFORM_DIR_INVERSE, at3.getDirection())
 
         ### Base Transform method tests ###
-        self.assertEqual(OCIO.Constants.TRANSFORM_DIR_FORWARD, at.getDirection())
-        at.setDirection(OCIO.Constants.TRANSFORM_DIR_UNKNOWN)
-        self.assertEqual(OCIO.Constants.TRANSFORM_DIR_UNKNOWN, at.getDirection())
+        self.assertEqual(OCIO.TRANSFORM_DIR_FORWARD, at.getDirection())
+        at.setDirection(OCIO.TRANSFORM_DIR_UNKNOWN)
+        self.assertEqual(OCIO.TRANSFORM_DIR_UNKNOWN, at.getDirection())
 
         ### CDLTransform ###
         cdl = OCIO.CDLTransform()
@@ -104,7 +104,7 @@ class TransformsTest(unittest.TestCase):
                                  [1.1, 1.2, 1.3],
                                  [2.1, 2.2, 2.3],
                                  0.5,
-                                 OCIO.Constants.TRANSFORM_DIR_INVERSE,
+                                 OCIO.TRANSFORM_DIR_INVERSE,
                                  'foobar123', 'bar')
         slope2 = cdl2.getSlope()
         offset2 = cdl2.getOffset()
@@ -118,7 +118,7 @@ class TransformsTest(unittest.TestCase):
         self.assertAlmostEqual(0.2126, luma2[0], delta=1e-8)
         self.assertAlmostEqual(0.7152, luma2[1], delta=1e-8)
         self.assertAlmostEqual(0.0722, luma2[2], delta=1e-8)
-        self.assertEqual(OCIO.Constants.TRANSFORM_DIR_INVERSE, cdl2.getDirection())
+        self.assertEqual(OCIO.TRANSFORM_DIR_INVERSE, cdl2.getDirection())
         self.assertEqual('foobar123', cdl2.getID())
         self.assertEqual('bar', cdl2.getDescription())
 
@@ -126,7 +126,7 @@ class TransformsTest(unittest.TestCase):
                                  offset=[1.1, 1.2, 1.3],
                                  power=[2.1, 2.2, 2.3],
                                  sat=0.5,
-                                 direction=OCIO.Constants.TRANSFORM_DIR_INVERSE,
+                                 direction=OCIO.TRANSFORM_DIR_INVERSE,
                                  id='foobar123', description='bar')
         slope3 = cdl2.getSlope()
         offset3 = cdl2.getOffset()
@@ -140,7 +140,7 @@ class TransformsTest(unittest.TestCase):
         self.assertAlmostEqual(0.2126, luma3[0], delta=1e-8)
         self.assertAlmostEqual(0.7152, luma3[1], delta=1e-8)
         self.assertAlmostEqual(0.0722, luma3[2], delta=1e-8)
-        self.assertEqual(OCIO.Constants.TRANSFORM_DIR_INVERSE, cdl3.getDirection())
+        self.assertEqual(OCIO.TRANSFORM_DIR_INVERSE, cdl3.getDirection())
         self.assertEqual('foobar123', cdl3.getID())
         self.assertEqual('bar', cdl3.getDescription())
 
@@ -175,19 +175,19 @@ class TransformsTest(unittest.TestCase):
         self.assertEqual(True, dt.getLooksOverrideEnabled())
 
         dt2 = OCIO.DisplayTransform("lin18", "sRGB", "foobar",
-                                    OCIO.Constants.TRANSFORM_DIR_INVERSE)
+                                    OCIO.TRANSFORM_DIR_INVERSE)
         self.assertEqual("lin18", dt2.getInputColorSpaceName())
         self.assertEqual("sRGB", dt2.getDisplay())
         self.assertEqual("foobar", dt2.getView())
-        self.assertEqual(OCIO.Constants.TRANSFORM_DIR_INVERSE, dt2.getDirection())
+        self.assertEqual(OCIO.TRANSFORM_DIR_INVERSE, dt2.getDirection())
 
         dt3 = OCIO.DisplayTransform(inputColorSpaceName="lin18",
                                     display="sRGB", view="foobar",
-                                    direction=OCIO.Constants.TRANSFORM_DIR_INVERSE)
+                                    direction=OCIO.TRANSFORM_DIR_INVERSE)
         self.assertEqual("lin18", dt3.getInputColorSpaceName())
         self.assertEqual("sRGB", dt3.getDisplay())
         self.assertEqual("foobar", dt3.getView())
-        self.assertEqual(OCIO.Constants.TRANSFORM_DIR_INVERSE, dt3.getDirection())
+        self.assertEqual(OCIO.TRANSFORM_DIR_INVERSE, dt3.getDirection())
 
         ### ExponentTransform ###
         et = OCIO.ExponentTransform()
@@ -201,8 +201,8 @@ class TransformsTest(unittest.TestCase):
         self.assertEqual("foo", ft.getSrc())
         ft.setCCCId("foobar")
         self.assertEqual("foobar", ft.getCCCId())
-        ft.setInterpolation(OCIO.Constants.INTERP_NEAREST)
-        self.assertEqual(OCIO.Constants.INTERP_NEAREST, ft.getInterpolation())
+        ft.setInterpolation(OCIO.INTERP_NEAREST)
+        self.assertEqual(OCIO.INTERP_NEAREST, ft.getInterpolation())
         self.assertEqual(24, ft.getNumFormats())
         self.assertEqual("flame", ft.getFormatNameByIndex(0))
         self.assertEqual("3dl", ft.getFormatExtensionByIndex(0))
@@ -213,7 +213,7 @@ class TransformsTest(unittest.TestCase):
         gt.appendTransform(ft)
         self.assertEqual(2, gt.getNumTransforms())
         foo = gt.getTransform(0)
-        self.assertEqual(OCIO.Constants.TRANSFORM_DIR_FORWARD, foo.getDirection())
+        self.assertEqual(OCIO.TRANSFORM_DIR_FORWARD, foo.getDirection())
 
         ### LogTransform ###
         lt = OCIO.LogTransform()
@@ -262,25 +262,25 @@ class TransformsTest(unittest.TestCase):
                                     0.9, 1.0, 1.1, 1.2,
                                     1.3, 1.4, 1.5, 1.6],
                                    [0.1, 0.2, 0.3, 0.4],
-                                   OCIO.Constants.TRANSFORM_DIR_INVERSE)
+                                   OCIO.TRANSFORM_DIR_INVERSE)
         m44_4 = mt4.getMatrix()
         offset_4 = mt4.getOffset()
         for i in range(0, 16):
             self.assertAlmostEqual(float(i+1)/10.0, m44_4[i], delta=1e-7)
         for i in range(0, 4):
             self.assertAlmostEqual(float(i+1)/10.0, offset_4[i], delta=1e-7)
-        self.assertEqual(mt4.getDirection(), OCIO.Constants.TRANSFORM_DIR_INVERSE)
+        self.assertEqual(mt4.getDirection(), OCIO.TRANSFORM_DIR_INVERSE)
 
         mt5 = OCIO.MatrixTransform(matrix=[0.1, 0.2, 0.3, 0.4,
                                            0.5, 0.6, 0.7, 0.8,
                                            0.9, 1.0, 1.1, 1.2,
                                            1.3, 1.4, 1.5, 1.6],
                                    offset=[0.1, 0.2, 0.3, 0.4],
-                                   direction=OCIO.Constants.TRANSFORM_DIR_INVERSE)
+                                   direction=OCIO.TRANSFORM_DIR_INVERSE)
         m44_5 = mt5.getMatrix()
         offset_5 = mt5.getOffset()
         for i in range(0, 16):
             self.assertAlmostEqual(float(i+1)/10.0, m44_5[i], delta=1e-7)
         for i in range(0, 4):
             self.assertAlmostEqual(float(i+1)/10.0, offset_5[i], delta=1e-7)
-        self.assertEqual(mt5.getDirection(), OCIO.Constants.TRANSFORM_DIR_INVERSE)
+        self.assertEqual(mt5.getDirection(), OCIO.TRANSFORM_DIR_INVERSE)
