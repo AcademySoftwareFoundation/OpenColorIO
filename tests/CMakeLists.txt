@@ -21,5 +21,5 @@ if(OCIO_BUILD_JAVA)
 endif()
 
 #if(OCIO_BUILD_PYTHON)
-#	add_subdirectory(python)
+	add_subdirectory(python)
 #endif()

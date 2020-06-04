@@ -7,7 +7,7 @@ import unittest, os, sys
 import PyOpenColorIO as OCIO
 
 class BakerTest(unittest.TestCase):
-    
+
     def __init__(self, testName, sseBuild):
         super(BakerTest, self).__init__(testName)
         self.useSSE = sseBuild
@@ -30,7 +30,7 @@ colorspaces:
     isdata: false
     allocation: uniform
     to_reference: !<ExponentTransform> {value: [2.2, 2.2, 2.2, 1]}"""
-    
+
     EXPECTED_LUT_NONSSE = """CSPLUTV100
 3D
 
@@ -116,4 +116,3 @@ END METADATA
         self.assertEqual(10, bakee.getNumFormats())
         self.assertEqual("cinespace", bakee.getFormatNameByIndex(4))
         self.assertEqual("3dl", bakee.getFormatExtensionByIndex(1))
-
