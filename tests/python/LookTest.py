@@ -33,6 +33,7 @@ class LookTest(unittest.TestCase):
         # Wrong type tests.
         with self.assertRaises(TypeError):
             self.look.setName(None)
+            self.look.setName(1)
 
     def test_process(self):
         """
@@ -49,6 +50,7 @@ class LookTest(unittest.TestCase):
         # Wrong type tests.
         with self.assertRaises(TypeError):
             self.look.setProcessSpace(None)
+            self.look.setProcessSpace(1)
 
     def test_description(self):
         """
@@ -65,6 +67,7 @@ class LookTest(unittest.TestCase):
         # Wrong type tests.
         with self.assertRaises(TypeError):
             self.look.setDescription(None)
+            self.look.setDescription(1)
 
     def test_transform(self):
         """
@@ -84,6 +87,7 @@ class LookTest(unittest.TestCase):
         # Wrong type tests.
         with self.assertRaises(TypeError):
             self.look.setTransform(OCIO.ALLOCATION_UNIFORM)
+            self.look.setTransform(1)
 
     def test_inverse_transform(self):
         """
@@ -103,6 +107,7 @@ class LookTest(unittest.TestCase):
         # Wrong type tests.
         with self.assertRaises(TypeError):
             self.look.setInverseTransform(OCIO.ALLOCATION_UNIFORM)
+            self.look.setInverseTransform(1)
 
     def test_constructor_with_keyword(self):
         """
@@ -178,3 +183,4 @@ class LookTest(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             look = OCIO.Look(None)
+            look = OCIO.Look(1)
