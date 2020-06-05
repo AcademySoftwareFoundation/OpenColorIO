@@ -43,6 +43,7 @@ void bindPyLook(py::module & m)
         .def("setInverseTransform", &Look::setInverseTransform, "transform"_a)
         .def("getDescription", &Look::getDescription)
         .def("setDescription", &Look::setDescription, "description"_a.none(false));
+
     defStr(cls);
 }
 

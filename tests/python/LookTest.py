@@ -31,9 +31,9 @@ class LookTest(unittest.TestCase):
             self.assertEqual(name, self.look.getName())
 
         # Wrong type tests.
-        with self.assertRaises(TypeError):
-            self.look.setName(None)
-            self.look.setName(1)
+        for invalid in (None, 1):
+            with self.assertRaises(TypeError):
+                self.look.setName(invalid)
 
     def test_process(self):
         """
@@ -48,9 +48,9 @@ class LookTest(unittest.TestCase):
             self.assertEqual(process_space, self.look.getProcessSpace())
 
         # Wrong type tests.
-        with self.assertRaises(TypeError):
-            self.look.setProcessSpace(None)
-            self.look.setProcessSpace(1)
+        for invalid in (None, 1):
+            with self.assertRaises(TypeError):
+                self.look.setProcessSpace(invalid)
 
     def test_description(self):
         """
@@ -65,9 +65,9 @@ class LookTest(unittest.TestCase):
             self.assertEqual(desc, self.look.getDescription())
 
         # Wrong type tests.
-        with self.assertRaises(TypeError):
-            self.look.setDescription(None)
-            self.look.setDescription(1)
+        for invalid in (None, 1):
+            with self.assertRaises(TypeError):
+                self.look.setDescription(invalid)
 
     def test_transform(self):
         """
@@ -85,9 +85,9 @@ class LookTest(unittest.TestCase):
         self.assertListEqual(oet.getValue(), exp_values)
 
         # Wrong type tests.
-        with self.assertRaises(TypeError):
-            self.look.setTransform(OCIO.ALLOCATION_UNIFORM)
-            self.look.setTransform(1)
+        for invalid in (OCIO.ALLOCATION_UNIFORM, 1):
+            with self.assertRaises(TypeError):
+                self.look.setTransform(invalid)
 
     def test_inverse_transform(self):
         """
@@ -105,9 +105,9 @@ class LookTest(unittest.TestCase):
         self.assertListEqual(inv_oet.getValue(), exp_values)
 
         # Wrong type tests.
-        with self.assertRaises(TypeError):
-            self.look.setInverseTransform(OCIO.ALLOCATION_UNIFORM)
-            self.look.setInverseTransform(1)
+        for invalid in (OCIO.ALLOCATION_UNIFORM, 1):
+            with self.assertRaises(TypeError):
+                self.look.setInverseTransform(invalid)
 
     def test_constructor_with_keyword(self):
         """
@@ -181,6 +181,6 @@ class LookTest(unittest.TestCase):
         Test Look constructor with a wrong parameter type.
         """
 
-        with self.assertRaises(TypeError):
-            look = OCIO.Look(None)
-            look = OCIO.Look(1)
+        for invalid in (None, 1):
+            with self.assertRaises(TypeError):
+                look = OCIO.Look(invalid)
