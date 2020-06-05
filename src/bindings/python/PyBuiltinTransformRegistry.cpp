@@ -97,7 +97,7 @@ void bindPyBuiltinTransformRegistry(py::module & m)
         .def("__iter__", [](BuiltinStyleIterator & it) -> BuiltinStyleIterator & { return it; })
         .def("__next__", [](BuiltinStyleIterator & it)
             {
-                int i = it.nextIndex(it.m_obj.getNumBuiltins());
+                int i = it.nextIndex((int)it.m_obj.getNumBuiltins());
                 return it.m_obj.getBuiltinStyle(i);
             });
 
@@ -112,7 +112,7 @@ void bindPyBuiltinTransformRegistry(py::module & m)
         .def("__iter__", [](BuiltinIterator & it) -> BuiltinIterator & { return it; })
         .def("__next__", [](BuiltinIterator & it)
             {
-                int i = it.nextIndex(it.m_obj.getNumBuiltins());
+                int i = it.nextIndex((int)it.m_obj.getNumBuiltins());
                 return py::make_tuple(it.m_obj.getBuiltinStyle(i), 
                                       it.m_obj.getBuiltinDescription(i));
             });
