@@ -5,6 +5,7 @@ import collections
 import unittest
 
 import PyOpenColorIO as OCIO
+from UnitTestUtils import STRING_TYPES
 
 
 class BuiltinTransformRegistryTest(unittest.TestCase):
@@ -19,8 +20,8 @@ class BuiltinTransformRegistryTest(unittest.TestCase):
         # Iterate all styles, validating all are non-empty strings
         all_styles = []
         for style in self.REGISTRY:
-            self.assertIsInstance(style, str)
-            self.assertIsInstance(self.REGISTRY[style], str)
+            self.assertIsInstance(style, STRING_TYPES)
+            self.assertIsInstance(self.REGISTRY[style], STRING_TYPES)
             all_styles.append(style)
 
         # All styles were iterated over, and __len__ and list() behave
@@ -39,22 +40,22 @@ class BuiltinTransformRegistryTest(unittest.TestCase):
         for i in range(len(iterator)):
             # Item at index matches list result
             self.assertEqual(iterator[i], values[i])
-            self.assertIsInstance(iterator[i], str)
+            self.assertIsInstance(iterator[i], STRING_TYPES)
 
     def test_get_builtins(self):
         # tuple iterator (like dict.items())
         for item in self.REGISTRY.getBuiltins():
             self.assertIsInstance(item, tuple)
             self.assertEqual(len(item), 2)
-            self.assertIsInstance(item[0], str)
-            self.assertIsInstance(item[1], str)
+            self.assertIsInstance(item[0], STRING_TYPES)
+            self.assertIsInstance(item[1], STRING_TYPES)
 
         # tuple unpacking support
         for style, desc in self.REGISTRY.getBuiltins():
             # __getitem__ has correct result
             self.assertEqual(self.REGISTRY[style], desc)
-            self.assertIsInstance(style, str)
-            self.assertIsInstance(desc, str)
+            self.assertIsInstance(style, STRING_TYPES)
+            self.assertIsInstance(desc, STRING_TYPES)
 
         # Test iterator instance
         iterator = self.REGISTRY.getBuiltins()
@@ -71,8 +72,8 @@ class BuiltinTransformRegistryTest(unittest.TestCase):
 
             self.assertIsInstance(iterator[i], tuple)
             self.assertEqual(len(iterator[i]), 2)
-            self.assertIsInstance(iterator[i][0], str)
-            self.assertIsInstance(iterator[i][1], str)
+            self.assertIsInstance(iterator[i][0], STRING_TYPES)
+            self.assertIsInstance(iterator[i][1], STRING_TYPES)
 
     def test_contains(self):
         # Valid __contains__ for all styles
