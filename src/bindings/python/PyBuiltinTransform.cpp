@@ -25,7 +25,7 @@ void bindPyBuiltinTransform(py::module & m)
              "style"_a = DEFAULT->getStyle(),
              "dir"_a = DEFAULT->getDirection())
 
-        .def("setStyle",       &BuiltinTransform::setStyle, "style"_a)
+        .def("setStyle",       &BuiltinTransform::setStyle, "style"_a.none(false))
         .def("getStyle",       &BuiltinTransform::getStyle)
         .def("getDescription", &BuiltinTransform::getDescription);
 }
