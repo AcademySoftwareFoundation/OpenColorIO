@@ -26,6 +26,12 @@
 namespace OCIO_NAMESPACE
 {
 
+// Note: 17 would allow exactly restoring most doubles but anything higher than 15,
+// introduces some serialization issues such as: 81.9 -> 81.90000000000001.
+// This results in less pretty output and also causes problems for some unit tests.  
+static constexpr unsigned DOUBLE_PRECISION = 15;
+
+
 void CTFVersion::ReadVersion(const std::string & versionString, CTFVersion & versionOut)
 {
     unsigned int numDot = 0;
@@ -495,7 +501,7 @@ template <>
 void SetOStream<double>(double, std::ostream & xml)
 {
     xml.width(19);
-    xml.precision(15);
+    xml.precision(DOUBLE_PRECISION);
 }
 
 template<typename Iter, typename scaleType>
@@ -507,73 +513,101 @@ void WriteValues(XmlFormatter & formatter,
                  unsigned iterStep,
                  scaleType scale)
 {
-    std::ostream& xml = formatter.getStream();
+    // Method used to write an array of values of the same type.
+
+    std::ostream & xml = formatter.getStream();
+    std::ostringstream oss;
+
+    // The numbers in a CLF/CTF file may always contain fractional values, regardless of the
+    // bit-depth attributes.  E.g., even if the bit-depth is 8i, the array could contain values
+    // such as [-0.1, 8, 100.234, 305].  However, we do use the bit-depth to initialize the most
+    // likely formatting to use when printing arrays with large numbers of values such as LUTs.
+    // And if the array really does only have integers, it is nicer to print those without
+    // decimal points.
+
+    switch (bitDepth)
+    {
+    case BIT_DEPTH_UINT8:
+    {
+        oss.width(3);
+        break;
+    }
+    case BIT_DEPTH_UINT10:
+    {
+        oss.width(4);
+        break;
+    }
+
+    case BIT_DEPTH_UINT12:
+    {
+        oss.width(4);
+        break;
+    }
+
+    case BIT_DEPTH_UINT16:
+    {
+        oss.width(5);
+        break;
+    }
+
+    case BIT_DEPTH_F16:
+    {
+        oss.width(11);
+        oss.precision(5);
+        break;
+    }
+
+    case BIT_DEPTH_F32:
+    {
+        SetOStream(*valuesBegin, oss);
+        break;
+    }
+
+    case BIT_DEPTH_UINT14:
+    case BIT_DEPTH_UINT32:
+    {
+        throw Exception("Unsupported bitdepth.");
+        break;
+    }
+
+    case BIT_DEPTH_UNKNOWN:
+    {
+        throw Exception("Unknown bitdepth.");
+        break;
+    }
+    }
+
+    const bool floatValues = (bitDepth == BIT_DEPTH_F16) || (bitDepth == BIT_DEPTH_F32);
 
     for (Iter it(valuesBegin); it != valuesEnd; it += iterStep)
     {
-        switch (bitDepth)
+        oss.str("");
+
+        if (floatValues)
         {
-        case BIT_DEPTH_UINT8:
-        {
-            xml.width(3);
-            xml << (*it) * scale;
-            break;
+            WriteValue((*it) * scale, oss);
         }
-        case BIT_DEPTH_UINT10:
+        else
         {
-            xml.width(4);
-            xml << (*it) * scale;
-            break;
+            oss << (*it) * scale;
         }
 
-        case BIT_DEPTH_UINT12:
+        const std::string value = oss.str();
+        if (value.length() > (size_t)oss.width())
         {
-            xml.width(4);
-            xml << (*it) * scale;
-            break;
+            // The imposed precision requires more characters so the code
+            // recomputes the width to better align the values for the next lines. 
+            oss.width(value.length());
         }
 
-        case BIT_DEPTH_UINT16:
-        {
-            xml.width(5);
-            xml << (*it) * scale;
-            break;
-        }
+        xml << value;
 
-        case BIT_DEPTH_F16:
+        if (std::distance(valuesBegin, it) % valuesPerLine == valuesPerLine - 1)
         {
-            xml.width(11);
-            xml.precision(5);
-            WriteValue((*it) * scale, xml);
-            break;
-        }
-
-        case BIT_DEPTH_F32:
-        {
-            SetOStream(*it, xml);
-            WriteValue((*it) * scale, xml);
-            break;
-        }
-
-        case BIT_DEPTH_UINT14:
-        case BIT_DEPTH_UINT32:
-        {
-            throw Exception("Unsupported bitdepth.");
-            break;
-        }
-
-        case BIT_DEPTH_UNKNOWN:
-        {
-            throw Exception("Unknown bitdepth.");
-            break;
-        }
-
-        }
-
-        if (std::distance(valuesBegin, it) % valuesPerLine
-            == valuesPerLine - 1)
-        {
-            xml << std::endl;
+            // std::endln writes a newline and flushes the output buffer where '\n' only
+            // writes a newline. Flushing the buffer for all floats of large LUTs
+            // introduces a huge performance hit so only use '\n'.
+            xml << "\n";
         }
         else
         {
@@ -775,7 +809,14 @@ void CDLWriter::getAttributes(XmlFormatter::Attributes & attributes) const
 void CDLWriter::writeContent() const
 {
     XmlFormatter::Attributes attributes;
+
     auto op = getOp();
+
+    std::ostringstream oss;
+    oss.precision(DOUBLE_PRECISION);
+
+    CDLOpData::ChannelParams params;
+
     // SOPNode.
     m_formatter.writeStartTag(TAG_SOPNODE, attributes);
     {
@@ -786,9 +827,20 @@ void CDLWriter::writeContent() const
                           METADATA_SOP_DESCRIPTION, desc);
         WriteDescriptions(m_formatter, TAG_DESCRIPTION, desc);
 
-        m_formatter.writeContentTag(TAG_SLOPE, m_cdl->getSlopeString());
-        m_formatter.writeContentTag(TAG_OFFSET, m_cdl->getOffsetString());
-        m_formatter.writeContentTag(TAG_POWER, m_cdl->getPowerString());
+        oss.str("");
+        params = m_cdl->getSlopeParams();
+        oss << params[0] << ", " << params[1] << ", " << params[2];
+        m_formatter.writeContentTag(TAG_SLOPE, oss.str());
+
+        oss.str("");
+        params = m_cdl->getOffsetParams();
+        oss << params[0] << ", " << params[1] << ", " << params[2];
+        m_formatter.writeContentTag(TAG_OFFSET, oss.str());
+
+        oss.str("");
+        params = m_cdl->getPowerParams();
+        oss << params[0] << ", " << params[1] << ", " << params[2];
+        m_formatter.writeContentTag(TAG_POWER, oss.str());
     }
     m_formatter.writeEndTag(TAG_SOPNODE);
 
@@ -802,7 +854,9 @@ void CDLWriter::writeContent() const
                           METADATA_SAT_DESCRIPTION, desc);
         WriteDescriptions(m_formatter, TAG_DESCRIPTION, desc);
 
-        m_formatter.writeContentTag(TAG_SATURATION, m_cdl->getSaturationString());
+        oss.str("");
+        oss << m_cdl->getSaturation();
+        m_formatter.writeContentTag(TAG_SATURATION, oss.str());
     }
     m_formatter.writeEndTag(TAG_SATNODE);
 }
@@ -877,41 +931,41 @@ void ExposureContrastWriter::getAttributes(XmlFormatter::Attributes& attributes)
 
 void ExposureContrastWriter::writeContent() const
 {
+    std::ostringstream oss;
+    oss.precision(DOUBLE_PRECISION);
+
     XmlFormatter::Attributes attributes;
     {
-        std::stringstream expAttr;
-        WriteValue(m_ec->getExposure(), expAttr);
-        attributes.push_back(XmlFormatter::Attribute(ATTR_EXPOSURE,
-                                                     expAttr.str()));
+        oss.str("");
+        WriteValue(m_ec->getExposure(), oss);
+        attributes.push_back(XmlFormatter::Attribute(ATTR_EXPOSURE, oss.str()));
     }
     {
-        std::stringstream contAttr;
-        WriteValue(m_ec->getContrast(), contAttr);
-        attributes.push_back(XmlFormatter::Attribute(ATTR_CONTRAST,
-                                                     contAttr.str()));
+        oss.str("");
+        WriteValue(m_ec->getContrast(), oss);
+        attributes.push_back(XmlFormatter::Attribute(ATTR_CONTRAST, oss.str()));
     }
     {
-        std::stringstream gammaAttr;
-        WriteValue(m_ec->getGamma(), gammaAttr);
-        attributes.push_back(XmlFormatter::Attribute(ATTR_GAMMA,
-                                                     gammaAttr.str()));
+        oss.str("");
+        WriteValue(m_ec->getGamma(), oss);
+        attributes.push_back(XmlFormatter::Attribute(ATTR_GAMMA, oss.str()));
     }
     {
-        std::ostringstream oss;
+        oss.str("");
         WriteValue(m_ec->getPivot(), oss);
         attributes.push_back(XmlFormatter::Attribute(ATTR_PIVOT, oss.str()));
     }
 
     if (m_ec->getLogExposureStep() != ExposureContrastOpData::LOGEXPOSURESTEP_DEFAULT)
     {
-        std::ostringstream oss;
+        oss.str("");
         WriteValue(m_ec->getLogExposureStep(), oss);
         attributes.push_back(XmlFormatter::Attribute(ATTR_LOGEXPOSURESTEP, oss.str()));
     }
 
     if (m_ec->getLogMidGray() != ExposureContrastOpData::LOGMIDGRAY_DEFAULT)
     {
-        std::ostringstream oss;
+        oss.str("");
         WriteValue(m_ec->getLogMidGray(), oss);
         attributes.push_back(XmlFormatter::Attribute(ATTR_LOGMIDGRAY, oss.str()));
     }
@@ -995,6 +1049,7 @@ void FixedFunctionWriter::getAttributes(XmlFormatter::Attributes& attributes) co
     {
         size_t i = 0;
         std::stringstream ffParams;
+        ffParams.precision(DOUBLE_PRECISION);
         WriteValue(params[i], ffParams);
         while (++i < numParams)
         {
@@ -1074,11 +1129,12 @@ void AddGammaParams(XmlFormatter::Attributes & attributes,
                     const GammaOpData::Style style,
                     bool useGamma)
 {
-    std::stringstream gammaAttr;
-    gammaAttr << params[0];
+    std::stringstream oss;
+    oss.precision(DOUBLE_PRECISION);
 
+    oss << params[0];
     attributes.push_back(XmlFormatter::Attribute(useGamma ? ATTR_GAMMA : ATTR_EXPONENT,
-                                                 gammaAttr.str()));
+                                                 oss.str()));
 
     switch (style)
     {
@@ -1087,10 +1143,9 @@ void AddGammaParams(XmlFormatter::Attributes & attributes,
     case GammaOpData::MONCURVE_MIRROR_FWD:
     case GammaOpData::MONCURVE_MIRROR_REV:
     {
-        std::stringstream offsetAttr;
-        offsetAttr << params[1];
-        attributes.push_back(XmlFormatter::Attribute(ATTR_OFFSET,
-                                                     offsetAttr.str()));
+        oss.str("");
+        oss << params[1];
+        attributes.push_back(XmlFormatter::Attribute(ATTR_OFFSET, oss.str()));
         break;
     }
     case GammaOpData::BASIC_FWD:
@@ -1244,6 +1299,7 @@ void AddLogParam(XmlFormatter::Attributes & attributes,
                  double attrValue)
 {
     std::stringstream stream;
+    stream.precision(DOUBLE_PRECISION);
     stream << attrValue;
     attributes.push_back(XmlFormatter::Attribute(attrName, stream.str()));
 }
@@ -1743,7 +1799,7 @@ const char * RangeWriter::getTagName() const
 void WriteTag(XmlFormatter & fmt, const char * tag, double value)
 {
     std::ostringstream o;
-    o.precision(15);
+    o.precision(DOUBLE_PRECISION);
     o << value;
     fmt.writeContentTag(tag, ' ' + o.str() + ' ');
 }
