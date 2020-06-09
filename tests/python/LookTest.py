@@ -11,6 +11,7 @@ from UnitTestUtils import TEST_NAMES, TEST_DESCS
 
 class LookTest(unittest.TestCase):
     TEST_PROCESS_SPACES = ['raw', 'lnh', 'vd8', 'a.b.c.', '1-2-3-']
+    TEST_EXP_VALUES = [0.1, 0.2, 0.3, 0.4]
 
     def setUp(self):
         self.look = OCIO.Look()
@@ -35,7 +36,7 @@ class LookTest(unittest.TestCase):
             with self.assertRaises(TypeError):
                 self.look.setName(invalid)
 
-    def test_process(self):
+    def test_process_space(self):
         """
         Test the setProcessSpace() and getProcessName() methods.
         """
@@ -78,11 +79,10 @@ class LookTest(unittest.TestCase):
         self.assertIsNone(self.look.getTransform())
 
         exp_tr = OCIO.ExponentTransform()
-        exp_values = [0.1, 0.2, 0.3, 0.4]
-        exp_tr.setValue(exp_values)
+        exp_tr.setValue(self.TEST_EXP_VALUES)
         self.look.setTransform(exp_tr)
-        oet = self.look.getTransform()
-        self.assertListEqual(oet.getValue(), exp_values)
+        out_exp_tr = self.look.getTransform()
+        self.assertListEqual(out_exp_tr.getValue(), self.TEST_EXP_VALUES)
 
         # Wrong type tests.
         for invalid in (OCIO.ALLOCATION_UNIFORM, 1):
@@ -98,18 +98,18 @@ class LookTest(unittest.TestCase):
         self.assertIsNone(self.look.getInverseTransform())
 
         exp_tr = OCIO.ExponentTransform()
-        exp_values = [-0.1, -0.2, -0.3, -0.4]
-        exp_tr.setValue(exp_values)
+        inv_exp_values = [1.0 / v for v in self.TEST_EXP_VALUES]
+        exp_tr.setValue(inv_exp_values)
         self.look.setInverseTransform(exp_tr)
         inv_oet = self.look.getInverseTransform()
-        self.assertListEqual(inv_oet.getValue(), exp_values)
+        self.assertListEqual(inv_oet.getValue(), inv_exp_values)
 
         # Wrong type tests.
         for invalid in (OCIO.ALLOCATION_UNIFORM, 1):
             with self.assertRaises(TypeError):
                 self.look.setInverseTransform(invalid)
 
-    def test_constructor_with_keyword(self):
+    def test_constructor_with_positional(self):
         """
         Test Look constructor with keywords and validate its values.
         """
@@ -144,7 +144,7 @@ class LookTest(unittest.TestCase):
         self.assertIsInstance(look2.getInverseTransform(), type(inv_exp_tr2))
         self.assertEqual(look2.getDescription(), 'this is a test')
 
-    def test_constructor_without_keyword(self):
+    def test_constructor_without_positional(self):
         """
         Test Look constructor without keywords and validate its values.
         """
@@ -162,19 +162,6 @@ class LookTest(unittest.TestCase):
         self.assertIsInstance(look.getTransform(), type(exp_tr))
         self.assertIsInstance(look.getInverseTransform(), type(inv_exp_tr))
         self.assertEqual(look.getDescription(), 'this is a test')
-
-    def test_constructor_without_parameter(self):
-        """
-        Test Look default constructor and validate its values.
-        """
-
-        look = OCIO.Look()
-
-        self.assertEqual(look.getName(), '')
-        self.assertEqual(look.getProcessSpace(), '')
-        self.assertIsNone(look.getTransform())
-        self.assertIsNone(look.getInverseTransform())
-        self.assertEqual(look.getDescription(), '')
 
     def test_constructor_wrong_parameter_type(self):
         """
