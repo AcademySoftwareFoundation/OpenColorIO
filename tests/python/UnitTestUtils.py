@@ -1,17 +1,32 @@
 import os
+import sys
 from random import randint
 
 
-TEST_DATAFILES_DIR = os.path.join(os.getenv('BUILD_LOCATION', None), 'testdata')
+# -----------------------------------------------------------------------------
+# Python 2/3 compatibility
+# -----------------------------------------------------------------------------
+if sys.version_info.major >= 3:
+    STRING_TYPES = str
+else:  # Python 2
+    STRING_TYPES = basestring
 
-TEST_NAMES = ['default_name', 'HelloWorld',
-                 'Simple Colourspace', 'a1b2c3d4', 'RGBA.1&2*3#']
+# -----------------------------------------------------------------------------
+# Test data
+# -----------------------------------------------------------------------------
+TEST_DATAFILES_DIR = os.path.join(os.getenv('BUILD_LOCATION'), 'testdata')
+
+TEST_NAMES = ['default_name', 'HelloWorld', 'Simple Colourspace', 'a1b2c3d4', 
+              'RGBA.1&2*3#']
 
 TEST_DESCS = [
-    'These: &lt; &amp; &quot; &apos; &gt; are escape chars', 'this is a description',
-    'The show reference space. This is a sensor referred linear '
-    'representation of the scene with primaries that correspond to\nscanned film. '
-    '0.18 in this space corresponds to a properly\nexposed 18 % grey card.',
+    'These: &lt; &amp; &quot; &apos; &gt; are escape chars', 
+    'this is a description',
+
+    'The show reference space. This is a sensor referred linear representation '
+    'of the scene with primaries that correspond to\nscanned film. 0.18 in '
+    'this space corresponds to a properly\nexposed 18 % grey card.',
+
     'A raw color space. Conversions to and from this space are no-ops.',
     'how many transforms can we use?']
 

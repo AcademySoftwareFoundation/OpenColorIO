@@ -31,6 +31,8 @@ sys.path.insert(0, pyopencolorio_dir)
 import PyOpenColorIO as OCIO
 
 import ColorSpaceTest
+import BuiltinTransformRegistryTest
+import BuiltinTransformTest
 import CDLTransformTest
 import LookTest
 #from MainTest import *
@@ -54,6 +56,8 @@ def suite():
     loader = unittest.TestLoader()
 
     suite.addTest(loader.loadTestsFromModule(ColorSpaceTest))
+    suite.addTest(loader.loadTestsFromModule(BuiltinTransformRegistryTest))
+    suite.addTest(loader.loadTestsFromModule(BuiltinTransformTest))
     suite.addTest(loader.loadTestsFromModule(CDLTransformTest))
     suite.addTest(loader.loadTestsFromModule(LookTest))
     #suite.addTest(MainTest("test_interface"))
