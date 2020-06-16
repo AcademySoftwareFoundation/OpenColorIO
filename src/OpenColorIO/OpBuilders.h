@@ -46,17 +46,20 @@ void BuildColorSpaceOps(OpRcPtrVec & ops,
                         const Config & config,
                         const ConstContextRcPtr & context,
                         const ConstColorSpaceRcPtr & srcColorSpace,
-                        const ConstColorSpaceRcPtr & dstColorSpace);
+                        const ConstColorSpaceRcPtr & dstColorSpace,
+                        bool dataBypass);
 
 void BuildColorSpaceToReferenceOps(OpRcPtrVec & ops,
                                    const Config & config,
                                    const ConstContextRcPtr & context,
-                                   const ConstColorSpaceRcPtr & srcColorSpace);
+                                   const ConstColorSpaceRcPtr & srcColorSpace,
+                                   bool dataBypass);
 
 void BuildColorSpaceFromReferenceOps(OpRcPtrVec & ops,
                                      const Config & config,
                                      const ConstContextRcPtr & context,
-                                     const ConstColorSpaceRcPtr & dstColorSpace);
+                                     const ConstColorSpaceRcPtr & dstColorSpace,
+                                     bool dataBypass);
 
 void BuildReferenceConversionOps(OpRcPtrVec & ops,
                                  const Config & config,
@@ -67,7 +70,7 @@ void BuildReferenceConversionOps(OpRcPtrVec & ops,
 void BuildDisplayOps(OpRcPtrVec & ops,
                      const Config & config,
                      const ConstContextRcPtr & context,
-                     const DisplayTransform & transform,
+                     const DisplayViewTransform & transform,
                      TransformDirection dir);
 
 void BuildExponentOp(OpRcPtrVec & ops,
@@ -126,7 +129,7 @@ void BuildLookOps(OpRcPtrVec & ops,
 
 void BuildLookOps(OpRcPtrVec & ops,
                   ConstColorSpaceRcPtr & currentColorSpace,
-                  bool skipColorSpaceConversions,
+                  bool skipColorSpaceConversion,
                   const Config & config,
                   const ConstContextRcPtr & context,
                   const LookParseResult & looks);
@@ -150,6 +153,10 @@ void BuildRangeOp(OpRcPtrVec & ops,
                   const Config & config,
                   const RangeTransform & transform,
                   TransformDirection dir);
+
+const char * LooksResultColorSpace(const Config & config,
+                                   const ConstContextRcPtr & context,
+                                   const LookParseResult & looks);
 
 } // namespace OCIO_NAMESPACE
 

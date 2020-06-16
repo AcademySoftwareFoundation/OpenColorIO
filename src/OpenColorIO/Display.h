@@ -11,6 +11,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "Platform.h"
 #include "PrivateTypes.h"
 #include "utils/StringUtils.h"
 
@@ -18,46 +19,69 @@
 namespace OCIO_NAMESPACE
 {
 
-// Displays
+// View can be part of the list of views of a display or the list of shared views of a config.
 struct View
 {
     std::string m_name;
-    std::string m_viewTransform; // Added for v2, might be empty.
+    std::string m_viewTransform; // Might be empty.
     std::string m_colorspace;
-    std::string m_looks;
+    std::string m_looks;         // Might be empty.
+    std::string m_rule;          // Might be empty.
+    std::string m_description;   // Might be empty.
 
     View() = default;
 
     View(const char * name,
          const char * viewTransform,
          const char * colorspace,
-         const char * looks)
+         const char * looks,
+         const char * rule,
+         const char * description)
         : m_name(name)
         , m_viewTransform(viewTransform ? viewTransform : "")
-        , m_colorspace(colorspace)
+        , m_colorspace(colorspace ? colorspace : "")
         , m_looks(looks ? looks : "")
+        , m_rule(rule ? rule : "")
+        , m_description(description ? description : "")
     { }
+
+    // Make sure that csname is not null.
+    static bool UseDisplayName(const char * csname)
+    {
+        return csname && 0 == Platform::Strcasecmp(csname, OCIO_VIEW_USE_DISPLAY_NAME);
+    }
+    bool useDisplayNameForColorspace() const
+    {
+        return UseDisplayName(m_colorspace.c_str());
+    }
 };
 
 typedef std::vector<View> ViewVec;
 
+ViewVec::const_iterator FindView(const ViewVec & vec, const std::string & name);
+ViewVec::iterator FindView(ViewVec & vec, const std::string & name);
+
+void AddView(ViewVec & views, const char * name, const char * viewTransform,
+             const char * displayColorSpace, const char * looks,
+             const char * rule, const char * description);
+
+// Display can be part of the list of displays (DisplayMap) of a config.
+struct Display
+{
+    // List of views defined by the display.
+    ViewVec m_views;
+    // List of references to shared views defined be a config.
+    StringUtils::StringVec m_sharedViews;
+};
+
 // In 0.6, the Yaml lib changed their implementation of a Yaml::Map from a C++ map 
 // to a std::vector< std::pair<> >.   We made the same change here so that the Display list 
 // can remain in config order but we left the "Map" in the name since it refers to a Yaml::Map.
-typedef std::vector<std::pair<std::string, ViewVec>> DisplayMap;  // Pair is (display name : ViewVec)
+typedef std::pair<std::string, Display> DisplayPair;
+typedef std::vector<DisplayPair> DisplayMap;  // Pair is (display name : ViewVec)
 
-DisplayMap::iterator find_display(DisplayMap & displays, const std::string & display);
-DisplayMap::const_iterator find_display_const(const DisplayMap & displays, const std::string & display);
-
-int find_view(const ViewVec & vec, const std::string & name);
-
-// Note: displayColorSpace has to be a display-referred color space if viewTransform is not empty.
-void AddDisplay(DisplayMap & displays,
-                const char * display,
-                const char * view,
-                const char * viewTransform,
-                const char * displayColorSpace,
-                const char * looks);
+DisplayMap::iterator FindDisplay(DisplayMap & displays, const std::string & display);
+DisplayMap::const_iterator FindDisplay(const DisplayMap & displays, const std::string & display);
 
 void ComputeDisplays(StringUtils::StringVec & displayCache,
                      const DisplayMap & displays,

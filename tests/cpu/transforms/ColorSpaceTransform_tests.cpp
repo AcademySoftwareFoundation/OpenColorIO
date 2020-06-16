@@ -4,8 +4,8 @@
 
 #include "transforms/ColorSpaceTransform.cpp"
 
-#include "ops/exponent/ExponentOp.h"
 #include "ops/fixedfunction/FixedFunctionOpData.h"
+#include "ops/gamma/GammaOpData.h"
 #include "ops/log/LogOpData.h"
 #include "ops/matrix/MatrixOpData.h"
 #include "testutils/UnitTest.h"
@@ -32,6 +32,12 @@ OCIO_ADD_TEST(ColorSpaceTransform, basic)
     const std::string dst{ "destination" };
     cst->setDst(dst.c_str());
     OCIO_CHECK_EQUAL(dst, cst->getDst());
+
+    OCIO_CHECK_EQUAL(true, cst->getDataBypass());
+    cst->setDataBypass(false);
+    OCIO_CHECK_EQUAL(false, cst->getDataBypass());
+    cst->setDataBypass(true);
+    OCIO_CHECK_EQUAL(true, cst->getDataBypass());
 
     OCIO_CHECK_NO_THROW(cst->validate());
 
@@ -77,7 +83,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
     csSceneFromRef->setTransform(ff, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
     config->addColorSpace(csSceneFromRef);
 
-    config->addDisplay("display", "view", dst.c_str(), "");
+    config->addDisplayView("display", "view", dst.c_str(), "");
 
     OCIO_CHECK_NO_THROW(config->sanityCheck());
 
@@ -123,6 +129,52 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
     }
 
     {
+        // Test that data color space will not create a color space conversion unless the
+        // color space transform forces data to be processed.
+
+        csSceneToRef->setIsData(true);
+        config->addColorSpace(csSceneToRef);
+
+        OCIO::OpRcPtrVec ops;
+        OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
+                                                     *cst, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_NO_THROW(ops.validate());
+        OCIO_CHECK_EQUAL(ops.size(), 0);
+
+        cst->setDataBypass(false);
+        OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
+                                                     *cst, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_NO_THROW(ops.validate());
+        OCIO_CHECK_EQUAL(ops.size(), 4);
+
+        // Restore default data flags.
+        csSceneToRef->setIsData(false);
+        config->addColorSpace(csSceneToRef);
+        cst->setDataBypass(true);
+
+        // Same with destination color space.
+        csSceneFromRef->setIsData(true);
+        config->addColorSpace(csSceneFromRef);
+
+        ops.clear();
+        OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
+                                                     *cst, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_NO_THROW(ops.validate());
+        OCIO_CHECK_EQUAL(ops.size(), 0);
+
+        cst->setDataBypass(false);
+        OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
+                                                     *cst, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_NO_THROW(ops.validate());
+        OCIO_CHECK_EQUAL(ops.size(), 4);
+
+        // Restore default data flags.
+        csSceneFromRef->setIsData(false);
+        config->addColorSpace(csSceneFromRef);
+        cst->setDataBypass(true);
+    }
+
+    {
         // Test in other direction.
         // Expecting destination-from reference inverted + source-to reference inverted.
 
@@ -160,6 +212,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         OCIO_CHECK_EQUAL(data->getType(), OCIO::OpData::NoOpType);
 
         // Finalize converts invert matrix into forward matrix.
+        OCIO_CHECK_NO_THROW(ops.validate());
         OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
         // No-ops are gone.
         OCIO_REQUIRE_EQUAL(ops.size(), 2);
@@ -178,12 +231,12 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
 
     {
         // Color space to reference ops: color space only defines from_reference, expecting the
-        // inverse of that transform.
+        // inverse of that transform. Don't bypass data color spaces.
 
         OCIO::OpRcPtrVec ops;
         OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceToReferenceOps(ops, *config,
                                                                 config->getCurrentContext(),
-                                                                csSceneFromRef));
+                                                                csSceneFromRef, false));
         OCIO_CHECK_NO_THROW(ops.validate());
         OCIO_REQUIRE_EQUAL(ops.size(), 2);
         auto op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[1]);
@@ -200,7 +253,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         OCIO::OpRcPtrVec ops;
         OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceFromReferenceOps(ops, *config,
                                                                   config->getCurrentContext(),
-                                                                  csSceneFromRef));
+                                                                  csSceneFromRef, true));
         OCIO_CHECK_NO_THROW(ops.validate());
         OCIO_REQUIRE_EQUAL(ops.size(), 2);
         auto op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[0]);
@@ -217,10 +270,22 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         auto csSceneBoth = csSceneFromRef->createEditableCopy();
         ff->setStyle(OCIO::FIXED_FUNCTION_ACES_GLOW_10);
         csSceneBoth->setTransform(ff, OCIO::COLORSPACE_DIR_TO_REFERENCE);
+
+        // Make it a data colorspace.
+        csSceneBoth->setIsData(true);
+
+        // If data is bypassed, nothing is created.
         OCIO::OpRcPtrVec ops;
         OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceFromReferenceOps(ops, *config,
                                                                   config->getCurrentContext(),
-                                                                  csSceneBoth));
+                                                                  csSceneBoth, true));
+        OCIO_CHECK_NO_THROW(ops.validate());
+        OCIO_REQUIRE_EQUAL(ops.size(), 0);
+
+        // If data is not bypassed ops are created.
+        OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceFromReferenceOps(ops, *config,
+                                                                  config->getCurrentContext(),
+                                                                  csSceneBoth, false));
         OCIO_CHECK_NO_THROW(ops.validate());
         OCIO_REQUIRE_EQUAL(ops.size(), 2);
         auto op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[0]);
@@ -228,10 +293,13 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         OCIO_REQUIRE_EQUAL(data->getType(), OCIO::OpData::FixedFunctionType);
         auto ffData = OCIO_DYNAMIC_POINTER_CAST<const OCIO::FixedFunctionOpData>(data);
         OCIO_CHECK_EQUAL(ffData->getStyle(), OCIO::FixedFunctionOpData::ACES_GLOW_03_FWD);
+
+        // Remove the data property and try in the other direction.
+        csSceneBoth->setIsData(false);
         ops.clear();
         OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceToReferenceOps(ops, *config,
                                                                 config->getCurrentContext(),
-                                                                csSceneBoth));
+                                                                csSceneBoth, true));
         OCIO_CHECK_NO_THROW(ops.validate());
         OCIO_REQUIRE_EQUAL(ops.size(), 2);
         op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[1]);
@@ -253,6 +321,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
     config->addColorSpace(csDisplayFromRef);
 
     // Because there are display-referred color spaces, there need to be a view transform.
+    config->upgradeToLatestVersion(); // View transforms are a v2 feature.
     auto vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_SCENE);
     vt->setName("view_transform");
     vt->setTransform(mat, OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE);
@@ -325,7 +394,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_reference_conversion_ops)
     cs->setTransform(ff, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
     config->addColorSpace(cs);
 
-    config->addDisplay("display", "view", scn.c_str(), "");
+    config->addDisplayView("display", "view", scn.c_str(), "");
 
     OCIO_CHECK_NO_THROW(config->sanityCheck());
 
@@ -366,6 +435,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_reference_conversion_ops)
     // Add scene-referred view transform.
     //
 
+    config->upgradeToLatestVersion();
     auto vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_SCENE);
     vt->setName("view_transform");
     auto mat = OCIO::MatrixTransform::Create();
@@ -423,6 +493,8 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops_with_reference_conversio
     const std::string scn{ "scene" };
 
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->upgradeToLatestVersion();
+
     auto cs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
     cs->setName(scn.c_str());
     auto ff = OCIO::FixedFunctionTransform::Create();
@@ -430,7 +502,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops_with_reference_conversio
     cs->setTransform(ff, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
     config->addColorSpace(cs);
 
-    config->addDisplay("display", "view", scn.c_str(), "");
+    config->addDisplayView("display", "view", scn.c_str(), "");
 
     // Add scene-referred view transform.
     auto vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_SCENE);
@@ -590,9 +662,9 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops_with_reference_conversio
         // Display reference to scene reference.
         op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[2]);
         data = op->data();
-        OCIO_REQUIRE_EQUAL(data->getType(), OCIO::OpData::ExponentType);
-        auto expData = OCIO_DYNAMIC_POINTER_CAST<const OCIO::ExponentOpData>(data);
-        OCIO_CHECK_EQUAL(expData->m_exp4[0], 1.0);
+        OCIO_REQUIRE_EQUAL(data->getType(), OCIO::OpData::GammaType);
+        auto gammaData = OCIO_DYNAMIC_POINTER_CAST<const OCIO::GammaOpData>(data);
+        OCIO_CHECK_EQUAL(gammaData->getRedParams()[0], 1.0);
 
         op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[3]);
         data = op->data();

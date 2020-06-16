@@ -41,6 +41,12 @@ typedef OCIO_SHARED_PTR<const FileRules> ConstFileRulesRcPtr;
 //!cpp:type::
 typedef OCIO_SHARED_PTR<FileRules> FileRulesRcPtr;
 
+class OCIOEXPORT ViewingRules;
+//!cpp:type::
+typedef OCIO_SHARED_PTR<const ViewingRules> ConstViewingRulesRcPtr;
+//!cpp:type::
+typedef OCIO_SHARED_PTR<ViewingRules> ViewingRulesRcPtr;
+
 class OCIOEXPORT ColorSpace;
 //!cpp:type::
 typedef OCIO_SHARED_PTR<const ColorSpace> ConstColorSpaceRcPtr;
@@ -162,11 +168,11 @@ typedef OCIO_SHARED_PTR<const ColorSpaceTransform> ConstColorSpaceTransformRcPtr
 //!cpp:type::
 typedef OCIO_SHARED_PTR<ColorSpaceTransform> ColorSpaceTransformRcPtr;
 
-class OCIOEXPORT DisplayTransform;
+class OCIOEXPORT DisplayViewTransform;
 //!cpp:type::
-typedef OCIO_SHARED_PTR<const DisplayTransform> ConstDisplayTransformRcPtr;
+typedef OCIO_SHARED_PTR<const DisplayViewTransform> ConstDisplayViewTransformRcPtr;
 //!cpp:type::
-typedef OCIO_SHARED_PTR<DisplayTransform> DisplayTransformRcPtr;
+typedef OCIO_SHARED_PTR<DisplayViewTransform> DisplayViewTransformRcPtr;
 
 class OCIOEXPORT DynamicProperty;
 //!cpp:type::
@@ -308,6 +314,13 @@ enum ColorSpaceVisibility
     COLORSPACE_ACTIVE = 0,
     COLORSPACE_INACTIVE,
     COLORSPACE_ALL
+};
+
+//!cpp:type::
+enum ViewType
+{
+    VIEW_SHARED = 0,
+    VIEW_DISPLAY_DEFINED
 };
 
 //!cpp:type::
@@ -712,9 +725,12 @@ abstract ways of asking for common colorspaces, without referring to them
 by hardcoded names.
 
 Internal::
+    Extracting color space from file path - (ROLE_DEFAULT)
 
-    GetGPUDisplayTransform - (ROLE_SCENE_LINEAR (fstop exposure))
-                            (ROLE_COLOR_TIMING (ASCColorCorrection))
+App Helpers::
+    ViewingPipeline         - (ROLE_SCENE_LINEAR (LinearCC for exposure))
+                              (ROLE_COLOR_TIMING (ColorTimingCC))
+    MixingColorSpaceManager - (ROLE_COLOR_PICKING)
 
 External Plugins (currently known)::
 
@@ -771,6 +787,19 @@ extern OCIOEXPORT const char * ROLE_TEXTURE_PAINT;
 //    this is a 1D HDR to LDR allocation. It is normally combined with
 //    another display transform in the host app for preview.
 extern OCIOEXPORT const char * ROLE_MATTE_PAINT;
+
+/*!rst::
+Shared View
+***********
+
+*/
+
+//!rst::
+// .. c:var:: const char * OCIO_VIEW_USE_DISPLAY_NAME
+//
+//    A shared view using this for the color space name will use a display color space that
+//    has the same name as the display the shared view is used by.
+extern OCIOEXPORT const char * OCIO_VIEW_USE_DISPLAY_NAME;
 
 /*!rst::
 FormatMetadata

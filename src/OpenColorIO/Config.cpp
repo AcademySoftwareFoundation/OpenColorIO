@@ -27,6 +27,7 @@
 #include "PrivateTypes.h"
 #include "Processor.h"
 #include "utils/StringUtils.h"
+#include "ViewingRules.h"
 
 
 namespace OCIO_NAMESPACE
@@ -37,6 +38,10 @@ const char * OCIO_ACTIVE_DISPLAYS_ENVVAR      = "OCIO_ACTIVE_DISPLAYS";
 const char * OCIO_ACTIVE_VIEWS_ENVVAR         = "OCIO_ACTIVE_VIEWS";
 const char * OCIO_INACTIVE_COLORSPACES_ENVVAR = "OCIO_INACTIVE_COLORSPACES";
 const char * OCIO_OPTIMIZATION_FLAGS_ENVVAR   = "OCIO_OPTIMIZATION_FLAGS";
+
+// A shared view using this for the color space name will use a display color space that
+// has the same name as the display the shared view is used by.
+const char * OCIO_VIEW_USE_DISPLAY_NAME       = "<USE_DISPLAY_NAME>";
 
 namespace
 {
@@ -167,10 +172,10 @@ void GetColorSpaceReferences(std::set<std::string> & colorSpaceNames,
         colorSpaceNames.insert(context->resolveStringVar(colorSpaceTransform->getSrc()));
         colorSpaceNames.insert(context->resolveStringVar(colorSpaceTransform->getDst()));
     }
-    else if(ConstDisplayTransformRcPtr displayTransform = \
-        DynamicPtrCast<const DisplayTransform>(transform))
+    else if(ConstDisplayViewTransformRcPtr displayViewTransform = \
+        DynamicPtrCast<const DisplayViewTransform>(transform))
     {
-        colorSpaceNames.insert(displayTransform->getInputColorSpaceName());
+        colorSpaceNames.insert(displayViewTransform->getSrc());
     }
     else if(ConstLookTransformRcPtr lookTransform = \
         DynamicPtrCast<const LookTransform>(transform))
@@ -196,6 +201,42 @@ void FindAvailableName(const ColorSpaceSetRcPtr & colorspaces, std::string & csn
         csname = AddedDefault + std::to_string(i);
         ++i;
     }
+}
+
+// Views are stored in two vectors of objects, using pointers to temporarily group them.
+typedef std::vector<const View *> ViewPtrVec;
+
+StringUtils::StringVec GetViewNames(const ViewPtrVec & views)
+{
+    StringUtils::StringVec viewNames;
+    for (const auto & view : views)
+    {
+        viewNames.push_back(view->m_name);
+    }
+    return viewNames;
+}
+
+std::ostringstream GetDisplayViewPrefixErrorMsg(const std::string & display, const View & view)
+{
+    std::ostringstream oss;
+    oss << "Config failed sanitycheck. ";
+    if (display.empty())
+    {
+        oss << "Shared ";
+    }
+    else
+    {
+        oss << "Display '" << display << "' has a ";
+    }
+    if (view.m_name.empty())
+    {
+        oss << "view with an empty name.";
+    }
+    else
+    {
+        oss << "view '" << view.m_name << "' ";
+    }
+    return oss;
 }
 
 } // namespace
@@ -244,6 +285,8 @@ public:
     StringUtils::StringVec m_activeDisplaysEnvOverride;
     StringUtils::StringVec m_activeViews;
     StringUtils::StringVec m_activeViewsEnvOverride;
+    ViewVec m_sharedViews;
+    ViewingRulesRcPtr m_viewingRules;
 
     std::vector<ViewTransformRcPtr> m_viewTransforms;
 
@@ -268,6 +311,7 @@ public:
         m_minorVersion(0),
         m_context(Context::Create()),
         m_allColorSpaces(ColorSpaceSet::Create()),
+        m_viewingRules(ViewingRules::Create()),
         m_strictParsing(true),
         m_sanity(SANITY_UNKNOWN),
         m_fileRules(FileRules::Create())
@@ -277,7 +321,7 @@ public:
         activeDisplays = StringUtils::Trim(activeDisplays);
         if (!activeDisplays.empty())
         {
-            SplitStringEnvStyle(m_activeDisplaysEnvOverride, activeDisplays.c_str());
+            m_activeDisplaysEnvOverride = SplitStringEnvStyle(activeDisplays);
         }
 
         std::string activeViews;
@@ -285,7 +329,7 @@ public:
         activeViews = StringUtils::Trim(activeViews);
         if (!activeViews.empty())
         {
-            SplitStringEnvStyle(m_activeViewsEnvOverride, activeViews.c_str());
+            m_activeViewsEnvOverride = SplitStringEnvStyle(activeViews);
         }
 
         m_defaultLumaCoefs.resize(3);
@@ -336,6 +380,8 @@ public:
             m_activeDisplaysEnvOverride = rhs.m_activeDisplaysEnvOverride;
             m_activeDisplaysStr = rhs.m_activeDisplaysStr;
             m_displayCache = rhs.m_displayCache;
+            m_viewingRules = rhs.m_viewingRules->createEditableCopy();
+            m_sharedViews = rhs.m_sharedViews;
 
             // Deep copy view transforms.
             m_viewTransforms.clear();
@@ -359,6 +405,20 @@ public:
         return *this;
     }
 
+    ConstColorSpaceRcPtr getColorSpace(const char * name) const
+    {
+        // Check to see if the name is a color space.
+        ConstColorSpaceRcPtr cs = m_allColorSpaces->getColorSpace(name);
+        if (!cs)
+        {
+            // Check to see if the name is a role.
+            const char * csname = LookupRole(m_roles, name);
+            cs = m_allColorSpaces->getColorSpace(csname);
+        }
+
+        return cs;
+    }
+
     // Only search for a color space name (i.e. not for a role name).
     int getColorSpaceIndex(const char * csname) const
     {
@@ -373,6 +433,56 @@ public:
 
     StringUtils::StringVec buildInactiveColorSpaceList() const;
     void refreshActiveColorSpaces();
+
+    ConstViewTransformRcPtr getViewTransform(const char * name) const noexcept
+    {
+        const std::string namelower = StringUtils::Lower(name);
+
+        for (const auto & vt : m_viewTransforms)
+        {
+            if (StringUtils::Lower(vt->getName()) == namelower)
+            {
+                return vt;
+            }
+        }
+
+        return ConstViewTransformRcPtr();
+    }
+
+    ConstLookRcPtr getLook(const char * name) const
+    {
+        const std::string namelower = StringUtils::Lower(name);
+
+        for (const auto & look : m_looksList)
+        {
+            if (StringUtils::Lower(look->getName()) == namelower)
+            {
+                return look;
+            }
+        }
+
+        return ConstLookRcPtr();
+    }
+
+    ViewPtrVec getViews(const Display & display) const
+    {
+        ViewPtrVec views;
+        for (const auto & view : display.m_views)
+        {
+            views.push_back(&view);
+        }
+
+        for (const auto & shared : display.m_sharedViews)
+        {
+            ViewVec::const_iterator sharedView = FindView(m_sharedViews, shared.c_str());
+            if (sharedView != m_sharedViews.end())
+            {
+                const View * viewPtr = &(*sharedView);
+                views.push_back(viewPtr);
+            }
+        }
+        return views;
+    }
 
     // Any time you modify the state of the config, you must call this
     // to reset internal cache states.  You also should do this in a
@@ -435,6 +545,169 @@ public:
         }
     }
 
+    // Sanity check view object that can be a config defined shared view or a display-defined view.
+    void sanityCheckView(const std::string & display, const View & view) const
+    {
+        if (view.m_name.empty())
+        {
+            std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
+            m_sanitytext = os.str();
+            throw Exception(m_sanitytext.c_str());
+        }
+
+        const bool sharedViewWithViewTransform = display.empty() && !view.m_viewTransform.empty();
+
+        // Validate color space name is not empty.
+        if (view.m_colorspace.empty())
+        {
+            std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
+            os << "does not refer to a color space.";
+            m_sanitytext = os.str();
+            throw Exception(m_sanitytext.c_str());
+        }
+        // USE_DISPLAY_NAME can only be used by shared views.
+        if (!sharedViewWithViewTransform && view.useDisplayNameForColorspace())
+        {
+            std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
+            os << "can not use '" << OCIO_VIEW_USE_DISPLAY_NAME;
+            os << "' keyword for the color space name.";
+            m_sanitytext = os.str();
+            throw Exception(m_sanitytext.c_str());
+        }
+
+        // If USE_DISPLAY_NAME is not present, a valid color space must be specified.
+        if (!view.useDisplayNameForColorspace() && !hasColorSpace(view.m_colorspace.c_str()))
+        {
+            std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
+            os << "refers to a color space, '" << view.m_colorspace << "', ";
+            os << "which is not defined.";
+            m_sanitytext = os.str();
+            throw Exception(m_sanitytext.c_str());
+        }
+
+        // If there is a view transform, it must exist and its color space must be a
+        // display-referred color space.
+        if (!view.m_viewTransform.empty())
+        {
+            if (!getViewTransform(view.m_viewTransform.c_str()))
+            {
+                std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
+                os << "refers to a view transform, '" << view.m_viewTransform << "', ";
+                os << "which is not defined.";
+                m_sanitytext = os.str();
+                throw Exception(m_sanitytext.c_str());
+            }
+
+            if (!view.useDisplayNameForColorspace())
+            {
+                auto cs = m_allColorSpaces->getColorSpace(view.m_colorspace.c_str());
+                if (cs->getReferenceSpaceType() != REFERENCE_SPACE_DISPLAY)
+                {
+                    std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
+                    os << "refers to a color space, '" << view.m_colorspace << "', ";
+                    os << "that is not a display-referred color space.";
+                    m_sanitytext = os.str();
+                    throw Exception(m_sanitytext.c_str());
+                }
+            }
+        }
+
+        // Confirm looks references exist.
+        LookParseResult looks;
+        const LookParseResult::Options & options = looks.parse(view.m_looks);
+
+        for (const auto & option : options)
+        {
+            for (const auto & token : option)
+            {
+                const std::string look = token.name;
+
+                if (!look.empty() && !getLook(look.c_str()))
+                {
+                    std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
+                    os << "refers to a look, '" << look << "', ";
+                    os << "which is not defined.";
+                    m_sanitytext = os.str();
+                    throw Exception(m_sanitytext.c_str());
+                }
+            }
+        }
+
+        if (!view.m_rule.empty())
+        {
+            size_t ruleIndex{ 0 };
+            if (!FindRule(m_viewingRules, view.m_rule, ruleIndex))
+            {
+                std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
+                os << "refers to a viewing rule, '" << view.m_rule << "', ";
+                os << "which is not defined.";
+                m_sanitytext = os.str();
+                throw Exception(m_sanitytext.c_str());
+            }
+        }
+    }
+
+    // Check a shared view used in a display. View itself has already been checked.
+    void sanityCheckSharedView(const std::string & display, const ViewVec & viewsOfDisplay,
+                               const std::string & sharedView) const
+    {
+        // Is the name already used for a display-defined view?
+        // This should never happen because this is checked when adding a view.
+        const auto viewIt = FindView(viewsOfDisplay, sharedView);
+        if (viewIt != viewsOfDisplay.end())
+        {
+            std::ostringstream os;
+            os << "Config failed sanitycheck. ";
+            os << "The display '" << display << "' ";
+            os << "contains a shared view '" << sharedView;
+            os << "' that is already defined as a view.";
+            m_sanitytext = os.str();
+            throw Exception(m_sanitytext.c_str());
+        }
+        // Is the shared view defined?
+        const auto sharedViewIt = FindView(m_sharedViews, sharedView);
+        if (sharedViewIt == m_sharedViews.end())
+        {
+            std::ostringstream os;
+            os << "Config failed sanitycheck. ";
+            os << "The display '" << display << "' ";
+            os << "contains a shared view '" << sharedView;
+            os << "' that is not defined.";
+            m_sanitytext = os.str();
+            throw Exception(m_sanitytext.c_str());
+        }
+        else
+        {
+            if (!((*sharedViewIt).m_viewTransform.empty()) &&
+                ((*sharedViewIt).useDisplayNameForColorspace()))
+            {
+                // Shared views using a view transform can omit the colorspace, in that case
+                // the color space to use should be named from the display.
+                const auto displayCS = m_allColorSpaces->getColorSpace(display.c_str());
+                if (!displayCS)
+                {
+                    std::ostringstream os;
+                    os << "Config failed sanitycheck. The display '" << display << "' ";
+                    os << "contains a shared view '" << (*sharedViewIt).m_name;
+                    os << "' which does not define a color space and there is "
+                          "no color space that matches the display name.";
+                    m_sanitytext = os.str();
+                    throw Exception(m_sanitytext.c_str());
+                }
+                if (displayCS->getReferenceSpaceType() != REFERENCE_SPACE_DISPLAY)
+                {
+                    std::ostringstream os;
+                    os << "Config failed sanitycheck. The display '" << display << "' ";
+                    os << "contains a shared view '" << (*sharedViewIt).m_name;
+                    os << "that refers to a color space, '" << display << "', ";
+                    os << "that is not a display-referred color space.";
+                    m_sanitytext = os.str();
+                    throw Exception(m_sanitytext.c_str());
+                }
+            }
+        }
+    }
+
     void setInactiveColorSpaces(const char * inactiveColorSpaces)
     {
         m_inactiveColorSpaceNamesConf
@@ -452,6 +725,145 @@ public:
     void checkVersionConsistency(ConstTransformRcPtr & transform) const;
     void checkVersionConsistency() const;
 
+    const View * getView(const char * display, const char * view) const
+    {
+        if (!view || !*view) return nullptr;
+
+        bool searchShared = !display || !*display;
+
+        DisplayMap::const_iterator iter = m_displays.end();
+        if (!searchShared)
+        {
+            iter = FindDisplay(m_displays, display);
+            if (iter == m_displays.end()) return nullptr;
+
+            const StringUtils::StringVec & sharedViews = iter->second.m_sharedViews;
+            searchShared = StringUtils::Contain(sharedViews, view);
+        }
+
+        const ViewVec & views = searchShared ? m_sharedViews : iter->second.m_views;
+        const auto & viewIt = FindView(views, view);
+
+        if (viewIt != views.end())
+        {
+            return &(*viewIt);
+        }
+        return nullptr;
+    }
+
+    // Filter/reorder views using the active views if defined.
+    StringUtils::StringVec getActiveViews(const StringUtils::StringVec & views) const
+    {
+        StringUtils::StringVec activeViews;
+        if (!m_activeViewsEnvOverride.empty())
+        {
+            const StringUtils::StringVec orderedViews
+                = IntersectStringVecsCaseIgnore(m_activeViewsEnvOverride, views);
+
+            if (!orderedViews.empty())
+            {
+                activeViews = orderedViews;
+            }
+        }
+        else if (!m_activeViews.empty())
+        {
+            const StringUtils::StringVec orderedViews
+                = IntersectStringVecsCaseIgnore(m_activeViews, views);
+
+            if (!orderedViews.empty())
+            {
+                activeViews = orderedViews;
+            }
+        }
+        
+        if (activeViews.empty())
+        {
+            activeViews = views;
+        }
+        return activeViews;
+    }
+
+    // Get all active views from a display with a rule that refers to color space or an encoding
+    // referred by color space. Note that views that do not have viewing rules are all returned.
+    // ViewNames, created from views, is returned as parameter.
+    StringUtils::StringVec getFilteredViews(StringUtils::StringVec & viewNames,
+                                            const ViewPtrVec & views,
+                                            const char * imageCSName) const
+    {
+        ConstColorSpaceRcPtr imageColorSpace = getColorSpace(imageCSName);
+        if (!imageColorSpace)
+        {
+            std::ostringstream os;
+            os << "Could not find source color space '" << imageCSName << "'.";
+            throw Exception(os.str().c_str());
+        }
+
+        const std::string viewEncoding{ imageColorSpace->getEncoding() };
+
+        viewNames = GetViewNames(views);
+        StringUtils::StringVec activeViews = getActiveViews(viewNames);
+
+        const std::string imageColorSpaceName{ StringUtils::Lower(imageCSName) };
+        StringUtils::StringVec filteredActiveViews;
+        for (const auto & view : activeViews)
+        {
+            const auto idx = FindInStringVecCaseIgnore(viewNames, view);
+            const auto & ruleName = views[idx]->m_rule;
+            size_t ruleIdx{ 0 };
+            if (ruleName.empty())
+            {
+                // Include all views that do not have a rule.
+                filteredActiveViews.push_back(view);
+            }
+            else if (FindRule(m_viewingRules, ruleName, ruleIdx))
+            {
+                const size_t numcs = m_viewingRules->getNumColorSpaces(ruleIdx);
+                bool added = false;
+                for (size_t csIdx = 0; csIdx < numcs; ++csIdx)
+                {
+                    // Rule can use role names.
+                    const char * rolename = m_viewingRules->getColorSpace(ruleIdx, csIdx);
+                    const char * csname = LookupRole(m_roles, rolename);
+
+                    const std::string csName{ *csname ? csname : rolename  };
+                    if (StringUtils::Lower(csName) == imageColorSpaceName)
+                    {
+                        // Include a view if its rule contains the image's color space.
+                        filteredActiveViews.push_back(view);
+                        added = true;
+                        break;
+                    }
+                }
+                if (!added && !viewEncoding.empty())
+                {
+                    const size_t numEnc = m_viewingRules->getNumEncodings(ruleIdx);
+                    for (size_t encIdx = 0; encIdx < numEnc; ++encIdx)
+                    {
+                        const std::string encName{ m_viewingRules->getEncoding(ruleIdx, encIdx) };
+                        if (StringUtils::Lower(encName) == viewEncoding)
+                        {
+                            // Include a view if its rule contains the image's color space encoding.
+                            filteredActiveViews.push_back(view);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return filteredActiveViews;
+    }
+
+    void updateDisplayCache() const
+    {
+        if (m_displayCache.empty())
+        {
+            ComputeDisplays(m_displayCache,
+                            m_displays,
+                            m_activeDisplays,
+                            m_activeDisplaysEnvOverride);
+        }
+
+    }
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -696,16 +1108,40 @@ void Config::sanityCheck() const
 
     ///// DISPLAYS / VIEWS
 
-    int numviews = 0;
+    // Viewing rules.
 
-    // Confirm all Display transforms refer to colorspaces that exit.
+     try
+     {
+         auto colorSpaceAccessor = std::bind(&Config::getColorSpace, this, std::placeholders::_1);
+         getImpl()->m_viewingRules->getImpl()->sanityCheck(colorSpaceAccessor,
+                                                           getImpl()->m_allColorSpaces);
+     }
+     catch (const Exception & e)
+     {
+         std::ostringstream os;
+         os << "Config failed sanitycheck. Viewing rules failed sanitycheck with: ";
+         os << e.what();
+         getImpl()->m_sanitytext = os.str();
+         throw Exception(getImpl()->m_sanitytext.c_str());
+     }
+
+    // Shared views.
+    for (const auto & view : getImpl()->m_sharedViews)
+    {
+        getImpl()->sanityCheckView("", view);
+    }
+
+    int numdisplays = 0;
+
+    // Confirm all Display transforms refer to colorspaces that exist.
     for(DisplayMap::const_iterator iter = getImpl()->m_displays.begin();
         iter != getImpl()->m_displays.end();
         ++iter)
     {
         const std::string display = iter->first;
-        const ViewVec & views = iter->second;
-        if(views.empty())
+        const ViewVec & views = iter->second.m_views;
+        const StringUtils::StringVec & sharedViews = iter->second.m_sharedViews;
+        if(views.empty() && sharedViews.empty())
         {
             std::ostringstream os;
             os << "Config failed sanitycheck. ";
@@ -714,95 +1150,23 @@ void Config::sanityCheck() const
             getImpl()->m_sanitytext = os.str();
             throw Exception(getImpl()->m_sanitytext.c_str());
         }
+        ++numdisplays;
+
+        // Confirm shared view exist and do not conflict with views.
+        for (const auto & sharedView : sharedViews)
+        {
+            getImpl()->sanityCheckSharedView(display, views, sharedView);
+        }
 
         // Confirm view references exist.
-        for(unsigned int i=0; i<views.size(); ++i)
+        for(const auto & view : views)
         {
-            if(views[i].m_name.empty() || views[i].m_colorspace.empty())
-            {
-                std::ostringstream os;
-                os << "Config failed sanitycheck. ";
-                os << "The display '" << display << "' ";
-                os << "defines a view with an empty name and/or color space.";
-                getImpl()->m_sanitytext = os.str();
-                throw Exception(getImpl()->m_sanitytext.c_str());
-            }
-
-            if(!getImpl()->hasColorSpace(views[i].m_colorspace.c_str()))
-            {
-                std::ostringstream os;
-                os << "Config failed sanitycheck. ";
-                os << "The display '" << display << "' ";
-                os << " view '" << views[i].m_name << "' ";
-                os << "refers to a color space, '" << views[i].m_colorspace << "', ";
-                os << "which is not defined.";
-                getImpl()->m_sanitytext = os.str();
-                throw Exception(getImpl()->m_sanitytext.c_str());
-            }
-
-            // If there is a view transform, it must exist and its color space must be a
-            // display-referred color space.
-            if (!views[i].m_viewTransform.empty())
-            {
-                if (!getViewTransform(views[i].m_viewTransform.c_str()))
-                {
-                    std::ostringstream os;
-                    os << "Config failed sanitycheck. ";
-                    os << "The display '" << display << "' ";
-                    os << " view '" << views[i].m_name << "' ";
-                    os << "refers to a view transform, '" << views[i].m_viewTransform << "', ";
-                    os << "which is not defined.";
-                    getImpl()->m_sanitytext = os.str();
-                    throw Exception(getImpl()->m_sanitytext.c_str());
-                }
-
-                auto cs = getImpl()->m_allColorSpaces->getColorSpace(views[i].m_colorspace.c_str());
-                if (cs->getReferenceSpaceType() != REFERENCE_SPACE_DISPLAY)
-                {
-                    std::ostringstream os;
-                    os << "Config failed sanitycheck. ";
-                    os << "The display '" << display << "' ";
-                    os << " view '" << views[i].m_name << "' ";
-                    os << "refers to a color space, '" << views[i].m_colorspace << "', ";
-                    os << "that is not a display-referred color space.";
-                    getImpl()->m_sanitytext = os.str();
-                    throw Exception(getImpl()->m_sanitytext.c_str());
-                }
-            }
-
-            // Confirm looks references exist.
-            LookParseResult looks;
-            const LookParseResult::Options & options = looks.parse(views[i].m_looks);
-
-            for(unsigned int optionindex=0;
-                optionindex < options.size();
-                ++optionindex)
-            {
-                for(unsigned int tokenindex=0;
-                    tokenindex < options[optionindex].size();
-                    ++tokenindex)
-                {
-                    std::string look = options[optionindex][tokenindex].name;
-
-                    if(!look.empty() && !getLook(look.c_str()))
-                    {
-                        std::ostringstream os;
-                        os << "Config failed sanitycheck. ";
-                        os << "The display '" << display << "' ";
-                        os << "refers to a look, '" << look << "', ";
-                        os << "which is not defined.";
-                        getImpl()->m_sanitytext = os.str();
-                        throw Exception(getImpl()->m_sanitytext.c_str());
-                    }
-                }
-            }
-
-            ++numviews;
+            getImpl()->sanityCheckView(display, view);
         }
     }
 
     // Confirm at least one display entry exists.
-    if (numviews == 0)
+    if (numdisplays == 0)
     {
         std::ostringstream os;
         os << "Config failed sanitycheck. ";
@@ -1008,10 +1372,31 @@ void Config::sanityCheck() const
 
     ///// FileRules
 
-    if (getMajorVersion() >= 2)
+    // There is always at least the default rule pointing to the default color space. OCIO v1 does
+    // not enforce that rule to be valid (default color space existance). If some other rules have
+    // been added they need to be valid.
+
+    // All Config objects have a fileRules object, regardless of version. This object is
+    // initialized to have a defaultRule with the color space set to "default" (i.e., the default
+    // role). The fileRules->sanityCheck call will validate that all color spaces used in rules
+    // exist, or if they are roles that they point to a color space that exists. Because this would
+    // cause sanityCheck to improperly fail on v1 configs (since they are not required to actually
+    // contain file rules), we don't do this check on v1 configs.
+    if (getMajorVersion() >= 2 || getImpl()->m_fileRules->getNumEntries() != 1)
     {
-        auto colorSpaceAccessor = std::bind(&Config::getColorSpace, this, std::placeholders::_1);
-        getImpl()->m_fileRules->getImpl()->sanityCheck(colorSpaceAccessor);
+        try
+        {
+            auto colorSpaceAccessor = std::bind(&Config::getColorSpace, this, std::placeholders::_1);
+            getImpl()->m_fileRules->getImpl()->sanityCheck(colorSpaceAccessor);
+        }
+        catch (const Exception & e)
+        {
+            std::ostringstream os;
+            os << "Config failed sanitycheck. File rules failed with: ";
+            os << e.what();
+            getImpl()->m_sanitytext = os.str();
+            throw Exception(getImpl()->m_sanitytext.c_str());
+        }
     }
 
     // Everything is groovy.
@@ -1052,7 +1437,7 @@ const char * Config::getDescription() const
 
 void Config::setDescription(const char * description)
 {
-    getImpl()->m_description = description;
+    getImpl()->m_description = description ? description : "";
 
     AutoMutex lock(getImpl()->m_cacheidMutex);
     getImpl()->resetCacheIDs();
@@ -1067,6 +1452,7 @@ ConstContextRcPtr Config::getCurrentContext() const
 
 void Config::addEnvironmentVar(const char * name, const char * defaultValue)
 {
+    if (!name || !*name) return;
     if(defaultValue)
     {
         getImpl()->m_env[std::string(name)] = std::string(defaultValue);
@@ -1097,6 +1483,7 @@ const char * Config::getEnvironmentVarNameByIndex(int index) const
 
 const char * Config::getEnvironmentVarDefault(const char * name) const
 {
+    if (!name || !*name) return "";
     return LookupEnvironment(getImpl()->m_env, name);
 }
 
@@ -1137,7 +1524,7 @@ const char * Config::getSearchPath() const
 
 void Config::setSearchPath(const char * path)
 {
-    getImpl()->m_context->setSearchPath(path);
+    getImpl()->m_context->setSearchPath(path ? path : "");
 
     AutoMutex lock(getImpl()->m_cacheidMutex);
     getImpl()->resetCacheIDs();
@@ -1163,6 +1550,7 @@ void Config::clearSearchPaths()
 
 void Config::addSearchPath(const char * path)
 {
+    if (!path || !*path) return;
     getImpl()->m_context->addSearchPath(path);
 
     AutoMutex lock(getImpl()->m_cacheidMutex);
@@ -1176,7 +1564,7 @@ const char * Config::getWorkingDir() const
 
 void Config::setWorkingDir(const char * dirname)
 {
-    getImpl()->m_context->setWorkingDir(dirname);
+    getImpl()->m_context->setWorkingDir(dirname ? dirname : "");
 
     AutoMutex lock(getImpl()->m_cacheidMutex);
     getImpl()->resetCacheIDs();
@@ -1393,16 +1781,7 @@ const char * Config::getColorSpaceNameByIndex(SearchReferenceSpaceType searchRef
 // Note: works from the list of all color spaces.
 ConstColorSpaceRcPtr Config::getColorSpace(const char * name) const
 {
-    // Check to see if the name is a color space.
-    ConstColorSpaceRcPtr cs = getImpl()->m_allColorSpaces->getColorSpace(name);
-    if (!cs)
-    {
-        // Check to see if the name is a role.
-        const char * csname = LookupRole(getImpl()->m_roles, name);
-        cs = getImpl()->m_allColorSpaces->getColorSpace(csname);
-    }
-
-    return cs;
+    return getImpl()->getColorSpace(name);
 }
 
 int Config::getNumColorSpaces() const
@@ -1509,18 +1888,44 @@ bool Config::isColorSpaceUsed(const char * name) const noexcept
         }
     }
 
+    // Check for all shared views.
+
+    for (const auto & view : getImpl()->m_sharedViews)
+    {
+        const char * csName = view.m_colorspace.c_str();
+        if (0 == Platform::Strcasecmp(csName, name))
+        {
+            return true;
+        }
+    }
+
     // Check for all (display, view) pairs (i.e. active and inactive ones).
 
     for (const auto & display : getImpl()->m_displays)
     {
         const char * dispName = display.first.c_str();
-        for (const auto & view : display.second)
+        for (const auto & view : display.second.m_views)
         {
             const char * viewName = view.m_name.c_str();
-            const char * csName = getDisplayColorSpaceName(dispName, viewName);
+            const char * csName = getDisplayViewColorSpaceName(dispName, viewName);
             if (0 == Platform::Strcasecmp(csName, name))
             {
                 return true;
+            }
+        }
+        for (const auto & sharedView : display.second.m_sharedViews)
+        {
+            auto viewIt = FindView(getImpl()->m_sharedViews, sharedView);
+            if (viewIt != getImpl()->m_sharedViews.end())
+            {
+                if (!((*viewIt).m_viewTransform.empty()) &&
+                    (*viewIt).useDisplayNameForColorspace())
+                {
+                    if (0 == Platform::Strcasecmp(dispName, name))
+                    {
+                        return true;
+                    }
+                }
             }
         }
     }
@@ -1537,7 +1942,7 @@ bool Config::isColorSpaceUsed(const char * name) const noexcept
         {
             return true;
         }
-    }      
+    }
 
     // Check the file rules.
 
@@ -1611,6 +2016,8 @@ void Config::setStrictParsingEnabled(bool enabled)
 // Roles
 void Config::setRole(const char * role, const char * colorSpaceName)
 {
+    if (!role || !*role) return;
+
     // Set the role
     if(colorSpaceName)
     {
@@ -1637,6 +2044,7 @@ int Config::getNumRoles() const
 
 bool Config::hasRole(const char * role) const
 {
+    if (!role || !*role) return false;
     const char* rname = LookupRole(getImpl()->m_roles, role);
     return  rname && *rname;
 }
@@ -1658,34 +2066,88 @@ const char * Config::getRoleColorSpace(int index) const
 //
 // Display/View Registration
 
+
+ConstViewingRulesRcPtr Config::getViewingRules() const noexcept
+{
+    return getImpl()->m_viewingRules;
+}
+
+void Config::setViewingRules(ConstViewingRulesRcPtr viewingRules)
+{
+    getImpl()->m_viewingRules = viewingRules->createEditableCopy();
+
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
+}
+
+void Config::addSharedView(const char * view, const char * viewTransform,
+                           const char * colorSpace, const char * looks,
+                           const char * rule, const char * description)
+{
+    if (!view || !*view)
+    {
+        throw Exception("Shared view could not be added to config, view name has to be a "
+                        "non-empty name.");
+    }
+
+    if (!colorSpace || !*colorSpace)
+    {
+        throw Exception("Shared view could not be added to config, color space name has to be a "
+                        "non-empty name.");
+    }
+
+    ViewVec & views = getImpl()->m_sharedViews;
+    AddView(views, view, viewTransform, colorSpace, looks, rule, description);
+
+    getImpl()->m_displayCache.clear();
+
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
+}
+
+void Config::removeSharedView(const char * view)
+{
+    if (!view || !*view)
+    {
+        throw Exception("Shared view could not be removed from config, view name has to be "
+                        "a non-empty name.");
+    }
+    ViewVec & views = getImpl()->m_sharedViews;
+    auto viewIt = FindView(views, view);
+
+    if (viewIt != views.end())
+    {
+        views.erase(viewIt);
+
+        getImpl()->m_displayCache.clear();
+
+        AutoMutex lock(getImpl()->m_cacheidMutex);
+        getImpl()->resetCacheIDs();
+    }
+    else
+    {
+        std::ostringstream os;
+        os << "Shared view could not be removed from config. A shared view named '"
+           << view << "' could be be found.";
+        throw Exception(os.str().c_str());
+    }
+}
+
 const char * Config::getDefaultDisplay() const
 {
     return getDisplay(0);
 }
 
-
 int Config::getNumDisplays() const
 {
-    if(getImpl()->m_displayCache.empty())
-    {
-        ComputeDisplays(getImpl()->m_displayCache,
-                        getImpl()->m_displays,
-                        getImpl()->m_activeDisplays,
-                        getImpl()->m_activeDisplaysEnvOverride);
-    }
+    getImpl()->updateDisplayCache();
 
     return static_cast<int>(getImpl()->m_displayCache.size());
 }
 
 const char * Config::getDisplay(int index) const
 {
-    if(getImpl()->m_displayCache.empty())
-    {
-        ComputeDisplays(getImpl()->m_displayCache,
-                        getImpl()->m_displays,
-                        getImpl()->m_activeDisplays,
-                        getImpl()->m_activeDisplaysEnvOverride);
-    }
+    getImpl()->updateDisplayCache();
 
     if(index>=0 && index < static_cast<int>(getImpl()->m_displayCache.size()))
     {
@@ -1702,105 +2164,94 @@ const char * Config::getDefaultView(const char * display) const
 
 int Config::getNumViews(const char * display) const
 {
-    if(getImpl()->m_displayCache.empty())
-    {
-        ComputeDisplays(getImpl()->m_displayCache,
-                        getImpl()->m_displays,
-                        getImpl()->m_activeDisplays,
-                        getImpl()->m_activeDisplaysEnvOverride);
-    }
+    if (!display || !*display) return 0;
 
-    if(!display) return 0;
-
-    DisplayMap::const_iterator iter = find_display_const(getImpl()->m_displays, display);
+    DisplayMap::const_iterator iter = FindDisplay(getImpl()->m_displays, display);
     if(iter == getImpl()->m_displays.end()) return 0;
 
-    const ViewVec & views = iter->second;
+    const ViewPtrVec views = getImpl()->getViews(iter->second);
 
-    StringUtils::StringVec masterViews;
-    for(unsigned int i=0; i<views.size(); ++i)
-    {
-        masterViews.push_back(views[i].m_name);
-    }
-
-    if(!getImpl()->m_activeViewsEnvOverride.empty())
-    {
-        const StringUtils::StringVec orderedViews
-            = IntersectStringVecsCaseIgnore(getImpl()->m_activeViewsEnvOverride, masterViews);
-
-        if(!orderedViews.empty())
-        {
-            return static_cast<int>(orderedViews.size());
-        }
-    }
-    else if(!getImpl()->m_activeViews.empty())
-    {
-        const StringUtils::StringVec orderedViews
-            = IntersectStringVecsCaseIgnore(getImpl()->m_activeViews, masterViews);
-
-        if(!orderedViews.empty())
-        {
-            return static_cast<int>(orderedViews.size());
-        }
-    }
-
-    return static_cast<int>(masterViews.size());
+    const StringUtils::StringVec masterViews{ GetViewNames(views) };
+    StringUtils::StringVec activeViews = getImpl()->getActiveViews(masterViews);
+    return static_cast<int>(activeViews.size());
 }
 
 const char * Config::getView(const char * display, int index) const
 {
-    if(getImpl()->m_displayCache.empty())
-    {
-        ComputeDisplays(getImpl()->m_displayCache,
-                        getImpl()->m_displays,
-                        getImpl()->m_activeDisplays,
-                        getImpl()->m_activeDisplaysEnvOverride);
-    }
+    if (!display || !*display) return "";
 
-    if(!display) return "";
-
-    DisplayMap::const_iterator iter = find_display_const(getImpl()->m_displays, display);
+    // Include all displays, do not limit to active displays. Consider active views only.
+    DisplayMap::const_iterator iter = FindDisplay(getImpl()->m_displays, display);
     if(iter == getImpl()->m_displays.end()) return "";
 
-    const ViewVec & views = iter->second;
+    const ViewPtrVec views = getImpl()->getViews(iter->second);
 
-    StringUtils::StringVec masterViews;
-    for(unsigned int i = 0; i < views.size(); ++i)
+    const StringUtils::StringVec masterViews{ GetViewNames(views) };
+    StringUtils::StringVec activeViews = getImpl()->getActiveViews(masterViews);
+
+    if (index < 0 || static_cast<size_t>(index) >= activeViews.size())
     {
-        masterViews.push_back(views[i].m_name);
+        return "";
+    }
+    int idx = FindInStringVecCaseIgnore(masterViews, activeViews[index]);
+
+    if(idx >= 0 && static_cast<size_t>(idx) < views.size())
+    {
+        return views[idx]->m_name.c_str();
     }
 
+    return "";
+}
+
+int Config::getNumViews(const char * display, const char * colorspace) const
+{
+    if (!display || !*display || !colorspace || !*colorspace) return 0;
+
+    DisplayMap::const_iterator iter = FindDisplay(getImpl()->m_displays, display);
+    if (iter == getImpl()->m_displays.end()) return 0;
+
+    const ViewPtrVec views = getImpl()->getViews(iter->second);
+
+    StringUtils::StringVec viewNames;
+    const StringUtils::StringVec filteredViews{ getImpl()->getFilteredViews(viewNames,
+                                                                            views,
+                                                                            colorspace) };
+
+    return static_cast<int>(filteredViews.size());
+}
+
+const char * Config::getView(const char * display, const char * colorspace, int index) const
+{
+    if (!display || !*display || !colorspace || !*colorspace) return "";
+
+    DisplayMap::const_iterator iter = FindDisplay(getImpl()->m_displays, display);
+    if (iter == getImpl()->m_displays.end()) return "";
+
+    const ViewPtrVec views = getImpl()->getViews(iter->second);
+
+    StringUtils::StringVec viewNames;
+    const StringUtils::StringVec filteredViews{ getImpl()->getFilteredViews(viewNames,
+                                                                            views,
+                                                                            colorspace) };
     int idx = index;
 
-    if(!getImpl()->m_activeViewsEnvOverride.empty())
+    if (!filteredViews.empty())
     {
-        const StringUtils::StringVec orderedViews
-            = IntersectStringVecsCaseIgnore(getImpl()->m_activeViewsEnvOverride, masterViews);
-
-        if(!orderedViews.empty())
+        if (index < 0 || static_cast<size_t>(index) >= filteredViews.size())
         {
-            idx = FindInStringVecCaseIgnore(masterViews, orderedViews[index]);
+            return "";
         }
-    }
-    else if(!getImpl()->m_activeViews.empty())
-    {
-        const StringUtils::StringVec orderedViews
-            = IntersectStringVecsCaseIgnore(getImpl()->m_activeViews, masterViews);
-
-        if(!orderedViews.empty())
-        {
-            idx = FindInStringVecCaseIgnore(masterViews, orderedViews[index]);
-        }
+        idx = FindInStringVecCaseIgnore(viewNames, filteredViews[index]);
     }
 
-    if(idx >= 0)
+    if (idx >= 0 && static_cast<size_t>(idx) < views.size())
     {
-        return views[idx].m_name.c_str();
+        return views[idx]->m_name.c_str();
     }
 
-    if(!views.empty())
+    if (!views.empty())
     {
-        return views[0].m_name.c_str();
+        return views[0]->m_name.c_str();
     }
 
     return "";
@@ -1808,109 +2259,195 @@ const char * Config::getView(const char * display, int index) const
 
 const char * Config::getDisplayViewTransformName(const char * display, const char * view) const
 {
-    if (!display || !view) return "";
+    const View * viewPtr = getImpl()->getView(display, view);
 
-    DisplayMap::const_iterator iter = find_display_const(getImpl()->m_displays, display);
-    if (iter == getImpl()->m_displays.end()) return "";
-
-    const ViewVec & views = iter->second;
-    const int index = find_view(views, view);
-    if (index<0) return "";
-
-    return views[index].m_viewTransform.c_str();
+    if (!viewPtr) return "";
+    return viewPtr->m_viewTransform.c_str();
 }
 
-const char * Config::getDisplayColorSpaceName(const char * display, const char * view) const
+const char * Config::getDisplayViewColorSpaceName(const char * display, const char * view) const
 {
-    if(!display || !view) return "";
+    const View * viewPtr = getImpl()->getView(display, view);
 
-    DisplayMap::const_iterator iter = find_display_const(getImpl()->m_displays, display);
-    if(iter == getImpl()->m_displays.end()) return "";
-
-    const ViewVec & views = iter->second;
-    const int index = find_view(views, view);
-    if(index<0) return "";
-
-    return views[index].m_colorspace.c_str();
+    if (!viewPtr) return "";
+    return viewPtr->m_colorspace.c_str();
 }
 
-const char * Config::getDisplayLooks(const char * display, const char * view) const
+const char * Config::getDisplayViewLooks(const char * display, const char * view) const
 {
-    if(!display || !view) return "";
+    const View * viewPtr = getImpl()->getView(display, view);
 
-    DisplayMap::const_iterator iter = find_display_const(getImpl()->m_displays, display);
-    if(iter == getImpl()->m_displays.end()) return "";
-
-    const ViewVec & views = iter->second;
-    const int index = find_view(views, view);
-    if(index<0) return "";
-
-    return views[index].m_looks.c_str();
+    if (!viewPtr) return "";
+    return viewPtr->m_looks.c_str();
 }
 
-
-void Config::addDisplay(const char * display, const char * view,
-                        const char * colorSpaceName, const char * looks)
+const char * Config::getDisplayViewRule(const char * display, const char * view) const noexcept
 {
-    addDisplay(display, view, nullptr, colorSpaceName, looks);
+    const View * viewPtr = getImpl()->getView(display, view);
+
+    return viewPtr ? viewPtr->m_rule.c_str() : "";
 }
 
-void Config::addDisplay(const char * display, const char * view, const char * viewTransform,
-                        const char * displayColorSpaceName, const char * looks)
+const char * Config::getDisplayViewDescription(const char * display, const char * view) const noexcept
 {
-    if (!display || !view || !displayColorSpaceName) return;
+    const View * viewPtr = getImpl()->getView(display, view);
 
-    AddDisplay(getImpl()->m_displays, display, view, viewTransform, displayColorSpaceName, looks);
-    getImpl()->m_displayCache.clear();
+    return viewPtr ? viewPtr->m_description.c_str() : "";
+}
+
+void Config::addDisplaySharedView(const char * display, const char * sharedView)
+{
+    if (!display || !*display)
+    {
+        throw Exception("Shared view could not be added to display: non-empty display name "
+                        "is needed.");
+    }
+    if (!sharedView || !*sharedView)
+    {
+        throw Exception("Shared view could not be added to display: non-empty view name "
+                        "is needed.");
+    }
+
+    bool invalidateCache = false;
+    DisplayMap::iterator iter = FindDisplay(getImpl()->m_displays, display);
+    if (iter == getImpl()->m_displays.end())
+    {
+        const auto curSize = getImpl()->m_displays.size();
+        getImpl()->m_displays.resize(curSize + 1);
+        getImpl()->m_displays[curSize].first = display;
+        iter = std::prev(getImpl()->m_displays.end());
+        invalidateCache = true;
+    }
+
+    const ViewVec & existingViews = iter->second.m_views;
+    auto viewIt = FindView(existingViews, sharedView);
+    if (viewIt != existingViews.end())
+    {
+        std::ostringstream os;
+        os << "There is already a view named '" << sharedView;
+        os << "' in the display '" << display << "'.";
+        throw Exception(os.str().c_str());
+    }
+
+    StringUtils::StringVec & views = iter->second.m_sharedViews;
+    if (StringUtils::Contain(views, sharedView))
+    {
+        std::ostringstream os;
+        os << "There is already a shared view named '" << sharedView;
+        os << "' in the display '" << display << "'.";
+        throw Exception(os.str().c_str());
+    }
+    views.push_back(sharedView);
+    if (invalidateCache)
+    {
+        getImpl()->m_displayCache.clear();
+    }
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
+}
+
+void Config::addDisplayView(const char * display, const char * view,
+                            const char * colorSpace, const char * looks)
+{
+    addDisplayView(display, view, nullptr, colorSpace, looks, nullptr, nullptr);
+}
+
+void Config::addDisplayView(const char * display, const char * view, const char * viewTransform,
+                            const char * colorSpace, const char * looks,
+                            const char * rule, const char * description)
+{
+    if (!display || !*display)
+    {
+        throw Exception("View could not be added to display in config: a non-empty display "
+                        "name is needed.");
+    }
+    if (!view || !*view)
+    {
+        throw Exception("View could not be added to display in config: a non-empty view "
+                        "name is needed.");
+    }
+    if (!colorSpace || !*colorSpace)
+    {
+        throw Exception("View could not be added to display in config: a non-empty color space "
+                        "name is needed.");
+    }
+
+    DisplayMap::iterator iter = FindDisplay(getImpl()->m_displays, display);
+    if (iter == getImpl()->m_displays.end())
+    {
+        const auto curSize = getImpl()->m_displays.size();
+        getImpl()->m_displays.resize(curSize + 1);
+        getImpl()->m_displays[curSize].first = display;
+        getImpl()->m_displays[curSize].second.m_views.push_back(View(view, viewTransform,
+                                                                     colorSpace, looks, rule,
+                                                                     description));
+        getImpl()->m_displayCache.clear();
+    }
+    else
+    {
+        if (StringUtils::Contain(iter->second.m_sharedViews, view))
+        {
+            std::ostringstream os;
+            os << "There is already a shared view named '" << view;
+            os << "' in the display '" << display << "'.";
+            throw Exception(os.str().c_str());
+        }
+
+        ViewVec & views = iter->second.m_views;
+        AddView(views, view, viewTransform, colorSpace, looks, rule, description);
+    }
 
     AutoMutex lock(getImpl()->m_cacheidMutex);
     getImpl()->resetCacheIDs();
 }
 
-void Config::removeDisplay(const char * display, const char * view)
+void Config::removeDisplayView(const char * display, const char * view)
 {
-    if(!display || !view) return;
+    if (!display || !*display)
+    {
+        throw Exception("Can't remove a view from a display with an empty display name.");
+    }
+    if (!view || !*view)
+    {
+        throw Exception("Can't remove a view from a display with an empty view name.");
+    }
 
     const std::string displayNameRef(display);
-    const std::string viewNameRef(view);
 
     // Check if the display exists.
 
-    DisplayMap::iterator iter = find_display(getImpl()->m_displays, display);
+    DisplayMap::iterator iter = FindDisplay(getImpl()->m_displays, display);
     if (iter==getImpl()->m_displays.end())
     {
-        return;
+        std::ostringstream os;
+        os << "Could not find a display named '" << display << "' to be removed from config.";
+        throw Exception(os.str().c_str());
+    }
+
+    ViewVec & views = iter->second.m_views;
+    StringUtils::StringVec & sharedViews = iter->second.m_sharedViews;
+
+    const std::string viewNameRef(view);
+    if (!StringUtils::Remove(sharedViews, view))
+    {
+        // view is not a shared view.
+        // Is it a view?
+        auto viewIt = FindView(views, view);
+        if (viewIt == views.end())
+        {
+            std::ostringstream os;
+            os << "Could not find a view named '" << view;
+            os << " to be removed from the display named '" << display << "'.";
+            throw Exception(os.str().c_str());
+        }
+
+        views.erase(viewIt);
     }
 
     // Check if the display needs to be removed also.
-
-    const bool removeDisplay = iter->second.size()<=1;
-    if (removeDisplay)
-    {
-        if (iter->second.size()==1 && !StrEqualsCaseIgnore(viewNameRef, iter->second[0].m_name))
-        {
-            // The display does not have the view.
-            return;
-        }
-    }
-
-    // Remove the display/view pair.
-
-    if (removeDisplay)
+    if (views.empty() && sharedViews.empty())
     {
         getImpl()->m_displays.erase(iter);
-    }
-    else
-    {
-        ViewVec & views = iter->second;
-
-        views.erase(std::remove_if(views.begin(),
-                                   views.end(),
-                                   [viewNameRef](const View & view)
-                                   {
-                                        return StrEqualsCaseIgnore(view.m_name, viewNameRef);
-                                   } ),
-                    views.end());
     }
 
     getImpl()->m_displayCache.clear();
@@ -1931,7 +2468,7 @@ void Config::clearDisplays()
 void Config::setActiveDisplays(const char * displays)
 {
     getImpl()->m_activeDisplays.clear();
-    SplitStringEnvStyle(getImpl()->m_activeDisplays, displays);
+    getImpl()->m_activeDisplays = SplitStringEnvStyle(displays);
 
     getImpl()->m_displayCache.clear();
 
@@ -1948,7 +2485,7 @@ const char * Config::getActiveDisplays() const
 void Config::setActiveViews(const char * views)
 {
     getImpl()->m_activeViews.clear();
-    SplitStringEnvStyle(getImpl()->m_activeViews, views);
+    getImpl()->m_activeViews = SplitStringEnvStyle(views);
 
     getImpl()->m_displayCache.clear();
 
@@ -1962,6 +2499,80 @@ const char * Config::getActiveViews() const
     return getImpl()->m_activeViewsStr.c_str();
 }
 
+int Config::getNumDisplaysAll() const
+{
+    return static_cast<int>(getImpl()->m_displays.size());
+}
+
+const char * Config::getDisplayAll(int index) const
+{
+    if (index >= 0 || index < static_cast<int>(getImpl()->m_displays.size()))
+    {
+        return getImpl()->m_displays[index].first.c_str();
+    }
+
+    return "";
+}
+
+int Config::getNumViews(ViewType type, const char * display) const
+{
+    if (!display || !*display)
+    {
+        return static_cast<int>(getImpl()->m_sharedViews.size());
+    }
+    DisplayMap::const_iterator iter = FindDisplay(getImpl()->m_displays, display);
+    if (iter == getImpl()->m_displays.end()) return 0;
+
+    switch (type)
+    {
+    case VIEW_SHARED:
+        return static_cast<int>(iter->second.m_sharedViews.size());
+        break;
+    case VIEW_DISPLAY_DEFINED:
+        return static_cast<int>(iter->second.m_views.size());
+        break;
+    }
+    return 0;
+}
+
+const char * Config::getView(ViewType type, const char * display, int index) const
+{
+    if (!display || !*display)
+    {
+        if (index >= 0 || index < static_cast<int>(getImpl()->m_sharedViews.size()))
+        {
+            return getImpl()->m_sharedViews[index].m_name.c_str();
+        }
+        return "";
+    }
+
+    DisplayMap::const_iterator iter = FindDisplay(getImpl()->m_displays, display);
+    if(iter == getImpl()->m_displays.end()) return "";
+
+    switch (type)
+    {
+    case VIEW_SHARED:
+    {
+        const StringUtils::StringVec & views = iter->second.m_sharedViews;
+        if (index >= 0 && index < static_cast<int>(views.size()))
+        {
+            return views[index].c_str();
+        }
+        break;
+    }
+    case VIEW_DISPLAY_DEFINED:
+    {
+        const ViewVec & views = iter->second.m_views;
+        if (index >= 0 && index < static_cast<int>(views.size()))
+        {
+            return views[index].m_name.c_str();
+        }
+        break;
+    }
+    }
+
+    return "";
+}
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -1982,17 +2593,7 @@ void Config::setDefaultLumaCoefs(const double * c3)
 
 ConstLookRcPtr Config::getLook(const char * name) const
 {
-    const std::string namelower = StringUtils::Lower(name);
-
-    for(unsigned int i=0; i<getImpl()->m_looksList.size(); ++i)
-    {
-        if(StringUtils::Lower(getImpl()->m_looksList[i]->getName()) == namelower)
-        {
-            return getImpl()->m_looksList[i];
-        }
-    }
-
-    return ConstLookRcPtr();
+    return getImpl()->getLook(name);
 }
 
 int Config::getNumLooks() const
@@ -2052,17 +2653,7 @@ int Config::getNumViewTransforms() const noexcept
 
 ConstViewTransformRcPtr Config::getViewTransform(const char * name) const noexcept
 {
-    const std::string namelower = StringUtils::Lower(name);
-
-    for (auto vt : getImpl()->m_viewTransforms)
-    {
-        if (StringUtils::Lower(vt->getName()) == namelower)
-        {
-            return vt;
-        }
-    }
-
-    return ConstViewTransformRcPtr();
+    return getImpl()->getViewTransform(name);
 }
 
 const char * Config::getViewTransformNameByIndex(int index) const noexcept
@@ -2101,7 +2692,9 @@ void Config::addViewTransform(const ConstViewTransformRcPtr & viewTransform)
     if (!viewTransform->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE) &&
         !viewTransform->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE))
     {
-        throw Exception("Cannot add view transform with no transform.");
+        std::ostringstream os;
+        os << "Cannot add view transform '" << name << "' with no transform.";
+        throw Exception(os.str().c_str());
     }
 
     const std::string namelower = StringUtils::Lower(name);
@@ -2146,11 +2739,6 @@ ConstFileRulesRcPtr Config::getFileRules() const noexcept
 
 void Config::setFileRules(ConstFileRulesRcPtr fileRules)
 {
-    if (getMajorVersion() < 2)
-    {
-        throw Exception("Only config version 2 or higher can accept file rules.");
-    }
-
     getImpl()->m_fileRules = fileRules->createEditableCopy();
 
     AutoMutex lock(getImpl()->m_cacheidMutex);
@@ -2176,23 +2764,23 @@ bool Config::filepathOnlyMatchesDefaultRule(const char * filePath) const
 ///////////////////////////////////////////////////////////////////////////
 
 ConstProcessorRcPtr Config::getProcessor(const ConstColorSpaceRcPtr & src,
-                                            const ConstColorSpaceRcPtr & dst) const
+                                         const ConstColorSpaceRcPtr & dst) const
 {
     ConstContextRcPtr context = getCurrentContext();
     return getProcessor(context, src, dst);
 }
 
 ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
-                                            const ConstColorSpaceRcPtr & src,
-                                            const ConstColorSpaceRcPtr & dst) const
+                                         const ConstColorSpaceRcPtr & src,
+                                         const ConstColorSpaceRcPtr & dst) const
 {
-    if(!src)
+    if (!src)
     {
-        throw Exception("Config::GetProcessor failed. Source color space is null.");
+        throw Exception("Can't get processor: source color space is null.");
     }
-    if(!dst)
+    if (!dst)
     {
-        throw Exception("Config::GetProcessor failed. Destination color space is null.");
+        throw Exception("Can't get processor: destination color space is null.");
     }
 
     ProcessorRcPtr processor = Processor::Create();
@@ -2233,19 +2821,19 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
 }
 
 
-ConstProcessorRcPtr Config::getProcessor(const char * inputColorSpaceName,
+ConstProcessorRcPtr Config::getProcessor(const char * srcColorSpaceName,
                                          const char * display, const char * view) const
 {
     ConstContextRcPtr context = getCurrentContext();
-    return getProcessor(context, inputColorSpaceName, display, view);
+    return getProcessor(context, srcColorSpaceName, display, view);
 }
 
 ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
-                                         const char * inputColorSpaceName,
+                                         const char * srcColorSpaceName,
                                          const char * display, const char * view) const
 {
-    auto dt = DisplayTransform::Create();
-    dt->setInputColorSpaceName(inputColorSpaceName);
+    auto dt = DisplayViewTransform::Create();
+    dt->setSrc(srcColorSpaceName);
     dt->setDisplay(display);
     dt->setView(view);
     dt->validate();
@@ -2727,6 +3315,34 @@ void Config::Impl::checkVersionConsistency() const
     if (m_majorVersion < 2 && m_fileRules->getNumEntries() > 1)
     {
         throw Exception("Only version 2 (or higher) can have FileRules.");
+    }
+
+    // Check for ViewingRules.
+
+    if (m_majorVersion < 2 && m_viewingRules->getNumEntries() != 0)
+    {
+        throw Exception("Only version 2 (or higher) can have viewing rules.");
+    }
+
+    // Check for shared views.
+
+    if (m_majorVersion < 2)
+    {
+        if (m_sharedViews.size() != 0)
+        {
+            throw Exception("Only version 2 (or higher) can have shared views.");
+        }
+        for (const auto & display : m_displays)
+        {
+            const StringUtils::StringVec & sharedViews = display.second.m_sharedViews;
+            if (!sharedViews.empty())
+            {
+                std::ostringstream os;
+                os << "Config failed sanitycheck. The display '" << display.first << "' ";
+                os << "uses shared views and config version is less than 2.";
+                throw Exception(os.str().c_str());
+            }
+        }
     }
 
     // Check for the DisplayColorSpaces.

@@ -17,7 +17,7 @@ TEST_DESCS = [
 
 TEST_CATEGORIES = ['linear', 'rendering', 'log', '123', 'a1b.']
 
-SIMPLE_CONFIG = """ocio_profile_version: 1
+SIMPLE_CONFIG = """ocio_profile_version: 2
 
 search_path: luts
 strictparsing: false
@@ -26,6 +26,12 @@ luma: [0.2126, 0.7152, 0.0722]
 roles:
   default: raw
   scene_linear: lnh
+
+viewing_rules:
+  - !<Rule> {name: Rule_1, colorspaces: c1, custom: {key0: value0, key1: value1}}
+  - !<Rule> {name: Rule_2, colorspaces: [c2, c3]}
+  - !<Rule> {name: Rule_3, encodings: log}
+  - !<Rule> {name: Rule_4, encodings: [log, scene-linear], custom: {key1: value2, key2: value0}}
 
 displays:
   sRGB:
@@ -76,4 +82,14 @@ colorspaces:
         - !<ExponentTransform> {value: [2.2, 2.2, 2.2, 1]}
         - !<MatrixTransform> {matrix: [1, 2, 3, 4, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], offset: [1, 2, 0, 0]}
         - !<CDLTransform> {slope: [0.9, 1, 1], offset: [0.1, 0.3, 0.4], power: [1.1, 1.1, 1.1], sat: 0.9}
+
+  - !<ColorSpace>
+    name: c1
+    encoding: scene-linear
+
+  - !<ColorSpace>
+    name: c2
+
+  - !<ColorSpace>
+    name: c3
 """
