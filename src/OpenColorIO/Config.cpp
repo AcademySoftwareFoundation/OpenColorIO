@@ -1399,6 +1399,8 @@ void Config::sanityCheck() const
         }
     }
 
+    getImpl()->checkVersionConsistency();
+
     // Everything is groovy.
     getImpl()->m_sanity = Impl::SANITY_SANE;
 }

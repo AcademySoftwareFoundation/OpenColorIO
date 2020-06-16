@@ -67,7 +67,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
     const std::string dst{ "destination" };
     cst->setDst(dst.c_str());
 
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    OCIO::ConfigRcPtr config = OCIO::Config::CreateRaw()->createEditableCopy();
     auto csSceneToRef = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
     csSceneToRef->setName(src.c_str());
     auto mat = OCIO::MatrixTransform::Create();
@@ -327,7 +327,8 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
     vt->setTransform(mat, OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE);
     OCIO_CHECK_NO_THROW(config->addViewTransform(vt));
 
-    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 2);
+    // 3 color spaces incluging "raw".
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
     OCIO_CHECK_NO_THROW(config->sanityCheck());
 
     // cst is now from csDisplayToRef to csDisplayFromRef.
@@ -386,7 +387,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_reference_conversion_ops)
 {
     const std::string scn{ "scene" };
 
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    OCIO::ConfigRcPtr config = OCIO::Config::CreateRaw()->createEditableCopy();
     auto cs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
     cs->setName(scn.c_str());
     auto ff = OCIO::FixedFunctionTransform::Create();
