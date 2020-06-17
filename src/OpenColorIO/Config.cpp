@@ -1372,16 +1372,12 @@ void Config::sanityCheck() const
 
     ///// FileRules
 
-    // There is always at least the default rule pointing to the default color space. OCIO v1 does
-    // not enforce that rule to be valid (default color space existance). If some other rules have
-    // been added they need to be valid.
-
     // All Config objects have a fileRules object, regardless of version. This object is
     // initialized to have a defaultRule with the color space set to "default" (i.e., the default
     // role). The fileRules->sanityCheck call will validate that all color spaces used in rules
     // exist, or if they are roles that they point to a color space that exists. Because this would
     // cause sanityCheck to improperly fail on v1 configs (since they are not required to actually
-    // contain file rules), we don't do this check on v1 configs.
+    // contain file rules), we don't do this check on v1 configs when there is only one rule.
     if (getMajorVersion() >= 2 || getImpl()->m_fileRules->getNumEntries() != 1)
     {
         try

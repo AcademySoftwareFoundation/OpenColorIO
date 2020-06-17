@@ -327,7 +327,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
     vt->setTransform(mat, OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE);
     OCIO_CHECK_NO_THROW(config->addViewTransform(vt));
 
-    // 3 color spaces incluging "raw".
+    // 3 color spaces including "raw".
     OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
     OCIO_CHECK_NO_THROW(config->sanityCheck());
 
