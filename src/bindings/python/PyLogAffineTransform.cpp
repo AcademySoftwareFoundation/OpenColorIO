@@ -22,9 +22,9 @@ void bindPyLogAffineTransform(py::module & m)
     std::array<double, 3> DEFAULT_LIN_SIDE_OFFSET;
     DEFAULT->getLinSideOffsetValue(*reinterpret_cast<double(*)[3]>(DEFAULT_LIN_SIDE_OFFSET.data()));
 
-    py::class_<LogAffineTransform, 
-               LogAffineTransformRcPtr /* holder */, 
-               Transform /* base */>(m, "LogAffineTransform")
+    auto cls = py::class_<LogAffineTransform, 
+                          LogAffineTransformRcPtr /* holder */, 
+                          Transform /* base */>(m, "LogAffineTransform")
         .def(py::init(&LogAffineTransform::Create))
         .def(py::init([](const std::array<double, 3> & logSideSlope,
                          const std::array<double, 3> & logSideOffset,
@@ -45,7 +45,7 @@ void bindPyLogAffineTransform(py::module & m)
              "logSideOffset"_a = DEFAULT_LOG_SIDE_OFFSET,
              "linSideSlope"_a = DEFAULT_LIN_SIDE_SLOPE,
              "linSideOffset"_a = DEFAULT_LIN_SIDE_OFFSET,
-             "dir"_a = DEFAULT->getDirection())
+             "direction"_a = DEFAULT->getDirection())
 
         .def("getFormatMetadata", 
              (FormatMetadata & (LogAffineTransform::*)()) &LogAffineTransform::getFormatMetadata,
@@ -105,6 +105,8 @@ void bindPyLogAffineTransform(py::module & m)
                 self->setLinSideOffsetValue(*reinterpret_cast<const double(*)[3]>(values.data()));
             }, 
              "values"_a);
+
+    defStr(cls);
 }
 
 } // namespace OCIO_NAMESPACE

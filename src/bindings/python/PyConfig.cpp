@@ -60,7 +60,7 @@ void bindPyConfig(py::module & m)
 
         .def_static("CreateRaw", &Config::CreateRaw)
         .def_static("CreateFromEnv", &Config::CreateFromEnv)
-        .def_static("CreateFromFile", &Config::CreateFromFile, "filename"_a)
+        .def_static("CreateFromFile", &Config::CreateFromFile, "fileName"_a)
         .def_static("CreateFromStream", [](const std::string & str) 
             {
                 std::istringstream is(str);
@@ -114,7 +114,7 @@ void bindPyConfig(py::module & m)
         .def("clearSearchPaths", &Config::clearSearchPaths)
         .def("addSearchPath", &Config::addSearchPath, "path"_a)
         .def("getWorkingDir", &Config::getWorkingDir)
-        .def("setWorkingDir", &Config::setWorkingDir, "dirname"_a)
+        .def("setWorkingDir", &Config::setWorkingDir, "dirName"_a)
 
         // ColorSpaces
         .def("getColorSpaces", &Config::getColorSpaces, "category"_a)
@@ -141,7 +141,7 @@ void bindPyConfig(py::module & m)
             {
                 return ActiveColorSpaceIterator(self);
             })
-        .def("addColorSpace", &Config::addColorSpace, "cs"_a)
+        .def("addColorSpace", &Config::addColorSpace, "colorSpace"_a)
         .def("removeColorSpace", &Config::removeColorSpace, "name"_a)
         .def("isColorSpaceUsed", &Config::isColorSpaceUsed, "name"_a)
         .def("clearColorSpaces", &Config::clearColorSpaces)

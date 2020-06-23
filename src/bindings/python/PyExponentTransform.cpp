@@ -10,12 +10,12 @@ void bindPyExponentTransform(py::module & m)
 {
     ExponentTransformRcPtr DEFAULT = ExponentTransform::Create();
 
-    std::array<double, 4> DEFAULT_VEC4;
-    DEFAULT->getValue(*reinterpret_cast<double(*)[4]>(DEFAULT_VEC4.data()));
+    std::array<double, 4> DEFAULT_VALUE;
+    DEFAULT->getValue(*reinterpret_cast<double(*)[4]>(DEFAULT_VALUE.data()));
 
-    py::class_<ExponentTransform, 
-               ExponentTransformRcPtr /* holder */, 
-               Transform /* base */>(m, "ExponentTransform")
+    auto cls = py::class_<ExponentTransform, 
+                          ExponentTransformRcPtr /* holder */, 
+                          Transform /* base */>(m, "ExponentTransform")
         .def(py::init(&ExponentTransform::Create))
         .def(py::init([](const std::array<double, 4> & vec4,
                          NegativeStyle negativeStyle, 
@@ -28,9 +28,9 @@ void bindPyExponentTransform(py::module & m)
                 p->validate();
                 return p;
             }),
-             "vec4"_a = DEFAULT_VEC4,
+             "value"_a = DEFAULT_VALUE,
              "negativeStyle"_a = DEFAULT->getNegativeStyle(),
-             "dir"_a = DEFAULT->getDirection())
+             "direction"_a = DEFAULT->getDirection())
 
         .def("getFormatMetadata", 
              (FormatMetadata & (ExponentTransform::*)()) &ExponentTransform::getFormatMetadata,
@@ -50,9 +50,11 @@ void bindPyExponentTransform(py::module & m)
             { 
                 self->setValue(*reinterpret_cast<const double(*)[4]>(vec4.data()));
             }, 
-             "vec4"_a)
+             "value"_a)
         .def("getNegativeStyle", &ExponentTransform::getNegativeStyle)
         .def("setNegativeStyle", &ExponentTransform::setNegativeStyle, "style"_a);
+
+    defStr(cls);
 }
 
 } // namespace OCIO_NAMESPACE

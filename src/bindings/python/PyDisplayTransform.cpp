@@ -10,9 +10,9 @@ void bindPyDisplayTransform(py::module & m)
 {
     DisplayTransformRcPtr DEFAULT = DisplayTransform::Create();
 
-    py::class_<DisplayTransform, 
-               DisplayTransformRcPtr /* holder */, 
-               Transform /* base */>(m, "DisplayTransform")
+    auto cls = py::class_<DisplayTransform, 
+                          DisplayTransformRcPtr /* holder */, 
+                          Transform /* base */>(m, "DisplayTransform")
         .def(py::init(&DisplayTransform::Create))
         .def(py::init([](const std::string & inputColorSpaceName,
                          TransformRcPtr linearCC,
@@ -49,16 +49,16 @@ void bindPyDisplayTransform(py::module & m)
              "display"_a = DEFAULT->getDisplay(),
              "view"_a = DEFAULT->getView(),
              "displayCC"_a = DEFAULT->getDisplayCC(),
-             "looksOvveride"_a = DEFAULT->getLooksOverride(),
+             "looksOverride"_a = DEFAULT->getLooksOverride(),
              "looksOverrideEnabled"_a = DEFAULT->getLooksOverrideEnabled(),
-             "dir"_a = DEFAULT->getDirection())
+             "direction"_a = DEFAULT->getDirection())
 
         .def("getInputColorSpaceName", &DisplayTransform::getInputColorSpaceName)
         .def("setInputColorSpaceName", &DisplayTransform::setInputColorSpaceName, "name"_a)
         .def("getLinearCC", &DisplayTransform::getLinearCC)
-        .def("setLinearCC", &DisplayTransform::setLinearCC, "cc"_a)
+        .def("setLinearCC", &DisplayTransform::setLinearCC, "transform"_a)
         .def("getColorTimingCC", &DisplayTransform::getColorTimingCC)
-        .def("setColorTimingCC", &DisplayTransform::setColorTimingCC, "cc"_a)
+        .def("setColorTimingCC", &DisplayTransform::setColorTimingCC, "transform"_a)
         .def("getChannelView", &DisplayTransform::getChannelView)
         .def("setChannelView", &DisplayTransform::setChannelView, "transform"_a)
         .def("getDisplay", &DisplayTransform::getDisplay)
@@ -66,11 +66,13 @@ void bindPyDisplayTransform(py::module & m)
         .def("getView", &DisplayTransform::getView)
         .def("setView", &DisplayTransform::setView, "view"_a)
         .def("getDisplayCC", &DisplayTransform::getDisplayCC)
-        .def("setDisplayCC", &DisplayTransform::setDisplayCC, "cc"_a)
+        .def("setDisplayCC", &DisplayTransform::setDisplayCC, "transform"_a)
         .def("getLooksOverride", &DisplayTransform::getLooksOverride)
         .def("setLooksOverride", &DisplayTransform::setLooksOverride, "looks"_a)
         .def("getLooksOverrideEnabled", &DisplayTransform::getLooksOverrideEnabled)
         .def("setLooksOverrideEnabled", &DisplayTransform::setLooksOverrideEnabled, "enabled"_a);
+
+    defStr(cls);
 }
 
 } // namespace OCIO_NAMESPACE

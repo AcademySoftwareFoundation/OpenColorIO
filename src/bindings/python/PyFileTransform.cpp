@@ -40,20 +40,22 @@ void bindPyFileTransform(py::module & m)
                 return p;
             }), 
              "src"_a = DEFAULT->getSrc(), 
-             "id"_a = DEFAULT->getCCCId(),
-             "interp"_a = DEFAULT->getInterpolation(),
-             "dir"_a = DEFAULT->getDirection())
+             "cccId"_a = DEFAULT->getCCCId(),
+             "interpolation"_a = DEFAULT->getInterpolation(),
+             "direction"_a = DEFAULT->getDirection())
 
         .def_static("getFormats", []() { return FormatIterator(nullptr); })
 
         .def("getSrc", &FileTransform::getSrc)
         .def("setSrc", &FileTransform::setSrc, "src"_a)
         .def("getCCCId", &FileTransform::getCCCId)
-        .def("setCCCId", &FileTransform::setCCCId, "id"_a)
+        .def("setCCCId", &FileTransform::setCCCId, "cccId"_a)
         .def("getCDLStyle", &FileTransform::getCDLStyle)
         .def("setCDLStyle", &FileTransform::setCDLStyle, "style"_a)
         .def("getInterpolation", &FileTransform::getInterpolation)
-        .def("setInterpolation", &FileTransform::setInterpolation, "interp"_a);
+        .def("setInterpolation", &FileTransform::setInterpolation, "interpolation"_a);
+
+    defStr(cls);
 
     py::class_<FormatIterator>(cls, "FormatIterator")
         .def("__len__", [](FormatIterator & it) { return FileTransform::getNumFormats(); })

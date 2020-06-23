@@ -27,9 +27,9 @@ void bindPyLogCameraTransform(py::module & m)
     std::array<double, 3> DEFAULT_LIN_SIDE_OFFSET;
     DEFAULT->getLinSideOffsetValue(*reinterpret_cast<double(*)[3]>(DEFAULT_LIN_SIDE_OFFSET.data()));
 
-    py::class_<LogCameraTransform, 
-               LogCameraTransformRcPtr /* holder */, 
-               Transform /* base */>(m, "LogCameraTransform")
+    auto cls = py::class_<LogCameraTransform, 
+                          LogCameraTransformRcPtr /* holder */, 
+                          Transform /* base */>(m, "LogCameraTransform")
         .def(py::init(&LogCameraTransform::Create))
         .def(py::init([](const std::array<double, 3> & linSideBreak,
                          const std::array<double, 3> & logSideSlope,
@@ -53,7 +53,7 @@ void bindPyLogCameraTransform(py::module & m)
              "logSideOffset"_a = DEFAULT_LOG_SIDE_OFFSET,
              "linSideSlope"_a = DEFAULT_LIN_SIDE_SLOPE,
              "linSideOffset"_a = DEFAULT_LIN_SIDE_OFFSET,
-             "dir"_a = DEFAULT->getDirection())
+             "direction"_a = DEFAULT->getDirection())
 
         .def("getFormatMetadata", 
              (FormatMetadata & (LogCameraTransform::*)()) &LogCameraTransform::getFormatMetadata,
@@ -138,6 +138,8 @@ void bindPyLogCameraTransform(py::module & m)
             }, 
              "values"_a)
         .def("unsetLinearSlopeValue", &LogCameraTransform::unsetLinearSlopeValue);
+
+    defStr(cls);
 }
 
 } // namespace OCIO_NAMESPACE

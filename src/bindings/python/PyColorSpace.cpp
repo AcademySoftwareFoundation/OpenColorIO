@@ -150,8 +150,8 @@ void bindPyColorSpace(py::module & m)
              "vars"_a)
 
         // Transform
-        .def("getTransform", &ColorSpace::getTransform, "dir"_a)
-        .def("setTransform", &ColorSpace::setTransform, "transform"_a, "dir"_a);
+        .def("getTransform", &ColorSpace::getTransform, "direction"_a)
+        .def("setTransform", &ColorSpace::setTransform, "transform"_a, "direction"_a);
 
     defStr(cls);
 

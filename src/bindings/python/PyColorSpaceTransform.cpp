@@ -10,9 +10,9 @@ void bindPyColorSpaceTransform(py::module & m)
 {
     ColorSpaceTransformRcPtr DEFAULT = ColorSpaceTransform::Create();
 
-    py::class_<ColorSpaceTransform, 
-               ColorSpaceTransformRcPtr /* holder */, 
-               Transform /* base */>(m, "ColorSpaceTransform")
+    auto cls = py::class_<ColorSpaceTransform, 
+                          ColorSpaceTransformRcPtr /* holder */, 
+                          Transform /* base */>(m, "ColorSpaceTransform")
         .def(py::init(&ColorSpaceTransform::Create))
         .def(py::init([](const std::string & src, 
                          const std::string & dst, 
@@ -27,12 +27,14 @@ void bindPyColorSpaceTransform(py::module & m)
             }), 
              "src"_a = DEFAULT->getSrc(), 
              "dst"_a = DEFAULT->getDst(),
-             "dir"_a = DEFAULT->getDirection())
+             "direction"_a = DEFAULT->getDirection())
 
         .def("getSrc", &ColorSpaceTransform::getSrc)
         .def("setSrc", &ColorSpaceTransform::setSrc, "src"_a)
         .def("getDst", &ColorSpaceTransform::getDst)
         .def("setDst", &ColorSpaceTransform::setDst, "dst"_a);
+
+    defStr(cls);
 }
 
 } // namespace OCIO_NAMESPACE
