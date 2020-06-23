@@ -109,7 +109,7 @@ class LookTest(unittest.TestCase):
             with self.assertRaises(TypeError):
                 self.look.setInverseTransform(invalid)
 
-    def test_constructor_with_positional(self):
+    def test_constructor_with_keyword(self):
         """
         Test Look constructor with keywords and validate its values.
         """
@@ -144,7 +144,7 @@ class LookTest(unittest.TestCase):
         self.assertIsInstance(look2.getInverseTransform(), type(inv_exp_tr2))
         self.assertEqual(look2.getDescription(), 'this is a test')
 
-    def test_constructor_without_positional(self):
+    def test_constructor_with_positional(self):
         """
         Test Look constructor without keywords and validate its values.
         """
