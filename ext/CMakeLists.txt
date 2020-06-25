@@ -2,6 +2,7 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 
+MESSAGE(STATUS "CMAKE_MODULE_PATH is set to    " ${CMAKE_MODULE_PATH})
 ###############################################################################
 ### External third-party C/C++ dependencies.                                ###
 

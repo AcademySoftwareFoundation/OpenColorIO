@@ -638,7 +638,7 @@ int main(int argc, char **argv)
 
     try
     {
-        g_oglApp = std::make_shared<OCIO::OglApp>("ociodisplay", 512, 512);
+        g_oglApp = std::make_shared<OCIO::ScreenApp>("ociodisplay", 512, 512);
     }
     catch (const OCIO::Exception & e)
     {
