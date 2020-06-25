@@ -16,15 +16,14 @@ namespace OCIO_NAMESPACE
 
 namespace
 {
-void CreatePaddedLutChannels(unsigned long width,
-                             unsigned long height,
-                             const std::vector<float> & channel,
-                             std::vector<float> & paddedChannel)
+void PadLutChannels(unsigned long width,
+                    unsigned long height,
+                    const std::vector<float> & channel,
+                    std::vector<float> & chn)
 {
-    // The 1D LUT always contains 3 channels.
     const unsigned long currWidth = (unsigned long)(channel.size() / 3);
 
-    if (height > 1)
+    if (height>1)
     {
         // Fill the texture values.
         //
@@ -39,12 +38,12 @@ void CreatePaddedLutChannels(unsigned long width,
         {
             std::transform(&channel[3 * i],
                            &channel[3 * (i + step)],
-                           std::back_inserter(paddedChannel),
+                           std::back_inserter(chn),
                            [](float val) {return SanitizeFloat(val); });
 
-            paddedChannel.push_back(SanitizeFloat(channel[3 * (i + step) + 0]));
-            paddedChannel.push_back(SanitizeFloat(channel[3 * (i + step) + 1]));
-            paddedChannel.push_back(SanitizeFloat(channel[3 * (i + step) + 2]));
+            chn.push_back(SanitizeFloat(channel[3 * (i + step) + 0]));
+            chn.push_back(SanitizeFloat(channel[3 * (i + step) + 1]));
+            chn.push_back(SanitizeFloat(channel[3 * (i + step) + 2]));
             leftover -= step;
         }
 
@@ -53,124 +52,50 @@ void CreatePaddedLutChannels(unsigned long width,
         {
             std::transform(&channel[3 * (currWidth - leftover)],
                            &channel[3 * (currWidth - 1)],
-                           std::back_inserter(paddedChannel),
+                           std::back_inserter(chn),
                            [](float val) {return SanitizeFloat(val); });
 
-            paddedChannel.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 0]));
-            paddedChannel.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 1]));
-            paddedChannel.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 2]));
+            chn.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 0]));
+            chn.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 1]));
+            chn.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 2]));
         }
     }
     else
     {
         for (auto & val : channel)
         {
-            paddedChannel.push_back(SanitizeFloat(val));
+            chn.push_back(SanitizeFloat(val));
         }
     }
 
     // Pad the remaining of the texture with the last LUT entry.
     // Note: GPU Textures are expected a size of width*height.
 
-    unsigned long missingEntries = width * height - ((unsigned long)paddedChannel.size() / 3);
+    unsigned long missingEntries = width*height - ((unsigned long)chn.size() / 3);
     for (unsigned long idx = 0; idx < missingEntries; ++idx)
     {
-        paddedChannel.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 0]));
-        paddedChannel.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 1]));
-        paddedChannel.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 2]));
+        chn.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 0]));
+        chn.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 1]));
+        chn.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 2]));
     }
 }
-
-void CreatePaddedRedChannel(unsigned long width,
-                            unsigned long height,
-                            const std::vector<float> & channel, // Contains RGB.
-                            std::vector<float> & paddedChannel) // Expects Red only.
-{
-    // The 1D LUT always contains 3 channels.
-    const unsigned long currWidth = (unsigned long)(channel.size() / 3);
-
-    if (height > 1)
-    {
-        // Fill the texture values.
-        //
-        // Make the last texel of a given row the same as the first texel
-        // of its next row.  This will preserve the continuity along row breaks
-        // as long as the lookup position used by the sampler is based on (width-1)
-        // to account for the 1 texel padding at the end of each row.
-        unsigned long leftover = currWidth;
-
-        const unsigned long step = width - 1;
-        for (unsigned long i = 0; i < (currWidth - step); i += step)
-        {
-            for (unsigned long idx = i; idx < (i + step); ++idx)
-            {
-                paddedChannel.push_back(SanitizeFloat(channel[3 * idx]));
-            }
-
-            paddedChannel.push_back(SanitizeFloat(channel[3 * (i + step)]));
-            leftover -= step;
-        }
-
-        // If there are still texels to fill, add them to the texture data.
-        if (leftover > 0)
-        {
-            for (unsigned long idx = (currWidth - leftover); idx < (currWidth - 1); ++idx)
-            {
-                paddedChannel.push_back(SanitizeFloat(channel[3 * idx]));
-            }
-
-            paddedChannel.push_back(SanitizeFloat(channel[3 * (currWidth - 1)]));
-        }
-    }
-    else
-    {
-        for (unsigned long idx = 0; idx < currWidth; ++idx)
-        {
-            paddedChannel.push_back(SanitizeFloat(channel[3 * idx]));
-        }
-    }
-
-    // Pad the remaining of the texture with the last LUT entry.
-    // Note: GPU Textures are expected a size of width * height.
-
-    unsigned long missingEntries = width * height - (unsigned long)paddedChannel.size();
-    for (unsigned long idx = 0; idx < missingEntries; ++idx)
-    {
-        paddedChannel.push_back(SanitizeFloat(channel[3 * (currWidth - 1)]));
-    }
 }
-
-}  // anon.
 
 void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
                               ConstLut1DOpDataRcPtr & lutData)
 {
     const unsigned long defaultMaxWidth = shaderCreator->getTextureMaxWidth();
 
-    const unsigned long length      = lutData->getArray().getLength();
-    const unsigned long width       = std::min(length, defaultMaxWidth);
-    const unsigned long height      = (length / defaultMaxWidth) + 1;
-    const unsigned long numChannels = lutData->getArray().getNumColorComponents();
-
-    // Note: The 1D LUT needs a GPU texture for the Look-up table implementation. 
-    // However, the texture type & content may vary based on the number of channels
-    // i.e. when all channels are identical a F32 Red GPU texture is enough.
- 
-    const bool singleChannel = (numChannels == 1);
+    const unsigned long length = lutData->getArray().getLength();
+    const unsigned long width = std::min(length, defaultMaxWidth);
+    const unsigned long height = (length / defaultMaxWidth) + 1;
 
     // Adjust LUT texture to allow for correct 2d linear interpolation, if needed.
 
     std::vector<float> values;
-    values.reserve(width * height * numChannels);
+    values.reserve(width*height*3);
 
-    if (singleChannel) // i.e. numChannels == 1.
-    {
-        CreatePaddedRedChannel(width, height, lutData->getArray().getValues(), values);
-    }
-    else
-    {
-        CreatePaddedLutChannels(width, height, lutData->getArray().getValues(), values);
-    }
+    PadLutChannels(width, height, lutData->getArray().getValues(), values);
 
     // Register the RGB LUT.
 
@@ -189,8 +114,7 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
                               GpuShaderText::getSamplerName(name).c_str(),
                               lutData->getCacheID().c_str(),
                               width, height,
-                              singleChannel ? GpuShaderCreator::TEXTURE_RED_CHANNEL
-                                            : GpuShaderCreator::TEXTURE_RGB_CHANNEL,
+                              GpuShaderCreator::TEXTURE_RGB_CHANNEL,
                               lutData->getConcreteInterpolation(),
                               &values[0]);
 
@@ -320,14 +244,9 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     {
         const std::string str = name + "_computePos(" + shaderCreator->getPixelName();
 
-        ss.newLine() << shaderCreator->getPixelName() << ".r = " 
-                     << ss.sampleTex2D(name, str + ".r)") << ".r;";
-
-        ss.newLine() << shaderCreator->getPixelName() << ".g = "
-                     << ss.sampleTex2D(name, str + ".g)") << (singleChannel ? ".r;" : ".g;");
-
-        ss.newLine() << shaderCreator->getPixelName() << ".b = " 
-                     << ss.sampleTex2D(name, str + ".b)") << (singleChannel ? ".r;" : ".b;");
+        ss.newLine() << shaderCreator->getPixelName() << ".r = " << ss.sampleTex2D(name, str + ".r)") << ".r;";
+        ss.newLine() << shaderCreator->getPixelName() << ".g = " << ss.sampleTex2D(name, str + ".g)") << ".g;";
+        ss.newLine() << shaderCreator->getPixelName() << ".b = " << ss.sampleTex2D(name, str + ".b)") << ".b;";
     }
     else
     {
@@ -341,12 +260,10 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
         ss.newLine() << shaderCreator->getPixelName() << ".r = "
                         << ss.sampleTex1D(name, name + "_coords.r") << ".r;";
-
         ss.newLine() << shaderCreator->getPixelName() << ".g = "
-                        << ss.sampleTex1D(name, name + "_coords.g") << (singleChannel ? ".r;" : ".g;");
-
+                        << ss.sampleTex1D(name, name + "_coords.g") << ".g;";
         ss.newLine() << shaderCreator->getPixelName() << ".b = "
-                        << ss.sampleTex1D(name, name + "_coords.b") << (singleChannel ? ".r;" : ".b;");
+                        << ss.sampleTex1D(name, name + "_coords.b") << ".b;";
     }
 
     if (lutData->getHueAdjust() == HUE_DW3)

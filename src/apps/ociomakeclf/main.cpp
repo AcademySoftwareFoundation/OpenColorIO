@@ -11,7 +11,6 @@
 namespace OCIO = OCIO_NAMESPACE;
 
 #include "apputils/argparse.h"
-#include "apputils/measure.h"
 #include "utils/StringUtils.h"
 
 
@@ -79,7 +78,7 @@ void CreateOutputLutFile(const std::string & outLutFilepath, OCIO::ConstGroupTra
 
 int main(int argc, const char ** argv)
 {
-    bool help = false, verbose = false, measure = false, listCSCColorSpaces = false;
+    bool help = false, verbose = false, listCSCColorSpaces = false;
     std::string cscColorSpace;
 
     ArgParse ap;
@@ -93,7 +92,6 @@ int main(int argc, const char ** argv)
                "<SEPARATOR>", "Options:",
                "--help",      &help,               "Print help message",
                "--verbose",   &verbose,            "Display general information",
-               "--measure",   &measure,            "Measure (in ms) the CLF write",
                "--list",      &listCSCColorSpaces, "List of the supported CSC color spaces",
                "--csc %s",    &cscColorSpace,      "The color space that the input LUT expects and produces",
                nullptr);
@@ -253,26 +251,13 @@ int main(int argc, const char ** argv)
             grp->appendTransform(outBuiltin);
         }
 
-        static constexpr char Msg[] = "Creating the CLF lut file";
-
-        if (verbose && !measure)
+        if (verbose)
         {
-            std::cout << Msg << "." << std::endl;
+            std::cout << "Creating the CLF lut file." << std::endl;
         }
 
-        if (measure)
-        {
-            Measure m(Msg);
-            m.resume();
-
-            // Create the CLF file.
-            CreateOutputLutFile(outLutFilepath, grp);
-        }
-        else
-        {
-            // Create the CLF file.
-            CreateOutputLutFile(outLutFilepath, grp);
-        }
+        // Create the CLF file.
+        CreateOutputLutFile(outLutFilepath, grp);
     }
     catch (OCIO::Exception & exception)
     {

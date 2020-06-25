@@ -43,7 +43,7 @@ void XmlFormatter::writeStartTag(const std::string & tagName,
         m_stream << "\"";
     }
 
-    m_stream << ">\n";
+    m_stream << ">" << std::endl;
 }
 
 void XmlFormatter::writeStartTag(const std::string & tagName)
@@ -55,7 +55,7 @@ void XmlFormatter::writeStartTag(const std::string & tagName)
 void XmlFormatter::writeEndTag(const std::string & tagName)
 {
     writeIndent();
-    m_stream << "</" << tagName << ">\n";
+    m_stream << "</" << tagName << ">" << std::endl;
 }
 
 void XmlFormatter::writeContentTag(const std::string & tagName,
@@ -79,7 +79,7 @@ void XmlFormatter::writeContentTag(const std::string & tagName,
     }
     m_stream << ">";
     writeString(content);
-    m_stream << "</" << tagName << ">\n";
+    m_stream << "</" << tagName << ">" << std::endl;
 }
 
 // Write the content using escaped characters if needed.
@@ -87,7 +87,7 @@ void XmlFormatter::writeContent(const std::string & content)
 {
     writeIndent();
     writeString(content);
-    m_stream << "\n";
+    m_stream << std::endl;
 }
 
 void XmlFormatter::writeEmptyTag(const std::string & tagName,
@@ -105,7 +105,7 @@ void XmlFormatter::writeEmptyTag(const std::string & tagName,
     }
 
     // Note we close the tag, no end tag is needed.
-    m_stream << " />\n";
+    m_stream << " />" << std::endl;
 }
 
 std::ostream & XmlFormatter::getStream()

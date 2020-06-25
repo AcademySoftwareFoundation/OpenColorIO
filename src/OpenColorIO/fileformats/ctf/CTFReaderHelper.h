@@ -543,6 +543,8 @@ public:
     CTFReaderGammaElt_1_5() : CTFReaderGammaElt() {}
     ~CTFReaderGammaElt_1_5() {}
 
+    void end() override;
+
     CTFReaderGammaParamsEltRcPtr createGammaParamsElt(
         const std::string & name,
         ContainerEltRcPtr pParent,
@@ -728,8 +730,6 @@ public:
     bool parseCineon(const char ** atts, unsigned i, double & gamma, double & refWhite,
                      double & refBlack, double & highlight, double & shadow);
 
-    void setCineon(LogUtil::CTFParams & legacyParams, int chan, double gamma,
-                   double refWhite, double refBlack, double highlight, double shadow);
 };
 
 class CTFReaderLogParamsElt_2_0 : public CTFReaderLogParamsElt

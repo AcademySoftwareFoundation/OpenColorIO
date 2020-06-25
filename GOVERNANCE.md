@@ -120,7 +120,6 @@ project at all ASWF TAC meetings.
 * Patrick Hodoul - Autodesk
 * Carol Payne - Netflix
 * Carl Rand - Weta Digital
-* Mark Titchener - Foundry
 * Doug Walker - Autodesk
 * Kevin Wheatley - Framestore
 

@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList compCLFversion="3.0">
-    <Description>The ProcessList id attribute is missing</Description>
-   <Log inBitDepth="32f" outBitDepth="16f" style="log10" />
-</ProcessList>
