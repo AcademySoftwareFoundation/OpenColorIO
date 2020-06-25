@@ -75,6 +75,7 @@ option(OCIO_BUILD_NUKE "Specify whether to build nuke plugins" OFF)
 option(OCIO_BUILD_DOCS "Specify whether to build documentation" OFF)
 option(OCIO_BUILD_TESTS "Specify whether to build unittests" ON)
 option(OCIO_BUILD_GPU_TESTS "Specify whether to build gpu unittests" ON)
+option(OCIO_USE_HEADLESS "Specify whether the GPU rendering is headless" OFF)
 
 option(OCIO_BUILD_PYTHON "Specify whether to build python bindings" ON)
 option(OCIO_BUILD_JAVA "Specify whether to build java bindings" OFF)
@@ -103,8 +104,26 @@ if(OCIO_BUILD_GPU_TESTS OR OCIO_BUILD_APPS)
         message(WARNING "GLUT not found.")
         set(OCIO_GL_ENABLED OFF)
     endif()
+
+    if(OCIO_USE_HEADLESS)
+        set(OCIO_EGL_HEADLESS ON)
+        # Find ECM package to use FindEGL.cmake
+        find_package(ECM REQUIRED NO_MODULE)
+        if(ECM_FOUND)
+            set(CMAKE_MODULE_PATH
+                ${CMAKE_MODULE_PATH}
+                ${ECM_FIND_MODULE_DIR})
+        endif()
+        find_package(EGL REQUIRED)
+        if(NOT EGL_FOUND)
+            message(WARNING "EGL not found")
+            set(OCIO_EGL_HEADLESS OFF)
+        endif()
+    endif()
 endif()
 
+message(STATUS "GL enabled " ${OCIO_GL_ENABLED})
+message(STATUS "EGL enabled" ${OCIO_EGL_HEADLESS})
 ###############################################################################
 # Optimization / internal linking preferences
 
