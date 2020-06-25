@@ -25,7 +25,6 @@ elif sys.platform == 'darwin':
 sys.path.insert(0, pyopencolorio_dir)
 import PyOpenColorIO as OCIO
 
-<<<<<<< HEAD
 from MainTest import *
 from ConstantsTest import *
 from ConfigTest import *
@@ -42,23 +41,9 @@ class FooTest(unittest.TestCase):
     
     def test_interface(self):
         pass
-=======
-import ColorSpaceTest
-import CDLTransformTest
-#from MainTest import *
-#from ConstantsTest import *
-#from ConfigTest import *
-#from ContextTest import *
-#from LookTest import *
-#from GpuShaderDescTest import *
-#from Baker import *
-#from TransformsTest import *
-#from RangeTransformTest import *
->>>>>>> parent of b2e7632... Refactor PyBuiltinTransform (#1026)
 
 def suite():
     suite = unittest.TestSuite()
-<<<<<<< HEAD
     suite.addTest(MainTest("test_interface"))
     suite.addTest(ConstantsTest("test_interface"))
     suite.addTest(ConfigTest("test_interface"))
@@ -73,23 +58,6 @@ def suite():
     suite.addTest(RangeTransformTest("test_equality"))
     suite.addTest(RangeTransformTest("test_validation"))
     suite.addTest(TransformsTest("test_interface"))
-=======
-    loader = unittest.TestLoader()
-
-    suite.addTest(loader.loadTestsFromModule(ColorSpaceTest))
-    suite.addTest(loader.loadTestsFromModule(CDLTransformTest))
-    #suite.addTest(MainTest("test_interface"))
-    #suite.addTest(ConstantsTest("test_interface"))
-    #suite.addTest(ConfigTest("test_interface"))
-    #suite.addTest(ConfigTest("test_is_editable"))
-    #suite.addTest(ContextTest("test_interface"))
-    #suite.addTest(LookTest("test_interface"))
-    #suite.addTest(RangeTransformTest("test_interface"))
-    #suite.addTest(RangeTransformTest("test_equality"))
-    #suite.addTest(RangeTransformTest("test_validation"))
-    #suite.addTest(TransformsTest("test_interface"))
-
->>>>>>> parent of b2e7632... Refactor PyBuiltinTransform (#1026)
     # Processor
     # ProcessorMetadata
     suite.addTest(GpuShaderDescTest("test_interface"))
