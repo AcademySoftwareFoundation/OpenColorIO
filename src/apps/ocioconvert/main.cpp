@@ -21,7 +21,7 @@ namespace OIIO = OIIO_NAMESPACE;
 
 #ifdef OCIO_GPU_ENABLED
 #include "oglapp.h"
-#endif // OCIO_GL_ENABLED
+#endif // OCIO_GPU_ENABLED
 
 #include "oiiohelpers.h"
 #include "OpenEXR/half.h"
