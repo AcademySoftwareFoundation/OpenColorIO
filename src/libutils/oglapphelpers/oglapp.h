@@ -58,7 +58,8 @@ public:
     OglApp() = delete;
 
     // Initialize the app with given window name & client rect size.
-    OglApp(const char * winTitle, int winWidth, int winHeight);
+    OglApp(int winWidth, int winHeight);
+
     ~OglApp();
 
     // When displaying the processed image in a window this needs to be done.
@@ -103,20 +104,16 @@ public:
     void updateUniforms();
 
     // Process the image.
-    void redisplay();
+    void virtual redisplay();
 
     // Read the image from the rendering buffer. It is not meant to be used by interactive
     // applications used to display the image.
     void readImage(float * imageBuffer);
 
     // Helper to print GL info.
-    void printGLInfo() const noexcept;
+    void virtual printGLInfo() const noexcept;
 
-private:
-
-    // Window identifier returned by glutCreateWindow.
-    int m_mainWin{ 0 };
-
+protected:
     // Window or output image size (set using reshape).
     // When the app is used to process an image this should be equal to the image size so that
     // when processed image is read from the viewport it matches the size of the original image.
@@ -125,6 +122,11 @@ private:
     int m_viewportWidth{ 0 };
     int m_viewportHeight{ 0 };
 
+    // Set up glew if needed.
+    // Initialize the OpenGL engine
+    void setupCommon();
+
+private:
     // Keep track of the original image ratio.
     float m_imageAspect{ 1.0f };
 
@@ -141,10 +143,54 @@ private:
     unsigned int m_imageTexID;
 
     OpenGLBuilderRcPtr m_oglBuilder;
-
 };
 
 typedef OCIO_SHARED_PTR<OglApp> OglAppRcPtr;
+
+class ScreenApp: public OglApp
+{
+public:
+    ScreenApp() = delete;
+    ScreenApp(const char * winTitle, int winWidth, int winHeight);
+
+    ~ScreenApp();
+    void redisplay() override;
+private:
+    // Window identifier returned by glutCreateWindow.
+    int m_mainWin{ 0 };
+};
+
+#ifdef OCIO_HEADLESS_ENABLED
+
+#include <EGL/egl.h>
+
+class HeadlessApp: public OglApp
+{
+public:
+    HeadlessApp() = delete;
+    HeadlessApp(const char * winTitle, int winWidth, int winHeight);
+
+    ~HeadlessApp();
+
+    void printGLInfo() const noexcept override;
+    // Helper to print EGL info.
+    void printEGLInfo() const noexcept;
+
+    void redisplay() override;
+private:
+    EGLint m_pixBufferWidth{ 0 };
+    EGLint m_pixBufferHeight{ 0 };
+    std::vector<EGLint> m_pixBufferAttribs;
+
+    EGLDisplay m_eglDisplay;
+    EGLSurface m_eglSurface;
+    EGLConfig m_eglConfig;
+    EGLContext m_eglContext;
+
+    std::vector<EGLint> m_configAttribs;
+};
+
+#endif
 
 } // namespace OCIO_NAMESPACE
 

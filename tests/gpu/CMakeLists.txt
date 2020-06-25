@@ -6,6 +6,14 @@ if(NOT OCIO_GL_ENABLED)
     return()
 endif()
 
+if(NOT OCIO_EGL_HEADLESS)
+    message(WARNING "EGL component missing. Can't render headlessly for GPU unit tests.")
+else()
+    add_compile_definitions(OCIO_HEADLESS_ENABLED)
+endif()
+
+
+
 set(SOURCES
 	CDLOp_test.cpp
 	Config_test.cpp

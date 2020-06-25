@@ -6,11 +6,14 @@ if(NOT OCIO_GL_ENABLED)
     return()
 endif()
 
+if(OCIO_EGL_HEADLESS)
+    add_compile_definitions(OCIO_HEADLESS_ENABLED)
+endif()
+
 set(SOURCES
     glsl.cpp
     oglapp.cpp
 )
-
 set(INCLUDES
     glsl.h
     oglapp.h
@@ -46,6 +49,17 @@ target_link_libraries(oglapphelpers
         ${GLEW_LIBRARIES}
         ${GLUT_LIBRARIES}
 )
+
+if(OCIO_EGL_HEADLESS)
+    target_include_directories(oglapphelpers
+        PRIVATE
+            ${EGL_INCLUDE_DIRS}
+    )
+    target_link_libraries(oglapphelpers
+        PRIVATE
+            ${EGL_LIBRARIES}
+    )
+endif()
 
 install(TARGETS oglapphelpers 
     LIBRARY DESTINATION lib

@@ -8,6 +8,12 @@ else()
     set(OCIO_GL_LIB oglapphelpers)
 endif()
 
+if((NOT OCIO_EGL_HEADLESS) AND OCIO_USE_HEADLESS)
+    message(WARNING "EGL component missing. Can't render headlessly for ocioconvert.")
+else()
+    add_compile_definitions(OCIO_HEADLESS_ENABLED)
+endif()
+
 set(SOURCES
     main.cpp
 )
