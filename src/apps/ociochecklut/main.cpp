@@ -46,7 +46,11 @@ public:
     {
 #ifdef OCIO_GPU_ENABLED
         m_gpu = gpu;
-        m_oglApp = std::make_shared<OCIO::OglApp>("ociochecklut", 256, 20);
+# ifdef OCIO_HEADLESS_ENABLED
+        m_oglApp = std::make_shared<OCIO::HeadlessApp>("ociochecklut", 256, 20);
+# else
+        m_oglApp = std::make_shared<OCIO::ScreenApp>("ociochecklut", 256, 20);
+# endif
         if (m_verbose)
         {
             m_oglApp->printGLInfo();

@@ -30,7 +30,6 @@ namespace OIIO = OIIO_NAMESPACE;
 // Array of non OpenColorIO arguments.
 static std::vector<std::string> args;
 
-
 // Fill 'args' array with OpenColorIO arguments.
 static int
 parse_end_args(int argc, const char *argv[])
@@ -401,8 +400,8 @@ int main(int argc, const char **argv)
 
 #ifdef OCIO_GPU_ENABLED
     // Initialize GPU.
-
     OCIO::OglAppRcPtr oglApp;
+
     if (usegpu || usegpuLegacy)
     {
         OCIO::OglApp::Components comp = OCIO::OglApp::COMPONENTS_RGBA;
@@ -422,7 +421,11 @@ int main(int argc, const char **argv)
 
         try
         {
-            oglApp = std::make_shared<OCIO::OglApp>("ocioconvert", 256, 20);
+# ifdef OCIO_HEADLESS_ENABLED
+            oglApp = std::make_shared<OCIO::HeadlessApp>("ocioconvert", 256, 20);
+# else
+            oglApp = std::make_shared<OCIO::ScreenApp>("ocioconvert", 256, 20);
+# endif
         }
         catch (const OCIO::Exception & e)
         {

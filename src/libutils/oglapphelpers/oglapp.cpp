@@ -27,52 +27,20 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-
 #include "oglapp.h"
 
 
 namespace OCIO_NAMESPACE
 {
 
-OglApp::OglApp(const char * winTitle, int winWidth, int winHeight)
+OglApp::OglApp(int winWidth, int winHeight)
     : m_viewportWidth(winWidth)
     , m_viewportHeight(winHeight)
-{
-    int argc = 2;
-    const char * argv[] = { winTitle, "-glDebug" };
-    glutInit(&argc, const_cast<char**>(&argv[0]));
-
-    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
-    glutInitWindowSize(m_viewportWidth, m_viewportHeight);
-    glutInitWindowPosition(0, 0);
-
-    m_mainWin = glutCreateWindow(argv[0]);
-
-#ifndef __APPLE__
-    glewInit();
-    if (!glewIsSupported("GL_VERSION_2_0"))
-    {
-        throw Exception("OpenGL 2.0 not supported.");
-    }
-#endif
-
-    // Initialize the OpenGL engine.
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);           // 4-byte pixel alignment
-
-#ifndef __APPLE__
-    glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE);     //
-    glClampColor(GL_CLAMP_VERTEX_COLOR, GL_FALSE);   // avoid any kind of clamping
-    glClampColor(GL_CLAMP_FRAGMENT_COLOR, GL_FALSE); //
-#endif
-
-    glEnable(GL_TEXTURE_2D);
-}
+{}
 
 OglApp::~OglApp()
 {
     m_oglBuilder.reset();
-    glutDestroyWindow(m_mainWin);
 }
 
 void OglApp::initImage(int imgWidth, int imgHeight, Components comp, const float * image)
@@ -165,8 +133,6 @@ void OglApp::redisplay()
         glPopMatrix();
 
     glDisable(GL_TEXTURE_2D);
-
-    glutSwapBuffers();
 
 }
 
@@ -264,5 +230,133 @@ void OglApp::printGLInfo() const noexcept
               << "GL Version:   " << glGetString(GL_VERSION) << std::endl
               << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 }
+
+void OglApp::setupCommon()
+{
+
+#ifndef __APPLE__
+    glewInit();
+    if (!glewIsSupported("GL_VERSION_2_0"))
+    {
+        throw Exception("OpenGL 2.0 not supported.");
+    }
+#endif
+
+    // Initialize the OpenGL engine.
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);           // 4-byte pixel alignment
+
+#ifndef __APPLE__
+    glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE);     //
+    glClampColor(GL_CLAMP_VERTEX_COLOR, GL_FALSE);   // avoid any kind of clamping
+    glClampColor(GL_CLAMP_FRAGMENT_COLOR, GL_FALSE); //
+#endif
+
+    glEnable(GL_TEXTURE_2D);
+}
+
+ScreenApp::ScreenApp(const char * winTitle, int winWidth, int winHeight):
+    OglApp(winWidth, winHeight)
+{
+    int argc = 2;
+    const char * argv[] = { winTitle, "-glDebug" };
+
+    glutInit(&argc, const_cast<char**>(&argv[0]));
+
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
+    glutInitWindowSize(m_viewportWidth, m_viewportHeight);
+    glutInitWindowPosition(0, 0);
+
+    m_mainWin = glutCreateWindow(argv[0]);
+
+    setupCommon();
+}
+
+ScreenApp::~ScreenApp()
+{
+    glutDestroyWindow(m_mainWin);
+}
+
+void ScreenApp::redisplay()
+{
+    OglApp::redisplay();
+    glutSwapBuffers();
+}
+
+#ifdef OCIO_HEADLESS_ENABLED
+
+HeadlessApp::HeadlessApp(const char * winTitle, int bufWidth, int bufHeight)
+    : OglApp(bufWidth, bufHeight)
+    , m_pixBufferWidth(bufWidth)
+    , m_pixBufferHeight(bufHeight)
+{
+    int argc = 2;
+    const char * argv[] = { winTitle, "-glDebug" };
+
+    m_configAttribs =
+    {
+              EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
+              EGL_BLUE_SIZE, 8,
+              EGL_GREEN_SIZE, 8,
+              EGL_RED_SIZE, 8,
+              EGL_DEPTH_SIZE, 8,
+              EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT,
+              EGL_NONE
+    };
+
+    m_pixBufferAttribs =
+    {
+        EGL_WIDTH, m_pixBufferWidth,
+        EGL_HEIGHT, m_pixBufferHeight,
+        EGL_NONE,
+    };
+
+    m_eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLint eglMajor, eglMinor;
+
+    eglInitialize(m_eglDisplay, &eglMajor, &eglMinor);
+
+    // Choose an appropriate configuration
+    EGLint numConfigs;
+    eglChooseConfig(m_eglDisplay, &m_configAttribs[0], &m_eglConfig, 1, &numConfigs);
+
+    m_eglSurface = eglCreatePbufferSurface(m_eglDisplay, m_eglConfig,
+                                                     &m_pixBufferAttribs[0]);
+    eglBindAPI(EGL_OPENGL_API);
+
+    // Create a context and make it current
+    m_eglContext = eglCreateContext(m_eglDisplay, m_eglConfig, EGL_NO_CONTEXT,
+                                             NULL);
+    eglMakeCurrent(m_eglDisplay, m_eglSurface, m_eglSurface, m_eglContext);
+
+    setupCommon();
+}
+
+HeadlessApp::~HeadlessApp()
+{
+    eglTerminate(m_eglDisplay);
+}
+
+void HeadlessApp::printGLInfo() const noexcept
+{
+    OglApp::printGLInfo();
+    printEGLInfo();
+}
+
+void HeadlessApp::printEGLInfo() const noexcept
+{
+    std::cout << std::endl
+              << "EGL Vendor:    " << eglQueryString(m_eglDisplay, EGL_VENDOR) << std::endl
+              << "EGL Version:   " << eglQueryString(m_eglDisplay, EGL_VERSION) << std::endl;
+}
+
+void HeadlessApp::redisplay()
+{
+    OglApp::redisplay();
+    eglSwapBuffers(m_eglDisplay, m_eglSurface);
+}
+
+#endif
+
 } // namespace OCIO_NAMESPACE
 
