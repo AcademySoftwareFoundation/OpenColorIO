@@ -379,7 +379,7 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_cloned)
 {
     // The unit test validates the processing of cloned ops.
 
-    const std::string fileName("lut3d_17x17x17_10i_12i.clf");
+    const std::string fileName("clf/lut3d_17x17x17_10i_12i.clf");
     OCIO::OpRcPtrVec ops;
     OCIO::ContextRcPtr context = OCIO::Context::Create();
     OCIO_CHECK_NO_THROW(BuildOpsTest(ops, fileName, context, OCIO::TRANSFORM_DIR_FORWARD));
@@ -444,7 +444,7 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_inverse)
 {
     // The unit test validates the processing of inversed ops.
 
-    const std::string fileName("lut3d_17x17x17_10i_12i.clf");
+    const std::string fileName("clf/lut3d_17x17x17_10i_12i.clf");
     OCIO::OpRcPtrVec ops;
     OCIO::ContextRcPtr context = OCIO::Context::Create();
     OCIO_CHECK_NO_THROW(BuildOpsTest(ops, fileName, context,
@@ -553,7 +553,7 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_inverse)
 
 OCIO_ADD_TEST(Lut3DOp, cpu_renderer_lut3d_with_nan)
 {
-    const std::string fileName("lut3d_2x2x2_32f_32f.clf");
+    const std::string fileName("clf/lut3d_identity_12i_16f.clf");
     OCIO::OpRcPtrVec ops;
 
     OCIO::ContextRcPtr context = OCIO::Context::Create();

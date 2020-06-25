@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="3.0" id="exponents" name="all styles" xmlns="urn:AMPAS:CLF:v3.0">
+    <Description>Test all Exponent style values</Description>
+    <Exponent inBitDepth="16f" outBitDepth="32f" style="basicFwd">
+        <Description>If there is only one Params, use it for R, G, and B.</Description>
+        <ExponentParams exponent="2.4" />
+    </Exponent>
+    <Exponent inBitDepth="32f" outBitDepth="10i" style="basicRev" id="a1" name="gamma">
+        <ExponentParams channel="R" exponent="2.4" />
+        <ExponentParams channel="G" exponent="2.35" />
+        <ExponentParams channel="B" exponent="2.2" />
+    </Exponent>
+    <Exponent inBitDepth="10i" outBitDepth="8i" style="monCurveFwd">
+        <Description>Rec 709 OETF</Description>
+        <!-- This is the shortest 2.22... string that will yield -->
+        <!-- a double that compares exactly equal to 1/0.45. -->
+        <ExponentParams exponent="2.2222222222222222" offset="0.099" />
+    </Exponent>
+    <Exponent inBitDepth="8i" outBitDepth="32f" style="monCurveRev">
+        <ExponentParams offset="0.1" channel="B" exponent="2.6" />
+        <ExponentParams channel="G" exponent="2.4" offset="0.01" />
+        <ExponentParams channel="R" exponent="2.2" offset="0.001" />
+   </Exponent>
+    <Exponent inBitDepth="32f" outBitDepth="8i" style="monCurveFwd">
+        <!-- This sets the R, G and B channels to identity -->
+        <ExponentParams exponent="1.0" offset="0.0" />
+    </Exponent>
+    <Exponent inBitDepth="8i" outBitDepth="16f" style="basicMirrorFwd">
+        <ExponentParams exponent="0.4" />
+    </Exponent>
+    <Exponent inBitDepth="16f" outBitDepth="8i" style="basicMirrorRev">
+        <ExponentParams exponent="0.4" />
+    </Exponent>
+    <Exponent inBitDepth="8i" outBitDepth="16f" style="basicPassThruFwd">
+        <ExponentParams exponent="2.4" />
+    </Exponent>
+    <Exponent inBitDepth="16f" outBitDepth="8i" style="basicPassThruRev">
+        <ExponentParams exponent="2.4" />
+    </Exponent>
+    <Exponent inBitDepth="8i" outBitDepth="16f" style="monCurveMirrorFwd">
+        <ExponentParams exponent="3" offset="0.16" />
+    </Exponent>
+    <Exponent inBitDepth="16f" outBitDepth="8i" style="monCurveMirrorRev">
+        <ExponentParams channel="R" exponent="3" offset="0.16" />
+        <!-- The G & B channels are not specified and should be set to an identity -->
+    </Exponent>
+</ProcessList>

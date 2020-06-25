@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList xmlns="urn:AMPAS:CLF:v3.0" id="exlut2" name="transform example lut3d" compCLFversion="3.0">
+<Description> 3D LUT example </Description>
+<LUT3D id="lut-24" name="identity" interpolation="tetrahedral" inBitDepth="12i" outBitDepth="16f">
+<Description> 3D LUT </Description>
+<Array dim="2 2 2 3">
+0.0 0.0 0.0
+0.0 0.0 1.0
+0.0 1.0 0.0
+0.0 1.0 1.0
+1.0 0.0 0.0
+1.0 0.0 1.0
+1.0 1.0 0.0
+1.0 1.0 1.0
+</Array>
+</LUT3D>
+</ProcessList>

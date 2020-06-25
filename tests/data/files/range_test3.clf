@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList id="e0a0ae4b-adc2-4c25-ad70-fa6f31ba219d" xmlns="urn:NATAS:ASC:LUT:v0.95" compCLFversion="2.0">
-    <Range inBitDepth="16f" outBitDepth="32f">
-    </Range>
-</ProcessList>
