@@ -213,11 +213,32 @@ jobs:
           cmake --build . \
                 --target install \
                 --config ${{ matrix.build-type }} \
-                -- -j2
+                -- -j$(nproc)
         working-directory: _build
       - name: Test
         run: ctest -V
         working-directory: _build
+
+  # ---------------------------------------------------------------------------
+  # Linux GPU (AWS CodeBuild)
+  # ---------------------------------------------------------------------------
+
+  linux_gpu:
+    name: 'Linux CentOS 7 VFX CY2020 GPU <GCC 6.3.1>'
+    # Don't run on OCIO forks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.CODEBUILD_ID }}
+          aws-secret-access-key: ${{ secrets.CODEBUILD_SECRET }}
+          aws-region: us-west-2
+      - name: Run CodeBuild
+        uses: aws-actions/aws-codebuild-run-project@v1.0.0
+        with:
+          project-name: OpenColorIO_GPU_CI
+          buildspec-override: buildspec.yml
 
   # ---------------------------------------------------------------------------
   # macOS
@@ -307,7 +328,7 @@ jobs:
           cmake --build . \
                 --target install \
                 --config ${{ matrix.build-type }} \
-                -- -j2
+                -- -j$(sysctl -n hw.ncpu)
         working-directory: _build
       - name: Test
         run: ctest -V

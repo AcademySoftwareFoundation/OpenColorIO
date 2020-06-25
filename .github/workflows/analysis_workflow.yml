@@ -133,7 +133,7 @@ jobs:
           cmake --build . \
                 --target install \
                 --config Release \
-                -- -j2
+                -- -j$(nproc)
         working-directory: _build
       - name: Test
         run: ctest -V

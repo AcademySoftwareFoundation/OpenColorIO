@@ -1,0 +1,38 @@
+version: 0.2
+
+env:
+  variables:
+    CXX: "g++"
+    CC: "gcc"
+  exported-variables:
+    - CXX
+    - CC
+
+phases:
+  pre_build:
+    commands:
+      - git clone https://github.com/$GITHUB_REPOSITORY OpenColorIO
+      - cd OpenColorIO
+      - git checkout $GITHUB_SHA
+      - mkdir _install _build
+      - cd _build
+  build:
+    commands:
+      - |
+        cmake ../. \
+              -DCMAKE_INSTALL_PREFIX=../_install \
+              -DOCIO_BUILD_APPS=ON \
+              -DOCIO_BUILD_DOCS=OFF \
+              -DOCIO_BUILD_TESTS=ON \
+              -DOCIO_BUILD_GPU_TESTS=ON \
+              -DOCIO_BUILD_PYTHON=ON \
+              -DOCIO_INSTALL_EXT_PACKAGES=ALL \
+              -DOCIO_WARNING_AS_ERROR=ON \
+              -DPYTHON_EXECUTABLE=$(which python)
+      - |
+        cmake --build . \
+              --target install \
+              -- -j$(nproc)
+  post_build:
+    commands:
+      - ctest -V
