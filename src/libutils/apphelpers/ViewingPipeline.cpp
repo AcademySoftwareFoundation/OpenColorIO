@@ -161,7 +161,7 @@ void ViewingPipeline::validate() const
 }
 
 ConstProcessorRcPtr ViewingPipeline::getProcessor(const ConstConfigRcPtr & configIn,
-                                                           const ConstContextRcPtr & context) const
+                                                  const ConstContextRcPtr & context) const
 {
     validate();
 
