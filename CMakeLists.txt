@@ -105,7 +105,7 @@ if(OCIO_BUILD_GPU_TESTS OR OCIO_BUILD_APPS)
         set(OCIO_GL_ENABLED OFF)
     endif()
 
-    if(OCIO_USE_HEADLESS)
+    if(${OCIO_USE_HEADLESS})
         set(OCIO_EGL_HEADLESS ON)
         # Find ECM package to use FindEGL.cmake
         find_package(ECM REQUIRED NO_MODULE)
@@ -240,3 +240,4 @@ if(OCIO_BUILD_DOCS)
 	add_subdirectory(docs)
 endif()
 add_subdirectory(vendor)
+

@@ -283,6 +283,11 @@ void ScreenApp::redisplay()
     glutSwapBuffers();
 }
 
+void ScreenApp::printGLInfo() const noexcept
+{
+    OglApp::printGLInfo();
+}
+
 #ifdef OCIO_HEADLESS_ENABLED
 
 HeadlessApp::HeadlessApp(const char * winTitle, int bufWidth, int bufHeight)
@@ -359,4 +364,5 @@ void HeadlessApp::redisplay()
 #endif
 
 } // namespace OCIO_NAMESPACE
+
 

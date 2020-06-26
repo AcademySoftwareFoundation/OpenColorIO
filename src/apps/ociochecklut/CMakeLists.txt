@@ -8,7 +8,7 @@ else()
     set(OCIO_GL_LIB oglapphelpers)
 endif()
 
-if((NOT OCIO_EGL_HEADLESS) AND OCIO_USE_HEADLESS)
+if((NOT ${OCIO_EGL_HEADLESS}) AND ${OCIO_USE_HEADLESS})
     message(WARNING "EGL component missing. Can't render headlessly for ociochecklut.")
 else()
     add_compile_definitions(OCIO_HEADLESS_ENABLED)
@@ -44,3 +44,4 @@ target_link_libraries(ociochecklut
 install(TARGETS ociochecklut
     RUNTIME DESTINATION bin
 )
+
