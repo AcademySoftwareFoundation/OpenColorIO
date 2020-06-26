@@ -38,13 +38,12 @@ import ColorSpaceTest
 import ColorSpaceTransformTest
 import ConfigTest
 import DisplayViewTransformTest
+import LookTest
 import ViewingRulesTest
-
 #from MainTest import *
 #from ConstantsTest import *
 #from ConfigTest import *
 #from ContextTest import *
-#from LookTest import *
 #from GpuShaderDescTest import *
 #from Baker import *
 #from TransformsTest import *
@@ -68,13 +67,13 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(ColorSpaceTransformTest))
     suite.addTest(loader.loadTestsFromModule(ConfigTest))
     suite.addTest(loader.loadTestsFromModule(DisplayViewTransformTest))
+    suite.addTest(loader.loadTestsFromModule(LookTest))
     suite.addTest(loader.loadTestsFromModule(ViewingRulesTest))
     #suite.addTest(MainTest("test_interface"))
     #suite.addTest(ConstantsTest("test_interface"))
     #suite.addTest(ConfigTest("test_interface"))
     #suite.addTest(ConfigTest("test_is_editable"))
     #suite.addTest(ContextTest("test_interface"))
-    #suite.addTest(LookTest("test_interface"))
     #suite.addTest(RangeTransformTest("test_interface"))
     #suite.addTest(RangeTransformTest("test_equality"))
     #suite.addTest(RangeTransformTest("test_validation"))
