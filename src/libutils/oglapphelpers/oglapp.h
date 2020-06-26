@@ -60,7 +60,7 @@ public:
     // Initialize the app with given window name & client rect size.
     OglApp(int winWidth, int winHeight);
 
-    ~OglApp();
+    virtual ~OglApp();
 
     // When displaying the processed image in a window this needs to be done.
     // In that case, when image is read, the result will be mirrored on Y.
@@ -155,6 +155,7 @@ public:
 
     ~ScreenApp();
     void redisplay() override;
+    void printGLInfo() const noexcept override;
 private:
     // Window identifier returned by glutCreateWindow.
     int m_mainWin{ 0 };
@@ -195,3 +196,4 @@ private:
 } // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_OGLAPP_H
+
