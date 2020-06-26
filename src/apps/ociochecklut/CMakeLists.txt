@@ -8,10 +8,12 @@ else()
     set(OCIO_GL_LIB oglapphelpers)
 endif()
 
-if((NOT ${OCIO_EGL_HEADLESS}) AND ${OCIO_USE_HEADLESS})
-    message(WARNING "EGL component missing. Can't render headlessly for ociochecklut.")
-else()
-    add_compile_definitions(OCIO_HEADLESS_ENABLED)
+if(${OCIO_USE_HEADLESS})
+    if(${OCIO_EGL_HEADLESS})
+        add_compile_definitions(OCIO_HEADLESS_ENABLED)
+    else()
+        message(WARNING "EGL component missing. Can't render headlessly for ociochecklut.")
+    endif()
 endif()
 
 set(SOURCES
