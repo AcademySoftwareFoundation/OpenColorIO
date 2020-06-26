@@ -34,11 +34,11 @@ import ColorSpaceTest
 import BuiltinTransformRegistryTest
 import BuiltinTransformTest
 import CDLTransformTest
+import LookTest
 #from MainTest import *
 #from ConstantsTest import *
 #from ConfigTest import *
 #from ContextTest import *
-#from LookTest import *
 #from GpuShaderDescTest import *
 #from Baker import *
 #from TransformsTest import *
@@ -59,12 +59,12 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(BuiltinTransformRegistryTest))
     suite.addTest(loader.loadTestsFromModule(BuiltinTransformTest))
     suite.addTest(loader.loadTestsFromModule(CDLTransformTest))
+    suite.addTest(loader.loadTestsFromModule(LookTest))
     #suite.addTest(MainTest("test_interface"))
     #suite.addTest(ConstantsTest("test_interface"))
     #suite.addTest(ConfigTest("test_interface"))
     #suite.addTest(ConfigTest("test_is_editable"))
     #suite.addTest(ContextTest("test_interface"))
-    #suite.addTest(LookTest("test_interface"))
     #suite.addTest(RangeTransformTest("test_interface"))
     #suite.addTest(RangeTransformTest("test_equality"))
     #suite.addTest(RangeTransformTest("test_validation"))
