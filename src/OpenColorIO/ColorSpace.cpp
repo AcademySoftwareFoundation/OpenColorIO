@@ -277,9 +277,12 @@ void ColorSpace::setTransform(const ConstTransformRcPtr & transform,
 
 std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
 {
-    int numVars(cs.getAllocationNumVars());
+    const int numVars(cs.getAllocationNumVars());
     std::vector<float> vars(numVars);
-    cs.getAllocationVars(&vars[0]);
+    if (numVars > 0)
+    {
+        cs.getAllocationVars(&vars[0]);
+    }
 
     os << "<ColorSpace referenceSpaceType=";
 
@@ -298,7 +301,7 @@ std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
     os << "equalityGroup=" << cs.getEqualityGroup() << ", ";
     os << "bitDepth=" << BitDepthToString(cs.getBitDepth()) << ", ";
     os << "isData=" << BoolToString(cs.isData());
-    if (numVars)
+    if (numVars > 0)
     {
         os << ", allocation=" << AllocationToString(cs.getAllocation()) << ", ";
         os << "vars=" << vars[0];

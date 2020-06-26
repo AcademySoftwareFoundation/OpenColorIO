@@ -589,8 +589,19 @@ OCIO_ADD_TEST(Config, env_check)
     "  - !<View> {name: Raw, colorspace: raw}\n"
     "\n";
 
-    OCIO::Platform::Setenv("SHOW", "bar");
-    OCIO::Platform::Setenv("TASK", "lighting");
+    struct Guard
+    {
+        Guard()
+        {
+            OCIO::Platform::Setenv("SHOW", "bar");
+            OCIO::Platform::Setenv("TASK", "lighting");
+        }
+        ~Guard()
+        {
+            OCIO::Platform::Unsetenv("SHOW");
+            OCIO::Platform::Unsetenv("TASK");
+        }
+    } guard;
 
     std::istringstream is;
     is.str(SIMPLE_PROFILE);
@@ -653,6 +664,16 @@ OCIO_ADD_TEST(Config, role_without_colorspace)
 
 OCIO_ADD_TEST(Config, env_colorspace_name)
 {
+    // Guard to automatically unset the env. variable.
+    struct Guard
+    {
+        Guard() = default;
+        ~Guard()
+        {
+            OCIO::Platform::Unsetenv("OCIO_TEST");
+        }
+    } guard;
+
     const std::string MY_OCIO_CONFIG =
         "ocio_profile_version: 1\n"
         "\n"
@@ -1708,13 +1729,12 @@ OCIO_ADD_TEST(Config, categories)
 OCIO_ADD_TEST(Config, display)
 {
     // Guard to automatically unset the env. variable.
-    class Guard
+    struct Guard
     {
-    public:
         Guard() = default;
         ~Guard()
         {
-            OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR, "");
+            OCIO::Platform::Unsetenv(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR);
         }
     } guard;
 
@@ -2009,7 +2029,7 @@ OCIO_ADD_TEST(Config, view)
         Guard() = default;
         ~Guard()
         {
-            OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_VIEWS_ENVVAR, "");
+            OCIO::Platform::Unsetenv(OCIO::OCIO_ACTIVE_VIEWS_ENVVAR);
         }
     } guard;
 
@@ -3160,7 +3180,7 @@ public:
     }
     ~InactiveCSGuard()
     {
-        OCIO::Platform::Setenv(OCIO::OCIO_INACTIVE_COLORSPACES_ENVVAR, "");
+        OCIO::Platform::Unsetenv(OCIO::OCIO_INACTIVE_COLORSPACES_ENVVAR);
     }
 };
 

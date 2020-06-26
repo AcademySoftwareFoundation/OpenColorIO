@@ -29,35 +29,71 @@ void SetEnvVariable(const char * name, const char * value)
     Platform::Setenv(name, value);
 }
 
+void UnsetEnvVariable(const char * name)
+{
+    Platform::Unsetenv(name);
+}
 
 namespace Platform
 {
 
-void Getenv (const char * name, std::string & value)
+bool Getenv(const char * name, std::string & value)
 {
+    if (!name || !*name)
+    {
+        return false;
+    }
+
 #ifdef _WIN32
     if(uint32_t size = GetEnvironmentVariable(name, nullptr, 0))
     {
         std::vector<char> buffer(size);
         GetEnvironmentVariable(name, buffer.data(), size);
         value = std::string(buffer.data());
+        return true;
     }
     else
     {
         value.clear();
+        return false;
     }
 #else
-    const char* val = ::getenv(name);
+    const char * val = ::getenv(name);
     value = (val && *val) ? val : "";
+    return val; // Returns true if the env. variable exists but empty.
 #endif
 }
 
-void Setenv (const char * name, const std::string & value)
+void Setenv(const char * name, const std::string & value)
 {
+    if (!name || !*name)
+    {
+        return;
+    }
+
+    // Note that the Windows _putenv_s() removes the env. variable if the value is empty. But
+    // the Linux ::setenv() sets the env. variable to empty if the value is empty i.e. it still 
+    // exists. To avoid the ambiguity, use Unsetenv() when the env. variable removal if needed.
+
 #ifdef _WIN32
     _putenv_s(name, value.c_str());
 #else
     ::setenv(name, value.c_str(), 1);
+#endif
+}
+
+void Unsetenv(const char * name)
+{
+    if (!name || !*name)
+    {
+        return;
+    }
+
+#ifdef _WIN32
+    // Note that the Windows _putenv_s() removes the env. variable if the value is empty.
+    _putenv_s(name, "");
+#else
+    ::unsetenv(name);
 #endif
 }
 
