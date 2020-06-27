@@ -105,7 +105,8 @@ if(OCIO_BUILD_GPU_TESTS OR OCIO_BUILD_APPS)
         set(OCIO_GL_ENABLED OFF)
     endif()
 
-    if(${OCIO_USE_HEADLESS})
+    # Tests whether the system is Linux
+    if(${OCIO_USE_HEADLESS} AND UNIX AND NOT APPLE)
         set(OCIO_EGL_HEADLESS ON)
         # Find ECM package to use FindEGL.cmake
         find_package(ECM REQUIRED NO_MODULE)
@@ -116,14 +117,18 @@ if(OCIO_BUILD_GPU_TESTS OR OCIO_BUILD_APPS)
         endif()
         find_package(EGL REQUIRED)
         if(NOT EGL_FOUND)
-            message(WARNING "EGL not found")
+            message(WARNING "EGL component missing. Can't render headlessly.")
+            set(OCIO_USE_HEADLESS OFF)
             set(OCIO_EGL_HEADLESS OFF)
+        else()
+            add_compile_definitions(OCIO_HEADLESS_ENABLED)
         endif()
     endif()
 endif()
 
 message(STATUS "GL enabled " ${OCIO_GL_ENABLED})
-message(STATUS "EGL enabled" ${OCIO_EGL_HEADLESS})
+message(STATUS "EGL enabled " ${OCIO_EGL_HEADLESS})
+
 ###############################################################################
 # Optimization / internal linking preferences
 

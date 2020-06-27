@@ -363,6 +363,15 @@ void HeadlessApp::redisplay()
 
 #endif
 
+OglAppRcPtr getOglAppPtr(const char * winTitle, int winWidth, int winHeight)
+{
+#ifdef OCIO_HEADLESS_ENABLED
+        return std::make_shared<HeadlessApp>(winTitle, winWidth, winHeight);
+#else
+        return std::make_shared<ScreenApp>(winTitle, winWidth, winHeight);
+#endif
+}
+
 } // namespace OCIO_NAMESPACE
 
 

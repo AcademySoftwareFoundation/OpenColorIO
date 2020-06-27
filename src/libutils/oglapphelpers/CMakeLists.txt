@@ -6,10 +6,6 @@ if(NOT OCIO_GL_ENABLED)
     return()
 endif()
 
-if(OCIO_EGL_HEADLESS)
-    add_compile_definitions(OCIO_HEADLESS_ENABLED)
-endif()
-
 set(SOURCES
     glsl.cpp
     oglapp.cpp
