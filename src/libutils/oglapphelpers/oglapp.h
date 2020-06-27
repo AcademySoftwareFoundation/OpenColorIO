@@ -193,6 +193,10 @@ private:
 
 #endif
 
+// Factory function for creating OglAppRcPtr
+// Returns OCIO_SHARED_PTR<HeadlessApp> if OCIO_HEADLESS_ENABLED
+OglAppRcPtr getOglAppPtr(const char * winTitle, int winWidth, int winHeight);
+
 } // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_OGLAPP_H

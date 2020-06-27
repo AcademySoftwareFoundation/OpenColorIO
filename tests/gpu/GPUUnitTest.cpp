@@ -501,12 +501,7 @@ int main(int, char **)
     OCIO::OglAppRcPtr app;
     try
     {
-#ifdef OCIO_HEADLESS_ENABLED
-        //std::cout << "HEADLESS_ENABLED" << std::endl;
-        app = std::make_shared<OCIO::HeadlessApp>("GPU tests", 10, 10);
-#else
-        app = std::make_shared<OCIO::ScreenApp>("GPU tests", 10, 10);
-#endif
+        app = OCIO::getOglAppPtr("GPU tests", 10, 10);
         std::cout << "GPU unit tests used " << typeid(*app).name() << std::endl;
     }
     catch (const OCIO::Exception & e)

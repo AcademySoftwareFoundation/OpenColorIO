@@ -421,11 +421,7 @@ int main(int argc, const char **argv)
 
         try
         {
-# ifdef OCIO_HEADLESS_ENABLED
-            oglApp = std::make_shared<OCIO::HeadlessApp>("ocioconvert", 256, 20);
-# else
-            oglApp = std::make_shared<OCIO::ScreenApp>("ocioconvert", 256, 20);
-# endif
+            oglApp = OCIO::getOglAppPtr("ocioconvert", 256, 20);
         }
         catch (const OCIO::Exception & e)
         {
