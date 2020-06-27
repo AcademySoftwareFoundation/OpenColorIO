@@ -81,7 +81,7 @@ class AllocationTransformTest(unittest.TestCase):
             with self.assertRaises(TypeError):
                 self.allo_tr.setVars(invalid)
 
-    def test_constructor_with_positional(self):
+    def test_constructor_with_keyword(self):
         """
         Test AllocationTransform constructor with keywords and validate its values.
         """
@@ -106,7 +106,7 @@ class AllocationTransformTest(unittest.TestCase):
             self.assertAlmostEqual(self.TEST_VARS[i], var, places=7)
         self.assertEqual(allo_tr2.getDirection(), self.TEST_DIRECTION)
 
-    def test_constructor_without_positional(self):
+    def test_constructor_with_positional(self):
         """
         Test AllocationTransform constructor without keywords and validate its values.
         """
@@ -120,6 +120,11 @@ class AllocationTransformTest(unittest.TestCase):
             self.assertAlmostEqual(self.TEST_VARS[i], var, places=7)
         self.assertEqual(allo_tr.getDirection(), self.TEST_DIRECTION)
 
-# TODO: Questions to ask in PR.
-# getNumVars()?
-# print(ocio.AllocationTransform()) returns error.
+    def test_constructor_wrong_parameter_type(self):
+        """
+        Test AllocationTransform constructor with a wrong parameter type.
+        """
+
+        for invalid in (None, 1):
+            with self.assertRaises(TypeError):
+                allo_tr = OCIO.AllocationTransform(invalid)

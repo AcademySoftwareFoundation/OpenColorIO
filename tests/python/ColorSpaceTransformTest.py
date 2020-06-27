@@ -72,7 +72,7 @@ class ColorSpaceTransformTest(unittest.TestCase):
             with self.assertRaises(TypeError):
                 self.cs_tr.setDirection(invalid)
 
-    def test_constructor_with_positional(self):
+    def test_constructor_with_keyword(self):
         """
         Test ColorSpaceTransform constructor with keywords and validate its values.
         """
@@ -95,7 +95,7 @@ class ColorSpaceTransformTest(unittest.TestCase):
         self.assertEqual(cs_tr2.getSrc(), self.TEST_SRC)
         self.assertEqual(cs_tr2.getDst(), self.TEST_DST)
 
-    def test_constructor_without_positional(self):
+    def test_constructor_with_positional(self):
         """
         Test ColorSpaceTransform constructor without keywords and validate its values.
         """
@@ -108,6 +108,11 @@ class ColorSpaceTransformTest(unittest.TestCase):
         self.assertEqual(cs_tr.getSrc(), self.TEST_SRC)
         self.assertEqual(cs_tr.getDst(), self.TEST_DST)
 
-# TODO: Questions to ask in PR.
-# setSrc() and setDst() wrong type tests will crash python
-# <ColorSpaceTransform direction=forward, src=, dst=> is not the right order and also dir vs direction
+    def test_constructor_wrong_parameter_type(self):
+        """
+        Test ColorSpaceTransform constructor with a wrong parameter type.
+        """
+
+        for invalid in (None, 1):
+            with self.assertRaises(TypeError):
+                cs_tr = OCIO.ColorSpaceTransform(invalid)

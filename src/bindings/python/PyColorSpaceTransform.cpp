@@ -30,9 +30,9 @@ void bindPyColorSpaceTransform(py::module & m)
              "dir"_a = DEFAULT->getDirection())
 
         .def("getSrc", &ColorSpaceTransform::getSrc)
-        .def("setSrc", &ColorSpaceTransform::setSrc, "src"_a)
+        .def("setSrc", &ColorSpaceTransform::setSrc, "src"_a.none(false))
         .def("getDst", &ColorSpaceTransform::getDst)
-        .def("setDst", &ColorSpaceTransform::setDst, "dst"_a);
+        .def("setDst", &ColorSpaceTransform::setDst, "dst"_a.none(false));
 }
 
 } // namespace OCIO_NAMESPACE
