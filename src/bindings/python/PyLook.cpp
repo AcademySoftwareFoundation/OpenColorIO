@@ -17,7 +17,7 @@ void bindPyLook(py::module & m)
                          const std::string & processSpace,
                          const TransformRcPtr & transform,
                          const TransformRcPtr & inverseTransform,
-                         const std::string & description) 
+                         const std::string & description)
             {
                 LookRcPtr p = Look::Create();
                 if (!name.empty())         { p->setName(name.c_str()); }
@@ -26,23 +26,23 @@ void bindPyLook(py::module & m)
                 if (inverseTransform)      { p->setInverseTransform(inverseTransform); }
                 if (!description.empty())  { p->setDescription(description.c_str()); }
                 return p;
-            }), 
+            }),
              "name"_a = DEFAULT->getName(),
              "processSpace"_a = DEFAULT->getProcessSpace(),
              "transform"_a = DEFAULT->getTransform(),
              "inverseTransform"_a = DEFAULT->getInverseTransform(),
-             "description"_a = DEFAULT->getDescription())  
+             "description"_a = DEFAULT->getDescription())
 
         .def("getName", &Look::getName)
-        .def("setName", &Look::setName, "name"_a)
+        .def("setName", &Look::setName, "name"_a.none(false))
         .def("getProcessSpace", &Look::getProcessSpace)
-        .def("setProcessSpace", &Look::setProcessSpace, "processSpace"_a)
+        .def("setProcessSpace", &Look::setProcessSpace, "processSpace"_a.none(false))
         .def("getTransform", &Look::getTransform)
         .def("setTransform", &Look::setTransform, "transform"_a)
         .def("getInverseTransform", &Look::getInverseTransform)
         .def("setInverseTransform", &Look::setInverseTransform, "transform"_a)
         .def("getDescription", &Look::getDescription)
-        .def("setDescription", &Look::setDescription, "description"_a);
+        .def("setDescription", &Look::setDescription, "description"_a.none(false));
 
     defStr(cls);
 }
