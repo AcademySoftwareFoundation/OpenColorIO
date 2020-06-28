@@ -20,6 +20,7 @@
 
 #include <GL/glew.h>
 #include <GL/gl.h>
+#include <GL/glext.h>
 #include <GL/glut.h>
 
 #endif
@@ -236,6 +237,7 @@ void OglApp::setupCommon()
 
 #ifndef __APPLE__
     glewInit();
+    printGLInfo();
     if (!glewIsSupported("GL_VERSION_2_0"))
     {
         throw Exception("OpenGL 2.0 not supported.");
