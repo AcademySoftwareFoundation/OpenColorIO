@@ -106,17 +106,10 @@ if(OCIO_BUILD_GPU_TESTS OR OCIO_BUILD_APPS)
     endif()
 
     # Tests whether the system is Linux
-    if(${OCIO_USE_HEADLESS} AND UNIX AND NOT APPLE)
+    if(${OCIO_USE_HEADLESS} AND (CMAKE_SYSTEM_NAME STREQUAL LINUX))
         set(OCIO_EGL_HEADLESS ON)
-        # Find ECM package to use FindEGL.cmake
-        find_package(ECM REQUIRED NO_MODULE)
-        if(ECM_FOUND)
-            set(CMAKE_MODULE_PATH
-                ${CMAKE_MODULE_PATH}
-                ${ECM_FIND_MODULE_DIR})
-        endif()
-        find_package(EGL REQUIRED)
-        if(NOT EGL_FOUND)
+        find_package(OPENGL COMPONENT EGL)
+        if(NOT OpenGL_EGL_FOUND)
             message(WARNING "EGL component missing. Can't render headlessly.")
             set(OCIO_USE_HEADLESS OFF)
             set(OCIO_EGL_HEADLESS OFF)
