@@ -295,9 +295,6 @@ HeadlessApp::HeadlessApp(const char * winTitle, int bufWidth, int bufHeight)
     , m_pixBufferWidth(bufWidth)
     , m_pixBufferHeight(bufHeight)
 {
-    int argc = 2;
-    const char * argv[] = { winTitle, "-glDebug" };
-
     m_configAttribs =
     {
               EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
@@ -351,8 +348,8 @@ void HeadlessApp::printGLInfo() const noexcept
 void HeadlessApp::printEGLInfo() const noexcept
 {
     std::cout << std::endl
-              << "EGL Vendor:    " << eglQueryString(m_eglDisplay, EGL_VENDOR) << std::endl
-              << "EGL Version:   " << eglQueryString(m_eglDisplay, EGL_VERSION) << std::endl;
+              << "EGL Vendor:   " << eglQueryString(m_eglDisplay, EGL_VENDOR) << std::endl
+              << "EGL Version:  " << eglQueryString(m_eglDisplay, EGL_VERSION) << std::endl;
 }
 
 void HeadlessApp::redisplay()
