@@ -145,6 +145,8 @@ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/build-html/
 ### PDF target ###
 
 find_package(LATEX)
+package_root_message(LATEX)
+
 if(PDFLATEX_COMPILER)
 
     add_custom_target(latex

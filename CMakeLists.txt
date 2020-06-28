@@ -84,22 +84,31 @@ option(OCIO_WARNING_AS_ERROR "Set build error level for CI testing" OFF)
 ###############################################################################
 # GPU configuration
 
+include(PackageUtils)
+
 if(OCIO_BUILD_GPU_TESTS OR OCIO_BUILD_APPS)
-    set(OCIO_GL_ENABLED ON)
-    find_package(OpenGL)
-    if(NOT OpenGL_FOUND)
+	set(OCIO_GL_ENABLED ON)
+	
+	find_package(OpenGL)
+	if(NOT OpenGL_FOUND)
+		package_root_message(OpenGL)
         set(OCIO_GL_ENABLED OFF)
-    endif()
-    if(NOT APPLE)
+	endif()
+	
+	if(NOT APPLE)
         find_package(GLEW)
         if(NOT GLEW_FOUND)
+			package_root_message(GLEW)
             set(OCIO_GL_ENABLED OFF)
         endif()
-    endif()
+	endif()
+	
     find_package(GLUT)
     if(NOT GLUT_FOUND)
+		package_root_message(GLUT)
         set(OCIO_GL_ENABLED OFF)
-    endif()
+	endif()
+	
 endif()
 
 ###############################################################################
@@ -213,7 +222,7 @@ endif()
 # don't generally produce global targets. To guarantee all imported targets are 
 # global, this module is included at the project root level.
 
-include(share/cmake/modules/FindExtPackages.cmake)
+include(FindExtPackages)
 
 ###############################################################################
 # Progress to other sources
