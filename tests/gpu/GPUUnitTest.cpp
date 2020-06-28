@@ -502,7 +502,6 @@ int main(int, char **)
     try
     {
         app = OCIO::getOglAppPtr("GPU tests", 10, 10);
-        std::cout << "GPU unit tests used " << typeid(*app).name() << std::endl;
     }
     catch (const OCIO::Exception & e)
     {
