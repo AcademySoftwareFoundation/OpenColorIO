@@ -320,13 +320,24 @@ HeadlessApp::HeadlessApp(const char * winTitle, int bufWidth, int bufHeight)
     };
 
     m_eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    if(m_eglDisplay == EGL_NO_DISPLAY )
+    {
+        throw Exception("EGL could not be initialized.");
+    }
+
     EGLint eglMajor, eglMinor;
 
-    eglInitialize(m_eglDisplay, &eglMajor, &eglMinor);
+    if(eglInitialize(m_eglDisplay, &eglMajor, &eglMinor) != EGL_TRUE)
+    {
+        throw Exception("EGL display connection couldn't be started.");
+    }
 
     // Choose an appropriate configuration
     EGLint numConfigs;
-    eglChooseConfig(m_eglDisplay, &m_configAttribs[0], &m_eglConfig, 1, &numConfigs);
+    if(eglChooseConfig(m_eglDisplay, &m_configAttribs[0], &m_eglConfig, 1, &numConfigs) != EGL_TRUE)
+    {
+        throw Exception("Failed to choose EGL configuration.");
+    }
 
     m_eglSurface = eglCreatePbufferSurface(m_eglDisplay, m_eglConfig,
                                                      &m_pixBufferAttribs[0]);
@@ -335,7 +346,10 @@ HeadlessApp::HeadlessApp(const char * winTitle, int bufWidth, int bufHeight)
     // Create a context and make it current
     m_eglContext = eglCreateContext(m_eglDisplay, m_eglConfig, EGL_NO_CONTEXT,
                                              NULL);
-    eglMakeCurrent(m_eglDisplay, m_eglSurface, m_eglSurface, m_eglContext);
+    if(eglMakeCurrent(m_eglDisplay, m_eglSurface, m_eglSurface, m_eglContext) != EGL_TRUE)
+    {
+        throw Exception("Could not make EGL context current.");
+    }
 
     setupCommon();
 }
