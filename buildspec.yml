@@ -2,8 +2,8 @@ version: 0.2
 
 env:
   variables:
-    CXX: "g++"
-    CC: "gcc"
+    CXX: g++
+    CC: gcc
   exported-variables:
     - CXX
     - CC
