@@ -236,8 +236,12 @@ void OglApp::setupCommon()
 {
 
 #ifndef __APPLE__
-    glewInit();
-    printGLInfo();
+    glewExperimental=true;
+    GLenum err=glewInit();
+    if(err!=GLEW_OK) {
+        std::cout << "glewInit failed: " << glewGetErrorString(err) << std::endl;
+        throw Exception("GLEW initialization failed.");
+    }
     if (!glewIsSupported("GL_VERSION_2_0"))
     {
         throw Exception("OpenGL 2.0 not supported.");
