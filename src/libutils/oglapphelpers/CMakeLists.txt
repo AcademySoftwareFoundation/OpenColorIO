@@ -49,11 +49,11 @@ target_link_libraries(oglapphelpers
 if(OCIO_EGL_HEADLESS)
     target_include_directories(oglapphelpers
         PRIVATE
-            ${EGL_INCLUDE_DIRS}
+            ${OPENGL_EGL_INCLUDE_DIRS}
     )
     target_link_libraries(oglapphelpers
         PRIVATE
-            ${EGL_LIBRARIES}
+            OpenGL::EGL
     )
 endif()
 
