@@ -154,7 +154,8 @@ extern OCIOEXPORT void LogMessage(LoggingLevel level, const char * message);
 extern OCIOEXPORT const char * GetEnvVariable(const char * name);
 //!cpp:function::
 extern OCIOEXPORT void SetEnvVariable(const char * name, const char * value);
-
+//!cpp:function::
+extern OCIOEXPORT void UnsetEnvVariable(const char * name);
 
 ///////////////////////////////////////////////////////////////////////////
 //!rst::
@@ -1657,7 +1658,18 @@ public:
     static const char * getFormatExtensionByIndex(int index);
 
     // TODO: Revisit the dynamic property access.
-    //!cpp:function::
+    //!cpp:function:: Access to dynamic properties.
+    //
+    // .. note:: The dynamic properties are a convenient way to change on-the-fly values without 
+    // generating again and again a CPU or GPU processor instance. Any color transformation can
+    // contain dynamic properties from a :cpp:class:`ExposureContrastTransform` for example. So, 
+    // :cpp:class:`Processor`, :cpp:class:`CPUProcessor` and :cpp:class:`GPUProcessor` all have
+    // ways to manage dynamic properties. However, the transform dynamic properties are decoupled
+    // between the types of processor instances so that the same :cpp:class:`Processor` can
+    // generate several independent CPU and/or GPU processor instances i.e. changing the value
+    // of the exposure dynamic property from a CPU processor instance does not affect the
+    // corresponding GPU processor instance.
+    //
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
     bool hasDynamicProperty(DynamicPropertyType type) const;
 
@@ -2638,6 +2650,18 @@ public:
     GpuShaderCreatorRcPtr clone() const override;
 
     //!cpp:function:: Dynamic Property related methods.
+    //
+    // .. note:: The dynamic properties are a convenient way to change on-the-fly values without 
+    // generating again and again the fragment shader program (i.e. dynamic properties map to
+    // uniforms in GLSL). So, the same color transformation could be used several times for DCCs
+    // supporting multiple viewports for example. It allows customizations
+    // (using :cpp:class:`GpuShaderDesc`) of the generated fragment shader program mainly to avoid
+    // resource conflicts. It also decouples dynamic properties to avoid having a change on one 
+    // viewport affect the others.
+    // Hence, a dynamic property value change must use the corresponding :cpp:class:`GpuShaderDesc`
+    // instance to do it -- the :cpp:class:`GPUProcessor` dynamic property values only represent
+    // the original values.
+    //
     virtual unsigned getNumUniforms() const noexcept = 0;
     virtual void getUniform(unsigned index, const char *& name,
                             DynamicPropertyRcPtr & value) const = 0;

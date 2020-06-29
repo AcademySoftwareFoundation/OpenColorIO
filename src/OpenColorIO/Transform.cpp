@@ -160,7 +160,7 @@ std::ostream& operator<< (std::ostream & os, const Transform & transform)
     {
         os << *allocationTransform;
     }
-    if(const BuiltinTransform * builtInTransform = \
+    else if(const BuiltinTransform * builtInTransform = \
         dynamic_cast<const BuiltinTransform*>(t))
     {
         os << *builtInTransform;

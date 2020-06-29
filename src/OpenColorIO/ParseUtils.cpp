@@ -431,10 +431,10 @@ const char * NegativeStyleToString(NegativeStyle style)
 {
     switch (style)
     {
-    case NEGATIVE_CLAMP:     throw Exception("NEGATIVE_CLAMP style should not be saved");
+    case NEGATIVE_CLAMP:     return NEGATIVE_STYLE_CLAMP;
     case NEGATIVE_MIRROR:    return NEGATIVE_STYLE_MIRROR;
     case NEGATIVE_PASS_THRU: return NEGATIVE_STYLE_PASS_THRU;
-    case NEGATIVE_LINEAR:    throw Exception("NEGATIVE_LINEAR style should not be saved");
+    case NEGATIVE_LINEAR:    return NEGATIVE_STYLE_LINEAR;
     }
 
     throw Exception("Unknown exponent style");
@@ -455,20 +455,21 @@ NegativeStyle NegativeStyleFromString(const char * style)
     throw Exception(ss.str().c_str());
 }
 
-const char * ROLE_DEFAULT = "default";
-const char * ROLE_REFERENCE = "reference";
-const char * ROLE_DATA = "data";
-const char * ROLE_COLOR_PICKING = "color_picking";
-const char * ROLE_SCENE_LINEAR = "scene_linear";
+// Define variables declared in OpenColorTypes.h.
+const char * ROLE_DEFAULT         = "default";
+const char * ROLE_REFERENCE       = "reference";
+const char * ROLE_DATA            = "data";
+const char * ROLE_COLOR_PICKING   = "color_picking";
+const char * ROLE_SCENE_LINEAR    = "scene_linear";
 const char * ROLE_COMPOSITING_LOG = "compositing_log";
-const char * ROLE_COLOR_TIMING = "color_timing";
-const char * ROLE_TEXTURE_PAINT = "texture_paint";
-const char * ROLE_MATTE_PAINT = "matte_paint";
+const char * ROLE_COLOR_TIMING    = "color_timing";
+const char * ROLE_TEXTURE_PAINT   = "texture_paint";
+const char * ROLE_MATTE_PAINT     = "matte_paint";
 
 namespace
 {
-const int FLOAT_DECIMALS = 7;
-const int DOUBLE_DECIMALS = 16;
+static constexpr int FLOAT_DECIMALS  = 7;
+static constexpr int DOUBLE_DECIMALS = 16;
 }
 
 std::string FloatToString(float value)
