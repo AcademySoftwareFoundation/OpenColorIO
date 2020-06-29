@@ -165,8 +165,6 @@ private:
 
 #include <EGL/egl.h>
 
-#define GLEW_EGL
-
 class HeadlessApp: public OglApp
 {
 public:
