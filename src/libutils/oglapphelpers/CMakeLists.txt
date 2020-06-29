@@ -41,6 +41,10 @@ target_include_directories(oglapphelpers
 
 if(OCIO_IS_NVIDIA)
     if(OCIO_EGL_HEADLESS)
+        target_include_directories(oglapphelpers
+            PRIVATE
+                ${OPENGL_EGL_INCLUDE_DIRS}
+        )
         target_link_libraries(oglapphelpers
             PRIVATE
                 OpenColorIO

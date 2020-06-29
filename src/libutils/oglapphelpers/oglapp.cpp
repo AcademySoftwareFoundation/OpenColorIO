@@ -257,6 +257,15 @@ void OglApp::setupCommon()
     glEnable(GL_TEXTURE_2D);
 }
 
+OglAppRcPtr OglApp::createOglAppPtr(const char * winTitle, int winWidth, int winHeight)
+{
+#ifdef OCIO_HEADLESS_ENABLED
+        return std::make_shared<HeadlessApp>(winTitle, winWidth, winHeight);
+#else
+        return std::make_shared<ScreenApp>(winTitle, winWidth, winHeight);
+#endif
+}
+
 ScreenApp::ScreenApp(const char * winTitle, int winWidth, int winHeight):
     OglApp(winWidth, winHeight)
 {
@@ -375,15 +384,6 @@ void HeadlessApp::redisplay()
 }
 
 #endif
-
-OglAppRcPtr getOglAppPtr(const char * winTitle, int winWidth, int winHeight)
-{
-#ifdef OCIO_HEADLESS_ENABLED
-        return std::make_shared<HeadlessApp>(winTitle, winWidth, winHeight);
-#else
-        return std::make_shared<ScreenApp>(winTitle, winWidth, winHeight);
-#endif
-}
 
 } // namespace OCIO_NAMESPACE
 

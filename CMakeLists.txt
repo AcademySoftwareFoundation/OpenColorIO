@@ -94,12 +94,12 @@ if(OCIO_BUILD_GPU_TESTS OR OCIO_BUILD_APPS)
         set(OCIO_IS_NVIDIA ON)
     else()
         set(OCIO_IS_NVIDIA OFF)
-        message(STATUS "CUDA not found")
+        message(STATUS "The GPU vendor is not NVidia.")
     endif()
 
     # Link to libOpenGL.so if the GPU vendor is NVidia
     # Nvidia's EGL implementation will be used
-    if(${OCIO_EGL_NVIDIA})
+    if(${OCIO_IS_NVIDIA})
         find_package(OpenGL REQUIRED COMPONENTS OpenGL GLU)
         if(NOT OpenGL_OpenGL_FOUND AND NOT OPENGL_GLU_FOUND)
             message(WARNING "OpenGL or GLU not found. GPU rendering disabled.")
@@ -148,7 +148,7 @@ if(OCIO_BUILD_GPU_TESTS OR OCIO_BUILD_APPS)
     endif()
 endif()
 
-message(STATUS "GL enabled " ${OCIO_GL_ENABLED})
+message(STATUS "GL enabled  " ${OCIO_GL_ENABLED})
 message(STATUS "EGL enabled " ${OCIO_EGL_HEADLESS})
 
 ###############################################################################
