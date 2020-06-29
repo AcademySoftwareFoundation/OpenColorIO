@@ -235,7 +235,8 @@ void OglApp::setupCommon()
 {
 
 #ifndef __APPLE__
-    GLenum err=glewInit();
+    glewInit();
+    // TO DO: Find out why glewInit() != GLEW_OK
 
     if (!glewIsSupported("GL_VERSION_2_0"))
     {

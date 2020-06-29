@@ -64,6 +64,7 @@ else()
     if(OCIO_EGL_HEADLESS)
         target_link_libraries(oglapphelpers
             PRIVATE
+                OpenColorIO
                 ${OPENGL_LIBRARIES}
                 ${GLEW_LIBRARIES}
                 ${GLUT_LIBRARIES}
@@ -72,6 +73,7 @@ else()
     else()
     target_link_libraries(oglapphelpers
         PRIVATE
+            OpenColorIO
             ${OPENGL_LIBRARIES}
             ${GLEW_LIBRARIES}
             ${GLUT_LIBRARIES}
