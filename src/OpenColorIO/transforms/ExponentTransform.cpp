@@ -109,12 +109,7 @@ std::ostream & operator<< (std::ostream & os, const ExponentTransform & t)
         os << " " << value[i];
     }
 
-    auto style = t.getNegativeStyle();
-    if (style != NEGATIVE_CLAMP)
-    {
-        os << ", style=" << NegativeStyleToString(style);
-    }
-
+    os << ", style=" << NegativeStyleToString(t.getNegativeStyle());
     os << ">";
     return os;
 }
