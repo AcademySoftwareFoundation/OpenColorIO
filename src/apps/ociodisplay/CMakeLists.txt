@@ -31,6 +31,7 @@ target_include_directories(ociodisplay
 )
 target_link_libraries(ociodisplay
 	PRIVATE 
+		apphelpers
 		${GLEW_LIBRARIES}
 		${GLUT_LIBRARIES}
         oglapphelpers

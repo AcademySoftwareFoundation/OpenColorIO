@@ -86,7 +86,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, basic)
     userTransform->setSrc(filePath.c_str());
 
     OCIO_CHECK_NO_THROW(
-        OCIO::DisplayViewHelpers::AddDisplayView(config, 
+        OCIO::DisplayViewHelpers::AddDisplayView(config,
                                                  "DISP_1", "VIEW_5", "look_3",
                                                  *csInfo, userTransform, 
                                                  "cat1, cat2", "lut_input_1"));
@@ -101,10 +101,10 @@ OCIO_ADD_TEST(DisplayViewHelpers, basic)
     OCIO_CHECK_NO_THROW(val = config->getView("DISP_1", 3));
     OCIO_CHECK_EQUAL(std::string(val), "VIEW_5");
 
-    OCIO_CHECK_NO_THROW(val = config->getDisplayColorSpaceName("DISP_1", "VIEW_5"));
+    OCIO_CHECK_NO_THROW(val = config->getDisplayViewColorSpaceName("DISP_1", "VIEW_5"));
     OCIO_CHECK_EQUAL(std::string(val), "view_5");
 
-    OCIO_CHECK_NO_THROW(val = config->getDisplayLooks("DISP_1", "VIEW_5"));
+    OCIO_CHECK_NO_THROW(val = config->getDisplayViewLooks("DISP_1", "VIEW_5"));
     OCIO_CHECK_EQUAL(std::string(val), "look_3");
 
     //
@@ -126,8 +126,9 @@ OCIO_ADD_TEST(DisplayViewHelpers, basic)
     //
     OCIO::ConstProcessorRcPtr processor;
     OCIO_CHECK_NO_THROW(
-        processor = OCIO::DisplayViewHelpers::GetProcessor(cfg,
+        processor = OCIO::DisplayViewHelpers::GetProcessor(cfg, 
                                                            "lin_1", "DISP_1", "VIEW_5",
+                                                           OCIO::ConstMatrixTransformRcPtr(),
                                                            OCIO::TRANSFORM_DIR_FORWARD));
 
     OCIO::GroupTransformRcPtr groupTransform;
@@ -182,7 +183,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, basic)
 
         OCIO_CHECK_EQUAL(cdl->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
 
-        double rgb[3] = { -1 };
+        double rgb[3] = { -1. };
         OCIO_CHECK_NO_THROW(cdl->getSlope(rgb));
         OCIO_CHECK_EQUAL(rgb[0], 1.);
         OCIO_CHECK_EQUAL(rgb[1], 2.);
@@ -223,7 +224,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, basic)
 
         OCIO_CHECK_EQUAL(exp->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
 
-        double values[4] = { -1 };
+        double values[4] = { -1. };
         exp->getValue(values);
 
         OCIO_CHECK_EQUAL(values[0], 2.6);
@@ -362,6 +363,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, display_view_without_look)
     OCIO_CHECK_NO_THROW(
         processor = OCIO::DisplayViewHelpers::GetProcessor(cfg,
                                                            "lin_1", "DISP_1", "VIEW_1",
+                                                           OCIO::ConstMatrixTransformRcPtr(),
                                                            OCIO::TRANSFORM_DIR_FORWARD));
 
     OCIO_CHECK_NO_THROW(groupTransform = processor->createGroupTransform());
@@ -378,6 +380,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, display_view_without_look)
     OCIO_CHECK_NO_THROW(
         processor = OCIO::DisplayViewHelpers::GetProcessor(cfg,
                                                            "lin_1", "DISP_1", "VIEW_1",
+                                                           OCIO::ConstMatrixTransformRcPtr(),
                                                            OCIO::TRANSFORM_DIR_INVERSE));
 
     OCIO_CHECK_NO_THROW(groupTransform = processor->createGroupTransform());
@@ -388,6 +391,36 @@ OCIO_ADD_TEST(DisplayViewHelpers, display_view_without_look)
     exp = OCIO::DynamicPtrCast<const OCIO::ExponentTransform>(tr);
     OCIO_REQUIRE_ASSERT(exp);
     OCIO_CHECK_EQUAL(exp->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+
+    // Forward with a channel view matrix.
+
+    auto cv = OCIO::MatrixTransform::Create();
+    double mat[] = { 1.0, 0.0, 0.0, 0.0,
+                     0.0, 0.0, 0.0, 0.0, 
+                     0.0, 0.0, 0.0, 0.0, 
+                     0.0, 0.0, 0.0, 0.0 };
+    cv->setMatrix(mat);
+
+    OCIO_CHECK_NO_THROW(
+        processor = OCIO::DisplayViewHelpers::GetProcessor(cfg,
+                                                           "lin_1", "DISP_1", "VIEW_1",
+                                                           cv,
+                                                           OCIO::TRANSFORM_DIR_FORWARD));
+
+    OCIO_CHECK_NO_THROW(groupTransform = processor->createGroupTransform());
+    OCIO_CHECK_NO_THROW(groupTransform->validate());
+    OCIO_REQUIRE_EQUAL(groupTransform->getNumTransforms(), 4);
+
+    OCIO_CHECK_NO_THROW(tr = groupTransform->getTransform(1));
+    auto mt = OCIO::DynamicPtrCast<const OCIO::MatrixTransform>(tr);
+    OCIO_REQUIRE_ASSERT(mt);
+    OCIO_CHECK_EQUAL(mt->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    mt->getMatrix(mat);
+    OCIO_CHECK_EQUAL(mat[0], 1.);
+    OCIO_CHECK_EQUAL(mat[5], 0.);
+
+    // Inverse test with a channel view matrix can't be done because channel view matrix
+    // is singular and inversion will fail.
 }
 
 namespace
@@ -451,7 +484,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, active_display_view)
     userTransform->setSrc(filePath.c_str());
 
     OCIO_CHECK_NO_THROW(
-        OCIO::DisplayViewHelpers::AddDisplayView(cfg, 
+        OCIO::DisplayViewHelpers::AddDisplayView(cfg,
                                                  "DISP_1", "VIEW_5", nullptr,
                                                  *csInfo, userTransform, 
                                                  "cat1, cat2", "lut_input_1"));
@@ -514,7 +547,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, active_display_view)
         OCIO_CHECK_EQUAL(cfg->getView("DISP_1", 2), std::string("VIEW_3"));
 
         OCIO_CHECK_THROW_WHAT(
-            OCIO::DisplayViewHelpers::AddDisplayView(cfg, 
+            OCIO::DisplayViewHelpers::AddDisplayView(cfg,
                                                      "DISP_5", "VIEW_5", nullptr,
                                                      *csInfo, userTransform, 
                                                      "cat1, cat2", "lut_input_1"),
@@ -540,7 +573,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, active_display_view)
         OCIO_CHECK_EQUAL(cfg->getView("DISP_1", 1), std::string("VIEW_2"));
 
         OCIO_CHECK_THROW_WHAT(
-            OCIO::DisplayViewHelpers::AddDisplayView(cfg, 
+            OCIO::DisplayViewHelpers::AddDisplayView(cfg,
                                                      "DISP_1", "VIEW_5", nullptr,
                                                      *csInfo, userTransform, 
                                                      "cat1, cat2", "lut_input_1"),
