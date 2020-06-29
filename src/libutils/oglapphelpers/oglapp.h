@@ -26,14 +26,14 @@ namespace OCIO_NAMESPACE
 // will appear in the UI so here you specify the name of the window and its size.  For non-GUI
 // apps you may want to use a small size (it does not need to match the size of the image being
 // processed).
-OglApp oglApp("Window Name", windowWidth, windowHeight);
+//
 
-float * imageBuffer = GetImageBuffer();
-int imageWidth = GetImageWidth();
-int imageHeight = GetImageHeight();
-oglApp.initImage(imagewidth, imageheight, OglApp::COMPONENTS_RGB, imageBuffer);
-oglApp.createGLBuffers();
 
+// TO DO: to be updated.
+
+
+
+//
 // Set (or change) shader.
 GpuShaderDescRcPtr shader = GpuShaderDesc::CreateShaderDesc();
 processor->getDefaultGPUProcessor()->extractGpuShaderInfo(shader);
@@ -52,6 +52,11 @@ std::vector<float> imageBufferOut(3 * imageWidth * imageWidth);
 oglApp.readImage(imageBufferOut.data());
 
 */
+
+// Forward declaration  of OglApp;
+class OglApp;
+typedef OCIO_SHARED_PTR<OglApp> OglAppRcPtr;
+
 class OglApp
 {
 public:
@@ -113,6 +118,10 @@ public:
     // Helper to print GL info.
     void virtual printGLInfo() const noexcept;
 
+    // Return a pointer of either ScreenApp or HeadlessApp depending on the
+    // OCIO_HEADLESS_ENABLED preprocessor
+    static OglAppRcPtr createOglAppPtr(const char * winTitle, int winWidth, int winHeight);
+
 protected:
     // Window or output image size (set using reshape).
     // When the app is used to process an image this should be equal to the image size so that
@@ -144,8 +153,6 @@ private:
 
     OpenGLBuilderRcPtr m_oglBuilder;
 };
-
-typedef OCIO_SHARED_PTR<OglApp> OglAppRcPtr;
 
 class ScreenApp: public OglApp
 {
