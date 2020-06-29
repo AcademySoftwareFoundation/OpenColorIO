@@ -331,7 +331,9 @@ FixedFunctionOpData::~FixedFunctionOpData()
 
 FixedFunctionOpDataRcPtr FixedFunctionOpData::clone() const
 {
-    return std::make_shared<FixedFunctionOpData>(getParams(), getStyle());
+    auto clone = std::make_shared<FixedFunctionOpData>(getParams(), getStyle());
+    clone->getFormatMetadata() = getFormatMetadata();
+    return clone;
 }
 
 void FixedFunctionOpData::validate() const

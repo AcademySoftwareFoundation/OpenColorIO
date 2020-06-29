@@ -31,7 +31,7 @@ set(SOURCES
 	PyBuiltinTransformRegistry.cpp
 	PyCDLTransform.cpp
 	PyColorSpaceTransform.cpp
-	PyDisplayTransform.cpp
+	PyDisplayViewTransform.cpp
 	PyExponentTransform.cpp
 	PyExponentWithLinearTransform.cpp
 	PyExposureContrastTransform.cpp
@@ -63,6 +63,7 @@ set(SOURCES
 	PyGpuShaderCreator.cpp
 	PyGpuShaderDesc.cpp
 	PyContext.cpp
+	PyViewingRules.cpp
 )
 
 add_library(PyOpenColorIO MODULE ${SOURCES} ${PYDOC_OUTPUT})

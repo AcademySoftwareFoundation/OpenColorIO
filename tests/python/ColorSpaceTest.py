@@ -125,7 +125,7 @@ class ColorSpaceTest(unittest.TestCase):
         Test the ColorSpace object from an OCIO config.
         """
 
-        # Get simple config file from Constants.py
+        # Get simple config file from UnitTestUtils.py
         cfg = OCIO.Config().CreateFromStream(SIMPLE_CONFIG)
 
         # Test ColorSpace class object getters from config
@@ -151,6 +151,7 @@ class ColorSpaceTest(unittest.TestCase):
         # With keywords in their proper order.
         cs = OCIO.ColorSpace(name='test',
                              family='ocio family',
+                             encoding='scene-linear',
                              equalityGroup='My_Equality',
                              description='This is a test colourspace!',
                              bitDepth=OCIO.BIT_DEPTH_F32,
@@ -160,6 +161,7 @@ class ColorSpaceTest(unittest.TestCase):
 
         self.assertEqual(cs.getName(), 'test')
         self.assertEqual(cs.getFamily(), 'ocio family')
+        self.assertEqual(cs.getEncoding(), 'scene-linear')
         self.assertEqual(cs.getEqualityGroup(), 'My_Equality')
         self.assertEqual(cs.getDescription(), 'This is a test colourspace!')
         self.assertEqual(cs.getBitDepth(), OCIO.BIT_DEPTH_F32)
@@ -175,11 +177,13 @@ class ColorSpaceTest(unittest.TestCase):
                               allocation=OCIO.ALLOCATION_LG2,
                               description='This is a test colourspace!',
                               equalityGroup='My_Equality',
+                              encoding='scene-linear',
                               bitDepth=OCIO.BIT_DEPTH_F32,
                               )
 
         self.assertEqual(cs2.getName(), 'test')
         self.assertEqual(cs2.getFamily(), 'ocio family')
+        self.assertEqual(cs2.getEncoding(), 'scene-linear')
         self.assertEqual(cs2.getEqualityGroup(), 'My_Equality')
         self.assertEqual(cs2.getDescription(), 'This is a test colourspace!')
         self.assertEqual(cs2.getBitDepth(), OCIO.BIT_DEPTH_F32)
@@ -195,6 +199,7 @@ class ColorSpaceTest(unittest.TestCase):
         cs = OCIO.ColorSpace(OCIO.REFERENCE_SPACE_SCENE,
                              'test',
                              'ocio family',
+                             'scene-linear',
                              'My_Equality',
                              'This is a test colourspace!',
                              OCIO.BIT_DEPTH_F32,
@@ -204,6 +209,7 @@ class ColorSpaceTest(unittest.TestCase):
 
         self.assertEqual(cs.getName(), 'test')
         self.assertEqual(cs.getFamily(), 'ocio family')
+        self.assertEqual(cs.getEncoding(), 'scene-linear')
         self.assertEqual(cs.getEqualityGroup(), 'My_Equality')
         self.assertEqual(cs.getDescription(), 'This is a test colourspace!')
         self.assertEqual(cs.getBitDepth(), OCIO.BIT_DEPTH_F32)
@@ -221,6 +227,7 @@ class ColorSpaceTest(unittest.TestCase):
         self.assertEqual(cs.getName(), '')
         self.assertEqual(cs.getFamily(), '')
         self.assertEqual(cs.getEqualityGroup(), '')
+        self.assertEqual(cs.getEncoding(), '')
         self.assertEqual(cs.getDescription(), '')
         self.assertEqual(cs.getBitDepth(), OCIO.BIT_DEPTH_UNKNOWN)
         self.assertFalse(cs.isData())
@@ -252,6 +259,15 @@ class ColorSpaceTest(unittest.TestCase):
         for desc in TEST_DESCS:
             self.colorspace.setDescription(desc)
             self.assertEqual(desc, self.colorspace.getDescription())
+
+    def test_encoding(self):
+        """
+        Test the setEncoding() and getEncoding() methods.
+        """
+
+        for name in TEST_NAMES:
+            self.colorspace.setEncoding(name)
+            self.assertEqual(name, self.colorspace.getEncoding())
 
     def test_equality(self):
         """

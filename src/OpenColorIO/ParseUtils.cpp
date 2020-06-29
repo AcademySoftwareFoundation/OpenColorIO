@@ -588,7 +588,7 @@ bool StringVecToIntVec(std::vector<int> &intArray,
 
 ////////////////////////////////////////////////////////////////////////////
 
-// read the next non empty line, and store it in 'line'
+// read the next non-empty line, and store it in 'line'
 // return 'true' on success
 
 bool nextline(std::istream &istream, std::string &line)
@@ -615,15 +615,9 @@ bool StrEqualsCaseIgnore(const std::string & a, const std::string & b)
     return 0 == Platform::Strcasecmp(a.c_str(), b.c_str());
 }
 
-// If a ',' is in the string, split on it
-// If a ':' is in the string, split on it
-// Otherwise, assume a single string.
-// Also, strip whitespace from all parts.
-
-void SplitStringEnvStyle(StringUtils::StringVec & outputvec, const char * str)
+StringUtils::StringVec SplitStringEnvStyle(const std::string & str)
 {
-    if (!str) return;
-
+    StringUtils::StringVec outputvec;
     const std::string s = StringUtils::Trim(str);
     if (StringUtils::Find(s, ",") != std::string::npos)
     {
@@ -642,6 +636,7 @@ void SplitStringEnvStyle(StringUtils::StringVec & outputvec, const char * str)
     {
         val = StringUtils::Trim(val);
     }
+    return outputvec;
 }
 
 std::string JoinStringEnvStyle(const StringUtils::StringVec & outputvec)

@@ -115,7 +115,7 @@ set(SOURCES
 	transforms/BuiltinTransform.cpp
 	transforms/CDLTransform.cpp
 	transforms/ColorSpaceTransform.cpp
-	transforms/DisplayTransform.cpp
+	transforms/DisplayViewTransform.cpp
 	transforms/ExponentTransform.cpp
 	transforms/ExponentWithLinearTransform.cpp
 	transforms/ExposureContrastTransform.cpp
@@ -130,6 +130,7 @@ set(SOURCES
 	transforms/Lut3DTransform.cpp
 	transforms/MatrixTransform.cpp
 	transforms/RangeTransform.cpp
+	ViewingRules.cpp
 	ViewTransform.cpp
 )
 

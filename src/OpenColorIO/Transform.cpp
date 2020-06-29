@@ -66,10 +66,10 @@ void BuildOps(OpRcPtrVec & ops,
     {
         BuildColorSpaceOps(ops, config, context, *colorSpaceTransform, dir);
     }
-    else if(ConstDisplayTransformRcPtr displayTransform = \
-        DynamicPtrCast<const DisplayTransform>(transform))
+    else if(ConstDisplayViewTransformRcPtr displayViewTransform = \
+        DynamicPtrCast<const DisplayViewTransform>(transform))
     {
-        BuildDisplayOps(ops, config, context, *displayTransform, dir);
+        BuildDisplayOps(ops, config, context, *displayViewTransform, dir);
     }
     else if(ConstExponentTransformRcPtr exponentTransform = \
         DynamicPtrCast<const ExponentTransform>(transform))
@@ -126,10 +126,10 @@ void BuildOps(OpRcPtrVec & ops,
     {
         BuildLut1DOp(ops, config, *lut1dTransform, dir);
     }
-    else if (ConstLut3DTransformRcPtr lut1dTransform = \
+    else if (ConstLut3DTransformRcPtr lut3dTransform = \
         DynamicPtrCast<const Lut3DTransform>(transform))
     {
-        BuildLut3DOp(ops, config, *lut1dTransform, dir);
+        BuildLut3DOp(ops, config, *lut3dTransform, dir);
     }
     else if(ConstMatrixTransformRcPtr matrixTransform = \
         DynamicPtrCast<const MatrixTransform>(transform))
@@ -175,10 +175,10 @@ std::ostream& operator<< (std::ostream & os, const Transform & transform)
     {
         os << *colorSpaceTransform;
     }
-    else if(const DisplayTransform * displayTransform = \
-        dynamic_cast<const DisplayTransform*>(t))
+    else if(const DisplayViewTransform * displayViewTransform = \
+        dynamic_cast<const DisplayViewTransform*>(t))
     {
-        os << *displayTransform;
+        os << *displayViewTransform;
     }
     else if(const ExponentTransform * exponentTransform = \
         dynamic_cast<const ExponentTransform*>(t))

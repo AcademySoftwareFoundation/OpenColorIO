@@ -44,7 +44,7 @@ FormatMetadataImpl::FormatMetadataImpl(const std::string & name, const std::stri
 {
     if (name.empty())
     {
-        throw Exception("FormatMetadata has to have a non empty name.");
+        throw Exception("FormatMetadata has to have a non-empty name.");
     }
 }
 
@@ -70,7 +70,7 @@ void FormatMetadataImpl::setName(const std::string & name)
 {
     if (name.empty())
     {
-        throw Exception("FormatMetadata has to have a non empty name.");
+        throw Exception("FormatMetadata has to have a non-empty name.");
     }
 
     m_name = name;
@@ -248,7 +248,7 @@ void FormatMetadataImpl::setName(const char * name)
     m_name = name;
     if (m_name.empty())
     {
-        throw Exception("FormatMetadata has to have a non empty name.");
+        throw Exception("FormatMetadata has to have a non-empty name.");
     }
 }
 

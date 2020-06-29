@@ -49,6 +49,7 @@ void bindPyColorSpace(py::module & m)
         .def(py::init([](ReferenceSpaceType referenceSpace,
                          const std::string & name,
                          const std::string & family,
+                         const std::string & encoding,
                          const std::string & equalityGroup,
                          const std::string & description,
                          BitDepth bitDepth,
@@ -62,6 +63,7 @@ void bindPyColorSpace(py::module & m)
                 ColorSpaceRcPtr p = ColorSpace::Create(referenceSpace);
                 if (!name.empty())          { p->setName(name.c_str()); }
                 if (!family.empty())        { p->setFamily(family.c_str()); }
+                if (!encoding.empty())      { p->setEncoding(encoding.c_str()); }
                 if (!equalityGroup.empty()) { p->setEqualityGroup(equalityGroup.c_str()); }
                 if (!description.empty())   { p->setDescription(description.c_str()); }
                 p->setBitDepth(bitDepth);
@@ -96,6 +98,7 @@ void bindPyColorSpace(py::module & m)
              "referenceSpace"_a = DEFAULT->getReferenceSpaceType(),
              "name"_a = DEFAULT->getName(),
              "family"_a = DEFAULT->getFamily(),
+             "encoding"_a = DEFAULT->getEncoding(),
              "equalityGroup"_a = DEFAULT->getEqualityGroup(),
              "description"_a = DEFAULT->getDescription(),
              "bitDepth"_a = DEFAULT->getBitDepth(),
@@ -104,12 +107,14 @@ void bindPyColorSpace(py::module & m)
              "allocationVars"_a = getAllocationVarsStdVec(DEFAULT),
              "toReference"_a = DEFAULT->getTransform(COLORSPACE_DIR_TO_REFERENCE),
              "fromReference"_a = DEFAULT->getTransform(COLORSPACE_DIR_FROM_REFERENCE),
-             "categories"_a = getCategoriesStdVec(DEFAULT))  
+             "categories"_a = getCategoriesStdVec(DEFAULT))
 
         .def("getName", &ColorSpace::getName)
         .def("setName", &ColorSpace::setName, "name"_a)
         .def("getFamily", &ColorSpace::getFamily)
         .def("setFamily", &ColorSpace::setFamily, "family"_a)
+        .def("getEncoding", &ColorSpace::getEncoding)
+        .def("setEncoding", &ColorSpace::setEncoding, "encoding"_a)
         .def("getEqualityGroup", &ColorSpace::getEqualityGroup)
         .def("setEqualityGroup", &ColorSpace::setEqualityGroup, "equalityGroup"_a)
         .def("getDescription", &ColorSpace::getDescription)

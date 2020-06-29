@@ -7,7 +7,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Categories.h"
+#include "TokensManager.h"
 #include "PrivateTypes.h"
 #include "utils/StringUtils.h"
 
@@ -15,13 +15,14 @@
 namespace OCIO_NAMESPACE
 {
 
-class ColorSpace::Impl : public CategoriesManager
+class ColorSpace::Impl
 {
 public:
     std::string m_name;
     std::string m_family;
     std::string m_equalityGroup;
     std::string m_description;
+    std::string m_encoding;
 
     BitDepth m_bitDepth{ BIT_DEPTH_UNKNOWN };
     bool m_isData{ false };
@@ -37,11 +38,11 @@ public:
     bool m_toRefSpecified{ false };
     bool m_fromRefSpecified{ false };
 
-    Impl() = delete;
+    TokensManager m_categories;
 
+    Impl() = delete;
     explicit Impl(ReferenceSpaceType referenceSpace)
-        : CategoriesManager()
-        , m_referenceSpaceType(referenceSpace)
+        : m_referenceSpaceType(referenceSpace)
     {
     }
 
@@ -53,13 +54,11 @@ public:
     {
         if (this != &rhs)
         {
-            *dynamic_cast<CategoriesManager*>(this)
-                = *dynamic_cast<const CategoriesManager*>(&rhs);
- 
             m_name = rhs.m_name;
             m_family = rhs.m_family;
             m_equalityGroup = rhs.m_equalityGroup;
             m_description = rhs.m_description;
+            m_encoding = rhs.m_encoding;
             m_bitDepth = rhs.m_bitDepth;
             m_isData = rhs.m_isData;
             m_referenceSpaceType = rhs.m_referenceSpaceType;
@@ -76,6 +75,7 @@ public:
 
             m_toRefSpecified = rhs.m_toRefSpecified;
             m_fromRefSpecified = rhs.m_fromRefSpecified;
+            m_categories = rhs.m_categories;
         }
         return *this;
     }
@@ -171,55 +171,65 @@ void ColorSpace::setBitDepth(BitDepth bitDepth)
 
 bool ColorSpace::hasCategory(const char * category) const
 {
-    return getImpl()->hasCategory(category);
+    return getImpl()->m_categories.hasToken(category);
 }
 
 void ColorSpace::addCategory(const char * category)
 {
-    getImpl()->addCategory(category);
+    getImpl()->m_categories.addToken(category);
 }
 
 void ColorSpace::removeCategory(const char * category)
 {
-    getImpl()->removeCategory(category);
+    getImpl()->m_categories.removeToken(category);
 }
 
 int ColorSpace::getNumCategories() const
 {
-    return getImpl()->getNumCategories();
+    return getImpl()->m_categories.getNumTokens();
 }
 
 const char * ColorSpace::getCategory(int index) const
 {
-    return getImpl()->getCategory(index);
+    return getImpl()->m_categories.getToken(index);
 }
 
 void ColorSpace::clearCategories()
 {
-    getImpl()->clearCategories();
+    getImpl()->m_categories.clearTokens();
 }
 
-bool ColorSpace::isData() const
+const char * ColorSpace::getEncoding() const noexcept
+{
+    return getImpl()->m_encoding.c_str();
+}
+
+void ColorSpace::setEncoding(const char * encoding)
+{
+    getImpl()->m_encoding = encoding;
+}
+
+bool ColorSpace::isData() const noexcept
 {
     return getImpl()->m_isData;
 }
 
-void ColorSpace::setIsData(bool val)
+void ColorSpace::setIsData(bool val) noexcept
 {
     getImpl()->m_isData = val;
 }
 
-ReferenceSpaceType ColorSpace::getReferenceSpaceType() const
+ReferenceSpaceType ColorSpace::getReferenceSpaceType() const noexcept
 {
     return getImpl()->m_referenceSpaceType;
 }
 
-Allocation ColorSpace::getAllocation() const
+Allocation ColorSpace::getAllocation() const noexcept
 {
     return getImpl()->m_allocation;
 }
 
-void ColorSpace::setAllocation(Allocation allocation)
+void ColorSpace::setAllocation(Allocation allocation) noexcept
 {
     getImpl()->m_allocation = allocation;
 }
@@ -294,9 +304,21 @@ std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
         break;
     }
     os << "name=" << cs.getName() << ", ";
-    os << "family=" << cs.getFamily() << ", ";
-    os << "equalityGroup=" << cs.getEqualityGroup() << ", ";
-    os << "bitDepth=" << BitDepthToString(cs.getBitDepth()) << ", ";
+    std::string str{ cs.getFamily() };
+    if (!str.empty())
+    {
+        os << "family=" << str << ", ";
+    }
+    str = cs.getEqualityGroup();
+    if (!str.empty())
+    {
+        os << "equalityGroup=" << str << ", ";
+    }
+    const auto bd = cs.getBitDepth();
+    if (bd != BIT_DEPTH_UNKNOWN)
+    {
+        os << "bitDepth=" << BitDepthToString(bd) << ", ";
+    }
     os << "isData=" << BoolToString(cs.isData());
     if (numVars)
     {
@@ -306,6 +328,20 @@ std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
         {
             os << " " << vars[i];
         }
+    }
+    if (cs.getNumCategories())
+    {
+        StringUtils::StringVec categories;
+        for (int i = 0; i < cs.getNumCategories(); ++i)
+        {
+            categories.push_back(cs.getCategory(i));
+        }
+        os << ", categories=" << StringUtils::Join(categories, ',');
+    }
+    str = cs.getEncoding();
+    if (!str.empty())
+    {
+        os << ", encoding=" << str;
     }
     os << ">";
 
