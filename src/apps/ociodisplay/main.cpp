@@ -34,6 +34,7 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #include "glsl.h"
 #include "oglapp.h"
+#include "ViewingPipeline.h"
 
 bool g_verbose   = false;
 bool g_gpulegacy = false;
@@ -177,7 +178,7 @@ void InitOCIO(const char * filename)
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
     g_display = config->getDefaultDisplay();
     g_transformName = config->getDefaultView(g_display.c_str());
-    g_look = config->getDisplayLooks(g_display.c_str(), g_transformName.c_str());
+    g_look = config->getDisplayViewLooks(g_display.c_str(), g_transformName.c_str());
 
     g_inputColorSpace = OCIO::ROLE_SCENE_LINEAR;
     if(filename && *filename)
@@ -324,11 +325,15 @@ void UpdateOCIOGLState()
     // Step 0: Get the processor using any of the pipelines mentioned above.
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
 
-    OCIO::DisplayTransformRcPtr transform = OCIO::DisplayTransform::Create();
-    transform->setInputColorSpaceName( g_inputColorSpace.c_str() );
+    OCIO::DisplayViewTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
+    transform->setSrc( g_inputColorSpace.c_str() );
     transform->setDisplay( g_display.c_str() );
     transform->setView( g_transformName.c_str() );
-    transform->setLooksOverride( g_look.c_str() );
+
+    OCIO::ViewingPipeline vpt;
+    vpt.setDisplayViewTransform(transform);
+    vpt.setLooksOverrideEnabled(true);
+    vpt.setLooksOverride(g_look);
 
     if(g_verbose)
     {
@@ -368,7 +373,7 @@ void UpdateOCIOGLState()
         OCIO::MatrixTransformRcPtr mtx =  OCIO::MatrixTransform::Create();
         mtx->setMatrix(m44);
         mtx->setOffset(offset4);
-        transform->setLinearCC(mtx);
+        vpt.setLinearCC(mtx);
     }
 
     // Channel swizzling
@@ -381,7 +386,7 @@ void UpdateOCIOGLState()
         OCIO::MatrixTransformRcPtr swizzle = OCIO::MatrixTransform::Create();
         swizzle->setMatrix(m44);
         swizzle->setOffset(offset);
-        transform->setChannelView(swizzle);
+        vpt.setChannelView(swizzle);
     }
 
     // Post-display transform gamma
@@ -390,13 +395,13 @@ void UpdateOCIOGLState()
         const double exponent4f[4] = { exponent, exponent, exponent, exponent };
         OCIO::ExponentTransformRcPtr expTransform =  OCIO::ExponentTransform::Create();
         expTransform->setValue(exponent4f);
-        transform->setDisplayCC(expTransform);
+        vpt.setDisplayCC(expTransform);
     }
 
     OCIO::ConstProcessorRcPtr processor;
     try
     {
-        processor = config->getProcessor(transform);
+        processor = vpt.getProcessor(config, config->getCurrentContext());
     }
     catch(OCIO::Exception & e)
     {
@@ -450,13 +455,13 @@ void displayDevice_CB(int id)
 
     g_display = display;
 
-    const char * csname = config->getDisplayColorSpaceName(g_display.c_str(), g_transformName.c_str());
-    if(!csname)
+    const char * csname = config->getDisplayViewColorSpaceName(g_display.c_str(), g_transformName.c_str());
+    if (!csname || !*csname)
     {
         g_transformName = config->getDefaultView(g_display.c_str());
     }
 
-    g_look = config->getDisplayLooks(g_display.c_str(), g_transformName.c_str());
+    g_look = config->getDisplayViewLooks(g_display.c_str(), g_transformName.c_str());
 
     UpdateOCIOGLState();
     glutPostRedisplay();
@@ -471,7 +476,7 @@ void transform_CB(int id)
 
     g_transformName = transform;
 
-    g_look = config->getDisplayLooks(g_display.c_str(), g_transformName.c_str());
+    g_look = config->getDisplayViewLooks(g_display.c_str(), g_transformName.c_str());
 
     UpdateOCIOGLState();
     glutPostRedisplay();

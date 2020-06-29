@@ -1670,6 +1670,7 @@ OCIO_ADD_TEST(Config, categories)
         "    bitdepth: unknown\n"
         "    isdata: false\n"
         "    categories: [rendering, linear]\n"
+        "    encoding: scene-linear\n"
         "    allocation: uniform\n"
         "    allocationvars: [-0.125, 1.125]\n"
         "\n"
@@ -1680,6 +1681,7 @@ OCIO_ADD_TEST(Config, categories)
         "    bitdepth: unknown\n"
         "    isdata: false\n"
         "    categories: [rendering]\n"
+        "    encoding: data\n"
         "    allocation: uniform\n"
         "    allocationvars: [-0.125, 1.125]\n";
 
@@ -1722,8 +1724,10 @@ OCIO_ADD_TEST(Config, categories)
     OCIO_CHECK_EQUAL(config->getIndexForColorSpace("raw2"), 1);
     cs = config->getColorSpace("raw1");
     OCIO_CHECK_EQUAL(std::string(cs->getName()), std::string("raw1"));
+    OCIO_CHECK_EQUAL(std::string(cs->getEncoding()), std::string("scene-linear"));
     cs = config->getColorSpace("raw2");
     OCIO_CHECK_EQUAL(std::string(cs->getName()), std::string("raw2"));
+    OCIO_CHECK_EQUAL(std::string(cs->getEncoding()), std::string("data"));
 }
 
 OCIO_ADD_TEST(Config, display)
@@ -1831,6 +1835,13 @@ OCIO_ADD_TEST(Config, display)
         OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 1);
         OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_1"));
         OCIO_CHECK_EQUAL(std::string(config->getDefaultDisplay()), "sRGB_1");
+
+        OCIO_REQUIRE_EQUAL(config->getNumDisplaysAll(), 6);
+
+        // Test that all displays are saved.
+        std::stringstream ss;
+        ss << *config.get();
+        OCIO_CHECK_EQUAL(ss.str(), myProfile);
     }
 
     {
@@ -2091,6 +2102,9 @@ OCIO_ADD_TEST(Config, view)
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_1"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 0)), "View_1");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 1)), "View_2");
+        // Invalid index.
+        OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 42)), "");
+
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_2")), "View_2");
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_2"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 0)), "View_2");
@@ -2099,6 +2113,10 @@ OCIO_ADD_TEST(Config, view)
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_3"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 0)), "View_3");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 1)), "View_1");
+
+        std::stringstream ss;
+        ss << *config.get();
+        OCIO_CHECK_EQUAL(ss.str(), myProfile);
     }
 
     {
@@ -2122,6 +2140,15 @@ OCIO_ADD_TEST(Config, view)
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_3")), "View_3");
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_3"), 1);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 0)), "View_3");
+
+        OCIO_REQUIRE_EQUAL(config->getNumViews(OCIO::VIEW_DISPLAY_DEFINED, "sRGB_1"), 2);
+        OCIO_REQUIRE_EQUAL(config->getNumViews(OCIO::VIEW_DISPLAY_DEFINED, "sRGB_2"), 2);
+        OCIO_REQUIRE_EQUAL(config->getNumViews(OCIO::VIEW_DISPLAY_DEFINED, "sRGB_3"), 2);
+
+        // Test that all views are saved.
+        std::stringstream ss;
+        ss << *config.get();
+        OCIO_CHECK_EQUAL(ss.str(), myProfile);
     }
 
     {
@@ -3347,7 +3374,7 @@ OCIO_ADD_TEST(Config, inactive_color_space)
         lookTransform->setLooks("beauty"); // Process space (i.e. lnh) inactive.
         lookTransform->setSrc("raw");
 
-        const char * csName = config->getDisplayColorSpaceName("sRGB", "Lnh");
+        const char * csName = config->getDisplayViewColorSpaceName("sRGB", "Lnh");
         lookTransform->setDst(csName); // Color space inactive (i.e. lnh).
 
         OCIO_CHECK_NO_THROW(config->getProcessor(lookTransform, OCIO::TRANSFORM_DIR_FORWARD));
@@ -4001,7 +4028,7 @@ OCIO_ADD_TEST(Config, view_transforms)
     const std::string vtDisplay{ "display" };
     vt->setName(vtDisplay.c_str());
     OCIO_CHECK_THROW_WHAT(configEdit->addViewTransform(vt), OCIO::Exception,
-                          "Cannot add view transform with no transform");
+                          "Cannot add view transform 'display' with no transform");
     OCIO_CHECK_NO_THROW(vt->setTransform(OCIO::MatrixTransform::Create(),
                                          OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
     OCIO_CHECK_NO_THROW(configEdit->addViewTransform(vt));
@@ -4059,7 +4086,11 @@ OCIO_ADD_TEST(Config, view_transforms)
 
 OCIO_ADD_TEST(Config, display_view)
 {
+    // Create a config with a display that has 2 kinds of views.
+
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->upgradeToLatestVersion();
+
     auto cs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
     cs->setName("scs");
     config->addColorSpace(cs);
@@ -4080,16 +4111,81 @@ OCIO_ADD_TEST(Config, display_view)
     OCIO_CHECK_NO_THROW(config->addViewTransform(vt));
 
     const std::string display{ "display" };
-    OCIO_CHECK_NO_THROW(config->addDisplay(display.c_str(), "view1", "scs", ""));
+    OCIO_CHECK_NO_THROW(config->addDisplayView(display.c_str(), "view1", "scs", ""));
 
     OCIO_CHECK_NO_THROW(config->sanityCheck());
 
-    OCIO_CHECK_NO_THROW(config->addDisplay(display.c_str(), "view2", "view_transform", "scs", ""));
+    OCIO_CHECK_NO_THROW(config->addDisplayView(display.c_str(), "view2", "view_transform", "scs",
+                                               "", "", ""));
     OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception,
                           "color space, 'scs', that is not a display-referred");
 
-    OCIO_CHECK_NO_THROW(config->addDisplay(display.c_str(), "view2", "view_transform", "dcs", ""));
+    OCIO_CHECK_NO_THROW(config->addDisplayView(display.c_str(), "view2", "view_transform", "dcs",
+                                               "", "", ""));
     OCIO_CHECK_NO_THROW(config->sanityCheck());
+
+    // Validate how the config is serialized.
+
+    std::stringstream os;
+    os << *config.get();
+    constexpr char expected[]{ R"(ocio_profile_version: 2
+
+search_path: ""
+strictparsing: true
+luma: [0.2126, 0.7152, 0.0722]
+
+roles:
+  {}
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: added_default_rule_colorspace}
+
+displays:
+  display:
+    - !<View> {name: view1, colorspace: scs}
+    - !<View> {name: view2, view_transform: view_transform, display_colorspace: dcs}
+
+active_displays: []
+active_views: []
+inactive_colorspaces: [added_default_rule_colorspace]
+
+view_transforms:
+  - !<ViewTransform>
+    name: display
+    from_display_reference: !<MatrixTransform> {}
+
+  - !<ViewTransform>
+    name: view_transform
+    from_reference: !<MatrixTransform> {}
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: dcs
+    family: ""
+    equalitygroup: ""
+    bitdepth: unknown
+    isdata: false
+    allocation: uniform
+
+colorspaces:
+  - !<ColorSpace>
+    name: added_default_rule_colorspace
+    family: ""
+    equalitygroup: ""
+    bitdepth: unknown
+    isdata: true
+    allocation: uniform
+
+  - !<ColorSpace>
+    name: scs
+    family: ""
+    equalitygroup: ""
+    bitdepth: unknown
+    isdata: false
+    allocation: uniform
+)" };
+
+    OCIO_CHECK_EQUAL(os.str(), expected);
 
     OCIO_CHECK_EQUAL(config->getNumDisplays(), 1);
     OCIO_CHECK_EQUAL(config->getNumViews(display.c_str()), 2);
@@ -4107,30 +4203,37 @@ OCIO_ADD_TEST(Config, display_view)
     const std::string v1{ configRead->getView("display", 0) };
     OCIO_CHECK_EQUAL(v1, "view1");
     OCIO_CHECK_EQUAL(std::string("scs"),
-                     configRead->getDisplayColorSpaceName("display", v1.c_str()));
+                     configRead->getDisplayViewColorSpaceName("display", v1.c_str()));
     OCIO_CHECK_EQUAL(std::string(""),
                      configRead->getDisplayViewTransformName("display", v1.c_str()));
     const std::string v2{ configRead->getView("display", 1) };
     OCIO_CHECK_EQUAL(v2, "view2");
     OCIO_CHECK_EQUAL(std::string("dcs"),
-                     configRead->getDisplayColorSpaceName("display", v2.c_str()));
+                     configRead->getDisplayViewColorSpaceName("display", v2.c_str()));
     OCIO_CHECK_EQUAL(std::string("view_transform"),
                      configRead->getDisplayViewTransformName("display", v2.c_str()));
 
-    // Using nullptr for any parameter does nothing.
-    OCIO_CHECK_NO_THROW(config->addDisplay(nullptr, "view1", "scs", ""));
-    OCIO_CHECK_NO_THROW(config->addDisplay(display.c_str(), nullptr, "scs", ""));
-    OCIO_CHECK_NO_THROW(config->addDisplay(display.c_str(), "view3", nullptr, ""));
-    OCIO_CHECK_NO_THROW(config->addDisplay(display.c_str(), "view4", "view_transform", nullptr, ""));
-    OCIO_CHECK_EQUAL(config->getNumDisplays(), 1);
-    OCIO_CHECK_EQUAL(config->getNumViews(display.c_str()), 2);
+    // Check some faulty calls related to displays & views.
 
-    OCIO_CHECK_THROW_WHAT(config->addDisplay("", "view1", "scs", ""), OCIO::Exception,
-                          "Can't add a (display, view) pair with empty display name");
-    OCIO_CHECK_THROW_WHAT(config->addDisplay(display.c_str(), "", "scs", ""), OCIO::Exception,
-                          "Can't add a (display, view) pair with empty view name");
-    OCIO_CHECK_THROW_WHAT(config->addDisplay(display.c_str(), "view1", "", ""), OCIO::Exception,
-                          "Can't add a (display, view) pair with empty color space name");
+    // Using nullptr or empty string for required parameters with throw.
+    OCIO_CHECK_THROW_WHAT(config->addDisplayView(nullptr, "view1", "scs", ""),
+                          OCIO::Exception, "a non-empty display name is needed");
+    OCIO_CHECK_THROW_WHAT(config->addDisplayView(display.c_str(), nullptr, "scs", ""),
+                          OCIO::Exception, "a non-empty view name is needed");
+    OCIO_CHECK_THROW_WHAT(config->addDisplayView(display.c_str(), "view3", nullptr, ""),
+                          OCIO::Exception, "a non-empty color space name is needed");
+    OCIO_CHECK_THROW_WHAT(config->addDisplayView(display.c_str(), "view4", "view_transform", nullptr,
+                                                 "", "", ""),
+                          OCIO::Exception, "a non-empty color space name is needed");
+    OCIO_CHECK_THROW_WHAT(config->addDisplayView("", "view1", "scs", ""),
+                          OCIO::Exception, "a non-empty display name is needed");
+    OCIO_CHECK_THROW_WHAT(config->addDisplayView(display.c_str(), "", "scs", ""),
+                          OCIO::Exception, "a non-empty view name is needed");
+    OCIO_CHECK_THROW_WHAT(config->addDisplayView(display.c_str(), "view3", "", ""),
+                          OCIO::Exception, "a non-empty color space name is needed");
+    OCIO_CHECK_THROW_WHAT(config->addDisplayView(display.c_str(), "view4", "view_transform", "",
+                                                 "", "", ""),
+                          OCIO::Exception, "a non-empty color space name is needed");
 }
 
 OCIO_ADD_TEST(Config, not_case_sensitive)
@@ -4202,6 +4305,11 @@ colorspaces:
     name: cs2
     allocation: uniform
     to_reference: !<ColorSpaceTransform> {src: SCENE_LINEAR, dst: raw}
+
+  - !<ColorSpace>
+    name: cs3
+    allocation: uniform
+    to_reference: !<ColorSpaceTransform> {src: SCENE_LINEAR, dst: raw, data_bypass: false}
 )" };
 
     std::istringstream is;
@@ -4223,22 +4331,38 @@ colorspaces:
     OCIO_CHECK_NO_THROW(processor = config->getProcessor("cs1", "cs2"));
     OCIO_CHECK_ASSERT(processor);
 
+    OCIO::ConstColorSpaceRcPtr cs2 = config->getColorSpace("cs2");
+    OCIO_REQUIRE_ASSERT(cs2);
+    auto tr2 = cs2->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE);
+    OCIO_REQUIRE_ASSERT(tr2);
+    auto cs2Tr = OCIO::DynamicPtrCast<const OCIO::ColorSpaceTransform>(tr2);
+    OCIO_REQUIRE_ASSERT(cs2Tr);
+    OCIO_CHECK_ASSERT(cs2Tr->getDataBypass());
+
+    OCIO::ConstColorSpaceRcPtr cs3 = config->getColorSpace("cs3");
+    OCIO_REQUIRE_ASSERT(cs3);
+    auto tr3 = cs3->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE);
+    OCIO_REQUIRE_ASSERT(tr3);
+    auto cs3Tr = OCIO::DynamicPtrCast<const OCIO::ColorSpaceTransform>(tr3);
+    OCIO_REQUIRE_ASSERT(cs3Tr);
+    OCIO_CHECK_ASSERT(!cs3Tr->getDataBypass());
+
     // Validate the (display, view) pair with looks.
 
-    OCIO::DisplayTransformRcPtr display = OCIO::DisplayTransform::Create();
-    display->setInputColorSpaceName("raw");
+    OCIO::DisplayViewTransformRcPtr display = OCIO::DisplayViewTransform::Create();
+    display->setSrc("raw");
     display->setDisplay("Disp1");
     display->setView("View1");
 
     OCIO_CHECK_NO_THROW(processor = config->getProcessor(display));
     OCIO_CHECK_ASSERT(processor);
 
-    display->setInputColorSpaceName("cs1");
+    display->setSrc("cs1");
 
     OCIO_CHECK_NO_THROW(processor = config->getProcessor(display));
     OCIO_CHECK_ASSERT(processor);
 
-    display->setInputColorSpaceName("cs2");
+    display->setSrc("cs2");
 
     OCIO_CHECK_NO_THROW(processor = config->getProcessor(display));
     OCIO_CHECK_ASSERT(processor);
@@ -4313,7 +4437,7 @@ OCIO_ADD_TEST(Config, add_remove_display)
 
     // Add a (display, view) pair.
 
-    OCIO_CHECK_NO_THROW(config->addDisplay("disp1", "view1", "raw", nullptr));
+    OCIO_CHECK_NO_THROW(config->addDisplayView("disp1", "view1", "raw", nullptr));
     OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 2);
     OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB"));
     OCIO_CHECK_EQUAL(std::string(config->getDisplay(1)), std::string("disp1"));
@@ -4321,7 +4445,7 @@ OCIO_ADD_TEST(Config, add_remove_display)
 
     // Remove a (display, view) pair.
 
-    OCIO_CHECK_NO_THROW(config->removeDisplay("disp1", "view1"));
+    OCIO_CHECK_NO_THROW(config->removeDisplayView("disp1", "view1"));
     OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 1);
     OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB"));
 }

@@ -41,7 +41,7 @@ bool StringVecToIntVec(std::vector<int> & intArray,
 
 //////////////////////////////////////////////////////////////////////////
 
-// read the next non empty line, and store it in 'line'
+// read the next non-empty line, and store it in 'line'
 // return 'true' on success
 
 bool nextline(std::istream &istream, std::string &line);
@@ -52,8 +52,7 @@ bool StrEqualsCaseIgnore(const std::string & a, const std::string & b);
 // If a ':' is in the string, split on it
 // Otherwise, assume a single string.
 // Also, strip whitespace from all parts.
-
-void SplitStringEnvStyle(StringUtils::StringVec & outputvec, const char * str);
+StringUtils::StringVec SplitStringEnvStyle(const std::string & str);
 
 // Join on ','
 std::string JoinStringEnvStyle(const StringUtils::StringVec & outputvec);

@@ -167,7 +167,7 @@ extern OCIOEXPORT void UnsetEnvVariable(const char * name);
 // The color configuration (:cpp:class:`Config`) is the main object for
 // interacting with this library. It encapsulates all of the information
 // necessary to use customized :cpp:class:`ColorSpaceTransform` and
-// :cpp:class:`DisplayTransform` operations.
+// :cpp:class:`DisplayViewTransform` operations.
 //
 // See the :ref:`user-guide` for more information on
 // selecting, creating, and working with custom color configurations.
@@ -495,41 +495,90 @@ public:
     // Where +/- prefixes are optionally allowed to denote forward/inverse
     // look specification. (And forward is assumed in the absence of either)
 
+    //!cpp:function:: Add shared view (or replace existing one with same name).
+    // Shared views are defined at config level and can be referenced by several
+    // displays. Either provide a view transform and a display color space or
+    // just a color space (and a null view transform).  Looks, rule and description
+    // are optional, they can be null or empty.
+    //
+    // Shared views using a view transform may use the token <USE_DISPLAY_NAME>
+    // for the color space (see :c:var:`OCIO_VIEW_USE_DISPLAY_NAME`).  In that
+    // case, when the view is referenced in a display, the display color space
+    // that is used will be the one matching the display name.  In other words,
+    // the view will be customized based on the display it is used in.
+    // :cpp:func:`Config::sanityCheck` will throw if the config does not contain
+    // the matching display color space.
+    //
+    // Will throw if view or colorSpaceName are null or empty.
+    void addSharedView(const char * view, const char * viewTransformName,
+                       const char * colorSpaceName, const char * looks,
+                       const char * ruleName, const char * description);
+    //!cpp:function:: Remove a shared view.  Will throw if the view does not exist.
+    void removeSharedView(const char * view);
+
     //!cpp:function::
     const char * getDefaultDisplay() const;
     //!cpp:function::
     int getNumDisplays() const;
-    //!cpp:function::
+    //!cpp:function:: Will return "" if the index is invalid.
     const char * getDisplay(int index) const;
 
     //!cpp:function::
     const char * getDefaultView(const char * display) const;
-    //!cpp:function::
+    //!cpp:function:: Return the number of views attached to the display including the number of
+    // shared views if any. Return 0 if display does not exist.
     int getNumViews(const char * display) const;
     //!cpp:function::
     const char * getView(const char * display, int index) const;
 
-    //!cpp:function:: Returns the view_transform attribute of the (display, view) pair.
+    //!cpp:function:: If the config has ViewingRules, get the number of active Views for this
+    // colorspace. (If there are no rules, it returns all of them.)
+    int getNumViews(const char * display, const char * colorspaceName) const;
+    //!cpp:function::
+    const char * getView(const char * display, const char * colorspaceName, int index) const;
+
+    //!cpp:function:: Returns the view_transform attribute of the (display, view) pair. View can
+    // be a shared view of the display. If display is null or empty, config shared views are used.
     const char * getDisplayViewTransformName(const char * display, const char * view) const;
     //!cpp:function:: Returns the colorspace attribute of the (display, view) pair.
     // (Note that this may be either a color space or a display color space.)
-    const char * getDisplayColorSpaceName(const char * display, const char * view) const;
+    const char * getDisplayViewColorSpaceName(const char * display, const char * view) const;
     //!cpp:function:: Returns the looks attribute of a (display, view) pair.
-    const char * getDisplayLooks(const char * display, const char * view) const;
+    const char * getDisplayViewLooks(const char * display, const char * view) const;
+    //!cpp:function:: Returns the rule attribute of a (display, view) pair.
+    const char * getDisplayViewRule(const char * display, const char * view) const noexcept;
+    //!cpp:function:: Returns the description attribute of a (display, view) pair.
+    const char * getDisplayViewDescription(const char * display, const char * view) const noexcept;
 
     //!cpp:function:: For the (display, view) pair, specify which color space and look to use.
     // If a look is not desired, then just pass a null or empty string.
-    void addDisplay(const char * display, const char * view,
-                    const char * colorSpaceName, const char * looks);
+    void addDisplayView(const char * display, const char * view,
+                        const char * colorSpaceName, const char * looks);
 
-    //!cpp:function:: For the (display, view) pair, specify a viewTransform + displayColorSpace
-    // to use.  (Looks work the same as above.)
-    void addDisplay(const char * display, const char * view, const char * viewTransform,
-                    const char * displayColorSpaceName, const char * looks);
+    //!cpp:function:: For the (display, view) pair, specify the color space or alternatively
+    // specify the view transform and display color space.  The looks, viewing rule, and
+    // description are optional.  Pass a null or empty string for any optional arguments.
+    // If the view already exists, it is replaced.
+    //
+    // Will throw if:
+    // * Display, view or colorSpace are null or empty.
+    // * Display already has a shared view with the same name.
+    void addDisplayView(const char * display, const char * view, const char * viewTransformName,
+                        const char * colorSpaceName, const char * looks,
+                        const char * ruleName, const char * description);
+
+    //!cpp:function:: Add a (reference to a) shared view to a display. The shared view must be
+    // part of the config. See :cpp:func:`Config::addSharedView`.
+    // This will throw if:
+    // * Display or view are null or empty.
+    // * Display already has a view (shared or not) with the same name.
+    void addDisplaySharedView(const char * display, const char * sharedView);
 
     //!cpp:function:: Remove the view and the display if no more views. It does not remove
-    // the associated color space.
-    void removeDisplay(const char * display, const char * view);
+    // the associated color space. If the view name is a shared view, it only removes the
+    // reference to the view from the display but the shared view, remains in the config.
+    // Will throw if the view does not exist.
+    void removeDisplayView(const char * display, const char * view);
 
     //!cpp:function::
     void clearDisplays();
@@ -557,6 +606,35 @@ public:
     void setActiveViews(const char * views);
     //!cpp:function::
     const char * getActiveViews() const;
+
+    //!cpp:function:: Get all displays in the config, ignoring the active_displays list.
+    int getNumDisplaysAll() const;
+    //!cpp:function::
+    const char * getDisplayAll(int index) const;
+
+    //!cpp:function:: Get either the shared or display-defined views for a display. The
+    // active_views list is ignored.  Passing a null or empty display (with type=VIEW_SHARED)
+    // returns the contents of the shared_views section of the config. Return 0 if display
+    // does not exist.
+    int getNumViews(ViewType type, const char * display) const;
+    //!cpp:function::
+    const char * getView(ViewType type, const char * display, int index) const;
+
+    ///////////////////////////////////////////////////////////////////////////
+    //!rst:: .. _cfgviewingrules_section:
+    // 
+    // Viewing Rules
+    // ^^^^^^^^^^^^^
+    //
+    // See :cpp:class:`ViewingRules`.
+
+    //!cpp:function:: Get read-only version of the viewing rules.
+    ConstViewingRulesRcPtr getViewingRules() const noexcept;
+
+    //!cpp:function:: Set viewing rules.
+    // .. note::
+    //    The argument is cloned.
+    void setViewingRules(ConstViewingRulesRcPtr viewingRules);
 
     ///////////////////////////////////////////////////////////////////////////
     //!rst:: .. _cfgluma_section:
@@ -681,31 +759,31 @@ public:
 
     //!cpp:function::
     ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
-                                        const ConstColorSpaceRcPtr & srcColorSpace,
-                                        const ConstColorSpaceRcPtr & dstColorSpace) const;
+                                     const ConstColorSpaceRcPtr & srcColorSpace,
+                                     const ConstColorSpaceRcPtr & dstColorSpace) const;
     //!cpp:function::
     ConstProcessorRcPtr getProcessor(const ConstColorSpaceRcPtr & srcColorSpace,
-                                        const ConstColorSpaceRcPtr & dstColorSpace) const;
+                                     const ConstColorSpaceRcPtr & dstColorSpace) const;
 
     //!cpp:function::
     // .. note::
     //    Names can be colorspace name, role name, or a combination of both.
-    ConstProcessorRcPtr getProcessor(const char * srcName,
-                                        const char * dstName) const;
+    ConstProcessorRcPtr getProcessor(const char * srcColorSpaceName,
+                                     const char * dstColorSpaceName) const;
     //!cpp:function::
     ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
-                                        const char * srcName,
-                                        const char * dstName) const;
+                                     const char * srcColorSpaceName,
+                                     const char * dstColorSpaceName) const;
 
-    //!rst:: Get the processor to apply a DisplayTransform for a display and view.  Refer to the
+    //!rst:: Get the processor to apply a DisplayViewTransform for a display and view.  Refer to the
     // Display/View Registration section above for more info on the display and view arguments.
 
     //!cpp:function::
-    ConstProcessorRcPtr getProcessor(const char * inputColorSpaceName,
+    ConstProcessorRcPtr getProcessor(const char * srcColorSpaceName,
                                      const char * display, const char * view) const;
     //!cpp:function::
     ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
-                                     const char * inputColorSpaceName,
+                                     const char * srcColorSpaceName,
                                      const char * display, const char * view) const;
 
     //!rst:: Get the processor for the specified transform.
@@ -714,14 +792,14 @@ public:
     // functionality (such as to apply an individual LUT file).
 
     //!cpp:function::
-    ConstProcessorRcPtr getProcessor(const ConstTransformRcPtr& transform) const;
+    ConstProcessorRcPtr getProcessor(const ConstTransformRcPtr & transform) const;
     //!cpp:function::
-    ConstProcessorRcPtr getProcessor(const ConstTransformRcPtr& transform,
-                                        TransformDirection direction) const;
+    ConstProcessorRcPtr getProcessor(const ConstTransformRcPtr & transform,
+                                     TransformDirection direction) const;
     //!cpp:function::
     ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
-                                        const ConstTransformRcPtr& transform,
-                                        TransformDirection direction) const;
+                                     const ConstTransformRcPtr & transform,
+                                     TransformDirection direction) const;
 
     //!rst: Get a processor to convert between color spaces in two separate configs.
 
@@ -729,40 +807,40 @@ public:
     // is scene-referred) or the role cie_xyz_d65_interchange (when srcName is display-referred)
     // defined.  An exception is thrown if that is not the case.
     static ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & srcConfig,
-                                            const char * srcName,
+                                            const char * srcColorSpaceName,
                                             const ConstConfigRcPtr & dstConfig,
-                                            const char * dstName);
+                                            const char * dstColorSpaceName);
     //!cpp:function::
     static ConstProcessorRcPtr GetProcessor(const ConstContextRcPtr & srcContext, 
                                             const ConstConfigRcPtr & srcConfig,
-                                            const char * srcName,
+                                            const char * srcColorSpaceName,
                                             const ConstContextRcPtr & dstContext,
                                             const ConstConfigRcPtr & dstConfig,
-                                            const char * dstName);
+                                            const char * dstColorSpaceName);
 
     //!cpp:function:: The srcInterchangeName and dstInterchangeName must refer to a pair of
     // color spaces in the two configs that are the same.  A role name may also be used.
     static ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & srcConfig,
-                                            const char * srcName,
+                                            const char * srcColorSpaceName,
                                             const char * srcInterchangeName,
                                             const ConstConfigRcPtr & dstConfig,
-                                            const char * dstName,
+                                            const char * dstColorSpaceName,
                                             const char * dstInterchangeName);
     //!cpp:function::
     static ConstProcessorRcPtr GetProcessor(const ConstContextRcPtr & srcContext,
                                             const ConstConfigRcPtr & srcConfig,
-                                            const char * srcName,
+                                            const char * srcColorSpaceName,
                                             const char * srcInterchangeName,
                                             const ConstContextRcPtr & dstContext,
                                             const ConstConfigRcPtr & dstConfig,
-                                            const char * dstName,
+                                            const char * dstColorSpaceName,
                                             const char * dstInterchangeName);
 
     //!cpp:function::
     Config(const Config &) = delete;
     //!cpp:function::
     Config& operator= (const Config &) = delete;
-    //!cpp:function::
+    //!cpp:function:: Do not use (needed only for pybind11).
     ~Config();
 
 private:
@@ -777,6 +855,8 @@ private:
 };
 
 extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
+
+
 
 ///////////////////////////////////////////////////////////////////////////
 //!rst:: .. _filerules_section:
@@ -882,7 +962,7 @@ public:
     size_t getNumCustomKeys(size_t ruleIndex) const;
     //!cpp:function:: Get name of key.
     const char * getCustomKeyName(size_t ruleIndex, size_t key) const;
-    //!cpp:function:: Get name of value.
+    //!cpp:function:: Get value for the key.
     const char * getCustomKeyValue(size_t ruleIndex, size_t key) const;
     //!cpp:function:: Adds a key/value or replace value if key exists. Setting a NULL or an
     // empty value will erase the key.
@@ -923,7 +1003,7 @@ public:
     FileRules(const FileRules &) = delete;
     //!cpp:function::
     FileRules & operator= (const FileRules &) = delete;
-    //!cpp:function::
+    //!cpp:function:: Do not use (needed only for pybind11).
     virtual ~FileRules();
 
 private:
@@ -938,6 +1018,121 @@ private:
     Impl * getImpl() { return m_impl; }
     const Impl * getImpl() const { return m_impl; }
 };
+
+extern OCIOEXPORT std::ostream & operator<< (std::ostream &, const FileRules &);
+
+
+
+
+///////////////////////////////////////////////////////////////////////////
+//!rst:: .. _viewingrules_section:
+//
+// ViewingRules
+// ************
+// Viewing Rules allow config authors to filter the list of views an application should offer
+// based on the color space of an image.   For example, a config may define a large number of
+// views but not all of them may be appropriate for use with all color spaces.  E.g., some views
+// may be intended for use with scene-linear color space encodings and others with video color
+// space encodings.
+// 
+// Each rule has a name key for applications to refer to the rule.  Name values must be unique
+// (using case insensitive comparison). Viewing Rules may also have the following keys:
+//
+// * colorspaces: Either a single colorspace name or a list of names.
+//
+// * encodings: One or more strings to be found in the colorspace's encoding attribute.
+//   Either this attribute or colorspaces must be present, but not both.
+//
+// * custom : Allows arbitrary key / value string pairs, similar to FileRules.
+//
+// Getters and setters are using the rule position, they will throw if the position is not
+// valid.
+//
+
+//!cpp:class::
+class ViewingRules
+{
+public:
+    //!cpp:function:: Creates ViewingRules for a Config.
+    static ViewingRulesRcPtr Create();
+
+    //!cpp:function:: The method clones the content decoupling the two instances.
+    ViewingRulesRcPtr createEditableCopy() const;
+
+    //!cpp:function::
+    size_t getNumEntries() const noexcept;
+
+    //!cpp:function:: Get the index from the rule name. Will throw if there is no rule named
+    // ruleName.
+    size_t getIndexForRule(const char * ruleName) const;
+
+    //!cpp:function:: Get name of the rule. Will throw if ruleIndex is invalid.
+    const char * getName(size_t ruleIndex) const;
+
+    //!cpp:function:: Get number of colorspaces. Will throw if ruleIndex is invalid.
+    size_t getNumColorSpaces(size_t ruleIndex) const;
+    //!cpp:function:: Get colorspace name. Will throw if ruleIndex or colorSpaceIndex is invalid.
+    const char * getColorSpace(size_t ruleIndex, size_t colorSpaceIndex) const;
+    //!cpp:function:: Add colorspace name. Will throw if:
+    // * RuleIndex is invalid.
+    // * :cpp:func:`ViewingRules::getNumEncodings` is not 0.
+    void addColorSpace(size_t ruleIndex, const char * colorSpace);
+    //!cpp:function:: Remove colorspace. Will throw if ruleIndex or colorSpaceIndex is invalid.
+    void removeColorSpace(size_t ruleIndex, size_t colorSpaceIndex);
+
+    //!cpp:function:: Get number of encodings. Will throw if ruleIndex is invalid.
+    size_t getNumEncodings(size_t ruleIndex) const;
+    //!cpp:function:: Get encoding name. Will throw if ruleIndex or encodingIndex is invalid.
+    const char * getEncoding(size_t ruleIndex, size_t encodingIndex) const;
+    //!cpp:function:: Add encoding name. Will throw if:
+    // * RuleIndex is invalid.
+    // * :cpp:func:`ViewingRules::getNumColorSpaces` is not 0.
+    void addEncoding(size_t ruleIndex, const char * encoding);
+    //!cpp:function:: Remove encoding. Will throw if ruleIndex or encodingIndex is invalid.
+    void removeEncoding(size_t ruleIndex, size_t encodingIndex);
+
+    //!cpp:function:: Get number of key/value pairs. Will throw if ruleIndex is invalid.
+    size_t getNumCustomKeys(size_t ruleIndex) const;
+    //!cpp:function:: Get name of key. Will throw if ruleIndex or keyIndex is invalid.
+    const char * getCustomKeyName(size_t ruleIndex, size_t keyIndex) const;
+    //!cpp:function:: Get value for the key. Will throw if ruleIndex or keyIndex is invalid.
+    const char * getCustomKeyValue(size_t ruleIndex, size_t keyIndex) const;
+    //!cpp:function:: Adds a key/value or replace value if key exists. Setting a NULL or an
+    // empty value will erase the key. Will throw if ruleIndex is invalid.
+    void setCustomKey(size_t ruleIndex, const char * key, const char * value);
+
+    //!cpp:function:: Insert a rule at a given ruleIndex. Rule currently at ruleIndex will be
+    // pushed to index: ruleIndex + 1. If ruleIndex is :cpp:func:`ViewingRules::getNumEntries`
+    // new rule will be added at the end. Will throw if:
+    // * RuleIndex is invalid (must be less than or equal to
+    //   cpp:func:`ViewingRules::getNumEntries`).
+    // * RuleName already exists.
+    void insertRule(size_t ruleIndex, const char * ruleName);
+
+    //!cpp:function:: Remove a rule. Throws if ruleIndex is not valid.
+    void removeRule(size_t ruleIndex);
+
+    ViewingRules(const ViewingRules &) = delete;
+    ViewingRules & operator= (const ViewingRules &) = delete;
+    //!cpp:function:: Do not use (needed only for pybind11).
+    virtual ~ViewingRules();
+
+private:
+    ViewingRules();
+
+    static void deleter(ViewingRules* c);
+
+    friend class Config;
+
+    class Impl;
+    Impl * m_impl;
+    Impl * getImpl() { return m_impl; }
+    const Impl * getImpl() const { return m_impl; }
+};
+
+extern OCIOEXPORT std::ostream & operator<< (std::ostream &, const ViewingRules &);
+
+
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1004,7 +1199,7 @@ public:
     void setBitDepth(BitDepth bitDepth);
 
     //!cpp:function:: A display color space will use the display-referred reference space.
-    ReferenceSpaceType getReferenceSpaceType() const;
+    ReferenceSpaceType getReferenceSpaceType() const noexcept;
 
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
@@ -1040,21 +1235,43 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
+    // Encodings
+    // ^^^^^^^^^
+    // It is sometimes useful for applications to group color spaces based on how the color values
+    // are digitally encoded.  For example, images in scene-linear, logarithmic, video, and data
+    // color spaces could have different default views.  Unlike the Family and EqualityGroup
+    // attributes of a color space, the list of Encodings is predefined in the OCIO documentation
+    // (rather than being config-specific) to make it easier for applications to utilize.
+    //
+    // Here is an example config entry that could appear under a ColorSpace:
+    // encoding: scene-linear
+    //
+    // Encoding strings are not case-sensitive. Although users may add their own encodings, the
+    // strings will typically come from a fixed set listed in the documentation (similar to roles).
+
+    //!cpp:function::
+    const char * getEncoding() const noexcept;
+    //!cpp:function::
+    void setEncoding(const char * encoding);
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    //!rst::
     // Data
     // ^^^^
-    // ColorSpaces that are data are treated a bit special. Basically, any
-    // colorspace transforms you try to apply to them are ignored. (Think
-    // of applying a gamut mapping transform to an ID pass). Also, the
-    // :cpp:class:`DisplayTransform` process obeys special 'data min' and
-    // 'data max' args.
+    // ColorSpaces that are data are treated a bit special. Basically, any colorspace transforms
+    // you try to apply to them are ignored. (Think of applying a gamut mapping transform to an
+    // ID pass). However, the setDataBypass method on ColorSpaceTransform and DisplayViewTransform
+    // allow applications to process data when necessary.  (Think of sending mattes to an HDR
+    // monitor.)
     //
     // This is traditionally used for pixel data that represents non-color
     // pixel data, such as normals, point positions, ID information, etc.
 
     //!cpp:function::
-    bool isData() const;
+    bool isData() const noexcept;
     //!cpp:function::
-    void setIsData(bool isData);
+    void setIsData(bool isData) noexcept;
 
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
@@ -1065,9 +1282,9 @@ public:
     // allocation to maximize bit efficiency.
 
     //!cpp:function::
-    Allocation getAllocation() const;
+    Allocation getAllocation() const noexcept;
     //!cpp:function::
-    void setAllocation(Allocation allocation);
+    void setAllocation(Allocation allocation) noexcept;
 
     //!rst::
     // Specify the optional variable values to configure the allocation.
@@ -1108,7 +1325,7 @@ public:
     ColorSpace(const ColorSpace &) = delete;
     //!cpp:function::
     ColorSpace& operator= (const ColorSpace &) = delete;
-    //!cpp:function::
+    //!cpp:function:: Do not use (needed only for pybind11).
     ~ColorSpace();
 
 private:
@@ -1294,6 +1511,7 @@ private:
 };
 
 extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Look&);
+
 
 ///////////////////////////////////////////////////////////////////////////
 //!rst:: .. _view_transform_section:

@@ -77,8 +77,8 @@ template void MatrixOpData::Offsets::setRGBA(const double * v4);
 
 bool MatrixOpData::Offsets::isNotNull() const
 {
-    static constexpr double zero4[] { 0., 0., 0., 0. };
-    return (memcmp(m_values, zero4, 4 * sizeof(double)) != 0);
+    return m_values[0] != 0. || m_values[1] != 0. ||
+           m_values[2] != 0. || m_values[3] != 0.;
 }
 
 void MatrixOpData::Offsets::scale(double s)
