@@ -100,9 +100,9 @@ if(OCIO_BUILD_GPU_TESTS OR OCIO_BUILD_APPS)
     # Link to libOpenGL.so if the GPU vendor is NVidia
     # Nvidia's EGL implementation will be used
     if(${OCIO_IS_NVIDIA})
-        find_package(OpenGL REQUIRED COMPONENTS OpenGL GLU)
-        if(NOT OpenGL_OpenGL_FOUND AND NOT OPENGL_GLU_FOUND)
-            message(WARNING "OpenGL or GLU not found. GPU rendering disabled.")
+        find_package(OpenGL REQUIRED COMPONENTS OpenGL)
+        if(NOT OpenGL_OpenGL_FOUND)
+            message(WARNING "OpenGL not found. GPU rendering disabled.")
             set(OCIO_GL_ENABLED OFF)
         endif()
     else() # Otherwise, the Linux system might not support GLVND
@@ -126,7 +126,7 @@ if(OCIO_BUILD_GPU_TESTS OR OCIO_BUILD_APPS)
         message(WARNING "GLUT not found.")
         set(OCIO_GL_ENABLED OFF)
     endif()
-
+    set(OCIO_EGL_HEADLESS OFF)
     if(${OCIO_USE_HEADLESS})
         if(CMAKE_SYSTEM_NAME STREQUAL Linux)
             set(OCIO_EGL_HEADLESS ON)
