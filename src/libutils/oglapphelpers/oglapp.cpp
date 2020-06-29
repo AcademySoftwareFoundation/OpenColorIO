@@ -20,7 +20,6 @@
 
 #include <GL/glew.h>
 #include <GL/gl.h>
-#include <GL/glext.h>
 #include <GL/glut.h>
 
 #endif
@@ -236,12 +235,9 @@ void OglApp::setupCommon()
 {
 
 #ifndef __APPLE__
-    glewExperimental=true;
-    GLenum err=glewInit();
-    if(err!=GLEW_OK) {
-        std::cout << "glewInit failed: " << glewGetErrorString(err) << std::endl;
-        throw Exception("GLEW initialization failed.");
-    }
+    glewInit();
+    // TO DO: Find out why glewInit() != GLEW_OK
+
     if (!glewIsSupported("GL_VERSION_2_0"))
     {
         throw Exception("OpenGL 2.0 not supported.");

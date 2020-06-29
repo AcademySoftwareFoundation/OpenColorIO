@@ -38,22 +38,53 @@ target_include_directories(oglapphelpers
         ${GLUT_INCLUDE_DIR}
 )
 
-target_link_libraries(oglapphelpers
-    PRIVATE
-        OpenColorIO
-        ${OPENGL_LIBRARIES}
-        ${GLEW_LIBRARIES}
-        ${GLUT_LIBRARIES}
-)
+
+if(OCIO_IS_NVIDIA)
+    if(OCIO_EGL_HEADLESS)
+        target_link_libraries(oglapphelpers
+            PRIVATE
+                OpenColorIO
+                OpenGL::OpenGL
+                OpenGL::GLU
+                ${GLEW_LIBRARIES}
+                ${GLUT_LIBRARIES}
+                OpenGL::EGL
+            )
+    else()
+        target_link_libraries(oglapphelpers
+            PRIVATE
+                OpenColorIO
+                OpenGL::OpenGL
+                OpenGL::GLU
+                ${GLEW_LIBRARIES}
+                ${GLUT_LIBRARIES}
+           )
+   endif()
+else()
+    if(OCIO_EGL_HEADLESS)
+        target_link_libraries(oglapphelpers
+            PRIVATE
+                OpenColorIO
+                ${OPENGL_LIBRARIES}
+                ${GLEW_LIBRARIES}
+                ${GLUT_LIBRARIES}
+                OpenGL::EGL
+            )
+    else()
+    target_link_libraries(oglapphelpers
+        PRIVATE
+            OpenColorIO
+            ${OPENGL_LIBRARIES}
+            ${GLEW_LIBRARIES}
+            ${GLUT_LIBRARIES}
+        )
+    endif()
+endif()
 
 if(OCIO_EGL_HEADLESS)
     target_include_directories(oglapphelpers
         PRIVATE
             ${OPENGL_EGL_INCLUDE_DIRS}
-    )
-    target_link_libraries(oglapphelpers
-        PRIVATE
-            OpenGL::EGL
     )
 endif()
 
