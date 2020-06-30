@@ -421,7 +421,7 @@ int main(int argc, const char **argv)
 
         try
         {
-            oglApp = OCIO::getOglAppPtr("ocioconvert", 256, 20);
+            oglApp = OCIO::OglApp::CreateOglApp("ocioconvert", 256, 20);
         }
         catch (const OCIO::Exception & e)
         {
