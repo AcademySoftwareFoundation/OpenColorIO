@@ -101,7 +101,7 @@ if(OCIO_BUILD_GPU_TESTS OR OCIO_BUILD_APPS)
     # Nvidia's EGL implementation will be used
     if(${OCIO_IS_NVIDIA})
         find_package(OpenGL REQUIRED COMPONENTS OpenGL)
-        if(NOT OpenGL_OpenGL_FOUND)
+        if(NOT OpenGL_OpenGL_FOUND AND NOT OPENGL_GLU_FOUND)
             message(WARNING "OpenGL not found. GPU rendering disabled.")
             set(OCIO_GL_ENABLED OFF)
         endif()

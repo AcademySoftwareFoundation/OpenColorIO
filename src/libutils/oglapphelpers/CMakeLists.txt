@@ -49,6 +49,7 @@ if(${OCIO_IS_NVIDIA})
             PRIVATE
                 OpenColorIO
                 OpenGL::OpenGL
+                OpenGL::GLU
                 ${GLEW_LIBRARIES}
                 ${GLUT_LIBRARIES}
                 OpenGL::EGL
@@ -58,6 +59,7 @@ if(${OCIO_IS_NVIDIA})
             PRIVATE
                 OpenColorIO
                 OpenGL::OpenGL
+                OpenGL::GLU
                 ${GLEW_LIBRARIES}
                 ${GLUT_LIBRARIES}
            )
