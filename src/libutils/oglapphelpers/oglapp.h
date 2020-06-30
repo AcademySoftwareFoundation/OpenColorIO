@@ -120,7 +120,7 @@ public:
 
     // Return a pointer of either ScreenApp or HeadlessApp depending on the
     // OCIO_HEADLESS_ENABLED preprocessor
-    static OglAppRcPtr createOglAppPtr(const char * winTitle, int winWidth, int winHeight);
+    static OglAppRcPtr CreateOglApp(const char * winTitle, int winWidth, int winHeight);
 
 protected:
     // Window or output image size (set using reshape).

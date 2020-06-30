@@ -501,7 +501,7 @@ int main(int, char **)
     OCIO::OglAppRcPtr app;
     try
     {
-        app = OCIO::getOglAppPtr("GPU tests", 10, 10);
+        app = OCIO::OglApp::CreateOglApp("GPU tests", 10, 10);
     }
     catch (const OCIO::Exception & e)
     {
