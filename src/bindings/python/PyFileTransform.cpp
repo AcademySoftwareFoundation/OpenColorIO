@@ -56,7 +56,8 @@ void bindPyFileTransform(py::module & m)
         .def("setInterpolation", &FileTransform::setInterpolation, "interpolation"_a);
 
     defStr(cls);
-py::class_<FormatIterator>(cls, "FormatIterator")
+
+    py::class_<FormatIterator>(cls, "FormatIterator")
         .def("__len__", [](FormatIterator & it) { return FileTransform::getNumFormats(); })
         .def("__getitem__", [](FormatIterator & it, int i) 
             { 
