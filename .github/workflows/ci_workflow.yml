@@ -88,6 +88,9 @@ jobs:
         run: |
           mkdir _install
           mkdir _build
+      - name: Print GPU info
+        run: |
+          nvidia-smi
       - name: Unset DISPLAY
         run: |
           unset DISPLAY
