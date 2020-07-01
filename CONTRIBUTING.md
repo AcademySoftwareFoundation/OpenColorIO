@@ -84,12 +84,12 @@ can be merged.
 * If you are an individual writing the code on your own time and
   you're SURE you are the sole owner of any intellectual property you
   contribute, you can
-  [sign the CLA as an individual contributor](https://github.com/communitybridge/easycla/blob/master/docs/Sign-a-CLA-as-an-Individual-Contributor-to-GitHub.md).
+  [sign the CLA as an individual contributor](https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla/contributors/sign-a-cla-as-an-individual-contributor-to-github).
 
 * If you are writing the code as part of your job, or if there is any
   possibility that your employers might think they own any
   intellectual property you create, then you should use the 
-  [Corporate Contributor Licence Agreement](https://github.com/communitybridge/easycla/blob/master/docs/Contribute-to-a-GitHub-Company-Project.md).
+  [Corporate Contributor Licence Agreement](https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla/contributors/contribute-to-a-github-company-project).
 
 The OCIO CLA's are the standard forms used by Linux Foundation projects and
 [recommended by the ASWF TAC](https://github.com/AcademySoftwareFoundation/tac/blob/master/process/contributing.md#contributor-license-agreement-cla).

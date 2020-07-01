@@ -24,7 +24,7 @@ void bindPyTransform(py::module & m)
     bindPyBuiltinTransform(m);
     bindPyCDLTransform(m);
     bindPyColorSpaceTransform(m);
-    bindPyDisplayTransform(m);
+    bindPyDisplayViewTransform(m);
     bindPyExponentTransform(m);
     bindPyExponentWithLinearTransform(m);
     bindPyExposureContrastTransform(m);
