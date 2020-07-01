@@ -111,9 +111,9 @@ class ExponentTransformTest(unittest.TestCase):
 
         # With keywords in their proper order.
         exp_tr = OCIO.ExponentTransform(
-            vec4=self.TEST_VALUES,
+            value=self.TEST_VALUES,
             negativeStyle=self.TEST_NEGATIVE_STYLE,
-            dir=self.TEST_DIRECTION)
+            direction=self.TEST_DIRECTION)
 
         self.assertEqual(exp_tr.getValue(), self.TEST_VALUES)
         self.assertEqual(exp_tr.getNegativeStyle(), self.TEST_NEGATIVE_STYLE)
@@ -122,8 +122,8 @@ class ExponentTransformTest(unittest.TestCase):
         # With keywords not in their proper order.
         exp_tr2 = OCIO.ExponentTransform(
             negativeStyle=self.TEST_NEGATIVE_STYLE,
-            dir=self.TEST_DIRECTION,
-            vec4=self.TEST_VALUES)
+            direction=self.TEST_DIRECTION,
+            value=self.TEST_VALUES)
 
         self.assertEqual(exp_tr2.getValue(), self.TEST_VALUES)
         self.assertEqual(exp_tr2.getNegativeStyle(), self.TEST_NEGATIVE_STYLE)
@@ -151,6 +151,3 @@ class ExponentTransformTest(unittest.TestCase):
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
                 exp_tr = OCIO.ExponentTransform(invalid)
-
-# TODO
-# Constructor parameter is vec4?

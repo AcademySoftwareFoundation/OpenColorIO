@@ -18,7 +18,7 @@ class ColorSpaceTransformTest(unittest.TestCase):
     def tearDown(self):
         self.cs_tr = None
 
-    def test_colorspace_src(self):
+    def test_src(self):
         """
         Test the setSrc() and getSrc() methods.
         """
@@ -35,7 +35,7 @@ class ColorSpaceTransformTest(unittest.TestCase):
             with self.assertRaises(TypeError):
                 self.cs_tr.setSrc(invalid)
 
-    def test_colorspace_dst(self):
+    def test_dst(self):
         """
         Test the setDst() and getDst() methods.
         """

@@ -89,7 +89,7 @@ class AllocationTransformTest(unittest.TestCase):
         # With keywords in their proper order.
         allo_tr = OCIO.AllocationTransform(allocation=self.TEST_ALLOCATION,
                                            vars=self.TEST_VARS,
-                                           dir=self.TEST_DIRECTION)
+                                           direction=self.TEST_DIRECTION)
 
         self.assertEqual(allo_tr.getAllocation(), self.TEST_ALLOCATION)
         for i, var in enumerate(allo_tr.getVars()):
@@ -97,7 +97,7 @@ class AllocationTransformTest(unittest.TestCase):
         self.assertEqual(allo_tr.getDirection(), self.TEST_DIRECTION)
 
         # With keywords not in their proper order.
-        allo_tr2 = OCIO.AllocationTransform(dir=self.TEST_DIRECTION,
+        allo_tr2 = OCIO.AllocationTransform(direction=self.TEST_DIRECTION,
                                             allocation=self.TEST_ALLOCATION,
                                             vars=self.TEST_VARS)
 

@@ -89,14 +89,14 @@ class LogTransformTest(unittest.TestCase):
         # With keywords in their proper order.
         log_tr = OCIO.LogTransform(
             base=self.TEST_BASE,
-            dir=self.TEST_DIRECTION)
+            direction=self.TEST_DIRECTION)
 
         self.assertEqual(log_tr.getBase(), self.TEST_BASE)
         self.assertEqual(log_tr.getDirection(), self.TEST_DIRECTION)
 
         # With keywords not in their proper order.
         log_tr2 = OCIO.LogTransform(
-            dir=self.TEST_DIRECTION,
+            direction=self.TEST_DIRECTION,
             base=self.TEST_BASE)
 
         self.assertEqual(log_tr2.getBase(), self.TEST_BASE)
