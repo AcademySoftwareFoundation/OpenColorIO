@@ -10,9 +10,9 @@ void bindPyDisplayViewTransform(py::module & m)
 {
     DisplayViewTransformRcPtr DEFAULT = DisplayViewTransform::Create();
 
-    py::class_<DisplayViewTransform, 
-               DisplayViewTransformRcPtr /* holder */, 
-               Transform /* base */>(m, "DisplayViewTransform")
+    auto cls = py::class_<DisplayViewTransform, 
+                          DisplayViewTransformRcPtr /* holder */, 
+                          Transform /* base */>(m, "DisplayViewTransform")
         .def(py::init(&DisplayViewTransform::Create))
         .def(py::init([](const std::string & src,
                          const std::string & display,
@@ -36,7 +36,7 @@ void bindPyDisplayViewTransform(py::module & m)
              "view"_a = DEFAULT->getView(),
              "looksBypass"_a = DEFAULT->getLooksBypass(),
              "dataBypass"_a = DEFAULT->getDataBypass(),
-             "dir"_a = DEFAULT->getDirection())
+             "direction"_a = DEFAULT->getDirection())
 
         .def("getSrc", &DisplayViewTransform::getSrc)
         .def("setSrc", &DisplayViewTransform::setSrc, "src"_a)
@@ -48,6 +48,8 @@ void bindPyDisplayViewTransform(py::module & m)
         .def("setLooksBypass", &DisplayViewTransform::setLooksBypass, "looksBypass"_a)
         .def("getDataBypass", &DisplayViewTransform::getDataBypass)
         .def("setDataBypass", &DisplayViewTransform::setDataBypass, "dataBypass"_a);
+
+    defStr(cls);
 }
 
 } // namespace OCIO_NAMESPACE

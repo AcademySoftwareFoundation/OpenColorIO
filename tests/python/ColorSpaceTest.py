@@ -178,8 +178,7 @@ class ColorSpaceTest(unittest.TestCase):
                               description='This is a test colourspace!',
                               equalityGroup='My_Equality',
                               encoding='scene-linear',
-                              bitDepth=OCIO.BIT_DEPTH_F32,
-                              )
+                              bitDepth=OCIO.BIT_DEPTH_F32)
 
         self.assertEqual(cs2.getName(), 'test')
         self.assertEqual(cs2.getFamily(), 'ocio family')
