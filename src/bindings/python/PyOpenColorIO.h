@@ -35,6 +35,7 @@ void bindPyBaker(py::module & m);
 void bindPyImageDesc(py::module & m);
 void bindPyGpuShaderCreator(py::module & m);
 void bindPyContext(py::module & m);
+void bindPyViewingRules(py::module & m);
 
 } // namespace OCIO_NAMESPACE
 
@@ -65,9 +66,9 @@ struct polymorphic_type_hook<OCIO::Transform> {
             {
                 type = &typeid(OCIO::ColorSpaceTransform);
             }
-            else if(dynamic_cast<const OCIO::DisplayTransform*>(src))
+            else if(dynamic_cast<const OCIO::DisplayViewTransform*>(src))
             {
-                type = &typeid(OCIO::DisplayTransform);
+                type = &typeid(OCIO::DisplayViewTransform);
             }
             else if(dynamic_cast<const OCIO::ExponentTransform*>(src))
             {

@@ -79,7 +79,7 @@ const LookParseResult::Options & LookParseResult::parse(const std::string & look
         LookParseResult::Tokens tokens;
 
         vec.clear();
-        SplitStringEnvStyle(vec, options[optionsindex].c_str());
+        vec = SplitStringEnvStyle(options[optionsindex]);
         for(unsigned int i=0; i<vec.size(); ++i)
         {
             LookParseResult::Token t;

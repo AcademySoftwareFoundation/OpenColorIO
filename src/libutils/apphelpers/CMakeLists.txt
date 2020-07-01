@@ -6,6 +6,7 @@ set(SOURCES
     ColorSpaceHelpers.cpp
     DisplayViewHelpers.cpp
     MixingHelpers.cpp
+    ViewingPipeline.cpp
 )
 
 set(INCLUDES
@@ -13,6 +14,7 @@ set(INCLUDES
     ColorSpaceHelpers.h
     DisplayViewHelpers.h
     MixingHelpers.h
+    ViewingPipeline.h
 )
 
 # Some include files are private to the library.

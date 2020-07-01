@@ -5,12 +5,12 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Categories.h"
+#include "TokensManager.h"
 
 namespace OCIO_NAMESPACE
 {
 
-class ViewTransform::Impl : public CategoriesManager
+class ViewTransform::Impl
 {
 public:
     std::string m_name;
@@ -21,10 +21,11 @@ public:
     TransformRcPtr m_toRefTransform;
     TransformRcPtr m_fromRefTransform;
 
+    TokensManager m_categories;
+
     Impl() = delete;
     explicit Impl(ReferenceSpaceType referenceSpace)
-        : CategoriesManager()
-        , m_referenceSpaceType(referenceSpace)
+        : m_referenceSpaceType(referenceSpace)
     {
     }
 
@@ -35,9 +36,6 @@ public:
     {
         if (this != &rhs)
         {
-            *dynamic_cast<CategoriesManager*>(this)
-                = *dynamic_cast<const CategoriesManager*>(&rhs);
- 
             m_name        = rhs.m_name;
             m_family      = rhs.m_family;
             m_description = rhs.m_description;
@@ -50,6 +48,8 @@ public:
             m_fromRefTransform = rhs.m_fromRefTransform ?
                                  rhs.m_fromRefTransform->createEditableCopy() :
                                  rhs.m_fromRefTransform;
+
+            m_categories = rhs.m_categories;
         }
         return *this;
     }
@@ -116,31 +116,31 @@ void ViewTransform::setDescription(const char * description)
 
 bool ViewTransform::hasCategory(const char * category) const
 {
-    return getImpl()->hasCategory(category);
+    return getImpl()->m_categories.hasToken(category);
 }
 
 void ViewTransform::addCategory(const char * category)
 {
-    getImpl()->addCategory(category);
+    getImpl()->m_categories.addToken(category);
 }
 void ViewTransform::removeCategory(const char * category)
 {
-    getImpl()->removeCategory(category);
+    getImpl()->m_categories.removeToken(category);
 }
 
 int ViewTransform::getNumCategories() const
 {
-    return getImpl()->getNumCategories();
+    return getImpl()->m_categories.getNumTokens();
 }
 
 const char * ViewTransform::getCategory(int index) const
 {
-    return getImpl()->getCategory(index);
+    return getImpl()->m_categories.getToken(index);
 }
 
 void ViewTransform::clearCategories()
 {
-    getImpl()->clearCategories();
+    getImpl()->m_categories.clearTokens();
 }
 
 

@@ -22,26 +22,24 @@ void ColorSpaceTransform::deleter(ColorSpaceTransform* t)
 class ColorSpaceTransform::Impl
 {
 public:
-    TransformDirection m_dir;
+    TransformDirection m_dir{ TRANSFORM_DIR_FORWARD  };
     std::string m_src;
     std::string m_dst;
+    bool m_dataBypass{ true };
 
-    Impl() :
-        m_dir(TRANSFORM_DIR_FORWARD)
-    { }
-
+    Impl() = default;
     Impl(const Impl &) = delete;
 
-    ~Impl()
-    { }
+    ~Impl() = default;
 
     Impl& operator= (const Impl & rhs)
     {
         if (this != &rhs)
         {
-            m_dir = rhs.m_dir;
-            m_src = rhs.m_src;
-            m_dst = rhs.m_dst;
+            m_dir        = rhs.m_dir;
+            m_src        = rhs.m_src;
+            m_dst        = rhs.m_dst;
+            m_dataBypass = rhs.m_dataBypass;
         }
         return *this;
     }
@@ -112,12 +110,27 @@ void ColorSpaceTransform::setDst(const char * dst)
     getImpl()->m_dst = dst;
 }
 
+bool ColorSpaceTransform::getDataBypass() const noexcept
+{
+    return getImpl()->m_dataBypass;
+}
+
+void ColorSpaceTransform::setDataBypass(bool bypass) noexcept
+{
+    getImpl()->m_dataBypass = bypass;
+}
+
 std::ostream& operator<< (std::ostream& os, const ColorSpaceTransform& t)
 {
     os << "<ColorSpaceTransform ";
     os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
     os << "src=" << t.getSrc() << ", ";
     os << "dst=" << t.getDst();
+    const bool bypass = t.getDataBypass();
+    if (!bypass)
+    {
+        os << "dataBypass=" << bypass;
+    }
     os << ">";
     return os;
 }
@@ -175,7 +188,8 @@ void BuildColorSpaceOps(OpRcPtrVec & ops,
         }
     }
 
-    BuildColorSpaceOps(ops, config, context, src, dst);
+    BuildColorSpaceOps(ops, config, context, src, dst,
+                       colorSpaceTransform.getDataBypass());
 }
 
 namespace
@@ -196,7 +210,8 @@ void BuildColorSpaceOps(OpRcPtrVec & ops,
                         const Config & config,
                         const ConstContextRcPtr & context,
                         const ConstColorSpaceRcPtr & srcColorSpace,
-                        const ConstColorSpaceRcPtr & dstColorSpace)
+                        const ConstColorSpaceRcPtr & dstColorSpace,
+                        bool dataBypass)
 {
     if(!srcColorSpace)
         throw Exception("BuildColorSpaceOps failed, null srcColorSpace.");
@@ -205,7 +220,7 @@ void BuildColorSpaceOps(OpRcPtrVec & ops,
 
     if(AreColorSpacesInSameEqualityGroup(srcColorSpace, dstColorSpace))
         return;
-    if(dstColorSpace->isData() || srcColorSpace->isData())
+    if(dataBypass && (dstColorSpace->isData() || srcColorSpace->isData()))
         return;
 
     // Consider dt8 -> vd8?
@@ -214,7 +229,7 @@ void BuildColorSpaceOps(OpRcPtrVec & ops,
     // ever encountered in transit, we'd want to short circuit the result.
 
     // Go from the srcColorSpace to the reference space.
-    BuildColorSpaceToReferenceOps(ops, config, context, srcColorSpace);
+    BuildColorSpaceToReferenceOps(ops, config, context, srcColorSpace, dataBypass);
 
     // There are two possible reference spaces, the main (scene-referred) one and the
     // display-referred one.  If the src and dst use different reference spaces, use the
@@ -224,18 +239,19 @@ void BuildColorSpaceOps(OpRcPtrVec & ops,
                                 dstColorSpace->getReferenceSpaceType());
 
     // Go from the reference space to dstColorSpace.
-    BuildColorSpaceFromReferenceOps(ops, config, context, dstColorSpace);
+    BuildColorSpaceFromReferenceOps(ops, config, context, dstColorSpace, dataBypass);
 }
 
 void BuildColorSpaceToReferenceOps(OpRcPtrVec & ops,
                                    const Config & config,
                                    const ConstContextRcPtr & context,
-                                   const ConstColorSpaceRcPtr & srcColorSpace)
+                                   const ConstColorSpaceRcPtr & srcColorSpace,
+                                   bool dataBypass)
 {
     if (!srcColorSpace)
         throw Exception("BuildColorSpaceOps failed, null colorSpace.");
 
-    if (srcColorSpace->isData())
+    if (dataBypass && srcColorSpace->isData())
         return;
 
     AllocationData srcAllocation;
@@ -267,12 +283,13 @@ void BuildColorSpaceToReferenceOps(OpRcPtrVec & ops,
 void BuildColorSpaceFromReferenceOps(OpRcPtrVec & ops,
                                      const Config & config,
                                      const ConstContextRcPtr & context,
-                                     const ConstColorSpaceRcPtr & dstColorSpace)
+                                     const ConstColorSpaceRcPtr & dstColorSpace,
+                                     bool dataBypass)
 {
     if (!dstColorSpace)
         throw Exception("BuildColorSpaceOps failed, null colorSpace.");
 
-    if (dstColorSpace->isData())
+    if (dataBypass && dstColorSpace->isData())
         return;
 
     // Go from the reference space, either by using:

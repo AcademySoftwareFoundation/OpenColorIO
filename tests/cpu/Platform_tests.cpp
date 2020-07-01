@@ -25,7 +25,7 @@ OCIO_ADD_TEST(Platform, envVariable)
     OCIO_CHECK_ASSERT(value && *value);
     OCIO_CHECK_EQUAL(std::string(value), "SomeValue");
 
-    OCIO::SetEnvVariable("MY_DUMMY_ENV", "");
+    OCIO::UnsetEnvVariable("MY_DUMMY_ENV");
     value = OCIO::GetEnvVariable("MY_DUMMY_ENV");
     OCIO_CHECK_ASSERT(!value || !*value);
 }
@@ -33,25 +33,36 @@ OCIO_ADD_TEST(Platform, envVariable)
 OCIO_ADD_TEST(Platform, getenv)
 {
     std::string env;
-    OCIO::Platform::Getenv("NotExistingEnvVariable", env);
+    OCIO_CHECK_ASSERT(!OCIO::Platform::Getenv("NotExistingEnvVariable", env));
     OCIO_CHECK_ASSERT(env.empty());
 
-    OCIO::Platform::Getenv("PATH", env);
+    OCIO_CHECK_ASSERT(OCIO::Platform::Getenv("PATH", env));
     OCIO_CHECK_ASSERT(!env.empty());
 
-    OCIO::Platform::Getenv("NotExistingEnvVariable", env);
+    OCIO_CHECK_ASSERT(!OCIO::Platform::Getenv("NotExistingEnvVariable", env));
     OCIO_CHECK_ASSERT(env.empty());
 
-    OCIO::Platform::Getenv("PATH", env);
+    OCIO_CHECK_ASSERT(OCIO::Platform::Getenv("PATH", env));
     OCIO_CHECK_ASSERT(!env.empty());
 }
 
 OCIO_ADD_TEST(Platform, setenv)
 {
+    // Guard to automatically unset the env. variable.
+    struct Guard
+    {
+        Guard() = default;
+        ~Guard()
+        {
+            OCIO::Platform::Unsetenv("MY_DUMMY_ENV");
+            OCIO::Platform::Unsetenv("MY_WINDOWS_DUMMY_ENV");
+        }
+    } guard;
+
     {
         OCIO::Platform::Setenv("MY_DUMMY_ENV", "SomeValue");
         std::string env;
-        OCIO::Platform::Getenv("MY_DUMMY_ENV", env);
+        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv("MY_DUMMY_ENV", env));
         OCIO_CHECK_ASSERT(!env.empty());
 
         OCIO_CHECK_ASSERT(0==std::strcmp("SomeValue", env.c_str()));
@@ -60,35 +71,44 @@ OCIO_ADD_TEST(Platform, setenv)
     {
         OCIO::Platform::Setenv("MY_DUMMY_ENV", " ");
         std::string env;
-        OCIO::Platform::Getenv("MY_DUMMY_ENV", env);
+        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv("MY_DUMMY_ENV", env));
         OCIO_CHECK_ASSERT(!env.empty());
 
         OCIO_CHECK_ASSERT(0==std::strcmp(" ", env.c_str()));
         OCIO_CHECK_EQUAL(std::strlen(" "), env.size());
     }
     {
-        OCIO::Platform::Setenv("MY_DUMMY_ENV", "");
+        OCIO::Platform::Unsetenv("MY_DUMMY_ENV");
         std::string env;
-        OCIO::Platform::Getenv("MY_DUMMY_ENV", env);
+        OCIO_CHECK_ASSERT(!OCIO::Platform::Getenv("MY_DUMMY_ENV", env));
         OCIO_CHECK_ASSERT(env.empty());
     }
 #ifdef _WIN32
     {
         SetEnvironmentVariable("MY_WINDOWS_DUMMY_ENV", "1");
         std::string env;
-        OCIO::Platform::Getenv("MY_WINDOWS_DUMMY_ENV", env);
+        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv("MY_WINDOWS_DUMMY_ENV", env));
         OCIO_CHECK_EQUAL(env, std::string("1"));
     }
     {
         SetEnvironmentVariable("MY_WINDOWS_DUMMY_ENV", " ");
         std::string env;
-        OCIO::Platform::Getenv("MY_WINDOWS_DUMMY_ENV", env);
+        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv("MY_WINDOWS_DUMMY_ENV", env));
         OCIO_CHECK_EQUAL(env, std::string(" "));
     }
     {
+        // Windows SetEnvironmentVariable() sets the env. variable to empty like
+        // the Linux ::setenv() in contradiction with the Windows _putenv_s().
+
         SetEnvironmentVariable("MY_WINDOWS_DUMMY_ENV", "");
         std::string env;
-        OCIO::Platform::Getenv("MY_WINDOWS_DUMMY_ENV", env);
+        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv("MY_WINDOWS_DUMMY_ENV", env));
+        OCIO_CHECK_ASSERT(env.empty());
+    }
+    {
+        SetEnvironmentVariable("MY_WINDOWS_DUMMY_ENV", nullptr);
+        std::string env;
+        OCIO_CHECK_ASSERT(!OCIO::Platform::Getenv("MY_WINDOWS_DUMMY_ENV", env));
         OCIO_CHECK_ASSERT(env.empty());
     }
 #endif

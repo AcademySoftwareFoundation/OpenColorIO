@@ -337,7 +337,7 @@ const char * Context::resolveFileLocation(const char * filename) const
         }
         std::ostringstream errortext;
         errortext << "The specified absolute file reference ";
-        errortext << "'" << expandedfullpath << "' could not be located. ";
+        errortext << "'" << expandedfullpath << "' could not be located.";
         throw Exception(errortext.str().c_str());
     }
     }

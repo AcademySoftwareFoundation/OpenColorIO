@@ -228,7 +228,6 @@ ConstCPUProcessorRcPtr Processor::getOptimizedCPUProcessor(BitDepth inBitDepth,
     return getImpl()->getOptimizedCPUProcessor(inBitDepth, outBitDepth, oFlags);
 }
 
-
 Processor::Impl::Impl():
     m_metadata(ProcessorMetadata::Create())
 {
@@ -451,15 +450,19 @@ void Processor::Impl::setColorSpaceConversion(const Config & config,
         throw Exception("Internal error: Processor should be empty");
     }
 
-    BuildColorSpaceOps(m_ops, config, context, srcColorSpace, dstColorSpace);
+    BuildColorSpaceOps(m_ops, config, context, srcColorSpace, dstColorSpace, false);
 
+    std::ostringstream desc;
+    desc << "Color space conversion from " << srcColorSpace->getName()
+         << " to " << dstColorSpace->getName();
+    m_ops.getFormatMetadata().addAttribute(METADATA_DESCRIPTION, desc.str().c_str());
     m_ops.finalize(OPTIMIZATION_NONE);
     m_ops.unifyDynamicProperties();
 }
 
 void Processor::Impl::setTransform(const Config & config,
                                    const ConstContextRcPtr & context,
-                                   const ConstTransformRcPtr& transform,
+                                   const ConstTransformRcPtr & transform,
                                    TransformDirection direction)
 {
     if (!m_ops.empty())
