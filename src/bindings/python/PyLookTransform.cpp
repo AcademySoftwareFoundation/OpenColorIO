@@ -10,9 +10,9 @@ void bindPyLookTransform(py::module & m)
 {
     LookTransformRcPtr DEFAULT = LookTransform::Create();
 
-    py::class_<LookTransform, 
-               LookTransformRcPtr /* holder */, 
-               Transform /* base */>(m, "LookTransform")
+    auto cls = py::class_<LookTransform, 
+                          LookTransformRcPtr /* holder */, 
+                          Transform /* base */>(m, "LookTransform")
         .def(py::init(&LookTransform::Create))
         .def(py::init([](const std::string & src,
                          const std::string & dst,
@@ -29,10 +29,10 @@ void bindPyLookTransform(py::module & m)
                 p->validate();
                 return p;
             }),
-             "src"_a   = DEFAULT->getSrc(),
-             "dst"_a   = DEFAULT->getDst(),
+             "src"_a = DEFAULT->getSrc(),
+             "dst"_a = DEFAULT->getDst(),
              "looks"_a = DEFAULT->getLooks(),
-             "dir"_a   = DEFAULT->getDirection(),
+             "direction"_a = DEFAULT->getDirection(),
              "skipColorSpaceConversion"_a = DEFAULT->getSkipColorSpaceConversion())
 
         .def("getSrc", &LookTransform::getSrc)
@@ -44,6 +44,8 @@ void bindPyLookTransform(py::module & m)
         .def("getSkipColorSpaceConversion", &LookTransform::getSkipColorSpaceConversion)
         .def("setSkipColorSpaceConversion", &LookTransform::setSkipColorSpaceConversion,
              "skipColorSpaceConversion"_a);
+
+    defStr(cls);
 }
 
 } // namespace OCIO_NAMESPACE

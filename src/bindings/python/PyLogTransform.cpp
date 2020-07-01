@@ -10,9 +10,9 @@ void bindPyLogTransform(py::module & m)
 {
     LogTransformRcPtr DEFAULT = LogTransform::Create();
 
-    py::class_<LogTransform, 
-               LogTransformRcPtr /* holder */, 
-               Transform /* base */>(m, "LogTransform")
+    auto cls = py::class_<LogTransform, 
+                          LogTransformRcPtr /* holder */, 
+                          Transform /* base */>(m, "LogTransform")
         .def(py::init(&LogTransform::Create))
 
         .def(py::init([](double base, TransformDirection dir) 
@@ -24,7 +24,7 @@ void bindPyLogTransform(py::module & m)
                 return p;
             }),
              "base"_a = DEFAULT->getBase(),
-             "dir"_a = DEFAULT->getDirection())
+             "direction"_a = DEFAULT->getDirection())
 
         .def("getFormatMetadata", 
              (FormatMetadata & (LogTransform::*)()) &LogTransform::getFormatMetadata,
@@ -34,7 +34,9 @@ void bindPyLogTransform(py::module & m)
              py::return_value_policy::reference_internal)
         .def("equals", &LogTransform::equals, "other"_a)
         .def("getBase", &LogTransform::getBase)
-        .def("setBase", &LogTransform::setBase, "val"_a);
+        .def("setBase", &LogTransform::setBase, "base"_a);
+
+    defStr(cls);
 }
 
 } // namespace OCIO_NAMESPACE

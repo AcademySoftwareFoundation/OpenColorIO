@@ -123,14 +123,14 @@ void bindPyContext(py::module & m)
         .def("clearSearchPaths", &Context::clearSearchPaths)
         .def("addSearchPath", &Context::addSearchPath, "path"_a)
         .def("getWorkingDir", &Context::getWorkingDir)
-        .def("setWorkingDir", &Context::setWorkingDir, "dirname"_a)
+        .def("setWorkingDir", &Context::setWorkingDir, "dirName"_a)
         .def("getStringVars", [](ContextRcPtr & self) { return StringVarIterator(self); })
         .def("clearStringVars", &Context::clearStringVars)
         .def("getEnvironmentMode", &Context::getEnvironmentMode)
         .def("setEnvironmentMode", &Context::setEnvironmentMode, "mode"_a)
         .def("loadEnvironment", &Context::loadEnvironment)
-        .def("resolveStringVar", &Context::resolveStringVar, "val"_a)
-        .def("resolveFileLocation", &Context::resolveFileLocation, "filename"_a);
+        .def("resolveStringVar", &Context::resolveStringVar, "value"_a)
+        .def("resolveFileLocation", &Context::resolveFileLocation, "fileName"_a);
 
     defStr(cls);
 

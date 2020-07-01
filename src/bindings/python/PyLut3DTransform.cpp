@@ -12,9 +12,9 @@ void bindPyLut3DTransform(py::module & m)
 {
     Lut3DTransformRcPtr DEFAULT = Lut3DTransform::Create();
 
-    py::class_<Lut3DTransform, 
-               Lut3DTransformRcPtr /* holder */, 
-               Transform /* base */>(m, "Lut3DTransform")
+    auto cls = py::class_<Lut3DTransform, 
+                          Lut3DTransformRcPtr /* holder */, 
+                          Transform /* base */>(m, "Lut3DTransform")
         .def(py::init([]() { return Lut3DTransform::Create(); }))
         .def(py::init([](unsigned long gridSize) 
             { 
@@ -36,7 +36,7 @@ void bindPyLut3DTransform(py::module & m)
              "gridSize"_a = DEFAULT->getGridSize(),
              "fileOutputBitDepth"_a = DEFAULT->getFileOutputBitDepth(),
              "interpolation"_a = DEFAULT->getInterpolation(),
-             "dir"_a = DEFAULT->getDirection())
+             "direction"_a = DEFAULT->getDirection())
 
         .def("getFileOutputBitDepth", &Lut3DTransform::getFileOutputBitDepth)
         .def("setFileOutputBitDepth", &Lut3DTransform::setFileOutputBitDepth, "bitDepth"_a)
@@ -122,7 +122,9 @@ void bindPyLut3DTransform(py::module & m)
                                  values.data());
             })
         .def("getInterpolation", &Lut3DTransform::getInterpolation)
-        .def("setInterpolation", &Lut3DTransform::setInterpolation, "algo"_a);
+        .def("setInterpolation", &Lut3DTransform::setInterpolation, "interpolation"_a);
+
+    defStr(cls);
 }
 
 } // namespace OCIO_NAMESPACE

@@ -11,7 +11,7 @@ void bindPyTransform(py::module & m)
     auto cls = py::class_<Transform, TransformRcPtr /* holder */>(m, "Transform")
         .def("validate", &Transform::validate)
         .def("getDirection", &Transform::getDirection)
-        .def("setDirection", &Transform::setDirection, "dir"_a);
+        .def("setDirection", &Transform::setDirection, "direction"_a);
 
     defStr(cls);
 
