@@ -90,7 +90,7 @@ jobs:
           mkdir _build
       - name: Print GPU info
         run: |
-          nvidia-smi
+          lspci | grep VGA
       - name: Unset DISPLAY
         run: |
           unset DISPLAY
