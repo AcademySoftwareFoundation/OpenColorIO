@@ -78,7 +78,7 @@ jobs:
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
-            build-gpu: 'OFF'
+            build-gpu: 'ON'
             use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
