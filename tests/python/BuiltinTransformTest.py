@@ -69,7 +69,7 @@ class BuiltinTransformTest(unittest.TestCase):
     def test_constructor_keyword(self):
         # Keyword args in order
         builtin_tr1 = OCIO.BuiltinTransform(style=self.EXAMPLE_STYLE,
-                                            dir=OCIO.TRANSFORM_DIR_FORWARD)
+                                            direction=OCIO.TRANSFORM_DIR_FORWARD)
 
         self.assertEqual(builtin_tr1.getStyle(), self.EXAMPLE_STYLE)
         self.assertEqual(builtin_tr1.getDescription(), self.EXAMPLE_DESC)
@@ -77,7 +77,7 @@ class BuiltinTransformTest(unittest.TestCase):
                          OCIO.TRANSFORM_DIR_FORWARD)
 
         # Keyword args out of order
-        builtin_tr2 = OCIO.BuiltinTransform(dir=OCIO.TRANSFORM_DIR_FORWARD,
+        builtin_tr2 = OCIO.BuiltinTransform(direction=OCIO.TRANSFORM_DIR_FORWARD,
                                             style=self.EXAMPLE_STYLE)
 
         self.assertEqual(builtin_tr2.getStyle(), self.EXAMPLE_STYLE)

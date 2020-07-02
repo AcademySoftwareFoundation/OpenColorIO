@@ -10,15 +10,15 @@ void bindPyLut1DTransform(py::module & m)
 {
     Lut1DTransformRcPtr DEFAULT = Lut1DTransform::Create();
 
-    py::class_<Lut1DTransform, 
-               Lut1DTransformRcPtr /* holder */, 
-               Transform /* base */>(m, "Lut1DTransform")
+    auto cls = py::class_<Lut1DTransform, 
+                          Lut1DTransformRcPtr /* holder */, 
+                          Transform /* base */>(m, "Lut1DTransform")
         .def(py::init([]() { return Lut1DTransform::Create(); }))
         .def(py::init([](unsigned long length, bool isHalfDomain) 
             { 
                 return Lut1DTransform::Create(length, isHalfDomain); 
             }),
-             "length"_a, "isHalfDomain"_a)
+             "length"_a, "inputHalfDomain"_a)
         .def(py::init([](unsigned long length, 
                          bool isHalfDomain,
                          bool isRawHalfs,
@@ -37,12 +37,12 @@ void bindPyLut1DTransform(py::module & m)
                 return p;
             }),
              "length"_a = DEFAULT->getLength(),
-             "isHalfDomain"_a = DEFAULT->getInputHalfDomain(),
-             "isRawHalfs"_a = DEFAULT->getOutputRawHalfs(),
+             "inputHalfDomain"_a = DEFAULT->getInputHalfDomain(),
+             "outputRawHalfs"_a = DEFAULT->getOutputRawHalfs(),
              "fileOutputBitDepth"_a = DEFAULT->getFileOutputBitDepth(),
              "hueAdjust"_a = DEFAULT->getHueAdjust(),
              "interpolation"_a = DEFAULT->getInterpolation(),
-             "dir"_a = DEFAULT->getDirection())
+             "direction"_a = DEFAULT->getDirection())
 
         .def("getFileOutputBitDepth", &Lut1DTransform::getFileOutputBitDepth)
         .def("setFileOutputBitDepth", &Lut1DTransform::setFileOutputBitDepth, "bitDepth"_a)
@@ -111,9 +111,11 @@ void bindPyLut1DTransform(py::module & m)
         .def("getOutputRawHalfs", &Lut1DTransform::getOutputRawHalfs)
         .def("setOutputRawHalfs", &Lut1DTransform::setOutputRawHalfs, "isRawHalfs"_a)
         .def("getHueAdjust", &Lut1DTransform::getHueAdjust)
-        .def("setHueAdjust", &Lut1DTransform::setHueAdjust, "algo"_a)
+        .def("setHueAdjust", &Lut1DTransform::setHueAdjust, "hueAdjust"_a)
         .def("getInterpolation", &Lut1DTransform::getInterpolation)
-        .def("setInterpolation", &Lut1DTransform::setInterpolation, "algo"_a);
+        .def("setInterpolation", &Lut1DTransform::setInterpolation, "interpolation"_a);
+
+    defStr(cls);
 }
 
 } // namespace OCIO_NAMESPACE

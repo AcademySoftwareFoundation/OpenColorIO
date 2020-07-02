@@ -10,15 +10,15 @@ void bindPyMatrixTransform(py::module & m)
 {
     MatrixTransformRcPtr DEFAULT = MatrixTransform::Create();
 
-    std::array<double, 16> DEFAULT_M44;
-    DEFAULT->getMatrix(DEFAULT_M44.data());
+    std::array<double, 16> DEFAULT_MATRIX;
+    DEFAULT->getMatrix(DEFAULT_MATRIX.data());
 
-    std::array<double, 4> DEFAULT_OFFSET4;
-    DEFAULT->getOffset(DEFAULT_OFFSET4.data());
+    std::array<double, 4> DEFAULT_OFFSET;
+    DEFAULT->getOffset(DEFAULT_OFFSET.data());
 
-    py::class_<MatrixTransform, 
-               MatrixTransformRcPtr /* holder */, 
-               Transform /* base */>(m, "MatrixTransform")
+    auto cls = py::class_<MatrixTransform, 
+                          MatrixTransformRcPtr /* holder */, 
+                          Transform /* base */>(m, "MatrixTransform")
         .def(py::init(&MatrixTransform::Create))
         .def(py::init([](const std::array<double, 16> & m44,
                          const std::array<double, 4> & offset4, 
@@ -31,9 +31,9 @@ void bindPyMatrixTransform(py::module & m)
                 p->validate();
                 return p;
             }), 
-             "m44"_a = DEFAULT_M44,
-             "offset4"_a = DEFAULT_OFFSET4,
-             "dir"_a = DEFAULT->getDirection())
+             "matrix"_a = DEFAULT_MATRIX,
+             "offset"_a = DEFAULT_OFFSET,
+             "direction"_a = DEFAULT->getDirection())
 
         // TODO: Update static convenience functions to construct a MatrixTransform in C++
         .def_static("Fit", [](const std::array<double, 4> & oldmin4,
@@ -52,10 +52,10 @@ void bindPyMatrixTransform(py::module & m)
                 p->validate();
                 return p;
             },
-             "oldmin4"_a = std::array<double, 4>{ 0.0, 0.0, 0.0, 0.0 }, 
-             "oldmax4"_a = std::array<double, 4>{ 1.0, 1.0, 1.0, 1.0 },
-             "newmin4"_a = std::array<double, 4>{ 0.0, 0.0, 0.0, 0.0 }, 
-             "newmax4"_a = std::array<double, 4>{ 1.0, 1.0, 1.0, 1.0 })
+             "oldMin"_a = std::array<double, 4>{ 0.0, 0.0, 0.0, 0.0 }, 
+             "oldMax"_a = std::array<double, 4>{ 1.0, 1.0, 1.0, 1.0 },
+             "newMin"_a = std::array<double, 4>{ 0.0, 0.0, 0.0, 0.0 }, 
+             "newMax"_a = std::array<double, 4>{ 1.0, 1.0, 1.0, 1.0 })
         .def_static("Identity", []()
             {
                 double m44[16];
@@ -78,7 +78,7 @@ void bindPyMatrixTransform(py::module & m)
                 p->validate();
                 return p;
             },
-             "sat"_a, "lumaCoef3"_a)
+             "sat"_a, "lumaCoef"_a)
         .def_static("Scale", [](const std::array<double, 4> & scale4)
             {
                 double m44[16];
@@ -90,7 +90,7 @@ void bindPyMatrixTransform(py::module & m)
                 p->validate();
                 return p;
             },
-             "scale4"_a)
+             "scale"_a)
         .def_static("View", [](std::array<int, 4> & channelHot4,
                                const std::array<double, 3> & lumaCoef3)
             {
@@ -103,7 +103,7 @@ void bindPyMatrixTransform(py::module & m)
                 p->validate();
                 return p;
             },
-             "channelHot4"_a, "scale4"_a)
+             "channelHot"_a, "lumaCoef"_a)
 
         .def("getFormatMetadata", 
              (FormatMetadata & (MatrixTransform::*)()) &MatrixTransform::getFormatMetadata,
@@ -123,7 +123,7 @@ void bindPyMatrixTransform(py::module & m)
             { 
                 self->setMatrix(m44.data());
             }, 
-             "m44"_a)
+             "matrix"_a)
         .def("getOffset", [](MatrixTransformRcPtr self)
             {
                 std::array<double, 4> offset4;
@@ -134,11 +134,13 @@ void bindPyMatrixTransform(py::module & m)
             { 
                 self->setOffset(offset4.data());
             }, 
-             "offset4"_a)
+             "offset"_a)
         .def("getFileInputBitDepth", &MatrixTransform::getFileInputBitDepth)
         .def("setFileInputBitDepth", &MatrixTransform::setFileInputBitDepth, "bitDepth"_a)
         .def("getFileOutputBitDepth", &MatrixTransform::getFileOutputBitDepth)
         .def("setFileOutputBitDepth", &MatrixTransform::setFileOutputBitDepth, "bitDepth"_a);
+
+    defStr(cls);
 }
 
 } // namespace OCIO_NAMESPACE

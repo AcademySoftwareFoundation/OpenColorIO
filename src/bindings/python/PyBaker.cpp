@@ -78,9 +78,9 @@ void bindPyBaker(py::module & m)
         .def("getTargetSpace", &Baker::getTargetSpace)
         .def("setTargetSpace", &Baker::setTargetSpace, "targetSpace"_a)
         .def("getShaperSize", &Baker::getShaperSize)
-        .def("setShaperSize", &Baker::setShaperSize, "shapersize"_a)
+        .def("setShaperSize", &Baker::setShaperSize, "shaperSize"_a)
         .def("getCubeSize", &Baker::getCubeSize)
-        .def("setCubeSize", &Baker::setCubeSize, "cubesize"_a)
+        .def("setCubeSize", &Baker::setCubeSize, "cubeSize"_a)
         .def("bake", [](BakerRcPtr & self, const std::string & fileName) 
             {
                 std::ofstream f(fileName.c_str());
