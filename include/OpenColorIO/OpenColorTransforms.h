@@ -194,7 +194,7 @@ public:
     //!cpp:function::
     virtual const char * getDescription() const noexcept = 0;
 
-    //!cpp:function:: To never use i.e. only needed for the Python bindings with pybind11. 
+    //!cpp:function:: Do not use (needed only for pybind11).
     virtual ~BuiltinTransform() = default;
 
 protected:
@@ -351,9 +351,14 @@ public:
     //!cpp:function::
     void setDst(const char * dst);
 
+    //!cpp:function:: Data color spaces do not get processed when true (which is the default).
+    bool getDataBypass() const noexcept;
+    //!cpp:function::
+    void setDataBypass(bool enabled) noexcept;
+
     //!cpp:function::
     ColorSpaceTransform & operator=(const ColorSpaceTransform &) = delete;
-    //!cpp:function::
+    //!cpp:function:: Do not use (needed only for pybind11).
     virtual ~ColorSpaceTransform();
 
 private:
@@ -375,11 +380,11 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const ColorSpaceTran
 //!rst:: //////////////////////////////////////////////////////////////////
 
 //!cpp:class::
-class OCIOEXPORT DisplayTransform : public Transform
+class OCIOEXPORT DisplayViewTransform : public Transform
 {
 public:
     //!cpp:function::
-    static DisplayTransformRcPtr Create();
+    static DisplayViewTransformRcPtr Create();
 
     //!cpp:function::
     TransformRcPtr createEditableCopy() const override;
@@ -393,77 +398,39 @@ public:
     void validate() const override;
 
     //!cpp:function::
-    const char * getInputColorSpaceName() const;
-    //!cpp:function:: Step 0. Specify the incoming color space.
-    void setInputColorSpaceName(const char * name);
-
-    //!cpp:function::
-    ConstTransformRcPtr getLinearCC() const;
-    //!cpp:function:: Step 1: Apply a Color Correction, in ROLE_SCENE_LINEAR.
-    void setLinearCC(const ConstTransformRcPtr & cc);
-
-    //!cpp:function::
-    ConstTransformRcPtr getColorTimingCC() const;
-    //!cpp:function:: Step 2: Apply a color correction, in ROLE_COLOR_TIMING.
-    void setColorTimingCC(const ConstTransformRcPtr & cc);
-
-    //!cpp:function::
-    ConstTransformRcPtr getChannelView() const;
-    //!cpp:function:: Step 3: Apply the Channel Viewing Swizzle (mtx).
-    void setChannelView(const ConstTransformRcPtr & transform);
+    const char * getSrc() const;
+    //!cpp:function:: Specify the incoming color space.
+    void setSrc(const char * name);
 
     //!cpp:function::
     const char * getDisplay() const;
-    //!cpp:function:: Step 4: Apply the output display transform
-    // This is controlled by the specification of (display, view)
+    //!cpp:function:: Specify which display to use.
     void setDisplay(const char * display);
 
     //!cpp:function::
     const char * getView() const;
-    //!cpp:function:: Specify which view transform to use
+    //!cpp:function:: Specify which view transform to use.
     void setView(const char * view);
 
     //!cpp:function::
-    ConstTransformRcPtr getDisplayCC() const;
-    //!cpp:function:: Step 5: Apply a post display transform color correction
-    void setDisplayCC(const ConstTransformRcPtr & cc);
-
-
+    bool getLooksBypass() const;
+    //!cpp:function:: Looks will be bypassed when true (the default is false).
+    void setLooksBypass(bool bypass);
 
     //!cpp:function::
-    const char * getLooksOverride() const;
-    //!cpp:function:: A user can optionally override the looks that are,
-    // by default, used with the expected display / view combination.
-    // A common use case for this functionality is in an image viewing
-    // app, where per-shot looks are supported.  If for some reason
-    // a per-shot look is not defined for the current Context, the
-    // Config::getProcessor fcn will not succeed by default.  Thus,
-    // with this mechanism the viewing app could override to looks = "",
-    // and this will allow image display to continue (though hopefully)
-    // the interface would reflect this fallback option.)
-    //
-    // Looks is a potentially comma (or colon) delimited list of lookNames,
-    // Where +/- prefixes are optionally allowed to denote forward/inverse
-    // look specification. (And forward is assumed in the absence of either)
-    void setLooksOverride(const char * looks);
+    bool getDataBypass() const noexcept;
+    //!cpp:function:: Data color spaces do not get processed when true (which is the default).
+    void setDataBypass(bool bypass) noexcept;
 
-    //!cpp:function::
-    bool getLooksOverrideEnabled() const;
-    //!cpp:function:: Specify whether the lookOverride should be used,
-    // or not. This is a separate flag, as it's often useful to override
-    // "looks" to an empty string.
-    void setLooksOverrideEnabled(bool enabled);
-
-    //!cpp:function::
-    DisplayTransform & operator=(const DisplayTransform &);
-    //!cpp:function::
-    virtual ~DisplayTransform();
+    //!cpp:function:: Do not use (needed only for pybind11).
+    virtual ~DisplayViewTransform();
 
 private:
-    DisplayTransform();
-    DisplayTransform(const DisplayTransform &);
+    DisplayViewTransform();
+    DisplayViewTransform(const DisplayViewTransform &) = delete;
+    DisplayViewTransform & operator=(const DisplayViewTransform &) = delete;
 
-    static void deleter(DisplayTransform * t);
+    static void deleter(DisplayViewTransform * t);
 
     class Impl;
     Impl * m_impl;
@@ -472,7 +439,7 @@ private:
 };
 
 //!cpp:function::
-extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const DisplayTransform &);
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const DisplayViewTransform &);
 
 
 //!rst:: //////////////////////////////////////////////////////////////////
@@ -1115,9 +1082,21 @@ public:
     // look specification. (And forward is assumed in the absence of either)
     void setLooks(const char * looks);
 
+    bool getSkipColorSpaceConversion() const;
+    //!cpp:function::
+    void setSkipColorSpaceConversion(bool skip);
+
+    //!cpp:function:: Return the name of the color space after applying looks in the forward
+    // direction but without converting to the destination color space.  This is equivalent
+    // to the process space of the last look in the look sequence (and takes into account that
+    // a look fall-back may be used).
+    static const char * GetLooksResultColorSpace(const ConstConfigRcPtr & config,
+                                                 const ConstContextRcPtr & context,
+                                                 const char * looks);
+
     //!cpp:function::
     LookTransform & operator=(const LookTransform &) = delete;
-    //!cpp:function::
+    //!cpp:function:: Do not use (needed only for pybind11).
     virtual ~LookTransform();
 
 private:

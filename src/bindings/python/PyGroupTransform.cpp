@@ -38,7 +38,7 @@ void bindPyGroupTransform(py::module & m)
                 return p;
             }), 
              "transforms"_a = std::vector<ConstTransformRcPtr>{},
-             "dir"_a = DEFAULT->getDirection())
+             "direction"_a = DEFAULT->getDirection())
 
         .def("__iter__", [](GroupTransformRcPtr & self) { return TransformIterator(self); })
         .def("__len__", &GroupTransform::getNumTransforms)
@@ -58,6 +58,8 @@ void bindPyGroupTransform(py::module & m)
              py::return_value_policy::reference_internal)
         .def("appendTransform", &GroupTransform::appendTransform, "transform"_a)
         .def("prependTransform", &GroupTransform::prependTransform, "transform"_a);
+
+    defStr(cls);
 
     py::class_<TransformIterator>(cls, "TransformIterator")
         .def("__len__", [](TransformIterator & it) { return it.m_obj->getNumTransforms(); })

@@ -185,52 +185,52 @@ void bindPyTypes(py::module & m)
         .export_values();
 
     // Conversion
-    m.def("BoolToString", &BoolToString, "val"_a);
-    m.def("BoolFromString", &BoolFromString, "s"_a);
+    m.def("BoolToString", &BoolToString, "value"_a);
+    m.def("BoolFromString", &BoolFromString, "str"_a);
 
     m.def("LoggingLevelToString", &LoggingLevelToString, "level"_a);
-    m.def("LoggingLevelFromString", &LoggingLevelFromString, "s"_a);
+    m.def("LoggingLevelFromString", &LoggingLevelFromString, "str"_a);
 
-    m.def("TransformDirectionToString", &TransformDirectionToString, "dir"_a);
-    m.def("TransformDirectionFromString", &TransformDirectionFromString, "s"_a);
+    m.def("TransformDirectionToString", &TransformDirectionToString, "direction"_a);
+    m.def("TransformDirectionFromString", &TransformDirectionFromString, "str"_a);
 
-    m.def("GetInverseTransformDirection", &GetInverseTransformDirection, "dir"_a);
-    m.def("CombineTransformDirections", &CombineTransformDirections, "d1"_a, "d2"_a);
+    m.def("GetInverseTransformDirection", &GetInverseTransformDirection, "direction"_a);
+    m.def("CombineTransformDirections", &CombineTransformDirections, "direction1"_a, "direction2"_a);
 
-    m.def("ColorSpaceDirectionToString", &ColorSpaceDirectionToString, "dir"_a);
-    m.def("ColorSpaceDirectionFromString", &ColorSpaceDirectionFromString, "s"_a);
+    m.def("ColorSpaceDirectionToString", &ColorSpaceDirectionToString, "direction"_a);
+    m.def("ColorSpaceDirectionFromString", &ColorSpaceDirectionFromString, "str"_a);
 
     m.def("BitDepthToString", &BitDepthToString, "bitDepth"_a);
-    m.def("BitDepthFromString", &BitDepthFromString, "s"_a);
+    m.def("BitDepthFromString", &BitDepthFromString, "str"_a);
     m.def("BitDepthIsFloat", &BitDepthIsFloat, "bitDepth"_a);
     m.def("BitDepthToInt", &BitDepthToInt, "bitDepth"_a);
 
     m.def("AllocationToString", &AllocationToString, "allocation"_a);
-    m.def("AllocationFromString", &AllocationFromString, "s"_a);
+    m.def("AllocationFromString", &AllocationFromString, "str"_a);
 
-    m.def("InterpolationToString", &InterpolationToString, "interp"_a);
-    m.def("InterpolationFromString", &InterpolationFromString, "s"_a);
+    m.def("InterpolationToString", &InterpolationToString, "interpolation"_a);
+    m.def("InterpolationFromString", &InterpolationFromString, "str"_a);
 
     m.def("GpuLanguageToString", &GpuLanguageToString, "language"_a);
-    m.def("GpuLanguageFromString", &GpuLanguageFromString, "s"_a);
+    m.def("GpuLanguageFromString", &GpuLanguageFromString, "str"_a);
 
     m.def("EnvironmentModeToString", &EnvironmentModeToString, "mode"_a);
-    m.def("EnvironmentModeFromString", &EnvironmentModeFromString, "s"_a);
+    m.def("EnvironmentModeFromString", &EnvironmentModeFromString, "str"_a);
 
     m.def("CDLStyleToString", &CDLStyleToString, "style"_a);
-    m.def("CDLStyleFromString", &CDLStyleFromString, "s"_a);
+    m.def("CDLStyleFromString", &CDLStyleFromString, "str"_a);
 
     m.def("RangeStyleToString", &RangeStyleToString, "style"_a);
-    m.def("RangeStyleFromString", &RangeStyleFromString, "s"_a);
+    m.def("RangeStyleFromString", &RangeStyleFromString, "str"_a);
 
     m.def("FixedFunctionStyleToString", &FixedFunctionStyleToString, "style"_a);
-    m.def("FixedFunctionStyleFromString", &FixedFunctionStyleFromString, "s"_a);
+    m.def("FixedFunctionStyleFromString", &FixedFunctionStyleFromString, "str"_a);
 
     m.def("ExposureContrastStyleToString", &ExposureContrastStyleToString, "style"_a);
-    m.def("ExposureContrastStyleFromString", &ExposureContrastStyleFromString, "s"_a);
+    m.def("ExposureContrastStyleFromString", &ExposureContrastStyleFromString, "str"_a);
 
     m.def("NegativeStyleToString", &NegativeStyleToString, "style"_a);
-    m.def("NegativeStyleFromString", &NegativeStyleFromString, "s"_a);
+    m.def("NegativeStyleFromString", &NegativeStyleFromString, "str"_a);
 
     // Envar
     m.attr("OCIO_CONFIG_ENVVAR") = OCIO_CONFIG_ENVVAR;

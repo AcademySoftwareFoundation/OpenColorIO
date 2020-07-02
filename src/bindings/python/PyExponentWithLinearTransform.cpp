@@ -16,9 +16,9 @@ void bindPyExponentWithLinearTransform(py::module & m)
     std::array<double, 4> DEFAULT_OFFSET;
     DEFAULT->getOffset(*reinterpret_cast<double(*)[4]>(DEFAULT_OFFSET.data()));
 
-    py::class_<ExponentWithLinearTransform, 
-               ExponentWithLinearTransformRcPtr /* holder */, 
-               Transform /* base */>(m, "ExponentWithLinearTransform")
+    auto cls = py::class_<ExponentWithLinearTransform, 
+                          ExponentWithLinearTransformRcPtr /* holder */, 
+                          Transform /* base */>(m, "ExponentWithLinearTransform")
         .def(py::init(&ExponentWithLinearTransform::Create))
         .def(py::init([](const std::array<double, 4> & gamma,
                          const std::array<double, 4> & offset,
@@ -36,7 +36,7 @@ void bindPyExponentWithLinearTransform(py::module & m)
              "gamma"_a = DEFAULT_GAMMA,
              "offset"_a = DEFAULT_OFFSET,
              "negativeStyle"_a = DEFAULT->getNegativeStyle(),
-             "dir"_a = DEFAULT->getDirection())
+             "direction"_a = DEFAULT->getDirection())
 
         .def("getFormatMetadata", 
              (FormatMetadata & (ExponentWithLinearTransform::*)()) 
@@ -73,6 +73,8 @@ void bindPyExponentWithLinearTransform(py::module & m)
              "values"_a)
         .def("getNegativeStyle", &ExponentWithLinearTransform::getNegativeStyle)
         .def("setNegativeStyle", &ExponentWithLinearTransform::setNegativeStyle, "style"_a);
+
+    defStr(cls);
 }
 
 } // namespace OCIO_NAMESPACE
