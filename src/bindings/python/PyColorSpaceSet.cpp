@@ -55,10 +55,10 @@ void bindPyColorSpaceSet(py::module & m)
                 return ColorSpaceIterator(self); 
             })
         .def("getColorSpace", &ColorSpaceSet::getColorSpace, "name"_a)
-        .def("addColorSpace", &ColorSpaceSet::addColorSpace, "cs"_a)
-        .def("addColorSpaces", &ColorSpaceSet::addColorSpaces, "cs"_a)
-        .def("removeColorSpace", &ColorSpaceSet::removeColorSpace, "cs"_a)
-        .def("removeColorSpaces", &ColorSpaceSet::removeColorSpaces, "cs"_a)
+        .def("addColorSpace", &ColorSpaceSet::addColorSpace, "colorSpace"_a)
+        .def("addColorSpaces", &ColorSpaceSet::addColorSpaces, "colorSpace"_a)
+        .def("removeColorSpace", &ColorSpaceSet::removeColorSpace, "colorSpace"_a)
+        .def("removeColorSpaces", &ColorSpaceSet::removeColorSpaces, "colorSpace"_a)
         .def("clearColorSpaces", &ColorSpaceSet::clearColorSpaces);
 
     py::class_<ColorSpaceNameIterator>(cls, "ColorSpaceNameIterator")

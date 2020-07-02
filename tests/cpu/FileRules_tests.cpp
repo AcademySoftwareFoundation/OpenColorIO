@@ -121,7 +121,7 @@ OCIO_ADD_TEST(FileRules, config_insert_rule)
 
     // Adds a rule with empty name.
     OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, nullptr, "raw", "*", "a"),
-                          OCIO::Exception, "rule should have a non empty name");
+                          OCIO::Exception, "rule should have a non-empty name");
 
     // Pattern and extension can't be null.
     OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, "rule", "raw", nullptr, "a"),
@@ -152,24 +152,24 @@ OCIO_ADD_TEST(FileRules, config_rule_customkeys)
     OCIO_CHECK_THROW_WHAT(fileRules->getNumCustomKeys(3), OCIO::Exception,
                           "rule index '3' invalid");
     OCIO_CHECK_THROW_WHAT(fileRules->getCustomKeyName(0, 0), OCIO::Exception,
-                          "key index '0' is invalid");
+                          "Key index '0' is invalid");
     OCIO_CHECK_THROW_WHAT(fileRules->getCustomKeyName(1, 0), OCIO::Exception,
-                          "key index '0' is invalid");
+                          "Key index '0' is invalid");
     OCIO_CHECK_THROW_WHAT(fileRules->getCustomKeyName(2, 0), OCIO::Exception,
-                          "key index '0' is invalid");
+                          "Key index '0' is invalid");
     OCIO_CHECK_THROW_WHAT(fileRules->getCustomKeyValue(0, 0), OCIO::Exception,
-                          "key index '0' is invalid");
+                          "Key index '0' is invalid");
     OCIO_CHECK_THROW_WHAT(fileRules->getCustomKeyValue(1, 0), OCIO::Exception,
-                          "key index '0' is invalid");
+                          "Key index '0' is invalid");
     OCIO_CHECK_THROW_WHAT(fileRules->getCustomKeyValue(2, 0), OCIO::Exception,
-                          "key index '0' is invalid");
+                          "Key index '0' is invalid");
     OCIO_CHECK_NO_THROW(fileRules->setCustomKey(0, "key", "val"));
     OCIO_CHECK_NO_THROW(fileRules->setCustomKey(1, "key", "val"));
     OCIO_CHECK_NO_THROW(fileRules->setCustomKey(2, "keyDef", "valDef"));
     OCIO_CHECK_THROW_WHAT(fileRules->setCustomKey(0, nullptr, "val"), OCIO::Exception,
-                          "key has to be a non empty string");
+                          "Key has to be a non-empty string");
     OCIO_CHECK_THROW_WHAT(fileRules->setCustomKey(0, "", "val"), OCIO::Exception,
-                          "key has to be a non empty string");
+                          "Key has to be a non-empty string");
     OCIO_REQUIRE_EQUAL(fileRules->getNumCustomKeys(0), 1);
     OCIO_REQUIRE_EQUAL(fileRules->getNumCustomKeys(1), 1);
     OCIO_REQUIRE_EQUAL(fileRules->getNumCustomKeys(2), 1);
@@ -1275,7 +1275,6 @@ OCIO_ADD_TEST(FileRules, rule_move)
     OCIO_CHECK_EQUAL(std::string(rules->getName(3)), "rule3");
     OCIO_CHECK_EQUAL(std::string(rules->getName(4)), "rule4");
 }
-
 
 OCIO_ADD_TEST(FileRules, clone)
 {

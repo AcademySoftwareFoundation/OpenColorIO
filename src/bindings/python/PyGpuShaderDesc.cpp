@@ -64,8 +64,8 @@ void bindPyGpuShaderDesc(py::module & m)
                 if (!uid.empty())   { p->setUniqueID(uid.c_str()); }
                 return p;
             }, 
-                    "edgelen"_a,
-                    "lang"_a = DEFAULT->getLanguage(),
+                    "edgeLen"_a,
+                    "language"_a = DEFAULT->getLanguage(),
                     "functionName"_a = DEFAULT->getFunctionName(),
                     "pixelName"_a = DEFAULT->getPixelName(),
                     "resourcePrefix"_a = DEFAULT->getResourcePrefix(),
@@ -84,7 +84,7 @@ void bindPyGpuShaderDesc(py::module & m)
                 if (!uid.empty())   { p->setUniqueID(uid.c_str()); }
                 return p;
             }, 
-                    "lang"_a = DEFAULT->getLanguage(),
+                    "language"_a = DEFAULT->getLanguage(),
                     "functionName"_a = DEFAULT->getFunctionName(),
                     "pixelName"_a = DEFAULT->getPixelName(),
                     "resourcePrefix"_a = DEFAULT->getResourcePrefix(),
@@ -204,7 +204,7 @@ void bindPyGpuShaderDesc(py::module & m)
                                    interpolation,
                                    static_cast<float *>(info.ptr));
             },
-             "textureName"_a, "samplerName"_a, "uid"_a, "edgelen"_a, "interpolation"_a, "values"_a)
+             "textureName"_a, "samplerName"_a, "uid"_a, "edgeLen"_a, "interpolation"_a, "values"_a)
         .def("get3DTextures", [](GpuShaderDescRcPtr & self) 
             {
                 return Texture3DIterator(self);
@@ -301,7 +301,7 @@ void bindPyGpuShaderDesc(py::module & m)
         .def_readonly("textureName", &Texture3D::textureName)
         .def_readonly("samplerName", &Texture3D::samplerName)
         .def_readonly("uid", &Texture3D::uid)
-        .def_readonly("edgelen", &Texture3D::edgelen)
+        .def_readonly("edgeLen", &Texture3D::edgelen)
         .def_readonly("interpolation", &Texture3D::interpolation);
 
     py::class_<Texture3DIterator>(cls, "Texture3DIterator")

@@ -160,11 +160,7 @@ std::ostream & operator<< (std::ostream & os, const ExponentWithLinearTransform 
       os << " " << offset[i];
     }
 
-    auto style = t.getNegativeStyle();
-    if (style == NEGATIVE_MIRROR)
-    {
-        os << ", style=" << NegativeStyleToString(style);
-    }
+    os << ", style=" << NegativeStyleToString(t.getNegativeStyle());
     os << ">";
     return os;
 }
