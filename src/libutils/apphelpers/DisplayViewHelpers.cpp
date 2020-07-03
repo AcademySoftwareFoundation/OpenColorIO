@@ -15,6 +15,7 @@
 #include "ColorSpaceHelpers.h"
 #include "DisplayViewHelpers.h"
 #include "utils/StringUtils.h"
+#include "ViewingPipeline.h"
 
 
 namespace OCIO_NAMESPACE
@@ -27,13 +28,14 @@ ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & config,
                                  const char * workingName,
                                  const char * displayName,
                                  const char * viewName,
+                                 const ConstMatrixTransformRcPtr & channelView,
                                  TransformDirection direction)
 {
     ColorSpaceMenuHelperRcPtr menuHelper = ColorSpaceMenuHelper::Create(config, nullptr, nullptr);
 
-    DisplayTransformRcPtr displayTransform = DisplayTransform::Create();
+    DisplayViewTransformRcPtr displayTransform = DisplayViewTransform::Create();
     displayTransform->setDirection(direction);
-    displayTransform->setInputColorSpaceName(menuHelper->getNameFromUIName(workingName));
+    displayTransform->setSrc(menuHelper->getNameFromUIName(workingName));
     displayTransform->setDisplay(displayName);
     displayTransform->setView(viewName);
 
@@ -64,9 +66,13 @@ ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & config,
         }
     }
 
-    // Note: Reuse the DisplayTransform instance to benefit from any improvement 
-    //       made to the (display, view) color transformation i.e.
-    //       ViewTransform + DisplayColorSpace and inverse computation.
+    if (!needExposure && !needGamma && !channelView)
+    {
+        return processor;
+    }
+
+    ViewingPipeline pipeline;
+    pipeline.setDisplayViewTransform(displayTransform);
 
     // TODO: Need to update to allow for apps that are viewing non-scene-linear images.
     if (needExposure)
@@ -79,7 +85,7 @@ ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & config,
         ex->makeExposureDynamic();
         ex->makeContrastDynamic();
 
-        displayTransform->setLinearCC(ex);
+        pipeline.setLinearCC(ex);
     }
 
     if (needGamma)
@@ -90,10 +96,16 @@ ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & config,
 
         ex->makeGammaDynamic();
 
-        displayTransform->setDisplayCC(ex);
+        pipeline.setDisplayCC(ex);
     }
 
-    return config->getProcessor(displayTransform);
+    if (channelView)
+    {
+        pipeline.setChannelView(channelView);
+    }
+
+    ConstContextRcPtr context = config->getCurrentContext();
+    return pipeline.getProcessor(config, context);
 }
 
 
@@ -393,7 +405,7 @@ void AddDisplayView(ConfigRcPtr & config,
 
     // Step 4 - Add a new active (display, view) pair.
 
-    config->addDisplay(displayName, viewName, colorSpace->getName(), lookDefinition);
+    config->addDisplayView(displayName, viewName, colorSpace->getName(), lookDefinition);
 }
 
 void AddDisplayView(ConfigRcPtr & config,
@@ -445,7 +457,8 @@ void AddDisplayView(ConfigRcPtr & config,
 
 void RemoveDisplayView(ConfigRcPtr & config, const char * displayName, const char * viewName)
 {
-    const std::string csName{ config->getDisplayColorSpaceName(displayName, viewName) };
+    const std::string name{ config->getDisplayViewColorSpaceName(displayName, viewName) };
+    const std::string csName{ name.empty() ? displayName : name };
     if (csName.empty())
     {
         std::string errMsg = "Missing color space for '";
@@ -458,7 +471,7 @@ void RemoveDisplayView(ConfigRcPtr & config, const char * displayName, const cha
 
     // Step 1 - Remove the (display, view) pair.
 
-    config->removeDisplay(displayName, viewName);
+    config->removeDisplayView(displayName, viewName);
 
     // Setp 2 - Remove the (display, view) pair from active lists if possible.
 

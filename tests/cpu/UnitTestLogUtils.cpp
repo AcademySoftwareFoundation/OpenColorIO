@@ -55,9 +55,13 @@ bool LogGuard::empty() const
 }
 
 MuteLogging::MuteLogging()
-    :   LogGuard()
 {
-    SetLoggingFunction(MuteLoggingFunction);
+    SetLoggingFunction(&MuteLoggingFunction);
+}
+
+MuteLogging::~MuteLogging()
+{
+    ResetToDefaultLoggingFunction();
 }
 
 } // namespace OCIO_NAMESPACE

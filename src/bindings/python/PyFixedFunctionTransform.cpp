@@ -19,9 +19,9 @@ void bindPyFixedFunctionTransform(py::module & m)
 {
     FixedFunctionTransformRcPtr DEFAULT = FixedFunctionTransform::Create();
 
-    py::class_<FixedFunctionTransform, 
-               FixedFunctionTransformRcPtr /* holder */, 
-               Transform /* base */>(m, "FixedFunctionTransform")
+    auto cls = py::class_<FixedFunctionTransform, 
+                          FixedFunctionTransformRcPtr /* holder */, 
+                          Transform /* base */>(m, "FixedFunctionTransform")
         .def(py::init(&FixedFunctionTransform::Create))
         .def(py::init([](FixedFunctionStyle style, 
                          const std::vector<double> & params,
@@ -36,7 +36,7 @@ void bindPyFixedFunctionTransform(py::module & m)
             }), 
              "style"_a = DEFAULT->getStyle(), 
              "params"_a = getParamsStdVec(DEFAULT),
-             "dir"_a = DEFAULT->getDirection())
+             "direction"_a = DEFAULT->getDirection())
 
         .def("getFormatMetadata", 
              (FormatMetadata & (FixedFunctionTransform::*)()) 
@@ -58,6 +58,8 @@ void bindPyFixedFunctionTransform(py::module & m)
                 self->setParams(params.data(), params.size());
             }, 
              "params"_a);
+
+    defStr(cls);
 }
 
 } // namespace OCIO_NAMESPACE
