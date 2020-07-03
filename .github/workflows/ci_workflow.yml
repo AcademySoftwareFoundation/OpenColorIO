@@ -84,20 +84,20 @@ jobs:
         if: matrix.vfx-cy == 2020
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Print GPU info
+        run: |
+          lspci | grep VGA
       - name: Create build directories
         run: |
           mkdir _install
           mkdir _build
-      - name: Print GPU info
-        run: |
-          lspci | grep VGA
       - name: Configure
         run: |
-          cmake ../. \
+          cmake -v ../. \
                 -DCMAKE_INSTALL_PREFIX=../_install \
                 -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
                 -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
-                -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
+                -DBUILD_SHAREsD_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
                 -DOCIO_BUILD_GPU_TESTS=${{ matrix.build-gpu }} \
                 -DOCIO_USE_HEADLESS=${{ matrix.use-headless }} \
@@ -116,41 +116,42 @@ jobs:
       - name: Test
         run: ctest -V
         working-directory: _build
-    
-    macos:
-    	name: 'macOS 10.15 
-	      <AppleClang 11.0 
-	       config=${{ matrix.build-type }}, 
-	       shared=${{ matrix.build-shared }}, 
-	       sse=${{ matrix.use-sse }}, 
-	       cxx=${{ matrix.cxx-standard }}, 
-	       python=${{ matrix.python-version }}, 
-	       docs=${{ matrix.build-docs }}>'
-    	runs-on: macos-10.15
-    	strategy:
-    	  matrix:
-    	    build: [1]
-    	    include:
-         	 # C++11, Python 3.7
-         	 - build: 1
-            	build-type: Release
-            	build-shared: 'ON'
-            	build-docs: 'ON'
-            	build-gpu: 'ON'
-            	use-headless: 'ON'
-            	use-sse: 'ON'
-            	cxx-standard: 11
-            	python-version: 3.7
-    	steps:
-    	- name: Setup Python
+
+  # ---------------------------------------------------------------------------
+  # macOS
+  # ---------------------------------------------------------------------------
+
+  macos:
+    name: 'macOS 10.15 
+      <AppleClang 11.0 
+       config=${{ matrix.build-type }}, 
+       shared=${{ matrix.build-shared }}, 
+       sse=${{ matrix.use-sse }}, 
+       cxx=${{ matrix.cxx-standard }}, 
+       python=${{ matrix.python-version }}, 
+       docs=${{ matrix.build-docs }}>'
+    runs-on: macos-10.15
+    strategy:
+      matrix:
+        build: [1]
+        include:
+          # C++11, Python 3.7
+          - build: 1
+            build-type: Release
+            build-shared: 'ON'
+            build-docs: 'ON'
+            build-gpu: 'ON'
+            use-headless: 'OFF'
+            use-sse: 'ON'
+            cxx-standard: 11
+            python-version: 3.7
+    steps:
+      - name: Setup Python
         uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Print GPU info
-        run: |
-          lspci | grep VGA
       - name: Create build directories
         run: |
           mkdir _install
@@ -179,4 +180,4 @@ jobs:
         working-directory: _build
       - name: Test
         run: ctest -V
-        working-directory: _build     
+        working-directory: _build
