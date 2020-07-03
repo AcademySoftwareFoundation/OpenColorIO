@@ -148,6 +148,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Print GPU info
+        run: |
+          lspci | grep VGA
       - name: Create build directories
         run: |
           mkdir _install
