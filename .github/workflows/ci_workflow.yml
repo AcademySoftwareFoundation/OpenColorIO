@@ -88,10 +88,10 @@ jobs:
         run: lspci | grep VGA
       - name: Try to find Nvidia
         run: lspci -nn | grep '\[03'
+      - name: Start X server
+        run: Xorg -configure
       - name: Print nvidia info
         run: glxinfo | grep NVIDIA
-      - name: Start X server
-        run: xinit
       - name: Create build directories
         run: |
           mkdir _install
