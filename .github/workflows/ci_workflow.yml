@@ -84,9 +84,18 @@ jobs:
         if: matrix.vfx-cy == 2020
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Print GPU info
+      - name: Print VGA info
         run: |
           lspci | grep VGA
+      - name: Try to find Nvidia
+      	run: |
+      	  lspci -nn | grep '\[03'
+      - name: Print nvidia info
+      	run: |
+      	  eglinfo | grep nvidia
+      - name: Start X server
+        run: |
+          xinit
       - name: Create build directories
         run: |
           mkdir _install
