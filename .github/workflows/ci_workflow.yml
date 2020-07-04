@@ -88,8 +88,8 @@ jobs:
         run: |
           lspci | grep VGA
       - name: Try to find Nvidia
-      	run: |
-      	  lspci -nn | grep '\[03'
+        run: |
+          lspci -nn | grep '\[03'
       - name: Print nvidia info
       	run: |
       	  eglinfo | grep nvidia
