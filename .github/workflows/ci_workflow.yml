@@ -89,7 +89,7 @@ jobs:
       - name: Try to find Nvidia
         run: lspci -nn | grep '\[03'
       - name: Print nvidia info
-        run: eglinfo | grep nvidia
+        run: glxinfo | grep NVIDIA
       - name: Start X server
         run: xinit
       - name: Create build directories
