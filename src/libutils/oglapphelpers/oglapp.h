@@ -170,6 +170,7 @@ private:
 
 #ifdef OCIO_HEADLESS_ENABLED
 
+#define EGL_EGLEXT_PROTOTYPES
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 
