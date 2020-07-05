@@ -86,14 +86,6 @@ jobs:
         uses: actions/checkout@v2
       - name: Print VGA info
         run: lspci | grep VGA
-      - name: Try to find Nvidia
-        run: lspci -nn | grep '\[03'
-      - name: print DISPLAY
-        run: echo $DISPLAY
-      - name: set DISPLAY
-        run: export DISPLAY=:0
-      - name: Print nvidia info
-        run: glxinfo | grep NVIDIA
       - name: Create build directories
         run: |
           mkdir _install

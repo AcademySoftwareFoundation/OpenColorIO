@@ -306,6 +306,23 @@ HeadlessApp::HeadlessApp(const char * winTitle, int bufWidth, int bufHeight)
     , m_pixBufferWidth(bufWidth)
     , m_pixBufferHeight(bufHeight)
 {
+    static const int MAX_DEVICES = 4;
+    EGLDeviceEXT eglDevs[MAX_DEVICES];
+    EGLint numDevices;
+    PFNEGLQUERYDEVICESEXTPROC eglQueryDevicesEXT = (PFNEGLQUERYDEVICESEXTPROC)eglGetProcAddress("eglQueryDevicesEXT");
+
+    eglQueryDevicesEXT(MAX_DEVICES, eglDevs, &numDevices);
+
+    printf("Detected %d devices\n", numDevices);
+    PFNEGLGETPLATFORMDISPLAYEXTPROC eglGetPlatformDisplayEXT = (PFNEGLGETPLATFORMDISPLAYEXTPROC) eglGetProcAddress("eglGetPlatformDisplayEXT");
+
+    m_eglDisplay = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT,
+                                        eglDevs[0], 0);
+
+    if(m_eglDisplay == EGL_NO_DISPLAY )
+    {
+        throw Exception("EGL could not be initialized.");
+    }
     m_configAttribs =
     {
               EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
@@ -323,12 +340,6 @@ HeadlessApp::HeadlessApp(const char * winTitle, int bufWidth, int bufHeight)
         EGL_HEIGHT, m_pixBufferHeight,
         EGL_NONE,
     };
-
-    m_eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    if(m_eglDisplay == EGL_NO_DISPLAY )
-    {
-        throw Exception("EGL could not be initialized.");
-    }
 
     EGLint eglMajor, eglMinor;
 
