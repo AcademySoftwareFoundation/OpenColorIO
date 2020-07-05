@@ -86,6 +86,10 @@ jobs:
         uses: actions/checkout@v2
       - name: Print VGA info
         run: lspci | grep VGA
+      - name: Info about EGL
+        run: ldconfig -p | grep EGL
+      - name: Find kernel modules from nvidia
+        run: lsmod | grep nvidia
       - name: Create build directories
         run: |
           mkdir _install
