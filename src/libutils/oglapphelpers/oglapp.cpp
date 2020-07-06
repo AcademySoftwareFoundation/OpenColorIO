@@ -308,7 +308,7 @@ HeadlessApp::HeadlessApp(const char * winTitle, int bufWidth, int bufHeight)
 {
     static const int MAX_DEVICES = 4;
     EGLDeviceEXT eglDevs[MAX_DEVICES];
-    EGLint numDevices;
+    EGLint numDevices = 0;
     PFNEGLQUERYDEVICESEXTPROC eglQueryDevicesEXT = (PFNEGLQUERYDEVICESEXTPROC)eglGetProcAddress("eglQueryDevicesEXT");
 
     eglQueryDevicesEXT(MAX_DEVICES, eglDevs, &numDevices);

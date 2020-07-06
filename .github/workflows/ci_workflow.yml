@@ -88,6 +88,8 @@ jobs:
         run: lspci | grep VGA
       - name: Info about EGL
         run: ldconfig -p | grep EGL
+      - name: Check mesa OpenGL version
+        run: glxinfo | grep "OpenGL version"
       - name: Find kernel modules from nvidia
         run: lsmod | grep nvidia
       - name: Create build directories
