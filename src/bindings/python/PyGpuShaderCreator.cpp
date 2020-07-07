@@ -150,7 +150,7 @@ void bindPyGpuShaderCreator(py::module & m)
         .def("getUniqueID", &GpuShaderCreator::getUniqueID)
         .def("setUniqueID", &GpuShaderCreator::setUniqueID, "uid"_a)
         .def("getLanguage", &GpuShaderCreator::getUniqueID)
-        .def("setLanguage", &GpuShaderCreator::setUniqueID, "lang"_a)
+        .def("setLanguage", &GpuShaderCreator::setUniqueID, "language"_a)
         .def("getFunctionName", &GpuShaderCreator::getFunctionName)
         .def("setFunctionName", &GpuShaderCreator::setFunctionName, "name"_a)
         .def("getPixelName", &GpuShaderCreator::getPixelName)
@@ -168,7 +168,7 @@ void bindPyGpuShaderCreator(py::module & m)
              "textureName"_a, "samplerName"_a, "uid"_a, "width"_a, "height"_a, "channel"_a, 
              "interpolation"_a, "values"_a)
         .def("add3DTexture", &GpuShaderCreator::add3DTexture,
-             "textureName"_a, "samplerName"_a, "uid"_a, "edgelen"_a, "interpolation"_a, "values"_a)
+             "textureName"_a, "samplerName"_a, "uid"_a, "edgeLen"_a, "interpolation"_a, "values"_a)
 
         // Methods to specialize parts of a OCIO shader program
         .def("addToDeclareShaderCode", &GpuShaderCreator::addToDeclareShaderCode, "shaderCode"_a)

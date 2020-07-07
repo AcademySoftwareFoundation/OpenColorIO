@@ -14,10 +14,10 @@ namespace OCIO_NAMESPACE
 {
 
 // Define __str__ implementation compatible with *most* OCIO classes
-template<typename T>
-void defStr(py::class_<T, OCIO_SHARED_PTR<T>> & cls)
+template<typename T, typename ... EXTRA>
+void defStr(py::class_<T, OCIO_SHARED_PTR<T>, EXTRA ...> & cls)
 {
-    cls.def("__str__", [](OCIO_SHARED_PTR<const T> & self)
+    cls.def("__str__", [](OCIO_SHARED_PTR<T> self)
         { 
             std::ostringstream os;
             os << (*self);

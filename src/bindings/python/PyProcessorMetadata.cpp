@@ -30,7 +30,7 @@ void bindPyProcessorMetadata(py::module & m)
 
         .def("getFiles", [](ProcessorMetadataRcPtr & self) { return FileIterator(self); })
         .def("getLooks", [](ProcessorMetadataRcPtr & self) { return LookIterator(self); })
-        .def("addFile", &ProcessorMetadata::addFile, "fname"_a)
+        .def("addFile", &ProcessorMetadata::addFile, "fileName"_a)
         .def("addLook", &ProcessorMetadata::addLook, "look"_a);
 
     py::class_<FileIterator>(cls, "FileIterator")

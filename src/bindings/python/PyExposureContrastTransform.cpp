@@ -10,9 +10,9 @@ void bindPyExposureContrastTransform(py::module & m)
 {
     ExposureContrastTransformRcPtr DEFAULT = ExposureContrastTransform::Create();
 
-    py::class_<ExposureContrastTransform, 
-               ExposureContrastTransformRcPtr /* holder */, 
-               Transform /* base */>(m, "ExposureContrastTransform")
+    auto cls = py::class_<ExposureContrastTransform, 
+                          ExposureContrastTransformRcPtr /* holder */, 
+                          Transform /* base */>(m, "ExposureContrastTransform")
         .def(py::init(&ExposureContrastTransform::Create))
         .def(py::init([](ExposureContrastStyle style,
                          double exposure,
@@ -50,7 +50,7 @@ void bindPyExposureContrastTransform(py::module & m)
              "dynamicExposure"_a = DEFAULT->isExposureDynamic(),
              "dynamicContrast"_a = DEFAULT->isContrastDynamic(),
              "dynamicGamma"_a = DEFAULT->isGammaDynamic(),
-             "dir"_a = DEFAULT->getDirection())
+             "direction"_a = DEFAULT->getDirection())
 
         .def("getFormatMetadata", 
              (FormatMetadata & (ExposureContrastTransform::*)()) 
@@ -82,6 +82,8 @@ void bindPyExposureContrastTransform(py::module & m)
              "logExposureStep"_a)
         .def("getLogMidGray", &ExposureContrastTransform::getLogMidGray)
         .def("setLogMidGray", &ExposureContrastTransform::setLogMidGray, "logMidGray"_a);
+
+    defStr(cls);
 }
 
 } // namespace OCIO_NAMESPACE

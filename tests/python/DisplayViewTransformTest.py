@@ -178,7 +178,7 @@ class DisplayViewTransformTest(unittest.TestCase):
                                           view=self.TEST_VIEW[0],
                                           looksBypass=True,
                                           dataBypass=False,
-                                          dir=OCIO.TRANSFORM_DIR_INVERSE)
+                                          direction=OCIO.TRANSFORM_DIR_INVERSE)
 
         self.assertEqual(self.TEST_SRC[0], dv_tr.getSrc())
         self.assertEqual(self.TEST_DISPLAY[0], dv_tr.getDisplay())
@@ -188,7 +188,7 @@ class DisplayViewTransformTest(unittest.TestCase):
         self.assertEqual(OCIO.TRANSFORM_DIR_INVERSE, dv_tr.getDirection())
 
         # With keyword not in their proper order.
-        dv_tr2 = OCIO.DisplayViewTransform(dir=OCIO.TRANSFORM_DIR_FORWARD,
+        dv_tr2 = OCIO.DisplayViewTransform(direction=OCIO.TRANSFORM_DIR_FORWARD,
                                            view=self.TEST_VIEW[1],
                                            src=self.TEST_SRC[1],
                                            looksBypass=True,
