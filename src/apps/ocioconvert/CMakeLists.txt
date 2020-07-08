@@ -37,5 +37,3 @@ target_link_libraries(ocioconvert
 install(TARGETS ocioconvert
     RUNTIME DESTINATION bin
 )
-
-

@@ -39,7 +39,7 @@ target_include_directories(oglapphelpers
 )
 
 
-if(${OCIO_IS_NVIDIA})
+if(${OCIO_USE_GLVND})
     if(${OCIO_EGL_HEADLESS})
         target_include_directories(oglapphelpers
             PRIVATE
@@ -65,16 +65,7 @@ if(${OCIO_IS_NVIDIA})
            )
    endif()
 else()
-    if(${OCIO_EGL_HEADLESS})
-        target_link_libraries(oglapphelpers
-            PRIVATE
-                OpenColorIO
-                ${OPENGL_LIBRARIES}
-                ${GLEW_LIBRARIES}
-                ${GLUT_LIBRARIES}
-                OpenGL::EGL
-            )
-    else()
+    # if OCIO_USE_GLVND is OFF, OCIO_EGL_HEADLESS is also OFF
     target_link_libraries(oglapphelpers
         PRIVATE
             OpenColorIO
@@ -82,7 +73,6 @@ else()
             ${GLEW_LIBRARIES}
             ${GLUT_LIBRARIES}
         )
-    endif()
 endif()
 
 if(${OCIO_EGL_HEADLESS})

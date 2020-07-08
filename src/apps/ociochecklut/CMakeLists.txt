@@ -38,4 +38,3 @@ target_link_libraries(ociochecklut
 install(TARGETS ociochecklut
     RUNTIME DESTINATION bin
 )
-

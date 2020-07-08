@@ -233,9 +233,9 @@ void OglApp::printGLInfo() const noexcept
 
 void OglApp::setupCommon()
 {
-
 #ifndef __APPLE__
     glewInit();
+
     // TO DO: Find out why glewInit() != GLEW_OK
 
     if (!glewIsSupported("GL_VERSION_2_0"))
@@ -308,13 +308,13 @@ HeadlessApp::HeadlessApp(const char * winTitle, int bufWidth, int bufHeight)
 {
     m_configAttribs =
     {
-              EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
-              EGL_BLUE_SIZE, 8,
-              EGL_GREEN_SIZE, 8,
-              EGL_RED_SIZE, 8,
-              EGL_DEPTH_SIZE, 8,
-              EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT,
-              EGL_NONE
+        EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
+        EGL_BLUE_SIZE, 8,
+        EGL_GREEN_SIZE, 8,
+        EGL_RED_SIZE, 8,
+        EGL_DEPTH_SIZE, 8,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT,
+        EGL_NONE
     };
 
     m_pixBufferAttribs =
@@ -331,26 +331,23 @@ HeadlessApp::HeadlessApp(const char * winTitle, int bufWidth, int bufHeight)
     }
 
     EGLint eglMajor, eglMinor;
-
     if(eglInitialize(m_eglDisplay, &eglMajor, &eglMinor) != EGL_TRUE)
     {
         throw Exception("EGL display connection couldn't be started.");
     }
 
-    // Choose an appropriate configuration
+    // Choose an appropriate configuration.
     EGLint numConfigs;
     if(eglChooseConfig(m_eglDisplay, &m_configAttribs[0], &m_eglConfig, 1, &numConfigs) != EGL_TRUE)
     {
         throw Exception("Failed to choose EGL configuration.");
     }
 
-    m_eglSurface = eglCreatePbufferSurface(m_eglDisplay, m_eglConfig,
-                                                     &m_pixBufferAttribs[0]);
+    m_eglSurface = eglCreatePbufferSurface(m_eglDisplay, m_eglConfig, &m_pixBufferAttribs[0]);
     eglBindAPI(EGL_OPENGL_API);
 
-    // Create a context and make it current
-    m_eglContext = eglCreateContext(m_eglDisplay, m_eglConfig, EGL_NO_CONTEXT,
-                                             NULL);
+    // Create a context and make it current.
+    m_eglContext = eglCreateContext(m_eglDisplay, m_eglConfig, EGL_NO_CONTEXT, NULL);
     if(eglMakeCurrent(m_eglDisplay, m_eglSurface, m_eglSurface, m_eglContext) != EGL_TRUE)
     {
         throw Exception("Could not make EGL context current.");
@@ -386,5 +383,3 @@ void HeadlessApp::redisplay()
 #endif
 
 } // namespace OCIO_NAMESPACE
-
-

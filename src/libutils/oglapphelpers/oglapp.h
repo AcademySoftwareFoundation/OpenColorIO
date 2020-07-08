@@ -22,38 +22,36 @@ namespace OCIO_NAMESPACE
 // the GPU.
 
 /*
-// Create and initialize.  Unfortunately, even for non-GUI apps we need to create a window that
-// will appear in the UI so here you specify the name of the window and its size.  For non-GUI
-// apps you may want to use a small size (it does not need to match the size of the image being
-// processed).
-//
+// Create and initialize OglAppRcPtr by creating a shared pointer to ScreenApp. You have to
+// specify the name of the window and its size. OglAppRcPtr that points to HeadlessApp object
+// can be created and used in the same way.
+OglAppRcPtr scrApp = std::make_shared<ScreenApp>("Window Name", windowWidth, windowHeight);
 
+float * imageBuffer = GetImageBuffer();
+int imageWidth = GetImageWidth();
+int imageHeight = GetImageHeight();
+scrApp->initImage(imagewidth, imageheight, OglApp::COMPONENTS_RGB, imageBuffer);
+scrApp->createGLBuffers();
 
-// TO DO: to be updated.
-
-
-
-//
 // Set (or change) shader.
 GpuShaderDescRcPtr shader = GpuShaderDesc::CreateShaderDesc();
 processor->getDefaultGPUProcessor()->extractGpuShaderInfo(shader);
-
-oglApp.setShader(shader);
+scrApp->setShader(shader);
 
 // Process the image:
 // - Call reshape to make the window size match the size of the image being processed.  (This will
 //   not update the size of the window in the UI.).
-oglApp.reshape(imageWidth, imageHeight);
+scrApp->reshape(imageWidth, imageHeight);
 // - Call redisplay to apply the shader.
-oglApp.redisplay();
+scrApp->redisplay();
 
 // Read the processed image.
 std::vector<float> imageBufferOut(3 * imageWidth * imageWidth);
-oglApp.readImage(imageBufferOut.data());
+scrApp->readImage(imageBufferOut.data());
 
 */
 
-// Forward declaration  of OglApp;
+// Forward declaration  of OglApp.
 class OglApp;
 typedef OCIO_SHARED_PTR<OglApp> OglAppRcPtr;
 
@@ -119,7 +117,7 @@ public:
     void virtual printGLInfo() const noexcept;
 
     // Return a pointer of either ScreenApp or HeadlessApp depending on the
-    // OCIO_HEADLESS_ENABLED preprocessor
+    // OCIO_HEADLESS_ENABLED preprocessor.
     static OglAppRcPtr CreateOglApp(const char * winTitle, int winWidth, int winHeight);
 
 protected:
@@ -131,8 +129,7 @@ protected:
     int m_viewportWidth{ 0 };
     int m_viewportHeight{ 0 };
 
-    // Set up glew if needed.
-    // Initialize the OpenGL engine
+    // Initialize the OpenGL engine, and set up GLEW if needed.
     void setupCommon();
 
 private:
@@ -158,11 +155,14 @@ class ScreenApp: public OglApp
 {
 public:
     ScreenApp() = delete;
+
     ScreenApp(const char * winTitle, int winWidth, int winHeight);
 
     ~ScreenApp();
+
     void redisplay() override;
     void printGLInfo() const noexcept override;
+
 private:
     // Window identifier returned by glutCreateWindow.
     int m_mainWin{ 0 };
@@ -176,15 +176,18 @@ class HeadlessApp: public OglApp
 {
 public:
     HeadlessApp() = delete;
-    HeadlessApp(const char * winTitle, int winWidth, int winHeight);
+
+    HeadlessApp(const char * winTitle, int bufWidth, int bufHeight);
 
     ~HeadlessApp();
 
     void printGLInfo() const noexcept override;
-    // Helper to print EGL info.
+    void redisplay() override;
+
+protected:
+    // Helper function to print EGL info.
     void printEGLInfo() const noexcept;
 
-    void redisplay() override;
 private:
     EGLint m_pixBufferWidth{ 0 };
     EGLint m_pixBufferHeight{ 0 };
@@ -199,10 +202,6 @@ private:
 };
 
 #endif
-
-// Factory function for creating OglAppRcPtr
-// Returns OCIO_SHARED_PTR<HeadlessApp> if OCIO_HEADLESS_ENABLED
-OglAppRcPtr getOglAppPtr(const char * winTitle, int winWidth, int winHeight);
 
 } // namespace OCIO_NAMESPACE
 

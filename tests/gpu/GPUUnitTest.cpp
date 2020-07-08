@@ -198,7 +198,7 @@ namespace
     static constexpr unsigned g_winHeight  = 256;
     static constexpr unsigned g_components = 4;
 
-    void AllocateImageTexture(OCIO::OglAppRcPtr app)
+    void AllocateImageTexture(OCIO::OglAppRcPtr & app)
     {
         const unsigned numEntries = g_winWidth * g_winHeight * g_components;
         OCIOGPUTest::CustomValues::Values image(numEntries, 0.0f);
@@ -218,7 +218,7 @@ namespace
         }
     }
 
-    void UpdateImageTexture(OCIO::OglAppRcPtr app, OCIOGPUTestRcPtr & test)
+    void UpdateImageTexture(OCIO::OglAppRcPtr & app, OCIOGPUTestRcPtr & test)
     {
         // Note: User-specified custom values are padded out
         // to the preferred size (g_winWidth x g_winHeight).
@@ -323,7 +323,7 @@ namespace
         app->updateImage(&values.m_inputValues[0]);
     }
 
-    void UpdateOCIOGLState(OCIO::OglAppRcPtr app, OCIOGPUTestRcPtr & test)
+    void UpdateOCIOGLState(OCIO::OglAppRcPtr & app, OCIOGPUTestRcPtr & test)
     {
         app->setPrintShader(test->isVerbose());
         OCIO::ConstProcessorRcPtr & processor = test->getProcessor();
@@ -366,7 +366,7 @@ namespace
     static constexpr size_t invalidIndex = std::numeric_limits<size_t>::max();
 
     // Validate the GPU processing against the CPU one.
-    void ValidateImageTexture(OCIO::OglAppRcPtr app, OCIOGPUTestRcPtr & test)
+    void ValidateImageTexture(OCIO::OglAppRcPtr & app, OCIOGPUTestRcPtr & test)
     {
         OCIO::ConstCPUProcessorRcPtr processor
             = test->getProcessor()->getDefaultCPUProcessor();
