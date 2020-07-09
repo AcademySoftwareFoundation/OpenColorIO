@@ -65,6 +65,8 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             cxx-compiler: g++
@@ -76,6 +78,8 @@ jobs:
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             cxx-compiler: g++
@@ -87,6 +91,8 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 14
             cxx-compiler: g++
@@ -98,6 +104,8 @@ jobs:
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'OFF'
             cxx-standard: 11
             cxx-compiler: g++
@@ -112,6 +120,8 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             cxx-compiler: g++
@@ -126,6 +136,8 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             cxx-compiler: clang++
@@ -137,6 +149,8 @@ jobs:
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            build-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             cxx-compiler: clang++
@@ -148,6 +162,8 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 14
             cxx-compiler: clang++
@@ -159,6 +175,8 @@ jobs:
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'OFF'
             cxx-standard: 11
             cxx-compiler: clang++
@@ -173,6 +191,8 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             cxx-compiler: clang++
@@ -202,7 +222,8 @@ jobs:
                 -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
-                -DOCIO_BUILD_GPU_TESTS=OFF \
+                -DOCIO_BUILD_GPU_TESTS=${{ matrix.build-gpu }} \
+                -DOCIO_USE_HEADLESS=${{ matrix.use-headless }} \
                 -DOCIO_USE_SSE=${{ matrix.use-sse }} \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
@@ -242,6 +263,8 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             python-version: 3.7
@@ -250,6 +273,8 @@ jobs:
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             python-version: 3.7
@@ -258,6 +283,8 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 14
             python-version: 3.7
@@ -266,6 +293,8 @@ jobs:
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'OFF'
             cxx-standard: 11
             python-version: 3.7
@@ -274,6 +303,8 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             python-version: 2.7
@@ -296,7 +327,8 @@ jobs:
                 -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
-                -DOCIO_BUILD_GPU_TESTS=OFF \
+                -DOCIO_BUILD_GPU_TESTS=${{ matrix.build-gpu }} \
+                -DOCIO_USE_HEADLESS=${{ matrix.use-headless }} \
                 -DOCIO_USE_SSE=${{ matrix.use-sse }} \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
@@ -338,6 +370,8 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             python-version: 3.7
@@ -346,6 +380,8 @@ jobs:
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             python-version: 3.7
@@ -354,6 +390,8 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 14
             python-version: 3.7
@@ -362,6 +400,8 @@ jobs:
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'OFF'
             cxx-standard: 11
             python-version: 3.7
@@ -370,6 +410,8 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             python-version: 2.7
@@ -394,7 +436,8 @@ jobs:
                 -DCMAKE_GENERATOR_PLATFORM=x64 \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
-                -DOCIO_BUILD_GPU_TESTS=OFF \
+                -DOCIO_BUILD_GPU_TESTS=${{ matrix.build-gpu }} \
+                -DOCIO_USE_HEADLESS=${{ matrix.use-headless }} \
                 -DOCIO_USE_SSE=${{ matrix.use-sse }} \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \

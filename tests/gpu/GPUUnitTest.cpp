@@ -198,12 +198,12 @@ namespace
     static constexpr unsigned g_winHeight  = 256;
     static constexpr unsigned g_components = 4;
 
-    void AllocateImageTexture(OCIO::OglApp & app)
+    void AllocateImageTexture(OCIO::OglAppRcPtr & app)
     {
         const unsigned numEntries = g_winWidth * g_winHeight * g_components;
         OCIOGPUTest::CustomValues::Values image(numEntries, 0.0f);
 
-        app.initImage(g_winWidth, g_winHeight, OCIO::OglApp::COMPONENTS_RGBA, &image[0]);
+        app->initImage(g_winWidth, g_winHeight, OCIO::OglApp::COMPONENTS_RGBA, &image[0]);
     }
 
     void SetTestValue(float * image, float val, unsigned numComponents)
@@ -218,7 +218,7 @@ namespace
         }
     }
 
-    void UpdateImageTexture(OCIO::OglApp & app, OCIOGPUTestRcPtr & test)
+    void UpdateImageTexture(OCIO::OglAppRcPtr & app, OCIOGPUTestRcPtr & test)
     {
         // Note: User-specified custom values are padded out
         // to the preferred size (g_winWidth x g_winHeight).
@@ -320,17 +320,17 @@ namespace
             throw OCIO::Exception("Missing some expected input values");
         }
 
-        app.updateImage(&values.m_inputValues[0]);
+        app->updateImage(&values.m_inputValues[0]);
     }
 
-    void UpdateOCIOGLState(OCIO::OglApp & app, OCIOGPUTestRcPtr & test)
+    void UpdateOCIOGLState(OCIO::OglAppRcPtr & app, OCIOGPUTestRcPtr & test)
     {
-        app.setPrintShader(test->isVerbose());
+        app->setPrintShader(test->isVerbose());
         OCIO::ConstProcessorRcPtr & processor = test->getProcessor();
         OCIO::GpuShaderDescRcPtr & shaderDesc = test->getShaderDesc();
         // Collect the shader program information for a specific processor.
         processor->getDefaultGPUProcessor()->extractGpuShaderInfo(shaderDesc);
-        app.setShader(shaderDesc);
+        app->setShader(shaderDesc);
     }
 
     void DiffComponent(const std::vector<float> & cpuImage,
@@ -366,7 +366,7 @@ namespace
     static constexpr size_t invalidIndex = std::numeric_limits<size_t>::max();
 
     // Validate the GPU processing against the CPU one.
-    void ValidateImageTexture(OCIO::OglApp & app, OCIOGPUTestRcPtr & test)
+    void ValidateImageTexture(OCIO::OglAppRcPtr & app, OCIOGPUTestRcPtr & test)
     {
         OCIO::ConstCPUProcessorRcPtr processor
             = test->getProcessor()->getDefaultCPUProcessor();
@@ -406,7 +406,7 @@ namespace
         // Step 2: Grab the GPU output from the rendering buffer.
 
         OCIOGPUTest::CustomValues::Values gpuImage(g_winWidth*g_winHeight*g_components, 0.0f);
-        app.readImage(&gpuImage[0]);
+        app->readImage(&gpuImage[0]);
 
         // Step 3: Compare the two results.
 
@@ -501,7 +501,7 @@ int main(int, char **)
     OCIO::OglAppRcPtr app;
     try
     {
-        app = std::make_shared<OCIO::OglApp>("GPU tests", 10, 10);
+        app = OCIO::OglApp::CreateOglApp("GPU tests", 10, 10);
     }
     catch (const OCIO::Exception & e)
     {
@@ -512,7 +512,7 @@ int main(int, char **)
     app->printGLInfo();
 
     // Step 2: Allocate the texture that holds the image.
-    AllocateImageTexture(*app);
+    AllocateImageTexture(app);
 
     // Step 3: Create the frame buffer and render buffer.
     app->createGLBuffers();
@@ -558,10 +558,10 @@ int main(int, char **)
             if(test->isValid() && enabledTest)
             {
                 // Initialize the texture with the RGBA values to be processed.
-                UpdateImageTexture(*app, test);
+                UpdateImageTexture(app, test);
 
                 // Update the GPU shader program.
-                UpdateOCIOGLState(*app, test);
+                UpdateOCIOGLState(app, test);
 
                 const size_t numRetest = test->getNumRetests();
                 // Need to run once and for each retest.
@@ -580,7 +580,7 @@ int main(int, char **)
 
                     // Compute the expected values using the CPU and compare
                     // against the GPU values.
-                    ValidateImageTexture(*app, test);
+                    ValidateImageTexture(app, test);
                 }
             }
         }
