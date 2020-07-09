@@ -331,7 +331,7 @@ class CDLTransformTest(unittest.TestCase):
                                    power=self.TEST_CDL_POWER,
                                    sat=self.TEST_CDL_SAT,
                                    id=self.TEST_CDL_ID,
-                                   desc=self.TEST_CDL_DESC)
+                                   description=self.TEST_CDL_DESC)
 
         self.assertEqual(self.TEST_CDL_ID, cdl_tr.getID())
         self.assertEqual(self.TEST_CDL_DESC, cdl_tr.getDescription())
@@ -343,7 +343,7 @@ class CDLTransformTest(unittest.TestCase):
 
         # With keyword not in their proper order.
         cdl_tr2 = OCIO.CDLTransform(id=self.TEST_CDL_ID,
-                                    desc=self.TEST_CDL_DESC,
+                                    description=self.TEST_CDL_DESC,
                                     slope=self.TEST_CDL_SLOPE,
                                     offset=self.TEST_CDL_OFFSET,
                                     power=self.TEST_CDL_POWER,

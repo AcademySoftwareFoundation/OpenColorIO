@@ -30,11 +30,11 @@ private:
 };
 
 // Utility to mute the logging mechanism so the unit test output is clean.
-class MuteLogging : public LogGuard
+class MuteLogging
 {
 public:
     MuteLogging();
-    virtual ~MuteLogging() = default;
+    ~MuteLogging();
 };
 
 } // namespace OCIO_NAMESPACE

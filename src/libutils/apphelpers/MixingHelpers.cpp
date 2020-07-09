@@ -375,8 +375,11 @@ ConstProcessorRcPtr MixingColorSpaceManagerImpl::getProcessorWithoutEncoding(con
         if (getSelectedMixingSpaceIdx()>0)
         {
             // Mix colors in the selected (display, view) space.
-            return DisplayViewHelpers::GetProcessor(m_config, workingName, displayName, viewName,
-                                                    TRANSFORM_DIR_FORWARD);
+            auto dt = DisplayViewTransform::Create();
+            dt->setDisplay(displayName);
+            dt->setView(viewName);
+            dt->setSrc(workingName);
+            return m_config->getProcessor(dt);
         }
         else
         {

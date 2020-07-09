@@ -22,6 +22,7 @@ ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & config,
                                  const char * workingName,
                                  const char * displayName,
                                  const char * viewName,
+                                 const ConstMatrixTransformRcPtr & channelView, // Can be null.
                                  TransformDirection direction);
 
 // Add a new (display, view) pair and the new color space to a configuration instance.

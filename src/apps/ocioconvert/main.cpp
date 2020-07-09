@@ -463,8 +463,8 @@ int main(int argc, const char **argv)
             }
             else if (useDisplayView)
             {
-                OCIO::DisplayTransformRcPtr t = OCIO::DisplayTransform::Create();
-                t->setInputColorSpaceName(inputcolorspace);
+                OCIO::DisplayViewTransformRcPtr t = OCIO::DisplayViewTransform::Create();
+                t->setSrc(inputcolorspace);
                 t->setDisplay(display);
                 t->setView(view);
                 processor = config->getProcessor(t);
