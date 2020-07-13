@@ -16,7 +16,7 @@ std::vector<float> getVarsStdVec(const AllocationTransformRcPtr & p)
     return vars;
 }
 
-void setVars(const AllocationTransformRcPtr & p, const std::vector<float> & vars)
+void setVars(AllocationTransformRcPtr & p, const std::vector<float> & vars)
 {
     if (vars.size() < 2 || vars.size() > 3)
     {
@@ -31,9 +31,9 @@ void bindPyAllocationTransform(py::module & m)
 {
     AllocationTransformRcPtr DEFAULT = AllocationTransform::Create();
 
-    py::class_<AllocationTransform, 
-               AllocationTransformRcPtr /* holder */, 
-               Transform /* base */>(m, "AllocationTransform")
+    auto cls = py::class_<AllocationTransform, 
+                          AllocationTransformRcPtr /* holder */, 
+                          Transform /* base */>(m, "AllocationTransform")
         .def(py::init(&AllocationTransform::Create))
         .def(py::init([](Allocation allocation, 
                          const std::vector<float> & vars, 
@@ -41,18 +41,18 @@ void bindPyAllocationTransform(py::module & m)
             {
                 AllocationTransformRcPtr p = AllocationTransform::Create();
                 p->setAllocation(allocation);
-                setVars(p, vars);
+                if (!vars.empty()) { setVars(p, vars); }
                 p->setDirection(dir);
                 p->validate();
                 return p;
             }), 
              "allocation"_a = DEFAULT->getAllocation(), 
              "vars"_a = getVarsStdVec(DEFAULT),
-             "dir"_a = DEFAULT->getDirection())
+             "direction"_a = DEFAULT->getDirection())
 
         .def("getAllocation", &AllocationTransform::getAllocation)
         .def("setAllocation", &AllocationTransform::setAllocation, "allocation"_a)
-        .def("getVars", [](AllocationTransformRcPtr & self)
+        .def("getVars", [](AllocationTransformRcPtr self)
             {
                 return getVarsStdVec(self);
             })
@@ -61,6 +61,8 @@ void bindPyAllocationTransform(py::module & m)
                 setVars(self, vars);
             }, 
              "vars"_a);
+
+    defStr(cls);
 }
 
 } // namespace OCIO_NAMESPACE
