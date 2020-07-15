@@ -25,10 +25,9 @@ phases:
               -DOCIO_BUILD_DOCS=OFF \
               -DOCIO_BUILD_TESTS=ON \
               -DOCIO_BUILD_GPU_TESTS=ON \
-              -DOCIO_BUILD_PYTHON=ON \
+              -DOCIO_BUILD_PYTHON=OFF \
               -DOCIO_INSTALL_EXT_PACKAGES=ALL \
-              -DOCIO_WARNING_AS_ERROR=ON \
-              -DPYTHON_EXECUTABLE=$(which python)
+              -DOCIO_WARNING_AS_ERROR=ON
       - |
         cmake --build . \
               --target install \
