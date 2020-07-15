@@ -236,7 +236,7 @@ jobs:
       - name: Run CodeBuild
         uses: aws-actions/aws-codebuild-run-project@v1.0.0
         with:
-          project-name: OpenColorIO_GPU_CI
+          project-name: OpenColorIO
           buildspec-override: buildspec.yml
 
   # ---------------------------------------------------------------------------
