@@ -29,7 +29,7 @@ void bindPyColorSpaceTransform(py::module & m)
             }), 
              "src"_a        = DEFAULT->getSrc(), 
              "dst"_a        = DEFAULT->getDst(),
-             "dir"_a        = DEFAULT->getDirection(),
+             "direction"_a        = DEFAULT->getDirection(),
              "dataBypass"_a = DEFAULT->getDataBypass())
 
         .def("getSrc",        &ColorSpaceTransform::getSrc)

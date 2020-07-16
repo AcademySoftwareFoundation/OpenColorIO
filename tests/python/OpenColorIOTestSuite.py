@@ -37,6 +37,7 @@ import CDLTransformTest
 import ColorSpaceTest
 import ColorSpaceTransformTest
 import ExponentTransformTest
+import ExponentWithLinearTransformTest
 import FileTransformTest
 import LogTransformTest
 import LookTest
@@ -67,6 +68,7 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(ColorSpaceTest))
     suite.addTest(loader.loadTestsFromModule(ColorSpaceTransformTest))
     suite.addTest(loader.loadTestsFromModule(ExponentTransformTest))
+    suite.addTest(loader.loadTestsFromModule(ExponentWithLinearTransformTest))
     suite.addTest(loader.loadTestsFromModule(FileTransformTest))
     suite.addTest(loader.loadTestsFromModule(LogTransformTest))
     suite.addTest(loader.loadTestsFromModule(LookTest))

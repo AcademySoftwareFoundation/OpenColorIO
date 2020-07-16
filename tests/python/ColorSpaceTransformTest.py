@@ -80,14 +80,14 @@ class ColorSpaceTransformTest(unittest.TestCase):
         # With keywords in their proper order.
         cs_tr = OCIO.ColorSpaceTransform(src=self.TEST_SRC,
                                          dst=self.TEST_DST,
-                                         dir=self.TEST_DIRECTION)
+                                         direction=self.TEST_DIRECTION)
 
         self.assertEqual(cs_tr.getDirection(), self.TEST_DIRECTION)
         self.assertEqual(cs_tr.getSrc(), self.TEST_SRC)
         self.assertEqual(cs_tr.getDst(), self.TEST_DST)
 
         # With keywords not in their proper order.
-        cs_tr2 = OCIO.ColorSpaceTransform(dir=self.TEST_DIRECTION,
+        cs_tr2 = OCIO.ColorSpaceTransform(direction=self.TEST_DIRECTION,
                                           src=self.TEST_SRC,
                                           dst=self.TEST_DST)
 
