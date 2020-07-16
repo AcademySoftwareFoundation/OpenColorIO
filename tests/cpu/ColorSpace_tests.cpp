@@ -29,6 +29,7 @@ OCIO_ADD_TEST(ColorSpace, basic)
     OCIO_CHECK_EQUAL(std::string(""), cs->getFamily());
     OCIO_CHECK_EQUAL(std::string(""), cs->getDescription());
     OCIO_CHECK_EQUAL(std::string(""), cs->getEqualityGroup());
+    OCIO_CHECK_EQUAL(std::string(""), cs->getEncoding());
     OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_UNKNOWN, cs->getBitDepth());
     OCIO_CHECK_ASSERT(!cs->isData());
     OCIO_CHECK_EQUAL(OCIO::ALLOCATION_UNIFORM, cs->getAllocation());
@@ -42,6 +43,8 @@ OCIO_ADD_TEST(ColorSpace, basic)
     OCIO_CHECK_EQUAL(std::string("description"), cs->getDescription());
     cs->setEqualityGroup("equalitygroup");
     OCIO_CHECK_EQUAL(std::string("equalitygroup"), cs->getEqualityGroup());
+    cs->setEncoding("encoding");
+    OCIO_CHECK_EQUAL(std::string("encoding"), cs->getEncoding());
     cs->setBitDepth(OCIO::BIT_DEPTH_F16);
     OCIO_CHECK_EQUAL(OCIO::BIT_DEPTH_F16, cs->getBitDepth());
     cs->setIsData(true);
@@ -58,7 +61,7 @@ OCIO_ADD_TEST(ColorSpace, basic)
 
     std::ostringstream oss;
     oss << *cs;
-    OCIO_CHECK_EQUAL(oss.str().size(), 149);
+    OCIO_CHECK_EQUAL(oss.str().size(), 168);
 }
 
 OCIO_ADD_TEST(ColorSpace, category)
@@ -98,4 +101,3 @@ OCIO_ADD_TEST(ColorSpace, category)
     OCIO_CHECK_NO_THROW(cs->clearCategories());
     OCIO_CHECK_EQUAL(cs->getNumCategories(), 0);
 }
-

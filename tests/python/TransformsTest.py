@@ -151,8 +151,8 @@ class TransformsTest(unittest.TestCase):
         ct.setDst("bar")
         self.assertEqual("bar", ct.getDst())
 
-        ### DisplayTransform ###
-        dt = OCIO.DisplayTransform()
+        ### DisplayViewTransform ###
+        dt = OCIO.DisplayViewTransform()
         dt.setInputColorSpaceName("lin18")
         self.assertEqual("lin18", dt.getInputColorSpaceName())
         dt.setLinearCC(ct)
@@ -174,16 +174,16 @@ class TransformsTest(unittest.TestCase):
         dt.setLooksOverrideEnabled(True)
         self.assertEqual(True, dt.getLooksOverrideEnabled())
 
-        dt2 = OCIO.DisplayTransform("lin18", "sRGB", "foobar",
-                                    OCIO.TRANSFORM_DIR_INVERSE)
+        dt2 = OCIO.DisplayViewTransform("lin18", "sRGB", "foobar",
+                                        OCIO.TRANSFORM_DIR_INVERSE)
         self.assertEqual("lin18", dt2.getInputColorSpaceName())
         self.assertEqual("sRGB", dt2.getDisplay())
         self.assertEqual("foobar", dt2.getView())
         self.assertEqual(OCIO.TRANSFORM_DIR_INVERSE, dt2.getDirection())
 
-        dt3 = OCIO.DisplayTransform(inputColorSpaceName="lin18",
-                                    display="sRGB", view="foobar",
-                                    direction=OCIO.TRANSFORM_DIR_INVERSE)
+        dt3 = OCIO.DisplayViewTransform(inputColorSpaceName="lin18",
+                                        display="sRGB", view="foobar",
+                                        direction=OCIO.TRANSFORM_DIR_INVERSE)
         self.assertEqual("lin18", dt3.getInputColorSpaceName())
         self.assertEqual("sRGB", dt3.getDisplay())
         self.assertEqual("foobar", dt3.getView())

@@ -21,7 +21,7 @@ void bindPyAllocationTransform(py::module & m);
 void bindPyBuiltinTransform(py::module & m);
 void bindPyCDLTransform(py::module & m);
 void bindPyColorSpaceTransform(py::module & m);
-void bindPyDisplayTransform(py::module & m);
+void bindPyDisplayViewTransform(py::module & m);
 void bindPyExponentTransform(py::module & m);
 void bindPyExponentWithLinearTransform(py::module & m);
 void bindPyExposureContrastTransform(py::module & m);
