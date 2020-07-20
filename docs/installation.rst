@@ -109,7 +109,7 @@ or static linking:
 - ``-Dlcms2_ROOT=<path>`` (include and/or library root dir)
 - ``-Dlcms2_STATIC_LIBRARY=ON`` (prefer static lib)
 - ``-pybind11_ROOT=<path>`` (include and/or library root dir)
-- ``-DPYTHON_EXECUTABLE=<path>`` (Python executable)
+- ``-DPython_EXECUTABLE=<path>`` (Python executable)
 - ``-DNUKE_INSTALL_PATH=<path>`` (or use ``NDK_PATH`` environment variable)
 
 To hint at Python package locations, add paths to the ``PYTHONPATH`` 
@@ -269,9 +269,9 @@ for compiling on Windows as provided by `@hodoulp <https://github.com/hodoulp>`_
         -DOCIO_USE_SSE=ON ^
         -DOCIO_WARNING_AS_ERROR=ON ^
         -DOCIO_BUILD_PYTHON=%OCIO_BUILD_PYTHON% ^
-        -DPYTHON_LIBRARY=%PYTHONPATH%\libs\python27.lib ^
-        -DPYTHON_INCLUDE_DIR=%PYTHONPATH%\include ^
-        -DPYTHON_EXECUTABLE=%PYTHONPATH%\python.exe ^
+        -DPython_LIBRARY=%PYTHONPATH%\libs\python27.lib ^
+        -DPython_INCLUDE_DIR=%PYTHONPATH%\include ^
+        -DPython_EXECUTABLE=%PYTHONPATH%\python.exe ^
         -DOCIO_BUILD_JAVA=OFF ^
         -DCMAKE_PREFIX_PATH=%COMPILED_THIRD_PARTY_HOME%\OpenImageIO-1.9.0;%COMPILED_THIRD_PARTY_HOME%/ilmbase-2.2.0 ^
         %OCIO_PATH%

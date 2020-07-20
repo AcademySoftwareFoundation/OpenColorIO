@@ -3,7 +3,7 @@
 
 ###############################################################################
 ### Python ###
-find_package(PythonInterp 2.7 REQUIRED)
+find_package(Python REQUIRED COMPONENTS Interpreter)
 if(NOT OCIO_BUILD_PYTHON)
     message(FATAL_ERROR "Doc generation requires that the python bindings be built")
 endif()
@@ -51,12 +51,12 @@ if(WIN32)
     set(PYT_PRE_CMD set ${PATH_SET} "\n" set ${PYTHONPATH_SET} "\n" call)
 
 else()
-    set(PYTHON_VARIANT "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
+    set(_Python_VARIANT "${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}")
     string(CONCAT PYT_PRE_CMD
         "PYTHONPATH="
         "${CMAKE_BINARY_DIR}/src/bindings/python"
         ":"
-        "${CMAKE_BINARY_DIR}/ext/dist/lib${LIB_SUFFIX}/python${PYTHON_VARIANT}/site-packages"
+        "${CMAKE_BINARY_DIR}/ext/dist/lib${LIB_SUFFIX}/python${_Python_VARIANT}/site-packages"
         ":"
         "$ENV{PYTHONPATH}"
     )
@@ -111,9 +111,9 @@ set(OCIO_HEADER_DIR "${CMAKE_SOURCE_DIR}/include/OpenColorIO")
 set(RST_DESTINATION "${CMAKE_BINARY_DIR}/docs/developers/api/")
 add_custom_target(rst_extraction
     COMMAND ${CMAKE_COMMAND} -E make_directory ${RST_DESTINATION}
-    COMMAND ${PYTHON_EXECUTABLE} ${EXTRACT_COMMAND} ${OCIO_HEADER_DIR}/OpenColorIO.h ${RST_DESTINATION}/OpenColorIO.rst
-    COMMAND ${PYTHON_EXECUTABLE} ${EXTRACT_COMMAND} ${OCIO_HEADER_DIR}/OpenColorTransforms.h ${RST_DESTINATION}/OpenColorTransforms.rst
-    COMMAND ${PYTHON_EXECUTABLE} ${EXTRACT_COMMAND} ${OCIO_HEADER_DIR}/OpenColorTypes.h ${RST_DESTINATION}/OpenColorTypes.rst
+    COMMAND ${Python_EXECUTABLE} ${EXTRACT_COMMAND} ${OCIO_HEADER_DIR}/OpenColorIO.h ${RST_DESTINATION}/OpenColorIO.rst
+    COMMAND ${Python_EXECUTABLE} ${EXTRACT_COMMAND} ${OCIO_HEADER_DIR}/OpenColorTransforms.h ${RST_DESTINATION}/OpenColorTransforms.rst
+    COMMAND ${Python_EXECUTABLE} ${EXTRACT_COMMAND} ${OCIO_HEADER_DIR}/OpenColorTypes.h ${RST_DESTINATION}/OpenColorTypes.rst
     COMMENT "Extracting .rst files from C++ headers"
 )
 
