@@ -58,12 +58,12 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     if(NOT pybind11_VERSION)
         # Check if pybind11 was installed as a Python package (i.e. with 
         # "pip install pybind11"). This requires a Python interpreter.
-        find_package(PythonInterp 2.7 QUIET)
+        find_package(Python QUIET COMPONENTS Interpreter)
 
-        if(PYTHONINTERP_FOUND)
+        if(Python_Interpreter_FOUND)
             execute_process(
                 COMMAND
-                    "${PYTHON_EXECUTABLE}" -c 
+                    "${Python_EXECUTABLE}" -c 
                     "print(__import__('pybind11').__version__)"
                 RESULTS_VARIABLE
                     _pybind11_VER_RESULTS
@@ -79,7 +79,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
             if(_pybind11_VER_RESULTS EQUAL 0 AND "${_pybind11_VER_OUTPUT}" MATCHES "[.0-9]+")
                 execute_process(
                     COMMAND
-                        "${PYTHON_EXECUTABLE}" -c 
+                        "${Python_EXECUTABLE}" -c 
                         "import os;\
                             import pybind11;\
                             print(os.path.join(os.path.dirname(pybind11.__file__), 'include'))"
@@ -99,7 +99,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
                     set(pybind11_INCLUDE_DIR ${_pybind11_DIR_OUTPUT})
                     message(STATUS 
                         "Using pybind11 python package (version \"${pybind11_VERSION}\", "
-                        "found in python \"${PYTHON_VERSION_STRING}\")"
+                        "found in python \"${Python_VERSION}\")"
                     )
                 endif()
             endif()

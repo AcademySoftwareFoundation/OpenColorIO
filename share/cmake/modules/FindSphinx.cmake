@@ -19,16 +19,16 @@
 # installed via pip at build time.
 #
 
-find_package(PythonInterp 2.7 QUIET)
+find_package(Python QUIET COMPONENTS Interpreter)
 
 if(NOT TARGET Sphinx)
     add_custom_target(Sphinx)
     set(_Sphinx_TARGET_CREATE TRUE)
 endif()
 
-if(PYTHONINTERP_FOUND AND WIN32)
-    get_filename_component(PYTHON_ROOT "${PYTHON_EXECUTABLE}" DIRECTORY)
-    set(PYTHON_SCRIPTS_DIR "${PYTHON_ROOT}/Scripts")
+if(Python_Interpreter_FOUND AND WIN32)
+    get_filename_component(_Python_ROOT "${Python_EXECUTABLE}" DIRECTORY)
+    set(_Python_SCRIPTS_DIR "${_Python_ROOT}/Scripts")
 endif()
 
 ###############################################################################
@@ -41,7 +41,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
             sphinx-build
         HINTS
             ${Sphinx_ROOT}
-            ${PYTHON_SCRIPTS_DIR}
+            ${_Python_SCRIPTS_DIR}
     )
 
     # Override REQUIRED if package can be installed
@@ -68,10 +68,10 @@ if(NOT Sphinx_FOUND)
     if(WIN32)
         set(Sphinx_EXECUTABLE "${_EXT_DIST_ROOT}/Scripts/sphinx-build")
         # On Windows platform, pip is in the Scripts sub-directory.
-        set(_PYTHON_PIP "${PYTHON_SCRIPTS_DIR}/pip.exe")
+        set(_Python_PIP "${_Python_SCRIPTS_DIR}/pip.exe")
     else()
         set(Sphinx_EXECUTABLE "${_EXT_DIST_ROOT}/bin/sphinx-build")
-        set(_PYTHON_PIP "pip")
+        set(_Python_PIP "pip")
     endif()
 
     # Configure install target
@@ -80,7 +80,7 @@ if(NOT Sphinx_FOUND)
             TARGET
                 Sphinx
             COMMAND
-                ${_PYTHON_PIP} install --disable-pip-version-check
+                ${_Python_PIP} install --disable-pip-version-check
                                        --install-option="--prefix=${_EXT_DIST_ROOT}"
                                        -I Sphinx==${Sphinx_FIND_VERSION}
             WORKING_DIRECTORY

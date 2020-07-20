@@ -35,10 +35,10 @@ if(OCIO_BUILD_PYTHON)
 endif()
 
 if(OCIO_BUILD_DOCS)
-    find_package(PythonInterp 2.7 QUIET)
+    find_package(Python QUIET COMPONENTS Interpreter)
 
-    if(PYTHONINTERP_FOUND)
-        if(PYTHON_VERSION_MAJOR GREATER_EQUAL 3)
+    if(Python_Interpreter_FOUND)
+        if(Python_VERSION_MAJOR GREATER_EQUAL 3)
             set(Sphinx_MIN_VERSION 2.0.0)
         else()
             # Last release with Python 2.7 support

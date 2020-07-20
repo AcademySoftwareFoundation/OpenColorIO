@@ -18,7 +18,7 @@
 # installed via pip at build time.
 #
 
-find_package(PythonInterp 2.7 QUIET)
+find_package(Python QUIET COMPONENTS Interpreter)
 
 macro(find_python_package package version)
     string(TOUPPER ${package} _PKG_UPPER)
@@ -45,7 +45,7 @@ macro(find_python_package package version)
         # Try importing Python package
         execute_process(
             COMMAND
-                "${PYTHON_EXECUTABLE}" -c "import ${_PKG_LOWER}"
+                "${Python_EXECUTABLE}" -c "import ${_PKG_LOWER}"
             RESULT_VARIABLE
                 _PKG_IMPORT_RESULT
             OUTPUT_QUIET ERROR_QUIET
@@ -58,7 +58,7 @@ macro(find_python_package package version)
             # Get the package's location
             execute_process(
                 COMMAND
-                    "${PYTHON_EXECUTABLE}" -c 
+                    "${Python_EXECUTABLE}" -c 
                     "import ${_PKG_LOWER}, os; print(os.path.dirname(${_PKG_LOWER}.__file__))"
                 OUTPUT_VARIABLE
                     _PKG_DIR
@@ -92,13 +92,12 @@ macro(find_python_package package version)
             if(WIN32)
                 set(_SITE_PKGS_DIR "${_EXT_DIST_ROOT}/lib${LIB_SUFFIX}/site-packages")
                 # On Windows platform, pip is in the Scripts sub-directory.
-                get_filename_component(PYTHON_ROOT "${PYTHON_EXECUTABLE}" DIRECTORY)
                 set(_PYTHON_PIP "${PYTHON_ROOT}/Scripts/pip.exe")
             else()
-                set(_PYTHON_VARIANT "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
+                set(_Python_VARIANT "${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}")
                 set(_SITE_PKGS_DIR
-                    "${_EXT_DIST_ROOT}/lib${LIB_SUFFIX}/python${_PYTHON_VARIANT}/site-packages")
-                set(_PYTHON_PIP "pip")
+                    "${_EXT_DIST_ROOT}/lib${LIB_SUFFIX}/python${_Python_VARIANT}/site-packages")
+                set(_Python_PIP "pip")
             endif()
 
             # Configure install target
@@ -106,7 +105,7 @@ macro(find_python_package package version)
                 TARGET
                     ${package}
                 COMMAND
-                    ${_PYTHON_PIP} install --disable-pip-version-check
+                    ${_Python_PIP} install --disable-pip-version-check
                                            --install-option="--prefix=${_EXT_DIST_ROOT}"
                                            -I ${package}==${version}
                 WORKING_DIRECTORY

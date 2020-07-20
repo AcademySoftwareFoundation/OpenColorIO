@@ -128,7 +128,7 @@ jobs:
                 -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_INSTALL_EXT_PACKAGES=NONE \
                 -DOCIO_WARNING_AS_ERROR=OFF \
-                -DPYTHON_EXECUTABLE=$(which python)
+                -DPython_EXECUTABLE=$(which python)
         working-directory: _build
       - name: Build
         run: |
@@ -184,7 +184,7 @@ jobs:
                 -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
-                -DPYTHON_EXECUTABLE=$(which python)
+                -DPython_EXECUTABLE=$(which python)
         working-directory: _build
       - name: Build OCIO with build-wrapper
         run: build-wrapper-linux-x86-64 --out-dir bw_output make clean all
