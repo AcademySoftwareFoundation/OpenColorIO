@@ -21,6 +21,8 @@ jobs:
       <${{ matrix.compiler-desc }} 
        cxx=${{ matrix.cxx-standard }}, 
        docs=${{ matrix.build-docs }}>'
+    # Don't run on OCIO forks
+    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     # GH-hosted VM. The build runs in CentOS 7 'container' defined below.
     runs-on: ubuntu-latest
     container:
@@ -145,6 +147,8 @@ jobs:
 
   linux_sonarcloud:
     name: 'Linux CentOS 7 VFX CY2020 SonarCloud <GCC 6.3.1>'
+    # Don't run on OCIO forks
+    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     # GH-hosted VM. The build runs in CentOS 7 'container' defined below.
     runs-on: ubuntu-latest
     container:

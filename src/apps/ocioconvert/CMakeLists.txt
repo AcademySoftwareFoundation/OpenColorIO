@@ -27,11 +27,11 @@ set_target_properties(ocioconvert PROPERTIES
 target_link_libraries(ocioconvert
     PRIVATE
         apputils
-        ilmbase::ilmbase
+        IlmBase::Half
         ${OCIO_GL_LIB}
         oiiohelpers
         OpenColorIO
-        OpenImageIO
+        OpenImageIO::OpenImageIO
 )
 
 install(TARGETS ocioconvert

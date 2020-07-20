@@ -21,7 +21,7 @@ target_link_libraries(ociolutimage
 	PRIVATE
 		apputils
 		OpenColorIO
-		OpenImageIO
+		OpenImageIO::OpenImageIO
 		utils::strings
 )
 

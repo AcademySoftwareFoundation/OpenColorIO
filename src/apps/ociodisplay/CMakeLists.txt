@@ -37,7 +37,7 @@ target_link_libraries(ociodisplay
         oglapphelpers
 		OpenColorIO
 		${OPENGL_LIBRARIES}
-		OpenImageIO
+		OpenImageIO::OpenImageIO
 )
 install(TARGETS ociodisplay
     RUNTIME DESTINATION bin
