@@ -65,9 +65,6 @@ endif()
 ###############################################################################
 ### Copy templates to build area ###
 
-message(STATUS "Create sphinx conf.py from conf.py.in")
-configure_file(conf.py.in ${CMAKE_BINARY_DIR}/docs/conf.py @ONLY)
-
 file(GLOB_RECURSE DOC_SOURCES "${CMAKE_SOURCE_DIR}/docs/*")
 list(APPEND DOC_SOURCES
     ${CMAKE_SOURCE_DIR}/README.md
