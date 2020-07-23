@@ -48,7 +48,7 @@ void bindPyGpuShaderDesc(py::module & m)
 
     auto cls = py::class_<GpuShaderDesc, 
                           GpuShaderDescRcPtr /* holder */, 
-                          GpuShaderCreator /* base */>(m, "GpuShaderDesc")
+                          GpuShaderCreator /* base */>(m, "GpuShaderDesc", DS(GpuShaderDesc))
         .def_static("CreateLegacyShaderDesc", [](unsigned edgelen,
                                                  GpuLanguage lang,
                                                  const std::string & functionName,
@@ -64,6 +64,7 @@ void bindPyGpuShaderDesc(py::module & m)
                 if (!uid.empty())   { p->setUniqueID(uid.c_str()); }
                 return p;
             }, 
+                    DS(GpuShaderDesc, CreateLegacyShaderDesc),
                     "edgeLen"_a,
                     "language"_a = DEFAULT->getLanguage(),
                     "functionName"_a = DEFAULT->getFunctionName(),
@@ -84,6 +85,7 @@ void bindPyGpuShaderDesc(py::module & m)
                 if (!uid.empty())   { p->setUniqueID(uid.c_str()); }
                 return p;
             }, 
+                    DS(GpuShaderDesc, CreateShaderDesc),
                     "language"_a = DEFAULT->getLanguage(),
                     "functionName"_a = DEFAULT->getFunctionName(),
                     "pixelName"_a = DEFAULT->getPixelName(),
@@ -98,7 +100,7 @@ void bindPyGpuShaderDesc(py::module & m)
             })
 
         // 1D lut related methods
-        .def("getNumTextures", &GpuShaderDesc::getNumTextures)
+        .def("getNumTextures", &GpuShaderDesc::getNumTextures, DS(GpuShaderDesc, getNumTextures))
         .def("addTexture", [](GpuShaderDescRcPtr & self,
                               const std::string & textureName, 
                               const std::string & samplerName, 
@@ -179,10 +181,11 @@ void bindPyGpuShaderDesc(py::module & m)
                                  { sizeof(float) },
                                  values);
             },
+             DS(GpuShaderDesc, getTextureValues),
              "index"_a)
 
         // 3D lut related methods
-        .def("getNum3DTextures", &GpuShaderDesc::getNum3DTextures)
+        .def("getNum3DTextures", &GpuShaderDesc::getNum3DTextures, DS(GpuShaderDesc, getNum3DTextures))
         .def("add3DTexture", [](GpuShaderDescRcPtr & self,
                                 const std::string & textureName, 
                                 const std::string & samplerName, 
@@ -230,6 +233,7 @@ void bindPyGpuShaderDesc(py::module & m)
                                  { sizeof(float) },
                                  values);
             },
+             DS(GpuShaderDesc, get3DTextureValues),
              "index"_a);
 
     py::class_<UniformIterator>(cls, "UniformIterator")

@@ -12,12 +12,13 @@ void bindPyLut1DTransform(py::module & m)
 
     auto cls = py::class_<Lut1DTransform, 
                           Lut1DTransformRcPtr /* holder */, 
-                          Transform /* base */>(m, "Lut1DTransform")
-        .def(py::init([]() { return Lut1DTransform::Create(); }))
+                          Transform /* base */>(m, "Lut1DTransform", DS(Lut1DTransform))
+        .def(py::init([]() { return Lut1DTransform::Create(); }), DS(Lut1DTransform, Create))
         .def(py::init([](unsigned long length, bool isHalfDomain) 
             { 
                 return Lut1DTransform::Create(length, isHalfDomain); 
             }),
+             DS(Lut1DTransform, Lut1DTransform),
              "length"_a, "inputHalfDomain"_a)
         .def(py::init([](unsigned long length, 
                          bool isHalfDomain,
@@ -36,6 +37,7 @@ void bindPyLut1DTransform(py::module & m)
                 p->validate();
                 return p;
             }),
+             DS(Lut1DTransform, Lut1DTransform),
              "length"_a = DEFAULT->getLength(),
              "inputHalfDomain"_a = DEFAULT->getInputHalfDomain(),
              "outputRawHalfs"_a = DEFAULT->getOutputRawHalfs(),
@@ -44,26 +46,32 @@ void bindPyLut1DTransform(py::module & m)
              "interpolation"_a = DEFAULT->getInterpolation(),
              "direction"_a = DEFAULT->getDirection())
 
-        .def("getFileOutputBitDepth", &Lut1DTransform::getFileOutputBitDepth)
-        .def("setFileOutputBitDepth", &Lut1DTransform::setFileOutputBitDepth, "bitDepth"_a)
+        .def("getFileOutputBitDepth", &Lut1DTransform::getFileOutputBitDepth,
+             DS(Lut1DTransform, getFileOutputBitDepth))
+        .def("setFileOutputBitDepth", &Lut1DTransform::setFileOutputBitDepth,
+             DS(Lut1DTransform, setFileOutputBitDepth),
+             "bitDepth"_a)
         .def("getFormatMetadata", 
              (FormatMetadata & (Lut1DTransform::*)()) &Lut1DTransform::getFormatMetadata,
+             DS(Lut1DTransform, getFormatMetadata),
              py::return_value_policy::reference_internal)
         .def("getFormatMetadata", 
              (const FormatMetadata & (Lut1DTransform::*)() const) 
              &Lut1DTransform::getFormatMetadata,
+             DS(Lut1DTransform, getFormatMetadata),
              py::return_value_policy::reference_internal)
-        .def("equals", &Lut1DTransform::equals, "other"_a)
-        .def("getLength", &Lut1DTransform::getLength)
-        .def("setLength", &Lut1DTransform::setLength, "length"_a)
+        .def("equals", &Lut1DTransform::equals, DS(Lut1DTransform, equals), "other"_a)
+        .def("getLength", &Lut1DTransform::getLength, DS(Lut1DTransform, getLength))
+        .def("setLength", &Lut1DTransform::setLength, DS(Lut1DTransform, setLength), "length"_a)
         .def("getValue", [](Lut1DTransformRcPtr & self, unsigned long index) 
             {
                 float r, g, b;
                 self->getValue(index, r, g, b);
                 return py::make_tuple(r, g, b);
             }, 
+            DS(Lut1DTransform, getValue),
             "index"_a)
-        .def("setValue", &Lut1DTransform::setValue, "index"_a, "r"_a, "g"_a, "b"_a)
+        .def("setValue", &Lut1DTransform::setValue, DS(Lut1DTransform, setValue), "index"_a, "r"_a, "g"_a, "b"_a)
         .def("setData", [](Lut1DTransformRcPtr & self, py::buffer & data) 
             {
                 py::buffer_info info = data.request();
@@ -106,14 +114,22 @@ void bindPyLut1DTransform(py::module & m)
                                  { sizeof(float) },
                                  values.data());
             })
-        .def("getInputHalfDomain", &Lut1DTransform::getInputHalfDomain)
-        .def("setInputHalfDomain", &Lut1DTransform::setInputHalfDomain, "isHalfDomain"_a)
-        .def("getOutputRawHalfs", &Lut1DTransform::getOutputRawHalfs)
-        .def("setOutputRawHalfs", &Lut1DTransform::setOutputRawHalfs, "isRawHalfs"_a)
-        .def("getHueAdjust", &Lut1DTransform::getHueAdjust)
-        .def("setHueAdjust", &Lut1DTransform::setHueAdjust, "hueAdjust"_a)
-        .def("getInterpolation", &Lut1DTransform::getInterpolation)
-        .def("setInterpolation", &Lut1DTransform::setInterpolation, "interpolation"_a);
+        .def("getInputHalfDomain", &Lut1DTransform::getInputHalfDomain,
+             DS(Lut1DTransform, getInputHalfDomain))
+        .def("setInputHalfDomain", &Lut1DTransform::setInputHalfDomain,
+             DS(Lut1DTransform, setInputHalfDomain),
+             "isHalfDomain"_a)
+        .def("getOutputRawHalfs", &Lut1DTransform::getOutputRawHalfs,
+             DS(Lut1DTransform, getOutputRawHalfs))
+        .def("setOutputRawHalfs", &Lut1DTransform::setOutputRawHalfs,
+             DS(Lut1DTransform, setOutputRawHalfs),
+             "isRawHalfs"_a)
+        .def("getHueAdjust", &Lut1DTransform::getHueAdjust, DS(Lut1DTransform, getHueAdjust))
+        .def("setHueAdjust", &Lut1DTransform::setHueAdjust, DS(Lut1DTransform, setHueAdjust), "hueAdjust"_a)
+        .def("getInterpolation", &Lut1DTransform::getInterpolation, DS(Lut1DTransform, getInterpolation))
+        .def("setInterpolation", &Lut1DTransform::setInterpolation,
+             DS(Lut1DTransform, setInterpolation),
+             "interpolation"_a);
 
     defStr(cls);
 }

@@ -18,36 +18,57 @@ using ViewingRuleEncodingIterator = PyIterator<ViewingRulesRcPtr, IT_VIEWING_RUL
 
 void bindPyViewingRules(py::module & m)
 {
-    auto cls = py::class_<ViewingRules, ViewingRulesRcPtr /* holder */>(m, "ViewingRules")
-        .def(py::init(&ViewingRules::Create))
+    auto cls = py::class_<ViewingRules, ViewingRulesRcPtr /* holder */>(m, "ViewingRules", DS(ViewingRules))
+        .def(py::init(&ViewingRules::Create), DS(ViewingRules, Create))
                     
-        .def("getNumEntries", &ViewingRules::getNumEntries)
-        .def("getIndexForRule", &ViewingRules::getIndexForRule, "ruleName"_a)
-        .def("getName", &ViewingRules::getName, "ruleIndex"_a)
+        .def("getNumEntries", &ViewingRules::getNumEntries, DS(ViewingRules, getNumEntries))
+        .def("getIndexForRule", &ViewingRules::getIndexForRule,
+             DS(ViewingRules, getIndexForRule),
+             "ruleName"_a)
+        .def("getName", &ViewingRules::getName,
+             DS(ViewingRules, getName),
+             "ruleIndex"_a)
         .def("getColorSpaces",
              [](ViewingRulesRcPtr & self, size_t ruleIndex)
              {
                  return ViewingRuleColorSpaceIterator(self, ruleIndex);
              },
             "ruleIndex"_a)
-        .def("addColorSpace", &ViewingRules::addColorSpace, "ruleIndex"_a, "colorSpaceName"_a)
-        .def("removeColorSpace", &ViewingRules::removeColorSpace, "ruleIndex"_a, "colorSpaceIndex"_a)
+        .def("addColorSpace", &ViewingRules::addColorSpace,
+             DS(ViewingRules, addColorSpace),
+             "ruleIndex"_a, "colorSpaceName"_a)
+        .def("removeColorSpace", &ViewingRules::removeColorSpace,
+             DS(ViewingRules, removeColorSpace),
+             "ruleIndex"_a, "colorSpaceIndex"_a)
         .def("getEncodings",
              [](ViewingRulesRcPtr & self, size_t ruleIndex)
              {
                  return ViewingRuleEncodingIterator(self, ruleIndex);
              },
             "ruleIndex"_a)
-        .def("addEncoding", &ViewingRules::addEncoding, "ruleIndex"_a, "encodingName"_a)
-        .def("removeEncoding", &ViewingRules::removeEncoding, "ruleIndex"_a, "encodingIndex"_a)
-        .def("getNumCustomKeys", &ViewingRules::getNumCustomKeys, "ruleIndex"_a)
-        .def("getCustomKeyName", &ViewingRules::getCustomKeyName, "ruleIndex"_a, "key"_a)
-        .def("getCustomKeyValue", &ViewingRules::getCustomKeyValue, "ruleIndex"_a, "key"_a)
-        .def("setCustomKey", &ViewingRules::setCustomKey, "ruleIndex"_a, "key"_a, "value"_a)
+        .def("addEncoding", &ViewingRules::addEncoding,
+             DS(ViewingRules, addEncoding),
+             "ruleIndex"_a, "encodingName"_a)
+        .def("removeEncoding", &ViewingRules::removeEncoding,
+             DS(ViewingRules, removeEncoding),
+             "ruleIndex"_a, "encodingIndex"_a)
+        .def("getNumCustomKeys", &ViewingRules::getNumCustomKeys,
+             DS(ViewingRules, getNumCustomKeys),
+             "ruleIndex"_a)
+        .def("getCustomKeyName", &ViewingRules::getCustomKeyName,
+             DS(ViewingRules, getCustomKeyName),
+             "ruleIndex"_a, "key"_a)
+        .def("getCustomKeyValue", &ViewingRules::getCustomKeyValue,
+             DS(ViewingRules, getCustomKeyValue),
+             "ruleIndex"_a, "key"_a)
+        .def("setCustomKey", &ViewingRules::setCustomKey,
+             DS(ViewingRules, setCustomKey),
+             "ruleIndex"_a, "key"_a, "value"_a)
         .def("insertRule", 
              (void (ViewingRules::*)(size_t, const char *)) &ViewingRules::insertRule,
+             DS(ViewingRules, insertRule),
              "ruleIndex"_a, "name"_a)
-        .def("removeRule", &ViewingRules::removeRule, "ruleIndex"_a);
+        .def("removeRule", &ViewingRules::removeRule, DS(ViewingRules, removeRule), "ruleIndex"_a);
 
     py::class_<ViewingRuleColorSpaceIterator>(cls, "ViewingRuleColorSpaceIterator")
         .def("__len__", [](ViewingRuleColorSpaceIterator & it) { return it.m_obj->getNumColorSpaces(std::get<0>(it.m_args)); })

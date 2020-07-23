@@ -14,12 +14,13 @@ void bindPyLut3DTransform(py::module & m)
 
     auto cls = py::class_<Lut3DTransform, 
                           Lut3DTransformRcPtr /* holder */, 
-                          Transform /* base */>(m, "Lut3DTransform")
-        .def(py::init([]() { return Lut3DTransform::Create(); }))
+                          Transform /* base */>(m, "Lut3DTransform", DS(Lut3DTransform))
+        .def(py::init([]() { return Lut3DTransform::Create(); }), DS(Lut3DTransform, Create))
         .def(py::init([](unsigned long gridSize) 
             { 
                 return Lut3DTransform::Create(gridSize); 
             }),
+             DS(Lut3DTransform, Lut3DTransform),
              "gridSize"_a)
         .def(py::init([](unsigned long gridSize,
                          BitDepth fileOutputBitDepth,
@@ -33,23 +34,31 @@ void bindPyLut3DTransform(py::module & m)
                 p->validate();
                 return p;
             }),
+             DS(Lut3DTransform, Lut3DTransform),
              "gridSize"_a = DEFAULT->getGridSize(),
              "fileOutputBitDepth"_a = DEFAULT->getFileOutputBitDepth(),
              "interpolation"_a = DEFAULT->getInterpolation(),
              "direction"_a = DEFAULT->getDirection())
 
-        .def("getFileOutputBitDepth", &Lut3DTransform::getFileOutputBitDepth)
-        .def("setFileOutputBitDepth", &Lut3DTransform::setFileOutputBitDepth, "bitDepth"_a)
+        .def("getFileOutputBitDepth", &Lut3DTransform::getFileOutputBitDepth,
+             DS(Lut3DTransform, getFileOutputBitDepth))
+        .def("setFileOutputBitDepth", &Lut3DTransform::setFileOutputBitDepth,
+             DS(Lut3DTransform, setFileOutputBitDepth),
+             "bitDepth"_a)
         .def("getFormatMetadata", 
              (FormatMetadata & (Lut3DTransform::*)()) &Lut3DTransform::getFormatMetadata,
+             DS(Lut3DTransform, getFormatMetadata),
              py::return_value_policy::reference_internal)
         .def("getFormatMetadata", 
              (const FormatMetadata & (Lut3DTransform::*)() const) 
              &Lut3DTransform::getFormatMetadata,
+             DS(Lut3DTransform, getFormatMetadata),
              py::return_value_policy::reference_internal)
-        .def("equals", &Lut3DTransform::equals, "other"_a)
-        .def("getGridSize", &Lut3DTransform::getGridSize)
-        .def("setGridSize", &Lut3DTransform::setGridSize, "gridSize"_a)
+        .def("equals", &Lut3DTransform::equals, DS(Lut3DTransform, equals), "other"_a)
+        .def("getGridSize", &Lut3DTransform::getGridSize, DS(Lut3DTransform, getGridSize))
+        .def("setGridSize", &Lut3DTransform::setGridSize,
+             DS(Lut3DTransform, setGridSize),
+             "gridSize"_a)
         .def("getValue", [](Lut3DTransformRcPtr & self, 
                             unsigned long indexR, 
                             unsigned long indexG, 
@@ -59,8 +68,10 @@ void bindPyLut3DTransform(py::module & m)
                 self->getValue(indexR, indexG, indexB, r, g, b);
                 return py::make_tuple(r, g, b);
             }, 
+            DS(Lut3DTransform, getValue),
             "indexR"_a, "indexG"_a, "indexB"_a)
         .def("setValue", &Lut3DTransform::setValue, 
+             DS(Lut3DTransform, setValue),
              "indexR"_a, "indexG"_a, "indexB"_a, "r"_a, "g"_a, "b"_a)
         .def("setData", [](Lut3DTransformRcPtr & self, py::buffer & data) 
             {
@@ -121,8 +132,10 @@ void bindPyLut3DTransform(py::module & m)
                                  { sizeof(float) },
                                  values.data());
             })
-        .def("getInterpolation", &Lut3DTransform::getInterpolation)
-        .def("setInterpolation", &Lut3DTransform::setInterpolation, "interpolation"_a);
+        .def("getInterpolation", &Lut3DTransform::getInterpolation, DS(Lut3DTransform, getInterpolation))
+        .def("setInterpolation", &Lut3DTransform::setInterpolation,
+             DS(Lut3DTransform, setInterpolation),
+             "interpolation"_a);
 
     defStr(cls);
 }

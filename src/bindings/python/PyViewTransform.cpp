@@ -33,11 +33,12 @@ void bindPyViewTransform(py::module & m)
 {
     ViewTransformRcPtr DEFAULT = ViewTransform::Create(REFERENCE_SPACE_SCENE);
 
-    auto cls = py::class_<ViewTransform, ViewTransformRcPtr /* holder */>(m, "ViewTransform")
+    auto cls = py::class_<ViewTransform, ViewTransformRcPtr /* holder */>(m, "ViewTransform", DS(ViewTransform))
         .def(py::init([](ReferenceSpaceType referenceSpace) 
             { 
                 return ViewTransform::Create(referenceSpace); 
             }), 
+             DS(ViewTransform, Create),
              "referenceSpace"_a)
         .def(py::init([](ReferenceSpaceType referenceSpace,
                          const std::string & name,
@@ -69,6 +70,7 @@ void bindPyViewTransform(py::module & m)
                 }
                 return p;
             }), 
+             DS(ViewTransform, ViewTransform),
              "referenceSpace"_a = DEFAULT->getReferenceSpaceType(),
              "name"_a = DEFAULT->getName(),
              "family"_a = DEFAULT->getFamily(),
@@ -77,23 +79,23 @@ void bindPyViewTransform(py::module & m)
              "fromReference"_a = DEFAULT->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE),
              "categories"_a = getCategoriesStdVec(DEFAULT))  
 
-        .def("getName", &ViewTransform::getName)
-        .def("setName", &ViewTransform::setName, "name"_a)
-        .def("getFamily", &ViewTransform::getFamily)
-        .def("setFamily", &ViewTransform::setFamily, "family"_a)
-        .def("getDescription", &ViewTransform::getDescription)
-        .def("setDescription", &ViewTransform::setDescription, "description"_a)
-        .def("hasCategory", &ViewTransform::hasCategory, "category"_a)
-        .def("addCategory", &ViewTransform::addCategory, "category"_a)
-        .def("removeCategory", &ViewTransform::removeCategory, "category"_a)
+        .def("getName", &ViewTransform::getName, DS(ViewTransform, getName))
+        .def("setName", &ViewTransform::setName, DS(ViewTransform, setName), "name"_a)
+        .def("getFamily", &ViewTransform::getFamily, DS(ViewTransform, getFamily))
+        .def("setFamily", &ViewTransform::setFamily, DS(ViewTransform, setFamily), "family"_a)
+        .def("getDescription", &ViewTransform::getDescription, DS(ViewTransform, getDescription))
+        .def("setDescription", &ViewTransform::setDescription, DS(ViewTransform, setDescription), "description"_a)
+        .def("hasCategory", &ViewTransform::hasCategory, DS(ViewTransform, hasCategory), "category"_a)
+        .def("addCategory", &ViewTransform::addCategory, DS(ViewTransform, addCategory), "category"_a)
+        .def("removeCategory", &ViewTransform::removeCategory, DS(ViewTransform, removeCategory), "category"_a)
         .def("getCategories", [](ViewTransformRcPtr & self) 
             { 
                 return ViewTransformCategoryIterator(self); 
             })
-        .def("clearCategories", &ViewTransform::clearCategories)
-        .def("getReferenceSpaceType", &ViewTransform::getReferenceSpaceType)
-        .def("getTransform", &ViewTransform::getTransform, "direction"_a)
-        .def("setTransform", &ViewTransform::setTransform, "transform"_a, "direction"_a);
+        .def("clearCategories", &ViewTransform::clearCategories, DS(ViewTransform, clearCategories))
+        .def("getReferenceSpaceType", &ViewTransform::getReferenceSpaceType, DS(ViewTransform, getReferenceSpaceType))
+        .def("getTransform", &ViewTransform::getTransform, DS(ViewTransform, getTransform), "direction"_a)
+        .def("setTransform", &ViewTransform::setTransform, DS(ViewTransform, setTransform), "transform"_a, "direction"_a);
 
     defStr(cls);
 

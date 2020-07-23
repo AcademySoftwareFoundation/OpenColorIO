@@ -24,8 +24,8 @@ void bindPyColorSpaceSet(py::module & m)
 {
     ColorSpaceSetRcPtr DEFAULT = ColorSpaceSet::Create();
 
-    auto cls = py::class_<ColorSpaceSet, ColorSpaceSetRcPtr /* holder */>(m, "ColorSpaceSet")
-        .def(py::init(&ColorSpaceSet::Create))
+    auto cls = py::class_<ColorSpaceSet, ColorSpaceSetRcPtr /* holder */>(m, "ColorSpaceSet", DS(ColorSpaceSet))
+        .def(py::init(&ColorSpaceSet::Create), DS(ColorSpaceSet, Create))
 
         .def("__eq__", &ColorSpaceSet::operator==, py::is_operator())
         .def("__ne__", &ColorSpaceSet::operator!=, py::is_operator())
@@ -54,12 +54,12 @@ void bindPyColorSpaceSet(py::module & m)
             { 
                 return ColorSpaceIterator(self); 
             })
-        .def("getColorSpace", &ColorSpaceSet::getColorSpace, "name"_a)
-        .def("addColorSpace", &ColorSpaceSet::addColorSpace, "colorSpace"_a)
-        .def("addColorSpaces", &ColorSpaceSet::addColorSpaces, "colorSpace"_a)
-        .def("removeColorSpace", &ColorSpaceSet::removeColorSpace, "colorSpace"_a)
-        .def("removeColorSpaces", &ColorSpaceSet::removeColorSpaces, "colorSpace"_a)
-        .def("clearColorSpaces", &ColorSpaceSet::clearColorSpaces);
+        .def("getColorSpace", &ColorSpaceSet::getColorSpace, DS(ColorSpaceSet, getColorSpace), "name"_a)
+        .def("addColorSpace", &ColorSpaceSet::addColorSpace, DS(ColorSpaceSet, addColorSpace), "colorSpace"_a)
+        .def("addColorSpaces", &ColorSpaceSet::addColorSpaces, DS(ColorSpaceSet, addColorSpaces), "colorSpace"_a)
+        .def("removeColorSpace", &ColorSpaceSet::removeColorSpace, DS(ColorSpaceSet, removeColorSpace), "colorSpace"_a)
+        .def("removeColorSpaces", &ColorSpaceSet::removeColorSpaces, DS(ColorSpaceSet, removeColorSpaces), "colorSpace"_a)
+        .def("clearColorSpaces", &ColorSpaceSet::clearColorSpaces, DS(ColorSpaceSet, clearColorSpaces));
 
     py::class_<ColorSpaceNameIterator>(cls, "ColorSpaceNameIterator")
         .def("__len__", [](ColorSpaceNameIterator & it) 

@@ -49,8 +49,8 @@ void bindPyContext(py::module & m)
 {
     ContextRcPtr DEFAULT = Context::Create();
 
-    auto cls = py::class_<Context, ContextRcPtr /* holder */>(m, "Context")
-        .def(py::init(&Context::Create))
+    auto cls = py::class_<Context, ContextRcPtr /* holder */>(m, "Context", DS(Context))
+        .def(py::init(&Context::Create), DS(Context, Create))
         .def(py::init([](const std::string & workingDir,
                          const std::vector<std::string> & searchPaths,
                          const std::map<std::string, std::string> stringVars,
@@ -78,6 +78,7 @@ void bindPyContext(py::module & m)
                 p->setEnvironmentMode(environmentMode);
                 return p;
             }), 
+             DS(Context, Context),
              "workingDir"_a = DEFAULT->getWorkingDir(),
              "searchPaths"_a = getSearchPathsStdVec(DEFAULT),
              "stringVars"_a = getStringVarsStdMap(DEFAULT),
@@ -116,21 +117,21 @@ void bindPyContext(py::module & m)
             },
             "name"_a)
 
-        .def("getCacheID", &Context::getCacheID)
-        .def("getSearchPath", (const char * (Context::*)() const) &Context::getSearchPath)
-        .def("setSearchPath", &Context::setSearchPath, "path"_a)
+        .def("getCacheID", &Context::getCacheID, DS(Context, getCacheID))
+        .def("getSearchPath", (const char * (Context::*)() const) &Context::getSearchPath, DS(Context, getSearchPath))
+        .def("setSearchPath", &Context::setSearchPath, DS(Context, setSearchPath), "path"_a)
         .def("getSearchPaths", [](ContextRcPtr & self) { return SearchPathIterator(self); })
-        .def("clearSearchPaths", &Context::clearSearchPaths)
-        .def("addSearchPath", &Context::addSearchPath, "path"_a)
-        .def("getWorkingDir", &Context::getWorkingDir)
-        .def("setWorkingDir", &Context::setWorkingDir, "dirName"_a)
+        .def("clearSearchPaths", &Context::clearSearchPaths, DS(Context, clearSearchPaths))
+        .def("addSearchPath", &Context::addSearchPath, DS(Context, addSearchPath), "path"_a)
+        .def("getWorkingDir", &Context::getWorkingDir, DS(Context, getWorkingDir))
+        .def("setWorkingDir", &Context::setWorkingDir, DS(Context, setWorkingDir), "dirName"_a)
         .def("getStringVars", [](ContextRcPtr & self) { return StringVarIterator(self); })
-        .def("clearStringVars", &Context::clearStringVars)
-        .def("getEnvironmentMode", &Context::getEnvironmentMode)
-        .def("setEnvironmentMode", &Context::setEnvironmentMode, "mode"_a)
-        .def("loadEnvironment", &Context::loadEnvironment)
-        .def("resolveStringVar", &Context::resolveStringVar, "value"_a)
-        .def("resolveFileLocation", &Context::resolveFileLocation, "fileName"_a);
+        .def("clearStringVars", &Context::clearStringVars, DS(Context, clearStringVars))
+        .def("getEnvironmentMode", &Context::getEnvironmentMode, DS(Context, getEnvironmentMode))
+        .def("setEnvironmentMode", &Context::setEnvironmentMode, DS(Context, setEnvironmentMode), "mode"_a)
+        .def("loadEnvironment", &Context::loadEnvironment, DS(Context, loadEnvironment))
+        .def("resolveStringVar", &Context::resolveStringVar, DS(Context, resolveStringVar), "value"_a)
+        .def("resolveFileLocation", &Context::resolveFileLocation, DS(Context, resolveFileLocation), "fileName"_a);
 
     defStr(cls);
 

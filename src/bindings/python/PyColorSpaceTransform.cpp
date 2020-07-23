@@ -12,8 +12,8 @@ void bindPyColorSpaceTransform(py::module & m)
 
     auto cls = py::class_<ColorSpaceTransform, 
                           ColorSpaceTransformRcPtr /* holder */, 
-                          Transform /* base */>(m, "ColorSpaceTransform")
-        .def(py::init(&ColorSpaceTransform::Create))
+                          Transform /* base */>(m, "ColorSpaceTransform", DS(ColorSpaceTransform))
+        .def(py::init(&ColorSpaceTransform::Create), DS(ColorSpaceTransform, Create))
         .def(py::init([](const std::string & src,
                          const std::string & dst,
                          TransformDirection dir,
@@ -27,17 +27,18 @@ void bindPyColorSpaceTransform(py::module & m)
                 p->validate();
                 return p;
             }), 
+             DS(ColorSpaceTransform, ColorSpaceTransform),
              "src"_a        = DEFAULT->getSrc(), 
              "dst"_a        = DEFAULT->getDst(),
              "dir"_a        = DEFAULT->getDirection(),
              "dataBypass"_a = DEFAULT->getDataBypass())
 
-        .def("getSrc",        &ColorSpaceTransform::getSrc)
-        .def("setSrc",        &ColorSpaceTransform::setSrc,        "src"_a)
-        .def("getDst",        &ColorSpaceTransform::getDst)
-        .def("setDst",        &ColorSpaceTransform::setDst,        "dst"_a)
-        .def("getDataBypass", &ColorSpaceTransform::getDataBypass)
-        .def("setDataBypass", &ColorSpaceTransform::setDataBypass, "dataBypass"_a);
+        .def("getSrc",        &ColorSpaceTransform::getSrc, DS(ColorSpaceTransform, getSrc))
+        .def("setSrc",        &ColorSpaceTransform::setSrc, DS(ColorSpaceTransform, setSrc), "src"_a)
+        .def("getDst",        &ColorSpaceTransform::getDst, DS(ColorSpaceTransform, getDst))
+        .def("setDst",        &ColorSpaceTransform::setDst, DS(ColorSpaceTransform, setDst), "dst"_a)
+        .def("getDataBypass", &ColorSpaceTransform::getDataBypass, DS(ColorSpaceTransform, getDataBypass))
+        .def("setDataBypass", &ColorSpaceTransform::setDataBypass, DS(ColorSpaceTransform, setDataBypass), "dataBypass"_a);
 
     defStr(cls);
 }

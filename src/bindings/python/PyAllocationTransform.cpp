@@ -33,8 +33,8 @@ void bindPyAllocationTransform(py::module & m)
 
     auto cls = py::class_<AllocationTransform, 
                           AllocationTransformRcPtr /* holder */, 
-                          Transform /* base */>(m, "AllocationTransform")
-        .def(py::init(&AllocationTransform::Create))
+                          Transform /* base */>(m, "AllocationTransform", DS(AllocationTransform))
+        .def(py::init(&AllocationTransform::Create), DS(AllocationTransform, Create))
         .def(py::init([](Allocation allocation, 
                          const std::vector<float> & vars, 
                          TransformDirection dir) 
@@ -45,21 +45,24 @@ void bindPyAllocationTransform(py::module & m)
                 p->setDirection(dir);
                 p->validate();
                 return p;
-            }), 
+            }),
+             DS(AllocationTransform, AllocationTransform, 2),
              "allocation"_a = DEFAULT->getAllocation(), 
              "vars"_a = getVarsStdVec(DEFAULT),
              "direction"_a = DEFAULT->getDirection())
 
-        .def("getAllocation", &AllocationTransform::getAllocation)
-        .def("setAllocation", &AllocationTransform::setAllocation, "allocation"_a)
+        .def("getAllocation", &AllocationTransform::getAllocation, DS(AllocationTransform, getAllocation))
+        .def("setAllocation", &AllocationTransform::setAllocation, DS(AllocationTransform, setAllocation), "allocation"_a)
         .def("getVars", [](AllocationTransformRcPtr self)
             {
                 return getVarsStdVec(self);
-            })
+            },
+             DS(AllocationTransform, getVars))
         .def("setVars", [](AllocationTransformRcPtr self, const std::vector<float> & vars)
             { 
                 setVars(self, vars);
-            }, 
+            },
+             DS(AllocationTransform, setVars),
              "vars"_a);
 
     defStr(cls);

@@ -29,7 +29,7 @@ using ChildElementIterator      = PyIterator<FormatMetadata &, IT_CHILD_ELEMENT>
 
 void bindPyFormatMetadata(py::module & m)
 {
-    auto cls = py::class_<FormatMetadata>(m, "FormatMetadata")
+    auto cls = py::class_<FormatMetadata>(m, "FormatMetadata", DS(FormatMetadata))
         .def("__iter__", [](const FormatMetadata & self) { return AttributeNameIterator(self); })
         .def("__len__", &FormatMetadata::getNumAttributes)
         .def("__getitem__", [](const FormatMetadata & self, const std::string & name) 
@@ -63,18 +63,20 @@ void bindPyFormatMetadata(py::module & m)
             },
              "name"_a)
 
-        .def("getName", &FormatMetadata::getName)
-        .def("setName", &FormatMetadata::setName, "name"_a)
-        .def("getValue", &FormatMetadata::getValue)
-        .def("setValue", &FormatMetadata::setValue, "value"_a)
+        .def("getName", &FormatMetadata::getName, DS(FormatMetadata, getName))
+        .def("setName", &FormatMetadata::setName, DS(FormatMetadata, setName), "name"_a)
+        .def("getValue", &FormatMetadata::getValue, DS(FormatMetadata, getValue))
+        .def("setValue", &FormatMetadata::setValue, DS(FormatMetadata, setValue), "value"_a)
         .def("getAttributes", [](const FormatMetadata & self) { return AttributeIterator(self); })
         .def("getChildElements", [](const FormatMetadata & self)
             {
                 return ConstChildElementIterator(self);
             })
         .def("getChildElements", [](FormatMetadata & self) { return ChildElementIterator(self); })
-        .def("addChildElement", &FormatMetadata::addChildElement, "name"_a, "value"_a)
-        .def("clear", &FormatMetadata::clear);
+        .def("addChildElement", &FormatMetadata::addChildElement,
+             DS(FormatMetadata, addChildElement),
+             "name"_a, "value"_a)
+        .def("clear", &FormatMetadata::clear, DS(FormatMetadata, clear));
 
     py::class_<AttributeNameIterator>(cls, "AttributeNameIterator")
         .def("__len__", [](AttributeNameIterator & it) { return it.m_obj.getNumAttributes(); })

@@ -143,51 +143,70 @@ void bindPyGpuShaderCreator(py::module & m)
 {
     auto cls = py::class_<GpuShaderCreator, 
                           GpuShaderCreatorRcPtr /* holder */, 
-                          PyGpuShaderCreator /* trampoline */>(m, "GpuShaderCreator")
+                          PyGpuShaderCreator /* trampoline */>(m, "GpuShaderCreator", DS(GpuShaderCreator))
         .def(py::init<>())
 
-        .def("clone", &GpuShaderCreator::clone)
-        .def("getUniqueID", &GpuShaderCreator::getUniqueID)
-        .def("setUniqueID", &GpuShaderCreator::setUniqueID, "uid"_a)
-        .def("getLanguage", &GpuShaderCreator::getUniqueID)
-        .def("setLanguage", &GpuShaderCreator::setUniqueID, "language"_a)
-        .def("getFunctionName", &GpuShaderCreator::getFunctionName)
-        .def("setFunctionName", &GpuShaderCreator::setFunctionName, "name"_a)
-        .def("getPixelName", &GpuShaderCreator::getPixelName)
-        .def("setPixelName", &GpuShaderCreator::setPixelName, "name"_a)
-        .def("getResourcePrefix", &GpuShaderCreator::getResourcePrefix)
-        .def("setResourcePrefix", &GpuShaderCreator::setResourcePrefix, "prefix"_a)
-        .def("getCacheID", &GpuShaderCreator::getCacheID)
-        .def("begin", &GpuShaderCreator::begin, "uid"_a)
-        .def("end", &GpuShaderCreator::end)
-        .def("getTextureMaxWidth", &GpuShaderCreator::getTextureMaxWidth)
-        .def("setTextureMaxWidth", &GpuShaderCreator::setTextureMaxWidth, "maxWidth"_a)
-        .def("getNextResourceIndex", &GpuShaderCreator::getNextResourceIndex)
-        .def("addUniform", &GpuShaderCreator::addUniform, "name"_a, "value"_a)
+        .def("clone", &GpuShaderCreator::clone, DS(GpuShaderCreator, clone))
+        .def("getUniqueID", &GpuShaderCreator::getUniqueID, DS(GpuShaderCreator, getUniqueID))
+        .def("setUniqueID", &GpuShaderCreator::setUniqueID, DS(GpuShaderCreator, setUniqueID), "uid"_a)
+        .def("getLanguage", &GpuShaderCreator::getUniqueID, DS(GpuShaderCreator, getLanguage))
+        .def("setLanguage", &GpuShaderCreator::setUniqueID, DS(GpuShaderCreator, setLanguage), "language"_a)
+        .def("getFunctionName", &GpuShaderCreator::getFunctionName, DS(GpuShaderCreator, getFunctionName))
+        .def("setFunctionName", &GpuShaderCreator::setFunctionName, DS(GpuShaderCreator, setFunctionName), "name"_a)
+        .def("getPixelName", &GpuShaderCreator::getPixelName, DS(GpuShaderCreator, getPixelName))
+        .def("setPixelName", &GpuShaderCreator::setPixelName, DS(GpuShaderCreator, setPixelName), "name"_a)
+        .def("getResourcePrefix", &GpuShaderCreator::getResourcePrefix,
+             DS(GpuShaderCreator, getResourcePrefix))
+        .def("setResourcePrefix", &GpuShaderCreator::setResourcePrefix,
+             DS(GpuShaderCreator, setResourcePrefix),
+             "prefix"_a)
+        .def("getCacheID", &GpuShaderCreator::getCacheID, DS(GpuShaderCreator, getCacheID))
+        .def("begin", &GpuShaderCreator::begin, DS(GpuShaderCreator, begin), "uid"_a)
+        .def("end", &GpuShaderCreator::end, DS(GpuShaderCreator, end))
+        .def("getTextureMaxWidth", &GpuShaderCreator::getTextureMaxWidth, DS(GpuShaderCreator, getTextureMaxWidth))
+        .def("setTextureMaxWidth", &GpuShaderCreator::setTextureMaxWidth,
+             DS(GpuShaderCreator, setTextureMaxWidth),
+             "maxWidth"_a)
+        .def("getNextResourceIndex", &GpuShaderCreator::getNextResourceIndex,
+             DS(GpuShaderCreator, getNextResourceIndex))
+        .def("addUniform", &GpuShaderCreator::addUniform, DS(GpuShaderCreator, addUniform), "name"_a, "value"_a)
         .def("addTexture", &GpuShaderCreator::addTexture, 
+             DS(GpuShaderCreator, addTexture),
              "textureName"_a, "samplerName"_a, "uid"_a, "width"_a, "height"_a, "channel"_a, 
              "interpolation"_a, "values"_a)
         .def("add3DTexture", &GpuShaderCreator::add3DTexture,
+             DS(GpuShaderCreator, add3DTexture),
              "textureName"_a, "samplerName"_a, "uid"_a, "edgeLen"_a, "interpolation"_a, "values"_a)
 
         // Methods to specialize parts of a OCIO shader program
-        .def("addToDeclareShaderCode", &GpuShaderCreator::addToDeclareShaderCode, "shaderCode"_a)
-        .def("addToHelperShaderCode", &GpuShaderCreator::addToHelperShaderCode, "shaderCode"_a)
+        .def("addToDeclareShaderCode", &GpuShaderCreator::addToDeclareShaderCode,
+             DS(GpuShaderCreator, addToDeclareShaderCode),
+             "shaderCode"_a)
+        .def("addToHelperShaderCode", &GpuShaderCreator::addToHelperShaderCode,
+             DS(GpuShaderCreator, addToHelperShaderCode),
+             "shaderCode"_a)
         .def("addToFunctionHeaderShaderCode", 
              &GpuShaderCreator::addToFunctionHeaderShaderCode, 
+             DS(GpuShaderCreator, addToFunctionHeaderShaderCode),
              "shaderCode"_a)
-        .def("addToFunctionShaderCode", &GpuShaderCreator::addToFunctionShaderCode, "shaderCode"_a)
+        .def("addToFunctionShaderCode", &GpuShaderCreator::addToFunctionShaderCode,
+             DS(GpuShaderCreator, addToFunctionShaderCode),
+             "shaderCode"_a)
         .def("addToFunctionFooterShaderCode", 
              &GpuShaderCreator::addToFunctionFooterShaderCode, 
+             DS(GpuShaderCreator, addToFunctionFooterShaderCode),
              "shaderCode"_a)
         .def("createShaderText", &GpuShaderCreator::createShaderText, 
+             DS(GpuShaderCreator, createShaderText),
              "shaderDeclarations"_a, "shaderHelperMethods"_a, "shaderFunctionHeader"_a, 
              "shaderFunctionBody"_a, "shaderFunctionFooter"_a)
-        .def("finalize", &GpuShaderCreator::finalize);
+        .def("finalize", &GpuShaderCreator::finalize, DS(GpuShaderCreator, finalize));
 
-    py::enum_<GpuShaderCreator::TextureType>(cls, "TextureType")
-        .value("TEXTURE_RED_CHANNEL", GpuShaderCreator::TEXTURE_RED_CHANNEL)
-        .value("TEXTURE_RGB_CHANNEL", GpuShaderCreator::TEXTURE_RGB_CHANNEL)
+    py::enum_<GpuShaderCreator::TextureType>(cls, "TextureType", DS(GpuShaderCreator, TextureType))
+        .value("TEXTURE_RED_CHANNEL", GpuShaderCreator::TEXTURE_RED_CHANNEL,
+             DS(GpuShaderCreator, TextureType, TEXTURE_RED_CHANNEL))
+        .value("TEXTURE_RGB_CHANNEL", GpuShaderCreator::TEXTURE_RGB_CHANNEL,
+             DS(GpuShaderCreator, TextureType, TEXTURE_RGB_CHANNEL))
         .export_values();
 
     // Subclasses

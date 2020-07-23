@@ -13,19 +13,20 @@ namespace OCIO_NAMESPACE
 
 void bindPyCPUProcessor(py::module & m)
 {
-    py::class_<CPUProcessor, CPUProcessorRcPtr /* holder */>(m, "CPUProcessor")
-        .def("isNoOp", &CPUProcessor::isNoOp)
-        .def("isIdentity", &CPUProcessor::isIdentity)
-        .def("hasChannelCrosstalk", &CPUProcessor::hasChannelCrosstalk)
-        .def("getCacheID", &CPUProcessor::getCacheID)
-        .def("getInputBitDepth", &CPUProcessor::getInputBitDepth)
-        .def("getOutputBitDepth", &CPUProcessor::getOutputBitDepth)
-        .def("getDynamicProperty", &CPUProcessor::getDynamicProperty, "type"_a)
+    py::class_<CPUProcessor, CPUProcessorRcPtr /* holder */>(m, "CPUProcessor", DS(CPUProcessor))
+        .def("isNoOp", &CPUProcessor::isNoOp, DS(CPUProcessor, isNoOp))
+        .def("isIdentity", &CPUProcessor::isIdentity, DS(CPUProcessor, isIdentity))
+        .def("hasChannelCrosstalk", &CPUProcessor::hasChannelCrosstalk, DS(CPUProcessor, hasChannelCrosstalk))
+        .def("getCacheID", &CPUProcessor::getCacheID, DS(CPUProcessor, getCacheID))
+        .def("getInputBitDepth", &CPUProcessor::getInputBitDepth, DS(CPUProcessor, getInputBitDepth))
+        .def("getOutputBitDepth", &CPUProcessor::getOutputBitDepth, DS(CPUProcessor, getOutputBitDepth))
+        .def("getDynamicProperty", &CPUProcessor::getDynamicProperty, DS(CPUProcessor, getDynamicProperty), "type"_a)
 
         .def("apply", [](CPUProcessorRcPtr & self, PyImageDesc & imgDesc) 
             {
                 self->apply((*imgDesc.m_img));
             },
+             DS(CPUProcessor, apply),
              "imgDesc"_a,
              py::call_guard<py::gil_scoped_release>())
         .def("apply", [](CPUProcessorRcPtr & self, 
@@ -34,6 +35,7 @@ void bindPyCPUProcessor(py::module & m)
             {
                 self->apply((*srcImgDesc.m_img), (*dstImgDesc.m_img));
             },
+             DS(CPUProcessor, apply),
              "srcImgDesc"_a, "dstImgDesc"_a,
              py::call_guard<py::gil_scoped_release>())
         .def("applyRGB", [](CPUProcessorRcPtr & self, py::buffer & pixel) 
@@ -47,6 +49,7 @@ void bindPyCPUProcessor(py::module & m)
                 self->applyRGB(static_cast<float *>(info.ptr));
                 return pixel;
             },
+             DS(CPUProcessor, applyRGB),
              "pixel"_a)
         .def("applyRGB", [](CPUProcessorRcPtr & self, std::vector<float> & pixel) 
             {
@@ -54,6 +57,7 @@ void bindPyCPUProcessor(py::module & m)
                 self->applyRGB(pixel.data());
                 return pixel;
             },
+             DS(CPUProcessor, applyRGB),
              "pixel"_a,
              py::call_guard<py::gil_scoped_release>())
         .def("applyRGBA", [](CPUProcessorRcPtr & self, py::buffer & pixel) 
@@ -67,6 +71,7 @@ void bindPyCPUProcessor(py::module & m)
                 self->applyRGBA(static_cast<float *>(info.ptr));
                 return pixel;
             },
+             DS(CPUProcessor, applyRGBA),
              "pixel"_a)
         .def("applyRGBA", [](CPUProcessorRcPtr & self, std::vector<float> & pixel) 
             {
@@ -74,6 +79,7 @@ void bindPyCPUProcessor(py::module & m)
                 self->applyRGBA(pixel.data());
                 return pixel;
             },
+             DS(CPUProcessor, applyRGBA),
              "pixel"_a,
              py::call_guard<py::gil_scoped_release>());
 }

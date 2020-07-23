@@ -21,8 +21,8 @@ void bindPyFixedFunctionTransform(py::module & m)
 
     auto cls = py::class_<FixedFunctionTransform, 
                           FixedFunctionTransformRcPtr /* holder */, 
-                          Transform /* base */>(m, "FixedFunctionTransform")
-        .def(py::init(&FixedFunctionTransform::Create))
+                          Transform /* base */>(m, "FixedFunctionTransform", DS(FixedFunctionTransform))
+        .def(py::init(&FixedFunctionTransform::Create), DS(FixedFunctionTransform, Create))
         .def(py::init([](FixedFunctionStyle style, 
                          const std::vector<double> & params,
                          TransformDirection dir) 
@@ -34,6 +34,7 @@ void bindPyFixedFunctionTransform(py::module & m)
                 p->validate();
                 return p;
             }), 
+             DS(FixedFunctionTransform, FixedFunctionTransform),
              "style"_a = DEFAULT->getStyle(), 
              "params"_a = getParamsStdVec(DEFAULT),
              "direction"_a = DEFAULT->getDirection())
@@ -41,22 +42,26 @@ void bindPyFixedFunctionTransform(py::module & m)
         .def("getFormatMetadata", 
              (FormatMetadata & (FixedFunctionTransform::*)()) 
              &FixedFunctionTransform::getFormatMetadata,
+             DS(FixedFunctionTransform, getFormatMetadata),
              py::return_value_policy::reference_internal)
         .def("getFormatMetadata", 
              (const FormatMetadata & (FixedFunctionTransform::*)() const) 
              &FixedFunctionTransform::getFormatMetadata,
+             DS(FixedFunctionTransform, getFormatMetadata),
              py::return_value_policy::reference_internal)
-        .def("equals", &FixedFunctionTransform::equals, "other"_a)
-        .def("getStyle", &FixedFunctionTransform::getStyle)
-        .def("setStyle", &FixedFunctionTransform::setStyle, "style"_a)
+        .def("equals", &FixedFunctionTransform::equals, DS(FixedFunctionTransform, equals), "other"_a)
+        .def("getStyle", &FixedFunctionTransform::getStyle, DS(FixedFunctionTransform, getStyle))
+        .def("setStyle", &FixedFunctionTransform::setStyle, DS(FixedFunctionTransform, setStyle), "style"_a)
         .def("getParams", [](FixedFunctionTransformRcPtr self)
             {
                 return getParamsStdVec(self);
-            })
+            },
+             DS(FixedFunctionTransform, getParams))
         .def("setParams", [](FixedFunctionTransformRcPtr self, const std::vector<double> & params)
             { 
                 self->setParams(params.data(), params.size());
             }, 
+             DS(FixedFunctionTransform, setParams),
              "params"_a);
 
     defStr(cls);

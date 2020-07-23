@@ -23,8 +23,8 @@ void bindPyGroupTransform(py::module & m)
 
     auto cls = py::class_<GroupTransform, 
                           GroupTransformRcPtr /* holder */, 
-                          Transform /* base */>(m, "GroupTransform")
-        .def(py::init(&GroupTransform::Create))
+                          Transform /* base */>(m, "GroupTransform", DS(GroupTransform))
+        .def(py::init(&GroupTransform::Create), DS(GroupTransform, Create))
         .def(py::init([](const std::vector<TransformRcPtr> transforms, 
                          TransformDirection dir)
             {
@@ -37,6 +37,7 @@ void bindPyGroupTransform(py::module & m)
                 p->validate();
                 return p;
             }), 
+             DS(GroupTransform, GroupTransform),
              "transforms"_a = std::vector<ConstTransformRcPtr>{},
              "direction"_a = DEFAULT->getDirection())
 
@@ -51,13 +52,15 @@ void bindPyGroupTransform(py::module & m)
              
         .def("getFormatMetadata", 
              (FormatMetadata & (GroupTransform::*)()) &GroupTransform::getFormatMetadata,
+             DS(GroupTransform, getFormatMetadata),
              py::return_value_policy::reference_internal)
         .def("getFormatMetadata", 
              (const FormatMetadata & (GroupTransform::*)() const) 
              &GroupTransform::getFormatMetadata,
+             DS(GroupTransform, getFormatMetadata),
              py::return_value_policy::reference_internal)
-        .def("appendTransform", &GroupTransform::appendTransform, "transform"_a)
-        .def("prependTransform", &GroupTransform::prependTransform, "transform"_a);
+        .def("appendTransform", &GroupTransform::appendTransform, DS(GroupTransform, appendTransform), "transform"_a)
+        .def("prependTransform", &GroupTransform::prependTransform, DS(GroupTransform, prependTransform), "transform"_a);
 
     defStr(cls);
 

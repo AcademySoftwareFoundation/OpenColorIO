@@ -46,8 +46,8 @@ using BuiltinIterator = PyIterator<PyBuiltinTransformRegistry, IT_BUILTIN>;
 
 void bindPyBuiltinTransformRegistry(py::module & m)
 {
-    auto cls = py::class_<PyBuiltinTransformRegistry>(m, "BuiltinTransformRegistry")
-        .def(py::init<>())
+    auto cls = py::class_<PyBuiltinTransformRegistry>(m, "BuiltinTransformRegistry", DS(BuiltinTransformRegistry))
+        .def(py::init<>(), DS(BuiltinTransformRegistry, BuiltinTransformRegistry))
 
         .def("__iter__", [](PyBuiltinTransformRegistry & self)
             { 

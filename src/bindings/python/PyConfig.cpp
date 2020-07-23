@@ -60,70 +60,77 @@ using ViewTransformIterator        = PyIterator<ConfigRcPtr, IT_VIEW_TRANSFORM>;
 
 void bindPyConfig(py::module & m)
 {
-    auto cls = py::class_<Config, ConfigRcPtr /* holder */>(m, "Config")
-        .def(py::init(&Config::Create))
+    auto cls = py::class_<Config, ConfigRcPtr /* holder */>(m, "Config", DS(Config))
+        .def(py::init(&Config::Create), DS(Config, Create))
 
-        .def_static("CreateRaw", &Config::CreateRaw)
-        .def_static("CreateFromEnv", &Config::CreateFromEnv)
-        .def_static("CreateFromFile", &Config::CreateFromFile, "fileName"_a)
+        .def_static("CreateRaw", &Config::CreateRaw, DS(Config, CreateRaw))
+        .def_static("CreateFromEnv", &Config::CreateFromEnv, DS(Config, CreateFromEnv))
+        .def_static("CreateFromFile", &Config::CreateFromFile, DS(Config, CreateFromFile), "fileName"_a)
         .def_static("CreateFromStream", [](const std::string & str) 
             {
                 std::istringstream is(str);
                 return Config::CreateFromStream(is);
             }, 
+             DS(Config, CreateFromStream),
              "str"_a)
                     
-        .def("getMajorVersion", &Config::getMajorVersion)
-        .def("setMajorVersion", &Config::setMajorVersion, "major"_a)
-        .def("getMinorVersion", &Config::getMinorVersion)
-        .def("setMinorVersion", &Config::setMinorVersion, "minor"_a)
-        .def("upgradeToLatestVersion", &Config::upgradeToLatestVersion)
-        .def("sanityCheck", &Config::sanityCheck)
-        .def("getFamilySeparator", &Config::getFamilySeparator)
-        .def("setFamilySeparator", &Config::setFamilySeparator, "separator"_a)
-        .def("getDescription", &Config::getDescription)
-        .def("setDescription", &Config::setDescription, "description"_a)
+        .def("getMajorVersion", &Config::getMajorVersion, DS(Config, getMajorVersion))
+        .def("setMajorVersion", &Config::setMajorVersion, DS(Config, setMajorVersion), "major"_a)
+        .def("getMinorVersion", &Config::getMinorVersion, DS(Config, getMinorVersion))
+        .def("setMinorVersion", &Config::setMinorVersion, DS(Config, setMinorVersion), "minor"_a)
+        .def("upgradeToLatestVersion", &Config::upgradeToLatestVersion, DS(Config, upgradeToLatestVersion))
+        .def("sanityCheck", &Config::sanityCheck, DS(Config, sanityCheck))
+        .def("getFamilySeparator", &Config::getFamilySeparator, DS(Config, getFamilySeparator))
+        .def("setFamilySeparator", &Config::setFamilySeparator, DS(Config, setFamilySeparator), "separator"_a)
+        .def("getDescription", &Config::getDescription, DS(Config, getDescription))
+        .def("setDescription", &Config::setDescription, DS(Config, setDescription), "description"_a)
         .def("serialize", [](ConfigRcPtr & self, const std::string & fileName) 
             {
                 std::ofstream f(fileName.c_str());
                 self->serialize(f);
                 f.close();
             }, 
+             DS(Config, serialize),
              "fileName"_a)
         .def("serialize", [](ConfigRcPtr & self) 
             {
                 std::ostringstream os;
                 self->serialize(os);
                 return os.str();
-            })
-        .def("getCacheID", (const char * (Config::*)() const) &Config::getCacheID)
+            },
+             DS(Config, serialize))
+        .def("getCacheID", (const char * (Config::*)() const) &Config::getCacheID, DS(Config, getCacheID))
         .def("getCacheID", 
              (const char * (Config::*)(const ConstContextRcPtr &) const) &Config::getCacheID, 
+             DS(Config, getCacheID),
              "context"_a)
 
         // Resources
-        .def("getCurrentContext", &Config::getCurrentContext)
-        .def("addEnvironmentVar", &Config::addEnvironmentVar, "name"_a, "defaultValue"_a)
+        .def("getCurrentContext", &Config::getCurrentContext, DS(Config, getCurrentContext))
+        .def("addEnvironmentVar", &Config::addEnvironmentVar, DS(Config, addEnvironmentVar), "name"_a, "defaultValue"_a)
         .def("getEnvironmentVarNames", [](ConfigRcPtr & self) 
             {
                 return EnvironmentVarNameIterator(self);
             })
-        .def("getEnvironmentVarDefault", &Config::getEnvironmentVarDefault, "name"_a)
-        .def("clearEnvironmentVars", &Config::clearEnvironmentVars)
-        .def("setEnvironmentMode", &Config::setEnvironmentMode, "mode"_a)
-        .def("getEnvironmentMode", &Config::getEnvironmentMode)
-        .def("loadEnvironment", &Config::loadEnvironment)
-        .def("getSearchPath", (const char * (Config::*)() const) &Config::getSearchPath)
-        .def("setSearchPath", &Config::setSearchPath, "path"_a)
+        .def("getEnvironmentVarDefault",
+            &Config::getEnvironmentVarDefault,
+            DS(Config, getEnvironmentVarDefault),
+            "name"_a)
+        .def("clearEnvironmentVars", &Config::clearEnvironmentVars, DS(Config, clearEnvironmentVars))
+        .def("setEnvironmentMode", &Config::setEnvironmentMode, DS(Config, setEnvironmentMode), "mode"_a)
+        .def("getEnvironmentMode", &Config::getEnvironmentMode, DS(Config, getEnvironmentMode))
+        .def("loadEnvironment", &Config::loadEnvironment, DS(Config, loadEnvironment))
+        .def("getSearchPath", (const char * (Config::*)() const) &Config::getSearchPath, DS(Config, getSearchPath))
+        .def("setSearchPath", &Config::setSearchPath, DS(Config, setSearchPath), "path"_a)
         .def("getSearchPaths", [](ConfigRcPtr & self) { return SearchPathIterator(self); })
-        .def("clearSearchPaths", &Config::clearSearchPaths)
-        .def("addSearchPath", &Config::addSearchPath, "path"_a)
-        .def("getWorkingDir", &Config::getWorkingDir)
-        .def("setWorkingDir", &Config::setWorkingDir, "dirName"_a)
+        .def("clearSearchPaths", &Config::clearSearchPaths, DS(Config, clearSearchPaths))
+        .def("addSearchPath", &Config::addSearchPath, DS(Config, addSearchPath), "path"_a)
+        .def("getWorkingDir", &Config::getWorkingDir, DS(Config, getWorkingDir))
+        .def("setWorkingDir", &Config::setWorkingDir, DS(Config, setWorkingDir), "dirName"_a)
 
         // ColorSpaces
-        .def("getColorSpaces", &Config::getColorSpaces, "category"_a)
-        .def("getColorSpace", &Config::getColorSpace, "name"_a)
+        .def("getColorSpaces", &Config::getColorSpaces, DS(Config, getColorSpaces), "category"_a)
+        .def("getColorSpace", &Config::getColorSpace, DS(Config, getColorSpace), "name"_a)
         .def("getColorSpaceNames", [](ConfigRcPtr & self, 
                                       SearchReferenceSpaceType searchReferenceType, 
                                       ColorSpaceVisibility visibility) 
@@ -137,6 +144,7 @@ void bindPyConfig(py::module & m)
             {
                 return ColorSpaceIterator(self, searchReferenceType, visibility);
             },
+             DS(Config, getColorSpaces),
              "searchReferenceType"_a, "visibility"_a)
         .def("getColorSpaceNames", [](ConfigRcPtr & self) 
             {
@@ -145,19 +153,30 @@ void bindPyConfig(py::module & m)
         .def("getColorSpaces", [](ConfigRcPtr & self) 
             {
                 return ActiveColorSpaceIterator(self);
-            })
-        .def("addColorSpace", &Config::addColorSpace, "colorSpace"_a)
-        .def("removeColorSpace", &Config::removeColorSpace, "name"_a)
-        .def("isColorSpaceUsed", &Config::isColorSpaceUsed, "name"_a)
-        .def("clearColorSpaces", &Config::clearColorSpaces)
-        .def("parseColorSpaceFromString", &Config::parseColorSpaceFromString, "str"_a)
-        .def("isStrictParsingEnabled", &Config::isStrictParsingEnabled)
-        .def("setInactiveColorSpaces", &Config::setInactiveColorSpaces, "inactiveColorSpaces"_a)
-        .def("getInactiveColorSpaces", &Config::getInactiveColorSpaces)
+            },
+             DS(Config, getColorSpaces))
+        .def("addColorSpace", &Config::addColorSpace, DS(Config, addColorSpace), "colorSpace"_a)
+        .def("removeColorSpace", &Config::removeColorSpace, DS(Config, removeColorSpace), "name"_a)
+        .def("isColorSpaceUsed", &Config::isColorSpaceUsed, DS(Config, isColorSpaceUsed), "name"_a)
+        .def("clearColorSpaces", &Config::clearColorSpaces, DS(Config, clearColorSpaces))
+        .def("parseColorSpaceFromString",
+            &Config::parseColorSpaceFromString,
+            DS(Config, parseColorSpaceFromString),
+            "str"_a)
+        .def("isStrictParsingEnabled",
+            &Config::isStrictParsingEnabled,
+            DS(Config, isStrictParsingEnabled))
+        .def("setInactiveColorSpaces",
+            &Config::setInactiveColorSpaces,
+            DS(Config, setInactiveColorSpaces),
+            "inactiveColorSpaces"_a)
+        .def("getInactiveColorSpaces",
+            &Config::getInactiveColorSpaces,
+            DS(Config, getInactiveColorSpaces))
 
         // Roles
-        .def("setRole", &Config::setRole, "role"_a, "colorSpaceName"_a)
-        .def("hasRole", &Config::hasRole, "role"_a)
+        .def("setRole", &Config::setRole, DS(Config, setRole), "role"_a, "colorSpaceName"_a)
+        .def("hasRole", &Config::hasRole, DS(Config, hasRole), "role"_a)
         .def("getRoleNames", [](ConfigRcPtr & self) { return RoleNameIterator(self); })
         .def("getRoles", [](ConfigRcPtr & self) { return RoleColorSpaceIterator(self); })
 
@@ -169,13 +188,14 @@ void bindPyConfig(py::module & m)
                                const char *,
                                const char *,
                                const char *)) &Config::addSharedView,
+             DS(Config, addSharedView),
              "view"_a, "viewTransformName"_a, "colorSpaceName"_a, "looks"_a,
              "ruleName"_a, "description"_a)
-        .def("removeSharedView", &Config::removeSharedView, "view"_a)
+        .def("removeSharedView", &Config::removeSharedView, DS(Config, removeSharedView), "view"_a)
         .def("getSharedViews", [](ConfigRcPtr & self) { return SharedViewIterator(self); })
-        .def("getDefaultDisplay", &Config::getDefaultDisplay)
+        .def("getDefaultDisplay", &Config::getDefaultDisplay, DS(Config, getDefaultDisplay))
         .def("getDisplays", [](ConfigRcPtr & self) { return DisplayIterator(self); })
-        .def("getDefaultView", &Config::getDefaultView, "display"_a)
+        .def("getDefaultView", &Config::getDefaultView, DS(Config, getDefaultView), "display"_a)
         .def("getViews", [](ConfigRcPtr & self, const std::string & display)
              {
                  return ViewIterator(self, display);
@@ -188,14 +208,28 @@ void bindPyConfig(py::module & m)
              },
              "display"_a, "colorSpaceName"_a)
         .def("getDisplayViewTransformName", &Config::getDisplayViewTransformName, 
+             DS(Config, getDisplayViewTransformName),
              "display"_a, "view"_a)
-        .def("getDisplayViewColorSpaceName", &Config::getDisplayViewColorSpaceName, "display"_a, "view"_a)
-        .def("getDisplayViewLooks", &Config::getDisplayViewLooks, "display"_a, "view"_a)
-        .def("getDisplayViewRule", &Config::getDisplayViewRule, "display"_a, "view"_a)
-        .def("getDisplayViewDescription", &Config::getDisplayViewDescription, "display"_a, "view"_a)
+        .def("getDisplayViewColorSpaceName",
+             &Config::getDisplayViewColorSpaceName,
+             DS(Config, getDisplayViewColorSpaceName),
+             "display"_a, "view"_a)
+        .def("getDisplayViewLooks",
+             &Config::getDisplayViewLooks,
+             DS(Config, getDisplayViewLooks),
+             "display"_a, "view"_a)
+        .def("getDisplayViewRule",
+             &Config::getDisplayViewRule,
+             DS(Config, getDisplayViewRule),
+             "display"_a, "view"_a)
+        .def("getDisplayViewDescription",
+             &Config::getDisplayViewDescription,
+             DS(Config, getDisplayViewDescription),
+             "display"_a, "view"_a)
         .def("addDisplayView", 
              (void (Config::*)(const char *, const char *, const char *, const char *)) 
              &Config::addDisplayView, 
+             DS(Config, addDisplayView),
              "display"_a, "view"_a, "colorSpaceName"_a, "looks"_a)
         .def("addDisplayView", 
              (void (Config::*)(const char *, 
@@ -205,15 +239,22 @@ void bindPyConfig(py::module & m)
                                const char *,
                                const char *,
                                const char *)) &Config::addDisplayView, 
+             DS(Config, addDisplayView),
              "display"_a, "view"_a, "viewTransform"_a, "displayColorSpaceName"_a, "looks"_a,
              "ruleName"_a, "description"_a)
-        .def("addDisplaySharedView", &Config::addDisplaySharedView, "display"_a, "view"_a)
-        .def("removeDisplayView", &Config::removeDisplayView, "display"_a, "view"_a)
-        .def("clearDisplays", &Config::clearDisplays)
-        .def("setActiveDisplays", &Config::setActiveDisplays, "displays"_a)
-        .def("getActiveDisplays", &Config::getActiveDisplays)
-        .def("setActiveViews", &Config::setActiveViews, "views"_a)
-        .def("getActiveViews", &Config::getActiveViews)
+        .def("addDisplaySharedView",
+             &Config::addDisplaySharedView,
+             DS(Config, addDisplaySharedView),
+             "display"_a, "view"_a)
+        .def("removeDisplayView",
+             &Config::removeDisplayView,
+             DS(Config, removeDisplayView),
+             "display"_a, "view"_a)
+        .def("clearDisplays", &Config::clearDisplays, DS(Config, clearDisplays))
+        .def("setActiveDisplays", &Config::setActiveDisplays, DS(Config, setActiveDisplays), "displays"_a)
+        .def("getActiveDisplays", &Config::getActiveDisplays, DS(Config, getActiveDisplays))
+        .def("setActiveViews", &Config::setActiveViews, DS(Config, setActiveViews), "views"_a)
+        .def("getActiveViews", &Config::getActiveViews, DS(Config, getActiveViews))
 
         // Luma
         .def("getDefaultLumaCoefs", [](ConfigRcPtr & self)
@@ -221,22 +262,24 @@ void bindPyConfig(py::module & m)
                 std::array<double, 3> rgb;
                 self->getDefaultLumaCoefs(rgb.data());
                 return rgb;
-            })
+            },
+             DS(Config, getDefaultLumaCoefs))
         .def("setDefaultLumaCoefs", [](ConfigRcPtr & self, const std::array<double, 3> & rgb)
             {
                 self->setDefaultLumaCoefs(rgb.data());
             }, 
+             DS(Config, setDefaultLumaCoefs),
              "rgb"_a)
 
         // Look
-        .def("getLook", &Config::getLook, "name"_a)
+        .def("getLook", &Config::getLook, DS(Config, getLook), "name"_a)
         .def("getLookNames", [](ConfigRcPtr & self) { return LookNameIterator(self); })
         .def("getLooks", [](ConfigRcPtr & self) { return LookIterator(self); })
-        .def("addLook", &Config::addLook, "look"_a)
-        .def("clearLooks", &Config::clearLooks)
+        .def("addLook", &Config::addLook, DS(Config, addLook), "look"_a)
+        .def("clearLooks", &Config::clearLooks, DS(Config, clearLooks))
 
         // View Transforms
-        .def("getViewTransform", &Config::getViewTransform, "name"_a)
+        .def("getViewTransform", &Config::getViewTransform, DS(Config, getViewTransform), "name"_a)
         .def("getViewTransformNames", [](ConfigRcPtr & self) 
             { 
                 return ViewTransformNameIterator(self); 
@@ -245,26 +288,30 @@ void bindPyConfig(py::module & m)
             { 
                 return ViewTransformIterator(self); 
             })
-        .def("addViewTransform", &Config::addViewTransform, "viewTransform"_a)
+        .def("addViewTransform", &Config::addViewTransform, DS(Config, addViewTransform), "viewTransform"_a)
         .def("getDefaultSceneToDisplayViewTransform", 
-             &Config::getDefaultSceneToDisplayViewTransform)
-        .def("clearViewTransforms", &Config::clearViewTransforms)
+             &Config::getDefaultSceneToDisplayViewTransform,
+             DS(Config, getDefaultSceneToDisplayViewTransform))
+        .def("clearViewTransforms", &Config::clearViewTransforms, DS(Config, clearViewTransforms))
 
         // Viewing Rules
-        .def("getViewingRules", &Config::getViewingRules)
-        .def("setViewingRules", &Config::setViewingRules, "ViewingRules"_a)
+        .def("getViewingRules", &Config::getViewingRules, DS(Config, getViewingRules))
+        .def("setViewingRules", &Config::setViewingRules, DS(Config, setViewingRules), "ViewingRules"_a)
 
         // File Rules
-        .def("getFileRules", &Config::getFileRules)
-        .def("setFileRules", &Config::setFileRules, "fileRules"_a)
+        .def("getFileRules", &Config::getFileRules, DS(Config, getFileRules))
+        .def("setFileRules", &Config::setFileRules, DS(Config, setFileRules), "fileRules"_a)
         .def("getColorSpaceFromFilepath",
              (const char * (Config::*)(const char *) const) &Config::getColorSpaceFromFilepath, 
+             DS(Config, getColorSpaceFromFilepath),
              "filePath"_a)
         .def("getColorSpaceFromFilepath",
              (const char * (Config::*)(const char *, size_t &) const) 
              &Config::getColorSpaceFromFilepath, 
+             DS(Config, getColorSpaceFromFilepath),
              "filePath"_a, "ruleIndex"_a)
         .def("filepathOnlyMatchesDefaultRule", &Config::filepathOnlyMatchesDefaultRule, 
+             DS(Config, filepathOnlyMatchesDefaultRule),
              "filePath"_a)
 
         // Processors
@@ -272,26 +319,31 @@ void bindPyConfig(py::module & m)
              (ConstProcessorRcPtr (Config::*)(const ConstColorSpaceRcPtr &, 
                                               const ConstColorSpaceRcPtr &) const) 
              &Config::getProcessor, 
+             DS(Config, getProcessor),
              "srcColorSpace"_a, "dstColorSpace"_a)
         .def("getProcessor", 
              (ConstProcessorRcPtr (Config::*)(const ConstContextRcPtr &, 
                                               const ConstColorSpaceRcPtr &, 
                                               const ConstColorSpaceRcPtr &) const) 
              &Config::getProcessor, 
+             DS(Config, getProcessor),
              "context"_a, "srcColorSpace"_a, "dstColorSpace"_a)
         .def("getProcessor", 
              (ConstProcessorRcPtr (Config::*)(const char *, const char *) const) 
              &Config::getProcessor, 
+             DS(Config, getProcessor),
              "srcColorSpaceName"_a, "dstColorSpaceName"_a)
         .def("getProcessor", 
              (ConstProcessorRcPtr (Config::*)(const ConstContextRcPtr &, 
                                               const char *, 
                                               const char *) const) 
              &Config::getProcessor, 
+             DS(Config, getProcessor),
              "context"_a, "srcColorSpaceName"_a, "dstColorSpaceName"_a)
         .def("getProcessor", 
              (ConstProcessorRcPtr (Config::*)(const char *, const char *, const char *) const) 
              &Config::getProcessor, 
+             DS(Config, getProcessor),
              "srcColorSpaceName"_a, "display"_a, "view"_a)
         .def("getProcessor", 
              (ConstProcessorRcPtr (Config::*)(const ConstContextRcPtr &, 
@@ -299,21 +351,25 @@ void bindPyConfig(py::module & m)
                                               const char *, 
                                               const char *) const) 
              &Config::getProcessor, 
+             DS(Config, getProcessor),
              "context"_a, "srcColorSpaceName"_a, "display"_a, "view"_a)
         .def("getProcessor", 
              (ConstProcessorRcPtr (Config::*)(const ConstTransformRcPtr &) const) 
              &Config::getProcessor, 
+             DS(Config, getProcessor),
              "transform"_a)
         .def("getProcessor", 
              (ConstProcessorRcPtr (Config::*)(const ConstTransformRcPtr &, 
                                               TransformDirection) const) 
              &Config::getProcessor, 
+             DS(Config, getProcessor),
              "transform"_a, "direction"_a)
         .def("getProcessor", 
              (ConstProcessorRcPtr (Config::*)(const ConstContextRcPtr &, 
                                               const ConstTransformRcPtr &, 
                                               TransformDirection) const) 
              &Config::getProcessor, 
+             DS(Config, getProcessor),
              "context"_a, "transform"_a, "direction"_a)
 
         .def_static("GetProcessor", [](const ConstConfigRcPtr & srcConfig,
@@ -324,7 +380,8 @@ void bindPyConfig(py::module & m)
                 return Config::GetProcessor(srcConfig, srcColorSpaceName,
                                             dstConfig, dstColorSpaceName);
             },
-                    "srcConfig"_a, "srcColorSpaceName"_a, "dstConfig"_a, "dstColorSpaceName"_a)
+             DS(Config, GetProcessor),
+             "srcConfig"_a, "srcColorSpaceName"_a, "dstConfig"_a, "dstColorSpaceName"_a)
         .def_static("GetProcessor", [](const ConstContextRcPtr & srcContext,
                                        const ConstConfigRcPtr & srcConfig,
                                        const char * srcColorSpaceName,
@@ -335,8 +392,9 @@ void bindPyConfig(py::module & m)
                 return Config::GetProcessor(srcContext, srcConfig, srcColorSpaceName,
                                             dstContext, dstConfig, dstColorSpaceName);
             },
-                    "srcContext"_a, "srcConfig"_a, "srcColorSpaceName"_a, 
-                    "dstContext"_a, "dstConfig"_a, "dstColorSpaceName"_a)
+             DS(Config, GetProcessor),
+             "srcContext"_a, "srcConfig"_a, "srcColorSpaceName"_a, 
+             "dstContext"_a, "dstConfig"_a, "dstColorSpaceName"_a)
         .def_static("GetProcessor", [](const ConstConfigRcPtr & srcConfig,
                                        const char * srcColorSpaceName,
                                        const char * srcInterchangeName,
@@ -347,8 +405,9 @@ void bindPyConfig(py::module & m)
                 return Config::GetProcessor(srcConfig, srcColorSpaceName, srcInterchangeName,
                                             dstConfig, dstColorSpaceName, dstInterchangeName);
             }, 
-                    "srcConfig"_a, "srcColorSpaceName"_a, "srcInterchangeName"_a, 
-                    "dstConfig"_a, "dstColorSpaceName"_a, "dstInterchangeName"_a)
+             DS(Config, GetProcessor),
+             "srcConfig"_a, "srcColorSpaceName"_a, "srcInterchangeName"_a, 
+             "dstConfig"_a, "dstColorSpaceName"_a, "dstInterchangeName"_a)
         .def_static("GetProcessor", [](const ConstContextRcPtr & srcContext,
                                        const ConstConfigRcPtr & srcConfig,
                                        const char * srcColorSpaceName,
@@ -361,8 +420,9 @@ void bindPyConfig(py::module & m)
                 return Config::GetProcessor(srcContext, srcConfig, srcColorSpaceName, srcInterchangeName,
                                             dstContext, dstConfig, dstColorSpaceName, dstInterchangeName);
             }, 
-                    "srcContext"_a, "srcConfig"_a, "srcColorSpaceName"_a, "srcInterchangeName"_a, 
-                    "dstContext"_a, "dstConfig"_a, "dstColorSpaceName"_a, "dstInterchangeName"_a);
+             DS(Config, GetProcessor),
+             "srcContext"_a, "srcConfig"_a, "srcColorSpaceName"_a, "srcInterchangeName"_a, 
+             "dstContext"_a, "dstConfig"_a, "dstColorSpaceName"_a, "dstInterchangeName"_a);
 
     defStr(cls);
 

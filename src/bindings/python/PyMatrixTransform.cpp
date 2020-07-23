@@ -18,8 +18,8 @@ void bindPyMatrixTransform(py::module & m)
 
     auto cls = py::class_<MatrixTransform, 
                           MatrixTransformRcPtr /* holder */, 
-                          Transform /* base */>(m, "MatrixTransform")
-        .def(py::init(&MatrixTransform::Create))
+                          Transform /* base */>(m, "MatrixTransform", DS(MatrixTransform))
+        .def(py::init(&MatrixTransform::Create), DS(MatrixTransform, Create))
         .def(py::init([](const std::array<double, 16> & m44,
                          const std::array<double, 4> & offset4, 
                          TransformDirection dir) 
@@ -31,6 +31,7 @@ void bindPyMatrixTransform(py::module & m)
                 p->validate();
                 return p;
             }), 
+             DS(MatrixTransform, MatrixTransform),
              "matrix"_a = DEFAULT_MATRIX,
              "offset"_a = DEFAULT_OFFSET,
              "direction"_a = DEFAULT->getDirection())
@@ -52,6 +53,7 @@ void bindPyMatrixTransform(py::module & m)
                 p->validate();
                 return p;
             },
+             DS(MatrixTransform, Fit),
              "oldMin"_a = std::array<double, 4>{ 0.0, 0.0, 0.0, 0.0 }, 
              "oldMax"_a = std::array<double, 4>{ 1.0, 1.0, 1.0, 1.0 },
              "newMin"_a = std::array<double, 4>{ 0.0, 0.0, 0.0, 0.0 }, 
@@ -66,7 +68,8 @@ void bindPyMatrixTransform(py::module & m)
                 p->setOffset(offset4);
                 p->validate();
                 return p;
-            })
+            },
+             DS(MatrixTransform, Identity))
         .def_static("Sat", [](double sat, const std::array<double, 3> & lumaCoef3)
             {
                 double m44[16];
@@ -78,6 +81,7 @@ void bindPyMatrixTransform(py::module & m)
                 p->validate();
                 return p;
             },
+             DS(MatrixTransform, Sat),
              "sat"_a, "lumaCoef"_a)
         .def_static("Scale", [](const std::array<double, 4> & scale4)
             {
@@ -90,6 +94,7 @@ void bindPyMatrixTransform(py::module & m)
                 p->validate();
                 return p;
             },
+             DS(MatrixTransform, Scale),
              "scale"_a)
         .def_static("View", [](std::array<int, 4> & channelHot4,
                                const std::array<double, 3> & lumaCoef3)
@@ -103,42 +108,55 @@ void bindPyMatrixTransform(py::module & m)
                 p->validate();
                 return p;
             },
+             DS(MatrixTransform, View),
              "channelHot"_a, "lumaCoef"_a)
 
         .def("getFormatMetadata", 
              (FormatMetadata & (MatrixTransform::*)()) &MatrixTransform::getFormatMetadata,
+             DS(MatrixTransform, getFormatMetadata),
              py::return_value_policy::reference_internal)
         .def("getFormatMetadata", 
              (const FormatMetadata & (MatrixTransform::*)() const) 
              &MatrixTransform::getFormatMetadata,
+             DS(MatrixTransform, getFormatMetadata),
              py::return_value_policy::reference_internal)
-        .def("equals", &MatrixTransform::equals, "other"_a)
+        .def("equals", &MatrixTransform::equals, DS(MatrixTransform, equals), "other"_a)
         .def("getMatrix", [](MatrixTransformRcPtr self)
             {
                 std::array<double, 16> m44;
                 self->getMatrix(m44.data());
                 return m44;
-            })
+            },
+             DS(MatrixTransform, getMatrix))
         .def("setMatrix", [](MatrixTransformRcPtr self, const std::array<double, 16> & m44)
             { 
                 self->setMatrix(m44.data());
             }, 
+             DS(MatrixTransform, setMatrix),
              "matrix"_a)
         .def("getOffset", [](MatrixTransformRcPtr self)
             {
                 std::array<double, 4> offset4;
                 self->getOffset(offset4.data());
                 return offset4;
-            })
+            },
+             DS(MatrixTransform, getOffset))
         .def("setOffset", [](MatrixTransformRcPtr self, const std::array<double, 4> & offset4)
             { 
                 self->setOffset(offset4.data());
             }, 
+             DS(MatrixTransform, setOffset),
              "offset"_a)
-        .def("getFileInputBitDepth", &MatrixTransform::getFileInputBitDepth)
-        .def("setFileInputBitDepth", &MatrixTransform::setFileInputBitDepth, "bitDepth"_a)
-        .def("getFileOutputBitDepth", &MatrixTransform::getFileOutputBitDepth)
-        .def("setFileOutputBitDepth", &MatrixTransform::setFileOutputBitDepth, "bitDepth"_a);
+        .def("getFileInputBitDepth", &MatrixTransform::getFileInputBitDepth,
+             DS(MatrixTransform, getFileInputBitDepth))
+        .def("setFileInputBitDepth", &MatrixTransform::setFileInputBitDepth,
+             DS(MatrixTransform, setFileInputBitDepth),
+             "bitDepth"_a)
+        .def("getFileOutputBitDepth", &MatrixTransform::getFileOutputBitDepth,
+             DS(MatrixTransform, getFileOutputBitDepth))
+        .def("setFileOutputBitDepth", &MatrixTransform::setFileOutputBitDepth,
+             DS(MatrixTransform, setFileOutputBitDepth),
+             "bitDepth"_a);
 
     defStr(cls);
 }

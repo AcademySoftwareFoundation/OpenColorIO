@@ -39,12 +39,13 @@ void bindPyColorSpace(py::module & m)
 {
     ColorSpaceRcPtr DEFAULT = ColorSpace::Create();
 
-    auto cls = py::class_<ColorSpace, ColorSpaceRcPtr /* holder */>(m, "ColorSpace")
-        .def(py::init([]() { return ColorSpace::Create(); }))
+    auto cls = py::class_<ColorSpace, ColorSpaceRcPtr /* holder */>(m, "ColorSpace", DS(ColorSpace))
+        .def(py::init([]() { return ColorSpace::Create(); }), DS(ColorSpace, Create))
         .def(py::init([](ReferenceSpaceType referenceSpace) 
             { 
                 return ColorSpace::Create(referenceSpace); 
             }), 
+             DS(ColorSpace, ColorSpace),
              "referenceSpace"_a)
         .def(py::init([](ReferenceSpaceType referenceSpace,
                          const std::string & name,
@@ -95,6 +96,7 @@ void bindPyColorSpace(py::module & m)
                 }
                 return p;
             }), 
+             DS(ColorSpace, ColorSpace),
              "referenceSpace"_a = DEFAULT->getReferenceSpaceType(),
              "name"_a = DEFAULT->getName(),
              "family"_a = DEFAULT->getFamily(),
@@ -109,41 +111,42 @@ void bindPyColorSpace(py::module & m)
              "fromReference"_a = DEFAULT->getTransform(COLORSPACE_DIR_FROM_REFERENCE),
              "categories"_a = getCategoriesStdVec(DEFAULT))
 
-        .def("getName", &ColorSpace::getName)
-        .def("setName", &ColorSpace::setName, "name"_a)
-        .def("getFamily", &ColorSpace::getFamily)
-        .def("setFamily", &ColorSpace::setFamily, "family"_a)
-        .def("getEncoding", &ColorSpace::getEncoding)
-        .def("setEncoding", &ColorSpace::setEncoding, "encoding"_a)
-        .def("getEqualityGroup", &ColorSpace::getEqualityGroup)
-        .def("setEqualityGroup", &ColorSpace::setEqualityGroup, "equalityGroup"_a)
-        .def("getDescription", &ColorSpace::getDescription)
-        .def("setDescription", &ColorSpace::setDescription, "description"_a)
-        .def("getBitDepth", &ColorSpace::getBitDepth)
-        .def("setBitDepth", &ColorSpace::setBitDepth, "bitDepth"_a)
+        .def("getName", &ColorSpace::getName, DS(ColorSpace, getName))
+        .def("setName", &ColorSpace::setName, DS(ColorSpace, setName), "name"_a)
+        .def("getFamily", &ColorSpace::getFamily, DS(ColorSpace, getFamily))
+        .def("setFamily", &ColorSpace::setFamily, DS(ColorSpace, setFamily), "family"_a)
+        .def("getEncoding", &ColorSpace::getEncoding, DS(ColorSpace, getEncoding))
+        .def("setEncoding", &ColorSpace::setEncoding, DS(ColorSpace, setEncoding), "encoding"_a)
+        .def("getEqualityGroup", &ColorSpace::getEqualityGroup, DS(ColorSpace, getEqualityGroup))
+        .def("setEqualityGroup", &ColorSpace::setEqualityGroup, DS(ColorSpace, setEqualityGroup), "equalityGroup"_a)
+        .def("getDescription", &ColorSpace::getDescription, DS(ColorSpace, getDescription))
+        .def("setDescription", &ColorSpace::setDescription, DS(ColorSpace, setDescription), "description"_a)
+        .def("getBitDepth", &ColorSpace::getBitDepth, DS(ColorSpace, getBitDepth))
+        .def("setBitDepth", &ColorSpace::setBitDepth, DS(ColorSpace, setBitDepth), "bitDepth"_a)
 
         // Categories
-        .def("hasCategory", &ColorSpace::hasCategory, "category"_a)
-        .def("addCategory", &ColorSpace::addCategory, "category"_a)
-        .def("removeCategory", &ColorSpace::removeCategory, "category"_a)
+        .def("hasCategory", &ColorSpace::hasCategory, DS(ColorSpace, hasCategory), "category"_a)
+        .def("addCategory", &ColorSpace::addCategory, DS(ColorSpace, addCategory), "category"_a)
+        .def("removeCategory", &ColorSpace::removeCategory, DS(ColorSpace, removeCategory), "category"_a)
         .def("getCategories", [](ColorSpaceRcPtr & self) 
             { 
                 return ColorSpaceCategoryIterator(self); 
             })
-        .def("clearCategories", &ColorSpace::clearCategories)
+        .def("clearCategories", &ColorSpace::clearCategories, DS(ColorSpace, clearCategories))
 
         // Data
-        .def("isData", &ColorSpace::isData)
-        .def("setIsData", &ColorSpace::setIsData, "isData"_a)
-        .def("getReferenceSpaceType", &ColorSpace::getReferenceSpaceType)
+        .def("isData", &ColorSpace::isData, DS(ColorSpace, isData))
+        .def("setIsData", &ColorSpace::setIsData, DS(ColorSpace, setIsData), "isData"_a)
+        .def("getReferenceSpaceType", &ColorSpace::getReferenceSpaceType, DS(ColorSpace, getReferenceSpaceType))
 
         // Allocation
-        .def("getAllocation", &ColorSpace::getAllocation)
-        .def("setAllocation", &ColorSpace::setAllocation, "allocation"_a)
+        .def("getAllocation", &ColorSpace::getAllocation, DS(ColorSpace, getAllocation))
+        .def("setAllocation", &ColorSpace::setAllocation, DS(ColorSpace, setAllocation), "allocation"_a)
         .def("getAllocationVars", [](ColorSpaceRcPtr & self) 
             { 
                 return getAllocationVarsStdVec(self); 
-            })
+            },
+             DS(ColorSpace, getAllocationVars))
         .def("setAllocationVars", [](ColorSpaceRcPtr self, const std::vector<float> & vars)
             { 
                 if (vars.size() < 2 || vars.size() > 3)
@@ -152,11 +155,12 @@ void bindPyColorSpace(py::module & m)
                 }
                 self->setAllocationVars((int)vars.size(), vars.data());
             }, 
+             DS(ColorSpace, setAllocationVars),
              "vars"_a)
 
         // Transform
-        .def("getTransform", &ColorSpace::getTransform, "direction"_a)
-        .def("setTransform", &ColorSpace::setTransform, "transform"_a, "direction"_a);
+        .def("getTransform", &ColorSpace::getTransform, DS(ColorSpace, getTransform), "direction"_a)
+        .def("setTransform", &ColorSpace::setTransform, DS(ColorSpace, setTransform), "transform"_a, "direction"_a);
 
     defStr(cls);
 

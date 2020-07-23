@@ -8,10 +8,10 @@ namespace OCIO_NAMESPACE
 
 void bindPyTransform(py::module & m)
 { 
-    auto cls = py::class_<Transform, TransformRcPtr /* holder */>(m, "Transform")
-        .def("validate", &Transform::validate)
-        .def("getDirection", &Transform::getDirection)
-        .def("setDirection", &Transform::setDirection, "direction"_a);
+    auto cls = py::class_<Transform, TransformRcPtr /* holder */>(m, "Transform", DS(Transform))
+        .def("validate", &Transform::validate, DS(Transform, validate))
+        .def("getDirection", &Transform::getDirection, DS(Transform, getDirection))
+        .def("setDirection", &Transform::setDirection, DS(Transform, setDirection), "direction"_a);
 
     defStr(cls);
 

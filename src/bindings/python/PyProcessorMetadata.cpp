@@ -25,13 +25,13 @@ using LookIterator = PyIterator<ProcessorMetadataRcPtr, IT_LOOK>;
 
 void bindPyProcessorMetadata(py::module & m)
 {
-    auto cls = py::class_<ProcessorMetadata, ProcessorMetadataRcPtr /* holder */>(m, "ProcessorMetadata")
-        .def(py::init(&ProcessorMetadata::Create))
+    auto cls = py::class_<ProcessorMetadata, ProcessorMetadataRcPtr /* holder */>(m, "ProcessorMetadata", DS(ProcessorMetadata))
+        .def(py::init(&ProcessorMetadata::Create), DS(ProcessorMetadata, Create))
 
         .def("getFiles", [](ProcessorMetadataRcPtr & self) { return FileIterator(self); })
         .def("getLooks", [](ProcessorMetadataRcPtr & self) { return LookIterator(self); })
-        .def("addFile", &ProcessorMetadata::addFile, "fileName"_a)
-        .def("addLook", &ProcessorMetadata::addLook, "look"_a);
+        .def("addFile", &ProcessorMetadata::addFile, DS(ProcessorMetadata, addFile), "fileName"_a)
+        .def("addLook", &ProcessorMetadata::addLook, DS(ProcessorMetadata, addLook), "look"_a);
 
     py::class_<FileIterator>(cls, "FileIterator")
         .def("__len__", [](FileIterator & it) { return it.m_obj->getNumFiles(); })

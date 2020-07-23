@@ -12,8 +12,8 @@ void bindPyBuiltinTransform(py::module & m)
 
     auto cls = py::class_<BuiltinTransform, 
                           BuiltinTransformRcPtr /* holder */, 
-                          Transform /* base */>(m, "BuiltinTransform")
-        .def(py::init(&BuiltinTransform::Create))
+                          Transform /* base */>(m, "BuiltinTransform", DS(BuiltinTransform))
+        .def(py::init(&BuiltinTransform::Create), DS(BuiltinTransform, Create))
         .def(py::init([](const std::string & style, TransformDirection dir) 
             {
                 BuiltinTransformRcPtr p = BuiltinTransform::Create();
@@ -22,12 +22,13 @@ void bindPyBuiltinTransform(py::module & m)
                 p->validate();
                 return p;
             }), 
+             DS(BuiltinTransform, BuiltinTransform),
              "style"_a = DEFAULT->getStyle(),
              "direction"_a = DEFAULT->getDirection())
 
-        .def("setStyle",       &BuiltinTransform::setStyle, "style"_a.none(false))
-        .def("getStyle",       &BuiltinTransform::getStyle)
-        .def("getDescription", &BuiltinTransform::getDescription);
+        .def("setStyle",       &BuiltinTransform::setStyle, DS(BuiltinTransform, setStyle), "style"_a.none(false))
+        .def("getStyle",       &BuiltinTransform::getStyle, DS(BuiltinTransform, getStyle))
+        .def("getDescription", &BuiltinTransform::getDescription, DS(BuiltinTransform, getDescription));
 
     defStr(cls);
 }

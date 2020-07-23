@@ -11,8 +11,8 @@ void bindPyLook(py::module & m)
 {
     LookRcPtr DEFAULT = Look::Create();
 
-    auto cls = py::class_<Look, LookRcPtr /* holder */>(m, "Look")
-        .def(py::init(&Look::Create))
+    auto cls = py::class_<Look, LookRcPtr /* holder */>(m, "Look", DS(Look))
+        .def(py::init(&Look::Create), DS(Look, Create))
         .def(py::init([](const std::string & name,
                          const std::string & processSpace,
                          const TransformRcPtr & transform,
@@ -27,22 +27,23 @@ void bindPyLook(py::module & m)
                 if (!description.empty())  { p->setDescription(description.c_str()); }
                 return p;
             }),
+             DS(Look, Look),
              "name"_a = DEFAULT->getName(),
              "processSpace"_a = DEFAULT->getProcessSpace(),
              "transform"_a = DEFAULT->getTransform(),
              "inverseTransform"_a = DEFAULT->getInverseTransform(),
              "description"_a = DEFAULT->getDescription())
 
-        .def("getName", &Look::getName)
-        .def("setName", &Look::setName, "name"_a.none(false))
-        .def("getProcessSpace", &Look::getProcessSpace)
-        .def("setProcessSpace", &Look::setProcessSpace, "processSpace"_a.none(false))
-        .def("getTransform", &Look::getTransform)
-        .def("setTransform", &Look::setTransform, "transform"_a)
-        .def("getInverseTransform", &Look::getInverseTransform)
-        .def("setInverseTransform", &Look::setInverseTransform, "transform"_a)
-        .def("getDescription", &Look::getDescription)
-        .def("setDescription", &Look::setDescription, "description"_a.none(false));
+        .def("getName", &Look::getName, DS(Look, getName))
+        .def("setName", &Look::setName, DS(Look, setName), "name"_a.none(false))
+        .def("getProcessSpace", &Look::getProcessSpace, DS(Look, getProcessSpace))
+        .def("setProcessSpace", &Look::setProcessSpace, DS(Look, setProcessSpace), "processSpace"_a.none(false))
+        .def("getTransform", &Look::getTransform, DS(Look, getTransform))
+        .def("setTransform", &Look::setTransform, DS(Look, setTransform), "transform"_a)
+        .def("getInverseTransform", &Look::getInverseTransform, DS(Look, getInverseTransform))
+        .def("setInverseTransform", &Look::setInverseTransform, DS(Look, setInverseTransform), "transform"_a)
+        .def("getDescription", &Look::getDescription, DS(Look, getDescription))
+        .def("setDescription", &Look::setDescription, DS(Look, setDescription), "description"_a.none(false));
 
     defStr(cls);
 }

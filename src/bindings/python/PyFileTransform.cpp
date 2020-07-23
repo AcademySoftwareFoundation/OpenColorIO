@@ -24,8 +24,8 @@ void bindPyFileTransform(py::module & m)
 
     auto cls = py::class_<FileTransform, 
                           FileTransformRcPtr /* holder */, 
-                          Transform /* base */>(m, "FileTransform")
-        .def(py::init(&FileTransform::Create))
+                          Transform /* base */>(m, "FileTransform", DS(FileTransform))
+        .def(py::init(&FileTransform::Create), DS(FileTransform, Create))
         .def(py::init([](const std::string & src, 
                          const std::string & id, 
                          Interpolation interp,
@@ -39,6 +39,7 @@ void bindPyFileTransform(py::module & m)
                 p->validate();
                 return p;
             }), 
+             DS(FileTransform, FileTransform),
              "src"_a = DEFAULT->getSrc(), 
              "cccId"_a = DEFAULT->getCCCId(),
              "interpolation"_a = DEFAULT->getInterpolation(),
@@ -46,14 +47,14 @@ void bindPyFileTransform(py::module & m)
 
         .def_static("getFormats", []() { return FormatIterator(nullptr); })
 
-        .def("getSrc", &FileTransform::getSrc)
-        .def("setSrc", &FileTransform::setSrc, "src"_a)
-        .def("getCCCId", &FileTransform::getCCCId)
-        .def("setCCCId", &FileTransform::setCCCId, "cccId"_a)
-        .def("getCDLStyle", &FileTransform::getCDLStyle)
-        .def("setCDLStyle", &FileTransform::setCDLStyle, "style"_a)
-        .def("getInterpolation", &FileTransform::getInterpolation)
-        .def("setInterpolation", &FileTransform::setInterpolation, "interpolation"_a);
+        .def("getSrc", &FileTransform::getSrc, DS(FileTransform, getSrc))
+        .def("setSrc", &FileTransform::setSrc, DS(FileTransform, setSrc), "src"_a)
+        .def("getCCCId", &FileTransform::getCCCId, DS(FileTransform, getCCCId))
+        .def("setCCCId", &FileTransform::setCCCId, DS(FileTransform, setCCCId), "cccId"_a)
+        .def("getCDLStyle", &FileTransform::getCDLStyle, DS(FileTransform, getCDLStyle))
+        .def("setCDLStyle", &FileTransform::setCDLStyle, DS(FileTransform, setCDLStyle), "style"_a)
+        .def("getInterpolation", &FileTransform::getInterpolation, DS(FileTransform, getInterpolation))
+        .def("setInterpolation", &FileTransform::setInterpolation, DS(FileTransform, setInterpolation), "interpolation"_a);
 
     defStr(cls);
 
