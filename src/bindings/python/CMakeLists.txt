@@ -15,6 +15,8 @@ find_package(Python REQUIRED COMPONENTS Interpreter Development)
 # 	WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
 # )
 
+include("${PROJECT_SOURCE_DIR}/share/cmake/macros/PyBind11DocStrings.cmake")
+
 ###############################################################################
 # Python libs
 
@@ -103,6 +105,9 @@ if(APPLE)
 		LINK_FLAGS "-undefined dynamic_lookup"
 	)
 endif()
+
+# Generate python docstring literals header when building python binding
+add_dependencies(PyOpenColorIO docstrings)
 
 target_include_directories(PyOpenColorIO
 	PRIVATE
