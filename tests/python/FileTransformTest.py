@@ -105,7 +105,7 @@ class FileTransformTest(unittest.TestCase):
         Test the getFormats() method.
         """
 
-        format_iterator = self.file_tr.getFormats()
+        format_iterator = OCIO.FileTransform.getFormats()
 
         for name, ext in self.DEFAULT_FORMATS:
             format_name, format_ext = next(format_iterator)

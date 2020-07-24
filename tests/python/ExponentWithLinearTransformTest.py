@@ -98,8 +98,8 @@ class ExponentWithLinearTransformTest(unittest.TestCase):
         for negative_style in OCIO.NegativeStyle.__members__.values():
             # These negative extrapolations are not valid for
             # MonCurve exponent style.
-            ExceptionNegatives = [OCIO.NEGATIVE_CLAMP, OCIO.NEGATIVE_PASS_THRU]
-            if negative_style not in ExceptionNegatives:
+            exception_negatives = [OCIO.NEGATIVE_CLAMP, OCIO.NEGATIVE_PASS_THRU]
+            if negative_style not in exception_negatives:
                 self.exp_tr.setNegativeStyle(negative_style)
                 self.assertEqual(
                     self.exp_tr.getNegativeStyle(), negative_style)
