@@ -2,7 +2,7 @@
 
 Since the API autodoc effort is happening simultaneously it will be easier for
 a lot of contributors to do a light-weight build of the Sphinx docs, which
-doesn't require
+doesn't require building OCIO in its entirety.
 
 ## How to Build RST-Only Docs
 
