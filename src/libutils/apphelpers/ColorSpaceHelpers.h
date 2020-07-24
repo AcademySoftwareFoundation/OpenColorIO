@@ -48,19 +48,19 @@ using ConstColorSpaceInfoRcPtr = OCIO_SHARED_PTR<const ColorSpaceInfo>;
 class ColorSpaceInfo
 {
 public:
-    static ConstColorSpaceInfoRcPtr Create(ConstConfigRcPtr config,
-                                           const char * name,
-                                           const char * family,
-                                           const char * description);
+    static ColorSpaceInfoRcPtr Create(ConstConfigRcPtr config,
+                                      const char * name,
+                                      const char * family,
+                                      const char * description);
 
-    static ConstColorSpaceInfoRcPtr Create(ConstConfigRcPtr config,
-                                           const char * name,
-                                           const char * uiName,
-                                           const char * family,
-                                           const char * description);
+    static ColorSpaceInfoRcPtr Create(ConstConfigRcPtr config,
+                                      const char * name,
+                                      const char * uiName,
+                                      const char * family,
+                                      const char * description);
 
-    static ConstColorSpaceInfoRcPtr Create(ConstConfigRcPtr config,
-                                           ConstColorSpaceRcPtr cs);
+    static ColorSpaceInfoRcPtr Create(ConstConfigRcPtr config,
+                                      ConstColorSpaceRcPtr cs);
 
     virtual const char * getName() const noexcept = 0;
     virtual const char * getUIName() const noexcept = 0;
@@ -72,9 +72,11 @@ public:
     // The description split into lines.
     virtual ConstStringsRcPtr getDescriptions() const noexcept = 0;
 
+    /// Do not use (needed only for pybind11).
+    virtual ~ColorSpaceInfo() = default;
+
 protected:
     ColorSpaceInfo() = default;
-    virtual ~ColorSpaceInfo() = default;
 
 private:
     ColorSpaceInfo(const ColorSpaceInfo &) = delete;
@@ -120,9 +122,10 @@ public:
     // Refresh the instance (i.e. needed following a configuration change for example).
     virtual void refresh(ConstConfigRcPtr config) = 0;
 
+    virtual ~ColorSpaceMenuHelper() = default;
+
 protected:
     ColorSpaceMenuHelper() = default;
-    virtual ~ColorSpaceMenuHelper() = default;
 
 private:
     ColorSpaceMenuHelper(const ColorSpaceMenuHelper &) = delete;

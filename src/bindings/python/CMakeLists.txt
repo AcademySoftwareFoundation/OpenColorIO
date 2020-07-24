@@ -146,3 +146,8 @@ endif()
 install(TARGETS PyOpenColorIO
     LIBRARY DESTINATION ${_Python_VARIANT_PATH}
 )
+
+###############################################################################
+# Python subpackages
+
+add_subdirectory(apphelpers)

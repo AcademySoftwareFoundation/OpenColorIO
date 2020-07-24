@@ -115,31 +115,31 @@ private:
 };
 
 
-ConstColorSpaceInfoRcPtr ColorSpaceInfo::Create(ConstConfigRcPtr config, ConstColorSpaceRcPtr cs)
+ColorSpaceInfoRcPtr ColorSpaceInfo::Create(ConstConfigRcPtr config, ConstColorSpaceRcPtr cs)
 {
-    return ConstColorSpaceInfoRcPtr(
+    return ColorSpaceInfoRcPtr(
         new ColorSpaceInfoImpl(config, cs->getName(), nullptr, 
                                cs->getFamily(), cs->getDescription()),
         &ColorSpaceInfoImpl::Deleter);
 }
 
-ConstColorSpaceInfoRcPtr ColorSpaceInfo::Create(ConstConfigRcPtr config,
+ColorSpaceInfoRcPtr ColorSpaceInfo::Create(ConstConfigRcPtr config,
                                                 const char * name,
                                                 const char * family,
                                                 const char * description)
 {
-    return ConstColorSpaceInfoRcPtr(
+    return ColorSpaceInfoRcPtr(
         new ColorSpaceInfoImpl(config, name, nullptr, family, description),
         &ColorSpaceInfoImpl::Deleter);
 }
 
-ConstColorSpaceInfoRcPtr ColorSpaceInfo::Create(ConstConfigRcPtr config,
+ColorSpaceInfoRcPtr ColorSpaceInfo::Create(ConstConfigRcPtr config,
                                                 const char * name,
                                                 const char * uiName,
                                                 const char * family,
                                                 const char * description)
 {
-    return ConstColorSpaceInfoRcPtr(
+    return ColorSpaceInfoRcPtr(
         new ColorSpaceInfoImpl(config, name, uiName, family, description),
         &ColorSpaceInfoImpl::Deleter);
 }
