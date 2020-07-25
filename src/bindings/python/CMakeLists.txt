@@ -4,20 +4,14 @@
 ###############################################################################
 # External dependencies
 
-find_package(PythonInterp 2.7 REQUIRED)
-find_package(PythonLibs 2.7 REQUIRED)
-
-# pybind11
-# https://github.com/pybind/pybind11
-set(pybind11_MIN_VERSION 2.4.3)
-find_package(pybind11 ${pybind11_MIN_VERSION} REQUIRED)
+find_package(Python REQUIRED COMPONENTS Interpreter Development)
 
 ###############################################################################
 # PyDoc generation
 # file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include")
 # set(PYDOC_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/include/PyDoc.h")
 # add_custom_command(OUTPUT ${PYDOC_OUTPUT}
-# 	COMMAND ${PYTHON_EXECUTABLE} createPyDocH.py ${PYDOC_OUTPUT}
+# 	COMMAND ${Python_EXECUTABLE} createPyDocH.py ${PYDOC_OUTPUT}
 # 	WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
 # )
 
@@ -117,7 +111,7 @@ target_include_directories(PyOpenColorIO
 		${CMAKE_CURRENT_SOURCE_DIR}
 		${pybind11_INCLUDE_DIR}
 	SYSTEM
-		${PYTHON_INCLUDE_DIRS}
+		${Python_INCLUDE_DIRS}
 )
 
 # pybind11 recommends intentionally NOT linking against libpython on Linux and 
@@ -126,7 +120,7 @@ target_include_directories(PyOpenColorIO
 #   https://pybind11.readthedocs.io/en/stable/compiling.html#building-manually
 set(PYOCIO_LINK_PUBLIC public_api)
 if(WIN32)
-	list(INSERT PYOCIO_LINK_PUBLIC 0 ${PYTHON_LIBRARIES})
+	list(INSERT PYOCIO_LINK_PUBLIC 0 ${Python_LIBRARIES})
 endif()
 
 target_link_libraries(PyOpenColorIO
@@ -144,11 +138,11 @@ target_compile_definitions(PyOpenColorIO
 )
 
 if(WIN32)
-    set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/site-packages")
+    set(_Python_VARIANT_PATH "lib${LIB_SUFFIX}/site-packages")
 else()
-    set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages")
+    set(_Python_VARIANT_PATH "lib${LIB_SUFFIX}/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages")
 endif()
 
 install(TARGETS PyOpenColorIO
-    LIBRARY DESTINATION ${PYTHON_VARIANT_PATH}
+    LIBRARY DESTINATION ${_Python_VARIANT_PATH}
 )

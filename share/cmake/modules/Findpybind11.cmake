@@ -9,7 +9,7 @@
 #   pybind11::module - IMPORTED target, if found
 #
 # If pybind11 is not installed in a standard path, you can use the 
-# pybind11_DIRS variable to tell CMake where to find it. If it is not found 
+# pybind11_ROOT variable to tell CMake where to find it. If it is not found 
 # and OCIO_INSTALL_EXT_PACKAGES is set to MISSING or ALL, pybind11 will be 
 # downloaded at build time.
 #
@@ -18,18 +18,21 @@
 ### Try to find package ###
 
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
-    if(DEFINED pybind11_DIRS)
-        # Try user defined search path first. Ignore all default cmake and 
-        # system paths, and fall back on a system CMake config.
+    if(NOT DEFINED pybind11_ROOT)
+        # Search for pybind11Config.cmake
+        find_package(pybind11 ${pybind11_FIND_VERSION} CONFIG QUIET)
+    endif()
+
+    if(NOT pybind11_FOUND)
+        # Find include directory
         find_path(pybind11_INCLUDE_DIR
             NAMES
                 pybind11/pybind11.h
             HINTS
-                ${pybind11_DIRS}
+                ${pybind11_ROOT}
             PATH_SUFFIXES
                 include
                 pybind11/include
-            NO_DEFAULT_PATH
         )
 
         # Version information can be extracted from this header
@@ -48,67 +51,56 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
                     "\\1" _pybind11_PATCH "${_pybind11_VER_SEARCH}")
 
                 set(pybind11_VERSION "${_pybind11_MAJOR}.${_pybind11_MINOR}.${_pybind11_PATCH}")
-                message(STATUS 
-                    "Using user defined search path for pybind11 "
-                    "(found version \"${pybind11_VERSION}\")"
-                )
             endif()
         endif()
     endif()
 
-    if(NOT DEFINED pybind11_VERSION)
-        # Search for a CMake config, which should have been installed with 
-        # pybind11, and will provide version information.
-        find_package(pybind11 ${pybind11_FIND_VERSION} CONFIG)
+    if(NOT pybind11_VERSION)
+        # Check if pybind11 was installed as a Python package (i.e. with 
+        # "pip install pybind11"). This requires a Python interpreter.
+        find_package(Python QUIET COMPONENTS Interpreter)
 
-        if(NOT pybind11_FOUND)
-            # No CMake config found. Check if pybind11 was installed as a 
-            # Python package (i.e. with "pip install pybind11"). This requires
-            # a Python interpreter.
-            find_package(PythonInterp 2.7 QUIET)
+        if(Python_Interpreter_FOUND)
+            execute_process(
+                COMMAND
+                    "${Python_EXECUTABLE}" -c 
+                    "print(__import__('pybind11').__version__)"
+                RESULTS_VARIABLE
+                    _pybind11_VER_RESULTS
+                OUTPUT_VARIABLE
+                    _pybind11_VER_OUTPUT
+                ERROR_QUIET
+            )
+            if(_pybind11_VER_OUTPUT)
+                # Strip \n from python output
+                string(STRIP ${_pybind11_VER_OUTPUT} _pybind11_VER_OUTPUT)
+            endif()
 
-            if(PYTHONINTERP_FOUND)
+            if(_pybind11_VER_RESULTS EQUAL 0 AND "${_pybind11_VER_OUTPUT}" MATCHES "[.0-9]+")
                 execute_process(
                     COMMAND
-                        "${PYTHON_EXECUTABLE}" -c 
-                        "print(__import__('pybind11').__version__)"
+                        "${Python_EXECUTABLE}" -c 
+                        "import os;\
+                            import pybind11;\
+                            print(os.path.join(os.path.dirname(pybind11.__file__), 'include'))"
                     RESULTS_VARIABLE
-                        _pybind11_VER_RESULTS
+                        _pybind11_DIR_RESULTS
                     OUTPUT_VARIABLE
-                        _pybind11_VER_OUTPUT
+                        _pybind11_DIR_OUTPUT
                     ERROR_QUIET
                 )
-                if(_pybind11_VER_OUTPUT)
+                if(_pybind11_DIR_OUTPUT)
                     # Strip \n from python output
-                    string(STRIP ${_pybind11_VER_OUTPUT} _pybind11_VER_OUTPUT)
+                    string(STRIP ${_pybind11_DIR_OUTPUT} _pybind11_DIR_OUTPUT)
                 endif()
 
-                if(_pybind11_VER_RESULTS EQUAL 0 AND "${_pybind11_VER_OUTPUT}" MATCHES "[.0-9]+")
-                    execute_process(
-                        COMMAND
-                            "${PYTHON_EXECUTABLE}" -c 
-                            "import os;\
-                             import pybind11;\
-                             print(os.path.join(os.path.dirname(pybind11.__file__), 'include'))"
-                        RESULTS_VARIABLE
-                            _pybind11_DIR_RESULTS
-                        OUTPUT_VARIABLE
-                            _pybind11_DIR_OUTPUT
-                        ERROR_QUIET
+                if(_pybind11_DIR_RESULTS EQUAL 0 AND EXISTS "${_pybind11_DIR_OUTPUT}")
+                    set(pybind11_VERSION ${_pybind11_VER_OUTPUT})
+                    set(pybind11_INCLUDE_DIR ${_pybind11_DIR_OUTPUT})
+                    message(STATUS 
+                        "Using pybind11 python package (version \"${pybind11_VERSION}\", "
+                        "found in python \"${Python_VERSION}\")"
                     )
-                    if(_pybind11_DIR_OUTPUT)
-                        # Strip \n from python output
-                        string(STRIP ${_pybind11_DIR_OUTPUT} _pybind11_DIR_OUTPUT)
-                    endif()
-
-                    if(_pybind11_DIR_RESULTS EQUAL 0 AND EXISTS "${_pybind11_DIR_OUTPUT}")
-                        set(pybind11_VERSION ${_pybind11_VER_OUTPUT})
-                        set(pybind11_INCLUDE_DIR ${_pybind11_DIR_OUTPUT})
-                        message(STATUS 
-                            "Using pybind11 python package (version \"${pybind11_VERSION}\", "
-                            "found in python \"${PYTHON_VERSION_STRING}\")"
-                        )
-                    endif()
                 endif()
             endif()
         endif()
@@ -141,6 +133,7 @@ endif()
 
 if(NOT pybind11_FOUND)
     include(ExternalProject)
+    include(GNUInstallDirs)
 
     set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
     set(_EXT_BUILD_ROOT "${CMAKE_BINARY_DIR}/ext/build")
@@ -148,7 +141,7 @@ if(NOT pybind11_FOUND)
     # Set find_package standard args
     set(pybind11_FOUND TRUE)
     set(pybind11_VERSION ${pybind11_FIND_VERSION})
-    set(pybind11_INCLUDE_DIR "${_EXT_DIST_ROOT}/include")
+    set(pybind11_INCLUDE_DIR "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_INCLUDEDIR}")
 
     if(_pybind11_TARGET_CREATE)
         # Hack to let imported target be built from ExternalProject_Add
@@ -157,8 +150,8 @@ if(NOT pybind11_FOUND)
         set(pybind11_CMAKE_ARGS
             ${pybind11_CMAKE_ARGS}
             -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
-            -DPYBIND11_INSTALL:BOOL=ON
-            -DPYBIND11_TEST:BOOL=OFF
+            -DPYBIND11_INSTALL=ON
+            -DPYBIND11_TEST=OFF
         )
 
         ExternalProject_Add(pybind11_install
@@ -172,7 +165,7 @@ if(NOT pybind11_FOUND)
         )
 
         add_dependencies(pybind11::module pybind11_install)
-        message(STATUS "Installing pybind11: ${pybind11_INCLUDE_DIR} (version ${pybind11_VERSION})")
+        message(STATUS "Installing pybind11: ${pybind11_INCLUDE_DIR} (version \"${pybind11_VERSION}\")")
     endif()
 endif()
 

@@ -55,7 +55,7 @@ Dependencies
 
 The basic requirements for building OCIO are:
 
-- cmake >= 3.10
+- cmake >= 3.12
 - \*Expat >= 2.2.5 (XML parser for CDL/CLF/CTF)
 - \*yaml-cpp >= 0.6.3 (YAML parser for Configs)
 - \*IlmBase (Half only) >= 2.3.0 (for half domain LUTs)
@@ -64,10 +64,11 @@ The basic requirements for building OCIO are:
 Some optional components also depend on:
 
 - \*Little CMS >= 2.2 (for ociobakelut ICC profile baking)
-- Python 2.x (for the Python bindings and docs)
+- \*pybind11 >= 2.4.3 (for the Python bindings)
+- Python >= 2.7 (for the Python bindings and docs)
     - \*Sphinx >= 1.8.5
+- OpenImageIO >= 2.1.9 (for apps including ocioconvert)
 - Nuke 6.x or newer (for the Nuke nodes)
-- OpenImageIO (for apps including ocioconvert)
 
 Automated Installation
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -97,16 +98,18 @@ When using existing system libraries, the following CMake variables can be
 defined to hint at non-standard install locations and preference of shared
 or static linking:
 
-- ``-DEXPAT_DIRS=<path>`` (include and/or library root dir)
-- ``-DEXPAT_STATIC_LIBRARY=ON`` (prefer static lib)
-- ``-DYAMLCPP_DIRS=<path>`` (include and/or library root dir)
-- ``-DYAMLCPP_STATIC_LIBRARY=ON`` (prefer static lib)
-- ``-DILMBASE_DIRS=<path>`` (include and/or library root dir)
-- ``-DILMBASE_STATIC_LIBRARY=ON`` (prefer static lib)
-- ``-DPYSTRING_DIRS=<path>`` (include and/or library root dir)
-- ``-DPYSTRING_STATIC_LIBRARY=ON`` (prefer static lib)
-- ``-DLCMS2_DIRS=<path>`` (include and/or library root dir)
-- ``-DLCMS2_STATIC_LIBRARY=ON`` (prefer static lib)
+- ``-DExpat_ROOT=<path>`` (include and/or library root dir)
+- ``-DExpat_STATIC_LIBRARY=ON`` (prefer static lib)
+- ``-Dyaml-cpp_ROOT=<path>`` (include and/or library root dir)
+- ``-Dyaml-cpp_STATIC_LIBRARY=ON`` (prefer static lib)
+- ``-DHalf_ROOT=<path>`` (include and/or library root dir)
+- ``-DHalf_STATIC_LIBRARY=ON`` (prefer static lib)
+- ``-Dpystring_ROOT=<path>`` (include and/or library root dir)
+- ``-Dpystring_STATIC_LIBRARY=ON`` (prefer static lib)
+- ``-Dlcms2_ROOT=<path>`` (include and/or library root dir)
+- ``-Dlcms2_STATIC_LIBRARY=ON`` (prefer static lib)
+- ``-pybind11_ROOT=<path>`` (include and/or library root dir)
+- ``-DPython_EXECUTABLE=<path>`` (Python executable)
 - ``-DNUKE_INSTALL_PATH=<path>`` (or use ``NDK_PATH`` environment variable)
 
 To hint at Python package locations, add paths to the ``PYTHONPATH`` 
@@ -266,9 +269,9 @@ for compiling on Windows as provided by `@hodoulp <https://github.com/hodoulp>`_
         -DOCIO_USE_SSE=ON ^
         -DOCIO_WARNING_AS_ERROR=ON ^
         -DOCIO_BUILD_PYTHON=%OCIO_BUILD_PYTHON% ^
-        -DPYTHON_LIBRARY=%PYTHONPATH%\libs\python27.lib ^
-        -DPYTHON_INCLUDE_DIR=%PYTHONPATH%\include ^
-        -DPYTHON_EXECUTABLE=%PYTHONPATH%\python.exe ^
+        -DPython_LIBRARY=%PYTHONPATH%\libs\python27.lib ^
+        -DPython_INCLUDE_DIR=%PYTHONPATH%\include ^
+        -DPython_EXECUTABLE=%PYTHONPATH%\python.exe ^
         -DOCIO_BUILD_JAVA=OFF ^
         -DCMAKE_PREFIX_PATH=%COMPILED_THIRD_PARTY_HOME%\OpenImageIO-1.9.0;%COMPILED_THIRD_PARTY_HOME%/ilmbase-2.2.0 ^
         %OCIO_PATH%

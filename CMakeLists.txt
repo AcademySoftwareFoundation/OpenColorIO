@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.12)
 
 project(OpenColorIO 
 	VERSION 2.0.0
@@ -85,64 +85,66 @@ option(OCIO_WARNING_AS_ERROR "Set build error level for CI testing" OFF)
 ###############################################################################
 # GPU configuration
 
+include(PackageUtils)
+
 if(OCIO_BUILD_GPU_TESTS OR OCIO_BUILD_APPS)
     set(OCIO_GL_ENABLED ON)
+    set(OCIO_USE_GLVND OFF)
+    set(OCIO_EGL_HEADLESS OFF)
 
-    find_package(OpenGL REQUIRED COMPONENTS OpenGL)
+    find_package(OpenGL COMPONENTS OpenGL)
     if(NOT OpenGL_OpenGL_FOUND AND NOT OPENGL_GLU_FOUND)
-        message(WARNING "OpenGL not found; GPU rendering disabled")
+        package_root_message(OpenGL)
         set(OCIO_GL_ENABLED OFF)
-    endif()
-
-    # OpenGL_egl_Library is defined iff GLVND is supported (CMake 10+).
-    if(OPENGL_egl_LIBRARY)
-        message(STATUS "GLVND supported")
-        set(OCIO_USE_GLVND ON)
-    else()
-        message(STATUS "GLVND not supported; legacy OpenGL libraries used")
-        set(OCIO_USE_GLVND OFF)
     endif()
 
     if(NOT APPLE)
-        find_package(GLEW QUIET)
+        find_package(GLEW)
         if(NOT GLEW_FOUND)
-            message(WARNING "GLEW not found")
+            package_root_message(GLEW)
             set(OCIO_GL_ENABLED OFF)
         endif()
-    endif()
-    find_package(GLUT QUIET)
+	endif()
+	
+    find_package(GLUT)
     if(NOT GLUT_FOUND)
-        message(WARNING "GLUT not found")
+        package_root_message(GLUT)
         set(OCIO_GL_ENABLED OFF)
     endif()
 
-    set(OCIO_EGL_HEADLESS OFF)
-    if(${OCIO_USE_HEADLESS})
-        if(CMAKE_SYSTEM_NAME STREQUAL Linux)
-            if(NOT ${OCIO_USE_GLVND})
-                message(STATUS "Can't find EGL without GLVND support; can't render headlessly")
-                set(OCIO_USE_HEADLESS OFF)
-                set(OCIO_EGL_HEADLESS OFF)
-            else()
-                set(OCIO_EGL_HEADLESS ON)
-                find_package(OpenGL COMPONENTS EGL)
-                if(NOT OpenGL_EGL_FOUND)
-                    message(WARNING "EGL component missing; can't render headlessly")
-                    set(OCIO_USE_HEADLESS OFF)
-                    set(OCIO_EGL_HEADLESS OFF)
-                else()
-                    add_compile_definitions(OCIO_HEADLESS_ENABLED)
-                endif()
-            endif()
+    if(NOT OCIO_GL_ENABLED)
+        message(WARNING "GPU rendering disabled")
+    else()
+        # OpenGL_egl_Library is defined iff GLVND is supported (CMake 10+).
+        if(OPENGL_egl_LIBRARY)
+            message(STATUS "GLVND supported")
+            set(OCIO_USE_GLVND ON)
         else()
-            message(WARNING "OS system is not Linux; can't render headlessly")
-            set(OCIO_EGL_HEADLESS OFF)
+            message(STATUS "GLVND not supported; legacy OpenGL libraries used")
+        endif()
+
+        if(OCIO_USE_HEADLESS)
+            if(CMAKE_SYSTEM_NAME STREQUAL Linux)
+                if(NOT OCIO_USE_GLVND)
+                    message(STATUS "Can't find EGL without GLVND support; can't render headlessly")
+                    set(OCIO_USE_HEADLESS OFF)
+                else()
+                    find_package(OpenGL COMPONENTS EGL)
+                    if(NOT OpenGL_EGL_FOUND)
+                        message(WARNING "EGL component missing; can't render headlessly")
+                        set(OCIO_USE_HEADLESS OFF)
+                    else()
+                        add_compile_definitions(OCIO_HEADLESS_ENABLED)
+                        set(OCIO_EGL_HEADLESS ON)
+                        message(STATUS "EGL enabled")
+                    endif()
+                endif()
+            else()
+                message(WARNING "OS system is not Linux; can't render headlessly")
+            endif()
         endif()
     endif()
 endif()
-
-message(STATUS "GL enabled  " ${OCIO_GL_ENABLED})
-message(STATUS "EGL enabled " ${OCIO_EGL_HEADLESS})
 
 ###############################################################################
 # Optimization / internal linking preferences
@@ -250,11 +252,19 @@ if(OCIO_BUILD_STATIC)
 endif()
 
 ###############################################################################
+# Find or install external dependencies
+# Some required targets may be created by third-party CMake configs, which 
+# don't generally produce global targets. To guarantee all imported targets are 
+# global, this module is included at the project root level.
+
+include(FindExtPackages)
+
+###############################################################################
 # Progress to other sources
 
+add_subdirectory(ext)
 add_subdirectory(tests)
 add_subdirectory(include)
-add_subdirectory(ext)
 add_subdirectory(src)
 if(OCIO_BUILD_DOCS)
 	add_subdirectory(docs)
