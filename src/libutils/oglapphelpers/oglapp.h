@@ -181,8 +181,8 @@ public:
 
     ~HeadlessApp();
 
-    void printGLInfo() const noexcept override;
     void redisplay() override;
+    void printGLInfo() const noexcept override;
 
 protected:
     // Helper function to print EGL info.
