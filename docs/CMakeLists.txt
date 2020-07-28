@@ -127,6 +127,10 @@ add_custom_target(docs ALL
         rst_extraction
         doc_copy
         Sphinx
+        breathe
+        sphinx-tabs
+        recommonmark
+        sphinx-press-theme
     COMMENT "Building html docs"
 )
 
