@@ -4,155 +4,123 @@
 ###############################################################################
 ### Python ###
 find_package(Python REQUIRED COMPONENTS Interpreter)
-if(NOT OCIO_BUILD_PYTHON)
-    message(FATAL_ERROR "Doc generation requires that the python bindings be built")
-endif()
-
-###############################################################################
-### Setup PYTHONPATH ###
-
-# Override PYTHONPATH prior to running Sphinx. This makes the PyOpenColorIO
-# build available, prioritizes ext/ installed Python dependencies, and
-# propagates the system PYTHONPATH.
-if(WIN32)
-    # Use Windows path separators since this is being passed through to cmd
-    file(TO_NATIVE_PATH ${CMAKE_BINARY_DIR} WIN_BINARY_DIR)
-
-    set(DLL_PATH "${WIN_BINARY_DIR}\\src\\OpenColorIO")
-    if(MSVC_IDE)
-        set(DLL_PATH "${DLL_PATH}\\${CMAKE_BUILD_TYPE}")
+if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
+    if(NOT OCIO_BUILD_PYTHON)
+        message(FATAL_ERROR "Doc generation requires that the python bindings be built")
     endif()
 
-    string(CONCAT PATH_SET
-        "PATH="
-        "${DLL_PATH}"
-        "\\\\;"
-        "%PATH%"
-    )
+    ###############################################################################
+    ### Setup PYTHONPATH ###
 
-    set(PYD_PATH "${WIN_BINARY_DIR}\\src\\bindings\\python")
-    if(MSVC_IDE)
-        set(PYD_PATH "${PYD_PATH}\\${CMAKE_BUILD_TYPE}")
+    # Override PYTHONPATH prior to running Sphinx. This makes the PyOpenColorIO
+    # build available, prioritizes ext/ installed Python dependencies, and
+    # propagates the system PYTHONPATH.
+    if(WIN32)
+        # Use Windows path separators since this is being passed through to cmd
+        file(TO_NATIVE_PATH ${CMAKE_BINARY_DIR} WIN_BINARY_DIR)
+
+        set(DLL_PATH "${WIN_BINARY_DIR}\\src\\OpenColorIO")
+        if(MSVC_IDE)
+            set(DLL_PATH "${DLL_PATH}\\${CMAKE_BUILD_TYPE}")
+        endif()
+
+        string(CONCAT PATH_SET
+            "PATH="
+            "${DLL_PATH}"
+            "\\\\;"
+            "%PATH%"
+        )
+
+        set(PYD_PATH "${WIN_BINARY_DIR}\\src\\bindings\\python")
+        if(MSVC_IDE)
+            set(PYD_PATH "${PYD_PATH}\\${CMAKE_BUILD_TYPE}")
+        endif()
+
+        string(CONCAT PYTHONPATH_SET
+            "PYTHONPATH="
+            "${PYD_PATH}"
+            "\\\\;"
+            "${WIN_BINARY_DIR}\\ext\\dist\\lib\\site-packages"
+            "\\\\;"
+            "%PYTHONPATH%"
+        )
+        # Mimic *nix:
+        #   '> PYTHONPATH=XXX CMD'
+        # on Windows with:
+        #   '> set PYTHONPATH=XXX \n call CMD'
+        # '\n' is here because '\\&' does not work.
+        set(PYT_PRE_CMD set ${PATH_SET} "\n" set ${PYTHONPATH_SET} "\n" call)
+
+    else()
+        set(_Python_VARIANT "${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}")
+        string(CONCAT PYT_PRE_CMD
+            "PYTHONPATH="
+            "${CMAKE_BINARY_DIR}/src/bindings/python"
+            ":"
+            "${CMAKE_BINARY_DIR}/ext/dist/lib${LIB_SUFFIX}/python${_Python_VARIANT}/site-packages"
+            ":"
+            "$ENV{PYTHONPATH}"
+        )
     endif()
 
-    string(CONCAT PYTHONPATH_SET
-        "PYTHONPATH="
-        "${PYD_PATH}"
-        "\\\\;"
-        "${WIN_BINARY_DIR}\\ext\\dist\\lib\\site-packages"
-        "\\\\;"
-        "%PYTHONPATH%"
+    ###############################################################################
+    ### Copy templates to build area ###
+
+    file(GLOB_RECURSE DOC_SOURCES "${CMAKE_SOURCE_DIR}/docs/*")
+    list(APPEND DOC_SOURCES
+        ${CMAKE_SOURCE_DIR}/README.md
+        ${CMAKE_SOURCE_DIR}/INSTALL.md
+        ${CMAKE_SOURCE_DIR}/CHANGELOG.md
+        ${CMAKE_SOURCE_DIR}/LICENSE
     )
-    # Mimic *nix:
-    #   '> PYTHONPATH=XXX CMD'
-    # on Windows with:
-    #   '> set PYTHONPATH=XXX \n call CMD'
-    # '\n' is here because '\\&' does not work.
-    set(PYT_PRE_CMD set ${PATH_SET} "\n" set ${PYTHONPATH_SET} "\n" call)
-
-else()
-    set(_Python_VARIANT "${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}")
-    string(CONCAT PYT_PRE_CMD
-        "PYTHONPATH="
-        "${CMAKE_BINARY_DIR}/src/bindings/python"
-        ":"
-        "${CMAKE_BINARY_DIR}/ext/dist/lib${LIB_SUFFIX}/python${_Python_VARIANT}/site-packages"
-        ":"
-        "$ENV{PYTHONPATH}"
-    )
-endif()
-
-###############################################################################
-### Copy templates to build area ###
-
-file(GLOB_RECURSE DOC_SOURCES "${CMAKE_SOURCE_DIR}/docs/*")
-list(APPEND DOC_SOURCES
-    ${CMAKE_SOURCE_DIR}/README.md
-    ${CMAKE_SOURCE_DIR}/INSTALL.md
-    ${CMAKE_SOURCE_DIR}/CHANGELOG.md
-    ${CMAKE_SOURCE_DIR}/LICENSE
-)
-if(OCIO_BUILD_NUKE)
-    list(APPEND DOC_SOURCES ${CMAKE_SOURCE_DIR}/share/nuke/ocionuke/viewer.py)
-endif()
-
-add_custom_target(doc_copy
-    COMMENT "Copying doc files to staging area"
-)
-
-foreach(f ${DOC_SOURCES})
-    string(REGEX REPLACE "^${CMAKE_SOURCE_DIR}/" "" relpath ${f})
-    string(REGEX REPLACE "[/. ]" "_" tgtname ${relpath})
-    string(REGEX MATCH "^docs" IN_DOCS ${relpath})
-
-    set(SRC_PATH ${CMAKE_SOURCE_DIR}/${relpath})
-    set(DST_PATH ${CMAKE_BINARY_DIR}/${relpath})
-    if(NOT IN_DOCS)
-        get_filename_component(F_NAME ${relpath} NAME)
-        set(DST_PATH "${CMAKE_BINARY_DIR}/docs/${F_NAME}")
+    if(OCIO_BUILD_NUKE)
+        list(APPEND DOC_SOURCES ${CMAKE_SOURCE_DIR}/share/nuke/ocionuke/viewer.py)
     endif()
 
-    add_custom_command(OUTPUT ${DST_PATH}
-        COMMAND ${CMAKE_COMMAND} -E copy ${SRC_PATH} ${DST_PATH}
-        DEPENDS ${SRC_PATH}
+    add_custom_target(doc_copy
+        COMMENT "Copying doc files to staging area"
     )
-    add_custom_target("copy_${tgtname}" DEPENDS ${DST_PATH})
-    add_dependencies(doc_copy "copy_${tgtname}")
-endforeach()
 
-###############################################################################
-### Extract rst from c++ headers ###
+    foreach(f ${DOC_SOURCES})
+        string(REGEX REPLACE "^${CMAKE_SOURCE_DIR}/" "" relpath ${f})
+        string(REGEX REPLACE "[/. ]" "_" tgtname ${relpath})
+        string(REGEX MATCH "^docs" IN_DOCS ${relpath})
 
-set(EXTRACT_COMMAND "${CMAKE_SOURCE_DIR}/share/sphinx/ExtractRstFromSourceCPP.py")
-set(OCIO_HEADER_DIR "${CMAKE_SOURCE_DIR}/include/OpenColorIO")
-set(RST_DESTINATION "${CMAKE_BINARY_DIR}/docs/developers/api/")
-add_custom_target(rst_extraction
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${RST_DESTINATION}
-    COMMAND ${Python_EXECUTABLE} ${EXTRACT_COMMAND} ${OCIO_HEADER_DIR}/OpenColorIO.h ${RST_DESTINATION}/OpenColorIO.rst
-    COMMAND ${Python_EXECUTABLE} ${EXTRACT_COMMAND} ${OCIO_HEADER_DIR}/OpenColorTransforms.h ${RST_DESTINATION}/OpenColorTransforms.rst
-    COMMAND ${Python_EXECUTABLE} ${EXTRACT_COMMAND} ${OCIO_HEADER_DIR}/OpenColorTypes.h ${RST_DESTINATION}/OpenColorTypes.rst
-    COMMENT "Extracting .rst files from C++ headers"
-)
+        set(SRC_PATH ${CMAKE_SOURCE_DIR}/${relpath})
+        set(DST_PATH ${CMAKE_BINARY_DIR}/${relpath})
+        if(NOT IN_DOCS)
+            get_filename_component(F_NAME ${relpath} NAME)
+            set(DST_PATH "${CMAKE_BINARY_DIR}/docs/${F_NAME}")
+        endif()
 
-###############################################################################
-### HTML doc target ###
+        add_custom_command(OUTPUT ${DST_PATH}
+            COMMAND ${CMAKE_COMMAND} -E copy ${SRC_PATH} ${DST_PATH}
+            DEPENDS ${SRC_PATH}
+        )
+        add_custom_target("copy_${tgtname}" DEPENDS ${DST_PATH})
+        add_dependencies(doc_copy "copy_${tgtname}")
+    endforeach()
 
-add_custom_target(docs ALL
-    COMMAND
-        ${PYT_PRE_CMD} "${Sphinx_EXECUTABLE}" -b html . "${CMAKE_CURRENT_BINARY_DIR}/build-html"
-    DEPENDS
-        OpenColorIO
-        PyOpenColorIO
-        ${CMAKE_BINARY_DIR}/docs/conf.py
-        rst_extraction
-        doc_copy
-        Sphinx
-        breathe
-        sphinx-tabs
-        recommonmark
-        sphinx-press-theme
-    COMMENT "Building html docs"
-)
+    ###############################################################################
+    ### Extract rst from c++ headers ###
 
-###############################################################################
-### Installation ###
+    set(EXTRACT_COMMAND "${CMAKE_SOURCE_DIR}/share/sphinx/ExtractRstFromSourceCPP.py")
+    set(OCIO_HEADER_DIR "${CMAKE_SOURCE_DIR}/include/OpenColorIO")
+    set(RST_DESTINATION "${CMAKE_BINARY_DIR}/docs/developers/api/")
+    add_custom_target(rst_extraction
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${RST_DESTINATION}
+        COMMAND ${Python_EXECUTABLE} ${EXTRACT_COMMAND} ${OCIO_HEADER_DIR}/OpenColorIO.h ${RST_DESTINATION}/OpenColorIO.rst
+        COMMAND ${Python_EXECUTABLE} ${EXTRACT_COMMAND} ${OCIO_HEADER_DIR}/OpenColorTransforms.h ${RST_DESTINATION}/OpenColorTransforms.rst
+        COMMAND ${Python_EXECUTABLE} ${EXTRACT_COMMAND} ${OCIO_HEADER_DIR}/OpenColorTypes.h ${RST_DESTINATION}/OpenColorTypes.rst
+        COMMENT "Extracting .rst files from C++ headers"
+    )
 
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/build-html/
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/OpenColorIO/html
-        PATTERN .* EXCLUDE
-)
+    ###############################################################################
+    ### HTML doc target ###
 
-###############################################################################
-### PDF target ###
-
-find_package(LATEX)
-package_root_message(LATEX)
-
-if(PDFLATEX_COMPILER)
-
-    add_custom_target(latex
+    add_custom_target(docs ALL
         COMMAND
-            ${PYT_PRE_CMD} "${Sphinx_EXECUTABLE}" -b latex . "${CMAKE_CURRENT_BINARY_DIR}/build-latex"
+            ${PYT_PRE_CMD} "${Sphinx_EXECUTABLE}" -b html . "${CMAKE_CURRENT_BINARY_DIR}/build-html"
         DEPENDS
             OpenColorIO
             PyOpenColorIO
@@ -160,17 +128,54 @@ if(PDFLATEX_COMPILER)
             rst_extraction
             doc_copy
             Sphinx
-        COMMENT "Building latex doc"
+            breathe
+            sphinx-tabs
+            recommonmark
+            sphinx-press-theme
+        COMMENT "Building html docs"
     )
 
-    add_custom_target(pdf ALL
-        DEPENDS latex
-        COMMAND ${PDFLATEX_COMPILER} OpenColorIO.tex
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/build-latex
-        COMMENT "Building pdf doc"
+    ###############################################################################
+    ### Installation ###
+
+    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/build-html/
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/OpenColorIO/html
+            PATTERN .* EXCLUDE
     )
 
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/build-latex/OpenColorIO.pdf
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/OpenColorIO/)
+    ###############################################################################
+    ### PDF target ###
 
+    find_package(LATEX)
+    package_root_message(LATEX)
+
+    if(PDFLATEX_COMPILER)
+
+        add_custom_target(latex
+            COMMAND
+                ${PYT_PRE_CMD} "${Sphinx_EXECUTABLE}" -b latex . "${CMAKE_CURRENT_BINARY_DIR}/build-latex"
+            DEPENDS
+                OpenColorIO
+                PyOpenColorIO
+                ${CMAKE_BINARY_DIR}/docs/conf.py
+                rst_extraction
+                doc_copy
+                Sphinx
+            COMMENT "Building latex doc"
+        )
+
+        add_custom_target(pdf ALL
+            DEPENDS latex
+            COMMAND ${PDFLATEX_COMPILER} OpenColorIO.tex
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/build-latex
+            COMMENT "Building pdf doc"
+        )
+
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/build-latex/OpenColorIO.pdf
+                DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/OpenColorIO/)
+
+    endif()
+
+else()
+    message(Warning "Skipping local documentation generation, requires Python >= 3.x")
 endif()
