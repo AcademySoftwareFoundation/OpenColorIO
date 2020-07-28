@@ -51,17 +51,17 @@ if(OCIO_BUILD_DOCS)
 
         include(FindPythonPackage)
 
-        # Breathe
-        # https://pypi.org/project/breathe/
-        find_python_package(breathe 4.19.2 REQUIRED)
+        # # testresources
+        # # https://pypi.org/project/testresources/
+        # find_python_package(testresources 2.0.1 REQUIRED)
 
-        # Sphinx-Tabs
-        # https://pypi.org/project/sphinx-tabs/
-        find_python_package(sphinx-tabs 1.1.13 REQUIRED)
+        # # Sphinx-Tabs
+        # # https://pypi.org/project/sphinx-tabs/
+        # find_python_package(sphinx-tabs 1.1.13 REQUIRED)
 
         # Sphinx Press Theme
-        # https://pypi.org/project/sphinx-press-theme/
-        find_python_package(sphinx-press-theme 0.5.1 REQUIRED)
+        # https://pypi.org/project/romnnn-sphinx-press-theme/
+        find_python_package(romnnn-sphinx-press-theme 0.5.6 REQUIRED)
 
     endif()
 endif()

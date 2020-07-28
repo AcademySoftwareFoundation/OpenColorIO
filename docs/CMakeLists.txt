@@ -128,10 +128,7 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
             rst_extraction
             doc_copy
             Sphinx
-            breathe
-            sphinx-tabs
-            recommonmark
-            sphinx-press-theme
+            romnnn-sphinx-press-theme
         COMMENT "Building html docs"
     )
 

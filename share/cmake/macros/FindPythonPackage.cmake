@@ -29,10 +29,19 @@ macro(find_python_package package version)
         if(_ARG STREQUAL "REQUIRED")
             set(_PKG_REQUIRED TRUE)
         endif()
+        if(_PREV_ARG STREQUAL "REQUIRES")
+            set(_PKG_REQUIRES ${_ARG})
+        endif()
+        set(_PREV_ARG ${_ARG})
     endforeach()
+    
 
     if(NOT TARGET ${package})
         add_custom_target(${package})
+        if(_PKG_REQUIRES)
+            add_dependencies(${package} ${_PKG_REQUIRES})
+            unset(_PKG_REQUIRES)
+        endif()
         set(_${_PKG_UPPER}_TARGET_CREATE TRUE)
     endif()
 
@@ -83,58 +92,6 @@ macro(find_python_package package version)
     ###########################################################################
     ### Install package from PyPi ###
 
-    # Override PYTHONPATH prior to installing via pip. This allows other
-    # pip installed packages to depend on each other, and makes the
-    # PyOpenColorIO build available, prioritizes ext/ installed Python
-    # dependencies, and propagates the system PYTHONPATH.
-    if(WIN32)
-        # Use Windows path separators since this is being passed through to cmd
-        file(TO_NATIVE_PATH ${CMAKE_BINARY_DIR} WIN_BINARY_DIR)
-
-        set(DLL_PATH "${WIN_BINARY_DIR}\\src\\OpenColorIO")
-        if(MSVC_IDE)
-            set(DLL_PATH "${DLL_PATH}\\${CMAKE_BUILD_TYPE}")
-        endif()
-
-        string(CONCAT PATH_SET
-            "PATH="
-            "${DLL_PATH}"
-            "\\\\;"
-            "%PATH%"
-        )
-
-        set(PYD_PATH "${WIN_BINARY_DIR}\\src\\bindings\\python")
-        if(MSVC_IDE)
-            set(PYD_PATH "${PYD_PATH}\\${CMAKE_BUILD_TYPE}")
-        endif()
-
-        string(CONCAT PYTHONPATH_SET
-            "PYTHONPATH="
-            "${PYD_PATH}"
-            "\\\\;"
-            "${WIN_BINARY_DIR}\\ext\\dist\\lib\\site-packages"
-            "\\\\;"
-            "%PYTHONPATH%"
-        )
-        # Mimic *nix:
-        #   '> PYTHONPATH=XXX CMD'
-        # on Windows with:
-        #   '> set PYTHONPATH=XXX \n call CMD'
-        # '\n' is here because '\\&' does not work.
-        set(PYT_PRE_CMD set ${PATH_SET} "\n" set ${PYTHONPATH_SET} "\n" call)
-
-    else()
-        set(_Python_VARIANT "${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}")
-        string(CONCAT PYT_PRE_CMD
-            "PYTHONPATH="
-            "${CMAKE_BINARY_DIR}/src/bindings/python"
-            ":"
-            "${CMAKE_BINARY_DIR}/ext/dist/lib${LIB_SUFFIX}/python${_Python_VARIANT}/site-packages"
-            ":"
-            "$ENV{PYTHONPATH}"
-        )
-    endif()
-
     if(_PKG_INSTALL)
         set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
         set(${_PKG_UPPER}_FOUND TRUE)
@@ -157,13 +114,15 @@ macro(find_python_package package version)
                 TARGET
                     ${package}
                 COMMAND
-                    ${PYT_PRE_CMD} ${_Python_PIP} install --disable-pip-version-check
+                    ${_Python_PIP} install --disable-pip-version-check
                                            --install-option="--prefix=${_EXT_DIST_ROOT}"
                                            -I ${package}==${version}
                 WORKING_DIRECTORY
                     "${CMAKE_BINARY_DIR}"
             )
-
+            message(${_Python_PIP} install --disable-pip-version-check
+            --install-option="--prefix=${_EXT_DIST_ROOT}"
+            -I ${package}==${version})
             message(STATUS "Installing ${package}: ${_SITE_PKGS_DIR} (version ${version})")
         endif()
     endif()
