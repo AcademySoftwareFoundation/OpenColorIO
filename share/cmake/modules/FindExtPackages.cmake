@@ -53,19 +53,15 @@ if(OCIO_BUILD_DOCS)
 
         # Breathe
         # https://pypi.org/project/breathe/
-        find_python_package(breathe 4.19.2 REQUIRED)
+        find_python_package(breathe REQUIRED)
 
         # Sphinx-Tabs
         # https://pypi.org/project/sphinx-tabs/
-        find_python_package(sphinx-tabs 1.1.13 REQUIRED)
-
-        # Recommonmark
-        # https://pypi.org/project/recommonmark/
-        find_python_package(recommonmark 0.6.0 REQUIRED)
+        find_python_package(sphinx-tabs REQUIRED)
 
         # Sphinx Press Theme
         # https://pypi.org/project/sphinx-press-theme/
-        find_python_package(sphinx-press-theme 0.5.1 REQUIRED)
+        find_python_package(sphinx-press-theme REQUIRED)
 
     endif()
 endif()

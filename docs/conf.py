@@ -20,7 +20,6 @@ extensions = [
     'breathe',
     'sphinx.ext.napoleon',
     'sphinx_tabs.tabs',
-    'recommonmark',
 ]
 templates_path = ['templates']
 source_suffix = {
