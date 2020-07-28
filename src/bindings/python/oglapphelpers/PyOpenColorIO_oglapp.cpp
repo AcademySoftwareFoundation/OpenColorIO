@@ -22,8 +22,8 @@ void bindPyOglApp(py::module & m)
                  "imageHeight"_a,
                  "Components"_a,
                  "imageBuffer"_a)
-            .def("updateImage", &OglApp::updataImage, "imageBuffer"_a)
-            .def("createGLBuffer", &OglApp::createGLBuffer)
+            .def("updateImage", &OglApp::updateImage, "imageBuffer"_a)
+            .def("createGLBuffers", &OglApp::createGLBuffers)
             .def("setShader", &OglApp::setShader)
             .def("reshape", &OglApp::reshape,
                  "width"_a,
@@ -35,47 +35,48 @@ void bindPyOglApp(py::module & m)
             .def_static("CreateOglApp", &OglApp::CreateOglApp,
                         "winTitle"_a,
                         "winWidth"_a,
-                        "winHeight"_a)
-            .def("setUpCommon", &OglApp::setUpCommon);
+                        "winHeight"_a);
 
     py::enum_<OglApp::Components>(cls, "Components")
             .value("Components_RGB", OglApp::Components::COMPONENTS_RGB)
             .value("Components_RGBA", OglApp::Components::COMPONENTS_RGBA)
             .export_values();
-
 }
 
 void bindPyScreenApp(py::module & m)
 {
     auto cls = py::class_<ScreenApp,
-                          OglAppRcPtr /* holder */,
+                          ScreenAppRcPtr /* holder */,
                           OglApp /* base */>(m, "ScreenApp")
-            .def(py::init()
+            .def(py::init([](const char * winTitle,
+                          int winWidth,
+                          int winHeight)
                 {
-                     OglAppRcPtr p = std::make_shared<OCIO::ScreenApp>(winTitle, winWidth, winHeight);
+                     ScreenAppRcPtr p = std::make_shared<ScreenApp>(winTitle, winWidth, winHeight);
                      return p;
-                 })
+                 }))
             .def("redisplay", &ScreenApp::redisplay)
             .def("printGLInfo", &ScreenApp::printGLInfo);
 }
 
 #ifdef OCIO_HEADLESS_ENABLED
+
 void bindPyHeadlessApp(py::module & m)
 {
     auto cls = py::class_<HeadlessApp,
-                          OglAppRcPtr /* holder */,
+                          HeadlessAppRcPtr /* holder */,
                           OglApp /* base */>(m, "HeadlessApp")
             .def(py::init([](const char * winTitle,
                              int winWidth,
                              int winHeight)
                 {
-                    OglAppRcPtr p = std::make_shared<OCIO::HeadlessApp>(winTitle, winWidth, winHeight);
+                    HeadlessAppRcPtr p = std::make_shared<HeadlessApp>(winTitle, winWidth, winHeight);
                     return p;
                 }))
             .def("redisplay", &HeadlessApp::redisplay)
-            .def("printGLInfo", &HeadlessApp::printGLInfo)
-            .def("printEGLInfo", &HeadlessApp::printEGLInfo);
+            .def("printGLInfo", &HeadlessApp::printGLInfo);
 }
+
 #endif
 
 } // namespace OCIO_NAMESPACE

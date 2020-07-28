@@ -168,6 +168,8 @@ private:
     int m_mainWin{ 0 };
 };
 
+typedef OCIO_SHARED_PTR<ScreenApp> ScreenAppRcPtr;
+
 #ifdef OCIO_HEADLESS_ENABLED
 
 #include <EGL/egl.h>
@@ -200,6 +202,8 @@ private:
 
     std::vector<EGLint> m_configAttribs;
 };
+
+typedef OCIO_SHARED_PTR<HeadlessApp> HeadlessAppRcPtr;
 
 #endif
 

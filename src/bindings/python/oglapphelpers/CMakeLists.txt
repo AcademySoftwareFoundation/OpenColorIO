@@ -70,6 +70,7 @@ target_link_libraries(PyOpenColorIO_oglapphelpers
 		${PYOCIO_LINK_PUBLIC}
 	PRIVATE
 		OpenColorIO
+                oglapphelpers
 		utils::strings
 		pybind11::module
 )

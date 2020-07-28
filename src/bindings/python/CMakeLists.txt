@@ -143,6 +143,8 @@ else()
     set(_Python_VARIANT_PATH "lib${LIB_SUFFIX}/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages")
 endif()
 
+add_subdirectory(oglapphelpers)
+
 install(TARGETS PyOpenColorIO
     LIBRARY DESTINATION ${_Python_VARIANT_PATH}
 )
