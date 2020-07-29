@@ -40,7 +40,7 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
             "PYTHONPATH="
             "${PYD_PATH}"
             "\\\\;"
-            "${WIN_BINARY_DIR}\\ext\\dist\\lib\\site-packages"
+            "${WIN_BINARY_DIR}\\ext\\dist\\lib${LIB_SUFFIX}\\site-packages"
             "\\\\;"
             "%PYTHONPATH%"
         )
@@ -122,15 +122,18 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
         COMMAND
             ${PYT_PRE_CMD} "${Sphinx_EXECUTABLE}" -b html . "${CMAKE_CURRENT_BINARY_DIR}/build-html"
         DEPENDS
-            OpenColorIO
-            PyOpenColorIO
             ${CMAKE_BINARY_DIR}/docs/conf.py
-            rst_extraction
-            doc_copy
-            Sphinx
-            romnnn-sphinx-press-theme
-            recommonmark
         COMMENT "Building html docs"
+    )
+
+    add_dependencies(docs
+        OpenColorIO
+        PyOpenColorIO
+        rst_extraction
+        doc_copy
+        Sphinx
+        sphinx-press-theme
+        recommonmark
     )
 
     ###############################################################################
@@ -153,20 +156,29 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
             COMMAND
                 ${PYT_PRE_CMD} "${Sphinx_EXECUTABLE}" -b latex . "${CMAKE_CURRENT_BINARY_DIR}/build-latex"
             DEPENDS
-                OpenColorIO
-                PyOpenColorIO
                 ${CMAKE_BINARY_DIR}/docs/conf.py
-                rst_extraction
-                doc_copy
-                Sphinx
             COMMENT "Building latex doc"
         )
 
+        add_dependencies(latex
+            OpenColorIO
+            PyOpenColorIO
+            rst_extraction
+            doc_copy
+            Sphinx
+            sphinx-press-theme
+            recommonmark
+        )
+
+
         add_custom_target(pdf ALL
-            DEPENDS latex
             COMMAND ${PDFLATEX_COMPILER} OpenColorIO.tex
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/build-latex
             COMMENT "Building pdf doc"
+        )
+
+        add_dependencies(pdf
+            latex
         )
 
         install(FILES ${CMAKE_CURRENT_BINARY_DIR}/build-latex/OpenColorIO.pdf
