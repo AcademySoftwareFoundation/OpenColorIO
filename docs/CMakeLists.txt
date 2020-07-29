@@ -129,6 +129,7 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
             doc_copy
             Sphinx
             romnnn-sphinx-press-theme
+            recommonmark
         COMMENT "Building html docs"
     )
 

@@ -51,17 +51,21 @@ if(OCIO_BUILD_DOCS)
 
         include(FindPythonPackage)
 
-        # # testresources
-        # # https://pypi.org/project/testresources/
-        # find_python_package(testresources 2.0.1 REQUIRED)
+        # testresources
+        # https://pypi.org/project/testresources/
+        find_python_package(testresources 2.0.1 REQUIRED)
 
         # # Sphinx-Tabs
         # # https://pypi.org/project/sphinx-tabs/
         # find_python_package(sphinx-tabs 1.1.13 REQUIRED)
 
+        # Recommonmark
+        # https://pypi.org/project/recommonmark/
+        find_python_package(recommonmark 0.6.0 REQUIRED)
+
         # Sphinx Press Theme
         # https://pypi.org/project/romnnn-sphinx-press-theme/
-        find_python_package(romnnn-sphinx-press-theme 0.5.6 REQUIRED)
+        find_python_package(romnnn-sphinx-press-theme 0.5.6 REQUIRES testresources REQUIRED)
 
     endif()
 endif()
