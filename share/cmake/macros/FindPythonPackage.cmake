@@ -115,14 +115,11 @@ macro(find_python_package package version)
                     ${package}
                 COMMAND
                     ${_Python_PIP} install --disable-pip-version-check
-                                           --install-option="--prefix=${_EXT_DIST_ROOT}"
+                                           --prefix=${_EXT_DIST_ROOT}
                                            -I ${package}==${version}
                 WORKING_DIRECTORY
                     "${CMAKE_BINARY_DIR}"
             )
-            message(${_Python_PIP} install --disable-pip-version-check
-            --install-option="--prefix=${_EXT_DIST_ROOT}"
-            -I ${package}==${version})
             message(STATUS "Installing ${package}: ${_SITE_PKGS_DIR} (version ${version})")
         endif()
     endif()
