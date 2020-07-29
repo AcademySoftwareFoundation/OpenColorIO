@@ -64,8 +64,8 @@ if(OCIO_BUILD_DOCS)
         find_python_package(recommonmark 0.6.0 REQUIRED)
 
         # Sphinx Press Theme
-        # https://pypi.org/project/romnnn-sphinx-press-theme/
-        find_python_package(romnnn-sphinx-press-theme 0.5.6 REQUIRES testresources REQUIRED)
+        # https://pypi.org/project/sphinx-press-theme/
+        find_python_package(sphinx-press-theme 0.5.1 REQUIRES testresources REQUIRED)
 
     endif()
 endif()
