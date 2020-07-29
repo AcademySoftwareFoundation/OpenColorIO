@@ -4,7 +4,7 @@
 ###############################################################################
 ### Python ###
 find_package(Python REQUIRED COMPONENTS Interpreter)
-if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
+if((${Python_VERSION_MAJOR} GREATER_EQUAL 3) AND (NOT WIN32))
     if(NOT OCIO_BUILD_PYTHON)
         message(FATAL_ERROR "Doc generation requires that the python bindings be built")
     endif()
