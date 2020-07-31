@@ -214,7 +214,7 @@ OCIO_ADD_TEST(ViewingRules, config_io)
 
     // Rules have to refer to colorspace or encoding.
     config->setViewingRules(vrules);
-    OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception,
+    OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
                           "must have either a color space or an encoding");
 
     const std::string cs0{ "colorspace0" };
@@ -232,7 +232,7 @@ OCIO_ADD_TEST(ViewingRules, config_io)
     config->addColorSpace(cs);
 
     config->setViewingRules(vrules);
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     // Save config and load back.
     std::ostringstream oss;
@@ -394,7 +394,7 @@ colorspaces:
     std::istringstream is(SIMPLE_CONFIG);
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     // Check 2 rules of 2 non-existing display/views.
     std::string rule;
@@ -491,7 +491,7 @@ colorspaces:
     // Copy to set active views.
     OCIO::ConfigRcPtr configav = config->createEditableCopy();
     configav->setActiveViews("SView_e, View_h, SView_d, View_d, SView_a, View_b");
-    OCIO_CHECK_NO_THROW(configav->sanityCheck());
+    OCIO_CHECK_NO_THROW(configav->validate());
 
     // Viewing rule results are further filtered and re-ordered by the active views list.
     OCIO_CHECK_NO_THROW(numViews = configav->getNumViews("sRGB", "c3"));

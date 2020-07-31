@@ -58,7 +58,7 @@ the colorspace used for ``compositing_log`` is not incorrect::
     ncf
     srgb8 -- output only
 
-    ERROR: Config failed sanitycheck. The role 'compositing_log' refers to a colorspace, 'lgff', which is not defined.
+    ERROR: Config failed validation. The role 'compositing_log' refers to a colorspace, 'lgff', which is not defined.
 
     Tests complete.
 

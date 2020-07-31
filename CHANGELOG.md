@@ -1,6 +1,13 @@
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 <!-- Copyright Contributors to the OpenColorIO Project. -->
 
+**Version 2.0.0 (unreleased):**
+    * Renamed sanityCheck() method to validate() in the classes
+      Config, FileRule and ViewingRule
+    * Renamed Sanity enumeration to Validation in Config::Impl class,
+      and its members SANITY_UNKNOWN, SANITY_SANE and SANITY_INSANE to
+      VALIDATION_UNKNOWN, VALIDATION_VALID and VALIDATION_INVALID
+
 **Version 1.1.1 (April 2 2019):**
     * Added optional compatibility for building apps with OpenImageIO 1.9+
     * Added USE_SSE checks to fix Linux build failure

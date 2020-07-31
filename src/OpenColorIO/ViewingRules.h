@@ -40,7 +40,7 @@ public:
     void validatePosition(size_t ruleIndex) const;
     void validateNewRule(const char * name) const;
 
-    void sanityCheck(std::function<ConstColorSpaceRcPtr(const char *)> colorSpaceAccessor,
+    void validate(std::function<ConstColorSpaceRcPtr(const char *)> colorSpaceAccessor,
                      const ColorSpaceSetRcPtr & colorspaces) const;
 
 private:

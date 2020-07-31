@@ -97,7 +97,7 @@ OCIO_ADD_TEST(Config, create_raw_config)
 {
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateRaw());
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
     OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 1);
     OCIO_CHECK_EQUAL(std::string(config->getColorSpaceNameByIndex(0)), std::string("raw"));
 
@@ -182,7 +182,7 @@ OCIO_ADD_TEST(Config, simple_config)
     is.str(SIMPLE_PROFILE);
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 }
 
 OCIO_ADD_TEST(Config, colorspace_duplicate)
@@ -507,7 +507,7 @@ OCIO_ADD_TEST(Config, serialize_searchpath)
     }
 }
 
-OCIO_ADD_TEST(Config, sanity_check)
+OCIO_ADD_TEST(Config, validation)
 {
     {
     std::string SIMPLE_PROFILE =
@@ -550,7 +550,7 @@ OCIO_ADD_TEST(Config, sanity_check)
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
 
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
     }
 }
 
@@ -732,7 +732,7 @@ OCIO_ADD_TEST(Config, env_colorspace_name)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception,
+        OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
                               "This config references a color space, '$MISSING_ENV', "
                               "which is not defined");
         OCIO_CHECK_THROW_WHAT(config->getProcessor("raw", "lgh"), OCIO::Exception,
@@ -753,7 +753,7 @@ OCIO_ADD_TEST(Config, env_colorspace_name)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception,
+        OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
                               "color space, 'FaultyColorSpaceName', which is not defined");
         OCIO_CHECK_THROW_WHAT(config->getProcessor("raw", "lgh"), OCIO::Exception,
                               "BuildColorSpaceOps failed: destination color space '$OCIO_TEST' "
@@ -773,7 +773,7 @@ OCIO_ADD_TEST(Config, env_colorspace_name)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
         OCIO_CHECK_NO_THROW(config->getProcessor("raw", "lgh"));
     }
 
@@ -790,7 +790,7 @@ OCIO_ADD_TEST(Config, env_colorspace_name)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -818,7 +818,7 @@ OCIO_ADD_TEST(Config, version)
     OCIO::ConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
 
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO_CHECK_NO_THROW(config->setMajorVersion(1));
     OCIO_CHECK_THROW_WHAT(config->setMajorVersion(20000), OCIO::Exception,
@@ -948,7 +948,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -966,7 +966,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -984,7 +984,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception,
+        OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
                               "non clamping range must have min and max values defined");
     }
 
@@ -999,7 +999,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -1019,7 +1019,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -1039,7 +1039,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         // Clamp style is not saved
         const std::string out_strEnd =
@@ -1063,7 +1063,7 @@ OCIO_ADD_TEST(Config, range_serialization)
         is.str(str);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_THROW_WHAT(config->sanityCheck(), 
+        OCIO_CHECK_THROW_WHAT(config->validate(), 
                               OCIO::Exception, 
                               "must be both set or both missing");
 
@@ -1092,7 +1092,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
         is.str(strSaved);
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         // Re-serialize and test that it matches the expected text.
         std::stringstream ss;
@@ -1115,7 +1115,7 @@ OCIO_ADD_TEST(Config, range_serialization)
         is.str(str);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         // Re-serialize and test that it matches the expected text.
         std::stringstream ss;
@@ -1133,7 +1133,7 @@ OCIO_ADD_TEST(Config, range_serialization)
         is.str(str);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_THROW_WHAT(config->sanityCheck(),
+        OCIO_CHECK_THROW_WHAT(config->validate(),
             OCIO::Exception,
             "must be both set or both missing");
 
@@ -1152,7 +1152,7 @@ OCIO_ADD_TEST(Config, range_serialization)
         is.str(str);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         // Re-serialize and test that it matches the original text.
         std::stringstream ss;
@@ -1170,7 +1170,7 @@ OCIO_ADD_TEST(Config, range_serialization)
         is.str(str);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_THROW_WHAT(config->sanityCheck(),
+        OCIO_CHECK_THROW_WHAT(config->validate(),
                               OCIO::Exception,
                               "must be both set or both missing");
 
@@ -1193,7 +1193,7 @@ OCIO_ADD_TEST(Config, range_serialization)
         is.str(str);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_THROW_WHAT(config->sanityCheck(),
+        OCIO_CHECK_THROW_WHAT(config->validate(),
                               OCIO::Exception,
                               "must be both set or both missing");
 
@@ -1264,7 +1264,7 @@ OCIO_ADD_TEST(Config, exponent_serialization)
         is.str(str);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;  
         OCIO_CHECK_NO_THROW(ss << *config.get());    
@@ -1281,7 +1281,7 @@ OCIO_ADD_TEST(Config, exponent_serialization)
         is.str(str);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -1298,7 +1298,7 @@ OCIO_ADD_TEST(Config, exponent_serialization)
         is.str(str); 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;  
         OCIO_CHECK_NO_THROW(ss << *config.get());    
@@ -1315,7 +1315,7 @@ OCIO_ADD_TEST(Config, exponent_serialization)
          is.str(str);
          OCIO::ConstConfigRcPtr config;
          OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-         OCIO_CHECK_NO_THROW(config->sanityCheck());
+         OCIO_CHECK_NO_THROW(config->validate());
 
          std::stringstream ss;
          OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -1332,7 +1332,7 @@ OCIO_ADD_TEST(Config, exponent_serialization)
          is.str(str);
          OCIO::ConstConfigRcPtr config;
          OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-         OCIO_CHECK_NO_THROW(config->sanityCheck());
+         OCIO_CHECK_NO_THROW(config->validate());
 
          std::stringstream ss;
          OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -1382,7 +1382,7 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
         is.str(str);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -1399,7 +1399,7 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
         is.str(str);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -1417,7 +1417,7 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
         is.str(str);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -1436,7 +1436,7 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
         is.str(str);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -1454,7 +1454,7 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
         is.str(str);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -1566,7 +1566,7 @@ OCIO_ADD_TEST(Config, exponent_vs_config_version)
 
     is.str(str);
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO_CHECK_NO_THROW(processor = config->getProcessor("raw", "lnh"));
 
@@ -1589,7 +1589,7 @@ OCIO_ADD_TEST(Config, exponent_vs_config_version)
 
     is.str(str2);
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO_CHECK_NO_THROW(processor = config->getProcessor("raw", "lnh"));
     OCIO_CHECK_NO_THROW(cpuProcessor = processor->getDefaultCPUProcessor());
@@ -1607,7 +1607,7 @@ OCIO_ADD_TEST(Config, exponent_vs_config_version)
     std::string str3 = PROFILE_V2_START + strEnd;
     is.str(str3);
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO_CHECK_NO_THROW(processor = config->getProcessor("raw", "lnh"));
     OCIO_CHECK_NO_THROW(cpuProcessor = processor->getDefaultCPUProcessor());
@@ -1625,7 +1625,7 @@ OCIO_ADD_TEST(Config, exponent_vs_config_version)
     std::string str4 = PROFILE_V2_START + strEnd2;
     is.str(str4);
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO_CHECK_NO_THROW(processor = config->getProcessor("raw", "lnh"));
     OCIO_CHECK_NO_THROW(cpuProcessor = processor->getDefaultCPUProcessor());
@@ -1690,7 +1690,7 @@ OCIO_ADD_TEST(Config, categories)
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     // Test the serialization & deserialization.
 
@@ -1803,7 +1803,7 @@ OCIO_ADD_TEST(Config, display)
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 6);
         OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_2"));
@@ -1830,7 +1830,7 @@ OCIO_ADD_TEST(Config, display)
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 1);
         OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_1"));
@@ -1875,7 +1875,7 @@ OCIO_ADD_TEST(Config, display)
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 2);
         OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_3"));
@@ -1896,7 +1896,7 @@ OCIO_ADD_TEST(Config, display)
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 2);
         OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_3"));
@@ -1917,7 +1917,7 @@ OCIO_ADD_TEST(Config, display)
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 2);
         OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_2"));
@@ -1940,7 +1940,7 @@ OCIO_ADD_TEST(Config, display)
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 2);
         OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_2"));
@@ -1963,7 +1963,7 @@ OCIO_ADD_TEST(Config, display)
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_THROW_WHAT(config->sanityCheck(),
+        OCIO_CHECK_THROW_WHAT(config->validate(),
                               OCIO::Exception,
                               "The content of the env. variable for the list of active displays [ABCDEF] is invalid.");
     }
@@ -1983,7 +1983,7 @@ OCIO_ADD_TEST(Config, display)
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_THROW_WHAT(config->sanityCheck(),
+        OCIO_CHECK_THROW_WHAT(config->validate(),
                               OCIO::Exception,
                               "The content of the env. variable for the list of active displays"\
                               " [sRGB_2, sRGB_1, ABCDEF] contains invalid display name(s).");
@@ -2004,7 +2004,7 @@ OCIO_ADD_TEST(Config, display)
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_THROW_WHAT(config->sanityCheck(),
+        OCIO_CHECK_THROW_WHAT(config->validate(),
                               OCIO::Exception,
                               "The list of active displays [ABCDEF] from the config file is invalid.");
     }
@@ -2024,7 +2024,7 @@ OCIO_ADD_TEST(Config, display)
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_THROW_WHAT(config->sanityCheck(),
+        OCIO_CHECK_THROW_WHAT(config->validate(),
                               OCIO::Exception,
                               "The list of active displays [sRGB_2, sRGB_1, ABCDEF] "\
                               "from the config file contains invalid display name(s)");
@@ -2292,7 +2292,7 @@ OCIO_ADD_TEST(Config, display_view_order)
     std::istringstream is(SIMPLE_CONFIG);
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 4);
 
@@ -2327,7 +2327,7 @@ OCIO_ADD_TEST(Config, log_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -2345,7 +2345,7 @@ OCIO_ADD_TEST(Config, log_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -2363,7 +2363,7 @@ OCIO_ADD_TEST(Config, log_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -2381,7 +2381,7 @@ OCIO_ADD_TEST(Config, log_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -2404,7 +2404,7 @@ OCIO_ADD_TEST(Config, log_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -2427,7 +2427,7 @@ OCIO_ADD_TEST(Config, log_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -2450,7 +2450,7 @@ OCIO_ADD_TEST(Config, log_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -2471,7 +2471,7 @@ OCIO_ADD_TEST(Config, log_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -2493,7 +2493,7 @@ OCIO_ADD_TEST(Config, log_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -2515,7 +2515,7 @@ OCIO_ADD_TEST(Config, log_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -2536,7 +2536,7 @@ OCIO_ADD_TEST(Config, log_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -2554,7 +2554,7 @@ OCIO_ADD_TEST(Config, log_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -2611,7 +2611,7 @@ OCIO_ADD_TEST(Config, log_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -2631,7 +2631,7 @@ OCIO_ADD_TEST(Config, log_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -2652,7 +2652,7 @@ OCIO_ADD_TEST(Config, log_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -2757,7 +2757,7 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         // Write the config.
 
@@ -2779,7 +2779,7 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception,
+        OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
             "The style 'ACES_DarkToDim10 (Forward)' must have zero parameters but 1 found.");
     }
 
@@ -2796,7 +2796,7 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception, 
+        OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, 
             "The style 'REC2100_Surround (Inverse)' must "
                               "have one parameter but 0 found.");
     }
@@ -2840,7 +2840,7 @@ OCIO_ADD_TEST(Config, exposure_contrast_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -2869,7 +2869,7 @@ OCIO_ADD_TEST(Config, exposure_contrast_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         const std::string strExpected = PROFILE_V2_START + strEnd + strEndECExpected;
 
@@ -2917,7 +2917,7 @@ OCIO_ADD_TEST(Config, matrix_serialization)
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     std::stringstream ss;
     OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -2944,7 +2944,7 @@ OCIO_ADD_TEST(Config, cdl_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::ostringstream oss;
         OCIO_CHECK_NO_THROW(oss << *config.get());
@@ -2968,7 +2968,7 @@ OCIO_ADD_TEST(Config, cdl_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::ostringstream oss;
         OCIO_CHECK_NO_THROW(oss << *config.get());
@@ -2994,7 +2994,7 @@ OCIO_ADD_TEST(Config, file_transform_serialization)
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     std::ostringstream oss;
     OCIO_CHECK_NO_THROW(oss << *config.get());
@@ -3017,7 +3017,7 @@ OCIO_ADD_TEST(Config, add_color_space)
 
     OCIO::ConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
     OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 2);
 
     OCIO::ColorSpaceRcPtr cs;
@@ -3090,7 +3090,7 @@ OCIO_ADD_TEST(Config, remove_color_space)
 
     OCIO::ConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
     OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
 
     // Step 1 - Validate the remove.
@@ -3104,19 +3104,19 @@ OCIO_ADD_TEST(Config, remove_color_space)
 
     // As documented, removing a color space that doesn't exist fails without any notice.
     OCIO_CHECK_NO_THROW(config->removeColorSpace("cs5"));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     // Since the method does not support role names, a role name removal fails 
     // without any notice except if it's also an existing color space.
     OCIO_CHECK_NO_THROW(config->removeColorSpace("scene_linear"));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
-    // Sucessfully remove a color space unfortunately used by a role.
+    // Successfully remove a color space unfortunately used by a role.
     OCIO_CHECK_NO_THROW(config->removeColorSpace("raw"));
-    // As discussed only the sanity check traps the issue.
-    OCIO_CHECK_THROW_WHAT(config->sanityCheck(),
+    // As discussed only validation traps the issue.
+    OCIO_CHECK_THROW_WHAT(config->validate(),
                           OCIO::Exception,
-                          "Config failed sanitycheck. The role 'default' refers to"\
+                          "Config failed validation. The role 'default' refers to"\
                           " a color space, 'raw', which is not defined.");
 }
 
@@ -3227,7 +3227,7 @@ OCIO_ADD_TEST(Config, inactive_color_space)
     OCIO::ConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
     OCIO_REQUIRE_ASSERT(config);
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
 
     // Step 1 - No inactive color spaces.
@@ -3505,7 +3505,7 @@ OCIO_ADD_TEST(Config, inactive_color_space_precedence)
 
     OCIO::ConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
                                                  OCIO::COLORSPACE_INACTIVE), 1);
@@ -3525,7 +3525,7 @@ OCIO_ADD_TEST(Config, inactive_color_space_precedence)
 
     is.str(configStr);
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
                                                  OCIO::COLORSPACE_INACTIVE), 3);
@@ -3568,7 +3568,7 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
                                                      OCIO::COLORSPACE_ALL), 5);
@@ -3594,7 +3594,7 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         {
             OCIO::LogGuard log; // Mute the warnings.
-            OCIO_CHECK_NO_THROW(config->sanityCheck());
+            OCIO_CHECK_NO_THROW(config->validate());
         }
 
         OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
@@ -3618,7 +3618,7 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
                                                      OCIO::COLORSPACE_ALL), 5);
@@ -3646,7 +3646,7 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
                                                    OCIO::COLORSPACE_ALL), 5);
@@ -3677,7 +3677,7 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
 
         {
             OCIO::LogGuard log;
-            OCIO_CHECK_NO_THROW(config->sanityCheck());
+            OCIO_CHECK_NO_THROW(config->validate());
             OCIO_CHECK_EQUAL(log.output(), 
                              "[OpenColorIO Warning]: Inactive color space 'unknown' does not exist.\n");
         }
@@ -3912,7 +3912,7 @@ OCIO_ADD_TEST(Config, display_color_spaces_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -4002,7 +4002,7 @@ OCIO_ADD_TEST(Config, config_v1)
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO_CHECK_EQUAL(config->getNumViewTransforms(), 0);
     OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY, OCIO::COLORSPACE_ALL), 
@@ -4018,7 +4018,7 @@ OCIO_ADD_TEST(Config, view_transforms)
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     auto configEdit = config->createEditableCopy();
     // Create display-referred view transform and add it to the config.
@@ -4034,7 +4034,7 @@ OCIO_ADD_TEST(Config, view_transforms)
     OCIO_CHECK_NO_THROW(configEdit->addViewTransform(vt));
     OCIO_CHECK_EQUAL(configEdit->getNumViewTransforms(), 1);
     // Need at least one scene-referred view transform.
-    OCIO_CHECK_THROW_WHAT(configEdit->sanityCheck(), OCIO::Exception,
+    OCIO_CHECK_THROW_WHAT(configEdit->validate(), OCIO::Exception,
                           "at least one must use the scene reference space");
     OCIO_CHECK_ASSERT(!configEdit->getDefaultSceneToDisplayViewTransform());
 
@@ -4046,7 +4046,7 @@ OCIO_ADD_TEST(Config, view_transforms)
                                          OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
     OCIO_CHECK_NO_THROW(configEdit->addViewTransform(vt));
     OCIO_REQUIRE_EQUAL(configEdit->getNumViewTransforms(), 2);
-    OCIO_CHECK_NO_THROW(configEdit->sanityCheck());
+    OCIO_CHECK_NO_THROW(configEdit->validate());
 
     auto sceneVT = configEdit->getDefaultSceneToDisplayViewTransform();
     OCIO_CHECK_ASSERT(sceneVT);
@@ -4066,7 +4066,7 @@ OCIO_ADD_TEST(Config, view_transforms)
 
     OCIO::ConstConfigRcPtr configReloaded;
     OCIO_CHECK_NO_THROW(configReloaded = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(configReloaded->sanityCheck());
+    OCIO_CHECK_NO_THROW(configReloaded->validate());
 
     // Setting a view transform with the same name replaces the earlier one.
     OCIO_CHECK_NO_THROW(vt->setTransform(OCIO::LogTransform::Create(),
@@ -4113,16 +4113,16 @@ OCIO_ADD_TEST(Config, display_view)
     const std::string display{ "display" };
     OCIO_CHECK_NO_THROW(config->addDisplayView(display.c_str(), "view1", "scs", ""));
 
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO_CHECK_NO_THROW(config->addDisplayView(display.c_str(), "view2", "view_transform", "scs",
                                                "", "", ""));
-    OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception,
+    OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
                           "color space, 'scs', that is not a display-referred");
 
     OCIO_CHECK_NO_THROW(config->addDisplayView(display.c_str(), "view2", "view_transform", "dcs",
                                                "", "", ""));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     // Validate how the config is serialized.
 
@@ -4245,7 +4245,7 @@ OCIO_ADD_TEST(Config, not_case_sensitive)
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::ConstColorSpaceRcPtr cs;
     OCIO_CHECK_NO_THROW(cs = config->getColorSpace("lnh"));
@@ -4270,7 +4270,7 @@ OCIO_ADD_TEST(Config, not_case_sensitive)
 
 OCIO_ADD_TEST(Config, transform_with_roles)
 {
-    // Validate that Config::sanityCheck() on config file containing transforms 
+    // Validate that Config::validate() on config file containing transforms 
     // with color space names (such as ColorSpaceTransform), correctly checks for role names
     // for those transforms.
 
@@ -4317,7 +4317,7 @@ colorspaces:
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     // Validate the color spaces.
 
@@ -4370,7 +4370,7 @@ colorspaces:
 
 OCIO_ADD_TEST(Config, look_transform)
 {
-    // Validate Config::sanityCheck() on config file containing look transforms.
+    // Validate Config::validate() on config file containing look transforms.
 
     constexpr const char * OCIO_CONFIG{ R"(
 ocio_profile_version: 2
@@ -4406,14 +4406,14 @@ colorspaces:
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 }
 
 OCIO_ADD_TEST(Config, family_separator)
 {
     OCIO::ConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateRaw()->createEditableCopy());
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO_CHECK_EQUAL(config->getFamilySeparator(), 0x0); // Default value i.e. no separator.
 
@@ -4428,7 +4428,7 @@ OCIO_ADD_TEST(Config, add_remove_display)
 {
     OCIO::ConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateRaw()->createEditableCopy());
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 1);
     OCIO_REQUIRE_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB"));
@@ -4536,7 +4536,7 @@ OCIO_ADD_TEST(Config, is_colorspace_used)
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO_CHECK_ASSERT(config->isColorSpaceUsed("cs1" )); // Used by a role.
     OCIO_CHECK_ASSERT(config->isColorSpaceUsed("cs2" )); // Used by a (display, view) pair.
@@ -4656,7 +4656,7 @@ colorspaces:
     {
         // Test loading the config.
 
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
         OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 2);
 
         OCIO::ConstProcessorRcPtr processor;

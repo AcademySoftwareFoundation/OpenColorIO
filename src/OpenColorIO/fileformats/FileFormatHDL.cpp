@@ -587,7 +587,7 @@ void LocalFileFormat::bake(const Baker & baker,
     // slightly less confusing than using the shaper LUT size
     int onedSize = baker.getCubeSize();
 
-    // Defaults and sanity check on cube size
+    // Check defaults and cube size
     if(cubeSize == -1) cubeSize = DEFAULT_CUBE_SIZE;
     if(cubeSize < 0) cubeSize = DEFAULT_CUBE_SIZE;
     if(cubeSize<2)

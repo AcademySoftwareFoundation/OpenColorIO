@@ -63,7 +63,7 @@ public:
 
     bool filepathOnlyMatchesDefaultRule(const Config & config, const char * filePath) const;
 
-    void sanityCheck(std::function<ConstColorSpaceRcPtr(const char *)> colorSpaceAccessor) const;
+    void validate(std::function<ConstColorSpaceRcPtr(const char *)> colorSpaceAccessor) const;
 
 private:
 
