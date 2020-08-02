@@ -29,10 +29,19 @@ macro(find_python_package package version)
         if(_ARG STREQUAL "REQUIRED")
             set(_PKG_REQUIRED TRUE)
         endif()
+        if(_PREV_ARG STREQUAL "REQUIRES")
+            set(_PKG_REQUIRES ${_ARG})
+        endif()
+        set(_PREV_ARG ${_ARG})
     endforeach()
+    
 
     if(NOT TARGET ${package})
         add_custom_target(${package})
+        if(_PKG_REQUIRES)
+            add_dependencies(${package} ${_PKG_REQUIRES})
+            unset(_PKG_REQUIRES)
+        endif()
         set(_${_PKG_UPPER}_TARGET_CREATE TRUE)
     endif()
 
@@ -106,12 +115,11 @@ macro(find_python_package package version)
                     ${package}
                 COMMAND
                     ${_Python_PIP} install --disable-pip-version-check
-                                           --install-option="--prefix=${_EXT_DIST_ROOT}"
+                                           --prefix=${_EXT_DIST_ROOT}
                                            -I ${package}==${version}
                 WORKING_DIRECTORY
                     "${CMAKE_BINARY_DIR}"
             )
-
             message(STATUS "Installing ${package}: ${_SITE_PKGS_DIR} (version ${version})")
         endif()
     endif()
