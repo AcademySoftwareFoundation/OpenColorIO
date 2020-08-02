@@ -3,8 +3,8 @@
 
 set(SOURCES
         PyOpenColorIO_oglapphelpers.cpp
-        PyOpenColorIO_glsl.cpp
-        PyOpenColorIO_oglapp.cpp
+        Pyglsl.cpp
+        PyOglapp.cpp
 )
 
 add_library(PyOpenColorIO_oglapphelpers MODULE ${SOURCES})
@@ -34,7 +34,7 @@ if(UNIX)
 	# but a static library on Windows.
 
 	# If supported for the target machine, emit position-independent code
-	# suitable for dynamic linking.
+        # suitable for dynamic linking.
         set_property(TARGET PyOpenColorIO_oglapphelpers PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif()
 
