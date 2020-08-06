@@ -2,7 +2,7 @@
   SPDX-License-Identifier: CC-BY-4.0
   Copyright Contributors to the OpenColorIO Project.
 
-.. _doxygen_style_guide:
+.. _doxygen-style-guide:
 
 OpenColorIO Doxygen Style Guide
 ===============================
@@ -24,19 +24,18 @@ Doxygen Tags
 
 The following tags are generally supported:
 
-* `\brief` Describes function or class succinctly, ideally in one sentence.
-* `\param` Describes function parameters.
-* `\tparam` Describes a template parameter.
-* `\return` Describes return values.
-* `\ref` A reference to another method/class.
-* `\note` Describes a note you want a user to be attentive of.
-* `\warning` Describes a warning to bring a users attention to.
-* `\code{<extension>}` The start of a code block. The extension denotes the language e.g. (".py", ".cpp")
-* `\endcode` The end of a code block.
+* ``brief``: Describes function or class succinctly, ideally in one sentence.
+* ``param``: Describes function parameters.
+* ``tparam``: Describes a template parameter.
+* ``return``: Describes return values.
+* ``ref``: A reference to another method/class.
+* ``note``: Describes a note you want a user to be attentive of.
+* ``warning``: Describes a warning to bring a users attention to.
+* ``code{<extension>}``: The start of a code block. The extension denotes the language e.g. (".py", ".cpp")
+* ``endcode``: The end of a code block.
 
 Additional Doxygen tags may be supported, but will need to be tested by building
 the Sphinx docs. Not all tags need to be used in every docstring.
-
 
 Block Comments
 ++++++++++++++

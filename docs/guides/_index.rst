@@ -14,9 +14,13 @@ Guides
    authoring/contexts
    authoring/allocation_vars
    integration/usage_examples
-   contributing/coding_guidelines
-   contributing/documentation_guidelines
-   contributing/doxygen_style_guide
    contributing/getting_started
+   contributing/repository_structure
+   contributing/architectural_notes
+   contributing/coding_style_guide
+   contributing/unit_tests
    contributing/issues
    contributing/submitting_changes
+   contributing/documentation_guidelines
+   contributing/doxygen_style_guide
+   

@@ -2,6 +2,8 @@
   SPDX-License-Identifier: CC-BY-4.0
   Copyright Contributors to the OpenColorIO Project.
 
+.. _documentation-guidelines:
+
 Documentation guidelines
 ========================
 
@@ -17,7 +19,6 @@ comments in the public header files in ``export/``
 The Python API documentation is extracted from dummy .py files within
 the ``src/pyglue/DocStrings/`` folder
 
-
 Building the docs
 *****************
 
@@ -30,14 +31,13 @@ created in ``build_dir/docs/build-html/``
 Note that CMake must be run before each invocation of ``make`` to copy
 the edited rST files.
 
-Initial run:
+Initial run::
 
     $ mkdir build && cd build
 
-Then after each change you wish to preview:
+Then after each change you wish to preview::
 
     $ cmake -D OCIO_BUILD_DOCS=yes .. && make doc
-
 
 Basics
 ******
