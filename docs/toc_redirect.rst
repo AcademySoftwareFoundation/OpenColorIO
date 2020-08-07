@@ -35,4 +35,4 @@
 .. toctree::
    :hidden:
 
-   license/_index
+   aswf/_index
