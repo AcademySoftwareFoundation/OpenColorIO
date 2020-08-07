@@ -2,9 +2,13 @@
   SPDX-License-Identifier: CC-BY-4.0
   Copyright Contributors to the OpenColorIO Project.
 
-.. _license:
+ASWF
+====
 
-License
-=======
+.. toctree::
+   :caption: ASWF
 
-.. include:: LICENSE
+   license
+   charter
+   cla_dco
+   aswf_docker
