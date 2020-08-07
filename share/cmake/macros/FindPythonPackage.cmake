@@ -4,7 +4,7 @@
 # Locate or install a Python package in PyPi
 #
 # Variables defined by this module:
-#   <PACKAGE>_FOUND
+#   <package>_FOUND
 #
 # Targets defined by this module:
 #   <package> - custom pip target, if package can be installed
@@ -21,8 +21,9 @@
 find_package(Python QUIET COMPONENTS Interpreter)
 
 macro(find_python_package package version)
-    string(TOUPPER ${package} _PKG_UPPER)
-    string(TOLOWER ${package} _PKG_LOWER)
+    # Some Python packages have "-" in the PyPi name, but are replaced with "_" 
+    # in the actual package name.
+    string(REPLACE "-" "_" _PKG_IMPORT ${package})
 
     # Parse options
     foreach(_ARG ${ARGN})
@@ -35,14 +36,13 @@ macro(find_python_package package version)
         set(_PREV_ARG ${_ARG})
     endforeach()
     
-
     if(NOT TARGET ${package})
         add_custom_target(${package})
         if(_PKG_REQUIRES)
             add_dependencies(${package} ${_PKG_REQUIRES})
             unset(_PKG_REQUIRES)
         endif()
-        set(_${_PKG_UPPER}_TARGET_CREATE TRUE)
+        set(_${package}_TARGET_CREATE TRUE)
     endif()
 
     set(_PKG_INSTALL TRUE)
@@ -54,21 +54,21 @@ macro(find_python_package package version)
         # Try importing Python package
         execute_process(
             COMMAND
-                "${Python_EXECUTABLE}" -c "import ${_PKG_LOWER}"
+                "${Python_EXECUTABLE}" -c "import ${_PKG_IMPORT}"
             RESULT_VARIABLE
                 _PKG_IMPORT_RESULT
             OUTPUT_QUIET ERROR_QUIET
         )
 
         if(_PKG_IMPORT_RESULT EQUAL 0)
-            set(${_PKG_UPPER}_FOUND TRUE)
+            set(${package}_FOUND TRUE)
             set(_PKG_INSTALL FALSE)
 
             # Get the package's location
             execute_process(
                 COMMAND
                     "${Python_EXECUTABLE}" -c 
-                    "import ${_PKG_LOWER}, os; print(os.path.dirname(${_PKG_LOWER}.__file__))"
+                    "import ${_PKG_IMPORT}, os; print(os.path.dirname(${_PKG_IMPORT}.__file__))"
                 OUTPUT_VARIABLE
                     _PKG_DIR
                 ERROR_QUIET
@@ -77,8 +77,8 @@ macro(find_python_package package version)
             message(STATUS "Found ${package}: ${_PKG_DIR}")
 
         else()
-            set(${_PKG_UPPER}_FOUND FALSE)
-            set(_FIND_ERR "Could NOT find ${package}: import ${_PKG_LOWER} failed")
+            set(${package}_FOUND FALSE)
+            set(_FIND_ERR "Could NOT find ${package}: import ${_PKG_IMPORT} failed")
             if(OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
                 set(_PKG_INSTALL FALSE)
                 if(_PKG_REQUIRED)
@@ -94,19 +94,22 @@ macro(find_python_package package version)
 
     if(_PKG_INSTALL)
         set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
-        set(${_PKG_UPPER}_FOUND TRUE)
+        set(${package}_FOUND TRUE)
 
-        if(_${_PKG_UPPER}_TARGET_CREATE)
+        if(_${package}_TARGET_CREATE)
             # Package install location
             if(WIN32)
                 set(_SITE_PKGS_DIR "${_EXT_DIST_ROOT}/lib${LIB_SUFFIX}/site-packages")
                 # On Windows platform, pip is in the Scripts sub-directory.
                 set(_PYTHON_PIP "${PYTHON_ROOT}/Scripts/pip.exe")
+                # --prefix value needs OS-native path separator
+                string(REPLACE "/" "\\" _PIP_PREFIX ${_EXT_DIST_ROOT})
             else()
                 set(_Python_VARIANT "${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}")
                 set(_SITE_PKGS_DIR
                     "${_EXT_DIST_ROOT}/lib${LIB_SUFFIX}/python${_Python_VARIANT}/site-packages")
                 set(_Python_PIP "pip")
+                set(_PIP_PREFIX "${_EXT_DIST_ROOT}")
             endif()
 
             # Configure install target
@@ -115,7 +118,7 @@ macro(find_python_package package version)
                     ${package}
                 COMMAND
                     ${_Python_PIP} install --disable-pip-version-check
-                                           --prefix=${_EXT_DIST_ROOT}
+                                           --prefix="${_PIP_PREFIX}"
                                            -I ${package}==${version}
                 WORKING_DIRECTORY
                     "${CMAKE_BINARY_DIR}"

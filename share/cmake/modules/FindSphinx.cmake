@@ -69,9 +69,12 @@ if(NOT Sphinx_FOUND)
         set(Sphinx_EXECUTABLE "${_EXT_DIST_ROOT}/Scripts/sphinx-build")
         # On Windows platform, pip is in the Scripts sub-directory.
         set(_Python_PIP "${_Python_SCRIPTS_DIR}/pip.exe")
+        # --prefix value needs OS-native path separator
+        string(REPLACE "/" "\\" _PIP_PREFIX ${_EXT_DIST_ROOT})
     else()
         set(Sphinx_EXECUTABLE "${_EXT_DIST_ROOT}/bin/sphinx-build")
         set(_Python_PIP "pip")
+        set(_PIP_PREFIX "${_EXT_DIST_ROOT}")
     endif()
 
     # Configure install target
@@ -81,7 +84,7 @@ if(NOT Sphinx_FOUND)
                 Sphinx
             COMMAND
                 ${_Python_PIP} install --disable-pip-version-check
-                                       --install-option="--prefix=${_EXT_DIST_ROOT}"
+                                       --prefix="${_PIP_PREFIX}"
                                        -I Sphinx==${Sphinx_FIND_VERSION}
             WORKING_DIRECTORY
                 "${CMAKE_BINARY_DIR}"
