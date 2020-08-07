@@ -86,6 +86,23 @@ OCIO_ADD_TEST(FileFormatSpi3D, read_failure)
         OCIO_CHECK_NO_THROW(ReadSpi3d(SAMPLE_NO_ERROR));
     }
     {
+        // Multiple spaces between entries are accepted
+        const std::string SAMPLE_NO_ERROR =
+            "SPILUT \t1.0\n"
+            "3    3\n"
+            "2  2\t2\n"
+            "0   0   0\t0.0 0.0 0.0\n"
+            "0 0 1 0.0 0.0 0.9\n"
+            "0 1 0 0.0 0.7 0.0\n"
+            "0 1 1 0.0 0.8 0.8\n"
+            "1 0 0 0.7 0.0 0.1\n"
+            "1 0 1 0.7 0.6 0.1\n"
+            "1 1 0 0.6 0.7 0.1\n"
+            "1 1 1 0.6 0.7 0.7\n";
+
+        OCIO_CHECK_NO_THROW(ReadSpi3d(SAMPLE_NO_ERROR));
+    }
+    {
         // Wrong first line
         const std::string SAMPLE_ERROR =
             "SPI LUT 1.0\n"
@@ -168,6 +185,60 @@ OCIO_ADD_TEST(FileFormatSpi3D, read_failure)
             "3 3\n"
             "2 2 2\n"
             "0 0 0 0.0 0.0 0.0\n"
+            "0 0 1 0.0 0.0 0.9\n"
+            "0 1 0 0.0 0.7 0.0\n"
+            "0 1 1 0.0 0.8 0.8\n"
+            "1 0 1 0.7 0.6 0.1\n"
+            "1 1 0 0.6 0.7 0.1\n"
+            "1 1 1 0.6 0.7 0.7\n";
+
+        OCIO_CHECK_THROW_WHAT(ReadSpi3d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Not enough entries found");
+    }
+    {
+        // Float instead of integer for index
+        const std::string SAMPLE_ERROR =
+            "SPILUT 1.0\n"
+            "3 3\n"
+            "2 2 2\n"
+            "0.0 0 0 0.0 0.0 0.0\n"
+            "0 0 1 0.0 0.0 0.9\n"
+            "0 1 0 0.0 0.7 0.0\n"
+            "0 1 1 0.0 0.8 0.8\n"
+            "1 0 1 0.7 0.6 0.1\n"
+            "1 1 0 0.6 0.7 0.1\n"
+            "1 1 1 0.6 0.7 0.7\n";
+
+        OCIO_CHECK_THROW_WHAT(ReadSpi3d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Not enough entries found");
+    }
+    {
+        // No newline between first and second entries
+        const std::string SAMPLE_ERROR =
+            "SPILUT 1.0\n"
+            "3 3\n"
+            "2 2 2\n"
+            "0 0 0 0.0 0.0 0.0"
+            "0 0 1 0.0 0.0 0.9\n"
+            "0 1 0 0.0 0.7 0.0\n"
+            "0 1 1 0.0 0.8 0.8\n"
+            "1 0 1 0.7 0.6 0.1\n"
+            "1 1 0 0.6 0.7 0.1\n"
+            "1 1 1 0.6 0.7 0.7\n";
+
+        OCIO_CHECK_THROW_WHAT(ReadSpi3d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Not enough entries found");
+    }
+    {
+        // First entry is incomplete
+        const std::string SAMPLE_ERROR =
+            "SPILUT 1.0\n"
+            "3 3\n"
+            "2 2 2\n"
+            "0 0 0 0.0 0.0\n"
             "0 0 1 0.0 0.0 0.9\n"
             "0 1 0 0.0 0.7 0.0\n"
             "0 1 1 0.0 0.8 0.8\n"

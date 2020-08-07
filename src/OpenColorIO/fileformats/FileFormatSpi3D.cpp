@@ -8,6 +8,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/lut3d/Lut3DOp.h"
+#include "ParseUtils.h"
 #include "Platform.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
@@ -97,7 +98,12 @@ CachedFileRcPtr LocalFileFormat::read(
     // Get LUT Size
     int rSize = 0, gSize = 0, bSize = 0;
     istream.getline(lineBuffer, MAX_LINE_SIZE);
-    if (3 != sscanf(lineBuffer, "%d %d %d", &rSize, &gSize, &bSize))
+
+    StringUtils::StringVec chunks = StringUtils::SplitByWhiteSpaces(StringUtils::Trim(lineBuffer));
+
+    if (chunks.size() != 3 || !StringToInt(&rSize, chunks[0].c_str())
+        || !StringToInt(&gSize, chunks[1].c_str())
+        || !StringToInt(&bSize, chunks[2].c_str()))
     {
         std::ostringstream os;
         os << "Error parsing .spi3d file (";
@@ -132,13 +138,16 @@ CachedFileRcPtr LocalFileFormat::read(
     Array & lutArray = lut3d->getArray();
     unsigned long numVal = lutArray.getNumValues();
     std::vector<bool> indexDefined(numVal, false);
+    std::istringstream ss;
     while (istream.good() && entriesRemaining > 0)
     {
         istream.getline(lineBuffer, MAX_LINE_SIZE);
+        ss.str(lineBuffer);
+        ss.seekg(0);
+        ss.clear();
 
-        if (sscanf(lineBuffer, "%d %d %d %f %f %f",
-            &rIndex, &gIndex, &bIndex,
-            &redValue, &greenValue, &blueValue) == 6)
+        if ((ss >> rIndex) && (ss >> gIndex) && (ss >> bIndex) &&
+            (ss >> redValue) && (ss >> greenValue) && (ss >> blueValue))
         {
             bool invalidIndex = false;
             if (rIndex < 0 || rIndex >= rSize
