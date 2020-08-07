@@ -107,12 +107,19 @@ CachedFileRcPtr LocalFileFormat::read(
             ++currentLine;
             headerLine = std::string(lineBuffer);
 
-            if(StringUtils::StartsWith(headerLine, "Version"))
+            StringUtils::StringVec chunks = StringUtils::SplitByWhiteSpaces(StringUtils::Trim(headerLine));
+
+            if(!chunks.size())
+            {
+                continue;
+            }
+
+            if(chunks[0] == "Version")
             {
                 // " " in format means any number of spaces (white space,
                 // new line, tab) including 0 of them.
                 // "Version1" is valid.
-                if (sscanf(lineBuffer, "Version %d", &version) != 1)
+                if (chunks.size() != 2 || !StringToInt(&version, chunks[1].c_str()))
                 {
                     ThrowErrorMessage("Invalid 'Version' Tag", currentLine, headerLine);
                 }
@@ -121,23 +128,24 @@ CachedFileRcPtr LocalFileFormat::read(
                     ThrowErrorMessage("Only format version 1 supported", currentLine, headerLine);
                 }
             }
-            else if(StringUtils::StartsWith(headerLine, "From"))
+            else if(chunks[0] == "From")
             {
-                if (sscanf(lineBuffer, "From %f %f", &from_min, &from_max) != 2)
+                if (chunks.size() != 3 || !StringToFloat(&from_min, chunks[1].c_str())
+                    || !StringToFloat(&from_max, chunks[2].c_str()))
                 {
                     ThrowErrorMessage("Invalid 'From' Tag", currentLine, headerLine);
                 }
             }
-            else if(StringUtils::StartsWith(headerLine, "Components"))
+            else if(chunks[0] == "Components")
             {
-                if (sscanf(lineBuffer, "Components %d", &components) != 1)
+                if (chunks.size() != 2 || !StringToInt(&components, chunks[1].c_str()))
                 {
                     ThrowErrorMessage("Invalid 'Components' Tag", currentLine, headerLine);
                 }
             }
-            else if(StringUtils::StartsWith(headerLine, "Length"))
+            else if(chunks[0] == "Length")
             {
-                if (sscanf(lineBuffer, "Length %d", &lut_size) != 1)
+                if (chunks.size() != 2 || !StringToInt(&lut_size, chunks[1].c_str()))
                 {
                     ThrowErrorMessage("Invalid 'Length' Tag", currentLine, headerLine);
                 }
