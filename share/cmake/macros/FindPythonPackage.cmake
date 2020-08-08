@@ -114,7 +114,7 @@ macro(find_python_package package version)
                 TARGET
                     ${package}
                 COMMAND
-                    "${Python_EXECUTABLE}" -m pip -v install  
+                    "${Python_EXECUTABLE}" -m pip install  
                                            --disable-pip-version-check
                                            --prefix="${_PIP_PREFIX}"
                                            -I ${package}==${version}
