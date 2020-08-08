@@ -80,7 +80,7 @@ if(NOT Sphinx_FOUND)
             TARGET
                 Sphinx
             COMMAND
-                "${Python_EXECUTABLE}" -m pip install 
+                "${Python_EXECUTABLE}" -m pip -v install 
                                        --disable-pip-version-check
                                        --prefix="${_PIP_PREFIX}"
                                        -I Sphinx==${Sphinx_FIND_VERSION}
