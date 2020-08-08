@@ -100,15 +100,12 @@ macro(find_python_package package version)
             # Package install location
             if(WIN32)
                 set(_SITE_PKGS_DIR "${_EXT_DIST_ROOT}/lib${LIB_SUFFIX}/site-packages")
-                # On Windows platform, pip is in the Scripts sub-directory.
-                set(_PYTHON_PIP "${PYTHON_ROOT}/Scripts/pip.exe")
                 # --prefix value needs OS-native path separator
                 string(REPLACE "/" "\\" _PIP_PREFIX ${_EXT_DIST_ROOT})
             else()
                 set(_Python_VARIANT "${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}")
                 set(_SITE_PKGS_DIR
                     "${_EXT_DIST_ROOT}/lib${LIB_SUFFIX}/python${_Python_VARIANT}/site-packages")
-                set(_Python_PIP "pip")
                 set(_PIP_PREFIX "${_EXT_DIST_ROOT}")
             endif()
 
@@ -117,7 +114,8 @@ macro(find_python_package package version)
                 TARGET
                     ${package}
                 COMMAND
-                    ${_Python_PIP} install --disable-pip-version-check
+                    "${Python_EXECUTABLE}" -m pip install  
+                                           --disable-pip-version-check
                                            --prefix="${_PIP_PREFIX}"
                                            -I ${package}==${version}
                 WORKING_DIRECTORY
