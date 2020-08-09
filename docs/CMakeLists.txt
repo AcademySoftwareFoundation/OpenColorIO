@@ -4,7 +4,7 @@
 ###############################################################################
 ### Python ###
 find_package(Python REQUIRED COMPONENTS Interpreter)
-if((${Python_VERSION_MAJOR} GREATER_EQUAL 3) AND (NOT WIN32))
+if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
     if(NOT OCIO_BUILD_PYTHON)
         message(FATAL_ERROR "Doc generation requires that the python bindings be built")
     endif()
@@ -65,6 +65,10 @@ if((${Python_VERSION_MAJOR} GREATER_EQUAL 3) AND (NOT WIN32))
 
     ###############################################################################
     ### Copy templates to build area ###
+
+    message(STATUS "Create sphinx conf.py from conf.py.in")
+    configure_file(${CMAKE_SOURCE_DIR}/docs/conf.py.in
+        ${CMAKE_BINARY_DIR}/docs/conf.py @ONLY)
 
     file(GLOB_RECURSE DOC_SOURCES "${CMAKE_SOURCE_DIR}/docs/*")
     list(APPEND DOC_SOURCES

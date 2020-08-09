@@ -9,7 +9,11 @@ import sys, os
 
 # -- Add PyOpenColorIO to sys.path ---------------------------------------------
 
-sys.path.insert(0, "@CMAKE_BINARY_DIR@/src/pyglue")
+sys.path.insert(0, "@CMAKE_BINARY_DIR@/src/bindings/python")
+
+# -- Add installed ext packages to sys.path ------------------------------------
+
+sys.path.insert(1, "@CMAKE_BINARY_DIR@/ext/dist/lib@LIB_SUFFIX@/site-packages")
 
 # -- General configuration -----------------------------------------------------
 
