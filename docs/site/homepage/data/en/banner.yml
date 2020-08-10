@@ -2,7 +2,7 @@
 banner:
   enable : true
   icon : "" # themify icon pack : https://themify.me/themify-icons
-  logo : "images/ocio_full_w@4x.png"
+  logo : "images/ocio_full_w4x.png"
   title : "OpenColorIO"
   content : "A complete color management solution geared towards motion picture production with an emphasis on visual effects and computer animation."
   button:

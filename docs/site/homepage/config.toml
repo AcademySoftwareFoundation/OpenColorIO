@@ -1,5 +1,5 @@
 ################################# Default configuration ###################
-baseURL = "https://examplesite.com"
+baseURL = "https://opencolorio.org/"
 title = "OpenColorIO"
 theme = "site"
 # post pagination
@@ -10,6 +10,7 @@ summaryLength = "15"
 disqusShortname = "" # get your shortname form here : https://disqus.com
 # disable language
 disableLanguages = ["fr"]
+##publishDir = "docs/site"
 
 ############################# Plugins ##########################
 # css plugins
