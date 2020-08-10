@@ -66,8 +66,10 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
     ###############################################################################
     ### Copy templates to build area ###
 
-    message(STATUS "Create sphinx conf.py from conf.py.in")
-    configure_file(${CMAKE_SOURCE_DIR}/docs/conf.py.in
+    # NOTE: The *.in extension is omitted from conf.py since RTD uses this file 
+    #       without CMake configuration.
+    message(STATUS "Substitute sphinx conf.py variables")
+    configure_file(${CMAKE_SOURCE_DIR}/docs/conf.py
         ${CMAKE_BINARY_DIR}/docs/conf.py @ONLY)
 
     file(GLOB_RECURSE DOC_SOURCES "${CMAKE_SOURCE_DIR}/docs/*")
