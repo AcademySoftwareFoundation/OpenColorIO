@@ -8,7 +8,7 @@ API
 .. toctree::
    :caption: API
 
-   installation
    bindings/PythonAPI
    bindings/PythonTransforms
    bindings/PythonTypes
+   change_log

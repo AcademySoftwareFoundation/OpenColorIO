@@ -13,6 +13,11 @@ The easy way
 While prebuilt binaries are not yet available for all platforms, OCIO
 is available via several platform's package managers.
 
+Please note that the package managers will install the current stable
+release.  If you want OCIO v2, you currently must build from source.
+See :ref:`building-from-source`.
+
+
 Fedora and RHEL
 ^^^^^^^^^^^^^^^
 
@@ -53,7 +58,9 @@ Building from source
 Dependencies
 ************
 
-The basic requirements for building OCIO are:
+The basic requirements for building OCIO are the following.  Note that, by
+default, cmake will try to install all of the items labelled with * and so
+it is not necessary to install those items manually:
 
 - cmake >= 3.12
 - \*Expat >= 2.2.5 (XML parser for CDL/CLF/CTF)
@@ -68,26 +75,25 @@ Some optional components also depend on:
 - Python >= 2.7 (for the Python bindings and docs)
     - \*Sphinx >= 1.8.5
 - OpenImageIO >= 2.1.9 (for apps including ocioconvert)
-- Nuke 6.x or newer (for the Nuke nodes)
 
 Automated Installation
 ^^^^^^^^^^^^^^^^^^^^^^
 
 Listed dependencies with a preceeding * can be automatically installed at 
-build time by setting the ``OCIO_INSTALL_EXT_PACKAGES`` option in your cmake 
-command (requires an internet connection). C/C++ libraries are pulled from 
-external repositories, built, and statically-linked into libOpenColorIO. Python 
-packages are installed with ``pip``. All installs are fully contained within 
-your build directory.
+build time using the ``OCIO_INSTALL_EXT_PACKAGES`` option in your cmake 
+command (requires an internet connection).  This is the default.  C/C++ 
+libraries are pulled from external repositories, built, and statically-linked 
+into libOpenColorIO. Python packages are installed with ``pip``. All installs 
+of these components are fully contained within your build directory.
 
 Three ``OCIO_INSTALL_EXT_PACKAGES`` options are available::
 
     cmake -DOCIO_INSTALL_EXT_PACKAGES=<NONE|MISSING|ALL>
 
-- ``NONE`` (default): Use system installed packages. Fail if any are missing or 
+- ``NONE``: Use system installed packages. Fail if any are missing or 
   don't meet minimum version requireements.
-- ``MISSING``: Prefer system installed packages. Install any that are not 
-  found or don't meet minimum version requireements.
+- ``MISSING`` (default): Prefer system installed packages. Install any that 
+  are not found or don't meet minimum version requireements.
 - ``ALL``: Install all required packages, regardless of availability on the 
   current system.
 
@@ -110,7 +116,6 @@ or static linking:
 - ``-Dlcms2_STATIC_LIBRARY=ON`` (prefer static lib)
 - ``-pybind11_ROOT=<path>`` (include and/or library root dir)
 - ``-DPython_EXECUTABLE=<path>`` (Python executable)
-- ``-DNUKE_INSTALL_PATH=<path>`` (or use ``NDK_PATH`` environment variable)
 
 To hint at Python package locations, add paths to the ``PYTHONPATH`` 
 environment variable prior to configuring the build.
@@ -136,10 +141,10 @@ First make the build directory and cd to it::
 
 Next step is to run cmake, which looks for things such as the
 compiler's required arguments, optional requirements like Python,
-Nuke, OpenImageIO etc
+OpenImageIO etc
 
-As we want to install OCIO to a custom location (instead of the
-default ``/usr/local``), we will run cmake with
+For this example we will show how to install OCIO to a custom location 
+(instead of the default ``/usr/local``), we will thus run cmake with
 ``CMAKE_INSTALL_PREFIX``.
 
 Still in ``/tmp/ociobuild``, run::
@@ -175,7 +180,7 @@ this::
     $ ls
     bin/     include/ lib/
     $ ls bin/
-    ocio2icc    ociobakelut ociocheck
+    ociobakelut ociocheck  (and others ...)
     $ ls include/
     OpenColorIO/   PyOpenColorIO/ pkgconfig/
     $ ls lib/
@@ -329,32 +334,6 @@ If not, you can point cmake to correct Python executable using the
 
     $ cmake -D PYTHON=/my/custom/python2.6 /source/ocio
 
-Same process with Nuke (although it less likely to be picked up
-automatically). Point cmake to your Nuke install directory by adding
-``-D NUKE_INSTALL_PATH``::
-
-    $ cmake -D PYTHON=/my/custom/python2.6 -D NUKE_INSTALL_PATH=/Applications/Nuke6.2v1/Nuke6.2v1.app/Contents/MacOS/ /source/ocio
-
-The ``NUKE_INSTALL_PATH`` directory should contain the Nuke executable
-(e.g Nuke6.2v1), and a ``include/`` directory containing ``DDImage/``
-and others.
-
-If set correctly, you will see something similar to::
-
-    -- Found Nuke: /Applications/Nuke6.2v1/Nuke6.2v1.app/Contents/MacOS/include
-    -- Nuke_API_VERSION: --6.2--
-
-The Nuke plugins are installed into ``lib/nuke$MAJOR.$MINOR/``, e.g
-``lib/nuke6.2/OCIODisdplay.so``
-
-
-.. note::
-
-    If you are using the Nuke plugins, you should compile the Python
-    bindings for the same version of Python that Nuke uses
-    internally. For Nuke 6.0 and 6.1 this is Python 2.5, and for 6.2
-    it is Python 2.6
-
 The applications included with OCIO have various dependencies - to
 determine these, look at the CMake output when first run::
 
@@ -386,68 +365,17 @@ configuration script etc), for example::
     export OCIO="/path/to/my/config.ocio"
 
 
-.. _nuke-configuration:
-
-Nuke Configuration
-******************
-
-If you specified the ``NUKE_INSTALL_PATH`` option when running cmake,
-you should have a ``/software/ocio/lib/nuke6.2`` directory containing
-various files.
-
-If you have followed :ref:`quick-env-config`, the plugins should be
-functional. However, one common additional configuration step is to
-register an OCIODisplay node for each display device/view specified in
-the config.
-
-To do this, in a menu.py on :envvar:`NUKE_PATH` (e.g
-``~/.nuke/menu.py`` for a single user setup), add the following:
-
-.. code-block:: python
-
-    import ocionuke.viewer
-    ocionuke.viewer.populate_viewer(also_remove = "default")
-
-The ``also_remove`` argument can be set to either "default" to remove
-the default sRGB/rec709 options, "all" to remove everything, or "none"
-to leave existing viewer processes untouched.
-
-Alternatively, if your workflow has different requirements, you can
-copy the function and modify it as required, or use it as reference to
-write your own, better viewer setup function!
-
-.. literalinclude:: /share/nuke/ocionuke/viewer.py
-   :language: python
-
-
 .. _environment-setup:
 
 Environment variables
 *********************
 
+Note: For other user facing environment variables, see :ref:`using_env_vars`.
+
 .. envvar:: OCIO
 
    This variable needs to point to the global OCIO config file, e.g
    ``config.ocio``
-
-.. envvar:: OCIO_LOGGING_LEVEL
-
-    Configures OCIO's internal logging level. Valid values are
-    ``none``, ``warning``, ``info``, or ``debug`` (or their respective
-    numeric values ``0``, ``1``, ``2``, or ``3`` can be used)
-
-    Logging output is sent to STDERR output.
-
-.. envvar:: OCIO_ACTIVE_DISPLAYS
-
-   Overrides the :ref:`active-displays` configuration value.
-   Colon-separated list of displays, e.g ``sRGB:P3``
-
-.. envvar:: OCIO_ACTIVE_VIEWS
-
-   Overrides the :ref:`active-views` configuration
-   item. Colon-separated list of view names, e.g
-   ``internal:client:DI``
 
 .. envvar:: DYLD_LIBRARY_PATH
 
@@ -460,7 +388,7 @@ Environment variables
         Reason: image not found
 
     This applies to anything that links against OCIO, including the
-    Nuke nodes, and the ``PyOpenColorIO`` Python bindings.
+    ``PyOpenColorIO`` Python bindings.
 
 .. envvar:: LD_LIBRARY_PATH
 
@@ -479,11 +407,3 @@ Environment variables
 
     Note that :envvar:`DYLD_LIBRARY_PATH` or :envvar:`LD_LIBRARY_PATH`
     must be set correctly for the module to work.
-
-.. envvar:: NUKE_PATH
-
-    Nuke's customization search path, where it will look for plugins,
-    gizmos, init.py and menu.py scripts and other customizations.
-
-    This should point to both ``lib/nuke6.2/`` (or whatever version
-    the plugins are built against), and ``share/nuke/``

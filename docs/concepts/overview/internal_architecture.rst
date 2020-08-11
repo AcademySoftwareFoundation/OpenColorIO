@@ -5,6 +5,9 @@
 Internal Architecture Overview
 ==============================
 
+.. warning::
+    This section is from OCIO v1 and has not been updated yet.
+
 External API
 ************
 
@@ -122,12 +125,13 @@ Example:
       // example. ColorSpace names should NEVER be hard-coded into client
       // software, but should be dynamically queried at runtime from the library
       OCIO::ConstProcessorRcPtr processor = config->getProcessor("adx10", "aces");
-      
+      OCIO::ConstCPUProcessorRcPtr cpu = processor->getDefaultCPUProcessor();
+
       // Wrap the image in a light-weight ImageDescription
       OCIO::PackedImageDesc img(imageData, w, h, 4);
       
       // Apply the color transformation (in place)
-      processor->apply(img);
+      cpu->apply(img);
    }
    catch(OCIO::Exception & exception)
    {
