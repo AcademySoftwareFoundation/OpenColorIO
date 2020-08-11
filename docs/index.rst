@@ -3,11 +3,6 @@
   Copyright Contributors to the OpenColorIO Project.
 
 
-.. .. raw:: html
-
-..     <object width="400" data="_static/OpenColorIO_withText.svg" type="image/svg+xml"></object>
-
-
 
 Overview
 ========

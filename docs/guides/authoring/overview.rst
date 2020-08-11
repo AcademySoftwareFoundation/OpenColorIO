@@ -36,7 +36,11 @@ Checking for errors
 
 Use the ``ociocheck`` command line tool to validate your config. It
 will inform you of YAML-syntax errors, but more importantly it
-performs various OCIO-specific "sanity checks".
+performs various OCIO-specific validations.  There are also validate
+methods on the Config class in the C++ and Python APIs, (although
+they do not do the role checking that ociocheck does).
+
+.. TODO: Insert API reference :py:meth:`Config.validate`.
 
 For more information, see the overview of :ref:`overview-ociocheck`
 
@@ -111,7 +115,7 @@ For this, we would set ``search_path`` as follows:
 
     search_path: "luts"
 
-In a colorspace definition, we might have a FileTransform which refers
+In a color space definition, we might have a FileTransform which refers
 to the LUT ``lg10_to_lnf.spi1d``. It will look in the ``luts``
 directory, relative to the ``config.ocio`` file's location.
 
@@ -240,16 +244,16 @@ Roles
 
 Required.
 
-A "role" is an alias to a colorspaces, which can be used by
+A "role" is an alias to a color space, which can be used by
 applications to perform task-specific color transforms without
-requiring the user to select a colorspace by name.
+requiring the user to select a color space by name.
 
 For example, the Nuke node OCIOLogConvert: instead of requiring the
-user to select the appropriate log colorspace, the node performs a
+user to select the appropriate log color space, the node performs a
 transform between ``scene_linear`` and ``compositing_log``, and the
-OCIO config specifies the project-appropriate colorspaces. This
+OCIO config specifies the project-appropriate color spaces. This
 simplifies life for artists, as they don't have to remember which is
-the correct log colorspace for the current project - the
+the correct log color space for the current project - the
 OCIOLogConvert always does the correct thing.
 
 
@@ -271,7 +275,7 @@ A typical role definition looks like this, taken from the
 
 
 All values in this example (such as ``cpf``, ``lg10`` and ``ncf``)
-refer to colorspaces defined later the config, in the ``colorspaces``
+refer to color spaces defined later the config, in the ``colorspaces``
 section.
 
 
@@ -279,7 +283,10 @@ Here is a description of the roles defined within OpenColorIO. Note
 that application developers may also define roles for config authors
 to use to control other types of tasks not listed below.
 
-Warning: applications may interpret or use these differently.
+.. warning::
+   Unfortunately there is a fair amount of variation in how
+   applications interpret OCIO roles.  This section should be
+   expanded to try and clarify the intended usage.
 
 * ``aces_interchange`` - defines the color space in the config that
   implements the ACES2065-1 color space defined in SMPTE ST2065-1.
@@ -295,31 +302,35 @@ Warning: applications may interpret or use these differently.
   in this space, while selecting colors in a different working space
   (e.g. ``scene_linear`` or ``texture_paint``)
 
-* ``color_timing`` - colorspace used for applying color corrections,
+* ``color_timing`` - color space used for applying color corrections,
   e.g. user-specified grade within an image viewer (if the application
   uses the ``DisplayTransform::setDisplayCC`` API method)
 
-* ``compositing_log`` - a log colorspace used for certain processing
+* ``compositing_log`` - a log color space used for certain processing
   operations (plate resizing, pulling keys, degrain, etc). Used by the
   OCIOLogConvert Nuke node
 
 * ``data`` - used when writing data outputs such as normals, depth
-  data, and other "non color" data. The colorspace in this role should
+  data, and other "non color" data. The color space in this role should
   typically have ``data: true`` specified, so no color transforms are
   applied
 
-* ``default`` - when ``strictparsing: false``, this colorspace is used
+* ``default`` - when ``strictparsing: false``, this color space is used
   as a fallback. If not defined, the ``scene_linear`` role is used
 
-* ``matte_paint`` - colorspace which matte-paintings are created in
+* ``matte_paint`` - color space which matte-paintings are created in
   (for more information, :ref:`see the guide on baking ICC profiles
   for Photoshop <userguide-bakelut-photoshop>`, and
   :ref:`config-spivfx`)
 
-* ``reference`` - the colorspace against which the other colorspaces
+* ``reference`` - the color space against which the other color spaces
   are defined
 
-* ``scene_linear`` - the scene-referred linear-to-light colorspace,
+.. note::
+   The reference role has sometimes been misinterpreted as being the
+   space in which "reference art" is stored in.
+
+* ``scene_linear`` - the scene-referred linear-to-light color space,
   often the same as the reference space (see:ref:`faq-terminology`)
 
 * ``texture_paint`` - similar to ``matte_paint`` but for painting

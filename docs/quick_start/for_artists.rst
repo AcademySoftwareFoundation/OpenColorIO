@@ -14,13 +14,13 @@ available separately on the :ref:`downloads` section of this site. Example
 images are also available. For assistance customizing .ocio configurations,
 contact `ocio-user <https://lists.aswf.io/g/ocio-user>`__\.
 
-- Step 1:  set the OCIO environment-variable to /path/to/your/profile.ocio
+- Step 1:  set the ``$OCIO`` environment-variable to ``/path/to/your/config.ocio``
 - Step 2:  Launch supported application.
 
 If you are on a platform that is not envvar friendly, most applications also
 provide a menu option to select a different OCIO configuration after launch.
 
-Please be sure to select a profile that matches your color workflow (VFX work
-typically requires a different profile than animated features). If you need
+Please be sure to select a configuration that matches your color workflow (VFX 
+work typically requires a different profile than animated features). If you need
 assistance picking a profile, email 
 `ocio-user <https://lists.aswf.io/g/ocio-user>`__\.

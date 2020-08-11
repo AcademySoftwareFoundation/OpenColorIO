@@ -54,7 +54,7 @@ colorspace.**
 
 The ``lg16`` colorspace is a 16-bit log colorspace (see
 :ref:`config-spivfx` for an explanation of this colorspace). It has a
-name, a bitdepth and a description.
+name, a bit-depth and a description.
 
 The ``lg16`` colorspace is defined as a transform from ``lg16`` to the
 reference colorspace (``lnf``). That transform is to apply the LUT
@@ -121,6 +121,9 @@ colorspace.
 Here to get from the reference colorspace, we first use the
 ``ColorSpaceTransform`` to convert from ``lnf`` to ``lg16``, then
 apply our 3D LUT on the log-encoded images.
+
+.. TODO: Eventually, we could :cpp:class: these class references to the API doc sections:
+.. https://www.sphinx-doc.org/en/1.5.1/domains.html
 
 This primarily demonstrates the meta-transform ``GroupTransform``: a
 transform which simply composes two or more transforms together into
@@ -240,7 +243,7 @@ also have the isdata attribute set to true. Examples: alpha, normals, Z-depth.
 Optional. Default: ``32f``
 
 
-Specify an appropriate bitdepth for the colorspace, and applications
+Specify an appropriate bit-depth for the colorspace, and applications
 can use this to automatically output images in the correct bit-depth.
 
 Valid options are:

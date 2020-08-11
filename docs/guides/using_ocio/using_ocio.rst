@@ -96,9 +96,16 @@ vf         Inventor 3D-LUT.                     Read support for 3D-LUT data
 ========== ===================================  =========================================
 
 .. note::
-   Shaper LUT application in OCIO currently only supports linear interpolation.
-   For very small shaper LUT sizes this may not be sufficient. (CSP shaper luts
-   excluded; they do use spline interpolation at load-time).
+   Some LUT formats include a "shaper" before a 3D-LUT intended to help the 3D-LUT
+   work better with input spaces that are not perceptually uniform.  These shapers
+   are sometimes not actually LUTs and OCIO needs to convert them into one of the
+   existing operators such as a LUT1D.  In some cases this is done with linear
+   interpolation, which does not work well with coarsely sampled shapers.  In other
+   cases (such as CSP format) spline interpolation is used, but the resulting LUT1D
+   may not have fine enough sampling in the shadows to adequately represent the
+   original shaper.  If you are able to use them, the CLF and CTF formats are 
+   recommended since they allow very powerful shaper options that may be converted 
+   exactly into OCIO operators.
 
 
 .. include:: compatible_software.rst

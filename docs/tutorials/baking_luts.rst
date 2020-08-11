@@ -8,12 +8,12 @@ Baking LUT's
 ============
 
 Sometimes it is necessary to write a color transform as a
-lookup-table file
+lookup-table file.
 
 This is usually because an application does not natively support OCIO
 (unlike, say, Nuke which various OCIO nodes), but can load a LUT of
 some kind. This would currently include applications like Autodesk
-Flame, Adobe Photoshop, SideFX's MPlay (Houdini's "Image Viewer")
+Flame, Adobe Photoshop, SideFX's MPlay (Houdini's "Image Viewer").
 
 Remember that baking a LUT is not a perfect solution. Different LUT
 formats have various limitations. Certain applications might apply
@@ -183,7 +183,7 @@ ICC profiles (Photoshop)
 
 Photoshop is very focused around print and graphic-design, industries
 with very different color management concerns to modern feature-film
-VFX. As such, it can be a pain to integrate.
+VFX. As such, it does not fit smoothly into a VFX workflow.
 
 The main issue is current versions of Photoshop (CS5) are only
 practical for working with 16-bit integer images (not floating

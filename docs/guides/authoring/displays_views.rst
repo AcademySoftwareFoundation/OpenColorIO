@@ -127,6 +127,7 @@ A View Transform may use the following keys:
   space to the display-referred reference space.
 * ``to_display_reference``: The inverse of the from_display_reference transform.
 
+.. TODO: Good spot for an example in a future revision.
 
 .. _shared_views:
 
