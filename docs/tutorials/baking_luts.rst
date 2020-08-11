@@ -242,7 +242,7 @@ machine, say, it is easiest to uncheck "Show profiles for this display
 only" and select the "sRGB IEC61966-2.1" profile. You can skip the
 rest of this section in this case.
 
-.. figure::  images/ps_icc/psicc_open_current_profile.png
+.. figure::  _images/psicc_open_current_profile.png
     :align:   center
 
 However, if you have a specific display-profile selected (maybe
@@ -250,7 +250,7 @@ created by monitor-calibration software), you should do the following:
 
 Click "Open Profile", and right-click the icon in the top of the window, and click the folder:
 
-.. figure::  images/ps_icc/psicc_reveal_profile.png
+.. figure::  _images/psicc_reveal_profile.png
     :align:   center
 
 This reveals the current profile in Finder. You can drag the file onto
@@ -307,13 +307,13 @@ On Windows, right-click the profile and select "Install profile"
 
 Then on either platform, click "View > Proof Setup > Custom..."
 
-.. figure::  images/ps_icc/psicc_proof_setup.png
+.. figure::  _images/psicc_proof_setup.png
     :align:   center
 
 Select your profile from the "Device to simulate" dropdown (the name
 is what you supplied with ``--description``):
 
-.. figure::  images/ps_icc/psicc_select_profile.png
+.. figure::  _images/psicc_select_profile.png
     :align:   center
 
 As pictured, selecting "Preserve RGB numbers", and deselecting
@@ -346,7 +346,7 @@ versions, Photoshop versions and the phase of the moon. The only way
 to be sure is to compare Photoshop side-by-side with a
 LUT-reference-image (ideally toggling between Photoshop and Nuke):
 
-.. figure::  images/ps_icc/psicc_itworks.png
+.. figure::  _images/psicc_itworks.png
     :align:   center
 
 

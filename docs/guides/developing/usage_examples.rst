@@ -39,9 +39,15 @@ steps internally.
    render 'setup' would be appropriate, once per scanline would be
    inappropriate.
 
+#. **Get a CPU or GPU Processor.**
+   Building the processor assembles the operators needed to perform the requested
+   transformation, however it is not ready to process pixels. The next step is to
+   create a CPU or GPU processor.  This optimizes and finalizes the operators to
+   produce something that may be executed efficiently on the target platform.
+
 #. **Convert your image, using the Processor.**
-   Once you have the processor, you can apply the color transformation using
-   the "apply" function.  In :ref:`usage_applybasic_cpp`, you apply the
+   Once you have a CPU or GPU processor, you can apply the color transformation 
+   using the "apply" function.  In :ref:`usage_applybasic_cpp`, you may apply the
    processing in-place, by first wrapping your image in an
    :cpp:class:`ImageDesc` class.  This approach is intended to be used in high
    performance applications, and can be used on multiple threads (per scanline,
@@ -62,16 +68,19 @@ C++
    
    try
    {
-       OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-       ConstProcessorRcPtr processor = config->getProcessor(OCIO::ROLE_COMPOSITING_LOG,
-                                                            OCIO::ROLE_SCENE_LINEAR);
+      OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+      OCIO::ConstProcessorRcPtr processor = config->getProcessor(OCIO::ROLE_COMPOSITING_LOG,
+                                                                 OCIO::ROLE_SCENE_LINEAR);
        
-       OCIO::PackedImageDesc img(imageData, w, h, 4);
-       processor->apply(img);
+      OCIO::ConstCPUProcessorRcPtr cpu = processor->getDefaultCPUProcessor();
+
+      // Apply the color transform to an existing RGBA image
+      OCIO::PackedImageDesc img(imageData, width, height, 4);
+      cpu->apply(img);
    }
    catch(OCIO::Exception & exception)
    {
-       std::cerr << "OpenColorIO Error: " << exception.what() << std::endl;
+      std::cerr << "OpenColorIO Error: " << exception.what() << std::endl;
    }
 
 .. _usage_applybasic_python:
@@ -87,9 +96,10 @@ Python
        config = OCIO.GetCurrentConfig()
        processor = config.getProcessor(OCIO.Constants.ROLE_COMPOSITING_LOG,
                                        OCIO.Constants.ROLE_SCENE_LINEAR)
+       cpu = processor->getDefaultCPUProcessor()
        
        # Apply the color transform to the existing RGBA pixel data
-       img = processor.applyRGBA(img)
+       img = cpu.applyRGBA(img)
    except Exception, e:
        print "OpenColorIO Error",e
 
@@ -105,13 +115,13 @@ transform name.
 #. **Get the Config.**
    See :ref:`usage_applybasic` for details.
    
-#. **Lookup the display ColorSpace.**
-   The display :cpp:class:`ColorSpace` is queried from the configuration using
-   :cpp:func:`Config::getDisplayColorSpaceName`.   If the user has specified
-   value for the ``device`` or the ``displayTransformName``, use them. If these
-   values are unknown default values can be queried (as shown below).
+#. **Get the desired display and view.**
+   If the user has specified a display and view, use them.  Otherwise 
+   :cpp:func:`Config::getDefaultDisplay` and :cpp:func:`Config::getDefaultView`
+   may be used to get the defaults.  These may be provided directly in a call
+   to getProcessor rather than the source and destination color space.
 
-#. **Get the processor from the Config.**
+#. **Get the processor and CPU processor from the Config.**
    See :ref:`usage_applybasic` for details.
 
 #. **Convert your image, using the processor.**
@@ -125,18 +135,24 @@ C++
    #include <OpenColorIO/OpenColorIO.h>
    namespace OCIO = OCIO_NAMESPACE;
    
-   OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+   try
+   {
+     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
    
-   // If the user hasn't picked a display, use the defaults...
-   const char * device = config->getDefaultDisplayDeviceName();
-   const char * transformName = config->getDefaultDisplayTransformName(device);
-   const char * displayColorSpace = config->getDisplayColorSpaceName(device, transformName);
+     const char * display = config->getDefaultDisplay();
+     const char * view = config->getDefaultView(display);
    
-   ConstProcessorRcPtr processor = config->getProcessor(OCIO::ROLE_SCENE_LINEAR,
-                                                        displayColorSpace);
+     OCIO::ConstProcessorRcPtr processor = config->getProcessor(OCIO::ROLE_SCENE_LINEAR,
+                                                                display, view);
+     OCIO::ConstCPUProcessorRcPtr cpu = processor->getDefaultCPUProcessor();
    
-   OCIO::PackedImageDesc img(imageData, w, h, 4);
-   processor->apply(img);
+     OCIO::PackedImageDesc img(imageData, width, height, 4);
+     cpu->apply(img);
+   }
+   catch(OCIO::Exception & exception)
+   {
+      std::cerr << "OpenColorIO Error: " << exception.what() << std::endl;
+   }
 
 Python
 ++++++
@@ -145,16 +161,19 @@ Python
 
     import PyOpenColorIO as OCIO
 
+   try:
     config = OCIO.GetCurrentConfig()
 
-    device = config.getDefaultDisplayDeviceName()
-    transformName = config.getDefaultDisplayTransformName(device)
-    displayColorSpace = config.getDisplayColorSpaceName(device, transformName)
+     display = config.getDefaultDisplay()
+     view = config.getDefaultView(display)
 
-    processor = config.getProcessor(OCIO.Constants.ROLE_SCENE_LINEAR, displayColorSpace)
+     processor = config.getProcessor(OCIO.Constants.ROLE_SCENE_LINEAR, display, view)
+     cpu = processor.getDefaultCPUProcessor()
 
-    processor.applyRGB(imageData)
-
+     imageData = [1, 0, 0]
+     cpu.applyRGB(img)
+   except Exception, e:
+       print "OpenColorIO Error",e
 
 Displaying an image, using the CPU (Full Display Pipeline)
 **********************************************************
@@ -203,49 +222,24 @@ C++
    OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
    
    // Step 2: Lookup the display ColorSpace
-   const char * device = config->getDefaultDisplayDeviceName();
-   const char * transformName = config->getDefaultDisplayTransformName(device);
-   const char * displayColorSpace = config->getDisplayColorSpaceName(device, transformName);
+   const char * display = config->getDefaultDisplay();
+   const char * view = config->getDefaultView(display);
    
    // Step 3: Create a DisplayTransform, and set the input and display ColorSpaces
    // (This example assumes the input is scene linear. Adapt as needed.)
    
-   OCIO::DisplayTransformRcPtr transform = OCIO::DisplayTransform::Create();
-   transform->setInputColorSpaceName( OCIO::ROLE_SCENE_LINEAR );
-   transform->setDisplayColorSpaceName( displayColorSpace );
+   OCIO::DisplayTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
+   transform->setSrc( OCIO::ROLE_SCENE_LINEAR );
+   transform->setDisplay( display );
+   transform->setView( view );
    
-   // Step 4: Add custom transforms for a 'canonical' Display Pipeline
-   
-   // Add an fstop exposure control (in SCENE_LINEAR)
-   float gain = powf(2.0f, exposure_in_stops);
-   const float slope3f[] = { gain, gain, gain };
-   OCIO::CDLTransformRcPtr cc =  OCIO::CDLTransform::Create();
-   cc->setSlope(slope3f);
-   transform->setLinearCC(cc);
-   
-   // Add a Channel view 'swizzle'
-   
-   // 'channelHot' controls which channels are viewed.
-   int channelHot[4] = { 1, 1, 1, 1 };  // show rgb
-   //int channelHot[4] = { 1, 0, 0, 0 };  // show red
-   //int channelHot[4] = { 0, 0, 0, 1 };  // show alpha
-   //int channelHot[4] = { 1, 1, 1, 0 };  // show luma
-   
-   float lumacoef[3];
-   config.getDefaultLumaCoefs(lumacoef);
-   
-   float m44[16];
-   float offset[4];
-   OCIO::MatrixTransform::View(m44, offset, channelHot, lumacoef);
-   OCIO::MatrixTransformRcPtr swizzle = OCIO::MatrixTransform::Create();
-   swizzle->setValue(m44, offset);
-   transform->setChannelView(swizzle);
-   
-   // And then process the image normally.
+   // Step 4: Create the processor
    OCIO::ConstProcessorRcPtr processor = config->getProcessor(transform);
+   OCIO::ConstCPUProcessorRcPtr cpu = processor->getDefaultCPUProcessor();
    
-   OCIO::PackedImageDesc img(imageData, w, h, 4);
-   processor->apply(img);
+   // Step 5: Apply the color transform to an existing RGBA pixel
+   OCIO::PackedImageDesc img(imageData, width, height, 4);
+   cpu->apply(img);
 
 Python
 ++++++
@@ -269,52 +263,26 @@ Python
     transform.setDisplay(display)
     transform.setView(view)
 
-    # Step 4: Add custom transforms for a 'canonical' Display Pipeline
-
-    # Add an fstop exposure control (in SCENE_LINEAR)
-    exposure = 0 # Example data: zero exposure adjustment
-    gain = 2**exposure
-    slope3f = (gain, gain, gain)
-
-    cc = OCIO.CDLTransform()
-    cc.setSlope(slope3f)
-
-    transform.setLinearCC(cc)
-
-    # Add a Channel view 'swizzle'
-
-    channelHot = (1, 1, 1, 1) # show rgb
-    # channelHot = (1, 0, 0, 0) # show red
-    # channelHot = (0, 0, 0, 1) # show alpha
-    # channelHot = (1, 1, 1, 0) # show luma
-
-    lumacoef = config.getDefaultLumaCoefs()
-
-    m44, offset = OCIO.MatrixTransform.View(channelHot, lumacoef)
-
-    swizzle = OCIO.MatrixTransform()
-    swizzle.setValue(m44, offset)
-    transform.setChannelView(swizzle)
-
-    # And then process the image normally.
+    # Step 4: Create the processor
     processor = config.getProcessor(transform)
+    cpu = processor.getDefaultCPUProcessor()
 
-    imageData = [0,0,0, 1,0,0] # Example data: A black and a red pixel
-    print processor.applyRGB(imageData)
+    # Step 5: Apply the color transform to an existing RGB pixel
+    imageData = [1, 0, 0]
+    print cpu.applyRGB(imageData)
 
 
 Displaying an image, using the GPU
 **********************************
 
-Applying OpenColorIO's color processing using GPU processing is
-straightforward, provided you have the capability to upload custom shader code
-and a custom 3D Lookup Table (3DLUT).
+Applying OpenColorIO's color processing using GPU processing is very customizable
+but an example helper class is provided for use with OpenGL.
 
-#. **Get the Processor.**
+#. **Get the Processor and GPU Processor.**
    This portion of the pipeline is identical to the CPU approach. Just get the
    processor as you normally would have, see above for details.
 #. **Create a GpuShaderDesc.**
-#. **Query the GPU Shader Text + 3D LUT.**
+#. **Extract the GPU Shader.**
 #. **Configure the GPU State.**
 #. **Draw your image.**
 
@@ -325,39 +293,34 @@ This example is available as a working app in the OCIO source: src/apps/ociodisp
 
 .. code-block:: cpp
    
-   // Step 0: Get the processor using any of the pipelines mentioned above.
    OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-   const char * device = config->getDefaultDisplayDeviceName();
-   const char * transformName = config->getDefaultDisplayTransformName(device);
-   const char * displayColorSpace = config->getDisplayColorSpaceName(device, transformName); 
-   ConstProcessorRcPtr processor = config->getProcessor(OCIO::ROLE_SCENE_LINEAR,
-                                                        displayColorSpace);
    
-   // Step 1: Create a GPU Shader Description
-   GpuShaderDesc shaderDesc;
-   shaderDesc.setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_0);
-   shaderDesc.setFunctionName("OCIODisplay");
-   const int LUT3D_EDGE_SIZE = 32;
-   shaderDesc.setLut3DEdgeLen(LUT3D_EDGE_SIZE);
-   
-   // Step 2: Compute and the 3D LUT
-   // Optional Optimization:
-   //     Only do this the 3D LUT's contents
-   //     are different from the last drawn frame.
-   //     Use getGpuLut3DCacheID to compute the cacheID.
-   //     cheaply.
-   // 
-   // std::string lut3dCacheID = processor->getGpuLut3DCacheID(shaderDesc);
-   int num3Dentries = 3*LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE;
-   std::vector<float> g_lut3d;
-   g_lut3d.resize(num3Dentries);
-   processor->getGpuLut3D(&g_lut3d[0], shaderDesc);
-   
-   // Load the data into an OpenGL 3D Texture
-   glGenTextures(1, &g_lut3d_textureID);
-   glBindTexture(GL_TEXTURE_3D, g_lut3d_textureID);
-   glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB,
-                LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
-                0, GL_RGB,GL_FLOAT, &g_lut3d[0]);
-   
-   // Step 3: Query
+   const char * display = config->getDefaultDisplay();
+   const char * view = config->getDefaultView(display);
+   const char * look = config->getDisplayViewLooks(display, view);
+
+   OCIO::DisplayViewTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
+   transform->setSrc(OCIO::ROLE_SCENE_LINEAR);
+   transform->setDisplay(display);
+   transform->setView(view);
+
+   OCIO::ViewingPipeline vpt;
+   vpt.setDisplayViewTransform(transform);
+   vpt.setLooksOverrideEnabled(true);
+   vpt.setLooksOverride(look);
+
+   OCIO::ConstProcessorRcPtr processor = vpt.getProcessor(config, config->getCurrentContext());
+   OCIO::ConstGPUProcessorRcPtr gpu = processor->getDefaultGPUProcessor();
+
+   OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+   shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
+   shaderDesc->setFunctionName("OCIODisplay");
+   shaderDesc->setResourcePrefix("ocio_");
+
+   gpu->extractGpuShaderInfo(shaderDesc);
+
+   OCIO::OglAppRcPtr oglApp = std::make_shared<OCIO::ScreenApp>("ociodisplay", 512, 512);
+   oglApp->initImage(imgWidth, imgHeight, OCIO::OglApp::COMPONENTS_RGBA, &img[0]);
+   oglApp->setShader(shaderDesc);
+
+   oglApp->redisplay();

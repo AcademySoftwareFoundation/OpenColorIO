@@ -7,10 +7,13 @@
 How to Configure ColorSpace Allocation
 ======================================
 
-The allocation / allocation vars are utilized using during GPU 3dlut / shader
-text generation. (Processor::getGpuShaderText, Processor::getGpuLut3D).
+The allocation / allocation vars were utilized using during GPU 3dlut / shader
+text generation in OCIO v1.  However in OCIO v2, the GPU renderer does not need
+to bake color transforms and the allocation vars are not utilized unless an
+application requests the legacy GPU shader.  However, the allocation vars are
+still utilized by the ociobakelut command-line utility.
 
-If, in the course of GPU processing, a 3D lut is required, the "allocation /
+If, in the course of baking, a 3D lut is required, the "allocation /
 allocation vars" direct how OCIO should sample the colorspace, with the intent
 being to maintain maximum fidelity and minimize clamping.
 
