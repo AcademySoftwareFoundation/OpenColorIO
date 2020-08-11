@@ -1,0 +1,38 @@
+############################## Contact #############################
+contact:
+  enable : true
+  title : Contact Us
+  subtitle : Get in touch!
+  content : Whether you're a seasoned pro or new to OCIO, we'd love to hear from you. Please reach out on either of our mailing lists, join us on Slack, or open a GitHub Issue.
+
+  # Contact details
+  contact_list:
+    - icon : ti-comment # themify icon pack : https://themify.me/themify-icons
+      name: "Slack:"
+      info : "OpenColorIO"
+      link: "http://slack.opencolorio.org"
+      
+    - icon : ti-email # themify icon pack : https://themify.me/themify-icons
+      name: "OCIO-User:"
+      info : "ocio-user@lists.aswf.io"
+      link: "https://lists.aswf.io/g/ocio-user"
+      
+    - icon : ti-email # themify icon pack : https://themify.me/themify-icons
+      name: "OCIO-Dev:"
+      info : "ocio-dev@lists.aswf.io"
+      link: "https://lists.aswf.io/g/ocio-dev"
+    
+    - icon : ti-github # themify icon pack : https://themify.me/themify-icons
+      name: "Github:"
+      info : "Open an issue"
+      link: "https://github.com/AcademySoftwareFoundation/OpenColorIO/issues"
+
+  # Contact form
+  contact_form:
+    enable : false
+    form_action : "#" #contact form works with https://formspree.io
+    name : "Your Name"
+    email : "Your Email"
+    subject : "Subject"
+    message : "Message"
+    submit : "Submit"

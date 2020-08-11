@@ -1,0 +1,155 @@
+################################# Default configuration ###################
+baseURL = "https://opencolorio.org/"
+title = "OpenColorIO"
+theme = "site"
+# post pagination
+paginate = "6"
+# post excerpt
+summaryLength = "15"
+# disqus short name
+disqusShortname = "" # get your shortname form here : https://disqus.com
+# disable language
+disableLanguages = ["fr"]
+##publishDir = "docs/site"
+
+############################# Plugins ##########################
+# css plugins
+[[params.plugins.css]]
+link = "plugins/bootstrap/bootstrap.min.css"
+[[params.plugins.css]]
+link = "plugins/themify-icons/themify-icons.css"
+[[params.plugins.css]]
+link = "plugins/magnific-popup/magnific-popup.css"
+[[params.plugins.css]]
+link = "plugins/slick/slick.css"
+[[params.plugins.css]]
+link = "https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,300;0,500;0,700;1,300;1,500;1,700&display=swap"
+
+# js plugins
+[[params.plugins.js]]
+link = "plugins/jquery/jquery.min.js"
+[[params.plugins.js]]
+link = "plugins/bootstrap/bootstrap.min.js"
+[[params.plugins.js]]
+link = "plugins/slick/slick.min.js"
+[[params.plugins.js]]
+link = "plugins/shuffle/shuffle.min.js"
+[[params.plugins.js]]
+link = "plugins/magnific-popup/jquery.magnific-popup.min.js"
+[[params.plugins.js]]
+link = "plugins/lazy-load/lozad.min.js"
+[[params.plugins.js]]
+link = "plugins/google-map/map.js"
+
+############################# Navigation ##################################
+
+
+[[menu.main]]
+name = "start"
+URL = "start"
+weight = 1
+
+[[menu.main]]
+name = "news"
+URL = "news"
+weight = 2
+
+[[menu.main]]
+name = "supported_apps"
+URL = "supported_apps"
+weight = 3
+
+##[[menu.main]]
+##name = "blog"
+##URL = "blog"
+##weight = 4
+
+[[menu.main]]
+name = "contact"
+URL = "contact"
+weight = 8
+
+[[menu.static]]
+name ="documentation"
+URL = "https://opencolorio.readthedocs.io/en/latest/"
+weight = 5
+
+#### external / static link ####
+[[menu.static]]
+name = "github"
+URL = "https://github.com/AcademySoftwareFoundation/OpenColorIO"
+weight = 6
+
+[[menu.static]]
+name = "downloads"
+URL = "https://opencolorio.readthedocs.io/en/latest/quick_start/downloads.html"
+weight = 7
+
+
+
+
+############################# Default Parameters ##########################
+[params]
+logo = "images/ocio_m2x.png"
+aswf_logo = "images/aswf_aqua.png"
+# Meta data
+description = "Open Source Color Management"
+author = "OpenColorIO Contributors"
+# Google Analytics
+google_analytics_id = "" # Your ID
+# post share
+post_share = true
+
+# preloader
+[params.preloader]
+enable = false
+preloader = "images/opencolorio-color.png"
+
+# google map
+[params.map]
+enable = false
+gmap_api = "https://maps.googleapis.com/maps/api/js?key=AIzaSyBu5nZKbeK-WHQ70oqOWo-_4VmwOwKP9YQ"
+map_latitude = "51.5223477"
+map_longitude = "-0.1622023"
+map_marker = "images/marker.png"
+
+
+############################# ASWF LINKS ##########################
+[[params.aswf]]
+name = "Trademark Policy"
+link = "https://lfprojects.org/policies/trademark-policy/"
+
+[[params.aswf]]
+name = "Privacy Policy"
+link = "https://lfprojects.org/policies/privacy-policy/"
+
+[[params.aswf]]
+name = "Antitrust Policy"
+link = "https://lfprojects.org/policies/antitrust-policy/"
+
+[[params.aswf]]
+name = "Code of Conduct"
+link = "https://lfprojects.org/policies/code-of-conduct/"
+
+[[params.aswf]]
+name = "Terms of Use"
+link = "https://lfprojects.org/policies/terms-of-use/"
+
+
+################################ English Language ########################
+[Languages.en]
+languageName = "En"
+languageCode = "en-us"
+contentDir = "content/english"
+weight = 1
+home = "Home"
+copyright = "copyright &copy; 2020 OpenColorIO Contributors"
+
+################################ France Language ########################
+[Languages.fr]
+languageName = "Fr"
+languageCode = "fr-fr"
+contentDir = "content/french"
+weight = 2
+home = "Accueil"
+copyright = "copyright &copy; 2020 [gethugothemes](https://gethugothemes.com) tous droits réservés"
