@@ -63,6 +63,10 @@ if(OCIO_BUILD_DOCS)
         # https://pypi.org/project/recommonmark/
         find_python_package(recommonmark 0.6.0 REQUIRED)
 
+        # Sphinx Tabs
+        # https://pypi.org/project/sphinx-tabs/
+        find_python_package(sphinx-tabs 1.1.13 REQUIRED)
+
         # Sphinx Press Theme
         # https://pypi.org/project/sphinx-press-theme/
         find_python_package(sphinx-press-theme 0.5.1 REQUIRES testresources REQUIRED)
