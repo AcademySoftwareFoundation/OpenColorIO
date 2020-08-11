@@ -1,0 +1,172 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>OpenColorIO</title>
+
+    
+    <link rel="stylesheet" href="_static/ocio.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/theme_extras.js"></script>
+    <link rel="top" title="OpenColorIO 1.1.1 documentation" href="#" />
+    <link rel="next" title="Introduction" href="introduction.html" /> 
+  </head>
+  <body>
+    <div class="header"><h1 class="heading"><a href="#">
+          <span>OpenColorIO</span></a></h1>
+        <h2 class="heading"><span>Open Source Color Management</span></h2>
+      </div>
+      <div class="topnav">
+      OpenColorIO 1.1.1 documentation
+      </div>
+      <div class="content">
+        
+        <table width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+        <td width="200">
+            <div class="sidebar2">
+                <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configurations/index.html">Configurations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="userguide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CompatibleSoftware.html">Compatible Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ChangeLog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="License.html">License</a></li>
+</ul>
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+            </div>
+        </td>
+        <td width="100%" id="bodycontent">
+        
+<div class="section" id="home">
+<h1>Home<a class="headerlink" href="#home" title="Permalink to this headline">¶</a></h1>
+<p>OpenColorIO (OCIO) is a complete color management solution geared towards motion
+picture production with an emphasis on visual effects and computer animation.
+OCIO provides a straightforward and consistent user experience across all
+supporting applications while allowing for sophisticated back-end configuration
+options suitable for high-end production usage. OCIO is compatible with the
+Academy Color Encoding Specification (ACES) and is LUT-format agnostic,
+supporting many popular formats.</p>
+<p>OpenColorIO is released as version 1.0 and has been in development since 2003.
+OCIO represents the culmination of years of production experience earned on such
+films as SpiderMan 2 (2004), Surf&#8217;s Up (2007), Cloudy with a Chance of Meatballs
+(2009), Alice in Wonderland (2010), and many more. OpenColorIO is natively
+supported in commercial applications like Katana, Mari, Nuke, Silhouette FX, and
+others.</p>
+<div class="section" id="mailing-lists">
+<span id="id1"></span><h2>Mailing Lists<a class="headerlink" href="#mailing-lists" title="Permalink to this headline">¶</a></h2>
+<p>There are two mailing lists associated with OpenColorIO:</p>
+<dl class="docutils">
+<dt><a class="reference external" href="https://lists.aswf.io/g/ocio-user">ocio-user</a><tt class="docutils literal"><span class="pre">&#64;lists.aswf.io</span></tt></dt>
+<dd>For end users (artists, often) interested in OCIO profile design,
+facility color management, and workflow.</dd>
+<dt><a class="reference external" href="https://lists.aswf.io/g/ocio-dev">ocio-dev</a><tt class="docutils literal"><span class="pre">&#64;lists.aswf.io</span></tt></dt>
+<dd>For developers interested OCIO APIs, code integration, compilation, etc.</dd>
+</dl>
+</div>
+<div class="section" id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
+<p>Most users will likely want to use the OpenColorIO that comes precompiled with
+their applications.  See the <a class="reference internal" href="CompatibleSoftware.html#compatiblesoftware"><em>Compatible Software</em></a> for further details on
+each application.</p>
+<p>Note that OCIO configurations are required to do any &#8216;real&#8217; work, and are
+available separately on the <a class="reference internal" href="downloads.html#downloads"><em>Downloads</em></a> section of this site. Example
+images are also available. For assistance customizing .ocio configurations,
+contact <a class="reference external" href="https://lists.aswf.io/g/ocio-user">ocio-user</a>.</p>
+<ul class="simple">
+<li>Step 1:  set the OCIO environment-variable to /path/to/your/profile.ocio</li>
+<li>Step 2:  Launch supported application.</li>
+</ul>
+<p>If you are on a platform that is not envvar friendly, most applications also
+provide a menu option to select a different OCIO configuration after launch.</p>
+<p>Please be sure to select a profile that matches your color workflow (VFX work
+typically requires a different profile than animated features). If you need
+assistance picking a profile, email
+<a class="reference external" href="https://lists.aswf.io/g/ocio-user">ocio-user</a>.</p>
+</div>
+<div class="section" id="downloading-and-building-the-code">
+<h2>Downloading and Building the Code<a class="headerlink" href="#downloading-and-building-the-code" title="Permalink to this headline">¶</a></h2>
+<p>Source code is available on Github at
+<a class="reference external" href="http://github.com/AcademySoftwareFoundation/OpenColorIO">http://github.com/AcademySoftwareFoundation/OpenColorIO</a></p>
+<p>Download a <a class="reference external" href="http://github.com/AcademySoftwareFoundation/OpenColorIO/zipball/master">.zip</a> or
+<a class="reference external" href="http://github.com/AcademySoftwareFoundation/OpenColorIO/tarball/master">.tar.gz</a> of the
+current state of the repository.</p>
+<p>Please see the <a class="reference internal" href="developers/index.html#developer-guide"><em>Developer Guide</em></a> for more info, and contact <a class="reference external" href="https://lists.aswf.io/g/ocio-dev">ocio-dev</a> with any questions.</p>
+<div class="toctree-wrapper compound">
+</div>
+<hr class="docutils" />
+<p><a class="reference internal" href="search.html"><em>Search Page</em></a></p>
+<p><a class="reference internal" href="genindex.html"><em>Index</em></a></p>
+</div>
+</div>
+
+    
+    <td width="275">
+        <div class="imageBar">
+        <p style="text-align: center; font-size: small;"><b>Color Transform Example</b></p>
+            <img src="_static/clo_res19_vd16.0101.jpg">
+            <div class="caption">Final Image: sRGB</div>
+            <img src="_static/clo_res19_lm10.0101.jpg">  
+            <div class="caption">Digital Intermediate (DI): log dpx</div>
+            <img src="_static/clo_res19_lnf.0101.jpg">
+            <div class="caption">Render: scene-linear exr</div>
+        <p style="text-align: right">Images from "Cloudy With A Chance of Meatballs"</p>
+        <p style="text-align: right">Copyright 2011 Sony Pictures Inc. All Rights Reserved.</p>
+        <p style="text-align: right">spi-animation profile, available <a href="http://github.com/imageworks/OpenColorIO-Configs">here</a>.</p>
+        </div>
+    </td>
+    
+
+        </td>
+        </tr></table>
+        <br>
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        </p>
+
+      </div>
+
+    <div class="footer">
+        &copy; Copyright Contributors to the OpenColorIO Project.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>
