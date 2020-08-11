@@ -1,0 +1,74 @@
+{{ $data := index site.Data site.Language.Lang }}
+
+{{ if $data.contact.contact.enable }}
+{{ with $data.contact.contact }}
+{{"<!-- Start Contact Us -->" | safeHTML}}
+<section id="contact" class="contact-us section-bg">
+	<div class="container pb-5">
+		<div class="row">
+			<div class="col-lg-12">
+				{{"<!-- section title -->" | safeHTML}}
+				<div class="title text-center wow fadeIn" data-wow-duration="500ms">
+					<h2>{{ with .title }} {{ index (split . " ") 0 | safeHTML }} {{ end }}<span class="color">
+						{{ with .title }} {{ index (split . " ") 1 | safeHTML }} {{ end }}</span></h2>
+					<div class="border-meghna"></div>
+				</div>
+			</div>
+			{{"<!-- /section title -->" | safeHTML}}
+
+			{{"<!-- Contact Details -->" | safeHTML}}
+			<div class="contact-info col-lg-6 wow fadeInUp" data-wow-duration="500ms">
+				<h3>{{ .subtitle | markdownify }}</h3>
+				<p> {{ .content | markdownify }} </p>
+
+				{{ if .contact_form.enable }}
+				<div class="contact-details">
+					{{ range .contact_list }}
+					<div class="con-info clearfix">
+						<i class="{{ .icon }}"></i>
+						<span>Hi {{ .info }}</span>
+					</div>
+					{{ end }}
+				</div>
+				{{ end }}
+			</div>
+
+			{{"<!-- Contact Form -->" | safeHTML}}
+			{{ if .contact_form.enable }}
+			{{ with .contact_form }}
+			<div class="col-lg-6 wow fadeInUp" data-wow-duration="500ms" data-wow-delay="300ms">
+				<form id="contact-form" class="form-meghna" method="post" action="{{ .form_action }}" role="form">
+					<div class="form-group">
+						<input type="text" placeholder="{{ .name }}" class="form-control" name="name" id="name">
+					</div>
+					<div class="form-group">
+						<input type="email" placeholder="{{ .email }}" class="form-control" name="email" id="email">
+					</div>
+					<div class="form-group">
+						<input type="text" placeholder="{{ .subject }}" class="form-control" name="subject" id="subject">
+					</div>
+					<div class="form-group">
+						<textarea rows="6" placeholder="{{ .message }}" class="form-control" name="message" id="message"></textarea>
+					</div>
+					<div id="cf-submit">
+						<button type="submit" id="contact-submit" class="btn btn-transparent btn-block" value="{{ .submit }}">{{ .submit }}</button>
+					</div>
+				</form>
+			</div>
+			{{ end }}
+			{{ else }}
+			<div class="contact-details">
+				{{ range .contact_list }}
+				<div class="con-info clearfix">
+					<i class="{{ .icon }}"></i>
+					<span>{{ .name }}</span><a href={{ .link }}><span>{{ .info }}</span></a>
+				</div>
+				{{ end }}
+			</div>
+			{{ end }}
+		</div>
+	</div>
+</section>
+{{"<!-- /contact -->" | safeHTML}}
+{{ end }}
+{{ end }}

@@ -1,0 +1,66 @@
+{{ $data := index site.Data site.Language.Lang }}
+
+{{ if $data.supported_apps.supported_apps.enable }}
+{{ with $data.supported_apps.supported_apps }}
+{{"<!-- Portfolio Section -->" | safeHTML}}
+<section class="portfolio section" id="supported_apps">
+	<div class="container">
+		<div class="row ">
+			<div class="col-xl-12">
+				{{"<!-- section title -->" | safeHTML}}
+				<div class="title text-center">
+					<h2>{{ with .title }} {{ index (split . " ") 0 | safeHTML }} {{ end }}<span class="color">
+							{{ with .title }} {{ index (split . " ") 1 | safeHTML }} {{ end }}</span></h2>
+					<div class="border-meghna"></div>
+				</div>
+				{{"<!-- /section title -->" | safeHTML}}
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-lg-12">
+				<div class="portfolio-filter btn-group-toggle justify-content-center d-flex flex-wrap"
+					data-toggle="buttons">
+					<label class="btn active">
+						<input type="radio" name="shuffle-filter" value="all" checked="checked" />{{ i18n "all"}}
+					</label>
+					{{ $categories := slice }}
+					{{ range .portfolio_item }}
+					{{ range .categories }}
+					{{ $categories = $categories | append . }}
+					{{ end }}
+					{{ end }}
+					{{ range ( $categories | uniq | sort ) }}
+					<label class="btn">
+						<input type="radio" name="shuffle-filter" value="{{ . | urlize }}" />{{ . }}
+					</label>
+					{{ end }}
+				</div>
+			</div>
+		</div>
+
+		<div class="row shuffle-wrapper justify-content-center">
+			{{"<!-- portfolio item -->" | safeHTML}}
+			{{ range .portfolio_item }}
+			<div class="col-lg-4 shuffle-item"
+				data-groups="[{{range $index, $element:= .categories }}{{if ne $index 0}},{{end}}&quot;{{. | urlize}}&quot;{{ end }}]">
+				<div class="portfolio-block mb-4 cursor-pointer" onclick="location.href='{{ .link | safeURL }}'">
+					<img class="img-fluid" src="{{ .image | absURL }}" onerror="this.onerror=null;this.src='{{ .image | absURL }}'" alt="{{ .name }}">
+					<div class="caption">
+						<h4 class="mt-3">
+							{{ if or (eq .link "#") (eq .link "") }}
+							{{ .name }}
+							{{ else }}
+							<a href="{{ .link | safeURL }}">{{ .name }}</a>
+							{{ end }}
+						</h4>
+						<p>{{ .content | markdownify }}</p>
+					</div>
+				</div>
+			</div>
+			{{ end }}
+		</div>
+	</div>
+</section>
+{{"<!-- /Portfolio -->" | safeHTML}}
+{{ end }}
+{{ end }}
