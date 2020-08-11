@@ -9,6 +9,21 @@ API
    :caption: API
 
    installation
-   bindings/PythonAPI
-   bindings/PythonTransforms
-   bindings/PythonTypes
+   c_baker
+   c_colorspace
+   c_colorspaceset
+   c_config
+   c_context
+   c_cpuprocessor
+   c_dynamicproperty
+   c_filerules
+   c_formatmetadata
+   c_global
+   c_gpuprocessor
+   c_gpushadercreator
+   c_gpushaderdesc
+   c_imagedesc
+   c_look
+   c_packedimagedesc
+   c_planarimagedesc
+   c_processor
