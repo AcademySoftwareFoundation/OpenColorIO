@@ -5,6 +5,8 @@
 Configurations
 ==============
 
+.. _configurations:
+
 .. toctree::
    :caption: Configurations
 
