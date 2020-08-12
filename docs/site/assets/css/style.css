@@ -508,6 +508,10 @@ a:hover {
   margin-bottom: 20px;
 }
 
+.hero-area-logo {
+  object-fit: contain;
+}
+
 @media (max-width: 480px) {
   .hero-area .block h1 {
     font-size: 60px;
