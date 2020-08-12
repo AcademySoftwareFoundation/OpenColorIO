@@ -140,6 +140,7 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
         Sphinx
         sphinx-press-theme
         recommonmark
+        sphinx-tabs
     )
 
     ###############################################################################
