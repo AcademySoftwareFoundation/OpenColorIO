@@ -55,9 +55,9 @@ if(OCIO_BUILD_DOCS)
         # https://pypi.org/project/testresources/
         find_python_package(testresources 2.0.1 REQUIRED)
 
-        # # Sphinx-Tabs
-        # # https://pypi.org/project/sphinx-tabs/
-        # find_python_package(sphinx-tabs 1.1.13 REQUIRED)
+        # Sphinx Tabs
+        # https://pypi.org/project/sphinx-tabs/
+        find_python_package(sphinx-tabs 1.1.13 REQUIRED)
 
         # Recommonmark
         # https://pypi.org/project/recommonmark/
