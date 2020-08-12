@@ -121,6 +121,7 @@ jobs:
           share/ci/scripts/linux/install_testresources.sh latest
           share/ci/scripts/linux/install_recommonmark.sh latest
           share/ci/scripts/linux/install_sphinx-press-theme.sh latest
+          share/ci/scripts/linux/install_sphinx-tabs.sh latest
         if: matrix.build-docs == 'ON'
       - name: Create build directories
         run: |
