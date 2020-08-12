@@ -45,7 +45,7 @@ Accessing Other Versions
 ************************
 
 You are reading the documentation for OCIO v2.  The documentation for the the current
-stable release (1.1.1) is available `here <https:opencolorio.org/old/index.html>`_.
+stable release (1.1.1) is available `here <https://opencolorio.org/old/index.html>`_.
 
 
 Community
