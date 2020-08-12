@@ -25,6 +25,11 @@
 .. toctree::
    :hidden:
 
+   configurations/_index
+
+.. toctree::
+   :hidden:
+
    upgrading_v2/_index
 
 .. toctree::

@@ -22,7 +22,7 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.ifconfig',
     'sphinx.ext.napoleon',
-    # 'sphinx_tabs.tabs',
+    'sphinx_tabs.tabs',
     'recommonmark',
 ]
 templates_path = ['templates']
@@ -67,7 +67,7 @@ napoleon_include_init_with_doc = True
 # -- Options for HTML output ---------------------------------------------------
 
 html_theme = 'press'
-html_logo = '_static/OpenColorIO_withText.svg'
+html_logo = '_static/ocio_b.svg'
 html_static_path = ['_static']
 
 html_theme_options = {

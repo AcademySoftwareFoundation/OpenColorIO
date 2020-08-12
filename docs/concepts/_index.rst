@@ -8,7 +8,5 @@ Concepts
 .. toctree::
    :caption: Concepts
 
-   overview/introduction
-   overview/internal_architecture
-   overview/configuration_files
-   publications/cinematic_color
+   overview/overview
+   publications/publications
