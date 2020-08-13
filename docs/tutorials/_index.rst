@@ -5,14 +5,15 @@
 Tutorials
 =========
 
+We would like to have more tutorials, please help us add some!  :)
+
+An easy way to get involved is to join the #docs channel on :ref:`slack`.
+
+
 .. toctree::
    :caption: Tutorials
+   :maxdepth: 2
 
    build_config
-   config_examples/aces_1.0.3
-   config_examples/nuke_default
-   config_examples/spi_anim
-   config_examples/spi_vfx
    baking_luts
    contributing
-   tool_overview

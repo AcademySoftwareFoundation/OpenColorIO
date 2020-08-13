@@ -4,7 +4,7 @@
 ###############################################################################
 ### Python ###
 find_package(Python REQUIRED COMPONENTS Interpreter)
-if((${Python_VERSION_MAJOR} GREATER_EQUAL 3) AND (NOT WIN32))
+if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
     if(NOT OCIO_BUILD_PYTHON)
         message(FATAL_ERROR "Doc generation requires that the python bindings be built")
     endif()
@@ -65,6 +65,12 @@ if((${Python_VERSION_MAJOR} GREATER_EQUAL 3) AND (NOT WIN32))
 
     ###############################################################################
     ### Copy templates to build area ###
+
+    # NOTE: The *.in extension is omitted from conf.py since RTD uses this file 
+    #       without CMake configuration.
+    message(STATUS "Substitute sphinx conf.py variables")
+    configure_file(${CMAKE_SOURCE_DIR}/docs/conf.py
+        ${CMAKE_BINARY_DIR}/docs/conf.py @ONLY)
 
     file(GLOB_RECURSE DOC_SOURCES "${CMAKE_SOURCE_DIR}/docs/*")
     list(APPEND DOC_SOURCES
@@ -134,6 +140,7 @@ if((${Python_VERSION_MAJOR} GREATER_EQUAL 3) AND (NOT WIN32))
         Sphinx
         sphinx-press-theme
         recommonmark
+        sphinx-tabs
     )
 
     ###############################################################################

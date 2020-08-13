@@ -25,6 +25,11 @@
 .. toctree::
    :hidden:
 
+   configurations/_index
+
+.. toctree::
+   :hidden:
+
    upgrading_v2/_index
 
 .. toctree::
@@ -35,4 +40,4 @@
 .. toctree::
    :hidden:
 
-   license/_index
+   aswf/_index

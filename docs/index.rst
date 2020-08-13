@@ -3,11 +3,6 @@
   Copyright Contributors to the OpenColorIO Project.
 
 
-.. .. raw:: html
-
-..     <object width="400" data="_static/OpenColorIO_withText.svg" type="image/svg+xml"></object>
-
-
 
 Overview
 ========
@@ -20,39 +15,37 @@ options suitable for high-end production usage. OCIO is compatible with the
 Academy Color Encoding Specification (ACES) and is LUT-format agnostic,
 supporting many popular formats.
 
-OpenColorIO is released as version 1.0 and has been in development since 2003.
-OCIO represents the culmination of years of production experience earned on such
+OpenColorIO version 1.0 was released in 2011, having been in development since 2003.
+OCIO v1 represented the culmination of years of production experience earned on such
 films as SpiderMan 2 (2004), Surf's Up (2007), Cloudy with a Chance of Meatballs
-(2009), Alice in Wonderland (2010), and many more. OpenColorIO is natively
-supported in commercial applications like Katana, Mari, Nuke, Silhouette FX, and
-others.
+(2009), Alice in Wonderland (2010), and many more.  The current stable release is 
+version 1.1.1 from April 2019.
+
+OpenColorIO v2 has been in development since 2017 and is feature complete as of
+SIGGRAPH 2020.  After a stabilization and bug-fixing period, an official 2.0 release
+will be made at the end of 2020.  OCIO v2 is in the VFX Reference Platform for
+calendar year 2021.  The OCIO v2 code is in the master branch on 
+`GitHub <https://github.com/AcademySoftwareFoundation/OpenColorIO>`_
+and we encourage developers to start integrating and providing feedback.
+See :ref:`upgrading_to_v2` for more.
 
 
-Users
-=====
+About the Documentation
+=======================
 
-Quick Start
-***********
+The documentation is a work-in-progress and we would love to have your help to 
+improve it!  An easy way to get involved is to join the #docs channel on 
+:ref:`slack`.
 
-Most users will likely want to use the OpenColorIO that comes precompiled with
-their applications.  See the :ref:`compatiblesoftware` for further details on
-each application.
+The documentation has been updated to include most of the new OCIO v2 features
+but additional work is needed to provide more detail and tutorials about how to
+best leverage them.  We will be working on that over the coming weeks.
 
-Note that OCIO configurations are required to do any 'real' work, and are
-available separately on the :ref:`downloads` section of this site. Example
-images are also available. For assistance customizing .ocio configurations,
-contact `ocio-user <https://lists.aswf.io/g/ocio-user>`__\.
+Accessing Other Versions
+************************
 
-- Step 1:  set the OCIO environment-variable to /path/to/your/profile.ocio
-- Step 2:  Launch supported application.
-
-If you are on a platform that is not envvar friendly, most applications also
-provide a menu option to select a different OCIO configuration after launch.
-
-Please be sure to select a profile that matches your color workflow (VFX work
-typically requires a different profile than animated features). If you need
-assistance picking a profile, email 
-`ocio-user <https://lists.aswf.io/g/ocio-user>`__\.
+You are reading the documentation for OCIO v2.  The documentation for the the current
+stable release (1.1.1) is available `here <https://opencolorio.org/old/index.html>`_.
 
 
 Community
@@ -72,10 +65,22 @@ There are two mailing lists associated with OpenColorIO:
 `ocio-dev <https://lists.aswf.io/g/ocio-dev>`__\ ``@lists.aswf.io``
     For developers interested OCIO APIs, code integration, compilation, etc.
 
+.. _slack:
 
-.. include:: toc_redirect.rst
+Slack
+*****
 
- 
+There is an OpenColorIO Slack workspace at: `<https://opencolorio.slack.com>`_.  
+
+New users may join the workspace from `here <http://slack.opencolorio.org/>`_.
+
+
+Search
+======
+
 :ref:`search`
 
 :ref:`genindex`
+
+.. include:: toc_redirect.rst
+

@@ -1,0 +1,62 @@
+<section class="sticky-top navigation">
+	<div class="container">
+		<nav class="navbar navbar-expand-lg navbar-dark">
+			<a class="navbar-brand p-0" href="{{ .Site.BaseURL | relLangURL }}">
+				{{ if site.Params.logo }}
+				<img class="lozad" data-src="{{ site.Params.logo | absURL }}" alt="{{ .Site.Title }}" height="42">
+				{{ else }}
+				{{ site.Title }}
+				{{ end }}
+			</a>
+
+			<button class="custom-navbar navbar-toggler rounded-0" type="button" data-toggle="collapse" data-target="#navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+
+			<div class="collapse navbar-collapse" id="navigation">
+				<ul class="navbar-nav ml-auto">
+					<li class="nav-item"><a class="nav-link" href="#body">{{ site.Params.home }}</a></li>
+					{{ if .IsHome }}
+					{{ range site.Menus.main }}
+					<li class="nav-item"><a class="nav-link" href="#{{ .URL }}">{{ i18n .Name }}</a></li>
+					{{ end }}
+
+					{{ else }}
+
+					{{ range site.Menus.main }}
+					<li class="nav-item"><a class="nav-link" href="{{ site.BaseURL | relLangURL }}#{{ .URL }}">{{ i18n .Name }}</a>
+					</li>
+					{{ end }}
+					{{ end }}
+
+					{{ range site.Menus.static }}
+					<li class="nav-item"><a class="nav-link" target="_blank" href="{{ .URL }}">{{ i18n .Name }}</a>
+					</li>
+					{{ end }}
+
+				</ul>
+				<!-- Language List -->
+				{{- if site.IsMultiLingual }}
+				<select id="select-language" onchange="location = this.value;">
+					{{ $siteLanguages := site.Languages}}
+					{{ $pageLang := .Page.Lang}}
+					{{ range .Page.AllTranslations }}
+					{{ $translation := .}}
+					{{ range $siteLanguages }}
+					{{ if eq $translation.Lang .Lang }}
+					{{ $selected := false }}
+					{{ if eq $pageLang .Lang}}
+					<option id="{{ $translation.Language }}" value="{{ $translation.Permalink }}" selected>{{ .LanguageName }}
+					</option>
+					{{ else }}
+					<option id="{{ $translation.Language }}" value="{{ $translation.Permalink }}">{{ .LanguageName }}</option>
+					{{ end }}
+					{{ end }}
+					{{ end }}
+					{{ end }}
+				</select>
+				{{ end }}
+			</div>
+		</nav>
+	</div>
+</section>

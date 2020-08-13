@@ -57,7 +57,8 @@ jobs:
           # -------------------------------------------------------------------
           # Python 2.7
           - build: 3
-            build-docs: 'ON'
+            # Doc build requires Python 3
+            build-docs: 'OFF'
             cxx-standard: 11
             cxx-compiler: g++
             cc-compiler: gcc
@@ -87,6 +88,7 @@ jobs:
           # -------------------------------------------------------------------
           # Python 2.7
           - build: 6
+            # Doc build requires Python 3
             build-docs: 'OFF'
             cxx-standard: 11
             cxx-compiler: clang++
@@ -113,7 +115,14 @@ jobs:
           share/ci/scripts/linux/install_pybind11.sh latest
           share/ci/scripts/linux/install_openexr.sh latest
           share/ci/scripts/linux/install_oiio.sh latest
+      - name: Install latest documentation ext package versions
+        run: |
           share/ci/scripts/linux/install_sphinx.sh latest
+          share/ci/scripts/linux/install_testresources.sh latest
+          share/ci/scripts/linux/install_recommonmark.sh latest
+          share/ci/scripts/linux/install_sphinx-press-theme.sh latest
+          share/ci/scripts/linux/install_sphinx-tabs.sh latest
+        if: matrix.build-docs == 'ON'
       - name: Create build directories
         run: |
           mkdir _install

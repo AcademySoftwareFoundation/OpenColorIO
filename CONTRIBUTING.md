@@ -194,8 +194,8 @@ with a separate pull request.
 
 4. Create a Github pull request from your topic branch.
 
-5. All pull requests trigger CI builds on [Travis CI](https://travis-ci.org/)
-for Linux and Mac OS and [AppVeyor](https://www.appveyor.com/) for Windows.
+5. All pull requests trigger CI builds on 
+[GitHub Actions](https://github.com/AcademySoftwareFoundation/OpenColorIO/actions).
 These builds verify that code compiles and all unit tests succeed. CI build
 status is displayed on the GitHub PR page, and changes will only be considered
 for merging after all builds have succeeded.

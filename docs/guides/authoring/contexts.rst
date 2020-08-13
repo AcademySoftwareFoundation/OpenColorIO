@@ -2,8 +2,11 @@
   SPDX-License-Identifier: CC-BY-4.0
   Copyright Contributors to the OpenColorIO Project.
 
-Contexts
-========
+Contexts Example
+================
+
+.. warning::
+    This section is from OCIO v1 and has not been updated yet.
 
 OCIO's allows different LUT's or grades to be applied based on the
 current context.

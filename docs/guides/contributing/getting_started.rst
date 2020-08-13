@@ -92,10 +92,54 @@ You can then mount the current OCIO directory and compile using the Docker image
 
     docker run --volume $PWD/../../:/src/ociosrc -t ocio:centos7_gcc48 bash -c 'mkdir /build && cd /build && cmake /src/ociosrc && make -j2`
 
+See also :ref:`aswf-docker` for ASWF-managed docker images for building and 
+testing OpenColorIO.
 
 Merging changes
 ***************
 
-More detailed guide coming soon, for now, see http://help.github.com/remotes/
+After you fork and clone OCIO, the upstream repository will change continually. 
+Your fork will not receive those changes until you manually pull and push the 
+commits, and in the case of in-progress feature branches, you'll need to merge 
+those changes or rebase your commits on top of them regularly to stay up to 
+date. To update your fork from upstream run the::
 
-.. TODO: Write this
+    git checkout master
+    git pull upstream master && git push origin master
+
+The first command makes sure you have the master branch checked out, and the 
+second combines an upstream pull (getting all the new commits to bring your
+local clone up to date) and an origin push (updating your fork's remote 
+master). Following these commands the master branch will be identical between
+the OpenColorIO repository and your fork.
+
+To merge these changes into a feature branch (making the branch able to merge 
+with the upstream master), run::
+
+    git checkout myFeature
+    git merge master
+
+git will report any merge conflicts encountered and allow you to resolve them 
+locally prior to committing the merge.
+
+Alternatively you can rebase the changes into your branch, which will replay
+your branch commits on top of the latest master branch commits. A rebase should
+only be used if you are the only contributor to a branch. Since rebasing alters
+the branch's commit history, a force push is required to push the changes to
+the remote repository, which can be problematic for others contributing to the
+same branch. To rebase, run::
+
+    git checkout myFeature
+    git rebase master
+
+Follow the interactive instructions that git provides during the rebase to 
+resolve merge conflicts at each replayed commit. Update your remote branch
+following a successful rebase with::
+
+    git push origin myFeature --force
+
+There are various reasons why you might prefer a merge or a rebase. This 
+`article from Atlassian 
+<https://www.atlassian.com/git/tutorials/merging-vs-rebasing>`__ provides a 
+great basis for understanding both options along with their benefits and 
+trade-offs.

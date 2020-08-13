@@ -7,6 +7,9 @@
 Introduction
 ============
 
+.. warning::
+    This section is from OCIO v1 and has not been updated yet.
+
 OpenColorIO (OCIO) is a complete color management solution geared towards motion
 picture production with an emphasis on visual effects and computer animation. As
 such, OCIO helps enforce a color management methodology that is required for the

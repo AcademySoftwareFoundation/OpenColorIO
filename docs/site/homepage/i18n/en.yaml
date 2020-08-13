@@ -1,0 +1,32 @@
+- id: blogTitle
+  translation: Blog
+- id: readMore
+  translation: Read more
+- id: viewAllPost
+  translation: View All Posts
+- id: share
+  translation: Share
+- id: aboutAuthor
+  translation: About author
+- id: authorsPosts
+  translation: Author's posts
+- id: all
+  translation: All
+- id: start
+  translation: Get Started
+- id: supported_apps
+  translation: Supported Applications
+- id: news
+  translation: News
+- id: pricing
+  translation: Pricing
+- id: blog
+  translation: Blog
+- id: contact
+  translation: Contact
+- id: github
+  translation: Github
+- id: downloads
+  translation: Downloads
+- id: documentation
+  translation: Documentation
