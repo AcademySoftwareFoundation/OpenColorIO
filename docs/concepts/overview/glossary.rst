@@ -2,10 +2,8 @@
   SPDX-License-Identifier: CC-BY-4.0
   Copyright Contributors to the OpenColorIO Project.
 
-.. _glossary:
-
 Glossary
-********
+========
 
 - Transform - a function that alters RGB(A) data (e.g transform an image 
   from scene linear to sRGB)
