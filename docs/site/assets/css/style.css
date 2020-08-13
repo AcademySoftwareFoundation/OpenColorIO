@@ -675,6 +675,16 @@ a:hover {
   font-weight: 600;
 }
 
+.about-2-img-caption {
+  position: absolute;
+  top: 97%;
+  left: 2%;
+  text-align: center;
+  color: #fff;
+  text-shadow: #353b43 1px 1px;
+  font-size: x-small;
+}
+
 .about-2 a {
   color: #cc1e68;
 }
