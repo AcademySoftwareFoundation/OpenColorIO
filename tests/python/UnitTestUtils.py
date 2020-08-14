@@ -48,12 +48,12 @@ def assertEqualBSpline(testCase, first, second):
     pts2 = second.getControlPoints()
     for pt1 in pts1:
         try:
-            pt2 = pts2.next()
+            pt2 = next(pts2)
             assertEqualControlPoint(testCase,pt1, pt2)
         except StopIteration:
             raise AssertionError("Different number of control points")
     try:
-        pt2 = pts2.next()
+        pt2 = next(pts2)
     except StopIteration:
         pass
     else:
