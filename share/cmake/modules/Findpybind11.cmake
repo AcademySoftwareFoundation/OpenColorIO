@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+#
 # Locate or install pybind11
 #
 # Variables defined by this module:
@@ -149,7 +152,9 @@ if(NOT pybind11_FOUND)
 
         set(pybind11_CMAKE_ARGS
             ${pybind11_CMAKE_ARGS}
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
+            -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
             -DPYBIND11_INSTALL=ON
             -DPYBIND11_TEST=OFF
         )
@@ -157,6 +162,7 @@ if(NOT pybind11_FOUND)
         ExternalProject_Add(pybind11_install
             GIT_REPOSITORY "https://github.com/pybind/pybind11.git"
             GIT_TAG "v${pybind11_FIND_VERSION}"
+            GIT_CONFIG advice.detachedHead=false
             GIT_SHALLOW TRUE
             PREFIX "${_EXT_BUILD_ROOT}/pybind11"
             BUILD_BYPRODUCTS ${pybind11_INCLUDE_DIR}

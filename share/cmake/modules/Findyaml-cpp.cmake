@@ -26,27 +26,37 @@
 ### Try to find package ###
 
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
+    set(_yaml-cpp_REQUIRED_VARS yaml-cpp_LIBRARY)
+
     if(NOT DEFINED yaml-cpp_ROOT)
+
         # Search for yaml-cpp-config.cmake
+
         find_package(yaml-cpp ${yaml-cpp_FIND_VERSION} CONFIG QUIET)
+
     endif()
 
     if(yaml-cpp_FOUND)
-        set(yaml-cpp_LIBRARY "${YAML_CPP_LIBRARIES}")
-        set(yaml-cpp_INCLUDE_DIR "${YAML_CPP_INCLUDE_DIR}")
+        get_target_property(yaml-cpp_LIBRARY yaml-cpp LOCATION)
     else()
+
+        # As yaml-cpp-config.cmake search fails, search an installed library
+        # using yaml-cpp.pc .
+
+        list(APPEND _yaml-cpp_REQUIRED_VARS yaml-cpp_INCLUDE_DIR)
+
         # Search for yaml-cpp.pc
         find_package(PkgConfig QUIET)
         pkg_check_modules(PC_yaml-cpp QUIET "yaml-cpp>=${yaml-cpp_FIND_VERSION}")
-        
+
         # Find include directory
-        find_path(yaml-cpp_INCLUDE_DIR 
+        find_path(yaml-cpp_INCLUDE_DIR
             NAMES
                 yaml-cpp/yaml.h
             HINTS
                 ${yaml-cpp_ROOT}
                 ${PC_yaml-cpp_INCLUDE_DIRS}
-            PATH_SUFFIXES 
+            PATH_SUFFIXES
                 include
                 yaml-cpp/include
         )
@@ -98,8 +108,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     include(FindPackageHandleStandardArgs)
     find_package_handle_standard_args(yaml-cpp
         REQUIRED_VARS 
-            yaml-cpp_INCLUDE_DIR 
-            yaml-cpp_LIBRARY
+            ${_yaml-cpp_REQUIRED_VARS}
         VERSION_VAR
             yaml-cpp_VERSION
     )
@@ -117,7 +126,12 @@ endif()
 ### Install package from source ###
 
 if(NOT yaml-cpp_FOUND)
+
+    # As searches using yaml-cpp-config.cmake and yaml-cpp.pc failed, it now
+    # installs the library from the yaml-cpp source.
+
     include(ExternalProject)
+
     # TODO: yaml-cpp master is using GNUInstallDirs to define include and lib 
     #       dir names. Once that change is released and OCIO updates the 
     #       minimum yaml-cpp version, toggle the three disabled lines below.
