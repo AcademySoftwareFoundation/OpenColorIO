@@ -545,8 +545,8 @@ public:
         }
     }
 
-    // Validation view object that can be a config defined shared view or a display-defined view.
-    void validationView(const std::string & display, const View & view) const
+    // Validate view object that can be a config defined shared view or a display-defined view.
+    void validateView(const std::string & display, const View & view) const
     {
         if (view.m_name.empty())
         {
@@ -648,7 +648,7 @@ public:
     }
 
     // Check a shared view used in a display. View itself has already been checked.
-    void validationSharedView(const std::string & display, const ViewVec & viewsOfDisplay,
+    void validateSharedView(const std::string & display, const ViewVec & viewsOfDisplay,
                                const std::string & sharedView) const
     {
         // Is the name already used for a display-defined view?
@@ -1128,7 +1128,7 @@ void Config::validate() const
     // Shared views.
     for (const auto & view : getImpl()->m_sharedViews)
     {
-        getImpl()->validationView("", view);
+        getImpl()->validateView("", view);
     }
 
     int numdisplays = 0;
@@ -1155,13 +1155,13 @@ void Config::validate() const
         // Confirm shared view exist and do not conflict with views.
         for (const auto & sharedView : sharedViews)
         {
-            getImpl()->validationSharedView(display, views, sharedView);
+            getImpl()->validateSharedView(display, views, sharedView);
         }
 
         // Confirm view references exist.
         for(const auto & view : views)
         {
-            getImpl()->validationView(display, view);
+            getImpl()->validateView(display, view);
         }
     }
 
