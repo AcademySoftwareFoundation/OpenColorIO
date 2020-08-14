@@ -16,7 +16,7 @@ void ValidateImage(const float * expected, const float * res, long numPix, unsig
 #ifdef USE_SSE
     static constexpr float error = 5e-4f;
 #else
-    static constexpr float error = 1e-6f;
+    static constexpr float error = 2e-5f;
 #endif // USE_SSE
 
     for (long i = 0; i < numPix; ++i)
