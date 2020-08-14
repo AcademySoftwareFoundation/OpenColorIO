@@ -72,18 +72,24 @@ OCIO_ADD_TEST(GradingPrimaryOpCPU, identity)
     OCIO::ConstGradingPrimaryOpDataRcPtr gdc = gd;
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingPrimaryCPURenderer(gdc));
     OCIO_CHECK_ASSERT(op);
-    // Check that class name contains LogFwd.
-    std::string typeName = typeid(*op).name();
-    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "LogFwd"));
+    // Check that the right OpCPU is created. Check that class name contains LogFwd.
+    {
+        const OCIO::OpCPU & c = *op;
+        std::string typeName = typeid(c).name();
+        OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "LogFwd"));
+    }
     OCIO_CHECK_NO_THROW(op->apply(image, res, numPixels));
     ValidateImage(expected, res, numPixels, __LINE__);
 
     gd->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingPrimaryCPURenderer(gdc));
     OCIO_CHECK_ASSERT(op);
-    // Check that class name contains LogRev.
-    typeName = typeid(*op).name();
-    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "LogRev"));
+    // Check that the right OpCPU is created. Check that class name contains LogRev.
+    {
+        const OCIO::OpCPU & c = *op;
+        std::string typeName = typeid(c).name();
+        OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "LogRev"));
+    }
     OCIO_CHECK_NO_THROW(op->apply(image, res, numPixels));
     ValidateImage(expected, res, numPixels, __LINE__);
 
@@ -91,18 +97,24 @@ OCIO_ADD_TEST(GradingPrimaryOpCPU, identity)
     gdc = gd;
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingPrimaryCPURenderer(gdc));
     OCIO_CHECK_ASSERT(op);
-    // Check that class name contains LinFwd.
-    typeName = typeid(*op).name();
-    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "LinFwd"));
+    // Check that the right OpCPU is created. Check that class name contains LinFwd.
+    {
+        const OCIO::OpCPU & c = *op;
+        std::string typeName = typeid(c).name();
+        OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "LinFwd"));
+    }
     OCIO_CHECK_NO_THROW(op->apply(image, res, numPixels));
     ValidateImage(expected, res, numPixels, __LINE__);
 
     gd->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingPrimaryCPURenderer(gdc));
     OCIO_CHECK_ASSERT(op);
-    // Check that class name contains LinRev.
-    typeName = typeid(*op).name();
-    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "LinRev"));
+    // Check that the right OpCPU is created. Check that class name contains LinRev.
+    {
+        const OCIO::OpCPU & c = *op;
+        std::string typeName = typeid(c).name();
+        OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "LinRev"));
+    }
     OCIO_CHECK_NO_THROW(op->apply(image, res, numPixels));
     ValidateImage(expected, res, numPixels, __LINE__);
 
@@ -110,18 +122,24 @@ OCIO_ADD_TEST(GradingPrimaryOpCPU, identity)
     gdc = gd;
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingPrimaryCPURenderer(gdc));
     OCIO_CHECK_ASSERT(op);
-    typeName = typeid(*op).name();
-    // Check that class name contains VidFwd.
-    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "VidFwd"));
+    // Check that the right OpCPU is created. Check that class name contains VidFwd.
+    {
+        const OCIO::OpCPU & c = *op;
+        std::string typeName = typeid(c).name();
+        OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "VidFwd"));
+    }
     OCIO_CHECK_NO_THROW(op->apply(image, res, numPixels));
     ValidateImage(expected, res, numPixels, __LINE__);
 
     gd->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingPrimaryCPURenderer(gdc));
     OCIO_CHECK_ASSERT(op);
-    // Check that class name contains VidRev.
-    typeName = typeid(*op).name();
-    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "VidRev"));
+    // Check that the right OpCPU is created. Check that class name contains VidRev.
+    {
+        const OCIO::OpCPU & c = *op;
+        std::string typeName = typeid(c).name();
+        OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "VidRev"));
+    }
     OCIO_CHECK_NO_THROW(op->apply(image, res, numPixels));
     ValidateImage(expected, res, numPixels, __LINE__);
 }

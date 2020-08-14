@@ -75,54 +75,72 @@ OCIO_ADD_TEST(GradingToneOpCPU, identity)
     OCIO::ConstGradingToneOpDataRcPtr gdc = gd;
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingToneCPURenderer(gdc));
     OCIO_CHECK_ASSERT(op);
-    // Check that class name contains GradingToneFwdOpCPU.
-    std::string typeName = typeid(*op).name();
-    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "GradingToneFwdOpCPU"));
+    // Check that the right OpCPU is created. Check that class name contains GradingToneFwdOpCPU.
+    {
+        const OCIO::OpCPU & c = *op;
+        std::string typeName = typeid(c).name();
+        OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "GradingToneFwdOpCPU"));
+    }
     OCIO_CHECK_NO_THROW(op->apply(image, res, numPixels));
     ValidateImage(expected, res, numPixels, __LINE__);
 
     gd->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingToneCPURenderer(gdc));
     OCIO_CHECK_ASSERT(op);
-    // Check that class name contains GradingToneRevOpCPU.
-    typeName = typeid(*op).name();
-    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "GradingToneRevOpCPU"));
+    // Check that the right OpCPU is created. Check that class name contains GradingToneRevOpCPU.
+    {
+        const OCIO::OpCPU & c = *op;
+        std::string typeName = typeid(c).name();
+        OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "GradingToneRevOpCPU"));
+    }
     // TODO: implement inverse.
 
     gd = std::make_shared<OCIO::GradingToneOpData>(OCIO::GRADING_LIN);
     gdc = gd;
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingToneCPURenderer(gdc));
     OCIO_CHECK_ASSERT(op);
-    // Check that class name contains GradingToneLinearFwdOpCPU.
-    typeName = typeid(*op).name();
-    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "GradingToneLinearFwdOpCPU"));
+    // Check that the right OpCPU is created. Check that class name contains GradingToneLinearFwdOpCPU.
+    {
+        const OCIO::OpCPU & c = *op;
+        std::string typeName = typeid(c).name();
+        OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "GradingToneLinearFwdOpCPU"));
+    }
     OCIO_CHECK_NO_THROW(op->apply(image, res, numPixels));
     ValidateImage(expected, res, numPixels, __LINE__);
 
     gd->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingToneCPURenderer(gdc));
     OCIO_CHECK_ASSERT(op);
-    // Check that class name contains GradingToneLinearRevOpCPU.
-    typeName = typeid(*op).name();
-    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "GradingToneLinearRevOpCPU"));
+    // Check that the right OpCPU is created. Check that class name contains GradingToneLinearRevOpCPU.
+    {
+        const OCIO::OpCPU & c = *op;
+        std::string typeName = typeid(c).name();
+        OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "GradingToneLinearRevOpCPU"));
+    }
     // TODO: implement inverse.
 
     gd = std::make_shared<OCIO::GradingToneOpData>(OCIO::GRADING_VIDEO);
     gdc = gd;
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingToneCPURenderer(gdc));
     OCIO_CHECK_ASSERT(op);
-    // Check that class name contains GradingToneFwdOpCPU.
-    typeName = typeid(*op).name();
-    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "GradingToneFwdOpCPU"));
+    // Check that the right OpCPU is created. Check that class name contains GradingToneFwdOpCPU.
+    {
+        const OCIO::OpCPU & c = *op;
+        std::string typeName = typeid(c).name();
+        OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "GradingToneFwdOpCPU"));
+    }
     OCIO_CHECK_NO_THROW(op->apply(image, res, numPixels));
     ValidateImage(expected, res, numPixels, __LINE__);
 
     gd->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingToneCPURenderer(gdc));
     OCIO_CHECK_ASSERT(op);
-    // Check that class name contains GradingToneRevOpCPU.
-    typeName = typeid(*op).name();
-    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "GradingToneRevOpCPU"));
+    // Check that the right OpCPU is created. Check that class name contains GradingToneRevOpCPU.
+    {
+        const OCIO::OpCPU & c = *op;
+        std::string typeName = typeid(c).name();
+        OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "GradingToneRevOpCPU"));
+    }
     // TODO: implement inverse.
 }
 

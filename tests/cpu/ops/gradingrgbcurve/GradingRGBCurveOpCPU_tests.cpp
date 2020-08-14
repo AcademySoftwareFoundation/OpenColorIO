@@ -72,7 +72,7 @@ OCIO_ADD_TEST(GradingRGBCurveOpCPU, identity)
     OCIO::ConstGradingRGBCurveOpDataRcPtr gcc = gc;
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingRGBCurveCPURenderer(gcc));
     OCIO_CHECK_ASSERT(op);
-    // Check that class name contains CurveLinearFwdOp.
+    // Check that the right OpCPU is created. Check that class name contains CurveLinearFwdOp.
     std::string typeName = typeid(*op).name();
     OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "CurveLinearFwdOp"));
     OCIO_CHECK_NO_THROW(op->apply(image, res, numPixels));
@@ -81,9 +81,12 @@ OCIO_ADD_TEST(GradingRGBCurveOpCPU, identity)
     gc->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingRGBCurveCPURenderer(gcc));
     OCIO_CHECK_ASSERT(op);
-    // Check that class name contains CurveLinearRevOp.
-    typeName = typeid(*op).name();
-    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "CurveLinearRevOp"));
+    // Check that the right OpCPU is created. Check that class name contains CurveLinearRevOp.
+    {
+        const OCIO::OpCPU & c = *op;
+        std::string typeName = typeid(c).name();
+        OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "CurveLinearRevOp"));
+    }
     // TODO: implement inverse.
 
     // If BypassLinToLog is true, a Curve*Op renderer rather than a CurveLinear*Op renderer will
@@ -91,17 +94,24 @@ OCIO_ADD_TEST(GradingRGBCurveOpCPU, identity)
     gc->setBypassLinToLog(true);
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingRGBCurveCPURenderer(gcc));
     OCIO_CHECK_ASSERT(op);
-    // Check that class name contains CurveRevOp.
-    typeName = typeid(*op).name();
-    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "CurveRevOp"));
+    // Check that the right OpCPU is created. Check that class name contains CurveRevOp.
+    {
+        const OCIO::OpCPU & c = *op;
+        std::string typeName = typeid(c).name();
+        typeName = typeid(*op).name();
+        OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "CurveRevOp"));
+    }
     // TODO: implement inverse.
 
     gc->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingRGBCurveCPURenderer(gcc));
     OCIO_CHECK_ASSERT(op);
-    // Check that class name contains CurveFwdOp.
-    typeName = typeid(*op).name();
-    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "CurveFwdOp"));
+    // Check that the right OpCPU is created. Check that class name contains CurveFwdOp.
+    {
+        const OCIO::OpCPU & c = *op;
+        std::string typeName = typeid(c).name();
+        OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "CurveFwdOp"));
+    }
     OCIO_CHECK_NO_THROW(op->apply(image, res, numPixels));
     ValidateImage(expected, res, numPixels, __LINE__);
 
@@ -109,18 +119,24 @@ OCIO_ADD_TEST(GradingRGBCurveOpCPU, identity)
     gcc = gc;
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingRGBCurveCPURenderer(gcc));
     OCIO_CHECK_ASSERT(op);
-    // Check that class name contains CurveFwdOp.
-    typeName = typeid(*op).name();
-    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "CurveFwdOp"));
+    // Check that the right OpCPU is created. Check that class name contains CurveFwdOp.
+    {
+        const OCIO::OpCPU & c = *op;
+        std::string typeName = typeid(c).name();
+        OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "CurveFwdOp"));
+    }
     OCIO_CHECK_NO_THROW(op->apply(image, res, numPixels));
     ValidateImage(expected, res, numPixels, __LINE__);
 
     gc->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingRGBCurveCPURenderer(gcc));
     OCIO_CHECK_ASSERT(op);
-    // Check that class name contains CurveRevOp.
-    typeName = typeid(*op).name();
-    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "CurveRevOp"));
+    // Check that the right OpCPU is created. Check that class name contains CurveRevOp.
+    {
+        const OCIO::OpCPU & c = *op;
+        std::string typeName = typeid(c).name();
+        OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "CurveRevOp"));
+    }
     // TODO: implement inverse.
 
     // BypassLinToLog is ignored when style is not GRADING_LIN, still creating a CurveRevOp
@@ -128,9 +144,12 @@ OCIO_ADD_TEST(GradingRGBCurveOpCPU, identity)
     gc->setBypassLinToLog(true);
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingRGBCurveCPURenderer(gcc));
     OCIO_CHECK_ASSERT(op);
-    // Check that class name contains CurveRevOp.
-    typeName = typeid(*op).name();
-    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "CurveRevOp"));
+    // Check that the right OpCPU is created. Check that class name contains CurveRevOp.
+    {
+        const OCIO::OpCPU & c = *op;
+        std::string typeName = typeid(c).name();
+        OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "CurveRevOp"));
+    }
     // TODO: implement inverse.
 }
 

@@ -124,7 +124,7 @@ OCIO_ADD_TEST(GradingRGBCurve, max_ctrl_pnts)
     auto rgbCurve = OCIO::GradingRGBCurve::Create(curveR, curveG, curveB, curveM);
     OCIO_REQUIRE_ASSERT(rgbCurve);
 
-    OCIO_CHECK_THROW_WHAT(std::make_shared<OCIO::DynamicPropertyGradingRGBCurveImpl>(rgbCurve, false),
+    OCIO::DynamicPropertyGradingRGBCurveImplRcPtr res;
+    OCIO_CHECK_THROW_WHAT(res = std::make_shared<OCIO::DynamicPropertyGradingRGBCurveImpl>(rgbCurve, false),
                           OCIO::Exception, "RGB curve: maximum number of control points reached");
-
 }
