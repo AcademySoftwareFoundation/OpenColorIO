@@ -4,8 +4,10 @@
 cmake_minimum_required(VERSION 3.12)
 
 project(OpenColorIO 
-	VERSION 2.0.0
-	LANGUAGES CXX C)
+    VERSION 2.0.0
+    DESCRIPTION "OpenColorIO (OCIO) is a complete color management solution"
+    HOMEPAGE_URL https://github.com/AcademySoftwareFoundation/OpenColorIO
+    LANGUAGES CXX C)
 
 # "dev" for master or "" for any official release
 set(OpenColorIO_VERSION_RELEASE_TYPE "dev")
