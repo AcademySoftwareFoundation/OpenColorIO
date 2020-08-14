@@ -36,6 +36,10 @@ set(SOURCES
 	PyExposureContrastTransform.cpp
 	PyFileTransform.cpp
 	PyFixedFunctionTransform.cpp
+	PyGradingData.cpp
+	PyGradingPrimaryTransform.cpp
+	PyGradingRGBCurveTransform.cpp
+	PyGradingToneTransform.cpp
 	PyGroupTransform.cpp
 	PyLogAffineTransform.cpp
 	PyLogCameraTransform.cpp

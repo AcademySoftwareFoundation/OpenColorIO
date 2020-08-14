@@ -97,6 +97,13 @@ class OCIOEXPORT BuiltinTransformRegistry;
 typedef OCIO_SHARED_PTR<BuiltinTransformRegistry> BuiltinTransformRegistryRcPtr;
 typedef OCIO_SHARED_PTR<const BuiltinTransformRegistry> ConstBuiltinTransformRegistryRcPtr;
 
+class OCIOEXPORT GradingBSplineCurve;
+typedef OCIO_SHARED_PTR<const GradingBSplineCurve> ConstGradingBSplineCurveRcPtr;
+typedef OCIO_SHARED_PTR<GradingBSplineCurve> GradingBSplineCurveRcPtr;
+
+class OCIOEXPORT GradingRGBCurve;
+typedef OCIO_SHARED_PTR<const GradingRGBCurve> ConstGradingRGBCurveRcPtr;
+typedef OCIO_SHARED_PTR<GradingRGBCurve> GradingRGBCurveRcPtr;
 
 // Transforms
 
@@ -128,6 +135,22 @@ class OCIOEXPORT DynamicProperty;
 typedef OCIO_SHARED_PTR<const DynamicProperty> ConstDynamicPropertyRcPtr;
 typedef OCIO_SHARED_PTR<DynamicProperty> DynamicPropertyRcPtr;
 
+class OCIOEXPORT DynamicPropertyDouble;
+typedef OCIO_SHARED_PTR<const DynamicPropertyDouble> ConstDynamicPropertyDoubleRcPtr;
+typedef OCIO_SHARED_PTR<DynamicPropertyDouble> DynamicPropertyDoubleRcPtr;
+
+class OCIOEXPORT DynamicPropertyGradingPrimary;
+typedef OCIO_SHARED_PTR<const DynamicPropertyGradingPrimary> ConstDynamicPropertyGradingPrimaryRcPtr;
+typedef OCIO_SHARED_PTR<DynamicPropertyGradingPrimary> DynamicPropertyGradingPrimaryRcPtr;
+
+class OCIOEXPORT DynamicPropertyGradingRGBCurve;
+typedef OCIO_SHARED_PTR<const DynamicPropertyGradingRGBCurve> ConstDynamicPropertyGradingRGBCurveRcPtr;
+typedef OCIO_SHARED_PTR<DynamicPropertyGradingRGBCurve> DynamicPropertyGradingRGBCurveRcPtr;
+
+class OCIOEXPORT DynamicPropertyGradingTone;
+typedef OCIO_SHARED_PTR<const DynamicPropertyGradingTone> ConstDynamicPropertyGradingToneRcPtr;
+typedef OCIO_SHARED_PTR<DynamicPropertyGradingTone> DynamicPropertyGradingToneRcPtr;
+
 class OCIOEXPORT ExponentTransform;
 typedef OCIO_SHARED_PTR<const ExponentTransform> ConstExponentTransformRcPtr;
 typedef OCIO_SHARED_PTR<ExponentTransform> ExponentTransformRcPtr;
@@ -147,6 +170,18 @@ typedef OCIO_SHARED_PTR<FileTransform> FileTransformRcPtr;
 class OCIOEXPORT FixedFunctionTransform;
 typedef OCIO_SHARED_PTR<const FixedFunctionTransform> ConstFixedFunctionTransformRcPtr;
 typedef OCIO_SHARED_PTR<FixedFunctionTransform> FixedFunctionTransformRcPtr;
+
+class OCIOEXPORT GradingPrimaryTransform;
+typedef OCIO_SHARED_PTR<const GradingPrimaryTransform> ConstGradingPrimaryTransformRcPtr;
+typedef OCIO_SHARED_PTR<GradingPrimaryTransform> GradingPrimaryTransformRcPtr;
+
+class OCIOEXPORT GradingRGBCurveTransform;
+typedef OCIO_SHARED_PTR<const GradingRGBCurveTransform> ConstGradingRGBCurveTransformRcPtr;
+typedef OCIO_SHARED_PTR<GradingRGBCurveTransform> GradingRGBCurveTransformRcPtr;
+
+class OCIOEXPORT GradingToneTransform;
+typedef OCIO_SHARED_PTR<const GradingToneTransform> ConstGradingToneTransformRcPtr;
+typedef OCIO_SHARED_PTR<GradingToneTransform> GradingToneTransformRcPtr;
 
 class OCIOEXPORT GroupTransform;
 typedef OCIO_SHARED_PTR<const GroupTransform> ConstGroupTransformRcPtr;
@@ -342,7 +377,7 @@ enum GpuLanguage
 {
     GPU_LANGUAGE_UNKNOWN = 0,
     GPU_LANGUAGE_CG,                ///< Nvidia Cg shader
-    GPU_LANGUAGE_GLSL_1_0,          ///< OpenGL Shading Language
+    GPU_LANGUAGE_GLSL_1_2,          ///< OpenGL Shading Language
     GPU_LANGUAGE_GLSL_1_3,          ///< OpenGL Shading Language
     GPU_LANGUAGE_GLSL_4_0,          ///< OpenGL Shading Language
     GPU_LANGUAGE_HLSL_DX11          ///< DirectX Shading Language
@@ -411,17 +446,43 @@ enum NegativeStyle
     NEGATIVE_LINEAR     ///< Linearly extrapolate the curve for negative values.
 };
 
-enum DynamicPropertyType
+/// Styles for grading transforms.
+enum GradingStyle
 {
-    DYNAMIC_PROPERTY_EXPOSURE = 0, ///< Image exposure value (double floating point value)
-    DYNAMIC_PROPERTY_CONTRAST,     ///< Image contrast value (double floating point value)
-    DYNAMIC_PROPERTY_GAMMA         ///< Image gamma value (double floating point value)
+    GRADING_LOG = 0,    ///< Algorithms for Logarithmic color spaces.
+    GRADING_LIN,        ///< Algorithms for Scene Linear color spaces.
+    GRADING_VIDEO       ///< Algorithms for Video color spaces.
 };
 
-enum DynamicPropertyValueType
+/// Types for dynamic properties.
+enum DynamicPropertyType
 {
-    DYNAMIC_PROPERTY_DOUBLE, ///< Value is a double
-    DYNAMIC_PROPERTY_BOOL    ///< Value is a bool
+    DYNAMIC_PROPERTY_EXPOSURE = 0,     ///< Image exposure value (double floating point value)
+    DYNAMIC_PROPERTY_CONTRAST,         ///< Image contrast value (double floating point value)
+    DYNAMIC_PROPERTY_GAMMA,            ///< Image gamma value (double floating point value)
+    DYNAMIC_PROPERTY_GRADING_PRIMARY,  ///< Used by GradingPrimaryTransform
+    DYNAMIC_PROPERTY_GRADING_RGBCURVE, ///< Used by GradingRGBCurveTransform
+    DYNAMIC_PROPERTY_GRADING_TONE      ///< Used by GradingToneTransform
+};
+
+/// Types for GradingRGBCurve.
+enum RGBCurveType
+{
+    RGB_RED = 0,
+    RGB_GREEN,
+    RGB_BLUE,
+    RGB_MASTER,
+    RGB_NUM_CURVES
+};
+
+/// Types for uniform data.
+enum UniformDataType
+{
+    UNIFORM_DOUBLE = 0,
+    UNIFORM_BOOL,
+    UNIFORM_ARRAY_FLOAT,  ///< Array of floats.
+    UNIFORM_ARRAY_INT2,   ///< Array of int pairs.
+    UNIFORM_UNKNOWN
 };
 
 /// Provides control over how the ops in a Processor are combined in order to improve performance.
@@ -436,40 +497,42 @@ enum OptimizationFlags : unsigned long
     OPTIMIZATION_IDENTITY                        = 0x00000001,
     /// Replace identity gamma ops.
     OPTIMIZATION_IDENTITY_GAMMA                  = 0x00000002,
+
     /// Replace a pair of ops where one is the inverse of the other.
-    OPTIMIZATION_PAIR_IDENTITY_CDL               = 0x00000004,
-    OPTIMIZATION_PAIR_IDENTITY_EXPOSURE_CONTRAST = 0x00000008,
-    OPTIMIZATION_PAIR_IDENTITY_FIXED_FUNCTION    = 0x00000010,
-    OPTIMIZATION_PAIR_IDENTITY_GAMMA             = 0x00000020,
-    OPTIMIZATION_PAIR_IDENTITY_LUT1D             = 0x00000040,
-    OPTIMIZATION_PAIR_IDENTITY_LUT3D             = 0x00000080,
-    OPTIMIZATION_PAIR_IDENTITY_LOG               = 0x00000100,
+    OPTIMIZATION_PAIR_IDENTITY_CDL               = 0x00000040,
+    OPTIMIZATION_PAIR_IDENTITY_EXPOSURE_CONTRAST = 0x00000080,
+    OPTIMIZATION_PAIR_IDENTITY_FIXED_FUNCTION    = 0x00000100,
+    OPTIMIZATION_PAIR_IDENTITY_GAMMA             = 0x00000200,
+    OPTIMIZATION_PAIR_IDENTITY_LUT1D             = 0x00000400,
+    OPTIMIZATION_PAIR_IDENTITY_LUT3D             = 0x00000800,
+    OPTIMIZATION_PAIR_IDENTITY_LOG               = 0x00001000,
+    OPTIMIZATION_PAIR_IDENTITY_GRADING           = 0x00002000,
 
     /// Compose a pair of ops into a single op.
-    OPTIMIZATION_COMP_EXPONENT                   = 0x00000200,
-    OPTIMIZATION_COMP_GAMMA                      = 0x00000400,
-    OPTIMIZATION_COMP_MATRIX                     = 0x00000800,
-    OPTIMIZATION_COMP_LUT1D                      = 0x00001000,
-    OPTIMIZATION_COMP_LUT3D                      = 0x00002000,
-    OPTIMIZATION_COMP_RANGE                      = 0x00004000,
+    OPTIMIZATION_COMP_EXPONENT                   = 0x00040000,
+    OPTIMIZATION_COMP_GAMMA                      = 0x00080000,
+    OPTIMIZATION_COMP_MATRIX                     = 0x00100000,
+    OPTIMIZATION_COMP_LUT1D                      = 0x00200000,
+    OPTIMIZATION_COMP_LUT3D                      = 0x00400000,
+    OPTIMIZATION_COMP_RANGE                      = 0x00800000,
 
     /**
-     * For integer and half bit-depths only, replace separable ops (i.e. no
-     * channel crosstalk ops) by a single 1D LUT of input bit-depth domain.
+     * For integer and half bit-depths only, replace separable ops (i.e. no channel crosstalk
+     * ops) by a single 1D LUT of input bit-depth domain.
      */
-    OPTIMIZATION_COMP_SEPARABLE_PREFIX           = 0x00008000,
+    OPTIMIZATION_COMP_SEPARABLE_PREFIX           = 0x01000000,
 
     /**
-     * Implement inverse Lut1D and Lut3D evaluations using a a forward LUT
-     * (faster but less accurate).  Note that GPU evals always do FAST.
+     * Implement inverse Lut1D and Lut3D evaluations using a a forward LUT (faster but less
+     * accurate).  Note that GPU evals always do FAST.
      */
-    OPTIMIZATION_LUT_INV_FAST                    = 0x00010000,
+    OPTIMIZATION_LUT_INV_FAST                    = 0x02000000,
 
     /**
-     * Turn off dynamic control of any ops that offer adjustment of parameter
-     * values after finalization (e.g. ExposureContrast).
+     * Turn off dynamic control of any ops that offer adjustment of parameter values after
+     * finalization (e.g. ExposureContrast).
      */
-    OPTIMIZATION_NO_DYNAMIC_PROPERTIES           = 0x00020000,
+    OPTIMIZATION_NO_DYNAMIC_PROPERTIES           = 0x80000000,
 
     /// Apply all possible optimizations.
     OPTIMIZATION_ALL                             = 0xFFFFFFFF,
@@ -477,31 +540,32 @@ enum OptimizationFlags : unsigned long
     // The following groupings of flags are provided as a convenient way to select an overall
     // optimization level.
 
-    OPTIMIZATION_LOSSLESS   = (OPTIMIZATION_IDENTITY |
-                                OPTIMIZATION_IDENTITY_GAMMA |
-                                OPTIMIZATION_PAIR_IDENTITY_CDL |
-                                OPTIMIZATION_PAIR_IDENTITY_EXPOSURE_CONTRAST |
-                                OPTIMIZATION_PAIR_IDENTITY_FIXED_FUNCTION |
-                                OPTIMIZATION_PAIR_IDENTITY_GAMMA |
-                                OPTIMIZATION_PAIR_IDENTITY_LOG |
-                                OPTIMIZATION_PAIR_IDENTITY_LUT1D |
-                                OPTIMIZATION_PAIR_IDENTITY_LUT3D |
-                                OPTIMIZATION_COMP_EXPONENT |
-                                OPTIMIZATION_COMP_GAMMA |
-                                OPTIMIZATION_COMP_MATRIX |
-                                OPTIMIZATION_COMP_RANGE),
+    OPTIMIZATION_LOSSLESS = (OPTIMIZATION_IDENTITY |
+                             OPTIMIZATION_IDENTITY_GAMMA |
+                             OPTIMIZATION_PAIR_IDENTITY_CDL |
+                             OPTIMIZATION_PAIR_IDENTITY_EXPOSURE_CONTRAST |
+                             OPTIMIZATION_PAIR_IDENTITY_FIXED_FUNCTION |
+                             OPTIMIZATION_PAIR_IDENTITY_GAMMA |
+                             OPTIMIZATION_PAIR_IDENTITY_GRADING |
+                             OPTIMIZATION_PAIR_IDENTITY_LOG |
+                             OPTIMIZATION_PAIR_IDENTITY_LUT1D |
+                             OPTIMIZATION_PAIR_IDENTITY_LUT3D |
+                             OPTIMIZATION_COMP_EXPONENT |
+                             OPTIMIZATION_COMP_GAMMA |
+                             OPTIMIZATION_COMP_MATRIX |
+                             OPTIMIZATION_COMP_RANGE),
 
-    OPTIMIZATION_VERY_GOOD  = (OPTIMIZATION_LOSSLESS |
-                                OPTIMIZATION_COMP_LUT1D |
-                                OPTIMIZATION_LUT_INV_FAST |
-                                OPTIMIZATION_COMP_SEPARABLE_PREFIX),
+    OPTIMIZATION_VERY_GOOD = (OPTIMIZATION_LOSSLESS |
+                              OPTIMIZATION_COMP_LUT1D |
+                              OPTIMIZATION_LUT_INV_FAST |
+                              OPTIMIZATION_COMP_SEPARABLE_PREFIX),
 
-    OPTIMIZATION_GOOD       = OPTIMIZATION_VERY_GOOD | OPTIMIZATION_COMP_LUT3D,
+    OPTIMIZATION_GOOD      = OPTIMIZATION_VERY_GOOD | OPTIMIZATION_COMP_LUT3D,
 
     /// For quite lossy optimizations.
-    OPTIMIZATION_DRAFT      = OPTIMIZATION_ALL,
+    OPTIMIZATION_DRAFT     = OPTIMIZATION_ALL,
 
-    OPTIMIZATION_DEFAULT    = OPTIMIZATION_VERY_GOOD
+    OPTIMIZATION_DEFAULT   = OPTIMIZATION_VERY_GOOD
 };
 
 
@@ -548,6 +612,9 @@ extern OCIOEXPORT RangeStyle RangeStyleFromString(const char * style);
 
 extern OCIOEXPORT const char * FixedFunctionStyleToString(FixedFunctionStyle style);
 extern OCIOEXPORT FixedFunctionStyle FixedFunctionStyleFromString(const char * style);
+
+extern OCIOEXPORT const char * GradingStyleToString(GradingStyle style);
+extern OCIOEXPORT GradingStyle GradingStyleFromString(const char * s);
 
 extern OCIOEXPORT const char * ExposureContrastStyleToString(ExposureContrastStyle style);
 extern OCIOEXPORT ExposureContrastStyle ExposureContrastStyleFromString(const char * style);

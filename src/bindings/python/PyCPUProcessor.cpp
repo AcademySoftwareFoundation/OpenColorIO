@@ -4,6 +4,7 @@
 #include <sstream>
 #include <vector>
 
+#include "PyDynamicProperty.h"
 #include "PyOpenColorIO.h"
 #include "PyUtils.h"
 #include "PyImageDesc.h"
@@ -20,7 +21,10 @@ void bindPyCPUProcessor(py::module & m)
         .def("getCacheID", &CPUProcessor::getCacheID)
         .def("getInputBitDepth", &CPUProcessor::getInputBitDepth)
         .def("getOutputBitDepth", &CPUProcessor::getOutputBitDepth)
-        .def("getDynamicProperty", &CPUProcessor::getDynamicProperty, "type"_a)
+        .def("getDynamicProperty", [](CPUProcessorRcPtr & self, DynamicPropertyType type) 
+            {
+                return PyDynamicProperty(self->getDynamicProperty(type));
+            }, "type"_a)
 
         .def("apply", [](CPUProcessorRcPtr & self, PyImageDesc & imgDesc) 
             {

@@ -167,7 +167,7 @@ OCIO::GpuShaderDescRcPtr & OCIOGPUTest::getShaderDesc()
         {
             m_shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
         }
-        m_shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
+        m_shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
     }
     return m_shaderDesc;
 }
@@ -223,8 +223,7 @@ namespace
         // Note: User-specified custom values are padded out
         // to the preferred size (g_winWidth x g_winHeight).
 
-        const unsigned predefinedNumEntries
-            = g_winWidth * g_winHeight * g_components;
+        const unsigned predefinedNumEntries = g_winWidth * g_winHeight * g_components;
 
         if (test->getCustomValues().m_inputValues.empty())
         {
@@ -240,8 +239,7 @@ namespace
 
             OCIOGPUTest::CustomValues tmp;
             tmp.m_originalInputValueSize = predefinedNumEntries;
-            tmp.m_inputValues
-                = OCIOGPUTest::CustomValues::Values(predefinedNumEntries, min);
+            tmp.m_inputValues = OCIOGPUTest::CustomValues::Values(predefinedNumEntries, min);
 
             unsigned idx = 0;
             unsigned numEntries = predefinedNumEntries;
@@ -368,16 +366,15 @@ namespace
     // Validate the GPU processing against the CPU one.
     void ValidateImageTexture(OCIO::OglAppRcPtr & app, OCIOGPUTestRcPtr & test)
     {
-        OCIO::ConstCPUProcessorRcPtr processor
-            = test->getProcessor()->getDefaultCPUProcessor();
+        // Each retest is rebuilding a cpu proc.
+        OCIO::ConstCPUProcessorRcPtr processor = test->getProcessor()->getDefaultCPUProcessor();
 
         const float epsilon = test->getErrorThreshold();
         const float expectMinValue = test->getExpectedMinimalValue();
 
         // Compute the width & height to avoid testing the padded values.
 
-        const size_t numPixels
-            = test->getCustomValues().m_originalInputValueSize / g_components;
+        const size_t numPixels = test->getCustomValues().m_originalInputValueSize / g_components;
 
         size_t width, height = 0;
         if(numPixels<=g_winWidth)

@@ -97,4 +97,80 @@ const char * GetInterpolation3DName(Interpolation interp)
     return nullptr;
 }
 
+namespace
+{
+constexpr char GRADING_STYLE_LOG_FWD[] = "log";
+constexpr char GRADING_STYLE_LIN_FWD[] = "linear";
+constexpr char GRADING_STYLE_VIDEO_FWD[] = "video";
+constexpr char GRADING_STYLE_LOG_REV[] = "logRev";
+constexpr char GRADING_STYLE_LIN_REV[] = "linearRev";
+constexpr char GRADING_STYLE_VIDEO_REV[] = "videoRev";
+}
+
+void ConvertStringToGradingStyleAndDir(const char * str,
+                                       GradingStyle & style,
+                                       TransformDirection & dir)
+{
+    if (str && *str)
+    {
+        if (0 == Platform::Strcasecmp(str, GRADING_STYLE_LOG_FWD))
+        {
+            style = GRADING_LOG;
+            dir = TRANSFORM_DIR_FORWARD;
+        }
+        else if (0 == Platform::Strcasecmp(str, GRADING_STYLE_LOG_REV))
+        {
+            style = GRADING_LOG;
+            dir = TRANSFORM_DIR_INVERSE;
+        }
+        else if (0 == Platform::Strcasecmp(str, GRADING_STYLE_LIN_FWD))
+        {
+            style = GRADING_LIN;
+            dir = TRANSFORM_DIR_FORWARD;
+        }
+        else if (0 == Platform::Strcasecmp(str, GRADING_STYLE_LIN_REV))
+        {
+            style = GRADING_LIN;
+            dir = TRANSFORM_DIR_INVERSE;
+        }
+        else if (0 == Platform::Strcasecmp(str, GRADING_STYLE_VIDEO_FWD))
+        {
+            style = GRADING_VIDEO;
+            dir = TRANSFORM_DIR_FORWARD;
+        }
+        else if (0 == Platform::Strcasecmp(str, GRADING_STYLE_VIDEO_REV))
+        {
+            style = GRADING_VIDEO;
+            dir = TRANSFORM_DIR_INVERSE;
+        }
+        else
+        {
+            std::ostringstream os;
+            os << "Unknown grading style: '" << str << "'.";
+
+            throw Exception(os.str().c_str());
+        }
+        return;
+    }
+
+    throw Exception("Missing grading style.");
+}
+
+const char * ConvertGradingStyleAndDirToString(GradingStyle style, TransformDirection dir)
+{
+    const bool fwd = (dir == TRANSFORM_DIR_FORWARD);
+    switch (style)
+    {
+    case GRADING_LOG:
+        return fwd ? GRADING_STYLE_LOG_FWD : GRADING_STYLE_LOG_REV;
+    case GRADING_LIN:
+        return fwd ? GRADING_STYLE_LIN_FWD : GRADING_STYLE_LIN_REV;
+    case GRADING_VIDEO:
+        return fwd ? GRADING_STYLE_VIDEO_FWD : GRADING_STYLE_VIDEO_REV;
+    }
+    std::ostringstream os;
+    os << "Unknown grading style: " << style;
+
+    throw Exception(os.str().c_str());
+}
 } // namespace OCIO_NAMESPACE

@@ -284,8 +284,8 @@ MenuHelperImpl::MenuHelperImpl(const ConstConfigRcPtr & config,
                                const char * categories)
     :   ColorSpaceMenuHelper()
     ,   m_config(config)
-    ,   m_roleName(StringUtils::Lower(role ? role : ""))
-    ,   m_categories(StringUtils::Lower(categories ? categories : ""))
+    ,   m_roleName(StringUtils::Lower(role))
+    ,   m_categories(StringUtils::Lower(categories))
 {
     refreshEntries();
 }

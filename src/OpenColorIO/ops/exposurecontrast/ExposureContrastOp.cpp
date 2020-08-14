@@ -44,8 +44,7 @@ public:
     bool isDynamic() const override;
     bool hasDynamicProperty(DynamicPropertyType type) const override;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const override;
-    void replaceDynamicProperty(DynamicPropertyType type,
-                                DynamicPropertyImplRcPtr prop) override;
+    void replaceDynamicProperty(DynamicPropertyType type, DynamicPropertyDoubleImplRcPtr & prop) override;
     void removeDynamicProperties() override;
 
     ConstOpCPURcPtr getCPUOp() const override;
@@ -158,7 +157,7 @@ DynamicPropertyRcPtr ExposureContrastOp::getDynamicProperty(DynamicPropertyType 
 }
 
 void ExposureContrastOp::replaceDynamicProperty(DynamicPropertyType type,
-                                                DynamicPropertyImplRcPtr prop)
+                                                DynamicPropertyDoubleImplRcPtr & prop)
 {
     ecData()->replaceDynamicProperty(type, prop);
 }
