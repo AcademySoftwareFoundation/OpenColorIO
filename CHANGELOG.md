@@ -2,13 +2,7 @@
 <!-- Copyright Contributors to the OpenColorIO Project. -->
 
 **Version 2.0.0 (unreleased):**
-    * Renamed sanityCheck() method to validate() in the classes
-      Config, FileRule and ViewingRule
-    * Renamed sanityCheckView() method to validateView() and
-      sanityCheckSharedView() method to validateSharedView() in Config class
-    * Renamed Sanity enumeration to Validation in Config class,
-      and its members SANITY_UNKNOWN, SANITY_SANE and SANITY_INSANE to
-      VALIDATION_UNKNOWN, VALIDATION_PASSED and VALIDATION_FAILED
+    * Renamed sanityCheck() method to validate()
 
 **Version 1.1.1 (April 2 2019):**
     * Added optional compatibility for building apps with OpenImageIO 1.9+
