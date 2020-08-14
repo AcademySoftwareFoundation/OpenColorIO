@@ -73,8 +73,11 @@ OCIO_ADD_TEST(GradingRGBCurveOpCPU, identity)
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingRGBCurveCPURenderer(gcc));
     OCIO_CHECK_ASSERT(op);
     // Check that the right OpCPU is created. Check that class name contains CurveLinearFwdOp.
-    std::string typeName = typeid(*op).name();
-    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "CurveLinearFwdOp"));
+    {
+        const OCIO::OpCPU & c = *op;
+        std::string typeName = typeid(c).name();
+        OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "CurveLinearFwdOp"));
+    }
     OCIO_CHECK_NO_THROW(op->apply(image, res, numPixels));
     ValidateImage(expected, res, numPixels, __LINE__);
 
@@ -98,7 +101,6 @@ OCIO_ADD_TEST(GradingRGBCurveOpCPU, identity)
     {
         const OCIO::OpCPU & c = *op;
         std::string typeName = typeid(c).name();
-        typeName = typeid(*op).name();
         OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "CurveRevOp"));
     }
     // TODO: implement inverse.
