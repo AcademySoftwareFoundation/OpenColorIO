@@ -252,8 +252,8 @@ public:
     enum Validation
     {
         VALIDATION_UNKNOWN = 0,
-        VALIDATION_VALID,
-        VALIDATION_INVALID
+        VALIDATION_PASSED,
+        VALIDATION_FAILED
     };
 
     unsigned int m_majorVersion;
@@ -992,13 +992,13 @@ ConfigRcPtr Config::createEditableCopy() const
 
 void Config::validate() const
 {
-    if(getImpl()->m_validation == Impl::VALIDATION_VALID) return;
-    if(getImpl()->m_validation == Impl::VALIDATION_INVALID)
+    if(getImpl()->m_validation == Impl::VALIDATION_PASSED) return;
+    if(getImpl()->m_validation == Impl::VALIDATION_FAILED)
     {
         throw Exception(getImpl()->m_validationtext.c_str());
     }
 
-    getImpl()->m_validation = Impl::VALIDATION_INVALID;
+    getImpl()->m_validation = Impl::VALIDATION_FAILED;
     getImpl()->m_validationtext = "";
 
     ///// COLORSPACES
@@ -1398,7 +1398,7 @@ void Config::validate() const
     getImpl()->checkVersionConsistency();
 
     // Everything is groovy.
-    getImpl()->m_validation = Impl::VALIDATION_VALID;
+    getImpl()->m_validation = Impl::VALIDATION_PASSED;
 }
 
 ///////////////////////////////////////////////////////////////////////////

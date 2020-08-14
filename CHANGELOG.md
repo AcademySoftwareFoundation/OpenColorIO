@@ -6,7 +6,7 @@
       Config, FileRule and ViewingRule
     * Renamed Sanity enumeration to Validation in Config::Impl class,
       and its members SANITY_UNKNOWN, SANITY_SANE and SANITY_INSANE to
-      VALIDATION_UNKNOWN, VALIDATION_VALID and VALIDATION_INVALID
+      VALIDATION_UNKNOWN, VALIDATION_PASSED and VALIDATION_FAILED
 
 **Version 1.1.1 (April 2 2019):**
     * Added optional compatibility for building apps with OpenImageIO 1.9+
