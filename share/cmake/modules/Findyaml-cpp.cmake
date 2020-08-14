@@ -32,21 +32,8 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
 
         # Search for yaml-cpp-config.cmake
 
-        # TODO: The find_package() with yaml-cpp does not provide a good module 
-        #       finding e.g. it finds compiled yaml-cpp from another ocio directory.
-        #       So, the find_package() only searches in this directory for now
-        #       i.e. will not find any installed yaml-cpp library but the search
-        #       using yaml-cpp.pc will.
+        find_package(yaml-cpp ${yaml-cpp_FIND_VERSION} CONFIG QUIET)
 
-        # Note that the variables defined by the yaml-cpp-config.cmake conflict
-        # with the convention to use the library name as the variable prefix (as-is
-        # but not case sensitive) because it changes '-' converted to '_'.
-
-        find_package(yaml-cpp ${yaml-cpp_FIND_VERSION} CONFIG QUIET
-            PATHS 
-                ${CMAKE_BINARY_DIR}/ext/dist
-            NO_DEFAULT_PATH
-        )
     endif()
 
     if(yaml-cpp_FOUND)
