@@ -59,7 +59,7 @@ OCIO_ADD_TEST(CategoryHelpers, basic)
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::ColorSpaceNames names;
 

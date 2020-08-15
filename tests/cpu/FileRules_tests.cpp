@@ -31,7 +31,7 @@ OCIO_ADD_TEST(FileRules, config_v1)
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO_CHECK_EQUAL(config->getFileRules()->getNumEntries(), 1);
     OCIO_CHECK_EQUAL(std::string(config->getFileRules()->getName(0)), "Default");
@@ -339,21 +339,21 @@ OCIO_ADD_TEST(FileRules, rule_invalid)
     OCIO::ConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
 
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
     auto rules = config->getFileRules()->createEditableCopy();
     OCIO_REQUIRE_EQUAL(rules->getNumEntries(), 1);
 
     OCIO_CHECK_NO_THROW(rules->insertRule(0, g_name, "cs1", g_filePattern, g_fileExt));
     config->setFileRules(rules);
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO_CHECK_NO_THROW(rules->setColorSpace(0, "role1"));
     config->setFileRules(rules);
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO_CHECK_NO_THROW(rules->setColorSpace(0, "invalid_color_space"));
     config->setFileRules(rules);
-    OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception, "does not exist");
+    OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "does not exist");
 }
 
 OCIO_ADD_TEST(FileRules, pattern_error)
@@ -403,7 +403,7 @@ OCIO_ADD_TEST(FileRules, multiple_rules)
     OCIO::ConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
 
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
     auto rules = config->getFileRules()->createEditableCopy();
 
     // Create multiple rules.
@@ -1046,10 +1046,10 @@ colorspaces:
         OCIO::ConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
 
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
         config->setMajorVersion(2);
 
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         auto rules = config->getFileRules()->createEditableCopy();
         OCIO_CHECK_EQUAL(std::string(rules->getColorSpace(rules->getNumEntries() - 1)),
@@ -1083,11 +1083,11 @@ colorspaces:
         OCIO_CHECK_NO_THROW(constConfig = OCIO::Config::CreateFromStream(is));
         OCIO::ConfigRcPtr config = constConfig->createEditableCopy();
 
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
         config->setMajorVersion(2);
 
         // Default rule is using 'Default' role that does not exist.
-        OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception, "does not exist");
+        OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "does not exist");
 
         config = constConfig->createEditableCopy();
         OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
@@ -1096,7 +1096,7 @@ colorspaces:
         config->upgradeToLatestVersion();
 
         OCIO_CHECK_EQUAL(config->getMajorVersion(), 2);
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         // 'Default' does not exist, 'Raw' is not a data color-space, so a new color-space has
         // been created with a unique name.
@@ -1133,11 +1133,11 @@ colorspaces:
         OCIO_CHECK_NO_THROW(constConfig = OCIO::Config::CreateFromStream(is));
         OCIO::ConfigRcPtr config = constConfig->createEditableCopy();
 
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
         config->setMajorVersion(2);
 
         // Default rule is using 'Default' role that does not exist.
-        OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception, "rule named 'Default' is "
+        OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "rule named 'Default' is "
                               "referencing color space 'default' that does not exist");
 
         config = constConfig->createEditableCopy();
@@ -1147,7 +1147,7 @@ colorspaces:
         config->upgradeToLatestVersion();
 
         OCIO_CHECK_EQUAL(config->getMajorVersion(), 2);
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         // 'Default' does not exist, 'Raw' is a data color-space.
         OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
@@ -1233,7 +1233,7 @@ OCIO_ADD_TEST(FileRules, rule_move)
     OCIO::ConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
 
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
     auto rules = config->getFileRules()->createEditableCopy();
 
     OCIO_CHECK_NO_THROW(rules->insertRule(0, "rule0", "cs1", g_filePattern, g_fileExt));

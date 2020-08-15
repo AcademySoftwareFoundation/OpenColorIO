@@ -143,7 +143,7 @@ float rsr_Interpolator1D_interpolate( float x, rsr_Interpolator1D * data )
 rsr_Interpolator1D * rsr_Interpolator1D_createFromRaw( rsr_Interpolator1D_Raw * data )
 {
     rsr_Interpolator1D * retval = NULL;
-    /* Check the sanity of the data */
+    /* Validate the data */
     assert(data!=NULL);
     assert(data->length>=2);
     assert(data->stims!=NULL);

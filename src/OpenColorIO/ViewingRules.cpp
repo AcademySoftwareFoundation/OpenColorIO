@@ -65,7 +65,7 @@ public:
         return m_name.c_str();
     }
 
-    void sanityCheck(std::function<ConstColorSpaceRcPtr(const char *)> colorSpaceAccesssor,
+    void validate(std::function<ConstColorSpaceRcPtr(const char *)> colorSpaceAccesssor,
                      const ColorSpaceSetRcPtr & colorspaces) const
     {
         const auto numCS = m_colorSpaces.getNumTokens();
@@ -196,13 +196,13 @@ void ViewingRules::Impl::validateNewRule(const char * name) const
     }
 }
 
-void ViewingRules::Impl::sanityCheck(
+void ViewingRules::Impl::validate(
     std::function<ConstColorSpaceRcPtr(const char *)> colorSpaceAccessor,
     const ColorSpaceSetRcPtr & colorspaces) const
 {
     for (auto & rule : m_rules)
     {
-        rule->sanityCheck(colorSpaceAccessor, colorspaces);
+        rule->validate(colorSpaceAccessor, colorspaces);
     }
 }
 

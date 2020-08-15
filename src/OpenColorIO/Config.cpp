@@ -219,7 +219,7 @@ StringUtils::StringVec GetViewNames(const ViewPtrVec & views)
 std::ostringstream GetDisplayViewPrefixErrorMsg(const std::string & display, const View & view)
 {
     std::ostringstream oss;
-    oss << "Config failed sanitycheck. ";
+    oss << "Config failed validation. ";
     if (display.empty())
     {
         oss << "Shared ";
@@ -249,11 +249,11 @@ static constexpr unsigned LastSupportedMinorVersion = OCIO_VERSION_MINOR;
 class Config::Impl
 {
 public:
-    enum Sanity
+    enum Validation
     {
-        SANITY_UNKNOWN = 0,
-        SANITY_SANE,
-        SANITY_INSANE
+        VALIDATION_UNKNOWN = 0,
+        VALIDATION_PASSED,
+        VALIDATION_FAILED
     };
 
     unsigned int m_majorVersion;
@@ -298,8 +298,8 @@ public:
     std::vector<double> m_defaultLumaCoefs;
     bool m_strictParsing;
 
-    mutable Sanity m_sanity;
-    mutable std::string m_sanitytext;
+    mutable Validation m_validation;
+    mutable std::string m_validationtext;
 
     mutable Mutex m_cacheidMutex;
     mutable StringMap m_cacheids;
@@ -313,7 +313,7 @@ public:
         m_allColorSpaces(ColorSpaceSet::Create()),
         m_viewingRules(ViewingRules::Create()),
         m_strictParsing(true),
-        m_sanity(SANITY_UNKNOWN),
+        m_validation(VALIDATION_UNKNOWN),
         m_fileRules(FileRules::Create())
     {
         std::string activeDisplays;
@@ -394,8 +394,8 @@ public:
             m_defaultLumaCoefs = rhs.m_defaultLumaCoefs;
             m_strictParsing = rhs.m_strictParsing;
 
-            m_sanity = rhs.m_sanity;
-            m_sanitytext = rhs.m_sanitytext;
+            m_validation = rhs.m_validation;
+            m_validationtext = rhs.m_validationtext;
 
             m_cacheids = rhs.m_cacheids;
             m_cacheidnocontext = rhs.m_cacheidnocontext;
@@ -545,14 +545,14 @@ public:
         }
     }
 
-    // Sanity check view object that can be a config defined shared view or a display-defined view.
-    void sanityCheckView(const std::string & display, const View & view) const
+    // Validate view object that can be a config defined shared view or a display-defined view.
+    void validateView(const std::string & display, const View & view) const
     {
         if (view.m_name.empty())
         {
             std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
-            m_sanitytext = os.str();
-            throw Exception(m_sanitytext.c_str());
+            m_validationtext = os.str();
+            throw Exception(m_validationtext.c_str());
         }
 
         const bool sharedViewWithViewTransform = display.empty() && !view.m_viewTransform.empty();
@@ -562,8 +562,8 @@ public:
         {
             std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
             os << "does not refer to a color space.";
-            m_sanitytext = os.str();
-            throw Exception(m_sanitytext.c_str());
+            m_validationtext = os.str();
+            throw Exception(m_validationtext.c_str());
         }
         // USE_DISPLAY_NAME can only be used by shared views.
         if (!sharedViewWithViewTransform && view.useDisplayNameForColorspace())
@@ -571,8 +571,8 @@ public:
             std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
             os << "can not use '" << OCIO_VIEW_USE_DISPLAY_NAME;
             os << "' keyword for the color space name.";
-            m_sanitytext = os.str();
-            throw Exception(m_sanitytext.c_str());
+            m_validationtext = os.str();
+            throw Exception(m_validationtext.c_str());
         }
 
         // If USE_DISPLAY_NAME is not present, a valid color space must be specified.
@@ -581,8 +581,8 @@ public:
             std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
             os << "refers to a color space, '" << view.m_colorspace << "', ";
             os << "which is not defined.";
-            m_sanitytext = os.str();
-            throw Exception(m_sanitytext.c_str());
+            m_validationtext = os.str();
+            throw Exception(m_validationtext.c_str());
         }
 
         // If there is a view transform, it must exist and its color space must be a
@@ -594,8 +594,8 @@ public:
                 std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
                 os << "refers to a view transform, '" << view.m_viewTransform << "', ";
                 os << "which is not defined.";
-                m_sanitytext = os.str();
-                throw Exception(m_sanitytext.c_str());
+                m_validationtext = os.str();
+                throw Exception(m_validationtext.c_str());
             }
 
             if (!view.useDisplayNameForColorspace())
@@ -606,8 +606,8 @@ public:
                     std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
                     os << "refers to a color space, '" << view.m_colorspace << "', ";
                     os << "that is not a display-referred color space.";
-                    m_sanitytext = os.str();
-                    throw Exception(m_sanitytext.c_str());
+                    m_validationtext = os.str();
+                    throw Exception(m_validationtext.c_str());
                 }
             }
         }
@@ -627,8 +627,8 @@ public:
                     std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
                     os << "refers to a look, '" << look << "', ";
                     os << "which is not defined.";
-                    m_sanitytext = os.str();
-                    throw Exception(m_sanitytext.c_str());
+                    m_validationtext = os.str();
+                    throw Exception(m_validationtext.c_str());
                 }
             }
         }
@@ -641,14 +641,14 @@ public:
                 std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
                 os << "refers to a viewing rule, '" << view.m_rule << "', ";
                 os << "which is not defined.";
-                m_sanitytext = os.str();
-                throw Exception(m_sanitytext.c_str());
+                m_validationtext = os.str();
+                throw Exception(m_validationtext.c_str());
             }
         }
     }
 
     // Check a shared view used in a display. View itself has already been checked.
-    void sanityCheckSharedView(const std::string & display, const ViewVec & viewsOfDisplay,
+    void validateSharedView(const std::string & display, const ViewVec & viewsOfDisplay,
                                const std::string & sharedView) const
     {
         // Is the name already used for a display-defined view?
@@ -657,24 +657,24 @@ public:
         if (viewIt != viewsOfDisplay.end())
         {
             std::ostringstream os;
-            os << "Config failed sanitycheck. ";
+            os << "Config failed validation. ";
             os << "The display '" << display << "' ";
             os << "contains a shared view '" << sharedView;
             os << "' that is already defined as a view.";
-            m_sanitytext = os.str();
-            throw Exception(m_sanitytext.c_str());
+            m_validationtext = os.str();
+            throw Exception(m_validationtext.c_str());
         }
         // Is the shared view defined?
         const auto sharedViewIt = FindView(m_sharedViews, sharedView);
         if (sharedViewIt == m_sharedViews.end())
         {
             std::ostringstream os;
-            os << "Config failed sanitycheck. ";
+            os << "Config failed validation. ";
             os << "The display '" << display << "' ";
             os << "contains a shared view '" << sharedView;
             os << "' that is not defined.";
-            m_sanitytext = os.str();
-            throw Exception(m_sanitytext.c_str());
+            m_validationtext = os.str();
+            throw Exception(m_validationtext.c_str());
         }
         else
         {
@@ -687,22 +687,22 @@ public:
                 if (!displayCS)
                 {
                     std::ostringstream os;
-                    os << "Config failed sanitycheck. The display '" << display << "' ";
+                    os << "Config failed validation. The display '" << display << "' ";
                     os << "contains a shared view '" << (*sharedViewIt).m_name;
                     os << "' which does not define a color space and there is "
                           "no color space that matches the display name.";
-                    m_sanitytext = os.str();
-                    throw Exception(m_sanitytext.c_str());
+                    m_validationtext = os.str();
+                    throw Exception(m_validationtext.c_str());
                 }
                 if (displayCS->getReferenceSpaceType() != REFERENCE_SPACE_DISPLAY)
                 {
                     std::ostringstream os;
-                    os << "Config failed sanitycheck. The display '" << display << "' ";
+                    os << "Config failed validation. The display '" << display << "' ";
                     os << "contains a shared view '" << (*sharedViewIt).m_name;
                     os << "that refers to a color space, '" << display << "', ";
                     os << "that is not a display-referred color space.";
-                    m_sanitytext = os.str();
-                    throw Exception(m_sanitytext.c_str());
+                    m_validationtext = os.str();
+                    throw Exception(m_validationtext.c_str());
                 }
             }
         }
@@ -990,16 +990,16 @@ ConfigRcPtr Config::createEditableCopy() const
     return config;
 }
 
-void Config::sanityCheck() const
+void Config::validate() const
 {
-    if(getImpl()->m_sanity == Impl::SANITY_SANE) return;
-    if(getImpl()->m_sanity == Impl::SANITY_INSANE)
+    if(getImpl()->m_validation == Impl::VALIDATION_PASSED) return;
+    if(getImpl()->m_validation == Impl::VALIDATION_FAILED)
     {
-        throw Exception(getImpl()->m_sanitytext.c_str());
+        throw Exception(getImpl()->m_validationtext.c_str());
     }
 
-    getImpl()->m_sanity = Impl::SANITY_INSANE;
-    getImpl()->m_sanitytext = "";
+    getImpl()->m_validation = Impl::VALIDATION_FAILED;
+    getImpl()->m_validationtext = "";
 
     ///// COLORSPACES
 
@@ -1014,20 +1014,20 @@ void Config::sanityCheck() const
         if (!cs)
         {
             std::ostringstream os;
-            os << "Config failed sanitycheck. ";
+            os << "Config failed validation. ";
             os << "The color space at index " << i << " is null.";
-            getImpl()->m_sanitytext = os.str();
-            throw Exception(getImpl()->m_sanitytext.c_str());
+            getImpl()->m_validationtext = os.str();
+            throw Exception(getImpl()->m_validationtext.c_str());
         }
 
         const char * name = cs->getName();
         if (!name || !*name)
         {
             std::ostringstream os;
-            os << "Config failed sanitycheck. ";
+            os << "Config failed validation. ";
             os << "The color space at index " << i << " is not named.";
-            getImpl()->m_sanitytext = os.str();
-            throw Exception(getImpl()->m_sanitytext.c_str());
+            getImpl()->m_validationtext = os.str();
+            throw Exception(getImpl()->m_validationtext.c_str());
         }
 
         const std::string namelower = StringUtils::Lower(name);
@@ -1035,11 +1035,11 @@ void Config::sanityCheck() const
         if (it != existingColorSpaces.end())
         {
             std::ostringstream os;
-            os << "Config failed sanitycheck. ";
+            os << "Config failed validation. ";
             os << "Two colorspaces are defined with the same name, '";
             os << namelower << "'.";
-            getImpl()->m_sanitytext = os.str();
-            throw Exception(getImpl()->m_sanitytext.c_str());
+            getImpl()->m_validationtext = os.str();
+            throw Exception(getImpl()->m_validationtext.c_str());
         }
 
         ConstTransformRcPtr toTrans = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
@@ -1069,23 +1069,23 @@ void Config::sanityCheck() const
             if(!getImpl()->hasColorSpace(iter->second.c_str()))
             {
                 std::ostringstream os;
-                os << "Config failed sanitycheck. ";
+                os << "Config failed validation. ";
                 os << "The role '" << iter->first << "' ";
                 os << "refers to a color space, '" << iter->second << "', ";
                 os << "which is not defined.";
-                getImpl()->m_sanitytext = os.str();
-                throw Exception(getImpl()->m_sanitytext.c_str());
+                getImpl()->m_validationtext = os.str();
+                throw Exception(getImpl()->m_validationtext.c_str());
             }
 
             // Confirm no name conflicts between colorspaces and roles
             if(getImpl()->hasColorSpace(iter->first.c_str()))
             {
                 std::ostringstream os;
-                os << "Config failed sanitycheck. ";
+                os << "Config failed validation. ";
                 os << "The role '" << iter->first << "' ";
                 os << " is in conflict with a color space of the same name.";
-                getImpl()->m_sanitytext = os.str();
-                throw Exception(getImpl()->m_sanitytext.c_str());
+                getImpl()->m_validationtext = os.str();
+                throw Exception(getImpl()->m_validationtext.c_str());
             }
         }
     }
@@ -1113,22 +1113,22 @@ void Config::sanityCheck() const
      try
      {
          auto colorSpaceAccessor = std::bind(&Config::getColorSpace, this, std::placeholders::_1);
-         getImpl()->m_viewingRules->getImpl()->sanityCheck(colorSpaceAccessor,
+         getImpl()->m_viewingRules->getImpl()->validate(colorSpaceAccessor,
                                                            getImpl()->m_allColorSpaces);
      }
      catch (const Exception & e)
      {
          std::ostringstream os;
-         os << "Config failed sanitycheck. Viewing rules failed sanitycheck with: ";
+         os << "Config failed validation. Viewing rules failed validation with: ";
          os << e.what();
-         getImpl()->m_sanitytext = os.str();
-         throw Exception(getImpl()->m_sanitytext.c_str());
+         getImpl()->m_validationtext = os.str();
+         throw Exception(getImpl()->m_validationtext.c_str());
      }
 
     // Shared views.
     for (const auto & view : getImpl()->m_sharedViews)
     {
-        getImpl()->sanityCheckView("", view);
+        getImpl()->validateView("", view);
     }
 
     int numdisplays = 0;
@@ -1144,24 +1144,24 @@ void Config::sanityCheck() const
         if(views.empty() && sharedViews.empty())
         {
             std::ostringstream os;
-            os << "Config failed sanitycheck. ";
+            os << "Config failed validation. ";
             os << "The display '" << display << "' ";
             os << "does not define any views.";
-            getImpl()->m_sanitytext = os.str();
-            throw Exception(getImpl()->m_sanitytext.c_str());
+            getImpl()->m_validationtext = os.str();
+            throw Exception(getImpl()->m_validationtext.c_str());
         }
         ++numdisplays;
 
         // Confirm shared view exist and do not conflict with views.
         for (const auto & sharedView : sharedViews)
         {
-            getImpl()->sanityCheckSharedView(display, views, sharedView);
+            getImpl()->validateSharedView(display, views, sharedView);
         }
 
         // Confirm view references exist.
         for(const auto & view : views)
         {
-            getImpl()->sanityCheckView(display, view);
+            getImpl()->validateView(display, view);
         }
     }
 
@@ -1169,10 +1169,10 @@ void Config::sanityCheck() const
     if (numdisplays == 0)
     {
         std::ostringstream os;
-        os << "Config failed sanitycheck. ";
+        os << "Config failed validation. ";
         os << "No displays are specified.";
-        getImpl()->m_sanitytext = os.str();
-        throw Exception(getImpl()->m_sanitytext.c_str());
+        getImpl()->m_validationtext = os.str();
+        throw Exception(getImpl()->m_validationtext.c_str());
     }
 
 
@@ -1203,8 +1203,8 @@ void Config::sanityCheck() const
                 os << "The content of the env. variable for the list of active displays ["
                    << JoinStringEnvStyle(getImpl()->m_activeDisplaysEnvOverride)
                    << "] is invalid.";
-                getImpl()->m_sanitytext = os.str();
-                throw Exception(getImpl()->m_sanitytext.c_str());
+                getImpl()->m_validationtext = os.str();
+                throw Exception(getImpl()->m_validationtext.c_str());
             }
             if (orderedDisplays.size()!=getImpl()->m_activeDisplaysEnvOverride.size())
             {
@@ -1212,8 +1212,8 @@ void Config::sanityCheck() const
                 os << "The content of the env. variable for the list of active displays ["
                    << JoinStringEnvStyle(getImpl()->m_activeDisplaysEnvOverride)
                    << "] contains invalid display name(s).";
-                getImpl()->m_sanitytext = os.str();
-                throw Exception(getImpl()->m_sanitytext.c_str());
+                getImpl()->m_validationtext = os.str();
+                throw Exception(getImpl()->m_validationtext.c_str());
             }
         }
     }
@@ -1232,8 +1232,8 @@ void Config::sanityCheck() const
                 os << "The list of active displays ["
                    << JoinStringEnvStyle(getImpl()->m_activeDisplays)
                    << "] from the config file is invalid.";
-                getImpl()->m_sanitytext = os.str();
-                throw Exception(getImpl()->m_sanitytext.c_str());
+                getImpl()->m_validationtext = os.str();
+                throw Exception(getImpl()->m_validationtext.c_str());
             }
             if (orderedDisplays.size()!=getImpl()->m_activeDisplays.size())
             {
@@ -1241,8 +1241,8 @@ void Config::sanityCheck() const
                 os << "The list of active displays ["
                    << JoinStringEnvStyle(getImpl()->m_activeDisplays)
                    << "] from the config file contains invalid display name(s).";
-                getImpl()->m_sanitytext = os.str();
-                throw Exception(getImpl()->m_sanitytext.c_str());
+                getImpl()->m_validationtext = os.str();
+                throw Exception(getImpl()->m_validationtext.c_str());
             }
         }
     }
@@ -1276,20 +1276,20 @@ void Config::sanityCheck() const
                 const char * csname = LookupRole(getImpl()->m_roles, name);
 
                 std::ostringstream os;
-                os << "Config failed sanitycheck. ";
+                os << "Config failed validation. ";
                 os << "This config references a color space, '";
 
                 if (!csname || !*csname)
                 {
                     os << name << "', which is not defined.";
-                    getImpl()->m_sanitytext = os.str();
-                    throw Exception(getImpl()->m_sanitytext.c_str());
+                    getImpl()->m_validationtext = os.str();
+                    throw Exception(getImpl()->m_validationtext.c_str());
                 }
                 else if(!getImpl()->hasColorSpace(csname))
                 {
                     os << csname << "' (for role '" << name << "'), which is not defined.";
-                    getImpl()->m_sanitytext = os.str();
-                    throw Exception(getImpl()->m_sanitytext.c_str());
+                    getImpl()->m_validationtext = os.str();
+                    throw Exception(getImpl()->m_validationtext.c_str());
                 }
             }
         }
@@ -1304,22 +1304,22 @@ void Config::sanityCheck() const
         if (!lookName || !*lookName)
         {
             std::ostringstream os;
-            os << "Config failed sanitycheck. ";
+            os << "Config failed validation. ";
             os << "The look at index '" << i << "' ";
             os << "does not specify a name.";
-            getImpl()->m_sanitytext = os.str();
-            throw Exception(getImpl()->m_sanitytext.c_str());
+            getImpl()->m_validationtext = os.str();
+            throw Exception(getImpl()->m_validationtext.c_str());
         }
 
         const char * processSpace = getImpl()->m_looksList[i]->getProcessSpace();
         if (!processSpace || !*processSpace)
         {
             std::ostringstream os;
-            os << "Config failed sanitycheck. ";
+            os << "Config failed validation. ";
             os << "The look '" << lookName << "' ";
             os << "does not specify a process space.";
-            getImpl()->m_sanitytext = os.str();
-            throw Exception(getImpl()->m_sanitytext.c_str());
+            getImpl()->m_validationtext = os.str();
+            throw Exception(getImpl()->m_validationtext.c_str());
         }
 
         if (!getImpl()->hasColorSpace(processSpace))
@@ -1328,21 +1328,21 @@ void Config::sanityCheck() const
             const char * csname = LookupRole(getImpl()->m_roles, processSpace);
 
             std::ostringstream os;
-            os << "Config failed sanitycheck. ";
+            os << "Config failed validation. ";
             os << "The look '" << lookName << "' ";
             os << "specifies a process color space, '";
 
             if (!csname || !*csname)
             {
                 os << processSpace << "', which is not defined.";
-                getImpl()->m_sanitytext = os.str();
-                throw Exception(getImpl()->m_sanitytext.c_str());
+                getImpl()->m_validationtext = os.str();
+                throw Exception(getImpl()->m_validationtext.c_str());
             }
             else if (!getImpl()->hasColorSpace(csname))
             {
                 os << csname << "' (for role '" << processSpace << "'), which is not defined.";
-                getImpl()->m_sanitytext = os.str();
-                throw Exception(getImpl()->m_sanitytext.c_str());
+                getImpl()->m_validationtext = os.str();
+                throw Exception(getImpl()->m_validationtext.c_str());
             }
         }
     }
@@ -1358,47 +1358,47 @@ void Config::sanityCheck() const
         // If there are view transforms, there must be one from the scene reference space.
         if (!fromScene)
         {
-            getImpl()->m_sanitytext = "Config failed sanitycheck. If there are view_transforms, "
+            getImpl()->m_validationtext = "Config failed validation. If there are view_transforms, "
                                       "at least one must use the scene reference space.";
-            throw Exception(getImpl()->m_sanitytext.c_str());
+            throw Exception(getImpl()->m_validationtext.c_str());
         }
     }
     else if (hasDisplayReferredColorspace)
     {
-        getImpl()->m_sanitytext = "Config failed sanitycheck. If there are display-referred "
+        getImpl()->m_validationtext = "Config failed validation. If there are display-referred "
                                   "color spaces, there must be view_transforms.";
-        throw Exception(getImpl()->m_sanitytext.c_str());
+        throw Exception(getImpl()->m_validationtext.c_str());
     }
 
     ///// FileRules
 
     // All Config objects have a fileRules object, regardless of version. This object is
     // initialized to have a defaultRule with the color space set to "default" (i.e., the default
-    // role). The fileRules->sanityCheck call will validate that all color spaces used in rules
+    // role). The fileRules->validate call will validate that all color spaces used in rules
     // exist, or if they are roles that they point to a color space that exists. Because this would
-    // cause sanityCheck to improperly fail on v1 configs (since they are not required to actually
+    // cause validate to improperly fail on v1 configs (since they are not required to actually
     // contain file rules), we don't do this check on v1 configs when there is only one rule.
     if (getMajorVersion() >= 2 || getImpl()->m_fileRules->getNumEntries() != 1)
     {
         try
         {
             auto colorSpaceAccessor = std::bind(&Config::getColorSpace, this, std::placeholders::_1);
-            getImpl()->m_fileRules->getImpl()->sanityCheck(colorSpaceAccessor);
+            getImpl()->m_fileRules->getImpl()->validate(colorSpaceAccessor);
         }
         catch (const Exception & e)
         {
             std::ostringstream os;
-            os << "Config failed sanitycheck. File rules failed with: ";
+            os << "Config failed validation. File rules failed with: ";
             os << e.what();
-            getImpl()->m_sanitytext = os.str();
-            throw Exception(getImpl()->m_sanitytext.c_str());
+            getImpl()->m_validationtext = os.str();
+            throw Exception(getImpl()->m_validationtext.c_str());
         }
     }
 
     getImpl()->checkVersionConsistency();
 
     // Everything is groovy.
-    getImpl()->m_sanity = Impl::SANITY_SANE;
+    getImpl()->m_validation = Impl::VALIDATION_PASSED;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -3156,8 +3156,8 @@ void Config::Impl::resetCacheIDs()
 {
     m_cacheids.clear();
     m_cacheidnocontext = "";
-    m_sanity = SANITY_UNKNOWN;
-    m_sanitytext = "";
+    m_validation = VALIDATION_UNKNOWN;
+    m_validationtext = "";
 }
 
 void Config::Impl::getAllInternalTransforms(ConstTransformVec & transformVec) const
@@ -3336,7 +3336,7 @@ void Config::Impl::checkVersionConsistency() const
             if (!sharedViews.empty())
             {
                 std::ostringstream os;
-                os << "Config failed sanitycheck. The display '" << display.first << "' ";
+                os << "Config failed validation. The display '" << display.first << "' ";
                 os << "uses shared views and config version is less than 2.";
                 throw Exception(os.str().c_str());
             }
