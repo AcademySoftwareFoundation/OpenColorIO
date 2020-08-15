@@ -206,7 +206,7 @@ endif(NOT HAVE_SSE2)
 ###############################################################################
 # External linking options
 
-# Support options
+# Supported options
 set(_EXT_OPTIONS NONE MISSING ALL)
 string(REPLACE ";" ", " _EXT_OPTIONS_STR "${_EXT_OPTIONS}")
 
