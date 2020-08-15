@@ -32,7 +32,12 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
 
         # Search for yaml-cpp-config.cmake
 
-        find_package(yaml-cpp ${yaml-cpp_FIND_VERSION} CONFIG QUIET)
+        # NOTE: yaml-cpp registers its CMake config location in the CMake User 
+        #       Package Registry. We disable this search location since it can
+        #       cause unwanted linking between multiple builds of OpenColorIO 
+        #       when yaml-cpp has previously been installed to ext/dist.
+        find_package(yaml-cpp ${yaml-cpp_FIND_VERSION} CONFIG QUIET
+            NO_CMAKE_PACKAGE_REGISTRY)
 
     endif()
 
