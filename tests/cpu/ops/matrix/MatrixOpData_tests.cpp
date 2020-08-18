@@ -296,7 +296,7 @@ OCIO_ADD_TEST(MatrixOpData, composition)
 
         const OCIO::ArrayDouble::Values& newCoeff = result->getArray().getValues();
 
-        // Sanity check on size.
+        // Size check.
         OCIO_REQUIRE_EQUAL(newCoeff.size(), 16);
 
         // Coefficient check.
@@ -351,7 +351,7 @@ OCIO_ADD_TEST(MatrixOpData, composition)
 
         const OCIO::ArrayDouble::Values & newCoeff = result->getArray().getValues();
 
-        // Sanity check on size.
+        // Size check.
         OCIO_REQUIRE_EQUAL(newCoeff.size(), 16);
 
         // Coefficient check.
@@ -405,7 +405,7 @@ OCIO_ADD_TEST(MatrixOpData, composition)
 
         const OCIO::ArrayDouble::Values & newCoeff = result->getArray().getValues();
 
-        // Sanity check on size.
+        // Size check.
         OCIO_REQUIRE_EQUAL(newCoeff.size(), 16);
 
         // Coefficient check.

@@ -22,7 +22,7 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.ifconfig',
     'sphinx.ext.napoleon',
-    # 'sphinx_tabs.tabs',
+    'sphinx_tabs.tabs',
     'recommonmark',
 ]
 templates_path = ['templates']

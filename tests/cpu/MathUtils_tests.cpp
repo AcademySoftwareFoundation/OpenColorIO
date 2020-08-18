@@ -823,7 +823,7 @@ OCIO_ADD_TEST(MathUtils, float_diff_compress_denorms_test )
 
 OCIO_ADD_TEST(MathUtils, half_bits_test)
 {
-    // Sanity check.
+    // Validation.
     OCIO_CHECK_EQUAL(0.5f, OCIO::ConvertHalfBitsToFloat(0x3800));
 
     // Preserve negatives.

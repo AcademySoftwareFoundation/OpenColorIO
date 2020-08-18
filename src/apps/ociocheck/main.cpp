@@ -259,11 +259,11 @@ int main(int argc, const char **argv)
             std::cout << "no looks defined" << std::endl;
         }
         std::cout << std::endl;
-        std::cout << "** Sanity Check **" << std::endl;
+        std::cout << "** Validation **" << std::endl;
 
         try
         {
-            config->sanityCheck();
+            config->validate();
             std::cout << "passed" << std::endl;
         }
         catch(OCIO::Exception & exception)

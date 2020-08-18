@@ -21,23 +21,23 @@ OCIO_ADD_TEST(SharedViews, basic)
 
     // Using a v2 config.
     config = OCIO::Config::CreateRaw()->createEditableCopy();
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     // Shared views need to refer to existing colorspaces.
     OCIO_CHECK_NO_THROW(config->addSharedView("shared1", "", "colorspace1", "", "", ""));
-    OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception,
+    OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
                           "color space, 'colorspace1', which is not defined");
 
     OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
     cs->setName("colorspace1");
     config->addColorSpace(cs);
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     // Shared views need to refer to existing looks.
     cs->setName("colorspace2");
     config->addColorSpace(cs);
     OCIO_CHECK_NO_THROW(config->addSharedView("shared2", "", "colorspace2", "look1", "", ""));
-    OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception,
+    OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
                           "refers to a look, 'look1', which is not defined.");
 
     OCIO::LookRcPtr lk = OCIO::Look::Create();
@@ -46,7 +46,7 @@ OCIO_ADD_TEST(SharedViews, basic)
     cs->setName("look1_process");
     config->addColorSpace(cs);
     config->addLook(lk);
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     // Shared views need to refer to existing view transforms.
     cs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_DISPLAY);
@@ -54,7 +54,7 @@ OCIO_ADD_TEST(SharedViews, basic)
     config->addColorSpace(cs);
     OCIO_CHECK_NO_THROW(config->addSharedView("shared3", "viewTransform1", "colorspace3", "", "",
                                               "shared view description"));
-    OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception,
+    OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
                           "refers to a view transform, 'viewTransform1', which is not defined");
 
     OCIO::ViewTransformRcPtr vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_SCENE);
@@ -62,11 +62,11 @@ OCIO_ADD_TEST(SharedViews, basic)
     OCIO_CHECK_NO_THROW(vt->setTransform(OCIO::MatrixTransform::Create(),
                                          OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
     OCIO_CHECK_NO_THROW(config->addViewTransform(vt));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     // Shared views need to refer to existing rules.
     OCIO_CHECK_NO_THROW(config->addSharedView("shared4", "", "colorspace1", "", "rule1", ""));
-    OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception,
+    OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
                           "viewing rule, 'rule1', which is not defined");
 
     OCIO::ViewingRulesRcPtr vrules = OCIO::ViewingRules::Create();
@@ -74,21 +74,21 @@ OCIO_ADD_TEST(SharedViews, basic)
     OCIO_CHECK_NO_THROW(vrules->addColorSpace(0, "colorspace3"));
 
     OCIO_CHECK_NO_THROW(config->setViewingRules(vrules));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     // Add shared view with description.
     OCIO_CHECK_NO_THROW(config->addSharedView("shared5", "", "colorspace2", "", "",
                                               "Sample description"));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     // Add another view to the sRGB display (CreateRaw creates an sRGB display with a Raw view).
     OCIO_CHECK_NO_THROW(config->addDisplayView("sRGB", "view1", "colorspace1", ""));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO_CHECK_NO_THROW(config->addDisplaySharedView("sRGB", "shared2"));
     OCIO_CHECK_NO_THROW(config->addDisplaySharedView("sRGB", "shared3"));
     OCIO_CHECK_NO_THROW(config->addDisplaySharedView("sRGB", "shared4"));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     // Expecting five views: two DISPLAY_DEFINED views plus three SHARED views.
     OCIO_REQUIRE_EQUAL(5, config->getNumViews("sRGB"));
@@ -178,25 +178,25 @@ OCIO_ADD_TEST(SharedViews, basic)
     // Shared1 is a shared view, but it is not used by sRGB, so a view with that name
     // can be added as a display-defined view.
     OCIO_CHECK_NO_THROW(config->addDisplayView("sRGB", "shared1", "colorspace1", ""));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
     OCIO_CHECK_THROW_WHAT(config->addDisplaySharedView("sRGB", "shared1"), OCIO::Exception,
                           "There is already a view named 'shared1' in the display 'sRGB'");
 
     OCIO_CHECK_EQUAL(3, config->getNumViews(OCIO::VIEW_SHARED, "sRGB"));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     // Add undefined shared view.
     OCIO_CHECK_NO_THROW(config->addDisplaySharedView("sRGB", "shared42"));
-    OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception,
+    OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
                           "contains a shared view 'shared42' that is not defined");
 
     // Remove faulty view.
     OCIO_CHECK_NO_THROW(config->removeDisplayView("sRGB", "shared42"));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     // Remove unused shared view.
     OCIO_CHECK_NO_THROW(config->removeSharedView("shared1"));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     // Replace one of the existing shared views.  This time, it uses only a view transform and
     // special color space name. However, the config is missing a display color space having the
@@ -205,14 +205,14 @@ OCIO_ADD_TEST(SharedViews, basic)
                                               OCIO::OCIO_VIEW_USE_DISPLAY_NAME,
                                               "", "", "shared view description"));
 
-    OCIO_CHECK_THROW_WHAT(config->sanityCheck(), OCIO::Exception,
+    OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
                           "The display 'sRGB' contains a shared view 'shared3' "
                           "which does not define a color space and there is no color space "
                           "that matches the display name");
 
     cs->setName("sRGB");
     config->addColorSpace(cs);
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     // Verify that shared views with no color space are saved with a special display
     // color space name, and that they are properly loaded.

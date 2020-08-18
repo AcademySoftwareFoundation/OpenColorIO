@@ -6,6 +6,21 @@
 # by the OCIO_INSTALL_EXT_PACKAGES option.
 #
 
+###############################################################################
+### Global package options ###
+
+# Some packages register their CMake config location in the CMake User or 
+# System Package Registry. We disable these search locations globally since 
+# they can cause unwanted linking between multiple builds of OpenColorIO 
+# when a package has previously been installed to ext/dist. Set these variables
+# to OFF during cmake configuration to enable package registry use.
+
+set(CMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY ON CACHE BOOL "Disable CMake User Package Registry when finding packages")
+set(CMAKE_FIND_PACKAGE_NO_SYSTEM_PACKAGE_REGISTRY ON CACHE BOOL "Disable CMake System Package Registry when finding packages")
+
+###############################################################################
+### Packages and versions ###
+
 # expat
 # https://github.com/libexpat/libexpat
 find_package(expat 2.2.8 REQUIRED)
@@ -55,9 +70,9 @@ if(OCIO_BUILD_DOCS)
         # https://pypi.org/project/testresources/
         find_python_package(testresources 2.0.1 REQUIRED)
 
-        # # Sphinx-Tabs
-        # # https://pypi.org/project/sphinx-tabs/
-        # find_python_package(sphinx-tabs 1.1.13 REQUIRED)
+        # Sphinx Tabs
+        # https://pypi.org/project/sphinx-tabs/
+        find_python_package(sphinx-tabs 1.1.13 REQUIRED)
 
         # Recommonmark
         # https://pypi.org/project/recommonmark/
