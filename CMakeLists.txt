@@ -32,7 +32,7 @@ set(SUPPORTED_CXX_STANDARDS 11 14)
 string(REPLACE ";" ", " SUPPORTED_CXX_STANDARDS_STR "${SUPPORTED_CXX_STANDARDS}")
 
 if(CMAKE_CXX_STANDARD AND NOT CMAKE_CXX_STANDARD IN_LIST SUPPORTED_CXX_STANDARDS)
-    message(FATAL_ERROR " CMAKE_CXX_STANDARD ${CMAKE_CXX_STANDARD} is unsupported. Supported standards are: ${SUPPORTED_CXX_STANDARDS_STR}.")
+    message(FATAL_ERROR " CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} is unsupported. Supported standards are: ${SUPPORTED_CXX_STANDARDS_STR}.")
 elseif(NOT CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 11)
 endif()
@@ -206,8 +206,24 @@ endif(NOT HAVE_SSE2)
 ###############################################################################
 # External linking options
 
-set(OCIO_INSTALL_EXT_PACKAGES "MISSING" CACHE STRING "Set the condition for Installing external dependencies")
-set_property(CACHE OCIO_INSTALL_EXT_PACKAGES PROPERTY STRINGS "NONE" "MISSING" "ALL")
+# Supported options
+set(_EXT_OPTIONS NONE MISSING ALL)
+string(REPLACE ";" ", " _EXT_OPTIONS_STR "${_EXT_OPTIONS}")
+
+# Default option
+set(_OCIO_INSTALL_EXT_PACKAGES "MISSING")
+
+if(DEFINED OCIO_INSTALL_EXT_PACKAGES)
+    # Case insensitive match
+    string(TOUPPER "${OCIO_INSTALL_EXT_PACKAGES}" _OCIO_INSTALL_EXT_PACKAGES)
+    if(NOT "${_OCIO_INSTALL_EXT_PACKAGES}" IN_LIST _EXT_OPTIONS)
+        message(FATAL_ERROR " OCIO_INSTALL_EXT_PACKAGES=${OCIO_INSTALL_EXT_PACKAGES} is unsupported. Supported values are: ${_EXT_OPTIONS_STR}.")
+    endif()
+endif()
+
+# Overwrite cache variable with normalized case
+set(OCIO_INSTALL_EXT_PACKAGES "${_OCIO_INSTALL_EXT_PACKAGES}" CACHE STRING "Set the condition for Installing external dependencies" FORCE)
+set_property(CACHE OCIO_INSTALL_EXT_PACKAGES PROPERTY STRINGS ${_EXT_OPTIONS})
 
 ###############################################################################
 # Versioning
