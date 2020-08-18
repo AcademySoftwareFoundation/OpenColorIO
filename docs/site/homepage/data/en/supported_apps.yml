@@ -53,8 +53,8 @@ supported_apps:
       link : "http://gafferhq.org/"
 
     # portfolio item loop
-    - name : Heiro
-      image : images/supported_apps/heiro.png
+    - name : Hiero
+      image : images/supported_apps/hiero.png
       categories : ["Review", "Editing"]
       content : Native support.
       link : "http://www.thefoundry.co.uk/products/hiero"
@@ -158,7 +158,7 @@ supported_apps:
       link : "http://www.silhouettefx.com/silhouette"
 
     # portfolio item loop
-    - name : Adobe Substance
+    - name : Substance Designer
       image : images/supported_apps/substance.png
       categories : ["2D", "Texture"]
       content : Version 2019.3 and up.
