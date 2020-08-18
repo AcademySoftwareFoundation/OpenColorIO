@@ -508,6 +508,10 @@ a:hover {
   margin-bottom: 20px;
 }
 
+.hero-area-logo {
+  object-fit: contain;
+}
+
 @media (max-width: 480px) {
   .hero-area .block h1 {
     font-size: 60px;
@@ -669,6 +673,16 @@ a:hover {
 .about-2 .content-block .media h4 {
   font-size: 16px;
   font-weight: 600;
+}
+
+.about-2-img-caption {
+  position: absolute;
+  top: 97%;
+  left: 2%;
+  text-align: center;
+  color: #fff;
+  text-shadow: #353b43 1px 1px;
+  font-size: x-small;
 }
 
 .about-2 a {
