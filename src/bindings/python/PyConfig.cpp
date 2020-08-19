@@ -169,8 +169,10 @@ void bindPyConfig(py::module & m)
                                const char *,
                                const char *,
                                const char *)) &Config::addSharedView,
-             "view"_a, "viewTransformName"_a, "colorSpaceName"_a, "looks"_a,
-             "ruleName"_a, "description"_a)
+             "view"_a, "viewTransformName"_a, "colorSpaceName"_a, 
+             "looks"_a = "",
+             "ruleName"_a = "", 
+             "description"_a = "")
         .def("removeSharedView", &Config::removeSharedView, "view"_a)
         .def("getSharedViews", [](ConfigRcPtr & self) { return SharedViewIterator(self); })
         .def("getDefaultDisplay", &Config::getDefaultDisplay)
@@ -196,7 +198,8 @@ void bindPyConfig(py::module & m)
         .def("addDisplayView", 
              (void (Config::*)(const char *, const char *, const char *, const char *)) 
              &Config::addDisplayView, 
-             "display"_a, "view"_a, "colorSpaceName"_a, "looks"_a)
+             "display"_a, "view"_a, "colorSpaceName"_a, 
+             "looks"_a = "")
         .def("addDisplayView", 
              (void (Config::*)(const char *, 
                                const char *, 
@@ -205,8 +208,10 @@ void bindPyConfig(py::module & m)
                                const char *,
                                const char *,
                                const char *)) &Config::addDisplayView, 
-             "display"_a, "view"_a, "viewTransform"_a, "displayColorSpaceName"_a, "looks"_a,
-             "ruleName"_a, "description"_a)
+             "display"_a, "view"_a, "viewTransform"_a, "displayColorSpaceName"_a, 
+             "looks"_a = "",
+             "ruleName"_a = "", 
+             "description"_a = "")
         .def("addDisplaySharedView", &Config::addDisplaySharedView, "display"_a, "view"_a)
         .def("removeDisplayView", &Config::removeDisplayView, "display"_a, "view"_a)
         .def("clearDisplays", &Config::clearDisplays)
