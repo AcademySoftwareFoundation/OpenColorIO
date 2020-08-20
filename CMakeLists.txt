@@ -103,7 +103,7 @@ if(OCIO_BUILD_GPU_TESTS OR OCIO_BUILD_APPS)
     if(NOT APPLE)
         # On some Linux platform, the glew-config.cmake is found first so make it explicit
         # to fall back on the regular search if not found.
-	find_package(GLEW CONFIG QUIET)
+        find_package(GLEW CONFIG QUIET)
         if(NOT GLEW_FOUND)
             find_package(GLEW)
             if(NOT GLEW_FOUND)
