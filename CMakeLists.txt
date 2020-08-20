@@ -101,13 +101,24 @@ if(OCIO_BUILD_GPU_TESTS OR OCIO_BUILD_APPS)
     endif()
 
     if(NOT APPLE)
-        find_package(GLEW)
+        # On some Linux platform, the glew-config.cmake is found first so make it explicit
+        # to fall back on the regular search if not found.
+	find_package(GLEW CONFIG QUIET)
         if(NOT GLEW_FOUND)
-            package_root_message(GLEW)
-            set(OCIO_GL_ENABLED OFF)
+            find_package(GLEW)
+            if(NOT GLEW_FOUND)
+                package_root_message(GLEW)
+                set(OCIO_GL_ENABLED OFF)
+            endif()
+        else()
+            # Expected variables GLEW_LIBRARIES and GLEW_INCLUDE_DIRS are missing so create
+            # the mandatory one. Note that the cmake bug is now fixed (issue 19662).
+            if(NOT GLEW_LIBRARIES)
+                set(GLEW_LIBRARIES GLEW::GLEW)
+            endif()
         endif()
-	endif()
-	
+    endif()
+
     find_package(GLUT)
     if(NOT GLUT_FOUND)
         package_root_message(GLUT)
