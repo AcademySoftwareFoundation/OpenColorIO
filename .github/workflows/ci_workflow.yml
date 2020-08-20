@@ -205,8 +205,6 @@ jobs:
       CXX: ${{ matrix.cxx-compiler }}
       CC: ${{ matrix.cc-compiler }}
     steps:
-      - name: Setup container
-        if: matrix.vfx-cy == 2020
       - name: Checkout
         uses: actions/checkout@v2
       - name: Create build directories
