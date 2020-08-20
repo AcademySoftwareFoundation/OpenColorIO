@@ -754,7 +754,7 @@ OCIO_ADD_TEST(CPUProcessor, with_several_ops)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         OCIO::ConstProcessorRcPtr processor;
         OCIO_CHECK_NO_THROW(processor = config->getProcessor("cs1", "cs2"));
@@ -898,7 +898,7 @@ OCIO_ADD_TEST(CPUProcessor, with_several_ops)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         OCIO::ConstProcessorRcPtr processor;
         OCIO_CHECK_NO_THROW(processor = config->getProcessor("cs1", "cs2"));
@@ -991,7 +991,7 @@ OCIO_ADD_TEST(CPUProcessor, with_several_ops)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         OCIO::ConstProcessorRcPtr processor;
         OCIO_CHECK_NO_THROW(processor = config->getProcessor("cs1", "cs2"));
@@ -1081,7 +1081,7 @@ OCIO_ADD_TEST(CPUProcessor, image_desc)
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::ConstProcessorRcPtr processor;
     OCIO_CHECK_NO_THROW(processor = config->getProcessor("cs1", "cs2"));

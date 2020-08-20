@@ -32,14 +32,14 @@ BEGIN
         BLOCK "040904E4"
         BEGIN
             VALUE "CompanyName",      ""
-            VALUE "FileDescription",  "OpenColorIO (OCIO) DLL"
+            VALUE "FileDescription",  "@PROJECT_NAME@ (OCIO) DLL"
             VALUE "FileVersion",      VER_FILEVERSION_STR
-            VALUE "InternalName",     "OpenColorIO"
+            VALUE "InternalName",     "@PROJECT_NAME@"
             VALUE "LegalCopyright",   ""
             VALUE "LegalTrademarks1", ""
             VALUE "LegalTrademarks2", ""
-            VALUE "OriginalFilename", "OpenColorIO@OCIO_LIBNAME_SUFFIX@@LIBNAME_SUFFIX@.dll"
-            VALUE "ProductName",      "OpenColorIO"
+            VALUE "OriginalFilename", "@PROJECT_NAME@@OCIO_LIBNAME_SUFFIX@@LIBNAME_SUFFIX@.dll"
+            VALUE "ProductName",      "@PROJECT_NAME@"
             VALUE "ProductVersion",   VER_PRODUCTVERSION_STR
         END
     END

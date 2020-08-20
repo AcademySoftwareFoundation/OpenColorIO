@@ -112,7 +112,7 @@ OCIO_ADD_TEST(DisplayViewTransform, build_ops)
     const std::string view{ "view" };
     OCIO_CHECK_NO_THROW(config->addDisplayView(display.c_str(), view.c_str(), dst.c_str(), ""));
 
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     auto dt = OCIO::DisplayViewTransform::Create();
     dt->setSrc(src.c_str());
@@ -189,7 +189,7 @@ OCIO_ADD_TEST(DisplayViewTransform, build_ops)
     // Explicitly use the display color space named "display".
     OCIO_CHECK_NO_THROW(config->addDisplayView(display.c_str(), viewt.c_str(), scenevt.c_str(),
                                                display.c_str(), "", "", ""));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     dt->setView(viewt.c_str());
 
@@ -251,7 +251,7 @@ OCIO_ADD_TEST(DisplayViewTransform, build_ops)
     // Replace view display.
     OCIO_CHECK_NO_THROW(config->addDisplayView(display.c_str(), viewt.c_str(), displayvt.c_str(),
                                                display.c_str(), "", "", ""));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     {
         OCIO::OpRcPtrVec ops;
@@ -308,7 +308,7 @@ OCIO_ADD_TEST(DisplayViewTransform, build_ops)
 
     // This is valid because shared view refers to a view transform, is used in "display" and
     // there is a color space named "display".
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
     dt->setView(sharedView.c_str());
 
     {
@@ -364,7 +364,7 @@ OCIO_ADD_TEST(DisplayViewTransform, build_ops)
     // Repeat with data color space.
     csSource->setIsData(true);
     config->addColorSpace(csSource);
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     {
         OCIO::OpRcPtrVec ops;
@@ -471,7 +471,7 @@ colorspaces:
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     auto dt = OCIO::DisplayViewTransform::Create();
     dt->setSrc("displayCSIn");
@@ -903,7 +903,7 @@ colorspaces:
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     // Create a display transform using a view that use a view transform and a scene-referred
     // input color space. Create forward and inverse processor and apply them one after the

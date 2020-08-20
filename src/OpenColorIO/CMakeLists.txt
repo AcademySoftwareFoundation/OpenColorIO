@@ -166,6 +166,20 @@ else()
 	message(WARNING "Disabling supplemental built-in transforms removes all built-in camera transforms, limiting OCIO configuration compatibility.")
 endif()
 
+if(NOT WIN32)
+
+    # Install the pkg-config file.
+
+    set(prefix ${CMAKE_INSTALL_PREFIX})
+    set(exec_prefix "\${prefix}")
+    set(libdir "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
+    set(includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
+    configure_file(res/OpenColorIO.pc.in ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc @ONLY)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+endif()
+
+# TODO: Install the OpenColorIO-config.cmake.
+
 if(WIN32 AND BUILD_SHARED_LIBS)
 
     # Impose a versioned name on Windows to avoid binary name clashes

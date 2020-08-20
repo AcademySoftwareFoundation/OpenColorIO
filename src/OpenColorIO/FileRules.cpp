@@ -457,7 +457,7 @@ public:
         return false;
     }
 
-    void sanityCheck(std::function<ConstColorSpaceRcPtr(const char *)> colorSpaceAccesssor) const
+    void validate(std::function<ConstColorSpaceRcPtr(const char *)> colorSpaceAccesssor) const
     {
         if (m_type != FILE_RULE_PARSE_FILEPATH)
         {
@@ -613,11 +613,11 @@ void FileRules::Impl::moveRule(size_t ruleIndex, int offset)
 }
 
 
-void FileRules::Impl::sanityCheck(std::function<ConstColorSpaceRcPtr(const char *)> colorSpaceAccesssor) const
+void FileRules::Impl::validate(std::function<ConstColorSpaceRcPtr(const char *)> colorSpaceAccesssor) const
 {
     for (auto & rule : m_rules)
     {
-        rule->sanityCheck(colorSpaceAccesssor);
+        rule->validate(colorSpaceAccesssor);
     }
 }
 

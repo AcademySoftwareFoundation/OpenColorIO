@@ -34,7 +34,7 @@ OCIO_ADD_TEST(ColorSpaceInfo, read_values)
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     // Tests with 'in_1'.
 
@@ -81,7 +81,7 @@ OCIO_ADD_TEST(ColorSpaceInfo, change_values)
 {
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateRaw());
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::ColorSpaceRcPtr cs;
     OCIO_CHECK_NO_THROW(cs = config->getColorSpace("raw")->createEditableCopy());
@@ -173,7 +173,7 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, categories)
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::ColorSpaceMenuHelperRcPtr menuHelper;
 
@@ -261,7 +261,7 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, input_color_transformation)
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     //
     // Step 1 - Validate the selected input color spaces.
@@ -367,7 +367,7 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, additional_color_space)
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     // Use an arbitrary menu helper.
 

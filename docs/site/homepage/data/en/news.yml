@@ -1,9 +1,10 @@
 ############################# feature ###################################
 news:
   enable : true
-  image : images/SpiderVerse_pmm014.1014_lm_v1.jpg
+  image : images/SpiderVerse_pmm014.1014_lm_v1_opt.jpg
   title : OCIO v2 is here!
-  content : "Check out our [guide](https://opencolorio.readthedocs.io/en/latest/upgrading_v2/_index.html#migrating-to-v2) for upgrading, and just a few highlights of new features:"
+  content : "Check out our [guide](https://opencolorio.readthedocs.io/en/latest/upgrading_v2/_index.html#migrating-to-v2) for upgrading. Here are just a few highlights of new features:"
+  caption: "OpenColorIO in use on Spider-Man™: Into the Spider-Verse"
   feature_item : 
       # feature item loop
     - title : New GPU Renderer

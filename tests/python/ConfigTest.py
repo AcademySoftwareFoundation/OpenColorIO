@@ -131,7 +131,7 @@ from UnitTestUtils import TEST_DATAFILES_DIR, TEST_NAMES, TEST_DESCS
 #        self.assertEqual("luts", _cfge.getSearchPath())
 #        _cfge.setSearchPath("otherdir")
 #        self.assertEqual("otherdir", _cfge.getSearchPath())
-#        _cfge.sanityCheck()
+#        _cfge.validate()
 #        _cfge.setDescription("testdesc")
 #        self.assertEqual("testdesc", _cfge.getDescription())
 #        self.assertEqual(self.SIMPLE_PROFILE, _cfg.serialize())

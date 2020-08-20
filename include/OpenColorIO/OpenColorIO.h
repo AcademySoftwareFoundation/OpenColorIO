@@ -262,13 +262,13 @@ public:
     void upgradeToLatestVersion();
 
     /**
-     * \brief Performs a thorough sanity check for the most common user errors.
+     * \brief Performs a thorough validation for the most common user errors.
      * 
      * This will throw an exception if the config is malformed. The most
      * common error occurs when references are made to colorspaces that do not
      * exist.
      */
-    void sanityCheck() const;
+    void validate() const;
 
     /// If not empty or null a single character to separate the family string in levels.
     char getFamilySeparator() const;
@@ -558,7 +558,7 @@ public:
     // case, when the view is referenced in a display, the display color space
     // that is used will be the one matching the display name.  In other words,
     // the view will be customized based on the display it is used in.
-    // :cpp:func:`Config::sanityCheck` will throw if the config does not contain
+    // :cpp:func:`Config::validate` will throw if the config does not contain
     // the matching display color space.
     
     /// Will throw if view or colorSpaceName are null or empty.

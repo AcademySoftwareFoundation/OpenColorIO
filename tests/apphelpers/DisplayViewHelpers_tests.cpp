@@ -35,7 +35,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, basic)
 
     OCIO::ConstConfigRcPtr cfg;
     OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(cfg->sanityCheck());
+    OCIO_CHECK_NO_THROW(cfg->validate());
 
     //
     // Step 1 - Validate the selected working color spaces.
@@ -350,7 +350,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, display_view_without_look)
 
     OCIO::ConstConfigRcPtr cfg;
     OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(cfg->sanityCheck());
+    OCIO_CHECK_NO_THROW(cfg->validate());
 
     OCIO::ConstProcessorRcPtr processor;
     OCIO::GroupTransformRcPtr groupTransform;
@@ -452,7 +452,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, active_display_view)
 
     OCIO::ConfigRcPtr cfg;
     OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(is)->createEditableCopy());
-    OCIO_CHECK_NO_THROW(cfg->sanityCheck());
+    OCIO_CHECK_NO_THROW(cfg->validate());
 
     // Step 1 - Check the current status.
 
@@ -621,7 +621,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, remove_display_view)
 
     OCIO::ConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
     OCIO_CHECK_EQUAL(config->getNumViews("disp1"), 4);
 
     // Remove a (display, view) pair.

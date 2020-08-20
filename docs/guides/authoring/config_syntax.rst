@@ -35,7 +35,7 @@ Checking for errors
 
 Use the ``ociocheck`` command line tool to validate your config. It
 will inform you of YAML-syntax errors, but more importantly it
-performs various OCIO-specific "sanity checks".
+performs various OCIO-specific plausibility checks.
 
 For more information, see the overview of :ref:`overview-ociocheck`
 

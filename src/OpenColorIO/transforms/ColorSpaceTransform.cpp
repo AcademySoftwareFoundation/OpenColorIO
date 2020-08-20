@@ -329,7 +329,7 @@ void BuildReferenceConversionOps(OpRcPtrVec & ops,
         auto view = config.getDefaultSceneToDisplayViewTransform();
         if (!view)
         {
-            // Can not be the case for a sane config.
+            // Can not be the case for a valid config.
             throw Exception("There is no view transform between the main scene-referred space "
                             "and the display-referred space.");
         }

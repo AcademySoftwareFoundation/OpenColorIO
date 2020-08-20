@@ -157,7 +157,7 @@ OCIO_ADD_TEST(ViewingPipeline, processorWithLooks)
 
     OCIO::ConstConfigRcPtr cfg;
     OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(cfg->sanityCheck());
+    OCIO_CHECK_NO_THROW(cfg->validate());
 
     OCIO::DisplayViewTransformRcPtr dt = OCIO::DisplayViewTransform::Create();
     dt->setDisplay("DISP_2");
@@ -528,7 +528,7 @@ OCIO_ADD_TEST(ViewingPipeline, fullPipelineNoLook)
     const std::string view{ "view" };
     OCIO_CHECK_NO_THROW(cfg->addDisplayView(display.c_str(), view.c_str(), dst.c_str(), ""));
 
-    OCIO_CHECK_NO_THROW(cfg->sanityCheck());
+    OCIO_CHECK_NO_THROW(cfg->validate());
 
     auto dt = OCIO::DisplayViewTransform::Create();
     dt->setSrc(src.c_str());
@@ -692,7 +692,7 @@ OCIO_ADD_TEST(ViewingPipeline, fullPipelineNoLook)
     const std::string viewt{ "viewt" };
     OCIO_CHECK_NO_THROW(cfg->addDisplayView(display.c_str(), viewt.c_str(), scenevt.c_str(),
                                             dsp.c_str(), "", "", ""));
-    OCIO_CHECK_NO_THROW(cfg->sanityCheck());
+    OCIO_CHECK_NO_THROW(cfg->validate());
 
     dt->setView(viewt.c_str());
     vp.setDisplayViewTransform(dt);
@@ -755,7 +755,7 @@ OCIO_ADD_TEST(ViewingPipeline, fullPipelineNoLook)
     // Replace view display.
     OCIO_CHECK_NO_THROW(cfg->addDisplayView(display.c_str(), viewt.c_str(), displayvt.c_str(),
                                             dsp.c_str(), "", "", ""));
-    OCIO_CHECK_NO_THROW(cfg->sanityCheck());
+    OCIO_CHECK_NO_THROW(cfg->validate());
 
     {
         OCIO::ConstProcessorRcPtr proc;
@@ -803,7 +803,7 @@ OCIO_ADD_TEST(ViewingPipeline, fullPipelineNoLook)
 
     csSource->setIsData(true);
     cfg->addColorSpace(csSource);
-    OCIO_CHECK_NO_THROW(cfg->sanityCheck());
+    OCIO_CHECK_NO_THROW(cfg->validate());
 
     {
         OCIO::ConstProcessorRcPtr proc;

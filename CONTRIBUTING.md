@@ -109,9 +109,9 @@ accepts the DCO:
 `Signed-off-by: John Doe <john.doe@example.com>`
 
 If John Doe has signed an individual CLA, or his corporation's CLA Manager
-has included his GitHub account in a corporate CLA whitelist, his pull request
+has included his GitHub account in a corporate CLA approved list, his pull request
 can be merged. Otherwise the EasyCLA system will provide instructions on
-signing a CLA, or request inclusion in an existing corporate CLA whitelist.
+signing a CLA, or request inclusion in an existing corporate CLA approved list.
 
 See the
 [ASWF TAC CONTRIBUTING.md](https://github.com/AcademySoftwareFoundation/tac/blob/master/process/contributing.md#contribution-sign-off)
