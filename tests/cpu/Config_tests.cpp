@@ -2744,7 +2744,7 @@ OCIO_ADD_TEST(Config, grading_primary_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         // Write the config.
 
@@ -2864,7 +2864,7 @@ OCIO_ADD_TEST(Config, grading_primary_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         // Write the config.
 
@@ -2902,7 +2902,7 @@ OCIO_ADD_TEST(Config, grading_primary_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         // Write the config.
 
@@ -3078,7 +3078,7 @@ OCIO_ADD_TEST(Config, grading_rgbcurve_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         // Write the config.
 
@@ -3121,7 +3121,7 @@ OCIO_ADD_TEST(Config, grading_rgbcurve_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         // Write the config.
 
@@ -3152,7 +3152,7 @@ OCIO_ADD_TEST(Config, grading_tone_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         // Write the config.
 
@@ -3217,7 +3217,7 @@ OCIO_ADD_TEST(Config, grading_tone_serialization)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->sanityCheck());
+        OCIO_CHECK_NO_THROW(config->validate());
 
         // Write the config.
 
