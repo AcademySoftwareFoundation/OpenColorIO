@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
@@ -14,10 +15,10 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "apputils/argparse.h"
 #include "ocioicc.h"
 
+
 static std::string outputfile;
 
-static int
-parse_end_args(int argc, const char *argv[])
+static int parse_end_args(int argc, const char *argv[])
 {
     if(argc>0)
     {
@@ -27,8 +28,7 @@ parse_end_args(int argc, const char *argv[])
     return 0;
 }
 
-OCIO::GroupTransformRcPtr
-parse_luts(int argc, const char *argv[]);
+OCIO::GroupTransformRcPtr parse_luts(int argc, const char *argv[]);
 
 int main (int argc, const char* argv[])
 {
@@ -392,8 +392,7 @@ int main (int argc, const char* argv[])
 // then atof() will likely try to convert "--invlut" to its double equivalent,
 // resulting in an invalid (or at least undesired) scale value.
 
-OCIO::GroupTransformRcPtr
-parse_luts(int argc, const char *argv[])
+OCIO::GroupTransformRcPtr parse_luts(int argc, const char *argv[])
 {
     OCIO::GroupTransformRcPtr groupTransform = OCIO::GroupTransform::Create();
     const char *lastCCCId = NULL; // Ugly to use this but using GroupTransform::getTransform()

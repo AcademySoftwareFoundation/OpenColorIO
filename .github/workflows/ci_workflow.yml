@@ -205,11 +205,6 @@ jobs:
       CXX: ${{ matrix.cxx-compiler }}
       CC: ${{ matrix.cc-compiler }}
     steps:
-      # TODO: Remove this workaround following resolution of:
-      #       https://github.com/AcademySoftwareFoundation/aswf-docker/issues/43
-      - name: Setup container
-        run: sudo rm -rf /usr/local/lib64/cmake/glew
-        if: matrix.vfx-cy == 2020
       - name: Checkout
         uses: actions/checkout@v2
       - name: Create build directories
