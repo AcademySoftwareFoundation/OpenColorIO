@@ -185,6 +185,11 @@ supported_apps:
       content : V-Ray 4 and up.
       link : "https://chaosgroup.com/"
 
-
+    # portfolio item loop
+    - name : Guerilla Render
+      image : images/supported_apps/guerillarender.png
+      categories : ["Render", "3D"]
+      content : Guerilla Render 2.2 and up.
+      link : "http://guerillarender.com/"
 
   
