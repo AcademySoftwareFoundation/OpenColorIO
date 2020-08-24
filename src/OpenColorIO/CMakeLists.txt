@@ -115,7 +115,7 @@ set(SOURCES
 	transforms/BuiltinTransform.cpp
 	transforms/CDLTransform.cpp
 	transforms/ColorSpaceTransform.cpp
-	transforms/DisplayTransform.cpp
+	transforms/DisplayViewTransform.cpp
 	transforms/ExponentTransform.cpp
 	transforms/ExponentWithLinearTransform.cpp
 	transforms/ExposureContrastTransform.cpp
@@ -130,6 +130,7 @@ set(SOURCES
 	transforms/Lut3DTransform.cpp
 	transforms/MatrixTransform.cpp
 	transforms/RangeTransform.cpp
+	ViewingRules.cpp
 	ViewTransform.cpp
 )
 
@@ -146,6 +147,20 @@ if(OCIO_ADD_EXTRA_BUILTINS)
 else()
 	message(WARNING "Disabling supplemental built-in transforms removes all built-in camera transforms, limiting OCIO configuration compatibility.")
 endif()
+
+if(NOT WIN32)
+
+    # Install the pkg-config file.
+
+    set(prefix ${CMAKE_INSTALL_PREFIX})
+    set(exec_prefix "\${prefix}")
+    set(libdir "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
+    set(includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
+    configure_file(res/OpenColorIO.pc.in ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc @ONLY)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+endif()
+
+# TODO: Install the OpenColorIO-config.cmake.
 
 if(WIN32 AND BUILD_SHARED_LIBS)
 
@@ -174,11 +189,11 @@ target_link_libraries(OpenColorIO
 		public_api
 	PRIVATE
 		expat::expat
-		ilmbase::ilmbase
+		IlmBase::Half
 		pystring::pystring
 		sampleicc::sampleicc
 		utils::strings
-		yamlcpp::yamlcpp
+		yaml-cpp
 )
 
 if(NOT BUILD_SHARED_LIBS)

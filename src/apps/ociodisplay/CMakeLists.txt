@@ -31,12 +31,13 @@ target_include_directories(ociodisplay
 )
 target_link_libraries(ociodisplay
 	PRIVATE 
+		apphelpers
 		${GLEW_LIBRARIES}
 		${GLUT_LIBRARIES}
         oglapphelpers
 		OpenColorIO
 		${OPENGL_LIBRARIES}
-		OpenImageIO
+		OpenImageIO::OpenImageIO
 )
 install(TARGETS ociodisplay
     RUNTIME DESTINATION bin

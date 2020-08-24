@@ -15,7 +15,7 @@ public class Config extends LoadLibrary
     public native Config CreateFromFile(String filename);
     public native Config CreateFromStream(String istream);
     public native Config createEditableCopy();
-    public native void sanityCheck();
+    public native void validate();
     public native String getDescription();
     public native void setDescription(String description);
     public native String serialize();

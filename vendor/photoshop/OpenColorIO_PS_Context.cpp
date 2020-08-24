@@ -33,7 +33,7 @@ OpenColorIO_PS_Context::OpenColorIO_PS_Context(const std::string &path) :
     {
         _config = OCIO::Config::CreateFromFile( _path.c_str() );
         
-        _config->sanityCheck();
+        _config->validate();
         
         _isLUT = false;
         

@@ -330,7 +330,7 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const std::string &path, OCIO_Sou
         {
             _config = OCIO::Config::CreateFromFile( _path.c_str() );
             
-            _config->sanityCheck();
+            _config->validate();
             
             for(int i=0; i < _config->getNumColorSpaces(); ++i)
             {
@@ -433,7 +433,7 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, co
         {
             _config = OCIO::Config::CreateFromFile( _path.c_str() );
             
-            _config->sanityCheck();
+            _config->validate();
             
             for(int i=0; i < _config->getNumColorSpaces(); ++i)
             {

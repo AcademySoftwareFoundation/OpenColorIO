@@ -1,0 +1,30 @@
+{{ $data := index site.Data site.Language.Lang }}
+
+{{ if $data.banner.banner.enable }}
+{{ with $data.banner.banner }}
+{{"<!-- Welcome Slider-->" | safeHTML}}
+<section class="hero-area">
+	<!-- this image is for trigger this section fallback background image -->
+	<img class="lozad" style="display: none;" onerror="this.onerror=null;this.parentElement.style.backgroundImage= 'url({{ .bg_image | absURL }})'" data-src="{{ .bg_image_webp | absURL }}" />
+
+	<div class="block">
+		{{ if .icon }}
+		<div class="video-button">
+			<i class="{{ .icon }}"></i>
+		</div>
+		{{ end }}
+		<div class="row justify-content-center" style="padding:50px 20px;">
+			<img class="hero-area-logo" src="{{ .logo | absURL }}" alt="{{ site.Title }}" />
+		</div>
+		<p>{{ .content | markdownify }}</p>
+		
+		{{ if .button.enable }}
+		{{ with .button }}
+		<a href="{{ .link }}" class="btn btn-transparent page-scroll">{{ .label }}</a>
+		{{ end }}
+		{{ end }}
+	</div>
+</section>
+{{"<!-- /Welcome Slider-->" | safeHTML}}
+{{end}}
+{{end}}

@@ -1,0 +1,11 @@
+############################### Banner ################################
+banner:
+  enable : true
+  icon : "" # themify icon pack : https://themify.me/themify-icons
+  logo : "images/ocio_full_w4x.png"
+  title : "OpenColorIO"
+  content : "A complete color management solution geared towards motion picture production with an emphasis on visual effects and computer animation."
+  button:
+    enable : true
+    label : "Get Started"
+    link : "#start"

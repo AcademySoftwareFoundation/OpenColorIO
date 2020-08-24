@@ -21,6 +21,8 @@ jobs:
       <${{ matrix.compiler-desc }} 
        cxx=${{ matrix.cxx-standard }}, 
        docs=${{ matrix.build-docs }}>'
+    # Don't run on OCIO forks
+    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     # GH-hosted VM. The build runs in CentOS 7 'container' defined below.
     runs-on: ubuntu-latest
     container:
@@ -55,7 +57,8 @@ jobs:
           # -------------------------------------------------------------------
           # Python 2.7
           - build: 3
-            build-docs: 'ON'
+            # Doc build requires Python 3
+            build-docs: 'OFF'
             cxx-standard: 11
             cxx-compiler: g++
             cc-compiler: gcc
@@ -85,6 +88,7 @@ jobs:
           # -------------------------------------------------------------------
           # Python 2.7
           - build: 6
+            # Doc build requires Python 3
             build-docs: 'OFF'
             cxx-standard: 11
             cxx-compiler: clang++
@@ -111,7 +115,14 @@ jobs:
           share/ci/scripts/linux/install_pybind11.sh latest
           share/ci/scripts/linux/install_openexr.sh latest
           share/ci/scripts/linux/install_oiio.sh latest
+      - name: Install latest documentation ext package versions
+        run: |
           share/ci/scripts/linux/install_sphinx.sh latest
+          share/ci/scripts/linux/install_testresources.sh latest
+          share/ci/scripts/linux/install_recommonmark.sh latest
+          share/ci/scripts/linux/install_sphinx-press-theme.sh latest
+          share/ci/scripts/linux/install_sphinx-tabs.sh latest
+        if: matrix.build-docs == 'ON'
       - name: Create build directories
         run: |
           mkdir _install
@@ -126,7 +137,7 @@ jobs:
                 -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_INSTALL_EXT_PACKAGES=NONE \
                 -DOCIO_WARNING_AS_ERROR=OFF \
-                -DPYTHON_EXECUTABLE=$(which python)
+                -DPython_EXECUTABLE=$(which python)
         working-directory: _build
       - name: Build
         run: |
@@ -145,6 +156,8 @@ jobs:
 
   linux_sonarcloud:
     name: 'Linux CentOS 7 VFX CY2020 SonarCloud <GCC 6.3.1>'
+    # Don't run on OCIO forks
+    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     # GH-hosted VM. The build runs in CentOS 7 'container' defined below.
     runs-on: ubuntu-latest
     container:
@@ -180,7 +193,7 @@ jobs:
                 -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
-                -DPYTHON_EXECUTABLE=$(which python)
+                -DPython_EXECUTABLE=$(which python)
         working-directory: _build
       - name: Build OCIO with build-wrapper
         run: build-wrapper-linux-x86-64 --out-dir bw_output make clean all

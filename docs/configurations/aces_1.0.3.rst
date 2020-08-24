@@ -5,7 +5,15 @@
 aces_1.0.3
 ==========
 
-ACES 1.0.3 OpenColorIO configuration
+This section describes the ACES 1.0.3 OpenColorIO configuration.
+
+.. note::
+    There is a more recent version of the ACES config for ACES 1.2 available here:
+
+    - https://github.com/colour-science/OpenColorIO-Configs/tree/feature/aces-1.2-config
+
+    An ACES config that takes advantage of the new OCIO v2 features is under development.
+
 
 Information about ACES
 ***********************
@@ -17,6 +25,10 @@ The **ACES** project home page is here:
 The latest documentation on the ACES transforms and specifications can be found here:
 
 - http://www.oscars.org/science-technology/aces/aces-documentation
+
+The ACES discussion forum is here:
+
+- https://acescentral.com/
 
 
 Colorspaces

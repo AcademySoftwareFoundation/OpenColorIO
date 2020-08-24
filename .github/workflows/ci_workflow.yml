@@ -65,6 +65,8 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             cxx-compiler: g++
@@ -76,6 +78,8 @@ jobs:
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             cxx-compiler: g++
@@ -87,6 +91,8 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 14
             cxx-compiler: g++
@@ -98,6 +104,8 @@ jobs:
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'OFF'
             cxx-standard: 11
             cxx-compiler: g++
@@ -111,7 +119,10 @@ jobs:
           - build: 5
             build-type: Release
             build-shared: 'ON'
-            build-docs: 'ON'
+            # Doc build requires Python 3
+            build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             cxx-compiler: g++
@@ -126,6 +137,8 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             cxx-compiler: clang++
@@ -137,6 +150,8 @@ jobs:
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            build-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             cxx-compiler: clang++
@@ -148,6 +163,8 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 14
             cxx-compiler: clang++
@@ -159,6 +176,8 @@ jobs:
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'OFF'
             cxx-standard: 11
             cxx-compiler: clang++
@@ -172,7 +191,10 @@ jobs:
           - build: 10
             build-type: Release
             build-shared: 'ON'
-            build-docs: 'ON'
+            # Doc build requires Python 3
+            build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             cxx-compiler: clang++
@@ -183,11 +205,6 @@ jobs:
       CXX: ${{ matrix.cxx-compiler }}
       CC: ${{ matrix.cc-compiler }}
     steps:
-      # TODO: Remove this workaround following resolution of:
-      #       https://github.com/AcademySoftwareFoundation/aswf-docker/issues/43
-      - name: Setup container
-        run: sudo rm -rf /usr/local/lib64/cmake/glew
-        if: matrix.vfx-cy == 2020
       - name: Checkout
         uses: actions/checkout@v2
       - name: Create build directories
@@ -202,11 +219,12 @@ jobs:
                 -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
-                -DOCIO_BUILD_GPU_TESTS=OFF \
+                -DOCIO_BUILD_GPU_TESTS=${{ matrix.build-gpu }} \
+                -DOCIO_USE_HEADLESS=${{ matrix.use-headless }} \
                 -DOCIO_USE_SSE=${{ matrix.use-sse }} \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
-                -DPYTHON_EXECUTABLE=$(which python)
+                -DPython_EXECUTABLE=$(which python)
         working-directory: _build
       - name: Build
         run: |
@@ -262,6 +280,8 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             python-version: 3.7
@@ -270,6 +290,8 @@ jobs:
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             python-version: 3.7
@@ -278,6 +300,8 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 14
             python-version: 3.7
@@ -286,6 +310,8 @@ jobs:
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'OFF'
             cxx-standard: 11
             python-version: 3.7
@@ -293,7 +319,10 @@ jobs:
           - build: 5
             build-type: Release
             build-shared: 'ON'
-            build-docs: 'ON'
+            # Doc build requires Python 3
+            build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             python-version: 2.7
@@ -316,11 +345,12 @@ jobs:
                 -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
-                -DOCIO_BUILD_GPU_TESTS=OFF \
+                -DOCIO_BUILD_GPU_TESTS=${{ matrix.build-gpu }} \
+                -DOCIO_USE_HEADLESS=${{ matrix.use-headless }} \
                 -DOCIO_USE_SSE=${{ matrix.use-sse }} \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
-                -DPYTHON_EXECUTABLE=$(which python)
+                -DPython_EXECUTABLE=$(which python)
         working-directory: _build
       - name: Build
         run: |
@@ -358,6 +388,8 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             python-version: 3.7
@@ -366,6 +398,8 @@ jobs:
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             python-version: 3.7
@@ -374,6 +408,8 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 14
             python-version: 3.7
@@ -382,6 +418,8 @@ jobs:
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'OFF'
             cxx-standard: 11
             python-version: 3.7
@@ -389,7 +427,10 @@ jobs:
           - build: 5
             build-type: Release
             build-shared: 'ON'
-            build-docs: 'ON'
+            # Doc build requires Python 3
+            build-docs: 'OFF'
+            build-gpu: 'OFF'
+            use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 11
             python-version: 2.7
@@ -414,11 +455,12 @@ jobs:
                 -DCMAKE_GENERATOR_PLATFORM=x64 \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
-                -DOCIO_BUILD_GPU_TESTS=OFF \
+                -DOCIO_BUILD_GPU_TESTS=${{ matrix.build-gpu }} \
+                -DOCIO_USE_HEADLESS=${{ matrix.use-headless }} \
                 -DOCIO_USE_SSE=${{ matrix.use-sse }} \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
-                -DPYTHON_EXECUTABLE=$(which python)
+                -DPython_EXECUTABLE=$(which python)
         shell: bash
         working-directory: _build
       - name: Build

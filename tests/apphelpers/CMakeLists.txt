@@ -8,6 +8,7 @@ set(SOURCES
     DisplayViewHelpers_tests.cpp
     MixingHelpers_tests.cpp
     UnitTestMain.cpp
+    ViewingPipeline_tests.cpp
 )
 
 add_executable(test_apphelpers_exec ${SOURCES})

@@ -19,9 +19,9 @@ void bindPyCDLTransform(py::module & m)
     std::array<double, 3> DEFAULT_POWER;
     DEFAULT->getPower(DEFAULT_POWER.data());
 
-    py::class_<CDLTransform, 
-               CDLTransformRcPtr /* holder */, 
-               Transform /* base */>(m, "CDLTransform")
+    auto cls = py::class_<CDLTransform, 
+                          CDLTransformRcPtr /* holder */, 
+                          Transform /* base */>(m, "CDLTransform")
         .def(py::init(&CDLTransform::Create))
         .def(py::init([](const std::string & xml, TransformDirection dir) 
             {
@@ -32,7 +32,7 @@ void bindPyCDLTransform(py::module & m)
                 return p;
             }), 
              "xml"_a,
-             "dir"_a = DEFAULT->getDirection())
+             "direction"_a = DEFAULT->getDirection())
         .def(py::init([](const std::array<double, 3> & slope,
                          const std::array<double, 3> & offset,
                          const std::array<double, 3> & power,
@@ -57,10 +57,10 @@ void bindPyCDLTransform(py::module & m)
              "power"_a = DEFAULT_POWER,
              "sat"_a = DEFAULT->getSat(),
              "id"_a = DEFAULT->getID(),
-             "desc"_a = DEFAULT->getDescription(),
-             "dir"_a = DEFAULT->getDirection())
+             "description"_a = DEFAULT->getDescription(),
+             "direction"_a = DEFAULT->getDirection())
 
-        .def_static("CreateFromFile", &CDLTransform::CreateFromFile, "src"_a, "cccid"_a)
+        .def_static("CreateFromFile", &CDLTransform::CreateFromFile, "src"_a, "id"_a)
 
         .def("getFormatMetadata", 
              (FormatMetadata & (CDLTransform::*)()) &CDLTransform::getFormatMetadata,
@@ -129,7 +129,9 @@ void bindPyCDLTransform(py::module & m)
         .def("getID", &CDLTransform::getID)
         .def("setID", &CDLTransform::setID, "id"_a)
         .def("getDescription", &CDLTransform::getDescription)
-        .def("setDescription", &CDLTransform::setDescription,  "desc"_a);
+        .def("setDescription", &CDLTransform::setDescription,  "description"_a);
+
+    defStr(cls);
 }
 
 } // namespace OCIO_NAMESPACE

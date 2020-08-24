@@ -6,10 +6,6 @@ set -ex
 
 OIIO_VERSION="$1"
 
-# TODO: Remove this when the aswf-docker containers are upgraded to the newer
-#       version of OpenJpeg. OIIO has deprecated v1 support.
-sudo yum -y install openjpeg2-devel
-
 git clone https://github.com/OpenImageIO/oiio.git
 cd oiio
 
@@ -22,8 +18,7 @@ fi
 
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
-      -DOIIO_BUILD_TOOLS=OFF \
+cmake -DOIIO_BUILD_TOOLS=OFF \
       -DOIIO_BUILD_TESTS=OFF \
       -DVERBOSE=ON \
       -DSTOP_ON_WARNING=OFF \

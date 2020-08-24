@@ -1,6 +1,9 @@
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 <!-- Copyright Contributors to the OpenColorIO Project. -->
 
+**Version 2.0.0 (unreleased):**
+    * Renamed sanityCheck() method to validate()
+
 **Version 1.1.1 (April 2 2019):**
     * Added optional compatibility for building apps with OpenImageIO 1.9+
     * Added USE_SSE checks to fix Linux build failure

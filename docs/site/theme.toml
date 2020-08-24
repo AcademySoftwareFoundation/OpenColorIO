@@ -1,0 +1,12 @@
+name = "Meghna Hugo"
+license = "CC BY 3.0"
+licenselink = "https://creativecommons.org/licenses/by/3.0/"
+description = "Hugo port of the Themefisher’s Meghna Template"
+homepage = "https://gethugothemes.com/products/meghna-hugo-theme/"
+tags = ['landing-page', 'google-analytics', 'fast', 'modern', 'minimal', 'minimalistic', 'business', 'agency-template', 'themefisher', 'hugo-theme', 'hugo-templates', 'bootstrap', 'blog', 'responsive', 'portfolio', 'single-page', 'dark', 'clean', 'simple', 'company', 'creative', 'contact-form', 'custom-themes', 'mobile']
+features = ['bootstrap','responsive']
+min_version = "0.58.0"
+
+[author]
+  name = "Themefisher"
+  homepage = "https://themefisher.com/"

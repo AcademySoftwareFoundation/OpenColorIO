@@ -86,7 +86,7 @@ OCIO_ADD_GPU_TEST(Config, several_1D_luts_legacy_shader)
     is.str(configStr);
 
     OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromStream(is);
-    config->sanityCheck();
+    config->validate();
 
     OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "lgh");
     test.setProcessor(processor);
@@ -105,7 +105,7 @@ OCIO_ADD_GPU_TEST(Config, several_1D_luts_generic_shader)
     is.str(configStr);
 
     OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromStream(is);
-    config->sanityCheck();
+    config->validate();
 
     OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "lgh");
     test.setProcessor(processor);
@@ -132,7 +132,7 @@ OCIO_ADD_GPU_TEST(Config, arbitrary_generic_shader)
     is.str(configStr);
 
     OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromStream(is);
-    config->sanityCheck();
+    config->validate();
 
     OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "lgh");
 
@@ -165,7 +165,7 @@ OCIO_ADD_GPU_TEST(Config, several_luts_generic_shader)
     is.str(configStr);
 
     OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromStream(is);
-    config->sanityCheck();
+    config->validate();
 
     OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "lgh");
 
@@ -204,7 +204,7 @@ OCIO_ADD_GPU_TEST(Config, with_underscores)
     is.str(configStr);
 
     OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromStream(is);
-    config->sanityCheck();
+    config->validate();
 
     OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "__lgh__");
     test.setProcessor(processor);

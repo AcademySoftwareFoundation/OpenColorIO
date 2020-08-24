@@ -1,0 +1,45 @@
+{{ $data := index site.Data site.Language.Lang }}
+
+{{ if $data.start.start.enable }}
+{{ with $data.start.start }}
+{{"<!-- Start About Section -->" | safeHTML}}
+<section class="bg-one about section" id="start">
+	<div class="container">
+		<div class="row justify-content-center">
+			<div class="row justify-content-center" style="padding:20px 0px;">
+				<iframe width="560" height="315" src="https://www.youtube.com/embed/8z61RZhvKQ8" frameborder="0" 
+				allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+			</div>
+			<div class="col-lg-12">
+				{{"<!-- section title -->" | safeHTML}}
+				<div class="title text-center wow fadeIn" data-wow-duration="1500ms">
+					<h2> {{ with .title }} {{ index (split . " ") 0 | safeHTML }} {{ end }}<span class="color">
+							{{ with .title }} {{ index (split . " ") 1 | safeHTML }} {{ end }} </span></h2>
+					<div class="border-meghna"></div>
+				</div>
+			</div>
+			{{"<!-- /section title -->" | safeHTML}}
+
+			{{ range .about_item }}
+			{{"<!-- About item -->" | safeHTML}}
+			<div class="col-lg-4 text-center wow fadeInUp" data-wow-duration="500ms">
+				<a href= "{{ .link }}">
+				<div class="block h-100">
+					<div class="icon-box">
+						{{with .icon}}<i class="{{ . }}"></i>{{ end }}
+					</div>
+					{{"<!-- Express About Yourself -->" | safeHTML}}
+					<div class="content text-center">
+						<h3>{{ .title }}</h3>
+						<p>{{ .content | markdownify }}</p>
+					</div>
+				</a>
+				</div>
+			</div>
+			{{ end }}
+		</div>
+	</div>
+</section>
+{{"<!-- /about -->" | safeHTML}}
+{{ end }}
+{{ end }}

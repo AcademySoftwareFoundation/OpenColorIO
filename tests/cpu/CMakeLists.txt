@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-include(ExternalProject)
-
 # Define used for tests in tests/cpu/Context_tests.cpp
 add_definitions("-DOCIO_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
 
@@ -20,12 +18,12 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 			public_api
 		PRIVATE
 			expat::expat
-			ilmbase::ilmbase
+			IlmBase::Half
 			pystring::pystring
 			sampleicc::sampleicc
 			unittest_data
 			utils::strings
-			yamlcpp::yamlcpp
+			yaml-cpp
 			testutils
 	)
 	if(PRIVATE_INCLUDES)
@@ -66,7 +64,6 @@ endfunction(add_ocio_test)
 # OpenColorIO target
 set(SOURCES
 	Caching.cpp
-	Display.cpp
 	fileformats/cdl/CDLParser.cpp
 	fileformats/cdl/CDLReaderHelper.cpp
 	fileformats/ctf/CTFReaderHelper.cpp
@@ -96,7 +93,6 @@ set(SOURCES
 	transforms/builtins/ACES.cpp
 	transforms/builtins/ColorMatrixHelpers.cpp
 	transforms/builtins/OpHelpers.cpp
-	transforms/LookTransform.cpp
 )
 
 if(OCIO_ADD_EXTRA_BUILTINS)
@@ -119,6 +115,7 @@ set(TESTS
 	Config_tests.cpp
 	Context_tests.cpp
 	CPUProcessor_tests.cpp
+	Display_tests.cpp
 	DynamicProperty_tests.cpp
 	Exception_tests.cpp
 	fileformats/ctf/CTFTransform_tests.cpp
@@ -198,7 +195,7 @@ set(TESTS
 	transforms/AllocationTransform_tests.cpp
 	transforms/CDLTransform_tests.cpp
 	transforms/ColorSpaceTransform_tests.cpp
-	transforms/DisplayTransform_tests.cpp
+	transforms/DisplayViewTransform_tests.cpp
 	transforms/ExponentTransform_tests.cpp
 	transforms/ExponentWithLinearTransform_tests.cpp
 	transforms/ExposureContrastTransform_tests.cpp
@@ -207,6 +204,7 @@ set(TESTS
 	transforms/LogAffineTransform_tests.cpp
 	transforms/LogCameraTransform_tests.cpp
 	transforms/LogTransform_tests.cpp
+	transforms/LookTransform_tests.cpp
 	transforms/Lut1DTransform_tests.cpp
 	transforms/Lut3DTransform_tests.cpp
 	transforms/MatrixTransform_tests.cpp
@@ -214,6 +212,7 @@ set(TESTS
 	UnitTestMain.cpp
 	UnitTestOptimFlags.cpp
 	UnitTestUtils.cpp
+	ViewingRules_tests.cpp
 	ViewTransform_tests.cpp
 )
 

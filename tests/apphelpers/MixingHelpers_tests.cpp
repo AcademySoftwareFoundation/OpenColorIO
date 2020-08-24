@@ -24,7 +24,7 @@ OCIO_ADD_TEST(MixingColorSpaceManager, basic)
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::MixingColorSpaceMenuRcPtr mixingHelper;
     OCIO_CHECK_NO_THROW(mixingHelper = OCIO::MixingColorSpaceManager::Create(config));
@@ -105,25 +105,12 @@ OCIO_ADD_TEST(MixingColorSpaceManager, basic)
         OCIO::GroupTransformRcPtr groupTransform;
         OCIO_CHECK_NO_THROW(groupTransform = processor->createGroupTransform());
         OCIO_CHECK_NO_THROW(groupTransform->validate());
-        OCIO_REQUIRE_EQUAL(groupTransform->getNumTransforms(), 4);
+        OCIO_REQUIRE_EQUAL(groupTransform->getNumTransforms(), 2);
 
         OCIO::ConstTransformRcPtr tr;
 
         {
             OCIO_CHECK_NO_THROW(tr = groupTransform->getTransform(0));
-
-            OCIO::ConstExposureContrastTransformRcPtr ec
-                = OCIO::DynamicPtrCast<const OCIO::ExposureContrastTransform>(tr);
-            OCIO_REQUIRE_ASSERT(ec);
-
-            OCIO_CHECK_EQUAL(ec->getStyle(), OCIO::EXPOSURE_CONTRAST_LINEAR);
-            OCIO_CHECK_ASSERT(ec->isExposureDynamic());
-            OCIO_CHECK_ASSERT(ec->isContrastDynamic());
-            OCIO_CHECK_ASSERT(!ec->isGammaDynamic());
-        }
-
-        {
-            OCIO_CHECK_NO_THROW(tr = groupTransform->getTransform(1));
 
             OCIO::ConstExponentTransformRcPtr exp
                 = OCIO::DynamicPtrCast<const OCIO::ExponentTransform>(tr);
@@ -141,20 +128,7 @@ OCIO_ADD_TEST(MixingColorSpaceManager, basic)
         }
 
         {
-            OCIO_CHECK_NO_THROW(tr = groupTransform->getTransform(2));
-
-            OCIO::ConstExposureContrastTransformRcPtr ec
-                = OCIO::DynamicPtrCast<const OCIO::ExposureContrastTransform>(tr);
-            OCIO_REQUIRE_ASSERT(ec);
-
-            OCIO_CHECK_EQUAL(ec->getStyle(), OCIO::EXPOSURE_CONTRAST_VIDEO);
-            OCIO_CHECK_ASSERT(!ec->isExposureDynamic());
-            OCIO_CHECK_ASSERT(!ec->isContrastDynamic());
-            OCIO_CHECK_ASSERT(ec->isGammaDynamic());
-        }
-
-        {
-            OCIO_CHECK_NO_THROW(tr = groupTransform->getTransform(3));
+            OCIO_CHECK_NO_THROW(tr = groupTransform->getTransform(1));
 
             OCIO::ConstFixedFunctionTransformRcPtr ff
                 = OCIO::DynamicPtrCast<const OCIO::FixedFunctionTransform>(tr);
@@ -172,7 +146,7 @@ OCIO_ADD_TEST(MixingColorSpaceManager, color_picker_role)
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::MixingColorSpaceMenuRcPtr mixingHelper;
     OCIO_CHECK_NO_THROW(mixingHelper = OCIO::MixingColorSpaceManager::Create(config));
@@ -265,7 +239,7 @@ OCIO_ADD_TEST(MixingSlider, basic)
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::MixingColorSpaceMenuRcPtr mixingHelper;
     OCIO_CHECK_NO_THROW(mixingHelper = OCIO::MixingColorSpaceManager::Create(config));
@@ -405,7 +379,7 @@ OCIO_ADD_TEST(MixingSlider, color_picker_role)
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::MixingColorSpaceMenuRcPtr mixingHelper;
     OCIO_CHECK_NO_THROW(mixingHelper = OCIO::MixingColorSpaceManager::Create(config));

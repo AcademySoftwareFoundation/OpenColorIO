@@ -30,7 +30,6 @@ namespace OIIO = OIIO_NAMESPACE;
 // Array of non OpenColorIO arguments.
 static std::vector<std::string> args;
 
-
 // Fill 'args' array with OpenColorIO arguments.
 static int
 parse_end_args(int argc, const char *argv[])
@@ -401,8 +400,8 @@ int main(int argc, const char **argv)
 
 #ifdef OCIO_GPU_ENABLED
     // Initialize GPU.
-
     OCIO::OglAppRcPtr oglApp;
+
     if (usegpu || usegpuLegacy)
     {
         OCIO::OglApp::Components comp = OCIO::OglApp::COMPONENTS_RGBA;
@@ -422,7 +421,7 @@ int main(int argc, const char **argv)
 
         try
         {
-            oglApp = std::make_shared<OCIO::OglApp>("ocioconvert", 256, 20);
+            oglApp = OCIO::OglApp::CreateOglApp("ocioconvert", 256, 20);
         }
         catch (const OCIO::Exception & e)
         {
@@ -464,8 +463,8 @@ int main(int argc, const char **argv)
             }
             else if (useDisplayView)
             {
-                OCIO::DisplayTransformRcPtr t = OCIO::DisplayTransform::Create();
-                t->setInputColorSpaceName(inputcolorspace);
+                OCIO::DisplayViewTransformRcPtr t = OCIO::DisplayViewTransform::Create();
+                t->setSrc(inputcolorspace);
                 t->setDisplay(display);
                 t->setView(view);
                 processor = config->getProcessor(t);

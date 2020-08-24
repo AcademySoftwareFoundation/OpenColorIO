@@ -7,82 +7,67 @@
 
 #include "Display.h"
 #include "ParseUtils.h"
+#include "Platform.h"
 
 namespace OCIO_NAMESPACE
 {
 
-DisplayMap::iterator find_display(DisplayMap & displays, const std::string & display)
+DisplayMap::iterator FindDisplay(DisplayMap & displays, const std::string & name)
 {
-    for(DisplayMap::iterator iter = displays.begin();
-        iter != displays.end();
-        ++iter)
-    {
-        if(StrEqualsCaseIgnore(display, iter->first)) return iter;
-    }
-    return displays.end();
+    return std::find_if(displays.begin(), displays.end(),
+                        [name](DisplayPair & display)
+                        {
+                            return 0 == Platform::Strcasecmp(name.c_str(), display.first.c_str());
+                        });
 }
 
-DisplayMap::const_iterator find_display_const(const DisplayMap & displays, const std::string & display)
+DisplayMap::const_iterator FindDisplay(const DisplayMap & displays, const std::string & name)
 {
-    for(DisplayMap::const_iterator iter = displays.begin();
-        iter != displays.end();
-        ++iter)
-    {
-        if(StrEqualsCaseIgnore(display, iter->first)) return iter;
-    }
-    return displays.end();
+    return std::find_if(displays.begin(), displays.end(),
+                        [name](const DisplayPair & display)
+                        {
+                            return 0 == Platform::Strcasecmp(name.c_str(), display.first.c_str());
+                        });
 }
 
-int find_view(const ViewVec & vec, const std::string & name)
+ViewVec::const_iterator FindView(const ViewVec & vec, const std::string & name)
 {
-    for(unsigned int i=0; i<vec.size(); ++i)
-    {
-        if(StrEqualsCaseIgnore(name, vec[i].m_name)) return i;
-    }
-    return -1;
+    return std::find_if(vec.begin(), vec.end(),
+                        [name](const View & view)
+                        {
+                            return 0 == Platform::Strcasecmp(name.c_str(), view.m_name.c_str());
+                        });
 }
 
-void AddDisplay(DisplayMap & displays,
-                const char * display,
-                const char * view,
-                const char * viewTransform,
-                const char * displayColorSpace,
-                const char * looks)
+ViewVec::iterator FindView(ViewVec & vec, const std::string & name)
 {
-    if (!display || !*display)
-    {
-        throw Exception("Can't add a (display, view) pair with empty display name.");
-    }
-    if (!view || !*view)
-    {
-        throw Exception("Can't add a (display, view) pair with empty view name.");
-    }
-    if (!displayColorSpace || !*displayColorSpace)
-    {
-        throw Exception("Can't add a (display, view) pair with empty color space name.");
-    }
+    return std::find_if(vec.begin(), vec.end(),
+                        [name](View & view)
+                        {
+                            return 0 == Platform::Strcasecmp(name.c_str(), view.m_name.c_str());
+                        });
+}
 
-    DisplayMap::iterator iter = find_display(displays, display);
-    if(iter == displays.end())
+void AddView(ViewVec & views, const char * name, const char * viewTransform,
+             const char * displayColorSpace, const char * looks,
+             const char * rule, const char * description)
+{
+    if (0 == Platform::Strcasecmp(displayColorSpace, OCIO_VIEW_USE_DISPLAY_NAME))
     {
-        ViewVec views;
-        views.push_back( View(view, viewTransform, displayColorSpace, looks) );
-        displays.push_back(std::make_pair(display, views));
+        displayColorSpace = OCIO_VIEW_USE_DISPLAY_NAME;
+    }
+    auto view = FindView(views, name);
+    if (view == views.end())
+    {
+        views.push_back(View(name, viewTransform, displayColorSpace, looks, rule, description));
     }
     else
     {
-        ViewVec & views = iter->second;
-        int index = find_view(views, view);
-        if (index < 0)
-        {
-            views.push_back( View(view, viewTransform, displayColorSpace, looks) );
-        }
-        else
-        {
-            views[index].m_viewTransform = viewTransform ? viewTransform : "";
-            views[index].m_colorspace    = displayColorSpace;
-            views[index].m_looks         = looks ? looks : "";
-        }
+        (*view).m_viewTransform = viewTransform     ? viewTransform     : "";
+        (*view).m_colorspace    = displayColorSpace ? displayColorSpace : "";
+        (*view).m_looks         = looks             ? looks             : "";
+        (*view).m_rule          = rule              ? rule              : "";
+        (*view).m_description   = description       ? description       : "";
     }
 }
 
@@ -94,11 +79,9 @@ void ComputeDisplays(StringUtils::StringVec & displayCache,
     displayCache.clear();
 
     StringUtils::StringVec displayMasterList;
-    for(DisplayMap::const_iterator iter = displays.begin();
-        iter != displays.end();
-        ++iter)
+    for(const auto & display : displays)
     {
-        displayMasterList.push_back(iter->first);
+        displayMasterList.push_back(display.first);
     }
 
     // Apply the env override if it's not empty.

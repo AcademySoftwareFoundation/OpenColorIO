@@ -2,8 +2,10 @@
   SPDX-License-Identifier: CC-BY-4.0
   Copyright Contributors to the OpenColorIO Project.
 
-Home
-====
+
+
+Overview
+========
 
 OpenColorIO (OCIO) is a complete color management solution geared towards motion
 picture production with an emphasis on visual effects and computer animation.
@@ -13,12 +15,41 @@ options suitable for high-end production usage. OCIO is compatible with the
 Academy Color Encoding Specification (ACES) and is LUT-format agnostic,
 supporting many popular formats.
 
-OpenColorIO is released as version 1.0 and has been in development since 2003.
-OCIO represents the culmination of years of production experience earned on such
+OpenColorIO version 1.0 was released in 2011, having been in development since 2003.
+OCIO v1 represented the culmination of years of production experience earned on such
 films as SpiderMan 2 (2004), Surf's Up (2007), Cloudy with a Chance of Meatballs
-(2009), Alice in Wonderland (2010), and many more. OpenColorIO is natively
-supported in commercial applications like Katana, Mari, Nuke, Silhouette FX, and
-others.
+(2009), Alice in Wonderland (2010), and many more.  The current stable release is 
+version 1.1.1 from April 2019.
+
+OpenColorIO v2 has been in development since 2017 and is feature complete as of
+SIGGRAPH 2020.  After a stabilization and bug-fixing period, an official 2.0 release
+will be made at the end of 2020.  OCIO v2 is in the VFX Reference Platform for
+calendar year 2021.  The OCIO v2 code is in the master branch on 
+`GitHub <https://github.com/AcademySoftwareFoundation/OpenColorIO>`_
+and we encourage developers to start integrating and providing feedback.
+See :ref:`upgrading_to_v2` for more.
+
+
+About the Documentation
+=======================
+
+The documentation is a work-in-progress and we would love to have your help to 
+improve it!  An easy way to get involved is to join the #docs channel on 
+:ref:`slack`.
+
+The documentation has been updated to include most of the new OCIO v2 features
+but additional work is needed to provide more detail and tutorials about how to
+best leverage them.  We will be working on that over the coming weeks.
+
+Accessing Other Versions
+************************
+
+You are reading the documentation for OCIO v2.  The documentation for the the current
+stable release (1.1.1) is available `here <https://opencolorio.org/old/index.html>`_.
+
+
+Community
+=========
 
 .. _mailing_lists:
 
@@ -34,65 +65,22 @@ There are two mailing lists associated with OpenColorIO:
 `ocio-dev <https://lists.aswf.io/g/ocio-dev>`__\ ``@lists.aswf.io``
     For developers interested OCIO APIs, code integration, compilation, etc.
 
-Quick Start
-***********
+.. _slack:
 
-Most users will likely want to use the OpenColorIO that comes precompiled with
-their applications.  See the :ref:`compatiblesoftware` for further details on
-each application.
+Slack
+*****
 
-Note that OCIO configurations are required to do any 'real' work, and are
-available separately on the :ref:`downloads` section of this site. Example
-images are also available. For assistance customizing .ocio configurations,
-contact `ocio-user <https://lists.aswf.io/g/ocio-user>`__\.
+There is an OpenColorIO Slack workspace at: `<https://opencolorio.slack.com>`_.  
 
-- Step 1:  set the OCIO environment-variable to /path/to/your/profile.ocio
-- Step 2:  Launch supported application.
+New users may join the workspace from `here <http://slack.opencolorio.org/>`_.
 
-If you are on a platform that is not envvar friendly, most applications also
-provide a menu option to select a different OCIO configuration after launch.
 
-Please be sure to select a profile that matches your color workflow (VFX work
-typically requires a different profile than animated features). If you need
-assistance picking a profile, email 
-`ocio-user <https://lists.aswf.io/g/ocio-user>`__\.
-
-Downloading and Building the Code
-*********************************
-
-Source code is available on Github at
-http://github.com/AcademySoftwareFoundation/OpenColorIO
-
-Download a `.zip <http://github.com/AcademySoftwareFoundation/OpenColorIO/zipball/master>`_ or
-`.tar.gz <http://github.com/AcademySoftwareFoundation/OpenColorIO/tarball/master>`_ of the
-current state of the repository.
-
-Please see the :ref:`developer-guide` for more info, and contact `ocio-dev
-<https://lists.aswf.io/g/ocio-dev>`__\  with any questions.
-
-.. toctree::
-    :hidden:
-    :maxdepth: 2
-    
-    self
-    introduction
-    
-    configurations/index
-    installation
-    
-    userguide/index
-    
-    developers/index
-    
-    CompatibleSoftware
-    FAQ
-    downloads
-    
-    ChangeLog
-    License
-
---------------------------------------------------------------------------------
+Search
+======
 
 :ref:`search`
 
 :ref:`genindex`
+
+.. include:: toc_redirect.rst
+

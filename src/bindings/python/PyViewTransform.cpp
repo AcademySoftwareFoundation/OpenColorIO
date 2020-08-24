@@ -92,8 +92,8 @@ void bindPyViewTransform(py::module & m)
             })
         .def("clearCategories", &ViewTransform::clearCategories)
         .def("getReferenceSpaceType", &ViewTransform::getReferenceSpaceType)
-        .def("getTransform", &ViewTransform::getTransform, "dir"_a)
-        .def("setTransform", &ViewTransform::setTransform, "transform"_a, "dir"_a);
+        .def("getTransform", &ViewTransform::getTransform, "direction"_a)
+        .def("setTransform", &ViewTransform::setTransform, "transform"_a, "direction"_a);
 
     defStr(cls);
 
