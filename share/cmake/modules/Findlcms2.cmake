@@ -124,7 +124,6 @@ if(NOT lcms2_FOUND)
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DBUILD_SHARED_LIBS=OFF
             -DCMAKE_C_FLAGS=${lcms2_C_FLAGS}
-            -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
         )
         if(CMAKE_TOOLCHAIN_FILE)
             set(lcms2_CMAKE_ARGS
