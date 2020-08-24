@@ -56,18 +56,17 @@ public:
         float image[4]{ 0.f, 0.f, 0.f, 0.f };
         m_oglApp->initImage(1, 1, OCIO::OglApp::COMPONENTS_RGBA, image);
         m_oglApp->createGLBuffers();
-        OCIO::GpuShaderDescRcPtr shaderDesc;
         if (legacyGpu)
         {
-            shaderDesc = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(32);
+            m_shaderDesc = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(32);
         }
         else
         {
-            shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+            m_shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
         }
-        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
-        m_gpu->extractGpuShaderInfo(shaderDesc);
-        m_oglApp->setShader(shaderDesc);
+        m_shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
+        m_gpu->extractGpuShaderInfo(m_shaderDesc);
+        m_oglApp->setShader(m_shaderDesc);
 #endif // OCIO_GPU_ENABLED
     }
 
@@ -89,6 +88,7 @@ private:
     {
 #ifdef OCIO_GPU_ENABLED
         m_oglApp->updateImage(pixel.data());
+        m_oglApp->setShader(m_shaderDesc);
         m_oglApp->reshape(1, 1);
         m_oglApp->redisplay();
         m_oglApp->readImage(pixel.data());
@@ -97,6 +97,7 @@ private:
 
 #ifdef OCIO_GPU_ENABLED
     OCIO::OglAppRcPtr m_oglApp;
+    OCIO::GpuShaderDescRcPtr m_shaderDesc;
 #endif // OCIO_GPU_ENABLED
 
     OCIO::ConstCPUProcessorRcPtr m_cpu;
