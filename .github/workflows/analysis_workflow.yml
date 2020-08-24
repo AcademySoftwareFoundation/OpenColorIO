@@ -6,10 +6,29 @@
 
 name: Analysis
 
+# on:
+#   schedule:
+#     # Nightly build
+#     - cron: "0 0 * * *"
+
 on:
-  schedule:
-    # Nightly build
-    - cron: "0 0 * * *"
+  push:
+    # Versioned branches and tags are ignored for OCIO <= 1.x.x
+    branches-ignore:
+      - RB-0.*
+      - RB-1.*
+      - gh-pages
+    tags-ignore:
+      - v0.*
+      - v1.*
+  pull_request:
+    branches-ignore:
+      - RB-0.*
+      - RB-1.*
+      - gh-pages
+    tags-ignore:
+      - v0.*
+      - v1.*
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -22,7 +41,7 @@ jobs:
        cxx=${{ matrix.cxx-standard }}, 
        docs=${{ matrix.build-docs }}>'
     # Don't run on OCIO forks
-    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    # if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     # GH-hosted VM. The build runs in CentOS 7 'container' defined below.
     runs-on: ubuntu-latest
     container:
@@ -99,11 +118,6 @@ jobs:
       CXX: ${{ matrix.cxx-compiler }}
       CC: ${{ matrix.cc-compiler }}
     steps:
-      # TODO: Remove this workaround following resolution of:
-      #       https://github.com/AcademySoftwareFoundation/aswf-docker/issues/43
-      - name: Setup container
-        run: sudo rm -rf /usr/local/lib64/cmake/glew
-        if: matrix.vfx-cy == 2020
       - name: Checkout
         uses: actions/checkout@v2
       - name: Install latest ext package versions
@@ -157,7 +171,7 @@ jobs:
   linux_sonarcloud:
     name: 'Linux CentOS 7 VFX CY2020 SonarCloud <GCC 6.3.1>'
     # Don't run on OCIO forks
-    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    # if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     # GH-hosted VM. The build runs in CentOS 7 'container' defined below.
     runs-on: ubuntu-latest
     container:
@@ -168,10 +182,6 @@ jobs:
       CXX: g++
       CC: gcc
     steps:
-      # TODO: Remove this workaround following resolution of:
-      #       https://github.com/AcademySoftwareFoundation/aswf-docker/issues/43
-      - name: Setup container
-        run: sudo rm -rf /usr/local/lib64/cmake/glew
       - name: Checkout
         uses: actions/checkout@v2
         with:
