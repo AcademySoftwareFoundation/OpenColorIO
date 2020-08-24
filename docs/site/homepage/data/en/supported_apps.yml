@@ -56,7 +56,7 @@ supported_apps:
     - name : Guerilla Render
       image : images/supported_apps/guerilla.png
       categories : ["3D", "Lighting", "Look Dev", "Render"]
-      content : Guerilla Render 2.2 and up.
+      content : Version 2.2 and up.
       link : "http://guerillarender.com/"
 
     # portfolio item loop
