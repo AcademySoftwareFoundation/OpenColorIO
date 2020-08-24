@@ -197,7 +197,7 @@ int main (int argc, const char* argv[])
                "-t", &test, "Test a set a predefined RGB values",
                "-v", &verbose, "Verbose",
                "--help", &help, "Print help message",
-               "--gpu", &usegpu, "Use GPU instead of CPU\n",
+               "--gpu", &usegpu, "Use GPU instead of CPU",
                "--gpulegacy", &usegpuLegacy, "Use the legacy (i.e. baked) GPU color processing "
                                              "instead of the CPU one (--gpu is ignored)",
                "--gpuinfo", &outputgpuInfo, "Output the OCIO shader program",
