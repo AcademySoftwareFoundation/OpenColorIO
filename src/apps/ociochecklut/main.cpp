@@ -197,7 +197,6 @@ int main (int argc, const char* argv[])
                "-t", &test, "Test a set a predefined RGB values",
                "-v", &verbose, "Verbose",
                "--help", &help, "Print help message",
-               "-t", &test, "Test a set a predefined RGB values\n",
                "--gpu", &usegpu, "Use GPU instead of CPU\n",
                "--gpulegacy", &usegpuLegacy, "Use the legacy (i.e. baked) GPU color processing "
                                              "instead of the CPU one (--gpu is ignored)",
