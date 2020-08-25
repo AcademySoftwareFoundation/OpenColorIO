@@ -152,10 +152,12 @@ if(NOT WIN32)
 
     # Install the pkg-config file.
 
+    include(GNUInstallDirs)
+
     set(prefix ${CMAKE_INSTALL_PREFIX})
-    set(exec_prefix "\${prefix}")
-    set(libdir "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
-    set(includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
+    set(exec_prefix "${prefix}")
+    set(libdir "${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
+    set(includedir "${exec_prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
     configure_file(res/OpenColorIO.pc.in ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc @ONLY)
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc DESTINATION ${libdir}/pkgconfig)
 endif()
