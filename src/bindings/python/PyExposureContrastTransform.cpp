@@ -27,6 +27,7 @@ void bindPyExposureContrastTransform(py::module & m)
                          TransformDirection dir) 
             {
                 ExposureContrastTransformRcPtr p = ExposureContrastTransform::Create();
+                p->setStyle(style);
                 p->setExposure(exposure);
                 p->setContrast(contrast);
                 p->setGamma(gamma);
