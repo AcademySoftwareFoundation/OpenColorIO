@@ -111,6 +111,11 @@ void OglApp::redisplay()
         std::swap(pts[1], pts[3]);
     }
 
+    // Bind OpenGL resources before drawing
+
+    m_oglBuilder->useAllTextures();
+    m_oglBuilder->useAllUniforms();
+
     glEnable(GL_TEXTURE_2D);
         glClearColor(0.2f, 0.2f, 0.2f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
