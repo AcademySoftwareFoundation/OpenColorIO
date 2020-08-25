@@ -27,10 +27,6 @@ env:
 phases:
   pre_build:
     commands:
-      # Setup container
-      # TODO: Remove this workaround following resolution of:
-      #       https://github.com/AcademySoftwareFoundation/aswf-docker/issues/43
-      - sudo rm -rf /usr/local/lib64/cmake/glew
       # Checkout
       - git clone https://github.com/$GITHUB_REPOSITORY OpenColorIO
       - cd OpenColorIO
