@@ -51,6 +51,13 @@ supported_apps:
       categories : ["3D", "Lighting", "Look Dev"]
       content : Open Source Lighting and Lookdev. 
       link : "http://gafferhq.org/"
+      
+    # portfolio item loop
+    - name : Guerilla Render
+      image : images/supported_apps/guerilla.png
+      categories : ["3D", "Lighting", "Look Dev", "Render"]
+      content : Version 2.2 and up.
+      link : "http://guerillarender.com/"
 
     # portfolio item loop
     - name : Hiero
