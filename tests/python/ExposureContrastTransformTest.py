@@ -29,7 +29,7 @@ class ExposureContrastTransformTest(unittest.TestCase):
         Test the setStyle() and getStyle() methods.
         """
 
-        # Default initialized direction is linear.
+        # Default initialized style is linear.
         self.assertEqual(self.exp_tr.getStyle(), OCIO.EXPOSURE_CONTRAST_LINEAR)
 
         for style in OCIO.ExposureContrastStyle.__members__.values():
