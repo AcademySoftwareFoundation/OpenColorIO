@@ -29,7 +29,7 @@ supported_apps:
       image : images/supported_apps/clarisse.png
       categories : ["3D", "Render"]
       content : "Native support."
-      link : "http://www.blender.org/" 
+      link : "http://www.isotropix.com/products/clarisse/ifx" 
 
     # portfolio item loop
     - name : CryEngine
@@ -106,7 +106,7 @@ supported_apps:
       image : images/supported_apps/modo.png
       categories : ["3D", "Modeling", "Texture", "Render"]
       content : Maya 2016 and up.
-      link : "https://www.autodesk.com/products/maya/overview"
+      link : "http://www.thefoundry.co.uk/products/modo"
 
     # portfolio item loop
     - name : mrViewer
