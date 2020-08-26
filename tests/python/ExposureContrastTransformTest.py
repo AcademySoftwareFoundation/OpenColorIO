@@ -236,7 +236,8 @@ class ExposureContrastTransformTest(unittest.TestCase):
             exposure=self.TEST_EXPOSURE,
             contrast=self.TEST_CONTRAST,
             gamma=self.TEST_GAMMA,
-            pivot=self.TEST_PIVOT)
+            pivot=self.TEST_PIVOT,
+            logExposureStep=self.TEST_LOGEXPOSURESTEP)
 
         self.assertEqual(exp_tr2.getStyle(), self.TEST_STYLE)
         self.assertEqual(exp_tr2.getExposure(), self.TEST_EXPOSURE)
