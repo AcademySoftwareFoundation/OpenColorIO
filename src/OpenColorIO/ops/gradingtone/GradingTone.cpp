@@ -315,8 +315,8 @@ void GradingTonePreRender::updateForStyle(GradingStyle style, const GradingTone 
     if (m_style != style)
     {
         setStyle(style);
-        computeValues(values);
     }
+    computeValues(values);
 }
 
 namespace
