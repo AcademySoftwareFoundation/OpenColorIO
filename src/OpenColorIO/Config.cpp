@@ -2860,21 +2860,21 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
     return processor;
 }
 
-ConstProcessorRcPtr Config::GetProcessor(const ConstConfigRcPtr & srcConfig,
-                                         const char * srcName,
-                                         const ConstConfigRcPtr & dstConfig,
-                                         const char * dstName)
+ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstConfigRcPtr & srcConfig,
+                                                    const char * srcName,
+                                                    const ConstConfigRcPtr & dstConfig,
+                                                    const char * dstName)
 {
-    return GetProcessor(srcConfig->getCurrentContext(), srcConfig, srcName,
-                        dstConfig->getCurrentContext(), dstConfig, dstName);
+    return GetProcessorFromConfigs(srcConfig->getCurrentContext(), srcConfig, srcName,
+                                   dstConfig->getCurrentContext(), dstConfig, dstName);
 }
 
-ConstProcessorRcPtr Config::GetProcessor(const ConstContextRcPtr & srcContext,
-                                         const ConstConfigRcPtr & srcConfig,
-                                         const char * srcName,
-                                         const ConstContextRcPtr & dstContext,
-                                         const ConstConfigRcPtr & dstConfig,
-                                         const char * dstName)
+ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & srcContext,
+                                                    const ConstConfigRcPtr & srcConfig,
+                                                    const char * srcName,
+                                                    const ConstContextRcPtr & dstContext,
+                                                    const ConstConfigRcPtr & dstConfig,
+                                                    const char * dstName)
 {
     ConstColorSpaceRcPtr srcColorSpace = srcConfig->getColorSpace(srcName);
     if (!srcColorSpace)
@@ -2920,29 +2920,29 @@ ConstProcessorRcPtr Config::GetProcessor(const ConstContextRcPtr & srcContext,
         throw Exception(os.str().c_str());
     }
 
-    return GetProcessor(srcContext, srcConfig, srcName, srcExName,
-                        dstContext, dstConfig, dstName, dstExName);
+    return GetProcessorFromConfigs(srcContext, srcConfig, srcName, srcExName,
+                                   dstContext, dstConfig, dstName, dstExName);
 }
 
-ConstProcessorRcPtr Config::GetProcessor(const ConstConfigRcPtr & srcConfig,
-                                         const char * srcName,
-                                         const char * srcInterchangeName,
-                                         const ConstConfigRcPtr & dstConfig,
-                                         const char * dstName,
-                                         const char * dstInterchangeName)
+ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstConfigRcPtr & srcConfig,
+                                                    const char * srcName,
+                                                    const char * srcInterchangeName,
+                                                    const ConstConfigRcPtr & dstConfig,
+                                                    const char * dstName,
+                                                    const char * dstInterchangeName)
 {
-    return GetProcessor(srcConfig->getCurrentContext(), srcConfig, srcName, srcInterchangeName,
-                        dstConfig->getCurrentContext(), dstConfig, dstName, dstInterchangeName);
+    return GetProcessorFromConfigs(srcConfig->getCurrentContext(), srcConfig, srcName, srcInterchangeName,
+                                   dstConfig->getCurrentContext(), dstConfig, dstName, dstInterchangeName);
 }
 
-ConstProcessorRcPtr Config::GetProcessor(const ConstContextRcPtr & srcContext,
-                                         const ConstConfigRcPtr & srcConfig,
-                                         const char * srcName,
-                                         const char * srcInterchangeName,
-                                         const ConstContextRcPtr & dstContext,
-                                         const ConstConfigRcPtr & dstConfig,
-                                         const char * dstName,
-                                         const char * dstInterchangeName)
+ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & srcContext,
+                                                    const ConstConfigRcPtr & srcConfig,
+                                                    const char * srcName,
+                                                    const char * srcInterchangeName,
+                                                    const ConstContextRcPtr & dstContext,
+                                                    const ConstConfigRcPtr & dstConfig,
+                                                    const char * dstName,
+                                                    const char * dstInterchangeName)
 {
     ConstColorSpaceRcPtr srcColorSpace = srcConfig->getColorSpace(srcName);
     if (!srcColorSpace)
