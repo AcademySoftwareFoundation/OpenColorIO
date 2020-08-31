@@ -36,6 +36,7 @@ void bindPyImageDesc(py::module & m);
 void bindPyGpuShaderCreator(py::module & m);
 void bindPyContext(py::module & m);
 void bindPyViewingRules(py::module & m);
+void bindPySystemMonitors(py::module & m);
 
 } // namespace OCIO_NAMESPACE
 

@@ -97,6 +97,10 @@ class OCIOEXPORT BuiltinTransformRegistry;
 typedef OCIO_SHARED_PTR<BuiltinTransformRegistry> BuiltinTransformRegistryRcPtr;
 typedef OCIO_SHARED_PTR<const BuiltinTransformRegistry> ConstBuiltinTransformRegistryRcPtr;
 
+class OCIOEXPORT SystemMonitors;
+typedef OCIO_SHARED_PTR<SystemMonitors> SystemMonitorsRcPtr;
+typedef OCIO_SHARED_PTR<const SystemMonitors> ConstSystemMonitorsRcPtr;
+
 
 // Transforms
 

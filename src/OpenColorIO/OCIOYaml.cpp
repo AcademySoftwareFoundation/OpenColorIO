@@ -3448,6 +3448,44 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
                 }
             }
         }
+        else if (key == "virtual_display")
+        {
+            if (second.Type() != YAML::NodeType::Sequence)
+            {
+                throwValueError(node.Tag(), first, "The view list is a sequence.");
+            }
+
+            for (const auto & val : second)
+            {
+                if (val.Tag() == "View")
+                {
+                    View view;
+                    load(val, view);
+                    config->addVirtualDisplayView(view.m_name.c_str(),
+                                                  view.m_viewTransform.c_str(),
+                                                  view.m_colorspace.c_str(),
+                                                  view.m_looks.c_str(),
+                                                  view.m_rule.c_str(),
+                                                  view.m_description.c_str());
+                }
+                else if (val.Tag() == "Views")
+                {
+                    StringUtils::StringVec views;
+                    load(val, views);
+                    for (const auto & sharedView : views)
+                    {
+                        config->addVirtualDisplaySharedView(sharedView.c_str());
+                    }
+                }
+                else
+                {
+                    std::ostringstream os;
+                    os << "Unknown element found in virtual_display:";
+                    os << val.Tag() << ".";
+                    LogWarning(os.str());
+                }
+            }
+        }
         else if(key == "active_displays")
         {
             StringUtils::StringVec display;
@@ -3818,33 +3856,77 @@ inline void save(YAML::Emitter & out, const Config & config)
     // All displays are saved (not just active ones).
     for(int i = 0; i < config.getNumDisplaysAll(); ++i)
     {
-        const char* display = config.getDisplayAll(i);
-        out << YAML::Key << display;
-        out << YAML::Value << YAML::BeginSeq;
-        for(int v = 0; v < config.getNumViews(VIEW_DISPLAY_DEFINED, display); ++v)
+        // Do not save displays instantiated from a virtual display.
+        if (!config.isDisplayTemporary(i))
         {
-            const char * name = config.getView(VIEW_DISPLAY_DEFINED, display, v);
-            const View dview{ name,
-                              config.getDisplayViewTransformName(display, name),
-                              config.getDisplayViewColorSpaceName(display, name),
-                              config.getDisplayViewLooks(display, name),
-                              config.getDisplayViewRule(display, name),
-                              config.getDisplayViewDescription(display, name) };
-            save(out, dview);
+            const char * display = config.getDisplayAll(i);
+
+            out << YAML::Key << display;
+            out << YAML::Value << YAML::BeginSeq;
+            for(int v = 0; v < config.getNumViews(VIEW_DISPLAY_DEFINED, display); ++v)
+            {
+                const char * name = config.getView(VIEW_DISPLAY_DEFINED, display, v);
+                const View dview{ name,
+                                  config.getDisplayViewTransformName(display, name),
+                                  config.getDisplayViewColorSpaceName(display, name),
+                                  config.getDisplayViewLooks(display, name),
+                                  config.getDisplayViewRule(display, name),
+                                  config.getDisplayViewDescription(display, name) };
+                save(out, dview);
+            }
+
+            StringUtils::StringVec sharedViews;
+            for (int v = 0; v < config.getNumViews(VIEW_SHARED, display); ++v)
+            {
+                sharedViews.push_back(config.getView(VIEW_SHARED, display, v));
+            }
+            if (!sharedViews.empty())
+            {
+                out << YAML::VerbatimTag("Views");
+                out << YAML::Flow << sharedViews;
+            }
+            out << YAML::EndSeq;
         }
-        StringUtils::StringVec sharedViews;
-        for (int v = 0; v < config.getNumViews(VIEW_SHARED, display); ++v)
+    }
+    out << YAML::EndMap;
+
+    // Virtual Display.
+    const int numVirtualDisplayViews
+        = config.getVirtualDisplayNumViews(VIEW_DISPLAY_DEFINED) 
+        + config.getVirtualDisplayNumViews(VIEW_SHARED);
+
+    if (configMajorVersion >= 2 && numVirtualDisplayViews > 0)
+    {
+        out << YAML::Newline;
+        out << YAML::Newline;
+        out << YAML::Key << "virtual_display";
+        out << YAML::Value << YAML::BeginSeq;
+    
+        for(int idx = 0; idx < config.getVirtualDisplayNumViews(VIEW_DISPLAY_DEFINED); ++idx)
         {
-            sharedViews.push_back(config.getView(VIEW_SHARED, display, v));
+            const char * viewName = config.getVirtualDisplayView(VIEW_DISPLAY_DEFINED, idx);
+            const View view{ viewName,
+                             config.getVirtualDisplayViewTransformName(viewName),
+                             config.getVirtualDisplayViewColorSpaceName(viewName),
+                             config.getVirtualDisplayViewLooks(viewName),
+                             config.getVirtualDisplayViewRule(viewName),
+                             config.getVirtualDisplayViewDescription(viewName) };
+            save(out, view);
+        }
+    
+        StringUtils::StringVec sharedViews;
+        for (int idx = 0; idx < config.getVirtualDisplayNumViews(VIEW_SHARED); ++idx)
+        {
+            sharedViews.push_back(config.getVirtualDisplayView(VIEW_SHARED, idx));
         }
         if (!sharedViews.empty())
         {
             out << YAML::VerbatimTag("Views");
             out << YAML::Flow << sharedViews;
         }
+    
         out << YAML::EndSeq;
     }
-    out << YAML::EndMap;
 
     out << YAML::Newline;
     out << YAML::Newline;
@@ -3904,12 +3986,20 @@ inline void save(YAML::Emitter & out, const Config & config)
     std::vector<ConstColorSpaceRcPtr> displayCS;
     for (int i = 0; i < config.getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL); ++i)
     {
-        const char* name = config.getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL,
-                                                           COLORSPACE_ALL, i);
+        const char * name
+            = config.getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL, i);
+
         auto cs = config.getColorSpace(name);
         if (cs->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
         {
-            displayCS.push_back(cs);
+            // Display color spaces instantiated from a virtual display must not be saved.
+            // Check them using their name as they have the same name as the display.
+
+            const int idx = config.getDisplayAllByName(name);
+            if (idx==-1 || !config.isDisplayTemporary(idx))
+            {
+                displayCS.push_back(cs);
+            }
         }
         else
         {

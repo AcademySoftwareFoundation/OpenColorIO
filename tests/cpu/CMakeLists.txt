@@ -26,6 +26,16 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 			yaml-cpp
 			testutils
 	)
+
+	if(APPLE)
+		# Frameworks needed to access the ICC monitor profile. 
+		target_link_libraries(${TEST_BINARY}
+			PRIVATE
+				"-framework Carbon"
+				"-framework IOKit"
+		)
+	endif(APPLE)
+
 	if(PRIVATE_INCLUDES)
 		target_include_directories(${TEST_BINARY}
 			PRIVATE
@@ -93,6 +103,7 @@ set(SOURCES
 	transforms/builtins/ACES.cpp
 	transforms/builtins/ColorMatrixHelpers.cpp
 	transforms/builtins/OpHelpers.cpp
+	SystemMonitor.cpp
 )
 
 if(OCIO_ADD_EXTRA_BUILTINS)

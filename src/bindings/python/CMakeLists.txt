@@ -62,6 +62,7 @@ set(SOURCES
 	PyGpuShaderCreator.cpp
 	PyGpuShaderDesc.cpp
 	PyContext.cpp
+	PySystemMonitors.cpp
 	PyViewingRules.cpp
 )
 

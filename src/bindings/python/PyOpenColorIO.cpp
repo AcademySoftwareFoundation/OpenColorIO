@@ -41,6 +41,7 @@ PYBIND11_MODULE(PyOpenColorIO, m)
     bindPyGpuShaderCreator(m);
     bindPyContext(m);
     bindPyViewingRules(m);
+    bindPySystemMonitors(m);
 }
 
 } // namespace OCIO_NAMESPACE

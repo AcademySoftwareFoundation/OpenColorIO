@@ -535,9 +535,10 @@ public:
      */
     const char * getRoleColorSpace(int index) const;
 
-    //
-    // Display/View Registration
-    //
+    /**
+     * \defgroup Methods related to displays and views.
+     * @{
+     */
 
     // TODO: Move to .rst 
     // The following methods only manipulate active displays and views. Active
@@ -649,8 +650,94 @@ public:
      * Will throw if the view does not exist.
      */
     void removeDisplayView(const char * display, const char * view);
-
+    /// Clear all the displays.
     void clearDisplays();
+
+    /** @} */
+
+    /**
+     * \defgroup Methods related to the Virtual Display.
+     * @{
+     *
+     *  ...  (See descriptions for the non-virtual methods above.)
+     *
+     * The virtual display is the way to incorporate the ICC monitor profile for a user's display
+     * into OCIO. The views that are defined for the virtual display are the views that are used to
+     * create a new display for an ICC profile. They serve as a kind of template that lets OCIO
+     * know how to build the new display.
+     *
+     * Typically the views will define a View Transform and set the colorSpaceName to 
+     * "<USE_DISPLAY_NAME>" so that it will use the display color space with the same name as the
+     * display, in this case corresponding to the ICC profile.
+     *
+     */
+
+    void addVirtualDisplayView(const char * view,
+                               const char * viewTransformName,
+                               const char * colorSpaceName,
+                               const char * looks,
+                               const char * ruleName,
+                               const char * description);
+
+    void addVirtualDisplaySharedView(const char * sharedView);
+
+    /// Get the number of views associated to the virtual display.
+    int getVirtualDisplayNumViews(ViewType type) const noexcept;
+    /// Get the view name at a specific index.
+    const char * getVirtualDisplayView(ViewType type, int index) const noexcept;
+
+    const char * getVirtualDisplayViewTransformName(const char * view) const noexcept;
+    const char * getVirtualDisplayViewColorSpaceName(const char * view) const noexcept;
+    const char * getVirtualDisplayViewLooks(const char * view) const noexcept;
+    const char * getVirtualDisplayViewRule(const char * view) const noexcept;
+    const char * getVirtualDisplayViewDescription(const char * view) const noexcept;
+
+    /// Remove the view from the virtual display.
+    void removeVirtualDisplayView(const char * view) noexcept;
+
+    /// Clear the virtual display.
+    void clearVirtualDisplay() noexcept;
+
+    /**
+     * \brief Instantiate a new display from a virtual display, using the monitor name.
+     * 
+     * This method uses the virtual display to create an actual display for the given monitorName.
+     * The new display will receive the views from the virtual display.
+     *
+     * After the ICC profile is read, a display name will be created by combining the description
+     * text from the profile with the monitorName obtained from the OS. Use the SystemMonitors class
+     * to obtain the list of monitorName strings for the displays connected to the computer.
+     *
+     * A new display color space will also be created using the display name. It will have a
+     * from_display_reference transform that is a FileTransform pointing to the ICC profile.
+     *
+     * Any instantiated display color spaces for a virtual display are intended to be temporary
+     * (i.e. last as long as the current session). By default, they are not saved when writing a
+     * config file. If there is a need to make it a permanent color space, it may be desirable to
+     * copy the ICC profile somewhere under the config search_path.
+     *
+     * Will throw if the config does not have a virtual display or if the monitorName does not exist.
+     *
+     * If there is already a display or a display color space with the name monitorName, it will be
+     * replaced/updated.
+     *
+     * Returns the index of the display.
+     */
+    int instantiateDisplayFromMonitorName(const char * monitorName);
+
+    /**
+     * \brief Instantiate a new display from a virtual display, using an ICC profile.
+     * 
+     * On platforms such as Linux, where the SystemMonitors class is not able to obtain a list of
+     * ICC profiles from the OS, this method may be used to manually specify a path to an ICC profile.
+     * 
+     * Will throw if the virtual display definition is missing from the config.
+     *
+     * Returns the index of the display.
+     */
+    int instantiateDisplayFromICCProfile(const char * ICCProfileFilepath);
+
+    /** @} */
 
     /**
      * \brief
@@ -688,8 +775,14 @@ public:
     const char * getActiveViews() const;
 
     /// Get all displays in the config, ignoring the active_displays list.
-    int getNumDisplaysAll() const;
-    const char * getDisplayAll(int index) const;
+    int getNumDisplaysAll() const noexcept;
+    const char * getDisplayAll(int index) const noexcept;
+    int getDisplayAllByName(const char *) const noexcept;
+    /**
+     * Will be true for a display that was instantiated from a virtual display. These displays are
+     * intended to be temporary (i.e. for the current session) and are not saved to a config file.
+     */
+    bool isDisplayTemporary(int index) const noexcept;
 
     /**
      * Get either the shared or display-defined views for a display. The
@@ -1406,8 +1499,7 @@ public:
      * Specify the transform for the appropriate direction.
      * Setting the transform to null will clear it.
      */
-    void setTransform(const ConstTransformRcPtr & transform,
-                        ColorSpaceDirection dir);
+    void setTransform(const ConstTransformRcPtr & transform, ColorSpaceDirection dir);
 
     ColorSpace(const ColorSpace &) = delete;
     ColorSpace& operator= (const ColorSpace &) = delete;
@@ -2858,6 +2950,9 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Context&);
 class OCIOEXPORT BuiltinTransformRegistry
 {
 public:
+    BuiltinTransformRegistry(const BuiltinTransformRegistry &) = delete;
+    BuiltinTransformRegistry & operator= (const BuiltinTransformRegistry &) = delete;
+
     /// Get the current built-in transform registry.
     static ConstBuiltinTransformRegistryRcPtr Get() noexcept;
 
@@ -2874,12 +2969,55 @@ public:
 protected:
     BuiltinTransformRegistry() = default;
     virtual ~BuiltinTransformRegistry() = default;
-
-private:
-    BuiltinTransformRegistry(const BuiltinTransformRegistry &) = delete;
-    BuiltinTransformRegistry & operator= (const BuiltinTransformRegistry &) = delete;
 };
 
+
+///////////////////////////////////////////////////////////////////////////
+// SystemMonitors
+
+/**
+ * Provides access to the ICC monitor profile provided by the operating system for each active display.
+ */
+class OCIOEXPORT SystemMonitors
+{
+public:
+    SystemMonitors(const SystemMonitors &) = delete;
+    SystemMonitors & operator= (const SystemMonitors &) = delete;
+
+    /// Get the existing instance. 
+    static ConstSystemMonitorsRcPtr Get() noexcept;
+
+    /** 
+     * True if the OS is able to provide ICC profiles for the attached monitors (macOS, Windows)
+     * and false otherwise.
+     */
+    virtual bool isSupported() const noexcept = 0;
+
+    /**
+     * \defgroup Methods to access some information of the attached and active monitors.
+     * @{
+     */
+
+    /// Get the number of active monitors reported by the operating system.
+    virtual size_t getNumMonitors() const noexcept = 0;
+
+    /** 
+     * \brief  Get the monitor profile name.
+     *
+     * Get the string describing the monitor. It is used as an argument to instantiateDisplay. It
+     * may also be used in a UI to ask a user which of several monitors they want to instantiate a
+     * display for.
+     */
+    virtual const char * getMonitorName(size_t idx) const = 0;
+    /// Get the ICC profile path associated to the monitor.
+    virtual const char * getProfileFilepath(size_t idx) const = 0;
+
+    /** @} */
+
+protected:
+    SystemMonitors() = default;
+    virtual ~SystemMonitors() = default;
+};
 
 } // namespace OCIO_NAMESPACE
 
