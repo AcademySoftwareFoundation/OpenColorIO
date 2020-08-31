@@ -1014,7 +1014,7 @@ public:
 
         // Force to refresh of all caches.
 
-        m_displayCache.empty();
+        m_displayCache.clear();
 
         ComputeDisplays(m_displayCache,
                         m_displays,
