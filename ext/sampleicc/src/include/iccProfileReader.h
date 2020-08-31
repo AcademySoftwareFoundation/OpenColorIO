@@ -312,7 +312,6 @@ namespace SampleICC
                 return false;
             }
 
-            icTagTypeSignature sig;
             icUInt32Number reserved, nNumRec, nRecSize;
   
             if (!Read32(istream, &reserved, 1)
