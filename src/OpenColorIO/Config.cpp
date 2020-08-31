@@ -941,18 +941,18 @@ public:
             DisplayMap::iterator iter = FindDisplay(m_displays, colorSpaceName.c_str());
             if (iter == m_displays.end())
             {
-                const auto curSize = m_displays.size();
+                const size_t curSize = m_displays.size();
                 m_displays.resize(curSize + 1);
                 m_displays[curSize].first  = colorSpaceName;
                 m_displays[curSize].second = m_virtualDisplay;
 
-                absoluteDisplayIndex = curSize;
+                absoluteDisplayIndex = static_cast<int>(curSize);
             }
             else
             {
                 iter->second = m_virtualDisplay;
 
-                absoluteDisplayIndex = iter - m_displays.begin();
+                absoluteDisplayIndex = static_cast<int>(iter - m_displays.begin());
             }
 
             // Add the corresponding display color space.
@@ -1032,7 +1032,7 @@ public:
         {
             if (0==strcmp(m_displayCache[idx].c_str(), colorSpaceName.c_str()))
             {
-                return idx;
+                return static_cast<int>(idx);
             }
         }
 
