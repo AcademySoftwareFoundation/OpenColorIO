@@ -191,11 +191,13 @@ void AddGCPropertiesUniforms(GpuShaderCreatorRcPtr & shaderCreator,
     auto getC = std::bind(&DynamicPropertyGradingRGBCurveImpl::getCoefsArray, curveProp);
     auto getLB = std::bind(&DynamicPropertyGradingRGBCurveImpl::getLocalBypass, curveProp);
     // Uniforms are added if they are not already there (added by another op).
-    AddUniform(shaderCreator, getNK, getKO, propNames.m_knotsOffsets);
+    AddUniform(shaderCreator, DynamicPropertyGradingRGBCurveImpl::GetNumCurves,
+               getKO, propNames.m_knotsOffsets);
     AddUniform(shaderCreator, getNK, getK,
                DynamicPropertyGradingRGBCurveImpl::GetMaxKnots(),
                propNames.m_knots);
-    AddUniform(shaderCreator, getNC, getCO, propNames.m_coefsOffsets);
+    AddUniform(shaderCreator, DynamicPropertyGradingRGBCurveImpl::GetNumCurves,
+               getCO, propNames.m_coefsOffsets);
     AddUniform(shaderCreator, getNC, getC,
                DynamicPropertyGradingRGBCurveImpl::GetMaxCoefs(),
                propNames.m_coefs);

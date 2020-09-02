@@ -122,6 +122,7 @@ public:
     bool getLocalBypass() const;
     int getNumKnots() const;
     int getNumCoefs() const;
+    static int GetNumCurves() { return 4; }
     const int * getKnotsOffsetsArray() const;
     const int * getCoefsOffsetsArray() const;
     const float * getKnotsArray() const;
